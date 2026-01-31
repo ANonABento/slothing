@@ -2,18 +2,40 @@ import { NextRequest, NextResponse } from "next/server";
 import { getJob } from "@/lib/db/jobs";
 import { getProfile, getLLMConfig } from "@/lib/db";
 import { generateTailoredResume } from "@/lib/resume/generator";
-import { generateResumeHTML } from "@/lib/resume/pdf";
+import { generateResumeHTML, TEMPLATES } from "@/lib/resume/pdf";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 import { generateId } from "@/lib/utils";
 
 const OUTPUT_DIR = path.join(process.cwd(), "public", "resumes");
 
+export async function GET() {
+  // Return available templates
+  return NextResponse.json({
+    templates: TEMPLATES.map((t) => ({
+      id: t.id,
+      name: t.name,
+      description: t.description,
+    })),
+  });
+}
+
 export async function POST(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
+    // Get template from request body
+    let templateId = "classic";
+    try {
+      const body = await request.json();
+      if (body.templateId) {
+        templateId = body.templateId;
+      }
+    } catch {
+      // No body or invalid JSON, use default
+    }
+
     const job = getJob(params.id);
     if (!job) {
       return NextResponse.json({ error: "Job not found" }, { status: 404 });
@@ -32,8 +54,8 @@ export async function POST(
     // Generate tailored resume content
     const tailoredResume = await generateTailoredResume(profile, job, llmConfig);
 
-    // Generate HTML
-    const html = generateResumeHTML(tailoredResume);
+    // Generate HTML with selected template
+    const html = generateResumeHTML(tailoredResume, templateId);
 
     // Ensure output directory exists
     await mkdir(OUTPUT_DIR, { recursive: true });

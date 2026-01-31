@@ -8,7 +8,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import type { JobDescription, JobMatch } from "@/types";
-import { Loader2, Plus, FileText, Trash2, Download, Sparkles } from "lucide-react";
+import { Loader2, Plus, FileText, Trash2, Download, Sparkles, ChevronDown } from "lucide-react";
+
+interface Template {
+  id: string;
+  name: string;
+  description: string;
+}
 
 export default function JobsPage() {
   const [jobs, setJobs] = useState<JobDescription[]>([]);
@@ -18,10 +24,28 @@ export default function JobsPage() {
   const [analyzing, setAnalyzing] = useState<string | null>(null);
   const [generating, setGenerating] = useState<string | null>(null);
   const [analyses, setAnalyses] = useState<Record<string, JobMatch>>({});
+  const [templates, setTemplates] = useState<Template[]>([]);
+  const [selectedTemplate, setSelectedTemplate] = useState<Record<string, string>>({});
 
   useEffect(() => {
     fetchJobs();
+    fetchTemplates();
   }, []);
+
+  const fetchTemplates = async () => {
+    try {
+      const res = await fetch("/api/jobs/templates");
+      const data = await res.json();
+      setTemplates(data.templates || []);
+    } catch {
+      // Default templates if fetch fails
+      setTemplates([
+        { id: "classic", name: "Classic", description: "Traditional professional format" },
+        { id: "modern", name: "Modern", description: "Contemporary design" },
+        { id: "minimal", name: "Minimal", description: "Clean and simple" },
+      ]);
+    }
+  };
 
   const fetchJobs = async () => {
     try {
@@ -82,7 +106,12 @@ export default function JobsPage() {
   const generateResume = async (jobId: string) => {
     setGenerating(jobId);
     try {
-      const res = await fetch(`/api/jobs/${jobId}/generate`, { method: "POST" });
+      const templateId = selectedTemplate[jobId] || "classic";
+      const res = await fetch(`/api/jobs/${jobId}/generate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ templateId }),
+      });
       const data = await res.json();
       if (data.pdfUrl) {
         window.open(data.pdfUrl, "_blank");
@@ -246,7 +275,7 @@ export default function JobsPage() {
                 )}
 
                 {/* Actions */}
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2 items-center">
                   <Button
                     variant="outline"
                     onClick={() => analyzeJob(job.id)}
@@ -259,6 +288,20 @@ export default function JobsPage() {
                     )}
                     Analyze Match
                   </Button>
+
+                  {/* Template selector */}
+                  <select
+                    value={selectedTemplate[job.id] || "classic"}
+                    onChange={(e) => setSelectedTemplate({ ...selectedTemplate, [job.id]: e.target.value })}
+                    className="h-10 rounded-md border px-3 text-sm"
+                  >
+                    {templates.map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.name}
+                      </option>
+                    ))}
+                  </select>
+
                   <Button
                     onClick={() => generateResume(job.id)}
                     disabled={generating === job.id}

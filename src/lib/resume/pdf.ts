@@ -1,14 +1,44 @@
 import type { TailoredResume } from "./generator";
+import { getTemplate, type ResumeTemplate, TEMPLATES } from "./templates";
 
-// Generate HTML resume that can be converted to PDF
-export function generateResumeHTML(resume: TailoredResume): string {
+export { TEMPLATES };
+
+// Generate HTML resume with template support
+export function generateResumeHTML(
+  resume: TailoredResume,
+  templateId: string = "classic"
+): string {
+  const template = getTemplate(templateId);
   const { contact, summary, experiences, skills, education } = resume;
+  const styles = template.styles;
+
+  const headerAlignment =
+    styles.headerStyle === "centered"
+      ? "text-align: center;"
+      : styles.headerStyle === "minimal"
+      ? ""
+      : "text-align: left;";
+
+  const sectionBorder =
+    styles.sectionDivider === "line"
+      ? `border-bottom: 1.5px solid ${styles.accentColor};`
+      : "";
+
+  const bulletStyle =
+    styles.bulletStyle === "disc"
+      ? ""
+      : styles.bulletStyle === "dash"
+      ? "list-style-type: none; ul li::before { content: '– '; }"
+      : styles.bulletStyle === "arrow"
+      ? "list-style-type: none;"
+      : "list-style-type: none;";
 
   return `
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="UTF-8">
+  <title>${contact.name} - Resume</title>
   <style>
     * {
       margin: 0;
@@ -16,27 +46,29 @@ export function generateResumeHTML(resume: TailoredResume): string {
       box-sizing: border-box;
     }
     body {
-      font-family: 'Helvetica Neue', Arial, sans-serif;
-      font-size: 11pt;
-      line-height: 1.4;
+      font-family: ${styles.fontFamily};
+      font-size: ${styles.fontSize};
+      line-height: ${styles.lineHeight};
       color: #333;
       max-width: 8.5in;
       margin: 0 auto;
       padding: 0.5in;
     }
     h1 {
-      font-size: 20pt;
+      font-size: ${styles.headerSize};
       font-weight: 600;
       margin-bottom: 4px;
+      color: ${styles.accentColor};
     }
     h2 {
-      font-size: 12pt;
+      font-size: ${styles.sectionHeaderSize};
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.5px;
-      border-bottom: 1.5px solid #333;
+      ${sectionBorder}
       padding-bottom: 3px;
       margin: 14px 0 8px 0;
+      color: ${styles.accentColor};
     }
     h3 {
       font-size: 11pt;
@@ -44,7 +76,7 @@ export function generateResumeHTML(resume: TailoredResume): string {
       margin-bottom: 2px;
     }
     .header {
-      text-align: center;
+      ${headerAlignment}
       margin-bottom: 12px;
     }
     .contact {
@@ -52,7 +84,7 @@ export function generateResumeHTML(resume: TailoredResume): string {
       color: #555;
     }
     .contact a {
-      color: #555;
+      color: ${styles.accentColor};
       text-decoration: none;
     }
     .contact span {
@@ -80,9 +112,20 @@ export function generateResumeHTML(resume: TailoredResume): string {
     ul {
       margin-left: 16px;
       margin-top: 4px;
+      ${bulletStyle}
     }
     li {
       margin-bottom: 2px;
+    }
+    ${
+      styles.bulletStyle === "arrow"
+        ? "li::before { content: '→ '; color: " + styles.accentColor + "; }"
+        : ""
+    }
+    ${
+      styles.bulletStyle === "dash"
+        ? "li::before { content: '– '; }"
+        : ""
     }
     .skills {
       display: flex;
