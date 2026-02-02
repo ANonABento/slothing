@@ -43,3 +43,6 @@ next-env.d.ts
 # Misc
 *.log
 .context/
+
+# clerk configuration (can include secrets)
+/.clerk/

@@ -37,7 +37,7 @@ describe("Button", () => {
     render(<Button variant="outline">Outline</Button>);
     const button = screen.getByRole("button");
     expect(button.className).toContain("border");
-    expect(button.className).toContain("bg-background");
+    expect(button.className).toContain("bg-transparent");
   });
 
   it("should apply secondary variant classes", () => {
