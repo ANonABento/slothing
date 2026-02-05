@@ -65,7 +65,7 @@ test.describe("Navigation", () => {
 
   test("should show app logo in sidebar", async ({ page }) => {
     await page.goto("/");
-    await expect(page.getByText("Columbus")).toBeVisible();
+    await expect(page.getByText("Get Me Job")).toBeVisible();
     await expect(page.getByText("Job Assistant")).toBeVisible();
   });
 });

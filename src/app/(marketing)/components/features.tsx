@@ -66,7 +66,7 @@ export function Features() {
             <span className="gradient-text">land your dream job</span>
           </h2>
           <p className="text-lg text-muted-foreground">
-            Columbus combines AI-powered tools with smart tracking to streamline
+            Get Me Job combines AI-powered tools with smart tracking to streamline
             your entire job search process.
           </p>
         </div>

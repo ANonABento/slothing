@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { LLMConfig } from "@/types";
+import { DEFAULT_MODELS, LLM_ENDPOINTS } from "@/lib/constants";
 import {
   Loader2,
   CheckCircle,
@@ -81,18 +82,11 @@ const PROVIDERS: Provider[] = [
   },
 ];
 
-const DEFAULT_MODELS: Record<string, string[]> = {
-  ollama: ["llama3.2", "llama3.1", "mistral", "codellama", "phi3"],
-  openai: ["gpt-4o-mini", "gpt-4o", "gpt-4-turbo", "gpt-3.5-turbo"],
-  anthropic: ["claude-3-haiku-20240307", "claude-3-sonnet-20240229", "claude-3-opus-20240229"],
-  openrouter: ["meta-llama/llama-3.2-3b-instruct:free", "google/gemma-2-9b-it:free"],
-};
-
 export default function SettingsPage() {
   const [config, setConfig] = useState<LLMConfig>({
     provider: "ollama",
-    model: "llama3.2",
-    baseUrl: "http://localhost:11434",
+    model: DEFAULT_MODELS.ollama[0],
+    baseUrl: LLM_ENDPOINTS.ollama,
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -180,19 +174,19 @@ export default function SettingsPage() {
       switch (type) {
         case "profile":
           url = "/api/export/profile?format=json";
-          filename = `columbus-profile-${new Date().toISOString().split("T")[0]}.json`;
+          filename = `get-me-job-profile-${new Date().toISOString().split("T")[0]}.json`;
           break;
         case "jobs-json":
           url = "/api/export/jobs?format=json";
-          filename = `columbus-jobs-${new Date().toISOString().split("T")[0]}.json`;
+          filename = `get-me-job-jobs-${new Date().toISOString().split("T")[0]}.json`;
           break;
         case "jobs-csv":
           url = "/api/export/jobs?format=csv";
-          filename = `columbus-jobs-${new Date().toISOString().split("T")[0]}.csv`;
+          filename = `get-me-job-jobs-${new Date().toISOString().split("T")[0]}.csv`;
           break;
         case "backup":
           url = "/api/backup";
-          filename = `columbus-backup-${new Date().toISOString().split("T")[0]}.json`;
+          filename = `get-me-job-backup-${new Date().toISOString().split("T")[0]}.json`;
           break;
       }
 
@@ -354,7 +348,7 @@ export default function SettingsPage() {
               <div>
                 <h2 className="font-semibold">AI Provider</h2>
                 <p className="text-sm text-muted-foreground">
-                  Choose how Columbus will process your documents
+                  Choose how Get Me Job will process your documents
                 </p>
               </div>
             </div>
@@ -733,7 +727,7 @@ export default function SettingsPage() {
               <div className="text-sm">
                 <p className="font-medium text-amber-800 dark:text-amber-200">Make sure Ollama is running</p>
                 <p className="text-amber-700/80 dark:text-amber-300/80 mt-1">
-                  Ollama must be running in the background for Columbus to work. If you get connection errors, start Ollama from your Applications folder.
+                  Ollama must be running in the background for Get Me Job to work. If you get connection errors, start Ollama from your Applications folder.
                 </p>
               </div>
             </div>

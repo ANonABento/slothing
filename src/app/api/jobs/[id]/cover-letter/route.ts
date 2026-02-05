@@ -105,9 +105,9 @@ Guidelines:
       usedLLM: !!llmConfig,
     });
   } catch (error) {
-    console.error("Cover letter error:", error);
+    console.error("Cover letter generation error:", error);
     return NextResponse.json(
-      { error: "Failed to generate cover letter", details: String(error) },
+      { error: "Failed to generate cover letter" },
       { status: 500 }
     );
   }

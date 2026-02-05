@@ -7,7 +7,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Columbus - AI-Powered Job Application Assistant",
+  title: "Get Me Job - AI-Powered Job Application Assistant",
   description: "Land your dream job with AI-powered resume optimization, interview coaching, and application tracking.",
 };
 

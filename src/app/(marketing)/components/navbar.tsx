@@ -39,7 +39,7 @@ export function Navbar() {
               <Rocket className="h-5 w-5" />
             </div>
             <div className="flex flex-col">
-              <span className="text-lg font-bold gradient-text">Columbus</span>
+              <span className="text-lg font-bold gradient-text">Get Me Job</span>
               <span className="text-2xs text-muted-foreground hidden sm:block">
                 Job Assistant
               </span>

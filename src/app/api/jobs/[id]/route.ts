@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { getJob, updateJob, deleteJob } from "@/lib/db/jobs";
+import { updateJobSchema } from "@/lib/constants";
 import { recordJobStatusChange } from "@/lib/db/analytics";
 
 export async function GET(
@@ -35,12 +36,29 @@ export async function PUT(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Get the job's current status before updating
+    // Check if job exists and get current status
     const existingJob = getJob(params.id);
-    const oldStatus = existingJob?.status || null;
+    if (!existingJob) {
+      return NextResponse.json({ error: "Job not found" }, { status: 404 });
+    }
+    const oldStatus = existingJob.status || null;
 
-    const data = await request.json();
-    // TODO: Switch to Drizzle queries with userId once Neon is configured
+    const rawData = await request.json();
+
+    // Validate input with Zod
+    const parseResult = updateJobSchema.safeParse(rawData);
+    if (!parseResult.success) {
+      const errors = parseResult.error.issues.map((issue) => ({
+        field: issue.path.join("."),
+        message: issue.message,
+      }));
+      return NextResponse.json(
+        { error: "Validation failed", errors },
+        { status: 400 }
+      );
+    }
+
+    const data = parseResult.data;
     updateJob(params.id, data);
     const job = getJob(params.id);
 
