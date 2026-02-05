@@ -227,6 +227,74 @@ db.exec(`
     FOREIGN KEY (profile_id) REFERENCES profile(id)
   );
 
+  -- Email drafts table
+  CREATE TABLE IF NOT EXISTS email_drafts (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL DEFAULT 'default',
+    type TEXT NOT NULL,
+    job_id TEXT,
+    subject TEXT NOT NULL,
+    body TEXT NOT NULL,
+    context_json TEXT,
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE SET NULL
+  );
+
+  -- Analytics snapshots table for historical tracking
+  CREATE TABLE IF NOT EXISTS analytics_snapshots (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL DEFAULT 'default',
+    snapshot_date TEXT NOT NULL,
+    total_jobs INTEGER DEFAULT 0,
+    jobs_saved INTEGER DEFAULT 0,
+    jobs_applied INTEGER DEFAULT 0,
+    jobs_interviewing INTEGER DEFAULT 0,
+    jobs_offered INTEGER DEFAULT 0,
+    jobs_rejected INTEGER DEFAULT 0,
+    total_interviews INTEGER DEFAULT 0,
+    interviews_completed INTEGER DEFAULT 0,
+    total_documents INTEGER DEFAULT 0,
+    total_resumes INTEGER DEFAULT 0,
+    profile_completeness INTEGER DEFAULT 0,
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(user_id, snapshot_date)
+  );
+
+  -- Job status history table
+  CREATE TABLE IF NOT EXISTS job_status_history (
+    id TEXT PRIMARY KEY,
+    job_id TEXT NOT NULL,
+    from_status TEXT,
+    to_status TEXT NOT NULL,
+    changed_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    notes TEXT,
+    FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE CASCADE
+  );
+
+  -- Salary offers table
+  CREATE TABLE IF NOT EXISTS salary_offers (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL DEFAULT 'default',
+    job_id TEXT,
+    company TEXT NOT NULL,
+    role TEXT NOT NULL,
+    base_salary REAL NOT NULL,
+    signing_bonus REAL,
+    annual_bonus REAL,
+    equity_value REAL,
+    vesting_years INTEGER,
+    location TEXT,
+    status TEXT DEFAULT 'pending',
+    notes TEXT,
+    negotiation_outcome TEXT,
+    final_base_salary REAL,
+    final_total_comp REAL,
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE SET NULL
+  );
+
   -- Create default profile if not exists
   INSERT OR IGNORE INTO profile (id) VALUES ('default');
 `);
@@ -249,8 +317,87 @@ try {
   if (!columnNames.includes("notes")) {
     db.exec("ALTER TABLE jobs ADD COLUMN notes TEXT");
   }
+  // Add user_id column for multi-user support
+  if (!columnNames.includes("user_id")) {
+    db.exec("ALTER TABLE jobs ADD COLUMN user_id TEXT DEFAULT 'default'");
+  }
 } catch (error) {
   console.error("Migration error:", error);
+}
+
+// Migration: Add user_id to documents table
+try {
+  const docTableInfo = db.prepare("PRAGMA table_info(documents)").all() as Array<{ name: string }>;
+  const docColumnNames = docTableInfo.map((col) => col.name);
+
+  if (!docColumnNames.includes("user_id")) {
+    db.exec("ALTER TABLE documents ADD COLUMN user_id TEXT DEFAULT 'default'");
+  }
+} catch (error) {
+  console.error("Documents migration error:", error);
+}
+
+// Migration: Add user_id to notifications table
+try {
+  const notifTableInfo = db.prepare("PRAGMA table_info(notifications)").all() as Array<{ name: string }>;
+  const notifColumnNames = notifTableInfo.map((col) => col.name);
+
+  if (!notifColumnNames.includes("user_id")) {
+    db.exec("ALTER TABLE notifications ADD COLUMN user_id TEXT DEFAULT 'default'");
+  }
+} catch (error) {
+  console.error("Notifications migration error:", error);
+}
+
+// Migration: Add extension tables
+try {
+  db.exec(`
+    -- Extension session tokens for API authentication
+    CREATE TABLE IF NOT EXISTS extension_sessions (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL DEFAULT 'default',
+      token TEXT NOT NULL UNIQUE,
+      device_info TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      expires_at TEXT NOT NULL,
+      last_used_at TEXT
+    );
+
+    -- Learned answers from job applications
+    CREATE TABLE IF NOT EXISTS learned_answers (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL DEFAULT 'default',
+      question TEXT NOT NULL,
+      question_normalized TEXT NOT NULL,
+      answer TEXT NOT NULL,
+      source_url TEXT,
+      source_company TEXT,
+      times_used INTEGER DEFAULT 1,
+      last_used_at TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+    );
+
+    -- Custom field mappings for specific sites
+    CREATE TABLE IF NOT EXISTS field_mappings (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL DEFAULT 'default',
+      site_pattern TEXT NOT NULL,
+      field_selector TEXT NOT NULL,
+      field_type TEXT NOT NULL,
+      custom_value TEXT,
+      enabled INTEGER DEFAULT 1,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP
+    );
+
+    -- Create indexes for extension tables
+    CREATE INDEX IF NOT EXISTS idx_extension_sessions_token ON extension_sessions(token);
+    CREATE INDEX IF NOT EXISTS idx_extension_sessions_user ON extension_sessions(user_id);
+    CREATE INDEX IF NOT EXISTS idx_learned_answers_normalized ON learned_answers(question_normalized);
+    CREATE INDEX IF NOT EXISTS idx_learned_answers_user ON learned_answers(user_id);
+  `);
+} catch (error) {
+  console.error("Extension tables migration error:", error);
 }
 
 export default db;

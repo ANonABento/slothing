@@ -3,6 +3,7 @@ import { getJob } from "@/lib/db/jobs";
 import { getProfile, getLLMConfig } from "@/lib/db";
 import { LLMClient, parseJSONFromLLM } from "@/lib/llm/client";
 import { startInterviewSchema, DIFFICULTY_DESCRIPTIONS, type InterviewDifficulty } from "@/lib/constants";
+import { requireAuth, isAuthError } from "@/lib/auth";
 
 interface InterviewQuestion {
   question: string;
@@ -12,6 +13,9 @@ interface InterviewQuestion {
 }
 
 export async function POST(request: NextRequest) {
+  const authResult = await requireAuth();
+  if (isAuthError(authResult)) return authResult;
+
   try {
     const rawData = await request.json();
 

@@ -9,10 +9,14 @@ import {
   ALLOWED_MIME_TYPES,
   validateFileMagicBytes,
 } from "@/lib/constants";
+import { requireAuth, isAuthError } from "@/lib/auth";
 
 const UPLOAD_DIR = path.join(process.cwd(), "uploads");
 
 export async function POST(request: NextRequest) {
+  const authResult = await requireAuth();
+  if (isAuthError(authResult)) return authResult;
+
   try {
     const formData = await request.formData();
     const file = formData.get("file") as File;
