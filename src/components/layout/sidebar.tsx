@@ -109,7 +109,7 @@ export function Sidebar() {
             </div>
             {!collapsed && (
               <div className="flex flex-col">
-                <span className="text-lg font-bold gradient-text">Columbus</span>
+                <span className="text-lg font-bold gradient-text">Get Me Job</span>
                 <span className="text-2xs text-muted-foreground">Job Assistant</span>
               </div>
             )}

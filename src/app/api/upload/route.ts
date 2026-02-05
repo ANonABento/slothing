@@ -4,6 +4,11 @@ import path from "path";
 import { generateId } from "@/lib/utils";
 import { saveDocument } from "@/lib/db";
 import { extractTextFromFile } from "@/lib/parser/pdf";
+import {
+  MAX_FILE_SIZE_BYTES,
+  ALLOWED_MIME_TYPES,
+  validateFileMagicBytes,
+} from "@/lib/constants";
 
 const UPLOAD_DIR = path.join(process.cwd(), "uploads");
 
@@ -16,6 +21,35 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
 
+    // Validate file size
+    if (file.size > MAX_FILE_SIZE_BYTES) {
+      const maxMB = MAX_FILE_SIZE_BYTES / (1024 * 1024);
+      return NextResponse.json(
+        { error: `File too large. Maximum size is ${maxMB}MB` },
+        { status: 400 }
+      );
+    }
+
+    // Validate MIME type
+    if (!ALLOWED_MIME_TYPES.includes(file.type as typeof ALLOWED_MIME_TYPES[number])) {
+      return NextResponse.json(
+        { error: `Invalid file type. Allowed types: PDF, DOC, DOCX, TXT` },
+        { status: 400 }
+      );
+    }
+
+    // Read file bytes for magic byte validation
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
+
+    // Validate magic bytes match claimed MIME type
+    if (!validateFileMagicBytes(buffer, file.type)) {
+      return NextResponse.json(
+        { error: "File content does not match its type. Please upload a valid document." },
+        { status: 400 }
+      );
+    }
+
     // Ensure upload directory exists
     await mkdir(UPLOAD_DIR, { recursive: true });
 
@@ -24,10 +58,6 @@ export async function POST(request: NextRequest) {
     const id = generateId();
     const filename = `${id}${ext}`;
     const filePath = path.join(UPLOAD_DIR, filename);
-
-    // Write file to disk
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
     await writeFile(filePath, buffer);
 
     // Extract text

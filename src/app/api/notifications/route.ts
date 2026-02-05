@@ -5,6 +5,7 @@ import {
   markAllNotificationsRead,
   deleteReadNotifications,
 } from "@/lib/db/notifications";
+import { notificationActionSchema } from "@/lib/constants";
 
 export async function GET(request: NextRequest) {
   try {
@@ -33,7 +34,18 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const { action } = await request.json();
+    const rawData = await request.json();
+
+    // Validate input with Zod
+    const parseResult = notificationActionSchema.safeParse(rawData);
+    if (!parseResult.success) {
+      return NextResponse.json(
+        { error: "Invalid action. Use 'markAllRead' or 'deleteRead'" },
+        { status: 400 }
+      );
+    }
+
+    const { action } = parseResult.data;
 
     switch (action) {
       case "markAllRead":
@@ -43,12 +55,6 @@ export async function POST(request: NextRequest) {
       case "deleteRead":
         deleteReadNotifications();
         return NextResponse.json({ success: true, action: "deletedRead" });
-
-      default:
-        return NextResponse.json(
-          { error: "Invalid action" },
-          { status: 400 }
-        );
     }
   } catch (error) {
     console.error("Notification action error:", error);

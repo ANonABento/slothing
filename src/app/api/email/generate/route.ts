@@ -3,26 +3,28 @@ import { getJob } from "@/lib/db/jobs";
 import { getProfile, getLLMConfig } from "@/lib/db";
 import { LLMClient, parseJSONFromLLM } from "@/lib/llm/client";
 import { generateEmail, EMAIL_TEMPLATE_INFO } from "@/lib/email/templates";
-import type { EmailTemplateType } from "@/types";
-
-interface GenerateEmailRequest {
-  type: EmailTemplateType;
-  jobId?: string;
-  interviewerName?: string;
-  interviewDate?: string;
-  daysAfter?: number;
-  targetCompany?: string;
-  connectionName?: string;
-  customNote?: string;
-  useLLM?: boolean;
-}
+import { generateEmailSchema } from "@/lib/constants";
 
 export async function POST(request: NextRequest) {
   try {
-    const body = (await request.json()) as GenerateEmailRequest;
-    const { type, jobId, useLLM = true, ...contextParams } = body;
+    const rawData = await request.json();
 
-    if (!type || !EMAIL_TEMPLATE_INFO[type]) {
+    // Validate input with Zod
+    const parseResult = generateEmailSchema.safeParse(rawData);
+    if (!parseResult.success) {
+      const errors = parseResult.error.issues.map((issue) => ({
+        field: issue.path.join("."),
+        message: issue.message,
+      }));
+      return NextResponse.json(
+        { error: "Validation failed", errors },
+        { status: 400 }
+      );
+    }
+
+    const { type, jobId, useLLM, ...contextParams } = parseResult.data;
+
+    if (!EMAIL_TEMPLATE_INFO[type]) {
       return NextResponse.json(
         { error: "Invalid email type" },
         { status: 400 }

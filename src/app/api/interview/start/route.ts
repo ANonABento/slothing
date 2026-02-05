@@ -2,29 +2,33 @@ import { NextRequest, NextResponse } from "next/server";
 import { getJob } from "@/lib/db/jobs";
 import { getProfile, getLLMConfig } from "@/lib/db";
 import { LLMClient, parseJSONFromLLM } from "@/lib/llm/client";
+import { startInterviewSchema, DIFFICULTY_DESCRIPTIONS, type InterviewDifficulty } from "@/lib/constants";
 
 interface InterviewQuestion {
   question: string;
   category: "behavioral" | "technical" | "situational" | "general";
   suggestedAnswer?: string;
-  difficulty?: "entry" | "mid" | "senior" | "executive";
+  difficulty?: InterviewDifficulty;
 }
-
-type DifficultyLevel = "entry" | "mid" | "senior" | "executive";
-
-const DIFFICULTY_DESCRIPTIONS: Record<DifficultyLevel, string> = {
-  entry: "Entry-level questions focusing on basic skills, learning ability, and enthusiasm. Avoid complex technical deep-dives.",
-  mid: "Mid-level questions testing practical experience, problem-solving, and technical competence. Include specific scenario-based questions.",
-  senior: "Senior-level questions probing leadership, architecture decisions, mentoring, and cross-functional impact. Expect detailed examples.",
-  executive: "Executive-level questions about strategy, vision, organizational transformation, and stakeholder management. Focus on business impact.",
-};
 
 export async function POST(request: NextRequest) {
   try {
-    const { jobId, difficulty = "mid" } = await request.json() as {
-      jobId: string;
-      difficulty?: DifficultyLevel;
-    };
+    const rawData = await request.json();
+
+    // Validate input with Zod
+    const parseResult = startInterviewSchema.safeParse(rawData);
+    if (!parseResult.success) {
+      const errors = parseResult.error.issues.map((issue) => ({
+        field: issue.path.join("."),
+        message: issue.message,
+      }));
+      return NextResponse.json(
+        { error: "Validation failed", errors },
+        { status: 400 }
+      );
+    }
+
+    const { jobId, difficulty } = parseResult.data;
 
     const job = getJob(jobId);
     if (!job) {
@@ -48,7 +52,7 @@ Candidate Background:
 `
         : "";
 
-      const difficultyContext = DIFFICULTY_DESCRIPTIONS[difficulty as DifficultyLevel] || DIFFICULTY_DESCRIPTIONS.mid;
+      const difficultyContext = DIFFICULTY_DESCRIPTIONS[difficulty as InterviewDifficulty] || DIFFICULTY_DESCRIPTIONS.mid;
 
       const response = await client.complete({
         messages: [
@@ -91,7 +95,7 @@ Make sure questions match the ${difficulty} difficulty level.`,
         questions = getDefaultQuestions(job);
       }
     } else {
-      questions = getDefaultQuestions(job, difficulty as DifficultyLevel);
+      questions = getDefaultQuestions(job, difficulty as InterviewDifficulty);
     }
 
     return NextResponse.json({ questions, difficulty });
@@ -106,9 +110,9 @@ Make sure questions match the ${difficulty} difficulty level.`,
 
 function getDefaultQuestions(
   job: { title: string; company: string; keywords: string[] },
-  difficulty: DifficultyLevel = "mid"
+  difficulty: InterviewDifficulty = "mid"
 ): InterviewQuestion[] {
-  const baseQuestions: Record<DifficultyLevel, InterviewQuestion[]> = {
+  const baseQuestions: Record<InterviewDifficulty, InterviewQuestion[]> = {
     entry: [
       {
         question: `Why are you interested in starting your career as a ${job.title} at ${job.company}?`,

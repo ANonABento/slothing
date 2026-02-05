@@ -1,5 +1,5 @@
 {
-  "name": "columbus",
+  "name": "get-me-job",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -34,7 +34,8 @@
     "react-dom": "^18",
     "react-dropzone": "^14.2.9",
     "tailwind-merge": "^2.5.2",
-    "tailwindcss-animate": "^1.0.7"
+    "tailwindcss-animate": "^1.0.7",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@playwright/test": "^1.58.1",

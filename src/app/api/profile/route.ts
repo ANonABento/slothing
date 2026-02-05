@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getProfile, updateProfile, clearProfile } from "@/lib/db";
+import { updateProfileSchema } from "@/lib/constants";
 
 export async function GET() {
   try {
@@ -16,8 +17,22 @@ export async function GET() {
 
 export async function PUT(request: NextRequest) {
   try {
-    const data = await request.json();
-    updateProfile(data);
+    const rawData = await request.json();
+
+    // Validate input with Zod
+    const parseResult = updateProfileSchema.safeParse(rawData);
+    if (!parseResult.success) {
+      const errors = parseResult.error.issues.map((issue) => ({
+        field: issue.path.join("."),
+        message: issue.message,
+      }));
+      return NextResponse.json(
+        { error: "Validation failed", errors },
+        { status: 400 }
+      );
+    }
+
+    updateProfile(parseResult.data);
     const profile = getProfile();
     return NextResponse.json({ success: true, profile });
   } catch (error) {

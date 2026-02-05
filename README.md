@@ -1,4 +1,4 @@
-# Columbus - Job Application Assistant
+# Get Me Job - Job Application Assistant
 
 Your personal job application command center. Upload your resume, match with jobs, and prepare for interviews.
 
@@ -44,7 +44,7 @@ Open [http://localhost:3000](http://localhost:3000)
 
 1. Install Ollama from [ollama.ai](https://ollama.ai)
 2. Pull a model: `ollama pull llama3.2`
-3. Go to Settings in Columbus and select "Ollama"
+3. Go to Settings in Get Me Job and select "Ollama"
 4. Test connection
 
 #### Option 2: Bring Your Own Key
@@ -80,7 +80,7 @@ src/
 ## Data Storage
 
 All data is stored locally:
-- `data/columbus.db` - SQLite database
+- `data/get-me-job.db` - SQLite database
 - `uploads/` - Uploaded documents
 - `public/resumes/` - Generated resume files
 

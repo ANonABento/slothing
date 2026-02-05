@@ -2,10 +2,26 @@ import { NextRequest, NextResponse } from "next/server";
 import { getJob } from "@/lib/db/jobs";
 import { getProfile, getLLMConfig } from "@/lib/db";
 import { LLMClient } from "@/lib/llm/client";
+import { interviewAnswerSchema } from "@/lib/constants";
 
 export async function POST(request: NextRequest) {
   try {
-    const { jobId, questionIndex, answer } = await request.json();
+    const rawData = await request.json();
+
+    // Validate input with Zod
+    const parseResult = interviewAnswerSchema.safeParse(rawData);
+    if (!parseResult.success) {
+      const errors = parseResult.error.issues.map((issue) => ({
+        field: issue.path.join("."),
+        message: issue.message,
+      }));
+      return NextResponse.json(
+        { error: "Validation failed", errors },
+        { status: 400 }
+      );
+    }
+
+    const { jobId, answer } = parseResult.data;
 
     const job = getJob(jobId);
     if (!job) {

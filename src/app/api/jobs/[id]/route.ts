@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getJob, updateJob, deleteJob } from "@/lib/db/jobs";
+import { updateJobSchema } from "@/lib/constants";
 
 export async function GET(
   request: NextRequest,
@@ -22,8 +23,28 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    const data = await request.json();
-    updateJob(params.id, data);
+    // Check if job exists
+    const existing = getJob(params.id);
+    if (!existing) {
+      return NextResponse.json({ error: "Job not found" }, { status: 404 });
+    }
+
+    const rawData = await request.json();
+
+    // Validate input with Zod
+    const parseResult = updateJobSchema.safeParse(rawData);
+    if (!parseResult.success) {
+      const errors = parseResult.error.issues.map((issue) => ({
+        field: issue.path.join("."),
+        message: issue.message,
+      }));
+      return NextResponse.json(
+        { error: "Validation failed", errors },
+        { status: 400 }
+      );
+    }
+
+    updateJob(params.id, parseResult.data);
     const job = getJob(params.id);
     return NextResponse.json({ job });
   } catch (error) {

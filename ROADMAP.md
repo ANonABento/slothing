@@ -1,4 +1,4 @@
-# Columbus Roadmap
+# Get Me Job Roadmap
 
 > AI-powered job application assistant - from MVP to production
 
@@ -6,7 +6,7 @@
 
 ## Current State: MVP Complete ✅
 
-Columbus is a **feature-complete single-user MVP** with:
+Get Me Job is a **feature-complete single-user MVP** with:
 - Resume parsing, tailoring, and PDF export (4 templates)
 - Job tracking with status pipeline
 - AI-powered interview prep (voice + text)

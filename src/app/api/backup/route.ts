@@ -4,6 +4,7 @@ import { getJobs, createJob } from "@/lib/db/jobs";
 import { getInterviewSessions } from "@/lib/db/interviews";
 import { getAllGeneratedResumes } from "@/lib/db/resumes";
 import { generateId } from "@/lib/utils";
+import { backupDataSchema } from "@/lib/constants";
 
 // GET - Export full backup
 export async function GET() {
@@ -39,7 +40,7 @@ export async function GET() {
     return new NextResponse(JSON.stringify(backup, null, 2), {
       headers: {
         "Content-Type": "application/json",
-        "Content-Disposition": `attachment; filename="columbus-backup-${new Date().toISOString().split("T")[0]}.json"`,
+        "Content-Disposition": `attachment; filename="get-me-job-backup-${new Date().toISOString().split("T")[0]}.json"`,
       },
     });
   } catch (error) {
@@ -54,15 +55,22 @@ export async function GET() {
 // POST - Restore from backup
 export async function POST(request: NextRequest) {
   try {
-    const backup = await request.json();
+    const rawData = await request.json();
 
-    // Validate backup format
-    if (!backup.version || !backup.data) {
+    // Validate backup format with Zod
+    const parseResult = backupDataSchema.safeParse(rawData);
+    if (!parseResult.success) {
+      const errors = parseResult.error.issues.map((issue) => ({
+        field: issue.path.join("."),
+        message: issue.message,
+      }));
       return NextResponse.json(
-        { error: "Invalid backup format" },
+        { error: "Invalid backup format", errors },
         { status: 400 }
       );
     }
+
+    const backup = parseResult.data;
 
     const results = {
       profile: false,
@@ -149,7 +157,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Restore error:", error);
     return NextResponse.json(
-      { error: "Failed to restore backup", details: String(error) },
+      { error: "Failed to restore backup" },
       { status: 500 }
     );
   }

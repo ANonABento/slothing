@@ -3,6 +3,7 @@ import {
   getInterviewSessions,
   createInterviewSession,
 } from "@/lib/db/interviews";
+import { createInterviewSessionSchema } from "@/lib/constants";
 
 // GET - List all interview sessions
 export async function GET(request: NextRequest) {
@@ -25,14 +26,22 @@ export async function GET(request: NextRequest) {
 // POST - Create a new interview session
 export async function POST(request: NextRequest) {
   try {
-    const { jobId, questions, mode } = await request.json();
+    const rawData = await request.json();
 
-    if (!jobId || !questions || !Array.isArray(questions)) {
+    // Validate input with Zod
+    const parseResult = createInterviewSessionSchema.safeParse(rawData);
+    if (!parseResult.success) {
+      const errors = parseResult.error.issues.map((issue) => ({
+        field: issue.path.join("."),
+        message: issue.message,
+      }));
       return NextResponse.json(
-        { error: "jobId and questions array are required" },
+        { error: "Validation failed", errors },
         { status: 400 }
       );
     }
+
+    const { jobId, questions, mode } = parseResult.data;
 
     const session = createInterviewSession(jobId, questions, mode);
 

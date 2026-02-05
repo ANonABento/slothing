@@ -128,7 +128,7 @@ export async function GET(request: NextRequest) {
       return new Response(jsonContent, {
         headers: {
           "Content-Type": "application/json",
-          "Content-Disposition": `attachment; filename="columbus-analytics-${range}.json"`,
+          "Content-Disposition": `attachment; filename="get-me-job-analytics-${range}.json"`,
         },
       });
     }
@@ -138,7 +138,7 @@ export async function GET(request: NextRequest) {
     return new Response(csvContent, {
       headers: {
         "Content-Type": "text/csv",
-        "Content-Disposition": `attachment; filename="columbus-analytics-${range}.csv"`,
+        "Content-Disposition": `attachment; filename="get-me-job-analytics-${range}.csv"`,
       },
     });
   } catch (error) {

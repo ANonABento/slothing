@@ -3,7 +3,7 @@ import { test, expect } from "@playwright/test";
 test.describe("Smoke Tests", () => {
   test("homepage loads successfully", async ({ page }) => {
     await page.goto("/");
-    await expect(page).toHaveTitle(/Columbus/i);
+    await expect(page).toHaveTitle(/Get Me Job/i);
   });
 
   test("all main pages load without errors", async ({ page }) => {
@@ -45,7 +45,7 @@ test.describe("Smoke Tests", () => {
   test("theme toggle works", async ({ page }) => {
     await page.goto("/");
     await page.evaluate(() => {
-      localStorage.setItem("columbus_onboarding_completed", "true");
+      localStorage.setItem("get_me_job_onboarding_completed", "true");
     });
     await page.reload();
 

@@ -21,19 +21,18 @@ import {
   CheckCircle,
   X,
 } from "lucide-react";
-
-const ONBOARDING_KEY = "columbus_onboarding_completed";
+import { STORAGE_KEYS } from "@/lib/constants";
 
 const steps = [
   {
-    title: "Welcome to Columbus",
+    title: "Welcome to Get Me Job",
     description: "Your AI-powered job application command center. Let's get you set up for success.",
     icon: Rocket,
     gradient: "from-primary to-accent",
   },
   {
     title: "Upload Your Resume",
-    description: "Start by uploading your resume. Columbus will automatically extract and organize your professional information.",
+    description: "Start by uploading your resume. Get Me Job will automatically extract and organize your professional information.",
     icon: Upload,
     gradient: "from-blue-500 to-cyan-500",
     action: "/upload",
@@ -70,7 +69,7 @@ export function OnboardingDialog() {
   useEffect(() => {
     setMounted(true);
     // Check if onboarding has been completed
-    const completed = localStorage.getItem(ONBOARDING_KEY);
+    const completed = localStorage.getItem(STORAGE_KEYS.ONBOARDING_COMPLETED);
     if (!completed) {
       // Small delay to let the page load first
       const timer = setTimeout(() => setOpen(true), 500);
@@ -79,12 +78,12 @@ export function OnboardingDialog() {
   }, []);
 
   const handleComplete = () => {
-    localStorage.setItem(ONBOARDING_KEY, "true");
+    localStorage.setItem(STORAGE_KEYS.ONBOARDING_COMPLETED, "true");
     setOpen(false);
   };
 
   const handleSkip = () => {
-    localStorage.setItem(ONBOARDING_KEY, "true");
+    localStorage.setItem(STORAGE_KEYS.ONBOARDING_COMPLETED, "true");
     setOpen(false);
   };
 
@@ -179,7 +178,7 @@ export function OnboardingDialog() {
         {currentStep === 0 && (
           <div className="mt-6 pt-6 border-t">
             <p className="text-sm font-medium text-muted-foreground mb-3 text-center">
-              What Columbus helps you with:
+              What Get Me Job helps you with:
             </p>
             <div className="grid grid-cols-2 gap-2 text-xs">
               {[
@@ -206,13 +205,13 @@ export function OnboardingDialog() {
 // Hook to reset onboarding (useful for testing)
 export function useOnboarding() {
   const reset = () => {
-    localStorage.removeItem(ONBOARDING_KEY);
+    localStorage.removeItem(STORAGE_KEYS.ONBOARDING_COMPLETED);
     window.location.reload();
   };
 
   const isCompleted = () => {
     if (typeof window === "undefined") return true;
-    return !!localStorage.getItem(ONBOARDING_KEY);
+    return !!localStorage.getItem(STORAGE_KEYS.ONBOARDING_COMPLETED);
   };
 
   return { reset, isCompleted };

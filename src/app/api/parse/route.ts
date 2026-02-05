@@ -1,10 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDocuments, getLLMConfig, updateProfile, getProfile } from "@/lib/db";
 import { parseResumeWithLLM, parseResumeBasic } from "@/lib/parser/resume";
+import { parseDocumentSchema } from "@/lib/constants";
 
 export async function POST(request: NextRequest) {
   try {
-    const { filename, documentId } = await request.json();
+    const rawData = await request.json();
+
+    // Validate input with Zod
+    const parseResult = parseDocumentSchema.safeParse(rawData);
+    if (!parseResult.success) {
+      const errors = parseResult.error.issues.map((issue) => ({
+        field: issue.path.join("."),
+        message: issue.message,
+      }));
+      return NextResponse.json(
+        { error: "Validation failed", errors },
+        { status: 400 }
+      );
+    }
+
+    const { filename, documentId } = parseResult.data;
 
     // Find the document
     const documents = getDocuments();
@@ -57,7 +73,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Parse error:", error);
     return NextResponse.json(
-      { error: "Parse failed", details: String(error) },
+      { error: "Parse failed" },
       { status: 500 }
     );
   }

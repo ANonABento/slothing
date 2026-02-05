@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getJobs, createJob } from "@/lib/db/jobs";
 import { getLLMConfig } from "@/lib/db";
-import { LLMClient } from "@/lib/llm/client";
+import { LLMClient, parseJSONFromLLM } from "@/lib/llm/client";
+import { createJobSchema, TECH_KEYWORDS } from "@/lib/constants";
 
 export async function GET() {
   try {
@@ -15,14 +16,22 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const data = await request.json();
+    const rawData = await request.json();
 
-    if (!data.title || !data.company || !data.description) {
+    // Validate input with Zod
+    const parseResult = createJobSchema.safeParse(rawData);
+    if (!parseResult.success) {
+      const errors = parseResult.error.issues.map((issue) => ({
+        field: issue.path.join("."),
+        message: issue.message,
+      }));
       return NextResponse.json(
-        { error: "Title, company, and description are required" },
+        { error: "Validation failed", errors },
         { status: 400 }
       );
     }
+
+    const data = parseResult.data;
 
     // Try to extract keywords using LLM
     let keywords: string[] = [];
@@ -47,18 +56,8 @@ Return format: ["skill1", "skill2", "skill3", ...]`,
           maxTokens: 500,
         });
 
-        // Parse response
-        let cleanResponse = response.trim();
-        if (cleanResponse.startsWith("```json")) {
-          cleanResponse = cleanResponse.slice(7);
-        }
-        if (cleanResponse.startsWith("```")) {
-          cleanResponse = cleanResponse.slice(3);
-        }
-        if (cleanResponse.endsWith("```")) {
-          cleanResponse = cleanResponse.slice(0, -3);
-        }
-        keywords = JSON.parse(cleanResponse.trim());
+        // Parse response using utility that handles markdown code blocks
+        keywords = parseJSONFromLLM<string[]>(response);
       } catch (llmError) {
         console.error("Failed to extract keywords:", llmError);
         // Extract keywords using basic regex
@@ -70,6 +69,8 @@ Return format: ["skill1", "skill2", "skill3", ...]`,
 
     const job = createJob({
       ...data,
+      requirements: data.requirements ?? [],
+      responsibilities: data.responsibilities ?? [],
       keywords,
     });
 
@@ -82,17 +83,6 @@ Return format: ["skill1", "skill2", "skill3", ...]`,
 
 // Basic keyword extraction
 function extractKeywordsBasic(text: string): string[] {
-  const techKeywords = [
-    "javascript", "typescript", "python", "java", "c++", "c#", "go", "rust",
-    "react", "vue", "angular", "node", "express", "django", "flask",
-    "aws", "gcp", "azure", "docker", "kubernetes", "terraform",
-    "sql", "postgresql", "mysql", "mongodb", "redis",
-    "git", "ci/cd", "jenkins", "github actions",
-    "agile", "scrum", "jira", "confluence",
-    "rest", "graphql", "api", "microservices",
-    "machine learning", "ai", "data science", "analytics",
-  ];
-
   const lowerText = text.toLowerCase();
-  return techKeywords.filter((kw) => lowerText.includes(kw));
+  return TECH_KEYWORDS.filter((kw) => lowerText.includes(kw));
 }

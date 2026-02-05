@@ -1,36 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createJob, getJobs } from "@/lib/db/jobs";
 import type { JobDescription } from "@/types";
-
-interface ImportedJob {
-  title: string;
-  company: string;
-  location?: string;
-  type?: string;
-  remote?: boolean;
-  salary?: string;
-  description: string;
-  requirements?: string[];
-  responsibilities?: string[];
-  keywords?: string[];
-  url?: string;
-  status?: string;
-  notes?: string;
-}
+import { importJobSchema, type ImportJobInput } from "@/lib/constants";
 
 export async function POST(request: NextRequest) {
   try {
     const contentType = request.headers.get("content-type") || "";
-    let jobs: ImportedJob[] = [];
+    let rawJobs: unknown[] = [];
 
     if (contentType.includes("application/json")) {
       const data = await request.json();
 
-      // Handle Columbus export format or direct array
+      // Handle Get Me Job export format or direct array
       if (data.jobs && Array.isArray(data.jobs)) {
-        jobs = data.jobs;
+        rawJobs = data.jobs;
       } else if (Array.isArray(data)) {
-        jobs = data;
+        rawJobs = data;
       } else {
         return NextResponse.json(
           { error: "Invalid JSON format. Expected array of jobs or {jobs: [...]}." },
@@ -52,7 +37,7 @@ export async function POST(request: NextRequest) {
       }
 
       const text = await file.text();
-      jobs = parseCsv(text);
+      rawJobs = parseCsv(text);
     } else {
       return NextResponse.json(
         { error: "Unsupported content type. Use application/json or multipart/form-data." },
@@ -72,47 +57,46 @@ export async function POST(request: NextRequest) {
       errors: [] as string[],
     };
 
-    for (const job of jobs) {
-      try {
-        // Validate required fields
-        if (!job.title || !job.company || !job.description) {
-          results.errors.push(
-            `Skipped job: Missing required fields (title, company, or description)`
-          );
-          results.skipped++;
-          continue;
-        }
-
-        // Check for duplicates
-        const key = `${job.title.toLowerCase()}-${job.company.toLowerCase()}`;
-        if (existingTitles.has(key)) {
-          results.skipped++;
-          continue;
-        }
-
-        // Create job
-        createJob({
-          title: job.title,
-          company: job.company,
-          location: job.location,
-          type: job.type as JobDescription["type"],
-          remote: Boolean(job.remote),
-          salary: job.salary,
-          description: job.description,
-          requirements: job.requirements || [],
-          responsibilities: job.responsibilities || [],
-          keywords: job.keywords || [],
-          url: job.url,
-          status: (job.status as JobDescription["status"]) || "saved",
-          notes: job.notes,
-        });
-
-        existingTitles.add(key);
-        results.imported++;
-      } catch (error) {
-        results.errors.push(`Error importing job "${job.title}": ${String(error)}`);
+    for (const rawJob of rawJobs) {
+      // Validate with Zod
+      const parseResult = importJobSchema.safeParse(rawJob);
+      if (!parseResult.success) {
+        const jobTitle = (rawJob as { title?: string })?.title || "unknown";
+        results.errors.push(
+          `Skipped job "${jobTitle}": ${parseResult.error.issues[0]?.message || "Invalid data"}`
+        );
         results.skipped++;
+        continue;
       }
+
+      const job = parseResult.data;
+
+      // Check for duplicates
+      const key = `${job.title.toLowerCase()}-${job.company.toLowerCase()}`;
+      if (existingTitles.has(key)) {
+        results.skipped++;
+        continue;
+      }
+
+      // Create job
+      createJob({
+        title: job.title,
+        company: job.company,
+        location: job.location,
+        type: job.type as JobDescription["type"],
+        remote: Boolean(job.remote),
+        salary: job.salary,
+        description: job.description,
+        requirements: job.requirements || [],
+        responsibilities: job.responsibilities || [],
+        keywords: job.keywords || [],
+        url: job.url,
+        status: (job.status as JobDescription["status"]) || "saved",
+        notes: job.notes,
+      });
+
+      existingTitles.add(key);
+      results.imported++;
     }
 
     return NextResponse.json({
@@ -123,18 +107,18 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Import jobs error:", error);
     return NextResponse.json(
-      { error: "Failed to import jobs", details: String(error) },
+      { error: "Failed to import jobs" },
       { status: 500 }
     );
   }
 }
 
-function parseCsv(text: string): ImportedJob[] {
+function parseCsv(text: string): unknown[] {
   const lines = text.split("\n").filter((line) => line.trim());
   if (lines.length < 2) return [];
 
   const headers = parseCSVLine(lines[0]).map((h) => h.toLowerCase().trim());
-  const jobs: ImportedJob[] = [];
+  const jobs: unknown[] = [];
 
   for (let i = 1; i < lines.length; i++) {
     const values = parseCSVLine(lines[i]);
@@ -155,7 +139,7 @@ function parseCsv(text: string): ImportedJob[] {
     });
 
     if (job.title && job.company) {
-      jobs.push(job as unknown as ImportedJob);
+      jobs.push(job);
     }
   }
 

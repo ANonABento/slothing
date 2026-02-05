@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getLLMConfig, setLLMConfig } from "@/lib/db";
-import type { LLMConfig } from "@/types";
+import { updateSettingsSchema, llmConfigSchema } from "@/lib/constants";
 
 export async function GET() {
   try {
@@ -17,10 +17,24 @@ export async function GET() {
 
 export async function PUT(request: NextRequest) {
   try {
-    const data = await request.json();
+    const rawData = await request.json();
 
+    // Validate input with Zod
+    const parseResult = updateSettingsSchema.safeParse(rawData);
+    if (!parseResult.success) {
+      const errors = parseResult.error.issues.map((issue) => ({
+        field: issue.path.join("."),
+        message: issue.message,
+      }));
+      return NextResponse.json(
+        { error: "Validation failed", errors },
+        { status: 400 }
+      );
+    }
+
+    const data = parseResult.data;
     if (data.llm) {
-      setLLMConfig(data.llm as LLMConfig);
+      setLLMConfig(data.llm);
     }
 
     return NextResponse.json({ success: true });
@@ -36,7 +50,22 @@ export async function PUT(request: NextRequest) {
 // Test LLM connection
 export async function POST(request: NextRequest) {
   try {
-    const { llm } = await request.json() as { llm: LLMConfig };
+    const rawData = await request.json();
+
+    // Validate LLM config
+    const parseResult = llmConfigSchema.safeParse(rawData.llm);
+    if (!parseResult.success) {
+      const errors = parseResult.error.issues.map((issue) => ({
+        field: issue.path.join("."),
+        message: issue.message,
+      }));
+      return NextResponse.json(
+        { error: "Invalid LLM configuration", errors },
+        { status: 400 }
+      );
+    }
+
+    const llm = parseResult.data;
 
     // Import dynamically to avoid issues
     const { LLMClient } = await import("@/lib/llm/client");
@@ -57,7 +86,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Test connection error:", error);
     return NextResponse.json(
-      { error: "Connection failed", details: String(error) },
+      { error: "Connection failed. Check your API key and settings." },
       { status: 400 }
     );
   }

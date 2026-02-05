@@ -94,7 +94,7 @@ export function Hero() {
                 <div className="w-3 h-3 rounded-full bg-green-500" />
               </div>
               <div className="flex-1 text-center text-sm text-muted-foreground">
-                Columbus Dashboard
+                Get Me Job Dashboard
               </div>
             </div>
             <div className="p-8 bg-gradient-to-br from-muted/20 to-muted/50">
