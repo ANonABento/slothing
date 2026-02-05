@@ -5,19 +5,19 @@ test.describe("Onboarding Flow", () => {
     // Clear localStorage to trigger onboarding
     await page.goto("/");
     await page.evaluate(() => {
-      localStorage.removeItem("columbus_onboarding_completed");
+      localStorage.removeItem("get_me_job_onboarding_completed");
     });
     await page.reload();
   });
 
   test("should show onboarding dialog on first visit", async ({ page }) => {
     await expect(page.getByRole("dialog")).toBeVisible();
-    await expect(page.getByText("Welcome to Columbus")).toBeVisible();
+    await expect(page.getByText("Welcome to Get Me Job")).toBeVisible();
   });
 
   test("should navigate through onboarding steps", async ({ page }) => {
     // Step 1: Welcome
-    await expect(page.getByText("Welcome to Columbus")).toBeVisible();
+    await expect(page.getByText("Welcome to Get Me Job")).toBeVisible();
     await page.getByRole("button", { name: "Get Started" }).click();
 
     // Step 2: Upload Resume
@@ -75,6 +75,6 @@ test.describe("Onboarding Flow", () => {
     await page.waitForLoadState("networkidle");
 
     // Dialog should not appear after completion
-    await expect(page.getByText("Welcome to Columbus")).not.toBeVisible({ timeout: 2000 });
+    await expect(page.getByText("Welcome to Get Me Job")).not.toBeVisible({ timeout: 2000 });
   });
 });

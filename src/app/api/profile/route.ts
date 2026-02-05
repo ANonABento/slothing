@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { getProfile, updateProfile, clearProfile } from "@/lib/db";
+import { updateProfileSchema } from "@/lib/constants";
 
 export async function GET() {
   try {
@@ -28,9 +29,23 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const data = await request.json();
+    const rawData = await request.json();
+
+    // Validate input with Zod
+    const parseResult = updateProfileSchema.safeParse(rawData);
+    if (!parseResult.success) {
+      const errors = parseResult.error.issues.map((issue) => ({
+        field: issue.path.join("."),
+        message: issue.message,
+      }));
+      return NextResponse.json(
+        { error: "Validation failed", errors },
+        { status: 400 }
+      );
+    }
+
     // TODO: Switch to Drizzle queries with userId once Neon is configured
-    updateProfile(data);
+    updateProfile(parseResult.data);
     const profile = getProfile();
     return NextResponse.json({ success: true, profile });
   } catch (error) {

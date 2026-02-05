@@ -1,4 +1,4 @@
-// Core profile types for Columbus
+// Core profile types for Get Me Job
 
 export interface ContactInfo {
   name: string;

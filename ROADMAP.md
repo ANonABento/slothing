@@ -1,4 +1,4 @@
-# Columbus Roadmap
+# Get Me Job Roadmap
 
 > AI-powered job application assistant - from MVP to production
 

@@ -1,11 +1,15 @@
 import { test, expect } from "@playwright/test";
+import {
+  skipOnboardingSetup,
+  navigateToProfile,
+} from "./utils/test-helpers";
 
 test.describe("Profile Page", () => {
   test.beforeEach(async ({ page }) => {
     // Mark onboarding as completed
     await page.goto("/");
     await page.evaluate(() => {
-      localStorage.setItem("columbus_onboarding_completed", "true");
+      localStorage.setItem("get_me_job_onboarding_completed", "true");
     });
     await page.goto("/profile");
   });
@@ -78,7 +82,7 @@ test.describe("Profile Editing", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/");
     await page.evaluate(() => {
-      localStorage.setItem("columbus_onboarding_completed", "true");
+      localStorage.setItem("get_me_job_onboarding_completed", "true");
     });
     await page.goto("/profile");
   });
@@ -114,5 +118,139 @@ test.describe("Profile Editing", () => {
       // Skills section should have some way to display or add skills
       expect(hasSkillBadges || hasAddSkillBtn).toBe(true);
     }
+  });
+});
+
+test.describe("Profile Edit Persistence", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto("/");
+    await skipOnboardingSetup(page);
+    await navigateToProfile(page);
+  });
+
+  test("should update and persist contact name", async ({ page }) => {
+    const timestamp = Date.now();
+    const testName = `Test User ${timestamp}`;
+
+    // Find and fill the name field
+    const nameInput = page.getByLabel(/full name/i);
+    await expect(nameInput).toBeVisible();
+    await nameInput.fill(testName);
+
+    // Save button should appear
+    const saveButton = page.getByRole("button", { name: /save changes/i });
+    await expect(saveButton).toBeVisible();
+    await saveButton.click();
+
+    // Wait for save confirmation
+    await expect(page.getByText(/changes saved/i)).toBeVisible({ timeout: 5000 });
+
+    // Reload the page
+    await page.reload();
+    await page.waitForLoadState("networkidle");
+
+    // Verify the name persists
+    const nameInputAfter = page.getByLabel(/full name/i);
+    await expect(nameInputAfter).toHaveValue(testName);
+  });
+
+  test("should update and persist email address", async ({ page }) => {
+    const timestamp = Date.now();
+    const testEmail = `test${timestamp}@example.com`;
+
+    // Find and fill the email field
+    const emailInput = page.getByLabel(/email address/i);
+    await expect(emailInput).toBeVisible();
+    await emailInput.fill(testEmail);
+
+    // Save changes
+    const saveButton = page.getByRole("button", { name: /save changes/i });
+    await expect(saveButton).toBeVisible();
+    await saveButton.click();
+
+    // Wait for save confirmation
+    await expect(page.getByText(/changes saved/i)).toBeVisible({ timeout: 5000 });
+
+    // Reload and verify persistence
+    await page.reload();
+    await page.waitForLoadState("networkidle");
+
+    const emailInputAfter = page.getByLabel(/email address/i);
+    await expect(emailInputAfter).toHaveValue(testEmail);
+  });
+
+  test("should update and persist phone number", async ({ page }) => {
+    const testPhone = "+1 (555) 123-4567";
+
+    // Find and fill the phone field
+    const phoneInput = page.getByLabel(/phone number/i);
+    await expect(phoneInput).toBeVisible();
+    await phoneInput.fill(testPhone);
+
+    // Save changes
+    const saveButton = page.getByRole("button", { name: /save changes/i });
+    await expect(saveButton).toBeVisible();
+    await saveButton.click();
+
+    // Wait for save confirmation
+    await expect(page.getByText(/changes saved/i)).toBeVisible({ timeout: 5000 });
+
+    // Reload and verify persistence
+    await page.reload();
+    await page.waitForLoadState("networkidle");
+
+    const phoneInputAfter = page.getByLabel(/phone number/i);
+    await expect(phoneInputAfter).toHaveValue(testPhone);
+  });
+
+  test("should update multiple fields and persist all", async ({ page }) => {
+    const timestamp = Date.now();
+    const testData = {
+      name: `Multi Field Test ${timestamp}`,
+      email: `multitest${timestamp}@example.com`,
+      location: `Test City ${timestamp}`,
+    };
+
+    // Fill multiple fields
+    const nameInput = page.getByLabel(/full name/i);
+    const emailInput = page.getByLabel(/email address/i);
+    const locationInput = page.getByLabel(/location/i);
+
+    await nameInput.fill(testData.name);
+    await emailInput.fill(testData.email);
+    await locationInput.fill(testData.location);
+
+    // Save all changes
+    const saveButton = page.getByRole("button", { name: /save changes/i });
+    await saveButton.click();
+
+    // Wait for save confirmation
+    await expect(page.getByText(/changes saved/i)).toBeVisible({ timeout: 5000 });
+
+    // Reload and verify all fields persisted
+    await page.reload();
+    await page.waitForLoadState("networkidle");
+
+    await expect(page.getByLabel(/full name/i)).toHaveValue(testData.name);
+    await expect(page.getByLabel(/email address/i)).toHaveValue(testData.email);
+    await expect(page.getByLabel(/location/i)).toHaveValue(testData.location);
+  });
+
+  test("should discard changes when clicking discard button", async ({ page }) => {
+    // Get the current name value first
+    const nameInput = page.getByLabel(/full name/i);
+    await expect(nameInput).toBeVisible();
+    const originalValue = await nameInput.inputValue();
+
+    // Change the name
+    await nameInput.fill("Temporary Change");
+
+    // Click discard instead of save
+    const discardButton = page.getByRole("button", { name: /discard/i });
+    await expect(discardButton).toBeVisible();
+    await discardButton.click();
+
+    // Value should revert to original
+    await expect(nameInput).toHaveValue(originalValue);
   });
 });

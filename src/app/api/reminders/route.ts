@@ -5,8 +5,8 @@ import {
   getUpcomingReminders,
   getOverdueReminders,
   getReminderCounts,
-  type ReminderType,
 } from "@/lib/db/reminders";
+import { createReminderSchema, type ReminderType } from "@/lib/constants";
 
 export async function GET(request: NextRequest) {
   try {
@@ -45,19 +45,26 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { jobId, type, title, description, dueDate } = body;
+    const rawData = await request.json();
 
-    if (!jobId || !title || !dueDate) {
+    // Validate input with Zod
+    const parseResult = createReminderSchema.safeParse(rawData);
+    if (!parseResult.success) {
+      const errors = parseResult.error.issues.map((issue) => ({
+        field: issue.path.join("."),
+        message: issue.message,
+      }));
       return NextResponse.json(
-        { error: "jobId, title, and dueDate are required" },
+        { error: "Validation failed", errors },
         { status: 400 }
       );
     }
 
+    const { jobId, type, title, description, dueDate } = parseResult.data;
+
     const reminder = createReminder({
       jobId,
-      type: (type as ReminderType) || "custom",
+      type: type as ReminderType,
       title,
       description,
       dueDate,
