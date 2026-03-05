@@ -4,10 +4,8 @@ import { getProfile, getLLMConfig, saveGeneratedResume } from "@/lib/db";
 import { generateTailoredResume } from "@/lib/resume/generator";
 import { generateResumeHTML, TEMPLATES } from "@/lib/resume/pdf";
 import { writeFile, mkdir } from "fs/promises";
-import path from "path";
 import { generateId } from "@/lib/utils";
-
-const OUTPUT_DIR = path.join(process.cwd(), "public", "resumes");
+import { PATHS } from "@/lib/constants";
 
 export async function GET() {
   // Return available templates
@@ -58,11 +56,11 @@ export async function POST(
     const html = generateResumeHTML(tailoredResume, templateId);
 
     // Ensure output directory exists
-    await mkdir(OUTPUT_DIR, { recursive: true });
+    await mkdir(PATHS.RESUMES_OUTPUT, { recursive: true });
 
     // Save HTML file
     const filename = `resume-${job.company.toLowerCase().replace(/\s+/g, "-")}-${generateId()}.html`;
-    const filePath = path.join(OUTPUT_DIR, filename);
+    const filePath = `${PATHS.RESUMES_OUTPUT}/${filename}`;
     await writeFile(filePath, html);
 
     // Return URL to the HTML file (can be printed to PDF from browser)

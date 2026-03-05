@@ -8,10 +8,9 @@ import {
   MAX_FILE_SIZE_BYTES,
   ALLOWED_MIME_TYPES,
   validateFileMagicBytes,
+  PATHS,
 } from "@/lib/constants";
 import { requireAuth, isAuthError } from "@/lib/auth";
-
-const UPLOAD_DIR = path.join(process.cwd(), "uploads");
 
 export async function POST(request: NextRequest) {
   const authResult = await requireAuth();
@@ -55,13 +54,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Ensure upload directory exists
-    await mkdir(UPLOAD_DIR, { recursive: true });
+    await mkdir(PATHS.UPLOADS, { recursive: true });
 
     // Generate unique filename
     const ext = path.extname(file.name);
     const id = generateId();
     const filename = `${id}${ext}`;
-    const filePath = path.join(UPLOAD_DIR, filename);
+    const filePath = path.join(PATHS.UPLOADS, filename);
     await writeFile(filePath, buffer);
 
     // Extract text

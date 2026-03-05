@@ -3,7 +3,9 @@ import { getJob } from "@/lib/db/jobs";
 import { getProfile, getLLMConfig } from "@/lib/db";
 import { LLMClient, parseJSONFromLLM } from "@/lib/llm/client";
 import { startInterviewSchema, DIFFICULTY_DESCRIPTIONS, type InterviewDifficulty } from "@/lib/constants";
-import { requireAuth, isAuthError } from "@/lib/auth";
+import { requireAuth, isAuthError, getCurrentUserId } from "@/lib/auth";
+import { rateLimiters, getClientIdentifier } from "@/lib/rate-limit";
+import { validationErrorResponse, ApiErrors } from "@/lib/api-utils";
 
 interface InterviewQuestion {
   question: string;
@@ -16,20 +18,34 @@ export async function POST(request: NextRequest) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
 
+  // Rate limit LLM operations - 10 per minute per user
+  const userId = await getCurrentUserId();
+  const identifier = getClientIdentifier(request, userId || undefined);
+  const rateLimitResult = rateLimiters.llm(identifier);
+
+  if (!rateLimitResult.allowed) {
+    return NextResponse.json(
+      {
+        error: "Rate limit exceeded. Please wait before generating more questions.",
+        retryAfter: Math.ceil((rateLimitResult.resetAt - Date.now()) / 1000),
+      },
+      {
+        status: 429,
+        headers: {
+          "Retry-After": String(Math.ceil((rateLimitResult.resetAt - Date.now()) / 1000)),
+          "X-RateLimit-Remaining": "0",
+        },
+      }
+    );
+  }
+
   try {
     const rawData = await request.json();
 
     // Validate input with Zod
     const parseResult = startInterviewSchema.safeParse(rawData);
     if (!parseResult.success) {
-      const errors = parseResult.error.issues.map((issue) => ({
-        field: issue.path.join("."),
-        message: issue.message,
-      }));
-      return NextResponse.json(
-        { error: "Validation failed", errors },
-        { status: 400 }
-      );
+      return validationErrorResponse(parseResult.error);
     }
 
     const { jobId, difficulty } = parseResult.data;
