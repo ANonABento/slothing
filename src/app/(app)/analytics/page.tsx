@@ -300,7 +300,7 @@ export default function AnalyticsPage() {
             {/* Total Jobs */}
             <div className="rounded-2xl border bg-card p-6">
               <div className="flex items-center justify-between mb-4">
-                <div className="p-2.5 rounded-xl bg-blue-500/10 text-blue-500">
+                <div className="p-2.5 rounded-xl bg-info/10 text-info">
                   <Briefcase className="h-5 w-5" />
                 </div>
                 <span className="text-2xl font-bold">{analytics.overview.totalJobs}</span>
@@ -314,7 +314,7 @@ export default function AnalyticsPage() {
             {/* Interviews */}
             <div className="rounded-2xl border bg-card p-6">
               <div className="flex items-center justify-between mb-4">
-                <div className="p-2.5 rounded-xl bg-amber-500/10 text-amber-500">
+                <div className="p-2.5 rounded-xl bg-warning/10 text-warning">
                   <MessageSquare className="h-5 w-5" />
                 </div>
                 <span className="text-2xl font-bold">{analytics.overview.totalInterviews}</span>
@@ -328,7 +328,7 @@ export default function AnalyticsPage() {
             {/* Resumes */}
             <div className="rounded-2xl border bg-card p-6">
               <div className="flex items-center justify-between mb-4">
-                <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-500">
+                <div className="p-2.5 rounded-xl bg-success/10 text-success">
                   <FileText className="h-5 w-5" />
                 </div>
                 <span className="text-2xl font-bold">{analytics.overview.totalResumesGenerated}</span>
@@ -381,15 +381,15 @@ export default function AnalyticsPage() {
                 <h4 className="text-sm font-medium mb-4">Conversion Rates</h4>
                 <div className="grid grid-cols-3 gap-4 text-center">
                   <div>
-                    <p className="text-2xl font-bold text-blue-500">{applicationRate}%</p>
+                    <p className="text-2xl font-bold text-info">{applicationRate}%</p>
                     <p className="text-xs text-muted-foreground">Applied</p>
                   </div>
                   <div>
-                    <p className="text-2xl font-bold text-amber-500">{interviewRate}%</p>
+                    <p className="text-2xl font-bold text-warning">{interviewRate}%</p>
                     <p className="text-xs text-muted-foreground">To Interview</p>
                   </div>
                   <div>
-                    <p className="text-2xl font-bold text-emerald-500">{offerRate}%</p>
+                    <p className="text-2xl font-bold text-success">{offerRate}%</p>
                     <p className="text-xs text-muted-foreground">To Offer</p>
                   </div>
                 </div>
@@ -422,14 +422,14 @@ export default function AnalyticsPage() {
               {analytics.skills.gaps.length > 0 && (
                 <div className="pt-6 border-t">
                   <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
-                    <AlertTriangle className="h-4 w-4 text-amber-500" />
+                    <AlertTriangle className="h-4 w-4 text-warning" />
                     Skill Gaps from Job Listings
                   </h4>
                   <div className="flex flex-wrap gap-2">
                     {analytics.skills.gaps.map((skill) => (
                       <span
                         key={skill}
-                        className="px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-600 text-xs font-medium capitalize"
+                        className="px-2.5 py-1 rounded-full bg-warning/10 text-warning text-xs font-medium capitalize"
                       >
                         {skill}
                       </span>

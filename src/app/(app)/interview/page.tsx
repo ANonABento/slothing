@@ -89,23 +89,23 @@ interface PastSession {
 
 const categoryColors: Record<string, { bg: string; text: string; icon: React.ReactNode }> = {
   behavioral: {
-    bg: "bg-blue-100 dark:bg-blue-900/30",
-    text: "text-blue-700 dark:text-blue-300",
+    bg: "bg-info/10",
+    text: "text-info",
     icon: <Brain className="h-4 w-4" />,
   },
   technical: {
-    bg: "bg-violet-100 dark:bg-violet-900/30",
-    text: "text-violet-700 dark:text-violet-300",
+    bg: "bg-primary/10",
+    text: "text-primary",
     icon: <Target className="h-4 w-4" />,
   },
   situational: {
-    bg: "bg-amber-100 dark:bg-amber-900/30",
-    text: "text-amber-700 dark:text-amber-300",
+    bg: "bg-warning/10",
+    text: "text-warning",
     icon: <Lightbulb className="h-4 w-4" />,
   },
   general: {
-    bg: "bg-emerald-100 dark:bg-emerald-900/30",
-    text: "text-emerald-700 dark:text-emerald-300",
+    bg: "bg-success/10",
+    text: "text-success",
     icon: <MessageSquare className="h-4 w-4" />,
   },
 };
@@ -561,7 +561,7 @@ export default function InterviewPage() {
                   <div className="space-y-3">
                     {followUpMode && currentFollowUp ? (
                       <>
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300">
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium bg-warning/10 text-warning">
                           <Zap className="h-4 w-4" />
                           Follow-up Question
                         </span>
@@ -885,7 +885,7 @@ function JobSelection({
                 return (
                   <div key={pastSession.id} className="p-4 flex items-center justify-between gap-4">
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className={`p-2 rounded-lg ${isComplete ? "bg-success/10 text-success" : "bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400"}`}>
+                      <div className={`p-2 rounded-lg ${isComplete ? "bg-success/10 text-success" : "bg-warning/10 text-warning"}`}>
                         {isComplete ? <CheckCircle2 className="h-4 w-4" /> : <Clock className="h-4 w-4" />}
                       </div>
                       <div className="min-w-0">
@@ -1163,20 +1163,20 @@ function InterviewSummary({
             {/* Follow-up Exchanges */}
             {session.followUps[i] && session.followUps[i].length > 0 && (
               <div className="mt-4 pt-4 border-t space-y-4">
-                <p className="text-sm font-medium text-orange-600 dark:text-orange-400 flex items-center gap-2">
+                <p className="text-sm font-medium text-warning flex items-center gap-2">
                   <Zap className="h-4 w-4" />
                   Follow-up Questions ({session.followUps[i].length})
                 </p>
                 {session.followUps[i].map((followUp, j) => (
-                  <div key={j} className="pl-4 border-l-2 border-orange-200 dark:border-orange-800 space-y-2">
+                  <div key={j} className="pl-4 border-l-2 border-warning/30 space-y-2">
                     <p className="text-sm font-medium">{followUp.followUpQuestion}</p>
                     <div className="rounded-lg bg-muted/50 p-3">
                       <p className="text-xs font-medium text-muted-foreground mb-1">Your Response</p>
                       <p className="text-sm">{followUp.answer}</p>
                     </div>
                     {followUp.feedback && (
-                      <div className="rounded-lg bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 p-3">
-                        <p className="text-xs font-medium text-orange-600 dark:text-orange-400 mb-1">Feedback</p>
+                      <div className="rounded-lg bg-warning/5 border border-warning/30 p-3">
+                        <p className="text-xs font-medium text-warning mb-1">Feedback</p>
                         <p className="text-sm">{followUp.feedback}</p>
                       </div>
                     )}
@@ -1203,9 +1203,9 @@ function Tip({
   description: string;
 }) {
   const colorClasses: Record<string, string> = {
-    blue: "bg-blue-500/10 text-blue-500",
-    violet: "bg-violet-500/10 text-violet-500",
-    amber: "bg-amber-500/10 text-amber-500",
+    blue: "bg-info/10 text-info",
+    violet: "bg-primary/10 text-primary",
+    amber: "bg-warning/10 text-warning",
   };
 
   return (

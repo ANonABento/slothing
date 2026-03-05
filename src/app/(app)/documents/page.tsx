@@ -141,15 +141,15 @@ export default function DocumentsPage() {
   const getTypeColor = (type: string) => {
     switch (type) {
       case "resume":
-        return "bg-blue-500";
+        return "bg-info";
       case "cover_letter":
-        return "bg-green-500";
+        return "bg-success";
       case "portfolio":
-        return "bg-purple-500";
+        return "bg-primary";
       case "certificate":
-        return "bg-orange-500";
+        return "bg-accent";
       default:
-        return "bg-gray-500";
+        return "bg-muted-foreground";
     }
   };
 

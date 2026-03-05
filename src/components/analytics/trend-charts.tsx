@@ -54,7 +54,7 @@ function TrendIndicator({
   const Icon = trend === "up" ? TrendingUp : trend === "down" ? TrendingDown : Minus;
   const colorClass =
     trend === "up"
-      ? "text-green-600 dark:text-green-400"
+      ? "text-success dark:text-green-400"
       : trend === "down"
       ? "text-red-600 dark:text-red-400"
       : "text-muted-foreground";
@@ -164,11 +164,11 @@ function ActivityTimelineItem({ event }: { event: ActivityEvent }) {
   };
 
   const colorMap = {
-    application: "text-blue-500",
+    application: "text-info",
     interview: "text-purple-500",
     offer: "text-green-500",
-    rejection: "text-red-500",
-    status_change: "text-amber-500",
+    rejection: "text-destructive",
+    status_change: "text-warning",
   };
 
   const Icon = iconMap[event.type];
@@ -258,7 +258,7 @@ export function TrendCharts({ initialRange = "30d" }: TrendChartsProps) {
   if (error) {
     return (
       <div className="rounded-xl border bg-card p-8 text-center">
-        <p className="text-red-500">{error}</p>
+        <p className="text-destructive">{error}</p>
       </div>
     );
   }
@@ -352,7 +352,7 @@ export function TrendCharts({ initialRange = "30d" }: TrendChartsProps) {
         {/* Response rate over time */}
         <div className="rounded-xl border bg-card p-4">
           <h3 className="font-medium mb-4 flex items-center gap-2">
-            <Activity className="h-4 w-4 text-blue-500" />
+            <Activity className="h-4 w-4 text-info" />
             Responses Over Time
           </h3>
           {hasRealData(data.timeSeries.responses) ? (
@@ -372,7 +372,7 @@ export function TrendCharts({ initialRange = "30d" }: TrendChartsProps) {
         {/* Interviews over time */}
         <div className="rounded-xl border bg-card p-4">
           <h3 className="font-medium mb-4 flex items-center gap-2">
-            <Calendar className="h-4 w-4 text-amber-500" />
+            <Calendar className="h-4 w-4 text-warning" />
             Interviews Over Time
           </h3>
           {hasRealData(data.timeSeries.interviews) ? (

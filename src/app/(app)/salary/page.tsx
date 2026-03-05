@@ -405,7 +405,7 @@ ${script.close}
                 <div className="space-y-6">
                   {/* Range visualization */}
                   <div className="relative pt-6 pb-2">
-                    <div className="h-3 bg-gradient-to-r from-amber-400 via-green-400 to-blue-400 rounded-full" />
+                    <div className="h-3 bg-gradient-to-r from-amber-400 via-success to-info rounded-full" />
                     <div className="absolute top-0 left-0 text-xs text-muted-foreground">
                       {formatCurrency(salaryRange.min)}
                     </div>
@@ -416,21 +416,21 @@ ${script.close}
 
                   {/* Stats */}
                   <div className="grid grid-cols-3 gap-4">
-                    <div className="text-center p-4 rounded-xl bg-amber-500/10 border border-amber-500/20">
+                    <div className="text-center p-4 rounded-xl bg-warning/10 border border-warning/20">
                       <p className="text-xs text-muted-foreground mb-1">25th Percentile</p>
-                      <p className="text-lg font-bold text-amber-600">
+                      <p className="text-lg font-bold text-warning">
                         {formatCurrency(salaryRange.percentile25)}
                       </p>
                     </div>
-                    <div className="text-center p-4 rounded-xl bg-green-500/10 border border-green-500/20">
+                    <div className="text-center p-4 rounded-xl bg-success/10 border border-success/20">
                       <p className="text-xs text-muted-foreground mb-1">Median</p>
-                      <p className="text-xl font-bold text-green-600">
+                      <p className="text-xl font-bold text-success">
                         {formatCurrency(salaryRange.median)}
                       </p>
                     </div>
-                    <div className="text-center p-4 rounded-xl bg-blue-500/10 border border-blue-500/20">
+                    <div className="text-center p-4 rounded-xl bg-info/10 border border-info/20">
                       <p className="text-xs text-muted-foreground mb-1">75th Percentile</p>
-                      <p className="text-lg font-bold text-blue-600">
+                      <p className="text-lg font-bold text-info">
                         {formatCurrency(salaryRange.percentile75)}
                       </p>
                     </div>
@@ -559,19 +559,19 @@ ${script.close}
                       className={cn(
                         "p-4 rounded-xl border relative",
                         comparison?.bestOverall === offer.company
-                          ? "border-green-500 bg-green-500/5"
+                          ? "border-success bg-success/5"
                           : "bg-muted/30"
                       )}
                     >
                       {comparison?.bestOverall === offer.company && (
-                        <div className="absolute -top-2 -right-2 bg-green-500 text-white text-xs px-2 py-0.5 rounded-full flex items-center gap-1">
+                        <div className="absolute -top-2 -right-2 bg-success text-white text-xs px-2 py-0.5 rounded-full flex items-center gap-1">
                           <Award className="h-3 w-3" />
                           Best
                         </div>
                       )}
                       <button
                         onClick={() => removeOffer(offer.id)}
-                        className="absolute top-2 right-2 p-1 text-muted-foreground hover:text-red-500"
+                        className="absolute top-2 right-2 p-1 text-muted-foreground hover:text-destructive"
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
@@ -728,7 +728,7 @@ ${script.close}
 
                   <div>
                     <h3 className="text-sm font-medium text-primary mb-2">The Ask</h3>
-                    <p className="text-sm bg-green-500/10 border border-green-500/20 p-3 rounded-lg">
+                    <p className="text-sm bg-success/10 border border-success/20 p-3 rounded-lg">
                       {script.theAsk}
                     </p>
                   </div>

@@ -141,7 +141,7 @@ export function CalendarSyncButton({
         {result && (
           <p className="text-xs text-center">
             {result.success ? (
-              <span className="text-green-600">
+              <span className="text-success">
                 Synced {result.synced} events
               </span>
             ) : (
@@ -193,13 +193,13 @@ export function CalendarSyncButton({
         <div
           className={`rounded-lg border p-4 ${
             result.success
-              ? "bg-green-50 border-green-200 dark:bg-green-950/50 dark:border-green-800"
-              : "bg-yellow-50 border-yellow-200 dark:bg-yellow-950/50 dark:border-yellow-800"
+              ? "bg-success/10 border-success/30 dark:bg-success/10 dark:border-success/30"
+              : "bg-warning/10 border-warning/30 dark:bg-warning/10 dark:border-warning/30"
           }`}
         >
           <div className="flex items-center gap-2 mb-2">
             {result.success ? (
-              <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
+              <CheckCircle className="h-5 w-5 text-success dark:text-green-400" />
             ) : (
               <AlertCircle className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
             )}
@@ -219,7 +219,7 @@ export function CalendarSyncButton({
                 >
                   <div className="flex items-center gap-2 min-w-0">
                     {item.success ? (
-                      <CheckCircle className="h-3 w-3 text-green-600 shrink-0" />
+                      <CheckCircle className="h-3 w-3 text-success shrink-0" />
                     ) : (
                       <AlertCircle className="h-3 w-3 text-red-500 shrink-0" />
                     )}

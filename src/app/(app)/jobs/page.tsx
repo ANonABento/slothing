@@ -671,7 +671,7 @@ const STATUS_STYLES: Record<string, { label: string; bg: string; text: string }>
   saved: { label: "Saved", bg: "bg-slate-100 dark:bg-slate-800", text: "text-slate-600 dark:text-slate-300" },
   applied: { label: "Applied", bg: "bg-blue-100 dark:bg-blue-900/30", text: "text-blue-600 dark:text-blue-400" },
   interviewing: { label: "Interviewing", bg: "bg-amber-100 dark:bg-amber-900/30", text: "text-amber-600 dark:text-amber-400" },
-  offered: { label: "Offered", bg: "bg-emerald-100 dark:bg-emerald-900/30", text: "text-emerald-600 dark:text-emerald-400" },
+  offered: { label: "Offered", bg: "bg-emerald-100 dark:bg-emerald-900/30", text: "text-success dark:text-emerald-400" },
   rejected: { label: "Rejected", bg: "bg-red-100 dark:bg-red-900/30", text: "text-red-600 dark:text-red-400" },
 };
 
@@ -760,7 +760,7 @@ function JobCard({
                   </span>
                 )}
                 {job.remote && (
-                  <span className="flex items-center gap-1 text-sm text-emerald-600">
+                  <span className="flex items-center gap-1 text-sm text-success">
                     <Wifi className="h-3.5 w-3.5" />
                     Remote
                   </span>
@@ -962,7 +962,7 @@ function JobCard({
           {status === "interviewing" && (
             <Link
               href={`/interview?jobId=${job.id}`}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 hover:bg-amber-200 dark:hover:bg-amber-900/50 transition-colors"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg bg-warning/10 text-warning hover:bg-warning/20 transition-colors"
             >
               <MessageSquare className="h-3.5 w-3.5" />
               Interview Prep

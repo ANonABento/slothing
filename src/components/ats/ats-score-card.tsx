@@ -24,7 +24,7 @@ interface ATSScoreCardProps {
 }
 
 const scoreColors = {
-  excellent: "text-green-600 dark:text-green-400",
+  excellent: "text-success dark:text-green-400",
   good: "text-blue-600 dark:text-blue-400",
   fair: "text-amber-600 dark:text-amber-400",
   poor: "text-red-600 dark:text-red-400",
@@ -95,10 +95,10 @@ function ScoreCircle({ score, size = "lg" }: { score: number; size?: "sm" | "lg"
 function IssueItem({ issue }: { issue: ATSIssue }) {
   const Icon = issue.type === "error" ? AlertCircle : issue.type === "warning" ? AlertTriangle : Info;
   const colorClass = issue.type === "error"
-    ? "text-red-500"
+    ? "text-destructive"
     : issue.type === "warning"
-    ? "text-amber-500"
-    : "text-blue-500";
+    ? "text-warning"
+    : "text-info";
 
   return (
     <div className="flex gap-3 p-3 rounded-lg bg-muted/50">
@@ -178,7 +178,7 @@ export function ATSScoreCard({ jobId, onAnalyze }: ATSScoreCardProps) {
             {jobId && " and keyword matching with this job"}.
           </p>
           {error && (
-            <p className="text-sm text-red-500 mb-4">{error}</p>
+            <p className="text-sm text-destructive mb-4">{error}</p>
           )}
           <button
             onClick={handleAnalyze}
@@ -229,7 +229,7 @@ export function ATSScoreCard({ jobId, onAnalyze }: ATSScoreCardProps) {
                 </span>
               )}
               {errorCount === 0 && warningCount === 0 && (
-                <span className="flex items-center gap-1 text-green-600 dark:text-green-400">
+                <span className="flex items-center gap-1 text-success dark:text-green-400">
                   <CheckCircle2 className="h-4 w-4" />
                   No issues found
                 </span>
