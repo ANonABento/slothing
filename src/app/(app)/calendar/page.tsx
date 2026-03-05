@@ -82,8 +82,9 @@ export default function CalendarPage() {
   const [showSubscribeDialog, setShowSubscribeDialog] = useState(false);
   const [copiedUrl, setCopiedUrl] = useState(false);
 
-  // Generate feed URLs
-  const feedToken = "columbus-feed-2024"; // Same as in the API
+  // Generate feed URLs - In production, this would be a per-user token
+  // For now, we use a static token matching the API constant (CALENDAR_FEED_TOKEN)
+  const feedToken = "get-me-job-feed-2024";
   const feedUrl = typeof window !== "undefined"
     ? `${window.location.origin}/api/calendar/feed?token=${feedToken}&type=all`
     : "";

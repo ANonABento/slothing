@@ -3,10 +3,7 @@ import { getJobs } from "@/lib/db/jobs";
 import { getReminders } from "@/lib/db/reminders";
 import { getInterviewSessions } from "@/lib/db/interviews";
 import { generateICSCalendar, type CalendarEvent } from "@/lib/calendar/ics-generator";
-
-// For a production app, this would be a unique user token stored in the database
-// For now, we use a simple static token since there's no real auth
-const FEED_TOKEN = "columbus-feed-2024";
+import { CALENDAR_FEED_TOKEN } from "@/lib/constants";
 
 type EventType = "interviews" | "deadlines" | "reminders" | "all";
 
@@ -17,7 +14,7 @@ export async function GET(request: NextRequest) {
     const type = (searchParams.get("type") || "all") as EventType;
 
     // Validate token (in production, this would validate against user's stored token)
-    if (token !== FEED_TOKEN) {
+    if (token !== CALENDAR_FEED_TOKEN) {
       return new Response(JSON.stringify({ error: "Invalid feed token" }), {
         status: 401,
         headers: { "Content-Type": "application/json" },
@@ -125,7 +122,7 @@ export async function GET(request: NextRequest) {
 // Utility to generate feed URL for the user
 export function getCalendarFeedUrl(baseUrl: string, type: EventType = "all"): string {
   const url = new URL("/api/calendar/feed", baseUrl);
-  url.searchParams.set("token", FEED_TOKEN);
+  url.searchParams.set("token", CALENDAR_FEED_TOKEN);
   url.searchParams.set("type", type);
   return url.toString();
 }
