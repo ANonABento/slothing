@@ -1,16 +1,15 @@
 import Database from "better-sqlite3";
 import path from "path";
 import fs from "fs";
-
-const DB_PATH = path.join(process.cwd(), "data", "get-me-job.db");
+import { PATHS } from "@/lib/constants";
 
 // Ensure data directory exists
-const dataDir = path.dirname(DB_PATH);
+const dataDir = path.dirname(PATHS.DATABASE);
 if (!fs.existsSync(dataDir)) {
   fs.mkdirSync(dataDir, { recursive: true });
 }
 
-const db = new Database(DB_PATH);
+const db = new Database(PATHS.DATABASE);
 
 // Enable WAL mode for better performance
 db.pragma("journal_mode = WAL");
