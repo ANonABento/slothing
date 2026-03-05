@@ -4,11 +4,11 @@ import { Button } from "@/components/ui/button";
 
 export function Hero() {
   return (
-    <section className="relative pt-32 pb-20 lg:pt-40 lg:pb-32 hero-gradient overflow-hidden">
+    <section className="relative pt-32 pb-20 lg:pt-40 lg:pb-32 hero-gradient overflow-hidden grain">
       {/* Background decoration */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-1/2 -right-1/2 w-full h-full bg-gradient-to-bl from-primary/10 via-transparent to-transparent rounded-full blur-3xl" />
-        <div className="absolute -bottom-1/2 -left-1/2 w-full h-full bg-gradient-to-tr from-violet-500/10 via-transparent to-transparent rounded-full blur-3xl" />
+        <div className="absolute -top-1/2 -right-1/2 w-full h-full bg-gradient-to-bl from-primary/8 via-transparent to-transparent rounded-full blur-3xl" />
+        <div className="absolute -bottom-1/2 -left-1/2 w-full h-full bg-gradient-to-tr from-accent/6 via-transparent to-transparent rounded-full blur-3xl" />
       </div>
 
       <div className="relative max-w-6xl mx-auto px-6">
@@ -59,7 +59,7 @@ export function Hero() {
                 {[1, 2, 3, 4].map((i) => (
                   <div
                     key={i}
-                    className="w-8 h-8 rounded-full bg-gradient-to-br from-primary/20 to-violet-500/20 border-2 border-background flex items-center justify-center text-xs font-medium"
+                    className="w-8 h-8 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 border-2 border-background flex items-center justify-center text-xs font-medium"
                   >
                     {String.fromCharCode(65 + i)}
                   </div>
@@ -105,7 +105,7 @@ export function Hero() {
                   <div className="text-sm text-muted-foreground">Jobs Tracked</div>
                 </div>
                 <div className="p-4 rounded-xl bg-card border">
-                  <div className="text-2xl font-bold text-emerald-500">8</div>
+                  <div className="text-2xl font-bold text-success">8</div>
                   <div className="text-sm text-muted-foreground">Applied</div>
                 </div>
                 <div className="p-4 rounded-xl bg-card border">

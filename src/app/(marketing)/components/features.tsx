@@ -13,42 +13,42 @@ const features = [
     title: "AI Resume Parsing",
     description:
       "Upload your resume and let AI extract your professional details instantly. No more manual data entry.",
-    gradient: "from-blue-500 to-cyan-500",
+    gradient: "from-violet-500 to-purple-400",
   },
   {
     icon: Target,
     title: "Job Match Scoring",
     description:
       "See how well you match with any job posting. Get instant compatibility scores and improvement suggestions.",
-    gradient: "from-emerald-500 to-teal-500",
+    gradient: "from-rose-400 to-orange-400",
   },
   {
     icon: FileText,
     title: "Tailored Resumes",
     description:
       "Generate customized resumes for each application. Highlight the skills that matter most for each role.",
-    gradient: "from-violet-500 to-purple-500",
+    gradient: "from-blue-500 to-indigo-400",
   },
   {
     icon: MessageSquare,
     title: "AI Interview Coach",
     description:
       "Practice with realistic mock interviews. Get feedback on your answers and improve your confidence.",
-    gradient: "from-orange-500 to-amber-500",
+    gradient: "from-amber-400 to-orange-400",
   },
   {
     icon: ShieldCheck,
     title: "ATS Optimization",
     description:
       "Ensure your resume passes applicant tracking systems. Get tips to improve ATS compatibility.",
-    gradient: "from-rose-500 to-pink-500",
+    gradient: "from-pink-500 to-rose-400",
   },
   {
     icon: BarChart3,
     title: "Progress Tracking",
     description:
       "Track all your applications in one place. See your funnel, success rates, and insights.",
-    gradient: "from-indigo-500 to-blue-500",
+    gradient: "from-indigo-500 to-violet-400",
   },
 ];
 

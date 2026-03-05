@@ -254,7 +254,7 @@ export function JobRecommendations() {
   if (error) {
     return (
       <div className="rounded-xl border bg-card p-6 text-center">
-        <p className="text-red-500">{error}</p>
+        <p className="text-destructive">{error}</p>
       </div>
     );
   }
