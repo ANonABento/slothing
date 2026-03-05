@@ -1,4 +1,4 @@
-# Columbus - AI Agent Instructions
+# Get Me Job - AI Agent Instructions
 
 > AI-powered job application assistant built with Next.js 14, TypeScript, and Tailwind CSS.
 
@@ -6,7 +6,7 @@
 
 ## Project Overview
 
-**Columbus** helps job seekers manage their entire application process:
+**Get Me Job** helps job seekers manage their entire application process:
 - Resume parsing and AI-powered tailoring
 - Job tracking with status pipeline
 - Interview prep (voice + text) with AI feedback
@@ -314,13 +314,24 @@ npm run test:e2e    # E2E tests
 
 ## Known Limitations
 
-1. **Single-user only** - No authentication system
-2. **SQLite database** - Not suitable for production scale
-3. **Local storage** - Data persists in `columbus.db` file
+1. **Single-user mode** - Clerk auth installed, multi-user pending Neon DB setup
+2. **SQLite database** - Drizzle schema ready for PostgreSQL migration
+3. **Local storage** - Data persists in `data/get-me-job.db` file
 4. **No email sending** - Templates generated but not sent
 5. **No external integrations** - LinkedIn, calendar sync not implemented
 
 See `ROADMAP.md` for planned improvements.
+
+---
+
+## Recent Improvements
+
+- **Security:** ID generation now uses `crypto.randomBytes()` instead of `Math.random()`
+- **Type Safety:** Backup schema uses proper Zod types instead of `z.any()`
+- **Rate Limiting:** LLM endpoints protected with sliding window rate limiter
+- **Path Constants:** All file paths centralized in `PATHS` constant
+- **API Utilities:** Shared error response helpers in `src/lib/api-utils.ts`
+- **Testing:** All 344 unit tests passing
 
 ---
 
@@ -362,6 +373,9 @@ Restart TypeScript server in VS Code.
 | `src/app/globals.css` | Theme colors and CSS variables |
 | `src/lib/db/schema.ts` | Database table definitions |
 | `src/lib/llm/client.ts` | LLM provider abstraction |
+| `src/lib/constants.ts` | Validation schemas and constants |
+| `src/lib/api-utils.ts` | API error response utilities |
+| `src/lib/rate-limit.ts` | Rate limiting for API routes |
 | `src/components/layout/sidebar.tsx` | Main navigation |
 | `src/components/ui/button.tsx` | Button component with variants |
 | `tailwind.config.ts` | Tailwind configuration |
