@@ -37,8 +37,8 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
+import { CalendarSyncButton } from "@/components/google";
 import type { JobDescription } from "@/types";
 
 interface Reminder {
@@ -337,11 +337,12 @@ export default function CalendarPage() {
                 </SelectContent>
               </Select>
 
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <Button size="sm" onClick={openCreateDialog} className="gradient-bg text-white">
                   <Plus className="h-4 w-4 mr-2" />
                   Create Event
                 </Button>
+                <CalendarSyncButton compact />
                 <Button variant="outline" size="sm" onClick={() => setShowSubscribeDialog(true)}>
                   <Link2 className="h-4 w-4 mr-2" />
                   Subscribe
