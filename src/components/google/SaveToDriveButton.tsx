@@ -109,7 +109,7 @@ export function SaveToDriveButton({
     return (
       <Button
         variant="outline"
-        className="text-green-600"
+        className="text-success"
         disabled
         size={compact ? "sm" : "default"}
       >

@@ -79,7 +79,7 @@ export function SaveToDocsButton({
 
   if (saved) {
     return (
-      <Button variant="outline" className="text-green-600" disabled>
+      <Button variant="outline" className="text-success" disabled>
         <CheckCircle className="h-4 w-4 mr-2" />
         Saved to Docs
       </Button>

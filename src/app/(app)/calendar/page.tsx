@@ -67,9 +67,9 @@ const MONTHS = [
 ];
 
 const EVENT_COLORS = {
-  interview: "bg-purple-500",
-  deadline: "bg-red-500",
-  reminder: "bg-blue-500",
+  interview: "bg-primary",
+  deadline: "bg-destructive",
+  reminder: "bg-info",
 };
 
 export default function CalendarPage() {
@@ -470,7 +470,7 @@ export default function CalendarPage() {
                     <div className="flex items-start gap-3">
                       <div className={`p-2 rounded-lg ${EVENT_COLORS[event.type]}/20`}>
                         {event.type === "interview" && (
-                          <Briefcase className={`h-4 w-4 text-purple-500`} />
+                          <Briefcase className={`h-4 w-4 text-primary`} />
                         )}
                         {event.type === "deadline" && (
                           <AlertCircle className={`h-4 w-4 text-red-500`} />
@@ -684,7 +684,7 @@ export default function CalendarPage() {
                 />
                 <Button variant="outline" size="icon" onClick={copyFeedUrl}>
                   {copiedUrl ? (
-                    <Check className="h-4 w-4 text-green-500" />
+                    <Check className="h-4 w-4 text-success" />
                   ) : (
                     <Copy className="h-4 w-4" />
                   )}

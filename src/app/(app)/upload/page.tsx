@@ -297,19 +297,19 @@ export default function UploadPage() {
                   icon={Briefcase}
                   label="Experience"
                   value={`${parseResult.profile?.experiences?.length || 0} positions`}
-                  color="text-violet-500"
+                  color="text-primary"
                 />
                 <ExtractedItem
                   icon={Wrench}
                   label="Skills"
                   value={`${parseResult.profile?.skills?.length || 0} skills`}
-                  color="text-orange-500"
+                  color="text-accent"
                 />
                 <ExtractedItem
                   icon={GraduationCap}
                   label="Education"
                   value={`${parseResult.profile?.education?.length || 0} entries`}
-                  color="text-emerald-500"
+                  color="text-success"
                 />
               </div>
             </div>

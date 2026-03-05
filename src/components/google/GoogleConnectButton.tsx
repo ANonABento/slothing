@@ -96,7 +96,7 @@ export function GoogleConnectButton({
             />
           )}
           <div className="flex flex-col">
-            <span className="flex items-center text-sm font-medium text-green-600">
+            <span className="flex items-center text-sm font-medium text-success">
               <CheckCircle className="mr-1.5 h-4 w-4" />
               Google Connected
             </span>

@@ -363,7 +363,7 @@ export function SkillLearningPaths() {
   if (error) {
     return (
       <div className="rounded-xl border bg-card p-6 text-center">
-        <p className="text-red-500">{error}</p>
+        <p className="text-destructive">{error}</p>
       </div>
     );
   }
@@ -435,7 +435,7 @@ export function SkillLearningPaths() {
         {result.strategicSkills.length > 0 && (
           <div className="p-4 rounded-xl border bg-blue-50/50 dark:bg-blue-900/10">
             <h3 className="text-sm font-medium flex items-center gap-2 mb-2">
-              <TrendingUp className="h-4 w-4 text-blue-500" />
+              <TrendingUp className="h-4 w-4 text-info" />
               Strategic Focus
             </h3>
             <p className="text-sm text-muted-foreground">

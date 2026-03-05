@@ -142,7 +142,7 @@ export default function Dashboard() {
     <div className="min-h-screen">
       {/* Hero Section */}
       <div className="hero-gradient border-b">
-        <div className="max-w-6xl mx-auto px-6 py-12 lg:py-16">
+        <div className="max-w-6xl mx-auto px-6 py-12 lg:py-16 grain">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
             <div className="space-y-4 animate-in">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium">
@@ -194,21 +194,21 @@ export default function Dashboard() {
                 icon={Star}
                 label="Applied"
                 value={stats.appliedJobs.toString()}
-                color="text-amber-500"
+                color="text-warning"
                 loading={loading}
               />
               <StatCard
                 icon={MessageSquare}
                 label="Interviews"
                 value={stats.interviewsCount.toString()}
-                color="text-emerald-500"
+                color="text-success"
                 loading={loading}
               />
               <StatCard
                 icon={TrendingUp}
                 label="Progress"
                 value={`${completedSteps}/4`}
-                color="text-violet-500"
+                color="text-accent"
                 loading={loading}
               />
             </div>
@@ -229,28 +229,28 @@ export default function Dashboard() {
             description="Extract your professional info automatically"
             href="/upload"
             icon={Upload}
-            gradient="from-blue-500 to-cyan-500"
+            gradient="from-violet-500 to-purple-400"
           />
           <QuickAction
             title="Edit Profile"
             description="Review and refine your career details"
             href="/profile"
             icon={FileText}
-            gradient="from-emerald-500 to-teal-500"
+            gradient="from-rose-400 to-orange-400"
           />
           <QuickAction
             title="Track Jobs"
             description="Get tailored resumes for each application"
             href="/jobs"
             icon={Briefcase}
-            gradient="from-violet-500 to-purple-500"
+            gradient="from-blue-500 to-indigo-400"
           />
           <QuickAction
             title="Interview Prep"
             description="Practice with AI mock interviews"
             href="/interview"
             icon={MessageSquare}
-            gradient="from-orange-500 to-amber-500"
+            gradient="from-amber-400 to-orange-400"
           />
         </div>
       </div>
@@ -282,9 +282,9 @@ export default function Dashboard() {
                     >
                       <div className={`flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold ${
                         rec.score >= 70
-                          ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                          ? "bg-success/10 text-success"
                           : rec.score >= 50
-                          ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
+                          ? "bg-warning/10 text-warning"
                           : "bg-muted text-muted-foreground"
                       }`}>
                         {rec.score}
@@ -322,7 +322,7 @@ export default function Dashboard() {
                       <div className="flex items-center gap-3">
                         <Lightbulb className={`h-4 w-4 ${
                           gap.priority === "high"
-                            ? "text-red-500"
+                            ? "text-destructive"
                             : gap.priority === "medium"
                             ? "text-amber-500"
                             : "text-muted-foreground"
