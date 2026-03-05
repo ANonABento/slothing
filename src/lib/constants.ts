@@ -134,6 +134,12 @@ export const STORAGE_KEYS = {
   THEME: "get_me_job_theme",
 } as const;
 
+/**
+ * Calendar feed token - In production, this should be per-user and stored in the database.
+ * For now, we use a static token since there's no multi-user auth.
+ */
+export const CALENDAR_FEED_TOKEN = "get-me-job-feed-2024";
+
 // API validation schemas
 export const createJobSchema = z.object({
   title: z.string().min(1, "Title is required").max(200),

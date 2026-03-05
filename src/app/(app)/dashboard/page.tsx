@@ -135,7 +135,7 @@ export default function Dashboard() {
     stats.profileComplete,
     stats.profileComplete,
     stats.jobsCount > 0,
-    false,
+    stats.interviewsCount > 0,
   ].filter(Boolean).length;
 
   return (
