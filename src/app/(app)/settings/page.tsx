@@ -58,7 +58,7 @@ const PROVIDERS: Provider[] = [
     description: "Free, local AI processing",
     icon: <Cpu className="h-5 w-5" />,
     requiresKey: false,
-    color: "from-emerald-500 to-teal-500",
+    color: "from-violet-500 to-purple-400",
   },
   {
     value: "openai",
@@ -66,7 +66,7 @@ const PROVIDERS: Provider[] = [
     description: "GPT-4 & GPT-3.5 models",
     icon: <Sparkles className="h-5 w-5" />,
     requiresKey: true,
-    color: "from-green-500 to-emerald-500",
+    color: "from-rose-400 to-orange-400",
   },
   {
     value: "anthropic",
@@ -74,7 +74,7 @@ const PROVIDERS: Provider[] = [
     description: "Claude models",
     icon: <Zap className="h-5 w-5" />,
     requiresKey: true,
-    color: "from-orange-500 to-amber-500",
+    color: "from-amber-400 to-orange-400",
   },
   {
     value: "openrouter",
@@ -82,7 +82,7 @@ const PROVIDERS: Provider[] = [
     description: "Access multiple providers",
     icon: <Cloud className="h-5 w-5" />,
     requiresKey: true,
-    color: "from-violet-500 to-purple-500",
+    color: "from-indigo-500 to-violet-400",
   },
 ];
 
@@ -538,7 +538,7 @@ export default function SettingsPage() {
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="rounded-2xl border bg-card p-5">
               <div className="flex items-center gap-3 mb-3">
-                <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-500">
+                <div className="p-2 rounded-xl bg-success/10 text-success">
                   <Cpu className="h-5 w-5" />
                 </div>
                 <h3 className="font-semibold">Using Ollama (Free)</h3>
@@ -564,7 +564,7 @@ export default function SettingsPage() {
 
             <div className="rounded-2xl border bg-card p-5">
               <div className="flex items-center gap-3 mb-3">
-                <div className="p-2 rounded-xl bg-violet-500/10 text-violet-500">
+                <div className="p-2 rounded-xl bg-primary/10 text-primary">
                   <Key className="h-5 w-5" />
                 </div>
                 <h3 className="font-semibold">Using API Keys</h3>

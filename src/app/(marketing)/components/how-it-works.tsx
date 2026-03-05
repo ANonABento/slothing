@@ -7,7 +7,7 @@ const steps = [
     title: "Upload Your Resume",
     description:
       "Start by uploading your existing resume. Our AI instantly parses and organizes your professional information.",
-    gradient: "from-blue-500 to-cyan-500",
+    gradient: "from-violet-500 to-purple-400",
   },
   {
     number: "02",
@@ -15,7 +15,7 @@ const steps = [
     title: "Build Your Profile",
     description:
       "Review and enhance your profile. Add skills, experiences, and achievements to maximize your match potential.",
-    gradient: "from-emerald-500 to-teal-500",
+    gradient: "from-rose-400 to-orange-400",
   },
   {
     number: "03",
@@ -23,7 +23,7 @@ const steps = [
     title: "Match With Jobs",
     description:
       "Add target jobs and get instant match scores. Generate tailored resumes optimized for each position.",
-    gradient: "from-violet-500 to-purple-500",
+    gradient: "from-blue-500 to-indigo-400",
   },
   {
     number: "04",
@@ -31,7 +31,7 @@ const steps = [
     title: "Land Interviews",
     description:
       "Prepare with AI interview coaching. Practice answers, get feedback, and land your dream job with confidence.",
-    gradient: "from-orange-500 to-amber-500",
+    gradient: "from-amber-400 to-orange-400",
   },
 ];
 

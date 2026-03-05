@@ -278,7 +278,7 @@ export function SuccessDashboard() {
   if (error || !metrics) {
     return (
       <div className="rounded-xl border bg-card p-8 text-center">
-        <p className="text-red-500">{error || "Failed to load metrics"}</p>
+        <p className="text-destructive">{error || "Failed to load metrics"}</p>
       </div>
     );
   }

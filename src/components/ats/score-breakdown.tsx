@@ -58,11 +58,11 @@ function IssueCard({ issue }: { issue: ATSIssue }) {
   const getIcon = () => {
     switch (issue.type) {
       case "error":
-        return <XCircle className="h-4 w-4 text-red-500" />;
+        return <XCircle className="h-4 w-4 text-destructive" />;
       case "warning":
-        return <AlertTriangle className="h-4 w-4 text-amber-500" />;
+        return <AlertTriangle className="h-4 w-4 text-warning" />;
       default:
-        return <CheckCircle className="h-4 w-4 text-blue-500" />;
+        return <CheckCircle className="h-4 w-4 text-info" />;
     }
   };
 
@@ -155,10 +155,10 @@ export function ATSScoreBreakdown({ result, open, onOpenChange }: ATSScoreBreakd
                 strokeLinecap="round"
                 className={
                   score.overall >= 80
-                    ? "text-emerald-500"
+                    ? "text-success"
                     : score.overall >= 60
-                    ? "text-amber-500"
-                    : "text-red-500"
+                    ? "text-warning"
+                    : "text-destructive"
                 }
               />
             </svg>
@@ -248,7 +248,7 @@ export function ATSScoreBreakdown({ result, open, onOpenChange }: ATSScoreBreakd
             <div className="pt-2 space-y-4">
               <div>
                 <h3 className="font-medium text-sm mb-2 flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-emerald-500" />
+                  <CheckCircle className="h-4 w-4 text-success" />
                   Found in Resume ({foundKeywords})
                 </h3>
                 <div className="flex flex-wrap gap-1.5">
@@ -263,7 +263,7 @@ export function ATSScoreBreakdown({ result, open, onOpenChange }: ATSScoreBreakd
               {keywords.filter((k) => !k.found).length > 0 && (
                 <div>
                   <h3 className="font-medium text-sm mb-2 flex items-center gap-2">
-                    <XCircle className="h-4 w-4 text-red-500" />
+                    <XCircle className="h-4 w-4 text-destructive" />
                     Missing Keywords ({keywords.filter((k) => !k.found).length})
                   </h3>
                   <div className="flex flex-wrap gap-1.5">
@@ -285,7 +285,7 @@ export function ATSScoreBreakdown({ result, open, onOpenChange }: ATSScoreBreakd
             <div className="pt-2 space-y-3">
               {issues.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
-                  <CheckCircle className="h-8 w-8 mx-auto mb-2 text-emerald-500" />
+                  <CheckCircle className="h-8 w-8 mx-auto mb-2 text-success" />
                   <p>No issues found!</p>
                 </div>
               ) : (

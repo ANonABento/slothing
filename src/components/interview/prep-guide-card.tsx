@@ -199,7 +199,7 @@ export function PrepGuideCard({ jobId }: PrepGuideCardProps) {
   if (error || !guide) {
     return (
       <div className="rounded-xl border bg-card p-6 text-center">
-        <p className="text-red-500">{error || "Failed to load guide"}</p>
+        <p className="text-destructive">{error || "Failed to load guide"}</p>
       </div>
     );
   }
@@ -315,13 +315,13 @@ export function PrepGuideCard({ jobId }: PrepGuideCardProps) {
 
               <div>
                 <h4 className="text-sm font-medium flex items-center gap-2 mb-2">
-                  <AlertTriangle className="h-4 w-4 text-amber-500" />
+                  <AlertTriangle className="h-4 w-4 text-warning" />
                   Potential Gaps
                 </h4>
                 <ul className="space-y-1">
                   {guide.potentialGaps.map((gap, i) => (
                     <li key={i} className="text-sm flex items-start gap-2">
-                      <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
+                      <AlertTriangle className="h-4 w-4 text-warning shrink-0 mt-0.5" />
                       {gap}
                     </li>
                   ))}

@@ -88,7 +88,7 @@ export function ExportToSheetsButton({
 
   if (exported) {
     return (
-      <Button variant="outline" size={size} className="text-green-600" disabled>
+      <Button variant="outline" size={size} className="text-success" disabled>
         <CheckCircle className="h-4 w-4 mr-2" />
         Exported
       </Button>

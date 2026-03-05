@@ -85,7 +85,7 @@ export function RecordingControls({
 
         {isRecording && (
           <>
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-red-500/10 text-red-500">
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-red-500/10 text-destructive">
               <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
               <span className="text-sm font-mono">{formatDuration(duration)}</span>
             </div>
@@ -113,7 +113,7 @@ export function RecordingControls({
         )}
 
         {error && (
-          <span className="text-xs text-red-500">{error}</span>
+          <span className="text-xs text-destructive">{error}</span>
         )}
       </div>
     );
@@ -231,7 +231,7 @@ export function RecordingControls({
 
       {/* Error message */}
       {error && (
-        <div className="mt-4 flex items-center gap-2 text-sm text-red-500">
+        <div className="mt-4 flex items-center gap-2 text-sm text-destructive">
           <AlertCircle className="h-4 w-4" />
           {error}
         </div>

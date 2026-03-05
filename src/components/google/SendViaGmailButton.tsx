@@ -82,7 +82,7 @@ export function SendViaGmailButton({
 
   if (sent) {
     return (
-      <Button variant="default" className="flex-1 bg-green-600" disabled>
+      <Button variant="default" className="flex-1 bg-success" disabled>
         <CheckCircle className="h-4 w-4 mr-2" />
         Sent
       </Button>
