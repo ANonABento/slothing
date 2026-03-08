@@ -335,7 +335,7 @@ ${script.close}
                     Role
                   </Label>
                   <Select value={role} onValueChange={setRole}>
-                    <SelectTrigger>
+                    <SelectTrigger aria-label="Select role">
                       <SelectValue placeholder="Select your role" />
                     </SelectTrigger>
                     <SelectContent>
@@ -354,7 +354,7 @@ ${script.close}
                     Location
                   </Label>
                   <Select value={location} onValueChange={setLocation}>
-                    <SelectTrigger>
+                    <SelectTrigger aria-label="Select location">
                       <SelectValue placeholder="Select location" />
                     </SelectTrigger>
                     <SelectContent>

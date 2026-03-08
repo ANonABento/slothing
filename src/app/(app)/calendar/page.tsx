@@ -371,10 +371,10 @@ export default function CalendarPage() {
                 <Button variant="outline" size="sm" onClick={goToToday}>
                   Today
                 </Button>
-                <Button variant="ghost" size="icon" onClick={goToPreviousMonth}>
+                <Button variant="ghost" size="icon" onClick={goToPreviousMonth} aria-label="Previous month">
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
-                <Button variant="ghost" size="icon" onClick={goToNextMonth}>
+                <Button variant="ghost" size="icon" onClick={goToNextMonth} aria-label="Next month">
                   <ChevronRight className="h-4 w-4" />
                 </Button>
               </div>
@@ -682,7 +682,7 @@ export default function CalendarPage() {
                   readOnly
                   className="text-sm font-mono"
                 />
-                <Button variant="outline" size="icon" onClick={copyFeedUrl}>
+                <Button variant="outline" size="icon" onClick={copyFeedUrl} aria-label="Copy URL">
                   {copiedUrl ? (
                     <Check className="h-4 w-4 text-success" />
                   ) : (
