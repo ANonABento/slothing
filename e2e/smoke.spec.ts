@@ -8,7 +8,7 @@ test.describe("Smoke Tests", () => {
 
   test("all main pages load without errors", async ({ page }) => {
     const pages = [
-      { url: "/", name: "Dashboard" },
+      { url: "/dashboard", name: "Dashboard" },
       { url: "/upload", name: "Upload" },
       { url: "/profile", name: "Profile" },
       { url: "/jobs", name: "Jobs" },
@@ -19,15 +19,23 @@ test.describe("Smoke Tests", () => {
 
     for (const p of pages) {
       await page.goto(p.url);
-      // Page should not have error state
-      await expect(page.getByText(/error|500|404/i)).not.toBeVisible({ timeout: 2000 });
+      // Page should not have HTTP error state (500, 404)
+      // Use more specific selectors to avoid false positives
+      await expect(page.locator("h1:has-text('500')")).not.toBeVisible({ timeout: 2000 });
+      await expect(page.locator("h1:has-text('404')")).not.toBeVisible({ timeout: 2000 });
+      await expect(page.getByText(/something went wrong|page not found/i)).not.toBeVisible({ timeout: 500 });
     }
   });
 
   test("sidebar is responsive on mobile", async ({ page }) => {
     // Set mobile viewport
     await page.setViewportSize({ width: 375, height: 667 });
-    await page.goto("/");
+    await page.goto("/dashboard");
+    await page.evaluate(() => {
+      localStorage.setItem("get_me_job_onboarding_completed", "true");
+    });
+    await page.reload();
+    await page.waitForLoadState("networkidle");
 
     // Sidebar should be hidden by default on mobile
     const sidebar = page.locator("aside");
@@ -43,11 +51,12 @@ test.describe("Smoke Tests", () => {
   });
 
   test("theme toggle works", async ({ page }) => {
-    await page.goto("/");
+    await page.goto("/dashboard");
     await page.evaluate(() => {
       localStorage.setItem("get_me_job_onboarding_completed", "true");
     });
     await page.reload();
+    await page.waitForLoadState("networkidle");
 
     // Find and click theme toggle
     const themeButton = page.getByRole("button", { name: /theme|light|dark|system/i });

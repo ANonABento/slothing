@@ -164,7 +164,7 @@ export function Dropzone({
           !isDragActive && "border-muted-foreground/25 hover:border-primary/50 hover:bg-muted/30"
         )}
       >
-        <input {...getInputProps()} />
+        <input {...getInputProps()} aria-label="Upload resume file" />
 
         {/* Background decoration */}
         <div className="absolute inset-0 opacity-5 pointer-events-none">
@@ -281,6 +281,7 @@ export function Dropzone({
                         e.stopPropagation();
                         removeFile(index);
                       }}
+                      aria-label="Remove file"
                     >
                       <X className="h-4 w-4" />
                     </Button>

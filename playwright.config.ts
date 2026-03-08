@@ -11,10 +11,19 @@ export default defineConfig({
     ["html", { outputFolder: "playwright-report" }],
   ],
   use: {
-    baseURL: "http://localhost:3000",
+    baseURL: process.env.PLAYWRIGHT_BASE_URL || "http://localhost:8888",
     trace: "on-first-retry",
     screenshot: "only-on-failure",
+    video: "retain-on-failure",
   },
+  // Snapshot settings for visual regression
+  expect: {
+    toHaveScreenshot: {
+      maxDiffPixels: 100,
+      threshold: 0.2,
+    },
+  },
+  snapshotDir: "./e2e/snapshots",
   projects: [
     {
       name: "chromium",
@@ -38,8 +47,8 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: "npm run dev",
-    url: "http://localhost:3000",
+    command: "npm run dev -- -p 8888",
+    url: "http://localhost:8888",
     reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000,
   },
