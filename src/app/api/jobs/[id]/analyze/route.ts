@@ -3,18 +3,22 @@ import { getJob } from "@/lib/db/jobs";
 import { getProfile, getLLMConfig } from "@/lib/db";
 import { LLMClient, parseJSONFromLLM } from "@/lib/llm/client";
 import type { JobMatch } from "@/types";
+import { requireAuth, isAuthError } from "@/lib/auth";
 
 export async function POST(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const authResult = await requireAuth();
+  if (isAuthError(authResult)) return authResult;
+
   try {
-    const job = getJob(params.id);
+    const job = getJob(params.id, authResult.userId);
     if (!job) {
       return NextResponse.json({ error: "Job not found" }, { status: 404 });
     }
 
-    const profile = getProfile();
+    const profile = getProfile(authResult.userId);
     if (!profile) {
       return NextResponse.json(
         { error: "No profile data. Upload a resume first." },

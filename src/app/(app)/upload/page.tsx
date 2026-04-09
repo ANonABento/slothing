@@ -65,14 +65,18 @@ export default function UploadPage() {
       });
 
       if (!uploadRes.ok) {
-        throw new Error("Failed to upload file");
+        const errorData = await uploadRes.json().catch(() => null);
+        throw new Error(errorData?.error || "Failed to upload file");
       }
 
       const uploadData = await uploadRes.json();
+      if (!uploadData.document?.id) {
+        throw new Error("Drive import completed without a document ID");
+      }
       const uploadedFile = new File([blob], file.name, { type: file.mimeType });
       setUploadResults([{
         file: uploadedFile,
-        documentId: uploadData.documentId,
+        documentId: uploadData.document?.id,
       }]);
     } catch (error) {
       console.error("Drive import error:", error);
@@ -192,7 +196,7 @@ export default function UploadPage() {
                 </div>
                 <DriveFilePicker
                   onSelect={handleDriveSelect}
-                  accept={["application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "text/plain"]}
+                  accept={["application/pdf", "text/plain"]}
                   trigger={
                     <button
                       disabled={driveLoading}

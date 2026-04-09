@@ -6,6 +6,7 @@ import { generateResumeHTML, TEMPLATES } from "@/lib/resume/pdf";
 import { writeFile, mkdir } from "fs/promises";
 import { generateId } from "@/lib/utils";
 import { PATHS } from "@/lib/constants";
+import { requireAuth, isAuthError } from "@/lib/auth";
 
 export async function GET() {
   // Return available templates
@@ -22,6 +23,9 @@ export async function POST(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const authResult = await requireAuth();
+  if (isAuthError(authResult)) return authResult;
+
   try {
     // Get template from request body
     let templateId = "classic";
@@ -34,12 +38,12 @@ export async function POST(
       // No body or invalid JSON, use default
     }
 
-    const job = getJob(params.id);
+    const job = getJob(params.id, authResult.userId);
     if (!job) {
       return NextResponse.json({ error: "Job not found" }, { status: 404 });
     }
 
-    const profile = getProfile();
+    const profile = getProfile(authResult.userId);
     if (!profile) {
       return NextResponse.json(
         { error: "No profile data. Upload a resume first." },
@@ -71,7 +75,9 @@ export async function POST(
       params.id,
       templateId,
       tailoredResume,
-      pdfUrl
+      pdfUrl,
+      undefined,
+      authResult.userId
     );
 
     return NextResponse.json({

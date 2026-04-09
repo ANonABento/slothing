@@ -24,15 +24,17 @@ export function setLLMConfig(config: LLMConfig): void {
 }
 
 // Documents
-export function saveDocument(doc: Omit<Document, "uploadedAt">): void {
+export function saveDocument(doc: Omit<Document, "uploadedAt">, userId: string = "default"): void {
   db.prepare(`
-    INSERT INTO documents (id, filename, type, mime_type, size, path, extracted_text)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
-  `).run(doc.id, doc.filename, doc.type, doc.mimeType, doc.size, doc.path, doc.extractedText);
+    INSERT INTO documents (id, filename, type, mime_type, size, path, extracted_text, user_id)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(doc.id, doc.filename, doc.type, doc.mimeType, doc.size, doc.path, doc.extractedText, userId);
 }
 
-export function getDocuments(): Document[] {
-  const rows = db.prepare("SELECT * FROM documents ORDER BY uploaded_at DESC").all() as any[];
+export function getDocuments(userId: string = "default"): Document[] {
+  const rows = db
+    .prepare("SELECT * FROM documents WHERE user_id = ? ORDER BY uploaded_at DESC")
+    .all(userId) as any[];
   return rows.map((row) => ({
     id: row.id,
     filename: row.filename,

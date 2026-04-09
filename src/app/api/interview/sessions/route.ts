@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const jobId = searchParams.get("jobId") || undefined;
 
-    const sessions = getInterviewSessions(jobId);
+    const sessions = getInterviewSessions(jobId, authResult.userId);
 
     return NextResponse.json({ sessions });
   } catch (error) {
@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
 
     const { jobId, questions, mode } = parseResult.data;
 
-    const session = createInterviewSession(jobId, questions, mode);
+    const session = createInterviewSession(jobId, questions, mode, authResult.userId);
 
     return NextResponse.json({ session });
   } catch (error) {

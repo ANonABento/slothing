@@ -2,8 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { createJob, getJobs } from "@/lib/db/jobs";
 import type { JobDescription } from "@/types";
 import { importJobSchema, type ImportJobInput } from "@/lib/constants";
+import { requireAuth, isAuthError } from "@/lib/auth";
 
 export async function POST(request: NextRequest) {
+  const authResult = await requireAuth();
+  if (isAuthError(authResult)) return authResult;
+
   try {
     const contentType = request.headers.get("content-type") || "";
     let rawJobs: unknown[] = [];
@@ -46,7 +50,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate and import jobs
-    const existingJobs = getJobs();
+    const existingJobs = getJobs(authResult.userId);
     const existingTitles = new Set(
       existingJobs.map((j) => `${j.title.toLowerCase()}-${j.company.toLowerCase()}`)
     );
@@ -93,7 +97,7 @@ export async function POST(request: NextRequest) {
         url: job.url,
         status: (job.status as JobDescription["status"]) || "saved",
         notes: job.notes,
-      });
+      }, authResult.userId);
 
       existingTitles.add(key);
       results.imported++;

@@ -7,8 +7,12 @@ import {
   getReminderCounts,
 } from "@/lib/db/reminders";
 import { createReminderSchema, type ReminderType } from "@/lib/constants";
+import { requireAuth, isAuthError } from "@/lib/auth";
 
 export async function GET(request: NextRequest) {
+  const authResult = await requireAuth();
+  if (isAuthError(authResult)) return authResult;
+
   try {
     const { searchParams } = new URL(request.url);
     const jobId = searchParams.get("jobId") || undefined;
@@ -21,16 +25,21 @@ export async function GET(request: NextRequest) {
     switch (filter) {
       case "upcoming":
         const days = parseInt(searchParams.get("days") || "7", 10);
-        reminders = getUpcomingReminders(days);
+        reminders = getUpcomingReminders(days, authResult.userId);
         break;
       case "overdue":
-        reminders = getOverdueReminders();
+        reminders = getOverdueReminders(authResult.userId);
         break;
       case "counts":
-        const counts = getReminderCounts();
+        const counts = getReminderCounts(authResult.userId);
         return NextResponse.json(counts);
       default:
-        reminders = getReminders({ jobId, includeCompleted, includeDismissed });
+        reminders = getReminders({
+          jobId,
+          includeCompleted,
+          includeDismissed,
+          userId: authResult.userId,
+        });
     }
 
     return NextResponse.json({ reminders });
@@ -44,6 +53,9 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const authResult = await requireAuth();
+  if (isAuthError(authResult)) return authResult;
+
   try {
     const rawData = await request.json();
 
@@ -68,7 +80,7 @@ export async function POST(request: NextRequest) {
       title,
       description,
       dueDate,
-    });
+    }, authResult.userId);
 
     return NextResponse.json({ success: true, reminder });
   } catch (error) {

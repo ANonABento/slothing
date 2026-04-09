@@ -39,7 +39,7 @@ export function Hero() {
               size="lg"
               className="gradient-bg text-white hover:opacity-90 shadow-lg shadow-primary/25"
             >
-              <Link href="/dashboard">
+              <Link href="/sign-up?redirect_url=/dashboard">
                 Get Started Free
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>

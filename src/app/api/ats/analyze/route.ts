@@ -2,12 +2,16 @@ import { NextRequest, NextResponse } from "next/server";
 import { getProfile } from "@/lib/db";
 import { getJob } from "@/lib/db/jobs";
 import { analyzeATS } from "@/lib/ats/analyzer";
+import { requireAuth, isAuthError } from "@/lib/auth";
 
 export async function POST(request: NextRequest) {
+  const authResult = await requireAuth();
+  if (isAuthError(authResult)) return authResult;
+
   try {
     const { jobId } = await request.json();
 
-    const profile = getProfile();
+    const profile = getProfile(authResult.userId);
     if (!profile) {
       return NextResponse.json(
         { error: "No profile found. Please upload your resume first." },
@@ -15,7 +19,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const job = jobId ? getJob(jobId) : undefined;
+    const job = jobId ? getJob(jobId, authResult.userId) : undefined;
     const result = analyzeATS(profile, job || undefined);
 
     return NextResponse.json(result);

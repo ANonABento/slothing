@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -129,6 +130,9 @@ export function ATSScoreBreakdown({ result, open, onOpenChange }: ATSScoreBreakd
             <ShieldCheck className="h-5 w-5 text-primary" />
             ATS Compatibility Analysis
           </DialogTitle>
+          <DialogDescription>
+            Review your score, matched keywords, and resume issues that affect ATS parsing.
+          </DialogDescription>
         </DialogHeader>
 
         {/* Overall Score */}

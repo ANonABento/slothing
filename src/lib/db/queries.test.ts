@@ -135,7 +135,8 @@ describe("Document Functions", () => {
         "application/pdf",
         1024,
         "/uploads/resume.pdf",
-        "John Doe, Software Engineer"
+        "John Doe, Software Engineer",
+        "default"
       );
     });
   });
@@ -159,6 +160,9 @@ describe("Document Functions", () => {
 
       const result = getDocuments();
 
+      expect(db.prepare).toHaveBeenCalledWith(
+        "SELECT * FROM documents WHERE user_id = ? ORDER BY uploaded_at DESC"
+      );
       expect(result).toEqual([
         {
           id: "doc-1",
@@ -178,6 +182,9 @@ describe("Document Functions", () => {
 
       const result = getDocuments();
 
+      expect(db.prepare).toHaveBeenCalledWith(
+        "SELECT * FROM documents WHERE user_id = ? ORDER BY uploaded_at DESC"
+      );
       expect(result).toEqual([]);
     });
   });

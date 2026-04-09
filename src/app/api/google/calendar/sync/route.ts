@@ -45,8 +45,8 @@ export async function POST(request: NextRequest) {
     const syncType = (body.syncType || "all") as SyncType;
 
     const results: SyncResultItem[] = [];
-    const jobs = getJobs();
-    const reminders = getReminders();
+    const jobs = getJobs(authResult.userId);
+    const reminders = getReminders({ userId: authResult.userId });
 
     // Sync interviews (jobs in "interviewing" status)
     if (syncType === "all" || syncType === "interviews") {

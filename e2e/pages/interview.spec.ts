@@ -5,6 +5,8 @@ import { test, expect } from "@playwright/test";
  * Tests interview preparation features including text and voice modes.
  */
 
+test.skip(true, "Requires an authenticated Clerk test fixture and interview seed data.");
+
 test.describe("Interview - Layout", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/");

@@ -24,8 +24,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const job = jobId ? getJob(jobId) : null;
-    const profile = getProfile();
+    const job = jobId ? getJob(jobId, authResult.userId) : null;
+    const profile = getProfile(authResult.userId);
     const llmConfig = getLLMConfig();
 
     let followUp: FollowUpResponse;

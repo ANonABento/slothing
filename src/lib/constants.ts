@@ -134,12 +134,6 @@ export const STORAGE_KEYS = {
   THEME: "get_me_job_theme",
 } as const;
 
-/**
- * Calendar feed token - In production, this should be per-user and stored in the database.
- * For now, we use a static token since there's no multi-user auth.
- */
-export const CALENDAR_FEED_TOKEN = "get-me-job-feed-2024";
-
 // API validation schemas
 export const createJobSchema = z.object({
   title: z.string().min(1, "Title is required").max(200),
@@ -203,16 +197,12 @@ export const startInterviewSchema = z.object({
 export const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
 export const ALLOWED_MIME_TYPES = [
   "application/pdf",
-  "application/msword",
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   "text/plain",
 ] as const;
 
 // Magic bytes for file type validation
 export const FILE_SIGNATURES: Record<string, number[]> = {
   "application/pdf": [0x25, 0x50, 0x44, 0x46], // %PDF
-  "application/msword": [0xd0, 0xcf, 0x11, 0xe0], // DOC (OLE2)
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [0x50, 0x4b, 0x03, 0x04], // DOCX (ZIP)
   // text/plain has no magic bytes - validated by content
 };
 

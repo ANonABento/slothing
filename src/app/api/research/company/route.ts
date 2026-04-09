@@ -10,8 +10,14 @@ import {
   generateCompanyResearch,
   generateBasicResearch,
 } from "@/lib/research/company";
+import { requireAuth, isAuthError } from "@/lib/auth";
+
+export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
+  const authResult = await requireAuth();
+  if (isAuthError(authResult)) return authResult;
+
   try {
     const { searchParams } = new URL(request.url);
     const companyName = searchParams.get("company");
@@ -35,7 +41,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get job details if provided
-    const job = jobId ? getJob(jobId) : null;
+    const job = jobId ? getJob(jobId, authResult.userId) : null;
     const llmConfig = getLLMConfig();
 
     let researchData;

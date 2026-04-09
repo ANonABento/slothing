@@ -27,8 +27,8 @@ export function getJobs(userId: string = "default"): JobDescription[] {
 }
 
 // Get single job
-export function getJob(id: string): JobDescription | null {
-  const row = db.prepare("SELECT * FROM jobs WHERE id = ?").get(id) as any;
+export function getJob(id: string, userId: string = "default"): JobDescription | null {
+  const row = db.prepare("SELECT * FROM jobs WHERE id = ? AND user_id = ?").get(id, userId) as any;
   if (!row) return null;
   return {
     id: row.id,
@@ -72,12 +72,12 @@ export function createJob(job: Omit<JobDescription, "id" | "createdAt">, userId:
     job.url || null,
     userId
   );
-  return getJob(id)!;
+  return getJob(id, userId)!;
 }
 
 // Update job
-export function updateJob(id: string, updates: Partial<JobDescription>): void {
-  const existing = getJob(id);
+export function updateJob(id: string, updates: Partial<JobDescription>, userId: string = "default"): void {
+  const existing = getJob(id, userId);
   if (!existing) return;
 
   const merged = { ...existing, ...updates };
@@ -98,7 +98,7 @@ export function updateJob(id: string, updates: Partial<JobDescription>): void {
       applied_at = ?,
       deadline = ?,
       notes = ?
-    WHERE id = ?
+    WHERE id = ? AND user_id = ?
   `).run(
     merged.title,
     merged.company,
@@ -115,7 +115,8 @@ export function updateJob(id: string, updates: Partial<JobDescription>): void {
     merged.appliedAt || null,
     merged.deadline || null,
     merged.notes || null,
-    id
+    id,
+    userId
   );
 }
 
@@ -123,7 +124,8 @@ export function updateJob(id: string, updates: Partial<JobDescription>): void {
 export function updateJobStatus(
   id: string,
   status: string,
-  appliedAt?: string
+  appliedAt?: string,
+  userId: string = "default"
 ): JobDescription | null {
   const now = new Date().toISOString();
 
@@ -131,17 +133,18 @@ export function updateJobStatus(
     UPDATE jobs SET
       status = ?,
       applied_at = COALESCE(?, applied_at)
-    WHERE id = ?
+    WHERE id = ? AND user_id = ?
   `).run(
     status,
     status === "applied" && !appliedAt ? now : appliedAt || null,
-    id
+    id,
+    userId
   );
 
-  return getJob(id);
+  return getJob(id, userId);
 }
 
 // Delete job
-export function deleteJob(id: string): void {
-  db.prepare("DELETE FROM jobs WHERE id = ?").run(id);
+export function deleteJob(id: string, userId: string = "default"): void {
+  db.prepare("DELETE FROM jobs WHERE id = ? AND user_id = ?").run(id, userId);
 }

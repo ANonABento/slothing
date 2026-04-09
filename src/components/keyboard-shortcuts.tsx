@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -139,6 +140,9 @@ function ShortcutsHelpDialog({
             <Keyboard className="h-5 w-5 text-primary" />
             Keyboard Shortcuts
           </DialogTitle>
+          <DialogDescription>
+            Browse navigation and global shortcuts available across the app.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6 py-4">

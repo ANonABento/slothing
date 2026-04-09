@@ -1,12 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getProfile, getDocuments } from "@/lib/db";
+import { requireAuth, isAuthError } from "@/lib/auth";
 
 export async function GET(request: NextRequest) {
+  const authResult = await requireAuth();
+  if (isAuthError(authResult)) return authResult;
+
   try {
     const searchParams = request.nextUrl.searchParams;
     const format = searchParams.get("format") || "json";
 
-    const profile = getProfile();
+    const profile = getProfile(authResult.userId);
     if (!profile) {
       return NextResponse.json(
         { error: "No profile data found" },
@@ -14,7 +18,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const documents = getDocuments();
+    const documents = getDocuments(authResult.userId);
 
     const exportData = {
       exportedAt: new Date().toISOString(),

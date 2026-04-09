@@ -15,8 +15,8 @@ export async function GET(request: NextRequest) {
     const type = (searchParams.get("type") || "all") as EventType;
 
     const events: CalendarEvent[] = [];
-    const jobs = getJobs();
-    const reminders = getReminders();
+    const jobs = getJobs(authResult.userId);
+    const reminders = getReminders({ userId: authResult.userId });
 
     // Get jobs that are in interviewing status
     if (type === "interviews" || type === "all") {

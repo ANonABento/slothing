@@ -42,7 +42,14 @@ describe("Interview Database Functions", () => {
 
       const result = createInterviewSession("job-123", questions, "text");
 
-      expect(mockRun).toHaveBeenCalled();
+      expect(mockRun).toHaveBeenCalledWith(
+        "test-session-id",
+        "job-123",
+        "default",
+        "text",
+        JSON.stringify(questions),
+        expect.any(String)
+      );
       expect(result).toEqual({
         id: "test-session-id",
         jobId: "job-123",
@@ -109,6 +116,7 @@ describe("Interview Database Functions", () => {
 
       const result = getInterviewSession("session-1");
 
+      expect(db.prepare).toHaveBeenCalledWith(expect.stringContaining("WHERE id = ? AND profile_id = ?"));
       expect(result).toEqual({
         id: "session-1",
         jobId: "job-123",
@@ -197,6 +205,7 @@ describe("Interview Database Functions", () => {
 
       const result = getInterviewSessions();
 
+      expect((db.prepare as Mock)).toHaveBeenCalledWith(expect.stringContaining("WHERE profile_id = ?"));
       expect(result).toHaveLength(2);
       expect(result[0].id).toBe("session-2");
       expect(result[1].id).toBe("session-1");
@@ -208,7 +217,7 @@ describe("Interview Database Functions", () => {
 
       getInterviewSessions("job-123");
 
-      expect(mockAll).toHaveBeenCalledWith("job-123");
+      expect(mockAll).toHaveBeenCalledWith("default", "job-123");
     });
 
     it("should return empty array when no sessions exist", () => {
@@ -216,6 +225,7 @@ describe("Interview Database Functions", () => {
 
       const result = getInterviewSessions();
 
+      expect((db.prepare as Mock)).toHaveBeenCalledWith(expect.stringContaining("WHERE profile_id = ?"));
       expect(result).toEqual([]);
     });
   });
@@ -261,19 +271,28 @@ describe("Interview Database Functions", () => {
       const runArgs = mockRun.mock.calls[0];
       expect(runArgs[0]).toBeTruthy(); // timestamp
       expect(runArgs[1]).toBe("session-1");
+      expect(runArgs[2]).toBe("default");
     });
   });
 
   describe("deleteInterviewSession", () => {
     it("should delete session and its answers", () => {
       const mockRun = vi.fn();
-      (db.prepare as Mock).mockReturnValue({ run: mockRun });
+      const mockGet = vi.fn().mockReturnValue({ id: "session-1" });
+
+      (db.prepare as Mock).mockImplementation((sql: string) => {
+        if (sql.includes("SELECT id FROM interview_sessions")) {
+          return { get: mockGet };
+        }
+        return { run: mockRun };
+      });
 
       deleteInterviewSession("session-1");
 
-      // Should be called twice: once for answers, once for session
+      expect(mockGet).toHaveBeenCalledWith("session-1", "default");
       expect(mockRun).toHaveBeenCalledTimes(2);
       expect(mockRun).toHaveBeenCalledWith("session-1");
+      expect(mockRun).toHaveBeenCalledWith("session-1", "default");
     });
   });
 
@@ -297,7 +316,7 @@ describe("Interview Database Functions", () => {
 
       const result = getRecentInterviewSessions(5);
 
-      expect(mockAll).toHaveBeenCalledWith(5);
+      expect(mockAll).toHaveBeenCalledWith("default", 5);
       expect(result).toHaveLength(1);
     });
 
@@ -307,7 +326,7 @@ describe("Interview Database Functions", () => {
 
       getRecentInterviewSessions();
 
-      expect(mockAll).toHaveBeenCalledWith(5);
+      expect(mockAll).toHaveBeenCalledWith("default", 5);
     });
   });
 });

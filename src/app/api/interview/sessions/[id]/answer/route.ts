@@ -26,7 +26,7 @@ export async function POST(
       );
     }
 
-    const session = getInterviewSession(params.id);
+    const session = getInterviewSession(params.id, authResult.userId);
 
     if (!session) {
       return NextResponse.json(
@@ -91,7 +91,7 @@ Be encouraging but also point out areas for improvement.`,
     // Check if interview is complete
     const isComplete = questionIndex >= session.questions.length - 1;
     if (isComplete) {
-      completeInterviewSession(params.id);
+      completeInterviewSession(params.id, authResult.userId);
     }
 
     return NextResponse.json({
