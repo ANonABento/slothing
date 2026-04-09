@@ -10,6 +10,7 @@ import {
   prepareReportData,
 } from "@/lib/analytics/report-generator";
 import type { JobDescription } from "@/types";
+import { requireAuth, isAuthError } from "@/lib/auth";
 
 type TimeRange = "7d" | "30d" | "90d" | "1y" | "all";
 
@@ -57,17 +58,20 @@ function getRangeLabel(range: TimeRange): string {
 }
 
 export async function GET(request: NextRequest) {
+  const authResult = await requireAuth();
+  if (isAuthError(authResult)) return authResult;
+
   try {
     const searchParams = request.nextUrl.searchParams;
     const format = (searchParams.get("format") || "csv") as "csv" | "json";
     const range = (searchParams.get("range") || "all") as TimeRange;
 
     // Fetch all data
-    const profile = getProfile();
-    const allJobs = getJobs();
-    const documents = getDocuments();
-    const interviews = getInterviewSessions();
-    const resumes = getAllGeneratedResumes();
+    const profile = getProfile(authResult.userId);
+    const allJobs = getJobs(authResult.userId);
+    const documents = getDocuments(authResult.userId);
+    const interviews = getInterviewSessions(undefined, authResult.userId);
+    const resumes = getAllGeneratedResumes(authResult.userId);
 
     // Filter jobs by range
     const jobs = filterJobsByRange(allJobs, range);

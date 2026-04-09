@@ -11,7 +11,7 @@ export async function GET() {
   if (isAuthError(authResult)) return authResult;
 
   try {
-    const drafts = getEmailDrafts();
+    const drafts = getEmailDrafts(authResult.userId);
 
     return NextResponse.json({ drafts });
   } catch (error) {
@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
       subject,
       body,
       context,
-    });
+    }, authResult.userId);
 
     return NextResponse.json({ draft });
   } catch (error) {

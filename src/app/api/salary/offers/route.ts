@@ -12,8 +12,8 @@ export async function GET() {
   if (isAuthError(authResult)) return authResult;
 
   try {
-    const offers = getSalaryOffers();
-    const stats = getSalaryStats();
+    const offers = getSalaryOffers(authResult.userId);
+    const stats = getSalaryStats(authResult.userId);
 
     return NextResponse.json({ offers, stats });
   } catch (error) {
@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
       vestingYears,
       location,
       notes,
-    });
+    }, authResult.userId);
 
     return NextResponse.json({ offer });
   } catch (error) {

@@ -11,15 +11,33 @@ import {
   DialogClose,
 } from "./dialog";
 
+function AccessibleDialogContent({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <DialogContent className={className}>
+      <DialogTitle className="sr-only">Test dialog heading</DialogTitle>
+      <DialogDescription className="sr-only">
+        Test dialog description
+      </DialogDescription>
+      {children}
+    </DialogContent>
+  );
+}
+
 describe("Dialog", () => {
   it("should not render content by default", () => {
     render(
       <Dialog>
         <DialogTrigger>Open</DialogTrigger>
-        <DialogContent>
+        <AccessibleDialogContent>
           <DialogTitle>Title</DialogTitle>
           <DialogDescription>Description</DialogDescription>
-        </DialogContent>
+        </AccessibleDialogContent>
       </Dialog>
     );
 
@@ -31,9 +49,9 @@ describe("Dialog", () => {
     render(
       <Dialog>
         <DialogTrigger>Open Dialog</DialogTrigger>
-        <DialogContent>
+        <AccessibleDialogContent>
           <DialogTitle>Title</DialogTitle>
-        </DialogContent>
+        </AccessibleDialogContent>
       </Dialog>
     );
 
@@ -44,10 +62,10 @@ describe("Dialog", () => {
     render(
       <Dialog>
         <DialogTrigger>Open</DialogTrigger>
-        <DialogContent>
+        <AccessibleDialogContent>
           <DialogTitle>Test Title</DialogTitle>
           <DialogDescription>Test Description</DialogDescription>
-        </DialogContent>
+        </AccessibleDialogContent>
       </Dialog>
     );
 
@@ -62,9 +80,9 @@ describe("Dialog", () => {
   it("should render DialogHeader with correct classes", async () => {
     render(
       <Dialog open>
-        <DialogContent>
+        <AccessibleDialogContent>
           <DialogHeader data-testid="header">Header Content</DialogHeader>
-        </DialogContent>
+        </AccessibleDialogContent>
       </Dialog>
     );
 
@@ -77,9 +95,9 @@ describe("Dialog", () => {
   it("should render DialogFooter with correct classes", async () => {
     render(
       <Dialog open>
-        <DialogContent>
+        <AccessibleDialogContent>
           <DialogFooter data-testid="footer">Footer Content</DialogFooter>
-        </DialogContent>
+        </AccessibleDialogContent>
       </Dialog>
     );
 
@@ -91,9 +109,9 @@ describe("Dialog", () => {
   it("should render DialogTitle with correct classes", async () => {
     render(
       <Dialog open>
-        <DialogContent>
+        <AccessibleDialogContent>
           <DialogTitle>My Title</DialogTitle>
-        </DialogContent>
+        </AccessibleDialogContent>
       </Dialog>
     );
 
@@ -105,9 +123,9 @@ describe("Dialog", () => {
   it("should render DialogDescription with correct classes", async () => {
     render(
       <Dialog open>
-        <DialogContent>
+        <AccessibleDialogContent>
           <DialogDescription>My Description</DialogDescription>
-        </DialogContent>
+        </AccessibleDialogContent>
       </Dialog>
     );
 
@@ -119,9 +137,9 @@ describe("Dialog", () => {
   it("should render close button in DialogContent", async () => {
     render(
       <Dialog open>
-        <DialogContent>
+        <AccessibleDialogContent>
           <DialogTitle>Title</DialogTitle>
-        </DialogContent>
+        </AccessibleDialogContent>
       </Dialog>
     );
 
@@ -133,9 +151,9 @@ describe("Dialog", () => {
     const onOpenChange = vi.fn();
     render(
       <Dialog open onOpenChange={onOpenChange}>
-        <DialogContent>
+        <AccessibleDialogContent>
           <DialogTitle>Title</DialogTitle>
-        </DialogContent>
+        </AccessibleDialogContent>
       </Dialog>
     );
 
@@ -148,9 +166,9 @@ describe("Dialog", () => {
   it("should render with controlled open state", async () => {
     const { rerender } = render(
       <Dialog open={false}>
-        <DialogContent>
+        <AccessibleDialogContent>
           <DialogTitle>Controlled Title</DialogTitle>
-        </DialogContent>
+        </AccessibleDialogContent>
       </Dialog>
     );
 
@@ -158,9 +176,9 @@ describe("Dialog", () => {
 
     rerender(
       <Dialog open={true}>
-        <DialogContent>
+        <AccessibleDialogContent>
           <DialogTitle>Controlled Title</DialogTitle>
-        </DialogContent>
+        </AccessibleDialogContent>
       </Dialog>
     );
 
@@ -170,9 +188,9 @@ describe("Dialog", () => {
   it("should merge custom className on DialogContent", async () => {
     render(
       <Dialog open>
-        <DialogContent className="custom-dialog">
+        <AccessibleDialogContent className="custom-dialog">
           <DialogTitle>Title</DialogTitle>
-        </DialogContent>
+        </AccessibleDialogContent>
       </Dialog>
     );
 
@@ -183,11 +201,11 @@ describe("Dialog", () => {
   it("should merge custom className on DialogHeader", async () => {
     render(
       <Dialog open>
-        <DialogContent>
+        <AccessibleDialogContent>
           <DialogHeader className="custom-header" data-testid="header">
             Header
           </DialogHeader>
-        </DialogContent>
+        </AccessibleDialogContent>
       </Dialog>
     );
 
@@ -197,11 +215,11 @@ describe("Dialog", () => {
   it("should merge custom className on DialogFooter", async () => {
     render(
       <Dialog open>
-        <DialogContent>
+        <AccessibleDialogContent>
           <DialogFooter className="custom-footer" data-testid="footer">
             Footer
           </DialogFooter>
-        </DialogContent>
+        </AccessibleDialogContent>
       </Dialog>
     );
 
@@ -211,9 +229,9 @@ describe("Dialog", () => {
   it("should merge custom className on DialogTitle", async () => {
     render(
       <Dialog open>
-        <DialogContent>
+        <AccessibleDialogContent>
           <DialogTitle className="custom-title">Title</DialogTitle>
-        </DialogContent>
+        </AccessibleDialogContent>
       </Dialog>
     );
 
@@ -223,11 +241,11 @@ describe("Dialog", () => {
   it("should merge custom className on DialogDescription", async () => {
     render(
       <Dialog open>
-        <DialogContent>
+        <AccessibleDialogContent>
           <DialogDescription className="custom-description">
             Description
           </DialogDescription>
-        </DialogContent>
+        </AccessibleDialogContent>
       </Dialog>
     );
 
@@ -237,10 +255,10 @@ describe("Dialog", () => {
   it("should render DialogClose component", async () => {
     render(
       <Dialog open>
-        <DialogContent>
+        <AccessibleDialogContent>
           <DialogTitle>Title</DialogTitle>
           <DialogClose data-testid="custom-close">Close Me</DialogClose>
-        </DialogContent>
+        </AccessibleDialogContent>
       </Dialog>
     );
 
@@ -251,7 +269,7 @@ describe("Dialog", () => {
   it("should render dialog with full structure", async () => {
     render(
       <Dialog open>
-        <DialogContent>
+        <AccessibleDialogContent>
           <DialogHeader>
             <DialogTitle>Confirm Action</DialogTitle>
             <DialogDescription>
@@ -263,7 +281,7 @@ describe("Dialog", () => {
             <button>Cancel</button>
             <button>Confirm</button>
           </DialogFooter>
-        </DialogContent>
+        </AccessibleDialogContent>
       </Dialog>
     );
 

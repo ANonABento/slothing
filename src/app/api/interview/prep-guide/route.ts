@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const job = getJob(jobId);
+    const job = getJob(jobId, authResult.userId);
     if (!job) {
       return NextResponse.json(
         { error: "Job not found" },
@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const profile = getProfile();
+    const profile = getProfile(authResult.userId);
     const llmConfig = getLLMConfig();
     const companyResearch = getCompanyResearch(job.company);
 

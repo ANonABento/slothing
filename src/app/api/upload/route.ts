@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
     // Validate MIME type
     if (!ALLOWED_MIME_TYPES.includes(file.type as typeof ALLOWED_MIME_TYPES[number])) {
       return NextResponse.json(
-        { error: `Invalid file type. Allowed types: PDF, DOC, DOCX, TXT` },
+        { error: "Invalid file type. Allowed types: PDF and TXT" },
         { status: 400 }
       );
     }
@@ -93,7 +93,7 @@ export async function POST(request: NextRequest) {
       size: file.size,
       path: filePath,
       extractedText,
-    });
+    }, authResult.userId);
 
     return NextResponse.json({
       success: true,

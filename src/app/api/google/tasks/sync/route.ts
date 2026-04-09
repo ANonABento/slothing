@@ -116,8 +116,8 @@ export async function POST(request: NextRequest) {
 
     // Default: sync reminders
     const results: { title: string; success: boolean; taskId?: string }[] = [];
-    const jobs = getJobs();
-    const reminders = getReminders();
+    const jobs = getJobs(authResult.userId);
+    const reminders = getReminders({ userId: authResult.userId });
 
     const type = syncType || "all";
 

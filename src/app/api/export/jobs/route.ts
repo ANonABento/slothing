@@ -1,12 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getJobs } from "@/lib/db/jobs";
+import { requireAuth, isAuthError } from "@/lib/auth";
 
 export async function GET(request: NextRequest) {
+  const authResult = await requireAuth();
+  if (isAuthError(authResult)) return authResult;
+
   try {
     const searchParams = request.nextUrl.searchParams;
     const format = searchParams.get("format") || "json";
 
-    const jobs = getJobs();
+    const jobs = getJobs(authResult.userId);
 
     if (format === "csv") {
       // CSV export

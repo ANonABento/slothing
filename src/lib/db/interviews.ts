@@ -35,22 +35,23 @@ export interface InterviewSessionWithAnswers extends InterviewSession {
 export function createInterviewSession(
   jobId: string,
   questions: InterviewQuestion[],
-  mode: "text" | "voice" = "text"
+  mode: "text" | "voice" = "text",
+  userId: string = "default"
 ): InterviewSession {
   const id = generateId();
   const now = new Date().toISOString();
 
   const stmt = db.prepare(`
     INSERT INTO interview_sessions (id, job_id, profile_id, mode, questions_json, status, started_at)
-    VALUES (?, ?, 'default', ?, ?, 'in_progress', ?)
+    VALUES (?, ?, ?, ?, ?, 'in_progress', ?)
   `);
 
-  stmt.run(id, jobId, mode, JSON.stringify(questions), now);
+  stmt.run(id, jobId, userId, mode, JSON.stringify(questions), now);
 
   return {
     id,
     jobId,
-    profileId: "default",
+    profileId: userId,
     mode,
     questions,
     status: "in_progress",
@@ -59,14 +60,17 @@ export function createInterviewSession(
 }
 
 // Get interview session by ID
-export function getInterviewSession(id: string): InterviewSessionWithAnswers | null {
+export function getInterviewSession(
+  id: string,
+  userId: string = "default"
+): InterviewSessionWithAnswers | null {
   const sessionStmt = db.prepare(`
     SELECT id, job_id, profile_id, mode, questions_json, status, started_at, completed_at
     FROM interview_sessions
-    WHERE id = ?
+    WHERE id = ? AND profile_id = ?
   `);
 
-  const row = sessionStmt.get(id) as {
+  const row = sessionStmt.get(id, userId) as {
     id: string;
     job_id: string;
     profile_id: string;
@@ -116,15 +120,20 @@ export function getInterviewSession(id: string): InterviewSessionWithAnswers | n
 }
 
 // Get all interview sessions (optionally filter by job)
-export function getInterviewSessions(jobId?: string): InterviewSession[] {
+export function getInterviewSessions(
+  jobId?: string,
+  userId: string = "default"
+): InterviewSession[] {
   let query = `
     SELECT id, job_id, profile_id, mode, questions_json, status, started_at, completed_at
     FROM interview_sessions
   `;
-  const params: string[] = [];
+  const params: string[] = [userId];
+
+  query += " WHERE profile_id = ?";
 
   if (jobId) {
-    query += " WHERE job_id = ?";
+    query += " AND job_id = ?";
     params.push(jobId);
   }
 
@@ -182,38 +191,52 @@ export function addInterviewAnswer(
 }
 
 // Complete an interview session
-export function completeInterviewSession(sessionId: string): void {
+export function completeInterviewSession(
+  sessionId: string,
+  userId: string = "default"
+): void {
   const now = new Date().toISOString();
 
   const stmt = db.prepare(`
     UPDATE interview_sessions
     SET status = 'completed', completed_at = ?
-    WHERE id = ?
+    WHERE id = ? AND profile_id = ?
   `);
 
-  stmt.run(now, sessionId);
+  stmt.run(now, sessionId, userId);
 }
 
 // Delete an interview session (cascades to answers)
-export function deleteInterviewSession(id: string): void {
-  // Delete answers first (manual cascade since SQLite foreign keys might not be enabled)
+export function deleteInterviewSession(id: string, userId: string = "default"): void {
+  const session = db
+    .prepare("SELECT id FROM interview_sessions WHERE id = ? AND profile_id = ?")
+    .get(id, userId) as { id: string } | undefined;
+
+  if (!session) {
+    return;
+  }
+
   const deleteAnswers = db.prepare("DELETE FROM interview_answers WHERE session_id = ?");
   deleteAnswers.run(id);
 
-  const deleteSession = db.prepare("DELETE FROM interview_sessions WHERE id = ?");
-  deleteSession.run(id);
+  const deleteSession = db.prepare("DELETE FROM interview_sessions WHERE id = ? AND profile_id = ?");
+  deleteSession.run(id, userId);
 }
 
 // Get recent interview sessions for dashboard
-export function getRecentInterviewSessions(limit: number = 5): InterviewSession[] {
+export function getRecentInterviewSessions(
+  limit: number = 5,
+  userId: string = "default"
+): InterviewSession[] {
   const stmt = db.prepare(`
     SELECT id, job_id, profile_id, mode, questions_json, status, started_at, completed_at
     FROM interview_sessions
+    WHERE profile_id = ?
     ORDER BY started_at DESC
     LIMIT ?
   `);
 
-  const rows = stmt.all(limit) as Array<{
+  const rows = stmt.all(userId, limit) as Array<{
     id: string;
     job_id: string;
     profile_id: string;

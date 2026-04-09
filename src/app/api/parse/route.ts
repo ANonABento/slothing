@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
     const { filename, documentId } = parseResult.data;
 
     // Find the document
-    const documents = getDocuments();
+    const documents = getDocuments(authResult.userId);
     const doc = documents.find(
       (d) => d.id === documentId || d.filename === filename
     );
@@ -64,10 +64,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Save to profile
-    updateProfile(parsedProfile);
+    updateProfile(parsedProfile, authResult.userId);
 
     // Get updated profile
-    const profile = getProfile();
+    const profile = getProfile(authResult.userId);
 
     return NextResponse.json({
       success: true,

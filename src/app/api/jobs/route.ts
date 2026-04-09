@@ -1,19 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
 import { getJobs, createJob } from "@/lib/db/jobs";
 import { getLLMConfig } from "@/lib/db";
 import { LLMClient, parseJSONFromLLM } from "@/lib/llm/client";
 import { createJobSchema, TECH_KEYWORDS } from "@/lib/constants";
+import { requireAuth, isAuthError } from "@/lib/auth";
 
 export async function GET() {
-  try {
-    const { userId } = await auth();
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+  const authResult = await requireAuth();
+  if (isAuthError(authResult)) return authResult;
 
-    // TODO: Switch to Drizzle queries with userId once Neon is configured
-    const jobs = getJobs();
+  try {
+    const jobs = getJobs(authResult.userId);
     return NextResponse.json({ jobs });
   } catch (error) {
     console.error("Get jobs error:", error);
@@ -22,12 +19,10 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
-  try {
-    const { userId } = await auth();
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+  const authResult = await requireAuth();
+  if (isAuthError(authResult)) return authResult;
 
+  try {
     const rawData = await request.json();
 
     // Validate input with Zod
@@ -84,7 +79,7 @@ Return format: ["skill1", "skill2", "skill3", ...]`,
       requirements: data.requirements ?? [],
       responsibilities: data.responsibilities ?? [],
       keywords,
-    });
+    }, authResult.userId);
 
     return NextResponse.json({ job });
   } catch (error) {

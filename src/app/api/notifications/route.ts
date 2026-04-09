@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
 import {
   getNotifications,
   getUnreadNotificationCount,
@@ -7,27 +6,25 @@ import {
   deleteReadNotifications,
 } from "@/lib/db/notifications";
 import { notificationActionSchema } from "@/lib/constants";
+import { requireAuth, isAuthError } from "@/lib/auth";
 
 export async function GET(request: NextRequest) {
-  try {
-    const { userId } = await auth();
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+  const authResult = await requireAuth();
+  if (isAuthError(authResult)) return authResult;
 
+  try {
     const { searchParams } = new URL(request.url);
     const unreadOnly = searchParams.get("unreadOnly") === "true";
     const limit = parseInt(searchParams.get("limit") || "50", 10);
     const countOnly = searchParams.get("countOnly") === "true";
 
-    // TODO: Switch to Drizzle queries with userId once Neon is configured
     if (countOnly) {
-      const count = getUnreadNotificationCount();
+      const count = getUnreadNotificationCount(authResult.userId);
       return NextResponse.json({ count });
     }
 
-    const notifications = getNotifications({ unreadOnly, limit });
-    const unreadCount = getUnreadNotificationCount();
+    const notifications = getNotifications({ unreadOnly, limit, userId: authResult.userId });
+    const unreadCount = getUnreadNotificationCount(authResult.userId);
 
     return NextResponse.json({ notifications, unreadCount });
   } catch (error) {
@@ -40,12 +37,10 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  try {
-    const { userId } = await auth();
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+  const authResult = await requireAuth();
+  if (isAuthError(authResult)) return authResult;
 
+  try {
     const rawData = await request.json();
 
     // Validate input with Zod
@@ -59,14 +54,13 @@ export async function POST(request: NextRequest) {
 
     const { action } = parseResult.data;
 
-    // TODO: Switch to Drizzle queries with userId once Neon is configured
     switch (action) {
       case "markAllRead":
-        markAllNotificationsRead();
+        markAllNotificationsRead(authResult.userId);
         return NextResponse.json({ success: true, action: "markedAllRead" });
 
       case "deleteRead":
-        deleteReadNotifications();
+        deleteReadNotifications(authResult.userId);
         return NextResponse.json({ success: true, action: "deletedRead" });
     }
   } catch (error) {

@@ -1,18 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCoverLettersByJob } from "@/lib/db/cover-letters";
 import { getJob } from "@/lib/db/jobs";
+import { requireAuth, isAuthError } from "@/lib/auth";
 
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const authResult = await requireAuth();
+  if (isAuthError(authResult)) return authResult;
+
   try {
-    const job = getJob(params.id);
+    const job = getJob(params.id, authResult.userId);
     if (!job) {
       return NextResponse.json({ error: "Job not found" }, { status: 404 });
     }
 
-    const coverLetters = getCoverLettersByJob(params.id);
+    const coverLetters = getCoverLettersByJob(params.id, authResult.userId);
 
     return NextResponse.json({
       versions: coverLetters.map((cl) => ({

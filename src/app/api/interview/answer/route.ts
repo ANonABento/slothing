@@ -27,12 +27,12 @@ export async function POST(request: NextRequest) {
 
     const { jobId, answer } = parseResult.data;
 
-    const job = getJob(jobId);
+    const job = getJob(jobId, authResult.userId);
     if (!job) {
       return NextResponse.json({ error: "Job not found" }, { status: 404 });
     }
 
-    const profile = getProfile();
+    const profile = getProfile(authResult.userId);
     const llmConfig = getLLMConfig();
 
     let feedback = "";

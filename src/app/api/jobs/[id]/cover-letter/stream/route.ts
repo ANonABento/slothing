@@ -2,13 +2,17 @@ import { NextRequest } from "next/server";
 import { getJob } from "@/lib/db/jobs";
 import { getProfile, getLLMConfig } from "@/lib/db";
 import { LLMClient } from "@/lib/llm/client";
+import { requireAuth, isAuthError } from "@/lib/auth";
 
 export async function POST(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const authResult = await requireAuth();
+  if (isAuthError(authResult)) return authResult;
+
   try {
-    const job = getJob(params.id);
+    const job = getJob(params.id, authResult.userId);
     if (!job) {
       return new Response(JSON.stringify({ error: "Job not found" }), {
         status: 404,
@@ -16,7 +20,7 @@ export async function POST(
       });
     }
 
-    const profile = getProfile();
+    const profile = getProfile(authResult.userId);
     if (!profile) {
       return new Response(
         JSON.stringify({ error: "No profile data. Upload a resume first." }),

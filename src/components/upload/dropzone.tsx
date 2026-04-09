@@ -54,7 +54,6 @@ export function Dropzone({
   maxSize = 10 * 1024 * 1024,
   accept = {
     "application/pdf": [".pdf"],
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"],
     "text/plain": [".txt"],
   },
 }: DropzoneProps) {
@@ -84,6 +83,7 @@ export function Dropzone({
   const uploadFiles = async () => {
     setIsUploading(true);
     const filesToUpload = files.filter((f) => f.status === "pending");
+    const successfulUploads: UploadResult[] = [];
 
     for (let i = 0; i < filesToUpload.length; i++) {
       const fileIndex = files.findIndex((f) => f.file === filesToUpload[i].file);
@@ -117,11 +117,16 @@ export function Dropzone({
         clearInterval(progressInterval);
 
         if (!response.ok) {
-          throw new Error("Upload failed");
+          const errorData = await response.json().catch(() => null);
+          throw new Error(errorData?.error || "Upload failed");
         }
 
         const data = await response.json();
         const documentId = data.document?.id;
+
+        if (!documentId) {
+          throw new Error("Upload completed without a document ID");
+        }
 
         setFiles((prev) =>
           prev.map((f, idx) =>
@@ -130,11 +135,14 @@ export function Dropzone({
               : f
           )
         );
+
+        successfulUploads.push({ file: filesToUpload[i].file, documentId });
       } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : "Upload failed";
         setFiles((prev) =>
           prev.map((f, idx) =>
             idx === fileIndex
-              ? { ...f, status: "error" as const, error: "Upload failed" }
+              ? { ...f, status: "error" as const, error: errorMessage }
               : f
           )
         );
@@ -142,11 +150,7 @@ export function Dropzone({
     }
 
     setIsUploading(false);
-    // Get successfully uploaded files with their document IDs
-    const successResults: UploadResult[] = files
-      .filter((f) => f.status === "success" && f.documentId)
-      .map((f) => ({ file: f.file, documentId: f.documentId! }));
-    onUploadComplete?.(successResults);
+    onUploadComplete?.(successfulUploads);
   };
 
   const pendingFiles = files.filter((f) => f.status === "pending");
@@ -198,7 +202,7 @@ export function Dropzone({
 
           <p className="mt-2 text-muted-foreground">
             {isDragReject
-              ? "Please upload PDF, DOCX, or TXT files only"
+              ? "Please upload PDF or TXT files only"
               : "or click to browse from your computer"}
           </p>
 
@@ -206,10 +210,6 @@ export function Dropzone({
             <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-300 text-sm font-medium">
               <FileText className="h-4 w-4" />
               PDF
-            </span>
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 text-sm font-medium">
-              <FileText className="h-4 w-4" />
-              DOCX
             </span>
             <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-sm font-medium">
               <File className="h-4 w-4" />
@@ -257,12 +257,15 @@ export function Dropzone({
                 {/* File Info */}
                 <div className="flex-1 min-w-0 space-y-1">
                   <p className="font-medium truncate pr-8">{uploadedFile.file.name}</p>
-                  <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                    <span>{formatFileSize(uploadedFile.file.size)}</span>
-                    {uploadedFile.status === "uploading" && (
-                      <span className="text-primary">{uploadedFile.progress}%</span>
-                    )}
-                  </div>
+                <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                  <span>{formatFileSize(uploadedFile.file.size)}</span>
+                  {uploadedFile.status === "uploading" && (
+                    <span className="text-primary">{uploadedFile.progress}%</span>
+                  )}
+                  {uploadedFile.status === "error" && uploadedFile.error && (
+                    <span className="text-destructive">{uploadedFile.error}</span>
+                  )}
+                </div>
 
                   {/* Progress Bar */}
                   {uploadedFile.status === "uploading" && (

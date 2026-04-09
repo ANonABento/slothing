@@ -173,7 +173,10 @@ export default function DocumentsPage() {
       formData.append("file", blob, file.name);
 
       const uploadRes = await fetch("/api/upload", { method: "POST", body: formData });
-      if (!uploadRes.ok) throw new Error("Failed to save document");
+      if (!uploadRes.ok) {
+        const errorData = await uploadRes.json().catch(() => null);
+        throw new Error(errorData?.error || "Failed to save document");
+      }
 
       await fetchDocuments();
     } catch (err) {
@@ -216,7 +219,7 @@ export default function DocumentsPage() {
         <div className="flex gap-2">
           <DriveFilePicker
             onSelect={handleDriveImport}
-            accept={["application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "text/plain"]}
+            accept={["application/pdf", "text/plain"]}
             trigger={
               <Button variant="outline" disabled={driveImporting}>
                 {driveImporting ? (

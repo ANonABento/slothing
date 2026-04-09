@@ -18,7 +18,7 @@ interface GoogleConnectButtonProps {
   showStatus?: boolean;
 }
 
-export function GoogleConnectButton({
+function GoogleConnectButtonWithClerk({
   onConnectionChange,
   showStatus = true,
 }: GoogleConnectButtonProps) {
@@ -120,6 +120,19 @@ export function GoogleConnectButton({
       Connect Google Account
     </Button>
   );
+}
+
+export function GoogleConnectButton(props: GoogleConnectButtonProps) {
+  if (!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY) {
+    return (
+      <Button variant="outline" disabled className="gap-2">
+        <GoogleIcon className="h-4 w-4" />
+        Clerk required
+      </Button>
+    );
+  }
+
+  return <GoogleConnectButtonWithClerk {...props} />;
 }
 
 function GoogleIcon({ className }: { className?: string }) {

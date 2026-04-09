@@ -3,18 +3,22 @@ import {
   markNotificationRead,
   deleteNotification,
 } from "@/lib/db/notifications";
+import { requireAuth, isAuthError } from "@/lib/auth";
 
 export async function PATCH(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const authResult = await requireAuth();
+  if (isAuthError(authResult)) return authResult;
+
   try {
     const { id } = params;
     const { action } = await request.json();
 
     switch (action) {
       case "markRead":
-        markNotificationRead(id);
+        markNotificationRead(id, authResult.userId);
         return NextResponse.json({ success: true, action: "markedRead" });
 
       default:
@@ -36,9 +40,12 @@ export async function DELETE(
   _request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const authResult = await requireAuth();
+  if (isAuthError(authResult)) return authResult;
+
   try {
     const { id } = params;
-    deleteNotification(id);
+    deleteNotification(id, authResult.userId);
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Delete notification error:", error);

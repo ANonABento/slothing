@@ -1,3 +1,4 @@
+import { Component, type ErrorInfo, type ReactNode } from "react";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, act, waitFor } from "@testing-library/react";
 import { ToastProvider, useToast } from "./toast";
@@ -42,24 +43,61 @@ function TestComponent() {
   );
 }
 
+class HookErrorBoundary extends Component<
+  {
+    children: ReactNode;
+    onError: (error: Error) => void;
+  },
+  { hasError: boolean }
+> {
+  state = { hasError: false };
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: Error, _errorInfo: ErrorInfo) {
+    this.props.onError(error);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return <div data-testid="hook-error-boundary" />;
+    }
+
+    return this.props.children;
+  }
+}
+
 describe("Toast", () => {
+  let consoleErrorSpy: ReturnType<typeof vi.spyOn> | null = null;
+
   beforeEach(() => {
     vi.useFakeTimers();
   });
 
   afterEach(() => {
+    consoleErrorSpy?.mockRestore();
+    consoleErrorSpy = null;
     vi.useRealTimers();
   });
 
   it("should throw error when useToast is used outside ToastProvider", () => {
-    // Suppress console.error for this test
-    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const onError = vi.fn();
 
-    expect(() => {
-      render(<TestComponent />);
-    }).toThrow("useToast must be used within a ToastProvider");
+    render(
+      <HookErrorBoundary onError={onError}>
+        <TestComponent />
+      </HookErrorBoundary>
+    );
 
-    consoleSpy.mockRestore();
+    expect(onError).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: "useToast must be used within a ToastProvider",
+      })
+    );
+    expect(screen.getByTestId("hook-error-boundary")).toBeInTheDocument();
   });
 
   it("should render children within ToastProvider", () => {

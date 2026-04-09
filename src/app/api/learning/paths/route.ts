@@ -5,14 +5,18 @@ import {
   generateLearningPaths,
   enhanceLearningPathsWithLLM,
 } from "@/lib/learning/skill-paths";
+import { requireAuth, isAuthError } from "@/lib/auth";
 
 export async function GET(request: NextRequest) {
+  const authResult = await requireAuth();
+  if (isAuthError(authResult)) return authResult;
+
   try {
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get("limit") || "5", 10);
     const enhance = searchParams.get("enhance") === "true";
 
-    const profile = getProfile();
+    const profile = getProfile(authResult.userId);
     if (!profile) {
       return NextResponse.json(
         { error: "No profile found. Please upload your resume first." },
@@ -20,7 +24,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const jobs = getJobs();
+    const jobs = getJobs(authResult.userId);
     if (jobs.length === 0) {
       return NextResponse.json({
         paths: [],

@@ -69,7 +69,9 @@ describe("Resume Database Functions", () => {
 
       expect(result.matchScore).toBeUndefined();
       const runArgs = mockRun.mock.calls[0];
-      expect(runArgs[4]).toBeNull(); // matchScore should be null
+      expect(runArgs[4]).toBe("/path/to/resume.html");
+      expect(runArgs[5]).toBeNull();
+      expect(runArgs[6]).toEqual(expect.any(String));
     });
   });
 
@@ -101,7 +103,7 @@ describe("Resume Database Functions", () => {
 
       const result = getGeneratedResumes("job-123");
 
-      expect(mockAll).toHaveBeenCalledWith("job-123");
+      expect(mockAll).toHaveBeenCalledWith("job-123", "default");
       expect(result).toHaveLength(2);
       expect(result[0]).toEqual({
         id: "resume-1",
@@ -160,6 +162,7 @@ describe("Resume Database Functions", () => {
 
       const result = getGeneratedResume("resume-1");
 
+      expect((db.prepare as Mock)).toHaveBeenCalledWith(expect.stringContaining("WHERE id = ? AND profile_id = ?"));
       expect(result).toEqual({
         id: "resume-1",
         jobId: "job-123",
@@ -189,9 +192,9 @@ describe("Resume Database Functions", () => {
       deleteGeneratedResume("resume-1");
 
       expect(db.prepare).toHaveBeenCalledWith(
-        "DELETE FROM generated_resumes WHERE id = ?"
+        "DELETE FROM generated_resumes WHERE id = ? AND profile_id = ?"
       );
-      expect(mockRun).toHaveBeenCalledWith("resume-1");
+      expect(mockRun).toHaveBeenCalledWith("resume-1", "default");
     });
   });
 
@@ -244,6 +247,9 @@ describe("Resume Database Functions", () => {
 
       const result = getGeneratedResumeCount();
 
+      expect((db.prepare as Mock)).toHaveBeenCalledWith(
+        "SELECT COUNT(*) as count FROM generated_resumes WHERE profile_id = ?"
+      );
       expect(result).toBe(42);
     });
 
@@ -254,6 +260,9 @@ describe("Resume Database Functions", () => {
 
       const result = getGeneratedResumeCount();
 
+      expect((db.prepare as Mock)).toHaveBeenCalledWith(
+        "SELECT COUNT(*) as count FROM generated_resumes WHERE profile_id = ?"
+      );
       expect(result).toBe(0);
     });
   });

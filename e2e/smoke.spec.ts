@@ -6,7 +6,7 @@ test.describe("Smoke Tests", () => {
     await expect(page).toHaveTitle(/Get Me Job/i);
   });
 
-  test("all main pages load without errors", async ({ page }) => {
+  test("protected pages redirect unauthenticated users to sign-in", async ({ page }) => {
     const pages = [
       { url: "/dashboard", name: "Dashboard" },
       { url: "/upload", name: "Upload" },
@@ -19,65 +19,34 @@ test.describe("Smoke Tests", () => {
 
     for (const p of pages) {
       await page.goto(p.url);
-      // Page should not have HTTP error state (500, 404)
-      // Use more specific selectors to avoid false positives
-      await expect(page.locator("h1:has-text('500')")).not.toBeVisible({ timeout: 2000 });
-      await expect(page.locator("h1:has-text('404')")).not.toBeVisible({ timeout: 2000 });
-      await expect(page.getByText(/something went wrong|page not found/i)).not.toBeVisible({ timeout: 500 });
+      await page.waitForLoadState("networkidle");
+      expect(page.url()).toContain("/sign-in");
     }
   });
 
-  test("sidebar is responsive on mobile", async ({ page }) => {
-    // Set mobile viewport
+  test("landing page navigation is responsive on mobile", async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 667 });
-    await page.goto("/dashboard");
+    await page.goto("/");
     await page.evaluate(() => {
       localStorage.setItem("get_me_job_onboarding_completed", "true");
     });
     await page.reload();
     await page.waitForLoadState("networkidle");
 
-    // Sidebar should be hidden by default on mobile
-    const sidebar = page.locator("aside");
-    await expect(sidebar).not.toBeInViewport();
-
-    // Menu button should be visible
-    const menuButton = page.getByRole("button", { name: /menu|open/i });
+    const menuButton = page.getByRole("button", { name: "Toggle menu" });
     await expect(menuButton).toBeVisible();
 
-    // Click menu button to open sidebar
     await menuButton.click();
-    await expect(sidebar).toBeInViewport();
+    await expect(page.getByRole("link", { name: "Features" })).toBeVisible();
   });
 
-  test("theme toggle works", async ({ page }) => {
-    await page.goto("/dashboard");
-    await page.evaluate(() => {
-      localStorage.setItem("get_me_job_onboarding_completed", "true");
-    });
-    await page.reload();
+  test("landing page renders without crash states", async ({ page }) => {
+    await page.goto("/");
     await page.waitForLoadState("networkidle");
 
-    // Find and click theme toggle
-    const themeButton = page.getByRole("button", { name: /theme|light|dark|system/i });
-
-    if (await themeButton.isVisible({ timeout: 2000 }).catch(() => false)) {
-      const htmlElement = page.locator("html");
-
-      // Get initial theme class
-      const initialClass = await htmlElement.getAttribute("class");
-
-      // Click theme toggle
-      await themeButton.click();
-
-      // Wait a moment for theme to change
-      await page.waitForTimeout(100);
-
-      // The class should have changed (or a data-attribute)
-      const newClass = await htmlElement.getAttribute("class");
-      // Theme should have changed in some way
-      // Note: This is a basic check - actual implementation may vary
-    }
+    await expect(page.locator("h1:has-text('500')")).not.toBeVisible();
+    await expect(page.locator("h1:has-text('404')")).not.toBeVisible();
+    await expect(page.getByText(/something went wrong|page not found/i)).not.toBeVisible();
   });
 
   test("app handles localStorage unavailability gracefully", async ({ page }) => {

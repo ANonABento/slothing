@@ -15,7 +15,7 @@ export async function GET(
   if (isAuthError(authResult)) return authResult;
 
   try {
-    const offer = getSalaryOffer(params.id);
+    const offer = getSalaryOffer(params.id, authResult.userId);
 
     if (!offer) {
       return NextResponse.json(
@@ -69,7 +69,7 @@ export async function PUT(
       negotiationOutcome,
       finalBaseSalary,
       finalTotalComp,
-    });
+    }, authResult.userId);
 
     if (!offer) {
       return NextResponse.json(
@@ -97,7 +97,7 @@ export async function DELETE(
   if (isAuthError(authResult)) return authResult;
 
   try {
-    const success = deleteSalaryOffer(params.id);
+    const success = deleteSalaryOffer(params.id, authResult.userId);
 
     if (!success) {
       return NextResponse.json(
