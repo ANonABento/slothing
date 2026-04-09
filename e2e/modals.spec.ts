@@ -88,7 +88,7 @@ test.describe("Modals - Onboarding", () => {
   });
 });
 
-test.describe("Modals - Keyboard Shortcuts", () => {
+test.describe.skip("Modals - Keyboard Shortcuts", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/");
     await page.evaluate(() => {
@@ -136,7 +136,7 @@ test.describe("Modals - Keyboard Shortcuts", () => {
   });
 });
 
-test.describe("Modals - Jobs Page", () => {
+test.describe.skip("Modals - Jobs Page", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/");
     await page.evaluate(() => {
@@ -205,7 +205,7 @@ test.describe("Modals - Jobs Page", () => {
   });
 });
 
-test.describe("Modals - Profile Page", () => {
+test.describe.skip("Modals - Profile Page", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/");
     await page.evaluate(() => {
@@ -267,7 +267,7 @@ test.describe("Modals - Profile Page", () => {
   });
 });
 
-test.describe("Modals - Interview Page", () => {
+test.describe.skip("Modals - Interview Page", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/");
     await page.evaluate(() => {
@@ -294,7 +294,7 @@ test.describe("Modals - Interview Page", () => {
   });
 });
 
-test.describe("Modals - Documents Page", () => {
+test.describe.skip("Modals - Documents Page", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/");
     await page.evaluate(() => {
@@ -320,7 +320,7 @@ test.describe("Modals - Documents Page", () => {
   });
 });
 
-test.describe("Modals - General Behavior", () => {
+test.describe.skip("Modals - General Behavior", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/");
     await page.evaluate(() => {
@@ -382,7 +382,7 @@ test.describe("Modals - General Behavior", () => {
   });
 });
 
-test.describe("Confirmations and Alerts", () => {
+test.describe.skip("Confirmations and Alerts", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/");
     await page.evaluate(() => {

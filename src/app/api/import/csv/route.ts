@@ -236,7 +236,7 @@ export async function PUT(request: NextRequest) {
           responsibilities: [],
           keywords: [],
           url: job.url,
-        });
+        }, authResult.userId);
         imported.push(`${job.title} at ${job.company}`);
       } catch {
         failed.push(`${job.title} at ${job.company}`);

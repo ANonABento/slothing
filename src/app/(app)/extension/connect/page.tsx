@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { CheckCircle, Loader2, Chrome, AlertCircle } from "lucide-react";
 
-export default function ExtensionConnectPage() {
+function ExtensionConnectPageWithAuth() {
   const { isSignedIn, isLoaded } = useUser();
   const [status, setStatus] = useState<"loading" | "connecting" | "success" | "error">("loading");
   const [error, setError] = useState<string | null>(null);
@@ -152,4 +152,23 @@ export default function ExtensionConnectPage() {
       </Card>
     </div>
   );
+}
+
+export default function ExtensionConnectPage() {
+  if (!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY) {
+    return (
+      <div className="flex min-h-screen items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <CardTitle>Extension auth unavailable</CardTitle>
+            <CardDescription>
+              Add Clerk environment variables to connect the browser extension in this environment.
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      </div>
+    );
+  }
+
+  return <ExtensionConnectPageWithAuth />;
 }

@@ -2,14 +2,18 @@ import { NextRequest, NextResponse } from "next/server";
 import { getGeneratedResumes, deleteGeneratedResume } from "@/lib/db";
 import { unlink } from "fs/promises";
 import path from "path";
+import { requireAuth, isAuthError } from "@/lib/auth";
 
 // GET - List all generated resumes for a job
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const authResult = await requireAuth();
+  if (isAuthError(authResult)) return authResult;
+
   try {
-    const resumes = getGeneratedResumes(params.id);
+    const resumes = getGeneratedResumes(params.id, authResult.userId);
 
     return NextResponse.json({ resumes });
   } catch (error) {
@@ -23,6 +27,9 @@ export async function GET(
 
 // DELETE - Delete a specific resume (body contains resumeId)
 export async function DELETE(request: NextRequest) {
+  const authResult = await requireAuth();
+  if (isAuthError(authResult)) return authResult;
+
   try {
     const { resumeId, htmlPath } = await request.json();
 
@@ -34,7 +41,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Delete from database
-    deleteGeneratedResume(resumeId);
+    deleteGeneratedResume(resumeId, authResult.userId);
 
     // Try to delete the file (optional - don't fail if file doesn't exist)
     if (htmlPath) {

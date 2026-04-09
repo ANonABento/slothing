@@ -3,8 +3,12 @@ import { getGeneratedResume } from "@/lib/db/resumes";
 import { compareResumes } from "@/lib/resume/compare";
 import { compareResumesSchema } from "@/lib/constants";
 import type { TailoredResume } from "@/lib/resume/generator";
+import { requireAuth, isAuthError } from "@/lib/auth";
 
 export async function POST(request: NextRequest) {
+  const authResult = await requireAuth();
+  if (isAuthError(authResult)) return authResult;
+
   try {
     const rawData = await request.json();
 
@@ -23,8 +27,8 @@ export async function POST(request: NextRequest) {
 
     const { beforeId, afterId } = parseResult.data;
 
-    const beforeResume = getGeneratedResume(beforeId);
-    const afterResume = getGeneratedResume(afterId);
+    const beforeResume = getGeneratedResume(beforeId, authResult.userId);
+    const afterResume = getGeneratedResume(afterId, authResult.userId);
 
     if (!beforeResume) {
       return NextResponse.json(

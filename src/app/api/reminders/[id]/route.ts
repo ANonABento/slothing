@@ -5,11 +5,15 @@ import {
   dismissReminder,
   deleteReminder,
 } from "@/lib/db/reminders";
+import { requireAuth, isAuthError } from "@/lib/auth";
 
 export async function PATCH(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const authResult = await requireAuth();
+  if (isAuthError(authResult)) return authResult;
+
   try {
     const { id } = params;
     const body = await request.json();
@@ -17,16 +21,16 @@ export async function PATCH(
 
     switch (action) {
       case "complete":
-        completeReminder(id);
+        completeReminder(id, authResult.userId);
         return NextResponse.json({ success: true, action: "completed" });
 
       case "dismiss":
-        dismissReminder(id);
+        dismissReminder(id, authResult.userId);
         return NextResponse.json({ success: true, action: "dismissed" });
 
       default:
         // Update reminder fields
-        updateReminder(id, updates);
+        updateReminder(id, updates, authResult.userId);
         return NextResponse.json({ success: true, action: "updated" });
     }
   } catch (error) {
@@ -42,9 +46,12 @@ export async function DELETE(
   _request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const authResult = await requireAuth();
+  if (isAuthError(authResult)) return authResult;
+
   try {
     const { id } = params;
-    deleteReminder(id);
+    deleteReminder(id, authResult.userId);
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Delete reminder error:", error);

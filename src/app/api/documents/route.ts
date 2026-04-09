@@ -7,7 +7,7 @@ export async function GET() {
   if (isAuthError(authResult)) return authResult;
 
   try {
-    const documents = getDocuments();
+    const documents = getDocuments(authResult.userId);
     return NextResponse.json({ documents });
   } catch (error) {
     console.error("Get documents error:", error);

@@ -15,7 +15,7 @@ export async function GET(
   if (isAuthError(authResult)) return authResult;
 
   try {
-    const draft = getEmailDraft(params.id);
+    const draft = getEmailDraft(params.id, authResult.userId);
 
     if (!draft) {
       return NextResponse.json(
@@ -49,7 +49,7 @@ export async function PUT(
       subject,
       body,
       context,
-    });
+    }, authResult.userId);
 
     if (!draft) {
       return NextResponse.json(
@@ -77,7 +77,7 @@ export async function DELETE(
   if (isAuthError(authResult)) return authResult;
 
   try {
-    const success = deleteEmailDraft(params.id);
+    const success = deleteEmailDraft(params.id, authResult.userId);
 
     if (!success) {
       return NextResponse.json(

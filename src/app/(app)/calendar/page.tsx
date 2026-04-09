@@ -81,14 +81,8 @@ export default function CalendarPage() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [showSubscribeDialog, setShowSubscribeDialog] = useState(false);
   const [copiedUrl, setCopiedUrl] = useState(false);
-
-  // Generate feed URLs - In production, this would be a per-user token
-  // For now, we use a static token matching the API constant (CALENDAR_FEED_TOKEN)
-  const feedToken = "get-me-job-feed-2024";
-  const feedUrl = typeof window !== "undefined"
-    ? `${window.location.origin}/api/calendar/feed?token=${feedToken}&type=all`
-    : "";
-  const webcalUrl = feedUrl.replace(/^https?:\/\//, "webcal://");
+  const [feedUrl, setFeedUrl] = useState("");
+  const [webcalUrl, setWebcalUrl] = useState("");
 
   const copyFeedUrl = async () => {
     try {
@@ -116,10 +110,13 @@ export default function CalendarPage() {
     Promise.all([
       fetch("/api/jobs").then((r) => r.json()),
       fetch("/api/reminders").then((r) => r.json()),
+      fetch("/api/calendar/feed-url?type=all").then((r) => r.json()),
     ])
-      .then(([jobsData, remindersData]) => {
+      .then(([jobsData, remindersData, feedData]) => {
         setJobs(jobsData.jobs || []);
         setReminders(remindersData.reminders || []);
+        setFeedUrl(feedData.feedUrl || "");
+        setWebcalUrl(feedData.webcalUrl || "");
       })
       .catch(console.error)
       .finally(() => setLoading(false));

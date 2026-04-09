@@ -17,16 +17,16 @@ export async function GET() {
       version: "1.0",
       exportedAt: new Date().toISOString(),
       data: {
-        profile: getProfile(),
-        jobs: getJobs(),
-        documents: getDocuments().map((d) => ({
+        profile: getProfile(authResult.userId),
+        jobs: getJobs(authResult.userId),
+        documents: getDocuments(authResult.userId).map((d) => ({
           filename: d.filename,
           type: d.type,
           mimeType: d.mimeType,
           uploadedAt: d.uploadedAt,
         })),
-        interviewSessions: getInterviewSessions(),
-        generatedResumes: getAllGeneratedResumes().map((r) => ({
+        interviewSessions: getInterviewSessions(undefined, authResult.userId),
+        generatedResumes: getAllGeneratedResumes(authResult.userId).map((r) => ({
           jobId: r.jobId,
           matchScore: r.matchScore,
           createdAt: r.createdAt,
@@ -34,10 +34,10 @@ export async function GET() {
         llmConfig: getLLMConfig(),
       },
       stats: {
-        totalJobs: getJobs().length,
-        totalDocuments: getDocuments().length,
-        totalInterviews: getInterviewSessions().length,
-        totalResumes: getAllGeneratedResumes().length,
+        totalJobs: getJobs(authResult.userId).length,
+        totalDocuments: getDocuments(authResult.userId).length,
+        totalInterviews: getInterviewSessions(undefined, authResult.userId).length,
+        totalResumes: getAllGeneratedResumes(authResult.userId).length,
       },
     };
 
@@ -135,13 +135,13 @@ export async function POST(request: NextRequest) {
           date: cert.date as string | undefined,
           url: cert.url as string | undefined,
         })),
-      });
+      }, authResult.userId);
       results.profile = true;
     }
 
     // Restore jobs (skip duplicates)
     if (backup.data.jobs && Array.isArray(backup.data.jobs)) {
-      const existingJobs = getJobs();
+      const existingJobs = getJobs(authResult.userId);
       const existingKeys = new Set(
         existingJobs.map((j) => `${j.title.toLowerCase()}-${j.company.toLowerCase()}`)
       );
@@ -178,7 +178,7 @@ export async function POST(request: NextRequest) {
           url: job.url,
           status: jobStatus,
           notes: job.notes,
-        });
+        }, authResult.userId);
         existingKeys.add(key);
         results.jobs.imported++;
       }

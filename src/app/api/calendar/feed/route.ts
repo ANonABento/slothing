@@ -3,7 +3,9 @@ import { getJobs } from "@/lib/db/jobs";
 import { getReminders } from "@/lib/db/reminders";
 import { getInterviewSessions } from "@/lib/db/interviews";
 import { generateICSCalendar, type CalendarEvent } from "@/lib/calendar/ics-generator";
-import { CALENDAR_FEED_TOKEN } from "@/lib/constants";
+import { verifyCalendarFeedToken } from "@/lib/calendar/feed-token";
+
+export const dynamic = "force-dynamic";
 
 type EventType = "interviews" | "deadlines" | "reminders" | "all";
 
@@ -12,9 +14,9 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const token = searchParams.get("token");
     const type = (searchParams.get("type") || "all") as EventType;
+    const userId = token ? verifyCalendarFeedToken(token) : null;
 
-    // Validate token (in production, this would validate against user's stored token)
-    if (token !== CALENDAR_FEED_TOKEN) {
+    if (!userId) {
       return new Response(JSON.stringify({ error: "Invalid feed token" }), {
         status: 401,
         headers: { "Content-Type": "application/json" },
@@ -22,8 +24,8 @@ export async function GET(request: NextRequest) {
     }
 
     const events: CalendarEvent[] = [];
-    const jobs = getJobs();
-    const reminders = getReminders();
+    const jobs = getJobs(userId);
+    const reminders = getReminders({ userId });
 
     // Get interview events from jobs in interviewing status
     if (type === "interviews" || type === "all") {
@@ -45,7 +47,7 @@ export async function GET(request: NextRequest) {
 
       // Also include interview practice sessions
       try {
-        const sessions = getInterviewSessions();
+        const sessions = getInterviewSessions(undefined, userId);
         for (const session of sessions) {
           if (session.startedAt) {
             const job = jobs.find((j) => j.id === session.jobId);
@@ -117,18 +119,4 @@ export async function GET(request: NextRequest) {
       headers: { "Content-Type": "application/json" },
     });
   }
-}
-
-// Utility to generate feed URL for the user
-export function getCalendarFeedUrl(baseUrl: string, type: EventType = "all"): string {
-  const url = new URL("/api/calendar/feed", baseUrl);
-  url.searchParams.set("token", CALENDAR_FEED_TOKEN);
-  url.searchParams.set("type", type);
-  return url.toString();
-}
-
-// Generate webcal:// URL (for calendar app subscription)
-export function getWebcalUrl(baseUrl: string, type: EventType = "all"): string {
-  const httpUrl = getCalendarFeedUrl(baseUrl, type);
-  return httpUrl.replace(/^https?:\/\//, "webcal://");
 }

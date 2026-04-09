@@ -23,10 +23,18 @@ export interface ReminderWithJob extends Reminder {
 
 // Create a new reminder
 export function createReminder(
-  reminder: Omit<Reminder, "id" | "completed" | "dismissed" | "createdAt" | "completedAt">
+  reminder: Omit<Reminder, "id" | "completed" | "dismissed" | "createdAt" | "completedAt">,
+  userId: string = "default"
 ): Reminder {
   const id = generateId();
   const now = new Date().toISOString();
+  const job = db
+    .prepare("SELECT id FROM jobs WHERE id = ? AND user_id = ?")
+    .get(reminder.jobId, userId) as { id: string } | undefined;
+
+  if (!job) {
+    throw new Error("Job not found");
+  }
 
   const stmt = db.prepare(`
     INSERT INTO reminders (id, job_id, type, title, description, due_date, created_at)
@@ -61,16 +69,22 @@ export function getReminders(options?: {
   jobId?: string;
   includeCompleted?: boolean;
   includeDismissed?: boolean;
+  userId?: string;
 }): ReminderWithJob[] {
-  const { jobId, includeCompleted = false, includeDismissed = false } = options || {};
+  const {
+    jobId,
+    includeCompleted = false,
+    includeDismissed = false,
+    userId = "default",
+  } = options || {};
 
   let query = `
     SELECT r.*, j.title as job_title, j.company as job_company
     FROM reminders r
     LEFT JOIN jobs j ON r.job_id = j.id
-    WHERE 1=1
+    WHERE j.user_id = ?
   `;
-  const params: (string | number)[] = [];
+  const params: (string | number)[] = [userId];
 
   if (jobId) {
     query += " AND r.job_id = ?";
@@ -120,7 +134,10 @@ export function getReminders(options?: {
 }
 
 // Get upcoming reminders (due within specified days)
-export function getUpcomingReminders(days: number = 7): ReminderWithJob[] {
+export function getUpcomingReminders(
+  days: number = 7,
+  userId: string = "default"
+): ReminderWithJob[] {
   const futureDate = new Date();
   futureDate.setDate(futureDate.getDate() + days);
 
@@ -128,13 +145,14 @@ export function getUpcomingReminders(days: number = 7): ReminderWithJob[] {
     SELECT r.*, j.title as job_title, j.company as job_company
     FROM reminders r
     LEFT JOIN jobs j ON r.job_id = j.id
-    WHERE r.completed = 0
+    WHERE j.user_id = ?
+      AND r.completed = 0
       AND r.dismissed = 0
       AND r.due_date <= ?
     ORDER BY r.due_date ASC
   `);
 
-  const rows = stmt.all(futureDate.toISOString()) as Array<{
+  const rows = stmt.all(userId, futureDate.toISOString()) as Array<{
     id: string;
     job_id: string;
     type: string;
@@ -166,20 +184,21 @@ export function getUpcomingReminders(days: number = 7): ReminderWithJob[] {
 }
 
 // Get overdue reminders
-export function getOverdueReminders(): ReminderWithJob[] {
+export function getOverdueReminders(userId: string = "default"): ReminderWithJob[] {
   const now = new Date().toISOString();
 
   const stmt = db.prepare(`
     SELECT r.*, j.title as job_title, j.company as job_company
     FROM reminders r
     LEFT JOIN jobs j ON r.job_id = j.id
-    WHERE r.completed = 0
+    WHERE j.user_id = ?
+      AND r.completed = 0
       AND r.dismissed = 0
       AND r.due_date < ?
     ORDER BY r.due_date ASC
   `);
 
-  const rows = stmt.all(now) as Array<{
+  const rows = stmt.all(userId, now) as Array<{
     id: string;
     job_id: string;
     type: string;
@@ -211,39 +230,46 @@ export function getOverdueReminders(): ReminderWithJob[] {
 }
 
 // Complete a reminder
-export function completeReminder(id: string): void {
+export function completeReminder(id: string, userId: string = "default"): void {
   const now = new Date().toISOString();
 
   const stmt = db.prepare(`
     UPDATE reminders
     SET completed = 1, completed_at = ?
     WHERE id = ?
+      AND job_id IN (SELECT id FROM jobs WHERE user_id = ?)
   `);
 
-  stmt.run(now, id);
+  stmt.run(now, id, userId);
 }
 
 // Dismiss a reminder
-export function dismissReminder(id: string): void {
+export function dismissReminder(id: string, userId: string = "default"): void {
   const stmt = db.prepare(`
     UPDATE reminders
     SET dismissed = 1
     WHERE id = ?
+      AND job_id IN (SELECT id FROM jobs WHERE user_id = ?)
   `);
 
-  stmt.run(id);
+  stmt.run(id, userId);
 }
 
 // Delete a reminder
-export function deleteReminder(id: string): void {
-  const stmt = db.prepare("DELETE FROM reminders WHERE id = ?");
-  stmt.run(id);
+export function deleteReminder(id: string, userId: string = "default"): void {
+  const stmt = db.prepare(`
+    DELETE FROM reminders
+    WHERE id = ?
+      AND job_id IN (SELECT id FROM jobs WHERE user_id = ?)
+  `);
+  stmt.run(id, userId);
 }
 
 // Update a reminder
 export function updateReminder(
   id: string,
-  updates: Partial<Pick<Reminder, "title" | "description" | "dueDate" | "type">>
+  updates: Partial<Pick<Reminder, "title" | "description" | "dueDate" | "type">>,
+  userId: string = "default"
 ): void {
   const fields: string[] = [];
   const values: (string | null)[] = [];
@@ -267,19 +293,24 @@ export function updateReminder(
 
   if (fields.length === 0) return;
 
-  values.push(id);
+  values.push(id, userId);
 
   const stmt = db.prepare(`
     UPDATE reminders
     SET ${fields.join(", ")}
     WHERE id = ?
+      AND job_id IN (SELECT id FROM jobs WHERE user_id = ?)
   `);
 
   stmt.run(...values);
 }
 
 // Create follow-up reminder for a job application
-export function createFollowUpReminder(jobId: string, daysFromNow: number = 7): Reminder {
+export function createFollowUpReminder(
+  jobId: string,
+  daysFromNow: number = 7,
+  userId: string = "default"
+): Reminder {
   const dueDate = new Date();
   dueDate.setDate(dueDate.getDate() + daysFromNow);
 
@@ -289,11 +320,11 @@ export function createFollowUpReminder(jobId: string, daysFromNow: number = 7): 
     title: "Follow up on application",
     description: "Send a follow-up email to check on your application status",
     dueDate: dueDate.toISOString(),
-  });
+  }, userId);
 }
 
 // Get reminder counts for dashboard
-export function getReminderCounts(): {
+export function getReminderCounts(userId: string = "default"): {
   total: number;
   overdue: number;
   upcoming: number;
@@ -304,22 +335,44 @@ export function getReminderCounts(): {
   weekFromNow.setDate(weekFromNow.getDate() + 7);
 
   const totalStmt = db.prepare(
-    "SELECT COUNT(*) as count FROM reminders WHERE completed = 0 AND dismissed = 0"
+    `
+      SELECT COUNT(*) as count
+      FROM reminders r
+      JOIN jobs j ON r.job_id = j.id
+      WHERE j.user_id = ? AND r.completed = 0 AND r.dismissed = 0
+    `
   );
   const overdueStmt = db.prepare(
-    "SELECT COUNT(*) as count FROM reminders WHERE completed = 0 AND dismissed = 0 AND due_date < ?"
+    `
+      SELECT COUNT(*) as count
+      FROM reminders r
+      JOIN jobs j ON r.job_id = j.id
+      WHERE j.user_id = ? AND r.completed = 0 AND r.dismissed = 0 AND r.due_date < ?
+    `
   );
   const upcomingStmt = db.prepare(
-    "SELECT COUNT(*) as count FROM reminders WHERE completed = 0 AND dismissed = 0 AND due_date >= ? AND due_date <= ?"
+    `
+      SELECT COUNT(*) as count
+      FROM reminders r
+      JOIN jobs j ON r.job_id = j.id
+      WHERE j.user_id = ? AND r.completed = 0 AND r.dismissed = 0 AND r.due_date >= ? AND r.due_date <= ?
+    `
   );
   const completedStmt = db.prepare(
-    "SELECT COUNT(*) as count FROM reminders WHERE completed = 1"
+    `
+      SELECT COUNT(*) as count
+      FROM reminders r
+      JOIN jobs j ON r.job_id = j.id
+      WHERE j.user_id = ? AND r.completed = 1
+    `
   );
 
-  const total = (totalStmt.get() as { count: number }).count;
-  const overdue = (overdueStmt.get(now) as { count: number }).count;
-  const upcoming = (upcomingStmt.get(now, weekFromNow.toISOString()) as { count: number }).count;
-  const completed = (completedStmt.get() as { count: number }).count;
+  const total = (totalStmt.get(userId) as { count: number }).count;
+  const overdue = (overdueStmt.get(userId, now) as { count: number }).count;
+  const upcoming = (
+    upcomingStmt.get(userId, now, weekFromNow.toISOString()) as { count: number }
+  ).count;
+  const completed = (completedStmt.get(userId) as { count: number }).count;
 
   return { total, overdue, upcoming, completed };
 }

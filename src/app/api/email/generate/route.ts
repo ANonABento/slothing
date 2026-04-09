@@ -35,8 +35,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const profile = getProfile();
-    const job = jobId ? getJob(jobId) : undefined;
+    const profile = getProfile(authResult.userId);
+    const job = jobId ? getJob(jobId, authResult.userId) : undefined;
 
     const context = {
       job: job || undefined,

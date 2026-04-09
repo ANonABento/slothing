@@ -12,14 +12,16 @@ export async function DELETE(
 
   try {
     // Get document path before deleting
-    const doc = db.prepare("SELECT path FROM documents WHERE id = ?").get(params.id) as { path: string } | undefined;
+    const doc = db
+      .prepare("SELECT path FROM documents WHERE id = ? AND user_id = ?")
+      .get(params.id, authResult.userId) as { path: string } | undefined;
 
     if (!doc) {
       return NextResponse.json({ error: "Document not found" }, { status: 404 });
     }
 
     // Delete from database
-    db.prepare("DELETE FROM documents WHERE id = ?").run(params.id);
+    db.prepare("DELETE FROM documents WHERE id = ? AND user_id = ?").run(params.id, authResult.userId);
 
     // Try to delete file (don't fail if file doesn't exist)
     try {

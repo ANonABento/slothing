@@ -1,17 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
 import { getProfile, updateProfile, clearProfile } from "@/lib/db";
 import { updateProfileSchema } from "@/lib/constants";
+import { requireAuth, isAuthError } from "@/lib/auth";
 
 export async function GET() {
-  try {
-    const { userId } = await auth();
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+  const authResult = await requireAuth();
+  if (isAuthError(authResult)) return authResult;
 
-    // TODO: Switch to Drizzle queries with userId once Neon is configured
-    const profile = getProfile();
+  try {
+    const profile = getProfile(authResult.userId);
     return NextResponse.json({ profile });
   } catch (error) {
     console.error("Get profile error:", error);
@@ -23,12 +20,10 @@ export async function GET() {
 }
 
 export async function PUT(request: NextRequest) {
-  try {
-    const { userId } = await auth();
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+  const authResult = await requireAuth();
+  if (isAuthError(authResult)) return authResult;
 
+  try {
     const rawData = await request.json();
 
     // Validate input with Zod
@@ -44,9 +39,8 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    // TODO: Switch to Drizzle queries with userId once Neon is configured
-    updateProfile(parseResult.data);
-    const profile = getProfile();
+    updateProfile(parseResult.data, authResult.userId);
+    const profile = getProfile(authResult.userId);
     return NextResponse.json({ success: true, profile });
   } catch (error) {
     console.error("Update profile error:", error);
@@ -58,14 +52,11 @@ export async function PUT(request: NextRequest) {
 }
 
 export async function DELETE() {
-  try {
-    const { userId } = await auth();
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+  const authResult = await requireAuth();
+  if (isAuthError(authResult)) return authResult;
 
-    // TODO: Switch to Drizzle queries with userId once Neon is configured
-    clearProfile();
+  try {
+    clearProfile(authResult.userId);
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Clear profile error:", error);

@@ -1,21 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
 import { getJob, updateJob, deleteJob } from "@/lib/db/jobs";
 import { updateJobSchema } from "@/lib/constants";
 import { recordJobStatusChange } from "@/lib/db/analytics";
+import { requireAuth, isAuthError } from "@/lib/auth";
 
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  try {
-    const { userId } = await auth();
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+  const authResult = await requireAuth();
+  if (isAuthError(authResult)) return authResult;
 
-    // TODO: Switch to Drizzle queries with userId once Neon is configured
-    const job = getJob(params.id);
+  try {
+    const job = getJob(params.id, authResult.userId);
     if (!job) {
       return NextResponse.json({ error: "Job not found" }, { status: 404 });
     }
@@ -30,14 +27,12 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  try {
-    const { userId } = await auth();
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+  const authResult = await requireAuth();
+  if (isAuthError(authResult)) return authResult;
 
+  try {
     // Check if job exists and get current status
-    const existingJob = getJob(params.id);
+    const existingJob = getJob(params.id, authResult.userId);
     if (!existingJob) {
       return NextResponse.json({ error: "Job not found" }, { status: 404 });
     }
@@ -59,8 +54,8 @@ export async function PUT(
     }
 
     const data = parseResult.data;
-    updateJob(params.id, data);
-    const job = getJob(params.id);
+    updateJob(params.id, data, authResult.userId);
+    const job = getJob(params.id, authResult.userId);
 
     // Record status change if status was updated
     if (data.status && data.status !== oldStatus) {
@@ -84,20 +79,21 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  try {
-    const { userId } = await auth();
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+  const authResult = await requireAuth();
+  if (isAuthError(authResult)) return authResult;
 
+  try {
     // Get the job's current status before updating
-    const existingJob = getJob(params.id);
+    const existingJob = getJob(params.id, authResult.userId);
     const oldStatus = existingJob?.status || null;
 
+    if (!existingJob) {
+      return NextResponse.json({ error: "Job not found" }, { status: 404 });
+    }
+
     const data = await request.json();
-    // TODO: Switch to Drizzle queries with userId once Neon is configured
-    updateJob(params.id, data);
-    const job = getJob(params.id);
+    updateJob(params.id, data, authResult.userId);
+    const job = getJob(params.id, authResult.userId);
 
     // Record status change if status was updated
     if (data.status && data.status !== oldStatus) {
@@ -117,17 +113,14 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  try {
-    const { userId } = await auth();
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+  const authResult = await requireAuth();
+  if (isAuthError(authResult)) return authResult;
 
-    // TODO: Switch to Drizzle queries with userId once Neon is configured
-    deleteJob(params.id);
+  try {
+    deleteJob(params.id, authResult.userId);
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Delete job error:", error);

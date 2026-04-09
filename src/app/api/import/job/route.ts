@@ -172,7 +172,7 @@ export async function PUT(request: NextRequest) {
       responsibilities: [],
       keywords: keywords || [],
       url,
-    });
+    }, authResult.userId);
 
     return NextResponse.json({
       success: true,

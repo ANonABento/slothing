@@ -89,6 +89,64 @@ const bottomNavigation = [
   { name: "Settings", href: "/settings", icon: Settings },
 ];
 
+function SidebarUserSection({ collapsed }: { collapsed: boolean }) {
+  if (!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY) {
+    return (
+      <Link
+        href="/sign-in"
+        className={cn(
+          "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-all duration-200",
+          collapsed && "justify-center px-2"
+        )}
+      >
+        <LogIn className="h-5 w-5 shrink-0" />
+        {!collapsed && <span>Sign In</span>}
+      </Link>
+    );
+  }
+
+  return (
+    <>
+      <SignedIn>
+        <div
+          className={cn(
+            "flex items-center gap-3 rounded-xl px-3 py-2.5",
+            collapsed && "justify-center px-2"
+          )}
+        >
+          <UserButton
+            afterSignOutUrl="/"
+            appearance={{
+              elements: {
+                avatarBox: "h-8 w-8",
+              },
+            }}
+          />
+          {!collapsed && (
+            <div className="flex-1 min-w-0">
+              <p className="text-xs text-muted-foreground">
+                Press <kbd className="px-1 py-0.5 rounded bg-muted text-2xs font-mono">?</kbd> for shortcuts
+              </p>
+            </div>
+          )}
+        </div>
+      </SignedIn>
+      <SignedOut>
+        <Link
+          href="/sign-in"
+          className={cn(
+            "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-all duration-200",
+            collapsed && "justify-center px-2"
+          )}
+        >
+          <LogIn className="h-5 w-5 shrink-0" />
+          {!collapsed && <span>Sign In</span>}
+        </Link>
+      </SignedOut>
+    </>
+  );
+}
+
 export function Sidebar() {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
@@ -306,40 +364,7 @@ export function Sidebar() {
 
         {/* User Profile Footer */}
         <div className="border-t p-3">
-          <SignedIn>
-            <div className={cn(
-              "flex items-center gap-3 rounded-xl px-3 py-2.5",
-              collapsed && "justify-center px-2"
-            )}>
-              <UserButton
-                afterSignOutUrl="/"
-                appearance={{
-                  elements: {
-                    avatarBox: "h-8 w-8",
-                  },
-                }}
-              />
-              {!collapsed && (
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs text-muted-foreground">
-                    Press <kbd className="px-1 py-0.5 rounded bg-muted text-2xs font-mono">?</kbd> for shortcuts
-                  </p>
-                </div>
-              )}
-            </div>
-          </SignedIn>
-          <SignedOut>
-            <Link
-              href="/sign-in"
-              className={cn(
-                "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-all duration-200",
-                collapsed && "justify-center px-2"
-              )}
-            >
-              <LogIn className="h-5 w-5 shrink-0" />
-              {!collapsed && <span>Sign In</span>}
-            </Link>
-          </SignedOut>
+          <SidebarUserSection collapsed={collapsed} />
         </div>
       </aside>
 

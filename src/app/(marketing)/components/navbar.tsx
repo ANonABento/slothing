@@ -62,10 +62,10 @@ export function Navbar() {
           {/* CTA Buttons */}
           <div className="hidden md:flex items-center gap-3">
             <Button variant="ghost" asChild>
-              <Link href="/dashboard">Sign In</Link>
+              <Link href="/sign-in?redirect_url=/dashboard">Sign In</Link>
             </Button>
             <Button asChild className="gradient-bg text-white hover:opacity-90">
-              <Link href="/dashboard">Get Started</Link>
+              <Link href="/sign-up?redirect_url=/dashboard">Get Started</Link>
             </Button>
           </div>
 
@@ -99,10 +99,10 @@ export function Navbar() {
               ))}
               <div className="flex flex-col gap-2 mt-2">
                 <Button variant="outline" asChild>
-                  <Link href="/dashboard">Sign In</Link>
+                  <Link href="/sign-in?redirect_url=/dashboard">Sign In</Link>
                 </Button>
                 <Button asChild className="gradient-bg text-white hover:opacity-90">
-                  <Link href="/dashboard">Get Started</Link>
+                  <Link href="/sign-up?redirect_url=/dashboard">Get Started</Link>
                 </Button>
               </div>
             </nav>

@@ -51,7 +51,8 @@ describe("Notification Database Functions", () => {
         "Test Notification",
         "This is a test",
         "/test",
-        expect.any(String)
+        expect.any(String),
+        "default"
       );
       expect(result.id).toBe("test-notification-id");
       expect(result.type).toBe("info");
@@ -74,7 +75,8 @@ describe("Notification Database Functions", () => {
         "System Alert",
         null,
         null,
-        expect.any(String)
+        expect.any(String),
+        "default"
       );
       expect(result.message).toBeUndefined();
       expect(result.link).toBeUndefined();
@@ -109,6 +111,10 @@ describe("Notification Database Functions", () => {
 
       const result = getNotifications();
 
+      expect(db.prepare).toHaveBeenCalledWith(
+        "SELECT * FROM notifications WHERE user_id = ? ORDER BY created_at DESC LIMIT ?"
+      );
+      expect(mockAll).toHaveBeenCalledWith("default", 50);
       expect(result).toHaveLength(2);
       expect(result[0].id).toBe("notif-1");
       expect(result[0].read).toBe(false);
@@ -124,7 +130,7 @@ describe("Notification Database Functions", () => {
       getNotifications({ unreadOnly: true });
 
       expect(db.prepare).toHaveBeenCalledWith(
-        expect.stringContaining("WHERE read = 0")
+        "SELECT * FROM notifications WHERE user_id = ? AND read = 0 ORDER BY created_at DESC LIMIT ?"
       );
     });
 
@@ -134,7 +140,7 @@ describe("Notification Database Functions", () => {
 
       getNotifications({ limit: 10 });
 
-      expect(mockAll).toHaveBeenCalledWith(10);
+      expect(mockAll).toHaveBeenCalledWith("default", 10);
     });
 
     it("should use default limit of 50", () => {
@@ -143,7 +149,7 @@ describe("Notification Database Functions", () => {
 
       getNotifications();
 
-      expect(mockAll).toHaveBeenCalledWith(50);
+      expect(mockAll).toHaveBeenCalledWith("default", 50);
     });
   });
 
@@ -155,9 +161,9 @@ describe("Notification Database Functions", () => {
       markNotificationRead("notif-1");
 
       expect(db.prepare).toHaveBeenCalledWith(
-        "UPDATE notifications SET read = 1 WHERE id = ?"
+        "UPDATE notifications SET read = 1 WHERE id = ? AND user_id = ?"
       );
-      expect(mockRun).toHaveBeenCalledWith("notif-1");
+      expect(mockRun).toHaveBeenCalledWith("notif-1", "default");
     });
   });
 
@@ -169,9 +175,9 @@ describe("Notification Database Functions", () => {
       markAllNotificationsRead();
 
       expect(db.prepare).toHaveBeenCalledWith(
-        "UPDATE notifications SET read = 1 WHERE read = 0"
+        "UPDATE notifications SET read = 1 WHERE read = 0 AND user_id = ?"
       );
-      expect(mockRun).toHaveBeenCalled();
+      expect(mockRun).toHaveBeenCalledWith("default");
     });
   });
 
@@ -183,9 +189,9 @@ describe("Notification Database Functions", () => {
       deleteNotification("notif-1");
 
       expect(db.prepare).toHaveBeenCalledWith(
-        "DELETE FROM notifications WHERE id = ?"
+        "DELETE FROM notifications WHERE id = ? AND user_id = ?"
       );
-      expect(mockRun).toHaveBeenCalledWith("notif-1");
+      expect(mockRun).toHaveBeenCalledWith("notif-1", "default");
     });
   });
 
@@ -197,9 +203,9 @@ describe("Notification Database Functions", () => {
       deleteReadNotifications();
 
       expect(db.prepare).toHaveBeenCalledWith(
-        "DELETE FROM notifications WHERE read = 1"
+        "DELETE FROM notifications WHERE read = 1 AND user_id = ?"
       );
-      expect(mockRun).toHaveBeenCalled();
+      expect(mockRun).toHaveBeenCalledWith("default");
     });
   });
 
@@ -211,8 +217,9 @@ describe("Notification Database Functions", () => {
       const result = getUnreadNotificationCount();
 
       expect(db.prepare).toHaveBeenCalledWith(
-        "SELECT COUNT(*) as count FROM notifications WHERE read = 0"
+        "SELECT COUNT(*) as count FROM notifications WHERE read = 0 AND user_id = ?"
       );
+      expect(mockGet).toHaveBeenCalledWith("default");
       expect(result).toBe(5);
     });
 
@@ -222,6 +229,7 @@ describe("Notification Database Functions", () => {
 
       const result = getUnreadNotificationCount();
 
+      expect(mockGet).toHaveBeenCalledWith("default");
       expect(result).toBe(0);
     });
   });

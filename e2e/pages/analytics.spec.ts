@@ -5,6 +5,8 @@ import { test, expect } from "@playwright/test";
  * Tests analytics dashboard and data visualization.
  */
 
+test.skip(true, "Requires an authenticated Clerk test fixture and analytics seed data.");
+
 test.describe("Analytics - Layout", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/");

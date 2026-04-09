@@ -1,24 +1,21 @@
 import { NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
 import { getJobs } from "@/lib/db/jobs";
 import { getProfile, getDocuments } from "@/lib/db";
 import { getInterviewSessions } from "@/lib/db/interviews";
 import { getAllGeneratedResumes } from "@/lib/db/resumes";
 import { saveAnalyticsSnapshot } from "@/lib/db/analytics";
+import { requireAuth, isAuthError } from "@/lib/auth";
 
 export async function GET() {
-  try {
-    const { userId } = await auth();
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+  const authResult = await requireAuth();
+  if (isAuthError(authResult)) return authResult;
 
-    // TODO: Switch to Drizzle queries with userId once Neon is configured
-    const profile = getProfile();
-    const jobs = getJobs();
-    const documents = getDocuments();
-    const interviews = getInterviewSessions();
-    const resumes = getAllGeneratedResumes();
+  try {
+    const profile = getProfile(authResult.userId);
+    const jobs = getJobs(authResult.userId);
+    const documents = getDocuments(authResult.userId);
+    const interviews = getInterviewSessions(undefined, authResult.userId);
+    const resumes = getAllGeneratedResumes(authResult.userId);
 
     // Calculate profile completeness
     let profileScore = 0;
@@ -101,7 +98,7 @@ export async function GET() {
     try {
       const today = new Date().toISOString().split("T")[0];
       saveAnalyticsSnapshot({
-        userId: "default", // TODO: Use actual userId when multi-user is ready
+        userId: authResult.userId,
         snapshotDate: today,
         totalJobs: jobs.length,
         jobsSaved: jobsByStatus["saved"] || 0,
@@ -114,7 +111,7 @@ export async function GET() {
         totalDocuments: documents.length,
         totalResumes: resumes.length,
         profileCompleteness: Math.min(profileScore, 100),
-      });
+      }, authResult.userId);
     } catch (snapshotError) {
       console.error("Failed to save analytics snapshot:", snapshotError);
       // Don't fail the request if snapshot fails

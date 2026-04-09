@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const range = (searchParams.get("range") as TimeRange) || "30d";
 
-    const jobs = getJobs();
+    const jobs = getJobs(authResult.userId);
 
     const timeSeries = generateTimeSeriesData(jobs, range);
     const trends = calculateTrendMetrics(jobs, range);
@@ -41,14 +41,15 @@ export async function GET(request: NextRequest) {
 
     const snapshots = getAnalyticsSnapshots(
       startDate.toISOString().split("T")[0],
-      today.toISOString().split("T")[0]
+      today.toISOString().split("T")[0],
+      authResult.userId
     );
 
     // Get week-over-week changes
-    const weekOverWeek = getWeekOverWeekChange();
+    const weekOverWeek = getWeekOverWeekChange(authResult.userId);
 
     // Get average time in status
-    const avgTimeInStatus = getAverageTimeInStatus();
+    const avgTimeInStatus = getAverageTimeInStatus(authResult.userId);
 
     return NextResponse.json({
       range,

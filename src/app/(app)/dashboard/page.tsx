@@ -23,6 +23,7 @@ import {
   Lightbulb,
   GraduationCap,
   Zap,
+  LogIn,
 } from "lucide-react";
 
 interface Stats {
@@ -67,24 +68,36 @@ export default function Dashboard() {
   const [recommendations, setRecommendations] = useState<JobRecommendation[]>([]);
   const [skillGaps, setSkillGaps] = useState<SkillGap[]>([]);
   const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
+    async function fetchJson(url: string) {
+      const response = await fetch(url);
+      const body = await response.json().catch(() => null);
+
+      if (response.status === 401) {
+        throw new Error("AUTH_REQUIRED");
+      }
+
+      if (!response.ok) {
+        throw new Error(body?.error || `Request failed for ${url}`);
+      }
+
+      return body;
+    }
+
     async function fetchStats() {
       try {
-        const [profileRes, jobsRes, documentsRes, analyticsRes, recsRes, learningRes] = await Promise.all([
-          fetch("/api/profile"),
-          fetch("/api/jobs"),
-          fetch("/api/documents"),
-          fetch("/api/analytics"),
-          fetch("/api/recommendations?limit=3"),
-          fetch("/api/learning/paths?limit=3"),
+        setErrorMessage(null);
+
+        const [profileData, jobsData, documentsData, analyticsData, recsData, learningData] = await Promise.all([
+          fetchJson("/api/profile"),
+          fetchJson("/api/jobs"),
+          fetchJson("/api/documents"),
+          fetchJson("/api/analytics"),
+          fetchJson("/api/recommendations?limit=3"),
+          fetchJson("/api/learning/paths?limit=3"),
         ]);
-        const profileData = await profileRes.json();
-        const jobsData = await jobsRes.json();
-        const documentsData = await documentsRes.json();
-        const analyticsData = await analyticsRes.json();
-        const recsData = await recsRes.json();
-        const learningData = await learningRes.json();
 
         const profile = profileData.profile;
         const hasContact = profile?.contact?.name && profile?.contact?.email;
@@ -124,6 +137,11 @@ export default function Dashboard() {
         }
       } catch (error) {
         console.error("Failed to fetch stats:", error);
+        setErrorMessage(
+          error instanceof Error && error.message === "AUTH_REQUIRED"
+            ? "Sign in to access your dashboard."
+            : "We couldn't load your dashboard data."
+        );
       } finally {
         setLoading(false);
       }
@@ -137,6 +155,43 @@ export default function Dashboard() {
     stats.jobsCount > 0,
     stats.interviewsCount > 0,
   ].filter(Boolean).length;
+
+  if (errorMessage) {
+    const needsSignIn = errorMessage === "Sign in to access your dashboard.";
+
+    return (
+      <div className="min-h-screen flex items-center justify-center px-6 py-16">
+        <div className="w-full max-w-md rounded-2xl border bg-card p-8 text-center shadow-sm">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+            <LogIn className="h-6 w-6" />
+          </div>
+          <h1 className="text-2xl font-bold tracking-tight">
+            {needsSignIn ? "Sign in required" : "Dashboard unavailable"}
+          </h1>
+          <p className="mt-3 text-sm text-muted-foreground">{errorMessage}</p>
+          <div className="mt-6 flex justify-center gap-3">
+            {needsSignIn ? (
+              <Link
+                href="/sign-in?redirect_url=/dashboard"
+                className="inline-flex items-center gap-2 rounded-xl gradient-bg px-5 py-2.5 font-medium text-white shadow-lg transition-opacity hover:opacity-90"
+              >
+                <LogIn className="h-4 w-4" />
+                Sign In
+              </Link>
+            ) : (
+              <button
+                type="button"
+                onClick={() => window.location.reload()}
+                className="inline-flex items-center gap-2 rounded-xl border bg-card px-5 py-2.5 font-medium transition-colors hover:bg-muted"
+              >
+                Try Again
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen">

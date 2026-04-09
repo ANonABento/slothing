@@ -61,6 +61,7 @@ describe("Job Database Functions", () => {
       expect(db.prepare).toHaveBeenCalledWith(
         "SELECT * FROM jobs WHERE user_id = ? ORDER BY created_at DESC"
       );
+      expect(mockAll).toHaveBeenCalledWith("default");
       expect(result).toHaveLength(1);
       expect(result[0]).toEqual({
         id: "job-1",
@@ -137,8 +138,10 @@ describe("Job Database Functions", () => {
 
       const result = getJob("job-1");
 
-      expect(db.prepare).toHaveBeenCalledWith("SELECT * FROM jobs WHERE id = ?");
-      expect(mockGet).toHaveBeenCalledWith("job-1");
+      expect(db.prepare).toHaveBeenCalledWith(
+        "SELECT * FROM jobs WHERE id = ? AND user_id = ?"
+      );
+      expect(mockGet).toHaveBeenCalledWith("job-1", "default");
       expect(result?.id).toBe("job-1");
       expect(result?.title).toBe("Software Engineer");
     });
@@ -287,6 +290,7 @@ describe("Job Database Functions", () => {
       expect(mockRun).toHaveBeenCalled();
       const runArgs = mockRun.mock.calls[0];
       expect(runArgs[0]).toBe("New Title"); // First arg is title
+      expect(runArgs[16]).toBe("default");
     });
 
     it("should do nothing for non-existent job", () => {
@@ -362,6 +366,8 @@ describe("Job Database Functions", () => {
       expect(runArgs[0]).toBe("applied");
       // Second arg should be set (the auto-generated timestamp)
       expect(runArgs[1]).toBeTruthy();
+      expect(runArgs[2]).toBe("job-1");
+      expect(runArgs[3]).toBe("default");
     });
   });
 
@@ -373,9 +379,9 @@ describe("Job Database Functions", () => {
       deleteJob("job-1");
 
       expect(db.prepare).toHaveBeenCalledWith(
-        "DELETE FROM jobs WHERE id = ?"
+        "DELETE FROM jobs WHERE id = ? AND user_id = ?"
       );
-      expect(mockRun).toHaveBeenCalledWith("job-1");
+      expect(mockRun).toHaveBeenCalledWith("job-1", "default");
     });
   });
 });

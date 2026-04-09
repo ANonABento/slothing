@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
 
     switch (type) {
       case "job_tracker":
-        const jobs = getJobs();
+        const jobs = getJobs(authResult.userId);
         result = await exportJobTrackerToSheet(jobs);
         break;
 
