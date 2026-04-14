@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { cn, generateId, formatDate, formatFileSize, slugify } from "./utils";
+import { cn, generateId, formatDate, formatFileSize, slugify, extractJSON } from "./utils";
 
 describe("cn", () => {
   it("should merge class names", () => {
@@ -88,6 +88,83 @@ describe("formatFileSize", () => {
 
   it("should format gigabytes", () => {
     expect(formatFileSize(1024 * 1024 * 1024)).toBe("1 GB");
+  });
+});
+
+describe("extractJSON", () => {
+  it("should parse pure JSON", () => {
+    const result = extractJSON('{"name": "John", "age": 30}');
+    expect(result).toEqual({ name: "John", age: 30 });
+  });
+
+  it("should parse JSON with surrounding whitespace", () => {
+    const result = extractJSON('  \n  {"name": "John"}  \n  ');
+    expect(result).toEqual({ name: "John" });
+  });
+
+  it("should parse JSON wrapped in markdown code fences", () => {
+    const input = '```json\n{"name": "John", "age": 30}\n```';
+    expect(extractJSON(input)).toEqual({ name: "John", age: 30 });
+  });
+
+  it("should parse JSON wrapped in plain code fences", () => {
+    const input = '```\n{"name": "John"}\n```';
+    expect(extractJSON(input)).toEqual({ name: "John" });
+  });
+
+  it("should extract JSON with text before and after", () => {
+    const input = 'Here is the result:\n{"name": "John", "age": 30}\nHope this helps!';
+    expect(extractJSON(input)).toEqual({ name: "John", age: 30 });
+  });
+
+  it("should handle nested objects", () => {
+    const input = '{"contact": {"name": "John", "email": "j@test.com"}, "skills": []}';
+    const result = extractJSON(input);
+    expect(result).toEqual({
+      contact: { name: "John", email: "j@test.com" },
+      skills: [],
+    });
+  });
+
+  it("should handle JSON with prose before it in markdown fences", () => {
+    const input = 'Sure! Here is the parsed data:\n```json\n{"name": "John"}\n```\nLet me know if you need changes.';
+    expect(extractJSON(input)).toEqual({ name: "John" });
+  });
+
+  it("should throw on invalid JSON", () => {
+    expect(() => extractJSON("this is not json")).toThrow(
+      "Failed to extract valid JSON object from LLM response"
+    );
+  });
+
+  it("should throw on empty string", () => {
+    expect(() => extractJSON("")).toThrow(
+      "Failed to extract valid JSON object from LLM response"
+    );
+  });
+
+  it("should throw on array JSON (not object)", () => {
+    expect(() => extractJSON('[1, 2, 3]')).toThrow(
+      "Failed to extract valid JSON object from LLM response"
+    );
+  });
+
+  it("should handle JSON with special characters in strings", () => {
+    const input = '{"description": "Used C++ and C# for \\"game dev\\""}';
+    expect(extractJSON(input)).toEqual({
+      description: 'Used C++ and C# for "game dev"',
+    });
+  });
+
+  it("should extract JSON when preceded by explanation text", () => {
+    const input = `I've analyzed the resume. Here are the results:
+
+{"contact": {"name": "Jane Doe"}, "summary": "Software engineer"}`;
+    const result = extractJSON(input);
+    expect(result).toEqual({
+      contact: { name: "Jane Doe" },
+      summary: "Software engineer",
+    });
   });
 });
 
