@@ -4,6 +4,20 @@ import { updateJobSchema } from "@/lib/constants";
 import { recordJobStatusChange } from "@/lib/db/analytics";
 import { requireAuth, isAuthError } from "@/lib/auth";
 
+function tryRecordStatusChange(
+  jobId: string,
+  oldStatus: string | null,
+  newStatus: string | undefined
+) {
+  if (newStatus && newStatus !== oldStatus) {
+    try {
+      recordJobStatusChange(jobId, oldStatus, newStatus);
+    } catch (err) {
+      console.error("Failed to record status change:", err);
+    }
+  }
+}
+
 export async function GET(
   _request: NextRequest,
   { params }: { params: { id: string } }
@@ -56,15 +70,7 @@ export async function PUT(
     const data = parseResult.data;
     const job = await updateJob(authResult.userId, params.id, data);
 
-    // Record status change if status was updated
-    if (data.status && data.status !== oldStatus) {
-      try {
-        recordJobStatusChange(params.id, oldStatus, data.status);
-      } catch (statusError) {
-        console.error("Failed to record status change:", statusError);
-        // Don't fail the request if recording fails
-      }
-    }
+    tryRecordStatusChange(params.id, oldStatus, data.status);
 
     return NextResponse.json({ job });
   } catch (error) {
@@ -90,18 +96,23 @@ export async function PATCH(
     }
     const oldStatus = existingJob.status || null;
 
-    const data = await request.json();
+    const rawData = await request.json();
+    const parseResult = updateJobSchema.safeParse(rawData);
+    if (!parseResult.success) {
+      const errors = parseResult.error.issues.map((issue) => ({
+        field: issue.path.join("."),
+        message: issue.message,
+      }));
+      return NextResponse.json(
+        { error: "Validation failed", errors },
+        { status: 400 }
+      );
+    }
+
+    const data = parseResult.data;
     const job = await updateJob(authResult.userId, params.id, data);
 
-    // Record status change if status was updated
-    if (data.status && data.status !== oldStatus) {
-      try {
-        recordJobStatusChange(params.id, oldStatus, data.status);
-      } catch (statusError) {
-        console.error("Failed to record status change:", statusError);
-        // Don't fail the request if recording fails
-      }
-    }
+    tryRecordStatusChange(params.id, oldStatus, data.status);
 
     return NextResponse.json({ job });
   } catch (error) {

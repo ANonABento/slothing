@@ -1,26 +1,20 @@
 import { db, jobs, eq, and, desc } from '../index';
 import { generateId } from '@/lib/utils';
+import { JOB_TYPES, JOB_STATUSES } from '@/lib/constants';
+import type { JobType, JobStatus } from '@/lib/constants';
 import type { JobDescription } from '@/types';
-
-// Valid job types
-const validJobTypes = ['full-time', 'part-time', 'contract', 'internship'] as const;
-type ValidJobType = typeof validJobTypes[number];
-
-// Valid job statuses
-const validJobStatuses = ['saved', 'applied', 'interviewing', 'offered', 'rejected', 'withdrawn'] as const;
-type ValidJobStatus = typeof validJobStatuses[number];
 
 // Map database row to JobDescription type
 function mapRowToJob(row: typeof jobs.$inferSelect): JobDescription {
-  const jobType = row.type as ValidJobType | null;
-  const jobStatus = (row.status ?? 'saved') as ValidJobStatus;
+  const jobType = row.type as JobType | null;
+  const jobStatus = (row.status ?? 'saved') as JobStatus;
 
   return {
     id: row.id,
     title: row.title,
     company: row.company,
     location: row.location ?? undefined,
-    type: jobType && validJobTypes.includes(jobType) ? jobType : undefined,
+    type: jobType && JOB_TYPES.includes(jobType) ? jobType : undefined,
     remote: row.remote ?? false,
     salary: row.salary ?? undefined,
     description: row.description,
@@ -28,7 +22,7 @@ function mapRowToJob(row: typeof jobs.$inferSelect): JobDescription {
     responsibilities: row.responsibilitiesJson ? JSON.parse(row.responsibilitiesJson) : [],
     keywords: row.keywordsJson ? JSON.parse(row.keywordsJson) : [],
     url: row.url ?? undefined,
-    status: validJobStatuses.includes(jobStatus) ? jobStatus : 'saved',
+    status: JOB_STATUSES.includes(jobStatus) ? jobStatus : 'saved',
     appliedAt: row.appliedAt ?? undefined,
     deadline: row.deadline ?? undefined,
     notes: row.notes ?? undefined,
