@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getJob, updateJob, deleteJob } from "@/lib/db/jobs";
+import { getJob, updateJob, deleteJob } from "@/lib/db/drizzle/queries";
 import { updateJobSchema } from "@/lib/constants";
 import { recordJobStatusChange } from "@/lib/db/analytics";
 import { requireAuth, isAuthError } from "@/lib/auth";
@@ -12,7 +12,7 @@ export async function GET(
   if (isAuthError(authResult)) return authResult;
 
   try {
-    const job = getJob(params.id, authResult.userId);
+    const job = await getJob(authResult.userId, params.id);
     if (!job) {
       return NextResponse.json({ error: "Job not found" }, { status: 404 });
     }
@@ -32,7 +32,7 @@ export async function PUT(
 
   try {
     // Check if job exists and get current status
-    const existingJob = getJob(params.id, authResult.userId);
+    const existingJob = await getJob(authResult.userId, params.id);
     if (!existingJob) {
       return NextResponse.json({ error: "Job not found" }, { status: 404 });
     }
@@ -54,8 +54,7 @@ export async function PUT(
     }
 
     const data = parseResult.data;
-    updateJob(params.id, data, authResult.userId);
-    const job = getJob(params.id, authResult.userId);
+    const job = await updateJob(authResult.userId, params.id, data);
 
     // Record status change if status was updated
     if (data.status && data.status !== oldStatus) {
@@ -84,7 +83,7 @@ export async function PATCH(
 
   try {
     // Get the job's current status before updating
-    const existingJob = getJob(params.id, authResult.userId);
+    const existingJob = await getJob(authResult.userId, params.id);
     const oldStatus = existingJob?.status || null;
 
     if (!existingJob) {
@@ -92,8 +91,7 @@ export async function PATCH(
     }
 
     const data = await request.json();
-    updateJob(params.id, data, authResult.userId);
-    const job = getJob(params.id, authResult.userId);
+    const job = await updateJob(authResult.userId, params.id, data);
 
     // Record status change if status was updated
     if (data.status && data.status !== oldStatus) {
@@ -120,7 +118,7 @@ export async function DELETE(
   if (isAuthError(authResult)) return authResult;
 
   try {
-    deleteJob(params.id, authResult.userId);
+    await deleteJob(authResult.userId, params.id);
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Delete job error:", error);
