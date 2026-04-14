@@ -40,11 +40,9 @@ async function generateWithLLM(
 ): Promise<TailoredResume> {
   const client = new LLMClient(llmConfig);
 
-  const response = await client.complete({
-    messages: [
-      {
-        role: "user",
-        content: `Generate a tailored resume for this job. The resume must fit on ONE page, so be concise and selective.
+  const userMessage = {
+    role: "user" as const,
+    content: `Generate a tailored resume for this job. The resume must fit on ONE page, so be concise and selective.
 
 CANDIDATE PROFILE:
 Name: ${profile.contact.name}
@@ -104,14 +102,31 @@ Return ONLY a JSON object with this structure:
     }
   ]
 }`,
-      },
-    ],
+  };
+
+  const response = await client.complete({
+    messages: [userMessage],
     temperature: 0.4,
     maxTokens: 2000,
   });
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const parsed = extractJSON(response) as any;
+  let parsed: any;
+  try {
+    parsed = extractJSON(response);
+  } catch {
+    // Retry: re-prompt the LLM with an explicit JSON-only instruction
+    const retryResponse = await client.complete({
+      messages: [
+        userMessage,
+        { role: "assistant", content: response },
+        { role: "user", content: "Please respond with valid JSON only, no markdown or explanation." },
+      ],
+      temperature: 0.4,
+      maxTokens: 2000,
+    });
+    parsed = extractJSON(retryResponse);
+  }
 
   return {
     contact: profile.contact,

@@ -76,19 +76,31 @@ export async function parseResumeWithLLM(
 ): Promise<Partial<Profile>> {
   const client = new LLMClient(llmConfig);
 
+  const userMessage = { role: "user" as const, content: RESUME_PARSE_PROMPT + text };
+
   const response = await client.complete({
-    messages: [
-      {
-        role: "user",
-        content: RESUME_PARSE_PROMPT + text,
-      },
-    ],
+    messages: [userMessage],
     temperature: 0.1,
     maxTokens: 4096,
   });
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const parsed = extractJSON(response) as any;
+  let parsed: any;
+  try {
+    parsed = extractJSON(response);
+  } catch {
+    // Retry: re-prompt the LLM with an explicit JSON-only instruction
+    const retryResponse = await client.complete({
+      messages: [
+        userMessage,
+        { role: "assistant", content: response },
+        { role: "user", content: "Please respond with valid JSON only, no markdown or explanation." },
+      ],
+      temperature: 0.1,
+      maxTokens: 4096,
+    });
+    parsed = extractJSON(retryResponse);
+  }
 
   // Add IDs to all items
   return {
