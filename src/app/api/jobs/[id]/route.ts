@@ -23,6 +23,45 @@ export async function GET(
   }
 }
 
+async function handleJobUpdate(
+  request: NextRequest,
+  userId: string,
+  jobId: string
+): Promise<NextResponse> {
+  const existingJob = await getJob(userId, jobId);
+  if (!existingJob) {
+    return NextResponse.json({ error: "Job not found" }, { status: 404 });
+  }
+
+  const oldStatus = existingJob.status;
+  const rawData = await request.json();
+
+  const parseResult = updateJobSchema.safeParse(rawData);
+  if (!parseResult.success) {
+    const errors = parseResult.error.issues.map((issue) => ({
+      field: issue.path.join("."),
+      message: issue.message,
+    }));
+    return NextResponse.json(
+      { error: "Validation failed", errors },
+      { status: 400 }
+    );
+  }
+
+  const data = parseResult.data;
+  const job = await updateJob(userId, jobId, data);
+
+  if (data.status && data.status !== oldStatus) {
+    try {
+      recordJobStatusChange(jobId, oldStatus ?? null, data.status);
+    } catch (statusError) {
+      console.error("Failed to record status change:", statusError);
+    }
+  }
+
+  return NextResponse.json({ job });
+}
+
 export async function PUT(
   request: NextRequest,
   { params }: { params: { id: string } }
@@ -31,42 +70,7 @@ export async function PUT(
   if (isAuthError(authResult)) return authResult;
 
   try {
-    // Check if job exists and get current status
-    const existingJob = await getJob(authResult.userId, params.id);
-    if (!existingJob) {
-      return NextResponse.json({ error: "Job not found" }, { status: 404 });
-    }
-    const oldStatus = existingJob.status || null;
-
-    const rawData = await request.json();
-
-    // Validate input with Zod
-    const parseResult = updateJobSchema.safeParse(rawData);
-    if (!parseResult.success) {
-      const errors = parseResult.error.issues.map((issue) => ({
-        field: issue.path.join("."),
-        message: issue.message,
-      }));
-      return NextResponse.json(
-        { error: "Validation failed", errors },
-        { status: 400 }
-      );
-    }
-
-    const data = parseResult.data;
-    const job = await updateJob(authResult.userId, params.id, data);
-
-    // Record status change if status was updated
-    if (data.status && data.status !== oldStatus) {
-      try {
-        recordJobStatusChange(params.id, oldStatus, data.status);
-      } catch (statusError) {
-        console.error("Failed to record status change:", statusError);
-        // Don't fail the request if recording fails
-      }
-    }
-
-    return NextResponse.json({ job });
+    return await handleJobUpdate(request, authResult.userId, params.id);
   } catch (error) {
     console.error("Update job error:", error);
     return NextResponse.json({ error: "Failed to update job" }, { status: 500 });
@@ -82,28 +86,7 @@ export async function PATCH(
   if (isAuthError(authResult)) return authResult;
 
   try {
-    // Get the job's current status before updating
-    const existingJob = await getJob(authResult.userId, params.id);
-    const oldStatus = existingJob?.status || null;
-
-    if (!existingJob) {
-      return NextResponse.json({ error: "Job not found" }, { status: 404 });
-    }
-
-    const data = await request.json();
-    const job = await updateJob(authResult.userId, params.id, data);
-
-    // Record status change if status was updated
-    if (data.status && data.status !== oldStatus) {
-      try {
-        recordJobStatusChange(params.id, oldStatus, data.status);
-      } catch (statusError) {
-        console.error("Failed to record status change:", statusError);
-        // Don't fail the request if recording fails
-      }
-    }
-
-    return NextResponse.json({ job });
+    return await handleJobUpdate(request, authResult.userId, params.id);
   } catch (error) {
     console.error("Patch job error:", error);
     return NextResponse.json({ error: "Failed to update job" }, { status: 500 });
