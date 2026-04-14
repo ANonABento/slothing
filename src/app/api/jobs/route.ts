@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getJobs, createJob } from "@/lib/db/jobs";
+import { getJobs, createJob } from "@/lib/db/drizzle/queries/jobs";
 import { getLLMConfig } from "@/lib/db";
 import { LLMClient, parseJSONFromLLM } from "@/lib/llm/client";
 import { createJobSchema, TECH_KEYWORDS } from "@/lib/constants";
@@ -10,7 +10,7 @@ export async function GET() {
   if (isAuthError(authResult)) return authResult;
 
   try {
-    const jobs = getJobs(authResult.userId);
+    const jobs = await getJobs(authResult.userId);
     return NextResponse.json({ jobs });
   } catch (error) {
     console.error("Get jobs error:", error);
@@ -74,12 +74,12 @@ Return format: ["skill1", "skill2", "skill3", ...]`,
       keywords = extractKeywordsBasic(data.description);
     }
 
-    const job = createJob({
+    const job = await createJob(authResult.userId, {
       ...data,
       requirements: data.requirements ?? [],
       responsibilities: data.responsibilities ?? [],
       keywords,
-    }, authResult.userId);
+    });
 
     return NextResponse.json({ job });
   } catch (error) {
