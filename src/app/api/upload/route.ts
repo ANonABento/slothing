@@ -27,6 +27,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
 
+    console.log(`[upload] File received: ${file.name} (${file.size} bytes, ${file.type})`);
+
     // Validate file size
     if (file.size > MAX_FILE_SIZE_BYTES) {
       const maxMB = MAX_FILE_SIZE_BYTES / (1024 * 1024);
@@ -49,7 +51,9 @@ export async function POST(request: NextRequest) {
     const buffer = Buffer.from(bytes);
 
     // Validate magic bytes match claimed MIME type
-    if (!validateFileMagicBytes(buffer, file.type)) {
+    const magicBytesValid = validateFileMagicBytes(buffer, file.type);
+    console.log(`[upload] Magic bytes validated: ${magicBytesValid}`);
+    if (!magicBytesValid) {
       return NextResponse.json(
         { error: "File content does not match its type. Please upload a valid document." },
         { status: 400 }
@@ -70,8 +74,9 @@ export async function POST(request: NextRequest) {
     let extractedText: string | undefined;
     try {
       extractedText = await extractTextFromFile(filePath);
+      console.log(`[upload] Text extracted: ${extractedText.length} chars`);
     } catch (err) {
-      console.error("Text extraction failed:", err);
+      console.error("[upload] Text extraction failed:", err instanceof Error ? err.stack : err);
     }
 
     // Classify document type using LLM with filename fallback
@@ -93,7 +98,7 @@ export async function POST(request: NextRequest) {
           parsedData = { docType: "certificate", data: parseResult.certificate };
         }
       } catch (err) {
-        console.error("Document parsing failed:", err);
+        console.error("[upload] Document parsing failed:", err instanceof Error ? err.stack : err);
       }
     }
 
@@ -108,6 +113,7 @@ export async function POST(request: NextRequest) {
       extractedText,
       parsedData,
     }, authResult.userId);
+    console.log(`[upload] Document saved: ${id}`);
 
     return NextResponse.json({
       success: true,
@@ -120,7 +126,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("Upload error:", error);
+    console.error("[upload] Upload error:", error instanceof Error ? error.stack : error);
     return NextResponse.json(
       { error: "Upload failed" },
       { status: 500 }

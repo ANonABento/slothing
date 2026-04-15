@@ -51,38 +51,67 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
  */
 export function extractJSON(text: string): Record<string, unknown> {
   const trimmed = text.trim();
+  const strategies: string[] = [];
+  let found: Record<string, unknown> | undefined;
 
   // Strategy 1: Direct parse
-  try {
-    const result = JSON.parse(trimmed);
-    if (isPlainObject(result)) return result;
-  } catch {
-    // continue to next strategy
+  if (!found) {
+    try {
+      const result = JSON.parse(trimmed);
+      if (isPlainObject(result)) {
+        strategies.push("direct-parse: success");
+        found = result;
+      } else {
+        strategies.push("direct-parse: not an object");
+      }
+    } catch {
+      strategies.push("direct-parse: failed");
+    }
   }
 
   // Strategy 2: Strip markdown code fences
-  const fenceMatch = trimmed.match(/^```(?:json)?\s*\n?([\s\S]*?)\n?\s*```$/);
-  if (fenceMatch) {
-    try {
-      const result = JSON.parse(fenceMatch[1].trim());
-      if (isPlainObject(result)) return result;
-    } catch {
-      // continue to next strategy
+  if (!found) {
+    const fenceMatch = trimmed.match(/^```(?:json)?\s*\n?([\s\S]*?)\n?\s*```$/);
+    if (fenceMatch) {
+      try {
+        const result = JSON.parse(fenceMatch[1].trim());
+        if (isPlainObject(result)) {
+          strategies.push("fence-strip: success");
+          found = result;
+        } else {
+          strategies.push("fence-strip: not an object");
+        }
+      } catch {
+        strategies.push("fence-strip: failed");
+      }
+    } else {
+      strategies.push("fence-strip: no match");
     }
   }
 
   // Strategy 3: Extract between first `{` and last `}`
-  const firstBrace = trimmed.indexOf("{");
-  const lastBrace = trimmed.lastIndexOf("}");
-  if (firstBrace !== -1 && lastBrace > firstBrace) {
-    try {
-      const result = JSON.parse(trimmed.slice(firstBrace, lastBrace + 1));
-      if (isPlainObject(result)) return result;
-    } catch {
-      // all strategies failed
+  if (!found) {
+    const firstBrace = trimmed.indexOf("{");
+    const lastBrace = trimmed.lastIndexOf("}");
+    if (firstBrace !== -1 && lastBrace > firstBrace) {
+      try {
+        const result = JSON.parse(trimmed.slice(firstBrace, lastBrace + 1));
+        if (isPlainObject(result)) {
+          strategies.push("brace-extract: success");
+          found = result;
+        } else {
+          strategies.push("brace-extract: not an object");
+        }
+      } catch {
+        strategies.push("brace-extract: failed");
+      }
+    } else {
+      strategies.push("brace-extract: no braces found");
     }
   }
 
+  console.log(`[parser] extractJSON strategies tried: ${strategies.join(", ")}`);
+  if (found) return found;
   throw new Error(
     `Failed to extract JSON from LLM response. Input starts with: "${trimmed.slice(0, 100)}"`
   );
