@@ -49,20 +49,18 @@ export default function BankPage() {
 
   // Compute category counts from all entries (not filtered)
   const [allEntries, setAllEntries] = useState<BankEntry[]>([]);
-  useEffect(() => {
-    // Fetch all entries for counts when category filter changes
-    if (activeCategory === "all" && !query) {
-      setAllEntries(entries);
-    }
-  }, [entries, activeCategory, query]);
 
-  // Fetch all entries for counts on mount
-  useEffect(() => {
+  const refreshAllEntries = useCallback(() => {
     fetch("/api/bank")
       .then((r) => r.json())
       .then((data) => setAllEntries(data.entries || []))
       .catch(() => {});
   }, []);
+
+  // Fetch all entries for counts on mount
+  useEffect(() => {
+    refreshAllEntries();
+  }, [refreshAllEntries]);
 
   const categoryCounts = useMemo(() => {
     const counts: Record<string, number> = {};
@@ -152,10 +150,7 @@ export default function BankPage() {
       });
 
       await fetchEntries();
-      // Refresh counts
-      const countRes = await fetch("/api/bank");
-      const countData = await countRes.json();
-      setAllEntries(countData.entries || []);
+      refreshAllEntries();
     } catch (err) {
       setError(getErrorMessage(err));
     } finally {
@@ -186,10 +181,7 @@ export default function BankPage() {
 
   function handleOverlayComplete() {
     fetchEntries();
-    fetch("/api/bank")
-      .then((r) => r.json())
-      .then((data) => setAllEntries(data.entries || []))
-      .catch(() => {});
+    refreshAllEntries();
   }
 
   return (

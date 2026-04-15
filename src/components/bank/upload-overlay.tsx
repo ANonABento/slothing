@@ -121,7 +121,7 @@ export function UploadOverlay({ onComplete }: UploadOverlayProps) {
     };
   }, [handleDragEnter, handleDragLeave, handleDragOver, handleDrop]);
 
-  const isVisible = isDragging || step === "uploading" || step === "parsing" || step === "done" || step === "error";
+  const isVisible = isDragging || step !== "idle";
 
   if (!isVisible) return null;
 

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth, isAuthError } from "@/lib/auth";
-import { updateBankEntry } from "@/lib/db/profile-bank";
+import { updateBankEntry, deleteBankEntry } from "@/lib/db/profile-bank";
 import { db } from "@/lib/db";
 
 export async function PATCH(
@@ -42,19 +42,10 @@ export async function DELETE(
   if (isAuthError(authResult)) return authResult;
 
   try {
-    const existing = db
-      .prepare("SELECT id FROM profile_bank WHERE id = ? AND user_id = ?")
-      .get(params.id, authResult.userId) as { id: string } | undefined;
-
-    if (!existing) {
+    const deleted = deleteBankEntry(params.id, authResult.userId);
+    if (!deleted) {
       return NextResponse.json({ error: "Entry not found" }, { status: 404 });
     }
-
-    db.prepare("DELETE FROM profile_bank WHERE id = ? AND user_id = ?").run(
-      params.id,
-      authResult.userId
-    );
-
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Delete bank entry error:", error);
