@@ -19,7 +19,7 @@ import {
   searchChunks,
   getChunksByType,
   findDuplicateByHash,
-  deleteChunk,
+  supersedChunk,
 } from "./knowledge-bank";
 
 describe("Knowledge Bank DB Functions", () => {
@@ -33,12 +33,14 @@ describe("Knowledge Bank DB Functions", () => {
       (db.prepare as Mock).mockReturnValue({ run: mockRun });
 
       const id = insertChunk(
-        "default",
-        "Built REST APIs with Node.js",
-        "experience",
-        "resume.pdf",
-        { company: "Acme" },
-        "abc123hash"
+        {
+          content: "Built REST APIs with Node.js",
+          sectionType: "experience",
+          sourceFile: "resume.pdf",
+          metadata: { company: "Acme" },
+          hash: "abc123hash",
+        },
+        "default"
       );
 
       expect(id).toBe("test-chunk-id");
@@ -57,7 +59,10 @@ describe("Knowledge Bank DB Functions", () => {
       const mockRun = vi.fn();
       (db.prepare as Mock).mockReturnValue({ run: mockRun });
 
-      insertChunk("default", "React expert", "skills", null, null, "hash456");
+      insertChunk(
+        { content: "React expert", sectionType: "skills", sourceFile: null, metadata: null, hash: "hash456" },
+        "default"
+      );
 
       expect(mockRun).toHaveBeenCalledWith(
         "test-chunk-id",
@@ -216,12 +221,12 @@ describe("Knowledge Bank DB Functions", () => {
     });
   });
 
-  describe("deleteChunk", () => {
+  describe("supersedChunk", () => {
     it("should soft delete by setting superseded_by", () => {
       const mockRun = vi.fn();
       (db.prepare as Mock).mockReturnValue({ run: mockRun });
 
-      deleteChunk("chunk-old", "chunk-new");
+      supersedChunk("chunk-old", "chunk-new");
 
       expect(mockRun).toHaveBeenCalledWith("chunk-new", "chunk-old");
     });

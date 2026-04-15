@@ -9,7 +9,7 @@ export type ChunkSectionType =
   | "certification"
   | "summary";
 
-export interface ChunkRow {
+interface ChunkRow {
   id: string;
   user_id: string;
   content: string;
@@ -54,19 +54,28 @@ function rowToChunk(row: ChunkRow): Chunk {
   };
 }
 
-export function insertChunk(
-  userId: string,
-  content: string,
-  sectionType: ChunkSectionType,
-  sourceFile: string | null,
-  metadata: Record<string, unknown> | null,
-  hash: string
-): string {
+export interface InsertChunk {
+  content: string;
+  sectionType: ChunkSectionType;
+  sourceFile: string | null;
+  metadata: Record<string, unknown> | null;
+  hash: string;
+}
+
+export function insertChunk(chunk: InsertChunk, userId: string = "default"): string {
   const id = generateId();
   db.prepare(`
     INSERT INTO chunks (id, user_id, content, section_type, source_file, metadata, hash)
     VALUES (?, ?, ?, ?, ?, ?, ?)
-  `).run(id, userId, content, sectionType, sourceFile, metadata ? JSON.stringify(metadata) : null, hash);
+  `).run(
+    id,
+    userId,
+    chunk.content,
+    chunk.sectionType,
+    chunk.sourceFile,
+    chunk.metadata ? JSON.stringify(chunk.metadata) : null,
+    chunk.hash
+  );
   return id;
 }
 
@@ -123,7 +132,7 @@ export function findDuplicateByHash(
   return row ? rowToChunk(row) : null;
 }
 
-export function deleteChunk(id: string, supersededBy: string): void {
+export function supersedChunk(id: string, supersededBy: string): void {
   db.prepare(`
     UPDATE chunks SET superseded_by = ? WHERE id = ?
   `).run(supersededBy, id);
