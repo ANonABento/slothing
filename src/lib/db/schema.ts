@@ -294,6 +294,13 @@ db.exec(`
     FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE SET NULL
   );
 
+  -- Custom resume templates table
+  CREATE TABLE IF NOT EXISTS custom_templates (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL DEFAULT 'default',
+    name TEXT NOT NULL,
+    source_document_id TEXT,
+    analyzed_styles TEXT NOT NULL,
   -- Profile bank table for aggregated resume data
   CREATE TABLE IF NOT EXISTS profile_bank (
     id TEXT PRIMARY KEY,
