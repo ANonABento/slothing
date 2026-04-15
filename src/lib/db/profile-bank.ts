@@ -122,7 +122,7 @@ export function deleteBankEntriesBySource(
   return result.changes;
 }
 
-export interface SourceDocumentRow {
+interface SourceDocumentRow {
   id: string;
   filename: string;
   size: number;

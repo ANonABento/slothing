@@ -11,14 +11,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { FileText, Loader2, Trash2 } from "lucide-react";
-
-interface SourceDocument {
-  id: string;
-  filename: string;
-  size: number;
-  uploadedAt: string;
-  chunkCount: number;
-}
+import type { SourceDocument } from "@/lib/db/profile-bank";
 
 interface SourceDocumentsProps {
   refreshKey: number;

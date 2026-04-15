@@ -157,9 +157,7 @@ export default function BankPage() {
       console.log("[bank] Upload complete:", uploadData.document?.id);
 
       // Upload route handles parse + ingest — just refresh the entries
-      await fetchEntries();
-      refreshAllEntries();
-      setSourceRefreshKey((k) => k + 1);
+      handleDataRefresh();
     } catch (err) {
       console.error("[bank] Upload error:", err);
       setError(getErrorMessage(err));
@@ -189,13 +187,7 @@ export default function BankPage() {
     }
   }
 
-  function handleOverlayComplete() {
-    fetchEntries();
-    refreshAllEntries();
-    setSourceRefreshKey((k) => k + 1);
-  }
-
-  function handleSourceDocumentDelete() {
+  function handleDataRefresh() {
     fetchEntries();
     refreshAllEntries();
     setSourceRefreshKey((k) => k + 1);
@@ -204,7 +196,7 @@ export default function BankPage() {
   return (
     <div className="p-6 lg:p-8 space-y-6">
       {/* Upload overlay for drag-and-drop */}
-      <UploadOverlay onComplete={handleOverlayComplete} />
+      <UploadOverlay onComplete={handleDataRefresh} />
 
       {/* Hidden file input */}
       <input
@@ -268,7 +260,7 @@ export default function BankPage() {
         refreshKey={sourceRefreshKey}
         onFilterByDocument={setActiveDocumentId}
         activeDocumentId={activeDocumentId}
-        onDelete={handleSourceDocumentDelete}
+        onDelete={handleDataRefresh}
       />
 
       {/* Content */}
