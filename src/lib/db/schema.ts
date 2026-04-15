@@ -294,6 +294,17 @@ db.exec(`
     FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE SET NULL
   );
 
+  -- Custom resume templates table
+  CREATE TABLE IF NOT EXISTS custom_templates (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL DEFAULT 'default',
+    name TEXT NOT NULL,
+    source_document_id TEXT,
+    analyzed_styles TEXT NOT NULL,
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (source_document_id) REFERENCES documents(id) ON DELETE SET NULL
+  );
+
   -- Create default profile if not exists
   INSERT OR IGNORE INTO profile (id) VALUES ('default');
 `);

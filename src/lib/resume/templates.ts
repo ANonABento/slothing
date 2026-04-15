@@ -161,9 +161,37 @@ export const TEMPLATES: ResumeTemplate[] = [
   },
 ];
 
-// Get template by ID
+// Get template by ID (built-in only)
 export function getTemplate(id: string): ResumeTemplate {
   return TEMPLATES.find((t) => t.id === id) || TEMPLATES[0];
+}
+
+// Get template by ID, checking custom templates first
+export function getTemplateWithCustom(
+  id: string,
+  userId?: string
+): ResumeTemplate {
+  // Check built-in templates first
+  const builtIn = TEMPLATES.find((t) => t.id === id);
+  if (builtIn) return builtIn;
+
+  // Check custom templates
+  try {
+    const { getCustomTemplate } = require("@/lib/db/custom-templates");
+    const custom = getCustomTemplate(id, userId || "default");
+    if (custom) {
+      return {
+        id: custom.id,
+        name: custom.name,
+        description: `Custom template${custom.sourceDocumentId ? " (from uploaded resume)" : ""}`,
+        styles: custom.analyzedStyles.styles,
+      };
+    }
+  } catch {
+    // Database not available (e.g., in tests)
+  }
+
+  return TEMPLATES[0];
 }
 
 // Generate CSS from template styles
