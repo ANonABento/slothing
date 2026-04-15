@@ -20,10 +20,11 @@ export async function GET(
       );
     }
 
+    const { snapshotJson, ...versionMeta } = version;
     return NextResponse.json({
       version: {
-        ...version,
-        snapshot: JSON.parse(version.snapshotJson),
+        ...versionMeta,
+        snapshot: JSON.parse(snapshotJson),
       },
     });
   } catch (error) {

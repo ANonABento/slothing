@@ -112,12 +112,10 @@ export function getProfile(userId: string = "default"): Profile | null {
   };
 }
 
-export function updateProfile(profile: Partial<Profile>, userId: string = "default", options?: { skipSnapshot?: boolean }): void {
-  if (!options?.skipSnapshot) {
-    const currentProfile = getProfile(userId);
-    if (currentProfile) {
-      createProfileSnapshot(userId, JSON.stringify(currentProfile));
-    }
+export function updateProfile(profile: Partial<Profile>, userId: string = "default"): void {
+  const currentProfile = getProfile(userId);
+  if (currentProfile) {
+    createProfileSnapshot(userId, JSON.stringify(currentProfile));
   }
 
   const doUpdate = db.transaction(() => {
