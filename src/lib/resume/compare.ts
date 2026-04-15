@@ -29,17 +29,17 @@ function compareStrings(
   path: string,
   label: string
 ): DiffItem | null {
-  const old = oldVal?.trim() || "";
-  const new_ = newVal?.trim() || "";
+  const before = oldVal?.trim() || "";
+  const after = newVal?.trim() || "";
 
-  if (old === new_) return null;
-  if (!old && new_) {
-    return { type: "added", path, label, newValue: new_ };
+  if (before === after) return null;
+  if (!before && after) {
+    return { type: "added", path, label, newValue: after };
   }
-  if (old && !new_) {
-    return { type: "removed", path, label, oldValue: old };
+  if (before && !after) {
+    return { type: "removed", path, label, oldValue: before };
   }
-  return { type: "changed", path, label, oldValue: old, newValue: new_ };
+  return { type: "changed", path, label, oldValue: before, newValue: after };
 }
 
 function compareArrays(
@@ -48,15 +48,15 @@ function compareArrays(
   path: string,
   label: string
 ): DiffItem[] {
-  const old = oldArr || [];
-  const new_ = newArr || [];
+  const before = oldArr || [];
+  const after = newArr || [];
   const diffs: DiffItem[] = [];
 
-  const oldSet = new Set(old);
-  const newSet = new Set(new_);
+  const oldSet = new Set(before);
+  const newSet = new Set(after);
 
   // Find added items
-  new_.forEach((item, i) => {
+  after.forEach((item, i) => {
     if (!oldSet.has(item)) {
       diffs.push({
         type: "added",
@@ -68,7 +68,7 @@ function compareArrays(
   });
 
   // Find removed items
-  old.forEach((item, i) => {
+  before.forEach((item, i) => {
     if (!newSet.has(item)) {
       diffs.push({
         type: "removed",
@@ -236,13 +236,6 @@ export interface SectionScore {
   afterScore: number;
   change: number;
 }
-
-const ATS_SECTION_WEIGHTS: Record<string, number> = {
-  summary: 15,
-  skills: 30,
-  experiences: 40,
-  education: 15,
-};
 
 function scoreSummarySection(summary: string | undefined): number {
   if (!summary) return 0;

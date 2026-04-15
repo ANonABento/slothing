@@ -2,6 +2,28 @@ import db from "./schema";
 import { generateId } from "@/lib/utils";
 import type { ABOutcome, ABTrackingEntry } from "@/lib/resume/compare";
 
+interface TrackingRow {
+  id: string;
+  resume_id: string;
+  job_id: string;
+  outcome: ABOutcome;
+  sent_at: string;
+  updated_at: string;
+  notes: string | null;
+}
+
+function rowToEntry(row: TrackingRow): ABTrackingEntry {
+  return {
+    id: row.id,
+    resumeId: row.resume_id,
+    jobId: row.job_id,
+    outcome: row.outcome,
+    sentAt: row.sent_at,
+    updatedAt: row.updated_at,
+    notes: row.notes || undefined,
+  };
+}
+
 // Log which resume version was sent to which job
 export function trackResumeSent(
   resumeId: string,
@@ -56,25 +78,7 @@ export function getTrackingEntries(userId: string = "default"): ABTrackingEntry[
     ORDER BY sent_at DESC
   `);
 
-  const rows = stmt.all(userId) as Array<{
-    id: string;
-    resume_id: string;
-    job_id: string;
-    outcome: ABOutcome;
-    sent_at: string;
-    updated_at: string;
-    notes: string | null;
-  }>;
-
-  return rows.map((row) => ({
-    id: row.id,
-    resumeId: row.resume_id,
-    jobId: row.job_id,
-    outcome: row.outcome,
-    sentAt: row.sent_at,
-    updatedAt: row.updated_at,
-    notes: row.notes || undefined,
-  }));
+  return (stmt.all(userId) as TrackingRow[]).map(rowToEntry);
 }
 
 // Get tracking entries for a specific resume
@@ -89,25 +93,7 @@ export function getTrackingEntriesByResume(
     ORDER BY sent_at DESC
   `);
 
-  const rows = stmt.all(resumeId, userId) as Array<{
-    id: string;
-    resume_id: string;
-    job_id: string;
-    outcome: ABOutcome;
-    sent_at: string;
-    updated_at: string;
-    notes: string | null;
-  }>;
-
-  return rows.map((row) => ({
-    id: row.id,
-    resumeId: row.resume_id,
-    jobId: row.job_id,
-    outcome: row.outcome,
-    sentAt: row.sent_at,
-    updatedAt: row.updated_at,
-    notes: row.notes || undefined,
-  }));
+  return (stmt.all(resumeId, userId) as TrackingRow[]).map(rowToEntry);
 }
 
 // Get distinct resume IDs that have been tracked

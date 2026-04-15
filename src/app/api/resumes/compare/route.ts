@@ -5,6 +5,14 @@ import { compareResumesSchema } from "@/lib/constants";
 import type { TailoredResume } from "@/lib/resume/generator";
 import { requireAuth, isAuthError } from "@/lib/auth";
 
+function parseResumeContent(json: string, label: string): TailoredResume | NextResponse {
+  try {
+    return JSON.parse(json) as TailoredResume;
+  } catch {
+    return NextResponse.json({ error: `${label} resume has invalid content` }, { status: 400 });
+  }
+}
+
 export async function POST(request: NextRequest) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
@@ -44,27 +52,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Safely parse JSON content
-    let beforeContent: TailoredResume;
-    let afterContent: TailoredResume;
+    const beforeResult = parseResumeContent(beforeResume.contentJson, "Before");
+    if (beforeResult instanceof NextResponse) return beforeResult;
+    const beforeContent = beforeResult;
 
-    try {
-      beforeContent = JSON.parse(beforeResume.contentJson) as TailoredResume;
-    } catch {
-      return NextResponse.json(
-        { error: "Before resume has invalid content" },
-        { status: 400 }
-      );
-    }
-
-    try {
-      afterContent = JSON.parse(afterResume.contentJson) as TailoredResume;
-    } catch {
-      return NextResponse.json(
-        { error: "After resume has invalid content" },
-        { status: 400 }
-      );
-    }
+    const afterResult = parseResumeContent(afterResume.contentJson, "After");
+    if (afterResult instanceof NextResponse) return afterResult;
+    const afterContent = afterResult;
 
     const comparison = compareResumes(
       beforeContent,

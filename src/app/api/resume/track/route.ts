@@ -1,6 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
+import type { ZodError } from "zod";
 import { requireAuth, isAuthError } from "@/lib/auth";
 import { trackResumeSentSchema, updateTrackingOutcomeSchema } from "@/lib/constants";
+
+function validationErrorResponse(error: ZodError) {
+  const errors = error.issues.map((issue) => ({
+    field: issue.path.join("."),
+    message: issue.message,
+  }));
+  return NextResponse.json({ error: "Validation failed", errors }, { status: 400 });
+}
 import {
   trackResumeSent,
   updateTrackingOutcome,
@@ -17,16 +26,7 @@ export async function POST(request: NextRequest) {
     const rawData = await request.json();
     const parseResult = trackResumeSentSchema.safeParse(rawData);
 
-    if (!parseResult.success) {
-      const errors = parseResult.error.issues.map((issue) => ({
-        field: issue.path.join("."),
-        message: issue.message,
-      }));
-      return NextResponse.json(
-        { error: "Validation failed", errors },
-        { status: 400 }
-      );
-    }
+    if (!parseResult.success) return validationErrorResponse(parseResult.error);
 
     const { resumeId, jobId, notes } = parseResult.data;
 
@@ -59,16 +59,7 @@ export async function PATCH(request: NextRequest) {
     const rawData = await request.json();
     const parseResult = updateTrackingOutcomeSchema.safeParse(rawData);
 
-    if (!parseResult.success) {
-      const errors = parseResult.error.issues.map((issue) => ({
-        field: issue.path.join("."),
-        message: issue.message,
-      }));
-      return NextResponse.json(
-        { error: "Validation failed", errors },
-        { status: 400 }
-      );
-    }
+    if (!parseResult.success) return validationErrorResponse(parseResult.error);
 
     const { id, outcome } = parseResult.data;
     const updated = updateTrackingOutcome(id, outcome, authResult.userId);
