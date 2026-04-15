@@ -1,4 +1,5 @@
 import type { Profile, JobDescription } from "@/types";
+import { getSynonyms, SYNONYM_MATCH_WEIGHT } from "./synonyms";
 
 export interface ATSIssue {
   type: "error" | "warning" | "info";
@@ -13,6 +14,8 @@ export interface KeywordAnalysis {
   found: boolean;
   frequency: number;
   locations: string[];
+  matchType?: "exact" | "synonym";
+  matchedTerm?: string;
 }
 
 export interface ATSScore {
@@ -23,6 +26,42 @@ export interface ATSScore {
   structure: number;
 }
 
+export type LetterGrade = "A" | "B" | "C" | "D" | "F";
+
+export interface SectionBreakdown {
+  section: string;
+  score: number;
+  weight: number;
+  weightedScore: number;
+  issueCount: number;
+}
+
+export interface KeywordHeatmap {
+  found: KeywordAnalysis[];
+  missing: KeywordAnalysis[];
+  matchRate: number;
+  bySection: Record<string, { found: string[]; missing: string[] }>;
+}
+
+export interface IndustryBenchmark {
+  percentile: number;
+  averageScore: number;
+  topPerformerScore: number;
+}
+
+export interface ATSScanReport {
+  score: ATSScore;
+  letterGrade: LetterGrade;
+  issues: ATSIssue[];
+  keywords: KeywordAnalysis[];
+  keywordHeatmap: KeywordHeatmap;
+  sectionBreakdown: SectionBreakdown[];
+  benchmark: IndustryBenchmark;
+  summary: string;
+  recommendations: string[];
+  scannedAt: string;
+}
+
 export interface ATSAnalysisResult {
   score: ATSScore;
   issues: ATSIssue[];
@@ -31,7 +70,7 @@ export interface ATSAnalysisResult {
   recommendations: string[];
 }
 
-const PROBLEMATIC_CHARACTERS = [
+export const PROBLEMATIC_CHARACTERS = [
   { char: "\u2022", name: "bullet point", replacement: "-" },
   { char: "\u2013", name: "en dash", replacement: "-" },
   { char: "\u2014", name: "em dash", replacement: "-" },
@@ -57,6 +96,22 @@ const SECTION_KEYWORDS = [
   "certifications",
   "achievements",
 ];
+
+function escapeRegExp(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function wordBoundaryRegex(term: string, flags = ""): RegExp {
+  return new RegExp(`\\b${escapeRegExp(term)}\\b`, flags);
+}
+
+function containsWord(text: string, word: string): boolean {
+  return wordBoundaryRegex(word).test(text);
+}
+
+function countWordOccurrences(text: string, word: string): number {
+  return (text.match(wordBoundaryRegex(word, "g")) || []).length;
+}
 
 function normalizeText(text: string): string {
   return text.toLowerCase().replace(/[^a-z0-9\s]/g, " ").replace(/\s+/g, " ").trim();
@@ -337,29 +392,58 @@ function analyzeKeywords(
     return { score: 80, keywords: [], issues: [] };
   }
 
-  let matchedCount = 0;
+  let weightedMatchCount = 0;
 
   importantKeywords.forEach((keyword) => {
     const normalizedKeyword = normalizeText(keyword);
-    const found = normalizedText.includes(normalizedKeyword);
-    const frequency = (normalizedText.match(new RegExp(normalizedKeyword, "g")) || []).length;
+
+    // Check exact match first (word-boundary aware)
+    let found = containsWord(normalizedText, normalizedKeyword);
+    let matchType: "exact" | "synonym" | undefined;
+    let matchedTerm: string | undefined;
+    let frequency = 0;
+
+    if (found) {
+      matchType = "exact";
+      frequency = countWordOccurrences(normalizedText, normalizedKeyword);
+    } else {
+      // Check synonym matches
+      const synonyms = getSynonyms(normalizedKeyword);
+      for (const synonym of synonyms) {
+        if (synonym === normalizedKeyword) continue;
+        const normalizedSynonym = normalizeText(synonym);
+        if (containsWord(normalizedText, normalizedSynonym)) {
+          found = true;
+          matchType = "synonym";
+          matchedTerm = synonym;
+          frequency = countWordOccurrences(normalizedText, normalizedSynonym);
+          break;
+        }
+      }
+    }
 
     const locations: string[] = [];
     if (found) {
-      matchedCount++;
-      if (normalizeText(profile.summary || "").includes(normalizedKeyword)) {
+      const matchWeight = matchType === "synonym" ? SYNONYM_MATCH_WEIGHT : 1;
+      weightedMatchCount += matchWeight;
+
+      const searchTerm = matchType === "synonym" && matchedTerm
+        ? normalizeText(matchedTerm)
+        : normalizedKeyword;
+
+      if (containsWord(normalizeText(profile.summary || ""), searchTerm)) {
         locations.push("summary");
       }
       profile.skills.forEach((s) => {
-        if (normalizeText(s.name).includes(normalizedKeyword)) {
+        if (containsWord(normalizeText(s.name), searchTerm)) {
           locations.push("skills");
         }
       });
       profile.experiences.forEach((e) => {
         if (
-          normalizeText(e.title).includes(normalizedKeyword) ||
-          normalizeText(e.description).includes(normalizedKeyword) ||
-          e.highlights.some((h) => normalizeText(h).includes(normalizedKeyword))
+          containsWord(normalizeText(e.title), searchTerm) ||
+          containsWord(normalizeText(e.description), searchTerm) ||
+          e.highlights.some((h) => containsWord(normalizeText(h), searchTerm))
         ) {
           locations.push("experience");
         }
@@ -371,10 +455,12 @@ function analyzeKeywords(
       found,
       frequency,
       locations: Array.from(new Set(locations)),
+      matchType,
+      matchedTerm,
     });
   });
 
-  const matchRate = matchedCount / importantKeywords.length;
+  const matchRate = weightedMatchCount / importantKeywords.length;
   score = Math.round(matchRate * 100);
 
   if (job && matchRate < 0.5) {
@@ -492,6 +578,136 @@ export function analyzeATS(
     keywords: keywordsResult.keywords,
     summary,
     recommendations,
+  };
+}
+
+export function scoreToLetterGrade(score: number): LetterGrade {
+  if (score >= 90) return "A";
+  if (score >= 80) return "B";
+  if (score >= 70) return "C";
+  if (score >= 60) return "D";
+  return "F";
+}
+
+export function calculateBenchmark(score: number): IndustryBenchmark {
+  // Approximate percentile based on a normal distribution centered around 62
+  // with standard deviation of 15 (typical resume score distribution)
+  const mean = 62;
+  const stddev = 15;
+  const z = (score - mean) / stddev;
+  // Approximate CDF using logistic function
+  const percentile = Math.round(100 / (1 + Math.exp(-1.7 * z)));
+  return {
+    percentile: Math.max(1, Math.min(99, percentile)),
+    averageScore: mean,
+    topPerformerScore: 90,
+  };
+}
+
+export function buildKeywordHeatmap(
+  keywords: KeywordAnalysis[],
+  profile: Profile
+): KeywordHeatmap {
+  const found = keywords.filter((k) => k.found);
+  const missing = keywords.filter((k) => !k.found);
+  const matchRate = keywords.length > 0 ? found.length / keywords.length : 0;
+
+  const sections = ["summary", "skills", "experience", "education", "projects"];
+  const bySection: Record<string, { found: string[]; missing: string[] }> = {};
+
+  for (const section of sections) {
+    const sectionText = extractSectionText(profile, section);
+    const normalizedSection = normalizeText(sectionText);
+
+    const sectionFound: string[] = [];
+    const sectionMissing: string[] = [];
+
+    for (const kw of keywords) {
+      const normalizedKeyword = normalizeText(kw.keyword);
+      if (normalizedSection.includes(normalizedKeyword)) {
+        sectionFound.push(kw.keyword);
+      } else {
+        sectionMissing.push(kw.keyword);
+      }
+    }
+
+    bySection[section] = { found: sectionFound, missing: sectionMissing };
+  }
+
+  return { found, missing, matchRate, bySection };
+}
+
+function extractSectionText(profile: Profile, section: string): string {
+  switch (section) {
+    case "summary":
+      return profile.summary || "";
+    case "skills":
+      return profile.skills.map((s) => s.name).join(" ");
+    case "experience":
+      return profile.experiences
+        .map((e) => [e.title, e.company, e.description, ...e.highlights, ...e.skills].join(" "))
+        .join(" ");
+    case "education":
+      return profile.education
+        .map((e) => [e.institution, e.degree, e.field, ...e.highlights].join(" "))
+        .join(" ");
+    case "projects":
+      return profile.projects
+        .map((p) => [p.name, p.description, ...p.technologies, ...p.highlights].join(" "))
+        .join(" ");
+    default:
+      return "";
+  }
+}
+
+export function buildSectionBreakdown(
+  formattingScore: number,
+  structureScore: number,
+  contentScore: number,
+  keywordsScore: number,
+  issues: ATSIssue[]
+): SectionBreakdown[] {
+  const sections: { section: string; score: number; weight: number; category: ATSIssue["category"] }[] = [
+    { section: "Formatting", score: formattingScore, weight: 0.2, category: "formatting" },
+    { section: "Structure", score: structureScore, weight: 0.25, category: "structure" },
+    { section: "Content", score: contentScore, weight: 0.25, category: "content" },
+    { section: "Keywords", score: keywordsScore, weight: 0.3, category: "keywords" },
+  ];
+
+  return sections.map(({ section, score, weight, category }) => ({
+    section,
+    score,
+    weight,
+    weightedScore: Math.round(score * weight),
+    issueCount: issues.filter((i) => i.category === category).length,
+  }));
+}
+
+export function generateScanReport(
+  profile: Profile,
+  job?: JobDescription
+): ATSScanReport {
+  const analysis = analyzeATS(profile, job);
+  const { score, issues, keywords } = analysis;
+
+  const letterGrade = scoreToLetterGrade(score.overall);
+  const benchmark = calculateBenchmark(score.overall);
+  const keywordHeatmap = buildKeywordHeatmap(keywords, profile);
+  const sectionBreakdown = buildSectionBreakdown(
+    score.formatting,
+    score.structure,
+    score.content,
+    score.keywords,
+    issues
+  );
+
+  return {
+    ...analysis,
+    letterGrade,
+    keywordHeatmap,
+    sectionBreakdown,
+    benchmark,
+    scannedAt: new Date().toISOString(),
   };
 }
 
