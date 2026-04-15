@@ -14,11 +14,6 @@ import { generateId } from "@/lib/utils";
 
 // ─── Confidence helpers ──────────────────────────────────────────────
 
-export interface FieldConfidence {
-  value: unknown;
-  confidence: number;
-}
-
 export interface ExtractedContact extends ContactInfo {
   confidence: number;
 }
@@ -613,13 +608,11 @@ function categorizeSkill(
   name: string
 ): Skill["category"] {
   const lower = name.toLowerCase().trim();
-  if (PROGRAMMING_LANGUAGES.has(lower)) return "technical";
-  if (FRAMEWORKS.has(lower)) return "technical";
+  if (PROGRAMMING_LANGUAGES.has(lower) || FRAMEWORKS.has(lower)) return "technical";
   if (TOOLS.has(lower)) return "tool";
   if (SOFT_SKILLS.has(lower)) return "soft";
   // Check partial matches for multi-word entries
-  const softArr = Array.from(SOFT_SKILLS);
-  for (const s of softArr) {
+  for (const s of Array.from(SOFT_SKILLS)) {
     if (lower.includes(s) || s.includes(lower)) return "soft";
   }
   return "other";
