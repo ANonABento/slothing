@@ -290,7 +290,7 @@ export default function AnalyticsPage() {
               <Progress value={analytics.overview.profileCompleteness} className="h-2" />
               {analytics.overview.profileCompleteness < 100 && (
                 <p className="text-xs text-muted-foreground mt-2">
-                  <Link href="/profile" className="text-primary hover:underline">
+                  <Link href="/bank" className="text-primary hover:underline">
                     Complete your profile
                   </Link> to improve your chances
                 </p>

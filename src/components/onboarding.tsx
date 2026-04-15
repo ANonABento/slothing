@@ -35,14 +35,14 @@ const steps = [
     description: "Start by uploading your resume. Get Me Job will automatically extract and organize your professional information.",
     icon: Upload,
     gradient: "from-violet-500 to-purple-400",
-    action: "/upload",
+    action: "/bank",
   },
   {
     title: "Build Your Profile",
     description: "Review and enhance your extracted profile. Add missing details to strengthen your applications.",
     icon: FileText,
     gradient: "from-rose-400 to-orange-400",
-    action: "/profile",
+    action: "/bank",
   },
   {
     title: "Track Target Jobs",

@@ -390,7 +390,7 @@ describe("Insight Generation", () => {
 
       expect(insights.length).toBe(1);
       expect(insights[0].title).toBe("Set up your profile");
-      expect(insights[0].actionUrl).toBe("/upload");
+      expect(insights[0].actionUrl).toBe("/bank");
       expect(insights[0].priority).toBe("high");
     });
 
