@@ -59,32 +59,6 @@ function rowToChunk(row: KnowledgeChunkRow): KnowledgeChunk {
   };
 }
 
-export function insertChunk(params: {
-  userId?: string;
-  documentId: string;
-  sectionType: string;
-  content: string;
-  contentHash: string;
-  embedding?: Buffer | null;
-  metadata?: Record<string, unknown>;
-}): string {
-  const id = generateId();
-  db.prepare(`
-    INSERT INTO knowledge_chunks (id, user_id, document_id, section_type, content, content_hash, embedding, metadata_json)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-  `).run(
-    id,
-    params.userId ?? "default",
-    params.documentId,
-    params.sectionType,
-    params.content,
-    params.contentHash,
-    params.embedding ?? null,
-    JSON.stringify(params.metadata ?? {})
-  );
-  return id;
-}
-
 export function insertChunks(chunks: Array<{
   userId?: string;
   documentId: string;

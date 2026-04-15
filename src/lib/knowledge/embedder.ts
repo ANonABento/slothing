@@ -2,8 +2,6 @@ import { getLLMConfig } from "@/lib/db";
 
 const OPENAI_EMBEDDINGS_URL = "https://api.openai.com/v1/embeddings";
 const EMBEDDING_MODEL = "text-embedding-3-small";
-const EMBEDDING_DIMENSIONS = 1536;
-
 function getOpenAIKey(): string | null {
   const config = getLLMConfig();
   if (config?.provider === "openai" && config.apiKey) {
@@ -18,11 +16,6 @@ function float32ArrayToBuffer(arr: Float32Array): Buffer {
 
 function arrayToFloat32Array(arr: number[]): Float32Array {
   return new Float32Array(arr);
-}
-
-export async function embedText(text: string): Promise<Float32Array | null> {
-  const result = await embedBatch([text]);
-  return result ? result[0] : null;
 }
 
 export async function embedBatch(texts: string[]): Promise<Float32Array[] | null> {
@@ -86,4 +79,3 @@ export function cosineSimilarity(a: Float32Array, b: Float32Array): number {
   return dot / denom;
 }
 
-export { EMBEDDING_DIMENSIONS };
