@@ -127,21 +127,52 @@ export function clearBankEntries(userId: string = "default"): void {
 }
 
 /**
- * Find a duplicate entry by matching category and key content fields.
- * Returns the existing entry if found, null otherwise.
+ * Generate a deduplication key for a bank entry.
+ * Used to detect if an equivalent entry already exists.
+ */
+export function getDeduplicationKey(
+  category: BankCategory,
+  content: Record<string, unknown>
+): string {
+  switch (category) {
+    case "experience":
+      return `${content.company}|${content.title}`.toLowerCase();
+    case "skill":
+      return `${content.name}`.toLowerCase();
+    case "education":
+      return `${content.institution}|${content.degree}`.toLowerCase();
+    case "project":
+      return `${content.name}`.toLowerCase();
+    case "certification":
+      return `${content.name}|${content.issuer}`.toLowerCase();
+    case "achievement":
+      return `${content.description}`.toLowerCase().slice(0, 100);
+    default:
+      return JSON.stringify(content).toLowerCase().slice(0, 100);
+  }
+}
+
+/**
+ * Find a duplicate entry by computing the dedup key for all entries in the
+ * category and doing an exact comparison. Avoids false positives from LIKE
+ * substring matching (e.g. "java" matching "javascript").
  */
 export function findDuplicateEntry(
   category: BankCategory,
   contentKey: string,
   userId: string = "default"
 ): BankEntry | null {
-  const pattern = `%${contentKey}%`;
-  const row = db
-    .prepare(
-      "SELECT * FROM profile_bank WHERE user_id = ? AND category = ? AND content LIKE ? LIMIT 1"
-    )
-    .get(userId, category, pattern) as BankEntryRow | undefined;
-  return row ? rowToEntry(row) : null;
+  const rows = db
+    .prepare("SELECT * FROM profile_bank WHERE user_id = ? AND category = ?")
+    .all(userId, category) as BankEntryRow[];
+
+  const normalizedKey = contentKey.toLowerCase();
+  const match = rows.find((row) => {
+    const content = JSON.parse(row.content) as Record<string, unknown>;
+    return getDeduplicationKey(category, content) === normalizedKey;
+  });
+
+  return match ? rowToEntry(match) : null;
 }
 
 /**

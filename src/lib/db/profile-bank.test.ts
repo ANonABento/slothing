@@ -220,7 +220,7 @@ describe("Profile Bank DB Functions", () => {
         confidence_score: 0.8,
         created_at: "2024-01-15T10:00:00.000Z",
       };
-      (db.prepare as Mock).mockReturnValue({ get: vi.fn().mockReturnValue(mockRow) });
+      (db.prepare as Mock).mockReturnValue({ all: vi.fn().mockReturnValue([mockRow]) });
 
       const result = findDuplicateEntry("skill", "react");
 
@@ -229,7 +229,7 @@ describe("Profile Bank DB Functions", () => {
     });
 
     it("should return null when no duplicate found", () => {
-      (db.prepare as Mock).mockReturnValue({ get: vi.fn().mockReturnValue(undefined) });
+      (db.prepare as Mock).mockReturnValue({ all: vi.fn().mockReturnValue([]) });
 
       const result = findDuplicateEntry("skill", "unknown-skill");
 

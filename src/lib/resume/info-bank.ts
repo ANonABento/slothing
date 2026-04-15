@@ -1,7 +1,8 @@
-import type { Profile, BankCategory } from "@/types";
+import type { Profile } from "@/types";
 import type { InsertBankEntry } from "@/lib/db/profile-bank";
 import {
   findDuplicateEntry,
+  getDeduplicationKey,
   updateBankEntry,
   insertBankEntries,
 } from "@/lib/db/profile-bank";
@@ -138,32 +139,6 @@ export function extractBankEntries(
   }
 
   return entries;
-}
-
-/**
- * Generate a deduplication key for a bank entry.
- * Used to detect if an equivalent entry already exists.
- */
-export function getDeduplicationKey(
-  category: BankCategory,
-  content: Record<string, unknown>
-): string {
-  switch (category) {
-    case "experience":
-      return `${content.company}|${content.title}`.toLowerCase();
-    case "skill":
-      return `${content.name}`.toLowerCase();
-    case "education":
-      return `${content.institution}|${content.degree}`.toLowerCase();
-    case "project":
-      return `${content.name}`.toLowerCase();
-    case "certification":
-      return `${content.name}|${content.issuer}`.toLowerCase();
-    case "achievement":
-      return `${content.description}`.toLowerCase().slice(0, 100);
-    default:
-      return JSON.stringify(content).toLowerCase().slice(0, 100);
-  }
 }
 
 /**

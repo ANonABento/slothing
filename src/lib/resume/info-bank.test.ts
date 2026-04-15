@@ -1,15 +1,19 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { Profile } from "@/types";
 
-// Mock the profile-bank DB module
-vi.mock("@/lib/db/profile-bank", () => ({
-  findDuplicateEntry: vi.fn(),
-  updateBankEntry: vi.fn(),
-  insertBankEntries: vi.fn().mockReturnValue([]),
-}));
+// Mock only the DB functions; keep pure helpers like getDeduplicationKey real
+vi.mock("@/lib/db/profile-bank", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/db/profile-bank")>();
+  return {
+    ...actual,
+    findDuplicateEntry: vi.fn(),
+    updateBankEntry: vi.fn(),
+    insertBankEntries: vi.fn().mockReturnValue([]),
+  };
+});
 
-import { findDuplicateEntry, updateBankEntry, insertBankEntries } from "@/lib/db/profile-bank";
-import { extractBankEntries, getDeduplicationKey, populateBankFromProfile } from "./info-bank";
+import { findDuplicateEntry, updateBankEntry, insertBankEntries, getDeduplicationKey } from "@/lib/db/profile-bank";
+import { extractBankEntries, populateBankFromProfile } from "./info-bank";
 
 describe("Info Bank", () => {
   beforeEach(() => {
