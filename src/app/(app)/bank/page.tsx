@@ -9,6 +9,7 @@ import { ErrorState, getErrorMessage } from "@/components/ui/error-state";
 import { BANK_CATEGORIES, type BankCategory, type BankEntry } from "@/types";
 import { Database, Loader2, Upload, HardDrive } from "lucide-react";
 import { DriveFilePicker } from "@/components/google";
+import { SourceDocuments } from "@/components/bank/source-documents";
 
 export default function BankPage() {
   const [entries, setEntries] = useState<BankEntry[]>([]);
@@ -19,6 +20,10 @@ export default function BankPage() {
   const [query, setQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState<BankCategory | "all">("all");
   const [sortBy, setSortBy] = useState<SortOption>("date");
+
+  // Source document filtering
+  const [activeDocumentId, setActiveDocumentId] = useState<string | null>(null);
+  const [sourceRefreshKey, setSourceRefreshKey] = useState(0);
 
   // Upload via button
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -70,19 +75,22 @@ export default function BankPage() {
     return counts;
   }, [allEntries]);
 
-  // Sort entries
+  // Sort & filter entries
   const sortedEntries = useMemo(() => {
-    const sorted = [...entries];
+    let filtered = [...entries];
+    if (activeDocumentId) {
+      filtered = filtered.filter((e) => e.sourceDocumentId === activeDocumentId);
+    }
     if (sortBy === "confidence") {
-      sorted.sort((a, b) => b.confidenceScore - a.confidenceScore);
+      filtered.sort((a, b) => b.confidenceScore - a.confidenceScore);
     } else {
-      sorted.sort(
+      filtered.sort(
         (a, b) =>
           new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       );
     }
-    return sorted;
-  }, [entries, sortBy]);
+    return filtered;
+  }, [entries, sortBy, activeDocumentId]);
 
   // Group by category for display
   const groupedEntries = useMemo(() => {
@@ -151,6 +159,7 @@ export default function BankPage() {
       // Upload route handles parse + ingest — just refresh the entries
       await fetchEntries();
       refreshAllEntries();
+      setSourceRefreshKey((k) => k + 1);
     } catch (err) {
       console.error("[bank] Upload error:", err);
       setError(getErrorMessage(err));
@@ -183,6 +192,13 @@ export default function BankPage() {
   function handleOverlayComplete() {
     fetchEntries();
     refreshAllEntries();
+    setSourceRefreshKey((k) => k + 1);
+  }
+
+  function handleSourceDocumentDelete() {
+    fetchEntries();
+    refreshAllEntries();
+    setSourceRefreshKey((k) => k + 1);
   }
 
   return (
@@ -245,6 +261,14 @@ export default function BankPage() {
         sortBy={sortBy}
         onSortChange={setSortBy}
         counts={categoryCounts}
+      />
+
+      {/* Source Files */}
+      <SourceDocuments
+        refreshKey={sourceRefreshKey}
+        onFilterByDocument={setActiveDocumentId}
+        activeDocumentId={activeDocumentId}
+        onDelete={handleSourceDocumentDelete}
       />
 
       {/* Content */}
