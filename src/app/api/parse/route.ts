@@ -12,7 +12,7 @@ export interface ParseResumeResult {
   llmFallback: boolean;
 }
 
-export async function parseResumeText(
+async function parseResumeText(
   text: string,
   llmConfig: LLMConfig | null
 ): Promise<ParseResumeResult> {

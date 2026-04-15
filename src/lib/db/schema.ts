@@ -1,7 +1,6 @@
 import Database from "better-sqlite3";
 import path from "path";
 import fs from "fs";
-import * as sqliteVec from "sqlite-vec";
 import { PATHS } from "@/lib/constants";
 
 // Ensure data directory exists
@@ -15,8 +14,14 @@ const db = new Database(PATHS.DATABASE);
 // Enable WAL mode for better performance
 db.pragma("journal_mode = WAL");
 
-// Load sqlite-vec extension for vector search
-sqliteVec.load(db);
+// Load sqlite-vec extension for vector search (optional — fails gracefully if not available)
+try {
+  // eslint-disable-next-line
+  const sqliteVec = require("sqlite-vec");
+  sqliteVec.load(db);
+} catch {
+  console.warn("[db] sqlite-vec extension not available — vector search disabled");
+}
 
 // Create tables
 db.exec(`
@@ -377,10 +382,12 @@ db.exec(`
   INSERT OR IGNORE INTO profile (id) VALUES ('default');
 `);
 
-// Create vec0 virtual table for vector search
-db.exec(`
-  CREATE VIRTUAL TABLE IF NOT EXISTS chunks_vec USING vec0(embedding float[1536]);
-`);
+// Create vec0 virtual table for vector search (requires sqlite-vec extension)
+try {
+  db.exec(`CREATE VIRTUAL TABLE IF NOT EXISTS chunks_vec USING vec0(embedding float[1536]);`);
+} catch {
+  console.warn("[db] Could not create chunks_vec table — sqlite-vec not loaded");
+}
 
 // Migration: Add new columns to jobs table if they don't exist
 try {
