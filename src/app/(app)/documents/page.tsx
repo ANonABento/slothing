@@ -24,13 +24,14 @@ import {
 } from "lucide-react";
 import { DriveFilePicker, SaveToDriveButton } from "@/components/google";
 
-type DocumentType = "all" | "resume" | "cover_letter" | "portfolio" | "certificate" | "other";
+type DocumentType = "all" | "resume" | "cover_letter" | "reference_letter" | "portfolio" | "certificate" | "other";
 type SortOption = "newest" | "oldest" | "name-asc" | "name-desc" | "size-asc" | "size-desc";
 
 const TYPE_OPTIONS: { value: DocumentType; label: string }[] = [
   { value: "all", label: "All Types" },
   { value: "resume", label: "Resume" },
   { value: "cover_letter", label: "Cover Letter" },
+  { value: "reference_letter", label: "Reference Letter" },
   { value: "portfolio", label: "Portfolio" },
   { value: "certificate", label: "Certificate" },
   { value: "other", label: "Other" },

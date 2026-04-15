@@ -73,10 +73,32 @@ export interface Profile {
 }
 
 // Document types
+export type DocumentType = 'resume' | 'cover_letter' | 'reference_letter' | 'portfolio' | 'certificate' | 'other';
+
+export interface CoverLetterData {
+  targetCompany?: string;
+  targetPosition?: string;
+  keySellingPoints: string[];
+  tone?: string;
+}
+
+export interface ReferenceLetterData {
+  refereeName?: string;
+  relationship?: string;
+  keyEndorsements: string[];
+}
+
+export interface CertificateData {
+  certName?: string;
+  issuer?: string;
+  date?: string;
+  credentialId?: string;
+}
+
 export interface Document {
   id: string;
   filename: string;
-  type: 'resume' | 'cover_letter' | 'portfolio' | 'certificate' | 'other';
+  type: DocumentType;
   mimeType: string;
   size: number;
   path: string;

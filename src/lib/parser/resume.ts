@@ -1,5 +1,12 @@
-import { LLMClient } from "@/lib/llm/client";
-import type { Profile, LLMConfig } from "@/types";
+import { LLMClient, parseJSONFromLLM } from "@/lib/llm/client";
+import type {
+  Profile,
+  LLMConfig,
+  DocumentType,
+  CoverLetterData,
+  ReferenceLetterData,
+  CertificateData,
+} from "@/types";
 import { generateId } from "@/lib/utils";
 
 const RESUME_PARSE_PROMPT = `You are a resume parser. Extract structured information from the following resume text.
@@ -129,6 +136,148 @@ export async function parseResumeWithLLM(
     })),
     rawText: text,
   };
+}
+
+// Type-specific parsing prompts
+
+const COVER_LETTER_PARSE_PROMPT = `You are a cover letter parser. Extract structured information from the following cover letter text.
+
+Return a JSON object with this exact structure (no markdown, just raw JSON):
+{
+  "targetCompany": "Company Name or null",
+  "targetPosition": "Position Title or null",
+  "keySellingPoints": ["Point 1", "Point 2"],
+  "tone": "professional/casual/enthusiastic/formal"
+}
+
+Rules:
+- Extract only information clearly present in the text
+- Use null for missing fields
+- keySellingPoints should capture the main arguments the candidate makes
+- Return ONLY the JSON object, no explanation or markdown
+
+Cover letter text:
+`;
+
+const REFERENCE_LETTER_PARSE_PROMPT = `You are a reference letter parser. Extract structured information from the following reference/recommendation letter.
+
+Return a JSON object with this exact structure (no markdown, just raw JSON):
+{
+  "refereeName": "Name of person writing the reference or null",
+  "relationship": "e.g. Former Manager, Professor, Colleague or null",
+  "keyEndorsements": ["Endorsement 1", "Endorsement 2"]
+}
+
+Rules:
+- Extract only information clearly present in the text
+- Use null for missing fields
+- keyEndorsements should capture the main positive qualities or achievements mentioned
+- Return ONLY the JSON object, no explanation or markdown
+
+Reference letter text:
+`;
+
+const CERTIFICATE_PARSE_PROMPT = `You are a certificate/credential parser. Extract structured information from the following certificate or credential document.
+
+Return a JSON object with this exact structure (no markdown, just raw JSON):
+{
+  "certName": "Certificate or Credential Name or null",
+  "issuer": "Issuing Organization or null",
+  "date": "Date Issued or null",
+  "credentialId": "Credential ID or Verification Number or null"
+}
+
+Rules:
+- Extract only information clearly present in the text
+- Use null for missing fields
+- Return ONLY the JSON object, no explanation or markdown
+
+Certificate text:
+`;
+
+export async function parseCoverLetterWithLLM(
+  text: string,
+  llmConfig: LLMConfig
+): Promise<CoverLetterData> {
+  const client = new LLMClient(llmConfig);
+
+  const response = await client.complete({
+    messages: [{ role: "user", content: COVER_LETTER_PARSE_PROMPT + text }],
+    temperature: 0.1,
+    maxTokens: 1024,
+  });
+
+  const parsed = parseJSONFromLLM<CoverLetterData>(response);
+  return {
+    targetCompany: parsed.targetCompany || undefined,
+    targetPosition: parsed.targetPosition || undefined,
+    keySellingPoints: parsed.keySellingPoints || [],
+    tone: parsed.tone || undefined,
+  };
+}
+
+export async function parseReferenceLetterWithLLM(
+  text: string,
+  llmConfig: LLMConfig
+): Promise<ReferenceLetterData> {
+  const client = new LLMClient(llmConfig);
+
+  const response = await client.complete({
+    messages: [{ role: "user", content: REFERENCE_LETTER_PARSE_PROMPT + text }],
+    temperature: 0.1,
+    maxTokens: 1024,
+  });
+
+  const parsed = parseJSONFromLLM<ReferenceLetterData>(response);
+  return {
+    refereeName: parsed.refereeName || undefined,
+    relationship: parsed.relationship || undefined,
+    keyEndorsements: parsed.keyEndorsements || [],
+  };
+}
+
+export async function parseCertificateWithLLM(
+  text: string,
+  llmConfig: LLMConfig
+): Promise<CertificateData> {
+  const client = new LLMClient(llmConfig);
+
+  const response = await client.complete({
+    messages: [{ role: "user", content: CERTIFICATE_PARSE_PROMPT + text }],
+    temperature: 0.1,
+    maxTokens: 512,
+  });
+
+  const parsed = parseJSONFromLLM<CertificateData>(response);
+  return {
+    certName: parsed.certName || undefined,
+    issuer: parsed.issuer || undefined,
+    date: parsed.date || undefined,
+    credentialId: parsed.credentialId || undefined,
+  };
+}
+
+/**
+ * Parse a document using the appropriate type-specific prompt.
+ * Returns structured data based on the document type.
+ */
+export async function parseDocumentByType(
+  text: string,
+  docType: DocumentType,
+  llmConfig: LLMConfig
+): Promise<{ parsedProfile?: Partial<Profile>; coverLetter?: CoverLetterData; referenceLetter?: ReferenceLetterData; certificate?: CertificateData }> {
+  switch (docType) {
+    case "resume":
+      return { parsedProfile: await parseResumeWithLLM(text, llmConfig) };
+    case "cover_letter":
+      return { coverLetter: await parseCoverLetterWithLLM(text, llmConfig) };
+    case "reference_letter":
+      return { referenceLetter: await parseReferenceLetterWithLLM(text, llmConfig) };
+    case "certificate":
+      return { certificate: await parseCertificateWithLLM(text, llmConfig) };
+    default:
+      return {};
+  }
 }
 
 // Fallback parser using regex patterns (no LLM required)
