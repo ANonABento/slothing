@@ -198,11 +198,13 @@ export const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
 export const ALLOWED_MIME_TYPES = [
   "application/pdf",
   "text/plain",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 ] as const;
 
 // Magic bytes for file type validation
 export const FILE_SIGNATURES: Record<string, number[]> = {
   "application/pdf": [0x25, 0x50, 0x44, 0x46], // %PDF
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [0x50, 0x4b, 0x03, 0x04], // PK zip header
   // text/plain has no magic bytes - validated by content
 };
 
@@ -442,6 +444,22 @@ export const compareResumesSchema = z.object({
 });
 
 export type CompareResumesInput = z.infer<typeof compareResumesSchema>;
+
+// Resume A/B tracking schemas
+export const trackResumeSentSchema = z.object({
+  resumeId: z.string().min(1, "Resume ID is required"),
+  jobId: z.string().min(1, "Job ID is required"),
+  notes: z.string().max(500).optional(),
+});
+
+export type TrackResumeSentInput = z.infer<typeof trackResumeSentSchema>;
+
+export const updateTrackingOutcomeSchema = z.object({
+  id: z.string().min(1, "Tracking entry ID is required"),
+  outcome: z.enum(["applied", "screening", "interviewing", "offered", "rejected", "withdrawn"]),
+});
+
+export type UpdateTrackingOutcomeInput = z.infer<typeof updateTrackingOutcomeSchema>;
 
 // Import job schema (single job)
 export const importJobSchema = z.object({
