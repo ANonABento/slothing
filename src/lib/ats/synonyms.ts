@@ -9,7 +9,7 @@ export interface SynonymGroup {
   synonyms: string[];
 }
 
-const SYNONYM_GROUPS: SynonymGroup[] = [
+export const SYNONYM_GROUPS: SynonymGroup[] = [
   // Programming Languages
   { canonical: "javascript", synonyms: ["js", "ecmascript", "es6", "es2015"] },
   { canonical: "typescript", synonyms: ["ts"] },
@@ -54,7 +54,7 @@ const SYNONYM_GROUPS: SynonymGroup[] = [
   { canonical: "azure", synonyms: ["microsoft azure", "ms azure"] },
   { canonical: "docker", synonyms: ["containerization", "containers"] },
   { canonical: "kubernetes", synonyms: ["k8s", "kube"] },
-  { canonical: "terraform", synonyms: ["tf", "infrastructure as code", "iac"] },
+  { canonical: "terraform", synonyms: ["infrastructure as code", "iac"] },
   { canonical: "ci/cd", synonyms: ["cicd", "ci cd", "continuous integration", "continuous deployment", "continuous delivery"] },
   { canonical: "devops", synonyms: ["dev ops", "site reliability", "sre"] },
 
@@ -96,7 +96,7 @@ const SYNONYM_GROUPS: SynonymGroup[] = [
   { canonical: "machine learning", synonyms: ["ml", "deep learning", "dl", "ai", "artificial intelligence"] },
   { canonical: "nlp", synonyms: ["natural language processing", "text processing"] },
   { canonical: "computer vision", synonyms: ["cv", "image recognition", "image processing"] },
-  { canonical: "tensorflow", synonyms: ["tf"] },
+  { canonical: "tensorflow", synonyms: ["keras"] },
   { canonical: "pytorch", synonyms: ["torch"] },
 
   // Testing
@@ -109,7 +109,7 @@ const SYNONYM_GROUPS: SynonymGroup[] = [
   { canonical: "authentication", synonyms: ["auth", "oauth", "sso", "single sign-on"] },
 
   // Mobile
-  { canonical: "ios", synonyms: ["swift", "objective-c", "apple development"] },
+  { canonical: "ios", synonyms: ["swift", "apple development"] },
   { canonical: "android", synonyms: ["android development", "kotlin android"] },
   { canonical: "react native", synonyms: ["react-native", "rn"] },
   { canonical: "flutter", synonyms: ["dart"] },
@@ -173,5 +173,3 @@ export function areSynonyms(termA: string, termB: string): boolean {
 /** Weight applied to synonym matches (vs 1.0 for exact matches) */
 export const SYNONYM_MATCH_WEIGHT = 0.8;
 
-/** Exported for testing */
-export { SYNONYM_GROUPS };

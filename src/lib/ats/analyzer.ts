@@ -391,29 +391,27 @@ function analyzeKeywords(
       const matchWeight = matchType === "synonym" ? SYNONYM_MATCH_WEIGHT : 1;
       weightedMatchCount += matchWeight;
 
-      const searchTerms = matchType === "synonym" && matchedTerm
-        ? [normalizeText(matchedTerm)]
-        : [normalizedKeyword];
+      const searchTerm = matchType === "synonym" && matchedTerm
+        ? normalizeText(matchedTerm)
+        : normalizedKeyword;
 
-      for (const term of searchTerms) {
-        if (containsWord(normalizeText(profile.summary || ""), term)) {
-          locations.push("summary");
-        }
-        profile.skills.forEach((s) => {
-          if (containsWord(normalizeText(s.name), term)) {
-            locations.push("skills");
-          }
-        });
-        profile.experiences.forEach((e) => {
-          if (
-            containsWord(normalizeText(e.title), term) ||
-            containsWord(normalizeText(e.description), term) ||
-            e.highlights.some((h) => containsWord(normalizeText(h), term))
-          ) {
-            locations.push("experience");
-          }
-        });
+      if (containsWord(normalizeText(profile.summary || ""), searchTerm)) {
+        locations.push("summary");
       }
+      profile.skills.forEach((s) => {
+        if (containsWord(normalizeText(s.name), searchTerm)) {
+          locations.push("skills");
+        }
+      });
+      profile.experiences.forEach((e) => {
+        if (
+          containsWord(normalizeText(e.title), searchTerm) ||
+          containsWord(normalizeText(e.description), searchTerm) ||
+          e.highlights.some((h) => containsWord(normalizeText(h), searchTerm))
+        ) {
+          locations.push("experience");
+        }
+      });
     }
 
     keywords.push({
