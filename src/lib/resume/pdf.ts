@@ -270,7 +270,3 @@ export function generateResumeHTML(
   `.trim();
 }
 
-// Generate JSON representation for React-PDF rendering
-export function generateResumeJSON(resume: TailoredResume) {
-  return resume;
-}

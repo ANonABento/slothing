@@ -1,25 +1,7 @@
 // Resume template definitions and management
-
-export interface ResumeTemplate {
-  id: string;
-  name: string;
-  description: string;
-  preview?: string;
-  styles: TemplateStyles;
-}
-
-export interface TemplateStyles {
-  fontFamily: string;
-  fontSize: string;
-  headerSize: string;
-  sectionHeaderSize: string;
-  lineHeight: string;
-  accentColor: string;
-  layout: "single-column" | "two-column";
-  headerStyle: "centered" | "left" | "minimal";
-  bulletStyle: "disc" | "dash" | "arrow" | "none";
-  sectionDivider: "line" | "space" | "none";
-}
+export type { ResumeTemplate, TemplateStyles } from "./template-types";
+import type { ResumeTemplate, TemplateStyles } from "./template-types";
+import { getCustomTemplate } from "@/lib/db/custom-templates";
 
 // Built-in templates
 export const TEMPLATES: ResumeTemplate[] = [
@@ -177,7 +159,6 @@ export function getTemplateWithCustom(
 
   // Check custom templates
   try {
-    const { getCustomTemplate } = require("@/lib/db/custom-templates");
     const custom = getCustomTemplate(id, userId || "default");
     if (custom) {
       return {
@@ -240,27 +221,3 @@ export function generateTemplateCSS(styles: TemplateStyles): string {
   `;
 }
 
-// Analyze uploaded resume to detect format
-export async function analyzeResumeFormat(text: string): Promise<Partial<TemplateStyles>> {
-  // Basic heuristics to detect formatting preferences
-  const detected: Partial<TemplateStyles> = {};
-
-  // Check for bullet styles
-  if (text.includes("→") || text.includes("▸")) {
-    detected.bulletStyle = "arrow";
-  } else if (text.includes("- ") || text.includes("– ")) {
-    detected.bulletStyle = "dash";
-  } else if (text.includes("•")) {
-    detected.bulletStyle = "disc";
-  }
-
-  // Check for section dividers (lines of dashes or equals)
-  if (/[-=]{10,}/.test(text)) {
-    detected.sectionDivider = "line";
-  }
-
-  // Estimate layout based on content structure
-  // (In a real implementation, this would analyze the PDF layout)
-
-  return detected;
-}

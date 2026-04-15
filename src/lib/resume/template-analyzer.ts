@@ -1,5 +1,5 @@
 import { LLMClient, parseJSONFromLLM } from "@/lib/llm/client";
-import type { TemplateStyles } from "./templates";
+import type { TemplateStyles } from "./template-types";
 
 /**
  * Analyzed template styles from an uploaded resume document.

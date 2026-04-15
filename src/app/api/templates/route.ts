@@ -16,6 +16,11 @@ import {
 } from "@/lib/api-utils";
 import type { AnalyzedTemplate } from "@/lib/resume/template-analyzer";
 
+const patchTemplateSchema = z.object({
+  id: z.string().min(1, "Template ID is required"),
+  name: z.string().min(1, "Template name is required").max(100),
+});
+
 const createTemplateSchema = z.object({
   name: z.string().min(1, "Name is required").max(100),
   analyzedStyles: z.object({
@@ -131,16 +136,14 @@ export async function PATCH(request: NextRequest) {
 
   try {
     const body = await request.json();
+    const parseResult = patchTemplateSchema.safeParse(body);
 
-    if (!body.id || typeof body.id !== "string") {
-      return ApiErrors.badRequest("Template ID is required");
+    if (!parseResult.success) {
+      return validationErrorResponse(parseResult.error);
     }
 
-    if (!body.name || typeof body.name !== "string") {
-      return ApiErrors.badRequest("Template name is required");
-    }
-
-    const updated = updateCustomTemplateName(body.id, body.name, authResult.userId);
+    const { id, name } = parseResult.data;
+    const updated = updateCustomTemplateName(id, name, authResult.userId);
     if (!updated) {
       return ApiErrors.notFound("Template");
     }
