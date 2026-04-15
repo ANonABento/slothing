@@ -1,25 +1,7 @@
 // Resume template definitions and management
-
-export interface ResumeTemplate {
-  id: string;
-  name: string;
-  description: string;
-  preview?: string;
-  styles: TemplateStyles;
-}
-
-export interface TemplateStyles {
-  fontFamily: string;
-  fontSize: string;
-  headerSize: string;
-  sectionHeaderSize: string;
-  lineHeight: string;
-  accentColor: string;
-  layout: "single-column" | "two-column";
-  headerStyle: "centered" | "left" | "minimal";
-  bulletStyle: "disc" | "dash" | "arrow" | "none";
-  sectionDivider: "line" | "space" | "none";
-}
+export type { ResumeTemplate, TemplateStyles } from "./template-types";
+import type { ResumeTemplate, TemplateStyles } from "./template-types";
+import { getCustomTemplate } from "@/lib/db/custom-templates";
 
 // Built-in templates
 export const TEMPLATES: ResumeTemplate[] = [
@@ -159,11 +141,55 @@ export const TEMPLATES: ResumeTemplate[] = [
       sectionDivider: "line",
     },
   },
+  {
+    id: "two-column",
+    name: "Two Column",
+    description: "Space-efficient two-column layout for experienced candidates",
+    styles: {
+      fontFamily: "'Inter', 'Segoe UI', sans-serif",
+      fontSize: "10pt",
+      headerSize: "22pt",
+      sectionHeaderSize: "11pt",
+      lineHeight: "1.4",
+      accentColor: "#2563eb",
+      layout: "two-column",
+      headerStyle: "left",
+      bulletStyle: "disc",
+      sectionDivider: "space",
+    },
+  },
 ];
 
-// Get template by ID
+// Get template by ID (built-in only)
 export function getTemplate(id: string): ResumeTemplate {
   return TEMPLATES.find((t) => t.id === id) || TEMPLATES[0];
+}
+
+// Get template by ID, checking custom templates first
+export function getTemplateWithCustom(
+  id: string,
+  userId?: string
+): ResumeTemplate {
+  // Check built-in templates first
+  const builtIn = TEMPLATES.find((t) => t.id === id);
+  if (builtIn) return builtIn;
+
+  // Check custom templates
+  try {
+    const custom = getCustomTemplate(id, userId || "default");
+    if (custom) {
+      return {
+        id: custom.id,
+        name: custom.name,
+        description: `Custom template${custom.sourceDocumentId ? " (from uploaded resume)" : ""}`,
+        styles: custom.analyzedStyles.styles,
+      };
+    }
+  } catch {
+    // Database not available (e.g., in tests)
+  }
+
+  return TEMPLATES[0];
 }
 
 // Generate CSS from template styles
@@ -212,27 +238,3 @@ export function generateTemplateCSS(styles: TemplateStyles): string {
   `;
 }
 
-// Analyze uploaded resume to detect format
-export async function analyzeResumeFormat(text: string): Promise<Partial<TemplateStyles>> {
-  // Basic heuristics to detect formatting preferences
-  const detected: Partial<TemplateStyles> = {};
-
-  // Check for bullet styles
-  if (text.includes("→") || text.includes("▸")) {
-    detected.bulletStyle = "arrow";
-  } else if (text.includes("- ") || text.includes("– ")) {
-    detected.bulletStyle = "dash";
-  } else if (text.includes("•")) {
-    detected.bulletStyle = "disc";
-  }
-
-  // Check for section dividers (lines of dashes or equals)
-  if (/[-=]{10,}/.test(text)) {
-    detected.sectionDivider = "line";
-  }
-
-  // Estimate layout based on content structure
-  // (In a real implementation, this would analyze the PDF layout)
-
-  return detected;
-}
