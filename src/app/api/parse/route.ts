@@ -54,6 +54,8 @@ export async function POST(request: NextRequest) {
 
     const { filename, documentId } = parseResult.data;
 
+    console.log(`[parse] Starting parse for document ${documentId || filename}`);
+
     // Find the document
     const documents = getDocuments(authResult.userId);
     const doc = documents.find(
@@ -76,10 +78,30 @@ export async function POST(request: NextRequest) {
 
     // Get LLM config and parse resume
     const llmConfig = getLLMConfig();
+    console.log(`[parse] LLM config: ${llmConfig ? llmConfig.provider : "none"}`);
+
+    let parsedProfile;
+    if (llmConfig) {
+      // Use LLM for parsing
+      console.log("[parse] Using LLM parser");
+      try {
+        parsedProfile = await parseResumeWithLLM(doc.extractedText, llmConfig);
+      } catch (llmError) {
+        console.error("[parse] LLM parsing failed, falling back to regex parser:", llmError instanceof Error ? llmError.stack : llmError);
+        parsedProfile = parseResumeBasic(doc.extractedText);
+      }
+    } else {
+      // Use basic regex parsing
+      console.log("[parse] Falling back to regex parser");
+      parsedProfile = parseResumeBasic(doc.extractedText);
+    }
     const { parsedProfile, parsingMethod, llmFallback } = await parseResumeText(
       doc.extractedText,
       llmConfig
     );
+
+    const sections = Object.keys(parsedProfile).filter(k => parsedProfile[k as keyof typeof parsedProfile] != null);
+    console.log(`[parse] Parse complete: ${sections.join(", ")}`);
 
     // Save to profile
     updateProfile(parsedProfile, authResult.userId);
@@ -88,7 +110,7 @@ export async function POST(request: NextRequest) {
     try {
       populateBankFromProfile(parsedProfile, doc.id, authResult.userId);
     } catch (bankError) {
-      console.error("Bank population failed:", bankError);
+      console.error("[parse] Bank population failed:", bankError instanceof Error ? bankError.stack : bankError);
     }
 
     // Get updated profile
@@ -102,7 +124,7 @@ export async function POST(request: NextRequest) {
       llmConfigured: !!llmConfig,
     });
   } catch (error) {
-    console.error("Parse error:", error);
+    console.error("[parse] Parse error:", error instanceof Error ? error.stack : error);
     return NextResponse.json(
       { error: "Parse failed" },
       { status: 500 }
