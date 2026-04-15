@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth, isAuthError } from "@/lib/auth";
 import { getGeneratedResume } from "@/lib/db";
-import { generateResumeLatex, LATEX_TEMPLATES } from "@/lib/resume/latex-generator";
+import { generateResumeLatex, LATEX_TEMPLATES, type LatexOptions } from "@/lib/resume/latex-generator";
 import type { TailoredResume } from "@/lib/resume/generator";
 import { exec } from "child_process";
 import { writeFile, readFile, unlink, mkdtemp } from "fs/promises";
@@ -10,6 +10,8 @@ import { join } from "path";
 import { promisify } from "util";
 
 const execAsync = promisify(exec);
+
+const LATEX_CLEANUP_EXTENSIONS = ["resume.tex", "resume.pdf", "resume.aux", "resume.log", "resume.out"];
 
 export async function GET() {
   return NextResponse.json({
@@ -28,7 +30,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { resumeId, templateId = "modern", options = {}, compilePdf = false } = body;
+    const { resumeId, templateId = "modern", options = {} as LatexOptions, compilePdf = false } = body;
 
     if (!resumeId) {
       return NextResponse.json(
@@ -61,10 +63,8 @@ export async function POST(request: NextRequest) {
 
         const pdfBuffer = await readFile(pdfPath);
 
-        // Cleanup temp files
-        const cleanupFiles = ["resume.tex", "resume.pdf", "resume.aux", "resume.log", "resume.out"];
         await Promise.allSettled(
-          cleanupFiles.map((f) => unlink(join(tmpDir, f)))
+          LATEX_CLEANUP_EXTENSIONS.map((f) => unlink(join(tmpDir, f)))
         );
 
         return new NextResponse(pdfBuffer, {
@@ -94,7 +94,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("LaTeX export error:", error);
     return NextResponse.json(
-      { error: "Failed to export resume", details: String(error) },
+      { error: "Failed to export resume" },
       { status: 500 }
     );
   }

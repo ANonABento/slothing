@@ -34,7 +34,7 @@ const LATEX_SPECIAL_REGEX = /[\\%&$#_{}~^]/g;
 /**
  * Escape LaTeX special characters in a string.
  */
-export function escapeLatex(text: string): string {
+export function escapeLatex(text: string | null | undefined): string {
   if (!text) return "";
   return text.replace(LATEX_SPECIAL_REGEX, (char) => LATEX_SPECIAL_CHARS[char]);
 }
@@ -94,6 +94,16 @@ export function getLatexTemplate(id: string): LatexTemplateConfig {
   return LATEX_TEMPLATES.find((t) => t.id === id) || LATEX_TEMPLATES[0];
 }
 
+function buildContactLine(
+  contact: TailoredResume["contact"],
+  separator: string
+): string {
+  return [contact.email, contact.phone, contact.location, contact.linkedin, contact.github]
+    .filter(Boolean)
+    .map((c) => escapeLatex(c))
+    .join(separator);
+}
+
 function renderModernTemplate(
   resume: TailoredResume,
   fontSize: 10 | 11 | 12,
@@ -102,16 +112,7 @@ function renderModernTemplate(
 ): string {
   const { contact, summary, experiences, skills, education } = resume;
 
-  const contactLine = [
-    contact.email,
-    contact.phone,
-    contact.location,
-    contact.linkedin,
-    contact.github,
-  ]
-    .filter(Boolean)
-    .map((c) => escapeLatex(c!))
-    .join(" \\textbar{} ");
+  const contactLine = buildContactLine(contact, " \\textbar{} ");
 
   const experienceBlocks = experiences
     .map(
@@ -276,16 +277,7 @@ function renderMinimalTemplate(
 ): string {
   const { contact, summary, experiences, skills, education } = resume;
 
-  const contactLine = [
-    contact.email,
-    contact.phone,
-    contact.location,
-    contact.linkedin,
-    contact.github,
-  ]
-    .filter(Boolean)
-    .map((c) => escapeLatex(c!))
-    .join(" \\quad ");
+  const contactLine = buildContactLine(contact, " \\quad ");
 
   const experienceBlocks = experiences
     .map(
