@@ -1,7 +1,47 @@
 import type { TailoredResume } from "./generator";
+import type { ContactInfo } from "@/types";
 import { getTemplate, type ResumeTemplate, TEMPLATES } from "./templates";
 
 export { TEMPLATES };
+
+function renderPrintButton(): string {
+  return `
+  <div class="no-print" style="position: fixed; top: 10px; right: 10px; z-index: 1000;">
+    <button
+      onclick="window.print()"
+      style="
+        background: #2563eb;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-size: 14px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        font-family: system-ui, sans-serif;
+      "
+    >
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+        <polyline points="7 10 12 15 17 10"/>
+        <line x1="12" y1="15" x2="12" y2="3"/>
+      </svg>
+      Download PDF
+    </button>
+  </div>`;
+}
+
+function renderContactInfo(contact: ContactInfo): string {
+  return `
+      ${contact.email ? `<a href="mailto:${contact.email}">${contact.email}</a>` : ""}
+      ${contact.phone ? `<span>|</span>${contact.phone}` : ""}
+      ${contact.location ? `<span>|</span>${contact.location}` : ""}
+      ${contact.linkedin ? `<span>|</span><a href="https://${contact.linkedin}">${contact.linkedin}</a>` : ""}
+      ${contact.github ? `<span>|</span><a href="https://${contact.github}">${contact.github}</a>` : ""}`;
+}
 
 // Generate HTML resume with template support
 export function generateResumeHTML(
@@ -28,14 +68,8 @@ export function generateResumeHTML(
       ? `border-bottom: 1.5px solid ${styles.accentColor};`
       : "";
 
-  const bulletStyle =
-    styles.bulletStyle === "disc"
-      ? ""
-      : styles.bulletStyle === "dash"
-      ? "list-style-type: none; ul li::before { content: '– '; }"
-      : styles.bulletStyle === "arrow"
-      ? "list-style-type: none;"
-      : "list-style-type: none;";
+  const bulletListStyle =
+    styles.bulletStyle === "disc" ? "" : "list-style-type: none;";
 
   return `
 <!DOCTYPE html>
@@ -116,7 +150,7 @@ export function generateResumeHTML(
     ul {
       margin-left: 16px;
       margin-top: 4px;
-      ${bulletStyle}
+      ${bulletListStyle}
     }
     li {
       margin-bottom: 2px;
@@ -173,40 +207,11 @@ export function generateResumeHTML(
   </style>
 </head>
 <body>
-  <div class="no-print" style="position: fixed; top: 10px; right: 10px; z-index: 1000;">
-    <button
-      onclick="window.print()"
-      style="
-        background: #2563eb;
-        color: white;
-        border: none;
-        padding: 10px 20px;
-        border-radius: 8px;
-        font-size: 14px;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-        font-family: system-ui, sans-serif;
-      "
-    >
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-        <polyline points="7 10 12 15 17 10"/>
-        <line x1="12" y1="15" x2="12" y2="3"/>
-      </svg>
-      Download PDF
-    </button>
-  </div>
+  ${renderPrintButton()}
   <div class="header">
     <h1>${contact.name}</h1>
     <div class="contact">
-      ${contact.email ? `<a href="mailto:${contact.email}">${contact.email}</a>` : ""}
-      ${contact.phone ? `<span>|</span>${contact.phone}` : ""}
-      ${contact.location ? `<span>|</span>${contact.location}` : ""}
-      ${contact.linkedin ? `<span>|</span><a href="https://${contact.linkedin}">${contact.linkedin}</a>` : ""}
-      ${contact.github ? `<span>|</span><a href="https://${contact.github}">${contact.github}</a>` : ""}
+      ${renderContactInfo(contact)}
     </div>
   </div>
 
@@ -439,41 +444,12 @@ function generateTwoColumnHTML(
   </style>
 </head>
 <body>
-  <div class="no-print" style="position: fixed; top: 10px; right: 10px; z-index: 1000;">
-    <button
-      onclick="window.print()"
-      style="
-        background: #2563eb;
-        color: white;
-        border: none;
-        padding: 10px 20px;
-        border-radius: 8px;
-        font-size: 14px;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-        font-family: system-ui, sans-serif;
-      "
-    >
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-        <polyline points="7 10 12 15 17 10"/>
-        <line x1="12" y1="15" x2="12" y2="3"/>
-      </svg>
-      Download PDF
-    </button>
-  </div>
+  ${renderPrintButton()}
 
   <div class="two-col-header">
     <h1>${contact.name}</h1>
     <div class="contact">
-      ${contact.email ? `<a href="mailto:${contact.email}">${contact.email}</a>` : ""}
-      ${contact.phone ? `<span>|</span>${contact.phone}` : ""}
-      ${contact.location ? `<span>|</span>${contact.location}` : ""}
-      ${contact.linkedin ? `<span>|</span><a href="https://${contact.linkedin}">${contact.linkedin}</a>` : ""}
-      ${contact.github ? `<span>|</span><a href="https://${contact.github}">${contact.github}</a>` : ""}
+      ${renderContactInfo(contact)}
     </div>
   </div>
 
@@ -536,9 +512,4 @@ function generateTwoColumnHTML(
 </body>
 </html>
   `.trim();
-}
-
-// Generate JSON representation for React-PDF rendering
-export function generateResumeJSON(resume: TailoredResume) {
-  return resume;
 }
