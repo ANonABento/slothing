@@ -114,6 +114,7 @@ export async function parseResumeWithLLM(
   });
 
   const parsed = extractJSON(response);
+  console.log(`[parser] extractJSON succeeded, keys: ${Object.keys(parsed).join(", ")}`);
 
   // Add IDs and coerce each field with safe defaults to guard against partial LLM responses
   const rawExperiences = (parsed.experiences ?? []) as Record<string, unknown>[];

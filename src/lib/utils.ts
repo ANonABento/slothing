@@ -51,13 +51,19 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
  */
 export function extractJSON(text: string): Record<string, unknown> {
   const trimmed = text.trim();
+  const strategies: string[] = [];
 
   // Strategy 1: Direct parse
   try {
     const result = JSON.parse(trimmed);
-    if (isPlainObject(result)) return result;
+    if (isPlainObject(result)) {
+      strategies.push("direct-parse: success");
+      console.log(`[parser] extractJSON strategies tried: ${strategies.join(", ")}`);
+      return result;
+    }
+    strategies.push("direct-parse: not an object");
   } catch {
-    // continue to next strategy
+    strategies.push("direct-parse: failed");
   }
 
   // Strategy 2: Strip markdown code fences
@@ -65,10 +71,17 @@ export function extractJSON(text: string): Record<string, unknown> {
   if (fenceMatch) {
     try {
       const result = JSON.parse(fenceMatch[1].trim());
-      if (isPlainObject(result)) return result;
+      if (isPlainObject(result)) {
+        strategies.push("fence-strip: success");
+        console.log(`[parser] extractJSON strategies tried: ${strategies.join(", ")}`);
+        return result;
+      }
+      strategies.push("fence-strip: not an object");
     } catch {
-      // continue to next strategy
+      strategies.push("fence-strip: failed");
     }
+  } else {
+    strategies.push("fence-strip: no match");
   }
 
   // Strategy 3: Extract between first `{` and last `}`
@@ -77,12 +90,20 @@ export function extractJSON(text: string): Record<string, unknown> {
   if (firstBrace !== -1 && lastBrace > firstBrace) {
     try {
       const result = JSON.parse(trimmed.slice(firstBrace, lastBrace + 1));
-      if (isPlainObject(result)) return result;
+      if (isPlainObject(result)) {
+        strategies.push("brace-extract: success");
+        console.log(`[parser] extractJSON strategies tried: ${strategies.join(", ")}`);
+        return result;
+      }
+      strategies.push("brace-extract: not an object");
     } catch {
-      // all strategies failed
+      strategies.push("brace-extract: failed");
     }
+  } else {
+    strategies.push("brace-extract: no braces found");
   }
 
+  console.log(`[parser] extractJSON strategies tried: ${strategies.join(", ")}`);
   throw new Error(
     `Failed to extract JSON from LLM response. Input starts with: "${trimmed.slice(0, 100)}"`
   );

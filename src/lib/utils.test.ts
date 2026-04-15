@@ -194,4 +194,40 @@ describe("extractJSON", () => {
     const input = '{"message": "Hello \\"world\\"", "path": "C:\\\\Users"}';
     expect(extractJSON(input)).toEqual({ message: 'Hello "world"', path: "C:\\Users" });
   });
+
+  it("should log strategy results for direct parse", () => {
+    const spy = vi.spyOn(console, "log").mockImplementation(() => {});
+    extractJSON('{"a": 1}');
+    expect(spy).toHaveBeenCalledWith(
+      expect.stringContaining("[parser] extractJSON strategies tried: direct-parse: success")
+    );
+    spy.mockRestore();
+  });
+
+  it("should log strategy results for fence-strip parse", () => {
+    const spy = vi.spyOn(console, "log").mockImplementation(() => {});
+    extractJSON('```json\n{"a": 1}\n```');
+    expect(spy).toHaveBeenCalledWith(
+      expect.stringContaining("fence-strip: success")
+    );
+    spy.mockRestore();
+  });
+
+  it("should log strategy results for brace-extract parse", () => {
+    const spy = vi.spyOn(console, "log").mockImplementation(() => {});
+    extractJSON('Here is data: {"a": 1} done');
+    expect(spy).toHaveBeenCalledWith(
+      expect.stringContaining("brace-extract: success")
+    );
+    spy.mockRestore();
+  });
+
+  it("should log all failed strategies on error", () => {
+    const spy = vi.spyOn(console, "log").mockImplementation(() => {});
+    expect(() => extractJSON("not json")).toThrow("Failed to extract JSON");
+    expect(spy).toHaveBeenCalledWith(
+      expect.stringContaining("direct-parse: failed")
+    );
+    spy.mockRestore();
+  });
 });
