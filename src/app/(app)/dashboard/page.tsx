@@ -25,6 +25,7 @@ import {
   Zap,
   LogIn,
 } from "lucide-react";
+import { InsightsPanel } from "@/components/dashboard/insights-panel";
 
 interface Stats {
   documentsCount: number;
@@ -308,6 +309,11 @@ export default function Dashboard() {
             gradient="from-amber-400 to-orange-400"
           />
         </div>
+      </div>
+
+      {/* AI Insights */}
+      <div className="max-w-6xl mx-auto px-6 pb-8">
+        <InsightsPanel />
       </div>
 
       {/* Smart Insights Row */}
