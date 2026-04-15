@@ -89,7 +89,7 @@ export async function parseResumeWithLLM(
 
   const parsed = extractJSON(response);
 
-  // Add IDs to all items — LLM output is trusted to match the prompted schema
+  // Add IDs and coerce each field with safe defaults to guard against partial LLM responses
   const rawExperiences = (parsed.experiences ?? []) as Record<string, unknown>[];
   const rawEducation = (parsed.education ?? []) as Record<string, unknown>[];
   const rawSkills = (parsed.skills ?? []) as Record<string, unknown>[];

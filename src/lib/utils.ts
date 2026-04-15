@@ -36,6 +36,10 @@ export function slugify(text: string): string {
     .replace(/^-+|-+$/g, '');
 }
 
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
 /**
  * Extract and parse a JSON object from a string that may contain
  * surrounding prose, markdown code fences, or other non-JSON content.
@@ -51,22 +55,17 @@ export function extractJSON(text: string): Record<string, unknown> {
   // Strategy 1: Direct parse
   try {
     const result = JSON.parse(trimmed);
-    if (typeof result === "object" && result !== null && !Array.isArray(result)) {
-      return result as Record<string, unknown>;
-    }
+    if (isPlainObject(result)) return result;
   } catch {
     // continue to next strategy
   }
 
   // Strategy 2: Strip markdown code fences
-  const fencePattern = /^```(?:json)?\s*\n?([\s\S]*?)\n?\s*```$/;
-  const fenceMatch = trimmed.match(fencePattern);
+  const fenceMatch = trimmed.match(/^```(?:json)?\s*\n?([\s\S]*?)\n?\s*```$/);
   if (fenceMatch) {
     try {
       const result = JSON.parse(fenceMatch[1].trim());
-      if (typeof result === "object" && result !== null && !Array.isArray(result)) {
-        return result as Record<string, unknown>;
-      }
+      if (isPlainObject(result)) return result;
     } catch {
       // continue to next strategy
     }
@@ -78,9 +77,7 @@ export function extractJSON(text: string): Record<string, unknown> {
   if (firstBrace !== -1 && lastBrace > firstBrace) {
     try {
       const result = JSON.parse(trimmed.slice(firstBrace, lastBrace + 1));
-      if (typeof result === "object" && result !== null && !Array.isArray(result)) {
-        return result as Record<string, unknown>;
-      }
+      if (isPlainObject(result)) return result;
     } catch {
       // all strategies failed
     }
