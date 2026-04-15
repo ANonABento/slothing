@@ -97,7 +97,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       profile,
-      usedLLM: !!llmConfig,
       parsingMethod,
       llmFallback,
       llmConfigured: !!llmConfig,
