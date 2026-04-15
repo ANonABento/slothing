@@ -1,4 +1,4 @@
-import type { Profile, JobDescription, Skill } from "@/types";
+import type { Profile, JobDescription } from "@/types";
 import type { AnalyticsSnapshot } from "@/lib/db/analytics";
 
 export type InsightType =
@@ -150,16 +150,18 @@ export function analyzeMissingKeywords(data: InsightData): Insight[] {
   }];
 }
 
-export function analyzeAtsTrend(data: InsightData): Insight[] {
-  const { snapshots } = data;
-  if (snapshots.length < 2) return [];
-
-  // Compare recent snapshot to one from ~7 days ago
+function getSnapshotWindow(snapshots: InsightData["snapshots"]): [typeof snapshots[number], typeof snapshots[number]] | null {
+  if (snapshots.length < 2) return null;
   const recent = snapshots[snapshots.length - 1];
-  const olderIndex = Math.max(0, snapshots.length - 8);
-  const older = snapshots[olderIndex];
+  const older = snapshots[Math.max(0, snapshots.length - 8)];
+  if (recent.snapshotDate === older.snapshotDate) return null;
+  return [recent, older];
+}
 
-  if (!recent || !older || recent.snapshotDate === older.snapshotDate) return [];
+export function analyzeAtsTrend(data: InsightData): Insight[] {
+  const window = getSnapshotWindow(data.snapshots);
+  if (!window) return [];
+  const [recent, older] = window;
 
   const recentCompleteness = recent.profileCompleteness;
   const olderCompleteness = older.profileCompleteness;
@@ -242,14 +244,9 @@ export function analyzeQuantifiedMetrics(data: InsightData): Insight[] {
 }
 
 export function analyzeApplicationMomentum(data: InsightData): Insight[] {
-  const { snapshots } = data;
-  if (snapshots.length < 2) return [];
-
-  const recent = snapshots[snapshots.length - 1];
-  const olderIndex = Math.max(0, snapshots.length - 8);
-  const older = snapshots[olderIndex];
-
-  if (!recent || !older || recent.snapshotDate === older.snapshotDate) return [];
+  const window = getSnapshotWindow(data.snapshots);
+  if (!window) return [];
+  const [recent, older] = window;
 
   const appliedChange = recent.jobsApplied - older.jobsApplied;
   const interviewChange = recent.jobsInterviewing - older.jobsInterviewing;
