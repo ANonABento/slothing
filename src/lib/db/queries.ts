@@ -1,5 +1,6 @@
 import db from "./schema";
 import { generateId } from "@/lib/utils";
+import { createProfileSnapshot } from "./profile-versions";
 import type { Profile, Experience, Education, Skill, Project, Document, Settings, LLMConfig } from "@/types";
 
 // Settings
@@ -111,7 +112,14 @@ export function getProfile(userId: string = "default"): Profile | null {
   };
 }
 
-export function updateProfile(profile: Partial<Profile>, userId: string = "default"): void {
+export function updateProfile(profile: Partial<Profile>, userId: string = "default", options?: { skipSnapshot?: boolean }): void {
+  if (!options?.skipSnapshot) {
+    const currentProfile = getProfile(userId);
+    if (currentProfile) {
+      createProfileSnapshot(userId, JSON.stringify(currentProfile));
+    }
+  }
+
   const doUpdate = db.transaction(() => {
     // Ensure profile exists for this user
     const existingProfile = db.prepare("SELECT id FROM profile WHERE id = ?").get(userId);
