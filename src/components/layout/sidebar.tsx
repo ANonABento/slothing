@@ -60,13 +60,10 @@ const navigationGroups: NavGroup[] = [
     ],
   },
   {
-    label: "Resume & Profile",
+    label: "Resume",
     items: [
-      { name: "My Profile", href: "/profile", icon: User },
-      { name: "Upload Resume", href: "/upload", icon: Upload },
-      { name: "Documents", href: "/documents", icon: FileText },
-      { name: "Tailor Resume", href: "/tailor", icon: Sparkles },
       { name: "Knowledge Bank", href: "/bank", icon: Database },
+      { name: "Tailor Resume", href: "/tailor", icon: Sparkles },
     ],
   },
   ...(FEATURES.jobTracker ? [{

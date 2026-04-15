@@ -210,7 +210,7 @@ export default function Dashboard() {
               </p>
               <div className="flex flex-wrap gap-3 pt-2">
                 <Link
-                  href="/upload"
+                  href="/bank"
                   className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl gradient-bg text-white font-medium shadow-lg hover:opacity-90 transition-opacity"
                 >
                   <Upload className="h-4 w-4" />
@@ -279,14 +279,14 @@ export default function Dashboard() {
           <QuickAction
             title="Upload Resume"
             description="Extract your professional info automatically"
-            href="/upload"
+            href="/bank"
             icon={Upload}
             gradient="from-violet-500 to-purple-400"
           />
           <QuickAction
             title="Edit Profile"
             description="Review and refine your career details"
-            href="/profile"
+            href="/bank"
             icon={FileText}
             gradient="from-rose-400 to-orange-400"
           />
@@ -454,14 +454,14 @@ export default function Dashboard() {
               title="Upload your resume"
               description="We'll extract and organize your professional information automatically using AI."
               done={stats.profileComplete}
-              href="/upload"
+              href="/bank"
             />
             <Step
               number={2}
               title="Review your profile"
               description="Verify the extracted data and add any missing details to strengthen your profile."
               done={stats.profileComplete}
-              href="/profile"
+              href="/bank"
             />
             <Step
               number={3}

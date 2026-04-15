@@ -46,9 +46,9 @@ export function KeyboardShortcutsProvider({ children }: { children: React.ReactN
   const shortcuts: Shortcut[] = useMemo(() => [
     // Navigation
     { key: "h", description: "Go to Dashboard", action: () => router.push("/"), category: "navigation" },
-    { key: "u", description: "Go to Upload", action: () => router.push("/upload"), category: "navigation" },
-    { key: "p", description: "Go to Profile", action: () => router.push("/profile"), category: "navigation" },
-    { key: "d", description: "Go to Documents", action: () => router.push("/documents"), category: "navigation" },
+    { key: "u", description: "Go to Knowledge Bank", action: () => router.push("/bank"), category: "navigation" },
+    { key: "p", description: "Go to Knowledge Bank", action: () => router.push("/bank"), category: "navigation" },
+    { key: "d", description: "Go to Knowledge Bank", action: () => router.push("/bank"), category: "navigation" },
     { key: "j", description: "Go to Jobs", action: () => router.push("/jobs"), category: "navigation" },
     { key: "i", description: "Go to Interview Prep", action: () => router.push("/interview"), category: "navigation" },
     { key: "a", description: "Go to Analytics", action: () => router.push("/analytics"), category: "navigation" },
