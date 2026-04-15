@@ -77,37 +77,26 @@ Rules:
 Resume text:
 `;
 
+async function callLLMParser<T>(
+  text: string,
+  prompt: string,
+  llmConfig: LLMConfig,
+  maxTokens: number
+): Promise<T> {
+  const client = new LLMClient(llmConfig);
+  const response = await client.complete({
+    messages: [{ role: "user", content: prompt + text }],
+    temperature: 0.1,
+    maxTokens,
+  });
+  return parseJSONFromLLM<T>(response);
+}
+
 export async function parseResumeWithLLM(
   text: string,
   llmConfig: LLMConfig
 ): Promise<Partial<Profile>> {
-  const client = new LLMClient(llmConfig);
-
-  const response = await client.complete({
-    messages: [
-      {
-        role: "user",
-        content: RESUME_PARSE_PROMPT + text,
-      },
-    ],
-    temperature: 0.1,
-    maxTokens: 4096,
-  });
-
-  // Clean response - remove markdown code blocks if present
-  let cleanResponse = response.trim();
-  if (cleanResponse.startsWith("```json")) {
-    cleanResponse = cleanResponse.slice(7);
-  }
-  if (cleanResponse.startsWith("```")) {
-    cleanResponse = cleanResponse.slice(3);
-  }
-  if (cleanResponse.endsWith("```")) {
-    cleanResponse = cleanResponse.slice(0, -3);
-  }
-  cleanResponse = cleanResponse.trim();
-
-  const parsed = JSON.parse(cleanResponse);
+  const parsed = await callLLMParser<any>(text, RESUME_PARSE_PROMPT, llmConfig, 4096);
 
   // Add IDs to all items
   return {
@@ -199,15 +188,7 @@ export async function parseCoverLetterWithLLM(
   text: string,
   llmConfig: LLMConfig
 ): Promise<CoverLetterData> {
-  const client = new LLMClient(llmConfig);
-
-  const response = await client.complete({
-    messages: [{ role: "user", content: COVER_LETTER_PARSE_PROMPT + text }],
-    temperature: 0.1,
-    maxTokens: 1024,
-  });
-
-  const parsed = parseJSONFromLLM<CoverLetterData>(response);
+  const parsed = await callLLMParser<CoverLetterData>(text, COVER_LETTER_PARSE_PROMPT, llmConfig, 1024);
   return {
     targetCompany: parsed.targetCompany || undefined,
     targetPosition: parsed.targetPosition || undefined,
@@ -220,15 +201,7 @@ export async function parseReferenceLetterWithLLM(
   text: string,
   llmConfig: LLMConfig
 ): Promise<ReferenceLetterData> {
-  const client = new LLMClient(llmConfig);
-
-  const response = await client.complete({
-    messages: [{ role: "user", content: REFERENCE_LETTER_PARSE_PROMPT + text }],
-    temperature: 0.1,
-    maxTokens: 1024,
-  });
-
-  const parsed = parseJSONFromLLM<ReferenceLetterData>(response);
+  const parsed = await callLLMParser<ReferenceLetterData>(text, REFERENCE_LETTER_PARSE_PROMPT, llmConfig, 1024);
   return {
     refereeName: parsed.refereeName || undefined,
     relationship: parsed.relationship || undefined,
@@ -240,15 +213,7 @@ export async function parseCertificateWithLLM(
   text: string,
   llmConfig: LLMConfig
 ): Promise<CertificateData> {
-  const client = new LLMClient(llmConfig);
-
-  const response = await client.complete({
-    messages: [{ role: "user", content: CERTIFICATE_PARSE_PROMPT + text }],
-    temperature: 0.1,
-    maxTokens: 512,
-  });
-
-  const parsed = parseJSONFromLLM<CertificateData>(response);
+  const parsed = await callLLMParser<CertificateData>(text, CERTIFICATE_PARSE_PROMPT, llmConfig, 512);
   return {
     certName: parsed.certName || undefined,
     issuer: parsed.issuer || undefined,

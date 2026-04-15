@@ -66,9 +66,6 @@ export function classifyDocumentByFilename(filename: string): DocumentType {
   if (lower.includes("resume") || lower.includes("cv")) {
     return "resume";
   }
-  if (lower.includes("cover") && lower.includes("letter")) {
-    return "cover_letter";
-  }
   if (lower.includes("cover")) {
     return "cover_letter";
   }
