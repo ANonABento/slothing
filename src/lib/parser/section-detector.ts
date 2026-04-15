@@ -177,7 +177,7 @@ function detectByCapsHeaders(text: string, lines: string[]): Section[] {
       // Exclude lines that are just punctuation or phone numbers
       /[A-Z]{3,}/.test(trimmed)
     ) {
-      const sectionType = inferSectionTypeFromContent(text, charOffset, lines, i);
+      const sectionType = inferSectionTypeFromContent(lines, i);
       if (sectionType) {
         matches.push({
           type: sectionType,
@@ -238,8 +238,6 @@ function buildSectionsFromMatches(
  * Infer section type by looking at the content below a potential header.
  */
 function inferSectionTypeFromContent(
-  text: string,
-  headerCharIndex: number,
   lines: string[],
   headerLineIndex: number
 ): SectionType | null {
@@ -429,7 +427,6 @@ function classifyLineContent(
       if (DEGREE_PATTERN.test(nearbyText) || GPA_PATTERN.test(nearbyText)) {
         return "education";
       }
-      if (nearbyBullets) return "experience";
       return "experience";
     }
   }
