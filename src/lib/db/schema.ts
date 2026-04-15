@@ -301,9 +301,31 @@ db.exec(`
     name TEXT NOT NULL,
     source_document_id TEXT,
     analyzed_styles TEXT NOT NULL,
+  -- Profile bank table for aggregated resume data
+  CREATE TABLE IF NOT EXISTS profile_bank (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL DEFAULT 'default',
+    category TEXT NOT NULL,
+    content TEXT NOT NULL,
+    source_document_id TEXT,
+    confidence_score REAL DEFAULT 0.8,
     created_at TEXT DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (source_document_id) REFERENCES documents(id) ON DELETE SET NULL
   );
+
+  CREATE INDEX IF NOT EXISTS idx_profile_bank_user ON profile_bank(user_id);
+  CREATE INDEX IF NOT EXISTS idx_profile_bank_category ON profile_bank(user_id, category);
+  -- Profile versions table for version history with rollback
+  CREATE TABLE IF NOT EXISTS profile_versions (
+    id TEXT PRIMARY KEY,
+    profile_id TEXT NOT NULL DEFAULT 'default',
+    version INTEGER NOT NULL,
+    snapshot_json TEXT NOT NULL,
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (profile_id) REFERENCES profile(id)
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_profile_versions_profile ON profile_versions(profile_id, version DESC);
 
   -- Create default profile if not exists
   INSERT OR IGNORE INTO profile (id) VALUES ('default');
@@ -408,6 +430,30 @@ try {
   `);
 } catch (error) {
   console.error("Extension tables migration error:", error);
+}
+
+// Migration: Resume A/B tracking table
+try {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS resume_ab_tracking (
+      id TEXT PRIMARY KEY,
+      resume_id TEXT NOT NULL,
+      job_id TEXT NOT NULL,
+      user_id TEXT NOT NULL DEFAULT 'default',
+      outcome TEXT NOT NULL DEFAULT 'applied',
+      sent_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      notes TEXT,
+      FOREIGN KEY (resume_id) REFERENCES generated_resumes(id) ON DELETE CASCADE,
+      FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE CASCADE
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_resume_ab_tracking_resume ON resume_ab_tracking(resume_id);
+    CREATE INDEX IF NOT EXISTS idx_resume_ab_tracking_job ON resume_ab_tracking(job_id);
+    CREATE INDEX IF NOT EXISTS idx_resume_ab_tracking_user ON resume_ab_tracking(user_id);
+  `);
+} catch (error) {
+  console.error("Resume A/B tracking migration error:", error);
 }
 
 export default db;
