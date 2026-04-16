@@ -117,7 +117,8 @@ export async function smartParseResume(
     const { enhanced, llmSectionCount, warnings } = await enhanceWithLLM(
       sectionsForEnhance,
       extracted,
-      llmConfig
+      llmConfig,
+      text
     );
 
     const enhancedFieldConf = calculateFieldConfidence(enhanced);
@@ -220,13 +221,22 @@ interface LLMEnhanceResult {
 async function enhanceWithLLM(
   sections: DetectedSection[],
   extracted: ExtractedFields,
-  llmConfig: LLMConfig
+  llmConfig: LLMConfig,
+  fullText: string
 ): Promise<LLMEnhanceResult> {
   const lowConfSections = sections.filter(
     (s) => s.confidence < CONFIDENCE_THRESHOLD && s.type !== "contact"
   );
 
-  if (lowConfSections.length === 0) {
+  // If no sections were detected at all, fall back to sending the full text to LLM
+  const sectionsToProcess =
+    lowConfSections.length > 0
+      ? lowConfSections
+      : sections.length === 0
+        ? [{ type: "experience" as const, text: fullText, content: fullText, startIndex: 0, endIndex: fullText.length, confidence: 0 }]
+        : [];
+
+  if (sectionsToProcess.length === 0) {
     return { enhanced: extracted, llmSectionCount: 0, warnings: [] };
   }
 
@@ -234,6 +244,10 @@ async function enhanceWithLLM(
   const sectionPrompts = lowConfSections.map((s, i) =>
     `--- Section ${i + 1} (detected as: ${s.type}) ---\n${s.text}`
   );
+  const sectionPrompts = sectionsToProcess.map((s, i) => {
+    const typeHint = s.type;
+    return `--- Section ${i + 1} (detected as: ${typeHint}) ---\n${s.text}`;
+  });
 
   const batchPrompt = `You are a resume parser. Parse the following resume sections and return structured JSON.
 
@@ -269,7 +283,7 @@ ${sectionPrompts.join("\n\n")}`;
 
     return {
       enhanced,
-      llmSectionCount: lowConfSections.length,
+      llmSectionCount: sectionsToProcess.length,
       warnings: [],
     };
   } catch (error) {
