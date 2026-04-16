@@ -64,8 +64,8 @@ export async function smartParseResume(
 ): Promise<SmartParseResult> {
   // Step 1: Detect sections
   const rawSections = detectSections(text);
-  const sections: DetectedSection[] = rawSections.map(s => ({ ...s, text: s.content, confidence: 0.7 }));
   const sectionConfidence = calculateSectionConfidence(rawSections);
+  const sections: DetectedSection[] = rawSections.map(s => ({ ...s, text: s.content, confidence: sectionConfidence }));
 
   // Step 2: Extract fields deterministically
   const extracted = extractFieldsFromSections(sections);
@@ -104,7 +104,8 @@ export async function smartParseResume(
     const { enhanced, llmSectionCount, warnings } = await enhanceWithLLM(
       sections,
       extracted,
-      llmConfig
+      llmConfig,
+      text
     );
 
     const enhancedFieldConf = calculateFieldConfidence(enhanced);
@@ -207,20 +208,26 @@ interface LLMEnhanceResult {
 async function enhanceWithLLM(
   sections: DetectedSection[],
   extracted: ExtractedFields,
-  llmConfig: LLMConfig
+  llmConfig: LLMConfig,
+  fullText: string
 ): Promise<LLMEnhanceResult> {
   const lowConfSections = sections.filter(
     (s) => s.confidence < CONFIDENCE_THRESHOLD && s.type !== "contact"
   );
 
-  if (lowConfSections.length === 0) {
+  // If no structured sections were detected, treat the full text as a single section to parse
+  const sectionsToProcess: Array<{ type: string; text: string }> =
+    lowConfSections.length > 0
+      ? lowConfSections
+      : [{ type: "unstructured", text: fullText }];
+
+  if (sectionsToProcess.length === 0) {
     return { enhanced: extracted, llmSectionCount: 0, warnings: [] };
   }
 
   // Build a batched prompt with all ambiguous sections
-  const sectionPrompts = lowConfSections.map((s, i) => {
-    const typeHint = true ? s.type : "unidentified section";
-    return `--- Section ${i + 1} (detected as: ${typeHint}) ---\n${s.text}`;
+  const sectionPrompts = sectionsToProcess.map((s, i) => {
+    return `--- Section ${i + 1} (detected as: ${s.type}) ---\n${s.text}`;
   });
 
   const batchPrompt = `You are a resume parser. Parse the following resume sections and return structured JSON.
@@ -257,7 +264,7 @@ ${sectionPrompts.join("\n\n")}`;
 
     return {
       enhanced,
-      llmSectionCount: lowConfSections.length,
+      llmSectionCount: sectionsToProcess.length,
       warnings: [],
     };
   } catch (error) {
