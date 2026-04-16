@@ -53,6 +53,7 @@ export function SearchBar({
             <button
               onClick={() => onQueryChange("")}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              aria-label="Clear search"
             >
               <X className="h-4 w-4" />
             </button>
@@ -62,6 +63,7 @@ export function SearchBar({
           value={sortBy}
           onChange={(e) => onSortChange(e.target.value as SortOption)}
           className="rounded-lg border bg-background px-3 py-2 text-sm"
+          aria-label="Sort order"
         >
           <option value="date">Newest</option>
           <option value="confidence">Confidence</option>
