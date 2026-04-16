@@ -68,7 +68,7 @@ export function ResumePreview({
               Preview
             </a>
           </Button>
-          <Button size="sm" asChild>
+          <Button size="sm" asChild title="Download PDF (Ctrl+E)">
             <a href={pdfUrl} target="_blank" rel="noopener noreferrer">
               <Download className="h-4 w-4 mr-1.5" />
               Download PDF

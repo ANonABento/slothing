@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { JDInput } from "@/components/tailor/jd-input";
 import { ResumePreview } from "@/components/tailor/resume-preview";
 import { GapAnalysis } from "@/components/tailor/gap-analysis";
 import { FileText, Sparkles } from "lucide-react";
 import type { TailoredResume } from "@/lib/resume/generator";
 import type { GapItem } from "@/lib/tailor/analyze";
+import { useRegisterShortcuts } from "@/components/keyboard-shortcuts";
 
 interface TemplateOption {
   id: string;
@@ -43,6 +44,14 @@ export default function TailorPage() {
     jobTitle: string;
     company: string;
   } | null>(null);
+
+  // Refs for keyboard shortcut access to latest state
+  const resultRef = useRef(result);
+  resultRef.current = result;
+  const lastInputRef = useRef(lastInput);
+  lastInputRef.current = lastInput;
+  const selectedTemplateRef = useRef(selectedTemplate);
+  selectedTemplateRef.current = selectedTemplate;
 
   useEffect(() => {
     fetch("/api/tailor")
@@ -88,6 +97,35 @@ export default function TailorPage() {
     },
     []
   );
+
+  // Register page-specific keyboard shortcuts
+  const generateRef = useRef(generate);
+  generateRef.current = generate;
+  useRegisterShortcuts("tailor", useMemo(() => [
+    {
+      key: "Enter",
+      ctrl: true,
+      description: "Re-generate resume",
+      category: "actions" as const,
+      action: () => {
+        if (lastInputRef.current) {
+          generateRef.current(lastInputRef.current, selectedTemplateRef.current);
+        }
+      },
+    },
+    {
+      key: "e",
+      ctrl: true,
+      description: "Export/download PDF",
+      category: "actions" as const,
+      action: () => {
+        const pdfUrl = resultRef.current?.pdfUrl;
+        if (pdfUrl) {
+          window.open(pdfUrl, "_blank", "noopener,noreferrer");
+        }
+      },
+    },
+  ], []));
 
   function handleSubmit(input: {
     jobDescription: string;
