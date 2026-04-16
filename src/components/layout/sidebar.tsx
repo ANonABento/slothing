@@ -189,7 +189,7 @@ export function Sidebar() {
       {/* Mobile menu button */}
       <button
         onClick={() => setMobileOpen(true)}
-        className="fixed top-4 left-4 z-40 flex h-10 w-10 items-center justify-center rounded-lg bg-card border shadow-md lg:hidden"
+        className="fixed top-4 left-4 z-40 flex h-11 w-11 items-center justify-center rounded-lg bg-card border shadow-md lg:hidden"
         aria-label="Open menu"
       >
         <Menu className="h-5 w-5" />
@@ -233,7 +233,7 @@ export function Sidebar() {
           {/* Mobile close button */}
           <button
             onClick={() => setMobileOpen(false)}
-            className="lg:hidden p-2 text-muted-foreground hover:text-foreground"
+            className="lg:hidden p-2.5 text-muted-foreground hover:text-foreground"
             aria-label="Close menu"
           >
             <X className="h-5 w-5" />
@@ -262,7 +262,7 @@ export function Sidebar() {
                       href={item.href}
                       title={collapsed ? item.name : undefined}
                       className={cn(
-                        "group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200",
+                        "group relative flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium transition-all duration-200 min-h-[44px]",
                         isActive
                           ? "gradient-bg text-white shadow-md"
                           : "text-muted-foreground hover:bg-muted hover:text-foreground",
@@ -306,7 +306,7 @@ export function Sidebar() {
                 href={item.href}
                 title={collapsed ? item.name : undefined}
                 className={cn(
-                  "group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200",
+                  "group relative flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium transition-all duration-200 min-h-[44px]",
                   isActive
                     ? "bg-muted text-foreground"
                     : "text-muted-foreground hover:bg-muted hover:text-foreground",
@@ -333,7 +333,7 @@ export function Sidebar() {
             onClick={cycleTheme}
             title={`Theme: ${theme} (click to change)`}
             className={cn(
-              "group relative flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-all duration-200",
+              "group relative flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-all duration-200 min-h-[44px]",
               collapsed && "justify-center px-2"
             )}
           >
@@ -356,7 +356,7 @@ export function Sidebar() {
           <button
             onClick={() => setCollapsed(!collapsed)}
             className={cn(
-              "hidden lg:flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-all duration-200",
+              "hidden lg:flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-all duration-200 min-h-[44px]",
               collapsed && "justify-center px-2"
             )}
           >
