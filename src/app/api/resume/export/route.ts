@@ -123,11 +123,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Default: PDF
+    const { generateResumeHTML } = await import("@/lib/resume/pdf");
     let html: string;
     if (rawHtml) {
       html = rawHtml;
     } else if (resume) {
-      const { generateResumeHTML } = await import("@/lib/resume/pdf");
       html = generateResumeHTML(resume, templateId);
     } else {
       return NextResponse.json({ error: "Provide resumeId or html" }, { status: 400 });

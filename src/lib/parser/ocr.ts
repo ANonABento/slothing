@@ -20,11 +20,11 @@ export async function extractTextWithOCR(
   const { pdf: pdfToImages } = await import("pdf-to-img");
 
   const pages: string[] = [];
+  const Tesseract = (await import("tesseract.js")).default;
 
   for await (const image of await pdfToImages(pdfBuffer, { scale: 2 })) {
     if (pages.length >= maxPages) break;
 
-    const Tesseract = (await import("tesseract.js")).default;
     const {
       data: { text },
     } = await Tesseract.recognize(image, "eng");
