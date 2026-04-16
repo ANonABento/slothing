@@ -16,7 +16,7 @@ export function Hero() {
           {/* Badge */}
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
             <Sparkles className="h-4 w-4" />
-            AI-Powered Job Application Assistant
+            You&apos;re not lazy. You&apos;re efficient.
           </div>
 
           {/* Headline */}
@@ -94,7 +94,7 @@ export function Hero() {
                 <div className="w-3 h-3 rounded-full bg-green-500" />
               </div>
               <div className="flex-1 text-center text-sm text-muted-foreground">
-                Get Me Job Dashboard
+                Taida Dashboard
               </div>
             </div>
             <div className="p-8 bg-gradient-to-br from-muted/20 to-muted/50">
