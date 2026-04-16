@@ -22,37 +22,32 @@ export interface ExportMenuProps {
 }
 
 interface ExportOption {
-  id: string;
   label: string;
   description: string;
   icon: React.ReactNode;
   format: "pdf" | "latex" | "html" | "clipboard";
 }
 
-const EXPORT_OPTIONS: ExportOption[] = [
+export const EXPORT_OPTIONS: ExportOption[] = [
   {
-    id: "pdf",
     label: "PDF",
     description: "Download as PDF",
     icon: <FileText className="h-4 w-4" />,
     format: "pdf",
   },
   {
-    id: "latex",
     label: "LaTeX",
     description: "Download .tex file",
     icon: <Code className="h-4 w-4" />,
     format: "latex",
   },
   {
-    id: "html",
     label: "HTML",
     description: "Download HTML file",
     icon: <Globe className="h-4 w-4" />,
     format: "html",
   },
   {
-    id: "clipboard",
     label: "Copy to Clipboard",
     description: "Copy resume text",
     icon: <Copy className="h-4 w-4" />,
@@ -178,14 +173,13 @@ export function ExportMenu({ resumeId, resume, templateId }: ExportMenuProps) {
         return;
       }
 
-      setLoading(option.id);
+      setLoading(option.format);
       try {
         await downloadExport(resumeId, templateId, option.format);
         setOpen(false);
       } catch (err) {
-        setError(
-          err instanceof Error ? err.message : "Export failed"
-        );
+        setOpen(false);
+        setError(err instanceof Error ? err.message : "Export failed");
       } finally {
         setLoading(null);
       }
@@ -216,7 +210,7 @@ export function ExportMenu({ resumeId, resume, templateId }: ExportMenuProps) {
         >
           {EXPORT_OPTIONS.map((option) => (
             <button
-              key={option.id}
+              key={option.format}
               role="menuitem"
               disabled={loading !== null}
               onClick={() => handleExport(option)}
@@ -227,7 +221,7 @@ export function ExportMenu({ resumeId, resume, templateId }: ExportMenuProps) {
                 "transition-colors"
               )}
             >
-              {loading === option.id ? (
+              {loading === option.format ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 option.icon
@@ -252,5 +246,4 @@ export function ExportMenu({ resumeId, resume, templateId }: ExportMenuProps) {
   );
 }
 
-// Exported for testing
-export { resumeToPlainText, EXPORT_OPTIONS };
+export { resumeToPlainText };
