@@ -14,6 +14,11 @@ import type {
 import { generateId } from "@/lib/utils";
 import { LLMClient, parseJSONFromLLM } from "@/lib/llm/client";
 import { detectSections, type Section } from "./section-detector";
+import {
+  extractFieldsFromSections,
+  extractContact,
+  type ExtractedFields,
+} from "./field-extractor";
 
 type DetectedSection = Section & { text: string; confidence: number };
 
@@ -30,11 +35,6 @@ function calculateSectionConfidence(sections: Section[]): number {
   if (hasContact) score += 0.1;
   return Math.min(score, 1.0);
 }
-import {
-  extractFieldsFromSections,
-  extractContact,
-  type ExtractedFields,
-} from "./field-extractor";
 
 const CONFIDENCE_THRESHOLD = 0.7;
 
@@ -83,9 +83,7 @@ export async function smartParseResume(
   const fieldConfidence = calculateFieldConfidence(extracted);
   const overallConfidence = (sectionConfidence + fieldConfidence) / 2;
 
-  const sectionsDetected = sections
-    .filter((s) => true)
-    .map((s) => s.type);
+  const sectionsDetected = sections.map((s) => s.type);
 
   // Step 4: High confidence → return deterministic result
   if (overallConfidence >= CONFIDENCE_THRESHOLD) {
@@ -104,7 +102,8 @@ export async function smartParseResume(
     const { enhanced, llmSectionCount, warnings } = await enhanceWithLLM(
       sections,
       extracted,
-      llmConfig
+      llmConfig,
+      text
     );
 
     const enhancedFieldConf = calculateFieldConfidence(enhanced);
@@ -207,19 +206,28 @@ interface LLMEnhanceResult {
 async function enhanceWithLLM(
   sections: DetectedSection[],
   extracted: ExtractedFields,
-  llmConfig: LLMConfig
+  llmConfig: LLMConfig,
+  fullText: string
 ): Promise<LLMEnhanceResult> {
   const lowConfSections = sections.filter(
     (s) => s.confidence < CONFIDENCE_THRESHOLD && s.type !== "contact"
   );
 
-  if (lowConfSections.length === 0) {
+  // If no sections were detected at all, fall back to sending the full text to LLM
+  const sectionsToProcess =
+    lowConfSections.length > 0
+      ? lowConfSections
+      : sections.length === 0
+        ? [{ type: "experience" as const, text: fullText, content: fullText, startIndex: 0, endIndex: fullText.length, confidence: 0 }]
+        : [];
+
+  if (sectionsToProcess.length === 0) {
     return { enhanced: extracted, llmSectionCount: 0, warnings: [] };
   }
 
   // Build a batched prompt with all ambiguous sections
-  const sectionPrompts = lowConfSections.map((s, i) => {
-    const typeHint = true ? s.type : "unidentified section";
+  const sectionPrompts = sectionsToProcess.map((s, i) => {
+    const typeHint = s.type;
     return `--- Section ${i + 1} (detected as: ${typeHint}) ---\n${s.text}`;
   });
 
@@ -257,7 +265,7 @@ ${sectionPrompts.join("\n\n")}`;
 
     return {
       enhanced,
-      llmSectionCount: lowConfSections.length,
+      llmSectionCount: sectionsToProcess.length,
       warnings: [],
     };
   } catch (error) {
@@ -278,7 +286,7 @@ function mergeWithLLMResult(
   existing: ExtractedFields,
   llmResult: Record<string, unknown>
 ): ExtractedFields {
-  const merged = { ...existing,  };
+  const merged = { ...existing };
 
   // Merge experiences
   const rawExperiences = llmResult.experience as Record<string, unknown>[] | undefined;
