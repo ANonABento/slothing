@@ -1,3 +1,9 @@
+/**
+ * @route GET /api/calendar/export
+ * @description Export calendar events as an ICS file download
+ * @auth Required
+ * @response ICS file (text/calendar)
+ */
 import { NextRequest } from "next/server";
 import { getJobs } from "@/lib/db/jobs";
 import { getReminders } from "@/lib/db/reminders";

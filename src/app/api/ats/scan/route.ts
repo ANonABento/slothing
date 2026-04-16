@@ -1,3 +1,11 @@
+/**
+ * @route POST /api/ats/scan
+ * @route GET /api/ats/scan
+ * @description POST: Generate ATS scan report. GET: Fetch scan history.
+ * @auth Required
+ * @request { jobId: string } (POST)
+ * @response ATSScanResponse / ATSScanHistoryResponse from @/types/api
+ */
 import { NextRequest, NextResponse } from "next/server";
 import { getProfile } from "@/lib/db";
 import { getJob } from "@/lib/db/jobs";

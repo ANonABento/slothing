@@ -1,3 +1,16 @@
+/**
+ * @route POST /api/import/job
+ * @description Parse a single job from text, JSON, or URL and return a preview
+ * @auth Required
+ * @request { source: "text" | "json" | "url", content: string }
+ * @response ImportJobPreviewResponse from @/types/api
+ *
+ * @route PUT /api/import/job
+ * @description Save a validated job from preview data
+ * @auth Required
+ * @request { job: ParsedJob }
+ * @response ImportJobResponse from @/types/api
+ */
 import { NextRequest, NextResponse } from "next/server";
 import { parseJobText, parseJobJSON, extractKeywords, type ParsedJob } from "@/lib/import/job-parser";
 import { createJob } from "@/lib/db/jobs";
