@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+
 import { Button } from "@/components/ui/button";
 import { SearchBar, CATEGORY_LABELS, type SortOption } from "@/components/bank/search-bar";
 import { ChunkCard } from "@/components/bank/chunk-card";
@@ -10,6 +11,7 @@ import { BANK_CATEGORIES, type BankCategory, type BankEntry } from "@/types";
 import { Database, Loader2, Upload, HardDrive } from "lucide-react";
 import { DriveFilePicker } from "@/components/google";
 import { SourceDocuments } from "@/components/bank/source-documents";
+import { useRegisterShortcuts } from "@/components/keyboard-shortcuts";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
 import { SkeletonCard } from "@/components/ui/skeleton";
 import { AddEntryDialog } from "@/components/bank/add-entry-dialog";
@@ -30,8 +32,35 @@ export default function BankPage() {
 
   // Upload via button
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [driveImporting, setDriveImporting] = useState(false);
+
+  // Register page-specific keyboard shortcuts
+  useRegisterShortcuts("bank", useMemo(() => [
+    {
+      key: "/",
+      description: "Focus search",
+      category: "actions" as const,
+      action: () => searchInputRef.current?.focus(),
+    },
+    {
+      key: "Escape",
+      description: "Clear search",
+      category: "actions" as const,
+      action: () => {
+        setQuery("");
+        searchInputRef.current?.blur();
+      },
+    },
+    {
+      key: "u",
+      ctrl: true,
+      description: "Upload file",
+      category: "actions" as const,
+      action: () => fileInputRef.current?.click(),
+    },
+  ], []));
 
   const fetchEntries = useCallback(async () => {
     setLoading(true);
@@ -254,6 +283,7 @@ export default function BankPage() {
           <Button
             onClick={() => fileInputRef.current?.click()}
             disabled={uploading}
+            title="Upload file (Ctrl+U)"
           >
             {uploading ? (
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -267,6 +297,7 @@ export default function BankPage() {
 
       {/* Search & Filters */}
       <SearchBar
+        ref={searchInputRef}
         query={query}
         onQueryChange={setQuery}
         activeCategory={activeCategory}

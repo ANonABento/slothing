@@ -235,6 +235,16 @@ async function enhanceWithLLM(
   // when overall confidence is already below threshold.
   const nonContactSections = sections.filter((s) => s.type !== "contact");
 
+  // If no low-confidence sections but we're here (overall confidence is low),
+  // fall back to sending full text as a single section
+  const sectionsToProcess =
+    lowConfSections.length > 0
+      ? lowConfSections
+      : fullText
+        ? [{ type: "full_resume", text: fullText, confidence: 0 } as DetectedSection]
+        : [];
+
+  if (sectionsToProcess.length === 0) {
   // If no low-confidence sections but we're called (overall confidence is low),
   // fall back to sending the full text to LLM
   // If no low-confidence sections detected, fall back to sending the full text
