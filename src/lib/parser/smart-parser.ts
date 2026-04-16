@@ -64,6 +64,7 @@ export async function smartParseResume(
 ): Promise<SmartParseResult> {
   // Step 1: Detect sections
   const rawSections = detectSections(text);
+  const sections: DetectedSection[] = rawSections.map(s => ({ ...s, text: s.content, confidence: 0.5 }));
   const sectionConfidence = calculateSectionConfidence(rawSections);
   const sections: DetectedSection[] = rawSections.map(s => ({ ...s, text: s.content, confidence: sectionConfidence }));
 
@@ -230,6 +231,27 @@ async function enhanceWithLLM(
   // when overall confidence is already below threshold.
   const nonContactSections = sections.filter((s) => s.type !== "contact");
 
+  // If no low-confidence sections exist but raw text is available, use it as a
+  // single unstructured section (handles resumes with no detectable headers).
+  if (lowConfSections.length === 0) {
+    if (!rawText) {
+      return { enhanced: extracted, llmSectionCount: 0, warnings: [] };
+    }
+    // Treat full text as an unstructured section for LLM enhancement
+    const syntheticSection: DetectedSection = {
+      type: "experience",
+      startIndex: 0,
+      endIndex: rawText.length,
+      content: rawText,
+      text: rawText,
+      confidence: 0,
+    };
+    lowConfSections.push(syntheticSection);
+  }
+
+  // Build a batched prompt with all ambiguous sections
+  const sectionPrompts = lowConfSections.map((s, i) => {
+    return `--- Section ${i + 1} (detected as: ${s.type}) ---\n${s.text}`;
   // If no sections were detected, fall back to parsing the full raw text
   const sectionsToProcess = nonContactSections.length > 0
     ? nonContactSections
