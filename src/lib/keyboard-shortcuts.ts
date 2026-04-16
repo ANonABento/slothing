@@ -23,28 +23,23 @@ export interface ShortcutEvent {
  * Check if a keyboard event matches a shortcut definition.
  */
 export function matchesShortcut(event: ShortcutEvent, shortcut: ShortcutDefinition): boolean {
-  // For ctrl shortcuts, accept either ctrlKey or metaKey (Cmd on Mac)
-  const ctrlMatch = shortcut.ctrl
-    ? (event.ctrlKey || event.metaKey)
-    : !event.ctrlKey && !event.metaKey;
-
-  // meta specifically requires metaKey only
-  const metaMatch = shortcut.meta ? event.metaKey : true;
-
-  const shiftMatch = shortcut.shift ? event.shiftKey : !event.shiftKey;
-
   // Special case: ? is Shift+/ on most keyboards
   const keyMatch =
     event.key.toLowerCase() === shortcut.key.toLowerCase() ||
-    (shortcut.key === "?" && event.key === "/" && event.shiftKey) ||
-    (shortcut.key === "/" && event.key === "/");
+    (shortcut.key === "?" && event.key === "/" && event.shiftKey);
 
-  // For ctrl/meta shortcuts, ignore shift matching (Cmd+Enter may send shift)
+  if (!keyMatch) return false;
+
+  // For ctrl/meta shortcuts, ignore shift (Cmd+Enter can send shift on some keyboards)
   if (shortcut.ctrl || shortcut.meta) {
-    return keyMatch && (shortcut.ctrl ? (event.ctrlKey || event.metaKey) : true) && (shortcut.meta ? event.metaKey : true);
+    const ctrlOk = shortcut.ctrl ? (event.ctrlKey || event.metaKey) : true;
+    const metaOk = shortcut.meta ? event.metaKey : true;
+    return ctrlOk && metaOk;
   }
 
-  return keyMatch && ctrlMatch && metaMatch && shiftMatch;
+  // Plain shortcuts: no modifier keys should be active
+  const shiftMatch = shortcut.shift ? event.shiftKey : !event.shiftKey;
+  return !event.ctrlKey && !event.metaKey && shiftMatch;
 }
 
 /**

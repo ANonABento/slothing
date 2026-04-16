@@ -41,17 +41,23 @@ const KeyboardShortcutsContext = createContext<KeyboardShortcutsContextType | un
 export function KeyboardShortcutsProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [showHelp, setShowHelp] = useState(false);
+  // Ref for handleKeyDown — always reads latest shortcuts without stale closure
   const pageShortcutsRef = useRef<Map<string, Shortcut[]>>(new Map());
-  const [, forceUpdate] = useState(0);
+  // State for rendering — triggers re-render so allShortcuts memo recomputes
+  const [pageShortcutsMap, setPageShortcutsMap] = useState<Map<string, Shortcut[]>>(new Map());
 
   const registerShortcuts = useCallback((id: string, shortcuts: Shortcut[]) => {
     pageShortcutsRef.current.set(id, shortcuts);
-    forceUpdate((n) => n + 1);
+    setPageShortcutsMap((prev) => new Map(prev).set(id, shortcuts));
   }, []);
 
   const unregisterShortcuts = useCallback((id: string) => {
     pageShortcutsRef.current.delete(id);
-    forceUpdate((n) => n + 1);
+    setPageShortcutsMap((prev) => {
+      const next = new Map(prev);
+      next.delete(id);
+      return next;
+    });
   }, []);
 
   const globalShortcuts: Shortcut[] = useMemo(() => [
@@ -66,17 +72,16 @@ export function KeyboardShortcutsProvider({ children }: { children: React.ReactN
   ], [router]);
 
   const allShortcuts = useMemo(() => {
-    const pageShortcuts = Array.from(pageShortcutsRef.current.values()).flat();
+    const pageShortcuts = Array.from(pageShortcutsMap.values()).flat();
     return [...globalShortcuts, ...pageShortcuts];
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [globalShortcuts, pageShortcutsRef.current.size]);
+  }, [globalShortcuts, pageShortcutsMap]);
 
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
     const target = event.target as HTMLElement;
     const inInput = isInputTarget(target);
+    const pageShortcuts = Array.from(pageShortcutsRef.current.values()).flat();
 
     // Page shortcuts with ctrl/meta should work even in inputs
-    const pageShortcuts = Array.from(pageShortcutsRef.current.values()).flat();
     for (const shortcut of pageShortcuts) {
       if (shortcut.ctrl || shortcut.meta) {
         if (matchesShortcut(event, shortcut)) {
@@ -87,9 +92,8 @@ export function KeyboardShortcutsProvider({ children }: { children: React.ReactN
       }
     }
 
-    // Allow Escape everywhere
+    // Allow Escape everywhere — fire all Escape handlers
     if (event.key === "Escape") {
-      // Fire Escape shortcuts from all sources
       for (const shortcut of [...globalShortcuts, ...pageShortcuts]) {
         if (shortcut.key === "Escape") {
           shortcut.action();
