@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { EntryPicker } from "@/components/builder/entry-picker";
 import { TemplatePicker } from "@/components/builder/template-picker";
 import { ResumePreview } from "@/components/builder/resume-preview";
-import { TEMPLATES } from "@/lib/resume/templates";
+import { TEMPLATES } from "@/lib/resume/template-data";
 import { bankEntriesToResume } from "@/lib/resume/bank-to-resume";
 import type { BankEntry } from "@/types";
 import type { TailoredResume } from "@/lib/resume/generator";
