@@ -235,11 +235,22 @@ async function enhanceWithLLM(
   // when overall confidence is already below threshold.
   const nonContactSections = sections.filter((s) => s.type !== "contact");
 
+  // If no low-confidence sections but we're called (overall confidence is low),
+  // fall back to sending the full text to LLM
   // If no low-confidence sections detected, fall back to sending the full text
   if (lowConfSections.length === 0) {
     if (!fullText) {
       return { enhanced: extracted, llmSectionCount: 0, warnings: [] };
     }
+    // Use full text as a single unidentified section
+    lowConfSections.push({
+      type: "summary" as DetectedSection["type"],
+      content: fullText,
+      text: fullText,
+      confidence: 0,
+      startIndex: 0,
+      endIndex: fullText.length,
+    } as DetectedSection);
     // Treat the entire resume as one unparsed block
     lowConfSections.push({
       type: "experience",
