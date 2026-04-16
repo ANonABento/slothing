@@ -8,7 +8,6 @@ import { useTheme } from "@/components/theme-provider";
 import { UserButton, SignedIn, SignedOut } from "@clerk/nextjs";
 import {
   Home,
-  User,
   Database,
   Briefcase,
   MessageSquare,
@@ -26,8 +25,6 @@ import {
   Calendar,
   DollarSign,
   LogIn,
-  Upload,
-  FileText,
   Sparkles,
   type LucideIcon,
 } from "lucide-react";
