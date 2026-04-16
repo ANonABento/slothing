@@ -34,6 +34,8 @@ export const metadata: Metadata = {
     title: `${SITE_NAME} — AI-Powered Job Application Assistant`,
     description: SITE_DESCRIPTION,
   },
+  title: "Taida — AI Resume Builder",
+  description: "Build tailored resumes from your career knowledge bank.",
 };
 
 export default function RootLayout({
