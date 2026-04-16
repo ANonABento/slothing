@@ -64,6 +64,11 @@ export async function smartParseResume(
 ): Promise<SmartParseResult> {
   // Step 1: Detect sections
   const rawSections = detectSections(text);
+  const sectionConfidence = calculateSectionConfidence(rawSections);
+  // Assign per-section confidence based on overall quality so low-confidence
+  // resumes have sections that fall below the LLM-fallback threshold.
+  const perSectionConf = sectionConfidence < CONFIDENCE_THRESHOLD ? sectionConfidence : 0.8;
+  const sections: DetectedSection[] = rawSections.map(s => ({ ...s, text: s.content, confidence: perSectionConf }));
   const sections: DetectedSection[] = rawSections.map(s => ({ ...s, text: s.content, confidence: 0.5 }));
   const sectionConfidence = calculateSectionConfidence(rawSections);
   const sections: DetectedSection[] = rawSections.map(s => ({ ...s, text: s.content, confidence: sectionConfidence }));
@@ -237,6 +242,10 @@ async function enhanceWithLLM(
   sections: DetectedSection[],
   extracted: ExtractedFields,
   llmConfig: LLMConfig,
+  fullText?: string
+): Promise<LLMEnhanceResult> {
+  let lowConfSections = sections.filter(
+    (s) => s.confidence < CONFIDENCE_THRESHOLD && s.type !== "contact"
   rawText: string
   fullText: string
   fullText?: string
@@ -304,6 +313,16 @@ async function enhanceWithLLM(
     if (!fullText) {
       return { enhanced: extracted, llmSectionCount: 0, warnings: [] };
     }
+    // No structured sections found — send full text as a single ambiguous section
+    lowConfSections = [
+      { type: "unknown", content: fullText, text: fullText, confidence: 0, startIndex: 0, endIndex: fullText.length },
+    ];
+  }
+
+  // Build a batched prompt with all ambiguous sections
+  const sectionPrompts = lowConfSections.map((s, i) =>
+    `--- Section ${i + 1} (detected as: ${s.type}) ---\n${s.text}`
+  );
     // Use full text as the single "section" to parse
     const sectionPrompts = [
       `--- Full resume text ---\n${fullText}`,
