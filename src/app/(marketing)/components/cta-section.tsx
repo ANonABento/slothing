@@ -28,7 +28,7 @@ export function CTASection() {
             </h2>
             <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
               Join thousands of successful job seekers who have transformed their
-              career journey with Get Me Job.
+              career journey with Taida.
             </p>
 
             {/* Benefits */}

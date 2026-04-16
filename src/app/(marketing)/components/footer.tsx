@@ -29,7 +29,7 @@ export function Footer() {
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl gradient-bg text-white font-bold text-lg shadow-md">
                 <Rocket className="h-5 w-5" />
               </div>
-              <span className="text-lg font-bold gradient-text">Get Me Job</span>
+              <span className="text-lg font-bold gradient-text">Taida</span>
             </Link>
             <p className="text-sm text-muted-foreground">
               Your AI-powered job application assistant. Land your dream job with
@@ -92,7 +92,7 @@ export function Footer() {
         {/* Bottom Bar */}
         <div className="mt-12 pt-8 border-t flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-sm text-muted-foreground">
-            © {new Date().getFullYear()} Get Me Job. All rights reserved.
+            © {new Date().getFullYear()} Taida. All rights reserved.
           </p>
           <p className="text-sm text-muted-foreground">
             Made with care for job seekers everywhere.
