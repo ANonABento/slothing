@@ -52,6 +52,8 @@ export function Features() {
           <p className="text-lg text-muted-foreground">
             Taida combines smart parsing with AI tailoring to turn your
             career history into job-winning resumes.
+            Taida combines AI-powered tools with smart tracking to streamline
+            your entire job search process.
           </p>
         </div>
 

@@ -17,6 +17,8 @@ export function Hero() {
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
             <ScanSearch className="h-4 w-4" />
             AI-Powered Resume Intelligence
+            <Sparkles className="h-4 w-4" />
+            You&apos;re not lazy. You&apos;re efficient.
           </div>
 
           {/* Headline */}
@@ -83,6 +85,43 @@ export function Hero() {
                 </svg>
               ))}
               <span className="ml-1">4.9/5 rating</span>
+            </div>
+          </div>
+        </div>
+
+        {/* App Preview */}
+        <div className="mt-16 relative animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-500">
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent z-10" />
+          <div className="rounded-2xl border bg-card shadow-2xl overflow-hidden">
+            <div className="p-4 border-b bg-muted/30 flex items-center gap-2">
+              <div className="flex gap-1.5">
+                <div className="w-3 h-3 rounded-full bg-red-500" />
+                <div className="w-3 h-3 rounded-full bg-amber-500" />
+                <div className="w-3 h-3 rounded-full bg-green-500" />
+              </div>
+              <div className="flex-1 text-center text-sm text-muted-foreground">
+                Taida Dashboard
+              </div>
+            </div>
+            <div className="p-8 bg-gradient-to-br from-muted/20 to-muted/50">
+              <div className="grid grid-cols-3 gap-4">
+                {/* Mock stats */}
+                <div className="p-4 rounded-xl bg-card border">
+                  <div className="text-2xl font-bold text-primary">12</div>
+                  <div className="text-sm text-muted-foreground">Jobs Tracked</div>
+                </div>
+                <div className="p-4 rounded-xl bg-card border">
+                  <div className="text-2xl font-bold text-success">8</div>
+                  <div className="text-sm text-muted-foreground">Applied</div>
+                </div>
+                <div className="p-4 rounded-xl bg-card border">
+                  <div className="text-2xl font-bold text-amber-500">3</div>
+                  <div className="text-sm text-muted-foreground">Interviews</div>
+                </div>
+              </div>
+              <div className="mt-4 h-32 rounded-xl bg-card border flex items-center justify-center text-muted-foreground">
+                <span className="text-sm">Your personalized job dashboard</span>
+              </div>
             </div>
           </div>
         </div>

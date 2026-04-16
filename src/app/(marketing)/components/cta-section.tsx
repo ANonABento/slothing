@@ -56,6 +56,8 @@ export function CTASection() {
             <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
               Join thousands of job seekers who build tailored resumes in
               minutes, not hours.
+              Join thousands of successful job seekers who have transformed their
+              career journey with Taida.
             </p>
 
             {/* Benefits */}

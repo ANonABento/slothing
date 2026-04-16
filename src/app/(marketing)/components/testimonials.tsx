@@ -5,6 +5,11 @@ const stats = [
     icon: Users,
     value: "10,000+",
     label: "Job seekers using Taida",
+    quote:
+      "Taida completely transformed my job search. The AI resume optimization helped me get callbacks from companies that never responded before.",
+    author: "Sarah M.",
+    role: "Software Engineer",
+    company: "Now at Google",
   },
   {
     icon: FileText,
@@ -15,6 +20,11 @@ const stats = [
     icon: ScanSearch,
     value: "85%",
     label: "ATS pass rate after optimization",
+    quote:
+      "I was applying to 50+ jobs with no response. After using Taida to tailor my resume, my response rate went from 2% to 40%. Game changer!",
+    author: "Jennifer L.",
+    role: "Marketing Director",
+    company: "Now at HubSpot",
   },
 ];
 
@@ -33,6 +43,7 @@ export function Testimonials() {
           </h2>
           <p className="text-lg text-muted-foreground">
             Thousands of professionals rely on Taida to land interviews faster.
+            See what our users have to say about their experience with Taida.
           </p>
         </div>
 

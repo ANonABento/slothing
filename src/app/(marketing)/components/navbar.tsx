@@ -42,6 +42,7 @@ export function Navbar() {
               <span className="text-lg font-bold gradient-text">Taida</span>
               <span className="text-2xs text-muted-foreground hidden sm:block">
                 Resume Intelligence
+                怠惰
               </span>
             </div>
           </Link>
