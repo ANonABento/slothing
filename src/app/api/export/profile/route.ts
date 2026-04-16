@@ -1,3 +1,9 @@
+/**
+ * @route GET /api/export/profile
+ * @description Export profile data as JSON
+ * @auth Required
+ * @response JSON profile object
+ */
 import { NextRequest, NextResponse } from "next/server";
 import { getProfile, getDocuments } from "@/lib/db";
 import { requireAuth, isAuthError } from "@/lib/auth";

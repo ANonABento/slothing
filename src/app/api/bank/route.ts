@@ -1,3 +1,9 @@
+/**
+ * @route GET /api/bank
+ * @description Fetch bank entries with optional search/category filter
+ * @auth Required
+ * @response BankEntriesResponse from @/types/api
+ */
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth, isAuthError } from "@/lib/auth";
 import { getBankEntries, searchBankEntries, getBankEntriesByCategory, insertBankEntry } from "@/lib/db/profile-bank";

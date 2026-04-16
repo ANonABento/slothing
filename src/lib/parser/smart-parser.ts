@@ -242,6 +242,7 @@ async function enhanceWithLLM(
   sections: DetectedSection[],
   extracted: ExtractedFields,
   llmConfig: LLMConfig,
+  rawText?: string
   fullText?: string
 ): Promise<LLMEnhanceResult> {
   let lowConfSections = sections.filter(
@@ -271,6 +272,21 @@ async function enhanceWithLLM(
     (s) => s.confidence <= CONFIDENCE_THRESHOLD && s.type !== "contact"
   );
 
+  // If no low-confidence sections found but we have raw text (e.g. no headers detected),
+  // fall back to sending the full text to LLM
+  const sectionsToSend = lowConfSections.length > 0 ? lowConfSections : (rawText ? [] : []);
+  const useFullText = lowConfSections.length === 0 && !!rawText;
+
+  if (!useFullText && sectionsToSend.length === 0) {
+    return { enhanced: extracted, llmSectionCount: 0, warnings: [] };
+  }
+
+  // Build a batched prompt with all ambiguous sections (or full text as fallback)
+  const sectionPrompts = useFullText
+    ? [`--- Full Resume Text ---\n${rawText}`]
+    : sectionsToSend.map((s, i) => {
+        return `--- Section ${i + 1} (detected as: ${s.type}) ---\n${s.text}`;
+      });
   // If no sections were detected at all, fall back to parsing the full text
   const sectionsToSend =
     lowConfSections.length > 0
@@ -546,6 +562,7 @@ async function enhanceWithLLM(
 
     return {
       enhanced,
+      llmSectionCount: useFullText ? 1 : sectionsToSend.length,
       llmSectionCount: sectionsToSend.length,
       llmSectionCount: sectionsToCount,
       llmSectionCount: sectionCount,

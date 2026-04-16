@@ -1,3 +1,11 @@
+/**
+ * @route PATCH /api/bank/[id]
+ * @route DELETE /api/bank/[id]
+ * @description PATCH: Update bank entry. DELETE: Remove bank entry.
+ * @auth Required
+ * @request { content?: string, category?: string, subcategory?: string } (PATCH)
+ * @response BankEntryUpdateResponse from @/types/api
+ */
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth, isAuthError } from "@/lib/auth";
 import { updateBankEntry, deleteBankEntry } from "@/lib/db/profile-bank";

@@ -1,3 +1,10 @@
+/**
+ * @route POST /api/ats/analyze
+ * @description Analyze resume ATS compatibility
+ * @auth Required
+ * @request { jobId: string }
+ * @response ATSAnalyzeResponse from @/types/api
+ */
 import { NextRequest, NextResponse } from "next/server";
 import { getProfile } from "@/lib/db";
 import { getJob } from "@/lib/db/jobs";

@@ -1,3 +1,9 @@
+/**
+ * @route GET /api/export/jobs
+ * @description Export jobs as CSV or JSON format
+ * @auth Required
+ * @response CSV file (text/csv) or JSON array
+ */
 import { NextRequest, NextResponse } from "next/server";
 import { getJobs } from "@/lib/db/jobs";
 import { requireAuth, isAuthError } from "@/lib/auth";

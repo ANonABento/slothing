@@ -1,3 +1,9 @@
+/**
+ * @route GET /api/analytics/export
+ * @description Export analytics in CSV or JSON format
+ * @auth Required
+ * @response CSV or JSON file
+ */
 import { NextRequest } from "next/server";
 import { getJobs } from "@/lib/db/jobs";
 import { getProfile, getDocuments } from "@/lib/db";
