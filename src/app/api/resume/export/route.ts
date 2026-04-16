@@ -1,3 +1,11 @@
+/**
+ * @route GET /api/resume/export
+ * @route POST /api/resume/export
+ * @description GET: List available export templates. POST: Export a resume as PDF, HTML, or LaTeX.
+ * @auth Required
+ * @request { resumeId: string, template: string, format: "pdf" | "html" | "latex" } (POST)
+ * @response ResumeTemplatesResponse from @/types/api
+ */
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requireAuth, isAuthError } from "@/lib/auth";

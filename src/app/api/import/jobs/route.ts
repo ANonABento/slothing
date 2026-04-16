@@ -1,3 +1,10 @@
+/**
+ * @route POST /api/import/jobs
+ * @description Bulk import jobs from JSON or CSV payload
+ * @auth Required
+ * @request { jobs: ImportJobInput[] }
+ * @response ImportJobsBulkResponse from @/types/api
+ */
 import { NextRequest, NextResponse } from "next/server";
 import { createJob, getJobs } from "@/lib/db/jobs";
 import type { JobDescription } from "@/types";
