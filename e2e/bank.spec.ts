@@ -2,6 +2,7 @@ import { test, expect } from "@playwright/test";
 import path from "path";
 
 const TEST_PDF = path.join(__dirname, "fixtures", "test-resume.pdf");
+const TEST_FILENAME = path.basename(TEST_PDF); // "test-resume.pdf"
 
 /**
  * Bank (Documents) Page E2E Tests
@@ -49,13 +50,14 @@ test.describe("Bank Page - Layout & Empty State", () => {
   });
 
   test("displays category filter chips", async ({ page }) => {
-    // "All" chip and at least a few category chips
+    // Use anchored patterns to avoid matching chunk card buttons whose accessible
+    // names also contain category words (e.g. "Uploaded Resume at Kevin Experience…").
     await expect(page.getByRole("button", { name: /^all \(/i })).toBeVisible();
     await expect(
-      page.getByRole("button", { name: /experience/i })
+      page.getByRole("button", { name: /^experience \(/i })
     ).toBeVisible();
     await expect(
-      page.getByRole("button", { name: /skills/i })
+      page.getByRole("button", { name: /^skills \(/i })
     ).toBeVisible();
   });
 
@@ -130,6 +132,10 @@ test.describe("Bank Page - File Upload Flow", () => {
 });
 
 test.describe("Bank Page - Search & Filter", () => {
+  // Run serially to avoid race conditions: parallel uploads from concurrent
+  // beforeEach calls can leave the DB in an unpredictable state.
+  test.describe.configure({ mode: "serial" });
+
   test.beforeEach(async ({ page }) => {
     await page.goto("/");
     await page.evaluate(() => {
@@ -156,8 +162,10 @@ test.describe("Bank Page - Search & Filter", () => {
     // Type a search query that won't match anything
     await searchInput.fill("zzz_nonexistent_term_zzz");
 
-    // Wait for API response
-    await page.waitForLoadState("networkidle");
+    // Wait for the filtered API response
+    await page.waitForResponse(
+      (resp) => resp.url().includes("/api/bank") && resp.status() === 200
+    );
 
     // Should show "No matching entries" since nothing matches
     await expect(page.getByText("No matching entries")).toBeVisible({
@@ -166,7 +174,9 @@ test.describe("Bank Page - Search & Filter", () => {
 
     // Clear search
     await searchInput.fill("");
-    await page.waitForLoadState("networkidle");
+    await page.waitForResponse(
+      (resp) => resp.url().includes("/api/bank") && resp.status() === 200
+    );
 
     // Entries should reappear
     await expect(page.getByText("No matching entries")).not.toBeVisible({
@@ -175,36 +185,45 @@ test.describe("Bank Page - Search & Filter", () => {
   });
 
   test("category filter chips narrow results", async ({ page }) => {
-    // Click a specific category chip (e.g. "Experience")
-    const experienceChip = page.getByRole("button", { name: /experience/i });
-    await experienceChip.click();
+    // Click a specific category chip (anchored pattern avoids matching chunk card buttons)
+    const experienceChip = page.getByRole("button", { name: /^experience \(/i });
 
-    await page.waitForLoadState("networkidle");
+    // Wait for the filtered API response directly instead of relying on networkidle,
+    // which can fire before the response is fully processed.
+    await Promise.all([
+      page.waitForResponse(
+        (resp) => resp.url().includes("/api/bank") && resp.status() === 200
+      ),
+      experienceChip.click(),
+    ]);
 
-    // The "Experience" heading should be visible if entries exist for that category
-    // or "No matching entries" if no entries in that category
+    // After filtering, either the Experience section heading or "No matching entries"
+    // must appear — both are valid outcomes depending on what data is in the DB.
     const experienceHeading = page.getByRole("heading", {
       name: /experience/i,
     });
     const noMatching = page.getByText("No matching entries");
 
-    const hasExperience = await experienceHeading
-      .isVisible({ timeout: 3000 })
-      .catch(() => false);
-    const hasNoMatching = await noMatching
-      .isVisible({ timeout: 1000 })
-      .catch(() => false);
-
-    // One of these should be true
-    expect(hasExperience || hasNoMatching).toBe(true);
+    await expect(experienceHeading.or(noMatching)).toBeVisible({
+      timeout: 5000,
+    });
 
     // Click "All" to reset
-    await page.getByRole("button", { name: /^all \(/i }).click();
-    await page.waitForLoadState("networkidle");
+    await Promise.all([
+      page.waitForResponse(
+        (resp) => resp.url().includes("/api/bank") && resp.status() === 200
+      ),
+      page.getByRole("button", { name: /^all \(/i }).click(),
+    ]);
   });
 });
 
 test.describe("Bank Page - Source Documents Section", () => {
+  // Run serially to prevent parallel beforeEach calls from uploading the fixture
+  // multiple times simultaneously (each would see "test-resume.pdf" not yet visible
+  // within the 1-second timeout and all kick off an upload).
+  test.describe.configure({ mode: "serial" });
+
   test.beforeEach(async ({ page }) => {
     await page.goto("/");
     await page.evaluate(() => {
@@ -213,15 +232,25 @@ test.describe("Bank Page - Source Documents Section", () => {
     await page.goto("/bank");
     await page.waitForLoadState("networkidle");
 
-    // Upload fixture if no entries exist
-    const emptyState = page.getByText("No documents yet");
-    if (await emptyState.isVisible({ timeout: 2000 }).catch(() => false)) {
+    // Upload the test fixture only if it isn't already in the source docs section.
+    // Checking by filename is more robust than checking for empty state — the DB
+    // may already contain documents from a prior run with a different filename.
+    const alreadyPresent = await page
+      .getByText(TEST_FILENAME, { exact: true })
+      .first()
+      .isVisible({ timeout: 3000 })
+      .catch(() => false);
+
+    if (!alreadyPresent) {
       const fileInput = page.locator("input[type='file']");
       await fileInput.setInputFiles(TEST_PDF);
       await expect(
         page.getByRole("button", { name: /^upload$/i })
       ).toBeVisible({ timeout: 30000 });
-      await expect(emptyState).not.toBeVisible({ timeout: 10000 });
+      // Wait for the filename to appear in Source Files section
+      await expect(
+        page.getByText(TEST_FILENAME, { exact: true }).first()
+      ).toBeVisible({ timeout: 15000 });
     }
   });
 
@@ -230,19 +259,22 @@ test.describe("Bank Page - Source Documents Section", () => {
   });
 
   test("shows uploaded filename in source documents", async ({ page }) => {
-    // The test fixture filename should appear
-    await expect(page.getByText("test-resume.pdf")).toBeVisible({
+    // The test fixture filename should appear (use .first() in case of duplicates
+    // from prior test runs that left data in the SQLite DB).
+    await expect(page.getByText(TEST_FILENAME).first()).toBeVisible({
       timeout: 5000,
     });
   });
 
   test("source document card shows file metadata", async ({ page }) => {
-    // Should show file size and chunk count
-    const sourceCard = page.locator("text=test-resume.pdf").locator("..");
-    await expect(sourceCard).toBeVisible({ timeout: 5000 });
+    // Should show file size and chunk count.
+    // Use .first() to handle any duplicate uploads from prior test runs.
+    const filenameEl = page.getByText(TEST_FILENAME, { exact: true }).first();
+    await expect(filenameEl).toBeVisible({ timeout: 5000 });
 
-    // Metadata line should contain size info and chunk count
-    const metadataText = sourceCard.locator(".text-xs");
+    // The metadata <p class="text-xs"> is a sibling of the filename inside div.min-w-0
+    const fileInfo = filenameEl.locator("..");
+    const metadataText = fileInfo.locator(".text-xs");
     await expect(metadataText).toBeVisible();
     const text = await metadataText.textContent();
     // Should contain something like "801 B" or "0.8 KB" and "X chunks"
@@ -250,9 +282,13 @@ test.describe("Bank Page - Source Documents Section", () => {
   });
 
   test("source document has delete button", async ({ page }) => {
-    // Each source doc card should have a delete (trash) button
-    const sourceCard = page.locator("text=test-resume.pdf").locator("..");
-    const deleteButton = sourceCard.getByRole("button");
+    // Each source doc card should have a delete (trash) button.
+    // Use .first() to handle any duplicate uploads from prior test runs.
+    const filenameEl = page.getByText(TEST_FILENAME, { exact: true }).first();
+    await expect(filenameEl).toBeVisible({ timeout: 5000 });
+    // p.text-sm → div.min-w-0 → card div
+    const card = filenameEl.locator("../..");
+    const deleteButton = card.getByRole("button");
     await expect(deleteButton).toBeVisible();
   });
 });
