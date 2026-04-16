@@ -242,6 +242,7 @@ async function enhanceWithLLM(
   sections: DetectedSection[],
   extracted: ExtractedFields,
   llmConfig: LLMConfig,
+  rawText: string
   rawText?: string
   fullText?: string
 ): Promise<LLMEnhanceResult> {
@@ -272,6 +273,12 @@ async function enhanceWithLLM(
     (s) => s.confidence <= CONFIDENCE_THRESHOLD && s.type !== "contact"
   );
 
+  // If no individually low-confidence sections, but we're here because overall
+  // confidence was low, fall back to sending the full text as one unstructured section.
+  const sectionsToSend: Array<{ type: string; text: string }> =
+    lowConfSections.length > 0
+      ? lowConfSections
+      : [{ type: "unstructured", text: rawText }];
   // If no low-confidence sections found but we have raw text (e.g. no headers detected),
   // fall back to sending the full text to LLM
   const sectionsToSend = lowConfSections.length > 0 ? lowConfSections : (rawText ? [] : []);
@@ -562,6 +569,7 @@ async function enhanceWithLLM(
 
     return {
       enhanced,
+      llmSectionCount: sectionsToSend.length,
       llmSectionCount: useFullText ? 1 : sectionsToSend.length,
       llmSectionCount: sectionsToSend.length,
       llmSectionCount: sectionsToCount,
