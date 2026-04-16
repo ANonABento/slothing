@@ -231,6 +231,16 @@ async function enhanceWithLLM(
   // when overall confidence is already below threshold.
   const nonContactSections = sections.filter((s) => s.type !== "contact");
 
+  // If no low-confidence sections (e.g. no sections detected at all), fall back to full text
+  const hasContent = lowConfSections.length > 0 || (sections.length === 0 && rawText);
+  if (!hasContent) {
+    return { enhanced: extracted, llmSectionCount: 0, warnings: [] };
+  }
+
+  // Build a batched prompt with all ambiguous sections (or full text if no sections)
+  const sectionPrompts = lowConfSections.length > 0
+    ? lowConfSections.map((s, i) => `--- Section ${i + 1} (detected as: ${s.type}) ---\n${s.text}`)
+    : [`--- Full resume text ---\n${rawText}`];
   // If no low-confidence sections exist but raw text is available, use it as a
   // single unstructured section (handles resumes with no detectable headers).
   if (lowConfSections.length === 0) {
@@ -327,6 +337,7 @@ ${sectionPrompts.join("\n\n")}`;
 
     return {
       enhanced,
+      llmSectionCount: lowConfSections.length > 0 ? lowConfSections.length : 1,
       llmSectionCount: hasFullTextFallback ? 1 : lowConfSections.length,
       llmSectionCount: sectionsToProcess.length,
       warnings: [],
