@@ -3,7 +3,7 @@ import { Quote } from "lucide-react";
 const testimonials = [
   {
     quote:
-      "Get Me Job completely transformed my job search. The AI resume optimization helped me get callbacks from companies that never responded before.",
+      "Taida completely transformed my job search. The AI resume optimization helped me get callbacks from companies that never responded before.",
     author: "Sarah M.",
     role: "Software Engineer",
     company: "Now at Google",
@@ -17,7 +17,7 @@ const testimonials = [
   },
   {
     quote:
-      "I was applying to 50+ jobs with no response. After using Get Me Job to tailor my resume, my response rate went from 2% to 40%. Game changer!",
+      "I was applying to 50+ jobs with no response. After using Taida to tailor my resume, my response rate went from 2% to 40%. Game changer!",
     author: "Jennifer L.",
     role: "Marketing Director",
     company: "Now at HubSpot",
@@ -38,7 +38,7 @@ export function Testimonials() {
             <span className="gradient-text">worldwide</span>
           </h2>
           <p className="text-lg text-muted-foreground">
-            See what our users have to say about their experience with Get Me Job.
+            See what our users have to say about their experience with Taida.
           </p>
         </div>
 
