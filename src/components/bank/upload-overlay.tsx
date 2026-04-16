@@ -72,7 +72,7 @@ export function stageProgress(stage: UploadStage): number {
 // Component types
 // ---------------------------------------------------------------------------
 
-type OverlayStep = "idle" | "dragging" | "processing" | "done" | "error";
+type OverlayStep = "idle" | "processing" | "done" | "error";
 
 interface FileResult {
   fileName: string;
