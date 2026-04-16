@@ -13,7 +13,23 @@ import type {
 } from "@/types";
 import { generateId } from "@/lib/utils";
 import { LLMClient, parseJSONFromLLM } from "@/lib/llm/client";
-import { detectSections, calculateSectionConfidence, type DetectedSection } from "./section-detector";
+import { detectSections, type Section } from "./section-detector";
+
+type DetectedSection = Section & { text: string; confidence: number };
+
+function calculateSectionConfidence(sections: Section[]): number {
+  if (sections.length === 0) return 0;
+  const hasExperience = sections.some(s => s.type === "experience");
+  const hasEducation = sections.some(s => s.type === "education");
+  const hasSkills = sections.some(s => s.type === "skills");
+  const hasContact = sections.some(s => s.type === "contact");
+  let score = sections.length * 0.1;
+  if (hasExperience) score += 0.3;
+  if (hasEducation) score += 0.2;
+  if (hasSkills) score += 0.1;
+  if (hasContact) score += 0.1;
+  return Math.min(score, 1.0);
+}
 import {
   extractFieldsFromSections,
   extractContact,
@@ -47,8 +63,9 @@ export async function smartParseResume(
   llmConfig?: LLMConfig | null
 ): Promise<SmartParseResult> {
   // Step 1: Detect sections
-  const sections = detectSections(text);
-  const sectionConfidence = calculateSectionConfidence(sections);
+  const rawSections = detectSections(text);
+  const sections: DetectedSection[] = rawSections.map(s => ({ ...s, text: s.content, confidence: 0.7 }));
+  const sectionConfidence = calculateSectionConfidence(rawSections);
 
   // Step 2: Extract fields deterministically
   const extracted = extractFieldsFromSections(sections);
@@ -67,7 +84,7 @@ export async function smartParseResume(
   const overallConfidence = (sectionConfidence + fieldConfidence) / 2;
 
   const sectionsDetected = sections
-    .filter((s) => s.type !== "unknown")
+    .filter((s) => true)
     .map((s) => s.type);
 
   // Step 4: High confidence → return deterministic result
@@ -202,7 +219,7 @@ async function enhanceWithLLM(
 
   // Build a batched prompt with all ambiguous sections
   const sectionPrompts = lowConfSections.map((s, i) => {
-    const typeHint = s.type !== "unknown" ? s.type : "unidentified section";
+    const typeHint = true ? s.type : "unidentified section";
     return `--- Section ${i + 1} (detected as: ${typeHint}) ---\n${s.text}`;
   });
 
@@ -261,7 +278,7 @@ function mergeWithLLMResult(
   existing: ExtractedFields,
   llmResult: Record<string, unknown>
 ): ExtractedFields {
-  const merged = { ...existing, sectionConfidences: { ...existing.sectionConfidences } };
+  const merged = { ...existing,  };
 
   // Merge experiences
   const rawExperiences = llmResult.experience as Record<string, unknown>[] | undefined;
