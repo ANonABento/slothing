@@ -14,38 +14,29 @@ interface FixSuggestionsListProps {
   maxItems?: number;
 }
 
-function getIssueIcon(type: ATSIssue["type"]) {
-  switch (type) {
-    case "error":
-      return AlertCircle;
-    case "warning":
-      return AlertTriangle;
-    default:
-      return Info;
-  }
-}
-
-function getIssueBorder(type: ATSIssue["type"]): string {
-  switch (type) {
-    case "error":
-      return "border-l-red-500";
-    case "warning":
-      return "border-l-amber-500";
-    default:
-      return "border-l-blue-500";
-  }
-}
-
-function getIssueIconColor(type: ATSIssue["type"]): string {
-  switch (type) {
-    case "error":
-      return "text-red-500";
-    case "warning":
-      return "text-amber-500";
-    default:
-      return "text-blue-500";
-  }
-}
+const ISSUE_STYLES: Record<
+  ATSIssue["type"],
+  { icon: typeof AlertCircle; border: string; iconColor: string; badge: string }
+> = {
+  error: {
+    icon: AlertCircle,
+    border: "border-l-red-500",
+    iconColor: "text-red-500",
+    badge: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
+  },
+  warning: {
+    icon: AlertTriangle,
+    border: "border-l-amber-500",
+    iconColor: "text-amber-500",
+    badge: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
+  },
+  info: {
+    icon: Info,
+    border: "border-l-blue-500",
+    iconColor: "text-blue-500",
+    badge: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
+  },
+};
 
 export function FixSuggestionsList({ issues, maxItems = 5 }: FixSuggestionsListProps) {
   if (issues.length === 0) return null;
@@ -70,26 +61,18 @@ export function FixSuggestionsList({ issues, maxItems = 5 }: FixSuggestionsListP
 
       <div className="space-y-3">
         {displayed.map((issue, i) => {
-          const Icon = getIssueIcon(issue.type);
+          const { icon: Icon, border, iconColor, badge } = ISSUE_STYLES[issue.type];
           return (
             <div
               key={i}
-              className={cn(
-                "rounded-lg border border-l-4 bg-card p-4",
-                getIssueBorder(issue.type)
-              )}
+              className={cn("rounded-lg border border-l-4 bg-card p-4", border)}
             >
               <div className="flex items-start gap-3">
-                <Icon className={cn("h-5 w-5 shrink-0 mt-0.5", getIssueIconColor(issue.type))} />
+                <Icon className={cn("h-5 w-5 shrink-0 mt-0.5", iconColor)} />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
                     <span className="font-medium text-sm">{issue.title}</span>
-                    <span className={cn(
-                      "text-xs px-1.5 py-0.5 rounded-full capitalize",
-                      issue.type === "error" && "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
-                      issue.type === "warning" && "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
-                      issue.type === "info" && "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
-                    )}>
+                    <span className={cn("text-xs px-1.5 py-0.5 rounded-full capitalize", badge)}>
                       {issue.type}
                     </span>
                   </div>

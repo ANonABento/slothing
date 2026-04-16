@@ -21,22 +21,42 @@ const DIMENSIONS = [
   { key: "keywords" as const, label: "Keywords", icon: Target, weight: "30%" },
 ];
 
+type ScoreLevel = "good" | "fair" | "poor";
+
+function getScoreLevel(score: number): ScoreLevel {
+  if (score >= 80) return "good";
+  if (score >= 60) return "fair";
+  return "poor";
+}
+
+const SCORE_COLORS: Record<ScoreLevel, { text: string; bar: string; bg: string }> = {
+  good: {
+    text: "text-emerald-600 dark:text-emerald-400",
+    bar: "bg-emerald-500",
+    bg: "bg-emerald-100 dark:bg-emerald-900/30",
+  },
+  fair: {
+    text: "text-amber-600 dark:text-amber-400",
+    bar: "bg-amber-500",
+    bg: "bg-amber-100 dark:bg-amber-900/30",
+  },
+  poor: {
+    text: "text-red-600 dark:text-red-400",
+    bar: "bg-red-500",
+    bg: "bg-red-100 dark:bg-red-900/30",
+  },
+};
+
 function getScoreColor(score: number): string {
-  if (score >= 80) return "text-emerald-600 dark:text-emerald-400";
-  if (score >= 60) return "text-amber-600 dark:text-amber-400";
-  return "text-red-600 dark:text-red-400";
+  return SCORE_COLORS[getScoreLevel(score)].text;
 }
 
 function getBarColor(score: number): string {
-  if (score >= 80) return "bg-emerald-500";
-  if (score >= 60) return "bg-amber-500";
-  return "bg-red-500";
+  return SCORE_COLORS[getScoreLevel(score)].bar;
 }
 
 function getGradeBg(score: number): string {
-  if (score >= 80) return "bg-emerald-100 dark:bg-emerald-900/30";
-  if (score >= 60) return "bg-amber-100 dark:bg-amber-900/30";
-  return "bg-red-100 dark:bg-red-900/30";
+  return SCORE_COLORS[getScoreLevel(score)].bg;
 }
 
 export function ScoreDisplay({ result }: ScoreDisplayProps) {
