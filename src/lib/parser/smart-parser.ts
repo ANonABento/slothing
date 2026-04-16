@@ -104,7 +104,8 @@ export async function smartParseResume(
     const { enhanced, llmSectionCount, warnings } = await enhanceWithLLM(
       sections,
       extracted,
-      llmConfig
+      llmConfig,
+      text
     );
 
     const enhancedFieldConf = calculateFieldConfidence(enhanced);
@@ -203,26 +204,44 @@ interface LLMEnhanceResult {
 /**
  * Send only low-confidence sections to LLM in a single batched call.
  * Much cheaper than sending the entire resume.
+ * Falls back to sending the full text when no sections were detected.
  */
 async function enhanceWithLLM(
   sections: DetectedSection[],
   extracted: ExtractedFields,
-  llmConfig: LLMConfig
+  llmConfig: LLMConfig,
+  fullText?: string
 ): Promise<LLMEnhanceResult> {
   const lowConfSections = sections.filter(
-    (s) => s.confidence < CONFIDENCE_THRESHOLD && s.type !== "contact"
+    (s) => s.confidence <= CONFIDENCE_THRESHOLD && s.type !== "contact"
   );
 
+  // If no sections at all, fall back to full-text LLM parse
   if (lowConfSections.length === 0) {
-    return { enhanced: extracted, llmSectionCount: 0, warnings: [] };
+    if (!fullText) {
+      return { enhanced: extracted, llmSectionCount: 0, warnings: [] };
+    }
+    // Use full text as the single "section" to parse
+    const sectionPrompts = [
+      `--- Full resume text ---\n${fullText}`,
+    ];
+    return runLLMBatch(sectionPrompts, 1, extracted, llmConfig);
   }
 
   // Build a batched prompt with all ambiguous sections
   const sectionPrompts = lowConfSections.map((s, i) => {
-    const typeHint = true ? s.type : "unidentified section";
-    return `--- Section ${i + 1} (detected as: ${typeHint}) ---\n${s.text}`;
+    return `--- Section ${i + 1} (detected as: ${s.type}) ---\n${s.text}`;
   });
 
+  return runLLMBatch(sectionPrompts, lowConfSections.length, extracted, llmConfig);
+}
+
+async function runLLMBatch(
+  sectionPrompts: string[],
+  sectionCount: number,
+  extracted: ExtractedFields,
+  llmConfig: LLMConfig
+): Promise<LLMEnhanceResult> {
   const batchPrompt = `You are a resume parser. Parse the following resume sections and return structured JSON.
 
 For each section, extract the relevant data. Return a JSON object with these keys (include only sections present):
@@ -257,7 +276,7 @@ ${sectionPrompts.join("\n\n")}`;
 
     return {
       enhanced,
-      llmSectionCount: lowConfSections.length,
+      llmSectionCount: sectionCount,
       warnings: [],
     };
   } catch (error) {
