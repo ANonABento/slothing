@@ -39,7 +39,7 @@ export const CATEGORY_CONFIG: Record<
 
 // --- Field definitions per category ---
 
-interface FieldDef {
+export interface FieldDef {
   key: string;
   label: string;
   type: "text" | "textarea" | "checkbox" | "list" | "select";
@@ -207,7 +207,7 @@ interface FieldEditorProps {
   onChange: (key: string, value: unknown) => void;
 }
 
-function FieldEditor({ field, value, onChange }: FieldEditorProps) {
+export function FieldEditor({ field, value, onChange }: FieldEditorProps) {
   switch (field.type) {
     case "text":
       return (
