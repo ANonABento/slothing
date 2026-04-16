@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { isLLMConfigured } from "./route";
+import { isLLMConfigured } from "@/lib/llm/is-configured";
 
 describe("isLLMConfigured", () => {
   it("returns false for null config", () => {
