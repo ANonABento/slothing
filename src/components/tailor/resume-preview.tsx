@@ -5,17 +5,18 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   ExternalLink,
-  Download,
   ChevronDown,
   ChevronUp,
   CheckCircle2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { TailoredResume } from "@/lib/resume/generator";
+import { ExportMenu } from "./export-menu";
 
 interface ResumePreviewProps {
   resume: TailoredResume;
   pdfUrl: string;
+  resumeId: string;
   matchScore: number;
   templateId: string;
   templates: { id: string; name: string; description: string }[];
@@ -25,6 +26,7 @@ interface ResumePreviewProps {
 export function ResumePreview({
   resume,
   pdfUrl,
+  resumeId,
   matchScore,
   templateId,
   templates,
@@ -74,6 +76,11 @@ export function ResumePreview({
               Download PDF
             </a>
           </Button>
+          <ExportMenu
+            resumeId={resumeId}
+            resume={resume}
+            templateId={templateId}
+          />
         </div>
       </div>
 
