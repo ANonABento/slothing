@@ -83,8 +83,9 @@ export function JDInput({ onSubmit, isLoading }: JDInputProps) {
           onChange={(e) => setJobDescription(e.target.value)}
           placeholder={JD_PLACEHOLDER}
           className="min-h-[300px] font-mono text-sm"
+          aria-describedby="jd-help-text"
         />
-        <p className="text-xs text-muted-foreground">
+        <p id="jd-help-text" className="text-xs text-muted-foreground">
           {jobDescription.length > 0
             ? `${jobDescription.split(/\s+/).filter(Boolean).length} words`
             : "Paste the full job posting for best results"}
