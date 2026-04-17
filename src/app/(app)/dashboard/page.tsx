@@ -17,10 +17,8 @@ import {
 import { InsightsPanel } from "@/components/dashboard/insights-panel";
 import { ProfileCompletenessRing } from "@/components/dashboard/profile-completeness-ring";
 import { EmptyState } from "@/components/dashboard/empty-state";
-import { RecentActivity } from "@/components/dashboard/recent-activity";
-import type { ActivityItem } from "@/components/dashboard/recent-activity";
-import { calculateProfileCompleteness } from "@/lib/profile-completeness";
-import type { ProfileCompletenessResult } from "@/lib/profile-completeness";
+import { RecentActivity, type ActivityItem } from "@/components/dashboard/recent-activity";
+import { calculateProfileCompleteness, type ProfileCompletenessResult } from "@/lib/profile-completeness";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
 import { SkeletonStatCard, SkeletonInsights } from "@/components/ui/skeleton";
 
@@ -86,7 +84,8 @@ export default function Dashboard() {
           profileCompleteness: completeness,
         });
 
-        setRecentJobs(analyticsData.recent?.jobs || []);
+        const recentJobsList = analyticsData.recent?.jobs || [];
+        setRecentJobs(recentJobsList);
 
         // Build activity timeline from documents + jobs
         const activities: ActivityItem[] = [];
@@ -100,7 +99,6 @@ export default function Dashboard() {
           });
         }
 
-        const recentJobsList = analyticsData.recent?.jobs || [];
         for (const job of recentJobsList.slice(0, 5)) {
           activities.push({
             id: `job-${job.id}`,
