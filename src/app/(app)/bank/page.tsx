@@ -262,7 +262,6 @@ export default function BankPage() {
             Upload resumes and career documents. Drag files anywhere or click upload.
           </p>
         </div>
-        <div className="flex gap-2 shrink-0">
         <div className="flex gap-2">
           <AddEntryDialog onCreate={handleCreate} />
           <DriveFilePicker
@@ -295,6 +294,7 @@ export default function BankPage() {
       </div>
 
       {/* Search & Filters */}
+
       <SearchBar
         ref={searchInputRef}
         query={query}
@@ -372,7 +372,6 @@ export default function BankPage() {
           ))}
         </div>
       )}
-    </div>
     </div>
     </ErrorBoundary>
   );
