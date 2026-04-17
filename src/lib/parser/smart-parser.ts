@@ -104,7 +104,8 @@ export async function smartParseResume(
     const { enhanced, llmSectionCount, warnings } = await enhanceWithLLM(
       sections,
       extracted,
-      llmConfig
+      llmConfig,
+      text
     );
 
     const enhancedFieldConf = calculateFieldConfidence(enhanced);
@@ -207,21 +208,29 @@ interface LLMEnhanceResult {
 async function enhanceWithLLM(
   sections: DetectedSection[],
   extracted: ExtractedFields,
-  llmConfig: LLMConfig
+  llmConfig: LLMConfig,
+  fallbackText?: string
 ): Promise<LLMEnhanceResult> {
   const lowConfSections = sections.filter(
     (s) => s.confidence < CONFIDENCE_THRESHOLD && s.type !== "contact"
   );
 
-  if (lowConfSections.length === 0) {
+  // Determine content to send to LLM
+  let sectionPrompts: string[];
+  let sectionsUsed: number;
+
+  if (lowConfSections.length > 0) {
+    sectionPrompts = lowConfSections.map((s, i) => {
+      return `--- Section ${i + 1} (detected as: ${s.type}) ---\n${s.text}`;
+    });
+    sectionsUsed = lowConfSections.length;
+  } else if (fallbackText) {
+    // No low-confidence sections but overall confidence is low — send full text
+    sectionPrompts = [`--- Full Resume Text ---\n${fallbackText}`];
+    sectionsUsed = 1;
+  } else {
     return { enhanced: extracted, llmSectionCount: 0, warnings: [] };
   }
-
-  // Build a batched prompt with all ambiguous sections
-  const sectionPrompts = lowConfSections.map((s, i) => {
-    const typeHint = true ? s.type : "unidentified section";
-    return `--- Section ${i + 1} (detected as: ${typeHint}) ---\n${s.text}`;
-  });
 
   const batchPrompt = `You are a resume parser. Parse the following resume sections and return structured JSON.
 
@@ -257,7 +266,7 @@ ${sectionPrompts.join("\n\n")}`;
 
     return {
       enhanced,
-      llmSectionCount: lowConfSections.length,
+      llmSectionCount: sectionsUsed,
       warnings: [],
     };
   } catch (error) {
