@@ -155,7 +155,10 @@ export default function BuilderPage() {
     }
   }, [html]);
 
-  const selectedTemplate = TEMPLATES.find((t) => t.id === templateId);
+  const selectedTemplate = useMemo(
+    () => TEMPLATES.find((t) => t.id === templateId),
+    [templateId]
+  );
 
   if (loading) {
     return (

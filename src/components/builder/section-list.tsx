@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import type { BankEntry, BankCategory } from "@/types";
 import type { SectionState } from "@/lib/builder/section-manager";
@@ -66,12 +66,15 @@ export function SectionList({
     });
   }, []);
 
-  const entriesByCategory = new Map<BankCategory, BankEntry[]>();
-  for (const entry of entries) {
-    const list = entriesByCategory.get(entry.category) || [];
-    list.push(entry);
-    entriesByCategory.set(entry.category, list);
-  }
+  const entriesByCategory = useMemo(() => {
+    const map = new Map<BankCategory, BankEntry[]>();
+    for (const entry of entries) {
+      const list = map.get(entry.category) || [];
+      list.push(entry);
+      map.set(entry.category, list);
+    }
+    return map;
+  }, [entries]);
 
   function handleDragStart(e: React.DragEvent, index: number) {
     setDragIndex(index);
