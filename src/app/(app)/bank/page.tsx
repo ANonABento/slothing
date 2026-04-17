@@ -205,8 +205,6 @@ export default function BankPage() {
       if (!uploadData.success) {
         throw new Error(uploadData.error || "Upload returned unsuccessful");
       }
-      console.log("[bank] Upload complete:", uploadData.document?.id);
-
       // Upload route handles parse + ingest — just refresh the entries
       handleDataRefresh();
 
@@ -214,21 +212,8 @@ export default function BankPage() {
       const entryCount =
         uploadData.parsing?.sectionsDetected?.length ?? 0;
 
-      const toast = formatUploadToast([
-        { fileName: file.name, entryCount },
-      ]);
-      addToast({
-        type: entryCount > 0 ? "success" : "error",
-        title: toast.title,
-        description: toast.description,
-      });
-
-      // Scroll to new entries
-      if (entryCount > 0) {
-        setTimeout(() => {
-          newEntriesRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-        }, 300);
-      }
+      showUploadToast([{ fileName: file.name, entryCount }]);
+      scrollToNewEntries(entryCount);
     } catch (err) {
       console.error("[bank] Upload error:", err);
       setError(getErrorMessage(err));
@@ -265,14 +250,7 @@ export default function BankPage() {
     setSourceRefreshKey((k) => k + 1);
   }
 
-  function handleOverlayUploadStart() {
-    setShowUploadSkeletons(true);
-  }
-
-  function handleOverlayComplete(results: FileResult[]) {
-    setShowUploadSkeletons(false);
-    handleDataRefresh();
-
+  function showUploadToast(results: FileResult[]) {
     const toast = formatUploadToast(results);
     const totalEntries = results.reduce((sum, r) => sum + r.entryCount, 0);
     addToast({
@@ -280,12 +258,25 @@ export default function BankPage() {
       title: toast.title,
       description: toast.description,
     });
+  }
 
-    if (totalEntries > 0) {
+  function scrollToNewEntries(entryCount: number) {
+    if (entryCount > 0) {
       setTimeout(() => {
         newEntriesRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
       }, 300);
     }
+  }
+
+  function handleOverlayUploadStart() {
+    setShowUploadSkeletons(true);
+  }
+
+  function handleOverlayComplete(results: FileResult[]) {
+    setShowUploadSkeletons(false);
+    handleDataRefresh();
+    showUploadToast(results);
+    scrollToNewEntries(results.reduce((sum, r) => sum + r.entryCount, 0));
   }
 
   return (
@@ -312,7 +303,6 @@ export default function BankPage() {
           </p>
         </div>
         <div className="flex gap-2 shrink-0">
-        <div className="flex gap-2">
           <AddEntryDialog onCreate={handleCreate} />
           <DriveFilePicker
             onSelect={handleDriveSelect}
@@ -436,7 +426,6 @@ export default function BankPage() {
           ))}
         </div>
       )}
-    </div>
     </div>
     </ErrorBoundary>
   );
