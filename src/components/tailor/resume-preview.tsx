@@ -20,7 +20,7 @@ import {
   highlightKeywords,
   type HighlightSegment,
 } from "@/lib/tailor/highlight";
-import { ScoreRing } from "./gap-analysis";
+import { ScoreRing, SCORE_STRONG, SCORE_MODERATE } from "./gap-analysis";
 
 interface ResumePreviewProps {
   resume: TailoredResume;
@@ -201,11 +201,11 @@ export function ResumePreview({
           <div>
             <p className="font-semibold">Match Score</p>
             <p className="text-sm text-muted-foreground">
-              {matchScore >= 70
+              {matchScore >= SCORE_STRONG
                 ? "Strong match"
-                : matchScore >= 40
+                : matchScore >= SCORE_MODERATE
                 ? "Moderate match"
-                : "Weak match — review gaps below"}
+                : "Needs work — review gaps below"}
             </p>
           </div>
         </div>

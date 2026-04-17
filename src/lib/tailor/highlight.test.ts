@@ -1,8 +1,5 @@
 import { describe, it, expect } from "vitest";
-import {
-  highlightKeywords,
-  suggestKeywordPlacements,
-} from "./highlight";
+import { highlightKeywords } from "./highlight";
 
 describe("highlightKeywords", () => {
   it("should return plain text when no keywords provided", () => {
@@ -83,33 +80,3 @@ describe("highlightKeywords", () => {
   });
 });
 
-describe("suggestKeywordPlacements", () => {
-  const sections = [
-    { name: "Summary", content: "Experienced developer" },
-    { name: "Skills", content: "React, TypeScript" },
-    { name: "Experience", content: "Built web applications using modern frameworks" },
-  ];
-
-  it("should return suggestions for each missing keyword", () => {
-    const result = suggestKeywordPlacements(["python", "docker"], sections);
-    expect(result.size).toBe(2);
-    expect(result.has("python")).toBe(true);
-    expect(result.has("docker")).toBe(true);
-  });
-
-  it("should suggest the section that contains related terms", () => {
-    const result = suggestKeywordPlacements(["react hooks"], sections);
-    // "react" appears in Skills section
-    expect(result.get("react hooks")).toBe("Skills");
-  });
-
-  it("should default to Skills for unknown keywords", () => {
-    const result = suggestKeywordPlacements(["kubernetes"], sections);
-    expect(result.get("kubernetes")).toBe("Skills");
-  });
-
-  it("should handle empty keywords", () => {
-    const result = suggestKeywordPlacements([], sections);
-    expect(result.size).toBe(0);
-  });
-});

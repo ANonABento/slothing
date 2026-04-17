@@ -12,6 +12,9 @@ import {
 import { cn } from "@/lib/utils";
 import type { GapItem } from "@/lib/tailor/analyze";
 
+export const SCORE_STRONG = 70;
+export const SCORE_MODERATE = 40;
+
 interface GapAnalysisProps {
   gaps: GapItem[];
   keywordsFound: string[];
@@ -34,23 +37,23 @@ function ScoreRing({
   const center = size / 2;
 
   const color =
-    score >= 70
+    score >= SCORE_STRONG
       ? "text-emerald-500"
-      : score >= 40
+      : score >= SCORE_MODERATE
       ? "text-amber-500"
       : "text-red-500";
 
   const bgColor =
-    score >= 70
+    score >= SCORE_STRONG
       ? "stroke-emerald-500/15"
-      : score >= 40
+      : score >= SCORE_MODERATE
       ? "stroke-amber-500/15"
       : "stroke-red-500/15";
 
   const label =
-    score >= 70
+    score >= SCORE_STRONG
       ? "Strong match"
-      : score >= 40
+      : score >= SCORE_MODERATE
       ? "Moderate match"
       : "Needs work";
 

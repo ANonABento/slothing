@@ -62,36 +62,3 @@ export function highlightKeywords(
 
   return segments;
 }
-
-/**
- * Calculate where missing keywords could be added in a resume section.
- * Returns suggestions mapping keyword -> suggested section.
- */
-export function suggestKeywordPlacements(
-  missingKeywords: string[],
-  resumeSections: { name: string; content: string }[]
-): Map<string, string> {
-  const suggestions = new Map<string, string>();
-
-  const sectionPriority = ["skills", "summary", "experience", "education"];
-
-  for (const keyword of missingKeywords) {
-    // Suggest the most relevant section based on keyword type
-    let bestSection = "Skills";
-
-    for (const section of resumeSections) {
-      const sectionLower = section.name.toLowerCase();
-      if (sectionPriority.includes(sectionLower)) {
-        // If the section already mentions related terms, suggest it
-        if (section.content.toLowerCase().includes(keyword.toLowerCase().split(" ")[0])) {
-          bestSection = section.name;
-          break;
-        }
-      }
-    }
-
-    suggestions.set(keyword, bestSection);
-  }
-
-  return suggestions;
-}
