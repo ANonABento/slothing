@@ -104,7 +104,8 @@ export async function smartParseResume(
     const { enhanced, llmSectionCount, warnings } = await enhanceWithLLM(
       sections,
       extracted,
-      llmConfig
+      llmConfig,
+      text
     );
 
     const enhancedFieldConf = calculateFieldConfidence(enhanced);
@@ -207,11 +208,18 @@ interface LLMEnhanceResult {
 async function enhanceWithLLM(
   sections: DetectedSection[],
   extracted: ExtractedFields,
-  llmConfig: LLMConfig
+  llmConfig: LLMConfig,
+  fullText: string
 ): Promise<LLMEnhanceResult> {
   const lowConfSections = sections.filter(
     (s) => s.confidence < CONFIDENCE_THRESHOLD && s.type !== "contact"
   );
+
+  // If no low-confidence sections detected, fall back to full text
+  if (lowConfSections.length === 0 && sections.length === 0) {
+    const sectionPrompts = [`--- Full Resume ---\n${fullText}`];
+    return runLLMEnhancement(sectionPrompts, extracted, llmConfig, 1);
+  }
 
   if (lowConfSections.length === 0) {
     return { enhanced: extracted, llmSectionCount: 0, warnings: [] };
@@ -219,9 +227,17 @@ async function enhanceWithLLM(
 
   // Build a batched prompt with all ambiguous sections
   const sectionPrompts = lowConfSections.map((s, i) => {
-    const typeHint = true ? s.type : "unidentified section";
-    return `--- Section ${i + 1} (detected as: ${typeHint}) ---\n${s.text}`;
+    return `--- Section ${i + 1} (detected as: ${s.type}) ---\n${s.text}`;
   });
+  return runLLMEnhancement(sectionPrompts, extracted, llmConfig, lowConfSections.length);
+}
+
+async function runLLMEnhancement(
+  sectionPrompts: string[],
+  extracted: ExtractedFields,
+  llmConfig: LLMConfig,
+  sectionCount: number
+): Promise<LLMEnhanceResult> {
 
   const batchPrompt = `You are a resume parser. Parse the following resume sections and return structured JSON.
 
@@ -257,7 +273,7 @@ ${sectionPrompts.join("\n\n")}`;
 
     return {
       enhanced,
-      llmSectionCount: lowConfSections.length,
+      llmSectionCount: sectionCount,
       warnings: [],
     };
   } catch (error) {
