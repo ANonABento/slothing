@@ -18,7 +18,8 @@ import {
   Calendar,
   DollarSign,
   Sparkles,
-  PenLine, FileText,
+  PenLine,
+  FileText,
   type LucideIcon,
 } from "lucide-react";
 import { useLLMStatus } from "@/hooks/useLLMStatus";
@@ -89,7 +90,7 @@ export const navigationGroups: NavGroup[] = [
   }] : []),
 ];
 
-export const bottomNavigation = [
+export const bottomNavigation: NavItem[] = [
   { name: "Settings", href: "/settings", icon: Settings },
 ];
 
