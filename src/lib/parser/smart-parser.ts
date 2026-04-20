@@ -209,21 +209,21 @@ async function enhanceWithLLM(
   sections: DetectedSection[],
   extracted: ExtractedFields,
   llmConfig: LLMConfig,
-  fullText?: string
+  rawText?: string
 ): Promise<LLMEnhanceResult> {
   const lowConfSections = sections.filter(
     (s) => s.confidence < CONFIDENCE_THRESHOLD && s.type !== "contact"
   );
 
-  // If no low-confidence sections were detected, fall back to sending the full text
-  const useFallback = lowConfSections.length === 0;
-  if (useFallback && !fullText) {
+  // When no sections were detected, fall back to parsing the full text
+  const useFullTextFallback = lowConfSections.length === 0 && rawText;
+  if (lowConfSections.length === 0 && !useFullTextFallback) {
     return { enhanced: extracted, llmSectionCount: 0, warnings: [] };
   }
 
   // Build a batched prompt with all ambiguous sections (or full text as fallback)
-  const sectionPrompts = useFallback
-    ? [`--- Full Resume Text ---\n${fullText}`]
+  const sectionPrompts = useFullTextFallback
+    ? [`--- Full resume text ---\n${rawText}`]
     : lowConfSections.map((s, i) => {
         return `--- Section ${i + 1} (detected as: ${s.type}) ---\n${s.text}`;
       });
@@ -262,7 +262,7 @@ ${sectionPrompts.join("\n\n")}`;
 
     return {
       enhanced,
-      llmSectionCount: useFallback ? 1 : lowConfSections.length,
+      llmSectionCount: useFullTextFallback ? 1 : lowConfSections.length,
       warnings: [],
     };
   } catch (error) {
