@@ -3,6 +3,9 @@ import { Plus_Jakarta_Sans } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
+import { ensureEnvValidated } from "@/lib/env";
+
+ensureEnvValidated();
 
 const plusJakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
