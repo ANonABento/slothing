@@ -6,8 +6,8 @@ describe("FEATURES", () => {
     expect(FEATURES.tailorResume).toBe(false);
   });
 
-  it("should have jobTracker flag disabled by default", () => {
-    expect(FEATURES.jobTracker).toBe(false);
+  it("should have jobTracker flag enabled", () => {
+    expect(FEATURES.jobTracker).toBe(true);
   });
 
   it("should have all feature flags defined", () => {
@@ -26,9 +26,31 @@ describe("navigationGroups", () => {
     expect(labels).toContain("Resume");
   });
 
-  it("should not include Job Tracker, Interview, Negotiation, or Insights groups when flags are off", () => {
+  it("should include Job Tracker group when jobTracker flag is on", () => {
     const labels = navigationGroups.map((g) => g.label);
-    expect(labels).not.toContain("Job Tracker");
+    expect(labels).toContain("Job Tracker");
+  });
+
+  it("should have Jobs, Calendar, and Email Templates in Job Tracker group", () => {
+    const jobTracker = navigationGroups.find((g) => g.label === "Job Tracker");
+    expect(jobTracker).toBeDefined();
+    const names = jobTracker!.items.map((i) => i.name);
+    expect(names).toContain("Jobs");
+    expect(names).toContain("Calendar");
+    expect(names).toContain("Email Templates");
+  });
+
+  it("should have correct hrefs for Job Tracker items", () => {
+    const jobTracker = navigationGroups.find((g) => g.label === "Job Tracker");
+    expect(jobTracker).toBeDefined();
+    const items = jobTracker!.items;
+    expect(items.find((i) => i.name === "Jobs")?.href).toBe("/jobs");
+    expect(items.find((i) => i.name === "Calendar")?.href).toBe("/calendar");
+    expect(items.find((i) => i.name === "Email Templates")?.href).toBe("/emails");
+  });
+
+  it("should not include Interview, Negotiation, or Insights groups when flags are off", () => {
+    const labels = navigationGroups.map((g) => g.label);
     expect(labels).not.toContain("Interview");
     expect(labels).not.toContain("Negotiation");
     expect(labels).not.toContain("Insights");
