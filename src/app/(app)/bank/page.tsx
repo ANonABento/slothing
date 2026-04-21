@@ -16,13 +16,12 @@ import { ErrorBoundary } from "@/components/ui/error-boundary";
 import { SkeletonCard, SkeletonButton } from "@/components/ui/skeleton";
 import { AddEntryDialog } from "@/components/bank/add-entry-dialog";
 import { useToast } from "@/components/ui/toast";
+import { uploadSuccessMessage } from "./utils";
 
 const DriveFilePicker = dynamic(
   () => import("@/components/google").then((m) => m.DriveFilePicker),
   { loading: () => <SkeletonButton className="w-40" />, ssr: false }
 );
-
-import { uploadSuccessMessage } from "./utils";
 
 export default function BankPage() {
   const [entries, setEntries] = useState<BankEntry[]>([]);
