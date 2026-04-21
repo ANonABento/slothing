@@ -26,7 +26,6 @@ describe("checkFeature", () => {
     const result = checkFeature(
       {
         name: "Clerk",
-        description: "auth",
         requireAll: ["CLERK_PK", "CLERK_SK"],
       },
       { CLERK_PK: "pk", CLERK_SK: "sk" }
@@ -39,7 +38,6 @@ describe("checkFeature", () => {
     const result = checkFeature(
       {
         name: "Clerk",
-        description: "auth",
         requireAll: ["CLERK_PK", "CLERK_SK"],
       },
       { CLERK_PK: "pk" }
@@ -52,7 +50,6 @@ describe("checkFeature", () => {
     const result = checkFeature(
       {
         name: "Clerk",
-        description: "auth",
         requireAll: ["CLERK_PK"],
       },
       { CLERK_PK: "   " }
@@ -65,7 +62,6 @@ describe("checkFeature", () => {
     const result = checkFeature(
       {
         name: "LLM",
-        description: "llm",
         requireAny: ["OPENAI_API_KEY", "ANTHROPIC_API_KEY"],
       },
       { ANTHROPIC_API_KEY: "sk-ant" }
@@ -78,7 +74,6 @@ describe("checkFeature", () => {
     const result = checkFeature(
       {
         name: "LLM",
-        description: "llm",
         requireAny: ["OPENAI_API_KEY", "ANTHROPIC_API_KEY"],
       },
       {}

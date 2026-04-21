@@ -2,7 +2,6 @@ export const ENV_EXAMPLE_FILE = ".env.example";
 
 export interface FeatureCheck {
   name: string;
-  description: string;
   requireAll?: string[];
   requireAny?: string[];
 }
@@ -10,20 +9,14 @@ export interface FeatureCheck {
 export const FEATURE_CHECKS: FeatureCheck[] = [
   {
     name: "Clerk Authentication",
-    description:
-      "User auth and multi-user support. When disabled, the app falls back to a shared local dev user and skips route protection.",
     requireAll: ["NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY", "CLERK_SECRET_KEY"],
   },
   {
     name: "Neon PostgreSQL Database",
-    description:
-      "Hosted Postgres for production. When disabled, the app falls back to the local SQLite file.",
     requireAll: ["DATABASE_URL"],
   },
   {
     name: "LLM Providers",
-    description:
-      "AI features (resume tailoring, interview prep, cover letters). At least one provider must be configured.",
     requireAny: [
       "OPENAI_API_KEY",
       "ANTHROPIC_API_KEY",
@@ -37,7 +30,6 @@ export type FeatureMode = "all" | "any";
 
 export interface FeatureStatus {
   name: string;
-  description: string;
   enabled: boolean;
   missing: string[];
   mode: FeatureMode;
@@ -56,35 +48,22 @@ function isSet(value: string | undefined): boolean {
 }
 
 export function checkFeature(check: FeatureCheck, env: EnvSource): FeatureStatus {
+  let enabled = true;
+  let missing: string[] = [];
+  let mode: FeatureMode = "all";
+
   if (check.requireAll && check.requireAll.length > 0) {
-    const missing = check.requireAll.filter((key) => !isSet(env[key]));
-    return {
-      name: check.name,
-      description: check.description,
-      enabled: missing.length === 0,
-      missing,
-      mode: "all",
-    };
-  }
-
-  if (check.requireAny && check.requireAny.length > 0) {
+    missing = check.requireAll.filter((key) => !isSet(env[key]));
+    enabled = missing.length === 0;
+    mode = "all";
+  } else if (check.requireAny && check.requireAny.length > 0) {
     const anySet = check.requireAny.some((key) => isSet(env[key]));
-    return {
-      name: check.name,
-      description: check.description,
-      enabled: anySet,
-      missing: anySet ? [] : [...check.requireAny],
-      mode: "any",
-    };
+    enabled = anySet;
+    missing = anySet ? [] : [...check.requireAny];
+    mode = "any";
   }
 
-  return {
-    name: check.name,
-    description: check.description,
-    enabled: true,
-    missing: [],
-    mode: "all",
-  };
+  return { name: check.name, enabled, missing, mode };
 }
 
 export function getFeatureStatuses(
