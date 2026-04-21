@@ -33,11 +33,14 @@ export const FEATURE_CHECKS: FeatureCheck[] = [
   },
 ];
 
+export type FeatureMode = "all" | "any";
+
 export interface FeatureStatus {
   name: string;
   description: string;
   enabled: boolean;
   missing: string[];
+  mode: FeatureMode;
 }
 
 export interface ValidationResult {
@@ -60,6 +63,7 @@ export function checkFeature(check: FeatureCheck, env: EnvSource): FeatureStatus
       description: check.description,
       enabled: missing.length === 0,
       missing,
+      mode: "all",
     };
   }
 
@@ -70,6 +74,7 @@ export function checkFeature(check: FeatureCheck, env: EnvSource): FeatureStatus
       description: check.description,
       enabled: anySet,
       missing: anySet ? [] : [...check.requireAny],
+      mode: "any",
     };
   }
 
@@ -78,6 +83,7 @@ export function checkFeature(check: FeatureCheck, env: EnvSource): FeatureStatus
     description: check.description,
     enabled: true,
     missing: [],
+    mode: "all",
   };
 }
 
@@ -89,10 +95,14 @@ export function getFeatureStatuses(
 }
 
 function formatWarning(status: FeatureStatus): string {
-  const missingText =
-    status.missing.length === 1
-      ? `missing ${status.missing[0]}`
-      : `missing one of: ${status.missing.join(", ")}`;
+  let missingText: string;
+  if (status.missing.length === 1) {
+    missingText = `missing ${status.missing[0]}`;
+  } else if (status.mode === "any") {
+    missingText = `missing one of: ${status.missing.join(", ")}`;
+  } else {
+    missingText = `missing: ${status.missing.join(", ")}`;
+  }
   return `[env] ${status.name} disabled — ${missingText}. See ${ENV_EXAMPLE_FILE} for the correct variable names.`;
 }
 

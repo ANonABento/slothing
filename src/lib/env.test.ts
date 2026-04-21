@@ -142,6 +142,18 @@ describe("validateEnv", () => {
     expect(clerkWarning).toBeDefined();
     expect(clerkWarning).toContain("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY");
     expect(clerkWarning).toContain("CLERK_SECRET_KEY");
+    // requireAll: both keys are needed, so wording must NOT say "one of"
+    expect(clerkWarning).not.toContain("one of");
+  });
+
+  it("uses 'missing one of' wording only for requireAny features", () => {
+    const result = validateEnv({});
+    const llmWarning = result.warnings.find((w) => w.includes("LLM Providers"));
+    const clerkWarning = result.warnings.find((w) =>
+      w.includes("Clerk Authentication")
+    );
+    expect(llmWarning).toContain("missing one of:");
+    expect(clerkWarning).not.toContain("one of");
   });
 
   it("produces an LLM warning listing all provider options", () => {
