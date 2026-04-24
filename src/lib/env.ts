@@ -55,7 +55,6 @@ export function checkFeature(check: FeatureCheck, env: EnvSource): FeatureStatus
   if (check.requireAll && check.requireAll.length > 0) {
     missing = check.requireAll.filter((key) => !isSet(env[key]));
     enabled = missing.length === 0;
-    mode = "all";
   } else if (check.requireAny && check.requireAny.length > 0) {
     const anySet = check.requireAny.some((key) => isSet(env[key]));
     enabled = anySet;

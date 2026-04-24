@@ -13,12 +13,13 @@ const plusJakarta = Plus_Jakarta_Sans({
 });
 
 const SITE_NAME = "Taida";
+const SITE_TITLE = `${SITE_NAME} — AI-Powered Job Application Assistant`;
 const SITE_DESCRIPTION =
   "AI-powered job application assistant — resume tailoring, interview prep, and application tracking to land your dream job.";
 
 export const metadata: Metadata = {
   title: {
-    default: `${SITE_NAME} — AI-Powered Job Application Assistant`,
+    default: SITE_TITLE,
     template: `%s — ${SITE_NAME}`,
   },
   description: SITE_DESCRIPTION,
@@ -28,12 +29,12 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     siteName: SITE_NAME,
-    title: `${SITE_NAME} — AI-Powered Job Application Assistant`,
+    title: SITE_TITLE,
     locale: "en_US",
   },
   twitter: {
     card: "summary_large_image",
-    title: `${SITE_NAME} — AI-Powered Job Application Assistant`,
+    title: SITE_TITLE,
     description: SITE_DESCRIPTION,
   },
 };
