@@ -5,6 +5,8 @@ import Image from "next/image";
 import { useClerk } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
 import { Loader2, CheckCircle, AlertCircle } from "lucide-react";
+import { showErrorToast } from "@/components/ui/error-toast";
+import { useToast } from "@/components/ui/toast";
 
 interface ConnectionStatus {
   connected: boolean;
@@ -23,6 +25,7 @@ function GoogleConnectButtonWithClerk({
   showStatus = true,
 }: GoogleConnectButtonProps) {
   const { openUserProfile } = useClerk();
+  const { addToast } = useToast();
   const [status, setStatus] = useState<ConnectionStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -38,13 +41,17 @@ function GoogleConnectButtonWithClerk({
       setStatus(data);
       onConnectionChange?.(data.connected);
     } catch (err) {
-      console.error("Failed to check Google connection:", err);
       setError("Failed to check connection");
       setStatus({ connected: false });
+      showErrorToast(addToast, {
+        title: "Couldn't check Google connection",
+        error: err,
+        fallbackDescription: "Please try again.",
+      });
     } finally {
       setLoading(false);
     }
-  }, [onConnectionChange]);
+  }, [addToast, onConnectionChange]);
 
   useEffect(() => {
     checkConnection();

@@ -38,6 +38,8 @@ import { TrendCharts } from "@/components/analytics/trend-charts";
 import { SuccessDashboard } from "@/components/analytics/success-dashboard";
 import { SkillLearningPaths } from "@/components/learning/skill-learning-paths";
 import { ExportToSheetsButton } from "@/components/google";
+import { showErrorToast } from "@/components/ui/error-toast";
+import { useToast } from "@/components/ui/toast";
 
 interface Analytics {
   overview: {
@@ -85,6 +87,7 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; icon: React.
 };
 
 export default function AnalyticsPage() {
+  const { addToast } = useToast();
   const [analytics, setAnalytics] = useState<Analytics | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -107,7 +110,11 @@ export default function AnalyticsPage() {
       a.click();
       URL.revokeObjectURL(url);
     } catch (err) {
-      console.error("Export error:", err);
+      showErrorToast(addToast, {
+        title: "Export failed",
+        error: err,
+        fallbackDescription: "Please try again.",
+      });
     } finally {
       setExporting(false);
     }

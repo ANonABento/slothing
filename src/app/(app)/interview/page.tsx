@@ -47,6 +47,8 @@ import {
 import { PrepGuideCard } from "@/components/interview/prep-guide-card";
 import { RecordingControls } from "@/components/interview/recording-controls";
 import { SaveToDocsButton } from "@/components/google";
+import { showErrorToast } from "@/components/ui/error-toast";
+import { useToast } from "@/components/ui/toast";
 
 interface InterviewQuestion {
   question: string;
@@ -111,6 +113,7 @@ const categoryColors: Record<string, { bg: string; text: string; icon: React.Rea
 };
 
 export default function InterviewPage() {
+  const { addToast } = useToast();
   const [jobs, setJobs] = useState<JobDescription[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedJob, setSelectedJob] = useState<string | null>(null);
@@ -132,6 +135,7 @@ export default function InterviewPage() {
   useEffect(() => {
     fetchJobs();
     fetchPastSessions();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchJobs = async () => {
@@ -140,7 +144,11 @@ export default function InterviewPage() {
       const data = await res.json();
       setJobs(data.jobs || []);
     } catch (error) {
-      console.error("Failed to fetch jobs:", error);
+      showErrorToast(addToast, {
+        title: "Couldn't load jobs",
+        error,
+        fallbackDescription: "Please refresh and try again.",
+      });
     } finally {
       setLoading(false);
     }
@@ -152,7 +160,11 @@ export default function InterviewPage() {
       const data = await res.json();
       setPastSessions(data.sessions || []);
     } catch (error) {
-      console.error("Failed to fetch past sessions:", error);
+      showErrorToast(addToast, {
+        title: "Couldn't load past sessions",
+        error,
+        fallbackDescription: "Please refresh and try again.",
+      });
     }
   };
 
@@ -165,7 +177,11 @@ export default function InterviewPage() {
       });
       fetchPastSessions();
     } catch (error) {
-      console.error("Failed to complete session:", error);
+      showErrorToast(addToast, {
+        title: "Couldn't complete session",
+        error,
+        fallbackDescription: "Please try again.",
+      });
     }
   };
 
@@ -176,7 +192,11 @@ export default function InterviewPage() {
       });
       fetchPastSessions();
     } catch (error) {
-      console.error("Failed to delete session:", error);
+      showErrorToast(addToast, {
+        title: "Couldn't delete session",
+        error,
+        fallbackDescription: "Please try again.",
+      });
     }
   };
 
@@ -240,7 +260,11 @@ export default function InterviewPage() {
         mode,
       });
     } catch (error) {
-      console.error("Failed to start interview:", error);
+      showErrorToast(addToast, {
+        title: "Couldn't start interview",
+        error,
+        fallbackDescription: "Please try again.",
+      });
     } finally {
       setGenerating(false);
     }
@@ -292,7 +316,11 @@ export default function InterviewPage() {
         });
       }
     } catch (error) {
-      console.error("Failed to submit answer:", error);
+      showErrorToast(addToast, {
+        title: "Couldn't submit answer",
+        error,
+        fallbackDescription: "Please try again.",
+      });
     } finally {
       setSubmitting(false);
     }
@@ -388,7 +416,11 @@ export default function InterviewPage() {
         setCurrentAnswer("");
       }
     } catch (error) {
-      console.error("Failed to get follow-up question:", error);
+      showErrorToast(addToast, {
+        title: "Couldn't get follow-up question",
+        error,
+        fallbackDescription: "Please try again.",
+      });
     } finally {
       setLoadingFollowUp(false);
     }
@@ -433,7 +465,11 @@ export default function InterviewPage() {
       setCurrentFollowUp(null);
       setCurrentAnswer("");
     } catch (error) {
-      console.error("Failed to submit follow-up answer:", error);
+      showErrorToast(addToast, {
+        title: "Couldn't submit follow-up answer",
+        error,
+        fallbackDescription: "Please try again.",
+      });
     } finally {
       setSubmitting(false);
     }

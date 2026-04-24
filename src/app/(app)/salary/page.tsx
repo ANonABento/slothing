@@ -31,6 +31,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { showErrorToast } from "@/components/ui/error-toast";
+import { useToast } from "@/components/ui/toast";
 
 interface SalaryRange {
   min: number;
@@ -103,6 +105,7 @@ function formatCurrency(amount: number): string {
 type TabType = "calculator" | "compare" | "negotiate";
 
 export default function SalaryToolsPage() {
+  const { addToast } = useToast();
   const [activeTab, setActiveTab] = useState<TabType>("calculator");
 
   // Calculator state
@@ -154,7 +157,11 @@ export default function SalaryToolsPage() {
         setSalaryRange(data.range);
       }
     } catch (error) {
-      console.error("Failed to calculate salary range:", error);
+      showErrorToast(addToast, {
+        title: "Couldn't calculate salary range",
+        error,
+        fallbackDescription: "Please try again.",
+      });
     } finally {
       setCalculatingRange(false);
     }
@@ -203,7 +210,11 @@ export default function SalaryToolsPage() {
         setComparison(data.comparison);
       }
     } catch (error) {
-      console.error("Failed to compare offers:", error);
+      showErrorToast(addToast, {
+        title: "Couldn't compare offers",
+        error,
+        fallbackDescription: "Please try again.",
+      });
     }
   };
 
@@ -230,7 +241,11 @@ export default function SalaryToolsPage() {
         setScript(data.script);
       }
     } catch (error) {
-      console.error("Failed to generate script:", error);
+      showErrorToast(addToast, {
+        title: "Couldn't generate negotiation script",
+        error,
+        fallbackDescription: "Please try again.",
+      });
     } finally {
       setGeneratingScript(false);
     }

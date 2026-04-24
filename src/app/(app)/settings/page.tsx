@@ -42,6 +42,8 @@ import {
   FileText,
 } from "lucide-react";
 import { GoogleConnectButton } from "@/components/google";
+import { showErrorToast } from "@/components/ui/error-toast";
+import { useToast } from "@/components/ui/toast";
 
 interface Provider {
   value: LLMConfig["provider"];
@@ -109,6 +111,7 @@ const PROVIDERS: Provider[] = [
 ];
 
 export default function SettingsPage() {
+  const { addToast } = useToast();
   const [config, setConfig] = useState<LLMConfig>({
     provider: "ollama",
     model: DEFAULT_MODELS.ollama[0],
@@ -126,6 +129,7 @@ export default function SettingsPage() {
 
   useEffect(() => {
     fetchSettings();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchSettings = async () => {
@@ -136,7 +140,11 @@ export default function SettingsPage() {
         setConfig(data.llm);
       }
     } catch (error) {
-      console.error("Failed to fetch settings:", error);
+      showErrorToast(addToast, {
+        title: "Couldn't load settings",
+        error,
+        fallbackDescription: "Please refresh and try again.",
+      });
     } finally {
       setLoading(false);
     }
@@ -240,8 +248,12 @@ export default function SettingsPage() {
       a.remove();
       window.URL.revokeObjectURL(downloadUrl);
     } catch (error) {
-      console.error("Export error:", error);
       setImportResult({ success: false, message: "Export failed" });
+      showErrorToast(addToast, {
+        title: "Export failed",
+        error,
+        fallbackDescription: "Please try again.",
+      });
     } finally {
       setExporting(null);
     }

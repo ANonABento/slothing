@@ -59,6 +59,8 @@ import { ImportJobDialog } from "@/components/jobs/import-job-dialog";
 import { GmailImportModal } from "@/components/google";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
 import { SkeletonJobCard } from "@/components/ui/skeleton";
+import { showErrorToast } from "@/components/ui/error-toast";
+import { useToast } from "@/components/ui/toast";
 import type { ATSAnalysisResult } from "@/lib/ats/analyzer";
 
 const ATSScoreBreakdown = dynamic(
@@ -77,6 +79,7 @@ interface Template {
 }
 
 export default function JobsPage() {
+  const { addToast } = useToast();
   const [jobs, setJobs] = useState<JobDescription[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddDialog, setShowAddDialog] = useState(false);
@@ -102,6 +105,7 @@ export default function JobsPage() {
   useEffect(() => {
     fetchJobs();
     fetchTemplates();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchTemplates = async () => {
@@ -129,7 +133,11 @@ export default function JobsPage() {
       const data = await res.json();
       setJobs(data.jobs || []);
     } catch (error) {
-      console.error("Failed to fetch jobs:", error);
+      showErrorToast(addToast, {
+        title: "Couldn't load jobs",
+        error,
+        fallbackDescription: "Please refresh and try again.",
+      });
     } finally {
       setLoading(false);
     }
@@ -152,7 +160,11 @@ export default function JobsPage() {
         setShowAddDialog(false);
       }
     } catch (error) {
-      console.error("Failed to add job:", error);
+      showErrorToast(addToast, {
+        title: "Couldn't add job",
+        error,
+        fallbackDescription: "Please check the details and try again.",
+      });
     } finally {
       setAddingJob(false);
     }
@@ -163,7 +175,11 @@ export default function JobsPage() {
       await fetch(`/api/jobs/${id}`, { method: "DELETE" });
       setJobs(jobs.filter((j) => j.id !== id));
     } catch (error) {
-      console.error("Failed to delete job:", error);
+      showErrorToast(addToast, {
+        title: "Couldn't delete job",
+        error,
+        fallbackDescription: "Please try again.",
+      });
     }
   };
 
@@ -178,7 +194,11 @@ export default function JobsPage() {
         setJobs(jobs.map((j) => (j.id === id ? { ...j, status: status as JobDescription["status"] } : j)));
       }
     } catch (error) {
-      console.error("Failed to update job status:", error);
+      showErrorToast(addToast, {
+        title: "Couldn't update job status",
+        error,
+        fallbackDescription: "Please try again.",
+      });
     }
   };
 
@@ -191,7 +211,11 @@ export default function JobsPage() {
         setAnalyses({ ...analyses, [jobId]: data.analysis });
       }
     } catch (error) {
-      console.error("Failed to analyze job:", error);
+      showErrorToast(addToast, {
+        title: "Couldn't analyze job",
+        error,
+        fallbackDescription: "Please try again.",
+      });
     } finally {
       setAnalyzing(null);
     }
@@ -211,7 +235,11 @@ export default function JobsPage() {
         window.open(data.pdfUrl, "_blank");
       }
     } catch (error) {
-      console.error("Failed to generate resume:", error);
+      showErrorToast(addToast, {
+        title: "Couldn't generate resume",
+        error,
+        fallbackDescription: "Please try again.",
+      });
     } finally {
       setGenerating(null);
     }
@@ -230,7 +258,11 @@ export default function JobsPage() {
         setAtsResults({ ...atsResults, [jobId]: data });
       }
     } catch (error) {
-      console.error("Failed to run ATS check:", error);
+      showErrorToast(addToast, {
+        title: "ATS check failed",
+        error,
+        fallbackDescription: "Please try again.",
+      });
     } finally {
       setAtsAnalyzing(null);
     }
@@ -350,7 +382,11 @@ export default function JobsPage() {
                         fetchJobs();
                       }
                     } catch (error) {
-                      console.error("Failed to create job from email:", error);
+                      showErrorToast(addToast, {
+                        title: "Couldn't create job from email",
+                        error,
+                        fallbackDescription: "Please try again.",
+                      });
                     }
                   }}
                   trigger={

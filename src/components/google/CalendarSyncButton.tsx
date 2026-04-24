@@ -16,6 +16,8 @@ import {
   AlertCircle,
   ExternalLink,
 } from "lucide-react";
+import { showErrorToast } from "@/components/ui/error-toast";
+import { useToast } from "@/components/ui/toast";
 
 type SyncType = "all" | "interviews" | "deadlines" | "reminders";
 
@@ -43,6 +45,7 @@ export function CalendarSyncButton({
   onSyncComplete,
   compact = false,
 }: CalendarSyncButtonProps) {
+  const { addToast } = useToast();
   const [syncing, setSyncing] = useState(false);
   const [syncType, setSyncType] = useState<SyncType>("all");
   const [result, setResult] = useState<SyncResponse | null>(null);
@@ -77,7 +80,6 @@ export function CalendarSyncButton({
       setResult(data);
       onSyncComplete?.(data);
     } catch (error) {
-      console.error("Sync failed:", error);
       setResult({
         success: false,
         synced: 0,
@@ -90,6 +92,11 @@ export function CalendarSyncButton({
             error: "Network error",
           },
         ],
+      });
+      showErrorToast(addToast, {
+        title: "Calendar sync failed",
+        error,
+        fallbackDescription: "Please try again.",
       });
     } finally {
       setSyncing(false);

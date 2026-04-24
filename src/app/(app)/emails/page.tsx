@@ -35,6 +35,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { SendViaGmailButton } from "@/components/google";
+import { showErrorToast } from "@/components/ui/error-toast";
+import { useToast } from "@/components/ui/toast";
 import type { EmailTemplateType, JobDescription } from "@/types";
 
 interface EmailDraft {
@@ -85,6 +87,7 @@ const TEMPLATE_CONFIG: Record<
 };
 
 export default function EmailTemplatesPage() {
+  const { addToast } = useToast();
   const [selectedType, setSelectedType] = useState<EmailTemplateType | null>(null);
   const [jobs, setJobs] = useState<JobDescription[]>([]);
   const [selectedJobId, setSelectedJobId] = useState<string>("");
@@ -114,6 +117,7 @@ export default function EmailTemplatesPage() {
   useEffect(() => {
     fetchJobs();
     fetchDrafts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchJobs = async () => {
@@ -122,7 +126,11 @@ export default function EmailTemplatesPage() {
       const data = await res.json();
       setJobs(data.jobs || []);
     } catch (error) {
-      console.error("Failed to fetch jobs:", error);
+      showErrorToast(addToast, {
+        title: "Couldn't load jobs",
+        error,
+        fallbackDescription: "Please refresh and try again.",
+      });
     }
   };
 
@@ -132,7 +140,11 @@ export default function EmailTemplatesPage() {
       const data = await res.json();
       setDrafts(data.drafts || []);
     } catch (error) {
-      console.error("Failed to fetch drafts:", error);
+      showErrorToast(addToast, {
+        title: "Couldn't load drafts",
+        error,
+        fallbackDescription: "Please refresh and try again.",
+      });
     }
   };
 
@@ -176,7 +188,11 @@ export default function EmailTemplatesPage() {
       fetchDrafts();
       setEditingDraftId(null);
     } catch (error) {
-      console.error("Failed to save draft:", error);
+      showErrorToast(addToast, {
+        title: "Couldn't save draft",
+        error,
+        fallbackDescription: "Please try again.",
+      });
     } finally {
       setSavingDraft(false);
     }
@@ -207,7 +223,11 @@ export default function EmailTemplatesPage() {
         setEditingDraftId(null);
       }
     } catch (error) {
-      console.error("Failed to delete draft:", error);
+      showErrorToast(addToast, {
+        title: "Couldn't delete draft",
+        error,
+        fallbackDescription: "Please try again.",
+      });
     }
   };
 
@@ -238,11 +258,16 @@ export default function EmailTemplatesPage() {
         });
       }
     } catch (error) {
-      console.error("Failed to generate email:", error);
+      showErrorToast(addToast, {
+        title: "Couldn't generate email",
+        error,
+        fallbackDescription: "Please try again.",
+      });
     } finally {
       setLoading(false);
     }
   }, [
+    addToast,
     selectedType,
     selectedJobId,
     interviewerName,

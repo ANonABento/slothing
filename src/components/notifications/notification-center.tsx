@@ -16,6 +16,8 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import type { Notification, NotificationType } from "@/lib/db/notifications";
+import { showErrorToast } from "@/components/ui/error-toast";
+import { useToast } from "@/components/ui/toast";
 
 const typeIcons: Record<NotificationType, typeof Bell> = {
   reminder_due: Clock,
@@ -42,6 +44,7 @@ interface NotificationCenterProps {
 }
 
 export function NotificationCenter({ collapsed = false }: NotificationCenterProps) {
+  const { addToast } = useToast();
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -54,8 +57,10 @@ export function NotificationCenter({ collapsed = false }: NotificationCenterProp
       const data = await res.json();
       setNotifications(data.notifications || []);
       setUnreadCount(data.unreadCount || 0);
-    } catch (error) {
-      console.error("Failed to fetch notifications:", error);
+    } catch {
+      // Silent: notification fetch runs on mount, open, and a 30s poll loop.
+      // Toasting here would cause noisy toast storms on transient network failures.
+      // User-initiated actions (mark read, delete) still surface errors below.
     } finally {
       setLoading(false);
     }
@@ -99,7 +104,11 @@ export function NotificationCenter({ collapsed = false }: NotificationCenterProp
       );
       setUnreadCount((prev) => Math.max(0, prev - 1));
     } catch (error) {
-      console.error("Failed to mark notification as read:", error);
+      showErrorToast(addToast, {
+        title: "Couldn't mark notification as read",
+        error,
+        fallbackDescription: "Please try again.",
+      });
     }
   };
 
@@ -113,7 +122,11 @@ export function NotificationCenter({ collapsed = false }: NotificationCenterProp
       setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
       setUnreadCount(0);
     } catch (error) {
-      console.error("Failed to mark all notifications as read:", error);
+      showErrorToast(addToast, {
+        title: "Couldn't mark all notifications as read",
+        error,
+        fallbackDescription: "Please try again.",
+      });
     }
   };
 
@@ -126,7 +139,11 @@ export function NotificationCenter({ collapsed = false }: NotificationCenterProp
         setUnreadCount((prev) => Math.max(0, prev - 1));
       }
     } catch (error) {
-      console.error("Failed to delete notification:", error);
+      showErrorToast(addToast, {
+        title: "Couldn't delete notification",
+        error,
+        fallbackDescription: "Please try again.",
+      });
     }
   };
 
@@ -139,7 +156,11 @@ export function NotificationCenter({ collapsed = false }: NotificationCenterProp
       });
       setNotifications((prev) => prev.filter((n) => !n.read));
     } catch (error) {
-      console.error("Failed to delete read notifications:", error);
+      showErrorToast(addToast, {
+        title: "Couldn't delete read notifications",
+        error,
+        fallbackDescription: "Please try again.",
+      });
     }
   };
 

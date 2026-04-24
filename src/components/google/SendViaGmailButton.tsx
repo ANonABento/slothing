@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Mail, Loader2, CheckCircle, AlertCircle } from "lucide-react";
+import { showErrorToast } from "@/components/ui/error-toast";
+import { useToast } from "@/components/ui/toast";
 
 interface SendViaGmailButtonProps {
   to: string;
@@ -19,6 +21,7 @@ export function SendViaGmailButton({
   onSuccess,
   disabled = false,
 }: SendViaGmailButtonProps) {
+  const { addToast } = useToast();
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -60,8 +63,12 @@ export function SendViaGmailButton({
         setError(data.error || "Failed to send");
       }
     } catch (err) {
-      console.error("Send failed:", err);
       setError("Failed to send via Gmail");
+      showErrorToast(addToast, {
+        title: "Couldn't send via Gmail",
+        error: err,
+        fallbackDescription: "Please try again.",
+      });
     } finally {
       setSending(false);
     }

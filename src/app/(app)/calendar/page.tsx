@@ -39,6 +39,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { CalendarSyncButton } from "@/components/google";
+import { showErrorToast } from "@/components/ui/error-toast";
+import { useToast } from "@/components/ui/toast";
 import type { JobDescription } from "@/types";
 
 interface Reminder {
@@ -73,6 +75,7 @@ const EVENT_COLORS = {
 };
 
 export default function CalendarPage() {
+  const { addToast } = useToast();
   const [jobs, setJobs] = useState<JobDescription[]>([]);
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [loading, setLoading] = useState(true);
@@ -90,7 +93,11 @@ export default function CalendarPage() {
       setCopiedUrl(true);
       setTimeout(() => setCopiedUrl(false), 2000);
     } catch {
-      console.error("Failed to copy URL");
+      addToast({
+        type: "warning",
+        title: "Couldn't copy URL",
+        description: "Copy manually from the address bar.",
+      });
     }
   };
 
@@ -118,9 +125,15 @@ export default function CalendarPage() {
         setFeedUrl(feedData.feedUrl || "");
         setWebcalUrl(feedData.webcalUrl || "");
       })
-      .catch(console.error)
+      .catch((error) =>
+        showErrorToast(addToast, {
+          title: "Couldn't load calendar feed",
+          error,
+          fallbackDescription: "Please refresh and try again.",
+        })
+      )
       .finally(() => setLoading(false));
-  }, []);
+  }, [addToast]);
 
   const events = useMemo(() => {
     const allEvents: CalendarEvent[] = [];
@@ -269,7 +282,11 @@ export default function CalendarPage() {
       setShowCreateDialog(false);
       resetNewEvent();
     } catch (error) {
-      console.error("Create event error:", error);
+      showErrorToast(addToast, {
+        title: "Couldn't create event",
+        error,
+        fallbackDescription: "Please try again.",
+      });
     } finally {
       setCreating(false);
     }

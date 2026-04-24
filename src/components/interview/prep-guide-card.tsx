@@ -19,6 +19,8 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import type { InterviewPrepGuide, PrepChecklistItem, PrepQuestion } from "@/lib/interview/prep-guide";
+import { showErrorToast } from "@/components/ui/error-toast";
+import { useToast } from "@/components/ui/toast";
 
 interface PrepGuideCardProps {
   jobId: string;
@@ -129,6 +131,7 @@ function QuestionCard({ question, index }: { question: PrepQuestion; index: numb
 }
 
 export function PrepGuideCard({ jobId }: PrepGuideCardProps) {
+  const { addToast } = useToast();
   const [guide, setGuide] = useState<InterviewPrepGuide | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -181,7 +184,11 @@ export function PrepGuideCard({ jobId }: PrepGuideCardProps) {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     } catch (err) {
-      console.error("Download failed:", err);
+      showErrorToast(addToast, {
+        title: "Download failed",
+        error: err,
+        fallbackDescription: "Please try again.",
+      });
     } finally {
       setDownloading(false);
     }

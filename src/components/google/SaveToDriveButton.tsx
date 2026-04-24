@@ -9,6 +9,8 @@ import {
   Link,
   AlertCircle,
 } from "lucide-react";
+import { showErrorToast } from "@/components/ui/error-toast";
+import { useToast } from "@/components/ui/toast";
 
 interface SaveToDriveButtonProps {
   file: File | Blob;
@@ -25,6 +27,7 @@ export function SaveToDriveButton({
   onSuccess,
   compact = false,
 }: SaveToDriveButtonProps) {
+  const { addToast } = useToast();
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -77,8 +80,12 @@ export function SaveToDriveButton({
         setError(data.error || "Failed to save");
       }
     } catch (err) {
-      console.error("Save failed:", err);
       setError("Failed to save to Drive");
+      showErrorToast(addToast, {
+        title: "Couldn't save to Drive",
+        error: err,
+        fallbackDescription: "Please try again.",
+      });
     } finally {
       setSaving(false);
     }

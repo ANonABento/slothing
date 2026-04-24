@@ -18,6 +18,8 @@ import {
   FileImage,
   FileSpreadsheet,
 } from "lucide-react";
+import { showErrorToast } from "@/components/ui/error-toast";
+import { useToast } from "@/components/ui/toast";
 
 interface DriveFile {
   id: string;
@@ -64,6 +66,7 @@ export function DriveFilePicker({
   accept,
   trigger,
 }: DriveFilePickerProps) {
+  const { addToast } = useToast();
   const [open, setOpen] = useState(false);
   const [files, setFiles] = useState<DriveFile[]>([]);
   const [loading, setLoading] = useState(false);
@@ -91,12 +94,16 @@ export function DriveFilePicker({
 
       setFiles(filteredFiles);
     } catch (err) {
-      console.error("Failed to load files:", err);
       setError("Failed to load files from Google Drive");
+      showErrorToast(addToast, {
+        title: "Couldn't load Drive files",
+        error: err,
+        fallbackDescription: "Please try again.",
+      });
     } finally {
       setLoading(false);
     }
-  }, [folder, accept]);
+  }, [accept, addToast, folder]);
 
   useEffect(() => {
     if (open) {

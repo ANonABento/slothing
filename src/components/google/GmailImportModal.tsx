@@ -21,6 +21,8 @@ import {
   RefreshCw,
   AlertCircle,
 } from "lucide-react";
+import { showErrorToast } from "@/components/ui/error-toast";
+import { useToast } from "@/components/ui/toast";
 
 interface ParsedJobInfo {
   type:
@@ -73,6 +75,7 @@ const TYPE_COLORS: Record<string, string> = {
 };
 
 export function GmailImportModal({ onImport, trigger }: GmailImportModalProps) {
+  const { addToast } = useToast();
   const [open, setOpen] = useState(false);
   const [emails, setEmails] = useState<ParsedEmail[]>([]);
   const [loading, setLoading] = useState(false);
@@ -104,12 +107,16 @@ export function GmailImportModal({ onImport, trigger }: GmailImportModalProps) {
 
       setEmails(data.emails || []);
     } catch (err) {
-      console.error("Failed to scan emails:", err);
       setError("Failed to scan emails from Gmail");
+      showErrorToast(addToast, {
+        title: "Couldn't scan Gmail",
+        error: err,
+        fallbackDescription: "Please try again.",
+      });
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [addToast]);
 
   useEffect(() => {
     if (open) {

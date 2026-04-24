@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { FileText, Loader2, CheckCircle, AlertCircle } from "lucide-react";
+import { showErrorToast } from "@/components/ui/error-toast";
+import { useToast } from "@/components/ui/toast";
 
 interface SaveToDocsButtonProps {
   title: string;
@@ -15,6 +17,7 @@ export function SaveToDocsButton({
   content,
   onSuccess,
 }: SaveToDocsButtonProps) {
+  const { addToast } = useToast();
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -57,8 +60,12 @@ export function SaveToDocsButton({
         setError(data.error || "Failed to create document");
       }
     } catch (err) {
-      console.error("Save failed:", err);
       setError("Failed to save to Google Docs");
+      showErrorToast(addToast, {
+        title: "Couldn't save to Google Docs",
+        error: err,
+        fallbackDescription: "Please try again.",
+      });
     } finally {
       setSaving(false);
     }
