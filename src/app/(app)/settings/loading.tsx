@@ -1,4 +1,4 @@
-import { Skeleton, SkeletonCard } from "@/components/ui/skeleton";
+import { Skeleton, SkeletonCard, SkeletonIconCard } from "@/components/ui/skeleton";
 
 export default function SettingsLoading() {
   return (
@@ -17,11 +17,7 @@ export default function SettingsLoading() {
       <div className="max-w-4xl mx-auto px-6 py-8 space-y-8">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="rounded-xl border bg-card p-5 space-y-3">
-              <Skeleton className="h-10 w-10 rounded-lg" />
-              <Skeleton className="h-5 w-24" />
-              <Skeleton className="h-3 w-full" />
-            </div>
+            <SkeletonIconCard key={i} />
           ))}
         </div>
 

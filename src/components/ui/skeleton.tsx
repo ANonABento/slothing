@@ -171,6 +171,22 @@ function SkeletonTableRow({
   );
 }
 
+function SkeletonIconCard({
+  className,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement>) {
+  return (
+    <div
+      className={cn("rounded-xl border bg-card p-4 space-y-3", className)}
+      {...props}
+    >
+      <Skeleton className="h-9 w-9 rounded-lg" />
+      <Skeleton className="h-5 w-24" />
+      <Skeleton className="h-3 w-full" />
+    </div>
+  );
+}
+
 /** Skeleton matching ChunkCard layout — icon, title, badge, and preview line */
 function SkeletonChunkCard({
   className,
@@ -205,5 +221,6 @@ export {
   SkeletonJobCard,
   SkeletonInsights,
   SkeletonTableRow,
-  SkeletonChunkCard
+  SkeletonChunkCard,
+  SkeletonIconCard
 };
