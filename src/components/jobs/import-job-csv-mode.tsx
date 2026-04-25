@@ -1,9 +1,9 @@
 "use client";
 
 import type React from "react";
-import { FileSpreadsheet, Loader2, Upload } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { FileSpreadsheet, Upload } from "lucide-react";
 import { Label } from "@/components/ui/label";
+import { ImportJobActions } from "./import-job-actions";
 
 interface ImportJobCsvModeProps {
   csvContent: string;
@@ -62,23 +62,14 @@ export function ImportJobCsvMode({
         </ul>
       </div>
 
-      <div className="flex justify-end gap-3 pt-2">
-        <Button variant="outline" onClick={onCancel}>
-          Cancel
-        </Button>
-        <Button
-          onClick={onParse}
-          disabled={parsing || !csvContent.trim()}
-          className="gradient-bg text-white hover:opacity-90"
-        >
-          {parsing ? (
-            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-          ) : (
-            <FileSpreadsheet className="h-4 w-4 mr-2" />
-          )}
-          Parse CSV
-        </Button>
-      </div>
+      <ImportJobActions
+        disabled={parsing || !csvContent.trim()}
+        loading={parsing}
+        icon={FileSpreadsheet}
+        submitLabel="Parse CSV"
+        onCancel={onCancel}
+        onSubmit={onParse}
+      />
     </div>
   );
 }

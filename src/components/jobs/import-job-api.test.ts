@@ -54,7 +54,7 @@ describe("import job api helpers", () => {
   it("parses pasted job text and omits an empty URL", async () => {
     vi.mocked(fetch).mockResolvedValueOnce(jsonResponse({ preview }));
 
-    await parseJobText("job text", "");
+    await parseJobText("job text", "   ");
 
     expect(fetch).toHaveBeenCalledWith("/api/import/job", expect.objectContaining({
       body: JSON.stringify({ text: "job text", url: undefined }),
@@ -64,7 +64,7 @@ describe("import job api helpers", () => {
   it("saves a parsed job using the full description and fallback URL", async () => {
     vi.mocked(fetch).mockResolvedValueOnce(jsonResponse({ ok: true }));
 
-    await saveParsedJob(preview, "https://example.com/fallback");
+    await saveParsedJob({ ...preview, url: "   " }, " https://example.com/fallback ");
 
     expect(fetch).toHaveBeenCalledWith("/api/import/job", expect.objectContaining({
       method: "PUT",
@@ -81,6 +81,12 @@ describe("import job api helpers", () => {
         url: "https://example.com/fallback",
       }),
     }));
+  });
+
+  it("rejects malformed job preview responses", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(jsonResponse({ preview: { title: "Engineer" } }));
+
+    await expect(parseJobText("job text")).rejects.toThrow("Unexpected job preview response");
   });
 
   it("parses CSV content", async () => {

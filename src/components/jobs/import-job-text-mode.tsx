@@ -1,10 +1,10 @@
 "use client";
 
-import { Loader2, Sparkles } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Sparkles } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { ImportJobActions } from "./import-job-actions";
 
 interface ImportJobTextModeProps {
   jobUrl: string;
@@ -65,23 +65,14 @@ Requirements:
         </p>
       </div>
 
-      <div className="flex justify-end gap-3 pt-2">
-        <Button variant="outline" onClick={onCancel}>
-          Cancel
-        </Button>
-        <Button
-          onClick={onParse}
-          disabled={parsing || !jobText.trim()}
-          className="gradient-bg text-white hover:opacity-90"
-        >
-          {parsing ? (
-            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-          ) : (
-            <Sparkles className="h-4 w-4 mr-2" />
-          )}
-          Parse Job
-        </Button>
-      </div>
+      <ImportJobActions
+        disabled={parsing || !jobText.trim()}
+        loading={parsing}
+        icon={Sparkles}
+        submitLabel="Parse Job"
+        onCancel={onCancel}
+        onSubmit={onParse}
+      />
     </>
   );
 }

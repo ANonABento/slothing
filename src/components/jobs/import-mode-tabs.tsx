@@ -1,6 +1,6 @@
 "use client";
 
-import { FileSpreadsheet, FileText, Link } from "lucide-react";
+import { FileSpreadsheet, FileText, Link, type LucideIcon } from "lucide-react";
 import type { ImportMode } from "./import-job-dialog.types";
 
 interface ImportModeTabsProps {
@@ -9,7 +9,7 @@ interface ImportModeTabsProps {
 }
 
 export function ImportModeTabs({ value, onChange }: ImportModeTabsProps) {
-  const modes: Array<{ value: ImportMode; label: string; icon: typeof FileText }> = [
+  const modes: Array<{ value: ImportMode; label: string; icon: LucideIcon }> = [
     { value: "text", label: "Paste", icon: FileText },
     { value: "url", label: "URL", icon: Link },
     { value: "csv", label: "CSV", icon: FileSpreadsheet },

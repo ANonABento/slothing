@@ -17,7 +17,7 @@ export interface CSVJob {
   title: string;
   company: string;
   location: string;
-  type: string;
+  type?: string;
   remote: boolean;
   salary: string;
   description: string;

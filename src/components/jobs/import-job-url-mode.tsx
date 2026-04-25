@@ -1,9 +1,9 @@
 "use client";
 
-import { Link, Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Link } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ImportJobActions } from "./import-job-actions";
 
 interface ImportJobUrlModeProps {
   jobUrl: string;
@@ -38,23 +38,14 @@ export function ImportJobUrlMode({
         Note: Some sites may block automated fetching. If the import fails, try pasting the job content directly.
       </div>
 
-      <div className="flex justify-end gap-3 pt-2">
-        <Button variant="outline" onClick={onCancel}>
-          Cancel
-        </Button>
-        <Button
-          onClick={onFetch}
-          disabled={fetchingUrl || !jobUrl.trim()}
-          className="gradient-bg text-white hover:opacity-90"
-        >
-          {fetchingUrl ? (
-            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-          ) : (
-            <Link className="h-4 w-4 mr-2" />
-          )}
-          Fetch Job
-        </Button>
-      </div>
+      <ImportJobActions
+        disabled={fetchingUrl || !jobUrl.trim()}
+        loading={fetchingUrl}
+        icon={Link}
+        submitLabel="Fetch Job"
+        onCancel={onCancel}
+        onSubmit={onFetch}
+      />
     </div>
   );
 }
