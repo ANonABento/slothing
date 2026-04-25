@@ -4,7 +4,6 @@
  * Import contacts for networking, save recruiter contacts
  */
 
-import { google } from "googleapis";
 import { createPeopleClient } from "./client";
 
 export interface GoogleContact {

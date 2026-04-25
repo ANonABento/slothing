@@ -310,7 +310,7 @@ export interface GoogleConnectionStatus {
 ## Dependencies to Install
 
 ```bash
-npm install googleapis @googleapis/calendar @googleapis/drive
+npm install googleapis
 ```
 
 ---
