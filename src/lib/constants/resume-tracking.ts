@@ -17,9 +17,20 @@ export const trackResumeSentSchema = z.object({
 
 export type TrackResumeSentInput = z.infer<typeof trackResumeSentSchema>;
 
+export const RESUME_TRACKING_OUTCOMES = [
+  "applied",
+  "screening",
+  "interviewing",
+  "offered",
+  "rejected",
+  "withdrawn",
+] as const;
+
+export type ResumeTrackingOutcome = (typeof RESUME_TRACKING_OUTCOMES)[number];
+
 export const updateTrackingOutcomeSchema = z.object({
   id: z.string().min(1, "Tracking entry ID is required"),
-  outcome: z.enum(["applied", "screening", "interviewing", "offered", "rejected", "withdrawn"]),
+  outcome: z.enum(RESUME_TRACKING_OUTCOMES),
 });
 
 export type UpdateTrackingOutcomeInput = z.infer<typeof updateTrackingOutcomeSchema>;

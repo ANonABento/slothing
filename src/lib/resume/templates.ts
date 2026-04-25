@@ -8,11 +8,10 @@ import { TEMPLATES } from "./template-data";
 // Re-export client-safe template data
 export { TEMPLATES, getTemplate, generateTemplateCSS } from "./template-data";
 
+type TemplateExtras = Pick<AnalyzedTemplate, "charsPerLine" | "margins" | "sectionGap">;
+
 // Matches hardcoded values that were in pdf.ts before the extras-aware refactor
-export const BUILT_IN_DEFAULT_EXTRAS: Pick<
-  AnalyzedTemplate,
-  "charsPerLine" | "margins" | "sectionGap"
-> = {
+export const BUILT_IN_DEFAULT_EXTRAS: TemplateExtras = {
   charsPerLine: 90,
   margins: {
     top: "0.5in",
@@ -28,13 +27,15 @@ export function getTemplateWithCustom(
   id: string,
   userId?: string
 ): ResumeTemplate {
+  const effectiveUserId = userId ?? "default";
+
   // Check built-in templates first
   const builtIn = TEMPLATES.find((t) => t.id === id);
   if (builtIn) return builtIn;
 
   // Check custom templates
   try {
-    const custom = getCustomTemplate(id, userId || "default");
+    const custom = getCustomTemplate(id, effectiveUserId);
     if (custom) {
       return {
         id: custom.id,
@@ -53,13 +54,15 @@ export function getTemplateWithCustom(
 export function getTemplateExtrasWithCustom(
   id: string,
   userId?: string
-): Pick<AnalyzedTemplate, "charsPerLine" | "margins" | "sectionGap"> {
+): TemplateExtras {
+  const effectiveUserId = userId ?? "default";
+
   if (TEMPLATES.some((t) => t.id === id)) {
     return BUILT_IN_DEFAULT_EXTRAS;
   }
 
   try {
-    const custom = getCustomTemplate(id, userId || "default");
+    const custom = getCustomTemplate(id, effectiveUserId);
     if (custom) {
       const { charsPerLine, margins, sectionGap } = custom.analyzedStyles;
       return { charsPerLine, margins, sectionGap };

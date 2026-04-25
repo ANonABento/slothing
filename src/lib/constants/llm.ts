@@ -33,18 +33,18 @@ export const LLM_ENDPOINTS = {
   anthropic: "https://api.anthropic.com/v1/messages",
   openrouter: "https://openrouter.ai/api/v1/chat/completions",
   ollama: "http://localhost:11434",
-} as const;
+} as const satisfies Record<LLMProvider, string>;
 
-export const DEFAULT_MODELS: Record<string, string[]> = {
+export const DEFAULT_MODELS = {
   ollama: ["llama3.2", "llama3.1", "mistral", "codellama", "phi3"],
   openai: ["gpt-4o-mini", "gpt-4o", "gpt-4-turbo", "gpt-3.5-turbo"],
   anthropic: ["claude-3-haiku-20240307", "claude-3-sonnet-20240229", "claude-3-opus-20240229"],
   openrouter: ["meta-llama/llama-3.2-3b-instruct:free", "google/gemma-2-9b-it:free"],
-};
+} as const satisfies Record<LLMProvider, readonly string[]>;
 
-export const DEFAULT_MODEL_BY_PROVIDER: Record<string, string> = {
+export const DEFAULT_MODEL_BY_PROVIDER = {
   openai: "gpt-4o-mini",
   anthropic: "claude-3-haiku-20240307",
   ollama: "llama3.2",
   openrouter: "meta-llama/llama-3.2-3b-instruct:free",
-};
+} as const satisfies Record<LLMProvider, string>;
