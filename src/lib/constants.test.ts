@@ -1,10 +1,69 @@
 import { describe, it, expect } from "vitest";
+import * as constants from "./constants";
 import {
   ALLOWED_MIME_TYPES,
+  backupDataSchema,
+  compareResumesSchema,
+  createInterviewSessionSchema,
+  DEFAULT_MODEL_BY_PROVIDER,
+  DOCUMENT_TYPES,
+  EMAIL_TEMPLATE_TYPES,
   FILE_SIGNATURES,
+  INTERVIEW_CATEGORIES,
+  JOB_STATUSES,
+  LLM_PROVIDERS,
+  NOTIFICATION_ACTIONS,
+  PATHS,
+  REMINDER_TYPES,
+  STORAGE_KEYS,
+  THEMES,
+  updateProfileSchema,
   validateFileMagicBytes,
   fullExportDataSchema,
 } from "./constants";
+
+describe("constants barrel", () => {
+  it("should expose representative exports from every domain module", () => {
+    expect(PATHS.DATABASE).toContain("data/get-me-job.db");
+
+    expect(THEMES).toEqual(["light", "dark", "system"]);
+    expect(STORAGE_KEYS.ONBOARDING_COMPLETED).toBe("get_me_job_onboarding_completed");
+
+    expect(JOB_STATUSES).toContain("interviewing");
+    expect(updateProfileSchema.safeParse({ contact: { name: "Jane Doe" } }).success).toBe(true);
+
+    expect(INTERVIEW_CATEGORIES).toContain("technical");
+    expect(
+      createInterviewSessionSchema.safeParse({
+        jobId: "job-1",
+        questions: [{ question: "Tell me about a project", category: "behavioral" }],
+        mode: "voice",
+      }).success
+    ).toBe(true);
+
+    expect(DOCUMENT_TYPES).toContain("resume");
+
+    expect(LLM_PROVIDERS).toContain("openai");
+    expect(DEFAULT_MODEL_BY_PROVIDER.openai).toBe("gpt-4o-mini");
+
+    expect(EMAIL_TEMPLATE_TYPES).toContain("thank_you");
+    expect(REMINDER_TYPES).toContain("interview");
+    expect(NOTIFICATION_ACTIONS).toContain("markAllRead");
+
+    expect(compareResumesSchema.safeParse({ beforeId: "before", afterId: "after" }).success).toBe(
+      true
+    );
+    expect(backupDataSchema.safeParse({ version: "1.0", data: {} }).success).toBe(true);
+  });
+
+  it("should keep backup helper schemas private", () => {
+    expect(constants).not.toHaveProperty("backupContactSchema");
+    expect(constants).not.toHaveProperty("backupProfileSchema");
+    expect(constants).not.toHaveProperty("backupJobSchema");
+    expect(constants).not.toHaveProperty("exportCoverLetterSchema");
+    expect(constants).not.toHaveProperty("exportBankEntrySchema");
+  });
+});
 
 describe("ALLOWED_MIME_TYPES", () => {
   it("should include application/pdf", () => {
