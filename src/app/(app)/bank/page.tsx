@@ -220,8 +220,6 @@ export default function BankPage() {
       if (!uploadData.success) {
         throw new Error(uploadData.error || "Upload returned unsuccessful");
       }
-      console.log("[bank] Upload complete:", uploadData.document?.id);
-
       await handleDataRefresh({ silent: true });
 
       const count = uploadData.entriesCreated ?? 0;

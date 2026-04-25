@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useErrorToast } from "@/hooks/use-error-toast";
+import { readJsonResponse } from "@/lib/http";
 import type { JobDescription } from "@/types";
 
 interface AddJobDialogProps {
@@ -21,6 +22,10 @@ interface NewJobForm {
   company: string;
   description: string;
   url: string;
+}
+
+interface CreateJobResponse {
+  job?: JobDescription;
 }
 
 const EMPTY_FORM: NewJobForm = {
@@ -48,11 +53,10 @@ export function AddJobDialog({ open, onOpenChange, onCreated }: AddJobDialogProp
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to add job");
-      }
+      const data = await readJsonResponse<CreateJobResponse>(
+        response,
+        "Failed to add job"
+      );
 
       if (!data.job) {
         throw new Error("Failed to add job");

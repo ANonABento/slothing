@@ -6,6 +6,7 @@ import { ArrowLeft, FileDown, Mail, Plus, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SkeletonButton } from "@/components/ui/skeleton";
 import { useErrorToast } from "@/hooks/use-error-toast";
+import { readJsonResponse } from "@/lib/http";
 
 const GmailImportModal = dynamic(
   () => import("@/components/google").then((module) => module.GmailImportModal),
@@ -71,10 +72,7 @@ export function JobsHero({ jobsCount, onImportClick, onAddClick, onGmailImportSu
                       body: JSON.stringify(jobData),
                     });
 
-                    if (!response.ok) {
-                      const body = await response.json().catch(() => null);
-                      throw new Error(body?.error || "Failed to create job");
-                    }
+                    await readJsonResponse<unknown>(response, "Failed to create job");
 
                     await onGmailImportSuccess();
                   } catch (error) {

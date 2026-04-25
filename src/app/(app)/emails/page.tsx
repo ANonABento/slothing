@@ -37,6 +37,7 @@ import {
 } from "@/components/ui/select";
 import { SkeletonButton } from "@/components/ui/skeleton";
 import { useErrorToast } from "@/hooks/use-error-toast";
+import { readJsonResponse } from "@/lib/http";
 import type { EmailTemplateType, JobDescription } from "@/types";
 
 const SendViaGmailButton = dynamic(
@@ -53,6 +54,21 @@ interface EmailDraft {
   context?: Record<string, string>;
   createdAt: string;
   updatedAt: string;
+}
+
+interface JobsResponse {
+  jobs?: JobDescription[];
+}
+
+interface EmailDraftsResponse {
+  drafts?: EmailDraft[];
+}
+
+interface GeneratedEmailResponse {
+  email?: {
+    subject: string;
+    body: string;
+  };
 }
 
 const TEMPLATE_CONFIG: Record<
@@ -122,7 +138,7 @@ export default function EmailTemplatesPage() {
   const fetchJobs = useCallback(async () => {
     try {
       const res = await fetch("/api/jobs");
-      const data = await res.json();
+      const data = await readJsonResponse<JobsResponse>(res, "Failed to load jobs");
       setJobs(data.jobs || []);
     } catch (error) {
       showErrorToast(error, {
@@ -135,7 +151,10 @@ export default function EmailTemplatesPage() {
   const fetchDrafts = useCallback(async () => {
     try {
       const res = await fetch("/api/email/drafts");
-      const data = await res.json();
+      const data = await readJsonResponse<EmailDraftsResponse>(
+        res,
+        "Failed to load drafts"
+      );
       setDrafts(data.drafts || []);
     } catch (error) {
       showErrorToast(error, {
@@ -164,7 +183,7 @@ export default function EmailTemplatesPage() {
 
       if (editingDraftId) {
         // Update existing draft
-        await fetch(`/api/email/drafts/${editingDraftId}`, {
+        const response = await fetch(`/api/email/drafts/${editingDraftId}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -173,9 +192,10 @@ export default function EmailTemplatesPage() {
             context: Object.keys(context).length > 0 ? context : undefined,
           }),
         });
+        await readJsonResponse<unknown>(response, "Failed to save draft");
       } else {
         // Create new draft
-        await fetch("/api/email/drafts", {
+        const response = await fetch("/api/email/drafts", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -186,6 +206,7 @@ export default function EmailTemplatesPage() {
             context: Object.keys(context).length > 0 ? context : undefined,
           }),
         });
+        await readJsonResponse<unknown>(response, "Failed to save draft");
       }
       void fetchDrafts();
       setEditingDraftId(null);
@@ -218,7 +239,8 @@ export default function EmailTemplatesPage() {
 
   const deleteDraft = async (draftId: string) => {
     try {
-      await fetch(`/api/email/drafts/${draftId}`, { method: "DELETE" });
+      const response = await fetch(`/api/email/drafts/${draftId}`, { method: "DELETE" });
+      await readJsonResponse<unknown>(response, "Failed to delete draft");
       void fetchDrafts();
       if (editingDraftId === draftId) {
         setEditingDraftId(null);
@@ -250,7 +272,10 @@ export default function EmailTemplatesPage() {
         }),
       });
 
-      const data = await res.json();
+      const data = await readJsonResponse<GeneratedEmailResponse>(
+        res,
+        "Failed to generate email"
+      );
       if (data.email) {
         setGeneratedEmail({
           subject: data.email.subject,

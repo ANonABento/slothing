@@ -14,6 +14,7 @@ import { ErrorBoundary } from "@/components/ui/error-boundary";
 import { SkeletonJobCard } from "@/components/ui/skeleton";
 import { useErrorToast } from "@/hooks/use-error-toast";
 import type { ATSAnalysisResult } from "@/lib/ats/analyzer";
+import { readJsonResponse } from "@/lib/http";
 import type { JobDescription, JobMatch } from "@/types";
 import { filterJobs, hasActiveJobFilters, type JobRemoteFilter, type JobSortOption, type JobStatusFilter, type JobTypeFilter } from "./filter-jobs";
 
@@ -31,6 +32,22 @@ const FALLBACK_TEMPLATES: ResumeTemplate[] = [
   { id: "compact", name: "Compact", description: "Dense layout for experienced pros" },
   { id: "professional", name: "Professional", description: "Conservative for business" },
 ];
+
+interface JobsResponse {
+  jobs?: JobDescription[];
+}
+
+interface TemplatesResponse {
+  templates?: ResumeTemplate[];
+}
+
+interface AnalyzeJobResponse {
+  analysis?: JobMatch;
+}
+
+interface GenerateResumeResponse {
+  pdfUrl?: string;
+}
 
 export default function JobsPage() {
   const [jobs, setJobs] = useState<JobDescription[]>([]);
@@ -57,7 +74,7 @@ export default function JobsPage() {
   const fetchJobs = useCallback(async () => {
     try {
       const response = await fetch("/api/jobs");
-      const data = await response.json();
+      const data = await readJsonResponse<JobsResponse>(response, "Failed to load jobs");
       setJobs(data.jobs || []);
     } catch (error) {
       showErrorToast(error, {
@@ -72,7 +89,10 @@ export default function JobsPage() {
   const fetchTemplates = useCallback(async () => {
     try {
       const response = await fetch("/api/jobs/templates");
-      const data = await response.json();
+      const data = await readJsonResponse<TemplatesResponse>(
+        response,
+        "Failed to load templates"
+      );
       setTemplates(data.templates || []);
     } catch {
       setTemplates(FALLBACK_TEMPLATES);
@@ -84,7 +104,7 @@ export default function JobsPage() {
   const deleteJob = async (id: string) => {
     try {
       const response = await fetch(`/api/jobs/${id}`, { method: "DELETE" });
-      if (!response.ok) throw new Error("Failed to delete job");
+      await readJsonResponse<unknown>(response, "Failed to delete job");
       setJobs((prev) => prev.filter((job) => job.id !== id));
     } catch (error) {
       showErrorToast(error, {
@@ -101,7 +121,7 @@ export default function JobsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status }),
       });
-      if (!response.ok) throw new Error("Failed to update job status");
+      await readJsonResponse<unknown>(response, "Failed to update job status");
       setJobs((prev) => prev.map((job) => (job.id === id ? { ...job, status: status as JobDescription["status"] } : job)));
     } catch (error) {
       showErrorToast(error, {
@@ -115,9 +135,12 @@ export default function JobsPage() {
     setAnalyzing(jobId);
     try {
       const response = await fetch(`/api/jobs/${jobId}/analyze`, { method: "POST" });
-      if (!response.ok) throw new Error("Failed to analyze job");
-      const data = await response.json();
-      if (data.analysis) setAnalyses((prev) => ({ ...prev, [jobId]: data.analysis }));
+      const data = await readJsonResponse<AnalyzeJobResponse>(
+        response,
+        "Failed to analyze job"
+      );
+      const analysis = data.analysis;
+      if (analysis) setAnalyses((prev) => ({ ...prev, [jobId]: analysis }));
     } catch (error) {
       showErrorToast(error, {
         title: "Could not analyze job",
@@ -136,8 +159,10 @@ export default function JobsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ templateId: selectedTemplate[jobId] || "classic" }),
       });
-      if (!response.ok) throw new Error("Failed to generate resume");
-      const data = await response.json();
+      const data = await readJsonResponse<GenerateResumeResponse>(
+        response,
+        "Failed to generate resume"
+      );
       if (data.pdfUrl) window.open(data.pdfUrl, "_blank");
     } catch (error) {
       showErrorToast(error, {
@@ -157,8 +182,10 @@ export default function JobsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ jobId }),
       });
-      if (!response.ok) throw new Error("Failed to run ATS check");
-      const data = (await response.json()) as ATSAnalysisResult;
+      const data = await readJsonResponse<ATSAnalysisResult>(
+        response,
+        "Failed to run ATS check"
+      );
       if (data.score) setAtsResults((prev) => ({ ...prev, [jobId]: data }));
     } catch (error) {
       showErrorToast(error, {
