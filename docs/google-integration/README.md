@@ -91,9 +91,9 @@ This integration connects Get Me Job with Google Workspace services to streamlin
 |-----------|------------|---------|
 | OAuth | Clerk Social Connection | Token management, refresh |
 | API Client | `googleapis` npm | Official Google API client |
-| Calendar | `@googleapis/calendar` | Calendar operations |
-| Drive | `@googleapis/drive` | File storage |
-| Gmail | `@googleapis/gmail` | Email operations |
+| Calendar | `google.calendar()` via `src/lib/google/client.ts` | Calendar operations |
+| Drive | `google.drive()` via `src/lib/google/client.ts` | File storage |
+| Gmail | `google.gmail()` via `src/lib/google/client.ts` | Email operations |
 
 ---
 
