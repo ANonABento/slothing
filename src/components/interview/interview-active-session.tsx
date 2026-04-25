@@ -23,6 +23,7 @@ import { Progress } from "@/components/ui/progress";
 import { RecordingControls } from "@/components/interview/recording-controls";
 import { useVoiceInput } from "@/hooks/useVoiceInput";
 import { useVoiceOutput } from "@/hooks/useVoiceOutput";
+import { useErrorToast } from "@/hooks/use-error-toast";
 import { CategoryBadge } from "@/lib/interview/category-display";
 import type { JobDescription } from "@/types";
 import type { CurrentFollowUp, InterviewSession } from "@/types/interview";
@@ -60,6 +61,7 @@ export function InterviewActiveSession({
 }: InterviewActiveSessionProps) {
   const [showHint, setShowHint] = useState(false);
   const voiceAnswerSeedRef = useRef("");
+  const showErrorToast = useErrorToast();
 
   const {
     isListening,
@@ -72,7 +74,10 @@ export function InterviewActiveSession({
   } = useVoiceInput({
     continuous: true,
     onError: (error) => {
-      console.error("Voice input error:", error);
+      showErrorToast(error, {
+        title: "Could not use voice input",
+        fallbackDescription: "Please check your microphone and try again.",
+      });
     },
   });
 

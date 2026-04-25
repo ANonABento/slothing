@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { FileText, Loader2, Trash2 } from "lucide-react";
 import type { SourceDocument } from "@/lib/db/profile-bank";
+import { useErrorToast } from "@/hooks/use-error-toast";
 
 interface SourceDocumentsProps {
   refreshKey: number;
@@ -36,6 +37,7 @@ export function SourceDocuments({
   const [loading, setLoading] = useState(true);
   const [deleteTarget, setDeleteTarget] = useState<SourceDocument | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const showErrorToast = useErrorToast();
 
   const fetchDocuments = useCallback(async () => {
     try {
@@ -43,12 +45,15 @@ export function SourceDocuments({
       if (!res.ok) throw new Error("Failed to fetch");
       const data = await res.json();
       setDocuments(data.documents || []);
-    } catch {
-      console.error("Failed to fetch source documents");
+    } catch (error) {
+      showErrorToast(error, {
+        title: "Could not load source files",
+        fallbackDescription: "Please refresh the page and try again.",
+      });
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [showErrorToast]);
 
   useEffect(() => {
     fetchDocuments();
@@ -68,7 +73,10 @@ export function SourceDocuments({
       }
       onDelete?.();
     } catch (err) {
-      console.error("Delete source document error:", err);
+      showErrorToast(err, {
+        title: "Could not delete source file",
+        fallbackDescription: "Please try deleting the file again.",
+      });
     } finally {
       setDeleting(false);
       setDeleteTarget(null);

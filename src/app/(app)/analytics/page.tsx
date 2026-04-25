@@ -36,6 +36,7 @@ import {
 import { Progress } from "@/components/ui/progress";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
 import { SkeletonChart, SkeletonButton } from "@/components/ui/skeleton";
+import { useErrorToast } from "@/hooks/use-error-toast";
 
 const TrendCharts = dynamic(
   () => import("@/components/analytics/trend-charts").then((m) => m.TrendCharts),
@@ -105,6 +106,7 @@ export default function AnalyticsPage() {
   const [error, setError] = useState<string | null>(null);
   const [exportRange, setExportRange] = useState<string>("all");
   const [exporting, setExporting] = useState(false);
+  const showErrorToast = useErrorToast();
 
   const handleExport = async (format: "csv" | "json") => {
     setExporting(true);
@@ -122,7 +124,10 @@ export default function AnalyticsPage() {
       a.click();
       URL.revokeObjectURL(url);
     } catch (err) {
-      console.error("Export error:", err);
+      showErrorToast(err, {
+        title: "Could not export analytics",
+        fallbackDescription: "Please try the export again.",
+      });
     } finally {
       setExporting(false);
     }

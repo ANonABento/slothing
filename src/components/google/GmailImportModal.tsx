@@ -11,6 +11,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { useErrorToast } from "@/hooks/use-error-toast";
 import {
   Mail,
   Loader2,
@@ -78,6 +79,7 @@ export function GmailImportModal({ onImport, trigger }: GmailImportModalProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [connected, setConnected] = useState<boolean | null>(null);
+  const showErrorToast = useErrorToast();
 
   const checkConnection = useCallback(async () => {
     try {
@@ -104,12 +106,15 @@ export function GmailImportModal({ onImport, trigger }: GmailImportModalProps) {
 
       setEmails(data.emails || []);
     } catch (err) {
-      console.error("Failed to scan emails:", err);
+      showErrorToast(err, {
+        title: "Could not scan Gmail",
+        fallbackDescription: "Please check your Google connection and try again.",
+      });
       setError("Failed to scan emails from Gmail");
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [showErrorToast]);
 
   useEffect(() => {
     if (open) {

@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import { ArrowLeft, FileDown, Mail, Plus, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SkeletonButton } from "@/components/ui/skeleton";
+import { useErrorToast } from "@/hooks/use-error-toast";
 
 const GmailImportModal = dynamic(
   () => import("@/components/google").then((module) => module.GmailImportModal),
@@ -19,6 +20,8 @@ interface JobsHeroProps {
 }
 
 export function JobsHero({ jobsCount, onImportClick, onAddClick, onGmailImportSuccess }: JobsHeroProps) {
+  const showErrorToast = useErrorToast();
+
   return (
     <div className="hero-gradient border-b">
       <div className="max-w-6xl mx-auto px-6 py-12">
@@ -68,11 +71,17 @@ export function JobsHero({ jobsCount, onImportClick, onAddClick, onGmailImportSu
                       body: JSON.stringify(jobData),
                     });
 
-                    if (response.ok) {
-                      await onGmailImportSuccess();
+                    if (!response.ok) {
+                      const body = await response.json().catch(() => null);
+                      throw new Error(body?.error || "Failed to create job");
                     }
+
+                    await onGmailImportSuccess();
                   } catch (error) {
-                    console.error("Failed to create job from email:", error);
+                    showErrorToast(error, {
+                      title: "Could not import Gmail job",
+                      fallbackDescription: "Please try importing the email again.",
+                    });
                   }
                 }}
                 trigger={

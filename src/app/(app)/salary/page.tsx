@@ -23,6 +23,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useErrorToast } from "@/hooks/use-error-toast";
 import {
   Select,
   SelectContent,
@@ -132,6 +133,7 @@ export default function SalaryToolsPage() {
   const [script, setScript] = useState<NegotiationScript | null>(null);
   const [generatingScript, setGeneratingScript] = useState(false);
   const [copied, setCopied] = useState(false);
+  const showErrorToast = useErrorToast();
 
   const calculateSalaryRange = async () => {
     if (!role || !location || !yearsExperience) return;
@@ -154,7 +156,10 @@ export default function SalaryToolsPage() {
         setSalaryRange(data.range);
       }
     } catch (error) {
-      console.error("Failed to calculate salary range:", error);
+      showErrorToast(error, {
+        title: "Could not calculate salary range",
+        fallbackDescription: "Please check the inputs and try again.",
+      });
     } finally {
       setCalculatingRange(false);
     }
@@ -203,7 +208,10 @@ export default function SalaryToolsPage() {
         setComparison(data.comparison);
       }
     } catch (error) {
-      console.error("Failed to compare offers:", error);
+      showErrorToast(error, {
+        title: "Could not compare offers",
+        fallbackDescription: "Please check the offer details and try again.",
+      });
     }
   };
 
@@ -230,7 +238,10 @@ export default function SalaryToolsPage() {
         setScript(data.script);
       }
     } catch (error) {
-      console.error("Failed to generate script:", error);
+      showErrorToast(error, {
+        title: "Could not generate negotiation script",
+        fallbackDescription: "Please adjust the inputs and try again.",
+      });
     } finally {
       setGeneratingScript(false);
     }

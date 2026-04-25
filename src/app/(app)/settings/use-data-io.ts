@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type ChangeEvent } from "react";
+import { useErrorToast } from "@/hooks/use-error-toast";
 
 export type ExportType = "profile" | "jobs-json" | "jobs-csv" | "backup" | "full-export";
 export type DataImportType = "jobs" | "backup";
@@ -103,6 +104,7 @@ export function useDataIO() {
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
   const [showImportPreview, setShowImportPreview] = useState<ImportPreview | null>(null);
+  const showErrorToast = useErrorToast();
 
   const exportData = async (type: ExportType) => {
     setExporting(type);
@@ -125,7 +127,10 @@ export function useDataIO() {
       anchor.remove();
       window.URL.revokeObjectURL(downloadUrl);
     } catch (error) {
-      console.error("Export error:", error);
+      showErrorToast(error, {
+        title: "Could not export data",
+        fallbackDescription: "Please try the export again.",
+      });
       setImportResult({ success: false, message: "Export failed" });
     } finally {
       setExporting(null);

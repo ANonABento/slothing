@@ -16,6 +16,7 @@ import { ErrorBoundary } from "@/components/ui/error-boundary";
 import { SkeletonCard, SkeletonButton } from "@/components/ui/skeleton";
 import { AddEntryDialog } from "@/components/bank/add-entry-dialog";
 import { useToast } from "@/components/ui/toast";
+import { useErrorToast } from "@/hooks/use-error-toast";
 import { uploadSuccessMessage } from "./utils";
 
 const DriveFilePicker = dynamic(
@@ -44,6 +45,7 @@ export default function BankPage() {
   const [uploading, setUploading] = useState(false);
   const [driveImporting, setDriveImporting] = useState(false);
   const { addToast } = useToast();
+  const showErrorToast = useErrorToast();
 
   // Register page-specific keyboard shortcuts
   useRegisterShortcuts("bank", useMemo(() => [
@@ -163,7 +165,10 @@ export default function BankPage() {
         prev.map((e) => (e.id === id ? { ...e, content } : e))
       );
     } catch (err) {
-      console.error("Update error:", err);
+      showErrorToast(err, {
+        title: "Could not update entry",
+        fallbackDescription: "Please try saving the entry again.",
+      });
     }
   }
 
@@ -177,7 +182,10 @@ export default function BankPage() {
       if (!res.ok) throw new Error("Create failed");
       handleDataRefresh();
     } catch (err) {
-      console.error("Create error:", err);
+      showErrorToast(err, {
+        title: "Could not create entry",
+        fallbackDescription: "Please try adding the entry again.",
+      });
     }
   }
 
@@ -188,7 +196,10 @@ export default function BankPage() {
       setEntries((prev) => prev.filter((e) => e.id !== id));
       setAllEntries((prev) => prev.filter((e) => e.id !== id));
     } catch (err) {
-      console.error("Delete error:", err);
+      showErrorToast(err, {
+        title: "Could not delete entry",
+        fallbackDescription: "Please try deleting the entry again.",
+      });
     }
   }
 
@@ -223,8 +234,12 @@ export default function BankPage() {
         entriesListRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
       });
     } catch (err) {
-      console.error("[bank] Upload error:", err);
-      setError(getErrorMessage(err));
+      const message = getErrorMessage(err);
+      setError(message);
+      showErrorToast(err, {
+        title: "Could not upload document",
+        fallbackDescription: "Please check the file and try again.",
+      });
     } finally {
       setUploading(false);
     }
@@ -246,6 +261,10 @@ export default function BankPage() {
       await handleFileUpload(localFile);
     } catch (err) {
       setError(getErrorMessage(err));
+      showErrorToast(err, {
+        title: "Could not import Drive file",
+        fallbackDescription: "Please try selecting the file again.",
+      });
     } finally {
       setDriveImporting(false);
     }

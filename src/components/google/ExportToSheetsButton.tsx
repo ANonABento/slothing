@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Table, Loader2, CheckCircle, AlertCircle } from "lucide-react";
+import { useErrorToast } from "@/hooks/use-error-toast";
 
 interface ExportToSheetsButtonProps {
   title: string;
@@ -24,6 +25,7 @@ export function ExportToSheetsButton({
   const [exported, setExported] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [connected, setConnected] = useState<boolean | null>(null);
+  const showErrorToast = useErrorToast();
 
   useEffect(() => {
     checkConnection();
@@ -66,7 +68,10 @@ export function ExportToSheetsButton({
         setError(result.error || "Failed to create spreadsheet");
       }
     } catch (err) {
-      console.error("Export failed:", err);
+      showErrorToast(err, {
+        title: "Could not export to Sheets",
+        fallbackDescription: "Please check your Google connection and try again.",
+      });
       setError("Failed to export to Google Sheets");
     } finally {
       setExporting(false);

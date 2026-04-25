@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { useClerk } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
+import { useErrorToast } from "@/hooks/use-error-toast";
 import { Loader2, CheckCircle, AlertCircle } from "lucide-react";
 
 interface ConnectionStatus {
@@ -26,6 +27,7 @@ function GoogleConnectButtonWithClerk({
   const [status, setStatus] = useState<ConnectionStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const showErrorToast = useErrorToast();
 
   const checkConnection = useCallback(async () => {
     try {
@@ -38,13 +40,16 @@ function GoogleConnectButtonWithClerk({
       setStatus(data);
       onConnectionChange?.(data.connected);
     } catch (err) {
-      console.error("Failed to check Google connection:", err);
+      showErrorToast(err, {
+        title: "Could not check Google connection",
+        fallbackDescription: "Please try checking the connection again.",
+      });
       setError("Failed to check connection");
       setStatus({ connected: false });
     } finally {
       setLoading(false);
     }
-  }, [onConnectionChange]);
+  }, [onConnectionChange, showErrorToast]);
 
   useEffect(() => {
     checkConnection();

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { FileText, Loader2, CheckCircle, AlertCircle } from "lucide-react";
+import { useErrorToast } from "@/hooks/use-error-toast";
 
 interface SaveToDocsButtonProps {
   title: string;
@@ -19,6 +20,7 @@ export function SaveToDocsButton({
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [connected, setConnected] = useState<boolean | null>(null);
+  const showErrorToast = useErrorToast();
 
   useEffect(() => {
     checkConnection();
@@ -57,7 +59,10 @@ export function SaveToDocsButton({
         setError(data.error || "Failed to create document");
       }
     } catch (err) {
-      console.error("Save failed:", err);
+      showErrorToast(err, {
+        title: "Could not save to Docs",
+        fallbackDescription: "Please check your Google connection and try again.",
+      });
       setError("Failed to save to Google Docs");
     } finally {
       setSaving(false);

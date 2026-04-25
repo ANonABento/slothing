@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { useErrorToast } from "@/hooks/use-error-toast";
 import type { JobDescription } from "@/types";
 
 interface AddJobDialogProps {
@@ -32,6 +33,7 @@ const EMPTY_FORM: NewJobForm = {
 export function AddJobDialog({ open, onOpenChange, onCreated }: AddJobDialogProps) {
   const [form, setForm] = useState<NewJobForm>(EMPTY_FORM);
   const [addingJob, setAddingJob] = useState(false);
+  const showErrorToast = useErrorToast();
 
   const handleSubmit = async () => {
     if (!form.title || !form.company || !form.description) {
@@ -48,13 +50,22 @@ export function AddJobDialog({ open, onOpenChange, onCreated }: AddJobDialogProp
       });
       const data = await response.json();
 
-      if (data.job) {
-        setForm(EMPTY_FORM);
-        onCreated(data.job);
-        onOpenChange(false);
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to add job");
       }
+
+      if (!data.job) {
+        throw new Error("Failed to add job");
+      }
+
+      setForm(EMPTY_FORM);
+      onCreated(data.job);
+      onOpenChange(false);
     } catch (error) {
-      console.error("Failed to add job:", error);
+      showErrorToast(error, {
+        title: "Could not add job",
+        fallbackDescription: "Please check the job details and try again.",
+      });
     } finally {
       setAddingJob(false);
     }

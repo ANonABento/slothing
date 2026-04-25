@@ -8,6 +8,7 @@ import {
   type Dispatch,
   type SetStateAction,
 } from "react";
+import { useErrorToast } from "@/hooks/use-error-toast";
 import type { InterviewDifficulty } from "@/lib/constants";
 import type { JobDescription } from "@/types";
 import type {
@@ -87,6 +88,7 @@ export function useInterviewSession(): UseInterviewSessionReturn {
   const [submitting, setSubmitting] = useState(false);
   const [generating, setGenerating] = useState(false);
   const activeRequestRef = useRef(0);
+  const showErrorToast = useErrorToast();
 
   const invalidatePendingRequests = useCallback(() => {
     activeRequestRef.current += 1;
@@ -102,11 +104,14 @@ export function useInterviewSession(): UseInterviewSessionReturn {
       );
       setJobs(data.jobs || []);
     } catch (error) {
-      console.error("Failed to fetch jobs:", error);
+      showErrorToast(error, {
+        title: "Could not load interview jobs",
+        fallbackDescription: "Please refresh the page and try again.",
+      });
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [showErrorToast]);
 
   const fetchPastSessions = useCallback(async () => {
     try {
@@ -117,9 +122,12 @@ export function useInterviewSession(): UseInterviewSessionReturn {
       );
       setPastSessions(data.sessions || []);
     } catch (error) {
-      console.error("Failed to fetch past sessions:", error);
+      showErrorToast(error, {
+        title: "Could not load interview sessions",
+        fallbackDescription: "Please refresh the page and try again.",
+      });
     }
-  }, []);
+  }, [showErrorToast]);
 
   useEffect(() => {
     void fetchJobs();
@@ -140,10 +148,13 @@ export function useInterviewSession(): UseInterviewSessionReturn {
         );
         await fetchPastSessions();
       } catch (error) {
-        console.error("Failed to complete session:", error);
+        showErrorToast(error, {
+          title: "Could not complete interview",
+          fallbackDescription: "Please try ending the interview again.",
+        });
       }
     },
-    [fetchPastSessions]
+    [fetchPastSessions, showErrorToast]
   );
 
   const deleteSession = useCallback(
@@ -158,10 +169,13 @@ export function useInterviewSession(): UseInterviewSessionReturn {
         );
         await fetchPastSessions();
       } catch (error) {
-        console.error("Failed to delete session:", error);
+        showErrorToast(error, {
+          title: "Could not delete interview",
+          fallbackDescription: "Please try deleting the interview again.",
+        });
       }
     },
-    [fetchPastSessions]
+    [fetchPastSessions, showErrorToast]
   );
 
   const resumeSession = useCallback(
@@ -257,14 +271,17 @@ export function useInterviewSession(): UseInterviewSessionReturn {
           mode,
         });
       } catch (error) {
-        console.error("Failed to start interview:", error);
+        showErrorToast(error, {
+          title: "Could not start interview",
+          fallbackDescription: "Please try starting the interview again.",
+        });
       } finally {
         if (activeRequestRef.current === requestId) {
           setGenerating(false);
         }
       }
     },
-    [invalidatePendingRequests]
+    [invalidatePendingRequests, showErrorToast]
   );
 
   const submitAnswer = useCallback(async () => {
@@ -332,11 +349,14 @@ export function useInterviewSession(): UseInterviewSessionReturn {
         await completeSession(completedSessionId);
       }
     } catch (error) {
-      console.error("Failed to submit answer:", error);
+      showErrorToast(error, {
+        title: "Could not submit answer",
+        fallbackDescription: "Please try submitting the answer again.",
+      });
     } finally {
       setSubmitting(false);
     }
-  }, [completeSession, currentAnswer, session]);
+  }, [completeSession, currentAnswer, session, showErrorToast]);
 
   const resetSession = useCallback(() => {
     invalidatePendingRequests();
