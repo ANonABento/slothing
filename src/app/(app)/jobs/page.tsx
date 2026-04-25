@@ -14,19 +14,11 @@ import { ErrorBoundary } from "@/components/ui/error-boundary";
 import { SkeletonJobCard } from "@/components/ui/skeleton";
 import type { ATSAnalysisResult } from "@/lib/ats/analyzer";
 import type { JobDescription, JobMatch } from "@/types";
-import {
-  filterJobs,
-  hasActiveJobFilters,
-  type JobRemoteFilter,
-  type JobSortOption,
-  type JobStatusFilter,
-  type JobTypeFilter,
-} from "./filter-jobs";
+import { filterJobs, hasActiveJobFilters, type JobRemoteFilter, type JobSortOption, type JobStatusFilter, type JobTypeFilter } from "./filter-jobs";
 
-const ATSScoreBreakdown = dynamic(
-  () => import("@/components/ats/score-breakdown").then((module) => module.ATSScoreBreakdown),
-  { loading: () => <div className="h-32 animate-pulse rounded-lg bg-muted" /> }
-);
+const ATSScoreBreakdown = dynamic(() => import("@/components/ats/score-breakdown").then((module) => module.ATSScoreBreakdown), {
+  loading: () => <div className="h-32 animate-pulse rounded-lg bg-muted" />,
+});
 
 const FALLBACK_TEMPLATES: ResumeTemplate[] = [
   { id: "classic", name: "Classic", description: "Traditional professional format" },
@@ -60,10 +52,7 @@ export default function JobsPage() {
   const [remoteFilter, setRemoteFilter] = useState<JobRemoteFilter>("all");
   const [sortBy, setSortBy] = useState<JobSortOption>("newest");
 
-  useEffect(() => {
-    void fetchJobs();
-    void fetchTemplates();
-  }, []);
+  useEffect(() => { void fetchJobs(); void fetchTemplates(); }, []);
 
   const fetchJobs = async () => {
     try {
@@ -90,11 +79,7 @@ export default function JobsPage() {
   const deleteJob = async (id: string) => {
     try {
       const response = await fetch(`/api/jobs/${id}`, { method: "DELETE" });
-
-      if (!response.ok) {
-        throw new Error("Failed to delete job");
-      }
-
+      if (!response.ok) throw new Error("Failed to delete job");
       setJobs((prev) => prev.filter((job) => job.id !== id));
     } catch (error) {
       console.error("Failed to delete job:", error);
@@ -108,7 +93,6 @@ export default function JobsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status }),
       });
-
       if (response.ok) {
         setJobs((prev) => prev.map((job) => (job.id === id ? { ...job, status: status as JobDescription["status"] } : job)));
       }
@@ -122,10 +106,7 @@ export default function JobsPage() {
     try {
       const response = await fetch(`/api/jobs/${jobId}/analyze`, { method: "POST" });
       const data = await response.json();
-
-      if (data.analysis) {
-        setAnalyses((prev) => ({ ...prev, [jobId]: data.analysis }));
-      }
+      if (data.analysis) setAnalyses((prev) => ({ ...prev, [jobId]: data.analysis }));
     } catch (error) {
       console.error("Failed to analyze job:", error);
     } finally {
@@ -142,10 +123,7 @@ export default function JobsPage() {
         body: JSON.stringify({ templateId: selectedTemplate[jobId] || "classic" }),
       });
       const data = await response.json();
-
-      if (data.pdfUrl) {
-        window.open(data.pdfUrl, "_blank");
-      }
+      if (data.pdfUrl) window.open(data.pdfUrl, "_blank");
     } catch (error) {
       console.error("Failed to generate resume:", error);
     } finally {
@@ -162,10 +140,7 @@ export default function JobsPage() {
         body: JSON.stringify({ jobId }),
       });
       const data = (await response.json()) as ATSAnalysisResult;
-
-      if (data.score) {
-        setAtsResults((prev) => ({ ...prev, [jobId]: data }));
-      }
+      if (data.score) setAtsResults((prev) => ({ ...prev, [jobId]: data }));
     } catch (error) {
       console.error("Failed to run ATS check:", error);
     } finally {
@@ -173,48 +148,21 @@ export default function JobsPage() {
     }
   };
 
-  const filteredJobs = filterJobs(jobs, {
-    searchQuery,
-    statusFilter,
-    typeFilter,
-    remoteFilter,
-    sortBy,
-  });
+  const filteredJobs = filterJobs(jobs, { searchQuery, statusFilter, typeFilter, remoteFilter, sortBy });
   const hasActiveFilters = hasActiveJobFilters({ searchQuery, statusFilter, typeFilter, remoteFilter });
-
-  const clearFilters = () => {
-    setSearchQuery("");
-    setStatusFilter("all");
-    setTypeFilter("all");
-    setRemoteFilter("all");
-  };
+  const clearFilters = () => { setSearchQuery(""); setStatusFilter("all"); setTypeFilter("all"); setRemoteFilter("all"); };
 
   return (
     <ErrorBoundary>
       <div className="min-h-screen">
-        <JobsHero
-          jobsCount={jobs.length}
-          onImportClick={() => setShowImportDialog(true)}
-          onAddClick={() => setShowAddDialog(true)}
-          onGmailImportSuccess={fetchJobs}
-        />
+        <JobsHero jobsCount={jobs.length} onImportClick={() => setShowImportDialog(true)} onAddClick={() => setShowAddDialog(true)} onGmailImportSuccess={fetchJobs} />
 
         {jobs.length > 0 && (
           <JobsToolbar
-            searchQuery={searchQuery}
-            statusFilter={statusFilter}
-            typeFilter={typeFilter}
-            remoteFilter={remoteFilter}
-            sortBy={sortBy}
-            hasActiveFilters={hasActiveFilters}
-            filteredCount={filteredJobs.length}
-            totalCount={jobs.length}
-            onSearchChange={setSearchQuery}
-            onStatusChange={setStatusFilter}
-            onTypeChange={setTypeFilter}
-            onRemoteChange={setRemoteFilter}
-            onSortChange={setSortBy}
-            onClearFilters={clearFilters}
+            searchQuery={searchQuery} statusFilter={statusFilter} typeFilter={typeFilter} remoteFilter={remoteFilter} sortBy={sortBy}
+            hasActiveFilters={hasActiveFilters} filteredCount={filteredJobs.length} totalCount={jobs.length}
+            onSearchChange={setSearchQuery} onStatusChange={setStatusFilter} onTypeChange={setTypeFilter}
+            onRemoteChange={setRemoteFilter} onSortChange={setSortBy} onClearFilters={clearFilters}
           />
         )}
 
@@ -233,25 +181,14 @@ export default function JobsPage() {
             <div className="grid gap-6 lg:grid-cols-2">
               {filteredJobs.map((job) => (
                 <JobCard
-                  key={job.id}
-                  job={job}
-                  analysis={analyses[job.id]}
-                  analyzing={analyzing === job.id}
-                  generating={generating === job.id}
-                  templates={templates}
-                  selectedTemplate={selectedTemplate[job.id] || "classic"}
-                  expanded={expandedDescription === job.id}
-                  atsResult={atsResults[job.id]}
-                  atsAnalyzing={atsAnalyzing === job.id}
+                  key={job.id} job={job} analysis={analyses[job.id]} analyzing={analyzing === job.id} generating={generating === job.id}
+                  templates={templates} selectedTemplate={selectedTemplate[job.id] || "classic"} expanded={expandedDescription === job.id}
+                  atsResult={atsResults[job.id]} atsAnalyzing={atsAnalyzing === job.id}
                   onSelectTemplate={(id) => setSelectedTemplate((prev) => ({ ...prev, [job.id]: id }))}
-                  onAnalyze={() => void analyzeJob(job.id)}
-                  onGenerate={() => void generateResume(job.id)}
-                  onDelete={() => void deleteJob(job.id)}
+                  onAnalyze={() => void analyzeJob(job.id)} onGenerate={() => void generateResume(job.id)} onDelete={() => void deleteJob(job.id)}
                   onStatusChange={(status) => void updateJobStatus(job.id, status)}
                   onToggleExpand={() => setExpandedDescription((prev) => (prev === job.id ? null : job.id))}
-                  onAtsCheck={() => void runAtsCheck(job.id)}
-                  onAtsDialogOpen={() => setAtsDialogJob(job.id)}
-                  onCoverLetter={() => setCoverLetterJob(job)}
+                  onAtsCheck={() => void runAtsCheck(job.id)} onAtsDialogOpen={() => setAtsDialogJob(job.id)} onCoverLetter={() => setCoverLetterJob(job)}
                 />
               ))}
             </div>
@@ -259,30 +196,18 @@ export default function JobsPage() {
         </div>
 
         {atsDialogJob && atsResults[atsDialogJob] && (
-          <ATSScoreBreakdown
-            result={atsResults[atsDialogJob]}
-            open={!!atsDialogJob}
-            onOpenChange={(open) => !open && setAtsDialogJob(null)}
-          />
+          <ATSScoreBreakdown result={atsResults[atsDialogJob]} open={!!atsDialogJob} onOpenChange={(open) => !open && setAtsDialogJob(null)} />
         )}
 
         {coverLetterJob && (
           <CoverLetterDialog
-            open={!!coverLetterJob}
-            onOpenChange={(open) => !open && setCoverLetterJob(null)}
-            jobId={coverLetterJob.id}
-            jobTitle={coverLetterJob.title}
-            company={coverLetterJob.company}
+            open={!!coverLetterJob} onOpenChange={(open) => !open && setCoverLetterJob(null)}
+            jobId={coverLetterJob.id} jobTitle={coverLetterJob.title} company={coverLetterJob.company}
           />
         )}
 
         <ImportJobDialog open={showImportDialog} onOpenChange={setShowImportDialog} onJobImported={fetchJobs} />
-
-        <AddJobDialog
-          open={showAddDialog}
-          onOpenChange={setShowAddDialog}
-          onCreated={(job) => setJobs((prev) => [job, ...prev])}
-        />
+        <AddJobDialog open={showAddDialog} onOpenChange={setShowAddDialog} onCreated={(job) => setJobs((prev) => [job, ...prev])} />
       </div>
     </ErrorBoundary>
   );
