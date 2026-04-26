@@ -1,4 +1,10 @@
-import { pgTable, text, timestamp, integer, real, boolean, index, uniqueIndex } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, integer, real, boolean, index, uniqueIndex, customType } from 'drizzle-orm/pg-core';
+
+const bytea = customType<{ data: Buffer; driverData: Buffer }>({
+  dataType() {
+    return 'bytea';
+  },
+});
 
 // Settings table (global, no userId)
 export const settings = pgTable('settings', {
@@ -199,7 +205,9 @@ export const companyResearch = pgTable('company_research', {
   recentNews: text('recent_news'),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
-});
+}, (table) => [
+  uniqueIndex('idx_company_research_user_company').on(table.userId, table.companyName),
+]);
 
 // Cover letters table
 export const coverLetters = pgTable('cover_letters', {
@@ -366,6 +374,24 @@ export const chunks = pgTable('chunks', {
   uniqueIndex('idx_chunks_user_hash').on(table.userId, table.hash),
 ]);
 
+// Tailored resume knowledge chunks with optional embeddings
+export const knowledgeChunks = pgTable('knowledge_chunks', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').notNull().default('default'),
+  documentId: text('document_id').notNull(),
+  sectionType: text('section_type').notNull(),
+  content: text('content').notNull(),
+  contentHash: text('content_hash').notNull(),
+  embedding: bytea('embedding'),
+  metadataJson: text('metadata_json').default('{}'),
+  createdAt: timestamp('created_at').defaultNow(),
+}, (table) => [
+  index('idx_knowledge_chunks_user').on(table.userId),
+  index('idx_knowledge_chunks_document').on(table.documentId),
+  uniqueIndex('idx_knowledge_chunks_user_hash').on(table.userId, table.contentHash),
+  index('idx_knowledge_chunks_section').on(table.userId, table.sectionType),
+]);
+
 // Extension session tokens for API authentication
 export const extensionSessions = pgTable('extension_sessions', {
   id: text('id').primaryKey(),
@@ -504,6 +530,9 @@ export type NewProfileVersion = typeof profileVersions.$inferInsert;
 
 export type Chunk = typeof chunks.$inferSelect;
 export type NewChunk = typeof chunks.$inferInsert;
+
+export type KnowledgeChunk = typeof knowledgeChunks.$inferSelect;
+export type NewKnowledgeChunk = typeof knowledgeChunks.$inferInsert;
 
 export type ExtensionSession = typeof extensionSessions.$inferSelect;
 export type NewExtensionSession = typeof extensionSessions.$inferInsert;
