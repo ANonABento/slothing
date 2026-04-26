@@ -212,7 +212,21 @@ export function recordJobStatusChange(
     WHERE EXISTS (SELECT 1 FROM jobs WHERE id = ? AND user_id = ?)
   `);
 
-  stmt.run(id, userId, jobId, fromStatus, toStatus, now, notes || null, jobId, userId);
+  const result = stmt.run(
+    id,
+    userId,
+    jobId,
+    fromStatus,
+    toStatus,
+    now,
+    notes || null,
+    jobId,
+    userId
+  );
+
+  if (result.changes === 0) {
+    throw new Error("Job not found");
+  }
 
   return {
     id,
@@ -304,11 +318,11 @@ export function getAverageTimeInStatus(userId: string = "default"): Record<strin
     SELECT jsh.job_id, jsh.from_status, jsh.to_status, jsh.changed_at
     FROM job_status_history jsh
     INNER JOIN jobs j ON j.id = jsh.job_id
-    WHERE j.user_id = ?
+    WHERE j.user_id = ? AND jsh.user_id = ?
     ORDER BY jsh.job_id, jsh.changed_at ASC
   `);
 
-  const rows = stmt.all(userId) as Array<{
+  const rows = stmt.all(userId, userId) as Array<{
     job_id: string;
     from_status: string | null;
     to_status: string;
