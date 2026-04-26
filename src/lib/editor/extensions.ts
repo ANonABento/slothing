@@ -1,7 +1,6 @@
 import {
   Node,
   mergeAttributes,
-  type CommandProps,
 } from "@tiptap/react";
 import Placeholder from "@tiptap/extension-placeholder";
 import TextAlign from "@tiptap/extension-text-align";
@@ -283,7 +282,3 @@ export const resumeEditorExtensions = [
   ResumeEntry,
   CoverLetterBlock,
 ];
-
-export function focusEditor({ commands }: CommandProps): boolean {
-  return commands.focus();
-}

@@ -9,6 +9,33 @@ function selector(rootSelector: string, childSelector: string): string {
   return childSelector ? `${rootSelector} ${childSelector}` : rootSelector;
 }
 
+function bulletListStyles(
+  styles: TemplateStyles,
+  rootSelector: string,
+  markerListSelector = "ul"
+): string {
+  const listStyle = styles.bulletStyle === "disc" ? "" : "list-style-type: none;";
+  const markerSelector = selector(rootSelector, `${markerListSelector} li::before`);
+  const markerStyle =
+    styles.bulletStyle === "arrow"
+      ? `${markerSelector} { content: "\\2192 "; color: ${styles.accentColor}; }`
+      : styles.bulletStyle === "dash"
+      ? `${markerSelector} { content: "\\2013 "; }`
+      : "";
+
+  return `
+    ${selector(rootSelector, "ul")} {
+      margin-left: 16px;
+      margin-top: 4px;
+      ${listStyle}
+    }
+    ${selector(rootSelector, "li")} {
+      margin-bottom: 2px;
+    }
+    ${markerStyle}
+  `;
+}
+
 function singleColumnStyles(
   styles: TemplateStyles,
   rootSelector: string,
@@ -25,9 +52,6 @@ function singleColumnStyles(
     styles.sectionDivider === "line"
       ? `border-bottom: 1.5px solid ${styles.accentColor};`
       : "";
-
-  const bulletListStyle =
-    styles.bulletStyle === "disc" ? "" : "list-style-type: none;";
 
   return `
     ${rootSelector}, ${rootSelector} * {
@@ -99,24 +123,7 @@ function singleColumnStyles(
       font-size: 10pt;
       color: #666;
     }
-    ${selector(rootSelector, "ul")} {
-      margin-left: 16px;
-      margin-top: 4px;
-      ${bulletListStyle}
-    }
-    ${selector(rootSelector, "li")} {
-      margin-bottom: 2px;
-    }
-    ${
-      styles.bulletStyle === "arrow"
-        ? `${selector(rootSelector, "li::before")} { content: '→ '; color: ${styles.accentColor}; }`
-        : ""
-    }
-    ${
-      styles.bulletStyle === "dash"
-        ? `${selector(rootSelector, "li::before")} { content: '– '; }`
-        : ""
-    }
+    ${bulletListStyles(styles, rootSelector)}
     ${selector(rootSelector, ".skills")} {
       display: flex;
       flex-wrap: wrap;
@@ -237,13 +244,7 @@ function twoColumnStyles(
       font-size: 10pt;
       color: #666;
     }
-    ${selector(rootSelector, "ul")} {
-      margin-left: 16px;
-      margin-top: 4px;
-    }
-    ${selector(rootSelector, "li")} {
-      margin-bottom: 2px;
-    }
+    ${bulletListStyles(styles, rootSelector, "ul:not(.skills-list)")}
     ${selector(rootSelector, ".skills-list")} {
       list-style: none;
       margin-left: 0;

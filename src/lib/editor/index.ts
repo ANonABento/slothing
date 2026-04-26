@@ -3,7 +3,6 @@ export {
   ContactInfoNode,
   ResumeEntry,
   ResumeSection,
-  focusEditor,
   resumeEditorExtensions,
 } from "./extensions";
 export {

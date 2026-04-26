@@ -22,4 +22,17 @@ describe("resume editor styles", () => {
     expect(css).toContain("@media print");
     expect(css).toContain("print-color-adjust: exact");
   });
+
+  it("applies custom bullet markers to two-column body lists only", () => {
+    const template = TEMPLATES.find((item) => item.id === "two-column")!;
+    const css = getResumeDocumentStyles({
+      ...template.styles,
+      bulletStyle: "arrow",
+    });
+
+    expect(css).toContain("list-style-type: none");
+    expect(css).toContain("body ul:not(.skills-list) li::before");
+    expect(css).toContain('content: "\\2192 "');
+    expect(css).not.toContain("body .skills-list li::before");
+  });
 });

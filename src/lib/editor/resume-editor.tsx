@@ -28,7 +28,7 @@ export function ResumeEditor({
     editable,
     immediatelyRender: false,
     onUpdate: ({ editor: currentEditor }) => {
-      onUpdate?.(currentEditor.getJSON() as TipTapJSONContent);
+      onUpdate?.(currentEditor.getJSON());
     },
   });
   useEffect(() => {
