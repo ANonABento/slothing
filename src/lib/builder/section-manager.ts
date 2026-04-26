@@ -11,6 +11,15 @@ export const BUILDER_PANELS: readonly BuilderPanel[] = ["edit", "preview"];
 
 export const DEFAULT_BUILDER_PANEL: BuilderPanel = "edit";
 
+export const SECTION_LABELS: Record<BankCategory, string> = {
+  experience: "Experience",
+  education: "Education",
+  skill: "Skills",
+  project: "Projects",
+  achievement: "Achievements",
+  certification: "Certifications",
+};
+
 // Uses `block` (not `flex`) so the child panel fills width without reflowing as a row flex item.
 export function getMobilePanelClasses(
   activeView: BuilderPanel,

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { BankEntry } from "@/types";
 import {
   createEditableResumeDocument,
+  editableDocumentToResume,
   reorderEditableDocumentSections,
   updateEditableEntryBullet,
   updateEditableEntryField,
@@ -103,6 +104,99 @@ describe("createEditableResumeDocument", () => {
 
     expect(rebuilt.sections[0].entries[0].heading).toBe("Staff Engineer");
     expect(rebuilt.sections[1].entries[0].heading).toBe("TypeScript");
+  });
+});
+
+describe("editableDocumentToResume", () => {
+  it("exports edited document text instead of original bank text", () => {
+    const document = createEditableResumeDocument(entries, [
+      "experience",
+      "skill",
+    ]);
+    const edited = updateEditableEntryField(
+      updateEditableEntryField(
+        updateEditableEntryBullet(
+          document,
+          "experience",
+          "exp-1",
+          0,
+          "Led work"
+        ),
+        "experience",
+        "exp-1",
+        "heading",
+        "Staff Engineer"
+      ),
+      "skill",
+      "skill-1",
+      "heading",
+      "React"
+    );
+
+    const resume = editableDocumentToResume(edited, { name: "Ada" });
+
+    expect(resume.contact.name).toBe("Ada");
+    expect(resume.experiences[0]).toMatchObject({
+      title: "Staff Engineer",
+      company: "Acme",
+      dates: "2020 - Present",
+      highlights: ["Led work"],
+    });
+    expect(resume.skills).toEqual(["React"]);
+  });
+
+  it("maps education subtitles, achievements, and certifications for export", () => {
+    const document = createEditableResumeDocument(
+      [
+        {
+          id: "edu-1",
+          userId: "user-1",
+          category: "education",
+          content: {
+            institution: "State University",
+            degree: "BS",
+            field: "Computer Science",
+            endDate: "2018",
+          },
+          confidenceScore: 1,
+          createdAt: "2026-01-01",
+        },
+        {
+          id: "ach-1",
+          userId: "user-1",
+          category: "achievement",
+          content: {
+            title: "Award",
+            description: "Won regional award",
+          },
+          confidenceScore: 1,
+          createdAt: "2026-01-01",
+        },
+        {
+          id: "cert-1",
+          userId: "user-1",
+          category: "certification",
+          content: {
+            name: "AWS Certified Developer",
+            issuer: "Amazon",
+          },
+          confidenceScore: 1,
+          createdAt: "2026-01-01",
+        },
+      ],
+      ["education", "achievement", "certification"]
+    );
+
+    const resume = editableDocumentToResume(document);
+
+    expect(resume.education[0]).toEqual({
+      institution: "State University",
+      degree: "BS",
+      field: "Computer Science",
+      date: "2018",
+    });
+    expect(resume.summary).toBe("Won regional award");
+    expect(resume.skills).toContain("AWS Certified Developer (Amazon)");
   });
 });
 

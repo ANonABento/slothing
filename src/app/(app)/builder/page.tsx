@@ -5,7 +5,6 @@ import {
   useCallback,
   useEffect,
   useMemo,
-  useRef,
   useState,
 } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -132,13 +131,11 @@ function BuilderPageContent() {
   const [entryPickerOpen, setEntryPickerOpen] = useState(false);
   const [loading, setLoading] = useState(initialDocumentMode === "resume");
   const [hasLoadedEntries, setHasLoadedEntries] = useState(false);
-  const [html, setHtml] = useState("");
-  const [generating, setGenerating] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const [mobileView, setMobileView] = useState<BuilderPanel>(
     DEFAULT_BUILDER_PANEL
   );
   const showErrorToast = useErrorToast();
-  const lastPreviewErrorToastRef = useRef("");
   const editorState = editorHistory.present;
   const sections = editorState.sections;
   const selectedIds = useMemo(
@@ -197,83 +194,9 @@ function BuilderPageContent() {
     };
   }, [documentMode, hasLoadedEntries]);
 
-  const visibleCategoryIds = useMemo(
-    () => getVisibleSectionIds(sections),
-    [sections]
+  const hasEditableContent = editorState.document.sections.some(
+    (section) => section.entries.length > 0
   );
-
-  const selectedEntries = useMemo(
-    () =>
-      entries.filter(
-        (e) =>
-          selectedIds.has(e.id) && visibleCategoryIds.includes(e.category)
-      ),
-    [entries, selectedIds, visibleCategoryIds]
-  );
-
-  const orderedEntries = useMemo(() => {
-    const categoryOrder = new Map(
-      visibleCategoryIds.map((id, i) => [id, i])
-    );
-    return [...selectedEntries].sort(
-      (a, b) =>
-        (categoryOrder.get(a.category) ?? 999) -
-        (categoryOrder.get(b.category) ?? 999)
-    );
-  }, [selectedEntries, visibleCategoryIds]);
-
-  useEffect(() => {
-    if (documentMode !== "resume") return;
-
-    if (orderedEntries.length === 0) {
-      setHtml("");
-      return;
-    }
-
-    const controller = new AbortController();
-    setGenerating(true);
-
-    const entryIds = orderedEntries.map((e) => e.id);
-
-    fetch("/api/builder", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        entryIds,
-        templateId,
-        sectionOrder: visibleCategoryIds,
-      }),
-      signal: controller.signal,
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.html) {
-          lastPreviewErrorToastRef.current = "";
-          setHtml(data.html);
-        }
-      })
-      .catch((err) => {
-        if (err.name !== "AbortError") {
-          const message = err instanceof Error ? err.message : "preview";
-          if (lastPreviewErrorToastRef.current !== message) {
-            lastPreviewErrorToastRef.current = message;
-            showErrorToast(err, {
-              title: "Could not update preview",
-              fallbackDescription: "Please try changing the resume content again.",
-            });
-          }
-        }
-      })
-      .finally(() => setGenerating(false));
-
-    return () => controller.abort();
-  }, [
-    documentMode,
-    orderedEntries,
-    showErrorToast,
-    templateId,
-    visibleCategoryIds,
-  ]);
 
   const commitEditorState = useCallback(
     (updater: (state: BuilderEditorState) => BuilderEditorState) => {
@@ -413,20 +336,64 @@ function BuilderPageContent() {
     [commitEditorState]
   );
 
-  const handleCopyHtml = useCallback(async () => {
-    if (!html) return;
-    await navigator.clipboard.writeText(html);
-  }, [html]);
+  const fetchExportHtml = useCallback(async () => {
+    const res = await fetch("/api/builder", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        document: editorState.document,
+        templateId,
+      }),
+    });
 
-  const handleDownloadPdf = useCallback(() => {
-    if (!html) return;
-    const win = window.open("", "_blank");
-    if (win) {
-      win.document.write(html);
-      win.document.close();
-      win.onload = () => win.print();
+    if (!res.ok) {
+      throw new Error("Failed to generate export");
     }
-  }, [html]);
+
+    const data = (await res.json()) as { html?: string };
+    if (!data.html) {
+      throw new Error("Export did not include HTML");
+    }
+
+    return data.html;
+  }, [editorState.document, templateId]);
+
+  const handleCopyHtml = useCallback(async () => {
+    if (!hasEditableContent || exporting) return;
+    setExporting(true);
+    try {
+      const html = await fetchExportHtml();
+      await navigator.clipboard.writeText(html);
+    } catch (error) {
+      showErrorToast(error, {
+        title: "Could not copy HTML",
+        fallbackDescription: "Please try exporting the resume again.",
+      });
+    } finally {
+      setExporting(false);
+    }
+  }, [exporting, fetchExportHtml, hasEditableContent, showErrorToast]);
+
+  const handleDownloadPdf = useCallback(async () => {
+    if (!hasEditableContent || exporting) return;
+    setExporting(true);
+    try {
+      const html = await fetchExportHtml();
+      const win = window.open("", "_blank");
+      if (win) {
+        win.document.write(html);
+        win.document.close();
+        win.onload = () => win.print();
+      }
+    } catch (error) {
+      showErrorToast(error, {
+        title: "Could not download PDF",
+        fallbackDescription: "Please try exporting the resume again.",
+      });
+    } finally {
+      setExporting(false);
+    }
+  }, [exporting, fetchExportHtml, hasEditableContent, showErrorToast]);
 
   const handleDocumentModeChange = useCallback(
     (mode: BuilderDocumentMode) => {
@@ -553,12 +520,16 @@ function BuilderPageContent() {
               variant="outline"
               size="sm"
               onClick={handleCopyHtml}
-              disabled={!html}
+              disabled={!hasEditableContent || exporting}
             >
               <Copy className="h-4 w-4 md:mr-1.5" />
               <span className="hidden md:inline">Copy HTML</span>
             </Button>
-            <Button size="sm" onClick={handleDownloadPdf} disabled={!html}>
+            <Button
+              size="sm"
+              onClick={handleDownloadPdf}
+              disabled={!hasEditableContent || exporting}
+            >
               <Download className="h-4 w-4 md:mr-1.5" />
               <span className="hidden md:inline">Download PDF</span>
             </Button>
@@ -643,7 +614,7 @@ function BuilderPageContent() {
                 getMobilePanelClasses(mobileView, "preview")
               )}
             >
-              {generating && (
+              {exporting && (
                 <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/50">
                   <Loader2 className="h-6 w-6 animate-spin text-primary" />
                 </div>

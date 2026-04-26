@@ -1,4 +1,6 @@
-import type { BankCategory, BankEntry } from "@/types";
+import { SECTION_LABELS } from "@/lib/builder/section-manager";
+import type { TailoredResume } from "@/lib/resume/generator";
+import type { BankCategory, BankEntry, ContactInfo } from "@/types";
 
 export interface EditableDocumentEntry {
   id: string;
@@ -21,15 +23,6 @@ export interface EditableResumeDocument {
 
 export type EditableEntryField = "heading" | "subtitle" | "meta" | "body";
 
-export const EDITABLE_SECTION_TITLES: Record<BankCategory, string> = {
-  experience: "Experience",
-  education: "Education",
-  skill: "Skills",
-  project: "Projects",
-  achievement: "Achievements",
-  certification: "Certifications",
-};
-
 export function createEditableResumeDocument(
   entries: BankEntry[],
   sectionOrder: BankCategory[],
@@ -38,7 +31,7 @@ export function createEditableResumeDocument(
   const nextDocument: EditableResumeDocument = {
     sections: sectionOrder.map((category) => ({
       id: category,
-      title: EDITABLE_SECTION_TITLES[category],
+      title: SECTION_LABELS[category],
       entries: entries
         .filter((entry) => entry.category === category)
         .map(createEditableEntry),
@@ -155,6 +148,61 @@ export function reorderEditableDocumentSections(
   return { sections };
 }
 
+export function editableDocumentToResume(
+  document: EditableResumeDocument,
+  contact: ContactInfo = { name: "Your Name" }
+): TailoredResume {
+  const experiences: TailoredResume["experiences"] = [];
+  const education: TailoredResume["education"] = [];
+  const skills: string[] = [];
+  const summaryParts: string[] = [];
+
+  for (const section of document.sections) {
+    for (const entry of section.entries) {
+      switch (section.id) {
+        case "experience":
+        case "project":
+          experiences.push({
+            title: entry.heading,
+            company:
+              entry.subtitle || (section.id === "project" ? "Project" : ""),
+            dates: entry.meta,
+            highlights:
+              entry.bullets.length > 0 ? entry.bullets : compact([entry.body]),
+          });
+          break;
+        case "education": {
+          const { degree, field } = splitEducationSubtitle(entry.subtitle);
+          education.push({
+            institution: entry.heading,
+            degree,
+            field,
+            date: entry.meta,
+          });
+          break;
+        }
+        case "skill":
+          skills.push(...compact([entry.heading]));
+          break;
+        case "certification":
+          skills.push(formatCertificationSkill(entry));
+          break;
+        case "achievement":
+          summaryParts.push(...compact([entry.body || entry.heading]));
+          break;
+      }
+    }
+  }
+
+  return {
+    contact,
+    summary: summaryParts.join(". "),
+    experiences,
+    skills: compact(skills),
+    education,
+  };
+}
+
 function createEditableEntry(entry: BankEntry): EditableDocumentEntry {
   const content = entry.content;
 
@@ -235,4 +283,24 @@ function formatDateRange(content: Record<string, unknown>): string {
 
 function joinNonEmpty(values: string[], separator: string): string {
   return values.filter(Boolean).join(separator);
+}
+
+function compact(values: string[]): string[] {
+  return values.map((value) => value.trim()).filter(Boolean);
+}
+
+function splitEducationSubtitle(subtitle: string): {
+  degree: string;
+  field: string;
+} {
+  const [degree = "", ...fieldParts] = subtitle.split(",");
+  return {
+    degree: degree.trim(),
+    field: fieldParts.join(",").trim(),
+  };
+}
+
+function formatCertificationSkill(entry: EditableDocumentEntry): string {
+  if (!entry.heading) return "";
+  return entry.subtitle ? `${entry.heading} (${entry.subtitle})` : entry.heading;
 }
