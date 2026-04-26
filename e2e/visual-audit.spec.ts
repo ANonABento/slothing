@@ -85,11 +85,9 @@ test.describe("Visual Audit - Landing Page States", () => {
       "Visual baselines are only maintained for the desktop Chromium project."
     );
 
+    await page.addInitScript(() => localStorage.setItem("theme", "light"));
     await page.goto("/");
-    await page.evaluate(() => {
-      document.documentElement.classList.remove("dark");
-      document.documentElement.classList.add("light");
-    });
+    await expect(page.locator("html")).not.toHaveClass(/dark/);
     await page.waitForTimeout(300);
 
     await expect(page).toHaveScreenshot("landing-light.png", {
@@ -104,11 +102,9 @@ test.describe("Visual Audit - Landing Page States", () => {
       "Visual baselines are only maintained for the desktop Chromium project."
     );
 
+    await page.addInitScript(() => localStorage.setItem("theme", "dark"));
     await page.goto("/");
-    await page.evaluate(() => {
-      document.documentElement.classList.remove("light");
-      document.documentElement.classList.add("dark");
-    });
+    await expect(page.locator("html")).toHaveClass(/dark/);
     await page.waitForTimeout(300);
 
     await expect(page).toHaveScreenshot("landing-dark.png", {

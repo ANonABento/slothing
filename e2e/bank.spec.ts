@@ -135,14 +135,18 @@ test.describe("Bank Page - Search & Filter", () => {
   test("search filters entries by query", async ({ page }) => {
     const searchInput = page.getByPlaceholder(/search your knowledge bank/i);
 
-    await searchInput.fill("zzz_nonexistent_term_zzz");
-    await page.waitForResponse(bankApiResponse);
+    await Promise.all([
+      page.waitForResponse(bankApiResponse),
+      searchInput.fill("zzz_nonexistent_term_zzz"),
+    ]);
     await expect(page.getByText("No matching entries")).toBeVisible({
       timeout: 5000,
     });
 
-    await searchInput.fill("");
-    await page.waitForResponse(bankApiResponse);
+    await Promise.all([
+      page.waitForResponse(bankApiResponse),
+      searchInput.fill(""),
+    ]);
     await expect(page.getByText("No matching entries")).not.toBeVisible({
       timeout: 5000,
     });

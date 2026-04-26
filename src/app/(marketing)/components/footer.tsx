@@ -51,12 +51,12 @@ export function Footer() {
                       {link.name}
                     </a>
                   ) : (
-                    <Link
+                    <a
                       href={link.href}
                       className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                     >
                       {link.name}
-                    </Link>
+                    </a>
                   )}
                 </li>
               ))}

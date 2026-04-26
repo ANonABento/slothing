@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -36,16 +36,22 @@ export function SourceDocuments({
   const [loading, setLoading] = useState(true);
   const [deleteTarget, setDeleteTarget] = useState<SourceDocument | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const requestIdRef = useRef(0);
 
   const fetchDocuments = useCallback(async () => {
+    const requestId = requestIdRef.current + 1;
+    requestIdRef.current = requestId;
     try {
       const res = await fetch("/api/bank/documents");
       if (!res.ok) throw new Error("Failed to fetch");
       const data = await res.json();
+      if (requestId !== requestIdRef.current) return;
       setDocuments(data.documents || []);
     } catch {
+      if (requestId !== requestIdRef.current) return;
       console.error("Failed to fetch source documents");
     } finally {
+      if (requestId !== requestIdRef.current) return;
       setLoading(false);
     }
   }, []);

@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { ArrowRight, ScanSearch, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -38,10 +37,10 @@ export function CTASection() {
               size="lg"
               className="gradient-bg text-white hover:opacity-90 shadow-lg shadow-primary/25"
             >
-              <Link href="/ats-scanner">
+              <a href="/ats-scanner">
                 Scan My Resume
                 <ArrowRight className="ml-2 h-5 w-5" />
-              </Link>
+              </a>
             </Button>
           </div>
         </div>
@@ -78,10 +77,10 @@ export function CTASection() {
               size="lg"
               variant="outline"
             >
-              <Link href="/sign-up?redirect_url=/dashboard">
+              <a href="/sign-up?redirect_url=/dashboard">
                 Get Started Free
                 <ArrowRight className="ml-2 h-5 w-5" />
-              </Link>
+              </a>
             </Button>
 
             <p className="mt-4 text-sm text-muted-foreground">

@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { ArrowRight, ScanSearch, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -40,20 +39,20 @@ export function Hero() {
               size="lg"
               variant="outline"
             >
-              <Link href="/ats-scanner">
+              <a href="/ats-scanner">
                 <ScanSearch className="mr-2 h-5 w-5" />
                 Try Free ATS Scanner
-              </Link>
+              </a>
             </Button>
             <Button
               asChild
               size="lg"
               className="gradient-bg text-white hover:opacity-90 shadow-lg shadow-primary/25"
             >
-              <Link href="/sign-up?redirect_url=/dashboard">
+              <a href="/sign-up?redirect_url=/dashboard">
                 Get Started
                 <ArrowRight className="ml-2 h-5 w-5" />
-              </Link>
+              </a>
             </Button>
           </div>
 
