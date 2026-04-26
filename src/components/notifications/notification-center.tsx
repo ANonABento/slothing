@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import type { Notification, NotificationType } from "@/lib/db/notifications";
+import { useErrorToast } from "@/hooks/use-error-toast";
 
 const typeIcons: Record<NotificationType, typeof Bell> = {
   reminder_due: Clock,
@@ -46,6 +47,7 @@ export function NotificationCenter({ collapsed = false }: NotificationCenterProp
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
+  const showErrorToast = useErrorToast();
 
   const fetchNotifications = useCallback(async () => {
     try {
@@ -55,11 +57,14 @@ export function NotificationCenter({ collapsed = false }: NotificationCenterProp
       setNotifications(data.notifications || []);
       setUnreadCount(data.unreadCount || 0);
     } catch (error) {
-      console.error("Failed to fetch notifications:", error);
+      showErrorToast(error, {
+        title: "Could not load notifications",
+        fallbackDescription: "Please try opening notifications again.",
+      });
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [showErrorToast]);
 
   // Fetch notifications on mount and when opening
   useEffect(() => {
@@ -99,7 +104,10 @@ export function NotificationCenter({ collapsed = false }: NotificationCenterProp
       );
       setUnreadCount((prev) => Math.max(0, prev - 1));
     } catch (error) {
-      console.error("Failed to mark notification as read:", error);
+      showErrorToast(error, {
+        title: "Could not mark notification read",
+        fallbackDescription: "Please try again.",
+      });
     }
   };
 
@@ -113,7 +121,10 @@ export function NotificationCenter({ collapsed = false }: NotificationCenterProp
       setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
       setUnreadCount(0);
     } catch (error) {
-      console.error("Failed to mark all notifications as read:", error);
+      showErrorToast(error, {
+        title: "Could not mark notifications read",
+        fallbackDescription: "Please try again.",
+      });
     }
   };
 
@@ -126,7 +137,10 @@ export function NotificationCenter({ collapsed = false }: NotificationCenterProp
         setUnreadCount((prev) => Math.max(0, prev - 1));
       }
     } catch (error) {
-      console.error("Failed to delete notification:", error);
+      showErrorToast(error, {
+        title: "Could not delete notification",
+        fallbackDescription: "Please try again.",
+      });
     }
   };
 
@@ -139,7 +153,10 @@ export function NotificationCenter({ collapsed = false }: NotificationCenterProp
       });
       setNotifications((prev) => prev.filter((n) => !n.read));
     } catch (error) {
-      console.error("Failed to delete read notifications:", error);
+      showErrorToast(error, {
+        title: "Could not clear notifications",
+        fallbackDescription: "Please try again.",
+      });
     }
   };
 

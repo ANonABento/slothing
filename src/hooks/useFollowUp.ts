@@ -8,6 +8,7 @@ import {
   type Dispatch,
   type SetStateAction,
 } from "react";
+import { useErrorToast } from "@/hooks/use-error-toast";
 import type { CurrentFollowUp, InterviewSession } from "@/types/interview";
 
 interface FollowUpApiResponse {
@@ -66,6 +67,7 @@ export function useFollowUp({
   const [loadingFollowUp, setLoadingFollowUp] = useState(false);
   const [submittingFollowUp, setSubmittingFollowUp] = useState(false);
   const sessionRef = useRef(session);
+  const showErrorToast = useErrorToast();
 
   useEffect(() => {
     sessionRef.current = session;
@@ -109,11 +111,14 @@ export function useFollowUp({
         setCurrentAnswer("");
       }
     } catch (error) {
-      console.error("Failed to get follow-up question:", error);
+      showErrorToast(error, {
+        title: "Could not get follow-up question",
+        fallbackDescription: "Please try requesting a follow-up again.",
+      });
     } finally {
       setLoadingFollowUp(false);
     }
-  }, [session, setCurrentAnswer]);
+  }, [session, setCurrentAnswer, showErrorToast]);
 
   const submitFollowUpAnswer = useCallback(async () => {
     if (!session || !currentFollowUp || !currentAnswer.trim()) return;
@@ -173,11 +178,14 @@ export function useFollowUp({
         setCurrentAnswer("");
       }
     } catch (error) {
-      console.error("Failed to submit follow-up answer:", error);
+      showErrorToast(error, {
+        title: "Could not submit follow-up answer",
+        fallbackDescription: "Please try submitting the answer again.",
+      });
     } finally {
       setSubmittingFollowUp(false);
     }
-  }, [currentAnswer, currentFollowUp, session, setCurrentAnswer, setSession]);
+  }, [currentAnswer, currentFollowUp, session, setCurrentAnswer, setSession, showErrorToast]);
 
   const skipFollowUp = useCallback(() => {
     setFollowUpMode(false);

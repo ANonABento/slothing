@@ -40,6 +40,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { SkeletonButton } from "@/components/ui/skeleton";
+import { useErrorToast } from "@/hooks/use-error-toast";
 import type { JobDescription } from "@/types";
 
 const CalendarSyncButton = dynamic(
@@ -89,14 +90,18 @@ export default function CalendarPage() {
   const [copiedUrl, setCopiedUrl] = useState(false);
   const [feedUrl, setFeedUrl] = useState("");
   const [webcalUrl, setWebcalUrl] = useState("");
+  const showErrorToast = useErrorToast();
 
   const copyFeedUrl = async () => {
     try {
       await navigator.clipboard.writeText(feedUrl);
       setCopiedUrl(true);
       setTimeout(() => setCopiedUrl(false), 2000);
-    } catch {
-      console.error("Failed to copy URL");
+    } catch (error) {
+      showErrorToast(error, {
+        title: "Could not copy calendar URL",
+        fallbackDescription: "Please copy the URL manually.",
+      });
     }
   };
 
@@ -124,9 +129,14 @@ export default function CalendarPage() {
         setFeedUrl(feedData.feedUrl || "");
         setWebcalUrl(feedData.webcalUrl || "");
       })
-      .catch(console.error)
+      .catch((error) => {
+        showErrorToast(error, {
+          title: "Could not load calendar",
+          fallbackDescription: "Please refresh the page and try again.",
+        });
+      })
       .finally(() => setLoading(false));
-  }, []);
+  }, [showErrorToast]);
 
   const events = useMemo(() => {
     const allEvents: CalendarEvent[] = [];
@@ -275,7 +285,10 @@ export default function CalendarPage() {
       setShowCreateDialog(false);
       resetNewEvent();
     } catch (error) {
-      console.error("Create event error:", error);
+      showErrorToast(error, {
+        title: "Could not create event",
+        fallbackDescription: "Please check the event details and try again.",
+      });
     } finally {
       setCreating(false);
     }

@@ -22,6 +22,15 @@ async function preparePage(page: Page) {
   await page.goto("/");
 }
 
+async function setStoredTheme(page: Page, theme: "light" | "dark") {
+  await page.addInitScript((storedTheme) => {
+    localStorage.setItem("theme", storedTheme);
+  }, theme);
+  await page.evaluate((storedTheme) => {
+    localStorage.setItem("theme", storedTheme);
+  }, theme);
+}
+
 test.describe("Visual Audit - Public Pages", () => {
   test.beforeEach(async ({ page }) => {
     await preparePage(page);
@@ -85,11 +94,9 @@ test.describe("Visual Audit - Landing Page States", () => {
       "Visual baselines are only maintained for the desktop Chromium project."
     );
 
+    await setStoredTheme(page, "light");
     await page.goto("/");
-    await page.evaluate(() => {
-      document.documentElement.classList.remove("dark");
-      document.documentElement.classList.add("light");
-    });
+    await expect(page.locator("html")).not.toHaveClass(/dark/);
     await page.waitForTimeout(300);
 
     await expect(page).toHaveScreenshot("landing-light.png", {
@@ -104,11 +111,9 @@ test.describe("Visual Audit - Landing Page States", () => {
       "Visual baselines are only maintained for the desktop Chromium project."
     );
 
+    await setStoredTheme(page, "dark");
     await page.goto("/");
-    await page.evaluate(() => {
-      document.documentElement.classList.remove("light");
-      document.documentElement.classList.add("dark");
-    });
+    await expect(page.locator("html")).toHaveClass(/dark/);
     await page.waitForTimeout(300);
 
     await expect(page).toHaveScreenshot("landing-dark.png", {

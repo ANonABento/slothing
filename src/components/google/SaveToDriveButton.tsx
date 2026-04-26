@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { useErrorToast } from "@/hooks/use-error-toast";
 import {
   Cloud,
   Loader2,
@@ -29,6 +30,7 @@ export function SaveToDriveButton({
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [connected, setConnected] = useState<boolean | null>(null);
+  const showErrorToast = useErrorToast();
 
   useEffect(() => {
     checkConnection();
@@ -77,7 +79,10 @@ export function SaveToDriveButton({
         setError(data.error || "Failed to save");
       }
     } catch (err) {
-      console.error("Save failed:", err);
+      showErrorToast(err, {
+        title: "Could not save to Drive",
+        fallbackDescription: "Please check your Google connection and try again.",
+      });
       setError("Failed to save to Drive");
     } finally {
       setSaving(false);
