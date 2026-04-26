@@ -71,4 +71,121 @@ describe("resume editor extensions", () => {
 
     editor.destroy();
   });
+
+  it("parses rendered resume HTML using only editable content containers", () => {
+    const editor = new Editor({
+      extensions: resumeEditorExtensions,
+      content: `
+        <div
+          data-type="contact-info"
+          data-contact-name="Jane Doe"
+          data-contact-email="jane@example.com"
+        >
+          <h1>Jane Doe</h1>
+          <div class="contact">jane@example.com</div>
+        </div>
+        <section data-type="resume-section" data-section-title="Experience">
+          <h2 class="resume-section-title">Experience</h2>
+          <div class="resume-section-content">
+            <div
+              data-type="resume-entry"
+              data-company="Acme"
+              data-title="Engineer"
+              data-dates="2020"
+            >
+              <div class="experience-header">
+                <div>
+                  <h3>Engineer</h3>
+                  <span class="company">Acme</span>
+                </div>
+                <span class="dates">2020</span>
+              </div>
+              <div class="resume-entry-bullets">
+                <ul>
+                  <li><p>Built APIs</p></li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </section>
+      `,
+    });
+
+    expect(editor.getJSON()).toMatchObject({
+      type: "doc",
+      content: [
+        {
+          type: "contactInfo",
+          attrs: {
+            name: "Jane Doe",
+            email: "jane@example.com",
+          },
+        },
+        {
+          type: "resumeSection",
+          attrs: { title: "Experience" },
+          content: [
+            {
+              type: "resumeEntry",
+              attrs: {
+                company: "Acme",
+                title: "Engineer",
+                dates: "2020",
+              },
+              content: [
+                {
+                  type: "bulletList",
+                  content: [
+                    {
+                      type: "listItem",
+                      content: [
+                        {
+                          type: "paragraph",
+                          content: [{ type: "text", text: "Built APIs" }],
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+
+    editor.destroy();
+  });
+
+  it("parses cover letter content without including its fixed label", () => {
+    const editor = new Editor({
+      extensions: resumeEditorExtensions,
+      content: `
+        <section data-type="cover-letter-block" data-label="Letter">
+          <div class="cover-letter-block-label">Letter</div>
+          <div class="cover-letter-block-content">
+            <p>Hello hiring team.</p>
+          </div>
+        </section>
+      `,
+    });
+
+    expect(editor.getJSON()).toMatchObject({
+      type: "doc",
+      content: [
+        {
+          type: "coverLetterBlock",
+          attrs: { label: "Letter" },
+          content: [
+            {
+              type: "paragraph",
+              content: [{ type: "text", text: "Hello hiring team." }],
+            },
+          ],
+        },
+      ],
+    });
+
+    editor.destroy();
+  });
 });

@@ -20,6 +20,22 @@ function omitAttribute(
   return rest;
 }
 
+function omitAttributes(
+  attributes: Record<string, unknown>,
+  keys: string[]
+): Record<string, unknown> {
+  return keys.reduce(omitAttribute, attributes);
+}
+
+const CONTACT_INFO_ATTRIBUTES = [
+  "name",
+  "email",
+  "phone",
+  "location",
+  "linkedin",
+  "github",
+];
+
 export const ResumeSection = Node.create({
   name: "resumeSection",
   group: "block",
@@ -37,7 +53,12 @@ export const ResumeSection = Node.create({
   },
 
   parseHTML() {
-    return [{ tag: 'section[data-type="resume-section"]' }];
+    return [
+      {
+        tag: 'section[data-type="resume-section"]',
+        contentElement: ".resume-section-content",
+      },
+    ];
   },
 
   renderHTML({ HTMLAttributes, node }) {
@@ -84,7 +105,12 @@ export const ResumeEntry = Node.create({
   },
 
   parseHTML() {
-    return [{ tag: 'div[data-type="resume-entry"]' }];
+    return [
+      {
+        tag: 'div[data-type="resume-entry"]',
+        contentElement: ".resume-entry-bullets",
+      },
+    ];
   },
 
   renderHTML({ HTMLAttributes, node }) {
@@ -128,12 +154,36 @@ export const ContactInfoNode = Node.create({
 
   addAttributes() {
     return {
-      name: { default: "" },
-      email: { default: "" },
-      phone: { default: "" },
-      location: { default: "" },
-      linkedin: { default: "" },
-      github: { default: "" },
+      name: {
+        default: "",
+        parseHTML: (element: HTMLElement) =>
+          getDataAttribute(element, "data-contact-name"),
+      },
+      email: {
+        default: "",
+        parseHTML: (element: HTMLElement) =>
+          getDataAttribute(element, "data-contact-email"),
+      },
+      phone: {
+        default: "",
+        parseHTML: (element: HTMLElement) =>
+          getDataAttribute(element, "data-contact-phone"),
+      },
+      location: {
+        default: "",
+        parseHTML: (element: HTMLElement) =>
+          getDataAttribute(element, "data-contact-location"),
+      },
+      linkedin: {
+        default: "",
+        parseHTML: (element: HTMLElement) =>
+          getDataAttribute(element, "data-contact-linkedin"),
+      },
+      github: {
+        default: "",
+        parseHTML: (element: HTMLElement) =>
+          getDataAttribute(element, "data-contact-github"),
+      },
     };
   },
 
@@ -143,14 +193,21 @@ export const ContactInfoNode = Node.create({
 
   renderHTML({ HTMLAttributes, node }) {
     const name = String(node.attrs.name || "");
-    const details = ["email", "phone", "location", "linkedin", "github"]
+    const details = CONTACT_INFO_ATTRIBUTES.filter((key) => key !== "name")
       .map((key) => String(node.attrs[key] || ""))
       .filter(Boolean);
+    const attributes = omitAttributes(HTMLAttributes, CONTACT_INFO_ATTRIBUTES);
 
     return [
       "div",
-      mergeAttributes(HTMLAttributes, {
+      mergeAttributes(attributes, {
         "data-type": "contact-info",
+        "data-contact-name": name,
+        "data-contact-email": String(node.attrs.email || ""),
+        "data-contact-phone": String(node.attrs.phone || ""),
+        "data-contact-location": String(node.attrs.location || ""),
+        "data-contact-linkedin": String(node.attrs.linkedin || ""),
+        "data-contact-github": String(node.attrs.github || ""),
         class: "header",
       }),
       ["h1", {}, name],
@@ -182,7 +239,12 @@ export const CoverLetterBlock = Node.create({
   },
 
   parseHTML() {
-    return [{ tag: 'section[data-type="cover-letter-block"]' }];
+    return [
+      {
+        tag: 'section[data-type="cover-letter-block"]',
+        contentElement: ".cover-letter-block-content",
+      },
+    ];
   },
 
   renderHTML({ HTMLAttributes, node }) {

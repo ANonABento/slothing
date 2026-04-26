@@ -1,6 +1,7 @@
 "use client";
 
 import { EditorContent, useEditor } from "@tiptap/react";
+import { useEffect } from "react";
 import type { TemplateStyles } from "@/lib/resume/template-types";
 import { getResumeEditorStyles } from "./styles";
 import { resumeEditorExtensions } from "./extensions";
@@ -30,6 +31,17 @@ export function ResumeEditor({
       onUpdate?.(currentEditor.getJSON() as TipTapJSONContent);
     },
   });
+  useEffect(() => {
+    if (!editor) return;
+    if (JSON.stringify(editor.getJSON()) !== JSON.stringify(content)) {
+      editor.commands.setContent(content, { emitUpdate: false });
+    }
+  }, [content, editor]);
+
+  useEffect(() => {
+    editor?.setEditable(editable);
+  }, [editable, editor]);
+
   const editorClassName = ["resume-editor", className].filter(Boolean).join(" ");
 
   return (

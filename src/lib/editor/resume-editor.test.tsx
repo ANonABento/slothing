@@ -43,4 +43,59 @@ describe("ResumeEditor", () => {
       await screen.findByText("Product-minded engineer")
     ).toBeInTheDocument();
   });
+
+  it("updates rendered content when the document prop changes", async () => {
+    const template = TEMPLATES.find((item) => item.id === "classic")!;
+    const firstContent: TipTapJSONContent = {
+      type: "doc",
+      content: [
+        {
+          type: "resumeSection",
+          attrs: { title: "Summary" },
+          content: [
+            {
+              type: "paragraph",
+              content: [{ type: "text", text: "First summary" }],
+            },
+          ],
+        },
+      ],
+    };
+    const nextContent: TipTapJSONContent = {
+      type: "doc",
+      content: [
+        {
+          type: "resumeSection",
+          attrs: { title: "Summary" },
+          content: [
+            {
+              type: "paragraph",
+              content: [{ type: "text", text: "Updated summary" }],
+            },
+          ],
+        },
+      ],
+    };
+
+    const { rerender } = render(
+      <ResumeEditor
+        content={firstContent}
+        templateStyles={template.styles}
+        editable={false}
+      />
+    );
+
+    expect(await screen.findByText("First summary")).toBeInTheDocument();
+
+    rerender(
+      <ResumeEditor
+        content={nextContent}
+        templateStyles={template.styles}
+        editable={false}
+      />
+    );
+
+    expect(await screen.findByText("Updated summary")).toBeInTheDocument();
+    expect(screen.queryByText("First summary")).not.toBeInTheDocument();
+  });
 });
