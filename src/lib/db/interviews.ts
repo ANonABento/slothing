@@ -154,7 +154,7 @@ export function getInterviewSessions(
   query += " ORDER BY started_at DESC";
 
   const stmt = db.prepare(query);
-  const rows = (params.length > 0 ? stmt.all(...params) : stmt.all()) as Array<{
+  const rows = stmt.all(...params) as Array<{
     id: string;
     job_id: string;
     profile_id: string;

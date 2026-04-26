@@ -13,7 +13,10 @@ export interface CompanyResearch {
   updatedAt: string;
 }
 
-export function getCompanyResearch(companyName: string, userId: string = "default"): CompanyResearch | null {
+export function getCompanyResearch(
+  companyName: string,
+  userId: string = "default"
+): CompanyResearch | null {
   const normalized = companyName.toLowerCase().trim();
   const stmt = db.prepare(
     "SELECT * FROM company_research WHERE user_id = ? AND LOWER(company_name) = ?"
@@ -83,7 +86,12 @@ export function saveCompanyResearch(
     now
   );
 
-  return getCompanyResearch(normalizedCompanyName, userId)!;
+  const saved = getCompanyResearch(normalizedCompanyName, userId);
+  if (!saved) {
+    throw new Error("Failed to save company research");
+  }
+
+  return saved;
 }
 
 export function deleteCompanyResearch(id: string, userId: string = "default"): void {

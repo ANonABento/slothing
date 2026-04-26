@@ -22,7 +22,7 @@ describe("Analytics DB Functions", () => {
 
   describe("recordJobStatusChange", () => {
     it("should record status changes only for the provided user job", () => {
-      const mockRun = vi.fn();
+      const mockRun = vi.fn().mockReturnValue({ changes: 1 });
       (db.prepare as Mock).mockReturnValue({ run: mockRun });
 
       const result = recordJobStatusChange(
@@ -46,6 +46,15 @@ describe("Analytics DB Functions", () => {
         "user-123"
       );
       expect(result.userId).toBe("user-123");
+    });
+
+    it("should reject status changes for jobs outside the provided user", () => {
+      const mockRun = vi.fn().mockReturnValue({ changes: 0 });
+      (db.prepare as Mock).mockReturnValue({ run: mockRun });
+
+      expect(() =>
+        recordJobStatusChange("job-1", "saved", "applied", undefined, "user-123")
+      ).toThrow("Job not found");
     });
   });
 
