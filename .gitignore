@@ -6,6 +6,7 @@ node_modules
 .next
 out
 build
+.vercel
 
 # Local data
 data/

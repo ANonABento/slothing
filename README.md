@@ -102,6 +102,12 @@ All data is stored locally:
 - `uploads/` - Uploaded documents
 - `public/resumes/` - Generated resume files
 
+## Deployment
+
+GitHub Actions deploys pull requests to Vercel Preview and pushes to `main` to
+Vercel Production after CI passes. See [docs/VERCEL.md](docs/VERCEL.md) for the
+required GitHub secrets and Vercel environment variables.
+
 ## License
 
 MIT

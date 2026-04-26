@@ -12,7 +12,7 @@ import type { ProviderOption } from "./llm-provider-selector";
 interface LLMProviderConfigProps {
   config: LLMConfig;
   selectedProvider?: ProviderOption;
-  models: string[];
+  models: readonly string[];
   saving: boolean;
   testing: boolean;
   hasChanges: boolean;
