@@ -7,7 +7,7 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { requireExtensionAuth } from "@/lib/extension-auth";
-import { createJob } from "@/lib/db/jobs";
+import { createJob } from "@/lib/db/drizzle/queries/jobs";
 
 // POST - Import a job from extension
 export async function POST(request: NextRequest) {
@@ -19,20 +19,14 @@ export async function POST(request: NextRequest) {
   try {
     const data = await request.json();
 
-    if (!data.title || !data.company) {
-      return NextResponse.json(
-        { error: "Title and company are required" },
-        { status: 400 }
-      );
-    }
-
     // Handle both single job and batch
     if (Array.isArray(data.jobs)) {
       // Batch import
       const results = [];
       for (const jobData of data.jobs) {
         if (!jobData.title || !jobData.company) continue;
-        const job = createJob(
+        const job = await createJob(
+          authResult.userId,
           {
             title: jobData.title,
             company: jobData.company,
@@ -47,16 +41,23 @@ export async function POST(request: NextRequest) {
             url: jobData.url,
             deadline: jobData.deadline,
             status: "saved",
-          },
-          authResult.userId
+          }
         );
         results.push(job.id);
       }
       return NextResponse.json({ imported: results.length, jobIds: results });
     }
 
+    if (!data.title || !data.company) {
+      return NextResponse.json(
+        { error: "Title and company are required" },
+        { status: 400 }
+      );
+    }
+
     // Single import
-    const job = createJob(
+    const job = await createJob(
+      authResult.userId,
       {
         title: data.title,
         company: data.company,
@@ -71,8 +72,7 @@ export async function POST(request: NextRequest) {
         url: data.url,
         deadline: data.deadline,
         status: "saved",
-      },
-      authResult.userId
+      }
     );
 
     return NextResponse.json({ jobId: job.id });

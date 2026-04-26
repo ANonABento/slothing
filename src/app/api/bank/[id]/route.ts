@@ -56,6 +56,10 @@ export async function PATCH(
     const body = await request.json();
     const { content, confidenceScore } = body;
 
+    if (!content || typeof content !== "object") {
+      return NextResponse.json({ error: "Content is required" }, { status: 400 });
+    }
+
     // Verify entry exists and belongs to user
     const existing = db
       .prepare("SELECT id FROM profile_bank WHERE id = ? AND user_id = ?")

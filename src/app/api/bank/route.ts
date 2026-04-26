@@ -6,9 +6,22 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth, isAuthError } from "@/lib/auth";
-import { getBankEntries, searchBankEntries, getBankEntriesByCategory, insertBankEntry } from "@/lib/db/profile-bank";
-import type { BankCategory } from "@/types";
+import { db, profileBank, eq, and, desc, like } from "@/lib/db/drizzle";
+import { generateId } from "@/lib/utils";
+import type { BankCategory, BankEntry } from "@/types";
 import { BANK_CATEGORIES } from "@/types";
+
+function toBankEntry(row: typeof profileBank.$inferSelect): BankEntry {
+  return {
+    id: row.id,
+    userId: row.userId,
+    category: row.category as BankCategory,
+    content: JSON.parse(row.content),
+    sourceDocumentId: row.sourceDocumentId ?? undefined,
+    confidenceScore: row.confidenceScore ?? 0.8,
+    createdAt: row.createdAt?.toISOString() ?? new Date().toISOString(),
+  };
+}
 
 export async function GET(request: NextRequest) {
   const authResult = await requireAuth();
@@ -19,19 +32,25 @@ export async function GET(request: NextRequest) {
     const query = searchParams.get("q");
     const category = searchParams.get("category") as BankCategory | null;
 
-    let entries;
+    const conditions = [eq(profileBank.userId, authResult.userId)];
     if (query) {
-      entries = searchBankEntries(query, authResult.userId);
-      if (category && BANK_CATEGORIES.includes(category)) {
-        entries = entries.filter((e) => e.category === category);
-      }
-    } else if (category && BANK_CATEGORIES.includes(category)) {
-      entries = getBankEntriesByCategory(category, authResult.userId);
-    } else {
-      entries = getBankEntries(authResult.userId);
+      conditions.push(like(profileBank.content, `%${query}%`));
+    }
+    if (category && BANK_CATEGORIES.includes(category)) {
+      conditions.push(eq(profileBank.category, category));
     }
 
-    return NextResponse.json({ entries });
+    const orderBy = query
+      ? [desc(profileBank.confidenceScore), desc(profileBank.createdAt)]
+      : [desc(profileBank.createdAt)];
+
+    const rows = await db
+      .select()
+      .from(profileBank)
+      .where(and(...conditions))
+      .orderBy(...orderBy);
+
+    return NextResponse.json({ entries: rows.map(toBankEntry) });
   } catch (error) {
     console.error("Get bank entries error:", error);
     return NextResponse.json(
@@ -56,10 +75,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Content is required" }, { status: 400 });
     }
 
-    const id = insertBankEntry(
-      { category, content, confidenceScore: 1.0 },
-      authResult.userId
-    );
+    const id = generateId();
+    await db.insert(profileBank).values({
+      id,
+      userId: authResult.userId,
+      category,
+      content: JSON.stringify(content),
+      confidenceScore: 1.0,
+    });
 
     return NextResponse.json({ success: true, id }, { status: 201 });
   } catch (error) {

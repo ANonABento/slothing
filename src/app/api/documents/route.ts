@@ -5,7 +5,7 @@
  * @response DocumentsListResponse from @/types/api
  */
 import { NextResponse } from "next/server";
-import { getDocuments } from "@/lib/db";
+import { db, documents, desc, eq } from "@/lib/db/drizzle";
 import { requireAuth, isAuthError } from "@/lib/auth";
 
 export async function GET() {
@@ -13,8 +13,25 @@ export async function GET() {
   if (isAuthError(authResult)) return authResult;
 
   try {
-    const documents = getDocuments(authResult.userId);
-    return NextResponse.json({ documents });
+    const rows = await db
+      .select()
+      .from(documents)
+      .where(eq(documents.userId, authResult.userId))
+      .orderBy(desc(documents.uploadedAt));
+
+    return NextResponse.json({
+      documents: rows.map((doc) => ({
+        id: doc.id,
+        filename: doc.filename,
+        type: doc.type,
+        mimeType: doc.mimeType,
+        size: doc.size,
+        path: doc.path,
+        extractedText: doc.extractedText ?? undefined,
+        parsedData: doc.parsedData ? JSON.parse(doc.parsedData) : undefined,
+        uploadedAt: doc.uploadedAt?.toISOString() ?? new Date().toISOString(),
+      })),
+    });
   } catch (error) {
     console.error("Get documents error:", error);
     return NextResponse.json(
