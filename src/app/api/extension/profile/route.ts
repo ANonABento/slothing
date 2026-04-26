@@ -6,7 +6,7 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { requireExtensionAuth } from "@/lib/extension-auth";
-import { getProfile } from "@/lib/db/queries";
+import { getProfile } from "@/lib/db/drizzle/queries/profile";
 import type { Experience, Education } from "@/types";
 
 // GET - Fetch profile optimized for extension auto-fill
@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const profile = getProfile(authResult.userId);
+    const profile = await getProfile(authResult.userId);
 
     if (!profile) {
       return NextResponse.json({ error: "Profile not found" }, { status: 404 });
@@ -66,7 +66,11 @@ function computeAutoFillValues(profile: {
   let totalMonths = 0;
   for (const exp of profile.experiences || []) {
     const start = new Date(exp.startDate);
+    if (Number.isNaN(start.getTime())) continue;
+
     const end = exp.current ? new Date() : new Date(exp.endDate || new Date());
+    if (Number.isNaN(end.getTime()) || end < start) continue;
+
     totalMonths += (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
   }
   const yearsExperience = Math.max(0, Math.round(totalMonths / 12));

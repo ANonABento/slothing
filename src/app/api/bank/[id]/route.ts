@@ -8,34 +8,57 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth, isAuthError } from "@/lib/auth";
-import { updateBankEntry, deleteBankEntry } from "@/lib/db/profile-bank";
-import { db } from "@/lib/db";
+import {
+  deleteBankEntry,
+  updateBankEntryForUser as updateStoredBankEntryForUser,
+} from "@/lib/db/profile-bank";
+
+interface BankEntryUpdateBody {
+  content?: unknown;
+  confidenceScore?: unknown;
+}
+
+interface BankEntryParams {
+  params: { id: string };
+}
+
+function isBankEntryContent(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+async function handleUpdateBankEntryForUser(
+  entryId: string,
+  userId: string,
+  body: BankEntryUpdateBody
+) {
+  if (!isBankEntryContent(body.content)) {
+    return NextResponse.json({ error: "Content is required" }, { status: 400 });
+  }
+
+  const updated = updateStoredBankEntryForUser(
+    entryId,
+    userId,
+    body.content,
+    typeof body.confidenceScore === "number" ? body.confidenceScore : 0.8
+  );
+
+  if (!updated) {
+    return NextResponse.json({ error: "Entry not found" }, { status: 404 });
+  }
+
+  return NextResponse.json({ success: true });
+}
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: BankEntryParams
 ) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
 
   try {
-    const body = await request.json();
-    const { content, confidenceScore } = body;
-
-    if (!content || typeof content !== "object") {
-      return NextResponse.json({ error: "Content is required" }, { status: 400 });
-    }
-
-    const existing = db
-      .prepare("SELECT id FROM profile_bank WHERE id = ? AND user_id = ?")
-      .get(params.id, authResult.userId) as { id: string } | undefined;
-
-    if (!existing) {
-      return NextResponse.json({ error: "Entry not found" }, { status: 404 });
-    }
-
-    updateBankEntry(params.id, content, confidenceScore ?? 0.8);
-    return NextResponse.json({ success: true });
+    const body = await request.json() as BankEntryUpdateBody;
+    return handleUpdateBankEntryForUser(params.id, authResult.userId, body);
   } catch (error) {
     console.error("Update bank entry error:", error);
     return NextResponse.json(
@@ -47,26 +70,14 @@ export async function PUT(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: BankEntryParams
 ) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
 
   try {
-    const body = await request.json();
-    const { content, confidenceScore } = body;
-
-    // Verify entry exists and belongs to user
-    const existing = db
-      .prepare("SELECT id FROM profile_bank WHERE id = ? AND user_id = ?")
-      .get(params.id, authResult.userId) as { id: string } | undefined;
-
-    if (!existing) {
-      return NextResponse.json({ error: "Entry not found" }, { status: 404 });
-    }
-
-    updateBankEntry(params.id, content, confidenceScore ?? 0.8);
-    return NextResponse.json({ success: true });
+    const body = await request.json() as BankEntryUpdateBody;
+    return handleUpdateBankEntryForUser(params.id, authResult.userId, body);
   } catch (error) {
     console.error("Update bank entry error:", error);
     return NextResponse.json(
@@ -78,14 +89,13 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: BankEntryParams
 ) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
 
   try {
-    const deleted = deleteBankEntry(params.id, authResult.userId);
-    if (!deleted) {
+    if (!deleteBankEntry(params.id, authResult.userId)) {
       return NextResponse.json({ error: "Entry not found" }, { status: 404 });
     }
     return NextResponse.json({ success: true });

@@ -5,16 +5,15 @@
  * @response DocumentsListResponse from @/types/api
  */
 import { NextResponse } from "next/server";
-import { getDocuments } from "@/lib/db";
 import { requireAuth, isAuthError } from "@/lib/auth";
+import { getDocuments } from "@/lib/db";
 
 export async function GET() {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
 
   try {
-    const documents = getDocuments(authResult.userId);
-    return NextResponse.json({ documents });
+    return NextResponse.json({ documents: getDocuments(authResult.userId) });
   } catch (error) {
     console.error("Get documents error:", error);
     return NextResponse.json(

@@ -6,7 +6,13 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth, isAuthError } from "@/lib/auth";
-import { getBankEntries, searchBankEntries, getBankEntriesByCategory, insertBankEntry } from "@/lib/db/profile-bank";
+import {
+  getBankEntries,
+  getBankEntriesByCategory,
+  insertBankEntry,
+  searchBankEntries,
+  searchBankEntriesByCategory,
+} from "@/lib/db/profile-bank";
 import type { BankCategory } from "@/types";
 import { BANK_CATEGORIES } from "@/types";
 
@@ -18,18 +24,16 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const query = searchParams.get("q");
     const category = searchParams.get("category") as BankCategory | null;
+    const validCategory =
+      category && BANK_CATEGORIES.includes(category) ? category : null;
 
-    let entries;
-    if (query) {
-      entries = searchBankEntries(query, authResult.userId);
-      if (category && BANK_CATEGORIES.includes(category)) {
-        entries = entries.filter((e) => e.category === category);
-      }
-    } else if (category && BANK_CATEGORIES.includes(category)) {
-      entries = getBankEntriesByCategory(category, authResult.userId);
-    } else {
-      entries = getBankEntries(authResult.userId);
-    }
+    const entries = query
+      ? validCategory
+        ? searchBankEntriesByCategory(query, validCategory, authResult.userId)
+        : searchBankEntries(query, authResult.userId)
+      : validCategory
+        ? getBankEntriesByCategory(validCategory, authResult.userId)
+        : getBankEntries(authResult.userId);
 
     return NextResponse.json({ entries });
   } catch (error) {
@@ -56,10 +60,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Content is required" }, { status: 400 });
     }
 
-    const id = insertBankEntry(
-      { category, content, confidenceScore: 1.0 },
-      authResult.userId
-    );
+    const id = insertBankEntry({
+      category,
+      content,
+      confidenceScore: 1.0,
+    }, authResult.userId);
 
     return NextResponse.json({ success: true, id }, { status: 201 });
   } catch (error) {

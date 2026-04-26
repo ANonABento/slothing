@@ -13,8 +13,7 @@ export async function GET() {
   if (isAuthError(authResult)) return authResult;
 
   try {
-    const documents = getSourceDocuments(authResult.userId);
-    return NextResponse.json({ documents });
+    return NextResponse.json({ documents: getSourceDocuments(authResult.userId) });
   } catch (error) {
     console.error("Get source documents error:", error);
     return NextResponse.json(
