@@ -1,6 +1,8 @@
 import db from "./schema";
 import { generateId } from "@/lib/utils";
 
+export const STANDALONE_RESUME_JOB_ID = "standalone";
+
 export interface GeneratedResume {
   id: string;
   jobId: string;
@@ -24,25 +26,30 @@ export function saveGeneratedResume(
   const id = generateId();
   const now = new Date().toISOString();
   const contentJson = JSON.stringify(content);
+  const shouldCheckJobOwnership = jobId !== STANDALONE_RESUME_JOB_ID;
 
   const stmt = db.prepare(`
     INSERT INTO generated_resumes (id, user_id, job_id, profile_id, content_json, pdf_path, match_score, created_at)
     SELECT ?, ?, ?, ?, ?, ?, ?, ?
-    WHERE EXISTS (SELECT 1 FROM jobs WHERE id = ? AND user_id = ?)
+    ${shouldCheckJobOwnership ? "WHERE EXISTS (SELECT 1 FROM jobs WHERE id = ? AND user_id = ?)" : ""}
   `);
 
-  const result = stmt.run(
+  const args: Array<string | number | null> = [
     id,
     userId,
     jobId,
     userId,
     contentJson,
     htmlPath,
-    matchScore || null,
+    matchScore ?? null,
     now,
-    jobId,
-    userId
-  ) as { changes?: number } | undefined;
+  ];
+
+  if (shouldCheckJobOwnership) {
+    args.push(jobId, userId);
+  }
+
+  const result = stmt.run(...args) as { changes?: number } | undefined;
 
   if (result?.changes === 0) {
     throw new Error("Job not found");
@@ -86,7 +93,7 @@ export function getGeneratedResumes(jobId: string, userId: string = "default"): 
     templateId: "", // Not stored in current schema
     contentJson: row.content_json,
     htmlPath: row.pdf_path,
-    matchScore: row.match_score || undefined,
+    matchScore: row.match_score ?? undefined,
     createdAt: row.created_at,
   }));
 }
@@ -118,7 +125,7 @@ export function getGeneratedResume(id: string, userId: string = "default"): Gene
     templateId: "",
     contentJson: row.content_json,
     htmlPath: row.pdf_path,
-    matchScore: row.match_score || undefined,
+    matchScore: row.match_score ?? undefined,
     createdAt: row.created_at,
   };
 }
@@ -155,7 +162,7 @@ export function getAllGeneratedResumes(userId: string = "default"): GeneratedRes
     templateId: "",
     contentJson: row.content_json,
     htmlPath: row.pdf_path,
-    matchScore: row.match_score || undefined,
+    matchScore: row.match_score ?? undefined,
     createdAt: row.created_at,
   }));
 }

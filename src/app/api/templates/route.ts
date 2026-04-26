@@ -16,7 +16,7 @@ import {
   deleteCustomTemplate,
   updateCustomTemplateName,
 } from "@/lib/db/custom-templates";
-import { getDocuments } from "@/lib/db/queries";
+import { getDocument } from "@/lib/db/queries";
 import { TEMPLATES } from "@/lib/resume/templates";
 import { requireAuth, isAuthError } from "@/lib/auth";
 import {
@@ -103,7 +103,7 @@ export async function POST(request: NextRequest) {
 
     const { name, analyzedStyles, sourceDocumentId } = parseResult.data;
 
-    if (sourceDocumentId && !getDocuments(authResult.userId).some((doc) => doc.id === sourceDocumentId)) {
+    if (sourceDocumentId && !getDocument(sourceDocumentId, authResult.userId)) {
       return ApiErrors.notFound("Source document");
     }
 

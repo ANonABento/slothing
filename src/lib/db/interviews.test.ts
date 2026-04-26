@@ -229,7 +229,7 @@ describe("Interview Database Functions", () => {
 
       const result = getInterviewSessions();
 
-      expect((db.prepare as Mock)).toHaveBeenCalledWith(expect.stringContaining("AND user_id = ?"));
+      expect((db.prepare as Mock)).toHaveBeenCalledWith(expect.stringContaining("WHERE user_id = ?"));
       expect(result).toHaveLength(2);
       expect(result[0].id).toBe("session-2");
       expect(result[1].id).toBe("session-1");
@@ -241,7 +241,7 @@ describe("Interview Database Functions", () => {
 
       getInterviewSessions("job-123");
 
-      expect(mockAll).toHaveBeenCalledWith("default", "default", "job-123");
+      expect(mockAll).toHaveBeenCalledWith("default", "job-123");
     });
 
     it("should return empty array when no sessions exist", () => {
@@ -249,7 +249,7 @@ describe("Interview Database Functions", () => {
 
       const result = getInterviewSessions();
 
-      expect((db.prepare as Mock)).toHaveBeenCalledWith(expect.stringContaining("AND user_id = ?"));
+      expect((db.prepare as Mock)).toHaveBeenCalledWith(expect.stringContaining("WHERE user_id = ?"));
       expect(result).toEqual([]);
     });
   });

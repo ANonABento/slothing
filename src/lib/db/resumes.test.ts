@@ -17,6 +17,7 @@ vi.mock("@/lib/utils", () => ({
 import db from "./schema";
 import {
   saveGeneratedResume,
+  STANDALONE_RESUME_JOB_ID,
   getGeneratedResumes,
   getGeneratedResume,
   deleteGeneratedResume,
@@ -86,6 +87,32 @@ describe("Resume Database Functions", () => {
       expect(() =>
         saveGeneratedResume("job-123", "modern", {}, "/path/to/resume.html", undefined, "user-123")
       ).toThrow("Job not found");
+    });
+
+    it("should allow standalone resumes without a job ownership check", () => {
+      const mockRun = vi.fn().mockReturnValue({ changes: 1 });
+      (db.prepare as Mock).mockReturnValue({ run: mockRun });
+
+      const result = saveGeneratedResume(
+        STANDALONE_RESUME_JOB_ID,
+        "retrieval",
+        {},
+        "",
+        undefined,
+        "user-123"
+      );
+
+      expect(result.jobId).toBe(STANDALONE_RESUME_JOB_ID);
+      expect(mockRun).toHaveBeenCalledWith(
+        "test-resume-id",
+        "user-123",
+        STANDALONE_RESUME_JOB_ID,
+        "user-123",
+        JSON.stringify({}),
+        "",
+        null,
+        expect.any(String)
+      );
     });
   });
 

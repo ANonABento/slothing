@@ -9,7 +9,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requireAuth, isAuthError } from "@/lib/auth";
 import { getLLMConfig } from "@/lib/db/queries";
-import { saveGeneratedResume } from "@/lib/db/resumes";
+import { saveGeneratedResume, STANDALONE_RESUME_JOB_ID } from "@/lib/db/resumes";
 import { runRetrievalPipeline } from "@/lib/knowledge/retrieval";
 
 const generateResumeSchema = z.object({
@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
 
     // Save generated resume to database
     const savedResume = saveGeneratedResume(
-      "standalone", // No specific job ID for standalone generation
+      STANDALONE_RESUME_JOB_ID,
       templateId || "retrieval",
       result.resume,
       "", // No HTML path yet — can be generated separately

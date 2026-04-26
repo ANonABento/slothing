@@ -145,9 +145,7 @@ export function getInterviewSessions(
   `;
   const params: string[] = [userId];
 
-  query += " WHERE profile_id = ?";
-  query += " AND user_id = ?";
-  params.push(userId);
+  query += " WHERE user_id = ?";
 
   if (jobId) {
     query += " AND job_id = ?";
