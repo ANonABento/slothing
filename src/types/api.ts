@@ -243,6 +243,7 @@ export interface BankDocumentsResponse {
 export interface BankDocumentDeleteResponse {
   success: true;
   chunksDeleted: number;
+  documentsDeleted?: number;
 }
 
 // ---------------------------------------------------------------------------
