@@ -55,7 +55,7 @@ describe("BuilderPage", () => {
     expect(screen.queryByText("Cover letter workspace")).not.toBeInTheDocument();
   });
 
-  it("renders cover letter mode from the builder mode search param", async () => {
+  it("renders cover letter mode from the builder mode search param", () => {
     navigationMock.searchParams = new URLSearchParams("mode=cover-letter");
 
     render(<BuilderPage />);
@@ -66,9 +66,7 @@ describe("BuilderPage", () => {
       "aria-selected",
       "true"
     );
-    await waitFor(() => {
-      expect(fetch).toHaveBeenCalledWith("/api/bank");
-    });
+    expect(fetch).not.toHaveBeenCalled();
   });
 
   it("updates the URL when switching to cover letter mode", async () => {

@@ -56,15 +56,18 @@ function BuilderLoading() {
 function BuilderPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [documentMode, setDocumentMode] = useState<BuilderDocumentMode>(() =>
-    getBuilderModeFromSearchParam(searchParams.get("mode"))
+  const initialDocumentMode = getBuilderModeFromSearchParam(
+    searchParams.get("mode")
   );
+  const [documentMode, setDocumentMode] =
+    useState<BuilderDocumentMode>(initialDocumentMode);
   const [entries, setEntries] = useState<BankEntry[]>([]);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [sections, setSections] = useState<SectionState[]>(createInitialSections);
   const [templateId, setTemplateId] = useState("classic");
   const [templateOpen, setTemplateOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(initialDocumentMode === "resume");
+  const [hasLoadedEntries, setHasLoadedEntries] = useState(false);
   const [html, setHtml] = useState("");
   const [generating, setGenerating] = useState(false);
   const [mobileView, setMobileView] = useState<BuilderPanel>(
@@ -78,22 +81,42 @@ function BuilderPageContent() {
   }, [searchParams]);
 
   useEffect(() => {
+    if (documentMode !== "resume") {
+      setLoading(false);
+      return;
+    }
+
+    if (hasLoadedEntries) return;
+
+    let cancelled = false;
+
     async function fetchEntries() {
+      setLoading(true);
       try {
         const res = await fetch("/api/bank");
         if (!res.ok) throw new Error("Failed to fetch");
         const data = await res.json();
         const bankEntries: BankEntry[] = data.entries || [];
+        if (cancelled) return;
         setEntries(bankEntries);
         setSelectedIds(new Set(bankEntries.map((e) => e.id)));
       } catch {
+        if (cancelled) return;
         // Entries stay empty
       } finally {
-        setLoading(false);
+        if (!cancelled) {
+          setHasLoadedEntries(true);
+          setLoading(false);
+        }
       }
     }
+
     fetchEntries();
-  }, []);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [documentMode, hasLoadedEntries]);
 
   const visibleCategoryIds = useMemo(
     () => getVisibleSectionIds(sections),

@@ -21,6 +21,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { SkeletonCard } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
+import { readCoverLetterApiResult } from "@/lib/cover-letter/api-response";
 
 const ChatEditor = dynamic(
   () =>
@@ -56,14 +57,17 @@ export function CoverLetterWorkspace() {
         }),
       });
 
-      const data = await res.json();
+      const result = await readCoverLetterApiResult(
+        res,
+        "Failed to generate cover letter"
+      );
 
-      if (!res.ok) {
-        setLlmError(data.error || "Failed to generate cover letter");
+      if (!result.ok) {
+        setLlmError(result.error);
         return;
       }
 
-      setInitialContent(data.content);
+      setInitialContent(result.content);
       setStep("editor");
     } catch {
       setLlmError("Network error. Please check your connection.");
