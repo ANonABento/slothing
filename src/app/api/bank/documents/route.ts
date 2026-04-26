@@ -9,6 +9,28 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth, isAuthError } from "@/lib/auth";
 import { deleteSourceDocuments, getSourceDocuments } from "@/lib/db/profile-bank";
 
+const INVALID_DOCUMENT_IDS_ERROR =
+  "documentIds must be a non-empty array of document ids";
+
+function isObjectRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function parseDocumentIds(body: unknown): string[] | null {
+  if (!isObjectRecord(body)) return null;
+  const documentIds = body.documentIds;
+
+  if (
+    !Array.isArray(documentIds) ||
+    documentIds.length === 0 ||
+    !documentIds.every((id) => typeof id === "string" && id.trim().length > 0)
+  ) {
+    return null;
+  }
+
+  return documentIds.map((id) => id.trim());
+}
+
 export async function GET() {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
@@ -39,18 +61,10 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const documentIds =
-      typeof body === "object" && body !== null
-        ? (body as { documentIds?: unknown }).documentIds
-        : undefined;
-
-    if (
-      !Array.isArray(documentIds) ||
-      documentIds.length === 0 ||
-      !documentIds.every((id) => typeof id === "string" && id.trim().length > 0)
-    ) {
+    const documentIds = parseDocumentIds(body);
+    if (!documentIds) {
       return NextResponse.json(
-        { error: "documentIds must be a non-empty array of document ids" },
+        { error: INVALID_DOCUMENT_IDS_ERROR },
         { status: 400 }
       );
     }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -36,8 +36,10 @@ export function SourceDocuments({
   const [documents, setDocuments] = useState<SourceDocument[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleteTarget, setDeleteTarget] = useState<SourceDocument | null>(null);
-  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
-  const [selectedDocumentIds, setSelectedDocumentIds] = useState<Set<string>>(new Set());
+  const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
+  const [selectedDocumentIds, setSelectedDocumentIds] = useState<Set<string>>(
+    new Set()
+  );
   const [deleting, setDeleting] = useState(false);
   const selectAllRef = useRef<HTMLInputElement>(null);
   const showErrorToast = useErrorToast();
@@ -70,10 +72,6 @@ export function SourceDocuments({
     });
   }, [documents]);
 
-  const selectedDocuments = useMemo(
-    () => documents.filter((doc) => selectedDocumentIds.has(doc.id)),
-    [documents, selectedDocumentIds]
-  );
   const selectedCount = selectedDocumentIds.size;
   const allSelected = documents.length > 0 && selectedCount === documents.length;
   const someSelected = selectedCount > 0 && !allSelected;
@@ -151,7 +149,7 @@ export function SourceDocuments({
       });
     } finally {
       setDeleting(false);
-      setBulkDeleteOpen(false);
+      setBulkDeleteDialogOpen(false);
     }
   }
 
@@ -180,7 +178,7 @@ export function SourceDocuments({
             <Button
               variant="destructive"
               size="sm"
-              onClick={() => setBulkDeleteOpen(true)}
+              onClick={() => setBulkDeleteDialogOpen(true)}
             >
               <Trash2 className="h-4 w-4 mr-2" />
               Delete Selected
@@ -273,8 +271,8 @@ export function SourceDocuments({
       </Dialog>
 
       <Dialog
-        open={bulkDeleteOpen}
-        onOpenChange={(open) => !open && setBulkDeleteOpen(false)}
+        open={bulkDeleteDialogOpen}
+        onOpenChange={(open) => !open && setBulkDeleteDialogOpen(false)}
       >
         <DialogContent>
           <DialogHeader>
@@ -288,7 +286,7 @@ export function SourceDocuments({
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setBulkDeleteOpen(false)}
+              onClick={() => setBulkDeleteDialogOpen(false)}
               disabled={deleting}
             >
               Cancel
@@ -296,7 +294,7 @@ export function SourceDocuments({
             <Button
               variant="destructive"
               onClick={handleBulkDelete}
-              disabled={deleting || selectedDocuments.length === 0}
+              disabled={deleting || selectedCount === 0}
             >
               {deleting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
               Delete Selected

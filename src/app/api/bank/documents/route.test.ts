@@ -83,6 +83,20 @@ describe("bank documents route", () => {
     });
   });
 
+  it("trims document ids before deleting", async () => {
+    mocks.deleteSourceDocuments.mockReturnValueOnce({
+      documentsDeleted: 1,
+      chunksDeleted: 2,
+    });
+
+    await DELETE(deleteRequest(JSON.stringify({ documentIds: [" doc-1 "] })));
+
+    expect(mocks.deleteSourceDocuments).toHaveBeenCalledWith(
+      ["doc-1"],
+      "user-1"
+    );
+  });
+
   it("rejects malformed JSON without calling the database", async () => {
     const response = await DELETE(deleteRequest("{"));
 

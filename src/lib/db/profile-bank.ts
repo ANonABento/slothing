@@ -179,26 +179,16 @@ export function getSourceDocuments(userId: string = "default"): SourceDocument[]
   return rows.map(rowToSourceDocument);
 }
 
-export function deleteSourceDocument(documentId: string, userId: string = "default"): number {
-  const deleteEntries = db.prepare(
-    "DELETE FROM profile_bank WHERE source_document_id = ? AND user_id = ?"
-  );
-  const deleteDoc = db.prepare(
-    "DELETE FROM documents WHERE id = ? AND user_id = ?"
-  );
-
-  const transaction = db.transaction(() => {
-    const result = deleteEntries.run(documentId, userId);
-    deleteDoc.run(documentId, userId);
-    return result.changes;
-  });
-
-  return transaction();
-}
-
 export interface DeleteSourceDocumentsResult {
   documentsDeleted: number;
   chunksDeleted: number;
+}
+
+export function deleteSourceDocument(
+  documentId: string,
+  userId: string = "default"
+): number {
+  return deleteSourceDocuments([documentId], userId).chunksDeleted;
 }
 
 export function deleteSourceDocuments(
