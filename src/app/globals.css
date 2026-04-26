@@ -131,7 +131,6 @@
   html {
     scroll-behavior: smooth;
     overscroll-behavior: none;
-    overflow-x: hidden;
   }
 
   body {
