@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { CoverLetterDialog } from "@/components/cover-letter/cover-letter-dialog";
 import { AddJobDialog } from "@/components/jobs/add-job-dialog";
@@ -12,7 +12,9 @@ import { JobsNoResults } from "@/components/jobs/jobs-no-results";
 import { JobsToolbar } from "@/components/jobs/jobs-toolbar";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
 import { SkeletonJobCard } from "@/components/ui/skeleton";
+import { useErrorToast } from "@/hooks/use-error-toast";
 import type { ATSAnalysisResult } from "@/lib/ats/analyzer";
+import { readJsonResponse } from "@/lib/http";
 import type { JobDescription, JobMatch } from "@/types";
 import { filterJobs, hasActiveJobFilters, type JobRemoteFilter, type JobSortOption, type JobStatusFilter, type JobTypeFilter } from "./filter-jobs";
 
@@ -30,6 +32,22 @@ const FALLBACK_TEMPLATES: ResumeTemplate[] = [
   { id: "compact", name: "Compact", description: "Dense layout for experienced pros" },
   { id: "professional", name: "Professional", description: "Conservative for business" },
 ];
+
+interface JobsResponse {
+  jobs?: JobDescription[];
+}
+
+interface TemplatesResponse {
+  templates?: ResumeTemplate[];
+}
+
+interface AnalyzeJobResponse {
+  analysis?: JobMatch;
+}
+
+interface GenerateResumeResponse {
+  pdfUrl?: string;
+}
 
 export default function JobsPage() {
   const [jobs, setJobs] = useState<JobDescription[]>([]);
@@ -51,38 +69,48 @@ export default function JobsPage() {
   const [typeFilter, setTypeFilter] = useState<JobTypeFilter>("all");
   const [remoteFilter, setRemoteFilter] = useState<JobRemoteFilter>("all");
   const [sortBy, setSortBy] = useState<JobSortOption>("newest");
+  const showErrorToast = useErrorToast();
 
-  useEffect(() => { void fetchJobs(); void fetchTemplates(); }, []);
-
-  const fetchJobs = async () => {
+  const fetchJobs = useCallback(async () => {
     try {
       const response = await fetch("/api/jobs");
-      const data = await response.json();
+      const data = await readJsonResponse<JobsResponse>(response, "Failed to load jobs");
       setJobs(data.jobs || []);
     } catch (error) {
-      console.error("Failed to fetch jobs:", error);
+      showErrorToast(error, {
+        title: "Could not load jobs",
+        fallbackDescription: "Please refresh the page and try again.",
+      });
     } finally {
       setLoading(false);
     }
-  };
+  }, [showErrorToast]);
 
-  const fetchTemplates = async () => {
+  const fetchTemplates = useCallback(async () => {
     try {
       const response = await fetch("/api/jobs/templates");
-      const data = await response.json();
+      const data = await readJsonResponse<TemplatesResponse>(
+        response,
+        "Failed to load templates"
+      );
       setTemplates(data.templates || []);
     } catch {
       setTemplates(FALLBACK_TEMPLATES);
     }
-  };
+  }, []);
+
+  useEffect(() => { void fetchJobs(); void fetchTemplates(); }, [fetchJobs, fetchTemplates]);
 
   const deleteJob = async (id: string) => {
     try {
       const response = await fetch(`/api/jobs/${id}`, { method: "DELETE" });
-      if (!response.ok) throw new Error("Failed to delete job");
+      await readJsonResponse<unknown>(response, "Failed to delete job");
       setJobs((prev) => prev.filter((job) => job.id !== id));
     } catch (error) {
-      console.error("Failed to delete job:", error);
+      showErrorToast(error, {
+        title: "Could not delete job",
+        fallbackDescription: "Please try deleting the job again.",
+      });
     }
   };
 
@@ -93,11 +121,13 @@ export default function JobsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status }),
       });
-      if (response.ok) {
-        setJobs((prev) => prev.map((job) => (job.id === id ? { ...job, status: status as JobDescription["status"] } : job)));
-      }
+      await readJsonResponse<unknown>(response, "Failed to update job status");
+      setJobs((prev) => prev.map((job) => (job.id === id ? { ...job, status: status as JobDescription["status"] } : job)));
     } catch (error) {
-      console.error("Failed to update job status:", error);
+      showErrorToast(error, {
+        title: "Could not update job status",
+        fallbackDescription: "Please try changing the status again.",
+      });
     }
   };
 
@@ -105,10 +135,17 @@ export default function JobsPage() {
     setAnalyzing(jobId);
     try {
       const response = await fetch(`/api/jobs/${jobId}/analyze`, { method: "POST" });
-      const data = await response.json();
-      if (data.analysis) setAnalyses((prev) => ({ ...prev, [jobId]: data.analysis }));
+      const data = await readJsonResponse<AnalyzeJobResponse>(
+        response,
+        "Failed to analyze job"
+      );
+      const analysis = data.analysis;
+      if (analysis) setAnalyses((prev) => ({ ...prev, [jobId]: analysis }));
     } catch (error) {
-      console.error("Failed to analyze job:", error);
+      showErrorToast(error, {
+        title: "Could not analyze job",
+        fallbackDescription: "Please try the analysis again.",
+      });
     } finally {
       setAnalyzing(null);
     }
@@ -122,10 +159,16 @@ export default function JobsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ templateId: selectedTemplate[jobId] || "classic" }),
       });
-      const data = await response.json();
+      const data = await readJsonResponse<GenerateResumeResponse>(
+        response,
+        "Failed to generate resume"
+      );
       if (data.pdfUrl) window.open(data.pdfUrl, "_blank");
     } catch (error) {
-      console.error("Failed to generate resume:", error);
+      showErrorToast(error, {
+        title: "Could not generate resume",
+        fallbackDescription: "Please try generating the resume again.",
+      });
     } finally {
       setGenerating(null);
     }
@@ -139,10 +182,16 @@ export default function JobsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ jobId }),
       });
-      const data = (await response.json()) as ATSAnalysisResult;
+      const data = await readJsonResponse<ATSAnalysisResult>(
+        response,
+        "Failed to run ATS check"
+      );
       if (data.score) setAtsResults((prev) => ({ ...prev, [jobId]: data }));
     } catch (error) {
-      console.error("Failed to run ATS check:", error);
+      showErrorToast(error, {
+        title: "Could not run ATS check",
+        fallbackDescription: "Please try the ATS check again.",
+      });
     } finally {
       setAtsAnalyzing(null);
     }

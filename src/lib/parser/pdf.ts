@@ -23,15 +23,19 @@ function extractPdfTextFallback(dataBuffer: Buffer): string {
   const raw = dataBuffer.toString("latin1");
   const textRuns: string[] = [];
   const literalPattern = /\((?:\\.|[^\\)])*\)/g;
+  const textRunPattern = /(\((?:\\.|[^\\)])*\)\s*Tj)/g;
+  const textArrayPattern = /\[([\s\S]*?)\]\s*TJ/g;
 
-  for (const match of raw.matchAll(/(\((?:\\.|[^\\)])*\)\s*Tj)/g)) {
+  let match: RegExpExecArray | null;
+
+  while ((match = textRunPattern.exec(raw)) !== null) {
     const literal = match[0].match(literalPattern)?.[0];
     if (literal) {
       textRuns.push(decodePdfLiteralString(literal.slice(1, -1)));
     }
   }
 
-  for (const match of raw.matchAll(/\[(.*?)\]\s*TJ/gs)) {
+  while ((match = textArrayPattern.exec(raw)) !== null) {
     const chunk = match[1];
     for (const literal of chunk.match(literalPattern) ?? []) {
       textRuns.push(decodePdfLiteralString(literal.slice(1, -1)));

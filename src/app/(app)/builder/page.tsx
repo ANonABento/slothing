@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { SectionList } from "@/components/builder/section-list";
 import { ResumePreview } from "@/components/builder/resume-preview";
@@ -18,6 +18,7 @@ import type { SectionState, BuilderPanel } from "@/lib/builder/section-manager";
 import { cn } from "@/lib/utils";
 import type { BankEntry, BankCategory } from "@/types";
 import type { TailoredResume } from "@/lib/resume/generator";
+import { useErrorToast } from "@/hooks/use-error-toast";
 import {
   Download,
   Copy,
@@ -41,6 +42,8 @@ export default function BuilderPage() {
   const [mobileView, setMobileView] = useState<BuilderPanel>(
     DEFAULT_BUILDER_PANEL
   );
+  const showErrorToast = useErrorToast();
+  const lastPreviewErrorToastRef = useRef("");
 
   useEffect(() => {
     async function fetchEntries() {
@@ -113,17 +116,27 @@ export default function BuilderPage() {
     })
       .then((res) => res.json())
       .then((data) => {
-        if (data.html) setHtml(data.html);
+        if (data.html) {
+          lastPreviewErrorToastRef.current = "";
+          setHtml(data.html);
+        }
       })
       .catch((err) => {
         if (err.name !== "AbortError") {
-          console.error("Failed to generate preview:", err);
+          const message = err instanceof Error ? err.message : "preview";
+          if (lastPreviewErrorToastRef.current !== message) {
+            lastPreviewErrorToastRef.current = message;
+            showErrorToast(err, {
+              title: "Could not update preview",
+              fallbackDescription: "Please try changing the resume content again.",
+            });
+          }
         }
       })
       .finally(() => setGenerating(false));
 
     return () => controller.abort();
-  }, [orderedEntries, templateId, visibleCategoryIds]);
+  }, [orderedEntries, showErrorToast, templateId, visibleCategoryIds]);
 
   const handleToggleEntry = useCallback((id: string) => {
     setSelectedIds((prev) => {

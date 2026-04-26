@@ -180,9 +180,9 @@ export function useVoiceInput(options: UseVoiceInputOptions = {}) {
 
     try {
       recognitionRef.current.start();
-    } catch (error) {
+    } catch {
       // Recognition might already be running
-      console.error("Speech recognition start error:", error);
+      onError?.("Speech recognition could not start");
     }
   }, [onError]);
 

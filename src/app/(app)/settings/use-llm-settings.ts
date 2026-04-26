@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useErrorToast } from "@/hooks/use-error-toast";
 import { DEFAULT_MODELS, LLM_ENDPOINTS } from "@/lib/constants";
 import type { LLMConfig } from "@/types";
 
@@ -23,6 +24,7 @@ export function useLLMSettings() {
   const [testResult, setTestResult] = useState<LLMTestResult | null>(null);
   const [ollamaModels, setOllamaModels] = useState<string[]>([]);
   const [hasChanges, setHasChanges] = useState(false);
+  const showErrorToast = useErrorToast();
 
   useEffect(() => {
     async function fetchSettings() {
@@ -34,14 +36,17 @@ export function useLLMSettings() {
           setConfig(data.llm);
         }
       } catch (error) {
-        console.error("Failed to fetch settings:", error);
+        showErrorToast(error, {
+          title: "Could not load settings",
+          fallbackDescription: "Default settings are being shown.",
+        });
       } finally {
         setLoading(false);
       }
     }
 
     void fetchSettings();
-  }, []);
+  }, [showErrorToast]);
 
   const updateConfig = (updates: Partial<LLMConfig>) => {
     setConfig((prev) => ({ ...prev, ...updates }));
@@ -103,8 +108,10 @@ export function useLLMSettings() {
     }
   };
 
-  const availableModels =
-    config.provider === "ollama" && ollamaModels.length > 0 ? ollamaModels : DEFAULT_MODELS[config.provider] || [];
+  const availableModels: string[] =
+    config.provider === "ollama" && ollamaModels.length > 0
+      ? ollamaModels
+      : [...(DEFAULT_MODELS[config.provider] || [])];
 
   return {
     config,

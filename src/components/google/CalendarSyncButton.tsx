@@ -16,6 +16,7 @@ import {
   AlertCircle,
   ExternalLink,
 } from "lucide-react";
+import { useErrorToast } from "@/hooks/use-error-toast";
 
 type SyncType = "all" | "interviews" | "deadlines" | "reminders";
 
@@ -47,6 +48,7 @@ export function CalendarSyncButton({
   const [syncType, setSyncType] = useState<SyncType>("all");
   const [result, setResult] = useState<SyncResponse | null>(null);
   const [connected, setConnected] = useState<boolean | null>(null);
+  const showErrorToast = useErrorToast();
 
   useEffect(() => {
     checkConnection();
@@ -77,7 +79,10 @@ export function CalendarSyncButton({
       setResult(data);
       onSyncComplete?.(data);
     } catch (error) {
-      console.error("Sync failed:", error);
+      showErrorToast(error, {
+        title: "Could not sync calendar",
+        fallbackDescription: "Please check your Google connection and try again.",
+      });
       setResult({
         success: false,
         synced: 0,

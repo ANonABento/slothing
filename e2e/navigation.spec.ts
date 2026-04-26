@@ -1,6 +1,6 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
 
-async function preparePage(page: Parameters<typeof test.beforeEach>[0]["page"], path = "/dashboard") {
+async function preparePage(page: Page, path = "/dashboard") {
   await page.addInitScript(() => {
     localStorage.setItem("get_me_job_onboarding_completed", "true");
   });
@@ -8,7 +8,7 @@ async function preparePage(page: Parameters<typeof test.beforeEach>[0]["page"], 
   await page.waitForLoadState("networkidle");
 }
 
-async function ensureSidebarOpen(page: Parameters<typeof test.beforeEach>[0]["page"]) {
+async function ensureSidebarOpen(page: Page) {
   const openMenuButton = page.getByRole("button", { name: /open menu/i });
   if (await openMenuButton.isVisible()) {
     await openMenuButton.click();

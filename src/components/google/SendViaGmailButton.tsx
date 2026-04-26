@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Mail, Loader2, CheckCircle, AlertCircle } from "lucide-react";
+import { useErrorToast } from "@/hooks/use-error-toast";
 
 interface SendViaGmailButtonProps {
   to: string;
@@ -23,6 +24,7 @@ export function SendViaGmailButton({
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [connected, setConnected] = useState<boolean | null>(null);
+  const showErrorToast = useErrorToast();
 
   useEffect(() => {
     checkConnection();
@@ -57,10 +59,13 @@ export function SendViaGmailButton({
         setSent(true);
         onSuccess?.();
       } else {
-        setError(data.error || "Failed to send");
+        throw new Error(data.error || "Failed to send");
       }
     } catch (err) {
-      console.error("Send failed:", err);
+      showErrorToast(err, {
+        title: "Could not send Gmail message",
+        fallbackDescription: "Please check your Google connection and try again.",
+      });
       setError("Failed to send via Gmail");
     } finally {
       setSending(false);

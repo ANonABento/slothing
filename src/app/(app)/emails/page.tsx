@@ -36,6 +36,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { SkeletonButton } from "@/components/ui/skeleton";
+import { useErrorToast } from "@/hooks/use-error-toast";
+import { readJsonResponse } from "@/lib/http";
 import type { EmailTemplateType, JobDescription } from "@/types";
 
 const SendViaGmailButton = dynamic(
@@ -52,6 +54,21 @@ interface EmailDraft {
   context?: Record<string, string>;
   createdAt: string;
   updatedAt: string;
+}
+
+interface JobsResponse {
+  jobs?: JobDescription[];
+}
+
+interface EmailDraftsResponse {
+  drafts?: EmailDraft[];
+}
+
+interface GeneratedEmailResponse {
+  email?: {
+    subject: string;
+    body: string;
+  };
 }
 
 const TEMPLATE_CONFIG: Record<
@@ -116,31 +133,41 @@ export default function EmailTemplatesPage() {
 
   // Gmail state
   const [recipientEmail, setRecipientEmail] = useState("");
+  const showErrorToast = useErrorToast();
 
-  useEffect(() => {
-    fetchJobs();
-    fetchDrafts();
-  }, []);
-
-  const fetchJobs = async () => {
+  const fetchJobs = useCallback(async () => {
     try {
       const res = await fetch("/api/jobs");
-      const data = await res.json();
+      const data = await readJsonResponse<JobsResponse>(res, "Failed to load jobs");
       setJobs(data.jobs || []);
     } catch (error) {
-      console.error("Failed to fetch jobs:", error);
+      showErrorToast(error, {
+        title: "Could not load jobs",
+        fallbackDescription: "Please refresh the page and try again.",
+      });
     }
-  };
+  }, [showErrorToast]);
 
-  const fetchDrafts = async () => {
+  const fetchDrafts = useCallback(async () => {
     try {
       const res = await fetch("/api/email/drafts");
-      const data = await res.json();
+      const data = await readJsonResponse<EmailDraftsResponse>(
+        res,
+        "Failed to load drafts"
+      );
       setDrafts(data.drafts || []);
     } catch (error) {
-      console.error("Failed to fetch drafts:", error);
+      showErrorToast(error, {
+        title: "Could not load drafts",
+        fallbackDescription: "Please refresh the page and try again.",
+      });
     }
-  };
+  }, [showErrorToast]);
+
+  useEffect(() => {
+    void fetchJobs();
+    void fetchDrafts();
+  }, [fetchDrafts, fetchJobs]);
 
   const saveDraft = async () => {
     if (!selectedType || !generatedEmail) return;
@@ -156,7 +183,7 @@ export default function EmailTemplatesPage() {
 
       if (editingDraftId) {
         // Update existing draft
-        await fetch(`/api/email/drafts/${editingDraftId}`, {
+        const response = await fetch(`/api/email/drafts/${editingDraftId}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -165,9 +192,10 @@ export default function EmailTemplatesPage() {
             context: Object.keys(context).length > 0 ? context : undefined,
           }),
         });
+        await readJsonResponse<unknown>(response, "Failed to save draft");
       } else {
         // Create new draft
-        await fetch("/api/email/drafts", {
+        const response = await fetch("/api/email/drafts", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -178,11 +206,15 @@ export default function EmailTemplatesPage() {
             context: Object.keys(context).length > 0 ? context : undefined,
           }),
         });
+        await readJsonResponse<unknown>(response, "Failed to save draft");
       }
-      fetchDrafts();
+      void fetchDrafts();
       setEditingDraftId(null);
     } catch (error) {
-      console.error("Failed to save draft:", error);
+      showErrorToast(error, {
+        title: "Could not save draft",
+        fallbackDescription: "Please try saving the draft again.",
+      });
     } finally {
       setSavingDraft(false);
     }
@@ -207,13 +239,17 @@ export default function EmailTemplatesPage() {
 
   const deleteDraft = async (draftId: string) => {
     try {
-      await fetch(`/api/email/drafts/${draftId}`, { method: "DELETE" });
-      fetchDrafts();
+      const response = await fetch(`/api/email/drafts/${draftId}`, { method: "DELETE" });
+      await readJsonResponse<unknown>(response, "Failed to delete draft");
+      void fetchDrafts();
       if (editingDraftId === draftId) {
         setEditingDraftId(null);
       }
     } catch (error) {
-      console.error("Failed to delete draft:", error);
+      showErrorToast(error, {
+        title: "Could not delete draft",
+        fallbackDescription: "Please try deleting the draft again.",
+      });
     }
   };
 
@@ -236,7 +272,10 @@ export default function EmailTemplatesPage() {
         }),
       });
 
-      const data = await res.json();
+      const data = await readJsonResponse<GeneratedEmailResponse>(
+        res,
+        "Failed to generate email"
+      );
       if (data.email) {
         setGeneratedEmail({
           subject: data.email.subject,
@@ -244,7 +283,10 @@ export default function EmailTemplatesPage() {
         });
       }
     } catch (error) {
-      console.error("Failed to generate email:", error);
+      showErrorToast(error, {
+        title: "Could not generate email",
+        fallbackDescription: "Please adjust the details and try again.",
+      });
     } finally {
       setLoading(false);
     }
@@ -256,14 +298,22 @@ export default function EmailTemplatesPage() {
     targetCompany,
     connectionName,
     customNote,
+    showErrorToast,
   ]);
 
   const copyToClipboard = async () => {
     if (!generatedEmail) return;
     const fullEmail = `Subject: ${generatedEmail.subject}\n\n${generatedEmail.body}`;
-    await navigator.clipboard.writeText(fullEmail);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    try {
+      await navigator.clipboard.writeText(fullEmail);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (error) {
+      showErrorToast(error, {
+        title: "Could not copy email",
+        fallbackDescription: "Please copy the email manually.",
+      });
+    }
   };
 
   const openInMailClient = () => {

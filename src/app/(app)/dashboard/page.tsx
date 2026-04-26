@@ -21,6 +21,7 @@ import { RecentActivity, type ActivityItem } from "@/components/dashboard/recent
 import { calculateProfileCompleteness, type ProfileCompletenessResult } from "@/lib/profile-completeness";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
 import { SkeletonStatCard, SkeletonInsights } from "@/components/ui/skeleton";
+import { useErrorToast } from "@/hooks/use-error-toast";
 import { buildQuickActions } from "./quick-actions";
 
 interface DashboardStats {
@@ -47,6 +48,7 @@ export default function Dashboard() {
   const [activityItems, setActivityItems] = useState<ActivityItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const showErrorToast = useErrorToast();
 
   useEffect(() => {
     async function fetchJson(url: string) {
@@ -116,9 +118,17 @@ export default function Dashboard() {
         );
         setActivityItems(activities.slice(0, 5));
       } catch (error) {
-        console.error("Failed to fetch stats:", error);
+        const isAuthError =
+          error instanceof Error && error.message === "AUTH_REQUIRED";
+        showErrorToast(
+          isAuthError ? new Error("Sign in to access your dashboard.") : error,
+          {
+            title: "Could not load dashboard",
+            fallbackDescription: "Please refresh the page and try again.",
+          }
+        );
         setErrorMessage(
-          error instanceof Error && error.message === "AUTH_REQUIRED"
+          isAuthError
             ? "Sign in to access your dashboard."
             : "We couldn't load your dashboard data."
         );
@@ -127,7 +137,7 @@ export default function Dashboard() {
       }
     }
     fetchStats();
-  }, []);
+  }, [showErrorToast]);
 
   if (errorMessage) {
     const needsSignIn = errorMessage === "Sign in to access your dashboard.";

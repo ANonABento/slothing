@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
+import { useErrorToast } from "@/hooks/use-error-toast";
 import {
   BookOpen,
   CheckSquare,
@@ -134,6 +135,7 @@ export function PrepGuideCard({ jobId }: PrepGuideCardProps) {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"overview" | "checklist" | "questions">("overview");
   const [downloading, setDownloading] = useState(false);
+  const showErrorToast = useErrorToast();
 
   useEffect(() => {
     async function fetchGuide() {
@@ -171,6 +173,9 @@ export function PrepGuideCard({ jobId }: PrepGuideCardProps) {
     setDownloading(true);
     try {
       const res = await fetch(`/api/interview/prep-guide?jobId=${jobId}&format=markdown`);
+      if (!res.ok) {
+        throw new Error("Failed to download guide");
+      }
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -181,7 +186,10 @@ export function PrepGuideCard({ jobId }: PrepGuideCardProps) {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     } catch (err) {
-      console.error("Download failed:", err);
+      showErrorToast(err, {
+        title: "Could not download prep guide",
+        fallbackDescription: "Please try downloading the guide again.",
+      });
     } finally {
       setDownloading(false);
     }
