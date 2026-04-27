@@ -15,44 +15,42 @@ function formatBankContext(bankEntries: GroupedBankEntries): string {
   if (bankEntries.experience.length > 0) {
     sections.push(
       "## Work Experience\n" +
-        bankEntries.experience
-          .map((e) => formatEntryContent(e))
-          .join("\n")
+        bankEntries.experience.map((e) => formatEntryContent(e)).join("\n"),
     );
   }
 
   if (bankEntries.skill.length > 0) {
     sections.push(
       "## Skills\n" +
-        bankEntries.skill.map((e) => formatEntryContent(e)).join(", ")
+        bankEntries.skill.map((e) => formatEntryContent(e)).join(", "),
     );
   }
 
   if (bankEntries.project.length > 0) {
     sections.push(
       "## Projects\n" +
-        bankEntries.project.map((e) => formatEntryContent(e)).join("\n")
+        bankEntries.project.map((e) => formatEntryContent(e)).join("\n"),
     );
   }
 
   if (bankEntries.education.length > 0) {
     sections.push(
       "## Education\n" +
-        bankEntries.education.map((e) => formatEntryContent(e)).join("\n")
+        bankEntries.education.map((e) => formatEntryContent(e)).join("\n"),
     );
   }
 
   if (bankEntries.achievement.length > 0) {
     sections.push(
       "## Achievements\n" +
-        bankEntries.achievement.map((e) => formatEntryContent(e)).join("\n")
+        bankEntries.achievement.map((e) => formatEntryContent(e)).join("\n"),
     );
   }
 
   if (bankEntries.certification.length > 0) {
     sections.push(
       "## Certifications\n" +
-        bankEntries.certification.map((e) => formatEntryContent(e)).join("\n")
+        bankEntries.certification.map((e) => formatEntryContent(e)).join("\n"),
     );
   }
 
@@ -112,21 +110,33 @@ export function buildRevisionPrompt(instruction: string): string {
 Apply the requested changes while maintaining professional quality. Output ONLY the revised cover letter text, no additional commentary.`;
 }
 
-export function buildSelectionRewritePrompt(
-  selectedText: string,
-  instruction: string
-): string {
-  return `Rewrite only this selected passage based on the instruction: "${instruction}"
+export function filterBankEntriesByIds(
+  bankEntries: GroupedBankEntries,
+  selectedEntryIds: string[],
+): GroupedBankEntries {
+  const selectedIds = new Set(selectedEntryIds);
 
-Selected passage:
-${selectedText}
-
-Keep the rewritten passage compatible with the surrounding cover letter. Output ONLY the rewritten passage, no additional commentary.`;
+  return {
+    experience: bankEntries.experience.filter((entry) =>
+      selectedIds.has(entry.id),
+    ),
+    skill: bankEntries.skill.filter((entry) => selectedIds.has(entry.id)),
+    project: bankEntries.project.filter((entry) => selectedIds.has(entry.id)),
+    education: bankEntries.education.filter((entry) =>
+      selectedIds.has(entry.id),
+    ),
+    achievement: bankEntries.achievement.filter((entry) =>
+      selectedIds.has(entry.id),
+    ),
+    certification: bankEntries.certification.filter((entry) =>
+      selectedIds.has(entry.id),
+    ),
+  };
 }
 
 export async function generateCoverLetter(
   input: CoverLetterInput,
-  llmConfig: LLMConfig
+  llmConfig: LLMConfig,
 ): Promise<string> {
   const client = new LLMClient(llmConfig);
   const systemPrompt = buildSystemPrompt(input);
@@ -150,7 +160,7 @@ export async function reviseCoverLetter(
   currentContent: string,
   instruction: string,
   input: CoverLetterInput,
-  llmConfig: LLMConfig
+  llmConfig: LLMConfig,
 ): Promise<string> {
   const client = new LLMClient(llmConfig);
   const systemPrompt = buildSystemPrompt(input);

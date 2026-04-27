@@ -42,6 +42,18 @@ export function createAiActionInstruction({
   sectionLabel,
 }: InstructionInput): string {
   const parts = [ACTION_INSTRUCTIONS[action]];
+  const isPartialReplacement =
+    action === "rewrite" ||
+    action === "concise" ||
+    action === "metrics" ||
+    action === "keywords" ||
+    action === "rewrite-section";
+
+  parts.push(
+    isPartialReplacement
+      ? "Return only replacement text for the selected passage, not a full cover letter."
+      : "Return the full revised cover letter text.",
+  );
 
   if (sectionLabel) {
     parts.push(`Section: ${sectionLabel}.`);
@@ -68,7 +80,7 @@ export function normalizeTextRange(range: TextRange, contentLength: number) {
 export function applyTextReplacement(
   content: string,
   replacement: string,
-  range: TextRange
+  range: TextRange,
 ): string {
   const normalized = normalizeTextRange(range, content.length);
   return (
@@ -79,8 +91,12 @@ export function applyTextReplacement(
 }
 
 export function getParagraphRanges(content: string) {
-  const ranges: Array<{ label: string; text: string; start: number; end: number }> =
-    [];
+  const ranges: Array<{
+    label: string;
+    text: string;
+    start: number;
+    end: number;
+  }> = [];
   const pattern = /\S[\s\S]*?(?=\n\s*\n|$)/g;
   let match: RegExpExecArray | null;
 

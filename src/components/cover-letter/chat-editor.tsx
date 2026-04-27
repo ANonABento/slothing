@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Check,
   ChevronLeft,
@@ -14,8 +14,10 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { getEntryTitle } from "@/components/bank/chunk-card-utils";
 import { readCoverLetterApiResult } from "@/lib/cover-letter/api-response";
 import { cn } from "@/lib/utils";
+import type { BankEntry } from "@/types";
 import {
   applyTextReplacement,
   createAiActionInstruction,
@@ -79,12 +81,70 @@ export function ChatEditor({
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [showJobDescription, setShowJobDescription] = useState(false);
+  const [showBankPicker, setShowBankPicker] = useState(false);
+  const [bankEntries, setBankEntries] = useState<BankEntry[]>([]);
+  const [selectedBankEntryIds, setSelectedBankEntryIds] = useState<Set<string>>(
+    new Set(),
+  );
+  const [hasLoadedBankEntries, setHasLoadedBankEntries] = useState(false);
+  const [isLoadingBankEntries, setIsLoadingBankEntries] = useState(false);
+  const [bankEntriesError, setBankEntriesError] = useState<string | null>(null);
   const [isPanelCollapsed, setIsPanelCollapsed] = useState(false);
   const contentRef = useRef(content);
+  const assistantRequestRef = useRef(0);
   contentRef.current = content;
 
   const sections = useMemo(() => getParagraphRanges(content), [content]);
   const selectedSection = sections[selectedSectionIndex] ?? sections[0] ?? null;
+
+  useEffect(() => {
+    if (sections.length === 0) {
+      if (selectedSectionIndex !== 0) setSelectedSectionIndex(0);
+      return;
+    }
+
+    if (selectedSectionIndex >= sections.length) {
+      setSelectedSectionIndex(sections.length - 1);
+    }
+  }, [sections.length, selectedSectionIndex]);
+
+  useEffect(() => {
+    if (!showBankPicker || hasLoadedBankEntries) return;
+
+    let cancelled = false;
+
+    async function loadBankEntries() {
+      setIsLoadingBankEntries(true);
+      setBankEntriesError(null);
+
+      try {
+        const res = await fetch("/api/bank");
+        if (!res.ok) throw new Error("Failed to load bank entries");
+
+        const data = (await res.json()) as { entries?: BankEntry[] };
+        const entries = data.entries ?? [];
+        if (cancelled) return;
+
+        setBankEntries(entries);
+        setSelectedBankEntryIds(new Set(entries.map((entry) => entry.id)));
+        setHasLoadedBankEntries(true);
+      } catch {
+        if (!cancelled) {
+          setBankEntriesError("Could not load knowledge bank entries.");
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoadingBankEntries(false);
+        }
+      }
+    }
+
+    loadBankEntries();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [hasLoadedBankEntries, showBankPicker]);
 
   function commitContent(nextContent: string, instruction: string) {
     const nextVersion: Version = {
@@ -135,6 +195,18 @@ export function ChatEditor({
   }
 
   async function generateFromBank() {
+    const requestId = assistantRequestRef.current + 1;
+    assistantRequestRef.current = requestId;
+    const baseContent = contentRef.current;
+    const selectedIds = hasLoadedBankEntries
+      ? Array.from(selectedBankEntryIds)
+      : undefined;
+
+    if (selectedIds && selectedIds.length === 0) {
+      setError("Select at least one bank entry to generate content.");
+      return;
+    }
+
     setIsGenerating(true);
     setError(null);
 
@@ -147,14 +219,22 @@ export function ChatEditor({
           jobTitle,
           company,
           action: "generate",
+          selectedBankEntryIds: selectedIds,
         }),
       });
       const result = await readCoverLetterApiResult(
         res,
-        "Failed to generate cover letter"
+        "Failed to generate cover letter",
       );
       if (!result.ok) {
         setError(result.error);
+        return;
+      }
+
+      if (
+        assistantRequestRef.current !== requestId ||
+        contentRef.current !== baseContent
+      ) {
         return;
       }
 
@@ -162,15 +242,19 @@ export function ChatEditor({
     } catch {
       setError("Network error. Please try again.");
     } finally {
-      setIsGenerating(false);
+      if (assistantRequestRef.current === requestId) {
+        setIsGenerating(false);
+      }
     }
   }
 
   async function runAssistantAction(
     action: AiActionId,
     actionLabel: string,
-    target: TextSelection | null
+    target: TextSelection | null,
   ) {
+    const requestId = assistantRequestRef.current + 1;
+    assistantRequestRef.current = requestId;
     const baseContent = contentRef.current;
     const before = target?.text ?? baseContent;
     const instruction = createAiActionInstruction({
@@ -201,14 +285,19 @@ export function ChatEditor({
       });
       const result = await readCoverLetterApiResult(
         res,
-        "Failed to revise cover letter"
+        "Failed to revise cover letter",
       );
       if (!result.ok) {
         setError(result.error);
         return;
       }
 
-      if (contentRef.current !== baseContent) return;
+      if (
+        assistantRequestRef.current !== requestId ||
+        contentRef.current !== baseContent
+      ) {
+        return;
+      }
 
       setPendingDiff({
         before,
@@ -220,7 +309,9 @@ export function ChatEditor({
     } catch {
       setError("Network error. Please try again.");
     } finally {
-      setIsGenerating(false);
+      if (assistantRequestRef.current === requestId) {
+        setIsGenerating(false);
+      }
     }
   }
 
@@ -239,7 +330,7 @@ export function ChatEditor({
       ? applyTextReplacement(
           pendingDiff.baseContent,
           pendingDiff.after,
-          pendingDiff.range
+          pendingDiff.range,
         )
       : pendingDiff.after;
 
@@ -248,108 +339,13 @@ export function ChatEditor({
     setSelection(null);
   }
 
-  function updateCurrentContent(content: string) {
-    setVersions((current) =>
-      current.map((version, index) =>
-        index === currentVersionIndex ? { ...version, content } : version
-      )
-    );
-  }
-
-  function handleEditorChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
-    updateCurrentContent(e.target.value);
-    setSelection(null);
-    setRewrite(null);
-  }
-
-  function handleEditorSelect(e: React.SyntheticEvent<HTMLTextAreaElement>) {
-    const target = e.currentTarget;
-    const start = target.selectionStart;
-    const end = target.selectionEnd;
-    const text = target.value.slice(start, end);
-    setSelection(
-      start < end && text.trim()
-        ? { start, end, text, baseContent: target.value }
-        : null
-    );
-  }
-
-  async function handleSelectionRewrite(rewriteInstruction = "Rewrite") {
-    if (!selection || !currentVersion) return;
-    if (selection.baseContent !== currentVersion.content) {
-      setSelection(null);
-      return;
-    }
-
-    const baseSelection = selection;
-    const baseVersionIndex = currentVersionIndex;
-    setIsGenerating(true);
-    setError(null);
-
-    try {
-      const res = await fetch("/api/cover-letter/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          jobDescription,
-          jobTitle,
-          company,
-          action: "rewrite",
-          currentContent: baseSelection.baseContent,
-          selectedText: baseSelection.text,
-          instruction: rewriteInstruction,
-        }),
-      });
-
-      const result = await readCoverLetterApiResult(
-        res,
-        "Failed to rewrite selection"
-      );
-      if (!result.ok) {
-        setError(result.error);
-        return;
-      }
-
-      if (
-        currentContentRef.current !== baseSelection.baseContent ||
-        currentVersionIndexRef.current !== baseVersionIndex
-      ) {
-        return;
-      }
-
-      setRewrite({
-        before: baseSelection.text,
-        after: result.content,
-        start: baseSelection.start,
-        end: baseSelection.end,
-        baseContent: baseSelection.baseContent,
-      });
-    } catch {
-      setError("Network error. Please try again.");
-    } finally {
-      setIsGenerating(false);
-    }
-  }
-
-  function handleAcceptRewrite() {
-    if (!rewrite || currentContentRef.current !== rewrite.baseContent) return;
-    const beforeSelection = rewrite.baseContent.slice(0, rewrite.start);
-    const afterSelection = rewrite.baseContent.slice(rewrite.end);
-    updateCurrentContent(
-      `${beforeSelection}${rewrite.after}${afterSelection}`
-    );
-    setRewrite(null);
-    setSelection(null);
-  }
-
-  function handleRejectRewrite() {
-    setRewrite(null);
-  }
-
-  function handleVersionChange(index: number) {
-    setCurrentVersionIndex(index);
-    setSelection(null);
-    setRewrite(null);
+  function toggleBankEntry(entryId: string) {
+    setSelectedBankEntryIds((currentIds) => {
+      const nextIds = new Set(currentIds);
+      if (nextIds.has(entryId)) nextIds.delete(entryId);
+      else nextIds.add(entryId);
+      return nextIds;
+    });
   }
 
   async function handleCopy() {
@@ -451,7 +447,7 @@ export function ChatEditor({
       <div
         className={cn(
           "grid min-h-0 flex-1 grid-cols-1 overflow-hidden rounded-lg border bg-card lg:grid-cols-[minmax(0,1fr)_340px]",
-          isPanelCollapsed && "lg:grid-cols-[minmax(0,1fr)_56px]"
+          isPanelCollapsed && "lg:grid-cols-[minmax(0,1fr)_56px]",
         )}
       >
         <div className="relative min-h-[420px] border-b lg:border-b-0 lg:border-r">
@@ -519,7 +515,9 @@ export function ChatEditor({
                     <Button
                       className="mt-3 w-full"
                       size="sm"
-                      onClick={() => runAssistantAction("tailor", "Tailor to JD", null)}
+                      onClick={() =>
+                        runAssistantAction("tailor", "Tailor to JD", null)
+                      }
                       disabled={isGenerating}
                     >
                       Apply JD Tailoring
@@ -529,11 +527,90 @@ export function ChatEditor({
                 <Button
                   className="w-full justify-start"
                   variant="outline"
-                  onClick={generateFromBank}
+                  onClick={() => setShowBankPicker((value) => !value)}
                   disabled={isGenerating}
                 >
                   Generate from Bank
                 </Button>
+                {showBankPicker && (
+                  <div className="space-y-3 rounded-md border bg-muted/40 p-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-xs font-medium text-muted-foreground">
+                        Knowledge bank
+                      </p>
+                      {bankEntries.length > 0 && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 px-2 text-xs"
+                          onClick={() =>
+                            setSelectedBankEntryIds(
+                              selectedBankEntryIds.size === bankEntries.length
+                                ? new Set()
+                                : new Set(bankEntries.map((entry) => entry.id)),
+                            )
+                          }
+                        >
+                          {selectedBankEntryIds.size === bankEntries.length
+                            ? "Deselect all"
+                            : "Select all"}
+                        </Button>
+                      )}
+                    </div>
+                    {isLoadingBankEntries && (
+                      <div className="flex items-center text-xs text-muted-foreground">
+                        <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
+                        Loading entries...
+                      </div>
+                    )}
+                    {bankEntriesError && (
+                      <p className="text-xs text-destructive">
+                        {bankEntriesError}
+                      </p>
+                    )}
+                    {!isLoadingBankEntries &&
+                      !bankEntriesError &&
+                      bankEntries.length === 0 && (
+                        <p className="text-xs text-muted-foreground">
+                          No bank entries found.
+                        </p>
+                      )}
+                    {bankEntries.length > 0 && (
+                      <div className="max-h-48 space-y-1 overflow-y-auto">
+                        {bankEntries.map((entry) => (
+                          <label
+                            key={entry.id}
+                            className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-background"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={selectedBankEntryIds.has(entry.id)}
+                              onChange={() => toggleBankEntry(entry.id)}
+                              className="h-4 w-4"
+                            />
+                            <span className="min-w-0 flex-1 truncate">
+                              {getEntryTitle(entry)}
+                            </span>
+                          </label>
+                        ))}
+                      </div>
+                    )}
+                    <Button
+                      className="w-full"
+                      size="sm"
+                      onClick={generateFromBank}
+                      disabled={
+                        isGenerating ||
+                        isLoadingBankEntries ||
+                        !hasLoadedBankEntries ||
+                        selectedBankEntryIds.size === 0
+                      }
+                    >
+                      Generate with selected entries
+                    </Button>
+                  </div>
+                )}
                 <div className="space-y-2 rounded-md border p-3">
                   <label
                     htmlFor="rewrite-section"
@@ -551,7 +628,10 @@ export function ChatEditor({
                     disabled={sections.length === 0}
                   >
                     {sections.map((section, index) => (
-                      <option key={`${section.start}-${section.end}`} value={index}>
+                      <option
+                        key={`${section.start}-${section.end}`}
+                        value={index}
+                      >
                         {section.label}
                       </option>
                     ))}
@@ -589,7 +669,9 @@ export function ChatEditor({
                   </div>
                 ) : (
                   <div className="space-y-2 rounded-md border bg-muted/30 p-3 text-sm text-muted-foreground">
-                    <p>Select text in the editor to rewrite a specific passage.</p>
+                    <p>
+                      Select text in the editor to rewrite a specific passage.
+                    </p>
                     <p>Select relevant experience and match JD keywords.</p>
                   </div>
                 )}

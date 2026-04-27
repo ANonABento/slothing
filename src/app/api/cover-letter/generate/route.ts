@@ -4,6 +4,7 @@ import { getLLMConfig, getProfile } from "@/lib/db";
 import { getGroupedBankEntries } from "@/lib/db/profile-bank";
 import { rateLimiters, getClientIdentifier } from "@/lib/rate-limit";
 import {
+  filterBankEntriesByIds,
   generateCoverLetter,
   reviseCoverLetter,
   rewriteCoverLetterSelection,
@@ -28,10 +29,10 @@ function isCoverLetterAction(action: unknown): action is CoverLetterAction {
  *   jobDescription: string;
  *   jobTitle?: string;
  *   company?: string;
- *   action: "generate" | "revise" | "rewrite";
- *   currentContent?: string;   // required for "revise" and "rewrite"
- *   instruction?: string;      // required for "revise" and "rewrite"
- *   selectedText?: string;     // required for "rewrite"
+ *   action: "generate" | "revise";
+ *   currentContent?: string;   // required for "revise"
+ *   instruction?: string;      // required for "revise"
+ *   selectedBankEntryIds?: string[]; // optional subset of bank entries to use
  * }
  */
 export async function POST(request: NextRequest) {
@@ -43,7 +44,7 @@ export async function POST(request: NextRequest) {
   if (!rateLimit.allowed) {
     return NextResponse.json(
       { error: "Too many requests. Please wait before trying again." },
-      { status: 429 }
+      { status: 429 },
     );
   }
 
@@ -57,7 +58,7 @@ export async function POST(request: NextRequest) {
       currentContent,
       selectedText,
       instruction,
-      selectedText,
+      selectedBankEntryIds,
     } = body as {
       jobDescription?: string;
       jobTitle?: string;
@@ -66,7 +67,7 @@ export async function POST(request: NextRequest) {
       currentContent?: string;
       selectedText?: string;
       instruction?: string;
-      selectedText?: string;
+      selectedBankEntryIds?: unknown;
     };
 
     if (!isCoverLetterAction(action)) {
@@ -79,7 +80,7 @@ export async function POST(request: NextRequest) {
     if (!jobDescription || jobDescription.trim().length < 20) {
       return NextResponse.json(
         { error: "Job description is too short. Please paste the full JD." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -94,18 +95,27 @@ export async function POST(request: NextRequest) {
     if (!llmConfig) {
       return NextResponse.json(
         { error: "No LLM provider configured. Go to Settings to set one up." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    const bankEntries = getGroupedBankEntries(authResult.userId);
+    const allBankEntries = getGroupedBankEntries(authResult.userId);
+    const selectedIds = Array.isArray(selectedBankEntryIds)
+      ? selectedBankEntryIds.filter(
+          (id): id is string => typeof id === "string",
+        )
+      : undefined;
+    const bankEntries = selectedIds
+      ? filterBankEntriesByIds(allBankEntries, selectedIds)
+      : allBankEntries;
     if (getTotalBankEntries(bankEntries) === 0) {
       return NextResponse.json(
         {
-          error:
-            "No knowledge bank entries found. Upload a resume first to populate your bank.",
+          error: selectedIds
+            ? "No selected knowledge bank entries found. Select at least one entry."
+            : "No knowledge bank entries found. Upload a resume first to populate your bank.",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -123,8 +133,10 @@ export async function POST(request: NextRequest) {
     if (action === "revise") {
       if (!currentContent?.trim() || !instruction?.trim()) {
         return NextResponse.json(
-          { error: "currentContent and instruction are required for revision." },
-          { status: 400 }
+          {
+            error: "currentContent and instruction are required for revision.",
+          },
+          { status: 400 },
         );
       }
 
@@ -132,7 +144,7 @@ export async function POST(request: NextRequest) {
         currentContent,
         instruction.trim(),
         input,
-        llmConfig
+        llmConfig,
       );
 
       return NextResponse.json({ success: true, content: revised });
@@ -171,7 +183,7 @@ export async function POST(request: NextRequest) {
     console.error("Cover letter generation error:", error);
     return NextResponse.json(
       { error: "Failed to generate cover letter", details: String(error) },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
