@@ -113,6 +113,7 @@ import { cn } from "@/lib/utils";
 import type { BankEntry, BankCategory } from "@/types";
 import type { TailoredResume } from "@/lib/resume/generator";
 import { useErrorToast } from "@/hooks/use-error-toast";
+import { readJsonResponse } from "@/lib/http";
 import {
   Download,
   Copy,
@@ -124,8 +125,32 @@ import {
   Eye,
   PenLine,
   Sparkles,
+  type LucideIcon,
 } from "lucide-react";
 >>>>>>> 0e974c5 (Consolidate document routes into studio)
+
+interface BuilderPreviewResponse {
+  html?: string;
+}
+
+const STUDIO_MODE_TABS: Array<{
+  mode: StudioDocumentMode;
+  label: string;
+  Icon: LucideIcon;
+}> = [
+  { mode: "resume", label: "Resume", Icon: FileText },
+  { mode: "tailored", label: "Tailored", Icon: Sparkles },
+  { mode: "cover-letter", label: "Cover Letter", Icon: PenLine },
+];
+
+const RESUME_MOBILE_TABS: Array<{
+  panel: BuilderPanel;
+  label: string;
+  Icon: LucideIcon;
+}> = [
+  { panel: "edit", label: "Edit", Icon: Pencil },
+  { panel: "preview", label: "Preview", Icon: Eye },
+];
 
 function StudioLoading() {
   return (
@@ -337,30 +362,34 @@ function StudioPageContent() {
       return;
     }
 
+    let cancelled = false;
     const controller = new AbortController();
     setGenerating(true);
 
-    const entryIds = orderedEntries.map((e) => e.id);
+    async function updatePreview() {
+      try {
+        const data = await readJsonResponse<BuilderPreviewResponse>(
+          await fetch("/api/builder", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              entryIds: orderedEntries.map((entry) => entry.id),
+              templateId,
+              sectionOrder: visibleCategoryIds,
+            }),
+            signal: controller.signal,
+          }),
+          "Failed to update preview"
+        );
 
-    fetch("/api/builder", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        entryIds,
-        templateId,
-        sectionOrder: visibleCategoryIds,
-      }),
-      signal: controller.signal,
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.html) {
+        if (!cancelled && data.html) {
           lastPreviewErrorToastRef.current = "";
           setHtml(data.html);
         }
-      })
-      .catch((err) => {
-        if (err.name !== "AbortError") {
+      } catch (err) {
+        const isAbortError =
+          err instanceof DOMException && err.name === "AbortError";
+        if (!cancelled && !isAbortError) {
           const message = err instanceof Error ? err.message : "preview";
           if (lastPreviewErrorToastRef.current !== message) {
             lastPreviewErrorToastRef.current = message;
@@ -370,10 +399,19 @@ function StudioPageContent() {
             });
           }
         }
-      })
-      .finally(() => setGenerating(false));
+      } finally {
+        if (!cancelled) {
+          setGenerating(false);
+        }
+      }
+    }
 
-    return () => controller.abort();
+    updatePreview();
+
+    return () => {
+      cancelled = true;
+      controller.abort();
+    };
   }, [
     documentMode,
     orderedEntries,
@@ -660,54 +698,25 @@ function StudioPageContent() {
             aria-label="Document type"
             className="flex rounded-md border bg-muted/30 p-0.5"
           >
-            <button
-              id="document-mode-resume-tab"
-              role="tab"
-              aria-selected={documentMode === "resume"}
-              aria-controls="document-mode-resume-panel"
-              onClick={() => handleDocumentModeChange("resume")}
-              className={cn(
-                "inline-flex h-8 items-center gap-1.5 rounded px-3 text-sm font-medium transition-colors",
-                documentMode === "resume"
-                  ? "bg-background text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              <FileText className="h-4 w-4" />
-              Resume
-            </button>
-            <button
-              id="document-mode-tailored-tab"
-              role="tab"
-              aria-selected={documentMode === "tailored"}
-              aria-controls="document-mode-tailored-panel"
-              onClick={() => handleDocumentModeChange("tailored")}
-              className={cn(
-                "inline-flex h-8 items-center gap-1.5 rounded px-3 text-sm font-medium transition-colors",
-                documentMode === "tailored"
-                  ? "bg-background text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              <Sparkles className="h-4 w-4" />
-              Tailored
-            </button>
-            <button
-              id="document-mode-cover-letter-tab"
-              role="tab"
-              aria-selected={documentMode === "cover-letter"}
-              aria-controls="document-mode-cover-letter-panel"
-              onClick={() => handleDocumentModeChange("cover-letter")}
-              className={cn(
-                "inline-flex h-8 items-center gap-1.5 rounded px-3 text-sm font-medium transition-colors",
-                documentMode === "cover-letter"
-                  ? "bg-background text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              <PenLine className="h-4 w-4" />
-              Cover Letter
-            </button>
+            {STUDIO_MODE_TABS.map(({ mode, label, Icon }) => (
+              <button
+                key={mode}
+                id={`document-mode-${mode}-tab`}
+                role="tab"
+                aria-selected={documentMode === mode}
+                aria-controls={`document-mode-${mode}-panel`}
+                onClick={() => handleDocumentModeChange(mode)}
+                className={cn(
+                  "inline-flex h-8 items-center gap-1.5 rounded px-3 text-sm font-medium transition-colors",
+                  documentMode === mode
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <Icon className="h-4 w-4" />
+                {label}
+              </button>
+            ))}
           </div>
 
           {documentMode === "resume" && (
@@ -797,38 +806,25 @@ function StudioPageContent() {
             aria-label="Builder view"
             className="flex border-b md:hidden"
           >
-            <button
-              id="builder-edit-tab"
-              role="tab"
-              aria-selected={mobileView === "edit"}
-              aria-controls="builder-edit-panel"
-              onClick={() => setMobileView("edit")}
-              className={cn(
-                "flex flex-1 items-center justify-center gap-2 border-b-2 px-4 py-2.5 text-sm font-medium transition-colors",
-                mobileView === "edit"
-                  ? "border-primary text-primary"
-                  : "border-transparent text-muted-foreground hover:text-foreground"
-              )}
-            >
-              <Pencil className="h-4 w-4" />
-              Edit
-            </button>
-            <button
-              id="builder-preview-tab"
-              role="tab"
-              aria-selected={mobileView === "preview"}
-              aria-controls="builder-preview-panel"
-              onClick={() => setMobileView("preview")}
-              className={cn(
-                "flex flex-1 items-center justify-center gap-2 border-b-2 px-4 py-2.5 text-sm font-medium transition-colors",
-                mobileView === "preview"
-                  ? "border-primary text-primary"
-                  : "border-transparent text-muted-foreground hover:text-foreground"
-              )}
-            >
-              <Eye className="h-4 w-4" />
-              Preview
-            </button>
+            {RESUME_MOBILE_TABS.map(({ panel, label, Icon }) => (
+              <button
+                key={panel}
+                id={`builder-${panel}-tab`}
+                role="tab"
+                aria-selected={mobileView === panel}
+                aria-controls={`builder-${panel}-panel`}
+                onClick={() => setMobileView(panel)}
+                className={cn(
+                  "flex flex-1 items-center justify-center gap-2 border-b-2 px-4 py-2.5 text-sm font-medium transition-colors",
+                  mobileView === panel
+                    ? "border-primary text-primary"
+                    : "border-transparent text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <Icon className="h-4 w-4" />
+                {label}
+              </button>
+            ))}
           </div>
 
           <div className="flex flex-1 overflow-hidden">
