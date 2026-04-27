@@ -1,4 +1,8 @@
-import { createInitialSections, type SectionState } from "@/lib/builder/section-manager";
+import {
+  createInitialSections,
+  type SectionState,
+} from "@/lib/builder/section-manager";
+import { BANK_CATEGORIES, type BankCategory } from "@/types";
 
 export const STUDIO_DOCUMENT_MODES = ["resume", "cover-letter"] as const;
 
@@ -55,6 +59,13 @@ function createDocumentId(type: StudioDocumentType) {
   return `${type}-${randomValue}`;
 }
 
+function isBankCategory(value: unknown): value is BankCategory {
+  return (
+    typeof value === "string" &&
+    BANK_CATEGORIES.includes(value as BankCategory)
+  );
+}
+
 export function isStudioDocumentMode(
   value: string | null | undefined
 ): value is StudioDocumentMode {
@@ -71,10 +82,6 @@ export function getStudioModeHref(mode: StudioDocumentMode): string {
   return mode === DEFAULT_STUDIO_DOCUMENT_MODE
     ? STUDIO_ROUTE
     : `${STUDIO_ROUTE}?${STUDIO_MODE_SEARCH_PARAM}=${mode}`;
-}
-
-export function getStudioDocumentTitle(mode: StudioDocumentMode): string {
-  return mode === "cover-letter" ? "Cover Letter" : "Resume";
 }
 
 export function getDefaultStudioContent(mode: StudioDocumentMode): string {
@@ -105,7 +112,7 @@ function isSectionState(value: unknown): value is SectionState {
     value !== null &&
     "id" in value &&
     "visible" in value &&
-    typeof (value as { id: unknown }).id === "string" &&
+    isBankCategory((value as { id: unknown }).id) &&
     typeof (value as { visible: unknown }).visible === "boolean"
   );
 }

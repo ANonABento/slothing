@@ -6,7 +6,6 @@ import {
   getActiveStudioDocument,
   getDefaultStudioContent,
   getDocumentsForType,
-  getStudioDocumentTitle,
   getStudioModeFromSearchParam,
   getStudioModeHref,
   isStudioDocumentMode,
@@ -40,9 +39,7 @@ describe("document studio helpers", () => {
     expect(getStudioModeHref("cover-letter")).toBe("/studio?mode=cover-letter");
   });
 
-  it("returns display titles and blank starter content", () => {
-    expect(getStudioDocumentTitle("resume")).toBe("Resume");
-    expect(getStudioDocumentTitle("cover-letter")).toBe("Cover Letter");
+  it("returns blank starter content", () => {
     expect(getDefaultStudioContent("resume")).toBe("");
     expect(getDefaultStudioContent("cover-letter")).toBe("");
   });
@@ -82,6 +79,31 @@ describe("document studio helpers", () => {
     expect(parsed).toEqual(expect.arrayContaining([valid]));
     expect(parsed.some((document) => document.type === "resume")).toBe(true);
     expect(parsed.some((document) => document.id === "bad")).toBe(false);
+  });
+
+  it("falls back to default sections when persisted section ids are invalid", () => {
+    const parsed = parseStudioDocuments(
+      JSON.stringify([
+        {
+          id: "resume-1",
+          name: "Saved Resume",
+          type: "resume",
+          templateId: "classic",
+          content: "",
+          sections: [{ id: "invalid", visible: true }],
+          selectedEntryIds: [],
+          createdAt: now,
+          updatedAt: now,
+        },
+      ])
+    );
+
+    const resume = parsed.find((document) => document.id === "resume-1");
+
+    expect(resume?.sections[0]).toMatchObject({
+      id: "experience",
+      visible: true,
+    });
   });
 
   it("ensures both tabs have at least one document", () => {

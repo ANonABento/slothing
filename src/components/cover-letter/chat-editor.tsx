@@ -316,11 +316,17 @@ export function ChatEditor({
     URL.revokeObjectURL(url);
   }
 
-  function handleRevert(index: number) {
+  function activateVersion(index: number) {
     setCurrentVersionIndex(index);
     const content = versions[index]?.content ?? "";
     editorContentRef.current = content;
     setEditorContent(content);
+    setSelection(null);
+    setRewriteSuggestion(null);
+  }
+
+  function handleRevert(index: number) {
+    activateVersion(index);
     setShowHistory(false);
   }
 
@@ -416,9 +422,10 @@ export function ChatEditor({
                 variant="outline"
                 size="sm"
                 onClick={() =>
-                  handleVersionChange(Math.max(0, currentVersionIndex - 1))
+                  activateVersion(Math.max(0, currentVersionIndex - 1))
                 }
                 disabled={currentVersionIndex <= 0}
+                aria-label="Previous version"
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
@@ -426,11 +433,12 @@ export function ChatEditor({
                 variant="outline"
                 size="sm"
                 onClick={() =>
-                  handleVersionChange(
+                  activateVersion(
                     Math.min(versions.length - 1, currentVersionIndex + 1)
                   )
                 }
                 disabled={currentVersionIndex >= versions.length - 1}
+                aria-label="Next version"
               >
                 <ChevronRight className="h-4 w-4" />
               </Button>
@@ -608,6 +616,7 @@ export function ChatEditor({
           onClick={handleRevise}
           disabled={isGenerating || !instruction.trim() || !currentVersion}
           className="shrink-0"
+          aria-label="Send revision instruction"
         >
           {isGenerating ? (
             <Loader2 className="h-4 w-4 animate-spin" />
