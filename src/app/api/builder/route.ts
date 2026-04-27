@@ -2,8 +2,19 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth, isAuthError } from "@/lib/auth";
 import { getBankEntries } from "@/lib/db/profile-bank";
 import { bankEntriesToResume } from "@/lib/resume/bank-to-resume";
+import {
+  editableDocumentToResume,
+  type EditableResumeDocument,
+} from "@/lib/builder/editor-document";
 import { generateResumeHTML } from "@/lib/resume/pdf";
 import type { ContactInfo } from "@/types";
+
+interface BuilderRequestBody {
+  entryIds?: string[];
+  templateId?: string;
+  contact?: ContactInfo;
+  document?: EditableResumeDocument;
+}
 
 export async function POST(request: NextRequest) {
   const authResult = await requireAuth();
@@ -11,11 +22,25 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { entryIds, templateId = "classic", contact } = body as {
-      entryIds: string[];
-      templateId?: string;
-      contact?: ContactInfo;
-    };
+    const { entryIds, templateId = "classic", contact, document } =
+      body as BuilderRequestBody;
+
+    if (document) {
+      if (!isEditableResumeDocument(document)) {
+        return NextResponse.json(
+          { error: "document must include a sections array" },
+          { status: 400 }
+        );
+      }
+
+      const resume = editableDocumentToResume(
+        document,
+        contact || { name: "Your Name" }
+      );
+      const html = generateResumeHTML(resume, templateId, authResult.userId);
+
+      return NextResponse.json({ html, resume });
+    }
 
     if (!Array.isArray(entryIds) || entryIds.length === 0) {
       return NextResponse.json(
@@ -42,4 +67,14 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
+}
+
+function isEditableResumeDocument(
+  value: unknown
+): value is EditableResumeDocument {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    Array.isArray((value as { sections?: unknown }).sections)
+  );
 }
