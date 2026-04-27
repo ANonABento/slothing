@@ -467,6 +467,7 @@ function StudioPageContent() {
 
           <div className="relative md:ml-4">
             <button
+              aria-label="Select resume template"
               onClick={() => setTemplateOpen((prev) => !prev)}
               className="flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm transition-colors hover:bg-muted"
             >
@@ -521,6 +522,7 @@ function StudioPageContent() {
 
         <div className="flex items-center gap-2">
           <Button
+            aria-label="Copy resume HTML"
             variant="outline"
             size="sm"
             onClick={handleCopyHtml}
@@ -529,7 +531,12 @@ function StudioPageContent() {
             <Copy className="h-4 w-4 md:mr-1.5" />
             <span className="hidden md:inline">Copy HTML</span>
           </Button>
-          <Button size="sm" onClick={handleDownloadPdf} disabled={!html}>
+          <Button
+            aria-label="Download resume PDF"
+            size="sm"
+            onClick={handleDownloadPdf}
+            disabled={!html}
+          >
             <Download className="h-4 w-4 md:mr-1.5" />
             <span className="hidden md:inline">Download PDF</span>
           </Button>

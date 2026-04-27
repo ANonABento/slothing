@@ -13,13 +13,17 @@ describe("BuilderRedirectPage", () => {
   });
 
   it("redirects to Document Studio", () => {
-    BuilderRedirectPage({});
+    BuilderRedirectPage();
 
     expect(redirectMock).toHaveBeenCalledWith("/studio");
   });
 
   it("ignores legacy builder mode params", () => {
-    BuilderRedirectPage({ searchParams: { mode: "cover-letter" } });
+    const redirectWithLegacyProps = BuilderRedirectPage as (props: {
+      searchParams: { mode: string };
+    }) => void;
+
+    redirectWithLegacyProps({ searchParams: { mode: "cover-letter" } });
 
     expect(redirectMock).toHaveBeenCalledWith("/studio");
   });
