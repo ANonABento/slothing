@@ -52,7 +52,12 @@ const QUICK_ACTION_ICONS: Record<DocumentAssistantAction, typeof Sparkles> = {
   "match-jd-keywords": Target,
 };
 
-export function ChatEditor({ jobDescription, jobTitle, company, initialContent }: ChatEditorProps) {
+export function ChatEditor({
+  jobDescription,
+  jobTitle,
+  company,
+  initialContent,
+}: ChatEditorProps) {
   const [versions, setVersions] = useState<Version[]>([
     {
       content: initialContent,
@@ -67,7 +72,7 @@ export function ChatEditor({ jobDescription, jobTitle, company, initialContent }
   const [copied, setCopied] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [selectionRange, setSelectionRange] = useState<SelectionRange | null>(
-    null
+    null,
   );
   const [assistantProposal, setAssistantProposal] = useState<{
     action: DocumentAssistantAction;
@@ -79,20 +84,35 @@ export function ChatEditor({ jobDescription, jobTitle, company, initialContent }
   const [assistantLoadingAction, setAssistantLoadingAction] =
     useState<DocumentAssistantAction | null>(null);
   const editorRef = useRef<HTMLTextAreaElement | null>(null);
-  const currentVersion = currentVersionIndex >= 0 ? versions[currentVersionIndex] : null;
+  const assistantRequestIdRef = useRef(0);
+  const currentVersion =
+    currentVersionIndex >= 0 ? versions[currentVersionIndex] : null;
   const currentContent = currentVersion?.content ?? "";
+  const currentContentRef = useRef(currentContent);
+  const currentVersionIndexRef = useRef(currentVersionIndex);
+  currentContentRef.current = currentContent;
+  currentVersionIndexRef.current = currentVersionIndex;
   const selectedText = useMemo(
     () => normalizeSelection(currentContent, selectionRange),
-    [currentContent, selectionRange]
+    [currentContent, selectionRange],
   );
   const suggestions = useMemo(
     () => getDocumentSuggestions(currentContent, jobDescription),
-    [currentContent, jobDescription]
+    [currentContent, jobDescription],
   );
 
+  const invalidateAssistantRequest = useCallback(() => {
+    assistantRequestIdRef.current += 1;
+    setAssistantLoadingAction(null);
+  }, []);
+
   const generate = useCallback(async () => {
+    invalidateAssistantRequest();
     setIsGenerating(true);
     setError(null);
+    setSelectionRange(null);
+    setAssistantProposal(null);
+    setAssistantError(null);
 
     try {
       const res = await fetch("/api/cover-letter/generate", {
@@ -108,7 +128,7 @@ export function ChatEditor({ jobDescription, jobTitle, company, initialContent }
 
       const result = await readCoverLetterApiResult(
         res,
-        "Failed to generate cover letter"
+        "Failed to generate cover letter",
       );
       if (!result.ok) {
         setError(result.error);
@@ -127,13 +147,16 @@ export function ChatEditor({ jobDescription, jobTitle, company, initialContent }
     } finally {
       setIsGenerating(false);
     }
-  }, [jobDescription, jobTitle, company]);
+  }, [jobDescription, jobTitle, company, invalidateAssistantRequest]);
 
   async function handleRevise() {
     if (!instruction.trim() || !currentVersion) return;
 
+    invalidateAssistantRequest();
     setIsGenerating(true);
     setError(null);
+    setAssistantProposal(null);
+    setAssistantError(null);
 
     try {
       const res = await fetch("/api/cover-letter/generate", {
@@ -151,7 +174,7 @@ export function ChatEditor({ jobDescription, jobTitle, company, initialContent }
 
       const result = await readCoverLetterApiResult(
         res,
-        "Failed to revise cover letter"
+        "Failed to revise cover letter",
       );
       if (!result.ok) {
         setError(result.error);
@@ -163,7 +186,10 @@ export function ChatEditor({ jobDescription, jobTitle, company, initialContent }
         instruction: instruction.trim(),
         createdAt: new Date().toISOString(),
       };
-      const newVersions = [...versions.slice(0, currentVersionIndex + 1), newVersion];
+      const newVersions = [
+        ...versions.slice(0, currentVersionIndex + 1),
+        newVersion,
+      ];
       setVersions(newVersions);
       setCurrentVersionIndex(newVersions.length - 1);
       setInstruction("");
@@ -194,13 +220,15 @@ export function ChatEditor({ jobDescription, jobTitle, company, initialContent }
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    const safeName = company.toLowerCase().replace(/\s+/g, "-") || "cover-letter";
+    const safeName =
+      company.toLowerCase().replace(/\s+/g, "-") || "cover-letter";
     a.download = `cover-letter-${safeName}.txt`;
     a.click();
     URL.revokeObjectURL(url);
   }
 
   function handleRevert(index: number) {
+    invalidateAssistantRequest();
     setCurrentVersionIndex(index);
     setShowHistory(false);
     setSelectionRange(null);
@@ -209,10 +237,12 @@ export function ChatEditor({ jobDescription, jobTitle, company, initialContent }
   }
 
   function handleContentChange(content: string) {
+    invalidateAssistantRequest();
+    currentContentRef.current = content;
     setVersions((prev) =>
       prev.map((version, index) =>
-        index === currentVersionIndex ? { ...version, content } : version
-      )
+        index === currentVersionIndex ? { ...version, content } : version,
+      ),
     );
     setAssistantProposal(null);
   }
@@ -225,8 +255,16 @@ export function ChatEditor({ jobDescription, jobTitle, company, initialContent }
       start: editor.selectionStart,
       end: editor.selectionEnd,
     };
+    const nextSelection = nextRange.end > nextRange.start ? nextRange : null;
+    const rangeChanged =
+      selectionRange?.start !== nextSelection?.start ||
+      selectionRange?.end !== nextSelection?.end;
 
-    setSelectionRange(nextRange.end > nextRange.start ? nextRange : null);
+    if (rangeChanged) {
+      invalidateAssistantRequest();
+    }
+
+    setSelectionRange(nextSelection);
     setAssistantError(null);
     setAssistantProposal(null);
   }
@@ -237,6 +275,11 @@ export function ChatEditor({ jobDescription, jobTitle, company, initialContent }
       setAssistantError("Select text in the editor first.");
       return;
     }
+
+    const requestId = assistantRequestIdRef.current + 1;
+    assistantRequestIdRef.current = requestId;
+    const requestContent = currentContent;
+    const requestVersionIndex = currentVersionIndex;
 
     setAssistantLoadingAction(action);
     setAssistantError(null);
@@ -256,10 +299,19 @@ export function ChatEditor({ jobDescription, jobTitle, company, initialContent }
 
       const result = await readCoverLetterApiResult(
         res,
-        "Failed to rewrite selected text"
+        "Failed to rewrite selected text",
       );
       if (!result.ok) {
+        if (assistantRequestIdRef.current !== requestId) return;
         setAssistantError(result.error);
+        return;
+      }
+
+      if (
+        assistantRequestIdRef.current !== requestId ||
+        currentContentRef.current !== requestContent ||
+        currentVersionIndexRef.current !== requestVersionIndex
+      ) {
         return;
       }
 
@@ -270,19 +322,40 @@ export function ChatEditor({ jobDescription, jobTitle, company, initialContent }
         range: { start: selection.start, end: selection.end },
       });
     } catch {
+      if (assistantRequestIdRef.current !== requestId) return;
       setAssistantError("Network error. Please try again.");
     } finally {
-      setAssistantLoadingAction(null);
+      if (assistantRequestIdRef.current === requestId) {
+        setAssistantLoadingAction(null);
+      }
     }
   }
 
   function handleAcceptProposal() {
     if (!assistantProposal || !currentVersion) return;
 
+    const currentSelection = normalizeSelection(
+      currentVersion.content,
+      assistantProposal.range,
+    );
+    if (
+      !currentSelection ||
+      currentSelection.text !== assistantProposal.before
+    ) {
+      invalidateAssistantRequest();
+      setAssistantProposal(null);
+      setSelectionRange(null);
+      setAssistantError(
+        "The selected text changed. Select the passage again and retry.",
+      );
+      return;
+    }
+
+    invalidateAssistantRequest();
     const content = applySelectionRewrite(
       currentVersion.content,
       assistantProposal.range,
-      assistantProposal.after
+      assistantProposal.after,
     );
     const newVersion: Version = {
       content,
@@ -328,7 +401,9 @@ export function ChatEditor({ jobDescription, jobTitle, company, initialContent }
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setCurrentVersionIndex(Math.max(0, currentVersionIndex - 1))}
+                onClick={() =>
+                  setCurrentVersionIndex(Math.max(0, currentVersionIndex - 1))
+                }
                 disabled={currentVersionIndex <= 0}
               >
                 <ChevronLeft className="h-4 w-4" />
@@ -337,7 +412,9 @@ export function ChatEditor({ jobDescription, jobTitle, company, initialContent }
                 variant="outline"
                 size="sm"
                 onClick={() =>
-                  setCurrentVersionIndex(Math.min(versions.length - 1, currentVersionIndex + 1))
+                  setCurrentVersionIndex(
+                    Math.min(versions.length - 1, currentVersionIndex + 1),
+                  )
                 }
                 disabled={currentVersionIndex >= versions.length - 1}
               >
@@ -366,12 +443,26 @@ export function ChatEditor({ jobDescription, jobTitle, company, initialContent }
             Regenerate
           </Button>
 
-          <Button variant="outline" size="sm" onClick={handleCopy} disabled={!currentVersion}>
-            {copied ? <Check className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleCopy}
+            disabled={!currentVersion}
+          >
+            {copied ? (
+              <Check className="h-4 w-4 mr-1" />
+            ) : (
+              <Copy className="h-4 w-4 mr-1" />
+            )}
             {copied ? "Copied" : "Copy"}
           </Button>
 
-          <Button variant="outline" size="sm" onClick={handleDownload} disabled={!currentVersion}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleDownload}
+            disabled={!currentVersion}
+          >
             <Download className="h-4 w-4 mr-1" />
             Download
           </Button>
@@ -390,7 +481,7 @@ export function ChatEditor({ jobDescription, jobTitle, company, initialContent }
                 "w-full text-left px-3 py-2 rounded-md text-sm transition-colors",
                 i === currentVersionIndex
                   ? "bg-primary text-primary-foreground"
-                  : "hover:bg-muted"
+                  : "hover:bg-muted",
               )}
             >
               <span className="font-medium">v{i + 1}</span>
@@ -451,28 +542,30 @@ export function ChatEditor({ jobDescription, jobTitle, company, initialContent }
                 </div>
 
                 <div className="grid grid-cols-1 gap-2">
-                  {(Object.keys(DOCUMENT_ASSISTANT_ACTION_LABELS) as DocumentAssistantAction[]).map(
-                    (action) => {
-                      const Icon = QUICK_ACTION_ICONS[action];
-                      return (
-                        <Button
-                          key={action}
-                          variant={action === "rewrite" ? "default" : "outline"}
-                          size="sm"
-                          onClick={() => handleAssistantAction(action)}
-                          disabled={assistantLoadingAction !== null}
-                          className="justify-start"
-                        >
-                          {assistantLoadingAction === action ? (
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          ) : (
-                            <Icon className="mr-2 h-4 w-4" />
-                          )}
-                          {DOCUMENT_ASSISTANT_ACTION_LABELS[action]}
-                        </Button>
-                      );
-                    }
-                  )}
+                  {(
+                    Object.keys(
+                      DOCUMENT_ASSISTANT_ACTION_LABELS,
+                    ) as DocumentAssistantAction[]
+                  ).map((action) => {
+                    const Icon = QUICK_ACTION_ICONS[action];
+                    return (
+                      <Button
+                        key={action}
+                        variant={action === "rewrite" ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => handleAssistantAction(action)}
+                        disabled={assistantLoadingAction !== null}
+                        className="justify-start"
+                      >
+                        {assistantLoadingAction === action ? (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        ) : (
+                          <Icon className="mr-2 h-4 w-4" />
+                        )}
+                        {DOCUMENT_ASSISTANT_ACTION_LABELS[action]}
+                      </Button>
+                    );
+                  })}
                 </div>
 
                 {assistantError && (
@@ -490,7 +583,7 @@ export function ChatEditor({ jobDescription, jobTitle, company, initialContent }
                       <div className="space-y-2">
                         {buildSimpleDiff(
                           assistantProposal.before,
-                          assistantProposal.after
+                          assistantProposal.after,
                         ).map((line, index) => (
                           <div
                             key={`${line.type}-${index}`}
@@ -500,7 +593,7 @@ export function ChatEditor({ jobDescription, jobTitle, company, initialContent }
                                 "border-destructive/40 bg-destructive/10 text-destructive",
                               line.type === "added" &&
                                 "border-emerald-500/40 bg-emerald-500/10 text-emerald-900 dark:text-emerald-100",
-                              line.type === "unchanged" && "bg-muted/30"
+                              line.type === "unchanged" && "bg-muted/30",
                             )}
                           >
                             <span className="mb-1 block text-xs font-medium uppercase opacity-70">

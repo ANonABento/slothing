@@ -48,7 +48,7 @@ const DOCUMENT_ASSISTANT_INSTRUCTIONS: Record<DocumentAssistantAction, string> =
   };
 
 export function isDocumentAssistantAction(
-  value: unknown
+  value: unknown,
 ): value is DocumentAssistantAction {
   return (
     typeof value === "string" &&
@@ -58,12 +58,17 @@ export function isDocumentAssistantAction(
 
 export function normalizeSelection(
   content: string,
-  range: SelectionRange | null
+  range: SelectionRange | null,
 ): NormalizedSelection | null {
   if (!range) return null;
+  if (!Number.isFinite(range.start) || !Number.isFinite(range.end)) {
+    return null;
+  }
 
-  const start = Math.max(0, Math.min(range.start, content.length));
-  const end = Math.max(0, Math.min(range.end, content.length));
+  const normalizedStart = Math.min(range.start, range.end);
+  const normalizedEnd = Math.max(range.start, range.end);
+  const start = Math.max(0, Math.min(normalizedStart, content.length));
+  const end = Math.max(0, Math.min(normalizedEnd, content.length));
   if (end <= start) return null;
 
   return {
@@ -76,14 +81,14 @@ export function normalizeSelection(
 export function applySelectionRewrite(
   content: string,
   range: SelectionRange,
-  replacement: string
+  replacement: string,
 ): string {
   const selection = normalizeSelection(content, range);
   if (!selection) return content;
 
   return (
     content.slice(0, selection.start) +
-    replacement.trim() +
+    replacement +
     content.slice(selection.end)
   );
 }
@@ -99,7 +104,7 @@ export function buildSimpleDiff(before: string, after: string): DiffLine[] {
 
 export function getDocumentSuggestions(
   documentContent: string,
-  jobDescription: string
+  jobDescription: string,
 ): string[] {
   const content = documentContent.trim();
   if (!content) {
@@ -109,13 +114,15 @@ export function getDocumentSuggestions(
   const suggestions: string[] = [];
   const wordCount = content.split(/\s+/).filter(Boolean).length;
   const hasMetric = /\b\d+([.,]\d+)?\s*(%|x|k|m|million|billion|\+)?\b/i.test(
-    content
+    content,
   );
 
   if (wordCount > 350) {
     suggestions.push("Select a long paragraph and make it more concise.");
   } else {
-    suggestions.push("Select a key paragraph and rewrite it with stronger verbs.");
+    suggestions.push(
+      "Select a key paragraph and rewrite it with stronger verbs.",
+    );
   }
 
   if (!hasMetric) {
@@ -127,7 +134,9 @@ export function getDocumentSuggestions(
   }
 
   if (suggestions.length < 3) {
-    suggestions.push("Select the opening paragraph and sharpen the positioning.");
+    suggestions.push(
+      "Select the opening paragraph and sharpen the positioning.",
+    );
   }
 
   return suggestions.slice(0, 3);
@@ -163,7 +172,7 @@ export async function rewriteDocumentSelection(
     documentContent: string;
     jobDescription?: string;
   },
-  llmConfig: LLMConfig
+  llmConfig: LLMConfig,
 ): Promise<string> {
   const client = new LLMClient(llmConfig);
   const result = await client.complete({

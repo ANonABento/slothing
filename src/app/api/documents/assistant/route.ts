@@ -7,6 +7,13 @@ import {
   rewriteDocumentSelection,
 } from "@/lib/document-assistant";
 
+type DocumentAssistantRequestBody = {
+  action?: unknown;
+  selectedText?: unknown;
+  documentContent?: unknown;
+  jobDescription?: unknown;
+};
+
 export async function POST(request: NextRequest) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
@@ -16,22 +23,26 @@ export async function POST(request: NextRequest) {
   if (!rateLimit.allowed) {
     return NextResponse.json(
       { error: "Too many requests. Please wait before trying again." },
-      { status: 429 }
+      { status: 429 },
+    );
+  }
+
+  let body: DocumentAssistantRequestBody;
+
+  try {
+    body = (await request.json()) as DocumentAssistantRequestBody;
+  } catch {
+    return NextResponse.json(
+      { error: "Request body must be valid JSON" },
+      { status: 400 },
     );
   }
 
   try {
-    const body = (await request.json()) as {
-      action?: unknown;
-      selectedText?: unknown;
-      documentContent?: unknown;
-      jobDescription?: unknown;
-    };
-
     if (!isDocumentAssistantAction(body.action)) {
       return NextResponse.json(
         { error: "Unsupported assistant action." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -41,14 +52,14 @@ export async function POST(request: NextRequest) {
     ) {
       return NextResponse.json(
         { error: "Select text before asking the assistant to rewrite it." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     if (typeof body.documentContent !== "string") {
       return NextResponse.json(
         { error: "Document content is required." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -56,7 +67,7 @@ export async function POST(request: NextRequest) {
     if (!llmConfig) {
       return NextResponse.json(
         { error: "No LLM provider configured. Go to Settings to set one up." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -70,15 +81,22 @@ export async function POST(request: NextRequest) {
             ? body.jobDescription
             : undefined,
       },
-      llmConfig
+      llmConfig,
     );
+
+    if (!content.trim()) {
+      return NextResponse.json(
+        { error: "Assistant returned an empty rewrite. Please try again." },
+        { status: 502 },
+      );
+    }
 
     return NextResponse.json({ success: true, content });
   } catch (error) {
     console.error("Document assistant error:", error);
     return NextResponse.json(
       { error: "Failed to rewrite selected text", details: String(error) },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -23,8 +23,23 @@ describe("document assistant helpers", () => {
     });
   });
 
+  it("normalizes reversed selections", () => {
+    expect(normalizeSelection("Hello world", { start: 11, end: 6 })).toEqual({
+      start: 6,
+      end: 11,
+      text: "world",
+    });
+  });
+
   it("returns null for collapsed selections", () => {
     expect(normalizeSelection("Hello", { start: 2, end: 2 })).toBeNull();
+  });
+
+  it("returns null for non-finite selection ranges", () => {
+    expect(
+      normalizeSelection("Hello", { start: Number.NaN, end: 4 }),
+    ).toBeNull();
+    expect(normalizeSelection("Hello", { start: 1, end: Infinity })).toBeNull();
   });
 
   it("applies replacement text to the selected range", () => {
@@ -32,9 +47,19 @@ describe("document assistant helpers", () => {
       applySelectionRewrite(
         "I built APIs quickly.",
         { start: 8, end: 12 },
-        "reliable APIs"
-      )
+        "reliable APIs",
+      ),
     ).toBe("I built reliable APIs quickly.");
+  });
+
+  it("preserves replacement text exactly when applying a rewrite", () => {
+    expect(
+      applySelectionRewrite(
+        "Hello world",
+        { start: 6, end: 11 },
+        "focused work",
+      ),
+    ).toBe("Hello focused work");
   });
 
   it("returns a compact before and after diff", () => {
@@ -47,10 +72,10 @@ describe("document assistant helpers", () => {
   it("returns document-aware suggestions when content exists", () => {
     const suggestions = getDocumentSuggestions(
       "I led a migration and improved developer workflows.",
-      "We need React, migration, and developer productivity experience."
+      "We need React, migration, and developer productivity experience.",
     );
     expect(suggestions).toContain(
-      "Select relevant experience and match JD keywords."
+      "Select relevant experience and match JD keywords.",
     );
     expect(suggestions).toHaveLength(3);
   });
