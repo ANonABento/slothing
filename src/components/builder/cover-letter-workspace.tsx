@@ -32,6 +32,8 @@ interface DocumentsResponse {
   documents?: Document[];
 }
 
+const COVER_LETTER_DOCUMENT_TYPE = "cover_letter";
+
 export function CoverLetterWorkspace() {
   const [jobDescription, setJobDescription] = useState("");
   const [jobTitle, setJobTitle] = useState("");
@@ -78,7 +80,9 @@ export function CoverLetterWorkspace() {
     async function fetchCoverLetterFiles() {
       setIsLoadingFiles(true);
       try {
-        const response = await fetch("/api/documents?type=cover_letter");
+        const response = await fetch(
+          `/api/documents?type=${COVER_LETTER_DOCUMENT_TYPE}`
+        );
         if (!response.ok) throw new Error("Failed to load cover letters.");
         const data = (await response.json()) as DocumentsResponse;
         if (!cancelled) setCoverLetterFiles(data.documents ?? []);
@@ -96,10 +100,11 @@ export function CoverLetterWorkspace() {
     };
   }, []);
 
-  function updateDocumentSection(
+  function handleDocumentSectionChange(
     section: keyof CoverLetterDocument,
     value: string
   ) {
+    setSelectedFileId(null);
     setDocument((current) => ({ ...current, [section]: value }));
   }
 
@@ -152,7 +157,7 @@ export function CoverLetterWorkspace() {
     try {
       await downloadHtmlAsPdf(
         previewHtml,
-        createDocumentFilename("cover-letter", company || jobTitle)
+        createDocumentFilename("cover-letter", company.trim() || jobTitle.trim())
       );
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to export PDF.");
@@ -286,7 +291,7 @@ export function CoverLetterWorkspace() {
                 id="coverOpening"
                 value={document.opening}
                 onChange={(event) =>
-                  updateDocumentSection("opening", event.target.value)
+                  handleDocumentSectionChange("opening", event.target.value)
                 }
                 className="min-h-[120px]"
                 placeholder="Dear hiring team..."
@@ -304,7 +309,7 @@ export function CoverLetterWorkspace() {
                 id="coverBody"
                 value={document.body}
                 onChange={(event) =>
-                  updateDocumentSection("body", event.target.value)
+                  handleDocumentSectionChange("body", event.target.value)
                 }
                 className="min-h-[220px]"
                 placeholder="Connect your strongest experience to the role..."
@@ -322,7 +327,7 @@ export function CoverLetterWorkspace() {
                 id="coverClosing"
                 value={document.closing}
                 onChange={(event) =>
-                  updateDocumentSection("closing", event.target.value)
+                  handleDocumentSectionChange("closing", event.target.value)
                 }
                 className="min-h-[120px]"
                 placeholder="Thank you for your consideration..."
