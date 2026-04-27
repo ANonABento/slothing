@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { readCoverLetterApiResult } from "@/lib/cover-letter/api-response";
 import {
+  DOCUMENT_ASSISTANT_ACTIONS,
   DOCUMENT_ASSISTANT_ACTION_LABELS,
   applySelectionRewrite,
   buildSimpleDiff,
@@ -106,13 +107,33 @@ export function ChatEditor({
     setAssistantLoadingAction(null);
   }, []);
 
+  const clearAssistantResponse = useCallback(() => {
+    setAssistantProposal(null);
+    setAssistantError(null);
+  }, []);
+
+  const clearAssistantSelection = useCallback(() => {
+    setSelectionRange(null);
+    clearAssistantResponse();
+  }, [clearAssistantResponse]);
+
+  const goToVersion = useCallback(
+    (index: number, options?: { closeHistory?: boolean }) => {
+      invalidateAssistantRequest();
+      setCurrentVersionIndex(index);
+      if (options?.closeHistory) {
+        setShowHistory(false);
+      }
+      clearAssistantSelection();
+    },
+    [clearAssistantSelection, invalidateAssistantRequest],
+  );
+
   const generate = useCallback(async () => {
     invalidateAssistantRequest();
     setIsGenerating(true);
     setError(null);
-    setSelectionRange(null);
-    setAssistantProposal(null);
-    setAssistantError(null);
+    clearAssistantSelection();
 
     try {
       const res = await fetch("/api/cover-letter/generate", {
@@ -147,7 +168,13 @@ export function ChatEditor({
     } finally {
       setIsGenerating(false);
     }
-  }, [jobDescription, jobTitle, company, invalidateAssistantRequest]);
+  }, [
+    jobDescription,
+    jobTitle,
+    company,
+    clearAssistantSelection,
+    invalidateAssistantRequest,
+  ]);
 
   async function handleRevise() {
     if (!instruction.trim() || !currentVersion) return;
@@ -155,8 +182,7 @@ export function ChatEditor({
     invalidateAssistantRequest();
     setIsGenerating(true);
     setError(null);
-    setAssistantProposal(null);
-    setAssistantError(null);
+    clearAssistantResponse();
 
     try {
       const res = await fetch("/api/cover-letter/generate", {
@@ -228,12 +254,7 @@ export function ChatEditor({
   }
 
   function handleRevert(index: number) {
-    invalidateAssistantRequest();
-    setCurrentVersionIndex(index);
-    setShowHistory(false);
-    setSelectionRange(null);
-    setAssistantProposal(null);
-    setAssistantError(null);
+    goToVersion(index, { closeHistory: true });
   }
 
   function handleContentChange(content: string) {
@@ -244,7 +265,7 @@ export function ChatEditor({
         index === currentVersionIndex ? { ...version, content } : version,
       ),
     );
-    setAssistantProposal(null);
+    clearAssistantSelection();
   }
 
   function handleSelectionChange() {
@@ -265,8 +286,7 @@ export function ChatEditor({
     }
 
     setSelectionRange(nextSelection);
-    setAssistantError(null);
-    setAssistantProposal(null);
+    clearAssistantResponse();
   }
 
   async function handleAssistantAction(action: DocumentAssistantAction) {
@@ -343,8 +363,7 @@ export function ChatEditor({
       currentSelection.text !== assistantProposal.before
     ) {
       invalidateAssistantRequest();
-      setAssistantProposal(null);
-      setSelectionRange(null);
+      clearAssistantSelection();
       setAssistantError(
         "The selected text changed. Select the passage again and retry.",
       );
@@ -368,9 +387,7 @@ export function ChatEditor({
     ];
     setVersions(newVersions);
     setCurrentVersionIndex(newVersions.length - 1);
-    setAssistantProposal(null);
-    setSelectionRange(null);
-    setAssistantError(null);
+    clearAssistantSelection();
 
     requestAnimationFrame(() => {
       editorRef.current?.focus();
@@ -378,8 +395,7 @@ export function ChatEditor({
   }
 
   function handleRejectProposal() {
-    setAssistantProposal(null);
-    setAssistantError(null);
+    clearAssistantResponse();
   }
 
   return (
@@ -402,7 +418,7 @@ export function ChatEditor({
                 variant="outline"
                 size="sm"
                 onClick={() =>
-                  setCurrentVersionIndex(Math.max(0, currentVersionIndex - 1))
+                  goToVersion(Math.max(0, currentVersionIndex - 1))
                 }
                 disabled={currentVersionIndex <= 0}
               >
@@ -412,7 +428,7 @@ export function ChatEditor({
                 variant="outline"
                 size="sm"
                 onClick={() =>
-                  setCurrentVersionIndex(
+                  goToVersion(
                     Math.min(versions.length - 1, currentVersionIndex + 1),
                   )
                 }
@@ -542,11 +558,7 @@ export function ChatEditor({
                 </div>
 
                 <div className="grid grid-cols-1 gap-2">
-                  {(
-                    Object.keys(
-                      DOCUMENT_ASSISTANT_ACTION_LABELS,
-                    ) as DocumentAssistantAction[]
-                  ).map((action) => {
+                  {DOCUMENT_ASSISTANT_ACTIONS.map((action) => {
                     const Icon = QUICK_ACTION_ICONS[action];
                     return (
                       <Button
