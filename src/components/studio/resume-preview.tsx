@@ -6,10 +6,10 @@ import { Button } from "@/components/ui/button";
 import { ResumeEditor } from "@/lib/editor/resume-editor";
 import { TEMPLATES } from "@/lib/resume/template-data";
 import type { TipTapJSONContent } from "@/lib/editor/types";
-import type { TailoredResume } from "@/lib/resume/generator";
+
+const PAGE_WIDTH_PX = 816; // 8.5in at 96dpi
 
 export interface ResumePreviewProps {
-  resume?: TailoredResume;
   templateId: string;
   html?: string;
   content?: TipTapJSONContent;
@@ -24,7 +24,6 @@ export function ResumePreview({
   onContentChange,
   onAddSection,
 }: ResumePreviewProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const [fitScale, setFitScale] = useState(1);
 
@@ -33,9 +32,6 @@ export function ResumePreview({
   const accentColor = template?.styles.accentColor ?? "#333333";
   const fontFamily =
     template?.styles.fontFamily ?? "'Helvetica Neue', Arial, sans-serif";
-
-  const PAGE_WIDTH_PX = 816; // 8.5in at 96dpi
-  const PAGE_HEIGHT_PX = 1056; // 11in at 96dpi
 
   const updateScale = useCallback(() => {
     if (!wrapperRef.current) return;
@@ -67,7 +63,6 @@ export function ResumePreview({
         }}
       >
         <article
-          ref={containerRef}
           className="min-h-[11in] bg-white text-slate-950 shadow-lg"
           style={{
             width: `${PAGE_WIDTH_PX}px`,

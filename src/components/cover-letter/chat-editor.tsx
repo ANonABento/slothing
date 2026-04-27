@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import type { KeyboardEvent, SyntheticEvent } from "react";
 import {
   Check,
   ChevronLeft,
@@ -87,13 +88,31 @@ export function ChatEditor({
     draftContentRef.current = draftContent;
   }, [draftContent]);
 
-  function replaceCurrentVersionContent(content: string) {
+  function clearRewriteState() {
+    setSelectedRange(null);
+    setAssistantRewrite(null);
+  }
+
+  function updateCurrentVersionContent(content: string) {
     setDraftContent(content);
     setVersions((prev) =>
       prev.map((version, index) =>
         index === currentVersionIndex ? { ...version, content } : version
       )
     );
+  }
+
+  function selectVersion(
+    index: number,
+    options: { closeHistory?: boolean } = {}
+  ) {
+    const nextIndex = Math.min(Math.max(index, 0), versions.length - 1);
+    setCurrentVersionIndex(nextIndex);
+    setDraftContent(versions[nextIndex]?.content ?? "");
+    clearRewriteState();
+    if (options.closeHistory) {
+      setShowHistory(false);
+    }
   }
 
   const generate = useCallback(async () => {
@@ -129,7 +148,7 @@ export function ChatEditor({
       setVersions([newVersion]);
       setCurrentVersionIndex(0);
       setDraftContent(result.content);
-      setAssistantRewrite(null);
+      clearRewriteState();
     } catch {
       setError("Network error. Please try again.");
     } finally {
@@ -195,7 +214,7 @@ export function ChatEditor({
       setVersions(newVersions);
       setCurrentVersionIndex(newVersions.length - 1);
       setDraftContent(result.content);
-      setAssistantRewrite(null);
+      clearRewriteState();
       setInstruction("");
     } catch {
       setError("Network error. Please try again.");
@@ -206,37 +225,11 @@ export function ChatEditor({
     }
   }
 
-  function handleRewriteSection() {
-    if (!selectedSection) return;
-    runAssistantAction("rewrite-section", "Rewrite section", {
-      start: selectedSection.start,
-      end: selectedSection.end,
-      text: selectedSection.text,
-    });
-  }
-
-  function handleAcceptDiff() {
-    if (!pendingDiff) return;
-    const nextContent = pendingDiff.range
-      ? applyTextReplacement(
-          pendingDiff.baseContent,
-          pendingDiff.after,
-          pendingDiff.range,
-        )
-      : pendingDiff.after;
-
-    commitContent(nextContent);
-    setPendingDiff(null);
-    setSelection(null);
-  }
-
-  function toggleBankEntry(entryId: string) {
-    setSelectedBankEntryIds((currentIds) => {
-      const nextIds = new Set(currentIds);
-      if (nextIds.has(entryId)) nextIds.delete(entryId);
-      else nextIds.add(entryId);
-      return nextIds;
-    });
+  function handleKeyDown(e: KeyboardEvent<HTMLTextAreaElement>) {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleRevise();
+    }
   }
 
   async function handleCopy() {
@@ -259,22 +252,13 @@ export function ChatEditor({
     URL.revokeObjectURL(url);
   }
 
-  function handleRevert(index: number) {
-    setCurrentVersionIndex(index);
-    setDraftContent(versions[index]?.content ?? "");
-    setAssistantRewrite(null);
-    setShowHistory(false);
-  }
-
-  function handleEditorSelect(event: React.SyntheticEvent<HTMLTextAreaElement>) {
+  function handleEditorSelect(event: SyntheticEvent<HTMLTextAreaElement>) {
     const target = event.currentTarget;
     const nextRange = {
       start: target.selectionStart,
       end: target.selectionEnd,
     };
-    setSelectedRange(
-      nextRange.end > nextRange.start ? nextRange : null
-    );
+    setSelectedRange(nextRange.end > nextRange.start ? nextRange : null);
   }
 
   async function handleAssistantRewrite(prompt = "Rewrite") {
@@ -335,7 +319,7 @@ export function ChatEditor({
     const nextContent = `${draftContent.slice(0, range.start)}${after}${draftContent.slice(
       range.end
     )}`;
-    replaceCurrentVersionContent(nextContent);
+    updateCurrentVersionContent(nextContent);
     setAssistantRewrite(null);
     setSelectedRange({
       start: range.start,
@@ -361,7 +345,8 @@ export function ChatEditor({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => handleVersionNavigation(currentVersionIndex - 1)}
+                aria-label="Previous version"
+                onClick={() => selectVersion(currentVersionIndex - 1)}
                 disabled={currentVersionIndex <= 0}
                 aria-label="Previous version"
               >
@@ -370,7 +355,8 @@ export function ChatEditor({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => handleVersionNavigation(currentVersionIndex + 1)}
+                aria-label="Next version"
+                onClick={() => selectVersion(currentVersionIndex + 1)}
                 disabled={currentVersionIndex >= versions.length - 1}
                 aria-label="Next version"
               >
@@ -415,6 +401,29 @@ export function ChatEditor({
         </div>
       </div>
 
+      {showHistory && (
+        <div className="space-y-2 rounded-lg border bg-muted/50 p-3">
+          <h3 className="text-sm font-medium">Version History</h3>
+          {versions.map((version, index) => (
+            <button
+              key={`${version.createdAt}-${index}`}
+              onClick={() => selectVersion(index, { closeHistory: true })}
+              className={cn(
+                "w-full rounded-md px-3 py-2 text-left text-sm transition-colors",
+                index === currentVersionIndex
+                  ? "bg-primary text-primary-foreground"
+                  : "hover:bg-muted"
+              )}
+            >
+              <span className="font-medium">v{index + 1}</span>
+              <span className="ml-2 text-xs opacity-75">
+                {version.instruction}
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
+
       {error && (
         <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive">
           {error}
@@ -432,8 +441,8 @@ export function ChatEditor({
             aria-label="Cover letter editor"
             value={draftContent}
             onChange={(event) => {
-              replaceCurrentVersionContent(event.target.value);
-              setAssistantRewrite(null);
+              updateCurrentVersionContent(event.target.value);
+              clearRewriteState();
             }}
             onSelect={handleEditorSelect}
             className="min-h-[300px] flex-1 resize-none bg-card p-6 text-sm leading-relaxed"
@@ -543,6 +552,7 @@ export function ChatEditor({
           onClick={handleRevise}
           disabled={isGenerating || !instruction.trim() || !currentVersion}
           className="shrink-0"
+          aria-label="Revise cover letter"
         >
           {isGenerating ? (
             <Loader2 className="h-4 w-4 animate-spin" />
