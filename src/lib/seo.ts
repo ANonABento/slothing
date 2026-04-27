@@ -37,14 +37,8 @@ const pages = {
   studio: {
     title: "Document Studio",
     description:
-      "Build resumes, cover letters, and tailored application documents from your career knowledge bank.",
+      "Build resumes, tailor applications, and generate cover letters from one workspace.",
     path: "/studio",
-  },
-  tailor: {
-    title: "Tailor Resume",
-    description:
-      "AI-powered resume tailoring — match your resume to any job description for higher ATS scores.",
-    path: "/tailor",
   },
   jobs: {
     title: "Job Tracker",
