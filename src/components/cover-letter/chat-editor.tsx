@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import {
   Check,
   ChevronLeft,
@@ -82,16 +82,21 @@ export function ChatEditor({
     );
   }
 
-  function updateEditorContent(content: string) {
+  function replaceEditorContent(content: string) {
     editorContentRef.current = content;
     rewriteRequestRef.current++;
     setEditorContent(content);
     setSelectedPassage(null);
     setAssistantRewrite(null);
+    setIsRewriting(false);
+  }
+
+  function updateEditorContent(content: string) {
+    replaceEditorContent(content);
     updateCurrentVersionContent(content);
   }
 
-  const generate = useCallback(async () => {
+  async function generate() {
     setIsGenerating(true);
     setError(null);
 
@@ -123,15 +128,13 @@ export function ChatEditor({
       };
       setVersions([newVersion]);
       setCurrentVersionIndex(0);
-      editorContentRef.current = result.content;
-      setEditorContent(result.content);
-      setAssistantRewrite(null);
+      replaceEditorContent(result.content);
     } catch {
       setError("Network error. Please try again.");
     } finally {
       setIsGenerating(false);
     }
-  }, [company, jobDescription, jobTitle]);
+  }
 
   async function handleRevise() {
     if (!instruction.trim() || !currentVersion) return;
@@ -173,9 +176,7 @@ export function ChatEditor({
       ];
       setVersions(newVersions);
       setCurrentVersionIndex(newVersions.length - 1);
-      editorContentRef.current = result.content;
-      setEditorContent(result.content);
-      setAssistantRewrite(null);
+      replaceEditorContent(result.content);
       setInstruction("");
     } catch {
       setError("Network error. Please try again.");
@@ -215,10 +216,7 @@ export function ChatEditor({
     setCurrentVersionIndex(index);
     const version = versions[index];
     if (version) {
-      editorContentRef.current = version.content;
-      setEditorContent(version.content);
-      setSelectedPassage(null);
-      setAssistantRewrite(null);
+      replaceEditorContent(version.content);
     }
   }
 
@@ -304,7 +302,6 @@ export function ChatEditor({
         assistantRewrite.after
       }${assistantRewrite.baseContent.slice(assistantRewrite.end)}`
     );
-    setSelectedPassage(null);
   }
 
   return (

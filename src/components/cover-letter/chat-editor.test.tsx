@@ -151,5 +151,10 @@ describe("ChatEditor AI assistant", () => {
     expect(
       screen.queryByText("This stale rewrite should not appear."),
     ).not.toBeInTheDocument();
+
+    editor.setSelectionRange(0, editor.value.length);
+    fireEvent.select(editor);
+
+    expect(screen.getByRole("button", { name: "Rewrite" })).not.toBeDisabled();
   });
 });
