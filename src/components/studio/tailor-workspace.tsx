@@ -231,9 +231,12 @@ export function TailorWorkspace() {
   }
 
   function handleResumeChange(resume: TailoredResume) {
-    if (!lastInput) return;
+    const input = draftInput ?? lastInput;
+    if (!input) return;
 
-    const resumeAnalysis = analyzeResumeFit(lastInput.jobDescription, resume);
+    const resumeAnalysis = analyzeResumeFit(input.jobDescription, resume);
+    const matchedEntriesCount =
+      result?.analysis.matchedEntriesCount ?? analysis?.matchedEntriesCount ?? 0;
     setResult((current) =>
       current
         ? {
@@ -248,7 +251,7 @@ export function TailorWorkspace() {
     );
     setAnalysis((current) => ({
       ...resumeAnalysis,
-      matchedEntriesCount: current?.matchedEntriesCount ?? 0,
+      matchedEntriesCount: current?.matchedEntriesCount ?? matchedEntriesCount,
     }));
   }
 
@@ -341,7 +344,7 @@ export function TailorWorkspace() {
                 resume={result.resume}
                 pdfUrl={result.pdfUrl}
                 resumeId={result.savedResume.id}
-                matchScore={result.analysis.matchScore}
+                matchScore={analysis?.matchScore ?? result.analysis.matchScore}
                 templateId={selectedTemplate}
                 templates={templates}
                 onTemplateChange={handleTemplateChange}

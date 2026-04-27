@@ -26,8 +26,31 @@ vi.mock("@/components/tailor/gap-analysis", () => ({
 }));
 
 vi.mock("@/components/tailor/resume-preview", () => ({
-  ResumePreview: ({ resume }: { resume: TailoredResume }) => (
-    <div>Resume preview {resume.summary}</div>
+  ResumePreview: ({
+    resume,
+    matchScore,
+    onResumeChange,
+  }: {
+    resume: TailoredResume;
+    matchScore: number;
+    onResumeChange?: (resume: TailoredResume) => void;
+  }) => (
+    <div>
+      <div>Resume preview {resume.summary}</div>
+      <div>Preview score {matchScore}</div>
+      <button
+        type="button"
+        onClick={() =>
+          onResumeChange?.({
+            ...resume,
+            summary: "React TypeScript GraphQL Kubernetes",
+            skills: ["React", "TypeScript", "GraphQL", "Kubernetes"],
+          })
+        }
+      >
+        Mock resume update
+      </button>
+    </div>
   ),
 }));
 
@@ -172,6 +195,71 @@ describe("TailorWorkspace", () => {
         return body.action === "generate";
       });
       expect(generateCall).toBeTruthy();
+    });
+  });
+
+  it("updates preview and gap scores when the resume changes", async () => {
+    const fetchMock = vi.fn(async (_url: string, init?: RequestInit) => {
+      if (!init) {
+        return new Response(JSON.stringify({ templates: [] }), { status: 200 });
+      }
+
+      const body = JSON.parse(String(init.body ?? "{}")) as {
+        action?: string;
+      };
+
+      if (body.action === "analyze") {
+        return new Response(
+          JSON.stringify({
+            success: true,
+            analysis: {
+              matchScore: 25,
+              keywordsFound: ["react"],
+              keywordsMissing: ["graphql", "kubernetes"],
+              gaps: [],
+              matchedEntriesCount: 1,
+            },
+          }),
+          { status: 200 }
+        );
+      }
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          pdfUrl: "/resume.html",
+          resume: generatedResume,
+          savedResume: { id: "resume-1" },
+          analysis: {
+            matchScore: 50,
+            keywordsFound: ["react", "typescript"],
+            keywordsMissing: ["graphql", "kubernetes"],
+            gaps: [],
+            matchedEntriesCount: 2,
+          },
+          jobId: "job-1",
+        }),
+        { status: 200 }
+      );
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<TailorWorkspace />);
+
+    fireEvent.change(screen.getByLabelText("Job Description"), {
+      target: {
+        value: "React TypeScript GraphQL Kubernetes",
+      },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Auto-Tailor" }));
+
+    expect(await screen.findByText("Resume preview React engineer.")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Mock resume update" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("Preview score 100")).toBeInTheDocument();
+      expect(screen.getAllByText("Gap score 100").length).toBeGreaterThan(0);
     });
   });
 });

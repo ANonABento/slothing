@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -154,9 +154,33 @@ export function ResumePreview({
   const [expanded, setExpanded] = useState(true);
   const [autoFixLoading, setAutoFixLoading] = useState(false);
   const [autoFixResult, setAutoFixResult] = useState<TailoredResume | null>(null);
+  const [resumeBeforeAutoFix, setResumeBeforeAutoFix] =
+    useState<TailoredResume | null>(null);
   const [showDiff, setShowDiff] = useState(false);
+  const pendingAutoFixResumeRef = useRef<TailoredResume | null>(null);
 
   const displayResume = autoFixResult ?? resume;
+
+  useEffect(() => {
+    if (!autoFixResult) return;
+
+    if (resume === autoFixResult) {
+      pendingAutoFixResumeRef.current = null;
+      return;
+    }
+
+    if (
+      pendingAutoFixResumeRef.current === autoFixResult ||
+      resume === resumeBeforeAutoFix
+    ) {
+      return;
+    }
+
+    pendingAutoFixResumeRef.current = null;
+    setAutoFixResult(null);
+    setResumeBeforeAutoFix(null);
+    setShowDiff(false);
+  }, [autoFixResult, resume, resumeBeforeAutoFix]);
 
   async function handleAutoFix() {
     if (keywordsMissing.length === 0 || !jobDescription) return;
@@ -167,7 +191,7 @@ export function ResumePreview({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          resume,
+          resume: displayResume,
           keywordsMissing,
           jobDescription,
         }),
@@ -177,6 +201,8 @@ export function ResumePreview({
 
       const data = await res.json();
       if (data.resume) {
+        pendingAutoFixResumeRef.current = data.resume;
+        setResumeBeforeAutoFix((current) => current ?? displayResume);
         setAutoFixResult(data.resume);
         onResumeChange?.(data.resume);
         setShowDiff(true);
@@ -189,7 +215,12 @@ export function ResumePreview({
   }
 
   function handleRevert() {
+    if (resumeBeforeAutoFix) {
+      onResumeChange?.(resumeBeforeAutoFix);
+    }
+    pendingAutoFixResumeRef.current = null;
     setAutoFixResult(null);
+    setResumeBeforeAutoFix(null);
     setShowDiff(false);
   }
 
@@ -280,12 +311,12 @@ export function ResumePreview({
           <CardHeader className="pb-2">
             <CardTitle className="text-base flex items-center gap-2">
               <Wand2 className="h-4 w-4 text-primary" />
-              Auto-fix Changes
+              Auto-Tailor Changes
             </CardTitle>
           </CardHeader>
           <CardContent>
             <DiffView
-              original={resumeToText(resume)}
+              original={resumeToText(resumeBeforeAutoFix ?? resume)}
               improved={resumeToText(autoFixResult)}
             />
           </CardContent>
