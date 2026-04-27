@@ -45,18 +45,15 @@ interface ChatEditorProps {
   initialContent: string;
 }
 
-interface SelectedPassage {
-  text: string;
+interface TextSelection {
   start: number;
   end: number;
+  text: string;
 }
 
-interface AssistantRewrite {
+interface RewriteSuggestion {
   before: string;
   after: string;
-  start: number;
-  end: number;
-  baseContent: string;
 }
 
 export function ChatEditor({
@@ -73,13 +70,17 @@ export function ChatEditor({
     },
   ]);
   const [currentVersionIndex, setCurrentVersionIndex] = useState(0);
+  const [editorContent, setEditorContent] = useState(initialContent);
+  const [selection, setSelection] = useState<TextSelection | null>(null);
+  const [rewriteSuggestion, setRewriteSuggestion] =
+    useState<RewriteSuggestion | null>(null);
   const [instruction, setInstruction] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
-  const [selection, setSelection] = useState<EditorSelection | null>(null);
-  const [rewrite, setRewrite] = useState<PendingRewrite | null>(null);
+  const rewriteSourceRef = useRef("");
+  const editorContentRef = useRef(initialContent);
   const currentVersion =
     currentVersionIndex >= 0 ? versions[currentVersionIndex] : null;
   const currentContentRef = useRef(currentVersion?.content ?? "");
@@ -87,29 +88,23 @@ export function ChatEditor({
   const currentVersionIndexRef = useRef(currentVersionIndex);
   currentVersionIndexRef.current = currentVersionIndex;
 
-  function updateCurrentVersionContent(content: string) {
-    setVersions((currentVersions) =>
-      currentVersions.map((version, index) =>
-        index === currentVersionIndex ? { ...version, content } : version
-      )
-    );
-  }
-
-  function replaceEditorContent(content: string) {
+  function commitContent(content: string, instructionLabel: string) {
+    const newVersion: Version = {
+      content,
+      instruction: instructionLabel,
+      createdAt: new Date().toISOString(),
+    };
+    const newVersions = [
+      ...versions.slice(0, currentVersionIndex + 1),
+      newVersion,
+    ];
+    setVersions(newVersions);
+    setCurrentVersionIndex(newVersions.length - 1);
     editorContentRef.current = content;
-    rewriteRequestRef.current++;
     setEditorContent(content);
-    setSelectedPassage(null);
-    setAssistantRewrite(null);
-    setIsRewriting(false);
   }
 
-  function updateEditorContent(content: string) {
-    replaceEditorContent(content);
-    updateCurrentVersionContent(content);
-  }
-
-  async function generate() {
+  const generate = useCallback(async () => {
     setIsGenerating(true);
     setError(null);
 
@@ -134,15 +129,15 @@ export function ChatEditor({
         return;
       }
 
-      const newVersion: Version = {
+      const newVersion = {
         content: result.content,
         instruction: "Initial generation",
         createdAt: new Date().toISOString(),
       };
       setVersions([newVersion]);
       setCurrentVersionIndex(0);
-      setSelection(null);
-      setRewrite(null);
+      editorContentRef.current = result.content;
+      setEditorContent(result.content);
     } catch {
       setError("Network error. Please try again.");
     } finally {
@@ -179,18 +174,7 @@ export function ChatEditor({
         return;
       }
 
-      const newVersion: Version = {
-        content: result.content,
-        instruction: instruction.trim(),
-        createdAt: new Date().toISOString(),
-      };
-      const newVersions = [
-        ...versions.slice(0, currentVersionIndex + 1),
-        newVersion,
-      ];
-      setVersions(newVersions);
-      setCurrentVersionIndex(newVersions.length - 1);
-      replaceEditorContent(result.content);
+      commitContent(result.content, instruction.trim());
       setInstruction("");
       setSelection(null);
       setRewrite(null);
@@ -313,14 +297,14 @@ export function ChatEditor({
   }
 
   async function handleCopy() {
-    if (!currentVersion) return;
+    if (!editorContent) return;
     await navigator.clipboard.writeText(editorContent);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   }
 
   function handleDownload() {
-    if (!currentVersion) return;
+    if (!editorContent) return;
     const blob = new Blob([editorContent], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -333,25 +317,39 @@ export function ChatEditor({
   }
 
   function handleRevert(index: number) {
-    handleVersionChange(index);
+    setCurrentVersionIndex(index);
+    const content = versions[index]?.content ?? "";
+    editorContentRef.current = content;
+    setEditorContent(content);
     setShowHistory(false);
+  }
+
+  function handleEditorChange(value: string) {
+    editorContentRef.current = value;
+    setEditorContent(value);
+    setRewriteSuggestion(null);
+    setSelection(null);
   }
 
   function handleEditorSelect(event: React.SyntheticEvent<HTMLTextAreaElement>) {
     const target = event.currentTarget;
-    const start = target.selectionStart;
-    const end = target.selectionEnd;
-    const text = target.value.slice(start, end);
-    setSelectedPassage(text ? { text, start, end } : null);
+    if (target.selectionStart === target.selectionEnd) {
+      setSelection(null);
+      return;
+    }
+
+    setSelection({
+      start: target.selectionStart,
+      end: target.selectionEnd,
+      text: target.value.slice(target.selectionStart, target.selectionEnd),
+    });
   }
 
-  async function handleAssistantRewrite(instructionText = "Rewrite") {
-    if (!selectedPassage || !currentVersion) return;
-
-    const requestId = ++rewriteRequestRef.current;
-    const baseContent = editorContentRef.current;
-    setIsRewriting(true);
+  async function handleSelectionRewrite(nextInstruction: string) {
+    if (!selection) return;
+    setIsGenerating(true);
     setError(null);
+    rewriteSourceRef.current = editorContentRef.current;
 
     try {
       const res = await fetch("/api/cover-letter/generate", {
@@ -361,59 +359,42 @@ export function ChatEditor({
           jobDescription,
           jobTitle,
           company,
-          action: "rewrite",
-          currentContent: baseContent,
-          selectedText: selectedPassage.text,
-          instruction: instructionText,
+          action: "revise",
+          currentContent: selection.text,
+          instruction: nextInstruction,
         }),
       });
 
       const result = await readCoverLetterApiResult(
         res,
-        "Failed to rewrite selection"
+        "Failed to revise cover letter"
       );
       if (!result.ok) {
         setError(result.error);
         return;
       }
 
-      if (
-        requestId !== rewriteRequestRef.current ||
-        editorContentRef.current !== baseContent
-      ) {
-        return;
-      }
-
-      setAssistantRewrite({
-        before: selectedPassage.text,
-        after: result.content,
-        start: selectedPassage.start,
-        end: selectedPassage.end,
-        baseContent,
-      });
+      if (rewriteSourceRef.current !== editorContentRef.current) return;
+      setRewriteSuggestion({ before: selection.text, after: result.content });
     } catch {
       setError("Network error. Please try again.");
     } finally {
-      if (requestId === rewriteRequestRef.current) {
-        setIsRewriting(false);
-      }
+      setIsGenerating(false);
     }
   }
 
   function handleAcceptRewrite() {
-    if (
-      !assistantRewrite ||
-      editorContentRef.current !== assistantRewrite.baseContent
-    ) {
-      setAssistantRewrite(null);
-      return;
-    }
+    if (!selection || !rewriteSuggestion) return;
+    const nextContent = `${editorContent.slice(0, selection.start)}${
+      rewriteSuggestion.after
+    }${editorContent.slice(selection.end)}`;
+    commitContent(nextContent, "Selection rewrite");
+    setSelection(null);
+    setRewriteSuggestion(null);
+  }
 
-    updateEditorContent(
-      `${assistantRewrite.baseContent.slice(0, assistantRewrite.start)}${
-        assistantRewrite.after
-      }${assistantRewrite.baseContent.slice(assistantRewrite.end)}`
-    );
+  function handleRejectRewrite() {
+    setRewriteSuggestion(null);
   }
 
   return (
@@ -531,15 +512,17 @@ export function ChatEditor({
         </div>
       )}
 
-      <div className="rounded-lg border bg-card p-4">
-        <h3 className="text-sm font-semibold">AI Assistant</h3>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Select text in the editor to rewrite a specific passage.
-        </p>
-        {selection ? (
+      <div className="rounded-lg border bg-muted/30 p-3">
+        <h3 className="text-sm font-medium">AI Assistant</h3>
+        {!selection ? (
+          <div className="mt-2 space-y-1 text-sm text-muted-foreground">
+            <p>Select text in the editor to rewrite a specific passage.</p>
+            <p>Select relevant experience and match JD keywords.</p>
+          </div>
+        ) : (
           <div className="mt-3 flex flex-wrap gap-2">
             <Button
-              type="button"
+              variant="outline"
               size="sm"
               onClick={() => handleSelectionRewrite("Rewrite")}
               disabled={isGenerating}
@@ -547,7 +530,6 @@ export function ChatEditor({
               Rewrite
             </Button>
             <Button
-              type="button"
               variant="outline"
               size="sm"
               onClick={() => handleSelectionRewrite("Make concise")}
@@ -556,7 +538,6 @@ export function ChatEditor({
               Make concise
             </Button>
             <Button
-              type="button"
               variant="outline"
               size="sm"
               onClick={() => handleSelectionRewrite("Add metrics")}
@@ -565,7 +546,6 @@ export function ChatEditor({
               Add metrics
             </Button>
             <Button
-              type="button"
               variant="outline"
               size="sm"
               onClick={() => handleSelectionRewrite("Match JD keywords")}
@@ -574,32 +554,31 @@ export function ChatEditor({
               Match JD keywords
             </Button>
           </div>
-        ) : (
-          <p className="mt-3 text-sm text-muted-foreground">
-            Select relevant experience and match JD keywords.
-          </p>
         )}
 
-        {rewrite && (
-          <div className="mt-3 space-y-3 rounded-md border bg-muted/40 p-3 text-sm">
+        {rewriteSuggestion && (
+          <div className="mt-3 grid gap-3 md:grid-cols-2">
             <div>
-              <p className="font-medium">Before</p>
-              <p className="mt-1 text-muted-foreground">{rewrite.before}</p>
+              <h4 className="mb-1 text-xs font-medium text-muted-foreground">
+                Before
+              </h4>
+              <div className="rounded-md border bg-background p-3 text-sm">
+                {rewriteSuggestion.before}
+              </div>
             </div>
             <div>
-              <p className="font-medium">After</p>
-              <p className="mt-1">{rewrite.after}</p>
+              <h4 className="mb-1 text-xs font-medium text-muted-foreground">
+                After
+              </h4>
+              <div className="rounded-md border bg-background p-3 text-sm">
+                {rewriteSuggestion.after}
+              </div>
             </div>
-            <div className="flex gap-2">
-              <Button type="button" size="sm" onClick={handleAcceptRewrite}>
+            <div className="flex gap-2 md:col-span-2">
+              <Button size="sm" onClick={handleAcceptRewrite}>
                 Accept
               </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={handleRejectRewrite}
-              >
+              <Button variant="outline" size="sm" onClick={handleRejectRewrite}>
                 Reject
               </Button>
             </div>
@@ -607,26 +586,13 @@ export function ChatEditor({
         )}
       </div>
 
-      <div className="min-h-[300px] flex-1">
-        {isGenerating && !currentVersion ? (
-          <div className="flex h-full items-center justify-center text-muted-foreground">
-            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-            Generating cover letter...
-          </div>
-        ) : currentVersion ? (
-          <Textarea
-            aria-label="Cover letter editor"
-            value={currentVersion.content}
-            onChange={handleEditorChange}
-            onSelect={handleEditorSelect}
-            className="h-full min-h-[300px] resize-none whitespace-pre-wrap bg-card p-6 leading-relaxed"
-          />
-        ) : (
-          <div className="flex h-full items-center justify-center text-muted-foreground">
-            No cover letter generated yet.
-          </div>
-        )}
-      </div>
+      <Textarea
+        aria-label="Cover letter editor"
+        value={editorContent}
+        onChange={(event) => handleEditorChange(event.target.value)}
+        onSelect={handleEditorSelect}
+        className="min-h-[300px] flex-1 resize-none"
+      />
 
       <div className="flex items-end gap-2">
         <Textarea

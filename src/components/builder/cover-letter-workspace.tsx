@@ -24,7 +24,17 @@ import { readCoverLetterApiResult } from "@/lib/cover-letter/api-response";
 
 type Step = "input" | "editor";
 
-export function CoverLetterWorkspace() {
+interface CoverLetterWorkspaceProps {
+  documentName?: string;
+  documentContent?: string;
+  onDocumentContentChange?: (content: string) => void;
+}
+
+export function CoverLetterWorkspace({
+  documentName,
+  documentContent,
+  onDocumentContentChange,
+}: CoverLetterWorkspaceProps = {}) {
   const [step, setStep] = useState<Step>("input");
   const [jobDescription, setJobDescription] = useState("");
   const [jobTitle, setJobTitle] = useState("");
@@ -60,6 +70,11 @@ export function CoverLetterWorkspace() {
         return;
       }
 
+      if (onDocumentContentChange) {
+        onDocumentContentChange(result.content);
+        return;
+      }
+
       setInitialContent(result.content);
       setStep("editor");
     } catch {
@@ -67,6 +82,111 @@ export function CoverLetterWorkspace() {
     } finally {
       setIsLoading(false);
     }
+  }
+
+  if (onDocumentContentChange) {
+    return (
+      <div className="flex h-full flex-col gap-4 p-4 md:p-6">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-semibold">
+              {documentName || "Cover Letter"}
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              Draft, generate, and revise the active cover letter.
+            </p>
+          </div>
+          <Button
+            onClick={handleGenerate}
+            disabled={jobDescription.trim().length < 20 || isLoading}
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Generating...
+              </>
+            ) : (
+              <>
+                Generate
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </>
+            )}
+          </Button>
+        </div>
+
+        {llmError && (
+          <Card className="border-destructive/50 bg-destructive/5">
+            <CardContent className="pt-6">
+              <p className="text-sm text-destructive">{llmError}</p>
+            </CardContent>
+          </Card>
+        )}
+
+        <div className="grid gap-3 md:grid-cols-2">
+          <div>
+            <label
+              htmlFor="studioCoverLetterJobTitle"
+              className="mb-1 block text-sm font-medium"
+            >
+              Job Title (optional)
+            </label>
+            <Input
+              id="studioCoverLetterJobTitle"
+              value={jobTitle}
+              onChange={(e) => setJobTitle(e.target.value)}
+              placeholder="e.g. Software Engineer"
+            />
+          </div>
+          <div>
+            <label
+              htmlFor="studioCoverLetterCompany"
+              className="mb-1 block text-sm font-medium"
+            >
+              Company (optional)
+            </label>
+            <Input
+              id="studioCoverLetterCompany"
+              value={company}
+              onChange={(e) => setCompany(e.target.value)}
+              placeholder="e.g. Acme Corp"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label
+            htmlFor="studioCoverLetterJobDescription"
+            className="mb-1 block text-sm font-medium"
+          >
+            Job Description
+          </label>
+          <Textarea
+            id="studioCoverLetterJobDescription"
+            value={jobDescription}
+            onChange={(e) => setJobDescription(e.target.value)}
+            placeholder="Paste the full job description here..."
+            className="min-h-[120px]"
+          />
+        </div>
+
+        <div className="min-h-0 flex-1">
+          <label
+            htmlFor="studioCoverLetterContent"
+            className="mb-1 block text-sm font-medium"
+          >
+            Cover Letter
+          </label>
+          <Textarea
+            id="studioCoverLetterContent"
+            aria-label="Cover letter editor"
+            value={documentContent ?? ""}
+            onChange={(e) => onDocumentContentChange(e.target.value)}
+            placeholder="Start writing your cover letter..."
+            className="h-[calc(100%-1.75rem)] min-h-[300px] resize-none"
+          />
+        </div>
+      </div>
+    );
   }
 
   if (step === "editor") {
