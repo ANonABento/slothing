@@ -37,6 +37,11 @@ function isBankCategory(value: unknown): value is BankCategory {
   );
 }
 
+function getVersionTimestamp(version: Pick<BuilderVersion, "savedAt">): number {
+  const timestamp = Date.parse(version.savedAt);
+  return Number.isFinite(timestamp) ? timestamp : 0;
+}
+
 function normalizeSections(value: unknown): SectionState[] | null {
   if (!Array.isArray(value)) return null;
 
@@ -131,6 +136,7 @@ export function parseBuilderVersion(value: unknown): BuilderVersion | null {
   if (typeof value.id !== "string" || typeof value.savedAt !== "string") {
     return null;
   }
+  if (!Number.isFinite(Date.parse(value.savedAt))) return null;
 
   const state = parseBuilderDraftState(value.state);
   if (!state) return null;
@@ -155,7 +161,7 @@ export function addBuilderVersion(
   maxVersions = MAX_BUILDER_VERSIONS
 ): BuilderVersion[] {
   return [version, ...versions.filter((existing) => existing.id !== version.id)]
-    .sort((a, b) => Date.parse(b.savedAt) - Date.parse(a.savedAt))
+    .sort((a, b) => getVersionTimestamp(b) - getVersionTimestamp(a))
     .slice(0, maxVersions);
 }
 
@@ -179,16 +185,16 @@ export function readBuilderVersions(
   storage: Pick<Storage, "getItem">,
   documentId: string
 ): BuilderVersion[] {
-  const raw = storage.getItem(getBuilderVersionStorageKey(documentId));
-  if (!raw) return [];
-
   try {
+    const raw = storage.getItem(getBuilderVersionStorageKey(documentId));
+    if (!raw) return [];
+
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed)) return [];
     return parsed
       .map(parseBuilderVersion)
       .filter((version): version is BuilderVersion => version !== null)
-      .sort((a, b) => Date.parse(b.savedAt) - Date.parse(a.savedAt))
+      .sort((a, b) => getVersionTimestamp(b) - getVersionTimestamp(a))
       .slice(0, MAX_BUILDER_VERSIONS);
   } catch {
     return [];
@@ -199,9 +205,14 @@ export function writeBuilderVersions(
   storage: Pick<Storage, "setItem">,
   documentId: string,
   versions: BuilderVersion[]
-): void {
-  storage.setItem(
-    getBuilderVersionStorageKey(documentId),
-    JSON.stringify(versions.slice(0, MAX_BUILDER_VERSIONS))
-  );
+): boolean {
+  try {
+    storage.setItem(
+      getBuilderVersionStorageKey(documentId),
+      JSON.stringify(versions.slice(0, MAX_BUILDER_VERSIONS))
+    );
+    return true;
+  } catch {
+    return false;
+  }
 }

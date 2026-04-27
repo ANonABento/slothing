@@ -99,6 +99,7 @@ describe("builder version history", () => {
         JSON.stringify([
           version("old", "2026-01-01T00:00:00.000Z"),
           { id: "bad", kind: "manual", savedAt: "2026-01-02T00:00:00.000Z" },
+          version("invalid-date", "not-a-date"),
           version("new", "2026-01-03T00:00:00.000Z"),
         ])
       ),
@@ -112,6 +113,16 @@ describe("builder version history", () => {
     );
   });
 
+  it("returns an empty list when storage reads fail", () => {
+    const storage = {
+      getItem: vi.fn(() => {
+        throw new Error("storage unavailable");
+      }),
+    };
+
+    expect(readBuilderVersions(storage, "resume")).toEqual([]);
+  });
+
   it("writes capped versions to storage", () => {
     const storage = { setItem: vi.fn() };
     const versions = Array.from(
@@ -123,10 +134,24 @@ describe("builder version history", () => {
         )
     );
 
-    writeBuilderVersions(storage, "resume", versions);
+    expect(writeBuilderVersions(storage, "resume", versions)).toBe(true);
 
     const [, raw] = storage.setItem.mock.calls[0];
     expect(JSON.parse(raw)).toHaveLength(MAX_BUILDER_VERSIONS);
+  });
+
+  it("reports failed storage writes without throwing", () => {
+    const storage = {
+      setItem: vi.fn(() => {
+        throw new Error("quota exceeded");
+      }),
+    };
+
+    expect(
+      writeBuilderVersions(storage, "resume", [
+        version("v1", "2026-01-01T00:00:00.000Z"),
+      ])
+    ).toBe(false);
   });
 
   it("compares normalized draft states", () => {

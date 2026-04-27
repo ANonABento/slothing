@@ -34,6 +34,7 @@ import {
 import {
   AUTO_SAVE_INTERVAL_MS,
   addBuilderVersion,
+  areBuilderStatesEqual,
   createBuilderVersion,
   getLatestBuilderVersion,
   readBuilderVersions,
@@ -99,6 +100,8 @@ function BuilderPageContent() {
   const lastPreviewErrorToastRef = useRef("");
   const restoredDraftRef = useRef(false);
   const hasUnsavedChangesRef = useRef(false);
+  const versionsRef = useRef<BuilderVersion[]>([]);
+  const lastSavedStateRef = useRef<BuilderDraftState | null>(null);
 
   const currentBuilderState = useMemo<BuilderDraftState>(
     () => ({
@@ -114,6 +117,13 @@ function BuilderPageContent() {
 
   useEffect(() => {
     currentBuilderStateRef.current = currentBuilderState;
+
+    const lastSavedState = lastSavedStateRef.current;
+    if (!lastSavedState) return;
+
+    setHasUnsavedChanges(
+      !areBuilderStatesEqual(currentBuilderState, lastSavedState)
+    );
   }, [currentBuilderState]);
 
   useEffect(() => {
@@ -139,11 +149,13 @@ function BuilderPageContent() {
       window.localStorage,
       RESUME_BUILDER_DOCUMENT_ID
     );
+    versionsRef.current = storedVersions;
     setVersions(storedVersions);
 
     const latestVersion = getLatestBuilderVersion(storedVersions);
     if (latestVersion) {
       restoredDraftRef.current = true;
+      lastSavedStateRef.current = latestVersion.state;
       applyBuilderState(latestVersion.state);
       setHasUnsavedChanges(false);
     }
@@ -155,20 +167,25 @@ function BuilderPageContent() {
       name: string,
       state = currentBuilderStateRef.current
     ) => {
-      if (typeof window === "undefined") return;
+      if (typeof window === "undefined") return false;
 
       const version = createBuilderVersion(state, { kind, name });
+      const nextVersions = addBuilderVersion(versionsRef.current, version);
+      const didWrite = writeBuilderVersions(
+        window.localStorage,
+        RESUME_BUILDER_DOCUMENT_ID,
+        nextVersions
+      );
 
-      setVersions((previousVersions) => {
-        const nextVersions = addBuilderVersion(previousVersions, version);
-        writeBuilderVersions(
-          window.localStorage,
-          RESUME_BUILDER_DOCUMENT_ID,
-          nextVersions
-        );
-        return nextVersions;
-      });
-      setHasUnsavedChanges(false);
+      if (!didWrite) return false;
+
+      versionsRef.current = nextVersions;
+      lastSavedStateRef.current = version.state;
+      setVersions(nextVersions);
+      setHasUnsavedChanges(
+        !areBuilderStatesEqual(currentBuilderStateRef.current, version.state)
+      );
+      return true;
     },
     []
   );
@@ -421,11 +438,15 @@ function BuilderPageContent() {
 
   const handleRestoreVersion = useCallback(
     (version: BuilderVersion) => {
+      persistBuilderVersion(
+        "manual",
+        `Restored ${version.name}`,
+        version.state
+      );
       applyBuilderState(version.state);
       setPreviewVersionId(null);
-      setHasUnsavedChanges(false);
     },
-    [applyBuilderState]
+    [applyBuilderState, persistBuilderVersion]
   );
 
   if (loading && documentMode === "resume") {
