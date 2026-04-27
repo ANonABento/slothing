@@ -1,21 +1,27 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import {
   Check,
   ChevronLeft,
   ChevronRight,
   Copy,
   Download,
-  History,
   Loader2,
+  Minimize2,
   RotateCcw,
-  Send,
+  Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { readCoverLetterApiResult } from "@/lib/cover-letter/api-response";
 import { cn } from "@/lib/utils";
+import {
+  applyTextReplacement,
+  createAiActionInstruction,
+  getParagraphRanges,
+  type AiActionId,
+} from "./ai-action-center-utils";
 
 interface Version {
   content: string;
@@ -23,19 +29,18 @@ interface Version {
   createdAt: string;
 }
 
-interface EditorSelection {
+interface TextSelection {
   start: number;
   end: number;
   text: string;
-  baseContent: string;
 }
 
-interface PendingRewrite {
+interface PendingDiff {
   before: string;
   after: string;
-  start: number;
-  end: number;
   baseContent: string;
+  range: { start: number; end: number } | null;
+  actionLabel: string;
 }
 
 interface ChatEditorProps {
@@ -45,16 +50,12 @@ interface ChatEditorProps {
   initialContent: string;
 }
 
-interface TextSelection {
-  start: number;
-  end: number;
-  text: string;
-}
-
-interface RewriteSuggestion {
-  before: string;
-  after: string;
-}
+const CONTEXTUAL_ACTIONS: Array<{ id: AiActionId; label: string }> = [
+  { id: "rewrite", label: "Rewrite" },
+  { id: "concise", label: "Make concise" },
+  { id: "metrics", label: "Add metrics" },
+  { id: "keywords", label: "Match JD keywords" },
+];
 
 export function ChatEditor({
   jobDescription,
@@ -70,41 +71,70 @@ export function ChatEditor({
     },
   ]);
   const [currentVersionIndex, setCurrentVersionIndex] = useState(0);
-  const [editorContent, setEditorContent] = useState(initialContent);
+  const [content, setContent] = useState(initialContent);
   const [selection, setSelection] = useState<TextSelection | null>(null);
-  const [rewriteSuggestion, setRewriteSuggestion] =
-    useState<RewriteSuggestion | null>(null);
-  const [instruction, setInstruction] = useState("");
+  const [pendingDiff, setPendingDiff] = useState<PendingDiff | null>(null);
+  const [selectedSectionIndex, setSelectedSectionIndex] = useState(0);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
-  const [showHistory, setShowHistory] = useState(false);
-  const rewriteSourceRef = useRef("");
-  const editorContentRef = useRef(initialContent);
-  const currentVersion =
-    currentVersionIndex >= 0 ? versions[currentVersionIndex] : null;
-  const currentContentRef = useRef(currentVersion?.content ?? "");
-  currentContentRef.current = currentVersion?.content ?? "";
-  const currentVersionIndexRef = useRef(currentVersionIndex);
-  currentVersionIndexRef.current = currentVersionIndex;
+  const [showJobDescription, setShowJobDescription] = useState(false);
+  const [isPanelCollapsed, setIsPanelCollapsed] = useState(false);
+  const contentRef = useRef(content);
+  contentRef.current = content;
 
-  function commitContent(content: string, instructionLabel: string) {
-    const newVersion: Version = {
-      content,
-      instruction: instructionLabel,
+  const sections = useMemo(() => getParagraphRanges(content), [content]);
+  const selectedSection = sections[selectedSectionIndex] ?? sections[0] ?? null;
+
+  function commitContent(nextContent: string, instruction: string) {
+    const nextVersion: Version = {
+      content: nextContent,
+      instruction,
       createdAt: new Date().toISOString(),
     };
-    const newVersions = [
+    const nextVersions = [
       ...versions.slice(0, currentVersionIndex + 1),
-      newVersion,
+      nextVersion,
     ];
-    setVersions(newVersions);
-    setCurrentVersionIndex(newVersions.length - 1);
-    editorContentRef.current = content;
-    setEditorContent(content);
+    setVersions(nextVersions);
+    setCurrentVersionIndex(nextVersions.length - 1);
+    setContent(nextContent);
   }
 
-  const generate = useCallback(async () => {
+  function handleVersionNavigation(index: number) {
+    const nextIndex = Math.max(0, Math.min(versions.length - 1, index));
+    const version = versions[nextIndex];
+    if (!version) return;
+
+    setCurrentVersionIndex(nextIndex);
+    setContent(version.content);
+    setPendingDiff(null);
+    setSelection(null);
+  }
+
+  function updateSelection(element: HTMLTextAreaElement) {
+    const start = element.selectionStart;
+    const end = element.selectionEnd;
+
+    if (end > start) {
+      setSelection({
+        start,
+        end,
+        text: element.value.slice(start, end),
+      });
+      return;
+    }
+
+    setSelection(null);
+  }
+
+  function handleContentChange(event: React.ChangeEvent<HTMLTextAreaElement>) {
+    setContent(event.target.value);
+    setPendingDiff(null);
+    updateSelection(event.target);
+  }
+
+  async function generateFromBank() {
     setIsGenerating(true);
     setError(null);
 
@@ -119,7 +149,6 @@ export function ChatEditor({
           action: "generate",
         }),
       });
-
       const result = await readCoverLetterApiResult(
         res,
         "Failed to generate cover letter"
@@ -129,15 +158,7 @@ export function ChatEditor({
         return;
       }
 
-      const newVersion = {
-        content: result.content,
-        instruction: "Initial generation",
-        createdAt: new Date().toISOString(),
-      };
-      setVersions([newVersion]);
-      setCurrentVersionIndex(0);
-      editorContentRef.current = result.content;
-      setEditorContent(result.content);
+      commitContent(result.content, "Generated from bank");
     } catch {
       setError("Network error. Please try again.");
     } finally {
@@ -145,8 +166,22 @@ export function ChatEditor({
     }
   }
 
-  async function handleRevise() {
-    if (!instruction.trim() || !currentVersion) return;
+  async function runAssistantAction(
+    action: AiActionId,
+    actionLabel: string,
+    target: TextSelection | null
+  ) {
+    const baseContent = contentRef.current;
+    const before = target?.text ?? baseContent;
+    const instruction = createAiActionInstruction({
+      action,
+      selectedText: before,
+      jobDescription,
+      sectionLabel:
+        action === "rewrite-section" && selectedSection
+          ? selectedSection.label
+          : undefined,
+    });
 
     setIsGenerating(true);
     setError(null);
@@ -160,11 +195,10 @@ export function ChatEditor({
           jobTitle,
           company,
           action: "revise",
-          currentContent: editorContent,
-          instruction: instruction.trim(),
+          currentContent: before,
+          instruction,
         }),
       });
-
       const result = await readCoverLetterApiResult(
         res,
         "Failed to revise cover letter"
@@ -174,10 +208,15 @@ export function ChatEditor({
         return;
       }
 
-      commitContent(result.content, instruction.trim());
-      setInstruction("");
-      setSelection(null);
-      setRewrite(null);
+      if (contentRef.current !== baseContent) return;
+
+      setPendingDiff({
+        before,
+        after: result.content,
+        baseContent,
+        range: target ? { start: target.start, end: target.end } : null,
+        actionLabel,
+      });
     } catch {
       setError("Network error. Please try again.");
     } finally {
@@ -185,11 +224,28 @@ export function ChatEditor({
     }
   }
 
-  function handleKeyDown(e: React.KeyboardEvent) {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleRevise();
-    }
+  function handleRewriteSection() {
+    if (!selectedSection) return;
+    runAssistantAction("rewrite-section", "Rewrite section", {
+      start: selectedSection.start,
+      end: selectedSection.end,
+      text: selectedSection.text,
+    });
+  }
+
+  function handleAcceptDiff() {
+    if (!pendingDiff) return;
+    const nextContent = pendingDiff.range
+      ? applyTextReplacement(
+          pendingDiff.baseContent,
+          pendingDiff.after,
+          pendingDiff.range
+        )
+      : pendingDiff.after;
+
+    commitContent(nextContent, pendingDiff.actionLabel);
+    setPendingDiff(null);
+    setSelection(null);
   }
 
   function updateCurrentContent(content: string) {
@@ -297,15 +353,13 @@ export function ChatEditor({
   }
 
   async function handleCopy() {
-    if (!editorContent) return;
-    await navigator.clipboard.writeText(editorContent);
+    await navigator.clipboard.writeText(content);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   }
 
   function handleDownload() {
-    if (!editorContent) return;
-    const blob = new Blob([editorContent], { type: "text/plain" });
+    const blob = new Blob([content], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -316,95 +370,8 @@ export function ChatEditor({
     URL.revokeObjectURL(url);
   }
 
-  function activateVersion(index: number) {
-    setCurrentVersionIndex(index);
-    const content = versions[index]?.content ?? "";
-    editorContentRef.current = content;
-    setEditorContent(content);
-    setSelection(null);
-    setRewriteSuggestion(null);
-  }
-
-  function handleRevert(index: number) {
-    activateVersion(index);
-    setShowHistory(false);
-  }
-
-  function handleEditorChange(value: string) {
-    editorContentRef.current = value;
-    setEditorContent(value);
-    setRewriteSuggestion(null);
-    setSelection(null);
-  }
-
-  function handleEditorSelect(event: React.SyntheticEvent<HTMLTextAreaElement>) {
-    const target = event.currentTarget;
-    if (target.selectionStart === target.selectionEnd) {
-      setSelection(null);
-      return;
-    }
-
-    setSelection({
-      start: target.selectionStart,
-      end: target.selectionEnd,
-      text: target.value.slice(target.selectionStart, target.selectionEnd),
-    });
-  }
-
-  async function handleSelectionRewrite(nextInstruction: string) {
-    if (!selection) return;
-    setIsGenerating(true);
-    setError(null);
-    rewriteSourceRef.current = editorContentRef.current;
-
-    try {
-      const res = await fetch("/api/cover-letter/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          jobDescription,
-          jobTitle,
-          company,
-          action: "revise",
-          currentContent: selection.text,
-          instruction: nextInstruction,
-        }),
-      });
-
-      const result = await readCoverLetterApiResult(
-        res,
-        "Failed to revise cover letter"
-      );
-      if (!result.ok) {
-        setError(result.error);
-        return;
-      }
-
-      if (rewriteSourceRef.current !== editorContentRef.current) return;
-      setRewriteSuggestion({ before: selection.text, after: result.content });
-    } catch {
-      setError("Network error. Please try again.");
-    } finally {
-      setIsGenerating(false);
-    }
-  }
-
-  function handleAcceptRewrite() {
-    if (!selection || !rewriteSuggestion) return;
-    const nextContent = `${editorContent.slice(0, selection.start)}${
-      rewriteSuggestion.after
-    }${editorContent.slice(selection.end)}`;
-    commitContent(nextContent, "Selection rewrite");
-    setSelection(null);
-    setRewriteSuggestion(null);
-  }
-
-  function handleRejectRewrite() {
-    setRewriteSuggestion(null);
-  }
-
   return (
-    <div className="flex h-full flex-col gap-4">
+    <div className="flex h-full min-h-0 flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <h2 className="text-lg font-semibold">Cover Letter</h2>
@@ -421,9 +388,7 @@ export function ChatEditor({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() =>
-                  activateVersion(Math.max(0, currentVersionIndex - 1))
-                }
+                onClick={() => handleVersionNavigation(currentVersionIndex - 1)}
                 disabled={currentVersionIndex <= 0}
                 aria-label="Previous version"
               >
@@ -432,11 +397,7 @@ export function ChatEditor({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() =>
-                  activateVersion(
-                    Math.min(versions.length - 1, currentVersionIndex + 1)
-                  )
-                }
+                onClick={() => handleVersionNavigation(currentVersionIndex + 1)}
                 disabled={currentVersionIndex >= versions.length - 1}
                 aria-label="Next version"
               >
@@ -448,17 +409,7 @@ export function ChatEditor({
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setShowHistory(!showHistory)}
-            disabled={versions.length <= 1}
-          >
-            <History className="mr-1 h-4 w-4" />
-            History
-          </Button>
-
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={generate}
+            onClick={generateFromBank}
             disabled={isGenerating}
           >
             <RotateCcw className="mr-1 h-4 w-4" />
@@ -469,7 +420,7 @@ export function ChatEditor({
             variant="outline"
             size="sm"
             onClick={handleCopy}
-            disabled={!currentVersion}
+            disabled={!content}
           >
             {copied ? (
               <Check className="mr-1 h-4 w-4" />
@@ -483,7 +434,7 @@ export function ChatEditor({
             variant="outline"
             size="sm"
             onClick={handleDownload}
-            disabled={!currentVersion}
+            disabled={!content}
           >
             <Download className="mr-1 h-4 w-4" />
             Download
@@ -491,139 +442,209 @@ export function ChatEditor({
         </div>
       </div>
 
-      {showHistory && (
-        <div className="space-y-2 rounded-lg border bg-muted/50 p-3">
-          <h3 className="text-sm font-medium">Version History</h3>
-          {versions.map((version, index) => (
-            <button
-              key={`${version.createdAt}-${index}`}
-              onClick={() => handleRevert(index)}
-              className={cn(
-                "w-full rounded-md px-3 py-2 text-left text-sm transition-colors",
-                index === currentVersionIndex
-                  ? "bg-primary text-primary-foreground"
-                  : "hover:bg-muted"
-              )}
-            >
-              <span className="font-medium">v{index + 1}</span>
-              <span className="ml-2 text-xs opacity-75">
-                {version.instruction}
-              </span>
-            </button>
-          ))}
-        </div>
-      )}
-
       {error && (
         <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive">
           {error}
         </div>
       )}
 
-      <div className="rounded-lg border bg-muted/30 p-3">
-        <h3 className="text-sm font-medium">AI Assistant</h3>
-        {!selection ? (
-          <div className="mt-2 space-y-1 text-sm text-muted-foreground">
-            <p>Select text in the editor to rewrite a specific passage.</p>
-            <p>Select relevant experience and match JD keywords.</p>
-          </div>
-        ) : (
-          <div className="mt-3 flex flex-wrap gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handleSelectionRewrite("Rewrite")}
-              disabled={isGenerating}
-            >
-              Rewrite
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handleSelectionRewrite("Make concise")}
-              disabled={isGenerating}
-            >
-              Make concise
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handleSelectionRewrite("Add metrics")}
-              disabled={isGenerating}
-            >
-              Add metrics
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handleSelectionRewrite("Match JD keywords")}
-              disabled={isGenerating}
-            >
-              Match JD keywords
-            </Button>
-          </div>
+      <div
+        className={cn(
+          "grid min-h-0 flex-1 grid-cols-1 overflow-hidden rounded-lg border bg-card lg:grid-cols-[minmax(0,1fr)_340px]",
+          isPanelCollapsed && "lg:grid-cols-[minmax(0,1fr)_56px]"
         )}
-
-        {rewriteSuggestion && (
-          <div className="mt-3 grid gap-3 md:grid-cols-2">
-            <div>
-              <h4 className="mb-1 text-xs font-medium text-muted-foreground">
-                Before
-              </h4>
-              <div className="rounded-md border bg-background p-3 text-sm">
-                {rewriteSuggestion.before}
-              </div>
+      >
+        <div className="relative min-h-[420px] border-b lg:border-b-0 lg:border-r">
+          {isGenerating && (
+            <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/60">
+              <Loader2 className="mr-2 h-5 w-5 animate-spin text-primary" />
+              <span className="text-sm text-muted-foreground">
+                Working with AI...
+              </span>
             </div>
-            <div>
-              <h4 className="mb-1 text-xs font-medium text-muted-foreground">
-                After
-              </h4>
-              <div className="rounded-md border bg-background p-3 text-sm">
-                {rewriteSuggestion.after}
-              </div>
-            </div>
-            <div className="flex gap-2 md:col-span-2">
-              <Button size="sm" onClick={handleAcceptRewrite}>
-                Accept
-              </Button>
-              <Button variant="outline" size="sm" onClick={handleRejectRewrite}>
-                Reject
-              </Button>
-            </div>
-          </div>
-        )}
-      </div>
-
-      <Textarea
-        aria-label="Cover letter editor"
-        value={editorContent}
-        onChange={(event) => handleEditorChange(event.target.value)}
-        onSelect={handleEditorSelect}
-        className="min-h-[300px] flex-1 resize-none"
-      />
-
-      <div className="flex items-end gap-2">
-        <Textarea
-          value={instruction}
-          onChange={(e) => setInstruction(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder='Refine: "make it more concise", "emphasize leadership", "add more technical details"...'
-          className="max-h-[120px] min-h-[44px] resize-none"
-          disabled={isGenerating || !currentVersion}
-          rows={1}
-        />
-        <Button
-          onClick={handleRevise}
-          disabled={isGenerating || !instruction.trim() || !currentVersion}
-          className="shrink-0"
-          aria-label="Send revision instruction"
-        >
-          {isGenerating ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Send className="h-4 w-4" />
           )}
-        </Button>
+          <Textarea
+            aria-label="Cover letter editor"
+            value={content}
+            onChange={handleContentChange}
+            onSelect={(event) => updateSelection(event.currentTarget)}
+            className="h-full min-h-[420px] resize-none rounded-none border-0 p-6 text-sm leading-relaxed focus-visible:ring-0 focus-visible:ring-offset-0"
+          />
+        </div>
+
+        <aside className="min-h-0 overflow-y-auto p-4">
+          <div className="mb-4 flex items-center justify-between gap-2">
+            {!isPanelCollapsed && (
+              <h3 className="flex items-center gap-2 text-sm font-semibold">
+                <Sparkles className="h-4 w-4 text-primary" />
+                AI Assistant
+              </h3>
+            )}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsPanelCollapsed((value) => !value)}
+              aria-label={
+                isPanelCollapsed
+                  ? "Expand AI action center"
+                  : "Collapse AI action center"
+              }
+            >
+              {isPanelCollapsed ? (
+                <ChevronLeft className="h-4 w-4" />
+              ) : (
+                <Minimize2 className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
+
+          {!isPanelCollapsed && (
+            <div className="space-y-5">
+              <section className="space-y-2">
+                <Button
+                  className="w-full justify-start"
+                  variant="outline"
+                  onClick={() => setShowJobDescription((value) => !value)}
+                >
+                  Tailor to JD
+                </Button>
+                {showJobDescription && (
+                  <div className="rounded-md border bg-muted/40 p-3">
+                    <p className="mb-2 text-xs font-medium text-muted-foreground">
+                      Job description
+                    </p>
+                    <div className="max-h-36 overflow-y-auto whitespace-pre-wrap text-xs text-muted-foreground">
+                      {jobDescription}
+                    </div>
+                    <Button
+                      className="mt-3 w-full"
+                      size="sm"
+                      onClick={() => runAssistantAction("tailor", "Tailor to JD", null)}
+                      disabled={isGenerating}
+                    >
+                      Apply JD Tailoring
+                    </Button>
+                  </div>
+                )}
+                <Button
+                  className="w-full justify-start"
+                  variant="outline"
+                  onClick={generateFromBank}
+                  disabled={isGenerating}
+                >
+                  Generate from Bank
+                </Button>
+                <div className="space-y-2 rounded-md border p-3">
+                  <label
+                    htmlFor="rewrite-section"
+                    className="text-xs font-medium text-muted-foreground"
+                  >
+                    Rewrite Section
+                  </label>
+                  <select
+                    id="rewrite-section"
+                    value={selectedSectionIndex}
+                    onChange={(event) =>
+                      setSelectedSectionIndex(Number(event.target.value))
+                    }
+                    className="h-9 w-full rounded-md border bg-background px-2 text-sm"
+                    disabled={sections.length === 0}
+                  >
+                    {sections.map((section, index) => (
+                      <option key={`${section.start}-${section.end}`} value={index}>
+                        {section.label}
+                      </option>
+                    ))}
+                  </select>
+                  <Button
+                    className="w-full"
+                    size="sm"
+                    onClick={handleRewriteSection}
+                    disabled={!selectedSection || isGenerating}
+                  >
+                    Rewrite Section
+                  </Button>
+                </div>
+              </section>
+
+              <section className="space-y-2">
+                <h4 className="text-xs font-semibold uppercase text-muted-foreground">
+                  Contextual actions
+                </h4>
+                {selection ? (
+                  <div className="grid grid-cols-1 gap-2">
+                    {CONTEXTUAL_ACTIONS.map((action) => (
+                      <Button
+                        key={action.id}
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          runAssistantAction(action.id, action.label, selection)
+                        }
+                        disabled={isGenerating}
+                      >
+                        {action.label}
+                      </Button>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="space-y-2 rounded-md border bg-muted/30 p-3 text-sm text-muted-foreground">
+                    <p>Select text in the editor to rewrite a specific passage.</p>
+                    <p>Select relevant experience and match JD keywords.</p>
+                  </div>
+                )}
+              </section>
+
+              {pendingDiff && (
+                <section className="space-y-3 rounded-md border p-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <h4 className="text-sm font-semibold">
+                      {pendingDiff.actionLabel}
+                    </h4>
+                    <span className="text-xs text-muted-foreground">
+                      Preview
+                    </span>
+                  </div>
+                  <div className="grid gap-2">
+                    <div>
+                      <p className="mb-1 text-xs font-medium text-muted-foreground">
+                        Before
+                      </p>
+                      <div className="max-h-32 overflow-y-auto rounded-md bg-muted p-2 text-xs whitespace-pre-wrap">
+                        {pendingDiff.before}
+                      </div>
+                    </div>
+                    <div>
+                      <p className="mb-1 text-xs font-medium text-muted-foreground">
+                        After
+                      </p>
+                      <div className="max-h-32 overflow-y-auto rounded-md bg-primary/10 p-2 text-xs whitespace-pre-wrap">
+                        {pendingDiff.after}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      className="flex-1"
+                      onClick={handleAcceptDiff}
+                    >
+                      Accept
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="flex-1"
+                      onClick={() => setPendingDiff(null)}
+                    >
+                      Reject
+                    </Button>
+                  </div>
+                </section>
+              )}
+            </div>
+          )}
+        </aside>
       </div>
     </div>
   );
