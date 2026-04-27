@@ -459,7 +459,7 @@ function StudioPageContent() {
               role="tabpanel"
               aria-labelledby="builder-preview-tab"
               className={cn(
-                "relative w-full flex-1 overflow-hidden",
+                "relative w-full flex-1 overflow-auto",
                 getMobilePanelClasses(mobileView, "preview")
               )}
             >
