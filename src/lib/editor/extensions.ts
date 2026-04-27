@@ -1,11 +1,14 @@
 import {
+  Extension,
   Node,
   mergeAttributes,
 } from "@tiptap/react";
 import Placeholder from "@tiptap/extension-placeholder";
 import TextAlign from "@tiptap/extension-text-align";
 import Underline from "@tiptap/extension-underline";
+import { TextSelection } from "@tiptap/pm/state";
 import StarterKit from "@tiptap/starter-kit";
+import type { Node as ProseMirrorNode } from "@tiptap/pm/model";
 
 function getDataAttribute(element: HTMLElement, name: string): string {
   return element.getAttribute(name) || "";
@@ -40,6 +43,7 @@ export const ResumeSection = Node.create({
   group: "block",
   content: "block+",
   defining: true,
+  draggable: true,
 
   addAttributes() {
     return {
@@ -71,9 +75,74 @@ export const ResumeSection = Node.create({
         "data-section-title": title,
         class: "resume-section",
       }),
+      [
+        "button",
+        {
+          type: "button",
+          class: "resume-section-drag-handle",
+          contenteditable: "false",
+          draggable: "true",
+          "aria-label": title ? `Drag ${title} section` : "Drag resume section",
+        },
+      ],
       ["h2", { class: "resume-section-title" }, title],
       ["div", { class: "resume-section-content" }, 0],
     ];
+  },
+});
+
+export function findAdjacentResumeSectionTextPosition(
+  doc: ProseMirrorNode,
+  selectionFrom: number,
+  direction: 1 | -1
+): number | null {
+  const sections: Array<{ from: number; to: number }> = [];
+
+  doc.descendants((node, pos) => {
+    if (node.type.name === "resumeSection") {
+      sections.push({ from: pos, to: pos + node.nodeSize });
+    }
+  });
+
+  if (sections.length === 0) return null;
+
+  const currentIndex = sections.findIndex(
+    (section) => selectionFrom > section.from && selectionFrom <= section.to
+  );
+  if (currentIndex === -1) return null;
+
+  const target = sections[currentIndex + direction];
+  return target ? target.from + 1 : null;
+}
+
+export const ResumeSectionKeyboardNavigation = Extension.create({
+  name: "resumeSectionKeyboardNavigation",
+
+  addKeyboardShortcuts() {
+    const moveToAdjacentSection =
+      (direction: 1 | -1) =>
+      () => {
+        const { state, view } = this.editor;
+        const targetPosition = findAdjacentResumeSectionTextPosition(
+          state.doc,
+          state.selection.from,
+          direction
+        );
+
+        if (targetPosition === null) return false;
+
+        const selection = TextSelection.near(
+          state.doc.resolve(targetPosition),
+          direction
+        );
+        view.dispatch(state.tr.setSelection(selection).scrollIntoView());
+        return true;
+      };
+
+    return {
+      Tab: moveToAdjacentSection(1),
+      "Shift-Tab": moveToAdjacentSection(-1),
+    };
   },
 });
 
@@ -275,10 +344,11 @@ export const resumeEditorExtensions = [
     types: ["heading", "paragraph"],
   }),
   Placeholder.configure({
-    placeholder: "Start writing...",
+    placeholder: "Click to add your experience...",
   }),
   ContactInfoNode,
   ResumeSection,
   ResumeEntry,
   CoverLetterBlock,
+  ResumeSectionKeyboardNavigation,
 ];
