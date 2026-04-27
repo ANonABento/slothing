@@ -3,7 +3,10 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import type { BankEntry, BankCategory } from "@/types";
-import type { SectionState } from "@/lib/builder/section-manager";
+import {
+  SECTION_LABELS,
+  type SectionState,
+} from "@/lib/builder/section-manager";
 import { getEntryTitle } from "@/components/bank/chunk-card";
 import {
   GripVertical,
@@ -18,17 +21,25 @@ import {
   Award,
   Shield,
   Sparkles,
+  Check,
   type LucideIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
-const SECTION_META: Record<BankCategory, { label: string; icon: LucideIcon }> = {
-  experience: { label: "Experience", icon: Briefcase },
-  education: { label: "Education", icon: GraduationCap },
-  skill: { label: "Skills", icon: Wrench },
-  project: { label: "Projects", icon: FolderOpen },
-  achievement: { label: "Achievements", icon: Award },
-  certification: { label: "Certifications", icon: Shield },
+const SECTION_ICONS: Record<BankCategory, LucideIcon> = {
+  experience: Briefcase,
+  education: GraduationCap,
+  skill: Wrench,
+  project: FolderOpen,
+  achievement: Award,
+  certification: Shield,
 };
 
 interface SectionListProps {
@@ -39,6 +50,8 @@ interface SectionListProps {
   onToggleVisibility: (categoryId: BankCategory) => void;
   onToggleEntry: (entryId: string) => void;
   onAiRewrite?: (categoryId: BankCategory) => void;
+  pickerOpen?: boolean;
+  onPickerOpenChange?: (open: boolean) => void;
 }
 
 export function SectionList({
@@ -49,6 +62,8 @@ export function SectionList({
   onToggleVisibility,
   onToggleEntry,
   onAiRewrite,
+  pickerOpen = false,
+  onPickerOpenChange,
 }: SectionListProps) {
   const [expandedSections, setExpandedSections] = useState<Set<BankCategory>>(
     new Set()
@@ -117,8 +132,80 @@ export function SectionList({
     dragCounterRef.current = 0;
   }
 
+  function renderEntryToggle(entry: BankEntry, compact = false) {
+    const selected = selectedIds.has(entry.id);
+    const sizeClasses = compact
+      ? "flex items-center gap-2 rounded px-3 py-1.5 text-xs"
+      : "flex items-center gap-2 rounded-md border px-3 py-2 text-sm";
+    const selectedClasses = compact
+      ? "bg-primary/10 text-foreground"
+      : "border-primary bg-primary/10 text-foreground";
+    const unselectedClasses = compact
+      ? "text-muted-foreground hover:bg-muted"
+      : "border-border text-muted-foreground hover:bg-muted";
+
+    return (
+      <button
+        key={entry.id}
+        type="button"
+        onClick={() => onToggleEntry(entry.id)}
+        className={cn(
+          "w-full text-left transition-colors",
+          sizeClasses,
+          selected ? selectedClasses : unselectedClasses
+        )}
+      >
+        <span
+          className={cn(
+            "flex shrink-0 items-center justify-center rounded border",
+            compact ? "h-3.5 w-3.5" : "h-4 w-4",
+            selected
+              ? "border-primary bg-primary text-primary-foreground"
+              : "border-border"
+          )}
+        >
+          {selected && (
+            <Check className={cn(compact ? "h-2.5 w-2.5" : "h-3 w-3")} />
+          )}
+        </span>
+        <span className="min-w-0 flex-1 truncate">{getEntryTitle(entry)}</span>
+      </button>
+    );
+  }
+
   return (
     <div className="flex flex-col h-full">
+      <Dialog open={pickerOpen} onOpenChange={onPickerOpenChange}>
+        <DialogContent className="max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Bank Entry Picker</DialogTitle>
+            <DialogDescription>
+              Select entries to add them to the document.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            {sections.map((section) => {
+              const Icon = SECTION_ICONS[section.id];
+              const sectionEntries = entriesByCategory.get(section.id) || [];
+              if (sectionEntries.length === 0) return null;
+
+              return (
+                <div key={section.id} className="space-y-2">
+                  <div className="flex items-center gap-2 text-sm font-medium">
+                    <Icon className="h-4 w-4 text-muted-foreground" />
+                    {SECTION_LABELS[section.id]}
+                  </div>
+                  <div className="space-y-1">
+                    {sectionEntries.map((entry) => renderEntryToggle(entry))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <div className="flex items-center justify-between px-4 py-3 border-b">
         <h3 className="text-sm font-semibold">Sections</h3>
         <span className="text-xs text-muted-foreground">Drag to reorder</span>
@@ -126,8 +213,7 @@ export function SectionList({
 
       <div className="flex-1 overflow-y-auto p-2 space-y-1">
         {sections.map((section, index) => {
-          const meta = SECTION_META[section.id];
-          const Icon = meta.icon;
+          const Icon = SECTION_ICONS[section.id];
           const sectionEntries = entriesByCategory.get(section.id) || [];
           const selectedCount = sectionEntries.filter((e) =>
             selectedIds.has(e.id)
@@ -178,7 +264,7 @@ export function SectionList({
                   onClick={() => toggleExpanded(section.id)}
                   className="flex-1 text-left text-sm font-medium truncate"
                 >
-                  {meta.label}
+                  {SECTION_LABELS[section.id]}
                 </button>
 
                 <span className="text-xs text-muted-foreground mr-1">
@@ -213,43 +299,9 @@ export function SectionList({
               {/* Expanded entries */}
               {isExpanded && (
                 <div className="px-2 pb-2 space-y-0.5">
-                  {sectionEntries.map((entry) => {
-                    const selected = selectedIds.has(entry.id);
-                    return (
-                      <button
-                        key={entry.id}
-                        onClick={() => onToggleEntry(entry.id)}
-                        className={cn(
-                          "w-full flex items-center gap-2 rounded px-3 py-1.5 text-left text-xs transition-colors",
-                          selected
-                            ? "bg-primary/10 text-foreground"
-                            : "text-muted-foreground hover:bg-muted"
-                        )}
-                      >
-                        <div
-                          className={cn(
-                            "flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded border transition-colors",
-                            selected
-                              ? "bg-primary border-primary text-primary-foreground"
-                              : "border-border"
-                          )}
-                        >
-                          {selected && (
-                            <svg
-                              className="h-2.5 w-2.5"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                              strokeWidth={3}
-                            >
-                              <path d="M5 13l4 4L19 7" />
-                            </svg>
-                          )}
-                        </div>
-                        <span className="truncate">{getEntryTitle(entry)}</span>
-                      </button>
-                    );
-                  })}
+                  {sectionEntries.map((entry) =>
+                    renderEntryToggle(entry, true)
+                  )}
                 </div>
               )}
             </div>
