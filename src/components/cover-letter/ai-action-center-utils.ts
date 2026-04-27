@@ -4,12 +4,16 @@ export type AiActionId =
   | "metrics"
   | "keywords"
   | "tailor"
-  | "generate-bank"
   | "rewrite-section";
 
-interface TextRange {
+export interface TextRange {
   start: number;
   end: number;
+}
+
+export interface ParagraphRange extends TextRange {
+  label: string;
+  text: string;
 }
 
 interface InstructionInput {
@@ -29,8 +33,6 @@ const ACTION_INSTRUCTIONS: Record<AiActionId, string> = {
     "Match the selected text more closely to the job description keywords while keeping it truthful.",
   tailor:
     "Tailor this document to the job description while preserving the candidate's voice and strongest evidence.",
-  "generate-bank":
-    "Generate stronger document content from the candidate's knowledge bank and job context.",
   "rewrite-section":
     "Rewrite the selected section for clarity, relevance, and measurable impact.",
 };
@@ -70,7 +72,10 @@ export function createAiActionInstruction({
   return parts.join("\n\n");
 }
 
-export function normalizeTextRange(range: TextRange, contentLength: number) {
+export function normalizeTextRange(
+  range: TextRange,
+  contentLength: number,
+): TextRange {
   const start = Math.max(0, Math.min(range.start, contentLength));
   const end = Math.max(0, Math.min(range.end, contentLength));
 
@@ -90,13 +95,8 @@ export function applyTextReplacement(
   );
 }
 
-export function getParagraphRanges(content: string) {
-  const ranges: Array<{
-    label: string;
-    text: string;
-    start: number;
-    end: number;
-  }> = [];
+export function getParagraphRanges(content: string): ParagraphRange[] {
+  const ranges: ParagraphRange[] = [];
   const pattern = /\S[\s\S]*?(?=\n\s*\n|$)/g;
   let match: RegExpExecArray | null;
 

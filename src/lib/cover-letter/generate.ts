@@ -1,5 +1,10 @@
 import { LLMClient } from "@/lib/llm/client";
-import type { LLMConfig, BankEntry, GroupedBankEntries } from "@/types";
+import {
+  BANK_CATEGORIES,
+  type BankEntry,
+  type GroupedBankEntries,
+  type LLMConfig,
+} from "@/types";
 
 export interface CoverLetterInput {
   jobDescription: string;
@@ -115,23 +120,22 @@ export function filterBankEntriesByIds(
   selectedEntryIds: string[],
 ): GroupedBankEntries {
   const selectedIds = new Set(selectedEntryIds);
-
-  return {
-    experience: bankEntries.experience.filter((entry) =>
-      selectedIds.has(entry.id),
-    ),
-    skill: bankEntries.skill.filter((entry) => selectedIds.has(entry.id)),
-    project: bankEntries.project.filter((entry) => selectedIds.has(entry.id)),
-    education: bankEntries.education.filter((entry) =>
-      selectedIds.has(entry.id),
-    ),
-    achievement: bankEntries.achievement.filter((entry) =>
-      selectedIds.has(entry.id),
-    ),
-    certification: bankEntries.certification.filter((entry) =>
-      selectedIds.has(entry.id),
-    ),
+  const filteredEntries: GroupedBankEntries = {
+    experience: [],
+    skill: [],
+    project: [],
+    education: [],
+    achievement: [],
+    certification: [],
   };
+
+  for (const category of BANK_CATEGORIES) {
+    filteredEntries[category] = bankEntries[category].filter((entry) =>
+      selectedIds.has(entry.id),
+    );
+  }
+
+  return filteredEntries;
 }
 
 export async function generateCoverLetter(

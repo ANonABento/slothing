@@ -25,12 +25,6 @@ import {
   type AiActionId,
 } from "./ai-action-center-utils";
 
-interface Version {
-  content: string;
-  instruction: string;
-  createdAt: string;
-}
-
 interface TextSelection {
   start: number;
   end: number;
@@ -65,13 +59,7 @@ export function ChatEditor({
   company,
   initialContent,
 }: ChatEditorProps) {
-  const [versions, setVersions] = useState<Version[]>([
-    {
-      content: initialContent,
-      instruction: "Initial generation",
-      createdAt: new Date().toISOString(),
-    },
-  ]);
+  const [versions, setVersions] = useState<string[]>([initialContent]);
   const [currentVersionIndex, setCurrentVersionIndex] = useState(0);
   const [content, setContent] = useState(initialContent);
   const [selection, setSelection] = useState<TextSelection | null>(null);
@@ -146,15 +134,10 @@ export function ChatEditor({
     };
   }, [hasLoadedBankEntries, showBankPicker]);
 
-  function commitContent(nextContent: string, instruction: string) {
-    const nextVersion: Version = {
-      content: nextContent,
-      instruction,
-      createdAt: new Date().toISOString(),
-    };
+  function commitContent(nextContent: string) {
     const nextVersions = [
       ...versions.slice(0, currentVersionIndex + 1),
-      nextVersion,
+      nextContent,
     ];
     setVersions(nextVersions);
     setCurrentVersionIndex(nextVersions.length - 1);
@@ -164,10 +147,10 @@ export function ChatEditor({
   function handleVersionNavigation(index: number) {
     const nextIndex = Math.max(0, Math.min(versions.length - 1, index));
     const version = versions[nextIndex];
-    if (!version) return;
+    if (version === undefined) return;
 
     setCurrentVersionIndex(nextIndex);
-    setContent(version.content);
+    setContent(version);
     setPendingDiff(null);
     setSelection(null);
   }
@@ -238,7 +221,7 @@ export function ChatEditor({
         return;
       }
 
-      commitContent(result.content, "Generated from bank");
+      commitContent(result.content);
     } catch {
       setError("Network error. Please try again.");
     } finally {
@@ -334,7 +317,7 @@ export function ChatEditor({
         )
       : pendingDiff.after;
 
-    commitContent(nextContent, pendingDiff.actionLabel);
+    commitContent(nextContent);
     setPendingDiff(null);
     setSelection(null);
   }
