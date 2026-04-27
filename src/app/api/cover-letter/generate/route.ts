@@ -11,6 +11,16 @@ import {
 } from "@/lib/cover-letter/generate";
 import type { CoverLetterInput } from "@/lib/cover-letter/generate";
 
+const COVER_LETTER_ACTIONS = ["generate", "revise", "rewrite"] as const;
+type CoverLetterAction = (typeof COVER_LETTER_ACTIONS)[number];
+
+function isCoverLetterAction(action: unknown): action is CoverLetterAction {
+  return (
+    typeof action === "string" &&
+    COVER_LETTER_ACTIONS.includes(action as CoverLetterAction)
+  );
+}
+
 /**
  * POST /api/cover-letter/generate
  *
@@ -52,12 +62,19 @@ export async function POST(request: NextRequest) {
       jobDescription?: string;
       jobTitle?: string;
       company?: string;
-      action?: "generate" | "revise" | "rewrite";
+      action?: unknown;
       currentContent?: string;
       selectedText?: string;
       instruction?: string;
       selectedText?: string;
     };
+
+    if (!isCoverLetterAction(action)) {
+      return NextResponse.json(
+        { error: "Unsupported cover letter action." },
+        { status: 400 }
+      );
+    }
 
     if (!jobDescription || jobDescription.trim().length < 20) {
       return NextResponse.json(

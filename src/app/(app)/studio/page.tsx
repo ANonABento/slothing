@@ -5,6 +5,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useReducer,
   useState,
 } from "react";
 import type { Editor } from "@tiptap/react";
@@ -15,7 +16,6 @@ import { EditorToolbar } from "@/components/studio/editor-toolbar";
 import { ResumePreview } from "@/components/studio/resume-preview";
 import { TailorWorkspace } from "@/components/studio/tailor-workspace";
 import { TEMPLATES } from "@/lib/resume/template-data";
-import { bankEntriesToResume } from "@/lib/resume/bank-to-resume";
 import { bankEntriesToTipTapDocument } from "@/lib/editor/bank-to-tiptap";
 import { createPrintableEditorHtml } from "@/lib/editor/document-html";
 import {
@@ -48,7 +48,6 @@ import {
 } from "@/lib/builder/version-history";
 import { cn } from "@/lib/utils";
 import type { BankEntry, BankCategory } from "@/types";
-import type { TailoredResume } from "@/lib/resume/generator";
 import { useErrorToast } from "@/hooks/use-error-toast";
 import {
   FileText,
@@ -117,7 +116,10 @@ function StudioPageContent() {
   const [loading, setLoading] = useState(initialDocumentMode === "resume");
   const [hasLoadedEntries, setHasLoadedEntries] = useState(false);
   const [editor, setEditor] = useState<Editor | null>(null);
-  const [, setEditorVersion] = useState(0);
+  const [, refreshToolbarState] = useReducer(
+    (version: number) => version + 1,
+    0
+  );
   const [zoomPercent, setZoomPercent] = useState(100);
   const [isExporting, setIsExporting] = useState(false);
   const [mobileView, setMobileView] = useState<BuilderPanel>(
@@ -206,17 +208,6 @@ function StudioPageContent() {
     );
   }, [selectedEntries, visibleCategoryIds]);
 
-  const currentDraft: BuilderDraftState = useMemo(
-    () => ({
-      documentMode: "resume",
-      selectedIds: Array.from(selectedIds),
-      sections,
-      templateId,
-      html,
-    }),
-    [html, sections, selectedIds, templateId]
-  );
-
   const editorDocument = useMemo(
     () =>
       orderedEntries.length > 0
@@ -233,15 +224,15 @@ function StudioPageContent() {
   useEffect(() => {
     if (!editor) return;
 
-    const refreshToolbarState = () => setEditorVersion((version) => version + 1);
-    editor.on("selectionUpdate", refreshToolbarState);
-    editor.on("transaction", refreshToolbarState);
+    const handleEditorStateChange = () => refreshToolbarState();
+    editor.on("selectionUpdate", handleEditorStateChange);
+    editor.on("transaction", handleEditorStateChange);
 
     return () => {
-      editor.off("selectionUpdate", refreshToolbarState);
-      editor.off("transaction", refreshToolbarState);
+      editor.off("selectionUpdate", handleEditorStateChange);
+      editor.off("transaction", handleEditorStateChange);
     };
-  }, [editor]);
+  }, [editor, refreshToolbarState]);
 
   const handleToggleEntry = useCallback((id: string) => {
     setPreviewVersionId(null);
@@ -519,7 +510,6 @@ function StudioPageContent() {
                 onPrint={handlePrint}
               />
               <ResumePreview
-                resume={resume}
                 templateId={templateId}
                 document={editorDocument}
                 editable

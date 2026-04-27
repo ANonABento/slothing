@@ -5,11 +5,9 @@ import type { Editor } from "@tiptap/react";
 import { ResumeEditor } from "@/lib/editor/resume-editor";
 import type { TipTapJSONContent } from "@/lib/editor/types";
 import { TEMPLATES } from "@/lib/resume/template-data";
-import type { TailoredResume } from "@/lib/resume/generator";
 import { cn } from "@/lib/utils";
 
 export interface ResumePreviewProps {
-  resume: TailoredResume;
   templateId: string;
   html?: string;
   document?: TipTapJSONContent | null;

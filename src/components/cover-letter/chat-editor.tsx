@@ -23,6 +23,21 @@ interface Version {
   createdAt: string;
 }
 
+interface EditorSelection {
+  start: number;
+  end: number;
+  text: string;
+  baseContent: string;
+}
+
+interface PendingRewrite {
+  before: string;
+  after: string;
+  start: number;
+  end: number;
+  baseContent: string;
+}
+
 interface ChatEditorProps {
   jobDescription: string;
   jobTitle: string;
@@ -63,18 +78,8 @@ export function ChatEditor({
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
-  const [selection, setSelection] = useState<{
-    start: number;
-    end: number;
-    text: string;
-  } | null>(null);
-  const [rewrite, setRewrite] = useState<{
-    before: string;
-    after: string;
-    start: number;
-    end: number;
-    baseContent: string;
-  } | null>(null);
+  const [selection, setSelection] = useState<EditorSelection | null>(null);
+  const [rewrite, setRewrite] = useState<PendingRewrite | null>(null);
   const currentVersion =
     currentVersionIndex >= 0 ? versions[currentVersionIndex] : null;
   const currentContentRef = useRef(currentVersion?.content ?? "");
@@ -136,7 +141,8 @@ export function ChatEditor({
       };
       setVersions([newVersion]);
       setCurrentVersionIndex(0);
-      replaceEditorContent(result.content);
+      setSelection(null);
+      setRewrite(null);
     } catch {
       setError("Network error. Please try again.");
     } finally {
@@ -186,6 +192,8 @@ export function ChatEditor({
       setCurrentVersionIndex(newVersions.length - 1);
       replaceEditorContent(result.content);
       setInstruction("");
+      setSelection(null);
+      setRewrite(null);
     } catch {
       setError("Network error. Please try again.");
     } finally {
@@ -210,6 +218,7 @@ export function ChatEditor({
 
   function handleEditorChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
     updateCurrentContent(e.target.value);
+    setSelection(null);
     setRewrite(null);
   }
 
@@ -218,13 +227,20 @@ export function ChatEditor({
     const start = target.selectionStart;
     const end = target.selectionEnd;
     const text = target.value.slice(start, end);
-    setSelection(start < end && text.trim() ? { start, end, text } : null);
+    setSelection(
+      start < end && text.trim()
+        ? { start, end, text, baseContent: target.value }
+        : null
+    );
   }
 
   async function handleSelectionRewrite(rewriteInstruction = "Rewrite") {
     if (!selection || !currentVersion) return;
+    if (selection.baseContent !== currentVersion.content) {
+      setSelection(null);
+      return;
+    }
 
-    const baseContent = currentVersion.content;
     const baseSelection = selection;
     const baseVersionIndex = currentVersionIndex;
     setIsGenerating(true);
@@ -239,7 +255,7 @@ export function ChatEditor({
           jobTitle,
           company,
           action: "rewrite",
-          currentContent: baseContent,
+          currentContent: baseSelection.baseContent,
           selectedText: baseSelection.text,
           instruction: rewriteInstruction,
         }),
@@ -255,7 +271,7 @@ export function ChatEditor({
       }
 
       if (
-        currentContentRef.current !== baseContent ||
+        currentContentRef.current !== baseSelection.baseContent ||
         currentVersionIndexRef.current !== baseVersionIndex
       ) {
         return;
@@ -266,7 +282,7 @@ export function ChatEditor({
         after: result.content,
         start: baseSelection.start,
         end: baseSelection.end,
-        baseContent,
+        baseContent: baseSelection.baseContent,
       });
     } catch {
       setError("Network error. Please try again.");
@@ -277,14 +293,22 @@ export function ChatEditor({
 
   function handleAcceptRewrite() {
     if (!rewrite || currentContentRef.current !== rewrite.baseContent) return;
+    const beforeSelection = rewrite.baseContent.slice(0, rewrite.start);
+    const afterSelection = rewrite.baseContent.slice(rewrite.end);
     updateCurrentContent(
-      `${rewrite.baseContent.slice(0, rewrite.start)}${rewrite.after}${rewrite.baseContent.slice(rewrite.end)}`
+      `${beforeSelection}${rewrite.after}${afterSelection}`
     );
     setRewrite(null);
     setSelection(null);
   }
 
   function handleRejectRewrite() {
+    setRewrite(null);
+  }
+
+  function handleVersionChange(index: number) {
+    setCurrentVersionIndex(index);
+    setSelection(null);
     setRewrite(null);
   }
 
@@ -308,16 +332,8 @@ export function ChatEditor({
     URL.revokeObjectURL(url);
   }
 
-  function selectVersion(index: number) {
-    setCurrentVersionIndex(index);
-    const version = versions[index];
-    if (version) {
-      replaceEditorContent(version.content);
-    }
-  }
-
   function handleRevert(index: number) {
-    selectVersion(index);
+    handleVersionChange(index);
     setShowHistory(false);
   }
 
@@ -419,7 +435,7 @@ export function ChatEditor({
                 variant="outline"
                 size="sm"
                 onClick={() =>
-                  selectVersion(Math.max(0, currentVersionIndex - 1))
+                  handleVersionChange(Math.max(0, currentVersionIndex - 1))
                 }
                 disabled={currentVersionIndex <= 0}
               >
@@ -429,7 +445,7 @@ export function ChatEditor({
                 variant="outline"
                 size="sm"
                 onClick={() =>
-                  selectVersion(
+                  handleVersionChange(
                     Math.min(versions.length - 1, currentVersionIndex + 1)
                   )
                 }

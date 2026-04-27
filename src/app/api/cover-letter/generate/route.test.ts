@@ -128,4 +128,22 @@ describe("cover letter generate route", () => {
     });
     expect(mocks.rewriteCoverLetterSelection).not.toHaveBeenCalled();
   });
+
+  it("rejects unsupported actions", async () => {
+    const response = await POST(
+      jsonRequest({
+        jobDescription:
+          "We need a frontend engineer who can improve reliability across customer-facing systems.",
+        action: "summarize",
+      })
+    );
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({
+      error: "Unsupported cover letter action.",
+    });
+    expect(mocks.generateCoverLetter).not.toHaveBeenCalled();
+    expect(mocks.reviseCoverLetter).not.toHaveBeenCalled();
+    expect(mocks.rewriteCoverLetterSelection).not.toHaveBeenCalled();
+  });
 });
