@@ -13,33 +13,14 @@ import { createJob } from "@/lib/db/jobs";
 import { analyzeJobFit, extractKeywords } from "@/lib/tailor/analyze";
 import { generateFromBank } from "@/lib/tailor/generate";
 import { generateResumeHTML, TEMPLATES } from "@/lib/resume/pdf";
-import type { TailoredResume } from "@/lib/resume/generator";
+import {
+  isTailorAction,
+  isTailoredResume,
+} from "@/lib/builder/tailored-resume-api";
 import { writeFile, mkdir } from "fs/promises";
 import { generateId } from "@/lib/utils";
 import { PATHS } from "@/lib/constants";
 import { requireAuth, isAuthError } from "@/lib/auth";
-
-type TailorAction = "analyze" | "generate" | "render";
-
-function isTailorAction(value: unknown): value is TailorAction {
-  return value === "analyze" || value === "generate" || value === "render";
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
-}
-
-function isTailoredResume(value: unknown): value is TailoredResume {
-  if (!isRecord(value)) return false;
-  return (
-    isRecord(value.contact) &&
-    typeof value.contact.name === "string" &&
-    typeof value.summary === "string" &&
-    Array.isArray(value.experiences) &&
-    Array.isArray(value.skills) &&
-    Array.isArray(value.education)
-  );
-}
 
 /**
  * GET /api/tailor — returns available templates

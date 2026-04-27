@@ -1,3 +1,5 @@
+import { escapeHtml } from "@/lib/html";
+
 export interface CoverLetterTemplate {
   id: string;
   name: string;
@@ -58,15 +60,6 @@ export function splitCoverLetterParagraphs(content: string): string[] {
     .split(/\n{2,}/)
     .map((paragraph) => paragraph.replace(/\s*\n\s*/g, " ").trim())
     .filter(Boolean);
-}
-
-function escapeHtml(value: string): string {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
 }
 
 export function generateCoverLetterHTML({

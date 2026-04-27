@@ -10,92 +10,24 @@ import {
   downloadHtmlAsPdf,
   createDocumentFilename,
 } from "@/lib/builder/document-export";
+import {
+  isRecord,
+  isTailoredResumeGenerateResult,
+  isTailoredResumeRenderResult,
+  readUnknownJson,
+  type TailoredResumeGenerateResult,
+  type TailoredResumeInput,
+} from "@/lib/builder/tailored-resume-api";
 import { TEMPLATES } from "@/lib/resume/template-data";
 import type { TailoredResume } from "@/lib/resume/generator";
-import type { GapItem } from "@/lib/tailor/analyze";
-
-interface AnalysisResult {
-  matchScore: number;
-  keywordsFound: string[];
-  keywordsMissing: string[];
-  gaps: GapItem[];
-  matchedEntriesCount: number;
-}
-
-interface GenerateResult {
-  success: boolean;
-  html: string;
-  resume: TailoredResume;
-  analysis: AnalysisResult;
-}
-
-interface RenderResult {
-  success: boolean;
-  html: string;
-}
-
-interface LastInput {
-  jobDescription: string;
-  jobTitle: string;
-  company: string;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
-}
-
-function isAnalysisResult(value: unknown): value is AnalysisResult {
-  return (
-    isRecord(value) &&
-    typeof value.matchScore === "number" &&
-    Array.isArray(value.keywordsFound) &&
-    Array.isArray(value.keywordsMissing) &&
-    Array.isArray(value.gaps) &&
-    typeof value.matchedEntriesCount === "number"
-  );
-}
-
-function isTailoredResume(value: unknown): value is TailoredResume {
-  return (
-    isRecord(value) &&
-    isRecord(value.contact) &&
-    typeof value.contact.name === "string" &&
-    typeof value.summary === "string" &&
-    Array.isArray(value.experiences) &&
-    Array.isArray(value.skills) &&
-    Array.isArray(value.education)
-  );
-}
-
-function isGenerateResult(value: unknown): value is GenerateResult {
-  return (
-    isRecord(value) &&
-    value.success === true &&
-    typeof value.html === "string" &&
-    isTailoredResume(value.resume) &&
-    isAnalysisResult(value.analysis)
-  );
-}
-
-function isRenderResult(value: unknown): value is RenderResult {
-  return (
-    isRecord(value) && value.success === true && typeof value.html === "string"
-  );
-}
-
-async function readJson(response: Response): Promise<unknown> {
-  try {
-    return await response.json();
-  } catch {
-    return null;
-  }
-}
 
 export function TailoredResumeWorkspace() {
   const [templateId, setTemplateId] = useState("classic");
   const [renderedTemplateId, setRenderedTemplateId] = useState("classic");
-  const [lastInput, setLastInput] = useState<LastInput | null>(null);
-  const [result, setResult] = useState<GenerateResult | null>(null);
+  const [lastInput, setLastInput] = useState<TailoredResumeInput | null>(null);
+  const [result, setResult] = useState<TailoredResumeGenerateResult | null>(
+    null
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -134,7 +66,7 @@ export function TailoredResumeWorkspace() {
           resume,
         }),
       });
-      const data = await readJson(response);
+      const data = await readUnknownJson(response);
 
       if (!isCurrentRequest(requestId)) return null;
 
@@ -147,7 +79,7 @@ export function TailoredResumeWorkspace() {
         return null;
       }
 
-      if (!isRenderResult(data)) {
+      if (!isTailoredResumeRenderResult(data)) {
         setError("Failed to update the resume template.");
         return null;
       }
@@ -170,7 +102,7 @@ export function TailoredResumeWorkspace() {
   }
 
   async function generate(
-    input: LastInput,
+    input: TailoredResumeInput,
     nextTemplateId = templateIdRef.current
   ) {
     const requestId = ++requestIdRef.current;
@@ -187,7 +119,7 @@ export function TailoredResumeWorkspace() {
           action: "generate",
         }),
       });
-      const data = await readJson(response);
+      const data = await readUnknownJson(response);
 
       if (!isCurrentRequest(requestId)) return;
 
@@ -200,7 +132,7 @@ export function TailoredResumeWorkspace() {
         return;
       }
 
-      if (!isGenerateResult(data)) {
+      if (!isTailoredResumeGenerateResult(data)) {
         setError("Failed to generate tailored resume.");
         return;
       }
@@ -230,7 +162,7 @@ export function TailoredResumeWorkspace() {
     }
   }
 
-  function handleSubmit(input: LastInput) {
+  function handleSubmit(input: TailoredResumeInput) {
     setLastInput(input);
     generate(input);
   }
