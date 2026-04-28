@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import StudioPage from "./page";
 import {
@@ -42,6 +42,10 @@ vi.mock("@/components/builder/section-list", () => ({
   ),
 }));
 
+vi.mock("@/components/builder/template-picker", () => ({
+  TemplatePicker: () => <div>Template picker</div>,
+}));
+
 vi.mock("@/components/studio/resume-preview", () => ({
   ResumePreview: ({ html }: { html: string }) => (
     <div>
@@ -52,11 +56,25 @@ vi.mock("@/components/studio/resume-preview", () => ({
 }));
 
 vi.mock("@/components/builder/cover-letter-workspace", () => ({
-  CoverLetterWorkspace: () => <div>Cover letter workspace</div>,
-}));
-
-vi.mock("@/components/studio/tailor-workspace", () => ({
-  TailorWorkspace: () => <div>Tailor workspace</div>,
+  CoverLetterWorkspace: ({
+    documentName,
+    documentContent,
+    onDocumentContentChange,
+  }: {
+    documentName: string;
+    documentContent: string;
+    onDocumentContentChange: (content: string) => void;
+  }) => (
+    <div>
+      <div>Cover letter workspace</div>
+      <div>{documentName}</div>
+      <textarea
+        aria-label="Cover letter editor"
+        value={documentContent}
+        onChange={(event) => onDocumentContentChange(event.target.value)}
+      />
+    </div>
+  ),
 }));
 
 vi.mock("@/hooks/use-error-toast", () => ({
@@ -123,37 +141,39 @@ describe("StudioPage", () => {
     navigationMock.searchParams = new URLSearchParams();
     vi.mocked(window.localStorage.getItem).mockReset();
     vi.mocked(window.localStorage.setItem).mockReset();
-    vi.mocked(window.localStorage.removeItem).mockReset();
-    vi.mocked(window.localStorage.clear).mockReset();
-    mockStorage();
-    mockStudioFetch();
+    vi.stubGlobal("confirm", vi.fn(() => true));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ entries: [] }),
+      })
+    );
   });
 
-  afterEach(() => {
-    vi.useRealTimers();
-  });
-
-  it("renders resume builder mode by default", async () => {
+  it("renders resume builder mode by default with a file panel", async () => {
     render(<StudioPage />);
 
     expect(await screen.findByText("Resume sections")).toBeInTheDocument();
     expect(screen.getByText("Resume preview")).toBeInTheDocument();
-    expect(screen.queryByText("Tailor workspace")).not.toBeInTheDocument();
+    expect(screen.getByText("Template picker")).toBeInTheDocument();
+    expect(screen.getByText("Untitled Resume")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("tab", { name: /tailored/i })
+    ).not.toBeInTheDocument();
     expect(screen.queryByText("Cover letter workspace")).not.toBeInTheDocument();
   });
 
-  it("renders tailored mode from the studio mode search param", () => {
+  it("defaults the old tailored search param to resume mode", async () => {
     navigationMock.searchParams = new URLSearchParams("mode=tailored");
 
     render(<StudioPage />);
 
-    expect(screen.getByText("Tailor workspace")).toBeInTheDocument();
-    expect(screen.queryByText("Resume sections")).not.toBeInTheDocument();
-    expect(screen.getByRole("tab", { name: /tailored/i })).toHaveAttribute(
+    expect(await screen.findByText("Resume sections")).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: /^resume$/i })).toHaveAttribute(
       "aria-selected",
       "true"
     );
-    expect(fetch).not.toHaveBeenCalled();
   });
 
   it("renders cover letter mode from the studio mode search param", () => {
@@ -162,6 +182,9 @@ describe("StudioPage", () => {
     render(<StudioPage />);
 
     expect(screen.getByText("Cover letter workspace")).toBeInTheDocument();
+    expect(screen.getAllByText("Untitled Cover Letter").length).toBeGreaterThan(
+      0
+    );
     expect(screen.queryByText("Resume sections")).not.toBeInTheDocument();
     expect(screen.getByRole("tab", { name: /cover letter/i })).toHaveAttribute(
       "aria-selected",
@@ -184,18 +207,117 @@ describe("StudioPage", () => {
     expect(screen.getByText("Cover letter workspace")).toBeInTheDocument();
   });
 
-  it("updates the URL when switching to tailored mode", async () => {
+  it("creates, renames, and deletes documents in the active tab", async () => {
     render(<StudioPage />);
 
-    fireEvent.click(await screen.findByRole("tab", { name: /tailored/i }));
+    fireEvent.click(await screen.findByRole("button", { name: /new/i }));
+    expect(screen.getByText("Resume 2")).toBeInTheDocument();
+
+    fireEvent.doubleClick(screen.getByTitle("Resume 2"));
+    const renameInput = screen.getByDisplayValue("Resume 2");
+    fireEvent.change(renameInput, { target: { value: "Backend Resume" } });
+    fireEvent.keyDown(renameInput, { key: "Enter" });
+    expect(screen.getByText("Backend Resume")).toBeInTheDocument();
+
+    fireEvent.click(
+      screen.getByRole("button", { name: /delete backend resume/i })
+    );
+    expect(screen.queryByText("Backend Resume")).not.toBeInTheDocument();
+    expect(window.confirm).toHaveBeenCalledWith('Delete "Backend Resume"?');
+  });
+
+  it("keeps persisted resume content while bank entries are still loading", async () => {
+    vi.mocked(window.localStorage.getItem).mockReturnValue(
+      JSON.stringify([
+        {
+          id: "resume-1",
+          name: "Saved Resume",
+          type: "resume",
+          templateId: "classic",
+          content: "<p>Saved resume</p>",
+          sections: [],
+          selectedEntryIds: ["entry-1"],
+          createdAt: "2026-04-26T12:00:00.000Z",
+          updatedAt: "2026-04-26T12:00:00.000Z",
+        },
+        {
+          id: "cover-1",
+          name: "Saved Letter",
+          type: "cover-letter",
+          templateId: "classic",
+          content: "",
+          sections: [],
+          selectedEntryIds: [],
+          createdAt: "2026-04-26T12:00:00.000Z",
+          updatedAt: "2026-04-26T12:00:00.000Z",
+        },
+      ])
+    );
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(() => new Promise<Response>(() => {}))
+    );
+
+    render(<StudioPage />);
 
     await waitFor(() => {
-      expect(navigationMock.replace).toHaveBeenCalledWith(
-        "/studio?mode=tailored",
-        { scroll: false }
-      );
+      expect(window.localStorage.setItem).toHaveBeenCalled();
     });
-    expect(screen.getByText("Tailor workspace")).toBeInTheDocument();
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    const savedResumes = vi
+      .mocked(window.localStorage.setItem)
+      .mock.calls.flatMap(([, value]) =>
+        (
+          JSON.parse(String(value)) as Array<{ id: string; content: string }>
+        ).filter((document) => document.id === "resume-1")
+      );
+
+    expect(savedResumes.length).toBeGreaterThan(0);
+    expect(
+      savedResumes.every(
+        (document) => document.content === "<p>Saved resume</p>"
+      )
+    ).toBe(true);
+  });
+
+  it("loads persisted active cover letter content into the editor", () => {
+    vi.mocked(window.localStorage.getItem).mockReturnValue(
+      JSON.stringify([
+        {
+          id: "cover-1",
+          name: "Acme Letter",
+          type: "cover-letter",
+          templateId: "classic",
+          content: "Dear Acme,",
+          sections: [],
+          selectedEntryIds: [],
+          createdAt: "2026-04-26T12:00:00.000Z",
+          updatedAt: "2026-04-26T12:00:00.000Z",
+        },
+        {
+          id: "resume-1",
+          name: "Main Resume",
+          type: "resume",
+          templateId: "classic",
+          content: "",
+          sections: [],
+          selectedEntryIds: [],
+          createdAt: "2026-04-26T12:00:00.000Z",
+          updatedAt: "2026-04-26T12:00:00.000Z",
+        },
+      ])
+    );
+    navigationMock.searchParams = new URLSearchParams("mode=cover-letter");
+
+    render(<StudioPage />);
+
+    expect(screen.getAllByText("Acme Letter").length).toBeGreaterThan(0);
+    expect(screen.getByLabelText("Cover letter editor")).toHaveValue(
+      "Dear Acme,"
+    );
   });
 
   it("saves a manual version with an optional custom name", async () => {

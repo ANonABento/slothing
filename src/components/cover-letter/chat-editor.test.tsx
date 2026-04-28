@@ -110,6 +110,30 @@ describe("ChatEditor AI assistant", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("updates the editable content when navigating versions", async () => {
+    render(<ChatEditor {...baseProps} />);
+
+    const editor = screen.getByLabelText(
+      "Cover letter editor",
+    ) as HTMLTextAreaElement;
+    fireEvent.change(screen.getByPlaceholderText(/Refine:/), {
+      target: { value: "Make it stronger" },
+    });
+    fireEvent.click(
+      screen.getByRole("button", { name: "Send revision instruction" }),
+    );
+
+    await waitFor(() => {
+      expect(editor.value).toBe("I built reliable APIs for internal teams.");
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Previous version" }));
+    expect(editor.value).toBe(baseProps.initialContent);
+
+    fireEvent.click(screen.getByRole("button", { name: "Next version" }));
+    expect(editor.value).toBe("I built reliable APIs for internal teams.");
+  });
+
   it("ignores assistant rewrites that resolve after the editor changes", async () => {
     let resolveFetch: (response: Response) => void = () => {};
     vi.stubGlobal(

@@ -107,7 +107,7 @@ export function getActionCommands(): CommandItem[] {
     { id: "act-upload", label: "Upload Resume", category: "actions", href: "/bank", shortcut: "Ctrl+U", keywords: ["import", "file", "pdf"] },
     { id: "act-build", label: "Build Resume", category: "actions", href: "/studio", keywords: ["create", "new", "generate"] },
     { id: "act-cover-letter", label: "Write Cover Letter", category: "actions", href: "/studio?mode=cover-letter", keywords: ["letter", "write"] },
-    { id: "act-tailor", label: "Tailor to Job", category: "actions", href: "/studio?mode=tailored", keywords: ["customize", "match", "job"] },
+    { id: "act-tailor", label: "Tailor to Job", category: "actions", href: "/studio", keywords: ["customize", "match", "job"] },
   ];
 }
 
