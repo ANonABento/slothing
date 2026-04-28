@@ -4,7 +4,7 @@ import {
   buildSelectionRewritePrompt,
   buildSystemPrompt,
   buildRevisionPrompt,
-  buildSelectionRewritePrompt,
+  filterBankEntriesByIds,
   getTotalBankEntries,
 } from "./generate";
 import type { CoverLetterInput } from "./generate";
@@ -46,8 +46,16 @@ function makePopulatedBank(): GroupedBankEntries {
       }),
     ],
     skill: [
-      makeBankEntry({ id: "skill-1", category: "skill", content: { name: "TypeScript" } }),
-      makeBankEntry({ id: "skill-2", category: "skill", content: { name: "React" } }),
+      makeBankEntry({
+        id: "skill-1",
+        category: "skill",
+        content: { name: "TypeScript" },
+      }),
+      makeBankEntry({
+        id: "skill-2",
+        category: "skill",
+        content: { name: "React" },
+      }),
     ],
     project: [
       makeBankEntry({
@@ -88,6 +96,22 @@ describe("getTotalBankEntries", () => {
   it("counts all entries across categories", () => {
     const bank = makePopulatedBank();
     expect(getTotalBankEntries(bank)).toBe(7);
+  });
+});
+
+describe("filterBankEntriesByIds", () => {
+  it("keeps only selected entries across categories", () => {
+    const filtered = filterBankEntriesByIds(makePopulatedBank(), [
+      "exp-1",
+      "skill-2",
+      "cert-1",
+    ]);
+
+    expect(filtered.experience.map((entry) => entry.id)).toEqual(["exp-1"]);
+    expect(filtered.skill.map((entry) => entry.id)).toEqual(["skill-2"]);
+    expect(filtered.project).toEqual([]);
+    expect(filtered.certification.map((entry) => entry.id)).toEqual(["cert-1"]);
+    expect(getTotalBankEntries(filtered)).toBe(3);
   });
 });
 

@@ -110,28 +110,71 @@ describe("ChatEditor AI assistant", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("updates the editable content when navigating versions", async () => {
+  it("generates from selected bank entries", async () => {
+    const fetchMock = vi.fn(
+      async (...args: [RequestInfo | URL, RequestInit?]) => {
+        const [input] = args;
+        if (String(input) === "/api/bank") {
+          return new Response(
+            JSON.stringify({
+              entries: [
+                {
+                  id: "skill-react",
+                  userId: "default",
+                  category: "skill",
+                  content: { name: "React" },
+                  confidenceScore: 0.9,
+                  createdAt: "2024-01-01",
+                },
+                {
+                  id: "skill-python",
+                  userId: "default",
+                  category: "skill",
+                  content: { name: "Python" },
+                  confidenceScore: 0.9,
+                  createdAt: "2024-01-01",
+                },
+              ],
+            }),
+            { status: 200 },
+          );
+        }
+
+        return new Response(
+          JSON.stringify({
+            success: true,
+            content: "Generated from selected React experience.",
+          }),
+          { status: 200 },
+        );
+      },
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
     render(<ChatEditor {...baseProps} />);
 
-    const editor = screen.getByLabelText(
-      "Cover letter editor",
-    ) as HTMLTextAreaElement;
-    fireEvent.change(screen.getByPlaceholderText(/Refine:/), {
-      target: { value: "Make it stronger" },
-    });
+    fireEvent.click(screen.getByRole("button", { name: "Generate from Bank" }));
+    await screen.findByText("React");
+
+    fireEvent.click(screen.getByRole("checkbox", { name: "Python" }));
     fireEvent.click(
-      screen.getByRole("button", { name: "Send revision instruction" }),
+      screen.getByRole("button", { name: "Generate with selected entries" }),
     );
 
     await waitFor(() => {
-      expect(editor.value).toBe("I built reliable APIs for internal teams.");
+      expect(
+        (screen.getByLabelText("Cover letter editor") as HTMLTextAreaElement)
+          .value,
+      ).toBe("Generated from selected React experience.");
     });
 
-    fireEvent.click(screen.getByRole("button", { name: "Previous version" }));
-    expect(editor.value).toBe(baseProps.initialContent);
-
-    fireEvent.click(screen.getByRole("button", { name: "Next version" }));
-    expect(editor.value).toBe("I built reliable APIs for internal teams.");
+    const generateCall = fetchMock.mock.calls.find(
+      ([input]) => String(input) === "/api/cover-letter/generate",
+    );
+    expect(generateCall).toBeDefined();
+    expect(JSON.parse(String(generateCall?.[1]?.body))).toMatchObject({
+      selectedBankEntryIds: ["skill-react"],
+    });
   });
 
   it("ignores assistant rewrites that resolve after the editor changes", async () => {
@@ -208,6 +251,47 @@ describe("ChatEditor AI assistant", () => {
 
     expect(
       screen.queryByRole("button", { name: "Rewrite" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("ignores generated bank content that resolves after the editor changes", async () => {
+    let resolveFetch: (response: Response) => void = () => {};
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(
+        () =>
+          new Promise<Response>((resolve) => {
+            resolveFetch = resolve;
+          }),
+      ),
+    );
+
+    render(<ChatEditor {...baseProps} />);
+
+    const editor = screen.getByLabelText(
+      "Cover letter editor",
+    ) as HTMLTextAreaElement;
+    fireEvent.click(screen.getByRole("button", { name: "Regenerate" }));
+
+    fireEvent.change(editor, {
+      target: { value: "Manual edit while generation runs." },
+    });
+
+    await act(async () => {
+      resolveFetch(
+        new Response(
+          JSON.stringify({
+            success: true,
+            content: "This stale generated letter should not appear.",
+          }),
+          { status: 200 },
+        ),
+      );
+    });
+
+    expect(editor.value).toBe("Manual edit while generation runs.");
+    expect(
+      screen.queryByText("This stale generated letter should not appear."),
     ).not.toBeInTheDocument();
   });
 });
