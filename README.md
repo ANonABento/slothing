@@ -8,8 +8,8 @@ Your personal job application command center. Upload your career documents, buil
 - **Document Studio**: Build resumes and cover letters from a single `/studio` workspace
 - **Studio Files**: Create, select, rename, and delete resume or cover letter files from the Studio file panel
 - **Resume/Cover Letter Tabs**: Switch between document types without leaving the Studio
-- **Version History**: Keep named and automatic document snapshots for resume drafts
-- **TipTap Editor Integration**: Edit application-ready documents with rich text editor primitives and template styling
+- **Version History**: Track capped resume draft snapshots through Studio version history helpers
+- **TipTap Editor Integration**: Convert bank entries into TipTap document JSON for the Studio preview/editor shell
 - **AI Panel**: Reserve contextual AI tools in the Studio alongside the document canvas
 - **Profile Management**: Edit and manage your professional information
 - **Job Matching**: Paste job descriptions and get match scores
@@ -88,7 +88,7 @@ See [docs/google-integration/README.md](docs/google-integration/README.md) for d
 4. **Analyze Match**: Click "Analyze Match" to see how well you fit
 5. **Open Document Studio**: Go to `/studio` to create resume and cover letter files
 6. **Build Documents**: Use the Resume and Cover Letter tabs, choose a template, select bank entries, and edit the generated draft
-7. **Export**: Copy HTML, print, or download a PDF from the Studio
+7. **Export**: Copy HTML or download a PDF from the Studio
 8. **Practice Interview**: Go to Interview Prep and start a mock interview
 
 ## Document Studio Architecture
@@ -107,12 +107,12 @@ Document Studio is the single document-building surface at `/studio`. It replace
 │   ├── Version History
 │   └── Knowledge bank section picker
 ├── Center panel
-│   └── TipTap-backed document preview/editor
+│   └── TipTap-backed document preview/editor shell
 └── Right panel
     └── AI Assistant
 ```
 
-The Studio file panel tracks resume and cover letter files separately while keeping users in the same workspace. Resume drafts use knowledge bank entries, section ordering, visibility controls, template styling, and TipTap document JSON. Version history helpers store capped builder snapshots in browser storage under `taida:builder:versions:<document-id>`.
+The Studio file panel tracks resume and cover letter files separately while keeping users in the same workspace. Resume drafts use knowledge bank entries, section ordering, visibility controls, template styling, and TipTap document JSON. Version history helpers normalize, compare, and store capped builder snapshots in browser storage under `taida:builder:versions:<document-id>`.
 
 ## Project Structure
 

@@ -132,11 +132,11 @@ The file panel filters files by the active Resume/Cover Letter tab, so each docu
 ### Version History
 
 Resume draft snapshots use helpers in `src/lib/builder/version-history.ts`.
-Version state is normalized before comparison or persistence, capped at `MAX_BUILDER_VERSIONS`, and stored in browser storage with keys formatted as `taida:builder:versions:<document-id>`.
+Version state is normalized before comparison or persistence, supports manual and automatic snapshot metadata, is capped at `MAX_BUILDER_VERSIONS`, and is stored in browser storage with keys formatted as `taida:builder:versions:<document-id>`.
 
 ### TipTap Editor Integration
 
-TipTap document JSON is the editable document format. Bank entries are converted through `src/lib/editor/bank-to-tiptap.ts`, rendered by `src/lib/editor/resume-editor.tsx`, and exported through `src/lib/editor/document-html.ts`. The Studio preview shell lives in `src/components/studio/resume-preview.tsx`.
+TipTap document JSON is the editor data contract. Bank entries are converted through `src/lib/editor/bank-to-tiptap.ts`, rendered by `src/lib/editor/resume-editor.tsx`, and exported through `src/lib/editor/document-html.ts`. The Studio preview shell lives in `src/components/studio/resume-preview.tsx`.
 
 ### AI Panel
 
@@ -400,7 +400,7 @@ See `ROADMAP.md` for planned improvements.
 - **Path Constants:** All file paths centralized in `PATHS` constant
 - **API Utilities:** Shared error response helpers in `src/lib/api-utils.ts`
 - **Document Studio:** Resume and cover letter document workflows consolidated under `/studio`
-- **Testing:** Unit tests cover Studio routing, editor conversion, document export, and version history helpers
+- **Testing:** Unit tests cover Studio redirects/routing, editor conversion, document export, and version history helpers
 
 ---
 
