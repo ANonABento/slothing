@@ -109,6 +109,18 @@ ${input.userName ? `- The candidate's name is ${input.userName}` : ""}
 - Output ONLY the cover letter text, no additional commentary`;
 }
 
+export function buildSelectionRewritePrompt(
+  selectedText: string,
+  instruction: string,
+): string {
+  return `Rewrite ONLY the following selected portion of the cover letter based on this feedback: "${instruction}"
+
+Selected text to rewrite:
+"${selectedText}"
+
+Output ONLY the rewritten text that should replace the selection, no additional commentary.`;
+}
+
 export function buildRevisionPrompt(instruction: string): string {
   return `Revise the cover letter based on this feedback: "${instruction}"
 

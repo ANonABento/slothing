@@ -8,6 +8,7 @@ import { TEMPLATES } from "@/lib/resume/template-data";
 import type { TipTapJSONContent } from "@/lib/editor/types";
 
 const PAGE_WIDTH_PX = 816; // 8.5in at 96dpi
+const PAGE_HEIGHT_PX = 1056; // 11in at 96dpi
 
 export interface ResumePreviewProps {
   templateId: string;
@@ -50,8 +51,8 @@ export function ResumePreview({
     return () => observer.disconnect();
   }, [updateScale]);
 
+  const zoomPercent = 100;
   const scale = fitScale * (zoomPercent / 100);
-  const hasDocument = Boolean(document);
 
   return (
     <div ref={wrapperRef} className="h-full overflow-auto bg-muted/30 p-4">
