@@ -98,7 +98,7 @@ src/
 
 ## Document Studio Architecture
 
-`/studio` is the only in-app route for building application documents. It consolidates resume and cover letter creation into one workspace with a shared header, file panel, document canvas, and AI assistant area.
+`/studio` is the only in-app workspace for building application documents. Legacy `/builder`, `/tailor`, and `/cover-letter` pages redirect there, so resume and cover letter creation share one header, file panel, document canvas, and AI assistant area.
 
 ```
 src/app/(app)/studio/page.tsx

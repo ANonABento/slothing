@@ -93,7 +93,7 @@ See [docs/google-integration/README.md](docs/google-integration/README.md) for d
 
 ## Document Studio Architecture
 
-Document Studio is the single document-building surface at `/studio`. It replaces separate document-building pages with one route that owns resume and cover letter workflows.
+Document Studio is the single document-building surface at `/studio`. Legacy document-building pages redirect there, so one route owns resume and cover letter workflows.
 
 ```
 /studio

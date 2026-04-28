@@ -203,7 +203,7 @@ export async function rewriteCoverLetterSelection(
   selectedText: string,
   instruction: string,
   input: CoverLetterInput,
-  llmConfig: LLMConfig
+  llmConfig: LLMConfig,
 ): Promise<string> {
   const client = new LLMClient(llmConfig);
   const systemPrompt = buildSystemPrompt(input);
