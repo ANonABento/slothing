@@ -1,33 +1,27 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import StudioPage from "./page";
-import {
-  AUTO_SAVE_INTERVAL_MS,
-  getBuilderVersionStorageKey,
-} from "@/lib/builder/version-history";
-import { createInitialSections } from "@/lib/builder/section-manager";
 import type { BankEntry } from "@/types";
 
 vi.mock("@/components/builder/section-list", () => ({
   SectionList: ({
     selectedIds,
     onToggleEntry,
+    pickerOpen,
   }: {
     selectedIds: Set<string>;
     onToggleEntry: (entryId: string) => void;
+    pickerOpen?: boolean;
   }) => (
     <div>
       <div>Resume sections</div>
       <div>Selected {selectedIds.size}</div>
+      {pickerOpen && <div>Bank Entry Picker</div>}
       <button type="button" onClick={() => onToggleEntry("entry-1")}>
         Toggle entry
       </button>
     </div>
   ),
-}));
-
-vi.mock("@/components/builder/template-picker", () => ({
-  TemplatePicker: () => <div>Template picker</div>,
 }));
 
 vi.mock("@/components/studio/resume-preview", () => ({
@@ -42,8 +36,6 @@ vi.mock("@/components/studio/resume-preview", () => ({
 vi.mock("@/hooks/use-error-toast", () => ({
   useErrorToast: () => vi.fn(),
 }));
-
-const storageKey = getBuilderVersionStorageKey("resume");
 
 const bankEntries: BankEntry[] = [
   {
@@ -98,6 +90,7 @@ function mockStudioFetch(entries: BankEntry[] = []) {
 
 describe("StudioPage", () => {
   beforeEach(() => {
+    mockStorage();
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue({
@@ -112,13 +105,25 @@ describe("StudioPage", () => {
 
     expect(await screen.findByText("Resume sections")).toBeInTheDocument();
     expect(screen.getByText("Resume preview")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Files" })).toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: "Resume" })).toHaveLength(2);
   });
 
-  it("does not render legacy document mode tabs", async () => {
+  it("renders document mode controls in the studio header", async () => {
     render(<StudioPage />);
 
     expect(await screen.findByText("Document Studio")).toBeInTheDocument();
-    expect(screen.queryByRole("tab", { name: /tailored/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole("tab", { name: /cover letter/i })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Cover Letter" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /tailored/i })).not.toBeInTheDocument();
+  });
+
+  it("opens the bank entry picker from the add button", async () => {
+    mockStudioFetch(bankEntries);
+
+    render(<StudioPage />);
+
+    fireEvent.click(await screen.findByRole("button", { name: /add from bank/i }));
+
+    expect(screen.getByText("Bank Entry Picker")).toBeInTheDocument();
   });
 });

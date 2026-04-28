@@ -118,7 +118,7 @@ export function buildSelectionRewritePrompt(
 Selected text to rewrite:
 "${selectedText}"
 
-Output ONLY the rewritten text that should replace the selection, no additional commentary.`;
+Output ONLY the rewritten passage that should replace the selection, no additional commentary.`;
 }
 
 export function buildRevisionPrompt(instruction: string): string {
