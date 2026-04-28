@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { TEMPLATES } from "@/lib/resume/template-data";
 import { cn } from "@/lib/utils";
 import {
-  DOCUMENT_MODE_LABELS,
+  DOCUMENT_MODE_OPTIONS,
   type DocumentMode,
 } from "./studio-documents";
 
@@ -55,11 +55,11 @@ export function StudioHeader({
         <h1 className="text-lg font-semibold">Document Studio</h1>
 
         <div className="ml-2 flex rounded-md border">
-          {Object.entries(DOCUMENT_MODE_LABELS).map(([mode, label]) => (
+          {DOCUMENT_MODE_OPTIONS.map(({ mode, label }) => (
             <button
               key={mode}
               type="button"
-              onClick={() => onDocumentModeChange(mode as DocumentMode)}
+              onClick={() => onDocumentModeChange(mode)}
               className={cn(
                 "px-3 py-1 text-sm font-medium transition-colors",
                 documentMode === mode

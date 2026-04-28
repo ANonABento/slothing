@@ -1,6 +1,7 @@
 import type { SectionState } from "@/lib/builder/section-manager";
 
 export const RESUME_DOCUMENT_ID = "resume";
+export const COVER_LETTER_DOCUMENT_ID = "cover-letter";
 
 export type DocumentMode = "resume" | "cover_letter";
 
@@ -17,6 +18,14 @@ export const DOCUMENT_MODE_LABELS: Record<DocumentMode, string> = {
   resume: "Resume",
   cover_letter: "Cover Letter",
 };
+
+export const DOCUMENT_MODE_OPTIONS: Array<{
+  mode: DocumentMode;
+  label: string;
+}> = [
+  { mode: "resume", label: DOCUMENT_MODE_LABELS.resume },
+  { mode: "cover_letter", label: DOCUMENT_MODE_LABELS.cover_letter },
+];
 
 export function getDefaultDocumentName(mode: DocumentMode, index = 1): string {
   const baseName = DOCUMENT_MODE_LABELS[mode];
@@ -55,7 +64,7 @@ export function getActiveStudioDocument(
     modeDocuments.find((document) => document.id === activeId) ??
     modeDocuments[0] ??
     createStudioDocument(mode, {
-      id: mode === "resume" ? RESUME_DOCUMENT_ID : "cover-letter",
+      id: mode === "resume" ? RESUME_DOCUMENT_ID : COVER_LETTER_DOCUMENT_ID,
     })
   );
 }

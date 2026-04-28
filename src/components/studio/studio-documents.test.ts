@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import {
+  COVER_LETTER_DOCUMENT_ID,
   createStudioDocument,
   deleteStudioDocument,
   formatVersionTimestamp,
@@ -44,7 +45,7 @@ describe("studio document helpers", () => {
     );
     expect(getActiveStudioDocument([], "cover_letter", undefined)).toMatchObject(
       {
-        id: "cover-letter",
+        id: COVER_LETTER_DOCUMENT_ID,
         mode: "cover_letter",
       }
     );

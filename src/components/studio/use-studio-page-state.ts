@@ -26,6 +26,7 @@ import { readJsonResponse } from "@/lib/http";
 import { useErrorToast } from "@/hooks/use-error-toast";
 import type { BankCategory, BankEntry } from "@/types";
 import {
+  COVER_LETTER_DOCUMENT_ID,
   RESUME_DOCUMENT_ID,
   createStudioDocument,
   deleteStudioDocument,
@@ -39,6 +40,42 @@ import {
 
 interface BuilderPreviewResponse {
   html?: string;
+}
+
+interface StudioPageState {
+  activeDocumentId: string;
+  currentDocuments: StudioDocument[];
+  documentMode: DocumentMode;
+  draftIsSaved: boolean;
+  entries: BankEntry[];
+  entryPickerOpen: boolean;
+  generating: boolean;
+  handleCopyHtml: () => Promise<void>;
+  handleCreateDocument: () => void;
+  handleDeleteDocument: (id: string) => void;
+  handleDownloadPdf: () => Promise<void>;
+  handlePreviewVersion: (id: string) => void;
+  handleRenameDocument: (id: string, name: string) => void;
+  handleReorder: (fromIndex: number, toIndex: number) => void;
+  handleSaveManualVersion: () => void;
+  handleSelectDocument: (id: string) => void;
+  handleTemplateSelect: (templateId: string) => void;
+  handleToggleEntry: (id: string) => void;
+  handleToggleVisibility: (categoryId: BankCategory) => void;
+  html: string;
+  isExporting: boolean;
+  loading: boolean;
+  manualVersionName: string;
+  mobileView: BuilderPanel;
+  previewVersionId: string | null;
+  sections: SectionState[];
+  selectedIds: Set<string>;
+  setDocumentMode: (mode: DocumentMode) => void;
+  setEntryPickerOpen: (open: boolean) => void;
+  setManualVersionName: (name: string) => void;
+  setMobileView: (panel: BuilderPanel) => void;
+  templateId: string;
+  versions: BuilderVersion[];
 }
 
 function areSelectedIdsEqual(current: Set<string>, next: string[]): boolean {
@@ -60,7 +97,7 @@ function areSectionsEqual(
   );
 }
 
-export function useStudioPageState() {
+export function useStudioPageState(): StudioPageState {
   const [entries, setEntries] = useState<BankEntry[]>([]);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [sections, setSections] = useState<SectionState[]>(createInitialSections);
@@ -77,12 +114,12 @@ export function useStudioPageState() {
   const [draftIsSaved, setDraftIsSaved] = useState(true);
   const [documents, setDocuments] = useState<StudioDocument[]>([
     createStudioDocument("resume", { id: RESUME_DOCUMENT_ID }),
-    createStudioDocument("cover_letter", { id: "cover-letter" }),
+    createStudioDocument("cover_letter", { id: COVER_LETTER_DOCUMENT_ID }),
   ]);
   const [documentMode, setDocumentMode] = useState<DocumentMode>("resume");
   const [activeDocumentIds, setActiveDocumentIds] = useState<
     Record<DocumentMode, string>
-  >({ resume: RESUME_DOCUMENT_ID, cover_letter: "cover-letter" });
+  >({ resume: RESUME_DOCUMENT_ID, cover_letter: COVER_LETTER_DOCUMENT_ID });
   const [isExporting, setIsExporting] = useState(false);
   const showErrorToast = useErrorToast();
   const lastPreviewErrorToastRef = useRef("");
@@ -356,9 +393,12 @@ export function useStudioPageState() {
     [documentMode, documents]
   );
 
-  const saveVersion = useCallback(
-    (kind: "manual" | "auto", name: string) => {
-      const version = createBuilderVersion(currentDraftState, { kind, name });
+  const saveManualVersion = useCallback(
+    (name: string) => {
+      const version = createBuilderVersion(currentDraftState, {
+        kind: "manual",
+        name,
+      });
       setVersions((prev) => {
         const next = addBuilderVersion(prev, version);
         if (typeof window !== "undefined") {
@@ -374,8 +414,8 @@ export function useStudioPageState() {
   );
 
   const handleSaveManualVersion = useCallback(() => {
-    saveVersion("manual", manualVersionName);
-  }, [manualVersionName, saveVersion]);
+    saveManualVersion(manualVersionName);
+  }, [manualVersionName, saveManualVersion]);
 
   const handlePreviewVersion = useCallback(
     (id: string) => {
