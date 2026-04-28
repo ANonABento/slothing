@@ -12,9 +12,8 @@ import type { Editor } from "@tiptap/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CoverLetterWorkspace } from "@/components/builder/cover-letter-workspace";
 import { SectionList } from "@/components/builder/section-list";
-import { EditorToolbar } from "@/components/studio/editor-toolbar";
+import { TemplatePicker } from "@/components/builder/template-picker";
 import { ResumePreview } from "@/components/studio/resume-preview";
-import { TailorWorkspace } from "@/components/studio/tailor-workspace";
 import { TEMPLATES } from "@/lib/resume/template-data";
 import { bankEntriesToTipTapDocument } from "@/lib/editor/bank-to-tiptap";
 import { createPrintableEditorHtml } from "@/lib/editor/document-html";
@@ -32,20 +31,19 @@ import {
 } from "@/lib/builder/section-manager";
 import type { SectionState, BuilderPanel } from "@/lib/builder/section-manager";
 import {
+  createStudioDocument,
+  deleteStudioDocument,
+  getActiveStudioDocument,
+  getDocumentsForType,
   getStudioModeFromSearchParam,
   getStudioModeHref,
+  loadStudioDocuments,
+  renameStudioDocument,
+  saveStudioDocuments,
+  updateStudioDocument,
+  type StudioDocument,
   type StudioDocumentMode,
-} from "@/lib/studio/document-mode";
-import {
-  AUTO_SAVE_INTERVAL_MS,
-  addBuilderVersion,
-  createBuilderVersion,
-  isBuilderStateSaved,
-  readBuilderVersions,
-  writeBuilderVersions,
-  type BuilderDraftState,
-  type BuilderVersion,
-} from "@/lib/builder/version-history";
+} from "@/lib/studio/document-studio";
 import { cn } from "@/lib/utils";
 import type { BankEntry, BankCategory } from "@/types";
 import { useErrorToast } from "@/hooks/use-error-toast";
@@ -55,10 +53,8 @@ import {
   Pencil,
   Eye,
   PenLine,
-  Sparkles,
-  Save,
-  History,
-  RotateCcw,
+  Plus,
+  Trash2,
   type LucideIcon,
 } from "lucide-react";
 
@@ -68,7 +64,6 @@ const STUDIO_MODE_TABS: Array<{
   Icon: LucideIcon;
 }> = [
   { mode: "resume", label: "Resume", Icon: FileText },
-  { mode: "tailored", label: "Tailored", Icon: Sparkles },
   { mode: "cover-letter", label: "Cover Letter", Icon: PenLine },
 ];
 
@@ -100,6 +95,107 @@ function StudioLoading() {
   );
 }
 
+interface StudioFilePanelProps {
+  documents: StudioDocument[];
+  activeDocumentId: string;
+  onCreate: () => void;
+  onSelect: (id: string) => void;
+  onRename: (id: string, name: string) => void;
+  onDelete: (id: string) => void;
+}
+
+function StudioFilePanel({
+  documents,
+  activeDocumentId,
+  onCreate,
+  onSelect,
+  onRename,
+  onDelete,
+}: StudioFilePanelProps) {
+  const [renamingId, setRenamingId] = useState<string | null>(null);
+  const [draftName, setDraftName] = useState("");
+
+  const startRename = useCallback((document: StudioDocument) => {
+    setRenamingId(document.id);
+    setDraftName(document.name);
+  }, []);
+
+  const finishRename = useCallback(() => {
+    if (renamingId) {
+      onRename(renamingId, draftName);
+    }
+    setRenamingId(null);
+    setDraftName("");
+  }, [draftName, onRename, renamingId]);
+
+  return (
+    <div className="border-b">
+      <div className="flex items-center justify-between px-4 py-3">
+        <h2 className="text-sm font-semibold">Files</h2>
+        <Button size="sm" variant="outline" onClick={onCreate}>
+          <Plus className="h-4 w-4 md:mr-1.5" />
+          <span className="hidden md:inline">New</span>
+        </Button>
+      </div>
+
+      <div className="space-y-1 px-2 pb-3">
+        {documents.map((document) => {
+          const isActive = document.id === activeDocumentId;
+          const isRenaming = document.id === renamingId;
+
+          return (
+            <div
+              key={document.id}
+              className={cn(
+                "group flex min-h-10 items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors",
+                isActive
+                  ? "bg-primary/10 text-foreground"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+              )}
+            >
+              <FileText className="h-4 w-4 shrink-0" />
+              {isRenaming ? (
+                <input
+                  value={draftName}
+                  onChange={(event) => setDraftName(event.target.value)}
+                  onBlur={finishRename}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") finishRename();
+                    if (event.key === "Escape") {
+                      setRenamingId(null);
+                      setDraftName("");
+                    }
+                  }}
+                  className="min-w-0 flex-1 rounded border bg-background px-2 py-1 text-sm text-foreground"
+                  autoFocus
+                />
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => onSelect(document.id)}
+                  onDoubleClick={() => startRename(document)}
+                  className="min-w-0 flex-1 truncate text-left"
+                  title={document.name}
+                >
+                  {document.name}
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => onDelete(document.id)}
+                className="rounded p-1 text-muted-foreground opacity-70 transition hover:bg-destructive/10 hover:text-destructive md:opacity-0 md:group-hover:opacity-100"
+                aria-label={`Delete ${document.name}`}
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function StudioPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -108,6 +204,17 @@ function StudioPageContent() {
   );
   const [documentMode, setDocumentMode] =
     useState<StudioDocumentMode>(initialDocumentMode);
+  const [documents, setDocuments] = useState<StudioDocument[]>(() =>
+    loadStudioDocuments(
+      typeof window === "undefined" ? undefined : window.localStorage
+    )
+  );
+  const [activeDocumentIds, setActiveDocumentIds] = useState<
+    Record<StudioDocumentMode, string>
+  >({
+    resume: "",
+    "cover-letter": "",
+  });
   const [entries, setEntries] = useState<BankEntry[]>([]);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [sections, setSections] =
@@ -115,13 +222,11 @@ function StudioPageContent() {
   const [templateId, setTemplateId] = useState("classic");
   const [loading, setLoading] = useState(initialDocumentMode === "resume");
   const [hasLoadedEntries, setHasLoadedEntries] = useState(false);
-  const [editor, setEditor] = useState<Editor | null>(null);
-  const [, refreshToolbarState] = useReducer(
-    (version: number) => version + 1,
-    0
-  );
-  const [zoomPercent, setZoomPercent] = useState(100);
-  const [isExporting, setIsExporting] = useState(false);
+  const [loadedResumeDocumentId, setLoadedResumeDocumentId] = useState<
+    string | null
+  >(null);
+  const [html, setHtml] = useState("");
+  const [generating, setGenerating] = useState(false);
   const [mobileView, setMobileView] = useState<BuilderPanel>(
     DEFAULT_BUILDER_PANEL
   );
@@ -129,21 +234,61 @@ function StudioPageContent() {
   const [manualVersionName, setManualVersionName] = useState("");
   const [previewVersionId, setPreviewVersionId] = useState<string | null>(null);
   const showErrorToast = useErrorToast();
+  const lastPreviewErrorToastRef = useRef("");
+  const lastLoadedDocumentIdRef = useRef<string | null>(null);
+
+  const activeDocument = useMemo(
+    () =>
+      getActiveStudioDocument(
+        documents,
+        documentMode,
+        activeDocumentIds[documentMode]
+      ),
+    [activeDocumentIds, documentMode, documents]
+  );
+
+  const currentDocuments = useMemo(
+    () => getDocumentsForType(documents, documentMode),
+    [documentMode, documents]
+  );
 
   useEffect(() => {
     setDocumentMode(getStudioModeFromSearchParam(searchParams.get("mode")));
   }, [searchParams]);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    const storedVersions = readBuilderVersions(
-      window.localStorage,
-      RESUME_DOCUMENT_ID
+    saveStudioDocuments(
+      typeof window === "undefined" ? undefined : window.localStorage,
+      documents
     );
-    versionsRef.current = storedVersions;
-    setVersions(storedVersions);
-  }, []);
+  }, [documents]);
+
+  useEffect(() => {
+    setActiveDocumentIds((prev) =>
+      prev[documentMode] === activeDocument.id
+        ? prev
+        : { ...prev, [documentMode]: activeDocument.id }
+    );
+  }, [activeDocument.id, documentMode]);
+
+  useEffect(() => {
+    if (lastLoadedDocumentIdRef.current === activeDocument.id) return;
+    lastLoadedDocumentIdRef.current = activeDocument.id;
+
+    if (activeDocument.type === "resume") {
+      setTemplateId(activeDocument.templateId || "classic");
+      setSections(
+        activeDocument.sections.length
+          ? activeDocument.sections
+          : createInitialSections()
+      );
+      setSelectedIds(new Set(activeDocument.selectedEntryIds));
+      setHtml(activeDocument.content);
+      setLoadedResumeDocumentId(activeDocument.id);
+    } else {
+      setLoadedResumeDocumentId(null);
+    }
+  }, [activeDocument]);
 
   useEffect(() => {
     if (documentMode !== "resume") {
@@ -164,7 +309,6 @@ function StudioPageContent() {
         const bankEntries: BankEntry[] = data.entries || [];
         if (cancelled) return;
         setEntries(bankEntries);
-        setSelectedIds(new Set(bankEntries.map((e) => e.id)));
       } catch {
         if (cancelled) return;
         // Entries stay empty
@@ -222,17 +366,81 @@ function StudioPageContent() {
   );
 
   useEffect(() => {
-    if (!editor) return;
+    if (documentMode !== "resume") return;
+    if (loadedResumeDocumentId !== activeDocument.id) return;
+    if (!hasLoadedEntries) return;
 
-    const handleEditorStateChange = () => refreshToolbarState();
-    editor.on("selectionUpdate", handleEditorStateChange);
-    editor.on("transaction", handleEditorStateChange);
+    if (orderedEntries.length === 0) {
+      setHtml("");
+      setDocuments((prev) =>
+        updateStudioDocument(prev, activeDocument.id, { content: "" })
+      );
+      return;
+    }
+
+    let cancelled = false;
+    const controller = new AbortController();
+    setGenerating(true);
+
+    async function updatePreview() {
+      try {
+        const data = await readJsonResponse<BuilderPreviewResponse>(
+          await fetch("/api/builder", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              entryIds: orderedEntries.map((entry) => entry.id),
+              templateId,
+              sectionOrder: visibleCategoryIds,
+            }),
+            signal: controller.signal,
+          }),
+          "Failed to update preview"
+        );
+
+        if (!cancelled && data.html) {
+          lastPreviewErrorToastRef.current = "";
+          setHtml(data.html);
+          setDocuments((prev) =>
+            updateStudioDocument(prev, activeDocument.id, { content: data.html })
+          );
+        }
+      } catch (err) {
+        const isAbortError =
+          err instanceof DOMException && err.name === "AbortError";
+        if (!cancelled && !isAbortError) {
+          const message = err instanceof Error ? err.message : "preview";
+          if (lastPreviewErrorToastRef.current !== message) {
+            lastPreviewErrorToastRef.current = message;
+            showErrorToast(err, {
+              title: "Could not update preview",
+              fallbackDescription: "Please try changing the resume content again.",
+            });
+          }
+        }
+      } finally {
+        if (!cancelled) {
+          setGenerating(false);
+        }
+      }
+    }
+
+    updatePreview();
 
     return () => {
       editor.off("selectionUpdate", handleEditorStateChange);
       editor.off("transaction", handleEditorStateChange);
     };
-  }, [editor, refreshToolbarState]);
+  }, [
+    documentMode,
+    activeDocument.id,
+    hasLoadedEntries,
+    loadedResumeDocumentId,
+    orderedEntries,
+    showErrorToast,
+    templateId,
+    visibleCategoryIds,
+  ]);
 
   const handleToggleEntry = useCallback((id: string) => {
     setPreviewVersionId(null);
@@ -240,22 +448,49 @@ function StudioPageContent() {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
       else next.add(id);
+      setDocuments((documents) =>
+        updateStudioDocument(documents, activeDocument.id, {
+          selectedEntryIds: Array.from(next),
+        })
+      );
       return next;
     });
-  }, []);
+  }, [activeDocument.id]);
 
   const handleReorder = useCallback(
     (fromIndex: number, toIndex: number) => {
-      setPreviewVersionId(null);
-      setSections((prev) => reorderSections(prev, fromIndex, toIndex));
+      setSections((prev) => {
+        const next = reorderSections(prev, fromIndex, toIndex);
+        setDocuments((documents) =>
+          updateStudioDocument(documents, activeDocument.id, { sections: next })
+        );
+        return next;
+      });
     },
-    []
+    [activeDocument.id]
   );
 
   const handleToggleVisibility = useCallback((categoryId: BankCategory) => {
-    setPreviewVersionId(null);
-    setSections((prev) => toggleSectionVisibility(prev, categoryId));
-  }, []);
+    setSections((prev) => {
+      const next = toggleSectionVisibility(prev, categoryId);
+      setDocuments((documents) =>
+        updateStudioDocument(documents, activeDocument.id, { sections: next })
+      );
+      return next;
+    });
+  }, [activeDocument.id]);
+
+  const handleTemplateSelect = useCallback(
+    (nextTemplateId: string) => {
+      setTemplateId(nextTemplateId);
+      setDocuments((documents) =>
+        updateStudioDocument(documents, activeDocument.id, {
+          templateId: nextTemplateId,
+        })
+      );
+    },
+    [activeDocument.id]
+  );
 
   const getPrintableHtml = useCallback(() => {
     if (!editor || !selectedTemplate) return "";
@@ -307,6 +542,67 @@ function StudioPageContent() {
     [router]
   );
 
+  const handleCreateDocument = useCallback(() => {
+    setDocuments((prev) => {
+      const documentCount = getDocumentsForType(prev, documentMode).length;
+      const document = createStudioDocument(documentMode, {
+        name:
+          documentMode === "cover-letter"
+            ? `Cover Letter ${documentCount + 1}`
+            : `Resume ${documentCount + 1}`,
+      });
+      setActiveDocumentIds((activeIds) => ({
+        ...activeIds,
+        [documentMode]: document.id,
+      }));
+      return [...prev, document];
+    });
+  }, [documentMode]);
+
+  const handleSelectDocument = useCallback(
+    (id: string) => {
+      setActiveDocumentIds((prev) => ({ ...prev, [documentMode]: id }));
+    },
+    [documentMode]
+  );
+
+  const handleRenameDocument = useCallback((id: string, name: string) => {
+    setDocuments((prev) => renameStudioDocument(prev, id, name));
+  }, []);
+
+  const handleDeleteDocument = useCallback(
+    (id: string) => {
+      const document = documents.find((candidate) => candidate.id === id);
+      if (!document) return;
+
+      if (
+        typeof window !== "undefined" &&
+        !window.confirm(`Delete "${document.name}"?`)
+      ) {
+        return;
+      }
+
+      setDocuments((prev) => {
+        const result = deleteStudioDocument(prev, id);
+        setActiveDocumentIds((activeIds) => ({
+          ...activeIds,
+          [document.type]: result.activeDocument.id,
+        }));
+        return result.documents;
+      });
+    },
+    [documents]
+  );
+
+  const handleCoverLetterContentChange = useCallback(
+    (content: string) => {
+      setDocuments((prev) =>
+        updateStudioDocument(prev, activeDocument.id, { content })
+      );
+    },
+    [activeDocument.id]
+  );
+
   if (loading && documentMode === "resume") {
     return <StudioLoading />;
   }
@@ -355,7 +651,6 @@ function StudioPageContent() {
               </button>
             ))}
           </div>
-
         </div>
       </div>
 
@@ -403,6 +698,21 @@ function StudioPageContent() {
               )}
             >
               <div className="flex h-full flex-col">
+                <StudioFilePanel
+                  documents={currentDocuments}
+                  activeDocumentId={activeDocument.id}
+                  onCreate={handleCreateDocument}
+                  onSelect={handleSelectDocument}
+                  onRename={handleRenameDocument}
+                  onDelete={handleDeleteDocument}
+                />
+                <div className="border-b p-4">
+                  <TemplatePicker
+                    templates={TEMPLATES}
+                    selectedId={templateId}
+                    onSelect={handleTemplateSelect}
+                  />
+                </div>
                 <div className="min-h-0 flex-1">
                   <SectionList
                     sections={sections}
@@ -413,78 +723,6 @@ function StudioPageContent() {
                     onToggleEntry={handleToggleEntry}
                   />
                 </div>
-
-                <section className="border-t bg-background p-3">
-                  <div className="mb-3 flex items-center gap-2">
-                    <History className="h-4 w-4 text-muted-foreground" />
-                    <h2 className="text-sm font-semibold">Version History</h2>
-                  </div>
-
-                  <form onSubmit={handleManualSave} className="mb-3 space-y-2">
-                    <input
-                      value={manualVersionName}
-                      onChange={(event) =>
-                        setManualVersionName(event.target.value)
-                      }
-                      placeholder="Version name (optional)"
-                      aria-label="Version name"
-                      className="h-9 w-full rounded-md border bg-background px-3 text-sm"
-                    />
-                    <Button
-                      type="submit"
-                      size="sm"
-                      variant="outline"
-                      className="w-full"
-                    >
-                      <Save className="mr-1.5 h-4 w-4" />
-                      Save Version
-                    </Button>
-                  </form>
-
-                  <div className="max-h-48 space-y-2 overflow-y-auto">
-                    {versions.length === 0 ? (
-                      <p className="rounded-md border border-dashed p-3 text-xs text-muted-foreground">
-                        No versions saved yet.
-                      </p>
-                    ) : (
-                      versions.map((version) => (
-                        <div
-                          key={version.id}
-                          className={cn(
-                            "rounded-md border p-2",
-                            previewVersionId === version.id &&
-                              "border-primary bg-primary/5"
-                          )}
-                        >
-                          <button
-                            type="button"
-                            onClick={() => setPreviewVersionId(version.id)}
-                            aria-label={`Preview ${version.name}`}
-                            className="w-full text-left"
-                          >
-                            <span className="block truncate text-sm font-medium">
-                              {version.name}
-                            </span>
-                            <span className="text-xs text-muted-foreground">
-                              {formatVersionTimestamp(version.savedAt)}
-                            </span>
-                          </button>
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant="ghost"
-                            className="mt-2 h-7 w-full justify-start px-2 text-xs"
-                            onClick={() => handleRestoreVersion(version)}
-                            aria-label={`Restore ${version.name}`}
-                          >
-                            <RotateCcw className="mr-1.5 h-3.5 w-3.5" />
-                            Restore
-                          </Button>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </section>
               </div>
             </div>
 
@@ -521,25 +759,30 @@ function StudioPageContent() {
         </div>
       )}
 
-      {documentMode === "tailored" && (
-        <div
-          id="document-mode-tailored-panel"
-          role="tabpanel"
-          aria-labelledby="document-mode-tailored-tab"
-          className="min-h-0 flex-1 overflow-y-auto"
-        >
-          <TailorWorkspace />
-        </div>
-      )}
-
       {documentMode === "cover-letter" && (
         <div
           id="document-mode-cover-letter-panel"
           role="tabpanel"
           aria-labelledby="document-mode-cover-letter-tab"
-          className="min-h-0 flex-1 overflow-hidden"
+          className="flex min-h-0 flex-1 flex-col overflow-hidden md:flex-row"
         >
-          <CoverLetterWorkspace />
+          <aside className="w-full shrink-0 border-b md:w-80 md:border-b-0 md:border-r">
+            <StudioFilePanel
+              documents={currentDocuments}
+              activeDocumentId={activeDocument.id}
+              onCreate={handleCreateDocument}
+              onSelect={handleSelectDocument}
+              onRename={handleRenameDocument}
+              onDelete={handleDeleteDocument}
+            />
+          </aside>
+          <div className="min-w-0 flex-1">
+            <CoverLetterWorkspace
+              documentName={activeDocument.name}
+              documentContent={activeDocument.content}
+              onDocumentContentChange={handleCoverLetterContentChange}
+            />
+          </div>
         </div>
       )}
     </div>

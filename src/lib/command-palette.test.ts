@@ -142,7 +142,7 @@ describe("getActionCommands", () => {
     expect(buildResume?.href).toBe("/studio");
     expect(coverLetter).toBeDefined();
     expect(coverLetter?.href).toBe("/studio?mode=cover-letter");
-    expect(tailor?.href).toBe("/studio?mode=tailored");
+    expect(tailor?.href).toBe("/studio");
   });
 });
 
