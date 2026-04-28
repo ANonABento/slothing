@@ -240,7 +240,7 @@ function StudioPageContent() {
   const [documents, setDocuments] = useState<StudioDocument[]>([
     { id: RESUME_DOCUMENT_ID, name: "Resume", mode: "resume" },
   ]);
-  const [documentMode] = useState<DocumentMode>("resume");
+  const [documentMode, setDocumentMode] = useState<DocumentMode>("resume");
   const [activeDocumentIds, setActiveDocumentIds] = useState<
     Record<DocumentMode, string>
   >({ resume: RESUME_DOCUMENT_ID, cover_letter: "" });
@@ -500,23 +500,41 @@ function StudioPageContent() {
 
   return (
     <div className="flex h-[calc(100vh-4rem)] flex-col">
+      {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-2 border-b px-4 py-3 md:px-6">
         <div className="flex flex-wrap items-center gap-3">
           <FileText className="h-5 w-5 text-primary" />
           <h1 className="text-lg font-semibold">Document Studio</h1>
-          {documentMode === "resume" && (
-            <span
+
+          {/* Resume / Cover Letter tab toggle */}
+          <div className="ml-2 flex rounded-md border">
+            <button
+              type="button"
+              onClick={() => setDocumentMode("resume")}
               className={cn(
-                "rounded-full border px-2 py-0.5 text-xs font-medium",
-                draftIsSaved
-                  ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                  : "border-amber-200 bg-amber-50 text-amber-700"
+                "px-3 py-1 text-sm font-medium transition-colors",
+                documentMode === "resume"
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:text-foreground"
               )}
             >
-              {draftIsSaved ? "Saved" : "Unsaved"}
-            </span>
-          )}
+              Resume
+            </button>
+            <button
+              type="button"
+              onClick={() => setDocumentMode("cover_letter")}
+              className={cn(
+                "px-3 py-1 text-sm font-medium transition-colors",
+                documentMode === "cover_letter"
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              Cover Letter
+            </button>
+          </div>
 
+          {/* Template picker */}
           <div className="relative md:ml-4">
             <button
               aria-label="Select resume template"
@@ -546,7 +564,7 @@ function StudioPageContent() {
                       <button
                         key={template.id}
                         onClick={() => {
-                          setTemplateId(template.id);
+                          handleTemplateSelect(template.id);
                           setTemplateOpen(false);
                         }}
                         className="flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-sm transition-colors hover:bg-muted"
@@ -570,6 +588,18 @@ function StudioPageContent() {
               </>
             )}
           </div>
+
+          {/* Saved indicator */}
+          <span
+            className={cn(
+              "rounded-full border px-2 py-0.5 text-xs font-medium",
+              draftIsSaved
+                ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                : "border-amber-200 bg-amber-50 text-amber-700"
+            )}
+          >
+            {draftIsSaved ? "Saved" : "Unsaved"}
+          </span>
         </div>
 
         <div className="flex items-center gap-2">
@@ -595,6 +625,7 @@ function StudioPageContent() {
         </div>
       </div>
 
+      {/* Mobile tabs */}
       <div className="flex min-h-0 flex-1 flex-col">
         <div
           role="tablist"
@@ -622,26 +653,125 @@ function StudioPageContent() {
           ))}
         </div>
 
+        {/* Three-panel body */}
         <div className="flex flex-1 overflow-hidden">
+          {/* Left panel (280px) — File list, Version history, Sections */}
           <div
             id="builder-edit-panel"
             role="tabpanel"
             aria-labelledby="builder-edit-tab"
             className={cn(
-              "w-full flex-1 overflow-hidden md:w-80 md:flex-none md:shrink-0 md:border-r",
+              "w-full overflow-y-auto md:w-[280px] md:flex-none md:shrink-0 md:border-r",
               getMobilePanelClasses(mobileView, "edit")
             )}
           >
-            <SectionList
-              sections={sections}
-              entries={entries}
-              selectedIds={selectedIds}
-              onReorder={handleReorder}
-              onToggleVisibility={handleToggleVisibility}
-              onToggleEntry={handleToggleEntry}
+            {/* File panel */}
+            <StudioFilePanel
+              documents={currentDocuments}
+              activeDocumentId={activeDocumentIds[documentMode]}
+              onCreate={() => {
+                const id = crypto.randomUUID();
+                const name =
+                  documentMode === "resume"
+                    ? `Resume ${currentDocuments.length + 1}`
+                    : `Cover Letter ${currentDocuments.length + 1}`;
+                setDocuments((prev) => [...prev, { id, name, mode: documentMode }]);
+                setActiveDocumentIds((prev) => ({ ...prev, [documentMode]: id }));
+              }}
+              onSelect={(id) =>
+                setActiveDocumentIds((prev) => ({ ...prev, [documentMode]: id }))
+              }
+              onRename={(id, name) =>
+                setDocuments((prev) => updateStudioDocument(prev, id, { name }))
+              }
+              onDelete={(id) => {
+                setDocuments((prev) => prev.filter((d) => d.id !== id));
+                if (activeDocumentIds[documentMode] === id) {
+                  const remaining = documents.filter(
+                    (d) => d.mode === documentMode && d.id !== id
+                  );
+                  setActiveDocumentIds((prev) => ({
+                    ...prev,
+                    [documentMode]: remaining[0]?.id ?? "",
+                  }));
+                }
+              }}
             />
+
+            {/* Version history */}
+            <div className="border-b px-4 py-3">
+              <h2 className="mb-2 text-sm font-semibold">Version History</h2>
+              <div className="space-y-1">
+                {versions.length === 0 && (
+                  <p className="text-xs text-muted-foreground">No versions yet</p>
+                )}
+                {versions.map((version) => (
+                  <div
+                    key={version.id}
+                    className={cn(
+                      "flex items-center justify-between rounded-md px-2 py-1.5 text-xs",
+                      previewVersionId === version.id
+                        ? "bg-primary/10 text-foreground"
+                        : "text-muted-foreground hover:bg-muted"
+                    )}
+                  >
+                    <button
+                      type="button"
+                      className="min-w-0 flex-1 truncate text-left"
+                      onClick={() => setPreviewVersionId(version.id)}
+                    >
+                      {version.name ?? formatVersionTimestamp(version.savedAt)}
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-2 flex items-center gap-2">
+                <input
+                  type="text"
+                  placeholder="Version name..."
+                  value={manualVersionName}
+                  onChange={(e) => setManualVersionName(e.target.value)}
+                  className="min-w-0 flex-1 rounded border bg-background px-2 py-1 text-xs"
+                />
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-7 text-xs"
+                  onClick={() => {
+                    // Manual save version (placeholder — requires version save logic)
+                    setManualVersionName("");
+                  }}
+                >
+                  Save
+                </Button>
+              </div>
+            </div>
+
+            {/* Section list */}
+            <div className="flex-1 overflow-y-auto">
+              <SectionList
+                sections={sections}
+                entries={entries}
+                selectedIds={selectedIds}
+                onReorder={handleReorder}
+                onToggleVisibility={handleToggleVisibility}
+                onToggleEntry={handleToggleEntry}
+              />
+              <div className="px-4 py-3">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                  onClick={() => setEntryPickerOpen(true)}
+                >
+                  <Plus className="mr-1.5 h-4 w-4" />
+                  Add from bank
+                </Button>
+              </div>
+            </div>
           </div>
 
+          {/* Center panel (flex-1) — Document Preview */}
           <div
             id="builder-preview-panel"
             role="tabpanel"
@@ -660,6 +790,16 @@ function StudioPageContent() {
               templateId={templateId}
               html={html}
             />
+          </div>
+
+          {/* Right panel (360px, collapsible) — AI Assistant */}
+          <div className="hidden w-[360px] shrink-0 border-l md:block">
+            <div className="flex items-center justify-between border-b px-4 py-3">
+              <h2 className="text-sm font-semibold">AI Assistant</h2>
+            </div>
+            <div className="flex items-center justify-center p-8 text-sm text-muted-foreground">
+              AI tools coming soon
+            </div>
           </div>
         </div>
       </div>
