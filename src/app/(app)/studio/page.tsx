@@ -6,11 +6,11 @@ import {
   useEffect,
   useMemo,
   useReducer,
+  useRef,
   useState,
 } from "react";
 import { Button } from "@/components/ui/button";
 import { SectionList } from "@/components/builder/section-list";
-import { TemplatePicker } from "@/components/builder/template-picker";
 import { ResumePreview } from "@/components/studio/resume-preview";
 import { TEMPLATES } from "@/lib/resume/template-data";
 import { bankEntriesToTipTapDocument } from "@/lib/editor/bank-to-tiptap";
@@ -28,12 +28,22 @@ import type { BankEntry, BankCategory } from "@/types";
 import type { TipTapJSONContent } from "@/lib/editor/types";
 import { useErrorToast } from "@/hooks/use-error-toast";
 import {
+  Check,
+  ChevronDown,
+  Copy,
+  Download,
   FileText,
   Loader2,
   Pencil,
+  Plus,
   Eye,
+  Trash2,
   type LucideIcon,
 } from "lucide-react";
+import { readJsonResponse } from "@/lib/http";
+import { downloadHtmlAsPdf, createDocumentFilename } from "@/lib/builder/document-export";
+import { createPrintableEditorHtml } from "@/lib/editor/document-html";
+import type { BuilderVersion } from "@/lib/builder/version-history";
 
 interface BuilderPreviewResponse {
   html?: string;
@@ -49,6 +59,38 @@ const RESUME_MOBILE_TABS: Array<{
 ];
 
 const RESUME_DOCUMENT_ID = "resume";
+
+type DocumentMode = "resume" | "cover_letter";
+
+interface StudioDocument {
+  id: string;
+  name: string;
+  mode: DocumentMode;
+  templateId?: string;
+  selectedEntryIds?: string[];
+  sections?: SectionState[];
+}
+
+function getActiveStudioDocument(
+  documents: StudioDocument[],
+  mode: DocumentMode,
+  activeId: string | undefined
+): StudioDocument {
+  const docs = documents.filter((d) => d.mode === mode);
+  return docs.find((d) => d.id === activeId) ?? docs[0] ?? { id: RESUME_DOCUMENT_ID, name: "Resume", mode: "resume" };
+}
+
+function getDocumentsForType(documents: StudioDocument[], mode: DocumentMode): StudioDocument[] {
+  return documents.filter((d) => d.mode === mode);
+}
+
+function updateStudioDocument(
+  documents: StudioDocument[],
+  id: string,
+  updates: Partial<StudioDocument>
+): StudioDocument[] {
+  return documents.map((d) => (d.id === id ? { ...d, ...updates } : d));
+}
 
 function formatVersionTimestamp(savedAt: string): string {
   return new Intl.DateTimeFormat(undefined, {
@@ -195,6 +237,16 @@ function StudioPageContent() {
   const showErrorToast = useErrorToast();
   const lastPreviewErrorToastRef = useRef("");
   const lastLoadedDocumentIdRef = useRef<string | null>(null);
+  const [documents, setDocuments] = useState<StudioDocument[]>([
+    { id: RESUME_DOCUMENT_ID, name: "Resume", mode: "resume" },
+  ]);
+  const [documentMode] = useState<DocumentMode>("resume");
+  const [activeDocumentIds, setActiveDocumentIds] = useState<
+    Record<DocumentMode, string>
+  >({ resume: RESUME_DOCUMENT_ID, cover_letter: "" });
+  const [isExporting, setIsExporting] = useState(false);
+  const [draftIsSaved, setDraftIsSaved] = useState(true);
+  const editorRef = useRef<{ getHTML: () => string } | null>(null);
 
   const activeDocument = useMemo(
     () =>
@@ -336,8 +388,8 @@ function StudioPageContent() {
     updatePreview();
 
     return () => {
-      editor.off("selectionUpdate", handleEditorStateChange);
-      editor.off("transaction", handleEditorStateChange);
+      cancelled = true;
+      controller.abort();
     };
   }, [
     orderedEntries,
@@ -397,13 +449,13 @@ function StudioPageContent() {
   );
 
   const getPrintableHtml = useCallback(() => {
-    if (!editor || !selectedTemplate) return "";
+    if (!editorRef.current || !selectedTemplate) return "";
     return createPrintableEditorHtml(
-      editor.getHTML(),
+      editorRef.current.getHTML(),
       selectedTemplate.styles,
       `${selectedTemplate.name} Resume`
     );
-  }, [editor, selectedTemplate]);
+  }, [selectedTemplate]);
 
   const handlePrint = useCallback(() => {
     const printableHtml = getPrintableHtml();
@@ -437,10 +489,10 @@ function StudioPageContent() {
     }
   }, [getPrintableHtml, selectedTemplate?.name, showErrorToast]);
 
-  const selectedTemplate = useMemo(
-    () => TEMPLATES.find((t) => t.id === templateId),
-    [templateId]
-  );
+  const handleCopyHtml = useCallback(async () => {
+    if (!html) return;
+    await navigator.clipboard.writeText(html);
+  }, [html]);
 
   if (loading) {
     return <StudioLoading />;
@@ -605,7 +657,6 @@ function StudioPageContent() {
               </div>
             )}
             <ResumePreview
-              resume={resume}
               templateId={templateId}
               html={html}
             />

@@ -1,6 +1,6 @@
 "use client";
 
-import { EditorContent, useEditor } from "@tiptap/react";
+import { EditorContent, useEditor, type Editor } from "@tiptap/react";
 import { useEffect } from "react";
 import type { MouseEvent } from "react";
 import type { TemplateStyles } from "@/lib/resume/template-types";
