@@ -1,7 +1,7 @@
 // Waterloo Works job scraper (University of Waterloo co-op portal)
 
 import { BaseScraper } from './base-scraper';
-import type { ScrapedJob } from '@/shared/types';
+import type { ScrapedJob } from '../../shared/types';
 
 export class WaterlooWorksScraper extends BaseScraper {
   readonly source = 'waterlooworks';

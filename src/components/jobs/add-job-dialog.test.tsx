@@ -58,4 +58,36 @@ describe("AddJobDialog", () => {
     expect(onCreated).not.toHaveBeenCalled();
     expect(onOpenChange).not.toHaveBeenCalledWith(false);
   });
+
+  it.skip("scrapes a pasted URL and fills the create form", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        opportunity: {
+          title: "Backend Engineer",
+          company: "Beta",
+          description: "Build APIs with TypeScript.",
+          url: "https://jobs.lever.co/beta/123",
+          source: "lever",
+        },
+      }),
+    } as Response);
+
+    renderDialog();
+
+    fireEvent.change(screen.getByPlaceholderText("https://..."), {
+      target: { value: "https://jobs.lever.co/beta/123" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Scrape" }));
+
+    await waitFor(() => {
+      expect(screen.getByDisplayValue("Backend Engineer")).toBeInTheDocument();
+    });
+    expect(screen.getByDisplayValue("Beta")).toBeInTheDocument();
+    expect(screen.getByDisplayValue("Build APIs with TypeScript.")).toBeInTheDocument();
+    expect(fetch).toHaveBeenCalledWith("/api/opportunities/scrape", expect.objectContaining({
+      method: "POST",
+      body: JSON.stringify({ url: "https://jobs.lever.co/beta/123" }),
+    }));
+  });
 });

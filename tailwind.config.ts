@@ -11,6 +11,7 @@ const config: Config = {
     extend: {
       fontFamily: {
         sans: ['var(--font-sans)', 'system-ui', 'sans-serif'],
+        heading: ['var(--font-heading)', 'var(--font-sans)', 'system-ui', 'sans-serif'],
       },
       colors: {
         background: "hsl(var(--background))",
@@ -69,9 +70,13 @@ const config: Config = {
       boxShadow: {
         sm: "var(--shadow-sm)",
         DEFAULT: "var(--shadow)",
+        card: "var(--shadow-card)",
+        elevated: "var(--shadow-elevated)",
+        button: "var(--shadow-button)",
         md: "var(--shadow-md)",
         lg: "var(--shadow-lg)",
         xl: "var(--shadow-xl)",
+        glow: "0 0 20px var(--glow-color)",
       },
       borderWidth: {
         DEFAULT: "var(--border-width)",
@@ -143,6 +148,9 @@ const config: Config = {
       },
       fontSize: {
         "2xs": ["0.625rem", { lineHeight: "0.75rem" }],
+      },
+      letterSpacing: {
+        theme: "var(--letter-spacing)",
       },
     },
   },

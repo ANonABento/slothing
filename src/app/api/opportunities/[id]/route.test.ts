@@ -7,7 +7,7 @@ const mocks = vi.hoisted(() => ({
   isAuthError: vi.fn(),
   deleteOpportunity: vi.fn(),
   getOpportunity: vi.fn(),
-  updateOpportunity: vi.fn(),
+  changeOpportunityStatus: vi.fn(),
 }));
 
 vi.mock("@/lib/auth", () => ({
@@ -18,7 +18,7 @@ vi.mock("@/lib/auth", () => ({
 vi.mock("@/lib/opportunities", () => ({
   deleteOpportunity: mocks.deleteOpportunity,
   getOpportunity: mocks.getOpportunity,
-  updateOpportunity: mocks.updateOpportunity,
+  changeOpportunityStatus: mocks.changeOpportunityStatus,
 }));
 
 import { DELETE, GET, PATCH } from "./route";
@@ -55,16 +55,16 @@ describe("opportunity detail route", () => {
   });
 
   it("validates and updates an opportunity", async () => {
-    mocks.updateOpportunity.mockReturnValueOnce({
+    mocks.changeOpportunityStatus.mockReturnValueOnce({
       id: "opportunity-1",
       status: "saved",
     });
 
     const response = await PATCH(jsonRequest({ status: "saved" }), routeContext);
 
-    expect(mocks.updateOpportunity).toHaveBeenCalledWith(
+    expect(mocks.changeOpportunityStatus).toHaveBeenCalledWith(
       "opportunity-1",
-      { status: "saved" },
+      "saved",
       "user-1"
     );
     await expect(response.json()).resolves.toEqual({
@@ -79,11 +79,11 @@ describe("opportunity detail route", () => {
     );
 
     expect(response.status).toBe(400);
-    expect(mocks.updateOpportunity).not.toHaveBeenCalled();
+    expect(mocks.changeOpportunityStatus).not.toHaveBeenCalled();
   });
 
   it("returns validation errors from repository-level invariants", async () => {
-    mocks.updateOpportunity.mockImplementationOnce(() => {
+    mocks.changeOpportunityStatus.mockImplementationOnce(() => {
       z.object({
         salaryMin: z.number(),
         salaryMax: z.number(),

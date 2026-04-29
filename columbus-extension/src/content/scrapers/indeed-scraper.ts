@@ -1,7 +1,7 @@
 // Indeed job scraper
 
 import { BaseScraper } from './base-scraper';
-import type { ScrapedJob } from '@/shared/types';
+import type { ScrapedJob } from '../../shared/types';
 
 export class IndeedScraper extends BaseScraper {
   readonly source = 'indeed';

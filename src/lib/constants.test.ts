@@ -11,12 +11,14 @@ import {
   FILE_SIGNATURES,
   INTERVIEW_CATEGORIES,
   JOB_STATUSES,
+  JOB_STATUS_LABELS,
   LLM_PROVIDERS,
   NOTIFICATION_ACTIONS,
   PATHS,
   REMINDER_TYPES,
   STORAGE_KEYS,
   THEMES,
+  updateJobSchema,
   updateProfileSchema,
   validateFileMagicBytes,
   fullExportDataSchema,
@@ -29,7 +31,9 @@ describe("constants barrel", () => {
     expect(THEMES).toEqual(["light", "dark", "system"]);
     expect(STORAGE_KEYS.ONBOARDING_COMPLETED).toBe("get_me_job_onboarding_completed");
 
+    expect(JOB_STATUSES).toContain("pending");
     expect(JOB_STATUSES).toContain("interviewing");
+    expect(JOB_STATUS_LABELS.withdrawn).toBe("Withdrawn");
     expect(updateProfileSchema.safeParse({ contact: { name: "Jane Doe" } }).success).toBe(true);
 
     expect(INTERVIEW_CATEGORIES).toContain("technical");
@@ -63,6 +67,14 @@ describe("constants barrel", () => {
     expect(constants).not.toHaveProperty("backupJobSchema");
     expect(constants).not.toHaveProperty("exportCoverLetterSchema");
     expect(constants).not.toHaveProperty("exportBankEntrySchema");
+  });
+});
+
+describe("updateJobSchema", () => {
+  it("does not default status on partial updates", () => {
+    expect(updateJobSchema.parse({ notes: "Follow up" })).toMatchObject({
+      notes: "Follow up",
+    });
   });
 });
 

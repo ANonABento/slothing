@@ -1,7 +1,7 @@
 // Lever job board scraper
 
 import { BaseScraper } from './base-scraper';
-import type { ScrapedJob } from '@/shared/types';
+import type { ScrapedJob } from '../../shared/types';
 
 export class LeverScraper extends BaseScraper {
   readonly source = 'lever';
@@ -84,7 +84,7 @@ export class LeverScraper extends BaseScraper {
             url,
             source: this.source,
             sourceJobId: this.extractJobIdFromUrl(url),
-            type: this.detectJobTypeFromCommitment(commitment),
+            type: this.detectJobTypeFromCommitment(commitment ?? null),
           });
         }
       } catch (err) {

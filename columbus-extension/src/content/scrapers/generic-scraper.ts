@@ -1,7 +1,7 @@
 // Generic job scraper for unknown sites
 
 import { BaseScraper } from './base-scraper';
-import type { ScrapedJob } from '@/shared/types';
+import type { ScrapedJob } from '../../shared/types';
 
 export class GenericScraper extends BaseScraper {
   readonly source = 'unknown';
@@ -36,7 +36,7 @@ export class GenericScraper extends BaseScraper {
     return {
       title,
       company: company || 'Unknown Company',
-      location,
+      location: location || undefined,
       description,
       requirements: this.extractRequirements(description),
       keywords: this.extractKeywords(description),
