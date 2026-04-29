@@ -3,6 +3,7 @@
 import { Suspense } from "react";
 import { Loader2, Plus } from "lucide-react";
 import { SectionList } from "@/components/builder/section-list";
+import { AiAssistantPanel } from "@/components/studio/ai-assistant-panel";
 import { MobileBuilderTabs } from "@/components/studio/mobile-builder-tabs";
 import { ResumePreview } from "@/components/studio/resume-preview";
 import { StudioFilePanel } from "@/components/studio/studio-file-panel";
@@ -99,6 +100,7 @@ function StudioPageContent() {
             id="builder-preview-panel"
             role="tabpanel"
             aria-labelledby="builder-preview-tab"
+            data-document-editor-root="true"
             className={cn(
               "relative w-full flex-1 overflow-auto",
               getMobilePanelClasses(studio.mobileView, "preview")
@@ -112,14 +114,11 @@ function StudioPageContent() {
             <ResumePreview templateId={studio.templateId} html={studio.html} />
           </div>
 
-          <div className="hidden w-[360px] shrink-0 border-l md:block">
-            <div className="flex items-center justify-between border-b px-4 py-3">
-              <h2 className="text-sm font-semibold">AI Assistant</h2>
-            </div>
-            <div className="flex items-center justify-center p-8 text-sm text-muted-foreground">
-              AI tools coming soon
-            </div>
-          </div>
+          <AiAssistantPanel
+            documentContent={studio.html}
+            selectedEntryCount={studio.selectedIds.size}
+            onOpenBank={() => studio.setEntryPickerOpen(true)}
+          />
         </div>
       </div>
     </div>

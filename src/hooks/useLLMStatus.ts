@@ -1,18 +1,17 @@
 "use client";
 
 import { useState, useEffect } from "react";
-
-interface LLMStatus {
-  configured: boolean;
-  provider: string | null;
-}
+import {
+  parseLLMStatusResponse,
+  type LLMStatusResponse,
+} from "@/lib/document-assistant";
 
 /**
  * Hook to check if an LLM provider is configured.
  * Used by the sidebar to show a status indicator.
  */
 export function useLLMStatus() {
-  const [status, setStatus] = useState<LLMStatus>({
+  const [status, setStatus] = useState<LLMStatusResponse>({
     configured: false,
     provider: null,
   });
@@ -26,7 +25,7 @@ export function useLLMStatus() {
         if (!response.ok) return;
         const data = await response.json();
         if (!cancelled) {
-          setStatus(data);
+          setStatus(parseLLMStatusResponse(data));
         }
       } catch {
         // Silently fail - sidebar indicator just stays gray

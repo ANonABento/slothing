@@ -1,11 +1,15 @@
 import { describe, expect, it } from "vitest";
 import {
   applySelectionRewrite,
+  buildDocumentAssistantRequestPayload,
   buildDocumentRewritePrompt,
   buildSimpleDiff,
   getDocumentSuggestions,
   isDocumentAssistantAction,
+  isMissingLLMSetupError,
   normalizeSelection,
+  parseLLMStatusResponse,
+  stripDocumentHtml,
 } from "./document-assistant";
 
 describe("document assistant helpers", () => {
@@ -84,6 +88,57 @@ describe("document assistant helpers", () => {
     expect(getDocumentSuggestions("", "")).toEqual([
       "Generate or paste document content to get assistant suggestions.",
     ]);
+  });
+
+  it("strips document HTML into assistant-readable text", () => {
+    expect(
+      stripDocumentHtml(
+        "<style>.x{}</style><p>Built&nbsp;APIs &amp; dashboards.</p>",
+      ),
+    ).toBe("Built APIs & dashboards.");
+  });
+
+  it("parses LLM status responses defensively", () => {
+    expect(parseLLMStatusResponse({ configured: true, provider: "openai" })).toEqual({
+      configured: true,
+      provider: "openai",
+    });
+    expect(parseLLMStatusResponse({ configured: "yes", provider: 123 })).toEqual({
+      configured: false,
+      provider: null,
+    });
+    expect(parseLLMStatusResponse(null)).toEqual({
+      configured: false,
+      provider: null,
+    });
+  });
+
+  it("recognizes missing LLM setup errors", () => {
+    expect(
+      isMissingLLMSetupError(
+        "No LLM provider configured. Go to Settings to set one up.",
+      ),
+    ).toBe(true);
+    expect(isMissingLLMSetupError("OpenAI API key is missing")).toBe(true);
+    expect(isMissingLLMSetupError("Failed to rewrite selected text")).toBe(
+      false,
+    );
+  });
+
+  it("builds assistant request payloads with trimmed optional context", () => {
+    expect(
+      buildDocumentAssistantRequestPayload({
+        action: "match-jd-keywords",
+        selectedText: "  Built dashboards.  ",
+        documentContent: "<p>Built dashboards.</p>",
+        jobDescription: "  React role  ",
+      }),
+    ).toEqual({
+      action: "match-jd-keywords",
+      selectedText: "Built dashboards.",
+      documentContent: "<p>Built dashboards.</p>",
+      jobDescription: "React role",
+    });
   });
 
   it("builds rewrite prompts with action and job context", () => {

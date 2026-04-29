@@ -35,6 +35,18 @@ export const DOCUMENT_ASSISTANT_ACTION_LABELS: Record<
   "match-jd-keywords": "Match JD keywords",
 };
 
+export interface DocumentAssistantRequestPayload {
+  action: DocumentAssistantAction;
+  selectedText: string;
+  documentContent: string;
+  jobDescription?: string;
+}
+
+export interface LLMStatusResponse {
+  configured: boolean;
+  provider: string | null;
+}
+
 const DOCUMENT_ASSISTANT_INSTRUCTIONS: Record<DocumentAssistantAction, string> =
   {
     rewrite:
@@ -46,6 +58,59 @@ const DOCUMENT_ASSISTANT_INSTRUCTIONS: Record<DocumentAssistantAction, string> =
     "match-jd-keywords":
       "Rewrite the selected text to naturally align with relevant keywords and responsibilities from the job description.",
   };
+
+export function stripDocumentHtml(content: string): string {
+  return content
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+export function parseLLMStatusResponse(value: unknown): LLMStatusResponse {
+  if (!value || typeof value !== "object") {
+    return { configured: false, provider: null };
+  }
+
+  const status = value as { configured?: unknown; provider?: unknown };
+  return {
+    configured: status.configured === true,
+    provider: typeof status.provider === "string" ? status.provider : null,
+  };
+}
+
+export function isMissingLLMSetupError(message: string): boolean {
+  return /no llm provider configured|llm not configured|api key|set one up/i.test(
+    message,
+  );
+}
+
+export function buildDocumentAssistantRequestPayload({
+  action,
+  selectedText,
+  documentContent,
+  jobDescription,
+}: DocumentAssistantRequestPayload): DocumentAssistantRequestPayload {
+  const payload: DocumentAssistantRequestPayload = {
+    action,
+    selectedText: selectedText.trim(),
+    documentContent,
+  };
+
+  const trimmedJobDescription = jobDescription?.trim();
+  if (trimmedJobDescription) {
+    payload.jobDescription = trimmedJobDescription;
+  }
+
+  return payload;
+}
 
 export function isDocumentAssistantAction(
   value: unknown,
