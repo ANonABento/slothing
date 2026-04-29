@@ -148,4 +148,41 @@ describe("runLocalDevCleanSlateMigration", () => {
       "default"
     );
   });
+
+  it("skips optional virtual tables when their sqlite module is unavailable", () => {
+    stubLocalCleanSlateEnv();
+    const run = vi.fn((sql: string, ...params: string[]) => ({ sql, params }));
+    const db = {
+      prepare: vi.fn((sql: string) => {
+        if (sql.includes("DELETE FROM chunks_vec")) {
+          throw Object.assign(new Error("no such module: vec0"), {
+            code: "SQLITE_ERROR",
+          });
+        }
+
+        return {
+          get: vi.fn((...params: string[]) => {
+            if (
+              sql.includes("sqlite_master") &&
+              params[0] === "chunks_vec"
+            ) {
+              return { name: "chunks_vec" };
+            }
+
+            return undefined;
+          }),
+          run: vi.fn((...params: string[]) => run(sql, ...params)),
+        };
+      }),
+      transaction: vi.fn((fn: () => void) => fn),
+    } satisfies CleanSlateDatabase;
+
+    runLocalDevCleanSlateMigration(db);
+
+    expect(run).toHaveBeenCalledWith(
+      expect.stringContaining("INSERT OR REPLACE INTO settings"),
+      LOCAL_DEV_CLEAN_SLATE_SETTING,
+      "true"
+    );
+  });
 });
