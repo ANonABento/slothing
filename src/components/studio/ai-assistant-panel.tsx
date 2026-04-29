@@ -58,12 +58,21 @@ const REWRITE_SECTIONS = [
   { value: "projects", label: "Projects" },
 ] as const;
 
-async function readAssistantError(response: Response): Promise<string> {
+type RewriteSection = (typeof REWRITE_SECTIONS)[number]["value"];
+
+function isRewriteSection(value: string): value is RewriteSection {
+  return REWRITE_SECTIONS.some((section) => section.value === value);
+}
+
+async function readApiError(
+  response: Response,
+  fallback = "Assistant request failed.",
+): Promise<string> {
   try {
     const data = (await response.json()) as AssistantResponse;
-    return data.error ?? "Assistant request failed.";
+    return data.error ?? fallback;
   } catch {
-    return "Assistant request failed.";
+    return fallback;
   }
 }
 
@@ -76,7 +85,9 @@ export function AiAssistantPanel({
   const runningActionRef = useRef<AssistantRunAction | null>(null);
   const [jobDescription, setJobDescription] = useState("");
   const [selectedText, setSelectedText] = useState("");
-  const [rewriteSection, setRewriteSection] = useState("");
+  const [rewriteSection, setRewriteSection] = useState<RewriteSection | "">(
+    "",
+  );
   const [runningAction, setRunningAction] = useState<AssistantRunAction | null>(
     null,
   );
@@ -119,7 +130,13 @@ export function AiAssistantPanel({
 
   const ensureLLMConfigured = useCallback(async () => {
     const response = await fetch("/api/settings/status");
-    if (!response.ok) return false;
+    if (!response.ok) {
+      setStatusMessage(
+        await readApiError(response, "Could not check LLM setup."),
+      );
+      setAssistantResult("");
+      return false;
+    }
 
     const status = parseLLMStatusResponse(await response.json());
     if (!status.configured) {
@@ -156,7 +173,7 @@ export function AiAssistantPanel({
       });
 
       if (!response.ok) {
-        const error = await readAssistantError(response);
+        const error = await readApiError(response);
         if (isMissingLLMSetupError(error)) {
           setSetupPrompt(true);
           setStatusMessage("");
@@ -184,16 +201,8 @@ export function AiAssistantPanel({
       setAssistantResult("");
 
       try {
-        const configured = await ensureLLMConfigured();
-        if (!configured) return;
-
-        if (action === "generate-from-bank") {
-          onOpenBank();
-          setStatusMessage(
-            selectedEntryCount > 0
-              ? "Bank entries are ready for the next generation step."
-              : "Choose bank entries to generate a stronger draft.",
-          );
+        if (action === "match-jd-keywords" && !jobDescription.trim()) {
+          setStatusMessage("Paste a job description first.");
           return;
         }
 
@@ -213,13 +222,23 @@ export function AiAssistantPanel({
             );
             return;
           }
+        }
 
-          await runRewrite("rewrite", "");
+        const configured = await ensureLLMConfigured();
+        if (!configured) return;
+
+        if (action === "generate-from-bank") {
+          onOpenBank();
+          setStatusMessage(
+            selectedEntryCount > 0
+              ? "Bank entries are ready for the next generation step."
+              : "Choose bank entries to generate a stronger draft.",
+          );
           return;
         }
 
-        if (action === "match-jd-keywords" && !jobDescription.trim()) {
-          setStatusMessage("Paste a job description first.");
+        if (action === "rewrite-section") {
+          await runRewrite("rewrite", "");
           return;
         }
 
@@ -331,7 +350,12 @@ export function AiAssistantPanel({
         <section className="space-y-2">
           <Label htmlFor="rewrite-section-trigger">Rewrite section</Label>
           <div className="grid grid-cols-[1fr_auto] gap-2">
-            <Select value={rewriteSection} onValueChange={setRewriteSection}>
+            <Select
+              value={rewriteSection}
+              onValueChange={(value) => {
+                if (isRewriteSection(value)) setRewriteSection(value);
+              }}
+            >
               <SelectTrigger
                 id="rewrite-section-trigger"
                 aria-label="Rewrite Section"

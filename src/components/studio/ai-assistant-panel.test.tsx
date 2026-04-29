@@ -66,6 +66,9 @@ describe("AiAssistantPanel", () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(statusResponse(false)));
     renderWithSelectableText();
 
+    fireEvent.change(screen.getByLabelText("Job description"), {
+      target: { value: "React role" },
+    });
     fireEvent.click(screen.getByRole("button", { name: "Tailor to JD" }));
 
     expect(
@@ -90,6 +93,9 @@ describe("AiAssistantPanel", () => {
     );
     renderWithSelectableText();
 
+    fireEvent.change(screen.getByLabelText("Job description"), {
+      target: { value: "React role" },
+    });
     fireEvent.click(screen.getByRole("button", { name: "Tailor to JD" }));
 
     expect(
@@ -100,6 +106,17 @@ describe("AiAssistantPanel", () => {
     expect(
       await screen.findByText("Set up an LLM provider to use AI tools."),
     ).toBeInTheDocument();
+  });
+
+  it("validates job-description actions before checking setup", () => {
+    const fetch = vi.fn();
+    vi.stubGlobal("fetch", fetch);
+    renderWithSelectableText();
+
+    fireEvent.click(screen.getByRole("button", { name: "Tailor to JD" }));
+
+    expect(screen.getByText("Paste a job description first.")).toBeInTheDocument();
+    expect(fetch).not.toHaveBeenCalled();
   });
 
   it("disables other assistant actions while an action is running", async () => {
