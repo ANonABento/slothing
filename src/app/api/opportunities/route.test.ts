@@ -4,9 +4,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   requireAuth: vi.fn(),
   isAuthError: vi.fn(),
-  createOpportunity: vi.fn(),
   listOpportunities: vi.fn(),
-  parseOpportunityFilters: vi.fn(),
+  createJob: vi.fn(),
 }));
 
 vi.mock("@/lib/auth", () => ({
@@ -15,9 +14,11 @@ vi.mock("@/lib/auth", () => ({
 }));
 
 vi.mock("@/lib/opportunities", () => ({
-  createOpportunity: mocks.createOpportunity,
   listOpportunities: mocks.listOpportunities,
-  parseOpportunityFilters: mocks.parseOpportunityFilters,
+}));
+
+vi.mock("@/lib/db/jobs", () => ({
+  createJob: mocks.createJob,
 }));
 
 import { GET, POST } from "./route";
@@ -35,7 +36,6 @@ describe("opportunities route", () => {
     vi.clearAllMocks();
     mocks.requireAuth.mockResolvedValue({ userId: "user-1" });
     mocks.isAuthError.mockReturnValue(false);
-    mocks.parseOpportunityFilters.mockReturnValue({ status: "saved" });
     mocks.listOpportunities.mockReturnValue([]);
   });
 
@@ -46,29 +46,20 @@ describe("opportunities route", () => {
 
     const response = await GET(request);
 
-    expect(mocks.parseOpportunityFilters).toHaveBeenCalledWith(
-      request.nextUrl.searchParams
-    );
-    expect(mocks.listOpportunities).toHaveBeenCalledWith("user-1", {
-      status: "saved",
-    });
+    expect(mocks.listOpportunities).toHaveBeenCalledWith("user-1", ["saved"]);
     await expect(response.json()).resolves.toEqual({ opportunities: [] });
   });
 
   it("creates an opportunity after validating the request body", async () => {
-    const opportunity = {
-      id: "opportunity-1",
-      type: "job",
+    const job = {
+      id: "job-1",
       title: "Frontend Engineer",
       company: "Acme",
-      source: "manual",
-      summary: "Build user interfaces.",
+      description: "Build user interfaces.",
       status: "pending",
-      tags: [],
       createdAt: "2026-04-29T12:00:00.000Z",
-      updatedAt: "2026-04-29T12:00:00.000Z",
     };
-    mocks.createOpportunity.mockReturnValueOnce(opportunity);
+    mocks.createJob.mockReturnValueOnce(job);
 
     const response = await POST(
       jsonRequest({
@@ -81,25 +72,25 @@ describe("opportunities route", () => {
     );
 
     expect(response.status).toBe(201);
-    expect(mocks.createOpportunity).toHaveBeenCalledWith(
+    expect(mocks.createJob).toHaveBeenCalledWith(
       expect.objectContaining({
-        type: "job",
         title: "Frontend Engineer",
+        company: "Acme",
+        description: "Build user interfaces.",
         status: "pending",
-        tags: [],
       }),
       "user-1"
     );
-    await expect(response.json()).resolves.toEqual({ opportunity });
+    await expect(response.json()).resolves.toEqual({ opportunity: job });
   });
 
   it("rejects invalid create payloads", async () => {
     const response = await POST(jsonRequest({ title: "Missing fields" }));
 
     expect(response.status).toBe(400);
-    await expect(response.json()).resolves.toMatchObject({
-      error: "Validation failed",
-    });
-    expect(mocks.createOpportunity).not.toHaveBeenCalled();
+    const body = await response.json();
+    expect(body.error).toBeDefined();
+    expect(body.error.fieldErrors).toBeDefined();
+    expect(mocks.createJob).not.toHaveBeenCalled();
   });
 });

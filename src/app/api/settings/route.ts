@@ -11,6 +11,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { getLLMConfig, setLLMConfig } from "@/lib/db";
 import { updateSettingsSchema, llmConfigSchema } from "@/lib/constants";
 import { requireAuth, isAuthError } from "@/lib/auth";
+import {
+  getOpportunityReviewEnabled,
+  setOpportunityReviewEnabled,
+} from "@/lib/settings/opportunity-review";
 
 export async function GET() {
   const authResult = await requireAuth();
@@ -18,7 +22,12 @@ export async function GET() {
 
   try {
     const llmConfig = getLLMConfig(authResult.userId);
-    return NextResponse.json({ llm: llmConfig });
+    return NextResponse.json({
+      llm: llmConfig,
+      opportunityReview: {
+        enabled: getOpportunityReviewEnabled(authResult.userId),
+      },
+    });
   } catch (error) {
     console.error("Get settings error:", error);
     return NextResponse.json(
@@ -51,6 +60,12 @@ export async function PUT(request: NextRequest) {
     const data = parseResult.data;
     if (data.llm) {
       setLLMConfig(data.llm, authResult.userId);
+    }
+    if (data.opportunityReview) {
+      setOpportunityReviewEnabled(
+        data.opportunityReview.enabled,
+        authResult.userId
+      );
     }
 
     return NextResponse.json({ success: true });

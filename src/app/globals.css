@@ -25,8 +25,28 @@
   body {
     @apply bg-background text-foreground antialiased;
     font-feature-settings: "rlig" 1, "calt" 1;
+    letter-spacing: var(--letter-spacing, 0);
+    text-transform: var(--text-transform, none);
     overscroll-behavior: none;
     overflow-x: hidden;
+  }
+
+  .theme-transitioning,
+  .theme-transitioning * {
+    transition:
+      background-color 220ms ease,
+      border-color 220ms ease,
+      color 220ms ease,
+      fill 220ms ease,
+      stroke 220ms ease,
+      box-shadow 220ms ease;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .theme-transitioning,
+    .theme-transitioning * {
+      transition: none;
+    }
   }
 
   /* Prevent overscroll bounce in scrollable containers */
@@ -91,7 +111,7 @@
 
   /* Elevated card with deeper shadow */
   .card-elevated {
-    @apply rounded-2xl border bg-card shadow-md;
+    @apply rounded-2xl border bg-card shadow-elevated;
     border-width: var(--border-width);
   }
 
@@ -119,7 +139,7 @@
 
   /* Soft glow for interactive elements */
   .glow-primary {
-    box-shadow: 0 0 20px hsl(var(--primary) / var(--glow-primary-opacity));
+    box-shadow: 0 0 20px var(--glow-color);
   }
 
   /* Subtle pulse animation for status indicators */

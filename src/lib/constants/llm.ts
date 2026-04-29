@@ -26,6 +26,9 @@ export type LLMConfigInput = z.infer<typeof llmConfigSchema>;
 
 export const updateSettingsSchema = z.object({
   llm: llmConfigSchema.optional(),
+  opportunityReview: z.object({
+    enabled: z.boolean(),
+  }).optional(),
 });
 
 export const LLM_ENDPOINTS = {

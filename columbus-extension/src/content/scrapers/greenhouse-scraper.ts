@@ -1,7 +1,7 @@
 // Greenhouse job board scraper
 
 import { BaseScraper } from './base-scraper';
-import type { ScrapedJob } from '@/shared/types';
+import type { ScrapedJob } from '../../shared/types';
 
 export class GreenhouseScraper extends BaseScraper {
   readonly source = 'greenhouse';

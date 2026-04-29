@@ -40,13 +40,11 @@ describe("navigationGroups", () => {
     expect(names).toContain("Dashboard");
   });
 
-  it("should have Documents, Document Studio, and Opportunities in Resume group", () => {
-    const resume = navigationGroups.find((g) => g.label === "Resume");
-    expect(resume).toBeDefined();
-    const names = resume!.items.map((i) => i.name);
+  it("should have Documents and Document Studio in Resume group", () => {
+    const resume = getGroup("Resume");
+    const names = getItemNames(resume.items);
     expect(names).toContain("Documents");
     expect(names).toContain("Document Studio");
-    expect(names).toContain("Opportunities");
   });
 
   it("should show one Document Studio link instead of separate document routes", () => {
@@ -70,6 +68,7 @@ describe("navigationGroups", () => {
     const items = jobTracker.items.map((i) => [i.name, i.href]);
     expect(items).toEqual([
       ["Jobs", "/jobs"],
+      ["Review Queue", "/opportunities/review"],
       ["Calendar", "/calendar"],
       ["Email Templates", "/emails"],
     ]);
@@ -91,19 +90,22 @@ describe("navigationGroups", () => {
 
   it("should have correct hrefs for core nav items", () => {
     const allItems = navigationGroups.flatMap((g) => g.items);
-    const dashboard = allItems.find((i) => i.name === "Dashboard");
-    const documents = allItems.find((i) => i.name === "Documents");
-    const studio = allItems.find((i) => i.name === "Document Studio");
-    const opportunities = allItems.find((i) => i.name === "Opportunities");
-    const interviewPrep = allItems.find((i) => i.name === "Interview Prep");
-    const analytics = allItems.find((i) => i.name === "Analytics");
+    const expectedHrefs = [
+      ["Dashboard", "/dashboard"],
+      ["Documents", "/bank"],
+      ["Document Studio", "/studio"],
+      ["Jobs", "/jobs"],
+      ["Review Queue", "/opportunities/review"],
+      ["Calendar", "/calendar"],
+      ["Email Templates", "/emails"],
+      ["Interview Prep", "/interview"],
+      ["Salary Tools", "/salary"],
+      ["Analytics", "/analytics"],
+    ];
 
-    expect(dashboard?.href).toBe("/dashboard");
-    expect(documents?.href).toBe("/bank");
-    expect(studio?.href).toBe("/studio");
-    expect(opportunities?.href).toBe("/opportunities");
-    expect(interviewPrep?.href).toBe("/interview");
-    expect(analytics?.href).toBe("/analytics");
+    for (const [name, href] of expectedHrefs) {
+      expect(getItem(allItems, name).href).toBe(href);
+    }
   });
 
   it("should have icons for all nav items", () => {
