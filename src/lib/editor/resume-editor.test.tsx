@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { TEMPLATES } from "@/lib/resume/templates";
 import { ResumeEditor } from "./resume-editor";
@@ -129,5 +129,123 @@ describe("ResumeEditor", () => {
     expect(container.querySelector("style")?.textContent).toContain(
       "caret-color"
     );
+  });
+
+  it("updates resume node attribute text from inline edits", async () => {
+    const template = TEMPLATES.find((item) => item.id === "classic")!;
+    const handleUpdate = vi.fn();
+    const content: TipTapJSONContent = {
+      type: "doc",
+      content: [
+        {
+          type: "contactInfo",
+          attrs: {
+            name: "Jane Doe",
+            email: "jane@example.com",
+          },
+        },
+        {
+          type: "resumeSection",
+          attrs: { title: "Experience" },
+          content: [
+            {
+              type: "resumeEntry",
+              attrs: {
+                company: "Acme",
+                title: "Engineer",
+                dates: "2020",
+              },
+              content: [
+                {
+                  type: "bulletList",
+                  content: [
+                    {
+                      type: "listItem",
+                      content: [
+                        {
+                          type: "paragraph",
+                          content: [{ type: "text", text: "Built APIs" }],
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+
+    render(
+      <ResumeEditor
+        content={content}
+        templateStyles={template.styles}
+        editable
+        onUpdate={handleUpdate}
+      />
+    );
+
+    const name = await screen.findByText("Jane Doe");
+    name.textContent = "Janet Doe";
+    fireEvent.blur(name);
+
+    const sectionTitle = screen.getByText("Experience");
+    sectionTitle.textContent = "Relevant Experience";
+    fireEvent.blur(sectionTitle);
+
+    const entryTitle = screen.getByText("Engineer");
+    entryTitle.textContent = "Staff Engineer";
+    fireEvent.blur(entryTitle);
+
+    await waitFor(() => {
+      expect(handleUpdate).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          content: expect.arrayContaining([
+            expect.objectContaining({
+              type: "contactInfo",
+              attrs: expect.objectContaining({ name: "Janet Doe" }),
+            }),
+            expect.objectContaining({
+              type: "resumeSection",
+              attrs: expect.objectContaining({ title: "Relevant Experience" }),
+              content: expect.arrayContaining([
+                expect.objectContaining({
+                  type: "resumeEntry",
+                  attrs: expect.objectContaining({ title: "Staff Engineer" }),
+                }),
+              ]),
+            }),
+          ]),
+        })
+      );
+    });
+  });
+
+  it("renders contact details without a leading separator when earlier fields are empty", async () => {
+    const template = TEMPLATES.find((item) => item.id === "classic")!;
+    const content: TipTapJSONContent = {
+      type: "doc",
+      content: [
+        {
+          type: "contactInfo",
+          attrs: {
+            name: "Jane Doe",
+            phone: "555-1234",
+          },
+        },
+      ],
+    };
+
+    const { container } = render(
+      <ResumeEditor
+        content={content}
+        templateStyles={template.styles}
+        editable
+      />
+    );
+
+    expect(await screen.findByText("555-1234")).toBeInTheDocument();
+    expect(container.querySelector(".contact")?.textContent).toBe("555-1234");
   });
 });
