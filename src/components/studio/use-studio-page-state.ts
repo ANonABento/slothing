@@ -168,6 +168,10 @@ function areSectionsEqual(
   );
 }
 
+function createEntrySelectionKey(entries: BankEntry[]): string {
+  return entries.map((entry) => entry.id).join("|");
+}
+
 export function isDraftSavedForDocument(
   dirtyDocumentIds: Set<string>,
   documentId: string,
@@ -217,7 +221,7 @@ export function useStudioPageState(): StudioPageState {
   const showErrorToast = useErrorToast();
   const lastPreviewErrorToastRef = useRef("");
   const lastActiveDocumentIdRef = useRef<string | null>(null);
-  const lastCoverLetterEntryKeyRef = useRef("");
+  const lastCoverLetterEntryKeyRef = useRef<string | null>(null);
   const contentRef = useRef<TipTapJSONContent | undefined>(undefined);
 
   const activeDocument = useMemo(
@@ -286,7 +290,7 @@ export function useStudioPageState(): StudioPageState {
     if (lastActiveDocumentIdRef.current !== activeDocument.id) {
       setPreviewVersionId(null);
       lastActiveDocumentIdRef.current = activeDocument.id;
-      lastCoverLetterEntryKeyRef.current = "__active-document-changed__";
+      lastCoverLetterEntryKeyRef.current = null;
       contentRef.current = activeDocument.content;
       setHtml(activeDocument.html ?? "");
       setContent(activeDocument.content);
@@ -368,7 +372,7 @@ export function useStudioPageState(): StudioPageState {
     if (previewVersionId) return;
 
     if (documentMode === "cover_letter") {
-      const entryKey = orderedEntries.map((entry) => entry.id).join("|");
+      const entryKey = createEntrySelectionKey(orderedEntries);
       const currentContent = contentRef.current;
       const shouldCreateDraft =
         !currentContent ||
@@ -564,9 +568,8 @@ export function useStudioPageState(): StudioPageState {
       setContent(nextContent);
       setHtml(nextHtml);
       updateActiveDocument({ content: nextContent, html: nextHtml });
-      lastCoverLetterEntryKeyRef.current = orderedEntries
-        .map((entry) => entry.id)
-        .join("|");
+      lastCoverLetterEntryKeyRef.current =
+        createEntrySelectionKey(orderedEntries);
     },
     [markActiveDocumentDirty, orderedEntries, updateActiveDocument],
   );
