@@ -18,6 +18,25 @@ interface TemplateThumbnailTraits {
   isTwoColumn: boolean;
 }
 
+const HEADER_ALIGNMENT_CLASS_BY_STYLE = {
+  centered: "items-center text-center",
+  left: "items-start",
+  minimal: "items-start",
+} satisfies Record<TemplateStyles["headerStyle"], string>;
+
+const SECTION_RULE_CLASS_BY_DIVIDER = {
+  line: "border-b",
+  space: "pb-1.5",
+  none: "",
+} satisfies Record<TemplateStyles["sectionDivider"], string>;
+
+const BULLET_LABEL_BY_STYLE = {
+  disc: "\u2022",
+  dash: "-",
+  arrow: "\u2192",
+  none: "",
+} satisfies Record<TemplateStyles["bulletStyle"], string>;
+
 const SAMPLE_RESUME = {
   name: "Alex Morgan",
   headline: "Product Leader",
@@ -36,22 +55,9 @@ export function getTemplateThumbnailTraits(
   return {
     accentColor: styles.accentColor,
     fontFamily: styles.fontFamily,
-    headerAlignmentClass:
-      styles.headerStyle === "centered" ? "items-center text-center" : "items-start",
-    sectionRuleClass:
-      styles.sectionDivider === "line"
-        ? "border-b"
-        : styles.sectionDivider === "space"
-        ? "pb-1.5"
-        : "",
-    bulletLabel:
-      styles.bulletStyle === "dash"
-        ? "-"
-        : styles.bulletStyle === "arrow"
-        ? ">"
-        : styles.bulletStyle === "none"
-        ? ""
-        : "•",
+    headerAlignmentClass: HEADER_ALIGNMENT_CLASS_BY_STYLE[styles.headerStyle],
+    sectionRuleClass: SECTION_RULE_CLASS_BY_DIVIDER[styles.sectionDivider],
+    bulletLabel: BULLET_LABEL_BY_STYLE[styles.bulletStyle],
     isTwoColumn: styles.layout === "two-column",
   };
 }
