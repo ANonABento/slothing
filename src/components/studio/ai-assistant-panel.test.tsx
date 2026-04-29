@@ -1,0 +1,170 @@
+import { describe, expect, it, vi } from "vitest";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { AiAssistantPanel } from "./ai-assistant-panel";
+
+function statusResponse(configured: boolean) {
+  return new Response(
+    JSON.stringify({
+      configured,
+      provider: configured ? "openai" : null,
+    }),
+    { status: 200 },
+  );
+}
+
+function renderWithSelectableText(anchorText = "Built APIs quickly.") {
+  const onOpenBank = vi.fn();
+  const view = render(
+    <div>
+      <div data-document-editor-root="true">
+        <p>{anchorText}</p>
+      </div>
+      <AiAssistantPanel
+        documentContent="<p>Built APIs quickly.</p>"
+        selectedEntryCount={1}
+        onOpenBank={onOpenBank}
+      />
+    </div>,
+  );
+
+  return { ...view, onOpenBank };
+}
+
+describe("AiAssistantPanel", () => {
+  it("renders the AI assistant controls", () => {
+    render(
+      <AiAssistantPanel
+        documentContent=""
+        selectedEntryCount={0}
+        onOpenBank={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByLabelText("Job description")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Tailor to JD" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Generate from Bank" }),
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText("Rewrite Section")).toBeInTheDocument();
+  });
+
+  it("shows a setup prompt when LLM providers are not configured", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(statusResponse(false)));
+    renderWithSelectableText();
+
+    fireEvent.click(screen.getByRole("button", { name: "Tailor to JD" }));
+
+    expect(
+      await screen.findByText("Set up an LLM provider to use AI tools."),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Open Settings" })).toHaveAttribute(
+      "href",
+      "/settings",
+    );
+  });
+
+  it("shows a loading state while checking setup", async () => {
+    let resolveStatus: (response: Response) => void = () => {};
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(
+        () =>
+          new Promise<Response>((resolve) => {
+            resolveStatus = resolve;
+          }),
+      ),
+    );
+    renderWithSelectableText();
+
+    fireEvent.click(screen.getByRole("button", { name: "Tailor to JD" }));
+
+    expect(
+      screen.getByRole("button", { name: "Tailoring..." }),
+    ).toBeDisabled();
+    resolveStatus(statusResponse(false));
+
+    expect(
+      await screen.findByText("Set up an LLM provider to use AI tools."),
+    ).toBeInTheDocument();
+  });
+
+  it("shows contextual quick actions for selected document text", async () => {
+    const { container } = renderWithSelectableText();
+    const paragraph = container.querySelector("p");
+    const textNode = paragraph?.firstChild;
+    vi.spyOn(window, "getSelection").mockReturnValue({
+      toString: () => "Built APIs quickly.",
+      anchorNode: textNode,
+    } as Selection);
+
+    fireEvent(document, new Event("selectionchange"));
+
+    expect(
+      await screen.findByRole("region", {
+        name: "Selected text quick actions",
+      }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Rewrite" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Make concise" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Add metrics" }),
+    ).toBeInTheDocument();
+  });
+
+  it("sends selected text rewrites to the assistant endpoint", async () => {
+    const assistantRequests: unknown[] = [];
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string, init?: RequestInit) => {
+        if (url === "/api/settings/status") return statusResponse(true);
+        if (url === "/api/documents/assistant") {
+          assistantRequests.push(JSON.parse(String(init?.body)));
+          return new Response(
+            JSON.stringify({
+              success: true,
+              content: "Built reliable APIs quickly.",
+            }),
+            { status: 200 },
+          );
+        }
+        return new Response("Not found", { status: 404 });
+      }),
+    );
+    const { container } = renderWithSelectableText();
+    const textNode = container.querySelector("p")?.firstChild;
+    vi.spyOn(window, "getSelection").mockReturnValue({
+      toString: () => "Built APIs quickly.",
+      anchorNode: textNode,
+    } as Selection);
+
+    fireEvent(document, new Event("selectionchange"));
+    fireEvent.click(await screen.findByRole("button", { name: "Rewrite" }));
+
+    await waitFor(() =>
+      expect(assistantRequests).toEqual([
+        {
+          action: "rewrite",
+          selectedText: "Built APIs quickly.",
+          documentContent: "<p>Built APIs quickly.</p>",
+        },
+      ]),
+    );
+    expect(screen.getByText("Built reliable APIs quickly.")).toBeInTheDocument();
+  });
+
+  it("opens the bank picker from the generate action after setup passes", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(statusResponse(true)));
+    const { onOpenBank } = renderWithSelectableText();
+
+    fireEvent.click(screen.getByRole("button", { name: "Generate from Bank" }));
+
+    await waitFor(() => expect(onOpenBank).toHaveBeenCalledTimes(1));
+    expect(
+      screen.getByText("Bank entries are ready for the next generation step."),
+    ).toBeInTheDocument();
+  });
+});
