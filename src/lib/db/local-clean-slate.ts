@@ -90,7 +90,7 @@ export function runLocalDevCleanSlateMigration(db: CleanSlateDatabase): void {
   db.transaction(() => {
     for (const statement of buildLocalDevCleanSlateStatements()) {
       if (statement.requiredTable && !tableExists(db, statement.requiredTable)) continue;
-      db.prepare(statement.sql).run(...statement.params);
+      runCleanSlateStatement(db, statement);
     }
 
     db.prepare(
@@ -114,4 +114,25 @@ function tableExists(db: CleanSlateDatabase, tableName: string): boolean {
     .get(tableName);
 
   return Boolean(row);
+}
+
+function runCleanSlateStatement(
+  db: CleanSlateDatabase,
+  statement: SqlStatement
+): void {
+  try {
+    db.prepare(statement.sql).run(...statement.params);
+  } catch (error) {
+    if (statement.requiredTable && isUnavailableVirtualTableError(error)) return;
+    throw error;
+  }
+}
+
+function isUnavailableVirtualTableError(error: unknown): boolean {
+  return (
+    error instanceof Error &&
+    "code" in error &&
+    error.code === "SQLITE_ERROR" &&
+    error.message.includes("no such module:")
+  );
 }
