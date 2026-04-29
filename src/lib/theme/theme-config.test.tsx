@@ -18,21 +18,56 @@ function resetRootThemeState() {
 }
 
 function mockSystemTheme(matchesDark: boolean) {
-  vi.mocked(window.matchMedia).mockImplementation((query) => ({
+  let mediaChangeHandler: ((event: MediaQueryListEvent) => void) | undefined;
+  const mediaQuery = {
     matches: matchesDark,
-    media: query,
+    media: "(prefers-color-scheme: dark)",
     onchange: null,
     addListener: vi.fn(),
     removeListener: vi.fn(),
-    addEventListener: vi.fn(),
+    addEventListener: vi.fn((event, handler) => {
+      if (event === "change") {
+        mediaChangeHandler = handler;
+      }
+    }),
     removeEventListener: vi.fn(),
     dispatchEvent: vi.fn(),
-  }));
+  } as unknown as MediaQueryList;
+  const addEventListener = vi.fn((event, handler) => {
+    if (event === "change") {
+      mediaChangeHandler = handler;
+    }
+  });
+  const removeEventListener = vi.fn();
+
+  Object.defineProperty(mediaQuery, "addEventListener", { value: addEventListener });
+  Object.defineProperty(mediaQuery, "removeEventListener", {
+    value: removeEventListener,
+  });
+  vi.mocked(window.matchMedia).mockReturnValue(mediaQuery);
+
+  return {
+    addEventListener,
+    removeEventListener,
+    dispatchChange(matches: boolean) {
+      Object.defineProperty(mediaQuery, "matches", {
+        configurable: true,
+        value: matches,
+      });
+      mediaChangeHandler?.({ matches } as MediaQueryListEvent);
+    },
+  };
 }
 
 function ThemeProbe() {
-  const { theme, resolvedTheme, themePreset, setThemePreset, availableThemePresets } =
-    useTheme();
+  const {
+    theme,
+    resolvedTheme,
+    themePreset,
+    setTheme,
+    setThemePreset,
+    availableThemePresets,
+  } = useTheme();
 
   return (
     <div>
@@ -42,6 +77,9 @@ function ThemeProbe() {
       <span data-testid="preset-count">{availableThemePresets.length}</span>
       <button type="button" onClick={() => setThemePreset("bold")}>
         Use bold
+      </button>
+      <button type="button" onClick={() => setTheme("system")}>
+        Use system
       </button>
     </div>
   );
@@ -102,6 +140,54 @@ describe("theme config", () => {
     expect(screen.getByTestId("preset-count")).toHaveTextContent(
       String(themePresetNames.length)
     );
+  });
+
+  it("ignores invalid stored values and applies the default theme preset", async () => {
+    vi.mocked(window.localStorage.getItem).mockImplementation((key) => {
+      if (key === THEME_STORAGE_KEY) return "sepia";
+      if (key === THEME_PRESET_STORAGE_KEY) return "neon";
+      return null;
+    });
+
+    render(
+      <ThemeProvider>
+        <ThemeProbe />
+      </ThemeProvider>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId("theme")).toHaveTextContent("system");
+      expect(screen.getByTestId("resolved-theme")).toHaveTextContent("light");
+      expect(screen.getByTestId("theme-preset")).toHaveTextContent("default");
+    });
+
+    expect(document.documentElement.dataset.themePreset).toBe("default");
+    expect(document.documentElement).not.toHaveClass("dark");
+  });
+
+  it("updates the resolved theme when the system preference changes", async () => {
+    const media = mockSystemTheme(false);
+
+    render(
+      <ThemeProvider>
+        <ThemeProbe />
+      </ThemeProvider>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId("resolved-theme")).toHaveTextContent("light");
+    });
+
+    await act(async () => {
+      media.dispatchChange(true);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("resolved-theme")).toHaveTextContent("dark");
+    });
+
+    expect(document.documentElement).toHaveClass("dark");
+    expect(document.documentElement.dataset.themeMode).toBe("dark");
   });
 
   it("persists and applies preset changes from the provider", async () => {
