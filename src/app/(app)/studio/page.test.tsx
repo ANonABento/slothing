@@ -183,6 +183,18 @@ describe("StudioPage", () => {
     expect(screen.queryByRole("button", { name: /tailored/i })).not.toBeInTheDocument();
   });
 
+  it("rounds the active document mode tab", async () => {
+    render(<StudioPage />);
+
+    await screen.findByText("Document Studio");
+
+    const activeResumeTab = screen
+      .getAllByRole("button", { name: "Resume" })
+      .find((button) => button.className.includes("bg-primary"));
+
+    expect(activeResumeTab).toHaveClass("rounded-md");
+  });
+
   it("shows the draft as saved on fresh load", async () => {
     render(<StudioPage />);
 
