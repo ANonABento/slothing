@@ -207,17 +207,29 @@ export function applyThemePreference(root: HTMLElement, preference: ThemePrefere
   }
 }
 
-export function saveThemePreference(preference: ThemePreference, storage: Storage = localStorage): void {
-  storage.setItem(THEME_PRESET_STORAGE_KEY, preference.presetId);
-  storage.setItem(CUSTOM_THEME_STORAGE_KEY, JSON.stringify(preference.customColors));
+export function saveThemePreference(preference: ThemePreference, storage = getThemeStorage()): void {
+  if (!storage) return;
+
+  try {
+    storage.setItem(THEME_PRESET_STORAGE_KEY, preference.presetId);
+    storage.setItem(CUSTOM_THEME_STORAGE_KEY, JSON.stringify(preference.customColors));
+  } catch {
+    // Keep the applied in-memory theme when localStorage is blocked or full.
+  }
 }
 
-export function readThemePreference(storage: Storage = localStorage): ThemePreference {
-  const storedPreset = storage.getItem(THEME_PRESET_STORAGE_KEY);
-  return {
-    presetId: isThemePresetId(storedPreset) ? storedPreset : "default",
-    customColors: readCustomColors(storage),
-  };
+export function readThemePreference(storage = getThemeStorage()): ThemePreference {
+  if (!storage) return createDefaultThemePreference();
+
+  try {
+    const storedPreset = storage.getItem(THEME_PRESET_STORAGE_KEY);
+    return {
+      presetId: isThemePresetId(storedPreset) ? storedPreset : "default",
+      customColors: readCustomColors(storage),
+    };
+  } catch {
+    return createDefaultThemePreference();
+  }
 }
 
 export function notifyThemePreferenceChanged(): void {
@@ -228,6 +240,23 @@ function clearThemeVariables(root: HTMLElement): void {
   for (const variable of CONTROLLED_VARIABLES) {
     root.style.removeProperty(variable);
   }
+}
+
+function getThemeStorage(): Storage | undefined {
+  if (typeof window === "undefined") return undefined;
+
+  try {
+    return window.localStorage;
+  } catch {
+    return undefined;
+  }
+}
+
+function createDefaultThemePreference(): ThemePreference {
+  return {
+    presetId: "default",
+    customColors: DEFAULT_CUSTOM_THEME,
+  };
 }
 
 function readCustomColors(storage: Storage): ThemeColors {

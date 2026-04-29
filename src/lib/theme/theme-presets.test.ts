@@ -108,6 +108,43 @@ describe("theme presets", () => {
     expect(readThemePreference(storage)).toEqual(preference);
   });
 
+  it("falls back to defaults when reading storage throws", () => {
+    const storage = createStorage();
+    vi.mocked(storage.getItem).mockImplementation(() => {
+      throw new Error("Storage unavailable");
+    });
+
+    expect(readThemePreference(storage)).toEqual({
+      presetId: "default",
+      customColors: {
+        primary: "196 78% 42%",
+        background: "210 30% 98%",
+        card: "0 0% 100%",
+      },
+    });
+  });
+
+  it("does not throw when saving storage fails", () => {
+    const storage = createStorage();
+    vi.mocked(storage.setItem).mockImplementation(() => {
+      throw new Error("Storage full");
+    });
+
+    expect(() =>
+      saveThemePreference(
+        {
+          presetId: "ocean",
+          customColors: {
+            primary: "196 78% 42%",
+            background: "210 30% 98%",
+            card: "0 0% 100%",
+          },
+        },
+        storage,
+      ),
+    ).not.toThrow();
+  });
+
   it("falls back to defaults when stored values are invalid", () => {
     const storage = createStorage({
       [THEME_PRESET_STORAGE_KEY]: "bad-preset",

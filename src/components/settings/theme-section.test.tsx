@@ -4,8 +4,9 @@ import { ThemeSection } from "./theme-section";
 
 describe("ThemeSection", () => {
   beforeEach(() => {
+    vi.mocked(window.localStorage.getItem).mockReset();
+    vi.mocked(window.localStorage.setItem).mockReset();
     vi.mocked(window.localStorage.getItem).mockReturnValue(null);
-    vi.mocked(window.localStorage.setItem).mockClear();
     document.documentElement.removeAttribute("style");
   });
 
@@ -36,5 +37,16 @@ describe("ThemeSection", () => {
 
     expect(document.documentElement.style.getPropertyValue("--primary")).toBe("142 71% 45%");
     expect(window.localStorage.setItem).toHaveBeenCalledWith("get_me_job_theme_preset", "custom");
+  });
+
+  it("still applies a preset when localStorage cannot persist it", () => {
+    vi.mocked(window.localStorage.setItem).mockImplementation(() => {
+      throw new Error("Storage unavailable");
+    });
+
+    render(<ThemeSection />);
+
+    expect(() => fireEvent.click(screen.getByRole("button", { name: /forest/i }))).not.toThrow();
+    expect(document.documentElement.style.getPropertyValue("--primary")).toBe("145 55% 34%");
   });
 });
