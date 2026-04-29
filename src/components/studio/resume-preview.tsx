@@ -101,6 +101,7 @@ export function ResumePreview({
   const scale = fitScale * (zoomPercent / 100);
   const emptyStateContent = getPreviewEmptyStateContent(documentMode);
   const EmptyStateIcon = documentMode === "cover_letter" ? PenLine : FileText;
+  const isCoverLetter = documentMode === "cover_letter";
 
   return (
     <div ref={wrapperRef} className="h-full overflow-auto bg-muted/30 p-4">
@@ -116,7 +117,7 @@ export function ResumePreview({
           style={{
             width: `${PAGE_WIDTH_PX}px`,
             fontFamily,
-            borderTop: `4px solid ${accentColor}`,
+            borderTop: isCoverLetter ? undefined : `4px solid ${accentColor}`,
             transformOrigin: "top left",
             transform: `scale(${scale})`,
           }}
@@ -145,7 +146,7 @@ export function ResumePreview({
             </>
           ) : html ? (
             <div
-              className="px-14 py-12"
+              className={isCoverLetter ? undefined : "px-14 py-12"}
               dangerouslySetInnerHTML={{ __html: html }}
             />
           ) : (

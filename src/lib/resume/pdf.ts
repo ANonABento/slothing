@@ -66,7 +66,7 @@ export interface CoverLetterHTMLInput {
   date?: string;
 }
 
-function splitCoverLetterParagraphs(content: string): string[] {
+export function splitCoverLetterParagraphs(content: string): string[] {
   return content
     .split(/\n{2,}/)
     .map((paragraph) => paragraph.replace(/\s*\n\s*/g, " ").trim())

@@ -74,6 +74,10 @@ describe("StudioHeader", () => {
     );
     expect(within(picker).getByTestId("template-thumbnail-formal")).toBeInTheDocument();
     expect(within(picker).queryByTestId("template-thumbnail-classic")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /copy cover letter html/i }))
+      .toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /download cover letter pdf/i }))
+      .toBeInTheDocument();
   });
 
   it("selects a template from the thumbnail grid and closes the picker", () => {

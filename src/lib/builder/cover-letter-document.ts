@@ -1,3 +1,5 @@
+import { splitCoverLetterParagraphs } from "@/lib/resume/pdf";
+
 export {
   COVER_LETTER_TEMPLATES,
   getCoverLetterTemplate,
@@ -6,19 +8,15 @@ export type {
   CoverLetterTemplate,
   CoverLetterTemplateStyles,
 } from "@/lib/resume/template-data";
-export { generateCoverLetterHTML } from "@/lib/resume/pdf";
+export {
+  generateCoverLetterHTML,
+  splitCoverLetterParagraphs,
+} from "@/lib/resume/pdf";
 
 export interface CoverLetterDocument {
   opening: string;
   body: string;
   closing: string;
-}
-
-export function splitCoverLetterParagraphs(content: string): string[] {
-  return content
-    .split(/\n{2,}/)
-    .map((paragraph) => paragraph.replace(/\s*\n\s*/g, " ").trim())
-    .filter(Boolean);
 }
 
 export function createBlankCoverLetterDocument(): CoverLetterDocument {

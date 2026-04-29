@@ -57,6 +57,8 @@ export function StudioHeader({
   );
   const templateLabel =
     documentMode === "cover_letter" ? "cover letter" : "resume";
+  const documentLabel =
+    documentMode === "cover_letter" ? "cover letter" : "resume";
   const templateListLabel =
     documentMode === "cover_letter"
       ? "Cover letter templates"
@@ -177,7 +179,7 @@ export function StudioHeader({
 
       <div className="flex items-center gap-2">
         <Button
-          aria-label="Copy resume HTML"
+          aria-label={`Copy ${documentLabel} HTML`}
           variant="outline"
           size="sm"
           onClick={onCopyHtml}
@@ -187,7 +189,7 @@ export function StudioHeader({
           <span className="hidden md:inline">Copy HTML</span>
         </Button>
         <Button
-          aria-label="Download resume PDF"
+          aria-label={`Download ${documentLabel} PDF`}
           size="sm"
           onClick={onDownloadPdf}
           disabled={!canDownloadPdf || isExporting}

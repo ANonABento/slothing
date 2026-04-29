@@ -4,6 +4,7 @@ import {
   type SectionState,
 } from "@/lib/builder/section-manager";
 import type { TipTapJSONContent } from "@/lib/editor/types";
+import { getDefaultTemplateIdForDocumentMode } from "@/lib/resume/template-data";
 
 export const AUTO_SAVE_INTERVAL_MS = 30_000;
 export const MAX_BUILDER_VERSIONS = 20;
@@ -42,10 +43,6 @@ function isBankCategory(value: unknown): value is BankCategory {
 
 function isBuilderDocumentMode(value: unknown): value is BuilderDocumentMode {
   return value === "resume" || value === "cover_letter";
-}
-
-function getDefaultTemplateId(documentMode: BuilderDocumentMode): string {
-  return documentMode === "cover_letter" ? "formal" : "classic";
 }
 
 function getVersionTimestamp(version: Pick<BuilderVersion, "savedAt">): number {
@@ -120,7 +117,7 @@ export function parseBuilderDraftState(value: unknown): BuilderDraftState | null
     templateId:
       typeof value.templateId === "string"
         ? value.templateId
-        : getDefaultTemplateId(value.documentMode),
+        : getDefaultTemplateIdForDocumentMode(value.documentMode),
     html: typeof value.html === "string" ? value.html : "",
     content: normalizeTipTapContent(value.content),
   });
