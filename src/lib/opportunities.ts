@@ -1,4 +1,4 @@
-import { getJob, getJobs, updateJob } from "@/lib/db/jobs";
+import { getJob, getJobs, updateJob, updateJobStatus } from "@/lib/db/jobs";
 import type { JobDescription, Opportunity, OpportunityStatus } from "@/types";
 
 export interface OpportunityLinkInput {
@@ -21,12 +21,14 @@ const JOB_STATUS_TO_OPPORTUNITY_STATUS: Record<
   NonNullable<JobDescription["status"]>,
   OpportunityStatus
 > = {
+  pending: "pending",
   saved: "saved",
   applied: "applied",
   interviewing: "interviewing",
   offered: "offer",
   rejected: "rejected",
   withdrawn: "dismissed",
+  dismissed: "dismissed",
 };
 
 function normalizeStatus(status: JobDescription["status"]): OpportunityStatus {
@@ -115,5 +117,23 @@ export function linkOpportunityDocument(
     userId,
   );
 
+  return getOpportunity(id, userId);
+}
+
+export function changeOpportunityStatus(
+  id: string,
+  status: string,
+  userId = "default",
+): Opportunity | null {
+  const existing = getJob(id, userId);
+  if (!existing) return null;
+
+  // Map opportunity status back to job status
+  const statusMap: Record<string, string> = {
+    offer: "offered",
+    dismissed: "withdrawn",
+  };
+  const jobStatus = (statusMap[status] || status) as import("@/types").JobStatus;
+  updateJobStatus(id, jobStatus, undefined, userId);
   return getOpportunity(id, userId);
 }

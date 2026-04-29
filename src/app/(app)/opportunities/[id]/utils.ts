@@ -64,12 +64,14 @@ export interface OpportunityFieldSection {
 }
 
 const OPPORTUNITY_STATUS_LABELS = {
+  pending: "Pending",
   saved: "Saved",
   applied: "Applied",
   interviewing: "Interviewing",
   offered: "Offered",
   rejected: "Rejected",
   withdrawn: "Withdrawn",
+  dismissed: "Dismissed",
 } satisfies Record<JobStatus, string>;
 
 const OPPORTUNITY_TYPE_LABELS = {

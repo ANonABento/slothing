@@ -257,7 +257,7 @@ export default function JobsPage() {
                     atsResult={atsResults[job.id]} atsAnalyzing={atsAnalyzing === job.id}
                     onSelectTemplate={(id) => setSelectedTemplate((prev) => ({ ...prev, [job.id]: id }))}
                     onAnalyze={() => void analyzeJob(job.id)} onGenerate={() => void generateResume(job.id)} onDelete={() => void deleteJob(job.id)}
-                    onStatusChange={(status) => void updateJobStatus(job.id, status)}
+                    onStatusChange={(status) => void updateJobStatus(job.id, status as JobStatus)}
                     onToggleExpand={() => setExpandedDescription((prev) => (prev === job.id ? null : job.id))}
                     onAtsCheck={() => void runAtsCheck(job.id)} onAtsDialogOpen={() => setAtsDialogJob(job.id)} onCoverLetter={() => setCoverLetterJob(job)}
                   />

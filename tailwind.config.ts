@@ -76,8 +76,6 @@ const config: Config = {
         md: "var(--shadow-md)",
         lg: "var(--shadow-lg)",
         xl: "var(--shadow-xl)",
-        card: "var(--shadow-card)",
-        elevated: "var(--shadow-elevated)",
         glow: "0 0 20px var(--glow-color)",
       },
       borderWidth: {

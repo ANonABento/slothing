@@ -12,6 +12,7 @@ export type ThemeColorKey = "primary" | "background" | "accent";
 export type ThemeColorOverrides = Partial<Record<ThemeColorKey, string>>;
 
 export const THEME_STORAGE_KEY = "theme";
+export const THEME_DARK_STORAGE_KEY = "theme-dark";
 export const THEME_PRESET_STORAGE_KEY = "theme-preset";
 export const THEME_CUSTOM_COLORS_STORAGE_KEY = "theme-custom-colors";
 export const DEFAULT_THEME_MODE: ThemeMode = "system";

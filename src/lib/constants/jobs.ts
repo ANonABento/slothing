@@ -9,9 +9,21 @@ export const JOB_STATUSES = [
   "offered",
   "rejected",
   "withdrawn",
+  "dismissed",
 ] as const;
 
 export type JobStatus = (typeof JOB_STATUSES)[number];
+
+export const JOB_STATUS_LABELS: Record<JobStatus, string> = {
+  pending: "Pending",
+  saved: "Saved",
+  applied: "Applied",
+  interviewing: "Interviewing",
+  offered: "Offered",
+  rejected: "Rejected",
+  withdrawn: "Withdrawn",
+  dismissed: "Dismissed",
+};
 
 export const jobStatusSchema = z.enum(JOB_STATUSES);
 
@@ -55,6 +67,13 @@ export const JOB_TYPES = [
 
 export type JobType = (typeof JOB_TYPES)[number];
 
+export const JOB_TYPE_LABELS: Record<JobType, string> = {
+  "full-time": "Full-time",
+  "part-time": "Part-time",
+  contract: "Contract",
+  internship: "Internship",
+};
+
 export const jobTypeSchema = z.enum(JOB_TYPES);
 
 // API validation schemas
@@ -97,6 +116,7 @@ export const importJobSchema = z.object({
   keywords: z.array(z.string()).optional(),
   url: z.string().url().optional().or(z.literal("")),
   status: jobStatusSchema.optional(),
+  deadline: z.string().optional(),
   notes: z.string().max(5000).optional(),
 });
 

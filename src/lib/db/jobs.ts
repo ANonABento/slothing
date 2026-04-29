@@ -168,3 +168,8 @@ export function updateJobStatus(
 export function deleteJob(id: string, userId: string = "default"): void {
   db.prepare("DELETE FROM jobs WHERE id = ? AND user_id = ?").run(id, userId);
 }
+
+export function countJobsByStatus(status: string, userId: string = "default"): number {
+  const result = db.prepare("SELECT COUNT(*) as count FROM jobs WHERE status = ? AND user_id = ?").get(status, userId) as { count: number } | undefined;
+  return result?.count ?? 0;
+}

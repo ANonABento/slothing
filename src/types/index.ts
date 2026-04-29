@@ -114,7 +114,9 @@ export interface Document {
 }
 
 // Job application types
-export type JobStatus = 'pending' | 'saved' | 'applied' | 'interviewing' | 'offered' | 'rejected' | 'withdrawn';
+export type JobStatus = 'pending' | 'saved' | 'applied' | 'interviewing' | 'offered' | 'rejected' | 'withdrawn' | 'dismissed';
+
+export type { Opportunity, OpportunityStatus } from './opportunity';
 
 export interface JobDescription {
   id: string;
@@ -134,6 +136,8 @@ export interface JobDescription {
   deadline?: string;
   notes?: string;
   createdAt: string;
+  linkedResumeId?: string;
+  linkedCoverLetterId?: string;
 }
 
 export interface JobMatch {
@@ -168,6 +172,7 @@ export const BANK_CATEGORIES = [
   'education',
   'achievement',
   'certification',
+  'hackathon',
 ] as const;
 
 export type BankCategory = (typeof BANK_CATEGORIES)[number];
@@ -189,6 +194,7 @@ export interface GroupedBankEntries {
   education: BankEntry[];
   achievement: BankEntry[];
   certification: BankEntry[];
+  hackathon: BankEntry[];
 }
 
 // Email template types
