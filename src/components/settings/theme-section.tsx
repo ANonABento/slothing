@@ -8,7 +8,6 @@ import {
   hexToHslString,
   hslStringToHex,
   type ThemeColorKey,
-  type ThemeColorOverrides,
   type ThemePreset,
 } from "@/lib/theme/theme-config";
 
@@ -90,7 +89,6 @@ export function ThemeSection() {
           <ThemePresetCard
             key={preset.name}
             preset={preset}
-            customColors={customThemeColors}
             selected={themePreset === preset.name}
             onClick={() => setThemePreset(preset.name)}
           />
@@ -140,19 +138,15 @@ export function ThemeSection() {
 
 interface ThemePresetCardProps {
   preset: ThemePreset;
-  customColors: ThemeColorOverrides;
   selected: boolean;
   onClick: () => void;
 }
 
 function ThemePresetCard({
   preset,
-  customColors,
   selected,
   onClick,
 }: ThemePresetCardProps) {
-  const previewColors = getThemePreviewColors(preset.name, customColors);
-
   return (
     <button
       type="button"
@@ -166,11 +160,11 @@ function ThemePresetCard({
       }`}
     >
       <div className="mb-4 flex overflow-hidden rounded-md border">
-        {(Object.keys(previewColors) as ThemeColorKey[]).map((key) => (
+        {(Object.keys(preset.preview) as ThemeColorKey[]).map((key) => (
           <span
             key={key}
             className="h-7 flex-1"
-            style={{ backgroundColor: `hsl(${previewColors[key]})` }}
+            style={{ backgroundColor: `hsl(${preset.preview[key]})` }}
             title={`${preset.label} ${key}`}
             aria-hidden="true"
           />

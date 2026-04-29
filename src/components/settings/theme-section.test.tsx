@@ -92,6 +92,24 @@ describe("ThemeSection", () => {
     );
   });
 
+  it("keeps preset card swatches tied to the preset when custom colors change", async () => {
+    renderThemeSection();
+
+    fireEvent.change(await screen.findByLabelText("Primary color"), {
+      target: { value: "#22c55e" },
+    });
+
+    await waitFor(() => {
+      expect(document.documentElement.style.getPropertyValue("--primary")).toBe(
+        "142 71% 45%"
+      );
+    });
+
+    expect(screen.getByTitle("Ocean primary")).toHaveStyle({
+      backgroundColor: "rgb(14, 153, 180)",
+    });
+  });
+
   it("loads stored theme settings", async () => {
     vi.mocked(window.localStorage.getItem).mockImplementation((key) => {
       if (key === THEME_STORAGE_KEY) return "dark";

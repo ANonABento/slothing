@@ -134,6 +134,16 @@ describe("theme config", () => {
     expect(variables["--ring"]).toBe("142 71% 45%");
   });
 
+  it("keeps readable foreground tokens for custom primary and accent colors", () => {
+    const variables = getThemeVariables("default", "light", {
+      primary: "0 0% 100%",
+      accent: "0 0% 0%",
+    });
+
+    expect(variables["--primary-foreground"]).toBe("258 20% 13%");
+    expect(variables["--accent-foreground"]).toBe("0 0% 100%");
+  });
+
   it("builds preview colors with custom overrides", () => {
     expect(getThemePreviewColors("forest", { accent: "12 86% 55%" })).toEqual({
       primary: "145 55% 34%",

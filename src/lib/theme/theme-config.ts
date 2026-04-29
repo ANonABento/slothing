@@ -710,6 +710,9 @@ function applyCustomThemeColors(
   }
 
   if (validCustomColors.primary) {
+    nextTokens["primary-foreground"] = readableForeground(
+      parseHslString(validCustomColors.primary)
+    );
     nextTokens.ring = validCustomColors.primary;
     nextTokens["gradient-primary"] =
       "linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--accent)) 100%)";
@@ -720,6 +723,9 @@ function applyCustomThemeColors(
   }
 
   if (validCustomColors.accent) {
+    nextTokens["accent-foreground"] = readableForeground(
+      parseHslString(validCustomColors.accent)
+    );
     nextTokens["gradient-primary"] =
       "linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--accent)) 100%)";
     nextTokens["gradient-hero"] =

@@ -44,6 +44,7 @@ interface ThemeContextType {
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+let themeTransitionTimeoutId: number | undefined;
 
 function readStoredValue<T>(
   key: string,
@@ -90,10 +91,21 @@ function persistCustomColors(colors: ThemeColorOverrides): void {
 
 function startThemeTransition(root: HTMLElement): void {
   const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
-  if (motionQuery.matches) return;
+  if (themeTransitionTimeoutId !== undefined) {
+    window.clearTimeout(themeTransitionTimeoutId);
+  }
+
+  if (motionQuery.matches) {
+    root.classList.remove("theme-transitioning");
+    themeTransitionTimeoutId = undefined;
+    return;
+  }
 
   root.classList.add("theme-transitioning");
-  window.setTimeout(() => root.classList.remove("theme-transitioning"), 260);
+  themeTransitionTimeoutId = window.setTimeout(() => {
+    root.classList.remove("theme-transitioning");
+    themeTransitionTimeoutId = undefined;
+  }, 260);
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
