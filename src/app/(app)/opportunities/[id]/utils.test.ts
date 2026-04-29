@@ -77,7 +77,7 @@ describe("opportunity detail utils", () => {
       remote: false,
     });
     expect(buildOpportunityPatch(getOpportunityFieldConfig("salary"), "  ")).toEqual({
-      salary: undefined,
+      salary: "",
     });
   });
 

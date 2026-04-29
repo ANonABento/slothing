@@ -257,6 +257,18 @@ export function buildOpportunityPatch(
     return { remote: Boolean(value) };
   }
 
+  if (
+    field.key === "location" ||
+    field.key === "salary" ||
+    field.key === "url" ||
+    field.key === "deadline" ||
+    field.key === "appliedAt"
+  ) {
+    return {
+      [field.key]: stringValue,
+    } as Partial<JobDescription>;
+  }
+
   return {
     [field.key]: stringValue || undefined,
   } as Partial<JobDescription>;

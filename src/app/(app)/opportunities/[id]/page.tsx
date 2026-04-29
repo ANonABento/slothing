@@ -96,6 +96,7 @@ export default function OpportunityDetailPage({
   const [notes, setNotes] = useState("");
   const [notesSaveState, setNotesSaveState] = useState<NotesSaveState>("idle");
   const lastSavedNotesRef = useRef("");
+  const patchQueueRef = useRef<Promise<void>>(Promise.resolve());
   const showErrorToast = useErrorToast();
 
   const fetchOpportunity = useCallback(async () => {
@@ -153,21 +154,32 @@ export default function OpportunityDetailPage({
 
   const patchOpportunity = useCallback(
     async (patch: Partial<JobDescription>) => {
-      const response = await fetch(`/api/jobs/${params.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(patch),
-      });
-      const data = await readJsonResponse<OpportunityResponse>(
-        response,
-        "Failed to update opportunity"
+      const queuedPatch = patchQueueRef.current
+        .catch(() => undefined)
+        .then(async () => {
+          const response = await fetch(`/api/jobs/${params.id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(patch),
+          });
+          const data = await readJsonResponse<OpportunityResponse>(
+            response,
+            "Failed to update opportunity"
+          );
+
+          setOpportunity((current) =>
+            data.job ?? (current ? { ...current, ...patch } : current)
+          );
+
+          return data.job;
+        });
+
+      patchQueueRef.current = queuedPatch.then(
+        () => undefined,
+        () => undefined
       );
 
-      setOpportunity((current) =>
-        data.job ?? (current ? { ...current, ...patch } : current)
-      );
-
-      return data.job;
+      return queuedPatch;
     },
     [params.id]
   );

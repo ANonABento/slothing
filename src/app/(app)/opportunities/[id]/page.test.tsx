@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import OpportunityDetailPage from "./page";
 import type { JobDescription } from "@/types";
@@ -89,6 +89,10 @@ describe("OpportunityDetailPage", () => {
     vi.stubGlobal("open", vi.fn());
   });
 
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it("renders opportunity details, actions, linked documents, and notes", async () => {
     mockOpportunityFetch();
 
@@ -131,6 +135,55 @@ describe("OpportunityDetailPage", () => {
       ).toBe(true)
     );
     expect(await screen.findByText("Globex · Remote")).toBeInTheDocument();
+  });
+
+  it("clears optional inline fields through the job API", async () => {
+    const fetchMock = mockOpportunityFetch();
+
+    render(<OpportunityDetailPage params={{ id: "job-1" }} />);
+
+    await screen.findByRole("heading", { name: "Frontend Engineer" });
+    fireEvent.click(screen.getByRole("button", { name: "Edit Salary" }));
+    fireEvent.change(screen.getByDisplayValue("$120k"), {
+      target: { value: "" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+
+    await waitFor(() =>
+      expect(
+        fetchMock.mock.calls.some(
+          ([url, init]) =>
+            url === "/api/jobs/job-1" &&
+            init?.method === "PATCH" &&
+            init.body === JSON.stringify({ salary: "" })
+        )
+      ).toBe(true)
+    );
+  });
+
+  it("auto-saves notes after edits", async () => {
+    const fetchMock = mockOpportunityFetch();
+
+    render(<OpportunityDetailPage params={{ id: "job-1" }} />);
+
+    await screen.findByRole("heading", { name: "Frontend Engineer" });
+    fireEvent.change(
+      screen.getByPlaceholderText("Add private notes about this opportunity."),
+      {
+        target: { value: "Follow up next week" },
+      }
+    );
+
+    await waitFor(() =>
+      expect(
+        fetchMock.mock.calls.some(
+          ([url, init]) =>
+            url === "/api/jobs/job-1" &&
+            init?.method === "PATCH" &&
+            init.body === JSON.stringify({ notes: "Follow up next week" })
+        )
+      ).toBe(true)
+    );
   });
 
   it("marks the opportunity applied and opens the source URL", async () => {
