@@ -40,11 +40,28 @@ describe("import job api helpers", () => {
   });
 
   it("fetches a job preview from a URL", async () => {
-    vi.mocked(fetch).mockResolvedValueOnce(jsonResponse({ preview }));
+    vi.mocked(fetch).mockResolvedValueOnce(jsonResponse({
+      opportunity: {
+        title: preview.title,
+        company: preview.company,
+        location: preview.location,
+        type: preview.type,
+        remote: preview.remote,
+        salary: preview.salary,
+        description: preview.fullDescription,
+        requirements: preview.requirements,
+        keywords: preview.keywords,
+        url: preview.url,
+        source: preview.source,
+      },
+    }));
 
-    await expect(fetchJobFromUrl("https://example.com/job")).resolves.toEqual(preview);
+    await expect(fetchJobFromUrl("https://example.com/job")).resolves.toEqual({
+      ...preview,
+      description: preview.fullDescription,
+    });
 
-    expect(fetch).toHaveBeenCalledWith("/api/import/job", {
+    expect(fetch).toHaveBeenCalledWith("/api/opportunities/scrape", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ url: "https://example.com/job" }),

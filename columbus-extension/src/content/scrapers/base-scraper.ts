@@ -1,6 +1,6 @@
 // Base scraper interface and utilities
 
-import type { ScrapedJob } from '@/shared/types';
+import type { ScrapedJob } from '../../shared/types';
 
 export abstract class BaseScraper {
   abstract readonly source: string;
