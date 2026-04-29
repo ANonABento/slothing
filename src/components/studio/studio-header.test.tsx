@@ -40,6 +40,33 @@ describe("StudioHeader", () => {
     expect(screen.getByTestId("template-thumbnail-classic")).toBeInTheDocument();
   });
 
+  it("uses the design-system radius on each active document mode tab", () => {
+    const { rerender } = renderStudioHeader();
+
+    expect(screen.getByRole("button", { name: "Resume" })).toHaveClass(
+      "rounded-md"
+    );
+
+    rerender(
+      <StudioHeader
+        documentMode="cover_letter"
+        draftIsSaved
+        templateId="classic"
+        canCopyHtml
+        canDownloadPdf
+        isExporting={false}
+        onDocumentModeChange={vi.fn()}
+        onTemplateSelect={vi.fn()}
+        onCopyHtml={vi.fn()}
+        onDownloadPdf={vi.fn()}
+      />
+    );
+
+    expect(screen.getByRole("button", { name: "Cover Letter" })).toHaveClass(
+      "rounded-md"
+    );
+  });
+
   it("opens a grid picker with thumbnails for every template", () => {
     renderStudioHeader();
 
