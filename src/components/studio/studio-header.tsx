@@ -10,9 +10,13 @@ import {
   Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { getTemplate, TEMPLATES } from "@/lib/resume/template-data";
+import {
+  getTemplateForDocumentMode,
+  getTemplatesForDocumentMode,
+} from "@/lib/resume/template-data";
 import { cn } from "@/lib/utils";
 import {
+  DOCUMENT_MODE_LABELS,
   DOCUMENT_MODE_OPTIONS,
   type DocumentMode,
 } from "./studio-documents";
@@ -44,10 +48,17 @@ export function StudioHeader({
   onDownloadPdf,
 }: StudioHeaderProps) {
   const [templateOpen, setTemplateOpen] = useState(false);
-  const selectedTemplate = useMemo(
-    () => getTemplate(templateId),
-    [templateId]
+  const templates = useMemo(
+    () => getTemplatesForDocumentMode(documentMode),
+    [documentMode]
   );
+  const selectedTemplate = useMemo(
+    () => getTemplateForDocumentMode(documentMode, templateId),
+    [documentMode, templateId]
+  );
+  const modeLabel = DOCUMENT_MODE_LABELS[documentMode];
+  const documentLabel = modeLabel.toLowerCase();
+  const templateListLabel = `${modeLabel} templates`;
 
   useEffect(() => {
     if (!templateOpen) return;
@@ -89,7 +100,7 @@ export function StudioHeader({
         <div className="relative md:ml-4">
           <button
             type="button"
-            aria-label="Select resume template"
+            aria-label={`Select ${documentLabel} template`}
             aria-expanded={templateOpen}
             aria-haspopup="listbox"
             onClick={() => setTemplateOpen((prev) => !prev)}
@@ -111,10 +122,10 @@ export function StudioHeader({
               />
               <div
                 role="listbox"
-                aria-label="Resume templates"
+                aria-label={templateListLabel}
                 className="absolute left-0 top-full z-50 mt-2 grid max-h-[70vh] w-[min(26rem,calc(100vw-2rem))] grid-cols-2 gap-2 overflow-auto rounded-lg border bg-popover p-2 shadow-lg sm:grid-cols-3"
               >
-                {TEMPLATES.map((template) => {
+                {templates.map((template) => {
                   const isSelected = template.id === selectedTemplate.id;
                   return (
                     <button
@@ -135,7 +146,9 @@ export function StudioHeader({
                     >
                       <TemplatePreviewThumbnail template={template} />
                       <span className="mt-2 flex items-center gap-1.5 font-medium">
-                        <span className="min-w-0 flex-1 truncate">{template.name}</span>
+                        <span className="min-w-0 flex-1 truncate">
+                          {template.name}
+                        </span>
                         {isSelected && (
                           <Check className="h-3.5 w-3.5 shrink-0 text-primary" />
                         )}
@@ -162,7 +175,7 @@ export function StudioHeader({
 
       <div className="flex items-center gap-2">
         <Button
-          aria-label="Copy resume HTML"
+          aria-label={`Copy ${documentLabel} HTML`}
           variant="outline"
           size="sm"
           onClick={onCopyHtml}
@@ -172,7 +185,7 @@ export function StudioHeader({
           <span className="hidden md:inline">Copy HTML</span>
         </Button>
         <Button
-          aria-label="Download resume PDF"
+          aria-label={`Download ${documentLabel} PDF`}
           size="sm"
           onClick={onDownloadPdf}
           disabled={!canDownloadPdf || isExporting}
