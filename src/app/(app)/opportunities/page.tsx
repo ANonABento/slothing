@@ -1,8 +1,9 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import type { FormEvent, ReactNode } from "react";
+import type { DragEvent, FormEvent, ReactNode } from "react";
 import {
   Briefcase,
   CalendarClock,
@@ -97,6 +98,10 @@ interface OpportunitiesResponse {
 }
 
 interface CreateOpportunityResponse {
+  opportunity?: Opportunity;
+}
+
+interface UpdateOpportunityResponse {
   opportunity?: Opportunity;
 }
 
@@ -260,6 +265,64 @@ export default function OpportunitiesPage() {
   function saveOpportunities(nextOpportunities: Opportunity[]) {
     setOpportunities(nextOpportunities);
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(nextOpportunities));
+  }
+
+  async function handleStatusChange(
+    opportunityId: string,
+    status: OpportunityStatus,
+  ) {
+    const previousOpportunity = opportunities.find(
+      (opportunity) => opportunity.id === opportunityId,
+    );
+    const nextOpportunities = opportunities.map((opportunity) =>
+      opportunity.id === opportunityId
+        ? { ...opportunity, status, updatedAt: new Date().toISOString() }
+        : opportunity,
+    );
+
+    saveOpportunities(nextOpportunities);
+
+    try {
+      const response = await fetch(
+        `/api/opportunities/${encodeURIComponent(opportunityId)}/status`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status }),
+        },
+      );
+      const data = await readJsonResponse<UpdateOpportunityResponse>(
+        response,
+        "Failed to update opportunity status",
+      );
+
+      if (data.opportunity) {
+        saveOpportunities(
+          nextOpportunities.map((opportunity) =>
+            opportunity.id === opportunityId ? data.opportunity! : opportunity,
+          ),
+        );
+      }
+    } catch (error) {
+      if (previousOpportunity) {
+        setOpportunities((current) => {
+          const rolledBackOpportunities = current.map((opportunity) =>
+            opportunity.id === opportunityId && opportunity.status === status
+              ? previousOpportunity
+              : opportunity,
+          );
+          window.localStorage.setItem(
+            STORAGE_KEY,
+            JSON.stringify(rolledBackOpportunities),
+          );
+          return rolledBackOpportunities;
+        });
+      }
+      showErrorToast(error, {
+        title: "Could not update opportunity",
+        fallbackDescription: "The status change was not saved.",
+      });
+    }
   }
 
   async function handleAddOpportunity(event: FormEvent<HTMLFormElement>) {
@@ -666,13 +729,21 @@ export default function OpportunitiesPage() {
               </Button>
             </div>
           ) : viewMode === "kanban" ? (
-            <OpportunityKanbanView opportunities={filteredOpportunities} />
+            <OpportunityKanbanView
+              opportunities={filteredOpportunities}
+              onStatusChange={(opportunityId, status) =>
+                void handleStatusChange(opportunityId, status)
+              }
+            />
           ) : (
             <div className="grid gap-4">
               {filteredOpportunities.map((opportunity) => (
                 <OpportunityRow
                   key={opportunity.id}
                   opportunity={opportunity}
+                  onStatusChange={(status) =>
+                    void handleStatusChange(opportunity.id, status)
+                  }
                 />
               ))}
             </div>
@@ -1047,7 +1118,13 @@ export default function OpportunitiesPage() {
   );
 }
 
-function OpportunityRow({ opportunity }: { opportunity: Opportunity }) {
+function OpportunityRow({
+  opportunity,
+  onStatusChange,
+}: {
+  opportunity: Opportunity;
+  onStatusChange: (status: OpportunityStatus) => void;
+}) {
   const isHackathon = opportunity.type === "hackathon";
 
   return (
@@ -1070,9 +1147,11 @@ function OpportunityRow({ opportunity }: { opportunity: Opportunity }) {
           </div>
 
           <div>
-            <h2 className="break-words text-xl font-semibold tracking-normal text-foreground">
-              {opportunity.title}
-            </h2>
+            <Link href={`/opportunities/${opportunity.id}`} className="group">
+              <h2 className="break-words text-xl font-semibold tracking-normal text-foreground group-hover:text-primary">
+                {opportunity.title}
+              </h2>
+            </Link>
             <div className="mt-1 text-sm font-medium text-muted-foreground">
               {opportunity.company}
             </div>
@@ -1111,6 +1190,25 @@ function OpportunityRow({ opportunity }: { opportunity: Opportunity }) {
             icon={DollarSign}
             value={formatOpportunitySalary(opportunity)}
           />
+          <Select
+            value={opportunity.status}
+            onValueChange={(value) =>
+              onStatusChange(value as OpportunityStatus)
+            }
+          >
+            <SelectTrigger
+              aria-label={`Update status for ${opportunity.title}`}
+            >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {OPPORTUNITY_KANBAN_COLUMNS.map((status) => (
+                <SelectItem key={status.value} value={status.value}>
+                  {status.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           {isHackathon && opportunity.teamSize && (
             <Meta
               icon={Trophy}
@@ -1133,13 +1231,44 @@ function OpportunityRow({ opportunity }: { opportunity: Opportunity }) {
 
 function OpportunityKanbanView({
   opportunities,
+  onStatusChange,
 }: {
   opportunities: Opportunity[];
+  onStatusChange: (opportunityId: string, status: OpportunityStatus) => void;
 }) {
   const groupedOpportunities = useMemo(
     () => groupOpportunitiesByStatus(opportunities),
     [opportunities],
   );
+  const [draggedOpportunityId, setDraggedOpportunityId] = useState<
+    string | null
+  >(null);
+
+  function handleDragStart(
+    event: DragEvent<HTMLElement>,
+    opportunityId: string,
+  ) {
+    event.dataTransfer.effectAllowed = "move";
+    event.dataTransfer.setData("text/plain", opportunityId);
+    setDraggedOpportunityId(opportunityId);
+  }
+
+  function handleDrop(
+    event: DragEvent<HTMLElement>,
+    status: OpportunityStatus,
+  ) {
+    event.preventDefault();
+    const opportunityId =
+      event.dataTransfer.getData("text/plain") || draggedOpportunityId;
+    const opportunity = opportunities.find(
+      (candidate) => candidate.id === opportunityId,
+    );
+
+    setDraggedOpportunityId(null);
+
+    if (!opportunity || opportunity.status === status) return;
+    onStatusChange(opportunity.id, status);
+  }
 
   return (
     <div className="overflow-x-auto pb-4">
@@ -1152,6 +1281,11 @@ function OpportunityKanbanView({
               key={column.value}
               aria-label={`${column.label} opportunities`}
               className="flex min-h-[560px] flex-col rounded-lg border bg-card/70 p-3"
+              onDragOver={(event) => {
+                event.preventDefault();
+                event.dataTransfer.dropEffect = "move";
+              }}
+              onDrop={(event) => handleDrop(event, column.value)}
             >
               <div className="mb-3 flex items-center justify-between gap-2">
                 <h2 className="text-sm font-semibold">{column.label}</h2>
@@ -1163,13 +1297,18 @@ function OpportunityKanbanView({
               <div className="flex flex-1 flex-col gap-3">
                 {columnOpportunities.length === 0 ? (
                   <div className="grid min-h-28 place-items-center rounded-lg border border-dashed bg-background/50 px-3 text-center text-sm text-muted-foreground">
-                    No opportunities
+                    Drop opportunities here
                   </div>
                 ) : (
                   columnOpportunities.map((opportunity) => (
                     <OpportunityKanbanCard
                       key={opportunity.id}
                       opportunity={opportunity}
+                      isDragging={draggedOpportunityId === opportunity.id}
+                      onDragStart={(event) =>
+                        handleDragStart(event, opportunity.id)
+                      }
+                      onDragEnd={() => setDraggedOpportunityId(null)}
                     />
                   ))
                 )}
@@ -1182,7 +1321,17 @@ function OpportunityKanbanView({
   );
 }
 
-function OpportunityKanbanCard({ opportunity }: { opportunity: Opportunity }) {
+function OpportunityKanbanCard({
+  opportunity,
+  isDragging,
+  onDragStart,
+  onDragEnd,
+}: {
+  opportunity: Opportunity;
+  isDragging: boolean;
+  onDragStart: (event: DragEvent<HTMLElement>) => void;
+  onDragEnd: () => void;
+}) {
   const details = [
     formatOpportunityLocation(opportunity),
     opportunity.deadline
@@ -1191,12 +1340,22 @@ function OpportunityKanbanCard({ opportunity }: { opportunity: Opportunity }) {
   ].filter(Boolean);
 
   return (
-    <article className="rounded-lg border bg-background p-3 shadow-sm">
+    <article
+      draggable
+      onDragStart={onDragStart}
+      onDragEnd={onDragEnd}
+      className={cn(
+        "cursor-grab rounded-lg border bg-background p-3 shadow-sm transition hover:border-primary/30 hover:shadow-md active:cursor-grabbing",
+        isDragging && "opacity-50",
+      )}
+    >
       <div className="mb-3 flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <h3 className="line-clamp-2 text-sm font-semibold leading-5">
-            {opportunity.title}
-          </h3>
+          <Link href={`/opportunities/${opportunity.id}`} className="group">
+            <h3 className="line-clamp-2 text-sm font-semibold leading-5 group-hover:text-primary">
+              {opportunity.title}
+            </h3>
+          </Link>
           <p className="mt-1 truncate text-sm text-muted-foreground">
             {opportunity.company}
           </p>
