@@ -1,7 +1,11 @@
 import {
   Extension,
   Node,
+  NodeViewContent,
+  NodeViewWrapper,
+  ReactNodeViewRenderer,
   mergeAttributes,
+  type NodeViewProps,
 } from "@tiptap/react";
 import Placeholder from "@tiptap/extension-placeholder";
 import TextAlign from "@tiptap/extension-text-align";
@@ -9,6 +13,7 @@ import Underline from "@tiptap/extension-underline";
 import { TextSelection } from "@tiptap/pm/state";
 import StarterKit from "@tiptap/starter-kit";
 import type { Node as ProseMirrorNode } from "@tiptap/pm/model";
+import { createElement, type KeyboardEvent } from "react";
 
 function getDataAttribute(element: HTMLElement, name: string): string {
   return element.getAttribute(name) || "";
@@ -37,6 +42,161 @@ const CONTACT_INFO_ATTRIBUTES = [
   "linkedin",
   "github",
 ];
+
+const CONTACT_DETAIL_ATTRIBUTES = CONTACT_INFO_ATTRIBUTES.filter(
+  (key) => key !== "name"
+);
+
+function handleEditableAttributeKeyDown(event: KeyboardEvent<HTMLElement>) {
+  if (event.key !== "Enter") return;
+
+  event.preventDefault();
+  event.currentTarget.blur();
+}
+
+function editableAttributeProps(
+  updateAttributes: NodeViewProps["updateAttributes"],
+  attribute: string,
+  className?: string
+) {
+  return {
+    className,
+    contentEditable: true,
+    suppressContentEditableWarning: true,
+    onBlur: (event: { currentTarget: HTMLElement }) => {
+      updateAttributes({
+        [attribute]: event.currentTarget.textContent ?? "",
+      });
+    },
+    onKeyDown: handleEditableAttributeKeyDown,
+  };
+}
+
+function ResumeSectionView({ node, updateAttributes }: NodeViewProps) {
+  const title = String(node.attrs.title || "");
+
+  return createElement(
+    NodeViewWrapper,
+    {
+      as: "section",
+      "data-type": "resume-section",
+      "data-section-title": title,
+      className: "resume-section",
+    },
+    createElement("button", {
+      type: "button",
+      className: "resume-section-drag-handle",
+      contentEditable: false,
+      draggable: true,
+      "data-drag-handle": "",
+      "aria-label": title ? `Drag ${title} section` : "Drag resume section",
+    }),
+    createElement(
+      "h2",
+      editableAttributeProps(
+        updateAttributes,
+        "title",
+        "resume-section-title"
+      ),
+      title
+    ),
+    createElement(NodeViewContent, {
+      as: "div",
+      className: "resume-section-content",
+    })
+  );
+}
+
+function ResumeEntryView({ node, updateAttributes }: NodeViewProps) {
+  const company = String(node.attrs.company || "");
+  const title = String(node.attrs.title || "");
+  const dates = String(node.attrs.dates || "");
+
+  return createElement(
+    NodeViewWrapper,
+    {
+      as: "div",
+      "data-type": "resume-entry",
+      "data-company": company,
+      "data-title": title,
+      "data-dates": dates,
+      className: "experience-item resume-entry",
+    },
+    createElement(
+      "div",
+      { className: "experience-header" },
+      createElement(
+        "div",
+        {},
+        createElement(
+          "h3",
+          editableAttributeProps(updateAttributes, "title"),
+          title
+        ),
+        createElement(
+          "span",
+          editableAttributeProps(updateAttributes, "company", "company"),
+          company
+        )
+      ),
+      createElement(
+        "span",
+        editableAttributeProps(updateAttributes, "dates", "dates"),
+        dates
+      )
+    ),
+    createElement(NodeViewContent, {
+      as: "div",
+      className: "resume-entry-bullets",
+    })
+  );
+}
+
+function ContactInfoView({ node, updateAttributes }: NodeViewProps) {
+  const name = String(node.attrs.name || "");
+  const details = CONTACT_DETAIL_ATTRIBUTES.map((attribute) => ({
+    attribute,
+    value: String(node.attrs[attribute] || ""),
+  })).filter((detail) => detail.value);
+  const detailNodes = details.flatMap(({ attribute, value }, index) => {
+    const field = createElement(
+      "span",
+      {
+        key: attribute,
+        ...editableAttributeProps(updateAttributes, attribute),
+      },
+      value
+    );
+
+    return index === 0
+      ? [field]
+      : [
+          createElement("span", { key: `${attribute}-separator` }, "|"),
+          field,
+        ];
+  });
+
+  return createElement(
+    NodeViewWrapper,
+    {
+      as: "div",
+      "data-type": "contact-info",
+      "data-contact-name": name,
+      "data-contact-email": String(node.attrs.email || ""),
+      "data-contact-phone": String(node.attrs.phone || ""),
+      "data-contact-location": String(node.attrs.location || ""),
+      "data-contact-linkedin": String(node.attrs.linkedin || ""),
+      "data-contact-github": String(node.attrs.github || ""),
+      className: "header",
+    },
+    createElement(
+      "h1",
+      editableAttributeProps(updateAttributes, "name"),
+      name
+    ),
+    createElement("div", { className: "contact" }, ...detailNodes)
+  );
+}
 
 export const ResumeSection = Node.create({
   name: "resumeSection",
@@ -88,6 +248,10 @@ export const ResumeSection = Node.create({
       ["h2", { class: "resume-section-title" }, title],
       ["div", { class: "resume-section-content" }, 0],
     ];
+  },
+
+  addNodeView() {
+    return ReactNodeViewRenderer(ResumeSectionView);
   },
 });
 
@@ -230,6 +394,10 @@ export const ResumeEntry = Node.create({
       ["div", { class: "resume-entry-bullets" }, 0],
     ];
   },
+
+  addNodeView() {
+    return ReactNodeViewRenderer(ResumeEntryView);
+  },
 });
 
 export const ContactInfoNode = Node.create({
@@ -304,6 +472,10 @@ export const ContactInfoNode = Node.create({
         ),
       ],
     ];
+  },
+
+  addNodeView() {
+    return ReactNodeViewRenderer(ContactInfoView);
   },
 });
 
