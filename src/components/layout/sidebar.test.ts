@@ -1,44 +1,17 @@
 import { describe, it, expect } from "vitest";
-import { FEATURES, navigationGroups, bottomNavigation } from "./sidebar";
-
-describe("FEATURES", () => {
-  it("should have jobTracker flag disabled by default", () => {
-    expect(FEATURES.jobTracker).toBe(false);
-  });
-
-  it("should have salary flag disabled by default", () => {
-    expect(FEATURES.salary).toBe(false);
-  });
-
-  it("should have interview flag enabled", () => {
-    expect(FEATURES.interview).toBe(true);
-  });
-
-  it("should have analytics flag enabled", () => {
-    expect(FEATURES.analytics).toBe(true);
-  });
-
-  it("should have all feature flags defined", () => {
-    expect(FEATURES).toHaveProperty("jobTracker");
-    expect(FEATURES).toHaveProperty("interview");
-    expect(FEATURES).toHaveProperty("salary");
-    expect(FEATURES).toHaveProperty("analytics");
-  });
-});
+import { navigationGroups, bottomNavigation } from "./sidebar";
 
 describe("navigationGroups", () => {
-  it("should include Overview, Resume, Interview, and Insights groups", () => {
+  it("should include all sidebar groups", () => {
     const labels = navigationGroups.map((g) => g.label);
-    expect(labels).toContain("Overview");
-    expect(labels).toContain("Resume");
-    expect(labels).toContain("Interview");
-    expect(labels).toContain("Insights");
-  });
-
-  it("should not include Job Tracker or Negotiation groups (flags still off)", () => {
-    const labels = navigationGroups.map((g) => g.label);
-    expect(labels).not.toContain("Job Tracker");
-    expect(labels).not.toContain("Negotiation");
+    expect(labels).toEqual([
+      "Overview",
+      "Resume",
+      "Job Tracker",
+      "Interview",
+      "Negotiation",
+      "Insights",
+    ]);
   });
 
   it("should have Dashboard in Overview group", () => {
@@ -75,6 +48,26 @@ describe("navigationGroups", () => {
     expect(interviewPrep!.icon).toBeDefined();
   });
 
+  it("should have job tracker items in Job Tracker group", () => {
+    const jobTracker = navigationGroups.find((g) => g.label === "Job Tracker");
+    expect(jobTracker).toBeDefined();
+    const items = jobTracker!.items.map((i) => [i.name, i.href]);
+    expect(items).toEqual([
+      ["Jobs", "/jobs"],
+      ["Calendar", "/calendar"],
+      ["Email Templates", "/emails"],
+    ]);
+  });
+
+  it("should have Salary Tools in Negotiation group", () => {
+    const negotiation = navigationGroups.find((g) => g.label === "Negotiation");
+    expect(negotiation).toBeDefined();
+    const salaryTools = negotiation!.items.find((i) => i.name === "Salary Tools");
+    expect(salaryTools).toBeDefined();
+    expect(salaryTools!.href).toBe("/salary");
+    expect(salaryTools!.icon).toBeDefined();
+  });
+
   it("should have Analytics in Insights group", () => {
     const insights = navigationGroups.find((g) => g.label === "Insights");
     expect(insights).toBeDefined();
@@ -89,13 +82,21 @@ describe("navigationGroups", () => {
     const dashboard = allItems.find((i) => i.name === "Dashboard");
     const documents = allItems.find((i) => i.name === "Documents");
     const studio = allItems.find((i) => i.name === "Document Studio");
+    const jobs = allItems.find((i) => i.name === "Jobs");
+    const calendar = allItems.find((i) => i.name === "Calendar");
+    const emailTemplates = allItems.find((i) => i.name === "Email Templates");
     const interviewPrep = allItems.find((i) => i.name === "Interview Prep");
+    const salaryTools = allItems.find((i) => i.name === "Salary Tools");
     const analytics = allItems.find((i) => i.name === "Analytics");
 
     expect(dashboard?.href).toBe("/dashboard");
     expect(documents?.href).toBe("/bank");
     expect(studio?.href).toBe("/studio");
+    expect(jobs?.href).toBe("/jobs");
+    expect(calendar?.href).toBe("/calendar");
+    expect(emailTemplates?.href).toBe("/emails");
     expect(interviewPrep?.href).toBe("/interview");
+    expect(salaryTools?.href).toBe("/salary");
     expect(analytics?.href).toBe("/analytics");
   });
 
