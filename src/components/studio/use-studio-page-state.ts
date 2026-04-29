@@ -1,7 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { TEMPLATES } from "@/lib/resume/template-data";
+import {
+  getDefaultTemplateIdForDocumentMode,
+  getTemplateForDocumentMode,
+} from "@/lib/resume/template-data";
+import type {
+  CoverLetterTemplateStyles,
+  TemplateStyles,
+} from "@/lib/resume/template-data";
 import {
   DEFAULT_BUILDER_PANEL,
   createInitialSections,
@@ -21,6 +28,7 @@ import {
   type BuilderVersion,
 } from "@/lib/builder/version-history";
 import { createDocumentFilename, downloadHtmlAsPdf } from "@/lib/builder/document-export";
+import { generateCoverLetterPreviewFallbackHTML } from "@/lib/builder/cover-letter-preview-fallback";
 import { generateResumePreviewFallbackHTML } from "@/lib/builder/resume-preview-fallback";
 import { tailoredResumeToTipTapDocument } from "@/lib/editor/bank-to-tiptap";
 import { createEditorBodyHtml, createPrintableEditorHtml } from "@/lib/editor/document-html";
@@ -85,6 +93,23 @@ interface StudioPageState {
   versions: BuilderVersion[];
 }
 
+function coverLetterStylesToEditorTemplateStyles(
+  styles: CoverLetterTemplateStyles
+): TemplateStyles {
+  return {
+    fontFamily: styles.fontFamily,
+    fontSize: styles.fontSize,
+    headerSize: styles.headerSize,
+    sectionHeaderSize: "12pt",
+    lineHeight: styles.lineHeight,
+    accentColor: styles.accentColor,
+    layout: "single-column",
+    headerStyle: styles.headerStyle,
+    bulletStyle: "none",
+    sectionDivider: "none",
+  };
+}
+
 function areSelectedIdsEqual(current: Set<string>, next: string[]): boolean {
   if (current.size !== next.length) return false;
   return next.every((id) => current.has(id));
@@ -120,7 +145,9 @@ export function useStudioPageState(): StudioPageState {
   const [entries, setEntries] = useState<BankEntry[]>([]);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [sections, setSections] = useState<SectionState[]>(createInitialSections);
-  const [templateId, setTemplateId] = useState("classic");
+  const [templateId, setTemplateId] = useState(
+    getDefaultTemplateIdForDocumentMode("resume")
+  );
   const [loading, setLoading] = useState(true);
   const [hasLoadedEntries, setHasLoadedEntries] = useState(false);
   const [html, setHtml] = useState("");
@@ -194,7 +221,9 @@ export function useStudioPageState(): StudioPageState {
   useEffect(() => {
     const nextSelectedEntryIds = activeDocument.selectedEntryIds ?? [];
     const nextSections = activeDocument.sections ?? createInitialSections();
-    const nextTemplateId = activeDocument.templateId ?? "classic";
+    const nextTemplateId =
+      activeDocument.templateId ??
+      getDefaultTemplateIdForDocumentMode(activeDocument.mode);
 
     setSelectedIds((current) =>
       areSelectedIdsEqual(current, nextSelectedEntryIds)
@@ -218,6 +247,7 @@ export function useStudioPageState(): StudioPageState {
     }
   }, [
     activeDocument.id,
+    activeDocument.mode,
     activeDocument.sections,
     activeDocument.selectedEntryIds,
     activeDocument.templateId,
@@ -240,20 +270,20 @@ export function useStudioPageState(): StudioPageState {
   }, [entries, selectedIds, visibleCategoryIds]);
 
   const selectedTemplate = useMemo(
-    () => TEMPLATES.find((template) => template.id === templateId),
-    [templateId]
+    () => getTemplateForDocumentMode(documentMode, templateId),
+    [documentMode, templateId]
   );
 
   const currentDraftState = useMemo<BuilderDraftState>(
     () => ({
-      documentMode: "resume",
+      documentMode,
       selectedIds: Array.from(selectedIds),
       sections,
       templateId,
       html,
       content,
     }),
-    [content, html, sections, selectedIds, templateId]
+    [content, documentMode, html, sections, selectedIds, templateId]
   );
 
   const draftIsSaved = useMemo(
@@ -276,6 +306,13 @@ export function useStudioPageState(): StudioPageState {
 
     if (orderedEntries.length === 0) {
       setHtml("");
+      setContent(undefined);
+      setGenerating(false);
+      return;
+    }
+
+    if (documentMode === "cover_letter") {
+      setHtml(generateCoverLetterPreviewFallbackHTML(orderedEntries, templateId));
       setContent(undefined);
       setGenerating(false);
       return;
@@ -353,6 +390,7 @@ export function useStudioPageState(): StudioPageState {
       controller.abort();
     };
   }, [
+    documentMode,
     orderedEntries,
     previewVersionId,
     showErrorToast,
@@ -527,17 +565,28 @@ export function useStudioPageState(): StudioPageState {
   );
 
   const getPrintableHtml = useCallback(() => {
-    if (!selectedTemplate) return "";
-
     const bodyHtml = content ? createEditorBodyHtml(content) : html;
     if (!bodyHtml) return "";
+
+    if (documentMode === "cover_letter") {
+      if (!content) return bodyHtml;
+      if (selectedTemplate.styles.layout !== "letter") return bodyHtml;
+
+      return createPrintableEditorHtml(
+        bodyHtml,
+        coverLetterStylesToEditorTemplateStyles(selectedTemplate.styles),
+        `${selectedTemplate.name} Cover Letter`
+      );
+    }
+
+    if (selectedTemplate.styles.layout === "letter") return bodyHtml;
 
     return createPrintableEditorHtml(
       bodyHtml,
       selectedTemplate.styles,
       `${selectedTemplate.name} Resume`
     );
-  }, [content, html, selectedTemplate]);
+  }, [content, documentMode, html, selectedTemplate]);
 
   const handleDownloadPdf = useCallback(async () => {
     const printableHtml = getPrintableHtml();
@@ -547,17 +596,23 @@ export function useStudioPageState(): StudioPageState {
     try {
       await downloadHtmlAsPdf(
         printableHtml,
-        createDocumentFilename("resume", selectedTemplate?.name)
+        createDocumentFilename(
+          documentMode === "cover_letter" ? "cover-letter" : "resume",
+          selectedTemplate.name
+        )
       );
     } catch (err) {
       showErrorToast(err, {
         title: "Could not download PDF",
-        fallbackDescription: "Please try exporting the resume again.",
+        fallbackDescription:
+          documentMode === "cover_letter"
+            ? "Please try exporting the cover letter again."
+            : "Please try exporting the resume again.",
       });
     } finally {
       setIsExporting(false);
     }
-  }, [getPrintableHtml, selectedTemplate?.name, showErrorToast]);
+  }, [documentMode, getPrintableHtml, selectedTemplate?.name, showErrorToast]);
 
   const handleCopyHtml = useCallback(async () => {
     const currentHtml = getPrintableHtml() || html;

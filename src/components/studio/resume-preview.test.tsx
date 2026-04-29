@@ -110,4 +110,22 @@ describe("ResumePreview", () => {
       screen.getByText("Preview and edit your cover letter")
     ).toBeInTheDocument();
   });
+
+  it("renders cover letter HTML without resume-only preview padding", () => {
+    render(
+      <ResumePreview
+        templateId="formal"
+        documentMode="cover_letter"
+        html='<article class="cover-letter-document">Letter body</article>'
+      />
+    );
+
+    const letter = document.querySelector(".cover-letter-document");
+    const htmlWrapper = letter?.parentElement;
+    const previewPage = htmlWrapper?.parentElement;
+
+    expect(letter).toHaveTextContent("Letter body");
+    expect(htmlWrapper).not.toHaveClass("px-14");
+    expect(previewPage).not.toHaveStyle("border-top: 4px solid #1f2937");
+  });
 });

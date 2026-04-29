@@ -4,7 +4,10 @@ import { useRef, useEffect, useState, useCallback } from "react";
 import { CheckCircle2, FileText, PenLine, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ResumeEditor } from "@/lib/editor/resume-editor";
-import { TEMPLATES } from "@/lib/resume/template-data";
+import {
+  getTemplateForDocumentMode,
+  TEMPLATES,
+} from "@/lib/resume/template-data";
 import type { TipTapJSONContent } from "@/lib/editor/types";
 import type { DocumentMode } from "./studio-documents";
 
@@ -70,11 +73,12 @@ export function ResumePreview({
   const wrapperRef = useRef<HTMLDivElement>(null);
   const [fitScale, setFitScale] = useState(1);
 
-  const template = TEMPLATES.find((t) => t.id === templateId);
-  const templateStyles = template?.styles ?? TEMPLATES[0].styles;
-  const accentColor = template?.styles.accentColor ?? "#333333";
+  const template = getTemplateForDocumentMode(documentMode, templateId);
+  const templateStyles =
+    template.styles.layout === "letter" ? TEMPLATES[0].styles : template.styles;
+  const accentColor = template.styles.accentColor;
   const fontFamily =
-    template?.styles.fontFamily ?? "'Helvetica Neue', Arial, sans-serif";
+    template.styles.fontFamily ?? "'Helvetica Neue', Arial, sans-serif";
 
   const updateScale = useCallback(() => {
     if (!wrapperRef.current) return;
@@ -97,6 +101,7 @@ export function ResumePreview({
   const scale = fitScale * (zoomPercent / 100);
   const emptyStateContent = getPreviewEmptyStateContent(documentMode);
   const EmptyStateIcon = documentMode === "cover_letter" ? PenLine : FileText;
+  const isCoverLetter = documentMode === "cover_letter";
 
   return (
     <div ref={wrapperRef} className="h-full overflow-auto bg-muted/30 p-4">
@@ -112,7 +117,7 @@ export function ResumePreview({
           style={{
             width: `${PAGE_WIDTH_PX}px`,
             fontFamily,
-            borderTop: `4px solid ${accentColor}`,
+            borderTop: isCoverLetter ? undefined : `4px solid ${accentColor}`,
             transformOrigin: "top left",
             transform: `scale(${scale})`,
           }}
@@ -141,7 +146,7 @@ export function ResumePreview({
             </>
           ) : html ? (
             <div
-              className="px-14 py-12"
+              className={isCoverLetter ? undefined : "px-14 py-12"}
               dangerouslySetInnerHTML={{ __html: html }}
             />
           ) : (
