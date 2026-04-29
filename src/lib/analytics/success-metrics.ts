@@ -40,6 +40,10 @@ export interface SuccessMetrics {
   insights: string[];
 }
 
+function isSubmittedApplication(job: JobDescription): boolean {
+  return job.status !== "pending" && job.status !== "saved" && job.status !== "withdrawn";
+}
+
 function daysBetween(date1: string, date2: string): number {
   const d1 = new Date(date1);
   const d2 = new Date(date2);
@@ -144,9 +148,7 @@ export function calculateOfferRate(jobs: JobDescription[]): {
   overall: number;
   byJobType: { type: string; rate: number; count: number }[];
 } {
-  const appliedJobs = jobs.filter(
-    (j) => j.status !== "saved" && j.status !== "withdrawn"
-  );
+  const appliedJobs = jobs.filter(isSubmittedApplication);
   const offeredJobs = jobs.filter((j) => j.status === "offered");
 
   const overall = appliedJobs.length > 0
@@ -257,7 +259,7 @@ export function generateInsights(
   }
 
   // Volume insight
-  const totalApplied = jobs.filter((j) => j.status !== "saved").length;
+  const totalApplied = jobs.filter(isSubmittedApplication).length;
   if (totalApplied < 10) {
     insights.push(
       "Apply to more positions to get statistically meaningful insights. Aim for 15-20+ applications."

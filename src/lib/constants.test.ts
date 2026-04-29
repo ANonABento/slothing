@@ -29,6 +29,7 @@ describe("constants barrel", () => {
     expect(THEMES).toEqual(["light", "dark", "system"]);
     expect(STORAGE_KEYS.ONBOARDING_COMPLETED).toBe("get_me_job_onboarding_completed");
 
+    expect(JOB_STATUSES).toContain("pending");
     expect(JOB_STATUSES).toContain("interviewing");
     expect(updateProfileSchema.safeParse({ contact: { name: "Jane Doe" } }).success).toBe(true);
 

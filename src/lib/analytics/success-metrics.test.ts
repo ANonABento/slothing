@@ -144,7 +144,7 @@ describe("calculateTimeToInterview", () => {
 
 describe("calculateOfferRate", () => {
   it("returns 0 for no applied jobs", () => {
-    const jobs = [createJob({ status: "saved" })];
+    const jobs = [createJob({ status: "saved" }), createJob({ status: "pending" })];
     const result = calculateOfferRate(jobs);
 
     expect(result.overall).toBe(0);
@@ -152,6 +152,7 @@ describe("calculateOfferRate", () => {
 
   it("calculates overall offer rate", () => {
     const jobs = [
+      createJob({ status: "pending" }),
       createJob({ status: "applied" }),
       createJob({ status: "applied" }),
       createJob({ status: "offered" }),

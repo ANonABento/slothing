@@ -93,6 +93,7 @@ interface Analytics {
 }
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; icon: React.ElementType }> = {
+  pending: { label: "Pending", color: "bg-violet-500", icon: Clock },
   saved: { label: "Saved", color: "bg-slate-500", icon: Star },
   applied: { label: "Applied", color: "bg-blue-500", icon: CheckCircle },
   interviewing: { label: "Interviewing", color: "bg-amber-500", icon: MessageSquare },

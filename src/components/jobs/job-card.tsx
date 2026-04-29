@@ -42,6 +42,7 @@ export interface ResumeTemplate {
 }
 
 const STATUS_STYLES: Record<string, { bg: string; text: string }> = {
+  pending: { bg: "bg-violet-100 dark:bg-violet-900/30", text: "text-violet-600 dark:text-violet-300" },
   saved: { bg: "bg-slate-100 dark:bg-slate-800", text: "text-slate-600 dark:text-slate-300" },
   applied: { bg: "bg-blue-100 dark:bg-blue-900/30", text: "text-blue-600 dark:text-blue-400" },
   interviewing: { bg: "bg-amber-100 dark:bg-amber-900/30", text: "text-amber-600 dark:text-amber-400" },
@@ -111,6 +112,7 @@ export function JobCard(props: JobCardProps) {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="pending">Pending</SelectItem>
                     <SelectItem value="saved">Saved</SelectItem>
                     <SelectItem value="applied">Applied</SelectItem>
                     <SelectItem value="interviewing">Interviewing</SelectItem>

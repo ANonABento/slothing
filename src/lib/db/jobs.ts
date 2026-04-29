@@ -55,8 +55,8 @@ export function getJob(id: string, userId: string = "default"): JobDescription |
 export function createJob(job: Omit<JobDescription, "id" | "createdAt">, userId: string = "default"): JobDescription {
   const id = generateId();
   db.prepare(`
-    INSERT INTO jobs (id, title, company, location, type, remote, salary, description, requirements_json, responsibilities_json, keywords_json, url, user_id)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO jobs (id, title, company, location, type, remote, salary, description, requirements_json, responsibilities_json, keywords_json, url, status, applied_at, deadline, notes, user_id)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run(
     id,
     job.title,
@@ -70,6 +70,10 @@ export function createJob(job: Omit<JobDescription, "id" | "createdAt">, userId:
     JSON.stringify(job.responsibilities || []),
     JSON.stringify(job.keywords || []),
     job.url || null,
+    job.status || "saved",
+    job.appliedAt || null,
+    job.deadline || null,
+    job.notes || null,
     userId
   );
   return getJob(id, userId)!;
@@ -147,4 +151,11 @@ export function updateJobStatus(
 // Delete job
 export function deleteJob(id: string, userId: string = "default"): void {
   db.prepare("DELETE FROM jobs WHERE id = ? AND user_id = ?").run(id, userId);
+}
+
+export function countJobsByStatus(status: string, userId: string = "default"): number {
+  const row = db.prepare(
+    "SELECT COUNT(*) as count FROM jobs WHERE status = ? AND user_id = ?"
+  ).get(status, userId) as { count: number };
+  return row.count;
 }
