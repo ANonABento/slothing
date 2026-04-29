@@ -16,6 +16,7 @@ import {
   DOCUMENT_MODE_OPTIONS,
   type DocumentMode,
 } from "./studio-documents";
+import { TemplatePreviewThumbnail } from "./template-preview-thumbnail";
 
 interface StudioHeaderProps {
   documentMode: DocumentMode;
@@ -76,13 +77,17 @@ export function StudioHeader({
           <button
             type="button"
             aria-label="Select resume template"
+            aria-expanded={templateOpen}
+            aria-haspopup="listbox"
             onClick={() => setTemplateOpen((prev) => !prev)}
             className="flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm transition-colors hover:bg-muted"
           >
-            <div
-              className="h-3 w-3 rounded-sm"
-              style={{ backgroundColor: selectedTemplate?.styles.accentColor }}
-            />
+            {selectedTemplate && (
+              <TemplatePreviewThumbnail
+                template={selectedTemplate}
+                className="h-7 w-5 shrink-0 rounded-sm"
+              />
+            )}
             <span>{selectedTemplate?.name ?? "Template"}</span>
             <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
           </button>
@@ -93,25 +98,37 @@ export function StudioHeader({
                 className="fixed inset-0 z-40"
                 onClick={() => setTemplateOpen(false)}
               />
-              <div className="absolute left-0 top-full z-50 mt-1 w-56 rounded-lg border bg-popover p-1 shadow-lg">
+              <div
+                role="listbox"
+                aria-label="Resume templates"
+                className="absolute left-0 top-full z-50 mt-2 grid max-h-[70vh] w-[min(26rem,calc(100vw-2rem))] grid-cols-2 gap-2 overflow-auto rounded-lg border bg-popover p-2 shadow-lg sm:grid-cols-3"
+              >
                 {TEMPLATES.map((template) => {
                   const isSelected = template.id === templateId;
                   return (
                     <button
                       key={template.id}
                       type="button"
+                      role="option"
+                      aria-selected={isSelected}
                       onClick={() => {
                         onTemplateSelect(template.id);
                         setTemplateOpen(false);
                       }}
-                      className="flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-sm transition-colors hover:bg-muted"
+                      className={cn(
+                        "rounded-md border p-2 text-left text-sm transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                        isSelected
+                          ? "border-primary bg-primary/5"
+                          : "border-border bg-background"
+                      )}
                     >
-                      <div
-                        className="h-3 w-3 shrink-0 rounded-sm"
-                        style={{ backgroundColor: template.styles.accentColor }}
-                      />
-                      <span className="flex-1 text-left">{template.name}</span>
-                      {isSelected && <Check className="h-3.5 w-3.5 text-primary" />}
+                      <TemplatePreviewThumbnail template={template} />
+                      <span className="mt-2 flex items-center gap-1.5 font-medium">
+                        <span className="min-w-0 flex-1 truncate">{template.name}</span>
+                        {isSelected && (
+                          <Check className="h-3.5 w-3.5 shrink-0 text-primary" />
+                        )}
+                      </span>
                     </button>
                   );
                 })}
