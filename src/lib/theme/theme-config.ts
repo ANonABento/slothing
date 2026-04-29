@@ -568,10 +568,18 @@ export function getThemeVariables(
 ): Record<`--${string}`, string> {
   const preset = getThemePreset(presetName);
   const tokens = applyCustomThemeColors(preset[resolvedTheme], customColors);
-
-  return Object.fromEntries(
+  const variables = Object.fromEntries(
     Object.entries(tokens).map(([name, value]) => [`--${name}`, value])
   ) as Record<`--${string}`, string>;
+
+  return {
+    ...variables,
+    "--shadow-card": tokens.shadow,
+    "--shadow-button": tokens["shadow-sm"],
+    "--shadow-elevated": tokens["shadow-lg"],
+    "--glow-color": "hsl(var(--primary) / var(--glow-primary-opacity))",
+    "--glow-color-secondary": "hsl(var(--accent) / 0.14)",
+  };
 }
 
 export function applyThemeVariables(

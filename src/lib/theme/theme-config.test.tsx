@@ -123,6 +123,17 @@ describe("theme config", () => {
     expect(variables["--font-sans"]).toContain("Aptos");
   });
 
+  it("returns layout theme token aliases used by navigation components", () => {
+    const variables = getThemeVariables("default", "light");
+
+    expect(variables["--shadow-card"]).toBe(variables["--shadow"]);
+    expect(variables["--shadow-button"]).toBe(variables["--shadow-sm"]);
+    expect(variables["--shadow-elevated"]).toBe(variables["--shadow-lg"]);
+    expect(variables["--glow-color"]).toBe(
+      "hsl(var(--primary) / var(--glow-primary-opacity))"
+    );
+  });
+
   it("returns CSS custom properties with custom color overrides", () => {
     const variables = getThemeVariables("ocean", "light", {
       primary: "142 71% 45%",
