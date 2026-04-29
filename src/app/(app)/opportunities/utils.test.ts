@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
   DEFAULT_OPPORTUNITY_FILTERS,
+  buildOpportunityTeamSize,
   filterOpportunities,
+  formatOpportunityDate,
   formatOpportunityLocation,
   formatOpportunitySalary,
   getOpportunityFilterOptions,
@@ -133,6 +135,17 @@ describe("formatOpportunity helpers", () => {
     expect(formatOpportunitySalary(opportunities[2])).toBe("From $170,000");
     expect(formatOpportunitySalary(opportunities[1])).toBe("Compensation TBD");
   });
+
+  it("handles zero salary values and invalid currency input", () => {
+    expect(formatOpportunitySalary({ ...opportunities[2], salaryMin: 0, salaryMax: undefined })).toBe("From $0");
+    expect(formatOpportunitySalary({ ...opportunities[2], salaryCurrency: "US" })).toBe("From $170,000");
+  });
+
+  it("formats date-only deadlines without timezone drift", () => {
+    expect(formatOpportunityDate("2026-05-18")).toBe("May 18, 2026");
+    expect(formatOpportunityDate("2026-05-18T14:00:00.000Z")).toBe("May 18, 2026");
+    expect(formatOpportunityDate("not-a-date")).toBe("Invalid date");
+  });
 });
 
 describe("form value helpers", () => {
@@ -153,5 +166,12 @@ describe("form value helpers", () => {
     expect(parseOptionalNumber(" 42 ")).toBe(42);
     expect(parseOptionalNumber("")).toBeUndefined();
     expect(parseOptionalNumber("not-a-number")).toBeUndefined();
+  });
+
+  it("normalizes optional hackathon team sizes", () => {
+    expect(buildOpportunityTeamSize("2", "5")).toEqual({ min: 2, max: 5 });
+    expect(buildOpportunityTeamSize("5", "2")).toEqual({ min: 2, max: 5 });
+    expect(buildOpportunityTeamSize("", "4")).toEqual({ min: 4, max: 4 });
+    expect(buildOpportunityTeamSize("0", "-1")).toBeUndefined();
   });
 });

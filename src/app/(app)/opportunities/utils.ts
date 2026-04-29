@@ -274,21 +274,49 @@ export function formatOpportunityLocation(opportunity: Opportunity): string {
 }
 
 export function formatOpportunitySalary(opportunity: Opportunity): string {
-  if (!opportunity.salaryMin && !opportunity.salaryMax) return "Compensation TBD";
+  if (opportunity.salaryMin == null && opportunity.salaryMax == null) return "Compensation TBD";
 
-  const currency = opportunity.salaryCurrency ?? "USD";
-  const formatter = new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency,
-    maximumFractionDigits: 0,
-  });
+  const formatter = getCurrencyFormatter(opportunity.salaryCurrency);
 
-  if (opportunity.salaryMin && opportunity.salaryMax) {
+  if (opportunity.salaryMin != null && opportunity.salaryMax != null) {
     return `${formatter.format(opportunity.salaryMin)} - ${formatter.format(opportunity.salaryMax)}`;
   }
 
-  if (opportunity.salaryMin) return `From ${formatter.format(opportunity.salaryMin)}`;
+  if (opportunity.salaryMin != null) return `From ${formatter.format(opportunity.salaryMin)}`;
   return `Up to ${formatter.format(opportunity.salaryMax ?? 0)}`;
+}
+
+export function formatOpportunityDate(value: string): string {
+  const parsedDate = parseDateOnly(value) ?? parseGenericDate(value);
+  if (!parsedDate) return "Invalid date";
+
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(parsedDate);
+}
+
+export function buildOpportunityTeamSize(
+  minValue: string,
+  maxValue: string
+): Opportunity["teamSize"] {
+  const sizes = [parseOptionalNumber(minValue), parseOptionalNumber(maxValue)].filter(
+    (value): value is number => value != null && value > 0
+  );
+
+  if (sizes.length === 0) return undefined;
+
+  if (sizes.length === 1) {
+    const [teamSize] = sizes;
+    return { min: teamSize, max: teamSize };
+  }
+
+  return {
+    min: Math.min(...sizes),
+    max: Math.max(...sizes),
+  };
 }
 
 export function splitDelimitedList(value: string): string[] {
@@ -361,7 +389,13 @@ function compareOptionalDates(a?: string, b?: string): number {
   if (!a && !b) return 0;
   if (!a) return 1;
   if (!b) return -1;
-  return new Date(a).getTime() - new Date(b).getTime();
+
+  const dateA = parseComparableDate(a);
+  const dateB = parseComparableDate(b);
+  if (dateA == null && dateB == null) return 0;
+  if (dateA == null) return 1;
+  if (dateB == null) return -1;
+  return dateA - dateB;
 }
 
 function getSalarySortValue(opportunity: Opportunity): number {
@@ -391,4 +425,52 @@ function uniqueSorted(values: string[]): string[] {
 
 function capitalize(value: string): string {
   return value.charAt(0).toUpperCase() + value.slice(1);
+}
+
+function getCurrencyFormatter(currencyValue?: string): Intl.NumberFormat {
+  const currency = currencyValue?.trim().toUpperCase() || "USD";
+
+  try {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency,
+      maximumFractionDigits: 0,
+    });
+  } catch {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      maximumFractionDigits: 0,
+    });
+  }
+}
+
+function parseComparableDate(value: string): number | undefined {
+  return (parseDateOnly(value) ?? parseGenericDate(value))?.getTime();
+}
+
+function parseDateOnly(value: string): Date | undefined {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  if (!match) return undefined;
+
+  const [, year, month, day] = match;
+  const yearNumber = Number(year);
+  const monthIndex = Number(month) - 1;
+  const dayNumber = Number(day);
+  const parsedDate = new Date(Date.UTC(yearNumber, monthIndex, dayNumber));
+
+  if (
+    parsedDate.getUTCFullYear() !== yearNumber ||
+    parsedDate.getUTCMonth() !== monthIndex ||
+    parsedDate.getUTCDate() !== dayNumber
+  ) {
+    return undefined;
+  }
+
+  return parsedDate;
+}
+
+function parseGenericDate(value: string): Date | undefined {
+  const parsedDate = new Date(value);
+  return Number.isFinite(parsedDate.getTime()) ? parsedDate : undefined;
 }

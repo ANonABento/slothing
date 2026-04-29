@@ -45,7 +45,9 @@ import {
   OPPORTUNITY_STATUS_OPTIONS,
   REMOTE_TYPE_OPTIONS,
   SAMPLE_OPPORTUNITIES,
+  buildOpportunityTeamSize,
   filterOpportunities,
+  formatOpportunityDate,
   formatOpportunityLocation,
   formatOpportunitySalary,
   getOpportunityFilterOptions,
@@ -218,13 +220,7 @@ export default function OpportunitiesPage() {
         : {
             prizes: splitDelimitedList(form.prizes),
             tracks: splitDelimitedList(form.tracks),
-            teamSize:
-              form.teamMin || form.teamMax
-                ? {
-                    min: Number(form.teamMin || form.teamMax),
-                    max: Number(form.teamMax || form.teamMin),
-                  }
-                : undefined,
+            teamSize: buildOpportunityTeamSize(form.teamMin, form.teamMax),
             submissionUrl: trimToUndefined(form.submissionUrl),
           }),
     };
@@ -284,6 +280,22 @@ export default function OpportunitiesPage() {
           </div>
 
           <div className="space-y-5">
+            <div className="space-y-2">
+              <Label htmlFor="opportunity-type">Type</Label>
+              <Select value={filters.typeTab} onValueChange={(value) => updateFilter("typeTab", value as OpportunityFilters["typeTab"])}>
+                <SelectTrigger id="opportunity-type">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {typeTabs.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="opportunity-status">Status</Label>
               <Select value={filters.status} onValueChange={(value) => updateFilter("status", value as OpportunityFilters["status"])}>
@@ -674,7 +686,7 @@ function OpportunityRow({ opportunity }: { opportunity: Opportunity }) {
 
         <div className="grid shrink-0 gap-3 text-sm text-muted-foreground sm:grid-cols-2 xl:w-80 xl:grid-cols-1">
           <Meta icon={MapPin} value={formatOpportunityLocation(opportunity)} />
-          <Meta icon={CalendarClock} value={opportunity.deadline ? `Due ${formatDate(opportunity.deadline)}` : "No deadline"} />
+          <Meta icon={CalendarClock} value={opportunity.deadline ? `Due ${formatOpportunityDate(opportunity.deadline)}` : "No deadline"} />
           <Meta icon={DollarSign} value={formatOpportunitySalary(opportunity)} />
           {isHackathon && opportunity.teamSize && (
             <Meta icon={Trophy} value={`Team ${opportunity.teamSize.min}-${opportunity.teamSize.max}`} />
@@ -734,12 +746,4 @@ function Meta({
       <span className="min-w-0 break-words">{value}</span>
     </div>
   );
-}
-
-function formatDate(value: string): string {
-  return new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  }).format(new Date(value));
 }
