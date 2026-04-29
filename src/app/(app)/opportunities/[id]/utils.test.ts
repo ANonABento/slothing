@@ -79,6 +79,9 @@ describe("opportunity detail utils", () => {
     expect(buildOpportunityPatch(getOpportunityFieldConfig("salary"), "  ")).toEqual({
       salary: "",
     });
+    expect(
+      buildOpportunityPatch(getOpportunityFieldConfig("status"), "unknown")
+    ).toEqual({ status: "saved" });
   });
 
   it("builds an applied patch with an ISO timestamp", () => {

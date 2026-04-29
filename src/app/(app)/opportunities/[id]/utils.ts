@@ -1,4 +1,10 @@
-import type { JobDescription, JobStatus } from "@/types";
+import {
+  JOB_STATUSES,
+  JOB_TYPES,
+  type JobStatus,
+  type JobType,
+} from "@/lib/constants";
+import type { JobDescription } from "@/types";
 
 export type OpportunitySectionId =
   | "core"
@@ -40,14 +46,13 @@ export type OpportunityFieldType =
 
 export interface OpportunityFieldOption {
   label: string;
-  value: string;
+  value: JobStatus | JobType;
 }
 
 export interface OpportunityFieldConfig {
   key: OpportunityField;
   label: string;
   type: OpportunityFieldType;
-  section: OpportunitySectionId;
   placeholder?: string;
   options?: OpportunityFieldOption[];
 }
@@ -58,34 +63,46 @@ export interface OpportunityFieldSection {
   fields: OpportunityFieldConfig[];
 }
 
-export const OPPORTUNITY_STATUS_OPTIONS: OpportunityFieldOption[] = [
-  { label: "Saved", value: "saved" },
-  { label: "Applied", value: "applied" },
-  { label: "Interviewing", value: "interviewing" },
-  { label: "Offered", value: "offered" },
-  { label: "Rejected", value: "rejected" },
-  { label: "Withdrawn", value: "withdrawn" },
-];
+const OPPORTUNITY_STATUS_LABELS = {
+  saved: "Saved",
+  applied: "Applied",
+  interviewing: "Interviewing",
+  offered: "Offered",
+  rejected: "Rejected",
+  withdrawn: "Withdrawn",
+} satisfies Record<JobStatus, string>;
 
-export const OPPORTUNITY_TYPE_OPTIONS: OpportunityFieldOption[] = [
-  { label: "Full-time", value: "full-time" },
-  { label: "Part-time", value: "part-time" },
-  { label: "Contract", value: "contract" },
-  { label: "Internship", value: "internship" },
-];
+const OPPORTUNITY_TYPE_LABELS = {
+  "full-time": "Full-time",
+  "part-time": "Part-time",
+  contract: "Contract",
+  internship: "Internship",
+} satisfies Record<JobType, string>;
+
+export const OPPORTUNITY_STATUS_OPTIONS: OpportunityFieldOption[] =
+  JOB_STATUSES.map((status) => ({
+    label: OPPORTUNITY_STATUS_LABELS[status],
+    value: status,
+  }));
+
+export const OPPORTUNITY_TYPE_OPTIONS: OpportunityFieldOption[] = JOB_TYPES.map(
+  (type) => ({
+    label: OPPORTUNITY_TYPE_LABELS[type],
+    value: type,
+  })
+);
 
 export const OPPORTUNITY_FIELD_SECTIONS: OpportunityFieldSection[] = [
   {
     id: "core",
     title: "Core",
     fields: [
-      { key: "title", label: "Title", type: "text", section: "core" },
-      { key: "company", label: "Company", type: "text", section: "core" },
+      { key: "title", label: "Title", type: "text" },
+      { key: "company", label: "Company", type: "text" },
       {
         key: "status",
         label: "Status",
         type: "select",
-        section: "core",
         options: OPPORTUNITY_STATUS_OPTIONS,
       },
     ],
@@ -94,8 +111,8 @@ export const OPPORTUNITY_FIELD_SECTIONS: OpportunityFieldSection[] = [
     id: "location",
     title: "Location",
     fields: [
-      { key: "location", label: "Location", type: "text", section: "location" },
-      { key: "remote", label: "Remote", type: "checkbox", section: "location" },
+      { key: "location", label: "Location", type: "text" },
+      { key: "remote", label: "Remote", type: "checkbox" },
     ],
   },
   {
@@ -106,34 +123,29 @@ export const OPPORTUNITY_FIELD_SECTIONS: OpportunityFieldSection[] = [
         key: "type",
         label: "Type",
         type: "select",
-        section: "details",
         options: OPPORTUNITY_TYPE_OPTIONS,
       },
       {
         key: "description",
         label: "Description",
         type: "textarea",
-        section: "details",
       },
       {
         key: "requirements",
         label: "Requirements",
         type: "list",
-        section: "details",
         placeholder: "One requirement per line",
       },
       {
         key: "responsibilities",
         label: "Responsibilities",
         type: "list",
-        section: "details",
         placeholder: "One responsibility per line",
       },
       {
         key: "keywords",
         label: "Keywords",
         type: "list",
-        section: "details",
         placeholder: "One keyword per line",
       },
     ],
@@ -142,20 +154,19 @@ export const OPPORTUNITY_FIELD_SECTIONS: OpportunityFieldSection[] = [
     id: "compensation",
     title: "Compensation",
     fields: [
-      { key: "salary", label: "Salary", type: "text", section: "compensation" },
+      { key: "salary", label: "Salary", type: "text" },
     ],
   },
   {
     id: "application",
     title: "Application",
     fields: [
-      { key: "url", label: "Source URL", type: "url", section: "application" },
-      { key: "deadline", label: "Deadline", type: "date", section: "application" },
+      { key: "url", label: "Source URL", type: "url" },
+      { key: "deadline", label: "Deadline", type: "date" },
       {
         key: "appliedAt",
         label: "Applied at",
         type: "date",
-        section: "application",
       },
     ],
   },
@@ -163,18 +174,28 @@ export const OPPORTUNITY_FIELD_SECTIONS: OpportunityFieldSection[] = [
     id: "meta",
     title: "Meta",
     fields: [
-      { key: "id", label: "ID", type: "readonly", section: "meta" },
-      { key: "createdAt", label: "Created", type: "readonly", section: "meta" },
+      { key: "id", label: "ID", type: "readonly" },
+      { key: "createdAt", label: "Created", type: "readonly" },
     ],
   },
 ];
 
+const OPPORTUNITY_FIELDS = OPPORTUNITY_FIELD_SECTIONS.flatMap(
+  (section) => section.fields
+);
+
+function isJobStatus(value: string): value is JobStatus {
+  return JOB_STATUSES.some((status) => status === value);
+}
+
+function isJobType(value: string): value is JobType {
+  return JOB_TYPES.some((type) => type === value);
+}
+
 export function getOpportunityFieldConfig(
   key: OpportunityField
 ): OpportunityFieldConfig {
-  const field = OPPORTUNITY_FIELD_SECTIONS.flatMap((section) => section.fields).find(
-    (candidate) => candidate.key === key
-  );
+  const field = OPPORTUNITY_FIELDS.find((candidate) => candidate.key === key);
 
   if (!field) {
     throw new Error(`Unknown opportunity field: ${key}`);
@@ -238,40 +259,51 @@ export function buildOpportunityPatch(
   }
 
   if (field.type === "checkbox") {
-    return { [field.key]: Boolean(value) } as Partial<JobDescription>;
+    return { remote: Boolean(value) };
   }
 
   if (field.type === "list") {
-    return {
-      [field.key]: parseOpportunityListValue(String(value)),
-    } as Partial<JobDescription>;
+    const listValue = parseOpportunityListValue(String(value));
+    switch (field.key) {
+      case "requirements":
+        return { requirements: listValue };
+      case "responsibilities":
+        return { responsibilities: listValue };
+      case "keywords":
+        return { keywords: listValue };
+      default:
+        return {};
+    }
   }
 
   const stringValue = String(value).trim();
 
   if (field.key === "status") {
-    return { status: (stringValue || "saved") as JobStatus };
+    return { status: isJobStatus(stringValue) ? stringValue : "saved" };
   }
 
-  if (field.key === "remote") {
-    return { remote: Boolean(value) };
+  switch (field.key) {
+    case "type":
+      return { type: isJobType(stringValue) ? stringValue : undefined };
+    case "location":
+      return { location: stringValue };
+    case "salary":
+      return { salary: stringValue };
+    case "url":
+      return { url: stringValue };
+    case "deadline":
+      return { deadline: stringValue };
+    case "appliedAt":
+      return { appliedAt: stringValue };
+    case "title":
+      return { title: stringValue || undefined };
+    case "company":
+      return { company: stringValue || undefined };
+    case "description":
+      return { description: stringValue || undefined };
+    default:
+      return {};
   }
-
-  if (
-    field.key === "location" ||
-    field.key === "salary" ||
-    field.key === "url" ||
-    field.key === "deadline" ||
-    field.key === "appliedAt"
-  ) {
-    return {
-      [field.key]: stringValue,
-    } as Partial<JobDescription>;
-  }
-
-  return {
-    [field.key]: stringValue || undefined,
-  } as Partial<JobDescription>;
 }
 
 export function buildAppliedOpportunityPatch(): Partial<JobDescription> {

@@ -78,6 +78,159 @@ function DocumentDate({ value }: { value: string }) {
   return <span>{value ? new Date(value).toLocaleDateString() : "Unknown date"}</span>;
 }
 
+interface OpportunityFieldSectionsProps {
+  opportunity: JobDescription;
+  editingField: string | null;
+  savingField: string | null;
+  draftValue: string;
+  draftChecked: boolean;
+  onStartEditing: (field: OpportunityFieldConfig) => void;
+  onDraftValueChange: (value: string) => void;
+  onDraftCheckedChange: (checked: boolean) => void;
+  onSaveField: (field: OpportunityFieldConfig) => void;
+  onCancelEditing: () => void;
+}
+
+function OpportunityFieldSections({
+  opportunity,
+  editingField,
+  savingField,
+  draftValue,
+  draftChecked,
+  onStartEditing,
+  onDraftValueChange,
+  onDraftCheckedChange,
+  onSaveField,
+  onCancelEditing,
+}: OpportunityFieldSectionsProps) {
+  return (
+    <>
+      {OPPORTUNITY_FIELD_SECTIONS.map((section) => (
+        <section key={section.id} className="rounded-lg border bg-card">
+          <div className="border-b px-5 py-4">
+            <h2 className="text-base font-semibold">{section.title}</h2>
+          </div>
+          <div className="divide-y">
+            {section.fields.map((field) => {
+              const isEditing = editingField === field.key;
+              const isSaving = savingField === field.key;
+              const preview = formatOpportunityFieldPreview(opportunity, field);
+
+              return (
+                <div
+                  key={field.key}
+                  className="grid gap-3 px-5 py-4 sm:grid-cols-[180px_minmax(0,1fr)]"
+                >
+                  <div className="text-sm font-medium text-muted-foreground">
+                    {field.label}
+                  </div>
+                  <div className="min-w-0">
+                    {isEditing ? (
+                      <div className="space-y-3">
+                        {field.type === "textarea" || field.type === "list" ? (
+                          <Textarea
+                            value={draftValue}
+                            placeholder={field.placeholder}
+                            onChange={(event) =>
+                              onDraftValueChange(event.target.value)
+                            }
+                            className="min-h-32"
+                          />
+                        ) : field.type === "checkbox" ? (
+                          <label className="inline-flex items-center gap-2 text-sm">
+                            <input
+                              type="checkbox"
+                              checked={draftChecked}
+                              onChange={(event) =>
+                                onDraftCheckedChange(event.target.checked)
+                              }
+                              className="h-4 w-4 rounded border-input"
+                            />
+                            Remote
+                          </label>
+                        ) : field.type === "select" ? (
+                          <select
+                            value={draftValue}
+                            onChange={(event) =>
+                              onDraftValueChange(event.target.value)
+                            }
+                            className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                          >
+                            {field.options?.map((option) => (
+                              <option key={option.value} value={option.value}>
+                                {option.label}
+                              </option>
+                            ))}
+                          </select>
+                        ) : (
+                          <Input
+                            type={field.type === "date" ? "date" : field.type}
+                            value={draftValue}
+                            onChange={(event) =>
+                              onDraftValueChange(event.target.value)
+                            }
+                          />
+                        )}
+
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            onClick={() => onSaveField(field)}
+                            disabled={isSaving}
+                          >
+                            {isSaving ? (
+                              <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+                            ) : (
+                              <Check className="mr-1.5 h-4 w-4" />
+                            )}
+                            Save
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={onCancelEditing}
+                            disabled={isSaving}
+                          >
+                            <X className="mr-1.5 h-4 w-4" />
+                            Cancel
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex items-start justify-between gap-3">
+                        <div
+                          className={cn(
+                            "min-h-9 min-w-0 whitespace-pre-wrap break-words text-sm leading-6",
+                            preview === "Not set" && "text-muted-foreground"
+                          )}
+                        >
+                          {preview}
+                        </div>
+                        {field.type !== "readonly" && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 shrink-0"
+                            onClick={() => onStartEditing(field)}
+                            aria-label={`Edit ${field.label}`}
+                          >
+                            <PenLine className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      ))}
+    </>
+  );
+}
+
 export default function OpportunityDetailPage({
   params,
 }: {
@@ -343,122 +496,18 @@ export default function OpportunityDetailPage({
             </div>
           </header>
 
-          {OPPORTUNITY_FIELD_SECTIONS.map((section) => (
-            <section key={section.id} className="rounded-lg border bg-card">
-              <div className="border-b px-5 py-4">
-                <h2 className="text-base font-semibold">{section.title}</h2>
-              </div>
-              <div className="divide-y">
-                {section.fields.map((field) => {
-                  const isEditing = editingField === field.key;
-                  const isSaving = savingField === field.key;
-                  const preview = formatOpportunityFieldPreview(opportunity, field);
-
-                  return (
-                    <div
-                      key={field.key}
-                      className="grid gap-3 px-5 py-4 sm:grid-cols-[180px_minmax(0,1fr)]"
-                    >
-                      <div className="text-sm font-medium text-muted-foreground">
-                        {field.label}
-                      </div>
-                      <div className="min-w-0">
-                        {isEditing ? (
-                          <div className="space-y-3">
-                            {field.type === "textarea" || field.type === "list" ? (
-                              <Textarea
-                                value={draftValue}
-                                placeholder={field.placeholder}
-                                onChange={(event) => setDraftValue(event.target.value)}
-                                className="min-h-32"
-                              />
-                            ) : field.type === "checkbox" ? (
-                              <label className="inline-flex items-center gap-2 text-sm">
-                                <input
-                                  type="checkbox"
-                                  checked={draftChecked}
-                                  onChange={(event) =>
-                                    setDraftChecked(event.target.checked)
-                                  }
-                                  className="h-4 w-4 rounded border-input"
-                                />
-                                Remote
-                              </label>
-                            ) : field.type === "select" ? (
-                              <select
-                                value={draftValue}
-                                onChange={(event) => setDraftValue(event.target.value)}
-                                className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                              >
-                                {field.options?.map((option) => (
-                                  <option key={option.value} value={option.value}>
-                                    {option.label}
-                                  </option>
-                                ))}
-                              </select>
-                            ) : (
-                              <Input
-                                type={field.type === "date" ? "date" : field.type}
-                                value={draftValue}
-                                onChange={(event) => setDraftValue(event.target.value)}
-                              />
-                            )}
-
-                            <div className="flex gap-2">
-                              <Button
-                                size="sm"
-                                onClick={() => void saveField(field)}
-                                disabled={isSaving}
-                              >
-                                {isSaving ? (
-                                  <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
-                                ) : (
-                                  <Check className="mr-1.5 h-4 w-4" />
-                                )}
-                                Save
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={cancelEditing}
-                                disabled={isSaving}
-                              >
-                                <X className="mr-1.5 h-4 w-4" />
-                                Cancel
-                              </Button>
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="flex items-start justify-between gap-3">
-                            <div
-                              className={cn(
-                                "min-h-9 min-w-0 whitespace-pre-wrap break-words text-sm leading-6",
-                                preview === "Not set" && "text-muted-foreground"
-                              )}
-                            >
-                              {preview}
-                            </div>
-                            {field.type !== "readonly" && (
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 shrink-0"
-                                onClick={() => startEditing(field)}
-                                aria-label={`Edit ${field.label}`}
-                              >
-                                <PenLine className="h-4 w-4" />
-                              </Button>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </section>
-          ))}
+          <OpportunityFieldSections
+            opportunity={opportunity}
+            editingField={editingField}
+            savingField={savingField}
+            draftValue={draftValue}
+            draftChecked={draftChecked}
+            onStartEditing={startEditing}
+            onDraftValueChange={setDraftValue}
+            onDraftCheckedChange={setDraftChecked}
+            onSaveField={(field) => void saveField(field)}
+            onCancelEditing={cancelEditing}
+          />
 
           <section className="rounded-lg border bg-card">
             <div className="flex items-center justify-between border-b px-5 py-4">
