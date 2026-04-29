@@ -4,10 +4,10 @@ import { describe, expect, it, vi } from "vitest";
 import { TEMPLATES } from "@/lib/resume/template-data";
 import { StudioHeader } from "./studio-header";
 
-function renderStudioHeader(
+function createStudioHeaderProps(
   props: Partial<ComponentProps<typeof StudioHeader>> = {}
-) {
-  const defaultProps: ComponentProps<typeof StudioHeader> = {
+): ComponentProps<typeof StudioHeader> {
+  return {
     documentMode: "resume",
     draftIsSaved: true,
     templateId: "classic",
@@ -18,9 +18,14 @@ function renderStudioHeader(
     onTemplateSelect: vi.fn(),
     onCopyHtml: vi.fn(),
     onDownloadPdf: vi.fn(),
+    ...props,
   };
+}
 
-  return render(<StudioHeader {...defaultProps} {...props} />);
+function renderStudioHeader(
+  props: Partial<ComponentProps<typeof StudioHeader>> = {}
+) {
+  return render(<StudioHeader {...createStudioHeaderProps(props)} />);
 }
 
 describe("StudioHeader", () => {
@@ -38,6 +43,24 @@ describe("StudioHeader", () => {
     expect(screen.getByRole("button", { name: /select resume template/i }))
       .toHaveTextContent("Classic");
     expect(screen.getByTestId("template-thumbnail-classic")).toBeInTheDocument();
+  });
+
+  it("uses the design-system radius on each active document mode tab", () => {
+    const { rerender } = renderStudioHeader();
+
+    expect(screen.getByRole("button", { name: "Resume" })).toHaveClass(
+      "rounded-md"
+    );
+
+    rerender(
+      <StudioHeader
+        {...createStudioHeaderProps({ documentMode: "cover_letter" })}
+      />
+    );
+
+    expect(screen.getByRole("button", { name: "Cover Letter" })).toHaveClass(
+      "rounded-md"
+    );
   });
 
   it("opens a grid picker with thumbnails for every template", () => {

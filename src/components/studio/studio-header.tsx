@@ -77,7 +77,7 @@ export function StudioHeader({
               className={cn(
                 "px-3 py-1 text-sm font-medium transition-colors",
                 documentMode === mode
-                  ? "bg-primary text-primary-foreground"
+                  ? "rounded-md bg-primary text-primary-foreground"
                   : "text-muted-foreground hover:text-foreground"
               )}
             >
