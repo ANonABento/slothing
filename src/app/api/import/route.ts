@@ -127,6 +127,7 @@ export async function POST(request: NextRequest) {
           keywords: job.keywords || [],
           url: job.url,
           status: jobStatus,
+          deadline: job.deadline,
           notes: job.notes,
         }, authResult.userId);
         existingKeys.add(key);

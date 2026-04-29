@@ -18,6 +18,7 @@ import {
   Calendar,
   DollarSign,
   FileText,
+  Rows3,
   type LucideIcon,
 } from "lucide-react";
 import { useLLMStatus } from "@/hooks/useLLMStatus";
@@ -52,6 +53,7 @@ export const navigationGroups: NavGroup[] = [
     label: "Job Tracker",
     items: [
       { name: "Jobs", href: "/jobs", icon: Briefcase },
+      { name: "Review Queue", href: "/opportunities/review", icon: Rows3 },
       { name: "Calendar", href: "/calendar", icon: Calendar },
       { name: "Email Templates", href: "/emails", icon: Mail },
     ],
@@ -135,7 +137,7 @@ export function Sidebar() {
           collapsed ? "justify-center px-3" : "justify-between px-4"
         )}>
           <Link href="/dashboard" className="flex items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl gradient-bg text-white font-bold text-lg shadow-md">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl gradient-bg text-primary-foreground font-bold text-lg shadow-md">
               <Rocket className="h-5 w-5" />
             </div>
             {!collapsed && (
@@ -181,12 +183,12 @@ export function Sidebar() {
                       className={cn(
                         "group relative flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium transition-all duration-200 min-h-[44px]",
                         isActive
-                          ? "gradient-bg text-white shadow-md"
+                          ? "gradient-bg text-primary-foreground shadow-md"
                           : "text-muted-foreground hover:bg-muted hover:text-foreground",
                         collapsed && "justify-center px-2"
                       )}
                     >
-                      <item.icon className={cn("h-5 w-5 shrink-0", isActive && "text-white")} />
+                      <item.icon className={cn("h-5 w-5 shrink-0", isActive && "text-primary-foreground")} />
                       {!collapsed && <span>{item.name}</span>}
 
                       {/* Tooltip for collapsed state */}
@@ -200,7 +202,7 @@ export function Sidebar() {
 
                       {/* Active indicator */}
                       {isActive && !collapsed && (
-                        <div className="absolute right-2 h-2 w-2 rounded-full bg-white/50" />
+                        <div className="absolute right-2 h-2 w-2 rounded-full bg-primary-foreground/50" />
                       )}
                     </Link>
                   );
@@ -235,7 +237,7 @@ export function Sidebar() {
                       className={cn(
                         "absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-card",
                         llmStatus.configured
-                          ? "bg-emerald-500"
+                          ? "bg-success"
                           : "bg-muted-foreground/40"
                       )}
                       title={

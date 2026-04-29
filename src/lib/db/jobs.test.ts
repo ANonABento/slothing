@@ -200,6 +200,9 @@ describe("Job Database Functions", () => {
         "[]",
         "[]",
         null,
+        "saved",
+        null,
+        null,
         "default"
       );
       expect(result.id).toBe("test-id-123");
@@ -257,9 +260,54 @@ describe("Job Database Functions", () => {
         '["Task"]',
         '["key"]',
         "https://job.com",
+        "saved",
+        null,
+        null,
         "default"
       );
       expect(result.remote).toBe(true);
+    });
+
+    it("should persist review queue fields when supplied", () => {
+      const mockRun = vi.fn();
+      const mockGet = vi.fn().mockReturnValue({
+        id: "test-id-123",
+        title: "Pending Job",
+        company: "Company",
+        description: "Desc",
+        requirements_json: "[]",
+        responsibilities_json: "[]",
+        keywords_json: "[]",
+        remote: 0,
+        status: "pending",
+        deadline: "2026-05-01",
+        notes: "Review later",
+      });
+
+      (db.prepare as Mock).mockImplementation((sql: string) => {
+        if (sql.includes("INSERT")) {
+          return { run: mockRun };
+        }
+        return { get: mockGet };
+      });
+
+      const result = createJob({
+        title: "Pending Job",
+        company: "Company",
+        description: "Desc",
+        requirements: [],
+        responsibilities: [],
+        keywords: [],
+        status: "pending",
+        deadline: "2026-05-01",
+        notes: "Review later",
+      });
+
+      const runArgs = mockRun.mock.calls[0];
+      expect(runArgs[12]).toBe("pending");
+      expect(runArgs[13]).toBe("2026-05-01");
+      expect(runArgs[14]).toBe("Review later");
+      expect(result.status).toBe("pending");
     });
   });
 

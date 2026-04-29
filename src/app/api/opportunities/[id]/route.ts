@@ -1,31 +1,14 @@
-/**
- * @route GET /api/opportunities/[id]
- * @description Get one opportunity
- * @route PATCH /api/opportunities/[id]
- * @description Update an opportunity
- * @route DELETE /api/opportunities/[id]
- * @description Delete an opportunity
- * @auth Required
- */
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { requireAuth, isAuthError } from "@/lib/auth";
-import {
-  deleteOpportunity,
-  getOpportunity,
-  updateOpportunity,
-} from "@/lib/opportunities";
-import { validationErrorResponse } from "@/lib/api-utils";
-import { updateOpportunitySchema } from "@/types/opportunity";
-import { ZodError } from "zod";
+import { getOpportunity, changeOpportunityStatus } from "@/lib/opportunities";
+import { deleteJob } from "@/lib/db/jobs";
 
-interface OpportunityRouteContext {
+interface RouteContext {
   params: { id: string };
 }
 
-export async function GET(
-  _request: NextRequest,
-  { params }: OpportunityRouteContext
-) {
+export async function GET(_request: NextRequest, { params }: RouteContext) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
 
@@ -34,7 +17,7 @@ export async function GET(
     if (!opportunity) {
       return NextResponse.json(
         { error: "Opportunity not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -43,73 +26,57 @@ export async function GET(
     console.error("Get opportunity error:", error);
     return NextResponse.json(
       { error: "Failed to get opportunity" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
-export async function PATCH(
-  request: NextRequest,
-  { params }: OpportunityRouteContext
-) {
+const VALID_STATUSES = ["pending", "saved", "applied", "interviewing", "offer", "rejected", "expired", "dismissed"] as const;
+
+export async function PATCH(request: NextRequest, { params }: RouteContext) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
 
   try {
-    const parseResult = updateOpportunitySchema.safeParse(await request.json());
-    if (!parseResult.success) {
-      return validationErrorResponse(parseResult.error);
-    }
+    const body = await request.json();
 
-    const opportunity = updateOpportunity(
-      params.id,
-      parseResult.data,
-      authResult.userId
-    );
-
-    if (!opportunity) {
+    if (body.status && !VALID_STATUSES.includes(body.status)) {
       return NextResponse.json(
-        { error: "Opportunity not found" },
-        { status: 404 }
+        { error: "Invalid status", validStatuses: VALID_STATUSES },
+        { status: 400 },
       );
     }
 
+    const opportunity = changeOpportunityStatus(params.id, body.status, authResult.userId);
+    if (!opportunity) {
+      return NextResponse.json({ error: "Opportunity not found" }, { status: 404 });
+    }
     return NextResponse.json({ opportunity });
   } catch (error) {
-    if (error instanceof ZodError) {
-      return validationErrorResponse(error);
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { error: "Validation failed", errors: error.issues.map((e: z.ZodIssue) => ({ field: e.path.join("."), message: e.message })) },
+        { status: 400 },
+      );
     }
-
     console.error("Update opportunity error:", error);
-    return NextResponse.json(
-      { error: "Failed to update opportunity" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to update opportunity" }, { status: 500 });
   }
 }
 
-export async function DELETE(
-  _request: NextRequest,
-  { params }: OpportunityRouteContext
-) {
+export async function DELETE(_request: NextRequest, { params }: RouteContext) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
 
   try {
-    const deleted = deleteOpportunity(params.id, authResult.userId);
-    if (!deleted) {
-      return NextResponse.json(
-        { error: "Opportunity not found" },
-        { status: 404 }
-      );
+    const existing = getOpportunity(params.id, authResult.userId);
+    if (!existing) {
+      return NextResponse.json({ error: "Opportunity not found" }, { status: 404 });
     }
-
+    deleteJob(params.id, authResult.userId);
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Delete opportunity error:", error);
-    return NextResponse.json(
-      { error: "Failed to delete opportunity" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to delete opportunity" }, { status: 500 });
   }
 }

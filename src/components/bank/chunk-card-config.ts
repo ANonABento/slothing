@@ -6,6 +6,7 @@ import {
   FolderOpen,
   GraduationCap,
   Shield,
+  Trophy,
   Wrench,
 } from "lucide-react";
 import type { FieldDef } from "./chunk-card.types";
@@ -18,6 +19,7 @@ export const CATEGORY_CONFIG: Record<
   education: { label: "Education", icon: GraduationCap, color: "bg-success/10 text-success" },
   skill: { label: "Skill", icon: Wrench, color: "bg-primary/10 text-primary" },
   project: { label: "Project", icon: FolderOpen, color: "bg-accent/10 text-accent" },
+  hackathon: { label: "Hackathon", icon: Trophy, color: "bg-warning/10 text-warning" },
   achievement: { label: "Achievement", icon: Award, color: "bg-warning/10 text-warning" },
   certification: { label: "Certification", icon: Shield, color: "bg-info/10 text-info" },
 };
@@ -76,6 +78,22 @@ export const CATEGORY_FIELDS: Record<BankCategory, FieldDef[]> = {
     { key: "technologies", label: "Technologies (one per line)", type: "list", placeholder: "React\nNode.js" },
     { key: "highlights", label: "Highlights (one per line)", type: "list", placeholder: "Key features..." },
   ],
+  hackathon: [
+    { key: "name", label: "Hackathon Name", type: "text", placeholder: "e.g. Hack the Future" },
+    { key: "organizer", label: "Organizer", type: "text", placeholder: "e.g. Devpost" },
+    { key: "location", label: "Location", type: "text", placeholder: "Online, New York, NY, or hybrid" },
+    { key: "startDate", label: "Start Date", type: "text", placeholder: "e.g. 2026-05-10" },
+    { key: "endDate", label: "End Date", type: "text", placeholder: "e.g. 2026-05-12" },
+    { key: "submissionUrl", label: "Submission URL", type: "text", placeholder: "https://...devpost.com/submissions/..." },
+    { key: "eventUrl", label: "Event URL", type: "text", placeholder: "https://...devpost.com" },
+    { key: "prizes", label: "Prizes (one per line)", type: "list", placeholder: "$5,000 Grand Prize\nBest AI Project\nSponsor API Prize" },
+    { key: "teamSizeMin", label: "Minimum Team Size", type: "text", placeholder: "1" },
+    { key: "teamSizeMax", label: "Maximum Team Size", type: "text", placeholder: "4" },
+    { key: "tracks", label: "Tracks (one per line)", type: "list", placeholder: "AI/ML\nDeveloper Tools\nSocial Impact" },
+    { key: "themes", label: "Themes (one per line)", type: "list", placeholder: "Accessibility\nClimate\nEducation" },
+    { key: "technologies", label: "Built With (one per line)", type: "list", placeholder: "React\nOpenAI API\nPostgreSQL" },
+    { key: "notes", label: "Notes", type: "textarea", placeholder: "Submission requirements, judging criteria, teammate notes..." },
+  ],
   certification: [
     { key: "name", label: "Certification Name", type: "text", placeholder: "e.g. AWS Solutions Architect" },
     { key: "issuer", label: "Issuer", type: "text", placeholder: "e.g. Amazon Web Services" },
@@ -88,9 +106,9 @@ export const CATEGORY_FIELDS: Record<BankCategory, FieldDef[]> = {
 };
 
 export const SKILL_CATEGORY_COLORS: Record<string, string> = {
-  technical: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
-  soft: "bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-400",
-  language: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
-  tool: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400",
-  other: "bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400",
+  technical: "bg-info/10 text-info",
+  soft: "bg-accent/10 text-accent",
+  language: "bg-success/10 text-success",
+  tool: "bg-warning/10 text-warning",
+  other: "bg-muted text-muted-foreground",
 };

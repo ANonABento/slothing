@@ -8,6 +8,7 @@ import { HelpCards } from "@/components/settings/help-cards";
 import { LLMProviderConfig } from "@/components/settings/llm-provider-config";
 import { LLMProviderSelector, PROVIDERS } from "@/components/settings/llm-provider-selector";
 import { OllamaWarning } from "@/components/settings/ollama-warning";
+import { OpportunityReviewSection } from "@/components/settings/opportunity-review-section";
 import { ThemeSection } from "@/components/settings/theme-section";
 import { WhatAiPowers } from "@/components/settings/what-ai-powers";
 import { useDataIO } from "./use-data-io";
@@ -62,6 +63,7 @@ export default function SettingsPage() {
             onProviderChange={llmSettings.updateConfig}
           />
           <ThemeSection />
+          <OpportunityReviewSection />
           <LLMProviderConfig
             config={llmSettings.config}
             selectedProvider={selectedProvider}
