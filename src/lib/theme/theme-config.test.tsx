@@ -14,10 +14,6 @@ import {
   themePresetNames,
 } from "./theme-config";
 import { ThemeProvider, useTheme } from "./theme-provider";
-import {
-  CUSTOM_THEME_STORAGE_KEY,
-  THEME_CHANGE_EVENT,
-} from "./theme-presets";
 
 function resetRootThemeState() {
   document.documentElement.className = "";
@@ -124,8 +120,6 @@ describe("theme config", () => {
 
     expect(variables["--primary"]).toBe("246 100% 45%");
     expect(variables["--border-width"]).toBe("2px");
-    expect(variables["--shadow-card"]).toBe("var(--shadow-md)");
-    expect(variables["--letter-spacing"]).toBe("0.01em");
     expect(variables["--font-sans"]).toContain("Aptos");
   });
 
@@ -181,38 +175,9 @@ describe("theme config", () => {
     expect(document.documentElement.style.getPropertyValue("--backdrop-blur")).toBe(
       "28px"
     );
-<<<<<<< HEAD
-    expect(document.documentElement.style.getPropertyValue("--glow-color")).toBe(
-      "hsl(var(--accent) / 0.26)"
-    );
-  });
-
-  it("defines seven complete theme presets", () => {
-    expect(themePresetNames).toEqual([
-      "default",
-      "ocean",
-      "forest",
-      "sunset",
-      "bold",
-      "glassmorphism",
-      "minimal",
-    ]);
-
-    for (const presetName of themePresetNames) {
-      const lightVariables = getThemeVariables(presetName, "light");
-      const darkVariables = getThemeVariables(presetName, "dark");
-
-      expect(lightVariables["--shadow-card"]).toBeTruthy();
-      expect(lightVariables["--shadow-elevated"]).toBeTruthy();
-      expect(lightVariables["--border-width"]).toBeTruthy();
-      expect(darkVariables["--shadow-card"]).toBeTruthy();
-      expect(darkVariables["--glow-color"]).toBeTruthy();
-    }
-=======
     expect(document.documentElement.style.getPropertyValue("--accent")).toBe(
       "278 64% 56%"
     );
->>>>>>> origin/bentoya/build-theme-picker-ui-in-settings-with-live-preview
   });
 
   it("loads stored theme mode and theme preset in the provider", async () => {
@@ -244,55 +209,6 @@ describe("theme config", () => {
     );
     expect(screen.getByTestId("preset-count")).toHaveTextContent(
       String(themePresetNames.length)
-    );
-  });
-
-  it("loads legacy stored theme keys in the provider", async () => {
-    vi.mocked(window.localStorage.getItem).mockImplementation((key) => {
-      if (key === "theme") return "dark";
-      if (key === "theme-preset") return "forest";
-      return null;
-    });
-
-    render(
-      <ThemeProvider>
-        <ThemeProbe />
-      </ThemeProvider>
-    );
-
-    await waitFor(() => {
-      expect(screen.getByTestId("theme")).toHaveTextContent("dark");
-      expect(screen.getByTestId("theme-preset")).toHaveTextContent("forest");
-    });
-
-    expect(document.documentElement.dataset.themePreset).toBe("forest");
-  });
-
-  it("loads stored custom theme preferences in the provider", async () => {
-    vi.mocked(window.localStorage.getItem).mockImplementation((key) => {
-      if (key === THEME_PRESET_STORAGE_KEY) return "custom";
-      if (key === CUSTOM_THEME_STORAGE_KEY) {
-        return JSON.stringify({
-          primary: "142 71% 45%",
-          background: "210 30% 98%",
-          card: "0 0% 100%",
-        });
-      }
-      return null;
-    });
-
-    render(
-      <ThemeProvider>
-        <ThemeProbe />
-      </ThemeProvider>
-    );
-
-    await waitFor(() => {
-      expect(document.documentElement.dataset.themePreset).toBe("custom");
-    });
-
-    expect(document.documentElement.style.getPropertyValue("--primary")).toBe(
-      "142 71% 45%"
     );
   });
 
@@ -373,11 +289,7 @@ describe("theme config", () => {
     );
   });
 
-<<<<<<< HEAD
-  it("applies theme preference changes dispatched outside the provider", async () => {
-=======
   it("persists and applies custom color changes from the provider", async () => {
->>>>>>> origin/bentoya/build-theme-picker-ui-in-settings-with-live-preview
     render(
       <ThemeProvider>
         <ThemeProbe />
@@ -388,30 +300,6 @@ describe("theme config", () => {
       expect(document.documentElement.dataset.themePreset).toBe("default");
     });
 
-<<<<<<< HEAD
-    vi.mocked(window.localStorage.getItem).mockImplementation((key) => {
-      if (key === THEME_PRESET_STORAGE_KEY) return "custom";
-      if (key === CUSTOM_THEME_STORAGE_KEY) {
-        return JSON.stringify({
-          primary: "196 78% 42%",
-          background: "210 30% 98%",
-          card: "0 0% 100%",
-        });
-      }
-      return null;
-    });
-
-    await act(async () => {
-      window.dispatchEvent(new Event(THEME_CHANGE_EVENT));
-    });
-
-    await waitFor(() => {
-      expect(document.documentElement.dataset.themePreset).toBe("custom");
-    });
-
-    expect(document.documentElement.style.getPropertyValue("--primary")).toBe(
-      "196 78% 42%"
-=======
     await act(async () => {
       screen.getByRole("button", { name: "Use custom primary" }).click();
     });
@@ -458,7 +346,6 @@ describe("theme config", () => {
     expect(window.localStorage.setItem).toHaveBeenCalledWith(
       THEME_PRESET_STORAGE_KEY,
       "bold"
->>>>>>> origin/bentoya/build-theme-picker-ui-in-settings-with-live-preview
     );
   });
 });

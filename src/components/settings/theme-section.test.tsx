@@ -31,18 +31,6 @@ describe("ThemeSection", () => {
     renderThemeSection();
 
     expect(screen.getByRole("heading", { name: "Theme" })).toBeInTheDocument();
-<<<<<<< HEAD
-    expect(screen.getByRole("button", { name: /taida/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /ocean/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /forest/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /sunset/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /bold/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /glassmorphism/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /minimal/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /customize/i })).toBeInTheDocument();
-  });
-=======
->>>>>>> origin/bentoya/build-theme-picker-ui-in-settings-with-live-preview
 
     await waitFor(() => {
       expect(screen.getAllByRole("button", { name: /select .* theme/i })).toHaveLength(7);

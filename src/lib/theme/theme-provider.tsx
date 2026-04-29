@@ -15,11 +15,8 @@ import {
   THEME_CUSTOM_COLORS_STORAGE_KEY,
   THEME_PRESET_STORAGE_KEY,
   THEME_STORAGE_KEY,
-<<<<<<< HEAD
-=======
   applyThemeVariables,
   hasThemeColorOverrides,
->>>>>>> origin/bentoya/build-theme-picker-ui-in-settings-with-live-preview
   isThemeMode,
   isThemePresetName,
   sanitizeThemeColorOverrides,
@@ -32,13 +29,6 @@ import {
   type ThemePreset,
   type ThemePresetName,
 } from "./theme-config";
-import {
-  DEFAULT_CUSTOM_THEME,
-  THEME_CHANGE_EVENT,
-  applyThemePreference,
-  readThemePreference,
-  type ThemePreference,
-} from "./theme-presets";
 
 interface ThemeContextType {
   theme: ThemeMode;
@@ -54,16 +44,7 @@ interface ThemeContextType {
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
-<<<<<<< HEAD
-const LEGACY_THEME_STORAGE_KEY = "theme";
-const LEGACY_THEME_PRESET_STORAGE_KEY = "theme-preset";
-const DEFAULT_THEME_PREFERENCE: ThemePreference = {
-  presetId: DEFAULT_THEME_PRESET,
-  customColors: DEFAULT_CUSTOM_THEME,
-};
-=======
 let themeTransitionTimeoutId: number | undefined;
->>>>>>> origin/bentoya/build-theme-picker-ui-in-settings-with-live-preview
 
 function readStoredValue<T>(
   key: string,
@@ -75,16 +56,6 @@ function readStoredValue<T>(
   } catch {
     return null;
   }
-}
-
-function readStoredValueWithLegacyFallback<T>(
-  key: string,
-  legacyKey: string,
-  isValid: (value: unknown) => value is T
-): T | null {
-  return (
-    readStoredValue(key, isValid) ?? readStoredValue(legacyKey, isValid)
-  );
 }
 
 function persistValue(key: string, value: string): void {
@@ -141,45 +112,25 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<ThemeMode>(DEFAULT_THEME_MODE);
   const [themePreset, setThemePresetState] =
     useState<ThemePresetName>(DEFAULT_THEME_PRESET);
-<<<<<<< HEAD
-  const [themePreference, setThemePreference] =
-    useState<ThemePreference>(DEFAULT_THEME_PREFERENCE);
-=======
   const [customThemeColors, setCustomThemeColorsState] =
     useState<ThemeColorOverrides>({});
->>>>>>> origin/bentoya/build-theme-picker-ui-in-settings-with-live-preview
   const [resolvedTheme, setResolvedTheme] = useState<ResolvedThemeMode>("light");
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
 
-    const storedTheme = readStoredValueWithLegacyFallback(
-      THEME_STORAGE_KEY,
-      LEGACY_THEME_STORAGE_KEY,
-      isThemeMode
-    );
+    const storedTheme = readStoredValue(THEME_STORAGE_KEY, isThemeMode);
     if (storedTheme) {
       setThemeState(storedTheme);
     }
 
-    const storedPreference = readThemePreference();
-    const storedPreset = readStoredValueWithLegacyFallback(
+    const storedPreset = readStoredValue(
       THEME_PRESET_STORAGE_KEY,
-      LEGACY_THEME_PRESET_STORAGE_KEY,
       isThemePresetName
     );
-    const nextPreference =
-      storedPreference.presetId === "custom"
-        ? storedPreference
-        : {
-            ...storedPreference,
-            presetId: storedPreset ?? storedPreference.presetId,
-          };
-
-    setThemePreference(nextPreference);
-    if (isThemePresetName(nextPreference.presetId)) {
-      setThemePresetState(nextPreference.presetId);
+    if (storedPreset) {
+      setThemePresetState(storedPreset);
     }
 
     setCustomThemeColorsState(readStoredCustomColors());
@@ -193,7 +144,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
     const applyTheme = (
       currentTheme: ThemeMode,
-      currentPreference: ThemePreference
+      currentPreset: ThemePresetName
     ) => {
       const nextResolvedTheme =
         currentTheme === "system"
@@ -205,43 +156,23 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       setResolvedTheme(nextResolvedTheme);
       startThemeTransition(root);
       root.classList.toggle("dark", nextResolvedTheme === "dark");
-<<<<<<< HEAD
-      applyThemePreference(root, currentPreference);
-=======
       applyThemeVariables(
         root,
         currentPreset,
         nextResolvedTheme,
         customThemeColors
       );
->>>>>>> origin/bentoya/build-theme-picker-ui-in-settings-with-live-preview
     };
 
-    applyTheme(theme, themePreference);
+    applyTheme(theme, themePreset);
 
     const handleMediaChange = () => {
       if (theme === "system") {
-        applyTheme("system", themePreference);
-      }
-    };
-
-    const handleThemePreferenceChange = () => {
-      const nextPreference = readThemePreference();
-      setThemePreference(nextPreference);
-      if (isThemePresetName(nextPreference.presetId)) {
-        setThemePresetState(nextPreference.presetId);
+        applyTheme("system", themePreset);
       }
     };
 
     mediaQuery.addEventListener("change", handleMediaChange);
-<<<<<<< HEAD
-    window.addEventListener(THEME_CHANGE_EVENT, handleThemePreferenceChange);
-    return () => {
-      mediaQuery.removeEventListener("change", handleMediaChange);
-      window.removeEventListener(THEME_CHANGE_EVENT, handleThemePreferenceChange);
-    };
-  }, [theme, themePreference, mounted]);
-=======
     return () => mediaQuery.removeEventListener("change", handleMediaChange);
   }, [customThemeColors, theme, themePreset, mounted]);
 
@@ -268,7 +199,6 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [cycleThemePreset, mounted]);
->>>>>>> origin/bentoya/build-theme-picker-ui-in-settings-with-live-preview
 
   const setTheme = useCallback((newTheme: ThemeMode) => {
     setThemeState(newTheme);
@@ -277,10 +207,6 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   const setThemePreset = useCallback((newPreset: ThemePresetName) => {
     setThemePresetState(newPreset);
-    setThemePreference((currentPreference) => ({
-      presetId: newPreset,
-      customColors: currentPreference.customColors,
-    }));
     persistValue(THEME_PRESET_STORAGE_KEY, newPreset);
   }, []);
 
