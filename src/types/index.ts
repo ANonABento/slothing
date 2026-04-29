@@ -144,7 +144,6 @@ export type OpportunityStatus =
   | 'applied'
   | 'interviewing'
   | 'offer'
-  | 'offered'
   | 'rejected'
   | 'expired'
   | 'dismissed';

@@ -6,9 +6,44 @@ export interface OpportunityLinkInput {
   coverLetterId?: string;
 }
 
-function normalizeStatus(status?: string): OpportunityStatus {
-  if (status === "offered") return "offer";
-  return (status || "saved") as OpportunityStatus;
+const OPPORTUNITY_STATUSES = new Set<OpportunityStatus>([
+  "pending",
+  "saved",
+  "applied",
+  "interviewing",
+  "offer",
+  "rejected",
+  "expired",
+  "dismissed",
+]);
+
+const JOB_STATUS_TO_OPPORTUNITY_STATUS: Record<
+  NonNullable<JobDescription["status"]>,
+  OpportunityStatus
+> = {
+  saved: "saved",
+  applied: "applied",
+  interviewing: "interviewing",
+  offered: "offer",
+  rejected: "rejected",
+  withdrawn: "dismissed",
+};
+
+function normalizeStatus(status: JobDescription["status"]): OpportunityStatus {
+  return status ? JOB_STATUS_TO_OPPORTUNITY_STATUS[status] : "saved";
+}
+
+function normalizeStatusFilter(status: string): OpportunityStatus | null {
+  const trimmedStatus = status.trim();
+  const normalized =
+    trimmedStatus === "offered"
+      ? "offer"
+      : trimmedStatus === "withdrawn"
+        ? "dismissed"
+        : trimmedStatus;
+  return OPPORTUNITY_STATUSES.has(normalized as OpportunityStatus)
+    ? (normalized as OpportunityStatus)
+    : null;
 }
 
 export function jobToOpportunity(job: JobDescription): Opportunity {
@@ -19,7 +54,7 @@ export function jobToOpportunity(job: JobDescription): Opportunity {
     company: job.company,
     source: "manual",
     sourceUrl: job.url,
-    summary: job.description,
+    summary: job.description.trim(),
     status: normalizeStatus(job.status),
     deadline: job.deadline,
     tags: job.keywords,
@@ -31,20 +66,23 @@ export function jobToOpportunity(job: JobDescription): Opportunity {
   };
 }
 
-export function getOpportunityDescription(opportunity: Opportunity): string {
-  return opportunity.summary.trim();
-}
-
 export function listOpportunities(
   userId = "default",
   statuses?: string[],
 ): Opportunity[] {
-  const allowedStatuses = new Set(statuses?.filter(Boolean));
+  const requestedStatuses = statuses?.filter(Boolean) ?? [];
+  const allowedStatuses = new Set(
+    requestedStatuses
+      .map(normalizeStatusFilter)
+      .filter((status) => status !== null),
+  );
+  const shouldFilter = requestedStatuses.length > 0;
+
   return getJobs(userId)
     .map(jobToOpportunity)
     .filter(
       (opportunity) =>
-        allowedStatuses.size === 0 || allowedStatuses.has(opportunity.status),
+        !shouldFilter || allowedStatuses.has(opportunity.status),
     );
 }
 

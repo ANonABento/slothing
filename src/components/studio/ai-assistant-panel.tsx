@@ -93,10 +93,6 @@ async function readApiError(
   }
 }
 
-function getOpportunityText(opportunity: Opportunity): string {
-  return opportunity.summary.trim();
-}
-
 export function AiAssistantPanel({
   documentContent,
   selectedEntryCount,
@@ -158,16 +154,17 @@ export function AiAssistantPanel({
   }, []);
 
   useEffect(() => {
-    const opportunityId = new URLSearchParams(window.location.search).get(
-      "opportunityId",
-    );
+    const opportunityId = new URLSearchParams(window.location.search)
+      .get("opportunityId")
+      ?.trim();
     if (!opportunityId) return;
 
+    const encodedOpportunityId = encodeURIComponent(opportunityId);
     let cancelled = false;
 
     async function preloadOpportunity() {
       try {
-        const response = await fetch(`/api/opportunities/${opportunityId}`);
+        const response = await fetch(`/api/opportunities/${encodedOpportunityId}`);
         if (!response.ok) {
           throw new Error(await readApiError(response, "Opportunity not found."));
         }
@@ -175,7 +172,7 @@ export function AiAssistantPanel({
         if (!data.opportunity) throw new Error("Opportunity not found.");
         if (cancelled) return;
 
-        setJobDescription(getOpportunityText(data.opportunity));
+        setJobDescription(data.opportunity.summary);
         setSelectedOpportunityId(data.opportunity.id);
         setSelectedOpportunityLabel(
           `${data.opportunity.title} at ${data.opportunity.company}`,
@@ -251,7 +248,7 @@ export function AiAssistantPanel({
   }, [loadOpportunities]);
 
   const handleSelectOpportunity = useCallback((opportunity: Opportunity) => {
-    setJobDescription(getOpportunityText(opportunity));
+    setJobDescription(opportunity.summary);
     setSelectedOpportunityId(opportunity.id);
     setSelectedOpportunityLabel(`${opportunity.title} at ${opportunity.company}`);
     onOpportunitySelect?.(opportunity.id);

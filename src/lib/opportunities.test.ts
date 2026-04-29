@@ -15,7 +15,6 @@ vi.mock("@/lib/db/jobs", () => ({
 
 import {
   getOpportunity,
-  getOpportunityDescription,
   jobToOpportunity,
   linkOpportunityDocument,
   listOpportunities,
@@ -45,6 +44,7 @@ describe("opportunities", () => {
     expect(
       jobToOpportunity(
         job({
+          description: "  Build polished product interfaces.  ",
           url: "https://example.com/job",
           linkedResumeId: "resume-1",
           linkedCoverLetterId: "cover-1",
@@ -69,16 +69,33 @@ describe("opportunities", () => {
     });
   });
 
+  it("normalizes legacy job statuses to opportunity statuses", () => {
+    expect(jobToOpportunity(job({ status: "offered" })).status).toBe("offer");
+    expect(jobToOpportunity(job({ status: "withdrawn" })).status).toBe(
+      "dismissed",
+    );
+  });
+
   it("lists only requested opportunity statuses", () => {
     mocks.getJobs.mockReturnValue([
       job({ id: "saved", status: "saved" }),
       job({ id: "applied", status: "applied" }),
+      job({ id: "offered", status: "offered" }),
       job({ id: "rejected", status: "rejected" }),
     ]);
 
-    expect(listOpportunities("user-1", ["saved", "applied"]).map((item) => item.id))
-      .toEqual(["saved", "applied"]);
+    expect(
+      listOpportunities("user-1", ["saved", "applied", "offered"]).map(
+        (item) => item.id,
+      ),
+    ).toEqual(["saved", "applied", "offered"]);
     expect(mocks.getJobs).toHaveBeenCalledWith("user-1");
+  });
+
+  it("does not treat unknown status filters as unfiltered requests", () => {
+    mocks.getJobs.mockReturnValue([job({ id: "saved", status: "saved" })]);
+
+    expect(listOpportunities("user-1", ["unknown"])).toEqual([]);
   });
 
   it("loads a single opportunity by id", () => {
@@ -137,11 +154,4 @@ describe("opportunities", () => {
     );
   });
 
-  it("returns trimmed opportunity JD text", () => {
-    expect(
-      getOpportunityDescription(
-        jobToOpportunity(job({ description: "  Write TypeScript.  " })),
-      ),
-    ).toBe("Write TypeScript.");
-  });
 });
