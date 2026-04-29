@@ -4,19 +4,6 @@ import { DEFAULT_JOB_FILTERS, filterJobs, getJobStatusValue, hasActiveJobFilters
 
 const jobs: JobDescription[] = [
   {
-    id: "0",
-    title: "Growth Engineer",
-    company: "Queue Co",
-    description: "Review me",
-    requirements: [],
-    responsibilities: [],
-    keywords: ["Next.js"],
-    status: "pending",
-    type: "full-time",
-    remote: true,
-    createdAt: "2026-04-23T00:00:00.000Z",
-  },
-  {
     id: "1",
     title: "Frontend Engineer",
     company: "Acme",
@@ -52,6 +39,19 @@ const jobs: JobDescription[] = [
     keywords: ["Python", "Airflow"],
     createdAt: "2026-04-20T00:00:00.000Z",
   },
+  {
+    id: "4",
+    title: "Design Engineer",
+    company: "Delta Studio",
+    description: "Shape product systems",
+    requirements: [],
+    responsibilities: [],
+    keywords: ["Figma"],
+    status: "pending",
+    type: "full-time",
+    remote: false,
+    createdAt: "2026-04-23T00:00:00.000Z",
+  },
 ];
 
 describe("filterJobs", () => {
@@ -84,8 +84,8 @@ describe("filterJobs", () => {
     expect(filterJobs(jobs, { ...DEFAULT_JOB_FILTERS, statusFilter: "saved" }).map((job) => job.id)).toEqual(["1", "3"]);
   });
 
-  it("status filter supports pending opportunities", () => {
-    expect(filterJobs(jobs, { ...DEFAULT_JOB_FILTERS, statusFilter: "pending" }).map((job) => job.id)).toEqual(["0"]);
+  it("status filter supports pending jobs", () => {
+    expect(filterJobs(jobs, { ...DEFAULT_JOB_FILTERS, statusFilter: "pending" }).map((job) => job.id)).toEqual(["4"]);
   });
 
   it("type filter excludes undefined types when a specific type is selected", () => {
@@ -93,24 +93,24 @@ describe("filterJobs", () => {
   });
 
   it("remote and onsite filters behave correctly", () => {
-    expect(filterJobs(jobs, { ...DEFAULT_JOB_FILTERS, remoteFilter: "remote" }).map((job) => job.id)).toEqual(["0", "1"]);
-    expect(filterJobs(jobs, { ...DEFAULT_JOB_FILTERS, remoteFilter: "onsite" }).map((job) => job.id)).toEqual(["2", "3"]);
+    expect(filterJobs(jobs, { ...DEFAULT_JOB_FILTERS, remoteFilter: "remote" }).map((job) => job.id)).toEqual(["1"]);
+    expect(filterJobs(jobs, { ...DEFAULT_JOB_FILTERS, remoteFilter: "onsite" }).map((job) => job.id)).toEqual(["4", "2", "3"]);
   });
 
   it("sorts by newest", () => {
-    expect(filterJobs(jobs, { ...DEFAULT_JOB_FILTERS, sortBy: "newest" }).map((job) => job.id)).toEqual(["0", "2", "1", "3"]);
+    expect(filterJobs(jobs, { ...DEFAULT_JOB_FILTERS, sortBy: "newest" }).map((job) => job.id)).toEqual(["4", "2", "1", "3"]);
   });
 
   it("sorts by oldest", () => {
-    expect(filterJobs(jobs, { ...DEFAULT_JOB_FILTERS, sortBy: "oldest" }).map((job) => job.id)).toEqual(["3", "1", "2", "0"]);
+    expect(filterJobs(jobs, { ...DEFAULT_JOB_FILTERS, sortBy: "oldest" }).map((job) => job.id)).toEqual(["3", "1", "2", "4"]);
   });
 
   it("sorts by company", () => {
-    expect(filterJobs(jobs, { ...DEFAULT_JOB_FILTERS, sortBy: "company" }).map((job) => job.id)).toEqual(["1", "2", "3", "0"]);
+    expect(filterJobs(jobs, { ...DEFAULT_JOB_FILTERS, sortBy: "company" }).map((job) => job.id)).toEqual(["1", "2", "4", "3"]);
   });
 
   it("sorts by title", () => {
-    expect(filterJobs(jobs, { ...DEFAULT_JOB_FILTERS, sortBy: "title" }).map((job) => job.id)).toEqual(["3", "1", "0", "2"]);
+    expect(filterJobs(jobs, { ...DEFAULT_JOB_FILTERS, sortBy: "title" }).map((job) => job.id)).toEqual(["3", "4", "1", "2"]);
   });
 });
 
@@ -128,5 +128,9 @@ describe("hasActiveJobFilters", () => {
 describe("getJobStatusValue", () => {
   it("defaults missing status to saved", () => {
     expect(getJobStatusValue({ status: undefined })).toBe("saved");
+  });
+
+  it("defaults unsupported statuses to saved", () => {
+    expect(getJobStatusValue({ status: "withdrawn" })).toBe("saved");
   });
 });

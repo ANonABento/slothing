@@ -7,6 +7,10 @@ export {
   JOB_STATUSES,
   JOB_STATUS_LABELS,
   jobStatusSchema,
+  TRACKED_JOB_STATUSES,
+  TRACKED_JOB_STATUS_LABELS,
+  isTrackedJobStatus,
+  getTrackedJobStatus,
   JOB_TYPES,
   JOB_TYPE_LABELS,
   jobTypeSchema,
@@ -18,6 +22,7 @@ export {
 } from "./jobs";
 export type {
   JobStatus,
+  TrackedJobStatus,
   JobType,
   CreateJobInput,
   UpdateJobInput,

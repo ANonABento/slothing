@@ -4,7 +4,6 @@ import { z } from "zod";
 export const JOB_STATUSES = [
   "pending",
   "saved",
-  "dismissed",
   "applied",
   "interviewing",
   "offered",
@@ -16,15 +15,35 @@ export type JobStatus = (typeof JOB_STATUSES)[number];
 
 export const jobStatusSchema = z.enum(JOB_STATUSES);
 
-export const JOB_STATUS_LABELS: Record<JobStatus, string> = {
+export const TRACKED_JOB_STATUSES = [
+  "pending",
+  "saved",
+  "applied",
+  "interviewing",
+  "offered",
+  "rejected",
+] as const;
+
+export type TrackedJobStatus = (typeof TRACKED_JOB_STATUSES)[number];
+
+export const TRACKED_JOB_STATUS_LABELS: Record<TrackedJobStatus, string> = {
   pending: "Pending",
   saved: "Saved",
   applied: "Applied",
   interviewing: "Interviewing",
   offered: "Offered",
   rejected: "Rejected",
-  withdrawn: "Withdrawn",
 };
+
+const TRACKED_JOB_STATUS_VALUES = new Set<string>(TRACKED_JOB_STATUSES);
+
+export function isTrackedJobStatus(status: string | undefined | null): status is TrackedJobStatus {
+  return Boolean(status && TRACKED_JOB_STATUS_VALUES.has(status));
+}
+
+export function getTrackedJobStatus(status: string | undefined | null): TrackedJobStatus {
+  return isTrackedJobStatus(status) ? status : "saved";
+}
 
 // Job types
 export const JOB_TYPES = [
@@ -37,13 +56,6 @@ export const JOB_TYPES = [
 export type JobType = (typeof JOB_TYPES)[number];
 
 export const jobTypeSchema = z.enum(JOB_TYPES);
-
-export const JOB_TYPE_LABELS: Record<JobType, string> = {
-  "full-time": "Full-time",
-  "part-time": "Part-time",
-  contract: "Contract",
-  internship: "Internship",
-};
 
 // API validation schemas
 export const createJobSchema = z.object({
@@ -66,7 +78,6 @@ export const createJobSchema = z.object({
 export type CreateJobInput = z.infer<typeof createJobSchema>;
 
 export const updateJobSchema = createJobSchema.partial().extend({
-  status: jobStatusSchema.optional(),
   appliedAt: z.string().optional(),
 });
 
@@ -86,7 +97,6 @@ export const importJobSchema = z.object({
   keywords: z.array(z.string()).optional(),
   url: z.string().url().optional().or(z.literal("")),
   status: jobStatusSchema.optional(),
-  deadline: z.string().optional(),
   notes: z.string().max(5000).optional(),
 });
 
