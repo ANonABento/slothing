@@ -4,6 +4,7 @@ import { z } from "zod";
 export const JOB_STATUSES = [
   "pending",
   "saved",
+  "dismissed",
   "applied",
   "interviewing",
   "offered",
@@ -65,6 +66,7 @@ export const createJobSchema = z.object({
 export type CreateJobInput = z.infer<typeof createJobSchema>;
 
 export const updateJobSchema = createJobSchema.partial().extend({
+  status: jobStatusSchema.optional(),
   appliedAt: z.string().optional(),
 });
 
@@ -84,6 +86,7 @@ export const importJobSchema = z.object({
   keywords: z.array(z.string()).optional(),
   url: z.string().url().optional().or(z.literal("")),
   status: jobStatusSchema.optional(),
+  deadline: z.string().optional(),
   notes: z.string().max(5000).optional(),
 });
 

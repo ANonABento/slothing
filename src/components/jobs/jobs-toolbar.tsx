@@ -4,7 +4,6 @@ import { Filter, Search, SortAsc, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { JOB_STATUSES, JOB_STATUS_LABELS, JOB_TYPES, JOB_TYPE_LABELS } from "@/lib/constants";
 import type { JobRemoteFilter, JobSortOption, JobStatusFilter, JobTypeFilter } from "@/app/(app)/jobs/filter-jobs";
 
 interface JobsToolbarProps {
@@ -70,11 +69,14 @@ export function JobsToolbar(props: JobsToolbarProps) {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Status</SelectItem>
-              {JOB_STATUSES.map((status) => (
-                <SelectItem key={status} value={status}>
-                  {JOB_STATUS_LABELS[status]}
-                </SelectItem>
-              ))}
+              <SelectItem value="pending">Pending</SelectItem>
+              <SelectItem value="saved">Saved</SelectItem>
+              <SelectItem value="dismissed">Dismissed</SelectItem>
+              <SelectItem value="applied">Applied</SelectItem>
+              <SelectItem value="interviewing">Interviewing</SelectItem>
+              <SelectItem value="offered">Offered</SelectItem>
+              <SelectItem value="rejected">Rejected</SelectItem>
+              <SelectItem value="withdrawn">Withdrawn</SelectItem>
             </SelectContent>
           </Select>
 
@@ -84,11 +86,10 @@ export function JobsToolbar(props: JobsToolbarProps) {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Types</SelectItem>
-              {JOB_TYPES.map((type) => (
-                <SelectItem key={type} value={type}>
-                  {JOB_TYPE_LABELS[type]}
-                </SelectItem>
-              ))}
+              <SelectItem value="full-time">Full-time</SelectItem>
+              <SelectItem value="part-time">Part-time</SelectItem>
+              <SelectItem value="contract">Contract</SelectItem>
+              <SelectItem value="internship">Internship</SelectItem>
             </SelectContent>
           </Select>
 

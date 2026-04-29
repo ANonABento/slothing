@@ -2,7 +2,8 @@
 import type { DocumentType } from "@/lib/constants/documents";
 import type { JobStatus, JobType } from "@/lib/constants/jobs";
 
-export type { DocumentType, JobStatus, JobType };
+export type { DocumentType };
+export type { JobStatus, JobType } from "@/lib/constants/jobs";
 
 export interface ContactInfo {
   name: string;
@@ -45,24 +46,6 @@ export interface Project {
   url?: string;
   technologies: string[];
   highlights: string[];
-}
-
-export interface Hackathon {
-  id: string;
-  name: string;
-  organizer?: string;
-  location?: string;
-  startDate?: string;
-  endDate?: string;
-  submissionUrl?: string;
-  eventUrl?: string;
-  prizes: string[];
-  teamSizeMin?: string;
-  teamSizeMax?: string;
-  tracks: string[];
-  themes: string[];
-  technologies: string[];
-  notes?: string;
 }
 
 export interface Skill {
@@ -149,37 +132,7 @@ export interface JobDescription {
   appliedAt?: string;
   deadline?: string;
   notes?: string;
-  linkedResumeId?: string;
-  linkedCoverLetterId?: string;
   createdAt: string;
-}
-
-export type OpportunityStatus =
-  | 'pending'
-  | 'saved'
-  | 'applied'
-  | 'interviewing'
-  | 'offer'
-  | 'rejected'
-  | 'expired'
-  | 'dismissed';
-
-export interface Opportunity {
-  id: string;
-  type: 'job' | 'hackathon';
-  title: string;
-  company: string;
-  source: string;
-  sourceUrl?: string;
-  summary: string;
-  status: OpportunityStatus;
-  deadline?: string;
-  tags: string[];
-  notes?: string;
-  linkedResumeId?: string;
-  linkedCoverLetterId?: string;
-  createdAt: string;
-  updatedAt: string;
 }
 
 export interface JobMatch {
@@ -211,7 +164,6 @@ export const BANK_CATEGORIES = [
   'experience',
   'skill',
   'project',
-  'hackathon',
   'education',
   'achievement',
   'certification',
@@ -233,7 +185,6 @@ export interface GroupedBankEntries {
   experience: BankEntry[];
   skill: BankEntry[];
   project: BankEntry[];
-  hackathon: BankEntry[];
   education: BankEntry[];
   achievement: BankEntry[];
   certification: BankEntry[];

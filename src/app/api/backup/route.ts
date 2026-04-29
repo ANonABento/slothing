@@ -12,7 +12,7 @@ import { getJobs, createJob } from "@/lib/db/jobs";
 import { getInterviewSessions } from "@/lib/db/interviews";
 import { getAllGeneratedResumes } from "@/lib/db/resumes";
 import { generateId } from "@/lib/utils";
-import { backupDataSchema, JOB_STATUSES, JOB_TYPES } from "@/lib/constants";
+import { JOB_STATUSES, JOB_TYPES, backupDataSchema } from "@/lib/constants";
 import { requireAuth, isAuthError } from "@/lib/auth";
 
 // GET - Export full backup
@@ -161,6 +161,7 @@ export async function POST(request: NextRequest) {
           continue;
         }
 
+        // Validate and cast job type and status
         const jobType = JOB_TYPES.includes(job.type as typeof JOB_TYPES[number])
           ? (job.type as typeof JOB_TYPES[number])
           : undefined;
@@ -181,6 +182,7 @@ export async function POST(request: NextRequest) {
           keywords: job.keywords || [],
           url: job.url,
           status: jobStatus,
+          deadline: job.deadline,
           notes: job.notes,
         }, authResult.userId);
         existingKeys.add(key);

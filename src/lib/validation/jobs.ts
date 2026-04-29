@@ -1,7 +1,17 @@
 import { z } from "zod";
-import { jobStatusSchema, jobTypeSchema } from "@/lib/constants";
+import { JOB_STATUSES } from "@/lib/constants/jobs";
 
-export { jobStatusSchema, jobTypeSchema };
+// Job status enum
+export const jobStatusSchema = z.enum(JOB_STATUSES);
+
+// Job type enum
+export const jobTypeSchema = z.enum([
+  "full-time",
+  "part-time",
+  "contract",
+  "internship",
+  "freelance",
+]);
 
 // Create job schema
 export const createJobSchema = z.object({

@@ -42,11 +42,14 @@ export interface ResumeTemplate {
 }
 
 const STATUS_STYLES: Record<string, { bg: string; text: string }> = {
-  saved: { bg: "bg-muted", text: "text-muted-foreground" },
-  applied: { bg: "bg-info/10", text: "text-info" },
-  interviewing: { bg: "bg-warning/10", text: "text-warning" },
-  offered: { bg: "bg-success/10", text: "text-success" },
-  rejected: { bg: "bg-destructive/10", text: "text-destructive" },
+  pending: { bg: "bg-violet-100 dark:bg-violet-900/30", text: "text-violet-600 dark:text-violet-400" },
+  saved: { bg: "bg-slate-100 dark:bg-slate-800", text: "text-slate-600 dark:text-slate-300" },
+  dismissed: { bg: "bg-zinc-100 dark:bg-zinc-800", text: "text-zinc-600 dark:text-zinc-300" },
+  applied: { bg: "bg-blue-100 dark:bg-blue-900/30", text: "text-blue-600 dark:text-blue-400" },
+  interviewing: { bg: "bg-amber-100 dark:bg-amber-900/30", text: "text-amber-600 dark:text-amber-400" },
+  offered: { bg: "bg-emerald-100 dark:bg-emerald-900/30", text: "text-success dark:text-emerald-400" },
+  rejected: { bg: "bg-red-100 dark:bg-red-900/30", text: "text-red-600 dark:text-red-400" },
+  withdrawn: { bg: "bg-stone-100 dark:bg-stone-800", text: "text-stone-600 dark:text-stone-300" },
 };
 
 interface JobCardProps {
@@ -111,11 +114,14 @@ export function JobCard(props: JobCardProps) {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="pending">Pending</SelectItem>
                     <SelectItem value="saved">Saved</SelectItem>
+                    <SelectItem value="dismissed">Dismissed</SelectItem>
                     <SelectItem value="applied">Applied</SelectItem>
                     <SelectItem value="interviewing">Interviewing</SelectItem>
                     <SelectItem value="offered">Offered</SelectItem>
                     <SelectItem value="rejected">Rejected</SelectItem>
+                    <SelectItem value="withdrawn">Withdrawn</SelectItem>
                   </SelectContent>
                 </Select>
                 {atsResult && <ATSScoreBadge score={atsResult.score.overall} onClick={onAtsDialogOpen} />}
@@ -252,7 +258,7 @@ export function JobCard(props: JobCardProps) {
               ))}
             </SelectContent>
           </Select>
-          <Button size="sm" onClick={onGenerate} disabled={generating} className="gradient-bg text-primary-foreground hover:opacity-90">
+          <Button size="sm" onClick={onGenerate} disabled={generating} className="gradient-bg text-white hover:opacity-90">
             {generating ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> : <Download className="h-4 w-4 mr-1.5" />}
             Resume
           </Button>

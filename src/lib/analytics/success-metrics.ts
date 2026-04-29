@@ -1,4 +1,4 @@
-import type { JobDescription, JobStatus } from "@/types";
+import type { JobDescription } from "@/types";
 import type { GeneratedResume } from "@/lib/db/resumes";
 
 export interface TimeToMetric {
@@ -40,17 +40,6 @@ export interface SuccessMetrics {
   insights: string[];
 }
 
-const SUBMITTED_APPLICATION_STATUSES: JobStatus[] = [
-  "applied",
-  "interviewing",
-  "offered",
-  "rejected",
-];
-
-function isSubmittedApplication(job: JobDescription): boolean {
-  return SUBMITTED_APPLICATION_STATUSES.includes(job.status ?? "saved");
-}
-
 function daysBetween(date1: string, date2: string): number {
   const d1 = new Date(date1);
   const d2 = new Date(date2);
@@ -58,9 +47,20 @@ function daysBetween(date1: string, date2: string): number {
   return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 }
 
+function isAppliedLifecycleStatus(status?: JobDescription["status"]): boolean {
+  return (
+    status === "applied" ||
+    status === "interviewing" ||
+    status === "offered" ||
+    status === "rejected" ||
+    status === "withdrawn"
+  );
+}
+
 export function calculateFunnel(jobs: JobDescription[]): FunnelStage[] {
-  const appliedJobs = jobs.filter(isSubmittedApplication);
-  if (appliedJobs.length === 0) {
+  const appliedJobs = jobs.filter((job) => isAppliedLifecycleStatus(job.status));
+  const applied = appliedJobs.length;
+  if (applied === 0) {
     return [
       { stage: "Applied", count: 0, percentage: 0, conversionFromPrevious: 0 },
       { stage: "Response", count: 0, percentage: 0, conversionFromPrevious: 0 },
@@ -69,7 +69,6 @@ export function calculateFunnel(jobs: JobDescription[]): FunnelStage[] {
     ];
   }
 
-  const applied = appliedJobs.length;
   const responded = appliedJobs.filter(
     (j) => j.status === "interviewing" || j.status === "offered" || j.status === "rejected"
   ).length;
@@ -155,7 +154,9 @@ export function calculateOfferRate(jobs: JobDescription[]): {
   overall: number;
   byJobType: { type: string; rate: number; count: number }[];
 } {
-  const appliedJobs = jobs.filter(isSubmittedApplication);
+  const appliedJobs = jobs.filter(
+    (j) => isAppliedLifecycleStatus(j.status) && j.status !== "withdrawn"
+  );
   const offeredJobs = jobs.filter((j) => j.status === "offered");
 
   const overall = appliedJobs.length > 0
@@ -266,7 +267,7 @@ export function generateInsights(
   }
 
   // Volume insight
-  const totalApplied = jobs.filter(isSubmittedApplication).length;
+  const totalApplied = jobs.filter((j) => isAppliedLifecycleStatus(j.status)).length;
   if (totalApplied < 10) {
     insights.push(
       "Apply to more positions to get statistically meaningful insights. Aim for 15-20+ applications."

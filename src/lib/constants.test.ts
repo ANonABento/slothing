@@ -18,6 +18,7 @@ import {
   REMINDER_TYPES,
   STORAGE_KEYS,
   THEMES,
+  updateJobSchema,
   updateProfileSchema,
   validateFileMagicBytes,
   fullExportDataSchema,
@@ -66,6 +67,14 @@ describe("constants barrel", () => {
     expect(constants).not.toHaveProperty("backupJobSchema");
     expect(constants).not.toHaveProperty("exportCoverLetterSchema");
     expect(constants).not.toHaveProperty("exportBankEntrySchema");
+  });
+});
+
+describe("updateJobSchema", () => {
+  it("does not default status on partial updates", () => {
+    expect(updateJobSchema.parse({ notes: "Follow up" })).toEqual({
+      notes: "Follow up",
+    });
   });
 });
 
