@@ -102,7 +102,8 @@ export async function POST(request: NextRequest) {
         responsibilities: job.responsibilities || [],
         keywords: job.keywords || [],
         url: job.url,
-        status: (job.status as JobDescription["status"]) || "saved",
+        status: (job.status as JobDescription["status"]) || "pending",
+        deadline: job.deadline,
         notes: job.notes,
       }, authResult.userId);
 
@@ -202,6 +203,7 @@ function mapCsvHeader(header: string): string | null {
     url: "url",
     link: "url",
     status: "status",
+    deadline: "deadline",
     notes: "notes",
   };
 

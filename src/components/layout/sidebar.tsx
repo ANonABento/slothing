@@ -18,6 +18,7 @@ import {
   Calendar,
   DollarSign,
   FileText,
+  Rows3,
   type LucideIcon,
 } from "lucide-react";
 import { useLLMStatus } from "@/hooks/useLLMStatus";
@@ -51,6 +52,7 @@ export const navigationGroups: NavGroup[] = [
     label: "Job Tracker",
     items: [
       { name: "Jobs", href: "/jobs", icon: Briefcase },
+      { name: "Review Queue", href: "/opportunities/review", icon: Rows3 },
       { name: "Calendar", href: "/calendar", icon: Calendar },
       { name: "Email Templates", href: "/emails", icon: Mail },
     ],

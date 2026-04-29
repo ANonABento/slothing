@@ -55,8 +55,8 @@ export function getJob(id: string, userId: string = "default"): JobDescription |
 export function createJob(job: Omit<JobDescription, "id" | "createdAt">, userId: string = "default"): JobDescription {
   const id = generateId();
   db.prepare(`
-    INSERT INTO jobs (id, title, company, location, type, remote, salary, description, requirements_json, responsibilities_json, keywords_json, url, user_id)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO jobs (id, title, company, location, type, remote, salary, description, requirements_json, responsibilities_json, keywords_json, url, status, deadline, notes, user_id)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run(
     id,
     job.title,
@@ -70,6 +70,9 @@ export function createJob(job: Omit<JobDescription, "id" | "createdAt">, userId:
     JSON.stringify(job.responsibilities || []),
     JSON.stringify(job.keywords || []),
     job.url || null,
+    job.status || "saved",
+    job.deadline || null,
+    job.notes || null,
     userId
   );
   return getJob(id, userId)!;

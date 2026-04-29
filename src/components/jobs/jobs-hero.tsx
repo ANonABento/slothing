@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import dynamic from "next/dynamic";
-import { ArrowLeft, FileDown, Mail, Plus, Target } from "lucide-react";
+import { ArrowLeft, FileDown, Mail, Plus, Rows3, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SkeletonButton } from "@/components/ui/skeleton";
 import { useErrorToast } from "@/hooks/use-error-toast";
@@ -51,7 +51,13 @@ export function JobsHero({ jobsCount, onImportClick, onAddClick, onGmailImportSu
               <p className="text-3xl font-bold text-primary">{jobsCount}</p>
               <p className="text-sm text-muted-foreground">Jobs Tracked</p>
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
+              <Button asChild size="lg" variant="outline">
+                <Link href="/opportunities/review">
+                  <Rows3 className="h-5 w-5 mr-2" />
+                  Review
+                </Link>
+              </Button>
               <Button onClick={onImportClick} size="lg" variant="outline">
                 <FileDown className="h-5 w-5 mr-2" />
                 Import

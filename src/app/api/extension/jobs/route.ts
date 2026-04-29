@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
             salary: jobData.salary,
             url: jobData.url,
             deadline: jobData.deadline,
-            status: "saved",
+            status: "pending",
           }
         );
         results.push(job.id);
@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
         salary: data.salary,
         url: data.url,
         deadline: data.deadline,
-        status: "saved",
+        status: "pending",
       }
     );
 

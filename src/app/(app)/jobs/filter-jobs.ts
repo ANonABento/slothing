@@ -1,6 +1,6 @@
 import type { JobDescription } from "@/types";
 
-export type JobStatusFilter = "all" | "saved" | "applied" | "interviewing" | "offered" | "rejected";
+export type JobStatusFilter = "all" | "pending" | "saved" | "dismissed" | "applied" | "interviewing" | "offered" | "rejected" | "withdrawn";
 export type JobTypeFilter = "all" | "full-time" | "part-time" | "contract" | "internship";
 export type JobRemoteFilter = "all" | "remote" | "onsite";
 export type JobSortOption = "newest" | "oldest" | "company" | "title";

@@ -68,6 +68,7 @@ describe("navigationGroups", () => {
     const items = jobTracker.items.map((i) => [i.name, i.href]);
     expect(items).toEqual([
       ["Jobs", "/jobs"],
+      ["Review Queue", "/opportunities/review"],
       ["Calendar", "/calendar"],
       ["Email Templates", "/emails"],
     ]);
@@ -94,6 +95,7 @@ describe("navigationGroups", () => {
       ["Documents", "/bank"],
       ["Document Studio", "/studio"],
       ["Jobs", "/jobs"],
+      ["Review Queue", "/opportunities/review"],
       ["Calendar", "/calendar"],
       ["Email Templates", "/emails"],
       ["Interview Prep", "/interview"],

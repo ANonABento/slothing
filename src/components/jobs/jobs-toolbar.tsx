@@ -69,11 +69,14 @@ export function JobsToolbar(props: JobsToolbarProps) {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Status</SelectItem>
+              <SelectItem value="pending">Pending</SelectItem>
               <SelectItem value="saved">Saved</SelectItem>
+              <SelectItem value="dismissed">Dismissed</SelectItem>
               <SelectItem value="applied">Applied</SelectItem>
               <SelectItem value="interviewing">Interviewing</SelectItem>
               <SelectItem value="offered">Offered</SelectItem>
               <SelectItem value="rejected">Rejected</SelectItem>
+              <SelectItem value="withdrawn">Withdrawn</SelectItem>
             </SelectContent>
           </Select>
 

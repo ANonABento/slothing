@@ -7,7 +7,7 @@ const validJobTypes = ['full-time', 'part-time', 'contract', 'internship'] as co
 type ValidJobType = typeof validJobTypes[number];
 
 // Valid job statuses
-const validJobStatuses = ['saved', 'applied', 'interviewing', 'offered', 'rejected', 'withdrawn'] as const;
+const validJobStatuses = ['pending', 'saved', 'dismissed', 'applied', 'interviewing', 'offered', 'rejected', 'withdrawn'] as const;
 type ValidJobStatus = typeof validJobStatuses[number];
 
 // Map database row to JobDescription type
@@ -160,7 +160,9 @@ export async function countJobsByStatus(userId: string): Promise<Record<string, 
     .where(eq(jobs.userId, userId));
 
   const counts: Record<string, number> = {
+    pending: 0,
     saved: 0,
+    dismissed: 0,
     applied: 0,
     interviewing: 0,
     offered: 0,

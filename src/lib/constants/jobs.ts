@@ -2,7 +2,9 @@ import { z } from "zod";
 
 // Job application statuses
 export const JOB_STATUSES = [
+  "pending",
   "saved",
+  "dismissed",
   "applied",
   "interviewing",
   "offered",
@@ -66,6 +68,7 @@ export const importJobSchema = z.object({
   keywords: z.array(z.string()).optional(),
   url: z.string().url().optional().or(z.literal("")),
   status: jobStatusSchema.optional(),
+  deadline: z.string().optional(),
   notes: z.string().max(5000).optional(),
 });
 

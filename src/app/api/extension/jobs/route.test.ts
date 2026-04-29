@@ -44,7 +44,7 @@ describe("extension jobs route", () => {
       title: "Frontend Engineer",
       company: "Acme",
       description: "Build UI",
-      status: "saved",
+      status: "pending",
     }));
   });
 
