@@ -1,6 +1,7 @@
 import type { BankEntry } from "@/types";
 import type { TailoredResume } from "./generator";
 import type { ContactInfo } from "@/types";
+import { formatHackathonHighlights } from "./hackathon-highlights";
 
 /**
  * Convert selected bank entries into the TailoredResume structure
@@ -88,19 +89,4 @@ function formatExperienceDates(c: Record<string, unknown>): string {
   if (c.endDate) parts.push(String(c.endDate));
   else if (c.current) parts.push("Present");
   return parts.join(" — ");
-}
-
-function formatHackathonHighlights(c: Record<string, unknown>): string[] {
-  const highlights: string[] = [];
-  if (Array.isArray(c.prizes) && c.prizes.length > 0) {
-    highlights.push(`Prizes: ${c.prizes.map(String).join(", ")}`);
-  }
-  if (Array.isArray(c.tracks) && c.tracks.length > 0) {
-    highlights.push(`Tracks: ${c.tracks.map(String).join(", ")}`);
-  }
-  if (Array.isArray(c.themes) && c.themes.length > 0) {
-    highlights.push(`Themes: ${c.themes.map(String).join(", ")}`);
-  }
-  if (c.notes) highlights.push(String(c.notes));
-  return highlights;
 }

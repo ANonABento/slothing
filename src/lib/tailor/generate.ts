@@ -1,5 +1,6 @@
 import type { BankEntry, GroupedBankEntries, LLMConfig, ContactInfo } from "@/types";
 import type { TailoredResume } from "@/lib/resume/generator";
+import { formatHackathonHighlights } from "@/lib/resume/hackathon-highlights";
 import type { BankMatch } from "./analyze";
 import { LLMClient, parseJSONFromLLM } from "@/lib/llm/client";
 
@@ -222,19 +223,4 @@ function formatDateRange(content: Record<string, unknown>): string {
   if (start && end) return `${start} - ${end}`;
   if (start) return `${start} - Present`;
   return end;
-}
-
-function formatHackathonHighlights(content: Record<string, unknown>): string[] {
-  const highlights: string[] = [];
-  if (Array.isArray(content.prizes) && content.prizes.length > 0) {
-    highlights.push(`Prizes: ${content.prizes.map(String).join(", ")}`);
-  }
-  if (Array.isArray(content.tracks) && content.tracks.length > 0) {
-    highlights.push(`Tracks: ${content.tracks.map(String).join(", ")}`);
-  }
-  if (Array.isArray(content.themes) && content.themes.length > 0) {
-    highlights.push(`Themes: ${content.themes.map(String).join(", ")}`);
-  }
-  if (content.notes) highlights.push(String(content.notes));
-  return highlights;
 }
