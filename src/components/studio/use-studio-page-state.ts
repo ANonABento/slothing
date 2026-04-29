@@ -130,9 +130,6 @@ function areSectionsEqual(
   );
 }
 
-function getDefaultTemplateIdForDocumentMode(mode: DocumentMode): string {
-  return mode === "cover_letter" ? "formal" : "classic";
-}
 
 export function isDraftSavedForDocument(
   dirtyDocumentIds: Set<string>,
