@@ -303,10 +303,19 @@ export function useStudioPageState(): StudioPageState {
 
         if (!cancelled) {
           lastPreviewErrorToastRef.current = "";
-          setHtml(data.html ?? "");
-          setContent(
-            data.resume ? tailoredResumeToTipTapDocument(data.resume) : undefined
-          );
+          if (data.html) {
+            setHtml(data.html);
+            setContent(
+              data.resume ? tailoredResumeToTipTapDocument(data.resume) : undefined
+            );
+          } else {
+            // API returned empty — use client-side fallback
+            const fallbackHtml = generateResumePreviewFallbackHTML(
+              orderedEntries,
+              templateId
+            );
+            setHtml(fallbackHtml);
+          }
         }
       } catch (err) {
         const isAbortError =
