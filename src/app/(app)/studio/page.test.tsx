@@ -133,6 +133,38 @@ describe("StudioPage", () => {
     expect(screen.queryByRole("button", { name: /tailored/i })).not.toBeInTheDocument();
   });
 
+  it("shows the draft as saved on fresh load", async () => {
+    render(<StudioPage />);
+
+    expect(await screen.findByText("Document Studio")).toBeInTheDocument();
+    expect(screen.getByText("Saved")).toBeInTheDocument();
+    expect(screen.queryByText("Unsaved")).not.toBeInTheDocument();
+  });
+
+  it("shows the draft as unsaved after a content edit", async () => {
+    mockStudioFetch(bankEntries);
+
+    render(<StudioPage />);
+
+    fireEvent.click(await screen.findByRole("button", { name: "Toggle entry" }));
+
+    expect(screen.getByText("Unsaved")).toBeInTheDocument();
+  });
+
+  it("keeps untouched documents saved after another document is edited", async () => {
+    mockStudioFetch(bankEntries);
+
+    render(<StudioPage />);
+
+    fireEvent.click(await screen.findByRole("button", { name: "Toggle entry" }));
+    expect(screen.getByText("Unsaved")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Cover Letter" }));
+
+    await waitFor(() => expect(screen.getByText("Saved")).toBeInTheDocument());
+    expect(screen.queryByText("Unsaved")).not.toBeInTheDocument();
+  });
+
   it("opens the bank entry picker from the add button", async () => {
     mockStudioFetch(bankEntries);
 
