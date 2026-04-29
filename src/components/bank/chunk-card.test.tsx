@@ -167,6 +167,11 @@ describe("getHackathonTeamSize", () => {
     expect(getHackathonTeamSize({ teamSizeMax: "5" })).toBe("Up to 5 people");
   });
 
+  it("should pluralize fixed team sizes", () => {
+    expect(getHackathonTeamSize({ teamSizeMin: "1", teamSizeMax: "1" })).toBe("1 person");
+    expect(getHackathonTeamSize({ teamSizeMin: "2", teamSizeMax: "2" })).toBe("2 people");
+  });
+
   it("should return empty string when no team size is set", () => {
     expect(getHackathonTeamSize({})).toBe("");
   });

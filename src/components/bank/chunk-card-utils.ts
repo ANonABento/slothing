@@ -54,7 +54,9 @@ export function getHackathonTeamSize(content: Record<string, unknown>): string {
   const min = content.teamSizeMin ? String(content.teamSizeMin).trim() : "";
   const max = content.teamSizeMax ? String(content.teamSizeMax).trim() : "";
 
-  if (min && max && min === max) return `${min} person`;
+  if (min && max && min === max) {
+    return `${min} ${min === "1" ? "person" : "people"}`;
+  }
   if (min && max) return `${min}-${max} people`;
   if (min) return `${min}+ people`;
   if (max) return `Up to ${max} people`;
