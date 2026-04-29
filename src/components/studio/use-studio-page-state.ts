@@ -21,6 +21,7 @@ import {
   type BuilderVersion,
 } from "@/lib/builder/version-history";
 import { createDocumentFilename, downloadHtmlAsPdf } from "@/lib/builder/document-export";
+import { generateResumePreviewFallbackHTML } from "@/lib/builder/resume-preview-fallback";
 import { createPrintableEditorHtml } from "@/lib/editor/document-html";
 import { readJsonResponse } from "@/lib/http";
 import { useErrorToast } from "@/hooks/use-error-toast";
@@ -299,13 +300,24 @@ export function useStudioPageState(): StudioPageState {
         const isAbortError =
           err instanceof DOMException && err.name === "AbortError";
         if (!cancelled && !isAbortError) {
-          const message = err instanceof Error ? err.message : "preview";
-          if (lastPreviewErrorToastRef.current !== message) {
-            lastPreviewErrorToastRef.current = message;
-            showErrorToast(err, {
-              title: "Could not update preview",
-              fallbackDescription: "Please try changing the resume content again.",
-            });
+          try {
+            const fallbackHtml = generateResumePreviewFallbackHTML(
+              orderedEntries,
+              templateId
+            );
+            lastPreviewErrorToastRef.current = "";
+            setHtml(fallbackHtml);
+          } catch (fallbackErr) {
+            const message =
+              fallbackErr instanceof Error ? fallbackErr.message : "preview";
+            if (lastPreviewErrorToastRef.current !== message) {
+              lastPreviewErrorToastRef.current = message;
+              showErrorToast(fallbackErr, {
+                title: "Could not update preview",
+                fallbackDescription:
+                  "Please try changing the resume content again.",
+              });
+            }
           }
         }
       } finally {

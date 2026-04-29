@@ -12,6 +12,7 @@ import { requireAuth, isAuthError } from "@/lib/auth";
 import { getGeneratedResume } from "@/lib/db";
 import type { TailoredResume } from "@/lib/resume/generator";
 import type { LatexOptions } from "@/lib/resume/latex-generator";
+import { getTemplateWithCustom } from "@/lib/resume/templates";
 import { exec } from "child_process";
 import { writeFile, readFile, unlink, mkdtemp } from "fs/promises";
 import { tmpdir } from "os";
@@ -42,6 +43,16 @@ const exportSchema = z.object({
   latexOptions: z.record(z.string(), z.unknown()).optional(),
   compilePdf: z.boolean().default(false),
 });
+
+async function renderResumeHtml(
+  resume: TailoredResume,
+  templateId: string,
+  userId: string
+): Promise<string> {
+  const { generateResumeHTML } = await import("@/lib/resume/pdf");
+  const template = getTemplateWithCustom(templateId, userId);
+  return generateResumeHTML(resume, templateId, template);
+}
 
 // POST — export resume in requested format
 export async function POST(request: NextRequest) {
@@ -123,20 +134,18 @@ export async function POST(request: NextRequest) {
       if (!resume) {
         return NextResponse.json({ error: "resumeId required for HTML export" }, { status: 400 });
       }
-      const { generateResumeHTML } = await import("@/lib/resume/pdf");
-      const html = generateResumeHTML(resume, templateId);
+      const html = await renderResumeHtml(resume, templateId, authResult.userId);
       return new NextResponse(html, {
         headers: { "Content-Type": "text/html", "Content-Disposition": `attachment; filename="resume.html"` },
       });
     }
 
     // Default: PDF
-    const { generateResumeHTML } = await import("@/lib/resume/pdf");
     let html: string;
     if (rawHtml) {
       html = rawHtml;
     } else if (resume) {
-      html = generateResumeHTML(resume, templateId);
+      html = await renderResumeHtml(resume, templateId, authResult.userId);
     } else {
       return NextResponse.json({ error: "Provide resumeId or html" }, { status: 400 });
     }
