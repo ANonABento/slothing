@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
+import { THEME_CHANGE_EVENT, applyThemePreference, readThemePreference } from "@/lib/theme/theme-presets";
 
 type Theme = "light" | "dark" | "system";
 
@@ -77,6 +78,27 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     mediaQuery.addEventListener("change", handleMediaChange);
     return () => mediaQuery.removeEventListener("change", handleMediaChange);
   }, [theme, mounted]);
+
+  useEffect(() => {
+    if (!mounted) return;
+
+    const applyStoredThemePreference = () => {
+      try {
+        applyThemePreference(document.documentElement, readThemePreference());
+      } catch {
+        // Keep the base theme usable when storage is blocked or malformed.
+      }
+    };
+
+    applyStoredThemePreference();
+    window.addEventListener(THEME_CHANGE_EVENT, applyStoredThemePreference);
+    window.addEventListener("storage", applyStoredThemePreference);
+
+    return () => {
+      window.removeEventListener(THEME_CHANGE_EVENT, applyStoredThemePreference);
+      window.removeEventListener("storage", applyStoredThemePreference);
+    };
+  }, [mounted]);
 
   const setTheme = (newTheme: Theme) => {
     setThemeState(newTheme);
