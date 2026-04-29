@@ -5,6 +5,10 @@ import {
   getDefaultTemplateIdForDocumentMode,
   getTemplateForDocumentMode,
 } from "@/lib/resume/template-data";
+import type {
+  CoverLetterTemplateStyles,
+  TemplateStyles,
+} from "@/lib/resume/template-data";
 import {
   DEFAULT_BUILDER_PANEL,
   createInitialSections,
@@ -87,6 +91,23 @@ interface StudioPageState {
   setMobileView: (panel: BuilderPanel) => void;
   templateId: string;
   versions: BuilderVersion[];
+}
+
+function coverLetterStylesToEditorTemplateStyles(
+  styles: CoverLetterTemplateStyles
+): TemplateStyles {
+  return {
+    fontFamily: styles.fontFamily,
+    fontSize: styles.fontSize,
+    headerSize: styles.headerSize,
+    sectionHeaderSize: "12pt",
+    lineHeight: styles.lineHeight,
+    accentColor: styles.accentColor,
+    layout: "single-column",
+    headerStyle: styles.headerStyle,
+    bulletStyle: "none",
+    sectionDivider: "none",
+  };
 }
 
 function areSelectedIdsEqual(current: Set<string>, next: string[]): boolean {
@@ -544,28 +565,16 @@ export function useStudioPageState(): StudioPageState {
   );
 
   const getPrintableHtml = useCallback(() => {
-    if (!selectedTemplate) return "";
-
     const bodyHtml = content ? createEditorBodyHtml(content) : html;
     if (!bodyHtml) return "";
 
     if (documentMode === "cover_letter") {
       if (!content) return bodyHtml;
+      if (selectedTemplate.styles.layout !== "letter") return bodyHtml;
 
       return createPrintableEditorHtml(
         bodyHtml,
-        {
-          fontFamily: selectedTemplate.styles.fontFamily,
-          fontSize: selectedTemplate.styles.fontSize,
-          headerSize: selectedTemplate.styles.headerSize,
-          sectionHeaderSize: "12pt",
-          lineHeight: selectedTemplate.styles.lineHeight,
-          accentColor: selectedTemplate.styles.accentColor,
-          layout: "single-column",
-          headerStyle: selectedTemplate.styles.headerStyle,
-          bulletStyle: "none",
-          sectionDivider: "none",
-        },
+        coverLetterStylesToEditorTemplateStyles(selectedTemplate.styles),
         `${selectedTemplate.name} Cover Letter`
       );
     }
@@ -589,7 +598,7 @@ export function useStudioPageState(): StudioPageState {
         printableHtml,
         createDocumentFilename(
           documentMode === "cover_letter" ? "cover-letter" : "resume",
-          selectedTemplate?.name
+          selectedTemplate.name
         )
       );
     } catch (err) {

@@ -16,6 +16,7 @@ import {
 } from "@/lib/resume/template-data";
 import { cn } from "@/lib/utils";
 import {
+  DOCUMENT_MODE_LABELS,
   DOCUMENT_MODE_OPTIONS,
   type DocumentMode,
 } from "./studio-documents";
@@ -55,14 +56,9 @@ export function StudioHeader({
     () => getTemplateForDocumentMode(documentMode, templateId),
     [documentMode, templateId]
   );
-  const templateLabel =
-    documentMode === "cover_letter" ? "cover letter" : "resume";
-  const documentLabel =
-    documentMode === "cover_letter" ? "cover letter" : "resume";
-  const templateListLabel =
-    documentMode === "cover_letter"
-      ? "Cover letter templates"
-      : "Resume templates";
+  const modeLabel = DOCUMENT_MODE_LABELS[documentMode];
+  const documentLabel = modeLabel.toLowerCase();
+  const templateListLabel = `${modeLabel} templates`;
 
   useEffect(() => {
     if (!templateOpen) return;
@@ -104,7 +100,7 @@ export function StudioHeader({
         <div className="relative md:ml-4">
           <button
             type="button"
-            aria-label={`Select ${templateLabel} template`}
+            aria-label={`Select ${documentLabel} template`}
             aria-expanded={templateOpen}
             aria-haspopup="listbox"
             onClick={() => setTemplateOpen((prev) => !prev)}

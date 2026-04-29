@@ -267,11 +267,32 @@ export function getDefaultTemplateIdForDocumentMode(
 }
 
 export function getTemplatesForDocumentMode(
+  documentMode: "resume"
+): ResumeTemplate[];
+export function getTemplatesForDocumentMode(
+  documentMode: "cover_letter"
+): CoverLetterTemplate[];
+export function getTemplatesForDocumentMode(
+  documentMode: TemplateDocumentMode
+): DocumentTemplate[];
+export function getTemplatesForDocumentMode(
   documentMode: TemplateDocumentMode
 ): DocumentTemplate[] {
   return documentMode === "cover_letter" ? COVER_LETTER_TEMPLATES : TEMPLATES;
 }
 
+export function getTemplateForDocumentMode(
+  documentMode: "resume",
+  id: string
+): ResumeTemplate;
+export function getTemplateForDocumentMode(
+  documentMode: "cover_letter",
+  id: string
+): CoverLetterTemplate;
+export function getTemplateForDocumentMode(
+  documentMode: TemplateDocumentMode,
+  id: string
+): DocumentTemplate;
 export function getTemplateForDocumentMode(
   documentMode: TemplateDocumentMode,
   id: string
