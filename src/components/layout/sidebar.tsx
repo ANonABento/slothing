@@ -22,13 +22,13 @@ import {
 } from "lucide-react";
 import { useLLMStatus } from "@/hooks/useLLMStatus";
 
-interface NavItem {
+export interface NavItem {
   name: string;
   href: string;
   icon: LucideIcon;
 }
 
-interface NavGroup {
+export interface NavGroup {
   label: string;
   items: NavItem[];
 }
