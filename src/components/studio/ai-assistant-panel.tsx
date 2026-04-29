@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
   FileText,
@@ -72,6 +72,8 @@ export function AiAssistantPanel({
   selectedEntryCount,
   onOpenBank,
 }: AiAssistantPanelProps) {
+  const panelRef = useRef<HTMLElement>(null);
+  const runningActionRef = useRef<AssistantRunAction | null>(null);
   const [jobDescription, setJobDescription] = useState("");
   const [selectedText, setSelectedText] = useState("");
   const [rewriteSection, setRewriteSection] = useState("");
@@ -86,7 +88,13 @@ export function AiAssistantPanel({
     function syncSelection() {
       const selection = window.getSelection();
       const text = selection?.toString().trim() ?? "";
+      const activeElement = document.activeElement;
+      const focusIsInPanel =
+        activeElement instanceof Element &&
+        panelRef.current?.contains(activeElement);
+
       if (!text) {
+        if (focusIsInPanel) return;
         setSelectedText("");
         return;
       }
@@ -98,7 +106,7 @@ export function AiAssistantPanel({
 
       if (root && anchorElement && root.contains(anchorElement)) {
         setSelectedText(text);
-      } else {
+      } else if (!focusIsInPanel) {
         setSelectedText("");
       }
     }
@@ -168,6 +176,9 @@ export function AiAssistantPanel({
 
   const handleAssistantAction = useCallback(
     async (action: AssistantRunAction) => {
+      if (runningActionRef.current) return;
+
+      runningActionRef.current = action;
       setRunningAction(action);
       setStatusMessage("");
       setAssistantResult("");
@@ -228,6 +239,7 @@ export function AiAssistantPanel({
           setStatusMessage(message);
         }
       } finally {
+        runningActionRef.current = null;
         setRunningAction(null);
       }
     },
@@ -244,16 +256,20 @@ export function AiAssistantPanel({
   );
 
   const isRunning = (action: AssistantRunAction) => runningAction === action;
+  const isBusy = runningAction !== null;
   const hasSelection = selectedText.length > 0;
 
   return (
-    <aside className="hidden w-[360px] shrink-0 border-l bg-background md:block">
+    <aside
+      ref={panelRef}
+      className="hidden w-[360px] shrink-0 flex-col border-l bg-background md:flex"
+    >
       <div className="flex items-center justify-between border-b px-4 py-3">
         <h2 className="text-sm font-semibold">AI Assistant</h2>
         <Sparkles className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
       </div>
 
-      <div className="space-y-5 overflow-y-auto p-4">
+      <div className="min-h-0 flex-1 space-y-5 overflow-y-auto p-4">
         {setupPrompt && (
           <div
             className="rounded-md border border-primary/30 bg-primary/5 p-3 text-sm"
@@ -281,7 +297,7 @@ export function AiAssistantPanel({
           <Button
             type="button"
             className="w-full"
-            disabled={isRunning("match-jd-keywords")}
+            disabled={isBusy}
             onClick={() => handleAssistantAction("match-jd-keywords")}
           >
             {isRunning("match-jd-keywords") ? (
@@ -298,7 +314,7 @@ export function AiAssistantPanel({
             type="button"
             variant="outline"
             className="w-full"
-            disabled={isRunning("generate-from-bank")}
+            disabled={isBusy}
             onClick={() => handleAssistantAction("generate-from-bank")}
           >
             {isRunning("generate-from-bank") ? (
@@ -334,7 +350,8 @@ export function AiAssistantPanel({
               type="button"
               size="icon"
               variant="secondary"
-              disabled={isRunning("rewrite-section")}
+              disabled={isBusy}
+              onMouseDown={(event) => event.preventDefault()}
               onClick={() => handleAssistantAction("rewrite-section")}
               aria-label="Rewrite selected section"
             >
@@ -365,8 +382,12 @@ export function AiAssistantPanel({
                   type="button"
                   size="sm"
                   variant="secondary"
-                  className={cn("px-2 text-xs", action === "make-concise" && "text-[11px]")}
-                  disabled={isRunning(action)}
+                  className={cn(
+                    "px-2 text-xs",
+                    action === "make-concise" && "text-[11px]",
+                  )}
+                  disabled={isBusy}
+                  onMouseDown={(event) => event.preventDefault()}
                   onClick={() => handleAssistantAction(action)}
                 >
                   {isRunning(action) ? (

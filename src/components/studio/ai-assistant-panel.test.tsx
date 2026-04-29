@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { AiAssistantPanel } from "./ai-assistant-panel";
 
@@ -30,7 +30,19 @@ function renderWithSelectableText(anchorText = "Built APIs quickly.") {
   return { ...view, onOpenBank };
 }
 
+function selectionWithText(text: string, anchorNode: Node | null): Selection {
+  return {
+    toString: () => text,
+    anchorNode,
+  } as unknown as Selection;
+}
+
 describe("AiAssistantPanel", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+  });
+
   it("renders the AI assistant controls", () => {
     render(
       <AiAssistantPanel
@@ -90,14 +102,47 @@ describe("AiAssistantPanel", () => {
     ).toBeInTheDocument();
   });
 
+  it("disables other assistant actions while an action is running", async () => {
+    let resolveStatus: (response: Response) => void = () => {};
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(
+        () =>
+          new Promise<Response>((resolve) => {
+            resolveStatus = resolve;
+          }),
+      ),
+    );
+    renderWithSelectableText();
+
+    fireEvent.change(screen.getByLabelText("Job description"), {
+      target: { value: "React role" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Tailor to JD" }));
+
+    expect(
+      screen.getByRole("button", { name: "Tailoring..." }),
+    ).toBeDisabled();
+    expect(
+      screen.getByRole("button", { name: "Generate from Bank" }),
+    ).toBeDisabled();
+    expect(
+      screen.getByRole("button", { name: "Rewrite selected section" }),
+    ).toBeDisabled();
+
+    resolveStatus(statusResponse(false));
+    expect(
+      await screen.findByText("Set up an LLM provider to use AI tools."),
+    ).toBeInTheDocument();
+  });
+
   it("shows contextual quick actions for selected document text", async () => {
     const { container } = renderWithSelectableText();
     const paragraph = container.querySelector("p");
     const textNode = paragraph?.firstChild;
-    vi.spyOn(window, "getSelection").mockReturnValue({
-      toString: () => "Built APIs quickly.",
-      anchorNode: textNode,
-    } as Selection);
+    vi.spyOn(window, "getSelection").mockReturnValue(
+      selectionWithText("Built APIs quickly.", textNode ?? null),
+    );
 
     fireEvent(document, new Event("selectionchange"));
 
@@ -113,6 +158,53 @@ describe("AiAssistantPanel", () => {
     expect(
       screen.getByRole("button", { name: "Add metrics" }),
     ).toBeInTheDocument();
+  });
+
+  it("keeps selected text actions visible when focus moves into the assistant panel", async () => {
+    const { container } = renderWithSelectableText();
+    const paragraph = container.querySelector("p");
+    const textNode = paragraph?.firstChild;
+    const getSelection = vi.spyOn(window, "getSelection");
+    getSelection.mockReturnValue(
+      selectionWithText("Built APIs quickly.", textNode ?? null),
+    );
+
+    fireEvent(document, new Event("selectionchange"));
+
+    const rewriteButton = await screen.findByRole("button", {
+      name: "Rewrite",
+    });
+    getSelection.mockReturnValue(
+      selectionWithText("", rewriteButton.firstChild),
+    );
+    rewriteButton.focus();
+    fireEvent(document, new Event("selectionchange"));
+
+    expect(
+      screen.getByRole("region", {
+        name: "Selected text quick actions",
+      }),
+    ).toBeInTheDocument();
+  });
+
+  it("hides selected text actions when selection moves outside the document and panel", async () => {
+    const { container } = renderWithSelectableText();
+    const paragraph = container.querySelector("p");
+    const textNode = paragraph?.firstChild;
+    const getSelection = vi.spyOn(window, "getSelection");
+    getSelection.mockReturnValue(
+      selectionWithText("Built APIs quickly.", textNode ?? null),
+    );
+
+    fireEvent(document, new Event("selectionchange"));
+    expect(await screen.findByText("Selected text")).toBeInTheDocument();
+
+    getSelection.mockReturnValue(selectionWithText("", document.body));
+    fireEvent(document, new Event("selectionchange"));
+
+    await waitFor(() =>
+      expect(screen.queryByText("Selected text")).not.toBeInTheDocument(),
+    );
   });
 
   it("sends selected text rewrites to the assistant endpoint", async () => {
@@ -136,10 +228,9 @@ describe("AiAssistantPanel", () => {
     );
     const { container } = renderWithSelectableText();
     const textNode = container.querySelector("p")?.firstChild;
-    vi.spyOn(window, "getSelection").mockReturnValue({
-      toString: () => "Built APIs quickly.",
-      anchorNode: textNode,
-    } as Selection);
+    vi.spyOn(window, "getSelection").mockReturnValue(
+      selectionWithText("Built APIs quickly.", textNode ?? null),
+    );
 
     fireEvent(document, new Event("selectionchange"));
     fireEvent.click(await screen.findByRole("button", { name: "Rewrite" }));
