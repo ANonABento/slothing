@@ -1,6 +1,19 @@
 import type { CSVJob, CSVPreview, ParsedJobPreview } from "./import-job-dialog.types";
 
 type JsonObject = Record<string, unknown>;
+type ScrapedOpportunity = {
+  title: string;
+  company: string;
+  location?: string;
+  type?: string;
+  remote?: boolean;
+  salary?: string;
+  description: string;
+  requirements?: string[];
+  keywords?: string[];
+  url?: string;
+  source?: string;
+};
 
 function isObject(value: unknown): value is JsonObject {
   return typeof value === "object" && value !== null;
@@ -59,6 +72,24 @@ function isCSVPreview(value: unknown): value is CSVPreview {
   );
 }
 
+function isScrapedOpportunity(value: unknown): value is ScrapedOpportunity {
+  if (!isObject(value)) return false;
+
+  return (
+    typeof value.title === "string" &&
+    typeof value.company === "string" &&
+    typeof value.description === "string" &&
+    (value.location === undefined || typeof value.location === "string") &&
+    (value.type === undefined || typeof value.type === "string") &&
+    (value.remote === undefined || typeof value.remote === "boolean") &&
+    (value.salary === undefined || typeof value.salary === "string") &&
+    (value.url === undefined || typeof value.url === "string") &&
+    (value.source === undefined || typeof value.source === "string") &&
+    (value.requirements === undefined || isStringArray(value.requirements)) &&
+    (value.keywords === undefined || isStringArray(value.keywords))
+  );
+}
+
 function getResponseError(data: unknown, fallbackMessage: string): string {
   if (isObject(data) && typeof data.error === "string") {
     return data.error;
@@ -69,6 +100,23 @@ function getResponseError(data: unknown, fallbackMessage: string): string {
 function normalizeOptionalString(value?: string): string | undefined {
   const trimmed = value?.trim();
   return trimmed ? trimmed : undefined;
+}
+
+function opportunityToPreview(opportunity: ScrapedOpportunity): ParsedJobPreview {
+  return {
+    title: opportunity.title,
+    company: opportunity.company,
+    location: opportunity.location || "",
+    type: opportunity.type || "",
+    remote: opportunity.remote ?? false,
+    salary: opportunity.salary || "",
+    description: opportunity.description.slice(0, 500) + (opportunity.description.length > 500 ? "..." : ""),
+    fullDescription: opportunity.description,
+    requirements: opportunity.requirements || [],
+    keywords: opportunity.keywords || [],
+    url: opportunity.url,
+    source: opportunity.source,
+  };
 }
 
 async function parseJsonResponse(response: Response, fallbackMessage: string): Promise<unknown> {
@@ -117,6 +165,19 @@ export async function fetchJobFromUrl(url: string): Promise<ParsedJobPreview> {
     body: JSON.stringify({ url }),
   });
   return parsePreviewResponse(response, "Failed to fetch job from URL");
+}
+
+export async function scrapeJobFromUrl(url: string): Promise<ParsedJobPreview> {
+  const response = await fetch("/api/opportunities/scrape", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ url }),
+  });
+  const data = await parseJsonResponse(response, "Failed to fetch job from URL");
+  if (isObject(data) && isScrapedOpportunity(data.opportunity)) {
+    return opportunityToPreview(data.opportunity);
+  }
+  throw new Error("Unexpected job preview response");
 }
 
 export async function parseJobText(text: string, url?: string): Promise<ParsedJobPreview> {

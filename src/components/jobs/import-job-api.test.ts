@@ -5,6 +5,7 @@ import {
   parseJobText,
   saveCsvJobs,
   saveParsedJob,
+  scrapeJobFromUrl,
 } from "./import-job-api";
 import type { CSVJob, ParsedJobPreview } from "./import-job-dialog.types";
 
@@ -48,6 +49,35 @@ describe("import job api helpers", () => {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ url: "https://example.com/job" }),
+    });
+  });
+
+  it("scrapes a supported job-board URL", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(jsonResponse({
+      opportunity: {
+        title: preview.title,
+        company: preview.company,
+        location: preview.location,
+        type: preview.type,
+        remote: preview.remote,
+        salary: preview.salary,
+        description: preview.fullDescription,
+        requirements: preview.requirements,
+        keywords: preview.keywords,
+        url: preview.url,
+        source: preview.source,
+      },
+    }));
+
+    await expect(scrapeJobFromUrl("https://jobs.lever.co/acme/123")).resolves.toEqual({
+      ...preview,
+      description: preview.fullDescription,
+    });
+
+    expect(fetch).toHaveBeenCalledWith("/api/opportunities/scrape", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url: "https://jobs.lever.co/acme/123" }),
     });
   });
 
