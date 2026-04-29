@@ -106,6 +106,7 @@ function mockStudioFetch(
 
 describe("StudioPage", () => {
   beforeEach(() => {
+    mockShowErrorToast.mockClear();
     mockStorage();
     vi.stubGlobal(
       "fetch",
@@ -141,6 +142,36 @@ describe("StudioPage", () => {
     fireEvent.click(await screen.findByRole("button", { name: /add from bank/i }));
 
     expect(screen.getByText("Bank Entry Picker")).toBeInTheDocument();
+  });
+
+  it("renders a client-side preview when the builder API fails", async () => {
+    let builderRequestCount = 0;
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string) => {
+        if (url === "/api/builder") {
+          builderRequestCount++;
+          return new Response(JSON.stringify({ error: "DB unavailable" }), {
+            status: 500,
+          });
+        }
+
+        return new Response(JSON.stringify({ entries: bankEntries }), {
+          status: 200,
+        });
+      })
+    );
+
+    render(<StudioPage />);
+
+    fireEvent.click(await screen.findByRole("button", { name: "Toggle entry" }));
+
+    await waitFor(() => {
+      expect(screen.getByTestId("resume-html")).toHaveTextContent("Engineer");
+      expect(screen.getByTestId("resume-html")).toHaveTextContent("Your Name");
+    });
+    expect(builderRequestCount).toBe(1);
+    expect(mockShowErrorToast).not.toHaveBeenCalled();
   });
 
   it("restores saved version HTML without a live preview overwrite", async () => {
