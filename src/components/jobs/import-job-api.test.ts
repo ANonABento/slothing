@@ -5,6 +5,7 @@ import {
   parseJobText,
   saveCsvJobs,
   saveParsedJob,
+  scrapeJobFromUrl,
 } from "./import-job-api";
 import type { CSVJob, ParsedJobPreview } from "./import-job-dialog.types";
 
@@ -40,6 +41,18 @@ describe("import job api helpers", () => {
   });
 
   it("fetches a job preview from a URL", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(jsonResponse({ preview }));
+
+    await expect(fetchJobFromUrl("https://example.com/job")).resolves.toEqual(preview);
+
+    expect(fetch).toHaveBeenCalledWith("/api/import/job", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url: "https://example.com/job" }),
+    });
+  });
+
+  it("scrapes a supported job-board URL", async () => {
     vi.mocked(fetch).mockResolvedValueOnce(jsonResponse({
       opportunity: {
         title: preview.title,
@@ -56,7 +69,7 @@ describe("import job api helpers", () => {
       },
     }));
 
-    await expect(fetchJobFromUrl("https://example.com/job")).resolves.toEqual({
+    await expect(scrapeJobFromUrl("https://jobs.lever.co/acme/123")).resolves.toEqual({
       ...preview,
       description: preview.fullDescription,
     });
@@ -64,7 +77,7 @@ describe("import job api helpers", () => {
     expect(fetch).toHaveBeenCalledWith("/api/opportunities/scrape", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ url: "https://example.com/job" }),
+      body: JSON.stringify({ url: "https://jobs.lever.co/acme/123" }),
     });
   });
 

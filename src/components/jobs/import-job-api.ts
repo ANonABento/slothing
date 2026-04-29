@@ -159,6 +159,15 @@ async function parseCSVPreviewResponse(
 }
 
 export async function fetchJobFromUrl(url: string): Promise<ParsedJobPreview> {
+  const response = await fetch("/api/import/job", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ url }),
+  });
+  return parsePreviewResponse(response, "Failed to fetch job from URL");
+}
+
+export async function scrapeJobFromUrl(url: string): Promise<ParsedJobPreview> {
   const response = await fetch("/api/opportunities/scrape", {
     method: "POST",
     headers: { "Content-Type": "application/json" },

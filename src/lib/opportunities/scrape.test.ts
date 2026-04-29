@@ -70,6 +70,23 @@ describe("opportunity scraping", () => {
     expect(opportunity.keywords).toEqual(expect.arrayContaining(["typescript", "react", "api"]));
   });
 
+  it("restores the test DOM globals after scraping", async () => {
+    const originalWindow = globalThis.window;
+    const originalDocument = globalThis.document;
+    const originalNavigator = globalThis.navigator;
+    const originalMutationObserver = globalThis.MutationObserver;
+
+    await scrapeOpportunityFromHtml(
+      "https://boards.greenhouse.io/acme/jobs/123",
+      greenhouseHtml
+    );
+
+    expect(globalThis.window).toBe(originalWindow);
+    expect(globalThis.document).toBe(originalDocument);
+    expect(globalThis.navigator).toBe(originalNavigator);
+    expect(globalThis.MutationObserver).toBe(originalMutationObserver);
+  });
+
   it("rejects unsupported job boards before fetching", async () => {
     vi.stubGlobal("fetch", vi.fn());
 

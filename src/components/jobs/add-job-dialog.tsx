@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useErrorToast } from "@/hooks/use-error-toast";
 import { readJsonResponse } from "@/lib/http";
 import type { JobDescription } from "@/types";
-import { fetchJobFromUrl } from "./import-job-api";
+import { scrapeJobFromUrl } from "./import-job-api";
 
 interface AddJobDialogProps {
   open: boolean;
@@ -58,7 +58,7 @@ export function AddJobDialog({ open, onOpenChange, onCreated }: AddJobDialogProp
 
     setScrapingUrl(true);
     try {
-      const preview = await fetchJobFromUrl(url);
+      const preview = await scrapeJobFromUrl(url);
       setForm({
         title: preview.title,
         company: preview.company,

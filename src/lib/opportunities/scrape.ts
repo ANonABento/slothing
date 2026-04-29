@@ -38,12 +38,8 @@ export class OpportunityScrapeError extends Error {
   }
 }
 
-interface GlobalDomSnapshot {
-  window: typeof globalThis.window | undefined;
-  document: typeof globalThis.document | undefined;
-  navigator: typeof globalThis.navigator | undefined;
-  MutationObserver: typeof globalThis.MutationObserver | undefined;
-}
+type GlobalDomKey = "window" | "document" | "navigator" | "MutationObserver";
+type GlobalDomSnapshot = Record<GlobalDomKey, PropertyDescriptor | undefined>;
 
 const SOURCE_LABELS: Record<SupportedOpportunitySource, string> = {
   linkedin: "LinkedIn",
@@ -52,6 +48,16 @@ const SOURCE_LABELS: Record<SupportedOpportunitySource, string> = {
   lever: "Lever",
   waterlooworks: "WaterlooWorks",
 };
+
+const GLOBAL_DOM_KEYS: GlobalDomKey[] = [
+  "window",
+  "document",
+  "navigator",
+  "MutationObserver",
+];
+
+const UNSUPPORTED_SITE_MESSAGE =
+  "This URL is not from a supported job board. Supported sites are LinkedIn, Indeed, Greenhouse, Lever, and WaterlooWorks.";
 
 let domScrapeQueue = Promise.resolve();
 
@@ -89,9 +95,11 @@ export function detectOpportunitySource(url: string): SupportedOpportunitySource
   return null;
 }
 
-export function toScrapedOpportunity(scrapedJob: ScrapedJob): ScrapedOpportunity {
-  const source = scrapedJob.source as SupportedOpportunitySource;
-
+export function toScrapedOpportunity(
+  scrapedJob: ScrapedJob,
+  source: SupportedOpportunitySource,
+  url: string
+): ScrapedOpportunity {
   return {
     title: scrapedJob.title,
     company: scrapedJob.company,
@@ -103,13 +111,23 @@ export function toScrapedOpportunity(scrapedJob: ScrapedJob): ScrapedOpportunity
     requirements: scrapedJob.requirements ?? [],
     responsibilities: scrapedJob.responsibilities ?? [],
     keywords: scrapedJob.keywords ?? [],
-    url: scrapedJob.url,
+    url,
     status: "saved",
     deadline: scrapedJob.deadline,
     source,
     sourceJobId: scrapedJob.sourceJobId,
     postedAt: scrapedJob.postedAt,
   };
+}
+
+function getSupportedOpportunitySource(normalizedUrl: string): SupportedOpportunitySource {
+  const source = detectOpportunitySource(normalizedUrl);
+
+  if (!source || !hasSpecializedScraper(normalizedUrl)) {
+    throw new OpportunityScrapeError("unsupported_site", UNSUPPORTED_SITE_MESSAGE);
+  }
+
+  return source;
 }
 
 async function fetchOpportunityHtml(url: string): Promise<string> {
@@ -154,12 +172,15 @@ async function fetchOpportunityHtml(url: string): Promise<string> {
 
 function installDom(html: string, url: string): { restore: () => void } {
   const dom = new JSDOM(html, { url });
-  const snapshot: GlobalDomSnapshot = {
-    window: globalThis.window,
-    document: globalThis.document,
-    navigator: globalThis.navigator,
-    MutationObserver: globalThis.MutationObserver,
-  };
+  const snapshot = GLOBAL_DOM_KEYS.reduce<GlobalDomSnapshot>((descriptors, key) => {
+    descriptors[key] = Object.getOwnPropertyDescriptor(globalThis, key);
+    return descriptors;
+  }, {
+    window: undefined,
+    document: undefined,
+    navigator: undefined,
+    MutationObserver: undefined,
+  });
 
   Object.defineProperty(globalThis, "window", {
     configurable: true,
@@ -180,22 +201,14 @@ function installDom(html: string, url: string): { restore: () => void } {
 
   return {
     restore: () => {
-      Object.defineProperty(globalThis, "window", {
-        configurable: true,
-        value: snapshot.window,
-      });
-      Object.defineProperty(globalThis, "document", {
-        configurable: true,
-        value: snapshot.document,
-      });
-      Object.defineProperty(globalThis, "navigator", {
-        configurable: true,
-        value: snapshot.navigator,
-      });
-      Object.defineProperty(globalThis, "MutationObserver", {
-        configurable: true,
-        value: snapshot.MutationObserver,
-      });
+      for (const key of GLOBAL_DOM_KEYS) {
+        const descriptor = snapshot[key];
+        if (descriptor) {
+          Object.defineProperty(globalThis, key, descriptor);
+        } else {
+          delete globalThis[key];
+        }
+      }
       dom.window.close();
     },
   };
@@ -233,14 +246,7 @@ export async function scrapeOpportunityFromHtml(
   html: string
 ): Promise<ScrapedOpportunity> {
   const normalizedUrl = normalizeOpportunityUrl(url);
-  const source = detectOpportunitySource(normalizedUrl);
-
-  if (!source || !hasSpecializedScraper(normalizedUrl)) {
-    throw new OpportunityScrapeError(
-      "unsupported_site",
-      "This URL is not from a supported job board. Supported sites are LinkedIn, Indeed, Greenhouse, Lever, and WaterlooWorks."
-    );
-  }
+  const source = getSupportedOpportunitySource(normalizedUrl);
 
   return withSerializedScraperDom(html, normalizedUrl, async () => {
     const scraper = getScraperForUrl(normalizedUrl);
@@ -253,20 +259,13 @@ export async function scrapeOpportunityFromHtml(
       );
     }
 
-    return toScrapedOpportunity({ ...scrapedJob, source, url: normalizedUrl });
+    return toScrapedOpportunity(scrapedJob, source, normalizedUrl);
   });
 }
 
 export async function scrapeOpportunityFromUrl(url: string): Promise<ScrapedOpportunity> {
   const normalizedUrl = normalizeOpportunityUrl(url);
-  const source = detectOpportunitySource(normalizedUrl);
-
-  if (!source || !hasSpecializedScraper(normalizedUrl)) {
-    throw new OpportunityScrapeError(
-      "unsupported_site",
-      "This URL is not from a supported job board. Supported sites are LinkedIn, Indeed, Greenhouse, Lever, and WaterlooWorks."
-    );
-  }
+  getSupportedOpportunitySource(normalizedUrl);
 
   const html = await fetchOpportunityHtml(normalizedUrl);
   return scrapeOpportunityFromHtml(normalizedUrl, html);
