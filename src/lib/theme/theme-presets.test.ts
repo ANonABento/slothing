@@ -9,6 +9,7 @@ import {
   hslStringToHex,
   notifyThemePreferenceChanged,
   readThemePreference,
+  resetThemePreference,
   saveThemePreference,
 } from "./theme-presets";
 
@@ -54,9 +55,11 @@ describe("theme presets", () => {
     expect(variables["--card"]).toBe("0 0% 100%");
     expect(variables["--ring"]).toBe("190 86% 38%");
     expect(variables["--gradient-primary"]).toContain("linear-gradient");
+    expect(variables["--shadow-card"]).toBeTruthy();
+    expect(variables["--border-width"]).toBe("1px");
   });
 
-  it("applies selected preset variables to the document root", () => {
+  it("applies complete selected preset variables to the document root", () => {
     const root = document.createElement("html");
 
     applyThemePreference(root, {
@@ -70,9 +73,11 @@ describe("theme presets", () => {
 
     expect(root.style.getPropertyValue("--primary")).toBe("190 86% 38%");
     expect(root.style.getPropertyValue("--background")).toBe("205 45% 98%");
+    expect(root.style.getPropertyValue("--shadow-card")).toBeTruthy();
+    expect(root.dataset.themePreset).toBe("ocean");
   });
 
-  it("clears controlled variables for the default preset", () => {
+  it("applies default token variables for the default preset", () => {
     const root = document.createElement("html");
     root.style.setProperty("--primary", "190 86% 38%");
     root.style.setProperty("--gradient-primary", "linear-gradient(red, blue)");
@@ -86,8 +91,27 @@ describe("theme presets", () => {
       },
     });
 
+    expect(root.style.getPropertyValue("--primary")).toBe("258 65% 58%");
+    expect(root.style.getPropertyValue("--gradient-primary")).toContain(
+      "linear-gradient"
+    );
+  });
+
+  it("resets applied theme preference metadata and variables", () => {
+    const root = document.createElement("html");
+    applyThemePreference(root, {
+      presetId: "forest",
+      customColors: {
+        primary: "1 2% 3%",
+        background: "4 5% 6%",
+        card: "7 8% 9%",
+      },
+    });
+
+    resetThemePreference(root);
+
     expect(root.style.getPropertyValue("--primary")).toBe("");
-    expect(root.style.getPropertyValue("--gradient-primary")).toBe("");
+    expect(root.dataset.themePreset).toBeUndefined();
   });
 
   it("persists and reads theme preferences", () => {

@@ -1,6 +1,15 @@
+import {
+  clearThemeVariables,
+  getThemePreset,
+  getThemeVariables,
+  isThemePresetName,
+  type ResolvedThemeMode,
+  type ThemePresetName,
+} from "./theme-config";
+
 export type ThemeColorKey = "primary" | "background" | "card";
 
-export type ThemePresetId = "default" | "ocean" | "forest" | "custom";
+export type ThemePresetId = ThemePresetName | "custom";
 
 export type ThemeColors = Record<ThemeColorKey, string>;
 
@@ -35,8 +44,8 @@ export const DEFAULT_CUSTOM_THEME: ThemeColors = {
 export const THEME_PRESETS: ThemePreset[] = [
   {
     id: "default",
-    label: "Taida",
-    description: "The standard violet and coral workspace.",
+    label: getThemePreset("default").label,
+    description: getThemePreset("default").description,
     colors: {
       primary: "258 65% 58%",
       background: "30 25% 99%",
@@ -45,8 +54,8 @@ export const THEME_PRESETS: ThemePreset[] = [
   },
   {
     id: "ocean",
-    label: "Ocean",
-    description: "Cool teal controls with clean white surfaces.",
+    label: getThemePreset("ocean").label,
+    description: getThemePreset("ocean").description,
     colors: {
       primary: "190 86% 38%",
       background: "205 45% 98%",
@@ -55,39 +64,55 @@ export const THEME_PRESETS: ThemePreset[] = [
   },
   {
     id: "forest",
-    label: "Forest",
-    description: "Grounded green with soft neutral surfaces.",
+    label: getThemePreset("forest").label,
+    description: getThemePreset("forest").description,
     colors: {
       primary: "145 55% 34%",
       background: "42 24% 98%",
       card: "0 0% 100%",
     },
   },
+  {
+    id: "sunset",
+    label: getThemePreset("sunset").label,
+    description: getThemePreset("sunset").description,
+    colors: {
+      primary: "347 86% 58%",
+      background: "24 32% 98%",
+      card: "0 0% 100%",
+    },
+  },
+  {
+    id: "bold",
+    label: getThemePreset("bold").label,
+    description: getThemePreset("bold").description,
+    colors: {
+      primary: "246 100% 45%",
+      background: "0 0% 100%",
+      card: "0 0% 100%",
+    },
+  },
+  {
+    id: "glassmorphism",
+    label: getThemePreset("glassmorphism").label,
+    description: getThemePreset("glassmorphism").description,
+    colors: {
+      primary: "199 89% 48%",
+      background: "210 60% 98%",
+      card: "0 0% 100%",
+    },
+  },
+  {
+    id: "minimal",
+    label: getThemePreset("minimal").label,
+    description: getThemePreset("minimal").description,
+    colors: {
+      primary: "220 16% 20%",
+      background: "0 0% 100%",
+      card: "0 0% 100%",
+    },
+  },
 ];
-
-const CONTROLLED_VARIABLES = [
-  "--background",
-  "--foreground",
-  "--card",
-  "--card-foreground",
-  "--popover",
-  "--popover-foreground",
-  "--primary",
-  "--primary-foreground",
-  "--secondary",
-  "--secondary-foreground",
-  "--muted",
-  "--muted-foreground",
-  "--accent",
-  "--accent-foreground",
-  "--border",
-  "--input",
-  "--ring",
-  "--gradient-primary",
-  "--gradient-hero",
-] as const;
-
-type ControlledThemeVariable = (typeof CONTROLLED_VARIABLES)[number];
 
 export function hexToHslString(hex: string): string {
   const normalized = normalizeHex(hex);
@@ -157,7 +182,11 @@ export function hslStringToHex(hsl: string): string {
   return `#${toHexChannel(red + match)}${toHexChannel(green + match)}${toHexChannel(blue + match)}`;
 }
 
-export function buildThemeVariables(colors: ThemeColors): Record<ControlledThemeVariable, string> {
+export function buildThemeVariables(
+  colors: ThemeColors,
+  resolvedTheme: ResolvedThemeMode = "light"
+): Record<`--${string}`, string> {
+  const variables = { ...getThemeVariables("default", resolvedTheme) };
   const primary = parseHslString(colors.primary);
   const background = parseHslString(colors.background);
   const card = parseHslString(colors.card);
@@ -167,6 +196,7 @@ export function buildThemeVariables(colors: ThemeColors): Record<ControlledTheme
   const accent = createAccentColor(primary, darkBackground);
 
   return {
+    ...variables,
     "--background": formatHsl(background),
     "--foreground": readableForeground(background),
     "--card": formatHsl(card),
@@ -190,21 +220,15 @@ export function buildThemeVariables(colors: ThemeColors): Record<ControlledTheme
 }
 
 export function applyThemePreference(root: HTMLElement, preference: ThemePreference): void {
-  if (preference.presetId === "default") {
-    clearThemeVariables(root);
-    return;
-  }
+  const resolvedTheme = readResolvedTheme(root);
+  const variables =
+    preference.presetId === "custom"
+      ? buildThemeVariables(preference.customColors, resolvedTheme)
+      : getThemeVariables(preference.presetId, resolvedTheme);
 
-  const colors = preference.presetId === "custom"
-    ? preference.customColors
-    : THEME_PRESETS.find((preset) => preset.id === preference.presetId)?.colors;
+  root.dataset.themePreset = preference.presetId;
+  root.dataset.themeMode = resolvedTheme;
 
-  if (!colors) {
-    clearThemeVariables(root);
-    return;
-  }
-
-  const variables = buildThemeVariables(colors);
   for (const [name, value] of Object.entries(variables)) {
     root.style.setProperty(name, value);
   }
@@ -241,10 +265,10 @@ export function notifyThemePreferenceChanged(): void {
   window.dispatchEvent(new Event(THEME_CHANGE_EVENT));
 }
 
-function clearThemeVariables(root: HTMLElement): void {
-  for (const variable of CONTROLLED_VARIABLES) {
-    root.style.removeProperty(variable);
-  }
+export function resetThemePreference(root: HTMLElement): void {
+  clearThemeVariables(root);
+  delete root.dataset.themePreset;
+  delete root.dataset.themeMode;
 }
 
 function getThemeStorage(): Storage | undefined {
@@ -292,7 +316,13 @@ function readStoredColor(value: unknown, fallback: string): string {
 }
 
 function isThemePresetId(value: string | null): value is ThemePresetId {
-  return value === "default" || value === "ocean" || value === "forest" || value === "custom";
+  return value === "custom" || isThemePresetName(value);
+}
+
+function readResolvedTheme(root: HTMLElement): ResolvedThemeMode {
+  return root.classList.contains("dark") || root.dataset.themeMode === "dark"
+    ? "dark"
+    : "light";
 }
 
 function normalizeHex(hex: string): string {

@@ -103,6 +103,8 @@ describe("theme config", () => {
 
     expect(variables["--primary"]).toBe("246 100% 45%");
     expect(variables["--border-width"]).toBe("2px");
+    expect(variables["--shadow-card"]).toBe("var(--shadow-md)");
+    expect(variables["--letter-spacing"]).toBe("0.01em");
     expect(variables["--font-sans"]).toContain("Aptos");
   });
 
@@ -114,6 +116,32 @@ describe("theme config", () => {
     expect(document.documentElement.style.getPropertyValue("--backdrop-blur")).toBe(
       "28px"
     );
+    expect(document.documentElement.style.getPropertyValue("--glow-color")).toBe(
+      "hsl(var(--accent) / 0.26)"
+    );
+  });
+
+  it("defines seven complete theme presets", () => {
+    expect(themePresetNames).toEqual([
+      "default",
+      "ocean",
+      "forest",
+      "sunset",
+      "bold",
+      "glassmorphism",
+      "minimal",
+    ]);
+
+    for (const presetName of themePresetNames) {
+      const lightVariables = getThemeVariables(presetName, "light");
+      const darkVariables = getThemeVariables(presetName, "dark");
+
+      expect(lightVariables["--shadow-card"]).toBeTruthy();
+      expect(lightVariables["--shadow-elevated"]).toBeTruthy();
+      expect(lightVariables["--border-width"]).toBeTruthy();
+      expect(darkVariables["--shadow-card"]).toBeTruthy();
+      expect(darkVariables["--glow-color"]).toBeTruthy();
+    }
   });
 
   it("loads stored theme mode and theme preset in the provider", async () => {
@@ -140,6 +168,27 @@ describe("theme config", () => {
     expect(screen.getByTestId("preset-count")).toHaveTextContent(
       String(themePresetNames.length)
     );
+  });
+
+  it("loads legacy stored theme keys in the provider", async () => {
+    vi.mocked(window.localStorage.getItem).mockImplementation((key) => {
+      if (key === "theme") return "dark";
+      if (key === "theme-preset") return "forest";
+      return null;
+    });
+
+    render(
+      <ThemeProvider>
+        <ThemeProbe />
+      </ThemeProvider>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId("theme")).toHaveTextContent("dark");
+      expect(screen.getByTestId("theme-preset")).toHaveTextContent("forest");
+    });
+
+    expect(document.documentElement.dataset.themePreset).toBe("forest");
   });
 
   it("ignores invalid stored values and applies the default theme preset", async () => {

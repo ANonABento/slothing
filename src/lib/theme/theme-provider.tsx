@@ -35,6 +35,8 @@ interface ThemeContextType {
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+const LEGACY_THEME_STORAGE_KEY = "theme";
+const LEGACY_THEME_PRESET_STORAGE_KEY = "theme-preset";
 
 function readStoredValue<T>(
   key: string,
@@ -46,6 +48,16 @@ function readStoredValue<T>(
   } catch {
     return null;
   }
+}
+
+function readStoredValueWithLegacyFallback<T>(
+  key: string,
+  legacyKey: string,
+  isValid: (value: unknown) => value is T
+): T | null {
+  return (
+    readStoredValue(key, isValid) ?? readStoredValue(legacyKey, isValid)
+  );
 }
 
 function persistValue(key: string, value: string): void {
@@ -66,13 +78,18 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     setMounted(true);
 
-    const storedTheme = readStoredValue(THEME_STORAGE_KEY, isThemeMode);
+    const storedTheme = readStoredValueWithLegacyFallback(
+      THEME_STORAGE_KEY,
+      LEGACY_THEME_STORAGE_KEY,
+      isThemeMode
+    );
     if (storedTheme) {
       setThemeState(storedTheme);
     }
 
-    const storedPreset = readStoredValue(
+    const storedPreset = readStoredValueWithLegacyFallback(
       THEME_PRESET_STORAGE_KEY,
+      LEGACY_THEME_PRESET_STORAGE_KEY,
       isThemePresetName
     );
     if (storedPreset) {

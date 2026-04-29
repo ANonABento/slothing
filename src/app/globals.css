@@ -25,6 +25,8 @@
   body {
     @apply bg-background text-foreground antialiased;
     font-feature-settings: "rlig" 1, "calt" 1;
+    letter-spacing: var(--letter-spacing, 0);
+    text-transform: var(--text-transform, none);
     overscroll-behavior: none;
     overflow-x: hidden;
   }
@@ -91,7 +93,7 @@
 
   /* Elevated card with deeper shadow */
   .card-elevated {
-    @apply rounded-2xl border bg-card shadow-md;
+    @apply rounded-2xl border bg-card shadow-elevated;
     border-width: var(--border-width);
   }
 
@@ -119,7 +121,7 @@
 
   /* Soft glow for interactive elements */
   .glow-primary {
-    box-shadow: 0 0 20px hsl(var(--primary) / var(--glow-primary-opacity));
+    box-shadow: 0 0 20px var(--glow-color);
   }
 
   /* Subtle pulse animation for status indicators */

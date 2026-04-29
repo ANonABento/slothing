@@ -1,14 +1,24 @@
 export type ThemeMode = "light" | "dark" | "system";
 export type ResolvedThemeMode = "light" | "dark";
-export type ThemePresetName = "default" | "bold" | "glassmorphism" | "minimal";
+export type ThemePresetName =
+  | "default"
+  | "ocean"
+  | "forest"
+  | "sunset"
+  | "bold"
+  | "glassmorphism"
+  | "minimal";
 
-export const THEME_STORAGE_KEY = "theme";
-export const THEME_PRESET_STORAGE_KEY = "theme-preset";
+export const THEME_STORAGE_KEY = "get_me_job_theme";
+export const THEME_PRESET_STORAGE_KEY = "get_me_job_theme_preset";
 export const DEFAULT_THEME_MODE: ThemeMode = "system";
 export const DEFAULT_THEME_PRESET: ThemePresetName = "default";
 
 export const themePresetNames = [
   "default",
+  "ocean",
+  "forest",
+  "sunset",
   "bold",
   "glassmorphism",
   "minimal",
@@ -81,6 +91,7 @@ const defaultLight = {
   "surface-border-opacity": "0.5",
   "backdrop-blur": "16px",
   "glow-primary-opacity": "0.15",
+  "glow-color": "hsl(var(--primary) / var(--glow-primary-opacity))",
   "shadow-sm": "0 1px 2px 0 rgb(100 60 130 / 0.04)",
   shadow:
     "0 1px 3px 0 rgb(100 60 130 / 0.06), 0 1px 2px -1px rgb(100 60 130 / 0.06)",
@@ -90,6 +101,10 @@ const defaultLight = {
     "0 10px 15px -3px rgb(100 60 130 / 0.08), 0 4px 6px -4px rgb(100 60 130 / 0.04)",
   "shadow-xl":
     "0 20px 25px -5px rgb(100 60 130 / 0.10), 0 8px 10px -6px rgb(100 60 130 / 0.04)",
+  "shadow-card": "var(--shadow)",
+  "shadow-elevated": "var(--shadow-lg)",
+  "letter-spacing": "0",
+  "text-transform": "none",
   "gradient-primary":
     "linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(350 80% 68%) 100%)",
   "gradient-success":
@@ -132,11 +147,16 @@ const defaultDark = {
   "surface-border-opacity": "0.5",
   "backdrop-blur": "16px",
   "glow-primary-opacity": "0.2",
+  "glow-color": "hsl(var(--primary) / var(--glow-primary-opacity))",
   "shadow-sm": "0 1px 2px 0 rgb(0 0 0 / 0.3)",
   shadow: "0 1px 3px 0 rgb(0 0 0 / 0.4), 0 1px 2px -1px rgb(0 0 0 / 0.3)",
   "shadow-md": "0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.3)",
   "shadow-lg": "0 10px 15px -3px rgb(0 0 0 / 0.4), 0 4px 6px -4px rgb(0 0 0 / 0.3)",
   "shadow-xl": "0 20px 25px -5px rgb(0 0 0 / 0.4), 0 8px 10px -6px rgb(0 0 0 / 0.3)",
+  "shadow-card": "var(--shadow)",
+  "shadow-elevated": "var(--shadow-lg)",
+  "letter-spacing": "0",
+  "text-transform": "none",
   "gradient-primary":
     "linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(350 80% 72%) 100%)",
   "gradient-success":
@@ -148,10 +168,160 @@ const defaultDark = {
 export const themePresets: Record<ThemePresetName, ThemePreset> = {
   default: {
     name: "default",
-    label: "Default",
+    label: "Taida",
     description: "Current violet and coral theme.",
     light: defaultLight,
     dark: defaultDark,
+  },
+  ocean: {
+    name: "ocean",
+    label: "Ocean",
+    description: "Cool teal controls with clean white surfaces.",
+    light: {
+      ...defaultLight,
+      background: "205 45% 98%",
+      foreground: "208 38% 12%",
+      card: "0 0% 100%",
+      "card-foreground": "208 38% 12%",
+      popover: "0 0% 100%",
+      "popover-foreground": "208 38% 12%",
+      primary: "190 86% 38%",
+      secondary: "196 38% 93%",
+      "secondary-foreground": "208 38% 12%",
+      muted: "196 34% 94%",
+      "muted-foreground": "205 12% 40%",
+      accent: "199 89% 48%",
+      border: "198 24% 86%",
+      input: "198 24% 86%",
+      ring: "190 86% 38%",
+      "shadow-sm": "0 1px 2px rgb(8 145 178 / 0.05)",
+      shadow: "0 1px 3px rgb(8 145 178 / 0.07)",
+      "shadow-md": "0 8px 24px rgb(8 145 178 / 0.08)",
+      "shadow-lg": "0 18px 44px rgb(8 145 178 / 0.10)",
+      "shadow-xl": "0 28px 70px rgb(8 145 178 / 0.12)",
+      "gradient-primary":
+        "linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--accent)) 100%)",
+      "gradient-hero":
+        "linear-gradient(135deg, hsl(var(--primary) / 0.10) 0%, hsl(var(--accent) / 0.06) 100%)",
+    },
+    dark: {
+      ...defaultDark,
+      background: "210 42% 7%",
+      foreground: "196 38% 95%",
+      card: "208 38% 11%",
+      "card-foreground": "196 38% 95%",
+      popover: "208 38% 11%",
+      "popover-foreground": "196 38% 95%",
+      primary: "190 86% 52%",
+      secondary: "205 32% 16%",
+      muted: "205 32% 16%",
+      "muted-foreground": "198 16% 66%",
+      accent: "199 89% 62%",
+      border: "202 28% 22%",
+      input: "202 28% 22%",
+      ring: "190 86% 52%",
+      "gradient-primary":
+        "linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--accent)) 100%)",
+      "gradient-hero":
+        "linear-gradient(135deg, hsl(var(--primary) / 0.14) 0%, hsl(var(--accent) / 0.08) 100%)",
+    },
+  },
+  forest: {
+    name: "forest",
+    label: "Forest",
+    description: "Grounded green with soft neutral surfaces.",
+    light: {
+      ...defaultLight,
+      background: "42 24% 98%",
+      foreground: "150 24% 12%",
+      card: "0 0% 100%",
+      "card-foreground": "150 24% 12%",
+      popover: "0 0% 100%",
+      "popover-foreground": "150 24% 12%",
+      primary: "145 55% 34%",
+      secondary: "88 28% 92%",
+      "secondary-foreground": "150 24% 12%",
+      muted: "88 24% 93%",
+      "muted-foreground": "145 10% 38%",
+      accent: "38 92% 50%",
+      border: "90 18% 84%",
+      input: "90 18% 84%",
+      ring: "145 55% 34%",
+      "shadow-sm": "0 1px 2px rgb(21 128 61 / 0.05)",
+      shadow: "0 1px 3px rgb(21 128 61 / 0.07)",
+      "shadow-md": "0 8px 24px rgb(21 128 61 / 0.08)",
+      "shadow-lg": "0 18px 44px rgb(21 128 61 / 0.10)",
+      "shadow-xl": "0 28px 70px rgb(21 128 61 / 0.12)",
+      "gradient-primary":
+        "linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--accent)) 100%)",
+      "gradient-hero":
+        "linear-gradient(135deg, hsl(var(--primary) / 0.10) 0%, hsl(var(--accent) / 0.06) 100%)",
+    },
+    dark: {
+      ...defaultDark,
+      background: "148 34% 7%",
+      foreground: "88 30% 94%",
+      card: "148 28% 11%",
+      "card-foreground": "88 30% 94%",
+      popover: "148 28% 11%",
+      "popover-foreground": "88 30% 94%",
+      primary: "145 55% 52%",
+      secondary: "148 22% 16%",
+      muted: "148 22% 16%",
+      "muted-foreground": "92 12% 66%",
+      accent: "38 92% 58%",
+      border: "148 18% 23%",
+      input: "148 18% 23%",
+      ring: "145 55% 52%",
+      "gradient-primary":
+        "linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--accent)) 100%)",
+      "gradient-hero":
+        "linear-gradient(135deg, hsl(var(--primary) / 0.14) 0%, hsl(var(--accent) / 0.08) 100%)",
+    },
+  },
+  sunset: {
+    name: "sunset",
+    label: "Sunset",
+    description: "Warm rose controls with balanced neutral surfaces.",
+    light: {
+      ...defaultLight,
+      background: "24 32% 98%",
+      foreground: "248 24% 12%",
+      card: "0 0% 100%",
+      "card-foreground": "248 24% 12%",
+      primary: "347 86% 58%",
+      secondary: "24 44% 94%",
+      "secondary-foreground": "248 24% 12%",
+      muted: "24 34% 94%",
+      "muted-foreground": "248 8% 42%",
+      accent: "32 95% 55%",
+      border: "24 24% 86%",
+      input: "24 24% 86%",
+      ring: "347 86% 58%",
+      "gradient-primary":
+        "linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--accent)) 100%)",
+      "gradient-hero":
+        "linear-gradient(135deg, hsl(var(--primary) / 0.10) 0%, hsl(var(--accent) / 0.06) 100%)",
+    },
+    dark: {
+      ...defaultDark,
+      background: "248 30% 7%",
+      foreground: "24 28% 95%",
+      card: "248 24% 11%",
+      "card-foreground": "24 28% 95%",
+      primary: "347 86% 66%",
+      secondary: "248 20% 15%",
+      muted: "248 20% 15%",
+      "muted-foreground": "24 10% 66%",
+      accent: "32 95% 62%",
+      border: "248 18% 22%",
+      input: "248 18% 22%",
+      ring: "347 86% 66%",
+      "gradient-primary":
+        "linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--accent)) 100%)",
+      "gradient-hero":
+        "linear-gradient(135deg, hsl(var(--primary) / 0.14) 0%, hsl(var(--accent) / 0.08) 100%)",
+    },
   },
   bold: {
     name: "bold",
@@ -179,6 +349,10 @@ export const themePresets: Record<ThemePresetName, ThemePreset> = {
       "shadow-md": "5px 5px 0 rgb(15 23 42 / 1)",
       "shadow-lg": "7px 7px 0 rgb(15 23 42 / 1)",
       "shadow-xl": "10px 10px 0 rgb(15 23 42 / 1)",
+      "shadow-card": "var(--shadow-md)",
+      "shadow-elevated": "var(--shadow-xl)",
+      "letter-spacing": "0.01em",
+      "text-transform": "none",
       "gradient-primary":
         "linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--accent)) 100%)",
       "gradient-hero":
@@ -207,6 +381,10 @@ export const themePresets: Record<ThemePresetName, ThemePreset> = {
       "shadow-md": "5px 5px 0 rgb(255 255 255 / 0.85)",
       "shadow-lg": "7px 7px 0 rgb(255 255 255 / 0.8)",
       "shadow-xl": "10px 10px 0 rgb(255 255 255 / 0.75)",
+      "shadow-card": "var(--shadow-md)",
+      "shadow-elevated": "var(--shadow-xl)",
+      "letter-spacing": "0.01em",
+      "text-transform": "none",
       "gradient-primary":
         "linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--accent)) 100%)",
       "gradient-hero":
@@ -232,6 +410,7 @@ export const themePresets: Record<ThemePresetName, ThemePreset> = {
       "surface-glass-opacity": "0.58",
       "surface-border-opacity": "0.7",
       "backdrop-blur": "24px",
+      "glow-color": "hsl(var(--accent) / 0.22)",
       "shadow-sm": "0 1px 2px rgb(14 116 144 / 0.08)",
       shadow: "0 8px 28px rgb(14 116 144 / 0.10)",
       "shadow-md": "0 14px 36px rgb(14 116 144 / 0.12)",
@@ -257,6 +436,7 @@ export const themePresets: Record<ThemePresetName, ThemePreset> = {
       "surface-glass-opacity": "0.42",
       "surface-border-opacity": "0.35",
       "backdrop-blur": "28px",
+      "glow-color": "hsl(var(--accent) / 0.26)",
       "shadow-sm": "0 1px 2px rgb(0 0 0 / 0.28)",
       shadow: "0 10px 34px rgb(0 0 0 / 0.34)",
       "shadow-md": "0 18px 46px rgb(0 0 0 / 0.38)",
@@ -333,6 +513,14 @@ export const themePresets: Record<ThemePresetName, ThemePreset> = {
   },
 };
 
+const themeVariableNames = Object.keys(defaultLight).map(
+  (name) => `--${name}` as const
+);
+
+export function getThemeVariableNames(): readonly `--${string}`[] {
+  return themeVariableNames;
+}
+
 export function isThemeMode(value: unknown): value is ThemeMode {
   return value === "light" || value === "dark" || value === "system";
 }
@@ -370,5 +558,11 @@ export function applyThemeVariables(
 
   for (const [name, value] of Object.entries(variables)) {
     root.style.setProperty(name, value);
+  }
+}
+
+export function clearThemeVariables(root: HTMLElement): void {
+  for (const name of themeVariableNames) {
+    root.style.removeProperty(name);
   }
 }
