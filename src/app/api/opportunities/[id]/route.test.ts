@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { z } from "zod";
 
 const mocks = vi.hoisted(() => ({
   requireAuth: vi.fn(),
@@ -79,6 +80,36 @@ describe("opportunity detail route", () => {
 
     expect(response.status).toBe(400);
     expect(mocks.updateOpportunity).not.toHaveBeenCalled();
+  });
+
+  it("returns validation errors from repository-level invariants", async () => {
+    mocks.updateOpportunity.mockImplementationOnce(() => {
+      z.object({
+        salaryMin: z.number(),
+        salaryMax: z.number(),
+      })
+        .refine((value) => value.salaryMin <= value.salaryMax, {
+          message: "Minimum salary must be less than or equal to maximum salary",
+          path: ["salaryMin"],
+        })
+        .parse({ salaryMin: 120_000, salaryMax: 100_000 });
+    });
+
+    const response = await PATCH(
+      jsonRequest({ salaryMin: 120_000 }),
+      routeContext
+    );
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toMatchObject({
+      error: "Validation failed",
+      errors: [
+        {
+          field: "salaryMin",
+          message: "Minimum salary must be less than or equal to maximum salary",
+        },
+      ],
+    });
   });
 
   it("returns 404 for missing records on delete", async () => {

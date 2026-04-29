@@ -129,6 +129,19 @@ const opportunityTeamSizeSchema = z
     path: ["min"],
   });
 
+const salaryRangeRefinement = {
+  message: "Minimum salary must be less than or equal to maximum salary",
+  path: ["salaryMin"],
+};
+
+const hasValidSalaryRange = (value: {
+  salaryMin?: number;
+  salaryMax?: number;
+}) =>
+  value.salaryMin === undefined ||
+  value.salaryMax === undefined ||
+  value.salaryMin <= value.salaryMax;
+
 const opportunityInputFields = {
   type: opportunityTypeSchema,
   title: requiredText(200, "Title"),
@@ -192,16 +205,7 @@ export const createOpportunitySchema = z
     status: opportunityStatusSchema.default("pending"),
     tags: z.array(z.string().trim().min(1).max(80)).default([]),
   })
-  .refine(
-    (value) =>
-      value.salaryMin === undefined ||
-      value.salaryMax === undefined ||
-      value.salaryMin <= value.salaryMax,
-    {
-      message: "Minimum salary must be less than or equal to maximum salary",
-      path: ["salaryMin"],
-    }
-  );
+  .refine(hasValidSalaryRange, salaryRangeRefinement);
 
 export const updateOpportunitySchema = z
   .object({
@@ -209,16 +213,18 @@ export const updateOpportunitySchema = z
     status: opportunityStatusSchema.optional(),
     tags: z.array(z.string().trim().min(1).max(80)).optional(),
   })
-  .refine(
-    (value) =>
-      value.salaryMin === undefined ||
-      value.salaryMax === undefined ||
-      value.salaryMin <= value.salaryMax,
-    {
-      message: "Minimum salary must be less than or equal to maximum salary",
-      path: ["salaryMin"],
-    }
-  );
+  .refine(hasValidSalaryRange, salaryRangeRefinement);
+
+export const opportunitySchema = z
+  .object({
+    ...opportunityInputFields,
+    id: requiredText(200, "ID"),
+    status: opportunityStatusSchema,
+    tags: z.array(z.string().trim().min(1).max(80)),
+    createdAt: requiredText(80, "Created at"),
+    updatedAt: requiredText(80, "Updated at"),
+  })
+  .refine(hasValidSalaryRange, salaryRangeRefinement);
 
 export const opportunityStatusChangeSchema = z.object({
   status: opportunityStatusSchema,

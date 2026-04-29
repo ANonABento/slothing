@@ -1,6 +1,7 @@
 import { generateId } from "@/lib/utils";
 import {
   createOpportunitySchema,
+  opportunitySchema,
   opportunityFiltersSchema,
   updateOpportunitySchema,
   type CreateOpportunityInput,
@@ -122,11 +123,11 @@ export function updateOpportunity(
 
   const now = clock.now().toISOString();
   const updated = applyStatusTimestamps(
-    {
+    opportunitySchema.parse({
       ...existing[index],
       ...data,
       updatedAt: now,
-    },
+    }),
     now
   );
 
@@ -210,7 +211,12 @@ function readOpportunities(
 
   try {
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
+    if (!Array.isArray(parsed)) return [];
+
+    return parsed.flatMap((item) => {
+      const result = opportunitySchema.safeParse(item);
+      return result.success ? [result.data] : [];
+    });
   } catch {
     return [];
   }

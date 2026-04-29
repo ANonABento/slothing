@@ -17,7 +17,9 @@ import {
   filterOpportunities,
   getOpportunity,
   listOpportunities,
+  OPPORTUNITIES_STORAGE_KEY,
   parseOpportunityFilters,
+  updateOpportunity,
   type OpportunityClock,
   type OpportunityStorage,
 } from "./opportunities";
@@ -164,6 +166,47 @@ describe("opportunity repository", () => {
     expect(deleteOpportunity("missing", "user-1", storage)).toBe(false);
     expect(deleteOpportunity(opportunity.id, "user-1", storage)).toBe(true);
     expect(getOpportunity(opportunity.id, "user-1", storage)).toBeNull();
+  });
+
+  it("validates salary ranges after partial updates are merged", () => {
+    const storage = createMemoryStorage();
+    const opportunity = createOpportunity(
+      validOpportunity({ salaryMax: 100_000 }),
+      "user-1",
+      storage,
+      fixedClock
+    );
+
+    expect(() =>
+      updateOpportunity(
+        opportunity.id,
+        { salaryMin: 120_000 },
+        "user-1",
+        storage,
+        fixedClock
+      )
+    ).toThrow("Minimum salary must be less than or equal to maximum salary");
+
+    const stored = getOpportunity(opportunity.id, "user-1", storage);
+    expect(stored?.salaryMax).toBe(100_000);
+    expect(stored?.salaryMin).toBeUndefined();
+  });
+
+  it("filters out malformed stored records instead of returning invalid data", () => {
+    const storage = createMemoryStorage();
+    const valid = storedOpportunity();
+    storage.setItem(
+      `${OPPORTUNITIES_STORAGE_KEY}:user-1`,
+      JSON.stringify([
+        valid,
+        {
+          id: "bad-record",
+          title: "Missing required fields",
+        },
+      ])
+    );
+
+    expect(listOpportunities("user-1", {}, storage)).toEqual([valid]);
   });
 
   it("clears opportunities for a single user", () => {

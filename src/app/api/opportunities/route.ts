@@ -51,6 +51,10 @@ export async function POST(request: NextRequest) {
     const opportunity = createOpportunity(parseResult.data, authResult.userId);
     return NextResponse.json({ opportunity }, { status: 201 });
   } catch (error) {
+    if (error instanceof ZodError) {
+      return validationErrorResponse(error);
+    }
+
     console.error("Create opportunity error:", error);
     return NextResponse.json(
       { error: "Failed to create opportunity" },

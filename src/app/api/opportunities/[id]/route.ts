@@ -16,6 +16,7 @@ import {
 } from "@/lib/opportunities";
 import { validationErrorResponse } from "@/lib/api-utils";
 import { updateOpportunitySchema } from "@/types/opportunity";
+import { ZodError } from "zod";
 
 interface OpportunityRouteContext {
   params: { id: string };
@@ -75,6 +76,10 @@ export async function PATCH(
 
     return NextResponse.json({ opportunity });
   } catch (error) {
+    if (error instanceof ZodError) {
+      return validationErrorResponse(error);
+    }
+
     console.error("Update opportunity error:", error);
     return NextResponse.json(
       { error: "Failed to update opportunity" },
