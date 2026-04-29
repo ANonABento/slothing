@@ -44,6 +44,11 @@ describe("opportunity scraping", () => {
     expect(detectOpportunitySource("https://example.com/jobs/123")).toBeNull();
   });
 
+  it("does not detect supported sources from lookalike hosts", () => {
+    expect(detectOpportunitySource("https://jobs.lever.co.evil.test/acme/123")).toBeNull();
+    expect(detectOpportunitySource("https://boards.greenhouse.io.evil.test/acme/jobs/123")).toBeNull();
+  });
+
   it("scrapes a supported job board page with the Columbus scrapers", async () => {
     const opportunity = await scrapeOpportunityFromHtml(
       "https://boards.greenhouse.io/acme/jobs/123",

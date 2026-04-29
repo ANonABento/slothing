@@ -53,6 +53,12 @@ const SOURCE_LABELS: Record<SupportedOpportunitySource, string> = {
   waterlooworks: "WaterlooWorks",
 };
 
+let domScrapeQueue = Promise.resolve();
+
+function isSameHostOrSubdomain(host: string, domain: string): boolean {
+  return host === domain || host.endsWith(`.${domain}`);
+}
+
 export function normalizeOpportunityUrl(rawUrl: string): string {
   let parsed: URL;
 
@@ -71,13 +77,12 @@ export function normalizeOpportunityUrl(rawUrl: string): string {
 
 export function detectOpportunitySource(url: string): SupportedOpportunitySource | null {
   const host = new URL(url).hostname.toLowerCase();
-  const href = url.toLowerCase();
 
-  if (host === "linkedin.com" || host.endsWith(".linkedin.com")) return "linkedin";
-  if (host === "indeed.com" || host.endsWith(".indeed.com")) return "indeed";
-  if (host.includes("greenhouse.io") || href.includes("boards.greenhouse.io")) return "greenhouse";
-  if (host.includes("lever.co") || href.includes("jobs.lever.co")) return "lever";
-  if (host === "waterlooworks.uwaterloo.ca" || host.endsWith(".waterlooworks.uwaterloo.ca")) {
+  if (isSameHostOrSubdomain(host, "linkedin.com")) return "linkedin";
+  if (isSameHostOrSubdomain(host, "indeed.com")) return "indeed";
+  if (isSameHostOrSubdomain(host, "greenhouse.io")) return "greenhouse";
+  if (isSameHostOrSubdomain(host, "lever.co")) return "lever";
+  if (isSameHostOrSubdomain(host, "waterlooworks.uwaterloo.ca")) {
     return "waterlooworks";
   }
 
@@ -196,6 +201,33 @@ function installDom(html: string, url: string): { restore: () => void } {
   };
 }
 
+async function withSerializedScraperDom<T>(
+  html: string,
+  url: string,
+  scrape: () => Promise<T>
+): Promise<T> {
+  let releaseQueue: () => void = () => {};
+  const previousScrape = domScrapeQueue;
+  const currentScrape = new Promise<void>((resolve) => {
+    releaseQueue = resolve;
+  });
+
+  domScrapeQueue = previousScrape.catch(() => undefined).then(() => currentScrape);
+
+  await previousScrape.catch(() => undefined);
+
+  try {
+    const dom = installDom(html, url);
+    try {
+      return await scrape();
+    } finally {
+      dom.restore();
+    }
+  } finally {
+    releaseQueue();
+  }
+}
+
 export async function scrapeOpportunityFromHtml(
   url: string,
   html: string
@@ -210,9 +242,7 @@ export async function scrapeOpportunityFromHtml(
     );
   }
 
-  const dom = installDom(html, normalizedUrl);
-
-  try {
+  return withSerializedScraperDom(html, normalizedUrl, async () => {
     const scraper = getScraperForUrl(normalizedUrl);
     const scrapedJob = await scraper.scrapeJobListing();
 
@@ -224,9 +254,7 @@ export async function scrapeOpportunityFromHtml(
     }
 
     return toScrapedOpportunity({ ...scrapedJob, source, url: normalizedUrl });
-  } finally {
-    dom.restore();
-  }
+  });
 }
 
 export async function scrapeOpportunityFromUrl(url: string): Promise<ScrapedOpportunity> {

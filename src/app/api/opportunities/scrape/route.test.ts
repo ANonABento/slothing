@@ -31,6 +31,14 @@ function scrapeRequest(body: unknown) {
   });
 }
 
+function malformedScrapeRequest() {
+  return new NextRequest("http://localhost/api/opportunities/scrape", {
+    method: "POST",
+    body: "{",
+    headers: { "content-type": "application/json" },
+  });
+}
+
 describe("opportunities scrape route", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -65,6 +73,17 @@ describe("opportunities scrape route", () => {
     expect(response.status).toBe(400);
     await expect(response.json()).resolves.toEqual({
       error: "A URL is required.",
+      code: "invalid_url",
+    });
+    expect(mocks.scrapeOpportunityFromUrl).not.toHaveBeenCalled();
+  });
+
+  it("rejects malformed JSON gracefully", async () => {
+    const response = await POST(malformedScrapeRequest());
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({
+      error: "A valid JSON body with a URL is required.",
       code: "invalid_url",
     });
     expect(mocks.scrapeOpportunityFromUrl).not.toHaveBeenCalled();

@@ -47,7 +47,18 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const body = (await request.json()) as ScrapeRequest;
+    let body: ScrapeRequest;
+    try {
+      body = (await request.json()) as ScrapeRequest;
+    } catch {
+      return errorResponse(
+        new OpportunityScrapeError(
+          "invalid_url",
+          "A valid JSON body with a URL is required."
+        )
+      );
+    }
+
     if (typeof body.url !== "string" || !body.url.trim()) {
       return errorResponse(
         new OpportunityScrapeError("invalid_url", "A URL is required.")
