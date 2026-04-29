@@ -55,7 +55,7 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: "Validation failed", errors: error.errors.map(e => ({ field: e.path.join("."), message: e.message })) },
+        { error: "Validation failed", errors: error.issues.map((e: z.ZodIssue) => ({ field: e.path.join("."), message: e.message })) },
         { status: 400 },
       );
     }
