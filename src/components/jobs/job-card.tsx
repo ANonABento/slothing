@@ -41,6 +41,7 @@ import {
 import {
   THEME_INTERACTIVE_SURFACE_CLASSES,
   THEME_MUTED_SURFACE_CLASSES,
+  THEME_PRIMARY_GRADIENT_BUTTON_CLASSES,
 } from "@/lib/theme/component-classes";
 import { cn } from "@/lib/utils";
 import type { JobDescription, JobMatch } from "@/types";
@@ -321,7 +322,7 @@ export function JobCard(props: JobCardProps) {
             size="sm"
             onClick={onGenerate}
             disabled={generating}
-            className="bg-[image:var(--gradient-primary)] text-primary-foreground hover:opacity-90"
+            className={THEME_PRIMARY_GRADIENT_BUTTON_CLASSES}
           >
             {generating ? (
               <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />

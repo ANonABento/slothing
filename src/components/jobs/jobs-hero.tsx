@@ -7,7 +7,10 @@ import { PageHeader, type PageWidth } from "@/components/ui/page-layout";
 import { SkeletonButton } from "@/components/ui/skeleton";
 import { useErrorToast } from "@/hooks/use-error-toast";
 import { readJsonResponse } from "@/lib/http";
-import { THEME_SURFACE_CLASSES } from "@/lib/theme/component-classes";
+import {
+  THEME_PRIMARY_GRADIENT_BUTTON_CLASSES,
+  THEME_SURFACE_CLASSES,
+} from "@/lib/theme/component-classes";
 import { cn } from "@/lib/utils";
 import type { JobsViewMode } from "./job-kanban-utils";
 
@@ -127,7 +130,7 @@ export function JobsHero({
             <Button
               onClick={onAddClick}
               size="lg"
-              className="bg-[image:var(--gradient-primary)] text-primary-foreground hover:opacity-90"
+              className={THEME_PRIMARY_GRADIENT_BUTTON_CLASSES}
             >
               <Plus className="h-5 w-5 mr-2" />
               Add Job

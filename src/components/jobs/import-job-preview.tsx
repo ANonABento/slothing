@@ -12,7 +12,10 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { THEME_MUTED_SURFACE_CLASSES } from "@/lib/theme/component-classes";
+import {
+  THEME_MUTED_SURFACE_CLASSES,
+  THEME_PRIMARY_GRADIENT_BUTTON_CLASSES,
+} from "@/lib/theme/component-classes";
 import { cn } from "@/lib/utils";
 import type { ParsedJobPreview } from "./import-job-dialog.types";
 
@@ -146,7 +149,7 @@ export function ImportJobPreview({
           <Button
             onClick={onSave}
             disabled={saving}
-            className="bg-[image:var(--gradient-primary)] text-primary-foreground hover:opacity-90"
+            className={THEME_PRIMARY_GRADIENT_BUTTON_CLASSES}
           >
             {saving ? (
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />

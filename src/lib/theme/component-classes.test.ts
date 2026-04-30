@@ -4,6 +4,7 @@ import {
   THEME_DASHED_SURFACE_CLASSES,
   THEME_INTERACTIVE_SURFACE_CLASSES,
   THEME_MUTED_SURFACE_CLASSES,
+  THEME_PRIMARY_GRADIENT_BUTTON_CLASSES,
   THEME_SURFACE_CLASSES,
 } from "./component-classes";
 
@@ -27,6 +28,15 @@ describe("theme component classes", () => {
     );
     expect(THEME_INTERACTIVE_SURFACE_CLASSES).toContain(
       "hover:shadow-[var(--shadow-elevated)]",
+    );
+  });
+
+  it("uses theme tokens for primary gradient buttons", () => {
+    expect(THEME_PRIMARY_GRADIENT_BUTTON_CLASSES).toContain(
+      "bg-[image:var(--gradient-primary)]",
+    );
+    expect(THEME_PRIMARY_GRADIENT_BUTTON_CLASSES).toContain(
+      "text-primary-foreground",
     );
   });
 });

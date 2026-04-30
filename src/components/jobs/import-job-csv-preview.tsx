@@ -3,7 +3,10 @@
 import { AlertCircle, Check, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { THEME_MUTED_SURFACE_CLASSES } from "@/lib/theme/component-classes";
+import {
+  THEME_MUTED_SURFACE_CLASSES,
+  THEME_PRIMARY_GRADIENT_BUTTON_CLASSES,
+} from "@/lib/theme/component-classes";
 import { cn } from "@/lib/utils";
 import type { CSVPreview } from "./import-job-dialog.types";
 
@@ -108,7 +111,7 @@ export function ImportJobCsvPreview({
           <Button
             onClick={onSave}
             disabled={saving || preview.jobs.length === 0}
-            className="bg-[image:var(--gradient-primary)] text-primary-foreground hover:opacity-90"
+            className={THEME_PRIMARY_GRADIENT_BUTTON_CLASSES}
           >
             {saving ? (
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />

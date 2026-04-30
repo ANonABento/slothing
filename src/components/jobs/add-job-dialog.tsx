@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useErrorToast } from "@/hooks/use-error-toast";
 import { readJsonResponse } from "@/lib/http";
+import { THEME_PRIMARY_GRADIENT_BUTTON_CLASSES } from "@/lib/theme/component-classes";
 import type { JobDescription } from "@/types";
 
 interface AddJobDialogProps {
@@ -158,7 +159,7 @@ export function AddJobDialog({
             disabled={
               addingJob || !form.title || !form.company || !form.description
             }
-            className="bg-[image:var(--gradient-primary)] text-primary-foreground hover:opacity-90"
+            className={THEME_PRIMARY_GRADIENT_BUTTON_CLASSES}
           >
             {addingJob && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
             Add Job
