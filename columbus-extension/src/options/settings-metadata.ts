@@ -1,5 +1,7 @@
+import type { ScraperSource } from '@/shared/types';
+
 export interface ScrapeSiteOption {
-  source: string;
+  source: ScraperSource;
   label: string;
   description: string;
 }
@@ -42,10 +44,10 @@ export function formatConfidencePercent(value: number): string {
 }
 
 export function toggleScrapeSource(
-  enabledSources: string[],
-  source: string,
+  enabledSources: ScraperSource[],
+  source: ScraperSource,
   enabled: boolean
-): string[] {
+): ScraperSource[] {
   if (enabled) {
     return enabledSources.includes(source) ? enabledSources : [...enabledSources, source];
   }

@@ -1,9 +1,9 @@
 // Base scraper interface and utilities
 
-import type { ScrapedJob } from '../../shared/types';
+import type { ScrapedJob, ScraperSource } from '../../shared/types';
 
 export abstract class BaseScraper {
-  abstract readonly source: string;
+  abstract readonly source: ScraperSource;
   abstract readonly urlPatterns: RegExp[];
 
   abstract canHandle(url: string): boolean;

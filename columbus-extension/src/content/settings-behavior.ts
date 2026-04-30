@@ -1,4 +1,4 @@
-import type { DetectedField, ExtensionSettings } from '@/shared/types';
+import type { DetectedField, ExtensionSettings, ScraperSource } from '@/shared/types';
 
 export function filterDetectedFields(
   fields: DetectedField[],
@@ -11,7 +11,7 @@ export function filterDetectedFields(
 
 export function isScraperSourceEnabled(
   settings: ExtensionSettings,
-  source: string
+  source: ScraperSource
 ): boolean {
   return settings.enableJobScraping && settings.enabledScraperSources.includes(source);
 }

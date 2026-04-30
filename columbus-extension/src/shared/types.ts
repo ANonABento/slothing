@@ -128,6 +128,17 @@ export interface FieldSignals {
 }
 
 // Scraper types
+export const SCRAPER_SOURCES = [
+  'linkedin',
+  'indeed',
+  'greenhouse',
+  'lever',
+  'waterlooworks',
+  'unknown',
+] as const;
+
+export type ScraperSource = (typeof SCRAPER_SOURCES)[number];
+
 export interface ScrapedJob {
   title: string;
   company: string;
@@ -212,7 +223,7 @@ export interface ExtensionSettings {
   notifyOnJobDetected: boolean;
   showSalaryOverlay: boolean;
   enableJobScraping: boolean;
-  enabledScraperSources: string[];
+  enabledScraperSources: ScraperSource[];
 }
 
 export const DEFAULT_SETTINGS: ExtensionSettings = {
@@ -224,7 +235,7 @@ export const DEFAULT_SETTINGS: ExtensionSettings = {
   notifyOnJobDetected: true,
   showSalaryOverlay: true,
   enableJobScraping: true,
-  enabledScraperSources: ['linkedin', 'indeed', 'greenhouse', 'lever', 'waterlooworks', 'unknown'],
+  enabledScraperSources: [...SCRAPER_SOURCES],
 };
 
 export const DEFAULT_API_BASE_URL = 'http://localhost:3000';

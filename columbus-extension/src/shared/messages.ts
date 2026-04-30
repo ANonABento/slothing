@@ -47,6 +47,11 @@ export const Messages = {
     type: 'SEARCH_ANSWERS',
     payload: question,
   }),
+  getLearnedAnswers: (): ExtensionMessage => ({ type: 'GET_LEARNED_ANSWERS' }),
+  deleteAnswer: (id: string): ExtensionMessage<string> => ({
+    type: 'DELETE_ANSWER',
+    payload: id,
+  }),
 };
 
 // Response type helpers

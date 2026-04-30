@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import type { ExtensionSettings, LearnedAnswer } from '@/shared/types';
+import type { ExtensionSettings, LearnedAnswer, ScraperSource } from '@/shared/types';
 import { DEFAULT_SETTINGS, DEFAULT_API_BASE_URL } from '@/shared/types';
 import { updateSettings, getSettings, getApiBaseUrl, setApiBaseUrl } from '../background/storage';
+import { Messages, sendMessage } from '@/shared/messages';
 import {
   SCRAPE_SITE_OPTIONS,
   formatConfidencePercent,
@@ -23,58 +24,55 @@ export default function OptionsApp() {
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   useEffect(() => {
-    loadSettings();
-    loadAuthStatus();
-    loadLearnedAnswers();
+    let isMounted = true;
+
+    async function loadInitialData() {
+      try {
+        const [settingsData, url, authResponse] = await Promise.all([
+          getSettings(),
+          getApiBaseUrl(),
+          sendMessage<AuthStatus>(Messages.getAuthStatus()),
+        ]);
+
+        if (!isMounted) return;
+
+        setSettingsState(settingsData);
+        setApiUrl(url);
+
+        if (authResponse.success && authResponse.data) {
+          setAuthStatus(authResponse.data);
+
+          if (authResponse.data.isAuthenticated) {
+            const learnedAnswersResponse = await sendMessage<LearnedAnswer[]>(
+              Messages.getLearnedAnswers()
+            );
+            if (isMounted && learnedAnswersResponse.success && learnedAnswersResponse.data) {
+              setLearnedAnswers(learnedAnswersResponse.data);
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load options data:', err);
+        if (isMounted) {
+          setMessage({ type: 'error', text: 'Failed to load settings' });
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    }
+
+    loadInitialData();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
-
-  async function loadSettings() {
-    try {
-      const [settingsData, url] = await Promise.all([
-        getSettings(),
-        getApiBaseUrl(),
-      ]);
-      setSettingsState(settingsData);
-      setApiUrl(url);
-    } catch (err) {
-      showMessage('error', 'Failed to load settings');
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function loadAuthStatus() {
-    try {
-      const response = await chrome.runtime.sendMessage({ type: 'GET_AUTH_STATUS' });
-      if (response?.success && response.data) {
-        setAuthStatus(response.data);
-      }
-    } catch (err) {
-      console.error('Failed to load auth status:', err);
-    }
-  }
-
-  async function loadLearnedAnswers() {
-    try {
-      const response = await chrome.runtime.sendMessage({ type: 'GET_AUTH_STATUS' });
-      if (!response?.data?.isAuthenticated) return;
-
-      // Fetch learned answers via background script
-      const result = await chrome.runtime.sendMessage({ type: 'GET_LEARNED_ANSWERS' });
-      if (result?.success && result.data) {
-        setLearnedAnswers(result.data);
-      }
-    } catch (err) {
-      console.error('Failed to load learned answers:', err);
-    }
-  }
 
   async function handleDeleteAnswer(id: string) {
     try {
-      const result = await chrome.runtime.sendMessage({
-        type: 'DELETE_ANSWER',
-        payload: id,
-      });
+      const result = await sendMessage(Messages.deleteAnswer(id));
       if (result?.success) {
         setLearnedAnswers((prev) => prev.filter((a) => a.id !== id));
         showMessage('success', 'Answer deleted');
@@ -86,7 +84,7 @@ export default function OptionsApp() {
 
   async function handleConnect() {
     try {
-      await chrome.runtime.sendMessage({ type: 'OPEN_AUTH' });
+      await sendMessage(Messages.openAuth());
       showMessage('success', 'Opening Columbus sign in');
     } catch (err) {
       showMessage('error', 'Failed to open sign in');
@@ -95,7 +93,7 @@ export default function OptionsApp() {
 
   async function handleLogout() {
     try {
-      const response = await chrome.runtime.sendMessage({ type: 'LOGOUT' });
+      const response = await sendMessage(Messages.logout());
       if (response?.success) {
         setAuthStatus((prev) => ({ apiBaseUrl: prev?.apiBaseUrl || apiUrl, isAuthenticated: false }));
         setLearnedAnswers([]);
@@ -108,9 +106,9 @@ export default function OptionsApp() {
     }
   }
 
-  async function handleSettingChange(
-    key: keyof ExtensionSettings,
-    value: boolean | number | string[]
+  async function handleSettingChange<K extends keyof ExtensionSettings>(
+    key: K,
+    value: ExtensionSettings[K]
   ) {
     const newSettings = { ...settings, [key]: value };
     setSettingsState(newSettings);
@@ -123,7 +121,7 @@ export default function OptionsApp() {
     }
   }
 
-  async function handleScrapeSourceChange(source: string, enabled: boolean) {
+  async function handleScrapeSourceChange(source: ScraperSource, enabled: boolean) {
     const latestSettings = await getSettings();
     await handleSettingChange(
       'enabledScraperSources',

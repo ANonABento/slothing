@@ -1,6 +1,7 @@
 // Scraper registry - maps URLs to appropriate scrapers
 
 import type { BaseScraper } from './base-scraper';
+import type { ScraperSource } from '@/shared/types';
 import { LinkedInScraper } from './linkedin-scraper';
 import { WaterlooWorksScraper } from './waterloo-works-scraper';
 import { IndeedScraper } from './indeed-scraper';
@@ -37,6 +38,6 @@ export function hasSpecializedScraper(url: string): boolean {
 /**
  * Get all available scraper sources
  */
-export function getAvailableSources(): string[] {
+export function getAvailableSources(): ScraperSource[] {
   return scrapers.map((s) => s.source);
 }
