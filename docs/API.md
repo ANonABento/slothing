@@ -789,6 +789,42 @@ AI assistant for editing a document. Rate limited.
 
 ---
 
+### `POST /api/upload`
+
+Upload a document file (resume, cover letter, or other). Validates file size and type, extracts text, classifies document type, parses structured content, saves to the document store, and ingests into the knowledge bank.
+
+**Request:** `multipart/form-data`
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `file` | File | Required — PDF, DOCX, or TXT; max 10 MB |
+
+**Response:**
+```json
+{
+  "success": true,
+  "document": {
+    "id": "doc_abc123",
+    "filename": "resume.pdf",
+    "type": "resume",
+    "size": 102400,
+    "extractedText": "John Smith\nSoftware Engineer..."
+  },
+  "entriesCreated": 5,
+  "parsing": {
+    "confidence": 0.92,
+    "sectionsDetected": ["experience", "education", "skills"],
+    "llmUsed": false,
+    "llmSectionsCount": 0,
+    "warnings": []
+  }
+}
+```
+
+`parsing` is only present when the document is a resume. `entriesCreated` reflects how many knowledge-bank entries were ingested.
+
+---
+
 ### `POST /api/parse`
 
 Parse an uploaded resume file and extract profile data.
@@ -1244,6 +1280,22 @@ Test an LLM connection without saving.
 ```json
 { "success": true, "message": "Connection successful!" }
 ```
+
+---
+
+### `GET /api/settings/status`
+
+Lightweight check for whether an LLM provider is configured. Used by the sidebar status indicator.
+
+**Response:**
+```json
+{
+  "configured": true,
+  "provider": "openai"
+}
+```
+
+`provider` is `null` when `configured` is `false`.
 
 ---
 
@@ -1775,3 +1827,130 @@ Export job tracker data to a Google Sheets spreadsheet.
 ### `POST /api/google/tasks/sync`
 
 Sync reminders to Google Tasks.
+
+---
+
+## Templates
+
+Custom resume templates stored per user alongside the built-in template set.
+
+### `GET /api/templates`
+
+List all available templates (built-in + user's custom templates).
+
+**Response:**
+```json
+{
+  "templates": [
+    {
+      "id": "classic",
+      "name": "Classic",
+      "description": "Clean single-column layout",
+      "type": "built-in"
+    },
+    {
+      "id": "cust_abc123",
+      "name": "My Template",
+      "description": "Custom template (from uploaded resume)",
+      "type": "custom",
+      "analyzedStyles": { "..." : "..." },
+      "createdAt": "2026-01-15T10:00:00.000Z"
+    }
+  ]
+}
+```
+
+---
+
+### `POST /api/templates`
+
+Save a new custom template.
+
+**Schema** (`createTemplateSchema`):
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `name` | string | Required, max 100 chars |
+| `analyzedStyles.styles.fontFamily` | string | Required |
+| `analyzedStyles.styles.fontSize` | string | Required |
+| `analyzedStyles.styles.headerSize` | string | Required |
+| `analyzedStyles.styles.sectionHeaderSize` | string | Required |
+| `analyzedStyles.styles.lineHeight` | string | Required |
+| `analyzedStyles.styles.accentColor` | string | Required |
+| `analyzedStyles.styles.layout` | enum | `single-column` \| `two-column` |
+| `analyzedStyles.styles.headerStyle` | enum | `centered` \| `left` \| `minimal` |
+| `analyzedStyles.styles.bulletStyle` | enum | `disc` \| `dash` \| `arrow` \| `none` |
+| `analyzedStyles.styles.sectionDivider` | enum | `line` \| `space` \| `none` |
+| `analyzedStyles.charsPerLine` | number | Positive integer |
+| `analyzedStyles.margins.top` | string | Required |
+| `analyzedStyles.margins.bottom` | string | Required |
+| `analyzedStyles.margins.left` | string | Required |
+| `analyzedStyles.margins.right` | string | Required |
+| `analyzedStyles.sectionGap` | string | Required |
+| `sourceDocumentId` | string | Optional — document ID template was derived from |
+
+**Response:** `201 Created` with the saved template object.
+
+---
+
+### `DELETE /api/templates?id={templateId}`
+
+Delete a custom template by ID.
+
+**Query params:**
+
+| Param | Type | Notes |
+|-------|------|-------|
+| `id` | string | Required — custom template ID |
+
+**Response:**
+```json
+{ "success": true }
+```
+
+---
+
+### `PATCH /api/templates`
+
+Rename a custom template.
+
+**Schema** (`patchTemplateSchema`):
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `id` | string | Required — custom template ID |
+| `name` | string | Required, max 100 chars |
+
+**Response:**
+```json
+{ "success": true }
+```
+
+---
+
+### `POST /api/templates/analyze`
+
+Analyze raw resume text to extract template styling information (font, layout, margins, etc.) using an LLM.
+
+**Request body:**
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `text` | string | Required — resume plain text, min 50 chars |
+
+**Response:**
+```json
+{
+  "analyzed": {
+    "styles": {
+      "fontFamily": "Georgia",
+      "layout": "single-column",
+      "..."
+    },
+    "charsPerLine": 80,
+    "margins": { "top": "1in", "bottom": "1in", "left": "1in", "right": "1in" },
+    "sectionGap": "0.5em"
+  },
+  "usedLLM": true
+}
+```
