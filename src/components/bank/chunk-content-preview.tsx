@@ -63,7 +63,7 @@ export function ChunkContentPreview({ entry }: { entry: BankEntry }) {
           {cat && (
             <span
               className={cn(
-                "text-2xs px-1.5 py-0.5 rounded-full font-medium",
+                "text-2xs px-1.5 py-0.5 rounded-[var(--radius)] font-medium",
                 SKILL_CATEGORY_COLORS[cat] || SKILL_CATEGORY_COLORS.other,
               )}
             >
@@ -90,7 +90,7 @@ export function ChunkContentPreview({ entry }: { entry: BankEntry }) {
               {techs.slice(0, 5).map((t, i) => (
                 <span
                   key={i}
-                  className="text-2xs px-1.5 py-0.5 rounded-full bg-accent/10 text-accent font-medium"
+                  className="text-2xs px-1.5 py-0.5 rounded-[var(--radius)] bg-accent/10 text-accent font-medium"
                 >
                   {t}
                 </span>
@@ -139,7 +139,7 @@ export function ChunkContentPreview({ entry }: { entry: BankEntry }) {
               {tags.slice(0, 5).map((tag, i) => (
                 <span
                   key={`${tag}-${i}`}
-                  className="text-2xs px-1.5 py-0.5 rounded-full bg-warning/15 text-warning font-medium"
+                  className="text-2xs px-1.5 py-0.5 rounded-[var(--radius)] bg-warning/15 text-warning font-medium"
                 >
                   {tag}
                 </span>

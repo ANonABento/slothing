@@ -141,6 +141,9 @@ describe("SearchBar", () => {
     expect(expTab).toHaveAttribute("aria-selected", "true");
     expect(expTab.className).toContain("rounded-[var(--radius)]");
     expect(expTab.className).toContain("shadow-[var(--shadow-button)]");
+    expect(expTab.querySelector("span")?.className).toContain(
+      "rounded-[var(--radius)]",
+    );
 
     const allTab = screen.getByRole("tab", { name: /All/i });
     expect(allTab).toHaveAttribute("aria-selected", "false");

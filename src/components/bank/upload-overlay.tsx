@@ -353,9 +353,9 @@ export function UploadOverlay({
             <p className="text-muted-foreground mt-2">{currentFile}</p>
 
             {/* Progress bar */}
-            <div className="mt-4 w-full bg-muted rounded-full h-2 overflow-hidden">
+            <div className="mt-4 w-full bg-muted rounded-[var(--radius)] h-2 overflow-hidden">
               <div
-                className="h-full bg-primary rounded-full transition-all duration-500 ease-out"
+                className="h-full bg-primary rounded-[var(--radius)] transition-all duration-500 ease-out"
                 style={{ width: `${stageProgress(stage) * 100}%` }}
               />
             </div>
