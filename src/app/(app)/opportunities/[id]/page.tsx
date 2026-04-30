@@ -22,6 +22,8 @@ import { useErrorToast } from "@/hooks/use-error-toast";
 import { readJsonResponse } from "@/lib/http";
 import { cn } from "@/lib/utils";
 import type { JobDescription } from "@/types";
+
+const NOTES_AUTOSAVE_DEBOUNCE_MS = 600;
 import {
   OPPORTUNITY_FIELD_SECTIONS,
   buildAppliedOpportunityPatch,
@@ -417,7 +419,7 @@ export default function OpportunityDetailPage({
           fallbackDescription: "Your latest notes were not saved.",
         });
       }
-    }, 600);
+    }, NOTES_AUTOSAVE_DEBOUNCE_MS);
 
     return () => window.clearTimeout(timeout);
   }, [notes, opportunity, patchOpportunity, showErrorToast]);

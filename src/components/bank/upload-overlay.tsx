@@ -13,6 +13,7 @@ import {
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { THEME_SURFACE_CLASSES } from "@/lib/theme/component-classes";
+import type { UploadResponse } from "@/types/api";
 
 // ---------------------------------------------------------------------------
 // Constants & helpers (exported for testing)
@@ -162,7 +163,7 @@ export function UploadOverlay({
         const errData = await uploadRes.json().catch(() => null);
         throw new Error(errData?.error || "Upload failed");
       }
-      const uploadData = await uploadRes.json();
+      const uploadData = (await uploadRes.json()) as UploadResponse;
       const documentId = uploadData.document?.id;
       if (!documentId)
         throw new Error("Upload completed without a document ID");
@@ -182,16 +183,12 @@ export function UploadOverlay({
         const errData = await parseRes.json().catch(() => null);
         throw new Error(errData?.error || "Parse failed");
       }
-      const parseData = await parseRes.json();
+      await parseRes.json();
 
       setStage("storing");
       await new Promise((r) => setTimeout(r, 300));
 
-      const entryCount =
-        parseData.entriesCreated ??
-        parseData.entries?.length ??
-        parseData.count ??
-        0;
+      const entryCount = uploadData.entriesCreated ?? 0;
 
       return { fileName: file.name, entryCount };
     },

@@ -250,7 +250,7 @@ export function useStudioPageState(): StudioPageState {
       try {
         const response = await fetch("/api/bank");
         if (!response.ok) throw new Error("Failed to fetch");
-        const data = await response.json();
+        const data = (await response.json()) as { entries: BankEntry[] };
         if (!cancelled) setEntries(data.entries || []);
       } catch {
         if (!cancelled) setEntries([]);

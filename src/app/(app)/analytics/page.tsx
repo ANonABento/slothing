@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import {
   BarChart3,
@@ -42,6 +42,7 @@ import {
 } from "@/components/ui/page-layout";
 import { SkeletonChart, SkeletonButton } from "@/components/ui/skeleton";
 import { useErrorToast } from "@/hooks/use-error-toast";
+import { readJsonResponse } from "@/lib/http";
 
 const TrendCharts = dynamic(
   () =>
@@ -122,7 +123,6 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; icon: React.
 export default function AnalyticsPage() {
   const [analytics, setAnalytics] = useState<Analytics | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [exportRange, setExportRange] = useState<string>("all");
   const [exporting, setExporting] = useState(false);
   const showErrorToast = useErrorToast();
@@ -188,22 +188,24 @@ export default function AnalyticsPage() {
     return { headers, rows };
   };
 
-  useEffect(() => {
-    fetchAnalytics();
-  }, []);
-
-  const fetchAnalytics = async () => {
+  const fetchAnalytics = useCallback(async () => {
     try {
       const response = await fetch("/api/analytics");
-      if (!response.ok) throw new Error("Failed to fetch analytics");
-      const data = await response.json();
+      const data = await readJsonResponse<Analytics>(response, "Failed to load analytics");
       setAnalytics(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load analytics");
+      showErrorToast(err, {
+        title: "Could not load analytics",
+        fallbackDescription: "Please refresh the page and try again.",
+      });
     } finally {
       setLoading(false);
     }
-  };
+  }, [showErrorToast]);
+
+  useEffect(() => {
+    fetchAnalytics();
+  }, [fetchAnalytics]);
 
   if (loading) {
     return (
@@ -216,14 +218,12 @@ export default function AnalyticsPage() {
     );
   }
 
-  if (error || !analytics) {
+  if (!analytics) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center space-y-4">
           <AlertTriangle className="h-12 w-12 mx-auto text-destructive" />
-          <p className="text-muted-foreground">
-            {error || "Failed to load analytics"}
-          </p>
+          <p className="text-muted-foreground">Failed to load analytics</p>
           <Button onClick={fetchAnalytics}>Retry</Button>
         </div>
       </div>

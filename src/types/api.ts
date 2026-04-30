@@ -270,6 +270,7 @@ export interface UploadResponse {
     size: number;
     extractedText: string | null;
   };
+  entriesCreated: number;
   parsing?: {
     confidence: number;
     sectionsDetected: string[];

@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { FileText, Loader2, Trash2 } from "lucide-react";
 import type { SourceDocument } from "@/lib/db/profile-bank";
+import type { BankDocumentsResponse } from "@/types/api";
 import { useErrorToast } from "@/hooks/use-error-toast";
 import { cn } from "@/lib/utils";
 import { THEME_INTERACTIVE_SURFACE_CLASSES } from "@/lib/theme/component-classes";
@@ -50,7 +51,7 @@ export function SourceDocuments({
     try {
       const res = await fetch("/api/bank/documents");
       if (!res.ok) throw new Error("Failed to fetch");
-      const data = await res.json();
+      const data = (await res.json()) as BankDocumentsResponse;
       setDocuments(data.documents || []);
     } catch (error) {
       showErrorToast(error, {

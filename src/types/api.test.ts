@@ -202,6 +202,7 @@ describe("API Types", () => {
           size: 1024,
           extractedText: "text...",
         },
+        entriesCreated: 3,
       };
       expect(response.document.id).toBe("abc");
     });
@@ -216,6 +217,7 @@ describe("API Types", () => {
           size: 1024,
           extractedText: null,
         },
+        entriesCreated: 0,
         parsing: {
           confidence: 0.95,
           sectionsDetected: ["experience", "education"],
