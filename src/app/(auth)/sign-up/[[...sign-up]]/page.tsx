@@ -18,7 +18,7 @@ export default function SignUpPage() {
         appearance={{
           elements: {
             rootBox: "mx-auto",
-            card: "shadow-lg",
+            card: "shadow-[var(--shadow-lg)]",
           },
         }}
       />

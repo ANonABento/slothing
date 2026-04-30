@@ -10,6 +10,9 @@ describe("theme token application", () => {
     expect(variables["--card-foreground"]).toBe("240 100% 94%");
     expect(variables["--shadow-button"]).toBe("0 0 12px rgba(0,212,255,0.3)");
     expect(variables["--glow-color"]).toBe("rgba(0,212,255,0.3)");
+    expect(variables["--glass-border-color"]).toBe(
+      "hsl(var(--border) / var(--surface-border-opacity))"
+    );
     expect(variables["--spacing-4"]).toBe("1rem");
   });
 

@@ -125,6 +125,12 @@ describe("theme config", () => {
     expect(variables["--shadow-elevated"]).toBe(variables["--shadow-lg"]);
     expect(variables["--shadow-button"]).toBe(variables["--shadow-sm"]);
     expect(variables["--backdrop-blur"]).toBe("blur(16px)");
+    expect(variables["--glass-background-color"]).toBe(
+      "hsl(var(--card) / var(--surface-glass-opacity))"
+    );
+    expect(variables["--skeleton-highlight-color"]).toBe(
+      "hsl(var(--muted-foreground) / 0.1)"
+    );
   });
 
   it("returns CSS custom properties with custom color overrides", () => {

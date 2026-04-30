@@ -71,6 +71,9 @@ export function themeTokensToCssVariables(tokens: ThemeTokens): ThemeCssVariable
       tokens.surfaceBorderOpacity ??
       DEFAULT_EFFECT_VARIABLES["--surface-border-opacity"],
     "--glow-primary-opacity": tokens.glowColor ? "0.3" : "0.15",
+    "--glass-border-color": "hsl(var(--border) / var(--surface-border-opacity))",
+    "--glass-background-color": "hsl(var(--card) / var(--surface-glass-opacity))",
+    "--skeleton-highlight-color": "hsl(var(--muted-foreground) / 0.1)",
     "--gradient-primary":
       "linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--accent)) 100%)",
     "--gradient-success":

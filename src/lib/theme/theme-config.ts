@@ -745,6 +745,9 @@ function withDerivedThemeTokens(tokens: ThemeTokenGroup): ThemeTokenGroup {
     "shadow-card": tokens["shadow-card"] ?? tokens.shadow,
     "shadow-elevated": tokens["shadow-elevated"] ?? tokens["shadow-lg"],
     "shadow-button": tokens["shadow-button"] ?? tokens["shadow-sm"],
+    "glass-border-color": "hsl(var(--border) / var(--surface-border-opacity))",
+    "glass-background-color": "hsl(var(--card) / var(--surface-glass-opacity))",
+    "skeleton-highlight-color": "hsl(var(--muted-foreground) / 0.1)",
   };
 }
 
