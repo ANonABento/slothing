@@ -91,6 +91,29 @@ describe("ResumePreview", () => {
     });
   });
 
+  it("marks changed readonly sections in the rendered preview", async () => {
+    const { container } = render(
+      <ResumePreview
+        templateId="classic"
+        content={content}
+        editable={false}
+        sectionHighlights={[{ label: "summary", type: "changed" }]}
+      />,
+    );
+
+    expect(
+      await screen.findByText("Focused product engineer"),
+    ).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(
+        container.querySelector(
+          'section[data-section-title="Summary"][data-compare-highlight="changed"]',
+        ),
+      ).toHaveClass("resume-compare-highlight-changed");
+    });
+  });
+
   it("returns resume empty state content by default", () => {
     expect(getPreviewEmptyStateContent()).toMatchObject({
       eyebrow: "Resume",

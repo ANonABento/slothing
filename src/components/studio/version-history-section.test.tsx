@@ -37,4 +37,25 @@ describe("VersionHistorySection", () => {
       "border-[length:var(--border-width)]",
     );
   });
+
+  it("links older versions to compare against the latest version", () => {
+    render(
+      <VersionHistorySection
+        versions={[
+          { ...version, id: "latest-version" },
+          { ...version, id: "older version", name: "Older draft" },
+        ]}
+        previewVersionId={null}
+        manualVersionName=""
+        onPreviewVersion={vi.fn()}
+        onManualVersionNameChange={vi.fn()}
+        onSaveVersion={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByRole("link", { name: "Compare" })).toHaveAttribute(
+      "href",
+      "/studio/compare?a=older%20version&b=latest-version",
+    );
+  });
 });

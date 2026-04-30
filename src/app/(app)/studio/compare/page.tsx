@@ -11,7 +11,10 @@ import {
   Plus,
   RefreshCw,
 } from "lucide-react";
-import { ResumePreview } from "@/components/studio/resume-preview";
+import {
+  ResumePreview,
+  type ResumePreviewSectionHighlight,
+} from "@/components/studio/resume-preview";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -35,6 +38,18 @@ function diffIcon(type: BuilderSectionDiff["type"]) {
   if (type === "added") return Plus;
   if (type === "removed") return Minus;
   return RefreshCw;
+}
+
+function getSectionHighlights(
+  pane: ComparePane,
+  sectionDiffs: BuilderSectionDiff[],
+): ResumePreviewSectionHighlight[] {
+  return sectionDiffs.filter(
+    (diff) =>
+      diff.type === "changed" ||
+      (pane === "before" && diff.type === "removed") ||
+      (pane === "after" && diff.type === "added"),
+  );
 }
 
 function VersionSummary({
@@ -100,21 +115,19 @@ function DiffSummary({
 function VersionPreview({
   version,
   label,
-  highlight,
+  pane,
   sectionDiffs,
 }: {
   version: BuilderVersion;
   label: string;
-  highlight: "removed" | "added";
+  pane: ComparePane;
   sectionDiffs: BuilderSectionDiff[];
 }) {
   const highlightClass =
-    highlight === "added"
+    pane === "after"
       ? "border-success bg-success/5"
       : "border-destructive bg-destructive/5";
-  const sectionHighlights = sectionDiffs.filter(
-    (diff) => diff.type === highlight,
-  );
+  const sectionHighlights = getSectionHighlights(pane, sectionDiffs);
 
   return (
     <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[var(--radius)] border-[length:var(--border-width)] bg-background">
@@ -254,7 +267,7 @@ function StudioCompareContent() {
           <VersionPreview
             version={before}
             label="Before"
-            highlight="removed"
+            pane="before"
             sectionDiffs={sectionDiffs}
           />
         </div>
@@ -266,7 +279,7 @@ function StudioCompareContent() {
           <VersionPreview
             version={after}
             label="After"
-            highlight="added"
+            pane="after"
             sectionDiffs={sectionDiffs}
           />
         </div>
