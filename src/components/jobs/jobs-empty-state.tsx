@@ -14,7 +14,7 @@ export function JobsEmptyState({ onAdd }: { onAdd: () => void }) {
         <Button
           onClick={onAdd}
           size="lg"
-          className="gradient-bg text-primary-foreground hover:opacity-90"
+          className="bg-[image:var(--gradient-primary)] text-primary-foreground hover:opacity-90"
         >
           <Plus className="h-5 w-5 mr-2" />
           Add Your First Job
