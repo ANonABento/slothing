@@ -12,6 +12,7 @@ import {
   MousePointerClick,
   Share2,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   AppPage,
@@ -52,6 +53,33 @@ const RANGE_OPTIONS = [
   { label: "90D", days: 90 },
 ] as const;
 
+interface MetricCardProps {
+  icon: LucideIcon;
+  iconClassName: string;
+  label: string;
+  description: string;
+  value: number;
+}
+
+function MetricCard({
+  icon: Icon,
+  iconClassName,
+  label,
+  description,
+  value,
+}: MetricCardProps) {
+  return (
+    <div className="rounded-lg border bg-card p-5">
+      <div className="mb-4 flex items-center justify-between">
+        <Icon className={`h-5 w-5 ${iconClassName}`} />
+        <span className="text-2xl font-bold">{value}</span>
+      </div>
+      <h3 className="font-medium">{label}</h3>
+      <p className="text-sm text-muted-foreground">{description}</p>
+    </div>
+  );
+}
+
 function formatDate(value: string): string {
   return new Date(value).toLocaleDateString(undefined, {
     month: "short",
@@ -74,6 +102,39 @@ export default function ResumeAnalyticsPage() {
       ) ?? [0]),
     );
   }, [analytics]);
+
+  const metricCards = analytics
+    ? [
+        {
+          icon: Eye,
+          iconClassName: "text-info",
+          label: "Views",
+          description: "Opened resume previews",
+          value: analytics.overview.totalViews,
+        },
+        {
+          icon: Download,
+          iconClassName: "text-success",
+          label: "Downloads",
+          description: "Exported resume files",
+          value: analytics.overview.totalDownloads,
+        },
+        {
+          icon: Share2,
+          iconClassName: "text-warning",
+          label: "Share Clicks",
+          description: "Tracked share actions",
+          value: analytics.overview.totalShareClicks,
+        },
+        {
+          icon: MousePointerClick,
+          iconClassName: "text-primary",
+          label: "Total Events",
+          description: "All resume engagement",
+          value: analytics.overview.totalEvents,
+        },
+      ]
+    : [];
 
   useEffect(() => {
     let canceled = false;
@@ -160,57 +221,9 @@ export default function ResumeAnalyticsPage() {
       <PageContent>
         <div className="space-y-8">
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <div className="rounded-lg border bg-card p-5">
-              <div className="mb-4 flex items-center justify-between">
-                <Eye className="h-5 w-5 text-info" />
-                <span className="text-2xl font-bold">
-                  {analytics.overview.totalViews}
-                </span>
-              </div>
-              <h3 className="font-medium">Views</h3>
-              <p className="text-sm text-muted-foreground">
-                Opened resume previews
-              </p>
-            </div>
-
-            <div className="rounded-lg border bg-card p-5">
-              <div className="mb-4 flex items-center justify-between">
-                <Download className="h-5 w-5 text-success" />
-                <span className="text-2xl font-bold">
-                  {analytics.overview.totalDownloads}
-                </span>
-              </div>
-              <h3 className="font-medium">Downloads</h3>
-              <p className="text-sm text-muted-foreground">
-                Exported resume files
-              </p>
-            </div>
-
-            <div className="rounded-lg border bg-card p-5">
-              <div className="mb-4 flex items-center justify-between">
-                <Share2 className="h-5 w-5 text-warning" />
-                <span className="text-2xl font-bold">
-                  {analytics.overview.totalShareClicks}
-                </span>
-              </div>
-              <h3 className="font-medium">Share Clicks</h3>
-              <p className="text-sm text-muted-foreground">
-                Tracked share actions
-              </p>
-            </div>
-
-            <div className="rounded-lg border bg-card p-5">
-              <div className="mb-4 flex items-center justify-between">
-                <MousePointerClick className="h-5 w-5 text-primary" />
-                <span className="text-2xl font-bold">
-                  {analytics.overview.totalEvents}
-                </span>
-              </div>
-              <h3 className="font-medium">Total Events</h3>
-              <p className="text-sm text-muted-foreground">
-                All resume engagement
-              </p>
-            </div>
+            {metricCards.map((metric) => (
+              <MetricCard key={metric.label} {...metric} />
+            ))}
           </div>
 
           <section className="rounded-lg border bg-card p-6">

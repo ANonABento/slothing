@@ -46,6 +46,21 @@ export interface ResumeEventSummary {
 
 const MAX_ANALYTICS_DAYS = 365;
 
+type ResumeEventRow = {
+  id: string;
+  user_id: string;
+  resume_id: string;
+  event_type: ResumeEventType;
+  occurred_at: string;
+  metadata_json: string | null;
+};
+
+type ResumeEventCountRow = {
+  views: number | null;
+  downloads: number | null;
+  share_clicks: number | null;
+};
+
 function parseMetadata(metadataJson: string | null): Record<string, unknown> | undefined {
   if (!metadataJson) return undefined;
 
@@ -59,14 +74,7 @@ function parseMetadata(metadataJson: string | null): Record<string, unknown> | u
   }
 }
 
-function mapEventRow(row: {
-  id: string;
-  user_id: string;
-  resume_id: string;
-  event_type: ResumeEventType;
-  occurred_at: string;
-  metadata_json: string | null;
-}): ResumeEvent {
+function mapEventRow(row: ResumeEventRow): ResumeEvent {
   return {
     id: row.id,
     userId: row.user_id,
@@ -129,14 +137,7 @@ export function getResumeEvents(
     ORDER BY occurred_at DESC
   `);
 
-  const rows = stmt.all(resumeId, userId) as Array<{
-    id: string;
-    user_id: string;
-    resume_id: string;
-    event_type: ResumeEventType;
-    occurred_at: string;
-    metadata_json: string | null;
-  }>;
+  const rows = stmt.all(resumeId, userId) as ResumeEventRow[];
 
   return rows.map(mapEventRow);
 }
@@ -165,10 +166,7 @@ export function getResumeEventSummary(
       WHERE user_id = ? AND occurred_at >= ?
     `,
     )
-    .get(userId, since) as {
-    views: number | null;
-    downloads: number | null;
-    share_clicks: number | null;
+    .get(userId, since) as ResumeEventCountRow & {
     total_events: number;
   };
 
@@ -186,11 +184,8 @@ export function getResumeEventSummary(
       ORDER BY event_date ASC
     `,
     )
-    .all(userId, since) as Array<{
+    .all(userId, since) as Array<ResumeEventCountRow & {
     event_date: string;
-    views: number | null;
-    downloads: number | null;
-    share_clicks: number | null;
   }>;
 
   const topRows = db
@@ -218,15 +213,12 @@ export function getResumeEventSummary(
       LIMIT 10
     `,
     )
-    .all(since, userId) as Array<{
+    .all(since, userId) as Array<ResumeEventCountRow & {
     resume_id: string;
     job_id: string;
     job_title: string;
     company: string;
     created_at: string;
-    views: number | null;
-    downloads: number | null;
-    share_clicks: number | null;
     total_events: number;
   }>;
 
