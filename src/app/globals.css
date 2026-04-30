@@ -53,7 +53,7 @@
   .overflow-auto,
   .overflow-y-auto,
   .overflow-x-auto {
-    overscroll-behavior: contain;
+    overscroll-behavior: none;
   }
 
   /* Custom scrollbar */
@@ -140,6 +140,27 @@
   /* Soft glow for interactive elements */
   .glow-primary {
     box-shadow: 0 0 20px var(--glow-color);
+  }
+
+  .app-sidebar {
+    box-shadow: var(--shadow-card);
+  }
+
+  .app-sidebar-nav-item {
+    box-shadow: none;
+  }
+
+  [data-theme-preset="neon"] .app-sidebar-nav-item[data-active="true"] {
+    border-left-color: var(--glow-color);
+    box-shadow:
+      inset 4px 0 0 var(--glow-color),
+      0 0 20px var(--glow-color),
+      var(--shadow-button);
+  }
+
+  [data-theme-preset="bloxy"] .app-sidebar,
+  [data-theme-preset="bloxy"] .app-sidebar * {
+    border-radius: 0;
   }
 
   /* Subtle pulse animation for status indicators */
