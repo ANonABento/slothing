@@ -112,19 +112,14 @@ export function AddEntryDialog({ onCreate }: AddEntryDialogProps) {
 
           {category === "hackathon" && (
             <div className="space-y-2">
-              <Label className="text-xs text-muted-foreground">
-                Hackathon Templates
-              </Label>
+              <Label className="text-xs text-muted-foreground">Hackathon Templates</Label>
               <div className="grid gap-2 sm:grid-cols-3">
                 {HACKATHON_TEMPLATES.map((template) => (
                   <button
                     key={template.id}
                     type="button"
                     onClick={() => handleTemplateSelect(template.id)}
-                    className={cn(
-                      THEME_CONTROL_CLASSES,
-                      "px-3 py-2 text-left text-xs transition-colors hover:border-warning/60 hover:bg-warning/5",
-                    )}
+                    className="rounded-lg border bg-background px-3 py-2 text-left text-xs transition-colors hover:border-warning/60 hover:bg-warning/5"
                   >
                     <span className="block font-medium text-foreground">
                       {template.label}

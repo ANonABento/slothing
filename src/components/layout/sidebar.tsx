@@ -50,6 +50,8 @@ export const navigationGroups: NavGroup[] = [
   {
     label: "Job Tracker",
     items: [
+      { name: "Jobs", href: "/jobs", icon: Briefcase },
+      { name: "Review Queue", href: "/opportunities/review", icon: Rows3 },
       { name: "Calendar", href: "/calendar", icon: Calendar },
       { name: "Email Templates", href: "/emails", icon: Mail },
     ],
@@ -206,12 +208,7 @@ export function Sidebar() {
                       })}
                       {...getSidebarNavItemState(isActive)}
                     >
-                      <item.icon
-                        className={cn(
-                          "h-5 w-5 shrink-0",
-                          isActive && "text-primary-foreground",
-                        )}
-                      />
+                      <item.icon className={cn("h-5 w-5 shrink-0", isActive && "text-primary-foreground")} />
                       {!collapsed && <span>{item.name}</span>}
 
                       {/* Tooltip for collapsed state */}
@@ -259,7 +256,7 @@ export function Sidebar() {
                         "absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-background",
                         llmStatus.configured
                           ? "bg-success"
-                          : "bg-muted-foreground/40",
+                          : "bg-muted-foreground/40"
                       )}
                       title={
                         llmStatus.configured

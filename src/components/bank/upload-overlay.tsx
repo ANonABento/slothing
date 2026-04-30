@@ -319,7 +319,7 @@ export function UploadOverlay({
         {/* ── Dragging ─────────────────────────────────────────────── */}
         {isDragging && step === "idle" && (
           <>
-            <div className="mx-auto w-20 h-20 rounded-[var(--radius)] bg-[image:var(--gradient-primary)] text-primary-foreground flex items-center justify-center mb-6 animate-bounce shadow-[var(--shadow-button)]">
+            <div className="mx-auto w-20 h-20 rounded-2xl gradient-bg text-primary-foreground flex items-center justify-center mb-6 animate-bounce">
               <CloudUpload className="h-10 w-10" />
             </div>
             <h2 className="text-2xl font-bold">Drop to upload</h2>
@@ -327,15 +327,15 @@ export function UploadOverlay({
               Resume, cover letter, or any career document
             </p>
             <div className="mt-4 flex justify-center gap-3">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--radius)] bg-destructive/10 text-destructive text-sm font-medium">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-destructive/10 text-destructive text-sm font-medium">
                 <FileText className="h-4 w-4" />
                 PDF
               </span>
-              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--radius)] bg-info/10 text-info text-sm font-medium">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-info/10 text-info text-sm font-medium">
                 <FileText className="h-4 w-4" />
                 DOCX
               </span>
-              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--radius)] bg-muted text-muted-foreground text-sm font-medium">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted text-muted-foreground text-sm font-medium">
                 <File className="h-4 w-4" />
                 TXT
               </span>
@@ -346,7 +346,7 @@ export function UploadOverlay({
         {/* ── Processing ───────────────────────────────────────────── */}
         {step === "processing" && (
           <>
-            <div className="mx-auto w-20 h-20 rounded-[var(--radius)] bg-[image:var(--gradient-primary)] text-primary-foreground flex items-center justify-center mb-6 shadow-[var(--shadow-button)]">
+            <div className="mx-auto w-20 h-20 rounded-2xl gradient-bg text-primary-foreground flex items-center justify-center mb-6">
               <Loader2 className="h-10 w-10 animate-spin" />
             </div>
             <h2 className="text-2xl font-bold">{STAGE_LABELS[stage]}</h2>
