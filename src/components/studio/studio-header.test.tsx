@@ -105,6 +105,55 @@ describe("StudioHeader", () => {
     ).toHaveClass("group-hover:h-56", "group-focus-visible:h-56");
   });
 
+  it("keeps the enlarged template picker inside the viewport", () => {
+    const originalInnerWidth = window.innerWidth;
+    const originalInnerHeight = window.innerHeight;
+    Object.defineProperty(window, "innerWidth", {
+      configurable: true,
+      value: 800,
+    });
+    Object.defineProperty(window, "innerHeight", {
+      configurable: true,
+      value: 800,
+    });
+
+    renderStudioHeader();
+
+    const trigger = screen.getByRole("button", {
+      name: /select resume template/i,
+    });
+    vi.spyOn(trigger, "getBoundingClientRect").mockReturnValue({
+      bottom: 128,
+      height: 96,
+      left: 700,
+      right: 940,
+      top: 32,
+      width: 240,
+      x: 700,
+      y: 32,
+      toJSON: () => ({}),
+    });
+
+    fireEvent.click(trigger);
+
+    expect(screen.getByRole("listbox", { name: /resume templates/i }))
+      .toHaveStyle({
+        left: "48px",
+        top: "136px",
+        width: "736px",
+        maxHeight: "648px",
+      });
+
+    Object.defineProperty(window, "innerWidth", {
+      configurable: true,
+      value: originalInnerWidth,
+    });
+    Object.defineProperty(window, "innerHeight", {
+      configurable: true,
+      value: originalInnerHeight,
+    });
+  });
+
   it("uses cover letter templates in cover letter mode", () => {
     renderStudioHeader({
       documentMode: "cover_letter",
