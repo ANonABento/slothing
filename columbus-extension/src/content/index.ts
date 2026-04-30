@@ -10,6 +10,7 @@ import { getScraperForUrl } from './scrapers/scraper-registry';
 import type { ExtensionProfile, ScrapedJob, DetectedField } from '@/shared/types';
 import { sendMessage, Messages } from '@/shared/messages';
 import { getSettings } from '@/background/storage';
+import { filterDetectedFields, isScraperSourceEnabled } from './settings-behavior';
 
 // Initialize components
 const fieldDetector = new FieldDetector();
@@ -31,15 +32,15 @@ async function scanPage() {
   // Detect forms
   if (settings.autoFillEnabled) {
     const forms = document.querySelectorAll('form');
+    const nextDetectedFields: DetectedField[] = [];
+
     for (const form of forms) {
-      const fields = fieldDetector
-        .detectFields(form)
-        .filter((field) => field.confidence >= settings.minimumConfidence)
-        .filter((field) => settings.autoDetectPrompts || field.fieldType !== 'customQuestion');
-      if (fields.length > 0) {
-        detectedFields = fields;
-        console.log('[Columbus] Detected fields:', fields.length);
-      }
+      nextDetectedFields.push(...filterDetectedFields(fieldDetector.detectFields(form), settings));
+    }
+
+    detectedFields = nextDetectedFields;
+    if (detectedFields.length > 0) {
+      console.log('[Columbus] Detected fields:', detectedFields.length);
     }
   } else {
     detectedFields = [];
@@ -48,17 +49,18 @@ async function scanPage() {
   // Check for job listing
   const scraper = getScraperForUrl(window.location.href);
   if (
-    settings.enableJobScraping &&
-    settings.enabledScraperSources.includes(scraper.source) &&
+    isScraperSourceEnabled(settings, scraper.source) &&
     scraper.canHandle(window.location.href)
   ) {
     try {
       scrapedJob = await scraper.scrapeJobListing();
       if (scrapedJob) {
         console.log('[Columbus] Scraped job:', scrapedJob.title);
-        syncSalaryOverlay(scrapedJob, settings.showSalaryOverlay);
       }
+      syncSalaryOverlay(scrapedJob, settings.showSalaryOverlay);
     } catch (err) {
+      scrapedJob = null;
+      syncSalaryOverlay(null, false);
       console.error('[Columbus] Scrape error:', err);
     }
   } else {
@@ -95,24 +97,49 @@ async function handleMessage(message: { type: string; payload?: unknown }) {
       return { success: false, error: 'No job detected' };
 
     case 'SCRAPE_JOB':
-      const scraper = getScraperForUrl(window.location.href);
-      if (scraper.canHandle(window.location.href)) {
-        scrapedJob = await scraper.scrapeJobListing();
-        return { success: true, data: scrapedJob };
-      }
-      return { success: false, error: 'No scraper available for this site' };
+      return handleScrapeJob();
 
     case 'SCRAPE_JOB_LIST':
-      const listScraper = getScraperForUrl(window.location.href);
-      if (listScraper.canHandle(window.location.href)) {
-        const jobs = await listScraper.scrapeJobList();
-        return { success: true, data: jobs };
-      }
-      return { success: false, error: 'No scraper available for this site' };
+      return handleScrapeJobList();
 
     default:
       return { success: false, error: `Unknown message type: ${message.type}` };
   }
+}
+
+async function handleScrapeJob() {
+  const settings = await getSettings();
+  const scraper = getScraperForUrl(window.location.href);
+
+  if (!isScraperSourceEnabled(settings, scraper.source)) {
+    scrapedJob = null;
+    syncSalaryOverlay(null, false);
+    return { success: false, error: 'Job scraping is disabled for this site' };
+  }
+
+  if (scraper.canHandle(window.location.href)) {
+    scrapedJob = await scraper.scrapeJobListing();
+    syncSalaryOverlay(scrapedJob, settings.showSalaryOverlay);
+    return { success: true, data: scrapedJob };
+  }
+
+  return { success: false, error: 'No scraper available for this site' };
+}
+
+async function handleScrapeJobList() {
+  const settings = await getSettings();
+  const scraper = getScraperForUrl(window.location.href);
+
+  if (!isScraperSourceEnabled(settings, scraper.source)) {
+    return { success: false, error: 'Job scraping is disabled for this site' };
+  }
+
+  if (scraper.canHandle(window.location.href)) {
+    const jobs = await scraper.scrapeJobList();
+    return { success: true, data: jobs };
+  }
+
+  return { success: false, error: 'No scraper available for this site' };
 }
 
 async function handleFillForm() {

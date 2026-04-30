@@ -124,9 +124,10 @@ export default function OptionsApp() {
   }
 
   async function handleScrapeSourceChange(source: string, enabled: boolean) {
+    const latestSettings = await getSettings();
     await handleSettingChange(
       'enabledScraperSources',
-      toggleScrapeSource(settings.enabledScraperSources, source, enabled)
+      toggleScrapeSource(latestSettings.enabledScraperSources, source, enabled)
     );
   }
 
