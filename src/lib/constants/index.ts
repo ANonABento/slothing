@@ -117,6 +117,8 @@ export type { NotificationAction } from "./notifications";
 
 export {
   CONTACT_FOLLOW_UP_FILTERS,
+  CONTACT_FOLLOW_UP_FILTER_OPTIONS,
+  CONTACT_FOLLOW_UP_LABELS,
   contactFollowUpFilterSchema,
   createContactSchema,
   updateContactSchema,

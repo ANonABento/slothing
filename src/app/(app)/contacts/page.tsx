@@ -3,7 +3,12 @@
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { CalendarClock, Mail, Pencil, Plus, Search, Trash2, Users, X } from "lucide-react";
 import type { Contact } from "@/types";
-import type { ContactFollowUpFilter, CreateContactInput } from "@/lib/constants";
+import {
+  CONTACT_FOLLOW_UP_FILTER_OPTIONS,
+  CONTACT_FOLLOW_UP_LABELS,
+  type ContactFollowUpFilter,
+  type CreateContactInput,
+} from "@/lib/constants";
 import { readJsonResponse } from "@/lib/http";
 
 interface ContactsResponse {
@@ -31,11 +36,21 @@ const EMPTY_FORM: CreateContactInput = {
   notes: "",
 };
 
-const FOLLOW_UP_FILTERS: Array<{ value: ContactFollowUpFilter; label: string }> = [
-  { value: "all", label: "All" },
-  { value: "due", label: "Due" },
-  { value: "upcoming", label: "Upcoming" },
-  { value: "none", label: "No follow-up" },
+type ContactFormField = {
+  name: keyof CreateContactInput;
+  label: string;
+  type?: "email" | "url" | "date";
+  className?: string;
+};
+
+const CONTACT_FORM_FIELDS: ContactFormField[] = [
+  { name: "name", label: "Name", className: "md:col-span-2" },
+  { name: "role", label: "Role" },
+  { name: "company", label: "Company" },
+  { name: "email", label: "Email", type: "email" },
+  { name: "linkedin", label: "LinkedIn", type: "url" },
+  { name: "lastContacted", label: "Last contacted", type: "date" },
+  { name: "nextFollowup", label: "Next follow-up", type: "date" },
 ];
 
 function formatDate(value?: string) {
@@ -48,11 +63,11 @@ function formatDate(value?: string) {
 }
 
 function getFollowUpTag(contact: Contact) {
-  if (!contact.nextFollowup) return "No follow-up";
+  if (!contact.nextFollowup) return CONTACT_FOLLOW_UP_LABELS.none;
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const followUpDate = new Date(`${contact.nextFollowup}T00:00:00`);
-  return followUpDate <= today ? "Follow up due" : "Upcoming";
+  return followUpDate <= today ? "Follow up due" : CONTACT_FOLLOW_UP_LABELS.upcoming;
 }
 
 export default function ContactsPage() {
@@ -131,6 +146,10 @@ export default function ContactsPage() {
     setModalOpen(true);
   };
 
+  const updateFormField = (field: keyof CreateContactInput, value: string) => {
+    setForm((prev) => ({ ...prev, [field]: value }));
+  };
+
   const submitContact = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setSaving(true);
@@ -207,7 +226,7 @@ export default function ContactsPage() {
           </label>
 
           <div className="flex flex-wrap items-center gap-2">
-            {FOLLOW_UP_FILTERS.map((filter) => (
+            {CONTACT_FOLLOW_UP_FILTER_OPTIONS.map((filter) => (
               <button
                 key={filter.value}
                 type="button"
@@ -359,72 +378,23 @@ export default function ContactsPage() {
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
-              <label className="space-y-1.5 md:col-span-2">
-                <span className="text-sm font-medium">Name</span>
-                <input
-                  required
-                  value={form.name}
-                  onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))}
-                  className="h-11 w-full rounded-lg border bg-background px-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-                />
-              </label>
-              <label className="space-y-1.5">
-                <span className="text-sm font-medium">Role</span>
-                <input
-                  value={form.role}
-                  onChange={(event) => setForm((prev) => ({ ...prev, role: event.target.value }))}
-                  className="h-11 w-full rounded-lg border bg-background px-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-                />
-              </label>
-              <label className="space-y-1.5">
-                <span className="text-sm font-medium">Company</span>
-                <input
-                  value={form.company}
-                  onChange={(event) => setForm((prev) => ({ ...prev, company: event.target.value }))}
-                  className="h-11 w-full rounded-lg border bg-background px-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-                />
-              </label>
-              <label className="space-y-1.5">
-                <span className="text-sm font-medium">Email</span>
-                <input
-                  type="email"
-                  value={form.email}
-                  onChange={(event) => setForm((prev) => ({ ...prev, email: event.target.value }))}
-                  className="h-11 w-full rounded-lg border bg-background px-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-                />
-              </label>
-              <label className="space-y-1.5">
-                <span className="text-sm font-medium">LinkedIn</span>
-                <input
-                  type="url"
-                  value={form.linkedin}
-                  onChange={(event) => setForm((prev) => ({ ...prev, linkedin: event.target.value }))}
-                  className="h-11 w-full rounded-lg border bg-background px-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-                />
-              </label>
-              <label className="space-y-1.5">
-                <span className="text-sm font-medium">Last contacted</span>
-                <input
-                  type="date"
-                  value={form.lastContacted}
-                  onChange={(event) => setForm((prev) => ({ ...prev, lastContacted: event.target.value }))}
-                  className="h-11 w-full rounded-lg border bg-background px-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-                />
-              </label>
-              <label className="space-y-1.5">
-                <span className="text-sm font-medium">Next follow-up</span>
-                <input
-                  type="date"
-                  value={form.nextFollowup}
-                  onChange={(event) => setForm((prev) => ({ ...prev, nextFollowup: event.target.value }))}
-                  className="h-11 w-full rounded-lg border bg-background px-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-                />
-              </label>
+              {CONTACT_FORM_FIELDS.map((field) => (
+                <label key={field.name} className={`space-y-1.5 ${field.className || ""}`}>
+                  <span className="text-sm font-medium">{field.label}</span>
+                  <input
+                    required={field.name === "name"}
+                    type={field.type}
+                    value={form[field.name] || ""}
+                    onChange={(event) => updateFormField(field.name, event.target.value)}
+                    className="h-11 w-full rounded-lg border bg-background px-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                  />
+                </label>
+              ))}
               <label className="space-y-1.5 md:col-span-2">
                 <span className="text-sm font-medium">Notes</span>
                 <textarea
-                  value={form.notes}
-                  onChange={(event) => setForm((prev) => ({ ...prev, notes: event.target.value }))}
+                  value={form.notes || ""}
+                  onChange={(event) => updateFormField("notes", event.target.value)}
                   rows={4}
                   className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                 />

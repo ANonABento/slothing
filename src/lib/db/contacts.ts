@@ -59,6 +59,22 @@ function mapRowToContact(row: ContactRow): Contact {
   };
 }
 
+function mergeDefinedContactUpdates(
+  existing: Contact,
+  updates: Partial<ContactInput>
+): ContactInput {
+  return {
+    name: updates.name ?? existing.name,
+    role: updates.role ?? existing.role,
+    company: updates.company ?? existing.company,
+    email: updates.email ?? existing.email,
+    linkedin: updates.linkedin ?? existing.linkedin,
+    lastContacted: updates.lastContacted ?? existing.lastContacted,
+    nextFollowup: updates.nextFollowup ?? existing.nextFollowup,
+    notes: updates.notes ?? existing.notes,
+  };
+}
+
 export function normalizeContactListOptions(options: ContactListOptions = {}) {
   const page = Number.isFinite(options.page) && options.page! > 0
     ? Math.floor(options.page!)
@@ -172,7 +188,7 @@ export function updateContact(
   const existing = getContact(id, userId);
   if (!existing) return null;
 
-  const merged = { ...existing, ...updates };
+  const merged = mergeDefinedContactUpdates(existing, updates);
   db.prepare(`
     UPDATE contacts SET
       name = ?,

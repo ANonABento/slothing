@@ -9,6 +9,18 @@ export const CONTACT_FOLLOW_UP_FILTERS = [
 
 export type ContactFollowUpFilter = (typeof CONTACT_FOLLOW_UP_FILTERS)[number];
 
+export const CONTACT_FOLLOW_UP_LABELS: Record<ContactFollowUpFilter, string> = {
+  all: "All",
+  due: "Due",
+  upcoming: "Upcoming",
+  none: "No follow-up",
+};
+
+export const CONTACT_FOLLOW_UP_FILTER_OPTIONS = CONTACT_FOLLOW_UP_FILTERS.map((value) => ({
+  value,
+  label: CONTACT_FOLLOW_UP_LABELS[value],
+}));
+
 export const contactFollowUpFilterSchema = z.enum(CONTACT_FOLLOW_UP_FILTERS);
 
 const optionalText = (max: number) =>

@@ -214,6 +214,43 @@ describe("Contact Database Functions", () => {
     expect(result?.role).toBe("Hiring Manager");
   });
 
+  it("ignores undefined fields when applying partial updates", () => {
+    const existing = {
+      id: "contact-1",
+      user_id: "user-1",
+      name: "Avery Lee",
+      role: "Recruiter",
+      company: "Tech Co",
+      email: "avery@example.com",
+      linkedin: null,
+      last_contacted: null,
+      next_followup: null,
+      notes: null,
+    };
+    const mockRun = vi.fn();
+    const mockGet = vi.fn().mockReturnValueOnce(existing).mockReturnValueOnce(existing);
+
+    (db.prepare as Mock).mockImplementation((sql: string) => {
+      if (sql.includes("UPDATE contacts")) return { run: mockRun };
+      return { get: mockGet };
+    });
+
+    updateContact("contact-1", { name: undefined, role: "Hiring Manager" }, "user-1");
+
+    expect(mockRun).toHaveBeenCalledWith(
+      "Avery Lee",
+      "Hiring Manager",
+      "Tech Co",
+      "avery@example.com",
+      null,
+      null,
+      null,
+      null,
+      "contact-1",
+      "user-1"
+    );
+  });
+
   it("returns false when deleting a missing contact", () => {
     const mockRun = vi.fn().mockReturnValue({ changes: 0 });
     (db.prepare as Mock).mockReturnValue({ run: mockRun });
