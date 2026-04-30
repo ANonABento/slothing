@@ -202,13 +202,11 @@ export function Sidebar() {
                       href={item.href}
                       title={collapsed ? item.name : undefined}
                       aria-label={collapsed ? item.name : undefined}
-                      className={cn(
-                        "group relative flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium transition-all duration-200 min-h-[44px]",
-                        isActive
-                          ? "gradient-bg text-primary-foreground shadow-md"
-                          : "text-muted-foreground hover:bg-muted hover:text-foreground",
-                        collapsed && "justify-center px-2"
-                      )}
+                      className={getSidebarNavItemClassName({
+                        isActive,
+                        collapsed,
+                      })}
+                      {...getSidebarNavItemState(isActive)}
                     >
                       <item.icon className={cn("h-5 w-5 shrink-0", isActive && "text-primary-foreground")} />
                       {!collapsed && <span>{item.name}</span>}
