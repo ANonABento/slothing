@@ -581,7 +581,8 @@ export function getThemeVariables(
 ): Record<`--${string}`, string> {
   const preset = getThemePreset(presetName);
   const tokens = applyCustomThemeColors(preset[resolvedTheme], customColors);
-  const variables = Object.fromEntries(
+
+  return Object.fromEntries(
     Object.entries(tokens).map(([name, value]) => [`--${name}`, value])
   ) as Record<`--${string}`, string>;
 
