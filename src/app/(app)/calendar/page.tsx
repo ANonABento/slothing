@@ -447,7 +447,7 @@ export default function CalendarPage() {
                   <button
                     key={date.toISOString()}
                     onClick={() => setSelectedDate(date)}
-                    className={`relative min-h-11 rounded-lg p-1 text-sm transition-colors ${
+                    className={`relative aspect-square min-h-11 rounded-lg p-1 text-sm transition-colors ${
                       isSelected
                         ? "bg-primary text-primary-foreground"
                         : isToday(date)
