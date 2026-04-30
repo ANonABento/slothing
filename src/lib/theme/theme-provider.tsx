@@ -69,17 +69,20 @@ function persistValue(key: string, value: string): void {
 
 function readStoredTheme(): ThemeMode | null {
   const storedTheme = readStoredValue(THEME_STORAGE_KEY, isThemeMode);
-  if (storedTheme) return storedTheme;
-
-  try {
-    const legacyDarkTheme = localStorage.getItem(THEME_DARK_STORAGE_KEY);
-    if (legacyDarkTheme === "true") return "dark";
-    if (legacyDarkTheme === "false") return "light";
-  } catch {
-    // Ignore storage errors and fall back to the default theme.
+  if (storedTheme) {
+    return storedTheme;
   }
 
-  return null;
+  const legacyDarkMode = readStoredValue(
+    THEME_DARK_STORAGE_KEY,
+    (value): value is "true" | "false" => value === "true" || value === "false"
+  );
+
+  if (!legacyDarkMode) {
+    return null;
+  }
+
+  return legacyDarkMode === "true" ? "dark" : "light";
 }
 
 function readStoredCustomColors(): ThemeColorOverrides {
