@@ -156,10 +156,9 @@ describe("getTechnologies", () => {
 
 describe("getStringList", () => {
   it("should return trimmed string values for list fields", () => {
-    expect(getStringList({ prizes: [" $5,000 ", "Best AI"] }, "prizes")).toEqual([
-      "$5,000",
-      "Best AI",
-    ]);
+    expect(
+      getStringList({ prizes: [" $5,000 ", "Best AI"] }, "prizes"),
+    ).toEqual(["$5,000", "Best AI"]);
   });
 
   it("should return empty array for missing or non-list fields", () => {
@@ -170,7 +169,9 @@ describe("getStringList", () => {
 
 describe("getHackathonTeamSize", () => {
   it("should return a min-max team size label", () => {
-    expect(getHackathonTeamSize({ teamSizeMin: "1", teamSizeMax: "4" })).toBe("1-4 people");
+    expect(getHackathonTeamSize({ teamSizeMin: "1", teamSizeMax: "4" })).toBe(
+      "1-4 people",
+    );
   });
 
   it("should return a max-only team size label", () => {
@@ -178,8 +179,12 @@ describe("getHackathonTeamSize", () => {
   });
 
   it("should pluralize fixed team sizes", () => {
-    expect(getHackathonTeamSize({ teamSizeMin: "1", teamSizeMax: "1" })).toBe("1 person");
-    expect(getHackathonTeamSize({ teamSizeMin: "2", teamSizeMax: "2" })).toBe("2 people");
+    expect(getHackathonTeamSize({ teamSizeMin: "1", teamSizeMax: "1" })).toBe(
+      "1 person",
+    );
+    expect(getHackathonTeamSize({ teamSizeMin: "2", teamSizeMax: "2" })).toBe(
+      "2 people",
+    );
   });
 
   it("should return empty string when no team size is set", () => {
@@ -501,9 +506,13 @@ describe("ChunkCard", () => {
     });
     render(<ChunkCard entry={entry} onUpdate={vi.fn()} onDelete={vi.fn()} />);
 
-    expect(screen.getByText("$5,000 Grand Prize · Best AI App")).toBeInTheDocument();
+    expect(
+      screen.getByText("$5,000 Grand Prize · Best AI App"),
+    ).toBeInTheDocument();
     expect(screen.getByText("1-4 people")).toBeInTheDocument();
-    expect(screen.getByText("Online · 2026-05-10 — 2026-05-12")).toBeInTheDocument();
+    expect(
+      screen.getByText("Online · 2026-05-10 — 2026-05-12"),
+    ).toBeInTheDocument();
     expect(screen.getByText("AI/ML")).toBeInTheDocument();
     expect(screen.getByText("Developer Tools")).toBeInTheDocument();
     expect(screen.getByText("Accessibility")).toBeInTheDocument();

@@ -66,7 +66,9 @@ export function ImportJobPreview({
               )}
             </div>
             {preview.salary && (
-              <p className="text-sm font-medium text-success">{preview.salary}</p>
+              <p className="text-sm font-medium text-success">
+                {preview.salary}
+              </p>
             )}
           </div>
           <Button variant="outline" size="sm" onClick={onEdit}>
@@ -147,7 +149,7 @@ export function ImportJobPreview({
           <Button
             onClick={onSave}
             disabled={saving}
-            className="gradient-bg text-primary-foreground hover:opacity-90"
+            className={THEME_PRIMARY_GRADIENT_BUTTON_CLASSES}
           >
             {saving ? (
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />

@@ -83,7 +83,8 @@ export function ChunkCard({
   return (
     <div
       className={cn(
-        "group rounded-xl border bg-card transition-all hover:border-primary/30 hover:shadow-md",
+        "group",
+        THEME_INTERACTIVE_SURFACE_CLASSES,
         entry.category === "hackathon" &&
           "border-warning/40 bg-warning/5 hover:border-warning/60",
         highlighted && "ring-2 ring-primary",
