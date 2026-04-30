@@ -1,5 +1,9 @@
 import { escapeHtml } from "@/lib/html";
-import type { TemplateStyles } from "@/lib/resume/template-types";
+import type {
+  CoverLetterTemplateStyles,
+  TemplateStyles,
+} from "@/lib/resume/template-types";
+import { getCoverLetterDocumentStyles } from "@/lib/resume/cover-letter-styles";
 import { generateHTML } from "@tiptap/react";
 import { resumeEditorExtensions } from "./extensions";
 import { getResumeDocumentStyles } from "./styles";
@@ -32,6 +36,30 @@ ${EDITOR_PRINT_CLEANUP_STYLES}
 </head>
 <body>
 ${bodyHtml}
+</body>
+</html>`;
+}
+
+export function createPrintableCoverLetterEditorHtml(
+  bodyHtml: string,
+  templateStyles: CoverLetterTemplateStyles,
+  title = "Cover Letter"
+): string {
+  return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>${escapeHtml(title)}</title>
+  <style>
+${getCoverLetterDocumentStyles(templateStyles)}
+  </style>
+</head>
+<body>
+  <article class="cover-letter-document">
+    <main class="letter-page">
+${bodyHtml}
+    </main>
+  </article>
 </body>
 </html>`;
 }

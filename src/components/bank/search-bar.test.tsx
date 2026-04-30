@@ -9,15 +9,7 @@ const defaultProps = {
   onCategoryChange: vi.fn(),
   sortBy: "date" as const,
   onSortChange: vi.fn(),
-  counts: {
-    experience: 5,
-    skill: 3,
-    project: 2,
-    hackathon: 4,
-    education: 1,
-    achievement: 0,
-    certification: 1,
-  },
+  counts: { experience: 5, skill: 3, project: 2, hackathon: 4, education: 1, achievement: 0, certification: 1 },
 };
 
 describe("SearchBar", () => {
