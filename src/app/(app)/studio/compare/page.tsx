@@ -101,15 +101,20 @@ function VersionPreview({
   version,
   label,
   highlight,
+  sectionDiffs,
 }: {
   version: BuilderVersion;
   label: string;
   highlight: "removed" | "added";
+  sectionDiffs: BuilderSectionDiff[];
 }) {
   const highlightClass =
     highlight === "added"
       ? "border-success bg-success/5"
       : "border-destructive bg-destructive/5";
+  const sectionHighlights = sectionDiffs.filter(
+    (diff) => diff.type === highlight,
+  );
 
   return (
     <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[var(--radius)] border-[length:var(--border-width)] bg-background">
@@ -128,6 +133,7 @@ function VersionPreview({
           content={version.state.content}
           documentMode={version.state.documentMode}
           editable={false}
+          sectionHighlights={sectionHighlights}
         />
       </div>
     </section>
@@ -144,9 +150,18 @@ function StudioCompareContent() {
   const [mobilePane, setMobilePane] = useState<ComparePane>("before");
 
   useEffect(() => {
-    const pair = findBuilderVersionPair(window.localStorage, beforeId, afterId);
-    setBefore(pair.before);
-    setAfter(pair.after);
+    try {
+      const pair = findBuilderVersionPair(
+        window.localStorage,
+        beforeId,
+        afterId,
+      );
+      setBefore(pair.before);
+      setAfter(pair.after);
+    } catch {
+      setBefore(null);
+      setAfter(null);
+    }
     setLoaded(true);
   }, [afterId, beforeId]);
 
@@ -236,14 +251,24 @@ function StudioCompareContent() {
             mobilePane === "before" ? "block h-full" : "hidden md:block"
           }
         >
-          <VersionPreview version={before} label="Before" highlight="removed" />
+          <VersionPreview
+            version={before}
+            label="Before"
+            highlight="removed"
+            sectionDiffs={sectionDiffs}
+          />
         </div>
         <div
           className={
             mobilePane === "after" ? "block h-full" : "hidden md:block"
           }
         >
-          <VersionPreview version={after} label="After" highlight="added" />
+          <VersionPreview
+            version={after}
+            label="After"
+            highlight="added"
+            sectionDiffs={sectionDiffs}
+          />
         </div>
       </div>
     </main>

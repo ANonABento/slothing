@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ResumePreview, getPreviewEmptyStateContent } from "./resume-preview";
 import type { TipTapJSONContent } from "@/lib/editor/types";
@@ -66,6 +66,29 @@ describe("ResumePreview", () => {
     expect(
       screen.queryByRole("button", { name: /add section/i }),
     ).not.toBeInTheDocument();
+  });
+
+  it("marks highlighted readonly sections in the rendered preview", async () => {
+    const { container } = render(
+      <ResumePreview
+        templateId="classic"
+        content={content}
+        editable={false}
+        sectionHighlights={[{ label: "Summary", type: "added" }]}
+      />,
+    );
+
+    expect(
+      await screen.findByText("Focused product engineer"),
+    ).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(
+        container.querySelector(
+          'section[data-section-title="Summary"][data-compare-highlight="added"]',
+        ),
+      ).toHaveClass("resume-compare-highlight-added");
+    });
   });
 
   it("returns resume empty state content by default", () => {

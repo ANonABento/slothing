@@ -40,9 +40,15 @@ export interface ResumePreviewProps {
   content?: TipTapJSONContent;
   documentMode?: DocumentMode;
   editable?: boolean;
+  sectionHighlights?: ResumePreviewSectionHighlight[];
   onContentChange?: (content: TipTapJSONContent) => void;
   onAddSection?: () => void;
   onAddFromBank?: () => void;
+}
+
+export interface ResumePreviewSectionHighlight {
+  label: string;
+  type: "added" | "removed" | "changed";
 }
 
 interface PreviewEmptyStateContent {
@@ -50,6 +56,19 @@ interface PreviewEmptyStateContent {
   heading: string;
   description: string;
   steps: string[];
+}
+
+const SECTION_HIGHLIGHT_CLASSES: Record<
+  ResumePreviewSectionHighlight["type"],
+  string
+> = {
+  added: "resume-compare-highlight-added",
+  removed: "resume-compare-highlight-removed",
+  changed: "resume-compare-highlight-changed",
+};
+
+function normalizeSectionTitle(value: string): string {
+  return value.trim().toLowerCase();
 }
 
 export function getPreviewEmptyStateContent(
@@ -88,6 +107,7 @@ export function ResumePreview({
   content,
   documentMode = "resume",
   editable = true,
+  sectionHighlights = [],
   onContentChange,
   onAddSection,
   onAddFromBank,
@@ -123,6 +143,39 @@ export function ResumePreview({
     return () => observer.disconnect();
   }, [updateScale]);
 
+  useEffect(() => {
+    const root = wrapperRef.current;
+    if (!root) return;
+
+    const timeout = window.setTimeout(() => {
+      const highlightedSections = new Map(
+        sectionHighlights.map((highlight) => [
+          normalizeSectionTitle(highlight.label),
+          highlight.type,
+        ]),
+      );
+      const highlightClassNames = Object.values(SECTION_HIGHLIGHT_CLASSES);
+
+      root
+        .querySelectorAll<HTMLElement>('section[data-type="resume-section"]')
+        .forEach((section) => {
+          section.classList.remove(...highlightClassNames);
+          section.removeAttribute("data-compare-highlight");
+
+          const title = normalizeSectionTitle(
+            section.getAttribute("data-section-title") ?? "",
+          );
+          const highlightType = highlightedSections.get(title);
+          if (!highlightType) return;
+
+          section.classList.add(SECTION_HIGHLIGHT_CLASSES[highlightType]);
+          section.setAttribute("data-compare-highlight", highlightType);
+        });
+    }, 0);
+
+    return () => window.clearTimeout(timeout);
+  }, [content, editor, html, sectionHighlights]);
+
   const zoomPercent = 100;
   const scale = fitScale * (zoomPercent / 100);
   const emptyStateContent = getPreviewEmptyStateContent(documentMode);
@@ -152,6 +205,27 @@ export function ResumePreview({
             transform: `scale(${scale})`,
           }}
         >
+          <style>{`
+            .resume-compare-highlight-added,
+            .resume-compare-highlight-removed,
+            .resume-compare-highlight-changed {
+              border-radius: 8px;
+              outline-offset: 8px;
+              position: relative;
+            }
+            .resume-compare-highlight-added {
+              background: color-mix(in srgb, #16a34a 8%, transparent);
+              outline: 2px solid color-mix(in srgb, #16a34a 58%, transparent);
+            }
+            .resume-compare-highlight-removed {
+              background: color-mix(in srgb, #dc2626 8%, transparent);
+              outline: 2px solid color-mix(in srgb, #dc2626 58%, transparent);
+            }
+            .resume-compare-highlight-changed {
+              background: color-mix(in srgb, #d97706 8%, transparent);
+              outline: 2px solid color-mix(in srgb, #d97706 58%, transparent);
+            }
+          `}</style>
           {content ? (
             <>
               <ResumeEditor
