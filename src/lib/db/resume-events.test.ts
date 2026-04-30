@@ -92,6 +92,31 @@ describe("Resume event DB functions", () => {
     expect(mockAll).toHaveBeenCalledWith("resume-1", "user-1");
   });
 
+  it("ignores malformed event metadata instead of failing event reads", () => {
+    const mockAll = vi.fn().mockReturnValue([
+      {
+        id: "event-1",
+        user_id: "user-1",
+        resume_id: "resume-1",
+        event_type: "view",
+        occurred_at: "2024-05-01T12:00:00.000Z",
+        metadata_json: "{bad-json",
+      },
+    ]);
+    (db.prepare as Mock).mockReturnValue({ all: mockAll });
+
+    expect(getResumeEvents("resume-1", "user-1")).toEqual([
+      {
+        id: "event-1",
+        userId: "user-1",
+        resumeId: "resume-1",
+        eventType: "view",
+        occurredAt: "2024-05-01T12:00:00.000Z",
+        metadata: undefined,
+      },
+    ]);
+  });
+
   it("builds overview, trend, and top performer summaries", () => {
     vi.setSystemTime(new Date("2024-05-31T00:00:00.000Z"));
     const overviewGet = vi.fn().mockReturnValue({
@@ -150,6 +175,27 @@ describe("Resume event DB functions", () => {
     expect(overviewGet).toHaveBeenCalledWith(
       "user-1",
       "2024-05-01T00:00:00.000Z",
+    );
+  });
+
+  it("clamps extreme analytics ranges to avoid invalid dates", () => {
+    vi.setSystemTime(new Date("2024-05-31T00:00:00.000Z"));
+    const overviewGet = vi.fn().mockReturnValue({
+      views: 0,
+      downloads: 0,
+      share_clicks: 0,
+      total_events: 0,
+    });
+    (db.prepare as Mock)
+      .mockReturnValueOnce({ get: overviewGet })
+      .mockReturnValueOnce({ all: vi.fn().mockReturnValue([]) })
+      .mockReturnValueOnce({ all: vi.fn().mockReturnValue([]) });
+
+    getResumeEventSummary("user-1", Number.MAX_VALUE);
+
+    expect(overviewGet).toHaveBeenCalledWith(
+      "user-1",
+      "2023-06-01T00:00:00.000Z",
     );
   });
 });

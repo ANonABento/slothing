@@ -145,6 +145,10 @@ describe("ExportMenu", () => {
 
   it("should copy to clipboard and show feedback", async () => {
     const writeText = vi.fn().mockResolvedValue(undefined);
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ event: { id: "event-1" } }),
+    });
     Object.assign(navigator, {
       clipboard: { writeText },
     });
@@ -167,6 +171,17 @@ describe("ExportMenu", () => {
     const clipboardArg = writeText.mock.calls[0][0];
     expect(clipboardArg).toContain("Jane Doe");
     expect(clipboardArg).toContain("Senior Engineer");
+    await waitFor(() => {
+      expect(global.fetch).toHaveBeenCalledWith("/api/resume/events", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          resumeId: "test-id",
+          eventType: "share_click",
+          metadata: { target: "clipboard" },
+        }),
+      });
+    });
 
     // Should show "Copied!" feedback
     expect(screen.getByRole("button", { name: /copied/i })).toBeInTheDocument();

@@ -108,6 +108,10 @@ describe("OpportunityDetailPage", () => {
       screen.getByRole("link", { name: /Generate Cover Letter/i })
     ).toHaveAttribute("href", "/studio?mode=cover-letter&opportunityId=job-1");
     expect(screen.getByText("Resume · 87% match")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Resume · 87% match/i })).toHaveAttribute(
+      "href",
+      "/api/resume/view?resumeId=resume-1"
+    );
     expect(screen.getByText("Version 2")).toBeInTheDocument();
     expect(screen.getByDisplayValue("Initial note")).toBeInTheDocument();
   });

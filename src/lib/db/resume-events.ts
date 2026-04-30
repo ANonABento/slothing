@@ -44,6 +44,21 @@ export interface ResumeEventSummary {
   topPerformers: ResumeEventTopPerformer[];
 }
 
+const MAX_ANALYTICS_DAYS = 365;
+
+function parseMetadata(metadataJson: string | null): Record<string, unknown> | undefined {
+  if (!metadataJson) return undefined;
+
+  try {
+    const parsed = JSON.parse(metadataJson);
+    return typeof parsed === "object" && parsed !== null
+      ? (parsed as Record<string, unknown>)
+      : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 function mapEventRow(row: {
   id: string;
   user_id: string;
@@ -58,7 +73,7 @@ function mapEventRow(row: {
     resumeId: row.resume_id,
     eventType: row.event_type,
     occurredAt: row.occurred_at,
-    metadata: row.metadata_json ? JSON.parse(row.metadata_json) : undefined,
+    metadata: parseMetadata(row.metadata_json),
   };
 }
 
@@ -130,7 +145,10 @@ export function getResumeEventSummary(
   userId: string = "default",
   days: number = 30,
 ): ResumeEventSummary {
-  const safeDays = Number.isFinite(days) && days > 0 ? Math.floor(days) : 30;
+  const safeDays =
+    Number.isFinite(days) && days > 0
+      ? Math.min(Math.floor(days), MAX_ANALYTICS_DAYS)
+      : 30;
   const since = new Date(
     Date.now() - safeDays * 24 * 60 * 60 * 1000,
   ).toISOString();

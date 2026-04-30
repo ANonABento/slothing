@@ -137,6 +137,20 @@ async function downloadExport(
   URL.revokeObjectURL(url);
 }
 
+async function recordResumeShareClick(resumeId: string): Promise<void> {
+  if (!resumeId) return;
+
+  await fetch("/api/resume/events", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      resumeId,
+      eventType: "share_click",
+      metadata: { target: "clipboard" },
+    }),
+  }).catch(() => undefined);
+}
+
 export function ExportMenu({ resumeId, resume, templateId }: ExportMenuProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState<string | null>(null);
@@ -164,6 +178,7 @@ export function ExportMenu({ resumeId, resume, templateId }: ExportMenuProps) {
         try {
           const text = resumeToPlainText(resume);
           await navigator.clipboard.writeText(text);
+          void recordResumeShareClick(resumeId);
           setCopied(true);
           setTimeout(() => setCopied(false), 2000);
         } catch {

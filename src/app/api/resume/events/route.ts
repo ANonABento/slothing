@@ -18,7 +18,16 @@ export async function POST(request: NextRequest) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
 
-  const body = await request.json();
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json(
+      { error: "Invalid resume event" },
+      { status: 400 },
+    );
+  }
+
   const parsed = eventSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
