@@ -77,6 +77,7 @@ describe("navigationGroups", () => {
       ["Jobs", "/jobs"],
       ["Review Queue", "/opportunities/review"],
       ["Calendar", "/calendar"],
+      ["Contacts", "/contacts"],
       ["Email Templates", "/emails"],
     ]);
   });
@@ -104,6 +105,7 @@ describe("navigationGroups", () => {
       ["Jobs", "/jobs"],
       ["Review Queue", "/opportunities/review"],
       ["Calendar", "/calendar"],
+      ["Contacts", "/contacts"],
       ["Email Templates", "/emails"],
       ["Interview Prep", "/interview"],
       ["Salary Tools", "/salary"],

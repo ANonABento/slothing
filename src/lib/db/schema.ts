@@ -164,6 +164,25 @@ db.exec(`
     created_at TEXT DEFAULT CURRENT_TIMESTAMP
   );
 
+  -- Networking contacts table
+  CREATE TABLE IF NOT EXISTS contacts (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL DEFAULT 'default',
+    name TEXT NOT NULL,
+    role TEXT,
+    company TEXT,
+    email TEXT,
+    linkedin TEXT,
+    last_contacted TEXT,
+    next_followup TEXT,
+    notes TEXT,
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_contacts_user_name ON contacts(user_id, name);
+  CREATE INDEX IF NOT EXISTS idx_contacts_user_next_followup ON contacts(user_id, next_followup);
+
   -- Generated resumes table
   CREATE TABLE IF NOT EXISTS generated_resumes (
     id TEXT PRIMARY KEY,

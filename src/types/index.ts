@@ -117,6 +117,7 @@ export interface Document {
 export type JobStatus = 'pending' | 'saved' | 'applied' | 'interviewing' | 'offered' | 'rejected' | 'withdrawn' | 'dismissed';
 
 export type { Opportunity, OpportunityStatus } from './opportunity';
+export type { Contact } from './contact';
 
 export interface JobDescription {
   id: string;

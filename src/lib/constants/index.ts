@@ -116,6 +116,18 @@ export {
 export type { NotificationAction } from "./notifications";
 
 export {
+  CONTACT_FOLLOW_UP_FILTERS,
+  contactFollowUpFilterSchema,
+  createContactSchema,
+  updateContactSchema,
+} from "./contacts";
+export type {
+  ContactFollowUpFilter,
+  CreateContactInput,
+  UpdateContactInput,
+} from "./contacts";
+
+export {
   compareResumesSchema,
   trackResumeSentSchema,
   updateTrackingOutcomeSchema,
