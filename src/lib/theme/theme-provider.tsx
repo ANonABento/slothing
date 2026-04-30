@@ -13,6 +13,7 @@ import {
   DEFAULT_THEME_MODE,
   DEFAULT_THEME_PRESET,
   THEME_CUSTOM_COLORS_STORAGE_KEY,
+  THEME_DARK_STORAGE_KEY,
   THEME_PRESET_STORAGE_KEY,
   THEME_STORAGE_KEY,
   applyThemeVariables,
@@ -53,6 +54,17 @@ function readStoredValue<T>(
   try {
     const stored = localStorage.getItem(key);
     return isValid(stored) ? stored : null;
+  } catch {
+    return null;
+  }
+}
+
+function readLegacyThemeMode(): ThemeMode | null {
+  try {
+    const stored = localStorage.getItem(THEME_DARK_STORAGE_KEY);
+    if (stored === "true") return "dark";
+    if (stored === "false") return "light";
+    return null;
   } catch {
     return null;
   }
@@ -121,9 +133,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     setMounted(true);
 
     const storedTheme = readStoredValue(THEME_STORAGE_KEY, isThemeMode);
-    if (storedTheme) {
-      setThemeState(storedTheme);
-    }
+    setThemeState(storedTheme ?? readLegacyThemeMode() ?? DEFAULT_THEME_MODE);
 
     const storedPreset = readStoredValue(
       THEME_PRESET_STORAGE_KEY,
