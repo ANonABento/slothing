@@ -168,6 +168,47 @@ describe("theme config", () => {
     ).toEqual({ primary: "142 71% 45%" });
   });
 
+  it("returns CSS custom properties with custom color overrides", () => {
+    const variables = getThemeVariables("ocean", "light", {
+      primary: "142 71% 45%",
+      accent: "278 64% 56%",
+    });
+
+    expect(variables["--primary"]).toBe("142 71% 45%");
+    expect(variables["--accent"]).toBe("278 64% 56%");
+    expect(variables["--ring"]).toBe("142 71% 45%");
+  });
+
+  it("keeps readable foreground tokens for custom primary and accent colors", () => {
+    const variables = getThemeVariables("default", "light", {
+      primary: "0 0% 100%",
+      accent: "0 0% 0%",
+    });
+
+    expect(variables["--primary-foreground"]).toBe("258 20% 13%");
+    expect(variables["--accent-foreground"]).toBe("0 0% 100%");
+  });
+
+  it("builds preview colors with custom overrides", () => {
+    expect(getThemePreviewColors("forest", { accent: "12 86% 55%" })).toEqual({
+      primary: "145 55% 34%",
+      background: "42 24% 98%",
+      accent: "12 86% 55%",
+    });
+  });
+
+  it("converts editable color formats and sanitizes stored custom colors", () => {
+    expect(hexToHslString("#22c55e")).toBe("142 71% 45%");
+    expect(hslStringToHex("0 0% 100%")).toBe("#ffffff");
+    expect(
+      sanitizeThemeColorOverrides({
+        primary: "142 71% 45%",
+        accent: "not hsl",
+        extra: "0 0% 0%",
+      })
+    ).toEqual({ primary: "142 71% 45%" });
+  });
+
   it("applies theme variables and metadata to an element", () => {
     applyThemeVariables(document.documentElement, "glassmorphism", "dark", {
       accent: "278 64% 56%",
@@ -178,6 +219,9 @@ describe("theme config", () => {
     expect(document.documentElement.dataset.themeCustom).toBe("true");
     expect(document.documentElement.style.getPropertyValue("--backdrop-blur")).toBe(
       "blur(28px)"
+    );
+    expect(document.documentElement.style.getPropertyValue("--accent")).toBe(
+      "278 64% 56%"
     );
     expect(document.documentElement.style.getPropertyValue("--accent")).toBe(
       "278 64% 56%"

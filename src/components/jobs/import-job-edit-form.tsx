@@ -127,7 +127,7 @@ export function ImportJobEditForm({
           <Button
             onClick={onSave}
             disabled={saving || !preview.title || !preview.company}
-            className={THEME_PRIMARY_GRADIENT_BUTTON_CLASSES}
+            className="gradient-bg text-primary-foreground hover:opacity-90"
           >
             {saving ? (
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />

@@ -1,17 +1,12 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { FileDown, LayoutGrid, List, Mail, Plus, Target } from "lucide-react";
+import { ArrowLeft, FileDown, LayoutGrid, List, Mail, Plus, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageHeader, type PageWidth } from "@/components/ui/page-layout";
 import { SkeletonButton } from "@/components/ui/skeleton";
 import { useErrorToast } from "@/hooks/use-error-toast";
 import { readJsonResponse } from "@/lib/http";
-import {
-  THEME_PRIMARY_GRADIENT_BUTTON_CLASSES,
-  THEME_SURFACE_CLASSES,
-} from "@/lib/theme/component-classes";
-import { cn } from "@/lib/utils";
 import type { JobsViewMode } from "./job-kanban-utils";
 
 const GmailImportModal = dynamic(
@@ -29,15 +24,7 @@ interface JobsHeroProps {
   width?: PageWidth;
 }
 
-export function JobsHero({
-  jobsCount,
-  viewMode,
-  onImportClick,
-  onAddClick,
-  onViewModeChange,
-  onGmailImportSuccess,
-  width = "wide",
-}: JobsHeroProps) {
+export function JobsHero({ jobsCount, viewMode, onImportClick, onAddClick, onViewModeChange, onGmailImportSuccess }: JobsHeroProps) {
   const showErrorToast = useErrorToast();
 
   return (
@@ -53,21 +40,40 @@ export function JobsHero({
             <p className="text-2xl font-bold text-primary">{jobsCount}</p>
             <p className="text-xs text-muted-foreground">Jobs Tracked</p>
           </div>
-          <div className="flex flex-wrap justify-end gap-2">
-            <div
-              className={cn(THEME_SURFACE_CLASSES, "flex p-1")}
-              aria-label="Job view mode"
-            >
-              <Button
-                type="button"
-                size="sm"
-                variant={viewMode === "list" ? "default" : "ghost"}
-                aria-pressed={viewMode === "list"}
-                onClick={() => onViewModeChange("list")}
-                className="h-9"
-              >
-                <List className="h-4 w-4 mr-2" />
-                List
+
+          <div className="flex items-center gap-4">
+            <div className="rounded-2xl border bg-card p-5 text-center">
+              <p className="text-3xl font-bold text-primary">{jobsCount}</p>
+              <p className="text-sm text-muted-foreground">Jobs Tracked</p>
+            </div>
+            <div className="flex flex-wrap justify-end gap-2">
+              <div className="flex rounded-lg border bg-card p-1" aria-label="Job view mode">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={viewMode === "list" ? "default" : "ghost"}
+                  aria-pressed={viewMode === "list"}
+                  onClick={() => onViewModeChange("list")}
+                  className="h-9"
+                >
+                  <List className="h-4 w-4 mr-2" />
+                  List
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={viewMode === "kanban" ? "default" : "ghost"}
+                  aria-pressed={viewMode === "kanban"}
+                  onClick={() => onViewModeChange("kanban")}
+                  className="h-9"
+                >
+                  <LayoutGrid className="h-4 w-4 mr-2" />
+                  Kanban
+                </Button>
+              </div>
+              <Button onClick={onImportClick} size="lg" variant="outline">
+                <FileDown className="h-5 w-5 mr-2" />
+                Import
               </Button>
               <Button
                 type="button"

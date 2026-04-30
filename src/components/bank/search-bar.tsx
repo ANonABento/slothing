@@ -31,14 +31,10 @@ interface SearchBarProps {
 
 function CountBadge({ count, active }: { count: number; active: boolean }) {
   return (
-    <span
-      className={cn(
-        "ml-1.5 inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1 rounded-[var(--radius)] text-xs",
-        active
-          ? "bg-primary-foreground/20 text-primary-foreground"
-          : "bg-background text-muted-foreground",
-      )}
-    >
+    <span className={cn(
+      "ml-1.5 inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1 rounded-full text-xs",
+      active ? "bg-primary-foreground/20 text-primary-foreground" : "bg-background text-muted-foreground"
+    )}>
       {count}
     </span>
   );
@@ -94,20 +90,27 @@ export const SearchBar = forwardRef<HTMLInputElement, SearchBarProps>(
           </select>
         </div>
 
-        {/* Category filter chips */}
-        <div
-          className="flex flex-wrap gap-2"
-          role="tablist"
-          aria-label="Filter by category"
+      {/* Category filter chips */}
+      <div className="flex flex-wrap gap-2" role="tablist" aria-label="Filter by category">
+        <button
+          role="tab"
+          aria-selected={activeCategory === "all"}
+          onClick={() => onCategoryChange("all")}
+          className={cn(
+            "px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200",
+            activeCategory === "all"
+              ? "gradient-bg text-primary-foreground shadow-sm scale-105"
+              : "bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/80"
+          )}
         >
           <button
             role="tab"
             aria-selected={activeCategory === "all"}
             onClick={() => onCategoryChange("all")}
             className={cn(
-              "px-3 py-1.5 rounded-[var(--radius)] text-sm font-medium transition-all duration-200",
-              activeCategory === "all"
-                ? "bg-[image:var(--gradient-primary)] text-primary-foreground shadow-[var(--shadow-button)] scale-105"
+              "px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200",
+              activeCategory === cat
+                ? "gradient-bg text-primary-foreground shadow-sm scale-105"
                 : "bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/80",
             )}
           >

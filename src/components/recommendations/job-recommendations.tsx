@@ -74,8 +74,8 @@ function SkillMatchBadge({ match }: { match: SkillMatch }) {
         match.matched
           ? "bg-success/10 text-success"
           : match.relevance === "high"
-            ? "bg-destructive/10 text-destructive"
-            : "bg-muted text-muted-foreground",
+          ? "bg-destructive/10 text-destructive"
+          : "bg-muted text-muted-foreground"
       )}
     >
       {match.matched ? (
@@ -196,7 +196,9 @@ function RecommendationCard({
                   <AlertCircle className="h-3 w-3" />
                   Skills to Develop
                 </p>
-                <p className="text-sm text-warning">{skillGaps.join(", ")}</p>
+                <p className="text-sm text-warning">
+                  {skillGaps.join(", ")}
+                </p>
               </div>
             )}
           </div>

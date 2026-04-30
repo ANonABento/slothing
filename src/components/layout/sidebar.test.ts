@@ -74,6 +74,8 @@ describe("navigationGroups", () => {
     const jobTracker = getGroup("Job Tracker");
     const items = jobTracker.items.map((i) => [i.name, i.href]);
     expect(items).toEqual([
+      ["Jobs", "/jobs"],
+      ["Review Queue", "/opportunities/review"],
       ["Calendar", "/calendar"],
       ["Email Templates", "/emails"],
     ]);
@@ -99,6 +101,8 @@ describe("navigationGroups", () => {
       ["Dashboard", "/dashboard"],
       ["Documents", "/bank"],
       ["Document Studio", "/studio"],
+      ["Jobs", "/jobs"],
+      ["Review Queue", "/opportunities/review"],
       ["Calendar", "/calendar"],
       ["Email Templates", "/emails"],
       ["Interview Prep", "/interview"],

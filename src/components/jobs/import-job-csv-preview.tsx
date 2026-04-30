@@ -35,9 +35,7 @@ export function ImportJobCsvPreview({
             <div className="text-xs text-muted-foreground">Total Rows</div>
           </div>
           <div>
-            <div className="text-2xl font-bold text-success">
-              {preview.valid}
-            </div>
+            <div className="text-2xl font-bold text-success">{preview.valid}</div>
             <div className="text-xs text-muted-foreground">Valid Jobs</div>
           </div>
           <div>
@@ -111,7 +109,7 @@ export function ImportJobCsvPreview({
           <Button
             onClick={onSave}
             disabled={saving || preview.jobs.length === 0}
-            className={THEME_PRIMARY_GRADIENT_BUTTON_CLASSES}
+            className="gradient-bg text-primary-foreground hover:opacity-90"
           >
             {saving ? (
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />

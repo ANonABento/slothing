@@ -673,20 +673,20 @@ export function AiAssistantPanel({
 
           <div className="max-h-[420px] space-y-2 overflow-y-auto">
             {opportunitiesLoading && (
-              <div className="flex items-center gap-2 rounded-[var(--radius)] border-[length:var(--border-width)] p-3 text-sm text-muted-foreground">
+              <div className="flex items-center gap-2 rounded-md border p-3 text-sm text-muted-foreground">
                 <Loader2 className="h-4 w-4 animate-spin" />
                 Loading opportunities...
               </div>
             )}
             {opportunityError && (
-              <p className="rounded-[var(--radius)] border-[length:var(--border-width)] border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
+              <p className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
                 {opportunityError}
               </p>
             )}
             {!opportunitiesLoading &&
               !opportunityError &&
               opportunities.length === 0 && (
-                <p className="rounded-[var(--radius)] border-[length:var(--border-width)] p-3 text-sm text-muted-foreground">
+                <p className="rounded-md border p-3 text-sm text-muted-foreground">
                   No saved or applied opportunities found.
                 </p>
               )}
@@ -694,7 +694,7 @@ export function AiAssistantPanel({
               <button
                 key={opportunity.id}
                 type="button"
-                className="w-full rounded-[var(--radius)] border-[length:var(--border-width)] p-3 text-left transition-colors hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring"
+                className="w-full rounded-md border p-3 text-left transition-colors hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring"
                 onClick={() => handleSelectOpportunity(opportunity)}
               >
                 <span className="block text-sm font-medium">

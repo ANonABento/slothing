@@ -10,6 +10,8 @@ export interface StudioDocument {
   id: string;
   name: string;
   mode: DocumentMode;
+  html?: string;
+  content?: TipTapJSONContent;
   templateId?: string;
   selectedEntryIds?: string[];
   sections?: SectionState[];
