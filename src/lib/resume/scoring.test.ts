@@ -18,12 +18,16 @@ function makeEntry(
 
 describe("calculateResumeScore", () => {
   it("scores a complete targeted resume with strong signals highly", () => {
+    const scopedExperience = Array.from({ length: 34 }, () =>
+      "Built React TypeScript accessibility testing analytics workflows for 12 customer teams.",
+    ).join(" ");
     const resumeText = `
       Summary Software engineer focused on accessible React platforms.
       Experience Led migration to TypeScript, improved performance by 42%,
       reduced release time by 3 days, and shipped analytics workflows for
       25000 users. Skills React TypeScript accessibility testing Node.
       Education BS Computer Science. Projects Built design system tooling.
+      ${scopedExperience}
     `;
 
     const result = calculateResumeScore({
@@ -81,5 +85,20 @@ describe("calculateResumeScore", () => {
     });
 
     expect(result.breakdown.completeness).toBe(48);
+  });
+
+  it("does not double count selected bank entries when resume text is available", () => {
+    const result = calculateResumeScore({
+      resumeText: "Built analytics for 100 users.",
+      entries: [
+        makeEntry("experience", {
+          highlights: ["Led 5 engineers", "Reduced latency by 25%"],
+        }),
+      ],
+    });
+
+    expect(result.stats.actionVerbCount).toBe(1);
+    expect(result.stats.quantifiedAchievementCount).toBe(1);
+    expect(result.stats.wordCount).toBe(4);
   });
 });

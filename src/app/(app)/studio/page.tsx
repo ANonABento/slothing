@@ -133,7 +133,6 @@ function StudioPageContent() {
             onOpenBank={() => studio.setEntryPickerOpen(true)}
             onOpportunityClear={() => {
               studio.setLinkedOpportunityId("");
-              studio.setJobDescription("");
             }}
             onOpportunitySelect={studio.setLinkedOpportunityId}
           />

@@ -15,6 +15,7 @@ function statusResponse(configured: boolean) {
 function renderWithSelectableText(
   anchorText = "Built APIs quickly.",
   options: {
+    onJobDescriptionChange?: (description: string) => void;
     onOpportunityClear?: () => void;
     onOpportunitySelect?: (opportunityId: string) => void;
   } = {},
@@ -29,6 +30,7 @@ function renderWithSelectableText(
         documentContent="<p>Built APIs quickly.</p>"
         selectedEntryCount={1}
         onOpenBank={onOpenBank}
+        onJobDescriptionChange={options.onJobDescriptionChange}
         onOpportunityClear={options.onOpportunityClear}
         onOpportunitySelect={options.onOpportunitySelect}
       />
@@ -432,6 +434,7 @@ describe("AiAssistantPanel", () => {
   });
 
   it("clears the selected opportunity when the JD is edited manually", async () => {
+    const onJobDescriptionChange = vi.fn();
     const onOpportunityClear = vi.fn();
     vi.stubGlobal(
       "fetch",
@@ -460,7 +463,10 @@ describe("AiAssistantPanel", () => {
         return new Response("Not found", { status: 404 });
       }),
     );
-    renderWithSelectableText("Built APIs quickly.", { onOpportunityClear });
+    renderWithSelectableText("Built APIs quickly.", {
+      onJobDescriptionChange,
+      onOpportunityClear,
+    });
 
     fireEvent.click(
       screen.getByRole("button", { name: "Select from Job Bank" }),
@@ -473,6 +479,9 @@ describe("AiAssistantPanel", () => {
     });
 
     expect(onOpportunityClear).toHaveBeenCalledTimes(1);
+    expect(onJobDescriptionChange).toHaveBeenLastCalledWith(
+      "Manual JD override",
+    );
     expect(
       screen.queryByText("Frontend Engineer at Acme"),
     ).not.toBeInTheDocument();

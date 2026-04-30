@@ -258,19 +258,18 @@ export function calculateResumeScore({
   resumeText,
 }: CalculateResumeScoreOptions): ResumeScoreResult {
   const entryText = entries.map(extractEntryText).join(" ");
-  const combinedResumeText = [resumeText, entryText].filter(Boolean).join(" ");
-  const words = getWords(combinedResumeText);
+  const scoreText = resumeText.trim() ? resumeText : entryText;
+  const words = getWords(scoreText);
   const wordCount = words.length;
   const keywordDensity = calculateKeywordDensityScore(
-    combinedResumeText,
+    scoreText,
     jobDescription,
   );
   const actionVerbs = calculateActionVerbScore(words);
-  const quantifiedAchievements =
-    calculateQuantifiedAchievementScore(combinedResumeText);
+  const quantifiedAchievements = calculateQuantifiedAchievementScore(scoreText);
 
   const breakdown: ResumeScoreBreakdown = {
-    completeness: calculateCompletenessScore(combinedResumeText, entries),
+    completeness: calculateCompletenessScore(scoreText, entries),
     keywordDensity: keywordDensity.score,
     length: calculateLengthScore(wordCount),
     actionVerbs: actionVerbs.score,
