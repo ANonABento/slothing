@@ -8,6 +8,7 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { getProfile, getLLMConfig, saveGeneratedResume } from "@/lib/db";
+import { logPromptVariantResult } from "@/lib/db/prompt-variants";
 import { getGroupedBankEntries } from "@/lib/db/profile-bank";
 import { createJob, getJob } from "@/lib/db/jobs";
 import { linkOpportunityDocument } from "@/lib/opportunities";
@@ -152,7 +153,7 @@ export async function POST(request: NextRequest) {
 
     const llmConfig = getLLMConfig(authResult.userId);
 
-    const tailoredResume = await generateFromBank(
+    const { resume: tailoredResume, promptVariantId } = await generateFromBank(
       {
         bankEntries,
         matchedEntries: analysis.matchedEntries,
@@ -209,6 +210,10 @@ export async function POST(request: NextRequest) {
         { resumeId: savedResume.id },
         authResult.userId,
       );
+    }
+
+    if (promptVariantId) {
+      logPromptVariantResult(promptVariantId, job.id, savedResume.id, analysis.matchScore);
     }
 
     return NextResponse.json({
