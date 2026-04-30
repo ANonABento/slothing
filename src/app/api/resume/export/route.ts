@@ -9,7 +9,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requireAuth, isAuthError } from "@/lib/auth";
-import { getGeneratedResume } from "@/lib/db";
+import { getGeneratedResume, recordResumeEvent } from "@/lib/db";
 import type { TailoredResume } from "@/lib/resume/generator";
 import type { LatexOptions } from "@/lib/resume/latex-generator";
 import { getTemplateWithCustom } from "@/lib/resume/templates";
@@ -87,6 +87,7 @@ export async function POST(request: NextRequest) {
       if (!resume) {
         return NextResponse.json({ error: "resumeId required for LaTeX export" }, { status: 400 });
       }
+      const savedResumeId = resumeId as string;
       const { generateResumeLatex } = await import("@/lib/resume/latex-generator");
       const latex = generateResumeLatex(resume, templateId, (latexOptions || {}) as LatexOptions);
 
@@ -103,6 +104,10 @@ export async function POST(request: NextRequest) {
 
           const pdfBuffer = await readFile(pdfPath);
           await Promise.allSettled(LATEX_CLEANUP_EXTENSIONS.map((f) => unlink(join(tmpDir, f))));
+          recordResumeEvent(savedResumeId, "download", authResult.userId, {
+            format: "pdf",
+            source: "latex",
+          });
 
           return new NextResponse(pdfBuffer, {
             headers: {
@@ -112,6 +117,10 @@ export async function POST(request: NextRequest) {
           });
         } catch {
           // pdflatex unavailable, fall back to .tex
+          recordResumeEvent(savedResumeId, "download", authResult.userId, {
+            format: "latex",
+            source: "latex-fallback",
+          });
           return new NextResponse(latex, {
             headers: {
               "Content-Type": "application/x-tex",
@@ -122,6 +131,9 @@ export async function POST(request: NextRequest) {
         }
       }
 
+      recordResumeEvent(savedResumeId, "download", authResult.userId, {
+        format: "latex",
+      });
       return new NextResponse(latex, {
         headers: {
           "Content-Type": "application/x-tex",
@@ -135,6 +147,9 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: "resumeId required for HTML export" }, { status: 400 });
       }
       const html = await renderResumeHtml(resume, templateId, authResult.userId);
+      recordResumeEvent(resumeId as string, "download", authResult.userId, {
+        format: "html",
+      });
       return new NextResponse(html, {
         headers: { "Content-Type": "text/html", "Content-Disposition": `attachment; filename="resume.html"` },
       });
@@ -152,6 +167,11 @@ export async function POST(request: NextRequest) {
 
     const { generatePDF } = await import("@/lib/resume/pdf-export");
     const pdfBuffer = await generatePDF(html);
+    if (resumeId) {
+      recordResumeEvent(resumeId, "download", authResult.userId, {
+        format: "pdf",
+      });
+    }
     return new NextResponse(new Uint8Array(pdfBuffer), {
       status: 200,
       headers: {

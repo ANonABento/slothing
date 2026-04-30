@@ -7,6 +7,7 @@ const mocks = vi.hoisted(() => ({
   getTemplateWithCustom: vi.fn(),
   generateResumeHTML: vi.fn(),
   generatePDF: vi.fn(),
+  recordResumeEvent: vi.fn(),
 }));
 
 vi.mock("@/lib/auth", () => ({
@@ -16,6 +17,7 @@ vi.mock("@/lib/auth", () => ({
 
 vi.mock("@/lib/db", () => ({
   getGeneratedResume: mocks.getGeneratedResume,
+  recordResumeEvent: mocks.recordResumeEvent,
 }));
 
 vi.mock("@/lib/resume/templates", () => ({
@@ -101,6 +103,12 @@ describe("resume export route", () => {
       "custom-template",
       customTemplate
     );
+    expect(mocks.recordResumeEvent).toHaveBeenCalledWith(
+      "resume-1",
+      "download",
+      "user-1",
+      { format: "html" }
+    );
     await expect(response.text()).resolves.toBe("<html>custom resume</html>");
   });
 
@@ -118,5 +126,22 @@ describe("resume export route", () => {
       "user-1"
     );
     expect(mocks.generatePDF).toHaveBeenCalledWith("<html>custom resume</html>");
+    expect(mocks.recordResumeEvent).toHaveBeenCalledWith(
+      "resume-1",
+      "download",
+      "user-1",
+      { format: "pdf" }
+    );
+  });
+
+  it("does not record a download event for raw HTML exports without a saved resume", async () => {
+    await POST(
+      exportRequest({
+        html: "<html>current draft</html>",
+        format: "pdf",
+      })
+    );
+
+    expect(mocks.recordResumeEvent).not.toHaveBeenCalled();
   });
 });

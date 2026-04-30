@@ -3,6 +3,7 @@ export * from "./queries";
 export * from "./jobs";
 export * from "./interviews";
 export * from "./resumes";
+export * from "./resume-events";
 export * from "./reminders";
 export * from "./notifications";
 export * from "./custom-templates";

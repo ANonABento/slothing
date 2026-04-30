@@ -270,6 +270,19 @@ export const analyticsSnapshots = pgTable('analytics_snapshots', {
   uniqueIndex('idx_analytics_snapshots_user_date').on(table.userId, table.snapshotDate),
 ]);
 
+// Resume engagement events table
+export const resumeEvents = pgTable('resume_events', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').notNull().default(DEFAULT_USER_ID),
+  resumeId: text('resume_id').notNull(),
+  eventType: text('event_type').notNull(),
+  occurredAt: timestamp('occurred_at').defaultNow(),
+  metadataJson: text('metadata_json'),
+}, (table) => [
+  index('idx_resume_events_user_date').on(table.userId, table.occurredAt),
+  index('idx_resume_events_resume').on(table.resumeId, table.eventType),
+]);
+
 // Job status history table
 export const jobStatusHistory = pgTable('job_status_history', {
   id: text('id').primaryKey(),
@@ -515,6 +528,9 @@ export type NewEmailDraft = typeof emailDrafts.$inferInsert;
 
 export type AnalyticsSnapshot = typeof analyticsSnapshots.$inferSelect;
 export type NewAnalyticsSnapshot = typeof analyticsSnapshots.$inferInsert;
+
+export type ResumeEvent = typeof resumeEvents.$inferSelect;
+export type NewResumeEvent = typeof resumeEvents.$inferInsert;
 
 export type JobStatusHistory = typeof jobStatusHistory.$inferSelect;
 export type NewJobStatusHistory = typeof jobStatusHistory.$inferInsert;

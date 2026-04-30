@@ -586,7 +586,7 @@ export default function OpportunityDetailPage({
                     resumes.map((resume) => (
                       <a
                         key={resume.id}
-                        href={resume.htmlPath || "#"}
+                        href={`/api/resume/view?resumeId=${encodeURIComponent(resume.id)}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex items-center justify-between gap-3 rounded-md border px-3 py-2 text-sm hover:bg-muted"

@@ -295,6 +295,22 @@ db.exec(`
     UNIQUE(user_id, snapshot_date)
   );
 
+  -- Resume engagement events table
+  CREATE TABLE IF NOT EXISTS resume_events (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL DEFAULT 'default',
+    resume_id TEXT NOT NULL,
+    event_type TEXT NOT NULL CHECK(event_type IN ('view', 'download', 'share_click')),
+    occurred_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    metadata_json TEXT,
+    FOREIGN KEY (resume_id) REFERENCES generated_resumes(id) ON DELETE CASCADE
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_resume_events_user_date
+    ON resume_events(user_id, occurred_at);
+  CREATE INDEX IF NOT EXISTS idx_resume_events_resume
+    ON resume_events(resume_id, event_type);
+
   -- Job status history table
   CREATE TABLE IF NOT EXISTS job_status_history (
     id TEXT PRIMARY KEY,

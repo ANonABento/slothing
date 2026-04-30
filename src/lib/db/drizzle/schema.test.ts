@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { getTableName } from "drizzle-orm";
 import { getTableConfig, type AnyPgTable } from "drizzle-orm/pg-core";
-import { companyResearch, jobStatusHistory, knowledgeChunks } from "./schema";
+import { companyResearch, jobStatusHistory, knowledgeChunks, resumeEvents } from "./schema";
 
 function indexColumnNames(indexName: string, table: AnyPgTable): string[] {
   const config = getTableConfig(table);
@@ -54,6 +54,24 @@ describe("Drizzle schema", () => {
       "user_id",
       "job_id",
       "changed_at",
+    ]);
+  });
+
+  it("includes resume engagement events for analytics", () => {
+    expect(getTableName(resumeEvents)).toBe("resume_events");
+
+    const columns = getTableConfig(resumeEvents).columns.map((column) => column.name);
+    expect(columns).toEqual([
+      "id",
+      "user_id",
+      "resume_id",
+      "event_type",
+      "occurred_at",
+      "metadata_json",
+    ]);
+    expect(indexColumnNames("idx_resume_events_user_date", resumeEvents)).toEqual([
+      "user_id",
+      "occurred_at",
     ]);
   });
 });
