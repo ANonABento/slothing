@@ -105,11 +105,12 @@ describe("generateFromBank", () => {
       null
     );
 
-    expect(result.contact.name).toBe("Jane Doe");
-    expect(result.summary).toBe("Experienced developer");
-    expect(result.experiences.length).toBeGreaterThan(0);
-    expect(result.skills.length).toBeGreaterThan(0);
-    expect(result.education.length).toBeGreaterThan(0);
+    expect(result.resume.contact.name).toBe("Jane Doe");
+    expect(result.resume.summary).toBe("Experienced developer");
+    expect(result.resume.experiences.length).toBeGreaterThan(0);
+    expect(result.resume.skills.length).toBeGreaterThan(0);
+    expect(result.resume.education.length).toBeGreaterThan(0);
+    expect(result.promptVariantId).toBeNull();
   });
 
   it("should prioritize matched experiences", async () => {
@@ -129,7 +130,7 @@ describe("generateFromBank", () => {
     );
 
     // The first experience (Acme Corp) was matched, should appear first
-    expect(result.experiences[0].company).toBe("Acme Corp");
+    expect(result.resume.experiences[0].company).toBe("Acme Corp");
   });
 
   it("should fill experiences from bank when few matches", async () => {
@@ -148,7 +149,7 @@ describe("generateFromBank", () => {
     );
 
     // Should still have experiences pulled from bank
-    expect(result.experiences.length).toBeGreaterThan(0);
+    expect(result.resume.experiences.length).toBeGreaterThan(0);
   });
 
   it("should use hackathons as resume experiences in the non-LLM fallback", async () => {
@@ -183,7 +184,7 @@ describe("generateFromBank", () => {
       null
     );
 
-    expect(result.experiences[0]).toEqual({
+    expect(result.resume.experiences[0]).toEqual({
       company: "Devpost",
       title: "AI Build Weekend",
       dates: "2026-05-10 - 2026-05-12",
@@ -219,7 +220,7 @@ describe("generateFromBank", () => {
     );
 
     // React should appear first in skills since it was matched
-    expect(result.skills[0]).toBe("React");
+    expect(result.resume.skills[0]).toBe("React");
   });
 
   it("should use default summary when none provided", async () => {
@@ -237,8 +238,8 @@ describe("generateFromBank", () => {
       null
     );
 
-    expect(result.summary).toContain("Engineer");
-    expect(result.summary).toContain("Acme");
+    expect(result.resume.summary).toContain("Engineer");
+    expect(result.resume.summary).toContain("Acme");
   });
 
   it("should map education from bank entries", async () => {
@@ -256,10 +257,10 @@ describe("generateFromBank", () => {
       null
     );
 
-    expect(result.education).toHaveLength(1);
-    expect(result.education[0].institution).toBe("MIT");
-    expect(result.education[0].degree).toBe("BS");
-    expect(result.education[0].field).toBe("Computer Science");
+    expect(result.resume.education).toHaveLength(1);
+    expect(result.resume.education[0].institution).toBe("MIT");
+    expect(result.resume.education[0].degree).toBe("BS");
+    expect(result.resume.education[0].field).toBe("Computer Science");
   });
 
   it("should limit skills to 15", async () => {
@@ -286,6 +287,6 @@ describe("generateFromBank", () => {
       null
     );
 
-    expect(result.skills.length).toBeLessThanOrEqual(15);
+    expect(result.resume.skills.length).toBeLessThanOrEqual(15);
   });
 });
