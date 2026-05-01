@@ -1,10 +1,4 @@
-/**
- * Deterministic PDF resume parser.
- * Extracts structured JSON from a PDF buffer — no LLM required.
- *
- * Pipeline:
- *   PDF buffer → text extraction (pdf-parse) → section detection → field extraction → ParsedResumeResult
- */
+/** Deterministic PDF resume parser. Extracts structured JSON from a PDF buffer — no LLM required. */
 
 import type { Profile } from "@/types";
 import { detectSections } from "@/lib/parser/section-detector";
@@ -16,31 +10,19 @@ import {
 } from "@/lib/parser/field-extractor";
 
 export interface ParsedResumeResult {
-  /** Structured profile data matching the app schema. */
   profile: Partial<Profile>;
-  /** Sections detected by header pattern matching. */
   sectionsDetected: string[];
-  /** Confidence score 0–1. */
+  /** 0–1 */
   confidence: number;
-  /** Raw extracted text from the PDF. */
   rawText: string;
-  /** Non-fatal warnings encountered during parsing. */
   warnings: string[];
 }
 
-/**
- * Parse a resume from a raw PDF buffer.
- * Returns structured data without any LLM calls.
- */
 export async function parsePdfResume(buffer: Buffer): Promise<ParsedResumeResult> {
   const rawText = await extractPdfText(buffer);
   return parseResumeText(rawText);
 }
 
-/**
- * Parse resume from already-extracted plain text.
- * Useful for testing or when text was extracted by another means.
- */
 export function parseResumeText(text: string): ParsedResumeResult {
   if (!text || text.trim().length === 0) {
     return {
@@ -53,9 +35,7 @@ export function parseResumeText(text: string): ParsedResumeResult {
   }
 
   const sections = detectSections(text);
-  const extracted: ExtractedFields = extractFieldsFromSections(
-    sections.map(s => ({ ...s, text: s.content, confidence: 0.7 }))
-  );
+  const extracted: ExtractedFields = extractFieldsFromSections(sections);
 
   // If no contact section was found, try extracting from the document header
   if (!extracted.contact.name) {
