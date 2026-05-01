@@ -720,4 +720,33 @@ try {
   console.error("Local dev clean slate migration error:", error);
 }
 
+// Migration: Prompt A/B testing tables
+try {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS prompt_variants (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      version INTEGER NOT NULL DEFAULT 1,
+      content TEXT NOT NULL,
+      active INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS prompt_variant_results (
+      id TEXT PRIMARY KEY,
+      prompt_variant_id TEXT NOT NULL,
+      job_id TEXT,
+      resume_id TEXT,
+      match_score REAL,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (prompt_variant_id) REFERENCES prompt_variants(id) ON DELETE CASCADE
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_prompt_variant_results_variant ON prompt_variant_results(prompt_variant_id);
+  `);
+} catch (error) {
+  console.error("Prompt A/B testing migration error:", error);
+}
+
 export default db;

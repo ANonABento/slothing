@@ -13,6 +13,7 @@ import { OllamaWarning } from "@/components/settings/ollama-warning";
 import { OpportunityReviewSection } from "@/components/settings/opportunity-review-section";
 import { ThemeSection } from "@/components/settings/theme-section";
 import { WhatAiPowers } from "@/components/settings/what-ai-powers";
+import { PromptVariantsSection } from "@/components/settings/prompt-variants-section";
 import { AppPage, PageContent, PageHeader } from "@/components/ui/page-layout";
 import { useDataIO } from "./use-data-io";
 import { useLLMSettings } from "./use-llm-settings";
@@ -67,6 +68,7 @@ export default function SettingsPage() {
             onTestConnection={() => void llmSettings.testConnection()}
           />
           <WhatAiPowers />
+          <PromptVariantsSection />
           <HelpCards />
           <DataManagement
             exporting={dataIO.exporting}
