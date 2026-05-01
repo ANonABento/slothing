@@ -3,6 +3,11 @@ import type { TailoredResume } from "@/lib/resume/generator";
 import { formatHackathonHighlights } from "@/lib/resume/hackathon-highlights";
 import type { BankMatch } from "./analyze";
 import { LLMClient, parseJSONFromLLM } from "@/lib/llm/client";
+import {
+  getActivePromptVariant,
+  DEFAULT_PROMPT_CONTENT,
+  type PromptVariant,
+} from "@/lib/db/prompt-variants";
 
 interface BankResumeInput {
   bankEntries: GroupedBankEntries;
@@ -14,23 +19,32 @@ interface BankResumeInput {
   jobDescription: string;
 }
 
+export interface GenerateFromBankResult {
+  resume: TailoredResume;
+  promptVariantId: string | null;
+}
+
 /**
  * Generate a tailored resume from knowledge bank entries.
  * Uses LLM when available, falls back to keyword-based selection.
+ * Returns the resume and the active prompt variant ID for result tracking.
  */
 export async function generateFromBank(
   input: BankResumeInput,
   llmConfig: LLMConfig | null
-): Promise<TailoredResume> {
+): Promise<GenerateFromBankResult> {
   if (llmConfig) {
-    return generateWithLLM(input, llmConfig);
+    const activeVariant = getActivePromptVariant();
+    const resume = await generateWithLLM(input, llmConfig, activeVariant);
+    return { resume, promptVariantId: activeVariant?.id ?? null };
   }
-  return generateBasicFromBank(input);
+  return { resume: generateBasicFromBank(input), promptVariantId: null };
 }
 
 async function generateWithLLM(
   input: BankResumeInput,
-  llmConfig: LLMConfig
+  llmConfig: LLMConfig,
+  promptVariant: PromptVariant | null
 ): Promise<TailoredResume> {
   const client = new LLMClient(llmConfig);
 
@@ -40,6 +54,8 @@ async function generateWithLLM(
   const projectEntries = formatBankCategory(input.bankEntries.project);
   const hackathonEntries = formatBankCategory(input.bankEntries.hackathon);
   const achievementEntries = formatBankCategory(input.bankEntries.achievement);
+
+  const instructions = promptVariant?.content ?? DEFAULT_PROMPT_CONTENT;
 
   const response = await client.complete({
     messages: [
@@ -80,12 +96,7 @@ Company: ${input.company}
 Description: ${input.jobDescription}
 
 INSTRUCTIONS:
-1. Write a professional summary (2-3 sentences) tailored to this job
-2. Select the 2-3 most relevant experiences from the bank and rewrite bullet points
-3. Each experience should have 2-4 bullet points maximum
-4. Prioritize skills matching the job description
-5. Include relevant achievements in experience bullet points
-6. Keep everything concise - one page
+${instructions}
 
 Return ONLY a JSON object:
 {
