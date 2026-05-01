@@ -34,6 +34,15 @@ export interface NavGroup {
   items: NavItem[];
 }
 
+interface SidebarNavItemClassNameOptions {
+  isActive: boolean;
+  collapsed: boolean;
+}
+
+type SidebarNavItemState = {
+  "data-active": "true" | "false";
+};
+
 export const navigationGroups: NavGroup[] = [
   {
     label: "Overview",
@@ -79,10 +88,7 @@ export const bottomNavigation: NavItem[] = [
 export function getSidebarNavItemClassName({
   isActive,
   collapsed,
-}: {
-  isActive: boolean;
-  collapsed: boolean;
-}) {
+}: SidebarNavItemClassNameOptions): string {
   return cn(
     "app-sidebar-nav-item group relative flex min-h-[44px] items-center gap-3 rounded-lg border-l px-3 py-3 text-sm font-medium transition-all duration-200",
     isActive
@@ -92,8 +98,8 @@ export function getSidebarNavItemClassName({
   );
 }
 
-export function getSidebarNavItemState(isActive: boolean) {
-  return { "data-active": isActive ? "true" : "false" } as const;
+export function getSidebarNavItemState(isActive: boolean): SidebarNavItemState {
+  return { "data-active": isActive ? "true" : "false" };
 }
 
 export function Sidebar() {
