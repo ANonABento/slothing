@@ -4,7 +4,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import {
   THEME_DARK_STORAGE_KEY,
   THEME_STORAGE_KEY,
-} from "@/lib/theme/theme-config";
+} from "@/lib/theme/storage-keys";
 import { ThemeSection } from "./theme-section";
 
 function renderThemeSection() {

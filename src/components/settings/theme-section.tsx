@@ -6,17 +6,8 @@ import { useTheme } from "@/components/theme-provider";
 import type { ThemePreset } from "@/lib/theme/tokens";
 
 export function ThemeSection() {
-  const {
-    isDark,
-    setTheme,
-    themePreset,
-    setThemePreset,
-    availableThemePresets,
-  } = useTheme();
-
-  const toggleDarkMode = () => {
-    setTheme(isDark ? "light" : "dark");
-  };
+  const { isDark, toggleDark, themeId, setThemeId, availableThemes } =
+    useTheme();
 
   return (
     <section className="rounded-2xl border bg-card p-6">
@@ -38,7 +29,7 @@ export function ThemeSection() {
             type="button"
             variant={isDark ? "default" : "outline"}
             size="sm"
-            onClick={toggleDarkMode}
+            onClick={toggleDark}
             aria-pressed={isDark}
           >
             {isDark ? (
@@ -52,12 +43,12 @@ export function ThemeSection() {
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {availableThemePresets.map((preset) => (
+        {availableThemes.map((preset) => (
           <ThemePresetCard
             key={preset.id}
             preset={preset}
-            selected={themePreset === preset.id}
-            onClick={() => setThemePreset(preset.id)}
+            selected={themeId === preset.id}
+            onClick={() => setThemeId(preset.id)}
           />
         ))}
       </div>
@@ -72,10 +63,7 @@ interface ThemePresetCardProps {
 }
 
 function ThemePresetCard({ preset, selected, onClick }: ThemePresetCardProps) {
-  const previewEntries = Object.entries(preset.preview) as [
-    keyof typeof preset.preview,
-    string,
-  ][];
+  const previewKeys = Object.keys(preset.preview) as (keyof typeof preset.preview)[];
 
   return (
     <button
@@ -90,11 +78,11 @@ function ThemePresetCard({ preset, selected, onClick }: ThemePresetCardProps) {
       }`}
     >
       <div className="mb-4 flex overflow-hidden rounded-md border">
-        {previewEntries.map(([key, color]) => (
+        {previewKeys.map((key) => (
           <span
             key={key}
             className="h-7 flex-1"
-            style={{ backgroundColor: color }}
+            style={{ backgroundColor: preset.preview[key] }}
             title={`${preset.name} ${key}`}
             aria-hidden="true"
           />
