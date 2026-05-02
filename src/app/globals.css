@@ -29,6 +29,7 @@
     text-transform: var(--text-transform, none);
     overscroll-behavior: none;
     overflow-x: hidden;
+    background-image: var(--gradient-bg, none);
   }
 
   .theme-transitioning,

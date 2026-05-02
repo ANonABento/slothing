@@ -1,7 +1,6 @@
 "use client";
 
-import { CheckCircle, Moon, Sun } from "lucide-react";
-import { Palette } from "lucide-react";
+import { CheckCircle, Moon, Palette, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/components/theme-provider";
 import type { ThemePreset } from "@/lib/theme/tokens";
