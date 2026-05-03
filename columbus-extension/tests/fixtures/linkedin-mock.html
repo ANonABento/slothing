@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Senior Software Engineer at Acme Corp | LinkedIn</title>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "JobPosting",
+    "title": "Senior Software Engineer",
+    "datePosted": "2024-01-15",
+    "jobLocation": {
+      "@type": "Place",
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "San Francisco, CA"
+      }
+    },
+    "baseSalary": {
+      "@type": "MonetaryAmount",
+      "currency": "USD",
+      "value": {
+        "@type": "QuantitativeValue",
+        "minValue": 150000,
+        "maxValue": 200000
+      }
+    }
+  }
+  </script>
+</head>
+<body>
+  <div class="job-details-jobs-unified-top-card__primary-description-container">
+    <h1 class="job-details-jobs-unified-top-card__job-title t-24">
+      Senior Software Engineer
+    </h1>
+    <a class="job-details-jobs-unified-top-card__company-name" href="/company/acme-corp">
+      Acme Corp
+    </a>
+    <!-- First bullet: location (no "applicant"/"ago" → scraper returns this) -->
+    <span class="job-details-jobs-unified-top-card__bullet">
+      San Francisco, CA
+    </span>
+    <!-- Second bullet: applicant count (filtered out by scraper) -->
+    <span class="job-details-jobs-unified-top-card__bullet t-black--light">
+      201 applicants
+    </span>
+  </div>
+
+  <div class="jobs-description__content">
+    <div class="jobs-description-content__text">
+      <h2>About the role</h2>
+      <p>We are looking for a Senior Software Engineer to join our growing team at Acme Corp.</p>
+      <p>This is a full-time position based in San Francisco, CA. Remote work options are available.</p>
+      <ul>
+        <li>5+ years of experience with React and TypeScript</li>
+        <li>Strong proficiency in Node.js and REST APIs</li>
+        <li>Experience with AWS, Docker, and Kubernetes</li>
+        <li>Must have excellent communication skills</li>
+        <li>Experience with PostgreSQL, Redis, and MongoDB is required</li>
+      </ul>
+      <h2>Requirements</h2>
+      <p>You should have 5+ years of full-time software engineering experience.</p>
+      <p>We require deep knowledge of JavaScript and TypeScript.</p>
+      <p>We prefer candidates with experience in GraphQL and microservices.</p>
+      <p>Salary: $150,000 - $200,000 per year</p>
+    </div>
+  </div>
+
+  <!-- Job cards for list scraping test -->
+  <ul class="jobs-search-results__list">
+    <li class="jobs-search-results__list-item job-card-container">
+      <a class="job-card-list__title" href="https://www.linkedin.com/jobs/view/123456">
+        Frontend Engineer
+      </a>
+      <span class="job-card-container__company-name">Beta Inc</span>
+      <span class="job-card-container__metadata-item">New York, NY</span>
+    </li>
+    <li class="jobs-search-results__list-item job-card-container">
+      <a class="job-card-list__title" href="https://www.linkedin.com/jobs/view/789012">
+        Backend Engineer
+      </a>
+      <span class="job-card-container__company-name">Gamma LLC</span>
+      <span class="job-card-container__metadata-item">Remote</span>
+    </li>
+  </ul>
+</body>
+</html>
