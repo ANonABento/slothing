@@ -47,6 +47,12 @@ export const Messages = {
     type: 'SEARCH_ANSWERS',
     payload: question,
   }),
+
+  // Badge notification messages
+  jobDetected: (meta: { title: string; company: string; url: string }): ExtensionMessage<{ title: string; company: string; url: string }> => ({
+    type: 'JOB_DETECTED',
+    payload: meta,
+  }),
 };
 
 // Response type helpers
