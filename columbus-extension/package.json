@@ -9,16 +9,18 @@
     "build:firefox": "npm run generate-icons && TARGET=firefox webpack --mode production",
     "generate-icons": "node scripts/generate-icons.js",
     "type-check": "tsc --noEmit",
-    "lint": "eslint src --ext .ts,.tsx",
+    "lint": "eslint src tests --ext .ts,.tsx",
     "test": "vitest",
+    "test:e2e": "npx playwright test",
     "clean": "rm -rf dist"
   },
   "dependencies": {
+    "dompurify": "^3.0.8",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "dompurify": "^3.0.8"
+    "react-dom": "^18.2.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.59.1",
     "@types/chrome": "^0.0.260",
     "@types/dompurify": "^3.0.5",
     "@types/react": "^18.2.48",
