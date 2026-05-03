@@ -16,7 +16,7 @@ let autoFillEngine: AutoFillEngine | null = null;
 let cachedProfile: ExtensionProfile | null = null;
 let detectedFields: DetectedField[] = [];
 let scrapedJob: ScrapedJob | null = null;
-let jobDetectionNotified = false;
+let jobDetectedForUrl: string | null = null;
 
 // Scan page on load
 scanPage();
@@ -43,8 +43,8 @@ async function scanPage() {
       scrapedJob = await scraper.scrapeJobListing();
       if (scrapedJob) {
         console.log('[Columbus] Scraped job:', scrapedJob.title);
-        if (!jobDetectionNotified) {
-          jobDetectionNotified = true;
+        if (jobDetectedForUrl !== window.location.href) {
+          jobDetectedForUrl = window.location.href;
           sendMessage(Messages.jobDetected({
             title: scrapedJob.title,
             company: scrapedJob.company,
