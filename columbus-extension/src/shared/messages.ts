@@ -47,6 +47,11 @@ export const Messages = {
     type: 'SEARCH_ANSWERS',
     payload: question,
   }),
+
+  jobDetected: (meta: Pick<ScrapedJob, 'title' | 'company' | 'url'>): ExtensionMessage<Pick<ScrapedJob, 'title' | 'company' | 'url'>> => ({
+    type: 'JOB_DETECTED',
+    payload: meta,
+  }),
 };
 
 // Response type helpers
