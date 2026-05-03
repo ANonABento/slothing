@@ -28,7 +28,11 @@ module.exports = {
       {
         test: /\.tsx?$/,
         use: 'ts-loader',
-        exclude: /node_modules/,
+        // Tests live in tests/ and use node modules (fs, path) — they are
+        // run by Playwright with its own TS setup, not bundled into the
+        // extension. Exclude from webpack to avoid TS2307 (Cannot find
+        // module 'fs') in the production build.
+        exclude: [/node_modules/, /tests\//],
       },
       {
         test: /\.css$/,
