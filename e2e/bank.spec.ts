@@ -39,7 +39,7 @@ test.describe("Bank Page - Layout & Empty State", () => {
     page,
   }) => {
     const emptyHeading = page.getByText("No documents yet");
-    const entryCards = page.locator(".grid .rounded-lg");
+    const entryCards = page.locator("[data-entry-id]");
     const hasEntries = (await entryCards.count()) > 0;
 
     if (!hasEntries) {
