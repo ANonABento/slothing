@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import type { ExtensionProfile, ScrapedJob } from '@/shared/types';
 import { sendMessage, Messages } from '@/shared/messages';
 
@@ -19,14 +19,12 @@ export default function App() {
   const [importing, setImporting] = useState(false);
   const [importSuccess, setImportSuccess] = useState(false);
 
-  const loadProfile = useCallback(async () => {
-    const response = await sendMessage<ExtensionProfile>(Messages.getProfile());
-    if (response.success && response.data) {
-      setProfile(response.data);
-    }
-  }, []);
+  useEffect(() => {
+    checkAuthStatus();
+    checkPageStatus();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const checkAuthStatus = useCallback(async () => {
+  async function checkAuthStatus() {
     try {
       const response = await sendMessage(Messages.getAuthStatus());
       if (response.success && response.data) {
@@ -44,9 +42,17 @@ export default function App() {
       setError((err as Error).message);
       setViewState('error');
     }
-  }, [loadProfile]);
+  }
 
-  const checkPageStatus = useCallback(async () => {
+  async function loadProfile() {
+    const response = await sendMessage<ExtensionProfile>(Messages.getProfile());
+    if (response.success && response.data) {
+      setProfile(response.data);
+    }
+  }
+
+  async function checkPageStatus() {
+    // Get current tab and send message to content script
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     if (tab?.id) {
       try {
@@ -58,12 +64,7 @@ export default function App() {
         // Content script not loaded
       }
     }
-  }, []);
-
-  useEffect(() => {
-    checkAuthStatus();
-    checkPageStatus();
-  }, [checkAuthStatus, checkPageStatus]);
+  }
 
   async function handleConnect() {
     await sendMessage(Messages.openAuth());

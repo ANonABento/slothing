@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import type { ExtensionSettings, LearnedAnswer } from '@/shared/types';
 import { DEFAULT_SETTINGS, DEFAULT_API_BASE_URL } from '@/shared/types';
 import { getStorage, setStorage, updateSettings, getSettings, getApiBaseUrl, setApiBaseUrl } from '../background/storage';
@@ -11,7 +11,12 @@ export default function OptionsApp() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  const loadSettings = useCallback(async () => {
+  useEffect(() => {
+    loadSettings();
+    loadLearnedAnswers();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  async function loadSettings() {
     try {
       const [settingsData, url] = await Promise.all([
         getSettings(),
@@ -24,13 +29,14 @@ export default function OptionsApp() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }
 
-  const loadLearnedAnswers = useCallback(async () => {
+  async function loadLearnedAnswers() {
     try {
       const response = await chrome.runtime.sendMessage({ type: 'GET_AUTH_STATUS' });
       if (!response?.data?.isAuthenticated) return;
 
+      // Fetch learned answers via background script
       const result = await chrome.runtime.sendMessage({ type: 'GET_LEARNED_ANSWERS' });
       if (result?.success && result.data) {
         setLearnedAnswers(result.data);
@@ -38,12 +44,7 @@ export default function OptionsApp() {
     } catch (err) {
       console.error('Failed to load learned answers:', err);
     }
-  }, []);
-
-  useEffect(() => {
-    loadSettings();
-    loadLearnedAnswers();
-  }, [loadSettings, loadLearnedAnswers]);
+  }
 
   async function handleDeleteAnswer(id: string) {
     try {
