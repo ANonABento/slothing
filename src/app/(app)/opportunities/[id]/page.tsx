@@ -55,7 +55,6 @@ interface CoverLettersResponse {
 
 type NotesSaveState = "idle" | "saving" | "saved" | "error";
 
-
 function fieldInputValue(
   opportunity: JobDescription,
   field: OpportunityFieldConfig
