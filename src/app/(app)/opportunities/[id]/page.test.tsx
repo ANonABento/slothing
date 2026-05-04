@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { ToastProvider } from "@/components/ui/toast";
 import OpportunityDetailPage from "./page";
 import type { JobDescription } from "@/types";
 
@@ -104,10 +105,18 @@ describe("OpportunityDetailPage", () => {
     vi.useRealTimers();
   });
 
+  function renderPage() {
+    return render(
+      <ToastProvider>
+        <OpportunityDetailPage params={{ id: "job-1" }} />
+      </ToastProvider>,
+    );
+  }
+
   it("renders opportunity details, actions, linked documents, and notes", async () => {
     mockOpportunityFetch();
 
-    render(<OpportunityDetailPage params={{ id: "job-1" }} />);
+    renderPage();
 
     expect(
       await screen.findByRole("heading", { name: "Frontend Engineer" }),
@@ -134,7 +143,7 @@ describe("OpportunityDetailPage", () => {
   it("saves an inline field edit through the opportunities API", async () => {
     const fetchMock = mockOpportunityFetch();
 
-    render(<OpportunityDetailPage params={{ id: "job-1" }} />);
+    renderPage();
 
     await screen.findByRole("heading", { name: "Frontend Engineer" });
     fireEvent.click(screen.getByRole("button", { name: "Edit Company" }));
@@ -159,7 +168,7 @@ describe("OpportunityDetailPage", () => {
   it("clears optional inline fields through the opportunities API", async () => {
     const fetchMock = mockOpportunityFetch();
 
-    render(<OpportunityDetailPage params={{ id: "job-1" }} />);
+    renderPage();
 
     await screen.findByRole("heading", { name: "Frontend Engineer" });
     fireEvent.click(screen.getByRole("button", { name: "Edit Salary" }));
@@ -183,7 +192,7 @@ describe("OpportunityDetailPage", () => {
   it("auto-saves notes after edits", async () => {
     const fetchMock = mockOpportunityFetch();
 
-    render(<OpportunityDetailPage params={{ id: "job-1" }} />);
+    renderPage();
 
     await screen.findByRole("heading", { name: "Frontend Engineer" });
     fireEvent.change(
@@ -209,7 +218,7 @@ describe("OpportunityDetailPage", () => {
     const fetchMock = mockOpportunityFetch();
     const openMock = vi.mocked(window.open);
 
-    render(<OpportunityDetailPage params={{ id: "job-1" }} />);
+    renderPage();
 
     await screen.findByRole("heading", { name: "Frontend Engineer" });
     fireEvent.click(screen.getByRole("button", { name: "Apply" }));
