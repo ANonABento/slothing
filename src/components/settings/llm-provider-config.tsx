@@ -21,7 +21,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { LLMConfig } from "@/types";
-import type { LLMTestResult } from "@/app/(app)/settings/use-llm-settings";
+import type {
+  LLMSettingsSaveStatus,
+  LLMTestResult,
+} from "@/app/(app)/settings/use-llm-settings";
 import type { ProviderOption } from "./llm-provider-selector";
 
 interface LLMProviderConfigProps {
@@ -31,7 +34,7 @@ interface LLMProviderConfigProps {
   saving: boolean;
   testing: boolean;
   hasChanges: boolean;
-  saveStatus: "saved" | "saving" | "error";
+  saveStatus: LLMSettingsSaveStatus;
   testResult: LLMTestResult | null;
   onConfigChange: (updates: Partial<LLMConfig>) => void;
   onSave: () => void;

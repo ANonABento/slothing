@@ -10,6 +10,8 @@ export interface LLMTestResult {
   message: string;
 }
 
+export type LLMSettingsSaveStatus = "saved" | "saving" | "error";
+
 const DEFAULT_CONFIG: LLMConfig = {
   provider: "ollama",
   model: DEFAULT_MODELS.ollama[0],
@@ -24,10 +26,10 @@ export function useLLMSettings() {
   const [testResult, setTestResult] = useState<LLMTestResult | null>(null);
   const [ollamaModels, setOllamaModels] = useState<string[]>([]);
   const [hasChanges, setHasChanges] = useState(false);
-  const [saveStatus, setSaveStatus] = useState<"saved" | "saving" | "error">(
-    "saved",
-  );
+  const [saveStatus, setSaveStatus] =
+    useState<LLMSettingsSaveStatus>("saved");
   const changeVersionRef = useRef(0);
+  const saveRequestRef = useRef(0);
   const showErrorToast = useErrorToast();
 
   useEffect(() => {
@@ -62,6 +64,8 @@ export function useLLMSettings() {
 
   const saveSettings = useCallback(async () => {
     const saveVersion = changeVersionRef.current;
+    const saveRequest = saveRequestRef.current + 1;
+    saveRequestRef.current = saveRequest;
     setSaving(true);
     setSaveStatus("saving");
 
@@ -95,7 +99,9 @@ export function useLLMSettings() {
         });
       }
     } finally {
-      setSaving(false);
+      if (saveRequest === saveRequestRef.current) {
+        setSaving(false);
+      }
     }
   }, [config]);
 
