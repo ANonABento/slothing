@@ -12,11 +12,15 @@ interface Toast {
   type: ToastType;
   title: string;
   description?: string;
+  action?: {
+    label: string;
+    onClick: () => void;
+  };
 }
 
 interface ToastContextType {
   toasts: Toast[];
-  addToast: (toast: Omit<Toast, "id">) => void;
+  addToast: (toast: Omit<Toast, "id">, durationMs?: number) => string;
   removeToast: (id: string) => void;
 }
 
@@ -26,14 +30,17 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
 
   const addToast = useCallback(
-    ({ type, title, description }: Omit<Toast, "id">) => {
+    ({ type, title, description, action }: Omit<Toast, "id">, durationMs = 5000) => {
       const id = Math.random().toString(36).slice(2);
-      setToasts((prev) => [...prev, { id, type, title, description }]);
+      setToasts((prev) => [...prev, { id, type, title, description, action }]);
 
-      // Auto remove after 5 seconds
-      setTimeout(() => {
-        setToasts((prev) => prev.filter((t) => t.id !== id));
-      }, 5000);
+      if (durationMs > 0) {
+        setTimeout(() => {
+          setToasts((prev) => prev.filter((t) => t.id !== id));
+        }, durationMs);
+      }
+
+      return id;
     },
     [],
   );
@@ -99,10 +106,24 @@ function ToastContainer() {
                   {toast.description}
                 </p>
               )}
+              {toast.action && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    toast.action?.onClick();
+                    removeToast(toast.id);
+                  }}
+                  className="mt-2 text-sm font-medium text-foreground underline-offset-4 hover:underline"
+                >
+                  {toast.action.label}
+                </button>
+              )}
             </div>
             <button
+              type="button"
               onClick={() => removeToast(toast.id)}
               className="text-muted-foreground hover:text-foreground transition-colors"
+              aria-label="Dismiss notification"
             >
               <X className="h-4 w-4" />
             </button>
