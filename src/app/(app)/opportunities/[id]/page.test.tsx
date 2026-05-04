@@ -31,7 +31,7 @@ const baseOpportunity: JobDescription = {
 function mockOpportunityFetch(initialJob: JobDescription = baseOpportunity) {
   let currentJob = { ...initialJob };
   const fetchMock = vi.fn(async (url: string, init?: RequestInit) => {
-    if (url === "/api/jobs/job-1" && init?.method === "PATCH") {
+    if (url === "/api/opportunities/job-1" && init?.method === "PATCH") {
       const patch =
         typeof init.body === "string"
           ? (JSON.parse(init.body) as Partial<JobDescription>)
@@ -40,11 +40,11 @@ function mockOpportunityFetch(initialJob: JobDescription = baseOpportunity) {
       return new Response(JSON.stringify({ job: currentJob }), { status: 200 });
     }
 
-    if (url === "/api/jobs/job-1") {
+    if (url === "/api/opportunities/job-1") {
       return new Response(JSON.stringify({ job: currentJob }), { status: 200 });
     }
 
-    if (url === "/api/jobs/job-1/resumes") {
+    if (url === "/api/opportunities/job-1/resumes") {
       return new Response(
         JSON.stringify({
           resumes: [
@@ -60,7 +60,7 @@ function mockOpportunityFetch(initialJob: JobDescription = baseOpportunity) {
       );
     }
 
-    if (url === "/api/jobs/job-1/cover-letter/history") {
+    if (url === "/api/opportunities/job-1/cover-letter/history") {
       return new Response(
         JSON.stringify({
           versions: [
@@ -72,6 +72,15 @@ function mockOpportunityFetch(initialJob: JobDescription = baseOpportunity) {
           ],
         }),
         { status: 200 }
+      );
+    }
+
+    if (url === "/api/opportunities/templates") {
+      return new Response(
+        JSON.stringify({
+          templates: [{ id: "classic", name: "Classic", description: "" }],
+        }),
+        { status: 200 },
       );
     }
 
@@ -100,13 +109,14 @@ describe("OpportunityDetailPage", () => {
 
     expect(await screen.findByRole("heading", { name: "Frontend Engineer" })).toBeInTheDocument();
     expect(screen.getByText("Acme · Remote")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /Tailor Resume/i })).toHaveAttribute(
+    expect(screen.getByRole("button", { name: /Analyze Match/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /ATS Check/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Resume/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Cover Letter/i })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Company Research/i })).toHaveAttribute(
       "href",
-      "/studio?mode=resume&opportunityId=job-1"
+      "/opportunities/job-1/research",
     );
-    expect(
-      screen.getByRole("link", { name: /Generate Cover Letter/i })
-    ).toHaveAttribute("href", "/studio?mode=cover-letter&opportunityId=job-1");
     expect(screen.getByText("Resume · 87% match")).toBeInTheDocument();
     expect(screen.getByText("Version 2")).toBeInTheDocument();
     expect(screen.getByDisplayValue("Initial note")).toBeInTheDocument();
@@ -128,7 +138,7 @@ describe("OpportunityDetailPage", () => {
       expect(
         fetchMock.mock.calls.some(
           ([url, init]) =>
-            url === "/api/jobs/job-1" &&
+            url === "/api/opportunities/job-1" &&
             init?.method === "PATCH" &&
             init.body === JSON.stringify({ company: "Globex" })
         )
@@ -153,7 +163,7 @@ describe("OpportunityDetailPage", () => {
       expect(
         fetchMock.mock.calls.some(
           ([url, init]) =>
-            url === "/api/jobs/job-1" &&
+            url === "/api/opportunities/job-1" &&
             init?.method === "PATCH" &&
             init.body === JSON.stringify({ salary: "" })
         )
@@ -178,7 +188,7 @@ describe("OpportunityDetailPage", () => {
       expect(
         fetchMock.mock.calls.some(
           ([url, init]) =>
-            url === "/api/jobs/job-1" &&
+            url === "/api/opportunities/job-1" &&
             init?.method === "PATCH" &&
             init.body === JSON.stringify({ notes: "Follow up next week" })
         )
@@ -199,7 +209,7 @@ describe("OpportunityDetailPage", () => {
       expect(
         fetchMock.mock.calls.some(
           ([url, init]) =>
-            url === "/api/jobs/job-1" &&
+            url === "/api/opportunities/job-1" &&
             init?.method === "PATCH" &&
             typeof init.body === "string" &&
             JSON.parse(init.body).status === "applied"
