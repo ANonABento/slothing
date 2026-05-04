@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { TimeAgo } from "@/components/format/time-ago";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -15,6 +16,7 @@ import type { SourceDocument } from "@/lib/db/profile-bank";
 import { useErrorToast } from "@/hooks/use-error-toast";
 import { cn } from "@/lib/utils";
 import { THEME_INTERACTIVE_SURFACE_CLASSES } from "@/lib/theme/component-classes";
+import { pluralize } from "@/lib/text/pluralize";
 
 interface SourceDocumentsProps {
   refreshKey: number;
@@ -217,9 +219,9 @@ export function SourceDocuments({
             <div className="min-w-0 flex-1">
               <p className="text-sm font-medium truncate">{doc.filename}</p>
               <p className="text-xs text-muted-foreground">
-                {formatFileSize(doc.size)} &middot; {doc.chunkCount} chunk
-                {doc.chunkCount !== 1 ? "s" : ""} &middot;{" "}
-                {new Date(doc.uploadedAt).toLocaleDateString()}
+                {formatFileSize(doc.size)} &middot;{" "}
+                {pluralize(doc.chunkCount, "chunk")} &middot;{" "}
+                <TimeAgo date={doc.uploadedAt} />
               </p>
             </div>
             <Button
@@ -248,9 +250,8 @@ export function SourceDocuments({
             <DialogDescription>
               This will permanently delete{" "}
               <strong>{deleteTarget?.filename}</strong> and all{" "}
-              {deleteTarget?.chunkCount} associated chunk
-              {deleteTarget?.chunkCount !== 1 ? "s" : ""}. This action cannot be
-              undone.
+              {pluralize(deleteTarget?.chunkCount ?? 0, "associated chunk")}.
+              This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -281,9 +282,8 @@ export function SourceDocuments({
           <DialogHeader>
             <DialogTitle>Delete selected source files?</DialogTitle>
             <DialogDescription>
-              This will permanently delete {selectedCount} source file
-              {selectedCount !== 1 ? "s" : ""} and all associated chunks. This
-              action cannot be undone.
+              This will permanently delete {pluralize(selectedCount, "source file")}
+              and all associated chunks. This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

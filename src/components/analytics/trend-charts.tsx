@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
+import { TimeAgo } from "@/components/format/time-ago";
 import {
   TrendingUp,
   TrendingDown,
@@ -214,11 +215,7 @@ function ActivityTimelineItem({ event }: { event: ActivityEvent }) {
           {event.description}
         </p>
         <p className="text-xs text-muted-foreground mt-1">
-          {new Date(event.date).toLocaleDateString("en-US", {
-            month: "short",
-            day: "numeric",
-            year: "numeric",
-          })}
+          <TimeAgo date={event.date} />
         </p>
       </div>
     </div>
