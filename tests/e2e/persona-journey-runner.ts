@@ -1,4 +1,10 @@
-import { expect, test, type Page, type TestInfo } from "@playwright/test";
+import {
+  expect,
+  test,
+  type Locator,
+  type Page,
+  type TestInfo,
+} from "@playwright/test";
 import fs from "node:fs";
 import path from "node:path";
 import {
@@ -9,6 +15,7 @@ import {
   parseTargetOpportunity,
   personaFixtureRequirements,
   personaJourneySteps,
+  requiredPersonaFixtures,
   type PersonaSlug,
   type PersonaTargetOpportunity,
 } from "../../src/lib/persona-journey";
@@ -17,7 +24,7 @@ const repoRoot = path.resolve(__dirname, "../..");
 
 function existingFixturePaths(slug: PersonaSlug): Set<string> {
   return new Set(
-    personaFixtureRequirements
+    requiredPersonaFixtures
       .map((requirement) => fixturePathFor(requirement, slug))
       .filter((relativePath) =>
         fs.existsSync(path.join(repoRoot, relativePath)),
@@ -34,7 +41,7 @@ async function captureStep(
   testInfo: TestInfo,
   slug: PersonaSlug,
   screenshotName: string,
-) {
+): Promise<void> {
   const screenshotPath = path.join(
     repoRoot,
     "tests",
@@ -54,7 +61,7 @@ async function captureStep(
   });
 }
 
-async function expectReachable(page: Page, pathName: string) {
+async function expectReachable(page: Page, pathName: string): Promise<void> {
   await page.goto(pathName);
   await page.waitForLoadState("domcontentloaded");
   await expect(page.locator("body")).toBeVisible();
@@ -66,7 +73,7 @@ async function attachApiState(
   slug: PersonaSlug,
   stepId: string,
   endpoint: string,
-) {
+): Promise<void> {
   const response = await page.request.get(endpoint);
   const body = await response.text();
   await testInfo.attach(`${slug}-${stepId}-${endpoint.replace(/\W+/g, "-")}`, {
@@ -76,12 +83,15 @@ async function attachApiState(
       "application/octet-stream",
   });
   expect(response.ok()).toBe(true);
-  return body;
 }
 
-async function fillIfPresent(page: Page, label: RegExp, value?: string) {
+async function fillIfPresent(
+  scope: Page | Locator,
+  label: RegExp,
+  value?: string,
+): Promise<void> {
   if (!value) return;
-  const field = page.getByLabel(label).first();
+  const field = scope.getByLabel(label).first();
   if (await field.isVisible({ timeout: 1000 }).catch(() => false)) {
     await field.fill(value);
   }
@@ -90,16 +100,16 @@ async function fillIfPresent(page: Page, label: RegExp, value?: string) {
 async function addTargetOpportunity(
   page: Page,
   opportunity: PersonaTargetOpportunity,
-) {
+): Promise<void> {
   await page.getByRole("button", { name: /^add opportunity$/i }).click();
   const dialog = page.getByRole("dialog", { name: /add opportunity/i });
   await expect(dialog).toBeVisible();
 
   await dialog.getByLabel(/^title$/i).fill(opportunity.title);
-  await dialog.getByLabel(/^company|organizer$/i).fill(opportunity.company);
-  await fillIfPresent(page, /source url/i, opportunity.url);
-  await fillIfPresent(page, /^city$/i, opportunity.location);
-  await fillIfPresent(page, /required skills/i, opportunity.skills.join(", "));
+  await dialog.getByLabel(/^(company|organizer)$/i).fill(opportunity.company);
+  await fillIfPresent(dialog, /source url/i, opportunity.url);
+  await fillIfPresent(dialog, /^city$/i, opportunity.location);
+  await fillIfPresent(dialog, /required skills/i, opportunity.skills.join(", "));
   await dialog.getByLabel(/summary/i).fill(opportunity.summary);
 
   await Promise.all([
@@ -119,7 +129,7 @@ async function addTargetOpportunity(
   );
 }
 
-export function createPersonaJourneySpec(slug: PersonaSlug) {
+export function createPersonaJourneySpec(slug: PersonaSlug): void {
   test.describe(`persona journey - ${slug}`, () => {
     test(`walks the full app journey for ${slug}`, async ({
       page,
@@ -133,10 +143,12 @@ export function createPersonaJourneySpec(slug: PersonaSlug) {
 
       const email = `${slug}@test.example.com`;
       const expectedBankFixture = readJsonFixture(
-        fixturePathFor(personaFixtureRequirements[1], slug),
+        fixturePathFor(personaFixtureRequirements.expectedBankEntries, slug),
       );
       const targetOpportunity = parseTargetOpportunity(
-        readJsonFixture(fixturePathFor(personaFixtureRequirements[2], slug)),
+        readJsonFixture(
+          fixturePathFor(personaFixtureRequirements.targetOpportunity, slug),
+        ),
       );
 
       // Expected: sign-up accepts a unique email or the E2E header auth bypass lands in the app shell.
@@ -149,7 +161,7 @@ export function createPersonaJourneySpec(slug: PersonaSlug) {
         page,
         testInfo,
         slug,
-        personaJourneySteps[0].screenshotName,
+        personaJourneySteps.signUp.screenshotName,
       );
 
       // Expected: onboarding can be completed or skipped using reasonable defaults for this persona.
@@ -162,14 +174,14 @@ export function createPersonaJourneySpec(slug: PersonaSlug) {
         page,
         testInfo,
         slug,
-        personaJourneySteps[1].screenshotName,
+        personaJourneySteps.onboarding.screenshotName,
       );
 
       // Expected: upload accepts the persona resume PDF and creates parsed profile/bank data.
       await expectReachable(page, "/bank");
       const resumePath = path.join(
         repoRoot,
-        fixturePathFor(personaFixtureRequirements[0], slug),
+        fixturePathFor(personaFixtureRequirements.resumePdf, slug),
       );
       const fileInput = page.locator('input[type="file"]').first();
       await Promise.all([
@@ -186,7 +198,7 @@ export function createPersonaJourneySpec(slug: PersonaSlug) {
         page,
         testInfo,
         slug,
-        personaJourneySteps[2].screenshotName,
+        personaJourneySteps.uploadResume.screenshotName,
       );
 
       // Expected: /bank renders entries matching the persona expected.json fixture.
@@ -204,7 +216,7 @@ export function createPersonaJourneySpec(slug: PersonaSlug) {
         page,
         testInfo,
         slug,
-        personaJourneySteps[3].screenshotName,
+        personaJourneySteps.verifyBank.screenshotName,
       );
 
       // Expected: the target opportunity can be added from URL or manual fixture data.
@@ -221,7 +233,7 @@ export function createPersonaJourneySpec(slug: PersonaSlug) {
         page,
         testInfo,
         slug,
-        personaJourneySteps[4].screenshotName,
+        personaJourneySteps.addOpportunity.screenshotName,
       );
 
       // Expected: Studio can generate a tailored resume for the newly added opportunity.
@@ -239,7 +251,7 @@ export function createPersonaJourneySpec(slug: PersonaSlug) {
         page,
         testInfo,
         slug,
-        personaJourneySteps[5].screenshotName,
+        personaJourneySteps.tailorResume.screenshotName,
       );
 
       // Expected: cover-letter flow generates persona- and job-specific content.
@@ -249,7 +261,7 @@ export function createPersonaJourneySpec(slug: PersonaSlug) {
         page,
         testInfo,
         slug,
-        personaJourneySteps[6].screenshotName,
+        personaJourneySteps.coverLetter.screenshotName,
       );
 
       // Expected: ATS scanner accepts the resume and job description and returns a result.
@@ -265,7 +277,7 @@ export function createPersonaJourneySpec(slug: PersonaSlug) {
         page,
         testInfo,
         slug,
-        personaJourneySteps[7].screenshotName,
+        personaJourneySteps.atsScan.screenshotName,
       );
 
       // Expected: analytics includes the new application in the funnel.
@@ -278,7 +290,7 @@ export function createPersonaJourneySpec(slug: PersonaSlug) {
         page,
         testInfo,
         slug,
-        personaJourneySteps[8].screenshotName,
+        personaJourneySteps.analytics.screenshotName,
       );
     });
   });

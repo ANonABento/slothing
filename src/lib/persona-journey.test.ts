@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 import {
-  buildFollowupTitle,
   collectExpectedBankAssertions,
   fixturePathFor,
   formatSkipReason,
@@ -12,7 +11,10 @@ import {
 describe("persona journey helpers", () => {
   it("expands fixture paths for a persona slug", () => {
     expect(
-      fixturePathFor(personaFixtureRequirements[0], "career-switcher"),
+      fixturePathFor(
+        personaFixtureRequirements.resumePdf,
+        "career-switcher",
+      ),
     ).toBe("tests/fixtures/personas/career-switcher/resume.pdf");
   });
 
@@ -34,12 +36,6 @@ describe("persona journey helpers", () => {
   it("formats the missing fixture skip reason with dependency context", () => {
     expect(formatSkipReason("remote-only", ["resume PDF"])).toBe(
       "Persona journey 'remote-only' requires fixtures from Test 1.1: resume PDF",
-    );
-  });
-
-  it("normalizes follow-up task titles", () => {
-    expect(buildFollowupTitle("Upload resume", " parser   error on PDF ")).toBe(
-      "Journey fix — Upload resume — parser error on PDF",
     );
   });
 

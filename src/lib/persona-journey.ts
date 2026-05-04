@@ -34,82 +34,86 @@ export interface PersonaTargetOpportunity {
   skills: string[];
 }
 
-export const personaFixtureRequirements: PersonaFixtureRequirement[] = [
-  {
+export const personaFixtureRequirements = {
+  resumePdf: {
     label: "resume PDF",
     relativePath: "tests/fixtures/personas/{slug}/resume.pdf",
   },
-  {
+  expectedBankEntries: {
     label: "expected bank entries",
     relativePath: "tests/fixtures/personas/{slug}/expected.json",
   },
-  {
+  targetOpportunity: {
     label: "target opportunity",
     relativePath: "tests/fixtures/personas/{slug}/target-jobs/job-1.json",
   },
-];
+} as const satisfies Record<string, PersonaFixtureRequirement>;
 
-export const personaJourneySteps: JourneyStepDefinition[] = [
-  {
+export const requiredPersonaFixtures = Object.values(
+  personaFixtureRequirements,
+);
+
+export const personaJourneySteps = {
+  signUp: {
     id: "sign-up",
     label: "Sign up",
     expected: "A unique persona email can reach the authenticated app shell.",
     screenshotName: "01-sign-up.png",
   },
-  {
+  onboarding: {
     id: "onboarding",
     label: "Onboarding",
     expected:
       "The persona can complete or skip onboarding with reasonable defaults.",
     screenshotName: "02-onboarding.png",
   },
-  {
+  uploadResume: {
     id: "upload-resume",
     label: "Upload resume",
     expected: "The persona resume PDF uploads and creates parsed profile data.",
     screenshotName: "03-upload-resume.png",
   },
-  {
+  verifyBank: {
     id: "verify-bank",
     label: "Verify bank",
     expected:
       "The rendered bank entries match the persona expected.json fixture.",
     screenshotName: "04-verify-bank.png",
   },
-  {
+  addOpportunity: {
     id: "add-opportunity",
     label: "Add target opportunity",
     expected:
       "The target job URL or manual data creates a tracked opportunity.",
     screenshotName: "05-add-opportunity.png",
   },
-  {
+  tailorResume: {
     id: "tailor-resume",
     label: "Tailor resume",
     expected: "Studio generates a tailored resume for the new opportunity.",
     screenshotName: "06-tailor-resume.png",
   },
-  {
+  coverLetter: {
     id: "cover-letter",
     label: "Generate cover letter",
     expected:
       "The cover-letter flow generates persona- and job-specific content.",
     screenshotName: "07-cover-letter.png",
   },
-  {
+  atsScan: {
     id: "ats-scan",
     label: "Run ATS scan",
     expected:
       "The ATS scanner accepts the resume and job description and returns a score.",
     screenshotName: "08-ats-scan.png",
   },
-  {
+  analytics: {
     id: "analytics",
     label: "Check analytics",
     expected: "Analytics includes the new application in the funnel.",
     screenshotName: "09-analytics.png",
   },
-];
+} as const satisfies Record<string, JourneyStepDefinition>;
 
 export function fixturePathFor(
   requirement: PersonaFixtureRequirement,
@@ -122,7 +126,7 @@ export function missingFixtureLabels(
   slug: PersonaSlug,
   existingRelativePaths: ReadonlySet<string>,
 ): string[] {
-  return personaFixtureRequirements
+  return requiredPersonaFixtures
     .filter(
       (requirement) =>
         !existingRelativePaths.has(fixturePathFor(requirement, slug)),
@@ -142,11 +146,6 @@ export function formatSkipReason(
   }
 
   return `Persona journey '${slug}' requires fixtures from Test 1.1: ${missing.join(", ")}`;
-}
-
-export function buildFollowupTitle(step: string, summary: string): string {
-  const normalizedSummary = summary.trim().replace(/\s+/g, " ");
-  return `Journey fix — ${step} — ${normalizedSummary}`;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -240,7 +239,7 @@ export function parseTargetOpportunity(
 export function collectExpectedBankAssertions(fixture: unknown): string[] {
   const assertions = new Set<string>();
 
-  function visit(value: unknown, key?: string) {
+  function visit(value: unknown, key?: string): void {
     if (typeof value === "string") {
       const normalized = value.trim().replace(/\s+/g, " ");
       if (
