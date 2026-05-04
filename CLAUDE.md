@@ -244,6 +244,10 @@ Key tables:
 
 ## Coding Conventions
 
+### Destructive actions convention
+
+All user-facing destructive actions MUST follow the pattern in `docs/destructive-actions-pattern.md`. No exceptions. New destructive actions require either a confirm dialog (Pattern A) or an optimistic-undo snackbar (Pattern B). Bare-click destruction is never acceptable.
+
 ### TypeScript
 - Strict mode enabled
 - Use explicit types for function parameters

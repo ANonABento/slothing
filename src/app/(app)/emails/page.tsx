@@ -23,6 +23,7 @@ import {
   ChevronUp,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -137,6 +138,7 @@ export default function EmailTemplatesPage() {
   // Gmail state
   const [recipientEmail, setRecipientEmail] = useState("");
   const showErrorToast = useErrorToast();
+  const { confirm, dialog: confirmDialog } = useConfirmDialog();
 
   const fetchJobs = useCallback(async () => {
     try {
@@ -244,6 +246,14 @@ export default function EmailTemplatesPage() {
   };
 
   const deleteDraft = async (draftId: string) => {
+    const confirmed = await confirm({
+      title: "Delete this email draft?",
+      description:
+        "This permanently removes the saved draft. The generated email currently on screen is not affected.",
+      confirmLabel: "Delete",
+    });
+    if (!confirmed) return;
+
     try {
       const response = await fetch(`/api/email/drafts/${draftId}`, {
         method: "DELETE",
@@ -537,7 +547,7 @@ export default function EmailTemplatesPage() {
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => deleteDraft(draft.id)}
+                          onClick={() => void deleteDraft(draft.id)}
                           className="text-muted-foreground hover:text-destructive"
                         >
                           <Trash2 className="h-4 w-4" />
@@ -737,6 +747,7 @@ export default function EmailTemplatesPage() {
           )}
         </div>
       </PageContent>
+      {confirmDialog}
     </AppPage>
   );
 }

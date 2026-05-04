@@ -3,6 +3,7 @@
 import { useCallback, useState } from "react";
 import { FileText, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useConfirmDialog } from "@/components/ui/confirm-dialog";
 import { cn } from "@/lib/utils";
 import type { StudioDocument } from "./studio-documents";
 
@@ -25,6 +26,7 @@ export function StudioFilePanel({
 }: StudioFilePanelProps) {
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [draftName, setDraftName] = useState("");
+  const { confirm, dialog: confirmDialog } = useConfirmDialog();
 
   const startRename = useCallback((document: StudioDocument) => {
     setRenamingId(document.id);
@@ -38,6 +40,21 @@ export function StudioFilePanel({
     setRenamingId(null);
     setDraftName("");
   }, [draftName, onRename, renamingId]);
+
+  const handleDelete = useCallback(
+    async (documentId: string) => {
+      const confirmed = await confirm({
+        title: "Delete this studio file?",
+        description:
+          "This permanently removes the local studio file and any unsaved changes in it.",
+        confirmLabel: "Delete",
+      });
+      if (confirmed) {
+        onDelete(documentId);
+      }
+    },
+    [confirm, onDelete],
+  );
 
   return (
     <div className="border-b-[length:var(--border-width)]">
@@ -93,7 +110,7 @@ export function StudioFilePanel({
               )}
               <button
                 type="button"
-                onClick={() => onDelete(document.id)}
+                onClick={() => void handleDelete(document.id)}
                 className="rounded-[var(--radius)] p-1 text-muted-foreground opacity-70 transition hover:bg-destructive/10 hover:text-destructive md:opacity-0 md:group-hover:opacity-100"
                 aria-label={`Delete ${document.name}`}
               >
@@ -103,6 +120,7 @@ export function StudioFilePanel({
           );
         })}
       </div>
+      {confirmDialog}
     </div>
   );
 }
