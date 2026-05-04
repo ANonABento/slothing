@@ -296,8 +296,8 @@ export default function OpportunitiesPage() {
 
             <div className="flex flex-wrap items-center gap-3">
               <Stat label="Total" value={counts.all} />
-              <Stat label="Jobs" value={counts.job} />
-              <Stat label="Hackathons" value={counts.hackathon} />
+              <Stat label="Job" value={counts.job} />
+              <Stat label="Hackathon" value={counts.hackathon} />
               <Stat label="Pending" value={counts.pending} />
               <div
                 className="flex rounded-lg border bg-card p-1"
@@ -897,12 +897,21 @@ function OpportunityKanbanCard({
 }
 
 function Stat({ label, value }: { label: string; value: number }) {
+  const displayLabel =
+    label === "Job" || label === "Hackathon"
+      ? pluralizeLabel(value, label)
+      : label;
+
   return (
     <div className="min-w-20 rounded-lg border bg-background px-3 py-2 text-center">
       <div className="text-lg font-semibold text-foreground">{value}</div>
-      <div className="text-xs text-muted-foreground">{label}</div>
+      <div className="text-xs text-muted-foreground">{displayLabel}</div>
     </div>
   );
+}
+
+function pluralizeLabel(value: number, singularLabel: string): string {
+  return value === 1 ? singularLabel : `${singularLabel}s`;
 }
 
 function Field({
