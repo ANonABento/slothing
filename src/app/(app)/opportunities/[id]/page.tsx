@@ -24,8 +24,6 @@ import { useErrorToast } from "@/hooks/use-error-toast";
 import { readJsonResponse } from "@/lib/http";
 import { cn } from "@/lib/utils";
 import type { JobDescription } from "@/types";
-
-type OpportunityTabKey = "details" | "research";
 import {
   OPPORTUNITY_FIELD_SECTIONS,
   buildAppliedOpportunityPatch,
@@ -34,6 +32,8 @@ import {
   formatOpportunityFieldValue,
   type OpportunityFieldConfig,
 } from "./utils";
+
+type OpportunityTabKey = "details" | "research";
 
 interface OpportunityResponse {
   job?: JobDescription;

@@ -80,5 +80,3 @@ export function isEnrichmentFresh(
   if (Number.isNaN(enriched)) return false;
   return now.getTime() - enriched < ttlMs;
 }
-
-export const ENRICHMENT_TTL_MS_VALUE = ENRICHMENT_TTL_MS;

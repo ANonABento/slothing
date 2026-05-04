@@ -66,10 +66,3 @@ export async function GET(
     );
   }
 }
-
-export async function POST(
-  request: NextRequest,
-  context: { params: { id: string } },
-) {
-  return GET(request, context);
-}

@@ -91,7 +91,7 @@ function blogUrlCandidates(sourceUrl: string | null | undefined): string[] {
 
 export async function fetchBlogEnrichment(
   sourceUrl: string | null | undefined,
-  options: { timeoutMs?: number; fetchImpl?: typeof fetch } = {},
+  options: { timeoutMs?: number } = {},
 ): Promise<EnrichmentSourceResult<BlogEnrichment>> {
   const candidates = blogUrlCandidates(sourceUrl);
   if (candidates.length === 0) {

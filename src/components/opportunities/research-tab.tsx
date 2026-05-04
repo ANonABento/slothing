@@ -44,11 +44,11 @@ function formatUSD(value: number | null): string {
   return `$${value}`;
 }
 
-function StatusLabel({
+function StatusLabel<T extends EnrichmentSourceData>({
   result,
   emptyMessage,
 }: {
-  result: EnrichmentSourceResult<EnrichmentSourceData>;
+  result: EnrichmentSourceResult<T>;
   emptyMessage: string;
 }) {
   if (result.status === "ok") return null;
@@ -86,7 +86,7 @@ function GitHubSection({
       </header>
       <div className="space-y-3 px-5 py-4">
         <StatusLabel
-          result={result as EnrichmentSourceResult<EnrichmentSourceData>}
+          result={result}
           emptyMessage="No public GitHub org detected."
         />
         {result.data ? (
@@ -166,7 +166,7 @@ function NewsSection({
       </header>
       <div className="space-y-3 px-5 py-4">
         <StatusLabel
-          result={result as EnrichmentSourceResult<EnrichmentSourceData>}
+          result={result}
           emptyMessage="No recent headlines."
         />
         {result.data ? (
@@ -224,7 +224,7 @@ function LevelsSection({
       </header>
       <div className="space-y-3 px-5 py-4">
         <StatusLabel
-          result={result as EnrichmentSourceResult<EnrichmentSourceData>}
+          result={result}
           emptyMessage="No public salary ranges available."
         />
         {result.data ? (
@@ -282,7 +282,7 @@ function BlogSection({
       </header>
       <div className="space-y-3 px-5 py-4">
         <StatusLabel
-          result={result as EnrichmentSourceResult<EnrichmentSourceData>}
+          result={result}
           emptyMessage="No company blog detected."
         />
         {result.data ? (
@@ -323,7 +323,7 @@ function HnSection({
       </header>
       <div className="space-y-3 px-5 py-4">
         <StatusLabel
-          result={result as EnrichmentSourceResult<EnrichmentSourceData>}
+          result={result}
           emptyMessage="No recent HN mentions."
         />
         {result.data ? (

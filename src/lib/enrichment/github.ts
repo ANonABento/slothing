@@ -65,7 +65,7 @@ export function parseGithubRepos(repos: GithubRepoApi[]): GitHubEnrichment {
 
 export async function fetchGithubEnrichment(
   org: string,
-  options: { timeoutMs?: number; fetchImpl?: typeof fetch } = {},
+  options: { timeoutMs?: number } = {},
 ): Promise<EnrichmentSourceResult<GitHubEnrichment>> {
   const trimmed = org.trim();
   if (!trimmed) {
