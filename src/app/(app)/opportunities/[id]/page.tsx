@@ -12,11 +12,13 @@ import {
   XCircle,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { TimeAgo } from "@/components/format/time-ago";
 import { Button } from "@/components/ui/button";
 import { JobStatusBadge } from "@/components/jobs/job-status-badge";
 import { OpportunityActions } from "@/components/opportunities/opportunity-actions";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { useDevMode } from "@/hooks/use-dev-mode";
 import { useErrorToast } from "@/hooks/use-error-toast";
 import { readJsonResponse } from "@/lib/http";
 import { cn } from "@/lib/utils";
@@ -62,7 +64,7 @@ function fieldInputValue(
 }
 
 function DocumentDate({ value }: { value: string }) {
-  return <span>{value ? new Date(value).toLocaleDateString() : "Unknown date"}</span>;
+  return <TimeAgo date={value} />;
 }
 
 interface OpportunityFieldSectionsProps {
@@ -90,6 +92,8 @@ function OpportunityFieldSections({
   onSaveField,
   onCancelEditing,
 }: OpportunityFieldSectionsProps) {
+  const showDebugIds = useDevMode();
+
   return (
     <>
       {OPPORTUNITY_FIELD_SECTIONS.map((section) => (
@@ -99,9 +103,18 @@ function OpportunityFieldSections({
           </div>
           <div className="divide-y">
             {section.fields.map((field) => {
+              if (field.key === "id" && !showDebugIds) {
+                return null;
+              }
+
               const isEditing = editingField === field.key;
               const isSaving = savingField === field.key;
               const preview = formatOpportunityFieldPreview(opportunity, field);
+              const rawValue = opportunity[field.key as keyof JobDescription];
+              const showTimeAgo =
+                (field.key === "appliedAt" || field.key === "createdAt") &&
+                typeof rawValue === "string" &&
+                rawValue.length > 0;
 
               return (
                 <div
@@ -191,7 +204,11 @@ function OpportunityFieldSections({
                             preview === "Not set" && "text-muted-foreground"
                           )}
                         >
-                          {preview}
+                          {showTimeAgo ? (
+                            <TimeAgo date={rawValue} />
+                          ) : (
+                            preview
+                          )}
                         </div>
                         {field.type !== "readonly" && (
                           <Button

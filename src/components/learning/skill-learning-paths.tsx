@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
+import { pluralize } from "@/lib/text/pluralize";
 import {
   GraduationCap,
   Clock,
@@ -165,7 +166,7 @@ function LearningPathCard({ path }: { path: SkillLearningPath }) {
             <div>
               <h3 className="font-semibold">{path.skill}</h3>
               <p className="text-xs text-muted-foreground">
-                {path.jobsRequiring} job{path.jobsRequiring !== 1 ? "s" : ""} require this skill
+                {pluralize(path.jobsRequiring, "job")} require this skill
               </p>
             </div>
           </div>
@@ -179,11 +180,11 @@ function LearningPathCard({ path }: { path: SkillLearningPath }) {
         <div className="flex items-center gap-4 mt-3 text-sm text-muted-foreground">
           <span className="flex items-center gap-1">
             <Clock className="h-4 w-4" />
-            ~{path.estimatedWeeks} weeks
+            ~{pluralize(path.estimatedWeeks, "week")}
           </span>
           <span className="flex items-center gap-1">
             <Book className="h-4 w-4" />
-            {path.resources.length} resources
+            {pluralize(path.resources.length, "resource")}
           </span>
         </div>
       </div>
@@ -389,7 +390,7 @@ export function SkillLearningPaths() {
           <h2 className="text-lg font-semibold">Skill Learning Paths</h2>
         </div>
         <span className="text-sm text-muted-foreground">
-          ~{result.totalEstimatedWeeks} weeks total
+          ~{pluralize(result.totalEstimatedWeeks, "week")} total
         </span>
       </div>
 
