@@ -1,11 +1,25 @@
 "use client";
 
-import { CheckCircle, Key, Loader2, RefreshCw, Shield, XCircle, Zap } from "lucide-react";
+import {
+  CheckCircle,
+  Key,
+  Loader2,
+  RefreshCw,
+  Shield,
+  XCircle,
+  Zap,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AutoSaveStatus } from "@/components/ui/auto-save-status";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import type { LLMConfig } from "@/types";
 import type { LLMTestResult } from "@/app/(app)/settings/use-llm-settings";
 import type { ProviderOption } from "./llm-provider-selector";
@@ -46,9 +60,13 @@ export function LLMProviderConfig(props: LLMProviderConfigProps) {
           <Key className="h-5 w-5" />
         </div>
         <div>
-          <h2 className="font-semibold">{selectedProvider?.label} Configuration</h2>
+          <h2 className="font-semibold">
+            {selectedProvider?.label} Configuration
+          </h2>
           <p className="text-sm text-muted-foreground">
-            {selectedProvider?.requiresKey ? "Enter your API key and select a model" : "Configure your local Ollama instance"}
+            {selectedProvider?.requiresKey
+              ? "Enter your API key and select a model"
+              : "Configure your local Ollama instance"}
           </p>
         </div>
       </div>
@@ -60,7 +78,9 @@ export function LLMProviderConfig(props: LLMProviderConfigProps) {
             <Input
               type="password"
               value={config.apiKey || ""}
-              onChange={(event) => onConfigChange({ apiKey: event.target.value })}
+              onChange={(event) =>
+                onConfigChange({ apiKey: event.target.value })
+              }
               placeholder={`Enter your ${selectedProvider.label} API key`}
             />
             <p className="text-xs text-muted-foreground flex items-center gap-1">
@@ -75,11 +95,14 @@ export function LLMProviderConfig(props: LLMProviderConfigProps) {
             <Label>Ollama URL</Label>
             <Input
               value={config.baseUrl || "http://localhost:11434"}
-              onChange={(event) => onConfigChange({ baseUrl: event.target.value })}
+              onChange={(event) =>
+                onConfigChange({ baseUrl: event.target.value })
+              }
               placeholder="http://localhost:11434"
             />
             <p className="text-xs text-muted-foreground">
-              Default is http://localhost:11434. Change if Ollama is running elsewhere.
+              Default is http://localhost:11434. Change if Ollama is running
+              elsewhere.
             </p>
           </div>
         )}
@@ -87,7 +110,10 @@ export function LLMProviderConfig(props: LLMProviderConfigProps) {
         <div className="space-y-2">
           <Label>Model</Label>
           <div className="flex gap-2">
-            <Select value={config.model} onValueChange={(value) => onConfigChange({ model: value })}>
+            <Select
+              value={config.model}
+              onValueChange={(value) => onConfigChange({ model: value })}
+            >
               <SelectTrigger className="flex-1">
                 <SelectValue placeholder="Select a model" />
               </SelectTrigger>
@@ -107,12 +133,16 @@ export function LLMProviderConfig(props: LLMProviderConfigProps) {
                 disabled={testing}
                 title="Refresh available models"
               >
-                <RefreshCw className={`h-4 w-4 ${testing ? "animate-spin" : ""}`} />
+                <RefreshCw
+                  className={`h-4 w-4 ${testing ? "animate-spin" : ""}`}
+                />
               </Button>
             )}
           </div>
           {config.provider === "ollama" && (
-            <p className="text-xs text-muted-foreground">Click refresh to load available models from Ollama</p>
+            <p className="text-xs text-muted-foreground">
+              Click refresh to load available models from Ollama
+            </p>
           )}
         </div>
 
@@ -124,13 +154,22 @@ export function LLMProviderConfig(props: LLMProviderConfigProps) {
                 : "bg-destructive/10 text-destructive border border-destructive/20"
             }`}
           >
-            {testResult.success ? <CheckCircle className="h-5 w-5 shrink-0" /> : <XCircle className="h-5 w-5 shrink-0" />}
+            {testResult.success ? (
+              <CheckCircle className="h-5 w-5 shrink-0" />
+            ) : (
+              <XCircle className="h-5 w-5 shrink-0" />
+            )}
             <span className="font-medium">{testResult.message}</span>
           </div>
         )}
 
         <div className="flex flex-wrap items-center gap-3 pt-2">
-          <Button variant="outline" onClick={onTestConnection} disabled={testing} className="flex-1">
+          <Button
+            variant="outline"
+            onClick={onTestConnection}
+            disabled={testing}
+            className="flex-1"
+          >
             {testing ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -144,7 +183,13 @@ export function LLMProviderConfig(props: LLMProviderConfigProps) {
             )}
           </Button>
           <AutoSaveStatus
-            status={saving || hasChanges ? "saving" : saveStatus}
+            status={
+              saveStatus === "error"
+                ? "error"
+                : saving || hasChanges
+                  ? "saving"
+                  : "saved"
+            }
             onRetry={saveStatus === "error" ? onSave : undefined}
             className="flex-1 justify-center"
           />

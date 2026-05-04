@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useErrorToast } from "@/hooks/use-error-toast";
 import { DEFAULT_MODELS, LLM_ENDPOINTS } from "@/lib/constants";
 import type { LLMConfig } from "@/types";
@@ -24,7 +24,10 @@ export function useLLMSettings() {
   const [testResult, setTestResult] = useState<LLMTestResult | null>(null);
   const [ollamaModels, setOllamaModels] = useState<string[]>([]);
   const [hasChanges, setHasChanges] = useState(false);
-  const [saveStatus, setSaveStatus] = useState<"saved" | "saving" | "error">("saved");
+  const [saveStatus, setSaveStatus] = useState<"saved" | "saving" | "error">(
+    "saved",
+  );
+  const changeVersionRef = useRef(0);
   const showErrorToast = useErrorToast();
 
   useEffect(() => {
@@ -50,6 +53,7 @@ export function useLLMSettings() {
   }, [showErrorToast]);
 
   const updateConfig = (updates: Partial<LLMConfig>) => {
+    changeVersionRef.current += 1;
     setConfig((prev) => ({ ...prev, ...updates }));
     setHasChanges(true);
     setSaveStatus("saving");
@@ -57,6 +61,7 @@ export function useLLMSettings() {
   };
 
   const saveSettings = useCallback(async () => {
+    const saveVersion = changeVersionRef.current;
     setSaving(true);
     setSaveStatus("saving");
 
@@ -72,15 +77,23 @@ export function useLLMSettings() {
         throw new Error(body?.error || "Failed to save settings");
       }
 
-      setTestResult({ success: true, message: "Settings saved successfully!" });
-      setHasChanges(false);
-      setSaveStatus("saved");
+      if (saveVersion === changeVersionRef.current) {
+        setTestResult({
+          success: true,
+          message: "Settings saved successfully!",
+        });
+        setHasChanges(false);
+        setSaveStatus("saved");
+      }
     } catch (error) {
-      setSaveStatus("error");
-      setTestResult({
-        success: false,
-        message: error instanceof Error ? error.message : "Failed to save settings",
-      });
+      if (saveVersion === changeVersionRef.current) {
+        setSaveStatus("error");
+        setTestResult({
+          success: false,
+          message:
+            error instanceof Error ? error.message : "Failed to save settings",
+        });
+      }
     } finally {
       setSaving(false);
     }
@@ -114,7 +127,10 @@ export function useLLMSettings() {
           setOllamaModels(data.models);
         }
       } else {
-        setTestResult({ success: false, message: data.error || "Connection failed" });
+        setTestResult({
+          success: false,
+          message: data.error || "Connection failed",
+        });
       }
     } catch {
       setTestResult({ success: false, message: "Connection test failed" });
