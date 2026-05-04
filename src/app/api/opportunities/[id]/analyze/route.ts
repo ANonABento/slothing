@@ -1,6 +1,6 @@
 /**
  * @route POST /api/opportunities/[id]/analyze
- * @description Analyze candidate fit against a job using LLM-powered matching
+ * @description Analyze candidate fit against an opportunity using LLM-powered matching
  * @auth Required
  * @response JobAnalysisResponse from @/types/api
  */
@@ -13,7 +13,7 @@ import { requireAuth, isAuthError } from "@/lib/auth";
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
@@ -21,14 +21,17 @@ export async function POST(
   try {
     const job = getJob(params.id, authResult.userId);
     if (!job) {
-      return NextResponse.json({ error: "Job not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Opportunity not found" },
+        { status: 404 },
+      );
     }
 
     const profile = getProfile(authResult.userId);
     if (!profile) {
       return NextResponse.json(
         { error: "No profile data. Upload a resume first." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -103,15 +106,16 @@ Return ONLY the JSON object, no explanation.`,
       const jobKeywords = job.keywords.map((k) => k.toLowerCase());
 
       const matched = jobKeywords.filter((kw) =>
-        profileSkills.some((ps) => ps.includes(kw) || kw.includes(ps))
+        profileSkills.some((ps) => ps.includes(kw) || kw.includes(ps)),
       );
       const missing = jobKeywords.filter(
-        (kw) => !profileSkills.some((ps) => ps.includes(kw) || kw.includes(ps))
+        (kw) => !profileSkills.some((ps) => ps.includes(kw) || kw.includes(ps)),
       );
 
-      const score = jobKeywords.length > 0
-        ? Math.round((matched.length / jobKeywords.length) * 100)
-        : 50;
+      const score =
+        jobKeywords.length > 0
+          ? Math.round((matched.length / jobKeywords.length) * 100)
+          : 50;
 
       analysis = {
         jobId: job.id,
@@ -124,9 +128,12 @@ Return ONLY the JSON object, no explanation.`,
         })),
         experienceMatches: [],
         gaps: missing,
-        suggestions: missing.length > 0
-          ? [`Consider highlighting experience with: ${missing.slice(0, 3).join(", ")}`]
-          : [],
+        suggestions:
+          missing.length > 0
+            ? [
+                `Consider highlighting experience with: ${missing.slice(0, 3).join(", ")}`,
+              ]
+            : [],
       };
     }
 
@@ -134,8 +141,8 @@ Return ONLY the JSON object, no explanation.`,
   } catch (error) {
     console.error("Analyze error:", error);
     return NextResponse.json(
-      { error: "Failed to analyze job match", details: String(error) },
-      { status: 500 }
+      { error: "Failed to analyze opportunity match", details: String(error) },
+      { status: 500 },
     );
   }
 }

@@ -1,6 +1,6 @@
 /**
  * @route POST /api/opportunities/[id]/cover-letter/save
- * @description Save a cover letter version for a job
+ * @description Save a cover letter version for an opportunity
  * @auth Required
  * @request { content: string, tone?: string, version?: number }
  * @response CoverLetterSaveResponse from @/types/api
@@ -12,7 +12,7 @@ import { requireAuth, isAuthError } from "@/lib/auth";
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
@@ -20,7 +20,10 @@ export async function POST(
   try {
     const job = getJob(params.id, authResult.userId);
     if (!job) {
-      return NextResponse.json({ error: "Job not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Opportunity not found" },
+        { status: 404 },
+      );
     }
 
     const body = await request.json();
@@ -29,7 +32,7 @@ export async function POST(
     if (!content) {
       return NextResponse.json(
         { error: "Cover letter content is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -37,7 +40,7 @@ export async function POST(
       params.id,
       content,
       highlights,
-      authResult.userId
+      authResult.userId,
     );
 
     return NextResponse.json({
@@ -54,7 +57,7 @@ export async function POST(
     console.error("Save cover letter error:", error);
     return NextResponse.json(
       { error: "Failed to save cover letter" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

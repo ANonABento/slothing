@@ -2,7 +2,7 @@
  * @route GET /api/opportunities/[id]/generate
  * @description List available resume templates for generation
  * @route POST /api/opportunities/[id]/generate
- * @description Generate a tailored resume for a job using LLM
+ * @description Generate a tailored resume for an opportunity using LLM
  * @auth Required
  * @request { templateId?: string } (POST)
  * @response ResumeTemplatesResponse | ResumeGenerateResponse from @/types/api
@@ -31,7 +31,7 @@ export async function GET() {
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
@@ -50,21 +50,28 @@ export async function POST(
 
     const job = getJob(params.id, authResult.userId);
     if (!job) {
-      return NextResponse.json({ error: "Job not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Opportunity not found" },
+        { status: 404 },
+      );
     }
 
     const profile = getProfile(authResult.userId);
     if (!profile) {
       return NextResponse.json(
         { error: "No profile data. Upload a resume first." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     const llmConfig = getLLMConfig(authResult.userId);
 
     // Generate tailored resume content
-    const tailoredResume = await generateTailoredResume(profile, job, llmConfig);
+    const tailoredResume = await generateTailoredResume(
+      profile,
+      job,
+      llmConfig,
+    );
 
     // Generate HTML with selected template
     const template = getTemplateWithCustom(templateId, authResult.userId);
@@ -88,7 +95,7 @@ export async function POST(
       tailoredResume,
       pdfUrl,
       undefined,
-      authResult.userId
+      authResult.userId,
     );
 
     return NextResponse.json({
@@ -101,7 +108,7 @@ export async function POST(
     console.error("Generate error:", error);
     return NextResponse.json(
       { error: "Failed to generate resume", details: String(error) },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

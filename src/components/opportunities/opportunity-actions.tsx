@@ -46,7 +46,7 @@ interface TemplatesResponse {
   templates?: ResumeTemplate[];
 }
 
-interface AnalyzeJobResponse {
+interface AnalyzeOpportunityResponse {
   analysis?: JobMatch;
 }
 
@@ -55,14 +55,34 @@ interface GenerateResumeResponse {
 }
 
 const FALLBACK_TEMPLATES: ResumeTemplate[] = [
-  { id: "classic", name: "Classic", description: "Traditional professional format" },
+  {
+    id: "classic",
+    name: "Classic",
+    description: "Traditional professional format",
+  },
   { id: "modern", name: "Modern", description: "Contemporary design" },
   { id: "minimal", name: "Minimal", description: "Clean and simple" },
-  { id: "executive", name: "Executive", description: "Bold headers, strong hierarchy" },
+  {
+    id: "executive",
+    name: "Executive",
+    description: "Bold headers, strong hierarchy",
+  },
   { id: "tech", name: "Tech", description: "Tech industry focused" },
-  { id: "creative", name: "Creative", description: "Bold colors for creative roles" },
-  { id: "compact", name: "Compact", description: "Dense layout for experienced pros" },
-  { id: "professional", name: "Professional", description: "Conservative for business" },
+  {
+    id: "creative",
+    name: "Creative",
+    description: "Bold colors for creative roles",
+  },
+  {
+    id: "compact",
+    name: "Compact",
+    description: "Dense layout for experienced pros",
+  },
+  {
+    id: "professional",
+    name: "Professional",
+    description: "Conservative for business",
+  },
 ];
 
 interface OpportunityActionsProps {
@@ -76,7 +96,8 @@ export function OpportunityActions({
   onApply,
   onGeneratedDocument,
 }: OpportunityActionsProps) {
-  const [templates, setTemplates] = useState<ResumeTemplate[]>(FALLBACK_TEMPLATES);
+  const [templates, setTemplates] =
+    useState<ResumeTemplate[]>(FALLBACK_TEMPLATES);
   const [selectedTemplate, setSelectedTemplate] = useState("classic");
   const [analysis, setAnalysis] = useState<JobMatch | null>(null);
   const [atsResult, setAtsResult] = useState<ATSAnalysisResult | null>(null);
@@ -116,7 +137,7 @@ export function OpportunityActions({
         `/api/opportunities/${opportunity.id}/analyze`,
         { method: "POST" },
       );
-      const data = await readJsonResponse<AnalyzeJobResponse>(
+      const data = await readJsonResponse<AnalyzeOpportunityResponse>(
         response,
         "Failed to analyze opportunity",
       );
@@ -226,7 +247,10 @@ export function OpportunityActions({
             {atsResult ? "Re-check ATS" : "ATS Check"}
           </Button>
           <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
-            <Select value={selectedTemplate} onValueChange={setSelectedTemplate}>
+            <Select
+              value={selectedTemplate}
+              onValueChange={setSelectedTemplate}
+            >
               <SelectTrigger aria-label="Resume template">
                 <SelectValue />
               </SelectTrigger>

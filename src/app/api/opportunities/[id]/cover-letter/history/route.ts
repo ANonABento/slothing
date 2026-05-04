@@ -1,6 +1,6 @@
 /**
  * @route GET /api/opportunities/[id]/cover-letter/history
- * @description List all cover letter versions for a job
+ * @description List all cover letter versions for an opportunity
  * @auth Required
  * @response CoverLetterHistoryResponse from @/types/api
  */
@@ -11,7 +11,7 @@ import { requireAuth, isAuthError } from "@/lib/auth";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
@@ -19,7 +19,10 @@ export async function GET(
   try {
     const job = getJob(params.id, authResult.userId);
     if (!job) {
-      return NextResponse.json({ error: "Job not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Opportunity not found" },
+        { status: 404 },
+      );
     }
 
     const coverLetters = getCoverLettersByJob(params.id, authResult.userId);
@@ -37,7 +40,7 @@ export async function GET(
     console.error("Cover letter history error:", error);
     return NextResponse.json(
       { error: "Failed to fetch cover letter history" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

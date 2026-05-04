@@ -12,7 +12,7 @@ import { requireAuth, isAuthError } from "@/lib/auth";
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
@@ -20,7 +20,7 @@ export async function POST(
   try {
     const job = getJob(params.id, authResult.userId);
     if (!job) {
-      return new Response(JSON.stringify({ error: "Job not found" }), {
+      return new Response(JSON.stringify({ error: "Opportunity not found" }), {
         status: 404,
         headers: { "Content-Type": "application/json" },
       });
@@ -30,7 +30,7 @@ export async function POST(
     if (!profile) {
       return new Response(
         JSON.stringify({ error: "No profile data. Upload a resume first." }),
-        { status: 400, headers: { "Content-Type": "application/json" } }
+        { status: 400, headers: { "Content-Type": "application/json" } },
       );
     }
 
@@ -38,9 +38,12 @@ export async function POST(
     if (!llmConfig) {
       // Return basic cover letter for non-LLM case
       const basicLetter = generateBasicCoverLetter(profile, job);
-      return new Response(JSON.stringify({ content: basicLetter, done: true }), {
-        headers: { "Content-Type": "application/json" },
-      });
+      return new Response(
+        JSON.stringify({ content: basicLetter, done: true }),
+        {
+          headers: { "Content-Type": "application/json" },
+        },
+      );
     }
 
     const client = new LLMClient(llmConfig);
@@ -97,9 +100,10 @@ Guidelines:
           controller.enqueue(encoder.encode(`data: {"done": true}\n\n`));
           controller.close();
         } catch (error) {
-          const errorMsg = error instanceof Error ? error.message : "Stream error";
+          const errorMsg =
+            error instanceof Error ? error.message : "Stream error";
           controller.enqueue(
-            encoder.encode(`data: {"error": "${errorMsg}", "done": true}\n\n`)
+            encoder.encode(`data: {"error": "${errorMsg}", "done": true}\n\n`),
           );
           controller.close();
         }
@@ -117,7 +121,7 @@ Guidelines:
     console.error("Cover letter stream error:", error);
     return new Response(
       JSON.stringify({ error: "Failed to generate cover letter" }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
+      { status: 500, headers: { "Content-Type": "application/json" } },
     );
   }
 }
@@ -129,7 +133,7 @@ function generateBasicCoverLetter(
     experiences: { title: string; company: string }[];
     skills: { name: string }[];
   },
-  job: { title: string; company: string }
+  job: { title: string; company: string },
 ): string {
   const name = profile.contact.name || "Applicant";
   const recentRole = profile.experiences[0];

@@ -55,7 +55,7 @@ export default function CompanyResearchPage() {
             Back to Opportunities
           </Link>
           <div className="rounded-2xl border bg-card p-12 text-center">
-            <p className="text-red-500">{error || "Job not found"}</p>
+            <p className="text-red-500">{error || "Opportunity not found"}</p>
             <Link
               href="/opportunities"
               className="inline-flex items-center gap-2 mt-4 text-primary hover:underline"

@@ -1,6 +1,6 @@
 /**
  * @route POST /api/opportunities/[id]/cover-letter
- * @description Generate a cover letter for a job using LLM
+ * @description Generate a cover letter for an opportunity using LLM
  * @auth Required
  * @response CoverLetterGenerateResponse from @/types/api
  */
@@ -17,7 +17,7 @@ interface CoverLetterResponse {
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
@@ -25,14 +25,17 @@ export async function POST(
   try {
     const job = getJob(params.id, authResult.userId);
     if (!job) {
-      return NextResponse.json({ error: "Job not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Opportunity not found" },
+        { status: 404 },
+      );
     }
 
     const profile = getProfile(authResult.userId);
     if (!profile) {
       return NextResponse.json(
         { error: "No profile data. Upload a resume first." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -93,7 +96,8 @@ Guidelines:
 
       try {
         const parsed = parseJSONFromLLM<CoverLetterResponse>(response);
-        coverLetter = parsed.coverLetter || generateBasicCoverLetter(profile, job);
+        coverLetter =
+          parsed.coverLetter || generateBasicCoverLetter(profile, job);
         highlights = parsed.highlights || [];
       } catch {
         coverLetter = response; // Use raw response if JSON parsing fails
@@ -103,7 +107,10 @@ Guidelines:
       coverLetter = generateBasicCoverLetter(profile, job);
       highlights = [
         `Experience as ${profile.experiences[0]?.title || "professional"}`,
-        `Skills in ${profile.skills.slice(0, 3).map((s) => s.name).join(", ")}`,
+        `Skills in ${profile.skills
+          .slice(0, 3)
+          .map((s) => s.name)
+          .join(", ")}`,
         "Motivated to contribute to the team",
       ];
     }
@@ -118,14 +125,19 @@ Guidelines:
     console.error("Cover letter generation error:", error);
     return NextResponse.json(
       { error: "Failed to generate cover letter" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
 function generateBasicCoverLetter(
-  profile: { contact: { name?: string; email?: string }; summary?: string; experiences: { title: string; company: string }[]; skills: { name: string }[] },
-  job: { title: string; company: string; description: string }
+  profile: {
+    contact: { name?: string; email?: string };
+    summary?: string;
+    experiences: { title: string; company: string }[];
+    skills: { name: string }[];
+  },
+  job: { title: string; company: string; description: string },
 ): string {
   const name = profile.contact.name || "Applicant";
   const recentRole = profile.experiences[0];

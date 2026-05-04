@@ -1,6 +1,6 @@
 /**
  * @route GET /api/opportunities/[id]/resumes
- * @description List all generated resumes for a job
+ * @description List all generated resumes for an opportunity
  * @route DELETE /api/opportunities/[id]/resumes
  * @description Remove a generated resume by ID
  * @auth Required
@@ -12,10 +12,10 @@ import { unlink } from "fs/promises";
 import path from "path";
 import { requireAuth, isAuthError } from "@/lib/auth";
 
-// GET - List all generated resumes for a job
+// GET - List all generated resumes for an opportunity
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
@@ -28,7 +28,7 @@ export async function GET(
     console.error("Get resumes error:", error);
     return NextResponse.json(
       { error: "Failed to get generated resumes" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -44,7 +44,7 @@ export async function DELETE(request: NextRequest) {
     if (!resumeId) {
       return NextResponse.json(
         { error: "resumeId is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -66,7 +66,7 @@ export async function DELETE(request: NextRequest) {
     console.error("Delete resume error:", error);
     return NextResponse.json(
       { error: "Failed to delete resume" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
