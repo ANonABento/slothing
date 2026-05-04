@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import {
   Calendar as CalendarIcon,
@@ -46,8 +47,14 @@ import {
   PageHeader,
   StandardEmptyState,
 } from "@/components/ui/page-layout";
+import { SkeletonButton } from "@/components/ui/skeleton";
 import { useErrorToast } from "@/hooks/use-error-toast";
 import type { JobDescription } from "@/types";
+
+const CalendarSyncButton = dynamic(
+  () => import("@/components/google").then((m) => m.CalendarSyncButton),
+  { loading: () => <SkeletonButton className="w-32" />, ssr: false },
+);
 
 interface Reminder {
   id: string;
@@ -101,6 +108,9 @@ export default function CalendarPage() {
   const [copiedUrl, setCopiedUrl] = useState(false);
   const [feedUrl, setFeedUrl] = useState("");
   const [webcalUrl, setWebcalUrl] = useState("");
+  const [googleCalendarConnected, setGoogleCalendarConnected] = useState<
+    boolean | null
+  >(null);
   const showErrorToast = useErrorToast();
 
   const copyFeedUrl = async () => {
@@ -133,12 +143,16 @@ export default function CalendarPage() {
       fetch("/api/jobs").then((r) => r.json()),
       fetch("/api/reminders").then((r) => r.json()),
       fetch("/api/calendar/feed-url?type=all").then((r) => r.json()),
+      fetch("/api/google/auth")
+        .then((r) => r.json())
+        .catch(() => ({ connected: false })),
     ])
-      .then(([jobsData, remindersData, feedData]) => {
+      .then(([jobsData, remindersData, feedData, googleAuthData]) => {
         setJobs(jobsData.jobs || []);
         setReminders(remindersData.reminders || []);
         setFeedUrl(feedData.feedUrl || "");
         setWebcalUrl(feedData.webcalUrl || "");
+        setGoogleCalendarConnected(Boolean(googleAuthData.connected));
       })
       .catch((error) => {
         showErrorToast(error, {
@@ -359,6 +373,7 @@ export default function CalendarPage() {
                 <Plus className="h-4 w-4 mr-2" />
                 Create Event
               </Button>
+              <CalendarSyncButton compact hideWhenDisconnected />
               <Button
                 variant="outline"
                 size="sm"
@@ -383,20 +398,22 @@ export default function CalendarPage() {
 
       {/* Calendar Content */}
       <PageContent>
-        <Link
-          href="/settings"
-          className="mb-6 flex items-center gap-3 rounded-xl border border-info/30 bg-info/10 p-4 text-sm transition-colors hover:bg-info/15"
-        >
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-card text-info">
-            <Link2 className="h-4 w-4" />
-          </span>
-          <span>
-            <span className="block font-medium">Calendar sync available</span>
-            <span className="text-muted-foreground">
-              Connect Google in Settings to sync calendar events.
+        {googleCalendarConnected === false && (
+          <Link
+            href="/settings"
+            className="mb-6 flex items-center gap-3 rounded-xl border border-info/30 bg-info/10 p-4 text-sm transition-colors hover:bg-info/15"
+          >
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-card text-info">
+              <Link2 className="h-4 w-4" />
             </span>
-          </span>
-        </Link>
+            <span>
+              <span className="block font-medium">Calendar sync available</span>
+              <span className="text-muted-foreground">
+                Connect Google in Settings to sync calendar events.
+              </span>
+            </span>
+          </Link>
+        )}
 
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Calendar Grid */}
