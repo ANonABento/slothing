@@ -55,6 +55,7 @@ function GoogleConnectButtonWithClerk({
   useEffect(() => {
     if (!isLoaded) return;
     if (!isSignedIn) {
+      setError(null);
       setLoading(false);
       setStatus({ connected: false });
       onConnectionChange?.(false);

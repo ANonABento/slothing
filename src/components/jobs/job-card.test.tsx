@@ -1,7 +1,10 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import type { ComponentProps } from "react";
 import { describe, expect, it, vi } from "vitest";
 import type { JobDescription } from "@/types";
 import { JobCard } from "./job-card";
+
+type JobCardProps = ComponentProps<typeof JobCard>;
 
 const job: JobDescription = {
   id: "job-1",
@@ -15,7 +18,7 @@ const job: JobDescription = {
   createdAt: "2026-05-01T00:00:00.000Z",
 };
 
-function renderJobCard(overrides = {}) {
+function renderJobCard(overrides: Partial<JobCardProps> = {}) {
   return render(
     <JobCard
       job={job}

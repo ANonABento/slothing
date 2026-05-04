@@ -7,6 +7,7 @@ import {
   useRef,
   useState,
   type KeyboardEvent as ReactKeyboardEvent,
+  type ReactNode,
 } from "react";
 import {
   AlertTriangle,
@@ -100,6 +101,21 @@ interface JobCardProps {
   onAtsDialogOpen: () => void;
   onCoverLetter: () => void;
 }
+
+type MoreMenuAction =
+  | {
+      type: "button";
+      label: string;
+      icon: ReactNode;
+      disabled?: boolean;
+      onSelect: () => void;
+    }
+  | {
+      type: "link";
+      label: string;
+      icon: ReactNode;
+      href: string;
+    };
 
 export function JobCard(props: JobCardProps) {
   const {
@@ -219,6 +235,43 @@ export function JobCard(props: JobCardProps) {
       items[items.length - 1]?.focus();
     }
   }
+
+  const moreMenuActions: MoreMenuAction[] = [
+    {
+      type: "button",
+      label: analysis ? "Re-analyze Match" : "Analyze Match",
+      icon: analyzing ? (
+        <Loader2 className="h-4 w-4 animate-spin" />
+      ) : (
+        <Sparkles className="h-4 w-4" />
+      ),
+      disabled: analyzing,
+      onSelect: onAnalyze,
+    },
+    {
+      type: "button",
+      label: atsResult ? "Re-check ATS" : "ATS Check",
+      icon: atsAnalyzing ? (
+        <Loader2 className="h-4 w-4 animate-spin" />
+      ) : (
+        <ShieldCheck className="h-4 w-4" />
+      ),
+      disabled: atsAnalyzing,
+      onSelect: onAtsCheck,
+    },
+    {
+      type: "button",
+      label: "Cover Letter",
+      icon: <FileEdit className="h-4 w-4" />,
+      onSelect: onCoverLetter,
+    },
+    {
+      type: "link",
+      label: "Company Research",
+      icon: <Info className="h-4 w-4" />,
+      href: `/jobs/research/${job.id}`,
+    },
+  ];
 
   return (
     <div
@@ -418,73 +471,48 @@ export function JobCard(props: JobCardProps) {
                 onKeyDown={handleMoreMenuKeyDown}
                 className="absolute left-0 top-full z-50 mt-2 w-64 rounded-md border bg-popover p-1 text-popover-foreground shadow-[var(--shadow-elevated)]"
               >
-                <button
-                  ref={(node) => {
-                    moreMenuItemRefs.current[0] = node;
-                  }}
-                  type="button"
-                  role="menuitem"
-                  onClick={() => {
-                    closeMoreMenu();
-                    onAnalyze();
-                  }}
-                  disabled={analyzing}
-                  className="flex w-full items-center gap-2 rounded px-3 py-2 text-left text-sm hover:bg-accent/10 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {analyzing ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Sparkles className="h-4 w-4" />
-                  )}
-                  {analysis ? "Re-analyze Match" : "Analyze Match"}
-                </button>
-                <button
-                  ref={(node) => {
-                    moreMenuItemRefs.current[1] = node;
-                  }}
-                  type="button"
-                  role="menuitem"
-                  onClick={() => {
-                    closeMoreMenu();
-                    onAtsCheck();
-                  }}
-                  disabled={atsAnalyzing}
-                  className="flex w-full items-center gap-2 rounded px-3 py-2 text-left text-sm hover:bg-accent/10 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {atsAnalyzing ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <ShieldCheck className="h-4 w-4" />
-                  )}
-                  {atsResult ? "Re-check ATS" : "ATS Check"}
-                </button>
-                <button
-                  ref={(node) => {
-                    moreMenuItemRefs.current[2] = node;
-                  }}
-                  type="button"
-                  role="menuitem"
-                  onClick={() => {
-                    closeMoreMenu();
-                    onCoverLetter();
-                  }}
-                  className="flex w-full items-center gap-2 rounded px-3 py-2 text-left text-sm hover:bg-accent/10"
-                >
-                  <FileEdit className="h-4 w-4" />
-                  Cover Letter
-                </button>
-                <Link
-                  ref={(node) => {
-                    moreMenuItemRefs.current[3] = node;
-                  }}
-                  href={`/jobs/research/${job.id}`}
-                  role="menuitem"
-                  onClick={() => closeMoreMenu()}
-                  className="flex w-full items-center gap-2 rounded px-3 py-2 text-left text-sm hover:bg-accent/10"
-                >
-                  <Info className="h-4 w-4" />
-                  Company Research
-                </Link>
+                {moreMenuActions.map((action, index) => {
+                  const className =
+                    "flex w-full items-center gap-2 rounded px-3 py-2 text-left text-sm hover:bg-accent/10 disabled:cursor-not-allowed disabled:opacity-50";
+
+                  if (action.type === "link") {
+                    return (
+                      <Link
+                        key={action.label}
+                        ref={(node) => {
+                          moreMenuItemRefs.current[index] = node;
+                        }}
+                        href={action.href}
+                        role="menuitem"
+                        onClick={() => closeMoreMenu()}
+                        className={className}
+                      >
+                        {action.icon}
+                        {action.label}
+                      </Link>
+                    );
+                  }
+
+                  return (
+                    <button
+                      key={action.label}
+                      ref={(node) => {
+                        moreMenuItemRefs.current[index] = node;
+                      }}
+                      type="button"
+                      role="menuitem"
+                      onClick={() => {
+                        closeMoreMenu();
+                        action.onSelect();
+                      }}
+                      disabled={action.disabled}
+                      className={className}
+                    >
+                      {action.icon}
+                      {action.label}
+                    </button>
+                  );
+                })}
                 <div className="my-1 border-t" />
                 <div className="px-3 py-2">
                   <label className="mb-1 block text-xs font-medium text-muted-foreground">
