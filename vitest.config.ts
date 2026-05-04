@@ -11,6 +11,7 @@ export default defineConfig({
     include: [
       "src/**/*.{test,spec}.{ts,tsx}",
       "evals/**/*.{test,spec}.ts",
+      "tests/parsing/**/*.{test,spec}.ts",
       "tests/fixtures/**/*.{test,spec}.ts",
       "tests/stress/**/*.{test,spec}.ts",
     ],
