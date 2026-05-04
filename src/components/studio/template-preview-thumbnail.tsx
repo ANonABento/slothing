@@ -111,7 +111,7 @@ export function TemplatePreviewThumbnail({
       aria-hidden="true"
       data-testid={`template-thumbnail-${template.id}`}
       className={cn(
-        "h-28 w-full overflow-hidden rounded-[var(--radius)] border-[length:var(--border-width)] bg-white text-slate-950 shadow-[var(--shadow-card)]",
+        "h-28 w-full overflow-hidden rounded-[var(--radius)] border-[length:var(--border-width)] border-paper-border bg-paper text-paper-foreground shadow-[var(--shadow-card)]",
         className,
       )}
       style={style}
@@ -137,8 +137,8 @@ function ResumeThumbnail({ traits }: { traits: TemplateThumbnailTraits }) {
         <p className="text-[7px] font-semibold leading-none">
           {SAMPLE_RESUME.name}
         </p>
-        <p className="text-slate-500">{SAMPLE_RESUME.headline}</p>
-        <p className="truncate text-[4px] text-slate-400">
+        <p className="text-paper-foreground/60">{SAMPLE_RESUME.headline}</p>
+        <p className="truncate text-[4px] text-paper-foreground/50">
           {SAMPLE_RESUME.contact}
         </p>
       </header>
@@ -153,7 +153,7 @@ function ResumeThumbnail({ traits }: { traits: TemplateThumbnailTraits }) {
 
         <div className="space-y-1">
           <PreviewSection traits={traits} title="Summary">
-            <p className="line-clamp-2 text-slate-500">
+            <p className="line-clamp-2 text-paper-foreground/60">
               {SAMPLE_RESUME.summary}
             </p>
           </PreviewSection>
@@ -182,13 +182,13 @@ function LetterThumbnail({ traits }: { traits: TemplateThumbnailTraits }) {
         <p className="text-[7px] font-semibold leading-none text-[var(--template-accent)]">
           {SAMPLE_LETTER.name}
         </p>
-        <p className="truncate text-[4px] text-slate-400">
+        <p className="truncate text-[4px] text-paper-foreground/50">
           {SAMPLE_LETTER.target}
         </p>
       </header>
       <div className="space-y-1.5">
         {SAMPLE_LETTER.paragraphs.map((paragraph) => (
-          <p key={paragraph} className="line-clamp-2 text-slate-500">
+          <p key={paragraph} className="line-clamp-2 text-paper-foreground/60">
             {paragraph}
           </p>
         ))}
@@ -205,7 +205,7 @@ function ThumbnailSidebar({ traits }: { traits: TemplateThumbnailTraits }) {
     >
       <PreviewSection traits={traits} title="Skills" compact>
         {SAMPLE_RESUME.skills.map((skill) => (
-          <p key={skill} className="truncate text-slate-500">
+          <p key={skill} className="truncate text-paper-foreground/60">
             {skill}
           </p>
         ))}
@@ -249,11 +249,11 @@ function PreviewBullet({
   children: ReactNode;
 }) {
   if (!traits.bulletLabel) {
-    return <p className="line-clamp-1 text-slate-500">{children}</p>;
+    return <p className="line-clamp-1 text-paper-foreground/60">{children}</p>;
   }
 
   return (
-    <p className="flex gap-0.5 text-slate-500">
+    <p className="flex gap-0.5 text-paper-foreground/60">
       <span className="w-1 text-[5px] leading-tight text-[var(--template-accent)]">
         {traits.bulletLabel}
       </span>
