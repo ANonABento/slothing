@@ -48,6 +48,7 @@ import { readJsonResponse } from "@/lib/http";
 import type { TailoredResume } from "@/lib/resume/generator";
 import { useErrorToast } from "@/hooks/use-error-toast";
 import type { BankCategory, BankEntry } from "@/types";
+import type { StudioSaveStatus } from "./save-status";
 import {
   COVER_LETTER_DOCUMENT_ID,
   RESUME_DOCUMENT_ID,
@@ -97,6 +98,7 @@ interface StudioPageState {
   previewVersionId: string | null;
   sections: SectionState[];
   selectedIds: Set<string>;
+  saveStatus: StudioSaveStatus;
   setLinkedOpportunityId: (opportunityId: string) => void;
   setDocumentMode: (mode: DocumentMode) => void;
   setEntryPickerOpen: (open: boolean) => void;
@@ -112,6 +114,8 @@ interface LinkStudioVersionOptions {
   opportunityId: string;
   versionId: string;
 }
+
+const SAVE_STATUS_MIN_VISIBLE_MS = 150;
 
 async function readLinkError(response: Response): Promise<string> {
   try {
@@ -209,6 +213,11 @@ export function useStudioPageState(): StudioPageState {
   const [dirtyDocumentIds, setDirtyDocumentIds] = useState<Set<string>>(
     new Set(),
   );
+  const [lastSavedAtByDocumentId, setLastSavedAtByDocumentId] = useState<
+    Record<string, number>
+  >({});
+  const [isSavingVersion, setIsSavingVersion] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [documents, setDocuments] = useState<StudioDocument[]>([
     createStudioDocument("resume", { id: RESUME_DOCUMENT_ID }),
     createStudioDocument("cover_letter", { id: COVER_LETTER_DOCUMENT_ID }),
@@ -360,6 +369,23 @@ export function useStudioPageState(): StudioPageState {
       ),
     [activeDocument.id, currentDraftState, dirtyDocumentIds, versions],
   );
+
+  const saveStatus = useMemo<StudioSaveStatus>(() => {
+    if (isSavingVersion) return { state: "saving" };
+    if (saveError) return { state: "error", error: saveError };
+    if (!draftIsSaved) return { state: "unsaved" };
+
+    return {
+      state: "saved",
+      lastSavedAt: lastSavedAtByDocumentId[activeDocument.id] ?? Date.now(),
+    };
+  }, [
+    activeDocument.id,
+    draftIsSaved,
+    isSavingVersion,
+    lastSavedAtByDocumentId,
+    saveError,
+  ]);
 
   useEffect(() => {
     if (previewVersionId) setGenerating(false);
@@ -530,6 +556,7 @@ export function useStudioPageState(): StudioPageState {
   );
 
   const markActiveDocumentDirty = useCallback(() => {
+    setSaveError(null);
     setDirtyDocumentIds((current) => {
       if (current.has(activeDocument.id)) return current;
       const next = new Set(current);
@@ -539,12 +566,17 @@ export function useStudioPageState(): StudioPageState {
   }, [activeDocument.id]);
 
   const markActiveDocumentSaved = useCallback(() => {
+    const documentId = activeDocument.id;
     setDirtyDocumentIds((current) => {
-      if (!current.has(activeDocument.id)) return current;
+      if (!current.has(documentId)) return current;
       const next = new Set(current);
-      next.delete(activeDocument.id);
+      next.delete(documentId);
       return next;
     });
+    setLastSavedAtByDocumentId((current) => ({
+      ...current,
+      [documentId]: Date.now(),
+    }));
   }, [activeDocument.id]);
 
   const handleContentChange = useCallback(
@@ -670,30 +702,53 @@ export function useStudioPageState(): StudioPageState {
         kind: "manual",
         name,
       });
-      setVersions((prev) => {
-        const next = addBuilderVersion(prev, version);
-        if (typeof window !== "undefined") {
-          writeBuilderVersions(window.localStorage, activeDocument.id, next);
-        }
-        return next;
-      });
-      setManualVersionName("");
-      setPreviewVersionId(version.id);
-      markActiveDocumentSaved();
+      const nextVersions = addBuilderVersion(versions, version);
 
-      if (linkedOpportunityId) {
-        void linkStudioVersionToOpportunity({
-          documentMode,
-          opportunityId: linkedOpportunityId,
-          versionId: version.id,
-        }).catch((err) => {
+      setIsSavingVersion(true);
+      setSaveError(null);
+
+      window.setTimeout(() => {
+        try {
+          const saved = writeBuilderVersions(
+            window.localStorage,
+            activeDocument.id,
+            nextVersions,
+          );
+          if (!saved) throw new Error("Browser storage rejected the save");
+
+          setVersions(nextVersions);
+          markActiveDocumentSaved();
+        } catch (err) {
+          const message =
+            err instanceof Error ? err.message : "Could not save version";
+          setSaveError(message);
           showErrorToast(err, {
-            title: "Could not link opportunity",
+            title: "Could not save version",
             fallbackDescription:
-              "The document was saved, but it was not attached to the selected opportunity.",
+              "Your draft is still open, but the saved version could not be written.",
           });
-        });
-      }
+          return;
+        } finally {
+          setIsSavingVersion(false);
+        }
+
+        setManualVersionName("");
+        setPreviewVersionId(version.id);
+
+        if (linkedOpportunityId) {
+          void linkStudioVersionToOpportunity({
+            documentMode,
+            opportunityId: linkedOpportunityId,
+            versionId: version.id,
+          }).catch((err) => {
+            showErrorToast(err, {
+              title: "Could not link opportunity",
+              fallbackDescription:
+                "The document was saved, but it was not attached to the selected opportunity.",
+            });
+          });
+        }
+      }, SAVE_STATUS_MIN_VISIBLE_MS);
     },
     [
       activeDocument.id,
@@ -702,6 +757,7 @@ export function useStudioPageState(): StudioPageState {
       linkedOpportunityId,
       markActiveDocumentSaved,
       showErrorToast,
+      versions,
     ],
   );
 
@@ -822,6 +878,7 @@ export function useStudioPageState(): StudioPageState {
     previewVersionId,
     sections,
     selectedIds,
+    saveStatus,
     setLinkedOpportunityId,
     setDocumentMode,
     setEntryPickerOpen,
