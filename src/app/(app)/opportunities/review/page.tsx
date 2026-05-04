@@ -125,7 +125,7 @@ export default function OpportunityReviewPage() {
       <Link
         href="/opportunities"
         className="fixed left-4 top-4 z-30 inline-flex h-11 w-11 items-center justify-center rounded-full border bg-card/90 text-muted-foreground shadow-sm backdrop-blur transition-colors hover:text-foreground"
-        aria-label="Back to jobs"
+        aria-label="Back to opportunities"
       >
         <ArrowLeft className="h-5 w-5" />
       </Link>

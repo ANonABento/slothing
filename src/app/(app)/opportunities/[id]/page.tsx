@@ -427,7 +427,7 @@ export default function OpportunityDetailPage({
           className="mb-6 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="h-4 w-4" />
-          Back to jobs
+          Back to opportunities
         </Link>
         <div className="rounded-lg border bg-card p-8">
           <h1 className="text-2xl font-semibold">Opportunity not found</h1>
@@ -446,7 +446,7 @@ export default function OpportunityDetailPage({
         className="mb-5 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
       >
         <ArrowLeft className="h-4 w-4" />
-        Back to jobs
+        Back to opportunities
       </Link>
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
