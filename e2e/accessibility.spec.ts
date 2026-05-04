@@ -15,6 +15,43 @@ const APP_PAGES = [
   "/settings",
 ];
 
+// Routes audited by the 2026-05-04 a11y pass. Each path must scan with zero
+// "critical" or "serious" axe violations, ignoring third-party portal nodes.
+const AUDIT_ROUTES = [
+  { path: "/", name: "marketing-home" },
+  { path: "/dashboard", name: "dashboard" },
+  { path: "/bank", name: "bank" },
+  { path: "/studio", name: "studio" },
+  { path: "/opportunities", name: "opportunities" },
+  { path: "/profile", name: "profile" },
+  { path: "/analytics", name: "analytics" },
+  { path: "/calendar", name: "calendar" },
+  { path: "/settings", name: "settings" },
+  { path: "/ats-scanner", name: "ats-scanner" },
+];
+
+const AXE_IGNORED_TARGET_FRAGMENTS = ["nextjs-portal", "clerk"];
+
+function filterIgnoredViolations(
+  violations: Awaited<ReturnType<AxeBuilder["analyze"]>>["violations"],
+) {
+  return violations
+    .filter(
+      (violation) =>
+        violation.impact === "critical" || violation.impact === "serious",
+    )
+    .map((violation) => ({
+      ...violation,
+      nodes: violation.nodes.filter((node) => {
+        const target = node.target.join(",");
+        return !AXE_IGNORED_TARGET_FRAGMENTS.some((fragment) =>
+          target.includes(fragment),
+        );
+      }),
+    }))
+    .filter((violation) => violation.nodes.length > 0);
+}
+
 async function preparePage(page: Page) {
   await page.addInitScript(() => {
     localStorage.setItem("get_me_job_onboarding_completed", "true");
@@ -37,19 +74,47 @@ test.describe("Accessibility - WCAG 2.1 AA Compliance", () => {
       .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
       .analyze();
 
-    const criticalViolations = accessibilityScanResults.violations
-      .filter((violation) => violation.impact === "critical" || violation.impact === "serious")
-      .map((violation) => ({
-        ...violation,
-        nodes: violation.nodes.filter((node) => {
-          const target = node.target.join(",");
-          return !target.includes("nextjs-portal") && !target.includes("clerk");
-        }),
-      }))
-      .filter((violation) => violation.nodes.length > 0);
+    const criticalViolations = filterIgnoredViolations(
+      accessibilityScanResults.violations,
+    );
 
     expect(criticalViolations).toHaveLength(0);
   });
+
+  for (const route of AUDIT_ROUTES) {
+    test(`${route.name} (${route.path}) has no critical/serious axe violations`, async ({
+      page,
+    }) => {
+      await page.goto(route.path);
+      await page.waitForLoadState("networkidle");
+
+      const results = await new AxeBuilder({ page })
+        .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
+        .analyze();
+
+      const violations = filterIgnoredViolations(results.violations);
+
+      if (violations.length > 0) {
+        // Surface details so failures are actionable in CI logs.
+        // eslint-disable-next-line no-console
+        console.log(
+          `axe violations on ${route.path}:`,
+          JSON.stringify(
+            violations.map((v) => ({
+              id: v.id,
+              impact: v.impact,
+              help: v.help,
+              nodes: v.nodes.length,
+            })),
+            null,
+            2,
+          ),
+        );
+      }
+
+      expect(violations).toHaveLength(0);
+    });
+  }
 
   test("app pages are accessible with auth bypass (no Clerk keys)", async ({
     page,

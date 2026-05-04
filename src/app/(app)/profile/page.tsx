@@ -263,7 +263,7 @@ export default function ProfilePage() {
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={form.avatarUrl}
-                      alt=""
+                      alt={form.name ? `${form.name} profile photo` : "Profile photo"}
                       className="h-24 w-24 rounded-full border object-cover"
                     />
                   ) : (
