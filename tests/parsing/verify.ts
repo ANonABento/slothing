@@ -23,6 +23,23 @@ export const DEFAULT_PERSONA_SLUGS = [
 const FIXTURE_ROOT = path.join(process.cwd(), "tests", "fixtures", "personas");
 const REPORT_PATH = path.join(process.cwd(), "tests", "parsing-results.md");
 const FOLLOWUP_TASK_PREFIX = "Parsing fix";
+const PRESENT_DATE_LABEL = "Present";
+const EXPERIENCE_CATEGORY = "experience";
+const HARNESS_USER_ID = "verification";
+const SOURCE_SMART_PARSER = "smart-parser";
+const SOURCE_BANK_EXTRACTION = "profile-bank-extraction";
+
+const GENERIC_LIMITATION_WORDS = new Set([
+  "category",
+  "categorized",
+  "different",
+  "entry",
+  "experience",
+  "parser",
+  "parse",
+  "resume",
+  "role",
+]);
 
 export interface ExpectedExperience {
   company: string;
@@ -125,7 +142,7 @@ function normalizeText(value: unknown): string {
 function parseMonth(value: unknown): number | null {
   if (!value) return null;
   const raw = String(value).trim().toLowerCase();
-  if (["present", "current", "now"].includes(raw)) return 9999 * 12;
+  if (["present", "current", "now"].includes(raw)) return Number.MAX_SAFE_INTEGER;
 
   const iso = raw.match(/(\d{4})[-/](\d{1,2})/);
   if (iso) return Number(iso[1]) * 12 + Number(iso[2]);
@@ -202,10 +219,10 @@ function normalizeExpectedExperience(
     company: experience.company,
     title: experience.title,
     startDate: experience.startDate,
-    endDate: experienceEndDate(experience),
+    endDate: inferEndDate(experience.endDate, experience.current),
     current:
       experience.current ??
-      (experience.endDate === "Present" ? true : undefined),
+      (experience.endDate === PRESENT_DATE_LABEL ? true : undefined),
     location: experience.location,
     description: experience.description ?? experience.summary,
     highlights: experience.highlights,
@@ -213,10 +230,12 @@ function normalizeExpectedExperience(
   };
 }
 
-function experienceEndDate(experience: ExpectedExperience): string | undefined {
-  return experience.current && !experience.endDate
-    ? "Present"
-    : experience.endDate;
+function inferEndDate(
+  rawEndDate: unknown,
+  isCurrent: unknown,
+): string | undefined {
+  if (isCurrent === true && !rawEndDate) return PRESENT_DATE_LABEL;
+  return rawEndDate ? String(rawEndDate) : undefined;
 }
 
 function valuesEqual(
@@ -244,23 +263,12 @@ function valuesEqual(
   return normalizeText(expected) === normalizeText(actual);
 }
 
-function limitationApplies(
+function findApplyingLimitations(
   knownLimitations: string[],
   summary: string,
-): boolean {
+): string[] {
   const normalizedSummary = normalizeText(summary);
-  const genericWords = new Set([
-    "category",
-    "categorized",
-    "different",
-    "entry",
-    "experience",
-    "parser",
-    "parse",
-    "resume",
-    "role",
-  ]);
-  return knownLimitations.some((limitation) => {
+  return knownLimitations.filter((limitation) => {
     const normalizedLimitation = normalizeText(limitation);
     if (normalizedSummary.includes(normalizedLimitation)) return true;
     if (
@@ -271,23 +279,15 @@ function limitationApplies(
     }
     const meaningfulWords = normalizedLimitation
       .split(" ")
-      .filter((word) => word.length > 3 && !genericWords.has(word));
+      .filter(
+        (word) => word.length > 3 && !GENERIC_LIMITATION_WORDS.has(word),
+      );
     if (meaningfulWords.length === 0) return false;
     const matchedWords = meaningfulWords.filter((word) =>
       normalizedSummary.includes(word),
     );
     return matchedWords.length >= Math.min(2, meaningfulWords.length);
   });
-}
-
-function applyMatchingLimitations(
-  appliedKnownLimitations: Set<string>,
-  knownLimitations: string[],
-  summary: string,
-): void {
-  knownLimitations
-    .filter((limitation) => limitationApplies([limitation], summary))
-    .forEach((limitation) => appliedKnownLimitations.add(limitation));
 }
 
 interface FailureContext {
@@ -301,7 +301,7 @@ function analyzeFailure(
   context: FailureContext = {},
 ): Pick<Failure, "rca" | "severity"> {
   const normalized = normalizeText(summary);
-  const persona = normalizeText(context.persona ?? "");
+  const persona = context.persona ?? "";
   const zeroEntriesParse =
     (context.actualCount ?? -1) === 0 && (context.expectedCount ?? 0) > 0;
 
@@ -311,13 +311,13 @@ function analyzeFailure(
   ) {
     return { rca: "Fixture dependency missing", severity: "high" };
   }
-  if (persona.includes("scanned")) {
+  if (persona.startsWith("scanned")) {
     return {
       rca: "Parser limitation — scanned PDF / OCR not wired",
       severity: "high",
     };
   }
-  if (persona.includes("non english")) {
+  if (persona.startsWith("non-english")) {
     return {
       rca: "AI prompt issue — resume in non-English language",
       severity: "high",
@@ -361,25 +361,22 @@ export function compareExperiences(
 
     if (index === -1) {
       const summary = `Missed expected experience: ${expectedExperience.title} at ${expectedExperience.company}`;
-      const knownLimitationApplied = limitationApplies(
+      const matchedLimitations = findApplyingLimitations(
         knownLimitations,
         summary,
       );
-      const rca = analyzeFailure(summary, failureContext);
-      if (!knownLimitationApplied) {
+      if (matchedLimitations.length === 0) {
         failures.push({
           persona,
           type: "missed",
           summary,
-          knownLimitationApplied,
-          ...rca,
+          knownLimitationApplied: false,
+          ...analyzeFailure(summary, failureContext),
         });
       } else {
         allowedMisses++;
-        applyMatchingLimitations(
-          appliedKnownLimitations,
-          knownLimitations,
-          summary,
+        matchedLimitations.forEach((limitation) =>
+          appliedKnownLimitations.add(limitation),
         );
       }
       continue;
@@ -402,13 +399,15 @@ export function compareExperiences(
       }
       const diff = { field, expected: expectedValue, actual: actualValue };
       const summary = `Field mismatch for ${expectedExperience.title} at ${expectedExperience.company}: ${field}`;
-      if (limitationApplies(knownLimitations, summary)) {
+      const matchedLimitations = findApplyingLimitations(
+        knownLimitations,
+        summary,
+      );
+      if (matchedLimitations.length > 0) {
         ignoredDiffs.push(diff);
         correctFields++;
-        applyMatchingLimitations(
-          appliedKnownLimitations,
-          knownLimitations,
-          summary,
+        matchedLimitations.forEach((limitation) =>
+          appliedKnownLimitations.add(limitation),
         );
       } else {
         fieldDiffs.push(diff);
@@ -438,21 +437,22 @@ export function compareExperiences(
 
   for (const actualExperience of unmatchedActual) {
     const summary = `Spurious experience: ${actualExperience.title} at ${actualExperience.company}`;
-    const knownLimitationApplied = limitationApplies(knownLimitations, summary);
-    if (!knownLimitationApplied) {
+    const matchedLimitations = findApplyingLimitations(
+      knownLimitations,
+      summary,
+    );
+    if (matchedLimitations.length === 0) {
       failures.push({
         persona,
         type: "spurious",
         summary,
-        knownLimitationApplied,
+        knownLimitationApplied: false,
         ...analyzeFailure(summary, failureContext),
       });
     } else {
       allowedSpurious++;
-      applyMatchingLimitations(
-        appliedKnownLimitations,
-        knownLimitations,
-        summary,
+      matchedLimitations.forEach((limitation) =>
+        appliedKnownLimitations.add(limitation),
       );
     }
   }
@@ -506,42 +506,37 @@ function profileExperiencesToActual(
     title: experience.title,
     location: experience.location,
     startDate: experience.startDate,
-    endDate: experienceEndDate(experience),
+    endDate: inferEndDate(experience.endDate, experience.current),
     current: experience.current,
     description: experience.description,
     highlights: experience.highlights,
     skills: experience.skills,
-    source: "smart-parser",
+    source: SOURCE_SMART_PARSER,
   }));
+}
+
+function optionalString(value: unknown): string | undefined {
+  return value ? String(value) : undefined;
+}
+
+function stringArray(value: unknown): string[] {
+  return Array.isArray(value) ? value.map(String) : [];
 }
 
 function bankEntriesToActual(entries: BankEntry[]): ActualExperience[] {
   return entries
-    .filter((entry) => entry.category === "experience")
+    .filter((entry) => entry.category === EXPERIENCE_CATEGORY)
     .map((entry) => ({
       company: String(entry.content.company ?? ""),
       title: String(entry.content.title ?? ""),
-      location: entry.content.location
-        ? String(entry.content.location)
-        : undefined,
-      startDate: entry.content.startDate
-        ? String(entry.content.startDate)
-        : undefined,
-      endDate:
-        entry.content.current && !entry.content.endDate
-          ? "Present"
-          : entry.content.endDate
-            ? String(entry.content.endDate)
-            : undefined,
+      location: optionalString(entry.content.location),
+      startDate: optionalString(entry.content.startDate),
+      endDate: inferEndDate(entry.content.endDate, entry.content.current),
       current: entry.content.current === true,
       description: String(entry.content.description ?? ""),
-      highlights: Array.isArray(entry.content.highlights)
-        ? entry.content.highlights.map(String)
-        : [],
-      skills: Array.isArray(entry.content.skills)
-        ? entry.content.skills.map(String)
-        : [],
-      source: "profile-bank-extraction",
+      highlights: stringArray(entry.content.highlights),
+      skills: stringArray(entry.content.skills),
+      source: SOURCE_BANK_EXTRACTION,
     }));
 }
 
@@ -569,6 +564,35 @@ async function listPersonaSlugs(fixtureRoot: string): Promise<string[]> {
   return slugs.length > 0 ? slugs : DEFAULT_PERSONA_SLUGS;
 }
 
+function failedPersonaScore(
+  slug: string,
+  summary: string,
+  notes: string[],
+): PersonaScore {
+  return {
+    slug,
+    status: "failed-to-process",
+    expectedCount: 0,
+    actualCount: 0,
+    matchedCount: 0,
+    recall: 0,
+    precision: 0,
+    fieldAccuracy: 0,
+    composite: 0,
+    knownLimitationsApplied: [],
+    failures: [
+      {
+        persona: slug,
+        type: "process",
+        summary,
+        knownLimitationApplied: false,
+        ...analyzeFailure(summary, { persona: slug }),
+      },
+    ],
+    notes,
+  };
+}
+
 export async function verifyPersona(
   slug: string,
   fixtureRoot = FIXTURE_ROOT,
@@ -581,29 +605,11 @@ export async function verifyPersona(
   ];
 
   if (!(await pathExists(resumePath)) || !(await pathExists(expectedPath))) {
-    const summary = `Missing fixture dependency for ${slug}: expected resume.pdf and expected.json`;
-    return {
+    return failedPersonaScore(
       slug,
-      status: "failed-to-process",
-      expectedCount: 0,
-      actualCount: 0,
-      matchedCount: 0,
-      recall: 0,
-      precision: 0,
-      fieldAccuracy: 0,
-      composite: 0,
-      knownLimitationsApplied: [],
-      failures: [
-        {
-          persona: slug,
-          type: "process",
-          summary,
-          knownLimitationApplied: false,
-          ...analyzeFailure(summary, { persona: slug }),
-        },
-      ],
+      `Missing fixture dependency for ${slug}: expected resume.pdf and expected.json`,
       notes,
-    };
+    );
   }
 
   try {
@@ -615,7 +621,7 @@ export async function verifyPersona(
     const bankEntries = extractBankEntries(parsed.profile, slug).map(
       (entry, index) => ({
         id: `${slug}-${index}`,
-        userId: "verification",
+        userId: HARNESS_USER_ID,
         category: entry.category,
         content: entry.content,
         sourceDocumentId: entry.sourceDocumentId,
@@ -641,31 +647,24 @@ export async function verifyPersona(
     };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    const summary = `Failed to process ${slug}: ${message}`;
-    return {
-      slug,
-      status: "failed-to-process",
-      expectedCount: 0,
-      actualCount: 0,
-      matchedCount: 0,
-      recall: 0,
-      precision: 0,
-      fieldAccuracy: 0,
-      composite: 0,
-      knownLimitationsApplied: [],
-      failures: [
-        {
-          persona: slug,
-          type: "process",
-          summary,
-          knownLimitationApplied: false,
-          ...analyzeFailure(summary, { persona: slug }),
-        },
-      ],
-      notes,
-    };
+    return failedPersonaScore(slug, `Failed to process ${slug}: ${message}`, notes);
   }
 }
+
+const SEVERITY_RANK: Record<Failure["severity"], number> = {
+  low: 0,
+  medium: 1,
+  high: 2,
+};
+
+function maxSeverity(
+  a: Failure["severity"],
+  b: Failure["severity"],
+): Failure["severity"] {
+  return SEVERITY_RANK[a] >= SEVERITY_RANK[b] ? a : b;
+}
+
+const TOP_FAILURE_MODES = 5;
 
 export function summarizeFailureModes(personas: PersonaScore[]): FailureMode[] {
   const modes = new Map<string, FailureMode>();
@@ -679,12 +678,7 @@ export function summarizeFailureModes(personas: PersonaScore[]): FailureMode[] {
       summaries: [],
     };
     existing.count++;
-    existing.severity =
-      existing.severity === "high" || failure.severity === "high"
-        ? "high"
-        : existing.severity === "medium" || failure.severity === "medium"
-          ? "medium"
-          : "low";
+    existing.severity = maxSeverity(existing.severity, failure.severity);
     if (!existing.personas.includes(failure.persona)) {
       existing.personas.push(failure.persona);
     }
@@ -694,7 +688,9 @@ export function summarizeFailureModes(personas: PersonaScore[]): FailureMode[] {
     modes.set(failure.rca, existing);
   }
 
-  return [...modes.values()].sort((a, b) => b.count - a.count).slice(0, 5);
+  return [...modes.values()]
+    .sort((a, b) => b.count - a.count)
+    .slice(0, TOP_FAILURE_MODES);
 }
 
 export function buildFollowupTasks(
