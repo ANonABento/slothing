@@ -37,7 +37,7 @@ import { AppPage, PageContent, PageHeader } from "@/components/ui/page-layout";
 import { SkeletonButton } from "@/components/ui/skeleton";
 import { useErrorToast } from "@/hooks/use-error-toast";
 import { readJsonResponse } from "@/lib/http";
-import { getEmailTemplateLayoutClass } from "./utils";
+import { getResponsiveDetailGridClass } from "../shared-layout-utils";
 import type { EmailTemplateType, JobDescription } from "@/types";
 
 const SendViaGmailButton = dynamic(
@@ -550,7 +550,7 @@ export default function EmailTemplatesPage() {
           </div>
         )}
 
-        <div className={getEmailTemplateLayoutClass(Boolean(selectedType))}>
+        <div className={getResponsiveDetailGridClass(Boolean(selectedType))}>
           {/* Left Column - Template Selection & Context */}
           <div className="space-y-6">
             {/* Template Selection */}

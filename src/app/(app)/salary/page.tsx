@@ -31,7 +31,7 @@ import {
 } from "@/components/ui/select";
 import { AppPage, PageContent, PageHeader } from "@/components/ui/page-layout";
 import { cn } from "@/lib/utils";
-import { getSalaryCalculatorLayoutClass } from "./utils";
+import { getResponsiveDetailGridClass } from "../shared-layout-utils";
 
 interface SalaryRange {
   min: number;
@@ -318,7 +318,7 @@ ${script.close}
       <PageContent>
         {/* Calculator Tab */}
         {activeTab === "calculator" && (
-          <div className={getSalaryCalculatorLayoutClass(Boolean(salaryRange))}>
+          <div className={getResponsiveDetailGridClass(Boolean(salaryRange))}>
             {/* Input */}
             <div className="rounded-2xl border bg-card p-6">
               <h2 className="font-semibold mb-6 flex items-center gap-2">
