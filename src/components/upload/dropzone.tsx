@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useDropzone } from "react-dropzone";
+import { pluralize } from "@/lib/text/pluralize";
 import {
   Upload,
   FileText,
@@ -15,6 +16,19 @@ import {
 import { cn, formatFileSize } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import {
+  formatExistingUploadDate,
+  getExistingUploadTimestamp,
+  type UploadConflictResponse,
+} from "@/lib/upload-conflict";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface UploadedFile {
   file: File;
@@ -59,6 +73,8 @@ export function Dropzone({
 }: DropzoneProps) {
   const [files, setFiles] = useState<UploadedFile[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadConflict, setUploadConflict] = useState<UploadConflictResponse | null>(null);
+  const conflictResolverRef = useRef<((replace: boolean) => void) | null>(null);
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const newFiles = acceptedFiles.map((file) => ({
@@ -79,6 +95,18 @@ export function Dropzone({
   const removeFile = (index: number) => {
     setFiles((prev) => prev.filter((_, i) => i !== index));
   };
+
+  const resolveUploadConflict = (replace: boolean) => {
+    conflictResolverRef.current?.(replace);
+    conflictResolverRef.current = null;
+    setUploadConflict(null);
+  };
+
+  const confirmReplacement = (existing: UploadConflictResponse["existing"]) =>
+    new Promise<boolean>((resolve) => {
+      conflictResolverRef.current = resolve;
+      setUploadConflict({ existing });
+    });
 
   const uploadFiles = async () => {
     setIsUploading(true);
@@ -109,12 +137,29 @@ export function Dropzone({
           );
         }, 100);
 
-        const response = await fetch("/api/upload", {
+        let response = await fetch("/api/upload", {
           method: "POST",
           body: formData,
         });
 
         clearInterval(progressInterval);
+
+        if (response.status === 409) {
+          const conflictData = await response.json().catch(() => null);
+          const existing = conflictData?.existing;
+          const shouldReplace = existing
+            ? await confirmReplacement(existing)
+            : false;
+
+          if (!shouldReplace) {
+            throw new Error("Upload canceled");
+          }
+
+          response = await fetch("/api/upload?force=true", {
+            method: "POST",
+            body: formData,
+          });
+        }
 
         if (!response.ok) {
           const errorData = await response.json().catch(() => null);
@@ -158,6 +203,32 @@ export function Dropzone({
 
   return (
     <div className="space-y-6">
+      <Dialog
+        open={!!uploadConflict}
+        onOpenChange={(open) => {
+          if (!open) resolveUploadConflict(false);
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Replace existing upload?</DialogTitle>
+            <DialogDescription>
+              {uploadConflict
+                ? `Looks like you uploaded "${uploadConflict.existing.filename}" on ${formatExistingUploadDate(getExistingUploadTimestamp(uploadConflict.existing))}. Replace it, or cancel?`
+                : ""}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => resolveUploadConflict(false)}>
+              Cancel
+            </Button>
+            <Button onClick={() => resolveUploadConflict(true)} autoFocus>
+              Replace
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Dropzone Area */}
       <div
         {...getRootProps()}
@@ -228,7 +299,7 @@ export function Dropzone({
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <h4 className="font-medium">
-              {files.length} file{files.length !== 1 ? "s" : ""} selected
+              {pluralize(files.length, "file")} selected
             </h4>
             {files.some((f) => f.status === "success") && (
               <span className="text-sm text-success flex items-center gap-1">
@@ -334,7 +405,7 @@ export function Dropzone({
           ) : (
             <>
               <CloudUpload className="mr-2 h-5 w-5" />
-              Upload {pendingFiles.length} file{pendingFiles.length !== 1 ? "s" : ""}
+              Upload {pluralize(pendingFiles.length, "file")}
             </>
           )}
         </Button>

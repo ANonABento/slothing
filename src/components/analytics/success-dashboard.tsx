@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { cn, formatRelativeTime } from "@/lib/utils";
+import { pluralize } from "@/lib/text/pluralize";
 import {
   Trophy,
   Clock,
@@ -22,6 +23,13 @@ import type {
   ResumePerformance,
 } from "@/lib/analytics/success-metrics";
 
+const FUNNEL_STAGE_STYLES = [
+  { bg: "bg-info", fg: "text-info-foreground" },
+  { bg: "bg-primary", fg: "text-primary-foreground" },
+  { bg: "bg-warning", fg: "text-warning-foreground" },
+  { bg: "bg-success", fg: "text-success-foreground" },
+] as const;
+
 function FunnelVisualization({ stages }: { stages: FunnelStage[] }) {
   const maxWidth = 100;
   const minWidth = 40;
@@ -33,6 +41,9 @@ function FunnelVisualization({ stages }: { stages: FunnelStage[] }) {
           minWidth,
           maxWidth * (stage.percentage / 100)
         );
+        const stageStyle =
+          FUNNEL_STAGE_STYLES[index] ??
+          FUNNEL_STAGE_STYLES[FUNNEL_STAGE_STYLES.length - 1];
 
         return (
           <div key={stage.stage} className="flex items-center gap-4">
@@ -43,15 +54,13 @@ function FunnelVisualization({ stages }: { stages: FunnelStage[] }) {
               <div
                 className={cn(
                   "h-10 rounded-r-lg flex items-center justify-between px-3 transition-all",
-                  index === 0 && "bg-info",
-                  index === 1 && "bg-primary",
-                  index === 2 && "bg-warning",
-                  index === 3 && "bg-success"
+                  stageStyle.bg,
+                  stageStyle.fg,
                 )}
                 style={{ width: `${widthPercentage}%` }}
               >
-                <span className="text-primary-foreground font-bold">{stage.count}</span>
-                <span className="text-primary-foreground/80 text-sm">{stage.percentage}%</span>
+                <span className="font-bold">{stage.count}</span>
+                <span className="text-sm">{stage.percentage}%</span>
               </div>
             </div>
             <div className="w-20 text-right">
@@ -85,7 +94,10 @@ function TimeMetricCard({ metric }: { metric: TimeToMetric }) {
         <span className="text-sm text-muted-foreground">days avg</span>
       </div>
       <p className="text-xs text-muted-foreground mt-1">
-        Range: {metric.minDays}-{metric.maxDays} days ({metric.count} samples)
+        {`Range: ${metric.minDays}-${metric.maxDays} days (${pluralize(
+          metric.count,
+          "sample",
+        )})`}
       </p>
     </div>
   );

@@ -81,6 +81,9 @@ describe("TemplatePreviewThumbnail", () => {
     expect(thumbnail.className).toContain(
       "border-[length:var(--border-width)]",
     );
+    expect(thumbnail.className).toContain("border-paper-border");
+    expect(thumbnail.className).toContain("bg-paper");
+    expect(thumbnail.className).toContain("text-paper-foreground");
     expect(thumbnail.className).toContain("shadow-[var(--shadow-card)]");
     expect(thumbnail).toHaveStyle({
       fontFamily: "'Inter', 'Segoe UI', sans-serif",

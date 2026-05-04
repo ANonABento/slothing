@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { pluralize } from "@/lib/text/pluralize";
 import {
   Select,
   SelectContent,
@@ -38,11 +39,13 @@ interface SyncResponse {
 interface CalendarSyncButtonProps {
   onSyncComplete?: (result: SyncResponse) => void;
   compact?: boolean;
+  hideWhenDisconnected?: boolean;
 }
 
 export function CalendarSyncButton({
   onSyncComplete,
   compact = false,
+  hideWhenDisconnected = false,
 }: CalendarSyncButtonProps) {
   const [syncing, setSyncing] = useState(false);
   const [syncType, setSyncType] = useState<SyncType>("all");
@@ -101,8 +104,9 @@ export function CalendarSyncButton({
     }
   }
 
-  // Not connected - show message
   if (connected === false) {
+    if (hideWhenDisconnected) return null;
+
     return (
       <div className="flex items-center gap-2 text-sm text-muted-foreground">
         <AlertCircle className="h-4 w-4" />
@@ -147,7 +151,7 @@ export function CalendarSyncButton({
           <p className="text-xs text-center">
             {result.success ? (
               <span className="text-success">
-                Synced {result.synced} events
+                Synced {pluralize(result.synced, "event")}
               </span>
             ) : (
               <span className="text-warning">
@@ -210,8 +214,8 @@ export function CalendarSyncButton({
             )}
             <span className="font-medium">
               {result.success
-                ? `Successfully synced ${result.synced} events`
-                : `Synced ${result.synced} events, ${result.failed} failed`}
+                ? `Successfully synced ${pluralize(result.synced, "event")}`
+                : `Synced ${pluralize(result.synced, "event")}, ${result.failed} failed`}
             </span>
           </div>
 

@@ -33,6 +33,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
+import { TimeAgo } from "@/components/format/time-ago";
+import { formatDateAbsolute } from "@/lib/format/time";
+import { pluralize } from "@/lib/text/pluralize";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
 import {
   AppPage,
@@ -257,7 +260,7 @@ export default function AnalyticsPage() {
         actions={
           <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center">
             <Select value={exportRange} onValueChange={setExportRange}>
-              <SelectTrigger className="w-36">
+              <SelectTrigger className="w-36" aria-label="Export date range">
                 <SelectValue placeholder="Date range" />
               </SelectTrigger>
               <SelectContent>
@@ -293,7 +296,7 @@ export default function AnalyticsPage() {
                 JSON
               </Button>
               <ExportToSheetsButton
-                title={`Job Search Analytics - ${new Date().toLocaleDateString()}`}
+                title={`Job Search Analytics - ${formatDateAbsolute(new Date())}`}
                 data={formatAnalyticsForSheets()}
                 size="sm"
               />
@@ -329,11 +332,15 @@ export default function AnalyticsPage() {
               <h3 className="font-medium mb-2">Profile Complete</h3>
               <Progress
                 value={analytics.overview.profileCompleteness}
+                aria-label="Profile completeness"
                 className="h-2"
               />
               {analytics.overview.profileCompleteness < 100 && (
                 <p className="text-xs text-muted-foreground mt-2">
-                  <Link href="/bank" className="text-primary hover:underline">
+                  <Link
+                    href="/bank"
+                    className="text-primary underline underline-offset-2 font-medium"
+                  >
                     Complete your profile
                   </Link>{" "}
                   to improve your chances
@@ -417,7 +424,7 @@ export default function AnalyticsPage() {
                           <span className="font-medium">{config.label}</span>
                         </div>
                         <span className="text-muted-foreground">
-                          {count} jobs
+                          {pluralize(count, "job")}
                         </span>
                       </div>
                       <div className="h-2 rounded-full bg-muted overflow-hidden">
@@ -554,7 +561,7 @@ export default function AnalyticsPage() {
                           {statusConfig.label}
                         </span>
                         <p className="text-xs text-muted-foreground mt-1">
-                          {new Date(job.createdAt).toLocaleDateString()}
+                          <TimeAgo date={job.createdAt} />
                         </p>
                       </div>
                     </Link>

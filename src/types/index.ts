@@ -119,6 +119,7 @@ export interface Document {
   path: string;
   extractedText?: string;
   parsedData?: ParsedDocumentData;
+  fileHash?: string;
   uploadedAt: string;
 }
 
@@ -171,6 +172,7 @@ export interface LLMConfig {
 export interface Settings {
   llm: LLMConfig;
   theme: 'light' | 'dark' | 'system';
+  locale?: string;
 }
 
 // Profile bank types
