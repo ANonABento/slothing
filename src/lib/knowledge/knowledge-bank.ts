@@ -159,7 +159,7 @@ export function multiQuerySearch(
 
 // --- Below: knowledge chunk storage (from ingest pipeline) ---
 
-import db from "@/lib/db/schema";
+import db from "@/lib/db/legacy";
 import { generateId } from "@/lib/utils";
 
 export interface KnowledgeChunk {

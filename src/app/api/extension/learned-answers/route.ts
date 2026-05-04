@@ -8,7 +8,7 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { requireExtensionAuth, normalizeQuestion } from "@/lib/extension-auth";
-import { db, learnedAnswers, eq, and, desc, sqlOp } from "@/lib/db/drizzle";
+import { db, learnedAnswers, eq, and, desc, sqlOp } from "@/lib/db";
 import { randomUUID } from "crypto";
 import { toNullableIsoDateString } from "@/lib/utils";
 
@@ -90,8 +90,8 @@ export async function POST(request: NextRequest) {
         .set({
           answer,
           timesUsed: sqlOp`coalesce(${learnedAnswers.timesUsed}, 0) + 1`,
-          updatedAt: now,
-          lastUsedAt: now,
+          updatedAt: now.toISOString(),
+          lastUsedAt: now.toISOString(),
         })
         .where(and(
           eq(learnedAnswers.id, existing.id),
@@ -120,8 +120,8 @@ export async function POST(request: NextRequest) {
       answer,
       sourceUrl: sourceUrl || null,
       sourceCompany: sourceCompany || null,
-      createdAt: now,
-      updatedAt: now,
+      createdAt: now.toISOString(),
+      updatedAt: now.toISOString(),
     });
 
     return NextResponse.json({

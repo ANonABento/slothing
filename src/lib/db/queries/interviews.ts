@@ -57,7 +57,7 @@ export async function createInterviewSession(
     mode,
     questionsJson: JSON.stringify(questions),
     status: 'in_progress',
-    startedAt: now,
+    startedAt: now.toISOString(),
   });
 
   return {
@@ -92,15 +92,15 @@ export async function getInterviewSession(
     mode: row.mode as 'text' | 'voice',
     questions: JSON.parse(row.questionsJson),
     status: row.status as 'in_progress' | 'completed',
-    startedAt: row.startedAt?.toISOString() ?? '',
-    completedAt: row.completedAt?.toISOString(),
+    startedAt: row.startedAt ?? '',
+    completedAt: row.completedAt ?? undefined,
     answers: answerRows.map((a) => ({
       id: a.id,
       sessionId: a.sessionId,
       questionIndex: a.questionIndex,
       answer: a.answer,
       feedback: a.feedback ?? undefined,
-      createdAt: a.createdAt?.toISOString() ?? '',
+      createdAt: a.createdAt ?? '',
     })),
   };
 }
@@ -129,8 +129,8 @@ export async function getInterviewSessions(
     mode: row.mode as 'text' | 'voice',
     questions: JSON.parse(row.questionsJson),
     status: row.status as 'in_progress' | 'completed',
-    startedAt: row.startedAt?.toISOString() ?? '',
-    completedAt: row.completedAt?.toISOString(),
+    startedAt: row.startedAt ?? '',
+    completedAt: row.completedAt ?? undefined,
   }));
 }
 
@@ -159,7 +159,7 @@ export async function addInterviewAnswer(
     questionIndex,
     answer,
     feedback: feedback ?? null,
-    createdAt: now,
+    createdAt: now.toISOString(),
   });
 
   return {
@@ -177,7 +177,7 @@ export async function completeInterviewSession(userId: string, sessionId: string
   await db.update(interviewSessions)
     .set({
       status: 'completed',
-      completedAt: new Date(),
+      completedAt: new Date().toISOString(),
     })
     .where(and(eq(interviewSessions.id, sessionId), eq(interviewSessions.userId, userId)));
 }
@@ -208,7 +208,7 @@ export async function getRecentInterviewSessions(
     mode: row.mode as 'text' | 'voice',
     questions: JSON.parse(row.questionsJson),
     status: row.status as 'in_progress' | 'completed',
-    startedAt: row.startedAt?.toISOString() ?? '',
-    completedAt: row.completedAt?.toISOString(),
+    startedAt: row.startedAt ?? '',
+    completedAt: row.completedAt ?? undefined,
   }));
 }

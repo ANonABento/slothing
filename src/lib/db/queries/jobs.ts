@@ -32,7 +32,7 @@ function mapRowToJob(row: typeof jobs.$inferSelect): JobDescription {
     appliedAt: row.appliedAt ?? undefined,
     deadline: row.deadline ?? undefined,
     notes: row.notes ?? undefined,
-    createdAt: row.createdAt?.toISOString() ?? new Date().toISOString(),
+    createdAt: row.createdAt ?? new Date().toISOString(),
   };
 }
 

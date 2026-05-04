@@ -87,16 +87,15 @@ describe("getFeatureStatuses", () => {
   it("returns a status for every feature check by default", () => {
     const statuses = getFeatureStatuses({});
     expect(statuses).toHaveLength(FEATURE_CHECKS.length);
-    for (const status of statuses) {
-      expect(status.enabled).toBe(false);
-    }
+    expect(statuses.find((status) => status.name === "libSQL Database")?.enabled).toBe(true);
+    expect(statuses.filter((status) => !status.enabled)).toHaveLength(2);
   });
 
   it("returns all enabled when full env is provided", () => {
     const statuses = getFeatureStatuses({
       NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: "pk",
       CLERK_SECRET_KEY: "sk",
-      DATABASE_URL: "postgresql://localhost/db",
+      TURSO_DATABASE_URL: "file:./.local.db",
       OPENAI_API_KEY: "sk-openai",
     });
     for (const status of statuses) {
@@ -110,7 +109,7 @@ describe("validateEnv", () => {
     const result = validateEnv({
       NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: "pk",
       CLERK_SECRET_KEY: "sk",
-      DATABASE_URL: "postgresql://localhost/db",
+      TURSO_DATABASE_URL: "file:./.local.db",
       OLLAMA_BASE_URL: "http://localhost:11434",
     });
     expect(result.ok).toBe(true);
@@ -128,7 +127,7 @@ describe("validateEnv", () => {
 
   it("produces a Clerk warning that names both Clerk keys", () => {
     const result = validateEnv({
-      DATABASE_URL: "postgresql://localhost/db",
+      TURSO_DATABASE_URL: "file:./.local.db",
       OPENAI_API_KEY: "sk-openai",
     });
     const clerkWarning = result.warnings.find((w) =>
@@ -155,7 +154,7 @@ describe("validateEnv", () => {
     const result = validateEnv({
       NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: "pk",
       CLERK_SECRET_KEY: "sk",
-      DATABASE_URL: "postgresql://localhost/db",
+      TURSO_DATABASE_URL: "file:./.local.db",
     });
     const llmWarning = result.warnings.find((w) => w.includes("LLM Providers"));
     expect(llmWarning).toBeDefined();
@@ -172,7 +171,7 @@ describe("logEnvValidation", () => {
     logEnvValidation(logger, {
       NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: "pk",
       CLERK_SECRET_KEY: "sk",
-      DATABASE_URL: "postgresql://localhost/db",
+      TURSO_DATABASE_URL: "file:./.local.db",
       OPENAI_API_KEY: "sk-openai",
     });
     expect(logger.warnings).toEqual([]);
@@ -184,7 +183,7 @@ describe("logEnvValidation", () => {
     const logger = createLogger();
     logEnvValidation(logger, {});
     expect(logger.infos).toEqual([]);
-    expect(logger.warnings.length).toBe(FEATURE_CHECKS.length);
+    expect(logger.warnings.length).toBe(2);
   });
 });
 

@@ -1,6 +1,6 @@
 import fs from "fs";
 import crypto from "crypto";
-import type Database from "better-sqlite3";
+import type Database from "libsql";
 
 export interface DedupeBackfillResult {
   duplicateSourceFilesRemoved: number;
