@@ -92,7 +92,7 @@ function canonicalize(value: unknown): string {
   return JSON.stringify(value);
 }
 
-export function entryDedupeKey(row: BankEntryRow): string {
+function entryDedupeKey(row: BankEntryRow): string {
   let content: Record<string, unknown> = {};
   try {
     content = JSON.parse(row.content) as Record<string, unknown>;

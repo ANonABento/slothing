@@ -257,34 +257,31 @@ describe("runDedupeBackfillMigration", () => {
 
 describe("revertDedupeBackfillMigration", () => {
   beforeEach(() => {
-    tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "dedupe-backfill-revert-"));
     db = new Database(":memory:");
     createSchema();
   });
 
   afterEach(() => {
     db.close();
-    fs.rmSync(tempDir, { recursive: true, force: true });
   });
+
+  function listIndexNames(): string[] {
+    const rows = db
+      .prepare("SELECT name FROM sqlite_master WHERE type = 'index'")
+      .all() as Array<{ name: string }>;
+    return rows.map((row) => row.name);
+  }
 
   it("drops dedupe indexes added by the up migration", () => {
     runDedupeBackfillMigration(db, { log: vi.fn() });
 
-    const indexesBefore = (
-      db.prepare("SELECT name FROM sqlite_master WHERE type = 'index'").all() as Array<{
-        name: string;
-      }>
-    ).map((row) => row.name);
+    const indexesBefore = listIndexNames();
     expect(indexesBefore).toContain("idx_documents_user_file_hash");
     expect(indexesBefore).toContain("idx_profile_bank_user_source");
 
     revertDedupeBackfillMigration(db);
 
-    const indexesAfter = (
-      db.prepare("SELECT name FROM sqlite_master WHERE type = 'index'").all() as Array<{
-        name: string;
-      }>
-    ).map((row) => row.name);
+    const indexesAfter = listIndexNames();
     expect(indexesAfter).not.toContain("idx_documents_user_file_hash");
     expect(indexesAfter).not.toContain("idx_profile_bank_user_source");
   });
