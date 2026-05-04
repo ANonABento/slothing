@@ -1,4 +1,4 @@
-import db from "./schema";
+import db from "./legacy";
 import { generateId } from "@/lib/utils";
 
 export type ReminderType = "follow_up" | "deadline" | "interview" | "custom";

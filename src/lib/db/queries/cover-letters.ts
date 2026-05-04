@@ -37,7 +37,7 @@ export async function saveCoverLetter(
     content,
     highlightsJson: JSON.stringify(highlights),
     version,
-    createdAt: now,
+    createdAt: now.toISOString(),
   });
 
   return {
@@ -64,7 +64,7 @@ export async function getCoverLettersByJob(userId: string, jobId: string): Promi
     content: row.content,
     highlights: row.highlightsJson ? JSON.parse(row.highlightsJson) : [],
     version: row.version ?? 1,
-    createdAt: row.createdAt?.toISOString() ?? '',
+    createdAt: row.createdAt ?? '',
   }));
 }
 
@@ -85,7 +85,7 @@ export async function getLatestCoverLetter(userId: string, jobId: string): Promi
     content: row.content,
     highlights: row.highlightsJson ? JSON.parse(row.highlightsJson) : [],
     version: row.version ?? 1,
-    createdAt: row.createdAt?.toISOString() ?? '',
+    createdAt: row.createdAt ?? '',
   };
 }
 
@@ -104,7 +104,7 @@ export async function getCoverLetter(userId: string, coverLetterId: string): Pro
     content: row.content,
     highlights: row.highlightsJson ? JSON.parse(row.highlightsJson) : [],
     version: row.version ?? 1,
-    createdAt: row.createdAt?.toISOString() ?? '',
+    createdAt: row.createdAt ?? '',
   };
 }
 

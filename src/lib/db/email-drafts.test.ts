@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Mock } from "vitest";
 
-vi.mock("./schema", () => ({
+vi.mock("./legacy", () => ({
   default: {
     prepare: vi.fn(),
   },
@@ -11,7 +11,7 @@ vi.mock("@/lib/utils", () => ({
   generateId: () => "test-draft-id",
 }));
 
-import db from "./schema";
+import db from "./legacy";
 import { createEmailDraft } from "./email-drafts";
 
 describe("Email Draft Database Functions", () => {

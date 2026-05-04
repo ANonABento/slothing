@@ -36,7 +36,7 @@ export async function createNotification(
     message: notification.message ?? null,
     link: notification.link ?? null,
     read: false,
-    createdAt: now,
+    createdAt: now.toISOString(),
   });
 
   return {
@@ -85,7 +85,7 @@ export async function getNotifications(
     message: row.message ?? undefined,
     link: row.link ?? undefined,
     read: row.read ?? false,
-    createdAt: row.createdAt?.toISOString() ?? "",
+    createdAt: row.createdAt ?? "",
   }));
 }
 

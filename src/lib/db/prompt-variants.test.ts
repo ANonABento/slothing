@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { Mock } from "vitest";
 
-vi.mock("./schema", () => {
+vi.mock("./legacy", () => {
   const mockDb = {
     prepare: vi.fn(),
     transaction: vi.fn((fn: () => unknown) => fn),
@@ -13,7 +13,7 @@ vi.mock("@/lib/utils", () => ({
   generateId: () => "test-id",
 }));
 
-import db from "./schema";
+import db from "./legacy";
 import {
   DEFAULT_PROMPT_CONTENT,
   seedDefaultPromptVariant,

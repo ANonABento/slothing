@@ -8,7 +8,7 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { requireExtensionAuth } from "@/lib/extension-auth";
-import { db, learnedAnswers, eq, and } from "@/lib/db/drizzle";
+import { db, learnedAnswers, eq, and } from "@/lib/db";
 
 // PATCH - Update a learned answer
 export async function PATCH(
@@ -45,7 +45,7 @@ export async function PATCH(
     const now = new Date();
     await db
       .update(learnedAnswers)
-      .set({ answer, updatedAt: now })
+      .set({ answer, updatedAt: now.toISOString() })
       .where(and(eq(learnedAnswers.id, id), eq(learnedAnswers.userId, authResult.userId)));
 
     return NextResponse.json({

@@ -12,8 +12,7 @@ export const FEATURE_CHECKS: FeatureCheck[] = [
     requireAll: ["NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY", "CLERK_SECRET_KEY"],
   },
   {
-    name: "Neon PostgreSQL Database",
-    requireAll: ["DATABASE_URL"],
+    name: "libSQL Database",
   },
   {
     name: "LLM Providers",

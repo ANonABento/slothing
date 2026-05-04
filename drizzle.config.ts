@@ -1,14 +1,13 @@
-import { defineConfig } from 'drizzle-kit';
-import { loadEnvConfig } from '@next/env';
-import { getDatabaseUrl } from './src/lib/db/database-url';
+import { defineConfig } from "drizzle-kit";
+import { loadEnvConfig } from "@next/env";
 
 loadEnvConfig(process.cwd());
 
 export default defineConfig({
-  schema: './src/lib/db/drizzle/schema.ts',
-  out: './drizzle',
-  dialect: 'postgresql',
+  schema: "./src/lib/db/schema.ts",
+  out: "./drizzle",
+  dialect: "sqlite",
   dbCredentials: {
-    url: getDatabaseUrl(),
+    url: process.env.TURSO_DATABASE_URL?.trim() || "file:./.local.db",
   },
 });

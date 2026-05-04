@@ -10,7 +10,7 @@ Columbus is a Next.js 14 application using the App Router pattern.
 | Language | TypeScript (strict mode) |
 | Styling | Tailwind CSS + CSS Variables |
 | Components | Shadcn/ui patterns (CVA) |
-| Database | SQLite (better-sqlite3) |
+| Database | Drizzle ORM with libSQL/SQLite |
 | LLM | Multi-provider (OpenAI, Anthropic, Ollama, OpenRouter) |
 | Testing | Vitest (unit) + Playwright (e2e) |
 
@@ -71,7 +71,7 @@ columbus-v1/
 │             ▼                      ▼                         │
 │  ┌─────────────────┐    ┌─────────────────────┐             │
 │  │   SQLite DB     │    │    LLM Provider     │             │
-│  │  (better-sqlite3)│    │ (OpenAI/Anthropic)  │             │
+│  │  (Drizzle/libSQL)│    │ (OpenAI/Anthropic)  │             │
 │  └─────────────────┘    └─────────────────────┘             │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -86,7 +86,7 @@ columbus-v1/
 - **interviews.ts**: Interview sessions and answers
 - **notifications.ts**: Notification management
 
-All database operations are synchronous using better-sqlite3.
+Database access is centralized through Drizzle ORM backed by libSQL. Local development defaults to `file:./.local.db`, and hosted deployments can use Turso via `TURSO_DATABASE_URL` plus optional `TURSO_AUTH_TOKEN`.
 
 ### LLM Client (`/lib/llm/client.ts`)
 

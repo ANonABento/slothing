@@ -7,7 +7,7 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import db from "@/lib/db/schema";
+import db from "@/lib/db/legacy";
 import { randomUUID } from "crypto";
 
 // POST - Create extension session token
