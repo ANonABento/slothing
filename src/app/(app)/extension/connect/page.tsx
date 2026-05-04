@@ -2,28 +2,23 @@
 
 import { useEffect, useState } from "react";
 import { useUser } from "@clerk/nextjs";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CheckCircle, Loader2, Chrome, AlertCircle } from "lucide-react";
 
-function ExtensionConnectPageWithAuth() {
-  const { isSignedIn, isLoaded } = useUser();
-  const [status, setStatus] = useState<"loading" | "connecting" | "success" | "error">("loading");
+const isClerkConfigured = !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+
+type ConnectStatus = "loading" | "connecting" | "success" | "error";
+
+function useTokenGenerator() {
+  const [status, setStatus] = useState<ConnectStatus>("loading");
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!isLoaded) return;
-
-    if (!isSignedIn) {
-      // Redirect to sign in
-      window.location.href = `/sign-in?redirect_url=${encodeURIComponent("/extension/connect")}`;
-      return;
-    }
-
-    // User is signed in, generate token
-    generateToken();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLoaded, isSignedIn]);
 
   async function generateToken() {
     setStatus("connecting");
@@ -31,9 +26,7 @@ function ExtensionConnectPageWithAuth() {
       const response = await fetch("/api/extension/auth", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          deviceInfo: navigator.userAgent,
-        }),
+        body: JSON.stringify({ deviceInfo: navigator.userAgent }),
       });
 
       if (!response.ok) {
@@ -42,51 +35,74 @@ function ExtensionConnectPageWithAuth() {
 
       const { token, expiresAt } = await response.json();
 
-      // Send token to extension
-      // Try extension messaging (if extension provides externally_connectable)
+      const params = new URLSearchParams(window.location.search);
+      const extensionId = params.get("extensionId");
+
+      // chrome.runtime is only injected on pages that match an extension's
+      // externally_connectable manifest entry. Access through globalThis to
+      // keep this file typecheckable without @types/chrome in the main app.
+      const chromeGlobal = (
+        globalThis as unknown as {
+          chrome?: {
+            runtime?: {
+              sendMessage?: (
+                extensionId: string,
+                message: unknown,
+                responseCallback: (response: unknown) => void,
+              ) => void;
+            };
+          };
+        }
+      ).chrome;
+
+      const fallbackToLocalStorage = () => {
+        localStorage.setItem(
+          "columbus_extension_token",
+          JSON.stringify({ token, expiresAt }),
+        );
+        setStatus("success");
+      };
+
       try {
-        // @ts-expect-error - chrome may not exist
-        if (typeof chrome !== "undefined" && chrome.runtime?.sendMessage) {
-          // Try to send to extension
-          // @ts-expect-error - extension ID would be set
-          chrome.runtime.sendMessage(
-            undefined, // Extension ID would go here
+        if (extensionId && chromeGlobal?.runtime?.sendMessage) {
+          chromeGlobal.runtime.sendMessage(
+            extensionId,
             { type: "AUTH_CALLBACK", token, expiresAt },
             (response: unknown) => {
-              if (response) {
-                setStatus("success");
+              if (!response) {
+                fallbackToLocalStorage();
               } else {
-                // Fallback: show token for manual copy
-                showManualConnect(token, expiresAt);
+                setStatus("success");
               }
-            }
+            },
           );
         } else {
-          showManualConnect(token, expiresAt);
+          fallbackToLocalStorage();
         }
       } catch {
-        showManualConnect(token, expiresAt);
+        fallbackToLocalStorage();
       }
 
-      setStatus("success");
-
-      // Close tab after short delay
-      setTimeout(() => {
-        window.close();
-      }, 2000);
+      setTimeout(() => window.close(), 2000);
     } catch (err) {
       setError((err as Error).message);
       setStatus("error");
     }
   }
 
-  function showManualConnect(token: string, expiresAt: string) {
-    // Store in localStorage for extension to pick up
-    localStorage.setItem("columbus_extension_token", JSON.stringify({ token, expiresAt }));
-    setStatus("success");
-  }
+  return { status, error, generateToken };
+}
 
-  if (!isLoaded || status === "loading") {
+function StatusCard({
+  status,
+  error,
+  onRetry,
+}: {
+  status: ConnectStatus;
+  error: string | null;
+  onRetry: () => void;
+}) {
+  if (status === "loading") {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <Card className="w-full max-w-md">
@@ -145,7 +161,7 @@ function ExtensionConnectPageWithAuth() {
               <p className="text-center text-sm text-muted-foreground">
                 {error || "An unexpected error occurred"}
               </p>
-              <Button onClick={generateToken}>Try Again</Button>
+              <Button onClick={onRetry}>Try Again</Button>
             </>
           )}
         </CardContent>
@@ -154,21 +170,43 @@ function ExtensionConnectPageWithAuth() {
   );
 }
 
-export default function ExtensionConnectPage() {
-  if (!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY) {
-    return (
-      <div className="flex min-h-screen items-center justify-center p-4">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <CardTitle>Extension auth unavailable</CardTitle>
-            <CardDescription>
-              Add Clerk environment variables to connect the browser extension in this environment.
-            </CardDescription>
-          </CardHeader>
-        </Card>
-      </div>
-    );
+function ExtensionConnectPageWithAuth() {
+  const { isSignedIn, isLoaded } = useUser();
+  const { status, error, generateToken } = useTokenGenerator();
+
+  useEffect(() => {
+    if (!isLoaded) return;
+
+    if (!isSignedIn) {
+      window.location.href = `/sign-in?redirect_url=${encodeURIComponent("/extension/connect")}`;
+      return;
+    }
+
+    generateToken();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoaded, isSignedIn]);
+
+  if (!isLoaded) {
+    return <StatusCard status="loading" error={null} onRetry={generateToken} />;
   }
 
+  return <StatusCard status={status} error={error} onRetry={generateToken} />;
+}
+
+function ExtensionConnectPageLocalDev() {
+  const { status, error, generateToken } = useTokenGenerator();
+
+  useEffect(() => {
+    generateToken();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return <StatusCard status={status} error={error} onRetry={generateToken} />;
+}
+
+export default function ExtensionConnectPage() {
+  if (!isClerkConfigured) {
+    return <ExtensionConnectPageLocalDev />;
+  }
   return <ExtensionConnectPageWithAuth />;
 }
