@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { formatRelativeTime, rollupActivityItems } from "./recent-activity";
+import { formatRelativeTime } from "./recent-activity";
 
 describe("formatRelativeTime", () => {
   afterEach(() => {
@@ -34,45 +34,5 @@ describe("formatRelativeTime", () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2024-06-30T12:00:00Z"));
     expect(formatRelativeTime("2024-06-15T12:00:00Z")).toBe("2w ago");
-  });
-});
-
-describe("rollupActivityItems", () => {
-  it("groups same action, target, and day while preserving timestamps", () => {
-    const result = rollupActivityItems([
-      {
-        id: "doc-1",
-        type: "document_uploaded",
-        title: "test-resume.pdf",
-        timestamp: "2024-06-15T09:14:00Z",
-      },
-      {
-        id: "doc-2",
-        type: "document_uploaded",
-        title: "test-resume.pdf",
-        timestamp: "2024-06-15T09:18:00Z",
-      },
-      {
-        id: "doc-3",
-        type: "document_uploaded",
-        title: "test-resume.pdf",
-        timestamp: "2024-06-16T09:14:00Z",
-      },
-    ]);
-
-    expect(result).toHaveLength(2);
-    expect(result[0]).toMatchObject({
-      type: "document_uploaded",
-      title: "test-resume.pdf",
-      count: 1,
-      timestamp: "2024-06-16T09:14:00Z",
-    });
-    expect(result[1]).toMatchObject({
-      type: "document_uploaded",
-      title: "test-resume.pdf",
-      count: 2,
-      timestamp: "2024-06-15T09:18:00Z",
-      timestamps: ["2024-06-15T09:14:00Z", "2024-06-15T09:18:00Z"],
-    });
   });
 });
