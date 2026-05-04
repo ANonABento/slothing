@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import {
   ChunkCard,
   getEntryTitle,
@@ -361,47 +361,43 @@ describe("ChunkCard", () => {
     expect(screen.getByText("Edit")).toBeInTheDocument();
   });
 
-  it("should require delete confirmation", () => {
+  it("should require delete confirmation", async () => {
     const onDelete = vi.fn();
     const entry = makeBankEntry();
     render(<ChunkCard entry={entry} onUpdate={vi.fn()} onDelete={onDelete} />);
 
-    // Expand
     fireEvent.click(screen.getByText("Engineer at Acme Corp"));
-    // Click delete — should show confirmation
     fireEvent.click(screen.getByText("Delete"));
 
-    expect(screen.getByText("Delete this entry?")).toBeInTheDocument();
-    expect(screen.getByText("Yes, Delete")).toBeInTheDocument();
-    expect(screen.getByText("No")).toBeInTheDocument();
-    // Should NOT have called onDelete yet
+    expect(
+      await screen.findByText("Delete this profile bank entry?"),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Cancel" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Delete" })).toBeInTheDocument();
     expect(onDelete).not.toHaveBeenCalled();
   });
 
-  it("should call onDelete after confirmation", () => {
+  it("should call onDelete after confirmation", async () => {
     const onDelete = vi.fn();
     const entry = makeBankEntry();
     render(<ChunkCard entry={entry} onUpdate={vi.fn()} onDelete={onDelete} />);
 
-    // Expand → Delete → Confirm
     fireEvent.click(screen.getByText("Engineer at Acme Corp"));
     fireEvent.click(screen.getByText("Delete"));
-    fireEvent.click(screen.getByText("Yes, Delete"));
+    fireEvent.click(await screen.findByRole("button", { name: "Delete" }));
 
-    expect(onDelete).toHaveBeenCalledWith("test-1");
+    await waitFor(() => expect(onDelete).toHaveBeenCalledWith("test-1"));
   });
 
-  it("should cancel delete confirmation", () => {
+  it("should cancel delete confirmation", async () => {
     const onDelete = vi.fn();
     const entry = makeBankEntry();
     render(<ChunkCard entry={entry} onUpdate={vi.fn()} onDelete={onDelete} />);
 
-    // Expand → Delete → Cancel
     fireEvent.click(screen.getByText("Engineer at Acme Corp"));
     fireEvent.click(screen.getByText("Delete"));
-    fireEvent.click(screen.getByText("No"));
+    fireEvent.click(await screen.findByRole("button", { name: "Cancel" }));
 
-    // Should be back to normal view with Delete button
     expect(screen.getByText("Delete")).toBeInTheDocument();
     expect(onDelete).not.toHaveBeenCalled();
   });

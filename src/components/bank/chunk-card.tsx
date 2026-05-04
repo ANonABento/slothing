@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
+import { useConfirmDialog } from "@/components/ui/confirm-dialog";
 import type { ChunkCardProps } from "./chunk-card.types";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { cn, formatRelativeTime } from "@/lib/utils";
@@ -47,7 +48,7 @@ export function ChunkCard({
   const [expanded, setExpanded] = useState(false);
   const [editing, setEditing] = useState(false);
   const [editContent, setEditContent] = useState<Record<string, unknown>>({});
-  const [confirmDelete, setConfirmDelete] = useState(false);
+  const { confirm, dialog: confirmDialog } = useConfirmDialog();
 
   const config = CATEGORY_CONFIG[entry.category];
   const Icon = config.icon;
@@ -75,9 +76,16 @@ export function ChunkCard({
     setEditContent({});
   }
 
-  function handleConfirmDelete() {
-    onDelete(entry.id);
-    setConfirmDelete(false);
+  async function handleDelete() {
+    const confirmed = await confirm({
+      title: "Delete this profile bank entry?",
+      description:
+        "This permanently removes the saved profile bank entry. This cannot be undone.",
+      confirmLabel: "Delete",
+    });
+    if (confirmed) {
+      onDelete(entry.id);
+    }
   }
 
   return (
@@ -172,15 +180,13 @@ export function ChunkCard({
             <ChunkExpandedContent
               fields={fields}
               content={entry.content}
-              confirmDelete={confirmDelete}
               onEdit={handleEdit}
-              onDeleteClick={() => setConfirmDelete(true)}
-              onCancelDelete={() => setConfirmDelete(false)}
-              onConfirmDelete={handleConfirmDelete}
+              onDeleteClick={() => void handleDelete()}
             />
           )}
         </div>
       )}
+      {confirmDialog}
     </div>
   );
 }

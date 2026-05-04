@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { useConfirmDialog } from "@/components/ui/confirm-dialog";
 import { THEME_SURFACE_CLASSES } from "@/lib/theme/component-classes";
 import { cn } from "@/lib/utils";
 import { Trash2, FileText, CheckSquare, XSquare, Download } from "lucide-react";
@@ -24,54 +25,71 @@ export function BulkActionBar({
   onAddToResume,
   onExport,
 }: BulkActionBarProps) {
+  const { confirm, dialog: confirmDialog } = useConfirmDialog();
+
   if (selectedCount === 0) return null;
 
   const allSelected = selectedCount === totalCount;
 
+  async function handleDelete() {
+    const confirmed = await confirm({
+      title: `Delete ${selectedCount} selected entries?`,
+      description:
+        "This permanently removes the selected profile bank entries. This cannot be undone.",
+      confirmLabel: "Delete",
+    });
+    if (confirmed) {
+      onDelete();
+    }
+  }
+
   return (
-    <div
-      className={cn(
-        "sticky top-0 z-10 flex items-center gap-3 p-3",
-        THEME_SURFACE_CLASSES,
-      )}
-    >
-      <span className="text-sm font-medium">{selectedCount} selected</span>
-      <div className="h-4 w-px bg-border" />
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={allSelected ? onDeselectAll : onSelectAll}
-      >
-        {allSelected ? (
-          <>
-            <XSquare className="h-4 w-4 mr-1" />
-            Deselect All
-          </>
-        ) : (
-          <>
-            <CheckSquare className="h-4 w-4 mr-1" />
-            Select All
-          </>
+    <>
+      <div
+        className={cn(
+          "sticky top-0 z-10 flex items-center gap-3 p-3",
+          THEME_SURFACE_CLASSES,
         )}
-      </Button>
-      <div className="flex-1" />
-      <Button variant="ghost" size="sm" onClick={onExport}>
-        <Download className="h-4 w-4 mr-1" />
-        Export
-      </Button>
-      <Button variant="ghost" size="sm" onClick={onAddToResume}>
-        <FileText className="h-4 w-4 mr-1" />
-        Add to Resume
-      </Button>
-      <Button
-        variant="ghost"
-        size="sm"
-        className="text-destructive hover:text-destructive"
-        onClick={onDelete}
       >
-        <Trash2 className="h-4 w-4 mr-1" />
-        Delete
-      </Button>
-    </div>
+        <span className="text-sm font-medium">{selectedCount} selected</span>
+        <div className="h-4 w-px bg-border" />
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={allSelected ? onDeselectAll : onSelectAll}
+        >
+          {allSelected ? (
+            <>
+              <XSquare className="h-4 w-4 mr-1" />
+              Deselect All
+            </>
+          ) : (
+            <>
+              <CheckSquare className="h-4 w-4 mr-1" />
+              Select All
+            </>
+          )}
+        </Button>
+        <div className="flex-1" />
+        <Button variant="ghost" size="sm" onClick={onExport}>
+          <Download className="h-4 w-4 mr-1" />
+          Export
+        </Button>
+        <Button variant="ghost" size="sm" onClick={onAddToResume}>
+          <FileText className="h-4 w-4 mr-1" />
+          Add to Resume
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-destructive hover:text-destructive"
+          onClick={() => void handleDelete()}
+        >
+          <Trash2 className="h-4 w-4 mr-1" />
+          Delete
+        </Button>
+      </div>
+      {confirmDialog}
+    </>
   );
 }

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { BulkActionBar } from "./bulk-action-bar";
 
 const defaultProps = {
@@ -64,11 +64,16 @@ describe("BulkActionBar", () => {
     expect(onDeselectAll).toHaveBeenCalled();
   });
 
-  it("should call onDelete when Delete is clicked", () => {
+  it("should call onDelete only after delete confirmation", async () => {
     const onDelete = vi.fn();
     render(<BulkActionBar {...defaultProps} onDelete={onDelete} />);
     fireEvent.click(screen.getByText("Delete"));
-    expect(onDelete).toHaveBeenCalled();
+    expect(onDelete).not.toHaveBeenCalled();
+
+    await screen.findByText("Delete 3 selected entries?");
+    const deleteButtons = screen.getAllByRole("button", { name: "Delete" });
+    fireEvent.click(deleteButtons.at(-1)!);
+    await waitFor(() => expect(onDelete).toHaveBeenCalled());
   });
 
   it("should call onAddToResume when Add to Resume is clicked", () => {

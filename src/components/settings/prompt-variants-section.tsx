@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { CheckCircle, FlaskConical, Loader2, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useConfirmDialog } from "@/components/ui/confirm-dialog";
 import { cn } from "@/lib/utils";
 import type { PromptVariant, PromptVariantStats } from "@/lib/db/prompt-variants";
 
@@ -20,6 +21,7 @@ export function PromptVariantsSection() {
   const [showForm, setShowForm] = useState(false);
   const [newName, setNewName] = useState("");
   const [newContent, setNewContent] = useState("");
+  const { confirm, dialog: confirmDialog } = useConfirmDialog();
 
   const loadVariants = useCallback(async () => {
     try {
@@ -65,7 +67,16 @@ export function PromptVariantsSection() {
     }
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (variant: VariantWithStats) => {
+    const confirmed = await confirm({
+      title: "Delete this prompt variant?",
+      description:
+        "This permanently removes the prompt variant. Existing generated results remain, but the variant cannot be restored.",
+      confirmLabel: "Delete",
+    });
+    if (!confirmed) return;
+
+    const { id } = variant;
     setDeleting(id);
     try {
       await fetch(`/api/prompts/${id}`, { method: "DELETE" });
@@ -186,11 +197,12 @@ export function PromptVariantsSection() {
               activating={activating === v.id}
               deleting={deleting === v.id}
               onActivate={() => void handleActivate(v.id)}
-              onDelete={() => void handleDelete(v.id)}
+              onDelete={() => void handleDelete(v)}
             />
           ))}
         </div>
       )}
+      {confirmDialog}
     </section>
   );
 }

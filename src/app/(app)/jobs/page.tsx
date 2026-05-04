@@ -12,6 +12,7 @@ import { JobCard, type ResumeTemplate } from "@/components/jobs/job-card";
 import { ImportJobDialog } from "@/components/jobs/import-job-dialog";
 import { JobsNoResults } from "@/components/jobs/jobs-no-results";
 import { JobsToolbar } from "@/components/jobs/jobs-toolbar";
+import { useConfirmDialog } from "@/components/ui/confirm-dialog";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
 import { SkeletonJobCard } from "@/components/ui/skeleton";
 import { useErrorToast } from "@/hooks/use-error-toast";
@@ -73,6 +74,7 @@ export default function JobsPage() {
   const [sortBy, setSortBy] = useState<JobSortOption>("newest");
   const [viewMode, setViewMode] = useState<JobsViewMode>("list");
   const showErrorToast = useErrorToast();
+  const { confirm, dialog: confirmDialog } = useConfirmDialog();
 
   const fetchJobs = useCallback(async () => {
     try {
@@ -113,11 +115,19 @@ export default function JobsPage() {
     writeJobsViewMode(getJobsViewStorage(), mode);
   };
 
-  const deleteJob = async (id: string) => {
+  const deleteJob = async (job: JobDescription) => {
+    const confirmed = await confirm({
+      title: "Delete this job?",
+      description:
+        "This permanently removes the job, notes, status, and linked generated work from this list. This cannot be undone.",
+      confirmLabel: "Delete",
+    });
+    if (!confirmed) return;
+
     try {
-      const response = await fetch(`/api/jobs/${id}`, { method: "DELETE" });
+      const response = await fetch(`/api/jobs/${job.id}`, { method: "DELETE" });
       await readJsonResponse<unknown>(response, "Failed to delete job");
-      setJobs((prev) => prev.filter((job) => job.id !== id));
+      setJobs((prev) => prev.filter((item) => item.id !== job.id));
     } catch (error) {
       showErrorToast(error, {
         title: "Could not delete job",
@@ -256,7 +266,7 @@ export default function JobsPage() {
                     templates={templates} selectedTemplate={selectedTemplate[job.id] || "classic"} expanded={expandedDescription === job.id}
                     atsResult={atsResults[job.id]} atsAnalyzing={atsAnalyzing === job.id}
                     onSelectTemplate={(id) => setSelectedTemplate((prev) => ({ ...prev, [job.id]: id }))}
-                    onAnalyze={() => void analyzeJob(job.id)} onGenerate={() => void generateResume(job.id)} onDelete={() => void deleteJob(job.id)}
+                    onAnalyze={() => void analyzeJob(job.id)} onGenerate={() => void generateResume(job.id)} onDelete={() => void deleteJob(job)}
                     onStatusChange={(status) => void updateJobStatus(job.id, status as JobStatus)}
                     onToggleExpand={() => setExpandedDescription((prev) => (prev === job.id ? null : job.id))}
                     onAtsCheck={() => void runAtsCheck(job.id)} onAtsDialogOpen={() => setAtsDialogJob(job.id)} onCoverLetter={() => setCoverLetterJob(job)}
@@ -280,6 +290,7 @@ export default function JobsPage() {
 
         <ImportJobDialog open={showImportDialog} onOpenChange={setShowImportDialog} onJobImported={fetchJobs} />
         <AddJobDialog open={showAddDialog} onOpenChange={setShowAddDialog} onCreated={(job) => setJobs((prev) => [job, ...prev])} />
+        {confirmDialog}
       </div>
     </ErrorBoundary>
   );
