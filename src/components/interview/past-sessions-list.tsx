@@ -9,7 +9,9 @@ import {
   PlayCircle,
   Trash2,
 } from "lucide-react";
+import { TimeAgo } from "@/components/format/time-ago";
 import { Button } from "@/components/ui/button";
+import { pluralize } from "@/lib/text/pluralize";
 import type { JobDescription } from "@/types";
 import type { PastSession } from "@/types/interview";
 
@@ -69,13 +71,14 @@ export function PastSessionsList({
                     <p className="text-sm text-muted-foreground flex items-center gap-2">
                       <span>{job?.company || "Unknown Company"}</span>
                       <span>•</span>
-                      <span>{answeredCount}/{totalQuestions} questions</span>
+                      <span>
+                        {answeredCount}/{pluralize(totalQuestions, "question")}
+                      </span>
                       <span>•</span>
                       <span>{pastSession.mode === "voice" ? "Voice" : "Text"}</span>
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {new Date(pastSession.startedAt).toLocaleDateString()} at{" "}
-                      {new Date(pastSession.startedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                      <TimeAgo date={pastSession.startedAt} />
                     </p>
                   </div>
                 </div>
