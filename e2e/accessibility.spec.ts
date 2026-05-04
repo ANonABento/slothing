@@ -1,5 +1,11 @@
 import { test, expect, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
+import {
+  type HeadingDescriptor,
+  findHeadingOrderIssues,
+  hasAccessibleName,
+  parseHeadingLevel,
+} from "../src/lib/a11y";
 
 const LANDING_PAGE = { path: "/", name: "Landing" };
 
@@ -205,18 +211,21 @@ test.describe("Accessibility - Screen Reader Support", () => {
     await page.waitForLoadState("networkidle");
 
     const headings = await page.locator("h1, h2, h3, h4, h5, h6").all();
-    let lastLevel = 0;
+    const descriptors: HeadingDescriptor[] = [];
 
     for (const heading of headings) {
       const tagName = await heading.evaluate((element) => element.tagName);
-      const level = parseInt(tagName.charAt(1), 10);
+      const level = parseHeadingLevel(tagName);
+      if (level === null) continue;
+      const text = (await heading.textContent()) ?? undefined;
+      descriptors.push({ level, text });
+    }
 
-      if (lastLevel > 0 && level > lastLevel + 1) {
-        const text = await heading.textContent();
-        console.log(`Skipped heading level: ${tagName} "${text}" after h${lastLevel}`);
-      }
-
-      lastLevel = level;
+    for (const issue of findHeadingOrderIssues(descriptors)) {
+      // eslint-disable-next-line no-console
+      console.log(
+        `Skipped heading level: h${issue.level} "${issue.text ?? ""}" after h${issue.previousLevel}`,
+      );
     }
   });
 
@@ -234,14 +243,16 @@ test.describe("Accessibility - Screen Reader Support", () => {
       const textContent = await button.textContent();
       const title = await button.getAttribute("title");
 
-      const hasName =
-        ariaLabel !== null ||
-        ariaLabelledBy !== null ||
-        Boolean(textContent && textContent.trim().length > 0) ||
-        title !== null;
+      const hasName = hasAccessibleName({
+        ariaLabel,
+        ariaLabelledBy,
+        textContent,
+        title,
+      });
 
       if (!hasName) {
         const buttonHtml = await button.evaluate((element) => element.outerHTML);
+        // eslint-disable-next-line no-console
         console.log(`Button missing accessible name: ${buttonHtml.substring(0, 100)}`);
       }
 
@@ -250,7 +261,7 @@ test.describe("Accessibility - Screen Reader Support", () => {
         (!textContent || textContent.trim().length === 0);
 
       if (hasOnlySvg) {
-        expect(ariaLabel !== null || title !== null).toBe(true);
+        expect(hasAccessibleName({ ariaLabel, title })).toBe(true);
       }
     }
   });

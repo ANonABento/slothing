@@ -105,10 +105,11 @@ export interface AccessibleNameInputs {
 }
 
 export function hasAccessibleName(inputs: AccessibleNameInputs): boolean {
-  if (inputs.ariaLabel && inputs.ariaLabel.trim().length > 0) return true;
-  if (inputs.ariaLabelledBy && inputs.ariaLabelledBy.trim().length > 0)
-    return true;
-  if (inputs.textContent && inputs.textContent.trim().length > 0) return true;
-  if (inputs.title && inputs.title.trim().length > 0) return true;
-  return false;
+  const candidates = [
+    inputs.ariaLabel,
+    inputs.ariaLabelledBy,
+    inputs.textContent,
+    inputs.title,
+  ];
+  return candidates.some((value) => !!value && value.trim().length > 0);
 }
