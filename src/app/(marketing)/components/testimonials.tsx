@@ -30,7 +30,7 @@ const stats = [
 
 export function Testimonials() {
   return (
-    <section id="testimonials" className="py-20 lg:py-32">
+    <section id="testimonials" className="pt-20 lg:pt-32">
       <div className="max-w-6xl mx-auto px-6">
         {/* Section Header */}
         <div className="text-center max-w-2xl mx-auto mb-16">
@@ -60,9 +60,7 @@ export function Testimonials() {
               <div className="text-3xl md:text-4xl font-bold gradient-text mb-2">
                 {stat.value}
               </div>
-              <div className="text-sm text-muted-foreground">
-                {stat.label}
-              </div>
+              <div className="text-sm text-muted-foreground">{stat.label}</div>
             </div>
           ))}
         </div>
@@ -70,8 +68,8 @@ export function Testimonials() {
         {/* Testimonial placeholder */}
         <div className="mt-12 p-8 rounded-2xl border bg-card text-center">
           <p className="text-muted-foreground italic">
-            &quot;Taida turned my 3-hour resume rewrite into a 5-minute task.
-            I got callbacks from companies that never responded before.&quot;
+            &quot;Taida turned my 3-hour resume rewrite into a 5-minute task. I
+            got callbacks from companies that never responded before.&quot;
           </p>
           <div className="mt-4 flex items-center justify-center gap-3">
             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center text-sm font-medium">

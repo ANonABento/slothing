@@ -1,5 +1,3 @@
-import Link from "next/link";
-
 export const metadata = {
   title: "Privacy Policy",
   description: "How Taida stores, uses, and protects your job search data.",
@@ -16,24 +14,14 @@ export const metadata = {
 
 export default function PrivacyPage() {
   return (
-    <main className="min-h-screen bg-background">
-      <div className="mx-auto max-w-3xl px-6 py-16">
+    <div className="bg-background">
+      <div className="mx-auto max-w-3xl px-6 py-32">
         <div className="mb-10">
-          <Link
-            href="/"
-            className="inline-flex min-h-11 items-center text-sm text-muted-foreground transition-colors hover:text-foreground"
-          >
-            Back to home
-          </Link>
-          <h1 className="mt-4 text-4xl font-bold tracking-tight">
-            Privacy Policy
-          </h1>
-          <p className="mt-3 text-muted-foreground">
-            Effective March 25, 2026.
-          </p>
+          <h1 className="text-4xl font-bold tracking-tight">Privacy Policy</h1>
+          <p className="mt-3 text-foreground">Effective March 25, 2026.</p>
         </div>
 
-        <div className="space-y-8 text-sm leading-7 text-muted-foreground">
+        <div className="space-y-8 text-sm leading-7 text-foreground">
           <section>
             <h2 className="text-xl font-semibold text-foreground">
               What we collect
@@ -90,6 +78,6 @@ export default function PrivacyPage() {
           </section>
         </div>
       </div>
-    </main>
+    </div>
   );
 }

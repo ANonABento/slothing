@@ -3,14 +3,9 @@ import { Sparkles } from "lucide-react";
 
 const footerLinks = {
   product: [
-    { name: "Features", href: "#features" },
-    { name: "How It Works", href: "#how-it-works" },
+    { name: "Features", href: "/#features" },
+    { name: "How It Works", href: "/#how-it-works" },
     { name: "ATS Scanner", href: "/ats-scanner" },
-  ],
-  resources: [
-    { name: "Dashboard", href: "/dashboard" },
-    { name: "Knowledge Bank", href: "/bank" },
-    { name: "Interview Prep", href: "/interview" },
   ],
   legal: [
     { name: "Privacy Policy", href: "/privacy" },
@@ -22,7 +17,7 @@ export function Footer() {
   return (
     <footer className="border-t bg-card">
       <div className="max-w-6xl mx-auto px-6 py-12">
-        <div className="grid md:grid-cols-4 gap-8">
+        <div className="grid md:grid-cols-3 gap-8">
           {/* Brand */}
           <div className="md:col-span-1">
             <Link href="/" className="flex items-center gap-3 mb-4">
@@ -42,33 +37,6 @@ export function Footer() {
             <h3 className="font-semibold mb-4">Product</h3>
             <ul className="space-y-2">
               {footerLinks.product.map((link) => (
-                <li key={link.name}>
-                  {link.href.startsWith("#") ? (
-                    <a
-                      href={link.href}
-                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                      {link.name}
-                    </a>
-                  ) : (
-                    <Link
-                      href={link.href}
-                      prefetch={false}
-                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                      {link.name}
-                    </Link>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Resources Links */}
-          <div>
-            <h3 className="font-semibold mb-4">Resources</h3>
-            <ul className="space-y-2">
-              {footerLinks.resources.map((link) => (
                 <li key={link.name}>
                   <Link
                     href={link.href}

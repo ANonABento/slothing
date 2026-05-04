@@ -20,9 +20,25 @@ describe("Features", () => {
   it("should render feature descriptions", () => {
     render(<Features />);
     expect(screen.getByText(/searchable knowledge bank/)).toBeInTheDocument();
-    expect(screen.getByText(/Deterministic section detection/)).toBeInTheDocument();
-    expect(screen.getByText(/Match your bank against any job/)).toBeInTheDocument();
-    expect(screen.getByText(/Score your resume against real ATS/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Deterministic section detection/),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/Match your bank against any job/),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/Score your resume against real ATS/),
+    ).toBeInTheDocument();
+  });
+
+  it("should render one deduped section description", () => {
+    render(<Features />);
+    expect(
+      screen.getByText(/Taida combines smart parsing with AI tailoring/),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText(/AI-powered tools with smart tracking/),
+    ).not.toBeInTheDocument();
   });
 
   it("should render exactly 4 feature cards", () => {

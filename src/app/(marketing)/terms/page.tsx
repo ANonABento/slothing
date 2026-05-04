@@ -1,5 +1,3 @@
-import Link from "next/link";
-
 export const metadata = {
   title: "Terms of Service",
   description: "Terms governing use of the Taida application.",
@@ -16,24 +14,16 @@ export const metadata = {
 
 export default function TermsPage() {
   return (
-    <main className="min-h-screen bg-background">
-      <div className="mx-auto max-w-3xl px-6 py-16">
+    <div className="bg-background">
+      <div className="mx-auto max-w-3xl px-6 py-32">
         <div className="mb-10">
-          <Link
-            href="/"
-            className="inline-flex min-h-11 items-center text-sm text-muted-foreground transition-colors hover:text-foreground"
-          >
-            Back to home
-          </Link>
-          <h1 className="mt-4 text-4xl font-bold tracking-tight">
+          <h1 className="text-4xl font-bold tracking-tight">
             Terms of Service
           </h1>
-          <p className="mt-3 text-muted-foreground">
-            Effective March 25, 2026.
-          </p>
+          <p className="mt-3 text-foreground">Effective March 25, 2026.</p>
         </div>
 
-        <div className="space-y-8 text-sm leading-7 text-muted-foreground">
+        <div className="space-y-8 text-sm leading-7 text-foreground">
           <section>
             <h2 className="text-xl font-semibold text-foreground">
               Use of the service
@@ -92,6 +82,6 @@ export default function TermsPage() {
           </section>
         </div>
       </div>
-    </main>
+    </div>
   );
 }

@@ -11,7 +11,7 @@ const benefits = [
 
 export function CTASection() {
   return (
-    <section className="py-20 lg:py-32 bg-muted/30">
+    <section className="pt-20 lg:pt-32 bg-muted/30">
       <div className="max-w-4xl mx-auto px-6 text-center">
         {/* ATS Scanner CTA */}
         <div className="relative rounded-3xl border bg-card p-8 md:p-12 overflow-hidden mb-8">
@@ -25,8 +25,7 @@ export function CTASection() {
               <ScanSearch className="h-8 w-8" />
             </div>
             <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">
-              Try the free{" "}
-              <span className="gradient-text">ATS Scanner</span>
+              Try the free <span className="gradient-text">ATS Scanner</span>
             </h2>
             <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
               Paste your resume and a job description. Get an instant ATS
@@ -56,8 +55,6 @@ export function CTASection() {
             <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
               Join thousands of job seekers who build tailored resumes in
               minutes, not hours.
-              Join thousands of successful job seekers who have transformed their
-              career journey with Taida.
             </p>
 
             {/* Benefits */}
@@ -76,11 +73,10 @@ export function CTASection() {
             <Button
               asChild
               size="lg"
-              variant="outline"
+              className="gradient-bg text-white hover:opacity-90 shadow-lg shadow-primary/25"
             >
               <Link href="/sign-up?redirect_url=/dashboard" prefetch={false}>
-                Get Started Free
-                <ArrowRight className="ml-2 h-5 w-5" />
+                Create your free account →
               </Link>
             </Button>
 

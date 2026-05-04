@@ -1,9 +1,4 @@
-import {
-  Database,
-  FileSearch,
-  Wand2,
-  ScanSearch,
-} from "lucide-react";
+import { Database, FileSearch, Wand2, ScanSearch } from "lucide-react";
 
 const features = [
   {
@@ -38,7 +33,7 @@ const features = [
 
 export function Features() {
   return (
-    <section id="features" className="py-20 lg:py-32">
+    <section id="features" className="pt-20 lg:pt-32">
       <div className="max-w-6xl mx-auto px-6">
         {/* Section Header */}
         <div className="text-center max-w-2xl mx-auto mb-16">
@@ -50,10 +45,8 @@ export function Features() {
             <span className="gradient-text">working for you</span>
           </h2>
           <p className="text-lg text-muted-foreground">
-            Taida combines smart parsing with AI tailoring to turn your
-            career history into job-winning resumes.
-            Taida combines AI-powered tools with smart tracking to streamline
-            your entire job search process.
+            Taida combines smart parsing with AI tailoring to turn your career
+            history into job-winning resumes.
           </p>
         </div>
 

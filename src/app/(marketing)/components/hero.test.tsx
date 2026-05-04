@@ -14,14 +14,14 @@ describe("Hero", () => {
     render(<Hero />);
     // Badge text is mixed with icons in a container; use regex to find substring
     expect(
-      screen.getByText(/AI-Powered Resume Intelligence/)
+      screen.getByText(/AI-Powered Resume Intelligence/),
     ).toBeInTheDocument();
   });
 
   it("should render the subheadline with Taida description", () => {
     render(<Hero />);
     expect(
-      screen.getByText(/Taida builds a knowledge bank/)
+      screen.getByText(/Taida builds a knowledge bank/),
     ).toBeInTheDocument();
   });
 
@@ -36,13 +36,16 @@ describe("Hero", () => {
     const getStarted = screen.getByRole("link", { name: /Get Started/ });
     expect(getStarted).toHaveAttribute(
       "href",
-      "/sign-up?redirect_url=/dashboard"
+      "/sign-up?redirect_url=/dashboard",
     );
   });
 
-  it("should render social proof section", () => {
+  it("should not render placeholder social proof", () => {
     render(<Hero />);
-    expect(screen.getByText(/Join 10,000\+ job seekers/)).toBeInTheDocument();
-    expect(screen.getByText("4.9/5 rating")).toBeInTheDocument();
+    expect(
+      screen.queryByText(/Join 10,000\+ job seekers/),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText("4.9/5 rating")).not.toBeInTheDocument();
+    expect(screen.queryByText("A")).not.toBeInTheDocument();
   });
 });
