@@ -19,11 +19,14 @@ export interface PersonaFixtureRequirement {
 }
 
 export interface JourneyStepDefinition {
-  id: string;
   label: string;
   expected: string;
   screenshotName: string;
 }
+
+const MAX_BANK_ASSERTIONS = 25;
+const STABLE_KEY_BLOCKLIST = /^(id|uuid|createdAt|updatedAt|sourceDocumentId)$/i;
+const MIN_ASSERTION_LENGTH = 3;
 
 export interface PersonaTargetOpportunity {
   title: string;
@@ -55,60 +58,51 @@ export const requiredPersonaFixtures = Object.values(
 
 export const personaJourneySteps = {
   signUp: {
-    id: "sign-up",
     label: "Sign up",
     expected: "A unique persona email can reach the authenticated app shell.",
     screenshotName: "01-sign-up.png",
   },
   onboarding: {
-    id: "onboarding",
     label: "Onboarding",
     expected:
       "The persona can complete or skip onboarding with reasonable defaults.",
     screenshotName: "02-onboarding.png",
   },
   uploadResume: {
-    id: "upload-resume",
     label: "Upload resume",
     expected: "The persona resume PDF uploads and creates parsed profile data.",
     screenshotName: "03-upload-resume.png",
   },
   verifyBank: {
-    id: "verify-bank",
     label: "Verify bank",
     expected:
       "The rendered bank entries match the persona expected.json fixture.",
     screenshotName: "04-verify-bank.png",
   },
   addOpportunity: {
-    id: "add-opportunity",
     label: "Add target opportunity",
     expected:
       "The target job URL or manual data creates a tracked opportunity.",
     screenshotName: "05-add-opportunity.png",
   },
   tailorResume: {
-    id: "tailor-resume",
     label: "Tailor resume",
     expected: "Studio generates a tailored resume for the new opportunity.",
     screenshotName: "06-tailor-resume.png",
   },
   coverLetter: {
-    id: "cover-letter",
     label: "Generate cover letter",
     expected:
       "The cover-letter flow generates persona- and job-specific content.",
     screenshotName: "07-cover-letter.png",
   },
   atsScan: {
-    id: "ats-scan",
     label: "Run ATS scan",
     expected:
       "The ATS scanner accepts the resume and job description and returns a score.",
     screenshotName: "08-ats-scan.png",
   },
   analytics: {
-    id: "analytics",
     label: "Check analytics",
     expected: "Analytics includes the new application in the funnel.",
     screenshotName: "09-analytics.png",
@@ -243,8 +237,8 @@ export function collectExpectedBankAssertions(fixture: unknown): string[] {
     if (typeof value === "string") {
       const normalized = value.trim().replace(/\s+/g, " ");
       if (
-        normalized.length >= 3 &&
-        !/^(id|uuid|createdAt|updatedAt|sourceDocumentId)$/i.test(key ?? "")
+        normalized.length >= MIN_ASSERTION_LENGTH &&
+        !STABLE_KEY_BLOCKLIST.test(key ?? "")
       ) {
         assertions.add(normalized);
       }
@@ -264,5 +258,5 @@ export function collectExpectedBankAssertions(fixture: unknown): string[] {
   }
 
   visit(fixture);
-  return [...assertions].slice(0, 25);
+  return [...assertions].slice(0, MAX_BANK_ASSERTIONS);
 }

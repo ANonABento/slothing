@@ -16,11 +16,21 @@ import {
   personaFixtureRequirements,
   personaJourneySteps,
   requiredPersonaFixtures,
+  type JourneyStepDefinition,
   type PersonaSlug,
   type PersonaTargetOpportunity,
 } from "../../src/lib/persona-journey";
 
 const repoRoot = path.resolve(__dirname, "../..");
+const JOURNEY_SCREENSHOT_DIR = path.join(
+  repoRoot,
+  "tests",
+  "journey-screenshots",
+);
+
+const VISIBLE_PROBE_TIMEOUT_MS = 1000;
+const DIALOG_TIMEOUT_MS = 10_000;
+const UPLOAD_TIMEOUT_MS = 120_000;
 
 function existingFixturePaths(slug: PersonaSlug): Set<string> {
   return new Set(
@@ -40,24 +50,26 @@ async function captureStep(
   page: Page,
   testInfo: TestInfo,
   slug: PersonaSlug,
-  screenshotName: string,
+  step: JourneyStepDefinition,
 ): Promise<void> {
   const screenshotPath = path.join(
-    repoRoot,
-    "tests",
-    "journey-screenshots",
+    JOURNEY_SCREENSHOT_DIR,
     slug,
-    screenshotName,
+    step.screenshotName,
   );
   fs.mkdirSync(path.dirname(screenshotPath), { recursive: true });
   await page.screenshot({ path: screenshotPath, fullPage: true });
-  await testInfo.attach(`${slug}-${screenshotName}`, {
+  await testInfo.attach(`${slug}-${step.screenshotName}`, {
     path: screenshotPath,
     contentType: "image/png",
   });
-  await testInfo.attach(`${slug}-${screenshotName}.dom.html`, {
+  await testInfo.attach(`${slug}-${step.screenshotName}.dom.html`, {
     body: await page.locator("body").evaluate((body) => body.outerHTML),
     contentType: "text/html",
+  });
+  await testInfo.attach(`${slug}-${step.screenshotName}.expected.txt`, {
+    body: step.expected,
+    contentType: "text/plain",
   });
 }
 
@@ -71,12 +83,12 @@ async function attachApiState(
   page: Page,
   testInfo: TestInfo,
   slug: PersonaSlug,
-  stepId: string,
+  stepKey: string,
   endpoint: string,
 ): Promise<void> {
   const response = await page.request.get(endpoint);
   const body = await response.text();
-  await testInfo.attach(`${slug}-${stepId}-${endpoint.replace(/\W+/g, "-")}`, {
+  await testInfo.attach(`${slug}-${stepKey}-${endpoint.replace(/\W+/g, "-")}`, {
     body,
     contentType:
       response.headers()["content-type"]?.split(";")[0] ??
@@ -92,7 +104,9 @@ async function fillIfPresent(
 ): Promise<void> {
   if (!value) return;
   const field = scope.getByLabel(label).first();
-  if (await field.isVisible({ timeout: 1000 }).catch(() => false)) {
+  if (
+    await field.isVisible({ timeout: VISIBLE_PROBE_TIMEOUT_MS }).catch(() => false)
+  ) {
     await field.fill(value);
   }
 }
@@ -123,9 +137,9 @@ async function addTargetOpportunity(
     dialog.getByRole("button", { name: /^add opportunity$/i }).click(),
   ]);
 
-  await expect(dialog).not.toBeVisible({ timeout: 10000 });
+  await expect(dialog).not.toBeVisible({ timeout: DIALOG_TIMEOUT_MS });
   await expect(page.getByText(opportunity.title, { exact: false })).toBeVisible(
-    { timeout: 10000 },
+    { timeout: DIALOG_TIMEOUT_MS },
   );
 }
 
@@ -151,147 +165,131 @@ export function createPersonaJourneySpec(slug: PersonaSlug): void {
         ),
       );
 
-      // Expected: sign-up accepts a unique email or the E2E header auth bypass lands in the app shell.
-      await expectReachable(page, "/sign-up");
-      await page
-        .getByLabel(/email/i)
-        .fill(email)
-        .catch(() => undefined);
-      await captureStep(
-        page,
-        testInfo,
-        slug,
-        personaJourneySteps.signUp.screenshotName,
-      );
+      await test.step(personaJourneySteps.signUp.label, async () => {
+        await expectReachable(page, "/sign-up");
+        await page
+          .getByLabel(/email/i)
+          .fill(email)
+          .catch(() => undefined);
+        await captureStep(page, testInfo, slug, personaJourneySteps.signUp);
+      });
 
-      // Expected: onboarding can be completed or skipped using reasonable defaults for this persona.
-      await expectReachable(page, "/dashboard");
-      const skip = page.getByRole("button", { name: /skip|later|close/i });
-      if (await skip.isVisible({ timeout: 1000 }).catch(() => false)) {
-        await skip.click();
-      }
-      await captureStep(
-        page,
-        testInfo,
-        slug,
-        personaJourneySteps.onboarding.screenshotName,
-      );
+      await test.step(personaJourneySteps.onboarding.label, async () => {
+        await expectReachable(page, "/dashboard");
+        const skip = page.getByRole("button", { name: /skip|later|close/i });
+        if (
+          await skip
+            .isVisible({ timeout: VISIBLE_PROBE_TIMEOUT_MS })
+            .catch(() => false)
+        ) {
+          await skip.click();
+        }
+        await captureStep(page, testInfo, slug, personaJourneySteps.onboarding);
+      });
 
-      // Expected: upload accepts the persona resume PDF and creates parsed profile/bank data.
-      await expectReachable(page, "/bank");
-      const resumePath = path.join(
-        repoRoot,
-        fixturePathFor(personaFixtureRequirements.resumePdf, slug),
-      );
-      const fileInput = page.locator('input[type="file"]').first();
-      await Promise.all([
-        page.waitForResponse(
-          (response) =>
-            new URL(response.url()).pathname === "/api/upload" &&
-            response.request().method() === "POST",
-          { timeout: 120000 },
-        ),
-        fileInput.setInputFiles(resumePath),
-      ]);
-      await attachApiState(page, testInfo, slug, "upload-resume", "/api/bank");
-      await captureStep(
-        page,
-        testInfo,
-        slug,
-        personaJourneySteps.uploadResume.screenshotName,
-      );
+      await test.step(personaJourneySteps.uploadResume.label, async () => {
+        await expectReachable(page, "/bank");
+        const resumePath = path.join(
+          repoRoot,
+          fixturePathFor(personaFixtureRequirements.resumePdf, slug),
+        );
+        const fileInput = page.locator('input[type="file"]').first();
+        await Promise.all([
+          page.waitForResponse(
+            (response) =>
+              new URL(response.url()).pathname === "/api/upload" &&
+              response.request().method() === "POST",
+            { timeout: UPLOAD_TIMEOUT_MS },
+          ),
+          fileInput.setInputFiles(resumePath),
+        ]);
+        await attachApiState(page, testInfo, slug, "upload-resume", "/api/bank");
+        await captureStep(
+          page,
+          testInfo,
+          slug,
+          personaJourneySteps.uploadResume,
+        );
+      });
 
-      // Expected: /bank renders entries matching the persona expected.json fixture.
-      await expectReachable(page, "/bank");
       const expectedBankAssertions =
         collectExpectedBankAssertions(expectedBankFixture);
-      expect(
-        expectedBankAssertions.length,
-        "expected.json must include rendered bank values to compare",
-      ).toBeGreaterThan(0);
-      for (const expectedText of expectedBankAssertions) {
-        await expect(page.locator("body")).toContainText(expectedText);
-      }
-      await captureStep(
-        page,
-        testInfo,
-        slug,
-        personaJourneySteps.verifyBank.screenshotName,
-      );
 
-      // Expected: the target opportunity can be added from URL or manual fixture data.
-      await expectReachable(page, "/opportunities");
-      await addTargetOpportunity(page, targetOpportunity);
-      await attachApiState(
-        page,
-        testInfo,
-        slug,
-        "add-opportunity",
-        "/api/opportunities",
-      );
-      await captureStep(
-        page,
-        testInfo,
-        slug,
-        personaJourneySteps.addOpportunity.screenshotName,
-      );
+      await test.step(personaJourneySteps.verifyBank.label, async () => {
+        await expectReachable(page, "/bank");
+        expect(
+          expectedBankAssertions.length,
+          "expected.json must include rendered bank values to compare",
+        ).toBeGreaterThan(0);
+        for (const expectedText of expectedBankAssertions) {
+          await expect(page.locator("body")).toContainText(expectedText);
+        }
+        await captureStep(page, testInfo, slug, personaJourneySteps.verifyBank);
+      });
 
-      // Expected: Studio can generate a tailored resume for the newly added opportunity.
-      await expectReachable(page, "/studio");
-      await expect(page.locator("body")).toContainText(
-        /studio|resume|document/i,
-      );
-      await expect(page.locator("body")).toContainText(
-        new RegExp(
-          targetOpportunity.title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
-          "i",
-        ),
-      );
-      await captureStep(
-        page,
-        testInfo,
-        slug,
-        personaJourneySteps.tailorResume.screenshotName,
-      );
+      await test.step(personaJourneySteps.addOpportunity.label, async () => {
+        await expectReachable(page, "/opportunities");
+        await addTargetOpportunity(page, targetOpportunity);
+        await attachApiState(
+          page,
+          testInfo,
+          slug,
+          "add-opportunity",
+          "/api/opportunities",
+        );
+        await captureStep(
+          page,
+          testInfo,
+          slug,
+          personaJourneySteps.addOpportunity,
+        );
+      });
 
-      // Expected: cover-letter flow generates persona- and job-specific content.
-      await expectReachable(page, "/cover-letter");
-      await expect(page.locator("body")).toContainText(/cover letter|letter/i);
-      await captureStep(
-        page,
-        testInfo,
-        slug,
-        personaJourneySteps.coverLetter.screenshotName,
-      );
+      await test.step(personaJourneySteps.tailorResume.label, async () => {
+        await expectReachable(page, "/studio");
+        await expect(page.locator("body")).toContainText(
+          /studio|resume|document/i,
+        );
+        await expect(page.locator("body")).toContainText(
+          new RegExp(
+            targetOpportunity.title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
+            "i",
+          ),
+        );
+        await captureStep(
+          page,
+          testInfo,
+          slug,
+          personaJourneySteps.tailorResume,
+        );
+      });
 
-      // Expected: ATS scanner accepts the resume and job description and returns a result.
-      await expectReachable(page, "/ats-scanner");
-      await expect(page.locator("body")).toContainText(/ats|scan|score/i);
-      await fillIfPresent(page, /resume/i, expectedBankAssertions.join("\n"));
-      await fillIfPresent(
-        page,
-        /job description|description/i,
-        targetOpportunity.summary,
-      );
-      await captureStep(
-        page,
-        testInfo,
-        slug,
-        personaJourneySteps.atsScan.screenshotName,
-      );
+      await test.step(personaJourneySteps.coverLetter.label, async () => {
+        await expectReachable(page, "/cover-letter");
+        await expect(page.locator("body")).toContainText(/cover letter|letter/i);
+        await captureStep(page, testInfo, slug, personaJourneySteps.coverLetter);
+      });
 
-      // Expected: analytics includes the new application in the funnel.
-      await expectReachable(page, "/analytics");
-      await expect(page.locator("body")).toContainText(
-        /analytics|funnel|application/i,
-      );
-      await attachApiState(page, testInfo, slug, "analytics", "/api/analytics");
-      await captureStep(
-        page,
-        testInfo,
-        slug,
-        personaJourneySteps.analytics.screenshotName,
-      );
+      await test.step(personaJourneySteps.atsScan.label, async () => {
+        await expectReachable(page, "/ats-scanner");
+        await expect(page.locator("body")).toContainText(/ats|scan|score/i);
+        await fillIfPresent(page, /resume/i, expectedBankAssertions.join("\n"));
+        await fillIfPresent(
+          page,
+          /job description|description/i,
+          targetOpportunity.summary,
+        );
+        await captureStep(page, testInfo, slug, personaJourneySteps.atsScan);
+      });
+
+      await test.step(personaJourneySteps.analytics.label, async () => {
+        await expectReachable(page, "/analytics");
+        await expect(page.locator("body")).toContainText(
+          /analytics|funnel|application/i,
+        );
+        await attachApiState(page, testInfo, slug, "analytics", "/api/analytics");
+        await captureStep(page, testInfo, slug, personaJourneySteps.analytics);
+      });
     });
   });
 }
