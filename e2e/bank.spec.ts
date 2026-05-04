@@ -57,15 +57,13 @@ test.describe("Bank Page - Layout & Empty State", () => {
   });
 
   test("displays category filter chips", async ({ page }) => {
-    // Anchored patterns avoid matching chunk card buttons whose accessible
-    // names can also contain category words from parsed document content.
+    // Empty categories are hidden; only the always-on "All" tab is guaranteed
+    // to render on a fresh bank. Anchored pattern avoids matching chunk card
+    // buttons whose accessible names can contain category words.
+    await expect(
+      page.getByRole("tablist", { name: /filter by category/i })
+    ).toBeVisible();
     await expect(page.getByRole("tab", { name: /^all/i })).toBeVisible();
-    await expect(
-      page.getByRole("tab", { name: /^experience/i })
-    ).toBeVisible();
-    await expect(
-      page.getByRole("tab", { name: /^skills/i })
-    ).toBeVisible();
   });
 
   test("displays sort dropdown", async ({ page }) => {
