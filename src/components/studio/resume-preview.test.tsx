@@ -137,6 +137,9 @@ describe("ResumePreview", () => {
 
     expect(letter).toHaveTextContent("Letter body");
     expect(htmlWrapper).not.toHaveClass("px-14");
+    expect(previewPage?.className).toContain("bg-paper");
+    expect(previewPage?.className).toContain("text-paper-foreground");
+    expect(previewPage?.className).toContain("border-paper-border");
     expect(previewPage?.className).toContain("shadow-[var(--shadow-elevated)]");
     expect(previewPage).not.toHaveStyle("border-top: 4px solid #1f2937");
   });

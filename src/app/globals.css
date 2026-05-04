@@ -5,10 +5,21 @@
 @layer base {
   :root {
     color-scheme: light;
+    --surface-paper: 0 0% 100%;
+    --paper-foreground: 0 0% 0%;
+    --surface-paper-border: 0 0% 90%;
+    --surface-scrim: 0 0% 0%;
   }
 
   .dark {
     color-scheme: dark;
+  }
+
+  [data-theme] {
+    --surface-paper: 0 0% 100%;
+    --paper-foreground: 0 0% 0%;
+    --surface-paper-border: 0 0% 90%;
+    --surface-scrim: 0 0% 0%;
   }
 }
 

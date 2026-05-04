@@ -56,6 +56,12 @@ const config: Config = {
           DEFAULT: "hsl(var(--info))",
           foreground: "hsl(var(--info-foreground))",
         },
+        paper: {
+          DEFAULT: "hsl(var(--surface-paper))",
+          foreground: "hsl(var(--paper-foreground))",
+          border: "hsl(var(--surface-paper-border))",
+        },
+        scrim: "hsl(var(--surface-scrim))",
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
