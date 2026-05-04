@@ -1,6 +1,6 @@
 # Resume Parsing Verification Results
 
-Generated: 2026-05-04T07:54:22.235Z
+Generated: 2026-05-04T10:45:30.738Z
 
 ## Score Table
 
@@ -19,7 +19,9 @@ Generated: 2026-05-04T07:54:22.235Z
 
 ## Top 5 Failure Modes by Frequency
 
-- **Parser limitation** (23, medium): Missed expected experience: Software Developer at Keystone Robotics Personas: career-changer, career-gap, entry-cs-grad, heavy-formatting, mid-engineer, multi-job-pm, non-english-mandarin, non-english-spanish, scanned-pdf, senior-ic.
+- **Parser limitation — zero entries extracted** (17, high): Missed expected experience: Software Developer at Keystone Robotics Personas: career-changer, career-gap, entry-cs-grad, heavy-formatting, mid-engineer, multi-job-pm, senior-ic.
+- **AI prompt issue — resume in non-English language** (4, high): Missed expected experience: 后端软件工程师 at 星桥科技 Personas: non-english-mandarin, non-english-spanish.
+- **Parser limitation — scanned PDF / OCR not wired** (2, high): Missed expected experience: QA Automation Engineer at Oakline Software Personas: scanned-pdf.
 
 ## Per-Persona Narrative
 
@@ -107,4 +109,6 @@ Surprising findings: Harness calls extractTextFromFile, smartParseResume, and ex
 
 Bento task creation MCP was unavailable in this session, so these task titles are queued for creation:
 
-- [pending-mcp] Parsing fix — Parser limitation — Missed expected experience: Software Developer at Keystone Robotics (medium)
+- [pending-mcp] Parsing fix — Parser limitation — zero entries extracted — Missed expected experience: Software Developer at Keystone Robotics (high)
+- [pending-mcp] Parsing fix — AI prompt issue — resume in non-English language — Missed expected experience: 后端软件工程师 at 星桥科技 (high)
+- [pending-mcp] Parsing fix — Parser limitation — scanned PDF / OCR not wired — Missed expected experience: QA Automation Engineer at Oakline Software (high)

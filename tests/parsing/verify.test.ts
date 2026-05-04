@@ -257,11 +257,78 @@ describe("parsing verification harness", () => {
           (persona) => persona.status === "failed-to-process",
         ),
       ).toBe(true);
-      expect(reportText).toContain("standard-software-engineer");
+      expect(reportText).toContain("career-changer");
+      expect(reportText).toContain("scanned-pdf");
       expect(reportText).toContain("Fixture dependency missing");
     } finally {
       await rm(tempDir, { recursive: true, force: true });
     }
+  });
+
+  it("categorizes failures by persona context with high severity", () => {
+    const nonEnglish = compareExperiences(
+      [{ title: "Ingeniera", company: "Acme", startDate: "2020-01" }],
+      [],
+      [],
+      "non-english-spanish",
+    );
+    expect(nonEnglish.failures).toHaveLength(1);
+    expect(nonEnglish.failures[0].rca).toBe(
+      "AI prompt issue — resume in non-English language",
+    );
+    expect(nonEnglish.failures[0].severity).toBe("high");
+
+    const scanned = compareExperiences(
+      [{ title: "QA", company: "Acme", startDate: "2020-01" }],
+      [],
+      [],
+      "scanned-pdf",
+    );
+    expect(scanned.failures[0].rca).toBe(
+      "Parser limitation — scanned PDF / OCR not wired",
+    );
+    expect(scanned.failures[0].severity).toBe("high");
+
+    const zeroEntries = compareExperiences(
+      [{ title: "Engineer", company: "Acme", startDate: "2020-01" }],
+      [],
+      [],
+      "career-changer",
+    );
+    expect(zeroEntries.failures[0].rca).toBe(
+      "Parser limitation — zero entries extracted",
+    );
+    expect(zeroEntries.failures[0].severity).toBe("high");
+  });
+
+  it("flags field mismatches as schema severity even when parser produced entries", () => {
+    const result = compareExperiences(
+      [
+        {
+          title: "Engineer",
+          company: "Acme",
+          startDate: "2020-01",
+          endDate: "2022-01",
+          location: "NYC",
+        },
+      ],
+      [
+        {
+          title: "Engineer",
+          company: "Acme",
+          startDate: "2020-01",
+          endDate: "2022-01",
+          location: "Remote",
+        },
+      ],
+      [],
+      "mid-engineer",
+    );
+
+    expect(result.failures).toHaveLength(1);
+    expect(result.failures[0].type).toBe("field");
+    expect(result.failures[0].rca).toBe("Schema mismatch");
+    expect(result.failures[0].severity).toBe("medium");
   });
 
   it("uses actual fixture slugs when directories exist", async () => {

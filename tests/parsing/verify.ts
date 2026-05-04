@@ -8,16 +8,16 @@ import { extractBankEntries } from "@/lib/resume/info-bank";
 import type { BankEntry, Experience } from "@/types";
 
 export const DEFAULT_PERSONA_SLUGS = [
-  "standard-software-engineer",
   "career-changer",
-  "entry-level",
-  "executive",
-  "contractor",
   "career-gap",
-  "non-english",
+  "entry-cs-grad",
+  "heavy-formatting",
+  "mid-engineer",
+  "multi-job-pm",
+  "non-english-mandarin",
+  "non-english-spanish",
   "scanned-pdf",
-  "academic",
-  "designer",
+  "senior-ic",
 ];
 
 const FIXTURE_ROOT = path.join(process.cwd(), "tests", "fixtures", "personas");
@@ -290,22 +290,47 @@ function applyMatchingLimitations(
     .forEach((limitation) => appliedKnownLimitations.add(limitation));
 }
 
-function analyzeFailure(summary: string): Pick<Failure, "rca" | "severity"> {
+interface FailureContext {
+  persona?: string;
+  actualCount?: number;
+  expectedCount?: number;
+}
+
+function analyzeFailure(
+  summary: string,
+  context: FailureContext = {},
+): Pick<Failure, "rca" | "severity"> {
   const normalized = normalizeText(summary);
+  const persona = normalizeText(context.persona ?? "");
+  const zeroEntriesParse =
+    (context.actualCount ?? -1) === 0 && (context.expectedCount ?? 0) > 0;
+
   if (
     normalized.includes("missing fixture") ||
     normalized.includes("resume pdf")
   ) {
     return { rca: "Fixture dependency missing", severity: "high" };
   }
-  if (normalized.includes("0 actual") || normalized.includes("no experience")) {
-    return { rca: "Parser limitation", severity: "high" };
+  if (persona.includes("scanned")) {
+    return {
+      rca: "Parser limitation — scanned PDF / OCR not wired",
+      severity: "high",
+    };
   }
-  if (normalized.includes("date") || normalized.includes("field")) {
+  if (persona.includes("non english")) {
+    return {
+      rca: "AI prompt issue — resume in non-English language",
+      severity: "high",
+    };
+  }
+  if (zeroEntriesParse) {
+    return {
+      rca: "Parser limitation — zero entries extracted",
+      severity: "high",
+    };
+  }
+  if (normalized.includes("field mismatch")) {
     return { rca: "Schema mismatch", severity: "medium" };
-  }
-  if (normalized.includes("non english") || normalized.includes("unknown")) {
-    return { rca: "AI prompt issue", severity: "medium" };
   }
   return { rca: "Parser limitation", severity: "medium" };
 }
@@ -323,6 +348,11 @@ export function compareExperiences(
   const appliedKnownLimitations = new Set<string>();
   let allowedMisses = 0;
   let allowedSpurious = 0;
+  const failureContext: FailureContext = {
+    persona,
+    actualCount: actual.length,
+    expectedCount: normalizedExpected.length,
+  };
 
   for (const expectedExperience of normalizedExpected) {
     const index = unmatchedActual.findIndex((actualExperience) =>
@@ -335,7 +365,7 @@ export function compareExperiences(
         knownLimitations,
         summary,
       );
-      const rca = analyzeFailure(summary);
+      const rca = analyzeFailure(summary, failureContext);
       if (!knownLimitationApplied) {
         failures.push({
           persona,
@@ -401,7 +431,7 @@ export function compareExperiences(
         type: "field",
         summary,
         knownLimitationApplied: false,
-        ...analyzeFailure(summary),
+        ...analyzeFailure(summary, failureContext),
       });
     }
   }
@@ -415,7 +445,7 @@ export function compareExperiences(
         type: "spurious",
         summary,
         knownLimitationApplied,
-        ...analyzeFailure(summary),
+        ...analyzeFailure(summary, failureContext),
       });
     } else {
       allowedSpurious++;
@@ -569,7 +599,7 @@ export async function verifyPersona(
           type: "process",
           summary,
           knownLimitationApplied: false,
-          ...analyzeFailure(summary),
+          ...analyzeFailure(summary, { persona: slug }),
         },
       ],
       notes,
@@ -629,7 +659,7 @@ export async function verifyPersona(
           type: "process",
           summary,
           knownLimitationApplied: false,
-          ...analyzeFailure(summary),
+          ...analyzeFailure(summary, { persona: slug }),
         },
       ],
       notes,
