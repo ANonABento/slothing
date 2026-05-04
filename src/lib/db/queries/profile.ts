@@ -87,8 +87,8 @@ export async function getProfile(userId: string): Promise<Profile | null> {
       date: c.issueDate ?? undefined,
       url: c.url ?? undefined,
     })),
-    createdAt: profileRow.createdAt?.toISOString() ?? now,
-    updatedAt: profileRow.updatedAt?.toISOString() ?? now,
+    createdAt: profileRow.createdAt ?? now,
+    updatedAt: profileRow.updatedAt ?? now,
   };
 }
 
@@ -125,7 +125,7 @@ export async function updateProfile(userId: string, profileData: Partial<Profile
         contactJson: profileData.contact ? JSON.stringify(profileData.contact) : undefined,
         summary: profileData.summary,
         rawText: profileData.rawText,
-        updatedAt: new Date(),
+        updatedAt: new Date().toISOString(),
       })
       .where(eq(profile.userId, userId));
   }
@@ -237,7 +237,7 @@ export async function clearProfile(userId: string): Promise<void> {
       contactJson: null,
       summary: null,
       rawText: null,
-      updatedAt: new Date(),
+      updatedAt: new Date().toISOString(),
     })
     .where(eq(profile.userId, userId));
 }

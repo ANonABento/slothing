@@ -31,7 +31,7 @@ The product is branded **Taida**; the repo and package are still named `get-me-j
 | Language | TypeScript (strict mode) |
 | Styling | Tailwind CSS + CSS Variables (semantic tokens only — see lint rule) |
 | Components | Shadcn/ui patterns (CVA) |
-| Database | SQLite (better-sqlite3); Drizzle schema ready for Postgres |
+| Database | Drizzle ORM with libSQL/SQLite |
 | Auth | Clerk (with local-dev fallback to a `default` user) |
 | LLM | Multi-provider (OpenAI, Anthropic, Ollama, OpenRouter) |
 | Editor | TipTap (resume + cover letter) |

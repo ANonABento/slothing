@@ -39,7 +39,7 @@ export async function createReminder(
     dueDate: reminder.dueDate,
     completed: false,
     dismissed: false,
-    createdAt: now,
+    createdAt: now.toISOString(),
   });
 
   return {
@@ -101,8 +101,8 @@ export async function getReminders(
       dueDate: row.dueDate,
       completed: row.completed ?? false,
       dismissed: row.dismissed ?? false,
-      createdAt: row.createdAt?.toISOString() ?? '',
-      completedAt: row.completedAt?.toISOString(),
+      createdAt: row.createdAt ?? '',
+      completedAt: row.completedAt ?? undefined,
       jobTitle: job?.title,
       jobCompany: job?.company,
     });
@@ -135,7 +135,7 @@ export async function completeReminder(userId: string, reminderId: string): Prom
   await db.update(reminders)
     .set({
       completed: true,
-      completedAt: new Date(),
+      completedAt: new Date().toISOString(),
     })
     .where(and(eq(reminders.id, reminderId), eq(reminders.userId, userId)));
 }

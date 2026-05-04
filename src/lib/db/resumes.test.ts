@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { Mock } from "vitest";
 
 // Mock the database module
-vi.mock("./schema", () => {
+vi.mock("./legacy", () => {
   const mockDb = {
     prepare: vi.fn(),
   };
@@ -14,7 +14,7 @@ vi.mock("@/lib/utils", () => ({
   generateId: () => "test-resume-id",
 }));
 
-import db from "./schema";
+import db from "./legacy";
 import {
   saveGeneratedResume,
   STANDALONE_RESUME_JOB_ID,

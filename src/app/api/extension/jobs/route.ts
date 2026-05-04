@@ -7,7 +7,7 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { requireExtensionAuth } from "@/lib/extension-auth";
-import { createJob } from "@/lib/db/drizzle/queries/jobs";
+import { createJob } from "@/lib/db/queries/jobs";
 
 // POST - Import a job from extension
 export async function POST(request: NextRequest) {

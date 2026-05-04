@@ -1,7 +1,12 @@
 // Background service worker for Columbus extension
 
-import type { ExtensionMessage, ExtensionResponse, ScrapedJob, DetectedField } from '@/shared/types';
-import { getAPIClient, resetAPIClient } from './api-client';
+import type {
+  ExtensionMessage,
+  ExtensionResponse,
+  ScrapedJob,
+  DetectedField,
+} from "@/shared/types";
+import { getAPIClient, resetAPIClient } from "./api-client";
 import {
   getStorage,
   setAuthToken,
@@ -9,65 +14,69 @@ import {
   getCachedProfile,
   setCachedProfile,
   getApiBaseUrl,
-} from './storage';
-import { setBadgeForTab, clearBadgeForTab } from './badge';
+} from "./storage";
+import { setBadgeForTab, clearBadgeForTab } from "./badge";
 
 // Handle messages from content scripts and popup
-chrome.runtime.onMessage.addListener((message: ExtensionMessage, sender, sendResponse) => {
-  handleMessage(message, sender)
-    .then(sendResponse)
-    .catch((error) => {
-      console.error('[Columbus] Message handler error:', error);
-      sendResponse({ success: false, error: error.message });
-    });
+chrome.runtime.onMessage.addListener(
+  (message: ExtensionMessage, sender, sendResponse) => {
+    handleMessage(message, sender)
+      .then(sendResponse)
+      .catch((error) => {
+        console.error("[Columbus] Message handler error:", error);
+        sendResponse({ success: false, error: error.message });
+      });
 
-  // Return true to indicate async response
-  return true;
-});
+    // Return true to indicate async response
+    return true;
+  },
+);
 
 async function handleMessage(
   message: ExtensionMessage,
-  sender: chrome.runtime.MessageSender
+  sender: chrome.runtime.MessageSender,
 ): Promise<ExtensionResponse> {
   switch (message.type) {
-    case 'GET_AUTH_STATUS':
+    case "GET_AUTH_STATUS":
       return handleGetAuthStatus();
 
-    case 'OPEN_AUTH':
+    case "OPEN_AUTH":
       return handleOpenAuth();
 
-    case 'LOGOUT':
+    case "LOGOUT":
       return handleLogout();
 
-    case 'GET_PROFILE':
+    case "GET_PROFILE":
       return handleGetProfile();
 
-    case 'IMPORT_JOB':
+    case "IMPORT_JOB":
       return handleImportJob(message.payload as ScrapedJob);
 
-    case 'IMPORT_JOBS_BATCH':
+    case "IMPORT_JOBS_BATCH":
       return handleImportJobsBatch(message.payload as ScrapedJob[]);
 
-    case 'SAVE_ANSWER':
-      return handleSaveAnswer(message.payload as {
-        question: string;
-        answer: string;
-        url?: string;
-        company?: string;
-      });
+    case "SAVE_ANSWER":
+      return handleSaveAnswer(
+        message.payload as {
+          question: string;
+          answer: string;
+          url?: string;
+          company?: string;
+        },
+      );
 
-    case 'SEARCH_ANSWERS':
+    case "SEARCH_ANSWERS":
       return handleSearchAnswers(message.payload as string);
 
-    case 'GET_LEARNED_ANSWERS':
+    case "GET_LEARNED_ANSWERS":
       return handleGetLearnedAnswers();
 
-    case 'DELETE_ANSWER':
+    case "DELETE_ANSWER":
       return handleDeleteAnswer(message.payload as string);
 
-    case 'JOB_DETECTED': {
+    case "JOB_DETECTED": {
       const tabId = sender.tab?.id;
-      if (!tabId) return { success: false, error: 'No tab ID in sender' };
+      if (!tabId) return { success: false, error: "No tab ID in sender" };
       await setBadgeForTab(tabId);
       return { success: true };
     }
@@ -98,9 +107,11 @@ async function handleGetAuthStatus(): Promise<ExtensionResponse> {
 async function handleOpenAuth(): Promise<ExtensionResponse> {
   try {
     const apiBaseUrl = await getApiBaseUrl();
-    const authUrl = `${apiBaseUrl}/extension/connect`;
+    // Pass extension ID so the connect page can deliver the token back via
+    // chrome.runtime.sendMessage(extensionId, ...). The page is a regular web
+    // page and cannot resolve the calling extension by passing undefined.
+    const authUrl = `${apiBaseUrl}/extension/connect?extensionId=${chrome.runtime.id}`;
 
-    // Open auth page in new tab
     await chrome.tabs.create({ url: authUrl });
 
     return { success: true };
@@ -150,7 +161,9 @@ async function handleImportJob(job: ScrapedJob): Promise<ExtensionResponse> {
   }
 }
 
-async function handleImportJobsBatch(jobs: ScrapedJob[]): Promise<ExtensionResponse> {
+async function handleImportJobsBatch(
+  jobs: ScrapedJob[],
+): Promise<ExtensionResponse> {
   try {
     const client = await getAPIClient();
     const result = await client.importJobsBatch(jobs);
@@ -180,7 +193,9 @@ async function handleSaveAnswer(data: {
   }
 }
 
-async function handleSearchAnswers(question: string): Promise<ExtensionResponse> {
+async function handleSearchAnswers(
+  question: string,
+): Promise<ExtensionResponse> {
   try {
     const client = await getAPIClient();
     const results = await client.searchSimilarAnswers(question);
@@ -211,19 +226,25 @@ async function handleDeleteAnswer(id: string): Promise<ExtensionResponse> {
 }
 
 // Handle auth callback from Columbus web app
-chrome.runtime.onMessageExternal.addListener((message, sender, sendResponse) => {
-  if (message.type === 'AUTH_CALLBACK' && message.token && message.expiresAt) {
-    setAuthToken(message.token, message.expiresAt)
-      .then(() => {
-        resetAPIClient();
-        sendResponse({ success: true });
-      })
-      .catch((error) => {
-        sendResponse({ success: false, error: error.message });
-      });
-    return true;
-  }
-});
+chrome.runtime.onMessageExternal.addListener(
+  (message, sender, sendResponse) => {
+    if (
+      message.type === "AUTH_CALLBACK" &&
+      message.token &&
+      message.expiresAt
+    ) {
+      setAuthToken(message.token, message.expiresAt)
+        .then(() => {
+          resetAPIClient();
+          sendResponse({ success: true });
+        })
+        .catch((error) => {
+          sendResponse({ success: false, error: error.message });
+        });
+      return true;
+    }
+  },
+);
 
 // Handle keyboard shortcuts
 chrome.commands.onCommand.addListener(async (command) => {
@@ -231,30 +252,33 @@ chrome.commands.onCommand.addListener(async (command) => {
   if (!tab?.id) return;
 
   switch (command) {
-    case 'fill-form':
-      chrome.tabs.sendMessage(tab.id, { type: 'TRIGGER_FILL' });
+    case "fill-form":
+      chrome.tabs.sendMessage(tab.id, { type: "TRIGGER_FILL" });
       break;
-    case 'import-job':
-      chrome.tabs.sendMessage(tab.id, { type: 'TRIGGER_IMPORT' });
+    case "import-job":
+      chrome.tabs.sendMessage(tab.id, { type: "TRIGGER_IMPORT" });
       break;
   }
 });
 
 // Clear badge when a tab navigates to a new URL
 chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
-  if (changeInfo.status === 'loading' && changeInfo.url) {
+  if (changeInfo.status === "loading" && changeInfo.url) {
     clearBadgeForTab(tabId).catch(() => {});
   }
 });
 
 // Handle extension install/update
 chrome.runtime.onInstalled.addListener((details) => {
-  if (details.reason === 'install') {
-    console.log('[Columbus] Extension installed');
+  if (details.reason === "install") {
+    console.log("[Columbus] Extension installed");
     // Could open onboarding page here
-  } else if (details.reason === 'update') {
-    console.log('[Columbus] Extension updated to', chrome.runtime.getManifest().version);
+  } else if (details.reason === "update") {
+    console.log(
+      "[Columbus] Extension updated to",
+      chrome.runtime.getManifest().version,
+    );
   }
 });
 
-console.log('[Columbus] Background service worker started');
+console.log("[Columbus] Background service worker started");

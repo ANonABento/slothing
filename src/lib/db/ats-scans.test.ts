@@ -1,7 +1,7 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import type { Mock } from "vitest";
 
-vi.mock("./schema", () => ({
+vi.mock("./legacy", () => ({
   default: {
     prepare: vi.fn(),
   },
@@ -11,7 +11,7 @@ vi.mock("@/lib/utils", () => ({
   generateId: () => "test-scan-id",
 }));
 
-import db from "./schema";
+import db from "./legacy";
 import { saveScanResult } from "./ats-scans";
 
 const report = {

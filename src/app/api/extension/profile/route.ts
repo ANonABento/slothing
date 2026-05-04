@@ -6,7 +6,7 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { requireExtensionAuth } from "@/lib/extension-auth";
-import { getProfile } from "@/lib/db/drizzle/queries/profile";
+import { getProfile } from "@/lib/db/queries/profile";
 import type { Experience, Education } from "@/types";
 
 // GET - Fetch profile optimized for extension auto-fill
