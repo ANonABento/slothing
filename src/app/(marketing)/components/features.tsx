@@ -66,7 +66,7 @@ export function Features() {
               style={{ animationDelay: `${index * 100}ms` }}
             >
               <div
-                className={`inline-flex p-3 rounded-xl bg-gradient-to-br ${feature.gradient} text-white shadow-lg mb-4 group-hover:scale-110 transition-transform duration-300`}
+                className={`inline-flex p-3 rounded-xl bg-gradient-to-br ${feature.gradient} text-primary-foreground shadow-lg mb-4 group-hover:scale-110 transition-transform duration-300`}
               >
                 <feature.icon className="h-6 w-6" />
               </div>

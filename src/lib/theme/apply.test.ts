@@ -19,6 +19,10 @@ describe("theme token application", () => {
     expect(variables["--skeleton-highlight-color"]).toBe(
       "hsl(var(--muted-foreground) / 0.1)",
     );
+    expect(variables["--surface-paper"]).toBe("0 0% 100%");
+    expect(variables["--paper-foreground"]).toBe("0 0% 0%");
+    expect(variables["--surface-paper-border"]).toBe("0 0% 90%");
+    expect(variables["--surface-scrim"]).toBe("0 0% 0%");
     expect(variables["--spacing-4"]).toBe("1rem");
   });
 

@@ -46,7 +46,7 @@ export default function NotFound() {
           <Button
             asChild
             size="lg"
-            className="gradient-bg text-white hover:opacity-90 shadow-lg shadow-primary/25"
+            className="gradient-bg text-primary-foreground hover:opacity-90 shadow-lg shadow-primary/25"
           >
             <Link href="/dashboard">
               Go to Dashboard
