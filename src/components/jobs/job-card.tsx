@@ -2,7 +2,12 @@
 
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type KeyboardEvent as ReactKeyboardEvent,
+} from "react";
 import {
   AlertTriangle,
   Briefcase,
@@ -121,6 +126,10 @@ export function JobCard(props: JobCardProps) {
   const status = getJobStatusValue(job);
   const statusStyle = STATUS_STYLES[status];
   const moreMenuRef = useRef<HTMLDivElement>(null);
+  const moreMenuTriggerRef = useRef<HTMLButtonElement>(null);
+  const moreMenuItemRefs = useRef<
+    Array<HTMLButtonElement | HTMLAnchorElement | null>
+  >([]);
   const [moreMenuOpen, setMoreMenuOpen] = useState(false);
 
   useEffect(() => {
@@ -144,11 +153,81 @@ export function JobCard(props: JobCardProps) {
     };
   }, [moreMenuOpen]);
 
+  function openMoreMenu(focusIndex = 0) {
+    setMoreMenuOpen(true);
+    requestAnimationFrame(() => {
+      moreMenuItemRefs.current[focusIndex]?.focus();
+    });
+  }
+
+  function closeMoreMenu({ returnFocus = false } = {}) {
+    setMoreMenuOpen(false);
+    if (returnFocus) {
+      requestAnimationFrame(() => moreMenuTriggerRef.current?.focus());
+    }
+  }
+
+  function handleMoreMenuTriggerKeyDown(
+    event: ReactKeyboardEvent<HTMLButtonElement>,
+  ) {
+    if (
+      event.key === "ArrowDown" ||
+      event.key === "Enter" ||
+      event.key === " "
+    ) {
+      event.preventDefault();
+      openMoreMenu();
+    }
+  }
+
+  function handleMoreMenuKeyDown(event: ReactKeyboardEvent<HTMLDivElement>) {
+    const items = moreMenuItemRefs.current.filter(
+      (item): item is HTMLButtonElement | HTMLAnchorElement =>
+        Boolean(item) && !(item instanceof HTMLButtonElement && item.disabled),
+    );
+    const currentIndex = items.findIndex(
+      (item) => item === document.activeElement,
+    );
+
+    if (items.length === 0) return;
+
+    if (event.key === "Escape") {
+      event.preventDefault();
+      closeMoreMenu({ returnFocus: true });
+      return;
+    }
+
+    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+      event.preventDefault();
+      const step = event.key === "ArrowDown" ? 1 : -1;
+      const nextIndex =
+        currentIndex === -1
+          ? 0
+          : (currentIndex + step + items.length) % items.length;
+      items[nextIndex]?.focus();
+      return;
+    }
+
+    if (event.key === "Home") {
+      event.preventDefault();
+      items[0]?.focus();
+      return;
+    }
+
+    if (event.key === "End") {
+      event.preventDefault();
+      items[items.length - 1]?.focus();
+    }
+  }
+
   return (
     <div
-      className={cn("group overflow-hidden", THEME_INTERACTIVE_SURFACE_CLASSES)}
+      className={cn(
+        "group overflow-visible",
+        THEME_INTERACTIVE_SURFACE_CLASSES,
+      )}
     >
-      <div className="p-5 border-b-[length:var(--border-width)] bg-muted/30 [backdrop-filter:var(--backdrop-blur)]">
+      <div className="rounded-t-[var(--radius)] p-5 border-b-[length:var(--border-width)] bg-muted/30 [backdrop-filter:var(--backdrop-blur)]">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-start gap-4 min-w-0">
             <div className="p-3 rounded-[var(--radius)] bg-primary/10 text-primary shrink-0">
@@ -319,12 +398,14 @@ export function JobCard(props: JobCardProps) {
           </Button>
           <div className="relative" ref={moreMenuRef}>
             <Button
+              ref={moreMenuTriggerRef}
               type="button"
               variant="outline"
               size="sm"
               aria-haspopup="menu"
               aria-expanded={moreMenuOpen}
               onClick={() => setMoreMenuOpen((open) => !open)}
+              onKeyDown={handleMoreMenuTriggerKeyDown}
               className="gap-1.5"
             >
               More
@@ -334,13 +415,17 @@ export function JobCard(props: JobCardProps) {
               <div
                 role="menu"
                 aria-label={`${job.title} secondary actions`}
+                onKeyDown={handleMoreMenuKeyDown}
                 className="absolute left-0 top-full z-50 mt-2 w-64 rounded-md border bg-popover p-1 text-popover-foreground shadow-[var(--shadow-elevated)]"
               >
                 <button
+                  ref={(node) => {
+                    moreMenuItemRefs.current[0] = node;
+                  }}
                   type="button"
                   role="menuitem"
                   onClick={() => {
-                    setMoreMenuOpen(false);
+                    closeMoreMenu();
                     onAnalyze();
                   }}
                   disabled={analyzing}
@@ -354,10 +439,13 @@ export function JobCard(props: JobCardProps) {
                   {analysis ? "Re-analyze Match" : "Analyze Match"}
                 </button>
                 <button
+                  ref={(node) => {
+                    moreMenuItemRefs.current[1] = node;
+                  }}
                   type="button"
                   role="menuitem"
                   onClick={() => {
-                    setMoreMenuOpen(false);
+                    closeMoreMenu();
                     onAtsCheck();
                   }}
                   disabled={atsAnalyzing}
@@ -371,10 +459,13 @@ export function JobCard(props: JobCardProps) {
                   {atsResult ? "Re-check ATS" : "ATS Check"}
                 </button>
                 <button
+                  ref={(node) => {
+                    moreMenuItemRefs.current[2] = node;
+                  }}
                   type="button"
                   role="menuitem"
                   onClick={() => {
-                    setMoreMenuOpen(false);
+                    closeMoreMenu();
                     onCoverLetter();
                   }}
                   className="flex w-full items-center gap-2 rounded px-3 py-2 text-left text-sm hover:bg-accent/10"
@@ -383,9 +474,12 @@ export function JobCard(props: JobCardProps) {
                   Cover Letter
                 </button>
                 <Link
+                  ref={(node) => {
+                    moreMenuItemRefs.current[3] = node;
+                  }}
                   href={`/jobs/research/${job.id}`}
                   role="menuitem"
-                  onClick={() => setMoreMenuOpen(false)}
+                  onClick={() => closeMoreMenu()}
                   className="flex w-full items-center gap-2 rounded px-3 py-2 text-left text-sm hover:bg-accent/10"
                 >
                   <Info className="h-4 w-4" />
@@ -396,7 +490,10 @@ export function JobCard(props: JobCardProps) {
                   <label className="mb-1 block text-xs font-medium text-muted-foreground">
                     Resume template
                   </label>
-                  <Select value={selectedTemplate} onValueChange={onSelectTemplate}>
+                  <Select
+                    value={selectedTemplate}
+                    onValueChange={onSelectTemplate}
+                  >
                     <SelectTrigger className="h-9 text-xs">
                       <SelectValue />
                     </SelectTrigger>
