@@ -462,6 +462,7 @@ export default function ProfilePage() {
                   <CardContent>
                     <Textarea
                       id="summaryText"
+                      aria-label="Professional summary"
                       value={form.summary}
                       rows={8}
                       onChange={(event) =>
