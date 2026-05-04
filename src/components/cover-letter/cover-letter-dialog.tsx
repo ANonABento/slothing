@@ -21,6 +21,7 @@ import {
   History,
   ChevronDown,
 } from "lucide-react";
+import { TimeAgo } from "@/components/format/time-ago";
 
 interface CoverLetterVersion {
   id: string;
@@ -58,7 +59,7 @@ export function CoverLetterDialog({
 
   const fetchVersions = useCallback(async () => {
     try {
-      const res = await fetch(`/api/jobs/${jobId}/cover-letter/history`);
+      const res = await fetch(`/api/opportunities/${jobId}/cover-letter/history`);
       if (res.ok) {
         const data = await res.json();
         setVersions(data.versions || []);
@@ -88,7 +89,7 @@ export function CoverLetterDialog({
     setSelectedVersion(null);
 
     try {
-      const res = await fetch(`/api/jobs/${jobId}/cover-letter/stream`, {
+      const res = await fetch(`/api/opportunities/${jobId}/cover-letter/stream`, {
         method: "POST",
       });
 
@@ -143,7 +144,7 @@ export function CoverLetterDialog({
     setSaving(true);
 
     try {
-      const res = await fetch(`/api/jobs/${jobId}/cover-letter/save`, {
+      const res = await fetch(`/api/opportunities/${jobId}/cover-letter/save`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ content, highlights }),
@@ -232,12 +233,7 @@ export function CoverLetterDialog({
                     >
                       <div className="font-medium">Version {v.version}</div>
                       <div className="text-xs text-muted-foreground">
-                        {new Date(v.createdAt).toLocaleDateString("en-US", {
-                          month: "short",
-                          day: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
+                        <TimeAgo date={v.createdAt} />
                       </div>
                     </button>
                   ))}

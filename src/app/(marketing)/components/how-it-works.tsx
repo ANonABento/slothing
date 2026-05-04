@@ -62,7 +62,7 @@ export function HowItWorks() {
 
                 {/* Icon */}
                 <div
-                  className={`inline-flex p-4 rounded-2xl bg-gradient-to-br ${step.gradient} text-white shadow-lg mb-4`}
+                  className={`inline-flex p-4 rounded-2xl bg-gradient-to-br ${step.gradient} text-primary-foreground shadow-lg mb-4`}
                 >
                   <step.icon className="h-8 w-8" />
                 </div>

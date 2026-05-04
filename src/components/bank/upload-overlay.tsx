@@ -11,8 +11,22 @@ import {
   RotateCcw,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { pluralize } from "@/lib/text/pluralize";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { THEME_SURFACE_CLASSES } from "@/lib/theme/component-classes";
+import {
+  formatExistingUploadDate,
+  getExistingUploadTimestamp,
+  type UploadConflictResponse,
+} from "@/lib/upload-conflict";
 
 // ---------------------------------------------------------------------------
 // Constants & helpers (exported for testing)
@@ -93,9 +107,9 @@ export function formatUploadToast(results: FileResult[]): {
     };
   }
   const fileLabel =
-    results.length === 1 ? results[0].fileName : `${results.length} files`;
+    results.length === 1 ? results[0].fileName : pluralize(results.length, "file");
   return {
-    title: `Added ${totalEntries} ${totalEntries === 1 ? "entry" : "entries"}`,
+    title: `Added ${pluralize(totalEntries, "entry", "entries")}`,
     description: `from ${fileLabel}`,
   };
 }
@@ -122,6 +136,8 @@ export function UploadOverlay({
   const [results, setResults] = useState<FileResult[]>([]);
   const [fileQueue, setFileQueue] = useState<globalThis.File[]>([]);
   const [queueIndex, setQueueIndex] = useState(0);
+  const [uploadConflict, setUploadConflict] = useState<UploadConflictResponse | null>(null);
+  const conflictResolverRef = useRef<((replace: boolean) => void) | null>(null);
   const processingRef = useRef(false);
 
   const isDragging = dragCount > 0;
@@ -144,6 +160,21 @@ export function UploadOverlay({
     e.preventDefault();
   }, []);
 
+  const resolveUploadConflict = useCallback((replace: boolean) => {
+    conflictResolverRef.current?.(replace);
+    conflictResolverRef.current = null;
+    setUploadConflict(null);
+  }, []);
+
+  const confirmReplacement = useCallback(
+    (existing: UploadConflictResponse["existing"]) =>
+      new Promise<boolean>((resolve) => {
+        conflictResolverRef.current = resolve;
+        setUploadConflict({ existing });
+      }),
+    [],
+  );
+
   // --- file processing -----------------------------------------------------
 
   const processFile = useCallback(
@@ -154,10 +185,26 @@ export function UploadOverlay({
       // Upload
       const formData = new FormData();
       formData.append("file", file);
-      const uploadRes = await fetch("/api/upload", {
+      let uploadRes = await fetch("/api/upload", {
         method: "POST",
         body: formData,
       });
+      if (uploadRes.status === 409) {
+        const conflictData = await uploadRes.json().catch(() => null);
+        const existing = conflictData?.existing;
+        const shouldReplace = existing
+          ? await confirmReplacement(existing)
+          : false;
+
+        if (!shouldReplace) {
+          throw new Error("Upload canceled");
+        }
+
+        uploadRes = await fetch("/api/upload?force=true", {
+          method: "POST",
+          body: formData,
+        });
+      }
       if (!uploadRes.ok) {
         const errData = await uploadRes.json().catch(() => null);
         throw new Error(errData?.error || "Upload failed");
@@ -195,7 +242,7 @@ export function UploadOverlay({
 
       return { fileName: file.name, entryCount };
     },
-    [],
+    [confirmReplacement],
   );
 
   const processQueue = useCallback(
@@ -392,12 +439,12 @@ export function UploadOverlay({
               <CheckCircle2 className="h-10 w-10" />
             </div>
             <h2 className="text-2xl font-bold">
-              Added {totalEntries} {totalEntries === 1 ? "entry" : "entries"}
+              Added {pluralize(totalEntries, "entry", "entries")}
             </h2>
             <p className="text-muted-foreground mt-2">
               {results.length === 1
                 ? `from ${results[0].fileName}`
-                : `from ${results.length} files`}
+                : `from ${pluralize(results.length, "file")}`}
             </p>
           </>
         )}
@@ -441,6 +488,32 @@ export function UploadOverlay({
           </>
         )}
       </div>
+
+      <Dialog
+        open={!!uploadConflict}
+        onOpenChange={(open) => {
+          if (!open) resolveUploadConflict(false);
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Replace existing upload?</DialogTitle>
+            <DialogDescription>
+              {uploadConflict
+                ? `Looks like you uploaded "${uploadConflict.existing.filename}" on ${formatExistingUploadDate(getExistingUploadTimestamp(uploadConflict.existing))}. Replace it, or cancel?`
+                : ""}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => resolveUploadConflict(false)}>
+              Cancel
+            </Button>
+            <Button onClick={() => resolveUploadConflict(true)} autoFocus>
+              Replace
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

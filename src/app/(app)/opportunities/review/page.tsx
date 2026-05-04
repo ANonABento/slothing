@@ -8,15 +8,10 @@ import { Button } from "@/components/ui/button";
 import { useErrorToast } from "@/hooks/use-error-toast";
 import { readJsonResponse } from "@/lib/http";
 import type { JobDescription } from "@/types";
+import type { SettingsResponse } from "@/types/api";
 
 interface JobsResponse {
   jobs?: JobDescription[];
-}
-
-interface SettingsResponse {
-  opportunityReview?: {
-    enabled: boolean;
-  };
 }
 
 export default function OpportunityReviewPage() {
@@ -31,15 +26,15 @@ export default function OpportunityReviewPage() {
     try {
       const [settingsResponse, jobsResponse] = await Promise.all([
         fetch("/api/settings"),
-        fetch("/api/jobs"),
+        fetch("/api/opportunities"),
       ]);
       const settingsData = await readJsonResponse<SettingsResponse>(
         settingsResponse,
-        "Failed to load settings"
+        "Failed to load settings",
       );
       const jobsData = await readJsonResponse<JobsResponse>(
         jobsResponse,
-        "Failed to load opportunities"
+        "Failed to load opportunities",
       );
 
       setEnabled(settingsData.opportunityReview?.enabled ?? true);
@@ -60,7 +55,7 @@ export default function OpportunityReviewPage() {
 
   const updateJobStatus = async (
     job: JobDescription,
-    status: JobDescription["status"]
+    status: JobDescription["status"],
   ) => {
     if (!status) {
       return;
@@ -68,14 +63,16 @@ export default function OpportunityReviewPage() {
 
     setUpdating(true);
     try {
-      const response = await fetch(`/api/jobs/${job.id}`, {
+      const response = await fetch(`/api/opportunities/${job.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status }),
       });
       await readJsonResponse<unknown>(response, "Failed to update opportunity");
       setJobs((current) =>
-        current.map((item) => (item.id === job.id ? { ...item, status } : item))
+        current.map((item) =>
+          item.id === job.id ? { ...item, status } : item,
+        ),
       );
     } catch (error) {
       showErrorToast(error, {
@@ -123,9 +120,9 @@ export default function OpportunityReviewPage() {
   return (
     <div className="relative min-h-screen">
       <Link
-        href="/jobs"
+        href="/opportunities"
         className="fixed left-4 top-4 z-30 inline-flex h-11 w-11 items-center justify-center rounded-full border bg-card/90 text-muted-foreground shadow-sm backdrop-blur transition-colors hover:text-foreground"
-        aria-label="Back to jobs"
+        aria-label="Back to opportunities"
       >
         <ArrowLeft className="h-5 w-5" />
       </Link>

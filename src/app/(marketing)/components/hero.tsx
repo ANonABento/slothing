@@ -48,7 +48,7 @@ export function Hero() {
             <Button
               asChild
               size="lg"
-              className="gradient-bg text-white hover:opacity-90 shadow-lg shadow-primary/25"
+              className="gradient-bg text-primary-foreground hover:opacity-90 shadow-lg shadow-primary/25"
             >
               <Link href="/sign-up?redirect_url=/dashboard" prefetch={false}>
                 Get Started
