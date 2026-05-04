@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import type { Notification, NotificationType } from "@/lib/db/notifications";
+import { useConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useErrorToast } from "@/hooks/use-error-toast";
 
 const typeIcons: Record<NotificationType, typeof Bell> = {
@@ -48,6 +49,7 @@ export function NotificationCenter({ collapsed = false }: NotificationCenterProp
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const showErrorToast = useErrorToast();
+  const { confirm, dialog: confirmDialog } = useConfirmDialog();
 
   const fetchNotifications = useCallback(async () => {
     try {
@@ -129,6 +131,13 @@ export function NotificationCenter({ collapsed = false }: NotificationCenterProp
   };
 
   const handleDelete = async (id: string) => {
+    const confirmed = await confirm({
+      title: "Delete this notification?",
+      description: "This permanently removes the notification from your feed.",
+      confirmLabel: "Delete",
+    });
+    if (!confirmed) return;
+
     try {
       await fetch(`/api/notifications/${id}`, { method: "DELETE" });
       const notification = notifications.find((n) => n.id === id);
@@ -145,6 +154,14 @@ export function NotificationCenter({ collapsed = false }: NotificationCenterProp
   };
 
   const handleDeleteRead = async () => {
+    const confirmed = await confirm({
+      title: "Delete read notifications?",
+      description:
+        "This permanently removes all notifications that are already marked read.",
+      confirmLabel: "Delete read",
+    });
+    if (!confirmed) return;
+
     try {
       await fetch("/api/notifications", {
         method: "POST",
@@ -303,7 +320,7 @@ export function NotificationCenter({ collapsed = false }: NotificationCenterProp
                                   onClick={(e) => {
                                     e.preventDefault();
                                     e.stopPropagation();
-                                    handleDelete(notification.id);
+                                    void handleDelete(notification.id);
                                   }}
                                   className="p-1 text-muted-foreground hover:text-destructive rounded hover:bg-muted transition-colors"
                                   title="Delete"
@@ -351,6 +368,7 @@ export function NotificationCenter({ collapsed = false }: NotificationCenterProp
           </div>
         </>
       )}
+      {confirmDialog}
     </div>
   );
 }

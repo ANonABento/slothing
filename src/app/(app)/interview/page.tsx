@@ -5,6 +5,7 @@ import { Loader2, Sparkles } from "lucide-react";
 import { InterviewActiveSession } from "@/components/interview/interview-active-session";
 import { InterviewJobSelection } from "@/components/interview/interview-job-selection";
 import { InterviewSummary } from "@/components/interview/interview-summary";
+import { useConfirmDialog } from "@/components/ui/confirm-dialog";
 import { AppPage, PageContent, PageHeader } from "@/components/ui/page-layout";
 import { useFollowUp } from "@/hooks/useFollowUp";
 import { useInterviewSession } from "@/hooks/useInterviewSession";
@@ -14,6 +15,7 @@ import type { InterviewMode, PastSession } from "@/types/interview";
 export default function InterviewPage() {
   const [difficulty, setDifficulty] = useState<InterviewDifficulty>("mid");
   const interview = useInterviewSession();
+  const { confirm, dialog: confirmDialog } = useConfirmDialog();
   const followUp = useFollowUp({
     session: interview.session,
     setSession: interview.setSession,
@@ -49,6 +51,21 @@ export default function InterviewPage() {
     [followUp, interview],
   );
 
+  const handleDeleteSession = useCallback(
+    async (sessionId: string) => {
+      const confirmed = await confirm({
+        title: "Delete this interview session?",
+        description:
+          "This permanently removes the practice session, answers, and feedback history.",
+        confirmLabel: "Delete",
+      });
+      if (confirmed) {
+        await interview.deleteSession(sessionId);
+      }
+    },
+    [confirm, interview],
+  );
+
   if (interview.loading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -81,9 +98,7 @@ export default function InterviewPage() {
             onDifficultyChange={setDifficulty}
             pastSessions={interview.pastSessions}
             onResumeSession={handleResumeSession}
-            onDeleteSession={(sessionId) =>
-              void interview.deleteSession(sessionId)
-            }
+            onDeleteSession={(sessionId) => void handleDeleteSession(sessionId)}
           />
         ) : isComplete ? (
           <InterviewSummary
@@ -109,6 +124,7 @@ export default function InterviewPage() {
           />
         )}
       </PageContent>
+      {confirmDialog}
     </AppPage>
   );
 }

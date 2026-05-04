@@ -20,9 +20,10 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useDevMode } from "@/hooks/use-dev-mode";
 import { useErrorToast } from "@/hooks/use-error-toast";
+import { useUndoableAction } from "@/hooks/use-undoable-action";
 import { readJsonResponse } from "@/lib/http";
 import { cn } from "@/lib/utils";
-import type { JobDescription } from "@/types";
+import type { JobDescription, JobStatus } from "@/types";
 import {
   OPPORTUNITY_FIELD_SECTIONS,
   buildAppliedOpportunityPatch,
@@ -54,6 +55,7 @@ interface CoverLettersResponse {
 }
 
 type NotesSaveState = "idle" | "saving" | "saved" | "error";
+type DismissUndoInput = { previousStatus: JobStatus };
 
 function fieldInputValue(
   opportunity: JobDescription,
@@ -341,6 +343,17 @@ export default function OpportunityDetailPage({
     [params.id]
   );
 
+  const dismissOpportunity = useUndoableAction<DismissUndoInput>({
+    action: async () => {
+      await patchOpportunity({ status: "withdrawn" });
+    },
+    undoAction: async ({ previousStatus }) => {
+      await patchOpportunity({ status: previousStatus });
+    },
+    message: "Opportunity dismissed.",
+    description: "Status changed to withdrawn.",
+  });
+
   const startEditing = (field: OpportunityFieldConfig) => {
     if (!opportunity || field.type === "readonly") return;
 
@@ -394,7 +407,7 @@ export default function OpportunityDetailPage({
 
   const handleDismiss = async () => {
     try {
-      await patchOpportunity({ status: "withdrawn" });
+      await dismissOpportunity({ previousStatus: opportunity?.status ?? "saved" });
     } catch (error) {
       showErrorToast(error, {
         title: "Could not dismiss opportunity",
