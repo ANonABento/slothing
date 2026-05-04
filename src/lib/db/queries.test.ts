@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { Mock } from "vitest";
 
 // Mock the database module
-vi.mock("./schema", () => {
+vi.mock("./legacy", () => {
   const mockDb = {
     prepare: vi.fn(),
     transaction: vi.fn((fn) => fn),
@@ -20,7 +20,7 @@ vi.mock("./profile-versions", () => ({
   createProfileSnapshot: vi.fn(),
 }));
 
-import db from "./schema";
+import db from "./legacy";
 import {
   getSetting,
   setSetting,

@@ -1,752 +1,584 @@
-import Database from "better-sqlite3";
-import path from "path";
-import fs from "fs";
-import { createRequire } from "module";
-import { PATHS } from "@/lib/constants";
-import { runLocalDevCleanSlateMigration } from "./local-clean-slate";
-
-const require = createRequire(import.meta.url);
-
-// Ensure data directory exists
-const dataDir = path.dirname(PATHS.DATABASE);
-if (!fs.existsSync(dataDir)) {
-  fs.mkdirSync(dataDir, { recursive: true });
-}
-
-const db = new Database(PATHS.DATABASE, { timeout: 5000 });
-
-// Give parallel test workers a chance to wait on short-lived locks.
-db.pragma("busy_timeout = 5000");
-
-// Enable WAL mode for better performance. When another worker is already
-// initializing the same file-backed database, continue instead of failing
-// the whole module import on a transient lock.
-try {
-  db.pragma("journal_mode = WAL");
-} catch (error) {
-  if ((error as NodeJS.ErrnoException).code !== "SQLITE_BUSY") {
-    throw error;
-  }
-  console.warn("[db] Database was busy while enabling WAL mode; continuing");
-}
-
-// Load sqlite-vec extension for vector search (optional — fails gracefully if not available)
-try {
-  const sqliteVec = require("sqlite-vec");
-  sqliteVec.load(db);
-} catch {
-  console.warn("[db] sqlite-vec extension not available — vector search disabled");
-}
-
-// Create tables
-db.exec(`
-  -- Settings table
-  CREATE TABLE IF NOT EXISTS settings (
-    key TEXT NOT NULL,
-    user_id TEXT NOT NULL DEFAULT 'default',
-    value TEXT NOT NULL,
-    updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (key, user_id)
-  );
-
-  -- Documents table
-  CREATE TABLE IF NOT EXISTS documents (
-    id TEXT PRIMARY KEY,
-    filename TEXT NOT NULL,
-    type TEXT NOT NULL,
-    mime_type TEXT NOT NULL,
-    size INTEGER NOT NULL,
-    path TEXT NOT NULL,
-    extracted_text TEXT,
-    uploaded_at TEXT DEFAULT CURRENT_TIMESTAMP
-  );
-
-  -- Profile table (single user for now)
-  CREATE TABLE IF NOT EXISTS profile (
-    id TEXT PRIMARY KEY DEFAULT 'default',
-    contact_json TEXT,
-    summary TEXT,
-    raw_text TEXT,
-    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-    updated_at TEXT DEFAULT CURRENT_TIMESTAMP
-  );
-
-  -- Experiences table
-  CREATE TABLE IF NOT EXISTS experiences (
-    id TEXT PRIMARY KEY,
-    profile_id TEXT NOT NULL DEFAULT 'default',
-    company TEXT NOT NULL,
-    title TEXT NOT NULL,
-    location TEXT,
-    start_date TEXT,
-    end_date TEXT,
-    current INTEGER DEFAULT 0,
-    description TEXT,
-    highlights_json TEXT,
-    skills_json TEXT,
-    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (profile_id) REFERENCES profile(id)
-  );
-
-  -- Education table
-  CREATE TABLE IF NOT EXISTS education (
-    id TEXT PRIMARY KEY,
-    profile_id TEXT NOT NULL DEFAULT 'default',
-    institution TEXT NOT NULL,
-    degree TEXT NOT NULL,
-    field TEXT,
-    start_date TEXT,
-    end_date TEXT,
-    gpa TEXT,
-    highlights_json TEXT,
-    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (profile_id) REFERENCES profile(id)
-  );
-
-  -- Skills table
-  CREATE TABLE IF NOT EXISTS skills (
-    id TEXT PRIMARY KEY,
-    profile_id TEXT NOT NULL DEFAULT 'default',
-    name TEXT NOT NULL,
-    category TEXT DEFAULT 'other',
-    proficiency TEXT,
-    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (profile_id) REFERENCES profile(id)
-  );
-
-  -- Projects table
-  CREATE TABLE IF NOT EXISTS projects (
-    id TEXT PRIMARY KEY,
-    profile_id TEXT NOT NULL DEFAULT 'default',
-    name TEXT NOT NULL,
-    description TEXT,
-    url TEXT,
-    technologies_json TEXT,
-    highlights_json TEXT,
-    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (profile_id) REFERENCES profile(id)
-  );
-
-  -- Certifications table
-  CREATE TABLE IF NOT EXISTS certifications (
-    id TEXT PRIMARY KEY,
-    profile_id TEXT NOT NULL DEFAULT 'default',
-    name TEXT NOT NULL,
-    issuer TEXT NOT NULL,
-    issue_date TEXT,
-    expiry_date TEXT,
-    credential_id TEXT,
-    url TEXT,
-    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (profile_id) REFERENCES profile(id)
-  );
-
-  -- Job descriptions table
-  CREATE TABLE IF NOT EXISTS jobs (
-    id TEXT PRIMARY KEY,
-    title TEXT NOT NULL,
-    company TEXT NOT NULL,
-    location TEXT,
-    type TEXT,
-    remote INTEGER DEFAULT 0,
-    salary TEXT,
-    description TEXT NOT NULL,
-    requirements_json TEXT,
-    responsibilities_json TEXT,
-    keywords_json TEXT,
-    url TEXT,
-    status TEXT DEFAULT 'saved',
-    applied_at TEXT,
-    deadline TEXT,
-    notes TEXT,
-    linked_resume_id TEXT,
-    linked_cover_letter_id TEXT,
-    created_at TEXT DEFAULT CURRENT_TIMESTAMP
-  );
-
-  -- Generated resumes table
-  CREATE TABLE IF NOT EXISTS generated_resumes (
-    id TEXT PRIMARY KEY,
-    user_id TEXT NOT NULL DEFAULT 'default',
-    job_id TEXT NOT NULL,
-    profile_id TEXT NOT NULL DEFAULT 'default',
-    content_json TEXT NOT NULL,
-    pdf_path TEXT,
-    match_score REAL,
-    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (job_id) REFERENCES jobs(id),
-    FOREIGN KEY (profile_id) REFERENCES profile(id)
-  );
-
-  -- Interview sessions table
-  CREATE TABLE IF NOT EXISTS interview_sessions (
-    id TEXT PRIMARY KEY,
-    user_id TEXT NOT NULL DEFAULT 'default',
-    job_id TEXT NOT NULL,
-    profile_id TEXT NOT NULL DEFAULT 'default',
-    mode TEXT DEFAULT 'text',
-    questions_json TEXT NOT NULL,
-    status TEXT DEFAULT 'in_progress',
-    started_at TEXT DEFAULT CURRENT_TIMESTAMP,
-    completed_at TEXT,
-    FOREIGN KEY (job_id) REFERENCES jobs(id),
-    FOREIGN KEY (profile_id) REFERENCES profile(id)
-  );
-
-  -- Interview answers table
-  CREATE TABLE IF NOT EXISTS interview_answers (
-    id TEXT PRIMARY KEY,
-    user_id TEXT NOT NULL DEFAULT 'default',
-    session_id TEXT NOT NULL,
-    question_index INTEGER NOT NULL,
-    answer TEXT NOT NULL,
-    feedback TEXT,
-    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (session_id) REFERENCES interview_sessions(id) ON DELETE CASCADE
-  );
-
-  -- Reminders table
-  CREATE TABLE IF NOT EXISTS reminders (
-    id TEXT PRIMARY KEY,
-    user_id TEXT NOT NULL DEFAULT 'default',
-    job_id TEXT NOT NULL,
-    type TEXT NOT NULL DEFAULT 'follow_up',
-    title TEXT NOT NULL,
-    description TEXT,
-    due_date TEXT NOT NULL,
-    completed INTEGER DEFAULT 0,
-    dismissed INTEGER DEFAULT 0,
-    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-    completed_at TEXT,
-    FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE CASCADE
-  );
-
-  -- Notifications table
-  CREATE TABLE IF NOT EXISTS notifications (
-    id TEXT PRIMARY KEY,
-    type TEXT NOT NULL,
-    title TEXT NOT NULL,
-    message TEXT,
-    link TEXT,
-    read INTEGER DEFAULT 0,
-    created_at TEXT DEFAULT CURRENT_TIMESTAMP
-  );
-
-  -- Company research cache table
-  CREATE TABLE IF NOT EXISTS company_research (
-    id TEXT PRIMARY KEY,
-    user_id TEXT NOT NULL DEFAULT 'default',
-    company_name TEXT NOT NULL,
-    summary TEXT,
-    key_facts_json TEXT,
-    interview_questions_json TEXT,
-    culture_notes TEXT,
-    recent_news TEXT,
-    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-    updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(user_id, company_name)
-  );
-
-  -- Cover letters table
-  CREATE TABLE IF NOT EXISTS cover_letters (
-    id TEXT PRIMARY KEY,
-    user_id TEXT NOT NULL DEFAULT 'default',
-    job_id TEXT NOT NULL,
-    profile_id TEXT NOT NULL DEFAULT 'default',
-    content TEXT NOT NULL,
-    highlights_json TEXT,
-    version INTEGER DEFAULT 1,
-    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE CASCADE,
-    FOREIGN KEY (profile_id) REFERENCES profile(id)
-  );
-
-  -- Email drafts table
-  CREATE TABLE IF NOT EXISTS email_drafts (
-    id TEXT PRIMARY KEY,
-    user_id TEXT NOT NULL DEFAULT 'default',
-    type TEXT NOT NULL,
-    job_id TEXT,
-    subject TEXT NOT NULL,
-    body TEXT NOT NULL,
-    context_json TEXT,
-    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-    updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE SET NULL
-  );
-
-  -- Analytics snapshots table for historical tracking
-  CREATE TABLE IF NOT EXISTS analytics_snapshots (
-    id TEXT PRIMARY KEY,
-    user_id TEXT NOT NULL DEFAULT 'default',
-    snapshot_date TEXT NOT NULL,
-    total_jobs INTEGER DEFAULT 0,
-    jobs_saved INTEGER DEFAULT 0,
-    jobs_applied INTEGER DEFAULT 0,
-    jobs_interviewing INTEGER DEFAULT 0,
-    jobs_offered INTEGER DEFAULT 0,
-    jobs_rejected INTEGER DEFAULT 0,
-    total_interviews INTEGER DEFAULT 0,
-    interviews_completed INTEGER DEFAULT 0,
-    total_documents INTEGER DEFAULT 0,
-    total_resumes INTEGER DEFAULT 0,
-    profile_completeness INTEGER DEFAULT 0,
-    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(user_id, snapshot_date)
-  );
-
-  -- Job status history table
-  CREATE TABLE IF NOT EXISTS job_status_history (
-    id TEXT PRIMARY KEY,
-    user_id TEXT NOT NULL DEFAULT 'default',
-    job_id TEXT NOT NULL,
-    from_status TEXT,
-    to_status TEXT NOT NULL,
-    changed_at TEXT DEFAULT CURRENT_TIMESTAMP,
-    notes TEXT,
-    FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE CASCADE
-  );
-
-  -- Salary offers table
-  CREATE TABLE IF NOT EXISTS salary_offers (
-    id TEXT PRIMARY KEY,
-    user_id TEXT NOT NULL DEFAULT 'default',
-    job_id TEXT,
-    company TEXT NOT NULL,
-    role TEXT NOT NULL,
-    base_salary REAL NOT NULL,
-    signing_bonus REAL,
-    annual_bonus REAL,
-    equity_value REAL,
-    vesting_years INTEGER,
-    location TEXT,
-    status TEXT DEFAULT 'pending',
-    notes TEXT,
-    negotiation_outcome TEXT,
-    final_base_salary REAL,
-    final_total_comp REAL,
-    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-    updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE SET NULL
-  );
-
-  -- ATS scan history table
-  CREATE TABLE IF NOT EXISTS ats_scan_history (
-    id TEXT PRIMARY KEY,
-    user_id TEXT NOT NULL DEFAULT 'default',
-    job_id TEXT,
-    overall_score INTEGER NOT NULL,
-    letter_grade TEXT NOT NULL,
-    formatting_score INTEGER NOT NULL,
-    structure_score INTEGER NOT NULL,
-    content_score INTEGER NOT NULL,
-    keywords_score INTEGER NOT NULL,
-    issue_count INTEGER NOT NULL DEFAULT 0,
-    fix_count INTEGER NOT NULL DEFAULT 0,
-    report_json TEXT NOT NULL,
-    scanned_at TEXT DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE SET NULL
-  );
-
-  CREATE INDEX IF NOT EXISTS idx_ats_scan_history_user ON ats_scan_history(user_id);
-  CREATE INDEX IF NOT EXISTS idx_ats_scan_history_date ON ats_scan_history(scanned_at);
-  -- Custom resume templates table
-  CREATE TABLE IF NOT EXISTS custom_templates (
-    id TEXT PRIMARY KEY,
-    user_id TEXT NOT NULL DEFAULT 'default',
-    name TEXT NOT NULL,
-    source_document_id TEXT,
-    analyzed_styles TEXT NOT NULL,
-    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (source_document_id) REFERENCES documents(id) ON DELETE SET NULL
-  );
-
-  CREATE INDEX IF NOT EXISTS idx_custom_templates_user_created
-    ON custom_templates(user_id, created_at DESC);
-
-  -- Profile bank table for aggregated resume data
-  CREATE TABLE IF NOT EXISTS profile_bank (
-    id TEXT PRIMARY KEY,
-    user_id TEXT NOT NULL DEFAULT 'default',
-    category TEXT NOT NULL,
-    content TEXT NOT NULL,
-    source_document_id TEXT,
-    confidence_score REAL DEFAULT 0.8,
-    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (source_document_id) REFERENCES documents(id) ON DELETE SET NULL
-  );
-
-  CREATE INDEX IF NOT EXISTS idx_profile_bank_user ON profile_bank(user_id);
-  CREATE INDEX IF NOT EXISTS idx_profile_bank_category ON profile_bank(user_id, category);
-  -- Profile versions table for version history with rollback
-  CREATE TABLE IF NOT EXISTS profile_versions (
-    id TEXT PRIMARY KEY,
-    user_id TEXT NOT NULL DEFAULT 'default',
-    profile_id TEXT NOT NULL DEFAULT 'default',
-    version INTEGER NOT NULL,
-    snapshot_json TEXT NOT NULL,
-    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (profile_id) REFERENCES profile(id)
-  );
-
-  CREATE INDEX IF NOT EXISTS idx_profile_versions_profile ON profile_versions(profile_id, version DESC);
-
-  -- Knowledge bank chunks table
-  CREATE TABLE IF NOT EXISTS chunks (
-    id TEXT PRIMARY KEY,
-    user_id TEXT NOT NULL DEFAULT 'default',
-    content TEXT NOT NULL,
-    section_type TEXT NOT NULL,
-    source_file TEXT,
-    metadata TEXT,
-    confidence_score REAL DEFAULT 0.8,
-    superseded_by TEXT,
-    hash TEXT NOT NULL,
-    created_at TEXT DEFAULT CURRENT_TIMESTAMP
-  );
-
-  CREATE INDEX IF NOT EXISTS idx_chunks_user ON chunks(user_id);
-  CREATE INDEX IF NOT EXISTS idx_chunks_user_section ON chunks(user_id, section_type);
-  CREATE UNIQUE INDEX IF NOT EXISTS idx_chunks_user_hash ON chunks(user_id, hash);
-
-`);
-
-// Create vec0 virtual table for vector search (requires sqlite-vec extension)
-try {
-  db.exec(`CREATE VIRTUAL TABLE IF NOT EXISTS chunks_vec USING vec0(embedding float[1536]);`);
-} catch {
-  console.warn("[db] Could not create chunks_vec table — sqlite-vec not loaded");
-}
-
-function getColumnNames(table: string): string[] {
-  const tableInfo = db.prepare(`PRAGMA table_info(${table})`).all() as Array<{ name: string }>;
-  return tableInfo.map((col) => col.name);
-}
-
-// Migration: Make settings user-scoped instead of globally keyed.
-try {
-  const settingsColumns = getColumnNames("settings");
-
-  if (!settingsColumns.includes("user_id")) {
-    db.transaction(() => {
-      db.exec(`
-        ALTER TABLE settings RENAME TO settings_old;
-        CREATE TABLE settings (
-          key TEXT NOT NULL,
-          user_id TEXT NOT NULL DEFAULT 'default',
-          value TEXT NOT NULL,
-          updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
-          PRIMARY KEY (key, user_id)
-        );
-        INSERT INTO settings (key, user_id, value, updated_at)
-        SELECT key, 'default', value, updated_at
-        FROM settings_old;
-        DROP TABLE settings_old;
-      `);
-    })();
-  }
-} catch (error) {
-  console.error("Settings migration error:", error);
-}
-
-// Migration: Add explicit user_id ownership columns to tables that previously
-// used profile_id or joined through jobs for isolation.
-try {
-  const ownershipMigrations: Array<{ table: string; backfill: string }> = [
-    {
-      table: "generated_resumes",
-      backfill: "UPDATE generated_resumes SET user_id = profile_id WHERE user_id = 'default'",
-    },
-    {
-      table: "interview_sessions",
-      backfill: "UPDATE interview_sessions SET user_id = profile_id WHERE user_id = 'default'",
-    },
-    {
-      table: "reminders",
-      backfill: `
-        UPDATE reminders
-        SET user_id = COALESCE((SELECT user_id FROM jobs WHERE jobs.id = reminders.job_id), 'default')
-        WHERE user_id = 'default'
-      `,
-    },
-    {
-      table: "cover_letters",
-      backfill: "UPDATE cover_letters SET user_id = profile_id WHERE user_id = 'default'",
-    },
-    {
-      table: "profile_versions",
-      backfill: "UPDATE profile_versions SET user_id = profile_id WHERE user_id = 'default'",
-    },
-  ];
-
-  for (const migration of ownershipMigrations) {
-    const columnNames = getColumnNames(migration.table);
-    if (!columnNames.includes("user_id")) {
-      db.exec(`ALTER TABLE ${migration.table} ADD COLUMN user_id TEXT NOT NULL DEFAULT 'default'`);
-      db.exec(migration.backfill);
-    }
-    db.exec(`CREATE INDEX IF NOT EXISTS idx_${migration.table}_user_id ON ${migration.table}(user_id)`);
-  }
-} catch (error) {
-  console.error("Ownership migration error:", error);
-}
-
-// Migration: Add new columns to jobs table if they don't exist
-try {
-  // Check if status column exists
-  const columnNames = getColumnNames("jobs");
-
-  if (!columnNames.includes("status")) {
-    db.exec("ALTER TABLE jobs ADD COLUMN status TEXT DEFAULT 'saved'");
-  }
-  if (!columnNames.includes("applied_at")) {
-    db.exec("ALTER TABLE jobs ADD COLUMN applied_at TEXT");
-  }
-  if (!columnNames.includes("deadline")) {
-    db.exec("ALTER TABLE jobs ADD COLUMN deadline TEXT");
-  }
-  if (!columnNames.includes("notes")) {
-    db.exec("ALTER TABLE jobs ADD COLUMN notes TEXT");
-  }
-  if (!columnNames.includes("linked_resume_id")) {
-    db.exec("ALTER TABLE jobs ADD COLUMN linked_resume_id TEXT");
-  }
-  if (!columnNames.includes("linked_cover_letter_id")) {
-    db.exec("ALTER TABLE jobs ADD COLUMN linked_cover_letter_id TEXT");
-  }
-  // Add user_id column for multi-user support
-  if (!columnNames.includes("user_id")) {
-    db.exec("ALTER TABLE jobs ADD COLUMN user_id TEXT DEFAULT 'default'");
-  }
-} catch (error) {
-  console.error("Migration error:", error);
-}
-
-// Migration: Add user_id to documents table
-try {
-  const docTableInfo = db.prepare("PRAGMA table_info(documents)").all() as Array<{ name: string }>;
-  const docColumnNames = docTableInfo.map((col) => col.name);
-
-  if (!docColumnNames.includes("user_id")) {
-    db.exec("ALTER TABLE documents ADD COLUMN user_id TEXT DEFAULT 'default'");
-  }
-} catch (error) {
-  console.error("Documents migration error:", error);
-}
-
-// Migration: Add user_id to notifications table
-try {
-  const notifTableInfo = db.prepare("PRAGMA table_info(notifications)").all() as Array<{ name: string }>;
-  const notifColumnNames = notifTableInfo.map((col) => col.name);
-
-  if (!notifColumnNames.includes("user_id")) {
-    db.exec("ALTER TABLE notifications ADD COLUMN user_id TEXT DEFAULT 'default'");
-  }
-} catch (error) {
-  console.error("Notifications migration error:", error);
-}
-
-// Migration: Add per-user ownership to interview answers
-try {
-  const answerTableInfo = db.prepare("PRAGMA table_info(interview_answers)").all() as Array<{ name: string }>;
-  const answerColumnNames = answerTableInfo.map((col) => col.name);
-
-  if (!answerColumnNames.includes("user_id")) {
-    db.exec("ALTER TABLE interview_answers ADD COLUMN user_id TEXT DEFAULT 'default'");
-  }
-} catch (error) {
-  console.error("Interview answers migration error:", error);
-}
-
-// Migration: Add per-user ownership to job status history
-try {
-  const statusTableInfo = db.prepare("PRAGMA table_info(job_status_history)").all() as Array<{ name: string }>;
-  const statusColumnNames = statusTableInfo.map((col) => col.name);
-
-  if (!statusColumnNames.includes("user_id")) {
-    db.exec("ALTER TABLE job_status_history ADD COLUMN user_id TEXT DEFAULT 'default'");
-  }
-
-  db.exec(`
-    CREATE INDEX IF NOT EXISTS idx_job_status_history_user_job
-      ON job_status_history(user_id, job_id, changed_at)
-  `);
-} catch (error) {
-  console.error("Job status history migration error:", error);
-}
-
-// Migration: company research used to be globally unique by company name.
-// Rebuild the table when needed so each Clerk user can cache the same company.
-try {
-  const companyTableInfo = db.prepare("PRAGMA table_info(company_research)").all() as Array<{ name: string }>;
-  const companyColumnNames = companyTableInfo.map((col) => col.name);
-  const indexes = db.prepare("PRAGMA index_list(company_research)").all() as Array<{
-    name: string;
-    unique: number;
-  }>;
-  const hasGlobalCompanyUnique = indexes.some((index) => {
-    if (!index.unique || index.name === "idx_company_research_user_company") return false;
-    const columns = db.prepare(`PRAGMA index_info(${JSON.stringify(index.name)})`).all() as Array<{ name: string }>;
-    return columns.length === 1 && columns[0]?.name === "company_name";
-  });
-
-  if (!companyColumnNames.includes("user_id") || hasGlobalCompanyUnique) {
-    db.transaction(() => {
-      db.exec(`
-        ALTER TABLE company_research RENAME TO company_research_old;
-        CREATE TABLE company_research (
-          id TEXT PRIMARY KEY,
-          user_id TEXT NOT NULL DEFAULT 'default',
-          company_name TEXT NOT NULL,
-          summary TEXT,
-          key_facts_json TEXT,
-          interview_questions_json TEXT,
-          culture_notes TEXT,
-          recent_news TEXT,
-          created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-          updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
-          UNIQUE(user_id, company_name)
-        );
-        INSERT INTO company_research (
-          id, user_id, company_name, summary, key_facts_json,
-          interview_questions_json, culture_notes, recent_news, created_at, updated_at
-        )
-        SELECT id, 'default', company_name, summary, key_facts_json,
-          interview_questions_json, culture_notes, recent_news, created_at, updated_at
-        FROM company_research_old;
-        DROP TABLE company_research_old;
-      `);
-    })();
-  }
-
-  db.exec(`
-    CREATE UNIQUE INDEX IF NOT EXISTS idx_company_research_user_company
-      ON company_research(user_id, company_name)
-  `);
-} catch (error) {
-  console.error("Company research migration error:", error);
-}
-
-// Migration: Add parsed_data column to documents table
-try {
-  const docTableInfo2 = db.prepare("PRAGMA table_info(documents)").all() as Array<{ name: string }>;
-  const docColumnNames2 = docTableInfo2.map((col) => col.name);
-
-  if (!docColumnNames2.includes("parsed_data")) {
-    db.exec("ALTER TABLE documents ADD COLUMN parsed_data TEXT");
-  }
-} catch (error) {
-  console.error("Documents parsed_data migration error:", error);
-}
-
-// Migration: Add extension tables
-try {
-  db.exec(`
-    -- Extension session tokens for API authentication
-    CREATE TABLE IF NOT EXISTS extension_sessions (
-      id TEXT PRIMARY KEY,
-      user_id TEXT NOT NULL DEFAULT 'default',
-      token TEXT NOT NULL UNIQUE,
-      device_info TEXT,
-      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-      expires_at TEXT NOT NULL,
-      last_used_at TEXT
-    );
-
-    -- Learned answers from job applications
-    CREATE TABLE IF NOT EXISTS learned_answers (
-      id TEXT PRIMARY KEY,
-      user_id TEXT NOT NULL DEFAULT 'default',
-      question TEXT NOT NULL,
-      question_normalized TEXT NOT NULL,
-      answer TEXT NOT NULL,
-      source_url TEXT,
-      source_company TEXT,
-      times_used INTEGER DEFAULT 1,
-      last_used_at TEXT,
-      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-      updated_at TEXT DEFAULT CURRENT_TIMESTAMP
-    );
-
-    -- Custom field mappings for specific sites
-    CREATE TABLE IF NOT EXISTS field_mappings (
-      id TEXT PRIMARY KEY,
-      user_id TEXT NOT NULL DEFAULT 'default',
-      site_pattern TEXT NOT NULL,
-      field_selector TEXT NOT NULL,
-      field_type TEXT NOT NULL,
-      custom_value TEXT,
-      enabled INTEGER DEFAULT 1,
-      created_at TEXT DEFAULT CURRENT_TIMESTAMP
-    );
-
-    -- Create indexes for extension tables
-    CREATE INDEX IF NOT EXISTS idx_extension_sessions_token ON extension_sessions(token);
-    CREATE INDEX IF NOT EXISTS idx_extension_sessions_user ON extension_sessions(user_id);
-    CREATE INDEX IF NOT EXISTS idx_learned_answers_normalized ON learned_answers(question_normalized);
-    CREATE INDEX IF NOT EXISTS idx_learned_answers_user ON learned_answers(user_id);
-  `);
-} catch (error) {
-  console.error("Extension tables migration error:", error);
-}
-
-// Migration: Resume A/B tracking table
-try {
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS resume_ab_tracking (
-      id TEXT PRIMARY KEY,
-      resume_id TEXT NOT NULL,
-      job_id TEXT NOT NULL,
-      user_id TEXT NOT NULL DEFAULT 'default',
-      outcome TEXT NOT NULL DEFAULT 'applied',
-      sent_at TEXT DEFAULT CURRENT_TIMESTAMP,
-      updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
-      notes TEXT,
-      FOREIGN KEY (resume_id) REFERENCES generated_resumes(id) ON DELETE CASCADE,
-      FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE CASCADE
-    );
-
-    CREATE INDEX IF NOT EXISTS idx_resume_ab_tracking_resume ON resume_ab_tracking(resume_id);
-    CREATE INDEX IF NOT EXISTS idx_resume_ab_tracking_job ON resume_ab_tracking(job_id);
-    CREATE INDEX IF NOT EXISTS idx_resume_ab_tracking_user ON resume_ab_tracking(user_id);
-  `);
-} catch (error) {
-  console.error("Resume A/B tracking migration error:", error);
-}
-
-try {
-  runLocalDevCleanSlateMigration(db);
-} catch (error) {
-  console.error("Local dev clean slate migration error:", error);
-}
-
-// Migration: Prompt A/B testing tables
-try {
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS prompt_variants (
-      id TEXT PRIMARY KEY,
-      name TEXT NOT NULL,
-      version INTEGER NOT NULL DEFAULT 1,
-      content TEXT NOT NULL,
-      active INTEGER NOT NULL DEFAULT 0,
-      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-      updated_at TEXT DEFAULT CURRENT_TIMESTAMP
-    );
-
-    CREATE TABLE IF NOT EXISTS prompt_variant_results (
-      id TEXT PRIMARY KEY,
-      prompt_variant_id TEXT NOT NULL,
-      job_id TEXT,
-      resume_id TEXT,
-      match_score REAL,
-      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (prompt_variant_id) REFERENCES prompt_variants(id) ON DELETE CASCADE
-    );
-
-    CREATE INDEX IF NOT EXISTS idx_prompt_variant_results_variant ON prompt_variant_results(prompt_variant_id);
-  `);
-} catch (error) {
-  console.error("Prompt A/B testing migration error:", error);
-}
-
-export default db;
+import { sqliteTable, text, integer, real, index, uniqueIndex, customType, primaryKey } from 'drizzle-orm/sqlite-core';
+import { sql } from 'drizzle-orm';
+
+export const DEFAULT_USER_ID = 'default';
+export const DEFAULT_PROFILE_ID = DEFAULT_USER_ID;
+
+const customBlob = customType<{ data: Buffer; driverData: Buffer }>({
+  dataType() {
+    return 'blob';
+  },
+});
+
+// Settings table (global, no userId)
+export const settings = sqliteTable('settings', {
+  key: text('key').notNull(),
+  userId: text('user_id').notNull().default(DEFAULT_USER_ID),
+  value: text('value').notNull(),
+  updatedAt: text('updated_at').default(sql`CURRENT_TIMESTAMP`),
+}, (table) => [
+  primaryKey({ columns: [table.key, table.userId] }),
+]);
+
+// Documents table
+export const documents = sqliteTable('documents', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').notNull().default(DEFAULT_USER_ID),
+  filename: text('filename').notNull(),
+  type: text('type').notNull(),
+  mimeType: text('mime_type').notNull(),
+  size: integer('size').notNull(),
+  path: text('path').notNull(),
+  extractedText: text('extracted_text'),
+  parsedData: text('parsed_data'),
+  uploadedAt: text('uploaded_at').default(sql`CURRENT_TIMESTAMP`),
+});
+
+// Profile table
+export const profile = sqliteTable('profile', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').notNull().default(DEFAULT_USER_ID).unique(),
+  contactJson: text('contact_json'),
+  summary: text('summary'),
+  rawText: text('raw_text'),
+  createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: text('updated_at').default(sql`CURRENT_TIMESTAMP`),
+});
+
+// Experiences table
+export const experiences = sqliteTable('experiences', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').notNull().default(DEFAULT_USER_ID),
+  profileId: text('profile_id').notNull(),
+  company: text('company').notNull(),
+  title: text('title').notNull(),
+  location: text('location'),
+  startDate: text('start_date'),
+  endDate: text('end_date'),
+  current: integer('current', { mode: 'boolean' }).default(false),
+  description: text('description'),
+  highlightsJson: text('highlights_json'),
+  skillsJson: text('skills_json'),
+  createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
+});
+
+// Education table
+export const education = sqliteTable('education', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').notNull().default(DEFAULT_USER_ID),
+  profileId: text('profile_id').notNull(),
+  institution: text('institution').notNull(),
+  degree: text('degree').notNull(),
+  field: text('field'),
+  startDate: text('start_date'),
+  endDate: text('end_date'),
+  gpa: text('gpa'),
+  highlightsJson: text('highlights_json'),
+  createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
+});
+
+// Skills table
+export const skills = sqliteTable('skills', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').notNull().default(DEFAULT_USER_ID),
+  profileId: text('profile_id').notNull(),
+  name: text('name').notNull(),
+  category: text('category').default('other'),
+  proficiency: text('proficiency'),
+  createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
+});
+
+// Projects table
+export const projects = sqliteTable('projects', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').notNull().default(DEFAULT_USER_ID),
+  profileId: text('profile_id').notNull(),
+  name: text('name').notNull(),
+  description: text('description'),
+  url: text('url'),
+  technologiesJson: text('technologies_json'),
+  highlightsJson: text('highlights_json'),
+  createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
+});
+
+// Certifications table
+export const certifications = sqliteTable('certifications', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').notNull().default(DEFAULT_USER_ID),
+  profileId: text('profile_id').notNull(),
+  name: text('name').notNull(),
+  issuer: text('issuer').notNull(),
+  issueDate: text('issue_date'),
+  expiryDate: text('expiry_date'),
+  credentialId: text('credential_id'),
+  url: text('url'),
+  createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
+});
+
+// Jobs table
+export const jobs = sqliteTable('jobs', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').notNull().default(DEFAULT_USER_ID),
+  title: text('title').notNull(),
+  company: text('company').notNull(),
+  location: text('location'),
+  type: text('type'),
+  remote: integer('remote', { mode: 'boolean' }).default(false),
+  salary: text('salary'),
+  description: text('description').notNull(),
+  requirementsJson: text('requirements_json'),
+  responsibilitiesJson: text('responsibilities_json'),
+  keywordsJson: text('keywords_json'),
+  url: text('url'),
+  status: text('status').default('saved'),
+  appliedAt: text('applied_at'),
+  deadline: text('deadline'),
+  notes: text('notes'),
+  createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
+});
+
+// Generated resumes table
+export const generatedResumes = sqliteTable('generated_resumes', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').notNull().default(DEFAULT_USER_ID),
+  jobId: text('job_id').notNull(),
+  profileId: text('profile_id').notNull(),
+  contentJson: text('content_json').notNull(),
+  pdfPath: text('pdf_path'),
+  matchScore: real('match_score'),
+  createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
+});
+
+// Interview sessions table
+export const interviewSessions = sqliteTable('interview_sessions', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').notNull().default(DEFAULT_USER_ID),
+  jobId: text('job_id').notNull(),
+  profileId: text('profile_id').notNull(),
+  mode: text('mode').default('text'),
+  questionsJson: text('questions_json').notNull(),
+  status: text('status').default('in_progress'),
+  startedAt: text('started_at').default(sql`CURRENT_TIMESTAMP`),
+  completedAt: text('completed_at'),
+});
+
+// Interview answers table
+export const interviewAnswers = sqliteTable('interview_answers', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').notNull().default(DEFAULT_USER_ID),
+  sessionId: text('session_id').notNull(),
+  questionIndex: integer('question_index').notNull(),
+  answer: text('answer').notNull(),
+  feedback: text('feedback'),
+  createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
+});
+
+// Reminders table
+export const reminders = sqliteTable('reminders', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').notNull().default(DEFAULT_USER_ID),
+  jobId: text('job_id').notNull(),
+  type: text('type').default('follow_up'),
+  title: text('title').notNull(),
+  description: text('description'),
+  dueDate: text('due_date').notNull(),
+  completed: integer('completed', { mode: 'boolean' }).default(false),
+  dismissed: integer('dismissed', { mode: 'boolean' }).default(false),
+  createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
+  completedAt: text('completed_at'),
+});
+
+// Notifications table
+export const notifications = sqliteTable('notifications', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').notNull().default(DEFAULT_USER_ID),
+  type: text('type').notNull(),
+  title: text('title').notNull(),
+  message: text('message'),
+  link: text('link'),
+  read: integer('read', { mode: 'boolean' }).default(false),
+  createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
+});
+
+// Company research cache table
+export const companyResearch = sqliteTable('company_research', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').notNull().default(DEFAULT_USER_ID),
+  companyName: text('company_name').notNull(),
+  summary: text('summary'),
+  keyFactsJson: text('key_facts_json'),
+  interviewQuestionsJson: text('interview_questions_json'),
+  cultureNotes: text('culture_notes'),
+  recentNews: text('recent_news'),
+  createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: text('updated_at').default(sql`CURRENT_TIMESTAMP`),
+}, (table) => [
+  uniqueIndex('idx_company_research_user_company').on(table.userId, table.companyName),
+]);
+
+// Cover letters table
+export const coverLetters = sqliteTable('cover_letters', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').notNull().default(DEFAULT_USER_ID),
+  jobId: text('job_id').notNull(),
+  profileId: text('profile_id').notNull(),
+  content: text('content').notNull(),
+  highlightsJson: text('highlights_json'),
+  version: integer('version').default(1),
+  createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
+});
+
+// LLM Settings table (per-user)
+export const llmSettings = sqliteTable('llm_settings', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').notNull().default(DEFAULT_USER_ID).unique(),
+  provider: text('provider').default('openai'),
+  model: text('model'),
+  apiKey: text('api_key'),
+  baseUrl: text('base_url'),
+  createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: text('updated_at').default(sql`CURRENT_TIMESTAMP`),
+});
+
+// Email drafts table
+export const emailDrafts = sqliteTable('email_drafts', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').notNull().default(DEFAULT_USER_ID),
+  type: text('type').notNull(),
+  jobId: text('job_id'),
+  subject: text('subject').notNull(),
+  body: text('body').notNull(),
+  contextJson: text('context_json'),
+  createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: text('updated_at').default(sql`CURRENT_TIMESTAMP`),
+});
+
+// Analytics snapshots table for historical tracking
+export const analyticsSnapshots = sqliteTable('analytics_snapshots', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').notNull().default(DEFAULT_USER_ID),
+  snapshotDate: text('snapshot_date').notNull(),
+  totalJobs: integer('total_jobs').default(0),
+  jobsSaved: integer('jobs_saved').default(0),
+  jobsApplied: integer('jobs_applied').default(0),
+  jobsInterviewing: integer('jobs_interviewing').default(0),
+  jobsOffered: integer('jobs_offered').default(0),
+  jobsRejected: integer('jobs_rejected').default(0),
+  totalInterviews: integer('total_interviews').default(0),
+  interviewsCompleted: integer('interviews_completed').default(0),
+  totalDocuments: integer('total_documents').default(0),
+  totalResumes: integer('total_resumes').default(0),
+  profileCompleteness: integer('profile_completeness').default(0),
+  createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
+}, (table) => [
+  uniqueIndex('idx_analytics_snapshots_user_date').on(table.userId, table.snapshotDate),
+]);
+
+// Job status history table
+export const jobStatusHistory = sqliteTable('job_status_history', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').notNull().default(DEFAULT_USER_ID),
+  jobId: text('job_id').notNull(),
+  fromStatus: text('from_status'),
+  toStatus: text('to_status').notNull(),
+  changedAt: text('changed_at').default(sql`CURRENT_TIMESTAMP`),
+  notes: text('notes'),
+}, (table) => [
+  index('idx_job_status_history_user_job').on(table.userId, table.jobId, table.changedAt),
+]);
+
+// Salary offers table
+export const salaryOffers = sqliteTable('salary_offers', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').notNull().default(DEFAULT_USER_ID),
+  jobId: text('job_id'),
+  company: text('company').notNull(),
+  role: text('role').notNull(),
+  baseSalary: real('base_salary').notNull(),
+  signingBonus: real('signing_bonus'),
+  annualBonus: real('annual_bonus'),
+  equityValue: real('equity_value'),
+  vestingYears: integer('vesting_years'),
+  location: text('location'),
+  status: text('status').default('pending'),
+  notes: text('notes'),
+  negotiationOutcome: text('negotiation_outcome'),
+  finalBaseSalary: real('final_base_salary'),
+  finalTotalComp: real('final_total_comp'),
+  createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: text('updated_at').default(sql`CURRENT_TIMESTAMP`),
+});
+
+// ATS scan history table
+export const atsScanHistory = sqliteTable('ats_scan_history', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').notNull().default(DEFAULT_USER_ID),
+  jobId: text('job_id'),
+  overallScore: integer('overall_score').notNull(),
+  letterGrade: text('letter_grade').notNull(),
+  formattingScore: integer('formatting_score').notNull(),
+  structureScore: integer('structure_score').notNull(),
+  contentScore: integer('content_score').notNull(),
+  keywordsScore: integer('keywords_score').notNull(),
+  issueCount: integer('issue_count').notNull().default(0),
+  fixCount: integer('fix_count').notNull().default(0),
+  reportJson: text('report_json').notNull(),
+  scannedAt: text('scanned_at').default(sql`CURRENT_TIMESTAMP`),
+}, (table) => [
+  index('idx_ats_scan_history_user').on(table.userId),
+  index('idx_ats_scan_history_date').on(table.scannedAt),
+]);
+
+// Custom resume templates table
+export const customTemplates = sqliteTable('custom_templates', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').notNull().default(DEFAULT_USER_ID),
+  name: text('name').notNull(),
+  sourceDocumentId: text('source_document_id'),
+  analyzedStyles: text('analyzed_styles').notNull(),
+  createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
+}, (table) => [
+  index('idx_custom_templates_user_created').on(table.userId, table.createdAt),
+]);
+
+// Profile bank table for aggregated resume data
+export const profileBank = sqliteTable('profile_bank', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').notNull().default(DEFAULT_USER_ID),
+  category: text('category').notNull(),
+  content: text('content').notNull(),
+  sourceDocumentId: text('source_document_id'),
+  confidenceScore: real('confidence_score').default(0.8),
+  createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
+}, (table) => [
+  index('idx_profile_bank_user').on(table.userId),
+  index('idx_profile_bank_category').on(table.userId, table.category),
+]);
+
+// Profile versions table for version history with rollback
+export const profileVersions = sqliteTable('profile_versions', {
+  id: text('id').primaryKey(),
+  profileId: text('profile_id').notNull().default(DEFAULT_PROFILE_ID),
+  version: integer('version').notNull(),
+  snapshotJson: text('snapshot_json').notNull(),
+  createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
+}, (table) => [
+  index('idx_profile_versions_profile').on(table.profileId, table.version),
+]);
+
+// Knowledge bank chunks table
+export const chunks = sqliteTable('chunks', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').notNull().default(DEFAULT_USER_ID),
+  content: text('content').notNull(),
+  sectionType: text('section_type').notNull(),
+  sourceFile: text('source_file'),
+  metadata: text('metadata'),
+  confidenceScore: real('confidence_score').default(0.8),
+  supersededBy: text('superseded_by'),
+  hash: text('hash').notNull(),
+  createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
+}, (table) => [
+  index('idx_chunks_user').on(table.userId),
+  index('idx_chunks_user_section').on(table.userId, table.sectionType),
+  uniqueIndex('idx_chunks_user_hash').on(table.userId, table.hash),
+]);
+
+// Tailored resume knowledge chunks with optional embeddings
+export const knowledgeChunks = sqliteTable('knowledge_chunks', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').notNull().default(DEFAULT_USER_ID),
+  documentId: text('document_id').notNull(),
+  sectionType: text('section_type').notNull(),
+  content: text('content').notNull(),
+  contentHash: text('content_hash').notNull(),
+  embedding: customBlob('embedding'),
+  metadataJson: text('metadata_json').default('{}'),
+  createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
+}, (table) => [
+  index('idx_knowledge_chunks_user').on(table.userId),
+  index('idx_knowledge_chunks_document').on(table.documentId),
+  uniqueIndex('idx_knowledge_chunks_user_hash').on(table.userId, table.contentHash),
+  index('idx_knowledge_chunks_section').on(table.userId, table.sectionType),
+]);
+
+// Extension session tokens for API authentication
+export const extensionSessions = sqliteTable('extension_sessions', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').notNull().default(DEFAULT_USER_ID),
+  token: text('token').notNull().unique(),
+  deviceInfo: text('device_info'),
+  createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
+  expiresAt: text('expires_at').notNull(),
+  lastUsedAt: text('last_used_at'),
+}, (table) => [
+  index('idx_extension_sessions_token').on(table.token),
+  index('idx_extension_sessions_user').on(table.userId),
+]);
+
+// Learned answers from job applications
+export const learnedAnswers = sqliteTable('learned_answers', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').notNull().default(DEFAULT_USER_ID),
+  question: text('question').notNull(),
+  questionNormalized: text('question_normalized').notNull(),
+  answer: text('answer').notNull(),
+  sourceUrl: text('source_url'),
+  sourceCompany: text('source_company'),
+  timesUsed: integer('times_used').default(1),
+  lastUsedAt: text('last_used_at'),
+  createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: text('updated_at').default(sql`CURRENT_TIMESTAMP`),
+}, (table) => [
+  index('idx_learned_answers_normalized').on(table.questionNormalized),
+  index('idx_learned_answers_user').on(table.userId),
+]);
+
+// Custom field mappings for specific sites
+export const fieldMappings = sqliteTable('field_mappings', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').notNull().default(DEFAULT_USER_ID),
+  sitePattern: text('site_pattern').notNull(),
+  fieldSelector: text('field_selector').notNull(),
+  fieldType: text('field_type').notNull(),
+  customValue: text('custom_value'),
+  enabled: integer('enabled', { mode: 'boolean' }).default(true),
+  createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
+});
+
+// Resume A/B tracking table
+export const resumeAbTracking = sqliteTable('resume_ab_tracking', {
+  id: text('id').primaryKey(),
+  resumeId: text('resume_id').notNull(),
+  jobId: text('job_id').notNull(),
+  userId: text('user_id').notNull().default(DEFAULT_USER_ID),
+  outcome: text('outcome').notNull().default('applied'),
+  sentAt: text('sent_at').default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: text('updated_at').default(sql`CURRENT_TIMESTAMP`),
+  notes: text('notes'),
+}, (table) => [
+  index('idx_resume_ab_tracking_resume').on(table.resumeId),
+  index('idx_resume_ab_tracking_job').on(table.jobId),
+  index('idx_resume_ab_tracking_user').on(table.userId),
+]);
+
+export const promptVariants = sqliteTable('prompt_variants', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  version: integer('version').notNull().default(1),
+  content: text('content').notNull(),
+  active: integer('active', { mode: 'boolean' }).notNull().default(false),
+  createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: text('updated_at').default(sql`CURRENT_TIMESTAMP`),
+});
+
+export const promptVariantResults = sqliteTable('prompt_variant_results', {
+  id: text('id').primaryKey(),
+  promptVariantId: text('prompt_variant_id').notNull(),
+  jobId: text('job_id'),
+  resumeId: text('resume_id'),
+  matchScore: real('match_score'),
+  createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
+}, (table) => [
+  index('idx_prompt_variant_results_variant').on(table.promptVariantId),
+]);
+
+// Type exports for use in application code
+export type Settings = typeof settings.$inferSelect;
+export type NewSettings = typeof settings.$inferInsert;
+
+export type Document = typeof documents.$inferSelect;
+export type NewDocument = typeof documents.$inferInsert;
+
+export type Profile = typeof profile.$inferSelect;
+export type NewProfile = typeof profile.$inferInsert;
+
+export type Experience = typeof experiences.$inferSelect;
+export type NewExperience = typeof experiences.$inferInsert;
+
+export type Education = typeof education.$inferSelect;
+export type NewEducation = typeof education.$inferInsert;
+
+export type Skill = typeof skills.$inferSelect;
+export type NewSkill = typeof skills.$inferInsert;
+
+export type Project = typeof projects.$inferSelect;
+export type NewProject = typeof projects.$inferInsert;
+
+export type Certification = typeof certifications.$inferSelect;
+export type NewCertification = typeof certifications.$inferInsert;
+
+export type Job = typeof jobs.$inferSelect;
+export type NewJob = typeof jobs.$inferInsert;
+
+export type GeneratedResume = typeof generatedResumes.$inferSelect;
+export type NewGeneratedResume = typeof generatedResumes.$inferInsert;
+
+export type InterviewSession = typeof interviewSessions.$inferSelect;
+export type NewInterviewSession = typeof interviewSessions.$inferInsert;
+
+export type InterviewAnswer = typeof interviewAnswers.$inferSelect;
+export type NewInterviewAnswer = typeof interviewAnswers.$inferInsert;
+
+export type Reminder = typeof reminders.$inferSelect;
+export type NewReminder = typeof reminders.$inferInsert;
+
+export type Notification = typeof notifications.$inferSelect;
+export type NewNotification = typeof notifications.$inferInsert;
+
+export type CompanyResearch = typeof companyResearch.$inferSelect;
+export type NewCompanyResearch = typeof companyResearch.$inferInsert;
+
+export type CoverLetter = typeof coverLetters.$inferSelect;
+export type NewCoverLetter = typeof coverLetters.$inferInsert;
+
+export type LlmSettings = typeof llmSettings.$inferSelect;
+export type NewLlmSettings = typeof llmSettings.$inferInsert;
+
+export type EmailDraft = typeof emailDrafts.$inferSelect;
+export type NewEmailDraft = typeof emailDrafts.$inferInsert;
+
+export type AnalyticsSnapshot = typeof analyticsSnapshots.$inferSelect;
+export type NewAnalyticsSnapshot = typeof analyticsSnapshots.$inferInsert;
+
+export type JobStatusHistory = typeof jobStatusHistory.$inferSelect;
+export type NewJobStatusHistory = typeof jobStatusHistory.$inferInsert;
+
+export type SalaryOffer = typeof salaryOffers.$inferSelect;
+export type NewSalaryOffer = typeof salaryOffers.$inferInsert;
+
+export type AtsScanHistory = typeof atsScanHistory.$inferSelect;
+export type NewAtsScanHistory = typeof atsScanHistory.$inferInsert;
+
+export type CustomTemplate = typeof customTemplates.$inferSelect;
+export type NewCustomTemplate = typeof customTemplates.$inferInsert;
+
+export type ProfileBankEntry = typeof profileBank.$inferSelect;
+export type NewProfileBankEntry = typeof profileBank.$inferInsert;
+
+export type ProfileVersion = typeof profileVersions.$inferSelect;
+export type NewProfileVersion = typeof profileVersions.$inferInsert;
+
+export type Chunk = typeof chunks.$inferSelect;
+export type NewChunk = typeof chunks.$inferInsert;
+
+export type KnowledgeChunk = typeof knowledgeChunks.$inferSelect;
+export type NewKnowledgeChunk = typeof knowledgeChunks.$inferInsert;
+
+export type ExtensionSession = typeof extensionSessions.$inferSelect;
+export type NewExtensionSession = typeof extensionSessions.$inferInsert;
+
+export type LearnedAnswer = typeof learnedAnswers.$inferSelect;
+export type NewLearnedAnswer = typeof learnedAnswers.$inferInsert;
+
+export type FieldMapping = typeof fieldMappings.$inferSelect;
+export type NewFieldMapping = typeof fieldMappings.$inferInsert;
+
+export type ResumeAbTracking = typeof resumeAbTracking.$inferSelect;
+export type NewResumeAbTracking = typeof resumeAbTracking.$inferInsert;
+
+export type PromptVariant = typeof promptVariants.$inferSelect;
+export type NewPromptVariant = typeof promptVariants.$inferInsert;
+
+export type PromptVariantResult = typeof promptVariantResults.$inferSelect;
+export type NewPromptVariantResult = typeof promptVariantResults.$inferInsert;

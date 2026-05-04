@@ -5,7 +5,7 @@
  * @response ExtensionAuthVerifyResponse from @/types/api
  */
 import { NextRequest, NextResponse } from "next/server";
-import db from "@/lib/db/schema";
+import db from "@/lib/db/legacy";
 
 export const dynamic = "force-dynamic";
 

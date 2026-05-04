@@ -1,5 +1,5 @@
 import { nanoid } from "nanoid";
-import db from "./schema";
+import db from "./legacy";
 
 export interface CoverLetter {
   id: string;

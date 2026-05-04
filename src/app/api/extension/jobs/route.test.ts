@@ -10,7 +10,7 @@ vi.mock("@/lib/extension-auth", () => ({
   requireExtensionAuth: mocks.requireExtensionAuth,
 }));
 
-vi.mock("@/lib/db/drizzle/queries/jobs", () => ({
+vi.mock("@/lib/db/queries/jobs", () => ({
   createJob: mocks.createJob,
 }));
 

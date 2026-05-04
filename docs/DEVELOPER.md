@@ -110,11 +110,11 @@ npm run dev
 
 ## Database
 
-Columbus uses SQLite via `better-sqlite3`. The database file (`columbus.db`) is created automatically on first run in the project root.
+Columbus uses Drizzle ORM with libSQL/SQLite. Local development defaults to `file:./.local.db`; hosted deployments can point `TURSO_DATABASE_URL` at Turso and set `TURSO_AUTH_TOKEN` when required.
 
 **Reset database:**
 ```bash
-rm columbus.db
+rm .local.db
 npm run dev  # Database recreated on startup
 ```
 
@@ -214,7 +214,7 @@ Restart the TypeScript server:
 ls -la columbus.db
 
 # Reset if corrupted
-rm columbus.db && npm run dev
+rm .local.db && npm run dev
 ```
 
 ### LLM Not Working

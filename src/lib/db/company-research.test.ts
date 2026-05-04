@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { Mock } from "vitest";
 
-vi.mock("./schema", () => {
+vi.mock("./legacy", () => {
   const mockDb = {
     prepare: vi.fn(),
   };
@@ -12,7 +12,7 @@ vi.mock("@/lib/utils", () => ({
   generateId: () => "research-id",
 }));
 
-import db from "./schema";
+import db from "./legacy";
 import {
   deleteCompanyResearch,
   getCompanyResearch,

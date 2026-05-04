@@ -34,8 +34,8 @@ export async function getCompanyResearch(
     interviewQuestions: row.interviewQuestionsJson ? JSON.parse(row.interviewQuestionsJson) : [],
     cultureNotes: row.cultureNotes ?? undefined,
     recentNews: row.recentNews ?? undefined,
-    createdAt: row.createdAt?.toISOString() ?? '',
-    updatedAt: row.updatedAt?.toISOString() ?? '',
+    createdAt: row.createdAt ?? '',
+    updatedAt: row.updatedAt ?? '',
   };
 }
 
@@ -60,7 +60,7 @@ export async function saveCompanyResearch(
         interviewQuestionsJson: JSON.stringify(research.interviewQuestions),
         cultureNotes: research.cultureNotes ?? null,
         recentNews: research.recentNews ?? null,
-        updatedAt: now,
+        updatedAt: now.toISOString(),
       })
       .where(and(eq(companyResearch.id, existing.id), eq(companyResearch.userId, userId)));
 
@@ -81,8 +81,8 @@ export async function saveCompanyResearch(
     interviewQuestionsJson: JSON.stringify(research.interviewQuestions),
     cultureNotes: research.cultureNotes ?? null,
     recentNews: research.recentNews ?? null,
-    createdAt: now,
-    updatedAt: now,
+    createdAt: now.toISOString(),
+    updatedAt: now.toISOString(),
   });
 
   return {
@@ -125,7 +125,7 @@ export async function getAllCompanyResearch(userId: string): Promise<CompanyRese
     interviewQuestions: row.interviewQuestionsJson ? JSON.parse(row.interviewQuestionsJson) : [],
     cultureNotes: row.cultureNotes ?? undefined,
     recentNews: row.recentNews ?? undefined,
-    createdAt: row.createdAt?.toISOString() ?? '',
-    updatedAt: row.updatedAt?.toISOString() ?? '',
+    createdAt: row.createdAt ?? '',
+    updatedAt: row.updatedAt ?? '',
   }));
 }

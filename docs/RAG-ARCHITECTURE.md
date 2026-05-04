@@ -8,7 +8,7 @@
 |-----------|--------|---------|------|
 | Embeddings (primary) | text-embedding-3-small | `openai` | $0.02/1M tokens |
 | Embeddings (local) | nomic-embed-text-v1.5 | `@huggingface/transformers` | Free |
-| Vector store | sqlite-vec | `sqlite-vec` + `better-sqlite3` | Free |
+| Vector store | sqlite-vec | `sqlite-vec` + Drizzle/libSQL | Free |
 | Reranking | Cohere Rerank | `cohere-ai` | $0.001/query |
 | PDF parsing | pdf.js | `pdfjs-dist` | Free |
 | DOCX parsing | mammoth | `mammoth` | Free |
@@ -141,7 +141,7 @@ Export (PDF / LaTeX / DOCX / HTML)
 
 - Zero infrastructure — single .db file
 - Works offline / local-first (core differentiator)
-- Already using better-sqlite3 in the project
+- Already using libSQL/SQLite in the project
 - 500-5,000 chunks per user = well within limits
 - 6KB per chunk vector, 1,000 chunks = 6MB
 - Migration path to Turso (cloud SQLite) when ready for multi-device

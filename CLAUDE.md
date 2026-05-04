@@ -28,7 +28,7 @@
 | Language | TypeScript (strict mode) |
 | Styling | Tailwind CSS + CSS Variables |
 | Components | Shadcn/ui patterns (CVA) |
-| Database | SQLite (better-sqlite3) |
+| Database | Drizzle ORM with libSQL/SQLite |
 | LLM | Multi-provider (OpenAI, Anthropic, Ollama, OpenRouter) |
 | Icons | Lucide React |
 | Testing | Vitest (unit) + Playwright (e2e) |

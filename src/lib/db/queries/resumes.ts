@@ -34,7 +34,7 @@ export async function saveGeneratedResume(
     contentJson,
     pdfPath: htmlPath,
     matchScore: matchScore ?? null,
-    createdAt: now,
+    createdAt: now.toISOString(),
   });
 
   return {
@@ -63,7 +63,7 @@ export async function getGeneratedResumes(userId: string, jobId: string): Promis
     contentJson: row.contentJson,
     htmlPath: row.pdfPath ?? '',
     matchScore: row.matchScore ?? undefined,
-    createdAt: row.createdAt?.toISOString() ?? '',
+    createdAt: row.createdAt ?? '',
   }));
 }
 
@@ -83,7 +83,7 @@ export async function getGeneratedResume(userId: string, resumeId: string): Prom
     contentJson: row.contentJson,
     htmlPath: row.pdfPath ?? '',
     matchScore: row.matchScore ?? undefined,
-    createdAt: row.createdAt?.toISOString() ?? '',
+    createdAt: row.createdAt ?? '',
   };
 }
 
@@ -107,7 +107,7 @@ export async function getAllGeneratedResumes(userId: string): Promise<GeneratedR
     contentJson: row.contentJson,
     htmlPath: row.pdfPath ?? '',
     matchScore: row.matchScore ?? undefined,
-    createdAt: row.createdAt?.toISOString() ?? '',
+    createdAt: row.createdAt ?? '',
   }));
 }
 

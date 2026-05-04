@@ -7,7 +7,7 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { requireExtensionAuth, normalizeQuestion, calculateSimilarity } from "@/lib/extension-auth";
-import { db, learnedAnswers, eq, and, or, desc, like } from "@/lib/db/drizzle";
+import { db, learnedAnswers, eq, and, or, desc, like } from "@/lib/db";
 
 type LearnedAnswerSearchRow = {
   id: string;
