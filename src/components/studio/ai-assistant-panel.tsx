@@ -39,7 +39,10 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import type { Opportunity } from "@/types";
-import type { CoverLetterCritique } from "@/lib/ai/critique-prompts";
+import {
+  COVER_LETTER_CRITIQUE_AXES,
+  type CoverLetterCritique,
+} from "@/lib/ai/critique-prompts";
 import type { DocumentMode } from "./studio-documents";
 
 type AssistantRunAction =
@@ -551,33 +554,21 @@ export function AiAssistantPanel({
   const isRunning = (action: AssistantRunAction) => runningAction === action;
   const isBusy = runningAction !== null;
   const hasSelection = selectedText.length > 0;
+  const isCoverLetter = documentMode === "cover_letter";
+  const generateBankLabel = isRunning("generate-from-bank")
+    ? isCoverLetter
+      ? "Generating..."
+      : "Preparing..."
+    : isCoverLetter
+      ? "AI Generate"
+      : "Generate from Bank";
   const critiqueScoreRows = coverLetterCritique
-    ? [
-        {
-          key: "fit",
-          label: "Company fit",
-          value: coverLetterCritique.scores.fit,
-          rationale: coverLetterCritique.rationale_per_axis.fit,
-        },
-        {
-          key: "specificity",
-          label: "Specificity",
-          value: coverLetterCritique.scores.specificity,
-          rationale: coverLetterCritique.rationale_per_axis.specificity,
-        },
-        {
-          key: "hook",
-          label: "Hook",
-          value: coverLetterCritique.scores.hook,
-          rationale: coverLetterCritique.rationale_per_axis.hook,
-        },
-        {
-          key: "ask",
-          label: "Ask / close",
-          value: coverLetterCritique.scores.ask,
-          rationale: coverLetterCritique.rationale_per_axis.ask,
-        },
-      ]
+    ? COVER_LETTER_CRITIQUE_AXES.map(({ key, label }) => ({
+        key,
+        label,
+        value: coverLetterCritique.scores[key],
+        rationale: coverLetterCritique.rationale_per_axis[key],
+      }))
     : [];
 
   return (
@@ -663,13 +654,7 @@ export function AiAssistantPanel({
         </section>
 
         <section className="space-y-2">
-          <div
-            className={
-              documentMode === "cover_letter"
-                ? "grid grid-cols-2 gap-2"
-                : undefined
-            }
-          >
+          <div className={isCoverLetter ? "grid grid-cols-2 gap-2" : undefined}>
             <Button
               type="button"
               variant="outline"
@@ -682,15 +667,9 @@ export function AiAssistantPanel({
               ) : (
                 <FileText className="mr-2 h-4 w-4" />
               )}
-              {isRunning("generate-from-bank")
-                ? documentMode === "cover_letter"
-                  ? "Generating..."
-                  : "Preparing..."
-                : documentMode === "cover_letter"
-                  ? "AI Generate"
-                  : "Generate from Bank"}
+              {generateBankLabel}
             </Button>
-            {documentMode === "cover_letter" && (
+            {isCoverLetter && (
               <Button
                 type="button"
                 variant="outline"
@@ -787,7 +766,7 @@ export function AiAssistantPanel({
           </section>
         )}
 
-        {coverLetterCritique && documentMode === "cover_letter" && (
+        {coverLetterCritique && isCoverLetter && (
           <section
             className="space-y-4 rounded-[var(--radius)] border-[length:var(--border-width)] bg-muted/30 p-3"
             aria-label="Cover letter critique"

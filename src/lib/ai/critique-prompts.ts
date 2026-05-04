@@ -1,6 +1,16 @@
 import { z } from "zod";
 import { parseJSONFromLLM } from "@/lib/llm/client";
 
+export const COVER_LETTER_CRITIQUE_AXES = [
+  { key: "fit", label: "Company fit" },
+  { key: "specificity", label: "Specificity" },
+  { key: "hook", label: "Hook" },
+  { key: "ask", label: "Ask / close" },
+] as const satisfies ReadonlyArray<{ key: string; label: string }>;
+
+export type CoverLetterCritiqueAxis =
+  (typeof COVER_LETTER_CRITIQUE_AXES)[number]["key"];
+
 export const coverLetterCritiqueSuggestionSchema = z.object({
   range_in_letter: z.string().min(1),
   suggestion: z.string().min(1),
