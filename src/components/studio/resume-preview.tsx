@@ -141,7 +141,7 @@ export function ResumePreview({
         }}
       >
         <article
-          className="min-h-[11in] bg-white text-slate-950 shadow-[var(--shadow-elevated)]"
+          className="min-h-[11in] border-[length:var(--border-width)] border-paper-border bg-paper text-paper-foreground shadow-[var(--shadow-elevated)]"
           style={{
             width: `${PAGE_WIDTH_PX}px`,
             fontFamily,
@@ -180,7 +180,7 @@ export function ResumePreview({
               dangerouslySetInnerHTML={{ __html: html }}
             />
           ) : (
-            <div className="flex min-h-[11in] items-center justify-center px-14 py-16 text-slate-950">
+            <div className="flex min-h-[11in] items-center justify-center px-14 py-16 text-paper-foreground">
               <div className="w-full max-w-md text-center">
                 <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-[calc(var(--radius)_+_8px)] bg-primary/10 text-primary">
                   <EmptyStateIcon className="h-8 w-8" aria-hidden="true" />
@@ -191,7 +191,7 @@ export function ResumePreview({
                 <h2 className="mt-2 text-2xl font-bold">
                   {emptyStateContent.heading}
                 </h2>
-                <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-slate-500">
+                <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-paper-foreground/60">
                   {emptyStateContent.description}
                 </p>
 

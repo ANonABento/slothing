@@ -100,6 +100,10 @@ export const BASE_FONT_VARIABLES = {
 } as const satisfies ThemeCssVariables;
 
 export const DEFAULT_EFFECT_VARIABLES = {
+  "--surface-paper": "0 0% 100%",
+  "--paper-foreground": "0 0% 0%",
+  "--surface-paper-border": "0 0% 90%",
+  "--surface-scrim": "0 0% 0%",
   "--backdrop-blur": "none",
   "--glow-color": "transparent",
   "--glow-color-secondary": "transparent",
