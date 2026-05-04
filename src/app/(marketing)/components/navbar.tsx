@@ -5,12 +5,7 @@ import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Sparkles, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-
-const navLinks = [
-  { name: "Features", href: "/#features" },
-  { name: "How It Works", href: "/#how-it-works" },
-  { name: "Testimonials", href: "/#testimonials" },
-];
+import { MARKETING_NAV_LINKS, MARKETING_ROUTES } from "../constants";
 
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
@@ -48,7 +43,7 @@ export function Navbar() {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-8">
-            {navLinks.map((link) => (
+            {MARKETING_NAV_LINKS.map((link) => (
               <a
                 key={link.name}
                 href={link.href}
@@ -62,12 +57,12 @@ export function Navbar() {
           {/* CTA Buttons */}
           <div className="hidden md:flex items-center gap-3">
             <Button variant="ghost" asChild>
-              <Link href="/sign-in?redirect_url=/dashboard" prefetch={false}>
+              <Link href={MARKETING_ROUTES.signIn} prefetch={false}>
                 Sign In
               </Link>
             </Button>
             <Button asChild className="gradient-bg text-white hover:opacity-90">
-              <Link href="/sign-up?redirect_url=/dashboard" prefetch={false}>
+              <Link href={MARKETING_ROUTES.signUp} prefetch={false}>
                 Get Started
               </Link>
             </Button>
@@ -91,7 +86,7 @@ export function Navbar() {
         {mobileOpen && (
           <div className="md:hidden mt-4 pb-4 border-t pt-4">
             <nav className="flex flex-col gap-4">
-              {navLinks.map((link) => (
+              {MARKETING_NAV_LINKS.map((link) => (
                 <a
                   key={link.name}
                   href={link.href}
@@ -104,7 +99,7 @@ export function Navbar() {
               <div className="flex flex-col gap-2 mt-2">
                 <Button variant="outline" asChild>
                   <Link
-                    href="/sign-in?redirect_url=/dashboard"
+                    href={MARKETING_ROUTES.signIn}
                     prefetch={false}
                   >
                     Sign In
@@ -115,7 +110,7 @@ export function Navbar() {
                   className="gradient-bg text-white hover:opacity-90"
                 >
                   <Link
-                    href="/sign-up?redirect_url=/dashboard"
+                    href={MARKETING_ROUTES.signUp}
                     prefetch={false}
                   >
                     Get Started

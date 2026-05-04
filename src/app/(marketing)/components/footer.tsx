@@ -1,17 +1,6 @@
 import Link from "next/link";
 import { Sparkles } from "lucide-react";
-
-const footerLinks = {
-  product: [
-    { name: "Features", href: "/#features" },
-    { name: "How It Works", href: "/#how-it-works" },
-    { name: "ATS Scanner", href: "/ats-scanner" },
-  ],
-  legal: [
-    { name: "Privacy Policy", href: "/privacy" },
-    { name: "Terms of Service", href: "/terms" },
-  ],
-};
+import { FOOTER_LINK_GROUPS, MARKETING_ROUTES } from "../constants";
 
 export function Footer() {
   return (
@@ -20,7 +9,10 @@ export function Footer() {
         <div className="grid md:grid-cols-3 gap-8">
           {/* Brand */}
           <div className="md:col-span-1">
-            <Link href="/" className="flex items-center gap-3 mb-4">
+            <Link
+              href={MARKETING_ROUTES.home}
+              className="flex items-center gap-3 mb-4"
+            >
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl gradient-bg text-white font-bold text-lg shadow-md">
                 <Sparkles className="h-5 w-5" />
               </div>
@@ -36,7 +28,7 @@ export function Footer() {
           <div>
             <h3 className="font-semibold mb-4">Product</h3>
             <ul className="space-y-2">
-              {footerLinks.product.map((link) => (
+              {FOOTER_LINK_GROUPS.product.map((link) => (
                 <li key={link.name}>
                   <Link
                     href={link.href}
@@ -54,7 +46,7 @@ export function Footer() {
           <div>
             <h3 className="font-semibold mb-4">Legal</h3>
             <ul className="space-y-2">
-              {footerLinks.legal.map((link) => (
+              {FOOTER_LINK_GROUPS.legal.map((link) => (
                 <li key={link.name}>
                   <Link
                     href={link.href}

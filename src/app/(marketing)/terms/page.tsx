@@ -1,87 +1,48 @@
-export const metadata = {
-  title: "Terms of Service",
-  description: "Terms governing use of the Taida application.",
+import type { Metadata } from "next";
+import { LegalPage } from "../legal-page";
+
+const title = "Terms of Service";
+const description = "Terms governing use of the Taida application.";
+const effectiveDate = "March 25, 2026";
+const sections = [
+  {
+    title: "Use of the service",
+    body: "Taida is provided to help you organize and improve your job search. You are responsible for the accuracy of the information you upload and for how you use any generated content in applications or interviews.",
+  },
+  {
+    title: "Accounts and access",
+    body: "Access is tied to your authenticated account. You are responsible for keeping your credentials secure and for reviewing integrations you authorize, including Google services and external AI providers.",
+  },
+  {
+    title: "Generated content",
+    body: "AI-generated resumes, interview feedback, and outreach drafts are assistive outputs. You should review them before relying on them in a professional context.",
+  },
+  {
+    title: "Availability",
+    body: "The service may change over time, including integrations, file support, and export features. We may suspend access to protect the platform or comply with legal and security requirements.",
+  },
+  {
+    title: "Limitation of liability",
+    body: "The product is offered on an as-is basis. It is intended to support your workflow, not to guarantee hiring outcomes, interview performance, or offer decisions.",
+  },
+] as const;
+
+export const metadata: Metadata = {
+  title,
+  description,
   openGraph: {
-    title: "Terms of Service",
-    description: "Terms governing use of the Taida application.",
+    title,
+    description,
     url: "/terms",
   },
   twitter: {
-    title: "Terms of Service",
-    description: "Terms governing use of the Taida application.",
+    title,
+    description,
   },
 };
 
 export default function TermsPage() {
   return (
-    <div className="bg-background">
-      <div className="mx-auto max-w-3xl px-6 py-32">
-        <div className="mb-10">
-          <h1 className="text-4xl font-bold tracking-tight">
-            Terms of Service
-          </h1>
-          <p className="mt-3 text-foreground">Effective March 25, 2026.</p>
-        </div>
-
-        <div className="space-y-8 text-sm leading-7 text-foreground">
-          <section>
-            <h2 className="text-xl font-semibold text-foreground">
-              Use of the service
-            </h2>
-            <p className="mt-2">
-              Taida is provided to help you organize and improve your job
-              search. You are responsible for the accuracy of the information
-              you upload and for how you use any generated content in
-              applications or interviews.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-xl font-semibold text-foreground">
-              Accounts and access
-            </h2>
-            <p className="mt-2">
-              Access is tied to your authenticated account. You are responsible
-              for keeping your credentials secure and for reviewing integrations
-              you authorize, including Google services and external AI
-              providers.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-xl font-semibold text-foreground">
-              Generated content
-            </h2>
-            <p className="mt-2">
-              AI-generated resumes, interview feedback, and outreach drafts are
-              assistive outputs. You should review them before relying on them
-              in a professional context.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-xl font-semibold text-foreground">
-              Availability
-            </h2>
-            <p className="mt-2">
-              The service may change over time, including integrations, file
-              support, and export features. We may suspend access to protect the
-              platform or comply with legal and security requirements.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-xl font-semibold text-foreground">
-              Limitation of liability
-            </h2>
-            <p className="mt-2">
-              The product is offered on an as-is basis. It is intended to
-              support your workflow, not to guarantee hiring outcomes, interview
-              performance, or offer decisions.
-            </p>
-          </section>
-        </div>
-      </div>
-    </div>
+    <LegalPage title={title} effectiveDate={effectiveDate} sections={sections} />
   );
 }

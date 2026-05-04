@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowRight, ScanSearch, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { MARKETING_ROUTES } from "../constants";
 
 export function Hero() {
   return (
@@ -36,7 +37,7 @@ export function Hero() {
           {/* CTAs */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300">
             <Button asChild size="lg" variant="outline">
-              <Link href="/ats-scanner" prefetch={false}>
+              <Link href={MARKETING_ROUTES.atsScanner} prefetch={false}>
                 <ScanSearch className="mr-2 h-5 w-5" />
                 Try Free ATS Scanner
               </Link>
@@ -46,7 +47,7 @@ export function Hero() {
               size="lg"
               className="gradient-bg text-white hover:opacity-90 shadow-lg shadow-primary/25"
             >
-              <Link href="/sign-up?redirect_url=/dashboard" prefetch={false}>
+              <Link href={MARKETING_ROUTES.signUp} prefetch={false}>
                 Get Started
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
