@@ -93,5 +93,4 @@ export function applySecurityHeaders(
 // Exported for unit tests that don't have access to a real NextResponse.
 export const __testables = {
   CSP_HEADER_VALUE,
-  PERMISSIONS_POLICY,
 };
