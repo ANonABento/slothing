@@ -58,11 +58,51 @@ export function isBlockedIPv4(ip: string): boolean {
   return BLOCKED_CIDRS.some((cidr) => inCidr(ip, cidr));
 }
 
+/**
+ * Block IPv6 loopback (::1), unspecified (::), link-local (fe80::/10),
+ * unique-local (fc00::/7), and IPv4-mapped IPv6 addresses whose embedded
+ * IPv4 is in a blocked range (e.g. ::ffff:127.0.0.1).
+ *
+ * Why this matters: when DNS resolves a public-looking hostname to an IPv6
+ * address pointing at the host itself or an internal network, an IPv4-only
+ * filter would let the request through.
+ */
+export function isBlockedIPv6(ip: string): boolean {
+  if (isIP(ip) !== 6) return false;
+  const lower = ip.toLowerCase();
+  if (lower === "::1" || lower === "::") return true;
+  // fe80::/10 — link-local. The /10 mask covers fe80–febf, but in practice
+  // implementations only emit fe80:.
+  if (
+    lower.startsWith("fe8") ||
+    lower.startsWith("fe9") ||
+    lower.startsWith("fea") ||
+    lower.startsWith("feb")
+  ) {
+    return true;
+  }
+  // fc00::/7 — unique local addresses. First byte is fc or fd.
+  if (/^f[cd][0-9a-f]{0,2}:/.test(lower)) return true;
+  // ::ffff:a.b.c.d — IPv4-mapped IPv6. Reject if the embedded IPv4 is blocked.
+  if (lower.startsWith("::ffff:")) {
+    const tail = lower.slice("::ffff:".length);
+    if (isIP(tail) === 4 && isBlockedIPv4(tail)) return true;
+  }
+  return false;
+}
+
+export function isBlockedIP(ip: string): boolean {
+  const family = isIP(ip);
+  if (family === 4) return isBlockedIPv4(ip);
+  if (family === 6) return isBlockedIPv6(ip);
+  return false;
+}
+
 function isBlockedHostnameLiteral(hostname: string): boolean {
   const lower = hostname.toLowerCase();
   if (lower === "localhost" || lower === "ip6-localhost") return true;
   if (BLOCKED_HOSTNAME_SUFFIXES.some((s) => lower.endsWith(s))) return true;
-  // IPv6 loopback / link-local
+  // IPv6 loopback / link-local / ULA
   if (lower === "::1" || lower.startsWith("fe80:") || lower.startsWith("fc") || lower.startsWith("fd")) {
     return true;
   }
@@ -140,7 +180,7 @@ export async function assertSafeOutboundUrl(
 
   // If the hostname is already an IP literal, check it directly.
   if (isIP(hostname)) {
-    if (isBlockedIPv4(hostname)) {
+    if (isBlockedIP(hostname)) {
       throw new SsrfBlockedError(
         `IP ${hostname} is in a private/reserved range.`,
       );
@@ -158,7 +198,7 @@ export async function assertSafeOutboundUrl(
     });
 
   const ip = await lookupFn(hostname);
-  if (isBlockedIPv4(ip)) {
+  if (isBlockedIP(ip)) {
     throw new SsrfBlockedError(
       `Hostname ${hostname} resolves to a private/reserved IP (${ip}).`,
     );

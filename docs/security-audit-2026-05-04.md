@@ -112,12 +112,12 @@ Verified no `console.log` calls expose `password`, `token`, `apiKey`, or `secret
 1. `/api/opportunities/scrape` (via `src/lib/opportunities/scrape.ts::fetchOpportunityHtml`) had hostname allowlisting (LinkedIn, Indeed, Greenhouse, Lever, WaterlooWorks) but did not check resolved IPs. An attacker controlling DNS for a domain on the allowlist (or via DNS rebinding) could point at `127.0.0.1`, `169.254.169.254` (AWS metadata), or internal RFC1918 ranges.
 2. `/api/import/job` (via `fetchJobFromUrl`) had **no validation at all** beyond `fetch.ok` — any URL pasted by a user was fetched server-side, and the error message was echoed back, enabling SSRF probes.
 
-**Fix.** Added `src/lib/security/ssrf.ts::assertSafeOutboundUrl`. Validates protocol (http/https only), rejects literal loopback / `*.local` / IPv6 link-local hostnames, blocks IPv4 literals in private/reserved CIDRs (10/8, 172.16/12, 192.168/16, 127/8, 169.254/16, 100.64/10, 192.0.2/24, 198.18/15, 224/4 multicast, 240/4 reserved), and DNS-resolves hostnames before final allow.
+**Fix.** Added `src/lib/security/ssrf.ts::assertSafeOutboundUrl`. Validates protocol (http/https only), rejects literal loopback / `*.local` / IPv6 link-local hostnames, blocks IPv4 literals in private/reserved CIDRs (10/8, 172.16/12, 192.168/16, 127/8, 169.254/16, 100.64/10, 192.0.2/24, 198.18/15, 224/4 multicast, 240/4 reserved), blocks IPv6 loopback (`::1`), unspecified (`::`), link-local (`fe80::/10`), unique-local (`fc00::/7`), and IPv4-mapped IPv6 (`::ffff:a.b.c.d`) whose embedded IPv4 is private, and DNS-resolves hostnames before final allow.
 
 - Scrape pipeline: hard allowlist (`linkedin.com`, `indeed.com`, `greenhouse.io`, `lever.co`, `waterlooworks.uwaterloo.ca`) **plus** post-resolution IP filter.
-- Import pipeline: no host allowlist (users paste arbitrary job URLs) but private/reserved IPs are always rejected. Error responses no longer echo upstream messages.
+- Import pipeline: no host allowlist (users paste arbitrary job URLs) but private/reserved IPs (v4 or v6) are always rejected. Error responses no longer echo upstream messages.
 
-Coverage: `src/lib/security/ssrf.test.ts` (9 tests including DNS rebinding) + `src/lib/opportunities/scrape.test.ts::"blocks DNS-rebinding to private IPs even on allowlisted hosts"`.
+Coverage: `src/lib/security/ssrf.test.ts` (14 tests including IPv4 + IPv6 DNS rebinding) + `src/lib/opportunities/scrape.test.ts::"blocks DNS-rebinding to private IPs even on allowlisted hosts"`.
 
 ---
 
