@@ -114,7 +114,7 @@ async function refreshGoogleAccessToken(
     )
     .run();
 
-  return { ...account, ...updated } as GoogleAccountRow;
+  return { ...account, ...updated };
 }
 
 /**
@@ -154,11 +154,11 @@ export async function isGoogleConnected(): Promise<boolean> {
  * Get Google connection status with user info.
  */
 export async function getGoogleConnectionStatus(): Promise<GoogleConnectionStatus> {
-  const userId = await getCurrentUserId();
-  if (!userId) return { connected: false };
-
   const tokenResult = await getGoogleAccessToken();
   if (!tokenResult) return { connected: false };
+
+  const userId = await getCurrentUserId();
+  if (!userId) return { connected: false };
 
   const userRow = await getDb()
     .select({

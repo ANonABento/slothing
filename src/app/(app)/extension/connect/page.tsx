@@ -10,11 +10,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { isNextAuthConfiguredOnClient } from "@/lib/auth-client";
 import { CheckCircle, Loader2, Chrome, AlertCircle } from "lucide-react";
-
-function isNextAuthConfiguredOnClient(): boolean {
-  return process.env.NEXT_PUBLIC_NEXTAUTH_ENABLED === "true";
-}
 
 type ConnectStatus = "loading" | "connecting" | "success" | "error";
 
