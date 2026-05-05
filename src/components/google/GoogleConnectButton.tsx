@@ -20,7 +20,7 @@ interface GoogleConnectButtonProps {
 }
 
 function isNextAuthConfiguredOnClient(): boolean {
-  return !!process.env.NEXT_PUBLIC_NEXTAUTH_ENABLED;
+  return process.env.NEXT_PUBLIC_NEXTAUTH_ENABLED === "true";
 }
 
 function GoogleConnectButtonWithSession({

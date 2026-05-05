@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { CheckCircle, Loader2, Chrome, AlertCircle } from "lucide-react";
 
 function isNextAuthConfiguredOnClient(): boolean {
-  return !!process.env.NEXT_PUBLIC_NEXTAUTH_ENABLED;
+  return process.env.NEXT_PUBLIC_NEXTAUTH_ENABLED === "true";
 }
 
 type ConnectStatus = "loading" | "connecting" | "success" | "error";
