@@ -1,6 +1,9 @@
+import NextAuth from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
-import { auth, isNextAuthConfigured } from "@/auth";
+import { authConfig, isNextAuthConfigured } from "@/auth.config";
 import { applySecurityHeaders } from "@/lib/security/headers";
+
+const { auth } = NextAuth(authConfig);
 
 const PUBLIC_ROUTE_PATTERNS = [
   /^\/$/, // Marketing landing page
