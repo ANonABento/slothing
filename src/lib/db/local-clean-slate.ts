@@ -23,8 +23,8 @@ export function shouldRunLocalDevCleanSlate(env: EnvSource = process.env): boole
   return (
     env.NODE_ENV === "development" &&
     env.GET_ME_JOB_SKIP_LOCAL_CLEAN_SLATE !== "true" &&
-    !env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY &&
-    !env.CLERK_SECRET_KEY
+    !env.GOOGLE_CLIENT_ID &&
+    !env.GOOGLE_CLIENT_SECRET
   );
 }
 

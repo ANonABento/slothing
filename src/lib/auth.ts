@@ -1,6 +1,6 @@
-import { auth } from '@clerk/nextjs/server';
-import { headers } from 'next/headers';
-import { NextResponse } from 'next/server';
+import { headers } from "next/headers";
+import { NextResponse } from "next/server";
+import { auth, isNextAuthConfigured } from "@/auth";
 
 export interface AuthResult {
   userId: string;
@@ -11,51 +11,50 @@ export interface AuthError {
   status: number;
 }
 
-const LOCAL_DEV_USER = 'default';
-const isClerkConfigured = !!(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && process.env.CLERK_SECRET_KEY);
+const LOCAL_DEV_USER = "default";
 
 function getLocalDevUserId(): string {
   try {
-    return headers().get('x-get-me-job-e2e-user') || LOCAL_DEV_USER;
+    return headers().get("x-get-me-job-e2e-user") || LOCAL_DEV_USER;
   } catch {
     return LOCAL_DEV_USER;
   }
 }
 
 /**
- * Get the current user ID from Clerk auth
- * Returns the userId if authenticated, null if not
- * Falls back to local dev user when Clerk is not configured
+ * Get the current user ID from NextAuth.
+ * Returns the userId if authenticated, null if not.
+ * Falls back to the local dev user when NextAuth is not configured.
  */
 export async function getCurrentUserId(): Promise<string | null> {
-  if (!isClerkConfigured) return getLocalDevUserId();
-  const { userId } = await auth();
-  return userId;
+  if (!isNextAuthConfigured()) return getLocalDevUserId();
+  const session = await auth();
+  return session?.user?.id ?? null;
 }
 
 /**
- * Require authentication for an API route
- * Returns the userId if authenticated, or an error response if not
- * Falls back to local dev user when Clerk is not configured
+ * Require authentication for an API route.
+ * Returns the userId if authenticated, or an error response if not.
+ * Falls back to the local dev user when NextAuth is not configured.
  */
 export async function requireAuth(): Promise<AuthResult | NextResponse> {
-  if (!isClerkConfigured) return { userId: getLocalDevUserId() };
+  if (!isNextAuthConfigured()) return { userId: getLocalDevUserId() };
 
-  const { userId } = await auth();
+  const session = await auth();
+  const userId = session?.user?.id;
 
   if (!userId) {
-    return NextResponse.json(
-      { error: 'Unauthorized' },
-      { status: 401 }
-    );
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   return { userId };
 }
 
 /**
- * Type guard to check if the result is an error response
+ * Type guard to check if the result is an error response.
  */
-export function isAuthError(result: AuthResult | NextResponse): result is NextResponse {
+export function isAuthError(
+  result: AuthResult | NextResponse,
+): result is NextResponse {
   return result instanceof NextResponse;
 }

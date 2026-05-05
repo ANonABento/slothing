@@ -1,4 +1,3 @@
-import { ClerkProvider } from "@clerk/nextjs";
 import type { CSSProperties } from "react";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -6,6 +5,7 @@ import { ensureEnvValidated } from "@/lib/env";
 import { getSiteMetadata } from "@/lib/seo";
 import { themeTokensToCssVariables } from "@/lib/theme/apply";
 import { getTheme } from "@/lib/theme/registry";
+import { AuthSessionProvider } from "@/components/auth/session-provider";
 
 ensureEnvValidated();
 
@@ -16,25 +16,17 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const app = (
+  return (
     <html
       lang="en"
       suppressHydrationWarning
       style={themeTokensToCssVariables(getTheme("default").light) as CSSProperties}
     >
       <body className="font-sans">
-        <ThemeProvider>{children}</ThemeProvider>
+        <AuthSessionProvider>
+          <ThemeProvider>{children}</ThemeProvider>
+        </AuthSessionProvider>
       </body>
     </html>
-  );
-
-  if (!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY) {
-    return app;
-  }
-
-  return (
-    <ClerkProvider publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}>
-      {app}
-    </ClerkProvider>
   );
 }

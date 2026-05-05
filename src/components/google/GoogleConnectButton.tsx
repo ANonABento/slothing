@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
-import { useClerk, useUser } from "@clerk/nextjs";
+import { signIn, useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { useErrorToast } from "@/hooks/use-error-toast";
 import { Loader2, CheckCircle, AlertCircle } from "lucide-react";
@@ -19,12 +19,17 @@ interface GoogleConnectButtonProps {
   showStatus?: boolean;
 }
 
-function GoogleConnectButtonWithClerk({
+function isNextAuthConfiguredOnClient(): boolean {
+  return !!process.env.NEXT_PUBLIC_NEXTAUTH_ENABLED;
+}
+
+function GoogleConnectButtonWithSession({
   onConnectionChange,
   showStatus = true,
 }: GoogleConnectButtonProps) {
-  const { openSignIn, openUserProfile } = useClerk();
-  const { isLoaded, isSignedIn } = useUser();
+  const { status: sessionStatus } = useSession();
+  const isSignedIn = sessionStatus === "authenticated";
+  const sessionLoading = sessionStatus === "loading";
   const [status, setStatus] = useState<ConnectionStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -53,7 +58,7 @@ function GoogleConnectButtonWithClerk({
   }, [onConnectionChange, showErrorToast]);
 
   useEffect(() => {
-    if (!isLoaded) return;
+    if (sessionLoading) return;
     if (!isSignedIn) {
       setError(null);
       setLoading(false);
@@ -62,9 +67,8 @@ function GoogleConnectButtonWithClerk({
       return;
     }
     checkConnection();
-  }, [checkConnection, isLoaded, isSignedIn, onConnectionChange]);
+  }, [checkConnection, sessionLoading, isSignedIn, onConnectionChange]);
 
-  // Re-check connection when user returns from Clerk profile
   useEffect(() => {
     function handleFocus() {
       if (!isSignedIn) return;
@@ -75,12 +79,7 @@ function GoogleConnectButtonWithClerk({
   }, [checkConnection, isSignedIn]);
 
   function handleConnect() {
-    if (!isSignedIn) {
-      openSignIn();
-      return;
-    }
-    // Opens Clerk's user profile where they can connect/manage Google
-    openUserProfile();
+    signIn("google", { callbackUrl: window.location.href });
   }
 
   if (loading) {
@@ -142,7 +141,7 @@ function GoogleConnectButtonWithClerk({
 }
 
 export function GoogleConnectButton(props: GoogleConnectButtonProps) {
-  if (!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY) {
+  if (!isNextAuthConfiguredOnClient()) {
     return (
       <Button variant="outline" disabled className="gap-2">
         <GoogleIcon className="h-4 w-4" />
@@ -151,7 +150,7 @@ export function GoogleConnectButton(props: GoogleConnectButtonProps) {
     );
   }
 
-  return <GoogleConnectButtonWithClerk {...props} />;
+  return <GoogleConnectButtonWithSession {...props} />;
 }
 
 function GoogleIcon({ className }: { className?: string }) {

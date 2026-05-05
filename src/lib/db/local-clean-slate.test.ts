@@ -9,8 +9,8 @@ import {
 
 function stubLocalCleanSlateEnv(): void {
   vi.stubEnv("NODE_ENV", "development");
-  vi.stubEnv("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY", "");
-  vi.stubEnv("CLERK_SECRET_KEY", "");
+  vi.stubEnv("GOOGLE_CLIENT_ID", "");
+  vi.stubEnv("GOOGLE_CLIENT_SECRET", "");
 }
 
 function createCleanSlateDbMock(
@@ -29,7 +29,7 @@ function createCleanSlateDbMock(
 }
 
 describe("shouldRunLocalDevCleanSlate", () => {
-  it("runs only in localhost mode without Clerk", () => {
+  it("runs only in localhost mode without NextAuth", () => {
     expect(shouldRunLocalDevCleanSlate({ NODE_ENV: "development" })).toBe(true);
   });
 
@@ -42,12 +42,12 @@ describe("shouldRunLocalDevCleanSlate", () => {
     expect(shouldRunLocalDevCleanSlate({})).toBe(false);
   });
 
-  it("does not run when Clerk is configured", () => {
+  it("does not run when NextAuth is configured", () => {
     expect(
       shouldRunLocalDevCleanSlate({
         NODE_ENV: "development",
-        NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: "pk_test_123",
-        CLERK_SECRET_KEY: "sk_test_123",
+        GOOGLE_CLIENT_ID: "google-id",
+        GOOGLE_CLIENT_SECRET: "google-secret",
       })
     ).toBe(false);
   });

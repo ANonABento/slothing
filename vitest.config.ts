@@ -8,6 +8,14 @@ export default defineConfig({
     environment: "jsdom",
     globals: true,
     setupFiles: ["./src/test/setup.ts"],
+    server: {
+      // next-auth (v5 beta) uses extensionless ESM imports of `next/server`
+      // which break the strict node resolver. Force vite to bundle it so the
+      // resolver pipeline goes through the alias defined below.
+      deps: {
+        inline: ["next-auth", "@auth/core", "@auth/drizzle-adapter"],
+      },
+    },
     include: [
       "src/**/*.{test,spec}.{ts,tsx}",
       "evals/**/*.{test,spec}.ts",
@@ -30,6 +38,9 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+      // next-auth (v5 beta) imports `next/server` without a file extension; the
+      // vitest jsdom resolver is strict about extensions, so map it explicitly.
+      "next/server": path.resolve(__dirname, "node_modules/next/server.js"),
     },
   },
 });
