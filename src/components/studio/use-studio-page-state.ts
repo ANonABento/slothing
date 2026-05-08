@@ -48,6 +48,7 @@ import type { TipTapJSONContent } from "@/lib/editor/types";
 import { readJsonResponse } from "@/lib/http";
 import type { TailoredResume } from "@/lib/resume/generator";
 import { useErrorToast } from "@/hooks/use-error-toast";
+import type { StudioSaveStatus } from "./save-status";
 import type { BankCategory, BankEntry } from "@/types";
 import type { CoverLetterCritique } from "@/lib/ai/critique-prompts";
 import {
@@ -103,6 +104,7 @@ interface StudioPageState {
   manualVersionName: string;
   mobileView: BuilderPanel;
   previewVersionId: string | null;
+  saveStatus: StudioSaveStatus;
   sections: SectionState[];
   selectedIds: Set<string>;
   setLinkedOpportunityId: (opportunityId: string) => void;
@@ -113,6 +115,12 @@ interface StudioPageState {
   templateId: string;
   versions: BuilderVersion[];
 }
+
+type SaveOperation =
+  | { type: "idle" }
+  | { type: "saving" }
+  | { type: "saved"; at: number }
+  | { type: "error"; message: string };
 
 interface LinkStudioVersionOptions {
   documentMode: DocumentMode;
@@ -229,6 +237,7 @@ export function useStudioPageState(): StudioPageState {
   const [versions, setVersions] = useState<BuilderVersion[]>([]);
   const [manualVersionName, setManualVersionName] = useState("");
   const [previewVersionId, setPreviewVersionId] = useState<string | null>(null);
+  const [saveOp, setSaveOp] = useState<SaveOperation>({ type: "idle" });
   const [dirtyDocumentIds, setDirtyDocumentIds] = useState<Set<string>>(
     new Set(),
   );
@@ -394,6 +403,19 @@ export function useStudioPageState(): StudioPageState {
       ),
     [activeDocument.id, currentDraftState, dirtyDocumentIds, versions],
   );
+
+  const saveStatus = useMemo<StudioSaveStatus>(() => {
+    if (saveOp.type === "saving") return { state: "saving" };
+    if (saveOp.type === "error") {
+      return { state: "error", error: saveOp.message };
+    }
+    if (saveOp.type === "saved") {
+      return draftIsSaved
+        ? { state: "saved", lastSavedAt: saveOp.at }
+        : { state: "unsaved" };
+    }
+    return { state: draftIsSaved ? "saved" : "unsaved" };
+  }, [draftIsSaved, saveOp]);
 
   useEffect(() => {
     if (previewVersionId) setGenerating(false);
@@ -742,16 +764,34 @@ export function useStudioPageState(): StudioPageState {
         kind: "manual",
         name,
       });
-      setVersions((prev) => {
-        const next = addBuilderVersion(prev, version);
+
+      try {
+        const next = addBuilderVersion(versions, version);
         if (typeof window !== "undefined") {
-          writeBuilderVersions(window.localStorage, activeDocument.id, next);
+          const persisted = writeBuilderVersions(
+            window.localStorage,
+            activeDocument.id,
+            next,
+          );
+          if (!persisted) {
+            throw new Error("Browser storage rejected the version snapshot");
+          }
         }
-        return next;
-      });
-      setManualVersionName("");
-      setPreviewVersionId(version.id);
-      markActiveDocumentSaved();
+        setVersions(next);
+        setManualVersionName("");
+        setPreviewVersionId(version.id);
+        markActiveDocumentSaved();
+        setSaveOp({ type: "saved", at: Date.now() });
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        setSaveOp({ type: "error", message });
+        showErrorToast(err, {
+          title: "Could not save version",
+          fallbackDescription:
+            "The browser refused to persist this version. Free up storage and try again.",
+        });
+        return;
+      }
 
       if (linkedOpportunityId) {
         void linkStudioVersionToOpportunity({
@@ -774,11 +814,17 @@ export function useStudioPageState(): StudioPageState {
       linkedOpportunityId,
       markActiveDocumentSaved,
       showErrorToast,
+      versions,
     ],
   );
 
   const handleSaveManualVersion = useCallback(() => {
-    saveManualVersion(manualVersionName);
+    setSaveOp({ type: "saving" });
+    // Defer the actual save by a microtask so React can render the
+    // "Saving..." status before the synchronous localStorage write resolves.
+    void Promise.resolve().then(() => {
+      saveManualVersion(manualVersionName);
+    });
   }, [manualVersionName, saveManualVersion]);
 
   const handlePreviewVersion = useCallback(
@@ -897,6 +943,7 @@ export function useStudioPageState(): StudioPageState {
     manualVersionName,
     mobileView,
     previewVersionId,
+    saveStatus,
     sections,
     selectedIds,
     setLinkedOpportunityId,

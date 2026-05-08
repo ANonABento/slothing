@@ -587,6 +587,58 @@ export const promptVariantResults = sqliteTable(
   ],
 );
 
+// NextAuth.js (@auth/drizzle-adapter) tables.
+// Schema must match @auth/drizzle-adapter/sqlite exactly — do not customize column names.
+export const users = sqliteTable("user", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  name: text("name"),
+  email: text("email").unique(),
+  emailVerified: integer("emailVerified", { mode: "timestamp_ms" }),
+  image: text("image"),
+});
+
+export const accounts = sqliteTable(
+  "account",
+  {
+    userId: text("userId")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    type: text("type").notNull(),
+    provider: text("provider").notNull(),
+    providerAccountId: text("providerAccountId").notNull(),
+    refresh_token: text("refresh_token"),
+    access_token: text("access_token"),
+    expires_at: integer("expires_at"),
+    token_type: text("token_type"),
+    scope: text("scope"),
+    id_token: text("id_token"),
+    session_state: text("session_state"),
+  },
+  (table) => [
+    primaryKey({ columns: [table.provider, table.providerAccountId] }),
+  ],
+);
+
+export const sessions = sqliteTable("session", {
+  sessionToken: text("sessionToken").primaryKey(),
+  userId: text("userId")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  expires: integer("expires", { mode: "timestamp_ms" }).notNull(),
+});
+
+export const verificationTokens = sqliteTable(
+  "verificationToken",
+  {
+    identifier: text("identifier").notNull(),
+    token: text("token").notNull(),
+    expires: integer("expires", { mode: "timestamp_ms" }).notNull(),
+  },
+  (table) => [primaryKey({ columns: [table.identifier, table.token] })],
+);
+
 // Type exports for use in application code
 export type Settings = typeof settings.$inferSelect;
 export type NewSettings = typeof settings.$inferInsert;
@@ -686,3 +738,15 @@ export type NewPromptVariant = typeof promptVariants.$inferInsert;
 
 export type PromptVariantResult = typeof promptVariantResults.$inferSelect;
 export type NewPromptVariantResult = typeof promptVariantResults.$inferInsert;
+
+export type AuthUser = typeof users.$inferSelect;
+export type NewAuthUser = typeof users.$inferInsert;
+
+export type AuthAccount = typeof accounts.$inferSelect;
+export type NewAuthAccount = typeof accounts.$inferInsert;
+
+export type AuthSession = typeof sessions.$inferSelect;
+export type NewAuthSession = typeof sessions.$inferInsert;
+
+export type AuthVerificationToken = typeof verificationTokens.$inferSelect;
+export type NewAuthVerificationToken = typeof verificationTokens.$inferInsert;

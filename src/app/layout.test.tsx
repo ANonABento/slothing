@@ -6,8 +6,8 @@ vi.mock("next/font/google", () => ({
   Plus_Jakarta_Sans: () => ({ variable: "--font-sans" }),
 }));
 
-vi.mock("@clerk/nextjs", () => ({
-  ClerkProvider: ({ children }: { children: ReactNode }) => children,
+vi.mock("@/components/auth/session-provider", () => ({
+  AuthSessionProvider: ({ children }: { children: ReactNode }) => children,
 }));
 
 vi.mock("@/components/theme-provider", () => ({

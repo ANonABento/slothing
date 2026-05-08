@@ -2,7 +2,7 @@
  * @route POST /api/extension/auth
  * @route DELETE /api/extension/auth
  * @description Create a new extension session token (POST) or revoke an existing token (DELETE)
- * @auth requireAuth (Clerk in prod, local-dev fallback when Clerk env vars absent)
+ * @auth requireAuth (NextAuth in prod, local-dev fallback when NextAuth env vars absent)
  * @response ExtensionAuthResponse from @/types/api
  */
 import { NextRequest, NextResponse } from "next/server";

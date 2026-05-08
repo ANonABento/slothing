@@ -21,14 +21,22 @@ function createLogger() {
   };
 }
 
+const FULL_ENV = {
+  GOOGLE_CLIENT_ID: "google-client-id",
+  GOOGLE_CLIENT_SECRET: "google-client-secret",
+  NEXTAUTH_SECRET: "nextauth-secret",
+  TURSO_DATABASE_URL: "file:./.local.db",
+  OPENAI_API_KEY: "sk-openai",
+};
+
 describe("checkFeature", () => {
   it("reports enabled when all requireAll keys are set", () => {
     const result = checkFeature(
       {
-        name: "Clerk",
-        requireAll: ["CLERK_PK", "CLERK_SK"],
+        name: "NextAuth",
+        requireAll: ["GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET"],
       },
-      { CLERK_PK: "pk", CLERK_SK: "sk" }
+      { GOOGLE_CLIENT_ID: "id", GOOGLE_CLIENT_SECRET: "secret" }
     );
     expect(result.enabled).toBe(true);
     expect(result.missing).toEqual([]);
@@ -37,25 +45,25 @@ describe("checkFeature", () => {
   it("reports disabled with missing keys when requireAll keys are absent", () => {
     const result = checkFeature(
       {
-        name: "Clerk",
-        requireAll: ["CLERK_PK", "CLERK_SK"],
+        name: "NextAuth",
+        requireAll: ["GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET"],
       },
-      { CLERK_PK: "pk" }
+      { GOOGLE_CLIENT_ID: "id" }
     );
     expect(result.enabled).toBe(false);
-    expect(result.missing).toEqual(["CLERK_SK"]);
+    expect(result.missing).toEqual(["GOOGLE_CLIENT_SECRET"]);
   });
 
   it("treats empty strings as missing", () => {
     const result = checkFeature(
       {
-        name: "Clerk",
-        requireAll: ["CLERK_PK"],
+        name: "NextAuth",
+        requireAll: ["GOOGLE_CLIENT_ID"],
       },
-      { CLERK_PK: "   " }
+      { GOOGLE_CLIENT_ID: "   " }
     );
     expect(result.enabled).toBe(false);
-    expect(result.missing).toEqual(["CLERK_PK"]);
+    expect(result.missing).toEqual(["GOOGLE_CLIENT_ID"]);
   });
 
   it("reports enabled when any requireAny key is set", () => {
@@ -92,12 +100,7 @@ describe("getFeatureStatuses", () => {
   });
 
   it("returns all enabled when full env is provided", () => {
-    const statuses = getFeatureStatuses({
-      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: "pk",
-      CLERK_SECRET_KEY: "sk",
-      TURSO_DATABASE_URL: "file:./.local.db",
-      OPENAI_API_KEY: "sk-openai",
-    });
+    const statuses = getFeatureStatuses(FULL_ENV);
     for (const status of statuses) {
       expect(status.enabled).toBe(true);
     }
@@ -107,9 +110,7 @@ describe("getFeatureStatuses", () => {
 describe("validateEnv", () => {
   it("returns ok=true with no warnings when all features enabled", () => {
     const result = validateEnv({
-      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: "pk",
-      CLERK_SECRET_KEY: "sk",
-      TURSO_DATABASE_URL: "file:./.local.db",
+      ...FULL_ENV,
       OLLAMA_BASE_URL: "http://localhost:11434",
     });
     expect(result.ok).toBe(true);
@@ -125,36 +126,34 @@ describe("validateEnv", () => {
     }
   });
 
-  it("produces a Clerk warning that names both Clerk keys", () => {
+  it("produces a NextAuth warning that names every required key", () => {
     const result = validateEnv({
       TURSO_DATABASE_URL: "file:./.local.db",
       OPENAI_API_KEY: "sk-openai",
     });
-    const clerkWarning = result.warnings.find((w) =>
-      w.includes("Clerk Authentication")
-    );
-    expect(clerkWarning).toBeDefined();
-    expect(clerkWarning).toContain("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY");
-    expect(clerkWarning).toContain("CLERK_SECRET_KEY");
-    // requireAll: both keys are needed, so wording must NOT say "one of"
-    expect(clerkWarning).not.toContain("one of");
+    const warning = result.warnings.find((w) => w.includes("NextAuth"));
+    expect(warning).toBeDefined();
+    expect(warning).toContain("GOOGLE_CLIENT_ID");
+    expect(warning).toContain("GOOGLE_CLIENT_SECRET");
+    expect(warning).toContain("NEXTAUTH_SECRET");
+    // requireAll: all keys are needed, so wording must NOT say "one of"
+    expect(warning).not.toContain("one of");
   });
 
   it("uses 'missing one of' wording only for requireAny features", () => {
     const result = validateEnv({});
     const llmWarning = result.warnings.find((w) => w.includes("LLM Providers"));
-    const clerkWarning = result.warnings.find((w) =>
-      w.includes("Clerk Authentication")
+    const nextAuthWarning = result.warnings.find((w) =>
+      w.includes("NextAuth")
     );
     expect(llmWarning).toContain("missing one of:");
-    expect(clerkWarning).not.toContain("one of");
+    expect(nextAuthWarning).not.toContain("one of");
   });
 
   it("produces an LLM warning listing all provider options", () => {
     const result = validateEnv({
-      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: "pk",
-      CLERK_SECRET_KEY: "sk",
-      TURSO_DATABASE_URL: "file:./.local.db",
+      ...FULL_ENV,
+      OPENAI_API_KEY: undefined,
     });
     const llmWarning = result.warnings.find((w) => w.includes("LLM Providers"));
     expect(llmWarning).toBeDefined();
@@ -168,12 +167,7 @@ describe("validateEnv", () => {
 describe("logEnvValidation", () => {
   it("logs a single info when all features enabled and no warnings", () => {
     const logger = createLogger();
-    logEnvValidation(logger, {
-      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: "pk",
-      CLERK_SECRET_KEY: "sk",
-      TURSO_DATABASE_URL: "file:./.local.db",
-      OPENAI_API_KEY: "sk-openai",
-    });
+    logEnvValidation(logger, FULL_ENV);
     expect(logger.warnings).toEqual([]);
     expect(logger.infos).toHaveLength(1);
     expect(logger.infos[0]).toContain("All feature env vars configured");

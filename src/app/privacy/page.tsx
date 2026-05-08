@@ -66,8 +66,8 @@ export default function PrivacyPage() {
             </h2>
             <p className="mt-2">
               Third-party providers are only involved when you use integrations
-              or AI features, such as Clerk for authentication, Google for
-              connected workflows, or an LLM provider you configure in the app.
+              or AI features, such as Google for sign-in and connected
+              workflows, or an LLM provider you configure in the app.
             </p>
           </section>
 

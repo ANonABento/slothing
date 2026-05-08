@@ -1,4 +1,5 @@
-import { auth } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
+import { auth, isNextAuthConfigured } from "@/auth";
 import { Sidebar } from "@/components/layout/sidebar";
 import { ToastProvider } from "@/components/ui/toast";
 import { KeyboardShortcutsProvider } from "@/components/keyboard-shortcuts";
@@ -41,14 +42,16 @@ export default async function AppLayout({
 }: {
   children: React.ReactNode;
 }) {
-  if (!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || !process.env.CLERK_SECRET_KEY) {
+  if (!isNextAuthConfigured()) {
     return <AppShell>{children}</AppShell>;
   }
 
-  const { userId, redirectToSignIn } = await auth();
+  const session = await auth();
 
-  if (!userId) {
-    return redirectToSignIn({ returnBackUrl: "/dashboard" });
+  if (!session?.user?.id) {
+    redirect(
+      `/sign-in?callbackUrl=${encodeURIComponent("/dashboard")}`,
+    );
   }
 
   return <AppShell>{children}</AppShell>;

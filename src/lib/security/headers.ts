@@ -7,26 +7,32 @@ import type { NextRequest, NextResponse } from "next/server";
  * - `script-src` allows `'unsafe-inline'` because Next.js injects an inline
  *   bootstrap script for hydration. We do not allow `'unsafe-eval'`.
  * - `style-src` allows `'unsafe-inline'` for Tailwind/CSS-in-JS runtime styles.
- * - `connect-src` includes Clerk and the configured LLM providers — outbound
- *   fetches happen server-side, not from the browser, so we keep the list
- *   conservative.
+ * - `connect-src` includes Google (NextAuth callbacks) and the configured LLM
+ *   providers — outbound fetches happen server-side, not from the browser, so
+ *   we keep the list conservative.
  * - `frame-ancestors 'none'` is enforced by both CSP and X-Frame-Options.
  * - `object-src 'none'` blocks Flash/legacy plugin XSS vectors.
  */
 function buildContentSecurityPolicy(): string {
   const directives: Record<string, string[]> = {
     "default-src": ["'self'"],
-    "script-src": ["'self'", "'unsafe-inline'", "https://*.clerk.accounts.dev", "https://*.clerk.com"],
+    "script-src": ["'self'", "'unsafe-inline'"],
     "style-src": ["'self'", "'unsafe-inline'"],
-    "img-src": ["'self'", "data:", "blob:", "https:"],
+    "img-src": [
+      "'self'",
+      "data:",
+      "blob:",
+      "https:",
+      "https://lh3.googleusercontent.com",
+    ],
     "font-src": ["'self'", "data:"],
     "connect-src": [
       "'self'",
-      "https://*.clerk.accounts.dev",
-      "https://*.clerk.com",
-      "https://clerk-telemetry.com",
+      "https://accounts.google.com",
+      "https://oauth2.googleapis.com",
+      "https://www.googleapis.com",
     ],
-    "frame-src": ["'self'", "https://*.clerk.accounts.dev", "https://*.clerk.com"],
+    "frame-src": ["'self'", "https://accounts.google.com"],
     "frame-ancestors": ["'none'"],
     "object-src": ["'none'"],
     "base-uri": ["'self'"],
