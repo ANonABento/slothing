@@ -21,6 +21,7 @@ export function isNextAuthConfigured(
 // edge runtime bundle does not pull libSQL/Drizzle. The full config in
 // auth.ts spreads this and adds the DrizzleAdapter for API/server routes.
 export const authConfig = {
+  trustHost: true,
   providers: [
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID,
