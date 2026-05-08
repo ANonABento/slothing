@@ -19,7 +19,7 @@
 ## Goals
 
 1. Upload generated resumes and cover letters to Google Drive
-2. Organize files in a "Get Me Job" folder structure
+2. Organize files in a "Slothing" folder structure
 3. Import existing resumes from Drive for parsing
 4. Generate shareable links for applications
 5. Backup entire job search data to Drive
@@ -32,7 +32,7 @@
 
 ```
 Google Drive/
-└── Get Me Job/
+└── Slothing/
     ├── Resumes/
     │   ├── Base Resume.pdf
     │   ├── TechCorp - Software Engineer.pdf
@@ -96,11 +96,11 @@ export interface UploadResult {
   error?: string;
 }
 
-const ROOT_FOLDER_NAME = 'Get Me Job';
+const ROOT_FOLDER_NAME = 'Slothing';
 const SUBFOLDERS = ['Resumes', 'Cover Letters', 'Company Research', 'Backups'];
 
 /**
- * Get or create the root "Get Me Job" folder
+ * Get or create the root "Slothing" folder
  */
 export async function getOrCreateRootFolder(): Promise<string> {
   const drive = await createDriveClient();
@@ -751,7 +751,7 @@ export function SaveToDriveButton({ file, fileName, type, onSuccess }: SaveToDri
 
 ## Acceptance Criteria
 
-1. [ ] "Get Me Job" folder structure created in Drive
+1. [ ] "Slothing" folder structure created in Drive
 2. [ ] Resumes saved to Resumes subfolder
 3. [ ] Cover letters saved to Cover Letters subfolder
 4. [ ] Shareable links generated for applications

@@ -1,6 +1,6 @@
 # Phase 2: Calendar Sync
 
-> Two-way sync between Get Me Job and Google Calendar
+> Two-way sync between Slothing and Google Calendar
 
 ---
 

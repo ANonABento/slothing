@@ -1,8 +1,15 @@
 # Google Integration Overview
 
-> Comprehensive Google Workspace integration for Get Me Job
+> Comprehensive Google Workspace integration for Slothing
 
 **Status: Complete** - All 6 phases implemented and integrated into UI.
+
+> **Note on auth examples in this folder:** Some Clerk-era code snippets remain
+> in the per-phase tickets (`01-oauth-foundation.md` etc.) for historical
+> reference. Slothing migrated from Clerk to NextAuth.js (Google provider) in
+> PR #243. The canonical auth surface now lives in `src/auth.ts`,
+> `src/auth.config.ts`, and `src/lib/auth.ts` — read those first; treat the
+> ticket snippets as architectural intent, not literal code.
 
 ---
 
@@ -25,7 +32,7 @@
 
 ## Summary
 
-This integration connects Get Me Job with Google Workspace services to streamline the job search process. Users can sync calendars, store documents in Drive, auto-import jobs from Gmail, and more.
+This integration connects Slothing with Google Workspace services to streamline the job search process. Users can sync calendars, store documents in Drive, auto-import jobs from Gmail, and more.
 
 ---
 
@@ -33,7 +40,7 @@ This integration connects Get Me Job with Google Workspace services to streamlin
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                        Get Me Job App                           │
+│                        Slothing App                           │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
 │  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐      │
@@ -201,7 +208,7 @@ CREATE TABLE google_drive_folders (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL REFERENCES users(id),
   folder_id TEXT NOT NULL, -- Google Drive folder ID
-  folder_name TEXT DEFAULT 'Get Me Job',
+  folder_name TEXT DEFAULT 'Slothing',
   created_at TIMESTAMP DEFAULT NOW()
 );
 
