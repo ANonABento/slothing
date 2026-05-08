@@ -232,7 +232,7 @@ export async function createSpreadsheet(
     const spreadsheetId = response.data.spreadsheetId!;
     const spreadsheetUrl = response.data.spreadsheetUrl!;
 
-    // Move to Get Me Job folder
+    // Move to Slothing folder
     const folderId = await getOrCreateRootFolder();
     await drive.files.update({
       fileId: spreadsheetId,
@@ -528,7 +528,7 @@ export async function POST(request: NextRequest) {
 2. [ ] Interview prep doc template works
 3. [ ] Job tracker exports to Sheets with headers
 4. [ ] Salary comparison has total comp calculation
-5. [ ] All files organized in Get Me Job folder
+5. [ ] All files organized in Slothing folder
 
 ---
 
