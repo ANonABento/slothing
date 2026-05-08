@@ -20,10 +20,10 @@ describe("CTASection", () => {
     expect(screen.getByText(/Ready to stop rewriting/)).toBeInTheDocument();
   });
 
-  it("should link Get Started to sign-up", () => {
+  it("should link Get Started to sign-in", () => {
     render(<CTASection />);
     const link = screen.getByRole("link", { name: /Get Started Free/ });
-    expect(link).toHaveAttribute("href", "/sign-up?redirect_url=/dashboard");
+    expect(link).toHaveAttribute("href", "/sign-in?callbackUrl=/dashboard");
   });
 
   it("should render benefit items", () => {
@@ -31,6 +31,8 @@ describe("CTASection", () => {
     expect(screen.getByText("Free ATS scanner included")).toBeInTheDocument();
     expect(screen.getByText("Smart resume parsing")).toBeInTheDocument();
     expect(screen.getByText("Unlimited tailored resumes")).toBeInTheDocument();
-    expect(screen.getByText("Knowledge bank for your career")).toBeInTheDocument();
+    expect(
+      screen.getByText("Knowledge bank for your career"),
+    ).toBeInTheDocument();
   });
 });
