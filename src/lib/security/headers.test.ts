@@ -1,8 +1,11 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { NextRequest, NextResponse } from "next/server";
 import { applySecurityHeaders, __testables } from "./headers";
 
-function makeRequest(url: string, headers: Record<string, string> = {}): NextRequest {
+function makeRequest(
+  url: string,
+  headers: Record<string, string> = {},
+): NextRequest {
   return new NextRequest(new URL(url), {
     headers: new Headers(headers),
   });
@@ -22,8 +25,18 @@ describe("applySecurityHeaders", () => {
     expect(csp).toContain("default-src 'self'");
   });
 
-  it("does not allow unsafe-eval", () => {
-    expect(__testables.CSP_HEADER_VALUE).not.toContain("unsafe-eval");
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it("disallows unsafe-eval in production builds", () => {
+    // CSP_HEADER_VALUE is computed once at module load. In test/dev it
+    // includes 'unsafe-eval' so Next.js HMR can hydrate the client bundle. The
+    // build path that matters is production, so assert the production
+    // directives directly rather than relying on the cached value.
+    vi.stubEnv("NODE_ENV", "production");
+    const csp = __testables.computeCspForTesting();
+    expect(csp).not.toContain("unsafe-eval");
   });
 
   it("emits HSTS only over HTTPS", () => {

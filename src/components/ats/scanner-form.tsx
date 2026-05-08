@@ -40,7 +40,8 @@ export function ScannerForm() {
     setJobText("");
   }
 
-  const canAnalyze = resumeText.trim().length >= MIN_RESUME_LENGTH && !analyzing;
+  const canAnalyze =
+    resumeText.trim().length >= MIN_RESUME_LENGTH && !analyzing;
 
   if (result) {
     return (
@@ -50,13 +51,16 @@ export function ScannerForm() {
 
         {/* CTA */}
         <div className="rounded-xl border-2 border-primary/20 bg-primary/5 p-8 text-center">
-          <h3 className="text-xl font-bold mb-2">Want AI-powered resume tailoring?</h3>
+          <h3 className="text-xl font-bold mb-2">
+            Want AI-powered resume tailoring?
+          </h3>
           <p className="text-muted-foreground mb-4">
-            Get personalized rewrites, keyword optimization, and cover letters generated for each job.
+            Get personalized rewrites, keyword optimization, and cover letters
+            generated for each job.
           </p>
           <div className="flex items-center justify-center gap-4">
             <Button variant="gradient" size="pill" asChild>
-              <a href="/sign-up">Sign up free &rarr;</a>
+              <a href="/sign-in?callbackUrl=/dashboard">Sign up free &rarr;</a>
             </Button>
             <Button variant="outline" onClick={handleReset}>
               Scan another resume
@@ -89,7 +93,8 @@ export function ScannerForm() {
 
       <div className="rounded-xl border border-dashed border-muted-foreground/30 bg-muted/30 p-4">
         <label htmlFor="job-text" className="block text-sm font-medium mb-2">
-          Paste job description <span className="text-muted-foreground font-normal">(optional)</span>
+          Paste job description{" "}
+          <span className="text-muted-foreground font-normal">(optional)</span>
         </label>
         <Textarea
           id="job-text"

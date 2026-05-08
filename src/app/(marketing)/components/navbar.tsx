@@ -62,7 +62,7 @@ export function Navbar() {
           {/* CTA Buttons */}
           <div className="hidden md:flex items-center gap-3">
             <Button variant="ghost" asChild>
-              <Link href="/sign-in?redirect_url=/dashboard" prefetch={false}>
+              <Link href="/sign-in?callbackUrl=/dashboard" prefetch={false}>
                 Sign In
               </Link>
             </Button>
@@ -70,7 +70,7 @@ export function Navbar() {
               asChild
               className="gradient-bg text-primary-foreground hover:opacity-90"
             >
-              <Link href="/sign-up?redirect_url=/dashboard" prefetch={false}>
+              <Link href="/sign-in?callbackUrl=/dashboard" prefetch={false}>
                 Get Started
               </Link>
             </Button>
@@ -106,10 +106,7 @@ export function Navbar() {
               ))}
               <div className="flex flex-col gap-2 mt-2">
                 <Button variant="outline" asChild>
-                  <Link
-                    href="/sign-in?redirect_url=/dashboard"
-                    prefetch={false}
-                  >
+                  <Link href="/sign-in?callbackUrl=/dashboard" prefetch={false}>
                     Sign In
                   </Link>
                 </Button>
@@ -117,10 +114,7 @@ export function Navbar() {
                   asChild
                   className="gradient-bg text-primary-foreground hover:opacity-90"
                 >
-                  <Link
-                    href="/sign-up?redirect_url=/dashboard"
-                    prefetch={false}
-                  >
+                  <Link href="/sign-in?callbackUrl=/dashboard" prefetch={false}>
                     Get Started
                   </Link>
                 </Button>
