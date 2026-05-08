@@ -163,7 +163,7 @@ export default function Dashboard() {
           <div className="mt-6 flex justify-center gap-3">
             {needsSignIn ? (
               <Link
-                href="/sign-in?redirect_url=/dashboard"
+                href="/sign-in?callbackUrl=/dashboard"
                 className="inline-flex items-center gap-2 rounded-xl gradient-bg px-5 py-2.5 font-medium text-primary-foreground shadow-lg transition-opacity hover:opacity-90"
               >
                 <LogIn className="h-4 w-4" />

@@ -5,7 +5,9 @@ import type { NextRequest, NextResponse } from "next/server";
  *
  * Notes on the chosen directives:
  * - `script-src` allows `'unsafe-inline'` because Next.js injects an inline
- *   bootstrap script for hydration. We do not allow `'unsafe-eval'`.
+ *   bootstrap script for hydration. `'unsafe-eval'` is permitted in dev only —
+ *   Next dev mode uses eval() for hot module replacement, and without it the
+ *   client bundle fails to hydrate, breaking onClick handlers like sign-in.
  * - `style-src` allows `'unsafe-inline'` for Tailwind/CSS-in-JS runtime styles.
  * - `connect-src` includes Google (NextAuth callbacks) and the configured LLM
  *   providers — outbound fetches happen server-side, not from the browser, so
@@ -14,9 +16,15 @@ import type { NextRequest, NextResponse } from "next/server";
  * - `object-src 'none'` blocks Flash/legacy plugin XSS vectors.
  */
 function buildContentSecurityPolicy(): string {
+  const isProduction = process.env.NODE_ENV === "production";
+  const scriptSrc = ["'self'", "'unsafe-inline'"];
+  if (!isProduction) {
+    scriptSrc.push("'unsafe-eval'");
+  }
+
   const directives: Record<string, string[]> = {
     "default-src": ["'self'"],
-    "script-src": ["'self'", "'unsafe-inline'"],
+    "script-src": scriptSrc,
     "style-src": ["'self'", "'unsafe-inline'"],
     "img-src": [
       "'self'",
@@ -99,4 +107,5 @@ export function applySecurityHeaders(
 // Exported for unit tests that don't have access to a real NextResponse.
 export const __testables = {
   CSP_HEADER_VALUE,
+  computeCspForTesting: buildContentSecurityPolicy,
 };
