@@ -31,12 +31,12 @@ describe("Hero", () => {
     expect(atsLink).toHaveAttribute("href", "/ats-scanner");
   });
 
-  it("should render Get Started CTA linking to sign-up", () => {
+  it("should render Get Started CTA linking to sign-in", () => {
     render(<Hero />);
     const getStarted = screen.getByRole("link", { name: /Get Started/ });
     expect(getStarted).toHaveAttribute(
       "href",
-      "/sign-up?redirect_url=/dashboard",
+      "/sign-in?callbackUrl=/dashboard",
     );
   });
 

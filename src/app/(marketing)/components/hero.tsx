@@ -46,7 +46,7 @@ export function Hero() {
               size="lg"
               className="gradient-bg text-primary-foreground hover:opacity-90 shadow-lg shadow-primary/25"
             >
-              <Link href="/sign-up?redirect_url=/dashboard" prefetch={false}>
+              <Link href="/sign-in?callbackUrl=/dashboard" prefetch={false}>
                 Get Started
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>

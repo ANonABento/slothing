@@ -72,7 +72,7 @@ export function CTASection() {
             </div>
 
             <Button asChild size="lg" variant="outline">
-              <Link href="/sign-up?redirect_url=/dashboard" prefetch={false}>
+              <Link href="/sign-in?callbackUrl=/dashboard" prefetch={false}>
                 Get Started Free
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
