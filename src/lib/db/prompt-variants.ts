@@ -75,6 +75,32 @@ export const DEFAULT_PROMPT_CONTENT = `1. Write a professional summary (2-3 sent
  * matching the pattern used by other tables.
  */
 function ensurePromptVariantsUserSchema(): void {
+  // Bootstrap base tables for fresh DBs (build-time prerender, first run).
+  // Drizzle schema lives in schema.ts but isn't applied to legacy DB connections.
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS prompt_variants (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL DEFAULT 'default',
+      name TEXT NOT NULL,
+      version INTEGER NOT NULL DEFAULT 1,
+      content TEXT NOT NULL,
+      active INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS prompt_variant_results (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL DEFAULT 'default',
+      prompt_variant_id TEXT NOT NULL,
+      job_id TEXT,
+      resume_id TEXT,
+      match_score REAL,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
   const promptCols = db
     .prepare("PRAGMA table_info(prompt_variants)")
     .all() as Array<{ name: string }>;

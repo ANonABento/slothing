@@ -8,8 +8,8 @@ export interface FeatureCheck {
 
 export const FEATURE_CHECKS: FeatureCheck[] = [
   {
-    name: "Clerk Authentication",
-    requireAll: ["NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY", "CLERK_SECRET_KEY"],
+    name: "NextAuth (Google)",
+    requireAll: ["GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET", "NEXTAUTH_SECRET"],
   },
   {
     name: "libSQL Database",

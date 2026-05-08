@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useUser } from "@clerk/nextjs";
+import { useSession } from "next-auth/react";
 import {
   Card,
   CardContent,
@@ -10,9 +10,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { isNextAuthConfiguredOnClient } from "@/lib/auth-client";
 import { CheckCircle, Loader2, Chrome, AlertCircle } from "lucide-react";
-
-const isClerkConfigured = !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
 
 type ConnectStatus = "loading" | "connecting" | "success" | "error";
 
@@ -171,14 +170,16 @@ function StatusCard({
 }
 
 function ExtensionConnectPageWithAuth() {
-  const { isSignedIn, isLoaded } = useUser();
+  const { status: sessionStatus } = useSession();
+  const isLoaded = sessionStatus !== "loading";
+  const isSignedIn = sessionStatus === "authenticated";
   const { status, error, generateToken } = useTokenGenerator();
 
   useEffect(() => {
     if (!isLoaded) return;
 
     if (!isSignedIn) {
-      window.location.href = `/sign-in?redirect_url=${encodeURIComponent("/extension/connect")}`;
+      window.location.href = `/sign-in?callbackUrl=${encodeURIComponent("/extension/connect")}`;
       return;
     }
 
@@ -205,7 +206,7 @@ function ExtensionConnectPageLocalDev() {
 }
 
 export default function ExtensionConnectPage() {
-  if (!isClerkConfigured) {
+  if (!isNextAuthConfiguredOnClient()) {
     return <ExtensionConnectPageLocalDev />;
   }
   return <ExtensionConnectPageWithAuth />;

@@ -33,7 +33,7 @@ The product is branded **Slothing** (domain: slothing.work). The repo path is st
 | Styling | Tailwind CSS + CSS Variables (semantic tokens only — see lint rule) |
 | Components | Shadcn/ui patterns (CVA) |
 | Database | Drizzle ORM with libSQL/SQLite |
-| Auth | Clerk (with local-dev fallback to a `default` user) |
+| Auth | NextAuth.js (Auth.js v5) with Google provider; local-dev fallback to a `default` user |
 | LLM | Multi-provider (OpenAI, Anthropic, Ollama, OpenRouter) |
 | Editor | TipTap (resume + cover letter) |
 | Icons | Lucide React |
@@ -87,7 +87,7 @@ src/
 │   ├── ats/                # ATS score analysis
 │   ├── interview/          # Interview prep logic
 │   ├── seo.ts              # Per-route SEO metadata helpers
-│   ├── auth.ts             # Clerk auth + local-dev fallback
+│   ├── auth.ts             # NextAuth.js auth + local-dev fallback
 │   ├── upload-conflict.ts  # Dedupe conflict messaging
 │   ├── rate-limit.ts       # Sliding-window rate limiter
 │   ├── api-utils.ts        # Shared API error helpers
@@ -200,7 +200,7 @@ Tables (selected):
 - Activity feed dedupes by stable hash IDs in `src/components/dashboard/recent-activity.tsx`.
 
 ### Ownership / multi-user readiness
-Every user-owned table has `user_id TEXT NOT NULL DEFAULT 'default'` plus a `idx_<table>_user_id` index. Migrations in `schema.ts` backfill `user_id` from `profile_id` or joined `jobs.user_id`. `lib/auth.ts` resolves the current user via Clerk; without Clerk env vars it falls back to the `default` local user (also overridable via the `x-get-me-job-e2e-user` header for E2E).
+Every user-owned table has `user_id TEXT NOT NULL DEFAULT 'default'` plus a `idx_<table>_user_id` index. Migrations in `schema.ts` backfill `user_id` from `profile_id` or joined `jobs.user_id`. `lib/auth.ts` resolves the current user via NextAuth; without NextAuth env vars (`GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET`) it falls back to the `default` local user (also overridable via the `x-get-me-job-e2e-user` header for E2E).
 
 ---
 
@@ -445,7 +445,7 @@ The Columbus extension has a separate workflow (`.github/workflows/extension-e2e
 4. **`/builder`, `/tailor`, `/cover-letter` are redirect-only.** All resume + cover letter editing happens in `/studio`. If you find yourself building UI in those routes, you're in the wrong place.
 5. **Don't reach into `Math.random()` for IDs.** Use `crypto.randomBytes()` (server) or stable hashes (client/dedupe). The activity feed and dedupe pipeline rely on stable IDs.
 6. **Don't write inline pluralization or `Date.toLocaleString()` calls.** Use `pluralize()` and the `format/time` helpers / `<TimeAgo />`. Locale is user-configurable.
-7. **Always scope DB queries by `user_id`.** Even in single-user dev mode the schema requires it. `lib/auth.ts` resolves it via Clerk or the local-dev fallback.
+7. **Always scope DB queries by `user_id`.** Even in single-user dev mode the schema requires it. `lib/auth.ts` resolves it via NextAuth or the local-dev fallback.
 8. **Schema changes are additive migrations, not rewrites.** Use the `PRAGMA table_info` + `ALTER TABLE ... ADD COLUMN` pattern already in `schema.ts`. Don't drop and recreate; existing dev DBs depend on it.
 9. **The `documents.file_hash` and `chunks` unique-hash indexes exist for dedupe (T1).** When ingesting new documents or bank chunks, hash first and short-circuit on collision instead of inserting blindly.
 10. **`/opportunities/review` is the inbound queue for scraped/extension opportunities.** New ingestion paths (URL scrape, Columbus extension, future integrations) should land in the review queue first — not directly in the tracked list.
@@ -470,7 +470,7 @@ npm run test:e2e     # Playwright e2e
 
 ## Known Limitations
 
-1. **Single-user mode by default** — Clerk is wired up; multi-user persistence is still being completed.
+1. **Single-user mode by default** — NextAuth.js is wired up; multi-user persistence is still being completed.
 2. **SQLite database** — Drizzle schema is ready for PostgreSQL migration.
 3. **Local storage** — Data persists in `data/get-me-job.db`.
 4. **No email sending** — templates are generated but not delivered.
@@ -510,9 +510,12 @@ OPENROUTER_API_KEY=sk-or-...
 # Optional: Ollama (local)
 OLLAMA_BASE_URL=http://localhost:11434
 
-# Optional: Clerk auth (omit for local-dev single-user mode)
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_...
-CLERK_SECRET_KEY=sk_...
+# Optional: NextAuth + Google OAuth (omit for local-dev single-user mode)
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET=<openssl rand -base64 32>
+GOOGLE_CLIENT_ID=...
+GOOGLE_CLIENT_SECRET=...
+NEXT_PUBLIC_NEXTAUTH_ENABLED=true
 ```
 
 ---
@@ -544,7 +547,8 @@ Restart the TypeScript server.
 | `src/lib/db/schema.ts` | Database table definitions and migrations |
 | `src/lib/db/dedupe-backfill.ts` | T1 dedupe schema bootstrap + backfill |
 | `src/lib/llm/client.ts` | LLM provider abstraction |
-| `src/lib/auth.ts` | Clerk auth + local-dev fallback |
+| `src/auth.ts` | NextAuth.js config (Google provider, Drizzle adapter) |
+| `src/lib/auth.ts` | NextAuth helper API + local-dev fallback |
 | `src/lib/seo.ts` | Per-route SEO metadata |
 | `src/lib/format/time.ts` | Locale-aware time formatting |
 | `src/lib/text/pluralize.ts` | `pluralize(count, singular, plural?)` |

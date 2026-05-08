@@ -3,7 +3,8 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 const CALENDAR_FEED_TOKEN_VERSION = "v1";
 
 function getCalendarFeedSecret(): string {
-  const secret = process.env.CALENDAR_FEED_SECRET || process.env.CLERK_SECRET_KEY;
+  const secret =
+    process.env.CALENDAR_FEED_SECRET || process.env.NEXTAUTH_SECRET;
 
   if (secret) {
     return secret;

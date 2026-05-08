@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import type { ComponentProps } from "react";
 import { describe, expect, it, vi } from "vitest";
 import type { JobDescription } from "@/types";
@@ -46,68 +46,37 @@ function renderJobCard(overrides: Partial<JobCardProps> = {}) {
 }
 
 describe("JobCard", () => {
-  it("renders one primary Tailor Resume button and hides secondary actions behind More", () => {
+  it("renders the primary action cluster with inline match, ATS, resume, and cover letter actions", () => {
     renderJobCard();
 
     expect(
-      screen.getByRole("button", { name: /Tailor Resume/i }),
-    ).toBeInTheDocument();
-    const moreButton = screen.getByRole("button", { name: /^More$/i });
-    expect(moreButton).toHaveAttribute("aria-haspopup", "menu");
-    expect(
-      screen.queryByRole("button", { name: /Analyze Match/i }),
-    ).not.toBeInTheDocument();
-    expect(screen.queryByText("Company Research")).not.toBeInTheDocument();
-
-    fireEvent.click(moreButton);
-
-    expect(screen.getByRole("menu")).toBeInTheDocument();
-    expect(
-      screen.getByRole("menuitem", { name: /Analyze Match/i }),
+      screen.getByRole("button", { name: /Analyze Match/i }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("menuitem", { name: /ATS Check/i }),
+      screen.getByRole("button", { name: /ATS Check/i }),
     ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^Resume$/i })).toBeInTheDocument();
     expect(
-      screen.getByRole("menuitem", { name: /Cover Letter/i }),
+      screen.getByRole("button", { name: /Cover Letter/i }),
     ).toBeInTheDocument();
-    expect(
-      screen.getByRole("menuitem", { name: /Company Research/i }),
-    ).toBeInTheDocument();
-    expect(screen.getByText("Resume template")).toBeInTheDocument();
+    expect(screen.getByText("Company Research")).toBeInTheDocument();
   });
 
-  it("closes the More menu with Escape", () => {
-    renderJobCard();
+  it("invokes the analyze handler when Analyze Match is clicked", () => {
+    const onAnalyze = vi.fn();
+    renderJobCard({ onAnalyze });
 
-    fireEvent.click(screen.getByRole("button", { name: /^More$/i }));
-    fireEvent.keyDown(document, { key: "Escape" });
+    fireEvent.click(screen.getByRole("button", { name: /Analyze Match/i }));
 
-    expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+    expect(onAnalyze).toHaveBeenCalledTimes(1);
   });
 
-  it("supports keyboard navigation in the More menu", async () => {
-    renderJobCard();
+  it("invokes the cover letter handler when Cover Letter is clicked", () => {
+    const onCoverLetter = vi.fn();
+    renderJobCard({ onCoverLetter });
 
-    const moreButton = screen.getByRole("button", { name: /^More$/i });
-    fireEvent.keyDown(moreButton, { key: "ArrowDown" });
+    fireEvent.click(screen.getByRole("button", { name: /Cover Letter/i }));
 
-    await waitFor(() =>
-      expect(
-        screen.getByRole("menuitem", { name: /Analyze Match/i }),
-      ).toHaveFocus(),
-    );
-
-    fireEvent.keyDown(screen.getByRole("menu"), { key: "ArrowDown" });
-    expect(screen.getByRole("menuitem", { name: /ATS Check/i })).toHaveFocus();
-
-    fireEvent.keyDown(screen.getByRole("menu"), { key: "End" });
-    expect(
-      screen.getByRole("menuitem", { name: /Company Research/i }),
-    ).toHaveFocus();
-
-    fireEvent.keyDown(screen.getByRole("menu"), { key: "Escape" });
-    expect(screen.queryByRole("menu")).not.toBeInTheDocument();
-    await waitFor(() => expect(moreButton).toHaveFocus());
+    expect(onCoverLetter).toHaveBeenCalledTimes(1);
   });
 });
