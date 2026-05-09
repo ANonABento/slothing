@@ -23,6 +23,7 @@ export interface ChunkCardProps {
   highlighted?: boolean;
   anySelected?: boolean;
   childEntries?: BankEntry[];
+  forceExpanded?: boolean;
 }
 
 export interface FieldEditorProps {
