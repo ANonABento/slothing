@@ -1,5 +1,12 @@
 import type { Profile, JobDescription } from "@/types";
 import { getSynonyms, SYNONYM_MATCH_WEIGHT } from "./synonyms";
+import {
+  scanResume,
+  type ATSScanResult,
+  type AxisScore,
+  type AxisKey,
+  type FileMeta,
+} from "./scoring";
 
 import { nowIso } from "@/lib/format/time";
 export interface ATSIssue {
@@ -683,56 +690,11 @@ export function analyzeATS(
   profile: Profile,
   job?: JobDescription,
 ): ATSAnalysisResult {
-  const formattingResult = analyzeFormatting(profile);
-  const structureResult = analyzeStructure(profile);
-  const contentResult = analyzeContent(profile);
-  const keywordsResult = analyzeKeywords(profile, job);
-
-  const allIssues = [
-    ...formattingResult.issues,
-    ...structureResult.issues,
-    ...contentResult.issues,
-    ...keywordsResult.issues,
-  ];
-
-  const score: ATSScore = {
-    formatting: formattingResult.score,
-    structure: structureResult.score,
-    content: contentResult.score,
-    keywords: keywordsResult.score,
-    overall: Math.round(
-      formattingResult.score * 0.2 +
-        structureResult.score * 0.25 +
-        contentResult.score * 0.25 +
-        keywordsResult.score * 0.3,
-    ),
-  };
-
-  const recommendations = generateRecommendations(allIssues, score);
-
-  let summary: string;
-  if (score.overall >= 80) {
-    summary =
-      "Your resume is well-optimized for ATS systems. Minor improvements can help you stand out even more.";
-  } else if (score.overall >= 60) {
-    summary =
-      "Your resume has good ATS compatibility but needs some improvements for better visibility.";
-  } else if (score.overall >= 40) {
-    summary =
-      "Your resume may have trouble passing ATS systems. Focus on the critical issues below.";
-  } else {
-    summary =
-      "Your resume needs significant improvements to pass ATS screening. Address the errors first.";
-  }
-
-  return {
-    score,
-    issues: allIssues,
-    keywords: keywordsResult.keywords,
-    summary,
-    recommendations,
-  };
+  return scanResume(profile, profile.rawText, job).legacy;
 }
+
+export { scanResume };
+export type { ATSScanResult, AxisScore, AxisKey, FileMeta };
 
 export function scoreToLetterGrade(score: number): LetterGrade {
   if (score >= 90) return "A";

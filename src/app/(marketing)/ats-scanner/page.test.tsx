@@ -6,8 +6,19 @@ describe("ATSScannerPage", () => {
   it("does not use a dollar sign icon for the free benefit", () => {
     const { container } = render(<ATSScannerPage />);
 
-    expect(screen.getByText("100% Free")).toBeInTheDocument();
+    expect(screen.getByText("Free and Private")).toBeInTheDocument();
     expect(container.querySelector(".lucide-dollar-sign")).toBeNull();
     expect(container.querySelector(".lucide-sparkles")).not.toBeNull();
+  });
+
+  it("links the ATS filtering stat to the HBS Hidden Workers source", () => {
+    render(<ATSScannerPage />);
+
+    expect(screen.queryByText(/75%/)).not.toBeInTheDocument();
+    const source = screen.getByRole("link", { name: /Hidden Workers/i });
+    expect(source).toHaveAttribute(
+      "href",
+      "https://www.hbs.edu/managing-the-future-of-work/Documents/research/hiddenworkers09032021.pdf",
+    );
   });
 });
