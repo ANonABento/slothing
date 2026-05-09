@@ -38,7 +38,9 @@ export function getTemplateWithCustom(
       return {
         id: custom.id,
         name: custom.name,
-        description: `Custom template${custom.sourceDocumentId ? " (from uploaded resume)" : ""}`,
+        description: custom.sourceType
+          ? `Imported from ${custom.sourceType.toUpperCase()}`
+          : `Custom template${custom.sourceDocumentId ? " (from uploaded resume)" : ""}`,
         styles: custom.analyzedStyles.styles,
       };
     }
