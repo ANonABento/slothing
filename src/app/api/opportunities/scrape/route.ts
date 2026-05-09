@@ -1,3 +1,4 @@
+import { nowEpoch } from "@/lib/format/time";
 /**
  * @route POST /api/opportunities/scrape
  * @description Scrape a supported job-board URL and return a structured opportunity preview
@@ -44,7 +45,7 @@ export async function POST(request: NextRequest) {
         headers: {
           "Retry-After": Math.max(
             1,
-            Math.ceil((rateLimit.resetAt - Date.now()) / 1000),
+            Math.ceil((rateLimit.resetAt - nowEpoch()) / 1000),
           ).toString(),
         },
       },

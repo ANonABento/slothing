@@ -1,3 +1,4 @@
+import { formatIsoDateOnly, nowIso } from "@/lib/format/time";
 /**
  * @route GET /api/export/profile
  * @description Export profile data as JSON
@@ -29,7 +30,7 @@ export async function GET(request: NextRequest) {
     const documents = getDocuments(authResult.userId);
 
     const exportData = {
-      exportedAt: new Date().toISOString(),
+      exportedAt: nowIso(),
       version: "1.0",
       profile: {
         contact: profile.contact,
@@ -84,7 +85,7 @@ export async function GET(request: NextRequest) {
       return new NextResponse(JSON.stringify(exportData, null, 2), {
         headers: {
           "Content-Type": "application/json",
-          "Content-Disposition": `attachment; filename="taida-profile-${new Date().toISOString().split("T")[0]}.json"`,
+          "Content-Disposition": `attachment; filename="taida-profile-${formatIsoDateOnly()}.json"`,
         },
       });
     }

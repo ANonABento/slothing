@@ -2,6 +2,7 @@ import type { SectionState } from "@/lib/builder/section-manager";
 import type { TipTapJSONContent } from "@/lib/editor/types";
 import type { CoverLetterCritique } from "@/lib/ai/critique-prompts";
 
+import { parseToDate } from "@/lib/format/time";
 export const RESUME_DOCUMENT_ID = "resume";
 export const COVER_LETTER_DOCUMENT_ID = "cover-letter";
 
@@ -122,7 +123,7 @@ export function formatVersionTimestamp(savedAt: string): string {
     day: "numeric",
     hour: "numeric",
     minute: "2-digit",
-  }).format(new Date(savedAt));
+  }).format(parseToDate(savedAt)!);
 }
 
 function createDocumentId(mode: DocumentMode): string {

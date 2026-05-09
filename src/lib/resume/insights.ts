@@ -1,6 +1,7 @@
 import type { Profile, JobDescription } from "@/types";
 import type { AnalyticsSnapshot } from "@/lib/db/analytics";
 
+import { nowEpoch } from "@/lib/format/time";
 export type InsightType =
   | "strongest_skills"
   | "missing_keywords"
@@ -51,12 +52,12 @@ export function getInsights(
   userId: string = "default",
 ): Insight[] {
   const cached = cache.get(userId);
-  if (cached && Date.now() - cached.generatedAt < CACHE_TTL_MS) {
+  if (cached && nowEpoch() - cached.generatedAt < CACHE_TTL_MS) {
     return cached.insights;
   }
 
   const insights = generateInsights(data);
-  cache.set(userId, { insights, generatedAt: Date.now() });
+  cache.set(userId, { insights, generatedAt: nowEpoch() });
   return insights;
 }
 

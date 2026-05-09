@@ -1,3 +1,4 @@
+import { nowDate, parseToDate } from "@/lib/format/time";
 /**
  * @route GET /api/analytics/export
  * @description Export analytics in CSV or JSON format
@@ -28,7 +29,7 @@ function filterJobsByRange(
 ): JobDescription[] {
   if (range === "all") return jobs;
 
-  const now = new Date();
+  const now = nowDate();
   let cutoff: Date;
 
   switch (range) {
@@ -48,7 +49,7 @@ function filterJobsByRange(
       return jobs;
   }
 
-  return jobs.filter((job) => new Date(job.createdAt) >= cutoff);
+  return jobs.filter((job) => parseToDate(job.createdAt)! >= cutoff);
 }
 
 function getRangeLabel(range: TimeRange): string {

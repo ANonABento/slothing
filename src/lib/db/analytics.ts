@@ -1,6 +1,13 @@
 import db from "./legacy";
 import { generateId } from "@/lib/utils";
 
+import {
+  formatIsoDateOnly,
+  nowDate,
+  nowIso,
+  parseToDate,
+  toEpoch,
+} from "@/lib/format/time";
 export interface AnalyticsSnapshot {
   id: string;
   userId: string;
@@ -32,10 +39,10 @@ export interface JobStatusChange {
 // Save today's analytics snapshot
 export function saveAnalyticsSnapshot(
   data: Omit<AnalyticsSnapshot, "id" | "createdAt">,
-  userId: string = "default"
+  userId: string = "default",
 ): AnalyticsSnapshot {
   const id = generateId();
-  const now = new Date().toISOString();
+  const now = nowIso();
 
   // Use INSERT OR REPLACE to update if snapshot for today exists
   const stmt = db.prepare(`
@@ -70,7 +77,7 @@ export function saveAnalyticsSnapshot(
     data.totalDocuments,
     data.totalResumes,
     data.profileCompleteness,
-    now
+    now,
   );
 
   return {
@@ -96,7 +103,7 @@ export function saveAnalyticsSnapshot(
 export function getAnalyticsSnapshots(
   startDate: string,
   endDate: string,
-  userId: string = "default"
+  userId: string = "default",
 ): AnalyticsSnapshot[] {
   const stmt = db.prepare(`
     SELECT id, user_id, snapshot_date, total_jobs, jobs_saved, jobs_applied,
@@ -145,7 +152,9 @@ export function getAnalyticsSnapshots(
 }
 
 // Get the most recent snapshot
-export function getLatestSnapshot(userId: string = "default"): AnalyticsSnapshot | null {
+export function getLatestSnapshot(
+  userId: string = "default",
+): AnalyticsSnapshot | null {
   const stmt = db.prepare(`
     SELECT id, user_id, snapshot_date, total_jobs, jobs_saved, jobs_applied,
            jobs_interviewing, jobs_offered, jobs_rejected, total_interviews,
@@ -156,23 +165,25 @@ export function getLatestSnapshot(userId: string = "default"): AnalyticsSnapshot
     LIMIT 1
   `);
 
-  const row = stmt.get(userId) as {
-    id: string;
-    user_id: string;
-    snapshot_date: string;
-    total_jobs: number;
-    jobs_saved: number;
-    jobs_applied: number;
-    jobs_interviewing: number;
-    jobs_offered: number;
-    jobs_rejected: number;
-    total_interviews: number;
-    interviews_completed: number;
-    total_documents: number;
-    total_resumes: number;
-    profile_completeness: number;
-    created_at: string;
-  } | undefined;
+  const row = stmt.get(userId) as
+    | {
+        id: string;
+        user_id: string;
+        snapshot_date: string;
+        total_jobs: number;
+        jobs_saved: number;
+        jobs_applied: number;
+        jobs_interviewing: number;
+        jobs_offered: number;
+        jobs_rejected: number;
+        total_interviews: number;
+        interviews_completed: number;
+        total_documents: number;
+        total_resumes: number;
+        profile_completeness: number;
+        created_at: string;
+      }
+    | undefined;
 
   if (!row) return null;
 
@@ -201,10 +212,10 @@ export function recordJobStatusChange(
   fromStatus: string | null,
   toStatus: string,
   notes?: string,
-  userId: string = "default"
+  userId: string = "default",
 ): JobStatusChange {
   const id = generateId();
-  const now = new Date().toISOString();
+  const now = nowIso();
 
   const stmt = db.prepare(`
     INSERT INTO job_status_history (id, user_id, job_id, from_status, to_status, changed_at, notes)
@@ -221,7 +232,7 @@ export function recordJobStatusChange(
     now,
     notes || null,
     jobId,
-    userId
+    userId,
   );
 
   if (result.changes === 0) {
@@ -242,7 +253,7 @@ export function recordJobStatusChange(
 // Get status history for a job
 export function getJobStatusHistory(
   jobId: string,
-  userId: string = "default"
+  userId: string = "default",
 ): JobStatusChange[] {
   const stmt = db.prepare(`
     SELECT id, user_id, job_id, from_status, to_status, changed_at, notes
@@ -278,12 +289,12 @@ export function getWeekOverWeekChange(userId: string = "default"): {
   appliedChange: number;
   interviewsChange: number;
 } | null {
-  const today = new Date();
-  const lastWeek = new Date(today);
+  const today = nowDate();
+  const lastWeek = parseToDate(today)!;
   lastWeek.setDate(lastWeek.getDate() - 7);
 
-  const todayStr = today.toISOString().split("T")[0];
-  const lastWeekStr = lastWeek.toISOString().split("T")[0];
+  const todayStr = formatIsoDateOnly(today);
+  const lastWeekStr = formatIsoDateOnly(lastWeek);
 
   const stmt = db.prepare(`
     SELECT snapshot_date, total_jobs, jobs_applied, total_interviews
@@ -312,7 +323,9 @@ export function getWeekOverWeekChange(userId: string = "default"): {
 }
 
 // Get time spent in each status for jobs (average)
-export function getAverageTimeInStatus(userId: string = "default"): Record<string, number> {
+export function getAverageTimeInStatus(
+  userId: string = "default",
+): Record<string, number> {
   // Get all status changes
   const stmt = db.prepare(`
     SELECT jsh.job_id, jsh.from_status, jsh.to_status, jsh.changed_at
@@ -341,7 +354,7 @@ export function getAverageTimeInStatus(userId: string = "default"): Record<strin
     }
 
     if (lastChange) {
-      const duration = new Date(row.changed_at).getTime() - lastChange.time.getTime();
+      const duration = toEpoch(row.changed_at) - lastChange.time.getTime();
       const daysInStatus = duration / (1000 * 60 * 60 * 24);
 
       if (!statusDurations[lastChange.status]) {
@@ -352,7 +365,7 @@ export function getAverageTimeInStatus(userId: string = "default"): Record<strin
 
     lastChange = {
       status: row.to_status,
-      time: new Date(row.changed_at),
+      time: parseToDate(row.changed_at)!,
     };
   }
 
@@ -360,7 +373,8 @@ export function getAverageTimeInStatus(userId: string = "default"): Record<strin
   const averages: Record<string, number> = {};
   for (const [status, durations] of Object.entries(statusDurations)) {
     if (durations.length > 0) {
-      averages[status] = durations.reduce((sum, d) => sum + d, 0) / durations.length;
+      averages[status] =
+        durations.reduce((sum, d) => sum + d, 0) / durations.length;
     }
   }
 

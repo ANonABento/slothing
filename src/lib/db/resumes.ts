@@ -1,6 +1,7 @@
 import db from "./legacy";
 import { generateId } from "@/lib/utils";
 
+import { nowIso } from "@/lib/format/time";
 export const STANDALONE_RESUME_JOB_ID = "standalone";
 
 export interface GeneratedResume {
@@ -21,10 +22,10 @@ export function saveGeneratedResume(
   content: unknown,
   htmlPath: string,
   matchScore?: number,
-  userId: string = "default"
+  userId: string = "default",
 ): GeneratedResume {
   const id = generateId();
-  const now = new Date().toISOString();
+  const now = nowIso();
   const contentJson = JSON.stringify(content);
   const shouldCheckJobOwnership = jobId !== STANDALONE_RESUME_JOB_ID;
 
@@ -68,7 +69,10 @@ export function saveGeneratedResume(
 }
 
 // Get all generated resumes for a job
-export function getGeneratedResumes(jobId: string, userId: string = "default"): GeneratedResume[] {
+export function getGeneratedResumes(
+  jobId: string,
+  userId: string = "default",
+): GeneratedResume[] {
   const stmt = db.prepare(`
     SELECT id, job_id, profile_id, content_json, pdf_path, match_score, created_at
     FROM generated_resumes
@@ -99,22 +103,27 @@ export function getGeneratedResumes(jobId: string, userId: string = "default"): 
 }
 
 // Get a specific generated resume
-export function getGeneratedResume(id: string, userId: string = "default"): GeneratedResume | null {
+export function getGeneratedResume(
+  id: string,
+  userId: string = "default",
+): GeneratedResume | null {
   const stmt = db.prepare(`
     SELECT id, job_id, profile_id, content_json, pdf_path, match_score, created_at
     FROM generated_resumes
     WHERE id = ? AND user_id = ?
   `);
 
-  const row = stmt.get(id, userId) as {
-    id: string;
-    job_id: string;
-    profile_id: string;
-    content_json: string;
-    pdf_path: string;
-    match_score: number | null;
-    created_at: string;
-  } | undefined;
+  const row = stmt.get(id, userId) as
+    | {
+        id: string;
+        job_id: string;
+        profile_id: string;
+        content_json: string;
+        pdf_path: string;
+        match_score: number | null;
+        created_at: string;
+      }
+    | undefined;
 
   if (!row) return null;
 
@@ -131,13 +140,20 @@ export function getGeneratedResume(id: string, userId: string = "default"): Gene
 }
 
 // Delete a generated resume
-export function deleteGeneratedResume(id: string, userId: string = "default"): void {
-  const stmt = db.prepare("DELETE FROM generated_resumes WHERE id = ? AND user_id = ?");
+export function deleteGeneratedResume(
+  id: string,
+  userId: string = "default",
+): void {
+  const stmt = db.prepare(
+    "DELETE FROM generated_resumes WHERE id = ? AND user_id = ?",
+  );
   stmt.run(id, userId);
 }
 
 // Get all generated resumes (for dashboard stats)
-export function getAllGeneratedResumes(userId: string = "default"): GeneratedResume[] {
+export function getAllGeneratedResumes(
+  userId: string = "default",
+): GeneratedResume[] {
   const stmt = db.prepare(`
     SELECT id, job_id, profile_id, content_json, pdf_path, match_score, created_at
     FROM generated_resumes
@@ -169,7 +185,9 @@ export function getAllGeneratedResumes(userId: string = "default"): GeneratedRes
 
 // Get count of generated resumes
 export function getGeneratedResumeCount(userId: string = "default"): number {
-  const stmt = db.prepare("SELECT COUNT(*) as count FROM generated_resumes WHERE user_id = ?");
+  const stmt = db.prepare(
+    "SELECT COUNT(*) as count FROM generated_resumes WHERE user_id = ?",
+  );
   const row = stmt.get(userId) as { count: number };
   return row.count;
 }

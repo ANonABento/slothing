@@ -1,9 +1,10 @@
 import type { InterviewSession } from "@/types/interview";
 import type { JobDescription } from "@/types";
 
+import { formatDateOnly, nowIso } from "@/lib/format/time";
 export function formatInterviewForDocs(
   session: InterviewSession,
-  job?: JobDescription
+  job?: JobDescription,
 ): string {
   const lines: string[] = [];
   lines.push(`Interview Preparation Notes`);
@@ -14,7 +15,7 @@ export function formatInterviewForDocs(
     lines.push(`Company: ${job.company}`);
     lines.push("");
   }
-  lines.push(`Date: ${new Date().toLocaleDateString()}`);
+  lines.push(`Date: ${formatDateOnly(nowIso())}`);
   lines.push(`Mode: ${session.mode === "voice" ? "Voice" : "Text"}`);
   lines.push(`Questions: ${session.questions.length}`);
   lines.push("");

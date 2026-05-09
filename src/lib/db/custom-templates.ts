@@ -2,6 +2,7 @@ import db from "./legacy";
 import { generateId } from "@/lib/utils";
 import type { AnalyzedTemplate } from "@/lib/resume/template-analyzer";
 
+import { nowIso } from "@/lib/format/time";
 export interface CustomTemplate {
   id: string;
   userId: string;
@@ -35,10 +36,10 @@ export function saveCustomTemplate(
   name: string,
   analyzedStyles: AnalyzedTemplate,
   sourceDocumentId?: string,
-  userId: string = "default"
+  userId: string = "default",
 ): CustomTemplate {
   const id = generateId();
-  const now = new Date().toISOString();
+  const now = nowIso();
 
   const stmt = db.prepare(`
     INSERT INTO custom_templates (id, user_id, name, source_document_id, analyzed_styles, created_at)
@@ -46,7 +47,14 @@ export function saveCustomTemplate(
     ${sourceDocumentId ? "WHERE EXISTS (SELECT 1 FROM documents WHERE id = ? AND user_id = ?)" : ""}
   `);
 
-  const args = [id, userId, name, sourceDocumentId || null, JSON.stringify(analyzedStyles), now];
+  const args = [
+    id,
+    userId,
+    name,
+    sourceDocumentId || null,
+    JSON.stringify(analyzedStyles),
+    now,
+  ];
   if (sourceDocumentId) {
     args.push(sourceDocumentId, userId);
   }
@@ -66,7 +74,9 @@ export function saveCustomTemplate(
   };
 }
 
-export function getCustomTemplates(userId: string = "default"): CustomTemplate[] {
+export function getCustomTemplates(
+  userId: string = "default",
+): CustomTemplate[] {
   const stmt = db.prepare(`
     SELECT id, user_id, name, source_document_id, analyzed_styles, created_at
     FROM custom_templates
@@ -78,7 +88,10 @@ export function getCustomTemplates(userId: string = "default"): CustomTemplate[]
   return rows.map(rowToCustomTemplate);
 }
 
-export function getCustomTemplate(id: string, userId: string = "default"): CustomTemplate | null {
+export function getCustomTemplate(
+  id: string,
+  userId: string = "default",
+): CustomTemplate | null {
   const stmt = db.prepare(`
     SELECT id, user_id, name, source_document_id, analyzed_styles, created_at
     FROM custom_templates
@@ -91,8 +104,13 @@ export function getCustomTemplate(id: string, userId: string = "default"): Custo
   return rowToCustomTemplate(row);
 }
 
-export function deleteCustomTemplate(id: string, userId: string = "default"): boolean {
-  const stmt = db.prepare("DELETE FROM custom_templates WHERE id = ? AND user_id = ?");
+export function deleteCustomTemplate(
+  id: string,
+  userId: string = "default",
+): boolean {
+  const stmt = db.prepare(
+    "DELETE FROM custom_templates WHERE id = ? AND user_id = ?",
+  );
   const result = stmt.run(id, userId);
   return result.changes > 0;
 }
@@ -100,9 +118,11 @@ export function deleteCustomTemplate(id: string, userId: string = "default"): bo
 export function updateCustomTemplateName(
   id: string,
   name: string,
-  userId: string = "default"
+  userId: string = "default",
 ): boolean {
-  const stmt = db.prepare("UPDATE custom_templates SET name = ? WHERE id = ? AND user_id = ?");
+  const stmt = db.prepare(
+    "UPDATE custom_templates SET name = ? WHERE id = ? AND user_id = ?",
+  );
   const result = stmt.run(name, id, userId);
   return result.changes > 0;
 }

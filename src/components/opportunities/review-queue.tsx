@@ -11,6 +11,7 @@ import { StandardEmptyState } from "@/components/ui/page-layout";
 import { cn } from "@/lib/utils";
 import type { JobDescription } from "@/types";
 
+import { toNullableEpoch } from "@/lib/format/time";
 type QueueAction = "save" | "dismiss" | "apply";
 
 const DESCRIPTION_PREVIEW_LENGTH = 260;
@@ -22,13 +23,11 @@ function getDeadlineTime(deadline?: string): number {
     return Number.POSITIVE_INFINITY;
   }
 
-  const time = new Date(deadline).getTime();
-  return Number.isNaN(time) ? Number.POSITIVE_INFINITY : time;
+  return toNullableEpoch(deadline) ?? Number.POSITIVE_INFINITY;
 }
 
 function getCreatedAtTime(createdAt: string): number {
-  const time = new Date(createdAt).getTime();
-  return Number.isNaN(time) ? 0 : time;
+  return toNullableEpoch(createdAt) ?? 0;
 }
 
 export function getPendingOpportunities(

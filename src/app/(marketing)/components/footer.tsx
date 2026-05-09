@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Sparkles } from "lucide-react";
 
+import { nowDate } from "@/lib/format/time";
 const footerLinks = {
   product: [
     { name: "Features", href: "#features" },
@@ -104,7 +105,7 @@ export function Footer() {
         {/* Bottom Bar */}
         <div className="mt-12 pt-8 border-t flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-sm text-muted-foreground">
-            © {new Date().getFullYear()} Slothing. All rights reserved.
+            © {nowDate().getFullYear()} Slothing. All rights reserved.
           </p>
           <p className="text-sm text-muted-foreground">
             Built for job seekers who value their time.

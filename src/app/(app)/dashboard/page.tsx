@@ -1,5 +1,7 @@
 "use client";
 
+import { nowIso } from "@/lib/format/time";
+
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import {
@@ -105,17 +107,13 @@ export default function Dashboard() {
       try {
         setErrorMessage(null);
 
-        const [
-          profileData,
-          documentsData,
-          analyticsData,
-          onboardingData,
-        ] = await Promise.all([
-          fetchJson("/api/profile"),
-          fetchJson("/api/documents"),
-          fetchJson("/api/analytics"),
-          fetchJson("/api/onboarding/dismiss"),
-        ]);
+        const [profileData, documentsData, analyticsData, onboardingData] =
+          await Promise.all([
+            fetchJson("/api/profile"),
+            fetchJson("/api/documents"),
+            fetchJson("/api/analytics"),
+            fetchJson("/api/onboarding/dismiss"),
+          ]);
 
         const profile = profileData.profile;
         const documents = documentsData.documents || [];
@@ -163,7 +161,7 @@ export default function Dashboard() {
 
     try {
       setDismissSubmitting(true);
-      const optimisticDismissedAt = new Date().toISOString();
+      const optimisticDismissedAt = nowIso();
       setOnboardingState((current) => ({
         ...current,
         dismissedAt: optimisticDismissedAt,
@@ -506,7 +504,9 @@ function ActiveDashboard({
 
   return (
     <div className="space-y-5">
-      <DashboardHeader description={getDashboardGreeting(firstName, "active")} />
+      <DashboardHeader
+        description={getDashboardGreeting(firstName, "active")}
+      />
       <DashboardStatStrip stats={stats} totalPipeline={totalPipeline} />
 
       <div className={pageGridClasses.primaryAside}>

@@ -1,5 +1,7 @@
 "use client";
 
+import { formatDateOnly, nowIso, toEpoch } from "@/lib/format/time";
+
 import {
   useCallback,
   useEffect,
@@ -394,10 +396,7 @@ export default function BankPage() {
     if (sortBy === "confidence") {
       filtered.sort((a, b) => b.confidenceScore - a.confidenceScore);
     } else {
-      filtered.sort(
-        (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-      );
+      filtered.sort((a, b) => toEpoch(b.createdAt) - toEpoch(a.createdAt));
     }
     return filtered;
   }, [
@@ -640,7 +639,7 @@ export default function BankPage() {
         content,
         sourceDocumentId: parent.sourceDocumentId,
         confidenceScore: 1,
-        createdAt: new Date().toISOString(),
+        createdAt: nowIso(),
       };
       const nextChildCount = existingChildren.length + 1;
       setEntries((prev) =>
@@ -1080,7 +1079,7 @@ export default function BankPage() {
           content,
           sourceDocumentId: existingEntry.sourceDocumentId,
           confidenceScore: child.confidenceScore,
-          createdAt: new Date().toISOString(),
+          createdAt: nowIso(),
         });
       }
 
@@ -1873,7 +1872,7 @@ function EntryTable({
                     {Math.round((entry.confidenceScore ?? 0) * 100)}%
                   </td>
                   <td className="px-4 py-3 text-muted-foreground">
-                    {new Date(entry.createdAt).toLocaleDateString()}
+                    {formatDateOnly(entry.createdAt)}
                   </td>
                 </tr>
               );

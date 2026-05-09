@@ -2,6 +2,7 @@ import db from "./legacy";
 import { generateId } from "@/lib/utils";
 import type { ABOutcome, ABTrackingEntry } from "@/lib/resume/compare";
 
+import { nowIso } from "@/lib/format/time";
 interface TrackingRow {
   id: string;
   resume_id: string;
@@ -29,10 +30,10 @@ export function trackResumeSent(
   resumeId: string,
   jobId: string,
   userId: string = "default",
-  notes?: string
+  notes?: string,
 ): ABTrackingEntry {
   const id = generateId();
-  const now = new Date().toISOString();
+  const now = nowIso();
 
   const stmt = db.prepare(`
     INSERT INTO resume_ab_tracking (id, resume_id, job_id, user_id, outcome, sent_at, updated_at, notes)
@@ -52,7 +53,7 @@ export function trackResumeSent(
     resumeId,
     userId,
     jobId,
-    userId
+    userId,
   );
 
   if (result.changes === 0) {
@@ -74,9 +75,9 @@ export function trackResumeSent(
 export function updateTrackingOutcome(
   id: string,
   outcome: ABOutcome,
-  userId: string = "default"
+  userId: string = "default",
 ): boolean {
-  const now = new Date().toISOString();
+  const now = nowIso();
   const stmt = db.prepare(`
     UPDATE resume_ab_tracking
     SET outcome = ?, updated_at = ?
@@ -88,7 +89,9 @@ export function updateTrackingOutcome(
 }
 
 // Get all tracking entries for a user
-export function getTrackingEntries(userId: string = "default"): ABTrackingEntry[] {
+export function getTrackingEntries(
+  userId: string = "default",
+): ABTrackingEntry[] {
   const stmt = db.prepare(`
     SELECT id, resume_id, job_id, outcome, sent_at, updated_at, notes
     FROM resume_ab_tracking
@@ -102,7 +105,7 @@ export function getTrackingEntries(userId: string = "default"): ABTrackingEntry[
 // Get tracking entries for a specific resume
 export function getTrackingEntriesByResume(
   resumeId: string,
-  userId: string = "default"
+  userId: string = "default",
 ): ABTrackingEntry[] {
   const stmt = db.prepare(`
     SELECT id, resume_id, job_id, outcome, sent_at, updated_at, notes
@@ -129,10 +132,10 @@ export function getTrackedResumeIds(userId: string = "default"): string[] {
 // Delete a tracking entry
 export function deleteTrackingEntry(
   id: string,
-  userId: string = "default"
+  userId: string = "default",
 ): boolean {
   const stmt = db.prepare(
-    "DELETE FROM resume_ab_tracking WHERE id = ? AND user_id = ?"
+    "DELETE FROM resume_ab_tracking WHERE id = ? AND user_id = ?",
   );
   const result = stmt.run(id, userId);
   return result.changes > 0;

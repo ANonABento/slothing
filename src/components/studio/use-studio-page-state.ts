@@ -1,5 +1,7 @@
 "use client";
 
+import { nowEpoch } from "@/lib/format/time";
+
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   getDefaultTemplateIdForDocumentMode,
@@ -824,7 +826,7 @@ export function useStudioPageState(): StudioPageState {
         setManualVersionName("");
         setPreviewVersionId(version.id);
         markActiveDocumentSaved();
-        setSaveOp({ type: "saved", at: Date.now() });
+        setSaveOp({ type: "saved", at: nowEpoch() });
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
         setSaveOp({ type: "error", message });

@@ -1,6 +1,7 @@
 import db from "./legacy";
 import { generateId } from "@/lib/utils";
 
+import { nowIso } from "@/lib/format/time";
 export type NotificationType =
   | "reminder_due"
   | "reminder_overdue"
@@ -26,7 +27,7 @@ export function createNotification(
   userId: string = "default",
 ): Notification {
   const id = generateId();
-  const now = new Date().toISOString();
+  const now = nowIso();
 
   const stmt = db.prepare(`
     INSERT INTO notifications (id, type, title, message, link, created_at, user_id)

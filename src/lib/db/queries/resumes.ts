@@ -1,6 +1,7 @@
-import { db, generatedResumes, eq, and, desc } from '../index';
-import { generateId } from '@/lib/utils';
+import { db, generatedResumes, eq, and, desc } from "../index";
+import { generateId } from "@/lib/utils";
 
+import { nowDate, toIso } from "@/lib/format/time";
 export interface GeneratedResume {
   id: string;
   jobId: string;
@@ -20,10 +21,10 @@ export async function saveGeneratedResume(
   templateId: string,
   content: unknown,
   htmlPath: string,
-  matchScore?: number
+  matchScore?: number,
 ): Promise<GeneratedResume> {
   const id = generateId();
-  const now = new Date();
+  const now = nowDate();
   const contentJson = JSON.stringify(content);
 
   await db.insert(generatedResumes).values({
@@ -34,7 +35,7 @@ export async function saveGeneratedResume(
     contentJson,
     pdfPath: htmlPath,
     matchScore: matchScore ?? null,
-    createdAt: now.toISOString(),
+    createdAt: toIso(now),
   });
 
   return {
@@ -45,32 +46,52 @@ export async function saveGeneratedResume(
     contentJson,
     htmlPath,
     matchScore,
-    createdAt: now.toISOString(),
+    createdAt: toIso(now),
   };
 }
 
 // Get all generated resumes for a job
-export async function getGeneratedResumes(userId: string, jobId: string): Promise<GeneratedResume[]> {
-  const rows = await db.select().from(generatedResumes)
-    .where(and(eq(generatedResumes.userId, userId), eq(generatedResumes.jobId, jobId)))
+export async function getGeneratedResumes(
+  userId: string,
+  jobId: string,
+): Promise<GeneratedResume[]> {
+  const rows = await db
+    .select()
+    .from(generatedResumes)
+    .where(
+      and(
+        eq(generatedResumes.userId, userId),
+        eq(generatedResumes.jobId, jobId),
+      ),
+    )
     .orderBy(desc(generatedResumes.createdAt));
 
   return rows.map((row) => ({
     id: row.id,
     jobId: row.jobId,
     profileId: row.profileId,
-    templateId: '',
+    templateId: "",
     contentJson: row.contentJson,
-    htmlPath: row.pdfPath ?? '',
+    htmlPath: row.pdfPath ?? "",
     matchScore: row.matchScore ?? undefined,
-    createdAt: row.createdAt ?? '',
+    createdAt: row.createdAt ?? "",
   }));
 }
 
 // Get a specific generated resume
-export async function getGeneratedResume(userId: string, resumeId: string): Promise<GeneratedResume | null> {
-  const rows = await db.select().from(generatedResumes)
-    .where(and(eq(generatedResumes.id, resumeId), eq(generatedResumes.userId, userId)));
+export async function getGeneratedResume(
+  userId: string,
+  resumeId: string,
+): Promise<GeneratedResume | null> {
+  const rows = await db
+    .select()
+    .from(generatedResumes)
+    .where(
+      and(
+        eq(generatedResumes.id, resumeId),
+        eq(generatedResumes.userId, userId),
+      ),
+    );
 
   if (rows.length === 0) return null;
   const row = rows[0];
@@ -79,23 +100,36 @@ export async function getGeneratedResume(userId: string, resumeId: string): Prom
     id: row.id,
     jobId: row.jobId,
     profileId: row.profileId,
-    templateId: '',
+    templateId: "",
     contentJson: row.contentJson,
-    htmlPath: row.pdfPath ?? '',
+    htmlPath: row.pdfPath ?? "",
     matchScore: row.matchScore ?? undefined,
-    createdAt: row.createdAt ?? '',
+    createdAt: row.createdAt ?? "",
   };
 }
 
 // Delete a generated resume
-export async function deleteGeneratedResume(userId: string, resumeId: string): Promise<void> {
-  await db.delete(generatedResumes)
-    .where(and(eq(generatedResumes.id, resumeId), eq(generatedResumes.userId, userId)));
+export async function deleteGeneratedResume(
+  userId: string,
+  resumeId: string,
+): Promise<void> {
+  await db
+    .delete(generatedResumes)
+    .where(
+      and(
+        eq(generatedResumes.id, resumeId),
+        eq(generatedResumes.userId, userId),
+      ),
+    );
 }
 
 // Get all generated resumes for a user
-export async function getAllGeneratedResumes(userId: string): Promise<GeneratedResume[]> {
-  const rows = await db.select().from(generatedResumes)
+export async function getAllGeneratedResumes(
+  userId: string,
+): Promise<GeneratedResume[]> {
+  const rows = await db
+    .select()
+    .from(generatedResumes)
     .where(eq(generatedResumes.userId, userId))
     .orderBy(desc(generatedResumes.createdAt));
 
@@ -103,17 +137,19 @@ export async function getAllGeneratedResumes(userId: string): Promise<GeneratedR
     id: row.id,
     jobId: row.jobId,
     profileId: row.profileId,
-    templateId: '',
+    templateId: "",
     contentJson: row.contentJson,
-    htmlPath: row.pdfPath ?? '',
+    htmlPath: row.pdfPath ?? "",
     matchScore: row.matchScore ?? undefined,
-    createdAt: row.createdAt ?? '',
+    createdAt: row.createdAt ?? "",
   }));
 }
 
 // Get count of generated resumes for a user
 export async function getGeneratedResumeCount(userId: string): Promise<number> {
-  const rows = await db.select().from(generatedResumes)
+  const rows = await db
+    .select()
+    .from(generatedResumes)
     .where(eq(generatedResumes.userId, userId));
 
   return rows.length;

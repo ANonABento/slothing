@@ -1,3 +1,4 @@
+import { nowEpoch } from "@/lib/format/time";
 export type StudioSaveStatusState = "saved" | "saving" | "unsaved" | "error";
 
 export interface StudioSaveStatus {
@@ -8,7 +9,7 @@ export interface StudioSaveStatus {
 
 export function formatRelativeSaveTime(
   timestamp: number,
-  now = Date.now(),
+  now = nowEpoch(),
 ): string {
   const elapsedSeconds = Math.max(0, Math.floor((now - timestamp) / 1000));
 
@@ -27,7 +28,7 @@ export function formatRelativeSaveTime(
 
 export function getStudioSaveStatusLabel(
   status: StudioSaveStatus,
-  now = Date.now(),
+  now = nowEpoch(),
 ): string {
   if (status.state === "saving") return "Saving...";
   if (status.state === "unsaved") return "Unsaved changes";

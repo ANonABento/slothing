@@ -1,3 +1,12 @@
+import {
+  addMinutes,
+  getUserTimezone,
+  nowDate,
+  nowEpoch,
+  nowIso,
+  parseToDate,
+  toIso,
+} from "@/lib/format/time";
 /**
  * Google Calendar Operations
  *
@@ -38,17 +47,6 @@ export interface GoogleCalendarEvent {
 }
 
 /**
- * Get the user's timezone
- */
-function getUserTimezone(): string {
-  try {
-    return Intl.DateTimeFormat().resolvedOptions().timeZone;
-  } catch {
-    return "UTC";
-  }
-}
-
-/**
  * Create a calendar event
  */
 export async function createCalendarEvent(
@@ -60,19 +58,18 @@ export async function createCalendarEvent(
     const timezone = getUserTimezone();
 
     // Default to 1 hour duration if no end date
-    const endDate =
-      event.endDate || new Date(event.startDate.getTime() + 60 * 60 * 1000);
+    const endDate = event.endDate || addMinutes(event.startDate, 60);
 
     const eventBody: calendar_v3.Schema$Event = {
       summary: event.title,
       description: event.description,
       location: event.location,
       start: {
-        dateTime: event.startDate.toISOString(),
+        dateTime: toIso(event.startDate),
         timeZone: timezone,
       },
       end: {
-        dateTime: endDate.toISOString(),
+        dateTime: toIso(endDate),
         timeZone: timezone,
       },
     };
@@ -132,14 +129,14 @@ export async function updateCalendarEvent(
 
     if (event.startDate) {
       updateBody.start = {
-        dateTime: event.startDate.toISOString(),
+        dateTime: toIso(event.startDate),
         timeZone: timezone,
       };
     }
 
     if (event.endDate) {
       updateBody.end = {
-        dateTime: event.endDate.toISOString(),
+        dateTime: toIso(event.endDate),
         timeZone: timezone,
       };
     }
@@ -206,8 +203,8 @@ export async function listUpcomingEvents(
     calendarId: "primary",
     maxResults: options.maxResults || 50,
     q: options.query,
-    timeMin: (options.timeMin || new Date()).toISOString(),
-    timeMax: options.timeMax?.toISOString(),
+    timeMin: options.timeMin ? toIso(options.timeMin) : nowIso(),
+    timeMax: options.timeMax ? toIso(options.timeMax) : undefined,
     singleEvents: true,
     orderBy: "startTime",
   });
@@ -216,10 +213,10 @@ export async function listUpcomingEvents(
     id: event.id!,
     title: event.summary || "Untitled",
     description: event.description || undefined,
-    startDate: new Date(
-      event.start?.dateTime || event.start?.date || Date.now(),
-    ),
-    endDate: event.end?.dateTime ? new Date(event.end.dateTime) : undefined,
+    startDate: parseToDate(
+      event.start?.dateTime || event.start?.date || nowEpoch(),
+    )!,
+    endDate: event.end?.dateTime ? parseToDate(event.end.dateTime)! : undefined,
     location: event.location || undefined,
     link: event.htmlLink || undefined,
   }));
@@ -285,7 +282,7 @@ export function createDeadlineEventInput(
 ): CalendarEventInput | null {
   if (!job.deadline) return null;
 
-  const deadlineDate = new Date(job.deadline);
+  const deadlineDate = parseToDate(job.deadline)!;
 
   return {
     title: `Application Deadline: ${job.title} at ${job.company}`,
@@ -301,7 +298,7 @@ export function createDeadlineEventInput(
       .join("\n"),
     startDate: deadlineDate,
     // Make it an all-day event feel by setting end 1 hour later
-    endDate: new Date(deadlineDate.getTime() + 60 * 60 * 1000),
+    endDate: addMinutes(deadlineDate, 60),
     reminders: [
       { method: "popup", minutes: 1440 }, // 1 day before
       { method: "popup", minutes: 10080 }, // 1 week before
@@ -330,7 +327,7 @@ export function createReminderEventInput(
   return {
     title: reminder.title,
     description: descriptionParts.join("\n"),
-    startDate: new Date(reminder.dueDate),
+    startDate: parseToDate(reminder.dueDate)!,
     reminders: [{ method: "popup", minutes: 30 }],
   };
 }
@@ -341,7 +338,7 @@ export function createReminderEventInput(
 export async function findInterviewEvents(
   options: { company?: string; daysAhead?: number } = {},
 ): Promise<GoogleCalendarEvent[]> {
-  const timeMax = new Date();
+  const timeMax = nowDate();
   timeMax.setDate(timeMax.getDate() + (options.daysAhead || 30));
 
   const query = options.company ? `interview ${options.company}` : "interview";
@@ -356,9 +353,7 @@ export async function findInterviewEvents(
 /**
  * Batch sync multiple events
  */
-export async function batchSyncEvents(
-  events: CalendarEventInput[],
-): Promise<{
+export async function batchSyncEvents(events: CalendarEventInput[]): Promise<{
   total: number;
   success: number;
   failed: number;

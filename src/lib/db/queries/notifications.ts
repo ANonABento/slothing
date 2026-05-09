@@ -1,6 +1,7 @@
 import { db, notifications, eq, and, desc } from "../index";
 import { generateId } from "@/lib/utils";
 
+import { nowDate, toIso } from "@/lib/format/time";
 export type NotificationType =
   | "reminder_due"
   | "reminder_overdue"
@@ -26,7 +27,7 @@ export async function createNotification(
   notification: Omit<Notification, "id" | "read" | "createdAt">,
 ): Promise<Notification> {
   const id = generateId();
-  const now = new Date();
+  const now = nowDate();
 
   await db.insert(notifications).values({
     id,
@@ -36,7 +37,7 @@ export async function createNotification(
     message: notification.message ?? null,
     link: notification.link ?? null,
     read: false,
-    createdAt: now.toISOString(),
+    createdAt: toIso(now),
   });
 
   return {
@@ -46,7 +47,7 @@ export async function createNotification(
     message: notification.message,
     link: notification.link,
     read: false,
-    createdAt: now.toISOString(),
+    createdAt: toIso(now),
   };
 }
 

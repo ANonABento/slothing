@@ -1,3 +1,4 @@
+import { formatIsoDateOnly, nowIso } from "@/lib/format/time";
 /**
  * @route GET /api/backup
  * @route POST /api/backup
@@ -31,7 +32,7 @@ export async function GET() {
   try {
     const backup = {
       version: "1.0",
-      exportedAt: new Date().toISOString(),
+      exportedAt: nowIso(),
       data: {
         profile: getProfile(authResult.userId),
         jobs: getJobs(authResult.userId),
@@ -63,7 +64,7 @@ export async function GET() {
     return new NextResponse(JSON.stringify(backup, null, 2), {
       headers: {
         "Content-Type": "application/json",
-        "Content-Disposition": `attachment; filename="taida-backup-${new Date().toISOString().split("T")[0]}.json"`,
+        "Content-Disposition": `attachment; filename="taida-backup-${formatIsoDateOnly()}.json"`,
       },
     });
   } catch (error) {

@@ -34,7 +34,7 @@ import {
 } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
 import { TimeAgo } from "@/components/format/time-ago";
-import { formatDateAbsolute } from "@/lib/format/time";
+import { formatDateAbsolute, nowDate } from "@/lib/format/time";
 import { pluralize } from "@/lib/text/pluralize";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
 import {
@@ -305,7 +305,7 @@ export default function AnalyticsPage() {
                 JSON
               </Button>
               <ExportToSheetsButton
-                title={`Job Search Analytics - ${formatDateAbsolute(new Date())}`}
+                title={`Job Search Analytics - ${formatDateAbsolute(nowDate())}`}
                 data={formatAnalyticsForSheets()}
                 size="sm"
               />
@@ -358,7 +358,10 @@ export default function AnalyticsPage() {
             {/* Total Opportunities */}
             <PagePanel>
               <div className="flex items-center justify-between mb-4">
-                <PageIconTile icon={Briefcase} className="bg-info/10 text-info" />
+                <PageIconTile
+                  icon={Briefcase}
+                  className="bg-info/10 text-info"
+                />
                 <span className="text-2xl font-bold">
                   {analytics.overview.totalJobs}
                 </span>

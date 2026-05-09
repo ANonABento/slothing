@@ -1,6 +1,7 @@
 import db from "./legacy";
 import { generateId } from "@/lib/utils";
 
+import { nowDate, nowIso, parseToDate } from "@/lib/format/time";
 export interface CompanyResearch {
   id: string;
   companyName: string;
@@ -15,24 +16,26 @@ export interface CompanyResearch {
 
 export function getCompanyResearch(
   companyName: string,
-  userId: string = "default"
+  userId: string = "default",
 ): CompanyResearch | null {
   const normalized = companyName.toLowerCase().trim();
   const stmt = db.prepare(
-    "SELECT * FROM company_research WHERE user_id = ? AND LOWER(company_name) = ?"
+    "SELECT * FROM company_research WHERE user_id = ? AND LOWER(company_name) = ?",
   );
-  const row = stmt.get(userId, normalized) as {
-    id: string;
-    user_id: string;
-    company_name: string;
-    summary: string | null;
-    key_facts_json: string | null;
-    interview_questions_json: string | null;
-    culture_notes: string | null;
-    recent_news: string | null;
-    created_at: string;
-    updated_at: string;
-  } | undefined;
+  const row = stmt.get(userId, normalized) as
+    | {
+        id: string;
+        user_id: string;
+        company_name: string;
+        summary: string | null;
+        key_facts_json: string | null;
+        interview_questions_json: string | null;
+        culture_notes: string | null;
+        recent_news: string | null;
+        created_at: string;
+        updated_at: string;
+      }
+    | undefined;
 
   if (!row) return null;
 
@@ -53,10 +56,10 @@ export function getCompanyResearch(
 
 export function saveCompanyResearch(
   research: Omit<CompanyResearch, "id" | "createdAt" | "updatedAt">,
-  userId: string = "default"
+  userId: string = "default",
 ): CompanyResearch {
   const id = generateId();
-  const now = new Date().toISOString();
+  const now = nowIso();
   const normalizedCompanyName = research.companyName.toLowerCase().trim();
 
   const stmt = db.prepare(`
@@ -83,7 +86,7 @@ export function saveCompanyResearch(
     research.cultureNotes || null,
     research.recentNews || null,
     now,
-    now
+    now,
   );
 
   const saved = getCompanyResearch(normalizedCompanyName, userId);
@@ -94,14 +97,23 @@ export function saveCompanyResearch(
   return saved;
 }
 
-export function deleteCompanyResearch(id: string, userId: string = "default"): void {
-  const stmt = db.prepare("DELETE FROM company_research WHERE id = ? AND user_id = ?");
+export function deleteCompanyResearch(
+  id: string,
+  userId: string = "default",
+): void {
+  const stmt = db.prepare(
+    "DELETE FROM company_research WHERE id = ? AND user_id = ?",
+  );
   stmt.run(id, userId);
 }
 
-export function isResearchStale(research: CompanyResearch, maxAgeDays = 7): boolean {
-  const updatedAt = new Date(research.updatedAt);
-  const now = new Date();
-  const ageInDays = (now.getTime() - updatedAt.getTime()) / (1000 * 60 * 60 * 24);
+export function isResearchStale(
+  research: CompanyResearch,
+  maxAgeDays = 7,
+): boolean {
+  const updatedAt = parseToDate(research.updatedAt)!;
+  const now = nowDate();
+  const ageInDays =
+    (now.getTime() - updatedAt.getTime()) / (1000 * 60 * 60 * 24);
   return ageInDays > maxAgeDays;
 }

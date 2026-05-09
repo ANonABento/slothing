@@ -3,6 +3,7 @@ import type { CompanyResearch } from "@/lib/db/company-research";
 import { LLMClient, parseJSONFromLLM } from "@/lib/llm/client";
 import type { LLMConfig } from "@/types";
 
+import { formatDateOnly, nowIso } from "@/lib/format/time";
 export interface PrepChecklistItem {
   id: string;
   category: "before" | "during" | "after";
@@ -35,9 +36,9 @@ export async function generatePrepGuide(
   job: JobDescription,
   profile: Profile | null,
   companyResearch: CompanyResearch | null,
-  llmConfig: LLMConfig | null
+  llmConfig: LLMConfig | null,
 ): Promise<InterviewPrepGuide> {
-  const now = new Date().toISOString();
+  const now = nowIso();
 
   if (llmConfig) {
     return generateWithLLM(job, profile, companyResearch, llmConfig, now);
@@ -51,7 +52,7 @@ async function generateWithLLM(
   profile: Profile | null,
   companyResearch: CompanyResearch | null,
   llmConfig: LLMConfig,
-  createdAt: string
+  createdAt: string,
 ): Promise<InterviewPrepGuide> {
   const client = new LLMClient(llmConfig);
 
@@ -149,18 +150,19 @@ function generateBasicPrepGuide(
   job: JobDescription,
   profile: Profile | null,
   companyResearch: CompanyResearch | null,
-  createdAt: string
+  createdAt: string,
 ): InterviewPrepGuide {
   // Identify matching skills
   const profileSkills = profile?.skills.map((s) => s.name.toLowerCase()) || [];
   const jobKeywords = job.keywords.map((k) => k.toLowerCase());
 
   const matchedSkills = profileSkills.filter((skill) =>
-    jobKeywords.some((kw) => skill.includes(kw) || kw.includes(skill))
+    jobKeywords.some((kw) => skill.includes(kw) || kw.includes(skill)),
   );
 
   const missingSkills = jobKeywords.filter(
-    (kw) => !profileSkills.some((skill) => skill.includes(kw) || kw.includes(skill))
+    (kw) =>
+      !profileSkills.some((skill) => skill.includes(kw) || kw.includes(skill)),
   );
 
   return {
@@ -175,12 +177,14 @@ function generateBasicPrepGuide(
       "Career goals",
       "Team collaboration",
     ],
-    yourStrengths: matchedSkills.length > 0
-      ? matchedSkills.slice(0, 5)
-      : ["Review your resume to identify matching skills"],
-    potentialGaps: missingSkills.length > 0
-      ? missingSkills.slice(0, 4)
-      : ["No major gaps identified - review job requirements carefully"],
+    yourStrengths:
+      matchedSkills.length > 0
+        ? matchedSkills.slice(0, 5)
+        : ["Review your resume to identify matching skills"],
+    potentialGaps:
+      missingSkills.length > 0
+        ? missingSkills.slice(0, 4)
+        : ["No major gaps identified - review job requirements carefully"],
     talkingPoints: [
       `Why you're interested in ${job.company}`,
       `Your experience with ${job.keywords[0] || "relevant technologies"}`,
@@ -194,7 +198,7 @@ function generateBasicPrepGuide(
 
 function generateChecklist(
   job: JobDescription,
-  companyResearch: CompanyResearch | null
+  companyResearch: CompanyResearch | null,
 ): PrepChecklistItem[] {
   return [
     // Before
@@ -202,7 +206,8 @@ function generateChecklist(
       id: "research-company",
       category: "before",
       task: `Research ${job.company}`,
-      description: "Understand their products, mission, recent news, and culture",
+      description:
+        "Understand their products, mission, recent news, and culture",
       completed: false,
     },
     {
@@ -239,7 +244,8 @@ function generateChecklist(
       id: "test-tech",
       category: "before",
       task: "Test technology (if virtual)",
-      description: "Check camera, microphone, internet connection, and background",
+      description:
+        "Check camera, microphone, internet connection, and background",
       completed: false,
     },
     {
@@ -305,7 +311,7 @@ function generateChecklist(
 
 function generateDefaultQuestions(
   job: JobDescription,
-  companyResearch: CompanyResearch | null
+  companyResearch: CompanyResearch | null,
 ): PrepQuestion[] {
   const questions: PrepQuestion[] = [
     {
@@ -318,7 +324,8 @@ function generateDefaultQuestions(
       ],
     },
     {
-      question: "Describe a challenging project you worked on. What was your approach?",
+      question:
+        "Describe a challenging project you worked on. What was your approach?",
       category: "behavioral",
       tips: [
         "Use the STAR method",
@@ -345,7 +352,8 @@ function generateDefaultQuestions(
       ],
     },
     {
-      question: "Tell me about a time you disagreed with a colleague. How did you handle it?",
+      question:
+        "Tell me about a time you disagreed with a colleague. How did you handle it?",
       category: "behavioral",
       tips: [
         "Focus on constructive resolution",
@@ -389,7 +397,10 @@ function generateDefaultQuestions(
     questions.push({
       question: "Be prepared to ask: " + companyResearch.interviewQuestions[0],
       category: "company",
-      tips: ["Shows you've done your research", "Demonstrates genuine interest"],
+      tips: [
+        "Shows you've done your research",
+        "Demonstrates genuine interest",
+      ],
     });
   }
 
@@ -401,7 +412,7 @@ export function generateExportableDocument(guide: InterviewPrepGuide): string {
 
   sections.push(`# Interview Preparation Guide
 ## ${guide.jobTitle} at ${guide.company}
-Generated: ${new Date(guide.createdAt).toLocaleDateString()}
+Generated: ${formatDateOnly(guide.createdAt)}
 
 ---
 
@@ -460,7 +471,7 @@ ${guide.questions
 Category: ${q.category}
 Tips:
 ${q.tips.map((t) => `  - ${t}`).join("\n")}
-`
+`,
   )
   .join("\n")}
 

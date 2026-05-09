@@ -1,12 +1,16 @@
 import type { Profile, JobDescription } from "@/types";
 
+import { nowIso } from "@/lib/format/time";
 /**
  * Converts raw resume text into a minimal Profile object
  * suitable for ATS analysis. Extracts what it can from plain text
  * using heuristic pattern matching.
  */
 export function textToProfile(resumeText: string): Profile {
-  const lines = resumeText.split("\n").map((l) => l.trim()).filter(Boolean);
+  const lines = resumeText
+    .split("\n")
+    .map((l) => l.trim())
+    .filter(Boolean);
   const fullText = resumeText.trim();
 
   return {
@@ -19,8 +23,8 @@ export function textToProfile(resumeText: string): Profile {
     projects: [],
     certifications: [],
     rawText: fullText,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    createdAt: nowIso(),
+    updatedAt: nowIso(),
   };
 }
 
@@ -28,7 +32,10 @@ export function textToProfile(resumeText: string): Profile {
  * Converts raw job description text into a minimal JobDescription object.
  */
 export function textToJob(jobText: string): JobDescription {
-  const lines = jobText.split("\n").map((l) => l.trim()).filter(Boolean);
+  const lines = jobText
+    .split("\n")
+    .map((l) => l.trim())
+    .filter(Boolean);
   const keywords = extractJobKeywords(jobText);
 
   return {
@@ -39,7 +46,7 @@ export function textToJob(jobText: string): JobDescription {
     requirements: extractRequirements(lines),
     responsibilities: [],
     keywords,
-    createdAt: new Date().toISOString(),
+    createdAt: nowIso(),
   };
 }
 
@@ -55,7 +62,12 @@ function extractContact(lines: string[]): Profile["contact"] {
 
   // First non-email, non-phone line is likely the name
   const nameLine = lines.find(
-    (l) => l.length > 1 && l.length < 60 && !EMAIL_RE.test(l) && !PHONE_RE.test(l) && !/^https?:/.test(l)
+    (l) =>
+      l.length > 1 &&
+      l.length < 60 &&
+      !EMAIL_RE.test(l) &&
+      !PHONE_RE.test(l) &&
+      !/^https?:/.test(l),
   );
 
   return {
@@ -66,14 +78,16 @@ function extractContact(lines: string[]): Profile["contact"] {
   };
 }
 
-const SECTION_HEADERS_RE = /^(summary|objective|profile|about me|professional summary|experience|work experience|work history|employment|education|academic|skills|technical skills|core competencies|projects|certifications|awards|achievements|publications|references|volunteer)/i;
+const SECTION_HEADERS_RE =
+  /^(summary|objective|profile|about me|professional summary|experience|work experience|work history|employment|education|academic|skills|technical skills|core competencies|projects|certifications|awards|achievements|publications|references|volunteer)/i;
 
 function isSectionHeader(line: string): boolean {
   return SECTION_HEADERS_RE.test(line) && line.length < 50;
 }
 
 function extractSummary(lines: string[]): string {
-  const summaryHeaders = /^(summary|objective|profile|about me|professional summary)/i;
+  const summaryHeaders =
+    /^(summary|objective|profile|about me|professional summary)/i;
   const idx = lines.findIndex((l) => summaryHeaders.test(l));
 
   if (idx !== -1) {
@@ -96,8 +110,10 @@ function extractSummary(lines: string[]): string {
   return "";
 }
 
-const EXPERIENCE_HEADERS = /^(experience|work experience|work history|employment|professional experience)/i;
-const DATE_RE = /(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec|january|february|march|april|may|june|july|august|september|october|november|december)\s+\d{4}|(?:\d{1,2}\/\d{4})|(?:\d{4}\s*[-–]\s*(?:\d{4}|present|current))|present|current/i;
+const EXPERIENCE_HEADERS =
+  /^(experience|work experience|work history|employment|professional experience)/i;
+const DATE_RE =
+  /(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec|january|february|march|april|may|june|july|august|september|october|november|december)\s+\d{4}|(?:\d{1,2}\/\d{4})|(?:\d{4}\s*[-–]\s*(?:\d{4}|present|current))|present|current/i;
 
 function extractExperiences(lines: string[]): Profile["experiences"] {
   const expStart = lines.findIndex((l) => EXPERIENCE_HEADERS.test(l));
@@ -126,7 +142,10 @@ function extractExperiences(lines: string[]): Profile["experiences"] {
         experiences.push(buildExperience(current, expIdCounter++));
       }
       current = {
-        title: line.replace(DATE_RE, "").replace(/[|,–-]+$/, "").trim(),
+        title: line
+          .replace(DATE_RE, "")
+          .replace(/[|,–-]+$/, "")
+          .trim(),
         company: "",
         startDate: extractDateString(line),
         highlights: [],
@@ -134,9 +153,18 @@ function extractExperiences(lines: string[]): Profile["experiences"] {
       };
     } else if (current) {
       // If we just started and don't have a company yet, this might be the company
-      if (!current.company && current.highlights.length === 0 && line.length < 80) {
+      if (
+        !current.company &&
+        current.highlights.length === 0 &&
+        line.length < 80
+      ) {
         current.company = line;
-      } else if (line.startsWith("-") || line.startsWith("•") || line.startsWith("*") || line.startsWith("–")) {
+      } else if (
+        line.startsWith("-") ||
+        line.startsWith("•") ||
+        line.startsWith("*") ||
+        line.startsWith("–")
+      ) {
         current.highlights.push(line.replace(/^[-•*–]\s*/, ""));
       } else if (line.length > 20) {
         current.description += (current.description ? " " : "") + line;
@@ -152,8 +180,14 @@ function extractExperiences(lines: string[]): Profile["experiences"] {
 }
 
 function buildExperience(
-  data: { title: string; company: string; startDate: string; highlights: string[]; description: string },
-  id: number
+  data: {
+    title: string;
+    company: string;
+    startDate: string;
+    highlights: string[];
+    description: string;
+  },
+  id: number,
 ): Profile["experiences"][0] {
   return {
     id: `exp-scan-${id}`,
@@ -203,7 +237,8 @@ function extractEducation(lines: string[]): Profile["education"] {
 }
 
 function buildEducation(lines: string[], id: number): Profile["education"][0] {
-  const degreeRe = /bachelor|master|ph\.?d|associate|diploma|certificate|b\.?s\.?|m\.?s\.?|b\.?a\.?|m\.?a\.?|m\.?b\.?a/i;
+  const degreeRe =
+    /bachelor|master|ph\.?d|associate|diploma|certificate|b\.?s\.?|m\.?s\.?|b\.?a\.?|m\.?a\.?|m\.?b\.?a/i;
   const degreeLine = lines.find((l) => degreeRe.test(l)) || lines[0] || "";
   const institution = lines.find((l) => l !== degreeLine && l.length > 3) || "";
 
@@ -216,7 +251,8 @@ function buildEducation(lines: string[], id: number): Profile["education"][0] {
   };
 }
 
-const SKILLS_HEADERS = /^(skills|technical skills|core competencies|technologies|tools|tech stack)/i;
+const SKILLS_HEADERS =
+  /^(skills|technical skills|core competencies|technologies|tools|tech stack)/i;
 
 function extractSkills(lines: string[]): Profile["skills"] {
   const skillStart = lines.findIndex((l) => SKILLS_HEADERS.test(l));
@@ -257,15 +293,84 @@ function extractJobKeywords(text: string): string[] {
   const normalized = text.toLowerCase();
   const words = normalized.split(/\s+/);
   const stopWords = new Set([
-    "the", "a", "an", "and", "or", "but", "in", "on", "at", "to", "for",
-    "of", "with", "by", "from", "as", "is", "was", "are", "were", "been",
-    "be", "have", "has", "had", "do", "does", "did", "will", "would", "could",
-    "should", "may", "might", "must", "we", "you", "they", "our", "your",
-    "this", "that", "these", "those", "about", "into", "through", "during",
-    "before", "after", "above", "below", "between", "than", "very", "just",
-    "also", "not", "all", "any", "can", "who", "what", "which", "when",
-    "where", "how", "work", "working", "able", "using", "including",
-    "experience", "years", "team", "company", "role", "position",
+    "the",
+    "a",
+    "an",
+    "and",
+    "or",
+    "but",
+    "in",
+    "on",
+    "at",
+    "to",
+    "for",
+    "of",
+    "with",
+    "by",
+    "from",
+    "as",
+    "is",
+    "was",
+    "are",
+    "were",
+    "been",
+    "be",
+    "have",
+    "has",
+    "had",
+    "do",
+    "does",
+    "did",
+    "will",
+    "would",
+    "could",
+    "should",
+    "may",
+    "might",
+    "must",
+    "we",
+    "you",
+    "they",
+    "our",
+    "your",
+    "this",
+    "that",
+    "these",
+    "those",
+    "about",
+    "into",
+    "through",
+    "during",
+    "before",
+    "after",
+    "above",
+    "below",
+    "between",
+    "than",
+    "very",
+    "just",
+    "also",
+    "not",
+    "all",
+    "any",
+    "can",
+    "who",
+    "what",
+    "which",
+    "when",
+    "where",
+    "how",
+    "work",
+    "working",
+    "able",
+    "using",
+    "including",
+    "experience",
+    "years",
+    "team",
+    "company",
+    "role",
+    "position",
   ]);
 
   const freq: Record<string, number> = {};
@@ -283,7 +388,8 @@ function extractJobKeywords(text: string): string[] {
 }
 
 function extractRequirements(lines: string[]): string[] {
-  const reqHeaders = /^(requirements|qualifications|what we.+looking|must have|minimum|preferred)/i;
+  const reqHeaders =
+    /^(requirements|qualifications|what we.+looking|must have|minimum|preferred)/i;
   const reqStart = lines.findIndex((l) => reqHeaders.test(l));
   if (reqStart === -1) return [];
 

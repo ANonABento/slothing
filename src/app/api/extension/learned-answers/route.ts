@@ -1,3 +1,4 @@
+import { nowDate, toIso } from "@/lib/format/time";
 /**
  * @route GET /api/extension/learned-answers
  * @route POST /api/extension/learned-answers
@@ -89,14 +90,14 @@ export async function POST(request: NextRequest) {
 
     if (existing) {
       // Update existing answer
-      const now = new Date();
+      const now = nowDate();
       await db
         .update(learnedAnswers)
         .set({
           answer,
           timesUsed: sqlOp`coalesce(${learnedAnswers.timesUsed}, 0) + 1`,
-          updatedAt: now.toISOString(),
-          lastUsedAt: now.toISOString(),
+          updatedAt: toIso(now),
+          lastUsedAt: toIso(now),
         })
         .where(
           and(
@@ -117,7 +118,7 @@ export async function POST(request: NextRequest) {
 
     // Create new answer
     const id = randomUUID();
-    const now = new Date();
+    const now = nowDate();
 
     await db.insert(learnedAnswers).values({
       id,
@@ -127,8 +128,8 @@ export async function POST(request: NextRequest) {
       answer,
       sourceUrl: sourceUrl || null,
       sourceCompany: sourceCompany || null,
-      createdAt: now.toISOString(),
-      updatedAt: now.toISOString(),
+      createdAt: toIso(now),
+      updatedAt: toIso(now),
     });
 
     return NextResponse.json({
@@ -139,7 +140,7 @@ export async function POST(request: NextRequest) {
       sourceUrl,
       sourceCompany,
       timesUsed: 1,
-      createdAt: now.toISOString(),
+      createdAt: toIso(now),
     });
   } catch (error) {
     console.error("Save answer error:", error);

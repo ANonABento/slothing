@@ -1,3 +1,4 @@
+import { formatDateOnly, nowIso } from "@/lib/format/time";
 /**
  * Google Contacts Operations
  *
@@ -30,7 +31,7 @@ export interface CreateContactInput {
  */
 export async function listContacts(
   pageSize = 100,
-  query?: string
+  query?: string,
 ): Promise<GoogleContact[]> {
   try {
     const people = await createPeopleClient();
@@ -77,7 +78,7 @@ export async function listContacts(
  * Get a single contact by resource name
  */
 export async function getContact(
-  resourceName: string
+  resourceName: string,
 ): Promise<GoogleContact | null> {
   try {
     const people = await createPeopleClient();
@@ -107,7 +108,7 @@ export async function getContact(
  * Create a new contact
  */
 export async function createContact(
-  contact: CreateContactInput
+  contact: CreateContactInput,
 ): Promise<string | null> {
   try {
     const people = await createPeopleClient();
@@ -115,7 +116,8 @@ export async function createContact(
     // Parse name into given/family if possible
     const nameParts = contact.name.split(" ");
     const givenName = nameParts[0];
-    const familyName = nameParts.length > 1 ? nameParts.slice(1).join(" ") : undefined;
+    const familyName =
+      nameParts.length > 1 ? nameParts.slice(1).join(" ") : undefined;
 
     const response = await people.people.createContact({
       requestBody: {
@@ -153,7 +155,7 @@ export async function createContact(
  */
 export async function updateContactNotes(
   resourceName: string,
-  notes: string
+  notes: string,
 ): Promise<boolean> {
   try {
     const people = await createPeopleClient();
@@ -202,11 +204,11 @@ export async function deleteContact(resourceName: string): Promise<boolean> {
  * Search contacts by company
  */
 export async function searchContactsByCompany(
-  company: string
+  company: string,
 ): Promise<GoogleContact[]> {
   const allContacts = await listContacts(500);
   return allContacts.filter((c) =>
-    c.company?.toLowerCase().includes(company.toLowerCase())
+    c.company?.toLowerCase().includes(company.toLowerCase()),
   );
 }
 
@@ -214,11 +216,11 @@ export async function searchContactsByCompany(
  * Search contacts by email domain
  */
 export async function searchContactsByEmailDomain(
-  domain: string
+  domain: string,
 ): Promise<GoogleContact[]> {
   const allContacts = await listContacts(500);
   return allContacts.filter((c) =>
-    c.email?.toLowerCase().includes(domain.toLowerCase())
+    c.email?.toLowerCase().includes(domain.toLowerCase()),
   );
 }
 
@@ -229,11 +231,11 @@ export async function createRecruiterContact(
   name: string,
   email: string,
   company: string,
-  jobTitle?: string
+  jobTitle?: string,
 ): Promise<string | null> {
   const notes = jobTitle
-    ? `Recruiting for: ${jobTitle}\n\nMet during job search - ${new Date().toLocaleDateString()}`
-    : `Met during job search - ${new Date().toLocaleDateString()}`;
+    ? `Recruiting for: ${jobTitle}\n\nMet during job search - ${formatDateOnly(nowIso())}`
+    : `Met during job search - ${formatDateOnly(nowIso())}`;
 
   return createContact({
     name,
@@ -251,11 +253,11 @@ export async function createHiringManagerContact(
   name: string,
   email: string,
   company: string,
-  department?: string
+  department?: string,
 ): Promise<string | null> {
   const notes = department
-    ? `Hiring Manager - ${department}\n\nMet during job search - ${new Date().toLocaleDateString()}`
-    : `Hiring Manager\n\nMet during job search - ${new Date().toLocaleDateString()}`;
+    ? `Hiring Manager - ${department}\n\nMet during job search - ${formatDateOnly(nowIso())}`
+    : `Hiring Manager\n\nMet during job search - ${formatDateOnly(nowIso())}`;
 
   return createContact({
     name,
