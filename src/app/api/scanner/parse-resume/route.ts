@@ -59,7 +59,11 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData();
     const file = formData.get("file");
 
-    if (!(file instanceof File)) {
+    if (
+      !file ||
+      typeof file !== "object" ||
+      typeof (file as File).arrayBuffer !== "function"
+    ) {
       return NextResponse.json(
         { error: "A PDF or text file is required.", code: "missing_file" },
         { status: 400 },

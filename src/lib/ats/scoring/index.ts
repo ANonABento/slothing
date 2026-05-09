@@ -312,7 +312,7 @@ function scoreDates(profile: Profile) {
   let score = 100;
   const missingStart = profile.experiences.filter((exp) => !exp.startDate).length;
   if (missingStart > 0) {
-    score -= Math.min(40, missingStart * 18);
+    score -= Math.min(50, missingStart * 22);
     notes.push("Some roles are missing start dates.");
     issues.push(issue("error", "structure", "Missing dates", "Some experience entries do not include start dates.", "Add month/year or year ranges to each role."));
   }
