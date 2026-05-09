@@ -1,5 +1,7 @@
 "use client";
 
+import { nowEpoch } from "@/lib/format/time";
+
 import {
   useEffect,
   useMemo,
@@ -73,7 +75,7 @@ export function StudioHeader({
 }: StudioHeaderProps) {
   const [templateOpen, setTemplateOpen] = useState(false);
   const [templateSearch, setTemplateSearch] = useState("");
-  const [now, setNow] = useState(() => Date.now());
+  const [now, setNow] = useState(() => nowEpoch());
   const [templatePickerPosition, setTemplatePickerPosition] =
     useState<TemplatePickerPosition | null>(null);
   const templateButtonRef = useRef<HTMLButtonElement>(null);
@@ -108,7 +110,7 @@ export function StudioHeader({
       : null;
 
   useEffect(() => {
-    const interval = window.setInterval(() => setNow(Date.now()), 5_000);
+    const interval = window.setInterval(() => setNow(nowEpoch()), 5_000);
     return () => window.clearInterval(interval);
   }, []);
 

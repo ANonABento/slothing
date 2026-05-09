@@ -1,6 +1,7 @@
 import db from "./legacy";
 import { generateId } from "@/lib/utils";
 
+import { nowIso } from "@/lib/format/time";
 export interface SalaryOffer {
   id: string;
   userId: string;
@@ -104,7 +105,10 @@ export function getSalaryOffers(userId: string = "default"): SalaryOffer[] {
 }
 
 // Get a single salary offer
-export function getSalaryOffer(id: string, userId: string = "default"): SalaryOffer | null {
+export function getSalaryOffer(
+  id: string,
+  userId: string = "default",
+): SalaryOffer | null {
   const stmt = db.prepare(`
     SELECT id, user_id, job_id, company, role, base_salary, signing_bonus,
            annual_bonus, equity_value, vesting_years, location, status, notes,
@@ -113,26 +117,28 @@ export function getSalaryOffer(id: string, userId: string = "default"): SalaryOf
     WHERE id = ? AND user_id = ?
   `);
 
-  const row = stmt.get(id, userId) as {
-    id: string;
-    user_id: string;
-    job_id: string | null;
-    company: string;
-    role: string;
-    base_salary: number;
-    signing_bonus: number | null;
-    annual_bonus: number | null;
-    equity_value: number | null;
-    vesting_years: number | null;
-    location: string | null;
-    status: string;
-    notes: string | null;
-    negotiation_outcome: string | null;
-    final_base_salary: number | null;
-    final_total_comp: number | null;
-    created_at: string;
-    updated_at: string;
-  } | undefined;
+  const row = stmt.get(id, userId) as
+    | {
+        id: string;
+        user_id: string;
+        job_id: string | null;
+        company: string;
+        role: string;
+        base_salary: number;
+        signing_bonus: number | null;
+        annual_bonus: number | null;
+        equity_value: number | null;
+        vesting_years: number | null;
+        location: string | null;
+        status: string;
+        notes: string | null;
+        negotiation_outcome: string | null;
+        final_base_salary: number | null;
+        final_total_comp: number | null;
+        created_at: string;
+        updated_at: string;
+      }
+    | undefined;
 
   if (!row) return null;
 
@@ -161,10 +167,10 @@ export function getSalaryOffer(id: string, userId: string = "default"): SalaryOf
 // Create a new salary offer
 export function createSalaryOffer(
   input: CreateSalaryOfferInput,
-  userId: string = "default"
+  userId: string = "default",
 ): SalaryOffer {
   const id = generateId();
-  const now = new Date().toISOString();
+  const now = nowIso();
 
   const stmt = db.prepare(`
     INSERT INTO salary_offers (
@@ -226,12 +232,12 @@ export function createSalaryOffer(
 export function updateSalaryOffer(
   id: string,
   input: UpdateSalaryOfferInput,
-  userId: string = "default"
+  userId: string = "default",
 ): SalaryOffer | null {
   const existing = getSalaryOffer(id, userId);
   if (!existing) return null;
 
-  const now = new Date().toISOString();
+  const now = nowIso();
   const updates: string[] = [];
   const params: (string | number | null)[] = [];
 
@@ -298,7 +304,10 @@ export function updateSalaryOffer(
 }
 
 // Delete a salary offer
-export function deleteSalaryOffer(id: string, userId: string = "default"): boolean {
+export function deleteSalaryOffer(
+  id: string,
+  userId: string = "default",
+): boolean {
   const stmt = db.prepare(`
     DELETE FROM salary_offers
     WHERE id = ? AND user_id = ?
@@ -325,18 +334,21 @@ export function getSalaryStats(userId: string = "default"): {
   const declinedOffers = offers.filter((o) => o.status === "declined").length;
 
   const baseSalaries = offers.map((o) => o.baseSalary);
-  const avgBaseSalary = baseSalaries.length > 0
-    ? baseSalaries.reduce((sum, s) => sum + s, 0) / baseSalaries.length
-    : 0;
+  const avgBaseSalary =
+    baseSalaries.length > 0
+      ? baseSalaries.reduce((sum, s) => sum + s, 0) / baseSalaries.length
+      : 0;
 
-  const totalComps = offers.map((o) =>
-    o.baseSalary +
-    (o.annualBonus || 0) +
-    ((o.equityValue || 0) / (o.vestingYears || 4))
+  const totalComps = offers.map(
+    (o) =>
+      o.baseSalary +
+      (o.annualBonus || 0) +
+      (o.equityValue || 0) / (o.vestingYears || 4),
   );
-  const avgTotalComp = totalComps.length > 0
-    ? totalComps.reduce((sum, c) => sum + c, 0) / totalComps.length
-    : 0;
+  const avgTotalComp =
+    totalComps.length > 0
+      ? totalComps.reduce((sum, c) => sum + c, 0) / totalComps.length
+      : 0;
 
   const highestOffer = totalComps.length > 0 ? Math.max(...totalComps) : 0;
 

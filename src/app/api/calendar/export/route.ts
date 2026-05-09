@@ -1,3 +1,4 @@
+import { parseToDate } from "@/lib/format/time";
 /**
  * @route GET /api/calendar/export
  * @description Export calendar events as an ICS file download
@@ -39,7 +40,7 @@ export async function GET(request: NextRequest) {
             id: `interview-${job.id}`,
             title: `Interview: ${job.title} at ${job.company}`,
             description: `Job interview for ${job.title} position at ${job.company}.\n\n${job.description?.slice(0, 200)}...`,
-            startDate: new Date(job.appliedAt),
+            startDate: parseToDate(job.appliedAt)!,
             type: "interview",
             location: job.location,
             url: job.url,
@@ -56,7 +57,7 @@ export async function GET(request: NextRequest) {
           id: `deadline-${job.id}`,
           title: `Application Deadline: ${job.title} at ${job.company}`,
           description: `Deadline to apply for ${job.title} position at ${job.company}.`,
-          startDate: new Date(job.deadline!),
+          startDate: parseToDate(job.deadline!)!,
           type: "deadline",
           url: job.url,
         });
@@ -74,7 +75,7 @@ export async function GET(request: NextRequest) {
             description:
               reminder.description ||
               (job ? `For: ${job.title} at ${job.company}` : ""),
-            startDate: new Date(reminder.dueDate),
+            startDate: parseToDate(reminder.dueDate)!,
             type: reminder.type === "follow_up" ? "follow_up" : "reminder",
           });
         }

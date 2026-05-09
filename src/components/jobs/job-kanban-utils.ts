@@ -6,14 +6,19 @@ import {
   type TrackedJobStatus,
 } from "@/lib/constants/jobs";
 
+import { parseToDate } from "@/lib/format/time";
 export type JobsViewMode = "list" | "kanban";
 export type JobKanbanStatus = TrackedJobStatus;
 
 export const JOBS_VIEW_STORAGE_KEY = "get_me_job_jobs_view";
 
-export const JOB_KANBAN_COLUMNS: readonly { value: JobKanbanStatus; label: string }[] = TRACKED_JOB_STATUSES.map(
-  (status) => ({ value: status, label: TRACKED_JOB_STATUS_LABELS[status] })
-);
+export const JOB_KANBAN_COLUMNS: readonly {
+  value: JobKanbanStatus;
+  label: string;
+}[] = TRACKED_JOB_STATUSES.map((status) => ({
+  value: status,
+  label: TRACKED_JOB_STATUS_LABELS[status],
+}));
 
 type WritableStorageLike = Pick<Storage, "setItem">;
 
@@ -27,11 +32,15 @@ export function getJobsViewStorage(): Storage | null {
   }
 }
 
-export function parseJobsViewMode(value: string | null | undefined): JobsViewMode {
+export function parseJobsViewMode(
+  value: string | null | undefined,
+): JobsViewMode {
   return value === "kanban" ? "kanban" : "list";
 }
 
-export function readJobsViewMode(storage: Pick<Storage, "getItem"> | null | undefined): JobsViewMode {
+export function readJobsViewMode(
+  storage: Pick<Storage, "getItem"> | null | undefined,
+): JobsViewMode {
   if (!storage) return "list";
 
   try {
@@ -41,7 +50,10 @@ export function readJobsViewMode(storage: Pick<Storage, "getItem"> | null | unde
   }
 }
 
-export function writeJobsViewMode(storage: WritableStorageLike | null | undefined, mode: JobsViewMode): void {
+export function writeJobsViewMode(
+  storage: WritableStorageLike | null | undefined,
+  mode: JobsViewMode,
+): void {
   if (!storage) return;
 
   try {
@@ -51,17 +63,21 @@ export function writeJobsViewMode(storage: WritableStorageLike | null | undefine
   }
 }
 
-export function getKanbanStatusValue(job: Pick<JobDescription, "status">): JobKanbanStatus {
+export function getKanbanStatusValue(
+  job: Pick<JobDescription, "status">,
+): JobKanbanStatus {
   return getTrackedJobStatus(job.status);
 }
 
-export function groupJobsByKanbanStatus(jobs: JobDescription[]): Record<JobKanbanStatus, JobDescription[]> {
+export function groupJobsByKanbanStatus(
+  jobs: JobDescription[],
+): Record<JobKanbanStatus, JobDescription[]> {
   const grouped = JOB_KANBAN_COLUMNS.reduce(
     (acc, column) => {
       acc[column.value] = [];
       return acc;
     },
-    {} as Record<JobKanbanStatus, JobDescription[]>
+    {} as Record<JobKanbanStatus, JobDescription[]>,
   );
 
   for (const job of jobs) {
@@ -91,6 +107,5 @@ function parseDeadlineDate(deadline: string): Date | null {
     return new Date(Date.UTC(Number(year), Number(month) - 1, Number(day)));
   }
 
-  const date = new Date(deadline);
-  return Number.isNaN(date.getTime()) ? null : date;
+  return parseToDate(deadline);
 }

@@ -1,4 +1,5 @@
 import { BANK_CATEGORIES, type BankCategory } from "@/types";
+import { nowIso } from "@/lib/format/time";
 import {
   DEFAULT_SECTION_ORDER,
   type SectionState,
@@ -220,7 +221,7 @@ export function createBuilderVersion(
     id?: string;
   },
 ): BuilderVersion {
-  const savedAt = options.savedAt ?? new Date().toISOString();
+  const savedAt = options.savedAt ?? nowIso();
 
   return {
     id:

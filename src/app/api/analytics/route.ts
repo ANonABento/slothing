@@ -1,3 +1,4 @@
+import { formatIsoDateOnly } from "@/lib/format/time";
 /**
  * @route GET /api/analytics
  * @description Fetch overview analytics
@@ -124,7 +125,7 @@ export async function GET() {
 
     // Save today's snapshot for historical tracking
     try {
-      const today = new Date().toISOString().split("T")[0];
+      const today = formatIsoDateOnly();
       saveAnalyticsSnapshot(
         {
           userId: authResult.userId,

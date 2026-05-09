@@ -1,3 +1,4 @@
+import { nowDate, parseToDate } from "@/lib/format/time";
 /**
  * @route POST /api/google/calendar/sync
  * @description Sync jobs and reminders to Google Calendar
@@ -59,8 +60,8 @@ export async function POST(request: NextRequest) {
       for (const job of interviewingJobs) {
         // Use appliedAt as a proxy for interview date, or current date
         const interviewDate = job.appliedAt
-          ? new Date(job.appliedAt)
-          : new Date();
+          ? parseToDate(job.appliedAt)!
+          : nowDate();
 
         const eventInput = createInterviewEventInput(job, interviewDate);
         const result = await createCalendarEvent(eventInput);

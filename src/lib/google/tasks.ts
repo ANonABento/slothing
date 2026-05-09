@@ -1,3 +1,10 @@
+import {
+  addDays,
+  formatDateOnly,
+  nowDate,
+  parseToDate,
+  toNullableIso,
+} from "@/lib/format/time";
 /**
  * Google Tasks Operations
  *
@@ -34,7 +41,7 @@ export async function getOrCreateJobSearchTaskList(): Promise<string | null> {
     // Check for existing list
     const lists = await tasks.tasklists.list();
     const existing = lists.data.items?.find(
-      (l) => l.title === JOB_SEARCH_TASK_LIST
+      (l) => l.title === JOB_SEARCH_TASK_LIST,
     );
     if (existing?.id) return existing.id;
 
@@ -75,7 +82,7 @@ export async function listTaskLists(): Promise<
  * List tasks from Job Search list
  */
 export async function listJobSearchTasks(
-  showCompleted = true
+  showCompleted = true,
 ): Promise<GoogleTask[]> {
   try {
     const tasks = await createTasksClient();
@@ -133,7 +140,9 @@ export async function getTask(taskId: string): Promise<GoogleTask | null> {
 /**
  * Create a task
  */
-export async function createTask(task: CreateTaskInput): Promise<string | null> {
+export async function createTask(
+  task: CreateTaskInput,
+): Promise<string | null> {
   try {
     const tasks = await createTasksClient();
     const listId = await getOrCreateJobSearchTaskList();
@@ -144,7 +153,7 @@ export async function createTask(task: CreateTaskInput): Promise<string | null> 
       requestBody: {
         title: task.title,
         notes: task.notes,
-        due: task.due?.toISOString(),
+        due: toNullableIso(task.due),
       },
     });
 
@@ -160,7 +169,7 @@ export async function createTask(task: CreateTaskInput): Promise<string | null> 
  */
 export async function updateTask(
   taskId: string,
-  updates: Partial<CreateTaskInput>
+  updates: Partial<CreateTaskInput>,
 ): Promise<boolean> {
   try {
     const tasks = await createTasksClient();
@@ -173,7 +182,7 @@ export async function updateTask(
       requestBody: {
         title: updates.title,
         notes: updates.notes,
-        due: updates.due?.toISOString(),
+        due: toNullableIso(updates.due),
       },
     });
 
@@ -254,7 +263,7 @@ export async function deleteTask(taskId: string): Promise<boolean> {
  */
 export async function syncReminderToTasks(
   reminder: Reminder,
-  jobInfo?: { title?: string; company?: string }
+  jobInfo?: { title?: string; company?: string },
 ): Promise<string | null> {
   let notes = reminder.description || "";
 
@@ -263,13 +272,15 @@ export async function syncReminderToTasks(
       jobInfo.title && jobInfo.company
         ? `${jobInfo.title} at ${jobInfo.company}`
         : jobInfo.title || jobInfo.company;
-    notes = notes ? `${notes}\n\nRelated to: ${jobLabel}` : `Related to: ${jobLabel}`;
+    notes = notes
+      ? `${notes}\n\nRelated to: ${jobLabel}`
+      : `Related to: ${jobLabel}`;
   }
 
   return createTask({
     title: reminder.title,
     notes: notes || undefined,
-    due: new Date(reminder.dueDate),
+    due: parseToDate(reminder.dueDate) ?? undefined,
   });
 }
 
@@ -279,15 +290,14 @@ export async function syncReminderToTasks(
 export async function createFollowUpTask(
   company: string,
   role: string,
-  interviewDate: Date
+  interviewDate: Date,
 ): Promise<string | null> {
   // Task due 24 hours after interview
-  const dueDate = new Date(interviewDate);
-  dueDate.setDate(dueDate.getDate() + 1);
+  const dueDate = addDays(interviewDate, 1);
 
   return createTask({
     title: `Send thank you email to ${company}`,
-    notes: `Follow up after your ${role} interview at ${company}.\n\nInterview date: ${interviewDate.toLocaleDateString()}`,
+    notes: `Follow up after your ${role} interview at ${company}.\n\nInterview date: ${formatDateOnly(interviewDate)}`,
     due: dueDate,
   });
 }
@@ -298,15 +308,14 @@ export async function createFollowUpTask(
 export async function createDeadlineTask(
   company: string,
   role: string,
-  deadline: Date
+  deadline: Date,
 ): Promise<string | null> {
   // Reminder 2 days before deadline
-  const reminderDate = new Date(deadline);
-  reminderDate.setDate(reminderDate.getDate() - 2);
+  const reminderDate = addDays(deadline, -2);
 
   return createTask({
     title: `Apply to ${role} at ${company}`,
-    notes: `Application deadline: ${deadline.toLocaleDateString()}\n\nDon't forget to submit your application!`,
+    notes: `Application deadline: ${formatDateOnly(deadline)}\n\nDon't forget to submit your application!`,
     due: reminderDate,
   });
 }
@@ -317,10 +326,10 @@ export async function createDeadlineTask(
 export async function createNetworkingFollowUpTask(
   contactName: string,
   company: string,
-  context?: string
+  context?: string,
 ): Promise<string | null> {
   // Follow up in 1 week
-  const dueDate = new Date();
+  const dueDate = nowDate();
   dueDate.setDate(dueDate.getDate() + 7);
 
   return createTask({

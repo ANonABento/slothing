@@ -1,3 +1,4 @@
+import { formatIsoDateOnly, nowDate, parseToDate } from "@/lib/format/time";
 /**
  * @route GET /api/analytics/trends
  * @description Time-series trends data
@@ -36,7 +37,7 @@ export async function GET(request: NextRequest) {
     const timeline = generateActivityTimeline(jobs, 20);
 
     // Get historical snapshots
-    const today = new Date();
+    const today = nowDate();
     const rangeMap: Record<string, number> = {
       "7d": 7,
       "14d": 14,
@@ -44,12 +45,12 @@ export async function GET(request: NextRequest) {
       "90d": 90,
     };
     const daysBack = rangeMap[range] || 30;
-    const startDate = new Date(today);
+    const startDate = parseToDate(today)!;
     startDate.setDate(startDate.getDate() - daysBack);
 
     const snapshots = getAnalyticsSnapshots(
-      startDate.toISOString().split("T")[0],
-      today.toISOString().split("T")[0],
+      formatIsoDateOnly(startDate),
+      formatIsoDateOnly(today),
       authResult.userId,
     );
 

@@ -8,6 +8,8 @@ import {
   formatDateRelative,
   getBrowserDefaultLocale,
   normalizeLocale,
+  parseToDate,
+  toIso,
 } from "@/lib/format/time";
 
 function readLocaleCookie(): string | null {
@@ -77,15 +79,13 @@ export function TimeAgo({ date, className, locale }: TimeAgoProps) {
 
   const absolute = formatDateAbsolute(date, preferredLocale);
   const relative = formatDateRelative(date);
-  const parsedDate = new Date(date);
+  const parsedDate = parseToDate(date)!;
 
   return (
     <time
       className={className}
       dateTime={
-        Number.isNaN(parsedDate.getTime())
-          ? undefined
-          : parsedDate.toISOString()
+        Number.isNaN(parsedDate.getTime()) ? undefined : toIso(parsedDate)
       }
       title={absolute}
       aria-label={absolute}

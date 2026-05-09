@@ -1,8 +1,17 @@
 import type { JobDescription } from "@/types";
-import { getTrackedJobStatus, type TrackedJobStatus } from "@/lib/constants/jobs";
+import {
+  getTrackedJobStatus,
+  type TrackedJobStatus,
+} from "@/lib/constants/jobs";
 
+import { toEpoch } from "@/lib/format/time";
 export type JobStatusFilter = "all" | TrackedJobStatus;
-export type JobTypeFilter = "all" | "full-time" | "part-time" | "contract" | "internship";
+export type JobTypeFilter =
+  | "all"
+  | "full-time"
+  | "part-time"
+  | "contract"
+  | "internship";
 export type JobRemoteFilter = "all" | "remote" | "onsite";
 export type JobSortOption = "newest" | "oldest" | "company" | "title";
 
@@ -22,24 +31,32 @@ export const DEFAULT_JOB_FILTERS: JobFilters = {
   sortBy: "newest",
 };
 
-export function getJobStatusValue(job: Pick<JobDescription, "status">): TrackedJobStatus {
+export function getJobStatusValue(
+  job: Pick<JobDescription, "status">,
+): TrackedJobStatus {
   return getTrackedJobStatus(job.status);
 }
 
-export function filterJobs(jobs: JobDescription[], filters: JobFilters): JobDescription[] {
+export function filterJobs(
+  jobs: JobDescription[],
+  filters: JobFilters,
+): JobDescription[] {
   return [...jobs]
     .filter((job) => matchesFilters(job, filters))
     .sort((a, b) => sortJobs(a, b, filters.sortBy));
 }
 
 export function hasActiveJobFilters(
-  filters: Pick<JobFilters, "searchQuery" | "statusFilter" | "typeFilter" | "remoteFilter">
+  filters: Pick<
+    JobFilters,
+    "searchQuery" | "statusFilter" | "typeFilter" | "remoteFilter"
+  >,
 ): boolean {
   return Boolean(
     filters.searchQuery ||
-      filters.statusFilter !== DEFAULT_JOB_FILTERS.statusFilter ||
-      filters.typeFilter !== DEFAULT_JOB_FILTERS.typeFilter ||
-      filters.remoteFilter !== DEFAULT_JOB_FILTERS.remoteFilter
+    filters.statusFilter !== DEFAULT_JOB_FILTERS.statusFilter ||
+    filters.typeFilter !== DEFAULT_JOB_FILTERS.typeFilter ||
+    filters.remoteFilter !== DEFAULT_JOB_FILTERS.remoteFilter,
   );
 }
 
@@ -48,14 +65,19 @@ function matchesFilters(job: JobDescription, filters: JobFilters): boolean {
     const query = filters.searchQuery.toLowerCase();
     const matchesTitle = job.title.toLowerCase().includes(query);
     const matchesCompany = job.company.toLowerCase().includes(query);
-    const matchesKeywords = job.keywords?.some((keyword) => keyword.toLowerCase().includes(query));
+    const matchesKeywords = job.keywords?.some((keyword) =>
+      keyword.toLowerCase().includes(query),
+    );
 
     if (!matchesTitle && !matchesCompany && !matchesKeywords) {
       return false;
     }
   }
 
-  if (filters.statusFilter !== "all" && getJobStatusValue(job) !== filters.statusFilter) {
+  if (
+    filters.statusFilter !== "all" &&
+    getJobStatusValue(job) !== filters.statusFilter
+  ) {
     return false;
   }
 
@@ -74,12 +96,16 @@ function matchesFilters(job: JobDescription, filters: JobFilters): boolean {
   return true;
 }
 
-function sortJobs(a: JobDescription, b: JobDescription, sortBy: JobSortOption): number {
+function sortJobs(
+  a: JobDescription,
+  b: JobDescription,
+  sortBy: JobSortOption,
+): number {
   switch (sortBy) {
     case "newest":
-      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      return toEpoch(b.createdAt) - toEpoch(a.createdAt);
     case "oldest":
-      return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+      return toEpoch(a.createdAt) - toEpoch(b.createdAt);
     case "company":
       return a.company.localeCompare(b.company);
     case "title":

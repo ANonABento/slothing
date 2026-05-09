@@ -1,3 +1,4 @@
+import { nowDate, parseToDate } from "@/lib/format/time";
 /**
  * @route GET /api/google/calendar/events
  * @route POST /api/google/calendar/events
@@ -44,7 +45,7 @@ export async function GET(request: NextRequest) {
       const company = searchParams.get("company") || undefined;
       events = await findInterviewEvents({ company, daysAhead });
     } else {
-      const timeMax = new Date();
+      const timeMax = nowDate();
       timeMax.setDate(timeMax.getDate() + daysAhead);
 
       events = await listUpcomingEvents({
@@ -102,8 +103,8 @@ export async function POST(request: NextRequest) {
     const eventInput: CalendarEventInput = {
       title,
       description,
-      startDate: new Date(startDate),
-      endDate: endDate ? new Date(endDate) : undefined,
+      startDate: parseToDate(startDate)!,
+      endDate: endDate ? parseToDate(endDate)! : undefined,
       location,
       reminders,
     };

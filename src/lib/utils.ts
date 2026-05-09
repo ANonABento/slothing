@@ -1,7 +1,12 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { randomBytes } from "crypto";
-import { formatDateRelative } from "@/lib/format/time";
+import {
+  formatDateRelative,
+  formatMonthYear,
+  nowIso,
+  toIso,
+} from "@/lib/format/time";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -18,37 +23,36 @@ export function generateId(): string {
 
 export function toIsoDateString(
   value: Date | string | null | undefined,
-  fallback = new Date()
+  fallback: Date | string = nowIso(),
 ): string {
-  if (!value) return fallback.toISOString();
-  return value instanceof Date ? value.toISOString() : value;
+  if (!value) return toIso(fallback);
+  return value instanceof Date ? toIso(value) : value;
 }
 
 export function toNullableIsoDateString(
-  value: Date | string | null | undefined
+  value: Date | string | null | undefined,
 ): string | null {
   return value ? toIsoDateString(value) : null;
 }
 
 export function formatDate(date: string | Date): string {
-  const d = new Date(date);
-  return d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+  return formatMonthYear(date, { locale: "en-US" });
 }
 
 export function formatFileSize(bytes: number): string {
-  if (bytes === 0) return '0 Bytes';
+  if (bytes === 0) return "0 Bytes";
   const k = 1024;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const sizes = ["Bytes", "KB", "MB", "GB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
 }
 
 export function slugify(text: string): string {
   return text
     .toLowerCase()
-    .replace(/[^\w\s-]/g, '')
-    .replace(/[\s_-]+/g, '-')
-    .replace(/^-+|-+$/g, '');
+    .replace(/[^\w\s-]/g, "")
+    .replace(/[\s_-]+/g, "-")
+    .replace(/^-+|-+$/g, "");
 }
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
@@ -125,10 +129,12 @@ export function extractJSON(text: string): Record<string, unknown> {
     }
   }
 
-  console.log(`[parser] extractJSON strategies tried: ${strategies.join(", ")}`);
+  console.log(
+    `[parser] extractJSON strategies tried: ${strategies.join(", ")}`,
+  );
   if (found) return found;
   throw new Error(
-    `Failed to extract JSON from LLM response. Input starts with: "${trimmed.slice(0, 100)}"`
+    `Failed to extract JSON from LLM response. Input starts with: "${trimmed.slice(0, 100)}"`,
   );
 }
 

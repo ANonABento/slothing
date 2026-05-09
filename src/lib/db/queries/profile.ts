@@ -1,43 +1,79 @@
-import { db, profile, experiences, education, skills, projects, certifications, eq, and } from '../index';
-import { generateId } from '@/lib/utils';
-import type { Profile, Skill } from '@/types';
+import {
+  db,
+  profile,
+  experiences,
+  education,
+  skills,
+  projects,
+  certifications,
+  eq,
+  and,
+} from "../index";
+import { generateId } from "@/lib/utils";
+import type { Profile, Skill } from "@/types";
 
+import { nowIso } from "@/lib/format/time";
 // Valid skill categories
-const validSkillCategories = ['technical', 'soft', 'language', 'tool', 'other'] as const;
-type ValidSkillCategory = typeof validSkillCategories[number];
+const validSkillCategories = [
+  "technical",
+  "soft",
+  "language",
+  "tool",
+  "other",
+] as const;
+type ValidSkillCategory = (typeof validSkillCategories)[number];
 
 // Valid skill proficiencies
-const validProficiencies = ['beginner', 'intermediate', 'advanced', 'expert'] as const;
-type ValidProficiency = typeof validProficiencies[number];
+const validProficiencies = [
+  "beginner",
+  "intermediate",
+  "advanced",
+  "expert",
+] as const;
+type ValidProficiency = (typeof validProficiencies)[number];
 
 // Get profile for a user
 export async function getProfile(userId: string): Promise<Profile | null> {
-  const profileRows = await db.select().from(profile)
+  const profileRows = await db
+    .select()
+    .from(profile)
     .where(eq(profile.userId, userId));
 
   if (profileRows.length === 0) return null;
   const profileRow = profileRows[0];
 
-  const experienceRows = await db.select().from(experiences)
+  const experienceRows = await db
+    .select()
+    .from(experiences)
     .where(eq(experiences.userId, userId));
 
-  const educationRows = await db.select().from(education)
+  const educationRows = await db
+    .select()
+    .from(education)
     .where(eq(education.userId, userId));
 
-  const skillRows = await db.select().from(skills)
+  const skillRows = await db
+    .select()
+    .from(skills)
     .where(eq(skills.userId, userId));
 
-  const projectRows = await db.select().from(projects)
+  const projectRows = await db
+    .select()
+    .from(projects)
     .where(eq(projects.userId, userId));
 
-  const certificationRows = await db.select().from(certifications)
+  const certificationRows = await db
+    .select()
+    .from(certifications)
     .where(eq(certifications.userId, userId));
 
-  const now = new Date().toISOString();
+  const now = nowIso();
 
   return {
     id: profileRow.id,
-    contact: profileRow.contactJson ? JSON.parse(profileRow.contactJson) : { name: '' },
+    contact: profileRow.contactJson
+      ? JSON.parse(profileRow.contactJson)
+      : { name: "" },
     summary: profileRow.summary ?? undefined,
     rawText: profileRow.rawText ?? undefined,
     experiences: experienceRows.map((e) => ({
@@ -45,10 +81,10 @@ export async function getProfile(userId: string): Promise<Profile | null> {
       company: e.company,
       title: e.title,
       location: e.location ?? undefined,
-      startDate: e.startDate ?? '',
+      startDate: e.startDate ?? "",
       endDate: e.endDate ?? undefined,
       current: e.current ?? false,
-      description: e.description ?? '',
+      description: e.description ?? "",
       highlights: e.highlightsJson ? JSON.parse(e.highlightsJson) : [],
       skills: e.skillsJson ? JSON.parse(e.skillsJson) : [],
     })),
@@ -56,7 +92,7 @@ export async function getProfile(userId: string): Promise<Profile | null> {
       id: e.id,
       institution: e.institution,
       degree: e.degree,
-      field: e.field ?? '',
+      field: e.field ?? "",
       startDate: e.startDate ?? undefined,
       endDate: e.endDate ?? undefined,
       gpa: e.gpa ?? undefined,
@@ -68,14 +104,17 @@ export async function getProfile(userId: string): Promise<Profile | null> {
       return {
         id: s.id,
         name: s.name,
-        category: validSkillCategories.includes(category) ? category : 'other',
-        proficiency: proficiency && validProficiencies.includes(proficiency) ? proficiency : undefined,
+        category: validSkillCategories.includes(category) ? category : "other",
+        proficiency:
+          proficiency && validProficiencies.includes(proficiency)
+            ? proficiency
+            : undefined,
       };
     }),
     projects: projectRows.map((p) => ({
       id: p.id,
       name: p.name,
-      description: p.description ?? '',
+      description: p.description ?? "",
       url: p.url ?? undefined,
       technologies: p.technologiesJson ? JSON.parse(p.technologiesJson) : [],
       highlights: p.highlightsJson ? JSON.parse(p.highlightsJson) : [],
@@ -109,23 +148,31 @@ export async function getOrCreateProfile(userId: string): Promise<Profile> {
 }
 
 // Update profile for a user
-export async function updateProfile(userId: string, profileData: Partial<Profile>): Promise<void> {
+export async function updateProfile(
+  userId: string,
+  profileData: Partial<Profile>,
+): Promise<void> {
   // Ensure profile exists
   await getOrCreateProfile(userId);
 
   // Get profile ID
-  const profileRows = await db.select().from(profile)
+  const profileRows = await db
+    .select()
+    .from(profile)
     .where(eq(profile.userId, userId));
   const profileId = profileRows[0].id;
 
   // Update main profile
   if (profileData.contact || profileData.summary || profileData.rawText) {
-    await db.update(profile)
+    await db
+      .update(profile)
       .set({
-        contactJson: profileData.contact ? JSON.stringify(profileData.contact) : undefined,
+        contactJson: profileData.contact
+          ? JSON.stringify(profileData.contact)
+          : undefined,
         summary: profileData.summary,
         rawText: profileData.rawText,
-        updatedAt: new Date().toISOString(),
+        updatedAt: nowIso(),
       })
       .where(eq(profile.userId, userId));
   }
@@ -182,7 +229,7 @@ export async function updateProfile(userId: string, profileData: Partial<Profile
         userId,
         profileId,
         name: skill.name,
-        category: skill.category ?? 'other',
+        category: skill.category ?? "other",
         proficiency: skill.proficiency ?? null,
       });
     }
@@ -232,12 +279,13 @@ export async function clearProfile(userId: string): Promise<void> {
   await db.delete(projects).where(eq(projects.userId, userId));
   await db.delete(certifications).where(eq(certifications.userId, userId));
 
-  await db.update(profile)
+  await db
+    .update(profile)
     .set({
       contactJson: null,
       summary: null,
       rawText: null,
-      updatedAt: new Date().toISOString(),
+      updatedAt: nowIso(),
     })
     .where(eq(profile.userId, userId));
 }

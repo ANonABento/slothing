@@ -1,6 +1,7 @@
 import db from "./legacy";
 import { generateId } from "@/lib/utils";
 
+import { nowDate, nowIso, toIso } from "@/lib/format/time";
 export type ReminderType = "follow_up" | "deadline" | "interview" | "custom";
 
 export interface Reminder {
@@ -23,11 +24,14 @@ export interface ReminderWithJob extends Reminder {
 
 // Create a new reminder
 export function createReminder(
-  reminder: Omit<Reminder, "id" | "completed" | "dismissed" | "createdAt" | "completedAt">,
-  userId: string = "default"
+  reminder: Omit<
+    Reminder,
+    "id" | "completed" | "dismissed" | "createdAt" | "completedAt"
+  >,
+  userId: string = "default",
 ): Reminder {
   const id = generateId();
-  const now = new Date().toISOString();
+  const now = nowIso();
   const job = db
     .prepare("SELECT id FROM jobs WHERE id = ? AND user_id = ?")
     .get(reminder.jobId, userId) as { id: string } | undefined;
@@ -49,7 +53,7 @@ export function createReminder(
     reminder.title,
     reminder.description || null,
     reminder.dueDate,
-    now
+    now,
   );
 
   return {
@@ -138,9 +142,9 @@ export function getReminders(options?: {
 // Get upcoming reminders (due within specified days)
 export function getUpcomingReminders(
   days: number = 7,
-  userId: string = "default"
+  userId: string = "default",
 ): ReminderWithJob[] {
-  const futureDate = new Date();
+  const futureDate = nowDate();
   futureDate.setDate(futureDate.getDate() + days);
 
   const stmt = db.prepare(`
@@ -155,7 +159,7 @@ export function getUpcomingReminders(
     ORDER BY r.due_date ASC
   `);
 
-  const rows = stmt.all(userId, futureDate.toISOString()) as Array<{
+  const rows = stmt.all(userId, toIso(futureDate)) as Array<{
     id: string;
     job_id: string;
     type: string;
@@ -187,8 +191,10 @@ export function getUpcomingReminders(
 }
 
 // Get overdue reminders
-export function getOverdueReminders(userId: string = "default"): ReminderWithJob[] {
-  const now = new Date().toISOString();
+export function getOverdueReminders(
+  userId: string = "default",
+): ReminderWithJob[] {
+  const now = nowIso();
 
   const stmt = db.prepare(`
     SELECT r.*, j.title as job_title, j.company as job_company
@@ -235,7 +241,7 @@ export function getOverdueReminders(userId: string = "default"): ReminderWithJob
 
 // Complete a reminder
 export function completeReminder(id: string, userId: string = "default"): void {
-  const now = new Date().toISOString();
+  const now = nowIso();
 
   const stmt = db.prepare(`
     UPDATE reminders
@@ -272,8 +278,10 @@ export function deleteReminder(id: string, userId: string = "default"): void {
 // Update a reminder
 export function updateReminder(
   id: string,
-  updates: Partial<Pick<Reminder, "title" | "description" | "dueDate" | "type">>,
-  userId: string = "default"
+  updates: Partial<
+    Pick<Reminder, "title" | "description" | "dueDate" | "type">
+  >,
+  userId: string = "default",
 ): void {
   const fields: string[] = [];
   const values: (string | null)[] = [];
@@ -313,18 +321,21 @@ export function updateReminder(
 export function createFollowUpReminder(
   jobId: string,
   daysFromNow: number = 7,
-  userId: string = "default"
+  userId: string = "default",
 ): Reminder {
-  const dueDate = new Date();
+  const dueDate = nowDate();
   dueDate.setDate(dueDate.getDate() + daysFromNow);
 
-  return createReminder({
-    jobId,
-    type: "follow_up",
-    title: "Follow up on application",
-    description: "Send a follow-up email to check on your application status",
-    dueDate: dueDate.toISOString(),
-  }, userId);
+  return createReminder(
+    {
+      jobId,
+      type: "follow_up",
+      title: "Follow up on application",
+      description: "Send a follow-up email to check on your application status",
+      dueDate: toIso(dueDate),
+    },
+    userId,
+  );
 }
 
 // Get reminder counts for dashboard
@@ -334,8 +345,8 @@ export function getReminderCounts(userId: string = "default"): {
   upcoming: number;
   completed: number;
 } {
-  const now = new Date().toISOString();
-  const weekFromNow = new Date();
+  const now = nowIso();
+  const weekFromNow = nowDate();
   weekFromNow.setDate(weekFromNow.getDate() + 7);
 
   const totalStmt = db.prepare(
@@ -344,7 +355,7 @@ export function getReminderCounts(userId: string = "default"): {
       FROM reminders r
       JOIN jobs j ON r.job_id = j.id
       WHERE r.user_id = ? AND j.user_id = r.user_id AND r.completed = 0 AND r.dismissed = 0
-    `
+    `,
   );
   const overdueStmt = db.prepare(
     `
@@ -352,7 +363,7 @@ export function getReminderCounts(userId: string = "default"): {
       FROM reminders r
       JOIN jobs j ON r.job_id = j.id
       WHERE r.user_id = ? AND j.user_id = r.user_id AND r.completed = 0 AND r.dismissed = 0 AND r.due_date < ?
-    `
+    `,
   );
   const upcomingStmt = db.prepare(
     `
@@ -360,7 +371,7 @@ export function getReminderCounts(userId: string = "default"): {
       FROM reminders r
       JOIN jobs j ON r.job_id = j.id
       WHERE r.user_id = ? AND j.user_id = r.user_id AND r.completed = 0 AND r.dismissed = 0 AND r.due_date >= ? AND r.due_date <= ?
-    `
+    `,
   );
   const completedStmt = db.prepare(
     `
@@ -368,13 +379,13 @@ export function getReminderCounts(userId: string = "default"): {
       FROM reminders r
       JOIN jobs j ON r.job_id = j.id
       WHERE r.user_id = ? AND j.user_id = r.user_id AND r.completed = 1
-    `
+    `,
   );
 
   const total = (totalStmt.get(userId) as { count: number }).count;
   const overdue = (overdueStmt.get(userId, now) as { count: number }).count;
   const upcoming = (
-    upcomingStmt.get(userId, now, weekFromNow.toISOString()) as { count: number }
+    upcomingStmt.get(userId, now, toIso(weekFromNow)) as { count: number }
   ).count;
   const completed = (completedStmt.get(userId) as { count: number }).count;
 

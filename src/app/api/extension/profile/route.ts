@@ -1,3 +1,4 @@
+import { nowDate, parseToDate, toEpoch } from "@/lib/format/time";
 /**
  * @route GET /api/extension/profile
  * @description Fetch user profile with computed auto-fill values for the browser extension
@@ -62,14 +63,14 @@ function computeAutoFillValues(profile: {
   const sortedExperiences = [...(profile.experiences || [])].sort((a, b) => {
     if (a.current && !b.current) return -1;
     if (b.current && !a.current) return 1;
-    return new Date(b.startDate).getTime() - new Date(a.startDate).getTime();
+    return toEpoch(b.startDate) - toEpoch(a.startDate);
   });
   const currentExp = sortedExperiences[0];
 
   // Get most recent education
   const sortedEducation = [...(profile.education || [])].sort((a, b) => {
-    const dateA = a.endDate ? new Date(a.endDate) : new Date();
-    const dateB = b.endDate ? new Date(b.endDate) : new Date();
+    const dateA = parseToDate(a.endDate) ?? nowDate();
+    const dateB = parseToDate(b.endDate) ?? nowDate();
     return dateB.getTime() - dateA.getTime();
   });
   const latestEdu = sortedEducation[0];
@@ -77,11 +78,13 @@ function computeAutoFillValues(profile: {
   // Calculate total years of experience
   let totalMonths = 0;
   for (const exp of profile.experiences || []) {
-    const start = new Date(exp.startDate);
-    if (Number.isNaN(start.getTime())) continue;
+    const start = parseToDate(exp.startDate);
+    if (!start) continue;
 
-    const end = exp.current ? new Date() : new Date(exp.endDate || new Date());
-    if (Number.isNaN(end.getTime()) || end < start) continue;
+    const end = exp.current
+      ? nowDate()
+      : (parseToDate(exp.endDate) ?? nowDate());
+    if (end < start) continue;
 
     totalMonths +=
       (end.getFullYear() - start.getFullYear()) * 12 +

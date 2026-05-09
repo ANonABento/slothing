@@ -1,3 +1,4 @@
+import { nowDate, toIso } from "@/lib/format/time";
 /**
  * @route PATCH /api/extension/learned-answers/[id]
  * @route DELETE /api/extension/learned-answers/[id]
@@ -50,10 +51,10 @@ export async function PATCH(
     }
 
     // Update
-    const now = new Date();
+    const now = nowDate();
     await db
       .update(learnedAnswers)
-      .set({ answer, updatedAt: now.toISOString() })
+      .set({ answer, updatedAt: toIso(now) })
       .where(
         and(
           eq(learnedAnswers.id, id),
@@ -66,7 +67,7 @@ export async function PATCH(
       question: existing.question,
       answer,
       timesUsed: existing.timesUsed ?? 1,
-      updatedAt: now.toISOString(),
+      updatedAt: toIso(now),
     });
   } catch (error) {
     console.error("Update answer error:", error);

@@ -1,3 +1,4 @@
+import { nowEpoch } from "@/lib/format/time";
 /**
  * @route POST /api/interview/start
  * @description Generate interview questions for a job (rate-limited)
@@ -41,13 +42,13 @@ export async function POST(request: NextRequest) {
       {
         error:
           "Rate limit exceeded. Please wait before generating more questions.",
-        retryAfter: Math.ceil((rateLimitResult.resetAt - Date.now()) / 1000),
+        retryAfter: Math.ceil((rateLimitResult.resetAt - nowEpoch()) / 1000),
       },
       {
         status: 429,
         headers: {
           "Retry-After": String(
-            Math.ceil((rateLimitResult.resetAt - Date.now()) / 1000),
+            Math.ceil((rateLimitResult.resetAt - nowEpoch()) / 1000),
           ),
           "X-RateLimit-Remaining": "0",
         },

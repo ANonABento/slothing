@@ -1,3 +1,4 @@
+import { nowIso } from "@/lib/format/time";
 import {
   JOB_STATUSES,
   JOB_TYPES,
@@ -32,7 +33,9 @@ export type OpportunityEditableField =
 
 export type OpportunityReadonlyField = "id" | "createdAt";
 
-export type OpportunityField = OpportunityEditableField | OpportunityReadonlyField;
+export type OpportunityField =
+  | OpportunityEditableField
+  | OpportunityReadonlyField;
 
 export type OpportunityFieldType =
   | "text"
@@ -91,7 +94,7 @@ export const OPPORTUNITY_TYPE_OPTIONS: OpportunityFieldOption[] = JOB_TYPES.map(
   (type) => ({
     label: OPPORTUNITY_TYPE_LABELS[type],
     value: type,
-  })
+  }),
 );
 
 export const OPPORTUNITY_FIELD_SECTIONS: OpportunityFieldSection[] = [
@@ -155,9 +158,7 @@ export const OPPORTUNITY_FIELD_SECTIONS: OpportunityFieldSection[] = [
   {
     id: "compensation",
     title: "Compensation",
-    fields: [
-      { key: "salary", label: "Salary", type: "text" },
-    ],
+    fields: [{ key: "salary", label: "Salary", type: "text" }],
   },
   {
     id: "application",
@@ -183,7 +184,7 @@ export const OPPORTUNITY_FIELD_SECTIONS: OpportunityFieldSection[] = [
 ];
 
 const OPPORTUNITY_FIELDS = OPPORTUNITY_FIELD_SECTIONS.flatMap(
-  (section) => section.fields
+  (section) => section.fields,
 );
 
 function isJobStatus(value: string): value is JobStatus {
@@ -195,7 +196,7 @@ function isJobType(value: string): value is JobType {
 }
 
 export function getOpportunityFieldConfig(
-  key: OpportunityField
+  key: OpportunityField,
 ): OpportunityFieldConfig {
   const field = OPPORTUNITY_FIELDS.find((candidate) => candidate.key === key);
 
@@ -208,7 +209,7 @@ export function getOpportunityFieldConfig(
 
 export function formatOpportunityFieldValue(
   opportunity: JobDescription,
-  field: OpportunityFieldConfig
+  field: OpportunityFieldConfig,
 ): string {
   const value = opportunity[field.key as keyof JobDescription];
 
@@ -233,7 +234,7 @@ export function formatOpportunityFieldValue(
 
 export function formatOpportunityFieldPreview(
   opportunity: JobDescription,
-  field: OpportunityFieldConfig
+  field: OpportunityFieldConfig,
 ): string {
   const formatted = formatOpportunityFieldValue(opportunity, field);
 
@@ -241,7 +242,9 @@ export function formatOpportunityFieldPreview(
     return "Not set";
   }
 
-  const selectedOption = field.options?.find((option) => option.value === formatted);
+  const selectedOption = field.options?.find(
+    (option) => option.value === formatted,
+  );
   return selectedOption?.label ?? formatted;
 }
 
@@ -254,7 +257,7 @@ export function parseOpportunityListValue(value: string): string[] {
 
 export function buildOpportunityPatch(
   field: OpportunityFieldConfig,
-  value: string | boolean
+  value: string | boolean,
 ): Partial<JobDescription> {
   if (field.type === "readonly") {
     return {};
@@ -311,6 +314,6 @@ export function buildOpportunityPatch(
 export function buildAppliedOpportunityPatch(): Partial<JobDescription> {
   return {
     status: "applied",
-    appliedAt: new Date().toISOString(),
+    appliedAt: nowIso(),
   };
 }

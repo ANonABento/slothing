@@ -1,6 +1,7 @@
 import type { Profile, JobDescription } from "@/types";
 import { getSynonyms, SYNONYM_MATCH_WEIGHT } from "./synonyms";
 
+import { nowIso } from "@/lib/format/time";
 export interface ATSIssue {
   type: "error" | "warning" | "info";
   category: "formatting" | "content" | "keywords" | "structure";
@@ -114,7 +115,11 @@ function countWordOccurrences(text: string, word: string): number {
 }
 
 function normalizeText(text: string): string {
-  return text.toLowerCase().replace(/[^a-z0-9\s]/g, " ").replace(/\s+/g, " ").trim();
+  return text
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 function extractAllText(profile: Profile): string {
@@ -155,7 +160,10 @@ function extractAllText(profile: Profile): string {
   return parts.join(" ");
 }
 
-function analyzeFormatting(profile: Profile): { score: number; issues: ATSIssue[] } {
+function analyzeFormatting(profile: Profile): {
+  score: number;
+  issues: ATSIssue[];
+} {
   const issues: ATSIssue[] = [];
   let score = 100;
   const fullText = extractAllText(profile);
@@ -188,8 +196,10 @@ function analyzeFormatting(profile: Profile): { score: number; issues: ATSIssue[
       type: "warning",
       category: "formatting",
       title: "Potential formatting issues",
-      description: "Some content sections are very long, which might indicate complex formatting.",
-      suggestion: "Break up long paragraphs into shorter bullet points for better readability.",
+      description:
+        "Some content sections are very long, which might indicate complex formatting.",
+      suggestion:
+        "Break up long paragraphs into shorter bullet points for better readability.",
     });
   }
 
@@ -201,7 +211,8 @@ function analyzeFormatting(profile: Profile): { score: number; issues: ATSIssue[
       category: "formatting",
       title: "Missing email address",
       description: "No email address found in contact information.",
-      suggestion: "Add a professional email address to ensure recruiters can contact you.",
+      suggestion:
+        "Add a professional email address to ensure recruiters can contact you.",
     });
   }
 
@@ -212,14 +223,18 @@ function analyzeFormatting(profile: Profile): { score: number; issues: ATSIssue[
       category: "formatting",
       title: "Missing phone number",
       description: "No phone number found in contact information.",
-      suggestion: "Consider adding a phone number for alternative contact method.",
+      suggestion:
+        "Consider adding a phone number for alternative contact method.",
     });
   }
 
   return { score: Math.max(0, score), issues };
 }
 
-function analyzeStructure(profile: Profile): { score: number; issues: ATSIssue[] } {
+function analyzeStructure(profile: Profile): {
+  score: number;
+  issues: ATSIssue[];
+} {
   const issues: ATSIssue[] = [];
   let score = 100;
 
@@ -231,7 +246,8 @@ function analyzeStructure(profile: Profile): { score: number; issues: ATSIssue[]
       category: "structure",
       title: "Missing work experience",
       description: "No work experience entries found.",
-      suggestion: "Add your work experience with clear job titles, companies, and dates.",
+      suggestion:
+        "Add your work experience with clear job titles, companies, and dates.",
     });
   }
 
@@ -242,7 +258,8 @@ function analyzeStructure(profile: Profile): { score: number; issues: ATSIssue[]
       category: "structure",
       title: "Missing education",
       description: "No education entries found.",
-      suggestion: "Add your educational background including degrees and institutions.",
+      suggestion:
+        "Add your educational background including degrees and institutions.",
     });
   }
 
@@ -253,7 +270,8 @@ function analyzeStructure(profile: Profile): { score: number; issues: ATSIssue[]
       category: "structure",
       title: "Missing skills section",
       description: "No skills listed.",
-      suggestion: "Add a skills section with relevant technical and soft skills.",
+      suggestion:
+        "Add a skills section with relevant technical and soft skills.",
     });
   }
 
@@ -263,29 +281,35 @@ function analyzeStructure(profile: Profile): { score: number; issues: ATSIssue[]
       type: "warning",
       category: "structure",
       title: "Missing or brief summary",
-      description: "A professional summary helps ATS and recruiters quickly understand your profile.",
-      suggestion: "Add a 2-3 sentence summary highlighting your key qualifications and career goals.",
+      description:
+        "A professional summary helps ATS and recruiters quickly understand your profile.",
+      suggestion:
+        "Add a 2-3 sentence summary highlighting your key qualifications and career goals.",
     });
   }
 
   // Check for experience details
   const experiencesWithoutHighlights = profile.experiences.filter(
-    (exp) => exp.highlights.length === 0
+    (exp) => exp.highlights.length === 0,
   );
-  if (experiencesWithoutHighlights.length > 0 && profile.experiences.length > 0) {
+  if (
+    experiencesWithoutHighlights.length > 0 &&
+    profile.experiences.length > 0
+  ) {
     score -= 10;
     issues.push({
       type: "warning",
       category: "structure",
       title: "Experience entries lack details",
       description: `${experiencesWithoutHighlights.length} experience(s) have no bullet points or highlights.`,
-      suggestion: "Add 3-5 achievement-focused bullet points to each experience entry.",
+      suggestion:
+        "Add 3-5 achievement-focused bullet points to each experience entry.",
     });
   }
 
   // Check for dates
   const experiencesWithoutDates = profile.experiences.filter(
-    (exp) => !exp.startDate
+    (exp) => !exp.startDate,
   );
   if (experiencesWithoutDates.length > 0) {
     score -= 10;
@@ -294,14 +318,18 @@ function analyzeStructure(profile: Profile): { score: number; issues: ATSIssue[]
       category: "structure",
       title: "Missing dates",
       description: "Some experience entries are missing start dates.",
-      suggestion: "Add dates to all experience entries (e.g., 'Jan 2020 - Present').",
+      suggestion:
+        "Add dates to all experience entries (e.g., 'Jan 2020 - Present').",
     });
   }
 
   return { score: Math.max(0, score), issues };
 }
 
-function analyzeContent(profile: Profile): { score: number; issues: ATSIssue[] } {
+function analyzeContent(profile: Profile): {
+  score: number;
+  issues: ATSIssue[];
+} {
   const issues: ATSIssue[] = [];
   let score = 100;
   const fullText = extractAllText(profile);
@@ -309,14 +337,28 @@ function analyzeContent(profile: Profile): { score: number; issues: ATSIssue[] }
 
   // Check for action verbs in experience
   const actionVerbs = [
-    "led", "managed", "developed", "created", "implemented", "designed",
-    "built", "achieved", "improved", "increased", "reduced", "launched",
-    "delivered", "collaborated", "coordinated", "analyzed", "resolved",
+    "led",
+    "managed",
+    "developed",
+    "created",
+    "implemented",
+    "designed",
+    "built",
+    "achieved",
+    "improved",
+    "increased",
+    "reduced",
+    "launched",
+    "delivered",
+    "collaborated",
+    "coordinated",
+    "analyzed",
+    "resolved",
   ];
 
   const normalizedText = normalizeText(fullText);
   const foundActionVerbs = actionVerbs.filter((verb) =>
-    normalizedText.includes(verb)
+    normalizedText.includes(verb),
   );
 
   if (foundActionVerbs.length < 5 && profile.experiences.length > 0) {
@@ -326,12 +368,14 @@ function analyzeContent(profile: Profile): { score: number; issues: ATSIssue[] }
       category: "content",
       title: "Few action verbs",
       description: "Resume lacks strong action verbs that demonstrate impact.",
-      suggestion: "Start bullet points with action verbs like 'Led', 'Developed', 'Achieved', 'Improved'.",
+      suggestion:
+        "Start bullet points with action verbs like 'Led', 'Developed', 'Achieved', 'Improved'.",
     });
   }
 
   // Check for quantifiable achievements
-  const hasNumbers = /\d+%|\$\d+|\d+ (people|users|clients|projects|team)/i.test(fullText);
+  const hasNumbers =
+    /\d+%|\$\d+|\d+ (people|users|clients|projects|team)/i.test(fullText);
   if (!hasNumbers && profile.experiences.length > 0) {
     score -= 15;
     issues.push({
@@ -339,7 +383,8 @@ function analyzeContent(profile: Profile): { score: number; issues: ATSIssue[] }
       category: "content",
       title: "Missing quantifiable achievements",
       description: "No metrics or numbers found to demonstrate impact.",
-      suggestion: "Add specific numbers (e.g., 'Increased sales by 20%', 'Led team of 5').",
+      suggestion:
+        "Add specific numbers (e.g., 'Increased sales by 20%', 'Led team of 5').",
     });
   }
 
@@ -351,7 +396,8 @@ function analyzeContent(profile: Profile): { score: number; issues: ATSIssue[] }
       category: "content",
       title: "Resume too brief",
       description: `Only ${wordCount} words. Most effective resumes have 300-700 words.`,
-      suggestion: "Expand your experience descriptions and add more details about achievements.",
+      suggestion:
+        "Expand your experience descriptions and add more details about achievements.",
     });
   } else if (wordCount > 1000) {
     score -= 10;
@@ -360,7 +406,8 @@ function analyzeContent(profile: Profile): { score: number; issues: ATSIssue[] }
       category: "content",
       title: "Resume may be too long",
       description: `${wordCount} words detected. ATS may truncate or struggle with very long resumes.`,
-      suggestion: "Consider condensing to most relevant information (aim for 500-700 words).",
+      suggestion:
+        "Consider condensing to most relevant information (aim for 500-700 words).",
     });
   }
 
@@ -369,7 +416,7 @@ function analyzeContent(profile: Profile): { score: number; issues: ATSIssue[] }
 
 function analyzeKeywords(
   profile: Profile,
-  job?: JobDescription
+  job?: JobDescription,
 ): { score: number; keywords: KeywordAnalysis[]; issues: ATSIssue[] } {
   const issues: ATSIssue[] = [];
   const keywords: KeywordAnalysis[] = [];
@@ -427,9 +474,10 @@ function analyzeKeywords(
       const matchWeight = matchType === "synonym" ? SYNONYM_MATCH_WEIGHT : 1;
       weightedMatchCount += matchWeight;
 
-      const searchTerm = matchType === "synonym" && matchedTerm
-        ? normalizeText(matchedTerm)
-        : normalizedKeyword;
+      const searchTerm =
+        matchType === "synonym" && matchedTerm
+          ? normalizeText(matchedTerm)
+          : normalizedKeyword;
 
       if (containsWord(normalizeText(profile.summary || ""), searchTerm)) {
         locations.push("summary");
@@ -469,7 +517,8 @@ function analyzeKeywords(
       category: "keywords",
       title: "Low keyword match",
       description: `Only ${Math.round(matchRate * 100)}% of job keywords found in your resume.`,
-      suggestion: "Review the job description and incorporate more relevant keywords naturally.",
+      suggestion:
+        "Review the job description and incorporate more relevant keywords naturally.",
     });
   } else if (job && matchRate < 0.7) {
     issues.push({
@@ -477,7 +526,8 @@ function analyzeKeywords(
       category: "keywords",
       title: "Moderate keyword match",
       description: `${Math.round(matchRate * 100)}% of job keywords found. Aim for 70%+.`,
-      suggestion: "Add missing keywords in your skills section or experience descriptions.",
+      suggestion:
+        "Add missing keywords in your skills section or experience descriptions.",
     });
   }
 
@@ -489,8 +539,10 @@ function analyzeKeywords(
       type: "warning",
       category: "keywords",
       title: "Potential keyword stuffing",
-      description: "Some keywords appear very frequently, which may look unnatural.",
-      suggestion: "Use keywords naturally throughout your resume without excessive repetition.",
+      description:
+        "Some keywords appear very frequently, which may look unnatural.",
+      suggestion:
+        "Use keywords naturally throughout your resume without excessive repetition.",
     });
   }
 
@@ -503,18 +555,115 @@ function extractKeywordsFromText(text: string): string[] {
 
   // Common words to ignore
   const stopWords = new Set([
-    "the", "a", "an", "and", "or", "but", "in", "on", "at", "to", "for",
-    "of", "with", "by", "from", "as", "is", "was", "are", "were", "been",
-    "be", "have", "has", "had", "do", "does", "did", "will", "would", "could",
-    "should", "may", "might", "must", "shall", "can", "need", "dare", "ought",
-    "used", "this", "that", "these", "those", "i", "you", "he", "she", "it",
-    "we", "they", "what", "which", "who", "whom", "whose", "where", "when",
-    "why", "how", "all", "each", "every", "both", "few", "more", "most",
-    "other", "some", "such", "no", "nor", "not", "only", "same", "so",
-    "than", "too", "very", "just", "also", "now", "about", "into", "through",
-    "during", "before", "after", "above", "below", "between", "under",
-    "again", "further", "then", "once", "here", "there", "when", "where",
-    "why", "how", "any", "work", "working", "able", "using", "including",
+    "the",
+    "a",
+    "an",
+    "and",
+    "or",
+    "but",
+    "in",
+    "on",
+    "at",
+    "to",
+    "for",
+    "of",
+    "with",
+    "by",
+    "from",
+    "as",
+    "is",
+    "was",
+    "are",
+    "were",
+    "been",
+    "be",
+    "have",
+    "has",
+    "had",
+    "do",
+    "does",
+    "did",
+    "will",
+    "would",
+    "could",
+    "should",
+    "may",
+    "might",
+    "must",
+    "shall",
+    "can",
+    "need",
+    "dare",
+    "ought",
+    "used",
+    "this",
+    "that",
+    "these",
+    "those",
+    "i",
+    "you",
+    "he",
+    "she",
+    "it",
+    "we",
+    "they",
+    "what",
+    "which",
+    "who",
+    "whom",
+    "whose",
+    "where",
+    "when",
+    "why",
+    "how",
+    "all",
+    "each",
+    "every",
+    "both",
+    "few",
+    "more",
+    "most",
+    "other",
+    "some",
+    "such",
+    "no",
+    "nor",
+    "not",
+    "only",
+    "same",
+    "so",
+    "than",
+    "too",
+    "very",
+    "just",
+    "also",
+    "now",
+    "about",
+    "into",
+    "through",
+    "during",
+    "before",
+    "after",
+    "above",
+    "below",
+    "between",
+    "under",
+    "again",
+    "further",
+    "then",
+    "once",
+    "here",
+    "there",
+    "when",
+    "where",
+    "why",
+    "how",
+    "any",
+    "work",
+    "working",
+    "able",
+    "using",
+    "including",
   ]);
 
   const wordFreq: Record<string, number> = {};
@@ -532,7 +681,7 @@ function extractKeywordsFromText(text: string): string[] {
 
 export function analyzeATS(
   profile: Profile,
-  job?: JobDescription
+  job?: JobDescription,
 ): ATSAnalysisResult {
   const formattingResult = analyzeFormatting(profile);
   const structureResult = analyzeStructure(profile);
@@ -555,7 +704,7 @@ export function analyzeATS(
       formattingResult.score * 0.2 +
         structureResult.score * 0.25 +
         contentResult.score * 0.25 +
-        keywordsResult.score * 0.3
+        keywordsResult.score * 0.3,
     ),
   };
 
@@ -563,13 +712,17 @@ export function analyzeATS(
 
   let summary: string;
   if (score.overall >= 80) {
-    summary = "Your resume is well-optimized for ATS systems. Minor improvements can help you stand out even more.";
+    summary =
+      "Your resume is well-optimized for ATS systems. Minor improvements can help you stand out even more.";
   } else if (score.overall >= 60) {
-    summary = "Your resume has good ATS compatibility but needs some improvements for better visibility.";
+    summary =
+      "Your resume has good ATS compatibility but needs some improvements for better visibility.";
   } else if (score.overall >= 40) {
-    summary = "Your resume may have trouble passing ATS systems. Focus on the critical issues below.";
+    summary =
+      "Your resume may have trouble passing ATS systems. Focus on the critical issues below.";
   } else {
-    summary = "Your resume needs significant improvements to pass ATS screening. Address the errors first.";
+    summary =
+      "Your resume needs significant improvements to pass ATS screening. Address the errors first.";
   }
 
   return {
@@ -606,7 +759,7 @@ export function calculateBenchmark(score: number): IndustryBenchmark {
 
 export function buildKeywordHeatmap(
   keywords: KeywordAnalysis[],
-  profile: Profile
+  profile: Profile,
 ): KeywordHeatmap {
   const found = keywords.filter((k) => k.found);
   const missing = keywords.filter((k) => !k.found);
@@ -645,15 +798,27 @@ function extractSectionText(profile: Profile, section: string): string {
       return profile.skills.map((s) => s.name).join(" ");
     case "experience":
       return profile.experiences
-        .map((e) => [e.title, e.company, e.description, ...e.highlights, ...e.skills].join(" "))
+        .map((e) =>
+          [
+            e.title,
+            e.company,
+            e.description,
+            ...e.highlights,
+            ...e.skills,
+          ].join(" "),
+        )
         .join(" ");
     case "education":
       return profile.education
-        .map((e) => [e.institution, e.degree, e.field, ...e.highlights].join(" "))
+        .map((e) =>
+          [e.institution, e.degree, e.field, ...e.highlights].join(" "),
+        )
         .join(" ");
     case "projects":
       return profile.projects
-        .map((p) => [p.name, p.description, ...p.technologies, ...p.highlights].join(" "))
+        .map((p) =>
+          [p.name, p.description, ...p.technologies, ...p.highlights].join(" "),
+        )
         .join(" ");
     default:
       return "";
@@ -665,13 +830,38 @@ export function buildSectionBreakdown(
   structureScore: number,
   contentScore: number,
   keywordsScore: number,
-  issues: ATSIssue[]
+  issues: ATSIssue[],
 ): SectionBreakdown[] {
-  const sections: { section: string; score: number; weight: number; category: ATSIssue["category"] }[] = [
-    { section: "Formatting", score: formattingScore, weight: 0.2, category: "formatting" },
-    { section: "Structure", score: structureScore, weight: 0.25, category: "structure" },
-    { section: "Content", score: contentScore, weight: 0.25, category: "content" },
-    { section: "Keywords", score: keywordsScore, weight: 0.3, category: "keywords" },
+  const sections: {
+    section: string;
+    score: number;
+    weight: number;
+    category: ATSIssue["category"];
+  }[] = [
+    {
+      section: "Formatting",
+      score: formattingScore,
+      weight: 0.2,
+      category: "formatting",
+    },
+    {
+      section: "Structure",
+      score: structureScore,
+      weight: 0.25,
+      category: "structure",
+    },
+    {
+      section: "Content",
+      score: contentScore,
+      weight: 0.25,
+      category: "content",
+    },
+    {
+      section: "Keywords",
+      score: keywordsScore,
+      weight: 0.3,
+      category: "keywords",
+    },
   ];
 
   return sections.map(({ section, score, weight, category }) => ({
@@ -685,7 +875,7 @@ export function buildSectionBreakdown(
 
 export function generateScanReport(
   profile: Profile,
-  job?: JobDescription
+  job?: JobDescription,
 ): ATSScanReport {
   const analysis = analyzeATS(profile, job);
   const { score, issues, keywords } = analysis;
@@ -698,7 +888,7 @@ export function generateScanReport(
     score.structure,
     score.content,
     score.keywords,
-    issues
+    issues,
   );
 
   return {
@@ -707,34 +897,47 @@ export function generateScanReport(
     keywordHeatmap,
     sectionBreakdown,
     benchmark,
-    scannedAt: new Date().toISOString(),
+    scannedAt: nowIso(),
   };
 }
 
-function generateRecommendations(issues: ATSIssue[], score: ATSScore): string[] {
+function generateRecommendations(
+  issues: ATSIssue[],
+  score: ATSScore,
+): string[] {
   const recommendations: string[] = [];
 
   // Prioritize based on score categories
   if (score.keywords < 70) {
-    recommendations.push("Add more relevant keywords from the job description to your skills and experience sections.");
+    recommendations.push(
+      "Add more relevant keywords from the job description to your skills and experience sections.",
+    );
   }
 
   if (score.structure < 70) {
-    recommendations.push("Ensure all standard sections are present: Contact, Summary, Experience, Education, Skills.");
+    recommendations.push(
+      "Ensure all standard sections are present: Contact, Summary, Experience, Education, Skills.",
+    );
   }
 
   if (score.content < 70) {
-    recommendations.push("Strengthen your bullet points with action verbs and quantifiable achievements.");
+    recommendations.push(
+      "Strengthen your bullet points with action verbs and quantifiable achievements.",
+    );
   }
 
   if (score.formatting < 70) {
-    recommendations.push("Review formatting for special characters and ensure clean, simple structure.");
+    recommendations.push(
+      "Review formatting for special characters and ensure clean, simple structure.",
+    );
   }
 
   // Add specific recommendations from high-priority issues
   const errorIssues = issues.filter((i) => i.type === "error");
   errorIssues.slice(0, 3).forEach((issue) => {
-    if (!recommendations.some((r) => r.includes(issue.suggestion.slice(0, 20)))) {
+    if (
+      !recommendations.some((r) => r.includes(issue.suggestion.slice(0, 20)))
+    ) {
       recommendations.push(issue.suggestion);
     }
   });

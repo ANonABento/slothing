@@ -1,5 +1,7 @@
 "use client";
 
+import { nowIso } from "@/lib/format/time";
+
 import { useRef, useEffect } from "react";
 import {
   Mic,
@@ -12,7 +14,11 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { useAudioRecorder, formatDuration, type AudioRecording } from "@/hooks/useAudioRecorder";
+import {
+  useAudioRecorder,
+  formatDuration,
+  type AudioRecording,
+} from "@/hooks/useAudioRecorder";
 
 interface RecordingControlsProps {
   onRecordingComplete?: (recording: AudioRecording) => void;
@@ -53,7 +59,7 @@ export function RecordingControls({
 
     const a = document.createElement("a");
     a.href = recording.url;
-    a.download = `recording-${new Date().toISOString().slice(0, 19).replace(/[:-]/g, "")}.webm`;
+    a.download = `recording-${nowIso().slice(0, 19).replace(/[:-]/g, "")}.webm`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -61,7 +67,12 @@ export function RecordingControls({
 
   if (!isSupported) {
     return (
-      <div className={cn("flex items-center gap-2 text-sm text-muted-foreground", className)}>
+      <div
+        className={cn(
+          "flex items-center gap-2 text-sm text-muted-foreground",
+          className,
+        )}
+      >
         <AlertCircle className="h-4 w-4" />
         Audio recording not supported
       </div>
@@ -87,13 +98,11 @@ export function RecordingControls({
           <>
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-destructive/10 text-destructive">
               <span className="h-2 w-2 rounded-full bg-destructive animate-pulse" />
-              <span className="text-sm font-mono">{formatDuration(duration)}</span>
+              <span className="text-sm font-mono">
+                {formatDuration(duration)}
+              </span>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={stopRecording}
-            >
+            <Button variant="outline" size="sm" onClick={stopRecording}>
               <Square className="h-4 w-4" />
             </Button>
           </>
@@ -102,19 +111,13 @@ export function RecordingControls({
         {recording && !isRecording && (
           <>
             <audio ref={audioRef} controls className="h-8 w-40" />
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={clearRecording}
-            >
+            <Button variant="ghost" size="sm" onClick={clearRecording}>
               <Trash2 className="h-4 w-4" />
             </Button>
           </>
         )}
 
-        {error && (
-          <span className="text-xs text-destructive">{error}</span>
-        )}
+        {error && <span className="text-xs text-destructive">{error}</span>}
       </div>
     );
   }
@@ -127,7 +130,7 @@ export function RecordingControls({
           <span
             className={cn(
               "h-3 w-3 rounded-full",
-              isPaused ? "bg-warning" : "bg-destructive animate-pulse"
+              isPaused ? "bg-warning" : "bg-destructive animate-pulse",
             )}
           />
           <span className="text-2xl font-mono font-bold">
@@ -148,11 +151,7 @@ export function RecordingControls({
               {formatDuration(recording.duration)}
             </span>
           </div>
-          <audio
-            ref={audioRef}
-            controls
-            className="w-full h-10 rounded"
-          />
+          <audio ref={audioRef} controls className="w-full h-10 rounded" />
         </div>
       )}
 

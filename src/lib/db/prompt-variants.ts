@@ -1,6 +1,7 @@
 import db from "./legacy";
 import { generateId } from "@/lib/utils";
 
+import { nowIso } from "@/lib/format/time";
 export interface PromptVariant {
   id: string;
   name: string;
@@ -162,7 +163,7 @@ export function seedDefaultPromptVariant(userId: string): string | null {
   if (existing) return null;
 
   const id = generateId();
-  const now = new Date().toISOString();
+  const now = nowIso();
   db.prepare(
     `
     INSERT INTO prompt_variants (id, user_id, name, version, content, active, created_at, updated_at)
@@ -224,7 +225,7 @@ export function createPromptVariant(
   }
 
   const id = generateId();
-  const now = new Date().toISOString();
+  const now = nowIso();
   db.prepare(
     `
     INSERT INTO prompt_variants (id, user_id, name, version, content, active, created_at, updated_at)
@@ -244,7 +245,7 @@ export function setActivePromptVariant(id: string, userId: string): boolean {
   const variant = getPromptVariantById(id, userId);
   if (!variant) return false;
 
-  const now = new Date().toISOString();
+  const now = nowIso();
   const activate = db.transaction(() => {
     db.prepare(
       "UPDATE prompt_variants SET active = 0, updated_at = ? WHERE user_id = ?",
@@ -268,7 +269,7 @@ export function updatePromptVariant(
   const existing = getPromptVariantById(id, userId);
   if (!existing) return null;
 
-  const now = new Date().toISOString();
+  const now = nowIso();
   const name = fields.name ?? existing.name;
   const content = fields.content ?? existing.content;
 
@@ -307,7 +308,7 @@ export function logPromptVariantResult(
 ): PromptVariantResult {
   ensurePromptVariantsUserSchema();
   const id = generateId();
-  const now = new Date().toISOString();
+  const now = nowIso();
   db.prepare(
     `
     INSERT INTO prompt_variant_results (id, user_id, prompt_variant_id, job_id, resume_id, match_score, created_at)
@@ -325,7 +326,9 @@ export function logPromptVariantResult(
 
   return rowToResult(
     db
-      .prepare("SELECT * FROM prompt_variant_results WHERE id = ? AND user_id = ?")
+      .prepare(
+        "SELECT * FROM prompt_variant_results WHERE id = ? AND user_id = ?",
+      )
       .get(id, userId) as PromptVariantResultRow,
   );
 }
