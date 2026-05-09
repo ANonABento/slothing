@@ -43,6 +43,40 @@ function rowToEntry(row: BankEntryRow): BankEntry {
   };
 }
 
+function supportsChildCount(entry: BankEntry): boolean {
+  return entry.category === "experience" || entry.category === "project";
+}
+
+function attachChildCounts(
+  entries: BankEntry[],
+  userId: string = "default",
+): BankEntry[] {
+  if (!entries.some(supportsChildCount)) return entries;
+
+  const rows = db
+    .prepare(
+      `SELECT parent_id, COUNT(*) AS child_count
+       FROM profile_bank
+       WHERE user_id = ? AND parent_id IS NOT NULL
+       GROUP BY parent_id`,
+    )
+    .all(userId) as { parent_id: string; child_count: number }[];
+  const childCounts = new Map(
+    rows.map((row) => [row.parent_id, Number(row.child_count)]),
+  );
+
+  return entries.map((entry) => {
+    if (!supportsChildCount(entry)) return entry;
+    return {
+      ...entry,
+      content: {
+        ...entry.content,
+        childCount: childCounts.get(entry.id) ?? 0,
+      },
+    };
+  });
+}
+
 let profileBankHierarchySchemaEnsured = false;
 
 export function ensureProfileBankHierarchySchema(): void {
@@ -171,7 +205,7 @@ export function getBankEntries(userId: string = "default"): BankEntry[] {
       "SELECT * FROM profile_bank WHERE user_id = ? ORDER BY created_at DESC",
     )
     .all(userId) as BankEntryRow[];
-  return rows.map(rowToEntry);
+  return attachChildCounts(rows.map(rowToEntry), userId);
 }
 
 export function getBankEntriesByCategory(
@@ -184,7 +218,7 @@ export function getBankEntriesByCategory(
       "SELECT * FROM profile_bank WHERE user_id = ? AND category = ? ORDER BY created_at DESC",
     )
     .all(userId, category) as BankEntryRow[];
-  return rows.map(rowToEntry);
+  return attachChildCounts(rows.map(rowToEntry), userId);
 }
 
 export function getGroupedBankEntries(
@@ -220,7 +254,7 @@ export function searchBankEntries(
       "SELECT * FROM profile_bank WHERE user_id = ? AND content LIKE ? ORDER BY confidence_score DESC, created_at DESC",
     )
     .all(userId, pattern) as BankEntryRow[];
-  return rows.map(rowToEntry);
+  return attachChildCounts(rows.map(rowToEntry), userId);
 }
 
 export function searchBankEntriesByCategory(
@@ -237,7 +271,7 @@ export function searchBankEntriesByCategory(
        ORDER BY confidence_score DESC, created_at DESC`,
     )
     .all(userId, category, pattern) as BankEntryRow[];
-  return rows.map(rowToEntry);
+  return attachChildCounts(rows.map(rowToEntry), userId);
 }
 
 export function deleteBankEntriesBySource(

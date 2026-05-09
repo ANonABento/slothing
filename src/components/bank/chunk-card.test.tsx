@@ -288,6 +288,16 @@ describe("ChunkCard", () => {
     );
   });
 
+  it("adds a title tooltip to the truncated entry title", () => {
+    const entry = makeBankEntry();
+    render(<ChunkCard entry={entry} onUpdate={vi.fn()} onDelete={vi.fn()} />);
+
+    expect(screen.getByText("Engineer at Acme Corp")).toHaveAttribute(
+      "title",
+      "Engineer at Acme Corp",
+    );
+  });
+
   it("should show high confidence badge when score >= 0.9", () => {
     const entry = makeBankEntry({ confidenceScore: 0.95 });
     render(<ChunkCard entry={entry} onUpdate={vi.fn()} onDelete={vi.fn()} />);
@@ -311,6 +321,21 @@ describe("ChunkCard", () => {
     // Should show structured field labels
     expect(screen.getByText(/Job Title:/)).toBeInTheDocument();
     expect(screen.getByText(/Company:/)).toBeInTheDocument();
+  });
+
+  it("renders expanded content immediately when forceExpanded is true", () => {
+    const entry = makeBankEntry();
+    render(
+      <ChunkCard
+        entry={entry}
+        onUpdate={vi.fn()}
+        onDelete={vi.fn()}
+        forceExpanded
+      />,
+    );
+
+    expect(screen.getByText("Edit")).toBeInTheDocument();
+    expect(screen.getByText(/Job Title:/)).toBeInTheDocument();
   });
 
   it("should enter edit mode with structured fields", () => {

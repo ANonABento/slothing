@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -28,13 +28,22 @@ import {
 
 interface AddEntryDialogProps {
   onCreate: (category: BankCategory, content: Record<string, unknown>) => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  trigger?: ReactNode;
 }
 
-export function AddEntryDialog({ onCreate }: AddEntryDialogProps) {
-  const [open, setOpen] = useState(false);
+export function AddEntryDialog({
+  onCreate,
+  open,
+  onOpenChange,
+  trigger,
+}: AddEntryDialogProps) {
+  const [internalOpen, setInternalOpen] = useState(false);
   const [category, setCategory] = useState<BankCategory>("experience");
   const [content, setContent] = useState<Record<string, unknown>>({});
 
+  const dialogOpen = open ?? internalOpen;
   const fields = CATEGORY_FIELDS[category];
 
   function handleCategoryChange(newCategory: BankCategory) {
@@ -53,13 +62,16 @@ export function AddEntryDialog({ onCreate }: AddEntryDialogProps) {
   function handleSubmit() {
     const cleaned = cleanContent(content, fields);
     onCreate(category, cleaned);
-    setOpen(false);
+    handleOpenChange(false);
     setContent({});
     setCategory("experience");
   }
 
   function handleOpenChange(nextOpen: boolean) {
-    setOpen(nextOpen);
+    onOpenChange?.(nextOpen);
+    if (open === undefined) {
+      setInternalOpen(nextOpen);
+    }
     if (!nextOpen) {
       setContent({});
       setCategory("experience");
@@ -67,13 +79,17 @@ export function AddEntryDialog({ onCreate }: AddEntryDialogProps) {
   }
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogTrigger asChild>
-        <Button variant="outline">
-          <Plus className="h-4 w-4 mr-2" />
-          Add Entry
-        </Button>
-      </DialogTrigger>
+    <Dialog open={dialogOpen} onOpenChange={handleOpenChange}>
+      {trigger ? (
+        <DialogTrigger asChild>{trigger}</DialogTrigger>
+      ) : (
+        <DialogTrigger asChild>
+          <Button variant="outline">
+            <Plus className="h-4 w-4 mr-2" />
+            Add Entry
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent className="max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Add New Entry</DialogTitle>
@@ -112,7 +128,9 @@ export function AddEntryDialog({ onCreate }: AddEntryDialogProps) {
 
           {category === "hackathon" && (
             <div className="space-y-2">
-              <Label className="text-xs text-muted-foreground">Hackathon Templates</Label>
+              <Label className="text-xs text-muted-foreground">
+                Hackathon Templates
+              </Label>
               <div className="grid gap-2 sm:grid-cols-3">
                 {HACKATHON_TEMPLATES.map((template) => (
                   <button

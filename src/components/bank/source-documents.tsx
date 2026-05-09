@@ -224,7 +224,7 @@ export function SourceDocuments({
               <p className="text-sm font-medium truncate">{doc.filename}</p>
               <p className="text-xs text-muted-foreground">
                 {formatFileSize(doc.size)} &middot;{" "}
-                {pluralize(doc.chunkCount, "chunk")} &middot;{" "}
+                {pluralize(doc.chunkCount, "bullet")} &middot;{" "}
                 <TimeAgo date={doc.uploadedAt} />
               </p>
             </div>
@@ -254,7 +254,7 @@ export function SourceDocuments({
             <DialogDescription>
               This will permanently delete{" "}
               <strong>{deleteTarget?.filename}</strong> and all{" "}
-              {pluralize(deleteTarget?.chunkCount ?? 0, "associated chunk")}.
+              {pluralize(deleteTarget?.chunkCount ?? 0, "associated bullet")}.
               This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
@@ -288,7 +288,7 @@ export function SourceDocuments({
             <DialogDescription>
               This will permanently delete{" "}
               {pluralize(selectedCount, "source file")}
-              and all associated chunks. This action cannot be undone.
+              and all associated bullets. This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

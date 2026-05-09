@@ -202,6 +202,43 @@ describe("Profile Bank DB Functions", () => {
       });
     });
 
+    it("rolls up child counts onto parent entries", () => {
+      const parentRows = [
+        {
+          id: "parent-1",
+          user_id: "default",
+          category: "experience",
+          content: '{"title":"Engineer","company":"Acme","childCount":0}',
+          source_document_id: null,
+          confidence_score: 0.9,
+          created_at: "2024-01-15T10:00:00.000Z",
+        },
+        {
+          id: "parent-2",
+          user_id: "default",
+          category: "project",
+          content: '{"name":"Portfolio"}',
+          source_document_id: null,
+          confidence_score: 0.85,
+          created_at: "2024-01-15T10:00:00.000Z",
+        },
+      ];
+      (db.prepare as Mock)
+        .mockReturnValueOnce({
+          all: vi.fn().mockReturnValue(parentRows),
+        })
+        .mockReturnValueOnce({
+          all: vi
+            .fn()
+            .mockReturnValue([{ parent_id: "parent-1", child_count: 3 }]),
+        });
+
+      const result = getBankEntries();
+
+      expect(result[0].content.childCount).toBe(3);
+      expect(result[1].content.childCount).toBe(0);
+    });
+
     it("should return empty array when no entries", () => {
       (db.prepare as Mock).mockReturnValue({
         all: vi.fn().mockReturnValue([]),
@@ -220,6 +257,32 @@ describe("Profile Bank DB Functions", () => {
       getBankEntriesByCategory("skill");
 
       expect(mockAll).toHaveBeenCalledWith("default", "skill");
+    });
+
+    it("rolls up child counts when filtering to parent categories", () => {
+      const mockCategoryAll = vi.fn().mockReturnValue([
+        {
+          id: "parent-1",
+          user_id: "default",
+          category: "experience",
+          content: '{"title":"Engineer","company":"Acme"}',
+          source_document_id: null,
+          confidence_score: 0.9,
+          created_at: "2024-01-15T10:00:00.000Z",
+        },
+      ]);
+      const mockCountAll = vi
+        .fn()
+        .mockReturnValue([{ parent_id: "parent-1", child_count: 2 }]);
+      (db.prepare as Mock)
+        .mockReturnValueOnce({ all: mockCategoryAll })
+        .mockReturnValueOnce({ all: mockCountAll });
+
+      const result = getBankEntriesByCategory("experience");
+
+      expect(mockCategoryAll).toHaveBeenCalledWith("default", "experience");
+      expect(mockCountAll).toHaveBeenCalledWith("default");
+      expect(result[0].content.childCount).toBe(2);
     });
   });
 
@@ -270,6 +333,32 @@ describe("Profile Bank DB Functions", () => {
       searchBankEntries("react");
 
       expect(mockAll).toHaveBeenCalledWith("default", "%react%");
+    });
+
+    it("rolls up child counts for parent search results", () => {
+      (db.prepare as Mock)
+        .mockReturnValueOnce({
+          all: vi.fn().mockReturnValue([
+            {
+              id: "project-1",
+              user_id: "default",
+              category: "project",
+              content: '{"name":"Portfolio"}',
+              source_document_id: null,
+              confidence_score: 0.9,
+              created_at: "2024-01-15T10:00:00.000Z",
+            },
+          ]),
+        })
+        .mockReturnValueOnce({
+          all: vi
+            .fn()
+            .mockReturnValue([{ parent_id: "project-1", child_count: 4 }]),
+        });
+
+      const result = searchBankEntries("portfolio");
+
+      expect(result[0].content.childCount).toBe(4);
     });
   });
 
