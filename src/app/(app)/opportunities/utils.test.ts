@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import {
   DEFAULT_OPPORTUNITY_FILTERS,
   buildOpportunityTeamSize,
+  countActiveOpportunityFilters,
   filterOpportunities,
   formatOpportunityDate,
   formatOpportunityLocation,
@@ -192,6 +193,45 @@ describe("hasActiveOpportunityFilters", () => {
         status: "saved",
       }),
     ).toBe(true);
+  });
+});
+
+describe("countActiveOpportunityFilters", () => {
+  it("returns zero for default and whitespace-only filters", () => {
+    expect(countActiveOpportunityFilters(DEFAULT_OPPORTUNITY_FILTERS)).toBe(0);
+    expect(
+      countActiveOpportunityFilters({
+        ...DEFAULT_OPPORTUNITY_FILTERS,
+        searchQuery: "   ",
+      }),
+    ).toBe(0);
+  });
+
+  it("counts each non-default filter", () => {
+    expect(
+      countActiveOpportunityFilters({
+        ...DEFAULT_OPPORTUNITY_FILTERS,
+        searchQuery: "react",
+      }),
+    ).toBe(1);
+    expect(
+      countActiveOpportunityFilters({
+        ...DEFAULT_OPPORTUNITY_FILTERS,
+        typeTab: "job",
+      }),
+    ).toBe(1);
+    expect(
+      countActiveOpportunityFilters({
+        ...DEFAULT_OPPORTUNITY_FILTERS,
+        searchQuery: "react",
+        typeTab: "job",
+        status: "saved",
+        source: "greenhouse",
+        tag: "frontend",
+        remoteType: "hybrid",
+        techStack: "TypeScript",
+      }),
+    ).toBe(7);
   });
 });
 
