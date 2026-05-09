@@ -7,6 +7,7 @@ if (process.env.FORCE_COLOR) {
 const playwrightPort = process.env.PORT || "8888";
 const baseURL =
   process.env.PLAYWRIGHT_BASE_URL || `http://localhost:${playwrightPort}`;
+const runningInsideWorktree = /[/\\]\.worktrees[/\\]/.test(process.cwd());
 
 const e2eUserHeader = (projectName: string) => ({
   "x-get-me-job-e2e-user": `e2e-${projectName
@@ -18,7 +19,7 @@ export default defineConfig({
   testDir: ".",
   testMatch: ["e2e/**/*.spec.ts", "tests/e2e/**/*.spec.ts"],
   testIgnore: [
-    "**/.worktrees/**",
+    ...(!runningInsideWorktree ? ["**/.worktrees/**"] : []),
     "**/.next/**",
     "**/node_modules/**",
     "**/playwright-report/**",
