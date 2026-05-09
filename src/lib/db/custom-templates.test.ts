@@ -55,7 +55,10 @@ describe("Custom Template Database Functions", () => {
       "user-1",
       "Modern",
       null,
+      null,
+      null,
       JSON.stringify(analyzedStyles),
+      expect.any(String),
       expect.any(String)
     );
   });
@@ -73,7 +76,10 @@ describe("Custom Template Database Functions", () => {
       "user-1",
       "Modern",
       "doc-1",
+      null,
+      null,
       JSON.stringify(analyzedStyles),
+      expect.any(String),
       expect.any(String),
       "doc-1",
       "user-1"
