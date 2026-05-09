@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   BriefcaseBusiness,
@@ -180,6 +181,7 @@ export default function ProfilePage() {
       setForm(nextForm);
       setSavedForm(nextForm);
       setTargetRolesText(joinProfileList(nextForm.targetRoles));
+      window.dispatchEvent(new Event("taida:profile:updated"));
       setStatus("Changes saved");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not save profile");
@@ -261,6 +263,15 @@ export default function ProfilePage() {
             {error}
           </div>
         ) : null}
+        <div className="mb-5 flex flex-col gap-2 rounded-[var(--radius)] border bg-card/70 p-4 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+          <span>
+            Need to save longer Q&A like sponsorship, references, or why this
+            company?
+          </span>
+          <Button asChild variant="outline" size="sm">
+            <Link href="/answer-bank">Open your Answer Bank</Link>
+          </Button>
+        </div>
 
         <div className="grid gap-6 lg:grid-cols-[320px_minmax(0,1fr)]">
           <aside className="space-y-6">
