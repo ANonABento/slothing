@@ -453,6 +453,7 @@ The Columbus extension has a separate workflow (`.github/workflows/extension-e2e
 10. **`/opportunities/review` is the inbound queue for scraped/extension opportunities.** New ingestion paths (URL scrape, Columbus extension, future integrations) should land in the review queue first — not directly in the tracked list.
 11. **Pre-commit hook runs lint-staged + type-check.** If a hook fails, fix the underlying problem; don't pass `--no-verify`.
 12. **`docs/architecture.md` (lowercase)** is the canonical architecture doc. There used to be an uppercase `ARCHITECTURE.md` referencing the old "Columbus" name — it has been replaced.
+13. **App pages should stay wide by default.** `width="narrow"` in `src/app/(app)/**/page.tsx` is lint-flagged; use `max-w-prose` for text-heavy blocks instead. See `docs/page-width.md`.
 
 ---
 

@@ -47,7 +47,7 @@ export default function CompanyResearchPage() {
   if (error || !job) {
     return (
       <AppPage>
-        <PageContent width="narrow">
+        <PageContent>
           <StandardEmptyState
             icon={Briefcase}
             title={error || "Opportunity not found"}
@@ -65,13 +65,12 @@ export default function CompanyResearchPage() {
   return (
     <AppPage>
       <PageHeader
-        width="narrow"
         icon={Briefcase}
         title={job.company}
         description={job.title}
       />
 
-      <PageContent width="narrow">
+      <PageContent>
         <CompanyResearchCard companyName={job.company} jobId={jobId} />
       </PageContent>
     </AppPage>
