@@ -276,7 +276,7 @@ describe("ResumeEditor", () => {
       ".cover-letter-editor .ProseMirror",
     );
     expect(container.querySelector("style")?.textContent).toContain(
-      "padding: 0.7in",
+      "padding: var(--page-margin-top, 1in)",
     );
   });
 });

@@ -13,6 +13,12 @@ import { getGeneratedResume } from "@/lib/db";
 import type { TailoredResume } from "@/lib/resume/generator";
 import type { LatexOptions } from "@/lib/resume/latex-generator";
 import { getTemplateWithCustom } from "@/lib/resume/templates";
+import {
+  DEFAULT_PAGE_SETTINGS,
+  normalizePageSettings,
+  pageSettingsToPdfMargin,
+  type PageSettings,
+} from "@/lib/editor/page-settings";
 import { exec } from "child_process";
 import { writeFile, readFile, unlink, mkdtemp } from "fs/promises";
 import { tmpdir } from "os";
@@ -50,6 +56,20 @@ const exportSchema = z.object({
   format: z.enum(["pdf", "latex", "html"]).default("pdf"),
   latexOptions: z.record(z.string(), z.unknown()).optional(),
   compilePdf: z.boolean().default(false),
+  pageSettings: z
+    .object({
+      size: z.enum(["letter", "a4"]).optional(),
+      marginPreset: z.enum(["narrow", "normal", "wide", "custom"]).optional(),
+      margins: z
+        .object({
+          top: z.number().optional(),
+          right: z.number().optional(),
+          bottom: z.number().optional(),
+          left: z.number().optional(),
+        })
+        .optional(),
+    })
+    .optional(),
 });
 
 async function renderResumeHtml(
@@ -85,6 +105,7 @@ export async function POST(request: NextRequest) {
       format,
       latexOptions,
       compilePdf,
+      pageSettings,
     } = parsed.data;
 
     // Get resume content
@@ -195,7 +216,14 @@ export async function POST(request: NextRequest) {
     }
 
     const { generatePDF } = await import("@/lib/resume/pdf-export");
-    const pdfBuffer = await generatePDF(html);
+    const normalizedPageSettings = normalizePageSettings(
+      (pageSettings as Partial<PageSettings> | undefined) ??
+        DEFAULT_PAGE_SETTINGS,
+    );
+    const pdfBuffer = await generatePDF(html, {
+      format: normalizedPageSettings.size === "a4" ? "A4" : "Letter",
+      margin: pageSettingsToPdfMargin(normalizedPageSettings),
+    });
     return new NextResponse(new Uint8Array(pdfBuffer), {
       status: 200,
       headers: {

@@ -31,6 +31,50 @@ describe("createEditorBodyHtml", () => {
     expect(html).toContain('data-section-title="Summary"');
     expect(html).toContain("Product engineer");
   });
+
+  it("serializes tables for layout-driven resume content", () => {
+    const content: TipTapJSONContent = {
+      type: "doc",
+      content: [
+        {
+          type: "table",
+          attrs: { noBorders: true },
+          content: [
+            {
+              type: "tableRow",
+              content: [
+                {
+                  type: "tableCell",
+                  content: [
+                    {
+                      type: "paragraph",
+                      content: [{ type: "text", text: "Left" }],
+                    },
+                  ],
+                },
+                {
+                  type: "tableCell",
+                  content: [
+                    {
+                      type: "paragraph",
+                      content: [{ type: "text", text: "Right" }],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+
+    const html = createEditorBodyHtml(content);
+
+    expect(html).toContain("<table");
+    expect(html).toContain('data-no-borders="true"');
+    expect(html).toContain("<td");
+    expect(html).toContain("Right");
+  });
 });
 
 describe("createPrintableEditorHtml", () => {
@@ -46,6 +90,7 @@ describe("createPrintableEditorHtml", () => {
     expect(html).toContain("<title>Jane &lt;Resume&gt;</title>");
     expect(html).toContain(template.styles.accentColor);
     expect(html).toContain("@media print");
+    expect(html).toContain("@page { size: letter; margin: 1in 1in 1in 1in; }");
     expect(html).toContain(".resume-section-drag-handle");
     expect(html).toContain("<p>Resume body</p>");
   });
