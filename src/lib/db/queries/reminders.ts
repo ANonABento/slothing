@@ -1,7 +1,8 @@
-import { db, reminders, jobs, eq, and, desc, asc } from '../index';
-import { generateId } from '@/lib/utils';
+import { db, reminders, jobs, eq, and, desc, asc } from "../index";
+import { generateId } from "@/lib/utils";
 
-export type ReminderType = 'follow_up' | 'deadline' | 'interview' | 'custom';
+import { nowDate, nowIso, parseToDate, toIso } from "@/lib/format/time";
+export type ReminderType = "follow_up" | "deadline" | "interview" | "custom";
 
 export interface Reminder {
   id: string;
@@ -24,10 +25,13 @@ export interface ReminderWithJob extends Reminder {
 // Create a new reminder
 export async function createReminder(
   userId: string,
-  reminder: Omit<Reminder, 'id' | 'completed' | 'dismissed' | 'createdAt' | 'completedAt'>
+  reminder: Omit<
+    Reminder,
+    "id" | "completed" | "dismissed" | "createdAt" | "completedAt"
+  >,
 ): Promise<Reminder> {
   const id = generateId();
-  const now = new Date();
+  const now = nowDate();
 
   await db.insert(reminders).values({
     id,
@@ -39,7 +43,7 @@ export async function createReminder(
     dueDate: reminder.dueDate,
     completed: false,
     dismissed: false,
-    createdAt: now.toISOString(),
+    createdAt: toIso(now),
   });
 
   return {
@@ -51,7 +55,7 @@ export async function createReminder(
     dueDate: reminder.dueDate,
     completed: false,
     dismissed: false,
-    createdAt: now.toISOString(),
+    createdAt: toIso(now),
   };
 }
 
@@ -62,32 +66,40 @@ export async function getReminders(
     jobId?: string;
     includeCompleted?: boolean;
     includeDismissed?: boolean;
-  }
+  },
 ): Promise<ReminderWithJob[]> {
-  const { jobId, includeCompleted = false, includeDismissed = false } = options ?? {};
+  const {
+    jobId,
+    includeCompleted = false,
+    includeDismissed = false,
+  } = options ?? {};
 
   // Get reminders
-  let reminderRows = await db.select().from(reminders)
+  let reminderRows = await db
+    .select()
+    .from(reminders)
     .where(eq(reminders.userId, userId))
     .orderBy(asc(reminders.dueDate));
 
   // Filter by jobId if specified
   if (jobId) {
-    reminderRows = reminderRows.filter(r => r.jobId === jobId);
+    reminderRows = reminderRows.filter((r) => r.jobId === jobId);
   }
 
   // Filter completed/dismissed
   if (!includeCompleted) {
-    reminderRows = reminderRows.filter(r => !r.completed);
+    reminderRows = reminderRows.filter((r) => !r.completed);
   }
   if (!includeDismissed) {
-    reminderRows = reminderRows.filter(r => !r.dismissed);
+    reminderRows = reminderRows.filter((r) => !r.dismissed);
   }
 
   // Get job info for each reminder
   const result: ReminderWithJob[] = [];
   for (const row of reminderRows) {
-    const jobRows = await db.select().from(jobs)
+    const jobRows = await db
+      .select()
+      .from(jobs)
       .where(and(eq(jobs.id, row.jobId), eq(jobs.userId, userId)));
 
     const job = jobRows[0];
@@ -101,7 +113,7 @@ export async function getReminders(
       dueDate: row.dueDate,
       completed: row.completed ?? false,
       dismissed: row.dismissed ?? false,
-      createdAt: row.createdAt ?? '',
+      createdAt: row.createdAt ?? "",
       completedAt: row.completedAt ?? undefined,
       jobTitle: job?.title,
       jobCompany: job?.company,
@@ -112,44 +124,67 @@ export async function getReminders(
 }
 
 // Get upcoming reminders
-export async function getUpcomingReminders(userId: string, days: number = 7): Promise<ReminderWithJob[]> {
-  const futureDate = new Date();
+export async function getUpcomingReminders(
+  userId: string,
+  days: number = 7,
+): Promise<ReminderWithJob[]> {
+  const futureDate = nowDate();
   futureDate.setDate(futureDate.getDate() + days);
 
-  const allReminders = await getReminders(userId, { includeCompleted: false, includeDismissed: false });
+  const allReminders = await getReminders(userId, {
+    includeCompleted: false,
+    includeDismissed: false,
+  });
 
-  return allReminders.filter(r => new Date(r.dueDate) <= futureDate);
+  return allReminders.filter((r) => parseToDate(r.dueDate)! <= futureDate);
 }
 
 // Get overdue reminders
-export async function getOverdueReminders(userId: string): Promise<ReminderWithJob[]> {
-  const now = new Date();
+export async function getOverdueReminders(
+  userId: string,
+): Promise<ReminderWithJob[]> {
+  const now = nowDate();
 
-  const allReminders = await getReminders(userId, { includeCompleted: false, includeDismissed: false });
+  const allReminders = await getReminders(userId, {
+    includeCompleted: false,
+    includeDismissed: false,
+  });
 
-  return allReminders.filter(r => new Date(r.dueDate) < now);
+  return allReminders.filter((r) => parseToDate(r.dueDate)! < now);
 }
 
 // Complete a reminder
-export async function completeReminder(userId: string, reminderId: string): Promise<void> {
-  await db.update(reminders)
+export async function completeReminder(
+  userId: string,
+  reminderId: string,
+): Promise<void> {
+  await db
+    .update(reminders)
     .set({
       completed: true,
-      completedAt: new Date().toISOString(),
+      completedAt: nowIso(),
     })
     .where(and(eq(reminders.id, reminderId), eq(reminders.userId, userId)));
 }
 
 // Dismiss a reminder
-export async function dismissReminder(userId: string, reminderId: string): Promise<void> {
-  await db.update(reminders)
+export async function dismissReminder(
+  userId: string,
+  reminderId: string,
+): Promise<void> {
+  await db
+    .update(reminders)
     .set({ dismissed: true })
     .where(and(eq(reminders.id, reminderId), eq(reminders.userId, userId)));
 }
 
 // Delete a reminder
-export async function deleteReminder(userId: string, reminderId: string): Promise<void> {
-  await db.delete(reminders)
+export async function deleteReminder(
+  userId: string,
+  reminderId: string,
+): Promise<void> {
+  await db
+    .delete(reminders)
     .where(and(eq(reminders.id, reminderId), eq(reminders.userId, userId)));
 }
 
@@ -157,9 +192,12 @@ export async function deleteReminder(userId: string, reminderId: string): Promis
 export async function updateReminder(
   userId: string,
   reminderId: string,
-  updates: Partial<Pick<Reminder, 'title' | 'description' | 'dueDate' | 'type'>>
+  updates: Partial<
+    Pick<Reminder, "title" | "description" | "dueDate" | "type">
+  >,
 ): Promise<void> {
-  await db.update(reminders)
+  await db
+    .update(reminders)
     .set({
       title: updates.title,
       description: updates.description ?? null,
@@ -173,17 +211,17 @@ export async function updateReminder(
 export async function createFollowUpReminder(
   userId: string,
   jobId: string,
-  daysFromNow: number = 7
+  daysFromNow: number = 7,
 ): Promise<Reminder> {
-  const dueDate = new Date();
+  const dueDate = nowDate();
   dueDate.setDate(dueDate.getDate() + daysFromNow);
 
   return createReminder(userId, {
     jobId,
-    type: 'follow_up',
-    title: 'Follow up on application',
-    description: 'Send a follow-up email to check on your application status',
-    dueDate: dueDate.toISOString(),
+    type: "follow_up",
+    title: "Follow up on application",
+    description: "Send a follow-up email to check on your application status",
+    dueDate: toIso(dueDate),
   });
 }
 
@@ -194,20 +232,22 @@ export async function getReminderCounts(userId: string): Promise<{
   upcoming: number;
   completed: number;
 }> {
-  const now = new Date();
-  const weekFromNow = new Date();
+  const now = nowDate();
+  const weekFromNow = nowDate();
   weekFromNow.setDate(weekFromNow.getDate() + 7);
 
-  const allReminders = await db.select().from(reminders)
+  const allReminders = await db
+    .select()
+    .from(reminders)
     .where(eq(reminders.userId, userId));
 
-  const active = allReminders.filter(r => !r.completed && !r.dismissed);
-  const overdue = active.filter(r => new Date(r.dueDate) < now);
-  const upcoming = active.filter(r => {
-    const due = new Date(r.dueDate);
+  const active = allReminders.filter((r) => !r.completed && !r.dismissed);
+  const overdue = active.filter((r) => parseToDate(r.dueDate)! < now);
+  const upcoming = active.filter((r) => {
+    const due = parseToDate(r.dueDate)!;
     return due >= now && due <= weekFromNow;
   });
-  const completed = allReminders.filter(r => r.completed);
+  const completed = allReminders.filter((r) => r.completed);
 
   return {
     total: active.length,

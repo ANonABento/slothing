@@ -1,3 +1,4 @@
+import { nowEpoch, toIso } from "@/lib/format/time";
 /**
  * @route POST /api/extension/auth
  * @route DELETE /api/extension/auth
@@ -24,7 +25,7 @@ export async function POST(request: NextRequest) {
 
     // Generate a secure token
     const token = `${randomUUID()}-${randomUUID()}`;
-    const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
+    const expiresAt = new Date(nowEpoch() + 30 * 24 * 60 * 60 * 1000); // 30 days
 
     const id = randomUUID();
 
@@ -34,11 +35,11 @@ export async function POST(request: NextRequest) {
       INSERT INTO extension_sessions (id, user_id, token, device_info, expires_at)
       VALUES (?, ?, ?, ?, ?)
     `,
-    ).run(id, userId, token, deviceInfo || null, expiresAt.toISOString());
+    ).run(id, userId, token, deviceInfo || null, toIso(expiresAt));
 
     return NextResponse.json({
       token,
-      expiresAt: expiresAt.toISOString(),
+      expiresAt: toIso(expiresAt),
     });
   } catch (error) {
     console.error("Extension auth error:", error);

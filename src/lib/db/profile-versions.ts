@@ -1,6 +1,7 @@
 import db from "./legacy";
 import { generateId } from "@/lib/utils";
 
+import { nowIso } from "@/lib/format/time";
 const MAX_VERSIONS = 20;
 
 export interface ProfileVersion {
@@ -21,18 +22,25 @@ export interface ProfileVersionSummary {
  * Save a profile snapshot into profile_versions.
  * Auto-prunes to keep only the last MAX_VERSIONS entries.
  */
-export function createProfileSnapshot(userId: string, snapshotJson: string): ProfileVersion {
+export function createProfileSnapshot(
+  userId: string,
+  snapshotJson: string,
+): ProfileVersion {
   const lastVersion = db
-    .prepare("SELECT MAX(version) as max_version FROM profile_versions WHERE user_id = ?")
+    .prepare(
+      "SELECT MAX(version) as max_version FROM profile_versions WHERE user_id = ?",
+    )
     .get(userId) as { max_version: number | null } | undefined;
 
   const nextVersion = (lastVersion?.max_version ?? 0) + 1;
   const id = generateId();
 
-  db.prepare(`
+  db.prepare(
+    `
     INSERT INTO profile_versions (id, user_id, profile_id, version, snapshot_json, created_at)
     VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-  `).run(id, userId, userId, nextVersion, snapshotJson);
+  `,
+  ).run(id, userId, userId, nextVersion, snapshotJson);
 
   pruneVersions(userId);
 
@@ -41,16 +49,20 @@ export function createProfileSnapshot(userId: string, snapshotJson: string): Pro
     profileId: userId,
     version: nextVersion,
     snapshotJson,
-    createdAt: new Date().toISOString(),
+    createdAt: nowIso(),
   };
 }
 
 /**
  * List all profile versions (most recent first).
  */
-export function listProfileVersions(userId: string = "default"): ProfileVersionSummary[] {
+export function listProfileVersions(
+  userId: string = "default",
+): ProfileVersionSummary[] {
   const rows = db
-    .prepare("SELECT id, version, created_at FROM profile_versions WHERE user_id = ? ORDER BY version DESC")
+    .prepare(
+      "SELECT id, version, created_at FROM profile_versions WHERE user_id = ? ORDER BY version DESC",
+    )
     .all(userId) as Array<{ id: string; version: number; created_at: string }>;
 
   return rows.map((row) => ({
@@ -65,11 +77,19 @@ export function listProfileVersions(userId: string = "default"): ProfileVersionS
  */
 export function getProfileVersion(
   versionId: string,
-  userId: string = "default"
+  userId: string = "default",
 ): ProfileVersion | null {
   const row = db
     .prepare("SELECT * FROM profile_versions WHERE id = ? AND user_id = ?")
-    .get(versionId, userId) as { id: string; profile_id: string; version: number; snapshot_json: string; created_at: string } | undefined;
+    .get(versionId, userId) as
+    | {
+        id: string;
+        profile_id: string;
+        version: number;
+        snapshot_json: string;
+        created_at: string;
+      }
+    | undefined;
 
   if (!row) return null;
 
@@ -94,14 +114,18 @@ export function pruneVersions(userId: string = "default"): number {
 
   const excess = countRow.count - MAX_VERSIONS;
 
-  const result = db.prepare(`
+  const result = db
+    .prepare(
+      `
     DELETE FROM profile_versions WHERE id IN (
       SELECT id FROM profile_versions
       WHERE user_id = ?
       ORDER BY version ASC
       LIMIT ?
     )
-  `).run(userId, excess);
+  `,
+    )
+    .run(userId, excess);
 
   return result.changes;
 }

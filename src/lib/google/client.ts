@@ -1,3 +1,4 @@
+import { nowEpoch } from "@/lib/format/time";
 /**
  * Google API Client Factory
  *
@@ -53,7 +54,7 @@ async function loadGoogleAccount(
 }
 
 function nowInSeconds(): number {
-  return Math.floor(Date.now() / 1000);
+  return Math.floor(nowEpoch() / 1000);
 }
 
 function isAccessTokenExpired(expiresAt: number | null | undefined): boolean {

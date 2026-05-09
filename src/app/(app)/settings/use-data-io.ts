@@ -5,6 +5,7 @@ import { useErrorToast } from "@/hooks/use-error-toast";
 
 import { pluralize } from "@/lib/text/pluralize";
 
+import { formatIsoDateOnly, nowDate } from "@/lib/format/time";
 export type ExportType =
   | "profile"
   | "jobs-json"
@@ -38,9 +39,9 @@ interface FullExportData {
 
 export function getExportFileName(
   type: ExportType,
-  date: Date = new Date(),
+  date: Date = nowDate(),
 ): string {
-  const formattedDate = date.toISOString().split("T")[0];
+  const formattedDate = formatIsoDateOnly(date);
 
   switch (type) {
     case "profile":

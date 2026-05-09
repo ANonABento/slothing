@@ -1,5 +1,6 @@
 import type { ContactInfo, Experience, Profile } from "@/types";
 
+import { toEpoch } from "@/lib/format/time";
 export interface ProfileFormValues {
   avatarUrl: string;
   name: string;
@@ -24,11 +25,7 @@ const DEFAULT_CURRENCY = "USD";
 
 function cleanList(values: string[] | undefined): string[] {
   return Array.from(
-    new Set(
-      (values ?? [])
-        .map((value) => value.trim())
-        .filter(Boolean),
-    ),
+    new Set((values ?? []).map((value) => value.trim()).filter(Boolean)),
   );
 }
 
@@ -36,7 +33,7 @@ function mostRecentExperience(profile: Profile | null): Experience | undefined {
   return [...(profile?.experiences ?? [])].sort((a, b) => {
     if (a.current && !b.current) return -1;
     if (b.current && !a.current) return 1;
-    return new Date(b.startDate).getTime() - new Date(a.startDate).getTime();
+    return toEpoch(b.startDate) - toEpoch(a.startDate);
   })[0];
 }
 
@@ -59,18 +56,21 @@ export function getProfileInitials(name: string): string {
   return initials || "P";
 }
 
-export function buildResumeDefaults(profile: Profile | null): Pick<
-  ProfileFormValues,
-  "headline" | "targetRoles"
-> {
+export function buildResumeDefaults(
+  profile: Profile | null,
+): Pick<ProfileFormValues, "headline" | "targetRoles"> {
   const currentExperience = mostRecentExperience(profile);
   const headline = currentExperience
     ? `${currentExperience.title}${currentExperience.company ? ` at ${currentExperience.company}` : ""}`
     : "";
 
-  const experienceTitles = (profile?.experiences ?? []).map((experience) => experience.title);
+  const experienceTitles = (profile?.experiences ?? []).map(
+    (experience) => experience.title,
+  );
   const skillRoles = (profile?.skills ?? [])
-    .filter((skill) => skill.category === "technical" || skill.category === "tool")
+    .filter(
+      (skill) => skill.category === "technical" || skill.category === "tool",
+    )
     .slice(0, 3)
     .map((skill) => `${skill.name} role`);
 
@@ -80,7 +80,9 @@ export function buildResumeDefaults(profile: Profile | null): Pick<
   };
 }
 
-export function profileToFormValues(profile: Profile | null): ProfileFormValues {
+export function profileToFormValues(
+  profile: Profile | null,
+): ProfileFormValues {
   const contact = profile?.contact ?? ({ name: "" } satisfies ContactInfo);
   const resumeDefaults = buildResumeDefaults(profile);
   const targetRoles = cleanList(contact.targetRoles);
@@ -97,7 +99,8 @@ export function profileToFormValues(profile: Profile | null): ProfileFormValues 
     website: contact.website ?? "",
     summary: profile?.summary ?? "",
     workStyle: cleanList(contact.workStyle),
-    targetRoles: targetRoles.length > 0 ? targetRoles : resumeDefaults.targetRoles,
+    targetRoles:
+      targetRoles.length > 0 ? targetRoles : resumeDefaults.targetRoles,
     targetSalaryMin: contact.targetSalaryMin ?? "",
     targetSalaryMax: contact.targetSalaryMax ?? "",
     targetSalaryCurrency: contact.targetSalaryCurrency ?? DEFAULT_CURRENCY,
@@ -126,7 +129,8 @@ export function formValuesToProfileUpdate(
       targetRoles: cleanList(values.targetRoles),
       targetSalaryMin: values.targetSalaryMin.trim(),
       targetSalaryMax: values.targetSalaryMax.trim(),
-      targetSalaryCurrency: values.targetSalaryCurrency.trim() || DEFAULT_CURRENCY,
+      targetSalaryCurrency:
+        values.targetSalaryCurrency.trim() || DEFAULT_CURRENCY,
       openToRecruiters: values.openToRecruiters,
       shareContactInfo: values.shareContactInfo,
     },

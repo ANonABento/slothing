@@ -1,5 +1,6 @@
 import type { JobDescription } from "@/types";
 
+import { nowDate, parseToDate, toEpoch } from "@/lib/format/time";
 export type TimeRange = "7d" | "30d" | "90d" | "1y" | "all";
 
 export interface DataPoint {
@@ -43,8 +44,8 @@ export interface TrendMetrics {
 }
 
 function getDateRange(range: TimeRange): { start: Date; end: Date } {
-  const end = new Date();
-  const start = new Date();
+  const end = nowDate();
+  const start = nowDate();
 
   switch (range) {
     case "7d":
@@ -69,7 +70,11 @@ function getDateRange(range: TimeRange): { start: Date; end: Date } {
 
 function formatDateKey(date: Date, range: TimeRange): string {
   if (range === "7d") {
-    return date.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+    return date.toLocaleDateString("en-US", {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+    });
   }
   if (range === "30d") {
     return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
@@ -78,13 +83,13 @@ function formatDateKey(date: Date, range: TimeRange): string {
 }
 
 function getDateKey(date: Date, range: TimeRange): string {
-  const d = new Date(date);
+  const d = parseToDate(date)!;
   if (range === "7d" || range === "30d") {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   }
   // For longer ranges, group by week
   if (range === "90d") {
-    const weekStart = new Date(d);
+    const weekStart = parseToDate(d)!;
     weekStart.setDate(d.getDate() - d.getDay());
     return `${weekStart.getFullYear()}-W${String(Math.ceil((d.getDate() + 6 - d.getDay()) / 7)).padStart(2, "0")}`;
   }
@@ -95,7 +100,7 @@ function getDateKey(date: Date, range: TimeRange): string {
 function generateDateBuckets(range: TimeRange): Map<string, DataPoint> {
   const { start, end } = getDateRange(range);
   const buckets = new Map<string, DataPoint>();
-  const current = new Date(start);
+  const current = parseToDate(start)!;
 
   while (current <= end) {
     const key = getDateKey(current, range);
@@ -121,13 +126,14 @@ function generateDateBuckets(range: TimeRange): Map<string, DataPoint> {
 
 export function generateTimeSeriesData(
   jobs: JobDescription[],
-  range: TimeRange
+  range: TimeRange,
 ): TimeSeriesData {
   const { start, end } = getDateRange(range);
 
   // Filter jobs within range
   const filteredJobs = jobs.filter((job) => {
-    const created = new Date(job.createdAt);
+    const created = parseToDate(job.createdAt);
+    if (!created) return false;
     return created >= start && created <= end;
   });
 
@@ -139,14 +145,20 @@ export function generateTimeSeriesData(
 
   // Populate application data
   filteredJobs.forEach((job) => {
-    const key = getDateKey(new Date(job.createdAt), range);
+    const created = parseToDate(job.createdAt);
+    if (!created) return;
+    const key = getDateKey(created, range);
     const bucket = applicationBuckets.get(key);
     if (bucket) {
       bucket.value++;
     }
 
     // Track responses (interviewing, offered, rejected)
-    if (job.status === "interviewing" || job.status === "offered" || job.status === "rejected") {
+    if (
+      job.status === "interviewing" ||
+      job.status === "offered" ||
+      job.status === "rejected"
+    ) {
       const responseBucket = responseBuckets.get(key);
       if (responseBucket) {
         responseBucket.value++;
@@ -180,25 +192,31 @@ export function generateTimeSeriesData(
 
 export function calculateTrendMetrics(
   jobs: JobDescription[],
-  range: TimeRange
+  range: TimeRange,
 ): TrendMetrics {
   const { start, end } = getDateRange(range);
-  const halfwayPoint = new Date(start.getTime() + (end.getTime() - start.getTime()) / 2);
+  const halfwayPoint = parseToDate(
+    start.getTime() + (end.getTime() - start.getTime()) / 2,
+  )!;
 
-  const recentJobs = jobs.filter((j) => new Date(j.createdAt) >= halfwayPoint);
+  const recentJobs = jobs.filter(
+    (j) => (parseToDate(j.createdAt)?.getTime() ?? 0) >= halfwayPoint.getTime(),
+  );
   const olderJobs = jobs.filter((j) => {
-    const date = new Date(j.createdAt);
+    const date = parseToDate(j.createdAt);
+    if (!date) return false;
     return date >= start && date < halfwayPoint;
   });
 
   const calculateRate = (
     recent: JobDescription[],
     older: JobDescription[],
-    filterFn: (j: JobDescription) => boolean
+    filterFn: (j: JobDescription) => boolean,
   ) => {
     const recentCount = recent.filter(filterFn).length;
     const olderCount = older.filter(filterFn).length;
-    const recentRate = recent.length > 0 ? (recentCount / recent.length) * 100 : 0;
+    const recentRate =
+      recent.length > 0 ? (recentCount / recent.length) * 100 : 0;
     const olderRate = older.length > 0 ? (olderCount / older.length) * 100 : 0;
     const change = recentRate - olderRate;
 
@@ -206,7 +224,10 @@ export function calculateTrendMetrics(
       current: Math.round(recentRate),
       previous: Math.round(olderRate),
       change: Math.round(change),
-      trend: (change > 5 ? "up" : change < -5 ? "down" : "stable") as "up" | "down" | "stable",
+      trend: (change > 5 ? "up" : change < -5 ? "down" : "stable") as
+        | "up"
+        | "down"
+        | "stable",
     };
   };
 
@@ -215,28 +236,35 @@ export function calculateTrendMetrics(
     current: recentJobs.length,
     previous: olderJobs.length,
     change: recentJobs.length - olderJobs.length,
-    trend: (recentJobs.length > olderJobs.length * 1.1 ? "up" : recentJobs.length < olderJobs.length * 0.9 ? "down" : "stable") as "up" | "down" | "stable",
+    trend: (recentJobs.length > olderJobs.length * 1.1
+      ? "up"
+      : recentJobs.length < olderJobs.length * 0.9
+        ? "down"
+        : "stable") as "up" | "down" | "stable",
   };
 
   // Response rate (got any response vs total applications)
   const responseRate = calculateRate(
     recentJobs,
     olderJobs,
-    (j) => j.status === "interviewing" || j.status === "offered" || j.status === "rejected"
+    (j) =>
+      j.status === "interviewing" ||
+      j.status === "offered" ||
+      j.status === "rejected",
   );
 
   // Interview rate (got interview vs total applications)
   const interviewRate = calculateRate(
     recentJobs,
     olderJobs,
-    (j) => j.status === "interviewing" || j.status === "offered"
+    (j) => j.status === "interviewing" || j.status === "offered",
   );
 
   // Success rate (offers vs total applications)
   const successRate = calculateRate(
     recentJobs,
     olderJobs,
-    (j) => j.status === "offered"
+    (j) => j.status === "offered",
   );
 
   return {
@@ -260,7 +288,7 @@ export interface ActivityEvent {
 
 export function generateActivityTimeline(
   jobs: JobDescription[],
-  limit = 20
+  limit = 20,
 ): ActivityEvent[] {
   const events: ActivityEvent[] = [];
 
@@ -320,6 +348,6 @@ export function generateActivityTimeline(
 
   // Sort by date descending and limit
   return events
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .sort((a, b) => toEpoch(b.date) - toEpoch(a.date))
     .slice(0, limit);
 }

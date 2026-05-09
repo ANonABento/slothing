@@ -1,19 +1,33 @@
-import { db, jobs, eq, and, desc } from '../index';
-import { generateId } from '@/lib/utils';
-import type { JobDescription } from '@/types';
+import { db, jobs, eq, and, desc } from "../index";
+import { generateId } from "@/lib/utils";
+import type { JobDescription } from "@/types";
 
+import { nowIso } from "@/lib/format/time";
 // Valid job types
-const validJobTypes = ['full-time', 'part-time', 'contract', 'internship'] as const;
-type ValidJobType = typeof validJobTypes[number];
+const validJobTypes = [
+  "full-time",
+  "part-time",
+  "contract",
+  "internship",
+] as const;
+type ValidJobType = (typeof validJobTypes)[number];
 
 // Valid job statuses
-const validJobStatuses = ['pending', 'saved', 'applied', 'interviewing', 'offered', 'rejected', 'withdrawn'] as const;
-type ValidJobStatus = typeof validJobStatuses[number];
+const validJobStatuses = [
+  "pending",
+  "saved",
+  "applied",
+  "interviewing",
+  "offered",
+  "rejected",
+  "withdrawn",
+] as const;
+type ValidJobStatus = (typeof validJobStatuses)[number];
 
 // Map database row to JobDescription type
 function mapRowToJob(row: typeof jobs.$inferSelect): JobDescription {
   const jobType = row.type as ValidJobType | null;
-  const jobStatus = (row.status ?? 'saved') as ValidJobStatus;
+  const jobStatus = (row.status ?? "saved") as ValidJobStatus;
 
   return {
     id: row.id,
@@ -25,20 +39,24 @@ function mapRowToJob(row: typeof jobs.$inferSelect): JobDescription {
     salary: row.salary ?? undefined,
     description: row.description,
     requirements: row.requirementsJson ? JSON.parse(row.requirementsJson) : [],
-    responsibilities: row.responsibilitiesJson ? JSON.parse(row.responsibilitiesJson) : [],
+    responsibilities: row.responsibilitiesJson
+      ? JSON.parse(row.responsibilitiesJson)
+      : [],
     keywords: row.keywordsJson ? JSON.parse(row.keywordsJson) : [],
     url: row.url ?? undefined,
-    status: validJobStatuses.includes(jobStatus) ? jobStatus : 'saved',
+    status: validJobStatuses.includes(jobStatus) ? jobStatus : "saved",
     appliedAt: row.appliedAt ?? undefined,
     deadline: row.deadline ?? undefined,
     notes: row.notes ?? undefined,
-    createdAt: row.createdAt ?? new Date().toISOString(),
+    createdAt: row.createdAt ?? nowIso(),
   };
 }
 
 // Get all jobs for a user
 export async function getJobs(userId: string): Promise<JobDescription[]> {
-  const rows = await db.select().from(jobs)
+  const rows = await db
+    .select()
+    .from(jobs)
     .where(eq(jobs.userId, userId))
     .orderBy(desc(jobs.createdAt));
 
@@ -46,8 +64,13 @@ export async function getJobs(userId: string): Promise<JobDescription[]> {
 }
 
 // Get single job for a user
-export async function getJob(userId: string, jobId: string): Promise<JobDescription | null> {
-  const rows = await db.select().from(jobs)
+export async function getJob(
+  userId: string,
+  jobId: string,
+): Promise<JobDescription | null> {
+  const rows = await db
+    .select()
+    .from(jobs)
     .where(and(eq(jobs.id, jobId), eq(jobs.userId, userId)));
 
   if (rows.length === 0) return null;
@@ -57,7 +80,7 @@ export async function getJob(userId: string, jobId: string): Promise<JobDescript
 // Create job for a user
 export async function createJob(
   userId: string,
-  job: Omit<JobDescription, 'id' | 'createdAt'>
+  job: Omit<JobDescription, "id" | "createdAt">,
 ): Promise<JobDescription> {
   const id = generateId();
 
@@ -75,7 +98,7 @@ export async function createJob(
     responsibilitiesJson: JSON.stringify(job.responsibilities ?? []),
     keywordsJson: JSON.stringify(job.keywords ?? []),
     url: job.url ?? null,
-    status: job.status ?? 'saved',
+    status: job.status ?? "saved",
     appliedAt: job.appliedAt ?? null,
     deadline: job.deadline ?? null,
     notes: job.notes ?? null,
@@ -89,14 +112,15 @@ export async function createJob(
 export async function updateJob(
   userId: string,
   jobId: string,
-  updates: Partial<JobDescription>
+  updates: Partial<JobDescription>,
 ): Promise<JobDescription | null> {
   const existing = await getJob(userId, jobId);
   if (!existing) return null;
 
   const merged = { ...existing, ...updates };
 
-  await db.update(jobs)
+  await db
+    .update(jobs)
     .set({
       title: merged.title,
       company: merged.company,
@@ -109,7 +133,7 @@ export async function updateJob(
       responsibilitiesJson: JSON.stringify(merged.responsibilities ?? []),
       keywordsJson: JSON.stringify(merged.keywords ?? []),
       url: merged.url ?? null,
-      status: merged.status ?? 'saved',
+      status: merged.status ?? "saved",
       appliedAt: merged.appliedAt ?? null,
       deadline: merged.deadline ?? null,
       notes: merged.notes ?? null,
@@ -124,12 +148,14 @@ export async function updateJobStatus(
   userId: string,
   jobId: string,
   status: string,
-  appliedAt?: string
+  appliedAt?: string,
 ): Promise<JobDescription | null> {
-  const now = new Date().toISOString();
-  const appliedValue = status === 'applied' && !appliedAt ? now : appliedAt ?? null;
+  const now = nowIso();
+  const appliedValue =
+    status === "applied" && !appliedAt ? now : (appliedAt ?? null);
 
-  await db.update(jobs)
+  await db
+    .update(jobs)
     .set({
       status,
       appliedAt: appliedValue,
@@ -141,13 +167,17 @@ export async function updateJobStatus(
 
 // Delete job for a user
 export async function deleteJob(userId: string, jobId: string): Promise<void> {
-  await db.delete(jobs)
-    .where(and(eq(jobs.id, jobId), eq(jobs.userId, userId)));
+  await db.delete(jobs).where(and(eq(jobs.id, jobId), eq(jobs.userId, userId)));
 }
 
 // Get jobs by status for a user
-export async function getJobsByStatus(userId: string, status: string): Promise<JobDescription[]> {
-  const rows = await db.select().from(jobs)
+export async function getJobsByStatus(
+  userId: string,
+  status: string,
+): Promise<JobDescription[]> {
+  const rows = await db
+    .select()
+    .from(jobs)
     .where(and(eq(jobs.userId, userId), eq(jobs.status, status)))
     .orderBy(desc(jobs.createdAt));
 
@@ -155,9 +185,10 @@ export async function getJobsByStatus(userId: string, status: string): Promise<J
 }
 
 // Count jobs by status for a user
-export async function countJobsByStatus(userId: string): Promise<Record<string, number>> {
-  const rows = await db.select().from(jobs)
-    .where(eq(jobs.userId, userId));
+export async function countJobsByStatus(
+  userId: string,
+): Promise<Record<string, number>> {
+  const rows = await db.select().from(jobs).where(eq(jobs.userId, userId));
 
   const counts: Record<string, number> = {
     pending: 0,
@@ -169,7 +200,7 @@ export async function countJobsByStatus(userId: string): Promise<Record<string, 
   };
 
   for (const row of rows) {
-    const status = row.status ?? 'saved';
+    const status = row.status ?? "saved";
     counts[status] = (counts[status] ?? 0) + 1;
   }
 

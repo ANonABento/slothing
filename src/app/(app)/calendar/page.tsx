@@ -4,6 +4,12 @@ import { useState, useEffect, useMemo } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import {
+  formatIsoDateOnly,
+  nowDate,
+  parseToDate,
+  toIso,
+} from "@/lib/format/time";
+import {
   Calendar as CalendarIcon,
   CalendarSearch,
   ChevronLeft,
@@ -105,7 +111,7 @@ export default function CalendarPage() {
   const [jobs, setJobs] = useState<JobDescription[]>([]);
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [loading, setLoading] = useState(true);
-  const [currentDate, setCurrentDate] = useState(new Date());
+  const [currentDate, setCurrentDate] = useState(nowDate());
   const [filterType, setFilterType] = useState<string>("all");
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [showSubscribeDialog, setShowSubscribeDialog] = useState(false);
@@ -177,7 +183,7 @@ export default function CalendarPage() {
         allEvents.push({
           id: `interview-${job.id}`,
           title: `Interview: ${job.title}`,
-          date: new Date(job.appliedAt!),
+          date: parseToDate(job.appliedAt!)!,
           type: "interview",
           job,
         });
@@ -190,7 +196,7 @@ export default function CalendarPage() {
         allEvents.push({
           id: `deadline-${job.id}`,
           title: `Deadline: ${job.title}`,
-          date: new Date(job.deadline!),
+          date: parseToDate(job.deadline!)!,
           type: "deadline",
           job,
         });
@@ -204,7 +210,7 @@ export default function CalendarPage() {
         allEvents.push({
           id: `reminder-${reminder.id}`,
           title: reminder.title,
-          date: new Date(reminder.dueDate),
+          date: parseToDate(reminder.dueDate)!,
           type: "reminder",
           job,
           reminder,
@@ -269,8 +275,8 @@ export default function CalendarPage() {
   };
 
   const goToToday = () => {
-    setCurrentDate(new Date());
-    setSelectedDate(new Date());
+    setCurrentDate(nowDate());
+    setSelectedDate(nowDate());
   };
 
   const exportCalendar = (type: string) => {
@@ -281,7 +287,7 @@ export default function CalendarPage() {
     setNewEvent({
       title: "",
       description: "",
-      dueDate: selectedDate ? selectedDate.toISOString().split("T")[0] : "",
+      dueDate: selectedDate ? formatIsoDateOnly(selectedDate) : "",
       dueTime: "09:00",
       jobId: "",
       type: "custom",
@@ -328,7 +334,7 @@ export default function CalendarPage() {
   };
 
   const isToday = (date: Date) => {
-    const today = new Date();
+    const today = nowDate();
     return (
       date.getFullYear() === today.getFullYear() &&
       date.getMonth() === today.getMonth() &&
@@ -473,7 +479,7 @@ export default function CalendarPage() {
 
                 return (
                   <button
-                    key={date.toISOString()}
+                    key={toIso(date)}
                     onClick={() => setSelectedDate(date)}
                     className={`relative h-14 rounded-lg p-1 text-sm transition-colors sm:h-16 ${
                       isSelected
@@ -597,7 +603,7 @@ export default function CalendarPage() {
             <div className="mt-6 pt-6 border-t">
               <h4 className="font-medium mb-3 text-sm">Upcoming Events</h4>
               {events
-                .filter((e) => e.date >= new Date())
+                .filter((e) => e.date >= nowDate())
                 .slice(0, 5)
                 .map((event) => (
                   <div
@@ -616,7 +622,7 @@ export default function CalendarPage() {
                     </span>
                   </div>
                 ))}
-              {events.filter((e) => e.date >= new Date()).length === 0 && (
+              {events.filter((e) => e.date >= nowDate()).length === 0 && (
                 <StandardEmptyState
                   icon={ListChecks}
                   title="No upcoming events"

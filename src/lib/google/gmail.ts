@@ -1,3 +1,4 @@
+import { parseToDate } from "@/lib/format/time";
 /**
  * Gmail Operations
  *
@@ -86,7 +87,7 @@ function extractBody(payload?: gmail_v1.Schema$MessagePart): string {
  */
 function getHeader(
   headers: gmail_v1.Schema$MessagePartHeader[] | undefined,
-  name: string
+  name: string,
 ): string {
   if (!headers) return "";
   return (
@@ -99,7 +100,7 @@ function getHeader(
  * Get full message details
  */
 export async function getMessage(
-  messageId: string
+  messageId: string,
 ): Promise<GmailMessage | null> {
   try {
     const gmail = await createGmailClient();
@@ -135,7 +136,7 @@ export async function getMessage(
  */
 export async function listMessages(
   query: string,
-  maxResults = 20
+  maxResults = 20,
 ): Promise<GmailMessage[]> {
   const gmail = await createGmailClient();
 
@@ -165,7 +166,7 @@ export async function searchJobEmails(
   options: {
     since?: Date;
     maxResults?: number;
-  } = {}
+  } = {},
 ): Promise<GmailMessage[]> {
   const queries = [
     // Recruiter outreach
@@ -292,7 +293,7 @@ export function parseJobEmail(message: GmailMessage): ParsedJobEmail {
     const match = fullText.match(pattern);
     if (match) {
       try {
-        const parsed = new Date(match[0]);
+        const parsed = parseToDate(match[0])!;
         if (!isNaN(parsed.getTime())) {
           interviewDate = parsed;
           break;
@@ -326,7 +327,7 @@ export async function sendEmail(
     threadId?: string;
     cc?: string;
     bcc?: string;
-  } = {}
+  } = {},
 ): Promise<SendEmailResult> {
   try {
     const gmail = await createGmailClient();
@@ -406,7 +407,7 @@ export async function getOrCreateJobSearchLabel(): Promise<string | null> {
  */
 export async function addLabelToMessage(
   messageId: string,
-  labelId: string
+  labelId: string,
 ): Promise<boolean> {
   try {
     const gmail = await createGmailClient();
@@ -429,7 +430,7 @@ export async function addLabelToMessage(
  */
 export async function removeLabelFromMessage(
   messageId: string,
-  labelId: string
+  labelId: string,
 ): Promise<boolean> {
   try {
     const gmail = await createGmailClient();

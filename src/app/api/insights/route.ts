@@ -1,3 +1,4 @@
+import { formatIsoDateOnly, nowDate, parseToDate } from "@/lib/format/time";
 /**
  * @route GET /api/insights
  * @description Generate AI-powered insights on skill gaps, market trends, and application strategy
@@ -31,12 +32,12 @@ export async function GET(request: Request) {
     const resumes = getAllGeneratedResumes(authResult.userId);
 
     // Get snapshots from last 30 days for trend analysis
-    const now = new Date();
-    const thirtyDaysAgo = new Date(now);
+    const now = nowDate();
+    const thirtyDaysAgo = parseToDate(now)!;
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     const snapshots = getAnalyticsSnapshots(
-      thirtyDaysAgo.toISOString().split("T")[0],
-      now.toISOString().split("T")[0],
+      formatIsoDateOnly(thirtyDaysAgo),
+      formatIsoDateOnly(now),
       authResult.userId,
     );
 

@@ -1,6 +1,7 @@
 import type { JobDescription } from "@/types";
 import type { SuccessMetrics, FunnelStage } from "./success-metrics";
 
+import { formatDateOnly, nowIso } from "@/lib/format/time";
 export interface AnalyticsReportData {
   generatedAt: string;
   range: string;
@@ -50,11 +51,7 @@ function escapeCSVValue(value: string | number | null | undefined): string {
 function formatDate(dateStr: string | null): string {
   if (!dateStr) return "";
   try {
-    return new Date(dateStr).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
+    return formatDateOnly(dateStr);
   } catch {
     return dateStr;
   }
@@ -162,7 +159,7 @@ export function prepareReportData(
   range: string,
 ): AnalyticsReportData {
   return {
-    generatedAt: new Date().toISOString(),
+    generatedAt: nowIso(),
     range,
     overview: analytics.overview,
     jobs: analytics.jobs,

@@ -1,3 +1,4 @@
+import { nowDate, nowIso, parseToDate } from "@/lib/format/time";
 // Extension authentication utilities
 import { NextRequest, NextResponse } from "next/server";
 import db from "@/lib/db/legacy";
@@ -55,8 +56,8 @@ export function requireExtensionAuth(
     }
 
     // Check expiry
-    const expiresAt = new Date(session.expires_at);
-    if (expiresAt < new Date()) {
+    const expiresAt = parseToDate(session.expires_at)!;
+    if (expiresAt < nowDate()) {
       db.prepare(
         `DELETE FROM extension_sessions WHERE id = ? AND user_id = ?`,
       ).run(session.id, session.user_id);
@@ -74,7 +75,7 @@ export function requireExtensionAuth(
       `
       UPDATE extension_sessions SET last_used_at = ? WHERE id = ? AND user_id = ?
     `,
-    ).run(new Date().toISOString(), session.id, session.user_id);
+    ).run(nowIso(), session.id, session.user_id);
 
     return {
       success: true,

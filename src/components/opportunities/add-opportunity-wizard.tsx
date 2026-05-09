@@ -1,5 +1,7 @@
 "use client";
 
+import { nowIso } from "@/lib/format/time";
+
 import {
   FormEvent,
   KeyboardEvent,
@@ -320,7 +322,7 @@ export function AddOpportunityWizard({
     }
 
     setIsSaving(true);
-    const now = new Date().toISOString();
+    const now = nowIso();
     const nextOpportunity = buildCreateOpportunity(form, now);
 
     try {

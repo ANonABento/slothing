@@ -1,5 +1,11 @@
-import type { JobDescription, Profile, EmailTemplate, EmailTemplateType } from "@/types";
+import type {
+  JobDescription,
+  Profile,
+  EmailTemplate,
+  EmailTemplateType,
+} from "@/types";
 
+import { formatDateOnly } from "@/lib/format/time";
 export interface EmailContext {
   job?: JobDescription;
   profile?: Profile;
@@ -27,11 +33,7 @@ function extractPlaceholders(text: string): string[] {
 function formatDate(date?: string): string {
   if (!date) return "[DATE]";
   try {
-    return new Date(date).toLocaleDateString("en-US", {
-      weekday: "long",
-      month: "long",
-      day: "numeric",
-    });
+    return formatDateOnly(date);
   } catch {
     return date;
   }
@@ -127,7 +129,9 @@ ${profile?.contact?.linkedin || "[YOUR LINKEDIN]"}`;
   };
 }
 
-export function generateStatusInquiryEmail(context: EmailContext): GeneratedEmail {
+export function generateStatusInquiryEmail(
+  context: EmailContext,
+): GeneratedEmail {
   const { job, profile } = context;
   const name = profile?.contact?.name || "[YOUR NAME]";
   const jobTitle = job?.title || "[JOB TITLE]";
@@ -157,7 +161,9 @@ ${profile?.contact?.phone || "[YOUR PHONE]"}`;
   };
 }
 
-export function generateNegotiationEmail(context: EmailContext): GeneratedEmail {
+export function generateNegotiationEmail(
+  context: EmailContext,
+): GeneratedEmail {
   const { job, profile, customNote } = context;
   const name = profile?.contact?.name || "[YOUR NAME]";
   const jobTitle = job?.title || "[JOB TITLE]";
@@ -190,7 +196,7 @@ ${profile?.contact?.email || "[YOUR EMAIL]"}`;
 
 export function generateEmail(
   type: EmailTemplateType,
-  context: EmailContext
+  context: EmailContext,
 ): GeneratedEmail {
   switch (type) {
     case "follow_up":

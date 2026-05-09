@@ -1,4 +1,5 @@
 import { randomUUID } from "crypto";
+import { nowIso } from "@/lib/format/time";
 import {
   AnswerBankEntry,
   normalizeQuestion,
@@ -61,7 +62,7 @@ export async function upsertLearnedAnswer(
     )
     .limit(1);
   const existing = existingRows[0];
-  const now = new Date().toISOString();
+  const now = nowIso();
 
   if (existing) {
     await db
@@ -144,7 +145,7 @@ export async function updateLearnedAnswer(
 
   const question = input.question?.trim() || existing.question;
   const answer = input.answer?.trim() || existing.answer;
-  const now = new Date().toISOString();
+  const now = nowIso();
   const next = {
     question,
     questionNormalized: normalizeQuestion(question),

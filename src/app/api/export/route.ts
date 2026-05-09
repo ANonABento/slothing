@@ -7,6 +7,7 @@ import { getAllCoverLetters } from "@/lib/db/cover-letters";
 import { getBankEntries } from "@/lib/db/profile-bank";
 import { requireAuth, isAuthError } from "@/lib/auth";
 
+import { formatIsoDateOnly, nowIso } from "@/lib/format/time";
 export const dynamic = "force-dynamic";
 
 // GET - Export all user data as JSON
@@ -27,7 +28,7 @@ export async function GET() {
 
     const exportData = {
       version: "2.0",
-      exportedAt: new Date().toISOString(),
+      exportedAt: nowIso(),
       data: {
         profile: getProfile(authResult.userId),
         jobs,
@@ -55,7 +56,7 @@ export async function GET() {
       },
     };
 
-    const dateStr = new Date().toISOString().split("T")[0];
+    const dateStr = formatIsoDateOnly();
     return new NextResponse(JSON.stringify(exportData, null, 2), {
       headers: {
         "Content-Type": "application/json",

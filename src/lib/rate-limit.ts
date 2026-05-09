@@ -1,3 +1,4 @@
+import { nowEpoch } from "@/lib/format/time";
 /**
  * Simple in-memory rate limiter for API routes.
  * Uses a sliding window approach.
@@ -30,11 +31,13 @@ function startCleanup(windowMs: number): void {
   if (cleanupInterval) return;
 
   cleanupInterval = setInterval(() => {
-    const now = Date.now();
+    const now = nowEpoch();
     const entries = Array.from(rateLimitStore.entries());
     for (const [key, entry] of entries) {
       // Remove timestamps older than the window
-      entry.timestamps = entry.timestamps.filter((t: number) => now - t < windowMs);
+      entry.timestamps = entry.timestamps.filter(
+        (t: number) => now - t < windowMs,
+      );
       // Remove entry if no timestamps left
       if (entry.timestamps.length === 0) {
         rateLimitStore.delete(key);
@@ -52,10 +55,10 @@ function startCleanup(windowMs: number): void {
  */
 export function checkRateLimit(
   identifier: string,
-  config: RateLimitConfig
+  config: RateLimitConfig,
 ): RateLimitResult {
   const { windowMs, maxRequests } = config;
-  const now = Date.now();
+  const now = nowEpoch();
 
   // Start cleanup process if not already running
   startCleanup(windowMs);
@@ -140,10 +143,7 @@ export const rateLimiters = {
  * @param userId - Optional user ID for authenticated requests
  * @returns Unique identifier for rate limiting
  */
-export function getClientIdentifier(
-  request: Request,
-  userId?: string
-): string {
+export function getClientIdentifier(request: Request, userId?: string): string {
   // Prefer user ID if available (authenticated requests)
   if (userId) {
     return `user:${userId}`;

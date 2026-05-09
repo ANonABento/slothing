@@ -1,3 +1,4 @@
+import { formatIsoDateOnly, nowIso } from "@/lib/format/time";
 /**
  * @route GET /api/export/jobs
  * @description Legacy compatibility route. Export opportunities as CSV or JSON format.
@@ -63,14 +64,14 @@ export async function GET(request: NextRequest) {
       return new NextResponse(csv, {
         headers: {
           "Content-Type": "text/csv",
-          "Content-Disposition": `attachment; filename="slothing-opportunities-${new Date().toISOString().split("T")[0]}.csv"`,
+          "Content-Disposition": `attachment; filename="slothing-opportunities-${formatIsoDateOnly()}.csv"`,
         },
       });
     }
 
     // JSON export
     const exportData = {
-      exportedAt: new Date().toISOString(),
+      exportedAt: nowIso(),
       version: "1.0",
       totalOpportunities: jobs.length,
       opportunities: jobs.map((job) => ({
@@ -96,7 +97,7 @@ export async function GET(request: NextRequest) {
     return new NextResponse(JSON.stringify(exportData, null, 2), {
       headers: {
         "Content-Type": "application/json",
-        "Content-Disposition": `attachment; filename="slothing-opportunities-${new Date().toISOString().split("T")[0]}.json"`,
+        "Content-Disposition": `attachment; filename="slothing-opportunities-${formatIsoDateOnly()}.json"`,
       },
     });
   } catch (error) {
