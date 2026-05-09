@@ -264,7 +264,6 @@ export default function AnalyticsPage() {
     <AppPage>
       <PageHeader
         icon={BarChart3}
-        eyebrow="Insights"
         title="Analytics Dashboard"
         description="Track your job search progress and identify areas for improvement."
         actions={

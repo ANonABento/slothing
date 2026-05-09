@@ -27,7 +27,6 @@ describe("page layout helpers", () => {
     render(
       <PageHeader
         icon={Settings}
-        eyebrow="Configuration"
         title="Settings"
         description="Configure the app."
         actions={<button>Save</button>}
@@ -39,7 +38,6 @@ describe("page layout helpers", () => {
     expect(screen.getByRole("heading", { name: "Settings" })).toHaveClass(
       "text-3xl",
     );
-    expect(screen.getByText("Configuration")).toBeInTheDocument();
     expect(screen.getByText("Configure the app.")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Save" })).toBeInTheDocument();
   });
