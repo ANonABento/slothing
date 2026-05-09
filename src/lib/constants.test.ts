@@ -52,6 +52,9 @@ describe("constants barrel", () => {
     expect(DEFAULT_MODEL_BY_PROVIDER.openai).toBe("gpt-4o-mini");
 
     expect(EMAIL_TEMPLATE_TYPES).toContain("thank_you");
+    expect(EMAIL_TEMPLATE_TYPES).toContain("cold_outreach");
+    expect(EMAIL_TEMPLATE_TYPES).toContain("recruiter_reply");
+    expect(EMAIL_TEMPLATE_TYPES).toContain("reference_request");
     expect(REMINDER_TYPES).toContain("interview");
     expect(NOTIFICATION_ACTIONS).toContain("markAllRead");
 

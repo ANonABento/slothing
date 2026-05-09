@@ -98,9 +98,14 @@ export type { LLMProvider, LLMConfigInput } from "./llm";
 export {
   EMAIL_TEMPLATE_TYPES,
   emailTemplateTypeSchema,
+  createEmailSendSchema,
   generateEmailSchema,
 } from "./email";
-export type { EmailTemplateType, GenerateEmailInput } from "./email";
+export type {
+  CreateEmailSendInput,
+  EmailTemplateType,
+  GenerateEmailInput,
+} from "./email";
 
 export {
   REMINDER_TYPES,

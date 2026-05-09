@@ -37,6 +37,7 @@ export function buildLocalDevCleanSlateStatements(
     { sql: "DELETE FROM resume_ab_tracking WHERE user_id = ?", params: userParam },
     { sql: "DELETE FROM ats_scan_history WHERE user_id = ?", params: userParam },
     { sql: "DELETE FROM cover_letters WHERE profile_id = ?", params: userParam },
+    { sql: "DELETE FROM email_sends WHERE user_id = ?", params: userParam },
     { sql: "DELETE FROM email_drafts WHERE user_id = ?", params: userParam },
     { sql: "DELETE FROM analytics_snapshots WHERE user_id = ?", params: userParam },
     { sql: "DELETE FROM job_status_history WHERE user_id = ?", params: userParam },
