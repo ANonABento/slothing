@@ -1,9 +1,8 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import type { DragEvent, ReactNode } from "react";
+import type { DragEvent } from "react";
 import {
   Briefcase,
   CalendarClock,
@@ -14,7 +13,6 @@ import {
   GripVertical,
   LayoutGrid,
   List,
-  Mail,
   MapPin,
   Plus,
   Search,
@@ -44,9 +42,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { SkeletonButton } from "@/components/ui/skeleton";
 import { useErrorToast } from "@/hooks/use-error-toast";
 import { readJsonResponse } from "@/lib/http";
+import { pluralize } from "@/lib/text/pluralize";
 import { cn } from "@/lib/utils";
 import {
   DEFAULT_OPPORTUNITY_FILTERS,
@@ -57,6 +55,7 @@ import {
   OPPORTUNITY_TYPE_TAB_OPTIONS,
   REMOTE_TYPE_OPTIONS,
   SAMPLE_OPPORTUNITIES,
+  countActiveOpportunityFilters,
   filterOpportunities,
   formatOpportunityDate,
   formatOpportunityLocation,
@@ -69,17 +68,14 @@ import {
   writeOpportunityViewMode,
   type Opportunity,
   type OpportunityFilters,
-  type OpportunitySource,
   type OpportunityStatus,
   type OpportunityViewMode,
 } from "./utils";
+import { OpportunitiesEmptyHero } from "./_components/empty-hero";
+import { SegmentedToggle } from "./_components/segmented-toggle";
 
 const STORAGE_KEY = "taida-opportunities";
-
-const GmailImportModal = dynamic(
-  () => import("@/components/google").then((module) => module.GmailImportModal),
-  { loading: () => <SkeletonButton className="h-10 w-28" />, ssr: false },
-);
+const FILTERS_OPEN_STORAGE_KEY = "taida:opportunities:filters-open";
 
 interface OpportunitiesResponse {
   opportunities?: Opportunity[];
@@ -98,6 +94,9 @@ export default function OpportunitiesPage() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [viewMode, setViewMode] = useState<OpportunityViewMode>("list");
+  const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+  const [hasLoadedFiltersPreference, setHasLoadedFiltersPreference] =
+    useState(false);
   const showErrorToast = useErrorToast();
 
   const fetchOpportunities = useCallback(async () => {
@@ -139,6 +138,16 @@ export default function OpportunitiesPage() {
     void fetchOpportunities();
   }, [fetchOpportunities]);
 
+  useEffect(() => {
+    setIsFiltersOpen(readFiltersOpenPreference());
+    setHasLoadedFiltersPreference(true);
+  }, []);
+
+  useEffect(() => {
+    if (!hasLoadedFiltersPreference) return;
+    writeFiltersOpenPreference(isFiltersOpen);
+  }, [hasLoadedFiltersPreference, isFiltersOpen]);
+
   const filteredOpportunities = useMemo(
     () => filterOpportunities(opportunities, filters),
     [opportunities, filters],
@@ -165,6 +174,7 @@ export default function OpportunitiesPage() {
   );
 
   const hasActiveFilters = hasActiveOpportunityFilters(filters);
+  const activeFilterCount = countActiveOpportunityFilters(filters);
 
   function updateFilter<T extends keyof OpportunityFilters>(
     key: T,
@@ -245,41 +255,6 @@ export default function OpportunitiesPage() {
     }
   }
 
-  async function handleGmailImport(email: {
-    subject: string;
-    from: string;
-    snippet: string;
-    parsed?: { role?: string; company?: string };
-  }) {
-    const jobData = {
-      title:
-        email.parsed?.role ||
-        email.subject.replace(/^(Re:|Fwd:)\s*/gi, "").trim(),
-      company:
-        email.parsed?.company ||
-        email.from.split("@")[1]?.split(".")[0] ||
-        "Unknown",
-      description: email.snippet,
-      url: "",
-    };
-
-    try {
-      const response = await fetch("/api/opportunities", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(jobData),
-      });
-
-      await readJsonResponse<unknown>(response, "Failed to create job");
-      await fetchOpportunities();
-    } catch (error) {
-      showErrorToast(error, {
-        title: "Could not import Gmail opportunity",
-        fallbackDescription: "Please try importing the email again.",
-      });
-    }
-  }
-
   return (
     <AppPage>
       <PageHeader
@@ -287,47 +262,40 @@ export default function OpportunitiesPage() {
         title="Opportunities"
         description="Review saved opportunities, compare fit signals, and keep application work moving from one list."
         actions={
-          <div className="flex flex-wrap items-center gap-3">
-            <div
-              className="flex rounded-lg border bg-card p-1"
-              aria-label="Opportunity view mode"
-            >
+          <div className="flex flex-wrap items-center gap-2">
+            <SegmentedToggle
+              ariaLabel="Opportunity view mode"
+              options={[
+                { value: "list", label: "List", icon: List },
+                { value: "kanban", label: "Kanban", icon: LayoutGrid },
+              ]}
+              value={viewMode}
+              onChange={handleViewModeChange}
+            />
+            {viewMode === "list" ? (
               <Button
                 type="button"
-                size="sm"
-                variant={viewMode === "list" ? "default" : "ghost"}
-                aria-pressed={viewMode === "list"}
-                onClick={() => handleViewModeChange("list")}
-                className="h-11"
+                variant="outline"
+                onClick={() => setIsFiltersOpen((open) => !open)}
+                aria-expanded={isFiltersOpen}
+                aria-controls="opportunities-filters-panel"
               >
-                <List className="mr-2 h-4 w-4" />
-                List
+                <Filter className="mr-2 h-4 w-4" />
+                Filters
+                {hasActiveFilters ? (
+                  <Badge
+                    variant="secondary"
+                    className="ml-2 h-5 px-1.5 text-[11px]"
+                  >
+                    {activeFilterCount}
+                  </Badge>
+                ) : null}
               </Button>
-              <Button
-                type="button"
-                size="sm"
-                variant={viewMode === "kanban" ? "default" : "ghost"}
-                aria-pressed={viewMode === "kanban"}
-                onClick={() => handleViewModeChange("kanban")}
-                className="h-11"
-              >
-                <LayoutGrid className="mr-2 h-4 w-4" />
-                Kanban
-              </Button>
-            </div>
+            ) : null}
             <Button variant="outline" onClick={() => setIsImportOpen(true)}>
               <FileDown className="mr-2 h-4 w-4" />
               Import
             </Button>
-            <GmailImportModal
-              onImport={(email) => void handleGmailImport(email)}
-              trigger={
-                <Button variant="outline">
-                  <Mail className="mr-2 h-4 w-4" />
-                  Gmail
-                </Button>
-              }
-            />
             <Button variant="gradient" onClick={() => setIsFormOpen(true)}>
               <Plus className="mr-2 h-4 w-4" />
               Add Opportunity
@@ -337,261 +305,288 @@ export default function OpportunitiesPage() {
       />
 
       <PageContent className="space-y-6">
-        <OpportunityStats counts={counts} />
-
-        <div
-          className={cn(
-            "grid gap-6",
-            viewMode === "list" && "lg:grid-cols-[280px_1fr]",
-          )}
-        >
-          {viewMode === "list" && (
-            <PagePanel as="aside">
-              <div className="mb-5 flex items-center justify-between">
-                <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-                  <Filter className="h-4 w-4" />
-                  Filters
-                </div>
-                {hasActiveFilters && (
-                  <Button variant="ghost" size="sm" onClick={clearFilters}>
-                    <X className="mr-2 h-4 w-4" />
-                    Clear
-                  </Button>
-                )}
-              </div>
-
-              <div className="space-y-5">
-                <div className="space-y-2">
-                  <Label htmlFor="opportunity-type">Type</Label>
-                  <Select
-                    value={filters.typeTab}
-                    onValueChange={(value) =>
-                      updateFilter(
-                        "typeTab",
-                        value as OpportunityFilters["typeTab"],
-                      )
-                    }
-                  >
-                    <SelectTrigger id="opportunity-type">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {OPPORTUNITY_TYPE_TAB_OPTIONS.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="opportunity-status">Status</Label>
-                  <Select
-                    value={filters.status}
-                    onValueChange={(value) =>
-                      updateFilter(
-                        "status",
-                        value as OpportunityFilters["status"],
-                      )
-                    }
-                  >
-                    <SelectTrigger id="opportunity-status">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {OPPORTUNITY_STATUS_OPTIONS.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="opportunity-source">Source</Label>
-                  <Select
-                    value={filters.source}
-                    onValueChange={(value) =>
-                      updateFilter(
-                        "source",
-                        value as OpportunityFilters["source"],
-                      )
-                    }
-                  >
-                    <SelectTrigger id="opportunity-source">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {OPPORTUNITY_SOURCE_OPTIONS.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="opportunity-tag">Tags</Label>
-                  <Select
-                    value={filters.tag}
-                    onValueChange={(value) => updateFilter("tag", value)}
-                  >
-                    <SelectTrigger id="opportunity-tag">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All tags</SelectItem>
-                      {filterOptions.tags.map((tag) => (
-                        <SelectItem key={tag} value={tag}>
-                          {tag}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="opportunity-remote">Remote type</Label>
-                  <Select
-                    value={filters.remoteType}
-                    onValueChange={(value) =>
-                      updateFilter(
-                        "remoteType",
-                        value as OpportunityFilters["remoteType"],
-                      )
-                    }
-                  >
-                    <SelectTrigger id="opportunity-remote">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {REMOTE_TYPE_OPTIONS.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="opportunity-tech">Tech stack</Label>
-                  <Select
-                    value={filters.techStack}
-                    onValueChange={(value) => updateFilter("techStack", value)}
-                  >
-                    <SelectTrigger id="opportunity-tech">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Any stack</SelectItem>
-                      {filterOptions.techStacks.map((tech) => (
-                        <SelectItem key={tech} value={tech}>
-                          {tech}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </PagePanel>
-          )}
-
-          <section aria-label="Opportunities list" className="min-w-0">
-            <div className="mb-6 flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-              <div className="inline-flex w-full rounded-lg border bg-card p-1 sm:w-auto">
-                {OPPORTUNITY_TYPE_TAB_OPTIONS.map((tab) => (
-                  <button
-                    key={tab.value}
-                    type="button"
-                    onClick={() => updateFilter("typeTab", tab.value)}
-                    className={cn(
-                      "min-h-11 flex-1 rounded-md px-4 text-sm font-medium transition-colors sm:flex-none",
-                      filters.typeTab === tab.value
-                        ? "bg-primary text-primary-foreground shadow-sm"
-                        : "text-muted-foreground hover:bg-muted hover:text-foreground",
-                    )}
-                  >
-                    {tab.label}
-                  </button>
-                ))}
-              </div>
-
-              <div className="grid gap-3 sm:grid-cols-[minmax(220px,1fr)_200px] xl:w-[560px]">
-                <div className="relative">
-                  <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    value={filters.searchQuery}
-                    onChange={(event) =>
-                      updateFilter("searchQuery", event.target.value)
-                    }
-                    placeholder="Search title, company, skills"
-                    className="pl-9"
-                    aria-label="Search opportunities"
-                  />
-                </div>
-                <Select
-                  value={filters.sortBy}
-                  onValueChange={(value) =>
-                    updateFilter(
-                      "sortBy",
-                      value as OpportunityFilters["sortBy"],
-                    )
-                  }
-                >
-                  <SelectTrigger aria-label="Sort opportunities">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {OPPORTUNITY_SORT_OPTIONS.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        Sort by {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className="mb-4 text-sm text-muted-foreground">
-              Showing {filteredOpportunities.length} of {opportunities.length}
-            </div>
-
-            {filteredOpportunities.length === 0 ? (
-              <StandardEmptyState
-                icon={Briefcase}
-                title="No opportunities found"
-                action={
-                  <Button variant="outline" onClick={clearFilters}>
-                    Clear filters
-                  </Button>
-                }
-              />
-            ) : viewMode === "kanban" ? (
-              <OpportunityKanbanView
-                opportunities={filteredOpportunities}
-                onStatusChange={(opportunityId, status) =>
-                  void handleStatusChange(opportunityId, status)
-                }
-              />
-            ) : (
-              <div className="grid gap-4">
-                {filteredOpportunities.map((opportunity) => (
-                  <OpportunityRow
-                    key={opportunity.id}
-                    opportunity={opportunity}
-                    onStatusChange={(status) =>
-                      void handleStatusChange(opportunity.id, status)
-                    }
-                  />
-                ))}
-              </div>
+        {opportunities.length === 0 ? (
+          <OpportunitiesEmptyHero
+            onAdd={() => setIsFormOpen(true)}
+            onImport={() => setIsImportOpen(true)}
+          />
+        ) : (
+          <div
+            className={cn(
+              "grid gap-6",
+              viewMode === "list" &&
+                isFiltersOpen &&
+                "lg:grid-cols-[280px_1fr]",
             )}
-          </section>
-        </div>
+          >
+            {viewMode === "list" && isFiltersOpen ? (
+              <div id="opportunities-filters-panel">
+                <PagePanel as="aside">
+                  <div className="mb-5 flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                      <Filter className="h-4 w-4" />
+                      Filters
+                    </div>
+                    {hasActiveFilters ? (
+                      <Button variant="ghost" size="sm" onClick={clearFilters}>
+                        <X className="mr-2 h-4 w-4" />
+                        Clear
+                      </Button>
+                    ) : null}
+                  </div>
+
+                  <div className="space-y-5">
+                    <div className="space-y-2">
+                      <Label htmlFor="opportunity-type">Type</Label>
+                      <Select
+                        value={filters.typeTab}
+                        onValueChange={(value) =>
+                          updateFilter(
+                            "typeTab",
+                            value as OpportunityFilters["typeTab"],
+                          )
+                        }
+                      >
+                        <SelectTrigger id="opportunity-type">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {OPPORTUNITY_TYPE_TAB_OPTIONS.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="opportunity-status">Status</Label>
+                      <Select
+                        value={filters.status}
+                        onValueChange={(value) =>
+                          updateFilter(
+                            "status",
+                            value as OpportunityFilters["status"],
+                          )
+                        }
+                      >
+                        <SelectTrigger id="opportunity-status">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {OPPORTUNITY_STATUS_OPTIONS.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="opportunity-source">Source</Label>
+                      <Select
+                        value={filters.source}
+                        onValueChange={(value) =>
+                          updateFilter(
+                            "source",
+                            value as OpportunityFilters["source"],
+                          )
+                        }
+                      >
+                        <SelectTrigger id="opportunity-source">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {OPPORTUNITY_SOURCE_OPTIONS.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="opportunity-tag">Tags</Label>
+                      <Select
+                        value={filters.tag}
+                        onValueChange={(value) => updateFilter("tag", value)}
+                      >
+                        <SelectTrigger id="opportunity-tag">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All tags</SelectItem>
+                          {filterOptions.tags.map((tag) => (
+                            <SelectItem key={tag} value={tag}>
+                              {tag}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="opportunity-remote">Remote type</Label>
+                      <Select
+                        value={filters.remoteType}
+                        onValueChange={(value) =>
+                          updateFilter(
+                            "remoteType",
+                            value as OpportunityFilters["remoteType"],
+                          )
+                        }
+                      >
+                        <SelectTrigger id="opportunity-remote">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {REMOTE_TYPE_OPTIONS.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="opportunity-tech">Tech stack</Label>
+                      <Select
+                        value={filters.techStack}
+                        onValueChange={(value) =>
+                          updateFilter("techStack", value)
+                        }
+                      >
+                        <SelectTrigger id="opportunity-tech">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Any stack</SelectItem>
+                          {filterOptions.techStacks.map((tech) => (
+                            <SelectItem key={tech} value={tech}>
+                              {tech}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </PagePanel>
+              </div>
+            ) : null}
+
+            <section aria-label="Opportunities list" className="min-w-0">
+              {hasActiveFilters ? (
+                <ActiveFiltersChips
+                  filters={filters}
+                  onClear={clearFilters}
+                  onRemove={updateFilter}
+                />
+              ) : null}
+
+              <div className="mb-6 flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+                <div className="inline-flex w-full rounded-lg border bg-card p-1 sm:w-auto">
+                  {OPPORTUNITY_TYPE_TAB_OPTIONS.map((tab) => (
+                    <button
+                      key={tab.value}
+                      type="button"
+                      onClick={() => updateFilter("typeTab", tab.value)}
+                      className={cn(
+                        "min-h-11 flex-1 rounded-md px-4 text-sm font-medium transition-colors sm:flex-none",
+                        filters.typeTab === tab.value
+                          ? "bg-primary text-primary-foreground shadow-sm"
+                          : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                      )}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-[minmax(220px,1fr)_200px] xl:w-[560px]">
+                  <div className="relative">
+                    <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      value={filters.searchQuery}
+                      onChange={(event) =>
+                        updateFilter("searchQuery", event.target.value)
+                      }
+                      placeholder="Search title, company, skills"
+                      className="pl-9"
+                      aria-label="Search opportunities"
+                    />
+                  </div>
+                  <Select
+                    value={filters.sortBy}
+                    onValueChange={(value) =>
+                      updateFilter(
+                        "sortBy",
+                        value as OpportunityFilters["sortBy"],
+                      )
+                    }
+                  >
+                    <SelectTrigger aria-label="Sort opportunities">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {OPPORTUNITY_SORT_OPTIONS.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          Sort by {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="mb-4 text-sm text-muted-foreground">
+                Showing {filteredOpportunities.length} of {opportunities.length}{" "}
+                opportunities
+                <span className="mx-2 text-muted-foreground/50">·</span>
+                {pluralize(counts.job, "job")}
+                <span className="mx-2 text-muted-foreground/50">·</span>
+                {pluralize(counts.hackathon, "hackathon")}
+                <span className="mx-2 text-muted-foreground/50">·</span>
+                {pluralize(counts.pending, "pending")}
+              </div>
+
+              {filteredOpportunities.length === 0 ? (
+                <StandardEmptyState
+                  icon={Briefcase}
+                  title="No opportunities match your filters"
+                  description="Try widening or clearing filters to see more."
+                  action={
+                    <Button variant="outline" onClick={clearFilters}>
+                      Clear filters
+                    </Button>
+                  }
+                />
+              ) : viewMode === "kanban" ? (
+                <OpportunityKanbanView
+                  opportunities={filteredOpportunities}
+                  onStatusChange={(opportunityId, status) =>
+                    void handleStatusChange(opportunityId, status)
+                  }
+                />
+              ) : (
+                <div className="grid gap-4">
+                  {filteredOpportunities.map((opportunity) => (
+                    <OpportunityRow
+                      key={opportunity.id}
+                      opportunity={opportunity}
+                      onStatusChange={(status) =>
+                        void handleStatusChange(opportunity.id, status)
+                      }
+                    />
+                  ))}
+                </div>
+              )}
+            </section>
+          </div>
+        )}
       </PageContent>
 
       <AddOpportunityWizard
@@ -609,19 +604,143 @@ export default function OpportunitiesPage() {
   );
 }
 
-function OpportunityStats({
-  counts,
+function readFiltersOpenPreference(): boolean {
+  if (typeof window === "undefined") return false;
+
+  try {
+    return window.localStorage.getItem(FILTERS_OPEN_STORAGE_KEY) === "true";
+  } catch {
+    return false;
+  }
+}
+
+function writeFiltersOpenPreference(isOpen: boolean): void {
+  if (typeof window === "undefined") return;
+
+  try {
+    window.localStorage.setItem(FILTERS_OPEN_STORAGE_KEY, String(isOpen));
+  } catch {
+    // Keep the in-memory panel state when localStorage writes are unavailable.
+  }
+}
+
+function ActiveFiltersChips({
+  filters,
+  onClear,
+  onRemove,
 }: {
-  counts: { all: number; job: number; hackathon: number; pending: number };
+  filters: OpportunityFilters;
+  onClear: () => void;
+  onRemove: <K extends keyof OpportunityFilters>(
+    key: K,
+    value: OpportunityFilters[K],
+  ) => void;
 }) {
+  const chips = [
+    filters.searchQuery.trim()
+      ? {
+          key: "search",
+          label: `Search: ${filters.searchQuery.trim()}`,
+          onRemove: () => onRemove("searchQuery", ""),
+        }
+      : null,
+    filters.typeTab !== DEFAULT_OPPORTUNITY_FILTERS.typeTab
+      ? {
+          key: "type",
+          label: `Type: ${getOptionLabel(
+            OPPORTUNITY_TYPE_TAB_OPTIONS,
+            filters.typeTab,
+          )}`,
+          onRemove: () =>
+            onRemove("typeTab", DEFAULT_OPPORTUNITY_FILTERS.typeTab),
+        }
+      : null,
+    filters.status !== DEFAULT_OPPORTUNITY_FILTERS.status
+      ? {
+          key: "status",
+          label: `Status: ${getOptionLabel(
+            OPPORTUNITY_STATUS_OPTIONS,
+            filters.status,
+          )}`,
+          onRemove: () =>
+            onRemove("status", DEFAULT_OPPORTUNITY_FILTERS.status),
+        }
+      : null,
+    filters.source !== DEFAULT_OPPORTUNITY_FILTERS.source
+      ? {
+          key: "source",
+          label: `Source: ${getOptionLabel(
+            OPPORTUNITY_SOURCE_OPTIONS,
+            filters.source,
+          )}`,
+          onRemove: () =>
+            onRemove("source", DEFAULT_OPPORTUNITY_FILTERS.source),
+        }
+      : null,
+    filters.remoteType !== DEFAULT_OPPORTUNITY_FILTERS.remoteType
+      ? {
+          key: "remoteType",
+          label: `Remote: ${getOptionLabel(
+            REMOTE_TYPE_OPTIONS,
+            filters.remoteType,
+          )}`,
+          onRemove: () =>
+            onRemove("remoteType", DEFAULT_OPPORTUNITY_FILTERS.remoteType),
+        }
+      : null,
+    filters.tag !== DEFAULT_OPPORTUNITY_FILTERS.tag
+      ? {
+          key: "tag",
+          label: `Tag: ${filters.tag}`,
+          onRemove: () => onRemove("tag", DEFAULT_OPPORTUNITY_FILTERS.tag),
+        }
+      : null,
+    filters.techStack !== DEFAULT_OPPORTUNITY_FILTERS.techStack
+      ? {
+          key: "techStack",
+          label: `Tech: ${filters.techStack}`,
+          onRemove: () =>
+            onRemove("techStack", DEFAULT_OPPORTUNITY_FILTERS.techStack),
+        }
+      : null,
+  ].filter(
+    (chip): chip is { key: string; label: string; onRemove: () => void } =>
+      Boolean(chip),
+  );
+
+  if (chips.length === 0) return null;
+
   return (
-    <div className="grid gap-3 sm:grid-cols-4">
-      <Stat label="Total" value={counts.all} />
-      <Stat label="Job" value={counts.job} />
-      <Stat label="Hackathon" value={counts.hackathon} />
-      <Stat label="Pending" value={counts.pending} />
+    <div className="mb-4 flex flex-wrap items-center gap-2">
+      {chips.map((chip) => (
+        <Badge
+          key={chip.key}
+          variant="secondary"
+          className="gap-1.5 pr-1 text-sm"
+        >
+          {chip.label}
+          <button
+            type="button"
+            className="inline-flex h-5 w-5 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-background hover:text-foreground"
+            onClick={chip.onRemove}
+            aria-label={`Remove ${chip.label} filter`}
+          >
+            <X className="h-3 w-3" />
+          </button>
+        </Badge>
+      ))}
+      <Button variant="ghost" size="sm" onClick={onClear}>
+        Clear all
+      </Button>
     </div>
   );
+}
+
+function getOptionLabel<T extends string>(
+  options: ReadonlyArray<{ value: T; label: string }>,
+  value: T,
+): string {
+  return options.find((option) => option.value === value)?.label ?? value;
 }
 
 function OpportunityRow({
@@ -911,45 +1030,6 @@ function OpportunityKanbanCard({
         </div>
       </div>
     </article>
-  );
-}
-
-function Stat({ label, value }: { label: string; value: number }) {
-  const displayLabel =
-    label === "Job" || label === "Hackathon"
-      ? pluralizeLabel(value, label)
-      : label;
-
-  return (
-    <div className="rounded-lg border bg-card p-4 shadow-sm">
-      <div className="text-2xl font-semibold text-foreground">{value}</div>
-      <div className="mt-1 text-xs font-medium uppercase text-muted-foreground">
-        {displayLabel}
-      </div>
-    </div>
-  );
-}
-
-function pluralizeLabel(value: number, singularLabel: string): string {
-  return value === 1 ? singularLabel : `${singularLabel}s`;
-}
-
-function Field({
-  label,
-  id,
-  className,
-  children,
-}: {
-  label: string;
-  id: string;
-  className?: string;
-  children: ReactNode;
-}) {
-  return (
-    <div className={cn("space-y-2", className)}>
-      <Label htmlFor={id}>{label}</Label>
-      {children}
-    </div>
   );
 }
 
