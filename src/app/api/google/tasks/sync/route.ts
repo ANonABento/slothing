@@ -1,3 +1,4 @@
+import { parseToDate } from "@/lib/format/time";
 /**
  * @route GET /api/google/tasks/sync
  * @route POST /api/google/tasks/sync
@@ -92,7 +93,7 @@ export async function POST(request: NextRequest) {
       const taskId = await createFollowUpTask(
         data.company,
         data.role,
-        new Date(data.interviewDate),
+        parseToDate(data.interviewDate)!,
       );
       return NextResponse.json({
         success: taskId !== null,
@@ -110,7 +111,7 @@ export async function POST(request: NextRequest) {
       const taskId = await createDeadlineTask(
         data.company,
         data.role,
-        new Date(data.deadline),
+        parseToDate(data.deadline)!,
       );
       return NextResponse.json({
         success: taskId !== null,
@@ -153,7 +154,7 @@ export async function POST(request: NextRequest) {
         const taskId = await createDeadlineTask(
           job.company,
           job.title,
-          new Date(job.deadline!),
+          parseToDate(job.deadline!)!,
         );
         results.push({
           title: `Deadline: ${job.title} at ${job.company}`,

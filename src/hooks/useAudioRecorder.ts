@@ -1,5 +1,7 @@
 "use client";
 
+import { nowDate, nowEpoch } from "@/lib/format/time";
+
 import { useState, useRef, useCallback, useEffect } from "react";
 
 export interface AudioRecording {
@@ -29,7 +31,7 @@ interface UseAudioRecorderReturn {
 }
 
 export function useAudioRecorder(
-  options: UseAudioRecorderOptions = {}
+  options: UseAudioRecorderOptions = {},
 ): UseAudioRecorderReturn {
   const { mimeType = "audio/webm", onRecordingComplete } = options;
 
@@ -56,7 +58,8 @@ export function useAudioRecorder(
   useEffect(() => {
     if (isRecording && !isPaused) {
       intervalRef.current = setInterval(() => {
-        const elapsed = Date.now() - startTimeRef.current - pausedDurationRef.current;
+        const elapsed =
+          nowEpoch() - startTimeRef.current - pausedDurationRef.current;
         setDuration(Math.floor(elapsed / 1000));
       }, 100);
     } else if (intervalRef.current) {
@@ -87,7 +90,8 @@ export function useAudioRecorder(
       let selectedMimeType = mimeType;
       if (!MediaRecorder.isTypeSupported(mimeType)) {
         const fallbacks = ["audio/webm", "audio/mp4", "audio/ogg", "audio/wav"];
-        selectedMimeType = fallbacks.find((type) => MediaRecorder.isTypeSupported(type)) || "";
+        selectedMimeType =
+          fallbacks.find((type) => MediaRecorder.isTypeSupported(type)) || "";
       }
 
       const mediaRecorder = new MediaRecorder(stream, {
@@ -102,13 +106,15 @@ export function useAudioRecorder(
       };
 
       mediaRecorder.onstop = () => {
-        const blob = new Blob(chunksRef.current, { type: selectedMimeType || "audio/webm" });
+        const blob = new Blob(chunksRef.current, {
+          type: selectedMimeType || "audio/webm",
+        });
         const url = URL.createObjectURL(blob);
         const newRecording: AudioRecording = {
           blob,
           url,
           duration,
-          timestamp: new Date(),
+          timestamp: nowDate(),
         };
         setRecording(newRecording);
         onRecordingComplete?.(newRecording);
@@ -122,7 +128,7 @@ export function useAudioRecorder(
         setIsRecording(false);
       };
 
-      startTimeRef.current = Date.now();
+      startTimeRef.current = nowEpoch();
       pausedDurationRef.current = 0;
       mediaRecorder.start(100); // Collect data every 100ms
       setIsRecording(true);
@@ -131,7 +137,9 @@ export function useAudioRecorder(
     } catch (err) {
       if (err instanceof Error) {
         if (err.name === "NotAllowedError") {
-          setError("Microphone access denied. Please allow microphone access to record.");
+          setError(
+            "Microphone access denied. Please allow microphone access to record.",
+          );
         } else if (err.name === "NotFoundError") {
           setError("No microphone found. Please connect a microphone.");
         } else {
@@ -154,7 +162,8 @@ export function useAudioRecorder(
   const pauseRecording = useCallback(() => {
     if (mediaRecorderRef.current && isRecording && !isPaused) {
       mediaRecorderRef.current.pause();
-      pausedDurationRef.current = Date.now() - startTimeRef.current - duration * 1000;
+      pausedDurationRef.current =
+        nowEpoch() - startTimeRef.current - duration * 1000;
       setIsPaused(true);
     }
   }, [isRecording, isPaused, duration]);
@@ -162,7 +171,7 @@ export function useAudioRecorder(
   const resumeRecording = useCallback(() => {
     if (mediaRecorderRef.current && isRecording && isPaused) {
       mediaRecorderRef.current.resume();
-      startTimeRef.current = Date.now() - duration * 1000;
+      startTimeRef.current = nowEpoch() - duration * 1000;
       setIsPaused(false);
     }
   }, [isRecording, isPaused, duration]);

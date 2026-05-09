@@ -2,6 +2,7 @@ import db from "./legacy";
 import { generateId } from "@/lib/utils";
 import type { JobDescription, JobStatus } from "@/types";
 
+import { nowIso } from "@/lib/format/time";
 interface JobRow {
   id: string;
   title: string;
@@ -51,30 +52,42 @@ function mapRowToJob(row: JobRow): JobDescription {
     appliedAt: row.applied_at,
     deadline: row.deadline,
     notes: row.notes,
-    createdAt: row.created_at || new Date().toISOString(),
+    createdAt: row.created_at || nowIso(),
   };
 }
 
 // Get all jobs
 export function getJobs(userId: string = "default"): JobDescription[] {
-  const rows = db.prepare("SELECT * FROM jobs WHERE user_id = ? ORDER BY created_at DESC").all(userId) as JobRow[];
+  const rows = db
+    .prepare("SELECT * FROM jobs WHERE user_id = ? ORDER BY created_at DESC")
+    .all(userId) as JobRow[];
   return rows.map(mapRowToJob);
 }
 
 // Get single job
-export function getJob(id: string, userId: string = "default"): JobDescription | null {
-  const row = db.prepare("SELECT * FROM jobs WHERE id = ? AND user_id = ?").get(id, userId) as JobRow | undefined;
+export function getJob(
+  id: string,
+  userId: string = "default",
+): JobDescription | null {
+  const row = db
+    .prepare("SELECT * FROM jobs WHERE id = ? AND user_id = ?")
+    .get(id, userId) as JobRow | undefined;
   if (!row) return null;
   return mapRowToJob(row);
 }
 
 // Create job
-export function createJob(job: Omit<JobDescription, "id" | "createdAt">, userId: string = "default"): JobDescription {
+export function createJob(
+  job: Omit<JobDescription, "id" | "createdAt">,
+  userId: string = "default",
+): JobDescription {
   const id = generateId();
-  db.prepare(`
+  db.prepare(
+    `
     INSERT INTO jobs (id, title, company, location, type, remote, salary, description, requirements_json, responsibilities_json, keywords_json, url, status, deadline, notes, user_id)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `).run(
+  `,
+  ).run(
     id,
     job.title,
     job.company,
@@ -90,18 +103,23 @@ export function createJob(job: Omit<JobDescription, "id" | "createdAt">, userId:
     job.status || "saved",
     job.deadline || null,
     job.notes || null,
-    userId
+    userId,
   );
   return getJob(id, userId)!;
 }
 
 // Update job
-export function updateJob(id: string, updates: Partial<JobDescription>, userId: string = "default"): void {
+export function updateJob(
+  id: string,
+  updates: Partial<JobDescription>,
+  userId: string = "default",
+): void {
   const existing = getJob(id, userId);
   if (!existing) return;
 
   const merged = { ...existing, ...updates };
-  db.prepare(`
+  db.prepare(
+    `
     UPDATE jobs SET
       title = ?,
       company = ?,
@@ -119,7 +137,8 @@ export function updateJob(id: string, updates: Partial<JobDescription>, userId: 
       deadline = ?,
       notes = ?
     WHERE id = ? AND user_id = ?
-  `).run(
+  `,
+  ).run(
     merged.title,
     merged.company,
     merged.location || null,
@@ -136,7 +155,7 @@ export function updateJob(id: string, updates: Partial<JobDescription>, userId: 
     merged.deadline || null,
     merged.notes || null,
     id,
-    userId
+    userId,
   );
 }
 
@@ -145,20 +164,22 @@ export function updateJobStatus(
   id: string,
   status: JobStatus,
   appliedAt?: string,
-  userId: string = "default"
+  userId: string = "default",
 ): JobDescription | null {
-  const now = new Date().toISOString();
+  const now = nowIso();
 
-  db.prepare(`
+  db.prepare(
+    `
     UPDATE jobs SET
       status = ?,
       applied_at = COALESCE(?, applied_at)
     WHERE id = ? AND user_id = ?
-  `).run(
+  `,
+  ).run(
     status,
     status === "applied" && !appliedAt ? now : appliedAt || null,
     id,
-    userId
+    userId,
   );
 
   return getJob(id, userId);
@@ -169,7 +190,14 @@ export function deleteJob(id: string, userId: string = "default"): void {
   db.prepare("DELETE FROM jobs WHERE id = ? AND user_id = ?").run(id, userId);
 }
 
-export function countJobsByStatus(status: string, userId: string = "default"): number {
-  const result = db.prepare("SELECT COUNT(*) as count FROM jobs WHERE status = ? AND user_id = ?").get(status, userId) as { count: number } | undefined;
+export function countJobsByStatus(
+  status: string,
+  userId: string = "default",
+): number {
+  const result = db
+    .prepare(
+      "SELECT COUNT(*) as count FROM jobs WHERE status = ? AND user_id = ?",
+    )
+    .get(status, userId) as { count: number } | undefined;
   return result?.count ?? 0;
 }

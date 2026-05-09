@@ -1,3 +1,4 @@
+import { nowDate, toIso } from "@/lib/format/time";
 /**
  * @route GET /api/google/gmail/scan
  * @description Scan inbox for job-related emails
@@ -29,7 +30,7 @@ export async function GET(request: NextRequest) {
     const days = parseInt(searchParams.get("days") || "30");
     const maxResults = parseInt(searchParams.get("maxResults") || "50");
 
-    const since = new Date();
+    const since = nowDate();
     since.setDate(since.getDate() - days);
 
     const messages = await searchJobEmails({ since, maxResults });
@@ -39,7 +40,7 @@ export async function GET(request: NextRequest) {
       threadId: msg.threadId,
       subject: msg.subject,
       from: msg.from,
-      date: msg.date.toISOString(),
+      date: toIso(msg.date),
       snippet: msg.snippet,
       labels: msg.labels,
       parsed: parseJobEmail(msg),

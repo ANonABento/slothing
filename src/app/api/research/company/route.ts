@@ -1,3 +1,4 @@
+import { nowEpoch } from "@/lib/format/time";
 /**
  * @route GET /api/research/company
  * @description Research a company with caching and optional LLM enrichment
@@ -35,7 +36,7 @@ export async function GET(request: NextRequest) {
         status: 429,
         headers: {
           "Retry-After": String(
-            Math.max(1, Math.ceil((limit.resetAt - Date.now()) / 1000)),
+            Math.max(1, Math.ceil((limit.resetAt - nowEpoch()) / 1000)),
           ),
         },
       },

@@ -1,9 +1,18 @@
-import { db, interviewSessions, interviewAnswers, jobs, eq, and, desc } from '../index';
-import { generateId } from '@/lib/utils';
+import {
+  db,
+  interviewSessions,
+  interviewAnswers,
+  jobs,
+  eq,
+  and,
+  desc,
+} from "../index";
+import { generateId } from "@/lib/utils";
 
+import { nowDate, nowIso, toIso } from "@/lib/format/time";
 interface InterviewQuestion {
   question: string;
-  category: 'behavioral' | 'technical' | 'situational' | 'general';
+  category: "behavioral" | "technical" | "situational" | "general";
   suggestedAnswer?: string;
 }
 
@@ -11,9 +20,9 @@ export interface InterviewSession {
   id: string;
   jobId: string;
   profileId: string;
-  mode: 'text' | 'voice';
+  mode: "text" | "voice";
   questions: InterviewQuestion[];
-  status: 'in_progress' | 'completed';
+  status: "in_progress" | "completed";
   startedAt: string;
   completedAt?: string;
 }
@@ -37,16 +46,18 @@ export async function createInterviewSession(
   jobId: string,
   profileId: string,
   questions: InterviewQuestion[],
-  mode: 'text' | 'voice' = 'text'
+  mode: "text" | "voice" = "text",
 ): Promise<InterviewSession> {
   const id = generateId();
-  const now = new Date();
-  const jobRows = await db.select({ id: jobs.id }).from(jobs)
+  const now = nowDate();
+  const jobRows = await db
+    .select({ id: jobs.id })
+    .from(jobs)
     .where(and(eq(jobs.id, jobId), eq(jobs.userId, userId)))
     .limit(1);
 
   if (jobRows.length === 0) {
-    throw new Error('Job not found');
+    throw new Error("Job not found");
   }
 
   await db.insert(interviewSessions).values({
@@ -56,8 +67,8 @@ export async function createInterviewSession(
     profileId,
     mode,
     questionsJson: JSON.stringify(questions),
-    status: 'in_progress',
-    startedAt: now.toISOString(),
+    status: "in_progress",
+    startedAt: toIso(now),
   });
 
   return {
@@ -66,33 +77,47 @@ export async function createInterviewSession(
     profileId,
     mode,
     questions,
-    status: 'in_progress',
-    startedAt: now.toISOString(),
+    status: "in_progress",
+    startedAt: toIso(now),
   };
 }
 
 // Get interview session by ID
 export async function getInterviewSession(
   userId: string,
-  sessionId: string
+  sessionId: string,
 ): Promise<InterviewSessionWithAnswers | null> {
-  const sessionRows = await db.select().from(interviewSessions)
-    .where(and(eq(interviewSessions.id, sessionId), eq(interviewSessions.userId, userId)));
+  const sessionRows = await db
+    .select()
+    .from(interviewSessions)
+    .where(
+      and(
+        eq(interviewSessions.id, sessionId),
+        eq(interviewSessions.userId, userId),
+      ),
+    );
 
   if (sessionRows.length === 0) return null;
   const row = sessionRows[0];
 
-  const answerRows = await db.select().from(interviewAnswers)
-    .where(and(eq(interviewAnswers.sessionId, sessionId), eq(interviewAnswers.userId, userId)));
+  const answerRows = await db
+    .select()
+    .from(interviewAnswers)
+    .where(
+      and(
+        eq(interviewAnswers.sessionId, sessionId),
+        eq(interviewAnswers.userId, userId),
+      ),
+    );
 
   return {
     id: row.id,
     jobId: row.jobId,
     profileId: row.profileId,
-    mode: row.mode as 'text' | 'voice',
+    mode: row.mode as "text" | "voice",
     questions: JSON.parse(row.questionsJson),
-    status: row.status as 'in_progress' | 'completed',
-    startedAt: row.startedAt ?? '',
+    status: row.status as "in_progress" | "completed",
+    startedAt: row.startedAt ?? "",
     completedAt: row.completedAt ?? undefined,
     answers: answerRows.map((a) => ({
       id: a.id,
@@ -100,7 +125,7 @@ export async function getInterviewSession(
       questionIndex: a.questionIndex,
       answer: a.answer,
       feedback: a.feedback ?? undefined,
-      createdAt: a.createdAt ?? '',
+      createdAt: a.createdAt ?? "",
     })),
   };
 }
@@ -108,15 +133,24 @@ export async function getInterviewSession(
 // Get all interview sessions for a user
 export async function getInterviewSessions(
   userId: string,
-  jobId?: string
+  jobId?: string,
 ): Promise<InterviewSession[]> {
-  let query = db.select().from(interviewSessions)
+  let query = db
+    .select()
+    .from(interviewSessions)
     .where(eq(interviewSessions.userId, userId))
     .orderBy(desc(interviewSessions.startedAt));
 
   if (jobId) {
-    query = db.select().from(interviewSessions)
-      .where(and(eq(interviewSessions.userId, userId), eq(interviewSessions.jobId, jobId)))
+    query = db
+      .select()
+      .from(interviewSessions)
+      .where(
+        and(
+          eq(interviewSessions.userId, userId),
+          eq(interviewSessions.jobId, jobId),
+        ),
+      )
       .orderBy(desc(interviewSessions.startedAt));
   }
 
@@ -126,10 +160,10 @@ export async function getInterviewSessions(
     id: row.id,
     jobId: row.jobId,
     profileId: row.profileId,
-    mode: row.mode as 'text' | 'voice',
+    mode: row.mode as "text" | "voice",
     questions: JSON.parse(row.questionsJson),
-    status: row.status as 'in_progress' | 'completed',
-    startedAt: row.startedAt ?? '',
+    status: row.status as "in_progress" | "completed",
+    startedAt: row.startedAt ?? "",
     completedAt: row.completedAt ?? undefined,
   }));
 }
@@ -140,16 +174,23 @@ export async function addInterviewAnswer(
   sessionId: string,
   questionIndex: number,
   answer: string,
-  feedback?: string
+  feedback?: string,
 ): Promise<InterviewAnswer> {
   const id = generateId();
-  const now = new Date();
-  const sessionRows = await db.select({ id: interviewSessions.id }).from(interviewSessions)
-    .where(and(eq(interviewSessions.id, sessionId), eq(interviewSessions.userId, userId)))
+  const now = nowDate();
+  const sessionRows = await db
+    .select({ id: interviewSessions.id })
+    .from(interviewSessions)
+    .where(
+      and(
+        eq(interviewSessions.id, sessionId),
+        eq(interviewSessions.userId, userId),
+      ),
+    )
     .limit(1);
 
   if (sessionRows.length === 0) {
-    throw new Error('Session not found');
+    throw new Error("Session not found");
   }
 
   await db.insert(interviewAnswers).values({
@@ -159,7 +200,7 @@ export async function addInterviewAnswer(
     questionIndex,
     answer,
     feedback: feedback ?? null,
-    createdAt: now.toISOString(),
+    createdAt: toIso(now),
   });
 
   return {
@@ -168,35 +209,61 @@ export async function addInterviewAnswer(
     questionIndex,
     answer,
     feedback,
-    createdAt: now.toISOString(),
+    createdAt: toIso(now),
   };
 }
 
 // Complete an interview session
-export async function completeInterviewSession(userId: string, sessionId: string): Promise<void> {
-  await db.update(interviewSessions)
+export async function completeInterviewSession(
+  userId: string,
+  sessionId: string,
+): Promise<void> {
+  await db
+    .update(interviewSessions)
     .set({
-      status: 'completed',
-      completedAt: new Date().toISOString(),
+      status: "completed",
+      completedAt: nowIso(),
     })
-    .where(and(eq(interviewSessions.id, sessionId), eq(interviewSessions.userId, userId)));
+    .where(
+      and(
+        eq(interviewSessions.id, sessionId),
+        eq(interviewSessions.userId, userId),
+      ),
+    );
 }
 
 // Delete an interview session
-export async function deleteInterviewSession(userId: string, sessionId: string): Promise<void> {
-  await db.delete(interviewAnswers)
-    .where(and(eq(interviewAnswers.sessionId, sessionId), eq(interviewAnswers.userId, userId)));
+export async function deleteInterviewSession(
+  userId: string,
+  sessionId: string,
+): Promise<void> {
+  await db
+    .delete(interviewAnswers)
+    .where(
+      and(
+        eq(interviewAnswers.sessionId, sessionId),
+        eq(interviewAnswers.userId, userId),
+      ),
+    );
 
-  await db.delete(interviewSessions)
-    .where(and(eq(interviewSessions.id, sessionId), eq(interviewSessions.userId, userId)));
+  await db
+    .delete(interviewSessions)
+    .where(
+      and(
+        eq(interviewSessions.id, sessionId),
+        eq(interviewSessions.userId, userId),
+      ),
+    );
 }
 
 // Get recent interview sessions for dashboard
 export async function getRecentInterviewSessions(
   userId: string,
-  limit: number = 5
+  limit: number = 5,
 ): Promise<InterviewSession[]> {
-  const rows = await db.select().from(interviewSessions)
+  const rows = await db
+    .select()
+    .from(interviewSessions)
     .where(eq(interviewSessions.userId, userId))
     .orderBy(desc(interviewSessions.startedAt))
     .limit(limit);
@@ -205,10 +272,10 @@ export async function getRecentInterviewSessions(
     id: row.id,
     jobId: row.jobId,
     profileId: row.profileId,
-    mode: row.mode as 'text' | 'voice',
+    mode: row.mode as "text" | "voice",
     questions: JSON.parse(row.questionsJson),
-    status: row.status as 'in_progress' | 'completed',
-    startedAt: row.startedAt ?? '',
+    status: row.status as "in_progress" | "completed",
+    startedAt: row.startedAt ?? "",
     completedAt: row.completedAt ?? undefined,
   }));
 }

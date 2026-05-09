@@ -2,6 +2,7 @@ import db from "./legacy";
 import { generateId } from "@/lib/utils";
 import type { EmailTemplateType } from "@/types";
 
+import { nowIso } from "@/lib/format/time";
 export interface EmailDraft {
   id: string;
   userId: string;
@@ -63,24 +64,29 @@ export function getEmailDrafts(userId: string = "default"): EmailDraft[] {
 }
 
 // Get a single email draft by ID
-export function getEmailDraft(id: string, userId: string = "default"): EmailDraft | null {
+export function getEmailDraft(
+  id: string,
+  userId: string = "default",
+): EmailDraft | null {
   const stmt = db.prepare(`
     SELECT id, user_id, type, job_id, subject, body, context_json, created_at, updated_at
     FROM email_drafts
     WHERE id = ? AND user_id = ?
   `);
 
-  const row = stmt.get(id, userId) as {
-    id: string;
-    user_id: string;
-    type: string;
-    job_id: string | null;
-    subject: string;
-    body: string;
-    context_json: string | null;
-    created_at: string;
-    updated_at: string;
-  } | undefined;
+  const row = stmt.get(id, userId) as
+    | {
+        id: string;
+        user_id: string;
+        type: string;
+        job_id: string | null;
+        subject: string;
+        body: string;
+        context_json: string | null;
+        created_at: string;
+        updated_at: string;
+      }
+    | undefined;
 
   if (!row) return null;
 
@@ -100,10 +106,10 @@ export function getEmailDraft(id: string, userId: string = "default"): EmailDraf
 // Create a new email draft
 export function createEmailDraft(
   input: CreateEmailDraftInput,
-  userId: string = "default"
+  userId: string = "default",
 ): EmailDraft {
   const id = generateId();
-  const now = new Date().toISOString();
+  const now = nowIso();
 
   const stmt = db.prepare(`
     INSERT INTO email_drafts (id, user_id, type, job_id, subject, body, context_json, created_at, updated_at)
@@ -150,12 +156,12 @@ export function createEmailDraft(
 export function updateEmailDraft(
   id: string,
   input: UpdateEmailDraftInput,
-  userId: string = "default"
+  userId: string = "default",
 ): EmailDraft | null {
   const existing = getEmailDraft(id, userId);
   if (!existing) return null;
 
-  const now = new Date().toISOString();
+  const now = nowIso();
 
   const updates: string[] = [];
   const params: (string | null)[] = [];
@@ -191,7 +197,10 @@ export function updateEmailDraft(
 }
 
 // Delete an email draft
-export function deleteEmailDraft(id: string, userId: string = "default"): boolean {
+export function deleteEmailDraft(
+  id: string,
+  userId: string = "default",
+): boolean {
   const stmt = db.prepare(`
     DELETE FROM email_drafts
     WHERE id = ? AND user_id = ?
@@ -204,7 +213,7 @@ export function deleteEmailDraft(id: string, userId: string = "default"): boolea
 // Get drafts by type
 export function getEmailDraftsByType(
   type: EmailTemplateType,
-  userId: string = "default"
+  userId: string = "default",
 ): EmailDraft[] {
   const stmt = db.prepare(`
     SELECT id, user_id, type, job_id, subject, body, context_json, created_at, updated_at

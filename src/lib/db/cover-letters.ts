@@ -1,6 +1,7 @@
 import { nanoid } from "nanoid";
 import db from "./legacy";
 
+import { nowIso } from "@/lib/format/time";
 export interface CoverLetter {
   id: string;
   jobId: string;
@@ -37,26 +38,36 @@ export function saveCoverLetter(
   jobId: string,
   content: string,
   highlights: string[] = [],
-  userId: string = "default"
+  userId: string = "default",
 ): CoverLetter {
   const id = nanoid();
 
   // Get next version number for this job
   const existing = db
     .prepare(
-      "SELECT MAX(version) as max_version FROM cover_letters WHERE job_id = ? AND user_id = ?"
+      "SELECT MAX(version) as max_version FROM cover_letters WHERE job_id = ? AND user_id = ?",
     )
     .get(jobId, userId) as { max_version: number | null } | undefined;
 
   const version = (existing?.max_version || 0) + 1;
 
-  const result = db.prepare(
-    `INSERT INTO cover_letters (id, user_id, job_id, profile_id, content, highlights_json, version)
+  const result = db
+    .prepare(
+      `INSERT INTO cover_letters (id, user_id, job_id, profile_id, content, highlights_json, version)
      SELECT ?, ?, ?, ?, ?, ?, ?
-     WHERE EXISTS (SELECT 1 FROM jobs WHERE id = ? AND user_id = ?)`
-  ).run(id, userId, jobId, userId, content, JSON.stringify(highlights), version, jobId, userId) as
-    | { changes?: number }
-    | undefined;
+     WHERE EXISTS (SELECT 1 FROM jobs WHERE id = ? AND user_id = ?)`,
+    )
+    .run(
+      id,
+      userId,
+      jobId,
+      userId,
+      content,
+      JSON.stringify(highlights),
+      version,
+      jobId,
+      userId,
+    ) as { changes?: number } | undefined;
 
   if (result?.changes === 0) {
     throw new Error("Job not found");
@@ -69,17 +80,17 @@ export function saveCoverLetter(
     content,
     highlights,
     version,
-    createdAt: new Date().toISOString(),
+    createdAt: nowIso(),
   };
 }
 
 export function getCoverLettersByJob(
   jobId: string,
-  userId: string = "default"
+  userId: string = "default",
 ): CoverLetter[] {
   const rows = db
     .prepare(
-      "SELECT * FROM cover_letters WHERE job_id = ? AND user_id = ? ORDER BY version DESC"
+      "SELECT * FROM cover_letters WHERE job_id = ? AND user_id = ? ORDER BY version DESC",
     )
     .all(jobId, userId) as CoverLetterRow[];
 
@@ -88,11 +99,11 @@ export function getCoverLettersByJob(
 
 export function getLatestCoverLetter(
   jobId: string,
-  userId: string = "default"
+  userId: string = "default",
 ): CoverLetter | null {
   const row = db
     .prepare(
-      "SELECT * FROM cover_letters WHERE job_id = ? AND user_id = ? ORDER BY version DESC LIMIT 1"
+      "SELECT * FROM cover_letters WHERE job_id = ? AND user_id = ? ORDER BY version DESC LIMIT 1",
     )
     .get(jobId, userId) as CoverLetterRow | undefined;
 
@@ -101,7 +112,7 @@ export function getLatestCoverLetter(
 
 export function getCoverLetter(
   id: string,
-  userId: string = "default"
+  userId: string = "default",
 ): CoverLetter | null {
   const row = db
     .prepare("SELECT * FROM cover_letters WHERE id = ? AND user_id = ?")
@@ -112,7 +123,7 @@ export function getCoverLetter(
 
 export function deleteCoverLetter(
   id: string,
-  userId: string = "default"
+  userId: string = "default",
 ): boolean {
   const result = db
     .prepare("DELETE FROM cover_letters WHERE id = ? AND user_id = ?")
@@ -122,20 +133,20 @@ export function deleteCoverLetter(
 
 export function getCoverLetterCount(
   jobId: string,
-  userId: string = "default"
+  userId: string = "default",
 ): number {
   const result = db
-    .prepare("SELECT COUNT(*) as count FROM cover_letters WHERE job_id = ? AND user_id = ?")
+    .prepare(
+      "SELECT COUNT(*) as count FROM cover_letters WHERE job_id = ? AND user_id = ?",
+    )
     .get(jobId, userId) as { count: number };
   return result.count;
 }
 
-export function getAllCoverLetters(
-  userId: string = "default"
-): CoverLetter[] {
+export function getAllCoverLetters(userId: string = "default"): CoverLetter[] {
   const rows = db
     .prepare(
-      "SELECT * FROM cover_letters WHERE user_id = ? ORDER BY created_at DESC"
+      "SELECT * FROM cover_letters WHERE user_id = ? ORDER BY created_at DESC",
     )
     .all(userId) as CoverLetterRow[];
 

@@ -1,6 +1,7 @@
 import db from "./legacy";
 import { generateId } from "@/lib/utils";
 
+import { nowIso } from "@/lib/format/time";
 interface InterviewQuestion {
   question: string;
   category: "behavioral" | "technical" | "situational" | "general";
@@ -36,10 +37,10 @@ export function createInterviewSession(
   jobId: string,
   questions: InterviewQuestion[],
   mode: "text" | "voice" = "text",
-  userId: string = "default"
+  userId: string = "default",
 ): InterviewSession {
   const id = generateId();
-  const now = new Date().toISOString();
+  const now = nowIso();
 
   const stmt = db.prepare(`
     INSERT INTO interview_sessions (id, user_id, job_id, profile_id, mode, questions_json, status, started_at)
@@ -56,7 +57,7 @@ export function createInterviewSession(
     JSON.stringify(questions),
     now,
     jobId,
-    userId
+    userId,
   ) as { changes?: number } | undefined;
 
   if (result?.changes === 0) {
@@ -77,7 +78,7 @@ export function createInterviewSession(
 // Get interview session by ID
 export function getInterviewSession(
   id: string,
-  userId: string = "default"
+  userId: string = "default",
 ): InterviewSessionWithAnswers | null {
   const sessionStmt = db.prepare(`
     SELECT id, job_id, profile_id, mode, questions_json, status, started_at, completed_at
@@ -85,16 +86,18 @@ export function getInterviewSession(
     WHERE id = ? AND user_id = ?
   `);
 
-  const row = sessionStmt.get(id, userId) as {
-    id: string;
-    job_id: string;
-    profile_id: string;
-    mode: string;
-    questions_json: string;
-    status: string;
-    started_at: string;
-    completed_at: string | null;
-  } | undefined;
+  const row = sessionStmt.get(id, userId) as
+    | {
+        id: string;
+        job_id: string;
+        profile_id: string;
+        mode: string;
+        questions_json: string;
+        status: string;
+        started_at: string;
+        completed_at: string | null;
+      }
+    | undefined;
 
   if (!row) return null;
 
@@ -137,7 +140,7 @@ export function getInterviewSession(
 // Get all interview sessions (optionally filter by job)
 export function getInterviewSessions(
   jobId?: string,
-  userId: string = "default"
+  userId: string = "default",
 ): InterviewSession[] {
   let query = `
     SELECT id, job_id, profile_id, mode, questions_json, status, started_at, completed_at
@@ -184,10 +187,10 @@ export function addInterviewAnswer(
   questionIndex: number,
   answer: string,
   feedback?: string,
-  userId: string = "default"
+  userId: string = "default",
 ): InterviewAnswer {
   const id = generateId();
-  const now = new Date().toISOString();
+  const now = nowIso();
 
   const stmt = db.prepare(`
     INSERT INTO interview_answers (id, user_id, session_id, question_index, answer, feedback, created_at)
@@ -207,7 +210,7 @@ export function addInterviewAnswer(
     feedback || null,
     now,
     sessionId,
-    userId
+    userId,
   ) as { changes?: number } | undefined;
 
   if (result?.changes === 0) {
@@ -227,9 +230,9 @@ export function addInterviewAnswer(
 // Complete an interview session
 export function completeInterviewSession(
   sessionId: string,
-  userId: string = "default"
+  userId: string = "default",
 ): void {
-  const now = new Date().toISOString();
+  const now = nowIso();
 
   const stmt = db.prepare(`
     UPDATE interview_sessions
@@ -241,7 +244,10 @@ export function completeInterviewSession(
 }
 
 // Delete an interview session (cascades to answers)
-export function deleteInterviewSession(id: string, userId: string = "default"): void {
+export function deleteInterviewSession(
+  id: string,
+  userId: string = "default",
+): void {
   const session = db
     .prepare("SELECT id FROM interview_sessions WHERE id = ? AND user_id = ?")
     .get(id, userId) as { id: string } | undefined;
@@ -250,17 +256,21 @@ export function deleteInterviewSession(id: string, userId: string = "default"): 
     return;
   }
 
-  const deleteAnswers = db.prepare("DELETE FROM interview_answers WHERE session_id = ? AND user_id = ?");
+  const deleteAnswers = db.prepare(
+    "DELETE FROM interview_answers WHERE session_id = ? AND user_id = ?",
+  );
   deleteAnswers.run(id, userId);
 
-  const deleteSession = db.prepare("DELETE FROM interview_sessions WHERE id = ? AND user_id = ?");
+  const deleteSession = db.prepare(
+    "DELETE FROM interview_sessions WHERE id = ? AND user_id = ?",
+  );
   deleteSession.run(id, userId);
 }
 
 // Get recent interview sessions for dashboard
 export function getRecentInterviewSessions(
   limit: number = 5,
-  userId: string = "default"
+  userId: string = "default",
 ): InterviewSession[] {
   const stmt = db.prepare(`
     SELECT id, job_id, profile_id, mode, questions_json, status, started_at, completed_at

@@ -5,6 +5,7 @@ import { updateJobSchema } from "@/lib/constants";
 import { recordJobStatusChange } from "@/lib/db/analytics";
 import { jobToOpportunity } from "@/lib/opportunities";
 
+import { nowIso } from "@/lib/format/time";
 export const dynamic = "force-dynamic";
 
 interface RouteContext {
@@ -69,7 +70,7 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
       !data.appliedAt &&
       !existingJob.appliedAt
     ) {
-      data.appliedAt = new Date().toISOString();
+      data.appliedAt = nowIso();
     }
 
     updateJob(params.id, data, authResult.userId);

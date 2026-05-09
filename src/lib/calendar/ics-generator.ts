@@ -1,3 +1,4 @@
+import { addMinutes, nowDate, nowEpoch, toIso } from "@/lib/format/time";
 // ICS (iCalendar) file generator for calendar integration
 
 export interface CalendarEvent {
@@ -12,8 +13,7 @@ export interface CalendarEvent {
 }
 
 function formatICSDate(date: Date): string {
-  return date
-    .toISOString()
+  return toIso(date)
     .replace(/[-:]/g, "")
     .replace(/\.\d{3}/, "");
 }
@@ -27,7 +27,7 @@ function escapeICSText(text: string): string {
 }
 
 function generateUID(): string {
-  return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}@slothing`;
+  return `${nowEpoch()}-${Math.random().toString(36).substr(2, 9)}@slothing`;
 }
 
 export function generateICSEvent(event: CalendarEvent): string {
@@ -35,7 +35,7 @@ export function generateICSEvent(event: CalendarEvent): string {
   const dtstart = formatICSDate(event.startDate);
   const dtend = event.endDate
     ? formatICSDate(event.endDate)
-    : formatICSDate(new Date(event.startDate.getTime() + 60 * 60 * 1000)); // Default 1 hour
+    : formatICSDate(addMinutes(event.startDate, 60)); // Default 1 hour
 
   const lines = [
     "BEGIN:VCALENDAR",
@@ -45,7 +45,7 @@ export function generateICSEvent(event: CalendarEvent): string {
     "METHOD:PUBLISH",
     "BEGIN:VEVENT",
     `UID:${uid}`,
-    `DTSTAMP:${formatICSDate(new Date())}`,
+    `DTSTAMP:${formatICSDate(nowDate())}`,
     `DTSTART:${dtstart}`,
     `DTEND:${dtend}`,
     `SUMMARY:${escapeICSText(event.title)}`,
@@ -100,11 +100,11 @@ export function generateICSCalendar(events: CalendarEvent[]): string {
     const dtstart = formatICSDate(event.startDate);
     const dtend = event.endDate
       ? formatICSDate(event.endDate)
-      : formatICSDate(new Date(event.startDate.getTime() + 60 * 60 * 1000));
+      : formatICSDate(addMinutes(event.startDate, 60));
 
     lines.push("BEGIN:VEVENT");
     lines.push(`UID:${uid}`);
-    lines.push(`DTSTAMP:${formatICSDate(new Date())}`);
+    lines.push(`DTSTAMP:${formatICSDate(nowDate())}`);
     lines.push(`DTSTART:${dtstart}`);
     lines.push(`DTEND:${dtend}`);
     lines.push(`SUMMARY:${escapeICSText(event.title)}`);
@@ -147,14 +147,10 @@ export function generateICSCalendar(events: CalendarEvent[]): string {
  * Generate Google Calendar URL for adding event
  */
 export function generateGoogleCalendarURL(event: CalendarEvent): string {
-  const startDate = event.startDate
-    .toISOString()
+  const startDate = toIso(event.startDate)
     .replace(/[-:]/g, "")
     .replace(/\.\d{3}Z/, "Z");
-  const endDate = (
-    event.endDate || new Date(event.startDate.getTime() + 60 * 60 * 1000)
-  )
-    .toISOString()
+  const endDate = toIso(event.endDate || addMinutes(event.startDate, 60))
     .replace(/[-:]/g, "")
     .replace(/\.\d{3}Z/, "Z");
 
@@ -179,17 +175,15 @@ export function generateGoogleCalendarURL(event: CalendarEvent): string {
  * Generate Outlook Web calendar URL
  */
 export function generateOutlookCalendarURL(event: CalendarEvent): string {
-  const startDate = event.startDate.toISOString();
-  const endDate = (
-    event.endDate || new Date(event.startDate.getTime() + 60 * 60 * 1000)
-  ).toISOString();
+  const startDate = toIso(event.startDate);
+  const endDate = event.endDate || addMinutes(event.startDate, 60);
 
   const params = new URLSearchParams({
     path: "/calendar/action/compose",
     rru: "addevent",
     subject: event.title,
     startdt: startDate,
-    enddt: endDate,
+    enddt: toIso(endDate),
   });
 
   if (event.description) {

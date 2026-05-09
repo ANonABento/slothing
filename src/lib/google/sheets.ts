@@ -1,3 +1,4 @@
+import { formatIsoDateOnly, toEpoch } from "@/lib/format/time";
 /**
  * Google Sheets Operations
  *
@@ -170,7 +171,7 @@ export async function clearSheet(
 export async function exportJobTrackerToSheet(
   jobs: JobDescription[],
 ): Promise<SpreadsheetResult | null> {
-  const timestamp = new Date().toISOString().split("T")[0];
+  const timestamp = formatIsoDateOnly();
   const result = await createSpreadsheet(`Job Tracker Export - ${timestamp}`, [
     "All Jobs",
     "By Status",
@@ -234,7 +235,7 @@ export async function exportJobTrackerToSheet(
     .sort((a, b) => {
       const dateA = a.appliedAt || a.createdAt;
       const dateB = b.appliedAt || b.createdAt;
-      return new Date(dateB).getTime() - new Date(dateA).getTime();
+      return toEpoch(dateB) - toEpoch(dateA);
     });
 
   const timelineRows = timelineJobs.map((job) => [
@@ -321,7 +322,7 @@ export async function createSalaryComparisonSheet(
  * Create application tracking spreadsheet with templates
  */
 export async function createApplicationTrackingSheet(): Promise<SpreadsheetResult | null> {
-  const timestamp = new Date().toISOString().split("T")[0];
+  const timestamp = formatIsoDateOnly();
   const result = await createSpreadsheet(`Application Tracker - ${timestamp}`, [
     "Applications",
     "Follow-ups",

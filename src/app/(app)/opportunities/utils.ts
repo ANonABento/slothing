@@ -1,3 +1,4 @@
+import { parseToDate } from "@/lib/format/time";
 export type OpportunityType = "job" | "hackathon";
 export type OpportunitySource =
   | "waterlooworks"
@@ -682,6 +683,5 @@ function parseDateOnly(value: string): Date | undefined {
 }
 
 function parseGenericDate(value: string): Date | undefined {
-  const parsedDate = new Date(value);
-  return Number.isFinite(parsedDate.getTime()) ? parsedDate : undefined;
+  return parseToDate(value) ?? undefined;
 }

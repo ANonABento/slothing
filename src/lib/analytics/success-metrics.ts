@@ -1,6 +1,7 @@
 import type { JobDescription } from "@/types";
 import type { GeneratedResume } from "@/lib/db/resumes";
 
+import { parseToDate } from "@/lib/format/time";
 export interface TimeToMetric {
   category: string;
   count: number;
@@ -41,8 +42,8 @@ export interface SuccessMetrics {
 }
 
 function daysBetween(date1: string, date2: string): number {
-  const d1 = new Date(date1);
-  const d2 = new Date(date2);
+  const d1 = parseToDate(date1)!;
+  const d2 = parseToDate(date2)!;
   const diffTime = Math.abs(d2.getTime() - d1.getTime());
   return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 }
@@ -58,22 +59,32 @@ function isAppliedLifecycleStatus(status?: JobDescription["status"]): boolean {
 }
 
 export function calculateFunnel(jobs: JobDescription[]): FunnelStage[] {
-  const appliedJobs = jobs.filter((job) => isAppliedLifecycleStatus(job.status));
+  const appliedJobs = jobs.filter((job) =>
+    isAppliedLifecycleStatus(job.status),
+  );
   const applied = appliedJobs.length;
   if (applied === 0) {
     return [
       { stage: "Applied", count: 0, percentage: 0, conversionFromPrevious: 0 },
       { stage: "Response", count: 0, percentage: 0, conversionFromPrevious: 0 },
-      { stage: "Interview", count: 0, percentage: 0, conversionFromPrevious: 0 },
+      {
+        stage: "Interview",
+        count: 0,
+        percentage: 0,
+        conversionFromPrevious: 0,
+      },
       { stage: "Offer", count: 0, percentage: 0, conversionFromPrevious: 0 },
     ];
   }
 
   const responded = appliedJobs.filter(
-    (j) => j.status === "interviewing" || j.status === "offered" || j.status === "rejected"
+    (j) =>
+      j.status === "interviewing" ||
+      j.status === "offered" ||
+      j.status === "rejected",
   ).length;
   const interviewed = appliedJobs.filter(
-    (j) => j.status === "interviewing" || j.status === "offered"
+    (j) => j.status === "interviewing" || j.status === "offered",
   ).length;
   const offered = appliedJobs.filter((j) => j.status === "offered").length;
 
@@ -94,13 +105,15 @@ export function calculateFunnel(jobs: JobDescription[]): FunnelStage[] {
       stage: "Interview",
       count: interviewed,
       percentage: Math.round((interviewed / applied) * 100),
-      conversionFromPrevious: responded > 0 ? Math.round((interviewed / responded) * 100) : 0,
+      conversionFromPrevious:
+        responded > 0 ? Math.round((interviewed / responded) * 100) : 0,
     },
     {
       stage: "Offer",
       count: offered,
       percentage: Math.round((offered / applied) * 100),
-      conversionFromPrevious: interviewed > 0 ? Math.round((offered / interviewed) * 100) : 0,
+      conversionFromPrevious:
+        interviewed > 0 ? Math.round((offered / interviewed) * 100) : 0,
     },
   ];
 }
@@ -110,15 +123,21 @@ export function calculateTimeToInterview(jobs: JobDescription[]): {
   byJobType: TimeToMetric[];
 } {
   const interviewedJobs = jobs.filter(
-    (j) => (j.status === "interviewing" || j.status === "offered") && j.appliedAt
+    (j) =>
+      (j.status === "interviewing" || j.status === "offered") && j.appliedAt,
   );
 
-  const calculateMetric = (filteredJobs: JobDescription[], category: string): TimeToMetric => {
+  const calculateMetric = (
+    filteredJobs: JobDescription[],
+    category: string,
+  ): TimeToMetric => {
     if (filteredJobs.length === 0) {
       return { category, count: 0, averageDays: 0, minDays: 0, maxDays: 0 };
     }
 
-    const days = filteredJobs.map((j) => daysBetween(j.createdAt, j.appliedAt || j.createdAt));
+    const days = filteredJobs.map((j) =>
+      daysBetween(j.createdAt, j.appliedAt || j.createdAt),
+    );
     const sum = days.reduce((a, b) => a + b, 0);
 
     return {
@@ -155,13 +174,14 @@ export function calculateOfferRate(jobs: JobDescription[]): {
   byJobType: { type: string; rate: number; count: number }[];
 } {
   const appliedJobs = jobs.filter(
-    (j) => isAppliedLifecycleStatus(j.status) && j.status !== "withdrawn"
+    (j) => isAppliedLifecycleStatus(j.status) && j.status !== "withdrawn",
   );
   const offeredJobs = jobs.filter((j) => j.status === "offered");
 
-  const overall = appliedJobs.length > 0
-    ? Math.round((offeredJobs.length / appliedJobs.length) * 100)
-    : 0;
+  const overall =
+    appliedJobs.length > 0
+      ? Math.round((offeredJobs.length / appliedJobs.length) * 100)
+      : 0;
 
   // Group by job type
   const byType = new Map<string, { applied: number; offered: number }>();
@@ -181,7 +201,10 @@ export function calculateOfferRate(jobs: JobDescription[]): {
   byType.forEach((stats, type) => {
     byJobType.push({
       type,
-      rate: stats.applied > 0 ? Math.round((stats.offered / stats.applied) * 100) : 0,
+      rate:
+        stats.applied > 0
+          ? Math.round((stats.offered / stats.applied) * 100)
+          : 0,
       count: stats.applied,
     });
   });
@@ -191,13 +214,14 @@ export function calculateOfferRate(jobs: JobDescription[]): {
 
 export function identifyTopResumes(
   resumes: GeneratedResume[],
-  jobs: JobDescription[]
+  jobs: JobDescription[],
 ): ResumePerformance[] {
   const jobMap = new Map(jobs.map((j) => [j.id, j]));
 
   const resumePerformance: ResumePerformance[] = resumes.map((resume) => {
     const job = jobMap.get(resume.jobId);
-    const successful = job?.status === "offered" || job?.status === "interviewing";
+    const successful =
+      job?.status === "offered" || job?.status === "interviewing";
 
     return {
       id: resume.id,
@@ -225,33 +249,39 @@ export function generateInsights(
   jobs: JobDescription[],
   funnel: FunnelStage[],
   timeToInterview: { overall: TimeToMetric; byJobType: TimeToMetric[] },
-  offerRate: { overall: number; byJobType: { type: string; rate: number; count: number }[] }
+  offerRate: {
+    overall: number;
+    byJobType: { type: string; rate: number; count: number }[];
+  },
 ): string[] {
   const insights: string[] = [];
 
   // Funnel insights
   if (funnel[1].conversionFromPrevious < 20 && funnel[0].count > 5) {
     insights.push(
-      "Your response rate is below 20%. Consider tailoring your resume more specifically to each job."
+      "Your response rate is below 20%. Consider tailoring your resume more specifically to each job.",
     );
   }
 
   if (funnel[2].conversionFromPrevious > 50 && funnel[1].count > 3) {
     insights.push(
-      "Great interview conversion rate! Once you get a response, you're likely to get an interview."
+      "Great interview conversion rate! Once you get a response, you're likely to get an interview.",
     );
   }
 
   if (funnel[3].conversionFromPrevious > 30 && funnel[2].count > 2) {
     insights.push(
-      "Strong interview-to-offer conversion! You're performing well in interviews."
+      "Strong interview-to-offer conversion! You're performing well in interviews.",
     );
   }
 
   // Time to interview insights
-  if (timeToInterview.overall.averageDays > 14 && timeToInterview.overall.count > 3) {
+  if (
+    timeToInterview.overall.averageDays > 14 &&
+    timeToInterview.overall.count > 3
+  ) {
     insights.push(
-      `Average time to interview is ${timeToInterview.overall.averageDays} days. Consider following up on applications after 1-2 weeks.`
+      `Average time to interview is ${timeToInterview.overall.averageDays} days. Consider following up on applications after 1-2 weeks.`,
     );
   }
 
@@ -262,21 +292,25 @@ export function generateInsights(
 
   if (bestPerformingType && bestPerformingType.rate > 0) {
     insights.push(
-      `You have the best success rate (${bestPerformingType.rate}%) with ${bestPerformingType.type} positions.`
+      `You have the best success rate (${bestPerformingType.rate}%) with ${bestPerformingType.type} positions.`,
     );
   }
 
   // Volume insight
-  const totalApplied = jobs.filter((j) => isAppliedLifecycleStatus(j.status)).length;
+  const totalApplied = jobs.filter((j) =>
+    isAppliedLifecycleStatus(j.status),
+  ).length;
   if (totalApplied < 10) {
     insights.push(
-      "Apply to more positions to get statistically meaningful insights. Aim for 15-20+ applications."
+      "Apply to more positions to get statistically meaningful insights. Aim for 15-20+ applications.",
     );
   }
 
   // No insights case
   if (insights.length === 0) {
-    insights.push("Keep tracking your applications to unlock personalized insights!");
+    insights.push(
+      "Keep tracking your applications to unlock personalized insights!",
+    );
   }
 
   return insights;
@@ -284,7 +318,7 @@ export function generateInsights(
 
 export function calculateSuccessMetrics(
   jobs: JobDescription[],
-  resumes: GeneratedResume[]
+  resumes: GeneratedResume[],
 ): SuccessMetrics {
   const funnel = calculateFunnel(jobs);
   const timeToInterview = calculateTimeToInterview(jobs);

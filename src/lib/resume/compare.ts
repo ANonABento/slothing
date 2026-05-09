@@ -1,5 +1,6 @@
 import type { TailoredResume } from "./generator";
 
+import { toEpoch } from "@/lib/format/time";
 export interface DiffItem {
   type: "added" | "removed" | "changed" | "unchanged";
   path: string;
@@ -27,7 +28,7 @@ function compareStrings(
   oldVal: string | undefined,
   newVal: string | undefined,
   path: string,
-  label: string
+  label: string,
 ): DiffItem | null {
   const before = oldVal?.trim() || "";
   const after = newVal?.trim() || "";
@@ -46,7 +47,7 @@ function compareArrays(
   oldArr: string[] | undefined,
   newArr: string[] | undefined,
   path: string,
-  label: string
+  label: string,
 ): DiffItem[] {
   const before = oldArr || [];
   const after = newArr || [];
@@ -86,16 +87,26 @@ export function compareResumes(
   before: TailoredResume,
   after: TailoredResume,
   beforeScore?: number,
-  afterScore?: number
+  afterScore?: number,
 ): ResumeComparison {
   const diffs: DiffItem[] = [];
 
   // Compare summary
-  const summaryDiff = compareStrings(before.summary, after.summary, "summary", "Summary");
+  const summaryDiff = compareStrings(
+    before.summary,
+    after.summary,
+    "summary",
+    "Summary",
+  );
   if (summaryDiff) diffs.push(summaryDiff);
 
   // Compare skills
-  const skillsDiffs = compareArrays(before.skills, after.skills, "skills", "Skill");
+  const skillsDiffs = compareArrays(
+    before.skills,
+    after.skills,
+    "skills",
+    "Skill",
+  );
   diffs.push(...skillsDiffs);
 
   // Compare experiences
@@ -124,7 +135,7 @@ export function compareResumes(
         `${oldExp.title} at ${oldExp.company}`,
         `${newExp.title} at ${newExp.company}`,
         `experiences[${i}].title`,
-        `Experience #${i + 1} Title`
+        `Experience #${i + 1} Title`,
       );
       if (titleDiff) diffs.push(titleDiff);
 
@@ -132,7 +143,7 @@ export function compareResumes(
         oldExp.dates,
         newExp.dates,
         `experiences[${i}].dates`,
-        `Experience #${i + 1} Dates`
+        `Experience #${i + 1} Dates`,
       );
       if (datesDiff) diffs.push(datesDiff);
 
@@ -141,7 +152,7 @@ export function compareResumes(
         oldExp.highlights,
         newExp.highlights,
         `experiences[${i}].highlights`,
-        `Experience #${i + 1} Highlight`
+        `Experience #${i + 1} Highlight`,
       );
       diffs.push(...highlightsDiffs);
     }
@@ -172,7 +183,7 @@ export function compareResumes(
         formatEducation(oldEdu),
         formatEducation(newEdu),
         `education[${i}]`,
-        `Education #${i + 1}`
+        `Education #${i + 1}`,
       );
       if (eduDiff) diffs.push(eduDiff);
     }
@@ -219,10 +230,10 @@ export interface VersionInfo {
 }
 
 export function createVersionTimeline(
-  versions: VersionInfo[]
+  versions: VersionInfo[],
 ): { version: VersionInfo; index: number }[] {
   return versions
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .sort((a, b) => toEpoch(b.createdAt) - toEpoch(a.createdAt))
     .map((version, index) => ({ version, index }));
 }
 
@@ -258,7 +269,9 @@ function scoreSkillsSection(skills: string[] | undefined): number {
   return 20;
 }
 
-function scoreExperiencesSection(experiences: TailoredResume["experiences"]): number {
+function scoreExperiencesSection(
+  experiences: TailoredResume["experiences"],
+): number {
   if (!experiences || experiences.length === 0) return 0;
   let score = 0;
   const count = experiences.length;
@@ -269,7 +282,8 @@ function scoreExperiencesSection(experiences: TailoredResume["experiences"]): nu
   else score += 30;
 
   // Highlights quality: 3-5 per role is ideal
-  const avgHighlights = experiences.reduce((sum, e) => sum + e.highlights.length, 0) / count;
+  const avgHighlights =
+    experiences.reduce((sum, e) => sum + e.highlights.length, 0) / count;
   if (avgHighlights >= 3 && avgHighlights <= 5) score += 60;
   else if (avgHighlights >= 2) score += 40;
   else if (avgHighlights >= 1) score += 20;
@@ -281,7 +295,7 @@ function scoreEducationSection(education: TailoredResume["education"]): number {
   if (!education || education.length === 0) return 0;
   // At least one complete education entry
   const complete = education.filter(
-    (e) => e.degree && e.field && e.institution && e.date
+    (e) => e.degree && e.field && e.institution && e.date,
   );
   if (complete.length === education.length) return 100;
   if (complete.length > 0) return 70;
@@ -290,7 +304,7 @@ function scoreEducationSection(education: TailoredResume["education"]): number {
 
 export function calculateSectionScores(
   before: TailoredResume,
-  after: TailoredResume
+  after: TailoredResume,
 ): SectionScore[] {
   const scorers: Record<string, (r: TailoredResume) => number> = {
     summary: (r) => scoreSummarySection(r.summary),
@@ -342,7 +356,9 @@ function resumeToPlainText(resume: TailoredResume): string {
   }
 
   for (const edu of resume.education) {
-    parts.push(`${edu.degree} in ${edu.field} from ${edu.institution} (${edu.date})`);
+    parts.push(
+      `${edu.degree} in ${edu.field} from ${edu.institution} (${edu.date})`,
+    );
   }
 
   return parts.join("\n");
@@ -354,7 +370,10 @@ export function calculateResumeMetrics(resume: TailoredResume): ResumeMetrics {
   const text = resumeToPlainText(resume);
   const characterCount = text.length;
   const wordCount = text.split(/\s+/).filter(Boolean).length;
-  const estimatedPages = Math.max(1, Math.ceil(characterCount / CHARS_PER_PAGE));
+  const estimatedPages = Math.max(
+    1,
+    Math.ceil(characterCount / CHARS_PER_PAGE),
+  );
 
   return { characterCount, wordCount, estimatedPages };
 }
@@ -394,7 +413,7 @@ export interface VersionStats {
 
 export function calculateVersionStats(
   resumeId: string,
-  entries: ABTrackingEntry[]
+  entries: ABTrackingEntry[],
 ): VersionStats {
   const relevant = entries.filter((e) => e.resumeId === resumeId);
   const total = relevant.length;
@@ -408,9 +427,7 @@ export function calculateVersionStats(
   }
 
   const interviewRate =
-    total > 0
-      ? ((outcomes.interviewing + outcomes.offered) / total) * 100
-      : 0;
+    total > 0 ? ((outcomes.interviewing + outcomes.offered) / total) * 100 : 0;
   const offerRate = total > 0 ? (outcomes.offered / total) * 100 : 0;
 
   return {
@@ -437,7 +454,7 @@ const MIN_ENTRIES_FOR_RECOMMENDATION = 3;
 
 export function generateRecommendation(
   allEntries: ABTrackingEntry[],
-  resumeIds: string[]
+  resumeIds: string[],
 ): ABRecommendation | null {
   if (resumeIds.length < 2) return null;
 
@@ -448,7 +465,8 @@ export function generateRecommendation(
 
   // Sort by interview rate descending, then offer rate
   const sorted = [...withData].sort((a, b) => {
-    if (b.interviewRate !== a.interviewRate) return b.interviewRate - a.interviewRate;
+    if (b.interviewRate !== a.interviewRate)
+      return b.interviewRate - a.interviewRate;
     return b.offerRate - a.offerRate;
   });
 

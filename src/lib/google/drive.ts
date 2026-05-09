@@ -1,3 +1,4 @@
+import { formatIsoDateOnly } from "@/lib/format/time";
 /**
  * Google Drive Operations
  *
@@ -182,7 +183,7 @@ export async function uploadCompanyResearch(
  */
 export async function uploadBackup(content: string): Promise<UploadResult> {
   const folderId = await getOrCreateSubfolder("Backups");
-  const timestamp = new Date().toISOString().split("T")[0];
+  const timestamp = formatIsoDateOnly();
   const fileName = `job-search-backup-${timestamp}.json`;
   return uploadFile(fileName, content, "application/json", folderId);
 }

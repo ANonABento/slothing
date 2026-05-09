@@ -1,3 +1,4 @@
+import { nowDate, nowIso, parseToDate } from "@/lib/format/time";
 /**
  * @route GET /api/extension/auth/verify
  * @description Verify an extension authentication token
@@ -39,8 +40,8 @@ export async function GET(request: NextRequest) {
     }
 
     // Check expiry
-    const expiresAt = new Date(session.expires_at);
-    if (expiresAt < new Date()) {
+    const expiresAt = parseToDate(session.expires_at)!;
+    if (expiresAt < nowDate()) {
       // Delete expired session
       db.prepare(
         `DELETE FROM extension_sessions WHERE id = ? AND user_id = ?`,
@@ -53,7 +54,7 @@ export async function GET(request: NextRequest) {
       `
       UPDATE extension_sessions SET last_used_at = ? WHERE id = ? AND user_id = ?
     `,
-    ).run(new Date().toISOString(), session.id, session.user_id);
+    ).run(nowIso(), session.id, session.user_id);
 
     return NextResponse.json({
       valid: true,

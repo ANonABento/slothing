@@ -1,5 +1,7 @@
 "use client";
 
+import { nowIso } from "@/lib/format/time";
+
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { DragEvent } from "react";
@@ -206,7 +208,7 @@ export default function OpportunitiesPage() {
     );
     const nextOpportunities = opportunities.map((opportunity) =>
       opportunity.id === opportunityId
-        ? { ...opportunity, status, updatedAt: new Date().toISOString() }
+        ? { ...opportunity, status, updatedAt: nowIso() }
         : opportunity,
     );
 
