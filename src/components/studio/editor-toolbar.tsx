@@ -34,7 +34,7 @@ import {
   Underline,
   Undo2,
 } from "lucide-react";
-import { useRef, useState } from "react";
+import { useRef, useState, type ComponentType, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import {
   COLOR_SWATCHES,
@@ -63,7 +63,7 @@ interface EditorToolbarProps {
   onPrint: () => void;
 }
 
-type Chain = ReturnType<Editor["chain"]> & Record<string, (...args: any[]) => Chain>;
+type Chain = any;
 
 function chain(editor: Editor | null): Chain | null {
   return editor ? (editor.chain().focus() as Chain) : null;
@@ -94,7 +94,7 @@ function ToolbarButton({
   disabled?: boolean;
   label: string;
   shortcut?: string;
-  children: React.ReactNode;
+  children: ReactNode;
   onClick: () => void;
 }) {
   return (
@@ -118,7 +118,7 @@ function ToolbarGroup({
   children,
 }: {
   label: string;
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   return (
     <div className="flex items-center gap-1 rounded-md border bg-card p-1">
@@ -150,7 +150,7 @@ function SelectControl({
   label: string;
   value: string;
   disabled?: boolean;
-  children: React.ReactNode;
+  children: ReactNode;
   onChange: (value: string) => void;
 }) {
   return (
@@ -509,8 +509,8 @@ function EditorParagraphControls({
             run(editor, (current) => current.setParagraph());
             return;
           }
-          run(editor, (current) =>
-            current.toggleHeading({ level: Number(value.slice(1)) }),
+      run(editor, (current) =>
+            current.toggleHeading({ level: Number(value.slice(1)) as 1 | 2 | 3 }),
           );
         }}
       >
@@ -519,12 +519,14 @@ function EditorParagraphControls({
         <option value="h2">H2</option>
         <option value="h3">H3</option>
       </SelectControl>
-      {[
-        ["Align left", "left", AlignLeft],
-        ["Align center", "center", AlignCenter],
-        ["Align right", "right", AlignRight],
-        ["Justify", "justify", AlignJustify],
-      ].map(([label, align, Icon]) => (
+      {(
+        [
+          ["Align left", "left", AlignLeft],
+          ["Align center", "center", AlignCenter],
+          ["Align right", "right", AlignRight],
+          ["Justify", "justify", AlignJustify],
+        ] as Array<[string, string, ComponentType<{ className?: string }>]>
+      ).map(([label, align, Icon]) => (
         <ToolbarButton
           key={String(align)}
           label={String(label)}

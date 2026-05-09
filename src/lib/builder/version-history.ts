@@ -5,6 +5,11 @@ import {
   type SectionState,
 } from "@/lib/builder/section-manager";
 import type { TipTapJSONContent } from "@/lib/editor/types";
+import {
+  DEFAULT_PAGE_SETTINGS,
+  normalizePageSettings,
+  type PageSettings,
+} from "@/lib/editor/page-settings";
 import { getDefaultTemplateIdForDocumentMode } from "@/lib/resume/template-data";
 import type { CoverLetterCritique } from "@/lib/ai/critique-prompts";
 
@@ -22,6 +27,7 @@ export interface BuilderDraftState {
   templateId: string;
   html: string;
   content?: TipTapJSONContent;
+  pageSettings?: PageSettings;
   coverLetterCritique?: CoverLetterCritique;
 }
 
@@ -179,6 +185,9 @@ export function normalizeBuilderState(
     templateId: state.templateId,
     html: state.html,
     content: normalizeTipTapContent(state.content),
+    pageSettings: normalizePageSettings(
+      state.pageSettings ?? DEFAULT_PAGE_SETTINGS,
+    ),
     coverLetterCritique: normalizeCoverLetterCritique(
       state.coverLetterCritique,
     ),
@@ -206,6 +215,9 @@ export function parseBuilderDraftState(
         : getDefaultTemplateIdForDocumentMode(value.documentMode),
     html: typeof value.html === "string" ? value.html : "",
     content: normalizeTipTapContent(value.content),
+    pageSettings: normalizePageSettings(
+      isRecord(value.pageSettings) ? value.pageSettings : DEFAULT_PAGE_SETTINGS,
+    ),
     coverLetterCritique: normalizeCoverLetterCritique(
       value.coverLetterCritique,
     ),

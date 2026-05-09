@@ -17,6 +17,22 @@ describe("createHtmlPdfExportPayload", () => {
       format: "pdf",
     });
   });
+
+  it("includes page settings when exporting editor documents", () => {
+    const pageSettings = {
+      size: "letter" as const,
+      marginPreset: "narrow" as const,
+      margins: { top: 0.5, right: 0.5, bottom: 0.5, left: 0.5 },
+    };
+
+    expect(createHtmlPdfExportPayload("<html>Doc</html>", pageSettings)).toEqual(
+      {
+        html: "<html>Doc</html>",
+        format: "pdf",
+        pageSettings,
+      },
+    );
+  });
 });
 
 describe("createDocumentFilename", () => {

@@ -6,6 +6,14 @@ import { CheckCircle2, FileText, PenLine, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ResumeEditor } from "@/lib/editor/resume-editor";
 import { EditorFormattingControls } from "@/components/studio/editor-toolbar";
+import { EditorPageSettings } from "@/components/studio/editor-page-settings";
+import {
+  DEFAULT_PAGE_SETTINGS,
+  PAGE_SIZES,
+  normalizePageSettings,
+  pageSettingsToCssVariables,
+  type PageSettings,
+} from "@/lib/editor/page-settings";
 import { getTemplateForDocumentMode } from "@/lib/resume/template-data";
 import type {
   CoverLetterTemplateStyles,
@@ -15,7 +23,7 @@ import type { TipTapJSONContent } from "@/lib/editor/types";
 import type { DocumentMode } from "./studio-documents";
 
 const PAGE_WIDTH_PX = 816; // 8.5in at 96dpi
-const PAGE_HEIGHT_PX = 1056; // 11in at 96dpi
+const PX_PER_IN = 96;
 
 function coverLetterStylesToEditorTemplateStyles(
   styles: CoverLetterTemplateStyles,
@@ -40,6 +48,8 @@ export interface ResumePreviewProps {
   content?: TipTapJSONContent;
   documentMode?: DocumentMode;
   onContentChange?: (content: TipTapJSONContent) => void;
+  pageSettings?: PageSettings;
+  onPageSettingsChange?: (pageSettings: PageSettings) => void;
   onAddSection?: () => void;
   onAddFromBank?: () => void;
 }
@@ -87,6 +97,8 @@ export function ResumePreview({
   content,
   documentMode = "resume",
   onContentChange,
+  pageSettings = DEFAULT_PAGE_SETTINGS,
+  onPageSettingsChange,
   onAddSection,
   onAddFromBank,
 }: ResumePreviewProps) {
@@ -103,16 +115,20 @@ export function ResumePreview({
   const accentColor = template.styles.accentColor;
   const fontFamily =
     template.styles.fontFamily ?? "'Helvetica Neue', Arial, sans-serif";
+  const normalizedPageSettings = normalizePageSettings(pageSettings);
+  const pageSize = PAGE_SIZES[normalizedPageSettings.size];
+  const pageWidthPx = pageSize.widthIn * PX_PER_IN;
+  const pageHeightPx = pageSize.heightIn * PX_PER_IN;
 
   const updateScale = useCallback(() => {
     if (!wrapperRef.current) return;
     const availableWidth = wrapperRef.current.clientWidth - 48; // minus padding
-    if (availableWidth < PAGE_WIDTH_PX) {
-      setFitScale(Math.max(availableWidth, 1) / PAGE_WIDTH_PX);
+    if (availableWidth < pageWidthPx) {
+      setFitScale(Math.max(availableWidth, 1) / pageWidthPx);
     } else {
       setFitScale(1);
     }
-  }, []);
+  }, [pageWidthPx]);
 
   useEffect(() => {
     updateScale();
@@ -129,21 +145,29 @@ export function ResumePreview({
   return (
     <div ref={wrapperRef} className="h-full overflow-auto bg-muted/30 p-4">
       {content && (
-        <div className="sticky top-0 z-20 mx-auto mb-3 flex w-fit flex-wrap items-center gap-2 rounded-md border bg-background/95 p-2 shadow-sm backdrop-blur">
+        <div className="sticky top-0 z-20 mx-auto mb-3 flex w-fit max-w-full flex-wrap items-center gap-2 rounded-md border bg-background/95 p-2 shadow-sm backdrop-blur">
           <EditorFormattingControls editor={editor} />
+          {onPageSettingsChange && (
+            <EditorPageSettings
+              pageSettings={normalizedPageSettings}
+              onChange={onPageSettingsChange}
+            />
+          )}
         </div>
       )}
       <div
         className="mx-auto"
         style={{
-          width: `${PAGE_WIDTH_PX * scale}px`,
-          minHeight: `${PAGE_HEIGHT_PX * scale}px`,
+          width: `${pageWidthPx * scale}px`,
+          minHeight: `${pageHeightPx * scale}px`,
         }}
       >
         <article
-          className="min-h-[11in] border-[length:var(--border-width)] border-paper-border bg-paper text-paper-foreground shadow-[var(--shadow-elevated)]"
+          className="tiptap-page border-[length:var(--border-width)] border-paper-border bg-paper text-paper-foreground shadow-[var(--shadow-elevated)]"
           style={{
-            width: `${PAGE_WIDTH_PX}px`,
+            ...pageSettingsToCssVariables(normalizedPageSettings),
+            width: `${pageWidthPx}px`,
+            minHeight: `${pageHeightPx}px`,
             fontFamily,
             borderTop: isCoverLetter ? undefined : `4px solid ${accentColor}`,
             transformOrigin: "top left",
