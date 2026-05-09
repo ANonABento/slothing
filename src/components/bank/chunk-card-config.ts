@@ -3,6 +3,7 @@ import type { BankCategory } from "@/types";
 import {
   Award,
   Briefcase,
+  ListChecks,
   FolderOpen,
   GraduationCap,
   Shield,
@@ -13,40 +14,148 @@ import type { FieldDef } from "./chunk-card.types";
 
 export const CATEGORY_CONFIG: Record<
   BankCategory,
-  { label: string; icon: React.ComponentType<{ className?: string }>; color: string }
+  {
+    label: string;
+    icon: React.ComponentType<{ className?: string }>;
+    color: string;
+  }
 > = {
-  experience: { label: "Experience", icon: Briefcase, color: "bg-info/10 text-info" },
-  education: { label: "Education", icon: GraduationCap, color: "bg-success/10 text-success" },
+  experience: {
+    label: "Experience",
+    icon: Briefcase,
+    color: "bg-info/10 text-info",
+  },
+  education: {
+    label: "Education",
+    icon: GraduationCap,
+    color: "bg-success/10 text-success",
+  },
   skill: { label: "Skill", icon: Wrench, color: "bg-primary/10 text-primary" },
-  project: { label: "Project", icon: FolderOpen, color: "bg-accent/10 text-accent" },
-  hackathon: { label: "Hackathon", icon: Trophy, color: "bg-warning/10 text-warning" },
-  achievement: { label: "Achievement", icon: Award, color: "bg-warning/10 text-warning" },
-  certification: { label: "Certification", icon: Shield, color: "bg-info/10 text-info" },
+  project: {
+    label: "Project",
+    icon: FolderOpen,
+    color: "bg-accent/10 text-accent",
+  },
+  hackathon: {
+    label: "Hackathon",
+    icon: Trophy,
+    color: "bg-warning/10 text-warning",
+  },
+  bullet: {
+    label: "Bullet",
+    icon: ListChecks,
+    color: "bg-accent/10 text-accent",
+  },
+  achievement: {
+    label: "Achievement",
+    icon: Award,
+    color: "bg-warning/10 text-warning",
+  },
+  certification: {
+    label: "Certification",
+    icon: Shield,
+    color: "bg-info/10 text-info",
+  },
 };
 
 export const CATEGORY_FIELDS: Record<BankCategory, FieldDef[]> = {
   experience: [
-    { key: "title", label: "Job Title", type: "text", placeholder: "e.g. Software Engineer" },
-    { key: "company", label: "Company", type: "text", placeholder: "e.g. Acme Corp" },
-    { key: "location", label: "Location", type: "text", placeholder: "e.g. San Francisco, CA" },
-    { key: "startDate", label: "Start Date", type: "text", placeholder: "e.g. 2020-01" },
-    { key: "endDate", label: "End Date", type: "text", placeholder: "e.g. 2023-06" },
+    {
+      key: "title",
+      label: "Job Title",
+      type: "text",
+      placeholder: "e.g. Software Engineer",
+    },
+    {
+      key: "company",
+      label: "Company",
+      type: "text",
+      placeholder: "e.g. Acme Corp",
+    },
+    {
+      key: "location",
+      label: "Location",
+      type: "text",
+      placeholder: "e.g. San Francisco, CA",
+    },
+    {
+      key: "startDate",
+      label: "Start Date",
+      type: "text",
+      placeholder: "e.g. 2020-01",
+    },
+    {
+      key: "endDate",
+      label: "End Date",
+      type: "text",
+      placeholder: "e.g. 2023-06",
+    },
     { key: "current", label: "Current Position", type: "checkbox" },
-    { key: "description", label: "Description", type: "textarea", placeholder: "Brief description of the role" },
-    { key: "highlights", label: "Highlights (one per line)", type: "list", placeholder: "Key accomplishments..." },
-    { key: "skills", label: "Skills (one per line)", type: "list", placeholder: "React\nTypeScript\nNode.js" },
+    {
+      key: "description",
+      label: "Description",
+      type: "textarea",
+      placeholder: "Brief description of the role",
+    },
+    {
+      key: "highlights",
+      label: "Highlights (one per line)",
+      type: "list",
+      placeholder: "Key accomplishments...",
+    },
+    {
+      key: "skills",
+      label: "Skills (one per line)",
+      type: "list",
+      placeholder: "React\nTypeScript\nNode.js",
+    },
   ],
   education: [
-    { key: "institution", label: "Institution", type: "text", placeholder: "e.g. MIT" },
-    { key: "degree", label: "Degree", type: "text", placeholder: "e.g. BS Computer Science" },
-    { key: "field", label: "Field of Study", type: "text", placeholder: "e.g. Computer Science" },
-    { key: "startDate", label: "Start Date", type: "text", placeholder: "e.g. 2016" },
-    { key: "endDate", label: "End Date", type: "text", placeholder: "e.g. 2020" },
+    {
+      key: "institution",
+      label: "Institution",
+      type: "text",
+      placeholder: "e.g. MIT",
+    },
+    {
+      key: "degree",
+      label: "Degree",
+      type: "text",
+      placeholder: "e.g. BS Computer Science",
+    },
+    {
+      key: "field",
+      label: "Field of Study",
+      type: "text",
+      placeholder: "e.g. Computer Science",
+    },
+    {
+      key: "startDate",
+      label: "Start Date",
+      type: "text",
+      placeholder: "e.g. 2016",
+    },
+    {
+      key: "endDate",
+      label: "End Date",
+      type: "text",
+      placeholder: "e.g. 2020",
+    },
     { key: "gpa", label: "GPA", type: "text", placeholder: "e.g. 3.8" },
-    { key: "highlights", label: "Highlights (one per line)", type: "list", placeholder: "Dean's list\nResearch assistant" },
+    {
+      key: "highlights",
+      label: "Highlights (one per line)",
+      type: "list",
+      placeholder: "Dean's list\nResearch assistant",
+    },
   ],
   skill: [
-    { key: "name", label: "Skill Name", type: "text", placeholder: "e.g. TypeScript" },
+    {
+      key: "name",
+      label: "Skill Name",
+      type: "text",
+      placeholder: "e.g. TypeScript",
+    },
     {
       key: "category",
       label: "Category",
@@ -72,36 +181,155 @@ export const CATEGORY_FIELDS: Record<BankCategory, FieldDef[]> = {
     },
   ],
   project: [
-    { key: "name", label: "Project Name", type: "text", placeholder: "e.g. My App" },
-    { key: "description", label: "Description", type: "textarea", placeholder: "What does this project do?" },
-    { key: "url", label: "URL", type: "text", placeholder: "https://github.com/..." },
-    { key: "technologies", label: "Technologies (one per line)", type: "list", placeholder: "React\nNode.js" },
-    { key: "highlights", label: "Highlights (one per line)", type: "list", placeholder: "Key features..." },
+    {
+      key: "name",
+      label: "Project Name",
+      type: "text",
+      placeholder: "e.g. My App",
+    },
+    {
+      key: "description",
+      label: "Description",
+      type: "textarea",
+      placeholder: "What does this project do?",
+    },
+    {
+      key: "url",
+      label: "URL",
+      type: "text",
+      placeholder: "https://github.com/...",
+    },
+    {
+      key: "technologies",
+      label: "Technologies (one per line)",
+      type: "list",
+      placeholder: "React\nNode.js",
+    },
+    {
+      key: "highlights",
+      label: "Highlights (one per line)",
+      type: "list",
+      placeholder: "Key features...",
+    },
   ],
   hackathon: [
-    { key: "name", label: "Hackathon Name", type: "text", placeholder: "e.g. Hack the Future" },
-    { key: "organizer", label: "Organizer", type: "text", placeholder: "e.g. Devpost" },
-    { key: "location", label: "Location", type: "text", placeholder: "Online, New York, NY, or hybrid" },
-    { key: "startDate", label: "Start Date", type: "text", placeholder: "e.g. 2026-05-10" },
-    { key: "endDate", label: "End Date", type: "text", placeholder: "e.g. 2026-05-12" },
-    { key: "submissionUrl", label: "Submission URL", type: "text", placeholder: "https://...devpost.com/submissions/..." },
-    { key: "eventUrl", label: "Event URL", type: "text", placeholder: "https://...devpost.com" },
-    { key: "prizes", label: "Prizes (one per line)", type: "list", placeholder: "$5,000 Grand Prize\nBest AI Project\nSponsor API Prize" },
-    { key: "teamSizeMin", label: "Minimum Team Size", type: "text", placeholder: "1" },
-    { key: "teamSizeMax", label: "Maximum Team Size", type: "text", placeholder: "4" },
-    { key: "tracks", label: "Tracks (one per line)", type: "list", placeholder: "AI/ML\nDeveloper Tools\nSocial Impact" },
-    { key: "themes", label: "Themes (one per line)", type: "list", placeholder: "Accessibility\nClimate\nEducation" },
-    { key: "technologies", label: "Built With (one per line)", type: "list", placeholder: "React\nOpenAI API\nPostgreSQL" },
-    { key: "notes", label: "Notes", type: "textarea", placeholder: "Submission requirements, judging criteria, teammate notes..." },
+    {
+      key: "name",
+      label: "Hackathon Name",
+      type: "text",
+      placeholder: "e.g. Hack the Future",
+    },
+    {
+      key: "organizer",
+      label: "Organizer",
+      type: "text",
+      placeholder: "e.g. Devpost",
+    },
+    {
+      key: "location",
+      label: "Location",
+      type: "text",
+      placeholder: "Online, New York, NY, or hybrid",
+    },
+    {
+      key: "startDate",
+      label: "Start Date",
+      type: "text",
+      placeholder: "e.g. 2026-05-10",
+    },
+    {
+      key: "endDate",
+      label: "End Date",
+      type: "text",
+      placeholder: "e.g. 2026-05-12",
+    },
+    {
+      key: "submissionUrl",
+      label: "Submission URL",
+      type: "text",
+      placeholder: "https://...devpost.com/submissions/...",
+    },
+    {
+      key: "eventUrl",
+      label: "Event URL",
+      type: "text",
+      placeholder: "https://...devpost.com",
+    },
+    {
+      key: "prizes",
+      label: "Prizes (one per line)",
+      type: "list",
+      placeholder: "$5,000 Grand Prize\nBest AI Project\nSponsor API Prize",
+    },
+    {
+      key: "teamSizeMin",
+      label: "Minimum Team Size",
+      type: "text",
+      placeholder: "1",
+    },
+    {
+      key: "teamSizeMax",
+      label: "Maximum Team Size",
+      type: "text",
+      placeholder: "4",
+    },
+    {
+      key: "tracks",
+      label: "Tracks (one per line)",
+      type: "list",
+      placeholder: "AI/ML\nDeveloper Tools\nSocial Impact",
+    },
+    {
+      key: "themes",
+      label: "Themes (one per line)",
+      type: "list",
+      placeholder: "Accessibility\nClimate\nEducation",
+    },
+    {
+      key: "technologies",
+      label: "Built With (one per line)",
+      type: "list",
+      placeholder: "React\nOpenAI API\nPostgreSQL",
+    },
+    {
+      key: "notes",
+      label: "Notes",
+      type: "textarea",
+      placeholder:
+        "Submission requirements, judging criteria, teammate notes...",
+    },
   ],
   certification: [
-    { key: "name", label: "Certification Name", type: "text", placeholder: "e.g. AWS Solutions Architect" },
-    { key: "issuer", label: "Issuer", type: "text", placeholder: "e.g. Amazon Web Services" },
+    {
+      key: "name",
+      label: "Certification Name",
+      type: "text",
+      placeholder: "e.g. AWS Solutions Architect",
+    },
+    {
+      key: "issuer",
+      label: "Issuer",
+      type: "text",
+      placeholder: "e.g. Amazon Web Services",
+    },
     { key: "date", label: "Date", type: "text", placeholder: "e.g. 2023-03" },
     { key: "url", label: "URL", type: "text", placeholder: "https://..." },
   ],
+  bullet: [
+    {
+      key: "description",
+      label: "Description",
+      type: "textarea",
+      placeholder: "Resume bullet...",
+    },
+  ],
   achievement: [
-    { key: "description", label: "Description", type: "textarea", placeholder: "Describe the achievement..." },
+    {
+      key: "description",
+      label: "Description",
+      type: "textarea",
+      placeholder: "Describe the achievement...",
+    },
   ],
 };
 

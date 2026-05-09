@@ -18,6 +18,8 @@ import { generateId } from "@/lib/utils";
 import { PATHS } from "@/lib/constants";
 import { requireAuth, isAuthError } from "@/lib/auth";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   // Return available templates
   return NextResponse.json({

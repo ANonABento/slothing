@@ -2,7 +2,7 @@
 
 > You're not lazy. Your job search system is.
 
-Your personal job application command center. Upload your career documents, build tailored resumes and cover letters in one workspace, match with jobs, and prepare for interviews. Slothing does the work for you.
+Your personal job application command center. Upload your career documents, build tailored resumes and cover letters in one workspace, match with opportunities, and prepare for interviews. Slothing does the work for you.
 
 The app code lives in the `get-me-job` repo and `slothing` npm package. Domain: [slothing.work](https://slothing.work).
 
@@ -69,6 +69,7 @@ Open [http://localhost:3000](http://localhost:3000)
 ### Google Integration (Optional)
 
 Connect your Google account to enable:
+
 - **Calendar Sync**: Sync interview schedules with Google Calendar
 - **Drive Integration**: Import resumes from Drive, back up documents
 - **Gmail**: Import job emails, send emails directly
@@ -98,6 +99,7 @@ npm run build:firefox  # Firefox   → dist-firefox/
 ```
 
 **Load it:**
+
 - Chrome: `chrome://extensions` → enable Developer mode → Load unpacked → pick `columbus-extension/dist/`
 - Firefox: `about:debugging` → Load Temporary Add-on → pick `columbus-extension/dist-firefox/manifest.json`
 
@@ -117,7 +119,7 @@ Full docs: [`columbus-extension/README.md`](./columbus-extension/README.md).
 
 1. **Upload Documents**: Go to Upload and add resumes, cover letters, or supporting career documents
 2. **Review Profile**: Check extracted data in My Profile and make corrections
-3. **Add Job**: Go to Jobs and paste a job description
+3. **Add Opportunity**: Go to Opportunities and paste a job description
 4. **Analyze Match**: Click "Analyze Match" to see how well you fit
 5. **Open Document Studio**: Go to `/studio` to create resume and cover letter files
 6. **Build Documents**: Use the Resume and Cover Letter tabs, choose a template, select bank entries, and edit the generated draft

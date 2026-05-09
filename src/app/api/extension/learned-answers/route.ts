@@ -42,7 +42,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ answers });
   } catch (error) {
     console.error("Learned answers fetch error:", error);
-    return NextResponse.json({ error: "Failed to fetch answers" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to fetch answers" },
+      { status: 500 },
+    );
   }
 }
 
@@ -65,7 +68,7 @@ export async function POST(request: NextRequest) {
     if (!question || !answer) {
       return NextResponse.json(
         { error: "Question and answer are required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -75,10 +78,12 @@ export async function POST(request: NextRequest) {
     const existingRows = await db
       .select()
       .from(learnedAnswers)
-      .where(and(
-        eq(learnedAnswers.userId, authResult.userId),
-        eq(learnedAnswers.questionNormalized, questionNormalized)
-      ))
+      .where(
+        and(
+          eq(learnedAnswers.userId, authResult.userId),
+          eq(learnedAnswers.questionNormalized, questionNormalized),
+        ),
+      )
       .limit(1);
     const existing = existingRows[0];
 
@@ -93,10 +98,12 @@ export async function POST(request: NextRequest) {
           updatedAt: now.toISOString(),
           lastUsedAt: now.toISOString(),
         })
-        .where(and(
-          eq(learnedAnswers.id, existing.id),
-          eq(learnedAnswers.userId, authResult.userId)
-        ));
+        .where(
+          and(
+            eq(learnedAnswers.id, existing.id),
+            eq(learnedAnswers.userId, authResult.userId),
+          ),
+        );
 
       return NextResponse.json({
         id: existing.id,
@@ -136,6 +143,9 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("Save answer error:", error);
-    return NextResponse.json({ error: "Failed to save answer" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to save answer" },
+      { status: 500 },
+    );
   }
 }

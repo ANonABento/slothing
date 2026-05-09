@@ -89,6 +89,14 @@ describe("getEntryTitle", () => {
     expect(getEntryTitle(entry)).toBe("Won hackathon");
   });
 
+  it("should return description for bullet", () => {
+    const entry = makeBankEntry({
+      category: "bullet",
+      content: { description: "Reduced latency by 40%" },
+    });
+    expect(getEntryTitle(entry)).toBe("Reduced latency by 40%");
+  });
+
   it("should fallback gracefully for empty content", () => {
     const entry = makeBankEntry({ category: "skill", content: {} });
     expect(getEntryTitle(entry)).toBe("Skill");
@@ -400,6 +408,112 @@ describe("ChunkCard", () => {
 
     expect(screen.getByText("Delete")).toBeInTheDocument();
     expect(onDelete).not.toHaveBeenCalled();
+  });
+
+  it("renders editable child bullet components", () => {
+    const onUpdate = vi.fn();
+    const entry = makeBankEntry({
+      content: { title: "Engineer", company: "Acme", childCount: 1 },
+    });
+    const child = makeBankEntry({
+      id: "child-1",
+      category: "bullet",
+      content: {
+        description: "Reduced latency by 40%",
+        parentId: "test-1",
+        order: 0,
+      },
+    });
+
+    render(
+      <ChunkCard
+        entry={entry}
+        childEntries={[child]}
+        onUpdate={onUpdate}
+        onDelete={vi.fn()}
+      />,
+    );
+
+    fireEvent.click(screen.getByText("Engineer at Acme"));
+    expect(screen.getByText("Bullet components")).toBeInTheDocument();
+    expect(screen.getByText("Reduced latency by 40%")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByTitle("Edit bullet"));
+    fireEvent.change(screen.getByLabelText("Description"), {
+      target: { value: "Reduced latency by 50%" },
+    });
+    fireEvent.click(screen.getByText("Save"));
+
+    expect(onUpdate).toHaveBeenCalledWith(
+      "child-1",
+      expect.objectContaining({
+        description: "Reduced latency by 50%",
+        parentId: "test-1",
+      }),
+    );
+  });
+
+  it("can create a new child bullet component", () => {
+    const onCreateChild = vi.fn();
+    const entry = makeBankEntry({
+      category: "project",
+      content: { name: "Parser", childCount: 0 },
+    });
+
+    render(
+      <ChunkCard
+        entry={entry}
+        onUpdate={vi.fn()}
+        onDelete={vi.fn()}
+        onCreateChild={onCreateChild}
+      />,
+    );
+
+    fireEvent.click(screen.getByText("Parser"));
+    fireEvent.click(screen.getByText("Add bullet component"));
+    fireEvent.change(screen.getByLabelText("Description"), {
+      target: { value: "Parsed 20 resume formats" },
+    });
+    fireEvent.click(screen.getByText("Save"));
+
+    expect(onCreateChild).toHaveBeenCalledWith(
+      entry,
+      "Parsed 20 resume formats",
+    );
+  });
+
+  it("can request child bullet reordering", () => {
+    const onReorderChild = vi.fn();
+    const entry = makeBankEntry({
+      content: { title: "Engineer", company: "Acme", childCount: 2 },
+    });
+    const children = [
+      makeBankEntry({
+        id: "child-1",
+        category: "bullet",
+        content: { description: "First bullet", parentId: "test-1", order: 0 },
+      }),
+      makeBankEntry({
+        id: "child-2",
+        category: "bullet",
+        content: { description: "Second bullet", parentId: "test-1", order: 1 },
+      }),
+    ];
+
+    render(
+      <ChunkCard
+        entry={entry}
+        childEntries={children}
+        onUpdate={vi.fn()}
+        onDelete={vi.fn()}
+        onReorderChild={onReorderChild}
+      />,
+    );
+
+    fireEvent.click(screen.getByText("Engineer at Acme"));
+    fireEvent.click(screen.getAllByTitle("Move bullet up")[1]);
+
+    expect(onReorderChild).toHaveBeenCalledWith(entry, "child-2", "up");
   });
 
   it("should hide source document attribution outside dev/debug mode", () => {

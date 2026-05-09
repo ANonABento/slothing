@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
     if (!companyName) {
       return NextResponse.json(
         { error: "Company name is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -83,7 +83,7 @@ export async function GET(request: NextRequest) {
         companyName,
         ...researchData,
       },
-      authResult.userId
+      authResult.userId,
     );
 
     return NextResponse.json({
@@ -94,7 +94,7 @@ export async function GET(request: NextRequest) {
     console.error("Company research error:", error);
     return NextResponse.json(
       { error: "Failed to generate company research" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

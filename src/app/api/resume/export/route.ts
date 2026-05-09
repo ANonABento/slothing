@@ -19,8 +19,16 @@ import { tmpdir } from "os";
 import { join } from "path";
 import { promisify } from "util";
 
+export const dynamic = "force-dynamic";
+
 const execAsync = promisify(exec);
-const LATEX_CLEANUP_EXTENSIONS = ["resume.tex", "resume.pdf", "resume.aux", "resume.log", "resume.out"];
+const LATEX_CLEANUP_EXTENSIONS = [
+  "resume.tex",
+  "resume.pdf",
+  "resume.aux",
+  "resume.log",
+  "resume.out",
+];
 
 // GET — list available templates
 export async function GET() {
@@ -47,7 +55,7 @@ const exportSchema = z.object({
 async function renderResumeHtml(
   resume: TailoredResume,
   templateId: string,
-  userId: string
+  userId: string,
 ): Promise<string> {
   const { generateResumeHTML } = await import("@/lib/resume/pdf");
   const template = getTemplateWithCustom(templateId, userId);
@@ -66,18 +74,28 @@ export async function POST(request: NextRequest) {
     if (!parsed.success) {
       return NextResponse.json(
         { error: "Provide { resumeId, format } or { html, format }" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    const { resumeId, html: rawHtml, templateId, format, latexOptions, compilePdf } = parsed.data;
+    const {
+      resumeId,
+      html: rawHtml,
+      templateId,
+      format,
+      latexOptions,
+      compilePdf,
+    } = parsed.data;
 
     // Get resume content
     let resume: TailoredResume | null = null;
     if (resumeId) {
       const saved = getGeneratedResume(resumeId, authResult.userId);
       if (!saved) {
-        return NextResponse.json({ error: "Resume not found" }, { status: 404 });
+        return NextResponse.json(
+          { error: "Resume not found" },
+          { status: 404 },
+        );
       }
       resume = JSON.parse(saved.contentJson);
     }
@@ -85,10 +103,18 @@ export async function POST(request: NextRequest) {
     // Route by format
     if (format === "latex") {
       if (!resume) {
-        return NextResponse.json({ error: "resumeId required for LaTeX export" }, { status: 400 });
+        return NextResponse.json(
+          { error: "resumeId required for LaTeX export" },
+          { status: 400 },
+        );
       }
-      const { generateResumeLatex } = await import("@/lib/resume/latex-generator");
-      const latex = generateResumeLatex(resume, templateId, (latexOptions || {}) as LatexOptions);
+      const { generateResumeLatex } =
+        await import("@/lib/resume/latex-generator");
+      const latex = generateResumeLatex(
+        resume,
+        templateId,
+        (latexOptions || {}) as LatexOptions,
+      );
 
       if (compilePdf) {
         try {
@@ -97,12 +123,17 @@ export async function POST(request: NextRequest) {
           const pdfPath = join(tmpDir, "resume.pdf");
 
           await writeFile(texPath, latex);
-          await execAsync(`pdflatex -interaction=nonstopmode -output-directory="${tmpDir}" "${texPath}"`, {
-            timeout: 30000,
-          });
+          await execAsync(
+            `pdflatex -interaction=nonstopmode -output-directory="${tmpDir}" "${texPath}"`,
+            {
+              timeout: 30000,
+            },
+          );
 
           const pdfBuffer = await readFile(pdfPath);
-          await Promise.allSettled(LATEX_CLEANUP_EXTENSIONS.map((f) => unlink(join(tmpDir, f))));
+          await Promise.allSettled(
+            LATEX_CLEANUP_EXTENSIONS.map((f) => unlink(join(tmpDir, f))),
+          );
 
           return new NextResponse(pdfBuffer, {
             headers: {
@@ -132,11 +163,21 @@ export async function POST(request: NextRequest) {
 
     if (format === "html") {
       if (!resume) {
-        return NextResponse.json({ error: "resumeId required for HTML export" }, { status: 400 });
+        return NextResponse.json(
+          { error: "resumeId required for HTML export" },
+          { status: 400 },
+        );
       }
-      const html = await renderResumeHtml(resume, templateId, authResult.userId);
+      const html = await renderResumeHtml(
+        resume,
+        templateId,
+        authResult.userId,
+      );
       return new NextResponse(html, {
-        headers: { "Content-Type": "text/html", "Content-Disposition": `attachment; filename="resume.html"` },
+        headers: {
+          "Content-Type": "text/html",
+          "Content-Disposition": `attachment; filename="resume.html"`,
+        },
       });
     }
 
@@ -147,7 +188,10 @@ export async function POST(request: NextRequest) {
     } else if (resume) {
       html = await renderResumeHtml(resume, templateId, authResult.userId);
     } else {
-      return NextResponse.json({ error: "Provide resumeId or html" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Provide resumeId or html" },
+        { status: 400 },
+      );
     }
 
     const { generatePDF } = await import("@/lib/resume/pdf-export");
@@ -162,6 +206,9 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("Export error:", error);
-    return NextResponse.json({ error: "Failed to export resume" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to export resume" },
+      { status: 500 },
+    );
   }
 }

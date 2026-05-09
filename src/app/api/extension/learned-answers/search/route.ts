@@ -6,7 +6,11 @@
  * @response LearnedAnswerSearchResponse from @/types/api
  */
 import { NextRequest, NextResponse } from "next/server";
-import { requireExtensionAuth, normalizeQuestion, calculateSimilarity } from "@/lib/extension-auth";
+import {
+  requireExtensionAuth,
+  normalizeQuestion,
+  calculateSimilarity,
+} from "@/lib/extension-auth";
 import { db, learnedAnswers, eq, and, or, desc, like } from "@/lib/db";
 
 type LearnedAnswerSearchRow = {
@@ -37,7 +41,10 @@ export async function POST(request: NextRequest) {
     const { question } = body as { question: string };
 
     if (!question) {
-      return NextResponse.json({ error: "Question is required" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Question is required" },
+        { status: 400 },
+      );
     }
 
     const normalized = normalizeQuestion(question);
@@ -49,11 +56,10 @@ export async function POST(request: NextRequest) {
     let rows: LearnedAnswerSearchRow[];
     if (likePatterns.length > 0) {
       const wordConditions = likePatterns.map((pattern) =>
-        like(learnedAnswers.questionNormalized, pattern)
+        like(learnedAnswers.questionNormalized, pattern),
       );
-      const wordCondition = wordConditions.length === 1
-        ? wordConditions[0]
-        : or(...wordConditions);
+      const wordCondition =
+        wordConditions.length === 1 ? wordConditions[0] : or(...wordConditions);
 
       rows = await db
         .select(learnedAnswerSearchColumns)

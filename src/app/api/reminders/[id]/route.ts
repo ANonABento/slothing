@@ -15,9 +15,11 @@ import {
 } from "@/lib/db/reminders";
 import { requireAuth, isAuthError } from "@/lib/auth";
 
+export const dynamic = "force-dynamic";
+
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
@@ -45,14 +47,14 @@ export async function PATCH(
     console.error("Update reminder error:", error);
     return NextResponse.json(
       { error: "Failed to update reminder" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
 export async function DELETE(
   _request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
@@ -65,7 +67,7 @@ export async function DELETE(
     console.error("Delete reminder error:", error);
     return NextResponse.json(
       { error: "Failed to delete reminder" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

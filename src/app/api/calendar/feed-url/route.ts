@@ -19,7 +19,8 @@ export async function GET(request: NextRequest) {
   if (isAuthError(authResult)) return authResult;
 
   try {
-    const type = (request.nextUrl.searchParams.get("type") || "all") as EventType;
+    const type = (request.nextUrl.searchParams.get("type") ||
+      "all") as EventType;
     const baseUrl = request.nextUrl.origin;
 
     return NextResponse.json({
@@ -31,7 +32,7 @@ export async function GET(request: NextRequest) {
     console.error("Calendar feed URL error:", error);
     return NextResponse.json(
       { error: "Failed to generate calendar feed URL" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -43,6 +43,56 @@ Personal Portfolio
 
 const POORLY_FORMATTED_RESUME = `some text about my career I worked at a company doing things and have a degree`;
 
+const KEVIN_RESUME_EXCERPT = `Kevin Jiang
+k69jiang@uwaterloo.ca
+
+EXPERIENCE
+Software Engineer — Hamming AI (YC S24) — Austin, Texas, United States    Dec 2025 — Present
+Robotics Engineer — Reazon Human Interaction Lab — Akihabara, Tokyo, Japan    Jun 2025 — Aug 2025
+• Designed a lightweight (<150 g) exoskeleton wrist controller in Fusion 360 using Dynamixel actuators
+• Developed a custom wrist-mounted magnetic AprilTags tracking system using dual cameras, Python, and ROS 2
+Hardware Developer — Midnight Sun — Waterloo, Ontario, Canada    Sep 2024 — Apr 2025
+• Designed and routed double-layer PCBs for controller subsystem testing and validation in Altium Designer
+
+PROJECTS
+Expressive Animatronic Head | Python | PyTorch | ROS2 | Linux | llama.cpp | Whisper | ESP32 | FreeRTOS | Fusion 360
+• Integrated Silero (VAD), Whisper (STT), llama.cpp (LLM), and Zonos (TTS) for real-time speech, gaze, and movement sync
+• Developed FreeRTOS-based multithreaded firmware on ESP32 for low-latency synchronized actuation of 12 servos
+AR Gesture Controlled Robot | Javascript | Python | ROS2 | Jetson Nano | Docker | MQTT | Flask | Fusion 360
+• Built a modular 2-wheel drive robot platform with a 3-DOF arm on Nvidia Jetson Nano running ROS2 on Docker
+
+EDUCATION
+University of Waterloo — BASc in Computer Engineering    Sept 2024 - Present`;
+
+const PDF_EXTRACTED_KEVIN_RESUME_EXCERPT = `Kevin Jiang
+k69jiang@uwaterloo.ca
+
+EXPERIENCE
+
+Software Engineer — Hamming AI (YC S24) — Austin, Texas, United States Dec 2025 — Present
+
+Robotics Engineer — Reazon Human Interaction Lab — Akihabara, Tokyo, Japan Jun 2025 — Aug 2025
+●
+Designed a lightweight (<150 g) exoskeleton wrist controller in Fusion 360 using Dynamixel actuators for encoder
+feedback and haptic response, enabling remote teleoperation of an 8-DOF Damiao robotic arm for RL data collection
+●
+Developed a custom wrist-mounted magnetic AprilTags tracking system using dual cameras, Python, and ROS 2 for
+real-time motion capture, improving tag recognition and bundle pose accuracy by 20% over lab's existing architecture
+
+PROJECTS 
+
+Expressive Animatronic Head  | Python | PyTorch | ROS2 | Linux | llama.cpp | Whisper | ESP32 | FreeRTOS | Fusion 360 
+●
+Integrated Silero (VAD), Whisper (STT), llama.cpp (LLM), and Zonos (TTS) for real-time speech, gaze, and movement sync
+●
+Developed FreeRTOS-based multithreaded firmware on ESP32 for low-latency synchronized actuation of 12 servos
+
+EDUCATION
+
+University of Waterloo — BASc in Computer Engineering
+
+Sept 2024 - Present`;
+
 const llmConfig: LLMConfig = {
   provider: "openai",
   apiKey: "test-key",
@@ -106,7 +156,7 @@ describe("smartParseResume", () => {
             highlights: ["Built things"],
           },
         ],
-      })
+      }),
     );
 
     const result = await smartParseResume(POORLY_FORMATTED_RESUME, llmConfig);
@@ -122,7 +172,9 @@ describe("smartParseResume", () => {
     const result = await smartParseResume(POORLY_FORMATTED_RESUME, llmConfig);
 
     expect(result.profile).toBeDefined();
-    expect(result.warnings.some((w) => w.includes("LLM enhancement failed"))).toBe(true);
+    expect(
+      result.warnings.some((w) => w.includes("LLM enhancement failed")),
+    ).toBe(true);
   });
 
   it("returns correct metadata shape", async () => {
@@ -164,5 +216,61 @@ Engineer at Corp
     const result = await smartParseResume(resumeNoContactSection);
     expect(result.profile.contact?.name).toBe("Jane Smith");
     expect(result.profile.contact?.email).toBe("jane@test.com");
+  });
+
+  it("chunks the Kevin resume example into reusable resume components", async () => {
+    const result = await smartParseResume(KEVIN_RESUME_EXCERPT);
+
+    expect(result.profile.contact?.name).toBe("Kevin Jiang");
+    expect(result.profile.experiences).toHaveLength(3);
+    expect(result.profile.experiences?.[0]).toMatchObject({
+      title: "Software Engineer",
+      company: "Hamming AI (YC S24)",
+      location: "Austin, Texas, United States",
+      startDate: "Dec 2025",
+      endDate: "Present",
+    });
+    expect(result.profile.experiences?.[1].highlights).toHaveLength(2);
+    expect(result.profile.projects?.[0]).toMatchObject({
+      name: "Expressive Animatronic Head",
+      technologies: expect.arrayContaining(["Python", "PyTorch", "ROS2"]),
+      highlights: expect.arrayContaining([
+        expect.stringContaining("Integrated Silero"),
+      ]),
+    });
+    expect(result.profile.education?.[0]).toMatchObject({
+      institution: "University of Waterloo",
+      degree: "BASc",
+      field: "Computer Engineering",
+    });
+  });
+
+  it("chunks PDF-extracted Kevin resume text with split bullets and header glyphs", async () => {
+    const result = await smartParseResume(PDF_EXTRACTED_KEVIN_RESUME_EXCERPT);
+
+    expect(result.sectionsDetected).toEqual(
+      expect.arrayContaining(["experience", "projects", "education"]),
+    );
+    expect(result.profile.experiences).toHaveLength(2);
+    expect(result.profile.experiences?.[1].highlights).toHaveLength(2);
+    expect(result.profile.experiences?.[1].highlights[0]).toContain(
+      "encoder feedback and haptic response",
+    );
+    expect(result.profile.projects).toHaveLength(1);
+    expect(result.profile.projects?.[0]).toMatchObject({
+      name: "Expressive Animatronic Head",
+      technologies: expect.arrayContaining(["Python", "PyTorch", "ROS2"]),
+      highlights: expect.arrayContaining([
+        expect.stringContaining("Integrated Silero"),
+        expect.stringContaining("FreeRTOS-based"),
+      ]),
+    });
+    expect(result.profile.education?.[0]).toMatchObject({
+      institution: "University of Waterloo",
+      degree: "BASc",
+      field: "Computer Engineering",
+      startDate: "Sept 2024",
+      endDate: "Present",
+    });
   });
 });

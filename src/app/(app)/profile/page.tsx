@@ -226,7 +226,7 @@ export default function ProfilePage() {
         actions={
           <>
             {status ? (
-              <span className="inline-flex items-center gap-2 text-sm font-medium text-green-600">
+              <span className="inline-flex items-center gap-2 text-sm font-medium text-success">
                 <Check className="h-4 w-4" />
                 {status}
               </span>
@@ -272,7 +272,11 @@ export default function ProfilePage() {
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={form.avatarUrl}
-                      alt={form.name ? `${form.name} profile photo` : "Profile photo"}
+                      alt={
+                        form.name
+                          ? `${form.name} profile photo`
+                          : "Profile photo"
+                      }
                       className="h-24 w-24 rounded-full border object-cover"
                     />
                   ) : (
@@ -531,7 +535,8 @@ export default function ProfilePage() {
                       Target Roles
                     </CardTitle>
                     <CardDescription>
-                      Auto-populated from resume roles when no saved targets exist.
+                      Auto-populated from resume roles when no saved targets
+                      exist.
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
@@ -552,7 +557,9 @@ export default function ProfilePage() {
 
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-xl">Target Salary Range</CardTitle>
+                    <CardTitle className="text-xl">
+                      Target Salary Range
+                    </CardTitle>
                     <CardDescription>
                       Keep compensation expectations ready for applications.
                     </CardDescription>
@@ -563,7 +570,10 @@ export default function ProfilePage() {
                         id="targetSalaryCurrency"
                         value={form.targetSalaryCurrency}
                         onChange={(event) =>
-                          updateField("targetSalaryCurrency", event.target.value)
+                          updateField(
+                            "targetSalaryCurrency",
+                            event.target.value,
+                          )
                         }
                       />
                     </Field>
@@ -597,7 +607,8 @@ export default function ProfilePage() {
                 <CardHeader>
                   <CardTitle className="text-xl">Privacy</CardTitle>
                   <CardDescription>
-                    Control how profile details are reused by connected workflows.
+                    Control how profile details are reused by connected
+                    workflows.
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -615,7 +626,8 @@ export default function ProfilePage() {
                         Open to recruiter outreach
                       </span>
                       <span className="mt-1 block text-sm text-muted-foreground">
-                        Allows this profile to be used for recruiter-facing exports.
+                        Allows this profile to be used for recruiter-facing
+                        exports.
                       </span>
                     </span>
                   </label>
@@ -634,7 +646,8 @@ export default function ProfilePage() {
                         Include contact info in generated documents
                       </span>
                       <span className="mt-1 block text-sm text-muted-foreground">
-                        Adds email, phone, and links when exporting profile-backed documents.
+                        Adds email, phone, and links when exporting
+                        profile-backed documents.
                       </span>
                     </span>
                   </label>

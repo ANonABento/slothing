@@ -407,6 +407,10 @@ export const profileBank = sqliteTable(
     category: text("category").notNull(),
     content: text("content").notNull(),
     sourceDocumentId: text("source_document_id"),
+    parentId: text("parent_id"),
+    componentType: text("component_type"),
+    componentOrder: integer("component_order").default(0),
+    sourceSection: text("source_section"),
     confidenceScore: real("confidence_score").default(0.8),
     createdAt: text("created_at").default(sql`CURRENT_TIMESTAMP`),
   },
@@ -416,6 +420,11 @@ export const profileBank = sqliteTable(
     index("idx_profile_bank_user_source").on(
       table.userId,
       table.sourceDocumentId,
+    ),
+    index("idx_profile_bank_parent").on(table.userId, table.parentId),
+    index("idx_profile_bank_component_type").on(
+      table.userId,
+      table.componentType,
     ),
   ],
 );

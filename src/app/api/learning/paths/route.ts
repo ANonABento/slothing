@@ -13,6 +13,8 @@ import {
 } from "@/lib/learning/skill-paths";
 import { requireAuth, isAuthError } from "@/lib/auth";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(request: NextRequest) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
@@ -26,7 +28,7 @@ export async function GET(request: NextRequest) {
     if (!profile) {
       return NextResponse.json(
         { error: "No profile found. Please upload your resume first." },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -59,7 +61,7 @@ export async function GET(request: NextRequest) {
     console.error("Learning paths error:", error);
     return NextResponse.json(
       { error: "Failed to generate learning paths" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -8,9 +8,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth, isAuthError } from "@/lib/auth";
 import { getProfileVersion } from "@/lib/db/profile-versions";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(
   _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
@@ -20,10 +22,7 @@ export async function GET(
     const version = getProfileVersion(id, authResult.userId);
 
     if (!version) {
-      return NextResponse.json(
-        { error: "Version not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Version not found" }, { status: 404 });
     }
 
     const { snapshotJson, ...versionMeta } = version;
@@ -37,7 +36,7 @@ export async function GET(
     console.error("Get profile version error:", error);
     return NextResponse.json(
       { error: "Failed to get profile version" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

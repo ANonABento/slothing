@@ -7,6 +7,8 @@ import { getAllCoverLetters } from "@/lib/db/cover-letters";
 import { getBankEntries } from "@/lib/db/profile-bank";
 import { requireAuth, isAuthError } from "@/lib/auth";
 
+export const dynamic = "force-dynamic";
+
 // GET - Export all user data as JSON
 export async function GET() {
   const authResult = await requireAuth();

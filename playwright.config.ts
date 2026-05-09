@@ -1,5 +1,9 @@
 import { defineConfig, devices } from "@playwright/test";
 
+if (process.env.FORCE_COLOR) {
+  delete process.env.NO_COLOR;
+}
+
 const playwrightPort = process.env.PORT || "8888";
 const baseURL =
   process.env.PLAYWRIGHT_BASE_URL || `http://localhost:${playwrightPort}`;
@@ -13,6 +17,13 @@ const e2eUserHeader = (projectName: string) => ({
 export default defineConfig({
   testDir: ".",
   testMatch: ["e2e/**/*.spec.ts", "tests/e2e/**/*.spec.ts"],
+  testIgnore: [
+    "**/.worktrees/**",
+    "**/.next/**",
+    "**/node_modules/**",
+    "**/playwright-report/**",
+    "**/test-results/**",
+  ],
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,

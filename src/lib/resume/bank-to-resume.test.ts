@@ -5,7 +5,7 @@ import type { BankEntry } from "@/types";
 function makeEntry(
   category: BankEntry["category"],
   content: Record<string, unknown>,
-  id = "e1"
+  id = "e1",
 ): BankEntry {
   return {
     id,
@@ -47,7 +47,41 @@ describe("bankEntriesToResume", () => {
     expect(result.experiences[0].company).toBe("Acme Corp");
     expect(result.experiences[0].title).toBe("Engineer");
     expect(result.experiences[0].dates).toBe("2020 — 2023");
-    expect(result.experiences[0].highlights).toEqual(["Built APIs", "Led team"]);
+    expect(result.experiences[0].highlights).toEqual([
+      "Built APIs",
+      "Led team",
+    ]);
+  });
+
+  it("uses selected child bullets as experience highlights", () => {
+    const parent = makeEntry(
+      "experience",
+      {
+        company: "Acme Corp",
+        title: "Engineer",
+        highlights: [],
+      },
+      "exp-1",
+    );
+    const bullets = [
+      makeEntry(
+        "bullet",
+        { parentId: "exp-1", description: "Built APIs", order: 1 },
+        "b2",
+      ),
+      makeEntry(
+        "bullet",
+        { parentId: "exp-1", description: "Led team", order: 0 },
+        "b1",
+      ),
+    ];
+
+    const result = bankEntriesToResume([parent, ...bullets]);
+
+    expect(result.experiences[0].highlights).toEqual([
+      "Led team",
+      "Built APIs",
+    ]);
   });
 
   it("handles experience with current flag", () => {
@@ -133,7 +167,28 @@ describe("bankEntriesToResume", () => {
     expect(result.experiences).toHaveLength(1);
     expect(result.experiences[0].company).toBe("Project");
     expect(result.experiences[0].title).toBe("Open Source Tool");
-    expect(result.experiences[0].highlights).toEqual(["1000 stars", "Featured on HN"]);
+    expect(result.experiences[0].highlights).toEqual([
+      "1000 stars",
+      "Featured on HN",
+    ]);
+  });
+
+  it("uses selected child bullets as project highlights", () => {
+    const parent = makeEntry(
+      "project",
+      { name: "Open Source Tool", highlights: [] },
+      "project-1",
+    );
+    const bullet = makeEntry(
+      "bullet",
+      { parentId: "project-1", description: "Reached 1000 stars", order: 0 },
+      "bullet-1",
+    );
+
+    const result = bankEntriesToResume([parent, bullet]);
+
+    expect(result.experiences[0].company).toBe("Project");
+    expect(result.experiences[0].highlights).toEqual(["Reached 1000 stars"]);
   });
 
   it("converts hackathon entries to experiences with prize and track highlights", () => {
@@ -161,9 +216,17 @@ describe("bankEntriesToResume", () => {
 
   it("handles mixed entry types", () => {
     const entries = [
-      makeEntry("experience", { company: "A", title: "Dev", startDate: "2020" }, "e1"),
+      makeEntry(
+        "experience",
+        { company: "A", title: "Dev", startDate: "2020" },
+        "e1",
+      ),
       makeEntry("skill", { name: "Go" }, "s1"),
-      makeEntry("education", { institution: "U", degree: "MS", field: "EE" }, "ed1"),
+      makeEntry(
+        "education",
+        { institution: "U", degree: "MS", field: "EE" },
+        "ed1",
+      ),
       makeEntry("achievement", { description: "Award winner" }, "a1"),
       makeEntry("certification", { name: "CKA" }, "c1"),
       makeEntry("project", { name: "Proj", highlights: ["Cool"] }, "p1"),

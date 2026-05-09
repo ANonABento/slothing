@@ -6,13 +6,13 @@
 
 ## Overview
 
-| Field | Value |
-|-------|-------|
-| **Phase** | 4 |
-| **Priority** | Medium |
-| **Effort** | Large (6-8 days) |
+| Field            | Value                      |
+| ---------------- | -------------------------- |
+| **Phase**        | 4                          |
+| **Priority**     | Medium                     |
+| **Effort**       | Large (6-8 days)           |
 | **Dependencies** | Phase 1 (OAuth Foundation) |
-| **Blocks** | None |
+| **Blocks**       | None                       |
 
 ---
 
@@ -31,23 +31,23 @@
 
 ### 4.1 Email Detection Patterns
 
-| Pattern | Indicators | Action |
-|---------|-----------|--------|
-| **Recruiter Outreach** | From: @linkedin.com, @indeed.com, recruiting@ | Suggest creating job entry |
-| **Interview Invitation** | Subject contains "interview", "schedule" | Parse date/time, create event |
-| **Application Confirmation** | Subject contains "application received" | Link to existing job, update status |
-| **Rejection** | Subject contains "unfortunately", "other candidates" | Update job status to "rejected" |
-| **Offer** | Subject contains "offer", "congratulations" | Update job status to "offer" |
+| Pattern                      | Indicators                                           | Action                              |
+| ---------------------------- | ---------------------------------------------------- | ----------------------------------- |
+| **Recruiter Outreach**       | From: @linkedin.com, @indeed.com, recruiting@        | Suggest creating job entry          |
+| **Interview Invitation**     | Subject contains "interview", "schedule"             | Parse date/time, create event       |
+| **Application Confirmation** | Subject contains "application received"              | Link to existing job, update status |
+| **Rejection**                | Subject contains "unfortunately", "other candidates" | Update job status to "rejected"     |
+| **Offer**                    | Subject contains "offer", "congratulations"          | Update job status to "offer"        |
 
 ### 4.2 Email Actions
 
-| Action | Description |
-|--------|-------------|
-| **Import Job** | Create job entry from recruiter email |
-| **Link to Job** | Associate email thread with existing job |
+| Action               | Description                                 |
+| -------------------- | ------------------------------------------- |
+| **Import Job**       | Create job entry from recruiter email       |
+| **Link to Job**      | Associate email thread with existing job    |
 | **Create Interview** | Extract date/time and create calendar event |
-| **Send Follow-up** | Generate and send follow-up email |
-| **Send Thank You** | Generate and send post-interview thank you |
+| **Send Follow-up**   | Generate and send follow-up email           |
+| **Send Thank You**   | Generate and send post-interview thank you  |
 
 ### 4.3 Smart Features
 
@@ -65,8 +65,8 @@
 **File:** `src/lib/google/gmail.ts`
 
 ```typescript
-import { google, gmail_v1 } from 'googleapis';
-import { createGoogleClient } from './client';
+import { google, gmail_v1 } from "googleapis";
+import { createGoogleClient } from "./client";
 
 export interface GmailMessage {
   id: string;
@@ -81,7 +81,13 @@ export interface GmailMessage {
 }
 
 export interface ParsedJobEmail {
-  type: 'recruiter_outreach' | 'interview_invite' | 'application_received' | 'rejection' | 'offer' | 'unknown';
+  type:
+    | "recruiter_outreach"
+    | "interview_invite"
+    | "application_received"
+    | "rejection"
+    | "offer"
+    | "unknown";
   company?: string;
   role?: string;
   recruiterName?: string;
@@ -96,7 +102,7 @@ export interface ParsedJobEmail {
  */
 async function createGmailClient() {
   const auth = await createGoogleClient();
-  return google.gmail({ version: 'v1', auth });
+  return google.gmail({ version: "v1", auth });
 }
 
 /**
@@ -104,12 +110,12 @@ async function createGmailClient() {
  */
 export async function listMessages(
   query: string,
-  maxResults = 20
+  maxResults = 20,
 ): Promise<GmailMessage[]> {
   const gmail = await createGmailClient();
 
   const response = await gmail.users.messages.list({
-    userId: 'me',
+    userId: "me",
     q: query,
     maxResults,
   });
@@ -130,29 +136,32 @@ export async function listMessages(
 /**
  * Get full message details
  */
-export async function getMessage(messageId: string): Promise<GmailMessage | null> {
+export async function getMessage(
+  messageId: string,
+): Promise<GmailMessage | null> {
   const gmail = await createGmailClient();
 
   const response = await gmail.users.messages.get({
-    userId: 'me',
+    userId: "me",
     id: messageId,
-    format: 'full',
+    format: "full",
   });
 
   const headers = response.data.payload?.headers || [];
   const getHeader = (name: string) =>
-    headers.find(h => h.name?.toLowerCase() === name.toLowerCase())?.value || '';
+    headers.find((h) => h.name?.toLowerCase() === name.toLowerCase())?.value ||
+    "";
 
   const body = extractBody(response.data.payload);
 
   return {
     id: response.data.id!,
     threadId: response.data.threadId!,
-    subject: getHeader('Subject'),
-    from: getHeader('From'),
-    to: getHeader('To'),
-    date: new Date(getHeader('Date')),
-    snippet: response.data.snippet || '',
+    subject: getHeader("Subject"),
+    from: getHeader("From"),
+    to: getHeader("To"),
+    date: new Date(getHeader("Date")),
+    snippet: response.data.snippet || "",
     body,
     labels: response.data.labelIds || [],
   };
@@ -162,28 +171,31 @@ export async function getMessage(messageId: string): Promise<GmailMessage | null
  * Extract body from message payload
  */
 function extractBody(payload?: gmail_v1.Schema$MessagePart): string {
-  if (!payload) return '';
+  if (!payload) return "";
 
   if (payload.body?.data) {
-    return Buffer.from(payload.body.data, 'base64').toString('utf-8');
+    return Buffer.from(payload.body.data, "base64").toString("utf-8");
   }
 
   if (payload.parts) {
     for (const part of payload.parts) {
-      if (part.mimeType === 'text/plain' && part.body?.data) {
-        return Buffer.from(part.body.data, 'base64').toString('utf-8');
+      if (part.mimeType === "text/plain" && part.body?.data) {
+        return Buffer.from(part.body.data, "base64").toString("utf-8");
       }
     }
     for (const part of payload.parts) {
-      if (part.mimeType === 'text/html' && part.body?.data) {
+      if (part.mimeType === "text/html" && part.body?.data) {
         // Strip HTML tags for plain text
-        const html = Buffer.from(part.body.data, 'base64').toString('utf-8');
-        return html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+        const html = Buffer.from(part.body.data, "base64").toString("utf-8");
+        return html
+          .replace(/<[^>]*>/g, " ")
+          .replace(/\s+/g, " ")
+          .trim();
       }
     }
   }
 
-  return '';
+  return "";
 }
 
 /**
@@ -193,24 +205,27 @@ export async function searchJobEmails(
   options: {
     since?: Date;
     maxResults?: number;
-  } = {}
+  } = {},
 ): Promise<GmailMessage[]> {
   const queries = [
     // Recruiter outreach
-    'from:linkedin.com subject:job OR subject:opportunity OR subject:position',
-    'from:indeed.com subject:job OR subject:apply',
-    'subject:recruiter OR subject:recruiting',
+    "from:linkedin.com subject:job OR subject:opportunity OR subject:position",
+    "from:indeed.com subject:job OR subject:apply",
+    "subject:recruiter OR subject:recruiting",
     // Interview invitations
-    'subject:interview schedule OR subject:interview invitation',
+    "subject:interview schedule OR subject:interview invitation",
     // Application responses
-    'subject:application received OR subject:application submitted',
-    'subject:thank you for applying',
+    "subject:application received OR subject:application submitted",
+    "subject:thank you for applying",
   ];
 
-  let combinedQuery = `(${queries.join(' OR ')})`;
+  let combinedQuery = `(${queries.join(" OR ")})`;
 
   if (options.since) {
-    const dateStr = options.since.toISOString().split('T')[0].replace(/-/g, '/');
+    const dateStr = options.since
+      .toISOString()
+      .split("T")[0]
+      .replace(/-/g, "/");
     combinedQuery += ` after:${dateStr}`;
   }
 
@@ -225,24 +240,39 @@ export function parseJobEmail(message: GmailMessage): ParsedJobEmail {
   const body = (message.body || message.snippet).toLowerCase();
   const from = message.from.toLowerCase();
 
-  let type: ParsedJobEmail['type'] = 'unknown';
+  let type: ParsedJobEmail["type"] = "unknown";
   let confidence = 0.5;
 
   // Detect email type
-  if (subject.includes('interview') && (subject.includes('schedule') || subject.includes('invitation'))) {
-    type = 'interview_invite';
+  if (
+    subject.includes("interview") &&
+    (subject.includes("schedule") || subject.includes("invitation"))
+  ) {
+    type = "interview_invite";
     confidence = 0.9;
-  } else if (subject.includes('unfortunately') || subject.includes('other candidates') || subject.includes('not moving forward')) {
-    type = 'rejection';
+  } else if (
+    subject.includes("unfortunately") ||
+    subject.includes("other candidates") ||
+    subject.includes("not moving forward")
+  ) {
+    type = "rejection";
     confidence = 0.85;
-  } else if (subject.includes('offer') || subject.includes('congratulations')) {
-    type = 'offer';
+  } else if (subject.includes("offer") || subject.includes("congratulations")) {
+    type = "offer";
     confidence = 0.8;
-  } else if (subject.includes('application received') || subject.includes('thank you for applying')) {
-    type = 'application_received';
+  } else if (
+    subject.includes("application received") ||
+    subject.includes("thank you for applying")
+  ) {
+    type = "application_received";
     confidence = 0.8;
-  } else if (from.includes('linkedin') || from.includes('indeed') || from.includes('recruiter') || from.includes('talent')) {
-    type = 'recruiter_outreach';
+  } else if (
+    from.includes("linkedin") ||
+    from.includes("indeed") ||
+    from.includes("recruiter") ||
+    from.includes("talent")
+  ) {
+    type = "recruiter_outreach";
     confidence = 0.7;
   }
 
@@ -255,7 +285,8 @@ export function parseJobEmail(message: GmailMessage): ParsedJobEmail {
 
   let company: string | undefined;
   for (const pattern of companyPatterns) {
-    const match = message.body?.match(pattern) || message.snippet.match(pattern);
+    const match =
+      message.body?.match(pattern) || message.snippet.match(pattern);
     if (match) {
       company = match[1].trim();
       break;
@@ -270,7 +301,8 @@ export function parseJobEmail(message: GmailMessage): ParsedJobEmail {
 
   let role: string | undefined;
   for (const pattern of rolePatterns) {
-    const match = message.body?.match(pattern) || message.subject.match(pattern);
+    const match =
+      message.body?.match(pattern) || message.subject.match(pattern);
     if (match) {
       role = match[0].trim();
       break;
@@ -279,7 +311,7 @@ export function parseJobEmail(message: GmailMessage): ParsedJobEmail {
 
   // Extract recruiter info from "From" header
   const fromMatch = message.from.match(/^(.+?)\s*<(.+?)>$/);
-  const recruiterName = fromMatch?.[1]?.replace(/"/g, '').trim();
+  const recruiterName = fromMatch?.[1]?.replace(/"/g, "").trim();
   const recruiterEmail = fromMatch?.[2] || message.from;
 
   // Try to extract interview date
@@ -325,7 +357,7 @@ export async function sendEmail(
   options: {
     replyTo?: string;
     threadId?: string;
-  } = {}
+  } = {},
 ): Promise<{ success: boolean; messageId?: string; error?: string }> {
   try {
     const gmail = await createGmailClient();
@@ -333,16 +365,21 @@ export async function sendEmail(
     const message = [
       `To: ${to}`,
       `Subject: ${subject}`,
-      options.replyTo ? `In-Reply-To: ${options.replyTo}` : '',
-      'Content-Type: text/plain; charset=utf-8',
-      '',
+      options.replyTo ? `In-Reply-To: ${options.replyTo}` : "",
+      "Content-Type: text/plain; charset=utf-8",
+      "",
       body,
-    ].filter(Boolean).join('\r\n');
+    ]
+      .filter(Boolean)
+      .join("\r\n");
 
-    const encodedMessage = Buffer.from(message).toString('base64').replace(/\+/g, '-').replace(/\//g, '_');
+    const encodedMessage = Buffer.from(message)
+      .toString("base64")
+      .replace(/\+/g, "-")
+      .replace(/\//g, "_");
 
     const response = await gmail.users.messages.send({
-      userId: 'me',
+      userId: "me",
       requestBody: {
         raw: encodedMessage,
         threadId: options.threadId,
@@ -354,10 +391,10 @@ export async function sendEmail(
       messageId: response.data.id || undefined,
     };
   } catch (error) {
-    console.error('Failed to send email:', error);
+    console.error("Failed to send email:", error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
+      error: error instanceof Error ? error.message : "Unknown error",
     };
   }
 }
@@ -370,23 +407,23 @@ export async function getOrCreateJobSearchLabel(): Promise<string | null> {
     const gmail = await createGmailClient();
 
     // Check if label exists
-    const labels = await gmail.users.labels.list({ userId: 'me' });
-    const existing = labels.data.labels?.find(l => l.name === 'Job Search');
+    const labels = await gmail.users.labels.list({ userId: "me" });
+    const existing = labels.data.labels?.find((l) => l.name === "Job Search");
     if (existing?.id) return existing.id;
 
     // Create label
     const created = await gmail.users.labels.create({
-      userId: 'me',
+      userId: "me",
       requestBody: {
-        name: 'Job Search',
-        labelListVisibility: 'labelShow',
-        messageListVisibility: 'show',
+        name: "Job Search",
+        labelListVisibility: "labelShow",
+        messageListVisibility: "show",
       },
     });
 
     return created.data.id || null;
   } catch (error) {
-    console.error('Failed to create label:', error);
+    console.error("Failed to create label:", error);
     return null;
   }
 }
@@ -394,11 +431,14 @@ export async function getOrCreateJobSearchLabel(): Promise<string | null> {
 /**
  * Add label to message
  */
-export async function addLabelToMessage(messageId: string, labelId: string): Promise<boolean> {
+export async function addLabelToMessage(
+  messageId: string,
+  labelId: string,
+): Promise<boolean> {
   try {
     const gmail = await createGmailClient();
     await gmail.users.messages.modify({
-      userId: 'me',
+      userId: "me",
       id: messageId,
       requestBody: {
         addLabelIds: [labelId],
@@ -406,7 +446,7 @@ export async function addLabelToMessage(messageId: string, labelId: string): Pro
     });
     return true;
   } catch (error) {
-    console.error('Failed to add label:', error);
+    console.error("Failed to add label:", error);
     return false;
   }
 }
@@ -417,10 +457,10 @@ export async function addLabelToMessage(messageId: string, labelId: string): Pro
 **File:** `src/app/api/google/gmail/scan/route.ts`
 
 ```typescript
-import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth, isAuthError } from '@/lib/auth';
-import { searchJobEmails, parseJobEmail } from '@/lib/google/gmail';
-import { isGoogleConnected } from '@/lib/google/client';
+import { NextRequest, NextResponse } from "next/server";
+import { requireAuth, isAuthError } from "@/lib/auth";
+import { searchJobEmails, parseJobEmail } from "@/lib/google/gmail";
+import { isGoogleConnected } from "@/lib/google/client";
 
 export async function GET(request: NextRequest) {
   const authResult = await requireAuth();
@@ -429,20 +469,20 @@ export async function GET(request: NextRequest) {
   const connected = await isGoogleConnected();
   if (!connected) {
     return NextResponse.json(
-      { error: 'Google account not connected' },
-      { status: 400 }
+      { error: "Google account not connected" },
+      { status: 400 },
     );
   }
 
   try {
     const searchParams = request.nextUrl.searchParams;
-    const days = parseInt(searchParams.get('days') || '30');
+    const days = parseInt(searchParams.get("days") || "30");
     const since = new Date();
     since.setDate(since.getDate() - days);
 
     const messages = await searchJobEmails({ since, maxResults: 50 });
 
-    const parsed = messages.map(msg => ({
+    const parsed = messages.map((msg) => ({
       ...msg,
       parsed: parseJobEmail(msg),
     }));
@@ -455,10 +495,10 @@ export async function GET(request: NextRequest) {
       emails: parsed,
     });
   } catch (error) {
-    console.error('Gmail scan error:', error);
+    console.error("Gmail scan error:", error);
     return NextResponse.json(
-      { error: 'Failed to scan emails' },
-      { status: 500 }
+      { error: "Failed to scan emails" },
+      { status: 500 },
     );
   }
 }
@@ -467,10 +507,10 @@ export async function GET(request: NextRequest) {
 **File:** `src/app/api/google/gmail/send/route.ts`
 
 ```typescript
-import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth, isAuthError } from '@/lib/auth';
-import { sendEmail } from '@/lib/google/gmail';
-import { isGoogleConnected } from '@/lib/google/client';
+import { NextRequest, NextResponse } from "next/server";
+import { requireAuth, isAuthError } from "@/lib/auth";
+import { sendEmail } from "@/lib/google/gmail";
+import { isGoogleConnected } from "@/lib/google/client";
 
 export async function POST(request: NextRequest) {
   const authResult = await requireAuth();
@@ -479,8 +519,8 @@ export async function POST(request: NextRequest) {
   const connected = await isGoogleConnected();
   if (!connected) {
     return NextResponse.json(
-      { error: 'Google account not connected' },
-      { status: 400 }
+      { error: "Google account not connected" },
+      { status: 400 },
     );
   }
 
@@ -489,8 +529,8 @@ export async function POST(request: NextRequest) {
 
     if (!to || !subject || !body) {
       return NextResponse.json(
-        { error: 'Missing required fields: to, subject, body' },
-        { status: 400 }
+        { error: "Missing required fields: to, subject, body" },
+        { status: 400 },
       );
     }
 
@@ -505,10 +545,10 @@ export async function POST(request: NextRequest) {
       messageId: result.messageId,
     });
   } catch (error) {
-    console.error('Gmail send error:', error);
+    console.error("Gmail send error:", error);
     return NextResponse.json(
-      { error: 'Failed to send email' },
-      { status: 500 }
+      { error: "Failed to send email" },
+      { status: 500 },
     );
   }
 }
@@ -599,7 +639,7 @@ export function GmailImportModal({ onImport }: GmailImportModalProps) {
       </DialogTrigger>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Import Jobs from Gmail</DialogTitle>
+          <DialogTitle>Import Opportunities from Gmail</DialogTitle>
         </DialogHeader>
 
         {loading ? (
@@ -683,7 +723,7 @@ CREATE TABLE gmail_imports (
   imported_at TIMESTAMP DEFAULT NOW()
 );
 
--- Link email threads to jobs
+-- Link email threads to opportunities
 ALTER TABLE jobs ADD COLUMN gmail_thread_id TEXT;
 ```
 
@@ -717,10 +757,10 @@ ALTER TABLE jobs ADD COLUMN gmail_thread_id TEXT;
 2. [ ] Scan finds interview invitations
 3. [ ] Can create job entry from email
 4. [ ] Can send follow-up from app
-5. [ ] Email threads linked to jobs
+5. [ ] Email threads linked to opportunities
 6. [ ] "Job Search" label auto-created
 
 ---
 
-*Status: Not Started*
-*Created: March 2026*
+_Status: Not Started_
+_Created: March 2026_

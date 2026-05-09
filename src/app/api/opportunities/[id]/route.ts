@@ -5,6 +5,8 @@ import { updateJobSchema } from "@/lib/constants";
 import { recordJobStatusChange } from "@/lib/db/analytics";
 import { jobToOpportunity } from "@/lib/opportunities";
 
+export const dynamic = "force-dynamic";
+
 interface RouteContext {
   params: { id: string };
 }
@@ -39,7 +41,10 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
   try {
     const existingJob = getJob(params.id, authResult.userId);
     if (!existingJob) {
-      return NextResponse.json({ error: "Opportunity not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Opportunity not found" },
+        { status: 404 },
+      );
     }
     const oldStatus = existingJob.status || null;
     const rawData = await request.json();
@@ -59,7 +64,11 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
     if (!Object.prototype.hasOwnProperty.call(rawData, "status")) {
       delete data.status;
     }
-    if (data.status === "applied" && !data.appliedAt && !existingJob.appliedAt) {
+    if (
+      data.status === "applied" &&
+      !data.appliedAt &&
+      !existingJob.appliedAt
+    ) {
       data.appliedAt = new Date().toISOString();
     }
 
@@ -86,7 +95,10 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
     });
   } catch (error) {
     console.error("Update opportunity error:", error);
-    return NextResponse.json({ error: "Failed to update opportunity" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to update opportunity" },
+      { status: 500 },
+    );
   }
 }
 
@@ -97,12 +109,18 @@ export async function DELETE(_request: NextRequest, { params }: RouteContext) {
   try {
     const existing = getJob(params.id, authResult.userId);
     if (!existing) {
-      return NextResponse.json({ error: "Opportunity not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Opportunity not found" },
+        { status: 404 },
+      );
     }
     deleteJob(params.id, authResult.userId);
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Delete opportunity error:", error);
-    return NextResponse.json({ error: "Failed to delete opportunity" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to delete opportunity" },
+      { status: 500 },
+    );
   }
 }

@@ -8,9 +8,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth, isAuthError } from "@/lib/auth";
 import { deleteSourceDocument } from "@/lib/db/profile-bank";
 
+export const dynamic = "force-dynamic";
+
 export async function DELETE(
   _request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
@@ -22,7 +24,7 @@ export async function DELETE(
     console.error("Delete source document error:", error);
     return NextResponse.json(
       { error: "Failed to delete source document" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

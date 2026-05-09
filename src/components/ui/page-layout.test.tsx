@@ -3,8 +3,15 @@ import { Settings } from "lucide-react";
 import { describe, expect, it } from "vitest";
 import {
   AppPage,
+  CenteredPagePanel,
   PageContent,
   PageHeader,
+  PageIconTile,
+  PageLoadingState,
+  PagePanel,
+  PagePanelHeader,
+  PageSection,
+  PageWorkspace,
   StandardEmptyState,
   getPageWidthClassName,
 } from "./page-layout";
@@ -13,7 +20,7 @@ describe("page layout helpers", () => {
   it("returns the expected width classes", () => {
     expect(getPageWidthClassName("full")).toBe("");
     expect(getPageWidthClassName("narrow")).toBe("mx-auto max-w-3xl");
-    expect(getPageWidthClassName("wide")).toBe("mx-auto max-w-6xl");
+    expect(getPageWidthClassName("wide")).toBe("max-w-screen-2xl");
   });
 
   it("renders a standard page header", () => {
@@ -71,5 +78,63 @@ describe("page layout helpers", () => {
     );
     expect(screen.getByText("Try another filter.")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Reset" })).toBeInTheDocument();
+  });
+
+  it("renders shared panel and loading primitives", () => {
+    render(
+      <>
+        <PageWorkspace>Workspace body</PageWorkspace>
+        <CenteredPagePanel>Centered body</CenteredPagePanel>
+        <PagePanel>
+          <PagePanelHeader icon={Settings} title="Panel title" />
+          Panel body
+        </PagePanel>
+        <PageIconTile icon={Settings} />
+        <PageLoadingState icon={Settings} label="Loading page..." />
+      </>,
+    );
+
+    expect(screen.getByRole("heading", { name: "Panel title" })).toHaveClass(
+      "text-xl",
+    );
+    expect(screen.getByText("Panel body")).toHaveClass(
+      "rounded-lg",
+      "border",
+      "bg-card",
+    );
+    expect(screen.getByText("Workspace body")).toHaveClass(
+      "h-[calc(100vh-4rem)]",
+      "lg:h-screen",
+    );
+    expect(screen.getByText("Centered body")).toHaveClass("max-w-md");
+    expect(screen.getByText("Loading page...")).toHaveClass(
+      "text-muted-foreground",
+    );
+  });
+
+  it("renders a reusable page section with standard title, icon, and action", () => {
+    render(
+      <PageSection
+        icon={Settings}
+        title="Shared section"
+        description="Consistent surface."
+        action={<button>Manage</button>}
+      >
+        Section body
+      </PageSection>,
+    );
+
+    expect(screen.getByRole("heading", { name: "Shared section" })).toHaveClass(
+      "font-semibold",
+    );
+    expect(screen.getByText("Consistent surface.")).toHaveClass(
+      "text-muted-foreground",
+    );
+    expect(screen.getByRole("button", { name: "Manage" })).toBeInTheDocument();
+    expect(screen.getByText("Section body").parentElement).toHaveClass(
+      "rounded-lg",
+      "border",
+      "bg-card",
+    );
   });
 });

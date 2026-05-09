@@ -7,7 +7,9 @@ export function getEntryTitle(entry: BankEntry): string {
     case "experience":
       return [c.title, c.company].filter(Boolean).join(" at ") || "Experience";
     case "education":
-      return [c.degree, c.institution].filter(Boolean).join(" — ") || "Education";
+      return (
+        [c.degree, c.institution].filter(Boolean).join(" — ") || "Education"
+      );
     case "skill":
       return (c.name as string) || "Skill";
     case "project":
@@ -16,6 +18,8 @@ export function getEntryTitle(entry: BankEntry): string {
       return (c.name as string) || "Hackathon";
     case "certification":
       return [c.name, c.issuer].filter(Boolean).join(" — ") || "Certification";
+    case "bullet":
+      return (c.description as string)?.slice(0, 80) || "Bullet";
     case "achievement":
       return (c.description as string)?.slice(0, 80) || "Achievement";
     default:
@@ -31,7 +35,10 @@ export function getDateRange(content: Record<string, unknown>): string {
   return parts.join(" — ");
 }
 
-export function getHighlights(content: Record<string, unknown>, max: number): string[] {
+export function getHighlights(
+  content: Record<string, unknown>,
+  max: number,
+): string[] {
   if (!Array.isArray(content.highlights)) return [];
   return content.highlights.slice(0, max).map(String);
 }
@@ -43,7 +50,7 @@ export function getTechnologies(content: Record<string, unknown>): string[] {
 
 export function getStringList(
   content: Record<string, unknown>,
-  key: string
+  key: string,
 ): string[] {
   const value = content[key];
   if (!Array.isArray(value)) return [];
@@ -74,7 +81,7 @@ export function textToList(text: string): string[] {
 
 export function cleanContent(
   content: Record<string, unknown>,
-  fields: FieldDef[]
+  fields: FieldDef[],
 ): Record<string, unknown> {
   const cleaned = { ...content };
   for (const field of fields) {

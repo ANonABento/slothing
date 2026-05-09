@@ -14,7 +14,9 @@ export const GOOGLE_OAUTH_SCOPES = [
 export function isNextAuthConfigured(
   env: Record<string, string | undefined> = process.env,
 ): boolean {
-  return Boolean(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET);
+  return Boolean(
+    env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET && env.NEXTAUTH_SECRET,
+  );
 }
 
 // Edge-safe NextAuth config (no DB adapter). Imported by middleware.ts so the

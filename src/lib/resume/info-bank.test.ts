@@ -11,7 +11,11 @@ vi.mock("@/lib/db/profile-bank", async (importOriginal) => {
   };
 });
 
-import { deleteBankEntriesBySource, insertBankEntries, getDeduplicationKey } from "@/lib/db/profile-bank";
+import {
+  deleteBankEntriesBySource,
+  insertBankEntries,
+  getDeduplicationKey,
+} from "@/lib/db/profile-bank";
 import { extractBankEntries, populateBankFromProfile } from "./info-bank";
 
 describe("Info Bank", () => {
@@ -40,7 +44,7 @@ describe("Info Bank", () => {
 
       const entries = extractBankEntries(profile, "doc-1");
 
-      // 1 experience + 1 achievement + 2 skills = 4
+      // 1 experience + 1 bullet + 2 skills = 4
       expect(entries).toHaveLength(4);
 
       const expEntry = entries.find((e) => e.category === "experience");
@@ -52,19 +56,29 @@ describe("Info Bank", () => {
         endDate: "2023-06-01",
         current: false,
         description: "Built web apps",
-        highlights: ["Led team of 5"],
+        highlights: [],
+        childCount: 1,
         skills: ["React", "Node.js"],
       });
+      expect(expEntry?.id).toEqual(expect.any(String));
       expect(expEntry?.sourceDocumentId).toBe("doc-1");
       expect(expEntry?.confidenceScore).toBe(0.9);
 
-      const achievementEntries = entries.filter((e) => e.category === "achievement");
-      expect(achievementEntries).toHaveLength(1);
-      expect(achievementEntries[0].content).toEqual({
+      const bulletEntries = entries.filter((e) => e.category === "bullet");
+      expect(bulletEntries).toHaveLength(1);
+      expect(bulletEntries[0].content).toMatchObject({
         description: "Led team of 5",
         context: "Senior Engineer at Acme Corp",
         company: "Acme Corp",
+        role: "Senior Engineer",
+        parentType: "experience",
+        parentId: expEntry?.id,
+        parentLabel: "Senior Engineer at Acme Corp",
+        order: 0,
       });
+      expect(entries.filter((e) => e.category === "achievement")).toHaveLength(
+        0,
+      );
 
       const skillEntries = entries.filter((e) => e.category === "skill");
       expect(skillEntries).toHaveLength(2);
@@ -102,7 +116,12 @@ describe("Info Bank", () => {
     it("should extract skill entries from profile skills", () => {
       const profile: Partial<Profile> = {
         skills: [
-          { id: "s1", name: "JavaScript", category: "technical", proficiency: "expert" },
+          {
+            id: "s1",
+            name: "JavaScript",
+            category: "technical",
+            proficiency: "expert",
+          },
           { id: "s2", name: "Communication", category: "soft" },
         ],
       };
@@ -138,15 +157,65 @@ describe("Info Bank", () => {
 
       const entries = extractBankEntries(profile);
 
-      expect(entries).toHaveLength(1);
-      expect(entries[0].category).toBe("project");
-      expect(entries[0].content).toEqual({
+      expect(entries).toHaveLength(2);
+      const projectEntry = entries.find(
+        (entry) => entry.category === "project",
+      );
+      const bulletEntry = entries.find((entry) => entry.category === "bullet");
+      expect(projectEntry?.content).toEqual({
         name: "Portfolio",
         description: "My site",
         url: "https://example.com",
         technologies: ["React", "Next.js"],
-        highlights: ["1000 visitors/day"],
+        highlights: [],
+        childCount: 1,
       });
+      expect(bulletEntry?.content).toMatchObject({
+        description: "1000 visitors/day",
+        context: "Portfolio",
+        project: "Portfolio",
+        parentType: "project",
+        parentId: projectEntry?.id,
+        parentLabel: "Portfolio",
+        order: 0,
+      });
+      expect(
+        entries.filter((entry) => entry.category === "achievement"),
+      ).toHaveLength(0);
+    });
+
+    it("does not duplicate bullet-only descriptions on parent entries", () => {
+      const profile: Partial<Profile> = {
+        experiences: [
+          {
+            id: "exp-1",
+            company: "Reazon Human Interaction Lab",
+            title: "Robotics Engineer",
+            startDate: "Jun 2025",
+            endDate: "Aug 2025",
+            current: false,
+            description:
+              "Designed a lightweight controller\nDeveloped a custom tracker",
+            highlights: [
+              "Designed a lightweight controller",
+              "Developed a custom tracker",
+            ],
+            skills: [],
+          },
+        ],
+      };
+
+      const entries = extractBankEntries(profile, "doc-resume");
+      const parent = entries.find((entry) => entry.category === "experience");
+      const children = entries.filter((entry) => entry.category === "bullet");
+
+      expect(parent?.content.description).toBe("");
+      expect(parent?.content.childCount).toBe(2);
+      expect(children).toHaveLength(2);
+      expect(children.map((entry) => entry.content.parentId)).toEqual([
+        parent?.id,
+        parent?.id,
+      ]);
     });
 
     it("should extract certification entries", () => {
@@ -187,9 +256,12 @@ describe("Info Bank", () => {
 
       const entries = extractBankEntries(profile);
 
-      const achievements = entries.filter((e) => e.category === "achievement");
-      expect(achievements).toHaveLength(1);
-      expect(achievements[0].content.description).toBe("Real achievement");
+      const bullets = entries.filter((e) => e.category === "bullet");
+      expect(bullets).toHaveLength(1);
+      expect(bullets[0].content.description).toBe("Real achievement");
+      expect(entries.filter((e) => e.category === "achievement")).toHaveLength(
+        0,
+      );
 
       const skills = entries.filter((e) => e.category === "skill");
       expect(skills).toHaveLength(1);
@@ -204,7 +276,10 @@ describe("Info Bank", () => {
 
   describe("getDeduplicationKey", () => {
     it("should generate key for experience", () => {
-      const key = getDeduplicationKey("experience", { company: "Acme", title: "Engineer" });
+      const key = getDeduplicationKey("experience", {
+        company: "Acme",
+        title: "Engineer",
+      });
       expect(key).toBe("acme|engineer");
     });
 
@@ -214,7 +289,10 @@ describe("Info Bank", () => {
     });
 
     it("should generate key for education", () => {
-      const key = getDeduplicationKey("education", { institution: "MIT", degree: "BS" });
+      const key = getDeduplicationKey("education", {
+        institution: "MIT",
+        degree: "BS",
+      });
       expect(key).toBe("mit|bs");
     });
 
@@ -224,19 +302,27 @@ describe("Info Bank", () => {
     });
 
     it("should generate key for certification", () => {
-      const key = getDeduplicationKey("certification", { name: "AWS SA", issuer: "Amazon" });
+      const key = getDeduplicationKey("certification", {
+        name: "AWS SA",
+        issuer: "Amazon",
+      });
       expect(key).toBe("aws sa|amazon");
     });
 
     it("should generate key for achievement", () => {
-      const key = getDeduplicationKey("achievement", { description: "Led team of 5 engineers" });
+      const key = getDeduplicationKey("achievement", {
+        description: "Led team of 5 engineers",
+      });
       expect(key).toBe("led team of 5 engineers");
     });
   });
 
   describe("populateBankFromProfile", () => {
     it("replaces entries from the same source document before inserting parsed entries", () => {
-      (insertBankEntries as ReturnType<typeof vi.fn>).mockReturnValue(["id1", "id2"]);
+      (insertBankEntries as ReturnType<typeof vi.fn>).mockReturnValue([
+        "id1",
+        "id2",
+      ]);
 
       const profile: Partial<Profile> = {
         skills: [
@@ -250,7 +336,10 @@ describe("Info Bank", () => {
       expect(result.inserted).toBe(2);
       expect(result.updated).toBe(0);
       expect(result.skipped).toBe(0);
-      expect(deleteBankEntriesBySource).toHaveBeenCalledWith("doc-1", "default");
+      expect(deleteBankEntriesBySource).toHaveBeenCalledWith(
+        "doc-1",
+        "default",
+      );
       expect(insertBankEntries).toHaveBeenCalled();
     });
 
@@ -258,7 +347,14 @@ describe("Info Bank", () => {
       (insertBankEntries as ReturnType<typeof vi.fn>).mockReturnValue(["id1"]);
 
       const profile: Partial<Profile> = {
-        skills: [{ id: "s1", name: "React", category: "technical", proficiency: "expert" }],
+        skills: [
+          {
+            id: "s1",
+            name: "React",
+            category: "technical",
+            proficiency: "expert",
+          },
+        ],
       };
 
       const result = populateBankFromProfile(profile, "doc-2");
@@ -270,10 +366,14 @@ describe("Info Bank", () => {
         expect.arrayContaining([
           expect.objectContaining({
             category: "skill",
-            content: { name: "React", category: "technical", proficiency: "expert" },
+            content: {
+              name: "React",
+              category: "technical",
+              proficiency: "expert",
+            },
           }),
         ]),
-        "default"
+        "default",
       );
     });
 

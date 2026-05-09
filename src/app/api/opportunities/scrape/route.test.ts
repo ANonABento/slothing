@@ -13,7 +13,8 @@ vi.mock("@/lib/auth", () => ({
 }));
 
 vi.mock("@/lib/opportunities/scrape", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@/lib/opportunities/scrape")>();
+  const actual =
+    await importOriginal<typeof import("@/lib/opportunities/scrape")>();
   return {
     ...actual,
     scrapeOpportunityFromUrl: mocks.scrapeOpportunityFromUrl,
@@ -61,9 +62,13 @@ describe("opportunities scrape route", () => {
     };
     mocks.scrapeOpportunityFromUrl.mockResolvedValueOnce(opportunity);
 
-    const response = await POST(scrapeRequest({ url: "https://jobs.lever.co/acme/123" }));
+    const response = await POST(
+      scrapeRequest({ url: "https://jobs.lever.co/acme/123" }),
+    );
 
-    expect(mocks.scrapeOpportunityFromUrl).toHaveBeenCalledWith("https://jobs.lever.co/acme/123");
+    expect(mocks.scrapeOpportunityFromUrl).toHaveBeenCalledWith(
+      "https://jobs.lever.co/acme/123",
+    );
     await expect(response.json()).resolves.toEqual({ opportunity });
   });
 
@@ -93,11 +98,13 @@ describe("opportunities scrape route", () => {
     mocks.scrapeOpportunityFromUrl.mockRejectedValueOnce(
       new OpportunityScrapeError(
         "unsupported_site",
-        "This URL is not from a supported job board."
-      )
+        "This URL is not from a supported job board.",
+      ),
     );
 
-    const response = await POST(scrapeRequest({ url: "https://example.com/job" }));
+    const response = await POST(
+      scrapeRequest({ url: "https://example.com/job" }),
+    );
 
     expect(response.status).toBe(400);
     await expect(response.json()).resolves.toEqual({

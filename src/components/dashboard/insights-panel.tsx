@@ -13,7 +13,11 @@ import {
   ArrowRight,
   Zap,
 } from "lucide-react";
-import type { Insight, InsightType, InsightPriority } from "@/lib/resume/insights";
+import type {
+  Insight,
+  InsightType,
+  InsightPriority,
+} from "@/lib/resume/insights";
 
 const ICON_MAP: Record<InsightType, React.ElementType> = {
   strongest_skills: Zap,
@@ -71,7 +75,9 @@ export function InsightsPanel() {
             disabled={refreshing}
             className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
           >
-            <RefreshCw className={`h-3.5 w-3.5 ${refreshing ? "animate-spin" : ""}`} />
+            <RefreshCw
+              className={`h-3.5 w-3.5 ${refreshing ? "animate-spin" : ""}`}
+            />
             Refresh
           </button>
         )}
@@ -85,7 +91,8 @@ export function InsightsPanel() {
         </div>
       ) : insights.length === 0 ? (
         <p className="text-sm text-muted-foreground">
-          Add more data to your profile and track some jobs to get personalized insights.
+          Add more data to your profile and track some opportunities to get
+          personalized insights.
         </p>
       ) : (
         <div className="space-y-3">

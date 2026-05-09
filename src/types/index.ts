@@ -189,6 +189,7 @@ export const BANK_CATEGORIES = [
   "skill",
   "project",
   "education",
+  "bullet",
   "achievement",
   "certification",
   "hackathon",
@@ -211,6 +212,7 @@ export interface GroupedBankEntries {
   skill: BankEntry[];
   project: BankEntry[];
   education: BankEntry[];
+  bullet: BankEntry[];
   achievement: BankEntry[];
   certification: BankEntry[];
   hackathon: BankEntry[];

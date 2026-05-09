@@ -56,9 +56,23 @@ describe("bank route", () => {
     expect(response.status).toBe(200);
     expect(mocks.getBankEntriesByCategory).toHaveBeenCalledWith(
       "hackathon",
-      "user-1"
+      "user-1",
     );
     expect(mocks.getBankEntries).not.toHaveBeenCalled();
+  });
+
+  it("filters returned entries by source document id", async () => {
+    mocks.getBankEntries.mockReturnValue([
+      { id: "entry-1", sourceDocumentId: "doc-1" },
+      { id: "entry-2", sourceDocumentId: "doc-2" },
+    ]);
+
+    const response = await GET(bankRequest("/api/bank?sourceDocumentId=doc-1"));
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual({
+      entries: [{ id: "entry-1", sourceDocumentId: "doc-1" }],
+    });
   });
 
   it("searches within hackathons when q and type=hackathon are provided", async () => {
@@ -67,7 +81,7 @@ describe("bank route", () => {
     expect(mocks.searchBankEntriesByCategory).toHaveBeenCalledWith(
       "ai",
       "hackathon",
-      "user-1"
+      "user-1",
     );
     expect(mocks.searchBankEntries).not.toHaveBeenCalled();
   });
@@ -77,7 +91,7 @@ describe("bank route", () => {
       createRequest({
         category: "hackathon",
         content: { name: "AI Build Weekend", prizes: ["Best AI App"] },
-      })
+      }),
     );
 
     expect(response.status).toBe(201);
@@ -87,11 +101,39 @@ describe("bank route", () => {
         content: { name: "AI Build Weekend", prizes: ["Best AI App"] },
         confidenceScore: 1.0,
       },
-      "user-1"
+      "user-1",
     );
     await expect(response.json()).resolves.toEqual({
       success: true,
       id: "entry-1",
     });
+  });
+
+  it("accepts source document and confidence metadata on create", async () => {
+    const response = await POST(
+      createRequest({
+        category: "bullet",
+        content: {
+          description: "Built a parser",
+          parentId: "parent-1",
+        },
+        sourceDocumentId: "doc-1",
+        confidenceScore: 0.82,
+      }),
+    );
+
+    expect(response.status).toBe(201);
+    expect(mocks.insertBankEntry).toHaveBeenCalledWith(
+      {
+        category: "bullet",
+        content: {
+          description: "Built a parser",
+          parentId: "parent-1",
+        },
+        sourceDocumentId: "doc-1",
+        confidenceScore: 0.82,
+      },
+      "user-1",
+    );
   });
 });

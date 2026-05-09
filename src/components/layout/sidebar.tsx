@@ -19,6 +19,8 @@ import {
   DollarSign,
   FileText,
   Rows3,
+  ChevronsLeft,
+  ClipboardList,
   type LucideIcon,
 } from "lucide-react";
 import { useLLMStatus } from "@/hooks/useLLMStatus";
@@ -45,37 +47,35 @@ type SidebarNavItemState = {
 
 export const navigationGroups: NavGroup[] = [
   {
-    label: "Overview",
+    label: "Home",
     items: [{ name: "Dashboard", href: "/dashboard", icon: Home }],
   },
   {
-    label: "Resume",
+    label: "Documents",
     items: [
       { name: "Documents", href: "/bank", icon: Database },
+      { name: "Answer Bank", href: "/answer-bank", icon: ClipboardList },
       { name: "Document Studio", href: "/studio", icon: FileText },
-      { name: "Opportunities", href: "/opportunities", icon: Briefcase },
     ],
   },
   {
-    label: "Workflow",
+    label: "Pipeline",
     items: [
+      { name: "Opportunities", href: "/opportunities", icon: Briefcase },
       { name: "Review Queue", href: "/opportunities/review", icon: Rows3 },
       { name: "Calendar", href: "/calendar", icon: Calendar },
-      { name: "Email Templates", href: "/emails", icon: Mail },
     ],
   },
   {
-    label: "Interview",
+    label: "Prep",
     items: [
+      { name: "Email Templates", href: "/emails", icon: Mail },
       { name: "Interview Prep", href: "/interview", icon: MessageSquare },
+      { name: "Salary Tools", href: "/salary", icon: DollarSign },
     ],
   },
   {
-    label: "Negotiation",
-    items: [{ name: "Salary Tools", href: "/salary", icon: DollarSign }],
-  },
-  {
-    label: "Insights",
+    label: "Reporting",
     items: [{ name: "Analytics", href: "/analytics", icon: BarChart3 }],
   },
 ];
@@ -89,10 +89,10 @@ export function getSidebarNavItemClassName({
   collapsed,
 }: SidebarNavItemClassNameOptions): string {
   return cn(
-    "app-sidebar-nav-item group relative flex min-h-[44px] items-center gap-3 rounded-lg border-l px-3 py-3 text-sm font-medium transition-all duration-200",
+    "app-sidebar-nav-item group relative flex min-h-[42px] items-center gap-3 rounded-lg border px-2.5 py-2 text-sm font-medium transition-all duration-200",
     isActive
-      ? "border-l-primary bg-primary text-primary-foreground shadow-button"
-      : "border-l-transparent text-muted-foreground hover:bg-muted hover:text-foreground",
+      ? "border-primary/20 bg-card text-foreground shadow-sm"
+      : "border-transparent text-muted-foreground hover:border-border/70 hover:bg-card/70 hover:text-foreground",
     collapsed && "justify-center px-2",
   );
 }
@@ -101,11 +101,31 @@ export function getSidebarNavItemState(isActive: boolean): SidebarNavItemState {
   return { "data-active": isActive ? "true" : "false" };
 }
 
+export function isSidebarItemActive(pathname: string, href: string): boolean {
+  if (href === "/dashboard") return pathname === href;
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
+
+export function getActiveSidebarHref(
+  pathname: string,
+  items: NavItem[],
+): string | null {
+  const matches = items
+    .filter((item) => isSidebarItemActive(pathname, item.href))
+    .sort((a, b) => b.href.length - a.href.length);
+
+  return matches[0]?.href ?? null;
+}
+
 export function Sidebar() {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const llmStatus = useLLMStatus();
+  const activeHref = getActiveSidebarHref(
+    pathname,
+    navigationGroups.flatMap((group) => group.items).concat(bottomNavigation),
+  );
   const mobileCloseButtonRef = useRef<HTMLButtonElement | null>(null);
   const mobileOpenButtonRef = useRef<HTMLButtonElement | null>(null);
   const sidebarRef = useRef<HTMLElement | null>(null);
@@ -209,30 +229,57 @@ export function Sidebar() {
         role={mobileOpen ? "dialog" : undefined}
         className={cn(
           "app-sidebar fixed inset-y-0 left-0 z-50 flex flex-col border-r bg-background transition-all duration-300 ease-in-out grain",
-          collapsed ? "w-[72px]" : "w-64",
+          collapsed ? "w-[72px]" : "w-[264px]",
           mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
         )}
       >
         {/* Header */}
         <div
           className={cn(
-            "flex h-16 items-center border-b",
+            "flex h-[72px] items-center border-b bg-card/35",
             collapsed ? "justify-center px-3" : "justify-between px-4",
           )}
         >
-          <Link href="/dashboard" className="flex min-h-11 items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl gradient-bg text-primary-foreground font-bold text-lg shadow-md">
+          {collapsed ? (
+            <button
+              type="button"
+              onClick={() => setCollapsed(false)}
+              className="hidden h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm transition-opacity hover:opacity-90 lg:flex"
+              aria-label="Expand navigation"
+              title="Expand navigation"
+            >
               <Rocket className="h-5 w-5" />
-            </div>
-            {!collapsed && (
-              <div className="flex flex-col">
-                <span className="text-lg font-bold gradient-text">
+            </button>
+          ) : (
+            <Link
+              href="/dashboard"
+              className="flex min-h-11 min-w-0 items-center gap-3"
+            >
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-lg shadow-sm">
+                <Rocket className="h-5 w-5" />
+              </div>
+              <div className="flex min-w-0 flex-col">
+                <span className="truncate text-lg font-bold leading-tight gradient-text">
                   Slothing
                 </span>
-                <span className="text-2xs text-muted-foreground">怠惰</span>
+                <span className="truncate text-2xs text-muted-foreground">
+                  Job search workspace
+                </span>
               </div>
-            )}
-          </Link>
+            </Link>
+          )}
+
+          {!collapsed && (
+            <button
+              type="button"
+              onClick={() => setCollapsed(true)}
+              className="hidden h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground lg:flex"
+              aria-label="Collapse navigation"
+              title="Collapse navigation"
+            >
+              <ChevronsLeft className="h-4 w-4" />
+            </button>
+          )}
 
           {/* Mobile close button */}
           <button
@@ -249,7 +296,7 @@ export function Sidebar() {
         {/* Navigation — overflow-y-auto only when expanded; collapsed has no y-overflow and needs visible for tooltips */}
         <nav
           className={cn(
-            "flex-1 p-3",
+            "app-sidebar-nav flex-1 px-3 py-3",
             collapsed ? "overflow-visible" : "overflow-y-auto",
           )}
         >
@@ -257,6 +304,7 @@ export function Sidebar() {
             <div
               key={group.label}
               className={cn(
+                groupIndex === 0 && collapsed && "pt-8",
                 groupIndex > 0 &&
                   (collapsed ? "mt-3 pt-3 border-t border-border/50" : "mt-4"),
               )}
@@ -264,7 +312,7 @@ export function Sidebar() {
               {/* Section label - only show when expanded */}
               {!collapsed && (
                 <div className="px-3 mb-2">
-                  <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+                  <span className="text-[10px] font-semibold uppercase tracking-normal text-muted-foreground/70">
                     {group.label}
                   </span>
                 </div>
@@ -272,11 +320,12 @@ export function Sidebar() {
 
               <div className="space-y-1">
                 {group.items.map((item) => {
-                  const isActive = pathname === item.href;
+                  const isActive = activeHref === item.href;
                   return (
                     <Link
                       key={item.name}
                       href={item.href}
+                      aria-current={isActive ? "page" : undefined}
                       title={collapsed ? item.name : undefined}
                       aria-label={collapsed ? item.name : undefined}
                       className={getSidebarNavItemClassName({
@@ -288,10 +337,12 @@ export function Sidebar() {
                       <item.icon
                         className={cn(
                           "h-5 w-5 shrink-0",
-                          isActive && "text-primary-foreground",
+                          isActive ? "text-primary" : "text-current",
                         )}
                       />
-                      {!collapsed && <span>{item.name}</span>}
+                      {!collapsed && (
+                        <span className="min-w-0 truncate">{item.name}</span>
+                      )}
 
                       {/* Tooltip for collapsed state */}
                       {collapsed && (
@@ -300,11 +351,6 @@ export function Sidebar() {
                             {item.name}
                           </div>
                         </div>
-                      )}
-
-                      {/* Active indicator */}
-                      {isActive && !collapsed && (
-                        <div className="absolute right-2 h-2 w-2 rounded-full bg-primary-foreground/50" />
                       )}
                     </Link>
                   );
@@ -315,13 +361,14 @@ export function Sidebar() {
         </nav>
 
         {/* Bottom navigation */}
-        <div className="border-t p-3 space-y-1">
+        <div className="border-t bg-card/40 p-3 space-y-1">
           {bottomNavigation.map((item) => {
-            const isActive = pathname === item.href;
+            const isActive = activeHref === item.href;
             return (
               <Link
                 key={item.name}
                 href={item.href}
+                aria-current={isActive ? "page" : undefined}
                 title={collapsed ? item.name : undefined}
                 aria-label={collapsed ? item.name : undefined}
                 className={getSidebarNavItemClassName({
@@ -334,7 +381,7 @@ export function Sidebar() {
                   <item.icon
                     className={cn(
                       "h-5 w-5",
-                      isActive && "text-primary-foreground",
+                      isActive ? "text-primary" : "text-current",
                     )}
                   />
                   {item.href === "/settings" && (
@@ -353,7 +400,9 @@ export function Sidebar() {
                     />
                   )}
                 </div>
-                {!collapsed && <span>{item.name}</span>}
+                {!collapsed && (
+                  <span className="min-w-0 truncate">{item.name}</span>
+                )}
 
                 {/* Tooltip for collapsed state */}
                 {collapsed && (
@@ -373,7 +422,7 @@ export function Sidebar() {
       <div
         className={cn(
           "hidden lg:block shrink-0 transition-all duration-300",
-          collapsed ? "w-[72px]" : "w-64",
+          collapsed ? "w-[72px]" : "w-[264px]",
         )}
       />
     </>

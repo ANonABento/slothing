@@ -35,7 +35,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { TimeAgo } from "@/components/format/time-ago";
-import { AppPage, PageContent, PageHeader } from "@/components/ui/page-layout";
+import {
+  AppPage,
+  PageContent,
+  PageHeader,
+  PagePanel,
+  PagePanelHeader,
+} from "@/components/ui/page-layout";
 import { SkeletonButton } from "@/components/ui/skeleton";
 import { useErrorToast } from "@/hooks/use-error-toast";
 import { readJsonResponse } from "@/lib/http";
@@ -481,7 +487,7 @@ export default function EmailTemplatesPage() {
       <PageContent>
         {/* Drafts Section */}
         {drafts.length > 0 && (
-          <div className="rounded-2xl border bg-card overflow-hidden mb-8">
+          <PagePanel className="mb-8 overflow-hidden p-0 sm:p-0">
             <button
               onClick={() => setShowDrafts(!showDrafts)}
               className="w-full flex items-center justify-between p-4 hover:bg-muted/50 transition-colors"
@@ -558,16 +564,26 @@ export default function EmailTemplatesPage() {
                 })}
               </div>
             )}
-          </div>
+          </PagePanel>
         )}
 
-        <div className={getResponsiveDetailGridClass(Boolean(selectedType))}>
+            <div
+              className={
+                selectedType
+                  ? getResponsiveDetailGridClass(true)
+                  : getResponsiveDetailGridClass(false, "comfortable")
+              }
+            >
           {/* Left Column - Template Selection & Context */}
           <div className="space-y-6">
             {/* Template Selection */}
-            <div className="rounded-2xl border bg-card p-6">
-              <h2 className="font-semibold mb-4">Choose Template</h2>
-              <div className="grid gap-3">
+            <PagePanel>
+              <PagePanelHeader title="Choose Template" className="mb-4" />
+              <div
+                className={
+                  selectedType ? "grid gap-3" : "grid gap-3 lg:grid-cols-2"
+                }
+              >
                 {(Object.keys(TEMPLATE_CONFIG) as EmailTemplateType[]).map(
                   (type) => {
                     const config = TEMPLATE_CONFIG[type];
@@ -581,7 +597,7 @@ export default function EmailTemplatesPage() {
                           setSelectedType(type);
                           setGeneratedEmail(null);
                         }}
-                        className={`flex items-start gap-4 p-4 rounded-xl border text-left transition-all ${
+                        className={`flex items-start gap-4 rounded-lg border p-4 text-left transition-all ${
                           isSelected
                             ? "border-primary bg-primary/5"
                             : "hover:border-primary/50 hover:bg-muted/50"
@@ -603,12 +619,12 @@ export default function EmailTemplatesPage() {
                   },
                 )}
               </div>
-            </div>
+            </PagePanel>
 
             {/* Context Fields */}
             {selectedType && (
-              <div className="rounded-2xl border bg-card p-6">
-                <h2 className="font-semibold mb-4">Customize</h2>
+              <PagePanel>
+                <PagePanelHeader title="Customize" className="mb-4" />
                 {renderContextFields()}
 
                 <Button
@@ -623,12 +639,12 @@ export default function EmailTemplatesPage() {
                   )}
                   Generate Email
                 </Button>
-              </div>
+              </PagePanel>
             )}
           </div>
 
           {selectedType && (
-            <div className="rounded-2xl border bg-card p-6 opacity-100 transition-all duration-300 ease-out animate-in fade-in slide-in-from-right-4">
+            <PagePanel className="opacity-100 transition-all duration-300 ease-out animate-in fade-in slide-in-from-right-4">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="font-semibold">Preview</h2>
                 {generatedEmail && (
@@ -743,7 +759,7 @@ export default function EmailTemplatesPage() {
                   </p>
                 </div>
               )}
-            </div>
+            </PagePanel>
           )}
         </div>
       </PageContent>

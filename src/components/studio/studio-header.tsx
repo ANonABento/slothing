@@ -102,6 +102,10 @@ export function StudioHeader({
   const templateListLabel = `${modeLabel} templates`;
   const showTemplateSearch = templates.length >= 6;
   const saveStatusLabel = getStudioSaveStatusLabel(saveStatus, now);
+  const exportHelpText =
+    !canCopyHtml || !canDownloadPdf
+      ? `Add bank entries or edit the ${documentLabel} to enable export.`
+      : null;
 
   useEffect(() => {
     const interval = window.setInterval(() => setNow(Date.now()), 5_000);
@@ -349,6 +353,7 @@ export function StudioHeader({
           size="sm"
           onClick={onCopyHtml}
           disabled={!canCopyHtml}
+          title={!canCopyHtml && exportHelpText ? exportHelpText : undefined}
         >
           <Copy className="h-4 w-4 md:mr-1.5" />
           <span className="hidden md:inline">Copy HTML</span>
@@ -358,6 +363,7 @@ export function StudioHeader({
           size="sm"
           onClick={onDownloadPdf}
           disabled={!canDownloadPdf || isExporting}
+          title={!canDownloadPdf && exportHelpText ? exportHelpText : undefined}
         >
           {isExporting ? (
             <Loader2 className="h-4 w-4 animate-spin md:mr-1.5" />
@@ -377,6 +383,11 @@ export function StudioHeader({
           <PanelRight className="h-5 w-5" />
         </Button>
       </div>
+      {exportHelpText && (
+        <p className="basis-full text-right text-xs text-muted-foreground">
+          {exportHelpText}
+        </p>
+      )}
     </div>
   );
 }

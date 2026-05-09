@@ -275,4 +275,25 @@ describe("StudioHeader", () => {
       within(picker).queryByRole("option", { name: /classic/i }),
     ).not.toBeInTheDocument();
   });
+
+  it("explains why export actions are disabled before content exists", () => {
+    renderStudioHeader({ canCopyHtml: false, canDownloadPdf: false });
+
+    const copyButton = screen.getByRole("button", {
+      name: /copy resume html/i,
+    });
+    const downloadButton = screen.getByRole("button", {
+      name: /download resume pdf/i,
+    });
+
+    expect(copyButton).toBeDisabled();
+    expect(downloadButton).toBeDisabled();
+    expect(copyButton).toHaveAttribute(
+      "title",
+      "Add bank entries or edit the resume to enable export.",
+    );
+    expect(
+      screen.getByText("Add bank entries or edit the resume to enable export."),
+    ).toBeInTheDocument();
+  });
 });

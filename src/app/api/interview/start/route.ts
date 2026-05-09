@@ -9,10 +9,16 @@ import { NextRequest, NextResponse } from "next/server";
 import { getJob } from "@/lib/db/jobs";
 import { getProfile, getLLMConfig } from "@/lib/db";
 import { LLMClient, parseJSONFromLLM } from "@/lib/llm/client";
-import { startInterviewSchema, DIFFICULTY_DESCRIPTIONS, type InterviewDifficulty } from "@/lib/constants";
+import {
+  startInterviewSchema,
+  DIFFICULTY_DESCRIPTIONS,
+  type InterviewDifficulty,
+} from "@/lib/constants";
 import { requireAuth, isAuthError, getCurrentUserId } from "@/lib/auth";
 import { rateLimiters, getClientIdentifier } from "@/lib/rate-limit";
 import { validationErrorResponse, ApiErrors } from "@/lib/api-utils";
+
+export const dynamic = "force-dynamic";
 
 interface InterviewQuestion {
   question: string;
@@ -33,16 +39,19 @@ export async function POST(request: NextRequest) {
   if (!rateLimitResult.allowed) {
     return NextResponse.json(
       {
-        error: "Rate limit exceeded. Please wait before generating more questions.",
+        error:
+          "Rate limit exceeded. Please wait before generating more questions.",
         retryAfter: Math.ceil((rateLimitResult.resetAt - Date.now()) / 1000),
       },
       {
         status: 429,
         headers: {
-          "Retry-After": String(Math.ceil((rateLimitResult.resetAt - Date.now()) / 1000)),
+          "Retry-After": String(
+            Math.ceil((rateLimitResult.resetAt - Date.now()) / 1000),
+          ),
           "X-RateLimit-Remaining": "0",
         },
-      }
+      },
     );
   }
 
@@ -79,7 +88,9 @@ Candidate Background:
 `
         : "";
 
-      const difficultyContext = DIFFICULTY_DESCRIPTIONS[difficulty as InterviewDifficulty] || DIFFICULTY_DESCRIPTIONS.mid;
+      const difficultyContext =
+        DIFFICULTY_DESCRIPTIONS[difficulty as InterviewDifficulty] ||
+        DIFFICULTY_DESCRIPTIONS.mid;
 
       const response = await client.complete({
         messages: [
@@ -130,45 +141,52 @@ Make sure questions match the ${difficulty} difficulty level.`,
     console.error("Start interview error:", error);
     return NextResponse.json(
       { error: "Failed to generate interview questions" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
 function getDefaultQuestions(
   job: { title: string; company: string; keywords: string[] },
-  difficulty: InterviewDifficulty = "mid"
+  difficulty: InterviewDifficulty = "mid",
 ): InterviewQuestion[] {
   const baseQuestions: Record<InterviewDifficulty, InterviewQuestion[]> = {
     entry: [
       {
         question: `Why are you interested in starting your career as a ${job.title} at ${job.company}?`,
         category: "general",
-        suggestedAnswer: "Show enthusiasm, research the company, and express eagerness to learn.",
+        suggestedAnswer:
+          "Show enthusiasm, research the company, and express eagerness to learn.",
         difficulty: "entry",
       },
       {
-        question: "Tell me about a project you worked on during school or in your personal time.",
+        question:
+          "Tell me about a project you worked on during school or in your personal time.",
         category: "behavioral",
-        suggestedAnswer: "Describe what you built, what you learned, and any challenges you overcame.",
+        suggestedAnswer:
+          "Describe what you built, what you learned, and any challenges you overcame.",
         difficulty: "entry",
       },
       {
         question: "How do you approach learning a new skill or technology?",
         category: "situational",
-        suggestedAnswer: "Show your learning process and give a concrete example.",
+        suggestedAnswer:
+          "Show your learning process and give a concrete example.",
         difficulty: "entry",
       },
       {
         question: `What do you know about ${job.keywords.slice(0, 3).join(", ")}?`,
         category: "technical",
-        suggestedAnswer: "Demonstrate basic understanding and eagerness to learn more.",
+        suggestedAnswer:
+          "Demonstrate basic understanding and eagerness to learn more.",
         difficulty: "entry",
       },
       {
-        question: "Describe a time when you worked effectively as part of a team.",
+        question:
+          "Describe a time when you worked effectively as part of a team.",
         category: "behavioral",
-        suggestedAnswer: "Use STAR method, focus on collaboration and communication.",
+        suggestedAnswer:
+          "Use STAR method, focus on collaboration and communication.",
         difficulty: "entry",
       },
     ],
@@ -176,95 +194,123 @@ function getDefaultQuestions(
       {
         question: `Why are you interested in the ${job.title} position at ${job.company}?`,
         category: "general",
-        suggestedAnswer: "Research the company, connect your experience to the role.",
+        suggestedAnswer:
+          "Research the company, connect your experience to the role.",
         difficulty: "mid",
       },
       {
-        question: "Describe a challenging project you led and how you handled obstacles.",
+        question:
+          "Describe a challenging project you led and how you handled obstacles.",
         category: "behavioral",
-        suggestedAnswer: "Use STAR method, emphasize problem-solving and outcomes.",
+        suggestedAnswer:
+          "Use STAR method, emphasize problem-solving and outcomes.",
         difficulty: "mid",
       },
       {
-        question: "How do you prioritize tasks when you have multiple deadlines?",
+        question:
+          "How do you prioritize tasks when you have multiple deadlines?",
         category: "situational",
-        suggestedAnswer: "Describe your prioritization framework with specific examples.",
+        suggestedAnswer:
+          "Describe your prioritization framework with specific examples.",
         difficulty: "mid",
       },
       {
         question: `Explain your experience with ${job.keywords.slice(0, 3).join(", ")}.`,
         category: "technical",
-        suggestedAnswer: "Give specific examples of projects and measurable outcomes.",
+        suggestedAnswer:
+          "Give specific examples of projects and measurable outcomes.",
         difficulty: "mid",
       },
       {
-        question: "Tell me about a time you disagreed with a teammate and how you resolved it.",
+        question:
+          "Tell me about a time you disagreed with a teammate and how you resolved it.",
         category: "behavioral",
-        suggestedAnswer: "Focus on communication, compromise, and professional outcome.",
+        suggestedAnswer:
+          "Focus on communication, compromise, and professional outcome.",
         difficulty: "mid",
       },
     ],
     senior: [
       {
-        question: "How would you approach building the technical strategy for a team working on our product?",
+        question:
+          "How would you approach building the technical strategy for a team working on our product?",
         category: "technical",
-        suggestedAnswer: "Discuss architecture decisions, trade-offs, and team alignment.",
+        suggestedAnswer:
+          "Discuss architecture decisions, trade-offs, and team alignment.",
         difficulty: "senior",
       },
       {
-        question: "Describe a time when you had to influence a decision without having direct authority.",
+        question:
+          "Describe a time when you had to influence a decision without having direct authority.",
         category: "behavioral",
-        suggestedAnswer: "Show leadership, stakeholder management, and persuasion skills.",
+        suggestedAnswer:
+          "Show leadership, stakeholder management, and persuasion skills.",
         difficulty: "senior",
       },
       {
-        question: "How do you mentor junior team members while maintaining your own productivity?",
+        question:
+          "How do you mentor junior team members while maintaining your own productivity?",
         category: "situational",
-        suggestedAnswer: "Balance teaching with delegation, discuss specific mentoring approaches.",
+        suggestedAnswer:
+          "Balance teaching with delegation, discuss specific mentoring approaches.",
         difficulty: "senior",
       },
       {
-        question: "Tell me about a system you designed that had to scale significantly. What would you do differently?",
+        question:
+          "Tell me about a system you designed that had to scale significantly. What would you do differently?",
         category: "technical",
-        suggestedAnswer: "Discuss architectural decisions, trade-offs, and lessons learned.",
+        suggestedAnswer:
+          "Discuss architectural decisions, trade-offs, and lessons learned.",
         difficulty: "senior",
       },
       {
-        question: "How do you handle technical debt while delivering new features?",
+        question:
+          "How do you handle technical debt while delivering new features?",
         category: "situational",
-        suggestedAnswer: "Discuss prioritization, ROI of refactoring, and stakeholder communication.",
+        suggestedAnswer:
+          "Discuss prioritization, ROI of refactoring, and stakeholder communication.",
         difficulty: "senior",
       },
     ],
     executive: [
       {
-        question: "How would you transform the engineering culture at ${job.company} to drive innovation?",
+        question:
+          "How would you transform the engineering culture at ${job.company} to drive innovation?",
         category: "situational",
-        suggestedAnswer: "Discuss vision, change management, and measuring cultural impact.",
+        suggestedAnswer:
+          "Discuss vision, change management, and measuring cultural impact.",
         difficulty: "executive",
       },
       {
-        question: "Describe a time when you had to make a significant strategic pivot. How did you gain buy-in?",
+        question:
+          "Describe a time when you had to make a significant strategic pivot. How did you gain buy-in?",
         category: "behavioral",
-        suggestedAnswer: "Focus on data-driven decision making and stakeholder alignment.",
+        suggestedAnswer:
+          "Focus on data-driven decision making and stakeholder alignment.",
         difficulty: "executive",
       },
       {
-        question: "How do you balance short-term business goals with long-term technical investments?",
+        question:
+          "How do you balance short-term business goals with long-term technical investments?",
         category: "situational",
-        suggestedAnswer: "Discuss frameworks for prioritization and communicating with the board.",
+        suggestedAnswer:
+          "Discuss frameworks for prioritization and communicating with the board.",
         difficulty: "executive",
       },
       {
-        question: "How would you build and scale the engineering organization for 3x growth?",
+        question:
+          "How would you build and scale the engineering organization for 3x growth?",
         category: "technical",
-        suggestedAnswer: "Discuss hiring, team structure, processes, and maintaining culture.",
+        suggestedAnswer:
+          "Discuss hiring, team structure, processes, and maintaining culture.",
         difficulty: "executive",
       },
       {
-        question: "Tell me about a failure in your leadership and what you learned from it.",
+        question:
+          "Tell me about a failure in your leadership and what you learned from it.",
         category: "behavioral",
-        suggestedAnswer: "Show vulnerability, accountability, and concrete lessons applied.",
+        suggestedAnswer:
+          "Show vulnerability, accountability, and concrete lessons applied.",
         difficulty: "executive",
       },
     ],

@@ -5,7 +5,10 @@ import { test, expect } from "@playwright/test";
  * Tests all features and components on the dashboard.
  */
 
-test.skip(true, "Requires an authenticated Clerk test fixture and dashboard seed data.");
+test.skip(
+  true,
+  "Requires an authenticated Clerk test fixture and dashboard seed data.",
+);
 
 test.describe("Dashboard - Layout", () => {
   test.beforeEach(async ({ page }) => {
@@ -27,13 +30,17 @@ test.describe("Dashboard - Layout", () => {
     await expect(statsSection).toBeVisible();
 
     // Check for stat cards
-    const cards = page.locator(".card, [class*='Card'], .rounded-xl.border.bg-card");
+    const cards = page.locator(
+      ".card, [class*='Card'], .rounded-xl.border.bg-card",
+    );
     expect(await cards.count()).toBeGreaterThan(0);
   });
 
   test("displays recent activity or quick actions", async ({ page }) => {
     // Look for recent activity section
-    const recentSection = page.getByText(/recent|activity|quick|actions/i).first();
+    const recentSection = page
+      .getByText(/recent|activity|quick|actions/i)
+      .first();
     if (await recentSection.isVisible({ timeout: 1000 }).catch(() => false)) {
       await expect(recentSection).toBeVisible();
     }
@@ -41,7 +48,9 @@ test.describe("Dashboard - Layout", () => {
 
   test("displays recommendations section", async ({ page }) => {
     // API returns recommendations
-    const recsSection = page.getByText(/recommended|suggestions|learning/i).first();
+    const recsSection = page
+      .getByText(/recommended|suggestions|learning/i)
+      .first();
     if (await recsSection.isVisible({ timeout: 2000 }).catch(() => false)) {
       await expect(recsSection).toBeVisible();
     }
@@ -67,11 +76,20 @@ test.describe("Dashboard - Navigation Links", () => {
     }
   });
 
-  test("job tracker section links to jobs page", async ({ page }) => {
-    const jobsLink = page.getByRole("link", { name: /jobs|applications/i });
-    if (await jobsLink.first().isVisible({ timeout: 1000 }).catch(() => false)) {
+  test("opportunity tracker section links to opportunities page", async ({
+    page,
+  }) => {
+    const jobsLink = page.getByRole("link", {
+      name: /opportunities|applications/i,
+    });
+    if (
+      await jobsLink
+        .first()
+        .isVisible({ timeout: 1000 })
+        .catch(() => false)
+    ) {
       await jobsLink.first().click();
-      await expect(page).toHaveURL(/jobs/);
+      await expect(page).toHaveURL(/opportunities/);
     }
   });
 });
@@ -112,7 +130,9 @@ test.describe("Dashboard - Data Display", () => {
     await page.reload();
 
     // Check for loading indicators
-    const loaders = page.locator(".animate-spin, .animate-pulse, [class*='skeleton']");
+    const loaders = page.locator(
+      ".animate-spin, .animate-pulse, [class*='skeleton']",
+    );
     // May or may not show loaders depending on cache
   });
 
@@ -121,7 +141,12 @@ test.describe("Dashboard - Data Display", () => {
       hasText: /^\d+$/,
     });
 
-    if (await statNumbers.first().isVisible({ timeout: 1000 }).catch(() => false)) {
+    if (
+      await statNumbers
+        .first()
+        .isVisible({ timeout: 1000 })
+        .catch(() => false)
+    ) {
       const count = await statNumbers.count();
       expect(count).toBeGreaterThan(0);
     }

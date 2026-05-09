@@ -8,6 +8,7 @@ const mocks = vi.hoisted(() => ({
   getLLMConfig: vi.fn(),
   getDocumentByFileHash: vi.fn(),
   deleteSourceDocuments: vi.fn(),
+  populateBankFromProfile: vi.fn(),
   extractTextFromFile: vi.fn(),
   classifyDocument: vi.fn(),
   smartParseResume: vi.fn(),
@@ -34,8 +35,11 @@ vi.mock("@/lib/db", () => ({
 }));
 
 vi.mock("@/lib/db/profile-bank", () => ({
-  insertBankEntries: vi.fn().mockReturnValue(["entry-1"]),
   deleteSourceDocuments: mocks.deleteSourceDocuments,
+}));
+
+vi.mock("@/lib/resume/info-bank", () => ({
+  populateBankFromProfile: mocks.populateBankFromProfile,
 }));
 
 vi.mock("@/lib/parser/pdf", () => ({
@@ -76,11 +80,7 @@ function pdfFile(name = "test-resume.pdf") {
   } as unknown as File;
 }
 
-function fileWithBytes(
-  name: string,
-  type: string,
-  bytes: Uint8Array,
-): File {
+function fileWithBytes(name: string, type: string, bytes: Uint8Array): File {
   return {
     name,
     type,
@@ -118,6 +118,11 @@ describe("upload route dedupe flow", () => {
       llmUsed: false,
       llmSectionsCount: 0,
       warnings: [],
+    });
+    mocks.populateBankFromProfile.mockReturnValue({
+      inserted: 1,
+      updated: 0,
+      skipped: 0,
     });
   });
 
@@ -178,24 +183,33 @@ describe("upload route dedupe flow", () => {
     });
 
     const response = await POST(
-      uploadRequest(pdfFile(), "http://localhost/api/upload?force=true")
+      uploadRequest(pdfFile(), "http://localhost/api/upload?force=true"),
     );
 
     expect(response.status).toBe(200);
     expect(mocks.deleteSourceDocuments).toHaveBeenCalledWith(
       ["doc-existing"],
-      "user-1"
+      "user-1",
     );
     expect(mocks.saveDocument).toHaveBeenCalledWith(
       expect.objectContaining({
         filename: "test-resume.pdf",
         fileHash: expect.any(String),
       }),
-      "user-1"
+      "user-1",
     );
     await expect(response.json()).resolves.toMatchObject({
       success: true,
       entriesCreated: 1,
+      document: {
+        id: expect.any(String),
+        filename: "test-resume.pdf",
+      },
     });
+    expect(mocks.populateBankFromProfile).toHaveBeenCalledWith(
+      expect.objectContaining({ experiences: expect.any(Array) }),
+      expect.any(String),
+      "user-1",
+    );
   });
 });

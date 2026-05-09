@@ -19,7 +19,10 @@ import { GET } from "./route";
 describe("extension profile route", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.requireExtensionAuth.mockReturnValue({ success: true, userId: "user-1" });
+    mocks.requireExtensionAuth.mockReturnValue({
+      success: true,
+      userId: "user-1",
+    });
   });
 
   it("loads the profile from the Drizzle query layer and returns computed autofill values", async () => {
@@ -64,27 +67,35 @@ describe("extension profile route", () => {
       certifications: [],
     });
 
-    const response = await GET(new NextRequest("http://localhost/api/extension/profile"));
+    const response = await GET(
+      new NextRequest("http://localhost/api/extension/profile"),
+    );
     const body = await response.json();
 
     expect(mocks.getProfile).toHaveBeenCalledWith("user-1");
-    expect(body.computed).toEqual(expect.objectContaining({
-      firstName: "Ada",
-      lastName: "Lovelace",
-      currentCompany: "Current Co",
-      currentTitle: "Staff Engineer",
-      mostRecentSchool: "University",
-      graduationYear: "2020",
-      skillsList: "TypeScript",
-    }));
+    expect(body.computed).toEqual(
+      expect.objectContaining({
+        firstName: "Ada",
+        lastName: "Lovelace",
+        currentCompany: "Current Co",
+        currentTitle: "Staff Engineer",
+        mostRecentSchool: "University",
+        graduationYear: "2020",
+        skillsList: "TypeScript",
+      }),
+    );
   });
 
   it("returns 404 when no Drizzle profile exists for the extension user", async () => {
     mocks.getProfile.mockResolvedValueOnce(null);
 
-    const response = await GET(new NextRequest("http://localhost/api/extension/profile"));
+    const response = await GET(
+      new NextRequest("http://localhost/api/extension/profile"),
+    );
 
     expect(response.status).toBe(404);
-    await expect(response.json()).resolves.toEqual({ error: "Profile not found" });
+    await expect(response.json()).resolves.toEqual({
+      error: "Profile not found",
+    });
   });
 });

@@ -15,6 +15,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { createJob } from "@/lib/db/jobs";
 import { requireAuth, isAuthError } from "@/lib/auth";
 
+export const dynamic = "force-dynamic";
+
 interface CSVJobRow {
   title: string;
   company: string;
@@ -49,12 +51,23 @@ function parseCSV(csvContent: string): CSVJobRow[] {
   // Parse header
   const headerLine = lines[0];
   const headers = parseCSVLine(headerLine).map((h) =>
-    h.toLowerCase().trim().replace(/[^a-z]/g, "")
+    h
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z]/g, ""),
   );
 
   // Validate required columns
-  const titleIndex = headers.findIndex((h) => h.includes("title") || h.includes("position") || h.includes("jobtitle"));
-  const companyIndex = headers.findIndex((h) => h.includes("company") || h.includes("employer") || h.includes("organization"));
+  const titleIndex = headers.findIndex(
+    (h) =>
+      h.includes("title") || h.includes("position") || h.includes("jobtitle"),
+  );
+  const companyIndex = headers.findIndex(
+    (h) =>
+      h.includes("company") ||
+      h.includes("employer") ||
+      h.includes("organization"),
+  );
 
   if (titleIndex === -1) {
     throw new Error("CSV must have a 'title' or 'position' column");
@@ -67,12 +80,25 @@ function parseCSV(csvContent: string): CSVJobRow[] {
   const columnMap = {
     title: titleIndex,
     company: companyIndex,
-    location: headers.findIndex((h) => h.includes("location") || h.includes("city")),
-    type: headers.findIndex((h) => h.includes("type") || h.includes("employment")),
-    remote: headers.findIndex((h) => h.includes("remote") || h.includes("workfrom")),
-    salary: headers.findIndex((h) => h.includes("salary") || h.includes("compensation") || h.includes("pay")),
-    description: headers.findIndex((h) => h.includes("description") || h.includes("jobdesc")),
-    url: headers.findIndex((h) => h.includes("url") || h.includes("link") || h.includes("posting")),
+    location: headers.findIndex(
+      (h) => h.includes("location") || h.includes("city"),
+    ),
+    type: headers.findIndex(
+      (h) => h.includes("type") || h.includes("employment"),
+    ),
+    remote: headers.findIndex(
+      (h) => h.includes("remote") || h.includes("workfrom"),
+    ),
+    salary: headers.findIndex(
+      (h) =>
+        h.includes("salary") || h.includes("compensation") || h.includes("pay"),
+    ),
+    description: headers.findIndex(
+      (h) => h.includes("description") || h.includes("jobdesc"),
+    ),
+    url: headers.findIndex(
+      (h) => h.includes("url") || h.includes("link") || h.includes("posting"),
+    ),
   };
 
   // Parse data rows
@@ -155,7 +181,12 @@ function validateAndTransform(row: CSVJobRow, index: number): ParsedCSVJob {
 
   // Normalize job type
   const typeText = (row.type || "").toLowerCase();
-  let jobType: "full-time" | "part-time" | "contract" | "internship" | undefined;
+  let jobType:
+    | "full-time"
+    | "part-time"
+    | "contract"
+    | "internship"
+    | undefined;
   if (typeText.includes("full")) jobType = "full-time";
   else if (typeText.includes("part")) jobType = "part-time";
   else if (typeText.includes("contract")) jobType = "contract";
@@ -169,7 +200,8 @@ function validateAndTransform(row: CSVJobRow, index: number): ParsedCSVJob {
     type: jobType,
     remote: isRemote,
     salary: row.salary?.trim() || "",
-    description: row.description?.trim() || `${row.title} position at ${row.company}`,
+    description:
+      row.description?.trim() || `${row.title} position at ${row.company}`,
     url: row.url?.trim() || "",
     isValid: errors.length === 0,
     errors,
@@ -188,7 +220,7 @@ export async function POST(request: NextRequest) {
     if (!csv) {
       return NextResponse.json(
         { error: "CSV content is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -211,12 +243,12 @@ export async function POST(request: NextRequest) {
     console.error("CSV parse error:", error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Failed to parse CSV" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 }
 
-// PUT - Save validated jobs
+// PUT - Save validated opportunities
 export async function PUT(request: NextRequest) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
@@ -227,8 +259,8 @@ export async function PUT(request: NextRequest) {
 
     if (!jobs || !Array.isArray(jobs) || jobs.length === 0) {
       return NextResponse.json(
-        { error: "No jobs to import" },
-        { status: 400 }
+        { error: "No opportunities to import" },
+        { status: 400 },
       );
     }
 
@@ -237,20 +269,23 @@ export async function PUT(request: NextRequest) {
 
     for (const job of jobs) {
       try {
-        createJob({
-          title: job.title,
-          company: job.company,
-          location: job.location,
-          type: job.type,
-          remote: job.remote,
-          salary: job.salary,
-          description: job.description,
-          requirements: [],
-          responsibilities: [],
-          keywords: [],
-          url: job.url,
-          status: "pending",
-        }, authResult.userId);
+        createJob(
+          {
+            title: job.title,
+            company: job.company,
+            location: job.location,
+            type: job.type,
+            remote: job.remote,
+            salary: job.salary,
+            description: job.description,
+            requirements: [],
+            responsibilities: [],
+            keywords: [],
+            url: job.url,
+            status: "pending",
+          },
+          authResult.userId,
+        );
         imported.push(`${job.title} at ${job.company}`);
       } catch {
         failed.push(`${job.title} at ${job.company}`);
@@ -266,8 +301,8 @@ export async function PUT(request: NextRequest) {
   } catch (error) {
     console.error("CSV save error:", error);
     return NextResponse.json(
-      { error: "Failed to save jobs" },
-      { status: 500 }
+      { error: "Failed to save opportunities" },
+      { status: 500 },
     );
   }
 }

@@ -1,4 +1,8 @@
-import type { CSVJob, CSVPreview, ParsedJobPreview } from "./import-job-dialog.types";
+import type {
+  CSVJob,
+  CSVPreview,
+  ParsedJobPreview,
+} from "./import-job-dialog.types";
 
 type JsonObject = Record<string, unknown>;
 type ScrapedOpportunity = {
@@ -20,7 +24,9 @@ function isObject(value: unknown): value is JsonObject {
 }
 
 function isStringArray(value: unknown): value is string[] {
-  return Array.isArray(value) && value.every((item) => typeof item === "string");
+  return (
+    Array.isArray(value) && value.every((item) => typeof item === "string")
+  );
 }
 
 function isParsedJobPreview(value: unknown): value is ParsedJobPreview {
@@ -102,7 +108,9 @@ function normalizeOptionalString(value?: string): string | undefined {
   return trimmed ? trimmed : undefined;
 }
 
-function opportunityToPreview(opportunity: ScrapedOpportunity): ParsedJobPreview {
+function opportunityToPreview(
+  opportunity: ScrapedOpportunity,
+): ParsedJobPreview {
   return {
     title: opportunity.title,
     company: opportunity.company,
@@ -110,7 +118,9 @@ function opportunityToPreview(opportunity: ScrapedOpportunity): ParsedJobPreview
     type: opportunity.type || "",
     remote: opportunity.remote ?? false,
     salary: opportunity.salary || "",
-    description: opportunity.description.slice(0, 500) + (opportunity.description.length > 500 ? "..." : ""),
+    description:
+      opportunity.description.slice(0, 500) +
+      (opportunity.description.length > 500 ? "..." : ""),
     fullDescription: opportunity.description,
     requirements: opportunity.requirements || [],
     keywords: opportunity.keywords || [],
@@ -119,7 +129,10 @@ function opportunityToPreview(opportunity: ScrapedOpportunity): ParsedJobPreview
   };
 }
 
-async function parseJsonResponse(response: Response, fallbackMessage: string): Promise<unknown> {
+async function parseJsonResponse(
+  response: Response,
+  fallbackMessage: string,
+): Promise<unknown> {
   let data: unknown;
   try {
     data = await response.json();
@@ -138,7 +151,7 @@ async function parseJsonResponse(response: Response, fallbackMessage: string): P
 
 async function parsePreviewResponse(
   response: Response,
-  fallbackMessage: string
+  fallbackMessage: string,
 ): Promise<ParsedJobPreview> {
   const data = await parseJsonResponse(response, fallbackMessage);
   if (isObject(data) && isParsedJobPreview(data.preview)) {
@@ -149,7 +162,7 @@ async function parsePreviewResponse(
 
 async function parseCSVPreviewResponse(
   response: Response,
-  fallbackMessage: string
+  fallbackMessage: string,
 ): Promise<CSVPreview> {
   const data = await parseJsonResponse(response, fallbackMessage);
   if (isObject(data) && isCSVPreview(data.preview)) {
@@ -173,14 +186,20 @@ export async function scrapeJobFromUrl(url: string): Promise<ParsedJobPreview> {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ url }),
   });
-  const data = await parseJsonResponse(response, "Failed to fetch job from URL");
+  const data = await parseJsonResponse(
+    response,
+    "Failed to fetch job from URL",
+  );
   if (isObject(data) && isScrapedOpportunity(data.opportunity)) {
     return opportunityToPreview(data.opportunity);
   }
   throw new Error("Unexpected job preview response");
 }
 
-export async function parseJobText(text: string, url?: string): Promise<ParsedJobPreview> {
+export async function parseJobText(
+  text: string,
+  url?: string,
+): Promise<ParsedJobPreview> {
   const response = await fetch("/api/import/job", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -194,7 +213,7 @@ export async function parseJobText(text: string, url?: string): Promise<ParsedJo
 
 export async function saveParsedJob(
   preview: ParsedJobPreview,
-  fallbackUrl: string
+  fallbackUrl: string,
 ): Promise<void> {
   const response = await fetch("/api/import/job", {
     method: "PUT",
@@ -209,10 +228,12 @@ export async function saveParsedJob(
       description: preview.fullDescription,
       requirements: preview.requirements,
       keywords: preview.keywords,
-      url: normalizeOptionalString(preview.url) || normalizeOptionalString(fallbackUrl),
+      url:
+        normalizeOptionalString(preview.url) ||
+        normalizeOptionalString(fallbackUrl),
     }),
   });
-  await parseJsonResponse(response, "Failed to save job");
+  await parseJsonResponse(response, "Failed to save opportunity");
 }
 
 export async function parseCsvContent(csv: string): Promise<CSVPreview> {
@@ -230,5 +251,5 @@ export async function saveCsvJobs(jobs: CSVJob[]): Promise<void> {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ jobs }),
   });
-  await parseJsonResponse(response, "Failed to import jobs");
+  await parseJsonResponse(response, "Failed to import opportunities");
 }

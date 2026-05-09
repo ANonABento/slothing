@@ -15,10 +15,12 @@ import {
 } from "@/lib/db/email-drafts";
 import { requireAuth, isAuthError } from "@/lib/auth";
 
+export const dynamic = "force-dynamic";
+
 // GET - Get a specific email draft
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
@@ -27,10 +29,7 @@ export async function GET(
     const draft = getEmailDraft(params.id, authResult.userId);
 
     if (!draft) {
-      return NextResponse.json(
-        { error: "Draft not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Draft not found" }, { status: 404 });
     }
 
     return NextResponse.json({ draft });
@@ -38,7 +37,7 @@ export async function GET(
     console.error("Get draft error:", error);
     return NextResponse.json(
       { error: "Failed to get email draft" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -46,7 +45,7 @@ export async function GET(
 // PUT - Update an email draft
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
@@ -54,17 +53,18 @@ export async function PUT(
   try {
     const { subject, body, context } = await request.json();
 
-    const draft = updateEmailDraft(params.id, {
-      subject,
-      body,
-      context,
-    }, authResult.userId);
+    const draft = updateEmailDraft(
+      params.id,
+      {
+        subject,
+        body,
+        context,
+      },
+      authResult.userId,
+    );
 
     if (!draft) {
-      return NextResponse.json(
-        { error: "Draft not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Draft not found" }, { status: 404 });
     }
 
     return NextResponse.json({ draft });
@@ -72,7 +72,7 @@ export async function PUT(
     console.error("Update draft error:", error);
     return NextResponse.json(
       { error: "Failed to update email draft" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -80,7 +80,7 @@ export async function PUT(
 // DELETE - Delete an email draft
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
@@ -89,10 +89,7 @@ export async function DELETE(
     const success = deleteEmailDraft(params.id, authResult.userId);
 
     if (!success) {
-      return NextResponse.json(
-        { error: "Draft not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Draft not found" }, { status: 404 });
     }
 
     return NextResponse.json({ success: true });
@@ -100,7 +97,7 @@ export async function DELETE(
     console.error("Delete draft error:", error);
     return NextResponse.json(
       { error: "Failed to delete email draft" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

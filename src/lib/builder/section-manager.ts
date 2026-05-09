@@ -5,11 +5,12 @@ export interface SectionState {
   visible: boolean;
 }
 
-export type BuilderPanel = "edit" | "preview" | "history";
+export type BuilderPanel = "edit" | "preview" | "assistant" | "history";
 
 export const BUILDER_PANELS: readonly BuilderPanel[] = [
   "edit",
   "preview",
+  "assistant",
   "history",
 ];
 
@@ -21,6 +22,7 @@ export const SECTION_LABELS: Record<BankCategory, string> = {
   skill: "Skills",
   project: "Projects",
   hackathon: "Hackathons",
+  bullet: "Bullets",
   achievement: "Achievements",
   certification: "Certifications",
 };
@@ -28,7 +30,7 @@ export const SECTION_LABELS: Record<BankCategory, string> = {
 // Uses `block` (not `flex`) so the child panel fills width without reflowing as a row flex item.
 export function getMobilePanelClasses(
   activeView: BuilderPanel,
-  panel: BuilderPanel
+  panel: BuilderPanel,
 ): string {
   return activeView === panel ? "block md:block" : "hidden md:block";
 }
@@ -39,29 +41,30 @@ export const DEFAULT_SECTION_ORDER: BankCategory[] = [
   "skill",
   "project",
   "hackathon",
+  "bullet",
   "achievement",
   "certification",
 ];
 
 export function createInitialSections(
-  categories: BankCategory[] = DEFAULT_SECTION_ORDER
+  categories: BankCategory[] = DEFAULT_SECTION_ORDER,
 ): SectionState[] {
   return categories.map((id) => ({ id, visible: true }));
 }
 
 export function toggleSectionVisibility(
   sections: SectionState[],
-  categoryId: BankCategory
+  categoryId: BankCategory,
 ): SectionState[] {
   return sections.map((s) =>
-    s.id === categoryId ? { ...s, visible: !s.visible } : s
+    s.id === categoryId ? { ...s, visible: !s.visible } : s,
   );
 }
 
 export function reorderSections(
   sections: SectionState[],
   fromIndex: number,
-  toIndex: number
+  toIndex: number,
 ): SectionState[] {
   if (
     fromIndex < 0 ||
@@ -81,7 +84,7 @@ export function reorderSections(
 export function reorderSectionsById(
   sections: SectionState[],
   fromId: BankCategory,
-  toId: BankCategory
+  toId: BankCategory,
 ): SectionState[] {
   const fromIndex = sections.findIndex((section) => section.id === fromId);
   const toIndex = sections.findIndex((section) => section.id === toId);

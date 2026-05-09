@@ -72,13 +72,13 @@ export function generateAnalyticsCSV(data: AnalyticsReportData): string {
   // Overview Section
   lines.push("=== OVERVIEW ===");
   lines.push(`Profile Completeness,${data.overview.profileCompleteness}%`);
-  lines.push(`Total Jobs Tracked,${data.overview.totalJobs}`);
+  lines.push(`Total Opportunities Tracked,${data.overview.totalJobs}`);
   lines.push(`Total Interviews,${data.overview.totalInterviews}`);
   lines.push(`Resumes Generated,${data.overview.totalResumesGenerated}`);
   lines.push("");
 
-  // Job Status Breakdown
-  lines.push("=== JOB STATUS BREAKDOWN ===");
+  // Opportunity Status Breakdown
+  lines.push("=== OPPORTUNITY STATUS BREAKDOWN ===");
   lines.push("Status,Count");
   Object.entries(data.jobs.byStatus).forEach(([status, count]) => {
     lines.push(`${escapeCSVValue(status)},${count}`);
@@ -118,8 +118,8 @@ export function generateAnalyticsCSV(data: AnalyticsReportData): string {
     lines.push("");
   }
 
-  // Job List
-  lines.push("=== JOB APPLICATIONS ===");
+  // Opportunity List
+  lines.push("=== OPPORTUNITY APPLICATIONS ===");
   lines.push("Title,Company,Status,Applied Date,Created Date");
   data.jobList.forEach((job) => {
     lines.push(

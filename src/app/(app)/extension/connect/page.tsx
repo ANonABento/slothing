@@ -2,14 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { CenteredPagePanel } from "@/components/ui/page-layout";
 import { isNextAuthConfiguredOnClient } from "@/lib/auth-client";
 import { CheckCircle, Loader2, Chrome, AlertCircle } from "lucide-react";
 
@@ -103,69 +97,68 @@ function StatusCard({
 }) {
   if (status === "loading") {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <Card className="w-full max-w-md">
-          <CardContent className="flex flex-col items-center py-12">
-            <Loader2 className="h-12 w-12 animate-spin text-primary" />
-            <p className="mt-4 text-muted-foreground">Loading...</p>
-          </CardContent>
-        </Card>
-      </div>
+      <CenteredPagePanel>
+        <div className="flex flex-col items-center py-8 text-center">
+          <Loader2 className="h-10 w-10 animate-spin text-primary" />
+          <p className="mt-4 text-sm text-muted-foreground">Loading...</p>
+        </div>
+      </CenteredPagePanel>
     );
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-            <Chrome className="h-8 w-8 text-primary" />
-          </div>
-          <CardTitle>Connect Slothing Extension</CardTitle>
-          <CardDescription>
-            Link your browser extension to your Slothing account
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-col items-center space-y-4">
-          {status === "connecting" && (
-            <>
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              <p className="text-sm text-muted-foreground">
-                Connecting your extension...
-              </p>
-            </>
-          )}
+    <CenteredPagePanel>
+      <div className="text-center">
+        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-lg bg-primary/10">
+          <Chrome className="h-7 w-7 text-primary" />
+        </div>
+        <h1 className="text-2xl font-semibold tracking-tight">
+          Connect Slothing Extension
+        </h1>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Link your browser extension to your Slothing account.
+        </p>
+      </div>
 
-          {status === "success" && (
-            <>
-              <CheckCircle className="h-12 w-12 text-green-500" />
-              <p className="text-center font-medium text-green-600">
-                Extension connected successfully!
-              </p>
-              <p className="text-center text-sm text-muted-foreground">
-                You can now close this tab and use the extension.
-              </p>
-              <Button variant="outline" onClick={() => window.close()}>
-                Close Tab
-              </Button>
-            </>
-          )}
+      <div className="mt-6 flex flex-col items-center space-y-4">
+        {status === "connecting" && (
+          <>
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <p className="text-sm text-muted-foreground">
+              Connecting your extension...
+            </p>
+          </>
+        )}
 
-          {status === "error" && (
-            <>
-              <AlertCircle className="h-12 w-12 text-destructive" />
-              <p className="text-center font-medium text-destructive">
-                Connection failed
-              </p>
-              <p className="text-center text-sm text-muted-foreground">
-                {error || "An unexpected error occurred"}
-              </p>
-              <Button onClick={onRetry}>Try Again</Button>
-            </>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+        {status === "success" && (
+          <>
+            <CheckCircle className="h-12 w-12 text-success" />
+            <p className="text-center font-medium text-success">
+              Extension connected successfully.
+            </p>
+            <p className="text-center text-sm text-muted-foreground">
+              You can now close this tab and use the extension.
+            </p>
+            <Button variant="outline" onClick={() => window.close()}>
+              Close Tab
+            </Button>
+          </>
+        )}
+
+        {status === "error" && (
+          <>
+            <AlertCircle className="h-12 w-12 text-destructive" />
+            <p className="text-center font-medium text-destructive">
+              Connection failed
+            </p>
+            <p className="text-center text-sm text-muted-foreground">
+              {error || "An unexpected error occurred"}
+            </p>
+            <Button onClick={onRetry}>Try Again</Button>
+          </>
+        )}
+      </div>
+    </CenteredPagePanel>
   );
 }
 

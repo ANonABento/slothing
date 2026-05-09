@@ -6,8 +6,16 @@
  */
 import { NextResponse } from "next/server";
 import { requireAuth, isAuthError } from "@/lib/auth";
-import { getTrackingEntries, getTrackedResumeIds } from "@/lib/db/resume-tracking";
-import { calculateVersionStats, generateRecommendation } from "@/lib/resume/compare";
+import {
+  getTrackingEntries,
+  getTrackedResumeIds,
+} from "@/lib/db/resume-tracking";
+import {
+  calculateVersionStats,
+  generateRecommendation,
+} from "@/lib/resume/compare";
+
+export const dynamic = "force-dynamic";
 
 // GET /api/resume/stats — conversion rates by resume version
 export async function GET() {
@@ -30,7 +38,7 @@ export async function GET() {
     console.error("Resume stats error:", error);
     return NextResponse.json(
       { error: "Failed to calculate resume stats" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

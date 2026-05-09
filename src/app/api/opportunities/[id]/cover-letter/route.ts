@@ -10,6 +10,8 @@ import { getProfile, getLLMConfig } from "@/lib/db";
 import { LLMClient, parseJSONFromLLM } from "@/lib/llm/client";
 import { requireAuth, isAuthError } from "@/lib/auth";
 
+export const dynamic = "force-dynamic";
+
 interface CoverLetterResponse {
   coverLetter: string;
   highlights: string[];

@@ -17,7 +17,7 @@ const APP_PAGES = [
   "/builder",
   "/tailor",
   "/cover-letter",
-  "/jobs",
+  "/opportunities",
   "/settings",
 ];
 
@@ -146,7 +146,7 @@ test.describe("Accessibility - Keyboard Navigation", () => {
   }) => {
     test.skip(
       browserName === "webkit",
-      "WebKit automation does not advance Tab focus reliably in this environment."
+      "WebKit automation does not advance Tab focus reliably in this environment.",
     );
 
     await page.goto(LANDING_PAGE.path);
@@ -180,7 +180,7 @@ test.describe("Accessibility - Keyboard Navigation", () => {
 
     await page.keyboard.press("Enter");
     await expect(
-      page.getByRole("banner").getByRole("link", { name: "Features" })
+      page.getByRole("banner").getByRole("link", { name: "Features" }),
     ).toBeVisible();
   });
 });
@@ -202,7 +202,9 @@ test.describe("Accessibility - Screen Reader Support", () => {
       const alt = await image.getAttribute("alt");
       const role = await image.getAttribute("role");
 
-      expect(alt !== null || role === "presentation" || role === "none").toBe(true);
+      expect(alt !== null || role === "presentation" || role === "none").toBe(
+        true,
+      );
     }
   });
 
@@ -251,9 +253,13 @@ test.describe("Accessibility - Screen Reader Support", () => {
       });
 
       if (!hasName) {
-        const buttonHtml = await button.evaluate((element) => element.outerHTML);
+        const buttonHtml = await button.evaluate(
+          (element) => element.outerHTML,
+        );
         // eslint-disable-next-line no-console
-        console.log(`Button missing accessible name: ${buttonHtml.substring(0, 100)}`);
+        console.log(
+          `Button missing accessible name: ${buttonHtml.substring(0, 100)}`,
+        );
       }
 
       const hasOnlySvg =
@@ -275,7 +281,7 @@ test.describe("Accessibility - Color and Contrast", () => {
   test("focus indicators are visible", async ({ page, browserName }) => {
     test.skip(
       browserName === "webkit",
-      "WebKit automation does not advance Tab focus reliably in this environment."
+      "WebKit automation does not advance Tab focus reliably in this environment.",
     );
 
     await page.goto(LANDING_PAGE.path);
@@ -310,7 +316,9 @@ test.describe("Accessibility - Motion and Animation", () => {
     await preparePage(page);
     await page.waitForLoadState("networkidle");
 
-    const animatedElements = page.locator(".animate-spin, .animate-pulse, [class*='animate']");
+    const animatedElements = page.locator(
+      ".animate-spin, .animate-pulse, [class*='animate']",
+    );
     const count = await animatedElements.count();
 
     for (let index = 0; index < count; index++) {

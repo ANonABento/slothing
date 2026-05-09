@@ -3,6 +3,8 @@ import { getLLMConfig } from "@/lib/db";
 import { requireAuth, isAuthError } from "@/lib/auth";
 import { isLLMConfigured } from "@/lib/llm/is-configured";
 
+export const dynamic = "force-dynamic";
+
 /**
  * Lightweight endpoint to check if LLM is configured.
  * Used by sidebar status indicator — returns only boolean + provider name.
@@ -24,4 +26,3 @@ export async function GET() {
     return NextResponse.json({ configured: false, provider: null });
   }
 }
-

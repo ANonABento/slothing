@@ -3,11 +3,23 @@ import path from "path";
 import { needsOCRFallback, extractTextWithOCR } from "./ocr";
 
 function toAbsolutePath(filePath: string): string {
-  return path.isAbsolute(filePath) ? filePath : path.join(process.cwd(), filePath);
+  return path.isAbsolute(filePath)
+    ? filePath
+    : path.join(process.cwd(), filePath);
+}
+
+function decodeUtf16Be(buffer: Buffer): string {
+  const start = buffer[0] === 0xfe && buffer[1] === 0xff ? 2 : 0;
+  const chars: string[] = [];
+  for (let i = start; i + 1 < buffer.length; i += 2) {
+    const code = (buffer[i] << 8) | buffer[i + 1];
+    if (code > 0) chars.push(String.fromCharCode(code));
+  }
+  return chars.join("");
 }
 
 function decodePdfLiteralString(value: string): string {
-  return value
+  const decoded = value
     .replace(/\\([()\\])/g, "$1")
     .replace(/\\n/g, "\n")
     .replace(/\\r/g, "\r")
@@ -15,8 +27,19 @@ function decodePdfLiteralString(value: string): string {
     .replace(/\\b/g, "\b")
     .replace(/\\f/g, "\f")
     .replace(/\\([0-7]{1,3})/g, (_, octal: string) =>
-      String.fromCharCode(parseInt(octal, 8))
+      String.fromCharCode(parseInt(octal, 8)),
     );
+
+  const bytes = Buffer.from(
+    Array.from(decoded, (char) => char.charCodeAt(0) & 0xff),
+  );
+  const hasUtf16Bom = bytes[0] === 0xfe && bytes[1] === 0xff;
+  const nullByteCount = bytes.filter((byte) => byte === 0).length;
+  if (hasUtf16Bom || nullByteCount > bytes.length / 4) {
+    return decodeUtf16Be(bytes);
+  }
+
+  return decoded.replace(/\0/g, "");
 }
 
 function extractPdfTextFallback(dataBuffer: Buffer): string {
@@ -48,6 +71,14 @@ function extractPdfTextFallback(dataBuffer: Buffer): string {
     .join("\n");
 }
 
+function sanitizeExtractedPdfText(text: string): string {
+  return text
+    .replace(/þÿ/g, "")
+    .replace(/\u0000/g, "")
+    .replace(/(\d)Í(?=-[A-Za-z]{2,})/g, "$1")
+    .replace(/[ \t]+\n/g, "\n");
+}
+
 export async function extractTextFromPDF(filePath: string): Promise<string> {
   const pdf = (await import("pdf-parse")).default;
   const dataBuffer = fs.readFileSync(toAbsolutePath(filePath));
@@ -55,23 +86,24 @@ export async function extractTextFromPDF(filePath: string): Promise<string> {
 
   try {
     const data = await pdf(dataBuffer);
+    const parsedText = sanitizeExtractedPdfText(data.text);
 
-    if (!needsOCRFallback(data.text)) {
-      return data.text;
+    if (!needsOCRFallback(parsedText)) {
+      return parsedText;
     }
   } catch {
     if (fallbackText) {
-      return fallbackText;
+      return sanitizeExtractedPdfText(fallbackText);
     }
 
-    return extractTextWithOCR(dataBuffer);
+    return sanitizeExtractedPdfText(await extractTextWithOCR(dataBuffer));
   }
 
   if (fallbackText) {
-    return fallbackText;
+    return sanitizeExtractedPdfText(fallbackText);
   }
 
-  return extractTextWithOCR(dataBuffer);
+  return sanitizeExtractedPdfText(await extractTextWithOCR(dataBuffer));
 }
 
 export async function extractTextFromDocx(buffer: Buffer): Promise<string> {

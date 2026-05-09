@@ -24,6 +24,7 @@ import {
   Sparkles,
   Check,
   Trophy,
+  ListChecks,
   type LucideIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -41,6 +42,7 @@ const SECTION_ICONS: Record<BankCategory, LucideIcon> = {
   skill: Wrench,
   project: FolderOpen,
   hackathon: Trophy,
+  bullet: ListChecks,
   achievement: Award,
   certification: Shield,
 };
@@ -318,7 +320,8 @@ export function SectionList({
 
           <div className="border-t px-4 py-2">
             <p className="text-xs text-muted-foreground">
-              {selectedIds.size} of {pluralize(entries.length, "entry", "entries")} selected
+              {selectedIds.size} of{" "}
+              {pluralize(entries.length, "entry", "entries")} selected
             </p>
           </div>
         </>

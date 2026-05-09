@@ -1,6 +1,10 @@
 // Extension authentication utilities
 import { NextRequest, NextResponse } from "next/server";
 import db from "@/lib/db/legacy";
+import {
+  calculateQuestionSimilarity,
+  normalizeQuestion,
+} from "@/lib/answers/learned-answers";
 
 interface ExtensionSession {
   id: string;
@@ -16,42 +20,61 @@ export type ExtensionAuthResult =
 /**
  * Validate extension token and return user ID
  */
-export function requireExtensionAuth(request: NextRequest): ExtensionAuthResult {
+export function requireExtensionAuth(
+  request: NextRequest,
+): ExtensionAuthResult {
   const token = request.headers.get("X-Extension-Token");
 
   if (!token) {
     return {
       success: false,
-      response: NextResponse.json({ error: "No token provided" }, { status: 401 }),
+      response: NextResponse.json(
+        { error: "No token provided" },
+        { status: 401 },
+      ),
     };
   }
 
   try {
-    const session = db.prepare(`
+    const session = db
+      .prepare(
+        `
       SELECT * FROM extension_sessions WHERE token = ?
-    `).get(token) as ExtensionSession | undefined;
+    `,
+      )
+      .get(token) as ExtensionSession | undefined;
 
     if (!session) {
       return {
         success: false,
-        response: NextResponse.json({ error: "Invalid token" }, { status: 401 }),
+        response: NextResponse.json(
+          { error: "Invalid token" },
+          { status: 401 },
+        ),
       };
     }
 
     // Check expiry
     const expiresAt = new Date(session.expires_at);
     if (expiresAt < new Date()) {
-      db.prepare(`DELETE FROM extension_sessions WHERE id = ? AND user_id = ?`).run(session.id, session.user_id);
+      db.prepare(
+        `DELETE FROM extension_sessions WHERE id = ? AND user_id = ?`,
+      ).run(session.id, session.user_id);
       return {
         success: false,
-        response: NextResponse.json({ error: "Token expired" }, { status: 401 }),
+        response: NextResponse.json(
+          { error: "Token expired" },
+          { status: 401 },
+        ),
       };
     }
 
     // Update last used
-    db.prepare(`
+    db.prepare(
+      `
       UPDATE extension_sessions SET last_used_at = ? WHERE id = ? AND user_id = ?
-    `).run(new Date().toISOString(), session.id, session.user_id);
+    `,
+    ).run(new Date().toISOString(), session.id, session.user_id);
 
     return {
       success: true,
@@ -61,29 +84,14 @@ export function requireExtensionAuth(request: NextRequest): ExtensionAuthResult 
     console.error("Extension auth error:", error);
     return {
       success: false,
-      response: NextResponse.json({ error: "Authentication failed" }, { status: 500 }),
+      response: NextResponse.json(
+        { error: "Authentication failed" },
+        { status: 500 },
+      ),
     };
   }
 }
 
-/**
- * Normalize question text for similarity matching
- */
-export function normalizeQuestion(question: string): string {
-  return question
-    .toLowerCase()
-    .replace(/[^\w\s]/g, "")
-    .replace(/\s+/g, " ")
-    .trim();
-}
+export { normalizeQuestion };
 
-/**
- * Calculate Jaccard similarity between two strings
- */
-export function calculateSimilarity(a: string, b: string): number {
-  const wordsA = new Set(a.split(" "));
-  const wordsB = new Set(b.split(" "));
-  const intersection = Array.from(wordsA).filter((w) => wordsB.has(w)).length;
-  const union = new Set([...Array.from(wordsA), ...Array.from(wordsB)]).size;
-  return union > 0 ? intersection / union : 0;
-}
+export const calculateSimilarity = calculateQuestionSimilarity;

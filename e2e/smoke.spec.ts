@@ -13,7 +13,7 @@ test.describe("Smoke Tests", () => {
       { url: "/dashboard", name: "Dashboard" },
       { url: "/bank", name: "Documents" },
       { url: "/studio", name: "Document Studio" },
-      { url: "/jobs", name: "Jobs" },
+      { url: "/opportunities", name: "Opportunities" },
       { url: "/settings", name: "Settings" },
     ];
 

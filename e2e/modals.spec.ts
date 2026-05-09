@@ -148,19 +148,21 @@ test.describe.skip("Modals - Keyboard Shortcuts", () => {
   });
 });
 
-test.describe.skip("Modals - Jobs Page", () => {
+test.describe.skip("Modals - Opportunities Page", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/");
     await page.evaluate(() => {
       localStorage.setItem("get_me_job_onboarding_completed", "true");
     });
-    await page.goto("/jobs");
+    await page.goto("/opportunities");
     await page.waitForLoadState("networkidle");
   });
 
-  test("add job modal opens and renders correctly", async ({ page }) => {
+  test("add opportunity modal opens and renders correctly", async ({
+    page,
+  }) => {
     const addButton = page
-      .getByRole("button", { name: /add job|paste|new/i })
+      .getByRole("button", { name: /add opportunity|paste|new/i })
       .first();
 
     if (await addButton.isVisible()) {
@@ -175,7 +177,7 @@ test.describe.skip("Modals - Jobs Page", () => {
         const hasTextArea = await textArea.isVisible().catch(() => false);
 
         // Take screenshot
-        await expect(dialog).toHaveScreenshot("add-job-modal.png", {
+        await expect(dialog).toHaveScreenshot("add-opportunity-modal.png", {
           animations: "disabled",
         });
 
@@ -186,9 +188,11 @@ test.describe.skip("Modals - Jobs Page", () => {
     }
   });
 
-  test("job details slide-over panel", async ({ page }) => {
-    // Check if there are any jobs to click
-    const jobCard = page.locator("[data-testid='job-item'], .job-card").first();
+  test("opportunity details slide-over panel", async ({ page }) => {
+    // Check if there are any opportunities to click
+    const jobCard = page
+      .locator("[data-testid='opportunity-item'], .opportunity-card")
+      .first();
 
     if (await jobCard.isVisible({ timeout: 1000 }).catch(() => false)) {
       await jobCard.click();
@@ -198,7 +202,7 @@ test.describe.skip("Modals - Jobs Page", () => {
         "[role='dialog'], .slide-over, [class*='Sheet']",
       );
       if (await panel.isVisible({ timeout: 1000 }).catch(() => false)) {
-        await expect(panel).toHaveScreenshot("job-details-panel.png", {
+        await expect(panel).toHaveScreenshot("opportunity-details-panel.png", {
           animations: "disabled",
         });
       }
@@ -358,7 +362,7 @@ test.describe.skip("Modals - General Behavior", () => {
 
   test("modals have backdrop overlay", async ({ page }) => {
     // Trigger any modal
-    await page.goto("/jobs");
+    await page.goto("/opportunities");
     const addButton = page
       .getByRole("button", { name: /add|paste|new/i })
       .first();
@@ -378,7 +382,7 @@ test.describe.skip("Modals - General Behavior", () => {
   });
 
   test("clicking backdrop closes modal", async ({ page }) => {
-    await page.goto("/jobs");
+    await page.goto("/opportunities");
     const addButton = page
       .getByRole("button", { name: /add|paste|new/i })
       .first();
@@ -398,7 +402,7 @@ test.describe.skip("Modals - General Behavior", () => {
   });
 
   test("modals prevent body scroll", async ({ page }) => {
-    await page.goto("/jobs");
+    await page.goto("/opportunities");
     const addButton = page
       .getByRole("button", { name: /add|paste|new/i })
       .first();
@@ -427,7 +431,7 @@ test.describe.skip("Confirmations and Alerts", () => {
   });
 
   test("delete confirmation appears", async ({ page }) => {
-    await page.goto("/jobs");
+    await page.goto("/opportunities");
     await page.waitForLoadState("networkidle");
 
     // Find a delete button

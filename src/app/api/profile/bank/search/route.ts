@@ -8,6 +8,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { searchBankEntries } from "@/lib/db/profile-bank";
 import { requireAuth, isAuthError } from "@/lib/auth";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(request: NextRequest) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
@@ -19,7 +21,7 @@ export async function GET(request: NextRequest) {
     if (!query || query.trim().length === 0) {
       return NextResponse.json(
         { error: "Query parameter 'q' is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -29,7 +31,7 @@ export async function GET(request: NextRequest) {
     console.error("Search bank entries error:", error);
     return NextResponse.json(
       { error: "Failed to search bank entries" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

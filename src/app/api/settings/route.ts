@@ -15,8 +15,13 @@ import {
   getOpportunityReviewEnabled,
   setOpportunityReviewEnabled,
 } from "@/lib/settings/opportunity-review";
-import { getStoredLocaleSetting, setLocaleSetting } from "@/lib/settings/locale";
+import {
+  getStoredLocaleSetting,
+  setLocaleSetting,
+} from "@/lib/settings/locale";
 import { LOCALE_COOKIE_NAME } from "@/lib/format/time";
+
+export const dynamic = "force-dynamic";
 
 export async function GET() {
   const authResult = await requireAuth();
@@ -35,7 +40,7 @@ export async function GET() {
     console.error("Get settings error:", error);
     return NextResponse.json(
       { error: "Failed to get settings" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -56,7 +61,7 @@ export async function PUT(request: NextRequest) {
       }));
       return NextResponse.json(
         { error: "Validation failed", errors },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -68,7 +73,7 @@ export async function PUT(request: NextRequest) {
     if (data.opportunityReview) {
       setOpportunityReviewEnabled(
         data.opportunityReview.enabled,
-        authResult.userId
+        authResult.userId,
       );
     }
     if (data.locale) {
@@ -88,7 +93,7 @@ export async function PUT(request: NextRequest) {
     console.error("Update settings error:", error);
     return NextResponse.json(
       { error: "Failed to update settings" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -110,7 +115,7 @@ export async function POST(request: NextRequest) {
       }));
       return NextResponse.json(
         { error: "Invalid LLM configuration", errors },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -122,7 +127,10 @@ export async function POST(request: NextRequest) {
 
     const response = await client.complete({
       messages: [
-        { role: "user", content: "Say 'Connection successful!' and nothing else." },
+        {
+          role: "user",
+          content: "Say 'Connection successful!' and nothing else.",
+        },
       ],
       temperature: 0,
       maxTokens: 50,
@@ -136,7 +144,7 @@ export async function POST(request: NextRequest) {
     console.error("Test connection error:", error);
     return NextResponse.json(
       { error: "Connection failed. Check your API key and settings." },
-      { status: 400 }
+      { status: 400 },
     );
   }
 }

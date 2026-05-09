@@ -16,6 +16,8 @@ import {
 } from "@/lib/google/drive";
 import { isGoogleConnected } from "@/lib/google/client";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(request: NextRequest) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
@@ -24,7 +26,7 @@ export async function POST(request: NextRequest) {
   if (!connected) {
     return NextResponse.json(
       { error: "Google account not connected" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -45,7 +47,7 @@ export async function POST(request: NextRequest) {
       if (!content) {
         return NextResponse.json(
           { error: "No content provided for backup" },
-          { status: 400 }
+          { status: 400 },
         );
       }
 
@@ -73,7 +75,7 @@ export async function POST(request: NextRequest) {
     const result = await uploadFn(
       fileName || file.name,
       buffer,
-      file.type || "application/pdf"
+      file.type || "application/pdf",
     );
 
     if (!result.success) {
@@ -95,7 +97,7 @@ export async function POST(request: NextRequest) {
     console.error("Drive upload error:", error);
     return NextResponse.json(
       { error: "Failed to upload file" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

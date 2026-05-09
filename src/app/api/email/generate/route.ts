@@ -13,6 +13,8 @@ import { generateEmail, EMAIL_TEMPLATE_INFO } from "@/lib/email/templates";
 import { generateEmailSchema } from "@/lib/constants";
 import { requireAuth, isAuthError } from "@/lib/auth";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(request: NextRequest) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
@@ -29,7 +31,7 @@ export async function POST(request: NextRequest) {
       }));
       return NextResponse.json(
         { error: "Validation failed", errors },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -38,7 +40,7 @@ export async function POST(request: NextRequest) {
     if (!EMAIL_TEMPLATE_INFO[type]) {
       return NextResponse.json(
         { error: "Invalid email type" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -64,7 +66,10 @@ Name: ${profile.contact.name}
 Email: ${profile.contact.email || "N/A"}
 Phone: ${profile.contact.phone || "N/A"}
 Current Role: ${profile.experiences[0]?.title || "N/A"} at ${profile.experiences[0]?.company || "N/A"}
-Skills: ${profile.skills.slice(0, 10).map((s) => s.name).join(", ")}
+Skills: ${profile.skills
+              .slice(0, 10)
+              .map((s) => s.name)
+              .join(", ")}
           `.trim()
           : "No profile data available";
 
@@ -111,7 +116,9 @@ Guidelines:
           maxTokens: 1000,
         });
 
-        const parsed = parseJSONFromLLM<{ subject: string; body: string }>(response);
+        const parsed = parseJSONFromLLM<{ subject: string; body: string }>(
+          response,
+        );
         if (parsed.subject && parsed.body) {
           return NextResponse.json({
             success: true,
@@ -124,7 +131,10 @@ Guidelines:
           });
         }
       } catch (llmError) {
-        console.error("LLM generation failed, falling back to template:", llmError);
+        console.error(
+          "LLM generation failed, falling back to template:",
+          llmError,
+        );
       }
     }
 
@@ -140,7 +150,7 @@ Guidelines:
     console.error("Email generation error:", error);
     return NextResponse.json(
       { error: "Failed to generate email" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

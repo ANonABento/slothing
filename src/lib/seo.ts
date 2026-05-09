@@ -34,6 +34,12 @@ const pages = {
       "Manage your resume sections, work experiences, and career documents in one place.",
     path: "/bank",
   },
+  answerBank: {
+    title: "Answer Bank",
+    description:
+      "Manage reusable answers for application forms, repeated questions, and autofill workflows.",
+    path: "/answer-bank",
+  },
   studio: {
     title: "Document Studio",
     description:

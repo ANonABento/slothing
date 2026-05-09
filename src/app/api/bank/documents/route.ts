@@ -7,7 +7,12 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth, isAuthError } from "@/lib/auth";
-import { deleteSourceDocuments, getSourceDocuments } from "@/lib/db/profile-bank";
+import {
+  deleteSourceDocuments,
+  getSourceDocuments,
+} from "@/lib/db/profile-bank";
+
+export const dynamic = "force-dynamic";
 
 const INVALID_DOCUMENT_IDS_ERROR =
   "documentIds must be a non-empty array of document ids";
@@ -36,12 +41,14 @@ export async function GET() {
   if (isAuthError(authResult)) return authResult;
 
   try {
-    return NextResponse.json({ documents: getSourceDocuments(authResult.userId) });
+    return NextResponse.json({
+      documents: getSourceDocuments(authResult.userId),
+    });
   } catch (error) {
     console.error("Get source documents error:", error);
     return NextResponse.json(
       { error: "Failed to get source documents" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -57,7 +64,7 @@ export async function DELETE(request: NextRequest) {
     } catch {
       return NextResponse.json(
         { error: "Request body must be valid JSON" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -65,7 +72,7 @@ export async function DELETE(request: NextRequest) {
     if (!documentIds) {
       return NextResponse.json(
         { error: INVALID_DOCUMENT_IDS_ERROR },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -75,7 +82,7 @@ export async function DELETE(request: NextRequest) {
     console.error("Delete source documents error:", error);
     return NextResponse.json(
       { error: "Failed to delete source documents" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

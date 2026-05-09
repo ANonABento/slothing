@@ -12,7 +12,7 @@ const APP_PAGES = [
   "/dashboard",
   "/bank",
   "/studio",
-  "/jobs",
+  "/opportunities",
   "/settings",
 ];
 
@@ -34,7 +34,9 @@ test.describe("Responsive - Mobile (375px)", () => {
     await page.goto("/");
     await page.waitForLoadState("networkidle");
 
-    await expect(page.getByRole("button", { name: "Toggle menu" })).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Toggle menu" }),
+    ).toBeVisible();
   });
 
   test("mobile menu reveals navigation links", async ({ page }) => {
@@ -44,19 +46,24 @@ test.describe("Responsive - Mobile (375px)", () => {
     await page.getByRole("button", { name: "Toggle menu" }).click();
 
     await expect(
-      page.getByRole("banner").getByRole("link", { name: "Features" })
+      page.getByRole("banner").getByRole("link", { name: "Features" }),
     ).toBeVisible();
     await expect(
-      page.getByRole("banner").getByRole("link", { name: "How It Works" })
+      page.getByRole("banner").getByRole("link", { name: "How It Works" }),
     ).toBeVisible();
   });
 
-  test("landing page content does not overflow horizontally", async ({ page }) => {
+  test("landing page content does not overflow horizontally", async ({
+    page,
+  }) => {
     await page.goto("/");
     await page.waitForLoadState("networkidle");
 
     const hasHorizontalScroll = await page.evaluate(() => {
-      return document.documentElement.scrollWidth > document.documentElement.clientWidth;
+      return (
+        document.documentElement.scrollWidth >
+        document.documentElement.clientWidth
+      );
     });
 
     expect(hasHorizontalScroll).toBe(false);
@@ -80,7 +87,9 @@ test.describe("Responsive - Mobile (375px)", () => {
     }
   });
 
-  test("app pages are accessible on mobile with auth bypass", async ({ page }) => {
+  test("app pages are accessible on mobile with auth bypass", async ({
+    page,
+  }) => {
     for (const path of APP_PAGES) {
       await page.goto(path);
       await page.waitForLoadState("networkidle");
@@ -116,7 +125,7 @@ test.describe("Responsive - Mobile (375px)", () => {
       await expect(page.locator("#builder-edit-panel")).toBeHidden();
       await expect(page.getByRole("tab", { name: /preview/i })).toHaveAttribute(
         "aria-selected",
-        "true"
+        "true",
       );
     });
 
@@ -126,7 +135,7 @@ test.describe("Responsive - Mobile (375px)", () => {
       const overflow = await page.evaluate(
         () =>
           document.documentElement.scrollWidth >
-          document.documentElement.clientWidth
+          document.documentElement.clientWidth,
       );
       expect(overflow).toBe(false);
     });
@@ -143,7 +152,7 @@ test.describe("Responsive - Tablet (768px)", () => {
   test("landing page layout adapts for tablet", async ({ page }, testInfo) => {
     test.skip(
       testInfo.project.name !== "chromium",
-      "Responsive visual baselines are only maintained for the desktop Chromium project."
+      "Responsive visual baselines are only maintained for the desktop Chromium project.",
     );
 
     await page.goto("/");
@@ -179,10 +188,10 @@ test.describe("Responsive - Desktop (1280px)", () => {
     await page.waitForLoadState("networkidle");
 
     await expect(
-      page.getByRole("banner").getByRole("link", { name: "Features" })
+      page.getByRole("banner").getByRole("link", { name: "Features" }),
     ).toBeVisible();
     await expect(
-      page.getByRole("banner").getByRole("link", { name: "Get Started" })
+      page.getByRole("banner").getByRole("link", { name: "Get Started" }),
     ).toBeVisible();
   });
 
@@ -199,7 +208,9 @@ test.describe("Responsive - Desktop (1280px)", () => {
     expect(box?.width ?? 0).toBeLessThanOrEqual(VIEWPORTS.desktop.width);
   });
 
-  test("dashboard is accessible on desktop with auth bypass", async ({ page }) => {
+  test("dashboard is accessible on desktop with auth bypass", async ({
+    page,
+  }) => {
     await page.goto("/dashboard");
     await page.waitForLoadState("networkidle");
 
@@ -207,7 +218,9 @@ test.describe("Responsive - Desktop (1280px)", () => {
     expect(page.url()).not.toContain("/sign-in");
   });
 
-  test("studio shows both resume panels and no tab strip on desktop", async ({ page }) => {
+  test("studio shows both resume panels and no tab strip on desktop", async ({
+    page,
+  }) => {
     await page.goto("/studio");
     await page.waitForLoadState("networkidle");
 
@@ -240,7 +253,7 @@ test.describe("Responsive - Wide Screen (1920px)", () => {
   test("wide layout remains visually stable", async ({ page }, testInfo) => {
     test.skip(
       testInfo.project.name !== "chromium",
-      "Responsive visual baselines are only maintained for the desktop Chromium project."
+      "Responsive visual baselines are only maintained for the desktop Chromium project.",
     );
 
     await page.goto("/");

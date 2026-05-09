@@ -12,6 +12,8 @@ import { extractJSON } from "@/lib/utils";
 import { requireAuth, isAuthError } from "@/lib/auth";
 import type { TailoredResume } from "@/lib/resume/generator";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(request: NextRequest) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
@@ -27,7 +29,7 @@ export async function POST(request: NextRequest) {
     if (!resume || !keywordsMissing?.length || !jobDescription) {
       return NextResponse.json(
         { error: "Missing required fields" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -35,7 +37,7 @@ export async function POST(request: NextRequest) {
     if (!llmConfig) {
       return NextResponse.json(
         { error: "No LLM provider configured. Visit Settings to set one up." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -70,7 +72,8 @@ Return the improved resume as a JSON object with the same structure (contact, su
     const parsed = extractJSON(response);
     const improved: TailoredResume = {
       contact: resume.contact,
-      summary: typeof parsed.summary === "string" ? parsed.summary : resume.summary,
+      summary:
+        typeof parsed.summary === "string" ? parsed.summary : resume.summary,
       experiences: Array.isArray(parsed.experiences)
         ? (parsed.experiences as TailoredResume["experiences"])
         : resume.experiences,
@@ -85,7 +88,7 @@ Return the improved resume as a JSON object with the same structure (contact, su
     console.error("Auto-fix error:", error);
     return NextResponse.json(
       { error: "Failed to auto-fix resume" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

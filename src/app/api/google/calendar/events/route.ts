@@ -17,6 +17,8 @@ import {
 } from "@/lib/google/calendar";
 import { isGoogleConnected } from "@/lib/google/client";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(request: NextRequest) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
@@ -25,7 +27,7 @@ export async function GET(request: NextRequest) {
   if (!connected) {
     return NextResponse.json(
       { error: "Google account not connected" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -60,7 +62,7 @@ export async function GET(request: NextRequest) {
     console.error("Failed to list calendar events:", error);
     return NextResponse.json(
       { error: "Failed to fetch calendar events" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -73,7 +75,7 @@ export async function POST(request: NextRequest) {
   if (!connected) {
     return NextResponse.json(
       { error: "Google account not connected" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -93,7 +95,7 @@ export async function POST(request: NextRequest) {
     if (!title || !startDate) {
       return NextResponse.json(
         { error: "Missing required fields: title, startDate" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -111,7 +113,7 @@ export async function POST(request: NextRequest) {
     if (!result.success) {
       return NextResponse.json(
         { error: result.error || "Failed to create event" },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -124,7 +126,7 @@ export async function POST(request: NextRequest) {
     console.error("Failed to create calendar event:", error);
     return NextResponse.json(
       { error: "Failed to create calendar event" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

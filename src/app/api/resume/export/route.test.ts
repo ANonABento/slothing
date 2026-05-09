@@ -85,21 +85,18 @@ describe("resume export route", () => {
         resumeId: "resume-1",
         templateId: "custom-template",
         format: "html",
-      })
+      }),
     );
 
-    expect(mocks.getGeneratedResume).toHaveBeenCalledWith(
-      "resume-1",
-      "user-1"
-    );
+    expect(mocks.getGeneratedResume).toHaveBeenCalledWith("resume-1", "user-1");
     expect(mocks.getTemplateWithCustom).toHaveBeenCalledWith(
       "custom-template",
-      "user-1"
+      "user-1",
     );
     expect(mocks.generateResumeHTML).toHaveBeenCalledWith(
       resume,
       "custom-template",
-      customTemplate
+      customTemplate,
     );
     await expect(response.text()).resolves.toBe("<html>custom resume</html>");
   });
@@ -110,13 +107,15 @@ describe("resume export route", () => {
         resumeId: "resume-1",
         templateId: "custom-template",
         format: "pdf",
-      })
+      }),
     );
 
     expect(mocks.getTemplateWithCustom).toHaveBeenCalledWith(
       "custom-template",
-      "user-1"
+      "user-1",
     );
-    expect(mocks.generatePDF).toHaveBeenCalledWith("<html>custom resume</html>");
+    expect(mocks.generatePDF).toHaveBeenCalledWith(
+      "<html>custom resume</html>",
+    );
   });
 });

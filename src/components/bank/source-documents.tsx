@@ -23,6 +23,7 @@ interface SourceDocumentsProps {
   onFilterByDocument: (documentId: string | null) => void;
   activeDocumentId: string | null;
   onDelete?: () => void;
+  onDocumentsChange?: (documents: SourceDocument[]) => void;
 }
 
 function formatFileSize(bytes: number): string {
@@ -36,6 +37,7 @@ export function SourceDocuments({
   onFilterByDocument,
   activeDocumentId,
   onDelete,
+  onDocumentsChange,
 }: SourceDocumentsProps) {
   const [documents, setDocuments] = useState<SourceDocument[]>([]);
   const [loading, setLoading] = useState(true);
@@ -53,7 +55,9 @@ export function SourceDocuments({
       const res = await fetch("/api/bank/documents");
       if (!res.ok) throw new Error("Failed to fetch");
       const data = await res.json();
-      setDocuments(data.documents || []);
+      const nextDocuments = data.documents || [];
+      setDocuments(nextDocuments);
+      onDocumentsChange?.(nextDocuments);
     } catch (error) {
       showErrorToast(error, {
         title: "Could not load source files",
@@ -62,7 +66,7 @@ export function SourceDocuments({
     } finally {
       setLoading(false);
     }
-  }, [showErrorToast]);
+  }, [onDocumentsChange, showErrorToast]);
 
   useEffect(() => {
     fetchDocuments();
@@ -282,7 +286,8 @@ export function SourceDocuments({
           <DialogHeader>
             <DialogTitle>Delete selected source files?</DialogTitle>
             <DialogDescription>
-              This will permanently delete {pluralize(selectedCount, "source file")}
+              This will permanently delete{" "}
+              {pluralize(selectedCount, "source file")}
               and all associated chunks. This action cannot be undone.
             </DialogDescription>
           </DialogHeader>

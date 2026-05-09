@@ -13,7 +13,7 @@ function renderDialog(props?: Partial<ComponentProps<typeof AddJobDialog>>) {
         onCreated={vi.fn()}
         {...props}
       />
-    </ToastProvider>
+    </ToastProvider>,
   );
 }
 
@@ -24,9 +24,14 @@ function fillRequiredFields() {
   fireEvent.change(screen.getByPlaceholderText("Acme Corp"), {
     target: { value: "Acme" },
   });
-  fireEvent.change(screen.getByPlaceholderText("Paste the full job description here..."), {
-    target: { value: "Build user interfaces." },
-  });
+  fireEvent.change(
+    screen.getByPlaceholderText(
+      "Paste the full opportunity description here...",
+    ),
+    {
+      target: { value: "Build user interfaces." },
+    },
+  );
 }
 
 describe("AddJobDialog", () => {
@@ -43,18 +48,20 @@ describe("AddJobDialog", () => {
     const onCreated = vi.fn();
     vi.mocked(fetch).mockResolvedValue({
       ok: false,
-      json: async () => ({ error: "Job could not be saved" }),
+      json: async () => ({ error: "Opportunity could not be saved" }),
     } as Response);
 
     renderDialog({ onOpenChange, onCreated });
     fillRequiredFields();
-    fireEvent.click(screen.getByRole("button", { name: "Add Job" }));
+    fireEvent.click(screen.getByRole("button", { name: "Add Opportunity" }));
 
     await waitFor(() => {
-      expect(screen.getByText("Could not add job")).toBeInTheDocument();
+      expect(screen.getByText("Could not add opportunity")).toBeInTheDocument();
     });
-    expect(screen.getByText("Job could not be saved")).toBeInTheDocument();
-    expect(screen.getByText("Add New Job")).toBeInTheDocument();
+    expect(
+      screen.getByText("Opportunity could not be saved"),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Add New Opportunity")).toBeInTheDocument();
     expect(onCreated).not.toHaveBeenCalled();
     expect(onOpenChange).not.toHaveBeenCalledWith(false);
   });
@@ -84,10 +91,15 @@ describe("AddJobDialog", () => {
       expect(screen.getByDisplayValue("Backend Engineer")).toBeInTheDocument();
     });
     expect(screen.getByDisplayValue("Beta")).toBeInTheDocument();
-    expect(screen.getByDisplayValue("Build APIs with TypeScript.")).toBeInTheDocument();
-    expect(fetch).toHaveBeenCalledWith("/api/opportunities/scrape", expect.objectContaining({
-      method: "POST",
-      body: JSON.stringify({ url: "https://jobs.lever.co/beta/123" }),
-    }));
+    expect(
+      screen.getByDisplayValue("Build APIs with TypeScript."),
+    ).toBeInTheDocument();
+    expect(fetch).toHaveBeenCalledWith(
+      "/api/opportunities/scrape",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({ url: "https://jobs.lever.co/beta/123" }),
+      }),
+    );
   });
 });

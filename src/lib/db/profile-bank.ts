@@ -8,8 +8,27 @@ interface BankEntryRow {
   category: string;
   content: string;
   source_document_id: string | null;
+  parent_id?: string | null;
+  component_type?: string | null;
+  component_order?: number | null;
+  source_section?: string | null;
   confidence_score: number;
   created_at: string;
+}
+
+function readContent(row: BankEntryRow): Record<string, unknown> {
+  const content = JSON.parse(row.content) as Record<string, unknown>;
+  if (row.parent_id && !content.parentId) content.parentId = row.parent_id;
+  if (row.component_type && !content.componentType) {
+    content.componentType = row.component_type;
+  }
+  if (typeof row.component_order === "number" && content.order === undefined) {
+    content.order = row.component_order;
+  }
+  if (row.source_section && !content.sourceSection) {
+    content.sourceSection = row.source_section;
+  }
+  return content;
 }
 
 function rowToEntry(row: BankEntryRow): BankEntry {
@@ -17,42 +36,123 @@ function rowToEntry(row: BankEntryRow): BankEntry {
     id: row.id,
     userId: row.user_id,
     category: row.category as BankCategory,
-    content: JSON.parse(row.content),
+    content: readContent(row),
     sourceDocumentId: row.source_document_id ?? undefined,
     confidenceScore: row.confidence_score,
     createdAt: row.created_at,
   };
 }
 
+let profileBankHierarchySchemaEnsured = false;
+
+export function ensureProfileBankHierarchySchema(): void {
+  if (profileBankHierarchySchemaEnsured) return;
+
+  const exec = (db as unknown as { exec?: (sql: string) => void }).exec;
+  if (typeof exec !== "function") {
+    profileBankHierarchySchemaEnsured = true;
+    return;
+  }
+
+  const statements = [
+    "ALTER TABLE profile_bank ADD COLUMN parent_id TEXT",
+    "ALTER TABLE profile_bank ADD COLUMN component_type TEXT",
+    "ALTER TABLE profile_bank ADD COLUMN component_order INTEGER DEFAULT 0",
+    "ALTER TABLE profile_bank ADD COLUMN source_section TEXT",
+    "CREATE INDEX IF NOT EXISTS idx_profile_bank_parent ON profile_bank(user_id, parent_id)",
+    "CREATE INDEX IF NOT EXISTS idx_profile_bank_component_type ON profile_bank(user_id, component_type)",
+  ];
+
+  for (const statement of statements) {
+    try {
+      exec.call(db, statement);
+    } catch (error) {
+      const message = (error as Error).message.toLowerCase();
+      if (!message.includes("duplicate column")) throw error;
+    }
+  }
+
+  profileBankHierarchySchemaEnsured = true;
+}
+
 export interface InsertBankEntry {
+  id?: string;
   category: BankCategory;
   content: Record<string, unknown>;
   sourceDocumentId?: string;
+  parentId?: string;
+  componentType?: string;
+  componentOrder?: number;
+  sourceSection?: string;
   confidenceScore?: number;
+}
+
+function stringValue(value: unknown): string | undefined {
+  return typeof value === "string" && value.trim() ? value.trim() : undefined;
+}
+
+function numberValue(value: unknown): number | undefined {
+  return typeof value === "number" && Number.isFinite(value)
+    ? value
+    : undefined;
+}
+
+function entryParentId(entry: InsertBankEntry): string | null {
+  return entry.parentId ?? stringValue(entry.content.parentId) ?? null;
+}
+
+function entryComponentType(entry: InsertBankEntry): string {
+  return (
+    entry.componentType ??
+    stringValue(entry.content.componentType) ??
+    stringValue(entry.content.parentType) ??
+    entry.category
+  );
+}
+
+function entryComponentOrder(entry: InsertBankEntry): number {
+  return entry.componentOrder ?? numberValue(entry.content.order) ?? 0;
+}
+
+function entrySourceSection(entry: InsertBankEntry): string | null {
+  return (
+    entry.sourceSection ?? stringValue(entry.content.sourceSection) ?? null
+  );
 }
 
 export function insertBankEntry(
   entry: InsertBankEntry,
-  userId: string = "default"
+  userId: string = "default",
 ): string {
-  const id = generateId();
-  db.prepare(`
-    INSERT INTO profile_bank (id, user_id, category, content, source_document_id, confidence_score)
-    VALUES (?, ?, ?, ?, ?, ?)
-  `).run(
+  ensureProfileBankHierarchySchema();
+  const id = entry.id ?? generateId();
+  db.prepare(
+    `
+    INSERT INTO profile_bank (
+      id, user_id, category, content, source_document_id,
+      parent_id, component_type, component_order, source_section,
+      confidence_score
+    )
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `,
+  ).run(
     id,
     userId,
     entry.category,
     JSON.stringify(entry.content),
     entry.sourceDocumentId ?? null,
-    entry.confidenceScore ?? 0.8
+    entryParentId(entry),
+    entryComponentType(entry),
+    entryComponentOrder(entry),
+    entrySourceSection(entry),
+    entry.confidenceScore ?? 0.8,
   );
   return id;
 }
 
 export function insertBankEntries(
   entries: InsertBankEntry[],
-  userId: string = "default"
+  userId: string = "default",
 ): string[] {
   const ids: string[] = [];
   const insert = db.transaction(() => {
@@ -65,23 +165,31 @@ export function insertBankEntries(
 }
 
 export function getBankEntries(userId: string = "default"): BankEntry[] {
+  ensureProfileBankHierarchySchema();
   const rows = db
-    .prepare("SELECT * FROM profile_bank WHERE user_id = ? ORDER BY created_at DESC")
+    .prepare(
+      "SELECT * FROM profile_bank WHERE user_id = ? ORDER BY created_at DESC",
+    )
     .all(userId) as BankEntryRow[];
   return rows.map(rowToEntry);
 }
 
 export function getBankEntriesByCategory(
   category: BankCategory,
-  userId: string = "default"
+  userId: string = "default",
 ): BankEntry[] {
+  ensureProfileBankHierarchySchema();
   const rows = db
-    .prepare("SELECT * FROM profile_bank WHERE user_id = ? AND category = ? ORDER BY created_at DESC")
+    .prepare(
+      "SELECT * FROM profile_bank WHERE user_id = ? AND category = ? ORDER BY created_at DESC",
+    )
     .all(userId, category) as BankEntryRow[];
   return rows.map(rowToEntry);
 }
 
-export function getGroupedBankEntries(userId: string = "default"): GroupedBankEntries {
+export function getGroupedBankEntries(
+  userId: string = "default",
+): GroupedBankEntries {
   const all = getBankEntries(userId);
   const grouped: GroupedBankEntries = {
     experience: [],
@@ -89,6 +197,7 @@ export function getGroupedBankEntries(userId: string = "default"): GroupedBankEn
     project: [],
     hackathon: [],
     education: [],
+    bullet: [],
     achievement: [],
     certification: [],
   };
@@ -102,12 +211,13 @@ export function getGroupedBankEntries(userId: string = "default"): GroupedBankEn
 
 export function searchBankEntries(
   query: string,
-  userId: string = "default"
+  userId: string = "default",
 ): BankEntry[] {
+  ensureProfileBankHierarchySchema();
   const pattern = `%${query}%`;
   const rows = db
     .prepare(
-      "SELECT * FROM profile_bank WHERE user_id = ? AND content LIKE ? ORDER BY confidence_score DESC, created_at DESC"
+      "SELECT * FROM profile_bank WHERE user_id = ? AND content LIKE ? ORDER BY confidence_score DESC, created_at DESC",
     )
     .all(userId, pattern) as BankEntryRow[];
   return rows.map(rowToEntry);
@@ -116,14 +226,15 @@ export function searchBankEntries(
 export function searchBankEntriesByCategory(
   query: string,
   category: BankCategory,
-  userId: string = "default"
+  userId: string = "default",
 ): BankEntry[] {
+  ensureProfileBankHierarchySchema();
   const pattern = `%${query}%`;
   const rows = db
     .prepare(
       `SELECT * FROM profile_bank
        WHERE user_id = ? AND category = ? AND content LIKE ?
-       ORDER BY confidence_score DESC, created_at DESC`
+       ORDER BY confidence_score DESC, created_at DESC`,
     )
     .all(userId, category, pattern) as BankEntryRow[];
   return rows.map(rowToEntry);
@@ -131,10 +242,13 @@ export function searchBankEntriesByCategory(
 
 export function deleteBankEntriesBySource(
   sourceDocumentId: string,
-  userId: string = "default"
+  userId: string = "default",
 ): number {
+  ensureProfileBankHierarchySchema();
   const result = db
-    .prepare("DELETE FROM profile_bank WHERE user_id = ? AND source_document_id = ?")
+    .prepare(
+      "DELETE FROM profile_bank WHERE user_id = ? AND source_document_id = ?",
+    )
     .run(userId, sourceDocumentId);
   return result.changes;
 }
@@ -165,7 +279,9 @@ function rowToSourceDocument(row: SourceDocumentRow): SourceDocument {
   };
 }
 
-export function getSourceDocuments(userId: string = "default"): SourceDocument[] {
+export function getSourceDocuments(
+  userId: string = "default",
+): SourceDocument[] {
   const rows = db
     .prepare(
       `SELECT d.id, d.filename, d.size, d.uploaded_at,
@@ -174,7 +290,7 @@ export function getSourceDocuments(userId: string = "default"): SourceDocument[]
        LEFT JOIN profile_bank pb ON pb.source_document_id = d.id AND pb.user_id = d.user_id
        WHERE d.user_id = ?
        GROUP BY d.id
-       ORDER BY d.uploaded_at DESC`
+       ORDER BY d.uploaded_at DESC`,
     )
     .all(userId) as SourceDocumentRow[];
   return rows.map(rowToSourceDocument);
@@ -187,14 +303,14 @@ export interface DeleteSourceDocumentsResult {
 
 export function deleteSourceDocument(
   documentId: string,
-  userId: string = "default"
+  userId: string = "default",
 ): number {
   return deleteSourceDocuments([documentId], userId).chunksDeleted;
 }
 
 export function deleteSourceDocuments(
   documentIds: string[],
-  userId: string = "default"
+  userId: string = "default",
 ): DeleteSourceDocumentsResult {
   if (documentIds.length === 0) {
     return { documentsDeleted: 0, chunksDeleted: 0 };
@@ -202,10 +318,10 @@ export function deleteSourceDocuments(
 
   const uniqueDocumentIds = Array.from(new Set(documentIds));
   const deleteEntries = db.prepare(
-    "DELETE FROM profile_bank WHERE source_document_id = ? AND user_id = ?"
+    "DELETE FROM profile_bank WHERE source_document_id = ? AND user_id = ?",
   );
   const deleteDoc = db.prepare(
-    "DELETE FROM documents WHERE id = ? AND user_id = ?"
+    "DELETE FROM documents WHERE id = ? AND user_id = ?",
   );
 
   const transaction = db.transaction(() => {
@@ -233,7 +349,7 @@ export function clearBankEntries(userId: string = "default"): void {
  */
 export function getDeduplicationKey(
   category: BankCategory,
-  content: Record<string, unknown>
+  content: Record<string, unknown>,
 ): string {
   switch (category) {
     case "experience":
@@ -248,6 +364,8 @@ export function getDeduplicationKey(
       return `${content.name}|${content.submissionUrl || content.eventUrl}`.toLowerCase();
     case "certification":
       return `${content.name}|${content.issuer}`.toLowerCase();
+    case "bullet":
+      return `${content.description}`.toLowerCase().slice(0, 100);
     case "achievement":
       return `${content.description}`.toLowerCase().slice(0, 100);
     default:
@@ -263,8 +381,9 @@ export function getDeduplicationKey(
 export function findDuplicateEntry(
   category: BankCategory,
   contentKey: string,
-  userId: string = "default"
+  userId: string = "default",
 ): BankEntry | null {
+  ensureProfileBankHierarchySchema();
   const rows = db
     .prepare("SELECT * FROM profile_bank WHERE user_id = ? AND category = ?")
     .all(userId, category) as BankEntryRow[];
@@ -285,26 +404,76 @@ export function updateBankEntry(
   id: string,
   content: Record<string, unknown>,
   confidenceScore: number,
-  userId: string = "default"
+  userId: string = "default",
 ): void {
+  ensureProfileBankHierarchySchema();
+  const metadata = {
+    parentId: stringValue(content.parentId) ?? null,
+    componentType:
+      stringValue(content.componentType) ??
+      stringValue(content.parentType) ??
+      null,
+    componentOrder: numberValue(content.order) ?? 0,
+    sourceSection: stringValue(content.sourceSection) ?? null,
+  };
   db.prepare(
-    "UPDATE profile_bank SET content = ?, confidence_score = ? WHERE id = ? AND user_id = ?"
-  ).run(JSON.stringify(content), confidenceScore, id, userId);
+    `UPDATE profile_bank
+     SET content = ?,
+         parent_id = ?,
+         component_type = coalesce(?, component_type),
+         component_order = ?,
+         source_section = ?,
+         confidence_score = ?
+     WHERE id = ? AND user_id = ?`,
+  ).run(
+    JSON.stringify(content),
+    metadata.parentId,
+    metadata.componentType,
+    metadata.componentOrder,
+    metadata.sourceSection,
+    confidenceScore,
+    id,
+    userId,
+  );
 }
 
 export function updateBankEntryForUser(
   id: string,
   userId: string,
   content: Record<string, unknown>,
-  confidenceScore: number
+  confidenceScore: number,
 ): boolean {
+  ensureProfileBankHierarchySchema();
+  const metadata = {
+    parentId: stringValue(content.parentId) ?? null,
+    componentType:
+      stringValue(content.componentType) ??
+      stringValue(content.parentType) ??
+      null,
+    componentOrder: numberValue(content.order) ?? 0,
+    sourceSection: stringValue(content.sourceSection) ?? null,
+  };
   const result = db
     .prepare(
       `UPDATE profile_bank
-       SET content = ?, confidence_score = ?
-       WHERE id = ? AND user_id = ?`
+       SET content = ?,
+           parent_id = ?,
+           component_type = coalesce(?, component_type),
+           component_order = ?,
+           source_section = ?,
+           confidence_score = ?
+       WHERE id = ? AND user_id = ?`,
     )
-    .run(JSON.stringify(content), confidenceScore, id, userId);
+    .run(
+      JSON.stringify(content),
+      metadata.parentId,
+      metadata.componentType,
+      metadata.componentOrder,
+      metadata.sourceSection,
+      confidenceScore,
+      id,
+      userId,
+    );
   return result.changes > 0;
 }
 
@@ -313,8 +482,19 @@ export function updateBankEntryForUser(
  */
 export function deleteBankEntry(
   id: string,
-  userId: string = "default"
+  userId: string = "default",
 ): boolean {
+  ensureProfileBankHierarchySchema();
+  db.prepare(
+    `DELETE FROM profile_bank
+     WHERE user_id = ?
+       AND category IN ('bullet', 'achievement')
+       AND (
+         parent_id = ?
+         OR json_extract(content, '$.parentId') = ?
+       )`,
+  ).run(userId, id, id);
+
   const result = db
     .prepare("DELETE FROM profile_bank WHERE id = ? AND user_id = ?")
     .run(id, userId);

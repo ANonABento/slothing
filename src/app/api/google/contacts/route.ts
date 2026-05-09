@@ -19,6 +19,8 @@ import {
 } from "@/lib/google/contacts";
 import { isGoogleConnected } from "@/lib/google/client";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(request: NextRequest) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
@@ -27,7 +29,7 @@ export async function GET(request: NextRequest) {
   if (!connected) {
     return NextResponse.json(
       { error: "Google account not connected" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -57,7 +59,7 @@ export async function GET(request: NextRequest) {
     console.error("Contacts list error:", error);
     return NextResponse.json(
       { error: "Failed to list contacts" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -70,18 +72,28 @@ export async function POST(request: NextRequest) {
   if (!connected) {
     return NextResponse.json(
       { error: "Google account not connected" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
   try {
     const body = await request.json();
-    const { type, name, email, company, title, phone, notes, jobTitle, department } = body;
+    const {
+      type,
+      name,
+      email,
+      company,
+      title,
+      phone,
+      notes,
+      jobTitle,
+      department,
+    } = body;
 
     if (!name) {
       return NextResponse.json(
         { error: "Missing required field: name" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -92,20 +104,30 @@ export async function POST(request: NextRequest) {
         if (!email || !company) {
           return NextResponse.json(
             { error: "Recruiter contacts require: email, company" },
-            { status: 400 }
+            { status: 400 },
           );
         }
-        resourceName = await createRecruiterContact(name, email, company, jobTitle);
+        resourceName = await createRecruiterContact(
+          name,
+          email,
+          company,
+          jobTitle,
+        );
         break;
 
       case "hiring_manager":
         if (!email || !company) {
           return NextResponse.json(
             { error: "Hiring manager contacts require: email, company" },
-            { status: 400 }
+            { status: 400 },
           );
         }
-        resourceName = await createHiringManagerContact(name, email, company, department);
+        resourceName = await createHiringManagerContact(
+          name,
+          email,
+          company,
+          department,
+        );
         break;
 
       case "custom":
@@ -124,7 +146,7 @@ export async function POST(request: NextRequest) {
     if (!resourceName) {
       return NextResponse.json(
         { error: "Failed to create contact" },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -136,7 +158,7 @@ export async function POST(request: NextRequest) {
     console.error("Contact create error:", error);
     return NextResponse.json(
       { error: "Failed to create contact" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

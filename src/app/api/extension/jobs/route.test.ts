@@ -27,25 +27,33 @@ function jsonRequest(body: unknown) {
 describe("extension jobs route", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.requireExtensionAuth.mockReturnValue({ success: true, userId: "user-1" });
+    mocks.requireExtensionAuth.mockReturnValue({
+      success: true,
+      userId: "user-1",
+    });
   });
 
   it("creates a single job through the Drizzle query layer", async () => {
     mocks.createJob.mockResolvedValueOnce({ id: "job-1" });
 
-    const response = await POST(jsonRequest({
-      title: "Frontend Engineer",
-      company: "Acme",
-      description: "Build UI",
-    }));
+    const response = await POST(
+      jsonRequest({
+        title: "Frontend Engineer",
+        company: "Acme",
+        description: "Build UI",
+      }),
+    );
 
     await expect(response.json()).resolves.toEqual({ jobId: "job-1" });
-    expect(mocks.createJob).toHaveBeenCalledWith("user-1", expect.objectContaining({
-      title: "Frontend Engineer",
-      company: "Acme",
-      description: "Build UI",
-      status: "pending",
-    }));
+    expect(mocks.createJob).toHaveBeenCalledWith(
+      "user-1",
+      expect.objectContaining({
+        title: "Frontend Engineer",
+        company: "Acme",
+        description: "Build UI",
+        status: "pending",
+      }),
+    );
   });
 
   it("accepts batch imports without requiring top-level job fields", async () => {
@@ -53,13 +61,15 @@ describe("extension jobs route", () => {
       .mockResolvedValueOnce({ id: "job-1" })
       .mockResolvedValueOnce({ id: "job-2" });
 
-    const response = await POST(jsonRequest({
-      jobs: [
-        { title: "Frontend Engineer", company: "Acme" },
-        { title: "Missing Company" },
-        { title: "Backend Engineer", company: "Beta" },
-      ],
-    }));
+    const response = await POST(
+      jsonRequest({
+        jobs: [
+          { title: "Frontend Engineer", company: "Acme" },
+          { title: "Missing Company" },
+          { title: "Backend Engineer", company: "Beta" },
+        ],
+      }),
+    );
 
     await expect(response.json()).resolves.toEqual({
       imported: 2,
@@ -69,12 +79,12 @@ describe("extension jobs route", () => {
     expect(mocks.createJob).toHaveBeenNthCalledWith(
       1,
       "user-1",
-      expect.objectContaining({ title: "Frontend Engineer", company: "Acme" })
+      expect.objectContaining({ title: "Frontend Engineer", company: "Acme" }),
     );
     expect(mocks.createJob).toHaveBeenNthCalledWith(
       2,
       "user-1",
-      expect.objectContaining({ title: "Backend Engineer", company: "Beta" })
+      expect.objectContaining({ title: "Backend Engineer", company: "Beta" }),
     );
   });
 

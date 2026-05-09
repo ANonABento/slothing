@@ -66,7 +66,9 @@ export function ImportJobDialog({
   const [fetchingUrl, setFetchingUrl] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [editedPreview, setEditedPreview] = useState<ParsedJobPreview | null>(null);
+  const [editedPreview, setEditedPreview] = useState<ParsedJobPreview | null>(
+    null,
+  );
   const [csvPreview, setCsvPreview] = useState<CSVPreview | null>(null);
 
   const resetDialog = () => {
@@ -118,7 +120,9 @@ export function ImportJobDialog({
       setEditedPreview(nextPreview);
       setStep("preview");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to fetch job from URL");
+      setError(
+        err instanceof Error ? err.message : "Failed to fetch job from URL",
+      );
     } finally {
       setFetchingUrl(false);
     }
@@ -139,7 +143,9 @@ export function ImportJobDialog({
       setEditedPreview(nextPreview);
       setStep("preview");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to parse job content");
+      setError(
+        err instanceof Error ? err.message : "Failed to parse job content",
+      );
     } finally {
       setParsing(false);
     }
@@ -197,7 +203,9 @@ export function ImportJobDialog({
       onJobImported();
       handleClose(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to import jobs");
+      setError(
+        err instanceof Error ? err.message : "Failed to import opportunities",
+      );
     } finally {
       setSaving(false);
     }
@@ -222,7 +230,7 @@ export function ImportJobDialog({
 
   const updateField = <K extends keyof ParsedJobPreview>(
     field: K,
-    value: ParsedJobPreview[K]
+    value: ParsedJobPreview[K],
   ) => {
     setEditedPreview((current) => {
       if (!current) return current;

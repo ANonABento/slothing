@@ -1,9 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import Link from "next/link";
 import {
-  ArrowLeft,
   Check,
   ExternalLink,
   Loader2,
@@ -17,6 +15,11 @@ import { Button } from "@/components/ui/button";
 import { JobStatusBadge } from "@/components/jobs/job-status-badge";
 import { OpportunityActions } from "@/components/opportunities/opportunity-actions";
 import { Input } from "@/components/ui/input";
+import {
+  AppPage,
+  PageContent,
+  StandardEmptyState,
+} from "@/components/ui/page-layout";
 import { Textarea } from "@/components/ui/textarea";
 import { useDevMode } from "@/hooks/use-dev-mode";
 import { useErrorToast } from "@/hooks/use-error-toast";
@@ -59,7 +62,7 @@ type DismissUndoInput = { previousStatus: JobStatus };
 
 function fieldInputValue(
   opportunity: JobDescription,
-  field: OpportunityFieldConfig
+  field: OpportunityFieldConfig,
 ) {
   const value = formatOpportunityFieldValue(opportunity, field);
   return field.type === "date" ? value.slice(0, 10) : value;
@@ -203,14 +206,10 @@ function OpportunityFieldSections({
                         <div
                           className={cn(
                             "min-h-9 min-w-0 whitespace-pre-wrap break-words text-sm leading-6",
-                            preview === "Not set" && "text-muted-foreground"
+                            preview === "Not set" && "text-muted-foreground",
                           )}
                         >
-                          {showTimeAgo ? (
-                            <TimeAgo date={rawValue} />
-                          ) : (
-                            preview
-                          )}
+                          {showTimeAgo ? <TimeAgo date={rawValue} /> : preview}
                         </div>
                         {field.type !== "readonly" && (
                           <Button
@@ -248,7 +247,9 @@ export default function OpportunityDetailPage({
   const [draftValue, setDraftValue] = useState("");
   const [draftChecked, setDraftChecked] = useState(false);
   const [savingField, setSavingField] = useState<string | null>(null);
-  const [resumes, setResumes] = useState<NonNullable<ResumesResponse["resumes"]>>([]);
+  const [resumes, setResumes] = useState<
+    NonNullable<ResumesResponse["resumes"]>
+  >([]);
   const [coverLetters, setCoverLetters] = useState<
     NonNullable<CoverLettersResponse["versions"]>
   >([]);
@@ -264,7 +265,7 @@ export default function OpportunityDetailPage({
       const response = await fetch(`/api/opportunities/${params.id}`);
       const data = await readJsonResponse<OpportunityResponse>(
         response,
-        "Failed to load opportunity"
+        "Failed to load opportunity",
       );
       if (data.job) {
         setOpportunity(data.job);
@@ -286,14 +287,15 @@ export default function OpportunityDetailPage({
       fetch(`/api/opportunities/${params.id}/resumes`).then((response) =>
         readJsonResponse<ResumesResponse>(
           response,
-          "Failed to load generated resumes"
-        )
+          "Failed to load generated resumes",
+        ),
       ),
-      fetch(`/api/opportunities/${params.id}/cover-letter/history`).then((response) =>
-        readJsonResponse<CoverLettersResponse>(
-          response,
-          "Failed to load cover letters"
-        )
+      fetch(`/api/opportunities/${params.id}/cover-letter/history`).then(
+        (response) =>
+          readJsonResponse<CoverLettersResponse>(
+            response,
+            "Failed to load cover letters",
+          ),
       ),
     ]);
 
@@ -323,11 +325,12 @@ export default function OpportunityDetailPage({
           });
           const data = await readJsonResponse<OpportunityResponse>(
             response,
-            "Failed to update opportunity"
+            "Failed to update opportunity",
           );
 
-          setOpportunity((current) =>
-            data.job ?? (current ? { ...current, ...patch } : current)
+          setOpportunity(
+            (current) =>
+              data.job ?? (current ? { ...current, ...patch } : current),
           );
 
           return data.job;
@@ -335,12 +338,12 @@ export default function OpportunityDetailPage({
 
       patchQueueRef.current = queuedPatch.then(
         () => undefined,
-        () => undefined
+        () => undefined,
       );
 
       return queuedPatch;
     },
-    [params.id]
+    [params.id],
   );
 
   const dismissOpportunity = useUndoableAction<DismissUndoInput>({
@@ -374,8 +377,8 @@ export default function OpportunityDetailPage({
       await patchOpportunity(
         buildOpportunityPatch(
           field,
-          field.type === "checkbox" ? draftChecked : draftValue
-        )
+          field.type === "checkbox" ? draftChecked : draftValue,
+        ),
       );
       cancelEditing();
     } catch (error) {
@@ -407,7 +410,9 @@ export default function OpportunityDetailPage({
 
   const handleDismiss = async () => {
     try {
-      await dismissOpportunity({ previousStatus: opportunity?.status ?? "saved" });
+      await dismissOpportunity({
+        previousStatus: opportunity?.status ?? "saved",
+      });
     } catch (error) {
       showErrorToast(error, {
         title: "Could not dismiss opportunity",
@@ -451,163 +456,157 @@ export default function OpportunityDetailPage({
 
   if (!opportunity) {
     return (
-      <div className="mx-auto max-w-3xl px-6 py-12">
-        <Link
-          href="/opportunities"
-          className="mb-6 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back to opportunities
-        </Link>
-        <div className="rounded-lg border bg-card p-8">
-          <h1 className="text-2xl font-semibold">Opportunity not found</h1>
-          <p className="mt-2 text-muted-foreground">
-            This opportunity may have been deleted or is no longer available.
-          </p>
-        </div>
-      </div>
+      <AppPage>
+        <PageContent width="narrow">
+          <StandardEmptyState
+            icon={XCircle}
+            title="Opportunity not found"
+            description="This opportunity may have been deleted or is no longer available."
+          />
+        </PageContent>
+      </AppPage>
     );
   }
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-      <Link
-        href="/opportunities"
-        className="mb-5 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        Back to opportunities
-      </Link>
-
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
-        <div className="space-y-6">
-          <header className="border-b pb-5">
-            <div className="flex flex-wrap items-start justify-between gap-4">
-              <div className="min-w-0">
-                <h1 className="text-3xl font-semibold tracking-tight">
-                  {opportunity.title}
-                </h1>
-                <p className="mt-2 text-lg text-muted-foreground">
-                  {opportunity.company}
-                  {opportunity.location ? ` · ${opportunity.location}` : ""}
-                </p>
-              </div>
-              <JobStatusBadge status={status} className="px-3 py-1 text-sm" />
-            </div>
-          </header>
-
-          <OpportunityFieldSections
-            opportunity={opportunity}
-            editingField={editingField}
-            savingField={savingField}
-            draftValue={draftValue}
-            draftChecked={draftChecked}
-            onStartEditing={startEditing}
-            onDraftValueChange={setDraftValue}
-            onDraftCheckedChange={setDraftChecked}
-            onSaveField={(field) => void saveField(field)}
-            onCancelEditing={cancelEditing}
-          />
-
-          <section className="rounded-lg border bg-card">
-            <div className="flex items-center justify-between border-b px-5 py-4">
-              <h2 className="text-base font-semibold">Notes</h2>
-              <span className="text-xs text-muted-foreground">
-                {notesSaveState === "saving" && "Saving notes..."}
-                {notesSaveState === "saved" && "Notes saved"}
-                {notesSaveState === "error" && "Notes not saved"}
-              </span>
-            </div>
-            <div className="p-5">
-              <Textarea
-                value={notes}
-                onChange={(event) => setNotes(event.target.value)}
-                placeholder="Add private notes about this opportunity."
-                className="min-h-36"
-              />
-            </div>
-          </section>
-        </div>
-
-        <aside className="space-y-6 lg:sticky lg:top-6 lg:self-start">
-          <OpportunityActions
-            opportunity={opportunity}
-            onApply={handleApply}
-            onGeneratedDocument={fetchLinkedDocuments}
-          />
-
-          <section className="rounded-lg border bg-card p-4">
-            <Button
-              type="button"
-              variant="ghost"
-              className="w-full justify-start text-destructive hover:text-destructive"
-              onClick={() => void handleDismiss()}
-            >
-              <XCircle className="mr-2 h-4 w-4" />
-              Dismiss
-            </Button>
-          </section>
-
-          <section className="rounded-lg border bg-card p-4">
-            <div className="flex items-center justify-between gap-3">
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                Linked Documents
-              </h2>
-              <Badge variant="outline">{linkedDocumentCount}</Badge>
-            </div>
-
-            <div className="mt-4 space-y-4">
-              <div>
-                <h3 className="text-sm font-medium">Tailored resumes</h3>
-                <div className="mt-2 space-y-2">
-                  {resumes.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">None attached</p>
-                  ) : (
-                    resumes.map((resume) => (
-                      <a
-                        key={resume.id}
-                        href={resume.htmlPath || "#"}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center justify-between gap-3 rounded-md border px-3 py-2 text-sm hover:bg-muted"
-                      >
-                        <span>
-                          Resume
-                          {resume.matchScore
-                            ? ` · ${Math.round(resume.matchScore)}% match`
-                            : ""}
-                        </span>
-                        <ExternalLink className="h-4 w-4 text-muted-foreground" />
-                      </a>
-                    ))
-                  )}
+    <AppPage>
+      <PageContent className="py-6">
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+          <div className="space-y-6">
+            <header className="border-b pb-5">
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div className="min-w-0">
+                  <h1 className="text-3xl font-semibold tracking-tight">
+                    {opportunity.title}
+                  </h1>
+                  <p className="mt-2 text-lg text-muted-foreground">
+                    {opportunity.company}
+                    {opportunity.location ? ` · ${opportunity.location}` : ""}
+                  </p>
                 </div>
+                <JobStatusBadge status={status} className="px-3 py-1 text-sm" />
+              </div>
+            </header>
+
+            <OpportunityFieldSections
+              opportunity={opportunity}
+              editingField={editingField}
+              savingField={savingField}
+              draftValue={draftValue}
+              draftChecked={draftChecked}
+              onStartEditing={startEditing}
+              onDraftValueChange={setDraftValue}
+              onDraftCheckedChange={setDraftChecked}
+              onSaveField={(field) => void saveField(field)}
+              onCancelEditing={cancelEditing}
+            />
+
+            <section className="rounded-lg border bg-card">
+              <div className="flex items-center justify-between border-b px-5 py-4">
+                <h2 className="text-base font-semibold">Notes</h2>
+                <span className="text-xs text-muted-foreground">
+                  {notesSaveState === "saving" && "Saving notes..."}
+                  {notesSaveState === "saved" && "Notes saved"}
+                  {notesSaveState === "error" && "Notes not saved"}
+                </span>
+              </div>
+              <div className="p-5">
+                <Textarea
+                  value={notes}
+                  onChange={(event) => setNotes(event.target.value)}
+                  placeholder="Add private notes about this opportunity."
+                  className="min-h-36"
+                />
+              </div>
+            </section>
+          </div>
+
+          <aside className="space-y-6 lg:sticky lg:top-6 lg:self-start">
+            <OpportunityActions
+              opportunity={opportunity}
+              onApply={handleApply}
+              onGeneratedDocument={fetchLinkedDocuments}
+            />
+
+            <section className="rounded-lg border bg-card p-4">
+              <Button
+                type="button"
+                variant="ghost"
+                className="w-full justify-start text-destructive hover:text-destructive"
+                onClick={() => void handleDismiss()}
+              >
+                <XCircle className="mr-2 h-4 w-4" />
+                Dismiss
+              </Button>
+            </section>
+
+            <section className="rounded-lg border bg-card p-4">
+              <div className="flex items-center justify-between gap-3">
+                <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                  Linked Documents
+                </h2>
+                <Badge variant="outline">{linkedDocumentCount}</Badge>
               </div>
 
-              <div>
-                <h3 className="text-sm font-medium">Cover letters</h3>
-                <div className="mt-2 space-y-2">
-                  {coverLetters.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">None attached</p>
-                  ) : (
-                    coverLetters.map((letter) => (
-                      <div
-                        key={letter.id}
-                        className="rounded-md border px-3 py-2 text-sm"
-                      >
-                        <div className="font-medium">Version {letter.version}</div>
-                        <div className="text-muted-foreground">
-                          <DocumentDate value={letter.createdAt} />
+              <div className="mt-4 space-y-4">
+                <div>
+                  <h3 className="text-sm font-medium">Tailored resumes</h3>
+                  <div className="mt-2 space-y-2">
+                    {resumes.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">
+                        None attached
+                      </p>
+                    ) : (
+                      resumes.map((resume) => (
+                        <a
+                          key={resume.id}
+                          href={resume.htmlPath || "#"}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center justify-between gap-3 rounded-md border px-3 py-2 text-sm hover:bg-muted"
+                        >
+                          <span>
+                            Resume
+                            {resume.matchScore
+                              ? ` · ${Math.round(resume.matchScore)}% match`
+                              : ""}
+                          </span>
+                          <ExternalLink className="h-4 w-4 text-muted-foreground" />
+                        </a>
+                      ))
+                    )}
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-sm font-medium">Cover letters</h3>
+                  <div className="mt-2 space-y-2">
+                    {coverLetters.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">
+                        None attached
+                      </p>
+                    ) : (
+                      coverLetters.map((letter) => (
+                        <div
+                          key={letter.id}
+                          className="rounded-md border px-3 py-2 text-sm"
+                        >
+                          <div className="font-medium">
+                            Version {letter.version}
+                          </div>
+                          <div className="text-muted-foreground">
+                            <DocumentDate value={letter.createdAt} />
+                          </div>
                         </div>
-                      </div>
-                    ))
-                  )}
+                      ))
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          </section>
-        </aside>
-      </div>
-    </div>
+            </section>
+          </aside>
+        </div>
+      </PageContent>
+    </AppPage>
   );
 }

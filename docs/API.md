@@ -5,9 +5,11 @@ All API routes are located under `/api/`. Responses are JSON.
 ## Profile
 
 ### GET /api/profile
+
 Get user profile data.
 
 **Response:**
+
 ```json
 {
   "profile": {
@@ -25,9 +27,11 @@ Get user profile data.
 ```
 
 ### PUT /api/profile
+
 Update user profile.
 
 **Request Body:**
+
 ```json
 {
   "name": "John Doe",
@@ -38,12 +42,14 @@ Update user profile.
 
 ---
 
-## Jobs
+## Browser Extension
 
-### GET /api/jobs
-List all job descriptions.
+### GET /api/opportunities
+
+List all tracked opportunities.
 
 **Response:**
+
 ```json
 {
   "jobs": [
@@ -59,10 +65,12 @@ List all job descriptions.
 }
 ```
 
-### POST /api/jobs
-Create a new job.
+### POST /api/opportunities
+
+Create a new opportunity.
 
 **Request Body:**
+
 ```json
 {
   "title": "Software Engineer",
@@ -74,25 +82,42 @@ Create a new job.
 }
 ```
 
-### GET /api/jobs/[id]
-Get a specific job.
+### GET /api/opportunities/[id]
 
-### PATCH /api/jobs/[id]
-Update a job.
+Get a specific opportunity.
 
-### DELETE /api/jobs/[id]
-Delete a job.
+### PATCH /api/opportunities/[id]
+
+Update an opportunity.
+
+### DELETE /api/opportunities/[id]
+
+Delete an opportunity.
+
+### GET /api/export/opportunities
+
+Export tracked opportunities. Accepts `format=json` or `format=csv`.
+
+Legacy compatibility: `/api/export/jobs` returns the same data.
+
+### POST /api/import/opportunities
+
+Import opportunities from JSON or CSV payloads.
+
+Legacy compatibility: `/api/import/jobs` accepts the same payloads.
 
 ---
 
 ## Opportunities
 
 ### POST /api/opportunities/from-extension
+
 Import scraped opportunities from the Columbus browser extension. Requires `X-Extension-Token`.
 
 Scraped opportunities are always created with `status: "pending"` so the user can review them before moving them to Saved, Applied, or another workflow status. The endpoint also creates an unread in-app notification and returns the current pending count for badge/review UI.
 
 **Request Body (single):**
+
 ```json
 {
   "title": "Frontend Engineer",
@@ -105,7 +130,7 @@ Scraped opportunities are always created with `status: "pending"` so the user ca
   "type": "full-time",
   "remote": true,
   "salary": "$120k-$150k",
-  "url": "https://example.com/jobs/frontend",
+  "url": "https://example.com/careers/frontend",
   "source": "linkedin",
   "sourceJobId": "abc-123",
   "postedAt": "2026-04-29",
@@ -114,11 +139,20 @@ Scraped opportunities are always created with `status: "pending"` so the user ca
 ```
 
 **Request Body (batch):**
+
 ```json
 {
   "jobs": [
-    { "title": "Frontend Engineer", "company": "Acme", "url": "https://example.com/a" },
-    { "title": "Backend Engineer", "company": "Beta", "url": "https://example.com/b" }
+    {
+      "title": "Frontend Engineer",
+      "company": "Acme",
+      "url": "https://example.com/a"
+    },
+    {
+      "title": "Backend Engineer",
+      "company": "Beta",
+      "url": "https://example.com/b"
+    }
   ]
 }
 ```
@@ -126,6 +160,7 @@ Scraped opportunities are always created with `status: "pending"` so the user ca
 `opportunities` is also accepted instead of `jobs` for batch payloads.
 
 **Response:**
+
 ```json
 {
   "imported": 2,
@@ -135,17 +170,20 @@ Scraped opportunities are always created with `status: "pending"` so the user ca
 ```
 
 **Errors:**
+
 - `401` when the extension token is missing, invalid, or expired.
 - `400` with validation details when a required field such as `title` or `company` is missing.
 
 ---
 
-## Job AI
+## Opportunity AI
 
-### POST /api/jobs/[id]/analyze
-Analyze job match with profile.
+### POST /api/opportunities/[id]/analyze
+
+Analyze opportunity match with profile.
 
 **Response:**
+
 ```json
 {
   "match": {
@@ -158,10 +196,12 @@ Analyze job match with profile.
 }
 ```
 
-### POST /api/jobs/[id]/generate
+### POST /api/opportunities/[id]/generate
+
 Generate tailored resume.
 
 **Request Body:**
+
 ```json
 {
   "template": "modern",
@@ -169,7 +209,8 @@ Generate tailored resume.
 }
 ```
 
-### POST /api/jobs/[id]/cover-letter
+### POST /api/opportunities/[id]/cover-letter
+
 Generate cover letter.
 
 ---
@@ -177,9 +218,11 @@ Generate cover letter.
 ## Interview
 
 ### POST /api/interview/start
+
 Generate interview questions.
 
 **Request Body:**
+
 ```json
 {
   "jobId": "job-123",
@@ -189,6 +232,7 @@ Generate interview questions.
 ```
 
 **Response:**
+
 ```json
 {
   "questions": [
@@ -202,15 +246,19 @@ Generate interview questions.
 ```
 
 ### POST /api/interview/sessions
+
 Create interview session.
 
 ### GET /api/interview/sessions
+
 List interview sessions.
 
 ### POST /api/interview/sessions/[id]/answer
+
 Submit answer and get feedback.
 
 **Request Body:**
+
 ```json
 {
   "questionIndex": 0,
@@ -219,6 +267,7 @@ Submit answer and get feedback.
 ```
 
 **Response:**
+
 ```json
 {
   "answer": "My answer...",
@@ -232,9 +281,11 @@ Submit answer and get feedback.
 ## Salary
 
 ### POST /api/salary/calculate
+
 Calculate salary range or compare offers.
 
 **Request Body (range):**
+
 ```json
 {
   "action": "range",
@@ -245,6 +296,7 @@ Calculate salary range or compare offers.
 ```
 
 **Response:**
+
 ```json
 {
   "range": {
@@ -258,6 +310,7 @@ Calculate salary range or compare offers.
 ```
 
 **Request Body (compare):**
+
 ```json
 {
   "action": "compare",
@@ -274,9 +327,11 @@ Calculate salary range or compare offers.
 ```
 
 ### POST /api/salary/negotiate
+
 Generate negotiation script.
 
 **Request Body:**
+
 ```json
 {
   "company": "Tech Corp",
@@ -293,9 +348,11 @@ Generate negotiation script.
 ## Analytics
 
 ### GET /api/analytics
+
 Get analytics overview.
 
 **Response:**
+
 ```json
 {
   "profileCompleteness": 85,
@@ -313,9 +370,11 @@ Get analytics overview.
 ```
 
 ### GET /api/analytics/export
+
 Export analytics data.
 
 **Query Parameters:**
+
 - `format`: `csv` or `json`
 - `range`: `7d`, `30d`, or `all`
 
@@ -324,16 +383,20 @@ Export analytics data.
 ## Notifications
 
 ### GET /api/notifications
+
 Get notifications.
 
 **Query Parameters:**
+
 - `limit`: Number of notifications (default: 20)
 - `countOnly`: Return only unread count
 
 ### POST /api/notifications
+
 Batch actions.
 
 **Request Body:**
+
 ```json
 {
   "action": "markAllRead"
@@ -341,9 +404,11 @@ Batch actions.
 ```
 
 ### PATCH /api/notifications/[id]
+
 Mark notification as read.
 
 ### DELETE /api/notifications/[id]
+
 Delete notification.
 
 ---
@@ -359,6 +424,7 @@ All endpoints return errors in this format:
 ```
 
 **Status Codes:**
+
 - `400` - Bad request (validation error)
 - `404` - Resource not found
 - `500` - Server error

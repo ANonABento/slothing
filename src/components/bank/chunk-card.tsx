@@ -42,14 +42,22 @@ export function ChunkCard({
   entry,
   onUpdate,
   onDelete,
+  onCreateChild,
+  onReorderChild,
   selected,
   onToggleSelect,
   highlighted,
   anySelected,
+  childEntries = [],
 }: ChunkCardProps) {
   const [expanded, setExpanded] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [editingChildId, setEditingChildId] = useState<string | null>(null);
+  const [creatingChild, setCreatingChild] = useState(false);
   const [editContent, setEditContent] = useState<Record<string, unknown>>({});
+  const [childEditContent, setChildEditContent] = useState<
+    Record<string, unknown>
+  >({});
   const { confirm, dialog: confirmDialog } = useConfirmDialog();
 
   const config = CATEGORY_CONFIG[entry.category];
@@ -79,6 +87,46 @@ export function ChunkCard({
     setEditContent({});
   }
 
+  function handleChildEdit(child: typeof entry) {
+    setEditingChildId(child.id);
+    setChildEditContent({ ...child.content });
+  }
+
+  function handleChildFieldChange(key: string, value: unknown) {
+    setChildEditContent((prev) => ({ ...prev, [key]: value }));
+  }
+
+  function handleChildSave() {
+    if (creatingChild) {
+      const description =
+        typeof childEditContent.description === "string"
+          ? childEditContent.description.trim()
+          : "";
+      if (description) onCreateChild?.(entry, description);
+      setCreatingChild(false);
+      setChildEditContent({});
+      return;
+    }
+
+    if (!editingChildId) return;
+    const cleaned = cleanContent(childEditContent, CATEGORY_FIELDS.bullet);
+    onUpdate(editingChildId, cleaned);
+    setEditingChildId(null);
+    setChildEditContent({});
+  }
+
+  function handleChildCancelEdit() {
+    setEditingChildId(null);
+    setCreatingChild(false);
+    setChildEditContent({});
+  }
+
+  function handleChildCreate() {
+    setCreatingChild(true);
+    setEditingChildId(null);
+    setChildEditContent({ description: "" });
+  }
+
   async function handleDelete() {
     const confirmed = await confirm({
       title: "Delete this profile bank entry?",
@@ -94,7 +142,7 @@ export function ChunkCard({
   return (
     <div
       className={cn(
-        "group",
+        "group relative",
         THEME_INTERACTIVE_SURFACE_CLASSES,
         entry.category === "hackathon" &&
           "border-warning/40 bg-warning/5 hover:border-warning/60",
@@ -105,9 +153,9 @@ export function ChunkCard({
     >
       <div className="flex w-full items-start gap-3 p-4 text-left">
         {onToggleSelect && (
-          <div
+          <label
             className={cn(
-              "shrink-0 pt-1 transition-opacity",
+              "absolute left-3 top-3 z-10 flex h-7 w-7 items-center justify-center rounded-[var(--radius)] border bg-background/95 shadow-[var(--shadow-button)] transition-opacity",
               anySelected
                 ? "opacity-100"
                 : "opacity-0 group-hover:opacity-100 [div:hover>&]:opacity-100",
@@ -124,7 +172,7 @@ export function ChunkCard({
               className="h-4 w-4 rounded border-input accent-primary cursor-pointer"
               aria-label={`Select ${getEntryTitle(entry)}`}
             />
-          </div>
+          </label>
         )}
         <button
           onClick={() => !editing && setExpanded(!expanded)}
@@ -183,10 +231,42 @@ export function ChunkCard({
             <ChunkExpandedContent
               fields={fields}
               content={entry.content}
+              childEntries={childEntries}
+              onChildEdit={handleChildEdit}
+              onChildDelete={onDelete}
+              onChildCreate={
+                onCreateChild &&
+                (entry.category === "experience" ||
+                  entry.category === "project")
+                  ? handleChildCreate
+                  : undefined
+              }
+              onChildReorder={
+                onReorderChild
+                  ? (childId, direction) =>
+                      onReorderChild(entry, childId, direction)
+                  : undefined
+              }
               onEdit={handleEdit}
               onDeleteClick={() => void handleDelete()}
             />
           )}
+          {editingChildId || creatingChild ? (
+            <div className="rounded-[var(--radius)] border border-border/70 bg-background/60 p-3">
+              <div className="mb-3 text-xs font-medium text-muted-foreground">
+                {creatingChild
+                  ? "Add bullet component"
+                  : "Edit bullet component"}
+              </div>
+              <ChunkEditForm
+                fields={CATEGORY_FIELDS.bullet}
+                editContent={childEditContent}
+                onFieldChange={handleChildFieldChange}
+                onCancel={handleChildCancelEdit}
+                onSave={handleChildSave}
+              />
+            </div>
+          ) : null}
         </div>
       )}
       {confirmDialog}

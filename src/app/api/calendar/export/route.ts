@@ -7,8 +7,13 @@
 import { NextRequest } from "next/server";
 import { getJobs } from "@/lib/db/jobs";
 import { getReminders } from "@/lib/db/reminders";
-import { generateICSCalendar, type CalendarEvent } from "@/lib/calendar/ics-generator";
+import {
+  generateICSCalendar,
+  type CalendarEvent,
+} from "@/lib/calendar/ics-generator";
 import { requireAuth, isAuthError } from "@/lib/auth";
+
+export const dynamic = "force-dynamic";
 
 type EventType = "interviews" | "deadlines" | "reminders" | "all";
 
@@ -66,7 +71,9 @@ export async function GET(request: NextRequest) {
           events.push({
             id: `reminder-${reminder.id}`,
             title: reminder.title,
-            description: reminder.description || (job ? `For: ${job.title} at ${job.company}` : ""),
+            description:
+              reminder.description ||
+              (job ? `For: ${job.title} at ${job.company}` : ""),
             startDate: new Date(reminder.dueDate),
             type: reminder.type === "follow_up" ? "follow_up" : "reminder",
           });
@@ -88,9 +95,12 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error("Calendar export error:", error);
-    return new Response(JSON.stringify({ error: "Failed to export calendar" }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" },
-    });
+    return new Response(
+      JSON.stringify({ error: "Failed to export calendar" }),
+      {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      },
+    );
   }
 }

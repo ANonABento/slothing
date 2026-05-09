@@ -17,6 +17,9 @@ type LegacySqlSurface = {
 
 let clientInstance: Client | undefined;
 let dbInstance: (LibSQLDatabase<typeof schema> & LegacySqlSurface) | undefined;
+const dbWarningGlobal = globalThis as typeof globalThis & {
+  __slothingVecBootstrapWarned?: boolean;
+};
 
 export function getLibsqlConfig(
   env: Record<string, string | undefined> = process.env,
@@ -71,7 +74,14 @@ async function bootstrapVirtualTables(client: Client): Promise<void> {
       "CREATE VIRTUAL TABLE IF NOT EXISTS chunks_vec USING vec0(embedding float[1536])",
     );
   } catch (error) {
-    if (process.env.NODE_ENV !== "test") {
+    const shouldWarn =
+      process.env.NODE_ENV !== "test" &&
+      process.env.NEXT_PHASE !== "phase-production-build" &&
+      process.env.npm_lifecycle_event !== "build" &&
+      !dbWarningGlobal.__slothingVecBootstrapWarned;
+
+    if (shouldWarn) {
+      dbWarningGlobal.__slothingVecBootstrapWarned = true;
       console.warn(
         "[db] chunks_vec bootstrap skipped:",
         (error as Error).message,
@@ -150,6 +160,7 @@ export * from "./reminders";
 export * from "./notifications";
 export * from "./custom-templates";
 export * from "./profile-bank";
+export * from "./learned-answers";
 export * from "./profile-versions";
 export * from "./knowledge-bank";
 

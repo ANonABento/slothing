@@ -16,6 +16,7 @@ export function ChunkContentPreview({ entry }: { entry: BankEntry }) {
     case "experience": {
       const dateRange = getDateRange(c);
       const highlights = getHighlights(c, 2);
+      const childCount = Number(c.childCount ?? 0);
       return (
         <div className="mt-1 space-y-1">
           {(c.location || dateRange) && (
@@ -37,6 +38,11 @@ export function ChunkContentPreview({ entry }: { entry: BankEntry }) {
               ))}
             </ul>
           )}
+          {childCount > 0 ? (
+            <p className="text-xs text-muted-foreground">
+              {childCount} bullet component{childCount === 1 ? "" : "s"}
+            </p>
+          ) : null}
         </div>
       );
     }
@@ -78,6 +84,7 @@ export function ChunkContentPreview({ entry }: { entry: BankEntry }) {
     }
     case "project": {
       const techs = getTechnologies(c);
+      const childCount = Number(c.childCount ?? 0);
       return (
         <div className="mt-1 space-y-1">
           {c.description ? (
@@ -102,6 +109,11 @@ export function ChunkContentPreview({ entry }: { entry: BankEntry }) {
               )}
             </div>
           )}
+          {childCount > 0 ? (
+            <p className="text-xs text-muted-foreground">
+              {childCount} bullet component{childCount === 1 ? "" : "s"}
+            </p>
+          ) : null}
         </div>
       );
     }
@@ -162,6 +174,7 @@ export function ChunkContentPreview({ entry }: { entry: BankEntry }) {
           </p>
         </div>
       );
+    case "bullet":
     case "achievement":
       return c.description ? (
         <p className="mt-1 text-sm text-muted-foreground line-clamp-2">

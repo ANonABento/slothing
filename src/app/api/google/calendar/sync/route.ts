@@ -19,6 +19,8 @@ import {
 } from "@/lib/google/calendar";
 import { isGoogleConnected } from "@/lib/google/client";
 
+export const dynamic = "force-dynamic";
+
 type SyncType = "all" | "interviews" | "deadlines" | "reminders";
 
 interface SyncResultItem {
@@ -38,7 +40,7 @@ export async function POST(request: NextRequest) {
   if (!connected) {
     return NextResponse.json(
       { error: "Google account not connected" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -140,7 +142,7 @@ export async function POST(request: NextRequest) {
     console.error("Calendar sync error:", error);
     return NextResponse.json(
       { error: "Failed to sync calendar" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

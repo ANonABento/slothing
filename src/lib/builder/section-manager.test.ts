@@ -140,13 +140,13 @@ describe("reorderSectionsById", () => {
       "project",
     ]);
     expect(result.find((section) => section.id === "education")?.visible).toBe(
-      false
+      false,
     );
   });
 
   it("returns the same array when either section id is missing", () => {
     expect(reorderSectionsById(sections, "skill", "certification")).toBe(
-      sections
+      sections,
     );
   });
 });
@@ -206,7 +206,7 @@ describe("getMobilePanelClasses", () => {
 
 describe("BUILDER_PANELS", () => {
   it("includes edit, preview, and history", () => {
-    expect(BUILDER_PANELS).toEqual(["edit", "preview", "history"]);
+    expect(BUILDER_PANELS).toEqual(["edit", "preview", "assistant", "history"]);
   });
 });
 

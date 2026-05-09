@@ -46,9 +46,9 @@ export function getExportFileName(
     case "profile":
       return `taida-profile-${formattedDate}.json`;
     case "jobs-json":
-      return `slothing-jobs-${formattedDate}.json`;
+      return `slothing-opportunities-${formattedDate}.json`;
     case "jobs-csv":
-      return `slothing-jobs-${formattedDate}.csv`;
+      return `slothing-opportunities-${formattedDate}.csv`;
     case "backup":
       return `slothing-backup-${formattedDate}.json`;
     case "full-export":
@@ -61,9 +61,9 @@ export function getExportUrl(type: ExportType): string {
     case "profile":
       return "/api/export/profile?format=json";
     case "jobs-json":
-      return "/api/export/jobs?format=json";
+      return "/api/export/opportunities?format=json";
     case "jobs-csv":
-      return "/api/export/jobs?format=csv";
+      return "/api/export/opportunities?format=csv";
     case "backup":
       return "/api/backup";
     case "full-export":
@@ -77,7 +77,9 @@ export function buildImportPreviewStats(
   const stats: Record<string, number> = {};
 
   if (data.data?.profile) stats["Profile"] = 1;
-  if (data.data?.jobs?.length) stats["Jobs"] = data.data.jobs.length;
+  if (data.data?.jobs?.length) {
+    stats["Opportunities"] = data.data.jobs.length;
+  }
   if (data.data?.coverLetters?.length)
     stats["Cover Letters"] = data.data.coverLetters.length;
   if (data.data?.bankEntries?.length)
@@ -104,7 +106,9 @@ export function buildFullImportMessage(result: {
 
   if (result.results.profile) parts.push("Profile");
   if (result.results.jobs.imported > 0) {
-    parts.push(pluralize(result.results.jobs.imported, "job"));
+    parts.push(
+      pluralize(result.results.jobs.imported, "opportunity", "opportunities"),
+    );
   }
   if (
     result.results.coverLetters?.imported &&
@@ -263,7 +267,7 @@ export function useDataIO() {
 
         setImportResult({
           success: true,
-          message: `Restored: ${result.results.profile ? "Profile" : ""} ${pluralize(result.results.jobs.imported, "job")} imported`,
+          message: `Restored: ${result.results.profile ? "Profile" : ""} ${pluralize(result.results.jobs.imported, "opportunity", "opportunities")} imported`,
         });
 
         return;
@@ -275,7 +279,7 @@ export function useDataIO() {
         const formData = new FormData();
         formData.append("file", file);
 
-        const response = await fetch("/api/import/jobs", {
+        const response = await fetch("/api/import/opportunities", {
           method: "POST",
           body: formData,
         });
@@ -291,7 +295,7 @@ export function useDataIO() {
 
       const text = await file.text();
       const data = JSON.parse(text);
-      const response = await fetch("/api/import/jobs", {
+      const response = await fetch("/api/import/opportunities", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),

@@ -35,7 +35,7 @@ export function PastSessionsList({
   if (pastSessions.length === 0) return null;
 
   return (
-    <div className="rounded-2xl border bg-card overflow-hidden">
+    <div className="rounded-lg border bg-card overflow-hidden">
       <button
         type="button"
         onClick={onToggleHistory}
@@ -61,13 +61,24 @@ export function PastSessionsList({
             const isComplete = pastSession.status === "completed";
 
             return (
-              <div key={pastSession.id} className="p-4 flex items-center justify-between gap-4">
+              <div
+                key={pastSession.id}
+                className="p-4 flex items-center justify-between gap-4"
+              >
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className={`p-2 rounded-lg ${isComplete ? "bg-success/10 text-success" : "bg-warning/10 text-warning"}`}>
-                    {isComplete ? <CheckCircle2 className="h-4 w-4" /> : <Clock className="h-4 w-4" />}
+                  <div
+                    className={`p-2 rounded-lg ${isComplete ? "bg-success/10 text-success" : "bg-warning/10 text-warning"}`}
+                  >
+                    {isComplete ? (
+                      <CheckCircle2 className="h-4 w-4" />
+                    ) : (
+                      <Clock className="h-4 w-4" />
+                    )}
                   </div>
                   <div className="min-w-0">
-                    <p className="font-medium truncate">{job?.title || "Unknown Job"}</p>
+                    <p className="font-medium truncate">
+                      {job?.title || "Unknown Job"}
+                    </p>
                     <p className="text-sm text-muted-foreground flex items-center gap-2">
                       <span>{job?.company || "Unknown Company"}</span>
                       <span>•</span>
@@ -75,7 +86,9 @@ export function PastSessionsList({
                         {answeredCount}/{pluralize(totalQuestions, "question")}
                       </span>
                       <span>•</span>
-                      <span>{pastSession.mode === "voice" ? "Voice" : "Text"}</span>
+                      <span>
+                        {pastSession.mode === "voice" ? "Voice" : "Text"}
+                      </span>
                     </p>
                     <p className="text-xs text-muted-foreground">
                       <TimeAgo date={pastSession.startedAt} />

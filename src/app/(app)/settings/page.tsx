@@ -15,7 +15,12 @@ import { OpportunityReviewSection } from "@/components/settings/opportunity-revi
 import { ThemeSection } from "@/components/settings/theme-section";
 import { WhatAiPowers } from "@/components/settings/what-ai-powers";
 import { PromptVariantsSection } from "@/components/settings/prompt-variants-section";
-import { AppPage, PageContent, PageHeader } from "@/components/ui/page-layout";
+import {
+  AppPage,
+  PageContent,
+  PageHeader,
+  PageLoadingState,
+} from "@/components/ui/page-layout";
 import { useDataIO } from "./use-data-io";
 import { useLLMSettings } from "./use-llm-settings";
 
@@ -27,14 +32,7 @@ export default function SettingsPage() {
   );
 
   if (llmSettings.loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="h-10 w-10 animate-spin mx-auto text-primary" />
-          <p className="mt-4 text-muted-foreground">Loading settings...</p>
-        </div>
-      </div>
-    );
+    return <PageLoadingState icon={Loader2} label="Loading settings..." />;
   }
 
   return (

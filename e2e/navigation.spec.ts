@@ -109,9 +109,9 @@ test.describe("Navigation", () => {
     const sidebar = page.locator("aside");
     const activeLink = sidebar.getByRole("link", { name: /Documents/i });
     await expect(activeLink).toHaveAttribute("data-active", "true");
-    await expect(activeLink).toHaveClass(/bg-primary/);
-    await expect(activeLink).toHaveClass(/text-primary-foreground/);
-    await expect(activeLink).toHaveClass(/shadow-button/);
+    await expect(activeLink).toHaveClass(/bg-card/);
+    await expect(activeLink).toHaveClass(/text-foreground/);
+    await expect(activeLink).toHaveClass(/shadow-sm/);
   });
 
   test("should show app logo in sidebar", async ({ page }) => {

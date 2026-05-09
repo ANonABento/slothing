@@ -15,10 +15,12 @@ import { getLLMConfig } from "@/lib/db";
 import { LLMClient, parseJSONFromLLM } from "@/lib/llm/client";
 import { requireAuth, isAuthError } from "@/lib/auth";
 
+export const dynamic = "force-dynamic";
+
 // POST - Add an answer to the session
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
@@ -29,17 +31,14 @@ export async function POST(
     if (questionIndex === undefined || !answer) {
       return NextResponse.json(
         { error: "questionIndex and answer are required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     const session = getInterviewSession(params.id, authResult.userId);
 
     if (!session) {
-      return NextResponse.json(
-        { error: "Session not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Session not found" }, { status: 404 });
     }
 
     const question = session.questions[questionIndex];
@@ -47,7 +46,7 @@ export async function POST(
     if (!question) {
       return NextResponse.json(
         { error: "Invalid question index" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -86,14 +85,22 @@ Be encouraging but also point out areas for improvement.`,
         feedback = parsed.feedback || "";
       } catch (llmError) {
         console.error("LLM feedback error:", llmError);
-        feedback = "Good effort! Consider using the STAR method (Situation, Task, Action, Result) to structure your answers for behavioral questions.";
+        feedback =
+          "Good effort! Consider using the STAR method (Situation, Task, Action, Result) to structure your answers for behavioral questions.";
       }
     } else {
-      feedback = "Answer recorded. To get AI-powered feedback, configure an LLM provider in Settings.";
+      feedback =
+        "Answer recorded. To get AI-powered feedback, configure an LLM provider in Settings.";
     }
 
     // Save the answer
-    const savedAnswer = addInterviewAnswer(params.id, questionIndex, answer, feedback, authResult.userId);
+    const savedAnswer = addInterviewAnswer(
+      params.id,
+      questionIndex,
+      answer,
+      feedback,
+      authResult.userId,
+    );
 
     // Check if interview is complete
     const isComplete = questionIndex >= session.questions.length - 1;
@@ -110,7 +117,7 @@ Be encouraging but also point out areas for improvement.`,
     console.error("Add answer error:", error);
     return NextResponse.json(
       { error: "Failed to add answer" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

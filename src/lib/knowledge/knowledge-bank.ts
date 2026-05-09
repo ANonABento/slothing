@@ -6,7 +6,10 @@
  */
 
 import type { BankEntry, BankCategory } from "@/types";
-import { getBankEntries, getBankEntriesByCategory } from "@/lib/db/profile-bank";
+import {
+  getBankEntries,
+  getBankEntriesByCategory,
+} from "@/lib/db/profile-bank";
 import { rankBySimilarity, type ScoredItem } from "./embedder";
 
 /** A bank entry with its relevance score */
@@ -19,7 +22,9 @@ export interface RankedChunk {
 }
 
 /** Convert a bank entry's content to a searchable text string */
-export function bankEntryToText(entry: Pick<BankEntry, "category" | "content">): string {
+export function bankEntryToText(
+  entry: Pick<BankEntry, "category" | "content">,
+): string {
   const parts: string[] = [];
   const c = entry.content;
 
@@ -80,8 +85,13 @@ export function bankEntryToText(entry: Pick<BankEntry, "category" | "content">):
       if (c.name) parts.push(String(c.name));
       if (c.issuer) parts.push(String(c.issuer));
       break;
+    case "bullet":
     case "achievement":
       if (c.description) parts.push(String(c.description));
+      if (c.context) parts.push(String(c.context));
+      if (c.company) parts.push(String(c.company));
+      if (c.role) parts.push(String(c.role));
+      if (c.project) parts.push(String(c.project));
       break;
   }
 
@@ -109,7 +119,7 @@ export function searchKnowledgeBank(
   query: string,
   userId: string = "default",
   limit: number = 20,
-  category?: BankCategory
+  category?: BankCategory,
 ): RankedChunk[] {
   const entries = category
     ? getBankEntriesByCategory(category, userId)
@@ -119,7 +129,7 @@ export function searchKnowledgeBank(
     query,
     entries,
     bankEntryToText,
-    limit
+    limit,
   );
 
   return ranked.map((r) => ({
@@ -138,7 +148,7 @@ export function searchKnowledgeBank(
 export function multiQuerySearch(
   queries: string[],
   userId: string = "default",
-  limitPerQuery: number = 20
+  limitPerQuery: number = 20,
 ): RankedChunk[] {
   const chunkMap = new Map<string, RankedChunk>();
 
@@ -220,15 +230,17 @@ function rowToChunk(row: KnowledgeChunkRow): KnowledgeChunk {
   };
 }
 
-export function insertChunks(chunks: Array<{
-  userId?: string;
-  documentId: string;
-  sectionType: string;
-  content: string;
-  contentHash: string;
-  embedding?: Buffer | null;
-  metadata?: Record<string, unknown>;
-}>): string[] {
+export function insertChunks(
+  chunks: Array<{
+    userId?: string;
+    documentId: string;
+    sectionType: string;
+    content: string;
+    contentHash: string;
+    embedding?: Buffer | null;
+    metadata?: Record<string, unknown>;
+  }>,
+): string[] {
   const stmt = db.prepare(`
     INSERT INTO knowledge_chunks (id, user_id, document_id, section_type, content, content_hash, embedding, metadata_json)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
@@ -246,7 +258,7 @@ export function insertChunks(chunks: Array<{
         chunk.content,
         chunk.contentHash,
         chunk.embedding ?? null,
-        JSON.stringify(chunk.metadata ?? {})
+        JSON.stringify(chunk.metadata ?? {}),
       );
       ids.push(id);
     }
@@ -255,32 +267,59 @@ export function insertChunks(chunks: Array<{
   return ids;
 }
 
-export function getChunksByHash(hashes: string[], userId: string = "default"): KnowledgeChunk[] {
+export function getChunksByHash(
+  hashes: string[],
+  userId: string = "default",
+): KnowledgeChunk[] {
   if (hashes.length === 0) return [];
   const placeholders = hashes.map(() => "?").join(",");
-  const rows = db.prepare(`
+  const rows = db
+    .prepare(
+      `
     SELECT * FROM knowledge_chunks WHERE user_id = ? AND content_hash IN (${placeholders})
-  `).all(userId, ...hashes) as KnowledgeChunkRow[];
+  `,
+    )
+    .all(userId, ...hashes) as KnowledgeChunkRow[];
   return rows.map(rowToChunk);
 }
 
-export function getChunksByDocument(documentId: string, userId: string = "default"): KnowledgeChunk[] {
-  const rows = db.prepare(`
+export function getChunksByDocument(
+  documentId: string,
+  userId: string = "default",
+): KnowledgeChunk[] {
+  const rows = db
+    .prepare(
+      `
     SELECT * FROM knowledge_chunks WHERE user_id = ? AND document_id = ?
-  `).all(userId, documentId) as KnowledgeChunkRow[];
+  `,
+    )
+    .all(userId, documentId) as KnowledgeChunkRow[];
   return rows.map(rowToChunk);
 }
 
-export function getAllChunksWithEmbeddings(userId: string = "default"): KnowledgeChunk[] {
-  const rows = db.prepare(`
+export function getAllChunksWithEmbeddings(
+  userId: string = "default",
+): KnowledgeChunk[] {
+  const rows = db
+    .prepare(
+      `
     SELECT * FROM knowledge_chunks WHERE user_id = ? AND embedding IS NOT NULL
-  `).all(userId) as KnowledgeChunkRow[];
+  `,
+    )
+    .all(userId) as KnowledgeChunkRow[];
   return rows.map(rowToChunk);
 }
 
-export function deleteChunksByDocument(documentId: string, userId: string = "default"): number {
-  const result = db.prepare(`
+export function deleteChunksByDocument(
+  documentId: string,
+  userId: string = "default",
+): number {
+  const result = db
+    .prepare(
+      `
     DELETE FROM knowledge_chunks WHERE user_id = ? AND document_id = ?
-  `).run(userId, documentId);
+  `,
+    )
+    .run(userId, documentId);
   return result.changes;
 }

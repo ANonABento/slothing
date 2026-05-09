@@ -12,6 +12,8 @@ import { getProfile, updateProfile, clearProfile } from "@/lib/db";
 import { updateProfileSchema } from "@/lib/constants";
 import { requireAuth, isAuthError } from "@/lib/auth";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
@@ -23,7 +25,7 @@ export async function GET() {
     console.error("Get profile error:", error);
     return NextResponse.json(
       { error: "Failed to get profile" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -44,7 +46,7 @@ export async function PUT(request: NextRequest) {
       }));
       return NextResponse.json(
         { error: "Validation failed", errors },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -55,7 +57,7 @@ export async function PUT(request: NextRequest) {
     console.error("Update profile error:", error);
     return NextResponse.json(
       { error: "Failed to update profile" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -71,7 +73,7 @@ export async function DELETE() {
     console.error("Clear profile error:", error);
     return NextResponse.json(
       { error: "Failed to clear profile" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

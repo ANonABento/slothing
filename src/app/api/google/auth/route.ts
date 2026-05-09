@@ -9,6 +9,8 @@ import { NextResponse } from "next/server";
 import { requireAuth, isAuthError } from "@/lib/auth";
 import { getGoogleConnectionStatus } from "@/lib/google/client";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
@@ -21,7 +23,7 @@ export async function GET() {
     console.error("Google auth check error:", error);
     return NextResponse.json(
       { error: "Failed to check Google connection", connected: false },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

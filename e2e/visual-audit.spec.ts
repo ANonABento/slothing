@@ -1,9 +1,7 @@
 import { test, expect, type Page } from "@playwright/test";
 import { THEME_DARK_STORAGE_KEY } from "../src/lib/theme/storage-keys";
 
-const PUBLIC_PAGES = [
-  { path: "/", name: "landing" },
-];
+const PUBLIC_PAGES = [{ path: "/", name: "landing" }];
 
 // Pages accessible with auth bypass (no Clerk keys configured)
 const APP_PAGES = [
@@ -13,7 +11,7 @@ const APP_PAGES = [
   "/builder",
   "/tailor",
   "/cover-letter",
-  "/jobs",
+  "/opportunities",
   "/settings",
 ];
 
@@ -33,7 +31,7 @@ test.describe("Visual Audit - Public Pages", () => {
     test(`${name} page renders correctly`, async ({ page }, testInfo) => {
       test.skip(
         testInfo.project.name !== "chromium",
-        "Visual baselines are only maintained for the desktop Chromium project."
+        "Visual baselines are only maintained for the desktop Chromium project.",
       );
 
       const errors: string[] = [];
@@ -55,7 +53,8 @@ test.describe("Visual Audit - Public Pages", () => {
       });
 
       const criticalErrors = errors.filter(
-        (error) => !error.includes("favicon.ico") && !error.includes("hydration")
+        (error) =>
+          !error.includes("favicon.ico") && !error.includes("hydration"),
       );
       expect(criticalErrors).toHaveLength(0);
     });
@@ -63,7 +62,9 @@ test.describe("Visual Audit - Public Pages", () => {
 });
 
 test.describe("Visual Audit - Auth Bypass Behavior", () => {
-  test("app pages are accessible without Clerk keys (auth bypass)", async ({ page }) => {
+  test("app pages are accessible without Clerk keys (auth bypass)", async ({
+    page,
+  }) => {
     await preparePage(page);
 
     for (const path of APP_PAGES) {
@@ -84,7 +85,7 @@ test.describe("Visual Audit - Landing Page States", () => {
   test("landing page light theme", async ({ page }, testInfo) => {
     test.skip(
       testInfo.project.name !== "chromium",
-      "Visual baselines are only maintained for the desktop Chromium project."
+      "Visual baselines are only maintained for the desktop Chromium project.",
     );
 
     await page.evaluate((darkStorageKey) => {
@@ -92,7 +93,10 @@ test.describe("Visual Audit - Landing Page States", () => {
     }, THEME_DARK_STORAGE_KEY);
     await page.goto("/");
     await expect(page.locator("html")).not.toHaveClass(/dark/);
-    await expect(page.locator("html")).toHaveAttribute("data-theme-mode", "light");
+    await expect(page.locator("html")).toHaveAttribute(
+      "data-theme-mode",
+      "light",
+    );
 
     await expect(page).toHaveScreenshot("landing-light.png", {
       fullPage: true,
@@ -103,7 +107,7 @@ test.describe("Visual Audit - Landing Page States", () => {
   test("landing page dark theme", async ({ page }, testInfo) => {
     test.skip(
       testInfo.project.name !== "chromium",
-      "Visual baselines are only maintained for the desktop Chromium project."
+      "Visual baselines are only maintained for the desktop Chromium project.",
     );
 
     await page.evaluate((darkStorageKey) => {
@@ -111,7 +115,10 @@ test.describe("Visual Audit - Landing Page States", () => {
     }, THEME_DARK_STORAGE_KEY);
     await page.goto("/");
     await expect(page.locator("html")).toHaveClass(/dark/);
-    await expect(page.locator("html")).toHaveAttribute("data-theme-mode", "dark");
+    await expect(page.locator("html")).toHaveAttribute(
+      "data-theme-mode",
+      "dark",
+    );
 
     await expect(page).toHaveScreenshot("landing-dark.png", {
       fullPage: true,
@@ -119,10 +126,12 @@ test.describe("Visual Audit - Landing Page States", () => {
     });
   });
 
-  test("mobile navigation state renders correctly", async ({ page }, testInfo) => {
+  test("mobile navigation state renders correctly", async ({
+    page,
+  }, testInfo) => {
     test.skip(
       testInfo.project.name !== "chromium",
-      "Visual baselines are only maintained for the desktop Chromium project."
+      "Visual baselines are only maintained for the desktop Chromium project.",
     );
 
     await page.setViewportSize({ width: 375, height: 667 });
@@ -131,7 +140,9 @@ test.describe("Visual Audit - Landing Page States", () => {
 
     await page.getByRole("button", { name: "Toggle menu" }).click();
 
-    await expect(page.locator("header")).toHaveScreenshot("landing-mobile-menu.png");
+    await expect(page.locator("header")).toHaveScreenshot(
+      "landing-mobile-menu.png",
+    );
   });
 });
 
@@ -147,7 +158,9 @@ test.describe("Visual Audit - Typography and Icons", () => {
     const h1 = page.locator("h1").first();
     await expect(h1).toBeVisible();
 
-    const fontSize = await h1.evaluate((element) => window.getComputedStyle(element).fontSize);
+    const fontSize = await h1.evaluate(
+      (element) => window.getComputedStyle(element).fontSize,
+    );
     expect(parseInt(fontSize, 10)).toBeGreaterThanOrEqual(24);
   });
 

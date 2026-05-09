@@ -7,6 +7,8 @@ import {
   rewriteDocumentSelection,
 } from "@/lib/document-assistant";
 
+export const dynamic = "force-dynamic";
+
 type DocumentAssistantRequestBody = {
   action?: unknown;
   selectedText?: unknown;

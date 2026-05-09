@@ -22,6 +22,8 @@ import { createJob } from "@/lib/db/jobs";
 import { requireAuth, isAuthError } from "@/lib/auth";
 import { assertSafeOutboundUrl, SsrfBlockedError } from "@/lib/security/ssrf";
 
+export const dynamic = "force-dynamic";
+
 interface ImportRequest {
   text?: string;
   json?: Record<string, unknown>;

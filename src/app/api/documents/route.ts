@@ -9,6 +9,8 @@ import { requireAuth, isAuthError } from "@/lib/auth";
 import { getDocuments, getDocumentsByType } from "@/lib/db";
 import { documentTypeSchema } from "@/lib/constants/documents";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(request: NextRequest) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
@@ -24,7 +26,7 @@ export async function GET(request: NextRequest) {
     if (!parsedType.success) {
       return NextResponse.json(
         { error: "Invalid document type" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -35,7 +37,7 @@ export async function GET(request: NextRequest) {
     console.error("Get documents error:", error);
     return NextResponse.json(
       { error: "Failed to get documents" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

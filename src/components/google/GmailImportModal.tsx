@@ -109,7 +109,8 @@ export function GmailImportModal({ onImport, trigger }: GmailImportModalProps) {
     } catch (err) {
       showErrorToast(err, {
         title: "Could not scan Gmail",
-        fallbackDescription: "Please check your Google connection and try again.",
+        fallbackDescription:
+          "Please check your Google connection and try again.",
       });
       setError("Failed to scan emails from Gmail");
     } finally {
@@ -148,10 +149,11 @@ export function GmailImportModal({ onImport, trigger }: GmailImportModalProps) {
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Mail className="h-5 w-5 text-primary" />
-            Import Jobs from Gmail
+            Import Opportunities from Gmail
           </DialogTitle>
           <DialogDescription>
-            Scan your inbox for job-related emails and import them as job entries
+            Scan your inbox for opportunity-related emails and import them as
+            tracked opportunities
           </DialogDescription>
         </DialogHeader>
 
@@ -170,7 +172,9 @@ export function GmailImportModal({ onImport, trigger }: GmailImportModalProps) {
           {connected === null && (
             <div className="flex flex-col items-center justify-center py-12 gap-3">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              <p className="text-sm text-muted-foreground">Checking connection...</p>
+              <p className="text-sm text-muted-foreground">
+                Checking connection...
+              </p>
             </div>
           )}
 
@@ -233,7 +237,9 @@ export function GmailImportModal({ onImport, trigger }: GmailImportModalProps) {
                             </span>
                           </div>
 
-                          <p className="font-medium truncate">{email.subject}</p>
+                          <p className="font-medium truncate">
+                            {email.subject}
+                          </p>
                           <p className="text-sm text-muted-foreground truncate">
                             From: {email.from}
                           </p>

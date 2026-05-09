@@ -45,6 +45,8 @@ import {
   AppPage,
   PageContent,
   PageHeader,
+  PageLoadingState,
+  PagePanel,
   StandardEmptyState,
 } from "@/components/ui/page-layout";
 import { SkeletonButton } from "@/components/ui/skeleton";
@@ -335,14 +337,7 @@ export default function CalendarPage() {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <CalendarIcon className="h-10 w-10 animate-pulse mx-auto text-primary" />
-          <p className="mt-4 text-muted-foreground">Loading calendar...</p>
-        </div>
-      </div>
-    );
+    return <PageLoadingState icon={Loader2} label="Loading calendar..." />;
   }
 
   return (
@@ -355,7 +350,10 @@ export default function CalendarPage() {
         actions={
           <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center">
             <Select value={filterType} onValueChange={setFilterType}>
-              <SelectTrigger className="w-36" aria-label="Filter events by type">
+              <SelectTrigger
+                className="w-36"
+                aria-label="Filter events by type"
+              >
                 <SelectValue placeholder="Filter" />
               </SelectTrigger>
               <SelectContent>
@@ -419,7 +417,7 @@ export default function CalendarPage() {
 
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Calendar Grid */}
-          <div className="rounded-2xl border bg-card p-2 sm:p-6 lg:col-span-2">
+          <PagePanel className="p-2 sm:p-6 lg:col-span-2">
             {/* Calendar Header */}
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-semibold">
@@ -464,7 +462,7 @@ export default function CalendarPage() {
             <div className="grid grid-cols-7 gap-0 sm:gap-1">
               {calendarDays.map((date, i) => {
                 if (!date) {
-                  return <div key={`empty-${i}`} className="aspect-square" />;
+                  return <div key={`empty-${i}`} className="h-14 sm:h-16" />;
                 }
 
                 const dayEvents = getEventsForDate(date);
@@ -478,7 +476,7 @@ export default function CalendarPage() {
                   <button
                     key={date.toISOString()}
                     onClick={() => setSelectedDate(date)}
-                    className={`relative aspect-square min-h-11 rounded-lg p-1 text-sm transition-colors ${
+                    className={`relative h-14 rounded-lg p-1 text-sm transition-colors sm:h-16 ${
                       isSelected
                         ? "bg-primary text-primary-foreground"
                         : isToday(date)
@@ -505,22 +503,22 @@ export default function CalendarPage() {
             {/* Legend */}
             <div className="flex items-center gap-4 mt-6 pt-4 border-t text-sm text-muted-foreground">
               <span className="flex items-center gap-2">
-                <span className="w-3 h-3 rounded-full bg-purple-500" />
+                <span className="w-3 h-3 rounded-full bg-primary" />
                 Interview
               </span>
               <span className="flex items-center gap-2">
-                <span className="w-3 h-3 rounded-full bg-red-500" />
+                <span className="w-3 h-3 rounded-full bg-destructive" />
                 Deadline
               </span>
               <span className="flex items-center gap-2">
-                <span className="w-3 h-3 rounded-full bg-blue-500" />
+                <span className="w-3 h-3 rounded-full bg-info" />
                 Reminder
               </span>
             </div>
-          </div>
+          </PagePanel>
 
           {/* Event Details */}
-          <div className="rounded-2xl border bg-card p-6">
+          <PagePanel>
             <h3 className="font-semibold mb-4">
               {selectedDate
                 ? new Intl.DateTimeFormat(locale, {
@@ -546,10 +544,10 @@ export default function CalendarPage() {
                           <Briefcase className={`h-4 w-4 text-primary`} />
                         )}
                         {event.type === "deadline" && (
-                          <AlertCircle className={`h-4 w-4 text-red-500`} />
+                          <AlertCircle className="h-4 w-4 text-destructive" />
                         )}
                         {event.type === "reminder" && (
-                          <Bell className={`h-4 w-4 text-blue-500`} />
+                          <Bell className="h-4 w-4 text-info" />
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
@@ -627,7 +625,7 @@ export default function CalendarPage() {
                 />
               )}
             </div>
-          </div>
+          </PagePanel>
         </div>
       </PageContent>
 

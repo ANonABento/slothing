@@ -11,6 +11,8 @@ import { requireAuth, isAuthError } from "@/lib/auth";
 import { sendEmail } from "@/lib/google/gmail";
 import { isGoogleConnected } from "@/lib/google/client";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(request: NextRequest) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
@@ -19,7 +21,7 @@ export async function POST(request: NextRequest) {
   if (!connected) {
     return NextResponse.json(
       { error: "Google account not connected" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -30,7 +32,7 @@ export async function POST(request: NextRequest) {
     if (!to || !subject || !emailBody) {
       return NextResponse.json(
         { error: "Missing required fields: to, subject, body" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -39,7 +41,7 @@ export async function POST(request: NextRequest) {
     if (!emailRegex.test(to)) {
       return NextResponse.json(
         { error: "Invalid email address" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -62,7 +64,7 @@ export async function POST(request: NextRequest) {
     console.error("Gmail send error:", error);
     return NextResponse.json(
       { error: "Failed to send email" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

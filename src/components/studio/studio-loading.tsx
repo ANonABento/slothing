@@ -1,11 +1,12 @@
 "use client";
 
 import { Loader2 } from "lucide-react";
+import { PageWorkspace } from "@/components/ui/page-layout";
 
 export function StudioLoading() {
   return (
-    <div className="flex h-[calc(100vh-4rem)] items-center justify-center">
+    <PageWorkspace className="items-center justify-center">
       <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-    </div>
+    </PageWorkspace>
   );
 }

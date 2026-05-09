@@ -12,6 +12,8 @@ import { getAllGeneratedResumes } from "@/lib/db/resumes";
 import { saveAnalyticsSnapshot } from "@/lib/db/analytics";
 import { requireAuth, isAuthError } from "@/lib/auth";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
@@ -38,24 +40,40 @@ export async function GET() {
     }
 
     // Job status breakdown
-    const jobsByStatus = jobs.reduce((acc, job) => {
-      const status = job.status || "saved";
-      acc[status] = (acc[status] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
+    const jobsByStatus = jobs.reduce(
+      (acc, job) => {
+        const status = job.status || "saved";
+        acc[status] = (acc[status] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>,
+    );
 
     // Interview stats
-    const completedInterviews = interviews.filter((i) => i.status === "completed").length;
-    const inProgressInterviews = interviews.filter((i) => i.status === "in_progress").length;
+    const completedInterviews = interviews.filter(
+      (i) => i.status === "completed",
+    ).length;
+    const inProgressInterviews = interviews.filter(
+      (i) => i.status === "in_progress",
+    ).length;
 
     // Skill gaps (from all jobs)
     const allKeywords = jobs.flatMap((j) => j.keywords || []);
-    const profileSkills = profile?.skills.map((s) => s.name.toLowerCase()) || [];
-    const skillGaps = Array.from(new Set(
-      allKeywords
-        .filter((kw) => !profileSkills.some((s) => s.includes(kw.toLowerCase()) || kw.toLowerCase().includes(s)))
-        .map((kw) => kw.toLowerCase())
-    )).slice(0, 10);
+    const profileSkills =
+      profile?.skills.map((s) => s.name.toLowerCase()) || [];
+    const skillGaps = Array.from(
+      new Set(
+        allKeywords
+          .filter(
+            (kw) =>
+              !profileSkills.some(
+                (s) =>
+                  s.includes(kw.toLowerCase()) || kw.toLowerCase().includes(s),
+              ),
+          )
+          .map((kw) => kw.toLowerCase()),
+      ),
+    ).slice(0, 10);
 
     // Recent activity
     const recentJobs = jobs.slice(0, 5).map((j) => ({
@@ -90,10 +108,14 @@ export async function GET() {
       skills: {
         total: profile?.skills.length || 0,
         gaps: skillGaps,
-        byCategory: profile?.skills.reduce((acc, s) => {
-          acc[s.category] = (acc[s.category] || 0) + 1;
-          return acc;
-        }, {} as Record<string, number>) || {},
+        byCategory:
+          profile?.skills.reduce(
+            (acc, s) => {
+              acc[s.category] = (acc[s.category] || 0) + 1;
+              return acc;
+            },
+            {} as Record<string, number>,
+          ) || {},
       },
       recent: {
         jobs: recentJobs,
@@ -103,21 +125,24 @@ export async function GET() {
     // Save today's snapshot for historical tracking
     try {
       const today = new Date().toISOString().split("T")[0];
-      saveAnalyticsSnapshot({
-        userId: authResult.userId,
-        snapshotDate: today,
-        totalJobs: jobs.length,
-        jobsSaved: jobsByStatus["saved"] || 0,
-        jobsApplied: jobsByStatus["applied"] || 0,
-        jobsInterviewing: jobsByStatus["interviewing"] || 0,
-        jobsOffered: jobsByStatus["offered"] || 0,
-        jobsRejected: jobsByStatus["rejected"] || 0,
-        totalInterviews: interviews.length,
-        interviewsCompleted: completedInterviews,
-        totalDocuments: documents.length,
-        totalResumes: resumes.length,
-        profileCompleteness: Math.min(profileScore, 100),
-      }, authResult.userId);
+      saveAnalyticsSnapshot(
+        {
+          userId: authResult.userId,
+          snapshotDate: today,
+          totalJobs: jobs.length,
+          jobsSaved: jobsByStatus["saved"] || 0,
+          jobsApplied: jobsByStatus["applied"] || 0,
+          jobsInterviewing: jobsByStatus["interviewing"] || 0,
+          jobsOffered: jobsByStatus["offered"] || 0,
+          jobsRejected: jobsByStatus["rejected"] || 0,
+          totalInterviews: interviews.length,
+          interviewsCompleted: completedInterviews,
+          totalDocuments: documents.length,
+          totalResumes: resumes.length,
+          profileCompleteness: Math.min(profileScore, 100),
+        },
+        authResult.userId,
+      );
     } catch (snapshotError) {
       console.error("Failed to save analytics snapshot:", snapshotError);
       // Don't fail the request if snapshot fails
@@ -128,7 +153,7 @@ export async function GET() {
     console.error("Analytics error:", error);
     return NextResponse.json(
       { error: "Failed to get analytics" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

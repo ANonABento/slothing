@@ -13,6 +13,8 @@ import {
   updateBankEntryForUser as updateStoredBankEntryForUser,
 } from "@/lib/db/profile-bank";
 
+export const dynamic = "force-dynamic";
+
 interface BankEntryUpdateBody {
   content?: unknown;
   confidenceScore?: unknown;
@@ -29,7 +31,7 @@ function isBankEntryContent(value: unknown): value is Record<string, unknown> {
 async function handleUpdateBankEntryForUser(
   entryId: string,
   userId: string,
-  body: BankEntryUpdateBody
+  body: BankEntryUpdateBody,
 ) {
   if (!isBankEntryContent(body.content)) {
     return NextResponse.json({ error: "Content is required" }, { status: 400 });
@@ -39,7 +41,7 @@ async function handleUpdateBankEntryForUser(
     entryId,
     userId,
     body.content,
-    typeof body.confidenceScore === "number" ? body.confidenceScore : 0.8
+    typeof body.confidenceScore === "number" ? body.confidenceScore : 0.8,
   );
 
   if (!updated) {
@@ -49,47 +51,41 @@ async function handleUpdateBankEntryForUser(
   return NextResponse.json({ success: true });
 }
 
-export async function PUT(
-  request: NextRequest,
-  { params }: BankEntryParams
-) {
+export async function PUT(request: NextRequest, { params }: BankEntryParams) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
 
   try {
-    const body = await request.json() as BankEntryUpdateBody;
+    const body = (await request.json()) as BankEntryUpdateBody;
     return handleUpdateBankEntryForUser(params.id, authResult.userId, body);
   } catch (error) {
     console.error("Update bank entry error:", error);
     return NextResponse.json(
       { error: "Failed to update bank entry" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
-export async function PATCH(
-  request: NextRequest,
-  { params }: BankEntryParams
-) {
+export async function PATCH(request: NextRequest, { params }: BankEntryParams) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
 
   try {
-    const body = await request.json() as BankEntryUpdateBody;
+    const body = (await request.json()) as BankEntryUpdateBody;
     return handleUpdateBankEntryForUser(params.id, authResult.userId, body);
   } catch (error) {
     console.error("Update bank entry error:", error);
     return NextResponse.json(
       { error: "Failed to update bank entry" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
 export async function DELETE(
   request: NextRequest,
-  { params }: BankEntryParams
+  { params }: BankEntryParams,
 ) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
@@ -103,7 +99,7 @@ export async function DELETE(
     console.error("Delete bank entry error:", error);
     return NextResponse.json(
       { error: "Failed to delete bank entry" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

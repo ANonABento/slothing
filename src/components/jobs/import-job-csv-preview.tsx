@@ -39,7 +39,9 @@ export function ImportJobCsvPreview({
             <div className="text-2xl font-bold text-success">
               {preview.valid}
             </div>
-            <div className="text-xs text-muted-foreground">Valid Jobs</div>
+            <div className="text-xs text-muted-foreground">
+              Valid Opportunities
+            </div>
           </div>
           <div>
             <div className="text-2xl font-bold text-destructive">
@@ -70,7 +72,7 @@ export function ImportJobCsvPreview({
       {preview.jobs.length > 0 && (
         <div>
           <Label className="text-sm font-medium">
-            Jobs to Import ({preview.jobs.length})
+            Opportunities to Import ({preview.jobs.length})
           </Label>
           <div className="mt-2 max-h-48 overflow-y-auto space-y-2">
             {preview.jobs.slice(0, 10).map((job, i) => (
@@ -94,7 +96,7 @@ export function ImportJobCsvPreview({
             ))}
             {preview.jobs.length > 10 && (
               <div className="text-xs text-muted-foreground text-center py-2">
-                ...and {pluralize(preview.jobs.length - 10, "more job")}
+                ...and {pluralize(preview.jobs.length - 10, "more opportunity")}
               </div>
             )}
           </div>
@@ -119,7 +121,7 @@ export function ImportJobCsvPreview({
             ) : (
               <Check className="h-4 w-4 mr-2" />
             )}
-            Import {pluralize(preview.jobs.length, "Job")}
+            Import {pluralize(preview.jobs.length, "Opportunity")}
           </Button>
         </div>
       </div>

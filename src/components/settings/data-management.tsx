@@ -1,9 +1,24 @@
 "use client";
 
 import type { ChangeEvent } from "react";
-import { CheckCircle, Database, Download, FileJson, FileSpreadsheet, HardDrive, Loader2, Upload, XCircle } from "lucide-react";
+import {
+  CheckCircle,
+  Database,
+  Download,
+  FileJson,
+  FileSpreadsheet,
+  HardDrive,
+  Loader2,
+  Upload,
+  XCircle,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
-import type { ExportType, ImportPreview, ImportResult } from "@/app/(app)/settings/use-data-io";
+import { PageSection } from "@/components/ui/page-layout";
+import type {
+  ExportType,
+  ImportPreview,
+  ImportResult,
+} from "@/app/(app)/settings/use-data-io";
 
 interface DataManagementProps {
   exporting: ExportType | null;
@@ -11,7 +26,10 @@ interface DataManagementProps {
   importResult: ImportResult | null;
   showImportPreview: ImportPreview | null;
   onExport: (type: ExportType) => void;
-  onImportFile: (event: ChangeEvent<HTMLInputElement>, type: "jobs" | "backup") => Promise<void>;
+  onImportFile: (
+    event: ChangeEvent<HTMLInputElement>,
+    type: "jobs" | "backup",
+  ) => Promise<void>;
   onFullImportPreview: (event: ChangeEvent<HTMLInputElement>) => Promise<void>;
   onConfirmFullImport: () => Promise<void>;
   onCancelImportPreview: () => void;
@@ -31,25 +49,25 @@ export function DataManagement(props: DataManagementProps) {
   } = props;
 
   return (
-    <div className="rounded-2xl border bg-card p-6">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="p-2.5 rounded-xl bg-primary/10 text-primary">
-          <Database className="h-5 w-5" />
-        </div>
-        <div>
-          <h2 className="font-semibold">Data Management</h2>
-          <p className="text-sm text-muted-foreground">Export your data or import from backups</p>
-        </div>
-      </div>
-
-      <div className="space-y-6">
+    <PageSection
+      title="Data Management"
+      description="Export your data or import from backups."
+      icon={Database}
+      contentClassName="space-y-6"
+    >
+      <>
         <div className="space-y-3">
           <h3 className="text-sm font-medium flex items-center gap-2">
             <Download className="h-4 w-4" />
             Export Data
           </h3>
           <div className="grid gap-2 sm:grid-cols-2">
-            <Button variant="outline" onClick={() => onExport("profile")} disabled={!!exporting} className="justify-start">
+            <Button
+              variant="outline"
+              onClick={() => onExport("profile")}
+              disabled={!!exporting}
+              className="justify-start"
+            >
               {exporting === "profile" ? (
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
               ) : (
@@ -57,23 +75,38 @@ export function DataManagement(props: DataManagementProps) {
               )}
               Export Profile (JSON)
             </Button>
-            <Button variant="outline" onClick={() => onExport("jobs-json")} disabled={!!exporting} className="justify-start">
+            <Button
+              variant="outline"
+              onClick={() => onExport("jobs-json")}
+              disabled={!!exporting}
+              className="justify-start"
+            >
               {exporting === "jobs-json" ? (
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
               ) : (
                 <FileJson className="h-4 w-4 mr-2 text-success" />
               )}
-              Export Jobs (JSON)
+              Export Opportunities (JSON)
             </Button>
-            <Button variant="outline" onClick={() => onExport("jobs-csv")} disabled={!!exporting} className="justify-start">
+            <Button
+              variant="outline"
+              onClick={() => onExport("jobs-csv")}
+              disabled={!!exporting}
+              className="justify-start"
+            >
               {exporting === "jobs-csv" ? (
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
               ) : (
                 <FileSpreadsheet className="h-4 w-4 mr-2 text-success" />
               )}
-              Export Jobs (CSV)
+              Export Opportunities (CSV)
             </Button>
-            <Button variant="outline" onClick={() => onExport("backup")} disabled={!!exporting} className="justify-start">
+            <Button
+              variant="outline"
+              onClick={() => onExport("backup")}
+              disabled={!!exporting}
+              className="justify-start"
+            >
               {exporting === "backup" ? (
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
               ) : (
@@ -112,9 +145,17 @@ export function DataManagement(props: DataManagementProps) {
                 aria-label="Import jobs from JSON or CSV file"
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
               />
-              <Button variant="outline" disabled={importing} className="w-full justify-start pointer-events-none">
-                {importing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <FileJson className="h-4 w-4 mr-2 text-info" />}
-                Import Jobs (JSON/CSV)
+              <Button
+                variant="outline"
+                disabled={importing}
+                className="w-full justify-start pointer-events-none"
+              >
+                {importing ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <FileJson className="h-4 w-4 mr-2 text-info" />
+                )}
+                Import Opportunities (JSON/CSV)
               </Button>
             </div>
             <div className="relative">
@@ -126,8 +167,16 @@ export function DataManagement(props: DataManagementProps) {
                 aria-label="Restore backup from JSON file"
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
               />
-              <Button variant="outline" disabled={importing} className="w-full justify-start pointer-events-none">
-                {importing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <HardDrive className="h-4 w-4 mr-2 text-primary" />}
+              <Button
+                variant="outline"
+                disabled={importing}
+                className="w-full justify-start pointer-events-none"
+              >
+                {importing ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <HardDrive className="h-4 w-4 mr-2 text-primary" />
+                )}
                 Restore Backup
               </Button>
             </div>
@@ -140,8 +189,16 @@ export function DataManagement(props: DataManagementProps) {
                 aria-label="Import all data from JSON file"
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
               />
-              <Button variant="outline" disabled={importing} className="w-full justify-start pointer-events-none">
-                {importing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Database className="h-4 w-4 mr-2 text-primary" />}
+              <Button
+                variant="outline"
+                disabled={importing}
+                className="w-full justify-start pointer-events-none"
+              >
+                {importing ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Database className="h-4 w-4 mr-2 text-primary" />
+                )}
                 Import All Data (JSON)
               </Button>
             </div>
@@ -180,7 +237,12 @@ export function DataManagement(props: DataManagementProps) {
                   "Confirm Import"
                 )}
               </Button>
-              <Button size="sm" variant="outline" onClick={onCancelImportPreview} disabled={importing}>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={onCancelImportPreview}
+                disabled={importing}
+              >
                 Cancel
               </Button>
             </div>
@@ -195,11 +257,15 @@ export function DataManagement(props: DataManagementProps) {
                 : "bg-destructive/10 text-destructive border border-destructive/20"
             }`}
           >
-            {importResult.success ? <CheckCircle className="h-5 w-5 shrink-0" /> : <XCircle className="h-5 w-5 shrink-0" />}
+            {importResult.success ? (
+              <CheckCircle className="h-5 w-5 shrink-0" />
+            ) : (
+              <XCircle className="h-5 w-5 shrink-0" />
+            )}
             <span className="font-medium">{importResult.message}</span>
           </div>
         )}
-      </div>
-    </div>
+      </>
+    </PageSection>
   );
 }

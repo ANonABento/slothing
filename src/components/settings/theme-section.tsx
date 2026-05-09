@@ -2,6 +2,7 @@
 
 import { CheckCircle, Moon, Palette, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { PageSection } from "@/components/ui/page-layout";
 import { useTheme } from "@/components/theme-provider";
 import type { ThemePreset } from "@/lib/theme/tokens";
 
@@ -10,21 +11,12 @@ export function ThemeSection() {
     useTheme();
 
   return (
-    <section className="rounded-2xl border bg-card p-6">
-      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="flex items-center gap-3">
-          <div className="rounded-xl bg-primary/10 p-2.5 text-primary">
-            <Palette className="h-5 w-5" />
-          </div>
-          <div>
-            <h2 className="font-semibold">Theme</h2>
-            <p className="text-sm text-muted-foreground">
-              Choose a preset or adjust workspace colors.
-            </p>
-          </div>
-        </div>
-
-        <div className="flex shrink-0 items-center gap-2">
+    <PageSection
+      title="Theme"
+      description="Choose a preset or adjust workspace colors."
+      icon={Palette}
+      action={
+        <div className="flex items-center gap-2">
           <Button
             type="button"
             variant={isDark ? "default" : "outline"}
@@ -40,8 +32,8 @@ export function ThemeSection() {
             Dark
           </Button>
         </div>
-      </div>
-
+      }
+    >
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {availableThemes.map((preset) => (
           <ThemePresetCard
@@ -52,7 +44,7 @@ export function ThemeSection() {
           />
         ))}
       </div>
-    </section>
+    </PageSection>
   );
 }
 
@@ -63,7 +55,9 @@ interface ThemePresetCardProps {
 }
 
 function ThemePresetCard({ preset, selected, onClick }: ThemePresetCardProps) {
-  const previewKeys = Object.keys(preset.preview) as (keyof typeof preset.preview)[];
+  const previewKeys = Object.keys(
+    preset.preview,
+  ) as (keyof typeof preset.preview)[];
 
   return (
     <button

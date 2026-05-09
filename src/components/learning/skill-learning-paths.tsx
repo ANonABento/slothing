@@ -66,7 +66,9 @@ function ProgressBar({
   return (
     <div className="space-y-1">
       <div className="flex justify-between text-xs text-muted-foreground">
-        <span className="capitalize">{currentLevel === "none" ? "Not started" : currentLevel}</span>
+        <span className="capitalize">
+          {currentLevel === "none" ? "Not started" : currentLevel}
+        </span>
         <span className="capitalize">{targetLevel}</span>
       </div>
       <div className="h-2 bg-muted rounded-full overflow-hidden">
@@ -92,7 +94,9 @@ function ResourceCard({ resource }: { resource: LearningResource }) {
           <div>
             <p className="text-sm font-medium">{resource.title}</p>
             {resource.platform && (
-              <p className="text-xs text-muted-foreground">{resource.platform}</p>
+              <p className="text-xs text-muted-foreground">
+                {resource.platform}
+              </p>
             )}
           </div>
           {resource.url && (
@@ -116,9 +120,12 @@ function ResourceCard({ resource }: { resource: LearningResource }) {
           <span
             className={cn(
               "px-1.5 py-0.5 text-xs rounded capitalize",
-              resource.difficulty === "beginner" && "bg-success/10 text-success",
-              resource.difficulty === "intermediate" && "bg-warning/10 text-warning",
-              resource.difficulty === "advanced" && "bg-destructive/10 text-destructive"
+              resource.difficulty === "beginner" &&
+                "bg-success/10 text-success",
+              resource.difficulty === "intermediate" &&
+                "bg-warning/10 text-warning",
+              resource.difficulty === "advanced" &&
+                "bg-destructive/10 text-destructive",
             )}
           >
             {resource.difficulty}
@@ -128,7 +135,7 @@ function ResourceCard({ resource }: { resource: LearningResource }) {
               "px-1.5 py-0.5 text-xs rounded",
               resource.free
                 ? "bg-success/10 text-success"
-                : "bg-muted text-muted-foreground"
+                : "bg-muted text-muted-foreground",
             )}
           >
             {resource.free ? "Free" : "Paid"}
@@ -141,10 +148,12 @@ function ResourceCard({ resource }: { resource: LearningResource }) {
 
 function LearningPathCard({ path }: { path: SkillLearningPath }) {
   const [expanded, setExpanded] = useState(false);
-  const [completedMilestones, setCompletedMilestones] = useState<Set<number>>(new Set());
+  const [completedMilestones, setCompletedMilestones] = useState<Set<number>>(
+    new Set(),
+  );
 
   const toggleMilestone = (index: number) => {
-    setCompletedMilestones(prev => {
+    setCompletedMilestones((prev) => {
       const next = new Set(prev);
       if (next.has(index)) {
         next.delete(index);
@@ -170,17 +179,25 @@ function LearningPathCard({ path }: { path: SkillLearningPath }) {
               </p>
             </div>
           </div>
-          <span className={cn("px-2 py-0.5 text-xs rounded font-medium capitalize", priorityColors[path.priority])}>
+          <span
+            className={cn(
+              "px-2 py-0.5 text-xs rounded font-medium capitalize",
+              priorityColors[path.priority],
+            )}
+          >
             {path.priority} priority
           </span>
         </div>
 
-        <ProgressBar currentLevel={path.currentLevel} targetLevel={path.targetLevel} />
+        <ProgressBar
+          currentLevel={path.currentLevel}
+          targetLevel={path.targetLevel}
+        />
 
         <div className="flex items-center gap-4 mt-3 text-sm text-muted-foreground">
           <span className="flex items-center gap-1">
-            <Clock className="h-4 w-4" />
-            ~{pluralize(path.estimatedWeeks, "week")}
+            <Clock className="h-4 w-4" />~
+            {pluralize(path.estimatedWeeks, "week")}
           </span>
           <span className="flex items-center gap-1">
             <Book className="h-4 w-4" />
@@ -229,7 +246,8 @@ function LearningPathCard({ path }: { path: SkillLearningPath }) {
                   <span
                     className={cn(
                       "text-sm",
-                      completedMilestones.has(i) && "line-through text-muted-foreground"
+                      completedMilestones.has(i) &&
+                        "line-through text-muted-foreground",
                     )}
                   >
                     {milestone}
@@ -275,7 +293,9 @@ export function SkillLearningPaths() {
 
         setResult(data);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load learning paths");
+        setError(
+          err instanceof Error ? err.message : "Failed to load learning paths",
+        );
       } finally {
         setLoading(false);
       }
@@ -299,7 +319,10 @@ export function SkillLearningPaths() {
         {/* Insights skeleton */}
         <div className="space-y-2">
           {[1, 2].map((i) => (
-            <div key={i} className="flex items-start gap-2 p-3 rounded-lg bg-primary/5 border border-primary/20">
+            <div
+              key={i}
+              className="flex items-start gap-2 p-3 rounded-lg bg-primary/5 border border-primary/20"
+            >
               <div className="h-4 w-4 skeleton rounded shrink-0 mt-0.5" />
               <div className="flex-1 h-4 skeleton rounded" />
             </div>
@@ -375,7 +398,7 @@ export function SkillLearningPaths() {
         <GraduationCap className="h-8 w-8 mx-auto mb-2 text-muted-foreground opacity-50" />
         <p className="text-muted-foreground">No skill gaps identified.</p>
         <p className="text-sm text-muted-foreground mt-1">
-          Your profile matches well with saved jobs!
+          Your profile matches well with saved opportunities!
         </p>
       </div>
     );

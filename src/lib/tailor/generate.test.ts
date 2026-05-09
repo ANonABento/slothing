@@ -62,6 +62,7 @@ function makeBank(): GroupedBankEntries {
     ],
     project: [],
     hackathon: [],
+    bullet: [],
     achievement: [],
     certification: [],
   };
@@ -103,7 +104,7 @@ describe("generateFromBank", () => {
         jobDescription: "We need a React developer",
         userId: "default",
       },
-      null
+      null,
     );
 
     expect(result.resume.contact.name).toBe("Jane Doe");
@@ -128,7 +129,7 @@ describe("generateFromBank", () => {
         jobDescription: "React developer needed",
         userId: "default",
       },
-      null
+      null,
     );
 
     // The first experience (Acme Corp) was matched, should appear first
@@ -148,7 +149,7 @@ describe("generateFromBank", () => {
         jobDescription: "Python developer needed",
         userId: "default",
       },
-      null
+      null,
     );
 
     // Should still have experiences pulled from bank
@@ -185,7 +186,7 @@ describe("generateFromBank", () => {
         jobDescription: "React developer needed",
         userId: "default",
       },
-      null
+      null,
     );
 
     expect(result.resume.experiences[0]).toEqual({
@@ -221,7 +222,7 @@ describe("generateFromBank", () => {
         jobDescription: "React developer",
         userId: "default",
       },
-      null
+      null,
     );
 
     // React should appear first in skills since it was matched
@@ -241,7 +242,7 @@ describe("generateFromBank", () => {
         jobDescription: "Some job",
         userId: "default",
       },
-      null
+      null,
     );
 
     expect(result.resume.summary).toContain("Engineer");
@@ -261,7 +262,7 @@ describe("generateFromBank", () => {
         jobDescription: "Some job",
         userId: "default",
       },
-      null
+      null,
     );
 
     expect(result.resume.education).toHaveLength(1);
@@ -278,7 +279,7 @@ describe("generateFromBank", () => {
         makeBankEntry({
           id: `skill-${i}`,
           content: { name: `Skill${i}` },
-        })
+        }),
       );
     }
 
@@ -292,7 +293,7 @@ describe("generateFromBank", () => {
         jobDescription: "Some job",
         userId: "default",
       },
-      null
+      null,
     );
 
     expect(result.resume.skills.length).toBeLessThanOrEqual(15);

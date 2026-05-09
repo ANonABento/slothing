@@ -16,6 +16,8 @@ import {
 import { notificationActionSchema } from "@/lib/constants";
 import { requireAuth, isAuthError } from "@/lib/auth";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(request: NextRequest) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
@@ -31,7 +33,11 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ count });
     }
 
-    const notifications = getNotifications({ unreadOnly, limit, userId: authResult.userId });
+    const notifications = getNotifications({
+      unreadOnly,
+      limit,
+      userId: authResult.userId,
+    });
     const unreadCount = getUnreadNotificationCount(authResult.userId);
 
     return NextResponse.json({ notifications, unreadCount });
@@ -39,7 +45,7 @@ export async function GET(request: NextRequest) {
     console.error("Get notifications error:", error);
     return NextResponse.json(
       { error: "Failed to get notifications" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -56,7 +62,7 @@ export async function POST(request: NextRequest) {
     if (!parseResult.success) {
       return NextResponse.json(
         { error: "Invalid action. Use 'markAllRead' or 'deleteRead'" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -75,7 +81,7 @@ export async function POST(request: NextRequest) {
     console.error("Notification action error:", error);
     return NextResponse.json(
       { error: "Failed to perform notification action" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

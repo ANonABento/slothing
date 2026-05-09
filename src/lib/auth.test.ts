@@ -7,7 +7,11 @@ const headersMock = vi.fn();
 vi.mock("@/auth", () => ({
   auth: (...args: unknown[]) => authMock(...args),
   isNextAuthConfigured: () =>
-    Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET),
+    Boolean(
+      process.env.GOOGLE_CLIENT_ID &&
+      process.env.GOOGLE_CLIENT_SECRET &&
+      process.env.NEXTAUTH_SECRET,
+    ),
 }));
 
 vi.mock("next/headers", () => ({
@@ -18,14 +22,17 @@ import { getCurrentUserId, isAuthError, requireAuth } from "./auth";
 
 const ORIGINAL_GOOGLE_ID = process.env.GOOGLE_CLIENT_ID;
 const ORIGINAL_GOOGLE_SECRET = process.env.GOOGLE_CLIENT_SECRET;
+const ORIGINAL_NEXTAUTH_SECRET = process.env.NEXTAUTH_SECRET;
 
 function configureNextAuth(enabled: boolean) {
   if (enabled) {
     process.env.GOOGLE_CLIENT_ID = "test-id";
     process.env.GOOGLE_CLIENT_SECRET = "test-secret";
+    process.env.NEXTAUTH_SECRET = "test-nextauth-secret";
   } else {
     delete process.env.GOOGLE_CLIENT_ID;
     delete process.env.GOOGLE_CLIENT_SECRET;
+    delete process.env.NEXTAUTH_SECRET;
   }
 }
 
@@ -45,11 +52,26 @@ afterEach(() => {
   } else {
     process.env.GOOGLE_CLIENT_SECRET = ORIGINAL_GOOGLE_SECRET;
   }
+  if (ORIGINAL_NEXTAUTH_SECRET === undefined) {
+    delete process.env.NEXTAUTH_SECRET;
+  } else {
+    process.env.NEXTAUTH_SECRET = ORIGINAL_NEXTAUTH_SECRET;
+  }
 });
 
 describe("getCurrentUserId", () => {
   it("returns the local-dev fallback user when NextAuth is not configured", async () => {
     configureNextAuth(false);
+    headersMock.mockReturnValue({ get: () => null });
+
+    expect(await getCurrentUserId()).toBe("default");
+    expect(authMock).not.toHaveBeenCalled();
+  });
+
+  it("uses the local-dev fallback when OAuth keys are present but NEXTAUTH_SECRET is missing", async () => {
+    process.env.GOOGLE_CLIENT_ID = "test-id";
+    process.env.GOOGLE_CLIENT_SECRET = "test-secret";
+    delete process.env.NEXTAUTH_SECRET;
     headersMock.mockReturnValue({ get: () => null });
 
     expect(await getCurrentUserId()).toBe("default");

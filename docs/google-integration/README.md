@@ -23,7 +23,7 @@
 2. **Use Features**
    - **Calendar**: Settings page → Enable calendar sync
    - **Drive**: Upload page → "From Drive" button
-   - **Gmail**: Jobs page → "Gmail" button to import
+   - **Gmail**: Opportunities page → "Gmail" button to import
    - **Docs**: Interview page → "Save to Docs" after session
    - **Sheets**: Analytics page → "Sheets" export button
    - **Contacts/Tasks**: Automatic via API integrations
@@ -32,7 +32,7 @@
 
 ## Summary
 
-This integration connects Slothing with Google Workspace services to streamline the job search process. Users can sync calendars, store documents in Drive, auto-import jobs from Gmail, and more.
+This integration connects Slothing with Google Workspace services to streamline the opportunity search process. Users can sync calendars, store documents in Drive, auto-import opportunities from Gmail, and more.
 
 ---
 
@@ -81,26 +81,26 @@ This integration connects Slothing with Google Workspace services to streamline 
 
 ## Implementation Phases
 
-| Phase | Feature | Status | Ticket |
-|-------|---------|--------|--------|
-| 1 | OAuth Foundation | ✅ Complete | [01-oauth-foundation.md](./01-oauth-foundation.md) |
-| 2 | Calendar Sync | ✅ Complete | [02-calendar-sync.md](./02-calendar-sync.md) |
-| 3 | Drive Integration | ✅ Complete | [03-drive-integration.md](./03-drive-integration.md) |
-| 4 | Gmail Integration | ✅ Complete | [04-gmail-integration.md](./04-gmail-integration.md) |
-| 5 | Docs & Sheets | ✅ Complete | [05-docs-sheets.md](./05-docs-sheets.md) |
-| 6 | Contacts & Tasks | ✅ Complete | [06-contacts-tasks.md](./06-contacts-tasks.md) |
+| Phase | Feature           | Status      | Ticket                                               |
+| ----- | ----------------- | ----------- | ---------------------------------------------------- |
+| 1     | OAuth Foundation  | ✅ Complete | [01-oauth-foundation.md](./01-oauth-foundation.md)   |
+| 2     | Calendar Sync     | ✅ Complete | [02-calendar-sync.md](./02-calendar-sync.md)         |
+| 3     | Drive Integration | ✅ Complete | [03-drive-integration.md](./03-drive-integration.md) |
+| 4     | Gmail Integration | ✅ Complete | [04-gmail-integration.md](./04-gmail-integration.md) |
+| 5     | Docs & Sheets     | ✅ Complete | [05-docs-sheets.md](./05-docs-sheets.md)             |
+| 6     | Contacts & Tasks  | ✅ Complete | [06-contacts-tasks.md](./06-contacts-tasks.md)       |
 
 ---
 
 ## Tech Stack
 
-| Component | Technology | Purpose |
-|-----------|------------|---------|
-| OAuth | Clerk Social Connection | Token management, refresh |
-| API Client | `googleapis` npm | Official Google API client |
-| Calendar | `google.calendar()` via `src/lib/google/client.ts` | Calendar operations |
-| Drive | `google.drive()` via `src/lib/google/client.ts` | File storage |
-| Gmail | `google.gmail()` via `src/lib/google/client.ts` | Email operations |
+| Component  | Technology                                         | Purpose                    |
+| ---------- | -------------------------------------------------- | -------------------------- |
+| OAuth      | Clerk Social Connection                            | Token management, refresh  |
+| API Client | `googleapis` npm                                   | Official Google API client |
+| Calendar   | `google.calendar()` via `src/lib/google/client.ts` | Calendar operations        |
+| Drive      | `google.drive()` via `src/lib/google/client.ts`    | File storage               |
+| Gmail      | `google.gmail()` via `src/lib/google/client.ts`    | Email operations           |
 
 ---
 
@@ -108,35 +108,31 @@ This integration connects Slothing with Google Workspace services to streamline 
 
 ```typescript
 // Core scopes (Phase 1)
-const CORE_SCOPES = [
-  'openid',
-  'email',
-  'profile',
-];
+const CORE_SCOPES = ["openid", "email", "profile"];
 
 // Calendar scopes (Phase 2)
 const CALENDAR_SCOPES = [
-  'https://www.googleapis.com/auth/calendar',
-  'https://www.googleapis.com/auth/calendar.events',
+  "https://www.googleapis.com/auth/calendar",
+  "https://www.googleapis.com/auth/calendar.events",
 ];
 
 // Drive scopes (Phase 3)
 const DRIVE_SCOPES = [
-  'https://www.googleapis.com/auth/drive.file',
-  'https://www.googleapis.com/auth/drive.readonly',
+  "https://www.googleapis.com/auth/drive.file",
+  "https://www.googleapis.com/auth/drive.readonly",
 ];
 
 // Gmail scopes (Phase 4)
 const GMAIL_SCOPES = [
-  'https://www.googleapis.com/auth/gmail.readonly',
-  'https://www.googleapis.com/auth/gmail.send',
-  'https://www.googleapis.com/auth/gmail.labels',
+  "https://www.googleapis.com/auth/gmail.readonly",
+  "https://www.googleapis.com/auth/gmail.send",
+  "https://www.googleapis.com/auth/gmail.labels",
 ];
 
 // Contacts & Tasks (Phase 6)
 const CONTACTS_SCOPES = [
-  'https://www.googleapis.com/auth/contacts.readonly',
-  'https://www.googleapis.com/auth/tasks',
+  "https://www.googleapis.com/auth/contacts.readonly",
+  "https://www.googleapis.com/auth/tasks",
 ];
 ```
 
@@ -243,20 +239,20 @@ export class GoogleAPIError extends Error {
   constructor(
     message: string,
     public code: number,
-    public reason?: string
+    public reason?: string,
   ) {
     super(message);
-    this.name = 'GoogleAPIError';
+    this.name = "GoogleAPIError";
   }
 }
 
 // Common error codes
 const GOOGLE_ERRORS = {
-  401: 'Token expired or invalid - re-authentication required',
-  403: 'Insufficient permissions - additional scopes needed',
-  404: 'Resource not found',
-  429: 'Rate limit exceeded - retry after delay',
-  500: 'Google API error - retry later',
+  401: "Token expired or invalid - re-authentication required",
+  403: "Insufficient permissions - additional scopes needed",
+  404: "Resource not found",
+  429: "Rate limit exceeded - retry after delay",
+  500: "Google API error - retry later",
 };
 ```
 
@@ -281,4 +277,4 @@ const GOOGLE_ERRORS = {
 
 ---
 
-*Created: March 2026*
+_Created: March 2026_

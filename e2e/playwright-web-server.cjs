@@ -10,15 +10,26 @@ const sqlitePath =
 const nextBin = require.resolve("next/dist/bin/next");
 let child;
 
+function getServerEnv() {
+  const env = {
+    ...process.env,
+    NEXT_DIST_DIR: distDir,
+    GET_ME_JOB_SQLITE_PATH: sqlitePath,
+    SLOTHING_SUPPRESS_OPTIONAL_ENV_WARNINGS: "1",
+  };
+
+  if (env.FORCE_COLOR) {
+    delete env.NO_COLOR;
+  }
+
+  return env;
+}
+
 function run(command, args) {
   const spawned = spawn(command, args, {
     stdio: "inherit",
     shell: process.platform === "win32",
-    env: {
-      ...process.env,
-      NEXT_DIST_DIR: distDir,
-      GET_ME_JOB_SQLITE_PATH: sqlitePath,
-    },
+    env: getServerEnv(),
   });
 
   return new Promise((resolve, reject) => {
@@ -27,7 +38,9 @@ function run(command, args) {
         resolve();
         return;
       }
-      reject(new Error(`${command} ${args.join(" ")} exited with ${code ?? signal}`));
+      reject(
+        new Error(`${command} ${args.join(" ")} exited with ${code ?? signal}`),
+      );
     });
   });
 }
@@ -36,17 +49,15 @@ function start(command, args) {
   child = spawn(command, args, {
     stdio: "inherit",
     shell: process.platform === "win32",
-    env: {
-      ...process.env,
-      NEXT_DIST_DIR: distDir,
-      GET_ME_JOB_SQLITE_PATH: sqlitePath,
-    },
+    env: getServerEnv(),
   });
 
   return new Promise((_, reject) => {
     child.once("exit", (code, signal) => {
       child = undefined;
-      reject(new Error(`${command} ${args.join(" ")} exited with ${code ?? signal}`));
+      reject(
+        new Error(`${command} ${args.join(" ")} exited with ${code ?? signal}`),
+      );
     });
   });
 }

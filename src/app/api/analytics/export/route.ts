@@ -18,6 +18,8 @@ import {
 import type { JobDescription } from "@/types";
 import { requireAuth, isAuthError } from "@/lib/auth";
 
+export const dynamic = "force-dynamic";
+
 type TimeRange = "7d" | "30d" | "90d" | "1y" | "all";
 
 function filterJobsByRange(

@@ -18,6 +18,8 @@ import {
 import { getJobs } from "@/lib/db/jobs";
 import { isGoogleConnected } from "@/lib/google/client";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(request: NextRequest) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
@@ -26,7 +28,7 @@ export async function POST(request: NextRequest) {
   if (!connected) {
     return NextResponse.json(
       { error: "Google account not connected" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -46,7 +48,7 @@ export async function POST(request: NextRequest) {
         if (!data?.offers || !Array.isArray(data.offers)) {
           return NextResponse.json(
             { error: "Missing required field: data.offers (array)" },
-            { status: 400 }
+            { status: 400 },
           );
         }
         result = await createSalaryComparisonSheet(data.offers);
@@ -60,12 +62,12 @@ export async function POST(request: NextRequest) {
         if (!data?.title) {
           return NextResponse.json(
             { error: "Missing required field: data.title" },
-            { status: 400 }
+            { status: 400 },
           );
         }
         result = await createSpreadsheet(
           data.title,
-          data.sheetTitles || ["Sheet1"]
+          data.sheetTitles || ["Sheet1"],
         );
 
         // If initial data provided, populate sheets
@@ -75,7 +77,7 @@ export async function POST(request: NextRequest) {
               await updateSheet(
                 result.spreadsheetId,
                 `${sheetName}!A1`,
-                values as (string | number | boolean)[][]
+                values as (string | number | boolean)[][],
               );
             }
           }
@@ -84,15 +86,18 @@ export async function POST(request: NextRequest) {
 
       default:
         return NextResponse.json(
-          { error: "Invalid export type. Use: job_tracker, salary_comparison, application_tracker, or custom" },
-          { status: 400 }
+          {
+            error:
+              "Invalid export type. Use: job_tracker, salary_comparison, application_tracker, or custom",
+          },
+          { status: 400 },
         );
     }
 
     if (!result) {
       return NextResponse.json(
         { error: "Failed to create spreadsheet" },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -105,7 +110,7 @@ export async function POST(request: NextRequest) {
     console.error("Sheets export error:", error);
     return NextResponse.json(
       { error: "Failed to export to sheets" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -8,8 +8,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { getJob } from "@/lib/db/jobs";
 import { getProfile, getLLMConfig } from "@/lib/db";
 import { getCompanyResearch } from "@/lib/db/company-research";
-import { generatePrepGuide, generateExportableDocument } from "@/lib/interview/prep-guide";
+import {
+  generatePrepGuide,
+  generateExportableDocument,
+} from "@/lib/interview/prep-guide";
 import { requireAuth, isAuthError } from "@/lib/auth";
+
+export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
   const authResult = await requireAuth();
@@ -23,23 +28,25 @@ export async function GET(request: NextRequest) {
     if (!jobId) {
       return NextResponse.json(
         { error: "Job ID is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     const job = getJob(jobId, authResult.userId);
     if (!job) {
-      return NextResponse.json(
-        { error: "Job not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Job not found" }, { status: 404 });
     }
 
     const profile = getProfile(authResult.userId);
     const llmConfig = getLLMConfig(authResult.userId);
     const companyResearch = getCompanyResearch(job.company, authResult.userId);
 
-    const guide = await generatePrepGuide(job, profile, companyResearch, llmConfig);
+    const guide = await generatePrepGuide(
+      job,
+      profile,
+      companyResearch,
+      llmConfig,
+    );
 
     if (format === "markdown") {
       const markdown = generateExportableDocument(guide);
@@ -56,7 +63,7 @@ export async function GET(request: NextRequest) {
     console.error("Prep guide error:", error);
     return NextResponse.json(
       { error: "Failed to generate preparation guide" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

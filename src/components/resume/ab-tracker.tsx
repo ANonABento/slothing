@@ -11,7 +11,11 @@ import {
   AlertCircle,
   ArrowRight,
 } from "lucide-react";
-import type { VersionStats, ABRecommendation, ABOutcome } from "@/lib/resume/compare";
+import type {
+  VersionStats,
+  ABRecommendation,
+  ABOutcome,
+} from "@/lib/resume/compare";
 
 interface StatsResponse {
   stats: VersionStats[];
@@ -37,7 +41,15 @@ const OUTCOME_COLORS: Record<ABOutcome, string> = {
   withdrawn: "bg-muted text-muted-foreground",
 };
 
-function ConversionBar({ label, rate, color }: { label: string; rate: number; color: string }) {
+function ConversionBar({
+  label,
+  rate,
+  color,
+}: {
+  label: string;
+  rate: number;
+  color: string;
+}) {
   return (
     <div className="space-y-1">
       <div className="flex justify-between text-xs">
@@ -46,7 +58,10 @@ function ConversionBar({ label, rate, color }: { label: string; rate: number; co
       </div>
       <div className="h-2 bg-muted rounded-full overflow-hidden">
         <div
-          className={cn("h-full rounded-full transition-all duration-500", color)}
+          className={cn(
+            "h-full rounded-full transition-all duration-500",
+            color,
+          )}
           style={{ width: `${Math.min(rate, 100)}%` }}
         />
       </div>
@@ -54,17 +69,26 @@ function ConversionBar({ label, rate, color }: { label: string; rate: number; co
   );
 }
 
-function VersionStatsCard({ stats, isRecommended }: { stats: VersionStats; isRecommended: boolean }) {
+function VersionStatsCard({
+  stats,
+  isRecommended,
+}: {
+  stats: VersionStats;
+  isRecommended: boolean;
+}) {
   return (
     <div
       className={cn(
         "rounded-lg border p-4 space-y-4",
-        isRecommended && "border-primary ring-1 ring-primary/20"
+        isRecommended && "border-primary ring-1 ring-primary/20",
       )}
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-medium truncate max-w-[180px]" title={stats.resumeId}>
+          <span
+            className="text-sm font-medium truncate max-w-[180px]"
+            title={stats.resumeId}
+          >
             Resume ...{stats.resumeId.slice(-8)}
           </span>
           {isRecommended && (
@@ -74,7 +98,9 @@ function VersionStatsCard({ stats, isRecommended }: { stats: VersionStats; isRec
             </span>
           )}
         </div>
-        <span className="text-xs text-muted-foreground">{stats.totalSent} sent</span>
+        <span className="text-xs text-muted-foreground">
+          {stats.totalSent} sent
+        </span>
       </div>
 
       <div className="space-y-2">
@@ -98,7 +124,7 @@ function VersionStatsCard({ stats, isRecommended }: { stats: VersionStats; isRec
               key={outcome}
               className={cn(
                 "inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium",
-                OUTCOME_COLORS[outcome]
+                OUTCOME_COLORS[outcome],
               )}
             >
               {OUTCOME_LABELS[outcome]}: {count}
@@ -109,7 +135,11 @@ function VersionStatsCard({ stats, isRecommended }: { stats: VersionStats; isRec
   );
 }
 
-function RecommendationBanner({ recommendation }: { recommendation: ABRecommendation }) {
+function RecommendationBanner({
+  recommendation,
+}: {
+  recommendation: ABRecommendation;
+}) {
   const confidenceColors = {
     low: "bg-muted border-border",
     medium: "bg-info/5 border-info/20",
@@ -117,13 +147,20 @@ function RecommendationBanner({ recommendation }: { recommendation: ABRecommenda
   };
 
   return (
-    <div className={cn("rounded-lg border p-4", confidenceColors[recommendation.confidence])}>
+    <div
+      className={cn(
+        "rounded-lg border p-4",
+        confidenceColors[recommendation.confidence],
+      )}
+    >
       <div className="flex items-start gap-3">
         <TrendingUp className="h-5 w-5 text-primary mt-0.5 shrink-0" />
         <div className="space-y-1">
           <p className="text-sm font-medium">{recommendation.reason}</p>
           <p className="text-xs text-muted-foreground">
-            Confidence: {recommendation.confidence} ({recommendation.stats.reduce((s, v) => s + v.totalSent, 0)} data points)
+            Confidence: {recommendation.confidence} (
+            {recommendation.stats.reduce((s, v) => s + v.totalSent, 0)} data
+            points)
           </p>
         </div>
       </div>
@@ -137,18 +174,20 @@ interface PipelineStage {
 }
 
 function OutcomePipeline({ stats }: { stats: VersionStats[] }) {
-  const aggregated: PipelineStage[] = (["applied", "screening", "interviewing", "offered"] as ABOutcome[]).map(
-    (outcome) => ({
-      outcome,
-      count: stats.reduce((sum, s) => sum + s.outcomes[outcome], 0),
-    })
-  );
+  const aggregated: PipelineStage[] = (
+    ["applied", "screening", "interviewing", "offered"] as ABOutcome[]
+  ).map((outcome) => ({
+    outcome,
+    count: stats.reduce((sum, s) => sum + s.outcomes[outcome], 0),
+  }));
 
   const maxCount = Math.max(...aggregated.map((s) => s.count), 1);
 
   return (
     <div className="space-y-3">
-      <h4 className="text-sm font-medium text-muted-foreground">Application Pipeline</h4>
+      <h4 className="text-sm font-medium text-muted-foreground">
+        Application Pipeline
+      </h4>
       <div className="flex items-end gap-1">
         {aggregated.map((stage, i) => (
           <div key={stage.outcome} className="flex items-end gap-1 flex-1">
@@ -160,9 +199,11 @@ function OutcomePipeline({ stats }: { stats: VersionStats[] }) {
                   i === 0 && "bg-info/80",
                   i === 1 && "bg-primary/80",
                   i === 2 && "bg-warning/80",
-                  i === 3 && "bg-success/80"
+                  i === 3 && "bg-success/80",
                 )}
-                style={{ height: `${Math.max((stage.count / maxCount) * 80, 8)}px` }}
+                style={{
+                  height: `${Math.max((stage.count / maxCount) * 80, 8)}px`,
+                }}
               />
               <span className="text-xs text-muted-foreground text-center">
                 {OUTCOME_LABELS[stage.outcome]}
@@ -209,7 +250,9 @@ export function ABTracker() {
     return (
       <div className="rounded-xl border bg-card p-8 text-center">
         <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
-        <p className="mt-4 text-muted-foreground">Loading A/B tracking data...</p>
+        <p className="mt-4 text-muted-foreground">
+          Loading A/B tracking data...
+        </p>
       </div>
     );
   }
@@ -228,7 +271,8 @@ export function ABTracker() {
       <div className="rounded-xl border bg-card p-8 text-center">
         <BarChart3 className="h-8 w-8 mx-auto text-muted-foreground opacity-50" />
         <p className="mt-4 text-muted-foreground">
-          No resume tracking data yet. Send resumes to jobs to start tracking performance.
+          No resume tracking data yet. Send resumes to opportunities to start
+          tracking performance.
         </p>
       </div>
     );
@@ -258,12 +302,16 @@ export function ABTracker() {
       </div>
 
       <div className="p-4 space-y-3">
-        <h4 className="text-sm font-medium text-muted-foreground">Version Performance</h4>
+        <h4 className="text-sm font-medium text-muted-foreground">
+          Version Performance
+        </h4>
         {data.stats.map((stat) => (
           <VersionStatsCard
             key={stat.resumeId}
             stats={stat}
-            isRecommended={data.recommendation?.recommendedResumeId === stat.resumeId}
+            isRecommended={
+              data.recommendation?.recommendedResumeId === stat.resumeId
+            }
           />
         ))}
       </div>

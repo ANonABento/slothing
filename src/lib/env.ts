@@ -46,7 +46,10 @@ function isSet(value: string | undefined): boolean {
   return typeof value === "string" && value.trim().length > 0;
 }
 
-export function checkFeature(check: FeatureCheck, env: EnvSource): FeatureStatus {
+export function checkFeature(
+  check: FeatureCheck,
+  env: EnvSource,
+): FeatureStatus {
   let enabled = true;
   let missing: string[] = [];
   let mode: FeatureMode = "all";
@@ -66,7 +69,7 @@ export function checkFeature(check: FeatureCheck, env: EnvSource): FeatureStatus
 
 export function getFeatureStatuses(
   env: EnvSource = process.env,
-  checks: FeatureCheck[] = FEATURE_CHECKS
+  checks: FeatureCheck[] = FEATURE_CHECKS,
 ): FeatureStatus[] {
   return checks.map((check) => checkFeature(check, env));
 }
@@ -85,7 +88,7 @@ function formatWarning(status: FeatureStatus): string {
 
 export function validateEnv(
   env: EnvSource = process.env,
-  checks: FeatureCheck[] = FEATURE_CHECKS
+  checks: FeatureCheck[] = FEATURE_CHECKS,
 ): ValidationResult {
   const statuses = getFeatureStatuses(env, checks);
   const disabled = statuses.filter((s) => !s.enabled);
@@ -98,10 +101,18 @@ export function validateEnv(
 
 type Logger = Pick<Console, "warn" | "info">;
 
+function isProductionBuildPhase(env: EnvSource = process.env): boolean {
+  return (
+    env.NEXT_PHASE === "phase-production-build" ||
+    env.npm_lifecycle_event === "build" ||
+    env.SLOTHING_SUPPRESS_OPTIONAL_ENV_WARNINGS === "1"
+  );
+}
+
 export function logEnvValidation(
   logger: Logger = console,
   env: EnvSource = process.env,
-  checks: FeatureCheck[] = FEATURE_CHECKS
+  checks: FeatureCheck[] = FEATURE_CHECKS,
 ): ValidationResult {
   const result = validateEnv(env, checks);
 
@@ -116,17 +127,24 @@ export function logEnvValidation(
   return result;
 }
 
-let hasLogged = false;
+const envValidationGlobal = globalThis as typeof globalThis & {
+  __slothingEnvValidationLogged?: boolean;
+};
 
 export function ensureEnvValidated(
   logger: Logger = console,
-  env: EnvSource = process.env
+  env: EnvSource = process.env,
 ): ValidationResult | undefined {
-  if (hasLogged) return undefined;
-  hasLogged = true;
+  if (envValidationGlobal.__slothingEnvValidationLogged) return undefined;
+  envValidationGlobal.__slothingEnvValidationLogged = true;
+
+  if (isProductionBuildPhase(env)) {
+    return validateEnv(env);
+  }
+
   return logEnvValidation(logger, env);
 }
 
 export function __resetEnvValidationForTests(): void {
-  hasLogged = false;
+  envValidationGlobal.__slothingEnvValidationLogged = false;
 }

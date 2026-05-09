@@ -9,20 +9,22 @@ import { validationErrorResponse } from "@/lib/api-utils";
 import { changeOpportunityStatus } from "@/lib/opportunities";
 import { opportunityStatusChangeSchema } from "@/types/opportunity";
 
+export const dynamic = "force-dynamic";
+
 interface OpportunityStatusRouteContext {
   params: { id: string };
 }
 
 export async function PATCH(
   request: NextRequest,
-  { params }: OpportunityStatusRouteContext
+  { params }: OpportunityStatusRouteContext,
 ) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
 
   try {
     const parseResult = opportunityStatusChangeSchema.safeParse(
-      await request.json()
+      await request.json(),
     );
     if (!parseResult.success) {
       return validationErrorResponse(parseResult.error);
@@ -31,13 +33,13 @@ export async function PATCH(
     const opportunity = changeOpportunityStatus(
       params.id,
       parseResult.data.status,
-      authResult.userId
+      authResult.userId,
     );
 
     if (!opportunity) {
       return NextResponse.json(
         { error: "Opportunity not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -46,7 +48,7 @@ export async function PATCH(
     console.error("Change opportunity status error:", error);
     return NextResponse.json(
       { error: "Failed to change opportunity status" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

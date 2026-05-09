@@ -81,7 +81,11 @@ export function InterviewActiveSession({
     },
   });
 
-  const { isSpeaking, speak, stop: stopSpeaking } = useVoiceOutput({
+  const {
+    isSpeaking,
+    speak,
+    stop: stopSpeaking,
+  } = useVoiceOutput({
     rate: 0.9,
   });
 
@@ -106,7 +110,13 @@ export function InterviewActiveSession({
     resetTranscript();
     stopListening();
     stopSpeaking();
-  }, [followUpMode, resetTranscript, session.currentIndex, stopListening, stopSpeaking]);
+  }, [
+    followUpMode,
+    resetTranscript,
+    session.currentIndex,
+    stopListening,
+    stopSpeaking,
+  ]);
 
   const handleToggleListening = () => {
     if (!voiceInputSupported) {
@@ -154,7 +164,7 @@ export function InterviewActiveSession({
 
   return (
     <div className="space-y-6 animate-enter">
-      <div className="rounded-2xl border bg-card p-5">
+      <div className="rounded-lg border bg-card p-5">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-4">
             <div className="rounded-xl bg-primary/10 p-3 text-primary">
@@ -185,19 +195,21 @@ export function InterviewActiveSession({
             </span>
             <span className="font-medium">
               {Math.round(
-                ((session.currentIndex + 1) / session.questions.length) * 100
+                ((session.currentIndex + 1) / session.questions.length) * 100,
               )}
               %
             </span>
           </div>
           <Progress
-            value={((session.currentIndex + 1) / session.questions.length) * 100}
+            value={
+              ((session.currentIndex + 1) / session.questions.length) * 100
+            }
             size="sm"
           />
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-2xl border bg-card">
+      <div className="overflow-hidden rounded-lg border bg-card">
         <div className="border-b bg-muted/30 p-6">
           <div className="flex items-start justify-between gap-4">
             <div className="space-y-3">

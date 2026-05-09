@@ -28,6 +28,7 @@ function makeEmptyBank(): GroupedBankEntries {
     project: [],
     hackathon: [],
     education: [],
+    bullet: [],
     achievement: [],
     certification: [],
   };
@@ -76,6 +77,7 @@ function makePopulatedBank(): GroupedBankEntries {
         },
       }),
     ],
+    bullet: [],
     education: [
       makeBankEntry({
         id: "edu-1",
@@ -253,7 +255,7 @@ describe("buildSelectionRewritePrompt", () => {
   it("includes the selected passage and instruction", () => {
     const prompt = buildSelectionRewritePrompt(
       "I built APIs quickly.",
-      "Add reliability impact"
+      "Add reliability impact",
     );
 
     expect(prompt).toContain("I built APIs quickly.");
