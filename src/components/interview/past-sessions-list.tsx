@@ -56,6 +56,7 @@ export function PastSessionsList({
         <div className="border-t divide-y">
           {pastSessions.slice(0, 10).map((pastSession) => {
             const job = jobs.find((j) => j.id === pastSession.jobId);
+            const isGeneric = pastSession.jobId === null;
             const answeredCount = pastSession.answers?.length || 0;
             const totalQuestions = pastSession.questions.length;
             const isComplete = pastSession.status === "completed";
@@ -77,10 +78,14 @@ export function PastSessionsList({
                   </div>
                   <div className="min-w-0">
                     <p className="font-medium truncate">
-                      {job?.title || "Unknown Job"}
+                      {job?.title ||
+                        `Practice (${pastSession.category?.replace("-", " ") || "general"})`}
                     </p>
                     <p className="text-sm text-muted-foreground flex items-center gap-2">
-                      <span>{job?.company || "Unknown Company"}</span>
+                      <span>
+                        {job?.company ||
+                          (isGeneric ? "Quick Practice" : "Unknown Company")}
+                      </span>
                       <span>•</span>
                       <span>
                         {answeredCount}/{pluralize(totalQuestions, "question")}
@@ -96,7 +101,7 @@ export function PastSessionsList({
                   </div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
-                  {!isComplete && job && (
+                  {!isComplete && (job || isGeneric) && (
                     <Button
                       variant="outline"
                       size="sm"

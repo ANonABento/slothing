@@ -5,6 +5,8 @@ import {
   ArrowRight,
   Briefcase,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   ChevronUp,
   Clock,
   Lightbulb,
@@ -24,6 +26,10 @@ import { RecordingControls } from "@/components/interview/recording-controls";
 import { useVoiceInput } from "@/hooks/useVoiceInput";
 import { useVoiceOutput } from "@/hooks/useVoiceOutput";
 import { useErrorToast } from "@/hooks/use-error-toast";
+import {
+  INTERVIEW_TIMER_DEFAULTS_MS,
+  INTERVIEW_TIMER_EXTENSION_MS,
+} from "@/lib/constants";
 import { CategoryBadge } from "@/lib/interview/category-display";
 import type { JobDescription } from "@/types";
 import type { CurrentFollowUp, InterviewSession } from "@/types/interview";
@@ -35,6 +41,7 @@ interface InterviewActiveSessionProps {
   onChangeAnswer: (value: string) => void;
   submitting: boolean;
   onSubmitAnswer: () => void;
+  onSkipQuestion: () => void;
   onEndInterview: () => void;
   followUpMode: boolean;
   currentFollowUp: CurrentFollowUp | null;
@@ -51,6 +58,7 @@ export function InterviewActiveSession({
   onChangeAnswer,
   submitting,
   onSubmitAnswer,
+  onSkipQuestion,
   onEndInterview,
   followUpMode,
   currentFollowUp,
@@ -60,6 +68,11 @@ export function InterviewActiveSession({
   onSkipFollowUp,
 }: InterviewActiveSessionProps) {
   const [showHint, setShowHint] = useState(false);
+  const [jobContextOpen, setJobContextOpen] = useState(false);
+  const [remainingMs, setRemainingMs] = useState(
+    session.timer?.remainingMs || 0,
+  );
+  const [timerExtended, setTimerExtended] = useState(false);
   const voiceAnswerSeedRef = useRef("");
   const showErrorToast = useErrorToast();
 
@@ -90,6 +103,8 @@ export function InterviewActiveSession({
   });
 
   const currentQuestion = session.questions[session.currentIndex];
+  const timerEnabled = Boolean(session.timer?.enabled && !followUpMode);
+  const timerExpired = timerEnabled && remainingMs <= 0;
 
   useEffect(() => {
     if (!isListening) return;
@@ -107,16 +122,43 @@ export function InterviewActiveSession({
 
   useEffect(() => {
     setShowHint(false);
+    setTimerExtended(false);
+    if (timerEnabled && currentQuestion) {
+      setRemainingMs(
+        session.timer?.remainingMs ??
+          (INTERVIEW_TIMER_DEFAULTS_MS[currentQuestion.category] ||
+            INTERVIEW_TIMER_DEFAULTS_MS.general),
+      );
+    }
     resetTranscript();
     stopListening();
     stopSpeaking();
   }, [
+    currentQuestion,
     followUpMode,
     resetTranscript,
     session.currentIndex,
+    session.timer?.remainingMs,
     stopListening,
     stopSpeaking,
+    timerEnabled,
   ]);
+
+  useEffect(() => {
+    if (!timerEnabled || timerExpired) return;
+
+    const intervalId = window.setInterval(() => {
+      setRemainingMs((currentValue) => Math.max(0, currentValue - 1000));
+    }, 1000);
+
+    return () => window.clearInterval(intervalId);
+  }, [timerEnabled, timerExpired]);
+
+  useEffect(() => {
+    if (!timerEnabled || !timerExtended || remainingMs > 0) return;
+    handleSubmitAnswer();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [remainingMs, timerEnabled, timerExtended]);
 
   const handleToggleListening = () => {
     if (!voiceInputSupported) {
@@ -152,6 +194,11 @@ export function InterviewActiveSession({
     onSubmitAnswer();
   };
 
+  const handleExtendTimer = () => {
+    setTimerExtended(true);
+    setRemainingMs(INTERVIEW_TIMER_EXTENSION_MS);
+  };
+
   const handleSubmitFollowUp = () => {
     stopListening();
     onSubmitFollowUp();
@@ -163,24 +210,48 @@ export function InterviewActiveSession({
   };
 
   return (
-    <div className="space-y-6 animate-enter">
+    <div className="grid gap-6 animate-enter lg:grid-cols-[minmax(0,1fr)_auto]">
+      <div className="space-y-6">
       <div className="rounded-lg border bg-card p-5">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-4">
             <div className="rounded-xl bg-primary/10 p-3 text-primary">
-              <Briefcase className="h-6 w-6" />
+              {session.mode === "generic-text" ? (
+                <Zap className="h-6 w-6" />
+              ) : (
+                <Briefcase className="h-6 w-6" />
+              )}
             </div>
             <div>
-              <p className="font-semibold">{selectedJobData?.title}</p>
+              <p className="font-semibold">
+                {session.mode === "generic-text"
+                  ? "Quick Practice"
+                  : selectedJobData?.title}
+              </p>
               <p className="text-sm text-muted-foreground">
-                {selectedJobData?.company}
+                {session.mode === "generic-text"
+                  ? "No opportunity attached"
+                  : selectedJobData?.company}
               </p>
             </div>
           </div>
           <div className="flex items-center gap-3">
+            {session.mode === "generic-text" && session.category ? (
+              <CategoryBadge category={session.category} />
+            ) : null}
+            {timerEnabled ? (
+              <Badge variant={timerExpired ? "warning" : "outline"} className="gap-1">
+                <Clock className="h-3 w-3" />
+                {formatRemainingTime(remainingMs)}
+              </Badge>
+            ) : null}
             <Badge variant="outline" className="gap-1">
               <Clock className="h-3 w-3" />
-              {session.mode === "voice" ? "Voice Mode" : "Text Mode"}
+              {session.mode === "voice"
+                ? "Voice Mode"
+                : session.mode === "generic-text"
+                  ? "Quick Practice"
+                  : "Text Mode"}
             </Badge>
             <Button variant="outline" size="sm" onClick={onEndInterview}>
               End Interview
@@ -378,6 +449,28 @@ export function InterviewActiveSession({
             </div>
           ) : (
             <div className="space-y-2">
+              {timerExpired ? (
+                <div className="flex flex-col gap-2 rounded-lg border border-warning/30 bg-warning/5 p-3 sm:flex-row">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleSubmitAnswer}
+                    disabled={submitting}
+                    className="flex-1"
+                  >
+                    Submit what I have
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleExtendTimer}
+                    disabled={timerExtended}
+                    className="flex-1"
+                  >
+                    Take 30s more
+                  </Button>
+                </div>
+              ) : null}
               <Button
                 onClick={handleSubmitAnswer}
                 disabled={submitting || !currentAnswer.trim()}
@@ -395,6 +488,16 @@ export function InterviewActiveSession({
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </>
                 )}
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={onSkipQuestion}
+                disabled={submitting}
+                className="w-full text-muted-foreground"
+              >
+                <SkipForward className="mr-2 h-4 w-4" />
+                Skip
               </Button>
 
               {session.answers.length > 0 && session.currentIndex > 0 && (
@@ -421,6 +524,57 @@ export function InterviewActiveSession({
           )}
         </div>
       </div>
+      </div>
+      {session.mode !== "generic-text" && selectedJobData ? (
+        <aside
+          className={`rounded-lg border bg-card transition-all lg:sticky lg:top-4 lg:h-fit ${
+            jobContextOpen ? "lg:w-80" : "lg:w-14"
+          }`}
+        >
+          <button
+            type="button"
+            onClick={() => setJobContextOpen((open) => !open)}
+            className="flex w-full items-center justify-between gap-2 border-b p-3 text-sm font-medium hover:bg-muted/50"
+          >
+            <span className={jobContextOpen ? "" : "sr-only"}>Job Context</span>
+            {jobContextOpen ? (
+              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+            ) : (
+              <ChevronLeft className="h-4 w-4 text-muted-foreground" />
+            )}
+          </button>
+          {jobContextOpen ? (
+            <div className="space-y-4 p-4">
+              <div>
+                <p className="font-medium">{selectedJobData.title}</p>
+                <p className="text-sm text-muted-foreground">
+                  {selectedJobData.company}
+                </p>
+              </div>
+              <p className="line-clamp-4 text-sm text-muted-foreground">
+                {selectedJobData.description}
+              </p>
+              {selectedJobData.requirements?.length ? (
+                <div>
+                  <p className="mb-2 text-sm font-medium">Key requirements</p>
+                  <ul className="space-y-1 text-sm text-muted-foreground">
+                    {selectedJobData.requirements.slice(0, 5).map((item) => (
+                      <li key={item}>• {item}</li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+        </aside>
+      ) : null}
     </div>
   );
+}
+
+function formatRemainingTime(remainingMs: number): string {
+  const totalSeconds = Math.max(0, Math.ceil(remainingMs / 1000));
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes}:${String(seconds).padStart(2, "0")}`;
 }

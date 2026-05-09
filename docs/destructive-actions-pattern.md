@@ -70,6 +70,7 @@ Default undo window: 5 seconds. Increase it when the action is easy to mis-click
 | Opportunities                 | Delete opportunity        | `DELETE /api/opportunities/[id]`; hard delete                       | Pattern A |
 | Email templates               | Delete draft              | `DELETE /api/email/drafts/[id]`; hard delete                        | Pattern A |
 | Interview                     | Delete session            | `DELETE /api/interview/sessions/[id]`; hard delete                  | Pattern A |
+| Interview                     | Skip question             | Stores `answer="[skipped]"` and advances the session                 | Pattern A |
 | Notifications                 | Delete notification       | `DELETE /api/notifications/[id]`; hard delete                       | Pattern A |
 | Notifications                 | Delete read notifications | `POST /api/notifications` with `deleteRead`; bulk hard delete       | Pattern A |
 | Profile bank                  | Delete selected entries   | `DELETE /api/bank/[id]`; hard delete                                | Pattern A |

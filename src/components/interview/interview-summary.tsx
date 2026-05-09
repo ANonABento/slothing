@@ -11,6 +11,7 @@ import {
   Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { pluralize } from "@/lib/text/pluralize";
 import { SkeletonButton } from "@/components/ui/skeleton";
 import { CategoryBadge } from "@/lib/interview/category-display";
@@ -49,6 +50,9 @@ export function InterviewSummary({
       : averageFeedbackLength > 100
         ? "good"
         : "brief";
+  const practiceTitle = selectedJob
+    ? `Interview Prep - ${selectedJob.title} at ${selectedJob.company}`
+    : `Practice - ${session.category?.replace("-", " ") || "Interview"}`;
 
   return (
     <div className="space-y-6 animate-enter">
@@ -70,9 +74,7 @@ export function InterviewSummary({
             Start New Interview
           </Button>
           <SaveToDocsButton
-            title={`Interview Prep - ${selectedJob?.title || "Practice"} at ${
-              selectedJob?.company || "Company"
-            }`}
+            title={practiceTitle}
             content={formatInterviewForDocs(session, selectedJob)}
           />
           {selectedJob && (
@@ -114,36 +116,47 @@ export function InterviewSummary({
       </div>
 
       <h3 className="text-xl font-semibold">Your Responses</h3>
-      {session.questions.map((question, questionIndex) => (
-        <div
-          key={`${questionIndex}-${question.question}`}
-          className="overflow-hidden rounded-lg border bg-card"
-        >
-          <div className="border-b bg-muted/30 p-5">
-            <CategoryBadge
-              category={question.category}
-              className="mb-3 text-xs"
-            />
-            <h4 className="font-semibold">{question.question}</h4>
-          </div>
-          <div className="space-y-4 p-5">
-            <div>
-              <p className="mb-2 text-sm font-medium text-muted-foreground">
-                Your Answer
-              </p>
-              <p className="text-sm">
-                {session.answers[questionIndex] || "No answer provided"}
-              </p>
-            </div>
-            {session.feedback[questionIndex] && (
-              <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
-                <p className="mb-2 flex items-center gap-2 text-sm font-medium text-primary">
-                  <CheckCircle2 className="h-4 w-4" />
-                  AI Feedback
-                </p>
-                <p className="text-sm">{session.feedback[questionIndex]}</p>
+      {session.questions.map((question, questionIndex) => {
+        const skipped =
+          session.skipped?.[questionIndex] ||
+          session.answers[questionIndex] === "[skipped]";
+
+        return (
+          <div
+            key={`${questionIndex}-${question.question}`}
+            className="overflow-hidden rounded-lg border bg-card"
+          >
+            <div className="border-b bg-muted/30 p-5">
+              <div className="mb-3 flex flex-wrap items-center gap-2">
+                <CategoryBadge category={question.category} className="text-xs" />
+                {skipped ? <Badge variant="outline">Skipped</Badge> : null}
               </div>
-            )}
+              <h4 className="font-semibold">{question.question}</h4>
+            </div>
+            <div className="space-y-4 p-5">
+              <div>
+                <p className="mb-2 text-sm font-medium text-muted-foreground">
+                  Your Answer
+                </p>
+                <p className="text-sm">
+                  {skipped
+                    ? "Skipped - revisit later"
+                    : session.answers[questionIndex] || "No answer provided"}
+                </p>
+              </div>
+              {skipped ? (
+                <div className="rounded-xl border border-warning/30 bg-warning/5 p-4 text-sm text-warning">
+                  Skipped - revisit this prompt when you are ready.
+                </div>
+              ) : session.feedback[questionIndex] ? (
+                <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
+                  <p className="mb-2 flex items-center gap-2 text-sm font-medium text-primary">
+                    <CheckCircle2 className="h-4 w-4" />
+                    AI Feedback
+                  </p>
+                  <p className="text-sm">{session.feedback[questionIndex]}</p>
+                </div>
+              ) : null}
 
             {session.followUps[questionIndex]?.length ? (
               <div className="mt-4 space-y-4 border-t pt-4">
@@ -180,9 +193,10 @@ export function InterviewSummary({
                 )}
               </div>
             ) : null}
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }

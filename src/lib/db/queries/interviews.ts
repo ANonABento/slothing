@@ -8,19 +8,21 @@ import {
   desc,
 } from "../index";
 import { generateId } from "@/lib/utils";
+import type { SessionMode, SessionQuestionCategory } from "@/lib/constants";
 
 import { nowDate, nowIso, toIso } from "@/lib/format/time";
 interface InterviewQuestion {
   question: string;
-  category: "behavioral" | "technical" | "situational" | "general";
+  category: SessionQuestionCategory;
   suggestedAnswer?: string;
 }
 
 export interface InterviewSession {
   id: string;
-  jobId: string;
+  jobId: string | null;
   profileId: string;
-  mode: "text" | "voice";
+  mode: SessionMode;
+  category?: SessionQuestionCategory | null;
   questions: InterviewQuestion[];
   status: "in_progress" | "completed";
   startedAt: string;
@@ -43,18 +45,21 @@ export interface InterviewSessionWithAnswers extends InterviewSession {
 // Create a new interview session
 export async function createInterviewSession(
   userId: string,
-  jobId: string,
+  jobId: string | null,
   profileId: string,
   questions: InterviewQuestion[],
-  mode: "text" | "voice" = "text",
+  mode: SessionMode = "text",
+  category?: SessionQuestionCategory | null,
 ): Promise<InterviewSession> {
   const id = generateId();
   const now = nowDate();
-  const jobRows = await db
-    .select({ id: jobs.id })
-    .from(jobs)
-    .where(and(eq(jobs.id, jobId), eq(jobs.userId, userId)))
-    .limit(1);
+  const jobRows = jobId
+    ? await db
+        .select({ id: jobs.id })
+        .from(jobs)
+        .where(and(eq(jobs.id, jobId), eq(jobs.userId, userId)))
+        .limit(1)
+    : [{ id: null }];
 
   if (jobRows.length === 0) {
     throw new Error("Job not found");
@@ -64,6 +69,7 @@ export async function createInterviewSession(
     id,
     userId,
     jobId,
+    category: category ?? null,
     profileId,
     mode,
     questionsJson: JSON.stringify(questions),
@@ -76,6 +82,7 @@ export async function createInterviewSession(
     jobId,
     profileId,
     mode,
+    category: category ?? null,
     questions,
     status: "in_progress",
     startedAt: toIso(now),
@@ -114,7 +121,8 @@ export async function getInterviewSession(
     id: row.id,
     jobId: row.jobId,
     profileId: row.profileId,
-    mode: row.mode as "text" | "voice",
+    mode: row.mode as SessionMode,
+    category: row.category as SessionQuestionCategory | null,
     questions: JSON.parse(row.questionsJson),
     status: row.status as "in_progress" | "completed",
     startedAt: row.startedAt ?? "",
@@ -160,7 +168,8 @@ export async function getInterviewSessions(
     id: row.id,
     jobId: row.jobId,
     profileId: row.profileId,
-    mode: row.mode as "text" | "voice",
+    mode: row.mode as SessionMode,
+    category: row.category as SessionQuestionCategory | null,
     questions: JSON.parse(row.questionsJson),
     status: row.status as "in_progress" | "completed",
     startedAt: row.startedAt ?? "",
@@ -272,7 +281,8 @@ export async function getRecentInterviewSessions(
     id: row.id,
     jobId: row.jobId,
     profileId: row.profileId,
-    mode: row.mode as "text" | "voice",
+    mode: row.mode as SessionMode,
+    category: row.category as SessionQuestionCategory | null,
     questions: JSON.parse(row.questionsJson),
     status: row.status as "in_progress" | "completed",
     startedAt: row.startedAt ?? "",

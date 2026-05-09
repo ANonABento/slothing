@@ -335,7 +335,7 @@ export interface InterviewFollowupResponse {
 
 export interface InterviewSession {
   id: string;
-  jobId?: string;
+  jobId?: string | null;
   type: string;
   difficulty: string;
   status: string;
