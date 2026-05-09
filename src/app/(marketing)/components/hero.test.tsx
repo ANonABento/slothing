@@ -45,4 +45,11 @@ describe("Hero", () => {
     expect(screen.getByText(/Join 10,000\+ job seekers/)).toBeInTheDocument();
     expect(screen.getByText("4.9/5 rating")).toBeInTheDocument();
   });
+
+  it("should disclose illustrative hero stats", () => {
+    render(<Hero />);
+    expect(
+      screen.getByText(/Stats and ratings are illustrative/),
+    ).toBeInTheDocument();
+  });
 });

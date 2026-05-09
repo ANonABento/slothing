@@ -46,9 +46,7 @@ export function Features() {
           </h2>
           <p className="text-lg text-muted-foreground">
             Slothing combines smart parsing with AI tailoring to turn your
-            career history into job-winning resumes. Slothing combines
-            AI-powered tools with smart tracking to streamline your entire job
-            search process.
+            career history into job-winning resumes.
           </p>
         </div>
 

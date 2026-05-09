@@ -31,4 +31,9 @@ describe("Testimonials", () => {
       screen.getByText(/Slothing turned my 3-hour resume rewrite/),
     ).toBeInTheDocument();
   });
+
+  it("should disclose illustrative social proof", () => {
+    render(<Testimonials />);
+    expect(screen.getByText(/real numbers are coming/)).toBeInTheDocument();
+  });
 });

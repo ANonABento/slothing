@@ -84,6 +84,10 @@ export function Testimonials() {
             </div>
           </div>
         </div>
+        <p className="mt-8 text-center text-xs italic text-muted-foreground">
+          Stats, ratings, and testimonials are illustrative placeholders.
+          Slothing is in active development — real numbers are coming.
+        </p>
       </div>
     </section>
   );
