@@ -5,7 +5,13 @@ import type {
 } from "@/lib/resume/template-types";
 import { getCoverLetterDocumentStyles } from "@/lib/resume/cover-letter-styles";
 import { generateHTML } from "@tiptap/react";
-import { resumeEditorExtensions } from "./extensions";
+import { resumeEditorExtensions } from "./editor-extensions";
+import {
+  DEFAULT_PAGE_SETTINGS,
+  normalizePageSettings,
+  pageSettingsToPrintCss,
+  type PageSettings,
+} from "./page-settings";
 import { getResumeDocumentStyles } from "./styles";
 import type { TipTapJSONContent } from "./types";
 
@@ -22,15 +28,18 @@ export function createEditorBodyHtml(content: TipTapJSONContent): string {
 export function createPrintableEditorHtml(
   bodyHtml: string,
   templateStyles: TemplateStyles,
-  title = "Resume"
+  title = "Resume",
+  pageSettings: PageSettings = DEFAULT_PAGE_SETTINGS,
 ): string {
+  const normalizedPageSettings = normalizePageSettings(pageSettings);
   return `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="UTF-8">
   <title>${escapeHtml(title)}</title>
   <style>
-${getResumeDocumentStyles(templateStyles)}
+${getResumeDocumentStyles(templateStyles, { pageSettings: normalizedPageSettings })}
+${pageSettingsToPrintCss(normalizedPageSettings)}
 ${EDITOR_PRINT_CLEANUP_STYLES}
   </style>
 </head>
@@ -43,8 +52,10 @@ ${bodyHtml}
 export function createPrintableCoverLetterEditorHtml(
   bodyHtml: string,
   templateStyles: CoverLetterTemplateStyles,
-  title = "Cover Letter"
+  title = "Cover Letter",
+  pageSettings: PageSettings = DEFAULT_PAGE_SETTINGS,
 ): string {
+  const normalizedPageSettings = normalizePageSettings(pageSettings);
   return `<!DOCTYPE html>
 <html>
 <head>
@@ -52,6 +63,7 @@ export function createPrintableCoverLetterEditorHtml(
   <title>${escapeHtml(title)}</title>
   <style>
 ${getCoverLetterDocumentStyles(templateStyles)}
+${pageSettingsToPrintCss(normalizedPageSettings)}
   </style>
 </head>
 <body>
