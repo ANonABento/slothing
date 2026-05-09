@@ -54,7 +54,8 @@ function StudioPageContent() {
             role="tabpanel"
             aria-labelledby="builder-edit-tab"
             className={cn(
-              "w-full overflow-y-auto md:w-[280px] md:flex-none md:shrink-0 md:border-r",
+              "w-full overflow-y-auto transition-[width] duration-200 md:flex-none md:shrink-0 md:border-r",
+              studio.filesPanelCollapsed ? "md:w-12" : "md:w-[280px]",
               getMobilePanelClasses(studio.mobileView, "edit"),
             )}
           >
@@ -65,49 +66,56 @@ function StudioPageContent() {
               onSelect={studio.handleSelectDocument}
               onRename={studio.handleRenameDocument}
               onDelete={studio.handleDeleteDocument}
+              collapsed={studio.filesPanelCollapsed}
+              onToggleCollapsed={studio.toggleFilesPanelCollapsed}
             />
 
-            <VersionHistorySection
-              versions={studio.versions}
-              previewVersionId={studio.previewVersionId}
-              manualVersionName={studio.manualVersionName}
-              onPreviewVersion={studio.handlePreviewVersion}
-              onManualVersionNameChange={studio.setManualVersionName}
-              onSaveVersion={studio.handleSaveManualVersion}
-            />
+            {!studio.filesPanelCollapsed && (
+              <>
+                <VersionHistorySection
+                  versions={studio.versions}
+                  previewVersionId={studio.previewVersionId}
+                  manualVersionName={studio.manualVersionName}
+                  onPreviewVersion={studio.handlePreviewVersion}
+                  onManualVersionNameChange={studio.setManualVersionName}
+                  onSaveVersion={studio.handleSaveManualVersion}
+                />
 
-            <div className="flex-1 overflow-y-auto">
-              {studio.stagedSelectionCount > 0 ? (
-                <div className="border-b px-4 py-3">
-                  <Badge variant="success">
-                    Using {studio.stagedSelectionCount} staged bank component
-                    {studio.stagedSelectionCount === 1 ? "" : "s"}
-                  </Badge>
+                <div className="flex-1 overflow-y-auto">
+                  {studio.stagedSelectionCount > 0 ? (
+                    <div className="border-b px-4 py-3">
+                      <Badge variant="success">
+                        Using {studio.stagedSelectionCount} staged bank
+                        component
+                        {studio.stagedSelectionCount === 1 ? "" : "s"}
+                      </Badge>
+                    </div>
+                  ) : null}
+                  <SectionList
+                    sections={studio.sections}
+                    entries={studio.entries}
+                    selectedIds={studio.selectedIds}
+                    onReorder={studio.handleReorder}
+                    onToggleVisibility={studio.handleToggleVisibility}
+                    onToggleEntry={studio.handleToggleEntry}
+                    pickerOpen={studio.entryPickerOpen}
+                    onPickerOpenChange={studio.setEntryPickerOpen}
+                    showSections={studio.documentMode === "resume"}
+                  />
+                  <div className="px-4 py-3">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full"
+                      onClick={() => studio.setEntryPickerOpen(true)}
+                    >
+                      <Plus className="mr-1.5 h-4 w-4" />
+                      Add from bank
+                    </Button>
+                  </div>
                 </div>
-              ) : null}
-              <SectionList
-                sections={studio.sections}
-                entries={studio.entries}
-                selectedIds={studio.selectedIds}
-                onReorder={studio.handleReorder}
-                onToggleVisibility={studio.handleToggleVisibility}
-                onToggleEntry={studio.handleToggleEntry}
-                pickerOpen={studio.entryPickerOpen}
-                onPickerOpenChange={studio.setEntryPickerOpen}
-                showSections={studio.documentMode === "resume"}
-              />
-              <div className="px-4 py-3">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full"
-                  onClick={() => studio.setEntryPickerOpen(true)}
-                >
-                  <Plus className="mr-1.5 h-4 w-4" />
-                  Add from bank
-                </Button>
-              </div>
-            </div>
+              </>
+            )}
           </div>
 
           <div
@@ -153,6 +161,8 @@ function StudioPageContent() {
             onOpenBank={() => studio.setEntryPickerOpen(true)}
             onOpportunityClear={() => studio.setLinkedOpportunityId("")}
             onOpportunitySelect={studio.setLinkedOpportunityId}
+            collapsed={studio.aiPanelCollapsed}
+            onToggleCollapsed={studio.toggleAiPanelCollapsed}
           />
         </div>
       </div>
