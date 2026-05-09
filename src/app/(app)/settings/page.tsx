@@ -38,51 +38,63 @@ export default function SettingsPage() {
   return (
     <AppPage>
       <PageHeader
-        width="narrow"
+        width="wide"
         icon={Settings}
         eyebrow="Configuration"
         title="Settings"
         description="Configure your AI provider for resume parsing and interview preparation."
       />
 
-      <PageContent width="narrow">
-        <div className="space-y-6">
-          <LLMProviderSelector
-            provider={llmSettings.config.provider}
-            apiKey={llmSettings.config.apiKey}
-            onProviderChange={llmSettings.updateConfig}
-          />
-          <ThemeSection />
-          <LocaleSection />
-          <OpportunityReviewSection />
-          <LLMProviderConfig
-            config={llmSettings.config}
-            selectedProvider={selectedProvider}
-            models={llmSettings.availableModels}
-            saving={llmSettings.saving}
-            testing={llmSettings.testing}
-            hasChanges={llmSettings.hasChanges}
-            testResult={llmSettings.testResult}
-            onConfigChange={llmSettings.updateConfig}
-            onSave={() => void llmSettings.saveSettings()}
-            onTestConnection={() => void llmSettings.testConnection()}
-          />
-          <WhatAiPowers />
-          <PromptVariantsSection />
-          <HelpCards />
-          <DataManagement
-            exporting={dataIO.exporting}
-            importing={dataIO.importing}
-            importResult={dataIO.importResult}
-            showImportPreview={dataIO.showImportPreview}
-            onExport={(type) => void dataIO.exportData(type)}
-            onImportFile={dataIO.handleFileImport}
-            onFullImportPreview={dataIO.handleFullImportPreview}
-            onConfirmFullImport={dataIO.confirmFullImport}
-            onCancelImportPreview={dataIO.clearImportPreview}
-          />
-          <GoogleIntegration />
-          {llmSettings.config.provider === "ollama" && <OllamaWarning />}
+      <PageContent width="wide">
+        <div className="space-y-8">
+          <div className="space-y-6">
+            <LLMProviderSelector
+              provider={llmSettings.config.provider}
+              apiKey={llmSettings.config.apiKey}
+              onProviderChange={llmSettings.updateConfig}
+            />
+            {llmSettings.config.provider === "ollama" && <OllamaWarning />}
+            <div className="grid gap-6 lg:grid-cols-2">
+              <LLMProviderConfig
+                config={llmSettings.config}
+                selectedProvider={selectedProvider}
+                models={llmSettings.availableModels}
+                saving={llmSettings.saving}
+                testing={llmSettings.testing}
+                hasChanges={llmSettings.hasChanges}
+                testResult={llmSettings.testResult}
+                onConfigChange={llmSettings.updateConfig}
+                onSave={() => void llmSettings.saveSettings()}
+                onTestConnection={() => void llmSettings.testConnection()}
+              />
+              <WhatAiPowers />
+            </div>
+            <PromptVariantsSection />
+            <HelpCards />
+          </div>
+
+          <div className="space-y-6">
+            <ThemeSection />
+            <div className="grid gap-6 lg:grid-cols-2">
+              <LocaleSection />
+              <OpportunityReviewSection />
+            </div>
+          </div>
+
+          <div className="grid gap-6 lg:grid-cols-2">
+            <DataManagement
+              exporting={dataIO.exporting}
+              importing={dataIO.importing}
+              importResult={dataIO.importResult}
+              showImportPreview={dataIO.showImportPreview}
+              onExport={(type) => void dataIO.exportData(type)}
+              onImportFile={dataIO.handleFileImport}
+              onFullImportPreview={dataIO.handleFullImportPreview}
+              onConfirmFullImport={dataIO.confirmFullImport}
+              onCancelImportPreview={dataIO.clearImportPreview}
+            />
+            <GoogleIntegration />
+          </div>
         </div>
       </PageContent>
     </AppPage>
