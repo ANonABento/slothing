@@ -1,5 +1,6 @@
 import type { NextAuthConfig } from "next-auth";
 import Google from "next-auth/providers/google";
+import Resend from "next-auth/providers/resend";
 
 export const GOOGLE_OAUTH_SCOPES = [
   "openid",
@@ -19,24 +20,41 @@ export function isNextAuthConfigured(
   );
 }
 
+export function isEmailMagicLinkConfigured(
+  env: Record<string, string | undefined> = process.env,
+): boolean {
+  return Boolean(env.RESEND_API_KEY && env.EMAIL_FROM);
+}
+
+const providers: NextAuthConfig["providers"] = [
+  Google({
+    clientId: process.env.GOOGLE_CLIENT_ID,
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    authorization: {
+      params: {
+        scope: GOOGLE_OAUTH_SCOPES.join(" "),
+        access_type: "offline",
+        prompt: "consent",
+      },
+    },
+  }),
+];
+
+if (isEmailMagicLinkConfigured()) {
+  providers.push(
+    Resend({
+      apiKey: process.env.RESEND_API_KEY,
+      from: process.env.EMAIL_FROM,
+    }),
+  );
+}
+
 // Edge-safe NextAuth config (no DB adapter). Imported by middleware.ts so the
 // edge runtime bundle does not pull libSQL/Drizzle. The full config in
 // auth.ts spreads this and adds the DrizzleAdapter for API/server routes.
 export const authConfig = {
   trustHost: true,
-  providers: [
-    Google({
-      clientId: process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      authorization: {
-        params: {
-          scope: GOOGLE_OAUTH_SCOPES.join(" "),
-          access_type: "offline",
-          prompt: "consent",
-        },
-      },
-    }),
-  ],
+  providers,
   session: { strategy: "jwt" },
   pages: { signIn: "/sign-in" },
   callbacks: {

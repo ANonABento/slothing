@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { isNextAuthConfigured } from "@/auth";
+import { isEmailMagicLinkConfigured, isNextAuthConfigured } from "@/auth";
 import { SignInCard } from "./sign-in-card";
 
 export const metadata: Metadata = {
   title: "Sign In",
-  description: "Sign in to your Slothing account.",
+  description:
+    "Sign in to Slothing - continue with Google or get a magic link by email.",
 };
 
 interface SignInPageProps {
@@ -18,10 +19,19 @@ export default function SignInPage({ searchParams }: SignInPageProps) {
   }
 
   const callbackUrl = searchParams?.callbackUrl ?? "/dashboard";
+  const enableEmailMagicLink = isEmailMagicLinkConfigured();
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted">
-      <SignInCard callbackUrl={callbackUrl} />
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-gradient-to-br from-background via-background to-muted px-4 py-10">
+      <h1 className="sr-only">Sign in to Slothing</h1>
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -right-1/3 -top-1/3 h-2/3 w-2/3 rounded-full bg-gradient-to-bl from-primary/8 via-transparent to-transparent blur-3xl" />
+        <div className="absolute -bottom-1/3 -left-1/3 h-2/3 w-2/3 rounded-full bg-gradient-to-tr from-accent/6 via-transparent to-transparent blur-3xl" />
+      </div>
+      <SignInCard
+        callbackUrl={callbackUrl}
+        enableEmailMagicLink={enableEmailMagicLink}
+      />
     </div>
   );
 }
