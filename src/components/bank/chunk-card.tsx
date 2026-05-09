@@ -49,8 +49,9 @@ export function ChunkCard({
   highlighted,
   anySelected,
   childEntries = [],
+  forceExpanded = false,
 }: ChunkCardProps) {
-  const [expanded, setExpanded] = useState(false);
+  const [localExpanded, setLocalExpanded] = useState(false);
   const [editing, setEditing] = useState(false);
   const [editingChildId, setEditingChildId] = useState<string | null>(null);
   const [creatingChild, setCreatingChild] = useState(false);
@@ -65,11 +66,12 @@ export function ChunkCard({
   const title = getEntryTitle(entry);
   const fields = CATEGORY_FIELDS[entry.category];
   const showDebugIds = useDevMode();
+  const expanded = forceExpanded || localExpanded;
 
   function handleEdit() {
     setEditContent({ ...entry.content });
     setEditing(true);
-    setExpanded(true);
+    setLocalExpanded(true);
   }
 
   function handleFieldChange(key: string, value: unknown) {
@@ -175,7 +177,9 @@ export function ChunkCard({
           </label>
         )}
         <button
-          onClick={() => !editing && setExpanded(!expanded)}
+          onClick={() =>
+            !editing && !forceExpanded && setLocalExpanded(!expanded)
+          }
           className="flex flex-1 items-start gap-3 text-left min-w-0"
         >
           <div
@@ -185,7 +189,9 @@ export function ChunkCard({
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="font-medium truncate">{title}</span>
+              <span className="font-medium truncate" title={title}>
+                {title}
+              </span>
               <Badge variant="secondary" className="text-2xs">
                 {config.label}
               </Badge>
@@ -207,13 +213,15 @@ export function ChunkCard({
               )}
             </div>
           </div>
-          <div className="shrink-0 text-muted-foreground">
-            {expanded ? (
-              <ChevronUp className="h-4 w-4" />
-            ) : (
-              <ChevronDown className="h-4 w-4" />
-            )}
-          </div>
+          {!forceExpanded && (
+            <div className="shrink-0 text-muted-foreground">
+              {expanded ? (
+                <ChevronUp className="h-4 w-4" />
+              ) : (
+                <ChevronDown className="h-4 w-4" />
+              )}
+            </div>
+          )}
         </button>
       </div>
 
