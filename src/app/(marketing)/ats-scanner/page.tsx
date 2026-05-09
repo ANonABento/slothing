@@ -5,7 +5,7 @@ import { ShieldCheck, Zap, Eye, Sparkles } from "lucide-react";
 export const metadata: Metadata = {
   title: "Free ATS Resume Checker | Slothing",
   description:
-    "Check your resume's ATS compatibility score for free. Get instant feedback on formatting, structure, content, and keyword optimization.",
+    "Check your resume's ATS compatibility score for free. Upload a PDF, import a job URL, and get private in-browser scoring feedback.",
   keywords: [
     "free ATS resume checker",
     "ATS score checker",
@@ -25,17 +25,17 @@ const BENEFITS = [
   {
     icon: Zap,
     title: "Instant Results",
-    description: "Get your ATS score in seconds, no signup required",
+    description: "Score in under a second, no signup required",
   },
   {
     icon: Eye,
     title: "Detailed Breakdown",
-    description: "See exactly what ATS systems check for",
+    description: "Five scoring axes: parseability, sections, keywords, dates, and content",
   },
   {
     icon: Sparkles,
-    title: "100% Free",
-    description: "No hidden fees, no credit card needed",
+    title: "Free and Private",
+    description: "Your resume is scored in your browser and nothing is stored",
   },
 ];
 
@@ -52,8 +52,18 @@ export default function ATSScannerPage() {
             Free ATS Resume Scanner
           </h1>
           <p className="text-lg text-muted-foreground max-w-xl mx-auto">
-            Over 75% of resumes are rejected by ATS before a human ever sees
-            them. Check yours in seconds.
+            88% of employers say their ATS filters out qualified candidates
+            before a human reviews them. Check yours in seconds.
+            <sup className="ml-1 align-super text-xs">
+              <a
+                href="https://www.hbs.edu/managing-the-future-of-work/Documents/research/hiddenworkers09032021.pdf"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary underline-offset-4 hover:underline"
+              >
+                Source: Harvard Business School, Hidden Workers (2021)
+              </a>
+            </sup>
           </p>
         </div>
 
