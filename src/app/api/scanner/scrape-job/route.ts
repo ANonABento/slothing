@@ -4,6 +4,7 @@ import {
   OpportunityScrapeError,
   scrapeOpportunityFromUrl,
 } from "@/lib/opportunities/scrape";
+import { nowEpoch } from "@/lib/format/time";
 
 export const dynamic = "force-dynamic";
 
@@ -31,7 +32,7 @@ function rateLimitResponse(request: NextRequest) {
       headers: {
         "Retry-After": Math.max(
           1,
-          Math.ceil((rateLimit.resetAt - Date.now()) / 1000),
+          Math.ceil((rateLimit.resetAt - nowEpoch()) / 1000),
         ).toString(),
       },
     },

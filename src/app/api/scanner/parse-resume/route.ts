@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { validateFileMagicBytes } from "@/lib/constants";
 import { parsePdfResume, parseResumeText } from "@/lib/parsers/pdf-resume";
 import { getClientIdentifier, rateLimiters } from "@/lib/rate-limit";
+import { nowEpoch } from "@/lib/format/time";
 
 export const dynamic = "force-dynamic";
 
@@ -21,14 +22,16 @@ function rateLimitResponse(request: NextRequest) {
       headers: {
         "Retry-After": Math.max(
           1,
-          Math.ceil((rateLimit.resetAt - Date.now()) / 1000),
+          Math.ceil((rateLimit.resetAt - nowEpoch()) / 1000),
         ).toString(),
       },
     },
   );
 }
 
-function publicParsePayload(result: Awaited<ReturnType<typeof parsePdfResume>>) {
+function publicParsePayload(
+  result: Awaited<ReturnType<typeof parsePdfResume>>,
+) {
   const { rawText: _rawText, ...safeResult } = result;
   return safeResult;
 }
@@ -46,7 +49,9 @@ export async function POST(request: NextRequest) {
     const contentType = request.headers.get("content-type") || "";
 
     if (contentType.includes("application/json")) {
-      const body = (await request.json().catch(() => null)) as { text?: unknown } | null;
+      const body = (await request.json().catch(() => null)) as {
+        text?: unknown;
+      } | null;
       if (typeof body?.text !== "string" || body.text.trim().length === 0) {
         return NextResponse.json(
           { error: "Resume text is required.", code: "invalid_text" },
@@ -72,14 +77,20 @@ export async function POST(request: NextRequest) {
 
     if (file.size > MAX_SCANNER_FILE_SIZE) {
       return NextResponse.json(
-        { error: "File too large. Maximum size is 5MB.", code: "file_too_large" },
+        {
+          error: "File too large. Maximum size is 5MB.",
+          code: "file_too_large",
+        },
         { status: 413 },
       );
     }
 
     if (!ALLOWED_TYPES.includes(file.type as (typeof ALLOWED_TYPES)[number])) {
       return NextResponse.json(
-        { error: "Invalid file type. Upload a PDF or TXT file.", code: "invalid_file_type" },
+        {
+          error: "Invalid file type. Upload a PDF or TXT file.",
+          code: "invalid_file_type",
+        },
         { status: 415 },
       );
     }
@@ -87,7 +98,10 @@ export async function POST(request: NextRequest) {
     const buffer = Buffer.from(await file.arrayBuffer());
     if (!validateFileMagicBytes(buffer, file.type)) {
       return NextResponse.json(
-        { error: "File content does not match its type.", code: "invalid_file_content" },
+        {
+          error: "File content does not match its type.",
+          code: "invalid_file_content",
+        },
         { status: 415 },
       );
     }
@@ -103,7 +117,8 @@ export async function POST(request: NextRequest) {
       if (isPasswordProtectedPdfError(error)) {
         return NextResponse.json(
           {
-            error: "This PDF is password-protected. Remove the password and try again.",
+            error:
+              "This PDF is password-protected. Remove the password and try again.",
             code: "password_protected",
           },
           { status: 422 },
