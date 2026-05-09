@@ -73,11 +73,13 @@ interface BuilderPreviewResponse {
 
 interface StudioPageState {
   activeDocumentId: string;
+  aiPanelCollapsed: boolean;
   currentDocuments: StudioDocument[];
   documentMode: DocumentMode;
   draftIsSaved: boolean;
   entries: BankEntry[];
   entryPickerOpen: boolean;
+  filesPanelCollapsed: boolean;
   generating: boolean;
   handleCopyHtml: () => Promise<void>;
   handleCreateDocument: () => void;
@@ -111,11 +113,15 @@ interface StudioPageState {
   selectedIds: Set<string>;
   stagedSelectionCount: number;
   setLinkedOpportunityId: (opportunityId: string) => void;
+  setAiPanelCollapsed: (collapsed: boolean) => void;
   setDocumentMode: (mode: DocumentMode) => void;
   setEntryPickerOpen: (open: boolean) => void;
+  setFilesPanelCollapsed: (collapsed: boolean) => void;
   setManualVersionName: (name: string) => void;
   setMobileView: (panel: BuilderPanel) => void;
   templateId: string;
+  toggleAiPanelCollapsed: () => void;
+  toggleFilesPanelCollapsed: () => void;
   versions: BuilderVersion[];
 }
 
@@ -126,6 +132,10 @@ type SaveOperation =
   | { type: "error"; message: string };
 
 const STAGED_BANK_ENTRY_IDS_KEY = "slothing:selectedBankEntryIds";
+export const STUDIO_FILES_PANEL_COLLAPSED_KEY =
+  "taida:studio:filesPanelCollapsed";
+export const STUDIO_AI_PANEL_COLLAPSED_KEY =
+  "taida:studio:aiPanelCollapsed";
 
 interface LinkStudioVersionOptions {
   documentMode: DocumentMode;
@@ -206,6 +216,26 @@ export function isDraftSavedForDocument(
   );
 }
 
+export function readStudioPanelCollapsed(
+  storage: Pick<Storage, "getItem">,
+  key: string,
+): boolean {
+  try {
+    return storage.getItem(key) === "true";
+  } catch {
+    return false;
+  }
+}
+
+function writeStudioPanelCollapsed(key: string, collapsed: boolean): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(key, String(collapsed));
+  } catch {
+    // Ignore storage failures; the visible UI state still updates.
+  }
+}
+
 export function applyCoverLetterCritiqueSuggestionToText(
   content: string,
   rangeInLetter: string,
@@ -253,6 +283,8 @@ export function useStudioPageState(): StudioPageState {
   const [linkedOpportunityId, setLinkedOpportunityId] = useState("");
   const [stagedSelectionCount, setStagedSelectionCount] = useState(0);
   const [documentMode, setDocumentMode] = useState<DocumentMode>("resume");
+  const [filesPanelCollapsed, setFilesPanelCollapsedState] = useState(false);
+  const [aiPanelCollapsed, setAiPanelCollapsedState] = useState(false);
   const [activeDocumentIds, setActiveDocumentIds] = useState<
     Record<DocumentMode, string>
   >({ resume: RESUME_DOCUMENT_ID, cover_letter: COVER_LETTER_DOCUMENT_ID });
@@ -262,6 +294,48 @@ export function useStudioPageState(): StudioPageState {
   const lastActiveDocumentIdRef = useRef<string | null>(null);
   const lastCoverLetterEntryKeyRef = useRef<string | null>(null);
   const contentRef = useRef<TipTapJSONContent | undefined>(undefined);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    setFilesPanelCollapsedState(
+      readStudioPanelCollapsed(
+        window.localStorage,
+        STUDIO_FILES_PANEL_COLLAPSED_KEY,
+      ),
+    );
+    setAiPanelCollapsedState(
+      readStudioPanelCollapsed(
+        window.localStorage,
+        STUDIO_AI_PANEL_COLLAPSED_KEY,
+      ),
+    );
+  }, []);
+
+  const setFilesPanelCollapsed = useCallback((collapsed: boolean) => {
+    setFilesPanelCollapsedState(collapsed);
+    writeStudioPanelCollapsed(STUDIO_FILES_PANEL_COLLAPSED_KEY, collapsed);
+  }, []);
+
+  const setAiPanelCollapsed = useCallback((collapsed: boolean) => {
+    setAiPanelCollapsedState(collapsed);
+    writeStudioPanelCollapsed(STUDIO_AI_PANEL_COLLAPSED_KEY, collapsed);
+  }, []);
+
+  const toggleFilesPanelCollapsed = useCallback(() => {
+    setFilesPanelCollapsedState((current) => {
+      const next = !current;
+      writeStudioPanelCollapsed(STUDIO_FILES_PANEL_COLLAPSED_KEY, next);
+      return next;
+    });
+  }, []);
+
+  const toggleAiPanelCollapsed = useCallback(() => {
+    setAiPanelCollapsedState((current) => {
+      const next = !current;
+      writeStudioPanelCollapsed(STUDIO_AI_PANEL_COLLAPSED_KEY, next);
+      return next;
+    });
+  }, []);
 
   const activeDocument = useMemo(
     () =>
@@ -958,11 +1032,13 @@ export function useStudioPageState(): StudioPageState {
 
   return {
     activeDocumentId: activeDocumentIds[documentMode],
+    aiPanelCollapsed,
     currentDocuments,
     documentMode,
     draftIsSaved,
     entries,
     entryPickerOpen,
+    filesPanelCollapsed,
     generating,
     content,
     coverLetterCritique,
@@ -992,12 +1068,16 @@ export function useStudioPageState(): StudioPageState {
     sections,
     selectedIds,
     stagedSelectionCount,
+    setAiPanelCollapsed,
     setLinkedOpportunityId,
     setDocumentMode,
     setEntryPickerOpen,
+    setFilesPanelCollapsed,
     setManualVersionName,
     setMobileView,
     templateId,
+    toggleAiPanelCollapsed,
+    toggleFilesPanelCollapsed,
     versions,
   };
 }
