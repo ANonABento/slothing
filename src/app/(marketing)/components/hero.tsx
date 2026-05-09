@@ -22,8 +22,8 @@ export function Hero() {
 
           {/* Headline */}
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-6 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-100">
-            You&apos;re not lazy.{" "}
-            <span className="gradient-text">Your system is.</span>
+            <span className="block">You&apos;re not lazy.</span>
+            <span className="block gradient-text">Your system is.</span>
           </h1>
 
           {/* Subheadline */}
