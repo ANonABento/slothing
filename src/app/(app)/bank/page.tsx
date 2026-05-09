@@ -1459,8 +1459,8 @@ export default function BankPage() {
         <PageContent className="space-y-6">
           {showLibraryTools ? (
             <>
-              {/* Search & Filters - sticky below header */}
-              <div className="sticky top-0 z-10 -mx-5 border-b border-border/50 bg-background/95 px-5 py-3 backdrop-blur-sm sm:-mx-8 sm:px-8">
+              {/* Keep this in flow: <main> is the scrollport, and nested sticky filter bars can trap wheel scrolling. */}
+              <div className="border-b border-border/50 bg-background/95 py-3">
                 <SearchBar
                   ref={searchInputRef}
                   query={query}
