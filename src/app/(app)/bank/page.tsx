@@ -3,6 +3,7 @@
 import {
   useCallback,
   useEffect,
+  Fragment,
   useMemo,
   useRef,
   useState,
@@ -37,6 +38,7 @@ import {
   Loader2,
   Rows3,
   AlertTriangle,
+  ChevronRight,
   Upload,
   HardDrive,
 } from "lucide-react";
@@ -280,6 +282,7 @@ export default function BankPage() {
   const [uploadReview, setUploadReview] = useState<UploadReviewState | null>(
     null,
   );
+  const [addEntryOpen, setAddEntryOpen] = useState(false);
   const [moveBulletsOpen, setMoveBulletsOpen] = useState(false);
   const [moveTargetParentId, setMoveTargetParentId] = useState("");
   const { addToast } = useToast();
@@ -343,6 +346,24 @@ export default function BankPage() {
   useEffect(() => {
     fetchEntries();
   }, [fetchEntries]);
+
+  const fetchSourceDocuments = useCallback(async () => {
+    try {
+      const res = await fetch("/api/bank/documents");
+      if (!res.ok) throw new Error("Failed to fetch source documents");
+      const data = await res.json();
+      setSourceDocuments(data.documents || []);
+    } catch (err) {
+      showErrorToast(err, {
+        title: "Could not load source files",
+        fallbackDescription: "Please refresh the page and try again.",
+      });
+    }
+  }, [showErrorToast]);
+
+  useEffect(() => {
+    fetchSourceDocuments();
+  }, [fetchSourceDocuments, sourceRefreshKey]);
 
   // Compute category counts from all entries (not filtered)
   const [allEntries, setAllEntries] = useState<BankEntry[]>([]);
@@ -1401,7 +1422,11 @@ export default function BankPage() {
           description="Store reusable resumes, projects, achievements, and career notes for tailored applications."
           actions={
             <div className="flex flex-wrap gap-2">
-              <AddEntryDialog onCreate={handleCreate} />
+              <AddEntryDialog
+                onCreate={handleCreate}
+                open={addEntryOpen}
+                onOpenChange={setAddEntryOpen}
+              />
               <DriveFilePicker
                 onSelect={handleDriveSelect}
                 accept={["application/pdf", "text/plain"]}
@@ -1561,10 +1586,36 @@ export default function BankPage() {
               }
               action={
                 !query && activeCategory === "all" ? (
-                  <Button onClick={() => fileInputRef.current?.click()}>
-                    <Upload className="h-4 w-4 mr-2" />
-                    Upload Document
-                  </Button>
+                  <div className="flex flex-col items-center gap-3">
+                    <Button onClick={() => fileInputRef.current?.click()}>
+                      <Upload className="h-4 w-4 mr-2" />
+                      Upload Document
+                    </Button>
+                    <div className="text-xs text-muted-foreground">
+                      or{" "}
+                      <button
+                        type="button"
+                        className="font-medium text-foreground underline underline-offset-4"
+                        onClick={() => setAddEntryOpen(true)}
+                      >
+                        add an entry manually
+                      </button>{" "}
+                      &middot;{" "}
+                      <DriveFilePicker
+                        onSelect={handleDriveSelect}
+                        accept={["application/pdf", "text/plain"]}
+                        trigger={
+                          <button
+                            type="button"
+                            className="font-medium text-foreground underline underline-offset-4"
+                          >
+                            pick from Drive
+                          </button>
+                        }
+                      />{" "}
+                      &middot; or drop files here
+                    </div>
+                  </div>
                 ) : null
               }
             />
@@ -1589,6 +1640,7 @@ export default function BankPage() {
                       </p>
                       <EntryCollection
                         layoutMode={layoutMode}
+                        displayMode={displayMode}
                         entries={group.entries}
                         allEntries={entries}
                         sourceDocuments={sourceDocuments}
@@ -1614,6 +1666,7 @@ export default function BankPage() {
                       </h2>
                       <EntryCollection
                         layoutMode={layoutMode}
+                        displayMode={displayMode}
                         entries={group.entries}
                         allEntries={entries}
                         sourceDocuments={sourceDocuments}
@@ -1693,6 +1746,7 @@ function IconModeButton({
 
 function EntryCollection({
   layoutMode,
+  displayMode,
   entries,
   allEntries,
   sourceDocuments,
@@ -1707,6 +1761,7 @@ function EntryCollection({
   reviewEntries,
 }: {
   layoutMode: LayoutMode;
+  displayMode: DisplayMode;
   entries: BankEntry[];
   allEntries: BankEntry[];
   sourceDocuments: SourceDocument[];
@@ -1729,7 +1784,12 @@ function EntryCollection({
       <EntryTable
         entries={entries}
         allEntries={allEntries}
+        displayMode={displayMode}
         sourceDocuments={sourceDocuments}
+        onUpdate={onUpdate}
+        onDelete={onDelete}
+        onCreateChild={onCreateChild}
+        onReorderChild={onReorderChild}
         selectedIds={selectedIds}
         onToggleSelect={onToggleSelect}
         onSelectEntries={onSelectEntries}
@@ -1763,7 +1823,12 @@ function EntryCollection({
 function EntryTable({
   entries,
   allEntries,
+  displayMode,
   sourceDocuments,
+  onUpdate,
+  onDelete,
+  onCreateChild,
+  onReorderChild,
   selectedIds,
   onToggleSelect,
   onSelectEntries,
@@ -1772,25 +1837,47 @@ function EntryTable({
 }: {
   entries: BankEntry[];
   allEntries: BankEntry[];
+  displayMode: DisplayMode;
   sourceDocuments: SourceDocument[];
+  onUpdate: (id: string, content: Record<string, unknown>) => void;
+  onDelete: (id: string) => void;
+  onCreateChild: (parent: BankEntry, description: string) => void;
+  onReorderChild: (
+    parent: BankEntry,
+    childId: string,
+    direction: "up" | "down",
+  ) => void;
   selectedIds: Set<string>;
   onToggleSelect: (id: string) => void;
   onSelectEntries: (ids: string[]) => void;
   onDeselectEntries: (ids: string[]) => void;
   reviewEntries: BankEntry[];
 }) {
+  const [expandedRowId, setExpandedRowId] = useState<string | null>(null);
   const sourceNames = new Map(
     sourceDocuments.map((document) => [document.id, document.filename]),
   );
   const allSelected =
     entries.length > 0 && entries.every((entry) => selectedIds.has(entry.id));
+  const showCategoryColumn = displayMode === "source";
+  const columnCount = showCategoryColumn ? 8 : 7;
+
+  function toggleRow(entryId: string) {
+    setExpandedRowId((current) => (current === entryId ? null : entryId));
+  }
 
   return (
     <div className="overflow-hidden rounded-[var(--radius)] border bg-card">
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[820px] text-left text-sm">
+        <table
+          className={cn(
+            "w-full text-left text-sm",
+            showCategoryColumn ? "min-w-[860px]" : "min-w-[760px]",
+          )}
+        >
           <thead className="border-b bg-muted/40 text-xs uppercase text-muted-foreground">
             <tr>
+              <th className="w-10 px-3 py-3 font-medium" aria-label="Expand" />
               <th className="w-12 px-4 py-3 font-medium">
                 <input
                   type="checkbox"
@@ -1808,7 +1895,9 @@ function EntryTable({
                 />
               </th>
               <th className="px-4 py-3 font-medium">Component</th>
-              <th className="px-4 py-3 font-medium">Category</th>
+              {showCategoryColumn ? (
+                <th className="px-4 py-3 font-medium">Category</th>
+              ) : null}
               <th className="px-4 py-3 font-medium">Source</th>
               <th className="px-4 py-3 font-medium">Bullets</th>
               <th className="px-4 py-3 font-medium">Confidence</th>
@@ -1818,70 +1907,135 @@ function EntryTable({
           <tbody className="divide-y">
             {entries.map((entry) => {
               const children = getChildEntriesFor(entry, allEntries);
+              const expanded = expandedRowId === entry.id;
+              const bulletCount = Number(
+                entry.content.childCount ?? children.length,
+              );
               const sourceName = entry.sourceDocumentId
-                ? (sourceNames.get(entry.sourceDocumentId) ?? "Uploaded file")
+                ? (sourceNames.get(entry.sourceDocumentId) ?? "—")
                 : "Manual";
               return (
-                <tr
-                  key={entry.id}
-                  className={cn(
-                    "hover:bg-muted/30",
-                    isBulletNeedsReview(entry, reviewEntries) && "bg-warning/5",
-                  )}
-                >
-                  <td className="px-4 py-3">
-                    <input
-                      type="checkbox"
-                      checked={selectedIds.has(entry.id)}
-                      onChange={() => onToggleSelect(entry.id)}
-                      className="h-4 w-4 rounded border-input accent-primary"
-                      aria-label={`Select ${getEntryLabel(entry)}`}
-                    />
-                  </td>
-                  <td className="max-w-[320px] px-4 py-3">
-                    <div className="truncate font-medium">
-                      {getEntryLabel(entry)}
-                    </div>
-                    <div className="mt-1 line-clamp-1 text-xs text-muted-foreground">
-                      {String(
-                        entry.content.description ??
-                          entry.content.location ??
-                          entry.content.field ??
-                          "",
-                      )}
-                    </div>
-                    {getBulletReviewReason(entry, reviewEntries) ? (
-                      <div className="mt-1 text-xs font-medium text-warning">
-                        {getBulletReviewReason(entry, reviewEntries)}
+                <Fragment key={entry.id}>
+                  <tr
+                    role="button"
+                    tabIndex={0}
+                    aria-expanded={expanded}
+                    onClick={() => toggleRow(entry.id)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        toggleRow(entry.id);
+                      }
+                    }}
+                    className={cn(
+                      "cursor-pointer hover:bg-muted/30",
+                      isBulletNeedsReview(entry, reviewEntries) &&
+                        "bg-warning/5",
+                    )}
+                  >
+                    <td className="px-3 py-3 text-muted-foreground">
+                      <ChevronRight
+                        className={cn(
+                          "h-4 w-4 transition-transform",
+                          expanded && "rotate-90",
+                        )}
+                        aria-hidden="true"
+                      />
+                    </td>
+                    <td className="px-4 py-3">
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.has(entry.id)}
+                        onChange={() => onToggleSelect(entry.id)}
+                        onClick={(event) => event.stopPropagation()}
+                        className="h-4 w-4 rounded border-input accent-primary"
+                        aria-label={`Select ${getEntryLabel(entry)}`}
+                      />
+                    </td>
+                    <td className="max-w-[320px] px-4 py-3">
+                      <div className="truncate font-medium">
+                        {getEntryLabel(entry)}
                       </div>
+                      <div className="mt-1 line-clamp-1 text-xs text-muted-foreground">
+                        {String(
+                          entry.content.description ??
+                            entry.content.location ??
+                            entry.content.field ??
+                            "",
+                        )}
+                      </div>
+                      {getBulletReviewReason(entry, reviewEntries) ? (
+                        <div className="mt-1 text-xs font-medium text-warning">
+                          {getBulletReviewReason(entry, reviewEntries)}
+                        </div>
+                      ) : null}
+                    </td>
+                    {showCategoryColumn ? (
+                      <td className="px-4 py-3">
+                        <Badge variant="secondary">
+                          {CATEGORY_LABELS[entry.category]}
+                        </Badge>
+                      </td>
                     ) : null}
-                  </td>
-                  <td className="px-4 py-3">
-                    <Badge variant="secondary">
-                      {CATEGORY_LABELS[entry.category]}
-                    </Badge>
-                  </td>
-                  <td className="max-w-[220px] px-4 py-3">
-                    <span className="block truncate text-muted-foreground">
-                      {sourceName}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-muted-foreground">
-                    {children.length}
-                  </td>
-                  <td className="px-4 py-3 text-muted-foreground">
-                    {Math.round((entry.confidenceScore ?? 0) * 100)}%
-                  </td>
-                  <td className="px-4 py-3 text-muted-foreground">
-                    {new Date(entry.createdAt).toLocaleDateString()}
-                  </td>
-                </tr>
+                    <td className="max-w-[220px] px-4 py-3">
+                      <span
+                        className="block truncate text-muted-foreground"
+                        title={sourceName}
+                      >
+                        {sourceName}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-muted-foreground">
+                      {bulletCount}
+                    </td>
+                    <td className="px-4 py-3">
+                      <ConfidenceBadge score={entry.confidenceScore ?? 0} />
+                    </td>
+                    <td className="px-4 py-3 text-muted-foreground">
+                      {new Date(entry.createdAt).toLocaleDateString()}
+                    </td>
+                  </tr>
+                  {expanded ? (
+                    <tr>
+                      <td colSpan={columnCount} className="bg-muted/20 p-4">
+                        <ChunkCard
+                          entry={entry}
+                          onUpdate={onUpdate}
+                          onDelete={onDelete}
+                          onCreateChild={onCreateChild}
+                          onReorderChild={onReorderChild}
+                          childEntries={children}
+                          forceExpanded
+                        />
+                      </td>
+                    </tr>
+                  ) : null}
+                </Fragment>
               );
             })}
           </tbody>
         </table>
       </div>
     </div>
+  );
+}
+
+function ConfidenceBadge({ score }: { score: number }) {
+  const percent = Math.round(score * 100);
+
+  if (score >= 0.85) {
+    return <span className="text-muted-foreground">{percent}%</span>;
+  }
+
+  if (score >= 0.7) {
+    return <Badge variant="warning">{percent}%</Badge>;
+  }
+
+  return (
+    <Badge variant="destructive" className="gap-1">
+      <AlertTriangle className="h-3 w-3" />
+      {percent}%
+    </Badge>
   );
 }
 
