@@ -74,6 +74,43 @@ describe("AiAssistantPanel", () => {
     expect(screen.getByLabelText("Rewrite Section")).toBeInTheDocument();
   });
 
+  it("renders an icon strip when collapsed", () => {
+    render(
+      <AiAssistantPanel
+        documentContent=""
+        selectedEntryCount={0}
+        onOpenBank={vi.fn()}
+        collapsed
+        onToggleCollapsed={vi.fn()}
+      />,
+    );
+
+    expect(
+      screen.getByRole("button", { name: "Expand AI assistant panel" }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Show Tailor to JD" }));
+    expect(screen.queryByLabelText("Job description")).toBeNull();
+  });
+
+  it("calls the collapse toggle from the icon strip", () => {
+    const onToggleCollapsed = vi.fn();
+    render(
+      <AiAssistantPanel
+        documentContent=""
+        selectedEntryCount={0}
+        onOpenBank={vi.fn()}
+        collapsed
+        onToggleCollapsed={onToggleCollapsed}
+      />,
+    );
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Expand AI assistant panel" }),
+    );
+
+    expect(onToggleCollapsed).toHaveBeenCalledTimes(1);
+  });
+
   it("shows a setup prompt when LLM providers are not configured", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(statusResponse(false)));
     renderWithSelectableText();

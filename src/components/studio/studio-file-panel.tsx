@@ -1,7 +1,14 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { FileText, Plus, Trash2 } from "lucide-react";
+import {
+  FileText,
+  History,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Plus,
+  Trash2,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useConfirmDialog } from "@/components/ui/confirm-dialog";
 import { cn } from "@/lib/utils";
@@ -14,6 +21,8 @@ interface StudioFilePanelProps {
   onSelect: (id: string) => void;
   onRename: (id: string, name: string) => void;
   onDelete: (id: string) => void;
+  collapsed?: boolean;
+  onToggleCollapsed?: () => void;
 }
 
 export function StudioFilePanel({
@@ -23,6 +32,8 @@ export function StudioFilePanel({
   onSelect,
   onRename,
   onDelete,
+  collapsed = false,
+  onToggleCollapsed,
 }: StudioFilePanelProps) {
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [draftName, setDraftName] = useState("");
@@ -56,14 +67,80 @@ export function StudioFilePanel({
     [confirm, onDelete],
   );
 
+  const expandPanel = useCallback(() => {
+    if (collapsed) onToggleCollapsed?.();
+  }, [collapsed, onToggleCollapsed]);
+
+  const handleCollapsedCreate = useCallback(() => {
+    expandPanel();
+    onCreate();
+  }, [expandPanel, onCreate]);
+
+  if (collapsed) {
+    return (
+      <div className="flex min-h-full w-12 flex-col items-center gap-2 border-b-[length:var(--border-width)] py-3 transition-[width] duration-200">
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          onClick={onToggleCollapsed}
+          aria-label="Expand files panel"
+        >
+          <PanelLeftOpen className="h-4 w-4" />
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          onClick={expandPanel}
+          aria-label="Show files"
+        >
+          <FileText className="h-4 w-4" />
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          onClick={handleCollapsedCreate}
+          aria-label="New studio file"
+        >
+          <Plus className="h-4 w-4" />
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          onClick={expandPanel}
+          aria-label="Show version history"
+        >
+          <History className="h-4 w-4" />
+        </Button>
+        {confirmDialog}
+      </div>
+    );
+  }
+
   return (
-    <div className="border-b-[length:var(--border-width)]">
+    <div className="border-b-[length:var(--border-width)] transition-[width] duration-200">
       <div className="flex items-center justify-between px-4 py-3">
         <h2 className="text-sm font-semibold">Files</h2>
-        <Button size="sm" variant="outline" onClick={onCreate}>
-          <Plus className="h-4 w-4 md:mr-1.5" />
-          <span className="hidden md:inline">New</span>
-        </Button>
+        <div className="flex items-center gap-1.5">
+          <Button size="sm" variant="outline" onClick={onCreate}>
+            <Plus className="h-4 w-4 md:mr-1.5" />
+            <span className="hidden md:inline">New</span>
+          </Button>
+          {onToggleCollapsed && (
+            <Button
+              type="button"
+              size="icon"
+              variant="ghost"
+              onClick={onToggleCollapsed}
+              aria-label="Collapse files panel"
+            >
+              <PanelLeftClose className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="space-y-1 px-2 pb-3">

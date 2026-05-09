@@ -13,6 +13,8 @@ import {
   BriefcaseBusiness,
   FileText,
   Loader2,
+  PanelRightClose,
+  PanelRightOpen,
   PenLine,
   Sparkles,
   Wand2,
@@ -73,6 +75,8 @@ interface AiAssistantPanelProps extends HTMLAttributes<HTMLElement> {
   onOpenBank: () => void;
   onOpportunityClear?: () => void;
   onOpportunitySelect?: (opportunityId: string) => void;
+  collapsed?: boolean;
+  onToggleCollapsed?: () => void;
 }
 
 interface AssistantResponse {
@@ -135,6 +139,8 @@ export function AiAssistantPanel({
   onOpenBank,
   onOpportunityClear,
   onOpportunitySelect,
+  collapsed = false,
+  onToggleCollapsed,
   ...asideProps
 }: AiAssistantPanelProps) {
   const panelRef = useRef<HTMLElement>(null);
@@ -580,21 +586,88 @@ export function AiAssistantPanel({
       }))
     : [];
 
+  const expandPanel = useCallback(() => {
+    if (collapsed) onToggleCollapsed?.();
+  }, [collapsed, onToggleCollapsed]);
+
+  if (collapsed) {
+    return (
+      <aside
+        ref={panelRef}
+        {...asideProps}
+        className={cn(
+          "flex w-full shrink-0 flex-col items-center gap-2 border-l-[length:var(--border-width)] bg-background py-3 transition-[width] duration-200 md:w-12",
+          className,
+        )}
+      >
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          onClick={onToggleCollapsed}
+          aria-label="Expand AI assistant panel"
+        >
+          <PanelRightOpen className="h-4 w-4" />
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          onClick={expandPanel}
+          aria-label="Show AI assistant"
+        >
+          <Sparkles className="h-4 w-4" />
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          onClick={expandPanel}
+          aria-label="Show Tailor to JD"
+        >
+          <Wand2 className="h-4 w-4" />
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          onClick={expandPanel}
+          aria-label="Show Generate from Bank"
+        >
+          <FileText className="h-4 w-4" />
+        </Button>
+      </aside>
+    );
+  }
+
   return (
     <aside
       ref={panelRef}
       {...asideProps}
       className={cn(
-        "flex w-full shrink-0 flex-col border-l-[length:var(--border-width)] bg-background md:w-[360px]",
+        "flex w-full shrink-0 flex-col border-l-[length:var(--border-width)] bg-background transition-[width] duration-200 md:w-[360px]",
         className,
       )}
     >
       <div className="flex items-center justify-between border-b-[length:var(--border-width)] px-4 py-3">
         <h2 className="text-sm font-semibold">AI Assistant</h2>
-        <Sparkles
-          className="h-4 w-4 text-muted-foreground"
-          aria-hidden="true"
-        />
+        <div className="flex items-center gap-1.5">
+          <Sparkles
+            className="h-4 w-4 text-muted-foreground"
+            aria-hidden="true"
+          />
+          {onToggleCollapsed && (
+            <Button
+              type="button"
+              size="icon"
+              variant="ghost"
+              onClick={onToggleCollapsed}
+              aria-label="Collapse AI assistant panel"
+            >
+              <PanelRightClose className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="min-h-0 flex-1 space-y-5 overflow-y-auto p-4">

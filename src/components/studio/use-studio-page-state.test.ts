@@ -7,6 +7,7 @@ import {
   applyCoverLetterCritiqueSuggestionToText,
   isDraftSavedForDocument,
   linkStudioVersionToOpportunity,
+  readStudioPanelCollapsed,
 } from "./use-studio-page-state";
 
 const draftState: BuilderDraftState = {
@@ -26,6 +27,31 @@ const savedVersion: BuilderVersion = {
 };
 
 describe("studio page state helpers", () => {
+  it("reads collapsed flags from storage", () => {
+    const storage = {
+      getItem: vi.fn((key: string) =>
+        key === "true-key" ? "true" : key === "false-key" ? "false" : null,
+      ),
+    };
+
+    expect(readStudioPanelCollapsed(storage, "true-key")).toBe(true);
+    expect(readStudioPanelCollapsed(storage, "false-key")).toBe(false);
+    expect(readStudioPanelCollapsed(storage, "missing-key")).toBe(false);
+  });
+
+  it("defaults collapsed flags to false when storage throws", () => {
+    expect(
+      readStudioPanelCollapsed(
+        {
+          getItem: () => {
+            throw new Error("blocked");
+          },
+        },
+        "blocked-key",
+      ),
+    ).toBe(false);
+  });
+
   it("applies critique suggestions by replacing the matching draft range", () => {
     expect(
       applyCoverLetterCritiqueSuggestionToText(

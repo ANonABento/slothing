@@ -9,10 +9,15 @@ import {
   DEFAULT_SECTION_ORDER,
   DEFAULT_BUILDER_PANEL,
   BUILDER_PANELS,
+  SECTION_LABELS,
 } from "./section-manager";
 import type { SectionState } from "./section-manager";
 
 describe("createInitialSections", () => {
+  it("labels bullet sections as highlights in the builder UI", () => {
+    expect(SECTION_LABELS.bullet).toBe("Highlights");
+  });
+
   it("creates sections from DEFAULT_SECTION_ORDER with all visible", () => {
     const sections = createInitialSections();
     expect(sections).toHaveLength(DEFAULT_SECTION_ORDER.length);

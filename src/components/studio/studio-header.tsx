@@ -10,12 +10,14 @@ import {
   type CSSProperties,
 } from "react";
 import {
+  AlertCircle,
   Check,
   ChevronDown,
   Copy,
   Download,
   FileText,
   Loader2,
+  Palette,
   PanelLeft,
   PanelRight,
   Search,
@@ -32,7 +34,11 @@ import {
   DOCUMENT_MODE_OPTIONS,
   type DocumentMode,
 } from "./studio-documents";
-import { getStudioSaveStatusLabel, type StudioSaveStatus } from "./save-status";
+import {
+  getStudioSaveStatusIcon,
+  getStudioSaveStatusLabel,
+  type StudioSaveStatus,
+} from "./save-status";
 import { TemplatePreviewThumbnail } from "./template-preview-thumbnail";
 
 interface StudioHeaderProps {
@@ -74,6 +80,7 @@ export function StudioHeader({
   onDownloadPdf,
 }: StudioHeaderProps) {
   const [templateOpen, setTemplateOpen] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
   const [templateSearch, setTemplateSearch] = useState("");
   const [now, setNow] = useState(() => nowEpoch());
   const [templatePickerPosition, setTemplatePickerPosition] =
@@ -104,10 +111,13 @@ export function StudioHeader({
   const templateListLabel = `${modeLabel} templates`;
   const showTemplateSearch = templates.length >= 6;
   const saveStatusLabel = getStudioSaveStatusLabel(saveStatus, now);
+  const saveStatusIcon = getStudioSaveStatusIcon(saveStatus);
   const exportHelpText =
     !canCopyHtml || !canDownloadPdf
       ? `Add bank entries or edit the ${documentLabel} to enable export.`
       : null;
+  const canExport = canCopyHtml && canDownloadPdf;
+  const exportDisabled = !canExport || isExporting;
 
   useEffect(() => {
     const interval = window.setInterval(() => setNow(nowEpoch()), 5_000);
@@ -117,6 +127,22 @@ export function StudioHeader({
   useEffect(() => {
     if (!templateOpen) setTemplateSearch("");
   }, [templateOpen]);
+
+  useEffect(() => {
+    if (canExport) return;
+    setExportOpen(false);
+  }, [canExport]);
+
+  useEffect(() => {
+    if (!exportOpen) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setExportOpen(false);
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [exportOpen]);
 
   useEffect(() => {
     if (!templateOpen) return;
@@ -179,10 +205,16 @@ export function StudioHeader({
           width: templatePickerPosition.width,
           maxHeight: templatePickerPosition.maxHeight,
         };
+  const SaveStatusIcon =
+    saveStatusIcon === "saved"
+      ? Check
+      : saveStatusIcon === "saving"
+        ? Loader2
+        : AlertCircle;
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-2 border-b-[length:var(--border-width)] bg-background/95 px-4 py-3 [backdrop-filter:var(--backdrop-blur)] md:px-6">
-      <div className="flex flex-wrap items-center gap-3">
+    <div className="flex flex-wrap items-center gap-3 border-b-[length:var(--border-width)] bg-background/95 px-4 py-3 [backdrop-filter:var(--backdrop-blur)] md:flex-nowrap md:px-6">
+      <div className="flex min-w-0 flex-wrap items-center gap-3 md:flex-nowrap">
         <Button
           type="button"
           variant="ghost"
@@ -198,12 +230,9 @@ export function StudioHeader({
           <h1 className="text-lg font-semibold leading-tight">
             Document Studio
           </h1>
-          <p className="text-xs text-muted-foreground" role="status">
-            {saveStatusLabel}
-          </p>
         </div>
 
-        <div className="ml-2 flex rounded-[var(--radius)] border-[length:var(--border-width)] bg-card">
+        <div className="flex rounded-[var(--radius)] border-[length:var(--border-width)] bg-card">
           {DOCUMENT_MODE_OPTIONS.map(({ mode, label }) => (
             <button
               key={mode}
@@ -220,29 +249,24 @@ export function StudioHeader({
             </button>
           ))}
         </div>
+      </div>
 
-        <div className="relative md:ml-4">
+      <div className="flex-1" />
+
+      <div className="flex min-w-0 flex-wrap items-center justify-end gap-2 md:flex-nowrap">
+        <div className="relative">
           <button
             ref={templateButtonRef}
             type="button"
-            aria-label={`Select ${documentLabel} template`}
+            aria-label={`Select ${documentLabel} template: ${selectedTemplate.name}`}
             aria-expanded={templateOpen}
-            aria-haspopup="listbox"
+            aria-haspopup="menu"
             onClick={() => setTemplateOpen((prev) => !prev)}
-            className="flex min-h-11 w-full min-w-0 items-center gap-2 rounded-[var(--radius)] border-[length:var(--border-width)] bg-card px-3 py-2 text-left text-sm transition-colors hover:bg-muted sm:min-w-[15rem]"
+            className="flex min-h-10 items-center gap-2 rounded-[var(--radius)] border-[length:var(--border-width)] bg-card px-3 py-2 text-left text-sm font-medium transition-colors hover:bg-muted"
           >
-            <TemplatePreviewThumbnail
-              template={selectedTemplate}
-              className="h-20 w-14 shrink-0 rounded-[calc(var(--radius)_-_4px)]"
-            />
-            <span className="min-w-0 flex-1">
-              <span className="block font-medium leading-tight">
-                {selectedTemplate.name}
-              </span>
-              <span className="mt-1 line-clamp-2 block text-xs leading-snug text-muted-foreground">
-                {selectedTemplate.description}
-              </span>
-            </span>
+            <Palette className="h-4 w-4 shrink-0 text-primary" />
+            <span className="hidden md:inline">Template</span>
+            <span className="sr-only">{selectedTemplate.name}</span>
             <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
           </button>
 
@@ -336,44 +360,103 @@ export function StudioHeader({
             </>
           )}
         </div>
-      </div>
 
-      <div className="flex items-center gap-2">
+        <div className="relative flex flex-col items-end">
+          <div className="flex items-center">
+            <Button
+              aria-label={`Download ${documentLabel} PDF`}
+              size="sm"
+              onClick={onDownloadPdf}
+              disabled={exportDisabled}
+              title={exportDisabled && exportHelpText ? exportHelpText : undefined}
+              className="rounded-r-none border-r-0"
+            >
+              {isExporting ? (
+                <Loader2 className="h-4 w-4 animate-spin md:mr-1.5" />
+              ) : (
+                <Download className="h-4 w-4 md:mr-1.5" />
+              )}
+              <span className="hidden md:inline">Export</span>
+            </Button>
+            <Button
+              type="button"
+              aria-label={`${modeLabel} export options`}
+              aria-expanded={exportOpen}
+              aria-haspopup="menu"
+              size="sm"
+              onClick={() => setExportOpen((prev) => !prev)}
+              disabled={exportDisabled}
+              title={exportDisabled && exportHelpText ? exportHelpText : undefined}
+              className="rounded-l-none px-2"
+            >
+              <ChevronDown className="h-4 w-4" />
+            </Button>
+          </div>
+          {exportHelpText && (
+            <p className="mt-1 max-w-[16rem] text-right text-xs text-muted-foreground">
+              {exportHelpText}
+            </p>
+          )}
+          {exportOpen && (
+            <>
+              <div
+                className="fixed inset-0 z-40"
+                onClick={() => setExportOpen(false)}
+              />
+              <div
+                role="menu"
+                aria-label={`${modeLabel} export actions`}
+                className="absolute right-0 top-full z-50 mt-2 w-48 overflow-hidden rounded-[var(--radius)] border-[length:var(--border-width)] bg-popover p-1 text-popover-foreground shadow-[var(--shadow-elevated)]"
+              >
+                {/* TODO: add "Download DOCX" once exporter exists. */}
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => {
+                    setExportOpen(false);
+                    onDownloadPdf();
+                  }}
+                  className="flex min-h-9 w-full items-center gap-2 rounded-[calc(var(--radius)_-_2px)] px-3 text-left text-sm transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <Download className="h-4 w-4" />
+                  Download PDF
+                </button>
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => {
+                    setExportOpen(false);
+                    onCopyHtml();
+                  }}
+                  className="flex min-h-9 w-full items-center gap-2 rounded-[calc(var(--radius)_-_2px)] px-3 text-left text-sm transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <Copy className="h-4 w-4" />
+                  Copy HTML
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+
         <span
+          role="status"
           className={cn(
-            "hidden rounded-[var(--radius)] border-[length:var(--border-width)] px-2 py-1 text-xs font-medium lg:inline-flex",
-            draftIsSaved
+            "inline-flex min-h-8 items-center gap-1.5 rounded-[var(--radius)] border-[length:var(--border-width)] px-2 py-1 text-xs font-medium text-muted-foreground",
+            saveStatusIcon === "saved" && draftIsSaved
               ? "border-success/20 bg-success/10 text-success"
-              : "border-warning/20 bg-warning/10 text-warning",
+              : saveStatusIcon === "error"
+                ? "border-destructive/20 bg-destructive/10 text-destructive"
+                : "border-warning/20 bg-warning/10 text-warning",
           )}
         >
+          <SaveStatusIcon
+            className={cn(
+              "h-3.5 w-3.5",
+              saveStatusIcon === "saving" && "animate-spin",
+            )}
+          />
           {saveStatusLabel}
         </span>
-        <Button
-          aria-label={`Copy ${documentLabel} HTML`}
-          variant="outline"
-          size="sm"
-          onClick={onCopyHtml}
-          disabled={!canCopyHtml}
-          title={!canCopyHtml && exportHelpText ? exportHelpText : undefined}
-        >
-          <Copy className="h-4 w-4 md:mr-1.5" />
-          <span className="hidden md:inline">Copy HTML</span>
-        </Button>
-        <Button
-          aria-label={`Download ${documentLabel} PDF`}
-          size="sm"
-          onClick={onDownloadPdf}
-          disabled={!canDownloadPdf || isExporting}
-          title={!canDownloadPdf && exportHelpText ? exportHelpText : undefined}
-        >
-          {isExporting ? (
-            <Loader2 className="h-4 w-4 animate-spin md:mr-1.5" />
-          ) : (
-            <Download className="h-4 w-4 md:mr-1.5" />
-          )}
-          <span className="hidden md:inline">Download PDF</span>
-        </Button>
         <Button
           type="button"
           variant="ghost"
@@ -385,11 +468,6 @@ export function StudioHeader({
           <PanelRight className="h-5 w-5" />
         </Button>
       </div>
-      {exportHelpText && (
-        <p className="basis-full text-right text-xs text-muted-foreground">
-          {exportHelpText}
-        </p>
-      )}
     </div>
   );
 }

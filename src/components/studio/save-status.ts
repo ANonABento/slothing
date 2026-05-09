@@ -38,3 +38,12 @@ export function getStudioSaveStatusLabel(
 
   return `Saved ${formatRelativeSaveTime(status.lastSavedAt ?? now, now)}`;
 }
+
+export function getStudioSaveStatusIcon(
+  status: StudioSaveStatus,
+): "saved" | "saving" | "warn" | "error" {
+  if (status.state === "saved") return "saved";
+  if (status.state === "saving") return "saving";
+  if (status.state === "error") return "error";
+  return "warn";
+}
