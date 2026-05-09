@@ -10,16 +10,21 @@ import {
 import {
   ClipboardList,
   Copy,
+  CopyPlus,
   Edit3,
+  ExternalLink,
+  History,
   Loader2,
   Plus,
   Search,
   Trash2,
 } from "lucide-react";
+import Link from "next/link";
 
 import { TimeAgo } from "@/components/format/time-ago";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { useConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   Dialog,
   DialogContent,
@@ -61,6 +66,25 @@ interface AnswerFormState {
   sourceUrl: string;
 }
 
+interface AnswerVersion {
+  id: string;
+  answerId: string;
+  version: number;
+  question: string;
+  answer: string;
+  sourceUrl: string | null;
+  sourceCompany: string | null;
+  createdAt: string | null;
+}
+
+interface MigrationSummary {
+  migratedToProfile: Array<{ id: string; question: string; field?: string }>;
+  reclassified: Array<{ id: string; question: string; field?: string }>;
+  skipped: Array<{ id: string; question: string; field?: string }>;
+}
+
+type AnswerSort = "most_used" | "newest" | "alpha";
+
 const EMPTY_FORM: AnswerFormState = {
   question: "",
   answer: "",
@@ -86,13 +110,20 @@ export default function AnswerBankPage() {
   const [activeType, setActiveType] = useState<AnswerComponentType | "all">(
     "all",
   );
+  const [sort, setSort] = useState<AnswerSort>("most_used");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingEntry, setEditingEntry] = useState<AnswerBankEntry | null>(
     null,
   );
   const [form, setForm] = useState<AnswerFormState>(EMPTY_FORM);
+  const [versions, setVersions] = useState<AnswerVersion[]>([]);
+  const [versionsLoading, setVersionsLoading] = useState(false);
+  const [dialogTab, setDialogTab] = useState<"edit" | "history">("edit");
+  const [migrationSummary, setMigrationSummary] =
+    useState<MigrationSummary | null>(null);
   const { addToast } = useToast();
   const showErrorToast = useErrorToast();
+  const { confirm, dialog: confirmDialog } = useConfirmDialog();
 
   const fetchAnswers = useCallback(async () => {
     setLoading(true);
@@ -113,6 +144,34 @@ export default function AnswerBankPage() {
     fetchAnswers();
   }, [fetchAnswers]);
 
+  useEffect(() => {
+    const key = "taida:answer-bank:pf-migration:done";
+    if (typeof window === "undefined" || window.localStorage.getItem(key)) {
+      return;
+    }
+
+    void (async () => {
+      try {
+        const res = await fetch("/api/answer-bank/migrate-personal-facts", {
+          method: "POST",
+        });
+        const data = (await res.json()) as MigrationSummary;
+        if (!res.ok) throw new Error("Failed to migrate personal facts");
+        window.localStorage.setItem(key, new Date().toISOString());
+        if (
+          data.migratedToProfile.length > 0 ||
+          data.reclassified.length > 0 ||
+          data.skipped.length > 0
+        ) {
+          setMigrationSummary(data);
+          await fetchAnswers();
+        }
+      } catch {
+        // Non-blocking: users can still manage answers if the cleanup check fails.
+      }
+    })();
+  }, [fetchAnswers]);
+
   const filteredAnswers = useMemo(() => {
     const normalized = query.trim().toLowerCase();
     const typeFiltered =
@@ -121,14 +180,25 @@ export default function AnswerBankPage() {
         : answers.filter(
             (entry) => classifyAnswerComponent(entry) === activeType,
           );
-    if (!normalized) return typeFiltered;
+    const searched = !normalized
+      ? typeFiltered
+      : typeFiltered.filter((entry) =>
+          [entry.question, entry.answer, entry.sourceCompany, entry.sourceUrl]
+            .filter(Boolean)
+            .some((value) => String(value).toLowerCase().includes(normalized)),
+        );
 
-    return typeFiltered.filter((entry) =>
-      [entry.question, entry.answer, entry.sourceCompany, entry.sourceUrl]
-        .filter(Boolean)
-        .some((value) => String(value).toLowerCase().includes(normalized)),
-    );
-  }, [activeType, answers, query]);
+    return [...searched].sort((a, b) => {
+      if (sort === "newest") {
+        return (
+          new Date(b.updatedAt ?? b.createdAt ?? 0).getTime() -
+          new Date(a.updatedAt ?? a.createdAt ?? 0).getTime()
+        );
+      }
+      if (sort === "alpha") return a.question.localeCompare(b.question);
+      return b.timesUsed - a.timesUsed;
+    });
+  }, [activeType, answers, query, sort]);
 
   const stats = useMemo(() => {
     const totalUses = answers.reduce((sum, entry) => sum + entry.timesUsed, 0);
@@ -147,7 +217,6 @@ export default function AnswerBankPage() {
       logistics: 0,
       compensation: 0,
       links: 0,
-      personal_fact: 0,
     };
     for (const entry of answers) {
       counts[classifyAnswerComponent(entry)] += 1;
@@ -158,19 +227,25 @@ export default function AnswerBankPage() {
   function openCreateDialog() {
     setEditingEntry(null);
     setForm(EMPTY_FORM);
+    setVersions([]);
+    setDialogTab("edit");
     setDialogOpen(true);
   }
 
   function openEditDialog(entry: AnswerBankEntry) {
     setEditingEntry(entry);
     setForm(entryToForm(entry));
+    setDialogTab("edit");
     setDialogOpen(true);
+    void fetchVersions(entry.id);
   }
 
   function closeDialog() {
     setDialogOpen(false);
     setEditingEntry(null);
     setForm(EMPTY_FORM);
+    setVersions([]);
+    setDialogTab("edit");
   }
 
   function updateForm(key: keyof AnswerFormState, value: string) {
@@ -204,6 +279,7 @@ export default function AnswerBankPage() {
         setAnswers((prev) =>
           prev.map((entry) => (entry.id === editingEntry.id ? data : entry)),
         );
+        void fetchVersions(editingEntry.id);
       } else {
         setAnswers((prev) => {
           const withoutDuplicate = prev.filter((entry) => entry.id !== data.id);
@@ -227,6 +303,15 @@ export default function AnswerBankPage() {
   }
 
   async function deleteAnswer(entry: AnswerBankEntry) {
+    const confirmed = await confirm({
+      title: "Delete answer?",
+      description:
+        "This removes the saved answer from autofill and your Answer Bank.",
+      confirmLabel: "Delete",
+      confirmVariant: "destructive",
+    });
+    if (!confirmed) return;
+
     try {
       const res = await fetch(`/api/answer-bank/${entry.id}`, {
         method: "DELETE",
@@ -247,6 +332,65 @@ export default function AnswerBankPage() {
   async function copyAnswer(entry: AnswerBankEntry) {
     await navigator.clipboard.writeText(entry.answer);
     addToast({ type: "success", title: "Answer copied" });
+  }
+
+  async function duplicateAnswer(entry: AnswerBankEntry) {
+    try {
+      const res = await fetch(`/api/answer-bank/${entry.id}/duplicate`, {
+        method: "POST",
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to duplicate answer");
+      setAnswers((prev) => [data, ...prev]);
+      addToast({ type: "success", title: "Answer duplicated" });
+    } catch (err) {
+      showErrorToast(err, {
+        title: "Could not duplicate answer",
+        fallbackDescription: "Please try duplicating it again.",
+      });
+    }
+  }
+
+  async function fetchVersions(answerId: string) {
+    setVersionsLoading(true);
+    try {
+      const res = await fetch(`/api/answer-bank/${answerId}/versions`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to fetch history");
+      setVersions(data.versions || []);
+    } catch (err) {
+      showErrorToast(err, {
+        title: "Could not load history",
+        fallbackDescription: "Please try opening the answer again.",
+      });
+    } finally {
+      setVersionsLoading(false);
+    }
+  }
+
+  async function restoreVersion(version: AnswerVersion) {
+    if (!editingEntry) return;
+    try {
+      const res = await fetch(
+        `/api/answer-bank/${editingEntry.id}/versions/${version.id}/restore`,
+        { method: "POST" },
+      );
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to restore version");
+      setAnswers((prev) =>
+        prev.map((entry) => (entry.id === editingEntry.id ? data : entry)),
+      );
+      setEditingEntry(data);
+      setForm(entryToForm(data));
+      setDialogTab("edit");
+      await fetchVersions(editingEntry.id);
+      addToast({ type: "success", title: "Version restored" });
+    } catch (err) {
+      showErrorToast(err, {
+        title: "Could not restore version",
+        fallbackDescription: "Please try restoring it again.",
+      });
+    }
   }
 
   return (
@@ -271,6 +415,13 @@ export default function AnswerBankPage() {
         </section>
 
         <section className="space-y-4">
+          <CrossLinkBanner />
+          {migrationSummary ? (
+            <MigrationBanner
+              summary={migrationSummary}
+              onDismiss={() => setMigrationSummary(null)}
+            />
+          ) : null}
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="relative max-w-xl flex-1">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -284,6 +435,16 @@ export default function AnswerBankPage() {
             <span className="text-sm text-muted-foreground">
               {filteredAnswers.length} shown
             </span>
+            <select
+              value={sort}
+              onChange={(event) => setSort(event.target.value as AnswerSort)}
+              className={cn(THEME_CONTROL_CLASSES, "w-full sm:w-40")}
+              aria-label="Sort answers"
+            >
+              <option value="most_used">Most used</option>
+              <option value="newest">Newest</option>
+              <option value="alpha">A to Z</option>
+            </select>
           </div>
           <div className="flex flex-wrap gap-2">
             <AnswerTypeButton
@@ -343,6 +504,7 @@ export default function AnswerBankPage() {
                   key={entry.id}
                   entry={entry}
                   onCopy={copyAnswer}
+                  onDuplicate={duplicateAnswer}
                   onEdit={openEditDialog}
                   onDelete={deleteAnswer}
                 />
@@ -357,14 +519,67 @@ export default function AnswerBankPage() {
         editing={!!editingEntry}
         form={form}
         saving={saving}
+        versions={versions}
+        versionsLoading={versionsLoading}
+        tab={dialogTab}
         onOpenChange={(open) => {
           if (!open) closeDialog();
           else setDialogOpen(true);
         }}
         onFormChange={updateForm}
         onSave={saveAnswer}
+        onTabChange={setDialogTab}
+        onRestoreVersion={restoreVersion}
       />
+      {confirmDialog}
     </AppPage>
+  );
+}
+
+function CrossLinkBanner() {
+  return (
+    <div className="flex flex-col gap-2 rounded-[var(--radius)] border bg-card/70 p-4 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+      <span>
+        Personal facts (email, phone, location, links) live in your{" "}
+        <Link href="/profile" className="font-medium text-primary underline">
+          Profile
+        </Link>
+        . Use this bank for Q&A like sponsorship, references, why this company,
+        etc.
+      </span>
+      <Button asChild variant="outline" size="sm">
+        <Link href="/profile">
+          Edit Profile
+          <ExternalLink className="ml-2 h-3.5 w-3.5" />
+        </Link>
+      </Button>
+    </div>
+  );
+}
+
+function MigrationBanner({
+  summary,
+  onDismiss,
+}: {
+  summary: MigrationSummary;
+  onDismiss: () => void;
+}) {
+  const count = summary.migratedToProfile.length;
+  return (
+    <div className="flex flex-col gap-2 rounded-[var(--radius)] border border-primary/20 bg-primary/5 p-4 text-sm sm:flex-row sm:items-center sm:justify-between">
+      <span>
+        Moved {count} personal {count === 1 ? "fact" : "facts"} into your
+        Profile. Please verify the details when you have a moment.
+      </span>
+      <div className="flex gap-2">
+        <Button asChild size="sm">
+          <Link href="/profile">Review Profile</Link>
+        </Button>
+        <Button variant="ghost" size="sm" onClick={onDismiss}>
+          Dismiss
+        </Button>
+      </div>
+    </div>
   );
 }
 
@@ -417,11 +632,13 @@ function AnswerTypeButton({
 function AnswerCard({
   entry,
   onCopy,
+  onDuplicate,
   onEdit,
   onDelete,
 }: {
   entry: AnswerBankEntry;
   onCopy: (entry: AnswerBankEntry) => void;
+  onDuplicate: (entry: AnswerBankEntry) => void;
   onEdit: (entry: AnswerBankEntry) => void;
   onDelete: (entry: AnswerBankEntry) => void;
 }) {
@@ -460,6 +677,15 @@ function AnswerCard({
           <Button
             variant="ghost"
             size="icon"
+            onClick={() => void onDuplicate(entry)}
+            aria-label="Duplicate answer"
+            title="Duplicate answer"
+          >
+            <CopyPlus className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={() => onEdit(entry)}
             aria-label="Edit answer"
             title="Edit answer"
@@ -490,17 +716,27 @@ function AnswerDialog({
   editing,
   form,
   saving,
+  versions,
+  versionsLoading,
+  tab,
   onOpenChange,
   onFormChange,
   onSave,
+  onTabChange,
+  onRestoreVersion,
 }: {
   open: boolean;
   editing: boolean;
   form: AnswerFormState;
   saving: boolean;
+  versions: AnswerVersion[];
+  versionsLoading: boolean;
+  tab: "edit" | "history";
   onOpenChange: (open: boolean) => void;
   onFormChange: (key: keyof AnswerFormState, value: string) => void;
   onSave: () => void;
+  onTabChange: (tab: "edit" | "history") => void;
+  onRestoreVersion: (version: AnswerVersion) => void;
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -512,60 +748,133 @@ function AnswerDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4">
-          <label className="block space-y-1">
-            <span className="text-sm font-medium">Question</span>
-            <input
-              value={form.question}
-              onChange={(event) => onFormChange("question", event.target.value)}
-              className={cn(THEME_CONTROL_CLASSES, "w-full")}
-              placeholder="Example: Will you now or in the future require sponsorship?"
-            />
-          </label>
-          <label className="block space-y-1">
-            <span className="text-sm font-medium">Answer</span>
-            <textarea
-              value={form.answer}
-              onChange={(event) => onFormChange("answer", event.target.value)}
-              className={cn(THEME_CONTROL_CLASSES, "min-h-36 w-full resize-y")}
-              placeholder="Write the answer you want reused by autofill."
-            />
-          </label>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <label className="block space-y-1">
-              <span className="text-sm font-medium">Source company</span>
-              <input
-                value={form.sourceCompany}
-                onChange={(event) =>
-                  onFormChange("sourceCompany", event.target.value)
-                }
-                className={cn(THEME_CONTROL_CLASSES, "w-full")}
-                placeholder="Optional"
-              />
-            </label>
-            <label className="block space-y-1">
-              <span className="text-sm font-medium">Source URL</span>
-              <input
-                value={form.sourceUrl}
-                onChange={(event) =>
-                  onFormChange("sourceUrl", event.target.value)
-                }
-                className={cn(THEME_CONTROL_CLASSES, "w-full")}
-                placeholder="Optional"
-              />
-            </label>
+        {editing ? (
+          <div className="flex gap-2">
+            <Button
+              variant={tab === "edit" ? "default" : "outline"}
+              size="sm"
+              onClick={() => onTabChange("edit")}
+            >
+              Edit
+            </Button>
+            <Button
+              variant={tab === "history" ? "default" : "outline"}
+              size="sm"
+              onClick={() => onTabChange("history")}
+            >
+              <History className="mr-2 h-4 w-4" />
+              History
+            </Button>
           </div>
-        </div>
+        ) : null}
 
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <Button onClick={onSave} disabled={saving}>
-            {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
-            {editing ? "Save Changes" : "Save Answer"}
-          </Button>
-        </DialogFooter>
+        {tab === "edit" ? (
+          <div className="space-y-4">
+            <label className="block space-y-1">
+              <span className="text-sm font-medium">Question</span>
+              <input
+                value={form.question}
+                onChange={(event) =>
+                  onFormChange("question", event.target.value)
+                }
+                className={cn(THEME_CONTROL_CLASSES, "w-full")}
+                placeholder="Example: Will you now or in the future require sponsorship?"
+              />
+            </label>
+            <label className="block space-y-1">
+              <span className="text-sm font-medium">Answer</span>
+              <textarea
+                value={form.answer}
+                onChange={(event) => onFormChange("answer", event.target.value)}
+                className={cn(
+                  THEME_CONTROL_CLASSES,
+                  "min-h-36 w-full resize-y",
+                )}
+                placeholder="Write the answer you want reused by autofill."
+              />
+            </label>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label className="block space-y-1">
+                <span className="text-sm font-medium">Source company</span>
+                <input
+                  value={form.sourceCompany}
+                  onChange={(event) =>
+                    onFormChange("sourceCompany", event.target.value)
+                  }
+                  className={cn(THEME_CONTROL_CLASSES, "w-full")}
+                  placeholder="Optional"
+                />
+              </label>
+              <label className="block space-y-1">
+                <span className="text-sm font-medium">Source URL</span>
+                <input
+                  value={form.sourceUrl}
+                  onChange={(event) =>
+                    onFormChange("sourceUrl", event.target.value)
+                  }
+                  className={cn(THEME_CONTROL_CLASSES, "w-full")}
+                  placeholder="Optional"
+                />
+              </label>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {versionsLoading ? (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Loading history
+              </div>
+            ) : versions.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                No previous versions yet. Edits you save from now on will show
+                up here.
+              </p>
+            ) : (
+              versions.map((version) => (
+                <div
+                  key={version.id}
+                  className="rounded-[var(--radius)] border bg-card/50 p-3"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium">
+                        Version {version.version}
+                      </p>
+                      <p className="truncate text-xs text-muted-foreground">
+                        {version.question}
+                      </p>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onRestoreVersion(version)}
+                    >
+                      Restore
+                    </Button>
+                  </div>
+                  <p className="mt-2 line-clamp-3 whitespace-pre-wrap text-xs text-muted-foreground">
+                    {version.answer}
+                  </p>
+                </div>
+              ))
+            )}
+          </div>
+        )}
+
+        {tab === "edit" ? (
+          <DialogFooter>
+            <Button variant="outline" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button onClick={onSave} disabled={saving}>
+              {saving ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : null}
+              {editing ? "Save Changes" : "Save Answer"}
+            </Button>
+          </DialogFooter>
+        ) : null}
       </DialogContent>
     </Dialog>
   );

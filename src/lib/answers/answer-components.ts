@@ -5,8 +5,7 @@ export type AnswerComponentType =
   | "work_authorization"
   | "logistics"
   | "compensation"
-  | "links"
-  | "personal_fact";
+  | "links";
 
 export const ANSWER_COMPONENT_TYPES: AnswerComponentType[] = [
   "repeated_question",
@@ -14,7 +13,6 @@ export const ANSWER_COMPONENT_TYPES: AnswerComponentType[] = [
   "logistics",
   "compensation",
   "links",
-  "personal_fact",
 ];
 
 export const ANSWER_COMPONENT_LABELS: Record<AnswerComponentType, string> = {
@@ -23,7 +21,6 @@ export const ANSWER_COMPONENT_LABELS: Record<AnswerComponentType, string> = {
   logistics: "Logistics",
   compensation: "Compensation",
   links: "Links",
-  personal_fact: "Personal Facts",
 };
 
 function includesAny(value: string, words: string[]): boolean {
@@ -105,7 +102,7 @@ export function classifyAnswerComponent(
       "pronoun",
     ])
   ) {
-    return "personal_fact";
+    return "logistics";
   }
 
   return "repeated_question";
