@@ -416,6 +416,29 @@ export function hasActiveOpportunityFilters(
   );
 }
 
+export function countActiveOpportunityFilters(
+  filters: Pick<
+    OpportunityFilters,
+    | "searchQuery"
+    | "typeTab"
+    | "status"
+    | "source"
+    | "tag"
+    | "remoteType"
+    | "techStack"
+  >,
+): number {
+  return [
+    filters.searchQuery.trim(),
+    filters.typeTab !== DEFAULT_OPPORTUNITY_FILTERS.typeTab,
+    filters.status !== DEFAULT_OPPORTUNITY_FILTERS.status,
+    filters.source !== DEFAULT_OPPORTUNITY_FILTERS.source,
+    filters.tag !== DEFAULT_OPPORTUNITY_FILTERS.tag,
+    filters.remoteType !== DEFAULT_OPPORTUNITY_FILTERS.remoteType,
+    filters.techStack !== DEFAULT_OPPORTUNITY_FILTERS.techStack,
+  ].filter(Boolean).length;
+}
+
 export function getOpportunityFilterOptions(
   opportunities: Opportunity[],
 ): OpportunityFilterOptions {
