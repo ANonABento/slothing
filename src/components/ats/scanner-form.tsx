@@ -22,6 +22,7 @@ import {
 } from "@/lib/ats/analyzer";
 import { pluralize } from "@/lib/text/pluralize";
 import { textToProfile, textToJob } from "@/lib/ats/text-to-profile";
+import { nowIso } from "@/lib/format/time";
 import type { JobDescription, Profile } from "@/types";
 import { ScoreDisplay } from "./score-display";
 import { FixSuggestionsList } from "./fix-suggestions";
@@ -47,7 +48,7 @@ interface ScrapedOpportunity {
 }
 
 function completeProfile(profile: Partial<Profile>, rawText?: string): Profile {
-  const now = new Date().toISOString();
+  const now = nowIso();
   return {
     id: profile.id || "scanner-anonymous",
     contact: profile.contact || { name: "" },
@@ -73,7 +74,7 @@ function opportunityToJob(opportunity: ScrapedOpportunity): JobDescription {
     responsibilities: opportunity.responsibilities || [],
     keywords: opportunity.keywords || [],
     url: opportunity.url,
-    createdAt: new Date().toISOString(),
+    createdAt: nowIso(),
   };
 }
 
@@ -135,7 +136,8 @@ export function ScannerForm() {
         throw new Error(data?.error || "Could not parse that resume.");
       }
 
-      const rawText = file.type === "text/plain" ? await file.text() : undefined;
+      const rawText =
+        file.type === "text/plain" ? await file.text() : undefined;
       const profile = completeProfile(data.profile, rawText);
       setParsedProfile(profile);
       if (rawText) setResumeText(rawText);
@@ -152,7 +154,9 @@ export function ScannerForm() {
     } catch (error) {
       setParsedProfile(null);
       setFileMeta(undefined);
-      setParseError(error instanceof Error ? error.message : "Could not parse that resume.");
+      setParseError(
+        error instanceof Error ? error.message : "Could not parse that resume.",
+      );
       setShowPasteResume(true);
     } finally {
       setParsing(false);
@@ -167,15 +171,16 @@ export function ScannerForm() {
     [parseFile],
   );
 
-  const { getRootProps, getInputProps, isDragActive, isDragReject } = useDropzone({
-    onDrop,
-    accept: {
-      "application/pdf": [".pdf"],
-      "text/plain": [".txt"],
-    },
-    maxFiles: 1,
-    maxSize: MAX_UPLOAD_SIZE,
-  });
+  const { getRootProps, getInputProps, isDragActive, isDragReject } =
+    useDropzone({
+      onDrop,
+      accept: {
+        "application/pdf": [".pdf"],
+        "text/plain": [".txt"],
+      },
+      maxFiles: 1,
+      maxSize: MAX_UPLOAD_SIZE,
+    });
 
   async function handleScrapeJob() {
     const url = jobUrl.trim();
@@ -191,9 +196,10 @@ export function ScannerForm() {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ url }),
       });
-      const data = (await response.json().catch(() => null)) as
-        | { opportunity?: ScrapedOpportunity; error?: string }
-        | null;
+      const data = (await response.json().catch(() => null)) as {
+        opportunity?: ScrapedOpportunity;
+        error?: string;
+      } | null;
       if (!response.ok || !data?.opportunity) {
         throw new Error(data?.error || "Could not import that job posting.");
       }
@@ -267,7 +273,10 @@ export function ScannerForm() {
           <h3 className="mb-3 text-sm font-semibold">Scoring axes</h3>
           <div className="grid gap-3 sm:grid-cols-2">
             {Object.values(result.axes).map((axis) => (
-              <div key={axis.key} className="rounded-md border border-border bg-muted/30 p-3">
+              <div
+                key={axis.key}
+                className="rounded-md border border-border bg-muted/30 p-3"
+              >
                 <div className="flex items-center justify-between gap-3">
                   <span className="text-sm font-medium">{axis.label}</span>
                   <span className="text-sm font-semibold">{axis.score}%</span>
@@ -327,7 +336,10 @@ export function ScannerForm() {
             isDragReject && "border-destructive bg-destructive/5",
           )}
         >
-          <input {...getInputProps()} aria-label="Upload resume PDF or text file" />
+          <input
+            {...getInputProps()}
+            aria-label="Upload resume PDF or text file"
+          />
           {parsing ? (
             <Loader2 className="mx-auto mb-3 h-8 w-8 animate-spin text-primary" />
           ) : uploadedFile ? (
@@ -336,7 +348,9 @@ export function ScannerForm() {
             <UploadCloud className="mx-auto mb-3 h-8 w-8 text-primary" />
           )}
           <p className="text-sm font-medium">
-            {uploadedFile ? uploadedFile.name : "Drop a PDF here or click to browse"}
+            {uploadedFile
+              ? uploadedFile.name
+              : "Drop a PDF here or click to browse"}
           </p>
           <p className="mt-1 text-xs text-muted-foreground">
             PDF preferred, TXT fallback, up to {formatFileSize(MAX_UPLOAD_SIZE)}
@@ -366,7 +380,10 @@ export function ScannerForm() {
 
         {showPasteResume ? (
           <div className="mt-4">
-            <label htmlFor="resume-text" className="mb-2 block text-sm font-medium">
+            <label
+              htmlFor="resume-text"
+              className="mb-2 block text-sm font-medium"
+            >
               Paste your resume text <span className="text-destructive">*</span>
             </label>
             <Textarea
