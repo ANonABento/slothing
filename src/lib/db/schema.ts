@@ -597,7 +597,9 @@ export const promptVariantResults = sqliteTable(
 );
 
 // NextAuth.js (@auth/drizzle-adapter) tables.
-// Schema must match @auth/drizzle-adapter/sqlite exactly — do not customize column names.
+// Adapter-owned columns must match @auth/drizzle-adapter/sqlite exactly — do not
+// customize column names. Nullable app-owned columns are okay; the adapter only
+// writes the fields it knows about.
 export const users = sqliteTable("user", {
   id: text("id")
     .primaryKey()
@@ -606,6 +608,7 @@ export const users = sqliteTable("user", {
   email: text("email").unique(),
   emailVerified: integer("emailVerified", { mode: "timestamp_ms" }),
   image: text("image"),
+  onboardingDismissedAt: text("onboarding_dismissed_at"),
 });
 
 export const accounts = sqliteTable(
