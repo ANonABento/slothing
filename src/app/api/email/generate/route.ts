@@ -15,6 +15,24 @@ import { requireAuth, isAuthError } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
+function getTemplateGuidelines(
+  type: string,
+  recruiterStance?: "interested" | "not_a_fit",
+): string {
+  switch (type) {
+    case "cold_outreach":
+      return "- For cold outreach, lead with a specific hook, stay humble, and do not sound salesy";
+    case "recruiter_reply":
+      return recruiterStance === "not_a_fit"
+        ? "- For recruiter replies, politely decline while leaving the door open for better-fit future roles"
+        : "- For recruiter replies, express interest and ask for role scope, compensation range, timeline, and next steps";
+    case "reference_request":
+      return "- For reference requests, make the ask clear, brief, appreciative, and low-pressure";
+    default:
+      return "- Match the selected email template's expected purpose and tone";
+  }
+}
+
 export async function POST(request: NextRequest) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
@@ -95,6 +113,13 @@ ${contextParams.interviewerName ? `Interviewer: ${contextParams.interviewerName}
 ${contextParams.interviewDate ? `Interview Date: ${contextParams.interviewDate}` : ""}
 ${contextParams.targetCompany ? `Target Company: ${contextParams.targetCompany}` : ""}
 ${contextParams.connectionName ? `Connection: ${contextParams.connectionName}` : ""}
+${contextParams.hookNote ? `Cold Outreach Hook: ${contextParams.hookNote}` : ""}
+${contextParams.recruiterName ? `Recruiter: ${contextParams.recruiterName}` : ""}
+${contextParams.recruiterCompany ? `Recruiter Company: ${contextParams.recruiterCompany}` : ""}
+${contextParams.recruiterStance ? `Recruiter Reply Stance: ${contextParams.recruiterStance}` : ""}
+${contextParams.referenceName ? `Reference Name: ${contextParams.referenceName}` : ""}
+${contextParams.applyingRole ? `Applying Role: ${contextParams.applyingRole}` : ""}
+${contextParams.interviewStage ? `Interview Stage: ${contextParams.interviewStage}` : ""}
 ${contextParams.customNote ? `Custom Note: ${contextParams.customNote}` : ""}
 
 Return a JSON object with:
@@ -108,7 +133,8 @@ Guidelines:
 - Be concise (under 200 words for the body)
 - Use specific details from the context provided
 - Include a clear call-to-action
-- Sign off with the candidate's name`;
+- Sign off with the candidate's name
+${getTemplateGuidelines(type, contextParams.recruiterStance)}`;
 
         const response = await client.complete({
           messages: [{ role: "user", content: prompt }],
