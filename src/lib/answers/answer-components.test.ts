@@ -22,6 +22,16 @@ describe("classifyAnswerComponent", () => {
     ).toBe("logistics");
   });
 
+  it("keeps personal facts out of the Answer Bank category set", () => {
+    expect(
+      classifyAnswerComponent({
+        question: "What is your phone number?",
+        answer: "555-0100",
+        sourceUrl: null,
+      }),
+    ).toBe("logistics");
+  });
+
   it("classifies portfolio and profile links", () => {
     expect(
       classifyAnswerComponent({

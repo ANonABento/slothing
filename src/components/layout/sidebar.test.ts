@@ -133,10 +133,11 @@ describe("navigationGroups", () => {
 });
 
 describe("bottomNavigation", () => {
-  it("should contain only Settings", () => {
-    expect(bottomNavigation).toHaveLength(1);
-    expect(bottomNavigation[0].name).toBe("Settings");
-    expect(bottomNavigation[0].href).toBe("/settings");
+  it("should contain Profile above Settings", () => {
+    expect(bottomNavigation.map((item) => [item.name, item.href])).toEqual([
+      ["Profile", "/profile"],
+      ["Settings", "/settings"],
+    ]);
   });
 
   it("should not contain Notifications, Dark, Collapse, or Sign in", () => {

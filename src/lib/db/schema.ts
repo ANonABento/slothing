@@ -532,6 +532,28 @@ export const learnedAnswers = sqliteTable(
   ],
 );
 
+export const learnedAnswerVersions = sqliteTable(
+  "learned_answer_versions",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id").notNull().default(DEFAULT_USER_ID),
+    answerId: text("answer_id").notNull(),
+    version: integer("version").notNull(),
+    question: text("question").notNull(),
+    answer: text("answer").notNull(),
+    sourceUrl: text("source_url"),
+    sourceCompany: text("source_company"),
+    createdAt: text("created_at").default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    index("idx_learned_answer_versions_answer").on(
+      table.answerId,
+      table.version,
+    ),
+    index("idx_learned_answer_versions_user").on(table.userId),
+  ],
+);
+
 // Custom field mappings for specific sites
 export const fieldMappings = sqliteTable("field_mappings", {
   id: text("id").primaryKey(),
@@ -738,6 +760,10 @@ export type NewExtensionSession = typeof extensionSessions.$inferInsert;
 
 export type LearnedAnswer = typeof learnedAnswers.$inferSelect;
 export type NewLearnedAnswer = typeof learnedAnswers.$inferInsert;
+
+export type LearnedAnswerVersion = typeof learnedAnswerVersions.$inferSelect;
+export type NewLearnedAnswerVersion =
+  typeof learnedAnswerVersions.$inferInsert;
 
 export type FieldMapping = typeof fieldMappings.$inferSelect;
 export type NewFieldMapping = typeof fieldMappings.$inferInsert;

@@ -21,9 +21,12 @@ import {
   Rows3,
   ChevronsLeft,
   ClipboardList,
+  ChevronRight,
+  UserCircle,
   type LucideIcon,
 } from "lucide-react";
 import { useLLMStatus } from "@/hooks/useLLMStatus";
+import { useProfileSnapshot } from "@/hooks/use-profile-snapshot";
 
 export interface NavItem {
   name: string;
@@ -81,6 +84,7 @@ export const navigationGroups: NavGroup[] = [
 ];
 
 export const bottomNavigation: NavItem[] = [
+  { name: "Profile", href: "/profile", icon: UserCircle },
   { name: "Settings", href: "/settings", icon: Settings },
 ];
 
@@ -122,6 +126,7 @@ export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const llmStatus = useLLMStatus();
+  const profileSnapshot = useProfileSnapshot();
   const activeHref = getActiveSidebarHref(
     pathname,
     navigationGroups.flatMap((group) => group.items).concat(bottomNavigation),
@@ -364,6 +369,55 @@ export function Sidebar() {
         <div className="border-t bg-card/40 p-3 space-y-1">
           {bottomNavigation.map((item) => {
             const isActive = activeHref === item.href;
+            if (item.href === "/profile") {
+              return (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  aria-current={isActive ? "page" : undefined}
+                  title={collapsed ? "Profile" : undefined}
+                  aria-label={collapsed ? "Profile" : undefined}
+                  className={getSidebarNavItemClassName({
+                    isActive,
+                    collapsed,
+                  })}
+                  {...getSidebarNavItemState(isActive)}
+                >
+                  <div className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary text-sm font-semibold text-primary-foreground">
+                    {profileSnapshot.avatarUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={profileSnapshot.avatarUrl}
+                        alt={
+                          profileSnapshot.name
+                            ? `${profileSnapshot.name} profile photo`
+                            : "Profile photo"
+                        }
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      profileSnapshot.initials
+                    )}
+                  </div>
+                  {!collapsed && (
+                    <>
+                      <span className="min-w-0 flex-1 truncate">
+                        {profileSnapshot.firstName}
+                      </span>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                    </>
+                  )}
+
+                  {collapsed && (
+                    <div className="absolute left-full ml-2 hidden group-hover:flex items-center">
+                      <div className="bg-popover text-popover-foreground text-sm font-medium px-3 py-1.5 rounded-lg shadow-elevated border whitespace-nowrap">
+                        Profile
+                      </div>
+                    </div>
+                  )}
+                </Link>
+              );
+            }
             return (
               <Link
                 key={item.name}
