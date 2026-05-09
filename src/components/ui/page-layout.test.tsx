@@ -42,6 +42,20 @@ describe("page layout helpers", () => {
     expect(screen.getByRole("button", { name: "Save" })).toBeInTheDocument();
   });
 
+  it("keeps page header descriptions at a readable prose width", () => {
+    render(
+      <PageHeader
+        icon={Settings}
+        title="Settings"
+        description="Configure the app."
+      />,
+    );
+
+    const description = screen.getByText("Configure the app.");
+    expect(description).toHaveClass("max-w-prose");
+    expect(description).not.toHaveClass("max-w-2xl");
+  });
+
   it("applies page and content spacing consistently", () => {
     const { container } = render(
       <AppPage>

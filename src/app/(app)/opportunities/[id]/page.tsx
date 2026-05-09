@@ -457,7 +457,7 @@ export default function OpportunityDetailPage({
   if (!opportunity) {
     return (
       <AppPage>
-        <PageContent width="narrow">
+        <PageContent>
           <StandardEmptyState
             icon={XCircle}
             title="Opportunity not found"

@@ -345,7 +345,7 @@ function NewUserDashboard({
               <h2 className="mt-1 text-xl font-semibold">
                 Build your workspace in three steps
               </h2>
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
+              <p className="mt-2 max-w-prose text-sm leading-6 text-muted-foreground">
                 Slothing works best once it has your resume, a target role, and
                 a place to draft tailored documents.
               </p>

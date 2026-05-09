@@ -105,7 +105,7 @@ export default function OpportunityReviewPage() {
   if (!enabled) {
     return (
       <AppPage>
-        <PageContent width="narrow">
+        <PageContent>
           <StandardEmptyState
             icon={Settings}
             title="Review queue disabled"
