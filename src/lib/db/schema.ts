@@ -284,6 +284,33 @@ export const emailDrafts = sqliteTable("email_drafts", {
   updatedAt: text("updated_at").default(sql`CURRENT_TIMESTAMP`),
 });
 
+// Email sends table
+export const emailSends = sqliteTable(
+  "email_sends",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id").notNull().default(DEFAULT_USER_ID),
+    type: text("type").notNull(),
+    jobId: text("job_id"),
+    recipient: text("recipient").notNull(),
+    subject: text("subject").notNull(),
+    body: text("body").notNull(),
+    inReplyToDraftId: text("in_reply_to_draft_id"),
+    gmailMessageId: text("gmail_message_id"),
+    status: text("status").notNull().default("sent"),
+    errorMessage: text("error_message"),
+    sentAt: text("sent_at").default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    index("idx_email_sends_user_sent_at").on(table.userId, table.sentAt),
+    index("idx_email_sends_user_recipient_type").on(
+      table.userId,
+      table.recipient,
+      table.type,
+    ),
+  ],
+);
+
 // Analytics snapshots table for historical tracking
 export const analyticsSnapshots = sqliteTable(
   "analytics_snapshots",
@@ -727,6 +754,8 @@ export type NewLlmSettings = typeof llmSettings.$inferInsert;
 
 export type EmailDraft = typeof emailDrafts.$inferSelect;
 export type NewEmailDraft = typeof emailDrafts.$inferInsert;
+export type EmailSend = typeof emailSends.$inferSelect;
+export type NewEmailSend = typeof emailSends.$inferInsert;
 
 export type AnalyticsSnapshot = typeof analyticsSnapshots.$inferSelect;
 export type NewAnalyticsSnapshot = typeof analyticsSnapshots.$inferInsert;

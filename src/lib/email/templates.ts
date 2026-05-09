@@ -14,6 +14,13 @@ export interface EmailContext {
   daysAfter?: number;
   targetCompany?: string;
   connectionName?: string;
+  referenceName?: string;
+  recruiterName?: string;
+  recruiterCompany?: string;
+  recruiterStance?: "interested" | "not_a_fit";
+  applyingRole?: string;
+  interviewStage?: string;
+  hookNote?: string;
   customNote?: string;
 }
 
@@ -129,6 +136,122 @@ ${profile?.contact?.linkedin || "[YOUR LINKEDIN]"}`;
   };
 }
 
+export function generateColdOutreachEmail(
+  context: EmailContext,
+): GeneratedEmail {
+  const { profile, targetCompany, connectionName, hookNote } = context;
+  const name = profile?.contact?.name || "[YOUR NAME]";
+  const company = targetCompany || "[TARGET COMPANY]";
+  const recipient = connectionName || "[HIRING MANAGER NAME]";
+  const currentRole = profile?.experiences?.[0]
+    ? `${profile.experiences[0].title} at ${profile.experiences[0].company}`
+    : "[YOUR CURRENT ROLE]";
+
+  const subject = `Interested in ${company} - quick intro from ${name}`;
+
+  const body = `Hi ${recipient},
+
+I'm ${name}, currently ${currentRole}. I'm reaching out because ${company} is on my short list of teams where I'd be excited to contribute.
+
+${hookNote || `I noticed [SPECIFIC PROJECT OR COMPANY UPDATE], and it connected strongly with the kind of work I enjoy doing.`}
+
+My background in ${profile?.skills?.[0]?.name || "[RELEVANT SKILL]"} and ${profile?.skills?.[1]?.name || "[RELATED SKILL]"} could be useful if your team is growing or exploring similar problems. If it would be helpful, I'd appreciate a brief conversation or a pointer toward the right person to contact.
+
+Thanks for considering,
+${name}
+${profile?.contact?.email || "[YOUR EMAIL]"}
+${profile?.contact?.linkedin || "[YOUR LINKEDIN]"}`;
+
+  return {
+    subject,
+    body,
+    placeholders: extractPlaceholders(body),
+  };
+}
+
+export function generateRecruiterReplyEmail(
+  context: EmailContext,
+): GeneratedEmail {
+  const {
+    profile,
+    recruiterName,
+    recruiterCompany,
+    recruiterStance = "interested",
+    customNote,
+  } = context;
+  const name = profile?.contact?.name || "[YOUR NAME]";
+  const recruiter = recruiterName || "[RECRUITER NAME]";
+  const company = recruiterCompany || "[COMPANY]";
+  const subject =
+    recruiterStance === "not_a_fit"
+      ? `Re: Opportunity at ${company}`
+      : `Interested in learning more - ${company}`;
+
+  const body =
+    recruiterStance === "not_a_fit"
+      ? `Hi ${recruiter},
+
+Thank you for reaching out and thinking of me for the opportunity at ${company}. I appreciate it.
+
+After taking a look, I don't think this is the right fit for what I'm focused on right now. ${customNote || "That said, I'd be glad to stay in touch if something more closely aligned comes up in the future."}
+
+Thanks again,
+${name}`
+      : `Hi ${recruiter},
+
+Thank you for reaching out. The opportunity at ${company} sounds interesting, and I'd be glad to learn more.
+
+Could you share a bit more about the role scope, team, compensation range, and hiring timeline? ${customNote || "If it looks aligned, I'd be happy to find time for a quick call."}
+
+Best,
+${name}
+${profile?.contact?.email || "[YOUR EMAIL]"}`;
+
+  return {
+    subject,
+    body,
+    placeholders: extractPlaceholders(body),
+  };
+}
+
+export function generateReferenceRequestEmail(
+  context: EmailContext,
+): GeneratedEmail {
+  const {
+    job,
+    profile,
+    referenceName,
+    applyingRole,
+    targetCompany,
+    interviewStage,
+    customNote,
+  } = context;
+  const name = profile?.contact?.name || "[YOUR NAME]";
+  const reference = referenceName || "[REFERENCE NAME]";
+  const role = applyingRole || job?.title || "[ROLE]";
+  const company = targetCompany || job?.company || "[COMPANY]";
+
+  const subject = `Reference request for ${role} opportunity`;
+
+  const body = `Hi ${reference},
+
+I hope you're doing well. I'm interviewing for a ${role} role at ${company}${interviewStage ? ` and am currently at the ${interviewStage} stage` : ""}. I wanted to ask whether you'd feel comfortable serving as a reference for me.
+
+${customNote || "I learned a lot working with you, and I think you could speak meaningfully about my collaboration, ownership, and impact."}
+
+I'm happy to send over the job description, my latest resume, and a short refresher on the work we did together. No pressure at all if the timing isn't good.
+
+Thank you,
+${name}
+${profile?.contact?.email || "[YOUR EMAIL]"}`;
+
+  return {
+    subject,
+    body,
+    placeholders: extractPlaceholders(body),
+  };
+}
+
 export function generateStatusInquiryEmail(
   context: EmailContext,
 ): GeneratedEmail {
@@ -205,10 +328,16 @@ export function generateEmail(
       return generateThankYouEmail(context);
     case "networking":
       return generateNetworkingEmail(context);
+    case "cold_outreach":
+      return generateColdOutreachEmail(context);
     case "status_inquiry":
       return generateStatusInquiryEmail(context);
+    case "recruiter_reply":
+      return generateRecruiterReplyEmail(context);
     case "negotiation":
       return generateNegotiationEmail(context);
+    case "reference_request":
+      return generateReferenceRequestEmail(context);
     default:
       throw new Error(`Unknown email type: ${type}`);
   }
@@ -233,14 +362,29 @@ export const EMAIL_TEMPLATE_INFO: Record<
     description: "Reach out to connections at target companies",
     icon: "Users",
   },
+  cold_outreach: {
+    title: "Cold Outreach",
+    description: "Reach out without a referral or open req",
+    icon: "UserPlus",
+  },
   status_inquiry: {
     title: "Status Inquiry",
     description: "Politely ask about your application progress",
     icon: "HelpCircle",
   },
+  recruiter_reply: {
+    title: "Recruiter Reply",
+    description: "Respond to inbound recruiter outreach",
+    icon: "MessageCircle",
+  },
   negotiation: {
     title: "Offer Negotiation",
     description: "Discuss salary and compensation",
     icon: "DollarSign",
+  },
+  reference_request: {
+    title: "Reference Request",
+    description: "Ask a former manager or colleague to be a reference",
+    icon: "UserCheck",
   },
 };
