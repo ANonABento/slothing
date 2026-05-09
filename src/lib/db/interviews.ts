@@ -1,18 +1,20 @@
 import db from "./legacy";
 import { generateId } from "@/lib/utils";
+import type { SessionQuestionCategory, SessionMode } from "@/lib/constants";
 
 import { nowIso } from "@/lib/format/time";
 interface InterviewQuestion {
   question: string;
-  category: "behavioral" | "technical" | "situational" | "general";
+  category: SessionQuestionCategory;
   suggestedAnswer?: string;
 }
 
 export interface InterviewSession {
   id: string;
-  jobId: string;
+  jobId: string | null;
   profileId: string;
-  mode: "text" | "voice";
+  mode: SessionMode;
+  category?: SessionQuestionCategory | null;
   questions: InterviewQuestion[];
   status: "in_progress" | "completed";
   startedAt: string;
@@ -32,33 +34,143 @@ export interface InterviewSessionWithAnswers extends InterviewSession {
   answers: InterviewAnswer[];
 }
 
+let interviewSessionsSchemaEnsured = false;
+
+interface TableInfoRow {
+  name: string;
+  notnull: number;
+}
+
+function tryExec(statement: string): void {
+  const exec = (db as unknown as { exec?: (sql: string) => void }).exec;
+  if (typeof exec === "function") {
+    exec.call(db, statement);
+    return;
+  }
+
+  const prepared = db.prepare(statement);
+  if ("run" in prepared && typeof prepared.run === "function") {
+    prepared.run();
+  }
+}
+
+export function ensureInterviewSessionsSchema(): void {
+  if (interviewSessionsSchemaEnsured) return;
+
+  try {
+    tryExec("ALTER TABLE interview_sessions ADD COLUMN category TEXT");
+  } catch (error) {
+    const message = (error as Error).message.toLowerCase();
+    if (!message.includes("duplicate column")) throw error;
+  }
+
+  try {
+    const pragmaStmt = db.prepare("PRAGMA table_info(interview_sessions)") as {
+      all?: () => TableInfoRow[];
+    };
+    if (typeof pragmaStmt.all !== "function") {
+      interviewSessionsSchemaEnsured = true;
+      return;
+    }
+    const rows = pragmaStmt.all();
+    const jobIdColumn = rows?.find((row) => row.name === "job_id");
+
+    if (jobIdColumn?.notnull) {
+      tryExec("BEGIN");
+      try {
+        tryExec(`
+          CREATE TABLE interview_sessions_new (
+            id TEXT PRIMARY KEY,
+            user_id TEXT NOT NULL DEFAULT 'default',
+            job_id TEXT,
+            category TEXT,
+            profile_id TEXT NOT NULL,
+            mode TEXT DEFAULT 'text',
+            questions_json TEXT NOT NULL,
+            status TEXT DEFAULT 'in_progress',
+            started_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            completed_at TEXT
+          )
+        `);
+        tryExec(`
+          INSERT INTO interview_sessions_new (
+            id, user_id, job_id, category, profile_id, mode, questions_json, status, started_at, completed_at
+          )
+          SELECT id, user_id, job_id, category, profile_id, mode, questions_json, status, started_at, completed_at
+          FROM interview_sessions
+        `);
+        tryExec("DROP TABLE interview_sessions");
+        tryExec(
+          "ALTER TABLE interview_sessions_new RENAME TO interview_sessions",
+        );
+        tryExec("COMMIT");
+      } catch (error) {
+        tryExec("ROLLBACK");
+        throw error;
+      }
+    }
+  } catch (error) {
+    const message = (error as Error).message.toLowerCase();
+    if (
+      !message.includes("no such table") &&
+      !message.includes("no such column")
+    ) {
+      throw error;
+    }
+  }
+
+  interviewSessionsSchemaEnsured = true;
+}
+
+function rowJobId(value: string | null | undefined): string | null {
+  return value || null;
+}
+
 // Create a new interview session
 export function createInterviewSession(
-  jobId: string,
+  jobId: string | null,
   questions: InterviewQuestion[],
-  mode: "text" | "voice" = "text",
+  mode: SessionMode = "text",
   userId: string = "default",
+  category?: SessionQuestionCategory | null,
 ): InterviewSession {
+  ensureInterviewSessionsSchema();
   const id = generateId();
   const now = nowIso();
 
-  const stmt = db.prepare(`
-    INSERT INTO interview_sessions (id, user_id, job_id, profile_id, mode, questions_json, status, started_at)
-    SELECT ?, ?, ?, ?, ?, ?, 'in_progress', ?
-    WHERE EXISTS (SELECT 1 FROM jobs WHERE id = ? AND user_id = ?)
-  `);
+  const stmt = jobId
+    ? db.prepare(`
+        INSERT INTO interview_sessions (id, user_id, job_id, category, profile_id, mode, questions_json, status, started_at)
+        SELECT ?, ?, ?, ?, ?, ?, ?, 'in_progress', ?
+        WHERE EXISTS (SELECT 1 FROM jobs WHERE id = ? AND user_id = ?)
+      `)
+    : db.prepare(`
+        INSERT INTO interview_sessions (id, user_id, job_id, category, profile_id, mode, questions_json, status, started_at)
+        VALUES (?, ?, NULL, ?, ?, ?, ?, 'in_progress', ?)
+      `);
 
-  const result = stmt.run(
-    id,
-    userId,
-    jobId,
-    userId,
-    mode,
-    JSON.stringify(questions),
-    now,
-    jobId,
-    userId,
-  ) as { changes?: number } | undefined;
+  const result = jobId
+    ? (stmt.run(
+        id,
+        userId,
+        jobId,
+        category || null,
+        userId,
+        mode,
+        JSON.stringify(questions),
+        now,
+        jobId,
+        userId,
+      ) as { changes?: number } | undefined)
+    : (stmt.run(
+        id,
+        userId,
+        category || null,
+        userId,
+        mode,
+        JSON.stringify(questions),
+        now,
+      ) as { changes?: number } | undefined);
 
   if (result?.changes === 0) {
     throw new Error("Job not found");
@@ -69,6 +181,7 @@ export function createInterviewSession(
     jobId,
     profileId: userId,
     mode,
+    category: category || null,
     questions,
     status: "in_progress",
     startedAt: now,
@@ -80,8 +193,9 @@ export function getInterviewSession(
   id: string,
   userId: string = "default",
 ): InterviewSessionWithAnswers | null {
+  ensureInterviewSessionsSchema();
   const sessionStmt = db.prepare(`
-    SELECT id, job_id, profile_id, mode, questions_json, status, started_at, completed_at
+    SELECT id, job_id, category, profile_id, mode, questions_json, status, started_at, completed_at
     FROM interview_sessions
     WHERE id = ? AND user_id = ?
   `);
@@ -89,7 +203,8 @@ export function getInterviewSession(
   const row = sessionStmt.get(id, userId) as
     | {
         id: string;
-        job_id: string;
+        job_id: string | null;
+        category: SessionQuestionCategory | null;
         profile_id: string;
         mode: string;
         questions_json: string;
@@ -119,9 +234,10 @@ export function getInterviewSession(
 
   return {
     id: row.id,
-    jobId: row.job_id,
+    jobId: rowJobId(row.job_id),
     profileId: row.profile_id,
-    mode: row.mode as "text" | "voice",
+    mode: row.mode as SessionMode,
+    category: row.category || null,
     questions: JSON.parse(row.questions_json),
     status: row.status as "in_progress" | "completed",
     startedAt: row.started_at,
@@ -142,8 +258,9 @@ export function getInterviewSessions(
   jobId?: string,
   userId: string = "default",
 ): InterviewSession[] {
+  ensureInterviewSessionsSchema();
   let query = `
-    SELECT id, job_id, profile_id, mode, questions_json, status, started_at, completed_at
+    SELECT id, job_id, category, profile_id, mode, questions_json, status, started_at, completed_at
     FROM interview_sessions
   `;
   const params: string[] = [userId];
@@ -160,7 +277,8 @@ export function getInterviewSessions(
   const stmt = db.prepare(query);
   const rows = stmt.all(...params) as Array<{
     id: string;
-    job_id: string;
+    job_id: string | null;
+    category: SessionQuestionCategory | null;
     profile_id: string;
     mode: string;
     questions_json: string;
@@ -171,9 +289,10 @@ export function getInterviewSessions(
 
   return rows.map((row) => ({
     id: row.id,
-    jobId: row.job_id,
+    jobId: rowJobId(row.job_id),
     profileId: row.profile_id,
-    mode: row.mode as "text" | "voice",
+    mode: row.mode as SessionMode,
+    category: row.category || null,
     questions: JSON.parse(row.questions_json),
     status: row.status as "in_progress" | "completed",
     startedAt: row.started_at,
@@ -189,6 +308,7 @@ export function addInterviewAnswer(
   feedback?: string,
   userId: string = "default",
 ): InterviewAnswer {
+  ensureInterviewSessionsSchema();
   const id = generateId();
   const now = nowIso();
 
@@ -232,6 +352,7 @@ export function completeInterviewSession(
   sessionId: string,
   userId: string = "default",
 ): void {
+  ensureInterviewSessionsSchema();
   const now = nowIso();
 
   const stmt = db.prepare(`
@@ -248,6 +369,7 @@ export function deleteInterviewSession(
   id: string,
   userId: string = "default",
 ): void {
+  ensureInterviewSessionsSchema();
   const session = db
     .prepare("SELECT id FROM interview_sessions WHERE id = ? AND user_id = ?")
     .get(id, userId) as { id: string } | undefined;
@@ -272,8 +394,9 @@ export function getRecentInterviewSessions(
   limit: number = 5,
   userId: string = "default",
 ): InterviewSession[] {
+  ensureInterviewSessionsSchema();
   const stmt = db.prepare(`
-    SELECT id, job_id, profile_id, mode, questions_json, status, started_at, completed_at
+    SELECT id, job_id, category, profile_id, mode, questions_json, status, started_at, completed_at
     FROM interview_sessions
     WHERE user_id = ?
     ORDER BY started_at DESC
@@ -282,7 +405,8 @@ export function getRecentInterviewSessions(
 
   const rows = stmt.all(userId, limit) as Array<{
     id: string;
-    job_id: string;
+    job_id: string | null;
+    category: SessionQuestionCategory | null;
     profile_id: string;
     mode: string;
     questions_json: string;
@@ -293,9 +417,10 @@ export function getRecentInterviewSessions(
 
   return rows.map((row) => ({
     id: row.id,
-    jobId: row.job_id,
+    jobId: rowJobId(row.job_id),
     profileId: row.profile_id,
-    mode: row.mode as "text" | "voice",
+    mode: row.mode as SessionMode,
+    category: row.category || null,
     questions: JSON.parse(row.questions_json),
     status: row.status as "in_progress" | "completed",
     startedAt: row.started_at,

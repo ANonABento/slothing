@@ -9,7 +9,11 @@ import {
   type SetStateAction,
 } from "react";
 import { useErrorToast } from "@/hooks/use-error-toast";
-import type { InterviewDifficulty } from "@/lib/constants";
+import {
+  INTERVIEW_TIMER_DEFAULTS_MS,
+  type InterviewDifficulty,
+  type SessionQuestionCategory,
+} from "@/lib/constants";
 import type { JobDescription } from "@/types";
 import type {
   InterviewMode,
@@ -40,6 +44,12 @@ interface InterviewAnswerResponse {
   feedback?: string;
 }
 
+interface StartInterviewOptions {
+  category?: SessionQuestionCategory;
+  questionCount?: number;
+  timerEnabled?: boolean;
+}
+
 interface UseInterviewSessionReturn {
   jobs: JobDescription[];
   loading: boolean;
@@ -52,11 +62,13 @@ interface UseInterviewSessionReturn {
   submitting: boolean;
   generating: boolean;
   startInterview: (
-    jobId: string,
+    jobId: string | null,
     mode: InterviewMode,
-    difficulty: InterviewDifficulty
+    difficulty: InterviewDifficulty,
+    options?: StartInterviewOptions,
   ) => Promise<void>;
   submitAnswer: () => Promise<void>;
+  skipQuestion: () => Promise<void>;
   resumeSession: (pastSession: PastSession) => void;
   deleteSession: (sessionId: string) => Promise<void>;
   resetSession: () => void;
@@ -67,7 +79,7 @@ const JSON_HEADERS = { "Content-Type": "application/json" };
 async function fetchJson<T>(
   url: string,
   init: RequestInit | undefined,
-  errorContext: string
+  errorContext: string,
 ): Promise<T> {
   const response = await fetch(url, init);
 
@@ -100,7 +112,7 @@ export function useInterviewSession(): UseInterviewSessionReturn {
       const data = await fetchJson<JobsResponse>(
         "/api/opportunities",
         undefined,
-        "Failed to fetch jobs"
+        "Failed to fetch jobs",
       );
       setJobs(data.jobs || []);
     } catch (error) {
@@ -118,7 +130,7 @@ export function useInterviewSession(): UseInterviewSessionReturn {
       const data = await fetchJson<InterviewSessionsResponse>(
         "/api/interview/sessions",
         undefined,
-        "Failed to fetch past sessions"
+        "Failed to fetch past sessions",
       );
       setPastSessions(data.sessions || []);
     } catch (error) {
@@ -144,7 +156,7 @@ export function useInterviewSession(): UseInterviewSessionReturn {
             headers: JSON_HEADERS,
             body: JSON.stringify({ status: "completed" }),
           },
-          "Failed to complete session"
+          "Failed to complete session",
         );
         await fetchPastSessions();
       } catch (error) {
@@ -154,7 +166,7 @@ export function useInterviewSession(): UseInterviewSessionReturn {
         });
       }
     },
-    [fetchPastSessions, showErrorToast]
+    [fetchPastSessions, showErrorToast],
   );
 
   const deleteSession = useCallback(
@@ -165,7 +177,7 @@ export function useInterviewSession(): UseInterviewSessionReturn {
           {
             method: "DELETE",
           },
-          "Failed to delete session"
+          "Failed to delete session",
         );
         await fetchPastSessions();
       } catch (error) {
@@ -175,24 +187,27 @@ export function useInterviewSession(): UseInterviewSessionReturn {
         });
       }
     },
-    [fetchPastSessions, showErrorToast]
+    [fetchPastSessions, showErrorToast],
   );
 
   const resumeSession = useCallback(
     (pastSession: PastSession) => {
-      const hasMatchingJob = jobs.some(
-        (candidateJob) => candidateJob.id === pastSession.jobId
-      );
+      const hasMatchingJob =
+        pastSession.jobId === null ||
+        jobs.some((candidateJob) => candidateJob.id === pastSession.jobId);
 
       if (!hasMatchingJob) return;
 
       invalidatePendingRequests();
 
       const answerMap = new Map(
-        (pastSession.answers ?? []).map((answer) => [answer.questionIndex, answer])
+        (pastSession.answers ?? []).map((answer) => [
+          answer.questionIndex,
+          answer,
+        ]),
       );
       const currentIndex = pastSession.questions.findIndex(
-        (_, questionIndex) => !answerMap.has(questionIndex)
+        (_, questionIndex) => !answerMap.has(questionIndex),
       );
 
       setSelectedJob(pastSession.jobId);
@@ -200,27 +215,33 @@ export function useInterviewSession(): UseInterviewSessionReturn {
       setSession({
         id: pastSession.id,
         jobId: pastSession.jobId,
+        category: pastSession.category || null,
         questions: pastSession.questions,
         currentIndex:
           currentIndex === -1 ? pastSession.questions.length : currentIndex,
         answers: pastSession.questions.map(
-          (_, questionIndex) => answerMap.get(questionIndex)?.answer || ""
+          (_, questionIndex) => answerMap.get(questionIndex)?.answer || "",
         ),
         feedback: pastSession.questions.map(
-          (_, questionIndex) => answerMap.get(questionIndex)?.feedback || ""
+          (_, questionIndex) => answerMap.get(questionIndex)?.feedback || "",
         ),
         followUps: [],
         mode: pastSession.mode,
+        skipped: pastSession.questions.map(
+          (_, questionIndex) =>
+            answerMap.get(questionIndex)?.answer === "[skipped]",
+        ),
       });
     },
-    [invalidatePendingRequests, jobs]
+    [invalidatePendingRequests, jobs],
   );
 
   const startInterview = useCallback(
     async (
-      jobId: string,
+      jobId: string | null,
       mode: InterviewMode,
-      difficulty: InterviewDifficulty
+      difficulty: InterviewDifficulty,
+      options: StartInterviewOptions = {},
     ) => {
       const requestId = invalidatePendingRequests();
       setSelectedJob(jobId);
@@ -232,9 +253,15 @@ export function useInterviewSession(): UseInterviewSessionReturn {
           {
             method: "POST",
             headers: JSON_HEADERS,
-            body: JSON.stringify({ jobId, mode, difficulty }),
+            body: JSON.stringify({
+              jobId,
+              mode,
+              difficulty,
+              category: options.category,
+              questionCount: options.questionCount,
+            }),
           },
-          "Failed to generate questions"
+          "Failed to generate questions",
         );
 
         if (!questionsData.questions) {
@@ -248,11 +275,12 @@ export function useInterviewSession(): UseInterviewSessionReturn {
             headers: JSON_HEADERS,
             body: JSON.stringify({
               jobId,
+              category: options.category,
               questions: questionsData.questions,
               mode,
             }),
           },
-          "Failed to create interview session"
+          "Failed to create interview session",
         );
 
         if (activeRequestRef.current !== requestId) {
@@ -263,12 +291,28 @@ export function useInterviewSession(): UseInterviewSessionReturn {
         setSession({
           id: sessionData.session?.id,
           jobId,
+          category: options.category || null,
+          questionCount:
+            options.questionCount || questionsData.questions.length,
+          timer: options.timerEnabled
+            ? {
+                enabled: true,
+                remainingMs:
+                  INTERVIEW_TIMER_DEFAULTS_MS[
+                    options.category ||
+                      questionsData.questions[0]?.category ||
+                      "general"
+                  ],
+                extended: false,
+              }
+            : null,
           questions: questionsData.questions,
           currentIndex: 0,
           answers: [],
           feedback: [],
           followUps: [],
           mode,
+          skipped: Array(questionsData.questions.length).fill(false),
         });
       } catch (error) {
         showErrorToast(error, {
@@ -281,7 +325,7 @@ export function useInterviewSession(): UseInterviewSessionReturn {
         }
       }
     },
-    [invalidatePendingRequests, showErrorToast]
+    [invalidatePendingRequests, showErrorToast],
   );
 
   const submitAnswer = useCallback(async () => {
@@ -304,9 +348,13 @@ export function useInterviewSession(): UseInterviewSessionReturn {
             jobId: submittingSession.jobId,
             questionIndex: submittingSession.currentIndex,
             answer: currentAnswer,
+            category:
+              submittingSession.category ||
+              submittingSession.questions[submittingSession.currentIndex]
+                ?.category,
           }),
         },
-        "Failed to submit answer"
+        "Failed to submit answer",
       );
       let completedSessionId: string | null = null;
       let shouldClearAnswer = false;
@@ -358,6 +406,87 @@ export function useInterviewSession(): UseInterviewSessionReturn {
     }
   }, [completeSession, currentAnswer, session, showErrorToast]);
 
+  const skipQuestion = useCallback(async () => {
+    if (!session) return;
+
+    const skippingSession = session;
+    setSubmitting(true);
+
+    try {
+      if (skippingSession.id) {
+        await fetchJson<InterviewAnswerResponse>(
+          `/api/interview/sessions/${skippingSession.id}/answer`,
+          {
+            method: "POST",
+            headers: JSON_HEADERS,
+            body: JSON.stringify({
+              jobId: skippingSession.jobId,
+              questionIndex: skippingSession.currentIndex,
+              answer: "[skipped]",
+              category:
+                skippingSession.category ||
+                skippingSession.questions[skippingSession.currentIndex]
+                  ?.category,
+            }),
+          },
+          "Failed to skip question",
+        );
+      }
+
+      let completedSessionId: string | null = null;
+
+      setSession((currentSession) => {
+        if (currentSession !== skippingSession) {
+          return currentSession;
+        }
+
+        const nextAnswers = [...currentSession.answers];
+        nextAnswers[currentSession.currentIndex] = "[skipped]";
+
+        const nextFeedback = [...currentSession.feedback];
+        nextFeedback[currentSession.currentIndex] = "";
+
+        const nextSkipped =
+          currentSession.skipped ||
+          Array(currentSession.questions.length).fill(false);
+        const skipped = [...nextSkipped];
+        skipped[currentSession.currentIndex] = true;
+
+        if (currentSession.currentIndex < currentSession.questions.length - 1) {
+          return {
+            ...currentSession,
+            currentIndex: currentSession.currentIndex + 1,
+            answers: nextAnswers,
+            feedback: nextFeedback,
+            skipped,
+          };
+        }
+
+        completedSessionId = currentSession.id ?? null;
+        return {
+          ...currentSession,
+          answers: nextAnswers,
+          feedback: nextFeedback,
+          skipped,
+          currentIndex: currentSession.questions.length,
+        };
+      });
+
+      setCurrentAnswer("");
+
+      if (completedSessionId) {
+        await completeSession(completedSessionId);
+      }
+    } catch (error) {
+      showErrorToast(error, {
+        title: "Could not skip question",
+        fallbackDescription: "Please try skipping the question again.",
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  }, [completeSession, session, showErrorToast]);
+
   const resetSession = useCallback(() => {
     invalidatePendingRequests();
     setSession(null);
@@ -379,6 +508,7 @@ export function useInterviewSession(): UseInterviewSessionReturn {
     generating,
     startInterview,
     submitAnswer,
+    skipQuestion,
     resumeSession,
     deleteSession,
     resetSession,

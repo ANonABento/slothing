@@ -1,18 +1,18 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
-  Brain,
   Briefcase,
   Building2,
   GraduationCap,
   Info,
-  Lightbulb,
   Loader2,
   MessageSquare,
   Mic,
+  Plus,
   Target,
+  Timer,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -24,9 +24,12 @@ import {
 } from "@/components/ui/select";
 import { PrepGuideCard } from "@/components/interview/prep-guide-card";
 import { PastSessionsList } from "@/components/interview/past-sessions-list";
+import { CategoryPracticeTiles } from "@/components/interview/category-practice-tiles";
 import {
   INTERVIEW_DIFFICULTIES,
+  INTERVIEW_QUESTION_COUNTS,
   type InterviewDifficulty,
+  type SessionQuestionCategory,
 } from "@/lib/constants";
 import type { JobDescription } from "@/types";
 import type { InterviewMode, PastSession } from "@/types/interview";
@@ -38,11 +41,19 @@ const INTERVIEW_DIFFICULTY_LABELS: Record<InterviewDifficulty, string> = {
   executive: "Executive",
 };
 
+const QUESTION_COUNT_STORAGE_KEY = "taida:interview:question-count";
+const TIMER_STORAGE_KEY = "taida:interview:timer-enabled";
+
 interface InterviewJobSelectionProps {
   jobs: JobDescription[];
   selectedJob: string | null;
   generating: boolean;
-  onStartInterview: (jobId: string, mode: InterviewMode) => void;
+  onStartInterview: (
+    jobId: string,
+    mode: InterviewMode,
+    options: { questionCount: number; timerEnabled: boolean },
+  ) => void;
+  onStartQuickPractice: (category?: SessionQuestionCategory) => void;
   difficulty: InterviewDifficulty;
   onDifficultyChange: (value: InterviewDifficulty) => void;
   pastSessions: PastSession[];
@@ -55,6 +66,7 @@ export function InterviewJobSelection({
   selectedJob,
   generating,
   onStartInterview,
+  onStartQuickPractice,
   difficulty,
   onDifficultyChange,
   pastSessions,
@@ -63,6 +75,35 @@ export function InterviewJobSelection({
 }: InterviewJobSelectionProps) {
   const [showPrepGuide, setShowPrepGuide] = useState<string | null>(null);
   const [showHistory, setShowHistory] = useState(false);
+  const [questionCount, setQuestionCount] = useState(5);
+  const [timerEnabled, setTimerEnabled] = useState(false);
+
+  useEffect(() => {
+    const storedQuestionCount = Number(
+      window.localStorage.getItem(QUESTION_COUNT_STORAGE_KEY),
+    );
+    if (
+      INTERVIEW_QUESTION_COUNTS.includes(storedQuestionCount as 5 | 10 | 15)
+    ) {
+      setQuestionCount(storedQuestionCount);
+    }
+    setTimerEnabled(window.localStorage.getItem(TIMER_STORAGE_KEY) === "true");
+  }, []);
+
+  const handleQuestionCountChange = (value: string) => {
+    const nextValue = Number(value);
+    setQuestionCount(nextValue);
+    window.localStorage.setItem(QUESTION_COUNT_STORAGE_KEY, String(nextValue));
+  };
+
+  const handleTimerChange = (checked: boolean) => {
+    setTimerEnabled(checked);
+    window.localStorage.setItem(TIMER_STORAGE_KEY, String(checked));
+  };
+
+  const startJobPractice = (jobId: string, mode: InterviewMode) => {
+    onStartInterview(jobId, mode, { questionCount, timerEnabled });
+  };
 
   const togglePrepGuide = (id: string) =>
     setShowPrepGuide(showPrepGuide === id ? null : id);
@@ -86,24 +127,10 @@ export function InterviewJobSelection({
           Add an Opportunity
         </Link>
 
-        <div className="mt-12 grid gap-4 sm:grid-cols-3 text-left">
-          <Tip
-            icon={<Brain className="h-5 w-5" />}
-            color="blue"
-            title="Behavioral Questions"
-            description="Practice STAR method responses for common scenarios."
-          />
-          <Tip
-            icon={<Target className="h-5 w-5" />}
-            color="violet"
-            title="Technical Questions"
-            description="Get role-specific technical questions and feedback."
-          />
-          <Tip
-            icon={<Lightbulb className="h-5 w-5" />}
-            color="amber"
-            title="Situational Questions"
-            description="Handle hypothetical scenarios with confidence."
+        <div className="mt-12">
+          <CategoryPracticeTiles
+            pastSessions={pastSessions}
+            onStartQuickPractice={onStartQuickPractice}
           />
         </div>
       </div>
@@ -121,13 +148,21 @@ export function InterviewJobSelection({
         onDeleteSession={onDeleteSession}
       />
 
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <h2 className="text-xl font-semibold">Select a job to practice for:</h2>
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground flex items-center gap-1">
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onStartQuickPractice()}
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Quick Practice
+          </Button>
+          <label className="flex items-center gap-2 text-sm text-muted-foreground">
             <GraduationCap className="h-4 w-4" />
-            Difficulty:
-          </span>
+            <span>Difficulty:</span>
+          </label>
           <Select
             value={difficulty}
             onValueChange={(value) =>
@@ -145,6 +180,31 @@ export function InterviewJobSelection({
               ))}
             </SelectContent>
           </Select>
+          <Select
+            value={String(questionCount)}
+            onValueChange={handleQuestionCountChange}
+          >
+            <SelectTrigger className="w-36">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {INTERVIEW_QUESTION_COUNTS.map((count) => (
+                <SelectItem key={count} value={String(count)}>
+                  {count} questions
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <label className="flex items-center gap-2 rounded-lg border px-3 py-2 text-sm text-muted-foreground">
+            <input
+              type="checkbox"
+              checked={timerEnabled}
+              onChange={(event) => handleTimerChange(event.target.checked)}
+              className="h-4 w-4 accent-primary"
+            />
+            <Timer className="h-4 w-4" />
+            Timer
+          </label>
         </div>
       </div>
 
@@ -167,7 +227,7 @@ export function InterviewJobSelection({
 
               <div className="flex gap-2 mb-3">
                 <Button
-                  onClick={() => onStartInterview(job.id, "text")}
+                  onClick={() => startJobPractice(job.id, "text")}
                   disabled={generating}
                   className="flex-1 gradient-bg text-primary-foreground hover:opacity-90"
                 >
@@ -180,7 +240,7 @@ export function InterviewJobSelection({
                 </Button>
                 <Button
                   variant="outline"
-                  onClick={() => onStartInterview(job.id, "voice")}
+                  onClick={() => startJobPractice(job.id, "voice")}
                   disabled={generating}
                   className="flex-1"
                 >
@@ -217,36 +277,6 @@ export function InterviewJobSelection({
           </div>
         ))}
       </div>
-    </div>
-  );
-}
-
-function Tip({
-  icon,
-  color,
-  title,
-  description,
-}: {
-  icon: ReactNode;
-  color: string;
-  title: string;
-  description: string;
-}) {
-  const colorClasses: Record<string, string> = {
-    blue: "bg-info/10 text-info",
-    violet: "bg-primary/10 text-primary",
-    amber: "bg-warning/10 text-warning",
-  };
-
-  return (
-    <div className="p-4 rounded-xl bg-muted/50">
-      <div
-        className={`p-2 w-10 h-10 rounded-lg ${colorClasses[color]} flex items-center justify-center mb-3`}
-      >
-        {icon}
-      </div>
-      <h3 className="font-medium">{title}</h3>
-      <p className="text-sm text-muted-foreground mt-1">{description}</p>
     </div>
   );
 }

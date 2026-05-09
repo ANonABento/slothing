@@ -63,10 +63,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { jobId, questions, mode } = parseResult.data;
+    const { jobId, questions, mode, category } = parseResult.data;
 
-    const job = getJob(jobId, authResult.userId);
-    if (!job) {
+    const job = jobId ? getJob(jobId, authResult.userId) : null;
+    if (jobId && !job) {
       return NextResponse.json({ error: "Job not found" }, { status: 404 });
     }
 
@@ -75,6 +75,7 @@ export async function POST(request: NextRequest) {
       questions,
       mode,
       authResult.userId,
+      category,
     );
 
     return NextResponse.json({ session });

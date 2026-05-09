@@ -34,10 +34,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { jobId, answer } = parseResult.data;
+    const { jobId, answer, category } = parseResult.data;
 
-    const job = getJob(jobId, authResult.userId);
-    if (!job) {
+    const job = jobId ? getJob(jobId, authResult.userId) : null;
+    if (jobId && !job) {
       return NextResponse.json({ error: "Job not found" }, { status: 404 });
     }
 
@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
             role: "user",
             content: `You are an interview coach. Provide brief, constructive feedback on this interview answer.
 
-Job: ${job.title} at ${job.company}
+${job ? `Job: ${job.title} at ${job.company}` : `Practice Category: ${category || "general"}`}
 
 Candidate's Answer:
 ${answer}
