@@ -4,9 +4,10 @@ export type InterviewQuestionCategory =
   | "behavioral"
   | "technical"
   | "situational"
-  | "general";
+  | "general"
+  | "cultural-fit";
 
-export type InterviewMode = "text" | "voice";
+export type InterviewMode = "text" | "voice" | "generic-text";
 
 export interface InterviewQuestion {
   question: string;
@@ -29,7 +30,15 @@ export interface CurrentFollowUp {
 
 export interface InterviewSession {
   id?: string;
-  jobId: string;
+  jobId: string | null;
+  category?: InterviewQuestionCategory | null;
+  questionCount?: number;
+  timer?: {
+    enabled: boolean;
+    remainingMs: number;
+    extended: boolean;
+  } | null;
+  skipped?: boolean[];
   questions: InterviewQuestion[];
   currentIndex: number;
   answers: string[];
@@ -47,7 +56,8 @@ export interface PastSessionAnswer {
 
 export interface PastSession {
   id: string;
-  jobId: string;
+  jobId: string | null;
+  category?: InterviewQuestionCategory | null;
   mode: InterviewMode;
   status: "in_progress" | "completed";
   startedAt: string;

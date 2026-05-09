@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Brain, Target, Lightbulb, MessageSquare } from "lucide-react";
+import { Brain, Target, Lightbulb, MessageSquare, Users } from "lucide-react";
 import type { InterviewQuestionCategory } from "@/types/interview";
 
 interface CategoryStyle {
@@ -29,6 +29,11 @@ export const categoryColors: Record<InterviewQuestionCategory, CategoryStyle> = 
     text: "text-success",
     icon: <MessageSquare className="h-4 w-4" />,
   },
+  "cultural-fit": {
+    bg: "bg-info/10",
+    text: "text-info",
+    icon: <Users className="h-4 w-4" />,
+  },
 };
 
 interface CategoryBadgeProps {
@@ -44,7 +49,10 @@ export function CategoryBadge({ category, className = "" }: CategoryBadgeProps) 
       className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium ${style.bg} ${style.text} ${className}`}
     >
       {style.icon}
-      {category.charAt(0).toUpperCase() + category.slice(1)}
+      {category
+        .split("-")
+        .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+        .join(" ")}
     </span>
   );
 }

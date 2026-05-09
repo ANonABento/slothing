@@ -177,7 +177,8 @@ export const generatedResumes = sqliteTable("generated_resumes", {
 export const interviewSessions = sqliteTable("interview_sessions", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull().default(DEFAULT_USER_ID),
-  jobId: text("job_id").notNull(),
+  jobId: text("job_id"),
+  category: text("category"),
   profileId: text("profile_id").notNull(),
   mode: text("mode").default("text"),
   questionsJson: text("questions_json").notNull(),

@@ -43,10 +43,11 @@ describe("Interview Database Functions", () => {
       const result = createInterviewSession("job-123", questions, "text");
 
       expect(db.prepare).toHaveBeenCalledWith(expect.stringContaining("WHERE EXISTS"));
-      expect(mockRun).toHaveBeenCalledWith(
+      expect(mockRun).toHaveBeenLastCalledWith(
         "test-session-id",
         "default",
         "job-123",
+        null,
         "default",
         "text",
         JSON.stringify(questions),
@@ -59,9 +60,44 @@ describe("Interview Database Functions", () => {
         jobId: "job-123",
         profileId: "default",
         mode: "text",
+        category: null,
         questions,
         status: "in_progress",
         startedAt: expect.any(String),
+      });
+    });
+
+    it("should create a generic interview session without a job", () => {
+      const mockRun = vi.fn();
+      (db.prepare as Mock).mockReturnValue({ run: mockRun });
+
+      const questions = [
+        { question: "Tell me about a challenge", category: "behavioral" as const },
+      ];
+
+      const result = createInterviewSession(
+        null,
+        questions,
+        "generic-text",
+        "default",
+        "behavioral",
+      );
+
+      expect(db.prepare).toHaveBeenCalledWith(expect.stringContaining("VALUES"));
+      expect(mockRun).toHaveBeenLastCalledWith(
+        "test-session-id",
+        "default",
+        "behavioral",
+        "default",
+        "generic-text",
+        JSON.stringify(questions),
+        expect.any(String),
+      );
+      expect(result).toMatchObject({
+        id: "test-session-id",
+        jobId: null,
+        category: "behavioral",
+        mode: "generic-text",
       });
     });
 
@@ -76,6 +112,7 @@ describe("Interview Database Functions", () => {
         "test-session-id",
         "user-123",
         "job-123",
+        null,
         "user-123",
         "text",
         JSON.stringify([]),
@@ -146,6 +183,7 @@ describe("Interview Database Functions", () => {
         jobId: "job-123",
         profileId: "default",
         mode: "text",
+        category: null,
         questions: [{ question: "Q1", category: "behavioral" }],
         status: "in_progress",
         startedAt: "2024-01-15T10:00:00.000Z",

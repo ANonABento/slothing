@@ -57,6 +57,7 @@ import {
   THEME_CONTROL_CLASSES,
   THEME_INTERACTIVE_SURFACE_CLASSES,
 } from "@/lib/theme/component-classes";
+import { nowIso, toEpoch } from "@/lib/format/time";
 import { cn } from "@/lib/utils";
 
 interface AnswerFormState {
@@ -157,7 +158,7 @@ export default function AnswerBankPage() {
         });
         const data = (await res.json()) as MigrationSummary;
         if (!res.ok) throw new Error("Failed to migrate personal facts");
-        window.localStorage.setItem(key, new Date().toISOString());
+        window.localStorage.setItem(key, nowIso());
         if (
           data.migratedToProfile.length > 0 ||
           data.reclassified.length > 0 ||
@@ -191,8 +192,8 @@ export default function AnswerBankPage() {
     return [...searched].sort((a, b) => {
       if (sort === "newest") {
         return (
-          new Date(b.updatedAt ?? b.createdAt ?? 0).getTime() -
-          new Date(a.updatedAt ?? a.createdAt ?? 0).getTime()
+          toEpoch(b.updatedAt ?? b.createdAt ?? 0) -
+          toEpoch(a.updatedAt ?? a.createdAt ?? 0)
         );
       }
       if (sort === "alpha") return a.question.localeCompare(b.question);
