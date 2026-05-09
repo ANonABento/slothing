@@ -478,7 +478,6 @@ export default function EmailTemplatesPage() {
     <AppPage>
       <PageHeader
         icon={Mail}
-        eyebrow="Communication"
         title="Email Templates"
         description="Generate professional emails for follow-ups, thank you notes, and networking."
       />

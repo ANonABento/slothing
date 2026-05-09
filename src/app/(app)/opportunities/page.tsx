@@ -284,7 +284,6 @@ export default function OpportunitiesPage() {
     <AppPage>
       <PageHeader
         icon={Sparkles}
-        eyebrow="Opportunity Bank"
         title="Opportunities"
         description="Review saved opportunities, compare fit signals, and keep application work moving from one list."
         actions={

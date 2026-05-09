@@ -67,7 +67,6 @@ export default function CompanyResearchPage() {
       <PageHeader
         width="narrow"
         icon={Briefcase}
-        eyebrow="Company Research"
         title={job.company}
         description={job.title}
       />

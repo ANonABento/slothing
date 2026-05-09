@@ -40,7 +40,6 @@ export default function SettingsPage() {
       <PageHeader
         width="wide"
         icon={Settings}
-        eyebrow="Configuration"
         title="Settings"
         description="Configure your AI provider for resume parsing and interview preparation."
       />

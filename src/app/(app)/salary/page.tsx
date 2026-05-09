@@ -293,7 +293,6 @@ ${script.close}
     <AppPage>
       <PageHeader
         icon={DollarSign}
-        eyebrow="Negotiation"
         title="Salary Tools"
         description="Research market rates, compare offers, and prepare for salary negotiations."
       />
