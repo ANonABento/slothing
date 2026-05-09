@@ -5,7 +5,7 @@ import { useEffect } from "react";
 import type { MouseEvent } from "react";
 import type { TemplateStyles } from "@/lib/resume/template-types";
 import { getCoverLetterEditorStyles, getResumeEditorStyles } from "./styles";
-import { resumeEditorExtensions } from "./extensions";
+import { resumeEditorExtensions } from "./editor-extensions";
 import type { TipTapJSONContent } from "./types";
 
 interface ResumeEditorProps {

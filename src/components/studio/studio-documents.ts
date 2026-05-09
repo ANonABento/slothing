@@ -1,4 +1,5 @@
 import type { SectionState } from "@/lib/builder/section-manager";
+import type { PageSettings } from "@/lib/editor/page-settings";
 import type { TipTapJSONContent } from "@/lib/editor/types";
 import type { CoverLetterCritique } from "@/lib/ai/critique-prompts";
 
@@ -17,6 +18,7 @@ export interface StudioDocument {
   sections?: SectionState[];
   html?: string;
   content?: TipTapJSONContent;
+  pageSettings?: PageSettings;
   coverLetterCritique?: CoverLetterCritique;
 }
 

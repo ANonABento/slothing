@@ -1,8 +1,15 @@
 import type { TemplateStyles } from "@/lib/resume/template-types";
+import {
+  DEFAULT_PAGE_SETTINGS,
+  normalizePageSettings,
+  pageSettingsToPrintCss,
+  type PageSettings,
+} from "./page-settings";
 
 interface ResumeStyleOptions {
   rootSelector?: string;
   includePrintStyles?: boolean;
+  pageSettings?: PageSettings;
 }
 
 function selector(rootSelector: string, childSelector: string): string {
@@ -44,6 +51,7 @@ function singleColumnStyles(
   styles: TemplateStyles,
   rootSelector: string,
   includePrintStyles: boolean,
+  pageSettings: PageSettings,
 ): string {
   const headerAlignment =
     styles.headerStyle === "centered"
@@ -143,7 +151,8 @@ function singleColumnStyles(
       display: flex;
       justify-content: space-between;
     }
-    ${printStyles(rootSelector, includePrintStyles, "0.5in", false)}
+    ${sharedRichEditorStyles(rootSelector, includePrintStyles)}
+    ${printStyles(rootSelector, includePrintStyles, pageSettings, false)}
   `;
 }
 
@@ -151,6 +160,7 @@ function twoColumnStyles(
   styles: TemplateStyles,
   rootSelector: string,
   includePrintStyles: boolean,
+  pageSettings: PageSettings,
 ): string {
   const sidebarBg = `${styles.accentColor}0d`;
 
@@ -269,14 +279,15 @@ function twoColumnStyles(
     ${selector(rootSelector, ".education-item .dates")} {
       font-size: 9pt;
     }
-    ${printStyles(rootSelector, includePrintStyles, "0", true)}
+    ${sharedRichEditorStyles(rootSelector, includePrintStyles)}
+    ${printStyles(rootSelector, includePrintStyles, pageSettings, true)}
   `;
 }
 
 function printStyles(
   rootSelector: string,
   includePrintStyles: boolean,
-  pageMargin: string,
+  pageSettings: PageSettings,
   includeTwoColumnContainer: boolean,
 ): string {
   if (!includePrintStyles) return "";
@@ -289,10 +300,7 @@ function printStyles(
 
   return `
     @media print {
-      @page {
-        size: letter;
-        margin: ${pageMargin};
-      }
+      ${pageSettingsToPrintCss(pageSettings)}
       ${rootSelector} {
         padding: 0;
         print-color-adjust: exact;
@@ -319,16 +327,118 @@ function printStyles(
   `;
 }
 
+function sharedRichEditorStyles(
+  rootSelector: string,
+  includePrintStyles: boolean,
+): string {
+  const printCleanup = includePrintStyles
+    ? `
+    @media print {
+      ${selector(rootSelector, ".page-break")} {
+        border: 0;
+        height: 0;
+        margin: 0;
+      }
+      ${selector(rootSelector, ".page-break::after")} {
+        content: "";
+      }
+    }`
+    : "";
+
+  return `
+    ${selector(rootSelector, "table")} {
+      border-collapse: collapse;
+      margin: 8px 0;
+      table-layout: fixed;
+      width: 100%;
+    }
+    ${selector(rootSelector, "td")},
+    ${selector(rootSelector, "th")} {
+      border: 1px solid var(--border);
+      min-width: 48px;
+      padding: 6px;
+      position: relative;
+      vertical-align: top;
+    }
+    ${selector(rootSelector, 'table[data-no-borders="true"] td')},
+    ${selector(rootSelector, 'table[data-no-borders="true"] th')} {
+      border-color: transparent;
+    }
+    ${selector(rootSelector, ".selectedCell::after")} {
+      background: color-mix(in srgb, var(--primary) 14%, transparent);
+      content: "";
+      inset: 0;
+      pointer-events: none;
+      position: absolute;
+      z-index: 1;
+    }
+    ${selector(rootSelector, ".column-resize-handle")} {
+      background-color: var(--primary);
+      bottom: -2px;
+      pointer-events: none;
+      position: absolute;
+      right: -2px;
+      top: 0;
+      width: 4px;
+    }
+    ${selector(rootSelector, ".resize-cursor")} {
+      cursor: col-resize;
+    }
+    ${selector(rootSelector, ".page-break")} {
+      align-items: center;
+      border-top: 1px dashed var(--border);
+      display: flex;
+      height: 28px;
+      justify-content: center;
+      margin: 16px 0;
+      page-break-after: always;
+    }
+    ${selector(rootSelector, ".page-break::after")} {
+      color: var(--muted-foreground);
+      content: "Page break";
+      font-size: 10px;
+      text-transform: uppercase;
+    }
+    ${selector(rootSelector, "img.tiptap-image")} {
+      display: inline-block;
+      height: auto;
+      max-width: 100%;
+    }
+    ${selector(rootSelector, 'img.tiptap-image[data-wrap="left"]')} {
+      float: left;
+      margin: 0 12px 8px 0;
+    }
+    ${selector(rootSelector, 'img.tiptap-image[data-wrap="right"]')} {
+      float: right;
+      margin: 0 0 8px 12px;
+    }
+    ${printCleanup}
+  `;
+}
+
 export function getResumeDocumentStyles(
   styles: TemplateStyles,
   options: ResumeStyleOptions = {},
 ): string {
   const rootSelector = options.rootSelector ?? "body";
   const includePrintStyles = options.includePrintStyles ?? true;
+  const pageSettings = normalizePageSettings(
+    options.pageSettings ?? DEFAULT_PAGE_SETTINGS,
+  );
 
   return styles.layout === "two-column"
-    ? twoColumnStyles(styles, rootSelector, includePrintStyles).trim()
-    : singleColumnStyles(styles, rootSelector, includePrintStyles).trim();
+    ? twoColumnStyles(
+        styles,
+        rootSelector,
+        includePrintStyles,
+        pageSettings,
+      ).trim()
+    : singleColumnStyles(
+        styles,
+        rootSelector,
+        includePrintStyles,
+        pageSettings,
+      ).trim();
 }
 
 function editorInteractionStyles(
@@ -418,7 +528,12 @@ export function getResumeEditorStyles(styles: TemplateStyles): string {
   return `${documentStyles}\n${editorInteractionStyles(
     rootSelector,
     styles.accentColor,
-  )}`.trim();
+  )}
+    ${rootSelector} {
+      max-width: none;
+      min-height: calc(var(--page-height, 11in) - var(--page-margin-top, 1in) - var(--page-margin-bottom, 1in));
+      padding: var(--page-margin-top, 1in) var(--page-margin-right, 1in) var(--page-margin-bottom, 1in) var(--page-margin-left, 1in);
+    }`.trim();
 }
 
 export function getCoverLetterEditorStyles(styles: TemplateStyles): string {
@@ -438,7 +553,7 @@ export function getCoverLetterEditorStyles(styles: TemplateStyles): string {
 
   return `${documentStyles}
     ${rootSelector} {
-      padding: 0.7in;
+      padding: var(--page-margin-top, 1in) var(--page-margin-right, 1in) var(--page-margin-bottom, 1in) var(--page-margin-left, 1in);
     }
     ${selector(rootSelector, "p")} {
       margin-bottom: 12px;

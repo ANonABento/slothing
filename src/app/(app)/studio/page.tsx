@@ -140,6 +140,8 @@ function StudioPageContent() {
               onAddFromBank={() => studio.setEntryPickerOpen(true)}
               content={studio.content}
               onContentChange={studio.handleContentChange}
+              pageSettings={studio.pageSettings}
+              onPageSettingsChange={studio.handlePageSettingsChange}
             />
           </div>
 

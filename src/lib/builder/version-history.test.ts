@@ -123,6 +123,12 @@ describe("builder version history", () => {
       templateId: "modern",
       html: "<p>Saved</p>",
       content: { type: "doc", content: [{ type: "paragraph" }] },
+      pageSettings: {
+        size: "letter",
+        marginPreset: "normal",
+        margins: { top: 1, right: 1, bottom: 1, left: 1 },
+      },
+      coverLetterCritique: undefined,
     });
   });
 
