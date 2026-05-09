@@ -1,5 +1,16 @@
 import Link from "next/link";
-import { ArrowRight, ScanSearch, Sparkles } from "lucide-react";
+import {
+  ArrowRight,
+  Briefcase,
+  CheckCircle2,
+  Clock,
+  FileText,
+  Plus,
+  ScanSearch,
+  Sparkles,
+  Target,
+  Upload,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export function Hero() {
@@ -82,6 +93,10 @@ export function Hero() {
               <span className="ml-1">4.9/5 rating</span>
             </div>
           </div>
+          <p className="mt-3 text-xs italic text-muted-foreground animate-in fade-in slide-in-from-bottom-4 duration-700 delay-500">
+            Stats and ratings are illustrative — Slothing is in active
+            development.
+          </p>
         </div>
 
         {/* App Preview */}
@@ -99,27 +114,203 @@ export function Hero() {
               </div>
             </div>
             <div className="p-8 bg-gradient-to-br from-muted/20 to-muted/50">
-              <div className="grid grid-cols-3 gap-4">
-                {/* Mock stats */}
-                <div className="p-4 rounded-xl bg-card border">
-                  <div className="text-2xl font-bold text-primary">12</div>
-                  <div className="text-sm text-muted-foreground">
-                    Opportunities Tracked
+              <div aria-label="Dashboard preview" className="space-y-3">
+                <div className="flex flex-col gap-3 rounded-xl border bg-card p-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <div className="text-base font-semibold text-foreground">
+                      Dashboard
+                    </div>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      You have a few clear moves to keep your search moving.
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <span className="inline-flex items-center gap-1.5 rounded-lg border bg-card px-2.5 py-1 text-xs font-medium text-foreground">
+                      <Plus className="h-3.5 w-3.5 text-primary" />
+                      Add opportunity
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 rounded-lg border bg-card px-2.5 py-1 text-xs font-medium text-foreground">
+                      <Upload className="h-3.5 w-3.5 text-primary" />
+                      Upload document
+                    </span>
                   </div>
                 </div>
-                <div className="p-4 rounded-xl bg-card border">
-                  <div className="text-2xl font-bold text-success">8</div>
-                  <div className="text-sm text-muted-foreground">Applied</div>
+
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                  {[
+                    { label: "Readiness", value: "78%", icon: Target },
+                    { label: "Documents", value: "4", icon: FileText },
+                    { label: "Tailored docs", value: "6", icon: FileText },
+                    { label: "Pipeline", value: "9", icon: Briefcase },
+                  ].map((item) => {
+                    const Icon = item.icon;
+                    return (
+                      <div
+                        key={item.label}
+                        className="rounded-lg border bg-card p-3"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <div>
+                            <p className="text-[0.68rem] font-medium uppercase text-muted-foreground">
+                              {item.label}
+                            </p>
+                            <p className="mt-1 text-xl font-semibold text-foreground">
+                              {item.value}
+                            </p>
+                          </div>
+                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                            <Icon className="h-4 w-4" />
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
-                <div className="p-4 rounded-xl bg-card border">
-                  <div className="text-2xl font-bold text-amber-500">3</div>
-                  <div className="text-sm text-muted-foreground">
-                    Interviews
+
+                <div className="grid gap-2 lg:grid-cols-[1.45fr_0.85fr]">
+                  <div className="rounded-lg border bg-card p-4">
+                    <div className="mb-3 flex items-center gap-2">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                        <Clock className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <div className="text-sm font-semibold text-foreground">
+                          Today
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          Two focused moves, then you are done.
+                        </p>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      {[
+                        {
+                          icon: Briefcase,
+                          title: "Review 3 new opportunities",
+                          context: "Decide what belongs in your pipeline.",
+                        },
+                        {
+                          icon: FileText,
+                          title: "Create a tailored document",
+                          context: "4 documents ready to reuse.",
+                        },
+                      ].map((action) => {
+                        const Icon = action.icon;
+                        return (
+                          <div
+                            key={action.title}
+                            className="flex items-center gap-3 rounded-lg border bg-background/40 p-3"
+                          >
+                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                              <Icon className="h-4 w-4" />
+                            </div>
+                            <div className="min-w-0 flex-1 text-left">
+                              <div className="truncate text-sm font-medium text-foreground">
+                                {action.title}
+                              </div>
+                              <p className="truncate text-xs text-muted-foreground">
+                                {action.context}
+                              </p>
+                            </div>
+                            <span className="inline-flex shrink-0 items-center gap-1 rounded-lg border bg-card px-2 py-1 text-xs font-medium text-foreground">
+                              Open
+                              <ArrowRight className="h-3 w-3" />
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="rounded-lg border bg-card p-4">
+                    <div className="mb-4 flex items-start justify-between gap-3">
+                      <div>
+                        <div className="text-sm font-semibold text-foreground">
+                          Readiness
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          Materials at a glance.
+                        </p>
+                      </div>
+                      <span className="text-xl font-bold text-primary">
+                        78%
+                      </span>
+                    </div>
+                    <div className="mb-4 h-2 overflow-hidden rounded-full bg-muted">
+                      <div
+                        className="h-full rounded-full bg-primary"
+                        style={{ width: "78%" }}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      {[
+                        { title: "Profile", detail: "Strong foundation" },
+                        { title: "Documents", detail: "4 files in your bank" },
+                      ].map((item) => (
+                        <div
+                          key={item.title}
+                          className="flex items-center gap-3 rounded-lg bg-background/40 p-2"
+                        >
+                          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                            <CheckCircle2 className="h-4 w-4" />
+                          </div>
+                          <div className="min-w-0 text-left">
+                            <div className="text-xs font-medium text-foreground">
+                              {item.title}
+                            </div>
+                            <p className="truncate text-xs text-muted-foreground">
+                              {item.detail}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
-              </div>
-              <div className="mt-4 h-32 rounded-xl bg-card border flex items-center justify-center text-muted-foreground">
-                <span className="text-sm">Your personalized job dashboard</span>
+
+                <div className="rounded-lg border bg-card p-4">
+                  <div className="mb-3 flex items-center gap-2">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                      <Briefcase className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <div className="text-sm font-semibold text-foreground">
+                        Pipeline
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        9 active opportunities across your search.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                    {[
+                      { label: "Saved", count: 3, width: "33%" },
+                      { label: "Applied", count: 4, width: "44%" },
+                      { label: "Interviewing", count: 2, width: "22%" },
+                      { label: "Offer", count: 0, width: "0%" },
+                    ].map((stage) => (
+                      <div
+                        key={stage.label}
+                        className="rounded-lg border bg-background/40 p-2"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="truncate text-xs text-muted-foreground">
+                            {stage.label}
+                          </span>
+                          <span className="text-sm font-semibold text-foreground">
+                            {stage.count}
+                          </span>
+                        </div>
+                        <div className="mt-2 h-1 overflow-hidden rounded-full bg-muted">
+                          <div
+                            className="h-full rounded-full bg-primary"
+                            style={{ width: stage.width }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
