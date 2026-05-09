@@ -1,13 +1,20 @@
+import type { PageSettings } from "@/lib/editor/page-settings";
+
 export const HTML_PDF_EXPORT_ENDPOINT = "/api/resume/export";
 
-export function createHtmlPdfExportPayload(html: string): {
+export function createHtmlPdfExportPayload(
+  html: string,
+  pageSettings?: PageSettings,
+): {
   html: string;
   format: "pdf";
+  pageSettings?: PageSettings;
 } {
-  return {
+  const payload = {
     html,
-    format: "pdf",
+    format: "pdf" as const,
   };
+  return pageSettings ? { ...payload, pageSettings } : payload;
 }
 
 export function createDocumentFilename(
@@ -26,7 +33,8 @@ export function createDocumentFilename(
 
 export async function downloadHtmlAsPdf(
   html: string,
-  filename: string
+  filename: string,
+  pageSettings?: PageSettings,
 ): Promise<void> {
   if (!html.trim()) {
     throw new Error("No document HTML available to export.");
@@ -35,7 +43,7 @@ export async function downloadHtmlAsPdf(
   const response = await fetch(HTML_PDF_EXPORT_ENDPOINT, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(createHtmlPdfExportPayload(html)),
+    body: JSON.stringify(createHtmlPdfExportPayload(html, pageSettings)),
   });
 
   if (!response.ok) {

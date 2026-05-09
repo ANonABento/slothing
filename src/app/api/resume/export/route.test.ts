@@ -116,6 +116,15 @@ describe("resume export route", () => {
     );
     expect(mocks.generatePDF).toHaveBeenCalledWith(
       "<html>custom resume</html>",
+      {
+        format: "Letter",
+        margin: {
+          top: "1in",
+          right: "1in",
+          bottom: "1in",
+          left: "1in",
+        },
+      },
     );
   });
 });

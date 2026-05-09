@@ -151,7 +151,7 @@ function singleColumnStyles(
       display: flex;
       justify-content: space-between;
     }
-    ${sharedRichEditorStyles(rootSelector)}
+    ${sharedRichEditorStyles(rootSelector, includePrintStyles)}
     ${printStyles(rootSelector, includePrintStyles, pageSettings, false)}
   `;
 }
@@ -279,7 +279,7 @@ function twoColumnStyles(
     ${selector(rootSelector, ".education-item .dates")} {
       font-size: 9pt;
     }
-    ${sharedRichEditorStyles(rootSelector)}
+    ${sharedRichEditorStyles(rootSelector, includePrintStyles)}
     ${printStyles(rootSelector, includePrintStyles, pageSettings, true)}
   `;
 }
@@ -327,7 +327,24 @@ function printStyles(
   `;
 }
 
-function sharedRichEditorStyles(rootSelector: string): string {
+function sharedRichEditorStyles(
+  rootSelector: string,
+  includePrintStyles: boolean,
+): string {
+  const printCleanup = includePrintStyles
+    ? `
+    @media print {
+      ${selector(rootSelector, ".page-break")} {
+        border: 0;
+        height: 0;
+        margin: 0;
+      }
+      ${selector(rootSelector, ".page-break::after")} {
+        content: "";
+      }
+    }`
+    : "";
+
   return `
     ${selector(rootSelector, "table")} {
       border-collapse: collapse;
@@ -395,16 +412,7 @@ function sharedRichEditorStyles(rootSelector: string): string {
       float: right;
       margin: 0 0 8px 12px;
     }
-    @media print {
-      ${selector(rootSelector, ".page-break")} {
-        border: 0;
-        height: 0;
-        margin: 0;
-      }
-      ${selector(rootSelector, ".page-break::after")} {
-        content: "";
-      }
-    }
+    ${printCleanup}
   `;
 }
 
@@ -520,7 +528,12 @@ export function getResumeEditorStyles(styles: TemplateStyles): string {
   return `${documentStyles}\n${editorInteractionStyles(
     rootSelector,
     styles.accentColor,
-  )}`.trim();
+  )}
+    ${rootSelector} {
+      max-width: none;
+      min-height: calc(var(--page-height, 11in) - var(--page-margin-top, 1in) - var(--page-margin-bottom, 1in));
+      padding: var(--page-margin-top, 1in) var(--page-margin-right, 1in) var(--page-margin-bottom, 1in) var(--page-margin-left, 1in);
+    }`.trim();
 }
 
 export function getCoverLetterEditorStyles(styles: TemplateStyles): string {
@@ -540,7 +553,7 @@ export function getCoverLetterEditorStyles(styles: TemplateStyles): string {
 
   return `${documentStyles}
     ${rootSelector} {
-      padding: 0.7in;
+      padding: var(--page-margin-top, 1in) var(--page-margin-right, 1in) var(--page-margin-bottom, 1in) var(--page-margin-left, 1in);
     }
     ${selector(rootSelector, "p")} {
       margin-bottom: 12px;

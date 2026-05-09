@@ -46,6 +46,11 @@ import {
   createPrintableCoverLetterEditorHtml,
   createPrintableEditorHtml,
 } from "@/lib/editor/document-html";
+import {
+  DEFAULT_PAGE_SETTINGS,
+  normalizePageSettings,
+  type PageSettings,
+} from "@/lib/editor/page-settings";
 import type { TipTapJSONContent } from "@/lib/editor/types";
 import { readJsonResponse } from "@/lib/http";
 import type { TailoredResume } from "@/lib/resume/generator";
@@ -93,6 +98,8 @@ interface StudioPageState {
   handleToggleVisibility: (categoryId: BankCategory) => void;
   html: string;
   content?: TipTapJSONContent;
+  pageSettings: PageSettings;
+  handlePageSettingsChange: (pageSettings: PageSettings) => void;
   handleContentChange: (content: TipTapJSONContent) => void;
   coverLetterCritique?: CoverLetterCritique;
   handleCoverLetterCritique: (critique: CoverLetterCritique) => void;
@@ -231,6 +238,9 @@ export function useStudioPageState(): StudioPageState {
   const [hasLoadedEntries, setHasLoadedEntries] = useState(false);
   const [html, setHtml] = useState("");
   const [content, setContent] = useState<TipTapJSONContent | undefined>();
+  const [pageSettings, setPageSettings] = useState<PageSettings>(
+    DEFAULT_PAGE_SETTINGS,
+  );
   const [coverLetterCritique, setCoverLetterCritique] = useState<
     CoverLetterCritique | undefined
   >();
@@ -333,6 +343,7 @@ export function useStudioPageState(): StudioPageState {
       contentRef.current = activeDocument.content;
       setHtml(activeDocument.html ?? "");
       setContent(activeDocument.content);
+      setPageSettings(normalizePageSettings(activeDocument.pageSettings));
       setCoverLetterCritique(activeDocument.coverLetterCritique);
     }
 
@@ -347,6 +358,7 @@ export function useStudioPageState(): StudioPageState {
     activeDocument.sections,
     activeDocument.selectedEntryIds,
     activeDocument.templateId,
+    activeDocument.pageSettings,
     activeDocument.coverLetterCritique,
   ]);
 
@@ -386,6 +398,7 @@ export function useStudioPageState(): StudioPageState {
       templateId,
       html,
       content,
+      pageSettings,
       coverLetterCritique,
     }),
     [
@@ -393,6 +406,7 @@ export function useStudioPageState(): StudioPageState {
       coverLetterCritique,
       documentMode,
       html,
+      pageSettings,
       sections,
       selectedIds,
       templateId,
@@ -660,6 +674,17 @@ export function useStudioPageState(): StudioPageState {
     [markActiveDocumentDirty, updateActiveDocument],
   );
 
+  const handlePageSettingsChange = useCallback(
+    (nextPageSettings: PageSettings) => {
+      const normalized = normalizePageSettings(nextPageSettings);
+      setPreviewVersionId(null);
+      markActiveDocumentDirty();
+      setPageSettings(normalized);
+      updateActiveDocument({ pageSettings: normalized });
+    },
+    [markActiveDocumentDirty, updateActiveDocument],
+  );
+
   const handleCoverLetterGenerated = useCallback(
     (generatedContent: string) => {
       const nextContent = coverLetterTextToTipTapDocument(generatedContent);
@@ -882,6 +907,7 @@ export function useStudioPageState(): StudioPageState {
       setSections(version.state.sections);
       setTemplateId(version.state.templateId);
       setHtml(version.state.html);
+      setPageSettings(normalizePageSettings(version.state.pageSettings));
       setCoverLetterCritique(version.state.coverLetterCritique);
       markActiveDocumentSaved();
       contentRef.current = version.state.content;
@@ -892,6 +918,7 @@ export function useStudioPageState(): StudioPageState {
         templateId: version.state.templateId,
         content: version.state.content,
         html: version.state.html,
+        pageSettings: version.state.pageSettings,
         coverLetterCritique: version.state.coverLetterCritique,
       });
     },
@@ -911,6 +938,7 @@ export function useStudioPageState(): StudioPageState {
         bodyHtml,
         selectedTemplate.styles,
         `${selectedTemplate.name} Cover Letter`,
+        pageSettings,
       );
     }
 
@@ -921,8 +949,9 @@ export function useStudioPageState(): StudioPageState {
       bodyHtml,
       selectedTemplate.styles as TemplateStyles,
       `${selectedTemplate.name} Resume`,
+      pageSettings,
     );
-  }, [content, documentMode, html, selectedTemplate]);
+  }, [content, documentMode, html, pageSettings, selectedTemplate]);
 
   const handleDownloadPdf = useCallback(async () => {
     const printableHtml = getPrintableHtml();
@@ -936,6 +965,7 @@ export function useStudioPageState(): StudioPageState {
           documentMode === "cover_letter" ? "cover-letter" : "resume",
           selectedTemplate?.name,
         ),
+        pageSettings,
       );
     } catch (err) {
       showErrorToast(err, {
@@ -948,7 +978,13 @@ export function useStudioPageState(): StudioPageState {
     } finally {
       setIsExporting(false);
     }
-  }, [documentMode, getPrintableHtml, selectedTemplate?.name, showErrorToast]);
+  }, [
+    documentMode,
+    getPrintableHtml,
+    pageSettings,
+    selectedTemplate?.name,
+    showErrorToast,
+  ]);
 
   const handleCopyHtml = useCallback(async () => {
     const currentHtml = getPrintableHtml() || html;
@@ -967,6 +1003,8 @@ export function useStudioPageState(): StudioPageState {
     content,
     coverLetterCritique,
     handleContentChange,
+    pageSettings,
+    handlePageSettingsChange,
     handleCoverLetterCritique,
     handleCoverLetterGenerated,
     handleCoverLetterSuggestionApply,
