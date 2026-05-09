@@ -216,7 +216,7 @@ export async function duplicateLearnedAnswer(
 
   if (!existing) return null;
 
-  const now = new Date().toISOString();
+  const now = nowIso();
   const copyQuestion = `${existing.question} (copy)`;
   const copy = {
     id: randomUUID(),
@@ -243,7 +243,7 @@ export async function incrementLearnedAnswerUsage(
   const existing = await getLearnedAnswer(id, userId);
   if (!existing) return null;
 
-  const now = new Date().toISOString();
+  const now = nowIso();
   await db
     .update(learnedAnswers)
     .set({

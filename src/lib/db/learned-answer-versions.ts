@@ -1,5 +1,6 @@
 import { randomUUID } from "crypto";
 import { and, desc, eq, lt } from "drizzle-orm";
+import { nowIso } from "@/lib/format/time";
 import { toNullableIsoDateString } from "@/lib/utils";
 import db from "./index";
 import { learnedAnswerVersions, type LearnedAnswer } from "./schema";
@@ -52,7 +53,7 @@ export async function createAnswerVersion(
     .orderBy(desc(learnedAnswerVersions.version))
     .limit(1);
 
-  const now = new Date().toISOString();
+  const now = nowIso();
   const row = {
     id: randomUUID(),
     userId,

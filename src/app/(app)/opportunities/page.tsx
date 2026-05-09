@@ -787,7 +787,7 @@ function OpportunityRow({
             </div>
           </div>
 
-          <p className="max-w-4xl text-sm leading-6 text-muted-foreground">
+          <p className="max-w-prose text-sm leading-6 text-muted-foreground">
             {opportunity.summary}
           </p>
 
