@@ -253,7 +253,6 @@ export default function AnswerBankPage() {
     <AppPage>
       <PageHeader
         icon={ClipboardList}
-        eyebrow="Autofill memory"
         title="Answer Bank"
         description="Manage reusable answers for repeated application questions, extension autofill, and future personal fact workflows."
         actions={

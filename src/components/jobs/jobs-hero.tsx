@@ -45,7 +45,6 @@ export function JobsHero({
     <PageHeader
       width={width}
       icon={Target}
-      eyebrow="Opportunity Tracker"
       title="Opportunities"
       description="Track target opportunities, analyze match scores, and generate tailored resumes."
       actions={

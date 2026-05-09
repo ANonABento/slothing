@@ -1397,7 +1397,6 @@ export default function BankPage() {
 
         <PageHeader
           icon={Database}
-          eyebrow="Document bank"
           title="Documents"
           description="Store reusable resumes, projects, achievements, and career notes for tailored applications."
           actions={

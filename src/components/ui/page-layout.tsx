@@ -40,7 +40,6 @@ export function AppPage({
 interface PageHeaderProps {
   title: string;
   description?: string;
-  eyebrow: string;
   icon: ElementType;
   width?: PageWidth;
   actions?: ReactNode;
@@ -50,8 +49,7 @@ interface PageHeaderProps {
 export function PageHeader({
   title,
   description,
-  eyebrow,
-  icon: Icon,
+  icon: _Icon,
   width = "wide",
   actions,
   className,
@@ -61,10 +59,6 @@ export function PageHeader({
       <div className={cn("px-5 py-6 sm:px-8", getPageWidthClassName(width))}>
         <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
           <div className="max-w-3xl space-y-3">
-            <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-              <Icon className="h-4 w-4 text-primary" />
-              {eyebrow}
-            </div>
             <div>
               <h1 className="text-3xl font-bold tracking-normal text-foreground sm:text-4xl">
                 {title}

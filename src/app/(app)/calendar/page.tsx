@@ -344,7 +344,6 @@ export default function CalendarPage() {
     <AppPage>
       <PageHeader
         icon={CalendarIcon}
-        eyebrow="Schedule"
         title="Calendar"
         description="Track interviews, deadlines, and reminders in one place."
         actions={
