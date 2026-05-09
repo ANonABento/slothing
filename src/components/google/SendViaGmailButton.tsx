@@ -9,7 +9,7 @@ interface SendViaGmailButtonProps {
   to: string;
   subject: string;
   body: string;
-  onSuccess?: () => void;
+  onSuccess?: (messageId?: string) => void;
   disabled?: boolean;
 }
 
@@ -57,7 +57,7 @@ export function SendViaGmailButton({
 
       if (data.success) {
         setSent(true);
-        onSuccess?.();
+        onSuccess?.(data.messageId);
       } else {
         throw new Error(data.error || "Failed to send");
       }

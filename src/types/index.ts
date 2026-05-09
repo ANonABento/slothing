@@ -223,8 +223,11 @@ export type EmailTemplateType =
   | "follow_up"
   | "thank_you"
   | "networking"
+  | "cold_outreach"
   | "status_inquiry"
-  | "negotiation";
+  | "recruiter_reply"
+  | "negotiation"
+  | "reference_request";
 
 export interface EmailTemplate {
   type: EmailTemplateType;

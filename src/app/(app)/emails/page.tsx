@@ -9,18 +9,9 @@ import {
   Check,
   Send,
   RefreshCw,
-  Heart,
-  Users,
-  HelpCircle,
-  DollarSign,
   Sparkles,
   Save,
   FileText,
-  Trash2,
-  Edit3,
-  Clock,
-  ChevronDown,
-  ChevronUp,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -34,7 +25,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { TimeAgo } from "@/components/format/time-ago";
 import {
   AppPage,
   PageContent,
@@ -44,8 +34,18 @@ import {
 } from "@/components/ui/page-layout";
 import { SkeletonButton } from "@/components/ui/skeleton";
 import { useErrorToast } from "@/hooks/use-error-toast";
+import { nowEpoch, toEpoch } from "@/lib/format/time";
 import { readJsonResponse } from "@/lib/http";
 import { getResponsiveDetailGridClass } from "../shared-layout-utils";
+import { DraftsSheet } from "./_components/drafts-sheet";
+import { DuplicateSendWarning } from "./_components/duplicate-send-warning";
+import { SentTimeline } from "./_components/sent-timeline";
+import {
+  DUPLICATE_SEND_WINDOW_DAYS,
+  SHOW_DUPLICATE_SEND_WARNING,
+  TEMPLATE_CONFIG,
+  TEMPLATE_ORDER,
+} from "./_data/templates";
 import type { EmailTemplateType, JobDescription } from "@/types";
 
 const SendViaGmailButton = dynamic(
@@ -72,48 +72,30 @@ interface EmailDraftsResponse {
   drafts?: EmailDraft[];
 }
 
+interface EmailSend {
+  id: string;
+  type: EmailTemplateType;
+  jobId?: string;
+  recipient: string;
+  subject: string;
+  body: string;
+  inReplyToDraftId?: string;
+  gmailMessageId?: string;
+  status: "sent" | "failed";
+  errorMessage?: string;
+  sentAt: string;
+}
+
+interface EmailSendsResponse {
+  sends?: EmailSend[];
+}
+
 interface GeneratedEmailResponse {
   email?: {
     subject: string;
     body: string;
   };
 }
-
-const TEMPLATE_CONFIG: Record<
-  EmailTemplateType,
-  { title: string; description: string; icon: React.ElementType; color: string }
-> = {
-  follow_up: {
-    title: "Follow-up Email",
-    description: "Check on your application status",
-    icon: Mail,
-    color: "text-info",
-  },
-  thank_you: {
-    title: "Thank You Email",
-    description: "Express gratitude after an interview",
-    icon: Heart,
-    color: "text-accent",
-  },
-  networking: {
-    title: "Networking Email",
-    description: "Connect with professionals at target companies",
-    icon: Users,
-    color: "text-primary",
-  },
-  status_inquiry: {
-    title: "Status Inquiry",
-    description: "Politely ask about application progress",
-    icon: HelpCircle,
-    color: "text-amber-500",
-  },
-  negotiation: {
-    title: "Offer Negotiation",
-    description: "Discuss salary and benefits",
-    icon: DollarSign,
-    color: "text-success",
-  },
-};
 
 export default function EmailTemplatesPage() {
   const [selectedType, setSelectedType] = useState<EmailTemplateType | null>(
@@ -133,13 +115,26 @@ export default function EmailTemplatesPage() {
   const [interviewDate, setInterviewDate] = useState("");
   const [targetCompany, setTargetCompany] = useState("");
   const [connectionName, setConnectionName] = useState("");
+  const [referenceName, setReferenceName] = useState("");
+  const [recruiterName, setRecruiterName] = useState("");
+  const [recruiterCompany, setRecruiterCompany] = useState("");
+  const [recruiterStance, setRecruiterStance] = useState<
+    "interested" | "not_a_fit"
+  >("interested");
+  const [applyingRole, setApplyingRole] = useState("");
+  const [interviewStage, setInterviewStage] = useState("");
+  const [hookNote, setHookNote] = useState("");
   const [customNote, setCustomNote] = useState("");
 
   // Drafts state
   const [drafts, setDrafts] = useState<EmailDraft[]>([]);
-  const [showDrafts, setShowDrafts] = useState(false);
+  const [draftsSheetOpen, setDraftsSheetOpen] = useState(false);
   const [savingDraft, setSavingDraft] = useState(false);
   const [editingDraftId, setEditingDraftId] = useState<string | null>(null);
+
+  // Sent state
+  const [sends, setSends] = useState<EmailSend[]>([]);
+  const [sentSheetOpen, setSentSheetOpen] = useState(false);
 
   // Gmail state
   const [recipientEmail, setRecipientEmail] = useState("");
@@ -178,10 +173,27 @@ export default function EmailTemplatesPage() {
     }
   }, [showErrorToast]);
 
+  const fetchSends = useCallback(async () => {
+    try {
+      const res = await fetch("/api/email/sends");
+      const data = await readJsonResponse<EmailSendsResponse>(
+        res,
+        "Failed to load sent emails",
+      );
+      setSends(data.sends || []);
+    } catch (error) {
+      showErrorToast(error, {
+        title: "Could not load sent emails",
+        fallbackDescription: "Please refresh the page and try again.",
+      });
+    }
+  }, [showErrorToast]);
+
   useEffect(() => {
     void fetchJobs();
     void fetchDrafts();
-  }, [fetchDrafts, fetchJobs]);
+    void fetchSends();
+  }, [fetchDrafts, fetchJobs, fetchSends]);
 
   const saveDraft = async () => {
     if (!selectedType || !generatedEmail) return;
@@ -193,6 +205,13 @@ export default function EmailTemplatesPage() {
       if (interviewDate) context.interviewDate = interviewDate;
       if (targetCompany) context.targetCompany = targetCompany;
       if (connectionName) context.connectionName = connectionName;
+      if (referenceName) context.referenceName = referenceName;
+      if (recruiterName) context.recruiterName = recruiterName;
+      if (recruiterCompany) context.recruiterCompany = recruiterCompany;
+      if (recruiterStance) context.recruiterStance = recruiterStance;
+      if (applyingRole) context.applyingRole = applyingRole;
+      if (interviewStage) context.interviewStage = interviewStage;
+      if (hookNote) context.hookNote = hookNote;
       if (customNote) context.customNote = customNote;
 
       if (editingDraftId) {
@@ -246,9 +265,20 @@ export default function EmailTemplatesPage() {
       setInterviewDate(draft.context.interviewDate || "");
       setTargetCompany(draft.context.targetCompany || "");
       setConnectionName(draft.context.connectionName || "");
+      setReferenceName(draft.context.referenceName || "");
+      setRecruiterName(draft.context.recruiterName || "");
+      setRecruiterCompany(draft.context.recruiterCompany || "");
+      setRecruiterStance(
+        draft.context.recruiterStance === "not_a_fit"
+          ? "not_a_fit"
+          : "interested",
+      );
+      setApplyingRole(draft.context.applyingRole || "");
+      setInterviewStage(draft.context.interviewStage || "");
+      setHookNote(draft.context.hookNote || "");
       setCustomNote(draft.context.customNote || "");
     }
-    setShowDrafts(false);
+    setDraftsSheetOpen(false);
   };
 
   const deleteDraft = async (draftId: string) => {
@@ -292,6 +322,13 @@ export default function EmailTemplatesPage() {
           interviewDate: interviewDate || undefined,
           targetCompany: targetCompany || undefined,
           connectionName: connectionName || undefined,
+          referenceName: referenceName || undefined,
+          recruiterName: recruiterName || undefined,
+          recruiterCompany: recruiterCompany || undefined,
+          recruiterStance,
+          applyingRole: applyingRole || undefined,
+          interviewStage: interviewStage || undefined,
+          hookNote: hookNote || undefined,
           customNote: customNote || undefined,
         }),
       });
@@ -321,6 +358,13 @@ export default function EmailTemplatesPage() {
     interviewDate,
     targetCompany,
     connectionName,
+    referenceName,
+    recruiterName,
+    recruiterCompany,
+    recruiterStance,
+    applyingRole,
+    interviewStage,
+    hookNote,
     customNote,
     showErrorToast,
   ]);
@@ -345,6 +389,57 @@ export default function EmailTemplatesPage() {
     const mailto = `mailto:?subject=${encodeURIComponent(generatedEmail.subject)}&body=${encodeURIComponent(generatedEmail.body)}`;
     window.location.href = mailto;
   };
+
+  const handleGmailSent = async (messageId?: string) => {
+    if (!selectedType || !generatedEmail || !recipientEmail) return;
+
+    try {
+      const response = await fetch("/api/email/sends", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: selectedType,
+          jobId: selectedJobId || undefined,
+          recipient: recipientEmail,
+          subject: generatedEmail.subject,
+          body: generatedEmail.body,
+          inReplyToDraftId: editingDraftId || undefined,
+          gmailMessageId: messageId,
+          status: "sent",
+        }),
+      });
+      await readJsonResponse<unknown>(
+        response,
+        "Failed to record sent email",
+      );
+      void fetchSends();
+    } catch (error) {
+      showErrorToast(error, {
+        title: "Sent email was not recorded",
+        fallbackDescription: "The Gmail send succeeded, but history did not update.",
+      });
+    }
+  };
+
+  const duplicateSend = (() => {
+    if (
+      !SHOW_DUPLICATE_SEND_WARNING ||
+      !selectedType ||
+      !recipientEmail.trim()
+    ) {
+      return null;
+    }
+
+    const cutoff = nowEpoch() - DUPLICATE_SEND_WINDOW_DAYS * 24 * 60 * 60 * 1000;
+    return (
+      sends.find(
+        (send) =>
+          send.type === selectedType &&
+          send.recipient.toLowerCase() === recipientEmail.trim().toLowerCase() &&
+          (toEpoch(send.sentAt) ?? 0) >= cutoff,
+      ) || null
+    );
+  })();
 
   const renderContextFields = () => {
     if (!selectedType) return null;
@@ -432,6 +527,37 @@ export default function EmailTemplatesPage() {
           </div>
         );
 
+      case "cold_outreach":
+        return (
+          <div className="space-y-4">
+            <div>
+              <Label>Target Company</Label>
+              <Input
+                value={targetCompany}
+                onChange={(e) => setTargetCompany(e.target.value)}
+                placeholder="e.g., Linear"
+              />
+            </div>
+            <div>
+              <Label>Hiring Manager or Engineer</Label>
+              <Input
+                value={connectionName}
+                onChange={(e) => setConnectionName(e.target.value)}
+                placeholder="e.g., Priya Shah"
+              />
+            </div>
+            <div>
+              <Label>Custom Hook</Label>
+              <Textarea
+                value={hookNote}
+                onChange={(e) => setHookNote(e.target.value)}
+                placeholder="Mention a recent project, shared interest, or company update..."
+                rows={3}
+              />
+            </div>
+          </div>
+        );
+
       case "negotiation":
         return (
           <div className="space-y-4">
@@ -469,6 +595,129 @@ export default function EmailTemplatesPage() {
           </div>
         );
 
+      case "recruiter_reply":
+        return (
+          <div className="space-y-4">
+            <div>
+              <Label>Recruiter Name</Label>
+              <Input
+                value={recruiterName}
+                onChange={(e) => setRecruiterName(e.target.value)}
+                placeholder="e.g., Morgan Lee"
+              />
+            </div>
+            <div>
+              <Label>Company</Label>
+              <Input
+                value={recruiterCompany}
+                onChange={(e) => setRecruiterCompany(e.target.value)}
+                placeholder="e.g., Stripe"
+              />
+            </div>
+            <div>
+              <Label>Reply Type</Label>
+              <Select
+                value={recruiterStance}
+                onValueChange={(value) =>
+                  setRecruiterStance(
+                    value === "not_a_fit" ? "not_a_fit" : "interested",
+                  )
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Choose a reply type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="interested">Interested</SelectItem>
+                  <SelectItem value="not_a_fit">Not the right fit</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Custom Note (optional)</Label>
+              <Textarea
+                value={customNote}
+                onChange={(e) => setCustomNote(e.target.value)}
+                placeholder="Add constraints, timing, compensation expectations, or a future-fit note..."
+                rows={3}
+              />
+            </div>
+          </div>
+        );
+
+      case "reference_request":
+        return (
+          <div className="space-y-4">
+            <div>
+              <Label>Select Job (optional)</Label>
+              <Select
+                value={selectedJobId}
+                onValueChange={(value) => {
+                  setSelectedJobId(value);
+                  const job = jobs.find((candidate) => candidate.id === value);
+                  if (job) {
+                    setTargetCompany(job.company);
+                    setApplyingRole(job.title);
+                  }
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Choose the role you're applying for" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">No job selected</SelectItem>
+                  {jobs.map((job) => (
+                    <SelectItem key={job.id} value={job.id}>
+                      {job.title} at {job.company}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Reference Name</Label>
+              <Input
+                value={referenceName}
+                onChange={(e) => setReferenceName(e.target.value)}
+                placeholder="e.g., Alex Chen"
+              />
+            </div>
+            <div>
+              <Label>Role</Label>
+              <Input
+                value={applyingRole}
+                onChange={(e) => setApplyingRole(e.target.value)}
+                placeholder="e.g., Senior Product Designer"
+              />
+            </div>
+            <div>
+              <Label>Company</Label>
+              <Input
+                value={targetCompany}
+                onChange={(e) => setTargetCompany(e.target.value)}
+                placeholder="e.g., Figma"
+              />
+            </div>
+            <div>
+              <Label>Interview Stage</Label>
+              <Input
+                value={interviewStage}
+                onChange={(e) => setInterviewStage(e.target.value)}
+                placeholder="e.g., final round"
+              />
+            </div>
+            <div>
+              <Label>Custom Note (optional)</Label>
+              <Textarea
+                value={customNote}
+                onChange={(e) => setCustomNote(e.target.value)}
+                placeholder="Add a recent accomplishment or project to remind them of..."
+                rows={3}
+              />
+            </div>
+          </div>
+        );
+
       default:
         return null;
     }
@@ -484,106 +733,43 @@ export default function EmailTemplatesPage() {
 
       {/* Main Content */}
       <PageContent>
-        {/* Drafts Section */}
-        {drafts.length > 0 && (
-          <PagePanel className="mb-8 overflow-hidden p-0 sm:p-0">
-            <button
-              onClick={() => setShowDrafts(!showDrafts)}
-              className="w-full flex items-center justify-between p-4 hover:bg-muted/50 transition-colors"
-            >
-              <span className="flex items-center gap-2 font-medium">
-                <FileText className="h-5 w-5 text-primary" />
-                Saved Drafts ({drafts.length})
-              </span>
-              {showDrafts ? (
-                <ChevronUp className="h-5 w-5 text-muted-foreground" />
-              ) : (
-                <ChevronDown className="h-5 w-5 text-muted-foreground" />
-              )}
-            </button>
-
-            {showDrafts && (
-              <div className="border-t divide-y">
-                {drafts.map((draft) => {
-                  const config = TEMPLATE_CONFIG[draft.type];
-                  const job = draft.jobId
-                    ? jobs.find((j) => j.id === draft.jobId)
-                    : null;
-
-                  return (
-                    <div
-                      key={draft.id}
-                      className="p-4 flex items-center justify-between gap-4"
-                    >
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div
-                          className={`p-2 rounded-lg bg-muted ${config.color}`}
-                        >
-                          <config.icon className="h-4 w-4" />
-                        </div>
-                        <div className="min-w-0">
-                          <p className="font-medium truncate">
-                            {draft.subject}
-                          </p>
-                          <p className="text-sm text-muted-foreground flex items-center gap-2">
-                            <span>{config.title}</span>
-                            {job && (
-                              <>
-                                <span>•</span>
-                                <span>{job.company}</span>
-                              </>
-                            )}
-                          </p>
-                          <p className="text-xs text-muted-foreground flex items-center gap-1">
-                            <Clock className="h-3 w-3" />
-                            <TimeAgo date={draft.updatedAt} />
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => loadDraft(draft)}
-                        >
-                          <Edit3 className="h-4 w-4 mr-1" />
-                          Edit
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => void deleteDraft(draft.id)}
-                          className="text-muted-foreground hover:text-destructive"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </PagePanel>
-        )}
-
-            <div
-              className={
-                selectedType
-                  ? getResponsiveDetailGridClass(true)
-                  : getResponsiveDetailGridClass(false, "comfortable")
-              }
-            >
+        <div
+          className={
+            selectedType
+              ? getResponsiveDetailGridClass(true)
+              : getResponsiveDetailGridClass(false, "comfortable")
+          }
+        >
           {/* Left Column - Template Selection & Context */}
           <div className="space-y-6">
             {/* Template Selection */}
             <PagePanel>
-              <PagePanelHeader title="Choose Template" className="mb-4" />
-              <div
-                className={
-                  selectedType ? "grid gap-3" : "grid gap-3 lg:grid-cols-2"
+              <PagePanelHeader
+                title="Choose Template"
+                className="mb-4"
+                action={
+                  <div className="flex flex-wrap justify-end gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setDraftsSheetOpen(true)}
+                    >
+                      <FileText className="mr-2 h-4 w-4" />
+                      Drafts ({drafts.length})
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setSentSheetOpen(true)}
+                    >
+                      <Send className="mr-2 h-4 w-4" />
+                      Sent ({sends.length})
+                    </Button>
+                  </div>
                 }
-              >
-                {(Object.keys(TEMPLATE_CONFIG) as EmailTemplateType[]).map(
+              />
+              <div className="grid gap-3 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+                {TEMPLATE_ORDER.map(
                   (type) => {
                     const config = TEMPLATE_CONFIG[type];
                     const Icon = config.icon;
@@ -697,6 +883,13 @@ export default function EmailTemplatesPage() {
                     />
                   </div>
 
+                  {duplicateSend ? (
+                    <DuplicateSendWarning
+                      recipient={recipientEmail}
+                      sentAt={duplicateSend.sentAt}
+                    />
+                  ) : null}
+
                   {/* Actions */}
                   <div className="flex gap-2 pt-2">
                     <Button
@@ -730,6 +923,7 @@ export default function EmailTemplatesPage() {
                       subject={generatedEmail.subject}
                       body={generatedEmail.body}
                       disabled={!recipientEmail}
+                      onSuccess={handleGmailSent}
                     />
                   </div>
 
@@ -762,6 +956,21 @@ export default function EmailTemplatesPage() {
           )}
         </div>
       </PageContent>
+      <DraftsSheet
+        open={draftsSheetOpen}
+        onOpenChange={setDraftsSheetOpen}
+        drafts={drafts}
+        jobs={jobs}
+        onLoadDraft={loadDraft}
+        onDeleteDraft={(draftId) => void deleteDraft(draftId)}
+      />
+      <SentTimeline
+        open={sentSheetOpen}
+        onOpenChange={setSentSheetOpen}
+        sends={sends}
+        jobs={jobs}
+        selectedJobId={selectedJobId}
+      />
       {confirmDialog}
     </AppPage>
   );
