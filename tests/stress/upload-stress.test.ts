@@ -36,6 +36,7 @@ const mocks = vi.hoisted(() => {
     getLLMConfig: vi.fn(),
     getDocumentByFileHash: vi.fn(),
     insertBankEntries: vi.fn(),
+    deleteBankEntriesBySource: vi.fn(),
     deleteSourceDocuments: vi.fn(),
     extractTextFromFile: vi.fn(),
     classifyDocument: vi.fn(),
@@ -71,6 +72,7 @@ vi.mock("@/lib/db", () => ({
 
 vi.mock("@/lib/db/profile-bank", () => ({
   insertBankEntries: mocks.insertBankEntries,
+  deleteBankEntriesBySource: mocks.deleteBankEntriesBySource,
   deleteSourceDocuments: mocks.deleteSourceDocuments,
 }));
 

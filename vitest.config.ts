@@ -1,6 +1,9 @@
 import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react";
+import { createRequire } from "node:module";
 import path from "path";
+
+const nodeRequire = createRequire(import.meta.url);
 
 export default defineConfig({
   plugins: [react()],
@@ -40,7 +43,7 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
       // next-auth (v5 beta) imports `next/server` without a file extension; the
       // vitest jsdom resolver is strict about extensions, so map it explicitly.
-      "next/server": path.resolve(__dirname, "node_modules/next/server.js"),
+      "next/server": nodeRequire.resolve("next/server"),
     },
   },
 });
