@@ -14,6 +14,8 @@ import {
 } from "@/lib/cover-letter/generate";
 import type { CoverLetterInput } from "@/lib/cover-letter/generate";
 
+export const dynamic = "force-dynamic";
+
 const COVER_LETTER_ACTIONS = ["generate", "revise", "rewrite"] as const;
 type CoverLetterAction = (typeof COVER_LETTER_ACTIONS)[number];
 
@@ -78,7 +80,7 @@ export async function POST(request: NextRequest) {
     if (!isCoverLetterAction(action)) {
       return NextResponse.json(
         { error: "Unsupported cover letter action." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -103,7 +105,7 @@ export async function POST(request: NextRequest) {
     if (action !== "generate" && action !== "revise" && action !== "rewrite") {
       return NextResponse.json(
         { error: "Unsupported cover letter action." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -177,7 +179,7 @@ export async function POST(request: NextRequest) {
             error:
               "currentContent, selectedText, and instruction are required for rewriting.",
           },
-          { status: 400 }
+          { status: 400 },
         );
       }
 
@@ -186,7 +188,7 @@ export async function POST(request: NextRequest) {
         selectedText,
         instruction.trim(),
         input,
-        llmConfig
+        llmConfig,
       );
 
       return NextResponse.json({ success: true, content: rewritten });

@@ -13,6 +13,8 @@ import { generateFixSuggestions } from "@/lib/ats/fix-suggestions";
 import { saveScanResult, getScanHistory } from "@/lib/db/ats-scans";
 import { requireAuth, isAuthError } from "@/lib/auth";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(request: NextRequest) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
@@ -24,21 +26,22 @@ export async function POST(request: NextRequest) {
     if (!profile) {
       return NextResponse.json(
         { error: "No profile found. Please upload your resume first." },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
     const { generateScanReport } = await import("@/lib/ats/analyzer");
     const job = jobId ? getJob(jobId, authResult.userId) : undefined;
     if (jobId && !job) {
-      return NextResponse.json(
-        { error: "Job not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Job not found" }, { status: 404 });
     }
 
     const report = generateScanReport(profile, job || undefined);
-    const fixes = generateFixSuggestions(profile, report.issues, report.keywords);
+    const fixes = generateFixSuggestions(
+      profile,
+      report.issues,
+      report.keywords,
+    );
 
     const scanId = saveScanResult(authResult.userId, report, fixes, jobId);
 
@@ -51,7 +54,7 @@ export async function POST(request: NextRequest) {
     console.error("ATS scan error:", error);
     return NextResponse.json(
       { error: "Failed to perform ATS scan" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -62,7 +65,10 @@ export async function GET(request: NextRequest) {
 
   try {
     const { searchParams } = new URL(request.url);
-    const limit = Math.min(parseInt(searchParams.get("limit") || "20", 10), 100);
+    const limit = Math.min(
+      parseInt(searchParams.get("limit") || "20", 10),
+      100,
+    );
 
     const history = getScanHistory(authResult.userId, limit);
 
@@ -71,7 +77,7 @@ export async function GET(request: NextRequest) {
     console.error("ATS scan history error:", error);
     return NextResponse.json(
       { error: "Failed to fetch scan history" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

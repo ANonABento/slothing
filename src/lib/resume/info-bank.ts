@@ -1,6 +1,38 @@
 import type { Profile } from "@/types";
 import type { InsertBankEntry } from "@/lib/db/profile-bank";
-import { deleteBankEntriesBySource, insertBankEntries } from "@/lib/db/profile-bank";
+import {
+  deleteBankEntriesBySource,
+  insertBankEntries,
+} from "@/lib/db/profile-bank";
+import { generateId } from "@/lib/utils";
+
+function cleanList(values: string[] | undefined): string[] {
+  if (!Array.isArray(values)) return [];
+  return values.map((value) => value.trim()).filter(Boolean);
+}
+
+function normalizeText(value: string): string {
+  return value.replace(/\s+/g, " ").trim();
+}
+
+function descriptionIsOnlyHighlights(
+  description: string | undefined,
+  highlights: string[],
+): boolean {
+  const cleanDescription = normalizeText(description ?? "");
+  if (!cleanDescription || highlights.length === 0) return false;
+
+  const newlineJoined = normalizeText(highlights.join("\n"));
+  const spaceJoined = normalizeText(highlights.join(" "));
+  return cleanDescription === newlineJoined || cleanDescription === spaceJoined;
+}
+
+function parentKey(parts: Array<string | undefined>): string {
+  return parts
+    .filter(Boolean)
+    .map((part) => normalizeText(String(part)).toLowerCase())
+    .join("|");
+}
 
 /**
  * Extract individual bank entries from parsed profile data.
@@ -8,13 +40,25 @@ import { deleteBankEntriesBySource, insertBankEntries } from "@/lib/db/profile-b
  */
 export function extractBankEntries(
   profile: Partial<Profile>,
-  sourceDocumentId?: string
+  sourceDocumentId?: string,
 ): InsertBankEntry[] {
   const entries: InsertBankEntry[] = [];
 
   if (profile.experiences) {
     for (const exp of profile.experiences) {
+      const parentId = generateId();
+      const highlights = cleanList(exp.highlights);
+      const skills = cleanList(exp.skills);
+      const description = descriptionIsOnlyHighlights(
+        exp.description,
+        highlights,
+      )
+        ? ""
+        : (exp.description ?? "");
+      const expParentKey = parentKey([exp.company, exp.title, exp.startDate]);
+
       entries.push({
+        id: parentId,
         category: "experience",
         content: {
           company: exp.company,
@@ -23,45 +67,52 @@ export function extractBankEntries(
           startDate: exp.startDate,
           endDate: exp.endDate,
           current: exp.current,
-          description: exp.description,
-          highlights: exp.highlights,
-          skills: exp.skills,
+          description,
+          highlights: [],
+          childCount: highlights.length,
+          skills,
         },
         sourceDocumentId,
+        sourceSection: "experience",
         confidenceScore: 0.9,
       });
 
-      // Extract individual achievements from highlights
-      for (const highlight of exp.highlights) {
-        if (highlight.trim()) {
-          entries.push({
-            category: "achievement",
-            content: {
-              description: highlight,
-              context: `${exp.title} at ${exp.company}`,
-              company: exp.company,
-            },
-            sourceDocumentId,
-            confidenceScore: 0.85,
-          });
-        }
-      }
+      // Extract individual resume bullets from highlights. These are reusable
+      // child components, not standalone achievements/awards.
+      highlights.forEach((highlight, index) => {
+        entries.push({
+          category: "bullet",
+          content: {
+            description: highlight,
+            context: `${exp.title} at ${exp.company}`,
+            company: exp.company,
+            role: exp.title,
+            parentType: "experience",
+            parentId,
+            parentKey: expParentKey,
+            parentLabel: `${exp.title} at ${exp.company}`,
+            order: index,
+          },
+          sourceDocumentId,
+          sourceSection: "experience",
+          confidenceScore: 0.85,
+        });
+      });
 
       // Extract skills with usage context
-      for (const skill of exp.skills) {
-        if (skill.trim()) {
-          entries.push({
-            category: "skill",
-            content: {
-              name: skill,
-              context: `Used as ${exp.title} at ${exp.company}`,
-              company: exp.company,
-              role: exp.title,
-            },
-            sourceDocumentId,
-            confidenceScore: 0.9,
-          });
-        }
+      for (const skill of skills) {
+        entries.push({
+          category: "skill",
+          content: {
+            name: skill,
+            context: `Used as ${exp.title} at ${exp.company}`,
+            company: exp.company,
+            role: exp.title,
+          },
+          sourceDocumentId,
+          sourceSection: "experience",
+          confidenceScore: 0.9,
+        });
       }
     }
   }
@@ -80,6 +131,7 @@ export function extractBankEntries(
           highlights: edu.highlights,
         },
         sourceDocumentId,
+        sourceSection: "education",
         confidenceScore: 0.95,
       });
     }
@@ -95,6 +147,7 @@ export function extractBankEntries(
           proficiency: skill.proficiency,
         },
         sourceDocumentId,
+        sourceSection: "skills",
         confidenceScore: 0.85,
       });
     }
@@ -102,17 +155,50 @@ export function extractBankEntries(
 
   if (profile.projects) {
     for (const proj of profile.projects) {
+      const parentId = generateId();
+      const highlights = cleanList(proj.highlights);
+      const description = descriptionIsOnlyHighlights(
+        proj.description,
+        highlights,
+      )
+        ? ""
+        : (proj.description ?? "");
+      const projectParentKey = parentKey([proj.name]);
+
       entries.push({
+        id: parentId,
         category: "project",
         content: {
           name: proj.name,
-          description: proj.description,
+          description,
           url: proj.url,
           technologies: proj.technologies,
-          highlights: proj.highlights,
+          highlights: [],
+          childCount: highlights.length,
         },
         sourceDocumentId,
+        sourceSection: "projects",
         confidenceScore: 0.9,
+      });
+
+      highlights.forEach((highlight, index) => {
+        entries.push({
+          category: "bullet",
+          content: {
+            description: highlight,
+            context: proj.name,
+            project: proj.name,
+            technologies: proj.technologies,
+            parentType: "project",
+            parentId,
+            parentKey: projectParentKey,
+            parentLabel: proj.name,
+            order: index,
+          },
+          sourceDocumentId,
+          sourceSection: "projects",
+          confidenceScore: 0.85,
+        });
       });
     }
   }
@@ -128,6 +214,7 @@ export function extractBankEntries(
           url: cert.url,
         },
         sourceDocumentId,
+        sourceSection: "certifications",
         confidenceScore: 0.95,
       });
     }
@@ -144,7 +231,7 @@ export function extractBankEntries(
 export function populateBankFromProfile(
   profile: Partial<Profile>,
   sourceDocumentId: string | undefined,
-  userId: string = "default"
+  userId: string = "default",
 ): { inserted: number; updated: number; skipped: number } {
   const entries = extractBankEntries(profile, sourceDocumentId);
 

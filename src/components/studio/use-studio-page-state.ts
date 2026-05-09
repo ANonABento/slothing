@@ -107,6 +107,7 @@ interface StudioPageState {
   saveStatus: StudioSaveStatus;
   sections: SectionState[];
   selectedIds: Set<string>;
+  stagedSelectionCount: number;
   setLinkedOpportunityId: (opportunityId: string) => void;
   setDocumentMode: (mode: DocumentMode) => void;
   setEntryPickerOpen: (open: boolean) => void;
@@ -121,6 +122,8 @@ type SaveOperation =
   | { type: "saving" }
   | { type: "saved"; at: number }
   | { type: "error"; message: string };
+
+const STAGED_BANK_ENTRY_IDS_KEY = "slothing:selectedBankEntryIds";
 
 interface LinkStudioVersionOptions {
   documentMode: DocumentMode;
@@ -246,6 +249,7 @@ export function useStudioPageState(): StudioPageState {
     createStudioDocument("cover_letter", { id: COVER_LETTER_DOCUMENT_ID }),
   ]);
   const [linkedOpportunityId, setLinkedOpportunityId] = useState("");
+  const [stagedSelectionCount, setStagedSelectionCount] = useState(0);
   const [documentMode, setDocumentMode] = useState<DocumentMode>("resume");
   const [activeDocumentIds, setActiveDocumentIds] = useState<
     Record<DocumentMode, string>
@@ -593,6 +597,45 @@ export function useStudioPageState(): StudioPageState {
       return next;
     });
   }, [activeDocument.id]);
+
+  useEffect(() => {
+    if (!hasLoadedEntries || typeof window === "undefined") return;
+
+    const rawIds = window.localStorage.getItem(STAGED_BANK_ENTRY_IDS_KEY);
+    if (!rawIds) return;
+
+    let parsedIds: unknown;
+    try {
+      parsedIds = JSON.parse(rawIds);
+    } catch {
+      window.localStorage.removeItem(STAGED_BANK_ENTRY_IDS_KEY);
+      return;
+    }
+
+    const entryIds = new Set(entries.map((entry) => entry.id));
+    const stagedIds = Array.isArray(parsedIds)
+      ? parsedIds.filter(
+          (id): id is string => typeof id === "string" && entryIds.has(id),
+        )
+      : [];
+
+    window.localStorage.removeItem(STAGED_BANK_ENTRY_IDS_KEY);
+    if (stagedIds.length === 0) return;
+
+    setPreviewVersionId(null);
+    setStagedSelectionCount(stagedIds.length);
+    markActiveDocumentDirty();
+    setSelectedIds((current) => {
+      const next = new Set([...current, ...stagedIds]);
+      updateActiveDocument({ selectedEntryIds: Array.from(next) });
+      return next;
+    });
+  }, [
+    entries,
+    hasLoadedEntries,
+    markActiveDocumentDirty,
+    updateActiveDocument,
+  ]);
 
   const markActiveDocumentSaved = useCallback(() => {
     setDirtyDocumentIds((current) => {
@@ -946,6 +989,7 @@ export function useStudioPageState(): StudioPageState {
     saveStatus,
     sections,
     selectedIds,
+    stagedSelectionCount,
     setLinkedOpportunityId,
     setDocumentMode,
     setEntryPickerOpen,

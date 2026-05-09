@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { CheckCircle2, Loader2, Rows3, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { PageSection } from "@/components/ui/page-layout";
 import { readJsonResponse } from "@/lib/http";
 import type { SettingsResponse } from "@/types/api";
 
@@ -67,26 +68,11 @@ export function OpportunityReviewSection() {
   };
 
   return (
-    <section className="rounded-2xl border bg-card p-6">
-      <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
-        <div className="flex gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-            <Rows3 className="h-5 w-5" />
-          </div>
-          <div>
-            <h2 className="font-semibold">Opportunity Review Queue</h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Review pending opportunities with a swipe-first card stack.
-            </p>
-            <Link
-              href="/opportunities/review"
-              className="mt-3 inline-flex text-sm font-medium text-primary hover:underline"
-            >
-              Open review queue
-            </Link>
-          </div>
-        </div>
-
+    <PageSection
+      title="Opportunity Review Queue"
+      description="Review pending opportunities with a swipe-first card stack."
+      icon={Rows3}
+      action={
         <Button
           type="button"
           variant={enabled ? "default" : "outline"}
@@ -104,13 +90,20 @@ export function OpportunityReviewSection() {
           )}
           {enabled ? "Enabled" : "Disabled"}
         </Button>
-      </div>
+      }
+    >
+      <Link
+        href="/opportunities/review"
+        className="inline-flex text-sm font-medium text-primary hover:underline"
+      >
+        Open review queue
+      </Link>
 
       {message && (
         <p className="mt-4 text-sm text-muted-foreground" role="status">
           {message}
         </p>
       )}
-    </section>
+    </PageSection>
   );
 }

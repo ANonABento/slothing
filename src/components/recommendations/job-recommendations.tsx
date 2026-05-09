@@ -75,8 +75,8 @@ function SkillMatchBadge({ match }: { match: SkillMatch }) {
         match.matched
           ? "bg-success/10 text-success"
           : match.relevance === "high"
-          ? "bg-destructive/10 text-destructive"
-          : "bg-muted text-muted-foreground"
+            ? "bg-destructive/10 text-destructive"
+            : "bg-muted text-muted-foreground",
       )}
     >
       {match.matched ? (
@@ -197,9 +197,7 @@ function RecommendationCard({
                   <AlertCircle className="h-3 w-3" />
                   Skills to Develop
                 </p>
-                <p className="text-sm text-warning">
-                  {skillGaps.join(", ")}
-                </p>
+                <p className="text-sm text-warning">{skillGaps.join(", ")}</p>
               </div>
             )}
           </div>
@@ -281,9 +279,11 @@ export function JobRecommendations() {
     return (
       <div className="rounded-xl border bg-card p-6 text-center">
         <Briefcase className="h-8 w-8 mx-auto mb-2 text-muted-foreground opacity-50" />
-        <p className="text-muted-foreground">No jobs to recommend yet.</p>
+        <p className="text-muted-foreground">
+          No opportunities to recommend yet.
+        </p>
         <p className="text-sm text-muted-foreground mt-1">
-          Save some jobs to get personalized recommendations!
+          Save some opportunities to get personalized recommendations!
         </p>
       </div>
     );

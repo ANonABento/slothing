@@ -15,10 +15,12 @@ import {
 } from "@/lib/db/salary";
 import { requireAuth, isAuthError } from "@/lib/auth";
 
+export const dynamic = "force-dynamic";
+
 // GET - Get a specific salary offer
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
@@ -27,10 +29,7 @@ export async function GET(
     const offer = getSalaryOffer(params.id, authResult.userId);
 
     if (!offer) {
-      return NextResponse.json(
-        { error: "Offer not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Offer not found" }, { status: 404 });
     }
 
     return NextResponse.json({ offer });
@@ -38,7 +37,7 @@ export async function GET(
     console.error("Get salary offer error:", error);
     return NextResponse.json(
       { error: "Failed to get salary offer" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -46,7 +45,7 @@ export async function GET(
 // PUT - Update a salary offer
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
@@ -66,25 +65,26 @@ export async function PUT(
       finalTotalComp,
     } = await request.json();
 
-    const offer = updateSalaryOffer(params.id, {
-      baseSalary,
-      signingBonus,
-      annualBonus,
-      equityValue,
-      vestingYears,
-      location,
-      status,
-      notes,
-      negotiationOutcome,
-      finalBaseSalary,
-      finalTotalComp,
-    }, authResult.userId);
+    const offer = updateSalaryOffer(
+      params.id,
+      {
+        baseSalary,
+        signingBonus,
+        annualBonus,
+        equityValue,
+        vestingYears,
+        location,
+        status,
+        notes,
+        negotiationOutcome,
+        finalBaseSalary,
+        finalTotalComp,
+      },
+      authResult.userId,
+    );
 
     if (!offer) {
-      return NextResponse.json(
-        { error: "Offer not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Offer not found" }, { status: 404 });
     }
 
     return NextResponse.json({ offer });
@@ -92,7 +92,7 @@ export async function PUT(
     console.error("Update salary offer error:", error);
     return NextResponse.json(
       { error: "Failed to update salary offer" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -100,7 +100,7 @@ export async function PUT(
 // DELETE - Delete a salary offer
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
@@ -109,10 +109,7 @@ export async function DELETE(
     const success = deleteSalaryOffer(params.id, authResult.userId);
 
     if (!success) {
-      return NextResponse.json(
-        { error: "Offer not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Offer not found" }, { status: 404 });
     }
 
     return NextResponse.json({ success: true });
@@ -120,7 +117,7 @@ export async function DELETE(
     console.error("Delete salary offer error:", error);
     return NextResponse.json(
       { error: "Failed to delete salary offer" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

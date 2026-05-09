@@ -27,6 +27,8 @@ import {
 } from "@/lib/api-utils";
 import type { AnalyzedTemplate } from "@/lib/resume/template-analyzer";
 
+export const dynamic = "force-dynamic";
+
 const patchTemplateSchema = z.object({
   id: z.string().min(1, "Template ID is required"),
   name: z.string().min(1, "Template name is required").max(100),
@@ -111,7 +113,7 @@ export async function POST(request: NextRequest) {
       name,
       analyzedStyles as AnalyzedTemplate,
       sourceDocumentId,
-      authResult.userId
+      authResult.userId,
     );
 
     return successResponse(template, 201);

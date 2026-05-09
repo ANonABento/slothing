@@ -10,6 +10,8 @@ import { getAllGeneratedResumes } from "@/lib/db/resumes";
 import { calculateSuccessMetrics } from "@/lib/analytics/success-metrics";
 import { requireAuth, isAuthError } from "@/lib/auth";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
@@ -25,7 +27,7 @@ export async function GET() {
     console.error("Success metrics error:", error);
     return NextResponse.json(
       { error: "Failed to calculate success metrics" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

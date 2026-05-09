@@ -7,12 +7,11 @@
  * @response EmailDraftsResponse | EmailDraftResponse from @/types/api
  */
 import { NextRequest, NextResponse } from "next/server";
-import {
-  getEmailDrafts,
-  createEmailDraft,
-} from "@/lib/db/email-drafts";
+import { getEmailDrafts, createEmailDraft } from "@/lib/db/email-drafts";
 import { getJob } from "@/lib/db/jobs";
 import { requireAuth, isAuthError } from "@/lib/auth";
+
+export const dynamic = "force-dynamic";
 
 // GET - List all email drafts
 export async function GET() {
@@ -27,7 +26,7 @@ export async function GET() {
     console.error("Get drafts error:", error);
     return NextResponse.json(
       { error: "Failed to get email drafts" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -43,31 +42,31 @@ export async function POST(request: NextRequest) {
     if (!type || !subject || !body) {
       return NextResponse.json(
         { error: "type, subject, and body are required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     if (jobId && !getJob(jobId, authResult.userId)) {
-      return NextResponse.json(
-        { error: "Job not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Job not found" }, { status: 404 });
     }
 
-    const draft = createEmailDraft({
-      type,
-      jobId,
-      subject,
-      body,
-      context,
-    }, authResult.userId);
+    const draft = createEmailDraft(
+      {
+        type,
+        jobId,
+        subject,
+        body,
+        context,
+      },
+      authResult.userId,
+    );
 
     return NextResponse.json({ draft });
   } catch (error) {
     console.error("Create draft error:", error);
     return NextResponse.json(
       { error: "Failed to create email draft" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

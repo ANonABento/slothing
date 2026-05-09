@@ -38,6 +38,13 @@ function formatBankContext(bankEntries: GroupedBankEntries): string {
     );
   }
 
+  if (bankEntries.bullet.length > 0) {
+    sections.push(
+      "## Resume Bullets\n" +
+        bankEntries.bullet.map((e) => formatEntryContent(e)).join("\n"),
+    );
+  }
+
   if (bankEntries.hackathon.length > 0) {
     sections.push(
       "## Hackathons\n" +
@@ -145,6 +152,7 @@ export function filterBankEntriesByIds(
     project: [],
     hackathon: [],
     education: [],
+    bullet: [],
     achievement: [],
     certification: [],
   };

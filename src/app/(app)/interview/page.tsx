@@ -6,7 +6,12 @@ import { InterviewActiveSession } from "@/components/interview/interview-active-
 import { InterviewJobSelection } from "@/components/interview/interview-job-selection";
 import { InterviewSummary } from "@/components/interview/interview-summary";
 import { useConfirmDialog } from "@/components/ui/confirm-dialog";
-import { AppPage, PageContent, PageHeader } from "@/components/ui/page-layout";
+import {
+  AppPage,
+  PageContent,
+  PageHeader,
+  PageLoadingState,
+} from "@/components/ui/page-layout";
 import { useFollowUp } from "@/hooks/useFollowUp";
 import { useInterviewSession } from "@/hooks/useInterviewSession";
 import type { InterviewDifficulty } from "@/lib/constants";
@@ -68,12 +73,7 @@ export default function InterviewPage() {
 
   if (interview.loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="mx-auto h-10 w-10 animate-spin text-primary" />
-          <p className="mt-4 text-muted-foreground">Loading...</p>
-        </div>
-      </div>
+      <PageLoadingState icon={Loader2} label="Loading interview prep..." />
     );
   }
 
@@ -87,7 +87,7 @@ export default function InterviewPage() {
         description="Practice with AI-generated questions tailored to your target jobs and receive instant feedback."
       />
 
-      <PageContent>
+      <PageContent className={!interview.session ? "max-w-4xl" : undefined}>
         {!interview.session ? (
           <InterviewJobSelection
             jobs={interview.jobs}

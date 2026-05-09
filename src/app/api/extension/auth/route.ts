@@ -10,6 +10,8 @@ import { requireAuth, isAuthError } from "@/lib/auth";
 import db from "@/lib/db/legacy";
 import { randomUUID } from "crypto";
 
+export const dynamic = "force-dynamic";
+
 // POST - Create extension session token
 export async function POST(request: NextRequest) {
   try {

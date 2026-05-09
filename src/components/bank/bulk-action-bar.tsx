@@ -4,7 +4,14 @@ import { Button } from "@/components/ui/button";
 import { useConfirmDialog } from "@/components/ui/confirm-dialog";
 import { THEME_SURFACE_CLASSES } from "@/lib/theme/component-classes";
 import { cn } from "@/lib/utils";
-import { Trash2, FileText, CheckSquare, XSquare, Download } from "lucide-react";
+import {
+  Trash2,
+  FileText,
+  CheckSquare,
+  XSquare,
+  Download,
+  MoveRight,
+} from "lucide-react";
 
 interface BulkActionBarProps {
   selectedCount: number;
@@ -14,6 +21,8 @@ interface BulkActionBarProps {
   onDelete: () => void;
   onAddToResume: () => void;
   onExport: () => void;
+  selectedBulletCount?: number;
+  onMoveBullets?: () => void;
 }
 
 export function BulkActionBar({
@@ -24,6 +33,8 @@ export function BulkActionBar({
   onDelete,
   onAddToResume,
   onExport,
+  selectedBulletCount = 0,
+  onMoveBullets,
 }: BulkActionBarProps) {
   const { confirm, dialog: confirmDialog } = useConfirmDialog();
 
@@ -75,6 +86,13 @@ export function BulkActionBar({
           <Download className="h-4 w-4 mr-1" />
           Export
         </Button>
+        {selectedBulletCount > 0 && onMoveBullets ? (
+          <Button variant="ghost" size="sm" onClick={onMoveBullets}>
+            <MoveRight className="h-4 w-4 mr-1" />
+            Move {selectedBulletCount} bullet
+            {selectedBulletCount === 1 ? "" : "s"}
+          </Button>
+        ) : null}
         <Button variant="ghost" size="sm" onClick={onAddToResume}>
           <FileText className="h-4 w-4 mr-1" />
           Add to Resume

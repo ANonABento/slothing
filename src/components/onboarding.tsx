@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   Dialog,
   DialogContent,
@@ -58,6 +58,17 @@ function clearOnboardingCompleted(): void {
     localStorage.removeItem(STORAGE_KEYS.ONBOARDING_COMPLETED);
   } catch {
     // Ignore storage failures.
+  }
+}
+
+function shouldAutoOpenOnboarding(): boolean {
+  try {
+    return (
+      localStorage.getItem(STORAGE_KEYS.ONBOARDING_COMPLETED) ===
+      "show-onboarding"
+    );
+  } catch {
+    return false;
   }
 }
 
@@ -156,18 +167,20 @@ const steps = [
 
 export function OnboardingDialog() {
   const router = useRouter();
+  const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
-    const completed = readOnboardingCompleted();
-    if (!completed) {
+    if (pathname !== "/dashboard") return;
+
+    if (shouldAutoOpenOnboarding()) {
       const timer = setTimeout(() => setOpen(true), 500);
       return () => clearTimeout(timer);
     }
-  }, []);
+  }, [pathname]);
 
   const markComplete = useCallback(() => {
     writeOnboardingCompleted("true");
@@ -186,59 +199,73 @@ export function OnboardingDialog() {
   if (!mounted) return null;
 
   const isLastStep = currentStep === ONBOARDING_STEP_COUNT - 1;
+  const showLauncher =
+    pathname === "/dashboard" && !open && !readOnboardingCompleted();
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="sm:max-w-lg">
-        {/* Accessible but hidden title/description for the dialog */}
-        <DialogTitle className="sr-only">
-          {STEP_TITLES[currentStep]}
-        </DialogTitle>
-        <DialogDescription className="sr-only">
-          Onboarding step {currentStep + 1} of {ONBOARDING_STEP_COUNT}
-        </DialogDescription>
-
-        {/* Skip button */}
-        <button
-          onClick={markComplete}
-          className="absolute right-4 top-4 p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-          aria-label="Skip onboarding"
+    <>
+      {showLauncher && (
+        <Button
+          type="button"
+          variant="outline"
+          className="fixed bottom-4 right-4 z-40 shadow-[var(--shadow-elevated)]"
+          onClick={() => setOpen(true)}
         >
-          <X className="h-4 w-4" />
-        </button>
+          Setup guide
+        </Button>
+      )}
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="sm:max-w-lg">
+          {/* Accessible but hidden title/description for the dialog */}
+          <DialogTitle className="sr-only">
+            {STEP_TITLES[currentStep]}
+          </DialogTitle>
+          <DialogDescription className="sr-only">
+            Onboarding step {currentStep + 1} of {ONBOARDING_STEP_COUNT}
+          </DialogDescription>
 
-        {/* Progress dots */}
-        <div className="mb-6">
-          <ProgressDots total={ONBOARDING_STEP_COUNT} current={currentStep} />
-        </div>
-
-        {/* Step content */}
-        <StepContent step={currentStep} />
-
-        {/* Actions */}
-        <div className="flex flex-col gap-3 mt-6">
-          <Button
-            onClick={handleNext}
-            className="gradient-bg text-primary-foreground hover:opacity-90"
+          {/* Skip button */}
+          <button
+            onClick={markComplete}
+            className="absolute right-4 top-4 p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+            aria-label="Skip onboarding"
           >
-            {isLastStep ? "Get Started" : "Continue"}
-            <ArrowRight className="h-4 w-4 ml-2" />
-          </Button>
-          {!isLastStep && (
-            <Button variant="ghost" onClick={markComplete}>
-              Skip setup
+            <X className="h-4 w-4" />
+          </button>
+
+          {/* Progress dots */}
+          <div className="mb-6">
+            <ProgressDots total={ONBOARDING_STEP_COUNT} current={currentStep} />
+          </div>
+
+          {/* Step content */}
+          <StepContent step={currentStep} />
+
+          {/* Actions */}
+          <div className="flex flex-col gap-3 mt-6">
+            <Button
+              onClick={handleNext}
+              className="gradient-bg text-primary-foreground hover:opacity-90"
+            >
+              {isLastStep ? "Get Started" : "Continue"}
+              <ArrowRight className="h-4 w-4 ml-2" />
             </Button>
-          )}
-        </div>
-      </DialogContent>
-    </Dialog>
+            {!isLastStep && (
+              <Button variant="ghost" onClick={markComplete}>
+                Skip setup
+              </Button>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 
 // Hook to reset onboarding (useful for testing)
 export function useOnboarding() {
   const reset = () => {
-    clearOnboardingCompleted();
+    writeOnboardingCompleted("show-onboarding");
     window.location.reload();
   };
 

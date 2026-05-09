@@ -79,12 +79,12 @@ describe("documents route", () => {
     ]);
 
     const response = await GET(
-      documentsRequest("/api/documents?type=cover_letter")
+      documentsRequest("/api/documents?type=cover_letter"),
     );
 
     expect(mocks.getDocumentsByType).toHaveBeenCalledWith(
       "cover_letter",
-      "user-1"
+      "user-1",
     );
     expect(mocks.getDocuments).not.toHaveBeenCalled();
     await expect(response.json()).resolves.toEqual({
@@ -104,13 +104,13 @@ describe("documents route", () => {
 
   it("accepts every supported document type in the type filter", async () => {
     const response = await GET(
-      documentsRequest("/api/documents?type=reference_letter")
+      documentsRequest("/api/documents?type=reference_letter"),
     );
 
     expect(response.status).toBe(200);
     expect(mocks.getDocumentsByType).toHaveBeenCalledWith(
       "reference_letter",
-      "user-1"
+      "user-1",
     );
   });
 

@@ -12,6 +12,8 @@ import { analyzeTemplateWithLLM } from "@/lib/resume/template-analyzer";
 import { requireAuth, isAuthError } from "@/lib/auth";
 import { ApiErrors, successResponse, errorResponse } from "@/lib/api-utils";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(request: NextRequest) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;

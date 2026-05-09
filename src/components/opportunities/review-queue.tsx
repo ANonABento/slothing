@@ -1,11 +1,13 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { AnimatePresence, motion, type PanInfo } from "framer-motion";
-import { Check, ExternalLink, MapPin, X } from "lucide-react";
+import { Check, ExternalLink, MapPin, Settings, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { StandardEmptyState } from "@/components/ui/page-layout";
 import { cn } from "@/lib/utils";
 import type { JobDescription } from "@/types";
 
@@ -29,7 +31,9 @@ function getCreatedAtTime(createdAt: string): number {
   return Number.isNaN(time) ? 0 : time;
 }
 
-export function getPendingOpportunities(jobs: JobDescription[]): JobDescription[] {
+export function getPendingOpportunities(
+  jobs: JobDescription[],
+): JobDescription[] {
   return jobs
     .filter((job) => job.status === "pending")
     .sort((a, b) => {
@@ -63,7 +67,10 @@ export function getDescriptionPreview(description: string): string {
 interface OpportunityReviewQueueProps {
   jobs: JobDescription[];
   updating: boolean;
-  onStatusChange: (job: JobDescription, status: JobDescription["status"]) => Promise<void>;
+  onStatusChange: (
+    job: JobDescription,
+    status: JobDescription["status"],
+  ) => Promise<void>;
   onApplyNow: (job: JobDescription) => Promise<void>;
 }
 
@@ -101,38 +108,65 @@ export function OpportunityReviewQueue({
     }
   };
 
-  const handleDragEnd = (_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-    if (info.offset.y < -SWIPE_DISTANCE_THRESHOLD || info.velocity.y < -SWIPE_VELOCITY_THRESHOLD) {
+  const handleDragEnd = (
+    _event: MouseEvent | TouchEvent | PointerEvent,
+    info: PanInfo,
+  ) => {
+    if (
+      info.offset.y < -SWIPE_DISTANCE_THRESHOLD ||
+      info.velocity.y < -SWIPE_VELOCITY_THRESHOLD
+    ) {
       void runAction("apply");
       return;
     }
 
-    if (info.offset.x > SWIPE_DISTANCE_THRESHOLD || info.velocity.x > SWIPE_VELOCITY_THRESHOLD) {
+    if (
+      info.offset.x > SWIPE_DISTANCE_THRESHOLD ||
+      info.velocity.x > SWIPE_VELOCITY_THRESHOLD
+    ) {
       void runAction("save");
       return;
     }
 
-    if (info.offset.x < -SWIPE_DISTANCE_THRESHOLD || info.velocity.x < -SWIPE_VELOCITY_THRESHOLD) {
+    if (
+      info.offset.x < -SWIPE_DISTANCE_THRESHOLD ||
+      info.velocity.x < -SWIPE_VELOCITY_THRESHOLD
+    ) {
       void runAction("dismiss");
     }
   };
 
   if (!activeJob) {
     return (
-      <div className="mx-auto flex min-h-[60vh] w-full max-w-md flex-col items-center justify-center px-6 text-center">
-        <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-          <Check className="h-7 w-7" />
-        </div>
-        <h1 className="text-2xl font-semibold">Queue cleared</h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          New pending opportunities will appear here.
-        </p>
+      <div className="mx-auto flex min-h-[70vh] w-full max-w-xl items-center justify-center px-5">
+        <h1 className="sr-only">Review Queue</h1>
+        <StandardEmptyState
+          icon={Check}
+          title="Queue cleared"
+          description="New pending opportunities will appear here when Slothing finds roles that need review."
+          className="w-full"
+          action={
+            <div className="flex flex-wrap justify-center gap-2">
+              <Button asChild>
+                <Link href="/opportunities">Open opportunities</Link>
+              </Button>
+              <Button asChild variant="outline">
+                <Link href="/settings">
+                  <Settings className="mr-2 h-4 w-4" />
+                  Review settings
+                </Link>
+              </Button>
+            </div>
+          }
+        />
       </div>
     );
   }
 
   const tags = getOpportunityTags(activeJob);
-  const preview = expanded ? activeJob.description : getDescriptionPreview(activeJob.description);
+  const preview = expanded
+    ? activeJob.description
+    : getDescriptionPreview(activeJob.description);
   const canApply = Boolean(activeJob.url);
 
   return (
@@ -141,7 +175,9 @@ export function OpportunityReviewQueue({
         <div className="mx-auto flex w-full max-w-md items-center justify-between">
           <div>
             <Badge variant="secondary">Pending review</Badge>
-            <h1 className="mt-3 text-2xl font-semibold tracking-tight">Opportunities</h1>
+            <h1 className="mt-3 text-2xl font-semibold tracking-tight">
+              Opportunities
+            </h1>
           </div>
           <div className="text-right">
             <p className="text-3xl font-bold text-primary">{remainingCount}</p>
@@ -154,7 +190,7 @@ export function OpportunityReviewQueue({
         <div className="relative h-[min(680px,72vh)] w-full max-w-md">
           {queue[1] && (
             <div
-              className="absolute inset-x-3 top-5 h-[calc(100%-1.25rem)] rounded-2xl border bg-card/50 shadow-sm"
+              className="absolute inset-x-3 top-5 h-[calc(100%-1.25rem)] rounded-lg border bg-card/50 shadow-sm"
               aria-hidden="true"
             />
           )}
@@ -169,18 +205,32 @@ export function OpportunityReviewQueue({
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{
                 opacity: 0,
-                x: activeAction === "save" ? 320 : activeAction === "dismiss" ? -320 : 0,
+                x:
+                  activeAction === "save"
+                    ? 320
+                    : activeAction === "dismiss"
+                      ? -320
+                      : 0,
                 y: activeAction === "apply" ? -360 : 0,
-                rotate: activeAction === "save" ? 12 : activeAction === "dismiss" ? -12 : 0,
+                rotate:
+                  activeAction === "save"
+                    ? 12
+                    : activeAction === "dismiss"
+                      ? -12
+                      : 0,
                 transition: { duration: 0.22 },
               }}
-              className="absolute inset-0 flex cursor-grab flex-col overflow-hidden rounded-2xl border bg-card shadow-xl active:cursor-grabbing"
+              className="absolute inset-0 flex cursor-grab flex-col overflow-hidden rounded-lg border bg-card shadow-xl active:cursor-grabbing"
             >
               <div className="flex-1 overflow-y-auto p-6">
                 <div className="flex items-start justify-between gap-4">
                   <div>
-                    <p className="text-sm font-medium text-primary">{activeJob.company}</p>
-                    <h2 className="mt-2 text-3xl font-bold leading-tight">{activeJob.title}</h2>
+                    <p className="text-sm font-medium text-primary">
+                      {activeJob.company}
+                    </p>
+                    <h2 className="mt-2 text-3xl font-bold leading-tight">
+                      {activeJob.title}
+                    </h2>
                   </div>
                   {activeJob.remote && <Badge variant="info">Remote</Badge>}
                 </div>
@@ -193,7 +243,9 @@ export function OpportunityReviewQueue({
                     </span>
                   )}
                   {activeJob.salary && <span>{activeJob.salary}</span>}
-                  {activeJob.deadline && <span>Deadline {activeJob.deadline}</span>}
+                  {activeJob.deadline && (
+                    <span>Deadline {activeJob.deadline}</span>
+                  )}
                 </div>
 
                 {tags.length > 0 && (
@@ -210,7 +262,8 @@ export function OpportunityReviewQueue({
                   <p className="whitespace-pre-line text-sm leading-6 text-muted-foreground">
                     {preview}
                   </p>
-                  {activeJob.description.length > DESCRIPTION_PREVIEW_LENGTH && (
+                  {activeJob.description.length >
+                    DESCRIPTION_PREVIEW_LENGTH && (
                     <Button
                       type="button"
                       variant="ghost"
@@ -262,13 +315,19 @@ interface ActionButtonProps {
   onClick: () => void;
 }
 
-function ActionButton({ label, icon, className, disabled, onClick }: ActionButtonProps) {
+function ActionButton({
+  label,
+  icon,
+  className,
+  disabled,
+  onClick,
+}: ActionButtonProps) {
   return (
     <button
       type="button"
       className={cn(
         "flex h-16 flex-col items-center justify-center gap-1 rounded-xl border bg-card text-xs font-medium transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50",
-        className
+        className,
       )}
       disabled={disabled}
       onClick={onClick}

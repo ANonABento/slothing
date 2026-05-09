@@ -16,6 +16,8 @@ import {
 } from "@/lib/salary/calculator";
 import { requireAuth, isAuthError } from "@/lib/auth";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(request: NextRequest) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
@@ -33,10 +35,16 @@ export async function POST(request: NextRequest) {
           skills: body.skills,
         };
 
-        if (!input.role || !input.location || input.yearsExperience === undefined) {
+        if (
+          !input.role ||
+          !input.location ||
+          input.yearsExperience === undefined
+        ) {
           return NextResponse.json(
-            { error: "Missing required fields: role, location, yearsExperience" },
-            { status: 400 }
+            {
+              error: "Missing required fields: role, location, yearsExperience",
+            },
+            { status: 400 },
           );
         }
 
@@ -49,7 +57,7 @@ export async function POST(request: NextRequest) {
         if (!offer || !offer.baseSalary) {
           return NextResponse.json(
             { error: "Missing required offer with baseSalary" },
-            { status: 400 }
+            { status: 400 },
           );
         }
 
@@ -62,7 +70,7 @@ export async function POST(request: NextRequest) {
         if (!offers || !Array.isArray(offers) || offers.length < 2) {
           return NextResponse.json(
             { error: "Need at least 2 offers to compare" },
-            { status: 400 }
+            { status: 400 },
           );
         }
 
@@ -75,25 +83,29 @@ export async function POST(request: NextRequest) {
         if (!offer || !marketRange) {
           return NextResponse.json(
             { error: "Missing offer or marketRange" },
-            { status: 400 }
+            { status: 400 },
           );
         }
 
-        const counter = generateCounterOffer(offer, marketRange, targetPercentile);
+        const counter = generateCounterOffer(
+          offer,
+          marketRange,
+          targetPercentile,
+        );
         return NextResponse.json({ counter });
       }
 
       default:
         return NextResponse.json(
           { error: "Invalid action. Use: range, total, compare, or counter" },
-          { status: 400 }
+          { status: 400 },
         );
     }
   } catch (error) {
     console.error("Salary calculation error:", error);
     return NextResponse.json(
       { error: "Failed to process salary calculation" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

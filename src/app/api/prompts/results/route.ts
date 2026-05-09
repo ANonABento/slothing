@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 import { requireAuth, isAuthError } from "@/lib/auth";
-import { getPromptVariantStats, seedDefaultPromptVariant } from "@/lib/db/prompt-variants";
+import {
+  getPromptVariantStats,
+  seedDefaultPromptVariant,
+} from "@/lib/db/prompt-variants";
+
+export const dynamic = "force-dynamic";
 
 export async function GET() {
   const authResult = await requireAuth();

@@ -11,6 +11,8 @@ import { LLMClient } from "@/lib/llm/client";
 import { formatCurrency } from "@/lib/salary/calculator";
 import { requireAuth, isAuthError } from "@/lib/auth";
 
+export const dynamic = "force-dynamic";
+
 interface NegotiationRequest {
   company: string;
   role: string;
@@ -57,8 +59,7 @@ Format the response as JSON:
 }`;
 
 function buildPrompt(request: NegotiationRequest): string {
-  let prompt = NEGOTIATION_SCRIPT_PROMPT
-    .replace("{company}", request.company)
+  let prompt = NEGOTIATION_SCRIPT_PROMPT.replace("{company}", request.company)
     .replace("{role}", request.role)
     .replace("{currentOffer}", formatCurrency(request.currentOffer))
     .replace("{targetSalary}", formatCurrency(request.targetSalary))
@@ -68,20 +69,26 @@ function buildPrompt(request: NegotiationRequest): string {
   if (request.hasCompetingOffers && request.competingOfferAmount) {
     prompt = prompt.replace(
       "{competingOffers}",
-      `- Competing Offer: ${formatCurrency(request.competingOfferAmount)}`
+      `- Competing Offer: ${formatCurrency(request.competingOfferAmount)}`,
     );
   } else {
     prompt = prompt.replace("{competingOffers}", "");
   }
 
   if (request.strengths && request.strengths.length > 0) {
-    prompt = prompt.replace("{strengths}", `- Key Strengths: ${request.strengths.join(", ")}`);
+    prompt = prompt.replace(
+      "{strengths}",
+      `- Key Strengths: ${request.strengths.join(", ")}`,
+    );
   } else {
     prompt = prompt.replace("{strengths}", "");
   }
 
   if (request.concerns && request.concerns.length > 0) {
-    prompt = prompt.replace("{concerns}", `- Your Concerns: ${request.concerns.join(", ")}`);
+    prompt = prompt.replace(
+      "{concerns}",
+      `- Your Concerns: ${request.concerns.join(", ")}`,
+    );
   } else {
     prompt = prompt.replace("{concerns}", "");
   }
@@ -90,7 +97,9 @@ function buildPrompt(request: NegotiationRequest): string {
 }
 
 function generateFallbackScript(request: NegotiationRequest) {
-  const increase = ((request.targetSalary - request.currentOffer) / request.currentOffer) * 100;
+  const increase =
+    ((request.targetSalary - request.currentOffer) / request.currentOffer) *
+    100;
 
   return {
     opening: `Thank you so much for the offer to join ${request.company} as a ${request.role}. I'm genuinely excited about the opportunity and the team. Before I sign, I'd like to discuss the compensation package.`,
@@ -129,10 +138,18 @@ export async function POST(request: NextRequest) {
   try {
     const body: NegotiationRequest = await request.json();
 
-    if (!body.company || !body.role || !body.currentOffer || !body.targetSalary) {
+    if (
+      !body.company ||
+      !body.role ||
+      !body.currentOffer ||
+      !body.targetSalary
+    ) {
       return NextResponse.json(
-        { error: "Missing required fields: company, role, currentOffer, targetSalary" },
-        { status: 400 }
+        {
+          error:
+            "Missing required fields: company, role, currentOffer, targetSalary",
+        },
+        { status: 400 },
       );
     }
 
@@ -167,7 +184,7 @@ export async function POST(request: NextRequest) {
     console.error("Negotiation script error:", error);
     return NextResponse.json(
       { error: "Failed to generate negotiation script" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

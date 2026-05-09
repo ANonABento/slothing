@@ -28,6 +28,7 @@ function makeEmptyBank(): GroupedBankEntries {
     project: [],
     hackathon: [],
     education: [],
+    bullet: [],
     achievement: [],
     certification: [],
   };
@@ -169,7 +170,7 @@ describe("analyzeJobFit", () => {
 
     const result = analyzeJobFit(
       "Looking for a React and TypeScript developer with frontend experience",
-      bank
+      bank,
     );
 
     expect(result.matchScore).toBeGreaterThan(0);
@@ -179,13 +180,11 @@ describe("analyzeJobFit", () => {
 
   it("should identify gaps (missing keywords)", () => {
     const bank = makeEmptyBank();
-    bank.skill = [
-      makeBankEntry({ id: "s1", content: { name: "React" } }),
-    ];
+    bank.skill = [makeBankEntry({ id: "s1", content: { name: "React" } })];
 
     const result = analyzeJobFit(
       "Need React, Kubernetes, and Terraform experience",
-      bank
+      bank,
     );
 
     expect(result.keywordsMissing.length).toBeGreaterThan(0);
@@ -198,27 +197,28 @@ describe("analyzeJobFit", () => {
       makeBankEntry({ id: "s1", content: { name: "Python" } }),
       makeBankEntry({
         id: "s2",
-        content: { name: "React", context: "Used React with TypeScript for 3 years" },
+        content: {
+          name: "React",
+          context: "Used React with TypeScript for 3 years",
+        },
       }),
     ];
 
     const result = analyzeJobFit(
       "Senior React TypeScript developer needed",
-      bank
+      bank,
     );
 
     if (result.matchedEntries.length >= 2) {
       expect(result.matchedEntries[0].relevanceScore).toBeGreaterThanOrEqual(
-        result.matchedEntries[1].relevanceScore
+        result.matchedEntries[1].relevanceScore,
       );
     }
   });
 
   it("should accept pre-extracted keywords", () => {
     const bank = makeEmptyBank();
-    bank.skill = [
-      makeBankEntry({ id: "s1", content: { name: "React" } }),
-    ];
+    bank.skill = [makeBankEntry({ id: "s1", content: { name: "React" } })];
 
     const result = analyzeJobFit("some text", bank, ["react", "vue"]);
     expect(result.keywordsFound).toContain("react");
@@ -229,7 +229,7 @@ describe("analyzeJobFit", () => {
     const bank = makeEmptyBank();
     const result = analyzeJobFit(
       "Must know Python and Docker and have AWS certified credentials",
-      bank
+      bank,
     );
 
     const skillGaps = result.gaps.filter((g) => g.category === "skill");
@@ -253,7 +253,7 @@ describe("analyzeResumeFit", () => {
     const result = analyzeResumeFit(
       "Need React, TypeScript, GraphQL, and Kubernetes experience",
       makeResume(),
-      ["react", "typescript", "graphql", "kubernetes"]
+      ["react", "typescript", "graphql", "kubernetes"],
     );
 
     expect(result.matchScore).toBe(50);
@@ -271,7 +271,7 @@ describe("analyzeResumeFit", () => {
     const improved = analyzeResumeFit(
       "some jd",
       makeResume({ skills: ["React", "TypeScript", "GraphQL"] }),
-      keywords
+      keywords,
     );
 
     expect(first.matchScore).toBe(67);

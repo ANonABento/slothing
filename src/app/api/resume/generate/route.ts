@@ -9,11 +9,18 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requireAuth, isAuthError } from "@/lib/auth";
 import { getLLMConfig } from "@/lib/db/queries";
-import { saveGeneratedResume, STANDALONE_RESUME_JOB_ID } from "@/lib/db/resumes";
+import {
+  saveGeneratedResume,
+  STANDALONE_RESUME_JOB_ID,
+} from "@/lib/db/resumes";
 import { runRetrievalPipeline } from "@/lib/knowledge/retrieval";
 
+export const dynamic = "force-dynamic";
+
 const generateResumeSchema = z.object({
-  jobDescription: z.string().min(10, "Job description must be at least 10 characters"),
+  jobDescription: z
+    .string()
+    .min(10, "Job description must be at least 10 characters"),
   templateId: z.string().optional(),
 });
 
@@ -34,7 +41,7 @@ export async function POST(request: NextRequest) {
             message: i.message,
           })),
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -44,7 +51,7 @@ export async function POST(request: NextRequest) {
     if (!llmConfig) {
       return NextResponse.json(
         { error: "No LLM provider configured. Go to Settings to set one up." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -52,7 +59,7 @@ export async function POST(request: NextRequest) {
     const result = await runRetrievalPipeline(
       jobDescription,
       authResult.userId,
-      llmConfig
+      llmConfig,
     );
 
     // Save generated resume to database
@@ -62,7 +69,7 @@ export async function POST(request: NextRequest) {
       result.resume,
       "", // No HTML path yet — can be generated separately
       undefined,
-      authResult.userId
+      authResult.userId,
     );
 
     return NextResponse.json({
@@ -80,7 +87,7 @@ export async function POST(request: NextRequest) {
     console.error("Resume generation error:", error);
     return NextResponse.json(
       { error: "Failed to generate resume", details: String(error) },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -43,7 +43,9 @@ describe("import job api helpers", () => {
   it("fetches a job preview from a URL", async () => {
     vi.mocked(fetch).mockResolvedValueOnce(jsonResponse({ preview }));
 
-    await expect(fetchJobFromUrl("https://example.com/job")).resolves.toEqual(preview);
+    await expect(fetchJobFromUrl("https://example.com/job")).resolves.toEqual(
+      preview,
+    );
 
     expect(fetch).toHaveBeenCalledWith("/api/import/job", {
       method: "POST",
@@ -53,23 +55,27 @@ describe("import job api helpers", () => {
   });
 
   it("scrapes a supported job-board URL", async () => {
-    vi.mocked(fetch).mockResolvedValueOnce(jsonResponse({
-      opportunity: {
-        title: preview.title,
-        company: preview.company,
-        location: preview.location,
-        type: preview.type,
-        remote: preview.remote,
-        salary: preview.salary,
-        description: preview.fullDescription,
-        requirements: preview.requirements,
-        keywords: preview.keywords,
-        url: preview.url,
-        source: preview.source,
-      },
-    }));
+    vi.mocked(fetch).mockResolvedValueOnce(
+      jsonResponse({
+        opportunity: {
+          title: preview.title,
+          company: preview.company,
+          location: preview.location,
+          type: preview.type,
+          remote: preview.remote,
+          salary: preview.salary,
+          description: preview.fullDescription,
+          requirements: preview.requirements,
+          keywords: preview.keywords,
+          url: preview.url,
+          source: preview.source,
+        },
+      }),
+    );
 
-    await expect(scrapeJobFromUrl("https://jobs.lever.co/acme/123")).resolves.toEqual({
+    await expect(
+      scrapeJobFromUrl("https://jobs.lever.co/acme/123"),
+    ).resolves.toEqual({
       ...preview,
       description: preview.fullDescription,
     });
@@ -86,71 +92,100 @@ describe("import job api helpers", () => {
 
     await parseJobText("job text", "   ");
 
-    expect(fetch).toHaveBeenCalledWith("/api/import/job", expect.objectContaining({
-      body: JSON.stringify({ text: "job text", url: undefined }),
-    }));
+    expect(fetch).toHaveBeenCalledWith(
+      "/api/import/job",
+      expect.objectContaining({
+        body: JSON.stringify({ text: "job text", url: undefined }),
+      }),
+    );
   });
 
   it("saves a parsed job using the full description and fallback URL", async () => {
     vi.mocked(fetch).mockResolvedValueOnce(jsonResponse({ ok: true }));
 
-    await saveParsedJob({ ...preview, url: "   " }, " https://example.com/fallback ");
+    await saveParsedJob(
+      { ...preview, url: "   " },
+      " https://example.com/fallback ",
+    );
 
-    expect(fetch).toHaveBeenCalledWith("/api/import/job", expect.objectContaining({
-      method: "PUT",
-      body: JSON.stringify({
-        title: preview.title,
-        company: preview.company,
-        location: preview.location,
-        type: preview.type,
-        remote: preview.remote,
-        salary: preview.salary,
-        description: preview.fullDescription,
-        requirements: preview.requirements,
-        keywords: preview.keywords,
-        url: "https://example.com/fallback",
+    expect(fetch).toHaveBeenCalledWith(
+      "/api/import/job",
+      expect.objectContaining({
+        method: "PUT",
+        body: JSON.stringify({
+          title: preview.title,
+          company: preview.company,
+          location: preview.location,
+          type: preview.type,
+          remote: preview.remote,
+          salary: preview.salary,
+          description: preview.fullDescription,
+          requirements: preview.requirements,
+          keywords: preview.keywords,
+          url: "https://example.com/fallback",
+        }),
       }),
-    }));
+    );
   });
 
   it("rejects malformed job preview responses", async () => {
-    vi.mocked(fetch).mockResolvedValueOnce(jsonResponse({ preview: { title: "Engineer" } }));
+    vi.mocked(fetch).mockResolvedValueOnce(
+      jsonResponse({ preview: { title: "Engineer" } }),
+    );
 
-    await expect(parseJobText("job text")).rejects.toThrow("Unexpected job preview response");
+    await expect(parseJobText("job text")).rejects.toThrow(
+      "Unexpected job preview response",
+    );
   });
 
   it("parses CSV content", async () => {
     const csvPreview = { total: 1, valid: 1, invalid: 0, jobs: [], errors: [] };
-    vi.mocked(fetch).mockResolvedValueOnce(jsonResponse({ preview: csvPreview }));
+    vi.mocked(fetch).mockResolvedValueOnce(
+      jsonResponse({ preview: csvPreview }),
+    );
 
-    await expect(parseCsvContent("title,company\nEngineer,Acme")).resolves.toEqual(csvPreview);
+    await expect(
+      parseCsvContent("title,company\nEngineer,Acme"),
+    ).resolves.toEqual(csvPreview);
 
-    expect(fetch).toHaveBeenCalledWith("/api/import/csv", expect.objectContaining({
-      method: "POST",
-      body: JSON.stringify({ csv: "title,company\nEngineer,Acme" }),
-    }));
+    expect(fetch).toHaveBeenCalledWith(
+      "/api/import/csv",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({ csv: "title,company\nEngineer,Acme" }),
+      }),
+    );
   });
 
   it("saves CSV jobs and surfaces API errors", async () => {
-    const jobs: CSVJob[] = [{
-      title: "Engineer",
-      company: "Acme",
-      location: "",
-      type: "",
-      remote: false,
-      salary: "",
-      description: "",
-      url: "",
-      isValid: true,
-      errors: [],
-    }];
-    vi.mocked(fetch).mockResolvedValueOnce(jsonResponse({ error: "No jobs imported" }, 400));
+    const jobs: CSVJob[] = [
+      {
+        title: "Engineer",
+        company: "Acme",
+        location: "",
+        type: "",
+        remote: false,
+        salary: "",
+        description: "",
+        url: "",
+        isValid: true,
+        errors: [],
+      },
+    ];
+    vi.mocked(fetch).mockResolvedValueOnce(
+      jsonResponse({ error: "No opportunities imported" }, 400),
+    );
 
-    await expect(saveCsvJobs(jobs)).rejects.toThrow("No jobs imported");
+    await expect(saveCsvJobs(jobs)).rejects.toThrow(
+      "No opportunities imported",
+    );
 
-    expect(fetch).toHaveBeenCalledWith("/api/import/csv", expect.objectContaining({
-      method: "PUT",
-      body: JSON.stringify({ jobs }),
-    }));
+    expect(fetch).toHaveBeenCalledWith(
+      "/api/import/csv",
+      expect.objectContaining({
+        method: "PUT",
+        body: JSON.stringify({ jobs }),
+      }),
+    );
   });
 });

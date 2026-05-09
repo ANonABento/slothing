@@ -17,6 +17,8 @@ import {
 } from "@/lib/google/docs";
 import { isGoogleConnected } from "@/lib/google/client";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(request: NextRequest) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
@@ -25,7 +27,7 @@ export async function POST(request: NextRequest) {
   if (!connected) {
     return NextResponse.json(
       { error: "Google account not connected" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -40,13 +42,13 @@ export async function POST(request: NextRequest) {
         if (!data.jobTitle || !data.company) {
           return NextResponse.json(
             { error: "Missing required fields: jobTitle, company" },
-            { status: 400 }
+            { status: 400 },
           );
         }
         result = await createInterviewPrepDoc(
           data.jobTitle,
           data.company,
-          data.questions || []
+          data.questions || [],
         );
         break;
 
@@ -54,7 +56,7 @@ export async function POST(request: NextRequest) {
         if (!data.title || !data.content) {
           return NextResponse.json(
             { error: "Missing required fields: title, content" },
-            { status: 400 }
+            { status: 400 },
           );
         }
         result = await exportResumeToDoc(data.title, data.content);
@@ -64,13 +66,13 @@ export async function POST(request: NextRequest) {
         if (!data.company || !data.role || !data.content) {
           return NextResponse.json(
             { error: "Missing required fields: company, role, content" },
-            { status: 400 }
+            { status: 400 },
           );
         }
         result = await exportCoverLetterToDoc(
           data.company,
           data.role,
-          data.content
+          data.content,
         );
         break;
 
@@ -78,17 +80,20 @@ export async function POST(request: NextRequest) {
         if (!data.company) {
           return NextResponse.json(
             { error: "Missing required field: company" },
-            { status: 400 }
+            { status: 400 },
           );
         }
-        result = await createCompanyResearchDoc(data.company, data.content || {});
+        result = await createCompanyResearchDoc(
+          data.company,
+          data.content || {},
+        );
         break;
 
       case "custom":
         if (!data.title) {
           return NextResponse.json(
             { error: "Missing required field: title" },
-            { status: 400 }
+            { status: 400 },
           );
         }
         result = await createDoc(data.title, data.content, data.folderId);
@@ -96,15 +101,18 @@ export async function POST(request: NextRequest) {
 
       default:
         return NextResponse.json(
-          { error: "Invalid document type. Use: interview_prep, resume, cover_letter, company_research, or custom" },
-          { status: 400 }
+          {
+            error:
+              "Invalid document type. Use: interview_prep, resume, cover_letter, company_research, or custom",
+          },
+          { status: 400 },
         );
     }
 
     if (!result) {
       return NextResponse.json(
         { error: "Failed to create document" },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -117,7 +125,7 @@ export async function POST(request: NextRequest) {
     console.error("Docs create error:", error);
     return NextResponse.json(
       { error: "Failed to create document" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -2,8 +2,10 @@ import { describe, it, expect } from "vitest";
 import {
   navigationGroups,
   bottomNavigation,
+  getActiveSidebarHref,
   getSidebarNavItemClassName,
   getSidebarNavItemState,
+  isSidebarItemActive,
   type NavGroup,
   type NavItem,
 } from "./sidebar";
@@ -32,64 +34,70 @@ describe("navigationGroups", () => {
   it("should include all sidebar groups", () => {
     const labels = navigationGroups.map((g) => g.label);
     expect(labels).toEqual([
-      "Overview",
-      "Resume",
-      "Workflow",
-      "Interview",
-      "Negotiation",
-      "Insights",
+      "Home",
+      "Documents",
+      "Pipeline",
+      "Prep",
+      "Reporting",
     ]);
   });
 
-  it("should have Dashboard in Overview group", () => {
-    const overview = getGroup("Overview");
+  it("should have Dashboard in Home group", () => {
+    const overview = getGroup("Home");
     const names = getItemNames(overview.items);
     expect(names).toContain("Dashboard");
   });
 
-  it("should have Documents and Document Studio in Resume group", () => {
-    const resume = getGroup("Resume");
-    const names = getItemNames(resume.items);
+  it("should have document tools in Documents group", () => {
+    const documents = getGroup("Documents");
+    const names = getItemNames(documents.items);
     expect(names).toContain("Documents");
+    expect(names).toContain("Answer Bank");
     expect(names).toContain("Document Studio");
   });
 
   it("should show one Document Studio link instead of separate document routes", () => {
-    const resume = getGroup("Resume");
-    const names = getItemNames(resume.items);
+    const documents = getGroup("Documents");
+    const names = getItemNames(documents.items);
     expect(names).toContain("Document Studio");
     expect(names).not.toContain("Resume Builder");
     expect(names).not.toContain("Tailor Resume");
     expect(names).not.toContain("Cover Letter");
   });
 
-  it("should have Interview Prep in Interview group", () => {
-    const interview = getGroup("Interview");
-    const interviewPrep = getItem(interview.items, "Interview Prep");
+  it("should have Interview Prep in Prep group", () => {
+    const prep = getGroup("Prep");
+    const interviewPrep = getItem(prep.items, "Interview Prep");
     expect(interviewPrep.href).toBe("/interview");
     expect(interviewPrep.icon).toBeDefined();
   });
 
-  it("should have opportunity workflow items in Workflow group", () => {
-    const workflow = getGroup("Workflow");
-    const items = workflow.items.map((i) => [i.name, i.href]);
+  it("should have opportunity workflow items in Pipeline group", () => {
+    const pipeline = getGroup("Pipeline");
+    const items = pipeline.items.map((i) => [i.name, i.href]);
     expect(items).toEqual([
+      ["Opportunities", "/opportunities"],
       ["Review Queue", "/opportunities/review"],
       ["Calendar", "/calendar"],
-      ["Email Templates", "/emails"],
     ]);
   });
 
-  it("should have Salary Tools in Negotiation group", () => {
-    const negotiation = getGroup("Negotiation");
-    const salaryTools = getItem(negotiation.items, "Salary Tools");
+  it("should have prep utilities in Prep group", () => {
+    const prep = getGroup("Prep");
+    const items = prep.items.map((i) => [i.name, i.href]);
+    expect(items).toEqual([
+      ["Email Templates", "/emails"],
+      ["Interview Prep", "/interview"],
+      ["Salary Tools", "/salary"],
+    ]);
+    const salaryTools = getItem(prep.items, "Salary Tools");
     expect(salaryTools.href).toBe("/salary");
     expect(salaryTools.icon).toBeDefined();
   });
 
-  it("should have Analytics in Insights group", () => {
-    const insights = getGroup("Insights");
-    const analytics = getItem(insights.items, "Analytics");
+  it("should have Analytics in Reporting group", () => {
+    const reporting = getGroup("Reporting");
+    const analytics = getItem(reporting.items, "Analytics");
     expect(analytics.href).toBe("/analytics");
     expect(analytics.icon).toBeDefined();
   });
@@ -99,6 +107,7 @@ describe("navigationGroups", () => {
     const expectedHrefs = [
       ["Dashboard", "/dashboard"],
       ["Documents", "/bank"],
+      ["Answer Bank", "/answer-bank"],
       ["Document Studio", "/studio"],
       ["Opportunities", "/opportunities"],
       ["Review Queue", "/opportunities/review"],
@@ -148,10 +157,10 @@ describe("sidebar nav item styling", () => {
     });
 
     expect(className).toContain("app-sidebar-nav-item");
-    expect(className).toContain("bg-primary");
-    expect(className).toContain("text-primary-foreground");
-    expect(className).toContain("border-l-primary");
-    expect(className).toContain("shadow-button");
+    expect(className).toContain("bg-card");
+    expect(className).toContain("text-foreground");
+    expect(className).toContain("border-primary/20");
+    expect(className).toContain("shadow-sm");
     expect(className).not.toContain("gradient-bg");
     expect(getSidebarNavItemState(true)).toEqual({ "data-active": "true" });
   });
@@ -162,9 +171,9 @@ describe("sidebar nav item styling", () => {
       collapsed: false,
     });
 
-    expect(className).toContain("border-l-transparent");
+    expect(className).toContain("border-transparent");
     expect(className).toContain("text-muted-foreground");
-    expect(className).toContain("hover:bg-muted");
+    expect(className).toContain("hover:bg-card/70");
     expect(className).toContain("hover:text-foreground");
     expect(getSidebarNavItemState(false)).toEqual({ "data-active": "false" });
   });
@@ -177,6 +186,38 @@ describe("sidebar nav item styling", () => {
 
     expect(className).toContain("justify-center");
     expect(className).toContain("px-2");
-    expect(className).toContain("bg-primary");
+    expect(className).toContain("bg-card");
+  });
+});
+
+describe("isSidebarItemActive", () => {
+  it("matches exact routes and nested application routes", () => {
+    expect(isSidebarItemActive("/opportunities/acme", "/opportunities")).toBe(
+      true,
+    );
+    expect(isSidebarItemActive("/settings/profile", "/settings")).toBe(true);
+    expect(isSidebarItemActive("/dashboard", "/dashboard")).toBe(true);
+  });
+
+  it("does not treat dashboard as a parent route", () => {
+    expect(isSidebarItemActive("/dashboard/reports", "/dashboard")).toBe(false);
+  });
+});
+
+describe("getActiveSidebarHref", () => {
+  it("uses the most specific matching route", () => {
+    const items = navigationGroups.flatMap((group) => group.items);
+
+    expect(getActiveSidebarHref("/opportunities/review", items)).toBe(
+      "/opportunities/review",
+    );
+  });
+
+  it("keeps parent routes active for detail pages", () => {
+    const items = navigationGroups.flatMap((group) => group.items);
+
+    expect(getActiveSidebarHref("/opportunities/acme", items)).toBe(
+      "/opportunities",
+    );
   });
 });

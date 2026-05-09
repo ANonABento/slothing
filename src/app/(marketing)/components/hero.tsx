@@ -104,7 +104,7 @@ export function Hero() {
                 <div className="p-4 rounded-xl bg-card border">
                   <div className="text-2xl font-bold text-primary">12</div>
                   <div className="text-sm text-muted-foreground">
-                    Jobs Tracked
+                    Opportunities Tracked
                   </div>
                 </div>
                 <div className="p-4 rounded-xl bg-card border">

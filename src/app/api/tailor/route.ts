@@ -25,6 +25,8 @@ import { generateId } from "@/lib/utils";
 import { PATHS } from "@/lib/constants";
 import { requireAuth, isAuthError } from "@/lib/auth";
 
+export const dynamic = "force-dynamic";
+
 /**
  * GET /api/tailor — returns available templates
  */
@@ -63,7 +65,7 @@ export async function POST(request: NextRequest) {
     if (body.action !== undefined && !isTailorAction(body.action)) {
       return NextResponse.json(
         { error: "Unsupported tailor action." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -71,7 +73,7 @@ export async function POST(request: NextRequest) {
       if (!isTailoredResume(body.resume)) {
         return NextResponse.json(
           { error: "A generated resume is required for template rendering." },
-          { status: 400 }
+          { status: 400 },
         );
       }
 
@@ -98,7 +100,7 @@ export async function POST(request: NextRequest) {
     if (!jobDescription || jobDescription.trim().length < 20) {
       return NextResponse.json(
         { error: "Job description is too short. Please paste the full JD." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -119,9 +121,10 @@ export async function POST(request: NextRequest) {
     if (totalEntries === 0) {
       return NextResponse.json(
         {
-          error: "No knowledge bank entries found. Upload a resume first to populate your bank.",
+          error:
+            "No knowledge bank entries found. Upload a resume first to populate your bank.",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -164,7 +167,7 @@ export async function POST(request: NextRequest) {
         jobDescription,
         userId: authResult.userId,
       },
-      llmConfig
+      llmConfig,
     );
 
     // Generate HTML
@@ -192,7 +195,7 @@ export async function POST(request: NextRequest) {
           responsibilities: [],
           status: "saved",
         },
-        authResult.userId
+        authResult.userId,
       );
 
     // Save the generated resume
@@ -202,7 +205,7 @@ export async function POST(request: NextRequest) {
       tailoredResume,
       pdfUrl,
       analysis.matchScore,
-      authResult.userId
+      authResult.userId,
     );
 
     if (opportunityId) {
@@ -214,7 +217,13 @@ export async function POST(request: NextRequest) {
     }
 
     if (promptVariantId) {
-      logPromptVariantResult(authResult.userId, promptVariantId, job.id, savedResume.id, analysis.matchScore);
+      logPromptVariantResult(
+        authResult.userId,
+        promptVariantId,
+        job.id,
+        savedResume.id,
+        analysis.matchScore,
+      );
     }
 
     return NextResponse.json({
@@ -236,7 +245,7 @@ export async function POST(request: NextRequest) {
     console.error("Tailor error:", error);
     return NextResponse.json(
       { error: "Failed to tailor resume", details: String(error) },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

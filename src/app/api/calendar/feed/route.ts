@@ -8,7 +8,10 @@ import { NextRequest } from "next/server";
 import { getJobs } from "@/lib/db/jobs";
 import { getReminders } from "@/lib/db/reminders";
 import { getInterviewSessions } from "@/lib/db/interviews";
-import { generateICSCalendar, type CalendarEvent } from "@/lib/calendar/ics-generator";
+import {
+  generateICSCalendar,
+  type CalendarEvent,
+} from "@/lib/calendar/ics-generator";
 import { verifyCalendarFeedToken } from "@/lib/calendar/feed-token";
 
 export const dynamic = "force-dynamic";
@@ -95,7 +98,9 @@ export async function GET(request: NextRequest) {
           events.push({
             id: `reminder-${reminder.id}`,
             title: reminder.title,
-            description: reminder.description || (job ? `For: ${job.title} at ${job.company}` : ""),
+            description:
+              reminder.description ||
+              (job ? `For: ${job.title} at ${job.company}` : ""),
             startDate: new Date(reminder.dueDate),
             type: reminder.type === "follow_up" ? "follow_up" : "reminder",
           });
@@ -114,15 +119,18 @@ export async function GET(request: NextRequest) {
       headers: {
         "Content-Type": "text/calendar; charset=utf-8",
         "Cache-Control": "no-cache, no-store, must-revalidate",
-        "Pragma": "no-cache",
-        "Expires": "0",
+        Pragma: "no-cache",
+        Expires: "0",
       },
     });
   } catch (error) {
     console.error("Calendar feed error:", error);
-    return new Response(JSON.stringify({ error: "Failed to generate calendar feed" }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" },
-    });
+    return new Response(
+      JSON.stringify({ error: "Failed to generate calendar feed" }),
+      {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      },
+    );
   }
 }

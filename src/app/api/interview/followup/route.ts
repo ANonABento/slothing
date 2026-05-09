@@ -11,6 +11,8 @@ import { getProfile, getLLMConfig } from "@/lib/db";
 import { LLMClient, parseJSONFromLLM } from "@/lib/llm/client";
 import { requireAuth, isAuthError } from "@/lib/auth";
 
+export const dynamic = "force-dynamic";
+
 interface FollowUpResponse {
   followUpQuestion: string;
   reason: string;
@@ -22,12 +24,13 @@ export async function POST(request: NextRequest) {
   if (isAuthError(authResult)) return authResult;
 
   try {
-    const { jobId, originalQuestion, userAnswer, questionCategory } = await request.json();
+    const { jobId, originalQuestion, userAnswer, questionCategory } =
+      await request.json();
 
     if (!originalQuestion || !userAnswer) {
       return NextResponse.json(
         { error: "Original question and user answer are required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -92,12 +95,19 @@ Return a JSON object with:
         followUp = {
           followUpQuestion: response.trim(),
           reason: "Probing deeper into your answer",
-          suggestedFocus: ["Provide specific examples", "Include measurable outcomes"],
+          suggestedFocus: [
+            "Provide specific examples",
+            "Include measurable outcomes",
+          ],
         };
       }
     } else {
       // Generate follow-up without LLM based on question category
-      followUp = generateBasicFollowUp(originalQuestion, userAnswer, questionCategory);
+      followUp = generateBasicFollowUp(
+        originalQuestion,
+        userAnswer,
+        questionCategory,
+      );
     }
 
     return NextResponse.json({
@@ -108,7 +118,7 @@ Return a JSON object with:
     console.error("Follow-up question error:", error);
     return NextResponse.json(
       { error: "Failed to generate follow-up question" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -116,20 +126,26 @@ Return a JSON object with:
 function generateBasicFollowUp(
   originalQuestion: string,
   userAnswer: string,
-  category?: string
+  category?: string,
 ): FollowUpResponse {
   const wordCount = userAnswer.split(/\s+/).length;
 
   // Check for common patterns that need follow-up
-  const hasSpecificNumbers = /\d+%|\$\d+|\d+ (people|team|months|years|hours)/i.test(userAnswer);
-  const mentionsChallenge = /challenge|difficult|problem|issue|obstacle/i.test(userAnswer);
-  const mentionsResult = /result|outcome|achieved|accomplished|impact/i.test(userAnswer);
+  const hasSpecificNumbers =
+    /\d+%|\$\d+|\d+ (people|team|months|years|hours)/i.test(userAnswer);
+  const mentionsChallenge = /challenge|difficult|problem|issue|obstacle/i.test(
+    userAnswer,
+  );
+  const mentionsResult = /result|outcome|achieved|accomplished|impact/i.test(
+    userAnswer,
+  );
   const mentionsTeam = /team|collaborate|together|we|group/i.test(userAnswer);
 
   // Select follow-up based on what's missing or can be explored
   if (wordCount < 30) {
     return {
-      followUpQuestion: "Can you walk me through a specific example of what you just mentioned?",
+      followUpQuestion:
+        "Can you walk me through a specific example of what you just mentioned?",
       reason: "The initial answer was brief and would benefit from more detail",
       suggestedFocus: ["Add specific details", "Describe the context"],
     };
@@ -137,7 +153,8 @@ function generateBasicFollowUp(
 
   if (!hasSpecificNumbers) {
     return {
-      followUpQuestion: "What specific metrics or measurable outcomes can you share from that experience?",
+      followUpQuestion:
+        "What specific metrics or measurable outcomes can you share from that experience?",
       reason: "Quantifying achievements makes answers more compelling",
       suggestedFocus: ["Include percentages or numbers", "Mention timeframes"],
     };
@@ -145,7 +162,8 @@ function generateBasicFollowUp(
 
   if (mentionsChallenge && !mentionsResult) {
     return {
-      followUpQuestion: "What was the final outcome of that situation? How did you know you were successful?",
+      followUpQuestion:
+        "What was the final outcome of that situation? How did you know you were successful?",
       reason: "Following up on the resolution of challenges",
       suggestedFocus: ["Describe the resolution", "Share the impact"],
     };
@@ -153,24 +171,33 @@ function generateBasicFollowUp(
 
   if (mentionsTeam) {
     return {
-      followUpQuestion: "What was your specific role in the team effort you described? What decisions did you personally make?",
+      followUpQuestion:
+        "What was your specific role in the team effort you described? What decisions did you personally make?",
       reason: "Understanding individual contribution in team contexts",
-      suggestedFocus: ["Highlight your specific contributions", "Show leadership or initiative"],
+      suggestedFocus: [
+        "Highlight your specific contributions",
+        "Show leadership or initiative",
+      ],
     };
   }
 
   // Category-specific follow-ups
   if (category === "behavioral") {
     return {
-      followUpQuestion: "Looking back, what would you do differently if you faced the same situation today?",
+      followUpQuestion:
+        "Looking back, what would you do differently if you faced the same situation today?",
       reason: "Testing self-reflection and growth mindset",
-      suggestedFocus: ["Show learning from experience", "Demonstrate adaptability"],
+      suggestedFocus: [
+        "Show learning from experience",
+        "Demonstrate adaptability",
+      ],
     };
   }
 
   if (category === "technical") {
     return {
-      followUpQuestion: "What alternative approaches did you consider, and why did you choose this one?",
+      followUpQuestion:
+        "What alternative approaches did you consider, and why did you choose this one?",
       reason: "Understanding technical decision-making process",
       suggestedFocus: ["Compare trade-offs", "Justify your choices"],
     };
@@ -178,7 +205,8 @@ function generateBasicFollowUp(
 
   if (category === "situational") {
     return {
-      followUpQuestion: "How would your approach change if you had limited resources or a tighter deadline?",
+      followUpQuestion:
+        "How would your approach change if you had limited resources or a tighter deadline?",
       reason: "Testing adaptability and prioritization",
       suggestedFocus: ["Show flexibility", "Demonstrate prioritization skills"],
     };
@@ -186,8 +214,12 @@ function generateBasicFollowUp(
 
   // Default follow-up
   return {
-    followUpQuestion: "That's interesting. Can you tell me more about how you handled the most challenging aspect of that situation?",
+    followUpQuestion:
+      "That's interesting. Can you tell me more about how you handled the most challenging aspect of that situation?",
     reason: "Exploring depth of experience",
-    suggestedFocus: ["Dive deeper into challenges", "Show problem-solving skills"],
+    suggestedFocus: [
+      "Dive deeper into challenges",
+      "Show problem-solving skills",
+    ],
   };
 }

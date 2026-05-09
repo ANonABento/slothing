@@ -20,7 +20,7 @@ import type { InterviewSession } from "@/types/interview";
 
 const SaveToDocsButton = dynamic(
   () => import("@/components/google").then((module) => module.SaveToDocsButton),
-  { loading: () => <SkeletonButton className="w-36" />, ssr: false }
+  { loading: () => <SkeletonButton className="w-36" />, ssr: false },
 );
 
 interface InterviewSummaryProps {
@@ -34,8 +34,12 @@ export function InterviewSummary({
   selectedJob,
   onReset,
 }: InterviewSummaryProps) {
-  const answeredCount = session.answers.filter((answer) => answer.trim()).length;
-  const feedbackEntries = session.feedback.filter((feedback) => feedback.trim());
+  const answeredCount = session.answers.filter((answer) =>
+    answer.trim(),
+  ).length;
+  const feedbackEntries = session.feedback.filter((feedback) =>
+    feedback.trim(),
+  );
   const averageFeedbackLength =
     feedbackEntries.reduce((sum, feedback) => sum + feedback.length, 0) /
     (feedbackEntries.length || 1);
@@ -48,17 +52,20 @@ export function InterviewSummary({
 
   return (
     <div className="space-y-6 animate-enter">
-      <div className="border-success/50 bg-success/5 rounded-2xl border p-8 text-center">
+      <div className="border-success/50 bg-success/5 rounded-lg border p-8 text-center">
         <div className="mb-6 inline-flex h-20 w-20 items-center justify-center rounded-full bg-success/20 text-success">
           <Trophy className="h-10 w-10" />
         </div>
         <h2 className="text-2xl font-bold">Interview Complete!</h2>
         <p className="mt-2 text-muted-foreground">
-          You answered all {pluralize(session.questions.length, "question")}. Review your
-          responses and feedback below.
+          You answered all {pluralize(session.questions.length, "question")}.
+          Review your responses and feedback below.
         </p>
         <div className="mt-6 flex justify-center gap-3">
-          <Button onClick={onReset} className="gradient-bg text-primary-foreground hover:opacity-90">
+          <Button
+            onClick={onReset}
+            className="gradient-bg text-primary-foreground hover:opacity-90"
+          >
             <RotateCcw className="mr-2 h-4 w-4" />
             Start New Interview
           </Button>
@@ -110,10 +117,13 @@ export function InterviewSummary({
       {session.questions.map((question, questionIndex) => (
         <div
           key={`${questionIndex}-${question.question}`}
-          className="overflow-hidden rounded-2xl border bg-card"
+          className="overflow-hidden rounded-lg border bg-card"
         >
           <div className="border-b bg-muted/30 p-5">
-            <CategoryBadge category={question.category} className="mb-3 text-xs" />
+            <CategoryBadge
+              category={question.category}
+              className="mb-3 text-xs"
+            />
             <h4 className="font-semibold">{question.question}</h4>
           </div>
           <div className="space-y-4 p-5">
@@ -139,32 +149,35 @@ export function InterviewSummary({
               <div className="mt-4 space-y-4 border-t pt-4">
                 <p className="flex items-center gap-2 text-sm font-medium text-warning">
                   <Zap className="h-4 w-4" />
-                  Follow-up Questions ({session.followUps[questionIndex].length})
+                  Follow-up Questions ({session.followUps[questionIndex].length}
+                  )
                 </p>
-                      {session.followUps[questionIndex].map((followUp, followUpIndex) => (
-                  <div
-                    key={`${questionIndex}-${followUpIndex}-${followUp.followUpQuestion}`}
-                    className="space-y-2 border-l-2 border-warning/30 pl-4"
-                  >
-                    <p className="text-sm font-medium">
-                      {followUp.followUpQuestion}
-                    </p>
-                    <div className="rounded-lg bg-muted/50 p-3">
-                      <p className="mb-1 text-xs font-medium text-muted-foreground">
-                        Your Response
+                {session.followUps[questionIndex].map(
+                  (followUp, followUpIndex) => (
+                    <div
+                      key={`${questionIndex}-${followUpIndex}-${followUp.followUpQuestion}`}
+                      className="space-y-2 border-l-2 border-warning/30 pl-4"
+                    >
+                      <p className="text-sm font-medium">
+                        {followUp.followUpQuestion}
                       </p>
-                      <p className="text-sm">{followUp.answer}</p>
-                    </div>
-                    {followUp.feedback && (
-                      <div className="rounded-lg border border-warning/30 bg-warning/5 p-3">
-                        <p className="mb-1 text-xs font-medium text-warning">
-                          Feedback
+                      <div className="rounded-lg bg-muted/50 p-3">
+                        <p className="mb-1 text-xs font-medium text-muted-foreground">
+                          Your Response
                         </p>
-                        <p className="text-sm">{followUp.feedback}</p>
+                        <p className="text-sm">{followUp.answer}</p>
                       </div>
-                    )}
-                  </div>
-                ))}
+                      {followUp.feedback && (
+                        <div className="rounded-lg border border-warning/30 bg-warning/5 p-3">
+                          <p className="mb-1 text-xs font-medium text-warning">
+                            Feedback
+                          </p>
+                          <p className="text-sm">{followUp.feedback}</p>
+                        </div>
+                      )}
+                    </div>
+                  ),
+                )}
               </div>
             ) : null}
           </div>

@@ -20,6 +20,8 @@ import { getReminders } from "@/lib/db/reminders";
 import { getJobs } from "@/lib/db/jobs";
 import { isGoogleConnected } from "@/lib/google/client";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(request: NextRequest) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
@@ -28,7 +30,7 @@ export async function GET(request: NextRequest) {
   if (!connected) {
     return NextResponse.json(
       { error: "Google account not connected" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -47,7 +49,7 @@ export async function GET(request: NextRequest) {
     console.error("Tasks list error:", error);
     return NextResponse.json(
       { error: "Failed to list tasks" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -60,7 +62,7 @@ export async function POST(request: NextRequest) {
   if (!connected) {
     return NextResponse.json(
       { error: "Google account not connected" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -73,7 +75,7 @@ export async function POST(request: NextRequest) {
       if (!data.taskId) {
         return NextResponse.json(
           { error: "Missing required field: taskId" },
-          { status: 400 }
+          { status: 400 },
         );
       }
       const success = await completeTask(data.taskId);
@@ -84,13 +86,13 @@ export async function POST(request: NextRequest) {
       if (!data.company || !data.role || !data.interviewDate) {
         return NextResponse.json(
           { error: "Missing required fields: company, role, interviewDate" },
-          { status: 400 }
+          { status: 400 },
         );
       }
       const taskId = await createFollowUpTask(
         data.company,
         data.role,
-        new Date(data.interviewDate)
+        new Date(data.interviewDate),
       );
       return NextResponse.json({
         success: taskId !== null,
@@ -102,13 +104,13 @@ export async function POST(request: NextRequest) {
       if (!data.company || !data.role || !data.deadline) {
         return NextResponse.json(
           { error: "Missing required fields: company, role, deadline" },
-          { status: 400 }
+          { status: 400 },
         );
       }
       const taskId = await createDeadlineTask(
         data.company,
         data.role,
-        new Date(data.deadline)
+        new Date(data.deadline),
       );
       return NextResponse.json({
         success: taskId !== null,
@@ -151,7 +153,7 @@ export async function POST(request: NextRequest) {
         const taskId = await createDeadlineTask(
           job.company,
           job.title,
-          new Date(job.deadline!)
+          new Date(job.deadline!),
         );
         results.push({
           title: `Deadline: ${job.title} at ${job.company}`,
@@ -176,7 +178,7 @@ export async function POST(request: NextRequest) {
     console.error("Tasks sync error:", error);
     return NextResponse.json(
       { error: "Failed to sync tasks" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

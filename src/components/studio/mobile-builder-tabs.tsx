@@ -1,6 +1,6 @@
 "use client";
 
-import { Eye, Pencil, type LucideIcon } from "lucide-react";
+import { Bot, Eye, Pencil, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { BuilderPanel } from "@/lib/builder/section-manager";
 
@@ -11,6 +11,7 @@ const RESUME_MOBILE_TABS: Array<{
 }> = [
   { panel: "edit", label: "Edit", Icon: Pencil },
   { panel: "preview", label: "Preview", Icon: Eye },
+  { panel: "assistant", label: "AI", Icon: Bot },
 ];
 
 interface MobileBuilderTabsProps {

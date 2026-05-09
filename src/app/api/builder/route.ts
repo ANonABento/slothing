@@ -10,6 +10,8 @@ import { generateResumeHTML } from "@/lib/resume/pdf";
 import { getTemplateWithCustom } from "@/lib/resume/templates";
 import type { ContactInfo } from "@/types";
 
+export const dynamic = "force-dynamic";
+
 interface BuilderRequestBody {
   entryIds?: string[];
   templateId?: string;
@@ -23,20 +25,24 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { entryIds, templateId = "classic", contact, document } =
-      body as BuilderRequestBody;
+    const {
+      entryIds,
+      templateId = "classic",
+      contact,
+      document,
+    } = body as BuilderRequestBody;
 
     if (document) {
       if (!isEditableResumeDocument(document)) {
         return NextResponse.json(
           { error: "document must include a sections array" },
-          { status: 400 }
+          { status: 400 },
         );
       }
 
       const resume = editableDocumentToResume(
         document,
-        contact || { name: "Your Name" }
+        contact || { name: "Your Name" },
       );
       const template = getTemplateWithCustom(templateId, authResult.userId);
       const html = generateResumeHTML(resume, templateId, template);
@@ -47,16 +53,16 @@ export async function POST(request: NextRequest) {
     if (!Array.isArray(entryIds) || entryIds.length === 0) {
       return NextResponse.json(
         { error: "entryIds must be a non-empty array" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     const allEntries = getBankEntries(authResult.userId);
-    const selectedEntries = allEntries.filter((e) => entryIds.includes(e.id));
+    const selectedEntries = expandSelectedBankEntries(allEntries, entryIds);
 
     const resume = bankEntriesToResume(
       selectedEntries,
-      contact || { name: "Your Name" }
+      contact || { name: "Your Name" },
     );
 
     const template = getTemplateWithCustom(templateId, authResult.userId);
@@ -67,13 +73,45 @@ export async function POST(request: NextRequest) {
     console.error("Builder error:", error);
     return NextResponse.json(
       { error: "Failed to generate resume" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
+function expandSelectedBankEntries(
+  entries: ReturnType<typeof getBankEntries>,
+  entryIds: string[],
+) {
+  const selectedIds = new Set(entryIds);
+  const selectedEntries = entries.filter((entry) => selectedIds.has(entry.id));
+  const selectedRootIds = new Set(
+    selectedEntries
+      .filter((entry) => !getParentId(entry))
+      .map((entry) => entry.id),
+  );
+
+  for (const entry of selectedEntries) {
+    const parentId = getParentId(entry);
+    if (parentId) selectedIds.add(parentId);
+  }
+
+  for (const entry of entries) {
+    const parentId = getParentId(entry);
+    if (parentId && selectedRootIds.has(parentId)) {
+      selectedIds.add(entry.id);
+    }
+  }
+
+  return entries.filter((entry) => selectedIds.has(entry.id));
+}
+
+function getParentId(entry: ReturnType<typeof getBankEntries>[number]) {
+  const parentId = entry.content.parentId;
+  return typeof parentId === "string" && parentId.trim() ? parentId : null;
+}
+
 function isEditableResumeDocument(
-  value: unknown
+  value: unknown,
 ): value is EditableResumeDocument {
   return (
     typeof value === "object" &&

@@ -66,11 +66,11 @@ export function AddJobDialog({
       });
       const data = await readJsonResponse<CreateJobResponse>(
         response,
-        "Failed to add job",
+        "Failed to add opportunity",
       );
 
       if (!data.job) {
-        throw new Error("Failed to add job");
+        throw new Error("Failed to add opportunity");
       }
 
       setForm(EMPTY_FORM);
@@ -78,8 +78,9 @@ export function AddJobDialog({
       onOpenChange(false);
     } catch (error) {
       showErrorToast(error, {
-        title: "Could not add job",
-        fallbackDescription: "Please check the job details and try again.",
+        title: "Could not add opportunity",
+        fallbackDescription:
+          "Please check the opportunity details and try again.",
       });
     } finally {
       setAddingJob(false);
@@ -92,18 +93,18 @@ export function AddJobDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Briefcase className="h-5 w-5 text-primary" />
-            Add New Job
+            Add New Opportunity
           </DialogTitle>
           <DialogDescription>
-            Paste the job description to analyze your match and generate a
-            tailored resume.
+            Paste the opportunity description to analyze your match and generate
+            a tailored resume.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label>Job Title</Label>
+              <Label>Opportunity Title</Label>
               <Input
                 value={form.title}
                 onChange={(event) =>
@@ -124,7 +125,7 @@ export function AddJobDialog({
             </div>
           </div>
           <div className="space-y-2">
-            <Label>Job URL (optional)</Label>
+            <Label>Opportunity URL (optional)</Label>
             <Input
               value={form.url}
               onChange={(event) =>
@@ -134,7 +135,7 @@ export function AddJobDialog({
             />
           </div>
           <div className="space-y-2">
-            <Label>Job Description</Label>
+            <Label>Opportunity Description</Label>
             <Textarea
               rows={10}
               value={form.description}
@@ -144,7 +145,7 @@ export function AddJobDialog({
                   description: event.target.value,
                 }))
               }
-              placeholder="Paste the full job description here..."
+              placeholder="Paste the full opportunity description here..."
               className="resize-none"
             />
           </div>
@@ -162,7 +163,7 @@ export function AddJobDialog({
             className={THEME_PRIMARY_GRADIENT_BUTTON_CLASSES}
           >
             {addingJob && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-            Add Job
+            Add Opportunity
           </Button>
         </div>
       </DialogContent>

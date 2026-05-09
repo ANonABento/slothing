@@ -1,6 +1,6 @@
 "use client";
 
-import { forwardRef } from "react";
+import { forwardRef, type ReactNode } from "react";
 import { Input } from "@/components/ui/input";
 import { BANK_CATEGORIES, type BankCategory } from "@/types";
 import { Search, X } from "lucide-react";
@@ -13,6 +13,7 @@ const CATEGORY_LABELS: Record<BankCategory, string> = {
   project: "Projects",
   hackathon: "Hackathons",
   education: "Education",
+  bullet: "Bullets",
   achievement: "Achievements",
   certification: "Certifications",
 };
@@ -27,6 +28,7 @@ interface SearchBarProps {
   sortBy: SortOption;
   onSortChange: (sort: SortOption) => void;
   counts: Record<string, number>;
+  controls?: ReactNode;
 }
 
 function CountBadge({ count, active }: { count: number; active: boolean }) {
@@ -54,6 +56,7 @@ export const SearchBar = forwardRef<HTMLInputElement, SearchBarProps>(
       sortBy,
       onSortChange,
       counts,
+      controls,
     },
     ref,
   ) {
@@ -62,7 +65,7 @@ export const SearchBar = forwardRef<HTMLInputElement, SearchBarProps>(
     return (
       <div className="space-y-3">
         {/* Search input */}
-        <div className="flex gap-3">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -86,12 +89,15 @@ export const SearchBar = forwardRef<HTMLInputElement, SearchBarProps>(
           <select
             value={sortBy}
             onChange={(e) => onSortChange(e.target.value as SortOption)}
-            className={cn(THEME_CONTROL_CLASSES, "px-3 py-2 text-sm")}
+            className={cn(THEME_CONTROL_CLASSES, "px-3 py-2 text-sm lg:w-36")}
             aria-label="Sort order"
           >
             <option value="date">Newest</option>
             <option value="confidence">Confidence</option>
           </select>
+          {controls ? (
+            <div className="flex flex-wrap items-center gap-2">{controls}</div>
+          ) : null}
         </div>
 
         {/* Category filter chips */}

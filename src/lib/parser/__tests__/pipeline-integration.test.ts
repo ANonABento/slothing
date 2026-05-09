@@ -29,15 +29,20 @@ vi.mock("@/lib/db/profile-bank", async (importOriginal) => {
     findDuplicateEntry: vi.fn().mockReturnValue(null),
     updateBankEntry: vi.fn(),
     deleteBankEntriesBySource: vi.fn().mockReturnValue(0),
-    insertBankEntries: vi.fn().mockImplementation((entries) =>
-      entries.map((_: unknown, i: number) => `bank-id-${i}`)
-    ),
+    insertBankEntries: vi
+      .fn()
+      .mockImplementation((entries) =>
+        entries.map((_: unknown, i: number) => `bank-id-${i}`),
+      ),
   };
 });
 
 // Import after mocks
 import { smartParseResume } from "../smart-parser";
-import { extractBankEntries, populateBankFromProfile } from "@/lib/resume/info-bank";
+import {
+  extractBankEntries,
+  populateBankFromProfile,
+} from "@/lib/resume/info-bank";
 import {
   findDuplicateEntry,
   updateBankEntry,
@@ -217,7 +222,7 @@ describe("Pipeline Integration: upload → parse → bank", () => {
       // Extract bank entries from parsed profile
       const entries = extractBankEntries(parseResult.profile, "doc-standard");
 
-      // Should have: experiences + achievements + skills + education + projects
+      // Should have: experiences + bullets + skills + education + projects
       expect(entries.length).toBeGreaterThanOrEqual(5);
 
       // Verify experience entries exist
@@ -318,10 +323,13 @@ describe("Pipeline Integration: upload → parse → bank", () => {
               highlights: [],
             },
           ],
-        })
+        }),
       );
 
-      const parseResult = await smartParseResume(UNSTRUCTURED_RESUME, llmConfig);
+      const parseResult = await smartParseResume(
+        UNSTRUCTURED_RESUME,
+        llmConfig,
+      );
 
       // With unstructured text, parser either:
       // 1. Calls LLM for low-confidence sections, OR
@@ -357,7 +365,7 @@ describe("Pipeline Integration: upload → parse → bank", () => {
           content: {},
           confidenceScore: 0.95,
           createdAt: "2024-01-01",
-        })
+        }),
       );
 
       const result2 = populateBankFromProfile(parseResult.profile, "doc-2");
@@ -378,13 +386,16 @@ describe("Pipeline Integration: upload → parse → bank", () => {
           content: {},
           confidenceScore: 0.5, // Lower than all new entries
           createdAt: "2024-01-01",
-        })
+        }),
       );
 
       const result = populateBankFromProfile(parseResult.profile, "doc-new");
       expect(result.updated).toBe(0);
       expect(result.inserted).toBeGreaterThan(0);
-      expect(deleteBankEntriesBySource).toHaveBeenCalledWith("doc-new", "default");
+      expect(deleteBankEntriesBySource).toHaveBeenCalledWith(
+        "doc-new",
+        "default",
+      );
       expect(updateBankEntry).not.toHaveBeenCalled();
     });
 
@@ -417,25 +428,32 @@ describe("Pipeline Integration: upload → parse → bank", () => {
       }
     });
 
-    it("achievement entries extracted from experience highlights", async () => {
+    it("bullet entries extracted from experience highlights", async () => {
       const parseResult = await smartParseResume(STANDARD_RESUME);
       const entries = extractBankEntries(parseResult.profile);
 
-      const achievementEntries = entries.filter((e) => e.category === "achievement");
-      for (const entry of achievementEntries) {
+      const bulletEntries = entries.filter((e) => e.category === "bullet");
+      expect(bulletEntries.length).toBeGreaterThan(0);
+      for (const entry of bulletEntries) {
         expect(entry.content).toHaveProperty("description");
         expect(entry.content).toHaveProperty("context");
+        expect(entry.content).toHaveProperty("parentId");
         expect(entry.confidenceScore).toBe(0.85);
       }
+      expect(entries.filter((e) => e.category === "achievement")).toHaveLength(
+        0,
+      );
     });
 
     it("skill entries from experience have usage context", async () => {
-      const parseResult = await smartParseResume(RESUME_WITH_OVERLAPPING_SKILLS);
+      const parseResult = await smartParseResume(
+        RESUME_WITH_OVERLAPPING_SKILLS,
+      );
       const entries = extractBankEntries(parseResult.profile);
 
       // Skills from experience section should have context
       const contextualSkills = entries.filter(
-        (e) => e.category === "skill" && e.content.context
+        (e) => e.category === "skill" && e.content.context,
       );
       for (const skill of contextualSkills) {
         expect(skill.content).toHaveProperty("company");
@@ -449,7 +467,7 @@ describe("Pipeline Integration: upload → parse → bank", () => {
 
       // Skills from the SKILLS section (not from experience)
       const standaloneSkills = entries.filter(
-        (e) => e.category === "skill" && !e.content.context
+        (e) => e.category === "skill" && !e.content.context,
       );
       for (const skill of standaloneSkills) {
         expect(skill.content).toHaveProperty("name");
@@ -475,6 +493,7 @@ describe("Pipeline Integration: upload → parse → bank", () => {
         "skill",
         "project",
         "education",
+        "bullet",
         "achievement",
         "certification",
       ];
@@ -538,10 +557,7 @@ describe("Pipeline Integration: upload → parse → bank", () => {
     it("populates bank from a full parse result", async () => {
       const parseResult = await smartParseResume(STANDARD_RESUME);
 
-      const result = populateBankFromProfile(
-        parseResult.profile,
-        "doc-e2e-1"
-      );
+      const result = populateBankFromProfile(parseResult.profile, "doc-e2e-1");
 
       expect(result.inserted).toBeGreaterThan(0);
       expect(insertBankEntries).toHaveBeenCalled();

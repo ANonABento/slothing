@@ -5,6 +5,12 @@ import Link from "next/link";
 import { ArrowLeft, Loader2, Settings } from "lucide-react";
 import { OpportunityReviewQueue } from "@/components/opportunities/review-queue";
 import { Button } from "@/components/ui/button";
+import {
+  AppPage,
+  PageContent,
+  PageLoadingState,
+  StandardEmptyState,
+} from "@/components/ui/page-layout";
 import { useErrorToast } from "@/hooks/use-error-toast";
 import { readJsonResponse } from "@/lib/http";
 import type { JobDescription } from "@/types";
@@ -93,27 +99,25 @@ export default function OpportunityReviewPage() {
   };
 
   if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <Loader2 className="h-10 w-10 animate-spin text-primary" />
-      </div>
-    );
+    return <PageLoadingState icon={Loader2} label="Loading review queue..." />;
   }
 
   if (!enabled) {
     return (
-      <div className="mx-auto flex min-h-screen w-full max-w-md flex-col items-center justify-center px-6 text-center">
-        <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-muted text-muted-foreground">
-          <Settings className="h-7 w-7" />
-        </div>
-        <h1 className="text-2xl font-semibold">Review queue disabled</h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Enable it in Settings to review pending opportunities.
-        </p>
-        <Button asChild className="mt-6">
-          <Link href="/settings">Open Settings</Link>
-        </Button>
-      </div>
+      <AppPage>
+        <PageContent width="narrow">
+          <StandardEmptyState
+            icon={Settings}
+            title="Review queue disabled"
+            description="Enable it in Settings to review pending opportunities."
+            action={
+              <Button asChild>
+                <Link href="/settings">Open Settings</Link>
+              </Button>
+            }
+          />
+        </PageContent>
+      </AppPage>
     );
   }
 
@@ -122,7 +126,7 @@ export default function OpportunityReviewPage() {
       <Link
         href="/opportunities"
         className="fixed left-4 top-4 z-30 inline-flex h-11 w-11 items-center justify-center rounded-full border bg-card/90 text-muted-foreground shadow-sm backdrop-blur transition-colors hover:text-foreground"
-        aria-label="Back to opportunities"
+        aria-label="Open opportunities"
       >
         <ArrowLeft className="h-5 w-5" />
       </Link>

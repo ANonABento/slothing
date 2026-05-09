@@ -19,6 +19,8 @@ import { getJob } from "@/lib/db/jobs";
 import { createInterviewSessionSchema } from "@/lib/constants";
 import { requireAuth, isAuthError } from "@/lib/auth";
 
+export const dynamic = "force-dynamic";
+
 // GET - List all interview sessions
 export async function GET(request: NextRequest) {
   const authResult = await requireAuth();
@@ -35,7 +37,7 @@ export async function GET(request: NextRequest) {
     console.error("Get sessions error:", error);
     return NextResponse.json(
       { error: "Failed to get interview sessions" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -57,7 +59,7 @@ export async function POST(request: NextRequest) {
       }));
       return NextResponse.json(
         { error: "Validation failed", errors },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -68,14 +70,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Job not found" }, { status: 404 });
     }
 
-    const session = createInterviewSession(jobId, questions, mode, authResult.userId);
+    const session = createInterviewSession(
+      jobId,
+      questions,
+      mode,
+      authResult.userId,
+    );
 
     return NextResponse.json({ session });
   } catch (error) {
     console.error("Create session error:", error);
     return NextResponse.json(
       { error: "Failed to create interview session" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -1,10 +1,25 @@
 "use client";
 
-import { CheckCircle, Key, Loader2, RefreshCw, Shield, XCircle, Zap } from "lucide-react";
+import {
+  CheckCircle,
+  Key,
+  Loader2,
+  RefreshCw,
+  Shield,
+  XCircle,
+  Zap,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { PageSection } from "@/components/ui/page-layout";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import type { LLMConfig } from "@/types";
 import type { LLMTestResult } from "@/app/(app)/settings/use-llm-settings";
 import type { ProviderOption } from "./llm-provider-selector";
@@ -37,19 +52,15 @@ export function LLMProviderConfig(props: LLMProviderConfigProps) {
   } = props;
 
   return (
-    <div className="rounded-2xl border bg-card p-6">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="p-2.5 rounded-xl bg-primary/10 text-primary">
-          <Key className="h-5 w-5" />
-        </div>
-        <div>
-          <h2 className="font-semibold">{selectedProvider?.label} Configuration</h2>
-          <p className="text-sm text-muted-foreground">
-            {selectedProvider?.requiresKey ? "Enter your API key and select a model" : "Configure your local Ollama instance"}
-          </p>
-        </div>
-      </div>
-
+    <PageSection
+      title={`${selectedProvider?.label} Configuration`}
+      description={
+        selectedProvider?.requiresKey
+          ? "Enter your API key and select a model."
+          : "Configure your local Ollama instance."
+      }
+      icon={Key}
+    >
       <div className="space-y-4">
         {selectedProvider?.requiresKey && (
           <div className="space-y-2">
@@ -57,7 +68,9 @@ export function LLMProviderConfig(props: LLMProviderConfigProps) {
             <Input
               type="password"
               value={config.apiKey || ""}
-              onChange={(event) => onConfigChange({ apiKey: event.target.value })}
+              onChange={(event) =>
+                onConfigChange({ apiKey: event.target.value })
+              }
               placeholder={`Enter your ${selectedProvider.label} API key`}
             />
             <p className="text-xs text-muted-foreground flex items-center gap-1">
@@ -72,11 +85,14 @@ export function LLMProviderConfig(props: LLMProviderConfigProps) {
             <Label>Ollama URL</Label>
             <Input
               value={config.baseUrl || "http://localhost:11434"}
-              onChange={(event) => onConfigChange({ baseUrl: event.target.value })}
+              onChange={(event) =>
+                onConfigChange({ baseUrl: event.target.value })
+              }
               placeholder="http://localhost:11434"
             />
             <p className="text-xs text-muted-foreground">
-              Default is http://localhost:11434. Change if Ollama is running elsewhere.
+              Default is http://localhost:11434. Change if Ollama is running
+              elsewhere.
             </p>
           </div>
         )}
@@ -84,8 +100,15 @@ export function LLMProviderConfig(props: LLMProviderConfigProps) {
         <div className="space-y-2">
           <Label htmlFor="llm-model-trigger">Model</Label>
           <div className="flex gap-2">
-            <Select value={config.model} onValueChange={(value) => onConfigChange({ model: value })}>
-              <SelectTrigger id="llm-model-trigger" className="flex-1" aria-label="Model">
+            <Select
+              value={config.model}
+              onValueChange={(value) => onConfigChange({ model: value })}
+            >
+              <SelectTrigger
+                id="llm-model-trigger"
+                className="flex-1"
+                aria-label="Model"
+              >
                 <SelectValue placeholder="Select a model" />
               </SelectTrigger>
               <SelectContent>
@@ -104,12 +127,16 @@ export function LLMProviderConfig(props: LLMProviderConfigProps) {
                 disabled={testing}
                 title="Refresh available models"
               >
-                <RefreshCw className={`h-4 w-4 ${testing ? "animate-spin" : ""}`} />
+                <RefreshCw
+                  className={`h-4 w-4 ${testing ? "animate-spin" : ""}`}
+                />
               </Button>
             )}
           </div>
           {config.provider === "ollama" && (
-            <p className="text-xs text-muted-foreground">Click refresh to load available models from Ollama</p>
+            <p className="text-xs text-muted-foreground">
+              Click refresh to load available models from Ollama
+            </p>
           )}
         </div>
 
@@ -121,13 +148,22 @@ export function LLMProviderConfig(props: LLMProviderConfigProps) {
                 : "bg-destructive/10 text-destructive border border-destructive/20"
             }`}
           >
-            {testResult.success ? <CheckCircle className="h-5 w-5 shrink-0" /> : <XCircle className="h-5 w-5 shrink-0" />}
+            {testResult.success ? (
+              <CheckCircle className="h-5 w-5 shrink-0" />
+            ) : (
+              <XCircle className="h-5 w-5 shrink-0" />
+            )}
             <span className="font-medium">{testResult.message}</span>
           </div>
         )}
 
         <div className="flex gap-3 pt-2">
-          <Button variant="outline" onClick={onTestConnection} disabled={testing} className="flex-1">
+          <Button
+            variant="outline"
+            onClick={onTestConnection}
+            disabled={testing}
+            className="flex-1"
+          >
             {testing ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -140,7 +176,11 @@ export function LLMProviderConfig(props: LLMProviderConfigProps) {
               </>
             )}
           </Button>
-          <Button onClick={onSave} disabled={saving || !hasChanges} className="flex-1 gradient-bg text-primary-foreground hover:opacity-90">
+          <Button
+            onClick={onSave}
+            disabled={saving || !hasChanges}
+            className="flex-1 gradient-bg text-primary-foreground hover:opacity-90"
+          >
             {saving ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -155,6 +195,6 @@ export function LLMProviderConfig(props: LLMProviderConfigProps) {
           </Button>
         </div>
       </div>
-    </div>
+    </PageSection>
   );
 }

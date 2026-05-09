@@ -1,4 +1,9 @@
-import type { BankEntry, GroupedBankEntries, LLMConfig, ContactInfo } from "@/types";
+import type {
+  BankEntry,
+  GroupedBankEntries,
+  LLMConfig,
+  ContactInfo,
+} from "@/types";
 import type { TailoredResume } from "@/lib/resume/generator";
 import { formatHackathonHighlights } from "@/lib/resume/hackathon-highlights";
 import type { BankMatch } from "./analyze";
@@ -32,7 +37,7 @@ export interface GenerateFromBankResult {
  */
 export async function generateFromBank(
   input: BankResumeInput,
-  llmConfig: LLMConfig | null
+  llmConfig: LLMConfig | null,
 ): Promise<GenerateFromBankResult> {
   if (llmConfig) {
     const activeVariant = getActivePromptVariant(input.userId);
@@ -45,7 +50,7 @@ export async function generateFromBank(
 async function generateWithLLM(
   input: BankResumeInput,
   llmConfig: LLMConfig,
-  promptVariant: PromptVariant | null
+  promptVariant: PromptVariant | null,
 ): Promise<TailoredResume> {
   const client = new LLMClient(llmConfig);
 
@@ -54,6 +59,7 @@ async function generateWithLLM(
   const educationEntries = formatBankCategory(input.bankEntries.education);
   const projectEntries = formatBankCategory(input.bankEntries.project);
   const hackathonEntries = formatBankCategory(input.bankEntries.hackathon);
+  const bulletEntries = formatBankCategory(input.bankEntries.bullet);
   const achievementEntries = formatBankCategory(input.bankEntries.achievement);
 
   const instructions = promptVariant?.content ?? DEFAULT_PROMPT_CONTENT;
@@ -87,6 +93,9 @@ ${projectEntries}
 
 KNOWLEDGE BANK - HACKATHONS:
 ${hackathonEntries}
+
+KNOWLEDGE BANK - RESUME BULLETS:
+${bulletEntries}
 
 KNOWLEDGE BANK - ACHIEVEMENTS:
 ${achievementEntries}
@@ -135,7 +144,10 @@ Return ONLY a JSON object:
 
   return {
     contact: input.contact,
-    summary: parsed.summary || input.summary || `Experienced professional seeking ${input.jobTitle} position.`,
+    summary:
+      parsed.summary ||
+      input.summary ||
+      `Experienced professional seeking ${input.jobTitle} position.`,
     experiences: parsed.experiences || [],
     skills: parsed.skills || [],
     education: parsed.education || [],
@@ -146,7 +158,10 @@ function generateBasicFromBank(input: BankResumeInput): TailoredResume {
   // Use matched entries sorted by relevance
   const usedEntryIds = new Set<string>();
   const topExperiences = input.matchedEntries
-    .filter((m) => m.entry.category === "experience" || m.entry.category === "hackathon")
+    .filter(
+      (m) =>
+        m.entry.category === "experience" || m.entry.category === "hackathon",
+    )
     .slice(0, 3)
     .map((m) => {
       usedEntryIds.add(m.entry.id);
@@ -155,7 +170,10 @@ function generateBasicFromBank(input: BankResumeInput): TailoredResume {
 
   // If not enough matched experiences, fill from bank
   if (topExperiences.length < 2) {
-    for (const entry of [...input.bankEntries.experience, ...input.bankEntries.hackathon]) {
+    for (const entry of [
+      ...input.bankEntries.experience,
+      ...input.bankEntries.hackathon,
+    ]) {
       if (topExperiences.length >= 3) break;
       if (!usedEntryIds.has(entry.id)) {
         topExperiences.push(entryToResumeExperience(entry));
@@ -208,7 +226,9 @@ function formatBankCategory(entries: BankEntry[]): string {
     .join("\n");
 }
 
-function entryToResumeExperience(entry: BankEntry): TailoredResume["experiences"][number] {
+function entryToResumeExperience(
+  entry: BankEntry,
+): TailoredResume["experiences"][number] {
   const c = entry.content;
   if (entry.category === "hackathon") {
     return {

@@ -9,6 +9,8 @@ import { getCoverLettersByJob } from "@/lib/db/cover-letters";
 import { getJob } from "@/lib/db/jobs";
 import { requireAuth, isAuthError } from "@/lib/auth";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } },

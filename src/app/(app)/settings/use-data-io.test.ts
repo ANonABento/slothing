@@ -3,6 +3,7 @@ import {
   buildFullImportMessage,
   buildImportPreviewStats,
   getExportFileName,
+  getExportUrl,
 } from "./use-data-io";
 
 describe("getExportFileName", () => {
@@ -13,10 +14,10 @@ describe("getExportFileName", () => {
       "taida-profile-2026-04-24.json",
     );
     expect(getExportFileName("jobs-json", date)).toBe(
-      "slothing-jobs-2026-04-24.json",
+      "slothing-opportunities-2026-04-24.json",
     );
     expect(getExportFileName("jobs-csv", date)).toBe(
-      "slothing-jobs-2026-04-24.csv",
+      "slothing-opportunities-2026-04-24.csv",
     );
     expect(getExportFileName("backup", date)).toBe(
       "slothing-backup-2026-04-24.json",
@@ -26,6 +27,17 @@ describe("getExportFileName", () => {
   it("uses the slothing full export filename", () => {
     expect(getExportFileName("full-export", date)).toBe(
       "slothing-export-2026-04-24.json",
+    );
+  });
+});
+
+describe("getExportUrl", () => {
+  it("uses the opportunities API for opportunities exports", () => {
+    expect(getExportUrl("jobs-json")).toBe(
+      "/api/export/opportunities?format=json",
+    );
+    expect(getExportUrl("jobs-csv")).toBe(
+      "/api/export/opportunities?format=csv",
     );
   });
 });
@@ -47,7 +59,7 @@ describe("buildImportPreviewStats", () => {
       }),
     ).toEqual({
       Profile: 1,
-      Jobs: 2,
+      Opportunities: 2,
       "Cover Letters": 1,
       "Bank Entries": 3,
       "Generated Resumes": 1,
@@ -69,7 +81,7 @@ describe("buildFullImportMessage", () => {
           llmConfig: true,
         },
       }),
-    ).toBe("Imported: Profile, 2 jobs, 1 cover letters, LLM config");
+    ).toBe("Imported: Profile, 2 opportunities, 1 cover letters, LLM config");
   });
 
   it("returns the duplicate-skipped message when nothing new was added", () => {

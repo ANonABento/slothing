@@ -132,7 +132,7 @@ export const OPPORTUNITY_TYPE_OPTIONS: OpportunityOption<OpportunityType>[] = [
 
 export const OPPORTUNITY_TYPE_TAB_OPTIONS: OpportunityOption<OpportunityTypeTab>[] =
   [
-    { value: "job", label: "Jobs" },
+    { value: "job", label: "Roles" },
     { value: "hackathon", label: "Hackathons" },
     { value: "all", label: "All" },
   ];

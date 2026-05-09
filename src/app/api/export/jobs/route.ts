@@ -1,12 +1,14 @@
 /**
  * @route GET /api/export/jobs
- * @description Export jobs as CSV or JSON format
+ * @description Legacy compatibility route. Export opportunities as CSV or JSON format.
  * @auth Required
  * @response CSV file (text/csv) or JSON array
  */
 import { NextRequest, NextResponse } from "next/server";
 import { getJobs } from "@/lib/db/jobs";
 import { requireAuth, isAuthError } from "@/lib/auth";
+
+export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
   const authResult = await requireAuth();
@@ -55,13 +57,13 @@ export async function GET(request: NextRequest) {
       ]);
 
       const csv = [headers.join(","), ...rows.map((row) => row.join(","))].join(
-        "\n"
+        "\n",
       );
 
       return new NextResponse(csv, {
         headers: {
           "Content-Type": "text/csv",
-          "Content-Disposition": `attachment; filename="taida-jobs-${new Date().toISOString().split("T")[0]}.csv"`,
+          "Content-Disposition": `attachment; filename="slothing-opportunities-${new Date().toISOString().split("T")[0]}.csv"`,
         },
       });
     }
@@ -70,8 +72,8 @@ export async function GET(request: NextRequest) {
     const exportData = {
       exportedAt: new Date().toISOString(),
       version: "1.0",
-      totalJobs: jobs.length,
-      jobs: jobs.map((job) => ({
+      totalOpportunities: jobs.length,
+      opportunities: jobs.map((job) => ({
         title: job.title,
         company: job.company,
         location: job.location,
@@ -94,14 +96,14 @@ export async function GET(request: NextRequest) {
     return new NextResponse(JSON.stringify(exportData, null, 2), {
       headers: {
         "Content-Type": "application/json",
-        "Content-Disposition": `attachment; filename="taida-jobs-${new Date().toISOString().split("T")[0]}.json"`,
+        "Content-Disposition": `attachment; filename="slothing-opportunities-${new Date().toISOString().split("T")[0]}.json"`,
       },
     });
   } catch (error) {
-    console.error("Export jobs error:", error);
+    console.error("Export opportunities error:", error);
     return NextResponse.json(
-      { error: "Failed to export jobs" },
-      { status: 500 }
+      { error: "Failed to export opportunities" },
+      { status: 500 },
     );
   }
 }

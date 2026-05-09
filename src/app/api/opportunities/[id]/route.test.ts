@@ -77,7 +77,10 @@ describe("opportunity detail route", () => {
       company: "Globex",
     });
 
-    const response = await PATCH(jsonRequest({ company: "Globex" }), routeContext);
+    const response = await PATCH(
+      jsonRequest({ company: "Globex" }),
+      routeContext,
+    );
 
     expect(response.status).toBe(200);
     expect(mocks.updateJob).toHaveBeenCalledWith(
@@ -101,7 +104,10 @@ describe("opportunity detail route", () => {
 
     expect(mocks.updateJob).toHaveBeenCalledWith(
       "opportunity-1",
-      expect.objectContaining({ status: "applied", appliedAt: expect.any(String) }),
+      expect.objectContaining({
+        status: "applied",
+        appliedAt: expect.any(String),
+      }),
       "user-1",
     );
     expect(mocks.recordJobStatusChange).toHaveBeenCalledWith(
@@ -116,7 +122,10 @@ describe("opportunity detail route", () => {
   it("rejects invalid update payloads", async () => {
     mocks.getJob.mockReturnValueOnce(baseJob);
 
-    const response = await PATCH(jsonRequest({ status: "offer" }), routeContext);
+    const response = await PATCH(
+      jsonRequest({ status: "offer" }),
+      routeContext,
+    );
 
     expect(response.status).toBe(400);
     expect(mocks.updateJob).not.toHaveBeenCalled();

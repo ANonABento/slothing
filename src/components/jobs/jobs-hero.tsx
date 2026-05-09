@@ -45,21 +45,21 @@ export function JobsHero({
     <PageHeader
       width={width}
       icon={Target}
-      eyebrow="Job Tracker"
-      title="Job Applications"
-      description="Track your target jobs, analyze match scores, and generate tailored resumes."
+      eyebrow="Opportunity Tracker"
+      title="Opportunities"
+      description="Track target opportunities, analyze match scores, and generate tailored resumes."
       actions={
         <>
           <div className={cn(THEME_SURFACE_CLASSES, "px-4 py-3 text-center")}>
             <p className="text-2xl font-bold text-primary">{jobsCount}</p>
             <p className="text-xs text-muted-foreground">
-              {pluralize(jobsCount, "Job")} Tracked
+              {pluralize(jobsCount, "Opportunity")} Tracked
             </p>
           </div>
           <div className="flex flex-wrap justify-end gap-2">
             <div
               className={cn(THEME_SURFACE_CLASSES, "flex p-1")}
-              aria-label="Job view mode"
+              aria-label="Opportunity view mode"
             >
               <Button
                 type="button"
@@ -103,7 +103,7 @@ export function JobsHero({
                 };
 
                 try {
-                  const response = await fetch("/api/jobs", {
+                  const response = await fetch("/api/opportunities", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(jobData),
@@ -111,13 +111,13 @@ export function JobsHero({
 
                   await readJsonResponse<unknown>(
                     response,
-                    "Failed to create job",
+                    "Failed to create opportunity",
                   );
 
                   await onGmailImportSuccess();
                 } catch (error) {
                   showErrorToast(error, {
-                    title: "Could not import Gmail job",
+                    title: "Could not import Gmail opportunity",
                     fallbackDescription:
                       "Please try importing the email again.",
                   });
@@ -136,7 +136,7 @@ export function JobsHero({
               className={THEME_PRIMARY_GRADIENT_BUTTON_CLASSES}
             >
               <Plus className="h-5 w-5 mr-2" />
-              Add Job
+              Add Opportunity
             </Button>
           </div>
         </>

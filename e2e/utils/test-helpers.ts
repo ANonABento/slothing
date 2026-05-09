@@ -2,7 +2,7 @@ import type { Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 
 /**
- * Test data for creating jobs
+ * Test data for creating opportunities
  */
 export interface TestJobData {
   title: string;
@@ -12,32 +12,32 @@ export interface TestJobData {
 }
 
 /**
- * Creates a job via the UI and returns the job's title for later reference.
- * This helper opens the Add Job dialog, fills in the form, and submits.
+ * Creates an opportunity via the UI and returns the opportunity's title for later reference.
+ * This helper opens the Add Opportunity dialog, fills in the form, and submits.
  */
 export async function createTestJob(
   page: Page,
-  data: TestJobData
+  data: TestJobData,
 ): Promise<void> {
-  // Click "Add Job" button
-  await page.getByRole("button", { name: /add job/i }).click();
+  // Click "Add Opportunity" button
+  await page.getByRole("button", { name: /add opportunity/i }).click();
 
   // Wait for dialog to appear
   await expect(page.getByRole("dialog")).toBeVisible();
 
   // Fill in the form fields
-  await page.getByLabel(/job title/i).fill(data.title);
+  await page.getByLabel(/opportunity title/i).fill(data.title);
   await page.getByLabel(/company/i).fill(data.company);
-  await page.getByLabel(/job description/i).fill(data.description);
+  await page.getByLabel(/opportunity description/i).fill(data.description);
 
   if (data.url) {
-    await page.getByLabel(/job url/i).fill(data.url);
+    await page.getByLabel(/opportunity url/i).fill(data.url);
   }
 
   // Submit the form - use the button inside the dialog
   await page
     .getByRole("dialog")
-    .getByRole("button", { name: /^add job$/i })
+    .getByRole("button", { name: /^add opportunity$/i })
     .click();
 
   // Wait for dialog to close (indicates success)
@@ -45,46 +45,46 @@ export async function createTestJob(
 }
 
 /**
- * Finds a job card by title and returns locator for further actions.
+ * Finds an opportunity card by title and returns locator for further actions.
  */
 export function getJobCard(page: Page, title: string) {
-  // Job cards contain the title as an h3
+  // Opportunity cards contain the title as an h3
   return page.locator(".group").filter({ hasText: title });
 }
 
 /**
- * Verifies a job exists in the list by checking for its title.
+ * Verifies an opportunity exists in the list by checking for its title.
  */
 export async function expectJobExists(
   page: Page,
-  title: string
+  title: string,
 ): Promise<void> {
   const jobCard = getJobCard(page, title);
   await expect(jobCard).toBeVisible();
 }
 
 /**
- * Verifies a job does NOT exist in the list.
+ * Verifies an opportunity does NOT exist in the list.
  */
 export async function expectJobNotExists(
   page: Page,
-  title: string
+  title: string,
 ): Promise<void> {
   const jobCard = getJobCard(page, title);
   await expect(jobCard).not.toBeVisible();
 }
 
 /**
- * Updates a job's status via the status dropdown.
+ * Updates an opportunity's status via the status dropdown.
  */
 export async function updateJobStatus(
   page: Page,
   jobTitle: string,
-  newStatus: "saved" | "applied" | "interviewing" | "offered" | "rejected"
+  newStatus: "saved" | "applied" | "interviewing" | "offered" | "rejected",
 ): Promise<void> {
   const jobCard = getJobCard(page, jobTitle);
 
-  // Click the status dropdown within the job card
+  // Click the status dropdown within the opportunity card
   await jobCard.getByRole("combobox").first().click();
 
   // Select the new status from dropdown
@@ -92,21 +92,24 @@ export async function updateJobStatus(
 }
 
 /**
- * Deletes a job via the trash icon button.
+ * Deletes an opportunity via the trash icon button.
  */
 export async function deleteJob(page: Page, jobTitle: string): Promise<void> {
   const jobCard = getJobCard(page, jobTitle);
 
   // Click the delete button (trash icon)
-  await jobCard.getByRole("button").filter({ has: page.locator("svg.lucide-trash-2") }).click();
+  await jobCard
+    .getByRole("button")
+    .filter({ has: page.locator("svg.lucide-trash-2") })
+    .click();
 }
 
 /**
- * Gets the displayed status badge text for a job.
+ * Gets the displayed status badge text for an opportunity.
  */
 export async function getJobStatus(
   page: Page,
-  jobTitle: string
+  jobTitle: string,
 ): Promise<string> {
   const jobCard = getJobCard(page, jobTitle);
   const statusDropdown = jobCard.getByRole("combobox").first();
@@ -114,10 +117,10 @@ export async function getJobStatus(
 }
 
 /**
- * Navigates to the jobs page and waits for it to load.
+ * Navigates to the opportunities page and waits for it to load.
  */
 export async function navigateToJobs(page: Page): Promise<void> {
-  await page.goto("/jobs");
+  await page.goto("/opportunities");
   await page.waitForLoadState("networkidle");
 }
 
@@ -181,6 +184,6 @@ export function generateUniqueJobData(baseName = "Test"): TestJobData {
   return {
     title: `${baseName} Engineer ${timestamp}`,
     company: `${baseName} Company ${timestamp}`,
-    description: `This is a test job description for ${baseName} position created at ${timestamp}. Requires JavaScript, React, Node.js skills.`,
+    description: `This is a test opportunity description for ${baseName} position created at ${timestamp}. Requires JavaScript, React, Node.js skills.`,
   };
 }

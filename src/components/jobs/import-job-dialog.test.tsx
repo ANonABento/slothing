@@ -80,9 +80,12 @@ describe("ImportJobDialog", () => {
 
     renderDialog({ onOpenChange, onJobImported });
 
-    fireEvent.change(screen.getByPlaceholderText(/paste the full job posting here/i), {
-      target: { value: "Senior Engineer\nAcme Corp\nBuild useful products." },
-    });
+    fireEvent.change(
+      screen.getByPlaceholderText(/paste the full job posting here/i),
+      {
+        target: { value: "Senior Engineer\nAcme Corp\nBuild useful products." },
+      },
+    );
     fireEvent.click(screen.getByRole("button", { name: /parse job/i }));
 
     expect(await screen.findByText("Review Import")).toBeInTheDocument();
@@ -95,12 +98,12 @@ describe("ImportJobDialog", () => {
     expect(fetchMock).toHaveBeenNthCalledWith(
       1,
       "/api/import/job",
-      expect.objectContaining({ method: "POST" })
+      expect.objectContaining({ method: "POST" }),
     );
     expect(fetchMock).toHaveBeenNthCalledWith(
       2,
       "/api/import/job",
-      expect.objectContaining({ method: "PUT" })
+      expect.objectContaining({ method: "PUT" }),
     );
   });
 
@@ -135,7 +138,8 @@ describe("ImportJobDialog", () => {
     renderDialog();
 
     fireEvent.click(screen.getByRole("button", { name: /csv/i }));
-    const input = document.querySelector<HTMLInputElement>("input[type='file']");
+    const input =
+      document.querySelector<HTMLInputElement>("input[type='file']");
     expect(input).not.toBeNull();
 
     const file = new File(["title,company\nDesigner,Acme Corp"], "jobs.csv", {
@@ -149,6 +153,8 @@ describe("ImportJobDialog", () => {
 
     expect(await screen.findByText("Review CSV Import")).toBeInTheDocument();
     expect(screen.getByText("Designer")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /import 1 job/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /import 1 opportunity/i }),
+    ).toBeInTheDocument();
   });
 });

@@ -16,6 +16,8 @@ import {
 } from "@/lib/google/drive";
 import { isGoogleConnected } from "@/lib/google/client";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(request: NextRequest) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
@@ -24,7 +26,7 @@ export async function GET(request: NextRequest) {
   if (!connected) {
     return NextResponse.json(
       { error: "Google account not connected" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -64,7 +66,7 @@ export async function GET(request: NextRequest) {
     console.error("Drive list error:", error);
     return NextResponse.json(
       { error: "Failed to list files" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

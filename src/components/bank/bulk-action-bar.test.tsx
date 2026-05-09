@@ -10,6 +10,8 @@ const defaultProps = {
   onDelete: vi.fn(),
   onAddToResume: vi.fn(),
   onExport: vi.fn(),
+  selectedBulletCount: 0,
+  onMoveBullets: vi.fn(),
 };
 
 describe("BulkActionBar", () => {
@@ -88,5 +90,20 @@ describe("BulkActionBar", () => {
     render(<BulkActionBar {...defaultProps} onExport={onExport} />);
     fireEvent.click(screen.getByText("Export"));
     expect(onExport).toHaveBeenCalled();
+  });
+
+  it("shows move bullets action when bullets are selected", () => {
+    const onMoveBullets = vi.fn();
+    render(
+      <BulkActionBar
+        {...defaultProps}
+        selectedBulletCount={2}
+        onMoveBullets={onMoveBullets}
+      />,
+    );
+
+    fireEvent.click(screen.getByText("Move 2 bullets"));
+
+    expect(onMoveBullets).toHaveBeenCalled();
   });
 });

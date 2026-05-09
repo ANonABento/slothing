@@ -11,6 +11,8 @@ import { requireAuth, isAuthError } from "@/lib/auth";
 import { downloadFile, getFileMetadata } from "@/lib/google/drive";
 import { isGoogleConnected } from "@/lib/google/client";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(request: NextRequest) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
@@ -19,7 +21,7 @@ export async function POST(request: NextRequest) {
   if (!connected) {
     return NextResponse.json(
       { error: "Google account not connected" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -29,7 +31,7 @@ export async function POST(request: NextRequest) {
     if (!fileId) {
       return NextResponse.json(
         { error: "No file ID provided" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -44,7 +46,7 @@ export async function POST(request: NextRequest) {
     if (!content) {
       return NextResponse.json(
         { error: "Failed to download file" },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -60,7 +62,7 @@ export async function POST(request: NextRequest) {
     console.error("Drive import error:", error);
     return NextResponse.json(
       { error: "Failed to import file" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

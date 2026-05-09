@@ -10,6 +10,8 @@ import { getProfile } from "@/lib/db";
 import { getJob } from "@/lib/db/jobs";
 import { requireAuth, isAuthError } from "@/lib/auth";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(request: NextRequest) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
@@ -21,7 +23,7 @@ export async function POST(request: NextRequest) {
     if (!profile) {
       return NextResponse.json(
         { error: "No profile found. Please upload your resume first." },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -34,7 +36,7 @@ export async function POST(request: NextRequest) {
     console.error("ATS analysis error:", error);
     return NextResponse.json(
       { error: "Failed to analyze resume for ATS compatibility" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

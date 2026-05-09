@@ -10,11 +10,13 @@ import { STORAGE_KEYS } from "@/lib/constants";
 
 const navigationMock = vi.hoisted(() => ({
   push: vi.fn(),
+  pathname: "/dashboard",
 }));
 
 // Mock next/navigation
 vi.mock("next/navigation", () => ({
   useRouter: () => navigationMock,
+  usePathname: () => navigationMock.pathname,
 }));
 
 // localStorage mock
@@ -97,6 +99,7 @@ describe("OnboardingDialog", () => {
   beforeEach(() => {
     localStorageMock.clear();
     navigationMock.push.mockClear();
+    navigationMock.pathname = "/dashboard";
     vi.useFakeTimers();
   });
 
@@ -105,6 +108,10 @@ describe("OnboardingDialog", () => {
   });
 
   function openDialog() {
+    localStorageMock.setItem(
+      STORAGE_KEYS.ONBOARDING_COMPLETED,
+      "show-onboarding",
+    );
     render(<OnboardingDialog />);
     act(() => {
       vi.advanceTimersByTime(600);
@@ -121,7 +128,7 @@ describe("OnboardingDialog", () => {
     expect(hasVisibleHeading("Welcome to Slothing")).toBe(false);
   });
 
-  it("should show after delay when onboarding is not completed", () => {
+  it("should show a non-blocking launcher when onboarding is not completed", () => {
     render(<OnboardingDialog />);
     expect(hasVisibleHeading("Welcome to Slothing")).toBe(false);
 
@@ -129,7 +136,29 @@ describe("OnboardingDialog", () => {
       vi.advanceTimersByTime(600);
     });
 
+    expect(hasVisibleHeading("Welcome to Slothing")).toBe(false);
+    expect(
+      screen.getByRole("button", { name: "Setup guide" }),
+    ).toBeInTheDocument();
+  });
+
+  it("should open the dialog from the setup launcher", () => {
+    render(<OnboardingDialog />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Setup guide" }));
+
     expect(hasVisibleHeading("Welcome to Slothing")).toBe(true);
+  });
+
+  it("should not block a deep-linked app route when onboarding is not completed", () => {
+    navigationMock.pathname = "/studio";
+
+    render(<OnboardingDialog />);
+    act(() => {
+      vi.advanceTimersByTime(600);
+    });
+
+    expect(hasVisibleHeading("Welcome to Slothing")).toBe(false);
   });
 
   it("should show step 1 (Welcome) initially", () => {

@@ -24,7 +24,9 @@ async function deleteRecord() {
 
 return (
   <>
-    <Button variant="ghost" onClick={() => void deleteRecord()}>Delete</Button>
+    <Button variant="ghost" onClick={() => void deleteRecord()}>
+      Delete
+    </Button>
     {dialog}
   </>
 );
@@ -45,36 +47,36 @@ const archiveRecord = useUndoableAction({
   message: "Record archived.",
 });
 
-<Button onClick={() => void archiveRecord({ id })}>Archive</Button>
+<Button onClick={() => void archiveRecord({ id })}>Archive</Button>;
 ```
 
 Default undo window: 5 seconds. Increase it when the action is easy to mis-click or harder to notice.
 
 ## Routing Rules
 
-| Situation | Pattern |
-| --- | --- |
-| Permanent DB delete or file delete | Pattern A |
-| Bulk delete or bulk destructive mutation | Pattern A |
+| Situation                                         | Pattern   |
+| ------------------------------------------------- | --------- |
+| Permanent DB delete or file delete                | Pattern A |
+| Bulk delete or bulk destructive mutation          | Pattern A |
 | Settings reset, theme reset, account-level change | Pattern A |
-| Reversible status change or soft delete | Pattern B |
-| Reversibility cannot be verified quickly | Pattern A |
+| Reversible status change or soft delete           | Pattern B |
+| Reversibility cannot be verified quickly          | Pattern A |
 
 ## Current Actions
 
-| Area | Action | Endpoint/data effect | Pattern |
-| --- | --- | --- | --- |
-| Opportunity detail | Dismiss | `PATCH /api/jobs/[id]`, status to `withdrawn`; row remains | Pattern B |
-| Jobs | Delete job | `DELETE /api/jobs/[id]`; hard delete | Pattern A |
-| Email templates | Delete draft | `DELETE /api/email/drafts/[id]`; hard delete | Pattern A |
-| Interview | Delete session | `DELETE /api/interview/sessions/[id]`; hard delete | Pattern A |
-| Notifications | Delete notification | `DELETE /api/notifications/[id]`; hard delete | Pattern A |
-| Notifications | Delete read notifications | `POST /api/notifications` with `deleteRead`; bulk hard delete | Pattern A |
-| Profile bank | Delete selected entries | `DELETE /api/bank/[id]`; hard delete | Pattern A |
-| Profile bank | Delete individual entry | `DELETE /api/bank/[id]`; hard delete | Pattern A |
-| Profile bank source documents | Delete source document(s) | `DELETE /api/bank/documents`; hard delete with cascaded chunks | Pattern A |
-| Studio | Delete local studio file | Local state removal | Pattern A |
-| Settings | Delete prompt variant | `DELETE /api/prompts/[id]`; hard delete | Pattern A |
+| Area                          | Action                    | Endpoint/data effect                                                | Pattern   |
+| ----------------------------- | ------------------------- | ------------------------------------------------------------------- | --------- |
+| Opportunity detail            | Dismiss                   | `PATCH /api/opportunities/[id]`, status to `withdrawn`; row remains | Pattern B |
+| Opportunities                 | Delete opportunity        | `DELETE /api/opportunities/[id]`; hard delete                       | Pattern A |
+| Email templates               | Delete draft              | `DELETE /api/email/drafts/[id]`; hard delete                        | Pattern A |
+| Interview                     | Delete session            | `DELETE /api/interview/sessions/[id]`; hard delete                  | Pattern A |
+| Notifications                 | Delete notification       | `DELETE /api/notifications/[id]`; hard delete                       | Pattern A |
+| Notifications                 | Delete read notifications | `POST /api/notifications` with `deleteRead`; bulk hard delete       | Pattern A |
+| Profile bank                  | Delete selected entries   | `DELETE /api/bank/[id]`; hard delete                                | Pattern A |
+| Profile bank                  | Delete individual entry   | `DELETE /api/bank/[id]`; hard delete                                | Pattern A |
+| Profile bank source documents | Delete source document(s) | `DELETE /api/bank/documents`; hard delete with cascaded chunks      | Pattern A |
+| Studio                        | Delete local studio file  | Local state removal                                                 | Pattern A |
+| Settings                      | Delete prompt variant     | `DELETE /api/prompts/[id]`; hard delete                             | Pattern A |
 
 ## Adding A New Destructive Action
 

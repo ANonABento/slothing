@@ -9,9 +9,11 @@ import { unlink } from "fs/promises";
 import { requireAuth, isAuthError } from "@/lib/auth";
 import { deleteDocument } from "@/lib/db";
 
+export const dynamic = "force-dynamic";
+
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
@@ -19,7 +21,10 @@ export async function DELETE(
   try {
     const path = deleteDocument(params.id, authResult.userId);
     if (!path) {
-      return NextResponse.json({ error: "Document not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Document not found" },
+        { status: 404 },
+      );
     }
 
     // Try to delete file (don't fail if file doesn't exist)
@@ -34,7 +39,7 @@ export async function DELETE(
     console.error("Delete document error:", error);
     return NextResponse.json(
       { error: "Failed to delete document" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

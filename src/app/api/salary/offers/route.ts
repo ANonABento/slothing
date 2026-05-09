@@ -15,6 +15,8 @@ import {
 import { getJob } from "@/lib/db/jobs";
 import { requireAuth, isAuthError } from "@/lib/auth";
 
+export const dynamic = "force-dynamic";
+
 // GET - List all salary offers
 export async function GET() {
   const authResult = await requireAuth();
@@ -29,7 +31,7 @@ export async function GET() {
     console.error("Get salary offers error:", error);
     return NextResponse.json(
       { error: "Failed to get salary offers" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -56,36 +58,36 @@ export async function POST(request: NextRequest) {
     if (!company || !role || baseSalary === undefined) {
       return NextResponse.json(
         { error: "company, role, and baseSalary are required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     if (jobId && !getJob(jobId, authResult.userId)) {
-      return NextResponse.json(
-        { error: "Job not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Job not found" }, { status: 404 });
     }
 
-    const offer = createSalaryOffer({
-      jobId,
-      company,
-      role,
-      baseSalary,
-      signingBonus,
-      annualBonus,
-      equityValue,
-      vestingYears,
-      location,
-      notes,
-    }, authResult.userId);
+    const offer = createSalaryOffer(
+      {
+        jobId,
+        company,
+        role,
+        baseSalary,
+        signingBonus,
+        annualBonus,
+        equityValue,
+        vestingYears,
+        location,
+        notes,
+      },
+      authResult.userId,
+    );
 
     return NextResponse.json({ offer });
   } catch (error) {
     console.error("Create salary offer error:", error);
     return NextResponse.json(
       { error: "Failed to create salary offer" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

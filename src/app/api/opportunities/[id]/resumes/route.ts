@@ -12,6 +12,8 @@ import { unlink } from "fs/promises";
 import path from "path";
 import { requireAuth, isAuthError } from "@/lib/auth";
 
+export const dynamic = "force-dynamic";
+
 // GET - List all generated resumes for an opportunity
 export async function GET(
   request: NextRequest,

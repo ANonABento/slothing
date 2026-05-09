@@ -13,6 +13,8 @@ import {
   scrapeOpportunityFromUrl,
 } from "@/lib/opportunities/scrape";
 
+export const dynamic = "force-dynamic";
+
 interface ScrapeRequest {
   url?: unknown;
 }
@@ -20,7 +22,7 @@ interface ScrapeRequest {
 function errorResponse(error: OpportunityScrapeError) {
   return NextResponse.json(
     { error: error.message, code: error.code },
-    { status: error.status }
+    { status: error.status },
   );
 }
 
@@ -29,7 +31,7 @@ export async function POST(request: NextRequest) {
   if (isAuthError(authResult)) return authResult;
 
   const rateLimit = rateLimiters.standard(
-    getClientIdentifier(request, authResult.userId)
+    getClientIdentifier(request, authResult.userId),
   );
   if (!rateLimit.allowed) {
     return NextResponse.json(
@@ -40,9 +42,12 @@ export async function POST(request: NextRequest) {
       {
         status: 429,
         headers: {
-          "Retry-After": Math.max(1, Math.ceil((rateLimit.resetAt - Date.now()) / 1000)).toString(),
+          "Retry-After": Math.max(
+            1,
+            Math.ceil((rateLimit.resetAt - Date.now()) / 1000),
+          ).toString(),
         },
-      }
+      },
     );
   }
 
@@ -54,14 +59,14 @@ export async function POST(request: NextRequest) {
       return errorResponse(
         new OpportunityScrapeError(
           "invalid_url",
-          "A valid JSON body with a URL is required."
-        )
+          "A valid JSON body with a URL is required.",
+        ),
       );
     }
 
     if (typeof body.url !== "string" || !body.url.trim()) {
       return errorResponse(
-        new OpportunityScrapeError("invalid_url", "A URL is required.")
+        new OpportunityScrapeError("invalid_url", "A URL is required."),
       );
     }
 
@@ -75,7 +80,7 @@ export async function POST(request: NextRequest) {
     console.error("Opportunity scrape error:", error);
     return NextResponse.json(
       { error: "Failed to scrape opportunity.", code: "scrape_failed" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

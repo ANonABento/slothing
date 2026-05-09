@@ -25,7 +25,8 @@ export interface Section {
 
 // Header patterns for each section type (case-insensitive, line-start anchored)
 const SECTION_HEADER_PATTERNS: Record<SectionType, RegExp> = {
-  contact: /^(?:CONTACT\s*(?:INFO(?:RMATION)?)?|PERSONAL\s*(?:INFO(?:RMATION)?|DETAILS))$/im,
+  contact:
+    /^(?:CONTACT\s*(?:INFO(?:RMATION)?)?|PERSONAL\s*(?:INFO(?:RMATION)?|DETAILS))$/im,
   summary:
     /^(?:SUMMARY|PROFESSIONAL\s+SUMMARY|EXECUTIVE\s+SUMMARY|OBJECTIVE|CAREER\s+OBJECTIVE|PROFILE|ABOUT\s*ME|PERSONAL\s+STATEMENT)$/im,
   experience:
@@ -42,8 +43,7 @@ const SECTION_HEADER_PATTERNS: Record<SectionType, RegExp> = {
     /^(?:AWARDS?|HONORS?\s*(?:&|AND)?\s*AWARDS?|ACHIEVEMENTS?|RECOGNITION|DISTINCTIONS?)$/im,
   languages:
     /^(?:LANGUAGES?|LANGUAGE\s+SKILLS|LANGUAGE\s+PROFICIENCY|SPOKEN\s+LANGUAGES?)$/im,
-  references:
-    /^(?:REFERENCES?|PROFESSIONAL\s+REFERENCES?)$/im,
+  references: /^(?:REFERENCES?|PROFESSIONAL\s+REFERENCES?)$/im,
   // "unknown" is a synthetic fallback type — never matched by the detector itself
   unknown: /(?!)/,
 };
@@ -64,18 +64,16 @@ const SECTION_TYPE_ORDER: SectionType[] = [
 
 // Content heuristic patterns
 const DATE_PATTERN =
-  /(?:\b(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\s+\d{4}\b|\b\d{1,2}\/\d{4}\b|\b\d{4}\s*[-–—]\s*(?:\d{4}|[Pp]resent|[Cc]urrent)\b|\b(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\s+\d{4}\s*[-–—]\s*(?:(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\s+\d{4}|[Pp]resent|[Cc]urrent)\b)/;
+  /(?:\b(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sept?(?:ember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\s+\d{4}\b|\b\d{4}-\d{2}\b|\b\d{1,2}\/\d{4}\b|\b\d{4}\s*[-–—]\s*(?:\d{4}|[Pp]resent|[Cc]urrent)\b|\b(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sept?(?:ember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\s+\d{4}\s*[-–—]\s*(?:(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sept?(?:ember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\s+\d{4}|[Pp]resent|[Cc]urrent)\b)/;
 
 const BULLET_PATTERN = /^\s*[•●○■▪▸\-–—*]\s+/;
 const EMAIL_PATTERN = /[\w.-]+@[\w.-]+\.\w+/;
-const PHONE_PATTERN =
-  /(\+?1?[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/;
+const PHONE_PATTERN = /(\+?1?[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/;
 const URL_PATTERN =
   /(?:https?:\/\/[\w.-]+|(?:www\.)?(?:linkedin\.com|github\.com)\/[\w-]+)/i;
 const DEGREE_PATTERN =
-  /\b(?:Bachelor|Master|Ph\.?D|M\.?S\.?|B\.?S\.?|B\.?A\.?|M\.?A\.?|M\.?B\.?A\.?|Associate|Doctorate|Doctor\s+of)\b/i;
-const SKILL_LIST_PATTERN =
-  /^[\w#+.\-/]+(?:\s*[,|•]\s*[\w#+.\-/]+){2,}/;
+  /\b(?:Bachelor|Master|Ph\.?D|BASc|B\.?A\.?Sc\.?|M\.?S\.?|B\.?S\.?|B\.?A\.?|M\.?A\.?|M\.?B\.?A\.?|Associate|Doctorate|Doctor\s+of)\b/i;
+const SKILL_LIST_PATTERN = /^[\w#+.\-/]+(?:\s*[,|•]\s*[\w#+.\-/]+){2,}/;
 const GPA_PATTERN = /\b(?:GPA|Grade)[\s:]*\d\.\d/i;
 
 /**
@@ -128,6 +126,7 @@ function detectByHeaders(text: string): Section[] {
       const cleaned = trimmed
         .replace(/[:\-–—_=]+$/, "")
         .replace(/^[:\-–—_=]+/, "")
+        .replace(/[^\p{L}\p{N}\s&/]+$/gu, "")
         .trim();
 
       if (cleaned.length > 0) {
@@ -199,7 +198,7 @@ function detectByCapsHeaders(text: string, lines: string[]): Section[] {
 
 function buildSectionsFromMatches(
   text: string,
-  matches: HeaderMatch[]
+  matches: HeaderMatch[],
 ): Section[] {
   if (matches.length === 0) return [];
 
@@ -242,7 +241,7 @@ function buildSectionsFromMatches(
  */
 function inferSectionTypeFromContent(
   lines: string[],
-  headerLineIndex: number
+  headerLineIndex: number,
 ): SectionType | null {
   // Look at next 5-10 lines for content clues
   const contentLines = lines.slice(headerLineIndex + 1, headerLineIndex + 10);
@@ -255,7 +254,9 @@ function inferSectionTypeFromContent(
   const hasBullets = contentLines.some((l) => BULLET_PATTERN.test(l));
   const hasDegrees = DEGREE_PATTERN.test(contentBlock);
   const hasGPA = GPA_PATTERN.test(contentBlock);
-  const hasSkillList = contentLines.some((l) => SKILL_LIST_PATTERN.test(l.trim()));
+  const hasSkillList = contentLines.some((l) =>
+    SKILL_LIST_PATTERN.test(l.trim()),
+  );
 
   if (hasDegrees || hasGPA) return "education";
   if (hasDateRanges && hasBullets) return "experience";
@@ -341,7 +342,9 @@ function detectByContentHeuristics(text: string): Section[] {
 
   // Phase 2: Scan remaining lines for content patterns
   const startLine = contactEnd > 0 ? contactEnd : 0;
-  charOffset = lines.slice(0, startLine).reduce((sum, l) => sum + l.length + 1, 0);
+  charOffset = lines
+    .slice(0, startLine)
+    .reduce((sum, l) => sum + l.length + 1, 0);
 
   for (let i = startLine; i < lines.length; i++) {
     const line = lines[i];
@@ -376,7 +379,11 @@ function findContactBlockEnd(lines: string[]): number {
   let hasAnyContactIndicator = false;
   for (let i = 0; i < maxScan; i++) {
     const line = lines[i].trim();
-    if (EMAIL_PATTERN.test(line) || PHONE_PATTERN.test(line) || URL_PATTERN.test(line)) {
+    if (
+      EMAIL_PATTERN.test(line) ||
+      PHONE_PATTERN.test(line) ||
+      URL_PATTERN.test(line)
+    ) {
       hasAnyContactIndicator = true;
       break;
     }
@@ -408,7 +415,7 @@ function findContactBlockEnd(lines: string[]): number {
 function classifyLineContent(
   line: string,
   lines: string[],
-  lineIndex: number
+  lineIndex: number,
 ): SectionType | null {
   if (line.length === 0) return null;
 

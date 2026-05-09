@@ -69,11 +69,11 @@ export function InterviewJobSelection({
 
   if (jobs.length === 0) {
     return (
-      <div className="rounded-2xl border bg-card p-12 text-center">
+      <div className="rounded-lg border bg-card p-12 text-center">
         <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-muted text-muted-foreground mb-6">
           <MessageSquare className="h-10 w-10" />
         </div>
-        <h2 className="text-2xl font-bold">No Jobs to Practice For</h2>
+        <h2 className="text-2xl font-bold">No Opportunities to Practice For</h2>
         <p className="text-muted-foreground mt-2 max-w-md mx-auto">
           Add a job description first to get personalized interview questions
           based on the role.
@@ -151,7 +151,7 @@ export function InterviewJobSelection({
       <div className="grid gap-4 md:grid-cols-2">
         {jobs.map((job) => (
           <div key={job.id} className="space-y-4">
-            <div className="group rounded-2xl border bg-card p-6 transition-all hover:shadow-lg hover:border-primary/20">
+            <div className="group rounded-lg border bg-card p-6 transition-all hover:shadow-lg hover:border-primary/20">
               <div className="flex items-start gap-4 mb-4">
                 <div className="p-3 rounded-xl bg-primary/10 text-primary">
                   <Briefcase className="h-6 w-6" />

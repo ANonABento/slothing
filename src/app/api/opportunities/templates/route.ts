@@ -9,6 +9,8 @@ import { getCustomTemplates } from "@/lib/db/custom-templates";
 import { requireAuth, isAuthError } from "@/lib/auth";
 import { successResponse, errorResponse } from "@/lib/api-utils";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;

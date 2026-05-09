@@ -23,7 +23,7 @@ import {
   smartParseResume,
   type SmartParseResult,
 } from "@/lib/parser/smart-parser";
-import type { BankCategory, ParsedDocumentData } from "@/types";
+import type { ParsedDocumentData } from "@/types";
 import {
   MAX_FILE_SIZE_BYTES,
   ALLOWED_MIME_TYPES,
@@ -32,6 +32,8 @@ import {
 } from "@/lib/constants";
 import { sanitizeFilename } from "@/lib/upload/filename";
 import { requireAuth, isAuthError } from "@/lib/auth";
+
+export const dynamic = "force-dynamic";
 
 function getForceUpload(request: NextRequest): boolean {
   return request.nextUrl.searchParams.get("force") === "true";
@@ -67,6 +69,14 @@ function buildExistingDocumentResponse(
     },
     { status: 409 },
   );
+}
+
+function buildExtractedTextPreview(extractedText: string): string {
+  return `${extractedText
+    .slice(0, 500)
+    .replace(/[\u0000-\u001f\u007f-\u009f]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()}...`;
 }
 
 export async function POST(request: NextRequest) {
@@ -299,68 +309,18 @@ export async function POST(request: NextRequest) {
 
     // Ingest into knowledge bank — writes to profile_bank table (what the UI reads)
     let entriesCreated = 0;
-    if (parsedData?.data) {
+    if (parsedData?.docType === "resume" && parsedData.data) {
       try {
-        const { insertBankEntries } = await import("@/lib/db/profile-bank");
-        const profile = (parsedData?.data ?? {}) as Record<string, unknown>;
-        const entries: Array<{
-          category: BankCategory;
-          content: Record<string, unknown>;
-          sourceDocumentId: string;
-        }> = [];
-
-        // Chunk profile into bank entries (only valid BankCategory types)
-        const experiences = profile.experiences as
-          | Record<string, unknown>[]
-          | undefined;
-        if (experiences?.length) {
-          for (const exp of experiences) {
-            entries.push({
-              category: "experience",
-              content: exp,
-              sourceDocumentId: id,
-            });
-          }
-        }
-        const education = profile.education as
-          | Record<string, unknown>[]
-          | undefined;
-        if (education?.length) {
-          for (const edu of education) {
-            entries.push({
-              category: "education",
-              content: edu,
-              sourceDocumentId: id,
-            });
-          }
-        }
-        const skills = profile.skills as Record<string, unknown>[] | undefined;
-        if (skills?.length) {
-          for (const skill of skills) {
-            entries.push({
-              category: "skill",
-              content: skill,
-              sourceDocumentId: id,
-            });
-          }
-        }
-        const projects = profile.projects as
-          | Record<string, unknown>[]
-          | undefined;
-        if (projects?.length) {
-          for (const proj of projects) {
-            entries.push({
-              category: "project",
-              content: proj,
-              sourceDocumentId: id,
-            });
-          }
-        }
-
-        if (entries.length > 0) {
-          insertBankEntries(entries, authResult.userId);
-          entriesCreated = entries.length;
-          console.log(`[upload] Ingested ${entries.length} entries into bank`);
+        const { populateBankFromProfile } =
+          await import("@/lib/resume/info-bank");
+        const result = populateBankFromProfile(
+          parsedData.data,
+          id,
+          authResult.userId,
+        );
+        entriesCreated = result.inserted;
+        if (entriesCreated > 0) {
+          console.log(`[upload] Ingested ${entriesCreated} entries into bank`);
         } else {
           console.log("[upload] No structured bank entries found");
         }
@@ -379,7 +339,7 @@ export async function POST(request: NextRequest) {
         filename: safeFilename,
         type: docType,
         size: file.size,
-        extractedText: extractedText.slice(0, 500) + "...",
+        extractedText: buildExtractedTextPreview(extractedText),
       },
       entriesCreated,
       ...(smartResult && {

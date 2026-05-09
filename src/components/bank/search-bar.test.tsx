@@ -15,6 +15,7 @@ const defaultProps = {
     project: 2,
     hackathon: 4,
     education: 1,
+    bullet: 6,
     achievement: 0,
     certification: 1,
   },
@@ -32,7 +33,7 @@ describe("SearchBar", () => {
     render(<SearchBar {...defaultProps} />);
     const allTab = screen.getByRole("tab", { name: /All/i });
     expect(allTab).toBeInTheDocument();
-    expect(allTab).toHaveTextContent("16");
+    expect(allTab).toHaveTextContent("22");
   });
 
   it("should render category chips with count badges", () => {
@@ -51,6 +52,9 @@ describe("SearchBar", () => {
 
     const eduTab = screen.getByRole("tab", { name: /Education/i });
     expect(eduTab).toHaveTextContent("1");
+
+    const bulletTab = screen.getByRole("tab", { name: /Bullets/i });
+    expect(bulletTab).toHaveTextContent("6");
 
     const achTab = screen.getByRole("tab", { name: /Achievements/i });
     expect(achTab).toHaveTextContent("0");
@@ -133,6 +137,7 @@ describe("SearchBar", () => {
     expect(CATEGORY_LABELS.project).toBe("Projects");
     expect(CATEGORY_LABELS.hackathon).toBe("Hackathons");
     expect(CATEGORY_LABELS.education).toBe("Education");
+    expect(CATEGORY_LABELS.bullet).toBe("Bullets");
     expect(CATEGORY_LABELS.achievement).toBe("Achievements");
     expect(CATEGORY_LABELS.certification).toBe("Certifications");
   });

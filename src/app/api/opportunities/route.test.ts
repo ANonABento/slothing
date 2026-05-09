@@ -57,7 +57,10 @@ describe("opportunities route", () => {
     const response = await GET(request);
 
     expect(mocks.listOpportunities).toHaveBeenCalledWith("user-1", ["saved"]);
-    await expect(response.json()).resolves.toEqual({ jobs: [], opportunities: [] });
+    await expect(response.json()).resolves.toEqual({
+      jobs: [],
+      opportunities: [],
+    });
   });
 
   it("creates an opportunity after validating the request body", async () => {

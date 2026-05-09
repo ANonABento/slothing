@@ -27,7 +27,7 @@ function jsonRequest(body: unknown) {
       method: "PATCH",
       body: JSON.stringify(body),
       headers: { "content-type": "application/json" },
-    }
+    },
   );
 }
 
@@ -44,12 +44,15 @@ describe("opportunity status route", () => {
       status: "applied",
     });
 
-    const response = await PATCH(jsonRequest({ status: "applied" }), routeContext);
+    const response = await PATCH(
+      jsonRequest({ status: "applied" }),
+      routeContext,
+    );
 
     expect(mocks.changeOpportunityStatus).toHaveBeenCalledWith(
       "opportunity-1",
       "applied",
-      "user-1"
+      "user-1",
     );
     await expect(response.json()).resolves.toEqual({
       opportunity: { id: "opportunity-1", status: "applied" },
@@ -57,7 +60,10 @@ describe("opportunity status route", () => {
   });
 
   it("rejects unsupported statuses", async () => {
-    const response = await PATCH(jsonRequest({ status: "offered" }), routeContext);
+    const response = await PATCH(
+      jsonRequest({ status: "offered" }),
+      routeContext,
+    );
 
     expect(response.status).toBe(400);
     expect(mocks.changeOpportunityStatus).not.toHaveBeenCalled();
@@ -66,7 +72,10 @@ describe("opportunity status route", () => {
   it("returns 404 when the opportunity does not exist", async () => {
     mocks.changeOpportunityStatus.mockReturnValueOnce(null);
 
-    const response = await PATCH(jsonRequest({ status: "saved" }), routeContext);
+    const response = await PATCH(
+      jsonRequest({ status: "saved" }),
+      routeContext,
+    );
 
     expect(response.status).toBe(404);
     await expect(response.json()).resolves.toEqual({

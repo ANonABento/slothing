@@ -304,6 +304,23 @@ describe("StudioPage", () => {
     expect(screen.getByText("Bank Entry Picker")).toBeInTheDocument();
   });
 
+  it("applies staged bank selections from the documents page", async () => {
+    const storage = mockStorage({
+      "slothing:selectedBankEntryIds": JSON.stringify(["entry-1", "entry-2"]),
+    });
+    mockStudioFetch(bankEntries);
+
+    render(<StudioPage />);
+
+    await waitFor(() =>
+      expect(screen.getByText("Selected 2")).toBeInTheDocument(),
+    );
+    expect(
+      screen.getByText("Using 2 staged bank components"),
+    ).toBeInTheDocument();
+    expect(storage.has("slothing:selectedBankEntryIds")).toBe(false);
+  });
+
   it("renders a client-side preview when the builder API fails", async () => {
     let builderRequestCount = 0;
     vi.stubGlobal(
@@ -436,7 +453,7 @@ describe("StudioPage", () => {
     );
   });
 
-  it("links saved resume versions to the selected job bank opportunity", async () => {
+  it("links saved resume versions to the selected opportunity bank opportunity", async () => {
     const linkRequests: unknown[] = [];
 
     vi.stubGlobal(
@@ -500,7 +517,9 @@ describe("StudioPage", () => {
     render(<StudioPage />);
 
     fireEvent.click(
-      await screen.findByRole("button", { name: "Select from Job Bank" }),
+      await screen.findByRole("button", {
+        name: "Select from Opportunity Bank",
+      }),
     );
     fireEvent.click(
       await screen.findByRole("button", { name: /frontend engineer/i }),

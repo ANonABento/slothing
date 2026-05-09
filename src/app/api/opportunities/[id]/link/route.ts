@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth, isAuthError } from "@/lib/auth";
 import { linkOpportunityDocument } from "@/lib/opportunities";
 
+export const dynamic = "force-dynamic";
+
 interface RouteContext {
   params: { id: string };
 }

@@ -19,6 +19,8 @@ import {
 } from "@/lib/db/analytics";
 import { requireAuth, isAuthError } from "@/lib/auth";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(request: NextRequest) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
@@ -48,7 +50,7 @@ export async function GET(request: NextRequest) {
     const snapshots = getAnalyticsSnapshots(
       startDate.toISOString().split("T")[0],
       today.toISOString().split("T")[0],
-      authResult.userId
+      authResult.userId,
     );
 
     // Get week-over-week changes
@@ -70,7 +72,7 @@ export async function GET(request: NextRequest) {
     console.error("Trends analytics error:", error);
     return NextResponse.json(
       { error: "Failed to get trend analytics" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

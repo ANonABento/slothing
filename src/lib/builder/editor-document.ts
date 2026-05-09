@@ -26,7 +26,7 @@ export type EditableEntryField = "heading" | "subtitle" | "meta" | "body";
 export function createEditableResumeDocument(
   entries: BankEntry[],
   sectionOrder: BankCategory[],
-  previousDocument?: EditableResumeDocument
+  previousDocument?: EditableResumeDocument,
 ): EditableResumeDocument {
   const nextDocument: EditableResumeDocument = {
     sections: sectionOrder.map((category) => ({
@@ -43,7 +43,7 @@ export function createEditableResumeDocument(
   }
 
   const previousSections = new Map(
-    previousDocument.sections.map((section) => [section.id, section])
+    previousDocument.sections.map((section) => [section.id, section]),
   );
 
   return {
@@ -52,14 +52,14 @@ export function createEditableResumeDocument(
       if (!previousSection) return section;
 
       const previousEntries = new Map(
-        previousSection.entries.map((entry) => [entry.id, entry])
+        previousSection.entries.map((entry) => [entry.id, entry]),
       );
 
       return {
         ...section,
         title: previousSection.title,
         entries: section.entries.map(
-          (entry) => previousEntries.get(entry.id) ?? entry
+          (entry) => previousEntries.get(entry.id) ?? entry,
         ),
       };
     }),
@@ -69,11 +69,11 @@ export function createEditableResumeDocument(
 export function updateEditableSectionTitle(
   document: EditableResumeDocument,
   sectionId: BankCategory,
-  title: string
+  title: string,
 ): EditableResumeDocument {
   return {
     sections: document.sections.map((section) =>
-      section.id === sectionId ? { ...section, title } : section
+      section.id === sectionId ? { ...section, title } : section,
     ),
   };
 }
@@ -83,7 +83,7 @@ export function updateEditableEntryField(
   sectionId: BankCategory,
   entryId: string,
   field: EditableEntryField,
-  value: string
+  value: string,
 ): EditableResumeDocument {
   return {
     sections: document.sections.map((section) =>
@@ -91,10 +91,10 @@ export function updateEditableEntryField(
         ? {
             ...section,
             entries: section.entries.map((entry) =>
-              entry.id === entryId ? { ...entry, [field]: value } : entry
+              entry.id === entryId ? { ...entry, [field]: value } : entry,
             ),
           }
-        : section
+        : section,
     ),
   };
 }
@@ -104,7 +104,7 @@ export function updateEditableEntryBullet(
   sectionId: BankCategory,
   entryId: string,
   bulletIndex: number,
-  value: string
+  value: string,
 ): EditableResumeDocument {
   return {
     sections: document.sections.map((section) =>
@@ -116,13 +116,13 @@ export function updateEditableEntryBullet(
                 ? {
                     ...entry,
                     bullets: entry.bullets.map((bullet, index) =>
-                      index === bulletIndex ? value : bullet
+                      index === bulletIndex ? value : bullet,
                     ),
                   }
-                : entry
+                : entry,
             ),
           }
-        : section
+        : section,
     ),
   };
 }
@@ -130,7 +130,7 @@ export function updateEditableEntryBullet(
 export function reorderEditableDocumentSections(
   document: EditableResumeDocument,
   fromIndex: number,
-  toIndex: number
+  toIndex: number,
 ): EditableResumeDocument {
   if (
     fromIndex < 0 ||
@@ -150,7 +150,7 @@ export function reorderEditableDocumentSections(
 
 export function editableDocumentToResume(
   document: EditableResumeDocument,
-  contact: ContactInfo = { name: "Your Name" }
+  contact: ContactInfo = { name: "Your Name" },
 ): TailoredResume {
   const experiences: TailoredResume["experiences"] = [];
   const education: TailoredResume["education"] = [];
@@ -193,6 +193,9 @@ export function editableDocumentToResume(
         case "certification":
           skills.push(formatCertificationSkill(entry));
           break;
+        case "bullet":
+          summaryParts.push(...compact([entry.body || entry.heading]));
+          break;
         case "achievement":
           summaryParts.push(...compact([entry.body || entry.heading]));
           break;
@@ -226,7 +229,10 @@ function createEditableEntry(entry: BankEntry): EditableDocumentEntry {
       return {
         id: entry.id,
         heading: readString(content.institution),
-        subtitle: joinNonEmpty([readString(content.degree), readString(content.field)], ", "),
+        subtitle: joinNonEmpty(
+          [readString(content.degree), readString(content.field)],
+          ", ",
+        ),
         meta: readString(content.endDate) || readString(content.startDate),
         body: "",
         bullets: readStringArray(content.highlights),
@@ -268,6 +274,16 @@ function createEditableEntry(entry: BankEntry): EditableDocumentEntry {
         heading: readString(content.title),
         subtitle: "",
         meta: readString(content.date),
+        body: readString(content.description),
+        bullets: [],
+      };
+    case "bullet":
+      return {
+        id: entry.id,
+        heading: readString(content.description),
+        subtitle:
+          readString(content.parentLabel) || readString(content.context),
+        meta: readString(content.sourceSection),
         body: readString(content.description),
         bullets: [],
       };
@@ -321,5 +337,7 @@ function splitEducationSubtitle(subtitle: string): {
 
 function formatCertificationSkill(entry: EditableDocumentEntry): string {
   if (!entry.heading) return "";
-  return entry.subtitle ? `${entry.heading} (${entry.subtitle})` : entry.heading;
+  return entry.subtitle
+    ? `${entry.heading} (${entry.subtitle})`
+    : entry.heading;
 }

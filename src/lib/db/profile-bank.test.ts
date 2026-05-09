@@ -26,6 +26,7 @@ import {
   findDuplicateEntry,
   getDeduplicationKey,
   updateBankEntry,
+  deleteBankEntry,
   getSourceDocuments,
   deleteSourceDocument,
   deleteSourceDocuments,
@@ -55,7 +56,11 @@ describe("Profile Bank DB Functions", () => {
         "experience",
         JSON.stringify({ company: "Acme", title: "Engineer" }),
         "doc-1",
-        0.9
+        null,
+        "experience",
+        0,
+        null,
+        0.9,
       );
     });
 
@@ -74,7 +79,46 @@ describe("Profile Bank DB Functions", () => {
         "skill",
         JSON.stringify({ name: "React" }),
         null,
-        0.8
+        null,
+        "skill",
+        0,
+        null,
+        0.8,
+      );
+    });
+
+    it("persists parent hierarchy metadata as first-class columns", () => {
+      const mockRun = vi.fn();
+      (db.prepare as Mock).mockReturnValue({ run: mockRun });
+
+      insertBankEntry({
+        category: "bullet",
+        content: {
+          description: "Built parser",
+          parentId: "parent-1",
+          parentType: "experience",
+          order: 2,
+          sourceSection: "experience",
+        },
+      });
+
+      expect(mockRun).toHaveBeenCalledWith(
+        "test-id",
+        "default",
+        "bullet",
+        JSON.stringify({
+          description: "Built parser",
+          parentId: "parent-1",
+          parentType: "experience",
+          order: 2,
+          sourceSection: "experience",
+        }),
+        null,
+        "parent-1",
+        "experience",
+        2,
+        "experience",
+        0.8,
       );
     });
   });
@@ -108,7 +152,9 @@ describe("Profile Bank DB Functions", () => {
           created_at: "2024-01-15T10:00:00.000Z",
         },
       ];
-      (db.prepare as Mock).mockReturnValue({ all: vi.fn().mockReturnValue(mockRows) });
+      (db.prepare as Mock).mockReturnValue({
+        all: vi.fn().mockReturnValue(mockRows),
+      });
 
       const result = getBankEntries();
 
@@ -125,8 +171,41 @@ describe("Profile Bank DB Functions", () => {
       ]);
     });
 
+    it("hydrates hierarchy metadata from first-class columns", () => {
+      const mockRows = [
+        {
+          id: "entry-1",
+          user_id: "default",
+          category: "achievement",
+          content: '{"description":"Built parser"}',
+          source_document_id: "doc-1",
+          parent_id: "parent-1",
+          component_type: "experience",
+          component_order: 3,
+          source_section: "experience",
+          confidence_score: 0.9,
+          created_at: "2024-01-15T10:00:00.000Z",
+        },
+      ];
+      (db.prepare as Mock).mockReturnValue({
+        all: vi.fn().mockReturnValue(mockRows),
+      });
+
+      const result = getBankEntries();
+
+      expect(result[0].content).toEqual({
+        description: "Built parser",
+        parentId: "parent-1",
+        componentType: "experience",
+        order: 3,
+        sourceSection: "experience",
+      });
+    });
+
     it("should return empty array when no entries", () => {
-      (db.prepare as Mock).mockReturnValue({ all: vi.fn().mockReturnValue([]) });
+      (db.prepare as Mock).mockReturnValue({
+        all: vi.fn().mockReturnValue([]),
+      });
 
       const result = getBankEntries();
       expect(result).toEqual([]);
@@ -166,7 +245,9 @@ describe("Profile Bank DB Functions", () => {
           created_at: "2024-01-15T10:00:00.000Z",
         },
       ];
-      (db.prepare as Mock).mockReturnValue({ all: vi.fn().mockReturnValue(mockRows) });
+      (db.prepare as Mock).mockReturnValue({
+        all: vi.fn().mockReturnValue(mockRows),
+      });
 
       const result = getGroupedBankEntries();
 
@@ -175,6 +256,7 @@ describe("Profile Bank DB Functions", () => {
       expect(result.project).toHaveLength(0);
       expect(result.hackathon).toHaveLength(0);
       expect(result.education).toHaveLength(0);
+      expect(result.bullet).toHaveLength(0);
       expect(result.achievement).toHaveLength(0);
       expect(result.certification).toHaveLength(0);
     });
@@ -225,7 +307,9 @@ describe("Profile Bank DB Functions", () => {
         confidence_score: 0.8,
         created_at: "2024-01-15T10:00:00.000Z",
       };
-      (db.prepare as Mock).mockReturnValue({ all: vi.fn().mockReturnValue([mockRow]) });
+      (db.prepare as Mock).mockReturnValue({
+        all: vi.fn().mockReturnValue([mockRow]),
+      });
 
       const result = findDuplicateEntry("skill", "react");
 
@@ -234,7 +318,9 @@ describe("Profile Bank DB Functions", () => {
     });
 
     it("should return null when no duplicate found", () => {
-      (db.prepare as Mock).mockReturnValue({ all: vi.fn().mockReturnValue([]) });
+      (db.prepare as Mock).mockReturnValue({
+        all: vi.fn().mockReturnValue([]),
+      });
 
       const result = findDuplicateEntry("skill", "unknown-skill");
 
@@ -248,7 +334,7 @@ describe("Profile Bank DB Functions", () => {
         getDeduplicationKey("hackathon", {
           name: "AI Build Weekend",
           submissionUrl: "https://example.devpost.com/submissions/1",
-        })
+        }),
       ).toBe("ai build weekend|https://example.devpost.com/submissions/1");
     });
   });
@@ -258,13 +344,21 @@ describe("Profile Bank DB Functions", () => {
       const mockRun = vi.fn();
       (db.prepare as Mock).mockReturnValue({ run: mockRun });
 
-      updateBankEntry("entry-1", { name: "React", proficiency: "expert" }, 0.95);
+      updateBankEntry(
+        "entry-1",
+        { name: "React", proficiency: "expert" },
+        0.95,
+      );
 
       expect(mockRun).toHaveBeenCalledWith(
         JSON.stringify({ name: "React", proficiency: "expert" }),
+        null,
+        null,
+        0,
+        null,
         0.95,
         "entry-1",
-        "default"
+        "default",
       );
     });
 
@@ -274,15 +368,32 @@ describe("Profile Bank DB Functions", () => {
 
       updateBankEntry("entry-1", { name: "React" }, 0.95, "user-123");
 
-      expect(db.prepare).toHaveBeenCalledWith(
-        "UPDATE profile_bank SET content = ?, confidence_score = ? WHERE id = ? AND user_id = ?"
-      );
       expect(mockRun).toHaveBeenCalledWith(
         JSON.stringify({ name: "React" }),
+        null,
+        null,
+        0,
+        null,
         0.95,
         "entry-1",
-        "user-123"
+        "user-123",
       );
+    });
+  });
+
+  describe("deleteBankEntry", () => {
+    it("cascades child bullet and legacy achievement entries before deleting the parent", () => {
+      const childRun = vi.fn().mockReturnValue({ changes: 2 });
+      const parentRun = vi.fn().mockReturnValue({ changes: 1 });
+      (db.prepare as Mock)
+        .mockReturnValueOnce({ run: childRun })
+        .mockReturnValueOnce({ run: parentRun });
+
+      const deleted = deleteBankEntry("parent-1", "user-123");
+
+      expect(deleted).toBe(true);
+      expect(childRun).toHaveBeenCalledWith("user-123", "parent-1", "parent-1");
+      expect(parentRun).toHaveBeenCalledWith("parent-1", "user-123");
     });
   });
 
@@ -297,7 +408,9 @@ describe("Profile Bank DB Functions", () => {
           chunk_count: 5,
         },
       ];
-      (db.prepare as Mock).mockReturnValue({ all: vi.fn().mockReturnValue(mockRows) });
+      (db.prepare as Mock).mockReturnValue({
+        all: vi.fn().mockReturnValue(mockRows),
+      });
 
       const result = getSourceDocuments();
 
@@ -313,7 +426,9 @@ describe("Profile Bank DB Functions", () => {
     });
 
     it("should return empty array when no source documents", () => {
-      (db.prepare as Mock).mockReturnValue({ all: vi.fn().mockReturnValue([]) });
+      (db.prepare as Mock).mockReturnValue({
+        all: vi.fn().mockReturnValue([]),
+      });
 
       const result = getSourceDocuments();
       expect(result).toEqual([]);
@@ -377,7 +492,10 @@ describe("Profile Bank DB Functions", () => {
         .mockReturnValueOnce({ run: docRun });
       (db.transaction as Mock).mockImplementation((fn) => fn);
 
-      const result = deleteSourceDocuments(["doc-1", "doc-2", "doc-1"], "user-123");
+      const result = deleteSourceDocuments(
+        ["doc-1", "doc-2", "doc-1"],
+        "user-123",
+      );
 
       expect(result).toEqual({ documentsDeleted: 2, chunksDeleted: 5 });
       expect(entryRun).toHaveBeenCalledTimes(2);

@@ -8,6 +8,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getProfile, getDocuments } from "@/lib/db";
 import { requireAuth, isAuthError } from "@/lib/auth";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(request: NextRequest) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
@@ -20,7 +22,7 @@ export async function GET(request: NextRequest) {
     if (!profile) {
       return NextResponse.json(
         { error: "No profile data found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -93,7 +95,7 @@ export async function GET(request: NextRequest) {
     console.error("Export profile error:", error);
     return NextResponse.json(
       { error: "Failed to export profile" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

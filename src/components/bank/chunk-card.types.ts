@@ -12,10 +12,17 @@ export interface ChunkCardProps {
   entry: BankEntry;
   onUpdate: (id: string, content: Record<string, unknown>) => void;
   onDelete: (id: string) => void;
+  onCreateChild?: (parent: BankEntry, description: string) => void;
+  onReorderChild?: (
+    parent: BankEntry,
+    childId: string,
+    direction: "up" | "down",
+  ) => void;
   selected?: boolean;
   onToggleSelect?: (id: string) => void;
   highlighted?: boolean;
   anySelected?: boolean;
+  childEntries?: BankEntry[];
 }
 
 export interface FieldEditorProps {

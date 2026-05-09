@@ -29,7 +29,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { AppPage, PageContent, PageHeader } from "@/components/ui/page-layout";
+import {
+  AppPage,
+  PageContent,
+  PageHeader,
+  PagePanel,
+  PagePanelHeader,
+  StandardEmptyState,
+} from "@/components/ui/page-layout";
 import { cn } from "@/lib/utils";
 import { getResponsiveDetailGridClass } from "../shared-layout-utils";
 
@@ -293,7 +300,7 @@ ${script.close}
 
       {/* Tabs */}
       <div className="border-b bg-card/50">
-        <div className="max-w-6xl mx-auto px-6">
+        <PageContent className="py-2">
           <div className="flex gap-1 py-2">
             {tabs.map((tab) => (
               <button
@@ -311,7 +318,7 @@ ${script.close}
               </button>
             ))}
           </div>
-        </div>
+        </PageContent>
       </div>
 
       {/* Main Content */}
@@ -320,11 +327,11 @@ ${script.close}
         {activeTab === "calculator" && (
           <div className={getResponsiveDetailGridClass(Boolean(salaryRange))}>
             {/* Input */}
-            <div className="rounded-2xl border bg-card p-6">
-              <h2 className="font-semibold mb-6 flex items-center gap-2">
-                <Calculator className="h-5 w-5 text-primary" />
-                Market Rate Calculator
-              </h2>
+            <PagePanel>
+              <PagePanelHeader
+                title="Market Rate Calculator"
+                icon={Calculator}
+              />
 
               <div className="space-y-4">
                 <div>
@@ -395,10 +402,10 @@ ${script.close}
                   Calculate Range
                 </Button>
               </div>
-            </div>
+            </PagePanel>
 
             {salaryRange && (
-              <div className="rounded-2xl border bg-card p-6 opacity-100 transition-all duration-300 ease-out animate-in fade-in slide-in-from-right-4">
+              <PagePanel className="opacity-100 transition-all duration-300 ease-out animate-in fade-in slide-in-from-right-4">
                 <h2 className="font-semibold mb-6">Market Salary Range</h2>
                 <div className="space-y-6">
                   {/* Range visualization */}
@@ -452,7 +459,7 @@ ${script.close}
                     </p>
                   </div>
                 </div>
-              </div>
+              </PagePanel>
             )}
           </div>
         )}
@@ -461,11 +468,8 @@ ${script.close}
         {activeTab === "compare" && (
           <div className="space-y-6">
             {/* Add Offer Form */}
-            <div className="rounded-2xl border bg-card p-6">
-              <h2 className="font-semibold mb-4 flex items-center gap-2">
-                <Plus className="h-5 w-5 text-primary" />
-                Add Offer
-              </h2>
+            <PagePanel>
+              <PagePanelHeader title="Add Offer" icon={Plus} className="mb-4" />
 
               <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div>
@@ -545,11 +549,11 @@ ${script.close}
                   </Button>
                 </div>
               </div>
-            </div>
+            </PagePanel>
 
             {/* Offers List */}
             {offers.length > 0 && (
-              <div className="rounded-2xl border bg-card p-6">
+              <PagePanel>
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="font-semibold flex items-center gap-2">
                     <Building2 className="h-5 w-5 text-primary" />
@@ -635,18 +639,15 @@ ${script.close}
                     </div>
                   ))}
                 </div>
-              </div>
+              </PagePanel>
             )}
 
             {offers.length === 0 && (
-              <div className="rounded-2xl border bg-card p-12 text-center">
-                <div className="p-4 rounded-full bg-muted text-muted-foreground inline-block mb-4">
-                  <Building2 className="h-8 w-8" />
-                </div>
-                <p className="text-muted-foreground">
-                  Add at least 2 offers to compare total compensation
-                </p>
-              </div>
+              <StandardEmptyState
+                icon={Building2}
+                title="No offers yet"
+                description="Add at least 2 offers to compare total compensation."
+              />
             )}
           </div>
         )}
@@ -655,11 +656,11 @@ ${script.close}
         {activeTab === "negotiate" && (
           <div className="grid lg:grid-cols-2 gap-8">
             {/* Input */}
-            <div className="rounded-2xl border bg-card p-6">
-              <h2 className="font-semibold mb-6 flex items-center gap-2">
-                <TrendingUp className="h-5 w-5 text-primary" />
-                Generate Negotiation Script
-              </h2>
+            <PagePanel>
+              <PagePanelHeader
+                title="Generate Negotiation Script"
+                icon={TrendingUp}
+              />
 
               <div className="space-y-4">
                 <div>
@@ -725,10 +726,10 @@ ${script.close}
                   Generate Script
                 </Button>
               </div>
-            </div>
+            </PagePanel>
 
             {/* Script */}
-            <div className="rounded-2xl border bg-card p-6">
+            <PagePanel>
               <div className="flex items-center justify-between mb-6">
                 <h2 className="font-semibold">Your Negotiation Script</h2>
                 {script && (
@@ -829,7 +830,7 @@ ${script.close}
                   </p>
                 </div>
               )}
-            </div>
+            </PagePanel>
           </div>
         )}
       </PageContent>

@@ -14,7 +14,9 @@ import {
 
 describe("hasDateRange", () => {
   it("matches 'January 2020 - Present'", () => {
-    expect(hasDateRange("Software Engineer  January 2020 - Present")).toBe(true);
+    expect(hasDateRange("Software Engineer  January 2020 - Present")).toBe(
+      true,
+    );
   });
 
   it("matches 'Jan 2020 - Dec 2023'", () => {
@@ -64,11 +66,15 @@ describe("hasDateRange", () => {
 
 describe("extractDateRange", () => {
   it("extracts full month date range", () => {
-    expect(extractDateRange("Software Engineer  January 2020 - Present")).toBe("January 2020 - Present");
+    expect(extractDateRange("Software Engineer  January 2020 - Present")).toBe(
+      "January 2020 - Present",
+    );
   });
 
   it("extracts abbreviated date range", () => {
-    expect(extractDateRange("Jan 2020 - Dec 2023 | Google")).toBe("Jan 2020 - Dec 2023");
+    expect(extractDateRange("Jan 2020 - Dec 2023 | Google")).toBe(
+      "Jan 2020 - Dec 2023",
+    );
   });
 
   it("extracts year-only range", () => {
@@ -76,21 +82,32 @@ describe("extractDateRange", () => {
   });
 
   it("extracts 'to' separator range", () => {
-    expect(extractDateRange("March 2019 to Current")).toBe("March 2019 to Current");
+    expect(extractDateRange("March 2019 to Current")).toBe(
+      "March 2019 to Current",
+    );
   });
 });
 
 describe("splitDateRange", () => {
   it("splits dash-separated dates", () => {
-    expect(splitDateRange("January 2020 - Present")).toEqual({ start: "January 2020", end: "Present" });
+    expect(splitDateRange("January 2020 - Present")).toEqual({
+      start: "January 2020",
+      end: "Present",
+    });
   });
 
   it("splits em-dash dates", () => {
-    expect(splitDateRange("2020 — 2024")).toEqual({ start: "2020", end: "2024" });
+    expect(splitDateRange("2020 — 2024")).toEqual({
+      start: "2020",
+      end: "2024",
+    });
   });
 
   it("splits 'to' dates", () => {
-    expect(splitDateRange("March 2019 to Current")).toEqual({ start: "March 2019", end: "Current" });
+    expect(splitDateRange("March 2019 to Current")).toEqual({
+      start: "March 2019",
+      end: "Current",
+    });
   });
 });
 
@@ -131,7 +148,9 @@ describe("parseDegreeAndField", () => {
   });
 
   it("parses 'Bachelor of Science in Mechanical Engineering'", () => {
-    const result = parseDegreeAndField("Bachelor of Science in Mechanical Engineering");
+    const result = parseDegreeAndField(
+      "Bachelor of Science in Mechanical Engineering",
+    );
     expect(result.degree).toBe("Bachelor of Science");
     expect(result.field).toBe("Mechanical Engineering");
   });
@@ -265,6 +284,59 @@ Senior Software Engineer
     expect(result[0].title).toBe("Senior Software Engineer");
     expect(result[0].company).toBe("Acme Corp");
   });
+
+  it("extracts compact resume rows with title, company, location, and dates", () => {
+    const text = `Software Engineer — Hamming AI (YC S24) — Austin, Texas, United States    Dec 2025 — Present
+Robotics Engineer — Reazon Human Interaction Lab — Akihabara, Tokyo, Japan    Jun 2025 — Aug 2025
+• Designed a lightweight exoskeleton wrist controller
+• Developed a custom wrist-mounted AprilTags tracking system`;
+
+    const result = extractExperiences(text);
+
+    expect(result).toHaveLength(2);
+    expect(result[0]).toMatchObject({
+      title: "Software Engineer",
+      company: "Hamming AI (YC S24)",
+      location: "Austin, Texas, United States",
+      startDate: "Dec 2025",
+      endDate: "Present",
+      current: true,
+    });
+    expect(result[1]).toMatchObject({
+      title: "Robotics Engineer",
+      company: "Reazon Human Interaction Lab",
+      location: "Akihabara, Tokyo, Japan",
+      startDate: "Jun 2025",
+      endDate: "Aug 2025",
+      highlights: [
+        "Designed a lightweight exoskeleton wrist controller",
+        "Developed a custom wrist-mounted AprilTags tracking system",
+      ],
+    });
+  });
+
+  it("attaches PDF-extracted standalone bullet markers to the following wrapped lines", () => {
+    const text = `Robotics Engineer — Reazon Human Interaction Lab — Akihabara, Tokyo, Japan Jun 2025 — Aug 2025
+●
+Designed a lightweight exoskeleton wrist controller in Fusion 360 using Dynamixel actuators for encoder
+feedback and haptic response
+●
+Developed a custom wrist-mounted AprilTags tracking system using dual cameras, Python, and ROS 2
+Hardware Developer — Midnight Sun — Waterloo, Ontario, Canada Sep 2024 — Apr 2025
+●
+Designed and routed double-layer PCBs`;
+
+    const result = extractExperiences(text);
+
+    expect(result).toHaveLength(2);
+    expect(result[0].highlights).toEqual([
+      "Designed a lightweight exoskeleton wrist controller in Fusion 360 using Dynamixel actuators for encoder feedback and haptic response",
+      "Developed a custom wrist-mounted AprilTags tracking system using dual cameras, Python, and ROS 2",
+    ]);
+    expect(result[1].highlights).toEqual([
+      "Designed and routed double-layer PCBs",
+    ]);
+  });
 });
 
 describe("extractEducation", () => {
@@ -332,6 +404,20 @@ GPA: 3.7`;
     expect(result).toHaveLength(2);
   });
 
+  it("extracts Waterloo-style BASc education rows", () => {
+    const text = `University of Waterloo — BASc in Computer Engineering    Sept 2024 - Present`;
+    const result = extractEducation(text);
+
+    expect(result).toHaveLength(1);
+    expect(result[0]).toMatchObject({
+      institution: "University of Waterloo",
+      degree: "BASc",
+      field: "Computer Engineering",
+      startDate: "Sept 2024",
+      endDate: "Present",
+    });
+  });
+
   it("handles cum laude honors as GPA", () => {
     const text = `Bachelor of Arts
 Yale University
@@ -368,11 +454,36 @@ github.com/janedoe`;
 describe("extractFieldsFromSections", () => {
   it("processes complete resume sections", () => {
     const sections = [
-      { type: "contact" as const, content: "John Doe\njohn@email.com\n(555) 111-2222", startIndex: 0, endIndex: 40 },
-      { type: "summary" as const, content: "Experienced engineer", startIndex: 41, endIndex: 61 },
-      { type: "experience" as const, content: "Software Engineer  Jan 2020 - Present\nGoogle\n- Built APIs", startIndex: 62, endIndex: 120 },
-      { type: "education" as const, content: "B.S. in Computer Science\nMIT\nGPA: 3.9", startIndex: 121, endIndex: 160 },
-      { type: "skills" as const, content: "JavaScript, TypeScript, Python, Go", startIndex: 161, endIndex: 195 },
+      {
+        type: "contact" as const,
+        content: "John Doe\njohn@email.com\n(555) 111-2222",
+        startIndex: 0,
+        endIndex: 40,
+      },
+      {
+        type: "summary" as const,
+        content: "Experienced engineer",
+        startIndex: 41,
+        endIndex: 61,
+      },
+      {
+        type: "experience" as const,
+        content: "Software Engineer  Jan 2020 - Present\nGoogle\n- Built APIs",
+        startIndex: 62,
+        endIndex: 120,
+      },
+      {
+        type: "education" as const,
+        content: "B.S. in Computer Science\nMIT\nGPA: 3.9",
+        startIndex: 121,
+        endIndex: 160,
+      },
+      {
+        type: "skills" as const,
+        content: "JavaScript, TypeScript, Python, Go",
+        startIndex: 161,
+        endIndex: 195,
+      },
     ];
     const result = extractFieldsFromSections(sections);
 

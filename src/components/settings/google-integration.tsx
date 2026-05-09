@@ -2,28 +2,23 @@
 
 import dynamic from "next/dynamic";
 import { Calendar, Cloud, FolderOpen, Mail } from "lucide-react";
+import { PageSection } from "@/components/ui/page-layout";
 import { SkeletonButton } from "@/components/ui/skeleton";
 
 const GoogleConnectButton = dynamic(
-  () => import("@/components/google").then((module) => module.GoogleConnectButton),
-  { loading: () => <SkeletonButton className="w-48" />, ssr: false }
+  () =>
+    import("@/components/google").then((module) => module.GoogleConnectButton),
+  { loading: () => <SkeletonButton className="w-48" />, ssr: false },
 );
 
 export function GoogleIntegration() {
   return (
-    <div className="rounded-2xl border bg-card p-6">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="p-2.5 rounded-xl gradient-bg text-primary-foreground">
-          <Cloud className="h-5 w-5" />
-        </div>
-        <div>
-          <h2 className="font-semibold">Google Integration</h2>
-          <p className="text-sm text-muted-foreground">
-            Connect your Google account to sync calendars, store documents, and more
-          </p>
-        </div>
-      </div>
-
+    <PageSection
+      title="Google Integration"
+      description="Connect your Google account to sync calendars, store documents, and more."
+      icon={Cloud}
+      iconClassName="gradient-bg text-primary-foreground"
+    >
       <div className="space-y-4">
         <GoogleConnectButton />
 
@@ -44,10 +39,11 @@ export function GoogleIntegration() {
             </div>
           </div>
           <p className="text-xs text-muted-foreground mt-3">
-            Connect your Google account to enable these features. Your data stays private and secure.
+            Connect your Google account to enable these features. Your data
+            stays private and secure.
           </p>
         </div>
       </div>
-    </div>
+    </PageSection>
   );
 }

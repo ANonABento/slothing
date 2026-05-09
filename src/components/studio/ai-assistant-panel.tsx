@@ -1,6 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type HTMLAttributes,
+} from "react";
 import Link from "next/link";
 import {
   BarChart3,
@@ -51,7 +57,7 @@ type AssistantRunAction =
   | "generate-from-bank"
   | "rewrite-section";
 
-interface AiAssistantPanelProps {
+interface AiAssistantPanelProps extends HTMLAttributes<HTMLElement> {
   className?: string;
   documentContent: string;
   documentMode?: DocumentMode;
@@ -129,6 +135,7 @@ export function AiAssistantPanel({
   onOpenBank,
   onOpportunityClear,
   onOpportunitySelect,
+  ...asideProps
 }: AiAssistantPanelProps) {
   const panelRef = useRef<HTMLElement>(null);
   const runningActionRef = useRef<AssistantRunAction | null>(null);
@@ -296,7 +303,9 @@ export function AiAssistantPanel({
       onOpportunitySelect?.(opportunity.id);
       setOpportunityPickerOpen(false);
       setOpportunityError("");
-      setStatusMessage(`Loaded ${opportunity.title} from the job bank.`);
+      setStatusMessage(
+        `Loaded ${opportunity.title} from the opportunity bank.`,
+      );
       setAssistantResult("");
     },
     [onOpportunitySelect],
@@ -574,8 +583,9 @@ export function AiAssistantPanel({
   return (
     <aside
       ref={panelRef}
+      {...asideProps}
       className={cn(
-        "flex w-[360px] shrink-0 flex-col border-l-[length:var(--border-width)] bg-background",
+        "flex w-full shrink-0 flex-col border-l-[length:var(--border-width)] bg-background md:w-[360px]",
         className,
       )}
     >
@@ -622,7 +632,7 @@ export function AiAssistantPanel({
             onClick={handleOpenOpportunityPicker}
           >
             <BriefcaseBusiness className="mr-2 h-4 w-4" />
-            Select from Job Bank
+            Select from Opportunity Bank
           </Button>
           <Textarea
             id="studio-jd-input"
@@ -856,7 +866,7 @@ export function AiAssistantPanel({
       >
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Select from Job Bank</DialogTitle>
+            <DialogTitle>Select from Opportunity Bank</DialogTitle>
             <DialogDescription>
               Choose a saved or applied opportunity to load its description.
             </DialogDescription>

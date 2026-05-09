@@ -4,6 +4,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { ensureEnvValidated } from "@/lib/env";
 import { getSiteMetadata } from "@/lib/seo";
 import { themeTokensToCssVariables } from "@/lib/theme/apply";
+import { getThemePreloadScript } from "@/lib/theme/preload-script";
 import { getTheme } from "@/lib/theme/registry";
 import { AuthSessionProvider } from "@/components/auth/session-provider";
 
@@ -20,8 +21,13 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      style={themeTokensToCssVariables(getTheme("default").light) as CSSProperties}
+      style={
+        themeTokensToCssVariables(getTheme("default").light) as CSSProperties
+      }
     >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: getThemePreloadScript() }} />
+      </head>
       <body className="font-sans">
         <AuthSessionProvider>
           <ThemeProvider>{children}</ThemeProvider>

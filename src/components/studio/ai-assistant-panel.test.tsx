@@ -66,7 +66,7 @@ describe("AiAssistantPanel", () => {
       screen.getByRole("button", { name: "Tailor to JD" }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: "Select from Job Bank" }),
+      screen.getByRole("button", { name: "Select from Opportunity Bank" }),
     ).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Generate from Bank" }),
@@ -440,7 +440,7 @@ describe("AiAssistantPanel", () => {
     expect(screen.getByText("Applied suggested rewrite.")).toBeInTheDocument();
   });
 
-  it("loads a selected job bank opportunity into the JD input", async () => {
+  it("loads a selected opportunity bank opportunity into the JD input", async () => {
     const onOpportunitySelect = vi.fn();
     vi.stubGlobal(
       "fetch",
@@ -472,7 +472,7 @@ describe("AiAssistantPanel", () => {
     renderWithSelectableText("Built APIs quickly.", { onOpportunitySelect });
 
     fireEvent.click(
-      screen.getByRole("button", { name: "Select from Job Bank" }),
+      screen.getByRole("button", { name: "Select from Opportunity Bank" }),
     );
     fireEvent.click(
       await screen.findByRole("button", { name: /frontend engineer/i }),
@@ -557,7 +557,7 @@ describe("AiAssistantPanel", () => {
     renderWithSelectableText("Built APIs quickly.", { onOpportunityClear });
 
     fireEvent.click(
-      screen.getByRole("button", { name: "Select from Job Bank" }),
+      screen.getByRole("button", { name: "Select from Opportunity Bank" }),
     );
     fireEvent.click(
       await screen.findByRole("button", { name: /frontend engineer/i }),

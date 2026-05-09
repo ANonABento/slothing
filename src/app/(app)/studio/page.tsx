@@ -11,7 +11,9 @@ import { StudioHeader } from "@/components/studio/studio-header";
 import { StudioLoading } from "@/components/studio/studio-loading";
 import { useStudioPageState } from "@/components/studio/use-studio-page-state";
 import { VersionHistorySection } from "@/components/studio/version-history-section";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { PageWorkspace } from "@/components/ui/page-layout";
 import { getMobilePanelClasses } from "@/lib/builder/section-manager";
 import { cn } from "@/lib/utils";
 
@@ -23,7 +25,7 @@ function StudioPageContent() {
   }
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] flex-col">
+    <PageWorkspace>
       <StudioHeader
         documentMode={studio.documentMode}
         draftIsSaved={studio.draftIsSaved}
@@ -33,6 +35,8 @@ function StudioPageContent() {
         canDownloadPdf={Boolean(studio.content || studio.html)}
         isExporting={studio.isExporting}
         onDocumentModeChange={studio.setDocumentMode}
+        onAiPanelToggle={() => studio.setMobileView("assistant")}
+        onFilesPanelToggle={() => studio.setMobileView("edit")}
         onTemplateSelect={studio.handleTemplateSelect}
         onCopyHtml={studio.handleCopyHtml}
         onDownloadPdf={studio.handleDownloadPdf}
@@ -73,6 +77,14 @@ function StudioPageContent() {
             />
 
             <div className="flex-1 overflow-y-auto">
+              {studio.stagedSelectionCount > 0 ? (
+                <div className="border-b px-4 py-3">
+                  <Badge variant="success">
+                    Using {studio.stagedSelectionCount} staged bank component
+                    {studio.stagedSelectionCount === 1 ? "" : "s"}
+                  </Badge>
+                </div>
+              ) : null}
               <SectionList
                 sections={studio.sections}
                 entries={studio.entries}
@@ -124,6 +136,10 @@ function StudioPageContent() {
           </div>
 
           <AiAssistantPanel
+            id="builder-assistant-panel"
+            role="tabpanel"
+            aria-labelledby="builder-assistant-tab"
+            className={getMobilePanelClasses(studio.mobileView, "assistant")}
             documentContent={studio.html}
             documentMode={studio.documentMode}
             selectedEntryCount={studio.selectedIds.size}
@@ -140,7 +156,7 @@ function StudioPageContent() {
           />
         </div>
       </div>
-    </div>
+    </PageWorkspace>
   );
 }
 

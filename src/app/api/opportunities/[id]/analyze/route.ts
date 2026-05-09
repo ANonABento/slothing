@@ -11,6 +11,8 @@ import { LLMClient, parseJSONFromLLM } from "@/lib/llm/client";
 import type { JobMatch } from "@/types";
 import { requireAuth, isAuthError } from "@/lib/auth";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(
   request: NextRequest,
   { params }: { params: { id: string } },

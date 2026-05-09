@@ -17,6 +17,8 @@ import {
 import { createReminderSchema, type ReminderType } from "@/lib/constants";
 import { requireAuth, isAuthError } from "@/lib/auth";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(request: NextRequest) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
@@ -55,7 +57,7 @@ export async function GET(request: NextRequest) {
     console.error("Get reminders error:", error);
     return NextResponse.json(
       { error: "Failed to fetch reminders" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -76,26 +78,29 @@ export async function POST(request: NextRequest) {
       }));
       return NextResponse.json(
         { error: "Validation failed", errors },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     const { jobId, type, title, description, dueDate } = parseResult.data;
 
-    const reminder = createReminder({
-      jobId,
-      type: type as ReminderType,
-      title,
-      description,
-      dueDate,
-    }, authResult.userId);
+    const reminder = createReminder(
+      {
+        jobId,
+        type: type as ReminderType,
+        title,
+        description,
+        dueDate,
+      },
+      authResult.userId,
+    );
 
     return NextResponse.json({ success: true, reminder });
   } catch (error) {
     console.error("Create reminder error:", error);
     return NextResponse.json(
       { error: "Failed to create reminder" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

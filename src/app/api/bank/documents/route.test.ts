@@ -69,12 +69,12 @@ describe("bank documents route", () => {
     });
 
     const response = await DELETE(
-      deleteRequest(JSON.stringify({ documentIds: ["doc-1", "doc-2"] }))
+      deleteRequest(JSON.stringify({ documentIds: ["doc-1", "doc-2"] })),
     );
 
     expect(mocks.deleteSourceDocuments).toHaveBeenCalledWith(
       ["doc-1", "doc-2"],
-      "user-1"
+      "user-1",
     );
     await expect(response.json()).resolves.toEqual({
       success: true,
@@ -93,7 +93,7 @@ describe("bank documents route", () => {
 
     expect(mocks.deleteSourceDocuments).toHaveBeenCalledWith(
       ["doc-1"],
-      "user-1"
+      "user-1",
     );
   });
 
@@ -119,7 +119,7 @@ describe("bank documents route", () => {
 
   it("rejects empty or blank document ids", async () => {
     const response = await DELETE(
-      deleteRequest(JSON.stringify({ documentIds: ["doc-1", "   "] }))
+      deleteRequest(JSON.stringify({ documentIds: ["doc-1", "   "] })),
     );
 
     expect(response.status).toBe(400);

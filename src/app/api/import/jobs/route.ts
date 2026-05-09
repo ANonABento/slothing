@@ -1,6 +1,6 @@
 /**
  * @route POST /api/import/jobs
- * @description Bulk import jobs from JSON or CSV payload
+ * @description Legacy compatibility route for bulk importing opportunities from JSON or CSV payload
  * @auth Required
  * @request { jobs: ImportJobInput[] }
  * @response ImportJobsBulkResponse from @/types/api
@@ -10,6 +10,8 @@ import { createJob, getJobs } from "@/lib/db/jobs";
 import type { JobDescription } from "@/types";
 import { importJobSchema, type ImportJobInput } from "@/lib/constants";
 import { requireAuth, isAuthError } from "@/lib/auth";
+
+export const dynamic = "force-dynamic";
 
 export async function POST(request: NextRequest) {
   const authResult = await requireAuth();
@@ -22,8 +24,10 @@ export async function POST(request: NextRequest) {
     if (contentType.includes("application/json")) {
       const data = await request.json();
 
-      // Handle Slothing export format or direct array
-      if (data.jobs && Array.isArray(data.jobs)) {
+      // Handle Slothing export format or direct array.
+      if (data.opportunities && Array.isArray(data.opportunities)) {
+        rawJobs = data.opportunities;
+      } else if (data.jobs && Array.isArray(data.jobs)) {
         rawJobs = data.jobs;
       } else if (Array.isArray(data)) {
         rawJobs = data;
@@ -31,7 +35,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json(
           {
             error:
-              "Invalid JSON format. Expected array of jobs or {jobs: [...]}.",
+              "Invalid JSON format. Expected an array, {opportunities: [...]}, or legacy {jobs: [...]}.",
           },
           { status: 400 },
         );
@@ -62,7 +66,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate and import jobs
+    // Validate and import opportunities.
     const existingJobs = getJobs(authResult.userId);
     const existingTitles = new Set(
       existingJobs.map(
@@ -82,7 +86,7 @@ export async function POST(request: NextRequest) {
       if (!parseResult.success) {
         const jobTitle = (rawJob as { title?: string })?.title || "unknown";
         results.errors.push(
-          `Skipped job "${jobTitle}": ${parseResult.error.issues[0]?.message || "Invalid data"}`,
+          `Skipped opportunity "${jobTitle}": ${parseResult.error.issues[0]?.message || "Invalid data"}`,
         );
         results.skipped++;
         continue;
@@ -125,12 +129,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       ...results,
-      message: `Imported ${results.imported} jobs, skipped ${results.skipped} (duplicates or errors)`,
+      message: `Imported ${results.imported} opportunities, skipped ${results.skipped} (duplicates or errors)`,
     });
   } catch (error) {
-    console.error("Import jobs error:", error);
+    console.error("Import opportunities error:", error);
     return NextResponse.json(
-      { error: "Failed to import jobs" },
+      { error: "Failed to import opportunities" },
       { status: 500 },
     );
   }

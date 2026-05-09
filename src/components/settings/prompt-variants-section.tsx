@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { CheckCircle, FlaskConical, Loader2, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useConfirmDialog } from "@/components/ui/confirm-dialog";
+import { PageSection } from "@/components/ui/page-layout";
 import { cn } from "@/lib/utils";
 import { pluralize } from "@/lib/text/pluralize";
 import type {
@@ -115,20 +116,11 @@ export function PromptVariantsSection() {
   };
 
   return (
-    <section className="rounded-2xl border bg-card p-6">
-      <div className="mb-6 flex items-start justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="rounded-xl bg-primary/10 p-2.5 text-primary">
-            <FlaskConical className="h-5 w-5" />
-          </div>
-          <div>
-            <h2 className="font-semibold">Prompt A/B Testing</h2>
-            <p className="text-sm text-muted-foreground">
-              Manage tailoring prompt versions. The active version is used for
-              all resume generations.
-            </p>
-          </div>
-        </div>
+    <PageSection
+      title="Prompt A/B Testing"
+      description="Manage tailoring prompt versions. The active version is used for all resume generations."
+      icon={FlaskConical}
+      action={
         <Button
           type="button"
           variant="outline"
@@ -138,8 +130,8 @@ export function PromptVariantsSection() {
           <Plus className="mr-2 h-4 w-4" />
           New Variant
         </Button>
-      </div>
-
+      }
+    >
       {showForm && (
         <div className="mb-6 rounded-xl border bg-muted/30 p-4 space-y-3">
           <h3 className="text-sm font-semibold">New Prompt Variant</h3>
@@ -219,7 +211,7 @@ export function PromptVariantsSection() {
         </div>
       )}
       {confirmDialog}
-    </section>
+    </PageSection>
   );
 }
 

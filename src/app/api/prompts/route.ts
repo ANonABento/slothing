@@ -7,6 +7,8 @@ import {
 } from "@/lib/db/prompt-variants";
 import { z } from "zod";
 
+export const dynamic = "force-dynamic";
+
 const CreatePromptVariantSchema = z.object({
   name: z.string().min(1).max(100),
   content: z.string().min(1),
@@ -32,7 +34,7 @@ export async function POST(request: NextRequest) {
     if (!parsed.success) {
       return NextResponse.json(
         { error: "Invalid request", details: parsed.error.flatten() },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -40,14 +42,14 @@ export async function POST(request: NextRequest) {
       authResult.userId,
       parsed.data.name,
       parsed.data.content,
-      parsed.data.version
+      parsed.data.version,
     );
     return NextResponse.json({ variant }, { status: 201 });
   } catch (error) {
     console.error("Create prompt variant error:", error);
     return NextResponse.json(
       { error: "Failed to create prompt variant", details: String(error) },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

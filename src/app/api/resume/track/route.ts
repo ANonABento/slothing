@@ -11,14 +11,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import type { ZodError } from "zod";
 import { requireAuth, isAuthError } from "@/lib/auth";
-import { trackResumeSentSchema, updateTrackingOutcomeSchema } from "@/lib/constants";
+import {
+  trackResumeSentSchema,
+  updateTrackingOutcomeSchema,
+} from "@/lib/constants";
+
+export const dynamic = "force-dynamic";
 
 function validationErrorResponse(error: ZodError) {
   const errors = error.issues.map((issue) => ({
     field: issue.path.join("."),
     message: issue.message,
   }));
-  return NextResponse.json({ error: "Validation failed", errors }, { status: 400 });
+  return NextResponse.json(
+    { error: "Validation failed", errors },
+    { status: 400 },
+  );
 }
 import {
   trackResumeSent,
@@ -44,18 +52,12 @@ export async function POST(request: NextRequest) {
     // Verify resume exists
     const resume = getGeneratedResume(resumeId, authResult.userId);
     if (!resume) {
-      return NextResponse.json(
-        { error: "Resume not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Resume not found" }, { status: 404 });
     }
 
     const job = getJob(jobId, authResult.userId);
     if (!job) {
-      return NextResponse.json(
-        { error: "Job not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Job not found" }, { status: 404 });
     }
 
     const entry = trackResumeSent(resumeId, jobId, authResult.userId, notes);
@@ -64,7 +66,7 @@ export async function POST(request: NextRequest) {
     console.error("Resume tracking error:", error);
     return NextResponse.json(
       { error: "Failed to track resume" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -86,7 +88,7 @@ export async function PATCH(request: NextRequest) {
     if (!updated) {
       return NextResponse.json(
         { error: "Tracking entry not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -95,7 +97,7 @@ export async function PATCH(request: NextRequest) {
     console.error("Tracking update error:", error);
     return NextResponse.json(
       { error: "Failed to update tracking" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -112,7 +114,7 @@ export async function GET() {
     console.error("Tracking list error:", error);
     return NextResponse.json(
       { error: "Failed to list tracking entries" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

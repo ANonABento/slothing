@@ -23,10 +23,12 @@ import {
 } from "@/lib/db/interviews";
 import { requireAuth, isAuthError } from "@/lib/auth";
 
+export const dynamic = "force-dynamic";
+
 // GET - Get a specific interview session
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
@@ -35,10 +37,7 @@ export async function GET(
     const session = getInterviewSession(params.id, authResult.userId);
 
     if (!session) {
-      return NextResponse.json(
-        { error: "Session not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Session not found" }, { status: 404 });
     }
 
     return NextResponse.json({ session });
@@ -46,7 +45,7 @@ export async function GET(
     console.error("Get session error:", error);
     return NextResponse.json(
       { error: "Failed to get interview session" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -54,7 +53,7 @@ export async function GET(
 // PATCH - Update session (complete it)
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
@@ -73,7 +72,7 @@ export async function PATCH(
     console.error("Update session error:", error);
     return NextResponse.json(
       { error: "Failed to update interview session" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -81,7 +80,7 @@ export async function PATCH(
 // DELETE - Delete a session
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
@@ -94,7 +93,7 @@ export async function DELETE(
     console.error("Delete session error:", error);
     return NextResponse.json(
       { error: "Failed to delete interview session" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

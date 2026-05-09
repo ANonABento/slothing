@@ -32,19 +32,31 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error("Profile fetch error:", error);
-    return NextResponse.json({ error: "Failed to fetch profile" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to fetch profile" },
+      { status: 500 },
+    );
   }
 }
 
 function computeAutoFillValues(profile: {
-  contact: { name?: string; email?: string; phone?: string; location?: string; linkedin?: string; github?: string; website?: string };
+  contact: {
+    name?: string;
+    email?: string;
+    phone?: string;
+    location?: string;
+    linkedin?: string;
+    github?: string;
+    website?: string;
+  };
   experiences: Experience[];
   education: Education[];
   skills: { name: string }[];
 }) {
   const nameParts = profile.contact?.name?.split(" ") || [];
   const firstName = nameParts[0];
-  const lastName = nameParts.length > 1 ? nameParts.slice(1).join(" ") : undefined;
+  const lastName =
+    nameParts.length > 1 ? nameParts.slice(1).join(" ") : undefined;
 
   // Get most recent experience (current or latest by start date)
   const sortedExperiences = [...(profile.experiences || [])].sort((a, b) => {
@@ -71,7 +83,9 @@ function computeAutoFillValues(profile: {
     const end = exp.current ? new Date() : new Date(exp.endDate || new Date());
     if (Number.isNaN(end.getTime()) || end < start) continue;
 
-    totalMonths += (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
+    totalMonths +=
+      (end.getFullYear() - start.getFullYear()) * 12 +
+      (end.getMonth() - start.getMonth());
   }
   const yearsExperience = Math.max(0, Math.round(totalMonths / 12));
 

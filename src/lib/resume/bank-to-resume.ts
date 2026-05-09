@@ -9,12 +9,13 @@ import { formatHackathonHighlights } from "./hackathon-highlights";
  */
 export function bankEntriesToResume(
   entries: BankEntry[],
-  contact: ContactInfo = { name: "Your Name" }
+  contact: ContactInfo = { name: "Your Name" },
 ): TailoredResume {
   const experiences: TailoredResume["experiences"] = [];
   const skills: string[] = [];
   const education: TailoredResume["education"] = [];
   const summaryParts: string[] = [];
+  const bulletsByParentId = groupBulletsByParentId(entries);
 
   for (const entry of entries) {
     const c = entry.content;
@@ -24,11 +25,7 @@ export function bankEntriesToResume(
           company: String(c.company || ""),
           title: String(c.title || ""),
           dates: formatExperienceDates(c),
-          highlights: Array.isArray(c.highlights)
-            ? c.highlights.map(String)
-            : c.description
-            ? [String(c.description)]
-            : [],
+          highlights: getEntryHighlights(entry, bulletsByParentId),
         });
         break;
       case "skill":
@@ -39,11 +36,19 @@ export function bankEntriesToResume(
           institution: String(c.institution || ""),
           degree: String(c.degree || ""),
           field: String(c.field || ""),
-          date: c.endDate ? String(c.endDate) : c.startDate ? String(c.startDate) : "",
+          date: c.endDate
+            ? String(c.endDate)
+            : c.startDate
+              ? String(c.startDate)
+              : "",
         });
         break;
       case "achievement":
         if (c.description) summaryParts.push(String(c.description));
+        break;
+      case "bullet":
+        // Bullets are child components. Parent experience/project assembly owns
+        // their placement, so standalone conversion intentionally skips them.
         break;
       case "certification":
         if (c.name) {
@@ -56,11 +61,7 @@ export function bankEntriesToResume(
           company: "Project",
           title: String(c.name || ""),
           dates: "",
-          highlights: Array.isArray(c.highlights)
-            ? c.highlights.map(String)
-            : c.description
-            ? [String(c.description)]
-            : [],
+          highlights: getEntryHighlights(entry, bulletsByParentId),
         });
         break;
       case "hackathon":
@@ -81,6 +82,44 @@ export function bankEntriesToResume(
     skills,
     education,
   };
+}
+
+function groupBulletsByParentId(
+  entries: BankEntry[],
+): Map<string, BankEntry[]> {
+  const groups = new Map<string, BankEntry[]>();
+  for (const entry of entries) {
+    if (entry.category !== "bullet") continue;
+    const parentId = entry.content.parentId;
+    if (typeof parentId !== "string" || !parentId) continue;
+    const group = groups.get(parentId) ?? [];
+    group.push(entry);
+    groups.set(parentId, group);
+  }
+
+  for (const group of groups.values()) {
+    group.sort(
+      (a, b) => Number(a.content.order ?? 0) - Number(b.content.order ?? 0),
+    );
+  }
+
+  return groups;
+}
+
+function getEntryHighlights(
+  entry: BankEntry,
+  bulletsByParentId: Map<string, BankEntry[]>,
+): string[] {
+  const childBullets = bulletsByParentId.get(entry.id) ?? [];
+  if (childBullets.length > 0) {
+    return childBullets
+      .map((bullet) => String(bullet.content.description ?? "").trim())
+      .filter(Boolean);
+  }
+
+  const c = entry.content;
+  if (Array.isArray(c.highlights)) return c.highlights.map(String);
+  return c.description ? [String(c.description)] : [];
 }
 
 function formatExperienceDates(c: Record<string, unknown>): string {

@@ -39,8 +39,14 @@ import { pluralize } from "@/lib/text/pluralize";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
 import {
   AppPage,
+  CenteredPagePanel,
   PageContent,
   PageHeader,
+  PageIconTile,
+  PageLoadingState,
+  PagePanel,
+  PagePanelHeader,
+  pageGridClasses,
   StandardEmptyState,
 } from "@/components/ui/page-layout";
 import { SkeletonChart, SkeletonButton } from "@/components/ui/skeleton";
@@ -179,7 +185,7 @@ export default function AnalyticsPage() {
     const headers = ["Metric", "Value"];
     const rows: string[][] = [
       ["Profile Completeness", `${analytics.overview.profileCompleteness}%`],
-      ["Total Jobs", analytics.overview.totalJobs.toString()],
+      ["Total Opportunities", analytics.overview.totalJobs.toString()],
       ["Total Documents", analytics.overview.totalDocuments.toString()],
       ["Total Interviews", analytics.overview.totalInterviews.toString()],
       [
@@ -187,7 +193,7 @@ export default function AnalyticsPage() {
         analytics.overview.totalResumesGenerated.toString(),
       ],
       ["", ""],
-      ["--- Jobs by Status ---", ""],
+      ["--- Opportunities by Status ---", ""],
       ...Object.entries(analytics.jobs.byStatus).map(([status, count]) => [
         status,
         count.toString(),
@@ -220,19 +226,12 @@ export default function AnalyticsPage() {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="h-10 w-10 animate-spin mx-auto text-primary" />
-          <p className="mt-4 text-muted-foreground">Loading analytics...</p>
-        </div>
-      </div>
-    );
+    return <PageLoadingState icon={Loader2} label="Loading analytics..." />;
   }
 
   if (error || !analytics) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <CenteredPagePanel>
         <div className="text-center space-y-4">
           <AlertTriangle className="h-12 w-12 mx-auto text-destructive" />
           <p className="text-muted-foreground">
@@ -240,7 +239,7 @@ export default function AnalyticsPage() {
           </p>
           <Button onClick={fetchAnalytics}>Retry</Button>
         </div>
-      </div>
+      </CenteredPagePanel>
     );
   }
 
@@ -329,13 +328,11 @@ export default function AnalyticsPage() {
       <PageContent>
         <div className="space-y-8">
           {/* Overview Cards */}
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className={pageGridClasses.fourStats}>
             {/* Profile Completeness */}
-            <div className="rounded-2xl border bg-card p-6">
+            <PagePanel>
               <div className="flex items-center justify-between mb-4">
-                <div className="p-2.5 rounded-xl bg-primary/10 text-primary">
-                  <Target className="h-5 w-5" />
-                </div>
+                <PageIconTile icon={Target} />
                 <span className="text-2xl font-bold">
                   {analytics.overview.profileCompleteness}%
                 </span>
@@ -357,30 +354,29 @@ export default function AnalyticsPage() {
                   to improve your chances
                 </p>
               )}
-            </div>
+            </PagePanel>
 
-            {/* Total Jobs */}
-            <div className="rounded-2xl border bg-card p-6">
+            {/* Total Opportunities */}
+            <PagePanel>
               <div className="flex items-center justify-between mb-4">
-                <div className="p-2.5 rounded-xl bg-info/10 text-info">
-                  <Briefcase className="h-5 w-5" />
-                </div>
+                <PageIconTile icon={Briefcase} className="bg-info/10 text-info" />
                 <span className="text-2xl font-bold">
                   {analytics.overview.totalJobs}
                 </span>
               </div>
-              <h3 className="font-medium mb-1">Total Jobs Tracked</h3>
+              <h3 className="font-medium mb-1">Total Opportunities</h3>
               <p className="text-sm text-muted-foreground">
                 {analytics.jobs.applied} applied
               </p>
-            </div>
+            </PagePanel>
 
             {/* Interviews */}
-            <div className="rounded-2xl border bg-card p-6">
+            <PagePanel>
               <div className="flex items-center justify-between mb-4">
-                <div className="p-2.5 rounded-xl bg-warning/10 text-warning">
-                  <MessageSquare className="h-5 w-5" />
-                </div>
+                <PageIconTile
+                  icon={MessageSquare}
+                  className="bg-warning/10 text-warning"
+                />
                 <span className="text-2xl font-bold">
                   {analytics.overview.totalInterviews}
                 </span>
@@ -389,33 +385,31 @@ export default function AnalyticsPage() {
               <p className="text-sm text-muted-foreground">
                 {analytics.interviews.completed} completed
               </p>
-            </div>
+            </PagePanel>
 
             {/* Resumes */}
-            <div className="rounded-2xl border bg-card p-6">
+            <PagePanel>
               <div className="flex items-center justify-between mb-4">
-                <div className="p-2.5 rounded-xl bg-success/10 text-success">
-                  <FileText className="h-5 w-5" />
-                </div>
+                <PageIconTile
+                  icon={FileText}
+                  className="bg-success/10 text-success"
+                />
                 <span className="text-2xl font-bold">
                   {analytics.overview.totalResumesGenerated}
                 </span>
               </div>
               <h3 className="font-medium mb-1">Resumes Generated</h3>
               <p className="text-sm text-muted-foreground">
-                Tailored for each job
+                Tailored for each opportunity
               </p>
-            </div>
+            </PagePanel>
           </div>
 
           {/* Pipeline & Skills Row */}
           <div className="grid gap-6 lg:grid-cols-2">
             {/* Job Pipeline */}
-            <div className="rounded-2xl border bg-card p-6">
-              <h3 className="font-semibold mb-6 flex items-center gap-2">
-                <TrendingUp className="h-5 w-5 text-primary" />
-                Application Pipeline
-              </h3>
+            <PagePanel>
+              <PagePanelHeader title="Application Pipeline" icon={TrendingUp} />
 
               <div className="space-y-4">
                 {Object.entries(STATUS_CONFIG).map(([status, config]) => {
@@ -435,7 +429,7 @@ export default function AnalyticsPage() {
                           <span className="font-medium">{config.label}</span>
                         </div>
                         <span className="text-muted-foreground">
-                          {pluralize(count, "job")}
+                          {pluralize(count, "opportunity", "opportunities")}
                         </span>
                       </div>
                       <div className="h-2 rounded-full bg-muted overflow-hidden">
@@ -475,14 +469,11 @@ export default function AnalyticsPage() {
                   </div>
                 </div>
               </div>
-            </div>
+            </PagePanel>
 
             {/* Skills Overview */}
-            <div className="rounded-2xl border bg-card p-6">
-              <h3 className="font-semibold mb-6 flex items-center gap-2">
-                <Users className="h-5 w-5 text-primary" />
-                Skills Overview
-              </h3>
+            <PagePanel>
+              <PagePanelHeader title="Skills Overview" icon={Users} />
 
               {/* Skills by Category */}
               <div className="space-y-4 mb-6">
@@ -511,7 +502,7 @@ export default function AnalyticsPage() {
                 <div className="pt-6 border-t">
                   <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
                     <AlertTriangle className="h-4 w-4 text-warning" />
-                    Skill Gaps from Job Listings
+                    Skill Gaps from Opportunity Listings
                   </h4>
                   <div className="flex flex-wrap gap-2">
                     {analytics.skills.gaps.map((skill) => (
@@ -524,20 +515,17 @@ export default function AnalyticsPage() {
                     ))}
                   </div>
                   <p className="text-xs text-muted-foreground mt-3">
-                    These skills appear frequently in your saved jobs but
-                    aren&apos;t in your profile.
+                    These skills appear frequently in your saved opportunities
+                    but aren&apos;t in your profile.
                   </p>
                 </div>
               )}
-            </div>
+            </PagePanel>
           </div>
 
           {/* Recent Activity */}
-          <div className="rounded-2xl border bg-card p-6">
-            <h3 className="font-semibold mb-6 flex items-center gap-2">
-              <Clock className="h-5 w-5 text-primary" />
-              Recent Job Activity
-            </h3>
+          <PagePanel>
+            <PagePanelHeader title="Recent Opportunity Activity" icon={Clock} />
 
             {analytics.recent.jobs.length > 0 ? (
               <div className="space-y-3">
@@ -547,7 +535,7 @@ export default function AnalyticsPage() {
                   return (
                     <Link
                       key={job.id}
-                      href={`/jobs?highlight=${job.id}`}
+                      href={`/opportunities?highlight=${job.id}`}
                       className="flex items-center justify-between p-4 rounded-xl bg-muted/50 hover:bg-muted transition-colors"
                     >
                       <div className="flex items-center gap-4">
@@ -582,16 +570,18 @@ export default function AnalyticsPage() {
             ) : (
               <StandardEmptyState
                 icon={Briefcase}
-                title="No jobs tracked yet"
+                title="No opportunities tracked yet"
                 action={
                   <Button asChild variant="outline">
-                    <Link href="/jobs">Add your first job</Link>
+                    <Link href="/opportunities">
+                      Add your first opportunity
+                    </Link>
                   </Button>
                 }
                 className="min-h-64"
               />
             )}
-          </div>
+          </PagePanel>
 
           {/* Advanced Analytics Section */}
           <div className="space-y-6 pt-4">
@@ -602,7 +592,7 @@ export default function AnalyticsPage() {
               <div>
                 <h2 className="text-xl font-bold">Advanced Insights</h2>
                 <p className="text-sm text-muted-foreground">
-                  Deep dive into your job search performance
+                  Deep dive into your opportunity search performance
                 </p>
               </div>
             </div>

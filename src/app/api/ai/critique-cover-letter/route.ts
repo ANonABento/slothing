@@ -9,6 +9,8 @@ import {
 } from "@/lib/ai/critique-prompts";
 import { getClientIdentifier, rateLimiters } from "@/lib/rate-limit";
 
+export const dynamic = "force-dynamic";
+
 const critiqueRequestSchema = z.object({
   letter: z.string().trim().min(20, "Cover letter draft is too short."),
   jd: z.string().trim().min(20, "Job description is too short."),

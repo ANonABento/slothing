@@ -12,28 +12,39 @@ import {
   navigateToJobs,
 } from "./utils/test-helpers";
 
-test.skip(true, "Requires an authenticated Clerk test fixture and seeded app data.");
+test.skip(
+  true,
+  "Requires an authenticated Clerk test fixture and seeded app data.",
+);
 
-test.describe("Jobs Page", () => {
+test.describe("Opportunities Page", () => {
   test.beforeEach(async ({ page }) => {
     // Mark onboarding as completed to skip it
     await page.goto("/");
     await page.evaluate(() => {
       localStorage.setItem("get_me_job_onboarding_completed", "true");
     });
-    await page.goto("/jobs");
+    await page.goto("/opportunities");
   });
 
-  test("should display jobs page header", async ({ page }) => {
-    await expect(page.getByRole("heading", { name: /Jobs/i })).toBeVisible();
+  test("should display opportunities page header", async ({ page }) => {
+    await expect(
+      page.getByRole("heading", { name: /Opportunities/i }),
+    ).toBeVisible();
   });
 
-  test("should show empty state when no jobs exist", async ({ page }) => {
-    // Check for empty state or job listing
-    const emptyState = page.getByText(/no jobs|add your first job|get started/i);
-    const jobList = page.locator("[data-testid='job-list'], .job-card, .job-item");
+  test("should show empty state when no opportunities exist", async ({
+    page,
+  }) => {
+    // Check for empty state or opportunity listing
+    const emptyState = page.getByText(
+      /no opportunities|add your first opportunity|get started/i,
+    );
+    const jobList = page.locator(
+      "[data-testid='opportunity-list'], .opportunity-card, .opportunity-item",
+    );
 
-    const hasJobs = await jobList.count() > 0;
+    const hasJobs = (await jobList.count()) > 0;
     if (!hasJobs) {
       await expect(emptyState).toBeVisible();
     }
@@ -49,49 +60,64 @@ test.describe("Jobs Page", () => {
 
   test("should have filter options", async ({ page }) => {
     // Check for filter buttons or dropdowns
-    const statusFilter = page.getByRole("combobox", { name: /status/i }).or(
-      page.getByRole("button", { name: /status/i })
-    ).or(page.getByText(/all statuses/i));
+    const statusFilter = page
+      .getByRole("combobox", { name: /status/i })
+      .or(page.getByRole("button", { name: /status/i }))
+      .or(page.getByText(/all statuses/i));
 
-    const typeFilter = page.getByRole("combobox", { name: /type/i }).or(
-      page.getByRole("button", { name: /type/i })
-    ).or(page.getByText(/all types/i));
+    const typeFilter = page
+      .getByRole("combobox", { name: /type/i })
+      .or(page.getByRole("button", { name: /type/i }))
+      .or(page.getByText(/all types/i));
 
     // At least one filter should exist
-    const hasStatusFilter = await statusFilter.first().isVisible({ timeout: 1000 }).catch(() => false);
-    const hasTypeFilter = await typeFilter.first().isVisible({ timeout: 1000 }).catch(() => false);
+    const hasStatusFilter = await statusFilter
+      .first()
+      .isVisible({ timeout: 1000 })
+      .catch(() => false);
+    const hasTypeFilter = await typeFilter
+      .first()
+      .isVisible({ timeout: 1000 })
+      .catch(() => false);
 
     expect(hasStatusFilter || hasTypeFilter).toBe(true);
   });
 
   test("should display sort options", async ({ page }) => {
-    const sortOption = page.getByRole("combobox", { name: /sort/i }).or(
-      page.getByRole("button", { name: /sort/i })
-    ).or(page.getByText(/newest|oldest|recent/i));
+    const sortOption = page
+      .getByRole("combobox", { name: /sort/i })
+      .or(page.getByRole("button", { name: /sort/i }))
+      .or(page.getByText(/newest|oldest|recent/i));
 
     await expect(sortOption.first()).toBeVisible({ timeout: 2000 });
   });
 });
 
-test.describe("Job Status Updates", () => {
+test.describe("Opportunity Status Updates", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/");
     await page.evaluate(() => {
       localStorage.setItem("get_me_job_onboarding_completed", "true");
     });
-    await page.goto("/jobs");
+    await page.goto("/opportunities");
   });
 
-  test("should be able to change job status", async ({ page }) => {
-    // This test assumes there's at least one job in the list
+  test("should be able to change opportunity status", async ({ page }) => {
+    // This test assumes there's at least one opportunity in the list
     // If not, we'll skip the status change check
-    const jobCard = page.locator(".job-card, [data-testid='job-item']").first();
+    const jobCard = page
+      .locator(".opportunity-card, [data-testid='opportunity-item']")
+      .first();
 
     if (await jobCard.isVisible({ timeout: 2000 }).catch(() => false)) {
-      // Look for status dropdown/button within the job card
-      const statusButton = jobCard.getByRole("combobox").or(
-        jobCard.getByRole("button", { name: /saved|applied|interviewing|offered|rejected/i })
-      );
+      // Look for status dropdown/button within the opportunity card
+      const statusButton = jobCard
+        .getByRole("combobox")
+        .or(
+          jobCard.getByRole("button", {
+            name: /saved|applied|interviewing|offered|rejected/i,
+          }),
+        );
 
       if (await statusButton.isVisible({ timeout: 1000 }).catch(() => false)) {
         await statusButton.click();
@@ -102,58 +128,64 @@ test.describe("Job Status Updates", () => {
   });
 });
 
-test.describe("Job CRUD + Persistence", () => {
+test.describe("Opportunity CRUD + Persistence", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/");
     await skipOnboardingSetup(page);
     await navigateToJobs(page);
   });
 
-  test("should create a job and verify it appears in the list", async ({ page }) => {
+  test("should create a opportunity and verify it appears in the list", async ({
+    page,
+  }) => {
     const jobData = generateUniqueJobData("CRUD");
 
-    // Create a new job
+    // Create a new opportunity
     await createTestJob(page, jobData);
 
-    // Verify the job appears in the list
+    // Verify the opportunity appears in the list
     await expectJobExists(page, jobData.title);
   });
 
-  test("should persist job after page reload", async ({ page }) => {
+  test("should persist opportunity after page reload", async ({ page }) => {
     const jobData = generateUniqueJobData("Persist");
 
-    // Create a new job
+    // Create a new opportunity
     await createTestJob(page, jobData);
 
-    // Verify the job appears in the list
+    // Verify the opportunity appears in the list
     await expectJobExists(page, jobData.title);
 
     // Reload the page
     await page.reload();
     await page.waitForLoadState("networkidle");
 
-    // Verify the job still exists after reload
+    // Verify the opportunity still exists after reload
     await expectJobExists(page, jobData.title);
   });
 
-  test("should delete a job and verify it is removed", async ({ page }) => {
+  test("should delete a opportunity and verify it is removed", async ({
+    page,
+  }) => {
     const jobData = generateUniqueJobData("Delete");
 
-    // Create a new job first
+    // Create a new opportunity first
     await createTestJob(page, jobData);
     await expectJobExists(page, jobData.title);
 
-    // Delete the job
+    // Delete the opportunity
     await deleteJob(page, jobData.title);
 
-    // Verify the job is removed from the list
+    // Verify the opportunity is removed from the list
     await expectJobNotExists(page, jobData.title);
   });
 
-  test("should persist job deletion after page reload", async ({ page }) => {
+  test("should persist opportunity deletion after page reload", async ({
+    page,
+  }) => {
     const jobData = generateUniqueJobData("DeletePersist");
 
-    // Create and then delete a job
+    // Create and then delete a opportunity
     await createTestJob(page, jobData);
     await expectJobExists(page, jobData.title);
     await deleteJob(page, jobData.title);
@@ -163,22 +195,24 @@ test.describe("Job CRUD + Persistence", () => {
     await page.reload();
     await page.waitForLoadState("networkidle");
 
-    // Verify the job is still gone after reload
+    // Verify the opportunity is still gone after reload
     await expectJobNotExists(page, jobData.title);
   });
 });
 
-test.describe("Job Status Workflow", () => {
+test.describe("Opportunity Status Workflow", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/");
     await skipOnboardingSetup(page);
     await navigateToJobs(page);
   });
 
-  test("should change job status from saved to applied", async ({ page }) => {
+  test("should change opportunity status from saved to applied", async ({
+    page,
+  }) => {
     const jobData = generateUniqueJobData("StatusChange");
 
-    // Create a job (default status is "saved")
+    // Create a opportunity (default status is "saved")
     await createTestJob(page, jobData);
     await expectJobExists(page, jobData.title);
 
@@ -193,7 +227,7 @@ test.describe("Job Status Workflow", () => {
   test("should persist status change after page reload", async ({ page }) => {
     const jobData = generateUniqueJobData("StatusPersist");
 
-    // Create a job and change its status
+    // Create a opportunity and change its status
     await createTestJob(page, jobData);
     await updateJobStatus(page, jobData.title, "interviewing");
 
@@ -210,10 +244,12 @@ test.describe("Job Status Workflow", () => {
     expect(status.toLowerCase()).toContain("interviewing");
   });
 
-  test("should transition through multiple status changes", async ({ page }) => {
+  test("should transition through multiple status changes", async ({
+    page,
+  }) => {
     const jobData = generateUniqueJobData("MultiStatus");
 
-    // Create a job
+    // Create a opportunity
     await createTestJob(page, jobData);
 
     // Transition: saved -> applied -> interviewing -> offered
@@ -233,7 +269,7 @@ test.describe("Job Status Workflow", () => {
   test("should allow changing status to rejected", async ({ page }) => {
     const jobData = generateUniqueJobData("Rejected");
 
-    // Create a job and change status to rejected
+    // Create a opportunity and change status to rejected
     await createTestJob(page, jobData);
     await updateJobStatus(page, jobData.title, "rejected");
 

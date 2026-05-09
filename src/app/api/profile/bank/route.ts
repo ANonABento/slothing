@@ -8,6 +8,8 @@ import { NextResponse } from "next/server";
 import { getGroupedBankEntries } from "@/lib/db/profile-bank";
 import { requireAuth, isAuthError } from "@/lib/auth";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
@@ -19,7 +21,7 @@ export async function GET() {
     console.error("Get bank entries error:", error);
     return NextResponse.json(
       { error: "Failed to get bank entries" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

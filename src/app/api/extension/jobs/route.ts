@@ -25,24 +25,21 @@ export async function POST(request: NextRequest) {
       const results = [];
       for (const jobData of data.jobs) {
         if (!jobData.title || !jobData.company) continue;
-        const job = await createJob(
-          authResult.userId,
-          {
-            title: jobData.title,
-            company: jobData.company,
-            location: jobData.location,
-            description: jobData.description || "",
-            requirements: jobData.requirements || [],
-            responsibilities: jobData.responsibilities || [],
-            keywords: jobData.keywords || [],
-            type: jobData.type,
-            remote: jobData.remote,
-            salary: jobData.salary,
-            url: jobData.url,
-            deadline: jobData.deadline,
-            status: "pending",
-          }
-        );
+        const job = await createJob(authResult.userId, {
+          title: jobData.title,
+          company: jobData.company,
+          location: jobData.location,
+          description: jobData.description || "",
+          requirements: jobData.requirements || [],
+          responsibilities: jobData.responsibilities || [],
+          keywords: jobData.keywords || [],
+          type: jobData.type,
+          remote: jobData.remote,
+          salary: jobData.salary,
+          url: jobData.url,
+          deadline: jobData.deadline,
+          status: "pending",
+        });
         results.push(job.id);
       }
       return NextResponse.json({ imported: results.length, jobIds: results });
@@ -51,36 +48,33 @@ export async function POST(request: NextRequest) {
     if (!data.title || !data.company) {
       return NextResponse.json(
         { error: "Title and company are required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     // Single import
-    const job = await createJob(
-      authResult.userId,
-      {
-        title: data.title,
-        company: data.company,
-        location: data.location,
-        description: data.description || "",
-        requirements: data.requirements || [],
-        responsibilities: data.responsibilities || [],
-        keywords: data.keywords || [],
-        type: data.type,
-        remote: data.remote,
-        salary: data.salary,
-        url: data.url,
-        deadline: data.deadline,
-        status: "pending",
-      }
-    );
+    const job = await createJob(authResult.userId, {
+      title: data.title,
+      company: data.company,
+      location: data.location,
+      description: data.description || "",
+      requirements: data.requirements || [],
+      responsibilities: data.responsibilities || [],
+      keywords: data.keywords || [],
+      type: data.type,
+      remote: data.remote,
+      salary: data.salary,
+      url: data.url,
+      deadline: data.deadline,
+      status: "pending",
+    });
 
     return NextResponse.json({ jobId: job.id });
   } catch (error) {
     console.error("Extension job import error:", error);
     return NextResponse.json(
       { error: "Failed to import job" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

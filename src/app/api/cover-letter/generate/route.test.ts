@@ -82,6 +82,7 @@ describe("cover letter generate route", () => {
       project: [],
       hackathon: [],
       education: [],
+      bullet: [],
       achievement: [],
       certification: [],
     });
@@ -103,7 +104,7 @@ describe("cover letter generate route", () => {
         currentContent: "I built APIs quickly.",
         selectedText: "I built APIs quickly.",
         instruction: "Add reliability impact",
-      })
+      }),
     );
 
     await expect(response.json()).resolves.toEqual({
@@ -119,7 +120,7 @@ describe("cover letter generate route", () => {
         company: "Acme",
         userName: "Jane Doe",
       }),
-      expect.objectContaining({ model: "gpt-test" })
+      expect.objectContaining({ model: "gpt-test" }),
     );
     expect(mocks.generateCoverLetter).not.toHaveBeenCalled();
   });
@@ -133,7 +134,7 @@ describe("cover letter generate route", () => {
         currentContent: "I built APIs quickly.",
         selectedText: " ",
         instruction: "Rewrite",
-      })
+      }),
     );
 
     expect(response.status).toBe(400);
@@ -150,7 +151,7 @@ describe("cover letter generate route", () => {
         jobDescription:
           "We need a frontend engineer who can improve reliability across customer-facing systems.",
         action: "summarize",
-      })
+      }),
     );
 
     expect(response.status).toBe(400);
@@ -174,7 +175,7 @@ describe("cover letter generate route", () => {
         company: "Acme",
         action: "generate",
         opportunityId: "job-1",
-      })
+      }),
     );
 
     await expect(response.json()).resolves.toEqual({

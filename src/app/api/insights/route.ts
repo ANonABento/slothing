@@ -12,6 +12,8 @@ import { getAllGeneratedResumes } from "@/lib/db/resumes";
 import { getAnalyticsSnapshots } from "@/lib/db/analytics";
 import { getInsights, clearInsightCache } from "@/lib/resume/insights";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(request: Request) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
@@ -35,7 +37,7 @@ export async function GET(request: Request) {
     const snapshots = getAnalyticsSnapshots(
       thirtyDaysAgo.toISOString().split("T")[0],
       now.toISOString().split("T")[0],
-      authResult.userId
+      authResult.userId,
     );
 
     const generatedResumes = resumes.map((r) => ({
@@ -47,7 +49,7 @@ export async function GET(request: Request) {
 
     const insights = getInsights(
       { profile, jobs, snapshots, generatedResumes },
-      authResult.userId
+      authResult.userId,
     );
 
     return NextResponse.json({ insights });
@@ -55,7 +57,7 @@ export async function GET(request: Request) {
     console.error("Insights error:", error);
     return NextResponse.json(
       { error: "Failed to generate insights" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

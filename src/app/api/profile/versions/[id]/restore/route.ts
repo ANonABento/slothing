@@ -9,9 +9,11 @@ import { requireAuth, isAuthError } from "@/lib/auth";
 import { getProfileVersion } from "@/lib/db/profile-versions";
 import { updateProfile } from "@/lib/db/queries";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(
   _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
@@ -21,10 +23,7 @@ export async function POST(
     const version = getProfileVersion(id, authResult.userId);
 
     if (!version) {
-      return NextResponse.json(
-        { error: "Version not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Version not found" }, { status: 404 });
     }
 
     const snapshot = JSON.parse(version.snapshotJson);
@@ -32,12 +31,15 @@ export async function POST(
     // updateProfile auto-snapshots current state before overwriting
     updateProfile(snapshot, authResult.userId);
 
-    return NextResponse.json({ success: true, message: "Profile restored to selected version" });
+    return NextResponse.json({
+      success: true,
+      message: "Profile restored to selected version",
+    });
   } catch (error) {
     console.error("Restore profile version error:", error);
     return NextResponse.json(
       { error: "Failed to restore profile version" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
