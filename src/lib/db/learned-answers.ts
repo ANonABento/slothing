@@ -7,6 +7,10 @@ import { toNullableIsoDateString } from "@/lib/utils";
 import { and, desc, eq, sql as sqlOp } from "drizzle-orm";
 import db from "./index";
 import { learnedAnswers } from "./schema";
+import {
+  createAnswerVersion,
+  deleteAnswerVersions,
+} from "./learned-answer-versions";
 
 function mapLearnedAnswer(
   row: typeof learnedAnswers.$inferSelect,
@@ -142,6 +146,8 @@ export async function updateLearnedAnswer(
 
   if (!existing) return null;
 
+  await createAnswerVersion(userId, id, existing);
+
   const question = input.question?.trim() || existing.question;
   const answer = input.answer?.trim() || existing.answer;
   const now = new Date().toISOString();
@@ -177,5 +183,79 @@ export async function deleteLearnedAnswer(
     .where(and(eq(learnedAnswers.id, id), eq(learnedAnswers.userId, userId)))
     .returning({ id: learnedAnswers.id });
 
-  return deleted.length > 0;
+  if (deleted.length === 0) return false;
+
+  await deleteAnswerVersions(userId, id);
+  return true;
+}
+
+export async function getLearnedAnswer(
+  id: string,
+  userId: string,
+): Promise<AnswerBankEntry | null> {
+  const rows = await db
+    .select()
+    .from(learnedAnswers)
+    .where(and(eq(learnedAnswers.id, id), eq(learnedAnswers.userId, userId)))
+    .limit(1);
+
+  return rows[0] ? mapLearnedAnswer(rows[0]) : null;
+}
+
+export async function duplicateLearnedAnswer(
+  id: string,
+  userId: string,
+): Promise<AnswerBankEntry | null> {
+  const existingRows = await db
+    .select()
+    .from(learnedAnswers)
+    .where(and(eq(learnedAnswers.id, id), eq(learnedAnswers.userId, userId)))
+    .limit(1);
+  const existing = existingRows[0];
+
+  if (!existing) return null;
+
+  const now = new Date().toISOString();
+  const copyQuestion = `${existing.question} (copy)`;
+  const copy = {
+    id: randomUUID(),
+    userId,
+    question: copyQuestion,
+    questionNormalized: normalizeQuestion(copyQuestion),
+    answer: existing.answer,
+    sourceUrl: existing.sourceUrl,
+    sourceCompany: existing.sourceCompany,
+    timesUsed: 1,
+    lastUsedAt: null,
+    createdAt: now,
+    updatedAt: now,
+  };
+
+  await db.insert(learnedAnswers).values(copy);
+  return mapLearnedAnswer(copy);
+}
+
+export async function incrementLearnedAnswerUsage(
+  id: string,
+  userId: string,
+): Promise<AnswerBankEntry | null> {
+  const existing = await getLearnedAnswer(id, userId);
+  if (!existing) return null;
+
+  const now = new Date().toISOString();
+  await db
+    .update(learnedAnswers)
+    .set({
+      timesUsed: sqlOp`coalesce(${learnedAnswers.timesUsed}, 0) + 1`,
+      lastUsedAt: now,
+      updatedAt: now,
+    })
+    .where(and(eq(learnedAnswers.id, id), eq(learnedAnswers.userId, userId)));
+
+  return {
+    ...existing,
+    timesUsed: existing.timesUsed + 1,
+    lastUsedAt: now,
+    updatedAt: now,
+  };
 }
