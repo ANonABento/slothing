@@ -31,7 +31,7 @@ function renderStudioHeader(
 }
 
 describe("StudioHeader", () => {
-  it("shows the selected template as a thumbnail trigger", () => {
+  it("shows the selected template as a compact trigger", () => {
     renderStudioHeader({ templateId: "modern" });
 
     const trigger = screen.getByRole("button", {
@@ -39,11 +39,13 @@ describe("StudioHeader", () => {
     });
 
     expect(trigger).toHaveAttribute("aria-expanded", "false");
-    expect(trigger).toHaveClass("min-h-11", "sm:min-w-[15rem]");
+    expect(trigger).toHaveAttribute("aria-haspopup", "menu");
+    expect(trigger).toHaveClass("min-h-10");
+    expect(trigger).toHaveTextContent("Template");
+    expect(trigger).toHaveTextContent("Modern");
     expect(
-      within(trigger).getByTestId("template-thumbnail-modern"),
-    ).toHaveClass("h-20", "w-14");
-    expect(trigger).toHaveTextContent("Contemporary design");
+      within(trigger).queryByTestId("template-thumbnail-modern"),
+    ).not.toBeInTheDocument();
   });
 
   it("falls back to the classic template when the selected id is missing", () => {
@@ -52,9 +54,6 @@ describe("StudioHeader", () => {
     expect(
       screen.getByRole("button", { name: /select resume template/i }),
     ).toHaveTextContent("Classic");
-    expect(
-      screen.getByTestId("template-thumbnail-classic"),
-    ).toBeInTheDocument();
   });
 
   it("uses the design-system radius on each active document mode tab", () => {
@@ -196,10 +195,13 @@ describe("StudioHeader", () => {
       within(picker).queryByTestId("template-thumbnail-classic"),
     ).not.toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /copy cover letter html/i }),
-    ).toBeInTheDocument();
-    expect(
       screen.getByRole("button", { name: /download cover letter pdf/i }),
+    ).toBeInTheDocument();
+    fireEvent.click(
+      screen.getByRole("button", { name: /cover letter export options/i }),
+    );
+    expect(
+      screen.getByRole("menuitem", { name: /copy html/i }),
     ).toBeInTheDocument();
   });
 
@@ -241,8 +243,11 @@ describe("StudioHeader", () => {
     expect(
       within(picker).queryByTestId("template-thumbnail-classic"),
     ).not.toBeInTheDocument();
+    fireEvent.click(
+      screen.getByRole("button", { name: /cover letter export options/i }),
+    );
     expect(
-      screen.getByRole("button", { name: /copy cover letter html/i }),
+      screen.getByRole("menuitem", { name: /copy html/i }),
     ).toBeInTheDocument();
   });
 
@@ -279,21 +284,48 @@ describe("StudioHeader", () => {
   it("explains why export actions are disabled before content exists", () => {
     renderStudioHeader({ canCopyHtml: false, canDownloadPdf: false });
 
-    const copyButton = screen.getByRole("button", {
-      name: /copy resume html/i,
-    });
     const downloadButton = screen.getByRole("button", {
       name: /download resume pdf/i,
     });
+    const menuButton = screen.getByRole("button", {
+      name: /resume export options/i,
+    });
 
-    expect(copyButton).toBeDisabled();
     expect(downloadButton).toBeDisabled();
-    expect(copyButton).toHaveAttribute(
+    expect(menuButton).toBeDisabled();
+    expect(downloadButton).toHaveAttribute(
       "title",
       "Add bank entries or edit the resume to enable export.",
     );
     expect(
       screen.getByText("Add bank entries or edit the resume to enable export."),
     ).toBeInTheDocument();
+  });
+
+  it("renders only one save status indicator", () => {
+    renderStudioHeader({
+      saveStatus: { state: "saved", lastSavedAt: Date.now() },
+    });
+
+    expect(screen.getAllByRole("status")).toHaveLength(1);
+    expect(screen.getAllByText(/saved/i)).toHaveLength(1);
+  });
+
+  it("uses the export split button for primary PDF export and menu actions", () => {
+    const onCopyHtml = vi.fn();
+    const onDownloadPdf = vi.fn();
+    renderStudioHeader({ onCopyHtml, onDownloadPdf });
+
+    fireEvent.click(screen.getByRole("button", { name: /download resume pdf/i }));
+    expect(onDownloadPdf).toHaveBeenCalledTimes(1);
+
+    fireEvent.click(
+      screen.getByRole("button", { name: /resume export options/i }),
+    );
+    const menu = screen.getByRole("menu", { name: /resume export actions/i });
+    expect(within(menu).getByRole("menuitem", { name: /download pdf/i }));
+    fireEvent.click(within(menu).getByRole("menuitem", { name: /copy html/i }));
+
+    expect(onCopyHtml).toHaveBeenCalledTimes(1);
   });
 });

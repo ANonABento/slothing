@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { StudioFilePanel } from "./studio-file-panel";
 import type { StudioDocument } from "./studio-documents";
@@ -25,5 +25,46 @@ describe("StudioFilePanel", () => {
       name: "Resume",
     }).parentElement;
     expect(fileRow?.className).toContain("rounded-[var(--radius)]");
+  });
+
+  it("renders an icon strip when collapsed", () => {
+    render(
+      <StudioFilePanel
+        documents={documents}
+        activeDocumentId="resume"
+        onCreate={vi.fn()}
+        onSelect={vi.fn()}
+        onRename={vi.fn()}
+        onDelete={vi.fn()}
+        collapsed
+        onToggleCollapsed={vi.fn()}
+      />,
+    );
+
+    expect(
+      screen.getByRole("button", { name: "Expand files panel" }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Show files" }));
+    expect(screen.queryByRole("heading", { name: "Files" })).toBeNull();
+  });
+
+  it("toggles back to expanded from the collapsed strip", () => {
+    const onToggleCollapsed = vi.fn();
+    render(
+      <StudioFilePanel
+        documents={documents}
+        activeDocumentId="resume"
+        onCreate={vi.fn()}
+        onSelect={vi.fn()}
+        onRename={vi.fn()}
+        onDelete={vi.fn()}
+        collapsed
+        onToggleCollapsed={onToggleCollapsed}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Expand files panel" }));
+
+    expect(onToggleCollapsed).toHaveBeenCalledTimes(1);
   });
 });
