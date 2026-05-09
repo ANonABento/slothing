@@ -20,6 +20,8 @@ The product is branded **Slothing** (domain: slothing.work). The repo path is st
 - Columbus browser extension for in-page job capture
 - **Google Integration**: Calendar sync, Drive import/backup, Gmail import/send, Docs/Sheets export, Contacts, Tasks
 
+Common pitfall: dashboard onboarding steps live in `src/lib/onboarding/steps.ts` now; add/remove steps there, and restore dismissed onboarding later with `setOnboardingDismissedAt(userId, null)`.
+
 **Target users:** Early-career professionals seeking jobs.
 
 ---

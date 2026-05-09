@@ -13,7 +13,6 @@ import {
   Briefcase,
   Calendar,
   Mail,
-  Settings,
   UserCheck,
   Circle,
   Clock,
@@ -37,6 +36,17 @@ import {
   pageGridClasses,
 } from "@/components/ui/page-layout";
 import { Button } from "@/components/ui/button";
+import {
+  BASIC_ONBOARDING_STEPS,
+  countCompletedSteps,
+  getActiveStepIndex,
+} from "@/lib/onboarding/steps";
+import { computeOnboardingActive } from "@/lib/onboarding/state";
+import type { OnboardingStep } from "@/lib/onboarding/types";
+import {
+  getPipelineCount,
+  getPipelineTotal,
+} from "@/lib/opportunities/pipeline";
 
 interface DashboardStats {
   documentsCount: number;
@@ -53,6 +63,11 @@ interface RecentJob {
   createdAt: string;
 }
 
+interface OnboardingApiState {
+  dismissedAt: string | null;
+  firstName: string | null;
+}
+
 export default function Dashboard() {
   const [stats, setStats] = useState<DashboardStats>({
     documentsCount: 0,
@@ -61,6 +76,11 @@ export default function Dashboard() {
     jobsByStatus: {},
   });
   const [recentJobs, setRecentJobs] = useState<RecentJob[]>([]);
+  const [onboardingState, setOnboardingState] = useState<OnboardingApiState>({
+    dismissedAt: null,
+    firstName: null,
+  });
+  const [dismissSubmitting, setDismissSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const showErrorToast = useErrorToast();
@@ -85,10 +105,16 @@ export default function Dashboard() {
       try {
         setErrorMessage(null);
 
-        const [profileData, documentsData, analyticsData] = await Promise.all([
+        const [
+          profileData,
+          documentsData,
+          analyticsData,
+          onboardingData,
+        ] = await Promise.all([
           fetchJson("/api/profile"),
           fetchJson("/api/documents"),
           fetchJson("/api/analytics"),
+          fetchJson("/api/onboarding/dismiss"),
         ]);
 
         const profile = profileData.profile;
@@ -106,6 +132,10 @@ export default function Dashboard() {
 
         const recentJobsList = analyticsData.recent?.jobs || [];
         setRecentJobs(recentJobsList);
+        setOnboardingState({
+          dismissedAt: onboardingData.dismissedAt ?? null,
+          firstName: onboardingData.firstName ?? null,
+        });
       } catch (error) {
         const isAuthError =
           error instanceof Error && error.message === "AUTH_REQUIRED";
@@ -127,6 +157,41 @@ export default function Dashboard() {
     }
     fetchStats();
   }, [showErrorToast]);
+
+  async function handleSkipOnboarding() {
+    const previousState = onboardingState;
+
+    try {
+      setDismissSubmitting(true);
+      const optimisticDismissedAt = new Date().toISOString();
+      setOnboardingState((current) => ({
+        ...current,
+        dismissedAt: optimisticDismissedAt,
+      }));
+
+      const response = await fetch("/api/onboarding/dismiss", {
+        method: "POST",
+      });
+      const body = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        throw new Error(body?.error || "Could not skip onboarding.");
+      }
+
+      setOnboardingState({
+        dismissedAt: body.dismissedAt ?? optimisticDismissedAt,
+        firstName: body.firstName ?? previousState.firstName,
+      });
+    } catch (error) {
+      setOnboardingState(previousState);
+      showErrorToast(error, {
+        title: "Could not skip setup",
+        fallbackDescription: "Please try again.",
+      });
+    } finally {
+      setDismissSubmitting(false);
+    }
+  }
 
   if (errorMessage) {
     const needsSignIn = errorMessage === "Sign in to access your dashboard.";
@@ -164,20 +229,29 @@ export default function Dashboard() {
     );
   }
 
-  const hasDocuments = stats.documentsCount > 0;
-  const hasResumes = stats.resumesGenerated > 0;
-  const hasMeaningfulOpportunities = getPipelineTotal(stats.jobsByStatus) > 0;
-  const isNewUser = !hasDocuments && !hasResumes && !hasMeaningfulOpportunities;
+  const onboardingActive = computeOnboardingActive({
+    dismissedAt: onboardingState.dismissedAt,
+    stats,
+  });
 
   return (
     <ErrorBoundary>
       <PageShell>
         {loading ? (
           <DashboardLoading />
-        ) : isNewUser ? (
-          <NewUserDashboard />
+        ) : onboardingActive ? (
+          <NewUserDashboard
+            stats={stats}
+            firstName={onboardingState.firstName}
+            onSkip={handleSkipOnboarding}
+            skipSubmitting={dismissSubmitting}
+          />
         ) : (
-          <ActiveDashboard stats={stats} recentJobs={recentJobs} />
+          <ActiveDashboard
+            stats={stats}
+            recentJobs={recentJobs}
+            firstName={onboardingState.firstName}
+          />
         )}
       </PageShell>
     </ErrorBoundary>
@@ -241,11 +315,26 @@ function DashboardHeader({
   );
 }
 
-function NewUserDashboard() {
+function NewUserDashboard({
+  stats,
+  firstName,
+  onSkip,
+  skipSubmitting,
+}: {
+  stats: DashboardStats;
+  firstName: string | null;
+  onSkip: () => void;
+  skipSubmitting: boolean;
+}) {
+  const steps = BASIC_ONBOARDING_STEPS;
+  const completedCount = countCompletedSteps(steps, stats);
+  const activeStepIndex = getActiveStepIndex(steps, stats);
+  const activeStep = steps[activeStepIndex] ?? steps[0];
+
   return (
     <div className="space-y-5">
       <DashboardHeader
-        description="Let's set up your job search workspace."
+        description={getDashboardGreeting(firstName, "onboarding")}
         showActions={false}
       />
       <div className={pageGridClasses.primaryAside}>
@@ -265,38 +354,22 @@ function NewUserDashboard() {
             </div>
             <div className="inline-flex w-fit shrink-0 items-center gap-2 rounded-lg border bg-background/50 px-3 py-2 text-xs font-medium text-muted-foreground">
               <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[11px] font-semibold text-primary-foreground">
-                0
+                {completedCount}
               </span>
-              of 3 complete
+              of {steps.length} complete
             </div>
           </div>
 
           <div className="space-y-3">
-            <SetupStep
-              active
-              number={1}
-              icon={Upload}
-              title="Upload your resume"
-              description="We'll organize your experience and make it reusable."
-              href="/bank"
-              actionLabel="Upload resume"
-            />
-            <SetupStep
-              number={2}
-              icon={Briefcase}
-              title="Add your first opportunity"
-              description="Track a role and see what documents you need."
-              href="/opportunities"
-              actionLabel="Add opportunity"
-            />
-            <SetupStep
-              number={3}
-              icon={FileText}
-              title="Create a tailored document"
-              description="Use your resume and target role to draft a stronger application."
-              href="/studio"
-              actionLabel="Open Studio"
-            />
+            {steps.map((step, index) => (
+              <SetupStep
+                key={step.id}
+                number={index + 1}
+                step={step}
+                active={index === activeStepIndex}
+                complete={step.isComplete(stats)}
+              />
+            ))}
           </div>
         </PagePanel>
 
@@ -304,33 +377,37 @@ function NewUserDashboard() {
           <div className="mb-5 flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
             <Target className="h-5 w-5" />
           </div>
-          <h2 className="text-lg font-semibold">Next best move</h2>
+          <h2 className="text-lg font-semibold">What unlocks next</h2>
           <p className="mt-2 text-sm leading-6 text-muted-foreground">
-            Start with your resume. Everything else gets easier once Slothing
-            has reusable source material.
+            {getUnlockPreviewIntro(activeStep)}
           </p>
-          <Button asChild className="mt-5">
-            <Link href="/bank">
-              <Upload className="mr-2 h-4 w-4" />
-              Upload resume
-            </Link>
-          </Button>
           <div className="mt-6 border-t pt-5">
             <h3 className="text-sm font-medium text-muted-foreground">
-              What you&apos;ll unlock
+              After this step
             </h3>
           </div>
           <div className="mt-3 space-y-3">
-            <UnlockItem title="Reusable document bank" />
-            <UnlockItem title="Tailored resumes and cover letters" />
-            <UnlockItem title="Interview and follow-up planning" />
+            {getUnlockPreviewItems(activeStep).map((item) => (
+              <UnlockItem
+                key={item.title}
+                icon={item.icon}
+                title={item.title}
+                description={item.description}
+              />
+            ))}
           </div>
-          <Button asChild variant="secondary" className="mt-auto">
-            <Link href="/settings">
-              <Settings className="mr-2 h-4 w-4" />
+          <div className="mt-auto border-t pt-5">
+            <Button
+              type="button"
+              variant="secondary"
+              className="w-full"
+              onClick={onSkip}
+              disabled={skipSubmitting}
+              aria-label="Skip onboarding"
+            >
               Skip setup for now
-            </Link>
-          </Button>
+            </Button>
+          </div>
         </PagePanel>
       </div>
     </div>
@@ -339,24 +416,20 @@ function NewUserDashboard() {
 
 function SetupStep({
   number,
-  icon: Icon,
-  title,
-  description,
-  href,
-  actionLabel,
+  step,
   active = false,
+  complete = false,
 }: {
   number: number;
-  icon: LucideIcon;
-  title: string;
-  description: string;
-  href: string;
-  actionLabel: string;
+  step: OnboardingStep;
   active?: boolean;
+  complete?: boolean;
 }) {
+  const Icon = step.icon;
+
   return (
     <Link
-      href={href}
+      href={step.href}
       className={`group flex flex-col gap-4 rounded-lg border p-4 transition-colors hover:bg-muted/50 sm:flex-row sm:items-center ${
         active ? "border-primary/30 bg-primary/5" : "bg-background/40"
       }`}
@@ -372,13 +445,13 @@ function SetupStep({
           <Icon className="h-4 w-4" />
         </div>
         <span className="text-xs font-semibold text-muted-foreground">
-          0{number}
+          {complete ? <CheckCircle2 className="h-4 w-4" /> : `0${number}`}
         </span>
       </div>
       <div className="min-w-0 flex-1">
-        <h3 className="font-semibold">{title}</h3>
+        <h3 className="font-semibold">{step.title}</h3>
         <p className="mt-1 text-sm leading-6 text-muted-foreground">
-          {description}
+          {step.description}
         </p>
       </div>
       <span
@@ -388,20 +461,33 @@ function SetupStep({
             : "border bg-card text-foreground"
         }`}
       >
-        {active ? "Recommended" : actionLabel}
+        {active ? "Recommended" : step.actionLabel}
         {!active ? <ArrowRight className="h-3.5 w-3.5" /> : null}
       </span>
     </Link>
   );
 }
 
-function UnlockItem({ title }: { title: string }) {
+function UnlockItem({
+  icon: Icon,
+  title,
+  description,
+}: {
+  icon: LucideIcon;
+  title: string;
+  description: string;
+}) {
   return (
-    <div className="flex items-center gap-3 text-sm">
-      <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-success/10 text-success">
-        <CheckCircle2 className="h-4 w-4" />
+    <div className="flex items-start gap-3 text-sm">
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-success/10 text-success">
+        <Icon className="h-4 w-4" />
       </div>
-      <span>{title}</span>
+      <div className="min-w-0">
+        <p className="font-medium">{title}</p>
+        <p className="mt-1 text-xs leading-5 text-muted-foreground">
+          {description}
+        </p>
+      </div>
     </div>
   );
 }
@@ -409,16 +495,18 @@ function UnlockItem({ title }: { title: string }) {
 function ActiveDashboard({
   stats,
   recentJobs,
+  firstName,
 }: {
   stats: DashboardStats;
   recentJobs: RecentJob[];
+  firstName: string | null;
 }) {
   const actions = buildTodayActions(stats, recentJobs);
   const totalPipeline = getPipelineTotal(stats.jobsByStatus);
 
   return (
     <div className="space-y-5">
-      <DashboardHeader description="You have a few clear moves to keep your search moving." />
+      <DashboardHeader description={getDashboardGreeting(firstName, "active")} />
       <DashboardStatStrip stats={stats} totalPipeline={totalPipeline} />
 
       <div className={pageGridClasses.primaryAside}>
@@ -809,21 +897,91 @@ function RecentOpportunitiesPanel({ recentJobs }: { recentJobs: RecentJob[] }) {
   );
 }
 
-function getPipelineCount(
-  jobsByStatus: Record<string, number>,
-  status: string,
-): number {
-  if (status === "saved") {
-    return (jobsByStatus.saved || 0) + (jobsByStatus.pending || 0);
+function getDashboardGreeting(
+  firstName: string | null,
+  mode: "onboarding" | "active",
+): string {
+  if (mode === "onboarding") {
+    return firstName
+      ? `Hey ${firstName}, let's set up your workspace.`
+      : "Let's set up your workspace.";
   }
-  return jobsByStatus[status] || 0;
+
+  return firstName ? `Hey ${firstName}, welcome back.` : "Welcome back.";
 }
 
-function getPipelineTotal(jobsByStatus: Record<string, number>): number {
-  return (
-    getPipelineCount(jobsByStatus, "saved") +
-    getPipelineCount(jobsByStatus, "applied") +
-    getPipelineCount(jobsByStatus, "interviewing") +
-    getPipelineCount(jobsByStatus, "offered")
-  );
+function getUnlockPreviewIntro(step: OnboardingStep | undefined): string {
+  switch (step?.id) {
+    case "add-opportunity":
+      return "Once your first role is tracked, Slothing can connect documents and next steps to a real target.";
+    case "create-tailored-doc":
+      return "Once a tailored document exists, your workspace starts turning source material into reusable application momentum.";
+    case "upload-resume":
+    default:
+      return "Once your resume is in the bank, Slothing has source material for the rest of the workflow.";
+  }
+}
+
+function getUnlockPreviewItems(step: OnboardingStep | undefined): Array<{
+  icon: LucideIcon;
+  title: string;
+  description: string;
+}> {
+  switch (step?.id) {
+    case "add-opportunity":
+      return [
+        {
+          icon: Target,
+          title: "Focused application plans",
+          description: "See the documents and prep work each role needs.",
+        },
+        {
+          icon: Calendar,
+          title: "Follow-up timing",
+          description: "Keep interviews, deadlines, and reminders visible.",
+        },
+        {
+          icon: BarChart3,
+          title: "Pipeline clarity",
+          description: "Watch saved, applied, and interviewing roles move.",
+        },
+      ];
+    case "create-tailored-doc":
+      return [
+        {
+          icon: CheckCircle2,
+          title: "Application-ready drafts",
+          description: "Turn your resume and target role into stronger docs.",
+        },
+        {
+          icon: Mail,
+          title: "Reusable follow-ups",
+          description: "Keep recruiter notes aligned with the role context.",
+        },
+        {
+          icon: UserCheck,
+          title: "Readiness signals",
+          description: "Know what is polished and what still needs work.",
+        },
+      ];
+    case "upload-resume":
+    default:
+      return [
+        {
+          icon: FileText,
+          title: "Reusable document bank",
+          description: "Keep your source material organized for every role.",
+        },
+        {
+          icon: Briefcase,
+          title: "Better opportunity matching",
+          description: "Compare jobs against real experience and skills.",
+        },
+        {
+          icon: Target,
+          title: "Tailored Studio drafts",
+          description: "Start from existing material instead of a blank page.",
+        },
+      ];
+  }
 }
