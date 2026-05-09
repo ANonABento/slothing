@@ -14,6 +14,7 @@ import {
   startInterviewSchema,
   DIFFICULTY_DESCRIPTIONS,
   type InterviewDifficulty,
+  type SessionQuestionCategory,
 } from "@/lib/constants";
 import { requireAuth, isAuthError, getCurrentUserId } from "@/lib/auth";
 import { rateLimiters, getClientIdentifier } from "@/lib/rate-limit";
@@ -23,10 +24,18 @@ export const dynamic = "force-dynamic";
 
 interface InterviewQuestion {
   question: string;
-  category: "behavioral" | "technical" | "situational" | "general";
+  category: SessionQuestionCategory;
   suggestedAnswer?: string;
   difficulty?: InterviewDifficulty;
 }
+
+const SESSION_CATEGORY_VALUES: SessionQuestionCategory[] = [
+  "behavioral",
+  "technical",
+  "situational",
+  "cultural-fit",
+  "general",
+];
 
 export async function POST(request: NextRequest) {
   const authResult = await requireAuth();
@@ -65,17 +74,27 @@ export async function POST(request: NextRequest) {
       return validationErrorResponse(parseResult.error);
     }
 
-    const { jobId, difficulty } = parseResult.data;
-
-    const job = getJob(jobId, authResult.userId);
-    if (!job) {
-      return NextResponse.json({ error: "Job not found" }, { status: 404 });
-    }
+    const { jobId, difficulty, category, questionCount } = parseResult.data;
 
     const profile = getProfile(authResult.userId);
     const llmConfig = getLLMConfig(authResult.userId);
 
     let questions: InterviewQuestion[];
+
+    if (!jobId) {
+      questions = await getGenericQuestions({
+        category: category as SessionQuestionCategory,
+        difficulty,
+        questionCount,
+        llmConfig,
+      });
+      return NextResponse.json({ questions, difficulty });
+    }
+
+    const job = getJob(jobId, authResult.userId);
+    if (!job) {
+      return NextResponse.json({ error: "Job not found" }, { status: 404 });
+    }
 
     if (llmConfig) {
       const client = new LLMClient(llmConfig);
@@ -97,7 +116,7 @@ Candidate Background:
         messages: [
           {
             role: "user",
-            content: `Generate 5 interview questions for this job. Mix behavioral, technical, and situational questions.
+            content: `Generate ${questionCount} interview questions for this job. Mix behavioral, technical, situational, and cultural-fit questions.
 
 Job: ${job.title} at ${job.company}
 Description: ${job.description}
@@ -117,7 +136,8 @@ Return ONLY a JSON array (no markdown):
   }
 ]
 
-Categories: behavioral, technical, situational, general
+Categories: ${SESSION_CATEGORY_VALUES.join(", ")}
+Every question must have the best primary category. Avoid "general" for the first question unless no other category fits.
 Include suggestedAnswer with tips appropriate for the ${difficulty} level.
 Make sure questions match the ${difficulty} difficulty level.`,
           },
@@ -127,14 +147,18 @@ Make sure questions match the ${difficulty} difficulty level.`,
       });
 
       try {
-        questions = parseJSONFromLLM<InterviewQuestion[]>(response);
+        questions = normalizeQuestions(
+          parseJSONFromLLM<InterviewQuestion[]>(response),
+          questionCount,
+          difficulty,
+        );
       } catch (parseError) {
         console.error("Failed to parse LLM response:", parseError);
         // Fall back to default questions if parsing fails
-        questions = getDefaultQuestions(job);
+        questions = getDefaultQuestions(job, difficulty, questionCount);
       }
     } else {
-      questions = getDefaultQuestions(job, difficulty as InterviewDifficulty);
+      questions = getDefaultQuestions(job, difficulty, questionCount);
     }
 
     return NextResponse.json({ questions, difficulty });
@@ -147,9 +171,102 @@ Make sure questions match the ${difficulty} difficulty level.`,
   }
 }
 
+async function getGenericQuestions({
+  category,
+  difficulty,
+  questionCount,
+  llmConfig,
+}: {
+  category: SessionQuestionCategory;
+  difficulty: InterviewDifficulty;
+  questionCount: number;
+  llmConfig: ReturnType<typeof getLLMConfig>;
+}): Promise<InterviewQuestion[]> {
+  if (!llmConfig) {
+    return getGenericDefaultQuestions(category, difficulty, questionCount);
+  }
+
+  const client = new LLMClient(llmConfig);
+  const difficultyContext =
+    DIFFICULTY_DESCRIPTIONS[difficulty] || DIFFICULTY_DESCRIPTIONS.mid;
+
+  try {
+    const response = await client.complete({
+      messages: [
+        {
+          role: "user",
+          content: `You are an interviewer for a ${category} interview at ${difficulty} level.
+
+Generate ${questionCount} questions covering common ${category} interview topics. Do not reference any specific role or company.
+
+DIFFICULTY LEVEL: ${difficulty.toUpperCase()}
+${difficultyContext}
+
+Return ONLY a JSON array (no markdown):
+[
+  {
+    "question": "Tell me about a time when...",
+    "category": "${category}",
+    "suggestedAnswer": "Structure using STAR method...",
+    "difficulty": "${difficulty}"
+  }
+]
+
+Categories: ${SESSION_CATEGORY_VALUES.join(", ")}
+Every question must have the best primary category and include suggestedAnswer.`,
+        },
+      ],
+      temperature: 0.7,
+      maxTokens: 2000,
+    });
+
+    return normalizeQuestions(
+      parseJSONFromLLM<InterviewQuestion[]>(response),
+      questionCount,
+      difficulty,
+      category,
+    );
+  } catch (error) {
+    console.error("Failed to generate generic interview questions:", error);
+    return getGenericDefaultQuestions(category, difficulty, questionCount);
+  }
+}
+
+function normalizeQuestions(
+  questions: InterviewQuestion[],
+  questionCount: number,
+  difficulty: InterviewDifficulty,
+  fallbackCategory: SessionQuestionCategory = "behavioral",
+): InterviewQuestion[] {
+  const normalized = questions.map((question) => ({
+    ...question,
+    category: SESSION_CATEGORY_VALUES.includes(question.category)
+      ? question.category
+      : fallbackCategory,
+    difficulty: question.difficulty || difficulty,
+  }));
+
+  return repeatToCount(
+    normalized.length
+      ? normalized
+      : [
+          {
+            question:
+              "Tell me about a recent challenge and how you handled it.",
+            category: fallbackCategory,
+            difficulty,
+            suggestedAnswer:
+              "Use a specific example, explain your actions, and close with the result.",
+          },
+        ],
+    questionCount,
+  );
+}
+
 function getDefaultQuestions(
   job: { title: string; company: string; keywords: string[] },
   difficulty: InterviewDifficulty = "mid",
+  questionCount = 5,
 ): InterviewQuestion[] {
   const baseQuestions: Record<InterviewDifficulty, InterviewQuestion[]> = {
     entry: [
@@ -317,5 +434,74 @@ function getDefaultQuestions(
     ],
   };
 
-  return baseQuestions[difficulty] || baseQuestions.mid;
+  return repeatToCount(
+    baseQuestions[difficulty] || baseQuestions.mid,
+    questionCount,
+  );
+}
+
+function getGenericDefaultQuestions(
+  category: SessionQuestionCategory,
+  difficulty: InterviewDifficulty = "mid",
+  questionCount = 5,
+): InterviewQuestion[] {
+  const label = category.replace("-", " ");
+  const templates: Record<SessionQuestionCategory, string[]> = {
+    behavioral: [
+      "Tell me about a time you handled a difficult challenge.",
+      "Describe a moment when you had to learn something quickly.",
+      "Tell me about a time you received tough feedback.",
+      "Describe a project where you had to collaborate across different working styles.",
+      "Tell me about a time you improved a process.",
+    ],
+    technical: [
+      "Walk me through a technical decision you made and the trade-offs involved.",
+      "How do you debug a production issue with limited information?",
+      "Describe a system or feature you built that you are proud of.",
+      "How do you evaluate whether a technical solution is maintainable?",
+      "Explain a complex technical topic to a non-technical stakeholder.",
+    ],
+    situational: [
+      "What would you do if priorities changed halfway through a project?",
+      "How would you handle being blocked by another team?",
+      "What would you do if you disagreed with the direction of a project?",
+      "How would you recover if you realized you misunderstood a requirement?",
+      "What would you do if you had too much work and too little time?",
+    ],
+    general: [
+      "What strengths would you bring to your next role?",
+      "What kind of work environment helps you do your best work?",
+      "How do you decide what to focus on during a busy week?",
+      "What are you hoping to grow in next?",
+      "Tell me about the kind of impact you want to have.",
+    ],
+    "cultural-fit": [
+      "What team norms help you collaborate well?",
+      "Tell me about a time you contributed to a healthier team culture.",
+      "How do you build trust with new teammates?",
+      "Describe how you prefer to give and receive feedback.",
+      "What values matter most to you in a workplace?",
+    ],
+  };
+
+  return repeatToCount(
+    templates[category].map((question) => ({
+      question,
+      category,
+      difficulty,
+      suggestedAnswer: `Use a concrete example, explain your choices, and connect the answer to common ${label} interview signals.`,
+    })),
+    questionCount,
+  );
+}
+
+function repeatToCount(
+  questions: InterviewQuestion[],
+  questionCount: number,
+): InterviewQuestion[] {
+  const result: InterviewQuestion[] = [];
+  while (result.length < questionCount) {
+    result.push(...questions);
+  }
+  return result.slice(0, questionCount);
 }

@@ -42,26 +42,69 @@ describe("Interview Database Functions", () => {
 
       const result = createInterviewSession("job-123", questions, "text");
 
-      expect(db.prepare).toHaveBeenCalledWith(expect.stringContaining("WHERE EXISTS"));
-      expect(mockRun).toHaveBeenCalledWith(
+      expect(db.prepare).toHaveBeenCalledWith(
+        expect.stringContaining("WHERE EXISTS"),
+      );
+      expect(mockRun).toHaveBeenLastCalledWith(
         "test-session-id",
         "default",
         "job-123",
+        null,
         "default",
         "text",
         JSON.stringify(questions),
         expect.any(String),
         "job-123",
-        "default"
+        "default",
       );
       expect(result).toEqual({
         id: "test-session-id",
         jobId: "job-123",
         profileId: "default",
         mode: "text",
+        category: null,
         questions,
         status: "in_progress",
         startedAt: expect.any(String),
+      });
+    });
+
+    it("should create a generic interview session without a job", () => {
+      const mockRun = vi.fn();
+      (db.prepare as Mock).mockReturnValue({ run: mockRun });
+
+      const questions = [
+        {
+          question: "Tell me about a challenge",
+          category: "behavioral" as const,
+        },
+      ];
+
+      const result = createInterviewSession(
+        null,
+        questions,
+        "generic-text",
+        "default",
+        "behavioral",
+      );
+
+      expect(db.prepare).toHaveBeenCalledWith(
+        expect.stringContaining("VALUES"),
+      );
+      expect(mockRun).toHaveBeenLastCalledWith(
+        "test-session-id",
+        "default",
+        "behavioral",
+        "default",
+        "generic-text",
+        JSON.stringify(questions),
+        expect.any(String),
+      );
+      expect(result).toMatchObject({
+        id: "test-session-id",
+        jobId: null,
+        category: "behavioral",
+        mode: "generic-text",
       });
     });
 
@@ -69,19 +112,20 @@ describe("Interview Database Functions", () => {
       const mockRun = vi.fn().mockReturnValue({ changes: 0 });
       (db.prepare as Mock).mockReturnValue({ run: mockRun });
 
-      expect(() => createInterviewSession("job-123", [], "text", "user-123")).toThrow(
-        "Job not found"
-      );
+      expect(() =>
+        createInterviewSession("job-123", [], "text", "user-123"),
+      ).toThrow("Job not found");
       expect(mockRun).toHaveBeenCalledWith(
         "test-session-id",
         "user-123",
         "job-123",
+        null,
         "user-123",
         "text",
         JSON.stringify([]),
         expect.any(String),
         "job-123",
-        "user-123"
+        "user-123",
       );
     });
 
@@ -140,12 +184,15 @@ describe("Interview Database Functions", () => {
 
       const result = getInterviewSession("session-1");
 
-      expect(db.prepare).toHaveBeenCalledWith(expect.stringContaining("WHERE id = ? AND user_id = ?"));
+      expect(db.prepare).toHaveBeenCalledWith(
+        expect.stringContaining("WHERE id = ? AND user_id = ?"),
+      );
       expect(result).toEqual({
         id: "session-1",
         jobId: "job-123",
         profileId: "default",
         mode: "text",
+        category: null,
         questions: [{ question: "Q1", category: "behavioral" }],
         status: "in_progress",
         startedAt: "2024-01-15T10:00:00.000Z",
@@ -225,11 +272,15 @@ describe("Interview Database Functions", () => {
         },
       ];
 
-      (db.prepare as Mock).mockReturnValue({ all: vi.fn().mockReturnValue(mockRows) });
+      (db.prepare as Mock).mockReturnValue({
+        all: vi.fn().mockReturnValue(mockRows),
+      });
 
       const result = getInterviewSessions();
 
-      expect((db.prepare as Mock)).toHaveBeenCalledWith(expect.stringContaining("WHERE user_id = ?"));
+      expect(db.prepare as Mock).toHaveBeenCalledWith(
+        expect.stringContaining("WHERE user_id = ?"),
+      );
       expect(result).toHaveLength(2);
       expect(result[0].id).toBe("session-2");
       expect(result[1].id).toBe("session-1");
@@ -245,11 +296,15 @@ describe("Interview Database Functions", () => {
     });
 
     it("should return empty array when no sessions exist", () => {
-      (db.prepare as Mock).mockReturnValue({ all: vi.fn().mockReturnValue([]) });
+      (db.prepare as Mock).mockReturnValue({
+        all: vi.fn().mockReturnValue([]),
+      });
 
       const result = getInterviewSessions();
 
-      expect((db.prepare as Mock)).toHaveBeenCalledWith(expect.stringContaining("WHERE user_id = ?"));
+      expect(db.prepare as Mock).toHaveBeenCalledWith(
+        expect.stringContaining("WHERE user_id = ?"),
+      );
       expect(result).toEqual([]);
     });
   });
@@ -270,7 +325,7 @@ describe("Interview Database Functions", () => {
         "Good!",
         expect.any(String),
         "session-1",
-        "default"
+        "default",
       );
       expect(result).toEqual({
         id: "test-session-id",
@@ -287,7 +342,7 @@ describe("Interview Database Functions", () => {
       (db.prepare as Mock).mockReturnValue({ run: mockRun });
 
       expect(() =>
-        addInterviewAnswer("session-1", 0, "My answer", undefined, "user-123")
+        addInterviewAnswer("session-1", 0, "My answer", undefined, "user-123"),
       ).toThrow("Session not found");
       expect(mockRun).toHaveBeenCalledWith(
         "test-session-id",
@@ -298,7 +353,7 @@ describe("Interview Database Functions", () => {
         null,
         expect.any(String),
         "session-1",
-        "user-123"
+        "user-123",
       );
     });
 

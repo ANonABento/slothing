@@ -177,7 +177,8 @@ export const generatedResumes = sqliteTable("generated_resumes", {
 export const interviewSessions = sqliteTable("interview_sessions", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull().default(DEFAULT_USER_ID),
-  jobId: text("job_id").notNull(),
+  jobId: text("job_id"),
+  category: text("category"),
   profileId: text("profile_id").notNull(),
   mode: text("mode").default("text"),
   questionsJson: text("questions_json").notNull(),
@@ -762,8 +763,7 @@ export type LearnedAnswer = typeof learnedAnswers.$inferSelect;
 export type NewLearnedAnswer = typeof learnedAnswers.$inferInsert;
 
 export type LearnedAnswerVersion = typeof learnedAnswerVersions.$inferSelect;
-export type NewLearnedAnswerVersion =
-  typeof learnedAnswerVersions.$inferInsert;
+export type NewLearnedAnswerVersion = typeof learnedAnswerVersions.$inferInsert;
 
 export type FieldMapping = typeof fieldMappings.$inferSelect;
 export type NewFieldMapping = typeof fieldMappings.$inferInsert;

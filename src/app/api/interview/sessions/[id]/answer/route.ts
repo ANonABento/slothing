@@ -50,9 +50,33 @@ export async function POST(
       );
     }
 
+    if (answer === "[skipped]") {
+      const savedAnswer = addInterviewAnswer(
+        params.id,
+        questionIndex,
+        answer,
+        "",
+        authResult.userId,
+      );
+      const isComplete = questionIndex >= session.questions.length - 1;
+      if (isComplete) {
+        completeInterviewSession(params.id, authResult.userId);
+      }
+
+      return NextResponse.json({
+        answer: savedAnswer,
+        feedback: "",
+        isComplete,
+      });
+    }
+
     // Generate feedback using LLM if available
     let feedback = "";
     const llmConfig = getLLMConfig(authResult.userId);
+    const promptIntro =
+      session.jobId === null
+        ? `Provide brief, constructive feedback for this ${session.category || question.category} interview answer. Do not reference a specific role or company.`
+        : "Provide brief, constructive feedback for this interview answer.";
 
     if (llmConfig) {
       try {
@@ -61,7 +85,7 @@ export async function POST(
           messages: [
             {
               role: "user",
-              content: `Provide brief, constructive feedback for this interview answer.
+              content: `${promptIntro}
 
 Question: ${question.question}
 Category: ${question.category}
