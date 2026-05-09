@@ -82,7 +82,6 @@ export default function InterviewPage() {
       <PageHeader
         width="wide"
         icon={Sparkles}
-        eyebrow="AI Interview Coach"
         title="Interview Preparation"
         description="Practice with AI-generated questions tailored to your target jobs and receive instant feedback."
       />

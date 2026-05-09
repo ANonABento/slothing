@@ -220,7 +220,6 @@ export default function ProfilePage() {
       <PageHeader
         width="wide"
         icon={User}
-        eyebrow="Candidate profile"
         title="Profile"
         description="Maintain the profile details used for resumes, autofill, matching, and job search preferences."
         actions={
