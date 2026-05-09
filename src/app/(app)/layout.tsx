@@ -25,6 +25,7 @@ function AppShell({ children }: { children: React.ReactNode }) {
             className="flex-1 overflow-x-hidden overflow-y-auto overscroll-y-none bg-background"
             role="main"
             aria-label="Main content"
+            tabIndex={-1}
           >
             <div className="lg:hidden h-16" aria-hidden="true" />
             {children}
