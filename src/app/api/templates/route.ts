@@ -59,6 +59,8 @@ const createTemplateSchema = z.object({
     sectionGap: z.string(),
   }),
   sourceDocumentId: z.string().optional(),
+  sourceFilename: z.string().optional(),
+  sourceType: z.enum(["pdf", "docx"]).optional(),
 });
 
 export async function GET() {
@@ -78,10 +80,15 @@ export async function GET() {
     const custom = customTemplates.map((t) => ({
       id: t.id,
       name: t.name,
-      description: `Custom template${t.sourceDocumentId ? " (from uploaded resume)" : ""}`,
+      description: t.sourceType
+        ? `Imported from ${t.sourceType.toUpperCase()}`
+        : `Custom template${t.sourceDocumentId ? " (from uploaded resume)" : ""}`,
       type: "custom" as const,
       analyzedStyles: t.analyzedStyles,
+      sourceFilename: t.sourceFilename,
+      sourceType: t.sourceType,
       createdAt: t.createdAt,
+      updatedAt: t.updatedAt,
     }));
 
     return successResponse({ templates: [...builtIn, ...custom] });
@@ -103,7 +110,8 @@ export async function POST(request: NextRequest) {
       return validationErrorResponse(parseResult.error);
     }
 
-    const { name, analyzedStyles, sourceDocumentId } = parseResult.data;
+    const { name, analyzedStyles, sourceDocumentId, sourceFilename, sourceType } =
+      parseResult.data;
 
     if (sourceDocumentId && !getDocument(sourceDocumentId, authResult.userId)) {
       return ApiErrors.notFound("Source document");
@@ -114,6 +122,9 @@ export async function POST(request: NextRequest) {
       analyzedStyles as AnalyzedTemplate,
       sourceDocumentId,
       authResult.userId,
+      sourceFilename && sourceType
+        ? { filename: sourceFilename, type: sourceType }
+        : undefined,
     );
 
     return successResponse(template, 201);

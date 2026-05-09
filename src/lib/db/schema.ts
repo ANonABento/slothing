@@ -415,8 +415,11 @@ export const customTemplates = sqliteTable(
     userId: text("user_id").notNull().default(DEFAULT_USER_ID),
     name: text("name").notNull(),
     sourceDocumentId: text("source_document_id"),
+    sourceFilename: text("source_filename"),
+    sourceType: text("source_type"),
     analyzedStyles: text("analyzed_styles").notNull(),
     createdAt: text("created_at").default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at").default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => [
     index("idx_custom_templates_user_created").on(
