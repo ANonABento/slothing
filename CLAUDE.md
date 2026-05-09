@@ -33,7 +33,7 @@ The product is branded **Slothing** (domain: slothing.work). The repo path is st
 | Styling | Tailwind CSS + CSS Variables (semantic tokens only — see lint rule) |
 | Components | Shadcn/ui patterns (CVA) |
 | Database | Drizzle ORM with libSQL/SQLite |
-| Auth | NextAuth.js (Auth.js v5) with Google provider; local-dev fallback to a `default` user |
+| Auth | NextAuth.js (Auth.js v5) with Google + optional Resend email magic-link; local-dev fallback to a `default` user |
 | LLM | Multi-provider (OpenAI, Anthropic, Ollama, OpenRouter) |
 | Editor | TipTap (resume + cover letter) |
 | Icons | Lucide React |
@@ -516,6 +516,10 @@ NEXTAUTH_SECRET=<openssl rand -base64 32>
 GOOGLE_CLIENT_ID=...
 GOOGLE_CLIENT_SECRET=...
 NEXT_PUBLIC_NEXTAUTH_ENABLED=true
+
+# Optional: email magic-link sign-in (NextAuth Resend provider)
+RESEND_API_KEY=
+EMAIL_FROM="Slothing <noreply@yourdomain.com>"
 ```
 
 ---

@@ -1,15 +1,14 @@
 import NextAuth from "next-auth";
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import { getDb } from "@/lib/db";
-import {
-  users,
-  accounts,
-  sessions,
-  verificationTokens,
-} from "@/lib/db/schema";
+import { users, accounts, sessions, verificationTokens } from "@/lib/db/schema";
 import { authConfig } from "@/auth.config";
 
-export { GOOGLE_OAUTH_SCOPES, isNextAuthConfigured } from "@/auth.config";
+export {
+  GOOGLE_OAUTH_SCOPES,
+  isEmailMagicLinkConfigured,
+  isNextAuthConfigured,
+} from "@/auth.config";
 
 // Use JWT session strategy so middleware (which runs in edge runtime) can
 // validate the session cookie without touching the libSQL/Drizzle adapter.
