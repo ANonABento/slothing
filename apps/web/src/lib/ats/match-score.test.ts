@@ -64,6 +64,91 @@ describe("computeJdMatch", () => {
     expect(result.totalKeywords).toBe(5);
     expect(result.missingKeywords).toHaveLength(2);
   });
+
+  it("does not list frontend internship skills as missing when present", () => {
+    const jd =
+      "Frontend internship requiring React, TypeScript, GraphQL, REST APIs, data visualization, Figma, accessible UI, and unit testing.";
+    const resume =
+      "Frontend student using React and TypeScript. Designed in Figma, built GraphQL clients, consumed REST APIs, created data visualization dashboards, improved accessible UI, and wrote unit tests.";
+
+    const result = computeJdMatch(resume, jd, { keywordLimit: 12 });
+
+    expect(result.score).toBeGreaterThanOrEqual(80);
+    expect(result.matchedKeywords).toEqual(
+      expect.arrayContaining([
+        "graphql",
+        "rest apis",
+        "data visualization",
+        "figma",
+      ]),
+    );
+    expect(result.missingKeywords).not.toEqual(
+      expect.arrayContaining([
+        "graphql",
+        "rest apis",
+        "data visualization",
+        "figma",
+      ]),
+    );
+  });
+
+  it("lists frontend skills as missing for a weak resume without filler chips", () => {
+    const result = computeJdMatch(
+      "Coursework in HTML and CSS with classroom projects.",
+      "Frontend intern: use React, TypeScript, GraphQL, REST APIs, data visualization, and Figma. Bonus if you write unit tests.",
+      { keywordLimit: 12 },
+    );
+
+    expect(result.missingKeywords).toEqual(
+      expect.arrayContaining([
+        "graphql",
+        "rest apis",
+        "data visualization",
+        "figma",
+      ]),
+    );
+    expect([...result.matchedKeywords, ...result.missingKeywords]).not.toEqual(
+      expect.arrayContaining(["bonus", "use", "intern", "write unit"]),
+    );
+  });
+
+  it("dedupes keyword-stuffed resumes and ignores filler from the JD", () => {
+    const result = computeJdMatch(
+      "React React React GraphQL GraphQL REST APIs Figma.",
+      "React GraphQL REST APIs Figma. Bonus: use these skills as an intern.",
+      { keywordLimit: 12 },
+    );
+
+    expect(new Set(result.matchedKeywords).size).toBe(
+      result.matchedKeywords.length,
+    );
+    expect([...result.matchedKeywords, ...result.missingKeywords]).not.toEqual(
+      expect.arrayContaining(["bonus", "use", "intern"]),
+    );
+  });
+
+  it("keeps unrelated data JDs focused on data skills", () => {
+    const result = computeJdMatch(
+      "Frontend engineer with React, TypeScript, and Figma.",
+      "Data analyst role requiring Python, SQL, Tableau, Power BI, ETL, data pipelines, and statistics.",
+      { keywordLimit: 10 },
+    );
+
+    expect(result.missingKeywords).toEqual(
+      expect.arrayContaining([
+        "python",
+        "sql",
+        "tableau",
+        "power bi",
+        "etl",
+        "data pipelines",
+        "statistics",
+      ]),
+    );
+    expect(result.missingKeywords).not.toEqual(
+      expect.arrayContaining(["front end", "intern", "role requiring"]),
+    );
+  });
 });
 
 describe("normalizeForMatch", () => {

@@ -1,4 +1,5 @@
 import type { Profile, JobDescription } from "@/types";
+import { extractJdKeywordTerms } from "./jd-keywords";
 
 import { nowIso } from "@/lib/format/time";
 /**
@@ -36,7 +37,7 @@ export function textToJob(jobText: string): JobDescription {
     .split("\n")
     .map((l) => l.trim())
     .filter(Boolean);
-  const keywords = extractJobKeywords(jobText);
+  const keywords = extractJdKeywordTerms(jobText);
 
   return {
     id: "scanner-job",
@@ -287,104 +288,6 @@ function extractSkills(lines: string[]): Profile["skills"] {
   }
 
   return skills;
-}
-
-function extractJobKeywords(text: string): string[] {
-  const normalized = text.toLowerCase();
-  const words = normalized.split(/\s+/);
-  const stopWords = new Set([
-    "the",
-    "a",
-    "an",
-    "and",
-    "or",
-    "but",
-    "in",
-    "on",
-    "at",
-    "to",
-    "for",
-    "of",
-    "with",
-    "by",
-    "from",
-    "as",
-    "is",
-    "was",
-    "are",
-    "were",
-    "been",
-    "be",
-    "have",
-    "has",
-    "had",
-    "do",
-    "does",
-    "did",
-    "will",
-    "would",
-    "could",
-    "should",
-    "may",
-    "might",
-    "must",
-    "we",
-    "you",
-    "they",
-    "our",
-    "your",
-    "this",
-    "that",
-    "these",
-    "those",
-    "about",
-    "into",
-    "through",
-    "during",
-    "before",
-    "after",
-    "above",
-    "below",
-    "between",
-    "than",
-    "very",
-    "just",
-    "also",
-    "not",
-    "all",
-    "any",
-    "can",
-    "who",
-    "what",
-    "which",
-    "when",
-    "where",
-    "how",
-    "work",
-    "working",
-    "able",
-    "using",
-    "including",
-    "experience",
-    "years",
-    "team",
-    "company",
-    "role",
-    "position",
-  ]);
-
-  const freq: Record<string, number> = {};
-  for (const word of words) {
-    const clean = word.replace(/[^a-z0-9+#.]/g, "");
-    if (clean.length > 2 && !stopWords.has(clean)) {
-      freq[clean] = (freq[clean] || 0) + 1;
-    }
-  }
-
-  return Object.entries(freq)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 20)
-    .map(([word]) => word);
 }
 
 function extractRequirements(lines: string[]): string[] {

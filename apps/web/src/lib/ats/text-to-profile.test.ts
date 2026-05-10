@@ -137,6 +137,26 @@ describe("textToJob", () => {
   it("extracts keywords from job description", () => {
     const job = textToJob(SAMPLE_JOB);
     expect(job.keywords.length).toBeGreaterThan(0);
+    expect(job.keywords).toEqual(
+      expect.arrayContaining([
+        "react",
+        "typescript",
+        "web performance",
+        "ci/cd",
+        "unit testing",
+        "integration testing",
+      ]),
+    );
+    expect(job.keywords).not.toEqual(
+      expect.arrayContaining([
+        "experience",
+        "strong",
+        "communication",
+        "collaborate",
+        "write",
+        "interfaces write unit",
+      ]),
+    );
   });
 
   it("extracts requirements", () => {

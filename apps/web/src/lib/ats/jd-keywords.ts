@@ -9,12 +9,19 @@ interface KeywordCandidate extends JdKeyword {
   signal: number;
 }
 
+interface CanonicalTerm {
+  term: string;
+  aliases?: string[];
+  signal?: number;
+}
+
 const DEFAULT_LIMIT = 30;
 
 const STOP_WORDS = new Set([
   "a",
   "about",
   "across",
+  "after",
   "all",
   "also",
   "an",
@@ -29,6 +36,8 @@ const STOP_WORDS = new Set([
   "candidate",
   "candidates",
   "company",
+  "during",
+  "each",
   "etc",
   "for",
   "from",
@@ -38,7 +47,9 @@ const STOP_WORDS = new Set([
   "is",
   "job",
   "looking",
+  "may",
   "must",
+  "need",
   "of",
   "on",
   "or",
@@ -67,96 +78,151 @@ const STOP_WORDS = new Set([
 const FILLER_TERMS = new Set([
   "ability",
   "benefits",
+  "bonus",
   "build",
+  "building",
   "collaborate",
+  "collaborates",
+  "collaboration",
   "communication",
   "environment",
   "excellent",
   "experience",
+  "familiarity",
   "fast",
   "help",
-  "integration",
-  "integrations",
+  "intern",
+  "internship",
+  "internships",
   "knowledge",
+  "maintain",
   "management",
+  "nice",
   "opportunity",
   "passion",
+  "plus",
   "professional",
   "proven",
   "required",
   "skills",
   "strong",
   "support",
+  "understanding",
+  "use",
+  "used",
+  "uses",
+  "write",
+  "writes",
+  "writing",
 ]);
 
-const KNOWN_TECH_TERMS = [
-  "node.js",
-  "javascript",
-  "typescript",
-  "react",
-  "next.js",
-  "python",
-  "java",
-  "c++",
-  "c#",
-  "sql",
-  "postgresql",
-  "mysql",
-  "aws",
-  "azure",
-  "gcp",
-  "kubernetes",
-  "docker",
-  "graphql",
-  "rest",
-  "api",
-  "apis",
-  "machine learning",
-  "data analysis",
-  "project management",
-  "customer success",
+const CANONICAL_TERMS: CanonicalTerm[] = [
+  { term: ".net", aliases: ["dotnet", "dot net"] },
+  { term: "accessibility", aliases: ["accessible ui", "a11y", "wcag"] },
+  { term: "agile" },
+  { term: "analytics" },
+  { term: "angular" },
+  { term: "api", aliases: ["apis"] },
+  { term: "aws", aliases: ["amazon web services"] },
+  { term: "azure" },
+  { term: "c#" },
+  { term: "c++" },
+  { term: "ci/cd", aliases: ["ci cd", "cicd"] },
+  { term: "css", aliases: ["css3"] },
+  { term: "dashboard", aliases: ["dashboards"] },
+  { term: "dashboard reporting", aliases: ["reporting dashboards"] },
+  { term: "data analysis", aliases: ["data analytics"] },
+  { term: "data pipelines", aliases: ["data pipeline"] },
+  { term: "data science" },
+  { term: "data visualization", aliases: ["data visualizations", "dataviz"] },
+  { term: "deep learning" },
+  { term: "docker" },
+  { term: "etl" },
+  { term: "excel" },
+  { term: "figma" },
+  { term: "front end", aliases: ["frontend", "front-end"] },
+  { term: "gcp", aliases: ["google cloud"] },
+  { term: "git" },
+  { term: "go", aliases: ["golang"] },
+  { term: "graphql", aliases: ["graph ql"] },
+  { term: "html", aliases: ["html5"] },
+  { term: "integration testing", aliases: ["integration tests"] },
+  { term: "java" },
+  { term: "javascript", aliases: ["js"] },
+  { term: "jira" },
+  { term: "kubernetes", aliases: ["k8s"] },
+  { term: "linux" },
+  { term: "machine learning", aliases: ["ml"] },
+  { term: "mongodb", aliases: ["mongo"] },
+  { term: "mysql" },
+  { term: "next.js", aliases: ["nextjs", "next js"] },
+  { term: "node.js", aliases: ["nodejs", "node js", "node"] },
+  { term: "postgresql", aliases: ["postgres"] },
+  { term: "power bi", aliases: ["powerbi"] },
+  { term: "python" },
+  { term: "react", aliases: ["react.js", "reactjs"] },
+  { term: "redux" },
+  { term: "responsive design", aliases: ["responsive ui", "responsive web"] },
+  { term: "rest apis", aliases: ["rest api", "restful api", "restful apis"] },
+  { term: "ruby" },
+  { term: "rust" },
+  { term: "salesforce" },
+  { term: "scrum" },
+  { term: "sql" },
+  { term: "statistics", aliases: ["statistical analysis"] },
+  { term: "swift" },
+  { term: "tableau" },
+  { term: "terraform" },
+  { term: "testing", aliases: ["test automation"] },
+  { term: "typescript", aliases: ["ts"] },
+  {
+    term: "unit testing",
+    aliases: ["unit tests", "unit and integration tests"],
+  },
+  { term: "vue", aliases: ["vue.js", "vuejs"] },
+  { term: "web performance", aliases: ["performance optimization"] },
+  { term: "zustand" },
 ];
 
-const KNOWN_TECH_TERM_SET = new Set(KNOWN_TECH_TERMS);
-const KNOWN_SINGLE_TECH_TERMS = new Set(
-  KNOWN_TECH_TERMS.filter((term) => !term.includes(" ")),
-);
+const KNOWN_TERMS = new Set(CANONICAL_TERMS.map(({ term }) => term));
 
-const WORD_RE = /[a-z0-9][a-z0-9+#.]*/g;
+const ALIAS_TO_CANONICAL = new Map<string, string>();
+const CANONICAL_TO_ALIASES = new Map<string, string[]>();
 
-function normalizeInput(text: string) {
+for (const definition of CANONICAL_TERMS) {
+  const aliases = [definition.term, ...(definition.aliases ?? [])].map((term) =>
+    normalizeTermSyntax(term),
+  );
+  const uniqueAliases = Array.from(new Set(aliases));
+  CANONICAL_TO_ALIASES.set(definition.term, uniqueAliases);
+  for (const alias of uniqueAliases) {
+    ALIAS_TO_CANONICAL.set(alias, definition.term);
+  }
+}
+
+function escapeRegExp(term: string) {
+  return term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function normalizeTermSyntax(text: string) {
   return text
     .toLowerCase()
     .replace(/[•*]/g, " ")
     .replace(/[()[\]{}"'`]/g, " ")
+    .replace(/[-_]/g, " ")
     .replace(/[,:;!?]/g, " ")
     .replace(/\s+/g, " ")
-    .trim();
+    .trim()
+    .replace(/^\.+|\.+$/g, "");
 }
 
-function normalizeToken(token: string) {
-  return token.replace(/^\.+|\.+$/g, "");
+function normalizeInput(text: string) {
+  return normalizeTermSyntax(text);
 }
 
-function tokenize(text: string) {
-  return Array.from(normalizeInput(text).matchAll(WORD_RE), (match) =>
-    normalizeToken(match[0]),
-  ).filter(Boolean);
-}
-
-function isKeywordToken(token: string) {
-  if (token.length < 2) return false;
-  if (/^\d+$/.test(token)) return false;
-  if (STOP_WORDS.has(token) || FILLER_TERMS.has(token)) return false;
-  return /[a-z]/.test(token);
-}
-
-function isUsefulPhrase(tokens: string[]) {
-  if (tokens.length < 2) return false;
-  if (!tokens.every(isKeywordToken)) return false;
-  if (tokens.some((token) => KNOWN_SINGLE_TECH_TERMS.has(token))) return false;
-  if (tokens.every((token) => FILLER_TERMS.has(token))) return false;
-  return tokens.join(" ").length >= 8;
+function canonicalizeTerm(term: string) {
+  const normalized = normalizeTermSyntax(term);
+  return ALIAS_TO_CANONICAL.get(normalized) ?? normalized;
 }
 
 function addCandidate(
@@ -166,10 +232,17 @@ function addCandidate(
   firstIndex: number,
   signal: number,
 ) {
-  const normalized = term.trim().replace(/\s+/g, " ");
-  if (!normalized) return;
+  const canonical = canonicalizeTerm(term);
+  if (
+    !canonical ||
+    STOP_WORDS.has(canonical) ||
+    FILLER_TERMS.has(canonical) ||
+    !KNOWN_TERMS.has(canonical)
+  ) {
+    return;
+  }
 
-  const existing = candidates.get(normalized);
+  const existing = candidates.get(canonical);
   if (existing) {
     existing.frequency += 1;
     existing.signal = Math.max(existing.signal, signal);
@@ -178,8 +251,8 @@ function addCandidate(
     return;
   }
 
-  candidates.set(normalized, {
-    term: normalized,
+  candidates.set(canonical, {
+    term: canonical,
     frequency: 1,
     kind,
     firstIndex,
@@ -196,6 +269,49 @@ function scoreCandidate(candidate: KeywordCandidate) {
   );
 }
 
+export function getJdKeywordAliases(term: string): string[] {
+  const canonical = canonicalizeTerm(term);
+  const aliases = CANONICAL_TO_ALIASES.get(canonical) ?? [canonical];
+  return Array.from(
+    new Set([
+      canonical,
+      ...aliases,
+      ...aliases.map(singularizeTerm),
+      ...aliases.map(pluralizeTerm),
+    ]),
+  ).filter(Boolean);
+}
+
+export function singularizeTerm(term: string) {
+  if (term.endsWith("ies") && term.length > 4) {
+    return `${term.slice(0, -3)}y`;
+  }
+  if (term.endsWith("ses") || term.endsWith("xes")) {
+    return term.slice(0, -2);
+  }
+  if (term.endsWith("s") && !term.endsWith("ss") && term.length > 3) {
+    return term.slice(0, -1);
+  }
+  return term;
+}
+
+export function pluralizeTerm(term: string) {
+  if (term.endsWith("y") && term.length > 3) {
+    return `${term.slice(0, -1)}ies`;
+  }
+  if (term.endsWith("s")) {
+    return term;
+  }
+  return `${term}s`;
+}
+
+export function extractJdKeywordTerms(
+  text: string,
+  options: { limit?: number } = {},
+): string[] {
+  return extractJdKeywords(text, options).map((keyword) => keyword.term);
+}
+
 export function extractJdKeywords(
   text: string,
   options: { limit?: number } = {},
@@ -207,50 +323,39 @@ export function extractJdKeywords(
   if (limit <= 0) return [];
 
   const candidates = new Map<string, KeywordCandidate>();
-  const tokens = tokenize(text);
 
-  for (const term of KNOWN_TECH_TERMS) {
-    if (!term.includes(" ")) {
-      tokens.forEach((token, index) => {
-        if (token === term) {
-          addCandidate(candidates, term, "keyword", index, 80);
-        }
-      });
-      continue;
-    }
-
-    const regex = new RegExp(
-      `(?<![a-z0-9+#])${term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?![a-z0-9+#])`,
-      "g",
-    );
-    const matches = Array.from(normalizedText.matchAll(regex));
-    for (const match of matches) {
-      addCandidate(
-        candidates,
-        term,
-        term.includes(" ") ? "phrase" : "keyword",
-        match.index,
-        80,
+  for (const definition of CANONICAL_TERMS) {
+    const aliases = CANONICAL_TO_ALIASES.get(definition.term) ?? [
+      definition.term,
+    ];
+    for (const alias of aliases) {
+      const pattern = escapeRegExp(alias).replace(/\s+/g, "\\s+");
+      const regex = new RegExp(
+        `(^|[^a-z0-9+#])${pattern}(?=$|[^a-z0-9+#])`,
+        "g",
       );
-    }
-  }
-
-  tokens.forEach((token, index) => {
-    if (isKeywordToken(token) && !KNOWN_TECH_TERM_SET.has(token)) {
-      addCandidate(candidates, token, "keyword", index, 10);
-    }
-  });
-
-  for (let index = 0; index < tokens.length; index += 1) {
-    for (const size of [3, 2]) {
-      const phraseTokens = tokens.slice(index, index + size);
-      if (phraseTokens.length === size && isUsefulPhrase(phraseTokens)) {
+      for (const match of normalizedText.matchAll(regex)) {
+        const matchedStart = match.index + (match[1]?.length ?? 0);
+        const beforeMatch = normalizedText.slice(0, matchedStart).trimEnd();
+        const previousChar = normalizedText[matchedStart - 1];
+        if (
+          definition.term === "api" &&
+          (beforeMatch.endsWith("rest") || beforeMatch.endsWith("restful"))
+        ) {
+          continue;
+        }
+        if (
+          alias.length <= 2 &&
+          (previousChar === "." || previousChar === "/")
+        ) {
+          continue;
+        }
         addCandidate(
           candidates,
-          phraseTokens.join(" "),
-          "phrase",
-          index,
-          size === 3 ? 45 : 35,
+          definition.term,
+          definition.term.includes(" ") ? "phrase" : "keyword",
+          matchedStart,
+          definition.signal ?? 80,
         );
       }
     }
