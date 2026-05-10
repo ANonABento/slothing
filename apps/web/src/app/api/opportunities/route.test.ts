@@ -6,6 +6,7 @@ const mocks = vi.hoisted(() => ({
   isAuthError: vi.fn(),
   createJob: vi.fn(),
   listJobsPaginated: vi.fn(),
+  safeTrackActivity: vi.fn(),
 }));
 
 vi.mock("@/lib/auth", () => ({
@@ -32,6 +33,10 @@ vi.mock("@/lib/db", () => ({
   getLLMConfig: vi.fn(() => null),
 }));
 
+vi.mock("@/lib/streak/track", () => ({
+  safeTrackActivity: mocks.safeTrackActivity,
+}));
+
 import { GET, POST } from "./route";
 
 function jsonRequest(body: unknown) {
@@ -48,6 +53,7 @@ describe("opportunities route", () => {
     mocks.requireAuth.mockResolvedValue({ userId: "user-1" });
     mocks.isAuthError.mockReturnValue(false);
     mocks.listJobsPaginated.mockReturnValue([]);
+    mocks.safeTrackActivity.mockResolvedValue({ unlocked: [] });
   });
 
   it("lists opportunities for the authenticated user with parsed filters", async () => {
@@ -103,7 +109,11 @@ describe("opportunities route", () => {
       }),
       "user-1",
     );
-    await expect(response.json()).resolves.toEqual({ job, opportunity: job });
+    await expect(response.json()).resolves.toEqual({
+      job,
+      opportunity: job,
+      unlocked: [],
+    });
   });
 
   it("maps opportunity create fields onto the tracked job record", async () => {

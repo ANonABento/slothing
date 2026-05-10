@@ -5,6 +5,7 @@ const mocks = vi.hoisted(() => ({
   requireAuth: vi.fn(),
   isAuthError: vi.fn(),
   changeOpportunityStatus: vi.fn(),
+  safeTrackActivity: vi.fn(),
 }));
 
 vi.mock("@/lib/auth", () => ({
@@ -14,6 +15,10 @@ vi.mock("@/lib/auth", () => ({
 
 vi.mock("@/lib/opportunities", () => ({
   changeOpportunityStatus: mocks.changeOpportunityStatus,
+}));
+
+vi.mock("@/lib/streak/track", () => ({
+  safeTrackActivity: mocks.safeTrackActivity,
 }));
 
 import { PATCH } from "./route";
@@ -36,6 +41,7 @@ describe("opportunity status route", () => {
     vi.clearAllMocks();
     mocks.requireAuth.mockResolvedValue({ userId: "user-1" });
     mocks.isAuthError.mockReturnValue(false);
+    mocks.safeTrackActivity.mockResolvedValue({ unlocked: [] });
   });
 
   it("changes an opportunity status for the authenticated user", async () => {
@@ -56,7 +62,16 @@ describe("opportunity status route", () => {
     );
     await expect(response.json()).resolves.toEqual({
       opportunity: { id: "opportunity-1", status: "applied" },
+      unlocked: [],
     });
+    expect(mocks.safeTrackActivity).toHaveBeenCalledWith(
+      "user-1",
+      "opp_status_changed",
+    );
+    expect(mocks.safeTrackActivity).toHaveBeenCalledWith(
+      "user-1",
+      "opp_applied",
+    );
   });
 
   it("rejects unsupported statuses", async () => {

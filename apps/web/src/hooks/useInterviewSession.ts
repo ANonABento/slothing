@@ -9,6 +9,9 @@ import {
   type SetStateAction,
 } from "react";
 import { useErrorToast } from "@/hooks/use-error-toast";
+import { showAchievementToasts } from "@/components/streak/achievement-toast";
+import { useToast } from "@/components/ui/toast";
+import { extractUnlockedFromResponse } from "@/lib/streak/client";
 import {
   INTERVIEW_TIMER_DEFAULTS_MS,
   type InterviewDifficulty,
@@ -38,6 +41,7 @@ interface CreateInterviewSessionResponse {
   session?: {
     id?: string;
   };
+  unlocked?: unknown[];
 }
 
 interface InterviewAnswerResponse {
@@ -101,6 +105,7 @@ export function useInterviewSession(): UseInterviewSessionReturn {
   const [generating, setGenerating] = useState(false);
   const activeRequestRef = useRef(0);
   const showErrorToast = useErrorToast();
+  const { addToast } = useToast();
 
   const invalidatePendingRequests = useCallback(() => {
     activeRequestRef.current += 1;
@@ -289,6 +294,10 @@ export function useInterviewSession(): UseInterviewSessionReturn {
           return;
         }
 
+        showAchievementToasts(
+          extractUnlockedFromResponse(sessionData),
+          addToast,
+        );
         setCurrentAnswer("");
         setSession({
           id: sessionData.session?.id,
@@ -327,7 +336,7 @@ export function useInterviewSession(): UseInterviewSessionReturn {
         }
       }
     },
-    [invalidatePendingRequests, showErrorToast],
+    [addToast, invalidatePendingRequests, showErrorToast],
   );
 
   const submitAnswer = useCallback(async () => {

@@ -11,6 +11,7 @@ import { getLLMConfig } from "@/lib/db";
 import { LLMClient, parseJSONFromLLM } from "@/lib/llm/client";
 import { createJobSchema, TECH_KEYWORDS } from "@/lib/constants";
 import { createOpportunitySchema } from "@/types/opportunity";
+import { safeTrackActivity } from "@/lib/streak/track";
 import {
   buildPaginationResult,
   decodeCursor,
@@ -167,9 +168,13 @@ Return format: ["skill1", "skill2", "skill3", ...]`,
         authResult.userId,
       );
       scheduleCompanyEnrichment(job.company, job.url, authResult.userId);
+      const { unlocked } = await safeTrackActivity(
+        authResult.userId,
+        "opp_created",
+      );
 
       return NextResponse.json(
-        { job, opportunity: jobToOpportunity(job) },
+        { job, opportunity: jobToOpportunity(job), unlocked },
         { status: 201 },
       );
     }
@@ -209,8 +214,12 @@ Return format: ["skill1", "skill2", "skill3", ...]`,
       authResult.userId,
     );
     scheduleCompanyEnrichment(job.company, job.url, authResult.userId);
+    const { unlocked } = await safeTrackActivity(
+      authResult.userId,
+      "opp_created",
+    );
     return NextResponse.json(
-      { job, opportunity: jobToOpportunity(job) },
+      { job, opportunity: jobToOpportunity(job), unlocked },
       { status: 201 },
     );
   } catch (error) {

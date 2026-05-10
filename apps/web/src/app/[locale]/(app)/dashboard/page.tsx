@@ -52,6 +52,8 @@ import {
   getPipelineTotal,
 } from "@/lib/opportunities/pipeline";
 import { Link } from "@/i18n/navigation";
+import { StreakHeroCard } from "@/components/streak/streak-hero-card";
+import type { StreakState } from "@/lib/streak/types";
 
 interface DashboardStats {
   documentsCount: number;
@@ -83,6 +85,7 @@ export default function Dashboard() {
     jobsByStatus: {},
   });
   const [recentJobs, setRecentJobs] = useState<RecentJob[]>([]);
+  const [streak, setStreak] = useState<StreakState | null>(null);
   const [onboardingState, setOnboardingState] = useState<OnboardingApiState>({
     dismissedAt: null,
     firstName: null,
@@ -112,12 +115,18 @@ export default function Dashboard() {
       try {
         setErrorMessage(null);
 
-        const [profileData, documentsData, analyticsData, onboardingData] =
-          await Promise.all([
+        const [
+          profileData,
+          documentsData,
+          analyticsData,
+          onboardingData,
+          streakData,
+        ] = await Promise.all([
             fetchJson("/api/profile"),
             fetchJson("/api/documents?limit=200"),
             fetchJson("/api/analytics"),
             fetchJson("/api/onboarding/dismiss"),
+            fetchJson("/api/streak"),
           ]);
 
         const profile = profileData.profile;
@@ -135,6 +144,7 @@ export default function Dashboard() {
 
         const recentJobsList = analyticsData.recent?.jobs || [];
         setRecentJobs(recentJobsList);
+        setStreak(streakData.streak ?? null);
         setOnboardingState({
           dismissedAt: onboardingData.dismissedAt ?? null,
           firstName: onboardingData.firstName ?? null,
@@ -252,6 +262,7 @@ export default function Dashboard() {
             stats={stats}
             recentJobs={recentJobs}
             firstName={onboardingState.firstName}
+            streak={streak}
           />
         )}
       </PageShell>
@@ -477,10 +488,12 @@ function ActiveDashboard({
   stats,
   recentJobs,
   firstName,
+  streak,
 }: {
   stats: DashboardStats;
   recentJobs: RecentJob[];
   firstName: string | null;
+  streak: StreakState | null;
 }) {
   const t = useTranslations("dashboard");
   const actions = buildTodayActions(stats, recentJobs, t);
@@ -491,6 +504,9 @@ function ActiveDashboard({
       <DashboardHeader
         description={getDashboardGreeting(firstName, "active", t)}
       />
+      <Suspense fallback={<SkeletonCard />}>
+        <StreakHeroCard streak={streak} />
+      </Suspense>
       <Suspense
         fallback={
           <div className={pageGridClasses.fourStats}>

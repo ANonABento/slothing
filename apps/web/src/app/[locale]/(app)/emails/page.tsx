@@ -33,8 +33,11 @@ import {
   PagePanelHeader,
 } from "@/components/ui/page-layout";
 import { SkeletonButton } from "@/components/ui/skeleton";
+import { showAchievementToasts } from "@/components/streak/achievement-toast";
+import { useToast } from "@/components/ui/toast";
 import { useErrorToast } from "@/hooks/use-error-toast";
 import { readJsonResponse } from "@/lib/http";
+import { extractUnlockedFromResponse } from "@/lib/streak/client";
 import { getResponsiveDetailGridClass } from "../shared-layout-utils";
 import { DuplicateSendWarning } from "./_components/duplicate-send-warning";
 import { findRecentDuplicateSend } from "./_data/duplicate-send";
@@ -156,6 +159,7 @@ export default function EmailTemplatesPage() {
   const [recipientEmail, setRecipientEmail] = useState("");
   const [jobsLoaded, setJobsLoaded] = useState(false);
   const showErrorToast = useErrorToast();
+  const { addToast } = useToast();
   const { confirm, dialog: confirmDialog } = useConfirmDialog();
 
   const fetchJobs = useCallback(async () => {
@@ -457,7 +461,11 @@ export default function EmailTemplatesPage() {
           status: "sent",
         }),
       });
-      await readJsonResponse<unknown>(response, "Failed to record sent email");
+      const data = await readJsonResponse<unknown>(
+        response,
+        "Failed to record sent email",
+      );
+      showAchievementToasts(extractUnlockedFromResponse(data), addToast);
       void fetchSends();
     } catch (error) {
       showErrorToast(error, {

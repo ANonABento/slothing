@@ -48,9 +48,12 @@ import {
   SkeletonKanbanLane,
 } from "@/components/ui/skeleton";
 import { VirtualList } from "@/components/ui/virtual-list";
+import { showAchievementToasts } from "@/components/streak/achievement-toast";
+import { useToast } from "@/components/ui/toast";
 import { useErrorToast } from "@/hooks/use-error-toast";
 import { ESTIMATED_CARD_HEIGHT_OPPORTUNITY_ROW } from "@/lib/constants/virtualization";
 import { readJsonResponse } from "@/lib/http";
+import { extractUnlockedFromResponse } from "@/lib/streak/client";
 import { cn } from "@/lib/utils";
 import { Link } from "@/i18n/navigation";
 import {
@@ -96,6 +99,7 @@ interface OpportunitiesResponse {
 
 interface UpdateOpportunityResponse {
   opportunity?: Opportunity;
+  unlocked?: unknown[];
 }
 
 export default function OpportunitiesPage() {
@@ -124,6 +128,7 @@ export default function OpportunitiesPage() {
     return Boolean(window.localStorage.getItem(STORAGE_KEY));
   });
   const showErrorToast = useErrorToast();
+  const { addToast } = useToast();
 
   const fetchOpportunities = useCallback(async () => {
     try {
@@ -317,6 +322,7 @@ export default function OpportunitiesPage() {
           ),
         );
       }
+      showAchievementToasts(extractUnlockedFromResponse(data), addToast);
     } catch (error) {
       if (previousOpportunity) {
         setOpportunities((current) => {

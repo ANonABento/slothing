@@ -8,6 +8,7 @@ const mocks = vi.hoisted(() => ({
   updateJob: vi.fn(),
   deleteJob: vi.fn(),
   recordJobStatusChange: vi.fn(),
+  safeTrackActivity: vi.fn(),
   jobToOpportunity: vi.fn((job) => ({ id: job.id, status: job.status })),
 }));
 
@@ -28,6 +29,10 @@ vi.mock("@/lib/db/analytics", () => ({
 
 vi.mock("@/lib/opportunities", () => ({
   jobToOpportunity: mocks.jobToOpportunity,
+}));
+
+vi.mock("@/lib/streak/track", () => ({
+  safeTrackActivity: mocks.safeTrackActivity,
 }));
 
 import { DELETE, GET, PATCH } from "./route";
@@ -54,6 +59,7 @@ describe("opportunity detail route", () => {
     vi.clearAllMocks();
     mocks.requireAuth.mockResolvedValue({ userId: "user-1" });
     mocks.isAuthError.mockReturnValue(false);
+    mocks.safeTrackActivity.mockResolvedValue({ unlocked: [] });
   });
 
   it("returns the underlying job and opportunity view for the authenticated user", async () => {
@@ -116,6 +122,14 @@ describe("opportunity detail route", () => {
       "applied",
       undefined,
       "user-1",
+    );
+    expect(mocks.safeTrackActivity).toHaveBeenCalledWith(
+      "user-1",
+      "opp_status_changed",
+    );
+    expect(mocks.safeTrackActivity).toHaveBeenCalledWith(
+      "user-1",
+      "opp_applied",
     );
   });
 

@@ -31,8 +31,10 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/toast";
+import { showAchievementToasts } from "@/components/streak/achievement-toast";
 import { useErrorToast } from "@/hooks/use-error-toast";
 import { readJsonResponse } from "@/lib/http";
+import { extractUnlockedFromResponse } from "@/lib/streak/client";
 import { cn } from "@/lib/utils";
 import {
   OPPORTUNITY_JOB_TYPE_OPTIONS,
@@ -331,10 +333,11 @@ export function AddOpportunityWizard({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(nextOpportunity),
       });
-      await readJsonResponse<{ opportunity?: Opportunity }>(
+      const data = await readJsonResponse<{ opportunity?: Opportunity }>(
         response,
         "Failed to create opportunity",
       );
+      showAchievementToasts(extractUnlockedFromResponse(data), addToast);
       await onSaved();
       closeAndReset();
     } catch (error) {
