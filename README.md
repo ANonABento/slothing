@@ -4,7 +4,7 @@
 
 Your personal job application command center. Upload your career documents, build tailored resumes and cover letters in one workspace, match with opportunities, and prepare for interviews. Slothing does the work for you.
 
-The app code lives in the `get-me-job` repo and `slothing` npm package. Domain: [slothing.work](https://slothing.work).
+The code lives in the `get-me-job` repo as a pnpm + Turborepo monorepo. Domain: [slothing.work](https://slothing.work).
 
 ## Features
 
@@ -22,6 +22,7 @@ The app code lives in the `get-me-job` repo and `slothing` npm package. Domain: 
 ## Tech Stack
 
 - **Framework**: Next.js 14 with App Router
+- **Workspace**: Turborepo + pnpm workspaces
 - **Database**: SQLite with Drizzle schema management
 - **AI**: Supports Ollama (free/local) or BYOK (OpenAI, Anthropic, OpenRouter)
 - **Document Parsing**: pdf-parse, mammoth, OCR utilities
@@ -33,19 +34,20 @@ The app code lives in the `get-me-job` repo and `slothing` npm package. Domain: 
 ### Prerequisites
 
 - Node.js 18+
-- npm
+- pnpm 9+
 - (Optional) Ollama for free local AI
 
 ### Installation
 
 ```bash
 # Install dependencies
-npm install
+pnpm install
 
 # Configure environment
 cp .env.example .env.local
+
 # Start development server
-npm run dev
+pnpm dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000)
@@ -87,33 +89,31 @@ See [docs/google-integration/README.md](docs/google-integration/README.md) for d
 
 ### Columbus Browser Extension (optional)
 
-The Columbus extension auto-fills job applications and imports listings from supported sites directly into your opportunity bank. It's a separate workspace under `columbus-extension/`.
+The Columbus extension auto-fills job applications and imports listings from supported sites directly into your opportunity bank. It's a workspace under `apps/extension/`.
 
 **Quick setup:**
 
 ```bash
-cd columbus-extension
-npm install
-npm run build          # Chrome    → dist/
-npm run build:firefox  # Firefox   → dist-firefox/
+pnpm --filter @slothing/extension build          # Chrome    → apps/extension/dist/
+pnpm --filter @slothing/extension build:firefox  # Firefox   → apps/extension/dist-firefox/
 ```
 
 **Load it:**
 
-- Chrome: `chrome://extensions` → enable Developer mode → Load unpacked → pick `columbus-extension/dist/`
-- Firefox: `about:debugging` → Load Temporary Add-on → pick `columbus-extension/dist-firefox/manifest.json`
+- Chrome: `chrome://extensions` → enable Developer mode → Load unpacked → pick `apps/extension/dist/`
+- Firefox: `about:debugging` → Load Temporary Add-on → pick `apps/extension/dist-firefox/manifest.json`
 
 **Try the demo first** (a sample job application form with embedded `JobPosting` JSON-LD, no auth needed):
 
 ```bash
-node columbus-extension/demo/launch-with-extension.mjs
+node apps/extension/demo/launch-with-extension.mjs
 ```
 
 Boots a fresh Chromium with the extension pre-loaded and opens the demo form so you can see scraping, the badge, and the popup behavior end-to-end.
 
 **Connect:** click the Columbus icon → **Connect Account**. Opens `/extension/connect` on your locally-running Slothing, generates a token tied to your Clerk session, stores in extension storage. After connecting, `Cmd+Shift+F` auto-fills, `Cmd+Shift+I` imports a listing.
 
-Full docs: [`columbus-extension/README.md`](./columbus-extension/README.md).
+Full docs: [`apps/extension/README.md`](./apps/extension/README.md).
 
 ## Usage
 
@@ -128,7 +128,7 @@ Full docs: [`columbus-extension/README.md`](./columbus-extension/README.md).
 
 ## Evals
 
-Resume and cover-letter generation evals live under `evals/`. Run `npm run eval -- --mode=resume --limit=5` with an LLM key, or set `EVAL_OFFLINE=1` for a deterministic local smoke run. See [docs/evals.md](docs/evals.md) for cases, metrics, report formats, and judge options.
+Resume and cover-letter generation evals live under `apps/web/evals/`. Run `pnpm --filter @slothing/web eval -- --mode=resume --limit=5` with an LLM key, or set `EVAL_OFFLINE=1` for a deterministic local smoke run. See [docs/evals.md](docs/evals.md) for cases, metrics, report formats, and judge options.
 
 ## Document Studio Architecture
 
@@ -156,25 +156,45 @@ The Studio file panel tracks resume and cover letter files separately while keep
 ## Project Structure
 
 ```
-src/
-├── app/           # Next.js pages and API routes
-│   └── (app)/studio/ # Document Studio route
-├── components/    # React components
-│   ├── studio/    # Studio preview and editor surface
-│   └── builder/   # Reusable section and builder controls
-├── lib/
-│   ├── db/       # Database access and Drizzle schema
-│   ├── builder/  # Studio document state, export, version history
-│   ├── editor/   # TipTap document conversion and rendering
-│   ├── llm/      # AI client
-│   ├── parser/   # PDF and resume parsing
-│   └── resume/   # Resume generation
-└── types/        # TypeScript types
+apps/
+├── web/
+│   ├── src/       # Next.js pages, components, lib, hooks, and types
+│   ├── drizzle/   # Database migrations
+│   ├── e2e/       # Playwright tests
+│   └── evals/     # Resume and cover-letter eval harness
+└── extension/     # Columbus browser extension
+packages/
+└── shared/
+    └── src/       # Shared types, Zod schemas, formatters, and scoring logic
 ```
+
+## Monorepo Workflow
+
+Run commands from the repo root:
+
+```bash
+pnpm install
+pnpm dev
+pnpm run type-check
+pnpm run test:run
+pnpm run lint
+pnpm run build
+```
+
+Package-scoped commands:
+
+```bash
+pnpm --filter @slothing/web db:migrate
+pnpm --filter @slothing/web test:e2e
+pnpm --filter @slothing/extension build
+pnpm --filter @slothing/extension build:firefox
+```
+
+Vercel should use `apps/web` as the project Root Directory, or build from the repo root with the Turborepo pipeline.
 
 ## Data Storage
 
-Application data is stored in SQLite using the schema in `src/lib/db/schema.ts`.
+Application data is stored in SQLite using the schema in `apps/web/src/lib/db/schema.ts`.
 Uploaded documents and generated files are stored on disk during local development:
 
 - `data/get-me-job.db` - Local SQLite database
