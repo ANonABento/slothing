@@ -4,7 +4,9 @@ import ATSScannerPage from "./page";
 
 describe("ATSScannerPage", () => {
   it("does not use a dollar sign icon for the free benefit", () => {
-    const { container } = render(<ATSScannerPage />);
+    const { container } = render(
+      <ATSScannerPage params={{ locale: "en" }} />,
+    );
 
     expect(screen.getByText("Free and Private")).toBeInTheDocument();
     expect(container.querySelector(".lucide-dollar-sign")).toBeNull();
@@ -12,7 +14,7 @@ describe("ATSScannerPage", () => {
   });
 
   it("links the ATS filtering stat to the HBS Hidden Workers source", () => {
-    render(<ATSScannerPage />);
+    render(<ATSScannerPage params={{ locale: "en" }} />);
 
     expect(screen.queryByText(/75%/)).not.toBeInTheDocument();
     const source = screen.getByRole("link", { name: /Hidden Workers/i });
