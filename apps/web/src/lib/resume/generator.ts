@@ -1,6 +1,7 @@
 import type { Profile, JobDescription, LLMConfig } from "@/types";
 import { LLMClient } from "@/lib/llm/client";
 import { extractJSON } from "@/lib/utils";
+import { tailoredResumeSchema } from "@/lib/schemas/tailor";
 
 export interface TailoredResume {
   contact: Profile["contact"];
@@ -43,7 +44,45 @@ async function generateWithLLM(
     messages: [
       {
         role: "user",
-        content: `Generate a tailored resume for this job. The resume must fit on ONE page, so be concise and selective.
+        content: buildTailoredResumePrompt(profile, job),
+      },
+    ],
+    temperature: 0.4,
+    maxTokens: 2000,
+  });
+
+  const parsed = tailoredResumeSchema.partial().parse(extractJSON(response));
+  const sourceEducation = profile.education.map((e) => ({
+    institution: e.institution,
+    degree: e.degree,
+    field: e.field,
+    date: e.endDate || "",
+  }));
+  const unsupportedKeywords = getUnsupportedKeywords(
+    job.keywords,
+    buildProfileEvidenceText(profile),
+  );
+
+  return {
+    contact: profile.contact,
+    summary: stripUnsupportedClaims(
+      parsed.summary || profile.summary || "",
+      unsupportedKeywords,
+    ),
+    experiences: sanitizeExperiences(
+      parsed.experiences || [],
+      unsupportedKeywords,
+    ),
+    skills: filterUnsupportedClaims(parsed.skills || [], unsupportedKeywords),
+    education: sourceEducation,
+  };
+}
+
+export function buildTailoredResumePrompt(
+  profile: Profile,
+  job: JobDescription,
+): string {
+  return `Generate a tailored resume for this job. The resume must fit on ONE page, so be concise and selective.
 
 CANDIDATE PROFILE:
 Name: ${profile.contact.name}
@@ -85,9 +124,15 @@ INSTRUCTIONS:
 3. Each experience should have 2-4 bullet points maximum
 4. Prioritize skills that match the job requirements
 5. Keep everything concise - this must fit on one page
+6. Every added keyword, skill, tool, metric, employer, degree, certification, responsibility, and achievement must be backed by the candidate profile above
+7. Incorporate job keywords only when the profile evidence already supports them; omit unsupported keywords instead of guessing
+8. Do not invent metrics, tools, employers, degrees, certifications, dates, job titles, clients, or responsibilities
+9. Preserve contact details, education, employers, titles, and dates exactly as provided; do not rewrite or replace them
+10. If evidence does not support a requested keyword such as AWS or Kubernetes, leave it out entirely
 
 Return ONLY a JSON object with this structure:
 {
+  "contact": ${JSON.stringify(profile.contact)},
   "summary": "Tailored professional summary...",
   "experiences": [
     {
@@ -106,22 +151,7 @@ Return ONLY a JSON object with this structure:
       "date": "2020"
     }
   ]
-}`,
-      },
-    ],
-    temperature: 0.4,
-    maxTokens: 2000,
-  });
-
-  const parsed = extractJSON(response);
-
-  return {
-    contact: profile.contact,
-    summary: parsed.summary as string,
-    experiences: parsed.experiences as TailoredResume["experiences"],
-    skills: parsed.skills as string[],
-    education: parsed.education as TailoredResume["education"],
-  };
+}`;
 }
 
 function generateBasic(profile: Profile, job: JobDescription): TailoredResume {
@@ -173,4 +203,72 @@ function generateBasic(profile: Profile, job: JobDescription): TailoredResume {
       date: e.endDate || "",
     })),
   };
+}
+
+function buildProfileEvidenceText(profile: Profile): string {
+  return JSON.stringify({
+    summary: profile.summary,
+    experiences: profile.experiences,
+    skills: profile.skills,
+    education: profile.education,
+  }).toLowerCase();
+}
+
+export function getUnsupportedKeywords(
+  keywords: string[],
+  evidenceText: string,
+): string[] {
+  const evidence = evidenceText.toLowerCase();
+  return keywords
+    .map((keyword) => keyword.trim())
+    .filter(Boolean)
+    .filter((keyword) => !evidence.includes(keyword.toLowerCase()));
+}
+
+export function filterUnsupportedClaims<T extends string>(
+  values: T[],
+  unsupportedKeywords: string[],
+): T[] {
+  if (unsupportedKeywords.length === 0) return values;
+  return values.filter(
+    (value) => !containsUnsupportedKeyword(value, unsupportedKeywords),
+  );
+}
+
+export function stripUnsupportedClaims(
+  value: string,
+  unsupportedKeywords: string[],
+): string {
+  if (!containsUnsupportedKeyword(value, unsupportedKeywords)) return value;
+  return unsupportedKeywords.reduce(
+    (next, keyword) =>
+      next.replace(new RegExp(`\\b${escapeRegExp(keyword)}\\b`, "gi"), ""),
+    value,
+  );
+}
+
+function sanitizeExperiences(
+  experiences: TailoredResume["experiences"],
+  unsupportedKeywords: string[],
+): TailoredResume["experiences"] {
+  return experiences.map((experience) => ({
+    ...experience,
+    highlights: filterUnsupportedClaims(
+      experience.highlights,
+      unsupportedKeywords,
+    ),
+  }));
+}
+
+function containsUnsupportedKeyword(
+  value: string,
+  unsupportedKeywords: string[],
+): boolean {
+  return unsupportedKeywords.some((keyword) =>
+    new RegExp(`\\b${escapeRegExp(keyword)}\\b`, "i").test(value),
+  );
+}
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }

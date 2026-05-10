@@ -158,4 +158,33 @@ describe("document assistant helpers", () => {
     expect(prompt).toContain("Job description:");
     expect(prompt).toContain("analytics dashboard");
   });
+
+  it("requires source evidence for matching JD keywords", () => {
+    const prompt = buildDocumentRewritePrompt({
+      action: "match-jd-keywords",
+      selectedText: "I built product APIs.",
+      documentContent: "I built product APIs and GraphQL schemas.",
+      jobDescription: "The role needs GraphQL, AWS, and Kubernetes.",
+    });
+
+    expect(prompt).toContain("only when the selected text or full document");
+    expect(prompt).toContain("GraphQL may be added only");
+    expect(prompt).toContain("If AWS, Kubernetes");
+    expect(prompt).toContain("return the selected text unchanged");
+    expect(prompt).toContain("Do not invent metrics, tools, employers");
+  });
+
+  it("keeps selected text as the only replaceable scope", () => {
+    const prompt = buildDocumentRewritePrompt({
+      action: "match-jd-keywords",
+      selectedText: "Built GraphQL dashboards.",
+      documentContent:
+        "Built GraphQL dashboards. Education: BS Computer Science, 2019.",
+      jobDescription: "Needs GraphQL dashboard experience.",
+    });
+
+    expect(prompt).toContain("selected text is the only replaceable scope");
+    expect(prompt).toContain("Use the full document only as evidence context");
+    expect(prompt).toContain("Preserve factual details");
+  });
 });
