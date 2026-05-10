@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { kanbanVisibleLanesSchema } from "@/types/opportunity";
 
 // LLM providers
 export const LLM_PROVIDERS = [
@@ -29,6 +30,7 @@ export const updateSettingsSchema = z.object({
   opportunityReview: z.object({
     enabled: z.boolean(),
   }).optional(),
+  kanbanVisibleLanes: kanbanVisibleLanesSchema.optional(),
   locale: z.string().optional(),
 });
 

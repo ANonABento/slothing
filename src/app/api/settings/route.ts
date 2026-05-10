@@ -16,6 +16,10 @@ import {
   setOpportunityReviewEnabled,
 } from "@/lib/settings/opportunity-review";
 import {
+  getKanbanVisibleLanes,
+  setKanbanVisibleLanes,
+} from "@/lib/settings/kanban-lanes";
+import {
   getStoredLocaleSetting,
   setLocaleSetting,
 } from "@/lib/settings/locale";
@@ -35,6 +39,7 @@ export async function GET() {
       opportunityReview: {
         enabled: getOpportunityReviewEnabled(authResult.userId),
       },
+      kanbanVisibleLanes: getKanbanVisibleLanes(authResult.userId),
     });
   } catch (error) {
     console.error("Get settings error:", error);
@@ -75,6 +80,9 @@ export async function PUT(request: NextRequest) {
         data.opportunityReview.enabled,
         authResult.userId,
       );
+    }
+    if (data.kanbanVisibleLanes) {
+      setKanbanVisibleLanes(data.kanbanVisibleLanes, authResult.userId);
     }
     if (data.locale) {
       locale = setLocaleSetting(data.locale, authResult.userId);
