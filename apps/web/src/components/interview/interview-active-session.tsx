@@ -22,6 +22,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { AnswerFeedbackCard } from "@/components/interview/answer-feedback-card";
 import { RecordingControls } from "@/components/interview/recording-controls";
 import { useVoiceInput } from "@/hooks/useVoiceInput";
 import { useVoiceOutput } from "@/hooks/useVoiceOutput";
@@ -30,6 +31,7 @@ import {
   INTERVIEW_TIMER_DEFAULTS_MS,
   INTERVIEW_TIMER_EXTENSION_MS,
 } from "@/lib/constants";
+import { analyzeInterviewAnswer } from "@/lib/interview/feedback";
 import { CategoryBadge } from "@/lib/interview/category-display";
 import type { Opportunity } from "@/types/opportunity";
 import type { CurrentFollowUp, InterviewSession } from "@/types/interview";
@@ -106,6 +108,20 @@ export function InterviewActiveSession({
   const currentQuestionId = "interview-current-question";
   const timerEnabled = Boolean(session.timer?.enabled && !followUpMode);
   const timerExpired = timerEnabled && remainingMs <= 0;
+  const latestAnsweredIndex = session.currentIndex - 1;
+  const latestAnswer = session.answers[latestAnsweredIndex]?.trim() ?? "";
+  const latestAnsweredQuestion = session.questions[latestAnsweredIndex];
+  const latestAnswerScorecard =
+    !followUpMode &&
+    latestAnsweredQuestion &&
+    latestAnswer &&
+    latestAnswer !== "[skipped]" &&
+    !session.skipped?.[latestAnsweredIndex]
+      ? analyzeInterviewAnswer({
+          answer: latestAnswer,
+          category: latestAnsweredQuestion.category,
+        })
+      : null;
 
   useEffect(() => {
     if (!isListening) return;
@@ -536,6 +552,10 @@ export function InterviewActiveSession({
             )}
           </div>
         </div>
+
+        {latestAnswerScorecard ? (
+          <AnswerFeedbackCard scorecard={latestAnswerScorecard} />
+        ) : null}
       </div>
       {session.mode !== "generic-text" && selectedJobData ? (
         <aside

@@ -12,9 +12,15 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { AnswerFeedbackCard } from "@/components/interview/answer-feedback-card";
+import { SessionFeedbackSummary } from "@/components/interview/session-feedback-summary";
 import { pluralize } from "@/lib/text/pluralize";
 import { SkeletonButton } from "@/components/ui/skeleton";
 import { CategoryBadge } from "@/lib/interview/category-display";
+import {
+  analyzeInterviewAnswer,
+  summarizeInterviewFeedback,
+} from "@/lib/interview/feedback";
 import { formatInterviewForDocs } from "@/lib/interview/format-for-docs";
 import type { Opportunity } from "@/types/opportunity";
 import type { InterviewSession } from "@/types/interview";
@@ -35,9 +41,19 @@ export function InterviewSummary({
   selectedJob,
   onReset,
 }: InterviewSummaryProps) {
-  const answeredCount = session.answers.filter((answer) =>
-    answer.trim(),
-  ).length;
+  const answeredCount = session.answers.filter((answer, index) => {
+    const trimmedAnswer = answer.trim();
+    return (
+      trimmedAnswer &&
+      trimmedAnswer !== "[skipped]" &&
+      !session.skipped?.[index]
+    );
+  }).length;
+  const coachingSummary = summarizeInterviewFeedback({
+    questions: session.questions,
+    answers: session.answers,
+    skipped: session.skipped,
+  });
   const feedbackEntries = session.feedback.filter((feedback) =>
     feedback.trim(),
   );
@@ -115,11 +131,21 @@ export function InterviewSummary({
         </div>
       </div>
 
+      <SessionFeedbackSummary summary={coachingSummary} />
+
       <h3 className="text-xl font-semibold">Your Responses</h3>
       {session.questions.map((question, questionIndex) => {
         const skipped =
           session.skipped?.[questionIndex] ||
           session.answers[questionIndex] === "[skipped]";
+        const answer = session.answers[questionIndex]?.trim() ?? "";
+        const answerScorecard =
+          !skipped && answer
+            ? analyzeInterviewAnswer({
+                answer,
+                category: question.category,
+              })
+            : null;
 
         return (
           <div
@@ -159,6 +185,10 @@ export function InterviewSummary({
                   </p>
                   <p className="text-sm">{session.feedback[questionIndex]}</p>
                 </div>
+              ) : null}
+
+              {answerScorecard ? (
+                <AnswerFeedbackCard scorecard={answerScorecard} compact />
               ) : null}
 
               {session.followUps[questionIndex]?.length ? (
