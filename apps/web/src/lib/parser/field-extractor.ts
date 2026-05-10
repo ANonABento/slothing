@@ -115,6 +115,7 @@ function stripDateRange(line: string): string {
   return line
     .replace(DATE_RANGE_REGEX, "")
     .replace(DATE_RANGE_TO_REGEX, "")
+    .replace(/\s*(?:[-–—|•·,])\s*$/, "")
     .trim();
 }
 
