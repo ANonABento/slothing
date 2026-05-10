@@ -1,4 +1,3 @@
-import Link from "next/link";
 import {
   ArrowRight,
   Briefcase,
@@ -11,9 +10,14 @@ import {
   Target,
   Upload,
 } from "lucide-react";
+import { getLocale } from "next-intl/server";
 import { Button } from "@/components/ui/button";
+import { Link } from "@/i18n/navigation";
 
-export function Hero() {
+export async function Hero() {
+  const locale = await getLocale();
+  const callbackUrl = `/${locale}/dashboard`;
+
   return (
     <section className="relative pt-32 pb-20 lg:pt-40 lg:pb-32 hero-gradient overflow-hidden grain">
       {/* Background decoration */}
@@ -57,7 +61,10 @@ export function Hero() {
               size="lg"
               className="gradient-bg text-primary-foreground hover:opacity-90 shadow-lg shadow-primary/25"
             >
-              <Link href="/sign-in?callbackUrl=/dashboard" prefetch={false}>
+              <Link
+                href={{ pathname: "/sign-in", query: { callbackUrl } }}
+                prefetch={false}
+              >
                 Get Started
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>

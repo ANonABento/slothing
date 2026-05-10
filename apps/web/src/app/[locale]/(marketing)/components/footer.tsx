@@ -1,6 +1,6 @@
-import Link from "next/link";
 import { Sparkles } from "lucide-react";
 
+import { Link } from "@/i18n/navigation";
 import { nowDate } from "@/lib/format/time";
 const footerLinks = {
   product: [

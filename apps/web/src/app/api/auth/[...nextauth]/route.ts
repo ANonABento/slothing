@@ -1,4 +1,5 @@
-import { handlers, isNextAuthConfigured } from "@/auth";
+import type { NextRequest } from "next/server";
+import { isNextAuthConfigured } from "@/auth.config";
 
 export const dynamic = "force-dynamic";
 
@@ -12,7 +13,19 @@ function authDisabledResponse() {
   );
 }
 
-export const GET = isNextAuthConfigured() ? handlers.GET : authDisabledResponse;
-export const POST = isNextAuthConfigured()
-  ? handlers.POST
-  : authDisabledResponse;
+async function handleAuth(method: "GET" | "POST", request: NextRequest) {
+  if (!isNextAuthConfigured()) {
+    return authDisabledResponse();
+  }
+
+  const { handlers } = await import("@/auth");
+  return handlers[method](request);
+}
+
+export function GET(request: NextRequest) {
+  return handleAuth("GET", request);
+}
+
+export function POST(request: NextRequest) {
+  return handleAuth("POST", request);
+}

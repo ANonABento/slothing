@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { getPageMetadata } from "@/lib/seo";
 
 export const metadata = getPageMetadata("terms");
