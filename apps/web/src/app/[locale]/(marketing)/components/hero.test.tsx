@@ -23,9 +23,11 @@ async function renderHero(locale = "en") {
 }
 
 function expectLocalizedHref(link: HTMLElement, locale: string) {
+  const escapedLocale = locale.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
   expect(link.getAttribute("href")).toMatch(
     new RegExp(
-      `^/${locale}/sign-in\\?callbackUrl=(%2F${locale}%2Fdashboard|/${locale}/dashboard)$`,
+      `^/${escapedLocale}/sign-in\\?callbackUrl=(%2F${escapedLocale}%2Fdashboard|/${escapedLocale}/dashboard)$`,
     ),
   );
 }
@@ -65,15 +67,20 @@ describe("Hero", () => {
     expectLocalizedHref(getStarted, "en");
   });
 
-  it("should preserve a non-English locale in CTA links", async () => {
-    await renderHero("es");
+  it.each(["es", "zh-CN", "pt-BR"])(
+    "should preserve %s in CTA links",
+    async (locale) => {
+      await renderHero(locale);
 
-    const atsLink = screen.getByRole("link", { name: /Try Free ATS Scanner/ });
-    const getStarted = screen.getByRole("link", { name: /Get Started/ });
+      const atsLink = screen.getByRole("link", {
+        name: /Try Free ATS Scanner/,
+      });
+      const getStarted = screen.getByRole("link", { name: /Get Started/ });
 
-    expect(atsLink).toHaveAttribute("href", "/es/ats-scanner");
-    expectLocalizedHref(getStarted, "es");
-  });
+      expect(atsLink).toHaveAttribute("href", `/${locale}/ats-scanner`);
+      expectLocalizedHref(getStarted, locale);
+    },
+  );
 
   it("should render social proof section", async () => {
     await renderHero();
