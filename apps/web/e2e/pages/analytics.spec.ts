@@ -16,7 +16,7 @@ test.describe("Analytics - Layout", () => {
     await page.evaluate(() => {
       localStorage.setItem("get_me_job_onboarding_completed", "true");
     });
-    await page.goto("/analytics");
+    await page.goto("/en/analytics");
     await page.waitForLoadState("networkidle");
   });
 
@@ -56,7 +56,7 @@ test.describe("Analytics - Data Display", () => {
     await page.evaluate(() => {
       localStorage.setItem("get_me_job_onboarding_completed", "true");
     });
-    await page.goto("/analytics");
+    await page.goto("/en/analytics");
     await page.waitForLoadState("networkidle");
   });
 
@@ -106,7 +106,7 @@ test.describe("Analytics - Export", () => {
     await page.evaluate(() => {
       localStorage.setItem("get_me_job_onboarding_completed", "true");
     });
-    await page.goto("/analytics");
+    await page.goto("/en/analytics");
     await page.waitForLoadState("networkidle");
   });
 
@@ -153,7 +153,7 @@ test.describe("Analytics - Empty State", () => {
     await page.evaluate(() => {
       localStorage.setItem("get_me_job_onboarding_completed", "true");
     });
-    await page.goto("/analytics");
+    await page.goto("/en/analytics");
     await page.waitForLoadState("networkidle");
 
     // Should not show error state or crash

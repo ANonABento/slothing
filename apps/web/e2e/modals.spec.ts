@@ -7,7 +7,7 @@ import { test, expect } from "@playwright/test";
 
 test.describe("Modals - Onboarding", () => {
   test("onboarding modal appears on first visit", async ({ page }) => {
-    await page.goto("/dashboard");
+    await page.goto("/en/dashboard");
     await page.evaluate(() => {
       localStorage.removeItem("get_me_job_onboarding_completed");
     });
@@ -23,7 +23,7 @@ test.describe("Modals - Onboarding", () => {
   test("onboarding modal can be navigated through all steps", async ({
     page,
   }) => {
-    await page.goto("/dashboard");
+    await page.goto("/en/dashboard");
     await page.evaluate(() => {
       localStorage.removeItem("get_me_job_onboarding_completed");
     });
@@ -59,7 +59,7 @@ test.describe("Modals - Onboarding", () => {
       "Visual onboarding baselines are only maintained for the desktop Chromium project.",
     );
 
-    await page.goto("/dashboard");
+    await page.goto("/en/dashboard");
     await page.evaluate(() => {
       localStorage.removeItem("get_me_job_onboarding_completed");
     });
@@ -86,7 +86,7 @@ test.describe("Modals - Onboarding", () => {
   });
 
   test("onboarding has skip button", async ({ page }) => {
-    await page.goto("/dashboard");
+    await page.goto("/en/dashboard");
     await page.evaluate(() => {
       localStorage.removeItem("get_me_job_onboarding_completed");
     });
@@ -154,7 +154,7 @@ test.describe.skip("Modals - Opportunities Page", () => {
     await page.evaluate(() => {
       localStorage.setItem("get_me_job_onboarding_completed", "true");
     });
-    await page.goto("/opportunities");
+    await page.goto("/en/opportunities");
     await page.waitForLoadState("networkidle");
   });
 
@@ -233,7 +233,7 @@ test.describe.skip("Modals - Profile Page", () => {
     await page.evaluate(() => {
       localStorage.setItem("get_me_job_onboarding_completed", "true");
     });
-    await page.goto("/profile");
+    await page.goto("/en/profile");
     await page.waitForLoadState("networkidle");
   });
 
@@ -301,7 +301,7 @@ test.describe.skip("Modals - Interview Page", () => {
     await page.evaluate(() => {
       localStorage.setItem("get_me_job_onboarding_completed", "true");
     });
-    await page.goto("/interview");
+    await page.goto("/en/interview");
     await page.waitForLoadState("networkidle");
   });
 
@@ -330,7 +330,7 @@ test.describe.skip("Modals - Bank Page", () => {
     await page.evaluate(() => {
       localStorage.setItem("get_me_job_onboarding_completed", "true");
     });
-    await page.goto("/bank");
+    await page.goto("/en/bank");
     await page.waitForLoadState("networkidle");
   });
 
@@ -362,7 +362,7 @@ test.describe.skip("Modals - General Behavior", () => {
 
   test("modals have backdrop overlay", async ({ page }) => {
     // Trigger any modal
-    await page.goto("/opportunities");
+    await page.goto("/en/opportunities");
     const addButton = page
       .getByRole("button", { name: /add|paste|new/i })
       .first();
@@ -382,7 +382,7 @@ test.describe.skip("Modals - General Behavior", () => {
   });
 
   test("clicking backdrop closes modal", async ({ page }) => {
-    await page.goto("/opportunities");
+    await page.goto("/en/opportunities");
     const addButton = page
       .getByRole("button", { name: /add|paste|new/i })
       .first();
@@ -402,7 +402,7 @@ test.describe.skip("Modals - General Behavior", () => {
   });
 
   test("modals prevent body scroll", async ({ page }) => {
-    await page.goto("/opportunities");
+    await page.goto("/en/opportunities");
     const addButton = page
       .getByRole("button", { name: /add|paste|new/i })
       .first();
@@ -431,7 +431,7 @@ test.describe.skip("Confirmations and Alerts", () => {
   });
 
   test("delete confirmation appears", async ({ page }) => {
-    await page.goto("/opportunities");
+    await page.goto("/en/opportunities");
     await page.waitForLoadState("networkidle");
 
     // Find a delete button
@@ -469,7 +469,7 @@ test.describe.skip("Confirmations and Alerts", () => {
   });
 
   test("success toast/notification appears after action", async ({ page }) => {
-    await page.goto("/profile");
+    await page.goto("/en/profile");
     await page.waitForLoadState("networkidle");
 
     // Try to save profile

@@ -10,7 +10,7 @@ import {
   KANBAN_LANE_OPTIONS,
   normalizeKanbanVisibleLanes,
   type KanbanLaneId,
-} from "@/app/(app)/opportunities/utils";
+} from "@/app/[locale]/(app)/opportunities/utils";
 import type { SettingsResponse } from "@/types/api";
 
 export function KanbanLanesSection() {

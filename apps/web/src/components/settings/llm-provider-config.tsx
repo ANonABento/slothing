@@ -21,7 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { LLMConfig } from "@/types";
-import type { LLMTestResult } from "@/app/(app)/settings/use-llm-settings";
+import type { LLMTestResult } from "@/app/[locale]/(app)/settings/use-llm-settings";
 import type { ProviderOption } from "./llm-provider-selector";
 
 interface LLMProviderConfigProps {

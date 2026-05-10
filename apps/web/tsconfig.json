@@ -18,6 +18,12 @@
     "paths": {
       "@/*": [
         "./src/*"
+      ],
+      "@slothing/shared": [
+        "../../packages/shared/src/index.ts"
+      ],
+      "@slothing/shared/*": [
+        "../../packages/shared/src/*"
       ]
     }
   },

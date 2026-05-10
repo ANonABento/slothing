@@ -1,15 +1,21 @@
-import { NextRequest, NextResponse } from "next/server";
+import createMiddleware from "next-intl/middleware";
+import { NextResponse, type NextRequest } from "next/server";
+import { routing } from "@/i18n";
 import { applySecurityHeaders } from "@/lib/security/headers";
 
+const intlMiddleware = createMiddleware(routing);
+
 export default function middleware(request: NextRequest) {
-  return applySecurityHeaders(NextResponse.next(), request);
+  const response = request.nextUrl.pathname.startsWith("/api/")
+    ? NextResponse.next()
+    : intlMiddleware(request);
+
+  return applySecurityHeaders(response, request);
 }
 
 export const config = {
   matcher: [
-    // Skip Next.js internals and all static files
-    "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
-    // Always run for API routes
+    "/((?!_next|_vercel|.*\\..*).*)",
     "/(api|trpc)(.*)",
   ],
 };

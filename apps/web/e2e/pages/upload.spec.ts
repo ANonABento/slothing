@@ -16,7 +16,7 @@ test.describe("Upload - Layout", () => {
     await page.evaluate(() => {
       localStorage.setItem("get_me_job_onboarding_completed", "true");
     });
-    await page.goto("/upload");
+    await page.goto("/en/upload");
     await page.waitForLoadState("networkidle");
   });
 
@@ -54,7 +54,7 @@ test.describe("Upload - Dropzone Interaction", () => {
     await page.evaluate(() => {
       localStorage.setItem("get_me_job_onboarding_completed", "true");
     });
-    await page.goto("/upload");
+    await page.goto("/en/upload");
     await page.waitForLoadState("networkidle");
   });
 
@@ -94,7 +94,7 @@ test.describe("Upload - File Upload Flow", () => {
     await page.evaluate(() => {
       localStorage.setItem("get_me_job_onboarding_completed", "true");
     });
-    await page.goto("/upload");
+    await page.goto("/en/upload");
     await page.waitForLoadState("networkidle");
   });
 
@@ -131,7 +131,7 @@ test.describe("Upload - Google Drive Integration", () => {
     await page.evaluate(() => {
       localStorage.setItem("get_me_job_onboarding_completed", "true");
     });
-    await page.goto("/upload");
+    await page.goto("/en/upload");
     await page.waitForLoadState("networkidle");
   });
 
@@ -176,7 +176,7 @@ test.describe("Upload - Back Navigation", () => {
     await page.evaluate(() => {
       localStorage.setItem("get_me_job_onboarding_completed", "true");
     });
-    await page.goto("/upload");
+    await page.goto("/en/upload");
     await page.waitForLoadState("networkidle");
   });
 

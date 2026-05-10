@@ -16,7 +16,7 @@ test.describe("Interview - Layout", () => {
     await page.evaluate(() => {
       localStorage.setItem("get_me_job_onboarding_completed", "true");
     });
-    await page.goto("/interview");
+    await page.goto("/en/interview");
     await page.waitForLoadState("networkidle");
   });
 
@@ -72,7 +72,7 @@ test.describe("Interview - Session Start", () => {
     await page.evaluate(() => {
       localStorage.setItem("get_me_job_onboarding_completed", "true");
     });
-    await page.goto("/interview");
+    await page.goto("/en/interview");
     await page.waitForLoadState("networkidle");
   });
 
@@ -125,7 +125,7 @@ test.describe("Interview - Text Mode", () => {
     await page.evaluate(() => {
       localStorage.setItem("get_me_job_onboarding_completed", "true");
     });
-    await page.goto("/interview");
+    await page.goto("/en/interview");
     await page.waitForLoadState("networkidle");
   });
 
@@ -177,7 +177,7 @@ test.describe("Interview - Save to Docs", () => {
     await page.evaluate(() => {
       localStorage.setItem("get_me_job_onboarding_completed", "true");
     });
-    await page.goto("/interview");
+    await page.goto("/en/interview");
     await page.waitForLoadState("networkidle");
   });
 
@@ -199,7 +199,7 @@ test.describe("Interview - Past Sessions", () => {
     await page.evaluate(() => {
       localStorage.setItem("get_me_job_onboarding_completed", "true");
     });
-    await page.goto("/interview");
+    await page.goto("/en/interview");
     await page.waitForLoadState("networkidle");
   });
 

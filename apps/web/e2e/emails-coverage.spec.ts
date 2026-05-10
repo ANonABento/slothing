@@ -13,7 +13,7 @@ test.describe("Emails coverage", () => {
       await route.fulfill({ json: { sends: [] } });
     });
 
-    await prepareAppPage(page, "/emails");
+    await prepareAppPage(page, "/en/emails");
   });
 
   test("renders the email template chooser", async ({ page }) => {

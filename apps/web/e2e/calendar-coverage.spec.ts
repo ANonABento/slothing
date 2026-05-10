@@ -42,7 +42,7 @@ test.describe("Calendar coverage", () => {
       await route.fulfill({ json: { connected: false } });
     });
 
-    await prepareAppPage(page, "/calendar");
+    await prepareAppPage(page, "/en/calendar");
   });
 
   test("renders calendar layout and empty upcoming state", async ({ page }) => {
