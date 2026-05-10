@@ -71,7 +71,7 @@ test.describe("Navigation", () => {
     await expect(page).toHaveURL("/bank");
   });
 
-  test("should navigate to Document Studio page", async ({ page }) => {
+  test("should navigate to Document Studio page @smoke", async ({ page }) => {
     await preparePage(page);
     await ensureSidebarOpen(page);
     const sidebar = page.locator("aside");
@@ -79,7 +79,7 @@ test.describe("Navigation", () => {
     await expect(page).toHaveURL("/studio");
   });
 
-  test("should navigate to Settings page", async ({ page }) => {
+  test("should navigate to Settings page @smoke", async ({ page }) => {
     await preparePage(page);
     await ensureSidebarOpen(page);
     const sidebar = page.locator("aside");
