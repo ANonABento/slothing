@@ -26,64 +26,86 @@ import { PATCH } from "./route";
 
 const context = { params: { id: "job-1" } };
 
-function request(body: unknown = { githubSlug: " anthropics " }) {
+function jsonRequest(body: unknown) {
   return new NextRequest("http://localhost/api/companies/job-1/enrich/slugs", {
     method: "PATCH",
     body: JSON.stringify(body),
+    headers: { "content-type": "application/json" },
   });
 }
 
-describe("company enrichment slug route", () => {
+describe("company enrichment GitHub slug route", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.requireAuth.mockResolvedValue({ userId: "user-1" });
     mocks.isAuthError.mockReturnValue(false);
     mocks.standard.mockReturnValue({ allowed: true, resetAt: 0 });
-    mocks.getJob.mockReturnValue({ id: "job-1", company: "Anthropic" });
-    mocks.setCompanyGithubSlug.mockReturnValue("anthropics");
-  });
-
-  it("stores trimmed lowercase slugs", async () => {
-    const response = await PATCH(request(), context);
-
-    expect(mocks.setCompanyGithubSlug).toHaveBeenCalledWith(
-      "user-1",
-      "Anthropic",
-      "anthropics",
-    );
-    await expect(response.json()).resolves.toEqual({
-      githubSlug: "anthropics",
+    mocks.getJob.mockReturnValue({
+      id: "job-1",
+      company: "Acme",
     });
+    mocks.setCompanyGithubSlug.mockReturnValue("acme-inc");
   });
 
-  it("clears the slug with an empty string", async () => {
-    mocks.setCompanyGithubSlug.mockReturnValue(null);
+  it("normalizes and saves the GitHub slug for an owned opportunity", async () => {
+    const response = await PATCH(
+      jsonRequest({ githubSlug: " ACME-Inc " }),
+      context,
+    );
 
-    const response = await PATCH(request({ githubSlug: " " }), context);
-
+    expect(response.status).toBe(200);
     expect(mocks.setCompanyGithubSlug).toHaveBeenCalledWith(
       "user-1",
-      "Anthropic",
-      null,
+      "Acme",
+      "acme-inc",
     );
-    await expect(response.json()).resolves.toEqual({ githubSlug: null });
+    await expect(response.json()).resolves.toEqual({ githubSlug: "acme-inc" });
+  });
+
+  it("returns auth errors before reading the opportunity", async () => {
+    const authError = NextResponse.json(
+      { error: "Unauthorized" },
+      { status: 401 },
+    );
+    mocks.requireAuth.mockResolvedValue(authError);
+    mocks.isAuthError.mockReturnValue(true);
+
+    const response = await PATCH(jsonRequest({ githubSlug: "acme" }), context);
+
+    expect(response.status).toBe(401);
+    expect(mocks.getJob).not.toHaveBeenCalled();
+    expect(mocks.setCompanyGithubSlug).not.toHaveBeenCalled();
   });
 
   it("returns 404 when the opportunity is missing", async () => {
     mocks.getJob.mockReturnValue(null);
 
-    const response = await PATCH(request(), context);
+    const response = await PATCH(jsonRequest({ githubSlug: "acme" }), context);
 
     expect(response.status).toBe(404);
+    await expect(response.json()).resolves.toEqual({
+      error: "Opportunity not found",
+    });
   });
 
-  it("returns auth errors", async () => {
-    const authError = NextResponse.json({ error: "nope" }, { status: 401 });
-    mocks.requireAuth.mockResolvedValue(authError);
-    mocks.isAuthError.mockReturnValue(true);
+  it("clears the saved slug when the body is invalid", async () => {
+    mocks.setCompanyGithubSlug.mockReturnValue(null);
 
-    const response = await PATCH(request(), context);
+    const response = await PATCH(
+      new NextRequest("http://localhost/api/companies/job-1/enrich/slugs", {
+        method: "PATCH",
+        body: "{",
+        headers: { "content-type": "application/json" },
+      }),
+      context,
+    );
 
-    expect(response.status).toBe(401);
+    expect(response.status).toBe(200);
+    expect(mocks.setCompanyGithubSlug).toHaveBeenCalledWith(
+      "user-1",
+      "Acme",
+      null,
+    );
+    await expect(response.json()).resolves.toEqual({ githubSlug: null });
   });
 });
