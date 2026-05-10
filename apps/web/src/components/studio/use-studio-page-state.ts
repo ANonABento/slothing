@@ -84,6 +84,7 @@ interface StudioPageState {
   draftIsSaved: boolean;
   entries: BankEntry[];
   entryPickerOpen: boolean;
+  exportMenuOpen: boolean;
   filesPanelCollapsed: boolean;
   generating: boolean;
   handleCopyHtml: () => Promise<void>;
@@ -123,12 +124,14 @@ interface StudioPageState {
   setAiPanelCollapsed: (collapsed: boolean) => void;
   setDocumentMode: (mode: DocumentMode) => void;
   setEntryPickerOpen: (open: boolean) => void;
+  setExportMenuOpen: (open: boolean) => void;
   setFilesPanelCollapsed: (collapsed: boolean) => void;
   setManualVersionName: (name: string) => void;
   setMobileView: (panel: BuilderPanel) => void;
   templateId: string;
   toggleAiPanelCollapsed: () => void;
   toggleFilesPanelCollapsed: () => void;
+  togglePreviewOnly: () => void;
   versions: BuilderVersion[];
 }
 
@@ -274,6 +277,7 @@ export function useStudioPageState(): StudioPageState {
     CoverLetterCritique | undefined
   >();
   const [entryPickerOpen, setEntryPickerOpen] = useState(false);
+  const [exportMenuOpen, setExportMenuOpen] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [mobileView, setMobileView] = useState<BuilderPanel>(
     DEFAULT_BUILDER_PANEL,
@@ -303,6 +307,9 @@ export function useStudioPageState(): StudioPageState {
   const lastActiveDocumentIdRef = useRef<string | null>(null);
   const lastCoverLetterEntryKeyRef = useRef<string | null>(null);
   const contentRef = useRef<TipTapJSONContent | undefined>(undefined);
+  const previousPanelsRef = useRef<{ files: boolean; ai: boolean } | null>(
+    null,
+  );
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -345,6 +352,31 @@ export function useStudioPageState(): StudioPageState {
       return next;
     });
   }, []);
+
+  const togglePreviewOnly = useCallback(() => {
+    if (filesPanelCollapsed && aiPanelCollapsed) {
+      const previousPanels = previousPanelsRef.current ?? {
+        files: false,
+        ai: false,
+      };
+      setFilesPanelCollapsed(previousPanels.files);
+      setAiPanelCollapsed(previousPanels.ai);
+      previousPanelsRef.current = null;
+      return;
+    }
+
+    previousPanelsRef.current = {
+      files: filesPanelCollapsed,
+      ai: aiPanelCollapsed,
+    };
+    setFilesPanelCollapsed(true);
+    setAiPanelCollapsed(true);
+  }, [
+    aiPanelCollapsed,
+    filesPanelCollapsed,
+    setAiPanelCollapsed,
+    setFilesPanelCollapsed,
+  ]);
 
   const activeDocument = useMemo(
     () =>
@@ -1073,6 +1105,7 @@ export function useStudioPageState(): StudioPageState {
     draftIsSaved,
     entries,
     entryPickerOpen,
+    exportMenuOpen,
     filesPanelCollapsed,
     generating,
     content,
@@ -1109,12 +1142,14 @@ export function useStudioPageState(): StudioPageState {
     setLinkedOpportunityId,
     setDocumentMode,
     setEntryPickerOpen,
+    setExportMenuOpen,
     setFilesPanelCollapsed,
     setManualVersionName,
     setMobileView,
     templateId,
     toggleAiPanelCollapsed,
     toggleFilesPanelCollapsed,
+    togglePreviewOnly,
     versions,
   };
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useCallback } from "react";
 import { Loader2, Plus } from "lucide-react";
 import { SectionList } from "@/components/builder/section-list";
 import { StudioSkeleton } from "@/components/skeletons/studio-skeleton";
@@ -9,6 +9,7 @@ import { MobileBuilderTabs } from "@/components/studio/mobile-builder-tabs";
 import { ResumePreview } from "@/components/studio/resume-preview";
 import { StudioFilePanel } from "@/components/studio/studio-file-panel";
 import { StudioHeader } from "@/components/studio/studio-header";
+import { useStudioKeyboardShortcuts } from "@/components/studio/use-studio-keyboard-shortcuts";
 import { useStudioPageState } from "@/components/studio/use-studio-page-state";
 import { VersionHistorySection } from "@/components/studio/version-history-section";
 import { Badge } from "@/components/ui/badge";
@@ -19,6 +20,18 @@ import { cn } from "@/lib/utils";
 
 function StudioPageContent() {
   const studio = useStudioPageState();
+  const { setExportMenuOpen } = studio;
+  const handleShortcutExport = useCallback(() => {
+    setExportMenuOpen(true);
+  }, [setExportMenuOpen]);
+
+  useStudioKeyboardShortcuts({
+    onSave: studio.handleSaveManualVersion,
+    onExport: handleShortcutExport,
+    onToggleAiPanel: studio.toggleAiPanelCollapsed,
+    onToggleFilesPanel: studio.toggleFilesPanelCollapsed,
+    onTogglePreviewOnly: studio.togglePreviewOnly,
+  });
 
   if (studio.loading) {
     return <StudioSkeleton />;
@@ -33,10 +46,12 @@ function StudioPageContent() {
         templateId={studio.templateId}
         canCopyHtml={Boolean(studio.content || studio.html)}
         canDownloadPdf={Boolean(studio.content || studio.html)}
+        exportMenuOpen={studio.exportMenuOpen}
         isExporting={studio.isExporting}
         onDocumentModeChange={studio.setDocumentMode}
         onAiPanelToggle={() => studio.setMobileView("assistant")}
         onFilesPanelToggle={() => studio.setMobileView("edit")}
+        onExportMenuOpenChange={studio.setExportMenuOpen}
         onTemplateSelect={studio.handleTemplateSelect}
         onCopyHtml={studio.handleCopyHtml}
         onDownloadPdf={studio.handleDownloadPdf}

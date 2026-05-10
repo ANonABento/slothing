@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
-import type { ComponentProps } from "react";
+import { useState, type ComponentProps } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { COVER_LETTER_TEMPLATES } from "@/lib/builder/cover-letter-document";
 import { TEMPLATES } from "@/lib/resume/template-data";
@@ -15,8 +15,10 @@ function createStudioHeaderProps(
     templateId: "classic",
     canCopyHtml: true,
     canDownloadPdf: true,
+    exportMenuOpen: false,
     isExporting: false,
     onDocumentModeChange: vi.fn(),
+    onExportMenuOpenChange: vi.fn(),
     onTemplateSelect: vi.fn(),
     onCopyHtml: vi.fn(),
     onDownloadPdf: vi.fn(),
@@ -27,7 +29,31 @@ function createStudioHeaderProps(
 function renderStudioHeader(
   props: Partial<ComponentProps<typeof StudioHeader>> = {},
 ) {
-  return render(<StudioHeader {...createStudioHeaderProps(props)} />);
+  function StudioHeaderHarness() {
+    const [exportMenuOpen, setExportMenuOpen] = useState(
+      props.exportMenuOpen ?? false,
+    );
+
+    return (
+      <StudioHeader
+        {...createStudioHeaderProps({
+          ...props,
+          exportMenuOpen:
+            props.exportMenuOpen === undefined
+              ? exportMenuOpen
+              : props.exportMenuOpen,
+          onExportMenuOpenChange: (open) => {
+            props.onExportMenuOpenChange?.(open);
+            if (props.exportMenuOpen === undefined) {
+              setExportMenuOpen(open);
+            }
+          },
+        })}
+      />
+    );
+  }
+
+  return render(<StudioHeaderHarness />);
 }
 
 describe("StudioHeader", () => {
