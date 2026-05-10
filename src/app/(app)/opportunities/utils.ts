@@ -1,4 +1,30 @@
 import { parseToDate } from "@/lib/format/time";
+import {
+  CLOSED_SUB_STATUSES,
+  DEFAULT_KANBAN_VISIBLE_LANES,
+  KANBAN_LANE_GROUPS,
+  KANBAN_LANE_IDS,
+  inferLaneFromStatus,
+  isClosedSubStatus,
+  kanbanVisibleLanesSchema,
+  normalizeKanbanVisibleLanes,
+  type ClosedSubStatus,
+  type KanbanLaneId,
+} from "@/types/opportunity";
+import type { BadgeProps } from "@/components/ui/badge";
+
+export {
+  CLOSED_SUB_STATUSES,
+  DEFAULT_KANBAN_VISIBLE_LANES,
+  KANBAN_LANE_GROUPS,
+  KANBAN_LANE_IDS,
+  inferLaneFromStatus,
+  isClosedSubStatus,
+  kanbanVisibleLanesSchema,
+  normalizeKanbanVisibleLanes,
+  type ClosedSubStatus,
+  type KanbanLaneId,
+};
 export type OpportunityType = "job" | "hackathon";
 export type OpportunitySource =
   | "waterlooworks"
@@ -157,6 +183,36 @@ export const OPPORTUNITY_KANBAN_COLUMNS: readonly OpportunityOption<OpportunityS
     (option): option is OpportunityOption<OpportunityStatus> =>
       option.value !== "all",
   );
+
+export const KANBAN_LANE_LABELS: Record<KanbanLaneId, string> = {
+  pending: "Pending",
+  saved: "Saved",
+  applied: "Applied",
+  interviewing: "Interviewing",
+  offer: "Offer",
+  closed: "Closed",
+};
+
+export const KANBAN_LANE_OPTIONS: readonly OpportunityOption<KanbanLaneId>[] =
+  KANBAN_LANE_IDS.map((lane) => ({
+    value: lane,
+    label: KANBAN_LANE_LABELS[lane],
+  }));
+
+export const CLOSED_SUB_STATUS_LABELS: Record<ClosedSubStatus, string> = {
+  rejected: "Rejected",
+  expired: "Expired",
+  dismissed: "Dismissed",
+};
+
+export const CLOSED_SUB_STATUS_BADGE_VARIANTS: Record<
+  ClosedSubStatus,
+  BadgeProps["variant"]
+> = {
+  rejected: "destructive",
+  expired: "warning",
+  dismissed: "secondary",
+};
 
 export const OPPORTUNITY_SOURCE_OPTIONS: OpportunityOption<
   OpportunitySource | "all"
@@ -389,6 +445,29 @@ export function groupOpportunitiesByStatus(
 
   for (const opportunity of opportunities) {
     grouped[opportunity.status].push(opportunity);
+  }
+
+  return grouped;
+}
+
+export function groupOpportunitiesByLane(
+  opportunities: Opportunity[],
+  lanes: readonly KanbanLaneId[] = KANBAN_LANE_IDS,
+): Record<KanbanLaneId, Opportunity[]> {
+  const grouped = KANBAN_LANE_IDS.reduce(
+    (acc, lane) => {
+      acc[lane] = [];
+      return acc;
+    },
+    {} as Record<KanbanLaneId, Opportunity[]>,
+  );
+  const visibleLaneSet = new Set<KanbanLaneId>(lanes);
+
+  for (const opportunity of opportunities) {
+    const lane = inferLaneFromStatus(opportunity.status);
+    if (visibleLaneSet.has(lane)) {
+      grouped[lane].push(opportunity);
+    }
   }
 
   return grouped;

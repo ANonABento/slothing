@@ -71,6 +71,10 @@ vi.mock("@/components/settings/opportunity-review-section", () => ({
   ),
 }));
 
+vi.mock("@/components/settings/kanban-lanes-section", () => ({
+  KanbanLanesSection: () => <section data-testid="kanban-lanes-section" />,
+}));
+
 vi.mock("@/components/settings/data-management", () => ({
   DataManagement: () => <section data-testid="data-management" />,
 }));
@@ -140,6 +144,7 @@ describe("SettingsPage", () => {
     expect(
       screen.getByTestId("opportunity-review-section"),
     ).toBeInTheDocument();
+    expect(screen.getByTestId("kanban-lanes-section")).toBeInTheDocument();
     expect(screen.getByTestId("data-management")).toBeInTheDocument();
     expect(screen.getByTestId("google-integration")).toBeInTheDocument();
   });

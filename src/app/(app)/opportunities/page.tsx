@@ -4,7 +4,6 @@ import { nowIso } from "@/lib/format/time";
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import type { DragEvent } from "react";
 import {
   Briefcase,
   CalendarClock,
@@ -12,7 +11,6 @@ import {
   ExternalLink,
   FileDown,
   Filter,
-  GripVertical,
   LayoutGrid,
   List,
   MapPin,
@@ -49,6 +47,7 @@ import { readJsonResponse } from "@/lib/http";
 import { pluralize } from "@/lib/text/pluralize";
 import { cn } from "@/lib/utils";
 import {
+  DEFAULT_KANBAN_VISIBLE_LANES,
   DEFAULT_OPPORTUNITY_FILTERS,
   OPPORTUNITY_KANBAN_COLUMNS,
   OPPORTUNITY_SORT_OPTIONS,
@@ -64,16 +63,19 @@ import {
   formatOpportunitySalary,
   getOpportunitiesViewStorage,
   getOpportunityFilterOptions,
-  groupOpportunitiesByStatus,
   hasActiveOpportunityFilters,
+  normalizeKanbanVisibleLanes,
   readOpportunityViewMode,
   writeOpportunityViewMode,
+  type KanbanLaneId,
   type Opportunity,
   type OpportunityFilters,
   type OpportunityStatus,
   type OpportunityViewMode,
 } from "./utils";
+import type { SettingsResponse } from "@/types/api";
 import { OpportunitiesEmptyHero } from "./_components/empty-hero";
+import { KanbanBoard } from "./_components/kanban-board";
 import { SegmentedToggle } from "./_components/segmented-toggle";
 
 const STORAGE_KEY = "taida-opportunities";
@@ -96,6 +98,9 @@ export default function OpportunitiesPage() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [viewMode, setViewMode] = useState<OpportunityViewMode>("list");
+  const [visibleKanbanLanes, setVisibleKanbanLanes] = useState<
+    KanbanLaneId[]
+  >([...DEFAULT_KANBAN_VISIBLE_LANES]);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const [hasLoadedFiltersPreference, setHasLoadedFiltersPreference] =
     useState(false);
@@ -139,6 +144,28 @@ export default function OpportunitiesPage() {
     setViewMode(readOpportunityViewMode(getOpportunitiesViewStorage()));
     void fetchOpportunities();
   }, [fetchOpportunities]);
+
+  useEffect(() => {
+    async function fetchKanbanSettings() {
+      try {
+        const response = await fetch("/api/settings");
+        const data = await readJsonResponse<SettingsResponse>(
+          response,
+          "Failed to load kanban lane settings",
+        );
+        setVisibleKanbanLanes(
+          normalizeKanbanVisibleLanes(data.kanbanVisibleLanes ?? null),
+        );
+      } catch (error) {
+        showErrorToast(error, {
+          title: "Could not load kanban lane settings",
+          fallbackDescription: "Showing the default pipeline lanes.",
+        });
+      }
+    }
+
+    void fetchKanbanSettings();
+  }, [showErrorToast]);
 
   useEffect(() => {
     setIsFiltersOpen(readFiltersOpenPreference());
@@ -253,6 +280,34 @@ export default function OpportunitiesPage() {
       showErrorToast(error, {
         title: "Could not update opportunity",
         fallbackDescription: "The status change was not saved.",
+      });
+    }
+  }
+
+  async function handleShowKanbanLane(lane: KanbanLaneId) {
+    const previousVisibleLanes = visibleKanbanLanes;
+    const nextVisibleLanes = normalizeKanbanVisibleLanes([
+      ...visibleKanbanLanes,
+      lane,
+    ]);
+
+    setVisibleKanbanLanes(nextVisibleLanes);
+
+    try {
+      const response = await fetch("/api/settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ kanbanVisibleLanes: nextVisibleLanes }),
+      });
+      await readJsonResponse<unknown>(
+        response,
+        "Failed to save kanban lane settings",
+      );
+    } catch (error) {
+      setVisibleKanbanLanes(previousVisibleLanes);
+      showErrorToast(error, {
+        title: "Could not update kanban lanes",
+        fallbackDescription: "The lane visibility change was not saved.",
       });
     }
   }
@@ -567,11 +622,13 @@ export default function OpportunitiesPage() {
                   }
                 />
               ) : viewMode === "kanban" ? (
-                <OpportunityKanbanView
+                <KanbanBoard
                   opportunities={filteredOpportunities}
+                  visibleLanes={visibleKanbanLanes}
                   onStatusChange={(opportunityId, status) =>
                     void handleStatusChange(opportunityId, status)
                   }
+                  onShowLane={(lane) => void handleShowKanbanLane(lane)}
                 />
               ) : (
                 <div className="grid gap-4">
@@ -856,182 +913,6 @@ function OpportunityRow({
         </div>
       </div>
     </PagePanel>
-  );
-}
-
-function OpportunityKanbanView({
-  opportunities,
-  onStatusChange,
-}: {
-  opportunities: Opportunity[];
-  onStatusChange: (opportunityId: string, status: OpportunityStatus) => void;
-}) {
-  const groupedOpportunities = useMemo(
-    () => groupOpportunitiesByStatus(opportunities),
-    [opportunities],
-  );
-  const [draggedOpportunityId, setDraggedOpportunityId] = useState<
-    string | null
-  >(null);
-
-  function handleDragStart(
-    event: DragEvent<HTMLElement>,
-    opportunityId: string,
-  ) {
-    event.dataTransfer.effectAllowed = "move";
-    event.dataTransfer.setData("text/plain", opportunityId);
-    setDraggedOpportunityId(opportunityId);
-  }
-
-  function handleDrop(
-    event: DragEvent<HTMLElement>,
-    status: OpportunityStatus,
-  ) {
-    event.preventDefault();
-    const opportunityId =
-      event.dataTransfer.getData("text/plain") || draggedOpportunityId;
-    const opportunity = opportunities.find(
-      (candidate) => candidate.id === opportunityId,
-    );
-
-    setDraggedOpportunityId(null);
-
-    if (!opportunity || opportunity.status === status) return;
-    onStatusChange(opportunity.id, status);
-  }
-
-  return (
-    <div
-      className="overflow-x-auto pb-4"
-      role="region"
-      aria-label="Opportunity kanban board"
-      aria-roledescription="kanban board"
-      tabIndex={0}
-    >
-      <div className="grid min-w-[1480px] grid-cols-8 gap-4">
-        {OPPORTUNITY_KANBAN_COLUMNS.map((column) => {
-          const columnOpportunities = groupedOpportunities[column.value];
-
-          return (
-            <section
-              key={column.value}
-              aria-label={`${column.label} opportunities`}
-              className="flex min-h-[560px] flex-col rounded-lg border bg-card/70 p-3"
-              onDragOver={(event) => {
-                event.preventDefault();
-                event.dataTransfer.dropEffect = "move";
-              }}
-              onDrop={(event) => handleDrop(event, column.value)}
-            >
-              <div className="mb-3 flex items-center justify-between gap-2">
-                <h2 className="text-sm font-semibold">{column.label}</h2>
-                <Badge variant="secondary" className="shrink-0">
-                  {columnOpportunities.length}
-                </Badge>
-              </div>
-
-              <div className="flex flex-1 flex-col gap-3">
-                {columnOpportunities.length === 0 ? (
-                  <div className="grid min-h-28 place-items-center rounded-lg border border-dashed bg-background/50 px-3 text-center text-sm text-muted-foreground">
-                    Drop opportunities here
-                  </div>
-                ) : (
-                  columnOpportunities.map((opportunity) => (
-                    <OpportunityKanbanCard
-                      key={opportunity.id}
-                      opportunity={opportunity}
-                      isDragging={draggedOpportunityId === opportunity.id}
-                      onDragStart={(event) =>
-                        handleDragStart(event, opportunity.id)
-                      }
-                      onDragEnd={() => setDraggedOpportunityId(null)}
-                    />
-                  ))
-                )}
-              </div>
-            </section>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-function OpportunityKanbanCard({
-  opportunity,
-  isDragging,
-  onDragStart,
-  onDragEnd,
-}: {
-  opportunity: Opportunity;
-  isDragging: boolean;
-  onDragStart: (event: DragEvent<HTMLElement>) => void;
-  onDragEnd: () => void;
-}) {
-  const details = [
-    formatOpportunityLocation(opportunity),
-    opportunity.deadline
-      ? `Due ${formatOpportunityDate(opportunity.deadline)}`
-      : undefined,
-  ].filter(Boolean);
-
-  return (
-    <article
-      draggable
-      onDragStart={onDragStart}
-      onDragEnd={onDragEnd}
-      className={cn(
-        "cursor-grab rounded-lg border bg-background p-3 shadow-sm transition hover:border-primary/30 hover:shadow-md active:cursor-grabbing",
-        isDragging && "opacity-50",
-      )}
-    >
-      <div className="mb-3 flex items-start justify-between gap-2">
-        <div className="min-w-0">
-          <Link
-            href={`/opportunities/${opportunity.id}`}
-            className="group inline-flex min-h-11 items-center"
-          >
-            <h3 className="line-clamp-2 text-sm font-semibold leading-5 group-hover:text-primary">
-              {opportunity.title}
-            </h3>
-          </Link>
-          <p className="mt-1 truncate text-sm text-muted-foreground">
-            {opportunity.company}
-          </p>
-        </div>
-        <GripVertical
-          className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground"
-          aria-hidden="true"
-        />
-      </div>
-
-      <div className="space-y-2 text-xs text-muted-foreground">
-        <Badge
-          variant={opportunity.type === "hackathon" ? "warning" : "info"}
-          className="capitalize"
-        >
-          {opportunity.type}
-        </Badge>
-        {details.map((detail) => (
-          <div key={detail} className="truncate">
-            {detail}
-          </div>
-        ))}
-        <div className="flex flex-wrap gap-1.5 pt-1">
-          {[...(opportunity.techStack ?? []), ...opportunity.tags]
-            .slice(0, 4)
-            .map((tag) => (
-              <Badge
-                key={tag}
-                variant="secondary"
-                className="max-w-full truncate text-[11px]"
-              >
-                {tag}
-              </Badge>
-            ))}
-        </div>
-      </div>
-    </article>
   );
 }
 
