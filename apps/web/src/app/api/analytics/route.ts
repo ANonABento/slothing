@@ -6,25 +6,51 @@ import { formatIsoDateOnly } from "@/lib/format/time";
  * @response AnalyticsOverviewResponse from @/types/api
  */
 import { NextResponse } from "next/server";
-import { getJobs } from "@/lib/db/jobs";
-import { getProfile, getDocuments } from "@/lib/db";
-import { getInterviewSessions } from "@/lib/db/interviews";
-import { getAllGeneratedResumes } from "@/lib/db/resumes";
 import { saveAnalyticsSnapshot } from "@/lib/db/analytics";
+import {
+  getDocumentCount,
+  getGeneratedResumeCount,
+  getInterviewSessionStats,
+  getJobsAnalyticsView,
+  getProfileAnalyticsView,
+} from "@/lib/db/analytics-queries";
 import { requireAuth, isAuthError } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
+
+function debugQuery<T>(label: string, query: () => T): T {
+  if (process.env.DEBUG_QUERIES !== "1") {
+    return query();
+  }
+
+  console.time(label);
+  try {
+    return query();
+  } finally {
+    console.timeEnd(label);
+  }
+}
 
 export async function GET() {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
 
   try {
-    const profile = getProfile(authResult.userId);
-    const jobs = getJobs(authResult.userId);
-    const documents = getDocuments(authResult.userId);
-    const interviews = getInterviewSessions(undefined, authResult.userId);
-    const resumes = getAllGeneratedResumes(authResult.userId);
+    const profile = debugQuery("analytics:profile", () =>
+      getProfileAnalyticsView(authResult.userId),
+    );
+    const jobs = debugQuery("analytics:jobs", () =>
+      getJobsAnalyticsView(authResult.userId),
+    );
+    const totalDocuments = debugQuery("analytics:documents", () =>
+      getDocumentCount(authResult.userId),
+    );
+    const interviews = debugQuery("analytics:interviews", () =>
+      getInterviewSessionStats(authResult.userId),
+    );
+    const totalResumesGenerated = debugQuery("analytics:resumes", () =>
+      getGeneratedResumeCount(authResult.userId),
+    );
 
     // Calculate profile completeness
     let profileScore = 0;
@@ -33,11 +59,11 @@ export async function GET() {
       if (profile.contact?.email) profileScore += 10;
       if (profile.contact?.phone) profileScore += 5;
       if (profile.summary && profile.summary.length > 50) profileScore += 15;
-      if (profile.experiences.length > 0) profileScore += 20;
-      if (profile.education.length > 0) profileScore += 10;
+      if (profile.experienceCount > 0) profileScore += 20;
+      if (profile.educationCount > 0) profileScore += 10;
       if (profile.skills.length >= 3) profileScore += 15;
-      if (profile.projects.length > 0) profileScore += 5;
-      if (profile.certifications.length > 0) profileScore += 5;
+      if (profile.projectCount > 0) profileScore += 5;
+      if (profile.certificationCount > 0) profileScore += 5;
     }
 
     // Job status breakdown
@@ -49,14 +75,6 @@ export async function GET() {
       },
       {} as Record<string, number>,
     );
-
-    // Interview stats
-    const completedInterviews = interviews.filter(
-      (i) => i.status === "completed",
-    ).length;
-    const inProgressInterviews = interviews.filter(
-      (i) => i.status === "in_progress",
-    ).length;
 
     // Skill gaps (from all jobs)
     const allKeywords = jobs.flatMap((j) => j.keywords || []);
@@ -89,9 +107,9 @@ export async function GET() {
       overview: {
         profileCompleteness: Math.min(profileScore, 100),
         totalJobs: jobs.length,
-        totalDocuments: documents.length,
-        totalInterviews: interviews.length,
-        totalResumesGenerated: resumes.length,
+        totalDocuments,
+        totalInterviews: interviews.total,
+        totalResumesGenerated,
       },
       jobs: {
         byStatus: jobsByStatus,
@@ -102,9 +120,9 @@ export async function GET() {
         rejected: jobsByStatus["rejected"] || 0,
       },
       interviews: {
-        total: interviews.length,
-        completed: completedInterviews,
-        inProgress: inProgressInterviews,
+        total: interviews.total,
+        completed: interviews.completed,
+        inProgress: interviews.inProgress,
       },
       skills: {
         total: profile?.skills.length || 0,
@@ -123,31 +141,32 @@ export async function GET() {
       },
     };
 
-    // Save today's snapshot for historical tracking
-    try {
-      const today = formatIsoDateOnly();
-      saveAnalyticsSnapshot(
-        {
-          userId: authResult.userId,
-          snapshotDate: today,
-          totalJobs: jobs.length,
-          jobsSaved: jobsByStatus["saved"] || 0,
-          jobsApplied: jobsByStatus["applied"] || 0,
-          jobsInterviewing: jobsByStatus["interviewing"] || 0,
-          jobsOffered: jobsByStatus["offered"] || 0,
-          jobsRejected: jobsByStatus["rejected"] || 0,
-          totalInterviews: interviews.length,
-          interviewsCompleted: completedInterviews,
-          totalDocuments: documents.length,
-          totalResumes: resumes.length,
-          profileCompleteness: Math.min(profileScore, 100),
-        },
-        authResult.userId,
-      );
-    } catch (snapshotError) {
-      console.error("Failed to save analytics snapshot:", snapshotError);
-      // Don't fail the request if snapshot fails
-    }
+    // Save today's snapshot for historical tracking without blocking the read.
+    void Promise.resolve().then(() => {
+      try {
+        const today = formatIsoDateOnly();
+        saveAnalyticsSnapshot(
+          {
+            userId: authResult.userId,
+            snapshotDate: today,
+            totalJobs: jobs.length,
+            jobsSaved: jobsByStatus["saved"] || 0,
+            jobsApplied: jobsByStatus["applied"] || 0,
+            jobsInterviewing: jobsByStatus["interviewing"] || 0,
+            jobsOffered: jobsByStatus["offered"] || 0,
+            jobsRejected: jobsByStatus["rejected"] || 0,
+            totalInterviews: interviews.total,
+            interviewsCompleted: interviews.completed,
+            totalDocuments,
+            totalResumes: totalResumesGenerated,
+            profileCompleteness: Math.min(profileScore, 100),
+          },
+          authResult.userId,
+        );
+      } catch (snapshotError) {
+        console.error("Failed to save analytics snapshot:", snapshotError);
+      }
+    });
 
     return NextResponse.json(analytics);
   } catch (error) {

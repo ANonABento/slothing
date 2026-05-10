@@ -5,8 +5,10 @@
  * @response AnalyticsSuccessResponse from @/types/api
  */
 import { NextResponse } from "next/server";
-import { getJobs } from "@/lib/db/jobs";
-import { getAllGeneratedResumes } from "@/lib/db/resumes";
+import {
+  getAnalyticsJobDescriptions,
+  getGeneratedResumeAnalyticsView,
+} from "@/lib/db/analytics-queries";
 import { calculateSuccessMetrics } from "@/lib/analytics/success-metrics";
 import { requireAuth, isAuthError } from "@/lib/auth";
 
@@ -17,8 +19,8 @@ export async function GET() {
   if (isAuthError(authResult)) return authResult;
 
   try {
-    const jobs = getJobs(authResult.userId);
-    const resumes = getAllGeneratedResumes(authResult.userId);
+    const jobs = getAnalyticsJobDescriptions(authResult.userId);
+    const resumes = getGeneratedResumeAnalyticsView(authResult.userId);
 
     const metrics = calculateSuccessMetrics(jobs, resumes);
 
