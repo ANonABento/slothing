@@ -88,10 +88,21 @@ describe("Hero", () => {
     expect(screen.getByText("4.9/5 rating")).toBeInTheDocument();
   });
 
+  it("should keep mobile social proof readable", async () => {
+    await renderHero();
+
+    const socialProof = screen.getByTestId("hero-social-proof");
+
+    expect(socialProof).toHaveClass("bg-card/80");
+    expect(socialProof).toHaveClass("text-foreground");
+    expect(socialProof).toHaveClass("sm:text-muted-foreground");
+  });
+
   it("should disclose illustrative hero stats", async () => {
     await renderHero();
-    expect(
-      screen.getByText(/Stats and ratings are illustrative/),
-    ).toBeInTheDocument();
+    const disclaimer = screen.getByText(/Stats and ratings are illustrative/);
+
+    expect(disclaimer).toBeInTheDocument();
+    expect(disclaimer).toHaveClass("text-foreground/70");
   });
 });

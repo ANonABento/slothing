@@ -72,13 +72,16 @@ export async function Hero() {
           </div>
 
           {/* Social proof */}
-          <div className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-6 text-sm text-muted-foreground animate-in fade-in slide-in-from-bottom-4 duration-700 delay-500">
+          <div
+            data-testid="hero-social-proof"
+            className="mt-12 inline-flex flex-col items-center justify-center gap-4 rounded-2xl border bg-card/80 px-4 py-3 text-sm font-medium text-foreground shadow-sm backdrop-blur sm:flex-row sm:gap-6 sm:border-0 sm:bg-transparent sm:p-0 sm:text-muted-foreground sm:shadow-none sm:backdrop-blur-none animate-in fade-in slide-in-from-bottom-4 duration-700 delay-500"
+          >
             <div className="flex items-center gap-2">
               <div className="flex -space-x-2">
                 {[0, 1, 2, 3].map((i) => (
                   <div
                     key={i}
-                    className="w-8 h-8 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 border-2 border-background flex items-center justify-center text-xs font-medium"
+                    className="w-8 h-8 rounded-full bg-gradient-to-br from-primary/25 to-accent/25 border-2 border-background flex items-center justify-center text-xs font-semibold text-foreground"
                   >
                     {String.fromCharCode(65 + i)}
                   </div>
@@ -100,7 +103,7 @@ export async function Hero() {
               <span className="ml-1">4.9/5 rating</span>
             </div>
           </div>
-          <p className="mt-3 text-xs italic text-muted-foreground animate-in fade-in slide-in-from-bottom-4 duration-700 delay-500">
+          <p className="mt-3 text-xs italic text-foreground/70 sm:text-muted-foreground animate-in fade-in slide-in-from-bottom-4 duration-700 delay-500">
             Stats and ratings are illustrative — Slothing is in active
             development.
           </p>
