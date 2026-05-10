@@ -38,6 +38,7 @@ import {
   pageGridClasses,
 } from "@/components/ui/page-layout";
 import { Button } from "@/components/ui/button";
+import { DashboardSkeleton } from "@/components/skeletons/dashboard-skeleton";
 import {
   BASIC_ONBOARDING_STEPS,
   countCompletedSteps,
@@ -237,7 +238,7 @@ export default function Dashboard() {
     <ErrorBoundary>
       <PageShell>
         {loading ? (
-          <DashboardLoading />
+          <DashboardSkeleton />
         ) : onboardingActive ? (
           <NewUserDashboard
             stats={stats}
@@ -254,29 +255,6 @@ export default function Dashboard() {
         )}
       </PageShell>
     </ErrorBoundary>
-  );
-}
-
-function DashboardLoading() {
-  return (
-    <div className="space-y-5">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <div className="h-8 w-40 animate-pulse rounded-md bg-muted" />
-          <div className="mt-3 h-4 w-72 animate-pulse rounded-md bg-muted" />
-        </div>
-        <div className="flex gap-2">
-          <div className="h-10 w-32 animate-pulse rounded-lg bg-muted" />
-          <div className="h-10 w-36 animate-pulse rounded-lg bg-muted" />
-        </div>
-      </div>
-      <div className={pageGridClasses.primaryAside}>
-        <div className="h-72 animate-pulse rounded-lg border bg-card" />
-        <div className="h-72 animate-pulse rounded-lg border bg-card" />
-      </div>
-      <div className="h-32 animate-pulse rounded-lg border bg-card" />
-      <div className="h-72 animate-pulse rounded-lg border bg-card" />
-    </div>
   );
 }
 

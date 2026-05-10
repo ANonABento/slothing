@@ -6,6 +6,7 @@ function Skeleton({
 }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
+      data-skeleton="true"
       className={cn("skeleton rounded-[var(--radius)]", className)}
       {...props}
     />
@@ -234,6 +235,95 @@ function SkeletonButton({
   );
 }
 
+function SkeletonHeader({
+  className,
+  withActions = true,
+  withDescription = true,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement> & {
+  withActions?: boolean;
+  withDescription?: boolean;
+}) {
+  return (
+    <header className={cn("border-b bg-card/70", className)} {...props}>
+      <div className="max-w-screen-2xl px-5 py-6 sm:px-8">
+        <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
+          <div className="max-w-3xl space-y-3">
+            <Skeleton className="h-9 w-56 sm:h-10 sm:w-72" />
+            {withDescription ? (
+              <Skeleton className="h-4 w-full max-w-xl" />
+            ) : null}
+          </div>
+          {withActions ? (
+            <div className="flex flex-wrap items-center gap-3">
+              <SkeletonButton className="h-10 w-32" />
+              <SkeletonButton className="h-10 w-36" />
+            </div>
+          ) : null}
+        </div>
+      </div>
+    </header>
+  );
+}
+
+function SkeletonKanbanLane({
+  className,
+  cards = 3,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement> & { cards?: number }) {
+  return (
+    <div
+      className={cn(
+        "min-h-[28rem] rounded-[var(--radius)] border-[length:var(--border-width)] bg-card p-3 shadow-[var(--shadow-card)] [backdrop-filter:var(--backdrop-blur)]",
+        className,
+      )}
+      {...props}
+    >
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <Skeleton className="h-5 w-28" />
+        <Skeleton className="h-6 w-9 rounded-full" />
+      </div>
+      <div className="space-y-3">
+        {Array.from({ length: cards }).map((_, index) => (
+          <SkeletonJobCard key={index} className="shadow-none" />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function SkeletonFormSection({
+  className,
+  rows = 4,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement> & { rows?: number }) {
+  return (
+    <div
+      className={cn(
+        "rounded-[var(--radius)] border-[length:var(--border-width)] bg-card p-6 shadow-[var(--shadow-card)] [backdrop-filter:var(--backdrop-blur)]",
+        className,
+      )}
+      {...props}
+    >
+      <div className="mb-6 flex items-start gap-3">
+        <Skeleton className="h-10 w-10 rounded-[var(--radius)]" />
+        <div className="space-y-2">
+          <Skeleton className="h-5 w-40" />
+          <Skeleton className="h-3 w-56" />
+        </div>
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2">
+        {Array.from({ length: rows }).map((_, index) => (
+          <div key={index} className="space-y-2">
+            <Skeleton className="h-3 w-24" />
+            <Skeleton className="h-10 w-full" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export {
   Skeleton,
   SkeletonText,
@@ -245,4 +335,7 @@ export {
   SkeletonChunkCard,
   SkeletonChart,
   SkeletonButton,
+  SkeletonHeader,
+  SkeletonKanbanLane,
+  SkeletonFormSection,
 };

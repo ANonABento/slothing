@@ -10,6 +10,9 @@ import {
   SkeletonTableRow,
   SkeletonChart,
   SkeletonButton,
+  SkeletonHeader,
+  SkeletonKanbanLane,
+  SkeletonFormSection,
 } from "./skeleton";
 
 describe("Skeleton", () => {
@@ -18,6 +21,7 @@ describe("Skeleton", () => {
     const el = screen.getByTestId("skeleton");
     expect(el.className).toContain("skeleton");
     expect(el.className).toContain("rounded-[var(--radius)]");
+    expect(el).toHaveAttribute("data-skeleton", "true");
   });
 
   it("should merge custom className", () => {
@@ -159,5 +163,46 @@ describe("SkeletonButton", () => {
   it("should allow width override via className", () => {
     render(<SkeletonButton data-testid="btn" className="w-48" />);
     expect(screen.getByTestId("btn").className).toContain("w-48");
+  });
+});
+
+describe("SkeletonHeader", () => {
+  it("should render the route header shape with actions by default", () => {
+    render(<SkeletonHeader data-testid="header" />);
+    const header = screen.getByTestId("header");
+    expect(header.className).toContain("border-b");
+    expect(header.querySelectorAll("[data-skeleton='true']").length).toBe(4);
+  });
+
+  it("should allow description and actions to be hidden", () => {
+    render(
+      <SkeletonHeader
+        data-testid="header"
+        withActions={false}
+        withDescription={false}
+      />,
+    );
+    expect(
+      screen.getByTestId("header").querySelectorAll("[data-skeleton='true']")
+        .length,
+    ).toBe(1);
+  });
+});
+
+describe("SkeletonKanbanLane", () => {
+  it("should render the requested number of job cards", () => {
+    render(<SkeletonKanbanLane cards={2} data-testid="lane" />);
+    const lane = screen.getByTestId("lane");
+    expect(lane.className).toContain("min-h-[28rem]");
+    expect(lane.querySelectorAll("[data-skeleton='true']").length).toBe(14);
+  });
+});
+
+describe("SkeletonFormSection", () => {
+  it("should render labeled field rows", () => {
+    render(<SkeletonFormSection rows={3} data-testid="form" />);
+    const form = screen.getByTestId("form");
+    expect(form.className).toContain("bg-card");
+    expect(form.querySelectorAll("[data-skeleton='true']").length).toBe(9);
   });
 });

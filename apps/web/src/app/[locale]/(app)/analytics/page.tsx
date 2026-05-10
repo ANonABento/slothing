@@ -24,6 +24,7 @@ import {
   Printer,
 } from "lucide-react";
 import dynamic from "next/dynamic";
+import { AnalyticsSkeleton } from "@/components/skeletons/analytics-skeleton";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -43,7 +44,6 @@ import {
   PageContent,
   PageHeader,
   PageIconTile,
-  PageLoadingState,
   PagePanel,
   PagePanelHeader,
   pageGridClasses,
@@ -226,7 +226,7 @@ export default function AnalyticsPage() {
   };
 
   if (loading) {
-    return <PageLoadingState icon={Loader2} label="Loading analytics..." />;
+    return <AnalyticsSkeleton />;
   }
 
   if (error || !analytics) {

@@ -1,6 +1,7 @@
 "use client";
 
-import { Loader2, Settings } from "lucide-react";
+import { Settings } from "lucide-react";
+import { SettingsSkeleton } from "@/components/skeletons/settings-skeleton";
 import { DataManagement } from "@/components/settings/data-management";
 import { EvalHealthSection } from "@/components/settings/eval-health-section";
 import { GoogleIntegration } from "@/components/settings/google-integration";
@@ -18,12 +19,7 @@ import { OpportunityReviewSection } from "@/components/settings/opportunity-revi
 import { ThemeSection } from "@/components/settings/theme-section";
 import { WhatAiPowers } from "@/components/settings/what-ai-powers";
 import { PromptVariantsSection } from "@/components/settings/prompt-variants-section";
-import {
-  AppPage,
-  PageContent,
-  PageHeader,
-  PageLoadingState,
-} from "@/components/ui/page-layout";
+import { AppPage, PageContent, PageHeader } from "@/components/ui/page-layout";
 import { useDataIO } from "./use-data-io";
 import { useLLMSettings } from "./use-llm-settings";
 import { useTranslations } from "next-intl";
@@ -37,7 +33,7 @@ export default function SettingsPage() {
   );
 
   if (llmSettings.loading) {
-    return <PageLoadingState icon={Loader2} label={t("loading")} />;
+    return <SettingsSkeleton />;
   }
 
   return (
