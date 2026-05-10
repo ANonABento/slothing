@@ -73,6 +73,30 @@ describe("DraftsSheet", () => {
     expect(screen.queryByText("Hello 1")).not.toBeInTheDocument();
   });
 
+  it("renders only a visible window for large draft lists", () => {
+    const drafts = Array.from({ length: 200 }, (_, index) =>
+      makeDraft({
+        id: `draft-${index}`,
+        subject: `Draft ${index}`,
+      }),
+    );
+
+    render(
+      <DraftsSheet
+        open
+        onOpenChange={vi.fn()}
+        drafts={drafts}
+        jobs={jobs}
+        onLoadDraft={vi.fn()}
+        onDeleteDraft={vi.fn()}
+      />,
+    );
+
+    expect(document.body.querySelectorAll("article").length).toBeLessThan(60);
+    expect(screen.getByText("Draft 0")).toBeInTheDocument();
+    expect(screen.queryByText("Draft 199")).not.toBeInTheDocument();
+  });
+
   it("renders an empty state", () => {
     render(
       <DraftsSheet

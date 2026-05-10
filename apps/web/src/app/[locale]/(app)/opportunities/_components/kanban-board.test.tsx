@@ -179,4 +179,32 @@ describe("KanbanBoard", () => {
       screen.queryByRole("region", { name: "Pending opportunities" }),
     ).not.toBeInTheDocument();
   });
+
+  it("renders only the visible window for a large lane", () => {
+    const opportunities = Array.from({ length: 200 }, (_, index) => ({
+      ...baseOpportunity,
+      id: `opp-${index}`,
+      title: `Saved Role ${index}`,
+      status: "saved" as const,
+    }));
+
+    renderWithIntl(
+      <KanbanBoard
+        opportunities={opportunities}
+        visibleLanes={["saved"]}
+        onStatusChange={vi.fn()}
+        onShowLane={vi.fn()}
+      />,
+    );
+
+    const savedLane = screen.getByRole("region", {
+      name: "Saved opportunities",
+    });
+
+    expect(within(savedLane).getAllByRole("article").length).toBeLessThan(60);
+    expect(within(savedLane).getByText("Saved Role 0")).toBeInTheDocument();
+    expect(
+      within(savedLane).queryByText("Saved Role 199"),
+    ).not.toBeInTheDocument();
+  });
 });

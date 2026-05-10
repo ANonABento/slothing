@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { Eye, GripVertical } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { VirtualList } from "@/components/ui/virtual-list";
 import {
   Dialog,
   DialogContent,
@@ -14,6 +15,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
+import { ESTIMATED_CARD_HEIGHT_KANBAN } from "@/lib/constants/virtualization";
 import {
   CLOSED_SUB_STATUSES,
   CLOSED_SUB_STATUS_BADGE_VARIANTS,
@@ -156,25 +158,13 @@ export function KanbanBoard({
                   </Badge>
                 </div>
 
-                <div className="flex flex-1 flex-col gap-3">
-                  {laneOpportunities.length === 0 ? (
-                    <div className="grid min-h-28 place-items-center rounded-lg border border-dashed bg-background/50 px-3 text-center text-sm text-muted-foreground">
-                      {t("dropHere")}
-                    </div>
-                  ) : (
-                    laneOpportunities.map((opportunity) => (
-                      <OpportunityKanbanCard
-                        key={opportunity.id}
-                        opportunity={opportunity}
-                        isDragging={draggedOpportunityId === opportunity.id}
-                        onDragStart={(event) =>
-                          handleDragStart(event, opportunity.id)
-                        }
-                        onDragEnd={() => setDraggedOpportunityId(null)}
-                      />
-                    ))
-                  )}
-                </div>
+                <KanbanLaneCards
+                  opportunities={laneOpportunities}
+                  draggedOpportunityId={draggedOpportunityId}
+                  emptyLabel={t("dropHere")}
+                  onDragStart={handleDragStart}
+                  onDragEnd={() => setDraggedOpportunityId(null)}
+                />
               </section>
             );
           })}
@@ -240,6 +230,58 @@ export function KanbanBoard({
         onCancel={() => setClosedMove(null)}
       />
     </div>
+  );
+}
+
+function KanbanLaneCards({
+  opportunities,
+  draggedOpportunityId,
+  emptyLabel,
+  onDragStart,
+  onDragEnd,
+}: {
+  opportunities: Opportunity[];
+  draggedOpportunityId: string | null;
+  emptyLabel: string;
+  onDragStart: (event: DragEvent<HTMLElement>, opportunityId: string) => void;
+  onDragEnd: () => void;
+}) {
+  function getOpportunityKey(opportunity: Opportunity): string {
+    return opportunity.id;
+  }
+
+  function renderKanbanCard({ item: opportunity }: { item: Opportunity }) {
+    function handleCardDragStart(event: DragEvent<HTMLElement>) {
+      onDragStart(event, opportunity.id);
+    }
+
+    return (
+      <OpportunityKanbanCard
+        opportunity={opportunity}
+        isDragging={draggedOpportunityId === opportunity.id}
+        onDragStart={handleCardDragStart}
+        onDragEnd={onDragEnd}
+      />
+    );
+  }
+
+  if (opportunities.length === 0) {
+    return (
+      <div className="grid min-h-28 flex-1 place-items-center rounded-lg border border-dashed bg-background/50 px-3 text-center text-sm text-muted-foreground">
+        {emptyLabel}
+      </div>
+    );
+  }
+
+  return (
+    <VirtualList
+      items={opportunities}
+      getKey={getOpportunityKey}
+      estimateSize={ESTIMATED_CARD_HEIGHT_KANBAN}
+      className="max-h-[60vh] flex-1"
+      itemClassName="pb-3"
+      renderItem={renderKanbanCard}
+    />
   );
 }
 

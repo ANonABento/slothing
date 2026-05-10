@@ -43,6 +43,7 @@ import {
 } from "@/components/ui/page-layout";
 import { SkeletonCard } from "@/components/ui/skeleton";
 import { useToast } from "@/components/ui/toast";
+import { VirtualGrid } from "@/components/ui/virtual-list";
 import { useErrorToast } from "@/hooks/use-error-toast";
 import {
   getAnswerSourceLabel,
@@ -55,6 +56,11 @@ import {
   type AnswerComponentType,
 } from "@/lib/answers/answer-components";
 import { nowIso, toNullableEpoch } from "@/lib/format/time";
+import {
+  BANK_GRID_GAP_PX,
+  ESTIMATED_CARD_HEIGHT_ANSWER,
+  MIN_ANSWER_COLUMN_WIDTH_PX,
+} from "@/lib/constants/virtualization";
 import {
   THEME_CONTROL_CLASSES,
   THEME_INTERACTIVE_SURFACE_CLASSES,
@@ -511,18 +517,13 @@ export default function AnswerBankPage() {
                 }
               />
             ) : (
-              <div className="grid gap-3 lg:grid-cols-2">
-                {filteredAnswers.map((entry) => (
-                  <AnswerCard
-                    key={entry.id}
-                    entry={entry}
-                    onCopy={copyAnswer}
-                    onDuplicate={duplicateAnswer}
-                    onEdit={openEditDialog}
-                    onDelete={deleteAnswer}
-                  />
-                ))}
-              </div>
+              <AnswerGrid
+                entries={filteredAnswers}
+                onCopy={copyAnswer}
+                onDuplicate={duplicateAnswer}
+                onEdit={openEditDialog}
+                onDelete={deleteAnswer}
+              />
             )}
           </section>
         </Suspense>
@@ -547,6 +548,48 @@ export default function AnswerBankPage() {
       />
       {confirmDialog}
     </AppPage>
+  );
+}
+
+function AnswerGrid({
+  entries,
+  onCopy,
+  onDuplicate,
+  onEdit,
+  onDelete,
+}: {
+  entries: AnswerBankEntry[];
+  onCopy: (entry: AnswerBankEntry) => void;
+  onDuplicate: (entry: AnswerBankEntry) => void;
+  onEdit: (entry: AnswerBankEntry) => void;
+  onDelete: (entry: AnswerBankEntry) => void;
+}) {
+  function getAnswerKey(entry: AnswerBankEntry): string {
+    return entry.id;
+  }
+
+  function renderAnswer({ item: entry }: { item: AnswerBankEntry }) {
+    return (
+      <AnswerCard
+        entry={entry}
+        onCopy={onCopy}
+        onDuplicate={onDuplicate}
+        onEdit={onEdit}
+        onDelete={onDelete}
+      />
+    );
+  }
+
+  return (
+    <VirtualGrid
+      items={entries}
+      getKey={getAnswerKey}
+      estimateSize={ESTIMATED_CARD_HEIGHT_ANSWER}
+      gapPx={BANK_GRID_GAP_PX}
+      minColumnWidthPx={MIN_ANSWER_COLUMN_WIDTH_PX}
+      className="max-h-[calc(100vh-22rem)]"
+      renderItem={renderAnswer}
+    />
   );
 }
 
