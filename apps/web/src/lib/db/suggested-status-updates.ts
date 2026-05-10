@@ -12,6 +12,9 @@ export interface SuggestedStatusUpdate {
   suggestedStatus: string;
   sourceProvider?: string | null;
   sourceEventId?: string | null;
+  confidence?: number | null;
+  reason?: string | null;
+  evidence?: string[];
   state: SuggestedStatusUpdateState;
   createdAt: string;
   resolvedAt?: string | null;
@@ -24,6 +27,9 @@ export interface CreateSuggestedStatusUpdateInput {
   suggestedStatus: string;
   sourceProvider?: string | null;
   sourceEventId?: string | null;
+  confidence?: number | null;
+  reason?: string | null;
+  evidence?: string[];
 }
 
 export function ensureSuggestedStatusUpdatesSchema(): void {
@@ -36,6 +42,9 @@ export function ensureSuggestedStatusUpdatesSchema(): void {
       suggested_status TEXT NOT NULL,
       source_provider TEXT,
       source_event_id TEXT,
+      confidence REAL,
+      reason TEXT,
+      evidence_json TEXT,
       state TEXT NOT NULL DEFAULT 'pending',
       created_at TEXT DEFAULT CURRENT_TIMESTAMP,
       resolved_at TEXT
@@ -45,6 +54,38 @@ export function ensureSuggestedStatusUpdatesSchema(): void {
     `CREATE INDEX IF NOT EXISTS idx_suggested_status_updates_user_state
      ON suggested_status_updates(user_id, state)`,
   ).run();
+  const columns = (
+    db.prepare("PRAGMA table_info(suggested_status_updates)").all() as Array<{
+      name: string;
+    }>
+  ).map((column) => column.name);
+  if (!columns.includes("confidence")) {
+    db.prepare(
+      "ALTER TABLE suggested_status_updates ADD COLUMN confidence REAL",
+    ).run();
+  }
+  if (!columns.includes("reason")) {
+    db.prepare(
+      "ALTER TABLE suggested_status_updates ADD COLUMN reason TEXT",
+    ).run();
+  }
+  if (!columns.includes("evidence_json")) {
+    db.prepare(
+      "ALTER TABLE suggested_status_updates ADD COLUMN evidence_json TEXT",
+    ).run();
+  }
+}
+
+function parseEvidence(value: string | null | undefined): string[] {
+  if (!value) return [];
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed)
+      ? parsed.filter((item): item is string => typeof item === "string")
+      : [];
+  } catch {
+    return [];
+  }
 }
 
 function rowToSuggestedStatusUpdate(row: any): SuggestedStatusUpdate {
@@ -56,6 +97,9 @@ function rowToSuggestedStatusUpdate(row: any): SuggestedStatusUpdate {
     suggestedStatus: row.suggested_status,
     sourceProvider: row.source_provider,
     sourceEventId: row.source_event_id,
+    confidence: row.confidence,
+    reason: row.reason,
+    evidence: parseEvidence(row.evidence_json),
     state: row.state,
     createdAt: row.created_at,
     resolvedAt: row.resolved_at,
@@ -72,9 +116,10 @@ export function createSuggestedStatusUpdate(
   db.prepare(
     `INSERT INTO suggested_status_updates (
       id, user_id, notification_id, opportunity_id, suggested_status,
-      source_provider, source_event_id, state, created_at
+      source_provider, source_event_id, confidence, reason, evidence_json,
+      state, created_at
     )
-    VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', ?)`,
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?)`,
   ).run(
     id,
     input.userId,
@@ -83,6 +128,9 @@ export function createSuggestedStatusUpdate(
     input.suggestedStatus,
     input.sourceProvider ?? null,
     input.sourceEventId ?? null,
+    input.confidence ?? null,
+    input.reason ?? null,
+    input.evidence ? JSON.stringify(input.evidence) : null,
     createdAt,
   );
 

@@ -25,18 +25,23 @@ describe("companySimilarity", () => {
 
 describe("matchOpportunityByCompany", () => {
   it("matches by exact normalized company name", () => {
-    expect(
-      matchOpportunityByCompany(opportunities, { body: "Hello from Acme" })
-        ?.opportunity.id,
-    ).toBe("opp-1");
+    const match = matchOpportunityByCompany(opportunities, {
+      subject: "Hello from Acme",
+    });
+
+    expect(match?.opportunity.id).toBe("opp-1");
+    expect(match?.confidence).toBeGreaterThanOrEqual(0.88);
+    expect(match?.reason).toBe("company_in_subject");
   });
 
-  it("matches by sender domain", () => {
-    expect(
-      matchOpportunityByCompany(opportunities, {
-        from: "Recruiting <jobs@globex.com>",
-      })?.opportunity.id,
-    ).toBe("opp-2");
+  it("matches by sender domain with lower confidence", () => {
+    const match = matchOpportunityByCompany(opportunities, {
+      from: "Recruiting <jobs@globex.com>",
+    });
+
+    expect(match?.opportunity.id).toBe("opp-2");
+    expect(match?.confidence).toBeLessThan(0.82);
+    expect(match?.reason).toBe("sender_domain");
   });
 
   it("returns null when no company is strong enough", () => {

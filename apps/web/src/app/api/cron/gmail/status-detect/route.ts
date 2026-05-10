@@ -20,6 +20,7 @@ export async function GET(request: NextRequest) {
     scanned: result.scanned,
     matched: result.matched,
     updated: result.updated,
+    suggested: result.suggested,
     skipped: result.skipped,
     errors: result.errors,
     durationMs: nowEpoch() - startedAt,

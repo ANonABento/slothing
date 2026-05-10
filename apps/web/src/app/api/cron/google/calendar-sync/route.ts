@@ -15,6 +15,10 @@ import {
 } from "@/lib/db/external-calendar-events";
 import { createSuggestedStatusUpdate } from "@/lib/db/suggested-status-updates";
 import {
+  buildStatusAutomationNotificationMessage,
+  shouldAutoApplyStatusUpdate,
+} from "@/lib/status-automation/confidence";
+import {
   getCalendarPullEnabled,
   setCalendarLastPulledAt,
 } from "@/lib/settings/calendar-sync";
@@ -91,13 +95,22 @@ export async function GET(request: NextRequest) {
 
         summary.matched += 1;
 
-        if (autoLinkEnabled) {
+        if (autoLinkEnabled && shouldAutoApplyStatusUpdate(match.confidence)) {
           changeOpportunityStatus(match.opportunity.id, "interviewing", userId);
           createNotification(
             {
               type: "interview_scheduled",
               title: "Interview detected",
-              message: `${event.title} matched ${match.opportunity.company}. Status updated to interviewing.`,
+              message: buildStatusAutomationNotificationMessage({
+                company: match.opportunity.company,
+                title: match.opportunity.title,
+                previousStatus: match.opportunity.status,
+                nextStatus: "interviewing",
+                reason: match.reason,
+                confidence: match.confidence,
+                evidence: match.evidence,
+                action: "updated",
+              }),
               link: `/opportunities?id=${match.opportunity.id}`,
             },
             userId,
@@ -120,7 +133,15 @@ export async function GET(request: NextRequest) {
           {
             type: "application_update",
             title: "Suggested status update",
-            message: `${event.title} looks like an interview for ${match.opportunity.company}.`,
+            message: buildStatusAutomationNotificationMessage({
+              company: match.opportunity.company,
+              title: match.opportunity.title,
+              nextStatus: "interviewing",
+              reason: match.reason,
+              confidence: match.confidence,
+              evidence: match.evidence,
+              action: "suggested",
+            }),
             link: `/opportunities?id=${match.opportunity.id}`,
           },
           userId,
@@ -132,6 +153,9 @@ export async function GET(request: NextRequest) {
           suggestedStatus: "interviewing",
           sourceProvider: PROVIDER,
           sourceEventId: event.id,
+          confidence: match.confidence,
+          reason: match.reason,
+          evidence: match.evidence,
         });
         recordExternalCalendarEvent({
           userId,

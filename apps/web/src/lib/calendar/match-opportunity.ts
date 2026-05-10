@@ -1,4 +1,9 @@
 import type { Opportunity } from "@/types";
+import {
+  clampConfidence,
+  formatEvidenceSnippet,
+  REVIEW_CONFIDENCE_THRESHOLD,
+} from "@/lib/status-automation/confidence";
 
 export interface CalendarEventAttendee {
   email?: string;
@@ -16,6 +21,8 @@ export interface CalendarInterviewEvent {
 export interface OpportunityCalendarMatch {
   opportunity: Opportunity;
   score: number;
+  confidence: number;
+  evidence: string[];
   reason: string;
 }
 
@@ -85,9 +92,9 @@ function scoreOpportunity(
     [event.description, event.location].filter(Boolean).join(" "),
   );
   const attendees = event.attendees ?? [];
-  const attendeeText = normalizeText(
+  const attendeeDisplayText = normalizeText(
     attendees
-      .flatMap((attendee) => [attendee.email, attendee.displayName])
+      .map((attendee) => attendee.displayName)
       .filter(Boolean)
       .join(" "),
   );
@@ -96,24 +103,30 @@ function scoreOpportunity(
 
   let score = 0;
   const reasons: string[] = [];
+  const evidence: string[] = [];
 
   if (company && textIncludesPhrase(title, company)) {
     score += 100;
     reasons.push("company in title");
+    evidence.push(event.title);
   }
   if (company && textIncludesPhrase(body, company)) {
     score += 45;
     reasons.push("company in details");
+    evidence.push(
+      [event.description, event.location].filter(Boolean).join(" "),
+    );
   }
-  if (company && textIncludesPhrase(attendeeText, company)) {
-    score += 35;
+  if (company && textIncludesPhrase(attendeeDisplayText, company)) {
+    score += 30;
     reasons.push("company in attendee");
+    evidence.push(attendees.map((attendee) => attendee.displayName).join(" "));
   }
 
   for (const token of tokens) {
     if (textIncludesPhrase(title, token)) score += 20;
     if (textIncludesPhrase(body, token)) score += 10;
-    if (textIncludesPhrase(attendeeText, token)) score += 12;
+    if (textIncludesPhrase(attendeeDisplayText, token)) score += 12;
   }
 
   const domainEvidence = attendees.some((attendee) => {
@@ -121,15 +134,28 @@ function scoreOpportunity(
     return domain ? tokens.includes(normalizeText(domain)) : false;
   });
   if (domainEvidence) {
-    score += 50;
+    score += 70;
     reasons.push("company in attendee domain");
+    evidence.push(
+      attendees
+        .map((attendee) => attendee.email)
+        .filter(Boolean)
+        .join(" "),
+    );
   }
 
   if (score <= 0) return null;
+  const confidence = clampConfidence(score / 120);
+  if (confidence < REVIEW_CONFIDENCE_THRESHOLD) return null;
 
   return {
     opportunity,
     score,
+    confidence,
+    evidence: evidence
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((value) => formatEvidenceSnippet(value)),
     reason: reasons[0] ?? "company token match",
   };
 }

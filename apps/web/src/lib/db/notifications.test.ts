@@ -86,10 +86,23 @@ describe("Notification Database Functions", () => {
   describe("getNotifications", () => {
     function mockNotificationQuery(rows: unknown[] = []) {
       const mockAll = vi.fn().mockReturnValue(rows);
-      (db.prepare as Mock)
-        .mockReturnValueOnce({ run: vi.fn() })
-        .mockReturnValueOnce({ run: vi.fn() })
-        .mockReturnValueOnce({ all: mockAll });
+      (db.prepare as Mock).mockImplementation((sql: string) => {
+        if (sql.startsWith("PRAGMA table_info")) {
+          return {
+            all: vi
+              .fn()
+              .mockReturnValue([
+                { name: "confidence" },
+                { name: "reason" },
+                { name: "evidence_json" },
+              ]),
+          };
+        }
+        if (sql.includes("SELECT")) {
+          return { all: mockAll };
+        }
+        return { run: vi.fn() };
+      });
       return mockAll;
     }
 
@@ -103,6 +116,12 @@ describe("Notification Database Functions", () => {
           link: "/link1",
           read: 0,
           created_at: "2024-01-15T00:00:00.000Z",
+          suggested_state: null,
+          suggested_opportunity_id: null,
+          suggested_status: null,
+          suggested_confidence: null,
+          suggested_reason: null,
+          suggested_evidence_json: null,
         },
         {
           id: "notif-2",
@@ -112,6 +131,12 @@ describe("Notification Database Functions", () => {
           link: null,
           read: 1,
           created_at: "2024-01-14T00:00:00.000Z",
+          suggested_state: null,
+          suggested_opportunity_id: null,
+          suggested_status: null,
+          suggested_confidence: null,
+          suggested_reason: null,
+          suggested_evidence_json: null,
         },
       ];
 
@@ -155,6 +180,57 @@ describe("Notification Database Functions", () => {
       getNotifications();
 
       expect(mockAll).toHaveBeenCalledWith("default", 50);
+    });
+
+    it("should include suggested status metadata", () => {
+      mockNotificationQuery([
+        {
+          id: "notif-1",
+          type: "application_update",
+          title: "Review Gmail status suggestion",
+          message: "Message",
+          link: "/opportunities?id=opp-1",
+          read: 0,
+          created_at: "2024-01-15T00:00:00.000Z",
+          suggested_state: "pending",
+          suggested_opportunity_id: "opp-1",
+          suggested_status: "interviewing",
+          suggested_confidence: 0.76,
+          suggested_reason: "interview scheduling language",
+          suggested_evidence_json: JSON.stringify(["Can we schedule a call?"]),
+        },
+      ]);
+
+      expect(getNotifications()[0].suggestedStatusUpdate).toEqual({
+        state: "pending",
+        opportunityId: "opp-1",
+        suggestedStatus: "interviewing",
+        confidence: 0.76,
+        reason: "interview scheduling language",
+        evidence: ["Can we schedule a call?"],
+      });
+    });
+
+    it("should ignore invalid suggested evidence JSON", () => {
+      mockNotificationQuery([
+        {
+          id: "notif-1",
+          type: "application_update",
+          title: "Review Gmail status suggestion",
+          message: "Message",
+          link: "/opportunities?id=opp-1",
+          read: 0,
+          created_at: "2024-01-15T00:00:00.000Z",
+          suggested_state: "pending",
+          suggested_opportunity_id: "opp-1",
+          suggested_status: "interviewing",
+          suggested_confidence: 0.76,
+          suggested_reason: "interview scheduling language",
+          suggested_evidence_json: "{nope",
+        },
+      ]);
+
+      expect(getNotifications()[0].suggestedStatusUpdate?.evidence).toEqual([]);
     });
   });
 
