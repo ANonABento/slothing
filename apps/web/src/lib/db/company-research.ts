@@ -3,6 +3,41 @@ import { generateId } from "@/lib/utils";
 
 import { nowDate, nowIso, parseToDate } from "@/lib/format/time";
 import type { EnrichmentSnapshot } from "@/lib/enrichment/types";
+
+let companyResearchSchemaEnsured = false;
+
+export function ensureCompanyResearchSchema(): void {
+  if (companyResearchSchemaEnsured) return;
+
+  try {
+    const columns = db
+      .prepare("PRAGMA table_info(company_research)")
+      .all() as Array<{
+      name: string;
+    }>;
+    const columnNames = new Set(columns.map((column) => column.name));
+
+    if (!columnNames.has("enrichment_json")) {
+      db.prepare(
+        "ALTER TABLE company_research ADD COLUMN enrichment_json text",
+      ).run();
+    }
+    if (!columnNames.has("enriched_at")) {
+      db.prepare(
+        "ALTER TABLE company_research ADD COLUMN enriched_at text",
+      ).run();
+    }
+    if (!columnNames.has("github_slug")) {
+      db.prepare(
+        "ALTER TABLE company_research ADD COLUMN github_slug text",
+      ).run();
+    }
+    companyResearchSchemaEnsured = true;
+  } catch {
+    // Tests and first-boot environments may not have the table available yet.
+  }
+}
+
 export interface CompanyResearch {
   id: string;
   companyName: string;
@@ -19,6 +54,7 @@ export function getCompanyResearch(
   companyName: string,
   userId: string = "default",
 ): CompanyResearch | null {
+  ensureCompanyResearchSchema();
   const normalized = companyName.toLowerCase().trim();
   const stmt = db.prepare(
     "SELECT * FROM company_research WHERE user_id = ? AND LOWER(company_name) = ?",
@@ -59,6 +95,7 @@ export function saveCompanyResearch(
   research: Omit<CompanyResearch, "id" | "createdAt" | "updatedAt">,
   userId: string = "default",
 ): CompanyResearch {
+  ensureCompanyResearchSchema();
   const id = generateId();
   const now = nowIso();
   const normalizedCompanyName = research.companyName.toLowerCase().trim();
@@ -102,6 +139,7 @@ export function deleteCompanyResearch(
   id: string,
   userId: string = "default",
 ): void {
+  ensureCompanyResearchSchema();
   const stmt = db.prepare(
     "DELETE FROM company_research WHERE id = ? AND user_id = ?",
   );
@@ -112,6 +150,7 @@ export function getCompanyEnrichment(
   companyName: string,
   userId: string = "default",
 ): { snapshot: EnrichmentSnapshot; enrichedAt: string } | null {
+  ensureCompanyResearchSchema();
   const normalized = companyName.toLowerCase().trim();
   const stmt = db.prepare(
     "SELECT enrichment_json, enriched_at FROM company_research WHERE user_id = ? AND LOWER(company_name) = ?",
@@ -136,19 +175,25 @@ export function saveCompanyEnrichment(
   companyName: string,
   snapshot: EnrichmentSnapshot,
 ): { snapshot: EnrichmentSnapshot; enrichedAt: string } {
+  ensureCompanyResearchSchema();
   const id = generateId();
   const now = nowIso();
   const normalizedCompanyName = companyName.toLowerCase().trim();
   const enrichedAt = snapshot.enrichedAt;
+  const resolvedGithubSlug =
+    snapshot.github?.ok && snapshot.github.data.resolvedSlug
+      ? snapshot.github.data.resolvedSlug
+      : null;
 
   const stmt = db.prepare(`
     INSERT INTO company_research (
       id, user_id, company_name, key_facts_json, interview_questions_json,
-      enrichment_json, enriched_at, created_at, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      enrichment_json, enriched_at, github_slug, created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(user_id, company_name) DO UPDATE SET
       enrichment_json = excluded.enrichment_json,
       enriched_at = excluded.enriched_at,
+      github_slug = COALESCE(excluded.github_slug, company_research.github_slug),
       updated_at = excluded.updated_at
   `);
 
@@ -160,11 +205,63 @@ export function saveCompanyEnrichment(
     "[]",
     JSON.stringify(snapshot),
     enrichedAt,
+    resolvedGithubSlug,
     now,
     now,
   );
 
   return { snapshot, enrichedAt };
+}
+
+export function getCompanyGithubSlug(
+  companyName: string,
+  userId: string = "default",
+): string | null {
+  ensureCompanyResearchSchema();
+  const normalized = companyName.toLowerCase().trim();
+  const stmt = db.prepare(
+    "SELECT github_slug FROM company_research WHERE user_id = ? AND LOWER(company_name) = ?",
+  );
+  const row = stmt.get(userId, normalized) as
+    | { github_slug: string | null }
+    | undefined;
+
+  return row?.github_slug ?? null;
+}
+
+export function setCompanyGithubSlug(
+  userId: string,
+  companyName: string,
+  slug: string | null,
+): string | null {
+  ensureCompanyResearchSchema();
+  const id = generateId();
+  const now = nowIso();
+  const normalizedCompanyName = companyName.toLowerCase().trim();
+  const normalizedSlug = slug?.trim().toLowerCase() || null;
+
+  const stmt = db.prepare(`
+    INSERT INTO company_research (
+      id, user_id, company_name, key_facts_json, interview_questions_json,
+      github_slug, created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    ON CONFLICT(user_id, company_name) DO UPDATE SET
+      github_slug = excluded.github_slug,
+      updated_at = excluded.updated_at
+  `);
+
+  stmt.run(
+    id,
+    userId,
+    normalizedCompanyName,
+    "[]",
+    "[]",
+    normalizedSlug,
+    now,
+    now,
+  );
+
+  return normalizedSlug;
 }
 
 export function isEnrichmentStale(

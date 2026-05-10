@@ -16,10 +16,12 @@ import db from "./legacy";
 import {
   deleteCompanyResearch,
   getCompanyEnrichment,
+  getCompanyGithubSlug,
   getCompanyResearch,
   isEnrichmentStale,
   saveCompanyEnrichment,
   saveCompanyResearch,
+  setCompanyGithubSlug,
 } from "./company-research";
 
 describe("Company Research DB Functions", () => {
@@ -134,6 +136,31 @@ describe("Company Research DB Functions", () => {
       "acme",
     ]);
     expect(fetched).toEqual({ snapshot, enrichedAt: snapshot.enrichedAt });
+  });
+
+  it("should save and fetch GitHub slug overrides", () => {
+    const mockRun = vi.fn();
+    const mockGet = vi.fn().mockReturnValue({ github_slug: "anthropics" });
+    (db.prepare as Mock).mockImplementation((sql: string) => {
+      if (sql.includes("INSERT INTO company_research")) {
+        return { run: mockRun };
+      }
+      return { get: mockGet };
+    });
+
+    const saved = setCompanyGithubSlug("user-123", "Anthropic", " Anthropics ");
+    const fetched = getCompanyGithubSlug("Anthropic", "user-123");
+
+    expect(saved).toBe("anthropics");
+    expect(mockRun.mock.calls[0].slice(0, 6)).toEqual([
+      "research-id",
+      "user-123",
+      "anthropic",
+      "[]",
+      "[]",
+      "anthropics",
+    ]);
+    expect(fetched).toBe("anthropics");
   });
 
   it("detects stale enrichment timestamps", () => {

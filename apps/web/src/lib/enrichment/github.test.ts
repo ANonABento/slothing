@@ -52,10 +52,52 @@ describe("fetchGithubOrg", () => {
     expect(result).toMatchObject({
       ok: true,
       data: {
+        resolvedSlug: "acme",
         totalStars: 10,
         topLanguages: ["TypeScript", "Go"],
       },
     });
+  });
+
+  it("tries fallback candidates until one resolves", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValueOnce(new Response("", { status: 404 }))
+        .mockResolvedValueOnce(
+          Response.json({
+            login: "anthropics",
+            html_url: "https://github.com/anthropics",
+            public_repos: 1,
+            followers: 20,
+          }),
+        )
+        .mockResolvedValueOnce(Response.json([])),
+    );
+
+    await expect(
+      fetchGithubOrg(["anthropic", "anthropics", "anthropic-inc"]),
+    ).resolves.toMatchObject({
+      ok: true,
+      data: { resolvedSlug: "anthropics", org: "anthropics" },
+    });
+  });
+
+  it("stops fallback on non-not-found errors", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response("", {
+        status: 403,
+        headers: { "X-RateLimit-Remaining": "0" },
+      }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(fetchGithubOrg(["limited", "next"])).resolves.toEqual({
+      ok: false,
+      error: "rate_limited",
+    });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
   it("maps not found and rate limit responses", async () => {

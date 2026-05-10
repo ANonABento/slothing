@@ -21,6 +21,7 @@ export interface GithubRepoSummary {
 export interface GithubData {
   org: string;
   url: string;
+  resolvedSlug?: string;
   totalStars: number;
   publicRepos: number;
   followers: number;

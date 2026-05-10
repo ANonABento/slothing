@@ -1,0 +1,1 @@
+ALTER TABLE `company_research` ADD `github_slug` text;

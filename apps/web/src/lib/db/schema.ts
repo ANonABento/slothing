@@ -239,6 +239,7 @@ export const companyResearch = sqliteTable(
     recentNews: text("recent_news"),
     enrichmentJson: text("enrichment_json"),
     enrichedAt: text("enriched_at"),
+    githubSlug: text("github_slug"),
     createdAt: text("created_at").default(sql`CURRENT_TIMESTAMP`),
     updatedAt: text("updated_at").default(sql`CURRENT_TIMESTAMP`),
   },
