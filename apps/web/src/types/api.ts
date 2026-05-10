@@ -8,6 +8,7 @@
 
 import type { InterviewDifficulty } from "@/lib/constants";
 import type { TailoredResume } from "@/lib/resume/generator";
+import type { ResultQualityRubric } from "@/lib/result-quality/rubric";
 import type { GapItem } from "@/lib/tailor/analyze";
 import type { InterviewQuestion } from "@/types/interview";
 import type {
@@ -181,6 +182,7 @@ export interface TailorAnalysisResponse {
     keywordsMissing: string[];
     gaps: GapItem[];
     matchedEntriesCount: number;
+    quality: ResultQualityRubric;
   };
 }
 

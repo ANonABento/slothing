@@ -2,6 +2,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ResumePreview } from "./resume-preview";
 import type { TailoredResume } from "@/lib/resume/generator";
+import type { ResultQualityRubric } from "@/lib/result-quality/rubric";
 
 vi.mock("./export-menu", () => ({
   ExportMenu: ({ resume }: { resume: TailoredResume }) => (
@@ -35,7 +36,15 @@ const improvedResume: TailoredResume = {
   skills: ["React", "TypeScript", "GraphQL", "Kubernetes"],
 };
 
-function renderPreview(onResumeChange = vi.fn()) {
+const quality: ResultQualityRubric = {
+  status: "needs_evidence",
+  label: "Needs evidence",
+  rationale: "Keywords need stronger proof.",
+  nextActions: ["Add project proof.", "Quantify one result."],
+  reasons: ["weak_evidence"],
+};
+
+function renderPreview(onResumeChange = vi.fn(), includeQuality = false) {
   render(
     <ResumePreview
       resume={baseResume}
@@ -49,6 +58,7 @@ function renderPreview(onResumeChange = vi.fn()) {
       keywordsMissing={["graphql", "kubernetes"]}
       jobDescription="React TypeScript GraphQL Kubernetes"
       onResumeChange={onResumeChange}
+      quality={includeQuality ? quality : undefined}
     />,
   );
 }
@@ -117,5 +127,27 @@ describe("ResumePreview Auto-Tailor", () => {
     expect(
       screen.getByText("React TypeScript GraphQL Kubernetes engineer."),
     ).toBeInTheDocument();
+  });
+
+  it("renders quality guidance without blocking Auto-Tailor", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => {
+        return new Response(JSON.stringify({ resume: improvedResume }), {
+          status: 200,
+        });
+      }),
+    );
+
+    renderPreview(vi.fn(), true);
+
+    expect(screen.getByText("Needs evidence")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Auto-Tailor" }));
+
+    expect(
+      await screen.findAllByText(
+        "React TypeScript GraphQL Kubernetes engineer.",
+      ),
+    ).not.toHaveLength(0);
   });
 });

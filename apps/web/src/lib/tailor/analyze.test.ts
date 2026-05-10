@@ -148,6 +148,7 @@ describe("analyzeJobFit", () => {
     const result = analyzeJobFit("Looking for React developer", bank);
     expect(result.matchScore).toBe(0);
     expect(result.matchedEntries).toHaveLength(0);
+    expect(result.quality.status).toBe("needs_evidence");
   });
 
   it("should match bank entries against job description", () => {
@@ -263,6 +264,7 @@ describe("analyzeResumeFit", () => {
       "graphql",
       "kubernetes",
     ]);
+    expect(result.quality.status).toBe("light_tailoring");
   });
 
   it("should update the score when resume content changes", () => {
@@ -270,12 +272,28 @@ describe("analyzeResumeFit", () => {
     const first = analyzeResumeFit("some jd", makeResume(), keywords);
     const improved = analyzeResumeFit(
       "some jd",
-      makeResume({ skills: ["React", "TypeScript", "GraphQL"] }),
+      makeResume({
+        summary:
+          "Frontend engineer shipping React, TypeScript, and GraphQL applications for customer workflows.",
+        experiences: [
+          {
+            company: "Acme",
+            title: "Senior Engineer",
+            dates: "2020 - Present",
+            highlights: [
+              "Built GraphQL data flows for React dashboards used by 1,000 customers.",
+              "Improved TypeScript quality checks by 25%.",
+            ],
+          },
+        ],
+        skills: ["React", "TypeScript", "GraphQL"],
+      }),
       keywords,
     );
 
     expect(first.matchScore).toBe(67);
     expect(improved.matchScore).toBe(100);
     expect(improved.keywordsMissing).toEqual([]);
+    expect(improved.quality.status).toBe("ready_to_apply");
   });
 });

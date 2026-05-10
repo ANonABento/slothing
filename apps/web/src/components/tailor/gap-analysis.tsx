@@ -12,6 +12,8 @@ import {
 import { cn } from "@/lib/utils";
 import { pluralize } from "@/lib/text/pluralize";
 import type { GapItem } from "@/lib/tailor/analyze";
+import type { ResultQualityRubric } from "@/lib/result-quality/rubric";
+import { ResultQualityCard } from "@/components/result-quality/result-quality-card";
 
 export const SCORE_STRONG = 70;
 export const SCORE_MODERATE = 40;
@@ -21,6 +23,7 @@ interface GapAnalysisProps {
   keywordsFound: string[];
   keywordsMissing: string[];
   matchScore: number;
+  quality?: ResultQualityRubric;
 }
 
 function ScoreRing({
@@ -98,6 +101,7 @@ export function GapAnalysis({
   keywordsFound,
   keywordsMissing,
   matchScore,
+  quality,
 }: GapAnalysisProps) {
   const topFound = keywordsFound.slice(0, 12);
   const topMissing = keywordsMissing.slice(0, 12);
@@ -106,6 +110,8 @@ export function GapAnalysis({
 
   return (
     <div className="space-y-4">
+      {quality ? <ResultQualityCard rubric={quality} /> : null}
+
       {/* Score ring + summary */}
       <div className="flex items-center gap-6 py-2">
         <div className="relative flex-shrink-0">
