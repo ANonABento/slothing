@@ -45,7 +45,7 @@ export function getExportFileName(
 
   switch (type) {
     case "profile":
-      return `taida-profile-${formattedDate}.json`;
+      return `slothing-profile-${formattedDate}.json`;
     case "jobs-json":
       return `slothing-opportunities-${formattedDate}.json`;
     case "jobs-csv":

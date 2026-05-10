@@ -64,7 +64,7 @@ export async function GET() {
     return new NextResponse(JSON.stringify(backup, null, 2), {
       headers: {
         "Content-Type": "application/json",
-        "Content-Disposition": `attachment; filename="taida-backup-${formatIsoDateOnly()}.json"`,
+        "Content-Disposition": `attachment; filename="slothing-backup-${formatIsoDateOnly()}.json"`,
       },
     });
   } catch (error) {
