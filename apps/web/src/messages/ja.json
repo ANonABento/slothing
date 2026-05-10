@@ -1,250 +1,251 @@
 {
   "_meta": {
     "note": "Auto-translated, needs human review.",
-    "source": "scripted-fallback",
-    "generatedAt": "2026-05-10T08:45:25.945Z"
+    "source": "llm-anthropic",
+    "model": "claude-code",
+    "generatedAt": "2026-05-10T09:53:14.656Z"
   },
   "common": {
-    "cancel": "Cancel",
-    "clear": "Clear",
-    "clearAll": "Clear all",
-    "filters": "Filters",
-    "import": "Import",
-    "loading": "Loading",
-    "openSource": "Open source",
-    "save": "Save",
-    "search": "Search",
-    "selectLocale": "Select locale",
-    "show": "Show",
-    "tryAgain": "Try Again"
+    "cancel": "キャンセル",
+    "clear": "クリア",
+    "clearAll": "すべてクリア",
+    "filters": "フィルター",
+    "import": "インポート",
+    "loading": "読み込み中",
+    "openSource": "オープンソース",
+    "save": "保存",
+    "search": "検索",
+    "selectLocale": "言語を選択",
+    "show": "表示",
+    "tryAgain": "再試行"
   },
   "nav": {
     "brand": "Slothing",
-    "tagline": "Job search workspace",
-    "skipToMain": "Skip to main content",
-    "mainContent": "Main content",
-    "mainNavigation": "Main navigation",
-    "openMenu": "Open navigation menu",
-    "closeMenu": "Close navigation menu",
-    "collapse": "Collapse navigation",
-    "expand": "Expand navigation",
-    "profilePhoto": "Profile photo",
-    "llmConfigured": "LLM configured ({provider})",
-    "llmNotConfigured": "LLM not configured",
+    "tagline": "求職活動ワークスペース",
+    "skipToMain": "メインコンテンツへスキップ",
+    "mainContent": "メインコンテンツ",
+    "mainNavigation": "メインナビゲーション",
+    "openMenu": "ナビゲーションメニューを開く",
+    "closeMenu": "ナビゲーションメニューを閉じる",
+    "collapse": "ナビゲーションを折りたたむ",
+    "expand": "ナビゲーションを展開",
+    "profilePhoto": "プロフィール写真",
+    "llmConfigured": "LLM 設定済み（{provider}）",
+    "llmNotConfigured": "LLM 未設定",
     "groups": {
-      "home": "Home",
-      "documents": "Documents",
-      "pipeline": "Pipeline",
-      "prep": "Prep",
-      "reporting": "Reporting"
+      "home": "ホーム",
+      "documents": "ドキュメント",
+      "pipeline": "パイプライン",
+      "prep": "準備",
+      "reporting": "レポート"
     },
     "items": {
       "dashboard": "ダッシュボード",
-      "documents": "Documents",
-      "answerBank": "Answer Bank",
-      "studio": "Document Studio",
-      "opportunities": "機会",
-      "reviewQueue": "Review Queue",
-      "calendar": "Calendar",
-      "emails": "Email Templates",
-      "interview": "Interview Prep",
-      "salary": "Salary Tools",
-      "analytics": "Analytics",
-      "profile": "Profile",
+      "documents": "ドキュメント",
+      "answerBank": "回答バンク",
+      "studio": "ドキュメントスタジオ",
+      "opportunities": "求人・機会",
+      "reviewQueue": "レビュー待ち",
+      "calendar": "カレンダー",
+      "emails": "メールテンプレート",
+      "interview": "面接対策",
+      "salary": "給与ツール",
+      "analytics": "分析",
+      "profile": "プロフィール",
       "settings": "設定"
     }
   },
   "dashboard": {
     "title": "ダッシュボード",
     "actions": {
-      "addOpportunity": "Add opportunity",
-      "uploadDocument": "Upload document",
-      "signIn": "Sign In"
+      "addOpportunity": "機会を追加",
+      "uploadDocument": "ドキュメントをアップロード",
+      "signIn": "サインイン"
     },
     "errors": {
-      "authRequired": "Sign in to access your dashboard.",
-      "loadTitle": "Could not load dashboard",
-      "loadFallback": "Please refresh the page and try again.",
-      "unavailable": "Dashboard unavailable",
-      "signInRequired": "Sign in required",
-      "loadData": "We couldn't load your dashboard data.",
-      "skipTitle": "Could not skip setup",
-      "skipFallback": "Please try again."
+      "authRequired": "ダッシュボードを利用するにはサインインしてください。",
+      "loadTitle": "ダッシュボードを読み込めませんでした",
+      "loadFallback": "ページを更新してもう一度お試しください。",
+      "unavailable": "ダッシュボードを利用できません",
+      "signInRequired": "サインインが必要です",
+      "loadData": "ダッシュボードのデータを読み込めませんでした。",
+      "skipTitle": "セットアップをスキップできませんでした",
+      "skipFallback": "もう一度お試しください。"
     },
     "greeting": {
-      "onboardingNamed": "Welcome, {name}. Let's set up your workspace.",
-      "onboarding": "Let's set up your workspace.",
-      "activeNamed": "Welcome back, {name}. Here's what needs your attention.",
-      "active": "Here's what needs your attention."
+      "onboardingNamed": "ようこそ、{name} さん。ワークスペースを設定しましょう。",
+      "onboarding": "ワークスペースを設定しましょう。",
+      "activeNamed": "おかえりなさい、{name} さん。今日対応すべき項目です。",
+      "active": "今日対応すべき項目です。"
     },
     "onboarding": {
-      "startHere": "Start here",
-      "title": "Build your workspace in three steps",
-      "description": "Slothing works best once it has your resume, a target role, and a place to draft tailored documents.",
-      "complete": "of {total} complete",
-      "unlocks": "What unlocks next",
-      "afterStep": "After this step",
-      "skip": "Skip setup for now",
-      "recommended": "Recommended"
+      "startHere": "ここから始める",
+      "title": "3 ステップでワークスペースを構築",
+      "description": "Slothing は、レジュメ、希望ロール、応募書類のドラフト先がそろうと最大限に活用できます。",
+      "complete": "{total} 中完了",
+      "unlocks": "次に解放される項目",
+      "afterStep": "このステップの後",
+      "skip": "セットアップを後回しにする",
+      "recommended": "おすすめ"
     },
     "stats": {
-      "readiness": "Readiness",
-      "documents": "Documents",
-      "tailoredDocs": "Tailored docs",
-      "pipeline": "Pipeline"
+      "readiness": "準備状況",
+      "documents": "ドキュメント",
+      "tailoredDocs": "カスタマイズ済み書類",
+      "pipeline": "パイプライン"
     },
     "today": {
-      "title": "Today",
-      "description": "Three focused actions, then you are done.",
-      "uploadResumeTitle": "Upload your resume",
-      "uploadResumeContext": "Create the source material for tailored applications.",
-      "uploadResumeAction": "Upload resume",
-      "reviewNewTitle": "Review {count, plural, one {# new opportunity} other {# new opportunities}}",
-      "reviewNewContext": "Decide what belongs in your pipeline.",
-      "reviewNewAction": "Open queue",
-      "completeProfileTitle": "Complete your profile",
-      "completeProfileContext": "{percentage}% ready for tailoring.",
-      "completeProfileAction": "Improve profile",
-      "prepareInterviewsTitle": "Prepare for interviews",
-      "prepareInterviewsContext": "Turn active opportunities into practice prompts.",
-      "prepareInterviewsAction": "Prep now",
-      "draftFollowUpTitle": "Draft a follow-up",
-      "draftFollowUpContext": "Keep recruiters warm with a reusable email.",
-      "draftFollowUpAction": "Open templates",
-      "tailoredDocumentTitle": "Create a tailored document",
-      "tailoredDocumentContext": "{count, plural, one {# document} other {# documents}} ready to reuse.",
-      "tailoredDocumentAction": "Open Studio"
+      "title": "今日のタスク",
+      "description": "3 つに集中すれば完了です。",
+      "uploadResumeTitle": "レジュメをアップロード",
+      "uploadResumeContext": "応募書類のベースとなる素材を作成します。",
+      "uploadResumeAction": "レジュメをアップロード",
+      "reviewNewTitle": "{count, plural, other {新着の機会 # 件}}を確認",
+      "reviewNewContext": "パイプラインに加える機会を選びましょう。",
+      "reviewNewAction": "キューを開く",
+      "completeProfileTitle": "プロフィールを完成させる",
+      "completeProfileContext": "カスタマイズ準備度 {percentage}%。",
+      "completeProfileAction": "プロフィールを改善",
+      "prepareInterviewsTitle": "面接の準備をする",
+      "prepareInterviewsContext": "進行中の機会を練習問題に変換します。",
+      "prepareInterviewsAction": "今すぐ準備",
+      "draftFollowUpTitle": "フォローアップを下書き",
+      "draftFollowUpContext": "再利用できるメールで採用担当者との関係を維持。",
+      "draftFollowUpAction": "テンプレートを開く",
+      "tailoredDocumentTitle": "カスタマイズ書類を作成",
+      "tailoredDocumentContext": "再利用可能な{count, plural, other {書類 # 件}}。",
+      "tailoredDocumentAction": "スタジオを開く"
     },
     "readiness": {
-      "description": "Your application materials at a glance.",
-      "profile": "Profile",
-      "strongFoundation": "Strong foundation",
-      "needsDetail": "Needs detail",
-      "documentsDetail": "{count, plural, one {# file} other {# files}} in your bank",
-      "tailoredDetail": "{count, plural, one {# resume} other {# resumes}} built"
+      "description": "応募書類のひと目でわかる状況。",
+      "profile": "プロフィール",
+      "strongFoundation": "土台が整っています",
+      "needsDetail": "詳細の追加が必要",
+      "documentsDetail": "バンク内に{count, plural, other {ファイル # 件}}",
+      "tailoredDetail": "{count, plural, other {レジュメ # 件}}を作成済み"
     },
     "pipeline": {
-      "title": "Pipeline",
-      "description": "Where your active opportunities stand.",
-      "empty": "Add opportunities to see your pipeline."
+      "title": "パイプライン",
+      "description": "進行中の機会の状況。",
+      "empty": "機会を追加するとパイプラインが表示されます。"
     },
     "recent": {
-      "title": "Recent opportunities",
-      "description": "The latest items saved to your workspace.",
-      "viewAll": "View all",
-      "emptyTitle": "No opportunities yet",
-      "emptyDescription": "Save or import opportunities to start tracking them here."
+      "title": "最近の機会",
+      "description": "ワークスペースに直近で保存された項目。",
+      "viewAll": "すべて表示",
+      "emptyTitle": "機会はまだありません",
+      "emptyDescription": "機会を保存またはインポートして、ここで管理を開始しましょう。"
     }
   },
   "opportunities": {
-    "title": "機会",
-    "description": "Review saved opportunities, compare fit signals, and keep application work moving from one list.",
-    "viewMode": "Opportunity view mode",
-    "list": "List",
+    "title": "求人・機会",
+    "description": "保存した機会を確認し、適合度を比較して、応募作業をひとつのリストから進めましょう。",
+    "viewMode": "機会の表示モード",
+    "list": "リスト",
     "kanban": "Kanban",
-    "addOpportunity": "Add Opportunity",
+    "addOpportunity": "機会を追加",
     "filters": {
-      "panel": "Filters",
-      "type": "Type",
-      "status": "Status",
-      "source": "Source",
-      "tags": "Tags",
-      "remote": "Remote type",
-      "tech": "Tech stack",
-      "allTags": "All tags",
-      "anyStack": "Any stack",
-      "searchPlaceholder": "Search title, company, skills",
-      "searchAria": "Search opportunities",
-      "sortAria": "Sort opportunities",
-      "sortBy": "Sort by {label}",
-      "activeSearch": "Search: {value}",
-      "activeType": "Type: {value}",
-      "activeStatus": "Status: {value}",
-      "activeSource": "Source: {value}",
-      "activeRemote": "Remote: {value}",
-      "activeTag": "Tag: {value}",
-      "activeTech": "Tech: {value}",
-      "remove": "Remove {label} filter"
+      "panel": "フィルター",
+      "type": "種類",
+      "status": "ステータス",
+      "source": "ソース",
+      "tags": "タグ",
+      "remote": "リモート種別",
+      "tech": "技術スタック",
+      "allTags": "すべてのタグ",
+      "anyStack": "すべてのスタック",
+      "searchPlaceholder": "タイトル、会社、スキルを検索",
+      "searchAria": "機会を検索",
+      "sortAria": "機会を並べ替え",
+      "sortBy": "{label}で並べ替え",
+      "activeSearch": "検索：{value}",
+      "activeType": "種類：{value}",
+      "activeStatus": "ステータス：{value}",
+      "activeSource": "ソース：{value}",
+      "activeRemote": "リモート：{value}",
+      "activeTag": "タグ：{value}",
+      "activeTech": "技術：{value}",
+      "remove": "{label}フィルターを削除"
     },
     "tabs": {
-      "job": "Roles",
-      "hackathon": "Hackathons",
-      "all": "All"
+      "job": "ロール",
+      "hackathon": "ハッカソン",
+      "all": "すべて"
     },
     "status": {
-      "all": "All statuses",
-      "pending": "Pending",
-      "saved": "Saved",
-      "applied": "Applied",
-      "interviewing": "Interviewing",
-      "offer": "Offer",
-      "rejected": "Rejected",
-      "expired": "Expired",
-      "dismissed": "Dismissed"
+      "all": "すべてのステータス",
+      "pending": "保留中",
+      "saved": "保存済み",
+      "applied": "応募済み",
+      "interviewing": "面接中",
+      "offer": "オファー",
+      "rejected": "不採用",
+      "expired": "期限切れ",
+      "dismissed": "却下"
     },
     "types": {
-      "job": "Job",
-      "hackathon": "Hackathon"
+      "job": "求人",
+      "hackathon": "ハッカソン"
     },
     "sources": {
-      "all": "All sources",
+      "all": "すべてのソース",
       "waterlooworks": "WaterlooWorks",
       "linkedin": "LinkedIn",
       "indeed": "Indeed",
       "greenhouse": "Greenhouse",
       "lever": "Lever",
       "devpost": "Devpost",
-      "manual": "Manual",
+      "manual": "手動",
       "url": "URL"
     },
     "remote": {
-      "all": "Any remote type",
-      "remote": "Remote",
-      "hybrid": "Hybrid",
-      "onsite": "Onsite"
+      "all": "すべてのリモート種別",
+      "remote": "リモート",
+      "hybrid": "ハイブリッド",
+      "onsite": "オンサイト"
     },
     "sort": {
-      "deadline": "Deadline",
-      "scrapedAt": "Date scraped",
-      "company": "Company",
-      "salary": "Salary"
+      "deadline": "締め切り",
+      "scrapedAt": "取得日",
+      "company": "会社",
+      "salary": "給与"
     },
-    "summary": "Showing {shown} of {total} opportunities",
+    "summary": "{total} 件中 {shown} 件の機会を表示中",
     "counts": {
-      "jobs": "{count, plural, one {# job} other {# jobs}}",
-      "hackathons": "{count, plural, one {# hackathon} other {# hackathons}}",
-      "pending": "{count, plural, one {# pending} other {# pending}}"
+      "jobs": "{count, plural, other {# 件の求人}}",
+      "hackathons": "{count, plural, other {# 件のハッカソン}}",
+      "pending": "{count, plural, other {# 件の保留中}}"
     },
     "empty": {
-      "noMatchesTitle": "No opportunities match your filters",
-      "noMatchesDescription": "Try widening or clearing filters to see more.",
-      "clearFilters": "Clear filters"
+      "noMatchesTitle": "条件に合う機会がありません",
+      "noMatchesDescription": "フィルターを広げるかクリアして、より多く表示しましょう。",
+      "clearFilters": "フィルターをクリア"
     },
     "meta": {
-      "due": "Due {date}",
-      "noDeadline": "No deadline",
-      "team": "Team {min}-{max}",
-      "updateStatus": "Update status for {title}"
+      "due": "締切：{date}",
+      "noDeadline": "締切なし",
+      "team": "チーム {min}-{max} 名",
+      "updateStatus": "{title} のステータスを更新"
     },
     "kanbanBoard": {
-      "region": "Opportunity kanban board",
-      "roleDescription": "kanban board",
-      "laneAria": "{lane} opportunities",
-      "dropHere": "Drop opportunities here",
-      "hidden": "{count} in hidden lanes",
+      "region": "機会の Kanban ボード",
+      "roleDescription": "Kanban ボード",
+      "laneAria": "{lane} の機会",
+      "dropHere": "ここに機会をドロップ",
+      "hidden": "非表示レーンに {count} 件",
       "hiddenSummary": "{label} · {count}",
-      "moveClosedTitle": "Move to Closed",
-      "moveClosedDescription": "Pick the final state for {title}."
+      "moveClosedTitle": "クローズへ移動",
+      "moveClosedDescription": "{title} の最終ステータスを選択してください。"
     }
   },
   "settings": {
     "title": "設定",
-    "description": "Configure your AI provider for resume parsing and interview preparation.",
-    "loading": "Loading settings...",
+    "description": "レジュメ解析と面接対策に使用する AI プロバイダーを設定します。",
+    "loading": "設定を読み込み中...",
     "language": {
       "title": "言語",
-      "description": "Choose the language used for navigation and app screens.",
-      "label": "Language",
+      "description": "ナビゲーションとアプリ画面で使用する言語を選びます。",
+      "label": "言語",
       "options": {
         "en": "English",
         "es": "Español",
@@ -258,8 +259,8 @@
     }
   },
   "notFound": {
-    "title": "Page not found",
-    "description": "We couldn't find that page.",
-    "action": "Go to dashboard"
+    "title": "ページが見つかりません",
+    "description": "そのページを見つけられませんでした。",
+    "action": "ダッシュボードへ戻る"
   }
 }

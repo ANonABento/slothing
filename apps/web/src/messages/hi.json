@@ -1,250 +1,251 @@
 {
   "_meta": {
     "note": "Auto-translated, needs human review.",
-    "source": "scripted-fallback",
-    "generatedAt": "2026-05-10T08:45:25.944Z"
+    "source": "llm-anthropic",
+    "model": "claude-code",
+    "generatedAt": "2026-05-10T09:51:09.616Z"
   },
   "common": {
-    "cancel": "Cancel",
-    "clear": "Clear",
-    "clearAll": "Clear all",
-    "filters": "Filters",
-    "import": "Import",
-    "loading": "Loading",
-    "openSource": "Open source",
-    "save": "Save",
-    "search": "Search",
-    "selectLocale": "Select locale",
-    "show": "Show",
-    "tryAgain": "Try Again"
+    "cancel": "रद्द करें",
+    "clear": "साफ़ करें",
+    "clearAll": "सभी साफ़ करें",
+    "filters": "फ़िल्टर",
+    "import": "आयात करें",
+    "loading": "लोड हो रहा है",
+    "openSource": "ओपन सोर्स",
+    "save": "सहेजें",
+    "search": "खोजें",
+    "selectLocale": "भाषा चुनें",
+    "show": "दिखाएँ",
+    "tryAgain": "पुनः प्रयास करें"
   },
   "nav": {
     "brand": "Slothing",
-    "tagline": "Job search workspace",
-    "skipToMain": "Skip to main content",
-    "mainContent": "Main content",
-    "mainNavigation": "Main navigation",
-    "openMenu": "Open navigation menu",
-    "closeMenu": "Close navigation menu",
-    "collapse": "Collapse navigation",
-    "expand": "Expand navigation",
-    "profilePhoto": "Profile photo",
-    "llmConfigured": "LLM configured ({provider})",
-    "llmNotConfigured": "LLM not configured",
+    "tagline": "जॉब सर्च वर्कस्पेस",
+    "skipToMain": "मुख्य सामग्री पर जाएँ",
+    "mainContent": "मुख्य सामग्री",
+    "mainNavigation": "मुख्य नेविगेशन",
+    "openMenu": "नेविगेशन मेनू खोलें",
+    "closeMenu": "नेविगेशन मेनू बंद करें",
+    "collapse": "नेविगेशन समेटें",
+    "expand": "नेविगेशन विस्तृत करें",
+    "profilePhoto": "प्रोफ़ाइल फ़ोटो",
+    "llmConfigured": "LLM कॉन्फ़िगर किया गया ({provider})",
+    "llmNotConfigured": "LLM कॉन्फ़िगर नहीं है",
     "groups": {
-      "home": "Home",
-      "documents": "Documents",
-      "pipeline": "Pipeline",
-      "prep": "Prep",
-      "reporting": "Reporting"
+      "home": "होम",
+      "documents": "दस्तावेज़",
+      "pipeline": "पाइपलाइन",
+      "prep": "तैयारी",
+      "reporting": "रिपोर्टिंग"
     },
     "items": {
       "dashboard": "डैशबोर्ड",
-      "documents": "Documents",
-      "answerBank": "Answer Bank",
-      "studio": "Document Studio",
+      "documents": "दस्तावेज़",
+      "answerBank": "उत्तर बैंक",
+      "studio": "डॉक्यूमेंट स्टूडियो",
       "opportunities": "अवसर",
-      "reviewQueue": "Review Queue",
-      "calendar": "Calendar",
-      "emails": "Email Templates",
-      "interview": "Interview Prep",
-      "salary": "Salary Tools",
-      "analytics": "Analytics",
-      "profile": "Profile",
+      "reviewQueue": "समीक्षा कतार",
+      "calendar": "कैलेंडर",
+      "emails": "ईमेल टेम्पलेट",
+      "interview": "इंटरव्यू तैयारी",
+      "salary": "वेतन उपकरण",
+      "analytics": "एनालिटिक्स",
+      "profile": "प्रोफ़ाइल",
       "settings": "सेटिंग्स"
     }
   },
   "dashboard": {
     "title": "डैशबोर्ड",
     "actions": {
-      "addOpportunity": "Add opportunity",
-      "uploadDocument": "Upload document",
-      "signIn": "Sign In"
+      "addOpportunity": "अवसर जोड़ें",
+      "uploadDocument": "दस्तावेज़ अपलोड करें",
+      "signIn": "साइन इन करें"
     },
     "errors": {
-      "authRequired": "Sign in to access your dashboard.",
-      "loadTitle": "Could not load dashboard",
-      "loadFallback": "Please refresh the page and try again.",
-      "unavailable": "Dashboard unavailable",
-      "signInRequired": "Sign in required",
-      "loadData": "We couldn't load your dashboard data.",
-      "skipTitle": "Could not skip setup",
-      "skipFallback": "Please try again."
+      "authRequired": "अपने डैशबोर्ड तक पहुँचने के लिए साइन इन करें।",
+      "loadTitle": "डैशबोर्ड लोड नहीं हो सका",
+      "loadFallback": "कृपया पेज को रिफ्रेश करें और फिर से प्रयास करें।",
+      "unavailable": "डैशबोर्ड उपलब्ध नहीं है",
+      "signInRequired": "साइन इन आवश्यक है",
+      "loadData": "हम आपका डैशबोर्ड डेटा लोड नहीं कर सके।",
+      "skipTitle": "सेटअप छोड़ा नहीं जा सका",
+      "skipFallback": "कृपया पुनः प्रयास करें।"
     },
     "greeting": {
-      "onboardingNamed": "Welcome, {name}. Let's set up your workspace.",
-      "onboarding": "Let's set up your workspace.",
-      "activeNamed": "Welcome back, {name}. Here's what needs your attention.",
-      "active": "Here's what needs your attention."
+      "onboardingNamed": "स्वागत है, {name}। चलिए आपका वर्कस्पेस सेट अप करें।",
+      "onboarding": "चलिए आपका वर्कस्पेस सेट अप करें।",
+      "activeNamed": "वापसी पर स्वागत है, {name}। यहाँ देखें कि किस पर ध्यान देने की ज़रूरत है।",
+      "active": "यहाँ देखें कि किस पर ध्यान देने की ज़रूरत है।"
     },
     "onboarding": {
-      "startHere": "Start here",
-      "title": "Build your workspace in three steps",
-      "description": "Slothing works best once it has your resume, a target role, and a place to draft tailored documents.",
-      "complete": "of {total} complete",
-      "unlocks": "What unlocks next",
-      "afterStep": "After this step",
-      "skip": "Skip setup for now",
-      "recommended": "Recommended"
+      "startHere": "यहाँ से शुरू करें",
+      "title": "तीन चरणों में अपना वर्कस्पेस बनाएँ",
+      "description": "Slothing तब सबसे अच्छा काम करता है जब उसके पास आपका रिज़्यूमे, एक लक्ष्य भूमिका, और तैयार किए गए दस्तावेज़ों का मसौदा बनाने की जगह हो।",
+      "complete": "{total} में से पूर्ण",
+      "unlocks": "आगे क्या अनलॉक होता है",
+      "afterStep": "इस चरण के बाद",
+      "skip": "अभी सेटअप छोड़ें",
+      "recommended": "अनुशंसित"
     },
     "stats": {
-      "readiness": "Readiness",
-      "documents": "Documents",
-      "tailoredDocs": "Tailored docs",
-      "pipeline": "Pipeline"
+      "readiness": "तैयारी",
+      "documents": "दस्तावेज़",
+      "tailoredDocs": "अनुकूलित दस्तावेज़",
+      "pipeline": "पाइपलाइन"
     },
     "today": {
-      "title": "Today",
-      "description": "Three focused actions, then you are done.",
-      "uploadResumeTitle": "Upload your resume",
-      "uploadResumeContext": "Create the source material for tailored applications.",
-      "uploadResumeAction": "Upload resume",
-      "reviewNewTitle": "Review {count, plural, one {# new opportunity} other {# new opportunities}}",
-      "reviewNewContext": "Decide what belongs in your pipeline.",
-      "reviewNewAction": "Open queue",
-      "completeProfileTitle": "Complete your profile",
-      "completeProfileContext": "{percentage}% ready for tailoring.",
-      "completeProfileAction": "Improve profile",
-      "prepareInterviewsTitle": "Prepare for interviews",
-      "prepareInterviewsContext": "Turn active opportunities into practice prompts.",
-      "prepareInterviewsAction": "Prep now",
-      "draftFollowUpTitle": "Draft a follow-up",
-      "draftFollowUpContext": "Keep recruiters warm with a reusable email.",
-      "draftFollowUpAction": "Open templates",
-      "tailoredDocumentTitle": "Create a tailored document",
-      "tailoredDocumentContext": "{count, plural, one {# document} other {# documents}} ready to reuse.",
-      "tailoredDocumentAction": "Open Studio"
+      "title": "आज",
+      "description": "तीन केंद्रित कार्य, फिर आपका काम पूरा।",
+      "uploadResumeTitle": "अपना रिज़्यूमे अपलोड करें",
+      "uploadResumeContext": "अनुकूलित आवेदनों के लिए स्रोत सामग्री बनाएँ।",
+      "uploadResumeAction": "रिज़्यूमे अपलोड करें",
+      "reviewNewTitle": "{count, plural, one {# नया अवसर} other {# नए अवसरों}} की समीक्षा करें",
+      "reviewNewContext": "तय करें कि आपकी पाइपलाइन में क्या होना चाहिए।",
+      "reviewNewAction": "कतार खोलें",
+      "completeProfileTitle": "अपनी प्रोफ़ाइल पूरी करें",
+      "completeProfileContext": "अनुकूलन के लिए {percentage}% तैयार।",
+      "completeProfileAction": "प्रोफ़ाइल सुधारें",
+      "prepareInterviewsTitle": "इंटरव्यू की तैयारी करें",
+      "prepareInterviewsContext": "सक्रिय अवसरों को अभ्यास प्रॉम्प्ट में बदलें।",
+      "prepareInterviewsAction": "अभी तैयारी करें",
+      "draftFollowUpTitle": "एक फ़ॉलो-अप का मसौदा तैयार करें",
+      "draftFollowUpContext": "एक पुन: उपयोग करने योग्य ईमेल से रिक्रूटर से जुड़ाव बनाए रखें।",
+      "draftFollowUpAction": "टेम्पलेट खोलें",
+      "tailoredDocumentTitle": "एक अनुकूलित दस्तावेज़ बनाएँ",
+      "tailoredDocumentContext": "{count, plural, one {# दस्तावेज़} other {# दस्तावेज़}} पुन: उपयोग के लिए तैयार।",
+      "tailoredDocumentAction": "स्टूडियो खोलें"
     },
     "readiness": {
-      "description": "Your application materials at a glance.",
-      "profile": "Profile",
-      "strongFoundation": "Strong foundation",
-      "needsDetail": "Needs detail",
-      "documentsDetail": "{count, plural, one {# file} other {# files}} in your bank",
-      "tailoredDetail": "{count, plural, one {# resume} other {# resumes}} built"
+      "description": "एक नज़र में आपकी आवेदन सामग्री।",
+      "profile": "प्रोफ़ाइल",
+      "strongFoundation": "मज़बूत आधार",
+      "needsDetail": "विवरण की आवश्यकता",
+      "documentsDetail": "आपके बैंक में {count, plural, one {# फ़ाइल} other {# फ़ाइलें}}",
+      "tailoredDetail": "{count, plural, one {# रिज़्यूमे} other {# रिज़्यूमे}} बनाए गए"
     },
     "pipeline": {
-      "title": "Pipeline",
-      "description": "Where your active opportunities stand.",
-      "empty": "Add opportunities to see your pipeline."
+      "title": "पाइपलाइन",
+      "description": "आपके सक्रिय अवसर कहाँ हैं।",
+      "empty": "अपनी पाइपलाइन देखने के लिए अवसर जोड़ें।"
     },
     "recent": {
-      "title": "Recent opportunities",
-      "description": "The latest items saved to your workspace.",
-      "viewAll": "View all",
-      "emptyTitle": "No opportunities yet",
-      "emptyDescription": "Save or import opportunities to start tracking them here."
+      "title": "हाल के अवसर",
+      "description": "आपके वर्कस्पेस में सहेजे गए नवीनतम आइटम।",
+      "viewAll": "सभी देखें",
+      "emptyTitle": "अभी तक कोई अवसर नहीं",
+      "emptyDescription": "अवसरों को यहाँ ट्रैक करना शुरू करने के लिए उन्हें सहेजें या आयात करें।"
     }
   },
   "opportunities": {
     "title": "अवसर",
-    "description": "Review saved opportunities, compare fit signals, and keep application work moving from one list.",
-    "viewMode": "Opportunity view mode",
-    "list": "List",
+    "description": "सहेजे गए अवसरों की समीक्षा करें, फिट संकेतों की तुलना करें, और एक ही सूची से आवेदन का काम आगे बढ़ाते रहें।",
+    "viewMode": "अवसर दृश्य मोड",
+    "list": "सूची",
     "kanban": "Kanban",
-    "addOpportunity": "Add Opportunity",
+    "addOpportunity": "अवसर जोड़ें",
     "filters": {
-      "panel": "Filters",
-      "type": "Type",
-      "status": "Status",
-      "source": "Source",
-      "tags": "Tags",
-      "remote": "Remote type",
-      "tech": "Tech stack",
-      "allTags": "All tags",
-      "anyStack": "Any stack",
-      "searchPlaceholder": "Search title, company, skills",
-      "searchAria": "Search opportunities",
-      "sortAria": "Sort opportunities",
-      "sortBy": "Sort by {label}",
-      "activeSearch": "Search: {value}",
-      "activeType": "Type: {value}",
-      "activeStatus": "Status: {value}",
-      "activeSource": "Source: {value}",
-      "activeRemote": "Remote: {value}",
-      "activeTag": "Tag: {value}",
-      "activeTech": "Tech: {value}",
-      "remove": "Remove {label} filter"
+      "panel": "फ़िल्टर",
+      "type": "प्रकार",
+      "status": "स्थिति",
+      "source": "स्रोत",
+      "tags": "टैग",
+      "remote": "रिमोट प्रकार",
+      "tech": "टेक स्टैक",
+      "allTags": "सभी टैग",
+      "anyStack": "कोई भी स्टैक",
+      "searchPlaceholder": "शीर्षक, कंपनी, कौशल खोजें",
+      "searchAria": "अवसर खोजें",
+      "sortAria": "अवसर क्रमबद्ध करें",
+      "sortBy": "{label} के अनुसार क्रमबद्ध करें",
+      "activeSearch": "खोज: {value}",
+      "activeType": "प्रकार: {value}",
+      "activeStatus": "स्थिति: {value}",
+      "activeSource": "स्रोत: {value}",
+      "activeRemote": "रिमोट: {value}",
+      "activeTag": "टैग: {value}",
+      "activeTech": "टेक: {value}",
+      "remove": "{label} फ़िल्टर हटाएँ"
     },
     "tabs": {
-      "job": "Roles",
-      "hackathon": "Hackathons",
-      "all": "All"
+      "job": "भूमिकाएँ",
+      "hackathon": "हैकथॉन",
+      "all": "सभी"
     },
     "status": {
-      "all": "All statuses",
-      "pending": "Pending",
-      "saved": "Saved",
-      "applied": "Applied",
-      "interviewing": "Interviewing",
-      "offer": "Offer",
-      "rejected": "Rejected",
-      "expired": "Expired",
-      "dismissed": "Dismissed"
+      "all": "सभी स्थितियाँ",
+      "pending": "लंबित",
+      "saved": "सहेजा गया",
+      "applied": "आवेदन किया",
+      "interviewing": "इंटरव्यू चल रहा है",
+      "offer": "ऑफ़र",
+      "rejected": "अस्वीकृत",
+      "expired": "समाप्त",
+      "dismissed": "खारिज"
     },
     "types": {
-      "job": "Job",
-      "hackathon": "Hackathon"
+      "job": "नौकरी",
+      "hackathon": "हैकथॉन"
     },
     "sources": {
-      "all": "All sources",
+      "all": "सभी स्रोत",
       "waterlooworks": "WaterlooWorks",
       "linkedin": "LinkedIn",
       "indeed": "Indeed",
       "greenhouse": "Greenhouse",
       "lever": "Lever",
       "devpost": "Devpost",
-      "manual": "Manual",
+      "manual": "मैन्युअल",
       "url": "URL"
     },
     "remote": {
-      "all": "Any remote type",
-      "remote": "Remote",
-      "hybrid": "Hybrid",
-      "onsite": "Onsite"
+      "all": "कोई भी रिमोट प्रकार",
+      "remote": "रिमोट",
+      "hybrid": "हाइब्रिड",
+      "onsite": "ऑनसाइट"
     },
     "sort": {
-      "deadline": "Deadline",
-      "scrapedAt": "Date scraped",
-      "company": "Company",
-      "salary": "Salary"
+      "deadline": "समय सीमा",
+      "scrapedAt": "स्क्रैप की गई तिथि",
+      "company": "कंपनी",
+      "salary": "वेतन"
     },
-    "summary": "Showing {shown} of {total} opportunities",
+    "summary": "{total} में से {shown} अवसर दिखाए जा रहे हैं",
     "counts": {
-      "jobs": "{count, plural, one {# job} other {# jobs}}",
-      "hackathons": "{count, plural, one {# hackathon} other {# hackathons}}",
-      "pending": "{count, plural, one {# pending} other {# pending}}"
+      "jobs": "{count, plural, one {# नौकरी} other {# नौकरियाँ}}",
+      "hackathons": "{count, plural, one {# हैकथॉन} other {# हैकथॉन}}",
+      "pending": "{count, plural, one {# लंबित} other {# लंबित}}"
     },
     "empty": {
-      "noMatchesTitle": "No opportunities match your filters",
-      "noMatchesDescription": "Try widening or clearing filters to see more.",
-      "clearFilters": "Clear filters"
+      "noMatchesTitle": "आपके फ़िल्टर से कोई अवसर मेल नहीं खाता",
+      "noMatchesDescription": "अधिक देखने के लिए फ़िल्टर का दायरा बढ़ाएँ या साफ़ करें।",
+      "clearFilters": "फ़िल्टर साफ़ करें"
     },
     "meta": {
-      "due": "Due {date}",
-      "noDeadline": "No deadline",
-      "team": "Team {min}-{max}",
-      "updateStatus": "Update status for {title}"
+      "due": "नियत {date}",
+      "noDeadline": "कोई समय सीमा नहीं",
+      "team": "टीम {min}-{max}",
+      "updateStatus": "{title} की स्थिति अपडेट करें"
     },
     "kanbanBoard": {
-      "region": "Opportunity kanban board",
-      "roleDescription": "kanban board",
-      "laneAria": "{lane} opportunities",
-      "dropHere": "Drop opportunities here",
-      "hidden": "{count} in hidden lanes",
+      "region": "अवसर Kanban बोर्ड",
+      "roleDescription": "Kanban बोर्ड",
+      "laneAria": "{lane} अवसर",
+      "dropHere": "अवसर यहाँ छोड़ें",
+      "hidden": "छिपी लेन में {count}",
       "hiddenSummary": "{label} · {count}",
-      "moveClosedTitle": "Move to Closed",
-      "moveClosedDescription": "Pick the final state for {title}."
+      "moveClosedTitle": "बंद में ले जाएँ",
+      "moveClosedDescription": "{title} के लिए अंतिम स्थिति चुनें।"
     }
   },
   "settings": {
     "title": "सेटिंग्स",
-    "description": "Configure your AI provider for resume parsing and interview preparation.",
-    "loading": "Loading settings...",
+    "description": "रिज़्यूमे पार्सिंग और इंटरव्यू तैयारी के लिए अपना AI प्रदाता कॉन्फ़िगर करें।",
+    "loading": "सेटिंग्स लोड हो रही हैं...",
     "language": {
       "title": "भाषा",
-      "description": "Choose the language used for navigation and app screens.",
-      "label": "Language",
+      "description": "नेविगेशन और ऐप स्क्रीन के लिए उपयोग की जाने वाली भाषा चुनें।",
+      "label": "भाषा",
       "options": {
         "en": "English",
         "es": "Español",
@@ -258,8 +259,8 @@
     }
   },
   "notFound": {
-    "title": "Page not found",
-    "description": "We couldn't find that page.",
-    "action": "Go to dashboard"
+    "title": "पेज नहीं मिला",
+    "description": "हम वह पेज नहीं ढूँढ सके।",
+    "action": "डैशबोर्ड पर जाएँ"
   }
 }
