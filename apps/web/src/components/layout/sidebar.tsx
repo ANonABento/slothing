@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { Link, usePathname } from "@/i18n/navigation";
@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import { useLLMStatus } from "@/hooks/useLLMStatus";
 import { useProfileSnapshot } from "@/hooks/use-profile-snapshot";
+import { SidebarExtensionCard } from "./sidebar-extension-card";
 
 export interface NavItem {
   name: string;
@@ -542,54 +543,60 @@ export function Sidebar() {
               );
             }
             return (
-              <Link
-                key={item.name}
-                href={item.href}
-                aria-current={isActive ? "page" : undefined}
-                title={collapsed ? label : undefined}
-                aria-label={collapsed ? label : undefined}
-                className={getSidebarNavItemClassName({
-                  isActive,
-                  collapsed,
-                })}
-                {...getSidebarNavItemState(isActive)}
-              >
-                <div className="relative shrink-0">
-                  <item.icon
-                    className={cn(
-                      "h-5 w-5",
-                      isActive ? "text-primary" : "text-current",
-                    )}
-                  />
-                  {item.href === "/settings" && (
-                    <span
+              <Fragment key={item.name}>
+                {item.href === "/settings" ? (
+                  <SidebarExtensionCard collapsed={collapsed} />
+                ) : null}
+                <Link
+                  href={item.href}
+                  aria-current={isActive ? "page" : undefined}
+                  title={collapsed ? label : undefined}
+                  aria-label={collapsed ? label : undefined}
+                  className={getSidebarNavItemClassName({
+                    isActive,
+                    collapsed,
+                  })}
+                  {...getSidebarNavItemState(isActive)}
+                >
+                  <div className="relative shrink-0">
+                    <item.icon
                       className={cn(
-                        "absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-background",
-                        llmStatus.configured
-                          ? "bg-success"
-                          : "bg-muted-foreground/40",
+                        "h-5 w-5",
+                        isActive ? "text-primary" : "text-current",
                       )}
-                      title={
-                        llmStatus.configured
-                          ? t("llmConfigured", { provider: llmStatus.provider })
-                          : t("llmNotConfigured")
-                      }
                     />
-                  )}
-                </div>
-                {!collapsed && (
-                  <span className="min-w-0 truncate">{label}</span>
-                )}
-
-                {/* Tooltip for collapsed state */}
-                {collapsed && (
-                  <div className="absolute left-full ml-2 hidden group-hover:flex items-center">
-                    <div className="bg-popover text-popover-foreground text-sm font-medium px-3 py-1.5 rounded-lg shadow-elevated border whitespace-nowrap">
-                      {label}
-                    </div>
+                    {item.href === "/settings" && (
+                      <span
+                        className={cn(
+                          "absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-background",
+                          llmStatus.configured
+                            ? "bg-success"
+                            : "bg-muted-foreground/40",
+                        )}
+                        title={
+                          llmStatus.configured
+                            ? t("llmConfigured", {
+                                provider: llmStatus.provider,
+                              })
+                            : t("llmNotConfigured")
+                        }
+                      />
+                    )}
                   </div>
-                )}
-              </Link>
+                  {!collapsed && (
+                    <span className="min-w-0 truncate">{label}</span>
+                  )}
+
+                  {/* Tooltip for collapsed state */}
+                  {collapsed && (
+                    <div className="absolute left-full ml-2 hidden group-hover:flex items-center">
+                      <div className="bg-popover text-popover-foreground text-sm font-medium px-3 py-1.5 rounded-lg shadow-elevated border whitespace-nowrap">
+                        {label}
+                      </div>
+                    </div>
+                  )}
+                </Link>
+              </Fragment>
             );
           })}
         </div>

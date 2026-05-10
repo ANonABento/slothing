@@ -1,5 +1,7 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { NextIntlClientProvider } from "next-intl";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import messages from "@/messages/en.json";
 import ExtensionConnectPage from "./page";
 
 const mocks = vi.hoisted(() => ({
@@ -31,6 +33,14 @@ function setChromeRuntime(sendMessage?: unknown) {
   });
 }
 
+function renderPage() {
+  return render(
+    <NextIntlClientProvider locale="en" messages={messages}>
+      <ExtensionConnectPage />
+    </NextIntlClientProvider>,
+  );
+}
+
 describe("ExtensionConnectPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -48,7 +58,7 @@ describe("ExtensionConnectPage", () => {
       expiresAt: "2026-05-09T12:00:00.000Z",
     });
 
-    render(<ExtensionConnectPage />);
+    renderPage();
 
     await screen.findByText("Extension connected successfully.");
 
@@ -78,6 +88,10 @@ describe("ExtensionConnectPage", () => {
     expect(
       screen.getByText("Return to your browser to use the extension."),
     ).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Install it" })).toHaveAttribute(
+      "href",
+      "/en/extension",
+    );
   });
 
   it("sends the token through chrome runtime when reachable", async () => {
@@ -95,7 +109,7 @@ describe("ExtensionConnectPage", () => {
       expiresAt: "2026-05-09T12:00:00.000Z",
     });
 
-    render(<ExtensionConnectPage />);
+    renderPage();
 
     await screen.findByText("Extension connected successfully.");
 
@@ -121,7 +135,7 @@ describe("ExtensionConnectPage", () => {
       "/extension/connect?extensionId=abc123",
     );
 
-    render(<ExtensionConnectPage />);
+    renderPage();
 
     expect(await screen.findByText("Connection failed")).toBeInTheDocument();
     expect(
@@ -143,7 +157,7 @@ describe("ExtensionConnectPage", () => {
   ])("shows the diagnostic message for HTTP %i", async (status, message) => {
     mockFetchResponse(status, { error: "nope" });
 
-    render(<ExtensionConnectPage />);
+    renderPage();
 
     expect(await screen.findByText(message)).toBeInTheDocument();
   });
@@ -151,7 +165,7 @@ describe("ExtensionConnectPage", () => {
   it("shows an offline diagnostic when fetch rejects", async () => {
     vi.mocked(fetch).mockRejectedValueOnce(new TypeError("Failed to fetch"));
 
-    render(<ExtensionConnectPage />);
+    renderPage();
 
     expect(
       await screen.findByText(
@@ -167,7 +181,7 @@ describe("ExtensionConnectPage", () => {
     });
     const closeSpy = vi.spyOn(window, "close").mockImplementation(() => {});
 
-    render(<ExtensionConnectPage />);
+    renderPage();
 
     const button = await screen.findByRole("button", { name: "Close tab" });
     fireEvent.click(button);

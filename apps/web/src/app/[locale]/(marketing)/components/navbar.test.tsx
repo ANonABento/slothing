@@ -37,19 +37,12 @@ function expectLocalePrefixedInternalHrefs(locale: string) {
 }
 
 describe("Navbar", () => {
-  it.each(["es", "zh-CN"])(
-    "prefixes internal links with %s",
-    (locale) => {
-      renderNavbar(locale);
+  it.each(["es", "zh-CN"])("prefixes internal links with %s", (locale) => {
+    renderNavbar(locale);
 
-      expectLocalePrefixedInternalHrefs(locale);
-      expect(anchorHrefs()).toEqual([
-        "#features",
-        "#how-it-works",
-        "#testimonials",
-      ]);
-    },
-  );
+    expectLocalePrefixedInternalHrefs(locale);
+    expect(anchorHrefs()).toEqual(["#features", "#how-it-works"]);
+  });
 
   it("prefixes mobile menu CTAs and keeps section anchors literal", () => {
     renderNavbar("es");
@@ -60,10 +53,8 @@ describe("Navbar", () => {
     expect(anchorHrefs()).toEqual([
       "#features",
       "#how-it-works",
-      "#testimonials",
       "#features",
       "#how-it-works",
-      "#testimonials",
     ]);
 
     const signInLinks = screen.getAllByRole("link", { name: "Sign In" });

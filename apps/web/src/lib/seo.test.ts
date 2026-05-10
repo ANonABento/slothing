@@ -87,6 +87,7 @@ const ALL_PAGES = [
   "privacy",
   "terms",
   "atsScanner",
+  "extension",
 ] as const;
 
 describe("getPageMetadata", () => {
@@ -105,6 +106,13 @@ describe("getPageMetadata", () => {
     expect((meta.openGraph as Record<string, unknown>).siteName).toBe(
       SITE_NAME,
     );
+  });
+
+  it("includes public extension page metadata", () => {
+    const meta = getPageMetadata("extension");
+
+    expect(meta.title).toBe("Browser Extension");
+    expect(meta.alternates).toMatchObject({ canonical: "/extension" });
   });
 
   it("includes twitter card fields", () => {

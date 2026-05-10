@@ -1,4 +1,4 @@
-import { Briefcase, FileText, Upload } from "lucide-react";
+import { Briefcase, FileText, Puzzle, Upload } from "lucide-react";
 import { getPipelineTotal } from "@/lib/opportunities/pipeline";
 import type { OnboardingStats, OnboardingStep } from "./types";
 
@@ -11,6 +11,16 @@ export const BASIC_ONBOARDING_STEPS: OnboardingStep[] = [
     href: "/bank",
     actionLabel: "Upload resume",
     isComplete: (stats) => stats.documentsCount > 0,
+    tier: "basic",
+  },
+  {
+    id: "install-extension",
+    icon: Puzzle,
+    title: "Install the browser extension",
+    description: "Capture roles from job boards while you browse.",
+    href: "/extension",
+    actionLabel: "Install extension",
+    isComplete: (stats) => stats.extensionInstalled === true,
     tier: "basic",
   },
   {

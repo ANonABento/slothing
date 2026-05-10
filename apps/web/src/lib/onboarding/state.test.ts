@@ -29,6 +29,7 @@ describe("computeOnboardingActive", () => {
         dismissedAt: null,
         stats: {
           documentsCount: 1,
+          extensionInstalled: true,
           resumesGenerated: 1,
           jobsByStatus: { interviewing: 1 },
         },
