@@ -74,6 +74,14 @@ describe("InterviewActiveSession", () => {
     expect(defaultProps.onSkipQuestion).toHaveBeenCalled();
   });
 
+  it("uses the current question as the answer textarea accessible name", () => {
+    render(<InterviewActiveSession session={baseSession} {...defaultProps} />);
+
+    expect(
+      screen.getByRole("textbox", { name: /Tell me about a challenge/i }),
+    ).toBeInTheDocument();
+  });
+
   it("renders timer controls when time expires", () => {
     render(
       <InterviewActiveSession

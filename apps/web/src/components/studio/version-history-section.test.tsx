@@ -37,4 +37,21 @@ describe("VersionHistorySection", () => {
       "border-[length:var(--border-width)]",
     );
   });
+
+  it("gives the manual version-name input an accessible name", () => {
+    render(
+      <VersionHistorySection
+        versions={[version]}
+        previewVersionId="version-1"
+        manualVersionName=""
+        onPreviewVersion={vi.fn()}
+        onManualVersionNameChange={vi.fn()}
+        onSaveVersion={vi.fn()}
+      />,
+    );
+
+    expect(
+      screen.getByRole("textbox", { name: "Version name" }),
+    ).toBeInTheDocument();
+  });
 });
