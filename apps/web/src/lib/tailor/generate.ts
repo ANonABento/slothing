@@ -27,6 +27,7 @@ interface BankResumeInput {
 
 export interface GenerateFromBankResult {
   resume: TailoredResume;
+  baseResume: TailoredResume;
   promptVariantId: string | null;
 }
 
@@ -39,12 +40,13 @@ export async function generateFromBank(
   input: BankResumeInput,
   llmConfig: LLMConfig | null,
 ): Promise<GenerateFromBankResult> {
+  const baseResume = generateBaseFromBank(input);
   if (llmConfig) {
     const activeVariant = getActivePromptVariant(input.userId);
     const resume = await generateWithLLM(input, llmConfig, activeVariant);
-    return { resume, promptVariantId: activeVariant?.id ?? null };
+    return { resume, baseResume, promptVariantId: activeVariant?.id ?? null };
   }
-  return { resume: generateBasicFromBank(input), promptVariantId: null };
+  return { resume: baseResume, baseResume, promptVariantId: null };
 }
 
 async function generateWithLLM(
@@ -154,7 +156,7 @@ Return ONLY a JSON object:
   };
 }
 
-function generateBasicFromBank(input: BankResumeInput): TailoredResume {
+export function generateBaseFromBank(input: BankResumeInput): TailoredResume {
   // Use matched entries sorted by relevance
   const usedEntryIds = new Set<string>();
   const topExperiences = input.matchedEntries
