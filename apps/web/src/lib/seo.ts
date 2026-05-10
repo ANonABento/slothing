@@ -146,6 +146,12 @@ const pages = {
       "Free, Pro, and Student plans for Slothing — start free, upgrade when you need unlimited tailored resumes.",
     path: "/pricing",
   },
+  extension: {
+    title: "Browser Extension",
+    description:
+      "Install the Slothing browser extension to capture jobs from LinkedIn, Indeed, and company career pages in one click.",
+    path: "/extension",
+  },
 } satisfies Record<string, RouteSeo>;
 
 export type PageSeoKey = keyof typeof pages;

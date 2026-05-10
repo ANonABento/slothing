@@ -9,9 +9,9 @@ import { Link } from "@/i18n/navigation";
 
 const navLinks = [
   { name: "Features", href: "#features" },
+  { name: "Extension", href: "/extension" },
   { name: "How It Works", href: "#how-it-works" },
   { name: "Pricing", href: "/pricing" },
-  { name: "Testimonials", href: "#testimonials" },
 ];
 
 export function Navbar() {
