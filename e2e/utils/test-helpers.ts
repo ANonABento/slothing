@@ -166,6 +166,36 @@ export async function skipOnboardingSetup(page: Page): Promise<void> {
 }
 
 /**
+ * Prepares an app route with onboarding marked complete and waits for the
+ * visible shell rather than relying on every background request to settle.
+ */
+export async function prepareAppPage(page: Page, path: string): Promise<void> {
+  await page.addInitScript(() => {
+    localStorage.setItem("get_me_job_onboarding_completed", "true");
+  });
+  await page.goto(path);
+  await page.waitForLoadState("networkidle", { timeout: 10_000 }).catch(() => {
+    // Notifications, sync checks, and route-specific background calls can keep
+    // the network busy. The app shell assertion below is the readiness signal.
+  });
+  await expect(page.getByRole("main", { name: /main content/i })).toBeVisible();
+}
+
+/**
+ * Opens the responsive sidebar when a test needs to inspect navigation links.
+ */
+export async function ensureSidebarOpen(page: Page): Promise<void> {
+  const openMenuButton = page.getByRole("button", {
+    name: /open navigation menu|open menu/i,
+  });
+  if (await openMenuButton.isVisible().catch(() => false)) {
+    await openMenuButton.click();
+  }
+
+  await expect(page.locator("aside")).toBeVisible();
+}
+
+/**
  * Navigates to the bank (documents) page and waits for it to load.
  */
 export async function navigateToBank(page: Page): Promise<void> {
