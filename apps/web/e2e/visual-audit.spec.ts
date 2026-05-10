@@ -5,14 +5,14 @@ const PUBLIC_PAGES = [{ path: "/", name: "landing" }];
 
 // Pages accessible with auth bypass (no Clerk keys configured)
 const APP_PAGES = [
-  "/dashboard",
-  "/bank",
-  "/studio",
+  "/en/dashboard",
+  "/en/bank",
+  "/en/studio",
   "/builder",
   "/tailor",
   "/cover-letter",
-  "/opportunities",
-  "/settings",
+  "/en/opportunities",
+  "/en/settings",
 ];
 
 async function preparePage(page: Page) {

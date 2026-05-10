@@ -10,6 +10,11 @@ export const SUPPORTED_LOCALES = [
   { value: "es", label: "Spanish" },
   { value: "de", label: "German" },
   { value: "ja", label: "Japanese" },
+  { value: "zh-CN", label: "Chinese (Simplified)" },
+  { value: "pt", label: "Portuguese" },
+  { value: "pt-BR", label: "Portuguese (Brazil)" },
+  { value: "hi", label: "Hindi" },
+  { value: "ko", label: "Korean" },
 ] as const;
 
 export type SupportedLocale = (typeof SUPPORTED_LOCALES)[number]["value"];

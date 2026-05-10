@@ -11,28 +11,28 @@ const LANDING_PAGE = { path: "/", name: "Landing" };
 
 // Pages that exist in the app (accessible with auth bypass when no Clerk keys)
 const APP_PAGES = [
-  "/dashboard",
-  "/bank",
-  "/studio",
+  "/en/dashboard",
+  "/en/bank",
+  "/en/studio",
   "/builder",
   "/tailor",
   "/cover-letter",
-  "/opportunities",
-  "/settings",
+  "/en/opportunities",
+  "/en/settings",
 ];
 
 // Routes audited by the 2026-05-04 a11y pass. Each path must scan with zero
 // "critical" or "serious" axe violations, ignoring third-party portal nodes.
 const AUDIT_ROUTES = [
   { path: "/", name: "marketing-home" },
-  { path: "/dashboard", name: "dashboard" },
-  { path: "/bank", name: "bank" },
-  { path: "/studio", name: "studio" },
-  { path: "/opportunities", name: "opportunities" },
-  { path: "/profile", name: "profile" },
-  { path: "/analytics", name: "analytics" },
-  { path: "/calendar", name: "calendar" },
-  { path: "/settings", name: "settings" },
+  { path: "/en/dashboard", name: "dashboard" },
+  { path: "/en/bank", name: "bank" },
+  { path: "/en/studio", name: "studio" },
+  { path: "/en/opportunities", name: "opportunities" },
+  { path: "/en/profile", name: "profile" },
+  { path: "/en/analytics", name: "analytics" },
+  { path: "/en/calendar", name: "calendar" },
+  { path: "/en/settings", name: "settings" },
   { path: "/ats-scanner", name: "ats-scanner" },
 ];
 

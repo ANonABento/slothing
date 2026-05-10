@@ -28,7 +28,7 @@ test.describe("Profile coverage", () => {
       await route.fulfill({ json: { profile: emptyProfile } });
     });
 
-    await prepareAppPage(page, "/profile");
+    await prepareAppPage(page, "/en/profile");
   });
 
   test("renders the profile form shell", async ({ page }) => {
@@ -75,12 +75,12 @@ test.describe("Profile coverage", () => {
   });
 
   test("navigates to profile from the sidebar", async ({ page }) => {
-    await prepareAppPage(page, "/dashboard");
+    await prepareAppPage(page, "/en/dashboard");
     await ensureSidebarOpen(page);
     await page
       .locator("aside")
       .getByRole("link", { name: /profile/i })
       .click();
-    await expect(page).toHaveURL("/profile");
+    await expect(page).toHaveURL("/en/profile");
   });
 });

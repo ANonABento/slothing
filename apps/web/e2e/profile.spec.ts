@@ -13,7 +13,7 @@ test.describe("Profile Page", () => {
     await page.evaluate(() => {
       localStorage.setItem("get_me_job_onboarding_completed", "true");
     });
-    await page.goto("/profile");
+    await page.goto("/en/profile");
   });
 
   test("should display profile page header", async ({ page }) => {
@@ -120,7 +120,7 @@ test.describe("Profile Editing", () => {
     await page.evaluate(() => {
       localStorage.setItem("get_me_job_onboarding_completed", "true");
     });
-    await page.goto("/profile");
+    await page.goto("/en/profile");
   });
 
   test("should allow editing profile summary", async ({ page }) => {

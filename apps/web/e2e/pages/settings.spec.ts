@@ -16,7 +16,7 @@ test.describe("Settings - Layout", () => {
     await page.evaluate(() => {
       localStorage.setItem("get_me_job_onboarding_completed", "true");
     });
-    await page.goto("/settings");
+    await page.goto("/en/settings");
     await page.waitForLoadState("networkidle");
   });
 
@@ -62,7 +62,7 @@ test.describe("Settings - LLM Configuration", () => {
     await page.evaluate(() => {
       localStorage.setItem("get_me_job_onboarding_completed", "true");
     });
-    await page.goto("/settings");
+    await page.goto("/en/settings");
     await page.waitForLoadState("networkidle");
   });
 
@@ -129,7 +129,7 @@ test.describe("Settings - Theme Toggle", () => {
     await page.evaluate(() => {
       localStorage.setItem("get_me_job_onboarding_completed", "true");
     });
-    await page.goto("/settings");
+    await page.goto("/en/settings");
     await page.waitForLoadState("networkidle");
   });
 
@@ -164,7 +164,7 @@ test.describe("Settings - Google Integration", () => {
     await page.evaluate(() => {
       localStorage.setItem("get_me_job_onboarding_completed", "true");
     });
-    await page.goto("/settings");
+    await page.goto("/en/settings");
     await page.waitForLoadState("networkidle");
   });
 
@@ -196,7 +196,7 @@ test.describe("Settings - Data Management", () => {
     await page.evaluate(() => {
       localStorage.setItem("get_me_job_onboarding_completed", "true");
     });
-    await page.goto("/settings");
+    await page.goto("/en/settings");
     await page.waitForLoadState("networkidle");
   });
 

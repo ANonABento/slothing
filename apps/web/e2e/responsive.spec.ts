@@ -9,11 +9,11 @@ const VIEWPORTS = {
 
 // Pages accessible with auth bypass (no Clerk keys)
 const APP_PAGES = [
-  "/dashboard",
-  "/bank",
-  "/studio",
-  "/opportunities",
-  "/settings",
+  "/en/dashboard",
+  "/en/bank",
+  "/en/studio",
+  "/en/opportunities",
+  "/en/settings",
 ];
 
 async function preparePage(page: Page) {
@@ -100,7 +100,7 @@ test.describe("Responsive - Mobile (375px)", () => {
 
   test.describe("Studio mobile layout", () => {
     test("shows the tab switcher and defaults to Edit", async ({ page }) => {
-      await page.goto("/studio");
+      await page.goto("/en/studio");
       await page.waitForLoadState("networkidle");
 
       const tablist = page.getByRole("tablist", { name: "Builder view" });
@@ -117,7 +117,7 @@ test.describe("Responsive - Mobile (375px)", () => {
     });
 
     test("Preview tab swaps which panel is visible", async ({ page }) => {
-      await page.goto("/studio");
+      await page.goto("/en/studio");
       await page.waitForLoadState("networkidle");
       await page.getByRole("tab", { name: /preview/i }).click();
 
@@ -130,7 +130,7 @@ test.describe("Responsive - Mobile (375px)", () => {
     });
 
     test("does not introduce horizontal scroll", async ({ page }) => {
-      await page.goto("/studio");
+      await page.goto("/en/studio");
       await page.waitForLoadState("networkidle");
       const overflow = await page.evaluate(
         () =>
@@ -211,7 +211,7 @@ test.describe("Responsive - Desktop (1280px)", () => {
   test("dashboard is accessible on desktop with auth bypass", async ({
     page,
   }) => {
-    await page.goto("/dashboard");
+    await page.goto("/en/dashboard");
     await page.waitForLoadState("networkidle");
 
     // With auth bypass, should NOT redirect to sign-in
@@ -221,7 +221,7 @@ test.describe("Responsive - Desktop (1280px)", () => {
   test("studio shows both resume panels and no tab strip on desktop", async ({
     page,
   }) => {
-    await page.goto("/studio");
+    await page.goto("/en/studio");
     await page.waitForLoadState("networkidle");
 
     // Tab strip is in the DOM but hidden by md:hidden

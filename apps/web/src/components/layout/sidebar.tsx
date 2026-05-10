@@ -1,9 +1,9 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
+import { Link, usePathname } from "@/i18n/navigation";
 import {
   Home,
   Database,
@@ -30,12 +30,14 @@ import { useProfileSnapshot } from "@/hooks/use-profile-snapshot";
 
 export interface NavItem {
   name: string;
+  messageKey: string;
   href: string;
   icon: LucideIcon;
 }
 
 export interface NavGroup {
   label: string;
+  messageKey: string;
   items: NavItem[];
 }
 
@@ -51,41 +53,115 @@ type SidebarNavItemState = {
 export const navigationGroups: NavGroup[] = [
   {
     label: "Home",
-    items: [{ name: "Dashboard", href: "/dashboard", icon: Home }],
+    messageKey: "groups.home",
+    items: [
+      {
+        name: "Dashboard",
+        messageKey: "items.dashboard",
+        href: "/dashboard",
+        icon: Home,
+      },
+    ],
   },
   {
     label: "Documents",
+    messageKey: "groups.documents",
     items: [
-      { name: "Documents", href: "/bank", icon: Database },
-      { name: "Answer Bank", href: "/answer-bank", icon: ClipboardList },
-      { name: "Document Studio", href: "/studio", icon: FileText },
+      {
+        name: "Documents",
+        messageKey: "items.documents",
+        href: "/bank",
+        icon: Database,
+      },
+      {
+        name: "Answer Bank",
+        messageKey: "items.answerBank",
+        href: "/answer-bank",
+        icon: ClipboardList,
+      },
+      {
+        name: "Document Studio",
+        messageKey: "items.studio",
+        href: "/studio",
+        icon: FileText,
+      },
     ],
   },
   {
     label: "Pipeline",
+    messageKey: "groups.pipeline",
     items: [
-      { name: "Opportunities", href: "/opportunities", icon: Briefcase },
-      { name: "Review Queue", href: "/opportunities/review", icon: Rows3 },
-      { name: "Calendar", href: "/calendar", icon: Calendar },
+      {
+        name: "Opportunities",
+        messageKey: "items.opportunities",
+        href: "/opportunities",
+        icon: Briefcase,
+      },
+      {
+        name: "Review Queue",
+        messageKey: "items.reviewQueue",
+        href: "/opportunities/review",
+        icon: Rows3,
+      },
+      {
+        name: "Calendar",
+        messageKey: "items.calendar",
+        href: "/calendar",
+        icon: Calendar,
+      },
     ],
   },
   {
     label: "Prep",
+    messageKey: "groups.prep",
     items: [
-      { name: "Email Templates", href: "/emails", icon: Mail },
-      { name: "Interview Prep", href: "/interview", icon: MessageSquare },
-      { name: "Salary Tools", href: "/salary", icon: DollarSign },
+      {
+        name: "Email Templates",
+        messageKey: "items.emails",
+        href: "/emails",
+        icon: Mail,
+      },
+      {
+        name: "Interview Prep",
+        messageKey: "items.interview",
+        href: "/interview",
+        icon: MessageSquare,
+      },
+      {
+        name: "Salary Tools",
+        messageKey: "items.salary",
+        href: "/salary",
+        icon: DollarSign,
+      },
     ],
   },
   {
     label: "Reporting",
-    items: [{ name: "Analytics", href: "/analytics", icon: BarChart3 }],
+    messageKey: "groups.reporting",
+    items: [
+      {
+        name: "Analytics",
+        messageKey: "items.analytics",
+        href: "/analytics",
+        icon: BarChart3,
+      },
+    ],
   },
 ];
 
 export const bottomNavigation: NavItem[] = [
-  { name: "Profile", href: "/profile", icon: UserCircle },
-  { name: "Settings", href: "/settings", icon: Settings },
+  {
+    name: "Profile",
+    messageKey: "items.profile",
+    href: "/profile",
+    icon: UserCircle,
+  },
+  {
+    name: "Settings",
+    messageKey: "items.settings",
+    href: "/settings",
+    icon: Settings,
+  },
 ];
 
 export function getSidebarNavItemClassName({
@@ -123,6 +199,7 @@ export function getActiveSidebarHref(
 
 export function Sidebar() {
   const pathname = usePathname();
+  const t = useTranslations("nav");
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const llmStatus = useLLMStatus();
@@ -208,7 +285,7 @@ export function Sidebar() {
         type="button"
         onClick={() => setMobileOpen(true)}
         className="fixed top-4 left-4 z-30 flex h-11 w-11 items-center justify-center rounded-lg border bg-background shadow-card lg:hidden"
-        aria-label="Open navigation menu"
+        aria-label={t("openMenu")}
         aria-haspopup="dialog"
         aria-expanded={mobileOpen}
         aria-controls="primary-sidebar"
@@ -229,7 +306,7 @@ export function Sidebar() {
       <aside
         ref={sidebarRef}
         id="primary-sidebar"
-        aria-label="Main navigation"
+        aria-label={t("mainNavigation")}
         aria-modal={mobileOpen ? "true" : undefined}
         role={mobileOpen ? "dialog" : undefined}
         className={cn(
@@ -250,8 +327,8 @@ export function Sidebar() {
               type="button"
               onClick={() => setCollapsed(false)}
               className="hidden h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm transition-opacity hover:opacity-90 lg:flex"
-              aria-label="Expand navigation"
-              title="Expand navigation"
+              aria-label={t("expand")}
+              title={t("expand")}
             >
               <Rocket className="h-5 w-5" />
             </button>
@@ -265,10 +342,10 @@ export function Sidebar() {
               </div>
               <div className="flex min-w-0 flex-col">
                 <span className="truncate text-lg font-bold leading-tight gradient-text">
-                  Slothing
+                  {t("brand")}
                 </span>
                 <span className="truncate text-2xs text-muted-foreground">
-                  Job search workspace
+                  {t("tagline")}
                 </span>
               </div>
             </Link>
@@ -279,8 +356,8 @@ export function Sidebar() {
               type="button"
               onClick={() => setCollapsed(true)}
               className="hidden h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground lg:flex"
-              aria-label="Collapse navigation"
-              title="Collapse navigation"
+              aria-label={t("collapse")}
+              title={t("collapse")}
             >
               <ChevronsLeft className="h-4 w-4" />
             </button>
@@ -292,7 +369,7 @@ export function Sidebar() {
             type="button"
             onClick={() => setMobileOpen(false)}
             className="flex h-11 w-11 items-center justify-center text-muted-foreground hover:text-foreground lg:hidden"
-            aria-label="Close navigation menu"
+            aria-label={t("closeMenu")}
           >
             <X className="h-5 w-5" />
           </button>
@@ -318,7 +395,7 @@ export function Sidebar() {
               {!collapsed && (
                 <div className="px-3 mb-2">
                   <span className="text-[10px] font-semibold uppercase tracking-normal text-muted-foreground/70">
-                    {group.label}
+                    {t(group.messageKey)}
                   </span>
                 </div>
               )}
@@ -326,13 +403,14 @@ export function Sidebar() {
               <div className="space-y-1">
                 {group.items.map((item) => {
                   const isActive = activeHref === item.href;
+                  const label = t(item.messageKey);
                   return (
                     <Link
                       key={item.name}
                       href={item.href}
                       aria-current={isActive ? "page" : undefined}
-                      title={collapsed ? item.name : undefined}
-                      aria-label={collapsed ? item.name : undefined}
+                      title={collapsed ? label : undefined}
+                      aria-label={collapsed ? label : undefined}
                       className={getSidebarNavItemClassName({
                         isActive,
                         collapsed,
@@ -346,14 +424,14 @@ export function Sidebar() {
                         )}
                       />
                       {!collapsed && (
-                        <span className="min-w-0 truncate">{item.name}</span>
+                        <span className="min-w-0 truncate">{label}</span>
                       )}
 
                       {/* Tooltip for collapsed state */}
                       {collapsed && (
                         <div className="absolute left-full ml-2 hidden group-hover:flex items-center z-50">
                           <div className="bg-popover text-popover-foreground text-sm font-medium px-3 py-1.5 rounded-lg shadow-elevated border whitespace-nowrap">
-                            {item.name}
+                            {label}
                           </div>
                         </div>
                       )}
@@ -369,14 +447,15 @@ export function Sidebar() {
         <div className="border-t bg-card/40 p-3 space-y-1">
           {bottomNavigation.map((item) => {
             const isActive = activeHref === item.href;
+            const label = t(item.messageKey);
             if (item.href === "/profile") {
               return (
                 <Link
                   key={item.name}
                   href={item.href}
                   aria-current={isActive ? "page" : undefined}
-                  title={collapsed ? "Profile" : undefined}
-                  aria-label={collapsed ? "Profile" : undefined}
+                  title={collapsed ? label : undefined}
+                  aria-label={collapsed ? label : undefined}
                   className={getSidebarNavItemClassName({
                     isActive,
                     collapsed,
@@ -391,7 +470,7 @@ export function Sidebar() {
                         alt={
                           profileSnapshot.name
                             ? `${profileSnapshot.name} profile photo`
-                            : "Profile photo"
+                            : t("profilePhoto")
                         }
                         className="h-full w-full object-cover"
                       />
@@ -411,7 +490,7 @@ export function Sidebar() {
                   {collapsed && (
                     <div className="absolute left-full ml-2 hidden group-hover:flex items-center">
                       <div className="bg-popover text-popover-foreground text-sm font-medium px-3 py-1.5 rounded-lg shadow-elevated border whitespace-nowrap">
-                        Profile
+                        {label}
                       </div>
                     </div>
                   )}
@@ -423,8 +502,8 @@ export function Sidebar() {
                 key={item.name}
                 href={item.href}
                 aria-current={isActive ? "page" : undefined}
-                title={collapsed ? item.name : undefined}
-                aria-label={collapsed ? item.name : undefined}
+                title={collapsed ? label : undefined}
+                aria-label={collapsed ? label : undefined}
                 className={getSidebarNavItemClassName({
                   isActive,
                   collapsed,
@@ -448,21 +527,21 @@ export function Sidebar() {
                       )}
                       title={
                         llmStatus.configured
-                          ? `LLM configured (${llmStatus.provider})`
-                          : "LLM not configured"
+                          ? t("llmConfigured", { provider: llmStatus.provider })
+                          : t("llmNotConfigured")
                       }
                     />
                   )}
                 </div>
                 {!collapsed && (
-                  <span className="min-w-0 truncate">{item.name}</span>
+                  <span className="min-w-0 truncate">{label}</span>
                 )}
 
                 {/* Tooltip for collapsed state */}
                 {collapsed && (
                   <div className="absolute left-full ml-2 hidden group-hover:flex items-center">
                     <div className="bg-popover text-popover-foreground text-sm font-medium px-3 py-1.5 rounded-lg shadow-elevated border whitespace-nowrap">
-                      {item.name}
+                      {label}
                     </div>
                   </div>
                 )}
