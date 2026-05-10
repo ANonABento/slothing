@@ -338,6 +338,8 @@ export function generateEmail(
       return generateNegotiationEmail(context);
     case "reference_request":
       return generateReferenceRequestEmail(context);
+    case "daily_digest":
+      throw new Error("daily_digest is a system-generated email type");
     default:
       throw new Error(`Unknown email type: ${type}`);
   }
@@ -386,5 +388,10 @@ export const EMAIL_TEMPLATE_INFO: Record<
     title: "Reference Request",
     description: "Ask a former manager or colleague to be a reference",
     icon: "UserCheck",
+  },
+  daily_digest: {
+    title: "Daily Digest",
+    description: "System-generated daily opportunity digest",
+    icon: "Bell",
   },
 };

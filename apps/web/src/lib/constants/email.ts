@@ -10,6 +10,7 @@ export const EMAIL_TEMPLATE_TYPES = [
   "recruiter_reply",
   "negotiation",
   "reference_request",
+  "daily_digest",
 ] as const;
 
 export type EmailTemplateType = (typeof EMAIL_TEMPLATE_TYPES)[number];

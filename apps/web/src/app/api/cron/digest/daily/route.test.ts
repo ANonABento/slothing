@@ -5,6 +5,17 @@ vi.mock("@/lib/cron-auth", () => ({
   requireCronAuth: vi.fn(async () => null),
 }));
 
+vi.mock("@/lib/digest/daily", () => ({
+  runDailyDigest: vi.fn(async () => ({
+    ok: true,
+    sent: 1,
+    skipped: 2,
+    errors: 0,
+    duration_ms: 12,
+    outcomes: [],
+  })),
+}));
+
 import { GET } from "./route";
 import { requireCronAuth } from "@/lib/cron-auth";
 import {
@@ -19,7 +30,7 @@ describe("/api/cron/digest/daily route contract", () => {
     vi.mocked(requireCronAuth).mockResolvedValue(null);
   });
 
-  it("returns the daily digest stub when auth passes", async () => {
+  it("runs the daily digest when auth passes", async () => {
     const response = await invokeRouteHandler(
       GET,
       getRequest("http://localhost/api/cron/digest/daily"),
@@ -31,6 +42,10 @@ describe("/api/cron/digest/daily route contract", () => {
     await expect(response.json()).resolves.toEqual({
       ok: true,
       cron: "digest.daily",
+      sent: 1,
+      skipped: 2,
+      errors: 0,
+      duration_ms: 12,
     });
   });
 

@@ -11,6 +11,8 @@ import {
 import type { ElementType } from "react";
 import type { EmailTemplateType } from "@/types";
 
+export type UserEmailTemplateType = Exclude<EmailTemplateType, "daily_digest">;
+
 export interface TemplateConfig {
   title: string;
   description: string;
@@ -18,7 +20,7 @@ export interface TemplateConfig {
   color: string;
 }
 
-export const TEMPLATE_ORDER: EmailTemplateType[] = [
+export const TEMPLATE_ORDER: UserEmailTemplateType[] = [
   "follow_up",
   "thank_you",
   "networking",
@@ -29,7 +31,7 @@ export const TEMPLATE_ORDER: EmailTemplateType[] = [
   "reference_request",
 ];
 
-export const TEMPLATE_CONFIG: Record<EmailTemplateType, TemplateConfig> = {
+export const TEMPLATE_CONFIG: Record<UserEmailTemplateType, TemplateConfig> = {
   follow_up: {
     title: "Follow-up Email",
     description: "Check on your application status",

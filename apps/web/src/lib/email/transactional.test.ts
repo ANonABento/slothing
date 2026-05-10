@@ -85,6 +85,29 @@ describe("transactional email sender", () => {
     });
   });
 
+  it("includes daily digest tags when provided", async () => {
+    process.env.RESEND_API_KEY = "resend-key";
+    process.env.EMAIL_FROM = "jobs@example.com";
+    vi.mocked(globalThis.fetch).mockResolvedValue({
+      ok: true,
+      status: 202,
+    } as Response);
+
+    await sendTransactionalEmail({
+      to: "ada@example.com",
+      subject: "Hello",
+      html: "<p>Hello</p>",
+      text: "Hello",
+      tags: [{ name: "type", value: "daily_digest" }],
+    });
+
+    const [, init] = vi.mocked(globalThis.fetch).mock.calls[0];
+    expect(JSON.parse(String(init?.body))).toMatchObject({
+      from: "jobs@example.com",
+      tags: [{ name: "type", value: "daily_digest" }],
+    });
+  });
+
   it("returns non-2xx failures", async () => {
     process.env.RESEND_API_KEY = "resend-key";
     process.env.EMAIL_FROM = "Slothing <noreply@example.com>";
