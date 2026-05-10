@@ -1,250 +1,251 @@
 {
   "_meta": {
     "note": "Auto-translated, needs human review.",
-    "source": "scripted-fallback",
-    "generatedAt": "2026-05-10T08:45:25.944Z"
+    "source": "llm-anthropic",
+    "model": "claude-code",
+    "generatedAt": "2026-05-10T09:48:59.697Z"
   },
   "common": {
-    "cancel": "Cancel",
-    "clear": "Clear",
-    "clearAll": "Clear all",
-    "filters": "Filters",
-    "import": "Import",
-    "loading": "Loading",
-    "openSource": "Open source",
-    "save": "Save",
-    "search": "Search",
-    "selectLocale": "Select locale",
-    "show": "Show",
-    "tryAgain": "Try Again"
+    "cancel": "取消",
+    "clear": "清除",
+    "clearAll": "全部清除",
+    "filters": "筛选",
+    "import": "导入",
+    "loading": "加载中",
+    "openSource": "开源",
+    "save": "保存",
+    "search": "搜索",
+    "selectLocale": "选择语言",
+    "show": "显示",
+    "tryAgain": "重试"
   },
   "nav": {
     "brand": "Slothing",
-    "tagline": "Job search workspace",
-    "skipToMain": "Skip to main content",
-    "mainContent": "Main content",
-    "mainNavigation": "Main navigation",
-    "openMenu": "Open navigation menu",
-    "closeMenu": "Close navigation menu",
-    "collapse": "Collapse navigation",
-    "expand": "Expand navigation",
-    "profilePhoto": "Profile photo",
-    "llmConfigured": "LLM configured ({provider})",
-    "llmNotConfigured": "LLM not configured",
+    "tagline": "求职工作台",
+    "skipToMain": "跳转至主要内容",
+    "mainContent": "主要内容",
+    "mainNavigation": "主导航",
+    "openMenu": "打开导航菜单",
+    "closeMenu": "关闭导航菜单",
+    "collapse": "收起导航",
+    "expand": "展开导航",
+    "profilePhoto": "头像",
+    "llmConfigured": "已配置 LLM（{provider}）",
+    "llmNotConfigured": "未配置 LLM",
     "groups": {
-      "home": "Home",
-      "documents": "Documents",
-      "pipeline": "Pipeline",
-      "prep": "Prep",
-      "reporting": "Reporting"
+      "home": "首页",
+      "documents": "文档",
+      "pipeline": "进展",
+      "prep": "准备",
+      "reporting": "报告"
     },
     "items": {
-      "dashboard": "仪表板",
-      "documents": "Documents",
-      "answerBank": "Answer Bank",
-      "studio": "Document Studio",
+      "dashboard": "仪表盘",
+      "documents": "文档",
+      "answerBank": "答案库",
+      "studio": "文档工作室",
       "opportunities": "机会",
-      "reviewQueue": "Review Queue",
-      "calendar": "Calendar",
-      "emails": "Email Templates",
-      "interview": "Interview Prep",
-      "salary": "Salary Tools",
-      "analytics": "Analytics",
-      "profile": "Profile",
+      "reviewQueue": "审核队列",
+      "calendar": "日历",
+      "emails": "邮件模板",
+      "interview": "面试准备",
+      "salary": "薪资工具",
+      "analytics": "数据分析",
+      "profile": "个人资料",
       "settings": "设置"
     }
   },
   "dashboard": {
-    "title": "仪表板",
+    "title": "仪表盘",
     "actions": {
-      "addOpportunity": "Add opportunity",
-      "uploadDocument": "Upload document",
-      "signIn": "Sign In"
+      "addOpportunity": "添加机会",
+      "uploadDocument": "上传文档",
+      "signIn": "登录"
     },
     "errors": {
-      "authRequired": "Sign in to access your dashboard.",
-      "loadTitle": "Could not load dashboard",
-      "loadFallback": "Please refresh the page and try again.",
-      "unavailable": "Dashboard unavailable",
-      "signInRequired": "Sign in required",
-      "loadData": "We couldn't load your dashboard data.",
-      "skipTitle": "Could not skip setup",
-      "skipFallback": "Please try again."
+      "authRequired": "请登录以访问您的仪表盘。",
+      "loadTitle": "无法加载仪表盘",
+      "loadFallback": "请刷新页面后重试。",
+      "unavailable": "仪表盘不可用",
+      "signInRequired": "需要登录",
+      "loadData": "我们无法加载您的仪表盘数据。",
+      "skipTitle": "无法跳过设置",
+      "skipFallback": "请重试。"
     },
     "greeting": {
-      "onboardingNamed": "Welcome, {name}. Let's set up your workspace.",
-      "onboarding": "Let's set up your workspace.",
-      "activeNamed": "Welcome back, {name}. Here's what needs your attention.",
-      "active": "Here's what needs your attention."
+      "onboardingNamed": "{name}，欢迎使用。让我们来设置您的工作台。",
+      "onboarding": "让我们来设置您的工作台。",
+      "activeNamed": "{name}，欢迎回来。以下是需要您关注的事项。",
+      "active": "以下是需要您关注的事项。"
     },
     "onboarding": {
-      "startHere": "Start here",
-      "title": "Build your workspace in three steps",
-      "description": "Slothing works best once it has your resume, a target role, and a place to draft tailored documents.",
-      "complete": "of {total} complete",
-      "unlocks": "What unlocks next",
-      "afterStep": "After this step",
-      "skip": "Skip setup for now",
-      "recommended": "Recommended"
+      "startHere": "从这里开始",
+      "title": "三步搭建您的工作台",
+      "description": "上传简历、设定目标岗位并准备好定制文档后，Slothing 将发挥最佳效果。",
+      "complete": "已完成 / 共 {total} 步",
+      "unlocks": "接下来将解锁",
+      "afterStep": "完成此步骤后",
+      "skip": "暂时跳过设置",
+      "recommended": "推荐"
     },
     "stats": {
-      "readiness": "Readiness",
-      "documents": "Documents",
-      "tailoredDocs": "Tailored docs",
-      "pipeline": "Pipeline"
+      "readiness": "就绪度",
+      "documents": "文档",
+      "tailoredDocs": "定制文档",
+      "pipeline": "进展"
     },
     "today": {
-      "title": "Today",
-      "description": "Three focused actions, then you are done.",
-      "uploadResumeTitle": "Upload your resume",
-      "uploadResumeContext": "Create the source material for tailored applications.",
-      "uploadResumeAction": "Upload resume",
-      "reviewNewTitle": "Review {count, plural, one {# new opportunity} other {# new opportunities}}",
-      "reviewNewContext": "Decide what belongs in your pipeline.",
-      "reviewNewAction": "Open queue",
-      "completeProfileTitle": "Complete your profile",
-      "completeProfileContext": "{percentage}% ready for tailoring.",
-      "completeProfileAction": "Improve profile",
-      "prepareInterviewsTitle": "Prepare for interviews",
-      "prepareInterviewsContext": "Turn active opportunities into practice prompts.",
-      "prepareInterviewsAction": "Prep now",
-      "draftFollowUpTitle": "Draft a follow-up",
-      "draftFollowUpContext": "Keep recruiters warm with a reusable email.",
-      "draftFollowUpAction": "Open templates",
-      "tailoredDocumentTitle": "Create a tailored document",
-      "tailoredDocumentContext": "{count, plural, one {# document} other {# documents}} ready to reuse.",
-      "tailoredDocumentAction": "Open Studio"
+      "title": "今日",
+      "description": "三个重点事项，完成即收工。",
+      "uploadResumeTitle": "上传您的简历",
+      "uploadResumeContext": "为定制申请创建源材料。",
+      "uploadResumeAction": "上传简历",
+      "reviewNewTitle": "审核 {count, plural, one {# 个新机会} other {# 个新机会}}",
+      "reviewNewContext": "决定哪些应进入您的进展列表。",
+      "reviewNewAction": "打开队列",
+      "completeProfileTitle": "完善个人资料",
+      "completeProfileContext": "定制就绪度 {percentage}%。",
+      "completeProfileAction": "完善资料",
+      "prepareInterviewsTitle": "准备面试",
+      "prepareInterviewsContext": "将进行中的机会转化为练习题。",
+      "prepareInterviewsAction": "立即准备",
+      "draftFollowUpTitle": "草拟跟进邮件",
+      "draftFollowUpContext": "用可复用的邮件模板与招聘方保持联系。",
+      "draftFollowUpAction": "打开模板",
+      "tailoredDocumentTitle": "创建定制文档",
+      "tailoredDocumentContext": "{count, plural, one {# 份文档} other {# 份文档}}可供复用。",
+      "tailoredDocumentAction": "打开工作室"
     },
     "readiness": {
-      "description": "Your application materials at a glance.",
-      "profile": "Profile",
-      "strongFoundation": "Strong foundation",
-      "needsDetail": "Needs detail",
-      "documentsDetail": "{count, plural, one {# file} other {# files}} in your bank",
-      "tailoredDetail": "{count, plural, one {# resume} other {# resumes}} built"
+      "description": "一览您的申请材料。",
+      "profile": "个人资料",
+      "strongFoundation": "基础扎实",
+      "needsDetail": "需补充细节",
+      "documentsDetail": "文档库中有 {count, plural, one {# 个文件} other {# 个文件}}",
+      "tailoredDetail": "已制作 {count, plural, one {# 份简历} other {# 份简历}}"
     },
     "pipeline": {
-      "title": "Pipeline",
-      "description": "Where your active opportunities stand.",
-      "empty": "Add opportunities to see your pipeline."
+      "title": "进展",
+      "description": "查看您进行中的机会状态。",
+      "empty": "添加机会以查看您的进展。"
     },
     "recent": {
-      "title": "Recent opportunities",
-      "description": "The latest items saved to your workspace.",
-      "viewAll": "View all",
-      "emptyTitle": "No opportunities yet",
-      "emptyDescription": "Save or import opportunities to start tracking them here."
+      "title": "最近的机会",
+      "description": "保存到工作台的最新条目。",
+      "viewAll": "查看全部",
+      "emptyTitle": "暂无机会",
+      "emptyDescription": "保存或导入机会即可在此处开始追踪。"
     }
   },
   "opportunities": {
     "title": "机会",
-    "description": "Review saved opportunities, compare fit signals, and keep application work moving from one list.",
-    "viewMode": "Opportunity view mode",
-    "list": "List",
+    "description": "查看已保存的机会、对比匹配信号，并在同一列表中持续推进申请工作。",
+    "viewMode": "机会视图模式",
+    "list": "列表",
     "kanban": "Kanban",
-    "addOpportunity": "Add Opportunity",
+    "addOpportunity": "添加机会",
     "filters": {
-      "panel": "Filters",
-      "type": "Type",
-      "status": "Status",
-      "source": "Source",
-      "tags": "Tags",
-      "remote": "Remote type",
-      "tech": "Tech stack",
-      "allTags": "All tags",
-      "anyStack": "Any stack",
-      "searchPlaceholder": "Search title, company, skills",
-      "searchAria": "Search opportunities",
-      "sortAria": "Sort opportunities",
-      "sortBy": "Sort by {label}",
-      "activeSearch": "Search: {value}",
-      "activeType": "Type: {value}",
-      "activeStatus": "Status: {value}",
-      "activeSource": "Source: {value}",
-      "activeRemote": "Remote: {value}",
-      "activeTag": "Tag: {value}",
-      "activeTech": "Tech: {value}",
-      "remove": "Remove {label} filter"
+      "panel": "筛选",
+      "type": "类型",
+      "status": "状态",
+      "source": "来源",
+      "tags": "标签",
+      "remote": "远程类型",
+      "tech": "技术栈",
+      "allTags": "全部标签",
+      "anyStack": "任意技术栈",
+      "searchPlaceholder": "搜索职位、公司、技能",
+      "searchAria": "搜索机会",
+      "sortAria": "排序机会",
+      "sortBy": "按 {label} 排序",
+      "activeSearch": "搜索：{value}",
+      "activeType": "类型：{value}",
+      "activeStatus": "状态：{value}",
+      "activeSource": "来源：{value}",
+      "activeRemote": "远程：{value}",
+      "activeTag": "标签：{value}",
+      "activeTech": "技术：{value}",
+      "remove": "移除 {label} 筛选"
     },
     "tabs": {
-      "job": "Roles",
-      "hackathon": "Hackathons",
-      "all": "All"
+      "job": "岗位",
+      "hackathon": "黑客松",
+      "all": "全部"
     },
     "status": {
-      "all": "All statuses",
-      "pending": "Pending",
-      "saved": "Saved",
-      "applied": "Applied",
-      "interviewing": "Interviewing",
-      "offer": "Offer",
-      "rejected": "Rejected",
-      "expired": "Expired",
-      "dismissed": "Dismissed"
+      "all": "全部状态",
+      "pending": "待处理",
+      "saved": "已保存",
+      "applied": "已申请",
+      "interviewing": "面试中",
+      "offer": "已获 Offer",
+      "rejected": "已拒绝",
+      "expired": "已过期",
+      "dismissed": "已忽略"
     },
     "types": {
-      "job": "Job",
-      "hackathon": "Hackathon"
+      "job": "岗位",
+      "hackathon": "黑客松"
     },
     "sources": {
-      "all": "All sources",
+      "all": "全部来源",
       "waterlooworks": "WaterlooWorks",
       "linkedin": "LinkedIn",
       "indeed": "Indeed",
       "greenhouse": "Greenhouse",
       "lever": "Lever",
       "devpost": "Devpost",
-      "manual": "Manual",
+      "manual": "手动",
       "url": "URL"
     },
     "remote": {
-      "all": "Any remote type",
-      "remote": "Remote",
-      "hybrid": "Hybrid",
-      "onsite": "Onsite"
+      "all": "任意远程类型",
+      "remote": "远程",
+      "hybrid": "混合办公",
+      "onsite": "现场办公"
     },
     "sort": {
-      "deadline": "Deadline",
-      "scrapedAt": "Date scraped",
-      "company": "Company",
-      "salary": "Salary"
+      "deadline": "截止日期",
+      "scrapedAt": "抓取日期",
+      "company": "公司",
+      "salary": "薪资"
     },
-    "summary": "Showing {shown} of {total} opportunities",
+    "summary": "显示 {shown} / 共 {total} 个机会",
     "counts": {
-      "jobs": "{count, plural, one {# job} other {# jobs}}",
-      "hackathons": "{count, plural, one {# hackathon} other {# hackathons}}",
-      "pending": "{count, plural, one {# pending} other {# pending}}"
+      "jobs": "{count, plural, one {# 个岗位} other {# 个岗位}}",
+      "hackathons": "{count, plural, one {# 场黑客松} other {# 场黑客松}}",
+      "pending": "{count, plural, one {# 个待处理} other {# 个待处理}}"
     },
     "empty": {
-      "noMatchesTitle": "No opportunities match your filters",
-      "noMatchesDescription": "Try widening or clearing filters to see more.",
-      "clearFilters": "Clear filters"
+      "noMatchesTitle": "没有符合筛选条件的机会",
+      "noMatchesDescription": "请放宽或清除筛选条件以查看更多内容。",
+      "clearFilters": "清除筛选"
     },
     "meta": {
-      "due": "Due {date}",
-      "noDeadline": "No deadline",
-      "team": "Team {min}-{max}",
-      "updateStatus": "Update status for {title}"
+      "due": "截止：{date}",
+      "noDeadline": "无截止日期",
+      "team": "团队 {min}-{max} 人",
+      "updateStatus": "更新 {title} 的状态"
     },
     "kanbanBoard": {
-      "region": "Opportunity kanban board",
-      "roleDescription": "kanban board",
-      "laneAria": "{lane} opportunities",
-      "dropHere": "Drop opportunities here",
-      "hidden": "{count} in hidden lanes",
+      "region": "机会 Kanban 看板",
+      "roleDescription": "Kanban 看板",
+      "laneAria": "{lane} 机会",
+      "dropHere": "将机会拖放至此",
+      "hidden": "{count} 个在隐藏列中",
       "hiddenSummary": "{label} · {count}",
-      "moveClosedTitle": "Move to Closed",
-      "moveClosedDescription": "Pick the final state for {title}."
+      "moveClosedTitle": "移至已关闭",
+      "moveClosedDescription": "为 {title} 选择最终状态。"
     }
   },
   "settings": {
     "title": "设置",
-    "description": "Configure your AI provider for resume parsing and interview preparation.",
-    "loading": "Loading settings...",
+    "description": "配置用于简历解析和面试准备的 AI 服务提供商。",
+    "loading": "加载设置中…",
     "language": {
       "title": "语言",
-      "description": "Choose the language used for navigation and app screens.",
-      "label": "Language",
+      "description": "选择导航和应用界面所使用的语言。",
+      "label": "语言",
       "options": {
         "en": "English",
         "es": "Español",
@@ -258,8 +259,8 @@
     }
   },
   "notFound": {
-    "title": "Page not found",
-    "description": "We couldn't find that page.",
-    "action": "Go to dashboard"
+    "title": "页面未找到",
+    "description": "我们找不到该页面。",
+    "action": "返回仪表盘"
   }
 }
