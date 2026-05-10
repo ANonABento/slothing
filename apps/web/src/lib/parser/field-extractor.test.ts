@@ -9,6 +9,7 @@ import {
   extractExperiences,
   extractEducation,
   extractContact,
+  extractSkills,
   extractFieldsFromSections,
 } from "./field-extractor";
 
@@ -448,6 +449,51 @@ github.com/janedoe`;
     const { contact } = extractContact(text);
     expect(contact.linkedin).toBe("linkedin.com/in/janedoe");
     expect(contact.github).toBe("github.com/janedoe");
+  });
+});
+
+describe("extractSkills", () => {
+  it("extracts skills from labeled category lines", () => {
+    const skills = extractSkills(
+      "Languages: Python, JavaScript\nFrameworks: React, Vue\nTools: Docker, Git",
+    );
+    const names = skills.map((skill) => skill.name);
+
+    expect(names).toEqual([
+      "Python",
+      "JavaScript",
+      "React",
+      "Vue",
+      "Docker",
+      "Git",
+    ]);
+    expect(names).not.toContain("Languages");
+    expect(names).not.toContain("Frameworks");
+    expect(names).not.toContain("Tools");
+    expect(names).not.toContain("Languages: Python");
+    expect(skills.find((skill) => skill.name === "Python")?.category).toBe(
+      "language",
+    );
+    expect(skills.find((skill) => skill.name === "Docker")?.category).toBe(
+      "tool",
+    );
+    expect(skills.find((skill) => skill.name === "React")?.category).toBe(
+      "technical",
+    );
+  });
+
+  it("keeps flat comma-separated skill lists working", () => {
+    expect(extractSkills("JavaScript, TypeScript, Python, Go")).toHaveLength(4);
+  });
+
+  it("dedupes skills case-insensitively", () => {
+    expect(extractSkills("Python, Python, python")).toHaveLength(1);
+  });
+
+  it("keeps punctuation-heavy language names", () => {
+    expect(
+      extractSkills("C++, C#, Node.js").map((skill) => skill.name),
+    ).toEqual(["C++", "C#", "Node.js"]);
   });
 });
 

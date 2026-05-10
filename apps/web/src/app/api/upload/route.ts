@@ -15,6 +15,8 @@ import {
   getLLMConfig,
   getDocumentByFileHash,
   DuplicateDocumentError,
+  getProfile,
+  updateProfile,
 } from "@/lib/db";
 import { extractTextFromFile } from "@/lib/parser/pdf";
 import { classifyDocument } from "@/lib/parser/document-classifier";
@@ -32,6 +34,7 @@ import {
 } from "@/lib/constants";
 import { sanitizeFilename } from "@/lib/upload/filename";
 import { requireAuth, isAuthError } from "@/lib/auth";
+import { mergeParsedProfileForAutoPromote } from "@/lib/profile/auto-promote";
 
 export const dynamic = "force-dynamic";
 
@@ -327,6 +330,23 @@ export async function POST(request: NextRequest) {
       } catch (err) {
         console.error(
           "[upload] Bank ingest failed:",
+          err instanceof Error ? err.stack : err,
+        );
+      }
+
+      try {
+        const existingProfile = getProfile(authResult.userId);
+        const promoted = mergeParsedProfileForAutoPromote(
+          existingProfile,
+          parsedData.data,
+        );
+        if (Object.keys(promoted).length > 0) {
+          updateProfile(promoted, authResult.userId);
+          console.log("[upload] Auto-promoted parsed resume into profile");
+        }
+      } catch (err) {
+        console.error(
+          "[upload] Profile auto-promote failed:",
           err instanceof Error ? err.stack : err,
         );
       }
