@@ -64,7 +64,10 @@ export const DEFAULT_PROMPT_CONTENT = `1. Write a professional summary (2-3 sent
 3. Each experience should have 2-4 bullet points maximum
 4. Prioritize skills matching the job description
 5. Include relevant achievements in experience bullet points
-6. Keep everything concise - one page`;
+6. Use only facts, skills, tools, metrics, employers, degrees, certifications, and dates explicitly supported by the knowledge bank
+7. Omit missing job keywords when the knowledge bank does not support them; never invent AWS, Kubernetes, GraphQL, metrics, tools, or credentials
+8. Preserve contact details, education, employers, titles, and dates exactly
+9. Keep everything concise - one page`;
 
 /**
  * Add a `user_id` column to `prompt_variants` and `prompt_variant_results`

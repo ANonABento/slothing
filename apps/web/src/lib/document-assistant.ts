@@ -57,7 +57,7 @@ const DOCUMENT_ASSISTANT_INSTRUCTIONS: Record<DocumentAssistantAction, string> =
     "add-metrics":
       "Rewrite the selected text to include credible, quantified impact where the source supports it. Do not invent exact numbers; use measured language when numbers are not provided.",
     "match-jd-keywords":
-      "Rewrite the selected text to naturally align with relevant keywords and responsibilities from the job description.",
+      "Rewrite the selected text to naturally align with relevant keywords and responsibilities from the job description only when the selected text or full document provides evidence for those keywords.",
   };
 
 export function stripDocumentHtml(content: string): string {
@@ -225,7 +225,27 @@ export function buildDocumentRewritePrompt({
   documentContent: string;
   jobDescription?: string;
 }): string {
+  const evidenceRules =
+    action === "match-jd-keywords"
+      ? `
+Evidence and refusal rules:
+- The selected text is the only replaceable scope; do not rewrite outside it
+- Use the full document only as evidence context, not as text to replace
+- Add job-description keywords only when the selected text or full document already supports them
+- GraphQL may be added only when the selected text or full document mentions GraphQL or direct GraphQL work
+- If AWS, Kubernetes, or any requested keyword is not supported by evidence, return the selected text unchanged followed by a brief parenthetical reason
+- Preserve factual details including employers, job titles, dates, education, certifications, tools, metrics, and contact details
+- Do not invent metrics, tools, employers, degrees, certifications, dates, responsibilities, or achievements
+`
+      : `
+Evidence rules:
+- The selected text is the only replaceable scope; do not rewrite outside it
+- Preserve factual details including employers, job titles, dates, education, certifications, tools, metrics, and contact details
+- Do not invent metrics, tools, employers, degrees, certifications, dates, responsibilities, or achievements
+`;
+
   return `Task: ${DOCUMENT_ASSISTANT_INSTRUCTIONS[action]}
+${evidenceRules}
 
 Selected text:
 ${selectedText}
