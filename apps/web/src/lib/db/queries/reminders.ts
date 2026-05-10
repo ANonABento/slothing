@@ -15,6 +15,8 @@ export interface Reminder {
   dismissed: boolean;
   createdAt: string;
   completedAt?: string;
+  firedAt?: string;
+  notifyByEmail?: boolean;
 }
 
 export interface ReminderWithJob extends Reminder {
@@ -27,7 +29,7 @@ export async function createReminder(
   userId: string,
   reminder: Omit<
     Reminder,
-    "id" | "completed" | "dismissed" | "createdAt" | "completedAt"
+    "id" | "completed" | "dismissed" | "createdAt" | "completedAt" | "firedAt"
   >,
 ): Promise<Reminder> {
   const id = generateId();
@@ -43,6 +45,7 @@ export async function createReminder(
     dueDate: reminder.dueDate,
     completed: false,
     dismissed: false,
+    notifyByEmail: reminder.notifyByEmail ?? false,
     createdAt: toIso(now),
   });
 
@@ -56,6 +59,7 @@ export async function createReminder(
     completed: false,
     dismissed: false,
     createdAt: toIso(now),
+    notifyByEmail: reminder.notifyByEmail ?? false,
   };
 }
 
@@ -115,6 +119,8 @@ export async function getReminders(
       dismissed: row.dismissed ?? false,
       createdAt: row.createdAt ?? "",
       completedAt: row.completedAt ?? undefined,
+      firedAt: row.firedAt ?? undefined,
+      notifyByEmail: row.notifyByEmail ?? false,
       jobTitle: job?.title,
       jobCompany: job?.company,
     });
@@ -193,7 +199,10 @@ export async function updateReminder(
   userId: string,
   reminderId: string,
   updates: Partial<
-    Pick<Reminder, "title" | "description" | "dueDate" | "type">
+    Pick<
+      Reminder,
+      "title" | "description" | "dueDate" | "type" | "notifyByEmail"
+    >
   >,
 ): Promise<void> {
   await db
@@ -203,6 +212,7 @@ export async function updateReminder(
       description: updates.description ?? null,
       dueDate: updates.dueDate,
       type: updates.type,
+      notifyByEmail: updates.notifyByEmail,
     })
     .where(and(eq(reminders.id, reminderId), eq(reminders.userId, userId)));
 }

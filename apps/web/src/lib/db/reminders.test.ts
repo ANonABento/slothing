@@ -12,6 +12,10 @@ vi.mock("@/lib/utils", () => ({
   generateId: () => "test-reminder-id",
 }));
 
+vi.mock("@/lib/reminders/fire-due", () => ({
+  ensureRemindersFiringSchema: vi.fn(),
+}));
+
 import db from "./legacy";
 import {
   createReminder,
@@ -53,6 +57,7 @@ describe("Reminder Database Functions", () => {
       "Follow up",
       null,
       "2026-05-01T00:00:00.000Z",
+      0,
       expect.any(String),
     );
     expect(result.id).toBe("test-reminder-id");
@@ -89,6 +94,8 @@ describe("Reminder Database Functions", () => {
         dismissed: 0,
         created_at: "2026-04-26T00:00:00.000Z",
         completed_at: null,
+        fired_at: null,
+        notify_by_email: 0,
         job_title: "Engineer",
         job_company: "Acme",
       },

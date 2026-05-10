@@ -244,8 +244,18 @@ describe("Notification Database Functions", () => {
         "Software Engineer",
         false,
         "job-123",
+        "user-1",
       );
 
+      expect(mockRun).toHaveBeenCalledWith(
+        expect.any(String),
+        "reminder_due",
+        "Reminder Due",
+        "Follow up for Software Engineer",
+        "/opportunities?id=job-123",
+        expect.any(String),
+        "user-1",
+      );
       expect(result.type).toBe("reminder_due");
       expect(result.title).toBe("Reminder Due");
       expect(result.message).toBe("Follow up for Software Engineer");
@@ -261,6 +271,7 @@ describe("Notification Database Functions", () => {
         "Data Analyst",
         true,
         "job-456",
+        "user-1",
       );
 
       expect(result.type).toBe("reminder_overdue");
