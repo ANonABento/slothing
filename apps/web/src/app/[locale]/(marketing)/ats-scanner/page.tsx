@@ -24,13 +24,13 @@ const BENEFITS = [
 ];
 
 interface ATSScannerPageProps {
-  params?: {
-    locale?: string;
+  params: {
+    locale: string;
   };
 }
 
-export default function ATSScannerPage({ params }: ATSScannerPageProps = {}) {
-  const locale = params?.locale || "en";
+export default function ATSScannerPage({ params }: ATSScannerPageProps) {
+  const locale = params.locale;
 
   return (
     <div className="py-16 px-4">
