@@ -23,7 +23,15 @@ const BENEFITS = [
   },
 ];
 
-export default function ATSScannerPage() {
+interface ATSScannerPageProps {
+  params?: {
+    locale?: string;
+  };
+}
+
+export default function ATSScannerPage({ params }: ATSScannerPageProps = {}) {
+  const locale = params?.locale || "en";
+
   return (
     <div className="py-16 px-4">
       <div className="max-w-3xl mx-auto">
@@ -63,7 +71,7 @@ export default function ATSScannerPage() {
         </div>
 
         {/* Scanner Form */}
-        <ScannerForm />
+        <ScannerForm locale={locale} />
       </div>
     </div>
   );
