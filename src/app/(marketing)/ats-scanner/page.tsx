@@ -1,25 +1,8 @@
-import type { Metadata } from "next";
 import { ScannerForm } from "@/components/ats/scanner-form";
+import { getPageMetadata } from "@/lib/seo";
 import { ShieldCheck, Zap, Eye, Sparkles } from "lucide-react";
 
-export const metadata: Metadata = {
-  title: "Free ATS Resume Checker | Slothing",
-  description:
-    "Check your resume's ATS compatibility score for free. Upload a PDF, import a job URL, and get private in-browser scoring feedback.",
-  keywords: [
-    "free ATS resume checker",
-    "ATS score checker",
-    "resume scanner",
-    "applicant tracking system",
-    "resume optimization",
-  ],
-  openGraph: {
-    title: "Free ATS Resume Checker",
-    description:
-      "Instant ATS compatibility score with actionable improvement suggestions. No sign-up required.",
-    type: "website",
-  },
-};
+export const metadata = getPageMetadata("atsScanner");
 
 const BENEFITS = [
   {
@@ -30,7 +13,8 @@ const BENEFITS = [
   {
     icon: Eye,
     title: "Detailed Breakdown",
-    description: "Five scoring axes: parseability, sections, keywords, dates, and content",
+    description:
+      "Five scoring axes: parseability, sections, keywords, dates, and content",
   },
   {
     icon: Sparkles,
