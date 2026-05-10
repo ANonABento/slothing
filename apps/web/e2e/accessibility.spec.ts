@@ -34,6 +34,15 @@ const AUDIT_ROUTES = [
   { path: "/en/calendar", name: "calendar" },
   { path: "/en/settings", name: "settings" },
   { path: "/ats-scanner", name: "ats-scanner" },
+  { path: "/en/emails", name: "emails" },
+  { path: "/en/interview", name: "interview" },
+  { path: "/en/answer-bank", name: "answer-bank" },
+  { path: "/en/salary", name: "salary" },
+  { path: "/pricing", name: "pricing" },
+  { path: "/en/builder", name: "builder-redirect" },
+  { path: "/en/cover-letter", name: "cover-letter-redirect" },
+  { path: "/en/tailor", name: "tailor-redirect" },
+  { path: "/en/extension/connect", name: "extension-connect" },
 ];
 
 const AXE_IGNORED_TARGET_FRAGMENTS = ["nextjs-portal", "clerk"];
@@ -329,5 +338,60 @@ test.describe("Accessibility - Motion and Animation", () => {
 
       expect(duration).toBeTruthy();
     }
+  });
+});
+
+test.describe("Accessibility - Onboarding Modal", () => {
+  test("each onboarding step has no critical/serious axe violations", async ({
+    page,
+  }) => {
+    await page.addInitScript(() => {
+      localStorage.removeItem("get_me_job_onboarding_completed");
+    });
+    await page.goto("/en/dashboard");
+    await expect(page.getByRole("dialog")).toBeVisible({ timeout: 5000 });
+
+    const scanModal = async (label: string) => {
+      const results = await new AxeBuilder({ page })
+        .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
+        .include('[role="dialog"]')
+        .analyze();
+
+      const violations = filterIgnoredViolations(results.violations);
+
+      if (violations.length > 0) {
+        // Surface details so failures are actionable in CI logs.
+        // eslint-disable-next-line no-console
+        console.log(
+          `axe violations on onboarding step "${label}":`,
+          JSON.stringify(
+            violations.map((v) => ({
+              id: v.id,
+              impact: v.impact,
+              help: v.help,
+              nodes: v.nodes.length,
+            })),
+            null,
+            2,
+          ),
+        );
+      }
+
+      expect(violations).toHaveLength(0);
+    };
+
+    await scanModal("welcome");
+    await page.getByRole("button", { name: /I have a resume/i }).click();
+
+    await scanModal("upload");
+    await page.getByRole("button", { name: /continue/i }).click();
+
+    await scanModal("review");
+    await page.getByRole("button", { name: /continue/i }).click();
+
+    await scanModal("configure");
+    await page.getByRole("button", { name: /continue/i }).click();
+
+    await scanModal("done");
   });
 });
