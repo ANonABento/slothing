@@ -23,6 +23,12 @@ const mediumAnswer = [
 const weakAnswer =
   "Um, like, you know, I guess I kind of just helped with stuff and basically it was actually fine.";
 
+const naturalStarAnswer = [
+  "During onboarding, our dashboard route was slow enough that users abandoned the first setup step and support kept getting confused tickets.",
+  "I profiled the page, split the route so the heavy editor loaded later, added keyboard focus states for the setup form, and paired with support to verify the confusing path.",
+  "That reduced time to interactive by 30%, cut first-week setup tickets by 12, and gave the team a cleaner route to reuse for the next launch.",
+].join(" ");
+
 const questions: InterviewQuestion[] = [
   { question: "Tell me about a challenge.", category: "behavioral" },
   { question: "Tell me about a project.", category: "behavioral" },
@@ -48,6 +54,15 @@ describe("interview feedback heuristics", () => {
 
     expect(coverage.covered).toEqual(["situation", "task", "action", "result"]);
     expect(coverage.score).toBe(4);
+  });
+
+  it("detects natural STAR signals without canonical labels", () => {
+    const coverage = detectStarCoverage(naturalStarAnswer);
+
+    expect(coverage.covered).toEqual(
+      expect.arrayContaining(["situation", "action", "result"]),
+    );
+    expect(coverage.score).toBeGreaterThanOrEqual(3);
   });
 
   it("rates a strong sample answer green across all metrics", () => {
@@ -77,7 +92,19 @@ describe("interview feedback heuristics", () => {
     expect(scorecard.quantification.rating).toBe("yellow");
     expect(scorecard.length.rating).toBe("yellow");
     expect(scorecard.pace.rating).toBe("yellow");
-    expect(scorecard.topSuggestion).toMatch(/Expand/i);
+    expect(scorecard.topSuggestion).toMatch(/setup|role/i);
+  });
+
+  it("does not suggest adding actions when natural actions are present", () => {
+    const scorecard = analyzeInterviewAnswer({
+      answer: naturalStarAnswer,
+      category: "behavioral",
+      durationSeconds: 70,
+    });
+
+    expect(scorecard.star.covered).toEqual(expect.arrayContaining(["action"]));
+    expect(scorecard.topSuggestion).not.toMatch(/add.*actions/i);
+    expect(scorecard.overallRating).not.toBe("red");
   });
 
   it("rates a weak sample answer red across all metrics", () => {
@@ -92,7 +119,35 @@ describe("interview feedback heuristics", () => {
     expect(scorecard.quantification.rating).toBe("red");
     expect(scorecard.length.rating).toBe("red");
     expect(scorecard.pace.rating).toBe("red");
-    expect(scorecard.topSuggestion).toMatch(/result/i);
+    expect(scorecard.topSuggestion).toMatch(/specific example/i);
+  });
+
+  it("gates vague short behavioral answers", () => {
+    const scorecard = analyzeInterviewAnswer({
+      answer: "I helped with a hard project and it went pretty well.",
+      category: "behavioral",
+      durationSeconds: 15,
+    });
+
+    expect(scorecard.overallRating).toBe("red");
+    expect(scorecard.star.rating).toBe("red");
+    expect(scorecard.quantification.rating).toBe("red");
+    expect(scorecard.topSuggestion).toMatch(/specific example|story|context/i);
+  });
+
+  it("flags tool list answers as not answering the behavioral question", () => {
+    const scorecard = analyzeInterviewAnswer({
+      answer:
+        "React, TypeScript, Tailwind, Prisma, PostgreSQL, Docker, AWS, GitHub Actions.",
+      category: "behavioral",
+      durationSeconds: 60,
+    });
+
+    expect(scorecard.overallRating).toBe("red");
+    expect(scorecard.star.score).toBeLessThanOrEqual(1);
+    expect(scorecard.topSuggestion).toMatch(
+      /behavioral question|specific story/i,
+    );
   });
 
   it("excludes blank and skipped answers from aggregate summaries", () => {
