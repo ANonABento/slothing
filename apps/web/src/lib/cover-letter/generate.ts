@@ -5,6 +5,7 @@ import {
   type GroupedBankEntries,
   type LLMConfig,
 } from "@/types";
+import { EVIDENCE_FIRST_PROMPT_RULES } from "@/lib/ai/prompt-quality";
 
 export interface CoverLetterInput {
   jobDescription: string;
@@ -113,13 +114,17 @@ ${bankContext}
 
 ## Guidelines
 - Write in first person
-- Be specific about how the candidate's experience matches the job requirements
 - Keep it concise (3-4 paragraphs)
 - Use a professional but personable tone
-- Reference specific skills, projects, and achievements from the candidate's background
 - Address the letter to "${company}" for the "${jobTitle}" position
 ${input.userName ? `- The candidate's name is ${input.userName}` : ""}
 - Do NOT include placeholder brackets like [Your Name] - use the candidate's actual name or omit
+- Preserve evidence from the candidate background exactly; never invent metrics, roles, projects, achievements, or company facts
+- Use company facts only when they are present in the job description or supplied context
+- Lead with one candidate evidence point and connect it to one job/company requirement
+- Close with a clear call to action
+- Avoid unsupported enthusiasm and generic phrases
+${EVIDENCE_FIRST_PROMPT_RULES}
 - Output ONLY the cover letter text, no additional commentary`;
 }
 
@@ -132,13 +137,15 @@ export function buildSelectionRewritePrompt(
 Selected text to rewrite:
 "${selectedText}"
 
+Preserve supported evidence already present in the selection. Do not add unsupported claims, metrics, roles, projects, achievements, or company facts.
+
 Output ONLY the rewritten passage that should replace the selection, no additional commentary.`;
 }
 
 export function buildRevisionPrompt(instruction: string): string {
   return `Revise the cover letter based on this feedback: "${instruction}"
 
-Apply the requested changes while maintaining professional quality. Output ONLY the revised cover letter text, no additional commentary.`;
+Apply the requested changes while maintaining professional quality. Preserve supported evidence already present in the draft and do not introduce unsupported claims, metrics, roles, projects, achievements, or company facts. Output ONLY the revised cover letter text, no additional commentary.`;
 }
 
 export function filterBankEntriesByIds(
