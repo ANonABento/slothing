@@ -7,6 +7,7 @@
  * @response DeleteResponse from @/types/api
  */
 import { NextRequest, NextResponse } from "next/server";
+import { parseJsonBody } from "@/lib/api-utils";
 import {
   updateReminder,
   completeReminder,
@@ -14,6 +15,7 @@ import {
   deleteReminder,
 } from "@/lib/db/reminders";
 import { requireAuth, isAuthError } from "@/lib/auth";
+import { updateReminderSchema } from "@/lib/schemas";
 
 export const dynamic = "force-dynamic";
 
@@ -26,8 +28,9 @@ export async function PATCH(
 
   try {
     const { id } = params;
-    const body = await request.json();
-    const { action, ...updates } = body;
+    const parsed = await parseJsonBody(request, updateReminderSchema);
+    if (!parsed.ok) return parsed.response;
+    const { action, ...updates } = parsed.data;
 
     switch (action) {
       case "complete":

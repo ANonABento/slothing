@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { parseJsonBody } from "@/lib/api-utils";
 import { requireAuth, isAuthError } from "@/lib/auth";
 import { getBankEntries } from "@/lib/db/profile-bank";
 import { bankEntriesToResume } from "@/lib/resume/bank-to-resume";
@@ -8,40 +9,23 @@ import {
 } from "@/lib/builder/editor-document";
 import { generateResumeHTML } from "@/lib/resume/pdf";
 import { getTemplateWithCustom } from "@/lib/resume/templates";
-import type { ContactInfo } from "@/types";
+import { builderRequestSchema } from "@/lib/schemas";
 
 export const dynamic = "force-dynamic";
-
-interface BuilderRequestBody {
-  entryIds?: string[];
-  templateId?: string;
-  contact?: ContactInfo;
-  document?: EditableResumeDocument;
-}
 
 export async function POST(request: NextRequest) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
 
   try {
-    const body = await request.json();
-    const {
-      entryIds,
-      templateId = "classic",
-      contact,
-      document,
-    } = body as BuilderRequestBody;
+    const parsed = await parseJsonBody(request, builderRequestSchema);
+    if (!parsed.ok) return parsed.response;
 
-    if (document) {
-      if (!isEditableResumeDocument(document)) {
-        return NextResponse.json(
-          { error: "document must include a sections array" },
-          { status: 400 },
-        );
-      }
+    const { entryIds, templateId = "classic", contact, document } = parsed.data;
 
+    if (document?.sections.length) {
       const resume = editableDocumentToResume(
-        document,
+        document as EditableResumeDocument,
         contact || { name: "Your Name" },
       );
       const template = getTemplateWithCustom(templateId, authResult.userId);
@@ -50,15 +34,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ html, resume });
     }
 
-    if (!Array.isArray(entryIds) || entryIds.length === 0) {
-      return NextResponse.json(
-        { error: "entryIds must be a non-empty array" },
-        { status: 400 },
-      );
-    }
-
     const allEntries = getBankEntries(authResult.userId);
-    const selectedEntries = expandSelectedBankEntries(allEntries, entryIds);
+    const selectedEntries = expandSelectedBankEntries(
+      allEntries,
+      entryIds ?? [],
+    );
 
     const resume = bankEntriesToResume(
       selectedEntries,
@@ -108,14 +88,4 @@ function expandSelectedBankEntries(
 function getParentId(entry: ReturnType<typeof getBankEntries>[number]) {
   const parentId = entry.content.parentId;
   return typeof parentId === "string" && parentId.trim() ? parentId : null;
-}
-
-function isEditableResumeDocument(
-  value: unknown,
-): value is EditableResumeDocument {
-  return (
-    typeof value === "object" &&
-    value !== null &&
-    Array.isArray((value as { sections?: unknown }).sections)
-  );
 }

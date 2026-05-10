@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { ZodError } from "zod";
+import { ZodError, type ZodType } from "zod";
 
 /**
  * Standard API response utilities for consistent error handling
@@ -21,6 +21,10 @@ interface ValidationErrorResponse {
   error: string;
   errors: Array<{ field: string; message: string }>;
 }
+
+type ParseBodyResult<T> =
+  | { ok: true; data: T }
+  | { ok: false; response: NextResponse };
 
 /**
  * Create a standardized error response
@@ -72,6 +76,90 @@ export function validationErrorResponse(
     },
     { status: 400 },
   );
+}
+
+/**
+ * Parse and validate a JSON request body, returning a ready-to-send 400
+ * response when the payload is malformed or fails schema validation.
+ */
+export async function parseJsonBody<T>(
+  request: Request,
+  schema: ZodType<T>,
+): Promise<ParseBodyResult<T>> {
+  let json: unknown;
+
+  try {
+    json = await request.json();
+  } catch {
+    return {
+      ok: false,
+      response: NextResponse.json(
+        { error: "Invalid JSON body" },
+        { status: 400 },
+      ),
+    };
+  }
+
+  const parsed = schema.safeParse(json);
+  if (!parsed.success) {
+    return { ok: false, response: validationErrorResponse(parsed.error) };
+  }
+
+  return { ok: true, data: parsed.data };
+}
+
+export async function parseOptionalJsonBody<T>(
+  request: Request,
+  schema: ZodType<T>,
+  emptyValue: unknown = {},
+): Promise<ParseBodyResult<T>> {
+  let text: string;
+
+  try {
+    text = await request.text();
+  } catch {
+    return {
+      ok: false,
+      response: NextResponse.json(
+        { error: "Invalid JSON body" },
+        { status: 400 },
+      ),
+    };
+  }
+
+  let json: unknown = emptyValue;
+  if (text.trim()) {
+    try {
+      json = JSON.parse(text);
+    } catch {
+      return {
+        ok: false,
+        response: NextResponse.json(
+          { error: "Invalid JSON body" },
+          { status: 400 },
+        ),
+      };
+    }
+  }
+
+  const parsed = schema.safeParse(json);
+  if (!parsed.success) {
+    return { ok: false, response: validationErrorResponse(parsed.error) };
+  }
+
+  return { ok: true, data: parsed.data };
+}
+
+export function parseSearchParams<T>(
+  searchParams: URLSearchParams,
+  schema: ZodType<T>,
+): ParseBodyResult<T> {
+  const parsed = schema.safeParse(Object.fromEntries(searchParams.entries()));
+  if (!parsed.success) {
+    return { ok: false, response: validationErrorResponse(parsed.error) };
+  }
+
+  return { ok: true, data: parsed.data };
 }
 
 /**

@@ -8,12 +8,14 @@
  * @response EmailDraftResponse from @/types/api
  */
 import { NextRequest, NextResponse } from "next/server";
+import { parseJsonBody } from "@/lib/api-utils";
 import {
   getEmailDraft,
   updateEmailDraft,
   deleteEmailDraft,
 } from "@/lib/db/email-drafts";
 import { requireAuth, isAuthError } from "@/lib/auth";
+import { updateEmailDraftSchema } from "@/lib/schemas";
 
 export const dynamic = "force-dynamic";
 
@@ -51,17 +53,10 @@ export async function PUT(
   if (isAuthError(authResult)) return authResult;
 
   try {
-    const { subject, body, context } = await request.json();
+    const parsed = await parseJsonBody(request, updateEmailDraftSchema);
+    if (!parsed.ok) return parsed.response;
 
-    const draft = updateEmailDraft(
-      params.id,
-      {
-        subject,
-        body,
-        context,
-      },
-      authResult.userId,
-    );
+    const draft = updateEmailDraft(params.id, parsed.data, authResult.userId);
 
     if (!draft) {
       return NextResponse.json({ error: "Draft not found" }, { status: 404 });

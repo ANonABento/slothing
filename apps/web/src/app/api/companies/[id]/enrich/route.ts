@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { parseOptionalJsonBody } from "@/lib/api-utils";
 import { getJob } from "@/lib/db/jobs";
 import {
   getCompanyEnrichment,
@@ -9,6 +10,7 @@ import { enrichCompany } from "@/lib/enrichment";
 import { nowEpoch } from "@/lib/format/time";
 import { requireAuth, isAuthError } from "@/lib/auth";
 import { getClientIdentifier, rateLimiters } from "@/lib/rate-limit";
+import { enrichCompanySchema } from "@/lib/schemas";
 
 export const dynamic = "force-dynamic";
 
@@ -74,11 +76,10 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
     job.company,
     authResult.userId,
   );
-  try {
-    const body = await request.json();
-    githubOrg = typeof body.githubOrg === "string" ? body.githubOrg : githubOrg;
-  } catch {
-    // Keep the stored override when the request body is empty or invalid.
+  const parsed = await parseOptionalJsonBody(request, enrichCompanySchema);
+  if (!parsed.ok) return parsed.response;
+  if (parsed.data.githubOrg) {
+    githubOrg = parsed.data.githubOrg;
   }
 
   const snapshot = await enrichCompany({
