@@ -2,7 +2,7 @@
 
 import { useRef, useEffect, useState, useCallback } from "react";
 import type { Editor } from "@tiptap/react";
-import { CheckCircle2, FileText, PenLine, Plus } from "lucide-react";
+import { FileText, PenLine, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ResumeEditor } from "@/lib/editor/resume-editor";
 import { EditorFormattingControls } from "@/components/studio/editor-toolbar";
@@ -72,26 +72,26 @@ export function getPreviewEmptyStateContent(
   if (documentMode === "cover_letter") {
     return {
       eyebrow: "Cover Letter",
-      heading: "Get started",
+      heading: "Select entries from your bank",
       description:
-        "Select bank entries to draft a focused cover letter with your strongest experience ready to edit.",
+        "Choose the saved experience you want to feature first. Then add a job description or use AI to shape the draft.",
       steps: [
-        "Select entries from the bank",
-        "Choose a template",
-        "Preview and edit your cover letter",
+        "Pick the bank entries to include",
+        "Add job details when you are ready",
+        "Preview and edit the cover letter",
       ],
     };
   }
 
   return {
     eyebrow: "Resume",
-    heading: "Get started",
+    heading: "Select entries from your bank",
     description:
-      "Build a polished preview from the experience, skills, and projects already saved in your bank.",
+      "Choose the saved experience, skills, and projects to include. The preview will build from those selections.",
     steps: [
-      "Select entries from the bank",
-      "Choose a template",
-      "Preview and edit your resume",
+      "Pick the bank entries to include",
+      "Review the generated preview",
+      "Edit and export your resume",
     ],
   };
 }
@@ -246,20 +246,16 @@ export function ResumePreview({
                   {emptyStateContent.description}
                 </p>
 
-                <ol className="mt-7 space-y-3 text-left">
+                <ol className="mt-7 space-y-2 text-left">
                   {emptyStateContent.steps.map((step, index) => (
                     <li
                       key={step}
-                      className="flex items-center gap-3 rounded-[var(--radius)] border-[length:var(--border-width)] border-border bg-card px-4 py-3 text-sm font-medium text-card-foreground shadow-[var(--shadow-card)]"
+                      className="flex items-center gap-3 rounded-[var(--radius)] bg-muted/40 px-4 py-3 text-sm text-paper-foreground/70"
                     >
-                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[var(--radius)] bg-background text-xs font-bold text-primary shadow-[var(--shadow-sm)]">
+                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[var(--radius)] bg-background text-xs font-bold text-primary">
                         {index + 1}
                       </span>
                       <span className="min-w-0 flex-1">{step}</span>
-                      <CheckCircle2
-                        className="h-4 w-4 shrink-0 text-primary"
-                        aria-hidden="true"
-                      />
                     </li>
                   ))}
                 </ol>
@@ -271,7 +267,7 @@ export function ResumePreview({
                   onClick={onAddFromBank}
                 >
                   <Plus className="mr-2 h-5 w-5" />
-                  Add from bank
+                  Select entries from your bank
                 </Button>
               </div>
             </div>
