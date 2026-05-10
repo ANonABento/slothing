@@ -1,4 +1,5 @@
 import type { OpportunityStatus } from "@/types";
+import { formatEvidenceSnippet } from "@/lib/status-automation/confidence";
 
 export type DetectedStatus = Extract<
   OpportunityStatus,
@@ -16,6 +17,8 @@ export interface StatusDetectionResult {
   status: DetectedStatus;
   confidence: number;
   pattern: string;
+  reason: string;
+  evidence: string[];
 }
 
 export const STATUS_ADVANCEMENT_ORDER: Record<OpportunityStatus, number> = {
@@ -33,40 +36,66 @@ const STATUS_PATTERNS: Array<{
   status: DetectedStatus;
   confidence: number;
   name: string;
+  reason: string;
   pattern: RegExp;
 }> = [
   {
     status: "offer",
     confidence: 0.9,
     name: "offer",
-    pattern: /\b(?:extend(?:ing)? (?:you )?an offer|offer letter)\b/i,
+    reason: "offer language",
+    pattern:
+      /\b(?:extend(?:ing)? (?:you )?an offer|offer letter|pleased to offer you)\b/i,
   },
   {
     status: "rejected",
     confidence: 0.85,
     name: "rejected",
+    reason: "rejection language",
     pattern:
-      /\b(?:unfortunately|decided to move forward|not (?:be )?moving forward|other candidates)\b/i,
+      /\b(?:decided to move forward with (?:another|other) candidate|not (?:be )?moving forward|other candidates|unable to proceed|will not be proceeding)\b/i,
+  },
+  {
+    status: "rejected",
+    confidence: 0.85,
+    name: "unfortunately_rejected",
+    reason: "rejection language",
+    pattern:
+      /\bunfortunately\b.{0,160}\b(?:decided to move forward|not (?:be )?moving forward|other candidates|unable to proceed|will not be proceeding|selected another candidate)\b/i,
   },
   {
     status: "interviewing",
     confidence: 0.85,
     name: "interviewing",
+    reason: "interview scheduling language",
     pattern: /\b(?:schedule (?:a )?call|interview|next round)\b/i,
   },
   {
     status: "applied",
     confidence: 0.8,
     name: "applied",
+    reason: "application confirmation",
     pattern: /\bthank you for applying\b/i,
   },
 ];
 
 const FALSE_POSITIVE_GUARDS = [
-  /\bunfortunately\b.{0,80}\b(?:reschedule|delay|postpone|cancel our call)\b/i,
+  /\bunfortunately\b.{0,120}\b(?:reschedule|delay|postpone|cancel our call|move our call|need to cancel)\b/i,
+  /\b(?:reschedule|delay|postpone|cancel our call|move our call|need to cancel)\b.{0,120}\bunfortunately\b/i,
   /\bwe offer\b.{0,80}\b(?:benefits|salary|perks|health|remote)\b/i,
-  /\boffer(?:s|ing)?\b.{0,80}\b(?:benefits|resources|services)\b/i,
+  /\b(?:benefits|perks|health benefits|employee benefits)\b.{0,80}\boffer(?:s|ed|ing)?\b/i,
+  /\boffer(?:s|ed|ing)?\b.{0,80}\b(?:benefits|resources|services|perks|health benefits|employee benefits)\b/i,
+  /\bour offer includes\b.{0,80}\b(?:benefits|perks|health|salary|pto)\b/i,
 ];
+
+function evidenceForPattern(text: string, pattern: RegExp): string[] {
+  const match = text.match(pattern);
+  if (!match || match.index === undefined) return [];
+
+  const start = Math.max(0, match.index - 60);
+  const end = Math.min(text.length, match.index + match[0].length + 100);
+  return [formatEvidenceSnippet(text.slice(start, end))];
+}
 
 export function detectStatusFromEmail(
   input: StatusDetectionInput,
@@ -87,6 +116,8 @@ export function detectStatusFromEmail(
     status: match.status,
     confidence: match.confidence,
     pattern: match.name,
+    reason: match.reason,
+    evidence: evidenceForPattern(text, match.pattern),
   };
 }
 

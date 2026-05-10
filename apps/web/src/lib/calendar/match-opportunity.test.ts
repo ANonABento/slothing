@@ -30,9 +30,11 @@ describe("matchOpportunityForCalendarEvent", () => {
     );
 
     expect(match?.opportunity.id).toBe("anthropic");
+    expect(match?.confidence).toBeGreaterThanOrEqual(0.82);
+    expect(match?.evidence).toContain("Anthropic interview");
   });
 
-  it("matches attendee domains", () => {
+  it("matches attendee domains with review-level confidence", () => {
     const match = matchOpportunityForCalendarEvent(
       {
         id: "event-2",
@@ -43,6 +45,8 @@ describe("matchOpportunityForCalendarEvent", () => {
     );
 
     expect(match?.opportunity.id).toBe("anthropic");
+    expect(match?.confidence).toBeGreaterThanOrEqual(0.55);
+    expect(match?.confidence).toBeLessThan(0.82);
   });
 
   it("does not match when interview intent exists but company evidence does not", () => {
@@ -58,6 +62,19 @@ describe("matchOpportunityForCalendarEvent", () => {
     expect(
       matchOpportunityForCalendarEvent(
         { id: "event-4", title: "Anthropic coffee chat" },
+        opportunities,
+      ),
+    ).toBeNull();
+  });
+
+  it("does not match office hours with attendee domain but no interview intent", () => {
+    expect(
+      matchOpportunityForCalendarEvent(
+        {
+          id: "event-office-hours",
+          title: "Office hours",
+          attendees: [{ email: "recruiting@anthropic.com" }],
+        },
         opportunities,
       ),
     ).toBeNull();

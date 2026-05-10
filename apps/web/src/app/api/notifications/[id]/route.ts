@@ -57,22 +57,33 @@ export async function PATCH(
             { status: 404 },
           );
         }
-        updateSuggestedStatusUpdateState(id, authResult.userId, "accepted");
+        const updatedSuggestion = updateSuggestedStatusUpdateState(
+          id,
+          authResult.userId,
+          "accepted",
+        );
         markNotificationRead(id, authResult.userId);
         return NextResponse.json({
           success: true,
           action: "acceptedSuggestedStatus",
           opportunity,
+          suggestedStatusUpdate: updatedSuggestion,
         });
       }
 
-      case "dismissSuggestedStatus":
-        updateSuggestedStatusUpdateState(id, authResult.userId, "dismissed");
+      case "dismissSuggestedStatus": {
+        const updatedSuggestion = updateSuggestedStatusUpdateState(
+          id,
+          authResult.userId,
+          "dismissed",
+        );
         markNotificationRead(id, authResult.userId);
         return NextResponse.json({
           success: true,
           action: "dismissedSuggestedStatus",
+          suggestedStatusUpdate: updatedSuggestion,
         });
+      }
 
       default:
         return NextResponse.json({ error: "Invalid action" }, { status: 400 });
