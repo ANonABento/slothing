@@ -6,6 +6,7 @@ import {
   listOpportunities,
 } from "@/lib/opportunities";
 import { createJob, getJobs } from "@/lib/db/jobs";
+import { enrichCompany } from "@/lib/enrichment";
 import { getLLMConfig } from "@/lib/db";
 import { LLMClient, parseJSONFromLLM } from "@/lib/llm/client";
 import { createJobSchema, TECH_KEYWORDS } from "@/lib/constants";
@@ -86,6 +87,7 @@ Return format: ["skill1", "skill2", "skill3", ...]`,
         },
         authResult.userId,
       );
+      scheduleCompanyEnrichment(job.company, job.url, authResult.userId);
 
       return NextResponse.json(
         { job, opportunity: jobToOpportunity(job) },
@@ -127,6 +129,7 @@ Return format: ["skill1", "skill2", "skill3", ...]`,
       },
       authResult.userId,
     );
+    scheduleCompanyEnrichment(job.company, job.url, authResult.userId);
     return NextResponse.json(
       { job, opportunity: jobToOpportunity(job) },
       { status: 201 },
@@ -138,6 +141,21 @@ Return format: ["skill1", "skill2", "skill3", ...]`,
       { status: 500 },
     );
   }
+}
+
+function scheduleCompanyEnrichment(
+  companyName: string,
+  companyUrl: string | undefined,
+  userId: string,
+): void {
+  if (process.env.NODE_ENV === "test") return;
+  void enrichCompany({
+    companyName,
+    companyUrl,
+    userId,
+  }).catch((error) => {
+    console.error("[enrichment] background failed", error);
+  });
 }
 
 function extractKeywordsBasic(text: string): string[] {

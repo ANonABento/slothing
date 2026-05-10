@@ -2,6 +2,7 @@ import db from "./legacy";
 import { generateId } from "@/lib/utils";
 
 import { nowDate, nowIso, parseToDate } from "@/lib/format/time";
+import type { EnrichmentSnapshot } from "@/lib/enrichment/types";
 export interface CompanyResearch {
   id: string;
   companyName: string;
@@ -105,6 +106,75 @@ export function deleteCompanyResearch(
     "DELETE FROM company_research WHERE id = ? AND user_id = ?",
   );
   stmt.run(id, userId);
+}
+
+export function getCompanyEnrichment(
+  companyName: string,
+  userId: string = "default",
+): { snapshot: EnrichmentSnapshot; enrichedAt: string } | null {
+  const normalized = companyName.toLowerCase().trim();
+  const stmt = db.prepare(
+    "SELECT enrichment_json, enriched_at FROM company_research WHERE user_id = ? AND LOWER(company_name) = ?",
+  );
+  const row = stmt.get(userId, normalized) as
+    | {
+        enrichment_json: string | null;
+        enriched_at: string | null;
+      }
+    | undefined;
+
+  if (!row?.enrichment_json || !row.enriched_at) return null;
+
+  return {
+    snapshot: JSON.parse(row.enrichment_json) as EnrichmentSnapshot,
+    enrichedAt: row.enriched_at,
+  };
+}
+
+export function saveCompanyEnrichment(
+  userId: string,
+  companyName: string,
+  snapshot: EnrichmentSnapshot,
+): { snapshot: EnrichmentSnapshot; enrichedAt: string } {
+  const id = generateId();
+  const now = nowIso();
+  const normalizedCompanyName = companyName.toLowerCase().trim();
+  const enrichedAt = snapshot.enrichedAt;
+
+  const stmt = db.prepare(`
+    INSERT INTO company_research (
+      id, user_id, company_name, key_facts_json, interview_questions_json,
+      enrichment_json, enriched_at, created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ON CONFLICT(user_id, company_name) DO UPDATE SET
+      enrichment_json = excluded.enrichment_json,
+      enriched_at = excluded.enriched_at,
+      updated_at = excluded.updated_at
+  `);
+
+  stmt.run(
+    id,
+    userId,
+    normalizedCompanyName,
+    "[]",
+    "[]",
+    JSON.stringify(snapshot),
+    enrichedAt,
+    now,
+    now,
+  );
+
+  return { snapshot, enrichedAt };
+}
+
+export function isEnrichmentStale(
+  enrichedAt: string | null | undefined,
+  maxAgeHours = 24,
+): boolean {
+  const date = parseToDate(enrichedAt);
+  if (!date) return true;
+  const ageHours = (nowDate().getTime() - date.getTime()) / (1000 * 60 * 60);
+  return ageHours > maxAgeHours;
 }
 
 export function isResearchStale(
