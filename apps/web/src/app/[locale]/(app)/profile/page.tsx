@@ -193,6 +193,10 @@ export default function ProfilePage() {
 
   const initials = getProfileInitials(form.name);
   const salaryRange = formatSalaryRange(form);
+  const careerDetailProfile =
+    profile && (profile.experiences.length > 0 || profile.projects.length > 0)
+      ? profile
+      : null;
 
   function focusField(tab: ProfileTab, fieldId: string) {
     setActiveTab(tab);
@@ -496,6 +500,57 @@ export default function ProfilePage() {
                     />
                   </CardContent>
                 </Card>
+
+                {careerDetailProfile ? (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-xl">Career Details</CardTitle>
+                      <CardDescription>
+                        Experience and projects saved for resumes and matching.
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-5">
+                      {careerDetailProfile.experiences.map((experience) => (
+                        <div
+                          key={experience.id}
+                          className="rounded-md border p-4"
+                        >
+                          <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
+                            <h3 className="font-medium">{experience.title}</h3>
+                            <span className="text-sm text-muted-foreground">
+                              {experience.company}
+                            </span>
+                          </div>
+                          {experience.highlights.length > 0 ? (
+                            <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+                              {experience.highlights.map((highlight) => (
+                                <li key={highlight}>{highlight}</li>
+                              ))}
+                            </ul>
+                          ) : null}
+                        </div>
+                      ))}
+
+                      {careerDetailProfile.projects.map((project) => (
+                        <div key={project.id} className="rounded-md border p-4">
+                          <h3 className="font-medium">{project.name}</h3>
+                          {project.description ? (
+                            <p className="mt-2 text-sm text-muted-foreground">
+                              {project.description}
+                            </p>
+                          ) : null}
+                          {project.highlights.length > 0 ? (
+                            <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+                              {project.highlights.map((highlight) => (
+                                <li key={highlight}>{highlight}</li>
+                              ))}
+                            </ul>
+                          ) : null}
+                        </div>
+                      ))}
+                    </CardContent>
+                  </Card>
+                ) : null}
               </>
             ) : null}
 

@@ -11,6 +11,8 @@ import { getProfile, updateProfile } from "@/lib/db";
 import {
   contactInfoSchema,
   educationSchema,
+  experienceSchema,
+  projectSchema,
   skillSchema,
 } from "@/lib/constants";
 import { requireAuth, isAuthError } from "@/lib/auth";
@@ -28,8 +30,10 @@ const seedContactSchema = contactInfoSchema.extend({
 const seedProfileSchema = z.object({
   contact: seedContactSchema,
   summary: z.string().trim().max(5000).optional(),
+  experiences: z.array(experienceSchema).optional(),
   education: z.array(educationSchema).optional(),
   skills: z.array(skillSchema).optional(),
+  projects: z.array(projectSchema).optional(),
 });
 
 export async function POST(request: NextRequest) {
