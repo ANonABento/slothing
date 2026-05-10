@@ -34,12 +34,12 @@ import {
 } from "@/components/ui/page-layout";
 import { SkeletonButton } from "@/components/ui/skeleton";
 import { useErrorToast } from "@/hooks/use-error-toast";
-import { nowEpoch, toEpoch } from "@/lib/format/time";
 import { readJsonResponse } from "@/lib/http";
 import { getResponsiveDetailGridClass } from "../shared-layout-utils";
 import { DraftsSheet } from "./_components/drafts-sheet";
 import { DuplicateSendWarning } from "./_components/duplicate-send-warning";
 import { SentTimeline } from "./_components/sent-timeline";
+import { findRecentDuplicateSend } from "./_data/duplicate-send";
 import {
   DUPLICATE_SEND_WINDOW_DAYS,
   SHOW_DUPLICATE_SEND_WARNING,
@@ -419,27 +419,14 @@ export default function EmailTemplatesPage() {
     }
   };
 
-  const duplicateSend = (() => {
-    if (
-      !SHOW_DUPLICATE_SEND_WARNING ||
-      !selectedType ||
-      !recipientEmail.trim()
-    ) {
-      return null;
-    }
-
-    const cutoff =
-      nowEpoch() - DUPLICATE_SEND_WINDOW_DAYS * 24 * 60 * 60 * 1000;
-    return (
-      sends.find(
-        (send) =>
-          send.type === selectedType &&
-          send.recipient.toLowerCase() ===
-            recipientEmail.trim().toLowerCase() &&
-          (toEpoch(send.sentAt) ?? 0) >= cutoff,
-      ) || null
-    );
-  })();
+  const duplicateSend =
+    SHOW_DUPLICATE_SEND_WARNING && selectedType
+      ? findRecentDuplicateSend(sends, {
+          type: selectedType,
+          recipient: recipientEmail,
+          windowDays: DUPLICATE_SEND_WINDOW_DAYS,
+        })
+      : null;
 
   const renderContextFields = () => {
     if (!selectedType) return null;
