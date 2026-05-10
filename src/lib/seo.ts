@@ -76,6 +76,11 @@ const pages = {
       "Visualize your job search metrics — response rates, interview conversion, and trends.",
     path: "/analytics",
   },
+  adminEvals: {
+    title: "Eval Metrics",
+    description: "Track LLM eval runs, scores, costs, and trends.",
+    path: "/admin/evals",
+  },
   salary: {
     title: "Salary Research",
     description:
