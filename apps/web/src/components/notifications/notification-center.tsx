@@ -39,6 +39,25 @@ const typeColors: Record<NotificationType, string> = {
   info: "text-muted-foreground",
 };
 
+function getUndoAction(notification: Notification): {
+  opportunityId: string;
+  previousStatus: string;
+  currentStatus: string;
+} | null {
+  if (notification.type !== "application_update" || !notification.link) {
+    return null;
+  }
+
+  const params = new URLSearchParams(notification.link.split("?")[1] ?? "");
+  const opportunityId = params.get("id");
+  const previousStatus = params.get("undoStatus");
+  const currentStatus = params.get("currentStatus");
+
+  if (!opportunityId || !previousStatus || !currentStatus) return null;
+
+  return { opportunityId, previousStatus, currentStatus };
+}
+
 interface NotificationCenterProps {
   collapsed?: boolean;
 }
@@ -151,6 +170,38 @@ export function NotificationCenter({
       showErrorToast(error, {
         title: "Could not delete notification",
         fallbackDescription: "Please try again.",
+      });
+    }
+  };
+
+  const handleUndoStatus = async (notification: Notification) => {
+    const action = getUndoAction(notification);
+    if (!action) return;
+
+    try {
+      const response = await fetch(
+        `/api/opportunities/${action.opportunityId}/status/undo`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            previousStatus: action.previousStatus,
+            currentStatus: action.currentStatus,
+          }),
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error("Undo failed");
+      }
+
+      await handleMarkRead(notification.id);
+      setNotifications((prev) => prev.filter((n) => n.id !== notification.id));
+    } catch (error) {
+      showErrorToast(error, {
+        title: "Could not undo status update",
+        fallbackDescription:
+          "The opportunity may have changed since Gmail updated it.",
       });
     }
   };
@@ -282,6 +333,7 @@ export function NotificationCenter({
                     const Icon = typeIcons[notification.type] || Bell;
                     const colorClass =
                       typeColors[notification.type] || "text-muted-foreground";
+                    const undoAction = getUndoAction(notification);
 
                     const content = (
                       <div
@@ -341,12 +393,25 @@ export function NotificationCenter({
                             <p className="text-xs text-muted-foreground mt-1">
                               {formatRelativeTime(notification.createdAt)}
                             </p>
+                            {undoAction && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  void handleUndoStatus(notification);
+                                }}
+                                className="mt-2 text-xs font-medium text-primary hover:underline"
+                              >
+                                Undo
+                              </button>
+                            )}
                           </div>
                         </div>
                       </div>
                     );
 
-                    if (notification.link) {
+                    if (notification.link && !undoAction) {
                       return (
                         <Link
                           key={notification.id}

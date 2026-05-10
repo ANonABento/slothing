@@ -6,7 +6,7 @@ import { parseToDate } from "@/lib/format/time";
  */
 
 import { gmail_v1 } from "googleapis";
-import { createGmailClient } from "./client";
+import { createGmailClient, createGmailClientForUser } from "./client";
 
 export interface GmailMessage {
   id: string;
@@ -101,9 +101,12 @@ function getHeader(
  */
 export async function getMessage(
   messageId: string,
+  options: { userId?: string } = {},
 ): Promise<GmailMessage | null> {
   try {
-    const gmail = await createGmailClient();
+    const gmail = options.userId
+      ? await createGmailClientForUser(options.userId)
+      : await createGmailClient();
 
     const response = await gmail.users.messages.get({
       userId: "me",
@@ -137,8 +140,11 @@ export async function getMessage(
 export async function listMessages(
   query: string,
   maxResults = 20,
+  options: { userId?: string } = {},
 ): Promise<GmailMessage[]> {
-  const gmail = await createGmailClient();
+  const gmail = options.userId
+    ? await createGmailClientForUser(options.userId)
+    : await createGmailClient();
 
   const response = await gmail.users.messages.list({
     userId: "me",
@@ -152,7 +158,7 @@ export async function listMessages(
 
   const messages: GmailMessage[] = [];
   for (const msg of response.data.messages) {
-    const full = await getMessage(msg.id!);
+    const full = await getMessage(msg.id!, options);
     if (full) messages.push(full);
   }
 
@@ -191,6 +197,36 @@ export async function searchJobEmails(
   }
 
   return listMessages(combinedQuery, options.maxResults || 50);
+}
+
+export async function searchStatusChangeEmailsForUser(
+  userId: string,
+  options: {
+    since?: Date;
+    maxResults?: number;
+  } = {},
+): Promise<GmailMessage[]> {
+  const queries = [
+    '"thank you for applying"',
+    '"schedule a call"',
+    "interview",
+    '"next round"',
+    "unfortunately",
+    '"decided to move forward"',
+    '"extend an offer"',
+    '"offer letter"',
+  ];
+
+  let combinedQuery = `in:inbox (${queries.join(" OR ")})`;
+  if (options.since) {
+    const dateStr = options.since
+      .toISOString()
+      .split("T")[0]
+      .replace(/-/g, "/");
+    combinedQuery += ` after:${dateStr}`;
+  }
+
+  return listMessages(combinedQuery, options.maxResults || 50, { userId });
 }
 
 /**
