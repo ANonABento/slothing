@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { CenteredPagePanel } from "@/components/ui/page-layout";
+import { Link } from "@/i18n/navigation";
 import { isNextAuthConfiguredOnClient } from "@/lib/auth-client";
 import { parseDeviceName } from "@/lib/extension/device-name";
 import { CheckCircle, Loader2, Chrome, AlertCircle } from "lucide-react";
@@ -212,6 +213,13 @@ function StatusCard({
           </>
         )}
       </div>
+
+      <p className="mt-6 border-t pt-5 text-center text-sm text-muted-foreground">
+        Need the extension?{" "}
+        <Link href="/extension" className="font-medium text-primary underline">
+          Install it
+        </Link>
+      </p>
     </CenteredPagePanel>
   );
 }

@@ -24,6 +24,7 @@ import {
   Printer,
 } from "lucide-react";
 import dynamic from "next/dynamic";
+import { ExtensionInstallButtons } from "@/components/marketing/extension-install-buttons";
 import { AnalyticsSkeleton } from "@/components/skeletons/analytics-skeleton";
 import { Button } from "@/components/ui/button";
 import {
@@ -610,11 +611,20 @@ export default function AnalyticsPage() {
                     icon={Briefcase}
                     title="No opportunities tracked yet"
                     action={
-                      <Button asChild variant="outline">
-                        <Link href="/opportunities">
-                          Add your first opportunity
-                        </Link>
-                      </Button>
+                      <div className="flex flex-col items-center gap-3">
+                        <p className="max-w-sm text-center text-sm text-muted-foreground">
+                          Install the extension to start capturing roles.
+                        </p>
+                        <ExtensionInstallButtons
+                          variant="compact"
+                          onlyDetected
+                        />
+                        <Button asChild variant="outline">
+                          <Link href="/opportunities">
+                            Add your first opportunity
+                          </Link>
+                        </Button>
+                      </div>
                     }
                     className="min-h-64"
                   />
