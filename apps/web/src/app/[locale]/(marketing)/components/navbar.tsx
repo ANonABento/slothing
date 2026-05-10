@@ -1,10 +1,11 @@
 "use client";
 
-import Link from "next/link";
 import { useState, useEffect } from "react";
+import { useLocale } from "next-intl";
 import { cn } from "@/lib/utils";
 import { Sparkles, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Link } from "@/i18n/navigation";
 
 const navLinks = [
   { name: "Features", href: "#features" },
@@ -13,8 +14,10 @@ const navLinks = [
 ];
 
 export function Navbar() {
+  const locale = useLocale();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const callbackUrl = `/${locale}/dashboard`;
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -62,7 +65,10 @@ export function Navbar() {
           {/* CTA Buttons */}
           <div className="hidden md:flex items-center gap-3">
             <Button variant="ghost" asChild>
-              <Link href="/sign-in?callbackUrl=/dashboard" prefetch={false}>
+              <Link
+                href={{ pathname: "/sign-in", query: { callbackUrl } }}
+                prefetch={false}
+              >
                 Sign In
               </Link>
             </Button>
@@ -70,7 +76,10 @@ export function Navbar() {
               asChild
               className="gradient-bg text-primary-foreground hover:opacity-90"
             >
-              <Link href="/sign-in?callbackUrl=/dashboard" prefetch={false}>
+              <Link
+                href={{ pathname: "/sign-in", query: { callbackUrl } }}
+                prefetch={false}
+              >
                 Get Started
               </Link>
             </Button>
@@ -106,7 +115,10 @@ export function Navbar() {
               ))}
               <div className="flex flex-col gap-2 mt-2">
                 <Button variant="outline" asChild>
-                  <Link href="/sign-in?callbackUrl=/dashboard" prefetch={false}>
+                  <Link
+                    href={{ pathname: "/sign-in", query: { callbackUrl } }}
+                    prefetch={false}
+                  >
                     Sign In
                   </Link>
                 </Button>
@@ -114,7 +126,10 @@ export function Navbar() {
                   asChild
                   className="gradient-bg text-primary-foreground hover:opacity-90"
                 >
-                  <Link href="/sign-in?callbackUrl=/dashboard" prefetch={false}>
+                  <Link
+                    href={{ pathname: "/sign-in", query: { callbackUrl } }}
+                    prefetch={false}
+                  >
                     Get Started
                   </Link>
                 </Button>

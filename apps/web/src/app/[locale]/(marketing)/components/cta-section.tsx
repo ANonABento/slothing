@@ -1,6 +1,7 @@
-import Link from "next/link";
 import { ArrowRight, ScanSearch, Check } from "lucide-react";
+import { getLocale } from "next-intl/server";
 import { Button } from "@/components/ui/button";
+import { Link } from "@/i18n/navigation";
 
 const benefits = [
   "Free ATS scanner included",
@@ -9,7 +10,10 @@ const benefits = [
   "Knowledge bank for your career",
 ];
 
-export function CTASection() {
+export async function CTASection() {
+  const locale = await getLocale();
+  const callbackUrl = `/${locale}/dashboard`;
+
   return (
     <section className="py-20 lg:py-32 bg-muted/30">
       <div className="max-w-4xl mx-auto px-6 text-center">
@@ -72,7 +76,10 @@ export function CTASection() {
             </div>
 
             <Button asChild size="lg" variant="outline">
-              <Link href="/sign-in?callbackUrl=/dashboard" prefetch={false}>
+              <Link
+                href={{ pathname: "/sign-in", query: { callbackUrl } }}
+                prefetch={false}
+              >
                 Get Started Free
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
