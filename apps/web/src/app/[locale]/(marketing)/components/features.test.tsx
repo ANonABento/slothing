@@ -11,7 +11,7 @@ describe("Features", () => {
 
   it("should render all four feature cards", () => {
     render(<Features />);
-    expect(screen.getByText("Knowledge Bank")).toBeInTheDocument();
+    expect(screen.getByText("Career profile")).toBeInTheDocument();
     expect(screen.getByText("Smart Parser")).toBeInTheDocument();
     expect(screen.getByText("AI Tailoring")).toBeInTheDocument();
     expect(screen.getByText("ATS Scanner")).toBeInTheDocument();
@@ -19,7 +19,7 @@ describe("Features", () => {
 
   it("should render feature descriptions", () => {
     render(<Features />);
-    expect(screen.getByText(/searchable knowledge bank/)).toBeInTheDocument();
+    expect(screen.getByText(/searchable career profile/)).toBeInTheDocument();
     expect(
       screen.getByText(/Deterministic section detection/),
     ).toBeInTheDocument();

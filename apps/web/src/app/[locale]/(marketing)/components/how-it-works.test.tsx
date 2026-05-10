@@ -27,7 +27,7 @@ describe("HowItWorks", () => {
     render(<HowItWorks />);
     expect(screen.getByText(/Drop in your resumes/)).toBeInTheDocument();
     expect(
-      screen.getByText(/chunked, indexed, and stored/),
+      screen.getByText(/saved to a searchable career profile/),
     ).toBeInTheDocument();
     expect(screen.getByText(/Paste a job description/)).toBeInTheDocument();
   });
