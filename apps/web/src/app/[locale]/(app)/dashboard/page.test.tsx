@@ -54,6 +54,10 @@ function mockFetch({
       return jsonResponse({ dismissedAt, firstName });
     }
 
+    if (url === "/api/streak") {
+      return jsonResponse({ streak: null });
+    }
+
     throw new Error(`Unexpected fetch: ${url}`);
   }) as typeof fetch;
 }

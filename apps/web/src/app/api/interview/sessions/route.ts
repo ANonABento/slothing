@@ -18,6 +18,7 @@ import {
 import { getJob } from "@/lib/db/jobs";
 import { createInterviewSessionSchema } from "@/lib/constants";
 import { requireAuth, isAuthError } from "@/lib/auth";
+import { safeTrackActivity } from "@/lib/streak/track";
 
 export const dynamic = "force-dynamic";
 
@@ -77,8 +78,12 @@ export async function POST(request: NextRequest) {
       authResult.userId,
       category,
     );
+    const { unlocked } = await safeTrackActivity(
+      authResult.userId,
+      "interview_started",
+    );
 
-    return NextResponse.json({ session });
+    return NextResponse.json({ session, unlocked });
   } catch (error) {
     console.error("Create session error:", error);
     return NextResponse.json(

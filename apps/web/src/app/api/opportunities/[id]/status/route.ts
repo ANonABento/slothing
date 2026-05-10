@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth, isAuthError } from "@/lib/auth";
 import { validationErrorResponse } from "@/lib/api-utils";
 import { changeOpportunityStatus } from "@/lib/opportunities";
+import { safeTrackActivity } from "@/lib/streak/track";
 import { opportunityStatusChangeSchema } from "@/types/opportunity";
 
 export const dynamic = "force-dynamic";
@@ -43,7 +44,19 @@ export async function PATCH(
       );
     }
 
-    return NextResponse.json({ opportunity });
+    const trackingResults = [
+      await safeTrackActivity(authResult.userId, "opp_status_changed"),
+    ];
+    if (parseResult.data.status === "applied") {
+      trackingResults.push(
+        await safeTrackActivity(authResult.userId, "opp_applied"),
+      );
+    }
+
+    return NextResponse.json({
+      opportunity,
+      unlocked: trackingResults.flatMap((result) => result.unlocked),
+    });
   } catch (error) {
     console.error("Change opportunity status error:", error);
     return NextResponse.json(
