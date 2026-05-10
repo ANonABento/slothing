@@ -29,6 +29,10 @@ function StudioPageContent() {
       ) ?? null,
     [studio.compareVersionId, studio.versions],
   );
+  const documentIsEmpty = !studio.content && !studio.html;
+  const hasBankEntries = studio.entries.length > 0;
+  const isFirstRunSelectionState =
+    documentIsEmpty && hasBankEntries && studio.selectedIds.size === 0;
   const handleShortcutExport = useCallback(() => {
     setExportMenuOpen(true);
   }, [setExportMenuOpen]);
@@ -134,6 +138,11 @@ function StudioPageContent() {
                     pickerOpen={studio.entryPickerOpen}
                     onPickerOpenChange={studio.setEntryPickerOpen}
                     showSections={studio.documentMode === "resume"}
+                    emptySelectionHint={
+                      isFirstRunSelectionState
+                        ? "Select entries to build your first draft."
+                        : undefined
+                    }
                   />
                   <div className="px-4 py-3">
                     <Button
@@ -143,7 +152,9 @@ function StudioPageContent() {
                       onClick={() => studio.setEntryPickerOpen(true)}
                     >
                       <Plus className="mr-1.5 h-4 w-4" />
-                      Add from bank
+                      {isFirstRunSelectionState
+                        ? "Open bank picker"
+                        : "Add from bank"}
                     </Button>
                   </div>
                 </div>

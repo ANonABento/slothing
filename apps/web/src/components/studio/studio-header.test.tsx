@@ -327,10 +327,27 @@ describe("StudioHeader", () => {
     expect(menuButton).toBeDisabled();
     expect(downloadButton).toHaveAttribute(
       "title",
-      "Add bank entries or edit the resume to enable export.",
+      "Select bank entries or edit the resume to enable export.",
     );
     expect(
-      screen.getByText("Add bank entries or edit the resume to enable export."),
+      screen.getByText(
+        "Select bank entries or edit the resume to enable export.",
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it("uses cover letter specific disabled export guidance", () => {
+    renderStudioHeader({
+      documentMode: "cover_letter",
+      canCopyHtml: false,
+      canDownloadDocx: false,
+      canDownloadPdf: false,
+    });
+
+    expect(
+      screen.getByText(
+        "Select bank entries or write a cover letter draft to enable export.",
+      ),
     ).toBeInTheDocument();
   });
 
