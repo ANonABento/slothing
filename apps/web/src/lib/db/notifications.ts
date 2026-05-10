@@ -1,5 +1,6 @@
 import db from "./legacy";
 import { generateId } from "@/lib/utils";
+import { ensureSuggestedStatusUpdatesSchema } from "./suggested-status-updates";
 
 import { nowIso } from "@/lib/format/time";
 export type NotificationType =
@@ -19,6 +20,11 @@ export interface Notification {
   link?: string;
   read: boolean;
   createdAt: string;
+  suggestedStatusUpdate?: {
+    state: "pending" | "accepted" | "dismissed";
+    opportunityId: string;
+    suggestedStatus: string;
+  };
 }
 
 // Create a new notification
@@ -62,15 +68,26 @@ export function getNotifications(options?: {
   userId?: string;
 }): Notification[] {
   const { unreadOnly = false, limit = 50, userId = "default" } = options || {};
+  ensureSuggestedStatusUpdatesSchema();
 
-  let query = "SELECT * FROM notifications WHERE user_id = ?";
+  let query = `
+    SELECT
+      notifications.*,
+      suggested_status_updates.state AS suggested_state,
+      suggested_status_updates.opportunity_id AS suggested_opportunity_id,
+      suggested_status_updates.suggested_status AS suggested_status
+    FROM notifications
+    LEFT JOIN suggested_status_updates
+      ON suggested_status_updates.notification_id = notifications.id
+      AND suggested_status_updates.user_id = notifications.user_id
+    WHERE notifications.user_id = ?`;
   const params: Array<string | number> = [userId];
 
   if (unreadOnly) {
-    query += " AND read = 0";
+    query += " AND notifications.read = 0";
   }
 
-  query += " ORDER BY created_at DESC LIMIT ?";
+  query += " ORDER BY notifications.created_at DESC LIMIT ?";
   params.push(limit);
 
   const stmt = db.prepare(query);
@@ -83,6 +100,9 @@ export function getNotifications(options?: {
       link: string | null;
       read: number;
       created_at: string;
+      suggested_state: string | null;
+      suggested_opportunity_id: string | null;
+      suggested_status: string | null;
     }>
   ).map((row) => ({
     id: row.id,
@@ -92,6 +112,16 @@ export function getNotifications(options?: {
     link: row.link || undefined,
     read: Boolean(row.read),
     createdAt: row.created_at,
+    suggestedStatusUpdate:
+      row.suggested_state &&
+      row.suggested_opportunity_id &&
+      row.suggested_status
+        ? {
+            state: row.suggested_state as "pending" | "accepted" | "dismissed",
+            opportunityId: row.suggested_opportunity_id,
+            suggestedStatus: row.suggested_status,
+          }
+        : undefined,
   }));
 }
 

@@ -132,6 +132,8 @@ export {
   interviewAnswers,
   reminders,
   notifications,
+  externalCalendarEvents,
+  suggestedStatusUpdates,
   companyResearch,
   coverLetters,
   llmSettings,
@@ -161,6 +163,8 @@ export * from "./interviews";
 export * from "./resumes";
 export * from "./reminders";
 export * from "./notifications";
+export * from "./external-calendar-events";
+export * from "./suggested-status-updates";
 export * from "./custom-templates";
 export * from "./profile-bank";
 export * from "./answer-bank";

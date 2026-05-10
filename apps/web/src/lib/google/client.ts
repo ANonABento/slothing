@@ -127,6 +127,12 @@ export async function getGoogleAccessToken(): Promise<GoogleTokenResult | null> 
   const userId = await getCurrentUserId();
   if (!userId) return null;
 
+  return getGoogleAccessTokenForUser(userId);
+}
+
+export async function getGoogleAccessTokenForUser(
+  userId: string,
+): Promise<GoogleTokenResult | null> {
   let account = await loadGoogleAccount(userId);
   if (!account?.access_token) return null;
 
@@ -149,6 +155,22 @@ export async function getGoogleAccessToken(): Promise<GoogleTokenResult | null> 
 export async function isGoogleConnected(): Promise<boolean> {
   const token = await getGoogleAccessToken();
   return token !== null;
+}
+
+export async function isGoogleConnectedForUser(
+  userId: string,
+): Promise<boolean> {
+  const token = await getGoogleAccessTokenForUser(userId);
+  return token !== null;
+}
+
+export async function listGoogleConnectedUserIds(): Promise<string[]> {
+  const rows = await getDb()
+    .select({ userId: accounts.userId })
+    .from(accounts)
+    .where(eq(accounts.provider, GOOGLE_PROVIDER));
+
+  return Array.from(new Set(rows.map((row) => row.userId)));
 }
 
 /**
@@ -186,6 +208,17 @@ export async function getGoogleConnectionStatus(): Promise<GoogleConnectionStatu
  */
 export async function createGoogleClient() {
   const tokenResult = await getGoogleAccessToken();
+  return createGoogleClientFromTokenResult(tokenResult);
+}
+
+export async function createGoogleClientForUser(userId: string) {
+  const tokenResult = await getGoogleAccessTokenForUser(userId);
+  return createGoogleClientFromTokenResult(tokenResult);
+}
+
+function createGoogleClientFromTokenResult(
+  tokenResult: GoogleTokenResult | null,
+) {
   if (!tokenResult) {
     throw new GoogleAPIError("Google account not connected", 401);
   }
@@ -198,6 +231,11 @@ export async function createGoogleClient() {
 
 export async function createCalendarClient() {
   const authClient = await createGoogleClient();
+  return google.calendar({ version: "v3", auth: authClient });
+}
+
+export async function createCalendarClientForUser(userId: string) {
+  const authClient = await createGoogleClientForUser(userId);
   return google.calendar({ version: "v3", auth: authClient });
 }
 

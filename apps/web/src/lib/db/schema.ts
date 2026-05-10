@@ -256,6 +256,55 @@ export const notifications = sqliteTable("notifications", {
   createdAt: text("created_at").default(sql`CURRENT_TIMESTAMP`),
 });
 
+export const externalCalendarEvents = sqliteTable(
+  "external_calendar_events",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id").notNull().default(DEFAULT_USER_ID),
+    provider: text("provider").notNull(),
+    externalEventId: text("external_event_id").notNull(),
+    calendarId: text("calendar_id"),
+    matchedOpportunityId: text("matched_opportunity_id"),
+    action: text("action").notNull(),
+    eventTitle: text("event_title"),
+    eventStart: text("event_start"),
+    processedAt: text("processed_at").default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    uniqueIndex("uniq_external_calendar_events_provider_event").on(
+      table.userId,
+      table.provider,
+      table.externalEventId,
+    ),
+    index("idx_external_calendar_events_user_processed").on(
+      table.userId,
+      table.processedAt,
+    ),
+  ],
+);
+
+export const suggestedStatusUpdates = sqliteTable(
+  "suggested_status_updates",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id").notNull().default(DEFAULT_USER_ID),
+    notificationId: text("notification_id").notNull().unique(),
+    opportunityId: text("opportunity_id").notNull(),
+    suggestedStatus: text("suggested_status").notNull(),
+    sourceProvider: text("source_provider"),
+    sourceEventId: text("source_event_id"),
+    state: text("state").notNull().default("pending"),
+    createdAt: text("created_at").default(sql`CURRENT_TIMESTAMP`),
+    resolvedAt: text("resolved_at"),
+  },
+  (table) => [
+    index("idx_suggested_status_updates_user_state").on(
+      table.userId,
+      table.state,
+    ),
+  ],
+);
+
 // Company research cache table
 export const companyResearch = sqliteTable(
   "company_research",
@@ -720,7 +769,9 @@ export const userActivity = sqliteTable(
     lastActivityDay: text("last_activity_day"),
     totalOppsCreated: integer("total_opps_created").notNull().default(0),
     totalOppsApplied: integer("total_opps_applied").notNull().default(0),
-    totalResumesTailored: integer("total_resumes_tailored").notNull().default(0),
+    totalResumesTailored: integer("total_resumes_tailored")
+      .notNull()
+      .default(0),
     totalCoverLetters: integer("total_cover_letters").notNull().default(0),
     totalEmailsSent: integer("total_emails_sent").notNull().default(0),
     totalInterviewsStarted: integer("total_interviews_started")
@@ -847,6 +898,14 @@ export type NewInterviewAnswer = typeof interviewAnswers.$inferInsert;
 
 export type Reminder = typeof reminders.$inferSelect;
 export type NewReminder = typeof reminders.$inferInsert;
+
+export type ExternalCalendarEvent = typeof externalCalendarEvents.$inferSelect;
+export type NewExternalCalendarEvent =
+  typeof externalCalendarEvents.$inferInsert;
+
+export type SuggestedStatusUpdate = typeof suggestedStatusUpdates.$inferSelect;
+export type NewSuggestedStatusUpdate =
+  typeof suggestedStatusUpdates.$inferInsert;
 
 export type Notification = typeof notifications.$inferSelect;
 export type NewNotification = typeof notifications.$inferInsert;

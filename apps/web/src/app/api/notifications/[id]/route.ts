@@ -10,7 +10,12 @@ import {
   markNotificationRead,
   deleteNotification,
 } from "@/lib/db/notifications";
+import {
+  getSuggestedStatusUpdateByNotification,
+  updateSuggestedStatusUpdateState,
+} from "@/lib/db/suggested-status-updates";
 import { requireAuth, isAuthError } from "@/lib/auth";
+import { changeOpportunityStatus } from "@/lib/opportunities";
 
 export const dynamic = "force-dynamic";
 
@@ -29,6 +34,45 @@ export async function PATCH(
       case "markRead":
         markNotificationRead(id, authResult.userId);
         return NextResponse.json({ success: true, action: "markedRead" });
+
+      case "acceptSuggestedStatus": {
+        const suggestion = getSuggestedStatusUpdateByNotification(
+          id,
+          authResult.userId,
+        );
+        if (!suggestion || suggestion.state !== "pending") {
+          return NextResponse.json(
+            { error: "Suggested update not found" },
+            { status: 404 },
+          );
+        }
+        const opportunity = changeOpportunityStatus(
+          suggestion.opportunityId,
+          suggestion.suggestedStatus,
+          authResult.userId,
+        );
+        if (!opportunity) {
+          return NextResponse.json(
+            { error: "Opportunity not found" },
+            { status: 404 },
+          );
+        }
+        updateSuggestedStatusUpdateState(id, authResult.userId, "accepted");
+        markNotificationRead(id, authResult.userId);
+        return NextResponse.json({
+          success: true,
+          action: "acceptedSuggestedStatus",
+          opportunity,
+        });
+      }
+
+      case "dismissSuggestedStatus":
+        updateSuggestedStatusUpdateState(id, authResult.userId, "dismissed");
+        markNotificationRead(id, authResult.userId);
+        return NextResponse.json({
+          success: true,
+          action: "dismissedSuggestedStatus",
+        });
 
       default:
         return NextResponse.json({ error: "Invalid action" }, { status: 400 });
