@@ -1,4 +1,6 @@
 import type { Profile, JobDescription } from "@/types";
+import { extractJdKeywordTerms } from "./jd-keywords";
+import { containsExactKeywordTerm } from "./match-score";
 import { getSynonyms, SYNONYM_MATCH_WEIGHT } from "./synonyms";
 import {
   scanResume,
@@ -434,7 +436,7 @@ function analyzeKeywords(
 
   // Get keywords from job description if provided
   const jobKeywords = job
-    ? [...job.keywords, ...extractKeywordsFromText(job.description)]
+    ? [...job.keywords, ...extractJdKeywordTerms(job.description)]
     : [];
 
   // Also include common important keywords
@@ -452,7 +454,7 @@ function analyzeKeywords(
     const normalizedKeyword = normalizeText(keyword);
 
     // Check exact match first (word-boundary aware)
-    let found = containsWord(normalizedText, normalizedKeyword);
+    let found = containsExactKeywordTerm(fullText, keyword);
     let matchType: "exact" | "synonym" | undefined;
     let matchedTerm: string | undefined;
     let frequency = 0;
@@ -466,7 +468,7 @@ function analyzeKeywords(
       for (const synonym of synonyms) {
         if (synonym === normalizedKeyword) continue;
         const normalizedSynonym = normalizeText(synonym);
-        if (containsWord(normalizedText, normalizedSynonym)) {
+        if (containsExactKeywordTerm(fullText, normalizedSynonym)) {
           found = true;
           matchType = "synonym";
           matchedTerm = synonym;
@@ -486,19 +488,19 @@ function analyzeKeywords(
           ? normalizeText(matchedTerm)
           : normalizedKeyword;
 
-      if (containsWord(normalizeText(profile.summary || ""), searchTerm)) {
+      if (containsExactKeywordTerm(profile.summary || "", searchTerm)) {
         locations.push("summary");
       }
       profile.skills.forEach((s) => {
-        if (containsWord(normalizeText(s.name), searchTerm)) {
+        if (containsExactKeywordTerm(s.name, searchTerm)) {
           locations.push("skills");
         }
       });
       profile.experiences.forEach((e) => {
         if (
-          containsWord(normalizeText(e.title), searchTerm) ||
-          containsWord(normalizeText(e.description), searchTerm) ||
-          e.highlights.some((h) => containsWord(normalizeText(h), searchTerm))
+          containsExactKeywordTerm(e.title, searchTerm) ||
+          containsExactKeywordTerm(e.description, searchTerm) ||
+          e.highlights.some((h) => containsExactKeywordTerm(h, searchTerm))
         ) {
           locations.push("experience");
         }

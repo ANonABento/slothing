@@ -1,4 +1,6 @@
 import type { JobDescription, Profile } from "@/types";
+import { extractJdKeywordTerms } from "@/lib/ats/jd-keywords";
+import { containsExactKeywordTerm } from "@/lib/ats/match-score";
 import { getSynonyms, SYNONYM_MATCH_WEIGHT } from "@/lib/ats/synonyms";
 import { scoreToLetterGrade } from "@/lib/ats/analyzer";
 import type {
@@ -389,8 +391,8 @@ function scoreKeywords(profile: Profile, text: string, job?: JobDescription) {
     ? Array.from(
         new Set([
           ...job.keywords,
-          ...job.requirements.flatMap(extractKeywords),
-          ...extractKeywords(job.description),
+          ...extractJdKeywordTerms(job.requirements.join("\n")),
+          ...extractJdKeywordTerms(job.description),
         ]),
       ).slice(0, 24)
     : extractKeywords(normalizedResume).slice(0, 10);
@@ -412,7 +414,7 @@ function scoreKeywords(profile: Profile, text: string, job?: JobDescription) {
   let weightedMatches = 0;
   for (const keyword of importantKeywords) {
     const normalizedKeyword = normalizeText(keyword);
-    let found = containsWord(normalizedResume, normalizedKeyword);
+    let found = containsExactKeywordTerm(normalizedResume, keyword);
     let matchType: "exact" | "synonym" | undefined = found
       ? "exact"
       : undefined;
@@ -426,7 +428,7 @@ function scoreKeywords(profile: Profile, text: string, job?: JobDescription) {
         const normalizedSynonym = normalizeText(synonym);
         if (
           normalizedSynonym !== normalizedKeyword &&
-          containsWord(normalizedResume, normalizedSynonym)
+          containsExactKeywordTerm(normalizedResume, normalizedSynonym)
         ) {
           found = true;
           matchType = "synonym";

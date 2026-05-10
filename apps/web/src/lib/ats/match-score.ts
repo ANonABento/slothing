@@ -1,4 +1,9 @@
-import { extractJdKeywords } from "./jd-keywords";
+import {
+  extractJdKeywords,
+  getJdKeywordAliases,
+  pluralizeTerm,
+  singularizeTerm,
+} from "./jd-keywords";
 
 export interface JdMatchResult {
   score: number;
@@ -13,29 +18,6 @@ function escapeRegExp(term: string) {
   return term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-function singularize(term: string) {
-  if (term.endsWith("ies") && term.length > 4) {
-    return `${term.slice(0, -3)}y`;
-  }
-  if (term.endsWith("ses") || term.endsWith("xes")) {
-    return term.slice(0, -2);
-  }
-  if (term.endsWith("s") && !term.endsWith("ss") && term.length > 3) {
-    return term.slice(0, -1);
-  }
-  return term;
-}
-
-function pluralize(term: string) {
-  if (term.endsWith("y") && term.length > 3) {
-    return `${term.slice(0, -1)}ies`;
-  }
-  if (term.endsWith("s")) {
-    return term;
-  }
-  return `${term}s`;
-}
-
 export function normalizeForMatch(text: string): string {
   return text
     .toLowerCase()
@@ -46,14 +28,15 @@ export function normalizeForMatch(text: string): string {
     .trim();
 }
 
-function containsTerm(normalizedText: string, term: string) {
+function containsNormalizedTerm(normalizedText: string, term: string) {
   const normalizedTerm = normalizeForMatch(term);
   if (!normalizedTerm) return false;
 
   const variants = new Set([
     normalizedTerm,
-    singularize(normalizedTerm),
-    pluralize(normalizedTerm),
+    singularizeTerm(normalizedTerm),
+    pluralizeTerm(normalizedTerm),
+    ...getJdKeywordAliases(normalizedTerm).map(normalizeForMatch),
   ]);
   for (const variant of variants) {
     const pattern = escapeRegExp(variant).replace(/\s+/g, "\\s+");
@@ -62,6 +45,32 @@ function containsTerm(normalizedText: string, term: string) {
   }
 
   return false;
+}
+
+function containsExactNormalizedTerm(normalizedText: string, term: string) {
+  const normalizedTerm = normalizeForMatch(term);
+  if (!normalizedTerm) return false;
+
+  const variants = new Set([
+    normalizedTerm,
+    singularizeTerm(normalizedTerm),
+    pluralizeTerm(normalizedTerm),
+  ]);
+  for (const variant of variants) {
+    const pattern = escapeRegExp(variant).replace(/\s+/g, "\\s+");
+    const regex = new RegExp(`(^|[^a-z0-9+#])${pattern}($|[^a-z0-9+#])`);
+    if (regex.test(normalizedText)) return true;
+  }
+
+  return false;
+}
+
+export function containsKeywordTerm(text: string, term: string) {
+  return containsNormalizedTerm(normalizeForMatch(text), term);
+}
+
+export function containsExactKeywordTerm(text: string, term: string) {
+  return containsExactNormalizedTerm(normalizeForMatch(text), term);
 }
 
 function emptyResult(): JdMatchResult {
@@ -90,7 +99,7 @@ export function computeJdMatch(
   const missingKeywords: string[] = [];
 
   for (const keyword of keywords) {
-    if (containsTerm(normalizedResume, keyword.term)) {
+    if (containsNormalizedTerm(normalizedResume, keyword.term)) {
       matchedKeywords.push(keyword.term);
     } else if (
       options.missingLimit === undefined ||
