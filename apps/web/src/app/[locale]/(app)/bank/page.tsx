@@ -8,6 +8,7 @@ import {
   Fragment,
   useMemo,
   useRef,
+  Suspense,
   useState,
   type ReactNode,
 } from "react";
@@ -44,7 +45,6 @@ import {
   Upload,
   HardDrive,
 } from "lucide-react";
-import { SourceDocuments } from "@/components/bank/source-documents";
 import type { SourceDocument } from "@/lib/db/profile-bank";
 import { Badge } from "@/components/ui/badge";
 import { useRegisterShortcuts } from "@/components/keyboard-shortcuts";
@@ -55,7 +55,11 @@ import {
   PageHeader,
   StandardEmptyState,
 } from "@/components/ui/page-layout";
-import { SkeletonCard, SkeletonButton } from "@/components/ui/skeleton";
+import {
+  SkeletonCard,
+  SkeletonButton,
+  SkeletonChunkCard,
+} from "@/components/ui/skeleton";
 import { AddEntryDialog } from "@/components/bank/add-entry-dialog";
 import { useToast } from "@/components/ui/toast";
 import { useErrorToast } from "@/hooks/use-error-toast";
@@ -75,6 +79,12 @@ import {
 const DriveFilePicker = dynamic(
   () => import("@/components/google").then((m) => m.DriveFilePicker),
   { loading: () => <SkeletonButton className="w-40" />, ssr: false },
+);
+
+const SourceDocuments = dynamic(
+  () =>
+    import("@/components/bank/source-documents").then((m) => m.SourceDocuments),
+  { loading: () => <SkeletonCard className="min-h-32" />, ssr: false },
 );
 
 interface UploadConflict {
@@ -493,6 +503,7 @@ export default function BankPage() {
   }, [sortedEntries, sourceDocuments]);
 
   const showLibraryTools =
+    loading ||
     allEntries.length > 0 ||
     query.length > 0 ||
     activeCategory !== "all" ||
@@ -1460,86 +1471,95 @@ export default function BankPage() {
           {showLibraryTools ? (
             <>
               {/* Keep this in flow: <main> is the scrollport, and nested sticky filter bars can trap wheel scrolling. */}
-              <div className="border-b border-border/50 bg-background/95 py-3">
-                <SearchBar
-                  ref={searchInputRef}
-                  query={query}
-                  onQueryChange={setQuery}
-                  activeCategory={activeCategory}
-                  onCategoryChange={(category) => {
-                    setActiveCategory(category);
-                    setReviewOnly(false);
-                  }}
-                  sortBy={sortBy}
-                  onSortChange={setSortBy}
-                  counts={categoryCounts}
-                  controls={
-                    <>
-                      <div className="flex items-center rounded-[var(--radius)] bg-muted p-1">
-                        <DisplayModeButton
-                          active={displayMode === "category"}
-                          onClick={() => {
-                            setDisplayMode("category");
-                            setActiveDocumentId(null);
-                          }}
-                        >
-                          Category
-                        </DisplayModeButton>
-                        <DisplayModeButton
-                          active={displayMode === "source"}
-                          onClick={() => setDisplayMode("source")}
-                        >
-                          Source
-                        </DisplayModeButton>
-                      </div>
-                      <div className="flex items-center rounded-[var(--radius)] bg-muted p-1">
-                        <IconModeButton
-                          active={layoutMode === "grid"}
-                          onClick={() => setLayoutMode("grid")}
-                          label="Grid view"
-                        >
-                          <LayoutGrid className="h-4 w-4" />
-                        </IconModeButton>
-                        <IconModeButton
-                          active={layoutMode === "table"}
-                          onClick={() => setLayoutMode("table")}
-                          label="Table view"
-                        >
-                          <Rows3 className="h-4 w-4" />
-                        </IconModeButton>
-                      </div>
-                      {needsReviewCount > 0 ? (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setReviewOnly((current) => !current);
-                            setActiveCategory("all");
-                          }}
-                          className={cn(
-                            "inline-flex min-h-10 items-center gap-2 rounded-[var(--radius)] px-3 text-sm font-medium transition-colors",
-                            reviewOnly
-                              ? "bg-warning/15 text-warning"
-                              : "bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground",
-                          )}
-                        >
-                          <AlertTriangle className="h-4 w-4" />
-                          Needs review {needsReviewCount}
-                        </button>
-                      ) : null}
-                    </>
-                  }
-                />
-              </div>
+              <Suspense fallback={<BankFiltersSkeleton />}>
+                <div
+                  className="border-b border-border/50 bg-background/95 py-3"
+                  data-testid="bank-search-filters"
+                >
+                  <SearchBar
+                    ref={searchInputRef}
+                    query={query}
+                    onQueryChange={setQuery}
+                    activeCategory={activeCategory}
+                    onCategoryChange={(category) => {
+                      setActiveCategory(category);
+                      setReviewOnly(false);
+                    }}
+                    sortBy={sortBy}
+                    onSortChange={setSortBy}
+                    counts={categoryCounts}
+                    controls={
+                      <>
+                        <div className="flex items-center rounded-[var(--radius)] bg-muted p-1">
+                          <DisplayModeButton
+                            active={displayMode === "category"}
+                            onClick={() => {
+                              setDisplayMode("category");
+                              setActiveDocumentId(null);
+                            }}
+                          >
+                            Category
+                          </DisplayModeButton>
+                          <DisplayModeButton
+                            active={displayMode === "source"}
+                            onClick={() => setDisplayMode("source")}
+                          >
+                            Source
+                          </DisplayModeButton>
+                        </div>
+                        <div className="flex items-center rounded-[var(--radius)] bg-muted p-1">
+                          <IconModeButton
+                            active={layoutMode === "grid"}
+                            onClick={() => setLayoutMode("grid")}
+                            label="Grid view"
+                          >
+                            <LayoutGrid className="h-4 w-4" />
+                          </IconModeButton>
+                          <IconModeButton
+                            active={layoutMode === "table"}
+                            onClick={() => setLayoutMode("table")}
+                            label="Table view"
+                          >
+                            <Rows3 className="h-4 w-4" />
+                          </IconModeButton>
+                        </div>
+                        {needsReviewCount > 0 ? (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setReviewOnly((current) => !current);
+                              setActiveCategory("all");
+                            }}
+                            className={cn(
+                              "inline-flex min-h-10 items-center gap-2 rounded-[var(--radius)] px-3 text-sm font-medium transition-colors",
+                              reviewOnly
+                                ? "bg-warning/15 text-warning"
+                                : "bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground",
+                            )}
+                          >
+                            <AlertTriangle className="h-4 w-4" />
+                            Needs review {needsReviewCount}
+                          </button>
+                        ) : null}
+                      </>
+                    }
+                  />
+                </div>
+              </Suspense>
 
               {/* Source Files */}
               {displayMode === "source" ? (
-                <SourceDocuments
-                  refreshKey={sourceRefreshKey}
-                  onFilterByDocument={setActiveDocumentId}
-                  activeDocumentId={activeDocumentId}
-                  onDelete={handleDataRefresh}
-                  onDocumentsChange={setSourceDocuments}
-                />
+                <Suspense fallback={<SkeletonCard className="min-h-32" />}>
+                  <div data-testid="bank-source-documents">
+                    <SourceDocuments
+                      refreshKey={sourceRefreshKey}
+                      onFilterByDocument={setActiveDocumentId}
+                      activeDocumentId={activeDocumentId}
+                      onDelete={handleDataRefresh}
+                      onDocumentsChange={setSourceDocuments}
+                    />
+                  </div>
+                </Suspense>
               ) : null}
 
               <BulkActionBar
@@ -1557,132 +1577,131 @@ export default function BankPage() {
           ) : null}
 
           {/* Content */}
-          {loading ? (
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <SkeletonCard key={i} />
-              ))}
-            </div>
-          ) : error ? (
-            <ErrorState
-              title="Failed to load documents"
-              message={error}
-              onRetry={fetchEntries}
-              variant="card"
-            />
-          ) : sortedEntries.length === 0 ? (
-            <StandardEmptyState
-              icon={Database}
-              title={
-                query || activeCategory !== "all"
-                  ? "No matching entries"
-                  : "Start with your resume"
-              }
-              description={
-                query || activeCategory !== "all"
-                  ? "Try adjusting your search or filters."
-                  : "Upload a resume or career document and Slothing will turn it into reusable building blocks."
-              }
-              action={
-                !query && activeCategory === "all" ? (
-                  <div className="flex flex-col items-center gap-3">
-                    <Button onClick={() => fileInputRef.current?.click()}>
-                      <Upload className="h-4 w-4 mr-2" />
-                      Upload Document
-                    </Button>
-                    <div className="text-xs text-muted-foreground">
-                      or{" "}
-                      <button
-                        type="button"
-                        className="font-medium text-foreground underline underline-offset-4"
-                        onClick={() => setAddEntryOpen(true)}
-                      >
-                        add an entry manually
-                      </button>{" "}
-                      &middot;{" "}
-                      <DriveFilePicker
-                        onSelect={handleDriveSelect}
-                        accept={["application/pdf", "text/plain"]}
-                        trigger={
-                          <button
-                            type="button"
-                            className="font-medium text-foreground underline underline-offset-4"
-                          >
-                            pick from Drive
-                          </button>
-                        }
-                      />{" "}
-                      &middot; or drop files here
+          <Suspense fallback={<BankEntriesSkeleton />}>
+            {loading ? (
+              <BankEntriesSkeleton />
+            ) : error ? (
+              <ErrorState
+                title="Failed to load documents"
+                message={error}
+                onRetry={fetchEntries}
+                variant="card"
+              />
+            ) : sortedEntries.length === 0 ? (
+              <StandardEmptyState
+                icon={Database}
+                title={
+                  query || activeCategory !== "all"
+                    ? "No matching entries"
+                    : "Start with your resume"
+                }
+                description={
+                  query || activeCategory !== "all"
+                    ? "Try adjusting your search or filters."
+                    : "Upload a resume or career document and Slothing will turn it into reusable building blocks."
+                }
+                action={
+                  !query && activeCategory === "all" ? (
+                    <div className="flex flex-col items-center gap-3">
+                      <Button onClick={() => fileInputRef.current?.click()}>
+                        <Upload className="h-4 w-4 mr-2" />
+                        Upload Document
+                      </Button>
+                      <div className="text-xs text-muted-foreground">
+                        or{" "}
+                        <button
+                          type="button"
+                          className="font-medium text-foreground underline underline-offset-4"
+                          onClick={() => setAddEntryOpen(true)}
+                        >
+                          add an entry manually
+                        </button>{" "}
+                        &middot;{" "}
+                        <DriveFilePicker
+                          onSelect={handleDriveSelect}
+                          accept={["application/pdf", "text/plain"]}
+                          trigger={
+                            <button
+                              type="button"
+                              className="font-medium text-foreground underline underline-offset-4"
+                            >
+                              pick from Drive
+                            </button>
+                          }
+                        />{" "}
+                        &middot; or drop files here
+                      </div>
                     </div>
-                  </div>
-                ) : null
-              }
-            />
-          ) : (
-            <div
-              ref={entriesListRef}
-              className="space-y-8 animate-in fade-in duration-200"
-            >
-              {displayMode === "source"
-                ? sourceGroupedEntries.map((group) => (
-                    <div key={group.key}>
-                      <h2 className="text-lg font-semibold mb-1 flex items-center gap-2">
-                        {group.document?.filename ?? "Manual entries"}
-                        <span className="text-sm font-normal text-muted-foreground">
-                          ({group.entries.length})
-                        </span>
-                      </h2>
-                      <p className="mb-3 text-sm text-muted-foreground">
-                        {group.document
-                          ? "Parsed components from this uploaded source."
-                          : "Components added directly in the bank."}
-                      </p>
-                      <EntryCollection
-                        layoutMode={layoutMode}
-                        displayMode={displayMode}
-                        entries={group.entries}
-                        allEntries={entries}
-                        sourceDocuments={sourceDocuments}
-                        onUpdate={handleUpdate}
-                        onDelete={handleDelete}
-                        onCreateChild={handleCreateChild}
-                        onReorderChild={handleReorderChild}
-                        selectedIds={selectedEntryIds}
-                        onToggleSelect={toggleEntrySelection}
-                        onSelectEntries={selectEntries}
-                        onDeselectEntries={deselectEntries}
-                        reviewEntries={allEntries}
-                      />
-                    </div>
-                  ))
-                : groupedEntries.map((group) => (
-                    <div key={group.category}>
-                      <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
-                        {CATEGORY_LABELS[group.category]}
-                        <span className="text-sm font-normal text-muted-foreground">
-                          ({group.entries.length})
-                        </span>
-                      </h2>
-                      <EntryCollection
-                        layoutMode={layoutMode}
-                        displayMode={displayMode}
-                        entries={group.entries}
-                        allEntries={entries}
-                        sourceDocuments={sourceDocuments}
-                        onUpdate={handleUpdate}
-                        onDelete={handleDelete}
-                        onCreateChild={handleCreateChild}
-                        onReorderChild={handleReorderChild}
-                        selectedIds={selectedEntryIds}
-                        onToggleSelect={toggleEntrySelection}
-                        onSelectEntries={selectEntries}
-                        onDeselectEntries={deselectEntries}
-                        reviewEntries={allEntries}
-                      />
-                    </div>
-                  ))}
-            </div>
-          )}
+                  ) : null
+                }
+              />
+            ) : (
+              <div
+                ref={entriesListRef}
+                className="space-y-8 animate-in fade-in duration-200"
+                data-testid="bank-entries"
+              >
+                {displayMode === "source"
+                  ? sourceGroupedEntries.map((group) => (
+                      <div key={group.key}>
+                        <h2 className="text-lg font-semibold mb-1 flex items-center gap-2">
+                          {group.document?.filename ?? "Manual entries"}
+                          <span className="text-sm font-normal text-muted-foreground">
+                            ({group.entries.length})
+                          </span>
+                        </h2>
+                        <p className="mb-3 text-sm text-muted-foreground">
+                          {group.document
+                            ? "Parsed components from this uploaded source."
+                            : "Components added directly in the bank."}
+                        </p>
+                        <EntryCollection
+                          layoutMode={layoutMode}
+                          displayMode={displayMode}
+                          entries={group.entries}
+                          allEntries={entries}
+                          sourceDocuments={sourceDocuments}
+                          onUpdate={handleUpdate}
+                          onDelete={handleDelete}
+                          onCreateChild={handleCreateChild}
+                          onReorderChild={handleReorderChild}
+                          selectedIds={selectedEntryIds}
+                          onToggleSelect={toggleEntrySelection}
+                          onSelectEntries={selectEntries}
+                          onDeselectEntries={deselectEntries}
+                          reviewEntries={allEntries}
+                        />
+                      </div>
+                    ))
+                  : groupedEntries.map((group) => (
+                      <div key={group.category}>
+                        <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                          {CATEGORY_LABELS[group.category]}
+                          <span className="text-sm font-normal text-muted-foreground">
+                            ({group.entries.length})
+                          </span>
+                        </h2>
+                        <EntryCollection
+                          layoutMode={layoutMode}
+                          displayMode={displayMode}
+                          entries={group.entries}
+                          allEntries={entries}
+                          sourceDocuments={sourceDocuments}
+                          onUpdate={handleUpdate}
+                          onDelete={handleDelete}
+                          onCreateChild={handleCreateChild}
+                          onReorderChild={handleReorderChild}
+                          selectedIds={selectedEntryIds}
+                          onToggleSelect={toggleEntrySelection}
+                          onSelectEntries={selectEntries}
+                          onDeselectEntries={deselectEntries}
+                          reviewEntries={allEntries}
+                        />
+                      </div>
+                    ))}
+              </div>
+            )}
+          </Suspense>
         </PageContent>
       </AppPage>
     </ErrorBoundary>
@@ -1740,6 +1759,29 @@ function IconModeButton({
     >
       {children}
     </button>
+  );
+}
+
+function BankFiltersSkeleton() {
+  return (
+    <div className="border-b border-border/50 bg-background/95 py-3">
+      <div className="flex flex-wrap items-center gap-3">
+        <SkeletonButton className="h-10 w-64" />
+        {Array.from({ length: 4 }).map((_, index) => (
+          <SkeletonButton key={index} className="h-10 w-24 rounded-full" />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function BankEntriesSkeleton() {
+  return (
+    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      {Array.from({ length: 6 }).map((_, index) => (
+        <SkeletonChunkCard key={index} />
+      ))}
+    </div>
   );
 }
 
