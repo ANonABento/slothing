@@ -64,6 +64,13 @@
       "when": 1778393750229,
       "tag": "0008_company_research_github_slug",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1778406026110,
+      "tag": "0009_huge_kitty_pryde",
+      "breakpoints": true
     }
   ]
 }

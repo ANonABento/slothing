@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import {
   BarChart3,
@@ -49,7 +49,12 @@ import {
   pageGridClasses,
   StandardEmptyState,
 } from "@/components/ui/page-layout";
-import { SkeletonChart, SkeletonButton } from "@/components/ui/skeleton";
+import {
+  SkeletonCard,
+  SkeletonChart,
+  SkeletonButton,
+  SkeletonStatCard,
+} from "@/components/ui/skeleton";
 import { useErrorToast } from "@/hooks/use-error-toast";
 
 const TrendCharts = dynamic(
@@ -327,263 +332,296 @@ export default function AnalyticsPage() {
       <PageContent>
         <div className="space-y-8">
           {/* Overview Cards */}
-          <div className={pageGridClasses.fourStats}>
-            {/* Profile Completeness */}
-            <PagePanel>
-              <div className="flex items-center justify-between mb-4">
-                <PageIconTile icon={Target} />
-                <span className="text-2xl font-bold">
-                  {analytics.overview.profileCompleteness}%
-                </span>
+          <Suspense
+            fallback={
+              <div className={pageGridClasses.fourStats}>
+                <SkeletonStatCard />
+                <SkeletonStatCard />
+                <SkeletonStatCard />
+                <SkeletonStatCard />
               </div>
-              <h3 className="font-medium mb-2">Profile Complete</h3>
-              <Progress
-                value={analytics.overview.profileCompleteness}
-                aria-label="Profile completeness"
-                className="h-2"
-              />
-              {analytics.overview.profileCompleteness < 100 && (
-                <p className="text-xs text-muted-foreground mt-2">
-                  <Link
-                    href="/bank"
-                    className="text-primary underline underline-offset-2 font-medium"
-                  >
-                    Complete your profile
-                  </Link>{" "}
-                  to improve your chances
-                </p>
-              )}
-            </PagePanel>
-
-            {/* Total Opportunities */}
-            <PagePanel>
-              <div className="flex items-center justify-between mb-4">
-                <PageIconTile
-                  icon={Briefcase}
-                  className="bg-info/10 text-info"
-                />
-                <span className="text-2xl font-bold">
-                  {analytics.overview.totalJobs}
-                </span>
-              </div>
-              <h3 className="font-medium mb-1">Total Opportunities</h3>
-              <p className="text-sm text-muted-foreground">
-                {analytics.jobs.applied} applied
-              </p>
-            </PagePanel>
-
-            {/* Interviews */}
-            <PagePanel>
-              <div className="flex items-center justify-between mb-4">
-                <PageIconTile
-                  icon={MessageSquare}
-                  className="bg-warning/10 text-warning"
-                />
-                <span className="text-2xl font-bold">
-                  {analytics.overview.totalInterviews}
-                </span>
-              </div>
-              <h3 className="font-medium mb-1">Interview Sessions</h3>
-              <p className="text-sm text-muted-foreground">
-                {analytics.interviews.completed} completed
-              </p>
-            </PagePanel>
-
-            {/* Resumes */}
-            <PagePanel>
-              <div className="flex items-center justify-between mb-4">
-                <PageIconTile
-                  icon={FileText}
-                  className="bg-success/10 text-success"
-                />
-                <span className="text-2xl font-bold">
-                  {analytics.overview.totalResumesGenerated}
-                </span>
-              </div>
-              <h3 className="font-medium mb-1">Resumes Generated</h3>
-              <p className="text-sm text-muted-foreground">
-                Tailored for each opportunity
-              </p>
-            </PagePanel>
-          </div>
-
-          {/* Pipeline & Skills Row */}
-          <div className="grid gap-6 lg:grid-cols-2">
-            {/* Job Pipeline */}
-            <PagePanel>
-              <PagePanelHeader title="Application Pipeline" icon={TrendingUp} />
-
-              <div className="space-y-4">
-                {Object.entries(STATUS_CONFIG).map(([status, config]) => {
-                  const count = analytics.jobs.byStatus[status] || 0;
-                  const percentage =
-                    analytics.overview.totalJobs > 0
-                      ? (count / analytics.overview.totalJobs) * 100
-                      : 0;
-
-                  return (
-                    <div key={status} className="space-y-2">
-                      <div className="flex items-center justify-between text-sm">
-                        <div className="flex items-center gap-2">
-                          <config.icon
-                            className={`h-4 w-4 ${config.color.replace("bg-", "text-")}`}
-                          />
-                          <span className="font-medium">{config.label}</span>
-                        </div>
-                        <span className="text-muted-foreground">
-                          {pluralize(count, "opportunity", "opportunities")}
-                        </span>
-                      </div>
-                      <div className="h-2 rounded-full bg-muted overflow-hidden">
-                        <div
-                          className={`h-full ${config.color} transition-all duration-500`}
-                          style={{ width: `${percentage}%` }}
-                        />
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Conversion Rates */}
-              <div className="mt-6 pt-6 border-t">
-                <h4 className="text-sm font-medium mb-4">Conversion Rates</h4>
-                <div className="grid grid-cols-3 gap-4 text-center">
-                  <div>
-                    <p className="text-2xl font-bold text-info">
-                      {applicationRate}%
-                    </p>
-                    <p className="text-xs text-muted-foreground">Applied</p>
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold text-warning">
-                      {interviewRate}%
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      To Interview
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold text-success">
-                      {offerRate}%
-                    </p>
-                    <p className="text-xs text-muted-foreground">To Offer</p>
-                  </div>
-                </div>
-              </div>
-            </PagePanel>
-
-            {/* Skills Overview */}
-            <PagePanel>
-              <PagePanelHeader title="Skills Overview" icon={Users} />
-
-              {/* Skills by Category */}
-              <div className="space-y-4 mb-6">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="font-medium">Total Skills</span>
-                  <span className="text-muted-foreground">
-                    {analytics.skills.total}
+            }
+          >
+            <div
+              className={pageGridClasses.fourStats}
+              data-testid="analytics-overview"
+            >
+              {/* Profile Completeness */}
+              <PagePanel>
+                <div className="flex items-center justify-between mb-4">
+                  <PageIconTile icon={Target} />
+                  <span className="text-2xl font-bold">
+                    {analytics.overview.profileCompleteness}%
                   </span>
                 </div>
-
-                {Object.entries(analytics.skills.byCategory).map(
-                  ([category, count]) => (
-                    <div
-                      key={category}
-                      className="flex items-center justify-between text-sm"
-                    >
-                      <span className="capitalize">{category}</span>
-                      <span className="text-muted-foreground">{count}</span>
-                    </div>
-                  ),
-                )}
-              </div>
-
-              {/* Skill Gaps */}
-              {analytics.skills.gaps.length > 0 && (
-                <div className="pt-6 border-t">
-                  <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
-                    <AlertTriangle className="h-4 w-4 text-warning" />
-                    Skill Gaps from Opportunity Listings
-                  </h4>
-                  <div className="flex flex-wrap gap-2">
-                    {analytics.skills.gaps.map((skill) => (
-                      <span
-                        key={skill}
-                        className="px-2.5 py-1 rounded-full bg-warning/10 text-warning text-xs font-medium capitalize"
-                      >
-                        {skill}
-                      </span>
-                    ))}
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-3">
-                    These skills appear frequently in your saved opportunities
-                    but aren&apos;t in your profile.
-                  </p>
-                </div>
-              )}
-            </PagePanel>
-          </div>
-
-          {/* Recent Activity */}
-          <PagePanel>
-            <PagePanelHeader title="Recent Opportunity Activity" icon={Clock} />
-
-            {analytics.recent.jobs.length > 0 ? (
-              <div className="space-y-3">
-                {analytics.recent.jobs.map((job) => {
-                  const statusConfig =
-                    STATUS_CONFIG[job.status] || STATUS_CONFIG.saved;
-                  return (
+                <h3 className="font-medium mb-2">Profile Complete</h3>
+                <Progress
+                  value={analytics.overview.profileCompleteness}
+                  aria-label="Profile completeness"
+                  className="h-2"
+                />
+                {analytics.overview.profileCompleteness < 100 && (
+                  <p className="text-xs text-muted-foreground mt-2">
                     <Link
-                      key={job.id}
-                      href={`/opportunities?highlight=${job.id}`}
-                      className="flex items-center justify-between p-4 rounded-xl bg-muted/50 hover:bg-muted transition-colors"
+                      href="/bank"
+                      className="text-primary underline underline-offset-2 font-medium"
                     >
-                      <div className="flex items-center gap-4">
-                        <div
-                          className={`p-2 rounded-lg ${statusConfig.color}/10`}
-                        >
-                          <statusConfig.icon
-                            className={`h-4 w-4 ${statusConfig.color.replace("bg-", "text-")}`}
+                      Complete your profile
+                    </Link>{" "}
+                    to improve your chances
+                  </p>
+                )}
+              </PagePanel>
+
+              {/* Total Opportunities */}
+              <PagePanel>
+                <div className="flex items-center justify-between mb-4">
+                  <PageIconTile
+                    icon={Briefcase}
+                    className="bg-info/10 text-info"
+                  />
+                  <span className="text-2xl font-bold">
+                    {analytics.overview.totalJobs}
+                  </span>
+                </div>
+                <h3 className="font-medium mb-1">Total Opportunities</h3>
+                <p className="text-sm text-muted-foreground">
+                  {analytics.jobs.applied} applied
+                </p>
+              </PagePanel>
+
+              {/* Interviews */}
+              <PagePanel>
+                <div className="flex items-center justify-between mb-4">
+                  <PageIconTile
+                    icon={MessageSquare}
+                    className="bg-warning/10 text-warning"
+                  />
+                  <span className="text-2xl font-bold">
+                    {analytics.overview.totalInterviews}
+                  </span>
+                </div>
+                <h3 className="font-medium mb-1">Interview Sessions</h3>
+                <p className="text-sm text-muted-foreground">
+                  {analytics.interviews.completed} completed
+                </p>
+              </PagePanel>
+
+              {/* Resumes */}
+              <PagePanel>
+                <div className="flex items-center justify-between mb-4">
+                  <PageIconTile
+                    icon={FileText}
+                    className="bg-success/10 text-success"
+                  />
+                  <span className="text-2xl font-bold">
+                    {analytics.overview.totalResumesGenerated}
+                  </span>
+                </div>
+                <h3 className="font-medium mb-1">Resumes Generated</h3>
+                <p className="text-sm text-muted-foreground">
+                  Tailored for each opportunity
+                </p>
+              </PagePanel>
+            </div>
+          </Suspense>
+
+          {/* Pipeline & Skills Row */}
+          <Suspense
+            fallback={
+              <div className="grid gap-6 lg:grid-cols-2">
+                <SkeletonCard />
+                <SkeletonCard />
+              </div>
+            }
+          >
+            <div className="grid gap-6 lg:grid-cols-2">
+              {/* Job Pipeline */}
+              <PagePanel>
+                <PagePanelHeader
+                  title="Application Pipeline"
+                  icon={TrendingUp}
+                />
+
+                <div className="space-y-4">
+                  {Object.entries(STATUS_CONFIG).map(([status, config]) => {
+                    const count = analytics.jobs.byStatus[status] || 0;
+                    const percentage =
+                      analytics.overview.totalJobs > 0
+                        ? (count / analytics.overview.totalJobs) * 100
+                        : 0;
+
+                    return (
+                      <div key={status} className="space-y-2">
+                        <div className="flex items-center justify-between text-sm">
+                          <div className="flex items-center gap-2">
+                            <config.icon
+                              className={`h-4 w-4 ${config.color.replace("bg-", "text-")}`}
+                            />
+                            <span className="font-medium">{config.label}</span>
+                          </div>
+                          <span className="text-muted-foreground">
+                            {pluralize(count, "opportunity", "opportunities")}
+                          </span>
+                        </div>
+                        <div className="h-2 rounded-full bg-muted overflow-hidden">
+                          <div
+                            className={`h-full ${config.color} transition-all duration-500`}
+                            style={{ width: `${percentage}%` }}
                           />
                         </div>
-                        <div>
-                          <p className="font-medium">{job.title}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {job.company}
-                          </p>
-                        </div>
                       </div>
-                      <div className="text-right">
+                    );
+                  })}
+                </div>
+
+                {/* Conversion Rates */}
+                <div className="mt-6 pt-6 border-t">
+                  <h4 className="text-sm font-medium mb-4">Conversion Rates</h4>
+                  <div className="grid grid-cols-3 gap-4 text-center">
+                    <div>
+                      <p className="text-2xl font-bold text-info">
+                        {applicationRate}%
+                      </p>
+                      <p className="text-xs text-muted-foreground">Applied</p>
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold text-warning">
+                        {interviewRate}%
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        To Interview
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold text-success">
+                        {offerRate}%
+                      </p>
+                      <p className="text-xs text-muted-foreground">To Offer</p>
+                    </div>
+                  </div>
+                </div>
+              </PagePanel>
+
+              {/* Skills Overview */}
+              <PagePanel>
+                <PagePanelHeader title="Skills Overview" icon={Users} />
+
+                {/* Skills by Category */}
+                <div className="space-y-4 mb-6">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="font-medium">Total Skills</span>
+                    <span className="text-muted-foreground">
+                      {analytics.skills.total}
+                    </span>
+                  </div>
+
+                  {Object.entries(analytics.skills.byCategory).map(
+                    ([category, count]) => (
+                      <div
+                        key={category}
+                        className="flex items-center justify-between text-sm"
+                      >
+                        <span className="capitalize">{category}</span>
+                        <span className="text-muted-foreground">{count}</span>
+                      </div>
+                    ),
+                  )}
+                </div>
+
+                {/* Skill Gaps */}
+                {analytics.skills.gaps.length > 0 && (
+                  <div className="pt-6 border-t">
+                    <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
+                      <AlertTriangle className="h-4 w-4 text-warning" />
+                      Skill Gaps from Opportunity Listings
+                    </h4>
+                    <div className="flex flex-wrap gap-2">
+                      {analytics.skills.gaps.map((skill) => (
                         <span
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusConfig.color}/10 ${statusConfig.color.replace("bg-", "text-")}`}
+                          key={skill}
+                          className="px-2.5 py-1 rounded-full bg-warning/10 text-warning text-xs font-medium capitalize"
                         >
-                          {statusConfig.label}
+                          {skill}
                         </span>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          <TimeAgo date={job.createdAt} />
-                        </p>
-                      </div>
-                    </Link>
-                  );
-                })}
-              </div>
-            ) : (
-              <StandardEmptyState
-                icon={Briefcase}
-                title="No opportunities tracked yet"
-                action={
-                  <Button asChild variant="outline">
-                    <Link href="/opportunities">
-                      Add your first opportunity
-                    </Link>
-                  </Button>
-                }
-                className="min-h-64"
-              />
-            )}
-          </PagePanel>
+                      ))}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-3">
+                      These skills appear frequently in your saved opportunities
+                      but aren&apos;t in your profile.
+                    </p>
+                  </div>
+                )}
+              </PagePanel>
+            </div>
+          </Suspense>
+
+          {/* Recent Activity */}
+          <Suspense fallback={<SkeletonCard />}>
+            <div data-testid="analytics-recent">
+              <PagePanel>
+                <PagePanelHeader
+                  title="Recent Opportunity Activity"
+                  icon={Clock}
+                />
+
+                {analytics.recent.jobs.length > 0 ? (
+                  <div className="space-y-3">
+                    {analytics.recent.jobs.map((job) => {
+                      const statusConfig =
+                        STATUS_CONFIG[job.status] || STATUS_CONFIG.saved;
+                      return (
+                        <Link
+                          key={job.id}
+                          href={`/opportunities?highlight=${job.id}`}
+                          className="flex items-center justify-between p-4 rounded-xl bg-muted/50 hover:bg-muted transition-colors"
+                        >
+                          <div className="flex items-center gap-4">
+                            <div
+                              className={`p-2 rounded-lg ${statusConfig.color}/10`}
+                            >
+                              <statusConfig.icon
+                                className={`h-4 w-4 ${statusConfig.color.replace("bg-", "text-")}`}
+                              />
+                            </div>
+                            <div>
+                              <p className="font-medium">{job.title}</p>
+                              <p className="text-sm text-muted-foreground">
+                                {job.company}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <span
+                              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusConfig.color}/10 ${statusConfig.color.replace("bg-", "text-")}`}
+                            >
+                              {statusConfig.label}
+                            </span>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              <TimeAgo date={job.createdAt} />
+                            </p>
+                          </div>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <StandardEmptyState
+                    icon={Briefcase}
+                    title="No opportunities tracked yet"
+                    action={
+                      <Button asChild variant="outline">
+                        <Link href="/opportunities">
+                          Add your first opportunity
+                        </Link>
+                      </Button>
+                    }
+                    className="min-h-64"
+                  />
+                )}
+              </PagePanel>
+            </div>
+          </Suspense>
 
           {/* Advanced Analytics Section */}
           <div className="space-y-6 pt-4">
@@ -606,7 +644,9 @@ export default function AnalyticsPage() {
                 Activity Trends
               </h3>
               <ErrorBoundary>
-                <TrendCharts />
+                <Suspense fallback={<SkeletonChart />}>
+                  <TrendCharts />
+                </Suspense>
               </ErrorBoundary>
             </div>
 
@@ -617,7 +657,9 @@ export default function AnalyticsPage() {
                 Success Metrics
               </h3>
               <ErrorBoundary>
-                <SuccessDashboard />
+                <Suspense fallback={<SkeletonChart />}>
+                  <SuccessDashboard />
+                </Suspense>
               </ErrorBoundary>
             </div>
 
@@ -628,7 +670,9 @@ export default function AnalyticsPage() {
                 Skill Development
               </h3>
               <ErrorBoundary>
-                <SkillLearningPaths />
+                <Suspense fallback={<SkeletonChart />}>
+                  <SkillLearningPaths />
+                </Suspense>
               </ErrorBoundary>
             </div>
           </div>
