@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { Clock, Search, Trash2 } from "lucide-react";
 import { TimeAgo } from "@/components/format/time-ago";
 import { Button } from "@/components/ui/button";
+import { VirtualList } from "@/components/ui/virtual-list";
 import {
   Dialog,
   DialogContent,
@@ -12,6 +13,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { ESTIMATED_CARD_HEIGHT_DRAFT } from "@/lib/constants/virtualization";
 import { TEMPLATE_CONFIG } from "../_data/templates";
 import type { EmailTemplateType } from "@/types";
 import type { Opportunity } from "@/types/opportunity";
@@ -60,6 +62,57 @@ export function DraftsSheet({
     });
   }, [drafts, normalizedQuery]);
 
+  function getDraftKey(draft: EmailDraftForSheet): string {
+    return draft.id;
+  }
+
+  function renderDraft({ item: draft }: { item: EmailDraftForSheet }) {
+    const config = TEMPLATE_CONFIG[draft.type];
+    const Icon = config.icon;
+    const job = draft.jobId
+      ? jobs.find((candidate) => candidate.id === draft.jobId)
+      : null;
+
+    return (
+      <article className="border-b p-4">
+        <div className="flex items-start gap-3">
+          <div className={`rounded-lg bg-muted p-2 ${config.color}`}>
+            <Icon className="h-4 w-4" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <h3 className="truncate text-sm font-medium">{draft.subject}</h3>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {config.title}
+              {job ? ` - ${job.company}` : ""}
+            </p>
+            <p className="mt-2 flex items-center gap-1 text-xs text-muted-foreground">
+              <Clock className="h-3 w-3" />
+              <TimeAgo date={draft.updatedAt} />
+            </p>
+          </div>
+        </div>
+        <div className="mt-3 flex items-center justify-end gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onLoadDraft(draft)}
+          >
+            Continue
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onDeleteDraft(draft.id)}
+            className="text-muted-foreground hover:text-destructive"
+            aria-label={`Delete draft ${draft.subject}`}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
+      </article>
+    );
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="left-auto right-0 top-0 flex h-dvh max-h-dvh w-full max-w-md translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden rounded-none p-0 sm:rounded-none">
@@ -84,7 +137,7 @@ export function DraftsSheet({
           </div>
         ) : null}
 
-        <div className="flex-1 overflow-y-auto">
+        <div className="min-h-0 flex-1">
           {drafts.length === 0 ? (
             <div className="flex h-full items-center justify-center p-6 text-center text-sm text-muted-foreground">
               No drafts yet. Generated emails are saved here automatically.
@@ -94,58 +147,13 @@ export function DraftsSheet({
               No drafts match your search.
             </div>
           ) : (
-            <div className="divide-y">
-              {filteredDrafts.map((draft) => {
-                const config = TEMPLATE_CONFIG[draft.type];
-                const Icon = config.icon;
-                const job = draft.jobId
-                  ? jobs.find((candidate) => candidate.id === draft.jobId)
-                  : null;
-
-                return (
-                  <article key={draft.id} className="p-4">
-                    <div className="flex items-start gap-3">
-                      <div
-                        className={`rounded-lg bg-muted p-2 ${config.color}`}
-                      >
-                        <Icon className="h-4 w-4" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <h3 className="truncate text-sm font-medium">
-                          {draft.subject}
-                        </h3>
-                        <p className="mt-1 text-xs text-muted-foreground">
-                          {config.title}
-                          {job ? ` - ${job.company}` : ""}
-                        </p>
-                        <p className="mt-2 flex items-center gap-1 text-xs text-muted-foreground">
-                          <Clock className="h-3 w-3" />
-                          <TimeAgo date={draft.updatedAt} />
-                        </p>
-                      </div>
-                    </div>
-                    <div className="mt-3 flex items-center justify-end gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => onLoadDraft(draft)}
-                      >
-                        Continue
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => onDeleteDraft(draft.id)}
-                        className="text-muted-foreground hover:text-destructive"
-                        aria-label={`Delete draft ${draft.subject}`}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </article>
-                );
-              })}
-            </div>
+            <VirtualList
+              items={filteredDrafts}
+              getKey={getDraftKey}
+              estimateSize={ESTIMATED_CARD_HEIGHT_DRAFT}
+              className="h-full min-h-0"
+              renderItem={renderDraft}
+            />
           )}
         </div>
       </DialogContent>

@@ -85,6 +85,35 @@ describe("SentTimeline", () => {
     expect(screen.queryByText("Nimbus note")).not.toBeInTheDocument();
   });
 
+  it("renders only a visible window for large sent lists", () => {
+    const sends = Array.from({ length: 200 }, (_, index) =>
+      makeSend({
+        id: `send-${index}`,
+        recipient: `person-${index}@example.com`,
+        subject: `Sent ${index}`,
+      }),
+    );
+
+    render(
+      <SentTimeline
+        open
+        onOpenChange={vi.fn()}
+        sends={sends}
+        jobs={jobs}
+        selectedJobId="job-1"
+      />,
+    );
+
+    expect(document.body.querySelectorAll("article").length).toBeLessThan(60);
+    expect(screen.getByText("person-0@example.com")).toBeInTheDocument();
+    expect(
+      screen.queryByText("person-199@example.com"),
+    ).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getAllByRole("button", { name: /View/ })[0]);
+    expect(screen.getByText("Full sent body")).toBeInTheDocument();
+  });
+
   it("renders an empty state", () => {
     render(
       <SentTimeline
