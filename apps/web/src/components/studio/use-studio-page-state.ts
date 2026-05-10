@@ -100,6 +100,8 @@ interface ExtensionCoverLetterResponse {
 interface StudioPageState {
   activeDocumentId: string;
   aiPanelCollapsed: boolean;
+  compareVersionId: string | null;
+  currentDraftState: BuilderDraftState;
   currentDocuments: StudioDocument[];
   documentMode: DocumentMode;
   draftIsSaved: boolean;
@@ -113,6 +115,8 @@ interface StudioPageState {
   handleDeleteDocument: (id: string) => void;
   handleDownloadDocx: () => Promise<void>;
   handleDownloadPdf: () => Promise<void>;
+  handleCloseVersionDiff: () => void;
+  handleCompareVersion: (id: string) => void;
   handlePreviewVersion: (id: string) => void;
   handleRenameDocument: (id: string, name: string) => void;
   handleReorder: (fromIndex: number, toIndex: number) => void;
@@ -310,6 +314,7 @@ export function useStudioPageState(): StudioPageState {
   const [versions, setVersions] = useState<BuilderVersion[]>([]);
   const [manualVersionName, setManualVersionName] = useState("");
   const [previewVersionId, setPreviewVersionId] = useState<string | null>(null);
+  const [compareVersionId, setCompareVersionId] = useState<string | null>(null);
   const [saveOp, setSaveOp] = useState<SaveOperation>({ type: "idle" });
   const [dirtyDocumentIds, setDirtyDocumentIds] = useState<Set<string>>(
     new Set(),
@@ -1177,6 +1182,14 @@ export function useStudioPageState(): StudioPageState {
     [markActiveDocumentSaved, updateActiveDocument, versions],
   );
 
+  const handleCompareVersion = useCallback((id: string) => {
+    setCompareVersionId(id);
+  }, []);
+
+  const handleCloseVersionDiff = useCallback(() => {
+    setCompareVersionId(null);
+  }, []);
+
   const getPrintableHtml = useCallback(() => {
     const bodyHtml = content ? createEditorBodyHtml(content) : html;
     if (!bodyHtml) return "";
@@ -1278,6 +1291,8 @@ export function useStudioPageState(): StudioPageState {
   return {
     activeDocumentId: activeDocumentIds[documentMode],
     aiPanelCollapsed,
+    compareVersionId,
+    currentDraftState,
     currentDocuments,
     documentMode,
     draftIsSaved,
@@ -1299,6 +1314,8 @@ export function useStudioPageState(): StudioPageState {
     handleDeleteDocument,
     handleDownloadDocx,
     handleDownloadPdf,
+    handleCloseVersionDiff,
+    handleCompareVersion,
     handlePreviewVersion,
     handleRenameDocument,
     handleReorder,
