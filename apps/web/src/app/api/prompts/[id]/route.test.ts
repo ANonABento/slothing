@@ -11,6 +11,7 @@ vi.mock("@/lib/db/prompt-variants", () =>
 );
 
 import { PATCH, DELETE } from "./route";
+import { updatePromptVariant } from "@/lib/db/prompt-variants";
 import {
   expectRouteResponseContract,
   getRequest,
@@ -89,5 +90,30 @@ describe("/api/prompts/[id] route contract", () => {
     );
 
     await expectRouteResponseContract(response);
+  });
+
+  it("does not leak raw error messages on 500", async () => {
+    const probe = "INTERNAL_LEAK_PROBE_PROMPTS_UPDATE_4A30A145";
+    setAuthSuccess();
+    vi.mocked(updatePromptVariant).mockImplementationOnce(() => {
+      throw new Error(probe);
+    });
+
+    const response = await invokeRouteHandler(
+      PATCH,
+      jsonRequest(
+        "http://localhost/api/prompts/item-1",
+        { name: "Updated prompt" },
+        "PATCH",
+        { "x-extension-token": "test-token" },
+      ),
+      routeContext({ id: "item-1" }),
+    );
+
+    expect(response.status).toBe(500);
+    const body = await response.json();
+    expect(JSON.stringify(body)).not.toContain(probe);
+    expect(body).not.toHaveProperty("details");
+    expect(body.error).toBe("Failed to update prompt variant");
   });
 });

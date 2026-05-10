@@ -19,6 +19,7 @@ vi.mock("@/lib/knowledge/retrieval", () =>
 );
 
 import { POST } from "./route";
+import { getLLMConfig } from "@/lib/db/queries";
 import {
   expectRouteResponseContract,
   getRequest,
@@ -82,5 +83,30 @@ describe("/api/resume/generate route contract", () => {
     );
 
     await expectRouteResponseContract(response);
+  });
+
+  it("does not leak raw error messages on 500", async () => {
+    const probe = "INTERNAL_LEAK_PROBE_RESUME_GENERATE_4A30A145";
+    setAuthSuccess();
+    vi.mocked(getLLMConfig).mockImplementationOnce(() => {
+      throw new Error(probe);
+    });
+
+    const response = await invokeRouteHandler(
+      POST,
+      jsonRequest(
+        "http://localhost/api/resume/generate",
+        { jobDescription: "Build polished user interfaces." },
+        "POST",
+        { "x-extension-token": "test-token" },
+      ),
+      routeContext(),
+    );
+
+    expect(response.status).toBe(500);
+    const body = await response.json();
+    expect(JSON.stringify(body)).not.toContain(probe);
+    expect(body).not.toHaveProperty("details");
+    expect(body.error).toBe("Failed to generate resume");
   });
 });
