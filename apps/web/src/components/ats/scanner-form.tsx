@@ -29,6 +29,11 @@ import type { JobDescription, Profile } from "@/types";
 import { ScoreDisplay } from "./score-display";
 import { FixSuggestionsList } from "./fix-suggestions";
 import { JdMatchCard } from "./jd-match-card";
+import { ResultQualityCard } from "@/components/result-quality/result-quality-card";
+import {
+  evaluateResultQuality,
+  type ResultQualityRubric,
+} from "@/lib/result-quality/rubric";
 
 const MIN_RESUME_LENGTH = 50;
 const MAX_UPLOAD_SIZE = 5 * 1024 * 1024;
@@ -155,6 +160,8 @@ export function ScannerForm({ locale = "en" }: ScannerFormProps = {}) {
   const [scraping, setScraping] = useState(false);
   const [result, setResult] = useState<ATSScanResult | null>(null);
   const [jdMatch, setJdMatch] = useState<JdMatchResult | null>(null);
+  const [resultQuality, setResultQuality] =
+    useState<ResultQualityRubric | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
   const jobTextareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -281,13 +288,23 @@ export function ScannerForm({ locale = "en" }: ScannerFormProps = {}) {
         (jobText.trim().length > 20 ? textToJob(jobText) : undefined);
       const jdText = job?.description || jobText;
       const analysis = scanResume(profile, resumeText, job, fileMeta);
+      const jdMatchResult = jdText.trim()
+        ? computeJdMatch(profileToMatchText(profile, resumeText), jdText, {
+            missingLimit: 10,
+          })
+        : null;
       setResult(analysis);
-      setJdMatch(
-        jdText.trim()
-          ? computeJdMatch(profileToMatchText(profile, resumeText), jdText, {
-              missingLimit: 10,
-            })
-          : null,
+      setJdMatch(jdMatchResult);
+      setResultQuality(
+        evaluateResultQuality({
+          jdMatchScore: jdMatchResult?.score,
+          missingKeywords: jdMatchResult?.missingKeywords,
+          atsAxes: analysis.axes,
+          atsIssues: analysis.issues,
+          keywords: analysis.keywords,
+          profile,
+          hasJobDescription: Boolean(jdText.trim()),
+        }),
       );
       setAnalyzing(false);
     });
@@ -296,6 +313,7 @@ export function ScannerForm({ locale = "en" }: ScannerFormProps = {}) {
   function handleReset() {
     setResult(null);
     setJdMatch(null);
+    setResultQuality(null);
     setResumeText("");
     setJobText("");
     setJobUrl("");
@@ -321,6 +339,8 @@ export function ScannerForm({ locale = "en" }: ScannerFormProps = {}) {
     return (
       <div className="space-y-8">
         <ScoreDisplay result={legacyResult} />
+
+        {resultQuality ? <ResultQualityCard rubric={resultQuality} /> : null}
 
         {jdMatch ? <JdMatchCard match={jdMatch} /> : null}
 
