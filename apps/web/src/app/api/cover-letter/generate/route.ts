@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAuth, isAuthError } from "@/lib/auth";
+import { requireUserAuth, isAuthError } from "@/lib/auth";
 import { getLLMConfig, getProfile } from "@/lib/db";
 import { saveCoverLetter } from "@/lib/db/cover-letters";
 import { getGroupedBankEntries } from "@/lib/db/profile-bank";
@@ -40,7 +40,7 @@ function isCoverLetterAction(action: unknown): action is CoverLetterAction {
  * }
  */
 export async function POST(request: NextRequest) {
-  const authResult = await requireAuth();
+  const authResult = await requireUserAuth(request);
   if (isAuthError(authResult)) return authResult;
 
   const clientId = getClientIdentifier(request, authResult.userId);

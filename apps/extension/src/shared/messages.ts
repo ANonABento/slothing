@@ -37,6 +37,16 @@ export const Messages = {
     type: "IMPORT_JOBS_BATCH",
     payload: jobs,
   }),
+  tailorFromPage: (job: ScrapedJob): ExtensionMessage<ScrapedJob> => ({
+    type: "TAILOR_FROM_PAGE",
+    payload: job,
+  }),
+  generateCoverLetterFromPage: (
+    job: ScrapedJob,
+  ): ExtensionMessage<ScrapedJob> => ({
+    type: "GENERATE_COVER_LETTER_FROM_PAGE",
+    payload: job,
+  }),
 
   // Learning messages
   saveAnswer: (data: {
@@ -73,6 +83,18 @@ export interface ImportJobResponse extends ExtensionResponse<{
   imported: number;
   opportunityIds: string[];
   pendingCount: number;
+}> {}
+
+export interface TailorFromPageResponse extends ExtensionResponse<{
+  url: string;
+  opportunityId: string;
+  resumeId: string;
+}> {}
+
+export interface GenerateCoverLetterFromPageResponse extends ExtensionResponse<{
+  url: string;
+  opportunityId: string;
+  coverLetterId: string;
 }> {}
 
 export interface SearchAnswersResponse extends ExtensionResponse<
