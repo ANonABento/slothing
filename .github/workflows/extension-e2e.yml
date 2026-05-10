@@ -3,16 +3,16 @@ name: Columbus Extension E2E Tests
 on:
   push:
     paths:
-      - 'apps/extension/**'
-      - 'packages/shared/**'
-      - 'pnpm-lock.yaml'
-      - '.github/workflows/extension-e2e.yml'
+      - "apps/extension/**"
+      - "packages/shared/**"
+      - "pnpm-lock.yaml"
+      - ".github/workflows/extension-e2e.yml"
   pull_request:
     paths:
-      - 'apps/extension/**'
-      - 'packages/shared/**'
-      - 'pnpm-lock.yaml'
-      - '.github/workflows/extension-e2e.yml'
+      - "apps/extension/**"
+      - "packages/shared/**"
+      - "pnpm-lock.yaml"
+      - ".github/workflows/extension-e2e.yml"
   workflow_dispatch:
 
 jobs:
@@ -32,8 +32,8 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'pnpm'
+          node-version: "20"
+          cache: "pnpm"
           cache-dependency-path: pnpm-lock.yaml
 
       - name: Install dependencies
@@ -50,6 +50,12 @@ jobs:
         run: xvfb-run --auto-servernum -- pnpm exec playwright test
         env:
           CI: true
+
+      - name: Run Slothing integration E2E
+        run: xvfb-run --auto-servernum -- pnpm exec playwright test tests/e2e/slothing-integration.spec.ts
+        env:
+          CI: true
+          SLOTHING_INTEGRATION: "1"
 
       - name: Upload Playwright report
         uses: actions/upload-artifact@v4
