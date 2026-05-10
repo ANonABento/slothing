@@ -127,6 +127,12 @@ export async function getGoogleAccessToken(): Promise<GoogleTokenResult | null> 
   const userId = await getCurrentUserId();
   if (!userId) return null;
 
+  return getGoogleAccessTokenForUser(userId);
+}
+
+export async function getGoogleAccessTokenForUser(
+  userId: string,
+): Promise<GoogleTokenResult | null> {
   let account = await loadGoogleAccount(userId);
   if (!account?.access_token) return null;
 
@@ -148,6 +154,13 @@ export async function getGoogleAccessToken(): Promise<GoogleTokenResult | null> 
  */
 export async function isGoogleConnected(): Promise<boolean> {
   const token = await getGoogleAccessToken();
+  return token !== null;
+}
+
+export async function isGoogleConnectedForUser(
+  userId: string,
+): Promise<boolean> {
+  const token = await getGoogleAccessTokenForUser(userId);
   return token !== null;
 }
 
@@ -186,6 +199,15 @@ export async function getGoogleConnectionStatus(): Promise<GoogleConnectionStatu
  */
 export async function createGoogleClient() {
   const tokenResult = await getGoogleAccessToken();
+  return createGoogleClientFromToken(tokenResult);
+}
+
+export async function createGoogleClientForUser(userId: string) {
+  const tokenResult = await getGoogleAccessTokenForUser(userId);
+  return createGoogleClientFromToken(tokenResult);
+}
+
+function createGoogleClientFromToken(tokenResult: GoogleTokenResult | null) {
   if (!tokenResult) {
     throw new GoogleAPIError("Google account not connected", 401);
   }
@@ -208,6 +230,11 @@ export async function createDriveClient() {
 
 export async function createGmailClient() {
   const authClient = await createGoogleClient();
+  return google.gmail({ version: "v1", auth: authClient });
+}
+
+export async function createGmailClientForUser(userId: string) {
+  const authClient = await createGoogleClientForUser(userId);
   return google.gmail({ version: "v1", auth: authClient });
 }
 

@@ -24,6 +24,11 @@ import {
   getStoredLocaleSetting,
   setLocaleSetting,
 } from "@/lib/settings/locale";
+import {
+  getGmailAutoStatusEnabled,
+  getGmailLastScannedAt,
+  setGmailAutoStatusEnabled,
+} from "@/lib/settings/gmail-auto-status";
 import { LOCALE_COOKIE_NAME } from "@/lib/format/time";
 
 export const dynamic = "force-dynamic";
@@ -42,6 +47,10 @@ export async function GET() {
       },
       digest: {
         enabled: getDigestEnabled(authResult.userId),
+      },
+      gmailAutoStatus: {
+        enabled: getGmailAutoStatusEnabled(authResult.userId),
+        lastScannedAt: getGmailLastScannedAt(authResult.userId),
       },
       kanbanVisibleLanes: getKanbanVisibleLanes(authResult.userId),
     });
@@ -87,6 +96,12 @@ export async function PUT(request: NextRequest) {
     }
     if (data.digest) {
       setDigestEnabled(data.digest.enabled, authResult.userId);
+    }
+    if (data.gmailAutoStatus) {
+      setGmailAutoStatusEnabled(
+        data.gmailAutoStatus.enabled,
+        authResult.userId,
+      );
     }
     if (data.kanbanVisibleLanes) {
       setKanbanVisibleLanes(data.kanbanVisibleLanes, authResult.userId);

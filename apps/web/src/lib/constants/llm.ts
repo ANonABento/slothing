@@ -37,6 +37,11 @@ export const updateSettingsSchema = z.object({
       enabled: z.boolean(),
     })
     .optional(),
+  gmailAutoStatus: z
+    .object({
+      enabled: z.boolean(),
+    })
+    .optional(),
   kanbanVisibleLanes: kanbanVisibleLanesSchema.optional(),
   locale: z.string().optional(),
 });

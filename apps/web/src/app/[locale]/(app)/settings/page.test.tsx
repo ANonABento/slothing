@@ -89,6 +89,12 @@ vi.mock("@/components/settings/google-integration", () => ({
   GoogleIntegration: () => <section data-testid="google-integration" />,
 }));
 
+vi.mock("@/components/settings/gmail-auto-status-section", () => ({
+  GmailAutoStatusSection: () => (
+    <section data-testid="gmail-auto-status-section" />
+  ),
+}));
+
 function mockSettingsPage(provider = "openai") {
   mocks.useLLMSettings.mockReturnValue({
     config: { provider, model: "gpt-4o-mini", apiKey: "test-key" },
@@ -162,6 +168,7 @@ describe("SettingsPage", () => {
     expect(screen.getByTestId("kanban-lanes-section")).toBeInTheDocument();
     expect(screen.getByTestId("data-management")).toBeInTheDocument();
     expect(screen.getByTestId("google-integration")).toBeInTheDocument();
+    expect(screen.getByTestId("gmail-auto-status-section")).toBeInTheDocument();
   });
 
   it("shows the Ollama warning only for Ollama and keeps it by the selector", () => {
