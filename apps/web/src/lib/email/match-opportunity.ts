@@ -1,11 +1,23 @@
 import type { Opportunity } from "@/types";
+import {
+  clampConfidence,
+  formatEvidenceSnippet,
+} from "@/lib/status-automation/confidence";
 
 export interface OpportunityCompanyMatch<
   T extends Pick<Opportunity, "company">,
 > {
   opportunity: T;
   score: number;
-  reason: "exact" | "contains" | "tokens";
+  confidence: number;
+  reason:
+    | "company_exact"
+    | "company_in_subject"
+    | "company_in_snippet"
+    | "company_in_body"
+    | "sender_domain"
+    | "token_overlap";
+  evidence: string[];
 }
 
 const LEGAL_SUFFIXES = new Set([
@@ -56,6 +68,13 @@ function senderDomainCandidates(from?: string): string[] {
   return domainParts.filter((part) => !SENDER_NOISE.has(part));
 }
 
+type CandidateSource = "company" | "subject" | "snippet" | "body" | "domain";
+
+interface CompanyCandidate {
+  value: string;
+  source: CandidateSource;
+}
+
 function tokens(value: string): Set<string> {
   return new Set(normalizeCompanyName(value).split(/\s+/).filter(Boolean));
 }
@@ -98,27 +117,67 @@ export function matchOpportunityByCompany<
     from?: string;
   },
 ): OpportunityCompanyMatch<T> | null {
-  const candidates = [
-    input.company,
-    input.subject,
-    input.snippet,
-    input.body,
-    ...senderDomainCandidates(input.from),
-  ].filter((value): value is string => Boolean(value?.trim()));
+  const candidates: CompanyCandidate[] = [
+    { value: input.company ?? "", source: "company" as const },
+    { value: input.subject ?? "", source: "subject" as const },
+    { value: input.snippet ?? "", source: "snippet" as const },
+    { value: input.body ?? "", source: "body" as const },
+    ...senderDomainCandidates(input.from).map((value) => ({
+      value,
+      source: "domain" as const,
+    })),
+  ].filter((candidate) => Boolean(candidate.value.trim()));
 
   const scored = opportunities
     .map((opportunity) => {
-      const bestScore = Math.max(
-        ...candidates.map((candidate) =>
-          companySimilarity(candidate, opportunity.company),
-        ),
-        0,
+      const best = candidates.reduce<{
+        rawScore: number;
+        weightedScore: number;
+        candidate?: CompanyCandidate;
+      }>(
+        (current, candidate) => {
+          const rawScore = companySimilarity(
+            candidate.value,
+            opportunity.company,
+          );
+          const sourceWeight =
+            candidate.source === "domain"
+              ? 0.68
+              : candidate.source === "body"
+                ? 0.9
+                : 1;
+          const weightedScore = rawScore * sourceWeight;
+          return weightedScore > current.weightedScore
+            ? { rawScore, weightedScore, candidate }
+            : current;
+        },
+        { rawScore: 0, weightedScore: 0 },
       );
       const reason: OpportunityCompanyMatch<T>["reason"] =
-        bestScore === 1 ? "exact" : bestScore >= 0.88 ? "contains" : "tokens";
-      return { opportunity, score: bestScore, reason };
+        best.candidate?.source === "domain"
+          ? "sender_domain"
+          : best.candidate?.source === "subject"
+            ? best.rawScore >= 0.88
+              ? "company_in_subject"
+              : "token_overlap"
+            : best.candidate?.source === "snippet"
+              ? "company_in_snippet"
+              : best.candidate?.source === "body"
+                ? "company_in_body"
+                : best.rawScore === 1
+                  ? "company_exact"
+                  : "token_overlap";
+      return {
+        opportunity,
+        score: best.weightedScore,
+        confidence: clampConfidence(best.weightedScore),
+        reason,
+        evidence: best.candidate
+          ? [formatEvidenceSnippet(best.candidate.value)]
+          : [],
+      };
     })
-    .filter((match) => match.score >= 0.72)
+    .filter((match) => match.score >= 0.55)
     .sort((a, b) => b.score - a.score);
 
   if (scored.length === 0) return null;

@@ -14,7 +14,11 @@ vi.mock("@/lib/opportunities", () => ({
 }));
 
 vi.mock("@/lib/db/notifications", () => ({
-  createNotification: vi.fn(),
+  createNotification: vi.fn(() => ({ id: "notif-1" })),
+}));
+
+vi.mock("@/lib/db/suggested-status-updates", () => ({
+  createSuggestedStatusUpdate: vi.fn(),
 }));
 
 vi.mock("@/lib/settings/gmail-auto-status", () => ({
@@ -25,6 +29,7 @@ vi.mock("@/lib/settings/gmail-auto-status", () => ({
 }));
 
 import { createNotification } from "@/lib/db/notifications";
+import { createSuggestedStatusUpdate } from "@/lib/db/suggested-status-updates";
 import { searchStatusChangeEmailsForUser } from "@/lib/google/gmail";
 import {
   changeOpportunityStatus,
@@ -97,6 +102,7 @@ describe("runGmailStatusDetectionForUser", () => {
       scanned: 1,
       matched: 1,
       updated: 1,
+      suggested: 0,
     });
     expect(changeOpportunityStatus).toHaveBeenCalledWith(
       "opp-1",
@@ -107,9 +113,93 @@ describe("runGmailStatusDetectionForUser", () => {
       expect.objectContaining({
         type: "application_update",
         title: "Application status updated from Gmail",
+        message: expect.stringContaining("Reason: application confirmation"),
       }),
       "user-1",
     );
+  });
+
+  it("queues lower-confidence Gmail matches for review", async () => {
+    vi.mocked(searchStatusChangeEmailsForUser).mockResolvedValueOnce([
+      {
+        id: "message-1",
+        threadId: "thread-1",
+        subject: "Next round",
+        from: "Recruiting <jobs@acme.com>",
+        to: "me@example.com",
+        date: new Date("2026-05-01T00:00:00Z"),
+        snippet: "Can we schedule a call next week?",
+        body: "Can we schedule a call next week?",
+        labels: ["INBOX"],
+      },
+    ]);
+    vi.mocked(listAllOpportunities).mockReturnValueOnce([
+      {
+        id: "opp-1",
+        type: "job",
+        title: "Engineer",
+        company: "Acme",
+        source: "manual",
+        status: "applied",
+        tags: [],
+        summary: "",
+        createdAt: "2026-05-01T00:00:00Z",
+        updatedAt: "2026-05-01T00:00:00Z",
+      },
+    ]);
+
+    await expect(
+      runGmailStatusDetectionForUser("user-1"),
+    ).resolves.toMatchObject({
+      matched: 1,
+      updated: 0,
+      suggested: 1,
+    });
+    expect(changeOpportunityStatus).not.toHaveBeenCalled();
+    expect(createSuggestedStatusUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        notificationId: "notif-1",
+        opportunityId: "opp-1",
+        suggestedStatus: "interviewing",
+        sourceProvider: "gmail",
+        sourceEventId: "message-1",
+        confidence: expect.any(Number),
+        evidence: expect.any(Array),
+      }),
+    );
+  });
+
+  it("skips benefits and reschedule false positives without notifications", async () => {
+    vi.mocked(searchStatusChangeEmailsForUser).mockResolvedValueOnce([
+      {
+        id: "benefits",
+        threadId: "thread-1",
+        subject: "Benefits we offer",
+        from: "hr@example.com",
+        to: "me@example.com",
+        date: new Date("2026-05-01T00:00:00Z"),
+        snippet: "We offer health benefits.",
+        body: "We offer health benefits and perks.",
+        labels: ["INBOX"],
+      },
+      {
+        id: "reschedule",
+        threadId: "thread-2",
+        subject: "Call update",
+        from: "recruiter@example.com",
+        to: "me@example.com",
+        date: new Date("2026-05-01T00:00:00Z"),
+        snippet: "Unfortunately, we need to reschedule.",
+        body: "Unfortunately, we need to reschedule our call.",
+        labels: ["INBOX"],
+      },
+    ]);
+
+    await expect(
+      runGmailStatusDetectionForUser("user-1"),
+    ).resolves.toMatchObject({ scanned: 2, matched: 0, skipped: 2 });
+    expect(createNotification).not.toHaveBeenCalled();
+    expect(createSuggestedStatusUpdate).not.toHaveBeenCalled();
   });
 
   it("does not downgrade a later status", async () => {
@@ -152,6 +242,6 @@ describe("runGmailStatusDetectionForEnabledUsers", () => {
   it("aggregates enabled users", async () => {
     await expect(
       runGmailStatusDetectionForEnabledUsers(),
-    ).resolves.toMatchObject({ processed: 1 });
+    ).resolves.toMatchObject({ processed: 1, suggested: 0 });
   });
 });

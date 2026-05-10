@@ -58,6 +58,11 @@ function getUndoAction(notification: Notification): {
   return { opportunityId, previousStatus, currentStatus };
 }
 
+function formatSuggestionConfidence(confidence?: number | null): string | null {
+  if (confidence === undefined || confidence === null) return null;
+  return `${Math.round(confidence * 100)}% confidence`;
+}
+
 interface NotificationCenterProps {
   collapsed?: boolean;
 }
@@ -206,6 +211,47 @@ export function NotificationCenter({
     }
   };
 
+  const handleSuggestedStatusAction = async (
+    notification: Notification,
+    action: "acceptSuggestedStatus" | "dismissSuggestedStatus",
+  ) => {
+    try {
+      const response = await fetch(`/api/notifications/${notification.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Could not update suggestion");
+      }
+
+      const state =
+        action === "acceptSuggestedStatus" ? "accepted" : "dismissed";
+      setNotifications((prev) =>
+        prev.map((item) =>
+          item.id === notification.id
+            ? {
+                ...item,
+                read: true,
+                suggestedStatusUpdate: item.suggestedStatusUpdate
+                  ? { ...item.suggestedStatusUpdate, state }
+                  : item.suggestedStatusUpdate,
+              }
+            : item,
+        ),
+      );
+      if (!notification.read) {
+        setUnreadCount((prev) => Math.max(0, prev - 1));
+      }
+    } catch (error) {
+      showErrorToast(error, {
+        title: "Could not update suggestion",
+        fallbackDescription: "Please try again.",
+      });
+    }
+  };
+
   const handleDeleteRead = async () => {
     const confirmed = await confirm({
       title: "Delete read notifications?",
@@ -334,6 +380,10 @@ export function NotificationCenter({
                     const colorClass =
                       typeColors[notification.type] || "text-muted-foreground";
                     const undoAction = getUndoAction(notification);
+                    const suggestion = notification.suggestedStatusUpdate;
+                    const suggestionConfidence = formatSuggestionConfidence(
+                      suggestion?.confidence,
+                    );
 
                     const content = (
                       <div
@@ -389,6 +439,67 @@ export function NotificationCenter({
                               <p className="text-sm text-muted-foreground mt-0.5 line-clamp-2">
                                 {notification.message}
                               </p>
+                            )}
+                            {suggestion && (
+                              <div className="mt-2 space-y-1 rounded-md border bg-background/60 p-2 text-xs text-muted-foreground">
+                                <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                                  {suggestionConfidence && (
+                                    <span>{suggestionConfidence}</span>
+                                  )}
+                                  {suggestion.reason && (
+                                    <span>{suggestion.reason}</span>
+                                  )}
+                                </div>
+                                {suggestion.evidence
+                                  ?.slice(0, 2)
+                                  .map((item, index) => (
+                                    <p
+                                      key={index}
+                                      className="line-clamp-1 italic"
+                                    >
+                                      {item}
+                                    </p>
+                                  ))}
+                                {suggestion.state === "pending" && (
+                                  <div className="flex items-center gap-2 pt-1">
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        void handleSuggestedStatusAction(
+                                          notification,
+                                          "acceptSuggestedStatus",
+                                        );
+                                      }}
+                                      className="inline-flex items-center gap-1 rounded-md bg-primary px-2 py-1 font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+                                    >
+                                      <Check className="h-3 w-3" />
+                                      Accept
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        void handleSuggestedStatusAction(
+                                          notification,
+                                          "dismissSuggestedStatus",
+                                        );
+                                      }}
+                                      className="inline-flex items-center gap-1 rounded-md border px-2 py-1 font-medium text-foreground transition-colors hover:bg-muted"
+                                    >
+                                      <X className="h-3 w-3" />
+                                      Dismiss
+                                    </button>
+                                  </div>
+                                )}
+                                {suggestion.state !== "pending" && (
+                                  <p className="font-medium capitalize">
+                                    {suggestion.state}
+                                  </p>
+                                )}
+                              </div>
                             )}
                             <p className="text-xs text-muted-foreground mt-1">
                               {formatRelativeTime(notification.createdAt)}
