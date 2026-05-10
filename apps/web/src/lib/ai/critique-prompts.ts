@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { parseJSONFromLLM } from "@/lib/llm/client";
+import { detectGenericPhrases, genericPhrasePenalty } from "./prompt-quality";
 
 export const COVER_LETTER_CRITIQUE_AXES = [
   { key: "fit", label: "Company fit" },
@@ -66,6 +67,10 @@ Rules:
 - Include at least two suggested_rewrites.
 - range_in_letter must be an exact contiguous excerpt copied from the draft.
 - suggestion must be replacement text for that exact excerpt.
+- Each rationale_per_axis value must cite at least one exact excerpt from the draft when explaining a weakness or score.
+- For low-specificity, generic-language, or weak-hook issues, cite the exact draft excerpt that caused the concern; do not paraphrase it.
+- suggested_rewrites must target exact excerpts from the draft and explain why the replacement preserves evidence.
+- Generic phrase-heavy drafts using phrases like "passionate about", "excited about this opportunity", "perfect fit", "contribute effectively", "fast-paced environment", "dynamic team", or "strong background" should receive lower specificity and hook scores.
 - Do not invent candidate achievements or company facts.
 - Do not include markdown or commentary outside the JSON.`;
 }
@@ -99,4 +104,38 @@ export function parseCoverLetterCritiqueResponse(
   response: string,
 ): CoverLetterCritique {
   return coverLetterCritiqueSchema.parse(parseJSONFromLLM<unknown>(response));
+}
+
+export function applyGenericPhrasePenaltyToCritique(
+  critique: CoverLetterCritique,
+  letter: string,
+): CoverLetterCritique {
+  const penalty = genericPhrasePenalty(letter);
+  const genericPhrases = detectGenericPhrases(letter);
+  if (penalty === 0 || genericPhrases.length === 0) {
+    return critique;
+  }
+
+  const phraseList = genericPhrases.map((phrase) => `"${phrase}"`).join(", ");
+  const note = ` Generic phrase check found exact draft phrase(s): ${phraseList}.`;
+  const scores = {
+    ...critique.scores,
+    specificity: Math.max(0, critique.scores.specificity - penalty),
+    hook: Math.max(0, critique.scores.hook - penalty),
+  };
+
+  return {
+    ...critique,
+    scores,
+    overall: Number(
+      ((scores.fit + scores.specificity + scores.hook + scores.ask) / 4).toFixed(
+        1,
+      ),
+    ),
+    rationale_per_axis: {
+      ...critique.rationale_per_axis,
+      specificity: `${critique.rationale_per_axis.specificity}${note}`,
+      hook: `${critique.rationale_per_axis.hook}${note}`,
+    },
+  };
 }

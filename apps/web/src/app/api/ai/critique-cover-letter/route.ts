@@ -4,6 +4,7 @@ import { requireAuth, isAuthError } from "@/lib/auth";
 import { getLLMConfig } from "@/lib/db";
 import { LLMClient } from "@/lib/llm/client";
 import {
+  applyGenericPhrasePenaltyToCritique,
   buildCoverLetterCritiqueMessages,
   parseCoverLetterCritiqueResponse,
 } from "@/lib/ai/critique-prompts";
@@ -60,7 +61,10 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      critique: parseCoverLetterCritiqueResponse(rawResponse),
+      critique: applyGenericPhrasePenaltyToCritique(
+        parseCoverLetterCritiqueResponse(rawResponse),
+        parseResult.data.letter,
+      ),
     });
   } catch (error) {
     console.error(

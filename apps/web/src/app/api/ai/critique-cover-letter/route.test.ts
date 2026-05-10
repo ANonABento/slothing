@@ -123,6 +123,27 @@ describe("cover letter critique route", () => {
     });
   });
 
+  it("lowers specificity and hook scores for generic phrase-heavy drafts", async () => {
+    const response = await POST(
+      critiqueRequest({
+        letter:
+          "Dear Acme, I am passionate about this role and excited about this opportunity. My strong background makes me a perfect fit for your dynamic team.",
+        jd: "Acme needs a product engineer to improve developer tooling and reliability.",
+        company: "Acme",
+        role: "Product Engineer",
+      }),
+    );
+
+    const body = await response.json();
+    expect(body.critique.scores.specificity).toBeLessThan(
+      validCritique.scores.specificity,
+    );
+    expect(body.critique.scores.hook).toBeLessThan(validCritique.scores.hook);
+    expect(body.critique.rationale_per_axis.specificity).toContain(
+      '"passionate about"',
+    );
+  });
+
   it("returns setup guidance when no LLM provider is configured", async () => {
     mocks.getLLMConfig.mockReturnValueOnce(null);
 
