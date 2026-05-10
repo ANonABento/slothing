@@ -10,3 +10,4 @@ export * from "./reminders";
 export * from "./tailor";
 export * from "./tailor-autofix";
 export * from "./upload";
+export * from "../pagination";

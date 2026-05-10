@@ -465,7 +465,7 @@ describe("StudioPage", () => {
           });
         }
 
-        if (url === "/api/opportunities?status=saved,applied") {
+        if (url.startsWith("/api/opportunities?status=saved,applied")) {
           return new Response(
             JSON.stringify({
               opportunities: [

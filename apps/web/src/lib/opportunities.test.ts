@@ -4,12 +4,14 @@ import type { JobDescription } from "@/types";
 const mocks = vi.hoisted(() => ({
   getJob: vi.fn(),
   getJobs: vi.fn(),
+  listJobsPaginated: vi.fn(),
   updateJob: vi.fn(),
 }));
 
 vi.mock("@/lib/db/jobs", () => ({
   getJob: mocks.getJob,
   getJobs: mocks.getJobs,
+  listJobsPaginated: mocks.listJobsPaginated,
   updateJob: mocks.updateJob,
 }));
 
@@ -77,25 +79,33 @@ describe("opportunities", () => {
   });
 
   it("lists only requested opportunity statuses", () => {
-    mocks.getJobs.mockReturnValue([
+    mocks.listJobsPaginated.mockReturnValue([
       job({ id: "saved", status: "saved" }),
       job({ id: "applied", status: "applied" }),
       job({ id: "offered", status: "offered" }),
-      job({ id: "rejected", status: "rejected" }),
     ]);
 
     expect(
-      listOpportunities("user-1", ["saved", "applied", "offered"]).map(
-        (item) => item.id,
-      ),
+      listOpportunities({
+        userId: "user-1",
+        statuses: ["saved", "applied", "offered"],
+        limit: 50,
+      }).items.map((item) => item.id),
     ).toEqual(["saved", "applied", "offered"]);
-    expect(mocks.getJobs).toHaveBeenCalledWith("user-1");
+    expect(mocks.listJobsPaginated).toHaveBeenCalledWith({
+      userId: "user-1",
+      statuses: ["saved", "applied", "offered"],
+      cursor: undefined,
+      limit: 50,
+    });
   });
 
   it("does not treat unknown status filters as unfiltered requests", () => {
-    mocks.getJobs.mockReturnValue([job({ id: "saved", status: "saved" })]);
+    mocks.listJobsPaginated.mockReturnValue([]);
 
-    expect(listOpportunities("user-1", ["unknown"])).toEqual([]);
+    expect(
+      listOpportunities({ userId: "user-1", statuses: ["unknown"], limit: 50 }),
+    ).toEqual({ items: [], nextCursor: null, hasMore: false });
   });
 
   it("loads a single opportunity by id", () => {

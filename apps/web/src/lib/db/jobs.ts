@@ -23,6 +23,18 @@ interface JobRow {
   created_at?: string;
 }
 
+export interface CreatedAtCursor {
+  lastId: string;
+  lastCreatedAt: string;
+}
+
+export interface ListJobsParams {
+  userId?: string;
+  statuses?: JobStatus[];
+  cursor?: CreatedAtCursor | null;
+  limit: number;
+}
+
 function parseJsonArray(value?: string): string[] {
   if (!value) {
     return [];
@@ -61,6 +73,38 @@ export function getJobs(userId: string = "default"): JobDescription[] {
   const rows = db
     .prepare("SELECT * FROM jobs WHERE user_id = ? ORDER BY created_at DESC")
     .all(userId) as JobRow[];
+  return rows.map(mapRowToJob);
+}
+
+export function listJobsPaginated({
+  userId = "default",
+  statuses,
+  cursor,
+  limit,
+}: ListJobsParams): JobDescription[] {
+  const whereClauses = ["user_id = ?"];
+  const params: Array<string | number> = [userId];
+
+  if (statuses?.length) {
+    whereClauses.push(`status IN (${statuses.map(() => "?").join(", ")})`);
+    params.push(...statuses);
+  }
+
+  if (cursor) {
+    whereClauses.push("(created_at < ? OR (created_at = ? AND id < ?))");
+    params.push(cursor.lastCreatedAt, cursor.lastCreatedAt, cursor.lastId);
+  }
+
+  params.push(limit + 1);
+
+  const rows = db
+    .prepare(
+      `SELECT * FROM jobs
+       WHERE ${whereClauses.join(" AND ")}
+       ORDER BY created_at DESC, id DESC
+       LIMIT ?`,
+    )
+    .all(...params) as JobRow[];
   return rows.map(mapRowToJob);
 }
 

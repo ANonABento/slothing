@@ -31,7 +31,7 @@ function mockFetch({
       return jsonResponse({ profile: null });
     }
 
-    if (url === "/api/documents") {
+    if (url.startsWith("/api/documents")) {
       return jsonResponse({ documents });
     }
 
