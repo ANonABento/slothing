@@ -13,6 +13,7 @@ import {
   DEFAULT_PROMPT_CONTENT,
   type PromptVariant,
 } from "@/lib/db/prompt-variants";
+import { buildTailoredResumePrompt } from "./prompt-builders";
 
 interface BankResumeInput {
   bankEntries: GroupedBankEntries;
@@ -55,82 +56,14 @@ async function generateWithLLM(
   promptVariant: PromptVariant | null,
 ): Promise<TailoredResume> {
   const client = new LLMClient(llmConfig);
-
-  const experienceEntries = formatBankCategory(input.bankEntries.experience);
-  const skillEntries = formatBankCategory(input.bankEntries.skill);
-  const educationEntries = formatBankCategory(input.bankEntries.education);
-  const projectEntries = formatBankCategory(input.bankEntries.project);
-  const hackathonEntries = formatBankCategory(input.bankEntries.hackathon);
-  const bulletEntries = formatBankCategory(input.bankEntries.bullet);
-  const achievementEntries = formatBankCategory(input.bankEntries.achievement);
-
   const instructions = promptVariant?.content ?? DEFAULT_PROMPT_CONTENT;
+  const prompt = buildTailoredResumePrompt(input, instructions);
 
   const response = await client.complete({
     messages: [
       {
         role: "user",
-        content: `Generate a tailored resume for this job using ONLY the knowledge bank entries provided. The resume must fit on ONE page.
-
-CANDIDATE:
-Name: ${input.contact.name}
-Email: ${input.contact.email || "N/A"}
-Phone: ${input.contact.phone || "N/A"}
-Location: ${input.contact.location || "N/A"}
-LinkedIn: ${input.contact.linkedin || "N/A"}
-GitHub: ${input.contact.github || "N/A"}
-Current Summary: ${input.summary || "N/A"}
-
-KNOWLEDGE BANK - EXPERIENCES:
-${experienceEntries}
-
-KNOWLEDGE BANK - SKILLS:
-${skillEntries}
-
-KNOWLEDGE BANK - EDUCATION:
-${educationEntries}
-
-KNOWLEDGE BANK - PROJECTS:
-${projectEntries}
-
-KNOWLEDGE BANK - HACKATHONS:
-${hackathonEntries}
-
-KNOWLEDGE BANK - RESUME BULLETS:
-${bulletEntries}
-
-KNOWLEDGE BANK - ACHIEVEMENTS:
-${achievementEntries}
-
-JOB TARGET:
-Title: ${input.jobTitle}
-Company: ${input.company}
-Description: ${input.jobDescription}
-
-INSTRUCTIONS:
-${instructions}
-
-Return ONLY a JSON object:
-{
-  "summary": "Tailored professional summary...",
-  "experiences": [
-    {
-      "company": "Company Name",
-      "title": "Job Title",
-      "dates": "Jan 2020 - Present",
-      "highlights": ["Achievement 1 with metrics", "Achievement 2"]
-    }
-  ],
-  "skills": ["Skill 1", "Skill 2"],
-  "education": [
-    {
-      "institution": "University",
-      "degree": "Degree",
-      "field": "Field",
-      "date": "2020"
-    }
-  ]
-}`,
+        content: prompt,
       },
     ],
     temperature: 0.4,
@@ -219,13 +152,6 @@ export function generateBaseFromBank(input: BankResumeInput): TailoredResume {
     skills: allSkills,
     education,
   };
-}
-
-function formatBankCategory(entries: BankEntry[]): string {
-  if (entries.length === 0) return "(none)";
-  return entries
-    .map((e, i) => `${i + 1}. ${JSON.stringify(e.content)}`)
-    .join("\n");
 }
 
 function entryToResumeExperience(

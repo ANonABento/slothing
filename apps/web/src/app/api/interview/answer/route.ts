@@ -11,6 +11,7 @@ import { getProfile, getLLMConfig } from "@/lib/db";
 import { LLMClient } from "@/lib/llm/client";
 import { interviewAnswerSchema } from "@/lib/constants";
 import { requireAuth, isAuthError } from "@/lib/auth";
+import { buildInterviewAnswerFeedbackPrompt } from "@/lib/interview/prompt-builders";
 
 export const dynamic = "force-dynamic";
 
@@ -53,18 +54,11 @@ export async function POST(request: NextRequest) {
         messages: [
           {
             role: "user",
-            content: `You are an interview coach. Provide brief, constructive feedback on this interview answer.
-
-${job ? `Job: ${job.title} at ${job.company}` : `Practice Category: ${category || "general"}`}
-
-Candidate's Answer:
-${answer}
-
-Provide 2-3 sentences of feedback focusing on:
-- What was good about the answer
-- One specific improvement suggestion
-
-Be encouraging but honest.`,
+            content: buildInterviewAnswerFeedbackPrompt({
+              job,
+              category,
+              answer,
+            }),
           },
         ],
         temperature: 0.7,
