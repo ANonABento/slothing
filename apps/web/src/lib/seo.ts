@@ -34,6 +34,24 @@ const pages = {
       "Manage your resume sections, work experiences, and career documents in one place.",
     path: "/bank",
   },
+  builder: {
+    title: "Resume Builder",
+    description:
+      "Open the unified Document Studio to assemble resumes from your bank.",
+    path: "/builder",
+  },
+  coverLetter: {
+    title: "Cover Letter",
+    description:
+      "Draft and revise tailored cover letters in the Document Studio.",
+    path: "/cover-letter",
+  },
+  documents: {
+    title: "Documents",
+    description:
+      "Manage uploaded resumes, cover letters, and supporting files in your bank.",
+    path: "/documents",
+  },
   answerBank: {
     title: "Answer Bank",
     description:
@@ -45,6 +63,17 @@ const pages = {
     description:
       "Build application-ready resumes from your best career details in one workspace.",
     path: "/studio",
+  },
+  tailor: {
+    title: "Tailor Resume",
+    description:
+      "Tailor your resume to a job description in the Document Studio.",
+    path: "/tailor",
+  },
+  upload: {
+    title: "Upload Resume",
+    description: "Import a resume to populate your knowledge bank and profile.",
+    path: "/upload",
   },
   jobs: {
     title: "Opportunities",
