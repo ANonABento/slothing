@@ -55,3 +55,4 @@ test-results/
 /.clerk/
 .worktrees/
 .audit/
+evals/reports/
