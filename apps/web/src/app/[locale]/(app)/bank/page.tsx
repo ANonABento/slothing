@@ -56,10 +56,16 @@ import {
   StandardEmptyState,
 } from "@/components/ui/page-layout";
 import { SkeletonCard, SkeletonButton } from "@/components/ui/skeleton";
+import { VirtualGrid } from "@/components/ui/virtual-list";
 import { AddEntryDialog } from "@/components/bank/add-entry-dialog";
 import { useToast } from "@/components/ui/toast";
 import { useErrorToast } from "@/hooks/use-error-toast";
 import { uploadSuccessMessage } from "./utils";
+import {
+  BANK_GRID_GAP_PX,
+  ESTIMATED_CARD_HEIGHT_BANK,
+  MIN_BANK_COLUMN_WIDTH_PX,
+} from "@/lib/constants/virtualization";
 import {
   formatExistingUploadDate,
   getExistingUploadTimestamp,
@@ -1798,24 +1804,37 @@ function EntryCollection({
     );
   }
 
+  function getEntryKey(entry: BankEntry): string {
+    return entry.id;
+  }
+
+  function renderEntryCard({ item: entry }: { item: BankEntry }) {
+    return (
+      <ChunkCard
+        entry={entry}
+        onUpdate={onUpdate}
+        onDelete={onDelete}
+        onCreateChild={onCreateChild}
+        onReorderChild={onReorderChild}
+        childEntries={getChildEntriesFor(entry, allEntries)}
+        selected={selectedIds.has(entry.id)}
+        onToggleSelect={onToggleSelect}
+        anySelected={selectedIds.size > 0}
+        highlighted={isBulletNeedsReview(entry, reviewEntries)}
+      />
+    );
+  }
+
   return (
-    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-      {entries.map((entry) => (
-        <ChunkCard
-          key={entry.id}
-          entry={entry}
-          onUpdate={onUpdate}
-          onDelete={onDelete}
-          onCreateChild={onCreateChild}
-          onReorderChild={onReorderChild}
-          childEntries={getChildEntriesFor(entry, allEntries)}
-          selected={selectedIds.has(entry.id)}
-          onToggleSelect={onToggleSelect}
-          anySelected={selectedIds.size > 0}
-          highlighted={isBulletNeedsReview(entry, reviewEntries)}
-        />
-      ))}
-    </div>
+    <VirtualGrid
+      items={entries}
+      getKey={getEntryKey}
+      estimateSize={ESTIMATED_CARD_HEIGHT_BANK}
+      gapPx={BANK_GRID_GAP_PX}
+      minColumnWidthPx={MIN_BANK_COLUMN_WIDTH_PX}
+      className="max-h-[calc(100vh-22rem)]"
+      renderItem={renderEntryCard}
+    />
   );
 }
 
@@ -1852,6 +1871,7 @@ function EntryTable({
   onDeselectEntries: (ids: string[]) => void;
   reviewEntries: BankEntry[];
 }) {
+  // Future work: virtualize table rows separately from the document grid.
   const [expandedRowId, setExpandedRowId] = useState<string | null>(null);
   const sourceNames = new Map(
     sourceDocuments.map((document) => [document.id, document.filename]),

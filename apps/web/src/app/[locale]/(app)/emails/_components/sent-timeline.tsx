@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { Eye } from "lucide-react";
 import { TimeAgo } from "@/components/format/time-ago";
 import { Button } from "@/components/ui/button";
+import { VirtualList } from "@/components/ui/virtual-list";
 import {
   Dialog,
   DialogContent,
@@ -11,6 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { ESTIMATED_CARD_HEIGHT_SEND } from "@/lib/constants/virtualization";
 import type { EmailTemplateType, JobDescription } from "@/types";
 
 export interface EmailSendForTimeline {
@@ -53,6 +55,52 @@ export function SentTimeline({
     return sends.filter((send) => send.jobId === selectedJob.id);
   }, [companyOnly, selectedJob, sends]);
 
+  function getSendKey(send: EmailSendForTimeline): string {
+    return send.id;
+  }
+
+  function renderSend({ item: send }: { item: EmailSendForTimeline }) {
+    const expanded = expandedSendId === send.id;
+
+    return (
+      <article className="border-b p-4">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="truncate text-sm font-medium">{send.recipient}</p>
+            <h3 className="mt-1 truncate text-sm">{send.subject}</h3>
+            <p className="mt-2 text-xs text-muted-foreground">
+              <TimeAgo date={send.sentAt} />
+            </p>
+          </div>
+          <span
+            className={
+              send.status === "failed"
+                ? "rounded-md bg-destructive/15 px-2 py-1 text-xs font-medium text-destructive"
+                : "rounded-md bg-success/15 px-2 py-1 text-xs font-medium text-success"
+            }
+          >
+            {send.status}
+          </span>
+        </div>
+        <div className="mt-3 flex justify-end">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setExpandedSendId(expanded ? null : send.id)}
+          >
+            <Eye className="mr-2 h-4 w-4" />
+            View
+          </Button>
+        </div>
+        {expanded ? (
+          <pre className="mt-3 max-h-80 overflow-y-auto whitespace-pre-wrap rounded-lg bg-muted/50 p-3 text-sm leading-relaxed">
+            {send.body}
+          </pre>
+        ) : null}
+      </article>
+    );
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="left-auto right-0 top-0 flex h-dvh max-h-dvh w-full max-w-lg translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden rounded-none p-0 sm:rounded-none">
@@ -86,7 +134,7 @@ export function SentTimeline({
           ) : null}
         </div>
 
-        <div className="flex-1 overflow-y-auto">
+        <div className="min-h-0 flex-1">
           {sends.length === 0 ? (
             <div className="flex h-full items-center justify-center p-6 text-center text-sm text-muted-foreground">
               No sent emails yet. Sending via Gmail will record here
@@ -97,55 +145,13 @@ export function SentTimeline({
               No sent emails match this company.
             </div>
           ) : (
-            <div className="divide-y">
-              {filteredSends.map((send) => {
-                const expanded = expandedSendId === send.id;
-
-                return (
-                  <article key={send.id} className="p-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-medium">
-                          {send.recipient}
-                        </p>
-                        <h3 className="mt-1 truncate text-sm">
-                          {send.subject}
-                        </h3>
-                        <p className="mt-2 text-xs text-muted-foreground">
-                          <TimeAgo date={send.sentAt} />
-                        </p>
-                      </div>
-                      <span
-                        className={
-                          send.status === "failed"
-                            ? "rounded-md bg-destructive/15 px-2 py-1 text-xs font-medium text-destructive"
-                            : "rounded-md bg-success/15 px-2 py-1 text-xs font-medium text-success"
-                        }
-                      >
-                        {send.status}
-                      </span>
-                    </div>
-                    <div className="mt-3 flex justify-end">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() =>
-                          setExpandedSendId(expanded ? null : send.id)
-                        }
-                      >
-                        <Eye className="mr-2 h-4 w-4" />
-                        View
-                      </Button>
-                    </div>
-                    {expanded ? (
-                      <pre className="mt-3 max-h-80 overflow-y-auto whitespace-pre-wrap rounded-lg bg-muted/50 p-3 text-sm leading-relaxed">
-                        {send.body}
-                      </pre>
-                    ) : null}
-                  </article>
-                );
-              })}
-            </div>
+            <VirtualList
+              items={filteredSends}
+              getKey={getSendKey}
+              estimateSize={ESTIMATED_CARD_HEIGHT_SEND}
+              className="h-full min-h-0"
+              renderItem={renderSend}
+            />
           )}
         </div>
       </DialogContent>

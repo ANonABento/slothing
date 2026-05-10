@@ -44,7 +44,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { VirtualList } from "@/components/ui/virtual-list";
 import { useErrorToast } from "@/hooks/use-error-toast";
+import { ESTIMATED_CARD_HEIGHT_OPPORTUNITY_ROW } from "@/lib/constants/virtualization";
 import { readJsonResponse } from "@/lib/http";
 import { cn } from "@/lib/utils";
 import { Link } from "@/i18n/navigation";
@@ -325,6 +327,23 @@ export default function OpportunitiesPage() {
         fallbackDescription: "The lane visibility change was not saved.",
       });
     }
+  }
+
+  function getOpportunityKey(opportunity: Opportunity): string {
+    return opportunity.id;
+  }
+
+  function renderOpportunityRow({ item: opportunity }: { item: Opportunity }) {
+    function updateRowStatus(status: OpportunityStatus) {
+      void handleStatusChange(opportunity.id, status);
+    }
+
+    return (
+      <OpportunityRow
+        opportunity={opportunity}
+        onStatusChange={updateRowStatus}
+      />
+    );
   }
 
   if (!hasFetched && !hasCachedData) {
@@ -676,17 +695,14 @@ export default function OpportunitiesPage() {
                   onShowLane={(lane) => void handleShowKanbanLane(lane)}
                 />
               ) : (
-                <div className="grid gap-4">
-                  {filteredOpportunities.map((opportunity) => (
-                    <OpportunityRow
-                      key={opportunity.id}
-                      opportunity={opportunity}
-                      onStatusChange={(status) =>
-                        void handleStatusChange(opportunity.id, status)
-                      }
-                    />
-                  ))}
-                </div>
+                <VirtualList
+                  items={filteredOpportunities}
+                  getKey={getOpportunityKey}
+                  estimateSize={ESTIMATED_CARD_HEIGHT_OPPORTUNITY_ROW}
+                  className="max-h-[calc(100vh-22rem)]"
+                  itemClassName="pb-4"
+                  renderItem={renderOpportunityRow}
+                />
               )}
             </section>
           </div>
