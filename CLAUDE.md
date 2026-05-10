@@ -6,6 +6,7 @@
 The product is branded **Slothing** (domain: slothing.work). The repo path is still `get-me-job` and the data file `data/get-me-job.db` for backwards compatibility — both names refer to the same app. Prefer "Slothing" in user-facing copy, "get-me-job" for repo-relative paths and the SQLite filename. Browser localStorage keys still use the `taida:` prefix to preserve existing user data.
 
 This repo is a pnpm + Turborepo monorepo:
+
 - `apps/web` is the Next.js application. Most older `src/...` references in this guide mean `apps/web/src/...`.
 - `apps/extension` is the Columbus browser extension.
 - `packages/shared` contains shared types, Zod schemas, formatters, and scoring logic consumed by both apps.
@@ -16,6 +17,7 @@ This repo is a pnpm + Turborepo monorepo:
 ## Project Overview
 
 **Slothing** helps job seekers manage their entire application process:
+
 - Resume parsing and AI-powered tailoring
 - Unified Document Studio for resumes and cover letters
 - Opportunity tracking (jobs + hackathons) with status pipeline
@@ -34,18 +36,18 @@ Common pitfall: dashboard onboarding steps live in `apps/web/src/lib/onboarding/
 
 ## Tech Stack
 
-| Layer | Technology |
-|-------|------------|
-| Framework | Next.js 14 (App Router) |
-| Language | TypeScript (strict mode) |
-| Styling | Tailwind CSS + CSS Variables (semantic tokens only — see lint rule) |
-| Components | Shadcn/ui patterns (CVA) |
-| Database | Drizzle ORM with libSQL/SQLite |
-| Auth | NextAuth.js (Auth.js v5) with Google + optional Resend email magic-link; local-dev fallback to a `default` user |
-| LLM | Multi-provider (OpenAI, Anthropic, Ollama, OpenRouter) |
-| Editor | TipTap (resume + cover letter) |
-| Icons | Lucide React |
-| Testing | Vitest (unit) + Playwright (e2e) |
+| Layer      | Technology                                                                                                      |
+| ---------- | --------------------------------------------------------------------------------------------------------------- |
+| Framework  | Next.js 14 (App Router)                                                                                         |
+| Language   | TypeScript (strict mode)                                                                                        |
+| Styling    | Tailwind CSS + CSS Variables (semantic tokens only — see lint rule)                                             |
+| Components | Shadcn/ui patterns (CVA)                                                                                        |
+| Database   | Drizzle ORM with libSQL/SQLite                                                                                  |
+| Auth       | NextAuth.js (Auth.js v5) with Google + optional Resend email magic-link; local-dev fallback to a `default` user |
+| LLM        | Multi-provider (OpenAI, Anthropic, Ollama, OpenRouter)                                                          |
+| Editor     | TipTap (resume + cover letter)                                                                                  |
+| Icons      | Lucide React                                                                                                    |
+| Testing    | Vitest (unit) + Playwright (e2e)                                                                                |
 
 ---
 
@@ -109,25 +111,25 @@ apps/web/src/
 
 ## Navigation Routes
 
-| Route | Purpose |
-|-------|---------|
-| `/` | Marketing landing page |
-| `/dashboard` | Main app dashboard with stats |
-| `/upload` | Resume upload and parsing |
-| `/profile` | Profile editor (contact, experience, education, skills) |
-| `/bank` | Documents + knowledge bank manager |
-| `/studio` | Document Studio for resumes and cover letters |
-| `/opportunities` | Opportunity tracker (jobs + hackathons) — single source of truth |
-| `/opportunities/[id]` | Opportunity detail (status, dismiss, linked docs) |
-| `/opportunities/review` | Review queue for scraped/extension/inbound opportunities |
-| `/interview` | Interview prep (text/voice modes) |
-| `/calendar` | Calendar with interviews and deadlines |
-| `/emails` | Email template generator |
-| `/analytics` | Progress tracking and metrics |
-| `/salary` | Salary research and offer tracking |
-| `/settings` | LLM provider + preferences |
-| `/builder`, `/tailor`, `/cover-letter` | Legacy → 308 redirect to `/studio` |
-| `/jobs` | **Removed** — consolidated into `/opportunities` |
+| Route                                  | Purpose                                                          |
+| -------------------------------------- | ---------------------------------------------------------------- |
+| `/`                                    | Marketing landing page                                           |
+| `/dashboard`                           | Main app dashboard with stats                                    |
+| `/upload`                              | Resume upload and parsing                                        |
+| `/profile`                             | Profile editor (contact, experience, education, skills)          |
+| `/bank`                                | Documents + knowledge bank manager                               |
+| `/studio`                              | Document Studio for resumes and cover letters                    |
+| `/opportunities`                       | Opportunity tracker (jobs + hackathons) — single source of truth |
+| `/opportunities/[id]`                  | Opportunity detail (status, dismiss, linked docs)                |
+| `/opportunities/review`                | Review queue for scraped/extension/inbound opportunities         |
+| `/interview`                           | Interview prep (text/voice modes)                                |
+| `/calendar`                            | Calendar with interviews and deadlines                           |
+| `/emails`                              | Email template generator                                         |
+| `/analytics`                           | Progress tracking and metrics                                    |
+| `/salary`                              | Salary research and offer tracking                               |
+| `/settings`                            | LLM provider + preferences                                       |
+| `/builder`, `/tailor`, `/cover-letter` | Legacy → 308 redirect to `/studio`                               |
+| `/jobs`                                | **Removed** — consolidated into `/opportunities`                 |
 
 ---
 
@@ -155,6 +157,7 @@ src/app/(app)/studio/page.tsx
 ### Studio Files
 
 `StudioDocument` state in `src/app/(app)/studio/page.tsx`:
+
 - `id` — document identity
 - `name` — user-visible file name
 - `mode` — `resume` or `cover_letter`
@@ -171,6 +174,7 @@ Snapshots use helpers in `src/lib/builder/version-history.ts`. Version state is 
 ### TipTap Editor
 
 TipTap document JSON is the editor data contract:
+
 - Bank entries → TipTap: `src/lib/editor/bank-to-tiptap.ts`
 - Cover letter entries → TipTap: `src/lib/editor/cover-letter-tiptap.ts`
 - Editor: `src/lib/editor/resume-editor.tsx`
@@ -188,6 +192,7 @@ The right-hand Studio panel is reserved for contextual AI assistance. Keep AI do
 **Location:** `apps/web/src/lib/db/schema.ts`. SQLite via better-sqlite3, Drizzle config in `apps/web/drizzle.config.ts`.
 
 Tables (selected):
+
 - `profile`, `experiences`, `education`, `skills`, `projects`, `certifications` — profile data
 - `documents` — uploaded files with `file_hash` (sha256) for dedupe
 - `profile_bank`, `profile_versions`, `chunks`, `chunks_vec` — knowledge bank + embeddings
@@ -201,6 +206,7 @@ Tables (selected):
 - `reminders`, `notifications`, `company_research`, `resume_ab_tracking`, `settings`
 
 ### Dedupe constraints (T1)
+
 - `documents` has a `file_hash` column with `idx_documents_user_file_hash` to short-circuit re-uploads of identical files.
 - `chunks` has a unique index `idx_chunks_user_hash` on `(user_id, hash)` so identical bank chunks cannot be inserted twice.
 - `profile_bank` has `idx_profile_bank_user_source` so source-document dedupe is fast.
@@ -208,6 +214,7 @@ Tables (selected):
 - Activity feed dedupes by stable hash IDs in `src/components/dashboard/recent-activity.tsx`.
 
 ### Ownership / multi-user readiness
+
 Every user-owned table has `user_id TEXT NOT NULL DEFAULT 'default'` plus a `idx_<table>_user_id` index. Migrations in `schema.ts` backfill `user_id` from `profile_id` or joined `jobs.user_id`. `lib/auth.ts` resolves the current user via NextAuth; without NextAuth env vars (`GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET`) it falls back to the `default` local user (also overridable via the `x-get-me-job-e2e-user` header for E2E).
 
 ---
@@ -215,11 +222,13 @@ Every user-owned table has `user_id TEXT NOT NULL DEFAULT 'default'` plus a `idx
 ## API Routes
 
 ### Profile / Bank
+
 - `GET/PUT /api/profile`
 - `POST /api/parse`, `POST /api/upload`, `POST /api/builder`
 - `GET/POST /api/bank`, `DELETE /api/bank/[id]`, `DELETE /api/bank/documents`
 
 ### Opportunities
+
 - `GET/POST /api/opportunities` — list/create
 - `GET/PATCH/DELETE /api/opportunities/[id]`
 - `POST /api/opportunities/scrape` — URL auto-scrape used by the Add Opportunity wizard
@@ -227,15 +236,20 @@ Every user-owned table has `user_id TEXT NOT NULL DEFAULT 'default'` plus a `idx
 - `GET /api/opportunities/templates`
 - `GET/POST/PATCH /api/jobs/*` — legacy aliases that share the `jobs` table
 
+Columbus is the browser-extension sub-brand inside Slothing. Keep extension UI strings as Columbus unless a product naming task explicitly asks for a rename.
+
 ### Document Studio
+
 - `POST /api/tailor` — analyze JD and generate a tailored resume from the bank
 - `POST /api/tailor/autofix` — rewrite highlighted resume gaps
 - `POST /api/cover-letter/generate` — generate or revise cover letter content
 
 ### Interview
+
 - `POST /api/interview/start`, `/answer`, `/sessions`
 
 ### Analytics
+
 - `GET /api/analytics`, `/trends`, `/export`
 
 Other route trees: `/api/ats`, `/api/backup`, `/api/calendar`, `/api/email`, `/api/extension`, `/api/google`, `/api/import`, `/api/insights`, `/api/learning`, `/api/notifications`, `/api/prompts`, `/api/recommendations`, `/api/reminders`, `/api/research`, `/api/resume`, `/api/resumes`, `/api/salary`, `/api/settings`, `/api/templates`.
@@ -249,6 +263,7 @@ All LLM-touching routes are wrapped with the sliding-window limiter from `src/li
 ### Semantic tokens (T3)
 
 After the T3 token migration, raw color names are forbidden in source. Use semantic CSS variable classes only:
+
 - Surfaces: `bg-background`, `bg-card`, `bg-paper`, `bg-muted`, `bg-popover`
 - Text: `text-foreground`, `text-muted-foreground`, `text-primary`, `text-destructive`
 - Borders: `border-border`, `border-input`, `border-primary`
@@ -258,6 +273,7 @@ After the T3 token migration, raw color names are forbidden in source. Use seman
 ### Forbidden hardcoded colors (hard-fail lint)
 
 `scripts/forbidden-color-lint.cjs` runs as part of `npm run lint` and fails on:
+
 - Tailwind color utilities like `bg-white`, `bg-black`, `text-gray-500`, `bg-slate-900`, etc.
 - Inline style props (`backgroundColor`, `color`, `fill`, `borderColor`, …) with hex/rgb/hsl/named colors
 - Arbitrary values like `bg-[#fff]` or `text-[rgb(0,0,0)]`
@@ -303,16 +319,19 @@ When you add a new destructive action, also append a row to the **Current Action
 - Hash-based IDs (activity feed, dedupe) must come from a stable hash; never re-derive a fresh ID from `Math.random()`.
 
 ### TypeScript / React
+
 - Strict mode. Explicit types on function parameters; prefer `interface` for objects, `type` for unions/primitives.
 - Functional components only. Named exports. Colocate component-specific types.
 - Use `cn()` from `src/lib/utils.ts` for conditional classes.
 
 ### File naming
+
 - Components: `PascalCase.tsx`
 - Utilities: `kebab-case.ts`
 - Tests: `*.test.ts` / `*.test.tsx`, colocated with source
 
 ### Imports
+
 ```tsx
 import { useState } from "react";
 
@@ -323,6 +342,7 @@ import { LocalComponent } from "./local";
 ```
 
 ### CSS
+
 - Tailwind utilities first, semantic tokens only (see lint rule above).
 - CSS variables for theme values; both light + `.dark` defined in `globals.css`.
 - No inline color styles.
@@ -387,6 +407,7 @@ describe("MyFunction", () => {
 ## CI Gates
 
 `.github/workflows/ci.yml` runs on every PR and push to main:
+
 1. `pnpm run type-check` — strict TS across workspaces
 2. `pnpm run test:run` — full Vitest run
 3. `pnpm run lint` — `next lint` **and** the forbidden-color hard-fail lint
@@ -400,35 +421,41 @@ The Columbus extension has a separate workflow (`.github/workflows/extension-e2e
 ## Common Tasks
 
 ### Adding a new page
+
 1. Route in `src/app/(app)/[route]/page.tsx`.
 2. Sidebar entry in `src/components/layout/sidebar.tsx`.
 3. SEO entry in `src/lib/seo.ts` and `metadata` export in route `layout.tsx`.
 4. API routes in `src/app/api/`.
 
 ### Updating Document Studio
+
 1. Studio UX stays under `src/app/(app)/studio/page.tsx`.
 2. Reusable Studio UI in `src/components/studio/` or `src/components/builder/`.
 3. State, export, version history, TipTap helpers in `src/lib/builder/` or `src/lib/editor/`.
 4. Update colocated unit tests for any changed helper or behavior.
 
 ### Adding a new UI component
+
 1. Create in `src/components/ui/[component].tsx`.
 2. Use CVA for variants if needed.
 3. Export from the file.
 
 ### Adding a database table
+
 1. Add to `src/lib/db/schema.ts` (CREATE TABLE IF NOT EXISTS).
 2. Add a column-level migration block when changing existing tables (use `PRAGMA table_info` + `ALTER TABLE` patterns).
 3. Queries in `src/lib/db/[table].ts`. Always scope by `user_id`.
 4. Add `idx_<table>_user_id` and any user-scoped uniqueness indexes.
 
 ### Adding a destructive action
+
 1. Decide hard delete vs. soft delete vs. status change.
 2. Pattern B only when the reverse mutation is known and tested; otherwise Pattern A.
 3. Add a row to the Current Actions table in `docs/destructive-actions-pattern.md`.
 4. Write a confirm/undo test.
 
 ### Updating theme tokens
+
 1. Edit CSS variables in `src/app/globals.css` — both `:root` and `.dark`.
 2. Tailwind picks up changes automatically.
 3. Never reach for raw hex/rgb in source — the lint will fail.
@@ -536,53 +563,58 @@ EMAIL_FROM="Slothing <noreply@yourdomain.com>"
 ## Troubleshooting
 
 ### "Database locked" error
+
 SQLite WAL contention. Restart dev server. Tests increase `busy_timeout` to 5s for parallel workers.
 
 ### LLM not responding
+
 Check API key in Settings or `.env.local`. Watch for rate-limit responses from `src/lib/rate-limit.ts`.
 
 ### Styles not updating
+
 Clear `.next` cache: `rm -rf .next && npm run dev`.
 
 ### Forbidden-color lint failing
+
 Find the offending file/line in the lint output and replace with a semantic token (`bg-card`, `bg-muted`, etc.). See **Common pitfalls** #1.
 
 ### Type errors after schema change
+
 Restart the TypeScript server.
 
 ---
 
 ## Key Files Reference
 
-| File | Purpose |
-|------|---------|
-| `src/app/globals.css` | Theme colors and CSS variables |
-| `src/lib/db/schema.ts` | Database table definitions and migrations |
-| `src/lib/db/dedupe-backfill.ts` | T1 dedupe schema bootstrap + backfill |
-| `src/lib/llm/client.ts` | LLM provider abstraction |
-| `src/auth.ts` | NextAuth.js config (Google provider, Drizzle adapter) |
-| `src/lib/auth.ts` | NextAuth helper API + local-dev fallback |
-| `src/lib/seo.ts` | Per-route SEO metadata |
-| `src/lib/format/time.ts` | Locale-aware time formatting |
-| `src/lib/text/pluralize.ts` | `pluralize(count, singular, plural?)` |
-| `src/lib/api-utils.ts` | API error response utilities |
-| `src/lib/rate-limit.ts` | Rate limiting for API routes |
-| `src/app/(app)/studio/page.tsx` | Unified Document Studio |
-| `src/app/(app)/opportunities/page.tsx` | Opportunity tracker (jobs + hackathons) |
-| `src/components/opportunities/add-opportunity-wizard.tsx` | T5 Add Opportunity wizard |
-| `src/components/studio/save-status.ts` | Studio save-status state machine |
-| `src/components/studio/resume-preview.tsx` | TipTap preview shell |
-| `src/components/format/time-ago.tsx` | `<TimeAgo />` component |
-| `src/components/ui/confirm-dialog.tsx` | Pattern A confirm dialog |
-| `src/hooks/use-undoable-action.ts` | Pattern B optimistic undo |
-| `src/lib/builder/version-history.ts` | Studio version snapshot helpers |
-| `src/lib/builder/document-export.ts` | Studio print/PDF export |
-| `src/lib/editor/bank-to-tiptap.ts` | Knowledge bank → TipTap |
-| `src/lib/editor/resume-editor.tsx` | TipTap resume editor |
-| `src/components/layout/sidebar.tsx` | Main navigation |
-| `src/components/ui/button.tsx` | Button + variants |
-| `scripts/forbidden-color-lint.cjs` | Hard-fail color lint |
-| `tailwind.config.ts` | Tailwind config |
-| `docs/architecture.md` | Architecture overview + Mermaid diagrams |
-| `docs/destructive-actions-pattern.md` | T8 destructive-action convention |
-| `ROADMAP.md` | Development roadmap |
+| File                                                      | Purpose                                               |
+| --------------------------------------------------------- | ----------------------------------------------------- |
+| `src/app/globals.css`                                     | Theme colors and CSS variables                        |
+| `src/lib/db/schema.ts`                                    | Database table definitions and migrations             |
+| `src/lib/db/dedupe-backfill.ts`                           | T1 dedupe schema bootstrap + backfill                 |
+| `src/lib/llm/client.ts`                                   | LLM provider abstraction                              |
+| `src/auth.ts`                                             | NextAuth.js config (Google provider, Drizzle adapter) |
+| `src/lib/auth.ts`                                         | NextAuth helper API + local-dev fallback              |
+| `src/lib/seo.ts`                                          | Per-route SEO metadata                                |
+| `src/lib/format/time.ts`                                  | Locale-aware time formatting                          |
+| `src/lib/text/pluralize.ts`                               | `pluralize(count, singular, plural?)`                 |
+| `src/lib/api-utils.ts`                                    | API error response utilities                          |
+| `src/lib/rate-limit.ts`                                   | Rate limiting for API routes                          |
+| `src/app/(app)/studio/page.tsx`                           | Unified Document Studio                               |
+| `src/app/(app)/opportunities/page.tsx`                    | Opportunity tracker (jobs + hackathons)               |
+| `src/components/opportunities/add-opportunity-wizard.tsx` | T5 Add Opportunity wizard                             |
+| `src/components/studio/save-status.ts`                    | Studio save-status state machine                      |
+| `src/components/studio/resume-preview.tsx`                | TipTap preview shell                                  |
+| `src/components/format/time-ago.tsx`                      | `<TimeAgo />` component                               |
+| `src/components/ui/confirm-dialog.tsx`                    | Pattern A confirm dialog                              |
+| `src/hooks/use-undoable-action.ts`                        | Pattern B optimistic undo                             |
+| `src/lib/builder/version-history.ts`                      | Studio version snapshot helpers                       |
+| `src/lib/builder/document-export.ts`                      | Studio print/PDF export                               |
+| `src/lib/editor/bank-to-tiptap.ts`                        | Knowledge bank → TipTap                               |
+| `src/lib/editor/resume-editor.tsx`                        | TipTap resume editor                                  |
+| `src/components/layout/sidebar.tsx`                       | Main navigation                                       |
+| `src/components/ui/button.tsx`                            | Button + variants                                     |
+| `scripts/forbidden-color-lint.cjs`                        | Hard-fail color lint                                  |
+| `tailwind.config.ts`                                      | Tailwind config                                       |
+| `docs/architecture.md`                                    | Architecture overview + Mermaid diagrams              |
+| `docs/destructive-actions-pattern.md`                     | T8 destructive-action convention                      |
+| `ROADMAP.md`                                              | Development roadmap                                   |
