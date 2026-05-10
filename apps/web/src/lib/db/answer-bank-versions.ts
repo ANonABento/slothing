@@ -3,11 +3,11 @@ import { and, desc, eq, lt } from "drizzle-orm";
 import { nowIso } from "@/lib/format/time";
 import { toNullableIsoDateString } from "@/lib/utils";
 import db from "./index";
-import { learnedAnswerVersions, type LearnedAnswer } from "./schema";
+import { answerBankVersions, type AnswerBankRow } from "./schema";
 
 const MAX_VERSIONS = 20;
 
-export interface LearnedAnswerVersionEntry {
+export interface AnswerBankVersionEntry {
   id: string;
   answerId: string;
   version: number;
@@ -19,8 +19,8 @@ export interface LearnedAnswerVersionEntry {
 }
 
 function mapAnswerVersion(
-  row: typeof learnedAnswerVersions.$inferSelect,
-): LearnedAnswerVersionEntry {
+  row: typeof answerBankVersions.$inferSelect,
+): AnswerBankVersionEntry {
   return {
     id: row.id,
     answerId: row.answerId,
@@ -37,20 +37,20 @@ export async function createAnswerVersion(
   userId: string,
   answerId: string,
   snapshot: Pick<
-    LearnedAnswer,
+    AnswerBankRow,
     "question" | "answer" | "sourceUrl" | "sourceCompany"
   >,
-): Promise<LearnedAnswerVersionEntry> {
+): Promise<AnswerBankVersionEntry> {
   const latest = await db
-    .select({ version: learnedAnswerVersions.version })
-    .from(learnedAnswerVersions)
+    .select({ version: answerBankVersions.version })
+    .from(answerBankVersions)
     .where(
       and(
-        eq(learnedAnswerVersions.userId, userId),
-        eq(learnedAnswerVersions.answerId, answerId),
+        eq(answerBankVersions.userId, userId),
+        eq(answerBankVersions.answerId, answerId),
       ),
     )
-    .orderBy(desc(learnedAnswerVersions.version))
+    .orderBy(desc(answerBankVersions.version))
     .limit(1);
 
   const now = nowIso();
@@ -66,7 +66,7 @@ export async function createAnswerVersion(
     createdAt: now,
   };
 
-  await db.insert(learnedAnswerVersions).values(row);
+  await db.insert(answerBankVersions).values(row);
   await pruneAnswerVersions(userId, answerId);
   return mapAnswerVersion(row);
 }
@@ -74,17 +74,17 @@ export async function createAnswerVersion(
 export async function listAnswerVersions(
   userId: string,
   answerId: string,
-): Promise<LearnedAnswerVersionEntry[]> {
+): Promise<AnswerBankVersionEntry[]> {
   const rows = await db
     .select()
-    .from(learnedAnswerVersions)
+    .from(answerBankVersions)
     .where(
       and(
-        eq(learnedAnswerVersions.userId, userId),
-        eq(learnedAnswerVersions.answerId, answerId),
+        eq(answerBankVersions.userId, userId),
+        eq(answerBankVersions.answerId, answerId),
       ),
     )
-    .orderBy(desc(learnedAnswerVersions.version));
+    .orderBy(desc(answerBankVersions.version));
 
   return rows.map(mapAnswerVersion);
 }
@@ -92,14 +92,14 @@ export async function listAnswerVersions(
 export async function getAnswerVersion(
   userId: string,
   versionId: string,
-): Promise<LearnedAnswerVersionEntry | null> {
+): Promise<AnswerBankVersionEntry | null> {
   const rows = await db
     .select()
-    .from(learnedAnswerVersions)
+    .from(answerBankVersions)
     .where(
       and(
-        eq(learnedAnswerVersions.userId, userId),
-        eq(learnedAnswerVersions.id, versionId),
+        eq(answerBankVersions.userId, userId),
+        eq(answerBankVersions.id, versionId),
       ),
     )
     .limit(1);
@@ -112,11 +112,11 @@ export async function deleteAnswerVersions(
   answerId: string,
 ): Promise<void> {
   await db
-    .delete(learnedAnswerVersions)
+    .delete(answerBankVersions)
     .where(
       and(
-        eq(learnedAnswerVersions.userId, userId),
-        eq(learnedAnswerVersions.answerId, answerId),
+        eq(answerBankVersions.userId, userId),
+        eq(answerBankVersions.answerId, answerId),
       ),
     );
 }
@@ -126,27 +126,27 @@ export async function pruneAnswerVersions(
   answerId: string,
 ): Promise<void> {
   const keep = await db
-    .select({ version: learnedAnswerVersions.version })
-    .from(learnedAnswerVersions)
+    .select({ version: answerBankVersions.version })
+    .from(answerBankVersions)
     .where(
       and(
-        eq(learnedAnswerVersions.userId, userId),
-        eq(learnedAnswerVersions.answerId, answerId),
+        eq(answerBankVersions.userId, userId),
+        eq(answerBankVersions.answerId, answerId),
       ),
     )
-    .orderBy(desc(learnedAnswerVersions.version))
+    .orderBy(desc(answerBankVersions.version))
     .limit(MAX_VERSIONS);
 
   const oldestKept = keep.at(-1)?.version;
   if (keep.length < MAX_VERSIONS || oldestKept === undefined) return;
 
   await db
-    .delete(learnedAnswerVersions)
+    .delete(answerBankVersions)
     .where(
       and(
-        eq(learnedAnswerVersions.userId, userId),
-        eq(learnedAnswerVersions.answerId, answerId),
-        lt(learnedAnswerVersions.version, oldestKept),
+        eq(answerBankVersions.userId, userId),
+        eq(answerBankVersions.answerId, answerId),
+        lt(answerBankVersions.version, oldestKept),
       ),
     );
 }

@@ -4,9 +4,9 @@ vi.mock("@/lib/auth", () =>
   globalThis.__contractRouteMocks!.createAuthModuleMock(),
 );
 
-vi.mock("@/lib/db/learned-answers-migration", () =>
+vi.mock("@/lib/db/answer-bank-migration", () =>
   globalThis.__contractRouteMocks!.createContractModuleMock(
-    "@/lib/db/learned-answers-migration",
+    "@/lib/db/answer-bank-migration",
   ),
 );
 

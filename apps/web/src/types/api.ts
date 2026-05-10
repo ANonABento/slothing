@@ -606,10 +606,15 @@ export interface ExtensionProfileResponse {
 export interface LearnedAnswer {
   id: string;
   question: string;
+  questionNormalized?: string;
   answer: string;
   category?: string;
-  source?: string;
-  createdAt: string;
+  source: "extension" | "curated" | "manual";
+  sourceUrl?: string | null;
+  sourceCompany?: string | null;
+  timesUsed?: number;
+  createdAt?: string | null;
+  updatedAt?: string | null;
 }
 
 export interface LearnedAnswersResponse {

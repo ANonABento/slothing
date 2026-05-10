@@ -598,15 +598,16 @@ export const extensionSessions = sqliteTable(
   ],
 );
 
-// Learned answers from job applications
-export const learnedAnswers = sqliteTable(
-  "learned_answers",
+// Reusable answers from job applications and manual curation
+export const answerBank = sqliteTable(
+  "answer_bank",
   {
     id: text("id").primaryKey(),
     userId: text("user_id").notNull().default(DEFAULT_USER_ID),
     question: text("question").notNull(),
     questionNormalized: text("question_normalized").notNull(),
     answer: text("answer").notNull(),
+    source: text("source").notNull().default("manual"),
     sourceUrl: text("source_url"),
     sourceCompany: text("source_company"),
     timesUsed: integer("times_used").default(1),
@@ -615,13 +616,14 @@ export const learnedAnswers = sqliteTable(
     updatedAt: text("updated_at").default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => [
-    index("idx_learned_answers_normalized").on(table.questionNormalized),
-    index("idx_learned_answers_user").on(table.userId),
+    index("idx_answer_bank_normalized").on(table.questionNormalized),
+    index("idx_answer_bank_user").on(table.userId),
+    index("idx_answer_bank_user_source").on(table.userId, table.source),
   ],
 );
 
-export const learnedAnswerVersions = sqliteTable(
-  "learned_answer_versions",
+export const answerBankVersions = sqliteTable(
+  "answer_bank_versions",
   {
     id: text("id").primaryKey(),
     userId: text("user_id").notNull().default(DEFAULT_USER_ID),
@@ -634,11 +636,8 @@ export const learnedAnswerVersions = sqliteTable(
     createdAt: text("created_at").default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => [
-    index("idx_learned_answer_versions_answer").on(
-      table.answerId,
-      table.version,
-    ),
-    index("idx_learned_answer_versions_user").on(table.userId),
+    index("idx_answer_bank_versions_answer").on(table.answerId, table.version),
+    index("idx_answer_bank_versions_user").on(table.userId),
   ],
 );
 
@@ -850,11 +849,11 @@ export type NewKnowledgeChunk = typeof knowledgeChunks.$inferInsert;
 export type ExtensionSession = typeof extensionSessions.$inferSelect;
 export type NewExtensionSession = typeof extensionSessions.$inferInsert;
 
-export type LearnedAnswer = typeof learnedAnswers.$inferSelect;
-export type NewLearnedAnswer = typeof learnedAnswers.$inferInsert;
+export type AnswerBankRow = typeof answerBank.$inferSelect;
+export type NewAnswerBankRow = typeof answerBank.$inferInsert;
 
-export type LearnedAnswerVersion = typeof learnedAnswerVersions.$inferSelect;
-export type NewLearnedAnswerVersion = typeof learnedAnswerVersions.$inferInsert;
+export type AnswerBankVersion = typeof answerBankVersions.$inferSelect;
+export type NewAnswerBankVersion = typeof answerBankVersions.$inferInsert;
 
 export type FieldMapping = typeof fieldMappings.$inferSelect;
 export type NewFieldMapping = typeof fieldMappings.$inferInsert;

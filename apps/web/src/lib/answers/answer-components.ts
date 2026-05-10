@@ -1,4 +1,4 @@
-import type { AnswerBankEntry } from "./learned-answers";
+import type { AnswerBankEntry } from "./answer-bank";
 
 export type AnswerComponentType =
   | "repeated_question"

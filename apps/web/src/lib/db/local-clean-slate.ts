@@ -59,7 +59,11 @@ export function buildLocalDevCleanSlateStatements(
       params: userParam,
     },
     { sql: "DELETE FROM notifications WHERE user_id = ?", params: userParam },
-    { sql: "DELETE FROM learned_answers WHERE user_id = ?", params: userParam },
+    {
+      sql: "DELETE FROM answer_bank_versions WHERE user_id = ?",
+      params: userParam,
+    },
+    { sql: "DELETE FROM answer_bank WHERE user_id = ?", params: userParam },
     {
       sql: "DELETE FROM extension_sessions WHERE user_id = ?",
       params: userParam,

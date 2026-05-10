@@ -9,7 +9,7 @@
 
 ### Phase 2: Database & API
 - `extension_sessions` table for token auth (30-day expiry, device tracking)
-- `learned_answers` table for Q&A storage (normalized questions, usage counting)
+- `answer_bank` table for Q&A storage (normalized questions, usage counting)
 - `field_mappings` table for custom site overrides
 - 6 API routes under `/api/extension/` with token auth (`X-Extension-Token`)
 - Extension connect page at `/extension/connect` (Clerk auth -> token generation)
