@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { jobTypeSchema } from "@/lib/constants";
+import { nowIso } from "@/lib/format/time";
 import type { JobDescription } from "@/types";
 
 const optionalString = z.string().trim().max(500).optional();
@@ -32,11 +33,21 @@ export const extensionOpportunitySchema = z.object({
   source: optionalString,
   sourceJobId: optionalString,
   postedAt: optionalString,
+  status: z.enum(["pending", "applied"]).optional().default("pending"),
+  appliedAt: z.string().datetime().optional(),
+  notes: z.string().trim().max(5000).optional(),
 });
 
 export type ExtensionOpportunityInput = z.infer<
   typeof extensionOpportunitySchema
 >;
+type BuildableExtensionOpportunity = Omit<
+  ExtensionOpportunityInput,
+  "status" | "url"
+> & {
+  status?: ExtensionOpportunityInput["status"];
+  url?: ExtensionOpportunityInput["url"];
+};
 
 export type ExtensionOpportunityParseResult =
   | { success: true; opportunities: ExtensionOpportunityInput[] }
@@ -93,9 +104,11 @@ function getPayloadSchema(rawData: unknown) {
   return extensionOpportunitySchema;
 }
 
-export function buildPendingJobFromExtension(
-  opportunity: ExtensionOpportunityInput,
+export function buildJobFromExtension(
+  opportunity: BuildableExtensionOpportunity,
 ): Omit<JobDescription, "id" | "createdAt"> {
+  const status = opportunity.status || "pending";
+
   return {
     title: opportunity.title,
     company: opportunity.company,
@@ -109,14 +122,18 @@ export function buildPendingJobFromExtension(
     remote: opportunity.remote,
     salary: opportunity.salary,
     url: opportunity.url || undefined,
-    status: "pending",
+    status,
+    appliedAt:
+      status === "applied" ? opportunity.appliedAt || nowIso() : undefined,
     deadline: opportunity.deadline,
     notes: buildExtensionNotes(opportunity),
   };
 }
 
+export const buildPendingJobFromExtension = buildJobFromExtension;
+
 function buildExtensionNotes(
-  opportunity: ExtensionOpportunityInput,
+  opportunity: BuildableExtensionOpportunity,
 ): string | undefined {
   const notes = [
     opportunity.source ? `Source: ${opportunity.source}` : undefined,
@@ -124,6 +141,7 @@ function buildExtensionNotes(
       ? `Source job ID: ${opportunity.sourceJobId}`
       : undefined,
     opportunity.postedAt ? `Posted at: ${opportunity.postedAt}` : undefined,
+    opportunity.notes,
   ].filter(Boolean);
 
   return notes.length > 0 ? notes.join("\n") : undefined;

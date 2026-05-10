@@ -5,12 +5,18 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { requireExtensionAuth } from "@/lib/extension-auth";
-import { createJob, countJobsByStatus } from "@/lib/db/jobs";
+import {
+  createJob,
+  countJobsByStatus,
+  getJobByUrl,
+  updateJobStatus,
+} from "@/lib/db/jobs";
 import { createNotification } from "@/lib/db/notifications";
 import {
-  buildPendingJobFromExtension,
+  buildJobFromExtension,
   parseExtensionOpportunityPayload,
 } from "@/lib/extension-opportunities";
+import type { JobDescription } from "@/types";
 
 export async function POST(request: NextRequest) {
   const authResult = requireExtensionAuth(request);
@@ -38,23 +44,42 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const importedJobs = parseResult.opportunities.map((opportunity) =>
-      createJob(buildPendingJobFromExtension(opportunity), authResult.userId),
-    );
+    const importedJobs: JobDescription[] = [];
+    const dedupedIds: string[] = [];
+
+    for (const opportunity of parseResult.opportunities) {
+      if (opportunity.status === "applied" && opportunity.url) {
+        const existingJob = getJobByUrl(opportunity.url, authResult.userId);
+        if (existingJob) {
+          const updatedJob = updateJobStatus(
+            existingJob.id,
+            "applied",
+            existingJob.appliedAt || opportunity.appliedAt,
+            authResult.userId,
+          );
+          importedJobs.push(updatedJob || existingJob);
+          dedupedIds.push(existingJob.id);
+          continue;
+        }
+      }
+
+      importedJobs.push(
+        createJob(buildJobFromExtension(opportunity), authResult.userId),
+      );
+    }
+
     const pendingCount = countJobsByStatus("pending", authResult.userId);
 
     if (importedJobs.length > 0) {
+      const appliedCount = parseResult.opportunities.filter(
+        (opportunity) => opportunity.status === "applied",
+      ).length;
+
       createNotification(
         {
           type: "info",
-          title:
-            importedJobs.length === 1
-              ? "New opportunity waiting for review"
-              : `${importedJobs.length} new opportunities waiting for review`,
-          message:
-            importedJobs.length === 1
-              ? `${importedJobs[0].title} at ${importedJobs[0].company} was added to Pending.`
-              : `${pendingCount} pending opportunities are ready to review.`,
+          title: notificationTitle(importedJobs.length, appliedCount),
+          message: notificationMessage(importedJobs, pendingCount, appliedCount),
           link: "/opportunities",
         },
         authResult.userId,
@@ -66,6 +91,7 @@ export async function POST(request: NextRequest) {
         imported: importedJobs.length,
         opportunityIds: importedJobs.map((job) => job.id),
         pendingCount,
+        dedupedIds,
       },
       { status: 201 },
     );
@@ -76,4 +102,33 @@ export async function POST(request: NextRequest) {
       { status: 500 },
     );
   }
+}
+
+function notificationTitle(importedCount: number, appliedCount: number): string {
+  if (appliedCount > 0) {
+    return importedCount === 1
+      ? "Tracked application"
+      : `${appliedCount} applications tracked`;
+  }
+
+  return importedCount === 1
+    ? "New opportunity waiting for review"
+    : `${importedCount} new opportunities waiting for review`;
+}
+
+function notificationMessage(
+  importedJobs: Array<{ title: string; company: string }>,
+  pendingCount: number,
+  appliedCount: number,
+): string {
+  if (appliedCount > 0) {
+    const firstJob = importedJobs[0];
+    return importedJobs.length === 1
+      ? `Tracked application: ${firstJob.title} at ${firstJob.company}.`
+      : `${appliedCount} submitted applications were added to Opportunities.`;
+  }
+
+  return importedJobs.length === 1
+    ? `${importedJobs[0].title} at ${importedJobs[0].company} was added to Pending.`
+    : `${pendingCount} pending opportunities are ready to review.`;
 }

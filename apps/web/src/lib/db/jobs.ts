@@ -89,6 +89,17 @@ export function getJobByIdAnyUser(id: string): JobDescription | null {
   return mapRowToJob(row);
 }
 
+export function getJobByUrl(
+  url: string,
+  userId: string = "default",
+): JobDescription | null {
+  const row = db
+    .prepare("SELECT * FROM jobs WHERE url = ? AND user_id = ?")
+    .get(url, userId) as JobRow | undefined;
+  if (!row) return null;
+  return mapRowToJob(row);
+}
+
 // Create job
 export function createJob(
   job: Omit<JobDescription, "id" | "createdAt">,
@@ -97,8 +108,8 @@ export function createJob(
   const id = generateId();
   db.prepare(
     `
-    INSERT INTO jobs (id, title, company, location, type, remote, salary, description, requirements_json, responsibilities_json, keywords_json, url, status, deadline, notes, user_id)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO jobs (id, title, company, location, type, remote, salary, description, requirements_json, responsibilities_json, keywords_json, url, status, applied_at, deadline, notes, user_id)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `,
   ).run(
     id,
@@ -114,6 +125,7 @@ export function createJob(
     JSON.stringify(job.keywords || []),
     job.url || null,
     job.status || "saved",
+    job.appliedAt || null,
     job.deadline || null,
     job.notes || null,
     userId,

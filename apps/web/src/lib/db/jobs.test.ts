@@ -18,6 +18,7 @@ import db from "./legacy";
 import {
   getJobs,
   getJob,
+  getJobByUrl,
   createJob,
   updateJob,
   updateJobStatus,
@@ -203,6 +204,7 @@ describe("Job Database Functions", () => {
         "saved",
         null,
         null,
+        null,
         "default",
       );
       expect(result.id).toBe("test-id-123");
@@ -263,6 +265,7 @@ describe("Job Database Functions", () => {
         "saved",
         null,
         null,
+        null,
         "default",
       );
       expect(result.remote).toBe(true);
@@ -305,9 +308,41 @@ describe("Job Database Functions", () => {
 
       const runArgs = mockRun.mock.calls[0];
       expect(runArgs[12]).toBe("pending");
-      expect(runArgs[13]).toBe("2026-05-01");
-      expect(runArgs[14]).toBe("Review later");
+      expect(runArgs[13]).toBeNull();
+      expect(runArgs[14]).toBe("2026-05-01");
+      expect(runArgs[15]).toBe("Review later");
       expect(result.status).toBe("pending");
+    });
+  });
+
+  describe("getJobByUrl", () => {
+    it("should return a job by URL for a user", () => {
+      const mockRow = {
+        id: "job-1",
+        title: "Software Engineer",
+        company: "Tech Corp",
+        description: "Great job",
+        requirements_json: "[]",
+        responsibilities_json: "[]",
+        keywords_json: "[]",
+        remote: 0,
+        status: "pending",
+        url: "https://example.com/job",
+      };
+
+      const mockGet = vi.fn().mockReturnValue(mockRow);
+      (db.prepare as Mock).mockReturnValue({ get: mockGet });
+
+      const result = getJobByUrl("https://example.com/job", "user-1");
+
+      expect(db.prepare).toHaveBeenCalledWith(
+        "SELECT * FROM jobs WHERE url = ? AND user_id = ?",
+      );
+      expect(mockGet).toHaveBeenCalledWith(
+        "https://example.com/job",
+        "user-1",
+      );
+      expect(result?.id).toBe("job-1");
     });
   });
 
