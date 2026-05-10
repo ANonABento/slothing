@@ -1,0 +1,212 @@
+import {
+  Check,
+  GraduationCap,
+  Hourglass,
+  Rocket,
+  Sparkles,
+} from "lucide-react";
+import { getLocale } from "next-intl/server";
+
+import { Button } from "@/components/ui/button";
+import { Link } from "@/i18n/navigation";
+import { FREE_TIER_TAILOR_MONTHLY_LIMIT } from "@/lib/constants";
+import { getPageMetadata } from "@/lib/seo";
+import { cn } from "@/lib/utils";
+
+export const metadata = getPageMetadata("pricing");
+
+const tiers = [
+  {
+    name: "Free",
+    price: "$0",
+    cadence: "forever",
+    description: "Start tailoring better applications with no credit card.",
+    icon: Sparkles,
+    cta: "Start free",
+    href: null,
+    highlighted: false,
+    features: [
+      `${FREE_TIER_TAILOR_MONTHLY_LIMIT} tailored resumes/month`,
+      "Free ATS scanner",
+      "Knowledge bank uploads",
+      "Application tracker",
+    ],
+  },
+  {
+    name: "Pro",
+    price: "$8/mo",
+    cadence: "waitlist",
+    description: "For active searches where every application needs polish.",
+    icon: Rocket,
+    cta: "Join waitlist",
+    href: "mailto:waitlist@slothing.work?subject=Pro%20waitlist",
+    highlighted: true,
+    features: [
+      "Unlimited tailored resumes",
+      "Priority generation",
+      "Advanced resume variants",
+      "Early access to new tools",
+    ],
+  },
+  {
+    name: "Student",
+    price: "$3/mo",
+    cadence: "with verification",
+    description: "Lower pricing for students moving from class to career.",
+    icon: GraduationCap,
+    cta: "Verify with .edu email",
+    href: "mailto:students@slothing.work?subject=Student%20verification",
+    highlighted: false,
+    features: [
+      "Unlimited tailored resumes",
+      "Student-friendly pricing",
+      "Internship and early-career workflows",
+      "All Pro features after verification",
+    ],
+  },
+] as const;
+
+const faqs = [
+  {
+    question: "Do I need a credit card for Free?",
+    answer:
+      "No. Start with the ATS scanner, knowledge bank, tracker, and five tailored resumes each month.",
+  },
+  {
+    question: "Can I buy Pro today?",
+    answer:
+      "Pro is waitlist-only while billing is being built. Joining the waitlist helps us prioritize access.",
+  },
+  {
+    question: "How does Student verification work?",
+    answer:
+      "Email from a school account and we will follow up with the lightweight verification path.",
+  },
+] as const;
+
+export default async function PricingPage() {
+  const locale = await getLocale();
+  const callbackUrl = `/${locale}/dashboard`;
+
+  return (
+    <main className="px-4 py-16">
+      <section className="mx-auto max-w-6xl">
+        <div className="mx-auto max-w-3xl text-center">
+          <div className="mb-6 inline-flex items-center gap-2 rounded-lg border bg-card px-3 py-2 text-sm font-medium text-muted-foreground">
+            <Hourglass className="h-4 w-4 text-primary" />
+            Pro is opening from the waitlist
+          </div>
+          <h1 className="text-4xl font-bold tracking-tight md:text-5xl">
+            Pricing for every job search pace
+          </h1>
+          <p className="mx-auto mt-4 max-w-2xl text-lg text-muted-foreground">
+            Start free, keep the cap honest, and move to Pro or Student when
+            your search needs unlimited tailored resumes.
+          </p>
+        </div>
+
+        <div className="mt-12 grid gap-6 lg:grid-cols-3">
+          {tiers.map((tier) => {
+            const Icon = tier.icon;
+            const isFree = tier.name === "Free";
+
+            return (
+              <article
+                key={tier.name}
+                className={cn(
+                  "flex flex-col rounded-lg border bg-card p-6 shadow-sm",
+                  tier.highlighted && "border-primary ring-2 ring-primary/30",
+                )}
+              >
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                      <Icon className="h-5 w-5" />
+                    </div>
+                    <h2 className="text-2xl font-semibold">{tier.name}</h2>
+                  </div>
+                  {tier.highlighted && (
+                    <span className="rounded-lg bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+                      Most flexible
+                    </span>
+                  )}
+                </div>
+
+                <div className="mt-6">
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-4xl font-bold tracking-tight">
+                      {tier.price}
+                    </span>
+                    <span className="text-sm text-muted-foreground">
+                      {tier.cadence}
+                    </span>
+                  </div>
+                  <p className="mt-4 min-h-14 text-sm text-muted-foreground">
+                    {tier.description}
+                  </p>
+                </div>
+
+                <ul className="mt-6 space-y-3">
+                  {tier.features.map((feature) => (
+                    <li key={feature} className="flex gap-3 text-sm">
+                      <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                <div className="mt-8">
+                  {isFree ? (
+                    <Button asChild className="w-full">
+                      <Link
+                        href={{
+                          pathname: "/sign-in",
+                          query: { callbackUrl },
+                        }}
+                        prefetch={false}
+                        aria-label="Start free with Slothing"
+                      >
+                        {tier.cta}
+                      </Link>
+                    </Button>
+                  ) : (
+                    <Button
+                      asChild
+                      className="w-full"
+                      variant={tier.highlighted ? "default" : "outline"}
+                    >
+                      <a
+                        href={tier.href ?? "#"}
+                        data-pro-cta={
+                          tier.name === "Pro" ? "waitlist" : undefined
+                        }
+                      >
+                        {tier.cta}
+                      </a>
+                    </Button>
+                  )}
+                </div>
+              </article>
+            );
+          })}
+        </div>
+
+        <section className="mt-16 border-t pt-10">
+          <h2 className="text-2xl font-semibold tracking-tight">
+            Plan questions
+          </h2>
+          <div className="mt-6 grid gap-6 md:grid-cols-3">
+            {faqs.map((faq) => (
+              <div key={faq.question}>
+                <h3 className="font-medium">{faq.question}</h3>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  {faq.answer}
+                </p>
+              </div>
+            ))}
+          </div>
+        </section>
+      </section>
+    </main>
+  );
+}

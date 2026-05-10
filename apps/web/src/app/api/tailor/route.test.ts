@@ -58,7 +58,12 @@ vi.mock("@/lib/auth", () =>
   globalThis.__contractRouteMocks!.createAuthModuleMock(),
 );
 
+vi.mock("@/lib/plan/quota", () =>
+  globalThis.__contractRouteMocks!.createContractModuleMock("@/lib/plan/quota"),
+);
+
 import { GET, POST } from "./route";
+import { checkTailorQuota } from "@/lib/plan/quota";
 import {
   expectRouteResponseContract,
   getRequest,
@@ -128,5 +133,42 @@ describe("/api/tailor route contract", () => {
     );
 
     await expectRouteResponseContract(response);
+  });
+
+  it("returns a structured 429 when the free tailor quota is exhausted", async () => {
+    setAuthSuccess();
+    vi.mocked(checkTailorQuota).mockReturnValueOnce({
+      allowed: false,
+      tier: "free",
+      used: 5,
+      limit: 5,
+      resetAt: "2026-06-01T00:00:00.000Z",
+    });
+
+    const response = await invokeRouteHandler(
+      POST,
+      jsonRequest(
+        "http://localhost/api/tailor",
+        representativeBody({
+          action: "generate",
+          jobDescription:
+            "We need a frontend engineer who can build polished TypeScript applications.",
+        }),
+        "POST",
+        {
+          "x-extension-token": "test-token",
+        },
+      ),
+      routeContext(),
+    );
+
+    expect(response.status).toBe(429);
+    await expect(response.json()).resolves.toMatchObject({
+      code: "free_tier_quota_exceeded",
+      limit: 5,
+      used: 5,
+      resetAt: "2026-06-01T00:00:00.000Z",
+      upgradeUrl: "/pricing",
+    });
   });
 });
