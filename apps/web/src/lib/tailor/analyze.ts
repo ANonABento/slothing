@@ -1,5 +1,9 @@
 import type { BankEntry, GroupedBankEntries } from "@/types";
 import type { TailoredResume } from "@/lib/resume/generator";
+import {
+  evaluateResultQuality,
+  type ResultQualityRubric,
+} from "@/lib/result-quality/rubric";
 
 export interface JobRequirement {
   text: string;
@@ -24,6 +28,7 @@ export interface TailorAnalysis {
   gaps: GapItem[];
   keywordsFound: string[];
   keywordsMissing: string[];
+  quality: ResultQualityRubric;
 }
 
 export interface ResumeFitAnalysis {
@@ -31,6 +36,7 @@ export interface ResumeFitAnalysis {
   gaps: GapItem[];
   keywordsFound: string[];
   keywordsMissing: string[];
+  quality: ResultQualityRubric;
 }
 
 /**
@@ -328,12 +334,20 @@ export function analyzeResumeFit(
     keywords.length > 0
       ? Math.round((keywordsFound.length / keywords.length) * 100)
       : 0;
+  const gaps = buildGapAnalysis(keywordsMissing);
 
   return {
     matchScore,
-    gaps: buildGapAnalysis(keywordsMissing),
+    gaps,
     keywordsFound,
     keywordsMissing,
+    quality: evaluateResultQuality({
+      jdMatchScore: matchScore,
+      missingKeywords: keywordsMissing,
+      gaps,
+      resume,
+      hasJobDescription: Boolean(jobDescription.trim()),
+    }),
   };
 }
 
@@ -387,6 +401,13 @@ export function analyzeJobFit(
     gaps,
     keywordsFound,
     keywordsMissing,
+    quality: evaluateResultQuality({
+      jdMatchScore: matchScore,
+      missingKeywords: keywordsMissing,
+      gaps,
+      matchedEntriesCount: matches.length,
+      hasJobDescription: Boolean(jobDescription.trim()),
+    }),
   };
 }
 

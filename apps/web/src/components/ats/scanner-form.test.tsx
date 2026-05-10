@@ -104,6 +104,9 @@ describe("ScannerForm", () => {
       expect(screen.getByText(/Scoring axes/i)).toBeInTheDocument();
     });
     expect(screen.queryByText(/JD Match/i)).not.toBeInTheDocument();
+    expect(
+      screen.getByText(/Paste the target job description to judge role fit/i),
+    ).toBeInTheDocument();
   });
 
   it("renders JD match results and copies missing keyword chips", async () => {
@@ -135,6 +138,9 @@ describe("ScannerForm", () => {
     await waitFor(() => {
       expect(screen.getByText(/JD Match/i)).toBeInTheDocument();
     });
+    expect(
+      screen.getByText(/Ready to apply|Needs light tailoring|Needs evidence|Not a fit/i),
+    ).toBeInTheDocument();
 
     fireEvent.click(
       screen.getByRole("button", {
@@ -146,5 +152,34 @@ describe("ScannerForm", () => {
       expect(writeText).toHaveBeenCalledWith("typescript");
       expect(screen.getByText(/Keyword copied/i)).toBeInTheDocument();
     });
+  });
+
+  it("flags keyword-stuffed resumes as needing evidence", async () => {
+    renderWithToast();
+
+    fireEvent.click(
+      screen.getByRole("button", { name: /Paste text instead/i }),
+    );
+    fireEvent.change(screen.getByLabelText(/Paste your resume text/i), {
+      target: {
+        value: [
+          "React React React React React React React React React React React React.",
+          "TypeScript TypeScript TypeScript TypeScript.",
+          "Frontend developer with skills section only.",
+        ].join(" "),
+      },
+    });
+    fireEvent.change(screen.getByLabelText(/Paste job description/i), {
+      target: {
+        value:
+          "Frontend role requiring React, TypeScript, GraphQL, accessibility, and product delivery.",
+      },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /Scan Resume/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText("Needs evidence")).toBeInTheDocument();
+    });
+    expect(screen.getByText(/Replace repeated keywords/i)).toBeInTheDocument();
   });
 });

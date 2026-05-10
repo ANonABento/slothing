@@ -1,4 +1,8 @@
 import type { TailoredResume } from "@/lib/resume/generator";
+import type {
+  ResultQualityReason,
+  ResultQualityRubric,
+} from "@/lib/result-quality/rubric";
 import type { GapItem } from "@/lib/tailor/analyze";
 import type { TailorAnalysisResponse } from "@/types/api";
 
@@ -89,6 +93,35 @@ function isGapItem(value: unknown): value is GapItem {
   );
 }
 
+function isResultQualityReason(value: unknown): value is ResultQualityReason {
+  return (
+    value === "strong_jd_match" ||
+    value === "moderate_jd_match" ||
+    value === "low_jd_match" ||
+    value === "critical_skills_missing" ||
+    value === "solid_evidence" ||
+    value === "weak_evidence" ||
+    value === "keyword_stuffing" ||
+    value === "contact_incomplete" ||
+    value === "no_job_description"
+  );
+}
+
+function isResultQualityRubric(value: unknown): value is ResultQualityRubric {
+  return (
+    isRecord(value) &&
+    (value.status === "ready_to_apply" ||
+      value.status === "light_tailoring" ||
+      value.status === "needs_evidence" ||
+      value.status === "not_a_fit") &&
+    typeof value.label === "string" &&
+    typeof value.rationale === "string" &&
+    isStringArray(value.nextActions) &&
+    Array.isArray(value.reasons) &&
+    value.reasons.every(isResultQualityReason)
+  );
+}
+
 export function isTailoredResumeAnalysisResult(
   value: unknown,
 ): value is TailoredResumeAnalysisResult {
@@ -99,7 +132,8 @@ export function isTailoredResumeAnalysisResult(
     isStringArray(value.keywordsMissing) &&
     Array.isArray(value.gaps) &&
     value.gaps.every(isGapItem) &&
-    typeof value.matchedEntriesCount === "number"
+    typeof value.matchedEntriesCount === "number" &&
+    isResultQualityRubric(value.quality)
   );
 }
 
