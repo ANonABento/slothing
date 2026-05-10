@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import type { BuilderVersion } from "@/lib/builder/version-history";
 import { VersionHistorySection } from "./version-history-section";
@@ -24,6 +24,7 @@ describe("VersionHistorySection", () => {
         versions={[version]}
         previewVersionId="version-1"
         manualVersionName=""
+        onCompareVersion={vi.fn()}
         onPreviewVersion={vi.fn()}
         onManualVersionNameChange={vi.fn()}
         onSaveVersion={vi.fn()}
@@ -44,6 +45,7 @@ describe("VersionHistorySection", () => {
         versions={[version]}
         previewVersionId="version-1"
         manualVersionName=""
+        onCompareVersion={vi.fn()}
         onPreviewVersion={vi.fn()}
         onManualVersionNameChange={vi.fn()}
         onSaveVersion={vi.fn()}
@@ -53,5 +55,31 @@ describe("VersionHistorySection", () => {
     expect(
       screen.getByRole("textbox", { name: "Version name" }),
     ).toBeInTheDocument();
+  });
+
+  it("calls compare without previewing the version", () => {
+    const onCompareVersion = vi.fn();
+    const onPreviewVersion = vi.fn();
+
+    render(
+      <VersionHistorySection
+        versions={[version]}
+        previewVersionId={null}
+        manualVersionName=""
+        onCompareVersion={onCompareVersion}
+        onPreviewVersion={onPreviewVersion}
+        onManualVersionNameChange={vi.fn()}
+        onSaveVersion={vi.fn()}
+      />,
+    );
+
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: "Compare Initial draft to current",
+      }),
+    );
+
+    expect(onCompareVersion).toHaveBeenCalledWith("version-1");
+    expect(onPreviewVersion).not.toHaveBeenCalled();
   });
 });

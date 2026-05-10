@@ -9,6 +9,7 @@ interface VersionHistorySectionProps {
   versions: BuilderVersion[];
   previewVersionId: string | null;
   manualVersionName: string;
+  onCompareVersion: (id: string) => void;
   onPreviewVersion: (id: string) => void;
   onManualVersionNameChange: (name: string) => void;
   onSaveVersion: () => void;
@@ -18,6 +19,7 @@ export function VersionHistorySection({
   versions,
   previewVersionId,
   manualVersionName,
+  onCompareVersion,
   onPreviewVersion,
   onManualVersionNameChange,
   onSaveVersion,
@@ -46,6 +48,18 @@ export function VersionHistorySection({
             >
               {version.name || formatVersionTimestamp(version.savedAt)}
             </button>
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              className="ml-2 h-7 shrink-0 px-2 text-xs"
+              aria-label={`Compare ${
+                version.name || formatVersionTimestamp(version.savedAt)
+              } to current`}
+              onClick={() => onCompareVersion(version.id)}
+            >
+              Compare to current
+            </Button>
           </div>
         ))}
       </div>
