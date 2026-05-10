@@ -25,14 +25,14 @@ describe("SearchBar", () => {
   it("should render search input", () => {
     render(<SearchBar {...defaultProps} />);
     expect(
-      screen.getByPlaceholderText("Search your knowledge bank..."),
+      screen.getByPlaceholderText("Search your career profile..."),
     ).toBeInTheDocument();
   });
 
   it("should name the search input without relying on placeholder text", () => {
     render(<SearchBar {...defaultProps} />);
     expect(
-      screen.getByRole("textbox", { name: /search knowledge bank/i }),
+      screen.getByRole("textbox", { name: /search your career profile/i }),
     ).toBeInTheDocument();
   });
 
@@ -74,7 +74,7 @@ describe("SearchBar", () => {
     const onQueryChange = vi.fn();
     render(<SearchBar {...defaultProps} onQueryChange={onQueryChange} />);
     fireEvent.change(
-      screen.getByPlaceholderText("Search your knowledge bank..."),
+      screen.getByPlaceholderText("Search your career profile..."),
       {
         target: { value: "react" },
       },
@@ -99,7 +99,7 @@ describe("SearchBar", () => {
   it("should show clear button when query is non-empty", () => {
     render(<SearchBar {...defaultProps} query="test" />);
     const clearButton = screen
-      .getByPlaceholderText("Search your knowledge bank...")
+      .getByPlaceholderText("Search your career profile...")
       .parentElement?.querySelector("button");
     expect(clearButton).toBeInTheDocument();
   });
@@ -114,7 +114,7 @@ describe("SearchBar", () => {
       />,
     );
     const clearButton = screen
-      .getByPlaceholderText("Search your knowledge bank...")
+      .getByPlaceholderText("Search your career profile...")
       .parentElement?.querySelector("button");
     fireEvent.click(clearButton!);
     expect(onQueryChange).toHaveBeenCalledWith("");

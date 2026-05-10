@@ -52,7 +52,7 @@ test.describe("Bank Page - Layout & Empty State", () => {
 
   test("displays search bar", async ({ page }) => {
     await expect(
-      page.getByPlaceholder(/search your knowledge bank/i),
+      page.getByPlaceholder(/search your career profile/i),
     ).toBeVisible();
   });
 
@@ -127,7 +127,7 @@ test.describe("Bank Page - Search & Filter", () => {
   });
 
   test("search filters entries by query", async ({ page }) => {
-    const searchInput = page.getByPlaceholder(/search your knowledge bank/i);
+    const searchInput = page.getByPlaceholder(/search your career profile/i);
 
     await Promise.all([
       page.waitForResponse(bankApiResponse),
