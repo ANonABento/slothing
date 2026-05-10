@@ -1,5 +1,5 @@
 /**
- * Columbus Extension E2E Tests
+ * Slothing Extension E2E Tests
  *
  * Loads the built extension in a persistent Chromium context and verifies:
  * - Background service worker starts without errors
@@ -77,7 +77,7 @@ test("background service worker registers with a valid extension ID", () => {
   expect(extensionId).toMatch(/^[a-z]{32}$/);
 });
 
-test("popup renders Columbus heading and Connect Account button", async () => {
+test("popup renders Slothing heading and Connect Account button", async () => {
   const page = await context.newPage();
   try {
     await page.goto(`chrome-extension://${extensionId}/popup.html`);
@@ -90,7 +90,7 @@ test("popup renders Columbus heading and Connect Account button", async () => {
     });
 
     // Heading — use hasText to avoid matching on the first h1 regardless of content
-    await expect(page.locator("h1", { hasText: "Columbus" })).toBeVisible();
+    await expect(page.locator("h1", { hasText: "Slothing" })).toBeVisible();
 
     // Subtitle visible in unauthenticated state
     await expect(page.locator(".popup-container")).toBeVisible();
@@ -99,13 +99,13 @@ test("popup renders Columbus heading and Connect Account button", async () => {
   }
 });
 
-test("options page renders Columbus Settings heading and API URL input", async () => {
+test("options page renders Slothing Settings heading and API URL input", async () => {
   const page = await context.newPage();
   try {
     await page.goto(`chrome-extension://${extensionId}/options.html`);
 
     // Wait for React to mount and settings to load (transitions out of loading state)
-    await expect(page.locator('h1:has-text("Columbus Settings")')).toBeVisible({
+    await expect(page.locator('h1:has-text("Slothing Settings")')).toBeVisible({
       timeout: 10_000,
     });
 
@@ -114,6 +114,11 @@ test("options page renders Columbus Settings heading and API URL input", async (
 
     // Should have a Save button
     await expect(page.locator('button:has-text("Save")')).toBeVisible();
+
+    await expect(page.locator('a:has-text("View on GitHub")')).toHaveAttribute(
+      "href",
+      "https://github.com/your-repo/slothing",
+    );
   } finally {
     await page.close();
   }

@@ -1,12 +1,12 @@
-# Columbus Browser Extension
+# Slothing Browser Extension
 
 Browser extension for Slothing that auto-fills job applications and imports job listings from major job sites.
 
-Columbus is the browser-extension sub-brand within the Slothing product; user-facing extension chrome keeps the Columbus name while imported opportunities land in Slothing.
+The extension ships under the Slothing brand. `Columbus` survives as an internal codename in source comments, console-log prefixes (`[Columbus]`), CSS/DOM class names, storage keys, and legacy repo paths; do not reintroduce it into user-facing UI strings.
 
 ## Prerequisites
 
-- Columbus main app running locally (`npm run dev` in parent directory)
+- Slothing main app running locally (`npm run dev` in parent directory)
 - Node.js 18+
 - Chrome or Firefox browser
 
@@ -27,7 +27,7 @@ The build pipeline pulls icons from `icons/source/columbus.svg` (a branded compa
 2. Enable **Developer mode** (top right toggle)
 3. Click **Load unpacked**
 4. Select the `columbus-extension/dist/` directory
-5. Pin the Columbus icon in the toolbar
+5. Pin the Slothing icon in the toolbar
 
 ### Load in Firefox
 
@@ -49,12 +49,12 @@ The demo form has 18 form fields (name / contact / address / URLs / current role
 
 ## Usage Guide
 
-### 1. Connect to Columbus
+### 1. Connect to Slothing
 
-The extension needs to authenticate with your Columbus account:
+The extension needs to authenticate with your Slothing account:
 
-1. Start the Columbus app (`npm run dev` in the parent directory)
-2. Click the Columbus extension icon in your toolbar
+1. Start the Slothing app (`npm run dev` in the parent directory)
+2. Click the Slothing extension icon in your toolbar
 3. Click **Connect Account**
 4. A new tab opens at `/extension/connect` - sign in with Clerk
 5. Token is generated and stored automatically
@@ -65,9 +65,9 @@ The extension needs to authenticate with your Columbus account:
 Navigate to any job application form (e.g., on Greenhouse, Lever, LinkedIn):
 
 - **Keyboard shortcut**: `Cmd+Shift+F` (Mac) / `Ctrl+Shift+F` (Windows)
-- **Via popup**: Click Columbus icon, then **Fill Form**
+- **Via popup**: Click Slothing icon, then **Fill Form**
 
-The extension detects form fields using multiple signals (name, id, label, placeholder, autocomplete attributes) and maps them to your Columbus profile data.
+The extension detects form fields using multiple signals (name, id, label, placeholder, autocomplete attributes) and maps them to your Slothing profile data.
 
 **Supported field types** (35+): name, email, phone, address, city, state, zip, country, LinkedIn URL, GitHub URL, website, current company, current title, education details, years of experience, work authorization, and more.
 
@@ -76,9 +76,9 @@ The extension detects form fields using multiple signals (name, id, label, place
 When you're on a supported job site:
 
 - **Keyboard shortcut**: `Cmd+Shift+I` (Mac) / `Ctrl+Shift+I` (Windows)
-- **Via popup**: Click Columbus icon, then **Import Job**
+- **Via popup**: Click Slothing icon, then **Import Job**
 
-The job title, company, location, description, requirements, salary, and keywords are scraped and saved to your Columbus tracker.
+The job title, company, location, description, requirements, salary, and keywords are scraped and saved to your Slothing tracker.
 
 ### 4. Learning System
 
@@ -99,7 +99,7 @@ Implementation: content script sends a `JOB_DETECTED` message to the background 
 
 ### 6. Settings
 
-Right-click the Columbus icon > **Options** to configure:
+Right-click the Slothing icon > **Options** to configure:
 
 - **Connection**: API URL (default `http://localhost:3000`)
 - **Auto-Fill**: Toggle on/off, confidence threshold (0-100%)
@@ -123,7 +123,7 @@ Right-click the Columbus icon > **Options** to configure:
 ### Extension Components
 
 ```
-popup (React)  ──message──>  background (service worker)  ──HTTP──>  Columbus API
+popup (React)  ──message──>  background (service worker)  ──HTTP──>  Slothing API
                                     ^
 content script  ──message──────────┘
 (auto-fill, scrapers, learning)
@@ -226,7 +226,7 @@ npm run generate-icons # Regenerate placeholder icons
 | `src/shared/types.ts`                       | All TypeScript types (35+ field types) |
 | `src/shared/field-patterns.ts`              | 32 field detection patterns            |
 | `src/shared/messages.ts`                    | Type-safe message passing              |
-| `src/background/api-client.ts`              | Columbus API client                    |
+| `src/background/api-client.ts`              | Slothing API client                    |
 | `src/background/storage.ts`                 | Chrome storage helpers                 |
 | `src/content/auto-fill/field-detector.ts`   | Multi-signal field detection           |
 | `src/content/auto-fill/field-mapper.ts`     | Profile-to-field mapping               |
@@ -256,7 +256,7 @@ npm run test:e2e
 Coverage includes:
 
 - Extension service worker registers (valid 32-char extension ID)
-- Popup renders the Columbus heading + Connect Account button (unauthenticated state)
+- Popup renders the Slothing heading + Connect Account button (unauthenticated state)
 - Options page renders Settings heading + URL input + Save button
 - Content script injects on a fixture page without uncaught errors
 - LinkedInScraper extracts title / company / location / description from a static fixture (`tests/fixtures/linkedin-mock.html`)
@@ -292,7 +292,7 @@ CI workflow at `.github/workflows/extension-e2e.yml` runs the e2e suite on every
 
 #### Authentication
 
-- [ ] Columbus app running at localhost:3000
+- [ ] Slothing app running at localhost:3000
 - [ ] Click "Connect Account" opens `/extension/connect`
 - [ ] Token generated and stored (check `chrome.storage.local`)
 - [ ] Popup shows profile info after connecting
@@ -313,8 +313,8 @@ CI workflow at `.github/workflows/extension-e2e.yml` runs the e2e suite on every
 
 - [ ] Navigate to a job listing page
 - [ ] Popup shows job title and company
-- [ ] Click "Import Job" saves to Columbus
-- [ ] Imported job appears in Columbus `/jobs` page
+- [ ] Click "Import Job" saves to Slothing
+- [ ] Imported job appears in Slothing `/jobs` page
 - [ ] Keywords extracted from description
 - [ ] `Cmd+Shift+I` shortcut works
 
@@ -346,7 +346,7 @@ Open DevTools on any page:
 - **Console**: Filter by `[Columbus]` to see extension logs
 - **Network**: Filter by `/api/extension/` to see API calls
 - **Application > Storage > Extension Storage**: View stored auth/settings
-- **Background page**: `chrome://extensions` > Columbus > "service worker" link
+- **Background page**: `chrome://extensions` > Slothing > "service worker" link
 
 ## Known Limitations
 
