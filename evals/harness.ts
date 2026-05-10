@@ -1,115 +1,120 @@
 import fs from "fs";
 import path from "path";
-import { TEST_CASES } from "./test-cases.js";
-import { generateWithGPT55, generateWithClaude } from "./generators.js";
-import { judgeOutputs } from "./judge.js";
-import { generateJSONReport, generateMarkdownReport, determineWinner } from "./report.js";
-import type { TestCaseResult } from "./types.js";
+import { fileURLToPath, pathToFileURL } from "url";
+import { RESUME_EVAL_CASES } from "./test-cases.js";
+import { createCoverLetterGenerator, createTailorGenerator } from "./generators/index.js";
+import { getEvalLLMConfig, hasJudgeKey } from "./llm-config.js";
+import { judgeSingle } from "./judge.js";
+import { writeReports } from "./report.js";
+import { runEval } from "./run.js";
+import type { EvalCase, EvalMode, EvalRunReport } from "./types.js";
 
-function getApiKeys(): { openaiKey: string; anthropicKey: string } {
-  const openaiKey = process.env.OPENAI_API_KEY ?? "";
-  const anthropicKey = process.env.ANTHROPIC_API_KEY ?? "";
-
-  if (!openaiKey) throw new Error("OPENAI_API_KEY environment variable is required");
-  if (!anthropicKey) throw new Error("ANTHROPIC_API_KEY environment variable is required");
-
-  return { openaiKey, anthropicKey };
+interface CliOptions {
+  mode: EvalMode | "both";
+  judge: boolean;
+  casesPath?: string;
+  outDir: string;
+  limit?: number;
 }
 
-async function runTestCase(
-  testCase: (typeof TEST_CASES)[0],
-  openaiKey: string,
-  anthropicKey: string
-): Promise<TestCaseResult> {
-  console.log(`  Running generators for: ${testCase.label}...`);
-
-  const [gpt55Result, claudeResult] = await Promise.all([
-    generateWithGPT55(testCase, openaiKey),
-    generateWithClaude(testCase, anthropicKey),
-  ]);
-
-  if (gpt55Result.error) {
-    console.warn(`  ⚠ GPT-5.5 error: ${gpt55Result.error}`);
-  }
-  if (claudeResult.error) {
-    console.warn(`  ⚠ Claude error: ${claudeResult.error}`);
-  }
-
-  console.log(`  Running judge...`);
-  const judgeScores = await judgeOutputs(
-    testCase,
-    gpt55Result,
-    claudeResult,
-    anthropicKey
-  );
-
-  const winner = determineWinner(judgeScores.gpt55.score, judgeScores.claude.score);
-
-  console.log(
-    `  ✓ GPT-5.5: ${judgeScores.gpt55.score}/5 | Claude: ${judgeScores.claude.score}/5 | Winner: ${winner}`
-  );
-
-  return {
-    testCaseId: testCase.id,
-    testCaseLabel: testCase.label,
-    gpt55: gpt55Result,
-    claude: claudeResult,
-    judgeScores,
-    winner,
+function parseArgs(argv: string[]): CliOptions {
+  const options: CliOptions = {
+    mode: "both",
+    judge: process.env.EVAL_JUDGE === "1",
+    outDir: path.join(path.dirname(fileURLToPath(import.meta.url)), "reports"),
   };
-}
 
-async function main() {
-  console.log("LLM Judge Harness: GPT-5.5 vs Claude on Resume Tailoring");
-  console.log("=".repeat(60));
-
-  let openaiKey: string;
-  let anthropicKey: string;
-  try {
-    ({ openaiKey, anthropicKey } = getApiKeys());
-  } catch (err) {
-    console.error(`Error: ${err instanceof Error ? err.message : String(err)}`);
-    process.exit(1);
-  }
-
-  const results: TestCaseResult[] = [];
-
-  for (const testCase of TEST_CASES) {
-    console.log(`\n[${testCase.id}] ${testCase.label}`);
-    try {
-      const result = await runTestCase(testCase, openaiKey, anthropicKey);
-      results.push(result);
-    } catch (err) {
-      console.error(`  ✗ Failed: ${err instanceof Error ? err.message : String(err)}`);
+  for (const arg of argv) {
+    if (arg === "--judge") options.judge = true;
+    else if (arg.startsWith("--mode=")) {
+      options.mode = arg.slice("--mode=".length) as CliOptions["mode"];
+    } else if (arg.startsWith("--cases=")) {
+      options.casesPath = arg.slice("--cases=".length);
+    } else if (arg.startsWith("--out=")) {
+      options.outDir = arg.slice("--out=".length);
+    } else if (arg.startsWith("--limit=")) {
+      options.limit = Number(arg.slice("--limit=".length));
     }
   }
 
-  console.log("\n" + "=".repeat(60));
-  console.log("Generating reports...");
+  if (!["resume", "cover-letter", "both"].includes(options.mode)) {
+    throw new Error("--mode must be resume, cover-letter, or both");
+  }
 
-  const report = generateJSONReport(results);
-  const markdown = generateMarkdownReport(report);
+  return options;
+}
 
-  const reportsDir = path.join(path.dirname(new URL(import.meta.url).pathname), "reports");
-  fs.mkdirSync(reportsDir, { recursive: true });
+async function loadCases(casesPath?: string): Promise<EvalCase[]> {
+  if (!casesPath) return RESUME_EVAL_CASES;
 
-  const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-  const jsonPath = path.join(reportsDir, `comparison-${timestamp}.json`);
-  const mdPath = path.join(reportsDir, `comparison-${timestamp}.md`);
+  const absolutePath = path.resolve(casesPath);
+  if (absolutePath.endsWith(".json")) {
+    return JSON.parse(fs.readFileSync(absolutePath, "utf8")) as EvalCase[];
+  }
 
-  fs.writeFileSync(jsonPath, JSON.stringify(report, null, 2));
-  fs.writeFileSync(mdPath, markdown);
+  const mod = (await import(pathToFileURL(absolutePath).href)) as {
+    default?: EvalCase[];
+    TEST_CASES?: EvalCase[];
+    RESUME_EVAL_CASES?: EvalCase[];
+  };
+  return mod.default ?? mod.RESUME_EVAL_CASES ?? mod.TEST_CASES ?? [];
+}
 
-  console.log(`\nReports saved:`);
-  console.log(`  JSON: ${jsonPath}`);
-  console.log(`  Markdown: ${mdPath}`);
+function selectCases(cases: EvalCase[], limit?: number): EvalCase[] {
+  if (!limit || !Number.isFinite(limit) || limit <= 0) return cases;
+  return cases.slice(0, Math.min(limit, cases.length));
+}
 
-  const { summary } = report;
-  console.log(`\nResults: ${summary.gpt55Wins} GPT-5.5 wins | ${summary.claudeWins} Claude wins | ${summary.ties} ties`);
-  console.log(`Avg scores: GPT-5.5 ${summary.avgScoreGpt55}/5 | Claude ${summary.avgScoreClaude}/5`);
+async function runMode(
+  mode: EvalMode,
+  cases: EvalCase[],
+  options: CliOptions,
+): Promise<EvalRunReport> {
+  const llmConfig = getEvalLLMConfig();
+  const generator =
+    mode === "resume"
+      ? createTailorGenerator(llmConfig)
+      : createCoverLetterGenerator(llmConfig);
+  const generatorName = mode === "resume" ? "tailor" : "cover-letter";
+  const judge =
+    options.judge && hasJudgeKey()
+      ? (testCase: EvalCase, output: Awaited<ReturnType<typeof generator>>) =>
+          judgeSingle(testCase, output)
+      : undefined;
+
+  if (options.judge && !hasJudgeKey()) {
+    console.warn("Judge requested, but ANTHROPIC_API_KEY is not set. Continuing with deterministic metrics only.");
+  }
+
+  console.log(`Running ${mode} eval on ${cases.length} case(s)...`);
+  const report = await runEval({
+    cases,
+    mode,
+    generatorName,
+    generator,
+    judge,
+  });
+  const paths = writeReports(report, options.outDir);
+  console.log(
+    `${mode}: avg=${report.summary.avgOverallScore} errors=${report.summary.errorCount} JSON=${paths.jsonPath}`,
+  );
+  console.log(`CSV=${paths.csvPath}`);
+  console.log(`Markdown=${paths.mdPath}`);
+  return report;
+}
+
+async function main(): Promise<void> {
+  const options = parseArgs(process.argv.slice(2));
+  const cases = selectCases(await loadCases(options.casesPath), options.limit);
+  const modes: EvalMode[] =
+    options.mode === "both" ? ["resume", "cover-letter"] : [options.mode];
+
+  for (const mode of modes) {
+    await runMode(mode, cases, options);
+  }
 }
 
 main().catch((err) => {
-  console.error("Fatal error:", err);
+  console.error(err instanceof Error ? err.message : String(err));
   process.exit(1);
 });

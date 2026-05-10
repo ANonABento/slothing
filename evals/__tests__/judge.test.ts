@@ -1,5 +1,12 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { buildJudgePrompt, parseJudgeResponse, judgeOutputs, CLAUDE_OPUS_MODEL } from "../judge.js";
+import {
+  buildJudgePrompt,
+  parseJudgeResponse,
+  judgeOutputs,
+  judgeIsConfigured,
+  judgeSingle,
+  CLAUDE_OPUS_MODEL,
+} from "../judge.js";
 import type { TestCase, GeneratorResult } from "../types.js";
 
 const SAMPLE_TEST_CASE: TestCase = {
@@ -186,5 +193,63 @@ describe("judgeOutputs", () => {
     await expect(
       judgeOutputs(SAMPLE_TEST_CASE, GPT55_RESULT, CLAUDE_RESULT, "test-key")
     ).rejects.toThrow("500");
+  });
+});
+
+describe("optional judge helpers", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.unstubAllGlobals();
+  });
+
+  it("reports missing Anthropic key as unconfigured", () => {
+    vi.stubEnv("ANTHROPIC_API_KEY", "");
+    expect(judgeIsConfigured()).toBe(false);
+  });
+
+  it("returns undefined from judgeSingle without a key", async () => {
+    await expect(
+      judgeSingle(SAMPLE_TEST_CASE, {
+        kind: "coverLetter",
+        generator: "test",
+        text: "A cover letter",
+        latencyMs: 1,
+      }, ""),
+    ).resolves.toBeUndefined();
+  });
+
+  it("judges a single output when configured", async () => {
+    vi.stubGlobal("fetch", vi.fn());
+    const mockFetch = vi.mocked(fetch);
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify({
+              score: 4,
+              reasoning: "Strong alignment.",
+              strengths: ["specific"],
+              weaknesses: ["brief"],
+            }),
+          },
+        ],
+      }),
+    } as Response);
+
+    const result = await judgeSingle(
+      SAMPLE_TEST_CASE,
+      {
+        kind: "coverLetter",
+        generator: "test",
+        text: "A React and TypeScript cover letter.",
+        latencyMs: 1,
+      },
+      "test-key",
+    );
+
+    expect(result?.score).toBe(4);
+    expect(result?.model).toBe(CLAUDE_OPUS_MODEL);
   });
 });

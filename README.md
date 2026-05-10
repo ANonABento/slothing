@@ -126,6 +126,10 @@ Full docs: [`columbus-extension/README.md`](./columbus-extension/README.md).
 7. **Export**: Copy HTML or download a PDF from the Studio
 8. **Practice Interview**: Go to Interview Prep and start a mock interview
 
+## Evals
+
+Resume and cover-letter generation evals live under `evals/`. Run `npm run eval -- --mode=resume --limit=5` with an LLM key, or set `EVAL_OFFLINE=1` for a deterministic local smoke run. See [docs/evals.md](docs/evals.md) for cases, metrics, report formats, and judge options.
+
 ## Document Studio Architecture
 
 Document Studio is the single document-building surface at `/studio`. Legacy document-building pages redirect there, so one route owns resume and cover letter workflows.

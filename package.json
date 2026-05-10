@@ -22,7 +22,9 @@
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
-    "eval": "npx tsx evals/harness.ts"
+    "eval": "npx tsx evals/harness.ts",
+    "eval:resume": "npx tsx evals/harness.ts --mode=resume",
+    "eval:cover-letter": "npx tsx evals/harness.ts --mode=cover-letter"
   },
   "dependencies": {
     "@auth/drizzle-adapter": "^1.11.2",
