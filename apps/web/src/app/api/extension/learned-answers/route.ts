@@ -9,7 +9,8 @@ import { nowDate, toIso } from "@/lib/format/time";
  */
 import { NextRequest, NextResponse } from "next/server";
 import { requireExtensionAuth, normalizeQuestion } from "@/lib/extension-auth";
-import { db, learnedAnswers, eq, and, desc, sqlOp } from "@/lib/db";
+import { db, answerBank, eq, and, desc, sqlOp } from "@/lib/db";
+import { ensureAnswerBankSchema } from "@/lib/db/answer-bank-schema";
 import { randomUUID } from "crypto";
 import { toNullableIsoDateString } from "@/lib/utils";
 
@@ -21,17 +22,19 @@ export async function GET(request: NextRequest) {
   }
 
   try {
+    await ensureAnswerBankSchema(db);
     const rows = await db
       .select()
-      .from(learnedAnswers)
-      .where(eq(learnedAnswers.userId, authResult.userId))
-      .orderBy(desc(learnedAnswers.timesUsed), desc(learnedAnswers.updatedAt));
+      .from(answerBank)
+      .where(eq(answerBank.userId, authResult.userId))
+      .orderBy(desc(answerBank.timesUsed), desc(answerBank.updatedAt));
 
     const answers = rows.map((row) => ({
       id: row.id,
       question: row.question,
       questionNormalized: row.questionNormalized,
       answer: row.answer,
+      source: row.source,
       sourceUrl: row.sourceUrl,
       sourceCompany: row.sourceCompany,
       timesUsed: row.timesUsed ?? 1,
@@ -58,6 +61,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
+    await ensureAnswerBankSchema(db);
     const body = await request.json();
     const { question, answer, sourceUrl, sourceCompany } = body as {
       question: string;
@@ -78,11 +82,11 @@ export async function POST(request: NextRequest) {
     // Check if similar question already exists
     const existingRows = await db
       .select()
-      .from(learnedAnswers)
+      .from(answerBank)
       .where(
         and(
-          eq(learnedAnswers.userId, authResult.userId),
-          eq(learnedAnswers.questionNormalized, questionNormalized),
+          eq(answerBank.userId, authResult.userId),
+          eq(answerBank.questionNormalized, questionNormalized),
         ),
       )
       .limit(1);
@@ -92,17 +96,18 @@ export async function POST(request: NextRequest) {
       // Update existing answer
       const now = nowDate();
       await db
-        .update(learnedAnswers)
+        .update(answerBank)
         .set({
           answer,
-          timesUsed: sqlOp`coalesce(${learnedAnswers.timesUsed}, 0) + 1`,
+          source: "extension",
+          timesUsed: sqlOp`coalesce(${answerBank.timesUsed}, 0) + 1`,
           updatedAt: toIso(now),
           lastUsedAt: toIso(now),
         })
         .where(
           and(
-            eq(learnedAnswers.id, existing.id),
-            eq(learnedAnswers.userId, authResult.userId),
+            eq(answerBank.id, existing.id),
+            eq(answerBank.userId, authResult.userId),
           ),
         );
 
@@ -111,6 +116,7 @@ export async function POST(request: NextRequest) {
         question: existing.question,
         questionNormalized: existing.questionNormalized,
         answer,
+        source: "extension",
         timesUsed: (existing.timesUsed ?? 0) + 1,
         updated: true,
       });
@@ -120,12 +126,13 @@ export async function POST(request: NextRequest) {
     const id = randomUUID();
     const now = nowDate();
 
-    await db.insert(learnedAnswers).values({
+    await db.insert(answerBank).values({
       id,
       userId: authResult.userId,
       question,
       questionNormalized,
       answer,
+      source: "extension",
       sourceUrl: sourceUrl || null,
       sourceCompany: sourceCompany || null,
       createdAt: toIso(now),
@@ -137,6 +144,7 @@ export async function POST(request: NextRequest) {
       question,
       questionNormalized,
       answer,
+      source: "extension",
       sourceUrl,
       sourceCompany,
       timesUsed: 1,

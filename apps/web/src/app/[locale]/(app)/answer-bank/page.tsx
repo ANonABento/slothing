@@ -45,9 +45,11 @@ import { SkeletonCard } from "@/components/ui/skeleton";
 import { useToast } from "@/components/ui/toast";
 import { useErrorToast } from "@/hooks/use-error-toast";
 import {
+  isExtensionSourced,
   getAnswerSourceLabel,
+  type AnswerBankSource,
   type AnswerBankEntry,
-} from "@/lib/answers/learned-answers";
+} from "@/lib/answers/answer-bank";
 import {
   ANSWER_COMPONENT_LABELS,
   ANSWER_COMPONENT_TYPES,
@@ -86,6 +88,7 @@ interface MigrationSummary {
 }
 
 type AnswerSort = "most_used" | "newest" | "alpha";
+type SourceFilter = "all" | AnswerBankSource;
 
 const EMPTY_FORM: AnswerFormState = {
   question: "",
@@ -112,6 +115,7 @@ export default function AnswerBankPage() {
   const [activeType, setActiveType] = useState<AnswerComponentType | "all">(
     "all",
   );
+  const [activeSource, setActiveSource] = useState<SourceFilter>("all");
   const [sort, setSort] = useState<AnswerSort>("most_used");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingEntry, setEditingEntry] = useState<AnswerBankEntry | null>(
@@ -182,9 +186,13 @@ export default function AnswerBankPage() {
         : answers.filter(
             (entry) => classifyAnswerComponent(entry) === activeType,
           );
+    const sourceFiltered =
+      activeSource === "all"
+        ? typeFiltered
+        : typeFiltered.filter((entry) => entry.source === activeSource);
     const searched = !normalized
-      ? typeFiltered
-      : typeFiltered.filter((entry) =>
+      ? sourceFiltered
+      : sourceFiltered.filter((entry) =>
           [entry.question, entry.answer, entry.sourceCompany, entry.sourceUrl]
             .filter(Boolean)
             .some((value) => String(value).toLowerCase().includes(normalized)),
@@ -200,7 +208,7 @@ export default function AnswerBankPage() {
       if (sort === "alpha") return a.question.localeCompare(b.question);
       return b.timesUsed - a.timesUsed;
     });
-  }, [activeType, answers, query, sort]);
+  }, [activeSource, activeType, answers, query, sort]);
 
   const stats = useMemo(() => {
     const totalUses = answers.reduce((sum, entry) => sum + entry.timesUsed, 0);
@@ -222,6 +230,18 @@ export default function AnswerBankPage() {
     };
     for (const entry of answers) {
       counts[classifyAnswerComponent(entry)] += 1;
+    }
+    return counts;
+  }, [answers]);
+
+  const sourceCounts = useMemo(() => {
+    const counts: Record<AnswerBankSource, number> = {
+      manual: 0,
+      extension: 0,
+      curated: 0,
+    };
+    for (const entry of answers) {
+      counts[entry.source] += 1;
     }
     return counts;
   }, [answers]);
@@ -353,6 +373,34 @@ export default function AnswerBankPage() {
     }
   }
 
+  async function promoteAnswer(entry: AnswerBankEntry) {
+    setAnswers((prev) =>
+      prev.map((item) =>
+        item.id === entry.id ? { ...item, source: "curated" } : item,
+      ),
+    );
+
+    try {
+      const res = await fetch(`/api/answer-bank/${entry.id}/promote`, {
+        method: "POST",
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to promote answer");
+      setAnswers((prev) =>
+        prev.map((item) => (item.id === entry.id ? data : item)),
+      );
+      addToast({ type: "success", title: "Answer promoted to curated" });
+    } catch (err) {
+      setAnswers((prev) =>
+        prev.map((item) => (item.id === entry.id ? entry : item)),
+      );
+      showErrorToast(err, {
+        title: "Could not promote answer",
+        fallbackDescription: "Please try promoting it again.",
+      });
+    }
+  }
+
   async function fetchVersions(answerId: string) {
     setVersionsLoading(true);
     try {
@@ -461,6 +509,36 @@ export default function AnswerBankPage() {
             </div>
             <div className="flex flex-wrap gap-2">
               <AnswerTypeButton
+                active={activeSource === "all"}
+                count={answers.length}
+                onClick={() => setActiveSource("all")}
+              >
+                All sources
+              </AnswerTypeButton>
+              <AnswerTypeButton
+                active={activeSource === "manual"}
+                count={sourceCounts.manual}
+                onClick={() => setActiveSource("manual")}
+              >
+                Manual
+              </AnswerTypeButton>
+              <AnswerTypeButton
+                active={activeSource === "extension"}
+                count={sourceCounts.extension}
+                onClick={() => setActiveSource("extension")}
+              >
+                From extension
+              </AnswerTypeButton>
+              <AnswerTypeButton
+                active={activeSource === "curated"}
+                count={sourceCounts.curated}
+                onClick={() => setActiveSource("curated")}
+              >
+                Curated
+              </AnswerTypeButton>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <AnswerTypeButton
                 active={activeType === "all"}
                 count={answers.length}
                 onClick={() => setActiveType("all")}
@@ -520,6 +598,7 @@ export default function AnswerBankPage() {
                     onDuplicate={duplicateAnswer}
                     onEdit={openEditDialog}
                     onDelete={deleteAnswer}
+                    onPromote={promoteAnswer}
                   />
                 ))}
               </div>
@@ -649,19 +728,29 @@ function AnswerCard({
   onDuplicate,
   onEdit,
   onDelete,
+  onPromote,
 }: {
   entry: AnswerBankEntry;
   onCopy: (entry: AnswerBankEntry) => void;
   onDuplicate: (entry: AnswerBankEntry) => void;
   onEdit: (entry: AnswerBankEntry) => void;
   onDelete: (entry: AnswerBankEntry) => void;
+  onPromote: (entry: AnswerBankEntry) => void;
 }) {
+  const sourceLabel =
+    entry.source === "extension"
+      ? "From extension"
+      : entry.source === "curated"
+        ? "Curated"
+        : "Manual";
+  const sourceMeta = getAnswerSourceLabel(entry);
+
   return (
     <article className={cn(THEME_INTERACTIVE_SURFACE_CLASSES, "p-4")}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 space-y-2">
           <div className="flex flex-wrap items-center gap-2">
-            <Badge variant="secondary">{getAnswerSourceLabel(entry)}</Badge>
+            <Badge variant="secondary">{sourceLabel}</Badge>
             <Badge variant="outline">
               {ANSWER_COMPONENT_LABELS[classifyAnswerComponent(entry)]}
             </Badge>
@@ -677,6 +766,11 @@ function AnswerCard({
           <h2 className="text-base font-semibold leading-6">
             {entry.question}
           </h2>
+          {sourceMeta !== sourceLabel ? (
+            <p className="text-xs text-muted-foreground">
+              Source: {sourceMeta}
+            </p>
+          ) : null}
         </div>
         <div className="flex shrink-0 items-center gap-1">
           <Button
@@ -721,6 +815,17 @@ function AnswerCard({
       <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-muted-foreground">
         {entry.answer}
       </p>
+      {isExtensionSourced(entry) ? (
+        <div className="mt-3">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => void onPromote(entry)}
+          >
+            Promote to curated
+          </Button>
+        </div>
+      ) : null}
     </article>
   );
 }

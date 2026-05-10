@@ -1,6 +1,6 @@
 import type { ContactInfo, Profile } from "@/types";
 import { mapPersonalFactToProfileField } from "@/lib/answer-bank/personal-facts";
-import { deleteLearnedAnswer, listLearnedAnswers } from "./learned-answers";
+import { deleteAnswerBankEntry, listAnswerBank } from "./answer-bank";
 import { getProfile, updateProfile } from "./queries";
 
 export interface PersonalFactsMigrationItem {
@@ -23,7 +23,7 @@ export async function runPersonalFactsMigration(
     reclassified: [],
     skipped: [],
   };
-  const answers = await listLearnedAnswers(userId);
+  const answers = await listAnswerBank(userId);
   const profile = getProfile(userId);
   const contact: ContactInfo = {
     ...(profile?.contact ?? { name: "" }),
@@ -37,7 +37,7 @@ export async function runPersonalFactsMigration(
 
     contact[mapping.field] = mapping.value;
     changed = true;
-    await deleteLearnedAnswer(entry.id, userId);
+    await deleteAnswerBankEntry(entry.id, userId);
     result.migratedToProfile.push({
       id: entry.id,
       question: entry.question,

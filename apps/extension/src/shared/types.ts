@@ -131,6 +131,7 @@ export interface LearnedAnswer {
   question: string;
   questionNormalized: string;
   answer: string;
+  source: "extension" | "curated" | "manual";
   sourceUrl?: string;
   sourceCompany?: string;
   timesUsed: number;

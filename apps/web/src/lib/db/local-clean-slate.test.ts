@@ -72,6 +72,8 @@ describe("buildLocalDevCleanSlateStatements", () => {
     expect(sql).toContain("DELETE FROM jobs WHERE user_id = ?");
     expect(sql).toContain("DELETE FROM profile WHERE id = ?");
     expect(sql).toContain("DELETE FROM knowledge_chunks WHERE user_id = ?");
+    expect(sql).toContain("DELETE FROM answer_bank WHERE user_id = ?");
+    expect(sql).toContain("DELETE FROM answer_bank_versions WHERE user_id = ?");
     expect(sql).not.toContain("DELETE FROM settings");
     expect(
       statements.every((statement) => statement.params?.[0] === "default"),
@@ -96,6 +98,9 @@ describe("buildLocalDevCleanSlateStatements", () => {
         "DELETE FROM chunks_vec WHERE rowid IN (SELECT rowid FROM chunks WHERE user_id = ?)",
       ),
     ).toBeLessThan(sql.indexOf("DELETE FROM chunks WHERE user_id = ?"));
+    expect(
+      sql.indexOf("DELETE FROM answer_bank_versions WHERE user_id = ?"),
+    ).toBeLessThan(sql.indexOf("DELETE FROM answer_bank WHERE user_id = ?"));
   });
 });
 

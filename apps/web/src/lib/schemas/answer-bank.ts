@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+const answerSourceSchema = z.enum(["extension", "curated", "manual"]);
+
 const optionalTrimmedString = z
   .string()
   .trim()
@@ -9,6 +11,7 @@ const optionalTrimmedString = z
 export const createAnswerSchema = z.object({
   question: z.string().trim().min(1).max(1000),
   answer: z.string().trim().min(1).max(20000),
+  source: answerSourceSchema.optional(),
   sourceUrl: optionalTrimmedString,
   sourceCompany: optionalTrimmedString,
 });

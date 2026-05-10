@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { isAuthError, requireAuth } from "@/lib/auth";
-import { getAnswerVersion } from "@/lib/db/learned-answer-versions";
-import { updateLearnedAnswer } from "@/lib/db/learned-answers";
+import { getAnswerVersion } from "@/lib/db/answer-bank-versions";
+import { updateAnswerBankEntry } from "@/lib/db/answer-bank";
 
 export const dynamic = "force-dynamic";
 
@@ -22,7 +22,7 @@ export async function POST(
       );
     }
 
-    const restored = await updateLearnedAnswer(
+    const restored = await updateAnswerBankEntry(
       id,
       {
         question: version.question,

@@ -146,8 +146,8 @@ export {
   chunks,
   knowledgeChunks,
   extensionSessions,
-  learnedAnswers,
-  learnedAnswerVersions,
+  answerBank,
+  answerBankVersions,
   fieldMappings,
   resumeAbTracking,
   promptVariants,
@@ -161,9 +161,9 @@ export * from "./reminders";
 export * from "./notifications";
 export * from "./custom-templates";
 export * from "./profile-bank";
-export * from "./learned-answers";
-export * from "./learned-answer-versions";
-export * from "./learned-answers-migration";
+export * from "./answer-bank";
+export * from "./answer-bank-versions";
+export * from "./answer-bank-migration";
 export * from "./profile-versions";
 export * from "./knowledge-bank";
 
