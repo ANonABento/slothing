@@ -148,13 +148,17 @@ export function createReminderNotification(
   jobTitle: string,
   isOverdue: boolean,
   jobId: string,
+  userId: string = "default",
 ): Notification {
-  return createNotification({
-    type: isOverdue ? "reminder_overdue" : "reminder_due",
-    title: isOverdue ? "Overdue Reminder" : "Reminder Due",
-    message: `${reminderTitle} for ${jobTitle}`,
-    link: `/opportunities?id=${jobId}`,
-  });
+  return createNotification(
+    {
+      type: isOverdue ? "reminder_overdue" : "reminder_due",
+      title: isOverdue ? "Overdue Reminder" : "Reminder Due",
+      message: `${reminderTitle} for ${jobTitle}`,
+      link: `/opportunities?id=${jobId}`,
+    },
+    userId,
+  );
 }
 
 // Create application update notification

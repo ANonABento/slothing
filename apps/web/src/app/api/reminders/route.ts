@@ -82,7 +82,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { jobId, type, title, description, dueDate } = parseResult.data;
+    const { jobId, type, title, description, dueDate, notifyByEmail } =
+      parseResult.data;
 
     const reminder = createReminder(
       {
@@ -91,6 +92,7 @@ export async function POST(request: NextRequest) {
         title,
         description,
         dueDate,
+        notifyByEmail,
       },
       authResult.userId,
     );

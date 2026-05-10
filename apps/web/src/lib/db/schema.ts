@@ -240,6 +240,8 @@ export const reminders = sqliteTable("reminders", {
   dismissed: integer("dismissed", { mode: "boolean" }).default(false),
   createdAt: text("created_at").default(sql`CURRENT_TIMESTAMP`),
   completedAt: text("completed_at"),
+  firedAt: text("fired_at"),
+  notifyByEmail: integer("notify_by_email", { mode: "boolean" }).default(false),
 });
 
 // Notifications table
