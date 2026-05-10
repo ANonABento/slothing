@@ -115,7 +115,7 @@ export default function Dashboard() {
         const [profileData, documentsData, analyticsData, onboardingData] =
           await Promise.all([
             fetchJson("/api/profile"),
-            fetchJson("/api/documents"),
+            fetchJson("/api/documents?limit=200"),
             fetchJson("/api/analytics"),
             fetchJson("/api/onboarding/dismiss"),
           ]);

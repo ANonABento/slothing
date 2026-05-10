@@ -5,7 +5,7 @@ import {
   normalizeQuestion,
 } from "@/lib/answers/learned-answers";
 import { toNullableIsoDateString } from "@/lib/utils";
-import { and, desc, eq, sql as sqlOp } from "drizzle-orm";
+import { and, desc, eq, or, sql as sqlOp } from "drizzle-orm";
 import db from "./index";
 import { learnedAnswers } from "./schema";
 import {
@@ -38,6 +38,54 @@ export async function listLearnedAnswers(
     .from(learnedAnswers)
     .where(eq(learnedAnswers.userId, userId))
     .orderBy(desc(learnedAnswers.timesUsed), desc(learnedAnswers.updatedAt));
+
+  return rows.map(mapLearnedAnswer);
+}
+
+export interface LearnedAnswerCursor {
+  lastId: string;
+  lastTimesUsed: number;
+  lastUpdatedAt: string;
+}
+
+export async function listLearnedAnswersPaginated({
+  userId,
+  cursor,
+  limit,
+}: {
+  userId: string;
+  cursor?: LearnedAnswerCursor | null;
+  limit: number;
+}): Promise<AnswerBankEntry[]> {
+  const cursorPredicate = cursor
+    ? or(
+        sqlOp`coalesce(${learnedAnswers.timesUsed}, 1) < ${cursor.lastTimesUsed}`,
+        and(
+          sqlOp`coalesce(${learnedAnswers.timesUsed}, 1) = ${cursor.lastTimesUsed}`,
+          sqlOp`${learnedAnswers.updatedAt} < ${cursor.lastUpdatedAt}`,
+        ),
+        and(
+          sqlOp`coalesce(${learnedAnswers.timesUsed}, 1) = ${cursor.lastTimesUsed}`,
+          eq(learnedAnswers.updatedAt, cursor.lastUpdatedAt),
+          sqlOp`${learnedAnswers.id} < ${cursor.lastId}`,
+        ),
+      )
+    : undefined;
+
+  const rows = await db
+    .select()
+    .from(learnedAnswers)
+    .where(
+      cursorPredicate
+        ? and(eq(learnedAnswers.userId, userId), cursorPredicate)
+        : eq(learnedAnswers.userId, userId),
+    )
+    .orderBy(
+      desc(learnedAnswers.timesUsed),
+      desc(learnedAnswers.updatedAt),
+      desc(learnedAnswers.id),
+    )
+    .limit(limit + 1);
 
   return rows.map(mapLearnedAnswer);
 }

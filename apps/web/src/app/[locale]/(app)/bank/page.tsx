@@ -253,6 +253,9 @@ export default function BankPage() {
   const [entries, setEntries] = useState<BankEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [hasMoreEntries, setHasMoreEntries] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   // Search & filter state
   const [query, setQuery] = useState("");
@@ -323,8 +326,9 @@ export default function BankPage() {
   );
 
   const fetchEntries = useCallback(
-    async (options?: { silent?: boolean }) => {
-      if (!options?.silent) setLoading(true);
+    async (options?: { silent?: boolean; cursor?: string | null }) => {
+      if (options?.cursor) setLoadingMore(true);
+      else if (!options?.silent) setLoading(true);
       setError(null);
       try {
         const params = new URLSearchParams();
@@ -332,14 +336,20 @@ export default function BankPage() {
         if (activeCategory === "hackathon") params.set("type", "hackathon");
         else if (activeCategory !== "all")
           params.set("category", activeCategory);
+        if (options?.cursor) params.set("cursor", options.cursor);
         const res = await fetch(`/api/bank?${params}`);
         if (!res.ok) throw new Error("Failed to fetch entries");
         const data = await res.json();
-        setEntries(data.entries || []);
+        setEntries((current) =>
+          options?.cursor ? [...current, ...(data.entries || [])] : data.entries || [],
+        );
+        setNextCursor(data.nextCursor ?? null);
+        setHasMoreEntries(Boolean(data.hasMore));
       } catch (err) {
         setError(getErrorMessage(err));
       } finally {
-        if (!options?.silent) setLoading(false);
+        if (options?.cursor) setLoadingMore(false);
+        else if (!options?.silent) setLoading(false);
       }
     },
     [query, activeCategory],
@@ -371,7 +381,7 @@ export default function BankPage() {
   const [allEntries, setAllEntries] = useState<BankEntry[]>([]);
 
   const refreshAllEntries = useCallback(() => {
-    fetch("/api/bank")
+    fetch("/api/bank?limit=200")
       .then((r) => r.json())
       .then((data) => setAllEntries(data.entries || []))
       .catch(() => {});
@@ -1681,6 +1691,19 @@ export default function BankPage() {
                       />
                     </div>
                   ))}
+              {hasMoreEntries ? (
+                <div className="flex justify-center">
+                  <Button
+                    variant="outline"
+                    onClick={() =>
+                      void fetchEntries({ silent: true, cursor: nextCursor })
+                    }
+                    disabled={loadingMore || !nextCursor}
+                  >
+                    {loadingMore ? "Loading..." : "Load more entries"}
+                  </Button>
+                </div>
+              ) : null}
             </div>
           )}
         </PageContent>

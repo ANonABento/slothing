@@ -272,7 +272,9 @@ export function AiAssistantPanel({
     setOpportunitiesLoading(true);
     setOpportunityError("");
     try {
-      const response = await fetch("/api/opportunities?status=saved,applied");
+      const response = await fetch(
+        "/api/opportunities?status=saved,applied&limit=50",
+      );
       if (!response.ok) {
         throw new Error(
           await readApiError(response, "Could not load saved opportunities."),

@@ -33,6 +33,9 @@ interface DraftsSheetProps {
   jobs: JobDescription[];
   onLoadDraft: (draft: EmailDraftForSheet) => void;
   onDeleteDraft: (draftId: string) => void;
+  hasMore?: boolean;
+  loadingMore?: boolean;
+  onLoadMore?: () => void;
 }
 
 export function DraftsSheet({
@@ -42,6 +45,9 @@ export function DraftsSheet({
   jobs,
   onLoadDraft,
   onDeleteDraft,
+  hasMore = false,
+  loadingMore = false,
+  onLoadMore,
 }: DraftsSheetProps) {
   const [query, setQuery] = useState("");
   const normalizedQuery = query.trim().toLowerCase();
@@ -147,6 +153,18 @@ export function DraftsSheet({
             </div>
           )}
         </div>
+        {hasMore ? (
+          <div className="border-t p-4">
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={onLoadMore}
+              disabled={loadingMore}
+            >
+              {loadingMore ? "Loading..." : "Load more drafts"}
+            </Button>
+          </div>
+        ) : null}
       </DialogContent>
     </Dialog>
   );

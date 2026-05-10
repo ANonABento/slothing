@@ -85,6 +85,8 @@ const FILTERS_OPEN_STORAGE_KEY = "taida:opportunities:filters-open";
 
 interface OpportunitiesResponse {
   opportunities?: Opportunity[];
+  nextCursor?: string | null;
+  hasMore?: boolean;
 }
 
 interface UpdateOpportunityResponse {
@@ -109,6 +111,9 @@ export default function OpportunitiesPage() {
   const [hasLoadedFiltersPreference, setHasLoadedFiltersPreference] =
     useState(false);
   const [hasFetched, setHasFetched] = useState(false);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [hasMoreOpportunities, setHasMoreOpportunities] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [hasCachedData, setHasCachedData] = useState(() => {
     if (typeof window === "undefined") return false;
     return Boolean(window.localStorage.getItem(STORAGE_KEY));
@@ -124,6 +129,8 @@ export default function OpportunitiesPage() {
       );
       if (data.opportunities) {
         setOpportunities(data.opportunities);
+        setNextCursor(data.nextCursor ?? null);
+        setHasMoreOpportunities(Boolean(data.hasMore));
         window.localStorage.setItem(
           STORAGE_KEY,
           JSON.stringify(data.opportunities),
@@ -138,6 +145,34 @@ export default function OpportunitiesPage() {
       setHasFetched(true);
     }
   }, [showErrorToast]);
+
+  const loadMoreOpportunities = useCallback(async () => {
+    if (!nextCursor) return;
+
+    setIsLoadingMore(true);
+    try {
+      const response = await fetch(
+        `/api/opportunities?cursor=${encodeURIComponent(nextCursor)}`,
+      );
+      const data = await readJsonResponse<OpportunitiesResponse>(
+        response,
+        "Failed to load more opportunities",
+      );
+      setOpportunities((current) => [
+        ...current,
+        ...(data.opportunities ?? []),
+      ]);
+      setNextCursor(data.nextCursor ?? null);
+      setHasMoreOpportunities(Boolean(data.hasMore));
+    } catch (error) {
+      showErrorToast(error, {
+        title: "Could not load more opportunities",
+        fallbackDescription: "Please try again.",
+      });
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }, [nextCursor, showErrorToast]);
 
   useEffect(() => {
     const saved = window.localStorage.getItem(STORAGE_KEY);
@@ -676,16 +711,31 @@ export default function OpportunitiesPage() {
                   onShowLane={(lane) => void handleShowKanbanLane(lane)}
                 />
               ) : (
-                <div className="grid gap-4">
-                  {filteredOpportunities.map((opportunity) => (
-                    <OpportunityRow
-                      key={opportunity.id}
-                      opportunity={opportunity}
-                      onStatusChange={(status) =>
-                        void handleStatusChange(opportunity.id, status)
-                      }
-                    />
-                  ))}
+                <div className="space-y-4">
+                  <div className="grid gap-4">
+                    {filteredOpportunities.map((opportunity) => (
+                      <OpportunityRow
+                        key={opportunity.id}
+                        opportunity={opportunity}
+                        onStatusChange={(status) =>
+                          void handleStatusChange(opportunity.id, status)
+                        }
+                      />
+                    ))}
+                  </div>
+                  {hasMoreOpportunities ? (
+                    <div className="flex justify-center">
+                      <Button
+                        variant="outline"
+                        onClick={() => void loadMoreOpportunities()}
+                        disabled={isLoadingMore}
+                      >
+                        {isLoadingMore
+                          ? "Loading..."
+                          : "Load more opportunities"}
+                      </Button>
+                    </div>
+                  ) : null}
                 </div>
               )}
             </section>

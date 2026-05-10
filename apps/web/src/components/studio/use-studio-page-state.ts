@@ -369,7 +369,7 @@ export function useStudioPageState(): StudioPageState {
     async function fetchEntries() {
       setLoading(true);
       try {
-        const response = await fetch("/api/bank");
+        const response = await fetch("/api/bank?limit=200");
         if (!response.ok) throw new Error("Failed to fetch");
         const data = await response.json();
         if (!cancelled) setEntries(data.entries || []);

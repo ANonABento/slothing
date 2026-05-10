@@ -26,6 +26,18 @@ interface DocumentRow {
   uploaded_at: string;
 }
 
+export interface DocumentCursor {
+  lastId: string;
+  lastCreatedAt: string;
+}
+
+export interface ListDocumentsPaginatedParams {
+  userId?: string;
+  type?: DocumentType;
+  cursor?: DocumentCursor | null;
+  limit: number;
+}
+
 function rowToDocument(row: DocumentRow): Document {
   return {
     id: row.id,
@@ -167,6 +179,38 @@ export function getDocumentsByType(
       "SELECT * FROM documents WHERE type = ? AND user_id = ? ORDER BY uploaded_at DESC",
     )
     .all(type, userId) as DocumentRow[];
+  return rows.map(rowToDocument);
+}
+
+export function listDocumentsPaginated({
+  userId = "default",
+  type,
+  cursor,
+  limit,
+}: ListDocumentsPaginatedParams): Document[] {
+  const whereClauses = ["user_id = ?"];
+  const params: Array<string | number> = [userId];
+
+  if (type) {
+    whereClauses.push("type = ?");
+    params.push(type);
+  }
+
+  if (cursor) {
+    whereClauses.push("(uploaded_at < ? OR (uploaded_at = ? AND id < ?))");
+    params.push(cursor.lastCreatedAt, cursor.lastCreatedAt, cursor.lastId);
+  }
+
+  params.push(limit + 1);
+
+  const rows = db
+    .prepare(
+      `SELECT * FROM documents
+       WHERE ${whereClauses.join(" AND ")}
+       ORDER BY uploaded_at DESC, id DESC
+       LIMIT ?`,
+    )
+    .all(...params) as DocumentRow[];
   return rows.map(rowToDocument);
 }
 

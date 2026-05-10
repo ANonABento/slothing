@@ -482,7 +482,7 @@ describe("AiAssistantPanel", () => {
     vi.stubGlobal(
       "fetch",
       vi.fn(async (url: string) => {
-        if (url === "/api/opportunities?status=saved,applied") {
+        if (url.startsWith("/api/opportunities?status=saved,applied")) {
           return new Response(
             JSON.stringify({
               opportunities: [
@@ -567,7 +567,7 @@ describe("AiAssistantPanel", () => {
     vi.stubGlobal(
       "fetch",
       vi.fn(async (url: string) => {
-        if (url === "/api/opportunities?status=saved,applied") {
+        if (url.startsWith("/api/opportunities?status=saved,applied")) {
           return new Response(
             JSON.stringify({
               opportunities: [
