@@ -4,6 +4,7 @@ import { Loader2, Settings } from "lucide-react";
 import { DataManagement } from "@/components/settings/data-management";
 import { GoogleIntegration } from "@/components/settings/google-integration";
 import { HelpCards } from "@/components/settings/help-cards";
+import { KanbanLanesSection } from "@/components/settings/kanban-lanes-section";
 import { LLMProviderConfig } from "@/components/settings/llm-provider-config";
 import { LocaleSection } from "@/components/settings/locale-section";
 import {
@@ -78,6 +79,7 @@ export default function SettingsPage() {
               <LocaleSection />
               <OpportunityReviewSection />
             </div>
+            <KanbanLanesSection />
           </div>
 
           <div className="grid gap-6 lg:grid-cols-2">
