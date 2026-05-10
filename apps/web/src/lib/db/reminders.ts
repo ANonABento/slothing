@@ -1,5 +1,6 @@
 import db from "./legacy";
 import { generateId } from "@/lib/utils";
+import { ensureRemindersFiringSchema } from "@/lib/reminders/fire-due";
 
 import { nowDate, nowIso, toIso } from "@/lib/format/time";
 export type ReminderType = "follow_up" | "deadline" | "interview" | "custom";
@@ -15,6 +16,8 @@ export interface Reminder {
   dismissed: boolean;
   createdAt: string;
   completedAt?: string;
+  firedAt?: string;
+  notifyByEmail?: boolean;
 }
 
 export interface ReminderWithJob extends Reminder {
@@ -26,10 +29,11 @@ export interface ReminderWithJob extends Reminder {
 export function createReminder(
   reminder: Omit<
     Reminder,
-    "id" | "completed" | "dismissed" | "createdAt" | "completedAt"
+    "id" | "completed" | "dismissed" | "createdAt" | "completedAt" | "firedAt"
   >,
   userId: string = "default",
 ): Reminder {
+  ensureRemindersFiringSchema();
   const id = generateId();
   const now = nowIso();
   const job = db
@@ -41,8 +45,10 @@ export function createReminder(
   }
 
   const stmt = db.prepare(`
-    INSERT INTO reminders (id, user_id, job_id, type, title, description, due_date, created_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO reminders (
+      id, user_id, job_id, type, title, description, due_date, notify_by_email, created_at
+    )
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
 
   stmt.run(
@@ -53,6 +59,7 @@ export function createReminder(
     reminder.title,
     reminder.description || null,
     reminder.dueDate,
+    reminder.notifyByEmail ? 1 : 0,
     now,
   );
 
@@ -66,6 +73,7 @@ export function createReminder(
     completed: false,
     dismissed: false,
     createdAt: now,
+    notifyByEmail: reminder.notifyByEmail ?? false,
   };
 }
 
@@ -119,6 +127,8 @@ export function getReminders(options?: {
     dismissed: number;
     created_at: string;
     completed_at: string | null;
+    fired_at: string | null;
+    notify_by_email: number;
     job_title: string | null;
     job_company: string | null;
   }>;
@@ -134,6 +144,8 @@ export function getReminders(options?: {
     dismissed: Boolean(row.dismissed),
     createdAt: row.created_at,
     completedAt: row.completed_at || undefined,
+    firedAt: row.fired_at || undefined,
+    notifyByEmail: Boolean(row.notify_by_email),
     jobTitle: row.job_title || undefined,
     jobCompany: row.job_company || undefined,
   }));
@@ -170,6 +182,8 @@ export function getUpcomingReminders(
     dismissed: number;
     created_at: string;
     completed_at: string | null;
+    fired_at: string | null;
+    notify_by_email: number;
     job_title: string | null;
     job_company: string | null;
   }>;
@@ -185,6 +199,8 @@ export function getUpcomingReminders(
     dismissed: Boolean(row.dismissed),
     createdAt: row.created_at,
     completedAt: row.completed_at || undefined,
+    firedAt: row.fired_at || undefined,
+    notifyByEmail: Boolean(row.notify_by_email),
     jobTitle: row.job_title || undefined,
     jobCompany: row.job_company || undefined,
   }));
@@ -219,6 +235,8 @@ export function getOverdueReminders(
     dismissed: number;
     created_at: string;
     completed_at: string | null;
+    fired_at: string | null;
+    notify_by_email: number;
     job_title: string | null;
     job_company: string | null;
   }>;
@@ -234,6 +252,8 @@ export function getOverdueReminders(
     dismissed: Boolean(row.dismissed),
     createdAt: row.created_at,
     completedAt: row.completed_at || undefined,
+    firedAt: row.fired_at || undefined,
+    notifyByEmail: Boolean(row.notify_by_email),
     jobTitle: row.job_title || undefined,
     jobCompany: row.job_company || undefined,
   }));
@@ -279,12 +299,15 @@ export function deleteReminder(id: string, userId: string = "default"): void {
 export function updateReminder(
   id: string,
   updates: Partial<
-    Pick<Reminder, "title" | "description" | "dueDate" | "type">
+    Pick<
+      Reminder,
+      "title" | "description" | "dueDate" | "type" | "notifyByEmail"
+    >
   >,
   userId: string = "default",
 ): void {
   const fields: string[] = [];
-  const values: (string | null)[] = [];
+  const values: (string | number | null)[] = [];
 
   if (updates.title !== undefined) {
     fields.push("title = ?");
@@ -301,6 +324,10 @@ export function updateReminder(
   if (updates.type !== undefined) {
     fields.push("type = ?");
     values.push(updates.type);
+  }
+  if (updates.notifyByEmail !== undefined) {
+    fields.push("notify_by_email = ?");
+    values.push(updates.notifyByEmail ? 1 : 0);
   }
 
   if (fields.length === 0) return;
