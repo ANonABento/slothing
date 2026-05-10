@@ -182,12 +182,12 @@ export default function App() {
     return (
       <div className="popup-container">
         <div className="header">
-          <h1>Columbus</h1>
+          <h1>Slothing</h1>
           <p className="subtitle">Job Application Assistant</p>
         </div>
         <div className="content">
           <p>
-            Connect your Columbus account to start auto-filling job
+            Connect your Slothing account to start auto-filling job
             applications.
           </p>
           <button className="primary" onClick={handleConnect}>
@@ -201,7 +201,7 @@ export default function App() {
   return (
     <div className="popup-container">
       <div className="header">
-        <h1>Columbus</h1>
+        <h1>Slothing</h1>
         {profile && (
           <p className="subtitle">
             {profile.contact?.name || "No profile name"}
