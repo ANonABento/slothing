@@ -1,0 +1,5252 @@
+[
+  {
+    "id": "j-001",
+    "resumeId": "r-001",
+    "scenario": "direct_match",
+    "title": "Frontend Engineer",
+    "company": "BrightPath Systems",
+    "seniorityLevel": "junior",
+    "industry": "consumer SaaS",
+    "description": "We need a Frontend Engineer to apply proven frontend experience in consumer SaaS. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "JavaScript",
+      "React",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "TypeScript",
+      "HTML/CSS",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-002",
+    "resumeId": "r-001",
+    "scenario": "stretch_up",
+    "title": "Senior Frontend Engineer",
+    "company": "Stage One Studios",
+    "seniorityLevel": "mid",
+    "industry": "consumer SaaS",
+    "description": "We are hiring a Senior Frontend Engineer who can lead projects, mentor teammates, and raise the bar for frontend. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "JavaScript",
+      "React",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "TypeScript",
+      "HTML/CSS",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-003",
+    "resumeId": "r-001",
+    "scenario": "adjacent_role",
+    "title": "Full-Stack Engineer",
+    "company": "Riverbend Analytics",
+    "seniorityLevel": "junior",
+    "industry": "consumer SaaS",
+    "description": "This Full-Stack Engineer role needs someone who can translate frontend strengths into adjacent workflows. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "JavaScript",
+      "React",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "TypeScript",
+      "HTML/CSS",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-004",
+    "resumeId": "r-001",
+    "scenario": "lateral_industry",
+    "title": "Frontend Engineer",
+    "company": "Atlas Grove",
+    "seniorityLevel": "junior",
+    "industry": "health technology",
+    "description": "This Frontend Engineer opening applies similar craft in health technology, with emphasis on domain learning and stakeholder trust. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "JavaScript",
+      "React",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "TypeScript",
+      "HTML/CSS",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-005",
+    "resumeId": "r-001",
+    "scenario": "reach",
+    "title": "Product Manager, AI Tools",
+    "company": "Nimbus Works",
+    "seniorityLevel": "mid",
+    "industry": "AI productivity",
+    "description": "This Product Manager, AI Tools role is a deliberate reach and requires transferable judgment without overstating hands-on experience. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "JavaScript",
+      "React",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "TypeScript",
+      "HTML/CSS",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-006",
+    "resumeId": "r-002",
+    "scenario": "direct_match",
+    "title": "Marketing Manager",
+    "company": "Copperline Group",
+    "seniorityLevel": "mid",
+    "industry": "B2B SaaS",
+    "description": "We need a Marketing Manager to apply proven digital marketing experience in B2B SaaS. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "SEO",
+      "SEM",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "content strategy",
+      "analytics",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-007",
+    "resumeId": "r-002",
+    "scenario": "stretch_up",
+    "title": "Senior Marketing Manager",
+    "company": "Silverline Apps",
+    "seniorityLevel": "senior",
+    "industry": "B2B SaaS",
+    "description": "We are hiring a Senior Marketing Manager who can lead projects, mentor teammates, and raise the bar for digital marketing. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "SEO",
+      "SEM",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "content strategy",
+      "analytics",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-008",
+    "resumeId": "r-002",
+    "scenario": "adjacent_role",
+    "title": "Product Marketing Manager",
+    "company": "BlueOwl Labs",
+    "seniorityLevel": "mid",
+    "industry": "B2B SaaS",
+    "description": "This Product Marketing Manager role needs someone who can translate digital marketing strengths into adjacent workflows. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "SEO",
+      "SEM",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "content strategy",
+      "analytics",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-009",
+    "resumeId": "r-002",
+    "scenario": "lateral_industry",
+    "title": "Marketing Manager",
+    "company": "North Harbor Health",
+    "seniorityLevel": "mid",
+    "industry": "health technology",
+    "description": "This Marketing Manager opening applies similar craft in health technology, with emphasis on domain learning and stakeholder trust. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "SEO",
+      "SEM",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "content strategy",
+      "analytics",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-010",
+    "resumeId": "r-002",
+    "scenario": "reach",
+    "title": "Revenue Operations Director",
+    "company": "Cedar Metric",
+    "seniorityLevel": "senior",
+    "industry": "enterprise software",
+    "description": "This Revenue Operations Director role is a deliberate reach and requires transferable judgment without overstating hands-on experience. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "SEO",
+      "SEM",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "content strategy",
+      "analytics",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-011",
+    "resumeId": "r-003",
+    "scenario": "direct_match",
+    "title": "Data Analyst",
+    "company": "BrightPath Systems",
+    "seniorityLevel": "mid",
+    "industry": "e-commerce",
+    "description": "We need a Data Analyst to apply proven analytics experience in e-commerce. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "SQL",
+      "Python",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "Tableau",
+      "A/B testing",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-012",
+    "resumeId": "r-003",
+    "scenario": "stretch_up",
+    "title": "Senior Data Analyst",
+    "company": "Stage One Studios",
+    "seniorityLevel": "senior",
+    "industry": "e-commerce",
+    "description": "We are hiring a Senior Data Analyst who can lead projects, mentor teammates, and raise the bar for analytics. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "SQL",
+      "Python",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "Tableau",
+      "A/B testing",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-013",
+    "resumeId": "r-003",
+    "scenario": "adjacent_role",
+    "title": "Analytics Engineer",
+    "company": "Riverbend Analytics",
+    "seniorityLevel": "mid",
+    "industry": "e-commerce",
+    "description": "This Analytics Engineer role needs someone who can translate analytics strengths into adjacent workflows. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "SQL",
+      "Python",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "Tableau",
+      "A/B testing",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-014",
+    "resumeId": "r-003",
+    "scenario": "lateral_industry",
+    "title": "Data Analyst",
+    "company": "Atlas Grove",
+    "seniorityLevel": "mid",
+    "industry": "health technology",
+    "description": "This Data Analyst opening applies similar craft in health technology, with emphasis on domain learning and stakeholder trust. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "SQL",
+      "Python",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "Tableau",
+      "A/B testing",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-015",
+    "resumeId": "r-003",
+    "scenario": "reach",
+    "title": "Machine Learning Product Manager",
+    "company": "Nimbus Works",
+    "seniorityLevel": "senior",
+    "industry": "enterprise software",
+    "description": "This Machine Learning Product Manager role is a deliberate reach and requires transferable judgment without overstating hands-on experience. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "SQL",
+      "Python",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "Tableau",
+      "A/B testing",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-016",
+    "resumeId": "r-004",
+    "scenario": "direct_match",
+    "title": "Product Manager",
+    "company": "Copperline Group",
+    "seniorityLevel": "mid",
+    "industry": "consumer mobile",
+    "description": "We need a Product Manager to apply proven growth product experience in consumer mobile. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "roadmapping",
+      "user research",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "experimentation",
+      "analytics",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-017",
+    "resumeId": "r-004",
+    "scenario": "stretch_up",
+    "title": "Senior Product Manager",
+    "company": "Silverline Apps",
+    "seniorityLevel": "senior",
+    "industry": "consumer mobile",
+    "description": "We are hiring a Senior Product Manager who can lead projects, mentor teammates, and raise the bar for growth product. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "roadmapping",
+      "user research",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "experimentation",
+      "analytics",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-018",
+    "resumeId": "r-004",
+    "scenario": "adjacent_role",
+    "title": "Product Operations Manager",
+    "company": "BlueOwl Labs",
+    "seniorityLevel": "mid",
+    "industry": "consumer mobile",
+    "description": "This Product Operations Manager role needs someone who can translate growth product strengths into adjacent workflows. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "roadmapping",
+      "user research",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "experimentation",
+      "analytics",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-019",
+    "resumeId": "r-004",
+    "scenario": "lateral_industry",
+    "title": "Product Manager",
+    "company": "North Harbor Health",
+    "seniorityLevel": "mid",
+    "industry": "health technology",
+    "description": "This Product Manager opening applies similar craft in health technology, with emphasis on domain learning and stakeholder trust. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "roadmapping",
+      "user research",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "experimentation",
+      "analytics",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-020",
+    "resumeId": "r-004",
+    "scenario": "reach",
+    "title": "General Manager",
+    "company": "Cedar Metric",
+    "seniorityLevel": "senior",
+    "industry": "enterprise software",
+    "description": "This General Manager role is a deliberate reach and requires transferable judgment without overstating hands-on experience. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "roadmapping",
+      "user research",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "experimentation",
+      "analytics",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-021",
+    "resumeId": "r-005",
+    "scenario": "direct_match",
+    "title": "UX/UI Designer",
+    "company": "BrightPath Systems",
+    "seniorityLevel": "mid",
+    "industry": "enterprise SaaS",
+    "description": "We need a UX/UI Designer to apply proven product design experience in enterprise SaaS. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "Figma",
+      "user research",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "prototyping",
+      "design systems",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-022",
+    "resumeId": "r-005",
+    "scenario": "stretch_up",
+    "title": "Senior UX/UI Designer",
+    "company": "Stage One Studios",
+    "seniorityLevel": "senior",
+    "industry": "enterprise SaaS",
+    "description": "We are hiring a Senior UX/UI Designer who can lead projects, mentor teammates, and raise the bar for product design. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "Figma",
+      "user research",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "prototyping",
+      "design systems",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-023",
+    "resumeId": "r-005",
+    "scenario": "adjacent_role",
+    "title": "UX Researcher",
+    "company": "Riverbend Analytics",
+    "seniorityLevel": "mid",
+    "industry": "enterprise SaaS",
+    "description": "This UX Researcher role needs someone who can translate product design strengths into adjacent workflows. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "Figma",
+      "user research",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "prototyping",
+      "design systems",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-024",
+    "resumeId": "r-005",
+    "scenario": "lateral_industry",
+    "title": "UX/UI Designer",
+    "company": "Atlas Grove",
+    "seniorityLevel": "mid",
+    "industry": "health technology",
+    "description": "This UX/UI Designer opening applies similar craft in health technology, with emphasis on domain learning and stakeholder trust. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "Figma",
+      "user research",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "prototyping",
+      "design systems",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-025",
+    "resumeId": "r-005",
+    "scenario": "reach",
+    "title": "Head of Design",
+    "company": "Nimbus Works",
+    "seniorityLevel": "senior",
+    "industry": "enterprise software",
+    "description": "This Head of Design role is a deliberate reach and requires transferable judgment without overstating hands-on experience. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "Figma",
+      "user research",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "prototyping",
+      "design systems",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-026",
+    "resumeId": "r-006",
+    "scenario": "direct_match",
+    "title": "Sales Development Representative",
+    "company": "Copperline Group",
+    "seniorityLevel": "junior",
+    "industry": "SaaS sales",
+    "description": "We need a Sales Development Representative to apply proven sales development experience in SaaS sales. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "cold outreach",
+      "Salesforce",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "discovery",
+      "pipeline management",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-027",
+    "resumeId": "r-006",
+    "scenario": "stretch_up",
+    "title": "Senior Sales Development Representative",
+    "company": "Silverline Apps",
+    "seniorityLevel": "mid",
+    "industry": "SaaS sales",
+    "description": "We are hiring a Senior Sales Development Representative who can lead projects, mentor teammates, and raise the bar for sales development. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "cold outreach",
+      "Salesforce",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "discovery",
+      "pipeline management",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-028",
+    "resumeId": "r-006",
+    "scenario": "adjacent_role",
+    "title": "Customer Success Manager",
+    "company": "BlueOwl Labs",
+    "seniorityLevel": "junior",
+    "industry": "SaaS sales",
+    "description": "This Customer Success Manager role needs someone who can translate sales development strengths into adjacent workflows. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "cold outreach",
+      "Salesforce",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "discovery",
+      "pipeline management",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-029",
+    "resumeId": "r-006",
+    "scenario": "lateral_industry",
+    "title": "Sales Development Representative",
+    "company": "North Harbor Health",
+    "seniorityLevel": "junior",
+    "industry": "health technology",
+    "description": "This Sales Development Representative opening applies similar craft in health technology, with emphasis on domain learning and stakeholder trust. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "cold outreach",
+      "Salesforce",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "discovery",
+      "pipeline management",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-030",
+    "resumeId": "r-006",
+    "scenario": "reach",
+    "title": "Strategic Partnerships Lead",
+    "company": "Cedar Metric",
+    "seniorityLevel": "mid",
+    "industry": "enterprise software",
+    "description": "This Strategic Partnerships Lead role is a deliberate reach and requires transferable judgment without overstating hands-on experience. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "cold outreach",
+      "Salesforce",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "discovery",
+      "pipeline management",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-031",
+    "resumeId": "r-007",
+    "scenario": "direct_match",
+    "title": "Backend Engineer Intern",
+    "company": "BrightPath Systems",
+    "seniorityLevel": "new_grad",
+    "industry": "payments",
+    "description": "We need a Backend Engineer Intern to apply proven backend experience in payments. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "Python",
+      "Java",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "Go",
+      "SQL",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-032",
+    "resumeId": "r-007",
+    "scenario": "stretch_up",
+    "title": "Senior Backend Engineer Intern",
+    "company": "Stage One Studios",
+    "seniorityLevel": "junior",
+    "industry": "payments",
+    "description": "We are hiring a Senior Backend Engineer Intern who can lead projects, mentor teammates, and raise the bar for backend. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "Python",
+      "Java",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "Go",
+      "SQL",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-033",
+    "resumeId": "r-007",
+    "scenario": "adjacent_role",
+    "title": "Full-Stack Engineer",
+    "company": "Riverbend Analytics",
+    "seniorityLevel": "new_grad",
+    "industry": "payments",
+    "description": "This Full-Stack Engineer role needs someone who can translate backend strengths into adjacent workflows. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "Python",
+      "Java",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "Go",
+      "SQL",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-034",
+    "resumeId": "r-007",
+    "scenario": "lateral_industry",
+    "title": "Backend Engineer Intern",
+    "company": "Atlas Grove",
+    "seniorityLevel": "new_grad",
+    "industry": "health technology",
+    "description": "This Backend Engineer Intern opening applies similar craft in health technology, with emphasis on domain learning and stakeholder trust. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "Python",
+      "Java",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "Go",
+      "SQL",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-035",
+    "resumeId": "r-007",
+    "scenario": "reach",
+    "title": "Product Manager, AI Tools",
+    "company": "Nimbus Works",
+    "seniorityLevel": "junior",
+    "industry": "AI productivity",
+    "description": "This Product Manager, AI Tools role is a deliberate reach and requires transferable judgment without overstating hands-on experience. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "Python",
+      "Java",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "Go",
+      "SQL",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-036",
+    "resumeId": "r-008",
+    "scenario": "direct_match",
+    "title": "Financial Analyst",
+    "company": "Copperline Group",
+    "seniorityLevel": "junior",
+    "industry": "corporate finance",
+    "description": "We need a Financial Analyst to apply proven corporate finance experience in corporate finance. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "financial modeling",
+      "Excel",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "PowerPoint",
+      "DCF",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-037",
+    "resumeId": "r-008",
+    "scenario": "stretch_up",
+    "title": "Senior Financial Analyst",
+    "company": "Silverline Apps",
+    "seniorityLevel": "mid",
+    "industry": "corporate finance",
+    "description": "We are hiring a Senior Financial Analyst who can lead projects, mentor teammates, and raise the bar for corporate finance. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "financial modeling",
+      "Excel",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "PowerPoint",
+      "DCF",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-038",
+    "resumeId": "r-008",
+    "scenario": "adjacent_role",
+    "title": "Strategic Finance Analyst",
+    "company": "BlueOwl Labs",
+    "seniorityLevel": "junior",
+    "industry": "corporate finance",
+    "description": "This Strategic Finance Analyst role needs someone who can translate corporate finance strengths into adjacent workflows. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "financial modeling",
+      "Excel",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "PowerPoint",
+      "DCF",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-039",
+    "resumeId": "r-008",
+    "scenario": "lateral_industry",
+    "title": "Financial Analyst",
+    "company": "North Harbor Health",
+    "seniorityLevel": "junior",
+    "industry": "health technology",
+    "description": "This Financial Analyst opening applies similar craft in health technology, with emphasis on domain learning and stakeholder trust. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "financial modeling",
+      "Excel",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "PowerPoint",
+      "DCF",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-040",
+    "resumeId": "r-008",
+    "scenario": "reach",
+    "title": "Corporate Development Associate",
+    "company": "Cedar Metric",
+    "seniorityLevel": "mid",
+    "industry": "enterprise software",
+    "description": "This Corporate Development Associate role is a deliberate reach and requires transferable judgment without overstating hands-on experience. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "financial modeling",
+      "Excel",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "PowerPoint",
+      "DCF",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-041",
+    "resumeId": "r-009",
+    "scenario": "direct_match",
+    "title": "HR Generalist",
+    "company": "BrightPath Systems",
+    "seniorityLevel": "mid",
+    "industry": "technology",
+    "description": "We need a HR Generalist to apply proven hr operations experience in technology. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "HRIS",
+      "employee relations",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "onboarding",
+      "benefits",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-042",
+    "resumeId": "r-009",
+    "scenario": "stretch_up",
+    "title": "Senior HR Generalist",
+    "company": "Stage One Studios",
+    "seniorityLevel": "senior",
+    "industry": "technology",
+    "description": "We are hiring a Senior HR Generalist who can lead projects, mentor teammates, and raise the bar for hr operations. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "HRIS",
+      "employee relations",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "onboarding",
+      "benefits",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-043",
+    "resumeId": "r-009",
+    "scenario": "adjacent_role",
+    "title": "People Operations Manager",
+    "company": "Riverbend Analytics",
+    "seniorityLevel": "mid",
+    "industry": "technology",
+    "description": "This People Operations Manager role needs someone who can translate hr operations strengths into adjacent workflows. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "HRIS",
+      "employee relations",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "onboarding",
+      "benefits",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-044",
+    "resumeId": "r-009",
+    "scenario": "lateral_industry",
+    "title": "HR Generalist",
+    "company": "Atlas Grove",
+    "seniorityLevel": "mid",
+    "industry": "health technology",
+    "description": "This HR Generalist opening applies similar craft in health technology, with emphasis on domain learning and stakeholder trust. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "HRIS",
+      "employee relations",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "onboarding",
+      "benefits",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-045",
+    "resumeId": "r-009",
+    "scenario": "reach",
+    "title": "Director, People Strategy",
+    "company": "Nimbus Works",
+    "seniorityLevel": "senior",
+    "industry": "enterprise software",
+    "description": "This Director, People Strategy role is a deliberate reach and requires transferable judgment without overstating hands-on experience. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "HRIS",
+      "employee relations",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "onboarding",
+      "benefits",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-046",
+    "resumeId": "r-010",
+    "scenario": "direct_match",
+    "title": "DevOps Engineer",
+    "company": "Copperline Group",
+    "seniorityLevel": "mid",
+    "industry": "cloud platforms",
+    "description": "We need a DevOps Engineer to apply proven devops experience in cloud platforms. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "AWS",
+      "Terraform",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "Docker",
+      "Kubernetes",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-047",
+    "resumeId": "r-010",
+    "scenario": "stretch_up",
+    "title": "Senior DevOps Engineer",
+    "company": "Silverline Apps",
+    "seniorityLevel": "senior",
+    "industry": "cloud platforms",
+    "description": "We are hiring a Senior DevOps Engineer who can lead projects, mentor teammates, and raise the bar for devops. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "AWS",
+      "Terraform",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "Docker",
+      "Kubernetes",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-048",
+    "resumeId": "r-010",
+    "scenario": "adjacent_role",
+    "title": "Full-Stack Engineer",
+    "company": "BlueOwl Labs",
+    "seniorityLevel": "mid",
+    "industry": "cloud platforms",
+    "description": "This Full-Stack Engineer role needs someone who can translate devops strengths into adjacent workflows. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "AWS",
+      "Terraform",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "Docker",
+      "Kubernetes",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-049",
+    "resumeId": "r-010",
+    "scenario": "lateral_industry",
+    "title": "DevOps Engineer",
+    "company": "North Harbor Health",
+    "seniorityLevel": "mid",
+    "industry": "health technology",
+    "description": "This DevOps Engineer opening applies similar craft in health technology, with emphasis on domain learning and stakeholder trust. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "AWS",
+      "Terraform",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "Docker",
+      "Kubernetes",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-050",
+    "resumeId": "r-010",
+    "scenario": "reach",
+    "title": "Product Manager, AI Tools",
+    "company": "Cedar Metric",
+    "seniorityLevel": "senior",
+    "industry": "AI productivity",
+    "description": "This Product Manager, AI Tools role is a deliberate reach and requires transferable judgment without overstating hands-on experience. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "AWS",
+      "Terraform",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "Docker",
+      "Kubernetes",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-051",
+    "resumeId": "r-011",
+    "scenario": "direct_match",
+    "title": "Senior Mobile Engineer",
+    "company": "BrightPath Systems",
+    "seniorityLevel": "senior",
+    "industry": "health technology",
+    "description": "We need a Senior Mobile Engineer to apply proven mobile experience in health technology. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "Swift",
+      "Kotlin",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "React Native",
+      "offline sync",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-052",
+    "resumeId": "r-011",
+    "scenario": "stretch_up",
+    "title": "Senior Mobile Engineer",
+    "company": "Stage One Studios",
+    "seniorityLevel": "principal",
+    "industry": "health technology",
+    "description": "We are hiring a Senior Mobile Engineer who can lead projects, mentor teammates, and raise the bar for mobile. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "Swift",
+      "Kotlin",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "React Native",
+      "offline sync",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-053",
+    "resumeId": "r-011",
+    "scenario": "adjacent_role",
+    "title": "Full-Stack Engineer",
+    "company": "Riverbend Analytics",
+    "seniorityLevel": "senior",
+    "industry": "health technology",
+    "description": "This Full-Stack Engineer role needs someone who can translate mobile strengths into adjacent workflows. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "Swift",
+      "Kotlin",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "React Native",
+      "offline sync",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-054",
+    "resumeId": "r-011",
+    "scenario": "lateral_industry",
+    "title": "Senior Mobile Engineer",
+    "company": "Atlas Grove",
+    "seniorityLevel": "senior",
+    "industry": "financial services",
+    "description": "This Senior Mobile Engineer opening applies similar craft in financial services, with emphasis on domain learning and stakeholder trust. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "Swift",
+      "Kotlin",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "React Native",
+      "offline sync",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-055",
+    "resumeId": "r-011",
+    "scenario": "reach",
+    "title": "Product Manager, AI Tools",
+    "company": "Nimbus Works",
+    "seniorityLevel": "principal",
+    "industry": "AI productivity",
+    "description": "This Product Manager, AI Tools role is a deliberate reach and requires transferable judgment without overstating hands-on experience. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "Swift",
+      "Kotlin",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "React Native",
+      "offline sync",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-056",
+    "resumeId": "r-012",
+    "scenario": "direct_match",
+    "title": "Machine Learning Engineer",
+    "company": "Copperline Group",
+    "seniorityLevel": "senior",
+    "industry": "marketplace",
+    "description": "We need a Machine Learning Engineer to apply proven machine learning experience in marketplace. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "Python",
+      "PyTorch",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "feature stores",
+      "model monitoring",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-057",
+    "resumeId": "r-012",
+    "scenario": "stretch_up",
+    "title": "Senior Machine Learning Engineer",
+    "company": "Silverline Apps",
+    "seniorityLevel": "principal",
+    "industry": "marketplace",
+    "description": "We are hiring a Senior Machine Learning Engineer who can lead projects, mentor teammates, and raise the bar for machine learning. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "Python",
+      "PyTorch",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "feature stores",
+      "model monitoring",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-058",
+    "resumeId": "r-012",
+    "scenario": "adjacent_role",
+    "title": "Full-Stack Engineer",
+    "company": "BlueOwl Labs",
+    "seniorityLevel": "senior",
+    "industry": "marketplace",
+    "description": "This Full-Stack Engineer role needs someone who can translate machine learning strengths into adjacent workflows. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "Python",
+      "PyTorch",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "feature stores",
+      "model monitoring",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-059",
+    "resumeId": "r-012",
+    "scenario": "lateral_industry",
+    "title": "Machine Learning Engineer",
+    "company": "North Harbor Health",
+    "seniorityLevel": "senior",
+    "industry": "health technology",
+    "description": "This Machine Learning Engineer opening applies similar craft in health technology, with emphasis on domain learning and stakeholder trust. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "Python",
+      "PyTorch",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "feature stores",
+      "model monitoring",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-060",
+    "resumeId": "r-012",
+    "scenario": "reach",
+    "title": "Product Manager, AI Tools",
+    "company": "Cedar Metric",
+    "seniorityLevel": "principal",
+    "industry": "AI productivity",
+    "description": "This Product Manager, AI Tools role is a deliberate reach and requires transferable judgment without overstating hands-on experience. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "Python",
+      "PyTorch",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "feature stores",
+      "model monitoring",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-061",
+    "resumeId": "r-013",
+    "scenario": "direct_match",
+    "title": "Security Engineer",
+    "company": "BrightPath Systems",
+    "seniorityLevel": "senior",
+    "industry": "fintech",
+    "description": "We need a Security Engineer to apply proven security experience in fintech. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "threat modeling",
+      "appsec",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "SAST",
+      "incident response",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-062",
+    "resumeId": "r-013",
+    "scenario": "stretch_up",
+    "title": "Senior Security Engineer",
+    "company": "Stage One Studios",
+    "seniorityLevel": "principal",
+    "industry": "fintech",
+    "description": "We are hiring a Senior Security Engineer who can lead projects, mentor teammates, and raise the bar for security. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "threat modeling",
+      "appsec",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "SAST",
+      "incident response",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-063",
+    "resumeId": "r-013",
+    "scenario": "adjacent_role",
+    "title": "Full-Stack Engineer",
+    "company": "Riverbend Analytics",
+    "seniorityLevel": "senior",
+    "industry": "fintech",
+    "description": "This Full-Stack Engineer role needs someone who can translate security strengths into adjacent workflows. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "threat modeling",
+      "appsec",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "SAST",
+      "incident response",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-064",
+    "resumeId": "r-013",
+    "scenario": "lateral_industry",
+    "title": "Security Engineer",
+    "company": "Atlas Grove",
+    "seniorityLevel": "senior",
+    "industry": "health technology",
+    "description": "This Security Engineer opening applies similar craft in health technology, with emphasis on domain learning and stakeholder trust. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "threat modeling",
+      "appsec",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "SAST",
+      "incident response",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-065",
+    "resumeId": "r-013",
+    "scenario": "reach",
+    "title": "Product Manager, AI Tools",
+    "company": "Nimbus Works",
+    "seniorityLevel": "principal",
+    "industry": "AI productivity",
+    "description": "This Product Manager, AI Tools role is a deliberate reach and requires transferable judgment without overstating hands-on experience. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "threat modeling",
+      "appsec",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "SAST",
+      "incident response",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-066",
+    "resumeId": "r-014",
+    "scenario": "direct_match",
+    "title": "Staff Platform Engineer",
+    "company": "Copperline Group",
+    "seniorityLevel": "principal",
+    "industry": "developer tools",
+    "description": "We need a Staff Platform Engineer to apply proven platform experience in developer tools. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "distributed systems",
+      "Kubernetes",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "Go",
+      "service mesh",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-067",
+    "resumeId": "r-014",
+    "scenario": "stretch_up",
+    "title": "Executive Platform Engineer",
+    "company": "Silverline Apps",
+    "seniorityLevel": "principal",
+    "industry": "developer tools",
+    "description": "We are hiring a Executive Platform Engineer who can lead projects, mentor teammates, and raise the bar for platform. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "distributed systems",
+      "Kubernetes",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "Go",
+      "service mesh",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-068",
+    "resumeId": "r-014",
+    "scenario": "adjacent_role",
+    "title": "Full-Stack Engineer",
+    "company": "BlueOwl Labs",
+    "seniorityLevel": "principal",
+    "industry": "developer tools",
+    "description": "This Full-Stack Engineer role needs someone who can translate platform strengths into adjacent workflows. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "distributed systems",
+      "Kubernetes",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "Go",
+      "service mesh",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-069",
+    "resumeId": "r-014",
+    "scenario": "lateral_industry",
+    "title": "Staff Platform Engineer",
+    "company": "North Harbor Health",
+    "seniorityLevel": "principal",
+    "industry": "health technology",
+    "description": "This Staff Platform Engineer opening applies similar craft in health technology, with emphasis on domain learning and stakeholder trust. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "distributed systems",
+      "Kubernetes",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "Go",
+      "service mesh",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-070",
+    "resumeId": "r-014",
+    "scenario": "reach",
+    "title": "Product Manager, AI Tools",
+    "company": "Cedar Metric",
+    "seniorityLevel": "principal",
+    "industry": "AI productivity",
+    "description": "This Product Manager, AI Tools role is a deliberate reach and requires transferable judgment without overstating hands-on experience. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "distributed systems",
+      "Kubernetes",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "Go",
+      "service mesh",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-071",
+    "resumeId": "r-015",
+    "scenario": "direct_match",
+    "title": "Senior Data Engineer",
+    "company": "BrightPath Systems",
+    "seniorityLevel": "senior",
+    "industry": "media analytics",
+    "description": "We need a Senior Data Engineer to apply proven data engineering experience in media analytics. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "dbt",
+      "Airflow",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "Spark",
+      "Snowflake",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-072",
+    "resumeId": "r-015",
+    "scenario": "stretch_up",
+    "title": "Senior Data Engineer",
+    "company": "Stage One Studios",
+    "seniorityLevel": "principal",
+    "industry": "media analytics",
+    "description": "We are hiring a Senior Data Engineer who can lead projects, mentor teammates, and raise the bar for data engineering. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "dbt",
+      "Airflow",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "Spark",
+      "Snowflake",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-073",
+    "resumeId": "r-015",
+    "scenario": "adjacent_role",
+    "title": "Analytics Engineer",
+    "company": "Riverbend Analytics",
+    "seniorityLevel": "senior",
+    "industry": "media analytics",
+    "description": "This Analytics Engineer role needs someone who can translate data engineering strengths into adjacent workflows. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "dbt",
+      "Airflow",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "Spark",
+      "Snowflake",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-074",
+    "resumeId": "r-015",
+    "scenario": "lateral_industry",
+    "title": "Senior Data Engineer",
+    "company": "Atlas Grove",
+    "seniorityLevel": "senior",
+    "industry": "health technology",
+    "description": "This Senior Data Engineer opening applies similar craft in health technology, with emphasis on domain learning and stakeholder trust. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "dbt",
+      "Airflow",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "Spark",
+      "Snowflake",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-075",
+    "resumeId": "r-015",
+    "scenario": "reach",
+    "title": "Machine Learning Product Manager",
+    "company": "Nimbus Works",
+    "seniorityLevel": "principal",
+    "industry": "enterprise software",
+    "description": "This Machine Learning Product Manager role is a deliberate reach and requires transferable judgment without overstating hands-on experience. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "dbt",
+      "Airflow",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "Spark",
+      "Snowflake",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-076",
+    "resumeId": "r-016",
+    "scenario": "direct_match",
+    "title": "Data Scientist",
+    "company": "Copperline Group",
+    "seniorityLevel": "senior",
+    "industry": "logistics",
+    "description": "We need a Data Scientist to apply proven data science experience in logistics. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "Python",
+      "scikit-learn",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "forecasting",
+      "causal inference",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-077",
+    "resumeId": "r-016",
+    "scenario": "stretch_up",
+    "title": "Senior Data Scientist",
+    "company": "Silverline Apps",
+    "seniorityLevel": "principal",
+    "industry": "logistics",
+    "description": "We are hiring a Senior Data Scientist who can lead projects, mentor teammates, and raise the bar for data science. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "Python",
+      "scikit-learn",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "forecasting",
+      "causal inference",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-078",
+    "resumeId": "r-016",
+    "scenario": "adjacent_role",
+    "title": "Analytics Engineer",
+    "company": "BlueOwl Labs",
+    "seniorityLevel": "senior",
+    "industry": "logistics",
+    "description": "This Analytics Engineer role needs someone who can translate data science strengths into adjacent workflows. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "Python",
+      "scikit-learn",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "forecasting",
+      "causal inference",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-079",
+    "resumeId": "r-016",
+    "scenario": "lateral_industry",
+    "title": "Data Scientist",
+    "company": "North Harbor Health",
+    "seniorityLevel": "senior",
+    "industry": "health technology",
+    "description": "This Data Scientist opening applies similar craft in health technology, with emphasis on domain learning and stakeholder trust. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "Python",
+      "scikit-learn",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "forecasting",
+      "causal inference",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-080",
+    "resumeId": "r-016",
+    "scenario": "reach",
+    "title": "Machine Learning Product Manager",
+    "company": "Cedar Metric",
+    "seniorityLevel": "principal",
+    "industry": "enterprise software",
+    "description": "This Machine Learning Product Manager role is a deliberate reach and requires transferable judgment without overstating hands-on experience. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "Python",
+      "scikit-learn",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "forecasting",
+      "causal inference",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-081",
+    "resumeId": "r-017",
+    "scenario": "direct_match",
+    "title": "BI Analyst",
+    "company": "BrightPath Systems",
+    "seniorityLevel": "junior",
+    "industry": "hospitality",
+    "description": "We need a BI Analyst to apply proven business intelligence experience in hospitality. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "SQL",
+      "Looker",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "Excel",
+      "dashboard design",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-082",
+    "resumeId": "r-017",
+    "scenario": "stretch_up",
+    "title": "Senior BI Analyst",
+    "company": "Stage One Studios",
+    "seniorityLevel": "mid",
+    "industry": "hospitality",
+    "description": "We are hiring a Senior BI Analyst who can lead projects, mentor teammates, and raise the bar for business intelligence. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "SQL",
+      "Looker",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "Excel",
+      "dashboard design",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-083",
+    "resumeId": "r-017",
+    "scenario": "adjacent_role",
+    "title": "Analytics Engineer",
+    "company": "Riverbend Analytics",
+    "seniorityLevel": "junior",
+    "industry": "hospitality",
+    "description": "This Analytics Engineer role needs someone who can translate business intelligence strengths into adjacent workflows. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "SQL",
+      "Looker",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "Excel",
+      "dashboard design",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-084",
+    "resumeId": "r-017",
+    "scenario": "lateral_industry",
+    "title": "BI Analyst",
+    "company": "Atlas Grove",
+    "seniorityLevel": "junior",
+    "industry": "health technology",
+    "description": "This BI Analyst opening applies similar craft in health technology, with emphasis on domain learning and stakeholder trust. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "SQL",
+      "Looker",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "Excel",
+      "dashboard design",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-085",
+    "resumeId": "r-017",
+    "scenario": "reach",
+    "title": "Machine Learning Product Manager",
+    "company": "Nimbus Works",
+    "seniorityLevel": "mid",
+    "industry": "enterprise software",
+    "description": "This Machine Learning Product Manager role is a deliberate reach and requires transferable judgment without overstating hands-on experience. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "SQL",
+      "Looker",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "Excel",
+      "dashboard design",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-086",
+    "resumeId": "r-018",
+    "scenario": "direct_match",
+    "title": "Analytics Engineer",
+    "company": "Copperline Group",
+    "seniorityLevel": "mid",
+    "industry": "subscription SaaS",
+    "description": "We need a Analytics Engineer to apply proven analytics engineering experience in subscription SaaS. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "SQL",
+      "dbt",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "Snowflake",
+      "Looker",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-087",
+    "resumeId": "r-018",
+    "scenario": "stretch_up",
+    "title": "Senior Analytics Engineer",
+    "company": "Silverline Apps",
+    "seniorityLevel": "senior",
+    "industry": "subscription SaaS",
+    "description": "We are hiring a Senior Analytics Engineer who can lead projects, mentor teammates, and raise the bar for analytics engineering. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "SQL",
+      "dbt",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "Snowflake",
+      "Looker",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-088",
+    "resumeId": "r-018",
+    "scenario": "adjacent_role",
+    "title": "Analytics Engineer",
+    "company": "BlueOwl Labs",
+    "seniorityLevel": "mid",
+    "industry": "subscription SaaS",
+    "description": "This Analytics Engineer role needs someone who can translate analytics engineering strengths into adjacent workflows. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "SQL",
+      "dbt",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "Snowflake",
+      "Looker",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-089",
+    "resumeId": "r-018",
+    "scenario": "lateral_industry",
+    "title": "Analytics Engineer",
+    "company": "North Harbor Health",
+    "seniorityLevel": "mid",
+    "industry": "health technology",
+    "description": "This Analytics Engineer opening applies similar craft in health technology, with emphasis on domain learning and stakeholder trust. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "SQL",
+      "dbt",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "Snowflake",
+      "Looker",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-090",
+    "resumeId": "r-018",
+    "scenario": "reach",
+    "title": "Machine Learning Product Manager",
+    "company": "Cedar Metric",
+    "seniorityLevel": "senior",
+    "industry": "enterprise software",
+    "description": "This Machine Learning Product Manager role is a deliberate reach and requires transferable judgment without overstating hands-on experience. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "SQL",
+      "dbt",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "Snowflake",
+      "Looker",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-091",
+    "resumeId": "r-019",
+    "scenario": "direct_match",
+    "title": "Principal Research Analyst",
+    "company": "BrightPath Systems",
+    "seniorityLevel": "principal",
+    "industry": "public policy",
+    "description": "We need a Principal Research Analyst to apply proven research analytics experience in public policy. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "survey methods",
+      "R",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "SQL",
+      "causal analysis",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-092",
+    "resumeId": "r-019",
+    "scenario": "stretch_up",
+    "title": "Executive Research Analyst",
+    "company": "Stage One Studios",
+    "seniorityLevel": "principal",
+    "industry": "public policy",
+    "description": "We are hiring a Executive Research Analyst who can lead projects, mentor teammates, and raise the bar for research analytics. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "survey methods",
+      "R",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "SQL",
+      "causal analysis",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-093",
+    "resumeId": "r-019",
+    "scenario": "adjacent_role",
+    "title": "Analytics Engineer",
+    "company": "Riverbend Analytics",
+    "seniorityLevel": "principal",
+    "industry": "public policy",
+    "description": "This Analytics Engineer role needs someone who can translate research analytics strengths into adjacent workflows. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "survey methods",
+      "R",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "SQL",
+      "causal analysis",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-094",
+    "resumeId": "r-019",
+    "scenario": "lateral_industry",
+    "title": "Principal Research Analyst",
+    "company": "Atlas Grove",
+    "seniorityLevel": "principal",
+    "industry": "health technology",
+    "description": "This Principal Research Analyst opening applies similar craft in health technology, with emphasis on domain learning and stakeholder trust. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "survey methods",
+      "R",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "SQL",
+      "causal analysis",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-095",
+    "resumeId": "r-019",
+    "scenario": "reach",
+    "title": "Machine Learning Product Manager",
+    "company": "Nimbus Works",
+    "seniorityLevel": "principal",
+    "industry": "enterprise software",
+    "description": "This Machine Learning Product Manager role is a deliberate reach and requires transferable judgment without overstating hands-on experience. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "survey methods",
+      "R",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "SQL",
+      "causal analysis",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-096",
+    "resumeId": "r-020",
+    "scenario": "direct_match",
+    "title": "Senior Technical Product Manager",
+    "company": "Copperline Group",
+    "seniorityLevel": "senior",
+    "industry": "API platforms",
+    "description": "We need a Senior Technical Product Manager to apply proven technical product experience in API platforms. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "API strategy",
+      "roadmapping",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "developer research",
+      "analytics",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-097",
+    "resumeId": "r-020",
+    "scenario": "stretch_up",
+    "title": "Senior Technical Product Manager",
+    "company": "Silverline Apps",
+    "seniorityLevel": "principal",
+    "industry": "API platforms",
+    "description": "We are hiring a Senior Technical Product Manager who can lead projects, mentor teammates, and raise the bar for technical product. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "API strategy",
+      "roadmapping",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "developer research",
+      "analytics",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-098",
+    "resumeId": "r-020",
+    "scenario": "adjacent_role",
+    "title": "Product Operations Manager",
+    "company": "BlueOwl Labs",
+    "seniorityLevel": "senior",
+    "industry": "API platforms",
+    "description": "This Product Operations Manager role needs someone who can translate technical product strengths into adjacent workflows. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "API strategy",
+      "roadmapping",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "developer research",
+      "analytics",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-099",
+    "resumeId": "r-020",
+    "scenario": "lateral_industry",
+    "title": "Senior Technical Product Manager",
+    "company": "North Harbor Health",
+    "seniorityLevel": "senior",
+    "industry": "health technology",
+    "description": "This Senior Technical Product Manager opening applies similar craft in health technology, with emphasis on domain learning and stakeholder trust. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "API strategy",
+      "roadmapping",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "developer research",
+      "analytics",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-100",
+    "resumeId": "r-020",
+    "scenario": "reach",
+    "title": "General Manager",
+    "company": "Cedar Metric",
+    "seniorityLevel": "principal",
+    "industry": "enterprise software",
+    "description": "This General Manager role is a deliberate reach and requires transferable judgment without overstating hands-on experience. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "API strategy",
+      "roadmapping",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "developer research",
+      "analytics",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-101",
+    "resumeId": "r-021",
+    "scenario": "direct_match",
+    "title": "Director of Product",
+    "company": "BrightPath Systems",
+    "seniorityLevel": "principal",
+    "industry": "workflow automation",
+    "description": "We need a Director of Product to apply proven platform product experience in workflow automation. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "portfolio strategy",
+      "pricing",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "roadmaps",
+      "team leadership",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-102",
+    "resumeId": "r-021",
+    "scenario": "stretch_up",
+    "title": "Executive Director of Product",
+    "company": "Stage One Studios",
+    "seniorityLevel": "principal",
+    "industry": "workflow automation",
+    "description": "We are hiring a Executive Director of Product who can lead projects, mentor teammates, and raise the bar for platform product. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "portfolio strategy",
+      "pricing",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "roadmaps",
+      "team leadership",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-103",
+    "resumeId": "r-021",
+    "scenario": "adjacent_role",
+    "title": "Product Operations Manager",
+    "company": "Riverbend Analytics",
+    "seniorityLevel": "principal",
+    "industry": "workflow automation",
+    "description": "This Product Operations Manager role needs someone who can translate platform product strengths into adjacent workflows. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "portfolio strategy",
+      "pricing",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "roadmaps",
+      "team leadership",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-104",
+    "resumeId": "r-021",
+    "scenario": "lateral_industry",
+    "title": "Director of Product",
+    "company": "Atlas Grove",
+    "seniorityLevel": "principal",
+    "industry": "health technology",
+    "description": "This Director of Product opening applies similar craft in health technology, with emphasis on domain learning and stakeholder trust. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "portfolio strategy",
+      "pricing",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "roadmaps",
+      "team leadership",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-105",
+    "resumeId": "r-021",
+    "scenario": "reach",
+    "title": "General Manager",
+    "company": "Nimbus Works",
+    "seniorityLevel": "principal",
+    "industry": "enterprise software",
+    "description": "This General Manager role is a deliberate reach and requires transferable judgment without overstating hands-on experience. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "portfolio strategy",
+      "pricing",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "roadmaps",
+      "team leadership",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-106",
+    "resumeId": "r-022",
+    "scenario": "direct_match",
+    "title": "Associate Product Manager",
+    "company": "Copperline Group",
+    "seniorityLevel": "junior",
+    "industry": "education software",
+    "description": "We need a Associate Product Manager to apply proven associate product experience in education software. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "user stories",
+      "analytics",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "QA",
+      "customer interviews",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-107",
+    "resumeId": "r-022",
+    "scenario": "stretch_up",
+    "title": "Senior Associate Product Manager",
+    "company": "Silverline Apps",
+    "seniorityLevel": "mid",
+    "industry": "education software",
+    "description": "We are hiring a Senior Associate Product Manager who can lead projects, mentor teammates, and raise the bar for associate product. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "user stories",
+      "analytics",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "QA",
+      "customer interviews",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-108",
+    "resumeId": "r-022",
+    "scenario": "adjacent_role",
+    "title": "Product Operations Manager",
+    "company": "BlueOwl Labs",
+    "seniorityLevel": "junior",
+    "industry": "education software",
+    "description": "This Product Operations Manager role needs someone who can translate associate product strengths into adjacent workflows. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "user stories",
+      "analytics",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "QA",
+      "customer interviews",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-109",
+    "resumeId": "r-022",
+    "scenario": "lateral_industry",
+    "title": "Associate Product Manager",
+    "company": "North Harbor Health",
+    "seniorityLevel": "junior",
+    "industry": "health technology",
+    "description": "This Associate Product Manager opening applies similar craft in health technology, with emphasis on domain learning and stakeholder trust. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "user stories",
+      "analytics",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "QA",
+      "customer interviews",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-110",
+    "resumeId": "r-022",
+    "scenario": "reach",
+    "title": "General Manager",
+    "company": "Cedar Metric",
+    "seniorityLevel": "mid",
+    "industry": "enterprise software",
+    "description": "This General Manager role is a deliberate reach and requires transferable judgment without overstating hands-on experience. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "user stories",
+      "analytics",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "QA",
+      "customer interviews",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-111",
+    "resumeId": "r-023",
+    "scenario": "direct_match",
+    "title": "Brand Designer",
+    "company": "BrightPath Systems",
+    "seniorityLevel": "junior",
+    "industry": "direct-to-consumer",
+    "description": "We need a Brand Designer to apply proven brand design experience in direct-to-consumer. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "Adobe Creative Suite",
+      "Figma",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "campaign design",
+      "motion basics",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-112",
+    "resumeId": "r-023",
+    "scenario": "stretch_up",
+    "title": "Senior Brand Designer",
+    "company": "Stage One Studios",
+    "seniorityLevel": "mid",
+    "industry": "direct-to-consumer",
+    "description": "We are hiring a Senior Brand Designer who can lead projects, mentor teammates, and raise the bar for brand design. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "Adobe Creative Suite",
+      "Figma",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "campaign design",
+      "motion basics",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-113",
+    "resumeId": "r-023",
+    "scenario": "adjacent_role",
+    "title": "UX Researcher",
+    "company": "Riverbend Analytics",
+    "seniorityLevel": "junior",
+    "industry": "direct-to-consumer",
+    "description": "This UX Researcher role needs someone who can translate brand design strengths into adjacent workflows. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "Adobe Creative Suite",
+      "Figma",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "campaign design",
+      "motion basics",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-114",
+    "resumeId": "r-023",
+    "scenario": "lateral_industry",
+    "title": "Brand Designer",
+    "company": "Atlas Grove",
+    "seniorityLevel": "junior",
+    "industry": "health technology",
+    "description": "This Brand Designer opening applies similar craft in health technology, with emphasis on domain learning and stakeholder trust. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "Adobe Creative Suite",
+      "Figma",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "campaign design",
+      "motion basics",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-115",
+    "resumeId": "r-023",
+    "scenario": "reach",
+    "title": "Head of Design",
+    "company": "Nimbus Works",
+    "seniorityLevel": "mid",
+    "industry": "enterprise software",
+    "description": "This Head of Design role is a deliberate reach and requires transferable judgment without overstating hands-on experience. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "Adobe Creative Suite",
+      "Figma",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "campaign design",
+      "motion basics",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-116",
+    "resumeId": "r-024",
+    "scenario": "direct_match",
+    "title": "Senior Service Designer",
+    "company": "Copperline Group",
+    "seniorityLevel": "senior",
+    "industry": "public services",
+    "description": "We need a Senior Service Designer to apply proven service design experience in public services. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "journey mapping",
+      "facilitation",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "research synthesis",
+      "prototyping",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-117",
+    "resumeId": "r-024",
+    "scenario": "stretch_up",
+    "title": "Senior Service Designer",
+    "company": "Silverline Apps",
+    "seniorityLevel": "principal",
+    "industry": "public services",
+    "description": "We are hiring a Senior Service Designer who can lead projects, mentor teammates, and raise the bar for service design. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "journey mapping",
+      "facilitation",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "research synthesis",
+      "prototyping",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-118",
+    "resumeId": "r-024",
+    "scenario": "adjacent_role",
+    "title": "UX Researcher",
+    "company": "BlueOwl Labs",
+    "seniorityLevel": "senior",
+    "industry": "public services",
+    "description": "This UX Researcher role needs someone who can translate service design strengths into adjacent workflows. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "journey mapping",
+      "facilitation",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "research synthesis",
+      "prototyping",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-119",
+    "resumeId": "r-024",
+    "scenario": "lateral_industry",
+    "title": "Senior Service Designer",
+    "company": "North Harbor Health",
+    "seniorityLevel": "senior",
+    "industry": "health technology",
+    "description": "This Senior Service Designer opening applies similar craft in health technology, with emphasis on domain learning and stakeholder trust. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "journey mapping",
+      "facilitation",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "research synthesis",
+      "prototyping",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-120",
+    "resumeId": "r-024",
+    "scenario": "reach",
+    "title": "Head of Design",
+    "company": "Cedar Metric",
+    "seniorityLevel": "principal",
+    "industry": "enterprise software",
+    "description": "This Head of Design role is a deliberate reach and requires transferable judgment without overstating hands-on experience. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "journey mapping",
+      "facilitation",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "research synthesis",
+      "prototyping",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-121",
+    "resumeId": "r-025",
+    "scenario": "direct_match",
+    "title": "Lead Product Designer",
+    "company": "BrightPath Systems",
+    "seniorityLevel": "principal",
+    "industry": "financial software",
+    "description": "We need a Lead Product Designer to apply proven design systems experience in financial software. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "design systems",
+      "Figma libraries",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "tokens",
+      "accessibility",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-122",
+    "resumeId": "r-025",
+    "scenario": "stretch_up",
+    "title": "Executive Product Designer",
+    "company": "Stage One Studios",
+    "seniorityLevel": "principal",
+    "industry": "financial software",
+    "description": "We are hiring a Executive Product Designer who can lead projects, mentor teammates, and raise the bar for design systems. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "design systems",
+      "Figma libraries",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "tokens",
+      "accessibility",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-123",
+    "resumeId": "r-025",
+    "scenario": "adjacent_role",
+    "title": "UX Researcher",
+    "company": "Riverbend Analytics",
+    "seniorityLevel": "principal",
+    "industry": "financial software",
+    "description": "This UX Researcher role needs someone who can translate design systems strengths into adjacent workflows. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "design systems",
+      "Figma libraries",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "tokens",
+      "accessibility",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-124",
+    "resumeId": "r-025",
+    "scenario": "lateral_industry",
+    "title": "Lead Product Designer",
+    "company": "Atlas Grove",
+    "seniorityLevel": "principal",
+    "industry": "health technology",
+    "description": "This Lead Product Designer opening applies similar craft in health technology, with emphasis on domain learning and stakeholder trust. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "design systems",
+      "Figma libraries",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "tokens",
+      "accessibility",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-125",
+    "resumeId": "r-025",
+    "scenario": "reach",
+    "title": "Head of Design",
+    "company": "Nimbus Works",
+    "seniorityLevel": "principal",
+    "industry": "enterprise software",
+    "description": "This Head of Design role is a deliberate reach and requires transferable judgment without overstating hands-on experience. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "design systems",
+      "Figma libraries",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "tokens",
+      "accessibility",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-126",
+    "resumeId": "r-026",
+    "scenario": "direct_match",
+    "title": "Content Marketing Coordinator",
+    "company": "Copperline Group",
+    "seniorityLevel": "junior",
+    "industry": "HR technology",
+    "description": "We need a Content Marketing Coordinator to apply proven content marketing experience in HR technology. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "copywriting",
+      "SEO",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "CMS",
+      "email marketing",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-127",
+    "resumeId": "r-026",
+    "scenario": "stretch_up",
+    "title": "Senior Content Marketing Coordinator",
+    "company": "Silverline Apps",
+    "seniorityLevel": "mid",
+    "industry": "HR technology",
+    "description": "We are hiring a Senior Content Marketing Coordinator who can lead projects, mentor teammates, and raise the bar for content marketing. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "copywriting",
+      "SEO",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "CMS",
+      "email marketing",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-128",
+    "resumeId": "r-026",
+    "scenario": "adjacent_role",
+    "title": "Product Marketing Manager",
+    "company": "BlueOwl Labs",
+    "seniorityLevel": "junior",
+    "industry": "HR technology",
+    "description": "This Product Marketing Manager role needs someone who can translate content marketing strengths into adjacent workflows. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "copywriting",
+      "SEO",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "CMS",
+      "email marketing",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-129",
+    "resumeId": "r-026",
+    "scenario": "lateral_industry",
+    "title": "Content Marketing Coordinator",
+    "company": "North Harbor Health",
+    "seniorityLevel": "junior",
+    "industry": "health technology",
+    "description": "This Content Marketing Coordinator opening applies similar craft in health technology, with emphasis on domain learning and stakeholder trust. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "copywriting",
+      "SEO",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "CMS",
+      "email marketing",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-130",
+    "resumeId": "r-026",
+    "scenario": "reach",
+    "title": "Revenue Operations Director",
+    "company": "Cedar Metric",
+    "seniorityLevel": "mid",
+    "industry": "enterprise software",
+    "description": "This Revenue Operations Director role is a deliberate reach and requires transferable judgment without overstating hands-on experience. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "copywriting",
+      "SEO",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "CMS",
+      "email marketing",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-131",
+    "resumeId": "r-027",
+    "scenario": "direct_match",
+    "title": "Senior Growth Marketing Manager",
+    "company": "BrightPath Systems",
+    "seniorityLevel": "senior",
+    "industry": "consumer subscriptions",
+    "description": "We need a Senior Growth Marketing Manager to apply proven growth marketing experience in consumer subscriptions. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "paid social",
+      "lifecycle marketing",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "experimentation",
+      "SQL",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-132",
+    "resumeId": "r-027",
+    "scenario": "stretch_up",
+    "title": "Senior Growth Marketing Manager",
+    "company": "Stage One Studios",
+    "seniorityLevel": "principal",
+    "industry": "consumer subscriptions",
+    "description": "We are hiring a Senior Growth Marketing Manager who can lead projects, mentor teammates, and raise the bar for growth marketing. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "paid social",
+      "lifecycle marketing",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "experimentation",
+      "SQL",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-133",
+    "resumeId": "r-027",
+    "scenario": "adjacent_role",
+    "title": "Product Marketing Manager",
+    "company": "Riverbend Analytics",
+    "seniorityLevel": "senior",
+    "industry": "consumer subscriptions",
+    "description": "This Product Marketing Manager role needs someone who can translate growth marketing strengths into adjacent workflows. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "paid social",
+      "lifecycle marketing",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "experimentation",
+      "SQL",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-134",
+    "resumeId": "r-027",
+    "scenario": "lateral_industry",
+    "title": "Senior Growth Marketing Manager",
+    "company": "Atlas Grove",
+    "seniorityLevel": "senior",
+    "industry": "health technology",
+    "description": "This Senior Growth Marketing Manager opening applies similar craft in health technology, with emphasis on domain learning and stakeholder trust. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "paid social",
+      "lifecycle marketing",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "experimentation",
+      "SQL",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-135",
+    "resumeId": "r-027",
+    "scenario": "reach",
+    "title": "Revenue Operations Director",
+    "company": "Nimbus Works",
+    "seniorityLevel": "principal",
+    "industry": "enterprise software",
+    "description": "This Revenue Operations Director role is a deliberate reach and requires transferable judgment without overstating hands-on experience. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "paid social",
+      "lifecycle marketing",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "experimentation",
+      "SQL",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-136",
+    "resumeId": "r-028",
+    "scenario": "direct_match",
+    "title": "Product Marketing Lead",
+    "company": "Copperline Group",
+    "seniorityLevel": "senior",
+    "industry": "cybersecurity",
+    "description": "We need a Product Marketing Lead to apply proven product marketing experience in cybersecurity. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "positioning",
+      "sales enablement",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "launch planning",
+      "competitive research",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-137",
+    "resumeId": "r-028",
+    "scenario": "stretch_up",
+    "title": "Senior Product Marketing Lead",
+    "company": "Silverline Apps",
+    "seniorityLevel": "principal",
+    "industry": "cybersecurity",
+    "description": "We are hiring a Senior Product Marketing Lead who can lead projects, mentor teammates, and raise the bar for product marketing. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "positioning",
+      "sales enablement",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "launch planning",
+      "competitive research",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-138",
+    "resumeId": "r-028",
+    "scenario": "adjacent_role",
+    "title": "Product Marketing Manager",
+    "company": "BlueOwl Labs",
+    "seniorityLevel": "senior",
+    "industry": "cybersecurity",
+    "description": "This Product Marketing Manager role needs someone who can translate product marketing strengths into adjacent workflows. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "positioning",
+      "sales enablement",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "launch planning",
+      "competitive research",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-139",
+    "resumeId": "r-028",
+    "scenario": "lateral_industry",
+    "title": "Product Marketing Lead",
+    "company": "North Harbor Health",
+    "seniorityLevel": "senior",
+    "industry": "health technology",
+    "description": "This Product Marketing Lead opening applies similar craft in health technology, with emphasis on domain learning and stakeholder trust. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "positioning",
+      "sales enablement",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "launch planning",
+      "competitive research",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-140",
+    "resumeId": "r-028",
+    "scenario": "reach",
+    "title": "Revenue Operations Director",
+    "company": "Cedar Metric",
+    "seniorityLevel": "principal",
+    "industry": "enterprise software",
+    "description": "This Revenue Operations Director role is a deliberate reach and requires transferable judgment without overstating hands-on experience. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "positioning",
+      "sales enablement",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "launch planning",
+      "competitive research",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-141",
+    "resumeId": "r-029",
+    "scenario": "direct_match",
+    "title": "VP Marketing",
+    "company": "BrightPath Systems",
+    "seniorityLevel": "principal",
+    "industry": "climate technology",
+    "description": "We need a VP Marketing to apply proven brand leadership experience in climate technology. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "brand strategy",
+      "demand generation",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "team leadership",
+      "budget ownership",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-142",
+    "resumeId": "r-029",
+    "scenario": "stretch_up",
+    "title": "Executive VP Marketing",
+    "company": "Stage One Studios",
+    "seniorityLevel": "principal",
+    "industry": "climate technology",
+    "description": "We are hiring a Executive VP Marketing who can lead projects, mentor teammates, and raise the bar for brand leadership. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "brand strategy",
+      "demand generation",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "team leadership",
+      "budget ownership",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-143",
+    "resumeId": "r-029",
+    "scenario": "adjacent_role",
+    "title": "Product Marketing Manager",
+    "company": "Riverbend Analytics",
+    "seniorityLevel": "principal",
+    "industry": "climate technology",
+    "description": "This Product Marketing Manager role needs someone who can translate brand leadership strengths into adjacent workflows. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "brand strategy",
+      "demand generation",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "team leadership",
+      "budget ownership",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-144",
+    "resumeId": "r-029",
+    "scenario": "lateral_industry",
+    "title": "VP Marketing",
+    "company": "Atlas Grove",
+    "seniorityLevel": "principal",
+    "industry": "health technology",
+    "description": "This VP Marketing opening applies similar craft in health technology, with emphasis on domain learning and stakeholder trust. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "brand strategy",
+      "demand generation",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "team leadership",
+      "budget ownership",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-145",
+    "resumeId": "r-029",
+    "scenario": "reach",
+    "title": "Revenue Operations Director",
+    "company": "Nimbus Works",
+    "seniorityLevel": "principal",
+    "industry": "enterprise software",
+    "description": "This Revenue Operations Director role is a deliberate reach and requires transferable judgment without overstating hands-on experience. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "brand strategy",
+      "demand generation",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "team leadership",
+      "budget ownership",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-146",
+    "resumeId": "r-030",
+    "scenario": "direct_match",
+    "title": "Account Executive",
+    "company": "Copperline Group",
+    "seniorityLevel": "mid",
+    "industry": "vertical SaaS",
+    "description": "We need a Account Executive to apply proven account executive experience in vertical SaaS. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "discovery",
+      "MEDDIC",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "contract negotiation",
+      "forecasting",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-147",
+    "resumeId": "r-030",
+    "scenario": "stretch_up",
+    "title": "Senior Account Executive",
+    "company": "Silverline Apps",
+    "seniorityLevel": "senior",
+    "industry": "vertical SaaS",
+    "description": "We are hiring a Senior Account Executive who can lead projects, mentor teammates, and raise the bar for account executive. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "discovery",
+      "MEDDIC",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "contract negotiation",
+      "forecasting",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-148",
+    "resumeId": "r-030",
+    "scenario": "adjacent_role",
+    "title": "Customer Success Manager",
+    "company": "BlueOwl Labs",
+    "seniorityLevel": "mid",
+    "industry": "vertical SaaS",
+    "description": "This Customer Success Manager role needs someone who can translate account executive strengths into adjacent workflows. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "discovery",
+      "MEDDIC",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "contract negotiation",
+      "forecasting",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-149",
+    "resumeId": "r-030",
+    "scenario": "lateral_industry",
+    "title": "Account Executive",
+    "company": "North Harbor Health",
+    "seniorityLevel": "mid",
+    "industry": "health technology",
+    "description": "This Account Executive opening applies similar craft in health technology, with emphasis on domain learning and stakeholder trust. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "discovery",
+      "MEDDIC",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "contract negotiation",
+      "forecasting",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-150",
+    "resumeId": "r-030",
+    "scenario": "reach",
+    "title": "Strategic Partnerships Lead",
+    "company": "Cedar Metric",
+    "seniorityLevel": "senior",
+    "industry": "enterprise software",
+    "description": "This Strategic Partnerships Lead role is a deliberate reach and requires transferable judgment without overstating hands-on experience. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "discovery",
+      "MEDDIC",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "contract negotiation",
+      "forecasting",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-151",
+    "resumeId": "r-031",
+    "scenario": "direct_match",
+    "title": "Enterprise Account Executive",
+    "company": "BrightPath Systems",
+    "seniorityLevel": "senior",
+    "industry": "cloud infrastructure",
+    "description": "We need a Enterprise Account Executive to apply proven enterprise sales experience in cloud infrastructure. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "enterprise selling",
+      "mutual action plans",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "executive presence",
+      "renewals",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-152",
+    "resumeId": "r-031",
+    "scenario": "stretch_up",
+    "title": "Senior Enterprise Account Executive",
+    "company": "Stage One Studios",
+    "seniorityLevel": "principal",
+    "industry": "cloud infrastructure",
+    "description": "We are hiring a Senior Enterprise Account Executive who can lead projects, mentor teammates, and raise the bar for enterprise sales. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "enterprise selling",
+      "mutual action plans",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "executive presence",
+      "renewals",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-153",
+    "resumeId": "r-031",
+    "scenario": "adjacent_role",
+    "title": "Customer Success Manager",
+    "company": "Riverbend Analytics",
+    "seniorityLevel": "senior",
+    "industry": "cloud infrastructure",
+    "description": "This Customer Success Manager role needs someone who can translate enterprise sales strengths into adjacent workflows. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "enterprise selling",
+      "mutual action plans",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "executive presence",
+      "renewals",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-154",
+    "resumeId": "r-031",
+    "scenario": "lateral_industry",
+    "title": "Enterprise Account Executive",
+    "company": "Atlas Grove",
+    "seniorityLevel": "senior",
+    "industry": "health technology",
+    "description": "This Enterprise Account Executive opening applies similar craft in health technology, with emphasis on domain learning and stakeholder trust. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "enterprise selling",
+      "mutual action plans",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "executive presence",
+      "renewals",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-155",
+    "resumeId": "r-031",
+    "scenario": "reach",
+    "title": "Strategic Partnerships Lead",
+    "company": "Nimbus Works",
+    "seniorityLevel": "principal",
+    "industry": "enterprise software",
+    "description": "This Strategic Partnerships Lead role is a deliberate reach and requires transferable judgment without overstating hands-on experience. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "enterprise selling",
+      "mutual action plans",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "executive presence",
+      "renewals",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-156",
+    "resumeId": "r-032",
+    "scenario": "direct_match",
+    "title": "Customer Success Manager",
+    "company": "Copperline Group",
+    "seniorityLevel": "mid",
+    "industry": "B2B software",
+    "description": "We need a Customer Success Manager to apply proven customer success experience in B2B software. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "QBRs",
+      "renewal management",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "adoption planning",
+      "health scoring",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-157",
+    "resumeId": "r-032",
+    "scenario": "stretch_up",
+    "title": "Senior Customer Success Manager",
+    "company": "Silverline Apps",
+    "seniorityLevel": "senior",
+    "industry": "B2B software",
+    "description": "We are hiring a Senior Customer Success Manager who can lead projects, mentor teammates, and raise the bar for customer success. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "QBRs",
+      "renewal management",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "adoption planning",
+      "health scoring",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-158",
+    "resumeId": "r-032",
+    "scenario": "adjacent_role",
+    "title": "Customer Success Manager",
+    "company": "BlueOwl Labs",
+    "seniorityLevel": "mid",
+    "industry": "B2B software",
+    "description": "This Customer Success Manager role needs someone who can translate customer success strengths into adjacent workflows. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "QBRs",
+      "renewal management",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "adoption planning",
+      "health scoring",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-159",
+    "resumeId": "r-032",
+    "scenario": "lateral_industry",
+    "title": "Customer Success Manager",
+    "company": "North Harbor Health",
+    "seniorityLevel": "mid",
+    "industry": "health technology",
+    "description": "This Customer Success Manager opening applies similar craft in health technology, with emphasis on domain learning and stakeholder trust. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "QBRs",
+      "renewal management",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "adoption planning",
+      "health scoring",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-160",
+    "resumeId": "r-032",
+    "scenario": "reach",
+    "title": "Strategic Partnerships Lead",
+    "company": "Cedar Metric",
+    "seniorityLevel": "senior",
+    "industry": "enterprise software",
+    "description": "This Strategic Partnerships Lead role is a deliberate reach and requires transferable judgment without overstating hands-on experience. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "QBRs",
+      "renewal management",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "adoption planning",
+      "health scoring",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-161",
+    "resumeId": "r-033",
+    "scenario": "direct_match",
+    "title": "Regional Sales Director",
+    "company": "BrightPath Systems",
+    "seniorityLevel": "principal",
+    "industry": "industrial technology",
+    "description": "We need a Regional Sales Director to apply proven sales leadership experience in industrial technology. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "team leadership",
+      "forecasting",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "territory planning",
+      "coaching",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-162",
+    "resumeId": "r-033",
+    "scenario": "stretch_up",
+    "title": "Executive Regional Sales Director",
+    "company": "Stage One Studios",
+    "seniorityLevel": "principal",
+    "industry": "industrial technology",
+    "description": "We are hiring a Executive Regional Sales Director who can lead projects, mentor teammates, and raise the bar for sales leadership. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "team leadership",
+      "forecasting",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "territory planning",
+      "coaching",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-163",
+    "resumeId": "r-033",
+    "scenario": "adjacent_role",
+    "title": "Customer Success Manager",
+    "company": "Riverbend Analytics",
+    "seniorityLevel": "principal",
+    "industry": "industrial technology",
+    "description": "This Customer Success Manager role needs someone who can translate sales leadership strengths into adjacent workflows. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "team leadership",
+      "forecasting",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "territory planning",
+      "coaching",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-164",
+    "resumeId": "r-033",
+    "scenario": "lateral_industry",
+    "title": "Regional Sales Director",
+    "company": "Atlas Grove",
+    "seniorityLevel": "principal",
+    "industry": "health technology",
+    "description": "This Regional Sales Director opening applies similar craft in health technology, with emphasis on domain learning and stakeholder trust. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "team leadership",
+      "forecasting",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "territory planning",
+      "coaching",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-165",
+    "resumeId": "r-033",
+    "scenario": "reach",
+    "title": "Strategic Partnerships Lead",
+    "company": "Nimbus Works",
+    "seniorityLevel": "principal",
+    "industry": "enterprise software",
+    "description": "This Strategic Partnerships Lead role is a deliberate reach and requires transferable judgment without overstating hands-on experience. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "team leadership",
+      "forecasting",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "territory planning",
+      "coaching",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-166",
+    "resumeId": "r-034",
+    "scenario": "direct_match",
+    "title": "FP&A Analyst",
+    "company": "Copperline Group",
+    "seniorityLevel": "mid",
+    "industry": "retail",
+    "description": "We need a FP&A Analyst to apply proven fp&a experience in retail. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "forecasting",
+      "variance analysis",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "SQL",
+      "Excel",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-167",
+    "resumeId": "r-034",
+    "scenario": "stretch_up",
+    "title": "Senior FP&A Analyst",
+    "company": "Silverline Apps",
+    "seniorityLevel": "senior",
+    "industry": "retail",
+    "description": "We are hiring a Senior FP&A Analyst who can lead projects, mentor teammates, and raise the bar for fp&a. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "forecasting",
+      "variance analysis",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "SQL",
+      "Excel",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-168",
+    "resumeId": "r-034",
+    "scenario": "adjacent_role",
+    "title": "Strategic Finance Analyst",
+    "company": "BlueOwl Labs",
+    "seniorityLevel": "mid",
+    "industry": "retail",
+    "description": "This Strategic Finance Analyst role needs someone who can translate fp&a strengths into adjacent workflows. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "forecasting",
+      "variance analysis",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "SQL",
+      "Excel",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-169",
+    "resumeId": "r-034",
+    "scenario": "lateral_industry",
+    "title": "FP&A Analyst",
+    "company": "North Harbor Health",
+    "seniorityLevel": "mid",
+    "industry": "health technology",
+    "description": "This FP&A Analyst opening applies similar craft in health technology, with emphasis on domain learning and stakeholder trust. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "forecasting",
+      "variance analysis",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "SQL",
+      "Excel",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-170",
+    "resumeId": "r-034",
+    "scenario": "reach",
+    "title": "Corporate Development Associate",
+    "company": "Cedar Metric",
+    "seniorityLevel": "senior",
+    "industry": "enterprise software",
+    "description": "This Corporate Development Associate role is a deliberate reach and requires transferable judgment without overstating hands-on experience. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "forecasting",
+      "variance analysis",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "SQL",
+      "Excel",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-171",
+    "resumeId": "r-035",
+    "scenario": "direct_match",
+    "title": "Finance Manager",
+    "company": "BrightPath Systems",
+    "seniorityLevel": "senior",
+    "industry": "manufacturing",
+    "description": "We need a Finance Manager to apply proven operations finance experience in manufacturing. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "cost accounting",
+      "budgeting",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "pricing analysis",
+      "Power BI",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-172",
+    "resumeId": "r-035",
+    "scenario": "stretch_up",
+    "title": "Senior Finance Manager",
+    "company": "Stage One Studios",
+    "seniorityLevel": "principal",
+    "industry": "manufacturing",
+    "description": "We are hiring a Senior Finance Manager who can lead projects, mentor teammates, and raise the bar for operations finance. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "cost accounting",
+      "budgeting",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "pricing analysis",
+      "Power BI",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-173",
+    "resumeId": "r-035",
+    "scenario": "adjacent_role",
+    "title": "Strategic Finance Analyst",
+    "company": "Riverbend Analytics",
+    "seniorityLevel": "senior",
+    "industry": "manufacturing",
+    "description": "This Strategic Finance Analyst role needs someone who can translate operations finance strengths into adjacent workflows. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "cost accounting",
+      "budgeting",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "pricing analysis",
+      "Power BI",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-174",
+    "resumeId": "r-035",
+    "scenario": "lateral_industry",
+    "title": "Finance Manager",
+    "company": "Atlas Grove",
+    "seniorityLevel": "senior",
+    "industry": "health technology",
+    "description": "This Finance Manager opening applies similar craft in health technology, with emphasis on domain learning and stakeholder trust. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "cost accounting",
+      "budgeting",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "pricing analysis",
+      "Power BI",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-175",
+    "resumeId": "r-035",
+    "scenario": "reach",
+    "title": "Corporate Development Associate",
+    "company": "Nimbus Works",
+    "seniorityLevel": "principal",
+    "industry": "enterprise software",
+    "description": "This Corporate Development Associate role is a deliberate reach and requires transferable judgment without overstating hands-on experience. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "cost accounting",
+      "budgeting",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "pricing analysis",
+      "Power BI",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-176",
+    "resumeId": "r-036",
+    "scenario": "direct_match",
+    "title": "Operations Manager",
+    "company": "Copperline Group",
+    "seniorityLevel": "mid",
+    "industry": "logistics",
+    "description": "We need a Operations Manager to apply proven program operations experience in logistics. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "process mapping",
+      "vendor management",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "KPI dashboards",
+      "Lean",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-177",
+    "resumeId": "r-036",
+    "scenario": "stretch_up",
+    "title": "Senior Operations Manager",
+    "company": "Silverline Apps",
+    "seniorityLevel": "senior",
+    "industry": "logistics",
+    "description": "We are hiring a Senior Operations Manager who can lead projects, mentor teammates, and raise the bar for program operations. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "process mapping",
+      "vendor management",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "KPI dashboards",
+      "Lean",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-178",
+    "resumeId": "r-036",
+    "scenario": "adjacent_role",
+    "title": "Program Manager",
+    "company": "BlueOwl Labs",
+    "seniorityLevel": "mid",
+    "industry": "logistics",
+    "description": "This Program Manager role needs someone who can translate program operations strengths into adjacent workflows. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "process mapping",
+      "vendor management",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "KPI dashboards",
+      "Lean",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-179",
+    "resumeId": "r-036",
+    "scenario": "lateral_industry",
+    "title": "Operations Manager",
+    "company": "North Harbor Health",
+    "seniorityLevel": "mid",
+    "industry": "health technology",
+    "description": "This Operations Manager opening applies similar craft in health technology, with emphasis on domain learning and stakeholder trust. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "process mapping",
+      "vendor management",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "KPI dashboards",
+      "Lean",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-180",
+    "resumeId": "r-036",
+    "scenario": "reach",
+    "title": "Strategy Manager",
+    "company": "Cedar Metric",
+    "seniorityLevel": "senior",
+    "industry": "enterprise software",
+    "description": "This Strategy Manager role is a deliberate reach and requires transferable judgment without overstating hands-on experience. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "process mapping",
+      "vendor management",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "KPI dashboards",
+      "Lean",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-181",
+    "resumeId": "r-037",
+    "scenario": "direct_match",
+    "title": "Business Operations Lead",
+    "company": "BrightPath Systems",
+    "seniorityLevel": "senior",
+    "industry": "marketplace",
+    "description": "We need a Business Operations Lead to apply proven business operations experience in marketplace. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "strategy ops",
+      "SQL",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "process design",
+      "OKRs",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-182",
+    "resumeId": "r-037",
+    "scenario": "stretch_up",
+    "title": "Senior Business Operations Lead",
+    "company": "Stage One Studios",
+    "seniorityLevel": "principal",
+    "industry": "marketplace",
+    "description": "We are hiring a Senior Business Operations Lead who can lead projects, mentor teammates, and raise the bar for business operations. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "strategy ops",
+      "SQL",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "process design",
+      "OKRs",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-183",
+    "resumeId": "r-037",
+    "scenario": "adjacent_role",
+    "title": "Program Manager",
+    "company": "Riverbend Analytics",
+    "seniorityLevel": "senior",
+    "industry": "marketplace",
+    "description": "This Program Manager role needs someone who can translate business operations strengths into adjacent workflows. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "strategy ops",
+      "SQL",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "process design",
+      "OKRs",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-184",
+    "resumeId": "r-037",
+    "scenario": "lateral_industry",
+    "title": "Business Operations Lead",
+    "company": "Atlas Grove",
+    "seniorityLevel": "senior",
+    "industry": "health technology",
+    "description": "This Business Operations Lead opening applies similar craft in health technology, with emphasis on domain learning and stakeholder trust. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "strategy ops",
+      "SQL",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "process design",
+      "OKRs",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-185",
+    "resumeId": "r-037",
+    "scenario": "reach",
+    "title": "Strategy Manager",
+    "company": "Nimbus Works",
+    "seniorityLevel": "principal",
+    "industry": "enterprise software",
+    "description": "This Strategy Manager role is a deliberate reach and requires transferable judgment without overstating hands-on experience. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "strategy ops",
+      "SQL",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "process design",
+      "OKRs",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-186",
+    "resumeId": "r-038",
+    "scenario": "direct_match",
+    "title": "Talent Acquisition Partner",
+    "company": "Copperline Group",
+    "seniorityLevel": "senior",
+    "industry": "biotech",
+    "description": "We need a Talent Acquisition Partner to apply proven talent acquisition experience in biotech. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "sourcing",
+      "interview design",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "ATS",
+      "stakeholder management",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-187",
+    "resumeId": "r-038",
+    "scenario": "stretch_up",
+    "title": "Senior Talent Acquisition Partner",
+    "company": "Silverline Apps",
+    "seniorityLevel": "principal",
+    "industry": "biotech",
+    "description": "We are hiring a Senior Talent Acquisition Partner who can lead projects, mentor teammates, and raise the bar for talent acquisition. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "sourcing",
+      "interview design",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "ATS",
+      "stakeholder management",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-188",
+    "resumeId": "r-038",
+    "scenario": "adjacent_role",
+    "title": "People Operations Manager",
+    "company": "BlueOwl Labs",
+    "seniorityLevel": "senior",
+    "industry": "biotech",
+    "description": "This People Operations Manager role needs someone who can translate talent acquisition strengths into adjacent workflows. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "sourcing",
+      "interview design",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "ATS",
+      "stakeholder management",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-189",
+    "resumeId": "r-038",
+    "scenario": "lateral_industry",
+    "title": "Talent Acquisition Partner",
+    "company": "North Harbor Health",
+    "seniorityLevel": "senior",
+    "industry": "health technology",
+    "description": "This Talent Acquisition Partner opening applies similar craft in health technology, with emphasis on domain learning and stakeholder trust. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "sourcing",
+      "interview design",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "ATS",
+      "stakeholder management",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-190",
+    "resumeId": "r-038",
+    "scenario": "reach",
+    "title": "Director, People Strategy",
+    "company": "Cedar Metric",
+    "seniorityLevel": "principal",
+    "industry": "enterprise software",
+    "description": "This Director, People Strategy role is a deliberate reach and requires transferable judgment without overstating hands-on experience. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "sourcing",
+      "interview design",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "ATS",
+      "stakeholder management",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-191",
+    "resumeId": "r-039",
+    "scenario": "direct_match",
+    "title": "Senior HR Business Partner",
+    "company": "BrightPath Systems",
+    "seniorityLevel": "principal",
+    "industry": "enterprise software",
+    "description": "We need a Senior HR Business Partner to apply proven hrbp experience in enterprise software. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "org design",
+      "performance management",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "employee relations",
+      "workforce planning",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-192",
+    "resumeId": "r-039",
+    "scenario": "stretch_up",
+    "title": "Executive HR Business Partner",
+    "company": "Stage One Studios",
+    "seniorityLevel": "principal",
+    "industry": "enterprise software",
+    "description": "We are hiring a Executive HR Business Partner who can lead projects, mentor teammates, and raise the bar for hrbp. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "org design",
+      "performance management",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "employee relations",
+      "workforce planning",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-193",
+    "resumeId": "r-039",
+    "scenario": "adjacent_role",
+    "title": "People Operations Manager",
+    "company": "Riverbend Analytics",
+    "seniorityLevel": "principal",
+    "industry": "enterprise software",
+    "description": "This People Operations Manager role needs someone who can translate hrbp strengths into adjacent workflows. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "org design",
+      "performance management",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "employee relations",
+      "workforce planning",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-194",
+    "resumeId": "r-039",
+    "scenario": "lateral_industry",
+    "title": "Senior HR Business Partner",
+    "company": "Atlas Grove",
+    "seniorityLevel": "principal",
+    "industry": "health technology",
+    "description": "This Senior HR Business Partner opening applies similar craft in health technology, with emphasis on domain learning and stakeholder trust. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "org design",
+      "performance management",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "employee relations",
+      "workforce planning",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-195",
+    "resumeId": "r-039",
+    "scenario": "reach",
+    "title": "Director, People Strategy",
+    "company": "Nimbus Works",
+    "seniorityLevel": "principal",
+    "industry": "enterprise software",
+    "description": "This Director, People Strategy role is a deliberate reach and requires transferable judgment without overstating hands-on experience. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "org design",
+      "performance management",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "employee relations",
+      "workforce planning",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-196",
+    "resumeId": "r-040",
+    "scenario": "direct_match",
+    "title": "Registered Nurse",
+    "company": "Copperline Group",
+    "seniorityLevel": "new_grad",
+    "industry": "acute care",
+    "description": "We need a Registered Nurse to apply proven nursing experience in acute care. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "patient assessment",
+      "EHR",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "care planning",
+      "medication safety",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-197",
+    "resumeId": "r-040",
+    "scenario": "stretch_up",
+    "title": "Senior Registered Nurse",
+    "company": "Silverline Apps",
+    "seniorityLevel": "junior",
+    "industry": "acute care",
+    "description": "We are hiring a Senior Registered Nurse who can lead projects, mentor teammates, and raise the bar for nursing. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "patient assessment",
+      "EHR",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "care planning",
+      "medication safety",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-198",
+    "resumeId": "r-040",
+    "scenario": "adjacent_role",
+    "title": "Clinical Quality Analyst",
+    "company": "BlueOwl Labs",
+    "seniorityLevel": "new_grad",
+    "industry": "acute care",
+    "description": "This Clinical Quality Analyst role needs someone who can translate nursing strengths into adjacent workflows. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "patient assessment",
+      "EHR",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "care planning",
+      "medication safety",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-199",
+    "resumeId": "r-040",
+    "scenario": "lateral_industry",
+    "title": "Registered Nurse",
+    "company": "North Harbor Health",
+    "seniorityLevel": "new_grad",
+    "industry": "health technology",
+    "description": "This Registered Nurse opening applies similar craft in health technology, with emphasis on domain learning and stakeholder trust. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "patient assessment",
+      "EHR",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "care planning",
+      "medication safety",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-200",
+    "resumeId": "r-040",
+    "scenario": "reach",
+    "title": "Healthcare Program Manager",
+    "company": "Cedar Metric",
+    "seniorityLevel": "junior",
+    "industry": "enterprise software",
+    "description": "This Healthcare Program Manager role is a deliberate reach and requires transferable judgment without overstating hands-on experience. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "patient assessment",
+      "EHR",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "care planning",
+      "medication safety",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-201",
+    "resumeId": "r-041",
+    "scenario": "direct_match",
+    "title": "Clinical Operations Lead",
+    "company": "BrightPath Systems",
+    "seniorityLevel": "senior",
+    "industry": "telehealth",
+    "description": "We need a Clinical Operations Lead to apply proven clinical operations experience in telehealth. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "clinical workflows",
+      "quality improvement",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "HIPAA",
+      "training",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-202",
+    "resumeId": "r-041",
+    "scenario": "stretch_up",
+    "title": "Senior Clinical Operations Lead",
+    "company": "Stage One Studios",
+    "seniorityLevel": "principal",
+    "industry": "telehealth",
+    "description": "We are hiring a Senior Clinical Operations Lead who can lead projects, mentor teammates, and raise the bar for clinical operations. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "clinical workflows",
+      "quality improvement",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "HIPAA",
+      "training",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-203",
+    "resumeId": "r-041",
+    "scenario": "adjacent_role",
+    "title": "Clinical Quality Analyst",
+    "company": "Riverbend Analytics",
+    "seniorityLevel": "senior",
+    "industry": "telehealth",
+    "description": "This Clinical Quality Analyst role needs someone who can translate clinical operations strengths into adjacent workflows. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "clinical workflows",
+      "quality improvement",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "HIPAA",
+      "training",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-204",
+    "resumeId": "r-041",
+    "scenario": "lateral_industry",
+    "title": "Clinical Operations Lead",
+    "company": "Atlas Grove",
+    "seniorityLevel": "senior",
+    "industry": "health technology",
+    "description": "This Clinical Operations Lead opening applies similar craft in health technology, with emphasis on domain learning and stakeholder trust. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "clinical workflows",
+      "quality improvement",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "HIPAA",
+      "training",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-205",
+    "resumeId": "r-041",
+    "scenario": "reach",
+    "title": "Healthcare Program Manager",
+    "company": "Nimbus Works",
+    "seniorityLevel": "principal",
+    "industry": "enterprise software",
+    "description": "This Healthcare Program Manager role is a deliberate reach and requires transferable judgment without overstating hands-on experience. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "clinical workflows",
+      "quality improvement",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "HIPAA",
+      "training",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-206",
+    "resumeId": "r-042",
+    "scenario": "direct_match",
+    "title": "Research Associate",
+    "company": "Copperline Group",
+    "seniorityLevel": "mid",
+    "industry": "biotech",
+    "description": "We need a Research Associate to apply proven biotech research experience in biotech. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "cell culture",
+      "ELISA",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "PCR",
+      "lab documentation",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-207",
+    "resumeId": "r-042",
+    "scenario": "stretch_up",
+    "title": "Senior Research Associate",
+    "company": "Silverline Apps",
+    "seniorityLevel": "senior",
+    "industry": "biotech",
+    "description": "We are hiring a Senior Research Associate who can lead projects, mentor teammates, and raise the bar for biotech research. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "cell culture",
+      "ELISA",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "PCR",
+      "lab documentation",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-208",
+    "resumeId": "r-042",
+    "scenario": "adjacent_role",
+    "title": "Clinical Quality Analyst",
+    "company": "BlueOwl Labs",
+    "seniorityLevel": "mid",
+    "industry": "biotech",
+    "description": "This Clinical Quality Analyst role needs someone who can translate biotech research strengths into adjacent workflows. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "cell culture",
+      "ELISA",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "PCR",
+      "lab documentation",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-209",
+    "resumeId": "r-042",
+    "scenario": "lateral_industry",
+    "title": "Research Associate",
+    "company": "North Harbor Health",
+    "seniorityLevel": "mid",
+    "industry": "health technology",
+    "description": "This Research Associate opening applies similar craft in health technology, with emphasis on domain learning and stakeholder trust. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "cell culture",
+      "ELISA",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "PCR",
+      "lab documentation",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-210",
+    "resumeId": "r-042",
+    "scenario": "reach",
+    "title": "Healthcare Program Manager",
+    "company": "Cedar Metric",
+    "seniorityLevel": "senior",
+    "industry": "enterprise software",
+    "description": "This Healthcare Program Manager role is a deliberate reach and requires transferable judgment without overstating hands-on experience. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "cell culture",
+      "ELISA",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "PCR",
+      "lab documentation",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-211",
+    "resumeId": "r-043",
+    "scenario": "direct_match",
+    "title": "High School Math Teacher",
+    "company": "BrightPath Systems",
+    "seniorityLevel": "junior",
+    "industry": "public education",
+    "description": "We need a High School Math Teacher to apply proven secondary teaching experience in public education. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "lesson planning",
+      "classroom management",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "assessment design",
+      "data-informed instruction",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-212",
+    "resumeId": "r-043",
+    "scenario": "stretch_up",
+    "title": "Senior High School Math Teacher",
+    "company": "Stage One Studios",
+    "seniorityLevel": "mid",
+    "industry": "public education",
+    "description": "We are hiring a Senior High School Math Teacher who can lead projects, mentor teammates, and raise the bar for secondary teaching. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "lesson planning",
+      "classroom management",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "assessment design",
+      "data-informed instruction",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-213",
+    "resumeId": "r-043",
+    "scenario": "adjacent_role",
+    "title": "Learning Experience Designer",
+    "company": "Riverbend Analytics",
+    "seniorityLevel": "junior",
+    "industry": "public education",
+    "description": "This Learning Experience Designer role needs someone who can translate secondary teaching strengths into adjacent workflows. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "lesson planning",
+      "classroom management",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "assessment design",
+      "data-informed instruction",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-214",
+    "resumeId": "r-043",
+    "scenario": "lateral_industry",
+    "title": "High School Math Teacher",
+    "company": "Atlas Grove",
+    "seniorityLevel": "junior",
+    "industry": "health technology",
+    "description": "This High School Math Teacher opening applies similar craft in health technology, with emphasis on domain learning and stakeholder trust. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "lesson planning",
+      "classroom management",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "assessment design",
+      "data-informed instruction",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-215",
+    "resumeId": "r-043",
+    "scenario": "reach",
+    "title": "Education Product Manager",
+    "company": "Nimbus Works",
+    "seniorityLevel": "mid",
+    "industry": "enterprise software",
+    "description": "This Education Product Manager role is a deliberate reach and requires transferable judgment without overstating hands-on experience. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "lesson planning",
+      "classroom management",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "assessment design",
+      "data-informed instruction",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-216",
+    "resumeId": "r-044",
+    "scenario": "direct_match",
+    "title": "Instructional Designer",
+    "company": "Copperline Group",
+    "seniorityLevel": "senior",
+    "industry": "online learning",
+    "description": "We need a Instructional Designer to apply proven curriculum design experience in online learning. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "curriculum design",
+      "LMS",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "adult learning",
+      "accessibility",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-217",
+    "resumeId": "r-044",
+    "scenario": "stretch_up",
+    "title": "Senior Instructional Designer",
+    "company": "Silverline Apps",
+    "seniorityLevel": "principal",
+    "industry": "online learning",
+    "description": "We are hiring a Senior Instructional Designer who can lead projects, mentor teammates, and raise the bar for curriculum design. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "curriculum design",
+      "LMS",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "adult learning",
+      "accessibility",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-218",
+    "resumeId": "r-044",
+    "scenario": "adjacent_role",
+    "title": "Learning Experience Designer",
+    "company": "BlueOwl Labs",
+    "seniorityLevel": "senior",
+    "industry": "online learning",
+    "description": "This Learning Experience Designer role needs someone who can translate curriculum design strengths into adjacent workflows. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "curriculum design",
+      "LMS",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "adult learning",
+      "accessibility",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-219",
+    "resumeId": "r-044",
+    "scenario": "lateral_industry",
+    "title": "Instructional Designer",
+    "company": "North Harbor Health",
+    "seniorityLevel": "senior",
+    "industry": "health technology",
+    "description": "This Instructional Designer opening applies similar craft in health technology, with emphasis on domain learning and stakeholder trust. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "curriculum design",
+      "LMS",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "adult learning",
+      "accessibility",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-220",
+    "resumeId": "r-044",
+    "scenario": "reach",
+    "title": "Education Product Manager",
+    "company": "Cedar Metric",
+    "seniorityLevel": "principal",
+    "industry": "enterprise software",
+    "description": "This Education Product Manager role is a deliberate reach and requires transferable judgment without overstating hands-on experience. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "curriculum design",
+      "LMS",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "adult learning",
+      "accessibility",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-221",
+    "resumeId": "r-045",
+    "scenario": "direct_match",
+    "title": "Paralegal",
+    "company": "BrightPath Systems",
+    "seniorityLevel": "mid",
+    "industry": "employment law",
+    "description": "We need a Paralegal to apply proven paralegal experience in employment law. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "legal research",
+      "case management",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "discovery",
+      "document review",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-222",
+    "resumeId": "r-045",
+    "scenario": "stretch_up",
+    "title": "Senior Paralegal",
+    "company": "Stage One Studios",
+    "seniorityLevel": "senior",
+    "industry": "employment law",
+    "description": "We are hiring a Senior Paralegal who can lead projects, mentor teammates, and raise the bar for paralegal. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "legal research",
+      "case management",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "discovery",
+      "document review",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-223",
+    "resumeId": "r-045",
+    "scenario": "adjacent_role",
+    "title": "Compliance Analyst",
+    "company": "Riverbend Analytics",
+    "seniorityLevel": "mid",
+    "industry": "employment law",
+    "description": "This Compliance Analyst role needs someone who can translate paralegal strengths into adjacent workflows. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "legal research",
+      "case management",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "discovery",
+      "document review",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-224",
+    "resumeId": "r-045",
+    "scenario": "lateral_industry",
+    "title": "Paralegal",
+    "company": "Atlas Grove",
+    "seniorityLevel": "mid",
+    "industry": "health technology",
+    "description": "This Paralegal opening applies similar craft in health technology, with emphasis on domain learning and stakeholder trust. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "legal research",
+      "case management",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "discovery",
+      "document review",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-225",
+    "resumeId": "r-045",
+    "scenario": "reach",
+    "title": "Trust and Safety Operations Lead",
+    "company": "Nimbus Works",
+    "seniorityLevel": "senior",
+    "industry": "enterprise software",
+    "description": "This Trust and Safety Operations Lead role is a deliberate reach and requires transferable judgment without overstating hands-on experience. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "legal research",
+      "case management",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "discovery",
+      "document review",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-226",
+    "resumeId": "r-046",
+    "scenario": "direct_match",
+    "title": "Investigative Reporter",
+    "company": "Copperline Group",
+    "seniorityLevel": "senior",
+    "industry": "local media",
+    "description": "We need a Investigative Reporter to apply proven journalism experience in local media. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "interviewing",
+      "FOIA",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "data reporting",
+      "editing",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-227",
+    "resumeId": "r-046",
+    "scenario": "stretch_up",
+    "title": "Senior Investigative Reporter",
+    "company": "Silverline Apps",
+    "seniorityLevel": "principal",
+    "industry": "local media",
+    "description": "We are hiring a Senior Investigative Reporter who can lead projects, mentor teammates, and raise the bar for journalism. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "interviewing",
+      "FOIA",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "data reporting",
+      "editing",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-228",
+    "resumeId": "r-046",
+    "scenario": "adjacent_role",
+    "title": "Content Strategist",
+    "company": "BlueOwl Labs",
+    "seniorityLevel": "senior",
+    "industry": "local media",
+    "description": "This Content Strategist role needs someone who can translate journalism strengths into adjacent workflows. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "interviewing",
+      "FOIA",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "data reporting",
+      "editing",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-229",
+    "resumeId": "r-046",
+    "scenario": "lateral_industry",
+    "title": "Investigative Reporter",
+    "company": "North Harbor Health",
+    "seniorityLevel": "senior",
+    "industry": "health technology",
+    "description": "This Investigative Reporter opening applies similar craft in health technology, with emphasis on domain learning and stakeholder trust. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "interviewing",
+      "FOIA",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "data reporting",
+      "editing",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-230",
+    "resumeId": "r-046",
+    "scenario": "reach",
+    "title": "Communications Director",
+    "company": "Cedar Metric",
+    "seniorityLevel": "principal",
+    "industry": "enterprise software",
+    "description": "This Communications Director role is a deliberate reach and requires transferable judgment without overstating hands-on experience. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "interviewing",
+      "FOIA",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "data reporting",
+      "editing",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-231",
+    "resumeId": "r-047",
+    "scenario": "direct_match",
+    "title": "QA Automation Engineer",
+    "company": "BrightPath Systems",
+    "seniorityLevel": "mid",
+    "industry": "insurance software",
+    "description": "We need a QA Automation Engineer to apply proven qa automation experience in insurance software. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "Playwright",
+      "TypeScript",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "API testing",
+      "CI/CD",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-232",
+    "resumeId": "r-047",
+    "scenario": "stretch_up",
+    "title": "Senior QA Automation Engineer",
+    "company": "Stage One Studios",
+    "seniorityLevel": "senior",
+    "industry": "insurance software",
+    "description": "We are hiring a Senior QA Automation Engineer who can lead projects, mentor teammates, and raise the bar for qa automation. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "Playwright",
+      "TypeScript",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "API testing",
+      "CI/CD",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-233",
+    "resumeId": "r-047",
+    "scenario": "adjacent_role",
+    "title": "Full-Stack Engineer",
+    "company": "Riverbend Analytics",
+    "seniorityLevel": "mid",
+    "industry": "insurance software",
+    "description": "This Full-Stack Engineer role needs someone who can translate qa automation strengths into adjacent workflows. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "Playwright",
+      "TypeScript",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "API testing",
+      "CI/CD",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-234",
+    "resumeId": "r-047",
+    "scenario": "lateral_industry",
+    "title": "QA Automation Engineer",
+    "company": "Atlas Grove",
+    "seniorityLevel": "mid",
+    "industry": "health technology",
+    "description": "This QA Automation Engineer opening applies similar craft in health technology, with emphasis on domain learning and stakeholder trust. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "Playwright",
+      "TypeScript",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "API testing",
+      "CI/CD",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-235",
+    "resumeId": "r-047",
+    "scenario": "reach",
+    "title": "Product Manager, AI Tools",
+    "company": "Nimbus Works",
+    "seniorityLevel": "senior",
+    "industry": "AI productivity",
+    "description": "This Product Manager, AI Tools role is a deliberate reach and requires transferable judgment without overstating hands-on experience. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "Playwright",
+      "TypeScript",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "API testing",
+      "CI/CD",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-236",
+    "resumeId": "r-048",
+    "scenario": "direct_match",
+    "title": "Solutions Engineer",
+    "company": "Copperline Group",
+    "seniorityLevel": "senior",
+    "industry": "data platforms",
+    "description": "We need a Solutions Engineer to apply proven solutions engineering experience in data platforms. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "technical demos",
+      "SQL",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "Python",
+      "architecture reviews",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-237",
+    "resumeId": "r-048",
+    "scenario": "stretch_up",
+    "title": "Senior Solutions Engineer",
+    "company": "Silverline Apps",
+    "seniorityLevel": "principal",
+    "industry": "data platforms",
+    "description": "We are hiring a Senior Solutions Engineer who can lead projects, mentor teammates, and raise the bar for solutions engineering. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "technical demos",
+      "SQL",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "Python",
+      "architecture reviews",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-238",
+    "resumeId": "r-048",
+    "scenario": "adjacent_role",
+    "title": "Full-Stack Engineer",
+    "company": "BlueOwl Labs",
+    "seniorityLevel": "senior",
+    "industry": "data platforms",
+    "description": "This Full-Stack Engineer role needs someone who can translate solutions engineering strengths into adjacent workflows. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "technical demos",
+      "SQL",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "Python",
+      "architecture reviews",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-239",
+    "resumeId": "r-048",
+    "scenario": "lateral_industry",
+    "title": "Solutions Engineer",
+    "company": "North Harbor Health",
+    "seniorityLevel": "senior",
+    "industry": "health technology",
+    "description": "This Solutions Engineer opening applies similar craft in health technology, with emphasis on domain learning and stakeholder trust. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "technical demos",
+      "SQL",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "Python",
+      "architecture reviews",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-240",
+    "resumeId": "r-048",
+    "scenario": "reach",
+    "title": "Product Manager, AI Tools",
+    "company": "Cedar Metric",
+    "seniorityLevel": "principal",
+    "industry": "AI productivity",
+    "description": "This Product Manager, AI Tools role is a deliberate reach and requires transferable judgment without overstating hands-on experience. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "technical demos",
+      "SQL",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "Python",
+      "architecture reviews",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-241",
+    "resumeId": "r-049",
+    "scenario": "direct_match",
+    "title": "Engineering Manager",
+    "company": "BrightPath Systems",
+    "seniorityLevel": "principal",
+    "industry": "productivity software",
+    "description": "We need a Engineering Manager to apply proven engineering management experience in productivity software. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "people management",
+      "delivery planning",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "system design",
+      "hiring",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-242",
+    "resumeId": "r-049",
+    "scenario": "stretch_up",
+    "title": "Executive Engineering Manager",
+    "company": "Stage One Studios",
+    "seniorityLevel": "principal",
+    "industry": "productivity software",
+    "description": "We are hiring a Executive Engineering Manager who can lead projects, mentor teammates, and raise the bar for engineering management. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "people management",
+      "delivery planning",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "system design",
+      "hiring",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-243",
+    "resumeId": "r-049",
+    "scenario": "adjacent_role",
+    "title": "Full-Stack Engineer",
+    "company": "Riverbend Analytics",
+    "seniorityLevel": "principal",
+    "industry": "productivity software",
+    "description": "This Full-Stack Engineer role needs someone who can translate engineering management strengths into adjacent workflows. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "people management",
+      "delivery planning",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "system design",
+      "hiring",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-244",
+    "resumeId": "r-049",
+    "scenario": "lateral_industry",
+    "title": "Engineering Manager",
+    "company": "Atlas Grove",
+    "seniorityLevel": "principal",
+    "industry": "health technology",
+    "description": "This Engineering Manager opening applies similar craft in health technology, with emphasis on domain learning and stakeholder trust. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "people management",
+      "delivery planning",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "system design",
+      "hiring",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-245",
+    "resumeId": "r-049",
+    "scenario": "reach",
+    "title": "Product Manager, AI Tools",
+    "company": "Nimbus Works",
+    "seniorityLevel": "principal",
+    "industry": "AI productivity",
+    "description": "This Product Manager, AI Tools role is a deliberate reach and requires transferable judgment without overstating hands-on experience. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "people management",
+      "delivery planning",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "system design",
+      "hiring",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-246",
+    "resumeId": "r-050",
+    "scenario": "direct_match",
+    "title": "Full-Stack Developer",
+    "company": "Copperline Group",
+    "seniorityLevel": "new_grad",
+    "industry": "civic technology",
+    "description": "We need a Full-Stack Developer to apply proven new graduate full stack experience in civic technology. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "TypeScript",
+      "React",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "Node.js",
+      "PostgreSQL",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-247",
+    "resumeId": "r-050",
+    "scenario": "stretch_up",
+    "title": "Senior Full-Stack Developer",
+    "company": "Silverline Apps",
+    "seniorityLevel": "junior",
+    "industry": "civic technology",
+    "description": "We are hiring a Senior Full-Stack Developer who can lead projects, mentor teammates, and raise the bar for new graduate full stack. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "TypeScript",
+      "React",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "Node.js",
+      "PostgreSQL",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-248",
+    "resumeId": "r-050",
+    "scenario": "adjacent_role",
+    "title": "Full-Stack Engineer",
+    "company": "BlueOwl Labs",
+    "seniorityLevel": "new_grad",
+    "industry": "civic technology",
+    "description": "This Full-Stack Engineer role needs someone who can translate new graduate full stack strengths into adjacent workflows. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "TypeScript",
+      "React",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "Node.js",
+      "PostgreSQL",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-249",
+    "resumeId": "r-050",
+    "scenario": "lateral_industry",
+    "title": "Full-Stack Developer",
+    "company": "North Harbor Health",
+    "seniorityLevel": "new_grad",
+    "industry": "health technology",
+    "description": "This Full-Stack Developer opening applies similar craft in health technology, with emphasis on domain learning and stakeholder trust. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "TypeScript",
+      "React",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "Node.js",
+      "PostgreSQL",
+      "experience in regulated or high-growth environments"
+    ]
+  },
+  {
+    "id": "j-250",
+    "resumeId": "r-050",
+    "scenario": "reach",
+    "title": "Product Manager, AI Tools",
+    "company": "Cedar Metric",
+    "seniorityLevel": "junior",
+    "industry": "AI productivity",
+    "description": "This Product Manager, AI Tools role is a deliberate reach and requires transferable judgment without overstating hands-on experience. The team values measurable impact, clear communication, pragmatic prioritization, and candidates who can explain tradeoffs with evidence.",
+    "mustHaves": [
+      "TypeScript",
+      "React",
+      "cross-functional communication",
+      "measurable business impact"
+    ],
+    "niceToHaves": [
+      "Node.js",
+      "PostgreSQL",
+      "experience in regulated or high-growth environments"
+    ]
+  }
+]
