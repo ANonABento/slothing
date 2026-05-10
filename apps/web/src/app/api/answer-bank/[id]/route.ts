@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
+import { parseJsonBody } from "@/lib/api-utils";
 import { isAuthError, requireAuth } from "@/lib/auth";
 import {
   deleteLearnedAnswer,
   updateLearnedAnswer,
 } from "@/lib/db/learned-answers";
+import { updateAnswerSchema } from "@/lib/schemas";
 
 export const dynamic = "force-dynamic";
 
@@ -16,33 +18,12 @@ export async function PATCH(
 
   try {
     const { id } = await params;
-    const body = await request.json();
-    const question =
-      typeof body.question === "string" ? body.question.trim() : undefined;
-    const answer =
-      typeof body.answer === "string" ? body.answer.trim() : undefined;
-    const sourceUrl =
-      typeof body.sourceUrl === "string" ? body.sourceUrl.trim() : undefined;
-    const sourceCompany =
-      typeof body.sourceCompany === "string"
-        ? body.sourceCompany.trim()
-        : undefined;
-
-    if (
-      !question &&
-      !answer &&
-      sourceUrl === undefined &&
-      sourceCompany === undefined
-    ) {
-      return NextResponse.json(
-        { error: "No answer fields provided" },
-        { status: 400 },
-      );
-    }
+    const parsed = await parseJsonBody(request, updateAnswerSchema);
+    if (!parsed.ok) return parsed.response;
 
     const updated = await updateLearnedAnswer(
       id,
-      { question, answer, sourceUrl, sourceCompany },
+      parsed.data,
       authResult.userId,
     );
 

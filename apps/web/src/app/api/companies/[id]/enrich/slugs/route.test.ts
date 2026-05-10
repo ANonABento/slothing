@@ -88,7 +88,7 @@ describe("company enrichment GitHub slug route", () => {
     });
   });
 
-  it("clears the saved slug when the body is invalid", async () => {
+  it("returns 400 when the body is malformed JSON", async () => {
     mocks.setCompanyGithubSlug.mockReturnValue(null);
 
     const response = await PATCH(
@@ -99,6 +99,29 @@ describe("company enrichment GitHub slug route", () => {
       }),
       context,
     );
+
+    expect(response.status).toBe(400);
+    expect(mocks.setCompanyGithubSlug).not.toHaveBeenCalled();
+    await expect(response.json()).resolves.toEqual({
+      error: "Invalid JSON body",
+    });
+  });
+
+  it("returns 400 for wrong GitHub slug types", async () => {
+    const response = await PATCH(jsonRequest({ githubSlug: 123 }), context);
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toMatchObject({
+      error: "Validation failed",
+      errors: [{ field: "githubSlug" }],
+    });
+    expect(mocks.setCompanyGithubSlug).not.toHaveBeenCalled();
+  });
+
+  it("clears the saved slug when the body omits a slug", async () => {
+    mocks.setCompanyGithubSlug.mockReturnValue(null);
+
+    const response = await PATCH(jsonRequest({}), context);
 
     expect(response.status).toBe(200);
     expect(mocks.setCompanyGithubSlug).toHaveBeenCalledWith(

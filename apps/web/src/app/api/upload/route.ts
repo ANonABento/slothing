@@ -9,6 +9,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { writeFile, mkdir, unlink } from "fs/promises";
 import crypto from "crypto";
 import path from "path";
+import { parseSearchParams } from "@/lib/api-utils";
 import { generateId } from "@/lib/utils";
 import {
   saveDocument,
@@ -35,12 +36,9 @@ import {
 import { sanitizeFilename } from "@/lib/upload/filename";
 import { requireAuth, isAuthError } from "@/lib/auth";
 import { mergeParsedProfileForAutoPromote } from "@/lib/profile/auto-promote";
+import { uploadQuerySchema } from "@/lib/schemas";
 
 export const dynamic = "force-dynamic";
-
-function getForceUpload(request: NextRequest): boolean {
-  return request.nextUrl.searchParams.get("force") === "true";
-}
 
 /**
  * Heuristic for detecting password-protected / encrypted PDFs from the parser
@@ -85,6 +83,13 @@ function buildExtractedTextPreview(extractedText: string): string {
 export async function POST(request: NextRequest) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
+
+  const query = parseSearchParams(
+    request.nextUrl.searchParams,
+    uploadQuerySchema,
+  );
+  if (!query.ok) return query.response;
+  const forceUpload = query.data.force;
 
   // Track the on-disk file (if written) so we can clean up on any error path.
   let writtenFilePath: string | undefined;
@@ -141,14 +146,14 @@ export async function POST(request: NextRequest) {
     }
 
     const existingDocument = getDocumentByFileHash(fileHash, authResult.userId);
-    if (existingDocument && !getForceUpload(request)) {
+    if (existingDocument && !forceUpload) {
       return buildExistingDocumentResponse(existingDocument);
     }
 
     // Ensure upload directory exists
     await mkdir(PATHS.UPLOADS, { recursive: true });
 
-    if (existingDocument && getForceUpload(request)) {
+    if (existingDocument && forceUpload) {
       const { deleteSourceDocuments } = await import("@/lib/db/profile-bank");
       deleteSourceDocuments([existingDocument.id], authResult.userId);
       await unlink(existingDocument.path).catch(() => undefined);

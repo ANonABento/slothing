@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
+import { parseJsonBody } from "@/lib/api-utils";
 import { isAuthError, requireAuth } from "@/lib/auth";
 import {
   listLearnedAnswers,
   upsertLearnedAnswer,
 } from "@/lib/db/learned-answers";
+import { createAnswerSchema } from "@/lib/schemas";
 
 export const dynamic = "force-dynamic";
 
@@ -28,28 +30,10 @@ export async function POST(request: NextRequest) {
   if (isAuthError(authResult)) return authResult;
 
   try {
-    const body = await request.json();
-    const question =
-      typeof body.question === "string" ? body.question.trim() : "";
-    const answer = typeof body.answer === "string" ? body.answer.trim() : "";
-    const sourceUrl =
-      typeof body.sourceUrl === "string" ? body.sourceUrl.trim() : undefined;
-    const sourceCompany =
-      typeof body.sourceCompany === "string"
-        ? body.sourceCompany.trim()
-        : undefined;
+    const parsed = await parseJsonBody(request, createAnswerSchema);
+    if (!parsed.ok) return parsed.response;
 
-    if (!question || !answer) {
-      return NextResponse.json(
-        { error: "Question and answer are required" },
-        { status: 400 },
-      );
-    }
-
-    const saved = await upsertLearnedAnswer(
-      { question, answer, sourceUrl, sourceCompany },
-      authResult.userId,
-    );
+    const saved = await upsertLearnedAnswer(parsed.data, authResult.userId);
 
     return NextResponse.json(saved, { status: saved.updated ? 200 : 201 });
   } catch (error) {

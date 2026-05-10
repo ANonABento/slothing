@@ -32,14 +32,10 @@ import { GET } from "./route";
 import {
   expectRouteResponseContract,
   getRequest,
-  invalidJsonRequest,
   invokeRouteHandler,
-  jsonRequest,
-  representativeBody,
   resetContractMocks,
   routeContext,
   setAuthFailure,
-  setAuthSuccess,
 } from "@/test/contract";
 
 describe("/api/insights route contract", () => {
@@ -57,6 +53,22 @@ describe("/api/insights route contract", () => {
     );
 
     await expectRouteResponseContract(response);
+  });
+
+  it("returns validation errors for invalid refresh values", async () => {
+    const response = await invokeRouteHandler(
+      GET,
+      getRequest("http://localhost/api/insights?refresh=banana", {
+        "x-extension-token": "test-token",
+      }),
+      routeContext(),
+    );
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toMatchObject({
+      error: "Validation failed",
+      errors: [{ field: "refresh" }],
+    });
   });
 
   it("returns the shared auth failure contract", async () => {

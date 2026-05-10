@@ -81,6 +81,47 @@ describe("/api/tailor/autofix route contract", () => {
       routeContext(),
     );
 
+    expect(response.status).toBe(400);
     await expectRouteResponseContract(response);
+  });
+
+  it("returns validation errors for missing required fields", async () => {
+    const response = await invokeRouteHandler(
+      POST,
+      jsonRequest(
+        "http://localhost/api/tailor/autofix",
+        { keywordsMissing: ["React"], jobDescription: "Build apps" },
+        "POST",
+      ),
+      routeContext(),
+    );
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toMatchObject({
+      error: "Validation failed",
+      errors: [{ field: "resume" }],
+    });
+  });
+
+  it("returns validation errors for wrong field types", async () => {
+    const response = await invokeRouteHandler(
+      POST,
+      jsonRequest(
+        "http://localhost/api/tailor/autofix",
+        {
+          resume: 123,
+          keywordsMissing: ["React"],
+          jobDescription: "Build apps",
+        },
+        "POST",
+      ),
+      routeContext(),
+    );
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toMatchObject({
+      error: "Validation failed",
+      errors: [{ field: "resume" }],
+    });
   });
 });

@@ -5,6 +5,7 @@
  * @response BankEntriesResponse from @/types/api
  */
 import { NextRequest, NextResponse } from "next/server";
+import { parseJsonBody } from "@/lib/api-utils";
 import { requireAuth, isAuthError } from "@/lib/auth";
 import {
   getBankEntries,
@@ -15,6 +16,7 @@ import {
 } from "@/lib/db/profile-bank";
 import type { BankCategory } from "@/types";
 import { BANK_CATEGORIES } from "@/types";
+import { createBankEntrySchema } from "@/lib/schemas";
 
 export const dynamic = "force-dynamic";
 
@@ -59,33 +61,21 @@ export async function POST(request: NextRequest) {
   if (isAuthError(authResult)) return authResult;
 
   try {
-    const body = await request.json();
-    const { category, content } = body;
-    const sourceDocumentId =
-      typeof body.sourceDocumentId === "string" && body.sourceDocumentId.trim()
-        ? body.sourceDocumentId.trim()
-        : undefined;
-    const confidenceScore =
-      typeof body.confidenceScore === "number" ? body.confidenceScore : 1.0;
+    const parsed = await parseJsonBody(request, createBankEntrySchema);
+    if (!parsed.ok) return parsed.response;
 
-    if (!category || !BANK_CATEGORIES.includes(category)) {
-      return NextResponse.json({ error: "Invalid category" }, { status: 400 });
-    }
-    if (!content || typeof content !== "object") {
-      return NextResponse.json(
-        { error: "Content is required" },
-        { status: 400 },
-      );
-    }
+    const { category, content, sourceDocumentId, confidenceScore } =
+      parsed.data;
 
-    const insertEntry = {
-      category,
-      content,
-      ...(sourceDocumentId ? { sourceDocumentId } : {}),
-      confidenceScore,
-    };
-
-    const id = insertBankEntry(insertEntry, authResult.userId);
+    const id = insertBankEntry(
+      {
+        category,
+        content,
+        ...(sourceDocumentId ? { sourceDocumentId } : {}),
+        confidenceScore,
+      },
+      authResult.userId,
+    );
 
     return NextResponse.json({ success: true, id }, { status: 201 });
   } catch (error) {

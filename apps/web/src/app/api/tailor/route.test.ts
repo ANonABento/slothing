@@ -133,7 +133,40 @@ describe("/api/tailor route contract", () => {
       routeContext(),
     );
 
+    expect(response.status).toBe(400);
     await expectRouteResponseContract(response);
+  });
+
+  it("returns validation errors for missing job description", async () => {
+    const response = await invokeRouteHandler(
+      POST,
+      jsonRequest("http://localhost/api/tailor", { action: "analyze" }, "POST"),
+      routeContext(),
+    );
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toMatchObject({
+      error: "Validation failed",
+      errors: [{ field: "jobDescription" }],
+    });
+  });
+
+  it("returns validation errors for wrong field types", async () => {
+    const response = await invokeRouteHandler(
+      POST,
+      jsonRequest(
+        "http://localhost/api/tailor",
+        { action: "analyze", jobDescription: 123 },
+        "POST",
+      ),
+      routeContext(),
+    );
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toMatchObject({
+      error: "Validation failed",
+      errors: [{ field: "jobDescription" }],
+    });
   });
 
   it("returns a structured 429 when the free tailor quota is exhausted", async () => {
@@ -145,7 +178,6 @@ describe("/api/tailor route contract", () => {
       limit: 5,
       resetAt: "2026-06-01T00:00:00.000Z",
     });
-
     const response = await invokeRouteHandler(
       POST,
       jsonRequest(
