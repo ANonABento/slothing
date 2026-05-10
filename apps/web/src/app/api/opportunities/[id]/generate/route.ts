@@ -107,9 +107,12 @@ export async function POST(
       savedResume,
     });
   } catch (error) {
-    console.error("Generate error:", error);
+    console.error(
+      "Generate error:",
+      error instanceof Error ? error.stack : error,
+    );
     return NextResponse.json(
-      { error: "Failed to generate resume", details: String(error) },
+      { error: "Failed to generate resume" },
       { status: 500 },
     );
   }

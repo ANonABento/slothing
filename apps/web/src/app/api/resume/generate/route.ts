@@ -84,9 +84,12 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("Resume generation error:", error);
+    console.error(
+      "Resume generation error:",
+      error instanceof Error ? error.stack : error,
+    );
     return NextResponse.json(
-      { error: "Failed to generate resume", details: String(error) },
+      { error: "Failed to generate resume" },
       { status: 500 },
     );
   }

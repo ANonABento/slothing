@@ -59,6 +59,7 @@ vi.mock("@/lib/auth", () =>
 );
 
 import { GET, POST } from "./route";
+import { getGroupedBankEntries } from "@/lib/db/profile-bank";
 import {
   expectRouteResponseContract,
   getRequest,
@@ -128,5 +129,34 @@ describe("/api/tailor route contract", () => {
     );
 
     await expectRouteResponseContract(response);
+  });
+
+  it("does not leak raw error messages on 500", async () => {
+    const probe = "INTERNAL_LEAK_PROBE_TAILOR_4A30A145";
+    setAuthSuccess();
+    vi.mocked(getGroupedBankEntries).mockImplementationOnce(() => {
+      throw new Error(probe);
+    });
+
+    const response = await invokeRouteHandler(
+      POST,
+      jsonRequest(
+        "http://localhost/api/tailor",
+        {
+          jobDescription:
+            "We need a frontend engineer who can improve reliability across customer-facing systems.",
+          action: "analyze",
+        },
+        "POST",
+        { "x-extension-token": "test-token" },
+      ),
+      routeContext(),
+    );
+
+    expect(response.status).toBe(500);
+    const body = await response.json();
+    expect(JSON.stringify(body)).not.toContain(probe);
+    expect(body).not.toHaveProperty("details");
+    expect(body.error).toBe("Failed to tailor resume");
   });
 });

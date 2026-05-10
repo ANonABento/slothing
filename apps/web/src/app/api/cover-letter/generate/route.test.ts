@@ -195,4 +195,25 @@ describe("cover letter generate route", () => {
       "user-1",
     );
   });
+
+  it("does not leak raw error messages on 500", async () => {
+    const probe = "INTERNAL_LEAK_PROBE_COVER_LETTER_GENERATE_4A30A145";
+    mocks.generateCoverLetter.mockRejectedValueOnce(new Error(probe));
+
+    const response = await POST(
+      jsonRequest({
+        jobDescription:
+          "We need a frontend engineer who can improve reliability across customer-facing systems.",
+        jobTitle: "Frontend Engineer",
+        company: "Acme",
+        action: "generate",
+      }),
+    );
+
+    expect(response.status).toBe(500);
+    const body = await response.json();
+    expect(JSON.stringify(body)).not.toContain(probe);
+    expect(body).not.toHaveProperty("details");
+    expect(body.error).toBe("Failed to generate cover letter");
+  });
 });

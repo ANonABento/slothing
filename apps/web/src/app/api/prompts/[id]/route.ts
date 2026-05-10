@@ -60,9 +60,12 @@ export async function PATCH(
     const updated = getPromptVariantById(id, authResult.userId);
     return NextResponse.json({ variant: updated });
   } catch (error) {
-    console.error("Update prompt variant error:", error);
+    console.error(
+      "Update prompt variant error:",
+      error instanceof Error ? error.stack : error,
+    );
     return NextResponse.json(
-      { error: "Failed to update prompt variant", details: String(error) },
+      { error: "Failed to update prompt variant" },
       { status: 500 },
     );
   }

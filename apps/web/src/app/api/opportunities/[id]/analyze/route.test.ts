@@ -17,6 +17,7 @@ vi.mock("@/lib/auth", () =>
 );
 
 import { POST } from "./route";
+import { getJob } from "@/lib/db/jobs";
 import {
   expectRouteResponseContract,
   getRequest,
@@ -83,5 +84,30 @@ describe("/api/opportunities/[id]/analyze route contract", () => {
     );
 
     await expectRouteResponseContract(response);
+  });
+
+  it("does not leak raw error messages on 500", async () => {
+    const probe = "INTERNAL_LEAK_PROBE_OPPORTUNITY_ANALYZE_4A30A145";
+    setAuthSuccess();
+    vi.mocked(getJob).mockImplementationOnce(() => {
+      throw new Error(probe);
+    });
+
+    const response = await invokeRouteHandler(
+      POST,
+      jsonRequest(
+        "http://localhost/api/opportunities/item-1/analyze",
+        representativeBody(),
+        "POST",
+        { "x-extension-token": "test-token" },
+      ),
+      routeContext({ id: "item-1" }),
+    );
+
+    expect(response.status).toBe(500);
+    const body = await response.json();
+    expect(JSON.stringify(body)).not.toContain(probe);
+    expect(body).not.toHaveProperty("details");
+    expect(body.error).toBe("Failed to analyze opportunity match");
   });
 });

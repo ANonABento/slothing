@@ -95,9 +95,12 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, content });
   } catch (error) {
-    console.error("Document assistant error:", error);
+    console.error(
+      "Document assistant error:",
+      error instanceof Error ? error.stack : error,
+    );
     return NextResponse.json(
-      { error: "Failed to rewrite selected text", details: String(error) },
+      { error: "Failed to rewrite selected text" },
       { status: 500 },
     );
   }
