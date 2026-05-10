@@ -10,26 +10,10 @@ import {
   useMemo,
 } from "react";
 import { useRouter } from "next/navigation";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  Home,
-  Upload,
-  FileText,
-  Settings,
-  Keyboard,
-  Search,
-  Sparkles,
-} from "lucide-react";
+import { ShortcutsHelpDialog } from "@/components/keyboard-shortcuts-dialog";
 import {
   matchesShortcut,
   isInputTarget,
-  formatShortcutKeys,
   type ShortcutDefinition,
 } from "@/lib/keyboard-shortcuts";
 
@@ -213,158 +197,12 @@ export function useKeyboardShortcuts() {
  */
 export function useRegisterShortcuts(id: string, shortcuts: Shortcut[]) {
   const { registerShortcuts, unregisterShortcuts } = useKeyboardShortcuts();
-  const shortcutsRef = useRef(shortcuts);
-  shortcutsRef.current = shortcuts;
 
   useEffect(() => {
-    registerShortcuts(id, shortcutsRef.current);
+    registerShortcuts(id, shortcuts);
     return () => unregisterShortcuts(id);
-  }, [id, registerShortcuts, unregisterShortcuts]);
+  }, [id, shortcuts, registerShortcuts, unregisterShortcuts]);
 }
 
 // Re-export for convenience
 export type { Shortcut };
-
-function ShortcutsHelpDialog({
-  open,
-  onOpenChange,
-  shortcuts,
-}: {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  shortcuts: Shortcut[];
-}) {
-  const navigationShortcuts = shortcuts.filter(
-    (s) => s.category === "navigation",
-  );
-  const actionShortcuts = shortcuts.filter((s) => s.category === "actions");
-  const generalShortcuts = shortcuts.filter((s) => s.category === "general");
-
-  const icons: Record<string, React.ElementType> = {
-    h: Home,
-    b: FileText,
-    t: Sparkles,
-    s: Settings,
-    "/": Search,
-    u: Upload,
-  };
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Keyboard className="h-5 w-5 text-primary" />
-            Keyboard Shortcuts
-          </DialogTitle>
-          <DialogDescription>
-            Navigate faster with keyboard shortcuts across the app.
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="space-y-6 py-4">
-          {/* Navigation */}
-          <div>
-            <h3 className="text-sm font-medium text-muted-foreground mb-3">
-              Navigation
-            </h3>
-            <div className="space-y-2">
-              {navigationShortcuts.map((shortcut, i) => {
-                const Icon = icons[shortcut.key];
-                return (
-                  <div
-                    key={`nav-${shortcut.key}-${i}`}
-                    className="flex items-center justify-between"
-                  >
-                    <div className="flex items-center gap-3">
-                      {Icon && (
-                        <Icon className="h-4 w-4 text-muted-foreground" />
-                      )}
-                      <span className="text-sm">{shortcut.description}</span>
-                    </div>
-                    <ShortcutKey shortcut={shortcut} />
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Page Actions */}
-          {actionShortcuts.length > 0 && (
-            <div>
-              <h3 className="text-sm font-medium text-muted-foreground mb-3">
-                Page Actions
-              </h3>
-              <div className="space-y-2">
-                {actionShortcuts.map((shortcut, i) => {
-                  const Icon = icons[shortcut.key];
-                  return (
-                    <div
-                      key={`act-${shortcut.key}-${i}`}
-                      className="flex items-center justify-between"
-                    >
-                      <div className="flex items-center gap-3">
-                        {Icon && (
-                          <Icon className="h-4 w-4 text-muted-foreground" />
-                        )}
-                        <span className="text-sm">{shortcut.description}</span>
-                      </div>
-                      <ShortcutKey shortcut={shortcut} />
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* General */}
-          <div>
-            <h3 className="text-sm font-medium text-muted-foreground mb-3">
-              General
-            </h3>
-            <div className="space-y-2">
-              {generalShortcuts.map((shortcut, i) => (
-                <div
-                  key={`gen-${shortcut.key}-${i}`}
-                  className="flex items-center justify-between"
-                >
-                  <span className="text-sm">{shortcut.description}</span>
-                  <ShortcutKey shortcut={shortcut} />
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        <div className="pt-2 border-t text-center">
-          <p className="text-xs text-muted-foreground">
-            Press{" "}
-            <kbd className="px-1.5 py-0.5 rounded bg-muted text-xs font-mono">
-              ?
-            </kbd>{" "}
-            anytime to show this dialog
-          </p>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-function ShortcutKey({ shortcut }: { shortcut: ShortcutDefinition }) {
-  const isMac =
-    typeof window !== "undefined" && navigator.platform.includes("Mac");
-  const parts = formatShortcutKeys(shortcut, isMac);
-
-  return (
-    <div className="flex items-center gap-1">
-      {parts.map((part, i) => (
-        <kbd
-          key={i}
-          className="px-2 py-1 rounded bg-muted text-xs font-mono min-w-[24px] text-center"
-        >
-          {part}
-        </kbd>
-      ))}
-    </div>
-  );
-}

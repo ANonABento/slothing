@@ -49,10 +49,12 @@ interface StudioHeaderProps {
   canCopyHtml: boolean;
   canDownloadDocx: boolean;
   canDownloadPdf: boolean;
+  exportMenuOpen: boolean;
   isExporting: boolean;
   onDocumentModeChange: (mode: DocumentMode) => void;
   onAiPanelToggle?: () => void;
   onFilesPanelToggle?: () => void;
+  onExportMenuOpenChange: (open: boolean) => void;
   onTemplateSelect: (templateId: string) => void;
   onCopyHtml: () => void;
   onDownloadDocx: () => void;
@@ -74,17 +76,18 @@ export function StudioHeader({
   canCopyHtml,
   canDownloadDocx,
   canDownloadPdf,
+  exportMenuOpen,
   isExporting,
   onDocumentModeChange,
   onAiPanelToggle,
   onFilesPanelToggle,
+  onExportMenuOpenChange,
   onTemplateSelect,
   onCopyHtml,
   onDownloadDocx,
   onDownloadPdf,
 }: StudioHeaderProps) {
   const [templateOpen, setTemplateOpen] = useState(false);
-  const [exportOpen, setExportOpen] = useState(false);
   const [templateSearch, setTemplateSearch] = useState("");
   const [now, setNow] = useState(() => nowEpoch());
   const [templatePickerPosition, setTemplatePickerPosition] =
@@ -134,19 +137,19 @@ export function StudioHeader({
 
   useEffect(() => {
     if (canExport) return;
-    setExportOpen(false);
-  }, [canExport]);
+    onExportMenuOpenChange(false);
+  }, [canExport, onExportMenuOpenChange]);
 
   useEffect(() => {
-    if (!exportOpen) return;
+    if (!exportMenuOpen) return;
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setExportOpen(false);
+      if (event.key === "Escape") onExportMenuOpenChange(false);
     };
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [exportOpen]);
+  }, [exportMenuOpen, onExportMenuOpenChange]);
 
   useEffect(() => {
     if (!templateOpen) return;
@@ -387,10 +390,10 @@ export function StudioHeader({
             <Button
               type="button"
               aria-label={`${modeLabel} export options`}
-              aria-expanded={exportOpen}
+              aria-expanded={exportMenuOpen}
               aria-haspopup="menu"
               size="sm"
-              onClick={() => setExportOpen((prev) => !prev)}
+              onClick={() => onExportMenuOpenChange(!exportMenuOpen)}
               disabled={exportDisabled}
               title={
                 exportDisabled && exportHelpText ? exportHelpText : undefined
@@ -405,11 +408,11 @@ export function StudioHeader({
               {exportHelpText}
             </p>
           )}
-          {exportOpen && (
+          {exportMenuOpen && (
             <>
               <div
                 className="fixed inset-0 z-40"
-                onClick={() => setExportOpen(false)}
+                onClick={() => onExportMenuOpenChange(false)}
               />
               <div
                 role="menu"
@@ -420,7 +423,7 @@ export function StudioHeader({
                   type="button"
                   role="menuitem"
                   onClick={() => {
-                    setExportOpen(false);
+                    onExportMenuOpenChange(false);
                     onDownloadPdf();
                   }}
                   className="flex min-h-9 w-full items-center gap-2 rounded-[calc(var(--radius)_-_2px)] px-3 text-left text-sm transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -432,7 +435,7 @@ export function StudioHeader({
                   type="button"
                   role="menuitem"
                   onClick={() => {
-                    setExportOpen(false);
+                    onExportMenuOpenChange(false);
                     onDownloadDocx();
                   }}
                   className="flex min-h-9 w-full items-center gap-2 rounded-[calc(var(--radius)_-_2px)] px-3 text-left text-sm transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -444,7 +447,7 @@ export function StudioHeader({
                   type="button"
                   role="menuitem"
                   onClick={() => {
-                    setExportOpen(false);
+                    onExportMenuOpenChange(false);
                     onCopyHtml();
                   }}
                   className="flex min-h-9 w-full items-center gap-2 rounded-[calc(var(--radius)_-_2px)] px-3 text-left text-sm transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
