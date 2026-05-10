@@ -10,6 +10,7 @@ import { Link } from "@/i18n/navigation";
 const navLinks = [
   { name: "Features", href: "#features" },
   { name: "How It Works", href: "#how-it-works" },
+  { name: "Pricing", href: "/pricing" },
   { name: "Testimonials", href: "#testimonials" },
 ];
 
@@ -51,15 +52,26 @@ export function Navbar() {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-8">
-            {navLinks.map((link) => (
-              <a
-                key={link.name}
-                href={link.href}
-                className="inline-flex min-h-11 items-center text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-              >
-                {link.name}
-              </a>
-            ))}
+            {navLinks.map((link) =>
+              link.href.startsWith("#") ? (
+                <a
+                  key={link.name}
+                  href={link.href}
+                  className="inline-flex min-h-11 items-center text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  {link.name}
+                </a>
+              ) : (
+                <Link
+                  key={link.name}
+                  href={link.href}
+                  prefetch={false}
+                  className="inline-flex min-h-11 items-center text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  {link.name}
+                </Link>
+              ),
+            )}
           </nav>
 
           {/* CTA Buttons */}
@@ -103,16 +115,28 @@ export function Navbar() {
         {mobileOpen && (
           <div className="md:hidden mt-4 pb-4 border-t pt-4">
             <nav className="flex flex-col gap-4">
-              {navLinks.map((link) => (
-                <a
-                  key={link.name}
-                  href={link.href}
-                  onClick={() => setMobileOpen(false)}
-                  className="flex min-h-11 items-center text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-                >
-                  {link.name}
-                </a>
-              ))}
+              {navLinks.map((link) =>
+                link.href.startsWith("#") ? (
+                  <a
+                    key={link.name}
+                    href={link.href}
+                    onClick={() => setMobileOpen(false)}
+                    className="flex min-h-11 items-center text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                  >
+                    {link.name}
+                  </a>
+                ) : (
+                  <Link
+                    key={link.name}
+                    href={link.href}
+                    prefetch={false}
+                    onClick={() => setMobileOpen(false)}
+                    className="flex min-h-11 items-center text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                  >
+                    {link.name}
+                  </Link>
+                ),
+              )}
               <div className="flex flex-col gap-2 mt-2">
                 <Button variant="outline" asChild>
                   <Link

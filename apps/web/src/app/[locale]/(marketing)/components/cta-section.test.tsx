@@ -68,7 +68,9 @@ describe("CTASection", () => {
     await renderCTASection();
     expect(screen.getByText("Free ATS scanner included")).toBeInTheDocument();
     expect(screen.getByText("Smart resume parsing")).toBeInTheDocument();
-    expect(screen.getByText("Unlimited tailored resumes")).toBeInTheDocument();
+    expect(
+      screen.getByText("5 free tailored resumes/month"),
+    ).toBeInTheDocument();
     expect(
       screen.getByText("Knowledge bank for your career"),
     ).toBeInTheDocument();
