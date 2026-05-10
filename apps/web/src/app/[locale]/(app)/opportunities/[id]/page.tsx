@@ -9,6 +9,7 @@ import {
   X,
   XCircle,
 } from "lucide-react";
+import { OpportunityDetailSkeleton } from "@/components/skeletons/opportunity-detail-skeleton";
 import { Badge } from "@/components/ui/badge";
 import { TimeAgo } from "@/components/format/time-ago";
 import { Button } from "@/components/ui/button";
@@ -447,11 +448,7 @@ export default function OpportunityDetailPage({
   const status = opportunity?.status ?? "saved";
   const linkedDocumentCount = resumes.length + coverLetters.length;
   if (loading) {
-    return (
-      <div className="flex min-h-[60vh] items-center justify-center">
-        <Loader2 className="h-6 w-6 animate-spin text-primary" />
-      </div>
-    );
+    return <OpportunityDetailSkeleton />;
   }
 
   if (!opportunity) {

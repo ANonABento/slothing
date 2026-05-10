@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { ProfileSkeleton } from "@/components/skeletons/profile-skeleton";
 import {
   Card,
   CardContent,
@@ -203,18 +204,7 @@ export default function ProfilePage() {
   }
 
   if (loading) {
-    return (
-      <AppPage>
-        <div className="flex min-h-[60vh] items-center justify-center">
-          <div className="text-center">
-            <Loader2 className="mx-auto h-10 w-10 animate-spin text-primary" />
-            <p className="mt-4 text-sm text-muted-foreground">
-              Loading profile...
-            </p>
-          </div>
-        </div>
-      </AppPage>
-    );
+    return <ProfileSkeleton />;
   }
 
   return (

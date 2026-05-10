@@ -21,6 +21,7 @@ import {
   type SourceCardState,
 } from "@/components/research/source-card";
 import { Button } from "@/components/ui/button";
+import { Skeleton, SkeletonChart } from "@/components/ui/skeleton";
 import type {
   BlogData,
   EnrichmentSnapshot,
@@ -137,80 +138,97 @@ export function CompanyEnrichmentDossier({
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
-        <SourceCard
-          title="GitHub"
-          icon={Github}
-          state={sourceState(snapshot?.github ?? null, isInitialLoading)}
-          errorMessage={sourceError("GitHub", snapshot?.github ?? null)}
-          onRetry={() => fetchSnapshot(true)}
-          headerAction={
-            <EditGithubSlugButton
-              jobId={jobId}
-              currentSlug={
-                snapshot?.github?.ok ? snapshot.github.data.resolvedSlug : null
+        {isInitialLoading ? (
+          Array.from({ length: 5 }).map((_, index) => (
+            <div key={index} className="rounded-lg border bg-card p-4">
+              <div className="mb-4 flex items-center gap-2">
+                <Skeleton className="h-5 w-5" />
+                <Skeleton className="h-5 w-24" />
+              </div>
+              <SkeletonChart className="border-0 p-0 shadow-none" />
+            </div>
+          ))
+        ) : (
+          <>
+            <SourceCard
+              title="GitHub"
+              icon={Github}
+              state={sourceState(snapshot?.github ?? null, isInitialLoading)}
+              errorMessage={sourceError("GitHub", snapshot?.github ?? null)}
+              onRetry={() => fetchSnapshot(true)}
+              headerAction={
+                <EditGithubSlugButton
+                  jobId={jobId}
+                  currentSlug={
+                    snapshot?.github?.ok
+                      ? snapshot.github.data.resolvedSlug
+                      : null
+                  }
+                  onSlugSaved={() => fetchSnapshot(true)}
+                />
               }
-              onSlugSaved={() => fetchSnapshot(true)}
-            />
-          }
-        >
-          <GithubSection result={snapshot?.github ?? null} />
-        </SourceCard>
+            >
+              <GithubSection result={snapshot?.github ?? null} />
+            </SourceCard>
 
-        <SourceCard
-          title="News"
-          icon={Newspaper}
-          state={sourceState(
-            snapshot?.news ?? null,
-            isInitialLoading,
-            (data) => data.headlines.length > 0,
-          )}
-          errorMessage={sourceError("News", snapshot?.news ?? null)}
-          onRetry={() => fetchSnapshot(true)}
-        >
-          <NewsSection result={snapshot?.news ?? null} />
-        </SourceCard>
+            <SourceCard
+              title="News"
+              icon={Newspaper}
+              state={sourceState(
+                snapshot?.news ?? null,
+                isInitialLoading,
+                (data) => data.headlines.length > 0,
+              )}
+              errorMessage={sourceError("News", snapshot?.news ?? null)}
+              onRetry={() => fetchSnapshot(true)}
+            >
+              <NewsSection result={snapshot?.news ?? null} />
+            </SourceCard>
 
-        <SourceCard
-          title="Levels"
-          icon={BarChart3}
-          state={sourceState(
-            snapshot?.levels ?? null,
-            isInitialLoading,
-            (data) => Boolean(data.medianTotalComp) || data.roles.length > 0,
-          )}
-          errorMessage={sourceError("Levels", snapshot?.levels ?? null)}
-          onRetry={() => fetchSnapshot(true)}
-        >
-          <LevelsSection result={snapshot?.levels ?? null} />
-        </SourceCard>
+            <SourceCard
+              title="Levels"
+              icon={BarChart3}
+              state={sourceState(
+                snapshot?.levels ?? null,
+                isInitialLoading,
+                (data) =>
+                  Boolean(data.medianTotalComp) || data.roles.length > 0,
+              )}
+              errorMessage={sourceError("Levels", snapshot?.levels ?? null)}
+              onRetry={() => fetchSnapshot(true)}
+            >
+              <LevelsSection result={snapshot?.levels ?? null} />
+            </SourceCard>
 
-        <SourceCard
-          title="Eng Blog"
-          icon={Rss}
-          state={sourceState(
-            snapshot?.blog ?? null,
-            isInitialLoading,
-            (data) => data.posts.length > 0,
-          )}
-          errorMessage={sourceError("Eng Blog", snapshot?.blog ?? null)}
-          onRetry={() => fetchSnapshot(true)}
-        >
-          <BlogSection result={snapshot?.blog ?? null} />
-        </SourceCard>
+            <SourceCard
+              title="Eng Blog"
+              icon={Rss}
+              state={sourceState(
+                snapshot?.blog ?? null,
+                isInitialLoading,
+                (data) => data.posts.length > 0,
+              )}
+              errorMessage={sourceError("Eng Blog", snapshot?.blog ?? null)}
+              onRetry={() => fetchSnapshot(true)}
+            >
+              <BlogSection result={snapshot?.blog ?? null} />
+            </SourceCard>
 
-        <SourceCard
-          title="HN"
-          icon={TrendingUp}
-          state={sourceState(
-            snapshot?.hn ?? null,
-            isInitialLoading,
-            (data) => data.stories.length > 0,
-          )}
-          errorMessage={sourceError("HN", snapshot?.hn ?? null)}
-          onRetry={() => fetchSnapshot(true)}
-        >
-          <HnSection result={snapshot?.hn ?? null} />
-        </SourceCard>
+            <SourceCard
+              title="HN"
+              icon={TrendingUp}
+              state={sourceState(
+                snapshot?.hn ?? null,
+                isInitialLoading,
+                (data) => data.stories.length > 0,
+              )}
+              errorMessage={sourceError("HN", snapshot?.hn ?? null)}
+              onRetry={() => fetchSnapshot(true)}
+            >
+              <HnSection result={snapshot?.hn ?? null} />
+            </SourceCard>
+          </>
+        )}
       </div>
 
       <QuickResearchLinks companyName={companyName} />

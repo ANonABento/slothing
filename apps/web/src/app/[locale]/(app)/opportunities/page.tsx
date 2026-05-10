@@ -24,6 +24,8 @@ import {
 } from "lucide-react";
 import { ImportJobDialog } from "@/components/jobs/import-job-dialog";
 import { AddOpportunityWizard } from "@/components/opportunities/add-opportunity-wizard";
+import { OpportunitiesKanbanSkeleton } from "@/components/skeletons/opportunities-kanban-skeleton";
+import { OpportunitiesListSkeleton } from "@/components/skeletons/opportunities-list-skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -106,6 +108,11 @@ export default function OpportunitiesPage() {
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const [hasLoadedFiltersPreference, setHasLoadedFiltersPreference] =
     useState(false);
+  const [hasFetched, setHasFetched] = useState(false);
+  const [hasCachedData, setHasCachedData] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return Boolean(window.localStorage.getItem(STORAGE_KEY));
+  });
   const showErrorToast = useErrorToast();
 
   const fetchOpportunities = useCallback(async () => {
@@ -127,6 +134,8 @@ export default function OpportunitiesPage() {
         title: "Could not load opportunities",
         fallbackDescription: "Showing locally saved opportunities instead.",
       });
+    } finally {
+      setHasFetched(true);
     }
   }, [showErrorToast]);
 
@@ -136,9 +145,13 @@ export default function OpportunitiesPage() {
 
     try {
       const parsed = JSON.parse(saved) as Opportunity[];
-      if (Array.isArray(parsed)) setOpportunities(parsed);
+      if (Array.isArray(parsed)) {
+        setOpportunities(parsed);
+        setHasCachedData(true);
+      }
     } catch {
       window.localStorage.removeItem(STORAGE_KEY);
+      setHasCachedData(false);
     }
   }, []);
 
@@ -314,6 +327,14 @@ export default function OpportunitiesPage() {
     }
   }
 
+  if (!hasFetched && !hasCachedData) {
+    return viewMode === "kanban" ? (
+      <OpportunitiesKanbanSkeleton />
+    ) : (
+      <OpportunitiesListSkeleton />
+    );
+  }
+
   return (
     <AppPage>
       <PageHeader
@@ -396,7 +417,9 @@ export default function OpportunitiesPage() {
 
                   <div className="space-y-5">
                     <div className="space-y-2">
-                      <Label htmlFor="opportunity-type">{t("filters.type")}</Label>
+                      <Label htmlFor="opportunity-type">
+                        {t("filters.type")}
+                      </Label>
                       <Select
                         value={filters.typeTab}
                         onValueChange={(value) =>
@@ -420,7 +443,9 @@ export default function OpportunitiesPage() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="opportunity-status">{t("filters.status")}</Label>
+                      <Label htmlFor="opportunity-status">
+                        {t("filters.status")}
+                      </Label>
                       <Select
                         value={filters.status}
                         onValueChange={(value) =>
@@ -444,7 +469,9 @@ export default function OpportunitiesPage() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="opportunity-source">{t("filters.source")}</Label>
+                      <Label htmlFor="opportunity-source">
+                        {t("filters.source")}
+                      </Label>
                       <Select
                         value={filters.source}
                         onValueChange={(value) =>
@@ -468,7 +495,9 @@ export default function OpportunitiesPage() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="opportunity-tag">{t("filters.tags")}</Label>
+                      <Label htmlFor="opportunity-tag">
+                        {t("filters.tags")}
+                      </Label>
                       <Select
                         value={filters.tag}
                         onValueChange={(value) => updateFilter("tag", value)}
@@ -477,7 +506,9 @@ export default function OpportunitiesPage() {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="all">{t("filters.allTags")}</SelectItem>
+                          <SelectItem value="all">
+                            {t("filters.allTags")}
+                          </SelectItem>
                           {filterOptions.tags.map((tag) => (
                             <SelectItem key={tag} value={tag}>
                               {tag}
@@ -488,7 +519,9 @@ export default function OpportunitiesPage() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="opportunity-remote">{t("filters.remote")}</Label>
+                      <Label htmlFor="opportunity-remote">
+                        {t("filters.remote")}
+                      </Label>
                       <Select
                         value={filters.remoteType}
                         onValueChange={(value) =>
@@ -512,7 +545,9 @@ export default function OpportunitiesPage() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="opportunity-tech">{t("filters.tech")}</Label>
+                      <Label htmlFor="opportunity-tech">
+                        {t("filters.tech")}
+                      </Label>
                       <Select
                         value={filters.techStack}
                         onValueChange={(value) =>
@@ -523,7 +558,9 @@ export default function OpportunitiesPage() {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="all">{t("filters.anyStack")}</SelectItem>
+                          <SelectItem value="all">
+                            {t("filters.anyStack")}
+                          </SelectItem>
                           {filterOptions.techStacks.map((tech) => (
                             <SelectItem key={tech} value={tech}>
                               {tech}
@@ -711,7 +748,9 @@ function ActiveFiltersChips({
     filters.searchQuery.trim()
       ? {
           key: "search",
-          label: t("filters.activeSearch", { value: filters.searchQuery.trim() }),
+          label: t("filters.activeSearch", {
+            value: filters.searchQuery.trim(),
+          }),
           onRemove: () => onRemove("searchQuery", ""),
         }
       : null,

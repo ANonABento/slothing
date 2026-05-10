@@ -11,7 +11,6 @@ import {
   AlertCircle,
   ChevronDown,
   ChevronUp,
-  Loader2,
   Briefcase,
   CheckCircle2,
   XCircle,
@@ -24,6 +23,7 @@ import type {
   JobRecommendation,
   SkillMatch,
 } from "@/lib/recommendations/job-matcher";
+import { SkeletonJobCard } from "@/components/ui/skeleton";
 
 function ScoreRing({ score }: { score: number }) {
   const radius = 18;
@@ -260,9 +260,10 @@ export function JobRecommendations() {
 
   if (loading) {
     return (
-      <div className="rounded-xl border bg-card p-6 text-center">
-        <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
-        <p className="mt-4 text-muted-foreground">Analyzing your profile...</p>
+      <div className="space-y-3">
+        {Array.from({ length: 3 }).map((_, index) => (
+          <SkeletonJobCard key={index} />
+        ))}
       </div>
     );
   }
