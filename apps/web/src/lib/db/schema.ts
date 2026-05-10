@@ -48,6 +48,10 @@ export const documents = sqliteTable(
     uploadedAt: text("uploaded_at").default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => ({
+    userUploadedIdx: index("idx_documents_user_uploaded").on(
+      table.userId,
+      table.uploadedAt,
+    ),
     userFileHashIdx: index("idx_documents_user_file_hash").on(
       table.userId,
       table.fileHash,
@@ -140,52 +144,74 @@ export const certifications = sqliteTable("certifications", {
 });
 
 // Jobs table
-export const jobs = sqliteTable("jobs", {
-  id: text("id").primaryKey(),
-  userId: text("user_id").notNull().default(DEFAULT_USER_ID),
-  title: text("title").notNull(),
-  company: text("company").notNull(),
-  location: text("location"),
-  type: text("type"),
-  remote: integer("remote", { mode: "boolean" }).default(false),
-  salary: text("salary"),
-  description: text("description").notNull(),
-  requirementsJson: text("requirements_json"),
-  responsibilitiesJson: text("responsibilities_json"),
-  keywordsJson: text("keywords_json"),
-  url: text("url"),
-  status: text("status").default("saved"),
-  appliedAt: text("applied_at"),
-  deadline: text("deadline"),
-  notes: text("notes"),
-  createdAt: text("created_at").default(sql`CURRENT_TIMESTAMP`),
-});
+export const jobs = sqliteTable(
+  "jobs",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id").notNull().default(DEFAULT_USER_ID),
+    title: text("title").notNull(),
+    company: text("company").notNull(),
+    location: text("location"),
+    type: text("type"),
+    remote: integer("remote", { mode: "boolean" }).default(false),
+    salary: text("salary"),
+    description: text("description").notNull(),
+    requirementsJson: text("requirements_json"),
+    responsibilitiesJson: text("responsibilities_json"),
+    keywordsJson: text("keywords_json"),
+    url: text("url"),
+    status: text("status").default("saved"),
+    appliedAt: text("applied_at"),
+    deadline: text("deadline"),
+    notes: text("notes"),
+    createdAt: text("created_at").default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [index("idx_jobs_user_created").on(table.userId, table.createdAt)],
+);
 
 // Generated resumes table
-export const generatedResumes = sqliteTable("generated_resumes", {
-  id: text("id").primaryKey(),
-  userId: text("user_id").notNull().default(DEFAULT_USER_ID),
-  jobId: text("job_id").notNull(),
-  profileId: text("profile_id").notNull(),
-  contentJson: text("content_json").notNull(),
-  pdfPath: text("pdf_path"),
-  matchScore: real("match_score"),
-  createdAt: text("created_at").default(sql`CURRENT_TIMESTAMP`),
-});
+export const generatedResumes = sqliteTable(
+  "generated_resumes",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id").notNull().default(DEFAULT_USER_ID),
+    jobId: text("job_id").notNull(),
+    profileId: text("profile_id").notNull(),
+    contentJson: text("content_json").notNull(),
+    pdfPath: text("pdf_path"),
+    matchScore: real("match_score"),
+    createdAt: text("created_at").default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    index("idx_generated_resumes_user_created").on(
+      table.userId,
+      table.createdAt,
+    ),
+  ],
+);
 
 // Interview sessions table
-export const interviewSessions = sqliteTable("interview_sessions", {
-  id: text("id").primaryKey(),
-  userId: text("user_id").notNull().default(DEFAULT_USER_ID),
-  jobId: text("job_id"),
-  category: text("category"),
-  profileId: text("profile_id").notNull(),
-  mode: text("mode").default("text"),
-  questionsJson: text("questions_json").notNull(),
-  status: text("status").default("in_progress"),
-  startedAt: text("started_at").default(sql`CURRENT_TIMESTAMP`),
-  completedAt: text("completed_at"),
-});
+export const interviewSessions = sqliteTable(
+  "interview_sessions",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id").notNull().default(DEFAULT_USER_ID),
+    jobId: text("job_id"),
+    category: text("category"),
+    profileId: text("profile_id").notNull(),
+    mode: text("mode").default("text"),
+    questionsJson: text("questions_json").notNull(),
+    status: text("status").default("in_progress"),
+    startedAt: text("started_at").default(sql`CURRENT_TIMESTAMP`),
+    completedAt: text("completed_at"),
+  },
+  (table) => [
+    index("idx_interview_sessions_user_started").on(
+      table.userId,
+      table.startedAt,
+    ),
+  ],
+);
 
 // Interview answers table
 export const interviewAnswers = sqliteTable("interview_answers", {

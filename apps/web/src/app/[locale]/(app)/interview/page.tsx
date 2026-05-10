@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { Suspense, useCallback, useState } from "react";
 import { Loader2, Sparkles } from "lucide-react";
 import { InterviewActiveSession } from "@/components/interview/interview-active-session";
 import { InterviewJobSelection } from "@/components/interview/interview-job-selection";
@@ -13,6 +13,7 @@ import {
   PageHeader,
   PageLoadingState,
 } from "@/components/ui/page-layout";
+import { SkeletonCard } from "@/components/ui/skeleton";
 import { useFollowUp } from "@/hooks/useFollowUp";
 import { useInterviewSession } from "@/hooks/useInterviewSession";
 import type {
@@ -136,51 +137,59 @@ export default function InterviewPage() {
 
       <PageContent>
         {!interview.session ? (
-          <InterviewJobSelection
-            jobs={interview.jobs}
-            selectedJob={interview.selectedJob}
-            generating={interview.generating}
-            onStartInterview={handleStartInterview}
-            onStartQuickPractice={openQuickPractice}
-            difficulty={difficulty}
-            onDifficultyChange={setDifficulty}
-            pastSessions={interview.pastSessions}
-            onResumeSession={handleResumeSession}
-            onDeleteSession={(sessionId) => void handleDeleteSession(sessionId)}
-          />
-        ) : isComplete ? (
-          <InterviewSummary
-            session={interview.session}
-            selectedJob={selectedJobData}
-            onReset={resetInterview}
-          />
-        ) : (
-          <InterviewActiveSession
-            session={interview.session}
-            selectedJobData={selectedJobData}
-            currentAnswer={interview.currentAnswer}
-            onChangeAnswer={interview.setCurrentAnswer}
-            submitting={interview.submitting || followUp.submittingFollowUp}
-            onSubmitAnswer={() => void interview.submitAnswer()}
-            onSkipQuestion={async () => {
-              const confirmed = await confirm({
-                title: "Skip this question?",
-                description:
-                  "It will be marked as skipped in your summary so you can revisit it later.",
-                confirmLabel: "Skip",
-              });
-              if (confirmed) {
-                await interview.skipQuestion();
+          <Suspense fallback={<SkeletonCard />}>
+            <InterviewJobSelection
+              jobs={interview.jobs}
+              selectedJob={interview.selectedJob}
+              generating={interview.generating}
+              onStartInterview={handleStartInterview}
+              onStartQuickPractice={openQuickPractice}
+              difficulty={difficulty}
+              onDifficultyChange={setDifficulty}
+              pastSessions={interview.pastSessions}
+              onResumeSession={handleResumeSession}
+              onDeleteSession={(sessionId) =>
+                void handleDeleteSession(sessionId)
               }
-            }}
-            onEndInterview={resetInterview}
-            followUpMode={followUp.followUpMode}
-            currentFollowUp={followUp.currentFollowUp}
-            loadingFollowUp={followUp.loadingFollowUp}
-            onRequestFollowUp={() => void followUp.requestFollowUp()}
-            onSubmitFollowUp={() => void followUp.submitFollowUpAnswer()}
-            onSkipFollowUp={followUp.skipFollowUp}
-          />
+            />
+          </Suspense>
+        ) : isComplete ? (
+          <Suspense fallback={<SkeletonCard />}>
+            <InterviewSummary
+              session={interview.session}
+              selectedJob={selectedJobData}
+              onReset={resetInterview}
+            />
+          </Suspense>
+        ) : (
+          <Suspense fallback={<SkeletonCard />}>
+            <InterviewActiveSession
+              session={interview.session}
+              selectedJobData={selectedJobData}
+              currentAnswer={interview.currentAnswer}
+              onChangeAnswer={interview.setCurrentAnswer}
+              submitting={interview.submitting || followUp.submittingFollowUp}
+              onSubmitAnswer={() => void interview.submitAnswer()}
+              onSkipQuestion={async () => {
+                const confirmed = await confirm({
+                  title: "Skip this question?",
+                  description:
+                    "It will be marked as skipped in your summary so you can revisit it later.",
+                  confirmLabel: "Skip",
+                });
+                if (confirmed) {
+                  await interview.skipQuestion();
+                }
+              }}
+              onEndInterview={resetInterview}
+              followUpMode={followUp.followUpMode}
+              currentFollowUp={followUp.currentFollowUp}
+              loadingFollowUp={followUp.loadingFollowUp}
+              onRequestFollowUp={() => void followUp.requestFollowUp()}
+              onSubmitFollowUp={() => void followUp.submitFollowUpAnswer()}
+              onSkipFollowUp={followUp.skipFollowUp}
+            />
+          </Suspense>
         )}
       </PageContent>
       <QuickPracticeDialog
