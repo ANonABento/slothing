@@ -6,6 +6,7 @@ const {
   findForbiddenColorViolations,
   isForbiddenColorClass,
   isForbiddenInlineColorValue,
+  isExemptPath,
 } = require("../../../scripts/forbidden-color-lint.cjs") as {
   findForbiddenColorViolations: (
     source: string,
@@ -19,6 +20,7 @@ const {
   }>;
   isForbiddenColorClass: (className: string) => boolean;
   isForbiddenInlineColorValue: (value: string) => boolean;
+  isExemptPath: (filePath: string) => boolean;
 };
 
 describe("forbidden color lint", () => {
@@ -65,6 +67,25 @@ describe("forbidden color lint", () => {
         expect.objectContaining({ value: `${"color"}: "#${"111827"}"` }),
         expect.objectContaining({ value: `${"fill"}: "black"` }),
       ]),
+    );
+  });
+
+  it("exempts Next OG image files from hardcoded color checks", () => {
+    const source = `<div style={{ color: "#${"ffffff"}" }} className="bg-${"white"}" />`;
+
+    expect(isExemptPath("src/app/(app)/dashboard/opengraph-image.tsx")).toBe(
+      true,
+    );
+    expect(isExemptPath("src/lib/og/template.tsx")).toBe(true);
+    expect(isExemptPath("src/app/(app)/dashboard/page.tsx")).toBe(false);
+    expect(
+      findForbiddenColorViolations(
+        source,
+        "src/app/(app)/dashboard/opengraph-image.tsx",
+      ),
+    ).toEqual([]);
+    expect(findForbiddenColorViolations(source, "src/app/page.tsx")).not.toEqual(
+      [],
     );
   });
 });
