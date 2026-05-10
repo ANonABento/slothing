@@ -148,7 +148,11 @@ export async function POST(request: NextRequest) {
 
     const llmConfig = getLLMConfig(authResult.userId);
 
-    const { resume: tailoredResume, promptVariantId } = await generateFromBank(
+    const {
+      resume: tailoredResume,
+      baseResume,
+      promptVariantId,
+    } = await generateFromBank(
       {
         bankEntries,
         matchedEntries: analysis.matchedEntries,
@@ -228,6 +232,7 @@ export async function POST(request: NextRequest) {
       html,
       pdfUrl,
       resume: tailoredResume,
+      baseResume,
       savedResume,
       jobId: job.id,
       analysis: {
