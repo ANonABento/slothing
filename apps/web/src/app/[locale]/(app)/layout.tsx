@@ -27,12 +27,11 @@ async function AppShell({ children }: { children: React.ReactNode }) {
             <Sidebar />
             <main
               id="main-content"
-              className="flex-1 overflow-x-hidden overflow-y-auto overscroll-y-none bg-background"
+              className="flex-1 overflow-x-hidden overflow-y-auto overscroll-y-none bg-background pt-16 lg:pt-0"
               role="main"
               aria-label={t("mainContent")}
               tabIndex={-1}
             >
-              <div className="lg:hidden h-16" aria-hidden="true" />
               {children}
             </main>
           </div>
