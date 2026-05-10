@@ -44,3 +44,32 @@ npm run test:run -- evals/__tests__/dataset.test.ts
 ```
 
 Keep the loader counts, IDs, and scenario coverage aligned with the dataset tests.
+
+## Prompt QA Fixtures
+
+The prompt QA fixtures are a lightweight, Vitest-compatible offline suite for
+student internship outcomes. They validate prompt construction and deterministic
+mocked model outputs for six scenarios:
+
+- strong frontend student
+- weak retail-to-tech student
+- keyword-stuffed resume
+- unrelated data role
+- thin profile with one project
+- unsupported keyword request
+
+Run them without any provider credentials or network calls:
+
+```sh
+pnpm --filter @slothing/web eval:prompt-qa
+```
+
+The harness covers resume generation, tailor autofix, cover letter, email, and
+interview question/feedback prompts. Rubrics score factuality, evidence use, job
+fit, actionability, concision, and student usefulness. The unsupported keyword
+fixture intentionally verifies that invented evidence scores low.
+
+A future real-provider run should reuse the existing eval configuration pattern:
+set `EVAL_PROVIDER`, `EVAL_MODEL`, and the matching provider API key, then swap
+the mocked outputs in `evals/prompt-qa/harness.ts` for provider completions while
+keeping the same fixtures and rubric checks.

@@ -12,13 +12,17 @@ import { getProfile, getLLMConfig } from "@/lib/db";
 import { LLMClient, parseJSONFromLLM } from "@/lib/llm/client";
 import {
   startInterviewSchema,
-  DIFFICULTY_DESCRIPTIONS,
   type InterviewDifficulty,
   type SessionQuestionCategory,
 } from "@/lib/constants";
 import { requireAuth, isAuthError, getCurrentUserId } from "@/lib/auth";
 import { rateLimiters, getClientIdentifier } from "@/lib/rate-limit";
 import { validationErrorResponse, ApiErrors } from "@/lib/api-utils";
+import {
+  buildGenericInterviewQuestionsPrompt,
+  buildJobInterviewQuestionsPrompt,
+  SESSION_CATEGORY_VALUES,
+} from "@/lib/interview/prompt-builders";
 
 export const dynamic = "force-dynamic";
 
@@ -28,14 +32,6 @@ interface InterviewQuestion {
   suggestedAnswer?: string;
   difficulty?: InterviewDifficulty;
 }
-
-const SESSION_CATEGORY_VALUES: SessionQuestionCategory[] = [
-  "behavioral",
-  "technical",
-  "situational",
-  "cultural-fit",
-  "general",
-];
 
 export async function POST(request: NextRequest) {
   const authResult = await requireAuth();
@@ -99,47 +95,16 @@ export async function POST(request: NextRequest) {
     if (llmConfig) {
       const client = new LLMClient(llmConfig);
 
-      const profileContext = profile
-        ? `
-Candidate Background:
-- Name: ${profile.contact?.name}
-- Experience: ${profile.experiences.map((e) => `${e.title} at ${e.company}`).join(", ")}
-- Skills: ${profile.skills.map((s) => s.name).join(", ")}
-`
-        : "";
-
-      const difficultyContext =
-        DIFFICULTY_DESCRIPTIONS[difficulty as InterviewDifficulty] ||
-        DIFFICULTY_DESCRIPTIONS.mid;
-
       const response = await client.complete({
         messages: [
           {
             role: "user",
-            content: `Generate ${questionCount} interview questions for this job. Mix behavioral, technical, situational, and cultural-fit questions.
-
-Job: ${job.title} at ${job.company}
-Description: ${job.description}
-Key Skills: ${job.keywords.join(", ")}
-${profileContext}
-
-DIFFICULTY LEVEL: ${difficulty.toUpperCase()}
-${difficultyContext}
-
-Return ONLY a JSON array (no markdown):
-[
-  {
-    "question": "Tell me about a time when...",
-    "category": "behavioral",
-    "suggestedAnswer": "Structure using STAR method...",
-    "difficulty": "${difficulty}"
-  }
-]
-
-Categories: ${SESSION_CATEGORY_VALUES.join(", ")}
-Every question must have the best primary category. Avoid "general" for the first question unless no other category fits.
-Include suggestedAnswer with tips appropriate for the ${difficulty} level.
-Make sure questions match the ${difficulty} difficulty level.`,
+            content: buildJobInterviewQuestionsPrompt({
+              job,
+              profile,
+              difficulty: difficulty as InterviewDifficulty,
+              questionCount,
+            }),
           },
         ],
         temperature: 0.7,
@@ -187,33 +152,16 @@ async function getGenericQuestions({
   }
 
   const client = new LLMClient(llmConfig);
-  const difficultyContext =
-    DIFFICULTY_DESCRIPTIONS[difficulty] || DIFFICULTY_DESCRIPTIONS.mid;
-
   try {
     const response = await client.complete({
       messages: [
         {
           role: "user",
-          content: `You are an interviewer for a ${category} interview at ${difficulty} level.
-
-Generate ${questionCount} questions covering common ${category} interview topics. Do not reference any specific role or company.
-
-DIFFICULTY LEVEL: ${difficulty.toUpperCase()}
-${difficultyContext}
-
-Return ONLY a JSON array (no markdown):
-[
-  {
-    "question": "Tell me about a time when...",
-    "category": "${category}",
-    "suggestedAnswer": "Structure using STAR method...",
-    "difficulty": "${difficulty}"
-  }
-]
-
-Categories: ${SESSION_CATEGORY_VALUES.join(", ")}
-Every question must have the best primary category and include suggestedAnswer.`,
+          content: buildGenericInterviewQuestionsPrompt({
+            category,
+            difficulty,
+            questionCount,
+          }),
         },
       ],
       temperature: 0.7,
