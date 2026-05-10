@@ -7,6 +7,7 @@ const mocks = vi.hoisted(() => ({
   getTemplateWithCustom: vi.fn(),
   generateResumeHTML: vi.fn(),
   generatePDF: vi.fn(),
+  convertContentToDocx: vi.fn(),
 }));
 
 vi.mock("@/lib/auth", () => ({
@@ -28,6 +29,10 @@ vi.mock("@/lib/resume/pdf", () => ({
 
 vi.mock("@/lib/resume/pdf-export", () => ({
   generatePDF: mocks.generatePDF,
+}));
+
+vi.mock("@/lib/builder/docx-export", () => ({
+  convertContentToDocx: mocks.convertContentToDocx,
 }));
 
 import { POST } from "./route";
@@ -77,6 +82,7 @@ describe("resume export route", () => {
     mocks.getTemplateWithCustom.mockReturnValue(customTemplate);
     mocks.generateResumeHTML.mockReturnValue("<html>custom resume</html>");
     mocks.generatePDF.mockResolvedValue(new Uint8Array([1, 2, 3]));
+    mocks.convertContentToDocx.mockResolvedValue(Buffer.from([4, 5, 6]));
   });
 
   it("renders saved resume HTML with the authenticated user's custom template", async () => {
@@ -126,5 +132,71 @@ describe("resume export route", () => {
         },
       },
     );
+  });
+
+  it("exports a resume DOCX from TipTap content", async () => {
+    const content = {
+      type: "doc",
+      content: [{ type: "paragraph", content: [{ type: "text", text: "Hi" }] }],
+    };
+
+    const response = await POST(
+      exportRequest({
+        content,
+        mode: "resume",
+        templateId: "classic",
+        format: "docx",
+      }),
+    );
+
+    expect(mocks.convertContentToDocx).toHaveBeenCalledWith(
+      expect.objectContaining({
+        content,
+        mode: "resume",
+        title: "Classic Resume",
+      }),
+    );
+    expect(response.headers.get("content-type")).toBe(
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    );
+    expect(Array.from(new Uint8Array(await response.arrayBuffer()))).toEqual([
+      4, 5, 6,
+    ]);
+  });
+
+  it("exports a cover letter DOCX from TipTap content", async () => {
+    const content = {
+      type: "doc",
+      content: [{ type: "paragraph", content: [{ type: "text", text: "Hi" }] }],
+    };
+
+    await POST(
+      exportRequest({
+        content,
+        mode: "cover_letter",
+        templateId: "formal",
+        format: "docx",
+      }),
+    );
+
+    expect(mocks.convertContentToDocx).toHaveBeenCalledWith(
+      expect.objectContaining({
+        content,
+        mode: "cover_letter",
+        title: "Formal Cover Letter",
+      }),
+    );
+  });
+
+  it("rejects DOCX export without TipTap content", async () => {
+    const response = await POST(
+      exportRequest({
+        mode: "resume",
+        format: "docx",
+      }),
+    );
+
+    expect(response.status).toBe(400);
+    expect(mocks.convertContentToDocx).not.toHaveBeenCalled();
   });
 });
