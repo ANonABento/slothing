@@ -20,28 +20,24 @@ import { cn } from "@/lib/utils";
 
 function StudioPageContent() {
   const studio = useStudioPageState();
-  const { setAiPanelCollapsed, setExportMenuOpen, setMobileView } = studio;
+  const { setAiPanelCollapsed, setExportMenuOpen } = studio;
   const handleShortcutExport = useCallback(() => {
     setExportMenuOpen(true);
   }, [setExportMenuOpen]);
-  const handleShortcutCommandPalette = useCallback(() => {
+  const handleShortcutFocusAiInput = useCallback(() => {
     setAiPanelCollapsed(false);
-    setMobileView("assistant");
-
-    if (typeof window === "undefined") return;
-
     window.requestAnimationFrame(() => {
       document.getElementById("studio-jd-input")?.focus();
     });
-  }, [setAiPanelCollapsed, setMobileView]);
+  }, [setAiPanelCollapsed]);
 
   useStudioKeyboardShortcuts({
     onSave: studio.handleSaveManualVersion,
     onExport: handleShortcutExport,
     onToggleAiPanel: studio.toggleAiPanelCollapsed,
+    onFocusAiInput: handleShortcutFocusAiInput,
     onToggleFilesPanel: studio.toggleFilesPanelCollapsed,
     onTogglePreviewOnly: studio.togglePreviewOnly,
-    onCommandPalette: handleShortcutCommandPalette,
   });
 
   if (studio.loading) {
