@@ -84,8 +84,32 @@ test.describe("Onboarding Flow", () => {
     await page.getByLabel("Target role").fill("Frontend intern");
     await page.getByLabel("Background summary").fill("Building my first role.");
     await page.getByLabel("Top skills").fill("Research, Excel");
+    await page
+      .getByRole("button", { name: /Add a role, project, or honour/i })
+      .click();
+    await page.getByLabel("Company / organisation").fill("Campus Cafe");
+    await page.getByLabel("Role / title").fill("Barista");
+    await page
+      .getByLabel("Role highlights")
+      .fill("Pulled espresso shots\nTrained 3 new baristas");
+    await page.getByLabel("Project name").fill("Community pantry dashboard");
+    await page
+      .getByLabel("What did you build?")
+      .fill("Tracked donations and volunteer shifts.");
+    await page
+      .getByLabel("Project highlights")
+      .fill("Built a filterable tracker\nPresented findings to class");
+    await page
+      .getByLabel("Honours, awards, leadership")
+      .fill("Residence council secretary");
     await page.getByRole("button", { name: /Save and continue/i }).click();
 
     await expect(onboardingHeading(page)).toHaveText(/Configure AI/i);
+    await page.getByRole("button", { name: /Skip setup/i }).click();
+    await expect(page.getByRole("dialog")).not.toBeVisible();
+
+    await page.goto("/en/profile");
+    await expect(page.getByText("Campus Cafe")).toBeVisible();
+    await expect(page.getByText("Community pantry dashboard")).toBeVisible();
   });
 });
