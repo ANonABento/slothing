@@ -1,5 +1,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, fireEvent, act } from "@testing-library/react";
+import {
+  render,
+  screen,
+  fireEvent,
+  act,
+  waitFor,
+} from "@testing-library/react";
 import {
   OnboardingDialog,
   ProgressDots,
@@ -105,6 +111,7 @@ describe("OnboardingDialog", () => {
 
   afterEach(() => {
     vi.useRealTimers();
+    vi.unstubAllGlobals();
   });
 
   function openDialog() {
@@ -177,13 +184,23 @@ describe("OnboardingDialog", () => {
     expect(getVisibleHeading("Welcome to Slothing")).toBeInTheDocument();
   });
 
-  it("should advance to next step on Continue click", () => {
+  it("should advance to upload when choosing the resume path", () => {
     openDialog();
     expect(getVisibleHeading("Welcome to Slothing")).toBeInTheDocument();
 
-    fireEvent.click(screen.getByText("Continue"));
+    fireEvent.click(screen.getByRole("button", { name: /I have a resume/i }));
 
     expect(getVisibleHeading("Upload Your Resume")).toBeInTheDocument();
+  });
+
+  it("should advance to builder when choosing the scratch path", () => {
+    openDialog();
+
+    fireEvent.click(
+      screen.getByRole("button", { name: /I'm starting from scratch/i }),
+    );
+
+    expect(getVisibleHeading("Build Your Starter Profile")).toBeInTheDocument();
   });
 
   it("should show Skip setup button on non-last steps", () => {
@@ -214,7 +231,8 @@ describe("OnboardingDialog", () => {
   it("should show Get Started on last step and complete on click", () => {
     openDialog();
 
-    for (let i = 0; i < ONBOARDING_STEP_COUNT - 1; i++) {
+    fireEvent.click(screen.getByRole("button", { name: /I have a resume/i }));
+    for (let i = 0; i < ONBOARDING_STEP_COUNT - 2; i++) {
       fireEvent.click(screen.getByText("Continue"));
     }
 
@@ -233,8 +251,10 @@ describe("OnboardingDialog", () => {
   it("should render all 5 steps when navigating through", () => {
     openDialog();
 
+    expect(getVisibleHeading("Welcome to Slothing")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /I have a resume/i }));
+
     const stepTexts = [
-      "Welcome to Slothing",
       "Upload Your Resume",
       "Review Your Profile",
       "Configure AI (Optional)",
@@ -250,6 +270,59 @@ describe("OnboardingDialog", () => {
       hasVisibleHeading("You\u2019re All Set!") ||
         hasVisibleHeading("You're All Set!"),
     ).toBe(true);
+  });
+
+  it("should render scratch path with 4 steps", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => new Response(JSON.stringify({ success: true }))),
+    );
+    openDialog();
+    vi.useRealTimers();
+
+    fireEvent.click(
+      screen.getByRole("button", { name: /I'm starting from scratch/i }),
+    );
+
+    const group = document.querySelector("[role='group']")!;
+    expect(group.children).toHaveLength(4);
+    expect(getVisibleHeading("Build Your Starter Profile")).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText("Name"), {
+      target: { value: "Ada Lovelace" },
+    });
+    fireEvent.change(screen.getByLabelText("Email"), {
+      target: { value: "ada@example.com" },
+    });
+    fireEvent.change(screen.getByLabelText("Target role"), {
+      target: { value: "Frontend intern" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /Save and continue/i }));
+
+    await waitFor(() =>
+      expect(getVisibleHeading("Configure AI (Optional)")).toBeInTheDocument(),
+    );
+
+    fireEvent.click(screen.getByText("Continue"));
+
+    expect(
+      hasVisibleHeading("You\u2019re All Set!") ||
+        hasVisibleHeading("You're All Set!"),
+    ).toBe(true);
+  });
+
+  it("should keep Skip setup available on the builder step", () => {
+    openDialog();
+    fireEvent.click(
+      screen.getByRole("button", { name: /I'm starting from scratch/i }),
+    );
+
+    fireEvent.click(screen.getByText("Skip setup"));
+
+    expect(localStorageMock.setItem).toHaveBeenCalledWith(
+      STORAGE_KEYS.ONBOARDING_COMPLETED,
+      "true",
+    );
   });
 
   it("should render progress dots with correct count", () => {
