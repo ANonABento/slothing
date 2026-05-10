@@ -14,7 +14,7 @@ const steps = [
     icon: Database,
     title: "Bank",
     description:
-      "Your career data is chunked, indexed, and stored in a searchable knowledge bank — ready to be assembled on demand.",
+      "Your career data is chunked, indexed, and saved to a searchable career profile — ready to be assembled on demand.",
     gradient: "from-rose-400 to-orange-400",
   },
   {
