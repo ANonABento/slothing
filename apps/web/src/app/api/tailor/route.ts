@@ -24,6 +24,7 @@ import { writeFile, mkdir } from "fs/promises";
 import { generateId } from "@/lib/utils";
 import { PATHS } from "@/lib/constants";
 import { requireAuth, isAuthError } from "@/lib/auth";
+import { checkTailorQuota } from "@/lib/plan/quota";
 
 export const dynamic = "force-dynamic";
 
@@ -146,6 +147,22 @@ export async function POST(request: NextRequest) {
     }
 
     // action === "generate"
+    const quota = checkTailorQuota(authResult.userId);
+    if (!quota.allowed) {
+      return NextResponse.json(
+        {
+          error:
+            "Free tier monthly limit reached. Upgrade to Pro for unlimited tailored resumes.",
+          code: "free_tier_quota_exceeded",
+          limit: quota.limit,
+          used: quota.used,
+          resetAt: quota.resetAt,
+          upgradeUrl: "/pricing",
+        },
+        { status: 429 },
+      );
+    }
+
     const profile = getProfile(authResult.userId);
     const contact = profile?.contact ?? {
       name: "Your Name",
