@@ -9,7 +9,8 @@ import { nowDate, toIso } from "@/lib/format/time";
  */
 import { NextRequest, NextResponse } from "next/server";
 import { requireExtensionAuth } from "@/lib/extension-auth";
-import { db, learnedAnswers, eq, and } from "@/lib/db";
+import { db, answerBank, eq, and } from "@/lib/db";
+import { ensureAnswerBankSchema } from "@/lib/db/answer-bank-schema";
 
 // PATCH - Update a learned answer
 export async function PATCH(
@@ -22,6 +23,7 @@ export async function PATCH(
   }
 
   try {
+    await ensureAnswerBankSchema(db);
     const { id } = await params;
     const body = await request.json();
     const { answer } = body as { answer: string };
@@ -36,12 +38,9 @@ export async function PATCH(
     // Verify ownership
     const existingRows = await db
       .select()
-      .from(learnedAnswers)
+      .from(answerBank)
       .where(
-        and(
-          eq(learnedAnswers.id, id),
-          eq(learnedAnswers.userId, authResult.userId),
-        ),
+        and(eq(answerBank.id, id), eq(answerBank.userId, authResult.userId)),
       )
       .limit(1);
     const existing = existingRows[0];
@@ -53,19 +52,20 @@ export async function PATCH(
     // Update
     const now = nowDate();
     await db
-      .update(learnedAnswers)
+      .update(answerBank)
       .set({ answer, updatedAt: toIso(now) })
       .where(
-        and(
-          eq(learnedAnswers.id, id),
-          eq(learnedAnswers.userId, authResult.userId),
-        ),
+        and(eq(answerBank.id, id), eq(answerBank.userId, authResult.userId)),
       );
 
     return NextResponse.json({
       id,
       question: existing.question,
+      questionNormalized: existing.questionNormalized,
       answer,
+      source: existing.source,
+      sourceUrl: existing.sourceUrl,
+      sourceCompany: existing.sourceCompany,
       timesUsed: existing.timesUsed ?? 1,
       updatedAt: toIso(now),
     });
@@ -89,17 +89,15 @@ export async function DELETE(
   }
 
   try {
+    await ensureAnswerBankSchema(db);
     const { id } = await params;
 
     const deleted = await db
-      .delete(learnedAnswers)
+      .delete(answerBank)
       .where(
-        and(
-          eq(learnedAnswers.id, id),
-          eq(learnedAnswers.userId, authResult.userId),
-        ),
+        and(eq(answerBank.id, id), eq(answerBank.userId, authResult.userId)),
       )
-      .returning({ id: learnedAnswers.id });
+      .returning({ id: answerBank.id });
 
     if (deleted.length === 0) {
       return NextResponse.json({ error: "Answer not found" }, { status: 404 });

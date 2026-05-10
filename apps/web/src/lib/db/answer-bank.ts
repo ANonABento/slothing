@@ -2,25 +2,29 @@ import { randomUUID } from "crypto";
 import { nowIso } from "@/lib/format/time";
 import {
   AnswerBankEntry,
+  type AnswerBankSource,
+  isAnswerBankSource,
   normalizeQuestion,
-} from "@/lib/answers/learned-answers";
+} from "@/lib/answers/answer-bank";
 import { toNullableIsoDateString } from "@/lib/utils";
 import { and, desc, eq, sql as sqlOp } from "drizzle-orm";
 import db from "./index";
-import { learnedAnswers } from "./schema";
+import { ensureAnswerBankSchema } from "./answer-bank-schema";
+import { answerBank } from "./schema";
 import {
   createAnswerVersion,
   deleteAnswerVersions,
-} from "./learned-answer-versions";
+} from "./answer-bank-versions";
 
-function mapLearnedAnswer(
-  row: typeof learnedAnswers.$inferSelect,
+function mapAnswerBankEntry(
+  row: typeof answerBank.$inferSelect,
 ): AnswerBankEntry {
   return {
     id: row.id,
     question: row.question,
     questionNormalized: row.questionNormalized,
     answer: row.answer,
+    source: isAnswerBankSource(row.source) ? row.source : "manual",
     sourceUrl: row.sourceUrl,
     sourceCompany: row.sourceCompany,
     timesUsed: row.timesUsed ?? 1,
@@ -30,38 +34,46 @@ function mapLearnedAnswer(
   };
 }
 
-export async function listLearnedAnswers(
-  userId: string,
-): Promise<AnswerBankEntry[]> {
-  const rows = await db
-    .select()
-    .from(learnedAnswers)
-    .where(eq(learnedAnswers.userId, userId))
-    .orderBy(desc(learnedAnswers.timesUsed), desc(learnedAnswers.updatedAt));
-
-  return rows.map(mapLearnedAnswer);
+async function ensureSchema(): Promise<void> {
+  await ensureAnswerBankSchema(db);
 }
 
-export async function upsertLearnedAnswer(
+export async function listAnswerBank(
+  userId: string,
+): Promise<AnswerBankEntry[]> {
+  await ensureSchema();
+  const rows = await db
+    .select()
+    .from(answerBank)
+    .where(eq(answerBank.userId, userId))
+    .orderBy(desc(answerBank.timesUsed), desc(answerBank.updatedAt));
+
+  return rows.map(mapAnswerBankEntry);
+}
+
+export async function upsertAnswerBankEntry(
   input: {
     question: string;
     answer: string;
+    source?: AnswerBankSource;
     sourceUrl?: string | null;
     sourceCompany?: string | null;
   },
   userId: string,
 ): Promise<AnswerBankEntry & { updated: boolean }> {
+  await ensureSchema();
   const question = input.question.trim();
   const answer = input.answer.trim();
+  const source = input.source ?? "manual";
   const questionNormalized = normalizeQuestion(question);
 
   const existingRows = await db
     .select()
-    .from(learnedAnswers)
+    .from(answerBank)
     .where(
       and(
-        eq(learnedAnswers.userId, userId),
-        eq(learnedAnswers.questionNormalized, questionNormalized),
+        eq(answerBank.userId, userId),
+        eq(answerBank.questionNormalized, questionNormalized),
       ),
     )
     .limit(1);
@@ -70,26 +82,25 @@ export async function upsertLearnedAnswer(
 
   if (existing) {
     await db
-      .update(learnedAnswers)
+      .update(answerBank)
       .set({
         answer,
+        source,
         sourceUrl: input.sourceUrl || existing.sourceUrl,
         sourceCompany: input.sourceCompany || existing.sourceCompany,
-        timesUsed: sqlOp`coalesce(${learnedAnswers.timesUsed}, 0) + 1`,
+        timesUsed: sqlOp`coalesce(${answerBank.timesUsed}, 0) + 1`,
         updatedAt: now,
         lastUsedAt: now,
       })
       .where(
-        and(
-          eq(learnedAnswers.id, existing.id),
-          eq(learnedAnswers.userId, userId),
-        ),
+        and(eq(answerBank.id, existing.id), eq(answerBank.userId, userId)),
       );
 
     return {
-      ...mapLearnedAnswer({
+      ...mapAnswerBankEntry({
         ...existing,
         answer,
+        source,
         sourceUrl: input.sourceUrl || existing.sourceUrl,
         sourceCompany: input.sourceCompany || existing.sourceCompany,
         timesUsed: (existing.timesUsed ?? 0) + 1,
@@ -101,12 +112,13 @@ export async function upsertLearnedAnswer(
   }
 
   const id = randomUUID();
-  await db.insert(learnedAnswers).values({
+  await db.insert(answerBank).values({
     id,
     userId,
     question,
     questionNormalized,
     answer,
+    source,
     sourceUrl: input.sourceUrl || null,
     sourceCompany: input.sourceCompany || null,
     createdAt: now,
@@ -118,6 +130,7 @@ export async function upsertLearnedAnswer(
     question,
     questionNormalized,
     answer,
+    source,
     sourceUrl: input.sourceUrl || null,
     sourceCompany: input.sourceCompany || null,
     timesUsed: 1,
@@ -128,7 +141,7 @@ export async function upsertLearnedAnswer(
   };
 }
 
-export async function updateLearnedAnswer(
+export async function updateAnswerBankEntry(
   id: string,
   input: {
     question?: string;
@@ -138,10 +151,11 @@ export async function updateLearnedAnswer(
   },
   userId: string,
 ): Promise<AnswerBankEntry | null> {
+  await ensureSchema();
   const existingRows = await db
     .select()
-    .from(learnedAnswers)
-    .where(and(eq(learnedAnswers.id, id), eq(learnedAnswers.userId, userId)))
+    .from(answerBank)
+    .where(and(eq(answerBank.id, id), eq(answerBank.userId, userId)))
     .limit(1);
   const existing = existingRows[0];
 
@@ -168,21 +182,22 @@ export async function updateLearnedAnswer(
   };
 
   await db
-    .update(learnedAnswers)
+    .update(answerBank)
     .set(next)
-    .where(and(eq(learnedAnswers.id, id), eq(learnedAnswers.userId, userId)));
+    .where(and(eq(answerBank.id, id), eq(answerBank.userId, userId)));
 
-  return mapLearnedAnswer({ ...existing, ...next });
+  return mapAnswerBankEntry({ ...existing, ...next });
 }
 
-export async function deleteLearnedAnswer(
+export async function deleteAnswerBankEntry(
   id: string,
   userId: string,
 ): Promise<boolean> {
+  await ensureSchema();
   const deleted = await db
-    .delete(learnedAnswers)
-    .where(and(eq(learnedAnswers.id, id), eq(learnedAnswers.userId, userId)))
-    .returning({ id: learnedAnswers.id });
+    .delete(answerBank)
+    .where(and(eq(answerBank.id, id), eq(answerBank.userId, userId)))
+    .returning({ id: answerBank.id });
 
   if (deleted.length === 0) return false;
 
@@ -190,27 +205,29 @@ export async function deleteLearnedAnswer(
   return true;
 }
 
-export async function getLearnedAnswer(
+export async function getAnswerBankEntry(
   id: string,
   userId: string,
 ): Promise<AnswerBankEntry | null> {
+  await ensureSchema();
   const rows = await db
     .select()
-    .from(learnedAnswers)
-    .where(and(eq(learnedAnswers.id, id), eq(learnedAnswers.userId, userId)))
+    .from(answerBank)
+    .where(and(eq(answerBank.id, id), eq(answerBank.userId, userId)))
     .limit(1);
 
-  return rows[0] ? mapLearnedAnswer(rows[0]) : null;
+  return rows[0] ? mapAnswerBankEntry(rows[0]) : null;
 }
 
-export async function duplicateLearnedAnswer(
+export async function duplicateAnswerBankEntry(
   id: string,
   userId: string,
 ): Promise<AnswerBankEntry | null> {
+  await ensureSchema();
   const existingRows = await db
     .select()
-    .from(learnedAnswers)
-    .where(and(eq(learnedAnswers.id, id), eq(learnedAnswers.userId, userId)))
+    .from(answerBank)
+    .where(and(eq(answerBank.id, id), eq(answerBank.userId, userId)))
     .limit(1);
   const existing = existingRows[0];
 
@@ -224,6 +241,7 @@ export async function duplicateLearnedAnswer(
     question: copyQuestion,
     questionNormalized: normalizeQuestion(copyQuestion),
     answer: existing.answer,
+    source: "manual" as const,
     sourceUrl: existing.sourceUrl,
     sourceCompany: existing.sourceCompany,
     timesUsed: 1,
@@ -232,26 +250,27 @@ export async function duplicateLearnedAnswer(
     updatedAt: now,
   };
 
-  await db.insert(learnedAnswers).values(copy);
-  return mapLearnedAnswer(copy);
+  await db.insert(answerBank).values(copy);
+  return mapAnswerBankEntry(copy);
 }
 
-export async function incrementLearnedAnswerUsage(
+export async function incrementAnswerBankUsage(
   id: string,
   userId: string,
 ): Promise<AnswerBankEntry | null> {
-  const existing = await getLearnedAnswer(id, userId);
+  await ensureSchema();
+  const existing = await getAnswerBankEntry(id, userId);
   if (!existing) return null;
 
   const now = nowIso();
   await db
-    .update(learnedAnswers)
+    .update(answerBank)
     .set({
-      timesUsed: sqlOp`coalesce(${learnedAnswers.timesUsed}, 0) + 1`,
+      timesUsed: sqlOp`coalesce(${answerBank.timesUsed}, 0) + 1`,
       lastUsedAt: now,
       updatedAt: now,
     })
-    .where(and(eq(learnedAnswers.id, id), eq(learnedAnswers.userId, userId)));
+    .where(and(eq(answerBank.id, id), eq(answerBank.userId, userId)));
 
   return {
     ...existing,
@@ -260,3 +279,28 @@ export async function incrementLearnedAnswerUsage(
     updatedAt: now,
   };
 }
+
+export async function promoteAnswerBankEntry(
+  id: string,
+  userId: string,
+): Promise<AnswerBankEntry | null> {
+  await ensureSchema();
+  const existing = await getAnswerBankEntry(id, userId);
+  if (!existing) return null;
+
+  const now = nowIso();
+  await db
+    .update(answerBank)
+    .set({ source: "curated", updatedAt: now })
+    .where(and(eq(answerBank.id, id), eq(answerBank.userId, userId)));
+
+  return { ...existing, source: "curated", updatedAt: now };
+}
+
+export const listLearnedAnswers = listAnswerBank;
+export const upsertLearnedAnswer = upsertAnswerBankEntry;
+export const updateLearnedAnswer = updateAnswerBankEntry;
+export const deleteLearnedAnswer = deleteAnswerBankEntry;
+export const getLearnedAnswer = getAnswerBankEntry;
+export const duplicateLearnedAnswer = duplicateAnswerBankEntry;
+export const incrementLearnedAnswerUsage = incrementAnswerBankUsage;

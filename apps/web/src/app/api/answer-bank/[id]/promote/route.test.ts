@@ -4,12 +4,6 @@ vi.mock("@/lib/auth", () =>
   globalThis.__contractRouteMocks!.createAuthModuleMock(),
 );
 
-vi.mock("@/lib/db/answer-bank-versions", () =>
-  globalThis.__contractRouteMocks!.createContractModuleMock(
-    "@/lib/db/answer-bank-versions",
-  ),
-);
-
 vi.mock("@/lib/db/answer-bank", () =>
   globalThis.__contractRouteMocks!.createContractModuleMock(
     "@/lib/db/answer-bank",
@@ -19,18 +13,15 @@ vi.mock("@/lib/db/answer-bank", () =>
 import { POST } from "./route";
 import {
   expectRouteResponseContract,
-  getRequest,
-  invalidJsonRequest,
   invokeRouteHandler,
   jsonRequest,
   representativeBody,
   resetContractMocks,
   routeContext,
   setAuthFailure,
-  setAuthSuccess,
 } from "@/test/contract";
 
-describe("/api/answer-bank/[id]/versions/[versionId]/restore route contract", () => {
+describe("/api/answer-bank/[id]/promote route contract", () => {
   beforeEach(() => {
     resetContractMocks();
   });
@@ -39,10 +30,9 @@ describe("/api/answer-bank/[id]/versions/[versionId]/restore route contract", ()
     const response = await invokeRouteHandler(
       POST,
       jsonRequest(
-        "http://localhost/api/answer-bank/item-1/versions/item-1/restore",
+        "http://localhost/api/answer-bank/item-1/promote",
         representativeBody(),
         "POST",
-        { "x-extension-token": "test-token" },
       ),
       routeContext(),
     );
@@ -56,10 +46,9 @@ describe("/api/answer-bank/[id]/versions/[versionId]/restore route contract", ()
     const response = await invokeRouteHandler(
       POST,
       jsonRequest(
-        "http://localhost/api/answer-bank/item-1/versions/item-1/restore",
+        "http://localhost/api/answer-bank/item-1/promote",
         representativeBody(),
         "POST",
-        { "x-extension-token": "test-token" },
       ),
       routeContext(),
     );
@@ -68,20 +57,5 @@ describe("/api/answer-bank/[id]/versions/[versionId]/restore route contract", ()
     await expect(response.json()).resolves.toMatchObject({
       error: expect.any(String),
     });
-  });
-
-  it("returns an HTTP error response for malformed mutation input", async () => {
-    setAuthSuccess();
-
-    const response = await invokeRouteHandler(
-      POST,
-      invalidJsonRequest(
-        "http://localhost/api/answer-bank/item-1/versions/item-1/restore",
-        "POST",
-      ),
-      routeContext(),
-    );
-
-    await expectRouteResponseContract(response);
   });
 });

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { isAuthError, requireAuth } from "@/lib/auth";
-import { getLearnedAnswer } from "@/lib/db/learned-answers";
-import { listAnswerVersions } from "@/lib/db/learned-answer-versions";
+import { getAnswerBankEntry } from "@/lib/db/answer-bank";
+import { listAnswerVersions } from "@/lib/db/answer-bank-versions";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +14,7 @@ export async function GET(
 
   try {
     const { id } = await params;
-    const answer = await getLearnedAnswer(id, authResult.userId);
+    const answer = await getAnswerBankEntry(id, authResult.userId);
     if (!answer) {
       return NextResponse.json({ error: "Answer not found" }, { status: 404 });
     }

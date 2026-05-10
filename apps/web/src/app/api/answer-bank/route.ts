@@ -1,10 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { parseJsonBody } from "@/lib/api-utils";
 import { isAuthError, requireAuth } from "@/lib/auth";
-import {
-  listLearnedAnswers,
-  upsertLearnedAnswer,
-} from "@/lib/db/learned-answers";
+import { listAnswerBank, upsertAnswerBankEntry } from "@/lib/db/answer-bank";
 import { createAnswerSchema } from "@/lib/schemas";
 
 export const dynamic = "force-dynamic";
@@ -14,7 +11,7 @@ export async function GET() {
   if (isAuthError(authResult)) return authResult;
 
   try {
-    const answers = await listLearnedAnswers(authResult.userId);
+    const answers = await listAnswerBank(authResult.userId);
     return NextResponse.json({ answers });
   } catch (error) {
     console.error("Answer bank fetch error:", error);
@@ -33,7 +30,10 @@ export async function POST(request: NextRequest) {
     const parsed = await parseJsonBody(request, createAnswerSchema);
     if (!parsed.ok) return parsed.response;
 
-    const saved = await upsertLearnedAnswer(parsed.data, authResult.userId);
+    const saved = await upsertAnswerBankEntry(
+      { ...parsed.data, source: "manual" },
+      authResult.userId,
+    );
 
     return NextResponse.json(saved, { status: saved.updated ? 200 : 201 });
   } catch (error) {

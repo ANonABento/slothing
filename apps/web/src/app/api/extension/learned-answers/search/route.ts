@@ -11,22 +11,25 @@ import {
   normalizeQuestion,
   calculateSimilarity,
 } from "@/lib/extension-auth";
-import { db, learnedAnswers, eq, and, or, desc, like } from "@/lib/db";
+import { db, answerBank, eq, and, or, desc, like } from "@/lib/db";
+import { ensureAnswerBankSchema } from "@/lib/db/answer-bank-schema";
 
-type LearnedAnswerSearchRow = {
+type AnswerBankRowSearchRow = {
   id: string;
   question: string;
   questionNormalized: string;
   answer: string;
+  source: string;
   timesUsed: number | null;
 };
 
 const learnedAnswerSearchColumns = {
-  id: learnedAnswers.id,
-  question: learnedAnswers.question,
-  questionNormalized: learnedAnswers.questionNormalized,
-  answer: learnedAnswers.answer,
-  timesUsed: learnedAnswers.timesUsed,
+  id: answerBank.id,
+  question: answerBank.question,
+  questionNormalized: answerBank.questionNormalized,
+  answer: answerBank.answer,
+  source: answerBank.source,
+  timesUsed: answerBank.timesUsed,
 };
 
 // POST - Search for similar questions
@@ -37,6 +40,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
+    await ensureAnswerBankSchema(db);
     const body = await request.json();
     const { question } = body as { question: string };
 
@@ -53,27 +57,27 @@ export async function POST(request: NextRequest) {
     // Find potential matches using LIKE queries on key words
     const likePatterns = words.slice(0, 5).map((w) => `%${w}%`);
 
-    let rows: LearnedAnswerSearchRow[];
+    let rows: AnswerBankRowSearchRow[];
     if (likePatterns.length > 0) {
       const wordConditions = likePatterns.map((pattern) =>
-        like(learnedAnswers.questionNormalized, pattern),
+        like(answerBank.questionNormalized, pattern),
       );
       const wordCondition =
         wordConditions.length === 1 ? wordConditions[0] : or(...wordConditions);
 
       rows = await db
         .select(learnedAnswerSearchColumns)
-        .from(learnedAnswers)
-        .where(and(eq(learnedAnswers.userId, authResult.userId), wordCondition))
-        .orderBy(desc(learnedAnswers.timesUsed))
+        .from(answerBank)
+        .where(and(eq(answerBank.userId, authResult.userId), wordCondition))
+        .orderBy(desc(answerBank.timesUsed))
         .limit(20);
     } else {
       // Fallback: get most used answers
       rows = await db
         .select(learnedAnswerSearchColumns)
-        .from(learnedAnswers)
-        .where(eq(learnedAnswers.userId, authResult.userId))
-        .orderBy(desc(learnedAnswers.timesUsed))
+        .from(answerBank)
+        .where(eq(answerBank.userId, authResult.userId))
+        .orderBy(desc(answerBank.timesUsed))
         .limit(10);
     }
 
@@ -83,6 +87,7 @@ export async function POST(request: NextRequest) {
         id: row.id,
         question: row.question,
         answer: row.answer,
+        source: row.source,
         similarity: calculateSimilarity(normalized, row.questionNormalized),
         timesUsed: row.timesUsed ?? 1,
       }))
