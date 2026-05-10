@@ -12,6 +12,7 @@ data/
 !evals/data/
 !evals/data/**
 uploads/
+evals/reports/
 *.db
 *.db-journal
 *.db-shm
