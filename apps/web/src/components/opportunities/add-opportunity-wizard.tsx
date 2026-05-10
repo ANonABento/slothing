@@ -120,6 +120,34 @@ const DEFAULT_WIZARD_STATE: OpportunityWizardState = {
 };
 
 const CURRENCY_OPTIONS = ["USD", "CAD", "EUR", "GBP", "JPY"];
+const WIZARD_STEPS: Array<{
+  title: string;
+  status: "Required" | "Optional";
+  description: string;
+}> = [
+  {
+    title: "Essentials",
+    status: "Required",
+    description: "Required: add a title and company before moving on.",
+  },
+  {
+    title: "Where & how",
+    status: "Optional",
+    description: "Optional: add location, remote type, job type, and level.",
+  },
+  {
+    title: "Compensation",
+    status: "Optional",
+    description:
+      "Optional: add salary range, currency, equity, or bonus notes.",
+  },
+  {
+    title: "Details",
+    status: "Optional",
+    description:
+      "Optional: add tags, skills, and notes, then create the opportunity.",
+  },
+];
 const STEP_FIELDS: Array<Array<keyof OpportunityWizardState>> = [
   ["title", "company", "sourceUrl"],
   [
@@ -164,6 +192,12 @@ export function AddOpportunityWizard({
   const { addToast } = useToast();
 
   const isStepOneValid = form.title.trim() !== "" && form.company.trim() !== "";
+  const titleIsInvalid = showRequiredHint && form.title.trim() === "";
+  const companyIsInvalid = showRequiredHint && form.company.trim() === "";
+  const missingRequiredFields = [
+    titleIsInvalid ? "Title" : null,
+    companyIsInvalid ? "Company" : null,
+  ].filter(Boolean);
   const hasDirtyFields = dirtyFields.size > 0;
   const currentStepIsDirty = STEP_FIELDS[step].some((field) =>
     dirtyFields.has(field),
@@ -384,12 +418,20 @@ export function AddOpportunityWizard({
             label="Title"
             id="opportunity-title"
             required
+            error={titleIsInvalid ? "Enter a title to continue." : undefined}
+            errorId="opportunity-title-error"
             autoFilled={autoFilledFields.has("title")}
           >
             <Input
               ref={titleRef}
               id="opportunity-title"
               value={form.title}
+              aria-label="Title required"
+              aria-required="true"
+              aria-invalid={titleIsInvalid}
+              aria-describedby={
+                titleIsInvalid ? "opportunity-title-error" : undefined
+              }
               onBlur={() => {
                 if (!form.title.trim()) setShowRequiredHint(true);
               }}
@@ -400,11 +442,21 @@ export function AddOpportunityWizard({
             label="Company"
             id="opportunity-company"
             required
+            error={
+              companyIsInvalid ? "Enter a company to continue." : undefined
+            }
+            errorId="opportunity-company-error"
             autoFilled={autoFilledFields.has("company")}
           >
             <Input
               id="opportunity-company"
               value={form.company}
+              aria-label="Company required"
+              aria-required="true"
+              aria-invalid={companyIsInvalid}
+              aria-describedby={
+                companyIsInvalid ? "opportunity-company-error" : undefined
+              }
               onBlur={() => {
                 if (!form.company.trim()) setShowRequiredHint(true);
               }}
@@ -680,22 +732,30 @@ export function AddOpportunityWizard({
       <DialogContent className="max-h-[92vh] max-w-3xl overflow-y-auto">
         <DialogHeader>
           <div
-            className="mb-2 flex justify-center gap-2"
+            className="mb-2 grid gap-2 sm:grid-cols-4"
             aria-label="Wizard progress"
           >
-            {[0, 1, 2, 3].map((index) => (
+            {WIZARD_STEPS.map((wizardStep, index) => (
               <button
                 key={index}
                 type="button"
-                aria-label={`Go to step ${index + 1}`}
+                aria-current={step === index ? "step" : undefined}
+                aria-label={`Step ${index + 1} of ${WIZARD_STEPS.length}: ${wizardStep.title}, ${wizardStep.status.toLowerCase()}${step === index ? ", current" : ""}`}
                 disabled={index > furthestStep}
                 onClick={() => setStep(index as WizardStep)}
                 className={cn(
-                  "text-lg leading-none text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50",
-                  step === index && "text-foreground",
+                  "rounded-[var(--radius)] border px-3 py-2 text-left text-xs transition-colors disabled:cursor-not-allowed disabled:opacity-50",
+                  step === index
+                    ? "border-primary bg-primary/10 text-foreground"
+                    : "border-border text-muted-foreground hover:bg-muted",
                 )}
               >
-                {step === index ? "●" : "○"}
+                <span className="block font-medium">
+                  {index + 1}. {wizardStep.title}
+                </span>
+                <span className="block text-[11px] leading-4">
+                  {wizardStep.status}
+                </span>
               </button>
             ))}
           </div>
@@ -711,9 +771,10 @@ export function AddOpportunityWizard({
           {stepContent}
 
           <DialogFooter className="items-center gap-2 sm:justify-between sm:space-x-0">
-            {showRequiredHint && step === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                Title and Company are required
+            {showRequiredHint && step === 0 && missingRequiredFields.length ? (
+              <p role="alert" className="text-sm text-destructive">
+                Add the required essentials:{" "}
+                {missingRequiredFields.join(" and ")}.
               </p>
             ) : (
               <span />
@@ -755,7 +816,7 @@ export function AddOpportunityWizard({
                 </Button>
               ) : (
                 <Button type="submit" variant="gradient" disabled={isSaving}>
-                  Save
+                  {isSaving ? "Creating..." : "Create Opportunity"}
                 </Button>
               )}
             </div>
@@ -841,6 +902,8 @@ function WizardField({
   children,
   required = false,
   autoFilled = false,
+  error,
+  errorId,
   aside,
   className,
 }: {
@@ -849,6 +912,8 @@ function WizardField({
   children: ReactNode;
   required?: boolean;
   autoFilled?: boolean;
+  error?: string;
+  errorId?: string;
   aside?: ReactNode;
   className?: string;
 }) {
@@ -862,10 +927,12 @@ function WizardField({
           <span>
             {label}
             {required && (
-              <span title="Required to save" className="ml-1 text-destructive">
+              <span aria-hidden="true" className="ml-1 text-destructive">
+                {" "}
                 *
               </span>
             )}
+            {required && <span className="sr-only"> required</span>}
           </span>
           {autoFilled && (
             <span className="rounded-full border bg-muted px-2 py-0.5 text-xs font-normal text-muted-foreground">
@@ -876,15 +943,20 @@ function WizardField({
         {aside}
       </div>
       {children}
+      {error && errorId && (
+        <p id={errorId} className="text-sm text-destructive">
+          {error}
+        </p>
+      )}
     </div>
   );
 }
 
 function getStepDescription(step: WizardStep) {
-  if (step === 0) return "Step 1 of 4: Essentials";
-  if (step === 1) return "Step 2 of 4: Where & how";
-  if (step === 2) return "Step 3 of 4: Compensation";
-  return "Step 4 of 4: Details + Save";
+  const wizardStep = WIZARD_STEPS[step];
+  return `Step ${step + 1} of ${WIZARD_STEPS.length}: ${wizardStep.title}. ${
+    wizardStep.description
+  }`;
 }
 
 export function mapScrapedOpportunityToWizard(
