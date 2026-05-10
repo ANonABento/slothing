@@ -2,13 +2,13 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Loader2, Settings } from "lucide-react";
+import { ArrowLeft, Settings } from "lucide-react";
 import { OpportunityReviewQueue } from "@/components/opportunities/review-queue";
+import { OpportunitiesReviewSkeleton } from "@/components/skeletons/opportunities-review-skeleton";
 import { Button } from "@/components/ui/button";
 import {
   AppPage,
   PageContent,
-  PageLoadingState,
   StandardEmptyState,
 } from "@/components/ui/page-layout";
 import { useErrorToast } from "@/hooks/use-error-toast";
@@ -99,7 +99,7 @@ export default function OpportunityReviewPage() {
   };
 
   if (loading) {
-    return <PageLoadingState icon={Loader2} label="Loading review queue..." />;
+    return <OpportunitiesReviewSkeleton />;
   }
 
   if (!enabled) {

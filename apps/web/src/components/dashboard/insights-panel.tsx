@@ -18,6 +18,7 @@ import type {
   InsightType,
   InsightPriority,
 } from "@/lib/resume/insights";
+import { SkeletonInsights } from "@/components/ui/skeleton";
 
 const ICON_MAP: Record<InsightType, React.ElementType> = {
   strongest_skills: Zap,
@@ -84,11 +85,7 @@ export function InsightsPanel() {
       </div>
 
       {loading ? (
-        <div className="space-y-3">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="h-20 rounded-lg bg-muted animate-pulse" />
-          ))}
-        </div>
+        <SkeletonInsights className="border-0 p-0 shadow-none" />
       ) : insights.length === 0 ? (
         <p className="text-sm text-muted-foreground">
           Add more data to your profile and track some opportunities to get

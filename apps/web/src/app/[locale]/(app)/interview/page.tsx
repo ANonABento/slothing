@@ -1,18 +1,14 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { Loader2, Sparkles } from "lucide-react";
+import { Sparkles } from "lucide-react";
+import { InterviewSkeleton } from "@/components/skeletons/interview-skeleton";
 import { InterviewActiveSession } from "@/components/interview/interview-active-session";
 import { InterviewJobSelection } from "@/components/interview/interview-job-selection";
 import { InterviewSummary } from "@/components/interview/interview-summary";
 import { QuickPracticeDialog } from "@/components/interview/quick-practice-dialog";
 import { useConfirmDialog } from "@/components/ui/confirm-dialog";
-import {
-  AppPage,
-  PageContent,
-  PageHeader,
-  PageLoadingState,
-} from "@/components/ui/page-layout";
+import { AppPage, PageContent, PageHeader } from "@/components/ui/page-layout";
 import { useFollowUp } from "@/hooks/useFollowUp";
 import { useInterviewSession } from "@/hooks/useInterviewSession";
 import type {
@@ -120,9 +116,7 @@ export default function InterviewPage() {
   );
 
   if (interview.loading) {
-    return (
-      <PageLoadingState icon={Loader2} label="Loading interview prep..." />
-    );
+    return <InterviewSkeleton />;
   }
 
   return (

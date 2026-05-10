@@ -3,12 +3,12 @@
 import { Suspense } from "react";
 import { Loader2, Plus } from "lucide-react";
 import { SectionList } from "@/components/builder/section-list";
+import { StudioSkeleton } from "@/components/skeletons/studio-skeleton";
 import { AiAssistantPanel } from "@/components/studio/ai-assistant-panel";
 import { MobileBuilderTabs } from "@/components/studio/mobile-builder-tabs";
 import { ResumePreview } from "@/components/studio/resume-preview";
 import { StudioFilePanel } from "@/components/studio/studio-file-panel";
 import { StudioHeader } from "@/components/studio/studio-header";
-import { StudioLoading } from "@/components/studio/studio-loading";
 import { useStudioPageState } from "@/components/studio/use-studio-page-state";
 import { VersionHistorySection } from "@/components/studio/version-history-section";
 import { Badge } from "@/components/ui/badge";
@@ -21,7 +21,7 @@ function StudioPageContent() {
   const studio = useStudioPageState();
 
   if (studio.loading) {
-    return <StudioLoading />;
+    return <StudioSkeleton />;
   }
 
   return (
@@ -174,7 +174,7 @@ function StudioPageContent() {
 
 export default function StudioPage() {
   return (
-    <Suspense fallback={<StudioLoading />}>
+    <Suspense fallback={<StudioSkeleton />}>
       <StudioPageContent />
     </Suspense>
   );
