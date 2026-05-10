@@ -19,8 +19,11 @@ import {
   stripUnsupportedClaims,
 } from "@/lib/resume/generator";
 import type { TailoredResume } from "@/lib/resume/generator";
+import { buildTailorAutofixPrompt } from "@/lib/tailor/prompt-builders";
 
 export const dynamic = "force-dynamic";
+
+export { buildTailorAutofixPrompt as buildAutofixPrompt };
 
 export async function POST(request: NextRequest) {
   const authResult = await requireAuth();
@@ -47,7 +50,7 @@ export async function POST(request: NextRequest) {
 
     const client = new LLMClient(llmConfig);
 
-    const prompt = buildAutofixPrompt({
+    const prompt = buildTailorAutofixPrompt({
       resume,
       keywordsMissing,
       jobDescription,
@@ -94,42 +97,6 @@ export async function POST(request: NextRequest) {
       { status: 500 },
     );
   }
-}
-
-export function buildAutofixPrompt({
-  resume,
-  keywordsMissing,
-  jobDescription,
-}: {
-  resume: TailoredResume;
-  keywordsMissing: string[];
-  jobDescription: string;
-}): string {
-  return `You are a resume optimization expert. Rewrite the following resume to naturally incorporate these missing keywords while maintaining authenticity and readability.
-
-MISSING KEYWORDS TO INCORPORATE:
-${keywordsMissing.slice(0, 15).join(", ")}
-
-JOB DESCRIPTION:
-${jobDescription.slice(0, 2000)}
-
-CURRENT RESUME:
-${JSON.stringify(resume, null, 2)}
-
-RULES:
-- Only modify summary, experience highlights, and skills
-- Every added keyword, skill, tool, metric, employer, degree, certification, responsibility, and achievement must be backed by the current resume evidence
-- Add GraphQL only when the current resume already contains GraphQL or direct evidence of GraphQL work
-- Refuse or omit AWS, Kubernetes, and any other missing keyword when absent from the current resume evidence
-- Do not invent metrics, tools, employers, degrees, certifications, dates, titles, clients, or responsibilities
-- Preserve contact info and education exactly
-- Preserve companies, titles, and dates exactly
-- Incorporate supported keywords naturally; don't just list them
-- Maintain the same JSON structure
-- Keep it concise (one-page resume)
-- Return schema-valid JSON only, with no markdown, labels, comments, or surrounding prose
-
-Return the improved resume as a JSON object with the same structure (contact, summary, experiences, skills, education).`;
 }
 
 function sanitizeAutofixExperiences(

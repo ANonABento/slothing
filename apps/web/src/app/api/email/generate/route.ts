@@ -12,7 +12,7 @@ import { LLMClient, parseJSONFromLLM } from "@/lib/llm/client";
 import { generateEmail, EMAIL_TEMPLATE_INFO } from "@/lib/email/templates";
 import { generateEmailSchema } from "@/lib/constants";
 import { requireAuth, isAuthError } from "@/lib/auth";
-import { buildEmailGenerationPrompt } from "@/lib/email/generate-prompt";
+import { buildEmailGenerationPrompt } from "@/lib/email/prompt-builders";
 import {
   detectGenericPhrases,
   mergeGenericPhraseMatches,
@@ -30,24 +30,6 @@ interface LLMEmailResponse {
     genericPhrases: string[];
     hasClearCTA: boolean;
   };
-}
-
-function getTemplateGuidelines(
-  type: string,
-  recruiterStance?: "interested" | "not_a_fit",
-): string {
-  switch (type) {
-    case "cold_outreach":
-      return "- For cold outreach, lead with a specific hook, stay humble, and do not sound salesy";
-    case "recruiter_reply":
-      return recruiterStance === "not_a_fit"
-        ? "- For recruiter replies, politely decline while leaving the door open for better-fit future roles"
-        : "- For recruiter replies, express interest and ask for role scope, compensation range, timeline, and next steps";
-    case "reference_request":
-      return "- For reference requests, make the ask clear, brief, appreciative, and low-pressure";
-    default:
-      return "- Match the selected email template's expected purpose and tone";
-  }
 }
 
 export async function POST(request: NextRequest) {
@@ -102,50 +84,12 @@ export async function POST(request: NextRequest) {
         const client = new LLMClient(llmConfig);
         const templateInfo = EMAIL_TEMPLATE_INFO[type];
 
-        const profileSummary = profile
-          ? `
-Name: ${profile.contact.name}
-Email: ${profile.contact.email || "N/A"}
-Phone: ${profile.contact.phone || "N/A"}
-Current Role: ${profile.experiences[0]?.title || "N/A"} at ${profile.experiences[0]?.company || "N/A"}
-Skills: ${profile.skills
-              .slice(0, 10)
-              .map((s) => s.name)
-              .join(", ")}
-          `.trim()
-          : "No profile data available";
-
-        const jobSummary = job
-          ? `
-Position: ${job.title}
-Company: ${job.company}
-Applied: ${job.appliedAt || "Not yet applied"}
-Status: ${job.status || "saved"}
-          `.trim()
-          : "No job selected";
-
-        const additionalContext = `${contextParams.interviewerName ? `Interviewer: ${contextParams.interviewerName}` : ""}
-${contextParams.interviewDate ? `Interview Date: ${contextParams.interviewDate}` : ""}
-${contextParams.targetCompany ? `Target Company: ${contextParams.targetCompany}` : ""}
-${contextParams.connectionName ? `Connection: ${contextParams.connectionName}` : ""}
-${contextParams.hookNote ? `Cold Outreach Hook: ${contextParams.hookNote}` : ""}
-${contextParams.recruiterName ? `Recruiter: ${contextParams.recruiterName}` : ""}
-${contextParams.recruiterCompany ? `Recruiter Company: ${contextParams.recruiterCompany}` : ""}
-${contextParams.recruiterStance ? `Recruiter Reply Stance: ${contextParams.recruiterStance}` : ""}
-${contextParams.referenceName ? `Reference Name: ${contextParams.referenceName}` : ""}
-${contextParams.applyingRole ? `Applying Role: ${contextParams.applyingRole}` : ""}
-${contextParams.interviewStage ? `Interview Stage: ${contextParams.interviewStage}` : ""}
-${contextParams.customNote ? `Custom Note: ${contextParams.customNote}` : ""}`;
-
         const prompt = buildEmailGenerationPrompt({
-          templateTitle: templateInfo.title,
-          profileSummary,
-          jobSummary,
-          additionalContext,
-          templateGuidelines: getTemplateGuidelines(
-            type,
-            contextParams.recruiterStance,
-          ),
+          templateInfo,
+          profile: profile || undefined,
+          job: job || undefined,
+          contextParams,
+          type,
         });
 
         const response = await client.complete({
