@@ -31,12 +31,12 @@ import {
   INTERVIEW_TIMER_EXTENSION_MS,
 } from "@/lib/constants";
 import { CategoryBadge } from "@/lib/interview/category-display";
-import type { JobDescription } from "@/types";
+import type { Opportunity } from "@/types/opportunity";
 import type { CurrentFollowUp, InterviewSession } from "@/types/interview";
 
 interface InterviewActiveSessionProps {
   session: InterviewSession;
-  selectedJobData?: JobDescription;
+  selectedJobData?: Opportunity;
   currentAnswer: string;
   onChangeAnswer: (value: string) => void;
   submitting: boolean;
@@ -556,13 +556,13 @@ export function InterviewActiveSession({
                 </p>
               </div>
               <p className="line-clamp-4 text-sm text-muted-foreground">
-                {selectedJobData.description}
+                {selectedJobData.summary}
               </p>
-              {selectedJobData.requirements?.length ? (
+              {selectedJobData.requiredSkills?.length ? (
                 <div>
                   <p className="mb-2 text-sm font-medium">Key requirements</p>
                   <ul className="space-y-1 text-sm text-muted-foreground">
-                    {selectedJobData.requirements.slice(0, 5).map((item) => (
+                    {selectedJobData.requiredSkills.slice(0, 5).map((item) => (
                       <li key={item}>• {item}</li>
                     ))}
                   </ul>

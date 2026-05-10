@@ -57,8 +57,18 @@ describe("opportunities", () => {
       company: "Acme",
       source: "manual",
       sourceUrl: "https://example.com/job",
+      city: undefined,
+      province: undefined,
+      country: undefined,
+      remoteType: undefined,
+      jobType: undefined,
       summary: "Build polished product interfaces.",
+      responsibilities: [],
+      requiredSkills: [],
+      salaryMin: undefined,
+      salaryMax: undefined,
       status: "saved",
+      appliedAt: undefined,
       deadline: undefined,
       tags: ["React", "TypeScript"],
       notes: undefined,
@@ -66,6 +76,33 @@ describe("opportunities", () => {
       linkedCoverLetterId: "cover-1",
       createdAt: "2026-01-01T00:00:00.000Z",
       updatedAt: "2026-01-01T00:00:00.000Z",
+    });
+  });
+
+  it("preserves legacy job metadata in opportunity fields", () => {
+    expect(
+      jobToOpportunity(
+        job({
+          location: "Toronto, ON, Canada",
+          remote: true,
+          salary: "100,000 - 120,000",
+          type: "full-time",
+          requirements: ["React"],
+          responsibilities: ["Build interfaces"],
+          appliedAt: "2026-02-01",
+        }),
+      ),
+    ).toMatchObject({
+      city: "Toronto",
+      province: "ON",
+      country: "Canada",
+      remoteType: "remote",
+      jobType: "full-time",
+      salaryMin: 100000,
+      salaryMax: 120000,
+      requiredSkills: ["React"],
+      responsibilities: ["Build interfaces"],
+      appliedAt: "2026-02-01",
     });
   });
 

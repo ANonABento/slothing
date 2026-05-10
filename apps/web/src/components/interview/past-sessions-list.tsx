@@ -12,12 +12,12 @@ import {
 import { TimeAgo } from "@/components/format/time-ago";
 import { Button } from "@/components/ui/button";
 import { pluralize } from "@/lib/text/pluralize";
-import type { JobDescription } from "@/types";
+import type { Opportunity } from "@/types/opportunity";
 import type { PastSession } from "@/types/interview";
 
 interface PastSessionsListProps {
   pastSessions: PastSession[];
-  jobs: JobDescription[];
+  opportunities: Opportunity[];
   showHistory: boolean;
   onToggleHistory: () => void;
   onResumeSession: (session: PastSession) => void;
@@ -26,7 +26,7 @@ interface PastSessionsListProps {
 
 export function PastSessionsList({
   pastSessions,
-  jobs,
+  opportunities,
   showHistory,
   onToggleHistory,
   onResumeSession,
@@ -55,7 +55,7 @@ export function PastSessionsList({
       {showHistory && (
         <div className="border-t divide-y">
           {pastSessions.slice(0, 10).map((pastSession) => {
-            const job = jobs.find((j) => j.id === pastSession.jobId);
+            const job = opportunities.find((j) => j.id === pastSession.jobId);
             const isGeneric = pastSession.jobId === null;
             const answeredCount = pastSession.answers?.length || 0;
             const totalQuestions = pastSession.questions.length;

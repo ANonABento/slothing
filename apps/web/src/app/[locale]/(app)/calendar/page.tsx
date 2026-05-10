@@ -59,7 +59,7 @@ import {
 import { SkeletonButton, SkeletonCard } from "@/components/ui/skeleton";
 import { usePreferredLocale } from "@/components/format/time-ago";
 import { useErrorToast } from "@/hooks/use-error-toast";
-import type { JobDescription } from "@/types";
+import type { Opportunity } from "@/types/opportunity";
 
 const CalendarSyncButton = dynamic(
   () => import("@/components/google").then((m) => m.CalendarSyncButton),
@@ -81,7 +81,7 @@ interface CalendarEvent {
   title: string;
   date: Date;
   type: "interview" | "deadline" | "reminder";
-  job?: JobDescription;
+  job?: Opportunity;
   reminder?: Reminder;
 }
 
@@ -124,7 +124,7 @@ function getMonthDate(year: number, monthIndex: number, day: number): Date {
 
 export default function CalendarPage() {
   const locale = usePreferredLocale();
-  const [jobs, setJobs] = useState<JobDescription[]>([]);
+  const [jobs, setJobs] = useState<Opportunity[]>([]);
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentDate, setCurrentDate] = useState(nowDate());
@@ -174,7 +174,7 @@ export default function CalendarPage() {
         .catch(() => ({ connected: false })),
     ])
       .then(([jobsData, remindersData, feedData, googleAuthData]) => {
-        setJobs(jobsData.jobs || []);
+        setJobs(jobsData.opportunities || []);
         setReminders(remindersData.reminders || []);
         setFeedUrl(feedData.feedUrl || "");
         setWebcalUrl(feedData.webcalUrl || "");
@@ -588,9 +588,9 @@ export default function CalendarPage() {
                               minute: "2-digit",
                             }).format(event.date)}
                           </p>
-                          {event.job?.url && (
+                          {event.job?.sourceUrl && (
                             <a
-                              href={event.job.url}
+                              href={event.job.sourceUrl}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="inline-flex items-center gap-1 text-xs text-primary hover:underline mt-2"

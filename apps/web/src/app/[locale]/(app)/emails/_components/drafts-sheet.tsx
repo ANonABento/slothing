@@ -13,7 +13,8 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { TEMPLATE_CONFIG } from "../_data/templates";
-import type { EmailTemplateType, JobDescription } from "@/types";
+import type { EmailTemplateType } from "@/types";
+import type { Opportunity } from "@/types/opportunity";
 
 export interface EmailDraftForSheet {
   id: string;
@@ -30,7 +31,7 @@ interface DraftsSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   drafts: EmailDraftForSheet[];
-  jobs: JobDescription[];
+  jobs: Opportunity[];
   onLoadDraft: (draft: EmailDraftForSheet) => void;
   onDeleteDraft: (draftId: string) => void;
 }
