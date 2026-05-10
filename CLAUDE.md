@@ -487,6 +487,7 @@ The Columbus extension has a separate workflow (`.github/workflows/extension-e2e
 11. **Pre-commit hook runs lint-staged + type-check.** If a hook fails, fix the underlying problem; don't pass `--no-verify`.
 12. **`docs/architecture.md` (lowercase)** is the canonical architecture doc. There used to be an uppercase `ARCHITECTURE.md` referencing the old "Columbus" name — it has been replaced.
 13. **App pages should stay wide by default.** `width="narrow"` in `src/app/(app)/**/page.tsx` is lint-flagged; use `max-w-prose` for text-heavy blocks instead. See `docs/page-width.md`.
+14. **Welcome email series state is JSON on `user.welcome_series_state`.** The cron runs daily via `/api/cron/follow-ups`; all transactional sends should go through `lib/email/transactional.ts`.
 
 ---
 
