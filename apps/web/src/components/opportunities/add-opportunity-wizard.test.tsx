@@ -17,7 +17,7 @@ function renderWizard(
 ) {
   const onOpenChange = vi.fn();
   const onSaved = vi.fn();
-  render(
+  const result = render(
     <ToastProvider>
       <AddOpportunityWizard
         open
@@ -27,7 +27,7 @@ function renderWizard(
       />
     </ToastProvider>,
   );
-  return { onOpenChange, onSaved };
+  return { onOpenChange, onSaved, ...result };
 }
 
 describe("AddOpportunityWizard", () => {
@@ -41,21 +41,79 @@ describe("AddOpportunityWizard", () => {
 
     const next = screen.getByRole("button", { name: "Next →" });
     expect(next).toBeDisabled();
+    expect(screen.getByLabelText(/Title required/i)).toHaveAttribute(
+      "aria-required",
+      "true",
+    );
+    expect(screen.getByLabelText(/Company required/i)).toHaveAttribute(
+      "aria-required",
+      "true",
+    );
+    const titleLabel = document.querySelector(
+      'label[for="opportunity-title"]',
+    ) as HTMLElement;
+    const companyLabel = document.querySelector(
+      'label[for="opportunity-company"]',
+    ) as HTMLElement;
+    expect(titleLabel).toHaveTextContent(/Title\s+\*/);
+    expect(companyLabel).toHaveTextContent(/Company\s+\*/);
 
     fireEvent.blur(screen.getByLabelText(/Title/));
-    expect(
-      screen.getByText("Title and Company are required"),
-    ).toBeInTheDocument();
+    expect(screen.getByLabelText(/Title/)).toHaveAttribute(
+      "aria-invalid",
+      "true",
+    );
+    expect(screen.getByText("Enter a title to continue.")).toBeInTheDocument();
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "Add the required essentials: Title and Company.",
+    );
 
     fireEvent.change(screen.getByLabelText(/Title/), {
       target: { value: "Frontend Engineer" },
     });
+    expect(screen.getByLabelText(/Title/)).toHaveAttribute(
+      "aria-invalid",
+      "false",
+    );
     expect(next).toBeDisabled();
 
     fireEvent.change(screen.getByLabelText(/Company/), {
       target: { value: "Northstar Labs" },
     });
     expect(next).toBeEnabled();
+
+    fireEvent.change(screen.getByLabelText(/Company/), {
+      target: { value: "" },
+    });
+    fireEvent.blur(screen.getByLabelText(/Company/));
+    expect(next).toBeDisabled();
+    expect(screen.getByLabelText(/Company/)).toHaveAttribute(
+      "aria-invalid",
+      "true",
+    );
+    expect(
+      screen.getByText("Enter a company to continue."),
+    ).toBeInTheDocument();
+  });
+
+  it("shows required and optional step context in progress controls", () => {
+    renderWizard();
+
+    expect(
+      screen.getByRole("button", {
+        name: "Step 1 of 4: Essentials, required, current",
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", {
+        name: "Step 2 of 4: Where & how, optional",
+      }),
+    ).toBeDisabled();
+    expect(
+      screen.getByText(
+        "Step 1 of 4: Essentials. Required: add a title and company before moving on.",
+      ),
+    ).toBeInTheDocument();
   });
 
   it("shows the Save & exit confirmation when current step data is dirty", () => {
@@ -110,6 +168,33 @@ describe("AddOpportunityWizard", () => {
     fireEvent.click(
       screen.getAllByRole("button", { name: "Save & exit" }).at(-1)!,
     );
+
+    await waitFor(() => expect(onSaved).toHaveBeenCalled());
+    expect(global.fetch).toHaveBeenCalledWith(
+      "/api/opportunities",
+      expect.objectContaining({ method: "POST" }),
+    );
+  });
+
+  it("creates from the final step with a clear primary action", async () => {
+    const onSaved = vi.fn();
+    vi.mocked(global.fetch).mockResolvedValue({
+      ok: true,
+      json: async () => ({ opportunity: { id: "opp-1" } }),
+    } as Response);
+    renderWizard({ onSaved });
+
+    fireEvent.change(screen.getByLabelText(/Title/), {
+      target: { value: "Frontend Engineer" },
+    });
+    fireEvent.change(screen.getByLabelText(/Company/), {
+      target: { value: "Northstar Labs" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Next →" }));
+    fireEvent.click(screen.getByRole("button", { name: "Next →" }));
+    fireEvent.click(screen.getByRole("button", { name: "Next →" }));
+
+    fireEvent.click(screen.getByRole("button", { name: "Create Opportunity" }));
 
     await waitFor(() => expect(onSaved).toHaveBeenCalled());
     expect(global.fetch).toHaveBeenCalledWith(

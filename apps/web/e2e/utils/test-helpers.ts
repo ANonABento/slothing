@@ -26,19 +26,20 @@ export async function createTestJob(
   await expect(page.getByRole("dialog")).toBeVisible();
 
   // Fill in the form fields
-  await page.getByLabel(/opportunity title/i).fill(data.title);
-  await page.getByLabel(/company/i).fill(data.company);
-  await page.getByLabel(/opportunity description/i).fill(data.description);
+  const dialog = page.getByRole("dialog");
+  await dialog.getByLabel(/title/i).fill(data.title);
+  await dialog.getByLabel(/company/i).fill(data.company);
 
   if (data.url) {
-    await page.getByLabel(/opportunity url/i).fill(data.url);
+    await dialog.getByLabel(/^url$/i).fill(data.url);
   }
 
-  // Submit the form - use the button inside the dialog
-  await page
-    .getByRole("dialog")
-    .getByRole("button", { name: /^add opportunity$/i })
-    .click();
+  await dialog.getByRole("button", { name: /^next/i }).click();
+  await dialog.getByRole("button", { name: /^next/i }).click();
+  await dialog.getByRole("button", { name: /^next/i }).click();
+  await dialog.getByLabel(/summary \/ job description/i).fill(data.description);
+
+  await dialog.getByRole("button", { name: /^create opportunity$/i }).click();
 
   // Wait for dialog to close (indicates success)
   await expect(page.getByRole("dialog")).not.toBeVisible({ timeout: 10000 });
