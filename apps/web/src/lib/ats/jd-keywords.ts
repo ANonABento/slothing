@@ -158,6 +158,7 @@ const CANONICAL_TERMS: CanonicalTerm[] = [
   { term: "next.js", aliases: ["nextjs", "next js"] },
   { term: "node.js", aliases: ["nodejs", "node js", "node"] },
   { term: "postgresql", aliases: ["postgres"] },
+  { term: "playwright" },
   { term: "power bi", aliases: ["powerbi"] },
   { term: "python" },
   { term: "react", aliases: ["react.js", "reactjs"] },

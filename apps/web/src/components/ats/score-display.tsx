@@ -55,6 +55,26 @@ const SCORE_COLORS: Record<
   },
 };
 
+function keywordBadgeClass(keyword: ATSAnalysisResult["keywords"][number]) {
+  const status = keyword.status;
+  if (!status) {
+    return keyword.found
+      ? "bg-success/10 text-success"
+      : "bg-destructive/10 text-destructive";
+  }
+  if (status === "matched_with_evidence") return "bg-success/10 text-success";
+  if (status === "mentioned_only") return "bg-warning/10 text-warning";
+  return "bg-destructive/10 text-destructive";
+}
+
+function keywordMark(keyword: ATSAnalysisResult["keywords"][number]) {
+  const status = keyword.status;
+  if (!status) return keyword.found ? "\u2713" : "\u2717";
+  if (status === "matched_with_evidence") return "\u2713";
+  if (status === "mentioned_only") return "!";
+  return "\u2717";
+}
+
 function getScoreColor(score: number): string {
   return SCORE_COLORS[getScoreLevel(score)].text;
 }
@@ -150,21 +170,34 @@ export function ScoreDisplay({ result }: ScoreDisplayProps) {
           <h3 className="font-semibold text-sm uppercase tracking-wider text-muted-foreground mb-3">
             Keyword Analysis
           </h3>
+          {result.issues.some(
+            (issue) =>
+              issue.category === "keywords" &&
+              /stuffing|thin evidence/i.test(
+                `${issue.title} ${issue.description}`,
+              ),
+          ) ? (
+            <p className="mb-3 rounded-md border border-warning/30 bg-warning/10 px-3 py-2 text-sm text-warning">
+              Repeated keywords need supporting bullets or projects to count as
+              strong ATS evidence.
+            </p>
+          ) : null}
           <div className="flex flex-wrap gap-2">
             {result.keywords.map((kw) => (
               <span
                 key={kw.keyword}
                 className={cn(
                   "px-2.5 py-1 rounded-full text-xs font-medium",
-                  kw.found
-                    ? "bg-success/10 text-success"
-                    : "bg-destructive/10 text-destructive",
+                  keywordBadgeClass(kw),
                 )}
               >
-                {kw.found ? "\u2713" : "\u2717"} {kw.keyword}
+                {keywordMark(kw)} {kw.keyword}
                 {kw.found && kw.frequency > 1 && (
                   <span className="opacity-60 ml-1">({kw.frequency}x)</span>
                 )}
+                {kw.status === "mentioned_only" ? (
+                  <span className="opacity-70 ml-1">mentioned only</span>
+                ) : null}
               </span>
             ))}
           </div>
