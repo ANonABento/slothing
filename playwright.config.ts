@@ -24,6 +24,9 @@ export default defineConfig({
     "**/node_modules/**",
     "**/playwright-report/**",
     "**/test-results/**",
+    // Subprojects with their own @playwright/test install must be excluded here
+    // so the root runner never loads two Playwright packages in one process.
+    "**/columbus-extension/**",
   ],
   fullyParallel: false,
   forbidOnly: !!process.env.CI,

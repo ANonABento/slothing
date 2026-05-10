@@ -1,12 +1,12 @@
 import { test, expect } from "@playwright/test";
 
 test.describe("Smoke Tests", () => {
-  test("homepage loads successfully", async ({ page }) => {
+  test("homepage loads successfully @smoke", async ({ page }) => {
     await page.goto("/");
     await expect(page).toHaveTitle(/Slothing/i);
   });
 
-  test("protected pages are accessible with auth bypass (no Clerk keys)", async ({
+  test("protected pages are accessible with auth bypass (no Clerk keys) @smoke", async ({
     page,
   }) => {
     const pages = [
