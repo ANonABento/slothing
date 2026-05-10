@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getJob } from "@/lib/db/jobs";
 import {
   getCompanyEnrichment,
+  getCompanyGithubSlug,
   isEnrichmentStale,
 } from "@/lib/db/company-research";
 import { enrichCompany } from "@/lib/enrichment";
@@ -69,12 +70,15 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
     return NextResponse.json({ ...cached, fromCache: true });
   }
 
-  let githubOrg: string | null = null;
+  let githubOrg: string | null = getCompanyGithubSlug(
+    job.company,
+    authResult.userId,
+  );
   try {
     const body = await request.json();
-    githubOrg = typeof body.githubOrg === "string" ? body.githubOrg : null;
+    githubOrg = typeof body.githubOrg === "string" ? body.githubOrg : githubOrg;
   } catch {
-    githubOrg = null;
+    // Keep the stored override when the request body is empty or invalid.
   }
 
   const snapshot = await enrichCompany({

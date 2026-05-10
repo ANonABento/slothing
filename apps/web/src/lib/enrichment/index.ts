@@ -1,4 +1,7 @@
-import { saveCompanyEnrichment } from "@/lib/db/company-research";
+import {
+  saveCompanyEnrichment,
+  setCompanyGithubSlug,
+} from "@/lib/db/company-research";
 import { nowIso } from "@/lib/format/time";
 import { fetchEngBlog } from "./blog";
 import { fetchGithubOrg } from "./github";
@@ -6,7 +9,7 @@ import { fetchHnMentions } from "./hn";
 import { fetchLevels } from "./levels";
 import { fetchNews } from "./news";
 import type { EnrichmentSnapshot, SourceError, SourceResult } from "./types";
-import { compactCompanySlug, domainFromUrl, githubOrgFromUrl } from "./utils";
+import { domainFromUrl, githubOrgFromUrl, githubSlugCandidates } from "./utils";
 
 interface EnrichCompanyOptions {
   companyName: string;
@@ -21,13 +24,19 @@ export async function enrichCompany({
   githubOrg,
   userId,
 }: EnrichCompanyOptions): Promise<EnrichmentSnapshot> {
-  const derivedGithubOrg =
-    githubOrg ??
-    githubOrgFromUrl(companyUrl) ??
-    compactCompanySlug(companyName);
+  const urlGithubOrg = githubOrgFromUrl(companyUrl);
+  const derivedGithubOrgs = githubOrg
+    ? [githubOrg]
+    : Array.from(
+        new Set(
+          [urlGithubOrg, ...githubSlugCandidates(companyName)].filter(
+            (candidate): candidate is string => Boolean(candidate),
+          ),
+        ),
+      );
   const domain = domainFromUrl(companyUrl);
   const settled = await Promise.allSettled([
-    fetchGithubOrg(derivedGithubOrg),
+    fetchGithubOrg(derivedGithubOrgs),
     fetchNews(companyName),
     fetchLevels(companyName),
     fetchEngBlog(domain),
@@ -45,6 +54,13 @@ export async function enrichCompany({
   };
 
   saveCompanyEnrichment(userId, companyName, snapshot);
+  if (snapshot.github?.ok && snapshot.github.data.resolvedSlug) {
+    setCompanyGithubSlug(
+      userId,
+      companyName,
+      snapshot.github.data.resolvedSlug,
+    );
+  }
   return snapshot;
 }
 

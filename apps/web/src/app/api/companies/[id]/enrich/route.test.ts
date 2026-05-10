@@ -6,6 +6,7 @@ const mocks = vi.hoisted(() => ({
   isAuthError: vi.fn(),
   getJob: vi.fn(),
   getCompanyEnrichment: vi.fn(),
+  getCompanyGithubSlug: vi.fn(),
   isEnrichmentStale: vi.fn(),
   enrichCompany: vi.fn(),
   standard: vi.fn(),
@@ -18,6 +19,7 @@ vi.mock("@/lib/auth", () => ({
 vi.mock("@/lib/db/jobs", () => ({ getJob: mocks.getJob }));
 vi.mock("@/lib/db/company-research", () => ({
   getCompanyEnrichment: mocks.getCompanyEnrichment,
+  getCompanyGithubSlug: mocks.getCompanyGithubSlug,
   isEnrichmentStale: mocks.isEnrichmentStale,
 }));
 vi.mock("@/lib/enrichment", () => ({ enrichCompany: mocks.enrichCompany }));
@@ -55,6 +57,7 @@ describe("company enrichment route", () => {
       url: "https://acme.com/jobs",
     });
     mocks.getCompanyEnrichment.mockReturnValue(null);
+    mocks.getCompanyGithubSlug.mockReturnValue(null);
     mocks.isEnrichmentStale.mockReturnValue(false);
     mocks.enrichCompany.mockResolvedValue(snapshot);
   });
@@ -109,6 +112,19 @@ describe("company enrichment route", () => {
       userId: "user-1",
     });
     await expect(response.json()).resolves.toMatchObject({ fromCache: false });
+  });
+
+  it("forwards the stored GitHub override when the body lacks one", async () => {
+    mocks.getCompanyGithubSlug.mockReturnValue("anthropics");
+
+    await POST(request(), context);
+
+    expect(mocks.enrichCompany).toHaveBeenCalledWith({
+      companyName: "Acme",
+      companyUrl: "https://acme.com/jobs",
+      githubOrg: "anthropics",
+      userId: "user-1",
+    });
   });
 
   it("returns 404 when the opportunity is missing", async () => {

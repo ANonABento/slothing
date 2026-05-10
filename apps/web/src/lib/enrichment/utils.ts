@@ -10,6 +10,20 @@ export function compactCompanySlug(name: string): string {
   return slugifyCompany(name).replace(/-/g, "");
 }
 
+export function githubSlugCandidates(name: string): string[] {
+  const base = compactCompanySlug(name);
+  if (!base) return [];
+
+  return Array.from(
+    new Set([
+      base,
+      ...(base.endsWith("s") ? [] : [`${base}s`]),
+      `${base}-inc`,
+      `${base}hq`,
+    ]),
+  ).filter(Boolean);
+}
+
 export function domainFromUrl(rawUrl?: string | null): string | null {
   if (!rawUrl) return null;
   try {

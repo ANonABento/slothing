@@ -18,7 +18,7 @@ interface GithubRepoResponse {
   pushed_at: string | null;
 }
 
-export async function fetchGithubOrg(
+async function fetchGithubOrgAttempt(
   slug: string,
 ): Promise<SourceResult<GithubData>> {
   if (!slug) return { ok: false, error: "not_found" };
@@ -64,6 +64,7 @@ export async function fetchGithubOrg(
       data: {
         org: org.login,
         url: org.html_url,
+        resolvedSlug: slug,
         totalStars: repos.reduce((sum, repo) => sum + repo.stargazers_count, 0),
         publicRepos: org.public_repos,
         followers: org.followers,
@@ -84,6 +85,32 @@ export async function fetchGithubOrg(
   } catch {
     return { ok: false, error: "parse_error" };
   }
+}
+
+export async function fetchGithubOrg(
+  slugOrCandidates: string | string[],
+): Promise<SourceResult<GithubData>> {
+  const candidates = Array.isArray(slugOrCandidates)
+    ? slugOrCandidates
+    : [slugOrCandidates];
+  const deduped = Array.from(
+    new Set(candidates.map((candidate) => candidate.trim()).filter(Boolean)),
+  );
+
+  if (deduped.length === 0) return { ok: false, error: "not_found" };
+
+  let lastNotFound: SourceResult<GithubData> = {
+    ok: false,
+    error: "not_found",
+  };
+  for (const candidate of deduped) {
+    const result = await fetchGithubOrgAttempt(candidate);
+    if (result.ok) return result;
+    if (result.error !== "not_found") return result;
+    lastNotFound = result;
+  }
+
+  return lastNotFound;
 }
 
 function isRateLimited(response: Response): boolean {

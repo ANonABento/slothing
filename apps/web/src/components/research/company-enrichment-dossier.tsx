@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { useCallback, useEffect, useState } from "react";
 import {
   BarChart3,
@@ -13,9 +14,13 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { TimeAgo } from "@/components/format/time-ago";
-import { ExpandableSection } from "@/components/research/expandable-section";
+import { EditGithubSlugButton } from "@/components/research/edit-github-slug-button";
+import { QuickResearchLinks } from "@/components/research/quick-research-links";
+import {
+  SourceCard,
+  type SourceCardState,
+} from "@/components/research/source-card";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 import type {
   BlogData,
   EnrichmentSnapshot,
@@ -25,6 +30,8 @@ import type {
   NewsData,
   SourceResult,
 } from "@/lib/enrichment";
+import { pluralize } from "@/lib/text/pluralize";
+import { cn } from "@/lib/utils";
 
 interface CompanyEnrichmentDossierProps {
   jobId: string;
@@ -53,21 +60,23 @@ export function CompanyEnrichmentDossier({
             body: forceRefresh ? "{}" : undefined,
           },
         );
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Failed to load research");
+        const data = await readJson(res);
+        if (!res.ok) {
+          throw new Error(readError(data, "Failed to load research"));
+        }
         if (data.snapshot) {
-          setSnapshot(data.snapshot);
+          setSnapshot(data.snapshot as EnrichmentSnapshot);
         } else if (!forceRefresh) {
           const createRes = await fetch(`/api/companies/${jobId}/enrich`, {
             method: "POST",
             headers: { "content-type": "application/json" },
             body: "{}",
           });
-          const createData = await createRes.json();
+          const createData = await readJson(createRes);
           if (!createRes.ok) {
-            throw new Error(createData.error || "Failed to enrich company");
+            throw new Error(readError(createData, "Failed to enrich company"));
           }
-          setSnapshot(createData.snapshot);
+          setSnapshot(createData.snapshot as EnrichmentSnapshot);
         }
       } catch (err) {
         setError(
@@ -85,36 +94,22 @@ export function CompanyEnrichmentDossier({
     void fetchSnapshot();
   }, [fetchSnapshot]);
 
-  if (loading && !snapshot) {
-    return (
-      <div className="rounded-xl border bg-card p-6">
-        <div className="flex items-center gap-3">
-          <Loader2 className="h-5 w-5 animate-spin text-primary" />
-          <div>
-            <h3 className="font-semibold">Public research</h3>
-            <p className="text-sm text-muted-foreground">
-              Building a company dossier...
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const isInitialLoading = loading && !snapshot;
 
   return (
-    <div className="rounded-xl border bg-card overflow-hidden">
-      <div className="p-4 bg-primary/5">
+    <div className="space-y-4">
+      <div className="rounded-lg border bg-card p-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="flex items-start gap-3">
-            <div className="p-2 rounded-lg bg-primary/10">
-              <Building2 className="h-5 w-5 text-primary" />
+            <div className="rounded-lg bg-primary/10 p-2 text-primary">
+              <Building2 className="h-5 w-5" />
             </div>
             <div>
-              <h3 className="font-semibold">Public research dossier</h3>
+              <h2 className="font-semibold">Public research dossier</h2>
               <p className="text-sm text-muted-foreground">
                 {snapshot ? (
                   <>
-                    Updated <TimeAgo date={snapshot.enrichedAt} />
+                    Last enriched <TimeAgo date={snapshot.enrichedAt} />
                   </>
                 ) : (
                   `No public research saved for ${companyName}`
@@ -128,7 +123,7 @@ export function CompanyEnrichmentDossier({
             variant="outline"
             size="sm"
             onClick={() => fetchSnapshot(true)}
-            disabled={refreshing}
+            disabled={refreshing || isInitialLoading}
             className="shrink-0"
           >
             {refreshing ? (
@@ -141,30 +136,124 @@ export function CompanyEnrichmentDossier({
         </div>
       </div>
 
-      <ExpandableSection title="GitHub" icon={Github} defaultExpanded>
-        <GithubSection result={snapshot?.github ?? null} />
-      </ExpandableSection>
-      <ExpandableSection title="News" icon={Newspaper} defaultExpanded>
-        <NewsSection result={snapshot?.news ?? null} />
-      </ExpandableSection>
-      <ExpandableSection title="Levels.fyi" icon={BarChart3}>
-        <LevelsSection result={snapshot?.levels ?? null} />
-      </ExpandableSection>
-      <ExpandableSection title="Engineering Blog" icon={Rss}>
-        <BlogSection result={snapshot?.blog ?? null} />
-      </ExpandableSection>
-      <ExpandableSection title="Hacker News" icon={TrendingUp}>
-        <HnSection result={snapshot?.hn ?? null} />
-      </ExpandableSection>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        <SourceCard
+          title="GitHub"
+          icon={Github}
+          state={sourceState(snapshot?.github ?? null, isInitialLoading)}
+          errorMessage={sourceError("GitHub", snapshot?.github ?? null)}
+          onRetry={() => fetchSnapshot(true)}
+          headerAction={
+            <EditGithubSlugButton
+              jobId={jobId}
+              currentSlug={
+                snapshot?.github?.ok ? snapshot.github.data.resolvedSlug : null
+              }
+              onSlugSaved={() => fetchSnapshot(true)}
+            />
+          }
+        >
+          <GithubSection result={snapshot?.github ?? null} />
+        </SourceCard>
+
+        <SourceCard
+          title="News"
+          icon={Newspaper}
+          state={sourceState(
+            snapshot?.news ?? null,
+            isInitialLoading,
+            (data) => data.headlines.length > 0,
+          )}
+          errorMessage={sourceError("News", snapshot?.news ?? null)}
+          onRetry={() => fetchSnapshot(true)}
+        >
+          <NewsSection result={snapshot?.news ?? null} />
+        </SourceCard>
+
+        <SourceCard
+          title="Levels"
+          icon={BarChart3}
+          state={sourceState(
+            snapshot?.levels ?? null,
+            isInitialLoading,
+            (data) => Boolean(data.medianTotalComp) || data.roles.length > 0,
+          )}
+          errorMessage={sourceError("Levels", snapshot?.levels ?? null)}
+          onRetry={() => fetchSnapshot(true)}
+        >
+          <LevelsSection result={snapshot?.levels ?? null} />
+        </SourceCard>
+
+        <SourceCard
+          title="Eng Blog"
+          icon={Rss}
+          state={sourceState(
+            snapshot?.blog ?? null,
+            isInitialLoading,
+            (data) => data.posts.length > 0,
+          )}
+          errorMessage={sourceError("Eng Blog", snapshot?.blog ?? null)}
+          onRetry={() => fetchSnapshot(true)}
+        >
+          <BlogSection result={snapshot?.blog ?? null} />
+        </SourceCard>
+
+        <SourceCard
+          title="HN"
+          icon={TrendingUp}
+          state={sourceState(
+            snapshot?.hn ?? null,
+            isInitialLoading,
+            (data) => data.stories.length > 0,
+          )}
+          errorMessage={sourceError("HN", snapshot?.hn ?? null)}
+          onRetry={() => fetchSnapshot(true)}
+        >
+          <HnSection result={snapshot?.hn ?? null} />
+        </SourceCard>
+      </div>
+
+      <QuickResearchLinks companyName={companyName} />
     </div>
   );
+}
+
+async function readJson(response: Response): Promise<Record<string, unknown>> {
+  try {
+    return (await response.json()) as Record<string, unknown>;
+  } catch {
+    return {};
+  }
+}
+
+function readError(data: Record<string, unknown>, fallback: string): string {
+  return typeof data.error === "string" ? data.error : fallback;
+}
+
+function sourceState<T>(
+  result: SourceResult<T> | null,
+  loading: boolean,
+  hasUsefulData: (data: T) => boolean = () => true,
+): SourceCardState {
+  if (loading && !result) return "loading";
+  if (!result) return "no-data";
+  if (!result.ok) return result.error === "not_found" ? "no-data" : "error";
+  return hasUsefulData(result.data) ? "has-data" : "no-data";
+}
+
+function sourceError<T>(
+  source: string,
+  result: SourceResult<T> | null,
+): string | undefined {
+  if (!result || result.ok || result.error === "not_found") return undefined;
+  return `Couldn't reach ${source}: ${result.error.replace("_", " ")}`;
 }
 
 function EmptySource<T>({ result }: { result: SourceResult<T> | null }) {
   const detail =
     result && !result.ok ? ` (${result.error.replace("_", " ")})` : "";
   return (
-    <p className="text-sm text-muted-foreground">No data available{detail}.</p>
+    <p className="text-sm text-muted-foreground">No data found{detail}.</p>
   );
 }
 
@@ -177,14 +266,14 @@ function GithubSection({
   const data = result.data;
   return (
     <div className="space-y-4 text-sm">
-      <div className="grid gap-2 sm:grid-cols-3">
+      <div className="grid gap-2">
         <Metric label="Stars" value={formatNumber(data.totalStars)} />
         <Metric label="Repos" value={formatNumber(data.publicRepos)} />
         <Metric label="Followers" value={formatNumber(data.followers)} />
       </div>
       <ChipRow values={data.topLanguages} />
       <div className="space-y-2">
-        {data.recentRepos.map((repo) => (
+        {data.recentRepos.slice(0, 5).map((repo) => (
           <ExternalItem
             key={repo.url}
             href={repo.url}
@@ -203,7 +292,7 @@ function NewsSection({ result }: { result: SourceResult<NewsData> | null }) {
   }
   return (
     <div className="space-y-2">
-      {result.data.headlines.map((item) => (
+      {result.data.headlines.slice(0, 5).map((item) => (
         <ExternalItem
           key={`${item.title}-${item.link}`}
           href={item.link}
@@ -220,13 +309,18 @@ function LevelsSection({
 }: {
   result: SourceResult<LevelsData> | null;
 }) {
-  if (!result?.ok) return <EmptySource result={result} />;
+  if (
+    !result?.ok ||
+    (!result.data.medianTotalComp && result.data.roles.length === 0)
+  ) {
+    return <EmptySource result={result} />;
+  }
   return (
     <div className="space-y-3 text-sm">
       {result.data.medianTotalComp && (
         <Metric label="Median total comp" value={result.data.medianTotalComp} />
       )}
-      {result.data.roles.map((role) => (
+      {result.data.roles.slice(0, 5).map((role) => (
         <div
           key={`${role.role}-${role.totalComp}`}
           className="flex justify-between gap-3"
@@ -248,7 +342,7 @@ function BlogSection({ result }: { result: SourceResult<BlogData> | null }) {
   }
   return (
     <div className="space-y-2">
-      {result.data.posts.map((post) => (
+      {result.data.posts.slice(0, 5).map((post) => (
         <ExternalItem
           key={post.url}
           href={post.url}
@@ -266,12 +360,15 @@ function HnSection({ result }: { result: SourceResult<HnData> | null }) {
   }
   return (
     <div className="space-y-2">
-      {result.data.stories.map((story) => (
+      {result.data.stories.slice(0, 5).map((story) => (
         <ExternalItem
           key={story.hnUrl}
           href={story.hnUrl}
           title={story.title}
-          description={`${story.points} points · ${story.comments} comments`}
+          description={`${pluralize(story.points, "point")} · ${pluralize(
+            story.comments,
+            "comment",
+          )}`}
         />
       ))}
     </div>
@@ -322,7 +419,7 @@ function ExternalItem({
       )}
     >
       <span className="flex items-start justify-between gap-3">
-        <span className="font-medium text-sm">{title}</span>
+        <span className="text-sm font-medium">{title}</span>
         <ExternalLink className="h-4 w-4 shrink-0 text-muted-foreground" />
       </span>
       {description && (
@@ -339,7 +436,7 @@ function ExternalLinkText({
   children,
 }: {
   href: string;
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   return (
     <a
