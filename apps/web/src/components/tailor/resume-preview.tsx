@@ -23,6 +23,8 @@ import {
 } from "@/lib/tailor/highlight";
 import { createTailorDiff } from "@/lib/tailor/diff";
 import { ScoreRing, SCORE_STRONG, SCORE_MODERATE } from "./gap-analysis";
+import type { ResultQualityRubric } from "@/lib/result-quality/rubric";
+import { ResultQualityCard } from "@/components/result-quality/result-quality-card";
 
 interface ResumePreviewProps {
   resume: TailoredResume;
@@ -36,6 +38,7 @@ interface ResumePreviewProps {
   keywordsMissing?: string[];
   jobDescription?: string;
   onResumeChange?: (resume: TailoredResume) => void;
+  quality?: ResultQualityRubric;
 }
 
 interface AutoTailorResponse {
@@ -98,6 +101,7 @@ export function ResumePreview({
   keywordsMissing = [],
   jobDescription = "",
   onResumeChange,
+  quality,
 }: ResumePreviewProps) {
   const [expanded, setExpanded] = useState(true);
   const [autoTailorLoading, setAutoTailorLoading] = useState(false);
@@ -179,6 +183,8 @@ export function ResumePreview({
 
   return (
     <div className="space-y-4">
+      {quality ? <ResultQualityCard rubric={quality} /> : null}
+
       {/* Match score ring + actions */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">

@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { GapAnalysis, ScoreRing } from "./gap-analysis";
 import type { GapItem } from "@/lib/tailor/analyze";
+import type { ResultQualityRubric } from "@/lib/result-quality/rubric";
 
 const mockGaps: GapItem[] = [
   {
@@ -17,6 +18,14 @@ const mockGaps: GapItem[] = [
       'Add "kubernetes" to Skills and support it with a project or experience bullet',
   },
 ];
+
+const mockQuality: ResultQualityRubric = {
+  status: "light_tailoring",
+  label: "Needs light tailoring",
+  rationale: "Close match with a few gaps.",
+  nextActions: ["Tune the summary.", "Add GraphQL evidence."],
+  reasons: ["moderate_jd_match"],
+};
 
 describe("ScoreRing", () => {
   it("should render the score percentage", () => {
@@ -174,5 +183,21 @@ describe("GapAnalysis", () => {
       />,
     );
     expect(screen.getByText("75%")).toBeInTheDocument();
+  });
+
+  it("renders quality guidance when provided", () => {
+    render(
+      <GapAnalysis
+        gaps={mockGaps}
+        keywordsFound={["react"]}
+        keywordsMissing={["graphql"]}
+        matchScore={70}
+        quality={mockQuality}
+      />,
+    );
+
+    expect(screen.getByText("Needs light tailoring")).toBeInTheDocument();
+    expect(screen.getByText("Close match with a few gaps.")).toBeInTheDocument();
+    expect(screen.getByText("70%")).toBeInTheDocument();
   });
 });

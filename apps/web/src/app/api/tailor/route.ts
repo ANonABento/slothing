@@ -117,6 +117,7 @@ export async function POST(request: NextRequest) {
           keywordsMissing: analysis.keywordsMissing,
           gaps: analysis.gaps,
           matchedEntriesCount: analysis.matchedEntries.length,
+          quality: analysis.quality,
         },
       });
     }
@@ -241,6 +242,7 @@ export async function POST(request: NextRequest) {
         keywordsMissing: analysis.keywordsMissing,
         gaps: analysis.gaps,
         matchedEntriesCount: analysis.matchedEntries.length,
+        quality: analysis.quality,
       },
       unlocked,
     });
