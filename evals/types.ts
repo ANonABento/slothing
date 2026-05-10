@@ -29,7 +29,9 @@ export interface CoverLetterGeneratorOutput {
   error?: string;
 }
 
-export type GeneratorOutput = ResumeGeneratorOutput | CoverLetterGeneratorOutput;
+export type GeneratorOutput =
+  | ResumeGeneratorOutput
+  | CoverLetterGeneratorOutput;
 export type EvalGenerator = (testCase: EvalCase) => Promise<GeneratorOutput>;
 
 export interface MetricScore {
@@ -69,6 +71,8 @@ export interface EvalRunReport {
   generator: string;
   judgeEnabled: boolean;
   judge: "disabled" | "enabled";
+  /** Total cases available in the source benchmark dataset, when known. */
+  datasetTotal?: number;
   cases: CaseResult[];
   summary: EvalRunSummary;
 }
