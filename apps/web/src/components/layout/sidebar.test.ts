@@ -3,6 +3,7 @@ import {
   navigationGroups,
   bottomNavigation,
   getActiveSidebarHref,
+  getActiveSidebarItem,
   getSidebarNavItemClassName,
   getSidebarNavItemState,
   isSidebarItemActive,
@@ -220,5 +221,23 @@ describe("getActiveSidebarHref", () => {
     expect(getActiveSidebarHref("/opportunities/acme", items)).toBe(
       "/opportunities",
     );
+  });
+});
+
+describe("getActiveSidebarItem", () => {
+  const items = navigationGroups.flatMap((group) => group.items);
+
+  it.each([
+    ["/opportunities", "Opportunities"],
+    ["/opportunities/acme", "Opportunities"],
+    ["/opportunities/review", "Review Queue"],
+    ["/studio", "Document Studio"],
+    ["/dashboard", "Dashboard"],
+  ])("resolves %s to %s", (pathname, expectedName) => {
+    expect(getActiveSidebarItem(pathname, items)?.name).toBe(expectedName);
+  });
+
+  it("returns null for unknown app routes", () => {
+    expect(getActiveSidebarItem("/unknown", items)).toBeNull();
   });
 });

@@ -190,11 +190,18 @@ export function getActiveSidebarHref(
   pathname: string,
   items: NavItem[],
 ): string | null {
+  return getActiveSidebarItem(pathname, items)?.href ?? null;
+}
+
+export function getActiveSidebarItem(
+  pathname: string,
+  items: NavItem[],
+): NavItem | null {
   const matches = items
     .filter((item) => isSidebarItemActive(pathname, item.href))
     .sort((a, b) => b.href.length - a.href.length);
 
-  return matches[0]?.href ?? null;
+  return matches[0] ?? null;
 }
 
 export function Sidebar() {
@@ -202,16 +209,33 @@ export function Sidebar() {
   const t = useTranslations("nav");
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [isDesktopViewport, setIsDesktopViewport] = useState<boolean | null>(
+    null,
+  );
   const llmStatus = useLLMStatus();
   const profileSnapshot = useProfileSnapshot();
-  const activeHref = getActiveSidebarHref(
-    pathname,
-    navigationGroups.flatMap((group) => group.items).concat(bottomNavigation),
-  );
+  const allNavigationItems = navigationGroups
+    .flatMap((group) => group.items)
+    .concat(bottomNavigation);
+  const activeItem = getActiveSidebarItem(pathname, allNavigationItems);
+  const activeHref = activeItem?.href ?? null;
+  const mobileHeaderTitle = activeItem
+    ? t(activeItem.messageKey)
+    : t("mainNavigation");
+  const isMobileDrawerClosed = isDesktopViewport === false && !mobileOpen;
   const mobileCloseButtonRef = useRef<HTMLButtonElement | null>(null);
   const mobileOpenButtonRef = useRef<HTMLButtonElement | null>(null);
   const sidebarRef = useRef<HTMLElement | null>(null);
   const previousMobileOpenRef = useRef(false);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(min-width: 1024px)");
+    const syncViewport = () => setIsDesktopViewport(mediaQuery.matches);
+
+    syncViewport();
+    mediaQuery.addEventListener("change", syncViewport);
+    return () => mediaQuery.removeEventListener("change", syncViewport);
+  }, []);
 
   // Close mobile menu on route change
   useEffect(() => {
@@ -279,19 +303,37 @@ export function Sidebar() {
 
   return (
     <>
-      {/* Mobile menu button */}
-      <button
-        ref={mobileOpenButtonRef}
-        type="button"
-        onClick={() => setMobileOpen(true)}
-        className="fixed top-4 left-4 z-30 flex h-11 w-11 items-center justify-center rounded-lg border bg-background shadow-card lg:hidden"
-        aria-label={t("openMenu")}
-        aria-haspopup="dialog"
-        aria-expanded={mobileOpen}
-        aria-controls="primary-sidebar"
+      {/* Mobile app header */}
+      <header
+        className="fixed inset-x-0 top-0 z-30 flex h-16 items-center gap-3 border-b bg-background/95 px-3 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-background/85 lg:hidden"
+        aria-label={`${t("brand")} ${mobileHeaderTitle}`}
       >
-        <Menu className="h-5 w-5" />
-      </button>
+        <button
+          ref={mobileOpenButtonRef}
+          type="button"
+          onClick={() => setMobileOpen(true)}
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border bg-card text-foreground shadow-sm transition-colors hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+          aria-label={t("openMenu")}
+          aria-haspopup="dialog"
+          aria-expanded={mobileOpen}
+          aria-controls="primary-sidebar"
+        >
+          <Menu className="h-5 w-5" />
+        </button>
+        <div className="flex min-w-0 flex-1 items-center gap-3">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
+            <Rocket className="h-4 w-4" />
+          </div>
+          <div className="flex min-w-0 flex-col">
+            <span className="truncate text-sm font-bold leading-tight text-foreground">
+              {t("brand")}
+            </span>
+            <span className="truncate text-xs font-medium text-muted-foreground">
+              {mobileHeaderTitle}
+            </span>
+          </div>
+        </div>
+      </header>
 
       {/* Mobile overlay */}
       {mobileOpen && (
@@ -307,8 +349,10 @@ export function Sidebar() {
         ref={sidebarRef}
         id="primary-sidebar"
         aria-label={t("mainNavigation")}
+        aria-hidden={isMobileDrawerClosed ? true : undefined}
         aria-modal={mobileOpen ? "true" : undefined}
         role={mobileOpen ? "dialog" : undefined}
+        inert={isMobileDrawerClosed ? true : undefined}
         className={cn(
           "app-sidebar fixed inset-y-0 left-0 z-50 flex flex-col border-r bg-background transition-all duration-300 ease-in-out grain",
           collapsed ? "w-[72px]" : "w-[264px]",

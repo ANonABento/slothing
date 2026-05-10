@@ -14,7 +14,9 @@ async function preparePage(page: Page, path = "/en/dashboard") {
 }
 
 async function ensureSidebarOpen(page: Page) {
-  const openMenuButton = page.getByRole("button", { name: /open menu/i });
+  const openMenuButton = page.getByRole("button", {
+    name: /open navigation menu|open menu/i,
+  });
   if (await openMenuButton.isVisible()) {
     await openMenuButton.click();
   }
