@@ -31,7 +31,13 @@ let userDataDir: string;
 
 async function gotoLinkedInFixture(page: Page) {
   const fixturePath = path.resolve(fixturesPath, "linkedin-mock.html");
-  await page.goto(`file://${fixturePath}`);
+  const body = fs.readFileSync(fixturePath, "utf-8");
+  const url = "https://www.linkedin.com/jobs/view/linkedin-mock.html";
+
+  await page.route(url, (route) =>
+    route.fulfill({ status: 200, contentType: "text/html", body }),
+  );
+  await page.goto(url);
   await page.waitForLoadState("domcontentloaded");
 }
 
@@ -130,6 +136,49 @@ test("content script injects on fixture page without throwing errors", async () 
       (e) => e.includes("[Columbus]") || e.includes("content.js"),
     );
     expect(contentScriptErrors).toHaveLength(0);
+  } finally {
+    await page.close();
+  }
+});
+
+test("content script does not inject on non-job-board hosts", async () => {
+  const page = await context.newPage();
+  const url = "https://example.com/";
+
+  try {
+    await page.route(url, (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "text/html",
+        body: "<html><body>ok</body></html>",
+      }),
+    );
+    await page.goto(url);
+    await page.waitForTimeout(CONTENT_SCRIPT_INIT_MS);
+
+    const popup = await context.newPage();
+    try {
+      await popup.goto(`chrome-extension://${extensionId}/popup.html`);
+      const result = await popup.evaluate(async (targetUrl) => {
+        const tabs = await chrome.tabs.query({});
+        const target = tabs.find((tab) => tab.url === targetUrl);
+
+        try {
+          await chrome.tabs.sendMessage(target!.id!, {
+            type: "GET_PAGE_STATUS",
+          });
+          return "unexpected_ok";
+        } catch (e) {
+          return (e as Error).message;
+        }
+      }, url);
+
+      expect(result).toMatch(
+        /Could not establish connection|Receiving end does not exist/,
+      );
+    } finally {
+      await popup.close();
+    }
   } finally {
     await page.close();
   }
