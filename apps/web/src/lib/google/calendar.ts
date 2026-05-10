@@ -15,7 +15,7 @@ import {
  */
 
 import { calendar_v3 } from "googleapis";
-import { createCalendarClient } from "./client";
+import { createCalendarClient, createCalendarClientForUser } from "./client";
 import type { JobDescription } from "@/types";
 import type { Reminder } from "@/lib/db/reminders";
 
@@ -44,6 +44,52 @@ export interface GoogleCalendarEvent {
   endDate?: Date;
   location?: string;
   link?: string;
+  attendees?: { email?: string; displayName?: string }[];
+  status?: string;
+  updated?: string;
+  calendarId?: string;
+  allDay?: boolean;
+}
+
+const INTERVIEW_SEARCH_QUERIES = [
+  "interview",
+  "onsite",
+  "on-site",
+  "phone screen",
+  "screening",
+  "technical",
+  "recruiter",
+  "hiring manager",
+  "panel",
+  "final round",
+];
+
+function mapGoogleEvent(
+  event: calendar_v3.Schema$Event,
+  calendarId = "primary",
+): GoogleCalendarEvent | null {
+  if (!event.id) return null;
+  const startValue = event.start?.dateTime || event.start?.date;
+  const parsedStart = parseToDate(startValue || nowEpoch());
+  if (!parsedStart) return null;
+
+  return {
+    id: event.id,
+    title: event.summary || "Untitled",
+    description: event.description || undefined,
+    startDate: parsedStart,
+    endDate: event.end?.dateTime ? parseToDate(event.end.dateTime)! : undefined,
+    location: event.location || undefined,
+    link: event.htmlLink || undefined,
+    attendees: event.attendees?.map((attendee) => ({
+      email: attendee.email ?? undefined,
+      displayName: attendee.displayName ?? undefined,
+    })),
+    status: event.status ?? undefined,
+    updated: event.updated ?? undefined,
+    calendarId,
+    allDay: Boolean(event.start?.date && !event.start.dateTime),
+  };
 }
 
 /**
@@ -220,6 +266,35 @@ export async function listUpcomingEvents(
     location: event.location || undefined,
     link: event.htmlLink || undefined,
   }));
+}
+
+export async function searchInterviewEvents(
+  userId: string,
+  sinceDate: Date,
+): Promise<GoogleCalendarEvent[]> {
+  const calendar = await createCalendarClientForUser(userId);
+  const byId = new Map<string, GoogleCalendarEvent>();
+
+  for (const query of INTERVIEW_SEARCH_QUERIES) {
+    const response = await calendar.events.list({
+      calendarId: "primary",
+      q: query,
+      timeMin: toIso(sinceDate),
+      singleEvents: true,
+      orderBy: "startTime",
+      maxResults: 50,
+      showDeleted: false,
+    });
+
+    for (const rawEvent of response.data.items ?? []) {
+      if (rawEvent.status === "cancelled") continue;
+      const event = mapGoogleEvent(rawEvent, "primary");
+      if (!event) continue;
+      byId.set(event.id, event);
+    }
+  }
+
+  return Array.from(byId.values());
 }
 
 /**

@@ -155,6 +155,44 @@ export function NotificationCenter({
     }
   };
 
+  const handleSuggestedStatusAction = async (
+    id: string,
+    action: "acceptSuggestedStatus" | "dismissSuggestedStatus",
+  ) => {
+    try {
+      await fetch(`/api/notifications/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action }),
+      });
+      setNotifications((prev) =>
+        prev.map((notification) =>
+          notification.id === id
+            ? {
+                ...notification,
+                read: true,
+                suggestedStatusUpdate: notification.suggestedStatusUpdate
+                  ? {
+                      ...notification.suggestedStatusUpdate,
+                      state:
+                        action === "acceptSuggestedStatus"
+                          ? "accepted"
+                          : "dismissed",
+                    }
+                  : undefined,
+              }
+            : notification,
+        ),
+      );
+      setUnreadCount((prev) => Math.max(0, prev - 1));
+    } catch (error) {
+      showErrorToast(error, {
+        title: "Could not update suggestion",
+        fallbackDescription: "Please try again.",
+      });
+    }
+  };
+
   const handleDeleteRead = async () => {
     const confirmed = await confirm({
       title: "Delete read notifications?",
@@ -337,6 +375,41 @@ export function NotificationCenter({
                               <p className="text-sm text-muted-foreground mt-0.5 line-clamp-2">
                                 {notification.message}
                               </p>
+                            )}
+                            {notification.suggestedStatusUpdate?.state ===
+                              "pending" && (
+                              <div className="mt-2 flex items-center gap-2">
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    void handleSuggestedStatusAction(
+                                      notification.id,
+                                      "acceptSuggestedStatus",
+                                    );
+                                  }}
+                                  className="inline-flex items-center gap-1 rounded-md bg-primary px-2 py-1 text-xs font-medium text-primary-foreground hover:bg-primary/90"
+                                >
+                                  <Check className="h-3.5 w-3.5" />
+                                  Accept
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    void handleSuggestedStatusAction(
+                                      notification.id,
+                                      "dismissSuggestedStatus",
+                                    );
+                                  }}
+                                  className="inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs font-medium hover:bg-muted"
+                                >
+                                  <X className="h-3.5 w-3.5" />
+                                  Dismiss
+                                </button>
+                              </div>
                             )}
                             <p className="text-xs text-muted-foreground mt-1">
                               {formatRelativeTime(notification.createdAt)}

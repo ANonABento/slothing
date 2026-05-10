@@ -24,6 +24,11 @@ import {
   getStoredLocaleSetting,
   setLocaleSetting,
 } from "@/lib/settings/locale";
+import {
+  getCalendarPullEnabled,
+  getCalendarLastPulledAt,
+  setCalendarPullEnabled,
+} from "@/lib/settings/calendar-sync";
 import { LOCALE_COOKIE_NAME } from "@/lib/format/time";
 
 export const dynamic = "force-dynamic";
@@ -42,6 +47,10 @@ export async function GET() {
       },
       digest: {
         enabled: getDigestEnabled(authResult.userId),
+      },
+      calendarSync: {
+        pullEnabled: getCalendarPullEnabled(authResult.userId),
+        lastPulledAt: getCalendarLastPulledAt(authResult.userId),
       },
       kanbanVisibleLanes: getKanbanVisibleLanes(authResult.userId),
     });
@@ -87,6 +96,9 @@ export async function PUT(request: NextRequest) {
     }
     if (data.digest) {
       setDigestEnabled(data.digest.enabled, authResult.userId);
+    }
+    if (data.calendarSync) {
+      setCalendarPullEnabled(data.calendarSync.pullEnabled, authResult.userId);
     }
     if (data.kanbanVisibleLanes) {
       setKanbanVisibleLanes(data.kanbanVisibleLanes, authResult.userId);

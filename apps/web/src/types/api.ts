@@ -527,6 +527,13 @@ export interface SettingsResponse {
   opportunityReview?: {
     enabled: boolean;
   };
+  digest?: {
+    enabled: boolean;
+  };
+  calendarSync?: {
+    pullEnabled: boolean;
+    lastPulledAt?: string | null;
+  };
   kanbanVisibleLanes?: import("@/types/opportunity").KanbanLaneId[];
 }
 

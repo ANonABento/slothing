@@ -85,6 +85,13 @@
       "when": 1778460000000,
       "tag": "0011_unify_answer_bank",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "6",
+      "when": 1778460600000,
+      "tag": "0012_external_calendar_events",
+      "breakpoints": true
     }
   ]
 }
