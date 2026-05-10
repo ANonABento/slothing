@@ -81,6 +81,12 @@ const pages = {
     description: "Track LLM eval runs, scores, costs, and trends.",
     path: "/admin/evals",
   },
+  profile: {
+    title: "Profile",
+    description:
+      "Keep your career profile, target roles, skills, and experience ready for every application.",
+    path: "/profile",
+  },
   salary: {
     title: "Salary Research",
     description:
@@ -93,7 +99,26 @@ const pages = {
       "Configure your AI provider, model preferences, and account settings.",
     path: "/settings",
   },
+  privacy: {
+    title: "Privacy Policy",
+    description:
+      "How Slothing stores, uses, and protects your job search data.",
+    path: "/privacy",
+  },
+  terms: {
+    title: "Terms of Service",
+    description: "Terms governing use of the Slothing application.",
+    path: "/terms",
+  },
+  atsScanner: {
+    title: "Free ATS Resume Checker",
+    description:
+      "Check your resume's ATS compatibility score for free with private, in-browser scoring feedback.",
+    path: "/ats-scanner",
+  },
 } satisfies Record<string, RouteSeo>;
+
+export type PageSeoKey = keyof typeof pages;
 
 const marketingHomePage = {
   title: SITE_TITLE,
@@ -170,4 +195,13 @@ export function getPageMetadata(page: keyof typeof pages): Metadata {
 
 export function getMarketingPageMetadata(): Metadata {
   return buildMetadata(marketingHomePage);
+}
+
+export function getOgSeo(page: keyof typeof pages | "marketingHome") {
+  const seo = page === "marketingHome" ? marketingHomePage : pages[page];
+
+  return {
+    title: seo.title,
+    description: seo.description,
+  };
 }

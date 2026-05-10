@@ -5,6 +5,14 @@ const path = require("node:path");
 
 const SOURCE_EXTENSIONS = new Set([".js", ".jsx", ".ts", ".tsx"]);
 const SCAN_ROOTS = ["src"];
+// next/og renders from inline JSX styles and cannot read CSS variables,
+// Tailwind classes, or app stylesheets. Keep this exemption scoped to image
+// route files and the shared OG template helpers only.
+const EXEMPT_PATH_PATTERNS = [
+  /^src\/app\/(?:.*\/)?opengraph-image\.tsx$/,
+  /^src\/app\/(?:.*\/)?twitter-image\.tsx$/,
+  /^src\/lib\/og\//,
+];
 const FORBIDDEN_COLOR_FAMILIES = [
   "gray",
   "slate",
@@ -248,10 +256,18 @@ function findInlineStyleViolations(source, filePath) {
 }
 
 function findForbiddenColorViolations(source, filePath) {
+  if (isExemptPath(filePath)) {
+    return [];
+  }
+
   return [
     ...findClassNameViolations(source, filePath),
     ...findInlineStyleViolations(source, filePath),
   ].sort((a, b) => a.line - b.line || a.column - b.column);
+}
+
+function isExemptPath(filePath) {
+  return EXEMPT_PATH_PATTERNS.some((pattern) => pattern.test(filePath));
 }
 
 function listSourceFiles(rootDir) {
@@ -320,6 +336,7 @@ if (require.main === module) {
 
 module.exports = {
   findForbiddenColorViolations,
+  isExemptPath,
   isForbiddenColorClass,
   isForbiddenInlineColorValue,
   runForbiddenColorLint,

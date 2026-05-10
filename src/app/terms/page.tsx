@@ -1,18 +1,7 @@
 import Link from "next/link";
+import { getPageMetadata } from "@/lib/seo";
 
-export const metadata = {
-  title: "Terms of Service",
-  description: "Terms governing use of the Slothing application.",
-  openGraph: {
-    title: "Terms of Service",
-    description: "Terms governing use of the Slothing application.",
-    url: "/terms",
-  },
-  twitter: {
-    title: "Terms of Service",
-    description: "Terms governing use of the Slothing application.",
-  },
-};
+export const metadata = getPageMetadata("terms");
 
 export default function TermsPage() {
   return (

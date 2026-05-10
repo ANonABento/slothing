@@ -1,20 +1,7 @@
 import Link from "next/link";
+import { getPageMetadata } from "@/lib/seo";
 
-export const metadata = {
-  title: "Privacy Policy",
-  description: "How Slothing stores, uses, and protects your job search data.",
-  openGraph: {
-    title: "Privacy Policy",
-    description:
-      "How Slothing stores, uses, and protects your job search data.",
-    url: "/privacy",
-  },
-  twitter: {
-    title: "Privacy Policy",
-    description:
-      "How Slothing stores, uses, and protects your job search data.",
-  },
-};
+export const metadata = getPageMetadata("privacy");
 
 export default function PrivacyPage() {
   return (

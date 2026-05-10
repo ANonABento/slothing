@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   getMarketingPageMetadata,
   getMetadataBase,
+  getOgSeo,
   getPageMetadata,
   getSiteMetadata,
   SITE_DESCRIPTION,
@@ -80,8 +81,13 @@ const ALL_PAGES = [
   "calendar",
   "emails",
   "analytics",
+  "adminEvals",
+  "profile",
   "salary",
   "settings",
+  "privacy",
+  "terms",
+  "atsScanner",
 ] as const;
 
 describe("getPageMetadata", () => {
@@ -121,5 +127,23 @@ describe("getPageMetadata", () => {
   it("returns unique descriptions for each page", () => {
     const descriptions = ALL_PAGES.map((p) => getPageMetadata(p).description);
     expect(new Set(descriptions).size).toBe(ALL_PAGES.length);
+  });
+});
+
+describe("getOgSeo", () => {
+  it("returns plain strings for route OG images", () => {
+    expect(getOgSeo("dashboard")).toEqual({
+      title: "Dashboard",
+      description:
+        "Track your job search progress, upcoming interviews, and application stats at a glance.",
+    });
+  });
+
+  it("returns plain strings for the marketing home page", () => {
+    expect(getOgSeo("marketingHome")).toEqual({
+      title: SITE_TITLE,
+      description:
+        "Land your dream job with AI-powered resume tailoring, ATS optimization, interview coaching, and application tracking.",
+    });
   });
 });
