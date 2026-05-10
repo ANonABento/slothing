@@ -95,6 +95,38 @@ describe("/api/builder route contract", () => {
       routeContext(),
     );
 
+    expect(response.status).toBe(400);
     await expectRouteResponseContract(response);
+  });
+
+  it("returns validation errors for missing build inputs", async () => {
+    const response = await invokeRouteHandler(
+      POST,
+      jsonRequest("http://localhost/api/builder", {}, "POST"),
+      routeContext(),
+    );
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toMatchObject({
+      error: "Validation failed",
+    });
+  });
+
+  it("returns validation errors for wrong field types", async () => {
+    const response = await invokeRouteHandler(
+      POST,
+      jsonRequest(
+        "http://localhost/api/builder",
+        { entryIds: "entry-1" },
+        "POST",
+      ),
+      routeContext(),
+    );
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toMatchObject({
+      error: "Validation failed",
+      errors: [{ field: "entryIds" }],
+    });
   });
 });

@@ -88,6 +88,37 @@ describe("/api/reminders/[id] route contract", () => {
       routeContext(),
     );
 
+    expect(response.status).toBe(400);
     await expectRouteResponseContract(response);
+  });
+
+  it("returns validation errors for missing update fields", async () => {
+    const response = await invokeRouteHandler(
+      PATCH,
+      jsonRequest("http://localhost/api/reminders/item-1", {}, "PATCH"),
+      routeContext(),
+    );
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toMatchObject({
+      error: "Validation failed",
+    });
+  });
+
+  it("returns validation errors for wrong field types", async () => {
+    const response = await invokeRouteHandler(
+      PATCH,
+      jsonRequest(
+        "http://localhost/api/reminders/item-1",
+        { title: 123 },
+        "PATCH",
+      ),
+      routeContext(),
+    );
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toMatchObject({
+      error: "Validation failed",
+    });
   });
 });

@@ -7,6 +7,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { searchBankEntries } from "@/lib/db/profile-bank";
 import { requireAuth, isAuthError } from "@/lib/auth";
+import { parseSearchParams } from "@/lib/api-utils";
+import { bankSearchQuerySchema } from "@/lib/schemas";
 
 export const dynamic = "force-dynamic";
 
@@ -15,17 +17,13 @@ export async function GET(request: NextRequest) {
   if (isAuthError(authResult)) return authResult;
 
   try {
-    const { searchParams } = new URL(request.url);
-    const query = searchParams.get("q");
+    const parsed = parseSearchParams(
+      request.nextUrl.searchParams,
+      bankSearchQuerySchema,
+    );
+    if (!parsed.ok) return parsed.response;
 
-    if (!query || query.trim().length === 0) {
-      return NextResponse.json(
-        { error: "Query parameter 'q' is required" },
-        { status: 400 },
-      );
-    }
-
-    const entries = searchBankEntries(query.trim(), authResult.userId);
+    const entries = searchBankEntries(parsed.data.q, authResult.userId);
     return NextResponse.json({ entries });
   } catch (error) {
     console.error("Search bank entries error:", error);

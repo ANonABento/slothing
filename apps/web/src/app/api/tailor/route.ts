@@ -7,6 +7,7 @@
  * @response TailorAnalysisResponse | TailorGenerateResponse from @/types/api
  */
 import { NextRequest, NextResponse } from "next/server";
+import { parseJsonBody } from "@/lib/api-utils";
 import { getProfile, getLLMConfig, saveGeneratedResume } from "@/lib/db";
 import { logPromptVariantResult } from "@/lib/db/prompt-variants";
 import { getGroupedBankEntries } from "@/lib/db/profile-bank";
@@ -16,10 +17,8 @@ import { analyzeJobFit, extractKeywords } from "@/lib/tailor/analyze";
 import { generateFromBank } from "@/lib/tailor/generate";
 import { generateResumeHTML, TEMPLATES } from "@/lib/resume/pdf";
 import { getTemplateWithCustom } from "@/lib/resume/templates";
-import {
-  isTailorAction,
-  isTailoredResume,
-} from "@/lib/builder/tailored-resume-api";
+import { isTailoredResume } from "@/lib/builder/tailored-resume-api";
+import { tailorRequestSchema } from "@/lib/schemas";
 import { writeFile, mkdir } from "fs/promises";
 import { generateId } from "@/lib/utils";
 import { PATHS } from "@/lib/constants";
@@ -58,18 +57,11 @@ export async function POST(request: NextRequest) {
   if (isAuthError(authResult)) return authResult;
 
   try {
-    const body = await request.json();
-    const action = isTailorAction(body.action) ? body.action : "analyze";
-    const templateId =
-      typeof body.templateId === "string" ? body.templateId : "classic";
+    const parsed = await parseJsonBody(request, tailorRequestSchema);
+    if (!parsed.ok) return parsed.response;
 
-    if (body.action !== undefined && !isTailorAction(body.action)) {
-      return NextResponse.json(
-        { error: "Unsupported tailor action." },
-        { status: 400 },
-      );
-    }
-
+    const body = parsed.data;
+    const { action, templateId } = body;
     if (action === "render") {
       if (!isTailoredResume(body.resume)) {
         return NextResponse.json(
@@ -85,25 +77,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const {
-      jobDescription,
-      jobTitle = "Unknown Position",
-      company = "Unknown Company",
-    } = body as {
-      jobDescription?: string;
-      jobTitle?: string;
-      company?: string;
-      opportunityId?: unknown;
-    };
-    const opportunityId =
-      typeof body.opportunityId === "string" ? body.opportunityId.trim() : "";
-
-    if (!jobDescription || jobDescription.trim().length < 20) {
-      return NextResponse.json(
-        { error: "Job description is too short. Please paste the full JD." },
-        { status: 400 },
-      );
-    }
+    const { jobDescription, jobTitle, company, opportunityId } = body;
 
     const existingOpportunity = opportunityId
       ? getJob(opportunityId, authResult.userId)

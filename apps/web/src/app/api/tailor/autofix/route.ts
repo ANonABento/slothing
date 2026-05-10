@@ -6,10 +6,12 @@
  * @response { resume: TailoredResume }
  */
 import { NextRequest, NextResponse } from "next/server";
+import { parseJsonBody } from "@/lib/api-utils";
 import { getLLMConfig } from "@/lib/db";
 import { LLMClient } from "@/lib/llm/client";
 import { extractJSON } from "@/lib/utils";
 import { requireAuth, isAuthError } from "@/lib/auth";
+import { tailorAutofixSchema } from "@/lib/schemas";
 import type { TailoredResume } from "@/lib/resume/generator";
 
 export const dynamic = "force-dynamic";
@@ -19,19 +21,15 @@ export async function POST(request: NextRequest) {
   if (isAuthError(authResult)) return authResult;
 
   try {
-    const body = await request.json();
-    const { resume, keywordsMissing, jobDescription } = body as {
-      resume: TailoredResume;
-      keywordsMissing: string[];
-      jobDescription: string;
-    };
+    const parsed = await parseJsonBody(request, tailorAutofixSchema);
+    if (!parsed.ok) return parsed.response;
 
-    if (!resume || !keywordsMissing?.length || !jobDescription) {
-      return NextResponse.json(
-        { error: "Missing required fields" },
-        { status: 400 },
-      );
-    }
+    const {
+      resume: validatedResume,
+      keywordsMissing,
+      jobDescription,
+    } = parsed.data;
+    const resume = validatedResume as TailoredResume;
 
     const llmConfig = getLLMConfig(authResult.userId);
     if (!llmConfig) {
@@ -69,16 +67,16 @@ Return the improved resume as a JSON object with the same structure (contact, su
       maxTokens: 4096,
     });
 
-    const parsed = extractJSON(response);
+    const llmJson = extractJSON(response);
     const improved: TailoredResume = {
       contact: resume.contact,
       summary:
-        typeof parsed.summary === "string" ? parsed.summary : resume.summary,
-      experiences: Array.isArray(parsed.experiences)
-        ? (parsed.experiences as TailoredResume["experiences"])
+        typeof llmJson.summary === "string" ? llmJson.summary : resume.summary,
+      experiences: Array.isArray(llmJson.experiences)
+        ? (llmJson.experiences as TailoredResume["experiences"])
         : resume.experiences,
-      skills: Array.isArray(parsed.skills)
-        ? (parsed.skills as string[])
+      skills: Array.isArray(llmJson.skills)
+        ? (llmJson.skills as string[])
         : resume.skills,
       education: resume.education,
     };

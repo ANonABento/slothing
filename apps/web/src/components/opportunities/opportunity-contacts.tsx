@@ -36,7 +36,9 @@ interface OpportunityContactsProps {
   opportunityId: string;
 }
 
-export function OpportunityContacts({ opportunityId }: OpportunityContactsProps) {
+export function OpportunityContacts({
+  opportunityId,
+}: OpportunityContactsProps) {
   const [contacts, setContacts] = useState<OpportunityContact[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -46,7 +48,9 @@ export function OpportunityContacts({ opportunityId }: OpportunityContactsProps)
   const loadContacts = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await fetch(`/api/opportunities/${opportunityId}/contacts`);
+      const response = await fetch(
+        `/api/opportunities/${opportunityId}/contacts`,
+      );
       const data = await readJsonResponse<ContactsResponse>(
         response,
         "Failed to load contacts",
@@ -69,19 +73,22 @@ export function OpportunityContacts({ opportunityId }: OpportunityContactsProps)
   async function addContact(contact: GooglePickerContact) {
     setSaving(true);
     try {
-      const response = await fetch(`/api/opportunities/${opportunityId}/contacts`, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          source: "google",
-          googleResourceName: contact.resourceName,
-          name: contact.name,
-          email: contact.email,
-          phone: contact.phone,
-          company: contact.company,
-          title: contact.title,
-        }),
-      });
+      const response = await fetch(
+        `/api/opportunities/${opportunityId}/contacts`,
+        {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            source: "google",
+            googleResourceName: contact.resourceName,
+            name: contact.name,
+            email: contact.email,
+            phone: contact.phone,
+            company: contact.company,
+            title: contact.title,
+          }),
+        },
+      );
       const data = await readJsonResponse<AddContactResponse>(
         response,
         "Failed to add contact",
@@ -148,7 +155,10 @@ export function OpportunityContacts({ opportunityId }: OpportunityContactsProps)
           <p className="text-sm text-muted-foreground">None attached</p>
         ) : (
           contacts.map((contact) => (
-            <div key={contact.id} className="rounded-md border px-3 py-2 text-sm">
+            <div
+              key={contact.id}
+              className="rounded-md border px-3 py-2 text-sm"
+            >
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
                   <div className="truncate font-medium">{contact.name}</div>
@@ -160,9 +170,12 @@ export function OpportunityContacts({ opportunityId }: OpportunityContactsProps)
                       {contact.email}
                     </a>
                   ) : null}
-                  {[contact.company, contact.title].filter(Boolean).length > 0 ? (
+                  {[contact.company, contact.title].filter(Boolean).length >
+                  0 ? (
                     <div className="truncate text-xs text-muted-foreground">
-                      {[contact.company, contact.title].filter(Boolean).join(" · ")}
+                      {[contact.company, contact.title]
+                        .filter(Boolean)
+                        .join(" · ")}
                     </div>
                   ) : null}
                 </div>

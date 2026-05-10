@@ -7,9 +7,11 @@
  * @response EmailDraftsResponse | EmailDraftResponse from @/types/api
  */
 import { NextRequest, NextResponse } from "next/server";
+import { parseJsonBody } from "@/lib/api-utils";
 import { getEmailDrafts, createEmailDraft } from "@/lib/db/email-drafts";
 import { getJob } from "@/lib/db/jobs";
 import { requireAuth, isAuthError } from "@/lib/auth";
+import { createEmailDraftSchema } from "@/lib/schemas";
 
 export const dynamic = "force-dynamic";
 
@@ -37,14 +39,9 @@ export async function POST(request: NextRequest) {
   if (isAuthError(authResult)) return authResult;
 
   try {
-    const { type, jobId, subject, body, context } = await request.json();
-
-    if (!type || !subject || !body) {
-      return NextResponse.json(
-        { error: "type, subject, and body are required" },
-        { status: 400 },
-      );
-    }
+    const parsed = await parseJsonBody(request, createEmailDraftSchema);
+    if (!parsed.ok) return parsed.response;
+    const { type, jobId, subject, body, context } = parsed.data;
 
     if (jobId && !getJob(jobId, authResult.userId)) {
       return NextResponse.json({ error: "Job not found" }, { status: 404 });

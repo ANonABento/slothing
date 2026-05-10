@@ -57,7 +57,9 @@ export function ContactPicker({ onSelect, trigger }: ContactPickerProps) {
 
     try {
       const response = await fetch("/api/google/contacts?limit=200");
-      const data = (await response.json().catch(() => ({}))) as ContactsResponse;
+      const data = (await response
+        .json()
+        .catch(() => ({}))) as ContactsResponse;
 
       if (!response.ok) {
         const message = data.error || "Failed to load contacts";
@@ -178,7 +180,9 @@ export function ContactPicker({ onSelect, trigger }: ContactPickerProps) {
                       {contact.name}
                     </p>
                     <p className="truncate text-xs text-muted-foreground">
-                      {[contact.email, contact.company].filter(Boolean).join(" · ")}
+                      {[contact.email, contact.company]
+                        .filter(Boolean)
+                        .join(" · ")}
                     </p>
                   </div>
                 </button>

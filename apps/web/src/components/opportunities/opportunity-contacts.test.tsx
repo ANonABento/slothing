@@ -60,7 +60,10 @@ describe("OpportunityContacts", () => {
         );
       }
 
-      if (url === "/api/opportunities/opp-1/contacts" && init?.method === "POST") {
+      if (
+        url === "/api/opportunities/opp-1/contacts" &&
+        init?.method === "POST"
+      ) {
         return new Response(
           JSON.stringify({
             contact: {

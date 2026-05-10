@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
+import { parseOptionalJsonBody } from "@/lib/api-utils";
 import { requireAuth, isAuthError } from "@/lib/auth";
 import { setCompanyGithubSlug } from "@/lib/db/company-research";
 import { getJob } from "@/lib/db/jobs";
 import { nowEpoch } from "@/lib/format/time";
 import { getClientIdentifier, rateLimiters } from "@/lib/rate-limit";
+import { setGithubSlugSchema } from "@/lib/schemas";
 
 export const dynamic = "force-dynamic";
 
@@ -41,14 +43,9 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
     );
   }
 
-  let githubSlug: string | null = null;
-  try {
-    const body = (await request.json()) as { githubSlug?: unknown };
-    githubSlug =
-      typeof body.githubSlug === "string" ? body.githubSlug.trim() : null;
-  } catch {
-    githubSlug = null;
-  }
+  const parsed = await parseOptionalJsonBody(request, setGithubSlugSchema);
+  if (!parsed.ok) return parsed.response;
+  const githubSlug = parsed.data.githubSlug;
 
   const saved = setCompanyGithubSlug(
     authResult.userId,
