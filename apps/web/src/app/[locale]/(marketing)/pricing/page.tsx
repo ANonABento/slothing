@@ -28,7 +28,7 @@ const tiers = [
     features: [
       `${FREE_TIER_TAILOR_MONTHLY_LIMIT} tailored resumes/month`,
       "Free ATS scanner",
-      "Knowledge bank uploads",
+      "Career profile uploads",
       "Application tracker",
     ],
   },
@@ -70,7 +70,7 @@ const faqs = [
   {
     question: "Do I need a credit card for Free?",
     answer:
-      "No. Start with the ATS scanner, knowledge bank, tracker, and five tailored resumes each month.",
+      "No. Start with the ATS scanner, your career profile, tracker, and five tailored resumes each month.",
   },
   {
     question: "Can I buy Pro today?",
