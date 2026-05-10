@@ -58,6 +58,7 @@ interface SectionListProps {
   pickerOpen?: boolean;
   onPickerOpenChange?: (open: boolean) => void;
   showSections?: boolean;
+  emptySelectionHint?: string;
 }
 
 export function SectionList({
@@ -71,6 +72,7 @@ export function SectionList({
   pickerOpen = false,
   onPickerOpenChange,
   showSections = true,
+  emptySelectionHint,
 }: SectionListProps) {
   const [expandedSections, setExpandedSections] = useState<Set<BankCategory>>(
     new Set(),
@@ -320,8 +322,13 @@ export function SectionList({
 
           <div className="border-t px-4 py-2">
             <p className="text-xs text-muted-foreground">
-              {selectedIds.size} of{" "}
-              {pluralize(entries.length, "entry", "entries")} selected
+              {selectedIds.size === 0 && emptySelectionHint
+                ? emptySelectionHint
+                : `${selectedIds.size} of ${pluralize(
+                    entries.length,
+                    "entry",
+                    "entries",
+                  )} selected`}
             </p>
           </div>
         </>
