@@ -4,9 +4,7 @@ import ATSScannerPage from "./page";
 
 describe("ATSScannerPage", () => {
   it("does not use a dollar sign icon for the free benefit", () => {
-    const { container } = render(
-      <ATSScannerPage params={{ locale: "en" }} />,
-    );
+    const { container } = render(<ATSScannerPage params={{ locale: "en" }} />);
 
     expect(screen.getByText("Free and Private")).toBeInTheDocument();
     expect(container.querySelector(".lucide-dollar-sign")).toBeNull();
@@ -22,5 +20,14 @@ describe("ATSScannerPage", () => {
       "href",
       "https://www.hbs.edu/managing-the-future-of-work/Documents/research/hiddenworkers09032021.pdf",
     );
+  });
+
+  it("renders the HBS source as a separate readable line", () => {
+    render(<ATSScannerPage params={{ locale: "en" }} />);
+
+    const source = screen.getByRole("link", { name: /Hidden Workers/i });
+
+    expect(source.closest("sup")).toBeNull();
+    expect(source.parentElement).toHaveClass("mt-3", "text-xs", "leading-5");
   });
 });

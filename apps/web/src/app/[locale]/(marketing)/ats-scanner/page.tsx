@@ -46,16 +46,16 @@ export default function ATSScannerPage({ params }: ATSScannerPageProps) {
           <p className="text-lg text-muted-foreground max-w-xl mx-auto">
             88% of employers say their ATS filters out qualified candidates
             before a human reviews them. Check yours in seconds.
-            <sup className="ml-1 align-super text-xs">
-              <a
-                href="https://www.hbs.edu/managing-the-future-of-work/Documents/research/hiddenworkers09032021.pdf"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-primary underline-offset-4 hover:underline"
-              >
-                Source: Harvard Business School, Hidden Workers (2021)
-              </a>
-            </sup>
+          </p>
+          <p className="mt-3 text-xs leading-5 text-muted-foreground">
+            <a
+              href="https://www.hbs.edu/managing-the-future-of-work/Documents/research/hiddenworkers09032021.pdf"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            >
+              Source: Harvard Business School, Hidden Workers (2021)
+            </a>
           </p>
         </div>
 
