@@ -63,9 +63,12 @@ export async function POST(request: NextRequest) {
       critique: parseCoverLetterCritiqueResponse(rawResponse),
     });
   } catch (error) {
-    console.error("Cover letter critique error:", error);
+    console.error(
+      "[ai/critique-cover-letter] error:",
+      error instanceof Error ? error.stack : error,
+    );
     return NextResponse.json(
-      { error: "Failed to critique cover letter", details: String(error) },
+      { error: "Failed to critique cover letter" },
       { status: 500 },
     );
   }

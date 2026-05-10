@@ -259,9 +259,12 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("Tailor error:", error);
+    console.error(
+      "Tailor error:",
+      error instanceof Error ? error.stack : error,
+    );
     return NextResponse.json(
-      { error: "Failed to tailor resume", details: String(error) },
+      { error: "Failed to tailor resume" },
       { status: 500 },
     );
   }

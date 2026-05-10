@@ -134,4 +134,25 @@ describe("documents assistant route", () => {
       error: "Assistant returned an empty rewrite. Please try again.",
     });
   });
+
+  it("does not leak raw error messages on 500", async () => {
+    const probe = "INTERNAL_LEAK_PROBE_DOCUMENT_ASSISTANT_4A30A145";
+    mocks.rewriteDocumentSelection.mockRejectedValueOnce(new Error(probe));
+
+    const response = await POST(
+      assistantRequest(
+        JSON.stringify({
+          action: "rewrite",
+          selectedText: "Original text.",
+          documentContent: "Original text.",
+        }),
+      ),
+    );
+
+    expect(response.status).toBe(500);
+    const body = await response.json();
+    expect(JSON.stringify(body)).not.toContain(probe);
+    expect(body).not.toHaveProperty("details");
+    expect(body.error).toBe("Failed to rewrite selected text");
+  });
 });

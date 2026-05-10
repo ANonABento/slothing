@@ -141,9 +141,12 @@ Return ONLY the JSON object, no explanation.`,
 
     return NextResponse.json({ analysis });
   } catch (error) {
-    console.error("Analyze error:", error);
+    console.error(
+      "Analyze error:",
+      error instanceof Error ? error.stack : error,
+    );
     return NextResponse.json(
-      { error: "Failed to analyze opportunity match", details: String(error) },
+      { error: "Failed to analyze opportunity match" },
       { status: 500 },
     );
   }
