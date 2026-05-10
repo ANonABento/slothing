@@ -1,4 +1,9 @@
-import type { TestCase, GeneratorResult, JudgeScore } from "./types.js";
+import type {
+  TestCase,
+  GeneratorResult,
+  GeneratorOutput,
+  JudgeScore,
+} from "./types.js";
 
 export const CLAUDE_OPUS_MODEL = "claude-opus-4-7";
 
@@ -63,6 +68,17 @@ interface RawJudgeScore {
 interface RawJudgeResponse {
   resume_a: RawJudgeScore;
   resume_b: RawJudgeScore;
+}
+
+interface RawSingleJudgeResponse {
+  score: number;
+  reasoning: string;
+  strengths: string[];
+  weaknesses: string[];
+}
+
+export function judgeIsConfigured(): boolean {
+  return Boolean(process.env.ANTHROPIC_API_KEY);
 }
 
 export function parseJudgeResponse(
@@ -135,4 +151,86 @@ export async function judgeOutputs(
   const raw = data.content[0]?.text ?? "";
 
   return parseJudgeResponse(raw, gpt55Result.model, claudeResult.model);
+}
+
+export function buildSingleJudgePrompt(
+  testCase: TestCase,
+  output: GeneratorOutput,
+): string {
+  const outputText =
+    output.kind === "resume"
+      ? output.rawText || "[No output - generator failed]"
+      : output.text || "[No output - generator failed]";
+
+  return `Evaluate this generated ${output.kind === "resume" ? "resume" : "cover letter"} for the candidate and job.
+
+JOB DESCRIPTION:
+${testCase.jobDescription}
+
+ORIGINAL CANDIDATE PROFILE:
+${testCase.candidateProfile}
+
+OUTPUT:
+${outputText}
+
+Score the output 1-5 and return this exact JSON structure:
+{
+  "score": <number 1-5>,
+  "reasoning": "<2-3 sentence explanation>",
+  "strengths": ["<strength 1>", "<strength 2>"],
+  "weaknesses": ["<weakness 1>"]
+}`;
+}
+
+function parseSingleJudgeResponse(response: string, model: string): JudgeScore {
+  let cleaned = response.trim();
+  const jsonStart = cleaned.indexOf("{");
+  if (jsonStart > 0) cleaned = cleaned.slice(jsonStart);
+  const jsonEnd = cleaned.lastIndexOf("}");
+  if (jsonEnd >= 0 && jsonEnd < cleaned.length - 1) {
+    cleaned = cleaned.slice(0, jsonEnd + 1);
+  }
+
+  const parsed = JSON.parse(cleaned) as RawSingleJudgeResponse;
+  return {
+    model,
+    score: Number(parsed.score),
+    reasoning: parsed.reasoning ?? "",
+    strengths: parsed.strengths ?? [],
+    weaknesses: parsed.weaknesses ?? [],
+  };
+}
+
+export async function judgeSingle(
+  testCase: TestCase,
+  output: GeneratorOutput,
+  apiKey = process.env.ANTHROPIC_API_KEY,
+): Promise<JudgeScore | undefined> {
+  if (!apiKey) return undefined;
+
+  const response = await fetch(ANTHROPIC_API_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": apiKey,
+      "anthropic-version": ANTHROPIC_API_VERSION,
+    },
+    body: JSON.stringify({
+      model: CLAUDE_OPUS_MODEL,
+      max_tokens: 500,
+      system: JUDGE_SYSTEM_PROMPT,
+      messages: [{ role: "user", content: buildSingleJudgePrompt(testCase, output) }],
+      temperature: 0.2,
+    }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Judge API error ${response.status}: ${errorText}`);
+  }
+
+  const data = (await response.json()) as {
+    content: Array<{ type: string; text: string }>;
+  };
+  return parseSingleJudgeResponse(data.content[0]?.text ?? "", CLAUDE_OPUS_MODEL);
 }

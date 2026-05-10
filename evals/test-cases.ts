@@ -184,3 +184,5 @@ You'll own reliability of critical systems and drive engineering culture around 
     `.trim(),
   },
 ];
+
+export const RESUME_EVAL_CASES = TEST_CASES;

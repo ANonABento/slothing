@@ -1,6 +1,16 @@
-import type { TestCaseResult, ComparisonReport, RunSummary } from "./types.js";
+import fs from "fs";
+import path from "path";
+import type {
+  EvalRunReport,
+  TestCaseResult,
+  ComparisonReport,
+  RunSummary,
+} from "./types.js";
 import { GPT55_MODEL, CLAUDE_SONNET_MODEL } from "./generators.js";
 import { CLAUDE_OPUS_MODEL } from "./judge.js";
+import { generateCSVReport } from "./report-csv.js";
+
+export { generateCSVReport } from "./report-csv.js";
 
 export function determineWinner(
   gpt55Score: number,
@@ -132,4 +142,67 @@ export function generateMarkdownReport(report: ComparisonReport): string {
   }
 
   return lines.join("\n");
+}
+
+export function generateEvalMarkdownReport(report: EvalRunReport): string {
+  const lines = [
+    `# Eval Report`,
+    ``,
+    `**Run:** ${report.runAt}`,
+    `**Mode:** ${report.mode}`,
+    `**Generator:** ${report.generator}`,
+    `**Judge:** ${report.judge}`,
+    `**Cases:** ${report.summary.totalCases}`,
+    `**Errors:** ${report.summary.errorCount}`,
+    `**Average overall score:** ${report.summary.avgOverallScore}`,
+    ``,
+    `## Metric Averages`,
+    ``,
+    `| Metric | Average |`,
+    `|--------|---------|`,
+    ...Object.entries(report.summary.avgScoreByMetric).map(
+      ([metric, score]) => `| ${metric} | ${score} |`,
+    ),
+    ``,
+    `## Cases`,
+    ``,
+  ];
+
+  for (const result of report.cases) {
+    lines.push(`### ${result.caseId}: ${result.caseLabel}`);
+    lines.push(``);
+    lines.push(`Overall: ${result.overallScore}`);
+    if (result.error) lines.push(`Error: ${result.error}`);
+    lines.push(``);
+    lines.push(`| Metric | Score |`);
+    lines.push(`|--------|-------|`);
+    for (const metric of result.metrics) {
+      lines.push(`| ${metric.name} | ${metric.score} |`);
+    }
+    if (result.judgeScore) {
+      lines.push(``);
+      lines.push(`Judge: ${result.judgeScore.score}/5 - ${result.judgeScore.reasoning}`);
+    }
+    lines.push(``);
+  }
+
+  return lines.join("\n");
+}
+
+export function writeReports(
+  report: EvalRunReport,
+  outDir: string,
+): { jsonPath: string; csvPath: string; mdPath: string } {
+  fs.mkdirSync(outDir, { recursive: true });
+  const timestamp = report.runAt.replace(/[:.]/g, "-");
+  const prefix = `${report.mode}-${timestamp}`;
+  const jsonPath = path.join(outDir, `${prefix}.json`);
+  const csvPath = path.join(outDir, `${prefix}.csv`);
+  const mdPath = path.join(outDir, `${prefix}.md`);
+
+  fs.writeFileSync(jsonPath, JSON.stringify(report, null, 2));
+  fs.writeFileSync(csvPath, generateCSVReport(report));
+  fs.writeFileSync(mdPath, generateEvalMarkdownReport(report));
+
+  return { jsonPath, csvPath, mdPath };
 }
