@@ -67,6 +67,7 @@ Default undo window: 5 seconds. Increase it when the action is easy to mis-click
 | Area                          | Action                    | Endpoint/data effect                                                | Pattern   |
 | ----------------------------- | ------------------------- | ------------------------------------------------------------------- | --------- |
 | Opportunity detail            | Dismiss                   | `PATCH /api/opportunities/[id]`, status to `withdrawn`; row remains | Pattern B |
+| Opportunity detail            | Remove opportunity contact | `DELETE /api/opportunities/[id]/contacts/[contactId]`; hard delete  | Pattern A |
 | Opportunities                 | Delete opportunity        | `DELETE /api/opportunities/[id]`; hard delete                       | Pattern A |
 | Email templates               | Delete draft              | `DELETE /api/email/drafts/[id]`; hard delete                        | Pattern A |
 | Interview                     | Delete session            | `DELETE /api/interview/sessions/[id]`; hard delete                  | Pattern A |

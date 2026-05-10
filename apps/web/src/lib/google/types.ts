@@ -27,9 +27,6 @@ export const GOOGLE_SCOPES = {
 
   // Contacts (Phase 6)
   CONTACTS_READONLY: "https://www.googleapis.com/auth/contacts.readonly",
-
-  // Tasks (Phase 6)
-  TASKS: "https://www.googleapis.com/auth/tasks",
 } as const;
 
 export type GoogleScope = (typeof GOOGLE_SCOPES)[keyof typeof GOOGLE_SCOPES];
@@ -47,7 +44,6 @@ export const SCOPE_SETS = {
     GOOGLE_SCOPES.GMAIL_LABELS,
   ],
   CONTACTS: [GOOGLE_SCOPES.CONTACTS_READONLY],
-  TASKS: [GOOGLE_SCOPES.TASKS],
 } as const;
 
 /**
@@ -57,6 +53,52 @@ export const ALL_GOOGLE_SCOPES = [
   ...SCOPE_SETS.CORE,
   ...SCOPE_SETS.CALENDAR,
   ...SCOPE_SETS.DRIVE,
+] as const;
+
+export interface GoogleFeatureDescriptor {
+  id: "calendar" | "drive" | "gmail" | "docs" | "sheets" | "contacts";
+  label: string;
+  iconName: "Calendar" | "FolderOpen" | "Mail" | "FileText" | "Table" | "Users";
+  iconClassName: string;
+}
+
+export const GOOGLE_FEATURES: readonly GoogleFeatureDescriptor[] = [
+  {
+    id: "calendar",
+    label: "Calendar Sync",
+    iconName: "Calendar",
+    iconClassName: "text-info",
+  },
+  {
+    id: "drive",
+    label: "Drive Backup",
+    iconName: "FolderOpen",
+    iconClassName: "text-warning",
+  },
+  {
+    id: "gmail",
+    label: "Gmail Import",
+    iconName: "Mail",
+    iconClassName: "text-destructive",
+  },
+  {
+    id: "docs",
+    label: "Google Docs",
+    iconName: "FileText",
+    iconClassName: "text-info",
+  },
+  {
+    id: "sheets",
+    label: "Sheets Export",
+    iconName: "Table",
+    iconClassName: "text-success",
+  },
+  {
+    id: "contacts",
+    label: "Contacts",
+    iconName: "Users",
+    iconClassName: "text-primary",
+  },
 ] as const;
 
 /**

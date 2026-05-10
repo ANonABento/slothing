@@ -15,6 +15,7 @@ import { TimeAgo } from "@/components/format/time-ago";
 import { Button } from "@/components/ui/button";
 import { JobStatusBadge } from "@/components/jobs/job-status-badge";
 import { OpportunityActions } from "@/components/opportunities/opportunity-actions";
+import { OpportunityContacts } from "@/components/opportunities/opportunity-contacts";
 import { Input } from "@/components/ui/input";
 import {
   AppPage,
@@ -530,6 +531,10 @@ export default function OpportunityDetailPage({
                 onApply={handleApply}
                 onGeneratedDocument={fetchLinkedDocuments}
               />
+            </Suspense>
+
+            <Suspense fallback={<SkeletonCard />}>
+              <OpportunityContacts opportunityId={opportunity.id} />
             </Suspense>
 
             <Suspense fallback={<SkeletonCard />}>
