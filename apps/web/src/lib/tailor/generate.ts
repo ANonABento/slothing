@@ -8,13 +8,19 @@ import type { TailoredResume } from "@/lib/resume/generator";
 import { formatHackathonHighlights } from "@/lib/resume/hackathon-highlights";
 import type { BankMatch } from "./analyze";
 import { LLMClient, parseJSONFromLLM } from "@/lib/llm/client";
+import { tailoredResumeSchema } from "@/lib/schemas/tailor";
+import {
+  filterUnsupportedClaims,
+  getUnsupportedKeywords,
+  stripUnsupportedClaims,
+} from "@/lib/resume/generator";
 import {
   getActivePromptVariant,
   DEFAULT_PROMPT_CONTENT,
   type PromptVariant,
 } from "@/lib/db/prompt-variants";
 
-interface BankResumeInput {
+export interface BankResumeInput {
   bankEntries: GroupedBankEntries;
   matchedEntries: BankMatch[];
   contact: ContactInfo;
@@ -55,7 +61,56 @@ async function generateWithLLM(
   promptVariant: PromptVariant | null,
 ): Promise<TailoredResume> {
   const client = new LLMClient(llmConfig);
+  const prompt = buildBankTailoredResumePrompt(input, promptVariant);
 
+  const response = await client.complete({
+    messages: [
+      {
+        role: "user",
+        content: prompt,
+      },
+    ],
+    temperature: 0.4,
+    maxTokens: 2000,
+  });
+
+  const parsed = parseJSONFromLLM<{
+    summary?: string;
+    experiences?: TailoredResume["experiences"];
+    skills?: string[];
+    education?: TailoredResume["education"];
+  }>(response);
+  const safeParsed = tailoredResumeSchema.partial().parse(parsed);
+  const sourceEducation = mapBankEducation(input);
+  const unsupportedKeywords = getUnsupportedKeywords(
+    extractKeywordCandidates(input.jobDescription),
+    buildBankEvidenceText(input),
+  );
+
+  return {
+    contact: input.contact,
+    summary: stripUnsupportedClaims(
+      safeParsed.summary ||
+        input.summary ||
+        `Experienced professional seeking ${input.jobTitle} position.`,
+      unsupportedKeywords,
+    ),
+    experiences: sanitizeExperiences(
+      safeParsed.experiences || [],
+      unsupportedKeywords,
+    ),
+    skills: filterUnsupportedClaims(
+      safeParsed.skills || [],
+      unsupportedKeywords,
+    ),
+    education: sourceEducation,
+  };
+}
+
+export function buildBankTailoredResumePrompt(
+  input: BankResumeInput,
+  promptVariant: PromptVariant | null,
+): string {
   const experienceEntries = formatBankCategory(input.bankEntries.experience);
   const skillEntries = formatBankCategory(input.bankEntries.skill);
   const educationEntries = formatBankCategory(input.bankEntries.education);
@@ -63,14 +118,13 @@ async function generateWithLLM(
   const hackathonEntries = formatBankCategory(input.bankEntries.hackathon);
   const bulletEntries = formatBankCategory(input.bankEntries.bullet);
   const achievementEntries = formatBankCategory(input.bankEntries.achievement);
+  const certificationEntries = formatBankCategory(
+    input.bankEntries.certification,
+  );
 
   const instructions = promptVariant?.content ?? DEFAULT_PROMPT_CONTENT;
 
-  const response = await client.complete({
-    messages: [
-      {
-        role: "user",
-        content: `Generate a tailored resume for this job using ONLY the knowledge bank entries provided. The resume must fit on ONE page.
+  return `Generate a tailored resume for this job using ONLY the knowledge bank entries provided. The resume must fit on ONE page.
 
 CANDIDATE:
 Name: ${input.contact.name}
@@ -102,23 +156,35 @@ ${bulletEntries}
 KNOWLEDGE BANK - ACHIEVEMENTS:
 ${achievementEntries}
 
+KNOWLEDGE BANK - CERTIFICATIONS:
+${certificationEntries}
+
 JOB TARGET:
 Title: ${input.jobTitle}
 Company: ${input.company}
 Description: ${input.jobDescription}
 
-INSTRUCTIONS:
+NON-OVERRIDABLE SAFETY RULES:
+- Every added keyword, skill, tool, metric, employer, degree, certification, responsibility, and achievement must be backed by explicit knowledge bank evidence above
+- Incorporate missing job keywords only when bank entries already support them; omit unsupported keywords rather than inventing support
+- Do not invent metrics, tools, employers, degrees, certifications, dates, job titles, clients, or responsibilities
+- Preserve contact details and education exactly from the source data; preserve employers, titles, and dates exactly for selected experiences
+- If AWS, Kubernetes, or any other requested keyword is absent from the knowledge bank evidence, do not include it anywhere in the JSON
+- Return schema-valid JSON only, with no markdown, labels, comments, or surrounding prose
+
+STYLE AND PRIORITIZATION GUIDANCE:
 ${instructions}
 
 Return ONLY a JSON object:
 {
+  "contact": ${JSON.stringify(input.contact)},
   "summary": "Tailored professional summary...",
   "experiences": [
     {
       "company": "Company Name",
       "title": "Job Title",
       "dates": "Jan 2020 - Present",
-      "highlights": ["Achievement 1 with metrics", "Achievement 2"]
+      "highlights": ["Achievement 1 with supported metrics", "Achievement 2"]
     }
   ],
   "skills": ["Skill 1", "Skill 2"],
@@ -130,30 +196,7 @@ Return ONLY a JSON object:
       "date": "2020"
     }
   ]
-}`,
-      },
-    ],
-    temperature: 0.4,
-    maxTokens: 2000,
-  });
-
-  const parsed = parseJSONFromLLM<{
-    summary?: string;
-    experiences?: TailoredResume["experiences"];
-    skills?: string[];
-    education?: TailoredResume["education"];
-  }>(response);
-
-  return {
-    contact: input.contact,
-    summary:
-      parsed.summary ||
-      input.summary ||
-      `Experienced professional seeking ${input.jobTitle} position.`,
-    experiences: parsed.experiences || [],
-    skills: parsed.skills || [],
-    education: parsed.education || [],
-  };
+}`;
 }
 
 export function generateBaseFromBank(input: BankResumeInput): TailoredResume {
@@ -226,6 +269,45 @@ function formatBankCategory(entries: BankEntry[]): string {
   return entries
     .map((e, i) => `${i + 1}. ${JSON.stringify(e.content)}`)
     .join("\n");
+}
+
+function mapBankEducation(input: BankResumeInput): TailoredResume["education"] {
+  return input.bankEntries.education.map((e) => {
+    const c = e.content;
+    return {
+      institution: String(c.institution || ""),
+      degree: String(c.degree || ""),
+      field: String(c.field || ""),
+      date: String(c.endDate || ""),
+    };
+  });
+}
+
+function buildBankEvidenceText(input: BankResumeInput): string {
+  return JSON.stringify({
+    summary: input.summary,
+    bankEntries: input.bankEntries,
+  }).toLowerCase();
+}
+
+function extractKeywordCandidates(jobDescription: string): string[] {
+  const knownKeywords = jobDescription.match(
+    /\b(?:AWS|Kubernetes|GraphQL|React|TypeScript|Python|Node\.js|Node|SQL)\b/g,
+  );
+  return Array.from(new Set(knownKeywords || []));
+}
+
+function sanitizeExperiences(
+  experiences: TailoredResume["experiences"],
+  unsupportedKeywords: string[],
+): TailoredResume["experiences"] {
+  return experiences.map((experience) => ({
+    ...experience,
+    highlights: filterUnsupportedClaims(
+      experience.highlights,
+      unsupportedKeywords,
+    ),
+  }));
 }
 
 function entryToResumeExperience(
