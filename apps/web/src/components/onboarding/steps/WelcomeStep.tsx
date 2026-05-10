@@ -5,7 +5,7 @@ import { Rocket, CheckCircle } from "lucide-react";
 const FEATURES = [
   "AI resume parsing",
   "Job match scoring",
-  "Document Studio",
+  "Resume builder",
   "Mock interviews",
   "Resume exports",
   "Progress tracking",
@@ -19,8 +19,8 @@ export function WelcomeStep() {
       </div>
       <h2 className="text-2xl font-semibold">Welcome to Slothing</h2>
       <p className="text-base mt-2 text-muted-foreground">
-        Your AI-powered job application assistant. Let&apos;s set up your
-        knowledge bank in a few quick steps.
+        Your AI-powered job application assistant. Let&apos;s get your career
+        details organized in a few quick steps.
       </p>
       <div className="mt-6 pt-6 border-t">
         <p className="text-sm font-medium text-muted-foreground mb-3">
