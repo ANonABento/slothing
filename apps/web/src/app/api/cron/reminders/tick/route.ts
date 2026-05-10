@@ -1,22 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireCronAuth } from "@/lib/cron-auth";
 import { nowEpoch } from "@/lib/format/time";
 import { fireDueReminders } from "@/lib/reminders/fire-due";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-export async function POST(request: NextRequest) {
-  const startedAt = nowEpoch();
+export async function GET(request: NextRequest) {
+  const authError = await requireCronAuth(request);
+  if (authError) return authError;
 
-  if (!isAuthorizedCronRequest(request)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const startedAt = nowEpoch();
 
   try {
     const result = await fireDueReminders();
 
     return NextResponse.json({
       ok: true,
+      cron: "reminders.tick",
       fired: result.fired,
       errors: result.errors,
       durationMs: nowEpoch() - startedAt,
@@ -31,15 +32,4 @@ export async function POST(request: NextRequest) {
       { status: 500 },
     );
   }
-}
-
-function isAuthorizedCronRequest(request: NextRequest): boolean {
-  if (process.env.NODE_ENV === "test" && !process.env.CRON_SECRET) {
-    return true;
-  }
-
-  const secret = process.env.CRON_SECRET;
-  if (!secret) return false;
-
-  return request.headers.get("authorization") === `Bearer ${secret}`;
 }

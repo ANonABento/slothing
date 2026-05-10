@@ -1,32 +1,31 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { NextResponse } from "next/server";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   fireDueReminders: vi.fn(),
+}));
+
+vi.mock("@/lib/cron-auth", () => ({
+  requireCronAuth: vi.fn(async () => null),
 }));
 
 vi.mock("@/lib/reminders/fire-due", () => ({
   fireDueReminders: mocks.fireDueReminders,
 }));
 
-import { POST } from "./route";
+import { GET } from "./route";
+import { requireCronAuth } from "@/lib/cron-auth";
 import {
   expectRouteResponseContract,
+  getRequest,
   invokeRouteHandler,
-  jsonRequest,
-  resetContractMocks,
   routeContext,
 } from "@/test/contract";
 
 describe("/api/cron/reminders/tick route contract", () => {
-  const originalEnv = process.env;
-
   beforeEach(() => {
-    resetContractMocks();
     vi.clearAllMocks();
-    process.env = {
-      ...originalEnv,
-      CRON_SECRET: "test-secret",
-    };
+    vi.mocked(requireCronAuth).mockResolvedValue(null);
     mocks.fireDueReminders.mockResolvedValue({
       fired: 1,
       errors: 0,
@@ -34,73 +33,46 @@ describe("/api/cron/reminders/tick route contract", () => {
     });
   });
 
-  afterEach(() => {
-    process.env = originalEnv;
-  });
-
-  it("returns 401 without authorization", async () => {
+  it("fires due reminders when auth passes", async () => {
     const response = await invokeRouteHandler(
-      POST,
-      jsonRequest("http://localhost/api/cron/reminders/tick"),
+      GET,
+      getRequest("http://localhost/api/cron/reminders/tick"),
       routeContext(),
     );
 
-    expect(response.status).toBe(401);
-    await expect(response.json()).resolves.toMatchObject({
-      error: "Unauthorized",
-    });
-  });
-
-  it("returns 401 with the wrong bearer token", async () => {
-    const response = await invokeRouteHandler(
-      POST,
-      jsonRequest("http://localhost/api/cron/reminders/tick", {}, "POST", {
-        Authorization: "Bearer wrong",
-      }),
-      routeContext(),
-    );
-
-    expect(response.status).toBe(401);
-  });
-
-  it("fires reminders with the correct bearer token", async () => {
-    const response = await invokeRouteHandler(
-      POST,
-      jsonRequest("http://localhost/api/cron/reminders/tick", {}, "POST", {
-        Authorization: "Bearer test-secret",
-      }),
-      routeContext(),
-    );
-
+    await expectRouteResponseContract(response.clone());
     expect(response.status).toBe(200);
     await expect(response.json()).resolves.toMatchObject({
       ok: true,
+      cron: "reminders.tick",
       fired: 1,
       errors: 0,
       durationMs: expect.any(Number),
     });
+    expect(mocks.fireDueReminders).toHaveBeenCalledTimes(1);
   });
 
-  it("returns the route response contract", async () => {
+  it("propagates cron auth failures", async () => {
+    vi.mocked(requireCronAuth).mockResolvedValueOnce(
+      NextResponse.json({ error: "Unauthorized" }, { status: 401 }),
+    );
+
     const response = await invokeRouteHandler(
-      POST,
-      jsonRequest("http://localhost/api/cron/reminders/tick", {}, "POST", {
-        Authorization: "Bearer test-secret",
-      }),
+      GET,
+      getRequest("http://localhost/api/cron/reminders/tick"),
       routeContext(),
     );
 
-    await expectRouteResponseContract(response);
+    expect(response.status).toBe(401);
+    expect(mocks.fireDueReminders).not.toHaveBeenCalled();
   });
 
   it("returns a 500 body when firing throws", async () => {
-    mocks.fireDueReminders.mockRejectedValue(new Error("db unavailable"));
+    mocks.fireDueReminders.mockRejectedValueOnce(new Error("db unavailable"));
 
     const response = await invokeRouteHandler(
-      POST,
-      jsonRequest("http://localhost/api/cron/reminders/tick", {}, "POST", {
-        Authorization: "Bearer test-secret",
-      }),
+      GET,
+      getRequest("http://localhost/api/cron/reminders/tick"),
       routeContext(),
     );
 
