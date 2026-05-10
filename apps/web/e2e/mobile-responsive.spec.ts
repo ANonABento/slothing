@@ -110,7 +110,7 @@ test.describe("Mobile responsive route sweep", () => {
           await setOpportunityView(page, route);
 
           await assertNoHorizontalOverflow(page, viewport);
-          await assertNavigationMode(page, viewport);
+          await assertNavigationMode(page, viewport, route);
           await assertCriticalActionsReachable(page, route, viewport);
           await assertTouchTargets(page);
           await captureRouteScreenshot(page, route.label, viewport);
@@ -243,9 +243,7 @@ async function setOpportunityView(page: Page, route: RouteDefinition) {
   if (route.path !== "/en/opportunities") return;
   if (!("view" in route)) return;
 
-  await page
-    .getByRole("button", { name: new RegExp(route.view, "i") })
-    .click();
+  await page.getByRole("button", { name: new RegExp(route.view, "i") }).click();
 }
 
 async function assertNoHorizontalOverflow(page: Page, viewport: Viewport) {
@@ -259,7 +257,11 @@ async function assertNoHorizontalOverflow(page: Page, viewport: Viewport) {
   }).toBeLessThanOrEqual(viewport.width + 1);
 }
 
-async function assertNavigationMode(page: Page, viewport: Viewport) {
+async function assertNavigationMode(
+  page: Page,
+  viewport: Viewport,
+  route: RouteDefinition,
+) {
   const mobileMenuButton = page.getByRole("button", {
     name: /open navigation menu|open menu/i,
   });
@@ -272,6 +274,15 @@ async function assertNavigationMode(page: Page, viewport: Viewport) {
 
   if (viewport.width < 1024) {
     await expect(mobileMenuButton).toBeVisible();
+    const mobileHeader = page.locator("header").filter({
+      has: page.getByRole("button", {
+        name: /open navigation menu|open menu/i,
+      }),
+    });
+    await expect(mobileHeader.getByText("Slothing")).toBeVisible();
+    await expect(
+      mobileHeader.getByText(getMobileHeaderTitle(route)),
+    ).toBeVisible();
     expect(
       sidebarBox!.x + sidebarBox!.width,
       "Expected mobile sidebar to be off canvas until opened",
@@ -284,6 +295,39 @@ async function assertNavigationMode(page: Page, viewport: Viewport) {
   expect(sidebarBox!.x + sidebarBox!.width).toBeLessThanOrEqual(
     viewport.width + 1,
   );
+}
+
+function getMobileHeaderTitle(route: RouteDefinition): string {
+  if (route.path === "__OPPORTUNITY_DETAIL__") return "Opportunities";
+
+  switch (route.path) {
+    case "/en/dashboard":
+      return "Dashboard";
+    case "/en/opportunities":
+      return "Opportunities";
+    case "/en/studio":
+      return "Document Studio";
+    case "/en/profile":
+      return "Profile";
+    case "/en/bank":
+      return "Documents";
+    case "/en/answer-bank":
+      return "Answer Bank";
+    case "/en/calendar":
+      return "Calendar";
+    case "/en/emails":
+      return "Email Templates";
+    case "/en/interview":
+      return "Interview Prep";
+    case "/en/salary":
+      return "Salary Tools";
+    case "/en/analytics":
+      return "Analytics";
+    case "/en/settings":
+      return "Settings";
+    default:
+      return "Main navigation";
+  }
 }
 
 async function assertCriticalActionsReachable(
@@ -310,10 +354,7 @@ async function assertCriticalActionsReachable(
   ).toBeLessThanOrEqual(viewport.width + 1);
 }
 
-function getCriticalAction(
-  page: Page,
-  route: RouteDefinition,
-): Locator | null {
+function getCriticalAction(page: Page, route: RouteDefinition): Locator | null {
   switch (route.label) {
     case "opportunities-list":
     case "opportunities-kanban":
