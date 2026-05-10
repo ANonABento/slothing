@@ -7,6 +7,17 @@ import {
   type AxisKey,
   type FileMeta,
 } from "./scoring";
+import type {
+  KeywordEvidenceMatch,
+  KeywordEvidenceStatus,
+  KeywordEvidenceSummary,
+} from "./keyword-evidence";
+
+export type {
+  KeywordEvidenceMatch,
+  KeywordEvidenceStatus,
+  KeywordEvidenceSummary,
+} from "./keyword-evidence";
 
 import { nowIso } from "@/lib/format/time";
 export interface ATSIssue {
@@ -24,6 +35,8 @@ export interface KeywordAnalysis {
   locations: string[];
   matchType?: "exact" | "synonym";
   matchedTerm?: string;
+  status?: KeywordEvidenceStatus;
+  evidenceSnippets?: string[];
 }
 
 export interface ATSScore {
