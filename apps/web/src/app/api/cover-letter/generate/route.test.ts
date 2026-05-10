@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
-  requireAuth: vi.fn(),
+  requireUserAuth: vi.fn(),
   getLLMConfig: vi.fn(),
   getProfile: vi.fn(),
   getGroupedBankEntries: vi.fn(),
@@ -18,7 +18,7 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("@/lib/auth", () => ({
-  requireAuth: mocks.requireAuth,
+  requireUserAuth: mocks.requireUserAuth,
   isAuthError: (value: unknown) => value instanceof Response,
 }));
 
@@ -67,7 +67,7 @@ function jsonRequest(body: unknown) {
 describe("cover letter generate route", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.requireAuth.mockResolvedValue({ userId: "user-1" });
+    mocks.requireUserAuth.mockResolvedValue({ userId: "user-1" });
     mocks.getClientIdentifier.mockReturnValue("client-1");
     mocks.llmRateLimiter.mockReturnValue({ allowed: true });
     mocks.getLLMConfig.mockReturnValue({

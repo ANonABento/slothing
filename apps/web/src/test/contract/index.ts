@@ -103,6 +103,7 @@ export function setAuthFailure(
 export function createAuthModuleMock() {
   return {
     requireAuth: vi.fn(async () => authResult),
+    requireUserAuth: vi.fn(async () => authResult),
     getCurrentUserId: vi.fn(async () =>
       authResult instanceof Response ? null : authResult.userId,
     ),

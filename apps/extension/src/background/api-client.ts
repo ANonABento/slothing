@@ -83,9 +83,7 @@ export class ColumbusAPIClient {
     return this.authenticatedFetch<ExtensionProfile>("/api/extension/profile");
   }
 
-  async importJob(
-    job: ScrapedJob,
-  ): Promise<{
+  async importJob(job: ScrapedJob): Promise<{
     imported: number;
     opportunityIds: string[];
     pendingCount: number;
@@ -130,9 +128,7 @@ export class ColumbusAPIClient {
     });
   }
 
-  async importJobsBatch(
-    jobs: ScrapedJob[],
-  ): Promise<{
+  async importJobsBatch(jobs: ScrapedJob[]): Promise<{
     imported: number;
     opportunityIds: string[];
     pendingCount: number;
@@ -200,6 +196,71 @@ export class ColumbusAPIClient {
     };
   }
 
+  async tailorFromJob(job: ScrapedJob): Promise<{
+    opportunityId: string;
+    savedResume: { id: string };
+    jobId: string;
+  }> {
+    const jobDescription = getReadableJobDescription(job);
+    const imported = await this.importJob(job);
+    const opportunityId = getImportedOpportunityId(imported.opportunityIds);
+
+    const response = await this.authenticatedFetch<{
+      savedResume?: { id?: string };
+      jobId?: string;
+    }>("/api/tailor", {
+      method: "POST",
+      body: JSON.stringify({
+        action: "generate",
+        jobDescription,
+        jobTitle: job.title,
+        company: job.company,
+        opportunityId,
+      }),
+    });
+
+    if (!response.savedResume?.id || !response.jobId) {
+      throw new Error("Tailored resume was generated without a saved resume.");
+    }
+
+    return {
+      opportunityId,
+      savedResume: { id: response.savedResume.id },
+      jobId: response.jobId,
+    };
+  }
+
+  async generateCoverLetterFromJob(job: ScrapedJob): Promise<{
+    opportunityId: string;
+    savedCoverLetter: { id: string };
+  }> {
+    const jobDescription = getReadableJobDescription(job);
+    const imported = await this.importJob(job);
+    const opportunityId = getImportedOpportunityId(imported.opportunityIds);
+
+    const response = await this.authenticatedFetch<{
+      savedCoverLetter?: { id?: string };
+    }>("/api/cover-letter/generate", {
+      method: "POST",
+      body: JSON.stringify({
+        action: "generate",
+        jobDescription,
+        jobTitle: job.title,
+        company: job.company,
+        opportunityId,
+      }),
+    });
+
+    if (!response.savedCoverLetter?.id) {
+      throw new Error("Cover letter was generated without a saved document.");
+    }
+
+    return {
+      opportunityId,
+      savedCoverLetter: { id: response.savedCoverLetter.id },
+    };
+  }
+
   async saveLearnedAnswer(data: {
     question: string;
     answer: string;
@@ -244,6 +305,22 @@ export class ColumbusAPIClient {
       body: JSON.stringify({ answer }),
     });
   }
+}
+
+function getReadableJobDescription(job: ScrapedJob): string {
+  const description = job.description?.trim() ?? "";
+  if (description.length < 20) {
+    throw new Error("Couldn't read the full job description from this page.");
+  }
+  return description;
+}
+
+function getImportedOpportunityId(opportunityIds: string[]): string {
+  const opportunityId = opportunityIds[0];
+  if (!opportunityId) {
+    throw new Error("Job import did not return an opportunity id.");
+  }
+  return opportunityId;
 }
 
 function normalizeOpportunitySource(source: string) {

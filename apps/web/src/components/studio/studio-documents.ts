@@ -20,6 +20,7 @@ export interface StudioDocument {
   content?: TipTapJSONContent;
   pageSettings?: PageSettings;
   coverLetterCritique?: CoverLetterCritique;
+  source?: "extension";
 }
 
 export const DOCUMENT_MODE_LABELS: Record<DocumentMode, string> = {

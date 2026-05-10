@@ -68,6 +68,12 @@ async function handleMessage(
     case "CAPTURE_VISIBLE_TAB":
       return handleCaptureVisibleTab();
 
+    case "TAILOR_FROM_PAGE":
+      return handleTailorFromPage(message.payload as ScrapedJob);
+
+    case "GENERATE_COVER_LETTER_FROM_PAGE":
+      return handleGenerateCoverLetterFromPage(message.payload as ScrapedJob);
+
     case "SAVE_ANSWER":
       return handleSaveAnswer(
         message.payload as {
@@ -96,6 +102,50 @@ async function handleMessage(
 
     default:
       return { success: false, error: `Unknown message type: ${message.type}` };
+  }
+}
+
+async function handleTailorFromPage(
+  job: ScrapedJob,
+): Promise<ExtensionResponse> {
+  try {
+    const client = await getAPIClient();
+    const result = await client.tailorFromJob(job);
+    const apiBaseUrl = await getApiBaseUrl();
+    const resumeId = result.savedResume.id;
+
+    return {
+      success: true,
+      data: {
+        url: `${apiBaseUrl}/studio?from=extension&tailorId=${encodeURIComponent(resumeId)}`,
+        opportunityId: result.opportunityId,
+        resumeId,
+      },
+    };
+  } catch (error) {
+    return { success: false, error: (error as Error).message };
+  }
+}
+
+async function handleGenerateCoverLetterFromPage(
+  job: ScrapedJob,
+): Promise<ExtensionResponse> {
+  try {
+    const client = await getAPIClient();
+    const result = await client.generateCoverLetterFromJob(job);
+    const apiBaseUrl = await getApiBaseUrl();
+    const coverLetterId = result.savedCoverLetter.id;
+
+    return {
+      success: true,
+      data: {
+        url: `${apiBaseUrl}/cover-letter?from=extension&id=${encodeURIComponent(coverLetterId)}`,
+        opportunityId: result.opportunityId,
+        coverLetterId,
+      },
+    };
+  } catch (error) {
+    return { success: false, error: (error as Error).message };
   }
 }
 
