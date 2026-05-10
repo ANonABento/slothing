@@ -92,6 +92,17 @@ describe("bank route", () => {
     });
   });
 
+  it("rejects unsupported category filters", async () => {
+    const response = await GET(bankRequest("/api/bank?category=invoice"));
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toMatchObject({
+      error: "Validation failed",
+      details: { fieldErrors: { category: ["Invalid category"] } },
+    });
+    expect(mocks.listBankEntriesPaginated).not.toHaveBeenCalled();
+  });
+
   it("accepts hackathon entries on create", async () => {
     const response = await POST(
       createRequest({

@@ -8,7 +8,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { parseJsonBody } from "@/lib/api-utils";
 import { requireAuth, isAuthError } from "@/lib/auth";
-import { insertBankEntry, listBankEntriesPaginated } from "@/lib/db/profile-bank";
+import {
+  insertBankEntry,
+  listBankEntriesPaginated,
+} from "@/lib/db/profile-bank";
 import type { BankCategory } from "@/types";
 import { BANK_CATEGORIES } from "@/types";
 import { createBankEntrySchema } from "@/lib/schemas";
@@ -47,18 +50,33 @@ export async function GET(request: NextRequest) {
         { status: 400 },
       );
     }
-    const { q: query, sourceDocumentId, type, category: categoryParam, limit } =
-      parsed.data;
+    const {
+      q: query,
+      sourceDocumentId,
+      type,
+      category: categoryParam,
+      limit,
+    } = parsed.data;
     const cursor = decodeCursor(parsed.data.cursor, bankCursorSchema);
-    const category = (categoryParam ||
-      (type === "hackathon" ? "hackathon" : null)) as BankCategory | null;
-    const validCategory =
-      category && BANK_CATEGORIES.includes(category) ? category : null;
+    const categoryValue = categoryParam || (type === "hackathon" ? type : null);
+    if (
+      categoryValue &&
+      !BANK_CATEGORIES.includes(categoryValue as BankCategory)
+    ) {
+      return NextResponse.json(
+        {
+          error: "Validation failed",
+          details: { fieldErrors: { category: ["Invalid category"] } },
+        },
+        { status: 400 },
+      );
+    }
+    const category = categoryValue as BankCategory | null;
 
     const rows = listBankEntriesPaginated({
       userId: authResult.userId,
       query,
-      category: validCategory,
+      category,
       sourceDocumentId,
       cursor,
       limit,
