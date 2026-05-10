@@ -4,15 +4,15 @@ vi.mock("@/lib/auth", () =>
   globalThis.__contractRouteMocks!.createAuthModuleMock(),
 );
 
-vi.mock("@/lib/db/learned-answers", () =>
+vi.mock("@/lib/db/answer-bank", () =>
   globalThis.__contractRouteMocks!.createContractModuleMock(
-    "@/lib/db/learned-answers",
+    "@/lib/db/answer-bank",
   ),
 );
 
-vi.mock("@/lib/db/learned-answer-versions", () =>
+vi.mock("@/lib/db/answer-bank-versions", () =>
   globalThis.__contractRouteMocks!.createContractModuleMock(
-    "@/lib/db/learned-answer-versions",
+    "@/lib/db/answer-bank-versions",
   ),
 );
 

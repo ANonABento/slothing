@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { isAuthError, requireAuth } from "@/lib/auth";
-import { runPersonalFactsMigration } from "@/lib/db/learned-answers-migration";
+import { runPersonalFactsMigration } from "@/lib/db/answer-bank-migration";
 
 export const dynamic = "force-dynamic";
 

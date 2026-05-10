@@ -202,7 +202,7 @@ Tables (selected):
 - `analytics_snapshots`, `job_status_history`
 - `salary_offers`, `ats_scan_history`
 - `custom_templates`, `prompt_variants`, `prompt_variant_results`
-- `extension_sessions`, `learned_answers`, `field_mappings` — Columbus extension
+- `extension_sessions`, `answer_bank`, `field_mappings` — Columbus extension
 - `reminders`, `notifications`, `company_research`, `resume_ab_tracking`, `settings`
 
 ### Dedupe constraints (T1)

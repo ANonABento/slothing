@@ -2,13 +2,13 @@ import { and, eq, like, or } from "drizzle-orm";
 import {
   calculateQuestionSimilarity,
   normalizeQuestion,
-} from "@/lib/answers/learned-answers";
+} from "@/lib/answers/answer-bank";
 import {
   classifyAnswerComponent,
   type AnswerComponentType,
 } from "@/lib/answers/answer-components";
 import db from "@/lib/db";
-import { learnedAnswers } from "@/lib/db/schema";
+import { answerBank } from "@/lib/db/schema";
 
 export interface AnswerBankMatch {
   id: string;
@@ -37,17 +37,17 @@ export async function matchAnswers(
 
   const terms = queryTerms(query);
   const predicates = terms.map((term) =>
-    like(learnedAnswers.questionNormalized, `%${term}%`),
+    like(answerBank.questionNormalized, `%${term}%`),
   );
   const safeLimit = Math.min(Math.max(limit, 1), 20);
 
   const rows = await db
     .select()
-    .from(learnedAnswers)
+    .from(answerBank)
     .where(
       predicates.length > 0
-        ? and(eq(learnedAnswers.userId, userId), or(...predicates))
-        : eq(learnedAnswers.userId, userId),
+        ? and(eq(answerBank.userId, userId), or(...predicates))
+        : eq(answerBank.userId, userId),
     )
     .limit(100);
 

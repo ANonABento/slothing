@@ -53,7 +53,12 @@ const sampleAnswer = {
   id: "answer-1",
   userId: "user-1",
   question: "Tell me about yourself",
+  questionNormalized: "tell me about yourself",
   answer: "I build useful software.",
+  source: "manual",
+  sourceUrl: null,
+  sourceCompany: null,
+  timesUsed: 1,
   category: "general",
   createdAt: sampleDate,
   updatedAt: sampleDate,
@@ -299,6 +304,10 @@ function createDrizzleMock() {
     insert: vi.fn(() => chain),
     update: vi.fn(() => chain),
     delete: vi.fn(() => chain),
+    exec: vi.fn(async () => undefined),
+    prepare: vi.fn(() => ({
+      get: vi.fn(async () => undefined),
+    })),
   };
 }
 

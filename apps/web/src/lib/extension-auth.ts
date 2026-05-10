@@ -5,7 +5,7 @@ import db from "@/lib/db/legacy";
 import {
   calculateQuestionSimilarity,
   normalizeQuestion,
-} from "@/lib/answers/learned-answers";
+} from "@/lib/answers/answer-bank";
 
 interface ExtensionSession {
   id: string;

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { isAuthError, requireAuth } from "@/lib/auth";
-import { duplicateAnswerBankEntry } from "@/lib/db/answer-bank";
+import { promoteAnswerBankEntry } from "@/lib/db/answer-bank";
 
 export const dynamic = "force-dynamic";
 
@@ -13,17 +13,17 @@ export async function POST(
 
   try {
     const { id } = await params;
-    const duplicated = await duplicateAnswerBankEntry(id, authResult.userId);
+    const promoted = await promoteAnswerBankEntry(id, authResult.userId);
 
-    if (!duplicated) {
+    if (!promoted) {
       return NextResponse.json({ error: "Answer not found" }, { status: 404 });
     }
 
-    return NextResponse.json(duplicated, { status: 201 });
+    return NextResponse.json(promoted);
   } catch (error) {
-    console.error("Answer bank duplicate error:", error);
+    console.error("Answer bank promote error:", error);
     return NextResponse.json(
-      { error: "Failed to duplicate answer" },
+      { error: "Failed to promote answer" },
       { status: 500 },
     );
   }

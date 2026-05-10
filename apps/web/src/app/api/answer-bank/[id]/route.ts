@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { parseJsonBody } from "@/lib/api-utils";
 import { isAuthError, requireAuth } from "@/lib/auth";
 import {
-  deleteLearnedAnswer,
-  updateLearnedAnswer,
-} from "@/lib/db/learned-answers";
+  deleteAnswerBankEntry,
+  updateAnswerBankEntry,
+} from "@/lib/db/answer-bank";
 import { updateAnswerSchema } from "@/lib/schemas";
 
 export const dynamic = "force-dynamic";
@@ -21,7 +21,7 @@ export async function PATCH(
     const parsed = await parseJsonBody(request, updateAnswerSchema);
     if (!parsed.ok) return parsed.response;
 
-    const updated = await updateLearnedAnswer(
+    const updated = await updateAnswerBankEntry(
       id,
       parsed.data,
       authResult.userId,
@@ -50,7 +50,7 @@ export async function DELETE(
 
   try {
     const { id } = await params;
-    const deleted = await deleteLearnedAnswer(id, authResult.userId);
+    const deleted = await deleteAnswerBankEntry(id, authResult.userId);
 
     if (!deleted) {
       return NextResponse.json({ error: "Answer not found" }, { status: 404 });
