@@ -27,7 +27,8 @@ function mergeContact(
     if (isBlank(value)) continue;
     const contactKey = key as keyof ContactInfo;
     if (isBlank(merged[contactKey])) {
-      (merged as Record<string, unknown>)[contactKey] = value;
+      (merged as Record<string, unknown>)[contactKey] =
+        typeof value === "string" ? value.trim() : value;
       changed = true;
     }
   }
