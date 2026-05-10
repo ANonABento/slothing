@@ -1,6 +1,8 @@
 # Columbus Browser Extension
 
-Browser extension for [Columbus](../README.md) that auto-fills job applications and imports job listings from major job sites.
+Browser extension for Slothing that auto-fills job applications and imports job listings from major job sites.
+
+Columbus is the browser-extension sub-brand within the Slothing product; user-facing extension chrome keeps the Columbus name while imported opportunities land in Slothing.
 
 ## Prerequisites
 
@@ -107,14 +109,14 @@ Right-click the Columbus icon > **Options** to configure:
 
 ## Supported Job Sites
 
-| Site | Job Scraping | Auto-Fill | Notes |
-|------|-------------|-----------|-------|
-| LinkedIn | Single + List | Yes | Handles frequent DOM changes |
-| Indeed | Single + List | Yes | Search results and detail pages |
-| Greenhouse | Single + List | Yes | `boards.greenhouse.io/*` |
-| Lever | Single + List | Yes | `jobs.lever.co/*` |
-| Waterloo Works | Single + List | Yes | Requires university SSO login |
-| Any site with JSON-LD | Single | Yes | Generic fallback scraper |
+| Site                  | Job Scraping  | Auto-Fill | Notes                           |
+| --------------------- | ------------- | --------- | ------------------------------- |
+| LinkedIn              | Single + List | Yes       | Handles frequent DOM changes    |
+| Indeed                | Single + List | Yes       | Search results and detail pages |
+| Greenhouse            | Single + List | Yes       | `boards.greenhouse.io/*`        |
+| Lever                 | Single + List | Yes       | `jobs.lever.co/*`               |
+| Waterloo Works        | Single + List | Yes       | Requires university SSO login   |
+| Any site with JSON-LD | Single        | Yes       | Generic fallback scraper        |
 
 ## Architecture
 
@@ -136,18 +138,18 @@ content script  ──message──────────┘
 
 All extension endpoints use token auth via `X-Extension-Token` header:
 
-| Endpoint | Method | Purpose |
-|----------|--------|---------|
-| `/api/extension/auth` | POST | Generate token (uses Clerk session) |
-| `/api/extension/auth` | DELETE | Revoke token(s) |
-| `/api/extension/auth/verify` | GET | Validate token |
-| `/api/extension/profile` | GET | Fetch profile with computed fields |
-| `/api/opportunities/from-extension` | POST | Import single or batch scraped jobs as pending opportunities |
-| `/api/extension/learned-answers` | GET | List saved answers |
-| `/api/extension/learned-answers` | POST | Save new answer |
-| `/api/extension/learned-answers/search` | POST | Similarity search |
-| `/api/extension/learned-answers/[id]` | PATCH | Update answer |
-| `/api/extension/learned-answers/[id]` | DELETE | Delete answer |
+| Endpoint                                | Method | Purpose                                                      |
+| --------------------------------------- | ------ | ------------------------------------------------------------ |
+| `/api/extension/auth`                   | POST   | Generate token (uses Clerk session)                          |
+| `/api/extension/auth`                   | DELETE | Revoke token(s)                                              |
+| `/api/extension/auth/verify`            | GET    | Validate token                                               |
+| `/api/extension/profile`                | GET    | Fetch profile with computed fields                           |
+| `/api/opportunities/from-extension`     | POST   | Import single or batch scraped jobs as pending opportunities |
+| `/api/extension/learned-answers`        | GET    | List saved answers                                           |
+| `/api/extension/learned-answers`        | POST   | Save new answer                                              |
+| `/api/extension/learned-answers/search` | POST   | Similarity search                                            |
+| `/api/extension/learned-answers/[id]`   | PATCH  | Update answer                                                |
+| `/api/extension/learned-answers/[id]`   | DELETE | Delete answer                                                |
 
 #### Opportunity Import Contract
 
@@ -219,18 +221,18 @@ npm run generate-icons # Regenerate placeholder icons
 
 ### Key Files
 
-| File | Purpose |
-|------|---------|
-| `src/shared/types.ts` | All TypeScript types (35+ field types) |
-| `src/shared/field-patterns.ts` | 32 field detection patterns |
-| `src/shared/messages.ts` | Type-safe message passing |
-| `src/background/api-client.ts` | Columbus API client |
-| `src/background/storage.ts` | Chrome storage helpers |
-| `src/content/auto-fill/field-detector.ts` | Multi-signal field detection |
-| `src/content/auto-fill/field-mapper.ts` | Profile-to-field mapping |
-| `src/content/auto-fill/engine.ts` | Form filling engine |
-| `src/content/learning/question-detector.ts` | Custom question detection |
-| `src/content/learning/answer-capturer.ts` | Answer capture with UI |
+| File                                        | Purpose                                |
+| ------------------------------------------- | -------------------------------------- |
+| `src/shared/types.ts`                       | All TypeScript types (35+ field types) |
+| `src/shared/field-patterns.ts`              | 32 field detection patterns            |
+| `src/shared/messages.ts`                    | Type-safe message passing              |
+| `src/background/api-client.ts`              | Columbus API client                    |
+| `src/background/storage.ts`                 | Chrome storage helpers                 |
+| `src/content/auto-fill/field-detector.ts`   | Multi-signal field detection           |
+| `src/content/auto-fill/field-mapper.ts`     | Profile-to-field mapping               |
+| `src/content/auto-fill/engine.ts`           | Form filling engine                    |
+| `src/content/learning/question-detector.ts` | Custom question detection              |
+| `src/content/learning/answer-capturer.ts`   | Answer capture with UI                 |
 
 ## Testing
 
@@ -251,19 +253,37 @@ End-to-end tests (Playwright + persistent Chromium with extension loaded):
 npm run test:e2e
 ```
 
-Six tests under `tests/e2e/extension.spec.ts`:
+Coverage includes:
+
 - Extension service worker registers (valid 32-char extension ID)
 - Popup renders the Columbus heading + Connect Account button (unauthenticated state)
 - Options page renders Settings heading + URL input + Save button
 - Content script injects on a fixture page without uncaught errors
 - LinkedInScraper extracts title / company / location / description from a static fixture (`tests/fixtures/linkedin-mock.html`)
 - LinkedIn job-list selectors match two cards in the fixture
+- Greenhouse, Lever, Indeed, and Workday fixture scrape coverage with from-extension payload validation
+- Autofill coverage against `demo/job-form.html`, including sensitive/custom field non-fill assertions and idempotency
+- Env-gated Slothing integration coverage for extension scrape/import into `/api/opportunities/from-extension`
+
+Additional fixture snapshots live under `tests/fixtures/`:
+
+- `greenhouse-mock.html`
+- `lever-mock.html`
+- `indeed-mock.html`
+- `workday-mock.html`
+
+The Slothing integration spec is skipped by default. Run it explicitly with:
+
+```bash
+SLOTHING_INTEGRATION=1 npm run test:e2e -- tests/e2e/slothing-integration.spec.ts
+```
 
 CI workflow at `.github/workflows/extension-e2e.yml` runs the e2e suite on every push that touches `columbus-extension/`.
 
 ### Manual Testing Checklist
 
 #### Extension Loading
+
 - [ ] Build completes without errors (`npm run build`)
 - [ ] Extension loads in Chrome without errors
 - [ ] Extension icon appears in toolbar
@@ -271,6 +291,7 @@ CI workflow at `.github/workflows/extension-e2e.yml` runs the e2e suite on every
 - [ ] Options page opens from popup "Settings"
 
 #### Authentication
+
 - [ ] Columbus app running at localhost:3000
 - [ ] Click "Connect Account" opens `/extension/connect`
 - [ ] Token generated and stored (check `chrome.storage.local`)
@@ -279,6 +300,7 @@ CI workflow at `.github/workflows/extension-e2e.yml` runs the e2e suite on every
 - [ ] Reconnecting works after disconnect
 
 #### Auto-Fill (test on each supported site)
+
 - [ ] Navigate to a job application form
 - [ ] Popup shows "Application Form Detected" with field count
 - [ ] `Cmd+Shift+F` fills detected fields
@@ -288,6 +310,7 @@ CI workflow at `.github/workflows/extension-e2e.yml` runs the e2e suite on every
 - [ ] Console shows `[Columbus] Detected fields: N`
 
 #### Job Scraping (test on each supported site)
+
 - [ ] Navigate to a job listing page
 - [ ] Popup shows job title and company
 - [ ] Click "Import Job" saves to Columbus
@@ -296,6 +319,7 @@ CI workflow at `.github/workflows/extension-e2e.yml` runs the e2e suite on every
 - [ ] `Cmd+Shift+I` shortcut works
 
 #### Learning System
+
 - [ ] Navigate to a form with custom questions (text areas)
 - [ ] Type an answer and tab away
 - [ ] Save prompt appears asking to save answer
@@ -306,18 +330,19 @@ CI workflow at `.github/workflows/extension-e2e.yml` runs the e2e suite on every
 
 #### Sites to Test
 
-| Site | Test URL Pattern | What to Verify |
-|------|-----------------|----------------|
-| LinkedIn | `/jobs/view/12345` | Title, company, location, description extracted |
-| Indeed | `/viewjob?jk=abc` | Salary info, job type detected |
-| Greenhouse | `boards.greenhouse.io/company/jobs/123` | Structured data parsed |
-| Lever | `jobs.lever.co/company/uuid` | Commitment (full-time, etc.) detected |
-| Waterloo Works | `waterlooworks.uwaterloo.ca` | Requires SSO auth first |
-| Generic | Any site with `JobPosting` JSON-LD | Fallback scraper works |
+| Site           | Test URL Pattern                        | What to Verify                                  |
+| -------------- | --------------------------------------- | ----------------------------------------------- |
+| LinkedIn       | `/jobs/view/12345`                      | Title, company, location, description extracted |
+| Indeed         | `/viewjob?jk=abc`                       | Salary info, job type detected                  |
+| Greenhouse     | `boards.greenhouse.io/company/jobs/123` | Structured data parsed                          |
+| Lever          | `jobs.lever.co/company/uuid`            | Commitment (full-time, etc.) detected           |
+| Waterloo Works | `waterlooworks.uwaterloo.ca`            | Requires SSO auth first                         |
+| Generic        | Any site with `JobPosting` JSON-LD      | Fallback scraper works                          |
 
 ### Debugging
 
 Open DevTools on any page:
+
 - **Console**: Filter by `[Columbus]` to see extension logs
 - **Network**: Filter by `/api/extension/` to see API calls
 - **Application > Storage > Extension Storage**: View stored auth/settings
@@ -330,4 +355,4 @@ Open DevTools on any page:
 - **Token delivery**: Connect page uses localStorage fallback (no `externally_connectable` in manifest yet)
 - **Waterloo Works**: Only works when logged into university SSO
 - **Bundle size**: popup.js and options.js are ~400KB (React not tree-shaken; could swap to Preact)
-- **Test coverage gaps**: field detector + non-LinkedIn scrapers still untested. Only LinkedIn scraper + badge module have automated coverage today.
+- **Workday**: Dedicated Workday scraper is still missing; current coverage pins the GenericScraper JSON-LD fallback.
