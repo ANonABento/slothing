@@ -47,6 +47,16 @@ export const Messages = {
   }),
   openDashboard: (): ExtensionMessage => ({ type: "OPEN_DASHBOARD" }),
   captureVisibleTab: (): ExtensionMessage => ({ type: "CAPTURE_VISIBLE_TAB" }),
+  tailorFromPage: (job: ScrapedJob): ExtensionMessage<ScrapedJob> => ({
+    type: "TAILOR_FROM_PAGE",
+    payload: job,
+  }),
+  generateCoverLetterFromPage: (
+    job: ScrapedJob,
+  ): ExtensionMessage<ScrapedJob> => ({
+    type: "GENERATE_COVER_LETTER_FROM_PAGE",
+    payload: job,
+  }),
 
   // Learning messages
   saveAnswer: (data: {
@@ -89,6 +99,18 @@ export interface ImportJobResponse extends ExtensionResponse<{
 export interface TrackAppliedResponse extends ExtensionResponse<{
   opportunityId: string;
   deduped: boolean;
+}> {}
+
+export interface TailorFromPageResponse extends ExtensionResponse<{
+  url: string;
+  opportunityId: string;
+  resumeId: string;
+}> {}
+
+export interface GenerateCoverLetterFromPageResponse extends ExtensionResponse<{
+  url: string;
+  opportunityId: string;
+  coverLetterId: string;
 }> {}
 
 export interface SearchAnswersResponse extends ExtensionResponse<

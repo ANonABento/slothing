@@ -22,7 +22,7 @@ import { tailorRequestSchema } from "@/lib/schemas";
 import { writeFile, mkdir } from "fs/promises";
 import { generateId } from "@/lib/utils";
 import { PATHS } from "@/lib/constants";
-import { requireAuth, isAuthError } from "@/lib/auth";
+import { requireUserAuth, isAuthError } from "@/lib/auth";
 import { checkTailorQuota } from "@/lib/plan/quota";
 
 export const dynamic = "force-dynamic";
@@ -53,7 +53,7 @@ export async function GET() {
  * }
  */
 export async function POST(request: NextRequest) {
-  const authResult = await requireAuth();
+  const authResult = await requireUserAuth(request);
   if (isAuthError(authResult)) return authResult;
 
   try {

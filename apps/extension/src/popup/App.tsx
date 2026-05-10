@@ -5,6 +5,7 @@ import { scoreResume } from "@slothing/shared/scoring";
 import { sendMessage, Messages } from "@/shared/messages";
 
 type ViewState = "loading" | "unauthenticated" | "authenticated" | "error";
+type PageAction = "tailor" | "cover-letter" | "import";
 
 interface PageStatus {
   hasForm: boolean;
@@ -18,8 +19,9 @@ export default function App() {
   const [profile, setProfile] = useState<ExtensionProfile | null>(null);
   const [pageStatus, setPageStatus] = useState<PageStatus | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [importing, setImporting] = useState(false);
-  const [importSuccess, setImportSuccess] = useState(false);
+  const [actionInFlight, setActionInFlight] = useState<PageAction | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [actionSuccess, setActionSuccess] = useState<PageAction | null>(null);
   const profileScore = profile ? scoreResume({ profile }).overall : null;
 
   useEffect(() => {
@@ -101,21 +103,47 @@ export default function App() {
   async function handleImportJob() {
     if (!pageStatus?.scrapedJob) return;
 
-    setImporting(true);
+    setActionInFlight("import");
+    setActionError(null);
     try {
       const response = await sendMessage(
         Messages.importJob(pageStatus.scrapedJob),
       );
       if (response.success) {
-        setImportSuccess(true);
+        setActionSuccess("import");
         setTimeout(() => window.close(), 1500);
       } else {
-        setError(response.error || "Failed to import job");
+        setActionError(response.error || "Failed to import job");
       }
     } catch (err) {
-      setError((err as Error).message);
+      setActionError((err as Error).message);
     } finally {
-      setImporting(false);
+      setActionInFlight(null);
+    }
+  }
+
+  async function handleGenerateFromPage(action: Exclude<PageAction, "import">) {
+    if (!pageStatus?.scrapedJob) return;
+
+    setActionInFlight(action);
+    setActionError(null);
+    try {
+      const message =
+        action === "tailor"
+          ? Messages.tailorFromPage(pageStatus.scrapedJob)
+          : Messages.generateCoverLetterFromPage(pageStatus.scrapedJob);
+      const response = await sendMessage<{ url: string }>(message);
+      if (response.success && response.data?.url) {
+        chrome.tabs.create({ url: response.data.url });
+        setActionSuccess(action);
+        setTimeout(() => window.close(), 1500);
+      } else {
+        setActionError(response.error || "Failed to generate document");
+      }
+    } catch (err) {
+      setActionError((err as Error).message);
+    } finally {
+      setActionInFlight(null);
     }
   }
 
@@ -213,16 +241,45 @@ export default function App() {
                     {pageStatus.scrapedJob.company}
                   </span>
                 </div>
-                {importSuccess ? (
-                  <span className="success-badge">Imported!</span>
+                {actionSuccess ? (
+                  <span className="success-badge">
+                    {actionSuccess === "import"
+                      ? "Imported!"
+                      : "Generated! Opening..."}
+                  </span>
                 ) : (
-                  <button
-                    className="primary small"
-                    onClick={handleImportJob}
-                    disabled={importing}
-                  >
-                    {importing ? "Importing..." : "Import Job"}
-                  </button>
+                  <div className="action-stack">
+                    <button
+                      className="primary small"
+                      onClick={() => handleGenerateFromPage("tailor")}
+                      disabled={actionInFlight !== null}
+                    >
+                      {actionInFlight === "tailor"
+                        ? "Tailoring..."
+                        : "Tailor my resume for this"}
+                    </button>
+                    <button
+                      className="secondary small"
+                      onClick={() => handleGenerateFromPage("cover-letter")}
+                      disabled={actionInFlight !== null}
+                    >
+                      {actionInFlight === "cover-letter"
+                        ? "Generating..."
+                        : "Generate cover letter"}
+                    </button>
+                    <button
+                      className="text-button small"
+                      onClick={handleImportJob}
+                      disabled={actionInFlight !== null}
+                    >
+                      {actionInFlight === "import"
+                        ? "Importing..."
+                        : "Just import"}
+                    </button>
+                    {actionError && (
+                      <p className="error-inline">{actionError}</p>
+                    )}
+                  </div>
                 )}
               </div>
             )}
