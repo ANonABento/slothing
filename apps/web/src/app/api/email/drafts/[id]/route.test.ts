@@ -100,6 +100,38 @@ describe("/api/email/drafts/[id] route contract", () => {
       routeContext(),
     );
 
+    expect(response.status).toBe(400);
     await expectRouteResponseContract(response);
+  });
+
+  it("returns validation errors for missing update fields", async () => {
+    const response = await invokeRouteHandler(
+      PUT,
+      jsonRequest("http://localhost/api/email/drafts/item-1", {}, "PUT"),
+      routeContext(),
+    );
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toMatchObject({
+      error: "Validation failed",
+    });
+  });
+
+  it("returns validation errors for wrong field types", async () => {
+    const response = await invokeRouteHandler(
+      PUT,
+      jsonRequest(
+        "http://localhost/api/email/drafts/item-1",
+        { subject: 123 },
+        "PUT",
+      ),
+      routeContext(),
+    );
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toMatchObject({
+      error: "Validation failed",
+      errors: [{ field: "subject" }],
+    });
   });
 });

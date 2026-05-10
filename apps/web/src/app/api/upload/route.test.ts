@@ -153,6 +153,20 @@ describe("upload route dedupe flow", () => {
     expect(mocks.saveDocument).not.toHaveBeenCalled();
   });
 
+  it("rejects invalid force query values", async () => {
+    const response = await POST(
+      uploadRequest(pdfFile(), "http://localhost/api/upload?force=maybe"),
+    );
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toMatchObject({
+      error: "Validation failed",
+      errors: [{ field: "force" }],
+    });
+    expect(mocks.extractTextFromFile).not.toHaveBeenCalled();
+    expect(mocks.saveDocument).not.toHaveBeenCalled();
+  });
+
   it("returns 409 with existing document metadata when the file hash already exists", async () => {
     mocks.getDocumentByFileHash.mockReturnValueOnce({
       id: "doc-existing",

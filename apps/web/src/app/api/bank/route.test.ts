@@ -38,6 +38,14 @@ function createRequest(body: unknown) {
   });
 }
 
+function malformedRequest() {
+  return new NextRequest("http://localhost/api/bank", {
+    method: "POST",
+    body: "{",
+    headers: { "content-type": "application/json" },
+  });
+}
+
 describe("bank route", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -135,5 +143,42 @@ describe("bank route", () => {
       },
       "user-1",
     );
+  });
+
+  it("rejects malformed JSON on create", async () => {
+    const response = await POST(malformedRequest());
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({
+      error: "Invalid JSON body",
+    });
+    expect(mocks.insertBankEntry).not.toHaveBeenCalled();
+  });
+
+  it("rejects missing required content on create", async () => {
+    const response = await POST(createRequest({ category: "bullet" }));
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toMatchObject({
+      error: "Validation failed",
+      errors: [{ field: "content" }],
+    });
+    expect(mocks.insertBankEntry).not.toHaveBeenCalled();
+  });
+
+  it("rejects wrong category types on create", async () => {
+    const response = await POST(
+      createRequest({
+        category: 123,
+        content: { description: "Built a parser" },
+      }),
+    );
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toMatchObject({
+      error: "Validation failed",
+      errors: [{ field: "category" }],
+    });
+    expect(mocks.insertBankEntry).not.toHaveBeenCalled();
   });
 });

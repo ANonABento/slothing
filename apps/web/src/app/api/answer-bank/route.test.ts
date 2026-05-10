@@ -85,6 +85,39 @@ describe("/api/answer-bank route contract", () => {
       routeContext(),
     );
 
+    expect(response.status).toBe(400);
     await expectRouteResponseContract(response);
+  });
+
+  it("returns validation errors for missing required fields", async () => {
+    const response = await invokeRouteHandler(
+      POST,
+      jsonRequest("http://localhost/api/answer-bank", { answer: "A" }, "POST"),
+      routeContext(),
+    );
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toMatchObject({
+      error: "Validation failed",
+      errors: [{ field: "question" }],
+    });
+  });
+
+  it("returns validation errors for wrong field types", async () => {
+    const response = await invokeRouteHandler(
+      POST,
+      jsonRequest(
+        "http://localhost/api/answer-bank",
+        { question: "Q", answer: 123 },
+        "POST",
+      ),
+      routeContext(),
+    );
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toMatchObject({
+      error: "Validation failed",
+      errors: [{ field: "answer" }],
+    });
   });
 });

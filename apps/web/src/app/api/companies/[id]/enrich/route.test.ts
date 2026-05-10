@@ -144,4 +144,39 @@ describe("company enrichment route", () => {
 
     expect(response.status).toBe(401);
   });
+
+  it("returns 400 for malformed JSON", async () => {
+    const response = await POST(
+      new NextRequest("http://localhost/api/companies/job-1/enrich", {
+        method: "POST",
+        body: "{",
+        headers: { "content-type": "application/json" },
+      }),
+      context,
+    );
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({
+      error: "Invalid JSON body",
+    });
+    expect(mocks.enrichCompany).not.toHaveBeenCalled();
+  });
+
+  it("returns 400 for wrong GitHub org types", async () => {
+    const response = await POST(
+      new NextRequest("http://localhost/api/companies/job-1/enrich", {
+        method: "POST",
+        body: JSON.stringify({ githubOrg: 123 }),
+        headers: { "content-type": "application/json" },
+      }),
+      context,
+    );
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toMatchObject({
+      error: "Validation failed",
+      errors: [{ field: "githubOrg" }],
+    });
+    expect(mocks.enrichCompany).not.toHaveBeenCalled();
+  });
 });
