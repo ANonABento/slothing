@@ -246,6 +246,29 @@ describe("StudioPage", () => {
     ).toBeInTheDocument();
   });
 
+  it("focuses the AI assistant input with Cmd+K", async () => {
+    mockStorage({ "taida:studio:aiPanelCollapsed": "true" });
+    vi.stubGlobal("requestAnimationFrame", (callback: FrameRequestCallback) => {
+      window.setTimeout(() => callback(0), 0);
+      return 0;
+    });
+    renderStudioPage();
+
+    expect(
+      await screen.findByRole("button", {
+        name: "Expand AI assistant panel",
+      }),
+    ).toBeInTheDocument();
+
+    fireEvent.keyDown(window, { key: "k", metaKey: true });
+
+    const textarea = await screen.findByLabelText("Job description");
+    await waitFor(() => expect(textarea).toBe(document.activeElement));
+    expect(
+      screen.getByRole("button", { name: "Collapse AI assistant panel" }),
+    ).toBeInTheDocument();
+  });
+
   it("uses Cmd+P to enter and restore preview-only mode", async () => {
     renderStudioPage();
 

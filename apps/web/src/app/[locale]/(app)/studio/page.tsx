@@ -20,10 +20,20 @@ import { cn } from "@/lib/utils";
 
 function StudioPageContent() {
   const studio = useStudioPageState();
-  const { setExportMenuOpen } = studio;
+  const { setAiPanelCollapsed, setExportMenuOpen, setMobileView } = studio;
   const handleShortcutExport = useCallback(() => {
     setExportMenuOpen(true);
   }, [setExportMenuOpen]);
+  const handleShortcutCommandPalette = useCallback(() => {
+    setAiPanelCollapsed(false);
+    setMobileView("assistant");
+
+    if (typeof window === "undefined") return;
+
+    window.requestAnimationFrame(() => {
+      document.getElementById("studio-jd-input")?.focus();
+    });
+  }, [setAiPanelCollapsed, setMobileView]);
 
   useStudioKeyboardShortcuts({
     onSave: studio.handleSaveManualVersion,
@@ -31,6 +41,7 @@ function StudioPageContent() {
     onToggleAiPanel: studio.toggleAiPanelCollapsed,
     onToggleFilesPanel: studio.toggleFilesPanelCollapsed,
     onTogglePreviewOnly: studio.togglePreviewOnly,
+    onCommandPalette: handleShortcutCommandPalette,
   });
 
   if (studio.loading) {
