@@ -100,4 +100,35 @@ describe("InterviewActiveSession", () => {
       screen.getByRole("button", { name: /Submit what I have/i }),
     ).toBeInTheDocument();
   });
+
+  it("renders a scorecard for the latest answered question", () => {
+    render(
+      <InterviewActiveSession
+        session={{
+          ...baseSession,
+          questions: [
+            ...baseSession.questions,
+            {
+              question: "What would you do next?",
+              category: "situational",
+            },
+          ],
+          currentIndex: 1,
+          answers: [
+            "When the project was delayed, my task was to align the team. I built a plan and the result improved delivery by 20%.",
+          ],
+        }}
+        {...defaultProps}
+      />,
+    );
+
+    expect(
+      screen.getByRole("region", { name: /Answer scorecard/i }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/Filler words/i)).toBeInTheDocument();
+    expect(screen.getByText(/STAR coverage/i)).toBeInTheDocument();
+    expect(screen.getByText(/Quantification/i)).toBeInTheDocument();
+    expect(screen.getByText(/Length vs target/i)).toBeInTheDocument();
+    expect(screen.getByText(/^Pace$/i)).toBeInTheDocument();
+  });
 });
