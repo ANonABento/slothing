@@ -1,11 +1,31 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { NextIntlClientProvider } from "next-intl";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { ToastProvider } from "@/components/ui/toast";
 import { ScannerForm } from "./scanner-form";
 
 describe("ScannerForm", () => {
+  beforeEach(() => {
+    vi.stubGlobal("requestAnimationFrame", (callback: FrameRequestCallback) => {
+      callback(0);
+      return 0;
+    });
+  });
+
   afterEach(() => {
     vi.restoreAllMocks();
+    vi.unstubAllGlobals();
   });
+
+  function renderWithToast() {
+    return render(
+      <NextIntlClientProvider locale="en" messages={{}}>
+        <ToastProvider>
+          <ScannerForm />
+        </ToastProvider>
+      </NextIntlClientProvider>,
+    );
+  }
 
   it("shows a drag-drop upload area by default", () => {
     render(<ScannerForm />);
@@ -63,6 +83,68 @@ describe("ScannerForm", () => {
 
     await waitFor(() => {
       expect(screen.getByText(/Paste manually instead/i)).toBeInTheDocument();
+    });
+  });
+
+  it("keeps JD matching optional when analyzing a resume only", async () => {
+    renderWithToast();
+
+    fireEvent.click(
+      screen.getByRole("button", { name: /Paste text instead/i }),
+    );
+    fireEvent.change(screen.getByLabelText(/Paste your resume text/i), {
+      target: {
+        value:
+          "Frontend engineer with React, TypeScript, accessibility, analytics, and dashboard delivery experience.",
+      },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /Scan Resume/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/Scoring axes/i)).toBeInTheDocument();
+    });
+    expect(screen.queryByText(/JD Match/i)).not.toBeInTheDocument();
+  });
+
+  it("renders JD match results and copies missing keyword chips", async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: { writeText },
+    });
+
+    renderWithToast();
+
+    fireEvent.click(
+      screen.getByRole("button", { name: /Paste text instead/i }),
+    );
+    fireEvent.change(screen.getByLabelText(/Paste your resume text/i), {
+      target: {
+        value:
+          "Frontend engineer with React, accessibility, analytics, and dashboard delivery experience.",
+      },
+    });
+    fireEvent.change(screen.getByLabelText(/Paste job description/i), {
+      target: {
+        value:
+          "This role requires React, TypeScript, AWS, SQL, and customer success collaboration.",
+      },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /Scan Resume/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/JD Match/i)).toBeInTheDocument();
+    });
+
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: /Copy missing keyword typescript/i,
+      }),
+    );
+
+    await waitFor(() => {
+      expect(writeText).toHaveBeenCalledWith("typescript");
+      expect(screen.getByText(/Keyword copied/i)).toBeInTheDocument();
     });
   });
 });
