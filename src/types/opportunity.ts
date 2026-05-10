@@ -39,12 +39,84 @@ export const OPPORTUNITY_STATUSES = [
   "dismissed",
 ] as const;
 
+export const KANBAN_LANE_IDS = [
+  "pending",
+  "saved",
+  "applied",
+  "interviewing",
+  "offer",
+  "closed",
+] as const;
+
+export const CLOSED_SUB_STATUSES = [
+  "rejected",
+  "expired",
+  "dismissed",
+] as const;
+
 export type OpportunityType = (typeof OPPORTUNITY_TYPES)[number];
 export type OpportunitySource = (typeof OPPORTUNITY_SOURCES)[number];
 export type OpportunityRemoteType = (typeof OPPORTUNITY_REMOTE_TYPES)[number];
 export type OpportunityJobType = (typeof OPPORTUNITY_JOB_TYPES)[number];
 export type OpportunityLevel = (typeof OPPORTUNITY_LEVELS)[number];
 export type OpportunityStatus = (typeof OPPORTUNITY_STATUSES)[number];
+export type KanbanLaneId = (typeof KANBAN_LANE_IDS)[number];
+export type ClosedSubStatus = (typeof CLOSED_SUB_STATUSES)[number];
+
+export const KANBAN_LANE_GROUPS: Record<
+  KanbanLaneId,
+  readonly OpportunityStatus[]
+> = {
+  pending: ["pending"],
+  saved: ["saved"],
+  applied: ["applied"],
+  interviewing: ["interviewing"],
+  offer: ["offer"],
+  closed: CLOSED_SUB_STATUSES,
+};
+
+export const DEFAULT_KANBAN_VISIBLE_LANES: readonly KanbanLaneId[] =
+  KANBAN_LANE_IDS;
+
+const STATUS_TO_KANBAN_LANE = Object.fromEntries(
+  KANBAN_LANE_IDS.flatMap((lane) =>
+    KANBAN_LANE_GROUPS[lane].map((status) => [status, lane] as const),
+  ),
+) as Record<OpportunityStatus, KanbanLaneId>;
+
+export function inferLaneFromStatus(status: OpportunityStatus): KanbanLaneId {
+  return STATUS_TO_KANBAN_LANE[status];
+}
+
+export function isClosedSubStatus(
+  status: OpportunityStatus,
+): status is ClosedSubStatus {
+  return (CLOSED_SUB_STATUSES as readonly OpportunityStatus[]).includes(status);
+}
+
+export function normalizeKanbanVisibleLanes(input: unknown): KanbanLaneId[] {
+  const parsedInput =
+    typeof input === "string"
+      ? parseJsonSafely(input)
+      : input;
+  if (!Array.isArray(parsedInput)) {
+    return [...DEFAULT_KANBAN_VISIBLE_LANES];
+  }
+
+  const selected = KANBAN_LANE_IDS.filter((lane) =>
+    parsedInput.includes(lane),
+  );
+
+  return selected.length > 0 ? selected : [...DEFAULT_KANBAN_VISIBLE_LANES];
+}
+
+function parseJsonSafely(value: string): unknown {
+  try {
+    return JSON.parse(value) as unknown;
+  } catch {
+    return null;
+  }
+}
 
 export interface Opportunity {
   id: string;
@@ -121,6 +193,10 @@ export const opportunityRemoteTypeSchema = z.enum(OPPORTUNITY_REMOTE_TYPES);
 export const opportunityJobTypeSchema = z.enum(OPPORTUNITY_JOB_TYPES);
 export const opportunityLevelSchema = z.enum(OPPORTUNITY_LEVELS);
 export const opportunityStatusSchema = z.enum(OPPORTUNITY_STATUSES);
+export const kanbanLaneIdSchema = z.enum(KANBAN_LANE_IDS);
+export const kanbanVisibleLanesSchema = z
+  .array(kanbanLaneIdSchema)
+  .min(1, "At least one kanban lane must remain visible");
 
 const opportunityTeamSizeSchema = z
   .object({

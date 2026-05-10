@@ -8,6 +8,7 @@ import {
   formatOpportunityLocation,
   formatOpportunitySalary,
   getOpportunityFilterOptions,
+  groupOpportunitiesByLane,
   groupOpportunitiesByStatus,
   hasActiveOpportunityFilters,
   parseOptionalNumber,
@@ -306,6 +307,47 @@ describe("groupOpportunitiesByStatus", () => {
       "3",
     ]);
     expect(grouped.applied).toEqual([]);
+  });
+});
+
+describe("groupOpportunitiesByLane", () => {
+  it("aggregates closed statuses into one display lane", () => {
+    const grouped = groupOpportunitiesByLane([
+      ...opportunities,
+      { ...opportunities[0], id: "4", status: "rejected" },
+      { ...opportunities[0], id: "5", status: "expired" },
+      { ...opportunities[0], id: "6", status: "dismissed" },
+    ]);
+
+    expect(Object.keys(grouped)).toEqual([
+      "pending",
+      "saved",
+      "applied",
+      "interviewing",
+      "offer",
+      "closed",
+    ]);
+    expect(grouped.closed.map((opportunity) => opportunity.id)).toEqual([
+      "4",
+      "5",
+      "6",
+    ]);
+  });
+
+  it("keeps hidden lanes empty while preserving fixed keys", () => {
+    const grouped = groupOpportunitiesByLane(opportunities, ["saved"]);
+
+    expect(Object.keys(grouped)).toEqual([
+      "pending",
+      "saved",
+      "applied",
+      "interviewing",
+      "offer",
+      "closed",
+    ]);
+    expect(grouped.saved.map((opportunity) => opportunity.id)).toEqual(["1"]);
+    expect(grouped.pending).toEqual([]);
+    expect(grouped.interviewing).toEqual([]);
   });
 });
 

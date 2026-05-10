@@ -517,6 +517,7 @@ export interface SettingsResponse {
   opportunityReview?: {
     enabled: boolean;
   };
+  kanbanVisibleLanes?: import("@/types/opportunity").KanbanLaneId[];
 }
 
 export interface SettingsUpdateResponse {
