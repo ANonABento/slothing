@@ -1,163 +1,400 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-type JsonRecord = {
-  [key: string]: string | JsonRecord;
+const targetLocales = ["es", "zh-CN", "pt-BR", "hi", "fr", "ja", "ko"] as const;
+
+type TargetLocale = (typeof targetLocales)[number];
+type JsonValue = string | JsonRecord;
+type JsonRecord = { [key: string]: JsonValue };
+type FlatMessages = Record<string, string>;
+
+type ProviderResult = {
+  provider: "anthropic" | "openai";
+  model: string;
+  content: string;
 };
 
-const targetLocales = ["es", "zh-CN", "pt-BR", "hi", "fr", "ja", "ko"];
+const ANTHROPIC_MODEL =
+  process.env.TRANSLATE_ANTHROPIC_MODEL ?? "claude-haiku-4-5-20251001";
+const OPENAI_MODEL = process.env.TRANSLATE_OPENAI_MODEL ?? "gpt-4o-mini";
 
-const localeOverrides: Record<string, Record<string, string>> = {
+const localeNames: Record<TargetLocale, string> = {
+  es: "Spanish (Latin America-neutral)",
+  "zh-CN": "Simplified Chinese",
+  "pt-BR": "Brazilian Portuguese",
+  hi: "Hindi",
+  fr: "French",
+  ja: "Japanese",
+  ko: "Korean",
+};
+
+const localeOverrides: Partial<Record<TargetLocale, Record<string, string>>> = {
   es: {
-    "nav.groups.home": "Inicio",
-    "nav.groups.documents": "Documentos",
     "nav.groups.pipeline": "Pipeline",
-    "nav.groups.prep": "Preparación",
-    "nav.groups.reporting": "Informes",
-    "nav.items.dashboard": "Tablero",
-    "nav.items.documents": "Documentos",
-    "nav.items.answerBank": "Banco de respuestas",
-    "nav.items.studio": "Estudio de documentos",
-    "nav.items.opportunities": "Oportunidades",
-    "nav.items.reviewQueue": "Cola de revisión",
-    "nav.items.calendar": "Calendario",
-    "nav.items.emails": "Plantillas de correo",
-    "nav.items.interview": "Preparación para entrevistas",
-    "nav.items.salary": "Herramientas salariales",
-    "nav.items.analytics": "Analítica",
-    "nav.items.profile": "Perfil",
-    "nav.items.settings": "Configuración",
-    "dashboard.title": "Tablero",
-    "dashboard.actions.addOpportunity": "Agregar oportunidad",
-    "dashboard.actions.uploadDocument": "Subir documento",
-    "opportunities.title": "Oportunidades",
-    "opportunities.description":
-      "Revisa oportunidades guardadas, compara señales de ajuste y mantén el trabajo de postulación en movimiento desde una lista.",
-    "opportunities.addOpportunity": "Agregar oportunidad",
-    "opportunities.filters.panel": "Filtros",
-    "opportunities.filters.type": "Tipo",
-    "opportunities.filters.status": "Estado",
-    "opportunities.filters.source": "Fuente",
-    "opportunities.filters.tags": "Etiquetas",
-    "opportunities.filters.remote": "Tipo remoto",
-    "opportunities.filters.tech": "Stack técnico",
-    "opportunities.filters.searchPlaceholder":
-      "Buscar título, empresa, habilidades",
-    "opportunities.tabs.job": "Roles",
-    "opportunities.tabs.hackathon": "Hackatones",
-    "opportunities.tabs.all": "Todo",
-    "opportunities.status.pending": "Pendiente",
-    "opportunities.status.saved": "Guardado",
-    "opportunities.status.applied": "Postulado",
-    "opportunities.status.interviewing": "Entrevistas",
-    "opportunities.status.offer": "Oferta",
-    "opportunities.status.rejected": "Rechazado",
-    "settings.title": "Configuración",
-    "settings.description":
-      "Configura tu proveedor de IA para analizar currículums y preparar entrevistas.",
-    "settings.loading": "Cargando configuración...",
-    "settings.language.title": "Idioma",
-    "settings.language.description":
-      "Elige el idioma usado para la navegación y las pantallas de la app.",
-    "settings.language.label": "Idioma",
-  },
-  "zh-CN": {
-    "nav.items.dashboard": "仪表板",
-    "nav.items.opportunities": "机会",
-    "nav.items.settings": "设置",
-    "dashboard.title": "仪表板",
-    "opportunities.title": "机会",
-    "settings.title": "设置",
-    "settings.language.title": "语言",
-  },
-  "pt-BR": {
-    "nav.items.dashboard": "Painel",
-    "nav.items.opportunities": "Oportunidades",
-    "nav.items.settings": "Configurações",
-    "dashboard.title": "Painel",
-    "opportunities.title": "Oportunidades",
-    "settings.title": "Configurações",
-    "settings.language.title": "Idioma",
-  },
-  hi: {
-    "nav.items.dashboard": "डैशबोर्ड",
-    "nav.items.opportunities": "अवसर",
-    "nav.items.settings": "सेटिंग्स",
-    "dashboard.title": "डैशबोर्ड",
-    "opportunities.title": "अवसर",
-    "settings.title": "सेटिंग्स",
-    "settings.language.title": "भाषा",
-  },
-  fr: {
-    "nav.items.dashboard": "Tableau de bord",
-    "nav.items.opportunities": "Opportunités",
-    "nav.items.settings": "Paramètres",
-    "dashboard.title": "Tableau de bord",
-    "opportunities.title": "Opportunités",
-    "settings.title": "Paramètres",
-    "settings.language.title": "Langue",
-  },
-  ja: {
-    "nav.items.dashboard": "ダッシュボード",
-    "nav.items.opportunities": "機会",
-    "nav.items.settings": "設定",
-    "dashboard.title": "ダッシュボード",
-    "opportunities.title": "機会",
-    "settings.title": "設定",
-    "settings.language.title": "言語",
-  },
-  ko: {
-    "nav.items.dashboard": "대시보드",
-    "nav.items.opportunities": "기회",
-    "nav.items.settings": "설정",
-    "dashboard.title": "대시보드",
-    "opportunities.title": "기회",
-    "settings.title": "설정",
-    "settings.language.title": "언어",
   },
 };
 
-function applyOverrides(
-  source: JsonRecord,
-  overrides: Record<string, string>,
-  prefix = "",
-): JsonRecord {
-  return Object.fromEntries(
-    Object.entries(source).map(([key, value]) => {
-      const pathKey = prefix ? `${prefix}.${key}` : key;
+const passthroughPaths = new Set([
+  "nav.brand",
+  "settings.language.options.en",
+  "settings.language.options.es",
+  "settings.language.options.zh-CN",
+  "settings.language.options.pt-BR",
+  "settings.language.options.hi",
+  "settings.language.options.fr",
+  "settings.language.options.ja",
+  "settings.language.options.ko",
+]);
 
-      if (typeof value === "string") {
-        return [key, overrides[pathKey] ?? value];
+const brandTerms = [
+  "Slothing",
+  "ATS",
+  "GitHub",
+  "WaterlooWorks",
+  "LinkedIn",
+  "Indeed",
+  "Greenhouse",
+  "Lever",
+  "Devpost",
+  "URL",
+  "Kanban",
+  "LLM",
+];
+
+function parseArgs(argv: string[]) {
+  const localesArg = argv.find((arg) => arg.startsWith("--locales="));
+  const dryRun = argv.includes("--dry-run");
+  const locales = localesArg
+    ? localesArg
+        .slice("--locales=".length)
+        .split(",")
+        .map((locale) => locale.trim())
+        .filter(Boolean)
+    : [...targetLocales];
+
+  for (const locale of locales) {
+    if (!targetLocales.includes(locale as TargetLocale)) {
+      throw new Error(
+        `Unsupported locale "${locale}". Expected one of: ${targetLocales.join(", ")}`,
+      );
+    }
+  }
+
+  return { dryRun, locales: locales as TargetLocale[] };
+}
+
+function flattenMessages(record: JsonRecord, prefix = ""): FlatMessages {
+  const entries: FlatMessages = {};
+
+  for (const [key, value] of Object.entries(record)) {
+    if (key === "_meta") continue;
+
+    const messageKey = prefix ? `${prefix}.${key}` : key;
+    if (typeof value === "string") {
+      entries[messageKey] = value;
+    } else {
+      Object.assign(entries, flattenMessages(value, messageKey));
+    }
+  }
+
+  return entries;
+}
+
+function unflattenMessages(messages: FlatMessages): JsonRecord {
+  const root: JsonRecord = {};
+
+  for (const [messageKey, value] of Object.entries(messages)) {
+    const parts = messageKey.split(".");
+    let cursor = root;
+
+    parts.forEach((part, index) => {
+      if (index === parts.length - 1) {
+        cursor[part] = value;
+        return;
       }
 
-      return [key, applyOverrides(value, overrides, pathKey)];
+      const next = cursor[part];
+      if (!next || typeof next === "string") {
+        cursor[part] = {};
+      }
+      cursor = cursor[part] as JsonRecord;
+    });
+  }
+
+  return root;
+}
+
+function buildPrompt(locale: TargetLocale, entries: FlatMessages) {
+  const protectedEntries = Object.fromEntries(
+    Object.entries(entries).filter(([key]) => passthroughPaths.has(key)),
+  );
+
+  return [
+    `Translate this product UI message catalog from English into ${localeNames[locale]}.`,
+    "Return one valid JSON object only. Do not include markdown fences or prose.",
+    "The returned JSON object must have exactly the same keys as the input object.",
+    "Preserve ICU MessageFormat argument names and syntax. You may translate human text inside plural/select branches, but keep placeholders like {name}, {count}, {percentage}, {provider}, {date}, {min}-{max}, {label}, {value}, {lane}, {title}, {shown}, and {total} usable.",
+    `Leave these brand and product terms untranslated: ${brandTerms.join(", ")}.`,
+    `Leave these exact key/value pairs unchanged: ${JSON.stringify(protectedEntries)}.`,
+    "Use concise, natural in-product UI language, not literal word-for-word phrasing.",
+    "Input JSON:",
+    JSON.stringify(entries, null, 2),
+  ].join("\n\n");
+}
+
+async function translateWithAnthropic(
+  locale: TargetLocale,
+  entries: FlatMessages,
+  retryPrompt?: string,
+): Promise<ProviderResult> {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) {
+    throw new Error("ANTHROPIC_API_KEY is not configured");
+  }
+
+  const response = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "anthropic-version": "2023-06-01",
+      "content-type": "application/json",
+      "x-api-key": apiKey,
+    },
+    body: JSON.stringify({
+      model: ANTHROPIC_MODEL,
+      max_tokens: 8192,
+      temperature: 0.2,
+      system:
+        "You are a professional software localization translator. Return strict JSON only.",
+      messages: [
+        {
+          role: "user",
+          content: retryPrompt ?? buildPrompt(locale, entries),
+        },
+      ],
     }),
+  });
+
+  if (!response.ok) {
+    throw new Error(
+      `Anthropic translation failed (${response.status}): ${await response.text()}`,
+    );
+  }
+
+  const payload = (await response.json()) as {
+    content?: Array<{ type: string; text?: string }>;
+  };
+  const content = payload.content
+    ?.filter((block) => block.type === "text" && block.text)
+    .map((block) => block.text)
+    .join("\n");
+
+  if (!content) throw new Error("Anthropic returned no text content");
+  return { provider: "anthropic", model: ANTHROPIC_MODEL, content };
+}
+
+async function translateWithOpenAI(
+  locale: TargetLocale,
+  entries: FlatMessages,
+  retryPrompt?: string,
+): Promise<ProviderResult> {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) {
+    throw new Error("OPENAI_API_KEY is not configured");
+  }
+
+  const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      authorization: `Bearer ${apiKey}`,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      model: OPENAI_MODEL,
+      temperature: 0.2,
+      response_format: { type: "json_object" },
+      messages: [
+        {
+          role: "system",
+          content:
+            "You are a professional software localization translator. Return strict JSON only.",
+        },
+        { role: "user", content: retryPrompt ?? buildPrompt(locale, entries) },
+      ],
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(
+      `OpenAI translation failed (${response.status}): ${await response.text()}`,
+    );
+  }
+
+  const payload = (await response.json()) as {
+    choices?: Array<{ message?: { content?: string } }>;
+  };
+  const content = payload.choices?.[0]?.message?.content;
+
+  if (!content) throw new Error("OpenAI returned no message content");
+  return { provider: "openai", model: OPENAI_MODEL, content };
+}
+
+async function translateBatch(locale: TargetLocale, entries: FlatMessages) {
+  const errors: string[] = [];
+  const runProvider = process.env.ANTHROPIC_API_KEY
+    ? translateWithAnthropic
+    : translateWithOpenAI;
+
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    const retryPrompt =
+      attempt === 0
+        ? undefined
+        : `${buildPrompt(locale, entries)}\n\nYour previous response was invalid. Return JSON only, with no surrounding prose, and preserve exactly the same key set.`;
+
+    try {
+      const result = await runProvider(locale, entries, retryPrompt);
+      return {
+        provider: result.provider,
+        model: result.model,
+        messages: parseTranslatedJson(result.content),
+      };
+    } catch (error) {
+      errors.push(error instanceof Error ? error.message : String(error));
+    }
+  }
+
+  throw new Error(`Could not translate ${locale}: ${errors.join(" | ")}`);
+}
+
+function parseTranslatedJson(content: string): FlatMessages {
+  const trimmed = content
+    .trim()
+    .replace(/^```json\s*/u, "")
+    .replace(/```$/u, "");
+  const parsed = JSON.parse(trimmed) as unknown;
+
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+    throw new Error("Translated payload is not a JSON object");
+  }
+
+  for (const [key, value] of Object.entries(parsed)) {
+    if (typeof key !== "string" || typeof value !== "string") {
+      throw new Error(
+        `Translated payload contains a non-string value at ${key}`,
+      );
+    }
+  }
+
+  return parsed as FlatMessages;
+}
+
+function extractArgumentNames(message: string) {
+  return Array.from(message.matchAll(/\{\s*([\w-]+)(?=[,}\s])/gu)).map(
+    (match) => match[1],
   );
 }
 
+function validateTranslated(source: FlatMessages, translated: FlatMessages) {
+  const sourceKeys = Object.keys(source).sort();
+  const translatedKeys = Object.keys(translated).sort();
+
+  if (sourceKeys.join("\0") !== translatedKeys.join("\0")) {
+    const sourceSet = new Set(sourceKeys);
+    const translatedSet = new Set(translatedKeys);
+    const missing = sourceKeys.filter((key) => !translatedSet.has(key));
+    const extra = translatedKeys.filter((key) => !sourceSet.has(key));
+    throw new Error(
+      `Translated key set mismatch. Missing: ${missing.join(", ") || "none"}. Extra: ${extra.join(", ") || "none"}.`,
+    );
+  }
+
+  for (const [key, sourceValue] of Object.entries(source)) {
+    const translatedValue = translated[key];
+
+    for (const argumentName of extractArgumentNames(sourceValue)) {
+      if (!translatedValue.includes(`{${argumentName}`)) {
+        throw new Error(`Missing ICU argument {${argumentName}} in ${key}`);
+      }
+    }
+
+    for (const brand of brandTerms) {
+      if (sourceValue.includes(brand) && !translatedValue.includes(brand)) {
+        throw new Error(`Brand term ${brand} was not preserved in ${key}`);
+      }
+    }
+
+    if (passthroughPaths.has(key) && translatedValue !== sourceValue) {
+      throw new Error(`Passthrough key ${key} changed during translation`);
+    }
+  }
+}
+
+function applyFinalOverrides(
+  locale: TargetLocale,
+  source: FlatMessages,
+  translated: FlatMessages,
+) {
+  const withPassthroughs = { ...translated };
+
+  for (const key of passthroughPaths) {
+    withPassthroughs[key] = source[key];
+  }
+
+  return { ...withPassthroughs, ...(localeOverrides[locale] ?? {}) };
+}
+
+function countChanged(source: FlatMessages, translated: FlatMessages) {
+  return Object.entries(source).filter(
+    ([key, value]) => translated[key] !== value,
+  ).length;
+}
+
 async function main() {
+  const { dryRun, locales } = parseArgs(process.argv.slice(2));
   const messagesDir = path.join(process.cwd(), "src/messages");
   const en = JSON.parse(
     await readFile(path.join(messagesDir, "en.json"), "utf8"),
   ) as JsonRecord;
+  const source = flattenMessages(en);
+
+  if (!process.env.ANTHROPIC_API_KEY && !process.env.OPENAI_API_KEY) {
+    throw new Error(
+      "Set ANTHROPIC_API_KEY or OPENAI_API_KEY before running translate:messages. Refusing to write English fallback copies.",
+    );
+  }
 
   await mkdir(messagesDir, { recursive: true });
 
-  for (const locale of targetLocales) {
-    const translated = applyOverrides(en, localeOverrides[locale] ?? {});
+  for (const locale of locales) {
+    console.log(`Translating ${locale}...`);
+    const result = await translateBatch(locale, source);
+    const translated = applyFinalOverrides(locale, source, result.messages);
+    validateTranslated(source, translated);
+
     const payload = {
       _meta: {
         note: "Auto-translated, needs human review.",
-        source: "scripted-fallback",
+        source: `llm-${result.provider}`,
+        model: result.model,
         generatedAt: new Date().toISOString(),
       },
-      ...translated,
+      ...unflattenMessages(translated),
     };
-    await writeFile(
-      path.join(messagesDir, `${locale}.json`),
-      `${JSON.stringify(payload, null, 2)}\n`,
-    );
+
+    const nextContent = `${JSON.stringify(payload, null, 2)}\n`;
+    const localePath = path.join(messagesDir, `${locale}.json`);
+
+    if (dryRun) {
+      console.log(
+        `${locale}: ${countChanged(source, translated)} of ${Object.keys(source).length} leaf strings differ from English.`,
+      );
+      continue;
+    }
+
+    await writeFile(localePath, nextContent);
   }
 }
 
-void main();
+void main().catch((error) => {
+  console.error(error instanceof Error ? error.message : error);
+  process.exitCode = 1;
+});

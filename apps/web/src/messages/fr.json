@@ -1,250 +1,251 @@
 {
   "_meta": {
     "note": "Auto-translated, needs human review.",
-    "source": "scripted-fallback",
-    "generatedAt": "2026-05-10T08:45:25.945Z"
+    "source": "llm-anthropic",
+    "model": "claude-code",
+    "generatedAt": "2026-05-10T09:52:09.947Z"
   },
   "common": {
-    "cancel": "Cancel",
-    "clear": "Clear",
-    "clearAll": "Clear all",
-    "filters": "Filters",
-    "import": "Import",
-    "loading": "Loading",
+    "cancel": "Annuler",
+    "clear": "Effacer",
+    "clearAll": "Tout effacer",
+    "filters": "Filtres",
+    "import": "Importer",
+    "loading": "Chargement",
     "openSource": "Open source",
-    "save": "Save",
-    "search": "Search",
-    "selectLocale": "Select locale",
-    "show": "Show",
-    "tryAgain": "Try Again"
+    "save": "Enregistrer",
+    "search": "Rechercher",
+    "selectLocale": "Sélectionner la langue",
+    "show": "Afficher",
+    "tryAgain": "Réessayer"
   },
   "nav": {
     "brand": "Slothing",
-    "tagline": "Job search workspace",
-    "skipToMain": "Skip to main content",
-    "mainContent": "Main content",
-    "mainNavigation": "Main navigation",
-    "openMenu": "Open navigation menu",
-    "closeMenu": "Close navigation menu",
-    "collapse": "Collapse navigation",
-    "expand": "Expand navigation",
-    "profilePhoto": "Profile photo",
-    "llmConfigured": "LLM configured ({provider})",
-    "llmNotConfigured": "LLM not configured",
+    "tagline": "Espace de recherche d'emploi",
+    "skipToMain": "Aller au contenu principal",
+    "mainContent": "Contenu principal",
+    "mainNavigation": "Navigation principale",
+    "openMenu": "Ouvrir le menu de navigation",
+    "closeMenu": "Fermer le menu de navigation",
+    "collapse": "Réduire la navigation",
+    "expand": "Développer la navigation",
+    "profilePhoto": "Photo de profil",
+    "llmConfigured": "LLM configuré ({provider})",
+    "llmNotConfigured": "LLM non configuré",
     "groups": {
-      "home": "Home",
+      "home": "Accueil",
       "documents": "Documents",
       "pipeline": "Pipeline",
-      "prep": "Prep",
-      "reporting": "Reporting"
+      "prep": "Préparation",
+      "reporting": "Rapports"
     },
     "items": {
       "dashboard": "Tableau de bord",
       "documents": "Documents",
-      "answerBank": "Answer Bank",
-      "studio": "Document Studio",
+      "answerBank": "Banque de réponses",
+      "studio": "Studio de documents",
       "opportunities": "Opportunités",
-      "reviewQueue": "Review Queue",
-      "calendar": "Calendar",
-      "emails": "Email Templates",
-      "interview": "Interview Prep",
-      "salary": "Salary Tools",
-      "analytics": "Analytics",
-      "profile": "Profile",
+      "reviewQueue": "File de révision",
+      "calendar": "Calendrier",
+      "emails": "Modèles d'e-mail",
+      "interview": "Préparation d'entretien",
+      "salary": "Outils de salaire",
+      "analytics": "Analyses",
+      "profile": "Profil",
       "settings": "Paramètres"
     }
   },
   "dashboard": {
     "title": "Tableau de bord",
     "actions": {
-      "addOpportunity": "Add opportunity",
-      "uploadDocument": "Upload document",
-      "signIn": "Sign In"
+      "addOpportunity": "Ajouter une opportunité",
+      "uploadDocument": "Téléverser un document",
+      "signIn": "Se connecter"
     },
     "errors": {
-      "authRequired": "Sign in to access your dashboard.",
-      "loadTitle": "Could not load dashboard",
-      "loadFallback": "Please refresh the page and try again.",
-      "unavailable": "Dashboard unavailable",
-      "signInRequired": "Sign in required",
-      "loadData": "We couldn't load your dashboard data.",
-      "skipTitle": "Could not skip setup",
-      "skipFallback": "Please try again."
+      "authRequired": "Connectez-vous pour accéder à votre tableau de bord.",
+      "loadTitle": "Impossible de charger le tableau de bord",
+      "loadFallback": "Veuillez actualiser la page et réessayer.",
+      "unavailable": "Tableau de bord indisponible",
+      "signInRequired": "Connexion requise",
+      "loadData": "Impossible de charger les données de votre tableau de bord.",
+      "skipTitle": "Impossible d'ignorer la configuration",
+      "skipFallback": "Veuillez réessayer."
     },
     "greeting": {
-      "onboardingNamed": "Welcome, {name}. Let's set up your workspace.",
-      "onboarding": "Let's set up your workspace.",
-      "activeNamed": "Welcome back, {name}. Here's what needs your attention.",
-      "active": "Here's what needs your attention."
+      "onboardingNamed": "Bienvenue, {name}. Configurons votre espace de travail.",
+      "onboarding": "Configurons votre espace de travail.",
+      "activeNamed": "Bon retour, {name}. Voici ce qui requiert votre attention.",
+      "active": "Voici ce qui requiert votre attention."
     },
     "onboarding": {
-      "startHere": "Start here",
-      "title": "Build your workspace in three steps",
-      "description": "Slothing works best once it has your resume, a target role, and a place to draft tailored documents.",
-      "complete": "of {total} complete",
-      "unlocks": "What unlocks next",
-      "afterStep": "After this step",
-      "skip": "Skip setup for now",
-      "recommended": "Recommended"
+      "startHere": "Commencez ici",
+      "title": "Construisez votre espace de travail en trois étapes",
+      "description": "Slothing fonctionne mieux avec votre CV, un poste cible et un endroit pour rédiger des documents personnalisés.",
+      "complete": "sur {total} terminées",
+      "unlocks": "Ce qui est débloqué ensuite",
+      "afterStep": "Après cette étape",
+      "skip": "Ignorer la configuration pour l'instant",
+      "recommended": "Recommandé"
     },
     "stats": {
-      "readiness": "Readiness",
+      "readiness": "Préparation",
       "documents": "Documents",
-      "tailoredDocs": "Tailored docs",
+      "tailoredDocs": "Documents personnalisés",
       "pipeline": "Pipeline"
     },
     "today": {
-      "title": "Today",
-      "description": "Three focused actions, then you are done.",
-      "uploadResumeTitle": "Upload your resume",
-      "uploadResumeContext": "Create the source material for tailored applications.",
-      "uploadResumeAction": "Upload resume",
-      "reviewNewTitle": "Review {count, plural, one {# new opportunity} other {# new opportunities}}",
-      "reviewNewContext": "Decide what belongs in your pipeline.",
-      "reviewNewAction": "Open queue",
-      "completeProfileTitle": "Complete your profile",
-      "completeProfileContext": "{percentage}% ready for tailoring.",
-      "completeProfileAction": "Improve profile",
-      "prepareInterviewsTitle": "Prepare for interviews",
-      "prepareInterviewsContext": "Turn active opportunities into practice prompts.",
-      "prepareInterviewsAction": "Prep now",
-      "draftFollowUpTitle": "Draft a follow-up",
-      "draftFollowUpContext": "Keep recruiters warm with a reusable email.",
-      "draftFollowUpAction": "Open templates",
-      "tailoredDocumentTitle": "Create a tailored document",
-      "tailoredDocumentContext": "{count, plural, one {# document} other {# documents}} ready to reuse.",
-      "tailoredDocumentAction": "Open Studio"
+      "title": "Aujourd'hui",
+      "description": "Trois actions ciblées, puis c'est terminé.",
+      "uploadResumeTitle": "Téléverser votre CV",
+      "uploadResumeContext": "Créez la base de vos candidatures personnalisées.",
+      "uploadResumeAction": "Téléverser le CV",
+      "reviewNewTitle": "Examiner {count, plural, one {# nouvelle opportunité} other {# nouvelles opportunités}}",
+      "reviewNewContext": "Décidez de ce qui mérite votre pipeline.",
+      "reviewNewAction": "Ouvrir la file",
+      "completeProfileTitle": "Compléter votre profil",
+      "completeProfileContext": "{percentage} % prêt pour la personnalisation.",
+      "completeProfileAction": "Améliorer le profil",
+      "prepareInterviewsTitle": "Préparer vos entretiens",
+      "prepareInterviewsContext": "Transformez les opportunités actives en questions de pratique.",
+      "prepareInterviewsAction": "Préparer maintenant",
+      "draftFollowUpTitle": "Rédiger une relance",
+      "draftFollowUpContext": "Gardez le contact avec les recruteurs grâce à un e-mail réutilisable.",
+      "draftFollowUpAction": "Ouvrir les modèles",
+      "tailoredDocumentTitle": "Créer un document personnalisé",
+      "tailoredDocumentContext": "{count, plural, one {# document} other {# documents}} prêts à réutiliser.",
+      "tailoredDocumentAction": "Ouvrir le Studio"
     },
     "readiness": {
-      "description": "Your application materials at a glance.",
-      "profile": "Profile",
-      "strongFoundation": "Strong foundation",
-      "needsDetail": "Needs detail",
-      "documentsDetail": "{count, plural, one {# file} other {# files}} in your bank",
-      "tailoredDetail": "{count, plural, one {# resume} other {# resumes}} built"
+      "description": "Vos supports de candidature en un coup d'œil.",
+      "profile": "Profil",
+      "strongFoundation": "Base solide",
+      "needsDetail": "Besoin de détails",
+      "documentsDetail": "{count, plural, one {# fichier} other {# fichiers}} dans votre banque",
+      "tailoredDetail": "{count, plural, one {# CV} other {# CV}} créés"
     },
     "pipeline": {
       "title": "Pipeline",
-      "description": "Where your active opportunities stand.",
-      "empty": "Add opportunities to see your pipeline."
+      "description": "Où en sont vos opportunités actives.",
+      "empty": "Ajoutez des opportunités pour voir votre pipeline."
     },
     "recent": {
-      "title": "Recent opportunities",
-      "description": "The latest items saved to your workspace.",
-      "viewAll": "View all",
-      "emptyTitle": "No opportunities yet",
-      "emptyDescription": "Save or import opportunities to start tracking them here."
+      "title": "Opportunités récentes",
+      "description": "Les derniers éléments enregistrés dans votre espace.",
+      "viewAll": "Tout afficher",
+      "emptyTitle": "Aucune opportunité pour l'instant",
+      "emptyDescription": "Enregistrez ou importez des opportunités pour commencer à les suivre ici."
     }
   },
   "opportunities": {
     "title": "Opportunités",
-    "description": "Review saved opportunities, compare fit signals, and keep application work moving from one list.",
-    "viewMode": "Opportunity view mode",
-    "list": "List",
+    "description": "Examinez les opportunités enregistrées, comparez les signaux de pertinence et faites avancer vos candidatures depuis une seule liste.",
+    "viewMode": "Mode d'affichage des opportunités",
+    "list": "Liste",
     "kanban": "Kanban",
-    "addOpportunity": "Add Opportunity",
+    "addOpportunity": "Ajouter une opportunité",
     "filters": {
-      "panel": "Filters",
+      "panel": "Filtres",
       "type": "Type",
-      "status": "Status",
+      "status": "Statut",
       "source": "Source",
-      "tags": "Tags",
-      "remote": "Remote type",
-      "tech": "Tech stack",
-      "allTags": "All tags",
-      "anyStack": "Any stack",
-      "searchPlaceholder": "Search title, company, skills",
-      "searchAria": "Search opportunities",
-      "sortAria": "Sort opportunities",
-      "sortBy": "Sort by {label}",
-      "activeSearch": "Search: {value}",
-      "activeType": "Type: {value}",
-      "activeStatus": "Status: {value}",
-      "activeSource": "Source: {value}",
-      "activeRemote": "Remote: {value}",
-      "activeTag": "Tag: {value}",
-      "activeTech": "Tech: {value}",
-      "remove": "Remove {label} filter"
+      "tags": "Étiquettes",
+      "remote": "Type de télétravail",
+      "tech": "Stack technique",
+      "allTags": "Toutes les étiquettes",
+      "anyStack": "Toute stack",
+      "searchPlaceholder": "Rechercher un titre, une entreprise, des compétences",
+      "searchAria": "Rechercher des opportunités",
+      "sortAria": "Trier les opportunités",
+      "sortBy": "Trier par {label}",
+      "activeSearch": "Recherche : {value}",
+      "activeType": "Type : {value}",
+      "activeStatus": "Statut : {value}",
+      "activeSource": "Source : {value}",
+      "activeRemote": "Télétravail : {value}",
+      "activeTag": "Étiquette : {value}",
+      "activeTech": "Tech : {value}",
+      "remove": "Supprimer le filtre {label}"
     },
     "tabs": {
-      "job": "Roles",
+      "job": "Postes",
       "hackathon": "Hackathons",
-      "all": "All"
+      "all": "Tout"
     },
     "status": {
-      "all": "All statuses",
-      "pending": "Pending",
-      "saved": "Saved",
-      "applied": "Applied",
-      "interviewing": "Interviewing",
-      "offer": "Offer",
-      "rejected": "Rejected",
-      "expired": "Expired",
-      "dismissed": "Dismissed"
+      "all": "Tous les statuts",
+      "pending": "En attente",
+      "saved": "Enregistré",
+      "applied": "Postulé",
+      "interviewing": "En entretien",
+      "offer": "Offre",
+      "rejected": "Refusé",
+      "expired": "Expiré",
+      "dismissed": "Ignoré"
     },
     "types": {
-      "job": "Job",
+      "job": "Poste",
       "hackathon": "Hackathon"
     },
     "sources": {
-      "all": "All sources",
+      "all": "Toutes les sources",
       "waterlooworks": "WaterlooWorks",
       "linkedin": "LinkedIn",
       "indeed": "Indeed",
       "greenhouse": "Greenhouse",
       "lever": "Lever",
       "devpost": "Devpost",
-      "manual": "Manual",
+      "manual": "Manuel",
       "url": "URL"
     },
     "remote": {
-      "all": "Any remote type",
-      "remote": "Remote",
-      "hybrid": "Hybrid",
-      "onsite": "Onsite"
+      "all": "Tout type de télétravail",
+      "remote": "Télétravail",
+      "hybrid": "Hybride",
+      "onsite": "Sur site"
     },
     "sort": {
-      "deadline": "Deadline",
-      "scrapedAt": "Date scraped",
-      "company": "Company",
-      "salary": "Salary"
+      "deadline": "Échéance",
+      "scrapedAt": "Date d'extraction",
+      "company": "Entreprise",
+      "salary": "Salaire"
     },
-    "summary": "Showing {shown} of {total} opportunities",
+    "summary": "Affichage de {shown} sur {total} opportunités",
     "counts": {
-      "jobs": "{count, plural, one {# job} other {# jobs}}",
+      "jobs": "{count, plural, one {# poste} other {# postes}}",
       "hackathons": "{count, plural, one {# hackathon} other {# hackathons}}",
-      "pending": "{count, plural, one {# pending} other {# pending}}"
+      "pending": "{count, plural, one {# en attente} other {# en attente}}"
     },
     "empty": {
-      "noMatchesTitle": "No opportunities match your filters",
-      "noMatchesDescription": "Try widening or clearing filters to see more.",
-      "clearFilters": "Clear filters"
+      "noMatchesTitle": "Aucune opportunité ne correspond à vos filtres",
+      "noMatchesDescription": "Essayez d'élargir ou d'effacer les filtres pour en voir davantage.",
+      "clearFilters": "Effacer les filtres"
     },
     "meta": {
-      "due": "Due {date}",
-      "noDeadline": "No deadline",
-      "team": "Team {min}-{max}",
-      "updateStatus": "Update status for {title}"
+      "due": "Échéance le {date}",
+      "noDeadline": "Aucune échéance",
+      "team": "Équipe {min}-{max}",
+      "updateStatus": "Mettre à jour le statut de {title}"
     },
     "kanbanBoard": {
-      "region": "Opportunity kanban board",
-      "roleDescription": "kanban board",
-      "laneAria": "{lane} opportunities",
-      "dropHere": "Drop opportunities here",
-      "hidden": "{count} in hidden lanes",
+      "region": "Tableau Kanban des opportunités",
+      "roleDescription": "tableau Kanban",
+      "laneAria": "Opportunités {lane}",
+      "dropHere": "Déposez les opportunités ici",
+      "hidden": "{count} dans des colonnes masquées",
       "hiddenSummary": "{label} · {count}",
-      "moveClosedTitle": "Move to Closed",
-      "moveClosedDescription": "Pick the final state for {title}."
+      "moveClosedTitle": "Déplacer vers Clôturé",
+      "moveClosedDescription": "Choisissez l'état final de {title}."
     }
   },
   "settings": {
     "title": "Paramètres",
-    "description": "Configure your AI provider for resume parsing and interview preparation.",
-    "loading": "Loading settings...",
+    "description": "Configurez votre fournisseur d'IA pour l'analyse de CV et la préparation d'entretien.",
+    "loading": "Chargement des paramètres...",
     "language": {
       "title": "Langue",
-      "description": "Choose the language used for navigation and app screens.",
-      "label": "Language",
+      "description": "Choisissez la langue utilisée pour la navigation et les écrans de l'application.",
+      "label": "Langue",
       "options": {
         "en": "English",
         "es": "Español",
@@ -258,8 +259,8 @@
     }
   },
   "notFound": {
-    "title": "Page not found",
-    "description": "We couldn't find that page.",
-    "action": "Go to dashboard"
+    "title": "Page introuvable",
+    "description": "Nous n'avons pas trouvé cette page.",
+    "action": "Aller au tableau de bord"
   }
 }

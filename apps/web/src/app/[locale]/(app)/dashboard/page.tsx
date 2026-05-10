@@ -306,6 +306,7 @@ function NewUserDashboard({
   onSkip: () => void;
   skipSubmitting: boolean;
 }) {
+  const t = useTranslations("dashboard");
   const steps = BASIC_ONBOARDING_STEPS;
   const completedCount = countCompletedSteps(steps, stats);
   const activeStepIndex = getActiveStepIndex(steps, stats);
@@ -314,7 +315,7 @@ function NewUserDashboard({
   return (
     <div className="space-y-5">
       <DashboardHeader
-        description={getDashboardGreeting(firstName, "onboarding")}
+        description={getDashboardGreeting(firstName, "onboarding", t)}
         showActions={false}
       />
       <div className={pageGridClasses.primaryAside}>
@@ -322,21 +323,20 @@ function NewUserDashboard({
           <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div className="min-w-0">
               <p className="text-xs font-semibold uppercase text-primary">
-                Start here
+                {t("onboarding.startHere")}
               </p>
               <h2 className="mt-1 text-xl font-semibold">
-                Build your workspace in three steps
+                {t("onboarding.title")}
               </h2>
               <p className="mt-2 max-w-prose text-sm leading-6 text-muted-foreground">
-                Slothing works best once it has your resume, a target role, and
-                a place to draft tailored documents.
+                {t("onboarding.description")}
               </p>
             </div>
             <div className="inline-flex w-fit shrink-0 items-center gap-2 rounded-lg border bg-background/50 px-3 py-2 text-xs font-medium text-muted-foreground">
               <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[11px] font-semibold text-primary-foreground">
                 {completedCount}
               </span>
-              of {steps.length} complete
+              {t("onboarding.complete", { total: steps.length })}
             </div>
           </div>
 
@@ -357,13 +357,13 @@ function NewUserDashboard({
           <div className="mb-5 flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
             <Target className="h-5 w-5" />
           </div>
-          <h2 className="text-lg font-semibold">What unlocks next</h2>
+          <h2 className="text-lg font-semibold">{t("onboarding.unlocks")}</h2>
           <p className="mt-2 text-sm leading-6 text-muted-foreground">
             {getUnlockPreviewIntro(activeStep)}
           </p>
           <div className="mt-6 border-t pt-5">
             <h3 className="text-sm font-medium text-muted-foreground">
-              After this step
+              {t("onboarding.afterStep")}
             </h3>
           </div>
           <div className="mt-3 space-y-3">
@@ -385,7 +385,7 @@ function NewUserDashboard({
               disabled={skipSubmitting}
               aria-label="Skip onboarding"
             >
-              Skip setup for now
+              {t("onboarding.skip")}
             </Button>
           </div>
         </PagePanel>
@@ -405,6 +405,7 @@ function SetupStep({
   active?: boolean;
   complete?: boolean;
 }) {
+  const t = useTranslations("dashboard");
   const Icon = step.icon;
 
   return (
@@ -441,7 +442,7 @@ function SetupStep({
             : "border bg-card text-foreground"
         }`}
       >
-        {active ? "Recommended" : step.actionLabel}
+        {active ? t("onboarding.recommended") : step.actionLabel}
         {!active ? <ArrowRight className="h-3.5 w-3.5" /> : null}
       </span>
     </Link>
@@ -481,13 +482,14 @@ function ActiveDashboard({
   recentJobs: RecentJob[];
   firstName: string | null;
 }) {
-  const actions = buildTodayActions(stats, recentJobs);
+  const t = useTranslations("dashboard");
+  const actions = buildTodayActions(stats, recentJobs, t);
   const totalPipeline = getPipelineTotal(stats.jobsByStatus);
 
   return (
     <div className="space-y-5">
       <DashboardHeader
-        description={getDashboardGreeting(firstName, "active")}
+        description={getDashboardGreeting(firstName, "active", t)}
       />
       <Suspense
         fallback={
@@ -529,15 +531,24 @@ function DashboardStatStrip({
   stats: DashboardStats;
   totalPipeline: number;
 }) {
+  const t = useTranslations("dashboard");
   const items = [
     {
-      label: "Readiness",
+      label: t("stats.readiness"),
       value: `${stats.profileCompleteness.percentage}%`,
       icon: Target,
     },
-    { label: "Documents", value: stats.documentsCount, icon: FileText },
-    { label: "Tailored docs", value: stats.resumesGenerated, icon: FileText },
-    { label: "Pipeline", value: totalPipeline, icon: Briefcase },
+    {
+      label: t("stats.documents"),
+      value: stats.documentsCount,
+      icon: FileText,
+    },
+    {
+      label: t("stats.tailoredDocs"),
+      value: stats.resumesGenerated,
+      icon: FileText,
+    },
+    { label: t("stats.pipeline"), value: totalPipeline, icon: Briefcase },
   ];
 
   return (
@@ -576,16 +587,17 @@ interface TodayAction {
 function buildTodayActions(
   stats: DashboardStats,
   recentJobs: RecentJob[],
+  t: ReturnType<typeof useTranslations<"dashboard">>,
 ): TodayAction[] {
   const actions: TodayAction[] = [];
 
   if (stats.documentsCount === 0) {
     actions.push({
       icon: Upload,
-      title: "Upload your resume",
-      context: "Create the source material for tailored applications.",
+      title: t("today.uploadResumeTitle"),
+      context: t("today.uploadResumeContext"),
       href: "/bank",
-      actionLabel: "Upload resume",
+      actionLabel: t("today.uploadResumeAction"),
       tone: "primary",
     });
   }
@@ -593,12 +605,10 @@ function buildTodayActions(
   if (stats.jobsByStatus.pending) {
     actions.push({
       icon: Briefcase,
-      title: `Review ${stats.jobsByStatus.pending} new ${
-        stats.jobsByStatus.pending === 1 ? "opportunity" : "opportunities"
-      }`,
-      context: "Decide what belongs in your pipeline.",
+      title: t("today.reviewNewTitle", { count: stats.jobsByStatus.pending }),
+      context: t("today.reviewNewContext"),
       href: "/opportunities/review",
-      actionLabel: "Open queue",
+      actionLabel: t("today.reviewNewAction"),
       tone: "primary",
     });
   }
@@ -606,10 +616,12 @@ function buildTodayActions(
   if (stats.profileCompleteness.percentage < 80) {
     actions.push({
       icon: UserCheck,
-      title: "Complete your profile",
-      context: `${stats.profileCompleteness.percentage}% ready for tailoring.`,
+      title: t("today.completeProfileTitle"),
+      context: t("today.completeProfileContext", {
+        percentage: stats.profileCompleteness.percentage,
+      }),
       href: stats.profileCompleteness.nextAction?.href ?? "/profile",
-      actionLabel: "Improve profile",
+      actionLabel: t("today.completeProfileAction"),
       tone: "warning",
     });
   }
@@ -617,32 +629,32 @@ function buildTodayActions(
   if (recentJobs.some((job) => job.status === "interviewing")) {
     actions.push({
       icon: Calendar,
-      title: "Prepare for interviews",
-      context: "Turn active opportunities into practice prompts.",
+      title: t("today.prepareInterviewsTitle"),
+      context: t("today.prepareInterviewsContext"),
       href: "/interview",
-      actionLabel: "Prep now",
+      actionLabel: t("today.prepareInterviewsAction"),
       tone: "success",
     });
   }
 
   actions.push({
     icon: Mail,
-    title: "Draft a follow-up",
-    context: "Keep recruiters warm with a reusable email.",
+    title: t("today.draftFollowUpTitle"),
+    context: t("today.draftFollowUpContext"),
     href: "/emails",
-    actionLabel: "Open templates",
+    actionLabel: t("today.draftFollowUpAction"),
     tone: "primary",
   });
 
   if (stats.documentsCount > 0) {
     actions.push({
       icon: FileText,
-      title: "Create a tailored document",
-      context: `${stats.documentsCount} ${
-        stats.documentsCount === 1 ? "document" : "documents"
-      } ready to reuse.`,
+      title: t("today.tailoredDocumentTitle"),
+      context: t("today.tailoredDocumentContext", {
+        count: stats.documentsCount,
+      }),
       href: "/studio",
-      actionLabel: "Open Studio",
+      actionLabel: t("today.tailoredDocumentAction"),
       tone: "primary",
     });
   }
@@ -651,11 +663,13 @@ function buildTodayActions(
 }
 
 function TodayPanel({ actions }: { actions: TodayAction[] }) {
+  const t = useTranslations("dashboard");
+
   return (
     <PagePanel>
       <PagePanelHeader
-        title="Today"
-        description="Three focused actions, then you are done."
+        title={t("today.title")}
+        description={t("today.description")}
         icon={Clock}
       />
       <div className="space-y-3">
@@ -699,6 +713,7 @@ function TodayActionRow({ action }: { action: TodayAction }) {
 }
 
 function ReadinessPanel({ stats }: { stats: DashboardStats }) {
+  const t = useTranslations("dashboard");
   const profileReady = stats.profileCompleteness.percentage >= 80;
   const docsReady = stats.documentsCount > 0;
   const studioReady = stats.resumesGenerated > 0;
@@ -706,8 +721,8 @@ function ReadinessPanel({ stats }: { stats: DashboardStats }) {
   return (
     <PagePanel as="aside">
       <PagePanelHeader
-        title="Readiness"
-        description="Your application materials at a glance."
+        title={t("stats.readiness")}
+        description={t("readiness.description")}
         action={
           <span className="text-2xl font-bold text-primary">
             {stats.profileCompleteness.percentage}%
@@ -723,28 +738,29 @@ function ReadinessPanel({ stats }: { stats: DashboardStats }) {
       <div className="space-y-3">
         <ReadinessItem
           ready={profileReady}
-          title="Profile"
+          title={t("readiness.profile")}
           detail={
             profileReady
-              ? "Strong foundation"
-              : (stats.profileCompleteness.nextAction?.label ?? "Needs detail")
+              ? t("readiness.strongFoundation")
+              : (stats.profileCompleteness.nextAction?.label ??
+                t("readiness.needsDetail"))
           }
           href={stats.profileCompleteness.nextAction?.href ?? "/profile"}
         />
         <ReadinessItem
           ready={docsReady}
-          title="Documents"
-          detail={`${stats.documentsCount} ${
-            stats.documentsCount === 1 ? "file" : "files"
-          } in your bank`}
+          title={t("stats.documents")}
+          detail={t("readiness.documentsDetail", {
+            count: stats.documentsCount,
+          })}
           href="/bank"
         />
         <ReadinessItem
           ready={studioReady}
-          title="Tailored docs"
-          detail={`${stats.resumesGenerated} ${
-            stats.resumesGenerated === 1 ? "resume" : "resumes"
-          } built`}
+          title={t("stats.tailoredDocs")}
+          detail={t("readiness.tailoredDetail", {
+            count: stats.resumesGenerated,
+          })}
           href="/studio"
         />
       </div>
@@ -794,27 +810,33 @@ function PipelineSummary({
   stats: DashboardStats;
   total: number;
 }) {
+  const t = useTranslations("dashboard");
+  const opportunitiesT = useTranslations("opportunities");
   const stages = [
-    { label: "Saved", count: getPipelineCount(stats.jobsByStatus, "saved") },
     {
-      label: "Applied",
+      label: opportunitiesT("status.saved"),
+      count: getPipelineCount(stats.jobsByStatus, "saved"),
+    },
+    {
+      label: opportunitiesT("status.applied"),
       count: getPipelineCount(stats.jobsByStatus, "applied"),
     },
     {
-      label: "Interviewing",
+      label: opportunitiesT("status.interviewing"),
       count: getPipelineCount(stats.jobsByStatus, "interviewing"),
     },
-    { label: "Offer", count: getPipelineCount(stats.jobsByStatus, "offered") },
+    {
+      label: opportunitiesT("status.offer"),
+      count: getPipelineCount(stats.jobsByStatus, "offered"),
+    },
   ];
 
   return (
     <PagePanel>
       <PagePanelHeader
-        title="Pipeline"
+        title={t("pipeline.title")}
         description={
-          total > 0
-            ? `${total} active opportunities across your search.`
-            : "Add opportunities to start tracking your search."
+          total > 0 ? t("pipeline.description") : t("pipeline.empty")
         }
         icon={BarChart3}
       />
@@ -848,17 +870,19 @@ function PipelineSummary({
 }
 
 function RecentOpportunitiesPanel({ recentJobs }: { recentJobs: RecentJob[] }) {
+  const t = useTranslations("dashboard");
+
   return (
     <PagePanel>
       <PagePanelHeader
-        title="Recent opportunities"
-        description="Keep the next step visible."
+        title={t("recent.title")}
+        description={t("recent.description")}
         action={
           <Link
             href="/opportunities"
             className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
           >
-            View all
+            {t("recent.viewAll")}
             <ArrowRight className="h-3.5 w-3.5" />
           </Link>
         }
@@ -891,7 +915,7 @@ function RecentOpportunitiesPanel({ recentJobs }: { recentJobs: RecentJob[] }) {
           className="flex min-h-24 items-center justify-center gap-2 rounded-lg border border-dashed bg-background/40 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
         >
           <Plus className="h-4 w-4" />
-          Add your first opportunity
+          {t("recent.emptyTitle")}
         </Link>
       )}
     </PagePanel>
@@ -901,14 +925,17 @@ function RecentOpportunitiesPanel({ recentJobs }: { recentJobs: RecentJob[] }) {
 function getDashboardGreeting(
   firstName: string | null,
   mode: "onboarding" | "active",
+  t: ReturnType<typeof useTranslations<"dashboard">>,
 ): string {
   if (mode === "onboarding") {
     return firstName
-      ? `Hey ${firstName}, let's set up your workspace.`
-      : "Let's set up your workspace.";
+      ? t("greeting.onboardingNamed", { name: firstName })
+      : t("greeting.onboarding");
   }
 
-  return firstName ? `Hey ${firstName}, welcome back.` : "Welcome back.";
+  return firstName
+    ? t("greeting.activeNamed", { name: firstName })
+    : t("greeting.active");
 }
 
 function getUnlockPreviewIntro(step: OnboardingStep | undefined): string {

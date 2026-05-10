@@ -1,250 +1,251 @@
 {
   "_meta": {
     "note": "Auto-translated, needs human review.",
-    "source": "scripted-fallback",
-    "generatedAt": "2026-05-10T08:45:25.946Z"
+    "source": "llm-anthropic",
+    "model": "claude-code",
+    "generatedAt": "2026-05-10T09:54:16.606Z"
   },
   "common": {
-    "cancel": "Cancel",
-    "clear": "Clear",
-    "clearAll": "Clear all",
-    "filters": "Filters",
-    "import": "Import",
-    "loading": "Loading",
-    "openSource": "Open source",
-    "save": "Save",
-    "search": "Search",
-    "selectLocale": "Select locale",
-    "show": "Show",
-    "tryAgain": "Try Again"
+    "cancel": "취소",
+    "clear": "지우기",
+    "clearAll": "모두 지우기",
+    "filters": "필터",
+    "import": "가져오기",
+    "loading": "로딩 중",
+    "openSource": "오픈 소스",
+    "save": "저장",
+    "search": "검색",
+    "selectLocale": "언어 선택",
+    "show": "표시",
+    "tryAgain": "다시 시도"
   },
   "nav": {
     "brand": "Slothing",
-    "tagline": "Job search workspace",
-    "skipToMain": "Skip to main content",
-    "mainContent": "Main content",
-    "mainNavigation": "Main navigation",
-    "openMenu": "Open navigation menu",
-    "closeMenu": "Close navigation menu",
-    "collapse": "Collapse navigation",
-    "expand": "Expand navigation",
-    "profilePhoto": "Profile photo",
-    "llmConfigured": "LLM configured ({provider})",
-    "llmNotConfigured": "LLM not configured",
+    "tagline": "구직 워크스페이스",
+    "skipToMain": "본문으로 건너뛰기",
+    "mainContent": "본문",
+    "mainNavigation": "주 메뉴",
+    "openMenu": "메뉴 열기",
+    "closeMenu": "메뉴 닫기",
+    "collapse": "메뉴 접기",
+    "expand": "메뉴 펼치기",
+    "profilePhoto": "프로필 사진",
+    "llmConfigured": "LLM 설정됨 ({provider})",
+    "llmNotConfigured": "LLM 미설정",
     "groups": {
-      "home": "Home",
-      "documents": "Documents",
-      "pipeline": "Pipeline",
-      "prep": "Prep",
-      "reporting": "Reporting"
+      "home": "홈",
+      "documents": "문서",
+      "pipeline": "파이프라인",
+      "prep": "준비",
+      "reporting": "리포트"
     },
     "items": {
       "dashboard": "대시보드",
-      "documents": "Documents",
-      "answerBank": "Answer Bank",
-      "studio": "Document Studio",
-      "opportunities": "기회",
-      "reviewQueue": "Review Queue",
-      "calendar": "Calendar",
-      "emails": "Email Templates",
-      "interview": "Interview Prep",
-      "salary": "Salary Tools",
-      "analytics": "Analytics",
-      "profile": "Profile",
+      "documents": "문서",
+      "answerBank": "답변 뱅크",
+      "studio": "문서 스튜디오",
+      "opportunities": "채용 기회",
+      "reviewQueue": "검토 대기열",
+      "calendar": "캘린더",
+      "emails": "이메일 템플릿",
+      "interview": "면접 준비",
+      "salary": "연봉 도구",
+      "analytics": "분석",
+      "profile": "프로필",
       "settings": "설정"
     }
   },
   "dashboard": {
     "title": "대시보드",
     "actions": {
-      "addOpportunity": "Add opportunity",
-      "uploadDocument": "Upload document",
-      "signIn": "Sign In"
+      "addOpportunity": "기회 추가",
+      "uploadDocument": "문서 업로드",
+      "signIn": "로그인"
     },
     "errors": {
-      "authRequired": "Sign in to access your dashboard.",
-      "loadTitle": "Could not load dashboard",
-      "loadFallback": "Please refresh the page and try again.",
-      "unavailable": "Dashboard unavailable",
-      "signInRequired": "Sign in required",
-      "loadData": "We couldn't load your dashboard data.",
-      "skipTitle": "Could not skip setup",
-      "skipFallback": "Please try again."
+      "authRequired": "대시보드를 사용하려면 로그인하세요.",
+      "loadTitle": "대시보드를 불러올 수 없습니다",
+      "loadFallback": "페이지를 새로고침하고 다시 시도하세요.",
+      "unavailable": "대시보드를 사용할 수 없습니다",
+      "signInRequired": "로그인이 필요합니다",
+      "loadData": "대시보드 데이터를 불러올 수 없습니다.",
+      "skipTitle": "설정을 건너뛸 수 없습니다",
+      "skipFallback": "다시 시도해 주세요."
     },
     "greeting": {
-      "onboardingNamed": "Welcome, {name}. Let's set up your workspace.",
-      "onboarding": "Let's set up your workspace.",
-      "activeNamed": "Welcome back, {name}. Here's what needs your attention.",
-      "active": "Here's what needs your attention."
+      "onboardingNamed": "환영합니다, {name}님. 워크스페이스를 설정해 봅시다.",
+      "onboarding": "워크스페이스를 설정해 봅시다.",
+      "activeNamed": "다시 오신 걸 환영합니다, {name}님. 확인이 필요한 항목입니다.",
+      "active": "확인이 필요한 항목입니다."
     },
     "onboarding": {
-      "startHere": "Start here",
-      "title": "Build your workspace in three steps",
-      "description": "Slothing works best once it has your resume, a target role, and a place to draft tailored documents.",
-      "complete": "of {total} complete",
-      "unlocks": "What unlocks next",
-      "afterStep": "After this step",
-      "skip": "Skip setup for now",
-      "recommended": "Recommended"
+      "startHere": "여기서 시작",
+      "title": "세 단계로 워크스페이스 만들기",
+      "description": "Slothing은 이력서, 목표 직무, 맞춤 문서를 작성할 공간이 갖춰지면 가장 잘 작동합니다.",
+      "complete": "/ {total} 완료",
+      "unlocks": "다음에 열리는 기능",
+      "afterStep": "이 단계 이후",
+      "skip": "지금은 설정 건너뛰기",
+      "recommended": "추천"
     },
     "stats": {
-      "readiness": "Readiness",
-      "documents": "Documents",
-      "tailoredDocs": "Tailored docs",
-      "pipeline": "Pipeline"
+      "readiness": "준비도",
+      "documents": "문서",
+      "tailoredDocs": "맞춤 문서",
+      "pipeline": "파이프라인"
     },
     "today": {
-      "title": "Today",
-      "description": "Three focused actions, then you are done.",
-      "uploadResumeTitle": "Upload your resume",
-      "uploadResumeContext": "Create the source material for tailored applications.",
-      "uploadResumeAction": "Upload resume",
-      "reviewNewTitle": "Review {count, plural, one {# new opportunity} other {# new opportunities}}",
-      "reviewNewContext": "Decide what belongs in your pipeline.",
-      "reviewNewAction": "Open queue",
-      "completeProfileTitle": "Complete your profile",
-      "completeProfileContext": "{percentage}% ready for tailoring.",
-      "completeProfileAction": "Improve profile",
-      "prepareInterviewsTitle": "Prepare for interviews",
-      "prepareInterviewsContext": "Turn active opportunities into practice prompts.",
-      "prepareInterviewsAction": "Prep now",
-      "draftFollowUpTitle": "Draft a follow-up",
-      "draftFollowUpContext": "Keep recruiters warm with a reusable email.",
-      "draftFollowUpAction": "Open templates",
-      "tailoredDocumentTitle": "Create a tailored document",
-      "tailoredDocumentContext": "{count, plural, one {# document} other {# documents}} ready to reuse.",
-      "tailoredDocumentAction": "Open Studio"
+      "title": "오늘",
+      "description": "집중할 작업 세 가지면 끝입니다.",
+      "uploadResumeTitle": "이력서 업로드",
+      "uploadResumeContext": "맞춤 지원서를 위한 원본 자료를 만드세요.",
+      "uploadResumeAction": "이력서 업로드",
+      "reviewNewTitle": "{count, plural, other {새 기회 #건}} 검토",
+      "reviewNewContext": "어떤 항목을 파이프라인에 넣을지 결정하세요.",
+      "reviewNewAction": "대기열 열기",
+      "completeProfileTitle": "프로필 완성하기",
+      "completeProfileContext": "맞춤화 준비 {percentage}% 완료.",
+      "completeProfileAction": "프로필 개선",
+      "prepareInterviewsTitle": "면접 준비하기",
+      "prepareInterviewsContext": "진행 중인 기회를 연습 질문으로 바꿔보세요.",
+      "prepareInterviewsAction": "지금 준비",
+      "draftFollowUpTitle": "후속 메일 작성",
+      "draftFollowUpContext": "재사용 가능한 이메일로 채용 담당자와 관계를 유지하세요.",
+      "draftFollowUpAction": "템플릿 열기",
+      "tailoredDocumentTitle": "맞춤 문서 만들기",
+      "tailoredDocumentContext": "{count, plural, other {재사용 가능한 문서 #개}}.",
+      "tailoredDocumentAction": "스튜디오 열기"
     },
     "readiness": {
-      "description": "Your application materials at a glance.",
-      "profile": "Profile",
-      "strongFoundation": "Strong foundation",
-      "needsDetail": "Needs detail",
-      "documentsDetail": "{count, plural, one {# file} other {# files}} in your bank",
-      "tailoredDetail": "{count, plural, one {# resume} other {# resumes}} built"
+      "description": "지원 자료를 한눈에 확인하세요.",
+      "profile": "프로필",
+      "strongFoundation": "탄탄한 기반",
+      "needsDetail": "내용 보강 필요",
+      "documentsDetail": "{count, plural, other {뱅크에 파일 #개}}",
+      "tailoredDetail": "{count, plural, other {이력서 #개}} 작성됨"
     },
     "pipeline": {
-      "title": "Pipeline",
-      "description": "Where your active opportunities stand.",
-      "empty": "Add opportunities to see your pipeline."
+      "title": "파이프라인",
+      "description": "진행 중인 기회의 현재 상태입니다.",
+      "empty": "기회를 추가하면 파이프라인이 표시됩니다."
     },
     "recent": {
-      "title": "Recent opportunities",
-      "description": "The latest items saved to your workspace.",
-      "viewAll": "View all",
-      "emptyTitle": "No opportunities yet",
-      "emptyDescription": "Save or import opportunities to start tracking them here."
+      "title": "최근 기회",
+      "description": "워크스페이스에 가장 최근에 저장된 항목입니다.",
+      "viewAll": "모두 보기",
+      "emptyTitle": "아직 기회가 없습니다",
+      "emptyDescription": "기회를 저장하거나 가져와 여기서 추적을 시작하세요."
     }
   },
   "opportunities": {
-    "title": "기회",
-    "description": "Review saved opportunities, compare fit signals, and keep application work moving from one list.",
-    "viewMode": "Opportunity view mode",
-    "list": "List",
+    "title": "채용 기회",
+    "description": "저장한 기회를 검토하고, 적합도 신호를 비교하며, 한 곳에서 지원 작업을 진행하세요.",
+    "viewMode": "기회 보기 모드",
+    "list": "리스트",
     "kanban": "Kanban",
-    "addOpportunity": "Add Opportunity",
+    "addOpportunity": "기회 추가",
     "filters": {
-      "panel": "Filters",
-      "type": "Type",
-      "status": "Status",
-      "source": "Source",
-      "tags": "Tags",
-      "remote": "Remote type",
-      "tech": "Tech stack",
-      "allTags": "All tags",
-      "anyStack": "Any stack",
-      "searchPlaceholder": "Search title, company, skills",
-      "searchAria": "Search opportunities",
-      "sortAria": "Sort opportunities",
-      "sortBy": "Sort by {label}",
-      "activeSearch": "Search: {value}",
-      "activeType": "Type: {value}",
-      "activeStatus": "Status: {value}",
-      "activeSource": "Source: {value}",
-      "activeRemote": "Remote: {value}",
-      "activeTag": "Tag: {value}",
-      "activeTech": "Tech: {value}",
-      "remove": "Remove {label} filter"
+      "panel": "필터",
+      "type": "유형",
+      "status": "상태",
+      "source": "출처",
+      "tags": "태그",
+      "remote": "근무 형태",
+      "tech": "기술 스택",
+      "allTags": "모든 태그",
+      "anyStack": "모든 스택",
+      "searchPlaceholder": "직무, 회사, 기술 검색",
+      "searchAria": "기회 검색",
+      "sortAria": "기회 정렬",
+      "sortBy": "{label} 기준 정렬",
+      "activeSearch": "검색: {value}",
+      "activeType": "유형: {value}",
+      "activeStatus": "상태: {value}",
+      "activeSource": "출처: {value}",
+      "activeRemote": "근무 형태: {value}",
+      "activeTag": "태그: {value}",
+      "activeTech": "기술: {value}",
+      "remove": "{label} 필터 제거"
     },
     "tabs": {
-      "job": "Roles",
-      "hackathon": "Hackathons",
-      "all": "All"
+      "job": "직무",
+      "hackathon": "해커톤",
+      "all": "전체"
     },
     "status": {
-      "all": "All statuses",
-      "pending": "Pending",
-      "saved": "Saved",
-      "applied": "Applied",
-      "interviewing": "Interviewing",
-      "offer": "Offer",
-      "rejected": "Rejected",
-      "expired": "Expired",
-      "dismissed": "Dismissed"
+      "all": "모든 상태",
+      "pending": "대기 중",
+      "saved": "저장됨",
+      "applied": "지원함",
+      "interviewing": "면접 중",
+      "offer": "오퍼",
+      "rejected": "불합격",
+      "expired": "만료됨",
+      "dismissed": "보류"
     },
     "types": {
-      "job": "Job",
-      "hackathon": "Hackathon"
+      "job": "직무",
+      "hackathon": "해커톤"
     },
     "sources": {
-      "all": "All sources",
+      "all": "모든 출처",
       "waterlooworks": "WaterlooWorks",
       "linkedin": "LinkedIn",
       "indeed": "Indeed",
       "greenhouse": "Greenhouse",
       "lever": "Lever",
       "devpost": "Devpost",
-      "manual": "Manual",
+      "manual": "수동",
       "url": "URL"
     },
     "remote": {
-      "all": "Any remote type",
-      "remote": "Remote",
-      "hybrid": "Hybrid",
-      "onsite": "Onsite"
+      "all": "모든 근무 형태",
+      "remote": "원격",
+      "hybrid": "하이브리드",
+      "onsite": "출근"
     },
     "sort": {
-      "deadline": "Deadline",
-      "scrapedAt": "Date scraped",
-      "company": "Company",
-      "salary": "Salary"
+      "deadline": "마감일",
+      "scrapedAt": "수집일",
+      "company": "회사",
+      "salary": "연봉"
     },
-    "summary": "Showing {shown} of {total} opportunities",
+    "summary": "총 {total}건 중 {shown}건 표시",
     "counts": {
-      "jobs": "{count, plural, one {# job} other {# jobs}}",
-      "hackathons": "{count, plural, one {# hackathon} other {# hackathons}}",
-      "pending": "{count, plural, one {# pending} other {# pending}}"
+      "jobs": "{count, plural, other {직무 #개}}",
+      "hackathons": "{count, plural, other {해커톤 #개}}",
+      "pending": "{count, plural, other {대기 중 #개}}"
     },
     "empty": {
-      "noMatchesTitle": "No opportunities match your filters",
-      "noMatchesDescription": "Try widening or clearing filters to see more.",
-      "clearFilters": "Clear filters"
+      "noMatchesTitle": "필터에 맞는 기회가 없습니다",
+      "noMatchesDescription": "필터를 넓히거나 지워 더 많은 결과를 확인하세요.",
+      "clearFilters": "필터 지우기"
     },
     "meta": {
-      "due": "Due {date}",
-      "noDeadline": "No deadline",
-      "team": "Team {min}-{max}",
-      "updateStatus": "Update status for {title}"
+      "due": "마감 {date}",
+      "noDeadline": "마감일 없음",
+      "team": "팀 {min}-{max}명",
+      "updateStatus": "{title} 상태 업데이트"
     },
     "kanbanBoard": {
-      "region": "Opportunity kanban board",
-      "roleDescription": "kanban board",
-      "laneAria": "{lane} opportunities",
-      "dropHere": "Drop opportunities here",
-      "hidden": "{count} in hidden lanes",
+      "region": "기회 Kanban 보드",
+      "roleDescription": "Kanban 보드",
+      "laneAria": "{lane} 기회",
+      "dropHere": "여기에 기회를 놓으세요",
+      "hidden": "숨겨진 레인에 {count}개",
       "hiddenSummary": "{label} · {count}",
-      "moveClosedTitle": "Move to Closed",
-      "moveClosedDescription": "Pick the final state for {title}."
+      "moveClosedTitle": "종료로 이동",
+      "moveClosedDescription": "{title}의 최종 상태를 선택하세요."
     }
   },
   "settings": {
     "title": "설정",
-    "description": "Configure your AI provider for resume parsing and interview preparation.",
-    "loading": "Loading settings...",
+    "description": "이력서 분석과 면접 준비를 위한 AI 제공자를 구성하세요.",
+    "loading": "설정 불러오는 중...",
     "language": {
       "title": "언어",
-      "description": "Choose the language used for navigation and app screens.",
-      "label": "Language",
+      "description": "내비게이션과 앱 화면에 사용할 언어를 선택하세요.",
+      "label": "언어",
       "options": {
         "en": "English",
         "es": "Español",
@@ -258,8 +259,8 @@
     }
   },
   "notFound": {
-    "title": "Page not found",
-    "description": "We couldn't find that page.",
-    "action": "Go to dashboard"
+    "title": "페이지를 찾을 수 없습니다",
+    "description": "해당 페이지를 찾을 수 없습니다.",
+    "action": "대시보드로 이동"
   }
 }
