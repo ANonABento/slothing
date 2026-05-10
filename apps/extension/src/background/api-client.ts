@@ -5,6 +5,7 @@ import type {
   ScrapedJob,
   LearnedAnswer,
   SimilarAnswer,
+  TrackedApplicationPayload,
 } from "@/shared/types";
 import { createOpportunitySchema } from "@slothing/shared/schemas";
 import { getStorage, setStorage } from "./storage";
@@ -140,6 +141,63 @@ export class ColumbusAPIClient {
       method: "POST",
       body: JSON.stringify({ jobs }),
     });
+  }
+
+  async trackApplied(payload: TrackedApplicationPayload): Promise<{
+    opportunityId: string;
+    deduped: boolean;
+  }> {
+    const scrapedJob = payload.scrapedJob || undefined;
+    const title = scrapedJob?.title || payload.headline || payload.title;
+    const company = scrapedJob?.company || payload.host.replace(/^www\./, "");
+    const notes = [
+      payload.headline ? `Headline: ${payload.headline}` : undefined,
+      payload.thumbnailDataUrl
+        ? "Screenshot captured by extension."
+        : undefined,
+    ]
+      .filter(Boolean)
+      .join("\n");
+
+    const response = await this.authenticatedFetch<{
+      opportunityIds: string[];
+      dedupedIds?: string[];
+    }>("/api/opportunities/from-extension", {
+      method: "POST",
+      body: JSON.stringify({
+        title,
+        company,
+        location: scrapedJob?.location,
+        description:
+          scrapedJob?.description ||
+          payload.headline ||
+          "Application submitted via extension.",
+        requirements: scrapedJob?.requirements || [],
+        responsibilities: scrapedJob?.responsibilities || [],
+        keywords: scrapedJob?.keywords || [],
+        type: scrapedJob?.type,
+        remote: scrapedJob?.remote,
+        salary: scrapedJob?.salary,
+        url: scrapedJob?.url || payload.url,
+        source: scrapedJob?.source || payload.host,
+        sourceJobId: scrapedJob?.sourceJobId,
+        postedAt: scrapedJob?.postedAt,
+        deadline: scrapedJob?.deadline,
+        status: "applied",
+        appliedAt: payload.submittedAt,
+        notes,
+      }),
+    });
+
+    const opportunityId = response.opportunityIds[0];
+    if (!opportunityId) {
+      throw new Error("Application was not tracked");
+    }
+
+    return {
+      opportunityId,
+      deduped: Boolean(response.dedupedIds?.includes(opportunityId)),
+    };
   }
 
   async saveLearnedAnswer(data: {

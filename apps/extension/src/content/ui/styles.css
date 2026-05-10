@@ -141,6 +141,15 @@
   background: #ef4444;
 }
 
+.columbus-toast-applied {
+  cursor: pointer;
+}
+
+.columbus-toast-applied:focus-visible {
+  outline: 2px solid white;
+  outline-offset: 2px;
+}
+
 @keyframes columbus-slide-up {
   from {
     transform: translateY(20px);

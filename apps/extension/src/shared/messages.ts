@@ -8,6 +8,7 @@ import type {
   LearnedAnswer,
   SimilarAnswer,
   DetectedField,
+  TrackedApplicationPayload,
 } from "./types";
 
 // Type-safe message creators
@@ -19,6 +20,7 @@ export const Messages = {
 
   // Profile messages
   getProfile: (): ExtensionMessage => ({ type: "GET_PROFILE" }),
+  getSettings: (): ExtensionMessage => ({ type: "GET_SETTINGS" }),
 
   // Form filling messages
   fillForm: (fields: DetectedField[]): ExtensionMessage<DetectedField[]> => ({
@@ -37,6 +39,14 @@ export const Messages = {
     type: "IMPORT_JOBS_BATCH",
     payload: jobs,
   }),
+  trackApplied: (
+    payload: TrackedApplicationPayload,
+  ): ExtensionMessage<TrackedApplicationPayload> => ({
+    type: "TRACK_APPLIED",
+    payload,
+  }),
+  openDashboard: (): ExtensionMessage => ({ type: "OPEN_DASHBOARD" }),
+  captureVisibleTab: (): ExtensionMessage => ({ type: "CAPTURE_VISIBLE_TAB" }),
 
   // Learning messages
   saveAnswer: (data: {
@@ -73,6 +83,12 @@ export interface ImportJobResponse extends ExtensionResponse<{
   imported: number;
   opportunityIds: string[];
   pendingCount: number;
+  dedupedIds?: string[];
+}> {}
+
+export interface TrackAppliedResponse extends ExtensionResponse<{
+  opportunityId: string;
+  deduped: boolean;
 }> {}
 
 export interface SearchAnswersResponse extends ExtensionResponse<

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  buildJobFromExtension,
   buildPendingJobFromExtension,
   parseExtensionOpportunityPayload,
 } from "./extension-opportunities";
@@ -103,6 +104,26 @@ describe("buildPendingJobFromExtension", () => {
       status: "pending",
       url: undefined,
       notes: "Source: linkedin\nSource job ID: abc-123\nPosted at: 2026-04-29",
+    });
+  });
+});
+
+describe("buildJobFromExtension", () => {
+  it("preserves applied status and fills appliedAt", () => {
+    const job = buildJobFromExtension({
+      title: "Platform Engineer",
+      company: "Beta",
+      description: "Build infra",
+      requirements: [],
+      responsibilities: [],
+      keywords: [],
+      status: "applied",
+      appliedAt: "2026-05-10T12:00:00.000Z",
+    });
+
+    expect(job).toMatchObject({
+      status: "applied",
+      appliedAt: "2026-05-10T12:00:00.000Z",
     });
   });
 });
