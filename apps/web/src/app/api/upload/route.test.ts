@@ -7,6 +7,8 @@ const mocks = vi.hoisted(() => ({
   saveDocument: vi.fn(),
   getLLMConfig: vi.fn(),
   getDocumentByFileHash: vi.fn(),
+  getProfile: vi.fn(),
+  updateProfile: vi.fn(),
   deleteSourceDocuments: vi.fn(),
   populateBankFromProfile: vi.fn(),
   extractTextFromFile: vi.fn(),
@@ -32,6 +34,8 @@ vi.mock("@/lib/db", () => ({
   saveDocument: mocks.saveDocument,
   getLLMConfig: mocks.getLLMConfig,
   getDocumentByFileHash: mocks.getDocumentByFileHash,
+  getProfile: mocks.getProfile,
+  updateProfile: mocks.updateProfile,
 }));
 
 vi.mock("@/lib/db/profile-bank", () => ({
@@ -102,6 +106,7 @@ describe("upload route dedupe flow", () => {
     mocks.requireAuth.mockResolvedValue({ userId: "user-1" });
     mocks.isAuthError.mockReturnValue(false);
     mocks.getLLMConfig.mockReturnValue(null);
+    mocks.getProfile.mockReturnValue(null);
     mocks.extractTextFromFile.mockResolvedValue("resume text");
     mocks.classifyDocument.mockResolvedValue("resume");
     mocks.smartParseResume.mockResolvedValue({
@@ -211,5 +216,136 @@ describe("upload route dedupe flow", () => {
       expect.any(String),
       "user-1",
     );
+  });
+
+  it("auto-promotes parsed resume data into all structured profile sections", async () => {
+    const parsedProfile = {
+      contact: {
+        name: "Ada Lovelace",
+        email: "ada@example.com",
+      },
+      summary: "Analytical computing pioneer",
+      experiences: [
+        {
+          id: "exp-1",
+          company: "Analytical Engines",
+          title: "Programmer",
+          startDate: "1842",
+          current: false,
+          description: "Wrote notes",
+          highlights: ["Wrote notes"],
+          skills: ["Math"],
+        },
+      ],
+      education: [
+        {
+          id: "edu-1",
+          institution: "Self-directed",
+          degree: "Mathematics",
+          field: "Computing",
+          highlights: [],
+        },
+      ],
+      skills: [
+        {
+          id: "skill-1",
+          name: "Mathematics",
+          category: "technical",
+        },
+      ],
+      projects: [
+        {
+          id: "project-1",
+          name: "Algorithm",
+          description: "First published algorithm",
+          technologies: ["Analytical Engine"],
+          highlights: [],
+        },
+      ],
+    };
+    mocks.smartParseResume.mockResolvedValueOnce({
+      profile: parsedProfile,
+      confidence: 0.95,
+      sectionsDetected: ["experience", "education", "skills", "projects"],
+      llmUsed: false,
+      llmSectionsCount: 0,
+      warnings: [],
+    });
+
+    const response = await POST(uploadRequest(pdfFile()));
+
+    expect(response.status).toBe(200);
+    expect(mocks.populateBankFromProfile).toHaveBeenCalledWith(
+      parsedProfile,
+      expect.any(String),
+      "user-1",
+    );
+    expect(mocks.updateProfile).toHaveBeenCalledWith(
+      expect.objectContaining({
+        contact: parsedProfile.contact,
+        summary: parsedProfile.summary,
+        experiences: parsedProfile.experiences,
+        education: parsedProfile.education,
+        skills: parsedProfile.skills,
+        projects: parsedProfile.projects,
+      }),
+      "user-1",
+    );
+  });
+
+  it("preserves manually edited contact fields during auto-promotion", async () => {
+    mocks.getProfile.mockReturnValueOnce({
+      id: "user-1",
+      contact: {
+        name: "Manual Name",
+      },
+      experiences: [],
+      education: [],
+      skills: [],
+      projects: [],
+      certifications: [],
+    });
+    mocks.smartParseResume.mockResolvedValueOnce({
+      profile: {
+        contact: {
+          name: "Parsed Name",
+          email: "parsed@example.com",
+        },
+      },
+      confidence: 0.95,
+      sectionsDetected: ["contact"],
+      llmUsed: false,
+      llmSectionsCount: 0,
+      warnings: [],
+    });
+
+    const response = await POST(uploadRequest(pdfFile()));
+
+    expect(response.status).toBe(200);
+    expect(mocks.updateProfile).toHaveBeenCalledWith(
+      expect.objectContaining({
+        contact: {
+          name: "Manual Name",
+          email: "parsed@example.com",
+        },
+      }),
+      "user-1",
+    );
+  });
+
+  it("keeps upload successful when profile auto-promotion fails", async () => {
+    mocks.updateProfile.mockImplementationOnce(() => {
+      throw new Error("boom");
+    });
+
+    const response = await POST(uploadRequest(pdfFile()));
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({
+      success: true,
+      entriesCreated: 1,
+    });
+    expect(mocks.saveDocument).toHaveBeenCalled();
+    expect(mocks.populateBankFromProfile).toHaveBeenCalled();
   });
 });

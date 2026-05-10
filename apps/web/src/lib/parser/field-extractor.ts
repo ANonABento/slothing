@@ -31,6 +31,35 @@ const GITHUB_REGEX = /github\.com\/[\w-]+/i;
 const URL_REGEX = /https?:\/\/[\w.-]+\.\w{2,}[\w/.-]*/;
 const BULLET_MARKER_REGEX = /^[•●○■▪▸\-–—*]$/;
 const BULLET_LINE_REGEX = /^[•●○■▪▸\-–—*]\s*/;
+const SKILL_SPLIT_REGEX = /[,;|•·]/;
+const SKILL_LABEL_REGEX = /^([\p{L}\s/&+-]{2,32}):\s*(.+)$/u;
+const ORPHAN_SKILL_LABELS = new Set([
+  "language",
+  "languages",
+  "tool",
+  "tools",
+  "framework",
+  "frameworks",
+  "library",
+  "libraries",
+  "database",
+  "databases",
+  "soft skill",
+  "soft skills",
+  "interpersonal",
+]);
+
+function skillCategoryForLabel(label: string | undefined): Skill["category"] {
+  const normalized = label?.toLowerCase().replace(/\s+/g, " ").trim();
+  if (!normalized) return "technical";
+  if (/^languages?$/.test(normalized)) return "language";
+  if (/^tools?$/.test(normalized)) return "tool";
+  if (/^(?:soft skills?|interpersonal)$/.test(normalized)) return "soft";
+  if (/^(?:frameworks?|libraries?|databases?)$/.test(normalized)) {
+    return "technical";
+  }
+  return "technical";
+}
 
 // Month names (abbreviated and full) for building date patterns
 const MONTH_NAMES =
@@ -507,17 +536,44 @@ export function extractEducation(text: string): Education[] {
   return education;
 }
 
-function extractSkills(text: string): Skill[] {
-  const items = text
-    .split(/[,|•·\n]/)
-    .map((s) => s.trim())
-    .filter((s) => s.length > 1 && s.length < 50);
-  return items.map((name) => ({
-    id: generateId(),
-    name,
-    category: "technical" as const,
-    proficiency: "intermediate" as const,
-  }));
+export function extractSkills(text: string): Skill[] {
+  const skills: Skill[] = [];
+  const seen = new Set<string>();
+  const lines = text
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  for (const line of lines) {
+    const labeled = line.match(SKILL_LABEL_REGEX);
+    const category = skillCategoryForLabel(labeled?.[1]);
+    const content = labeled ? labeled[2] : line;
+    const items = content
+      .split(SKILL_SPLIT_REGEX)
+      .map((item) => item.trim())
+      .filter((item) => {
+        const normalized = item.toLowerCase();
+        return (
+          item.length >= 2 &&
+          item.length <= 50 &&
+          /[\p{L}\p{N}]/u.test(item) &&
+          !ORPHAN_SKILL_LABELS.has(normalized)
+        );
+      });
+
+    for (const name of items) {
+      const dedupeKey = name.toLowerCase();
+      if (seen.has(dedupeKey)) continue;
+      seen.add(dedupeKey);
+      skills.push({
+        id: generateId(),
+        name,
+        category,
+      });
+    }
+  }
+
+  return skills;
 }
 
 function extractProjects(text: string): Project[] {
