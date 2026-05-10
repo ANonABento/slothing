@@ -32,8 +32,10 @@ Each public route should either own an `opengraph-image.tsx` next to its
 
 | Route | OG image source |
 | --- | --- |
+| `/` | `opengraph-image.tsx` |
 | `/en` | `[locale]/(marketing)/opengraph-image.tsx` |
 | `/en/ats-scanner` | `[locale]/(marketing)/ats-scanner/opengraph-image.tsx` |
+| `/en/pricing` | `[locale]/(marketing)/pricing/opengraph-image.tsx` |
 | `/en/dashboard` | `[locale]/(app)/dashboard/opengraph-image.tsx` |
 | `/en/profile` | `[locale]/(app)/profile/opengraph-image.tsx` |
 | `/en/studio` | `[locale]/(app)/studio/opengraph-image.tsx` |
