@@ -1,5 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import type { ReactElement } from "react";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { ToastProvider } from "@/components/ui/toast";
 import { AiAssistantPanel } from "./ai-assistant-panel";
 
 function statusResponse(configured: boolean) {
@@ -21,21 +23,27 @@ function renderWithSelectableText(
 ) {
   const onOpenBank = vi.fn();
   const view = render(
-    <div>
-      <div data-document-editor-root="true">
-        <p>{anchorText}</p>
+    <ToastProvider>
+      <div>
+        <div data-document-editor-root="true">
+          <p>{anchorText}</p>
+        </div>
+        <AiAssistantPanel
+          documentContent="<p>Built APIs quickly.</p>"
+          selectedEntryCount={1}
+          onOpenBank={onOpenBank}
+          onOpportunityClear={options.onOpportunityClear}
+          onOpportunitySelect={options.onOpportunitySelect}
+        />
       </div>
-      <AiAssistantPanel
-        documentContent="<p>Built APIs quickly.</p>"
-        selectedEntryCount={1}
-        onOpenBank={onOpenBank}
-        onOpportunityClear={options.onOpportunityClear}
-        onOpportunitySelect={options.onOpportunitySelect}
-      />
-    </div>,
+    </ToastProvider>,
   );
 
   return { ...view, onOpenBank };
+}
+
+function renderWithToast(ui: ReactElement) {
+  return render(<ToastProvider>{ui}</ToastProvider>);
 }
 
 function selectionWithText(text: string, anchorNode: Node | null): Selection {
@@ -53,7 +61,7 @@ describe("AiAssistantPanel", () => {
   });
 
   it("renders the AI assistant controls", () => {
-    render(
+    renderWithToast(
       <AiAssistantPanel
         documentContent=""
         selectedEntryCount={0}
@@ -75,7 +83,7 @@ describe("AiAssistantPanel", () => {
   });
 
   it("renders an icon strip when collapsed", () => {
-    render(
+    renderWithToast(
       <AiAssistantPanel
         documentContent=""
         selectedEntryCount={0}
@@ -94,7 +102,7 @@ describe("AiAssistantPanel", () => {
 
   it("calls the collapse toggle from the icon strip", () => {
     const onToggleCollapsed = vi.fn();
-    render(
+    renderWithToast(
       <AiAssistantPanel
         documentContent=""
         selectedEntryCount={0}
@@ -346,7 +354,7 @@ describe("AiAssistantPanel", () => {
       }),
     );
 
-    render(
+    renderWithToast(
       <AiAssistantPanel
         documentContent=""
         documentMode="cover_letter"
@@ -425,7 +433,7 @@ describe("AiAssistantPanel", () => {
       }),
     );
 
-    const { rerender } = render(
+    const { rerender } = renderWithToast(
       <AiAssistantPanel
         documentContent="<p>I built reliable systems.</p>"
         documentMode="cover_letter"
@@ -448,15 +456,17 @@ describe("AiAssistantPanel", () => {
     );
 
     rerender(
-      <AiAssistantPanel
-        documentContent="<p>I built reliable systems.</p>"
-        documentMode="cover_letter"
-        selectedEntryCount={1}
-        coverLetterCritique={critique}
-        onCoverLetterCritique={onCoverLetterCritique}
-        onCoverLetterSuggestionApply={onCoverLetterSuggestionApply}
-        onOpenBank={vi.fn()}
-      />,
+      <ToastProvider>
+        <AiAssistantPanel
+          documentContent="<p>I built reliable systems.</p>"
+          documentMode="cover_letter"
+          selectedEntryCount={1}
+          coverLetterCritique={critique}
+          onCoverLetterCritique={onCoverLetterCritique}
+          onCoverLetterSuggestionApply={onCoverLetterSuggestionApply}
+          onOpenBank={vi.fn()}
+        />
+      </ToastProvider>,
     );
 
     expect(

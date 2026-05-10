@@ -4,6 +4,8 @@ import { getJob, updateJob, deleteJob } from "@/lib/db/jobs";
 import { updateJobSchema } from "@/lib/constants";
 import { recordJobStatusChange } from "@/lib/db/analytics";
 import { jobToOpportunity } from "@/lib/opportunities";
+import { safeTrackActivity } from "@/lib/streak/track";
+import type { AchievementUnlock } from "@/lib/streak/types";
 
 import { nowIso } from "@/lib/format/time";
 export const dynamic = "force-dynamic";
@@ -76,6 +78,7 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
     updateJob(params.id, data, authResult.userId);
     const job = getJob(params.id, authResult.userId);
 
+    const unlocked: AchievementUnlock[] = [];
     if (data.status && data.status !== oldStatus) {
       try {
         recordJobStatusChange(
@@ -88,11 +91,22 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
       } catch (statusError) {
         console.error("Failed to record status change:", statusError);
       }
+      unlocked.push(
+        ...(await safeTrackActivity(authResult.userId, "opp_status_changed"))
+          .unlocked,
+      );
+      if (data.status === "applied") {
+        unlocked.push(
+          ...(await safeTrackActivity(authResult.userId, "opp_applied"))
+            .unlocked,
+        );
+      }
     }
 
     return NextResponse.json({
       job,
       opportunity: job ? jobToOpportunity(job) : null,
+      unlocked,
     });
   } catch (error) {
     console.error("Update opportunity error:", error);

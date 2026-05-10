@@ -710,6 +710,47 @@ export const promptVariantResults = sqliteTable(
   ],
 );
 
+export const userActivity = sqliteTable(
+  "user_activity",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id").notNull().default(DEFAULT_USER_ID),
+    currentStreak: integer("current_streak").notNull().default(0),
+    longestStreak: integer("longest_streak").notNull().default(0),
+    lastActivityDay: text("last_activity_day"),
+    totalOppsCreated: integer("total_opps_created").notNull().default(0),
+    totalOppsApplied: integer("total_opps_applied").notNull().default(0),
+    totalResumesTailored: integer("total_resumes_tailored").notNull().default(0),
+    totalCoverLetters: integer("total_cover_letters").notNull().default(0),
+    totalEmailsSent: integer("total_emails_sent").notNull().default(0),
+    totalInterviewsStarted: integer("total_interviews_started")
+      .notNull()
+      .default(0),
+    updatedAt: text("updated_at").default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [uniqueIndex("idx_user_activity_user_id").on(table.userId)],
+);
+
+export const achievementUnlocks = sqliteTable(
+  "achievement_unlocks",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id").notNull().default(DEFAULT_USER_ID),
+    achievementId: text("achievement_id").notNull(),
+    unlockedAt: text("unlocked_at").default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    uniqueIndex("idx_achievement_unlocks_user_achievement").on(
+      table.userId,
+      table.achievementId,
+    ),
+    index("idx_achievement_unlocks_user_unlocked").on(
+      table.userId,
+      table.unlockedAt,
+    ),
+  ],
+);
+
 // NextAuth.js (@auth/drizzle-adapter) tables.
 // Adapter-owned columns must match @auth/drizzle-adapter/sqlite exactly — do not
 // customize column names. Nullable app-owned columns are okay; the adapter only
@@ -873,6 +914,12 @@ export type NewPromptVariant = typeof promptVariants.$inferInsert;
 
 export type PromptVariantResult = typeof promptVariantResults.$inferSelect;
 export type NewPromptVariantResult = typeof promptVariantResults.$inferInsert;
+
+export type UserActivity = typeof userActivity.$inferSelect;
+export type NewUserActivity = typeof userActivity.$inferInsert;
+
+export type AchievementUnlockRow = typeof achievementUnlocks.$inferSelect;
+export type NewAchievementUnlockRow = typeof achievementUnlocks.$inferInsert;
 
 export type AuthUser = typeof users.$inferSelect;
 export type NewAuthUser = typeof users.$inferInsert;

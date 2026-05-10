@@ -152,6 +152,8 @@ export {
   resumeAbTracking,
   promptVariants,
   promptVariantResults,
+  userActivity,
+  achievementUnlocks,
 } from "./schema";
 export * from "./queries";
 export * from "./jobs";
@@ -166,6 +168,7 @@ export * from "./answer-bank-versions";
 export * from "./answer-bank-migration";
 export * from "./profile-versions";
 export * from "./knowledge-bank";
+export * from "./streak";
 
 export {
   eq,
