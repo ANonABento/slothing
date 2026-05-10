@@ -1,6 +1,6 @@
 {
   "manifest_version": 2,
-  "name": "Columbus - Job Application Assistant",
+  "name": "Slothing - Job Application Assistant",
   "version": "1.0.0",
   "description": "Auto-fill job applications and import job listings from LinkedIn, Waterloo Works, and more",
   "browser_specific_settings": {

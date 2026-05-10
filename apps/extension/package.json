@@ -1,7 +1,7 @@
 {
   "name": "@slothing/extension",
   "version": "1.0.0",
-  "description": "Columbus browser extension for auto-filling job applications and scraping job listings",
+  "description": "Slothing browser extension for auto-filling job applications and scraping job listings",
   "scripts": {
     "dev": "pnpm generate-icons && webpack --mode development --watch",
     "build": "pnpm generate-icons && webpack --mode production",
