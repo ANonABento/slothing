@@ -11,6 +11,7 @@ const OG_ROUTES = [
   () => import("./opengraph-image"),
   () => import("./[locale]/(marketing)/opengraph-image"),
   () => import("./[locale]/(marketing)/ats-scanner/opengraph-image"),
+  () => import("./[locale]/(marketing)/pricing/opengraph-image"),
   () => import("./[locale]/(app)/dashboard/opengraph-image"),
   () => import("./[locale]/(app)/answer-bank/opengraph-image"),
   () => import("./[locale]/(app)/studio/opengraph-image"),
