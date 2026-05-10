@@ -1,0 +1,2219 @@
+[
+  {
+    "id": "r-001",
+    "label": "Frontend Engineer, 2 yrs",
+    "field": "software",
+    "subfield": "frontend",
+    "seniorityLevel": "junior",
+    "seniorityYears": 2,
+    "candidateName": "Alex Rivera",
+    "location": "Austin, TX",
+    "summary": "Frontend Engineer with 2 years of experience in frontend, known for practical execution, clear communication, and measurable outcomes in consumer SaaS.",
+    "skills": [
+      "JavaScript",
+      "React",
+      "TypeScript",
+      "HTML/CSS",
+      "Git",
+      "Jest"
+    ],
+    "experience": [
+      {
+        "title": "Frontend Engineer",
+        "company": "BlueOwl Labs",
+        "startYear": 2024,
+        "endYear": null,
+        "bullets": [
+          "Built React dashboards for internal support workflows and improved load time by 30%.",
+          "Partnered with product, operations, and leadership stakeholders to prioritize work and communicate progress against shared goals.",
+          "Documented repeatable workflows and mentored peers on JavaScript and React practices."
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "BA or BS, relevant field",
+        "school": "State University",
+        "year": 2023
+      }
+    ],
+    "projects": [
+      {
+        "name": "Frontend impact portfolio",
+        "description": "Anonymized examples showing JavaScript, React, and measurable improvements from recent work."
+      }
+    ]
+  },
+  {
+    "id": "r-002",
+    "label": "Marketing Manager, 5 yrs",
+    "field": "marketing",
+    "subfield": "digital marketing",
+    "seniorityLevel": "mid",
+    "seniorityYears": 5,
+    "candidateName": "Priya Shah",
+    "location": "Chicago, IL",
+    "summary": "Marketing Manager with 5 years of experience in digital marketing, known for practical execution, clear communication, and measurable outcomes in B2B SaaS.",
+    "skills": [
+      "SEO",
+      "SEM",
+      "content strategy",
+      "analytics",
+      "HubSpot",
+      "campaign planning"
+    ],
+    "experience": [
+      {
+        "title": "Marketing Manager",
+        "company": "North Harbor Health",
+        "startYear": 2021,
+        "endYear": null,
+        "bullets": [
+          "Managed a $500K paid media budget and grew organic traffic 120% year over year.",
+          "Partnered with product, operations, and leadership stakeholders to prioritize work and communicate progress against shared goals.",
+          "Documented repeatable workflows and mentored peers on SEO and SEM practices."
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "BA or BS, relevant field",
+        "school": "Regional Polytechnic",
+        "year": 2020
+      }
+    ],
+    "projects": [
+      {
+        "name": "Digital Marketing impact portfolio",
+        "description": "Anonymized examples showing SEO, SEM, and measurable improvements from recent work."
+      }
+    ]
+  },
+  {
+    "id": "r-003",
+    "label": "Data Analyst, 3 yrs",
+    "field": "data",
+    "subfield": "analytics",
+    "seniorityLevel": "mid",
+    "seniorityYears": 3,
+    "candidateName": "Jordan Lee",
+    "location": "Denver, CO",
+    "summary": "Data Analyst with 3 years of experience in analytics, known for practical execution, clear communication, and measurable outcomes in e-commerce.",
+    "skills": [
+      "SQL",
+      "Python",
+      "Tableau",
+      "A/B testing",
+      "statistics",
+      "Excel"
+    ],
+    "experience": [
+      {
+        "title": "Data Analyst",
+        "company": "Cedar Metric",
+        "startYear": 2023,
+        "endYear": null,
+        "bullets": [
+          "Built executive dashboards and ran checkout experiments that lifted conversion by 8%.",
+          "Partnered with product, operations, and leadership stakeholders to prioritize work and communicate progress against shared goals.",
+          "Documented repeatable workflows and mentored peers on SQL and Python practices."
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "BA or BS, relevant field",
+        "school": "Mid-Atlantic Liberal Arts College",
+        "year": 2022
+      }
+    ],
+    "projects": [
+      {
+        "name": "Analytics impact portfolio",
+        "description": "Anonymized examples showing SQL, Python, and measurable improvements from recent work."
+      }
+    ]
+  },
+  {
+    "id": "r-004",
+    "label": "Product Manager, 4 yrs",
+    "field": "product",
+    "subfield": "growth product",
+    "seniorityLevel": "mid",
+    "seniorityYears": 4,
+    "candidateName": "Maya Chen",
+    "location": "Raleigh, NC",
+    "summary": "Product Manager with 4 years of experience in growth product, known for practical execution, clear communication, and measurable outcomes in consumer mobile.",
+    "skills": [
+      "roadmapping",
+      "user research",
+      "experimentation",
+      "analytics",
+      "PRDs",
+      "stakeholder management"
+    ],
+    "experience": [
+      {
+        "title": "Product Manager",
+        "company": "BrightPath Systems",
+        "startYear": 2022,
+        "endYear": null,
+        "bullets": [
+          "Launched mobile onboarding improvements used by 200K users and lifted retention 15%.",
+          "Partnered with product, operations, and leadership stakeholders to prioritize work and communicate progress against shared goals.",
+          "Documented repeatable workflows and mentored peers on roadmapping and user research practices."
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "BA or BS, relevant field",
+        "school": "Metro Business College",
+        "year": 2021
+      }
+    ],
+    "projects": [
+      {
+        "name": "Growth Product impact portfolio",
+        "description": "Anonymized examples showing roadmapping, user research, and measurable improvements from recent work."
+      }
+    ]
+  },
+  {
+    "id": "r-005",
+    "label": "UX/UI Designer, 3 yrs",
+    "field": "design",
+    "subfield": "product design",
+    "seniorityLevel": "mid",
+    "seniorityYears": 3,
+    "candidateName": "Sam Morgan",
+    "location": "Portland, OR",
+    "summary": "UX/UI Designer with 3 years of experience in product design, known for practical execution, clear communication, and measurable outcomes in enterprise SaaS.",
+    "skills": [
+      "Figma",
+      "user research",
+      "prototyping",
+      "design systems",
+      "WCAG",
+      "usability testing"
+    ],
+    "experience": [
+      {
+        "title": "UX/UI Designer",
+        "company": "Stage One Studios",
+        "startYear": 2023,
+        "endYear": null,
+        "bullets": [
+          "Redesigned onboarding and created a 60-component design system for three products.",
+          "Partnered with product, operations, and leadership stakeholders to prioritize work and communicate progress against shared goals.",
+          "Documented repeatable workflows and mentored peers on Figma and user research practices."
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "BFA Design",
+        "school": "Western Applied Sciences Institute",
+        "year": 2022
+      }
+    ],
+    "projects": [
+      {
+        "name": "Product Design impact portfolio",
+        "description": "Anonymized examples showing Figma, user research, and measurable improvements from recent work."
+      }
+    ]
+  },
+  {
+    "id": "r-006",
+    "label": "Sales Development Representative, 2 yrs",
+    "field": "sales",
+    "subfield": "sales development",
+    "seniorityLevel": "junior",
+    "seniorityYears": 2,
+    "candidateName": "Nina Patel",
+    "location": "Minneapolis, MN",
+    "summary": "Sales Development Representative with 2 years of experience in sales development, known for practical execution, clear communication, and measurable outcomes in SaaS sales.",
+    "skills": [
+      "cold outreach",
+      "Salesforce",
+      "discovery",
+      "pipeline management",
+      "objection handling"
+    ],
+    "experience": [
+      {
+        "title": "Sales Development Representative",
+        "company": "Riverbend Analytics",
+        "startYear": 2024,
+        "endYear": null,
+        "bullets": [
+          "Generated $2M in qualified pipeline and booked 15 meetings per month.",
+          "Partnered with product, operations, and leadership stakeholders to prioritize work and communicate progress against shared goals.",
+          "Documented repeatable workflows and mentored peers on cold outreach and Salesforce practices."
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "BA or BS, relevant field",
+        "school": "State University",
+        "year": 2023
+      }
+    ],
+    "projects": [
+      {
+        "name": "Sales Development impact portfolio",
+        "description": "Anonymized examples showing cold outreach, Salesforce, and measurable improvements from recent work."
+      }
+    ]
+  },
+  {
+    "id": "r-007",
+    "label": "Backend Engineer Intern, new grad",
+    "field": "software",
+    "subfield": "backend",
+    "seniorityLevel": "new_grad",
+    "seniorityYears": 0,
+    "candidateName": "Owen Brooks",
+    "location": "Atlanta, GA",
+    "summary": "Backend Engineer Intern with early-career experience in backend, known for practical execution, clear communication, and measurable outcomes in payments.",
+    "skills": [
+      "Python",
+      "Java",
+      "Go",
+      "SQL",
+      "REST APIs",
+      "Docker"
+    ],
+    "experience": [
+      {
+        "title": "Backend Engineer Intern",
+        "company": "Atlas Grove",
+        "startYear": 2025,
+        "endYear": null,
+        "bullets": [
+          "Built a payment webhook processor handling 1K events per day during internship.",
+          "Partnered with product, operations, and leadership stakeholders to prioritize work and communicate progress against shared goals.",
+          "Documented repeatable workflows and mentored peers on Python and Java practices."
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "BA or BS, relevant field",
+        "school": "Regional Polytechnic",
+        "year": 2025
+      }
+    ],
+    "projects": [
+      {
+        "name": "Backend impact portfolio",
+        "description": "Anonymized examples showing Python, Java, and measurable improvements from recent work."
+      }
+    ]
+  },
+  {
+    "id": "r-008",
+    "label": "Financial Analyst, 2 yrs",
+    "field": "finance",
+    "subfield": "corporate finance",
+    "seniorityLevel": "junior",
+    "seniorityYears": 2,
+    "candidateName": "Leah Kim",
+    "location": "Phoenix, AZ",
+    "summary": "Financial Analyst with 2 years of experience in corporate finance, known for practical execution, clear communication, and measurable outcomes in corporate finance.",
+    "skills": [
+      "financial modeling",
+      "Excel",
+      "PowerPoint",
+      "DCF",
+      "GAAP",
+      "variance analysis"
+    ],
+    "experience": [
+      {
+        "title": "Financial Analyst",
+        "company": "Nimbus Works",
+        "startYear": 2024,
+        "endYear": null,
+        "bullets": [
+          "Built a three-statement model for a $50M acquisition review and quarterly board materials.",
+          "Partnered with product, operations, and leadership stakeholders to prioritize work and communicate progress against shared goals.",
+          "Documented repeatable workflows and mentored peers on financial modeling and Excel practices."
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "BS Finance",
+        "school": "Mid-Atlantic Liberal Arts College",
+        "year": 2023
+      }
+    ],
+    "projects": [
+      {
+        "name": "Corporate Finance impact portfolio",
+        "description": "Anonymized examples showing financial modeling, Excel, and measurable improvements from recent work."
+      }
+    ]
+  },
+  {
+    "id": "r-009",
+    "label": "HR Generalist, 3 yrs",
+    "field": "people",
+    "subfield": "hr operations",
+    "seniorityLevel": "mid",
+    "seniorityYears": 3,
+    "candidateName": "Diego Santos",
+    "location": "Boston, MA",
+    "summary": "HR Generalist with 3 years of experience in hr operations, known for practical execution, clear communication, and measurable outcomes in technology.",
+    "skills": [
+      "HRIS",
+      "employee relations",
+      "onboarding",
+      "benefits",
+      "workforce planning"
+    ],
+    "experience": [
+      {
+        "title": "HR Generalist",
+        "company": "Copperline Group",
+        "startYear": 2023,
+        "endYear": null,
+        "bullets": [
+          "Supported a 150-person organization and reduced time-to-hire by 20%.",
+          "Partnered with product, operations, and leadership stakeholders to prioritize work and communicate progress against shared goals.",
+          "Documented repeatable workflows and mentored peers on HRIS and employee relations practices."
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "BA or BS, relevant field",
+        "school": "Metro Business College",
+        "year": 2022
+      }
+    ],
+    "projects": [
+      {
+        "name": "Hr Operations impact portfolio",
+        "description": "Anonymized examples showing HRIS, employee relations, and measurable improvements from recent work."
+      }
+    ]
+  },
+  {
+    "id": "r-010",
+    "label": "DevOps Engineer, 3 yrs",
+    "field": "software",
+    "subfield": "devops",
+    "seniorityLevel": "mid",
+    "seniorityYears": 3,
+    "candidateName": "Riley Stone",
+    "location": "Seattle, WA",
+    "summary": "DevOps Engineer with 3 years of experience in devops, known for practical execution, clear communication, and measurable outcomes in cloud platforms.",
+    "skills": [
+      "AWS",
+      "Terraform",
+      "Docker",
+      "Kubernetes",
+      "CI/CD",
+      "Datadog"
+    ],
+    "experience": [
+      {
+        "title": "DevOps Engineer",
+        "company": "Silverline Apps",
+        "startYear": 2023,
+        "endYear": null,
+        "bullets": [
+          "Migrated services to containers and reduced deployment time from two hours to 15 minutes.",
+          "Partnered with product, operations, and leadership stakeholders to prioritize work and communicate progress against shared goals.",
+          "Documented repeatable workflows and mentored peers on AWS and Terraform practices."
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "BA or BS, relevant field",
+        "school": "Western Applied Sciences Institute",
+        "year": 2022
+      }
+    ],
+    "projects": [
+      {
+        "name": "Devops impact portfolio",
+        "description": "Anonymized examples showing AWS, Terraform, and measurable improvements from recent work."
+      }
+    ]
+  },
+  {
+    "id": "r-011",
+    "label": "Senior Mobile Engineer, 8 yrs",
+    "field": "software",
+    "subfield": "mobile",
+    "seniorityLevel": "senior",
+    "seniorityYears": 8,
+    "candidateName": "Avery Quinn",
+    "location": "Austin, TX",
+    "summary": "Senior Mobile Engineer with 8 years of experience in mobile, known for practical execution, clear communication, and measurable outcomes in health technology.",
+    "skills": [
+      "Swift",
+      "Kotlin",
+      "React Native",
+      "offline sync",
+      "accessibility",
+      "crash analytics"
+    ],
+    "experience": [
+      {
+        "title": "Senior Mobile Engineer",
+        "company": "BlueOwl Labs",
+        "startYear": 2018,
+        "endYear": null,
+        "bullets": [
+          "Led mobile releases for a patient engagement app with 4.8 store rating.",
+          "Partnered with product, operations, and leadership stakeholders to prioritize work and communicate progress against shared goals.",
+          "Documented repeatable workflows and mentored peers on Swift and Kotlin practices."
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "BA or BS, relevant field",
+        "school": "State University",
+        "year": 2017
+      }
+    ],
+    "projects": [
+      {
+        "name": "Mobile impact portfolio",
+        "description": "Anonymized examples showing Swift, Kotlin, and measurable improvements from recent work."
+      }
+    ]
+  },
+  {
+    "id": "r-012",
+    "label": "Machine Learning Engineer, 7 yrs",
+    "field": "software",
+    "subfield": "machine learning",
+    "seniorityLevel": "senior",
+    "seniorityYears": 7,
+    "candidateName": "Noah Grant",
+    "location": "Chicago, IL",
+    "summary": "Machine Learning Engineer with 7 years of experience in machine learning, known for practical execution, clear communication, and measurable outcomes in marketplace.",
+    "skills": [
+      "Python",
+      "PyTorch",
+      "feature stores",
+      "model monitoring",
+      "Spark",
+      "experimentation"
+    ],
+    "experience": [
+      {
+        "title": "Machine Learning Engineer",
+        "company": "North Harbor Health",
+        "startYear": 2019,
+        "endYear": null,
+        "bullets": [
+          "Shipped ranking models that increased qualified matches by 18%.",
+          "Partnered with product, operations, and leadership stakeholders to prioritize work and communicate progress against shared goals.",
+          "Documented repeatable workflows and mentored peers on Python and PyTorch practices."
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "BA or BS, relevant field",
+        "school": "Regional Polytechnic",
+        "year": 2018
+      }
+    ],
+    "projects": [
+      {
+        "name": "Machine Learning impact portfolio",
+        "description": "Anonymized examples showing Python, PyTorch, and measurable improvements from recent work."
+      }
+    ]
+  },
+  {
+    "id": "r-013",
+    "label": "Security Engineer, 9 yrs",
+    "field": "software",
+    "subfield": "security",
+    "seniorityLevel": "senior",
+    "seniorityYears": 9,
+    "candidateName": "Iris Coleman",
+    "location": "Denver, CO",
+    "summary": "Security Engineer with 9 years of experience in security, known for practical execution, clear communication, and measurable outcomes in fintech.",
+    "skills": [
+      "threat modeling",
+      "appsec",
+      "SAST",
+      "incident response",
+      "cloud security",
+      "Python"
+    ],
+    "experience": [
+      {
+        "title": "Security Engineer",
+        "company": "Cedar Metric",
+        "startYear": 2017,
+        "endYear": null,
+        "bullets": [
+          "Built secure SDLC reviews and cut critical vulnerability remediation time by 45%.",
+          "Partnered with product, operations, and leadership stakeholders to prioritize work and communicate progress against shared goals.",
+          "Documented repeatable workflows and mentored peers on threat modeling and appsec practices."
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "BA or BS, relevant field",
+        "school": "Mid-Atlantic Liberal Arts College",
+        "year": 2016
+      }
+    ],
+    "projects": [
+      {
+        "name": "Security impact portfolio",
+        "description": "Anonymized examples showing threat modeling, appsec, and measurable improvements from recent work."
+      }
+    ]
+  },
+  {
+    "id": "r-014",
+    "label": "Staff Platform Engineer, 14 yrs",
+    "field": "software",
+    "subfield": "platform",
+    "seniorityLevel": "principal",
+    "seniorityYears": 14,
+    "candidateName": "Tara Singh",
+    "location": "Raleigh, NC",
+    "summary": "Staff Platform Engineer with 14 years of experience in platform, known for practical execution, clear communication, and measurable outcomes in developer tools.",
+    "skills": [
+      "distributed systems",
+      "Kubernetes",
+      "Go",
+      "service mesh",
+      "observability",
+      "technical strategy"
+    ],
+    "experience": [
+      {
+        "title": "Staff Platform Engineer",
+        "company": "BrightPath Systems",
+        "startYear": 2012,
+        "endYear": null,
+        "bullets": [
+          "Owned platform architecture for 120 engineers and improved service reliability to 99.95%.",
+          "Partnered with product, operations, and leadership stakeholders to prioritize work and communicate progress against shared goals.",
+          "Documented repeatable workflows and mentored peers on distributed systems and Kubernetes practices."
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "BA or BS, relevant field",
+        "school": "Metro Business College",
+        "year": 2011
+      }
+    ],
+    "projects": [
+      {
+        "name": "Platform impact portfolio",
+        "description": "Anonymized examples showing distributed systems, Kubernetes, and measurable improvements from recent work."
+      }
+    ]
+  },
+  {
+    "id": "r-015",
+    "label": "Senior Data Engineer, 8 yrs",
+    "field": "data",
+    "subfield": "data engineering",
+    "seniorityLevel": "senior",
+    "seniorityYears": 8,
+    "candidateName": "Miles Carter",
+    "location": "Portland, OR",
+    "summary": "Senior Data Engineer with 8 years of experience in data engineering, known for practical execution, clear communication, and measurable outcomes in media analytics.",
+    "skills": [
+      "dbt",
+      "Airflow",
+      "Spark",
+      "Snowflake",
+      "Python",
+      "data quality"
+    ],
+    "experience": [
+      {
+        "title": "Senior Data Engineer",
+        "company": "Stage One Studios",
+        "startYear": 2018,
+        "endYear": null,
+        "bullets": [
+          "Rebuilt batch pipelines to reduce reporting latency from 12 hours to 90 minutes.",
+          "Partnered with product, operations, and leadership stakeholders to prioritize work and communicate progress against shared goals.",
+          "Documented repeatable workflows and mentored peers on dbt and Airflow practices."
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "BA or BS, relevant field",
+        "school": "Western Applied Sciences Institute",
+        "year": 2017
+      }
+    ],
+    "projects": [
+      {
+        "name": "Data Engineering impact portfolio",
+        "description": "Anonymized examples showing dbt, Airflow, and measurable improvements from recent work."
+      }
+    ]
+  },
+  {
+    "id": "r-016",
+    "label": "Data Scientist, 6 yrs",
+    "field": "data",
+    "subfield": "data science",
+    "seniorityLevel": "senior",
+    "seniorityYears": 6,
+    "candidateName": "Sofia Vega",
+    "location": "Minneapolis, MN",
+    "summary": "Data Scientist with 6 years of experience in data science, known for practical execution, clear communication, and measurable outcomes in logistics.",
+    "skills": [
+      "Python",
+      "scikit-learn",
+      "forecasting",
+      "causal inference",
+      "SQL",
+      "model evaluation"
+    ],
+    "experience": [
+      {
+        "title": "Data Scientist",
+        "company": "Riverbend Analytics",
+        "startYear": 2020,
+        "endYear": null,
+        "bullets": [
+          "Built demand forecasts that lowered stockouts 12% across regional warehouses.",
+          "Partnered with product, operations, and leadership stakeholders to prioritize work and communicate progress against shared goals.",
+          "Documented repeatable workflows and mentored peers on Python and scikit-learn practices."
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "BA or BS, relevant field",
+        "school": "State University",
+        "year": 2019
+      }
+    ],
+    "projects": [
+      {
+        "name": "Data Science impact portfolio",
+        "description": "Anonymized examples showing Python, scikit-learn, and measurable improvements from recent work."
+      }
+    ]
+  },
+  {
+    "id": "r-017",
+    "label": "BI Analyst, 2 yrs",
+    "field": "data",
+    "subfield": "business intelligence",
+    "seniorityLevel": "junior",
+    "seniorityYears": 2,
+    "candidateName": "Eli Monroe",
+    "location": "Atlanta, GA",
+    "summary": "BI Analyst with 2 years of experience in business intelligence, known for practical execution, clear communication, and measurable outcomes in hospitality.",
+    "skills": [
+      "SQL",
+      "Looker",
+      "Excel",
+      "dashboard design",
+      "stakeholder interviews"
+    ],
+    "experience": [
+      {
+        "title": "BI Analyst",
+        "company": "Atlas Grove",
+        "startYear": 2024,
+        "endYear": null,
+        "bullets": [
+          "Created revenue dashboards used weekly by regional operators.",
+          "Partnered with product, operations, and leadership stakeholders to prioritize work and communicate progress against shared goals.",
+          "Documented repeatable workflows and mentored peers on SQL and Looker practices."
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "BA or BS, relevant field",
+        "school": "Regional Polytechnic",
+        "year": 2023
+      }
+    ],
+    "projects": [
+      {
+        "name": "Business Intelligence impact portfolio",
+        "description": "Anonymized examples showing SQL, Looker, and measurable improvements from recent work."
+      }
+    ]
+  },
+  {
+    "id": "r-018",
+    "label": "Analytics Engineer, 4 yrs",
+    "field": "data",
+    "subfield": "analytics engineering",
+    "seniorityLevel": "mid",
+    "seniorityYears": 4,
+    "candidateName": "Hana Park",
+    "location": "Phoenix, AZ",
+    "summary": "Analytics Engineer with 4 years of experience in analytics engineering, known for practical execution, clear communication, and measurable outcomes in subscription SaaS.",
+    "skills": [
+      "SQL",
+      "dbt",
+      "Snowflake",
+      "Looker",
+      "data modeling",
+      "Git"
+    ],
+    "experience": [
+      {
+        "title": "Analytics Engineer",
+        "company": "Nimbus Works",
+        "startYear": 2022,
+        "endYear": null,
+        "bullets": [
+          "Modeled self-serve metrics layers and reduced ad hoc analyst requests 25%.",
+          "Partnered with product, operations, and leadership stakeholders to prioritize work and communicate progress against shared goals.",
+          "Documented repeatable workflows and mentored peers on SQL and dbt practices."
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "BA or BS, relevant field",
+        "school": "Mid-Atlantic Liberal Arts College",
+        "year": 2021
+      }
+    ],
+    "projects": [
+      {
+        "name": "Analytics Engineering impact portfolio",
+        "description": "Anonymized examples showing SQL, dbt, and measurable improvements from recent work."
+      }
+    ]
+  },
+  {
+    "id": "r-019",
+    "label": "Principal Research Analyst, 13 yrs",
+    "field": "data",
+    "subfield": "research analytics",
+    "seniorityLevel": "principal",
+    "seniorityYears": 13,
+    "candidateName": "Theo James",
+    "location": "Boston, MA",
+    "summary": "Principal Research Analyst with 13 years of experience in research analytics, known for practical execution, clear communication, and measurable outcomes in public policy.",
+    "skills": [
+      "survey methods",
+      "R",
+      "SQL",
+      "causal analysis",
+      "research design",
+      "storytelling"
+    ],
+    "experience": [
+      {
+        "title": "Principal Research Analyst",
+        "company": "Copperline Group",
+        "startYear": 2013,
+        "endYear": null,
+        "bullets": [
+          "Led multi-year research programs informing funding decisions across five states.",
+          "Partnered with product, operations, and leadership stakeholders to prioritize work and communicate progress against shared goals.",
+          "Documented repeatable workflows and mentored peers on survey methods and R practices."
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "BA or BS, relevant field",
+        "school": "Metro Business College",
+        "year": 2012
+      }
+    ],
+    "projects": [
+      {
+        "name": "Research Analytics impact portfolio",
+        "description": "Anonymized examples showing survey methods, R, and measurable improvements from recent work."
+      }
+    ]
+  },
+  {
+    "id": "r-020",
+    "label": "Senior Technical Product Manager, 8 yrs",
+    "field": "product",
+    "subfield": "technical product",
+    "seniorityLevel": "senior",
+    "seniorityYears": 8,
+    "candidateName": "Lina Ortiz",
+    "location": "Seattle, WA",
+    "summary": "Senior Technical Product Manager with 8 years of experience in technical product, known for practical execution, clear communication, and measurable outcomes in API platforms.",
+    "skills": [
+      "API strategy",
+      "roadmapping",
+      "developer research",
+      "analytics",
+      "partner management"
+    ],
+    "experience": [
+      {
+        "title": "Senior Technical Product Manager",
+        "company": "Silverline Apps",
+        "startYear": 2018,
+        "endYear": null,
+        "bullets": [
+          "Launched API versioning program that cut partner migration effort by 35%.",
+          "Partnered with product, operations, and leadership stakeholders to prioritize work and communicate progress against shared goals.",
+          "Documented repeatable workflows and mentored peers on API strategy and roadmapping practices."
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "BA or BS, relevant field",
+        "school": "Western Applied Sciences Institute",
+        "year": 2017
+      }
+    ],
+    "projects": [
+      {
+        "name": "Technical Product impact portfolio",
+        "description": "Anonymized examples showing API strategy, roadmapping, and measurable improvements from recent work."
+      }
+    ]
+  },
+  {
+    "id": "r-021",
+    "label": "Director of Product, 13 yrs",
+    "field": "product",
+    "subfield": "platform product",
+    "seniorityLevel": "principal",
+    "seniorityYears": 13,
+    "candidateName": "Kai Bennett",
+    "location": "Austin, TX",
+    "summary": "Director of Product with 13 years of experience in platform product, known for practical execution, clear communication, and measurable outcomes in workflow automation.",
+    "skills": [
+      "portfolio strategy",
+      "pricing",
+      "roadmaps",
+      "team leadership",
+      "OKRs",
+      "customer discovery"
+    ],
+    "experience": [
+      {
+        "title": "Director of Product",
+        "company": "BlueOwl Labs",
+        "startYear": 2013,
+        "endYear": null,
+        "bullets": [
+          "Managed a five-PM portfolio and grew platform adoption across 80 enterprise accounts.",
+          "Partnered with product, operations, and leadership stakeholders to prioritize work and communicate progress against shared goals.",
+          "Documented repeatable workflows and mentored peers on portfolio strategy and pricing practices."
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "BA or BS, relevant field",
+        "school": "State University",
+        "year": 2012
+      }
+    ],
+    "projects": [
+      {
+        "name": "Platform Product impact portfolio",
+        "description": "Anonymized examples showing portfolio strategy, pricing, and measurable improvements from recent work."
+      }
+    ]
+  },
+  {
+    "id": "r-022",
+    "label": "Associate Product Manager, 2 yrs",
+    "field": "product",
+    "subfield": "associate product",
+    "seniorityLevel": "junior",
+    "seniorityYears": 2,
+    "candidateName": "Mira Lawson",
+    "location": "Chicago, IL",
+    "summary": "Associate Product Manager with 2 years of experience in associate product, known for practical execution, clear communication, and measurable outcomes in education software.",
+    "skills": [
+      "user stories",
+      "analytics",
+      "QA",
+      "customer interviews",
+      "agile"
+    ],
+    "experience": [
+      {
+        "title": "Associate Product Manager",
+        "company": "North Harbor Health",
+        "startYear": 2024,
+        "endYear": null,
+        "bullets": [
+          "Coordinated gradebook improvements used by 40K teachers.",
+          "Partnered with product, operations, and leadership stakeholders to prioritize work and communicate progress against shared goals.",
+          "Documented repeatable workflows and mentored peers on user stories and analytics practices."
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "BA or BS, relevant field",
+        "school": "Regional Polytechnic",
+        "year": 2023
+      }
+    ],
+    "projects": [
+      {
+        "name": "Associate Product impact portfolio",
+        "description": "Anonymized examples showing user stories, analytics, and measurable improvements from recent work."
+      }
+    ]
+  },
+  {
+    "id": "r-023",
+    "label": "Brand Designer, 2 yrs",
+    "field": "design",
+    "subfield": "brand design",
+    "seniorityLevel": "junior",
+    "seniorityYears": 2,
+    "candidateName": "Jonah Reed",
+    "location": "Denver, CO",
+    "summary": "Brand Designer with 2 years of experience in brand design, known for practical execution, clear communication, and measurable outcomes in direct-to-consumer.",
+    "skills": [
+      "Adobe Creative Suite",
+      "Figma",
+      "campaign design",
+      "motion basics",
+      "brand systems"
+    ],
+    "experience": [
+      {
+        "title": "Brand Designer",
+        "company": "Cedar Metric",
+        "startYear": 2024,
+        "endYear": null,
+        "bullets": [
+          "Produced campaign assets that improved email click-through by 18%.",
+          "Partnered with product, operations, and leadership stakeholders to prioritize work and communicate progress against shared goals.",
+          "Documented repeatable workflows and mentored peers on Adobe Creative Suite and Figma practices."
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "BFA Design",
+        "school": "Mid-Atlantic Liberal Arts College",
+        "year": 2023
+      }
+    ],
+    "projects": [
+      {
+        "name": "Brand Design impact portfolio",
+        "description": "Anonymized examples showing Adobe Creative Suite, Figma, and measurable improvements from recent work."
+      }
+    ]
+  },
+  {
+    "id": "r-024",
+    "label": "Senior Service Designer, 9 yrs",
+    "field": "design",
+    "subfield": "service design",
+    "seniorityLevel": "senior",
+    "seniorityYears": 9,
+    "candidateName": "Anika Rao",
+    "location": "Raleigh, NC",
+    "summary": "Senior Service Designer with 9 years of experience in service design, known for practical execution, clear communication, and measurable outcomes in public services.",
+    "skills": [
+      "journey mapping",
+      "facilitation",
+      "research synthesis",
+      "prototyping",
+      "accessibility"
+    ],
+    "experience": [
+      {
+        "title": "Senior Service Designer",
+        "company": "BrightPath Systems",
+        "startYear": 2017,
+        "endYear": null,
+        "bullets": [
+          "Mapped high-friction permit workflows and reduced in-person visits by 22%.",
+          "Partnered with product, operations, and leadership stakeholders to prioritize work and communicate progress against shared goals.",
+          "Documented repeatable workflows and mentored peers on journey mapping and facilitation practices."
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "BFA Design",
+        "school": "Metro Business College",
+        "year": 2016
+      }
+    ],
+    "projects": [
+      {
+        "name": "Service Design impact portfolio",
+        "description": "Anonymized examples showing journey mapping, facilitation, and measurable improvements from recent work."
+      }
+    ]
+  },
+  {
+    "id": "r-025",
+    "label": "Lead Product Designer, 12 yrs",
+    "field": "design",
+    "subfield": "design systems",
+    "seniorityLevel": "principal",
+    "seniorityYears": 12,
+    "candidateName": "Cal Ellis",
+    "location": "Portland, OR",
+    "summary": "Lead Product Designer with 12 years of experience in design systems, known for practical execution, clear communication, and measurable outcomes in financial software.",
+    "skills": [
+      "design systems",
+      "Figma libraries",
+      "tokens",
+      "accessibility",
+      "mentorship"
+    ],
+    "experience": [
+      {
+        "title": "Lead Product Designer",
+        "company": "Stage One Studios",
+        "startYear": 2014,
+        "endYear": null,
+        "bullets": [
+          "Led a design system adopted by 14 product squads.",
+          "Partnered with product, operations, and leadership stakeholders to prioritize work and communicate progress against shared goals.",
+          "Documented repeatable workflows and mentored peers on design systems and Figma libraries practices."
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "BFA Design",
+        "school": "Western Applied Sciences Institute",
+        "year": 2013
+      }
+    ],
+    "projects": [
+      {
+        "name": "Design Systems impact portfolio",
+        "description": "Anonymized examples showing design systems, Figma libraries, and measurable improvements from recent work."
+      }
+    ]
+  },
+  {
+    "id": "r-026",
+    "label": "Content Marketing Coordinator, 2 yrs",
+    "field": "marketing",
+    "subfield": "content marketing",
+    "seniorityLevel": "junior",
+    "seniorityYears": 2,
+    "candidateName": "Zara Imani",
+    "location": "Minneapolis, MN",
+    "summary": "Content Marketing Coordinator with 2 years of experience in content marketing, known for practical execution, clear communication, and measurable outcomes in HR technology.",
+    "skills": [
+      "copywriting",
+      "SEO",
+      "CMS",
+      "email marketing",
+      "analytics"
+    ],
+    "experience": [
+      {
+        "title": "Content Marketing Coordinator",
+        "company": "Riverbend Analytics",
+        "startYear": 2024,
+        "endYear": null,
+        "bullets": [
+          "Published lifecycle content that improved trial activation by 10%.",
+          "Partnered with product, operations, and leadership stakeholders to prioritize work and communicate progress against shared goals.",
+          "Documented repeatable workflows and mentored peers on copywriting and SEO practices."
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "BA or BS, relevant field",
+        "school": "State University",
+        "year": 2023
+      }
+    ],
+    "projects": [
+      {
+        "name": "Content Marketing impact portfolio",
+        "description": "Anonymized examples showing copywriting, SEO, and measurable improvements from recent work."
+      }
+    ]
+  },
+  {
+    "id": "r-027",
+    "label": "Senior Growth Marketing Manager, 8 yrs",
+    "field": "marketing",
+    "subfield": "growth marketing",
+    "seniorityLevel": "senior",
+    "seniorityYears": 8,
+    "candidateName": "Evan Holt",
+    "location": "Atlanta, GA",
+    "summary": "Senior Growth Marketing Manager with 8 years of experience in growth marketing, known for practical execution, clear communication, and measurable outcomes in consumer subscriptions.",
+    "skills": [
+      "paid social",
+      "lifecycle marketing",
+      "experimentation",
+      "SQL",
+      "budget planning"
+    ],
+    "experience": [
+      {
+        "title": "Senior Growth Marketing Manager",
+        "company": "Atlas Grove",
+        "startYear": 2018,
+        "endYear": null,
+        "bullets": [
+          "Scaled acquisition spend to $1.8M annually while holding CAC within target.",
+          "Partnered with product, operations, and leadership stakeholders to prioritize work and communicate progress against shared goals.",
+          "Documented repeatable workflows and mentored peers on paid social and lifecycle marketing practices."
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "BA or BS, relevant field",
+        "school": "Regional Polytechnic",
+        "year": 2017
+      }
+    ],
+    "projects": [
+      {
+        "name": "Growth Marketing impact portfolio",
+        "description": "Anonymized examples showing paid social, lifecycle marketing, and measurable improvements from recent work."
+      }
+    ]
+  },
+  {
+    "id": "r-028",
+    "label": "Product Marketing Lead, 10 yrs",
+    "field": "marketing",
+    "subfield": "product marketing",
+    "seniorityLevel": "senior",
+    "seniorityYears": 10,
+    "candidateName": "Mei Tan",
+    "location": "Phoenix, AZ",
+    "summary": "Product Marketing Lead with 10 years of experience in product marketing, known for practical execution, clear communication, and measurable outcomes in cybersecurity.",
+    "skills": [
+      "positioning",
+      "sales enablement",
+      "launch planning",
+      "competitive research",
+      "GTM"
+    ],
+    "experience": [
+      {
+        "title": "Product Marketing Lead",
+        "company": "Nimbus Works",
+        "startYear": 2016,
+        "endYear": null,
+        "bullets": [
+          "Led launches for three security products and increased win-rate 9 points.",
+          "Partnered with product, operations, and leadership stakeholders to prioritize work and communicate progress against shared goals.",
+          "Documented repeatable workflows and mentored peers on positioning and sales enablement practices."
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "BA or BS, relevant field",
+        "school": "Mid-Atlantic Liberal Arts College",
+        "year": 2015
+      }
+    ],
+    "projects": [
+      {
+        "name": "Product Marketing impact portfolio",
+        "description": "Anonymized examples showing positioning, sales enablement, and measurable improvements from recent work."
+      }
+    ]
+  },
+  {
+    "id": "r-029",
+    "label": "VP Marketing, 15 yrs",
+    "field": "marketing",
+    "subfield": "brand leadership",
+    "seniorityLevel": "principal",
+    "seniorityYears": 15,
+    "candidateName": "Drew Mason",
+    "location": "Boston, MA",
+    "summary": "VP Marketing with 15 years of experience in brand leadership, known for practical execution, clear communication, and measurable outcomes in climate technology.",
+    "skills": [
+      "brand strategy",
+      "demand generation",
+      "team leadership",
+      "budget ownership",
+      "communications"
+    ],
+    "experience": [
+      {
+        "title": "VP Marketing",
+        "company": "Copperline Group",
+        "startYear": 2011,
+        "endYear": null,
+        "bullets": [
+          "Built a 12-person marketing function and sourced 42% of enterprise pipeline.",
+          "Partnered with product, operations, and leadership stakeholders to prioritize work and communicate progress against shared goals.",
+          "Documented repeatable workflows and mentored peers on brand strategy and demand generation practices."
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "BA or BS, relevant field",
+        "school": "Metro Business College",
+        "year": 2010
+      }
+    ],
+    "projects": [
+      {
+        "name": "Brand Leadership impact portfolio",
+        "description": "Anonymized examples showing brand strategy, demand generation, and measurable improvements from recent work."
+      }
+    ]
+  },
+  {
+    "id": "r-030",
+    "label": "Account Executive, 5 yrs",
+    "field": "sales",
+    "subfield": "account executive",
+    "seniorityLevel": "mid",
+    "seniorityYears": 5,
+    "candidateName": "Nora Blake",
+    "location": "Seattle, WA",
+    "summary": "Account Executive with 5 years of experience in account executive, known for practical execution, clear communication, and measurable outcomes in vertical SaaS.",
+    "skills": [
+      "discovery",
+      "MEDDIC",
+      "contract negotiation",
+      "forecasting",
+      "Salesforce"
+    ],
+    "experience": [
+      {
+        "title": "Account Executive",
+        "company": "Silverline Apps",
+        "startYear": 2021,
+        "endYear": null,
+        "bullets": [
+          "Closed $980K ARR and maintained 112% quota attainment.",
+          "Partnered with product, operations, and leadership stakeholders to prioritize work and communicate progress against shared goals.",
+          "Documented repeatable workflows and mentored peers on discovery and MEDDIC practices."
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "BA or BS, relevant field",
+        "school": "Western Applied Sciences Institute",
+        "year": 2020
+      }
+    ],
+    "projects": [
+      {
+        "name": "Account Executive impact portfolio",
+        "description": "Anonymized examples showing discovery, MEDDIC, and measurable improvements from recent work."
+      }
+    ]
+  },
+  {
+    "id": "r-031",
+    "label": "Enterprise Account Executive, 9 yrs",
+    "field": "sales",
+    "subfield": "enterprise sales",
+    "seniorityLevel": "senior",
+    "seniorityYears": 9,
+    "candidateName": "Rafi Cohen",
+    "location": "Austin, TX",
+    "summary": "Enterprise Account Executive with 9 years of experience in enterprise sales, known for practical execution, clear communication, and measurable outcomes in cloud infrastructure.",
+    "skills": [
+      "enterprise selling",
+      "mutual action plans",
+      "executive presence",
+      "renewals",
+      "security reviews"
+    ],
+    "experience": [
+      {
+        "title": "Enterprise Account Executive",
+        "company": "BlueOwl Labs",
+        "startYear": 2017,
+        "endYear": null,
+        "bullets": [
+          "Closed six-figure platform deals with 14-month average contract value growth.",
+          "Partnered with product, operations, and leadership stakeholders to prioritize work and communicate progress against shared goals.",
+          "Documented repeatable workflows and mentored peers on enterprise selling and mutual action plans practices."
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "BA or BS, relevant field",
+        "school": "State University",
+        "year": 2016
+      }
+    ],
+    "projects": [
+      {
+        "name": "Enterprise Sales impact portfolio",
+        "description": "Anonymized examples showing enterprise selling, mutual action plans, and measurable improvements from recent work."
+      }
+    ]
+  },
+  {
+    "id": "r-032",
+    "label": "Customer Success Manager, 4 yrs",
+    "field": "sales",
+    "subfield": "customer success",
+    "seniorityLevel": "mid",
+    "seniorityYears": 4,
+    "candidateName": "Gia Flores",
+    "location": "Chicago, IL",
+    "summary": "Customer Success Manager with 4 years of experience in customer success, known for practical execution, clear communication, and measurable outcomes in B2B software.",
+    "skills": [
+      "QBRs",
+      "renewal management",
+      "adoption planning",
+      "health scoring",
+      "training"
+    ],
+    "experience": [
+      {
+        "title": "Customer Success Manager",
+        "company": "North Harbor Health",
+        "startYear": 2022,
+        "endYear": null,
+        "bullets": [
+          "Managed $4M ARR book and improved gross retention to 93%.",
+          "Partnered with product, operations, and leadership stakeholders to prioritize work and communicate progress against shared goals.",
+          "Documented repeatable workflows and mentored peers on QBRs and renewal management practices."
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "BA or BS, relevant field",
+        "school": "Regional Polytechnic",
+        "year": 2021
+      }
+    ],
+    "projects": [
+      {
+        "name": "Customer Success impact portfolio",
+        "description": "Anonymized examples showing QBRs, renewal management, and measurable improvements from recent work."
+      }
+    ]
+  },
+  {
+    "id": "r-033",
+    "label": "Regional Sales Director, 13 yrs",
+    "field": "sales",
+    "subfield": "sales leadership",
+    "seniorityLevel": "principal",
+    "seniorityYears": 13,
+    "candidateName": "Ben Park",
+    "location": "Denver, CO",
+    "summary": "Regional Sales Director with 13 years of experience in sales leadership, known for practical execution, clear communication, and measurable outcomes in industrial technology.",
+    "skills": [
+      "team leadership",
+      "forecasting",
+      "territory planning",
+      "coaching",
+      "channel sales"
+    ],
+    "experience": [
+      {
+        "title": "Regional Sales Director",
+        "company": "Cedar Metric",
+        "startYear": 2013,
+        "endYear": null,
+        "bullets": [
+          "Led eight sellers to 118% regional quota and rebuilt partner coverage model.",
+          "Partnered with product, operations, and leadership stakeholders to prioritize work and communicate progress against shared goals.",
+          "Documented repeatable workflows and mentored peers on team leadership and forecasting practices."
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "BA or BS, relevant field",
+        "school": "Mid-Atlantic Liberal Arts College",
+        "year": 2012
+      }
+    ],
+    "projects": [
+      {
+        "name": "Sales Leadership impact portfolio",
+        "description": "Anonymized examples showing team leadership, forecasting, and measurable improvements from recent work."
+      }
+    ]
+  },
+  {
+    "id": "r-034",
+    "label": "FP&A Analyst, 5 yrs",
+    "field": "finance",
+    "subfield": "fp&a",
+    "seniorityLevel": "mid",
+    "seniorityYears": 5,
+    "candidateName": "Amara Wells",
+    "location": "Raleigh, NC",
+    "summary": "FP&A Analyst with 5 years of experience in fp&a, known for practical execution, clear communication, and measurable outcomes in retail.",
+    "skills": [
+      "forecasting",
+      "variance analysis",
+      "SQL",
+      "Excel",
+      "executive reporting"
+    ],
+    "experience": [
+      {
+        "title": "FP&A Analyst",
+        "company": "BrightPath Systems",
+        "startYear": 2021,
+        "endYear": null,
+        "bullets": [
+          "Created rolling forecast model improving revenue forecast accuracy by 14%.",
+          "Partnered with product, operations, and leadership stakeholders to prioritize work and communicate progress against shared goals.",
+          "Documented repeatable workflows and mentored peers on forecasting and variance analysis practices."
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "BS Finance",
+        "school": "Metro Business College",
+        "year": 2020
+      }
+    ],
+    "projects": [
+      {
+        "name": "Fp&A impact portfolio",
+        "description": "Anonymized examples showing forecasting, variance analysis, and measurable improvements from recent work."
+      }
+    ]
+  },
+  {
+    "id": "r-035",
+    "label": "Finance Manager, 8 yrs",
+    "field": "finance",
+    "subfield": "operations finance",
+    "seniorityLevel": "senior",
+    "seniorityYears": 8,
+    "candidateName": "Ivy Brooks",
+    "location": "Portland, OR",
+    "summary": "Finance Manager with 8 years of experience in operations finance, known for practical execution, clear communication, and measurable outcomes in manufacturing.",
+    "skills": [
+      "cost accounting",
+      "budgeting",
+      "pricing analysis",
+      "Power BI",
+      "process improvement"
+    ],
+    "experience": [
+      {
+        "title": "Finance Manager",
+        "company": "Stage One Studios",
+        "startYear": 2018,
+        "endYear": null,
+        "bullets": [
+          "Identified $3.2M in margin improvements through SKU profitability analysis.",
+          "Partnered with product, operations, and leadership stakeholders to prioritize work and communicate progress against shared goals.",
+          "Documented repeatable workflows and mentored peers on cost accounting and budgeting practices."
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "BS Finance",
+        "school": "Western Applied Sciences Institute",
+        "year": 2017
+      }
+    ],
+    "projects": [
+      {
+        "name": "Operations Finance impact portfolio",
+        "description": "Anonymized examples showing cost accounting, budgeting, and measurable improvements from recent work."
+      }
+    ]
+  },
+  {
+    "id": "r-036",
+    "label": "Operations Manager, 6 yrs",
+    "field": "operations",
+    "subfield": "program operations",
+    "seniorityLevel": "mid",
+    "seniorityYears": 6,
+    "candidateName": "Leo Nadir",
+    "location": "Minneapolis, MN",
+    "summary": "Operations Manager with 6 years of experience in program operations, known for practical execution, clear communication, and measurable outcomes in logistics.",
+    "skills": [
+      "process mapping",
+      "vendor management",
+      "KPI dashboards",
+      "Lean",
+      "workforce scheduling"
+    ],
+    "experience": [
+      {
+        "title": "Operations Manager",
+        "company": "Riverbend Analytics",
+        "startYear": 2020,
+        "endYear": null,
+        "bullets": [
+          "Reduced fulfillment defects 28% across three warehouse shifts.",
+          "Partnered with product, operations, and leadership stakeholders to prioritize work and communicate progress against shared goals.",
+          "Documented repeatable workflows and mentored peers on process mapping and vendor management practices."
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "BA or BS, relevant field",
+        "school": "State University",
+        "year": 2019
+      }
+    ],
+    "projects": [
+      {
+        "name": "Program Operations impact portfolio",
+        "description": "Anonymized examples showing process mapping, vendor management, and measurable improvements from recent work."
+      }
+    ]
+  },
+  {
+    "id": "r-037",
+    "label": "Business Operations Lead, 9 yrs",
+    "field": "operations",
+    "subfield": "business operations",
+    "seniorityLevel": "senior",
+    "seniorityYears": 9,
+    "candidateName": "Celia Ford",
+    "location": "Atlanta, GA",
+    "summary": "Business Operations Lead with 9 years of experience in business operations, known for practical execution, clear communication, and measurable outcomes in marketplace.",
+    "skills": [
+      "strategy ops",
+      "SQL",
+      "process design",
+      "OKRs",
+      "cross-functional leadership"
+    ],
+    "experience": [
+      {
+        "title": "Business Operations Lead",
+        "company": "Atlas Grove",
+        "startYear": 2017,
+        "endYear": null,
+        "bullets": [
+          "Designed operating cadence that improved launch predictability across five teams.",
+          "Partnered with product, operations, and leadership stakeholders to prioritize work and communicate progress against shared goals.",
+          "Documented repeatable workflows and mentored peers on strategy ops and SQL practices."
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "BA or BS, relevant field",
+        "school": "Regional Polytechnic",
+        "year": 2016
+      }
+    ],
+    "projects": [
+      {
+        "name": "Business Operations impact portfolio",
+        "description": "Anonymized examples showing strategy ops, SQL, and measurable improvements from recent work."
+      }
+    ]
+  },
+  {
+    "id": "r-038",
+    "label": "Talent Acquisition Partner, 7 yrs",
+    "field": "people",
+    "subfield": "talent acquisition",
+    "seniorityLevel": "senior",
+    "seniorityYears": 7,
+    "candidateName": "Omar Knight",
+    "location": "Phoenix, AZ",
+    "summary": "Talent Acquisition Partner with 7 years of experience in talent acquisition, known for practical execution, clear communication, and measurable outcomes in biotech.",
+    "skills": [
+      "sourcing",
+      "interview design",
+      "ATS",
+      "stakeholder management",
+      "diversity hiring"
+    ],
+    "experience": [
+      {
+        "title": "Talent Acquisition Partner",
+        "company": "Nimbus Works",
+        "startYear": 2019,
+        "endYear": null,
+        "bullets": [
+          "Filled 48 specialist roles and improved onsite-to-offer conversion by 16%.",
+          "Partnered with product, operations, and leadership stakeholders to prioritize work and communicate progress against shared goals.",
+          "Documented repeatable workflows and mentored peers on sourcing and interview design practices."
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "BA or BS, relevant field",
+        "school": "Mid-Atlantic Liberal Arts College",
+        "year": 2018
+      }
+    ],
+    "projects": [
+      {
+        "name": "Talent Acquisition impact portfolio",
+        "description": "Anonymized examples showing sourcing, interview design, and measurable improvements from recent work."
+      }
+    ]
+  },
+  {
+    "id": "r-039",
+    "label": "Senior HR Business Partner, 12 yrs",
+    "field": "people",
+    "subfield": "hrbp",
+    "seniorityLevel": "principal",
+    "seniorityYears": 12,
+    "candidateName": "June Adler",
+    "location": "Boston, MA",
+    "summary": "Senior HR Business Partner with 12 years of experience in hrbp, known for practical execution, clear communication, and measurable outcomes in enterprise software.",
+    "skills": [
+      "org design",
+      "performance management",
+      "employee relations",
+      "workforce planning",
+      "coaching"
+    ],
+    "experience": [
+      {
+        "title": "Senior HR Business Partner",
+        "company": "Copperline Group",
+        "startYear": 2014,
+        "endYear": null,
+        "bullets": [
+          "Partnered with leaders across 600 employees during two reorganizations.",
+          "Partnered with product, operations, and leadership stakeholders to prioritize work and communicate progress against shared goals.",
+          "Documented repeatable workflows and mentored peers on org design and performance management practices."
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "BA or BS, relevant field",
+        "school": "Metro Business College",
+        "year": 2013
+      }
+    ],
+    "projects": [
+      {
+        "name": "Hrbp impact portfolio",
+        "description": "Anonymized examples showing org design, performance management, and measurable improvements from recent work."
+      }
+    ]
+  },
+  {
+    "id": "r-040",
+    "label": "Registered Nurse, new grad",
+    "field": "healthcare",
+    "subfield": "nursing",
+    "seniorityLevel": "new_grad",
+    "seniorityYears": 0,
+    "candidateName": "Pia Malik",
+    "location": "Seattle, WA",
+    "summary": "Registered Nurse with early-career experience in nursing, known for practical execution, clear communication, and measurable outcomes in acute care.",
+    "skills": [
+      "patient assessment",
+      "EHR",
+      "care planning",
+      "medication safety",
+      "patient education"
+    ],
+    "experience": [
+      {
+        "title": "Registered Nurse",
+        "company": "Silverline Apps",
+        "startYear": 2025,
+        "endYear": null,
+        "bullets": [
+          "Completed clinical rotations in med-surg, pediatrics, and community health.",
+          "Partnered with product, operations, and leadership stakeholders to prioritize work and communicate progress against shared goals.",
+          "Documented repeatable workflows and mentored peers on patient assessment and EHR practices."
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "BS Health Sciences",
+        "school": "Western Applied Sciences Institute",
+        "year": 2025
+      }
+    ],
+    "projects": [
+      {
+        "name": "Nursing impact portfolio",
+        "description": "Anonymized examples showing patient assessment, EHR, and measurable improvements from recent work."
+      }
+    ]
+  },
+  {
+    "id": "r-041",
+    "label": "Clinical Operations Lead, 8 yrs",
+    "field": "healthcare",
+    "subfield": "clinical operations",
+    "seniorityLevel": "senior",
+    "seniorityYears": 8,
+    "candidateName": "Ren Ito",
+    "location": "Austin, TX",
+    "summary": "Clinical Operations Lead with 8 years of experience in clinical operations, known for practical execution, clear communication, and measurable outcomes in telehealth.",
+    "skills": [
+      "clinical workflows",
+      "quality improvement",
+      "HIPAA",
+      "training",
+      "incident review"
+    ],
+    "experience": [
+      {
+        "title": "Clinical Operations Lead",
+        "company": "BlueOwl Labs",
+        "startYear": 2018,
+        "endYear": null,
+        "bullets": [
+          "Standardized care escalation protocols and reduced response delays by 31%.",
+          "Partnered with product, operations, and leadership stakeholders to prioritize work and communicate progress against shared goals.",
+          "Documented repeatable workflows and mentored peers on clinical workflows and quality improvement practices."
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "BS Health Sciences",
+        "school": "State University",
+        "year": 2017
+      }
+    ],
+    "projects": [
+      {
+        "name": "Clinical Operations impact portfolio",
+        "description": "Anonymized examples showing clinical workflows, quality improvement, and measurable improvements from recent work."
+      }
+    ]
+  },
+  {
+    "id": "r-042",
+    "label": "Research Associate, 4 yrs",
+    "field": "healthcare",
+    "subfield": "biotech research",
+    "seniorityLevel": "mid",
+    "seniorityYears": 4,
+    "candidateName": "Elle Hart",
+    "location": "Chicago, IL",
+    "summary": "Research Associate with 4 years of experience in biotech research, known for practical execution, clear communication, and measurable outcomes in biotech.",
+    "skills": [
+      "cell culture",
+      "ELISA",
+      "PCR",
+      "lab documentation",
+      "LIMS",
+      "assay development"
+    ],
+    "experience": [
+      {
+        "title": "Research Associate",
+        "company": "North Harbor Health",
+        "startYear": 2022,
+        "endYear": null,
+        "bullets": [
+          "Supported assay validation that improved sample throughput 20%.",
+          "Partnered with product, operations, and leadership stakeholders to prioritize work and communicate progress against shared goals.",
+          "Documented repeatable workflows and mentored peers on cell culture and ELISA practices."
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "BS Health Sciences",
+        "school": "Regional Polytechnic",
+        "year": 2021
+      }
+    ],
+    "projects": [
+      {
+        "name": "Biotech Research impact portfolio",
+        "description": "Anonymized examples showing cell culture, ELISA, and measurable improvements from recent work."
+      }
+    ]
+  },
+  {
+    "id": "r-043",
+    "label": "High School Math Teacher, 2 yrs",
+    "field": "education",
+    "subfield": "secondary teaching",
+    "seniorityLevel": "junior",
+    "seniorityYears": 2,
+    "candidateName": "Hugo Silva",
+    "location": "Denver, CO",
+    "summary": "High School Math Teacher with 2 years of experience in secondary teaching, known for practical execution, clear communication, and measurable outcomes in public education.",
+    "skills": [
+      "lesson planning",
+      "classroom management",
+      "assessment design",
+      "data-informed instruction"
+    ],
+    "experience": [
+      {
+        "title": "High School Math Teacher",
+        "company": "Cedar Metric",
+        "startYear": 2024,
+        "endYear": null,
+        "bullets": [
+          "Raised algebra proficiency 11 points across two sections.",
+          "Partnered with product, operations, and leadership stakeholders to prioritize work and communicate progress against shared goals.",
+          "Documented repeatable workflows and mentored peers on lesson planning and classroom management practices."
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "BA or BS, relevant field",
+        "school": "Mid-Atlantic Liberal Arts College",
+        "year": 2023
+      }
+    ],
+    "projects": [
+      {
+        "name": "Secondary Teaching impact portfolio",
+        "description": "Anonymized examples showing lesson planning, classroom management, and measurable improvements from recent work."
+      }
+    ]
+  },
+  {
+    "id": "r-044",
+    "label": "Instructional Designer, 9 yrs",
+    "field": "education",
+    "subfield": "curriculum design",
+    "seniorityLevel": "senior",
+    "seniorityYears": 9,
+    "candidateName": "Mina Clarke",
+    "location": "Raleigh, NC",
+    "summary": "Instructional Designer with 9 years of experience in curriculum design, known for practical execution, clear communication, and measurable outcomes in online learning.",
+    "skills": [
+      "curriculum design",
+      "LMS",
+      "adult learning",
+      "accessibility",
+      "video scripting"
+    ],
+    "experience": [
+      {
+        "title": "Instructional Designer",
+        "company": "BrightPath Systems",
+        "startYear": 2017,
+        "endYear": null,
+        "bullets": [
+          "Built blended courses completed by 18K learners with 92% satisfaction.",
+          "Partnered with product, operations, and leadership stakeholders to prioritize work and communicate progress against shared goals.",
+          "Documented repeatable workflows and mentored peers on curriculum design and LMS practices."
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "BA or BS, relevant field",
+        "school": "Metro Business College",
+        "year": 2016
+      }
+    ],
+    "projects": [
+      {
+        "name": "Curriculum Design impact portfolio",
+        "description": "Anonymized examples showing curriculum design, LMS, and measurable improvements from recent work."
+      }
+    ]
+  },
+  {
+    "id": "r-045",
+    "label": "Paralegal, 5 yrs",
+    "field": "legal",
+    "subfield": "paralegal",
+    "seniorityLevel": "mid",
+    "seniorityYears": 5,
+    "candidateName": "Tess Nguyen",
+    "location": "Portland, OR",
+    "summary": "Paralegal with 5 years of experience in paralegal, known for practical execution, clear communication, and measurable outcomes in employment law.",
+    "skills": [
+      "legal research",
+      "case management",
+      "discovery",
+      "document review",
+      "client intake"
+    ],
+    "experience": [
+      {
+        "title": "Paralegal",
+        "company": "Stage One Studios",
+        "startYear": 2021,
+        "endYear": null,
+        "bullets": [
+          "Managed discovery trackers for 40 active matters with zero missed deadlines.",
+          "Partnered with product, operations, and leadership stakeholders to prioritize work and communicate progress against shared goals.",
+          "Documented repeatable workflows and mentored peers on legal research and case management practices."
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "BA or BS, relevant field",
+        "school": "Western Applied Sciences Institute",
+        "year": 2020
+      }
+    ],
+    "projects": [
+      {
+        "name": "Paralegal impact portfolio",
+        "description": "Anonymized examples showing legal research, case management, and measurable improvements from recent work."
+      }
+    ]
+  },
+  {
+    "id": "r-046",
+    "label": "Investigative Reporter, 8 yrs",
+    "field": "media",
+    "subfield": "journalism",
+    "seniorityLevel": "senior",
+    "seniorityYears": 8,
+    "candidateName": "Arun Nair",
+    "location": "Minneapolis, MN",
+    "summary": "Investigative Reporter with 8 years of experience in journalism, known for practical execution, clear communication, and measurable outcomes in local media.",
+    "skills": [
+      "interviewing",
+      "FOIA",
+      "data reporting",
+      "editing",
+      "deadline writing"
+    ],
+    "experience": [
+      {
+        "title": "Investigative Reporter",
+        "company": "Riverbend Analytics",
+        "startYear": 2018,
+        "endYear": null,
+        "bullets": [
+          "Produced accountability series that increased digital subscriptions 7%.",
+          "Partnered with product, operations, and leadership stakeholders to prioritize work and communicate progress against shared goals.",
+          "Documented repeatable workflows and mentored peers on interviewing and FOIA practices."
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "BA or BS, relevant field",
+        "school": "State University",
+        "year": 2017
+      }
+    ],
+    "projects": [
+      {
+        "name": "Journalism impact portfolio",
+        "description": "Anonymized examples showing interviewing, FOIA, and measurable improvements from recent work."
+      }
+    ]
+  },
+  {
+    "id": "r-047",
+    "label": "QA Automation Engineer, 4 yrs",
+    "field": "software",
+    "subfield": "qa automation",
+    "seniorityLevel": "mid",
+    "seniorityYears": 4,
+    "candidateName": "Quinn Davis",
+    "location": "Atlanta, GA",
+    "summary": "QA Automation Engineer with 4 years of experience in qa automation, known for practical execution, clear communication, and measurable outcomes in insurance software.",
+    "skills": [
+      "Playwright",
+      "TypeScript",
+      "API testing",
+      "CI/CD",
+      "test planning"
+    ],
+    "experience": [
+      {
+        "title": "QA Automation Engineer",
+        "company": "Atlas Grove",
+        "startYear": 2022,
+        "endYear": null,
+        "bullets": [
+          "Expanded automated regression coverage from 35% to 78%.",
+          "Partnered with product, operations, and leadership stakeholders to prioritize work and communicate progress against shared goals.",
+          "Documented repeatable workflows and mentored peers on Playwright and TypeScript practices."
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "BA or BS, relevant field",
+        "school": "Regional Polytechnic",
+        "year": 2021
+      }
+    ],
+    "projects": [
+      {
+        "name": "Qa Automation impact portfolio",
+        "description": "Anonymized examples showing Playwright, TypeScript, and measurable improvements from recent work."
+      }
+    ]
+  },
+  {
+    "id": "r-048",
+    "label": "Solutions Engineer, 8 yrs",
+    "field": "software",
+    "subfield": "solutions engineering",
+    "seniorityLevel": "senior",
+    "seniorityYears": 8,
+    "candidateName": "Lena Brooks",
+    "location": "Phoenix, AZ",
+    "summary": "Solutions Engineer with 8 years of experience in solutions engineering, known for practical execution, clear communication, and measurable outcomes in data platforms.",
+    "skills": [
+      "technical demos",
+      "SQL",
+      "Python",
+      "architecture reviews",
+      "RFPs"
+    ],
+    "experience": [
+      {
+        "title": "Solutions Engineer",
+        "company": "Nimbus Works",
+        "startYear": 2018,
+        "endYear": null,
+        "bullets": [
+          "Supported pre-sales technical work on $6M in closed pipeline.",
+          "Partnered with product, operations, and leadership stakeholders to prioritize work and communicate progress against shared goals.",
+          "Documented repeatable workflows and mentored peers on technical demos and SQL practices."
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "BA or BS, relevant field",
+        "school": "Mid-Atlantic Liberal Arts College",
+        "year": 2017
+      }
+    ],
+    "projects": [
+      {
+        "name": "Solutions Engineering impact portfolio",
+        "description": "Anonymized examples showing technical demos, SQL, and measurable improvements from recent work."
+      }
+    ]
+  },
+  {
+    "id": "r-049",
+    "label": "Engineering Manager, 15 yrs",
+    "field": "software",
+    "subfield": "engineering management",
+    "seniorityLevel": "principal",
+    "seniorityYears": 15,
+    "candidateName": "Cole Rivera",
+    "location": "Boston, MA",
+    "summary": "Engineering Manager with 15 years of experience in engineering management, known for practical execution, clear communication, and measurable outcomes in productivity software.",
+    "skills": [
+      "people management",
+      "delivery planning",
+      "system design",
+      "hiring",
+      "incident review"
+    ],
+    "experience": [
+      {
+        "title": "Engineering Manager",
+        "company": "Copperline Group",
+        "startYear": 2011,
+        "endYear": null,
+        "bullets": [
+          "Led 18 engineers across three squads and improved roadmap predictability 30%.",
+          "Partnered with product, operations, and leadership stakeholders to prioritize work and communicate progress against shared goals.",
+          "Documented repeatable workflows and mentored peers on people management and delivery planning practices."
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "BA or BS, relevant field",
+        "school": "Metro Business College",
+        "year": 2010
+      }
+    ],
+    "projects": [
+      {
+        "name": "Engineering Management impact portfolio",
+        "description": "Anonymized examples showing people management, delivery planning, and measurable improvements from recent work."
+      }
+    ]
+  },
+  {
+    "id": "r-050",
+    "label": "Full-Stack Developer, new grad",
+    "field": "software",
+    "subfield": "new graduate full stack",
+    "seniorityLevel": "new_grad",
+    "seniorityYears": 0,
+    "candidateName": "Sara Pike",
+    "location": "Seattle, WA",
+    "summary": "Full-Stack Developer with early-career experience in new graduate full stack, known for practical execution, clear communication, and measurable outcomes in civic technology.",
+    "skills": [
+      "TypeScript",
+      "React",
+      "Node.js",
+      "PostgreSQL",
+      "unit testing"
+    ],
+    "experience": [
+      {
+        "title": "Full-Stack Developer",
+        "company": "Silverline Apps",
+        "startYear": 2025,
+        "endYear": null,
+        "bullets": [
+          "Built capstone volunteer-matching app used by four nonprofit partners.",
+          "Partnered with product, operations, and leadership stakeholders to prioritize work and communicate progress against shared goals.",
+          "Documented repeatable workflows and mentored peers on TypeScript and React practices."
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "BA or BS, relevant field",
+        "school": "Western Applied Sciences Institute",
+        "year": 2025
+      }
+    ],
+    "projects": [
+      {
+        "name": "New Graduate Full Stack impact portfolio",
+        "description": "Anonymized examples showing TypeScript, React, and measurable improvements from recent work."
+      }
+    ]
+  }
+]

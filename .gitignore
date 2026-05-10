@@ -9,6 +9,8 @@ build
 
 # Local data
 data/
+!evals/data/
+!evals/data/**
 uploads/
 *.db
 *.db-journal
