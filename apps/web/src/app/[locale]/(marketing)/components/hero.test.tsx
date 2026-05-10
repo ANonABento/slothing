@@ -49,7 +49,7 @@ describe("Hero", () => {
   it("should render the subheadline with Slothing description", async () => {
     await renderHero();
     expect(
-      screen.getByText(/Slothing builds a knowledge bank/),
+      screen.getByText(/Slothing remembers your full career history/),
     ).toBeInTheDocument();
   });
 
