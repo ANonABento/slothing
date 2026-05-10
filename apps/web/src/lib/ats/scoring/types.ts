@@ -2,6 +2,7 @@ import type {
   ATSAnalysisResult,
   ATSIssue,
   KeywordAnalysis,
+  KeywordEvidenceSummary,
   LetterGrade,
 } from "@/lib/ats/analyzer";
 
@@ -35,6 +36,7 @@ export interface ATSScanResult {
   axes: Record<AxisKey, AxisScore>;
   issues: ATSIssue[];
   keywords: KeywordAnalysis[];
+  keywordEvidence?: KeywordEvidenceSummary;
   summary: string;
   recommendations: string[];
   scannedAt: string;
