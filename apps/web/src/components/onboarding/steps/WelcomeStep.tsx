@@ -1,17 +1,15 @@
 "use client";
 
-import { Rocket, CheckCircle } from "lucide-react";
+import { FileUp, PencilLine, Rocket } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
-const FEATURES = [
-  "AI resume parsing",
-  "Job match scoring",
-  "Resume builder",
-  "Mock interviews",
-  "Resume exports",
-  "Progress tracking",
-] as const;
+export type OnboardingPath = "resume" | "scratch";
 
-export function WelcomeStep() {
+interface WelcomeStepProps {
+  onSelectPath: (path: OnboardingPath) => void;
+}
+
+export function WelcomeStep({ onSelectPath }: WelcomeStepProps) {
   return (
     <div className="text-center">
       <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-primary to-accent text-primary-foreground shadow-lg mb-6">
@@ -22,21 +20,26 @@ export function WelcomeStep() {
         Your AI-powered job application assistant. Let&apos;s get your career
         details organized in a few quick steps.
       </p>
-      <div className="mt-6 pt-6 border-t">
-        <p className="text-sm font-medium text-muted-foreground mb-3">
-          What Slothing helps you with:
+      <div className="mt-6 pt-6 border-t space-y-3">
+        <p className="text-sm font-medium text-muted-foreground">
+          Pick the starting point that fits where you are today.
         </p>
-        <div className="grid grid-cols-2 gap-2 text-xs">
-          {FEATURES.map((feature) => (
-            <div
-              key={feature}
-              className="flex items-center gap-2 text-muted-foreground"
-            >
-              <CheckCircle className="h-3 w-3 text-success" />
-              {feature}
-            </div>
-          ))}
-        </div>
+        <Button
+          type="button"
+          className="w-full gap-2 gradient-bg text-primary-foreground hover:opacity-90"
+          onClick={() => onSelectPath("resume")}
+        >
+          <FileUp className="h-4 w-4" />I have a resume
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full gap-2"
+          onClick={() => onSelectPath("scratch")}
+        >
+          <PencilLine className="h-4 w-4" />
+          I&apos;m starting from scratch
+        </Button>
       </div>
     </div>
   );
