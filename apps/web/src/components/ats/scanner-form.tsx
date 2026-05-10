@@ -23,10 +23,12 @@ import {
 } from "@/lib/ats/analyzer";
 import { pluralize } from "@/lib/text/pluralize";
 import { textToProfile, textToJob } from "@/lib/ats/text-to-profile";
+import { computeJdMatch, type JdMatchResult } from "@/lib/ats/match-score";
 import { nowIso } from "@/lib/format/time";
 import type { JobDescription, Profile } from "@/types";
 import { ScoreDisplay } from "./score-display";
 import { FixSuggestionsList } from "./fix-suggestions";
+import { JdMatchCard } from "./jd-match-card";
 
 const MIN_RESUME_LENGTH = 50;
 const MAX_UPLOAD_SIZE = 5 * 1024 * 1024;
@@ -101,6 +103,41 @@ function opportunityToText(opportunity: ScrapedOpportunity) {
     .join("\n\n");
 }
 
+function profileToMatchText(profile: Profile, fallbackText: string) {
+  const parts = [
+    fallbackText,
+    profile.rawText,
+    profile.contact?.name,
+    profile.summary,
+    ...profile.experiences.flatMap((experience) => [
+      experience.title,
+      experience.company,
+      experience.description,
+      ...experience.highlights,
+      ...experience.skills,
+    ]),
+    ...profile.education.flatMap((education) => [
+      education.institution,
+      education.degree,
+      education.field,
+      ...education.highlights,
+    ]),
+    ...profile.skills.map((skill) => skill.name),
+    ...profile.projects.flatMap((project) => [
+      project.name,
+      project.description,
+      ...project.technologies,
+      ...project.highlights,
+    ]),
+    ...profile.certifications.flatMap((certification) => [
+      certification.name,
+      certification.issuer,
+    ]),
+  ];
+
+  return parts.filter(Boolean).join(" ");
+}
+
 export function ScannerForm({ locale = "en" }: ScannerFormProps = {}) {
   const [resumeText, setResumeText] = useState("");
   const [jobText, setJobText] = useState("");
@@ -117,6 +154,7 @@ export function ScannerForm({ locale = "en" }: ScannerFormProps = {}) {
   const [parsing, setParsing] = useState(false);
   const [scraping, setScraping] = useState(false);
   const [result, setResult] = useState<ATSScanResult | null>(null);
+  const [jdMatch, setJdMatch] = useState<JdMatchResult | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
   const jobTextareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -241,14 +279,23 @@ export function ScannerForm({ locale = "en" }: ScannerFormProps = {}) {
       const job =
         scrapedJob ||
         (jobText.trim().length > 20 ? textToJob(jobText) : undefined);
+      const jdText = job?.description || jobText;
       const analysis = scanResume(profile, resumeText, job, fileMeta);
       setResult(analysis);
+      setJdMatch(
+        jdText.trim()
+          ? computeJdMatch(profileToMatchText(profile, resumeText), jdText, {
+              missingLimit: 10,
+            })
+          : null,
+      );
       setAnalyzing(false);
     });
   }
 
   function handleReset() {
     setResult(null);
+    setJdMatch(null);
     setResumeText("");
     setJobText("");
     setJobUrl("");
@@ -274,6 +321,8 @@ export function ScannerForm({ locale = "en" }: ScannerFormProps = {}) {
     return (
       <div className="space-y-8">
         <ScoreDisplay result={legacyResult} />
+
+        {jdMatch ? <JdMatchCard match={jdMatch} /> : null}
 
         <div className="rounded-lg border border-border bg-card p-4">
           <h3 className="mb-3 text-sm font-semibold">Scoring axes</h3>
