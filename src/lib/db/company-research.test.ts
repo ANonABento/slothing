@@ -15,7 +15,10 @@ vi.mock("@/lib/utils", () => ({
 import db from "./legacy";
 import {
   deleteCompanyResearch,
+  getCompanyEnrichment,
   getCompanyResearch,
+  isEnrichmentStale,
+  saveCompanyEnrichment,
   saveCompanyResearch,
 } from "./company-research";
 
@@ -42,7 +45,7 @@ describe("Company Research DB Functions", () => {
     const result = getCompanyResearch(" Acme ", "user-123");
 
     expect(db.prepare).toHaveBeenCalledWith(
-      "SELECT * FROM company_research WHERE user_id = ? AND LOWER(company_name) = ?"
+      "SELECT * FROM company_research WHERE user_id = ? AND LOWER(company_name) = ?",
     );
     expect(mockGet).toHaveBeenCalledWith("user-123", "acme");
     expect(result?.id).toBe("research-id");
@@ -77,7 +80,7 @@ describe("Company Research DB Functions", () => {
         keyFacts: [],
         interviewQuestions: [],
       },
-      "user-123"
+      "user-123",
     );
 
     expect(mockRun.mock.calls[0].slice(0, 3)).toEqual([
@@ -94,8 +97,47 @@ describe("Company Research DB Functions", () => {
     deleteCompanyResearch("research-id", "user-123");
 
     expect(db.prepare).toHaveBeenCalledWith(
-      "DELETE FROM company_research WHERE id = ? AND user_id = ?"
+      "DELETE FROM company_research WHERE id = ? AND user_id = ?",
     );
     expect(mockRun).toHaveBeenCalledWith("research-id", "user-123");
+  });
+
+  it("should save and fetch company enrichment", () => {
+    const snapshot = {
+      version: 1 as const,
+      github: null,
+      news: { ok: true as const, data: { headlines: [] } },
+      levels: null,
+      blog: null,
+      hn: null,
+      enrichedAt: "2026-05-01T00:00:00.000Z",
+    };
+    const mockRun = vi.fn();
+    const mockGet = vi.fn().mockReturnValue({
+      enrichment_json: JSON.stringify(snapshot),
+      enriched_at: snapshot.enrichedAt,
+    });
+    (db.prepare as Mock).mockImplementation((sql: string) => {
+      if (sql.includes("INSERT INTO company_research")) {
+        return { run: mockRun };
+      }
+      return { get: mockGet };
+    });
+
+    const saved = saveCompanyEnrichment("user-123", "Acme", snapshot);
+    const fetched = getCompanyEnrichment("Acme", "user-123");
+
+    expect(saved).toEqual({ snapshot, enrichedAt: snapshot.enrichedAt });
+    expect(mockRun.mock.calls[0].slice(0, 3)).toEqual([
+      "research-id",
+      "user-123",
+      "acme",
+    ]);
+    expect(fetched).toEqual({ snapshot, enrichedAt: snapshot.enrichedAt });
+  });
+
+  it("detects stale enrichment timestamps", () => {
+    expect(isEnrichmentStale("not-a-date")).toBe(true);
+    expect(isEnrichmentStale("2020-01-01T00:00:00.000Z")).toBe(true);
   });
 });
