@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Briefcase, Loader2 } from "lucide-react";
+import { CompanyEnrichmentDossier } from "@/components/research/company-enrichment-dossier";
 import { CompanyResearchCard } from "@/components/research/company-research-card";
 import { Button } from "@/components/ui/button";
 import {
@@ -71,6 +72,7 @@ export default function CompanyResearchPage() {
       />
 
       <PageContent>
+        <CompanyEnrichmentDossier jobId={jobId} companyName={job.company} />
         <CompanyResearchCard companyName={job.company} jobId={jobId} />
       </PageContent>
     </AppPage>
