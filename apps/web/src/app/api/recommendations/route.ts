@@ -9,6 +9,8 @@ import { getProfile } from "@/lib/db";
 import { getJobs } from "@/lib/db/jobs";
 import { generateRecommendations } from "@/lib/recommendations/job-matcher";
 import { requireAuth, isAuthError } from "@/lib/auth";
+import { parseSearchParams } from "@/lib/api-utils";
+import { recommendationsQuerySchema } from "@/lib/schemas";
 
 export const dynamic = "force-dynamic";
 
@@ -17,8 +19,13 @@ export async function GET(request: NextRequest) {
   if (isAuthError(authResult)) return authResult;
 
   try {
-    const { searchParams } = new URL(request.url);
-    const limit = parseInt(searchParams.get("limit") || "10", 10);
+    const parsed = parseSearchParams(
+      request.nextUrl.searchParams,
+      recommendationsQuerySchema,
+    );
+    if (!parsed.ok) return parsed.response;
+
+    const { limit } = parsed.data;
 
     const profile = getProfile(authResult.userId);
     if (!profile) {

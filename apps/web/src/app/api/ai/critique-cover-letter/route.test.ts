@@ -139,4 +139,23 @@ describe("cover letter critique route", () => {
       error: "No LLM provider configured. Go to Settings to set one up.",
     });
   });
+
+  it("does not leak raw error messages on 500", async () => {
+    const probe = "INTERNAL_LEAK_PROBE_CRITIQUE_COVER_LETTER_4A30A145";
+    mocks.complete.mockRejectedValueOnce(new Error(probe));
+
+    const response = await POST(
+      critiqueRequest({
+        letter:
+          "Dear Acme, I built reliable systems. I would love to talk about this role.",
+        jd: "Acme needs a product engineer to improve developer tooling and reliability.",
+      }),
+    );
+
+    expect(response.status).toBe(500);
+    const body = await response.json();
+    expect(JSON.stringify(body)).not.toContain(probe);
+    expect(body).not.toHaveProperty("details");
+    expect(body.error).toBe("Failed to critique cover letter");
+  });
 });

@@ -46,9 +46,12 @@ export async function POST(request: NextRequest) {
     );
     return NextResponse.json({ variant }, { status: 201 });
   } catch (error) {
-    console.error("Create prompt variant error:", error);
+    console.error(
+      "Create prompt variant error:",
+      error instanceof Error ? error.stack : error,
+    );
     return NextResponse.json(
-      { error: "Failed to create prompt variant", details: String(error) },
+      { error: "Failed to create prompt variant" },
       { status: 500 },
     );
   }

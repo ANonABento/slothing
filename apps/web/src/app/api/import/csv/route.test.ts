@@ -88,4 +88,27 @@ describe("/api/import/csv route contract", () => {
 
     await expectRouteResponseContract(response);
   });
+
+  it("does not leak raw error messages on 400", async () => {
+    const parserMessage =
+      "CSV must have at least a header row and one data row";
+    setAuthSuccess();
+
+    const response = await invokeRouteHandler(
+      POST,
+      jsonRequest(
+        "http://localhost/api/import/csv",
+        { csv: "single-line" },
+        "POST",
+        { "x-extension-token": "test-token" },
+      ),
+      routeContext(),
+    );
+
+    expect(response.status).toBe(400);
+    const body = await response.json();
+    expect(JSON.stringify(body)).not.toContain(parserMessage);
+    expect(body).not.toHaveProperty("details");
+    expect(body.error).toBe("Failed to parse CSV");
+  });
 });

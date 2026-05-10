@@ -111,6 +111,12 @@ const pages = {
       "Check your resume's ATS compatibility score for free with private, in-browser scoring feedback.",
     path: "/ats-scanner",
   },
+  pricing: {
+    title: "Pricing",
+    description:
+      "Free, Pro, and Student plans for Slothing — start free, upgrade when you need unlimited tailored resumes.",
+    path: "/pricing",
+  },
 } satisfies Record<string, RouteSeo>;
 
 export type PageSeoKey = keyof typeof pages;

@@ -17,8 +17,8 @@ export function UploadStep() {
         <FileUp className="h-8 w-8" />
         <p className="text-sm">
           Drop your PDF or DOCX here, or head to{" "}
-          <span className="font-medium text-primary">Knowledge Bank</span> after
-          setup.
+          <span className="font-medium text-primary">Documents</span> after
+          setup to add it later.
         </p>
       </div>
     </div>

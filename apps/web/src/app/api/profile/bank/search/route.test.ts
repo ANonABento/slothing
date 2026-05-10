@@ -14,14 +14,10 @@ import { GET } from "./route";
 import {
   expectRouteResponseContract,
   getRequest,
-  invalidJsonRequest,
   invokeRouteHandler,
-  jsonRequest,
-  representativeBody,
   resetContractMocks,
   routeContext,
   setAuthFailure,
-  setAuthSuccess,
 } from "@/test/contract";
 
 describe("/api/profile/bank/search route contract", () => {
@@ -32,13 +28,45 @@ describe("/api/profile/bank/search route contract", () => {
   it("invokes the real GET handler and returns an HTTP response contract", async () => {
     const response = await invokeRouteHandler(
       GET,
-      getRequest("http://localhost/api/profile/bank/search", {
+      getRequest("http://localhost/api/profile/bank/search?q=hello", {
         "x-extension-token": "test-token",
       }),
       routeContext(),
     );
 
     await expectRouteResponseContract(response);
+  });
+
+  it("returns validation errors when the query is missing", async () => {
+    const response = await invokeRouteHandler(
+      GET,
+      getRequest("http://localhost/api/profile/bank/search", {
+        "x-extension-token": "test-token",
+      }),
+      routeContext(),
+    );
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toMatchObject({
+      error: "Validation failed",
+      errors: [{ field: "q" }],
+    });
+  });
+
+  it("returns validation errors for whitespace-only queries", async () => {
+    const response = await invokeRouteHandler(
+      GET,
+      getRequest("http://localhost/api/profile/bank/search?q=%20%20", {
+        "x-extension-token": "test-token",
+      }),
+      routeContext(),
+    );
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toMatchObject({
+      error: "Validation failed",
+      errors: [{ field: "q" }],
+    });
   });
 
   it("returns the shared auth failure contract", async () => {
