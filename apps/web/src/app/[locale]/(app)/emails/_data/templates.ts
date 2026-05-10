@@ -80,5 +80,5 @@ export const TEMPLATE_CONFIG: Record<EmailTemplateType, TemplateConfig> = {
   },
 };
 
-export const SHOW_DUPLICATE_SEND_WARNING = false;
+export const SHOW_DUPLICATE_SEND_WARNING = true;
 export const DUPLICATE_SEND_WINDOW_DAYS = 14;
