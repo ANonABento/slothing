@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { Suspense, useState, useEffect, useMemo } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import {
@@ -56,7 +56,7 @@ import {
   PagePanel,
   StandardEmptyState,
 } from "@/components/ui/page-layout";
-import { SkeletonButton } from "@/components/ui/skeleton";
+import { SkeletonButton, SkeletonCard } from "@/components/ui/skeleton";
 import { usePreferredLocale } from "@/components/format/time-ago";
 import { useErrorToast } from "@/hooks/use-error-toast";
 import type { JobDescription } from "@/types";
@@ -438,215 +438,219 @@ export default function CalendarPage() {
 
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Calendar Grid */}
-          <PagePanel className="p-2 sm:p-6 lg:col-span-2">
-            {/* Calendar Header */}
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-semibold">
-                {MONTHS[currentDate.getMonth()]} {currentDate.getFullYear()}
-              </h2>
-              <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm" onClick={goToToday}>
-                  Today
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={goToPreviousMonth}
-                  aria-label="Previous month"
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={goToNextMonth}
-                  aria-label="Next month"
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-
-            {/* Day Headers */}
-            <div className="mb-2 grid grid-cols-7 gap-0 sm:gap-1">
-              {DAYS.map((day) => (
-                <div
-                  key={day}
-                  className="text-center text-sm font-medium text-muted-foreground py-2"
-                >
-                  {day}
-                </div>
-              ))}
-            </div>
-
-            {/* Calendar Days */}
-            <div className="grid grid-cols-7 gap-0 sm:gap-1">
-              {calendarDays.map((date, i) => {
-                if (!date) {
-                  return <div key={`empty-${i}`} className="h-14 sm:h-16" />;
-                }
-
-                const dayEvents = getEventsForDate(date);
-                const isSelected =
-                  selectedDate &&
-                  date.getFullYear() === selectedDate.getFullYear() &&
-                  date.getMonth() === selectedDate.getMonth() &&
-                  date.getDate() === selectedDate.getDate();
-
-                return (
-                  <button
-                    key={toIso(date)}
-                    onClick={() => setSelectedDate(date)}
-                    className={`relative h-14 rounded-lg p-1 text-sm transition-colors sm:h-16 ${
-                      isSelected
-                        ? "bg-primary text-primary-foreground"
-                        : isToday(date)
-                          ? "bg-primary/20 font-bold"
-                          : "hover:bg-muted"
-                    }`}
+          <Suspense fallback={<SkeletonCard className="lg:col-span-2" />}>
+            <PagePanel className="p-2 sm:p-6 lg:col-span-2">
+              {/* Calendar Header */}
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-semibold">
+                  {MONTHS[currentDate.getMonth()]} {currentDate.getFullYear()}
+                </h2>
+                <div className="flex items-center gap-2">
+                  <Button variant="outline" size="sm" onClick={goToToday}>
+                    Today
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={goToPreviousMonth}
+                    aria-label="Previous month"
                   >
-                    <span className="block">{date.getDate()}</span>
-                    {dayEvents.length > 0 && (
-                      <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-0.5">
-                        {dayEvents.slice(0, 3).map((e) => (
-                          <span
-                            key={e.id}
-                            className={`w-1.5 h-1.5 rounded-full ${EVENT_COLORS[e.type]}`}
-                          />
-                        ))}
-                      </div>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={goToNextMonth}
+                    aria-label="Next month"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
 
-            {/* Legend */}
-            <div className="flex items-center gap-4 mt-6 pt-4 border-t text-sm text-muted-foreground">
-              <span className="flex items-center gap-2">
-                <span className="w-3 h-3 rounded-full bg-primary" />
-                Interview
-              </span>
-              <span className="flex items-center gap-2">
-                <span className="w-3 h-3 rounded-full bg-destructive" />
-                Deadline
-              </span>
-              <span className="flex items-center gap-2">
-                <span className="w-3 h-3 rounded-full bg-info" />
-                Reminder
-              </span>
-            </div>
-          </PagePanel>
+              {/* Day Headers */}
+              <div className="mb-2 grid grid-cols-7 gap-0 sm:gap-1">
+                {DAYS.map((day) => (
+                  <div
+                    key={day}
+                    className="text-center text-sm font-medium text-muted-foreground py-2"
+                  >
+                    {day}
+                  </div>
+                ))}
+              </div>
+
+              {/* Calendar Days */}
+              <div className="grid grid-cols-7 gap-0 sm:gap-1">
+                {calendarDays.map((date, i) => {
+                  if (!date) {
+                    return <div key={`empty-${i}`} className="h-14 sm:h-16" />;
+                  }
+
+                  const dayEvents = getEventsForDate(date);
+                  const isSelected =
+                    selectedDate &&
+                    date.getFullYear() === selectedDate.getFullYear() &&
+                    date.getMonth() === selectedDate.getMonth() &&
+                    date.getDate() === selectedDate.getDate();
+
+                  return (
+                    <button
+                      key={toIso(date)}
+                      onClick={() => setSelectedDate(date)}
+                      className={`relative h-14 rounded-lg p-1 text-sm transition-colors sm:h-16 ${
+                        isSelected
+                          ? "bg-primary text-primary-foreground"
+                          : isToday(date)
+                            ? "bg-primary/20 font-bold"
+                            : "hover:bg-muted"
+                      }`}
+                    >
+                      <span className="block">{date.getDate()}</span>
+                      {dayEvents.length > 0 && (
+                        <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-0.5">
+                          {dayEvents.slice(0, 3).map((e) => (
+                            <span
+                              key={e.id}
+                              className={`w-1.5 h-1.5 rounded-full ${EVENT_COLORS[e.type]}`}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Legend */}
+              <div className="flex items-center gap-4 mt-6 pt-4 border-t text-sm text-muted-foreground">
+                <span className="flex items-center gap-2">
+                  <span className="w-3 h-3 rounded-full bg-primary" />
+                  Interview
+                </span>
+                <span className="flex items-center gap-2">
+                  <span className="w-3 h-3 rounded-full bg-destructive" />
+                  Deadline
+                </span>
+                <span className="flex items-center gap-2">
+                  <span className="w-3 h-3 rounded-full bg-info" />
+                  Reminder
+                </span>
+              </div>
+            </PagePanel>
+          </Suspense>
 
           {/* Event Details */}
-          <PagePanel>
-            <h3 className="font-semibold mb-4">
-              {selectedDate
-                ? new Intl.DateTimeFormat(locale, {
-                    weekday: "long",
-                    month: "long",
-                    day: "numeric",
-                  }).format(selectedDate)
-                : "Select a date"}
-            </h3>
+          <Suspense fallback={<SkeletonCard />}>
+            <PagePanel>
+              <h3 className="font-semibold mb-4">
+                {selectedDate
+                  ? new Intl.DateTimeFormat(locale, {
+                      weekday: "long",
+                      month: "long",
+                      day: "numeric",
+                    }).format(selectedDate)
+                  : "Select a date"}
+              </h3>
 
-            {selectedEvents.length > 0 ? (
-              <div className="space-y-3">
-                {selectedEvents.map((event) => (
-                  <div
-                    key={event.id}
-                    className="p-3 rounded-lg border bg-muted/30"
-                  >
-                    <div className="flex items-start gap-3">
-                      <div
-                        className={`p-2 rounded-lg ${EVENT_COLORS[event.type]}/20`}
-                      >
-                        {event.type === "interview" && (
-                          <Briefcase className={`h-4 w-4 text-primary`} />
-                        )}
-                        {event.type === "deadline" && (
-                          <AlertCircle className="h-4 w-4 text-destructive" />
-                        )}
-                        {event.type === "reminder" && (
-                          <Bell className="h-4 w-4 text-info" />
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm">{event.title}</p>
-                        {event.job && (
-                          <p className="text-xs text-muted-foreground">
-                            {event.job.company}
+              {selectedEvents.length > 0 ? (
+                <div className="space-y-3">
+                  {selectedEvents.map((event) => (
+                    <div
+                      key={event.id}
+                      className="p-3 rounded-lg border bg-muted/30"
+                    >
+                      <div className="flex items-start gap-3">
+                        <div
+                          className={`p-2 rounded-lg ${EVENT_COLORS[event.type]}/20`}
+                        >
+                          {event.type === "interview" && (
+                            <Briefcase className={`h-4 w-4 text-primary`} />
+                          )}
+                          {event.type === "deadline" && (
+                            <AlertCircle className="h-4 w-4 text-destructive" />
+                          )}
+                          {event.type === "reminder" && (
+                            <Bell className="h-4 w-4 text-info" />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm">{event.title}</p>
+                          {event.job && (
+                            <p className="text-xs text-muted-foreground">
+                              {event.job.company}
+                            </p>
+                          )}
+                          <p className="text-xs text-muted-foreground mt-1">
+                            <Clock className="h-3 w-3 inline mr-1" />
+                            {new Intl.DateTimeFormat(locale, {
+                              hour: "numeric",
+                              minute: "2-digit",
+                            }).format(event.date)}
                           </p>
-                        )}
-                        <p className="text-xs text-muted-foreground mt-1">
-                          <Clock className="h-3 w-3 inline mr-1" />
-                          {new Intl.DateTimeFormat(locale, {
-                            hour: "numeric",
-                            minute: "2-digit",
-                          }).format(event.date)}
-                        </p>
-                        {event.job?.url && (
-                          <a
-                            href={event.job.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 text-xs text-primary hover:underline mt-2"
-                          >
-                            <ExternalLink className="h-3 w-3" />
-                            View Job
-                          </a>
-                        )}
+                          {event.job?.url && (
+                            <a
+                              href={event.job.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 text-xs text-primary hover:underline mt-2"
+                            >
+                              <ExternalLink className="h-3 w-3" />
+                              View Job
+                            </a>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            ) : selectedDate ? (
-              <StandardEmptyState
-                icon={CalendarIcon}
-                title="No events scheduled for this day"
-                className="min-h-48"
-              />
-            ) : (
-              <StandardEmptyState
-                icon={CalendarSearch}
-                title="Click on a date to view events"
-                className="min-h-48"
-              />
-            )}
-
-            {/* Upcoming Events */}
-            <div className="mt-6 pt-6 border-t">
-              <h4 className="font-medium mb-3 text-sm">Upcoming Events</h4>
-              {events
-                .filter((e) => e.date >= nowDate())
-                .slice(0, 5)
-                .map((event) => (
-                  <div
-                    key={event.id}
-                    className="flex items-center gap-2 py-2 text-sm"
-                  >
-                    <span
-                      className={`w-2 h-2 rounded-full ${EVENT_COLORS[event.type]}`}
-                    />
-                    <span className="flex-1 truncate">{event.title}</span>
-                    <span className="text-xs text-muted-foreground">
-                      {new Intl.DateTimeFormat(locale, {
-                        month: "short",
-                        day: "numeric",
-                      }).format(event.date)}
-                    </span>
-                  </div>
-                ))}
-              {events.filter((e) => e.date >= nowDate()).length === 0 && (
+                  ))}
+                </div>
+              ) : selectedDate ? (
                 <StandardEmptyState
-                  icon={ListChecks}
-                  title="No upcoming events"
-                  className="min-h-40"
+                  icon={CalendarIcon}
+                  title="No events scheduled for this day"
+                  className="min-h-48"
+                />
+              ) : (
+                <StandardEmptyState
+                  icon={CalendarSearch}
+                  title="Click on a date to view events"
+                  className="min-h-48"
                 />
               )}
-            </div>
-          </PagePanel>
+
+              {/* Upcoming Events */}
+              <div className="mt-6 pt-6 border-t">
+                <h4 className="font-medium mb-3 text-sm">Upcoming Events</h4>
+                {events
+                  .filter((e) => e.date >= nowDate())
+                  .slice(0, 5)
+                  .map((event) => (
+                    <div
+                      key={event.id}
+                      className="flex items-center gap-2 py-2 text-sm"
+                    >
+                      <span
+                        className={`w-2 h-2 rounded-full ${EVENT_COLORS[event.type]}`}
+                      />
+                      <span className="flex-1 truncate">{event.title}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {new Intl.DateTimeFormat(locale, {
+                          month: "short",
+                          day: "numeric",
+                        }).format(event.date)}
+                      </span>
+                    </div>
+                  ))}
+                {events.filter((e) => e.date >= nowDate()).length === 0 && (
+                  <StandardEmptyState
+                    icon={ListChecks}
+                    title="No upcoming events"
+                    className="min-h-40"
+                  />
+                )}
+              </div>
+            </PagePanel>
+          </Suspense>
         </div>
       </PageContent>
 

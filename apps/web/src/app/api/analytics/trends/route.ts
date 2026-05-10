@@ -6,7 +6,7 @@ import { formatIsoDateOnly, nowDate, parseToDate } from "@/lib/format/time";
  * @response AnalyticsTrendsResponse from @/types/api
  */
 import { NextRequest, NextResponse } from "next/server";
-import { getJobs } from "@/lib/db/jobs";
+import { getAnalyticsJobDescriptions } from "@/lib/db/analytics-queries";
 import {
   generateTimeSeriesData,
   calculateTrendMetrics,
@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const range = (searchParams.get("range") as TimeRange) || "30d";
 
-    const jobs = getJobs(authResult.userId);
+    const jobs = getAnalyticsJobDescriptions(authResult.userId);
 
     const timeSeries = generateTimeSeriesData(jobs, range);
     const trends = calculateTrendMetrics(jobs, range);

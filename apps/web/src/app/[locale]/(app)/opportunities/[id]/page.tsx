@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import {
   Check,
   ExternalLink,
@@ -22,6 +22,7 @@ import {
   StandardEmptyState,
 } from "@/components/ui/page-layout";
 import { Textarea } from "@/components/ui/textarea";
+import { SkeletonCard } from "@/components/ui/skeleton";
 import { useDevMode } from "@/hooks/use-dev-mode";
 import { useErrorToast } from "@/hooks/use-error-toast";
 import { useUndoableAction } from "@/hooks/use-undoable-action";
@@ -485,122 +486,130 @@ export default function OpportunityDetailPage({
               </div>
             </header>
 
-            <OpportunityFieldSections
-              opportunity={opportunity}
-              editingField={editingField}
-              savingField={savingField}
-              draftValue={draftValue}
-              draftChecked={draftChecked}
-              onStartEditing={startEditing}
-              onDraftValueChange={setDraftValue}
-              onDraftCheckedChange={setDraftChecked}
-              onSaveField={(field) => void saveField(field)}
-              onCancelEditing={cancelEditing}
-            />
+            <Suspense fallback={<SkeletonCard />}>
+              <OpportunityFieldSections
+                opportunity={opportunity}
+                editingField={editingField}
+                savingField={savingField}
+                draftValue={draftValue}
+                draftChecked={draftChecked}
+                onStartEditing={startEditing}
+                onDraftValueChange={setDraftValue}
+                onDraftCheckedChange={setDraftChecked}
+                onSaveField={(field) => void saveField(field)}
+                onCancelEditing={cancelEditing}
+              />
+            </Suspense>
 
-            <section className="rounded-lg border bg-card">
-              <div className="flex items-center justify-between border-b px-5 py-4">
-                <h2 className="text-base font-semibold">Notes</h2>
-                <span className="text-xs text-muted-foreground">
-                  {notesSaveState === "saving" && "Saving notes..."}
-                  {notesSaveState === "saved" && "Notes saved"}
-                  {notesSaveState === "error" && "Notes not saved"}
-                </span>
-              </div>
-              <div className="p-5">
-                <Textarea
-                  value={notes}
-                  onChange={(event) => setNotes(event.target.value)}
-                  placeholder="Add private notes about this opportunity."
-                  className="min-h-36"
-                />
-              </div>
-            </section>
+            <Suspense fallback={<SkeletonCard />}>
+              <section className="rounded-lg border bg-card">
+                <div className="flex items-center justify-between border-b px-5 py-4">
+                  <h2 className="text-base font-semibold">Notes</h2>
+                  <span className="text-xs text-muted-foreground">
+                    {notesSaveState === "saving" && "Saving notes..."}
+                    {notesSaveState === "saved" && "Notes saved"}
+                    {notesSaveState === "error" && "Notes not saved"}
+                  </span>
+                </div>
+                <div className="p-5">
+                  <Textarea
+                    value={notes}
+                    onChange={(event) => setNotes(event.target.value)}
+                    placeholder="Add private notes about this opportunity."
+                    className="min-h-36"
+                  />
+                </div>
+              </section>
+            </Suspense>
           </div>
 
           <aside className="space-y-6 lg:sticky lg:top-6 lg:self-start">
-            <OpportunityActions
-              opportunity={opportunity}
-              onApply={handleApply}
-              onGeneratedDocument={fetchLinkedDocuments}
-            />
+            <Suspense fallback={<SkeletonCard />}>
+              <OpportunityActions
+                opportunity={opportunity}
+                onApply={handleApply}
+                onGeneratedDocument={fetchLinkedDocuments}
+              />
+            </Suspense>
 
-            <section className="rounded-lg border bg-card p-4">
-              <Button
-                type="button"
-                variant="ghost"
-                className="w-full justify-start text-destructive hover:text-destructive"
-                onClick={() => void handleDismiss()}
-              >
-                <XCircle className="mr-2 h-4 w-4" />
-                Dismiss
-              </Button>
-            </section>
+            <Suspense fallback={<SkeletonCard />}>
+              <section className="rounded-lg border bg-card p-4">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="w-full justify-start text-destructive hover:text-destructive"
+                  onClick={() => void handleDismiss()}
+                >
+                  <XCircle className="mr-2 h-4 w-4" />
+                  Dismiss
+                </Button>
+              </section>
 
-            <section className="rounded-lg border bg-card p-4">
-              <div className="flex items-center justify-between gap-3">
-                <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                  Linked Documents
-                </h2>
-                <Badge variant="outline">{linkedDocumentCount}</Badge>
-              </div>
-
-              <div className="mt-4 space-y-4">
-                <div>
-                  <h3 className="text-sm font-medium">Tailored resumes</h3>
-                  <div className="mt-2 space-y-2">
-                    {resumes.length === 0 ? (
-                      <p className="text-sm text-muted-foreground">
-                        None attached
-                      </p>
-                    ) : (
-                      resumes.map((resume) => (
-                        <a
-                          key={resume.id}
-                          href={resume.htmlPath || "#"}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center justify-between gap-3 rounded-md border px-3 py-2 text-sm hover:bg-muted"
-                        >
-                          <span>
-                            Resume
-                            {resume.matchScore
-                              ? ` · ${Math.round(resume.matchScore)}% match`
-                              : ""}
-                          </span>
-                          <ExternalLink className="h-4 w-4 text-muted-foreground" />
-                        </a>
-                      ))
-                    )}
-                  </div>
+              <section className="rounded-lg border bg-card p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                    Linked Documents
+                  </h2>
+                  <Badge variant="outline">{linkedDocumentCount}</Badge>
                 </div>
 
-                <div>
-                  <h3 className="text-sm font-medium">Cover letters</h3>
-                  <div className="mt-2 space-y-2">
-                    {coverLetters.length === 0 ? (
-                      <p className="text-sm text-muted-foreground">
-                        None attached
-                      </p>
-                    ) : (
-                      coverLetters.map((letter) => (
-                        <div
-                          key={letter.id}
-                          className="rounded-md border px-3 py-2 text-sm"
-                        >
-                          <div className="font-medium">
-                            Version {letter.version}
+                <div className="mt-4 space-y-4">
+                  <div>
+                    <h3 className="text-sm font-medium">Tailored resumes</h3>
+                    <div className="mt-2 space-y-2">
+                      {resumes.length === 0 ? (
+                        <p className="text-sm text-muted-foreground">
+                          None attached
+                        </p>
+                      ) : (
+                        resumes.map((resume) => (
+                          <a
+                            key={resume.id}
+                            href={resume.htmlPath || "#"}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center justify-between gap-3 rounded-md border px-3 py-2 text-sm hover:bg-muted"
+                          >
+                            <span>
+                              Resume
+                              {resume.matchScore
+                                ? ` · ${Math.round(resume.matchScore)}% match`
+                                : ""}
+                            </span>
+                            <ExternalLink className="h-4 w-4 text-muted-foreground" />
+                          </a>
+                        ))
+                      )}
+                    </div>
+                  </div>
+
+                  <div>
+                    <h3 className="text-sm font-medium">Cover letters</h3>
+                    <div className="mt-2 space-y-2">
+                      {coverLetters.length === 0 ? (
+                        <p className="text-sm text-muted-foreground">
+                          None attached
+                        </p>
+                      ) : (
+                        coverLetters.map((letter) => (
+                          <div
+                            key={letter.id}
+                            className="rounded-md border px-3 py-2 text-sm"
+                          >
+                            <div className="font-medium">
+                              Version {letter.version}
+                            </div>
+                            <div className="text-muted-foreground">
+                              <DocumentDate value={letter.createdAt} />
+                            </div>
                           </div>
-                          <div className="text-muted-foreground">
-                            <DocumentDate value={letter.createdAt} />
-                          </div>
-                        </div>
-                      ))
-                    )}
+                        ))
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            </section>
+              </section>
+            </Suspense>
           </aside>
         </div>
       </PageContent>

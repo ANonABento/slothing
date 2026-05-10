@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  Suspense,
   useCallback,
   useEffect,
   useMemo,
@@ -409,110 +410,122 @@ export default function AnswerBankPage() {
       />
 
       <PageContent className="space-y-6">
-        <section className="grid gap-3 md:grid-cols-3">
-          <AnswerStat label="Saved answers" value={answers.length} />
-          <AnswerStat label="Known sources" value={stats.sourceCount} />
-          <AnswerStat label="Autofill uses" value={stats.totalUses} />
-        </section>
+        <Suspense
+          fallback={
+            <section className="grid gap-3 md:grid-cols-3">
+              <SkeletonCard />
+              <SkeletonCard />
+              <SkeletonCard />
+            </section>
+          }
+        >
+          <section className="grid gap-3 md:grid-cols-3">
+            <AnswerStat label="Saved answers" value={answers.length} />
+            <AnswerStat label="Known sources" value={stats.sourceCount} />
+            <AnswerStat label="Autofill uses" value={stats.totalUses} />
+          </section>
+        </Suspense>
 
-        <section className="space-y-4">
-          <CrossLinkBanner />
-          {migrationSummary ? (
-            <MigrationBanner
-              summary={migrationSummary}
-              onDismiss={() => setMigrationSummary(null)}
-            />
-          ) : null}
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="relative max-w-xl flex-1">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <input
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                placeholder="Search questions, answers, or sources"
-                className={cn(THEME_CONTROL_CLASSES, "w-full pl-9")}
+        <Suspense fallback={<SkeletonCard />}>
+          <section className="space-y-4">
+            <CrossLinkBanner />
+            {migrationSummary ? (
+              <MigrationBanner
+                summary={migrationSummary}
+                onDismiss={() => setMigrationSummary(null)}
               />
-            </div>
-            <span className="text-sm text-muted-foreground">
-              {filteredAnswers.length} shown
-            </span>
-            <select
-              value={sort}
-              onChange={(event) => setSort(event.target.value as AnswerSort)}
-              className={cn(THEME_CONTROL_CLASSES, "w-full sm:w-40")}
-              aria-label="Sort answers"
-            >
-              <option value="most_used">Most used</option>
-              <option value="newest">Newest</option>
-              <option value="alpha">A to Z</option>
-            </select>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <AnswerTypeButton
-              active={activeType === "all"}
-              count={answers.length}
-              onClick={() => setActiveType("all")}
-            >
-              All
-            </AnswerTypeButton>
-            {ANSWER_COMPONENT_TYPES.map((type) => (
-              <AnswerTypeButton
-                key={type}
-                active={activeType === type}
-                count={typeCounts[type]}
-                onClick={() => setActiveType(type)}
-              >
-                {ANSWER_COMPONENT_LABELS[type]}
-              </AnswerTypeButton>
-            ))}
-          </div>
-
-          {loading ? (
-            <div className="grid gap-3 lg:grid-cols-2">
-              {Array.from({ length: 4 }).map((_, index) => (
-                <SkeletonCard key={index} />
-              ))}
-            </div>
-          ) : error ? (
-            <ErrorState
-              title="Failed to load answers"
-              message={error}
-              onRetry={fetchAnswers}
-              variant="card"
-            />
-          ) : filteredAnswers.length === 0 ? (
-            <StandardEmptyState
-              icon={ClipboardList}
-              title={query ? "No matching answers" : "Start your answer bank"}
-              description={
-                query
-                  ? "Try a different search term."
-                  : "Save common responses like work authorization, sponsorship, relocation, portfolio links, and repeated application questions."
-              }
-              action={
-                !query ? (
-                  <Button onClick={openCreateDialog}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Answer
-                  </Button>
-                ) : null
-              }
-            />
-          ) : (
-            <div className="grid gap-3 lg:grid-cols-2">
-              {filteredAnswers.map((entry) => (
-                <AnswerCard
-                  key={entry.id}
-                  entry={entry}
-                  onCopy={copyAnswer}
-                  onDuplicate={duplicateAnswer}
-                  onEdit={openEditDialog}
-                  onDelete={deleteAnswer}
+            ) : null}
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="relative max-w-xl flex-1">
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <input
+                  value={query}
+                  onChange={(event) => setQuery(event.target.value)}
+                  placeholder="Search questions, answers, or sources"
+                  className={cn(THEME_CONTROL_CLASSES, "w-full pl-9")}
                 />
+              </div>
+              <span className="text-sm text-muted-foreground">
+                {filteredAnswers.length} shown
+              </span>
+              <select
+                value={sort}
+                onChange={(event) => setSort(event.target.value as AnswerSort)}
+                className={cn(THEME_CONTROL_CLASSES, "w-full sm:w-40")}
+                aria-label="Sort answers"
+              >
+                <option value="most_used">Most used</option>
+                <option value="newest">Newest</option>
+                <option value="alpha">A to Z</option>
+              </select>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <AnswerTypeButton
+                active={activeType === "all"}
+                count={answers.length}
+                onClick={() => setActiveType("all")}
+              >
+                All
+              </AnswerTypeButton>
+              {ANSWER_COMPONENT_TYPES.map((type) => (
+                <AnswerTypeButton
+                  key={type}
+                  active={activeType === type}
+                  count={typeCounts[type]}
+                  onClick={() => setActiveType(type)}
+                >
+                  {ANSWER_COMPONENT_LABELS[type]}
+                </AnswerTypeButton>
               ))}
             </div>
-          )}
-        </section>
+
+            {loading ? (
+              <div className="grid gap-3 lg:grid-cols-2">
+                {Array.from({ length: 4 }).map((_, index) => (
+                  <SkeletonCard key={index} />
+                ))}
+              </div>
+            ) : error ? (
+              <ErrorState
+                title="Failed to load answers"
+                message={error}
+                onRetry={fetchAnswers}
+                variant="card"
+              />
+            ) : filteredAnswers.length === 0 ? (
+              <StandardEmptyState
+                icon={ClipboardList}
+                title={query ? "No matching answers" : "Start your answer bank"}
+                description={
+                  query
+                    ? "Try a different search term."
+                    : "Save common responses like work authorization, sponsorship, relocation, portfolio links, and repeated application questions."
+                }
+                action={
+                  !query ? (
+                    <Button onClick={openCreateDialog}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Answer
+                    </Button>
+                  ) : null
+                }
+              />
+            ) : (
+              <div className="grid gap-3 lg:grid-cols-2">
+                {filteredAnswers.map((entry) => (
+                  <AnswerCard
+                    key={entry.id}
+                    entry={entry}
+                    onCopy={copyAnswer}
+                    onDuplicate={duplicateAnswer}
+                    onEdit={openEditDialog}
+                    onDelete={deleteAnswer}
+                  />
+                ))}
+              </div>
+            )}
+          </section>
+        </Suspense>
       </PageContent>
 
       <AnswerDialog

@@ -2,7 +2,7 @@
 
 import { nowIso } from "@/lib/format/time";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import {
   Upload,
@@ -39,6 +39,7 @@ import {
 } from "@/components/ui/page-layout";
 import { Button } from "@/components/ui/button";
 import { DashboardSkeleton } from "@/components/skeletons/dashboard-skeleton";
+import { SkeletonCard, SkeletonStatCard } from "@/components/ui/skeleton";
 import {
   BASIC_ONBOARDING_STEPS,
   countCompletedSteps,
@@ -488,16 +489,35 @@ function ActiveDashboard({
       <DashboardHeader
         description={getDashboardGreeting(firstName, "active")}
       />
-      <DashboardStatStrip stats={stats} totalPipeline={totalPipeline} />
+      <Suspense
+        fallback={
+          <div className={pageGridClasses.fourStats}>
+            <SkeletonStatCard />
+            <SkeletonStatCard />
+            <SkeletonStatCard />
+            <SkeletonStatCard />
+          </div>
+        }
+      >
+        <DashboardStatStrip stats={stats} totalPipeline={totalPipeline} />
+      </Suspense>
 
       <div className={pageGridClasses.primaryAside}>
-        <TodayPanel actions={actions} />
-        <ReadinessPanel stats={stats} />
+        <Suspense fallback={<SkeletonCard />}>
+          <TodayPanel actions={actions} />
+        </Suspense>
+        <Suspense fallback={<SkeletonCard />}>
+          <ReadinessPanel stats={stats} />
+        </Suspense>
       </div>
 
-      <PipelineSummary stats={stats} total={totalPipeline} />
+      <Suspense fallback={<SkeletonCard />}>
+        <PipelineSummary stats={stats} total={totalPipeline} />
+      </Suspense>
 
-      <RecentOpportunitiesPanel recentJobs={recentJobs} />
+      <Suspense fallback={<SkeletonCard />}>
+        <RecentOpportunitiesPanel recentJobs={recentJobs} />
+      </Suspense>
     </div>
   );
 }

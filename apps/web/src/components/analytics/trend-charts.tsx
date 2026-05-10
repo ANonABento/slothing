@@ -295,7 +295,7 @@ export function TrendCharts({ initialRange = "30d" }: TrendChartsProps) {
   if (!data) return null;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-testid="analytics-trends">
       {/* Time range selector */}
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold flex items-center gap-2">
