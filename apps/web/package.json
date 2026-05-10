@@ -24,7 +24,8 @@
     "db:studio": "drizzle-kit studio",
     "eval": "npx tsx evals/harness.ts",
     "eval:resume": "npx tsx evals/harness.ts --mode=resume",
-    "eval:cover-letter": "npx tsx evals/harness.ts --mode=cover-letter"
+    "eval:cover-letter": "npx tsx evals/harness.ts --mode=cover-letter",
+    "eval:prompt-qa": "vitest run evals/prompt-qa"
   },
   "dependencies": {
     "@auth/drizzle-adapter": "^1.11.2",

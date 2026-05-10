@@ -13,6 +13,7 @@ import { extractJSON } from "@/lib/utils";
 import { requireAuth, isAuthError } from "@/lib/auth";
 import { tailorAutofixSchema } from "@/lib/schemas";
 import type { TailoredResume } from "@/lib/resume/generator";
+import { buildTailorAutofixPrompt } from "@/lib/tailor/prompt-builders";
 
 export const dynamic = "force-dynamic";
 
@@ -41,25 +42,11 @@ export async function POST(request: NextRequest) {
 
     const client = new LLMClient(llmConfig);
 
-    const prompt = `You are a resume optimization expert. Rewrite the following resume to naturally incorporate these missing keywords while maintaining authenticity and readability.
-
-MISSING KEYWORDS TO INCORPORATE:
-${keywordsMissing.slice(0, 15).join(", ")}
-
-JOB DESCRIPTION:
-${jobDescription.slice(0, 2000)}
-
-CURRENT RESUME:
-${JSON.stringify(resume, null, 2)}
-
-RULES:
-- Only modify summary, experience highlights, and skills
-- Keep contact info and education unchanged
-- Incorporate keywords naturally — don't just list them
-- Maintain the same JSON structure
-- Keep it concise (one-page resume)
-
-Return the improved resume as a JSON object with the same structure (contact, summary, experiences, skills, education).`;
+    const prompt = buildTailorAutofixPrompt({
+      resume,
+      keywordsMissing,
+      jobDescription,
+    });
 
     const response = await client.complete({
       messages: [{ role: "user", content: prompt }],

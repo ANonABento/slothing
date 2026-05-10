@@ -141,6 +141,19 @@ export function buildRevisionPrompt(instruction: string): string {
 Apply the requested changes while maintaining professional quality. Output ONLY the revised cover letter text, no additional commentary.`;
 }
 
+export function buildCoverLetterGenerationMessages(input: CoverLetterInput): {
+  role: "system" | "user";
+  content: string;
+}[] {
+  return [
+    { role: "system", content: buildSystemPrompt(input) },
+    {
+      role: "user",
+      content: `Write a cover letter for this job:\n\n${input.jobDescription}`,
+    },
+  ];
+}
+
 export function filterBankEntriesByIds(
   bankEntries: GroupedBankEntries,
   selectedEntryIds: string[],
@@ -171,16 +184,9 @@ export async function generateCoverLetter(
   llmConfig: LLMConfig,
 ): Promise<string> {
   const client = new LLMClient(llmConfig);
-  const systemPrompt = buildSystemPrompt(input);
 
   const result = await client.complete({
-    messages: [
-      { role: "system", content: systemPrompt },
-      {
-        role: "user",
-        content: `Write a cover letter for this job:\n\n${input.jobDescription}`,
-      },
-    ],
+    messages: buildCoverLetterGenerationMessages(input),
     temperature: 0.7,
     maxTokens: 2048,
   });
