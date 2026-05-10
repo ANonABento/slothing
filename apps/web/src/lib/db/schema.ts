@@ -723,6 +723,8 @@ export const users = sqliteTable("user", {
   emailVerified: integer("emailVerified", { mode: "timestamp_ms" }),
   image: text("image"),
   onboardingDismissedAt: text("onboarding_dismissed_at"),
+  createdAt: text("created_at"),
+  welcomeSeriesState: text("welcome_series_state"),
 });
 
 export const accounts = sqliteTable(
