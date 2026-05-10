@@ -121,7 +121,9 @@ export function StudioHeader({
   const saveStatusIcon = getStudioSaveStatusIcon(saveStatus);
   const exportHelpText =
     !canCopyHtml || !canDownloadPdf || !canDownloadDocx
-      ? `Add bank entries or edit the ${documentLabel} to enable export.`
+      ? documentMode === "cover_letter"
+        ? "Select bank entries or write a cover letter draft to enable export."
+        : "Select bank entries or edit the resume to enable export."
       : null;
   const canExport = canCopyHtml && canDownloadPdf && canDownloadDocx;
   const exportDisabled = !canExport || isExporting;

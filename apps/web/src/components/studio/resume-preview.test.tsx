@@ -93,11 +93,11 @@ describe("ResumePreview", () => {
   it("returns resume empty state content by default", () => {
     expect(getPreviewEmptyStateContent()).toMatchObject({
       eyebrow: "Resume",
-      heading: "Get started",
+      heading: "Select entries from your bank",
       steps: [
-        "Select entries from the bank",
-        "Choose a template",
-        "Preview and edit your resume",
+        "Pick the bank entries to include",
+        "Review the generated preview",
+        "Edit and export your resume",
       ],
     });
   });
@@ -105,11 +105,11 @@ describe("ResumePreview", () => {
   it("returns cover letter empty state content", () => {
     expect(getPreviewEmptyStateContent("cover_letter")).toMatchObject({
       eyebrow: "Cover Letter",
-      heading: "Get started",
+      heading: "Select entries from your bank",
       steps: [
-        "Select entries from the bank",
-        "Choose a template",
-        "Preview and edit your cover letter",
+        "Pick the bank entries to include",
+        "Add job details when you are ready",
+        "Preview and edit the cover letter",
       ],
     });
   });
@@ -126,29 +126,32 @@ describe("ResumePreview", () => {
     );
 
     expect(
-      screen.getByRole("heading", { name: "Get started" }),
+      screen.getByRole("heading", { name: "Select entries from your bank" }),
     ).toBeInTheDocument();
     expect(
-      screen.getByText("Select entries from the bank"),
-    ).toBeInTheDocument();
-    expect(screen.getByText("Choose a template")).toBeInTheDocument();
-    expect(
-      screen.getByText("Preview and edit your resume"),
+      screen.getByText("Pick the bank entries to include"),
     ).toBeInTheDocument();
     expect(
-      screen.getByText("Select entries from the bank").closest("li")?.className,
+      screen.getByText("Review the generated preview"),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Edit and export your resume")).toBeInTheDocument();
+    expect(
+      screen.getByText("Pick the bank entries to include").closest("li")
+        ?.className,
     ).toContain("rounded-[var(--radius)]");
     expect(
-      screen.getByText("Select entries from the bank").closest("li")?.className,
-    ).toContain("border-[length:var(--border-width)]");
-    expect(
-      screen.getByText("Select entries from the bank").closest("li")?.className,
-    ).toContain("shadow-[var(--shadow-card)]");
+      screen.getByText("Pick the bank entries to include").closest("li")
+        ?.className,
+    ).toContain("bg-muted/40");
     expect(screen.getByText("1").className).toContain(
       "rounded-[var(--radius)]",
     );
 
-    fireEvent.click(screen.getByRole("button", { name: /add from bank/i }));
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: /select entries from your bank/i,
+      }),
+    );
 
     expect(handleAddFromBank).toHaveBeenCalledTimes(1);
   });
@@ -158,7 +161,7 @@ describe("ResumePreview", () => {
 
     expect(screen.getByText("Cover Letter")).toBeInTheDocument();
     expect(
-      screen.getByText("Preview and edit your cover letter"),
+      screen.getByText("Preview and edit the cover letter"),
     ).toBeInTheDocument();
   });
 

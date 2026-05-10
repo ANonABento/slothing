@@ -14,15 +14,18 @@ vi.mock("@/components/builder/section-list", () => ({
     onToggleEntry,
     pickerOpen,
     showSections = true,
+    emptySelectionHint,
   }: {
     selectedIds: Set<string>;
     onToggleEntry: (entryId: string) => void;
     pickerOpen?: boolean;
     showSections?: boolean;
+    emptySelectionHint?: string;
   }) => (
     <div>
       {showSections && <div>Resume sections</div>}
       {showSections && <div>Selected {selectedIds.size}</div>}
+      {emptySelectionHint && <div>{emptySelectionHint}</div>}
       {pickerOpen && <div>Bank Entry Picker</div>}
       <button type="button" onClick={() => onToggleEntry("entry-1")}>
         Toggle entry
@@ -33,8 +36,9 @@ vi.mock("@/components/builder/section-list", () => ({
 
 vi.mock("@/components/studio/resume-preview", () => ({
   ResumePreview: (props: {
-    html: string;
+    html?: string;
     content?: unknown;
+    onAddFromBank?: () => void;
     onContentChange?: (content: {
       type: string;
       content?: Array<Record<string, unknown>>;
@@ -49,6 +53,11 @@ vi.mock("@/components/studio/resume-preview", () => ({
         <div data-testid="resume-content">
           {props.content ? "editable" : "static"}
         </div>
+        {!props.content && !props.html && (
+          <button type="button" onClick={props.onAddFromBank}>
+            Select entries from your bank
+          </button>
+        )}
         <button
           type="button"
           onClick={() =>
@@ -453,7 +462,35 @@ describe("StudioPage", () => {
     renderStudioPage();
 
     fireEvent.click(
-      await screen.findByRole("button", { name: /add from bank/i }),
+      await screen.findByRole("button", { name: /open bank picker/i }),
+    );
+
+    expect(screen.getByText("Bank Entry Picker")).toBeInTheDocument();
+  });
+
+  it("shows first-run bank guidance and opens the picker from the preview CTA", async () => {
+    mockStudioFetch(bankEntries);
+
+    renderStudioPage();
+
+    expect(
+      await screen.findByRole("button", {
+        name: /select entries from your bank/i,
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("Select entries to build your first draft."),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Select bank entries or edit the resume to enable export.",
+      ),
+    ).toBeInTheDocument();
+
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: /select entries from your bank/i,
+      }),
     );
 
     expect(screen.getByText("Bank Entry Picker")).toBeInTheDocument();
