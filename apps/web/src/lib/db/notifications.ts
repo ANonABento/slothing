@@ -24,6 +24,9 @@ export interface Notification {
     state: "pending" | "accepted" | "dismissed";
     opportunityId: string;
     suggestedStatus: string;
+    confidence?: number | null;
+    reason?: string | null;
+    evidence?: string[];
   };
 }
 
@@ -75,7 +78,10 @@ export function getNotifications(options?: {
       notifications.*,
       suggested_status_updates.state AS suggested_state,
       suggested_status_updates.opportunity_id AS suggested_opportunity_id,
-      suggested_status_updates.suggested_status AS suggested_status
+      suggested_status_updates.suggested_status AS suggested_status,
+      suggested_status_updates.confidence AS suggested_confidence,
+      suggested_status_updates.reason AS suggested_reason,
+      suggested_status_updates.evidence_json AS suggested_evidence_json
     FROM notifications
     LEFT JOIN suggested_status_updates
       ON suggested_status_updates.notification_id = notifications.id
@@ -103,6 +109,9 @@ export function getNotifications(options?: {
       suggested_state: string | null;
       suggested_opportunity_id: string | null;
       suggested_status: string | null;
+      suggested_confidence: number | null;
+      suggested_reason: string | null;
+      suggested_evidence_json: string | null;
     }>
   ).map((row) => ({
     id: row.id,
@@ -120,9 +129,24 @@ export function getNotifications(options?: {
             state: row.suggested_state as "pending" | "accepted" | "dismissed",
             opportunityId: row.suggested_opportunity_id,
             suggestedStatus: row.suggested_status,
+            confidence: row.suggested_confidence,
+            reason: row.suggested_reason,
+            evidence: parseEvidence(row.suggested_evidence_json),
           }
         : undefined,
   }));
+}
+
+function parseEvidence(value: string | null | undefined): string[] {
+  if (!value) return [];
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed)
+      ? parsed.filter((item): item is string => typeof item === "string")
+      : [];
+  } catch {
+    return [];
+  }
 }
 
 // Mark notification as read

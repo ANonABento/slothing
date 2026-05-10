@@ -78,7 +78,9 @@ describe("/api/cron/google/calendar-sync", () => {
     mocks.matchOpportunityForCalendarEvent.mockReturnValue({
       opportunity,
       score: 100,
+      confidence: 0.9,
       reason: "company in title",
+      evidence: ["Anthropic interview"],
     });
     mocks.hasProcessedExternalCalendarEvent.mockReturnValue(false);
     mocks.createNotification.mockReturnValue({ id: "notif-1" });
@@ -140,6 +142,37 @@ describe("/api/cron/google/calendar-sync", () => {
         notificationId: "notif-1",
         opportunityId: "opp-1",
         suggestedStatus: "interviewing",
+        confidence: 0.9,
+        evidence: ["Anthropic interview"],
+      }),
+    );
+  });
+
+  it("creates suggested updates for lower-confidence matches even when auto-link is on", async () => {
+    mocks.matchOpportunityForCalendarEvent.mockReturnValue({
+      opportunity,
+      score: 70,
+      confidence: 0.58,
+      reason: "company in attendee domain",
+      evidence: ["recruiting@anthropic.com"],
+    });
+
+    const response = await invokeRouteHandler(
+      GET,
+      getRequest("http://localhost/api/cron/google/calendar-sync"),
+      routeContext(),
+    );
+
+    await expect(response.json()).resolves.toMatchObject({
+      matched: 1,
+      autoLinked: 0,
+      suggested: 1,
+    });
+    expect(mocks.changeOpportunityStatus).not.toHaveBeenCalled();
+    expect(mocks.createSuggestedStatusUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        confidence: 0.58,
+        reason: "company in attendee domain",
       }),
     );
   });
