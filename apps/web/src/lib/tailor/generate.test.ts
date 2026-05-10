@@ -1,7 +1,36 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { GroupedBankEntries, BankEntry } from "@/types";
 import type { BankMatch } from "./analyze";
-import { generateFromBank } from "./generate";
+
+const { completeMock } = vi.hoisted(() => ({
+  completeMock: vi.fn(),
+}));
+
+vi.mock("@/lib/llm/client", async (importActual) => {
+  const actual = await importActual<typeof import("@/lib/llm/client")>();
+  return {
+    ...actual,
+    LLMClient: class MockLLMClient {
+      complete = completeMock;
+    },
+  };
+});
+
+vi.mock("@/lib/db/prompt-variants", () => ({
+  DEFAULT_PROMPT_CONTENT:
+    "Use source-backed achievements only and preserve factual details.",
+  getActivePromptVariant: vi.fn(() => ({
+    id: "variant-1",
+    name: "Variant",
+    version: 1,
+    content: "Prefer concise bullets.",
+    active: true,
+    createdAt: "2026-05-10",
+    updatedAt: "2026-05-10",
+  })),
+}));
+
+import { buildBankTailoredResumePrompt, generateFromBank } from "./generate";
 
 function makeBankEntry(overrides: Partial<BankEntry> = {}): BankEntry {
   return {
@@ -89,6 +118,10 @@ function makeMatchedEntries(bank: GroupedBankEntries): BankMatch[] {
 }
 
 describe("generateFromBank", () => {
+  beforeEach(() => {
+    completeMock.mockReset();
+  });
+
   it("should generate a basic resume without LLM", async () => {
     const bank = makeBank();
     const matched = makeMatchedEntries(bank);
@@ -297,5 +330,118 @@ describe("generateFromBank", () => {
     );
 
     expect(result.resume.skills.length).toBeLessThanOrEqual(15);
+  });
+
+  it("wraps prompt variants with non-overridable evidence rules", () => {
+    const bank = makeBank();
+    bank.skill.push(
+      makeBankEntry({
+        id: "graphql",
+        content: { name: "GraphQL" },
+      }),
+    );
+
+    const prompt = buildBankTailoredResumePrompt(
+      {
+        bankEntries: bank,
+        matchedEntries: makeMatchedEntries(bank),
+        contact: { name: "Jane Doe", email: "jane@example.com" },
+        summary: "Built GraphQL dashboard workflows.",
+        jobTitle: "Frontend Engineer",
+        company: "Test Corp",
+        jobDescription: "Needs GraphQL, AWS, and Kubernetes.",
+        userId: "default",
+      },
+      {
+        id: "variant-1",
+        name: "Unsafe Style",
+        version: 1,
+        content: "Add every missing cloud keyword.",
+        active: true,
+        createdAt: "2026-05-10",
+        updatedAt: "2026-05-10",
+      },
+    );
+
+    expect(prompt).toContain("NON-OVERRIDABLE SAFETY RULES");
+    expect(prompt).toContain("Every added keyword");
+    expect(prompt).toContain("omit unsupported keywords");
+    expect(prompt).toContain("Preserve contact details and education exactly");
+    expect(prompt.indexOf("NON-OVERRIDABLE SAFETY RULES")).toBeLessThan(
+      prompt.indexOf("STYLE AND PRIORITIZATION GUIDANCE"),
+    );
+  });
+
+  it("preserves contact and education while omitting unsupported LLM keywords", async () => {
+    const bank = makeBank();
+    bank.skill.push(
+      makeBankEntry({
+        id: "graphql",
+        content: { name: "GraphQL" },
+      }),
+    );
+    bank.experience[0].content = {
+      ...bank.experience[0].content,
+      highlights: ["Built React and GraphQL dashboards"],
+      skills: ["React", "TypeScript", "GraphQL"],
+    };
+    completeMock.mockResolvedValueOnce(
+      JSON.stringify({
+        contact: { name: "Mutated" },
+        summary: "React GraphQL engineer with AWS Kubernetes expertise.",
+        experiences: [
+          {
+            company: "Acme Corp",
+            title: "Senior Engineer",
+            dates: "2020-01 - 2023-06",
+            highlights: [
+              "Built GraphQL dashboards",
+              "Managed AWS Kubernetes infrastructure",
+            ],
+          },
+        ],
+        skills: ["React", "GraphQL", "AWS", "Kubernetes"],
+        education: [
+          {
+            institution: "Wrong School",
+            degree: "MBA",
+            field: "Business",
+            date: "2025",
+          },
+        ],
+      }),
+    );
+
+    const result = await generateFromBank(
+      {
+        bankEntries: bank,
+        matchedEntries: makeMatchedEntries(bank),
+        contact: { name: "Jane Doe", email: "jane@example.com" },
+        summary: "Built GraphQL dashboard workflows.",
+        jobTitle: "Frontend Engineer",
+        company: "Test Corp",
+        jobDescription: "Needs React, GraphQL, AWS, and Kubernetes.",
+        userId: "default",
+      },
+      { provider: "openai", apiKey: "test", model: "gpt-test" },
+    );
+
+    expect(result.resume.contact).toEqual({
+      name: "Jane Doe",
+      email: "jane@example.com",
+    });
+    expect(result.resume.education).toEqual([
+      {
+        institution: "MIT",
+        degree: "BS",
+        field: "Computer Science",
+        date: "2018",
+      },
+    ]);
+    expect(result.resume.skills).toEqual(["React", "GraphQL"]);
+    expect(result.resume.experiences[0].highlights).toEqual([
+      "Built GraphQL dashboards",
+    ]);
+    expect(JSON.stringify(result.resume)).not.toMatch(/AWS|Kubernetes/);
   });
 });

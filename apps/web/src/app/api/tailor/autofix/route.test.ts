@@ -12,13 +12,7 @@ vi.mock("@/lib/auth", () =>
   globalThis.__contractRouteMocks!.createAuthModuleMock(),
 );
 
-vi.mock("@/lib/resume/generator", () =>
-  globalThis.__contractRouteMocks!.createContractModuleMock(
-    "@/lib/resume/generator",
-  ),
-);
-
-import { POST } from "./route";
+import { buildAutofixPrompt, POST } from "./route";
 import {
   expectRouteResponseContract,
   getRequest,
@@ -123,5 +117,42 @@ describe("/api/tailor/autofix route contract", () => {
       error: "Validation failed",
       errors: [{ field: "resume" }],
     });
+  });
+
+  it("builds prompt rules that refuse unsupported keywords and preserve trusted fields", () => {
+    const prompt = buildAutofixPrompt({
+      resume: {
+        contact: { name: "Jane Doe", email: "jane@example.com" },
+        summary: "Frontend engineer with GraphQL experience.",
+        experiences: [
+          {
+            company: "Acme",
+            title: "Senior Engineer",
+            dates: "2021 - 2024",
+            highlights: ["Built GraphQL dashboards"],
+          },
+        ],
+        skills: ["React", "GraphQL"],
+        education: [
+          {
+            institution: "State University",
+            degree: "BS",
+            field: "Computer Science",
+            date: "2019",
+          },
+        ],
+      },
+      keywordsMissing: ["GraphQL", "AWS", "Kubernetes"],
+      jobDescription: "Needs GraphQL, AWS, and Kubernetes.",
+    });
+
+    expect(prompt).toContain(
+      "Only modify summary, experience highlights, and skills",
+    );
+    expect(prompt).toContain("Add GraphQL only when");
+    expect(prompt).toContain("Refuse or omit AWS, Kubernetes");
+    expect(prompt).toContain("Preserve contact info and education exactly");
+    expect(prompt).toContain("Preserve companies, titles, and dates exactly");
+    expect(prompt).toContain("Return schema-valid JSON only");
   });
 });

@@ -12,6 +12,12 @@ import { LLMClient } from "@/lib/llm/client";
 import { extractJSON } from "@/lib/utils";
 import { requireAuth, isAuthError } from "@/lib/auth";
 import { tailorAutofixSchema } from "@/lib/schemas";
+import { tailoredResumeSchema } from "@/lib/schemas/tailor";
+import {
+  filterUnsupportedClaims,
+  getUnsupportedKeywords,
+  stripUnsupportedClaims,
+} from "@/lib/resume/generator";
 import type { TailoredResume } from "@/lib/resume/generator";
 
 export const dynamic = "force-dynamic";
@@ -41,25 +47,11 @@ export async function POST(request: NextRequest) {
 
     const client = new LLMClient(llmConfig);
 
-    const prompt = `You are a resume optimization expert. Rewrite the following resume to naturally incorporate these missing keywords while maintaining authenticity and readability.
-
-MISSING KEYWORDS TO INCORPORATE:
-${keywordsMissing.slice(0, 15).join(", ")}
-
-JOB DESCRIPTION:
-${jobDescription.slice(0, 2000)}
-
-CURRENT RESUME:
-${JSON.stringify(resume, null, 2)}
-
-RULES:
-- Only modify summary, experience highlights, and skills
-- Keep contact info and education unchanged
-- Incorporate keywords naturally — don't just list them
-- Maintain the same JSON structure
-- Keep it concise (one-page resume)
-
-Return the improved resume as a JSON object with the same structure (contact, summary, experiences, skills, education).`;
+    const prompt = buildAutofixPrompt({
+      resume,
+      keywordsMissing,
+      jobDescription,
+    });
 
     const response = await client.complete({
       messages: [{ role: "user", content: prompt }],
@@ -67,16 +59,29 @@ Return the improved resume as a JSON object with the same structure (contact, su
       maxTokens: 4096,
     });
 
-    const llmJson = extractJSON(response);
+    const llmJson = tailoredResumeSchema.partial().parse(extractJSON(response));
+    const unsupportedKeywords = getUnsupportedKeywords(
+      keywordsMissing,
+      JSON.stringify(resume).toLowerCase(),
+    );
     const improved: TailoredResume = {
       contact: resume.contact,
-      summary:
+      summary: stripUnsupportedClaims(
         typeof llmJson.summary === "string" ? llmJson.summary : resume.summary,
+        unsupportedKeywords,
+      ),
       experiences: Array.isArray(llmJson.experiences)
-        ? (llmJson.experiences as TailoredResume["experiences"])
+        ? sanitizeAutofixExperiences(
+            resume.experiences,
+            llmJson.experiences as TailoredResume["experiences"],
+            unsupportedKeywords,
+          )
         : resume.experiences,
       skills: Array.isArray(llmJson.skills)
-        ? (llmJson.skills as string[])
+        ? filterUnsupportedClaims(
+            llmJson.skills as string[],
+            unsupportedKeywords,
+          )
         : resume.skills,
       education: resume.education,
     };
@@ -89,4 +94,59 @@ Return the improved resume as a JSON object with the same structure (contact, su
       { status: 500 },
     );
   }
+}
+
+export function buildAutofixPrompt({
+  resume,
+  keywordsMissing,
+  jobDescription,
+}: {
+  resume: TailoredResume;
+  keywordsMissing: string[];
+  jobDescription: string;
+}): string {
+  return `You are a resume optimization expert. Rewrite the following resume to naturally incorporate these missing keywords while maintaining authenticity and readability.
+
+MISSING KEYWORDS TO INCORPORATE:
+${keywordsMissing.slice(0, 15).join(", ")}
+
+JOB DESCRIPTION:
+${jobDescription.slice(0, 2000)}
+
+CURRENT RESUME:
+${JSON.stringify(resume, null, 2)}
+
+RULES:
+- Only modify summary, experience highlights, and skills
+- Every added keyword, skill, tool, metric, employer, degree, certification, responsibility, and achievement must be backed by the current resume evidence
+- Add GraphQL only when the current resume already contains GraphQL or direct evidence of GraphQL work
+- Refuse or omit AWS, Kubernetes, and any other missing keyword when absent from the current resume evidence
+- Do not invent metrics, tools, employers, degrees, certifications, dates, titles, clients, or responsibilities
+- Preserve contact info and education exactly
+- Preserve companies, titles, and dates exactly
+- Incorporate supported keywords naturally; don't just list them
+- Maintain the same JSON structure
+- Keep it concise (one-page resume)
+- Return schema-valid JSON only, with no markdown, labels, comments, or surrounding prose
+
+Return the improved resume as a JSON object with the same structure (contact, summary, experiences, skills, education).`;
+}
+
+function sanitizeAutofixExperiences(
+  sourceExperiences: TailoredResume["experiences"],
+  nextExperiences: TailoredResume["experiences"],
+  unsupportedKeywords: string[],
+): TailoredResume["experiences"] {
+  return nextExperiences.map((experience, index) => {
+    const source = sourceExperiences[index];
+    return {
+      company: source?.company || experience.company,
+      title: source?.title || experience.title,
+      dates: source?.dates || experience.dates,
+      highlights: filterUnsupportedClaims(
+        experience.highlights,
+        unsupportedKeywords,
+      ),
+    };
+  });
 }
