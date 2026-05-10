@@ -50,6 +50,13 @@
       "when": 1778324789344,
       "tag": "0006_busy_carnage",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1778420000000,
+      "tag": "0007_company_enrichment",
+      "breakpoints": true
     }
   ]
 }

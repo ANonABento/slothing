@@ -26,6 +26,10 @@ vi.mock("@/lib/db/jobs", () => ({
   getJobs: mocks.getJobs,
 }));
 
+vi.mock("@/lib/enrichment", () => ({
+  enrichCompany: vi.fn(),
+}));
+
 vi.mock("@/lib/db", () => ({
   getLLMConfig: vi.fn(() => null),
 }));

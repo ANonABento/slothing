@@ -10,13 +10,12 @@ import {
   Newspaper,
   RefreshCw,
   Loader2,
-  ChevronDown,
-  ChevronUp,
   Copy,
   Check,
   Sparkles,
   ExternalLink,
 } from "lucide-react";
+import { ExpandableSection } from "@/components/research/expandable-section";
 import type { CompanyResearch } from "@/lib/db/company-research";
 
 interface CompanyResearchCardProps {
@@ -51,40 +50,6 @@ function CopyButton({ text }: { text: string }) {
   );
 }
 
-function ExpandableSection({
-  title,
-  icon: Icon,
-  children,
-  defaultExpanded = false,
-}: {
-  title: string;
-  icon: typeof Info;
-  children: React.ReactNode;
-  defaultExpanded?: boolean;
-}) {
-  const [expanded, setExpanded] = useState(defaultExpanded);
-
-  return (
-    <div className="border-t">
-      <button
-        onClick={() => setExpanded(!expanded)}
-        className="w-full flex items-center justify-between p-3 hover:bg-muted/50 transition-colors"
-      >
-        <div className="flex items-center gap-2">
-          <Icon className="h-4 w-4 text-primary" />
-          <span className="font-medium text-sm">{title}</span>
-        </div>
-        {expanded ? (
-          <ChevronUp className="h-4 w-4 text-muted-foreground" />
-        ) : (
-          <ChevronDown className="h-4 w-4 text-muted-foreground" />
-        )}
-      </button>
-      {expanded && <div className="px-3 pb-3">{children}</div>}
-    </div>
-  );
-}
-
 export function CompanyResearchCard({
   companyName,
   jobId,
@@ -94,32 +59,37 @@ export function CompanyResearchCard({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchResearch = useCallback(async (forceRefresh = false) => {
-    setLoading(true);
-    setError(null);
+  const fetchResearch = useCallback(
+    async (forceRefresh = false) => {
+      setLoading(true);
+      setError(null);
 
-    try {
-      const params = new URLSearchParams({
-        company: companyName,
-        ...(jobId && { jobId }),
-        ...(forceRefresh && { refresh: "true" }),
-      });
+      try {
+        const params = new URLSearchParams({
+          company: companyName,
+          ...(jobId && { jobId }),
+          ...(forceRefresh && { refresh: "true" }),
+        });
 
-      const res = await fetch(`/api/research/company?${params}`);
-      const data = await res.json();
+        const res = await fetch(`/api/research/company?${params}`);
+        const data = await res.json();
 
-      if (!res.ok) {
-        throw new Error(data.error || "Failed to fetch research");
+        if (!res.ok) {
+          throw new Error(data.error || "Failed to fetch research");
+        }
+
+        setResearch(data);
+        onRefresh?.();
+      } catch (err) {
+        setError(
+          err instanceof Error ? err.message : "Failed to load research",
+        );
+      } finally {
+        setLoading(false);
       }
-
-      setResearch(data);
-      onRefresh?.();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load research");
-    } finally {
-      setLoading(false);
-    }
-  }, [companyName, jobId, onRefresh]);
+    },
+    [companyName, jobId, onRefresh],
+  );
 
   useEffect(() => {
     fetchResearch();
@@ -134,7 +104,9 @@ export function CompanyResearchCard({
           </div>
           <div>
             <h3 className="font-semibold">{companyName}</h3>
-            <p className="text-sm text-muted-foreground">Researching company...</p>
+            <p className="text-sm text-muted-foreground">
+              Researching company...
+            </p>
           </div>
         </div>
         <div className="flex items-center justify-center py-8">
@@ -197,7 +169,7 @@ export function CompanyResearchCard({
             disabled={loading}
             className={cn(
               "p-2 rounded-lg hover:bg-muted transition-colors",
-              loading && "opacity-50 cursor-not-allowed"
+              loading && "opacity-50 cursor-not-allowed",
             )}
             title="Refresh research"
           >
@@ -226,7 +198,11 @@ export function CompanyResearchCard({
       </ExpandableSection>
 
       {/* Interview Questions */}
-      <ExpandableSection title="Questions to Ask" icon={HelpCircle} defaultExpanded>
+      <ExpandableSection
+        title="Questions to Ask"
+        icon={HelpCircle}
+        defaultExpanded
+      >
         <div className="space-y-2">
           {research.interviewQuestions.map((question, i) => (
             <div
@@ -265,7 +241,9 @@ export function CompanyResearchCard({
 
       {/* Quick Links */}
       <div className="p-3 bg-muted/30 border-t">
-        <p className="text-xs text-muted-foreground mb-2">Quick Research Links</p>
+        <p className="text-xs text-muted-foreground mb-2">
+          Quick Research Links
+        </p>
         <div className="flex flex-wrap gap-2">
           {[
             {

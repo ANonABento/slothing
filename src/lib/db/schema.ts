@@ -237,6 +237,8 @@ export const companyResearch = sqliteTable(
     interviewQuestionsJson: text("interview_questions_json"),
     cultureNotes: text("culture_notes"),
     recentNews: text("recent_news"),
+    enrichmentJson: text("enrichment_json"),
+    enrichedAt: text("enriched_at"),
     createdAt: text("created_at").default(sql`CURRENT_TIMESTAMP`),
     updatedAt: text("updated_at").default(sql`CURRENT_TIMESTAMP`),
   },
