@@ -80,6 +80,13 @@ export interface SummarizeInterviewFeedbackInput {
   skipped?: boolean[];
 }
 
+interface AnswerSubstance {
+  hasStorySignal: boolean;
+  isVagueShortAnswer: boolean;
+  looksLikeToolList: boolean;
+  shouldGateOverall: boolean;
+}
+
 const TARGET_WPM = 140;
 const PACE_TARGET = {
   min: 130,
@@ -113,6 +120,38 @@ const NUMBER_WORDS = [
   "dozen",
 ] as const;
 
+const STORY_CATEGORIES = new Set<InterviewQuestionCategory>([
+  "behavioral",
+  "situational",
+  "general",
+  "cultural-fit",
+]);
+
+const TOOL_TERMS = [
+  "react",
+  "typescript",
+  "javascript",
+  "tailwind",
+  "prisma",
+  "postgres",
+  "postgresql",
+  "docker",
+  "aws",
+  "github",
+  "actions",
+  "next",
+  "next.js",
+  "node",
+  "python",
+  "kubernetes",
+  "terraform",
+  "graphql",
+  "redux",
+  "vercel",
+  "supabase",
+  "sql",
+] as const;
+
 export function analyzeInterviewAnswer({
   answer,
   category,
@@ -131,6 +170,13 @@ export function analyzeInterviewAnswer({
   const filler = countFillerWords(cleanedAnswer);
   const star = detectStarCoverage(cleanedAnswer);
   const quantificationCount = countQuantifications(cleanedAnswer);
+  const substance = classifyAnswerSubstance(
+    cleanedAnswer,
+    category,
+    star,
+    quantificationCount,
+    wordCount,
+  );
   const fillerRating = rateFillerCount(filler.total);
   const starRating = rateStarCoverage(star.score);
   const quantificationRating = rateQuantificationCount(quantificationCount);
@@ -147,7 +193,9 @@ export function analyzeInterviewAnswer({
     lengthRating,
     paceRating,
   ];
-  const overallRating = summarizeRatings(metricRatings);
+  const overallRating = substance.shouldGateOverall
+    ? "red"
+    : summarizeRatings(metricRatings);
 
   const scorecardBase = {
     answer: cleanedAnswer,
@@ -183,7 +231,7 @@ export function analyzeInterviewAnswer({
     overallRating,
   };
 
-  const topSuggestion = chooseTopSuggestion(scorecardBase);
+  const topSuggestion = chooseTopSuggestion(scorecardBase, substance);
 
   return {
     ...scorecardBase,
@@ -324,9 +372,18 @@ function buildMetrics(
 
 function chooseTopSuggestion(
   scorecard: Omit<InterviewAnswerScorecard, "metrics" | "topSuggestion">,
+  substance: AnswerSubstance,
 ): string {
   if (!scorecard.answer) {
     return "Write a complete answer before reviewing coaching feedback.";
+  }
+
+  if (substance.looksLikeToolList) {
+    return "Answer the behavioral question with one specific story, not a stack of tools.";
+  }
+
+  if (substance.isVagueShortAnswer || !substance.hasStorySignal) {
+    return "Choose one specific example and add the context, actions, and result.";
   }
 
   if (scorecard.star.missing.includes("result")) {
@@ -335,6 +392,13 @@ function chooseTopSuggestion(
 
   if (scorecard.star.missing.includes("action")) {
     return "Add the actions you personally took to solve the problem.";
+  }
+
+  if (
+    scorecard.star.missing.includes("situation") ||
+    scorecard.star.missing.includes("task")
+  ) {
+    return "Add the setup and your role so the interviewer understands the stakes.";
   }
 
   if (scorecard.quantification.count === 0) {
@@ -378,6 +442,58 @@ function summarizeFocusAreas(scorecards: InterviewAnswerScorecard[]): string[] {
 
 function countWords(answer: string): number {
   return answer.match(/\b[\w'-]+\b/g)?.length ?? 0;
+}
+
+function classifyAnswerSubstance(
+  answer: string,
+  category: InterviewQuestionCategory,
+  star: StarCoverage,
+  quantificationCount: number,
+  wordCount: number,
+): AnswerSubstance {
+  const storyCategory = STORY_CATEGORIES.has(category);
+  const hasSpecificity =
+    star.score >= 2 ||
+    quantificationCount > 0 ||
+    /\b(?:because|after|before|during|customer|user|team|deadline|launch|project|incident|rollout|migration|blocked|problem|challenge)\b/i.test(
+      answer,
+    );
+  const hasPersonalAction =
+    /\b(?:i|we)\s+(?:built|led|created|implemented|decided|launched|designed|coordinated|profiled|split|added|mapped|prioritized|tested|shipped|facilitated|debugged|redesigned|owned|helped|moved|trained|documented|reviewed)\b/i.test(
+      answer,
+    );
+  const hasStorySignal =
+    !storyCategory ||
+    star.score >= 2 ||
+    (hasPersonalAction && (star.situation || star.result));
+  const isVagueShortAnswer =
+    storyCategory &&
+    wordCount < 30 &&
+    star.score <= 1 &&
+    quantificationCount === 0 &&
+    !hasSpecificity;
+  const toolList = looksLikeToolList(answer);
+  const looksLikeToolListAnswer =
+    storyCategory && toolList && !hasPersonalAction && star.score <= 1;
+
+  return {
+    hasStorySignal,
+    isVagueShortAnswer,
+    looksLikeToolList: looksLikeToolListAnswer,
+    shouldGateOverall:
+      isVagueShortAnswer || looksLikeToolListAnswer || !hasStorySignal,
+  };
+}
+
+function looksLikeToolList(answer: string): boolean {
+  const normalized = answer.toLowerCase();
+  const commaCount = (answer.match(/,/g) ?? []).length;
+  const toolMatches = TOOL_TERMS.filter((term) =>
+    new RegExp(`\\b${escapeRegExp(term)}\\b`, "i").test(normalized),
+  ).length;
+  const wordCount = countWords(answer);
+
+  return toolMatches >= 4 && (commaCount >= 3 || toolMatches / wordCount > 0.3);
 }
 
 function countQuantifications(answer: string): number {
@@ -487,4 +603,8 @@ function formatDuration(seconds: number): string {
   const remainder = seconds % 60;
 
   return remainder === 0 ? `${minutes}m` : `${minutes}m ${remainder}s`;
+}
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
