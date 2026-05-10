@@ -10,7 +10,7 @@ const footerLinks = {
   ],
   resources: [
     { name: "Dashboard", href: "/dashboard" },
-    { name: "Knowledge Bank", href: "/bank" },
+    { name: "Documents", href: "/bank" },
     { name: "Interview Prep", href: "/interview" },
   ],
   legal: [
@@ -34,7 +34,7 @@ export function Footer() {
             </Link>
             <p className="text-sm text-muted-foreground">
               Your AI-powered resume intelligence platform. Build tailored
-              resumes from your career knowledge bank.
+              resumes from your career history.
             </p>
           </div>
 
