@@ -4,8 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   requireAuth: vi.fn(),
   isAuthError: vi.fn(),
-  getDocuments: vi.fn(),
-  getDocumentsByType: vi.fn(),
+  listDocumentsPaginated: vi.fn(),
 }));
 
 vi.mock("@/lib/auth", () => ({
@@ -14,8 +13,7 @@ vi.mock("@/lib/auth", () => ({
 }));
 
 vi.mock("@/lib/db", () => ({
-  getDocuments: mocks.getDocuments,
-  getDocumentsByType: mocks.getDocumentsByType,
+  listDocumentsPaginated: mocks.listDocumentsPaginated,
 }));
 
 import { GET } from "./route";
@@ -29,12 +27,11 @@ describe("documents route", () => {
     vi.clearAllMocks();
     mocks.requireAuth.mockResolvedValue({ userId: "user-1" });
     mocks.isAuthError.mockReturnValue(false);
-    mocks.getDocuments.mockReturnValue([]);
-    mocks.getDocumentsByType.mockReturnValue([]);
+    mocks.listDocumentsPaginated.mockReturnValue([]);
   });
 
   it("lists all documents for the authenticated user when no type is provided", async () => {
-    mocks.getDocuments.mockReturnValueOnce([
+    mocks.listDocumentsPaginated.mockReturnValueOnce([
       {
         id: "doc-1",
         filename: "resume.pdf",
@@ -48,8 +45,12 @@ describe("documents route", () => {
 
     const response = await GET(documentsRequest());
 
-    expect(mocks.getDocuments).toHaveBeenCalledWith("user-1");
-    expect(mocks.getDocumentsByType).not.toHaveBeenCalled();
+    expect(mocks.listDocumentsPaginated).toHaveBeenCalledWith({
+      userId: "user-1",
+      type: undefined,
+      cursor: null,
+      limit: 50,
+    });
     await expect(response.json()).resolves.toEqual({
       documents: [
         {
@@ -62,11 +63,24 @@ describe("documents route", () => {
           uploadedAt: "2026-04-01T10:00:00.000Z",
         },
       ],
+      items: [
+        {
+          id: "doc-1",
+          filename: "resume.pdf",
+          type: "resume",
+          mimeType: "application/pdf",
+          size: 1024,
+          path: "/uploads/resume.pdf",
+          uploadedAt: "2026-04-01T10:00:00.000Z",
+        },
+      ],
+      nextCursor: null,
+      hasMore: false,
     });
   });
 
   it("lists only documents matching the requested type for the authenticated user", async () => {
-    mocks.getDocumentsByType.mockReturnValueOnce([
+    mocks.listDocumentsPaginated.mockReturnValueOnce([
       {
         id: "doc-2",
         filename: "cover-letter.pdf",
@@ -82,11 +96,12 @@ describe("documents route", () => {
       documentsRequest("/api/documents?type=cover_letter"),
     );
 
-    expect(mocks.getDocumentsByType).toHaveBeenCalledWith(
-      "cover_letter",
-      "user-1",
-    );
-    expect(mocks.getDocuments).not.toHaveBeenCalled();
+    expect(mocks.listDocumentsPaginated).toHaveBeenCalledWith({
+      userId: "user-1",
+      type: "cover_letter",
+      cursor: null,
+      limit: 50,
+    });
     await expect(response.json()).resolves.toEqual({
       documents: [
         {
@@ -99,6 +114,19 @@ describe("documents route", () => {
           uploadedAt: "2026-04-02T10:00:00.000Z",
         },
       ],
+      items: [
+        {
+          id: "doc-2",
+          filename: "cover-letter.pdf",
+          type: "cover_letter",
+          mimeType: "application/pdf",
+          size: 2048,
+          path: "/uploads/cover-letter.pdf",
+          uploadedAt: "2026-04-02T10:00:00.000Z",
+        },
+      ],
+      nextCursor: null,
+      hasMore: false,
     });
   });
 
@@ -108,20 +136,20 @@ describe("documents route", () => {
     );
 
     expect(response.status).toBe(200);
-    expect(mocks.getDocumentsByType).toHaveBeenCalledWith(
-      "reference_letter",
-      "user-1",
-    );
+    expect(mocks.listDocumentsPaginated).toHaveBeenCalledWith({
+      userId: "user-1",
+      type: "reference_letter",
+      cursor: null,
+      limit: 50,
+    });
   });
 
   it("rejects unsupported document type filters", async () => {
     const response = await GET(documentsRequest("/api/documents?type=invoice"));
 
     expect(response.status).toBe(400);
-    await expect(response.json()).resolves.toEqual({
-      error: "Invalid document type",
-    });
-    expect(mocks.getDocuments).not.toHaveBeenCalled();
-    expect(mocks.getDocumentsByType).not.toHaveBeenCalled();
+    const body = await response.json();
+    expect(body.error).toBe("Validation failed");
+    expect(mocks.listDocumentsPaginated).not.toHaveBeenCalled();
   });
 });

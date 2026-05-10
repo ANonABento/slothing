@@ -79,6 +79,8 @@ interface OpportunitiesResponse {
 
 interface EmailDraftsResponse {
   drafts?: EmailDraft[];
+  nextCursor?: string | null;
+  hasMore?: boolean;
 }
 
 interface EmailSend {
@@ -141,6 +143,9 @@ export default function EmailTemplatesPage() {
   const [draftsSheetOpen, setDraftsSheetOpen] = useState(false);
   const [savingDraft, setSavingDraft] = useState(false);
   const [editingDraftId, setEditingDraftId] = useState<string | null>(null);
+  const [draftsNextCursor, setDraftsNextCursor] = useState<string | null>(null);
+  const [hasMoreDrafts, setHasMoreDrafts] = useState(false);
+  const [loadingMoreDrafts, setLoadingMoreDrafts] = useState(false);
 
   // Sent state
   const [sends, setSends] = useState<EmailSend[]>([]);
@@ -155,7 +160,7 @@ export default function EmailTemplatesPage() {
 
   const fetchJobs = useCallback(async () => {
     try {
-      const res = await fetch("/api/opportunities");
+      const res = await fetch("/api/opportunities?limit=200");
       const data = await readJsonResponse<OpportunitiesResponse>(
         res,
         "Failed to load jobs",
@@ -179,6 +184,8 @@ export default function EmailTemplatesPage() {
         "Failed to load drafts",
       );
       setDrafts(data.drafts || []);
+      setDraftsNextCursor(data.nextCursor ?? null);
+      setHasMoreDrafts(Boolean(data.hasMore));
     } catch (error) {
       showErrorToast(error, {
         title: "Could not load drafts",
@@ -188,6 +195,30 @@ export default function EmailTemplatesPage() {
       setDraftsLoaded(true);
     }
   }, [showErrorToast]);
+
+  const loadMoreDrafts = useCallback(async () => {
+    if (!draftsNextCursor) return;
+    setLoadingMoreDrafts(true);
+    try {
+      const res = await fetch(
+        `/api/email/drafts?cursor=${encodeURIComponent(draftsNextCursor)}`,
+      );
+      const data = await readJsonResponse<EmailDraftsResponse>(
+        res,
+        "Failed to load drafts",
+      );
+      setDrafts((current) => [...current, ...(data.drafts || [])]);
+      setDraftsNextCursor(data.nextCursor ?? null);
+      setHasMoreDrafts(Boolean(data.hasMore));
+    } catch (error) {
+      showErrorToast(error, {
+        title: "Could not load more drafts",
+        fallbackDescription: "Please try again.",
+      });
+    } finally {
+      setLoadingMoreDrafts(false);
+    }
+  }, [draftsNextCursor, showErrorToast]);
 
   const fetchSends = useCallback(async () => {
     try {
@@ -994,6 +1025,9 @@ export default function EmailTemplatesPage() {
         jobs={jobs}
         onLoadDraft={loadDraft}
         onDeleteDraft={(draftId) => void deleteDraft(draftId)}
+        hasMore={hasMoreDrafts}
+        loadingMore={loadingMoreDrafts}
+        onLoadMore={() => void loadMoreDrafts()}
       />
       <SentTimeline
         open={sentSheetOpen}

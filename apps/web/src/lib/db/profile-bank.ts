@@ -16,6 +16,20 @@ interface BankEntryRow {
   created_at: string;
 }
 
+export interface BankEntryCursor {
+  lastId: string;
+  lastCreatedAt: string;
+}
+
+export interface ListBankEntriesPaginatedParams {
+  userId?: string;
+  query?: string | null;
+  category?: BankCategory | null;
+  sourceDocumentId?: string | null;
+  cursor?: BankEntryCursor | null;
+  limit: number;
+}
+
 function readContent(row: BankEntryRow): Record<string, unknown> {
   const content = JSON.parse(row.content) as Record<string, unknown>;
   if (row.parent_id && !content.parentId) content.parentId = row.parent_id;
@@ -271,6 +285,51 @@ export function searchBankEntriesByCategory(
        ORDER BY confidence_score DESC, created_at DESC`,
     )
     .all(userId, category, pattern) as BankEntryRow[];
+  return attachChildCounts(rows.map(rowToEntry), userId);
+}
+
+export function listBankEntriesPaginated({
+  userId = "default",
+  query,
+  category,
+  sourceDocumentId,
+  cursor,
+  limit,
+}: ListBankEntriesPaginatedParams): BankEntry[] {
+  ensureProfileBankHierarchySchema();
+  const whereClauses = ["user_id = ?"];
+  const params: Array<string | number> = [userId];
+
+  if (category) {
+    whereClauses.push("category = ?");
+    params.push(category);
+  }
+
+  if (sourceDocumentId) {
+    whereClauses.push("source_document_id = ?");
+    params.push(sourceDocumentId);
+  }
+
+  if (query?.trim()) {
+    whereClauses.push("content LIKE ?");
+    params.push(`%${query.trim()}%`);
+  }
+
+  if (cursor) {
+    whereClauses.push("(created_at < ? OR (created_at = ? AND id < ?))");
+    params.push(cursor.lastCreatedAt, cursor.lastCreatedAt, cursor.lastId);
+  }
+
+  params.push(limit + 1);
+
+  const rows = db
+    .prepare(
+      `SELECT * FROM profile_bank
+       WHERE ${whereClauses.join(" AND ")}
+       ORDER BY created_at DESC, id DESC
+       LIMIT ?`,
+    )
+    .all(...params) as BankEntryRow[];
   return attachChildCounts(rows.map(rowToEntry), userId);
 }
 

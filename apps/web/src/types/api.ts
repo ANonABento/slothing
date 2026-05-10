@@ -52,6 +52,12 @@ export type ApiResponse<T> =
   | ApiErrorResponse
   | ApiValidationErrorResponse;
 
+export interface PaginatedResponse<TItem> {
+  items?: TItem[];
+  nextCursor: string | null;
+  hasMore: boolean;
+}
+
 // ---------------------------------------------------------------------------
 // Profile
 // ---------------------------------------------------------------------------
@@ -93,7 +99,9 @@ export interface ProfileVersionResponse {
 // Jobs
 // ---------------------------------------------------------------------------
 
-export interface JobsResponse {
+export interface JobsResponse extends Partial<
+  PaginatedResponse<JobDescription>
+> {
   jobs: JobDescription[];
 }
 
@@ -233,7 +241,7 @@ export interface ResumeCompareResponse {
 // Bank (profile knowledge bank)
 // ---------------------------------------------------------------------------
 
-export interface BankEntriesResponse {
+export interface BankEntriesResponse extends PaginatedResponse<BankEntry> {
   entries: BankEntry[];
 }
 
@@ -291,15 +299,17 @@ export interface ParseResponse {
 // Documents
 // ---------------------------------------------------------------------------
 
-export interface DocumentsListResponse {
-  documents: Array<{
-    id: string;
-    filename: string;
-    type: DocumentType;
-    mimeType: string;
-    size: number;
-    uploadedAt: string;
-  }>;
+export interface DocumentListItem {
+  id: string;
+  filename: string;
+  type: DocumentType;
+  mimeType: string;
+  size: number;
+  uploadedAt: string;
+}
+
+export interface DocumentsListResponse extends PaginatedResponse<DocumentListItem> {
+  documents: DocumentListItem[];
 }
 
 export interface DocumentDeleteResponse {
@@ -441,7 +451,7 @@ export interface EmailDraft {
   createdAt: string;
 }
 
-export interface EmailDraftsResponse {
+export interface EmailDraftsResponse extends PaginatedResponse<EmailDraft> {
   drafts: EmailDraft[];
 }
 

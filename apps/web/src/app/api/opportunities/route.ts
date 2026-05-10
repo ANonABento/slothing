@@ -1,34 +1,115 @@
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { requireAuth, isAuthError } from "@/lib/auth";
 import {
   getJobStatusForOpportunityStatus,
   jobToOpportunity,
-  listOpportunities,
 } from "@/lib/opportunities";
-import { createJob } from "@/lib/db/jobs";
+import { createJob, listJobsPaginated } from "@/lib/db/jobs";
 import { enrichCompany } from "@/lib/enrichment";
 import { getLLMConfig } from "@/lib/db";
 import { LLMClient, parseJSONFromLLM } from "@/lib/llm/client";
 import { createJobSchema, TECH_KEYWORDS } from "@/lib/constants";
 import { createOpportunitySchema } from "@/types/opportunity";
+import {
+  buildPaginationResult,
+  decodeCursor,
+  InvalidCursorError,
+  PaginationParamsSchema,
+} from "@/lib/pagination";
+import type { JobStatus, OpportunityStatus } from "@/types";
 
 export const dynamic = "force-dynamic";
+
+const createdAtCursorSchema = z.object({
+  lastId: z.string(),
+  lastCreatedAt: z.string(),
+});
+
+const opportunitiesQuerySchema = PaginationParamsSchema.extend({
+  status: z.string().optional(),
+});
+
+const opportunityStatuses = new Set<OpportunityStatus>([
+  "pending",
+  "saved",
+  "applied",
+  "interviewing",
+  "offer",
+  "rejected",
+  "expired",
+  "dismissed",
+]);
+
+function statusParamToJobStatuses(
+  value?: string,
+): JobStatus[] | undefined | null {
+  if (!value) return undefined;
+  const statuses = value
+    .split(",")
+    .map((status) => status.trim())
+    .filter(Boolean)
+    .map((status) =>
+      status === "offered"
+        ? "offer"
+        : status === "withdrawn"
+          ? "dismissed"
+          : status,
+    )
+    .filter((status): status is OpportunityStatus =>
+      opportunityStatuses.has(status as OpportunityStatus),
+    )
+    .map(getJobStatusForOpportunityStatus);
+  return statuses.length ? statuses : null;
+}
 
 export async function GET(request: NextRequest) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
 
-  const statuses = request.nextUrl.searchParams
-    .get("status")
-    ?.split(",")
-    .map((status) => status.trim())
-    .filter(Boolean);
-
   try {
+    const parsed = opportunitiesQuerySchema.safeParse(
+      Object.fromEntries(request.nextUrl.searchParams.entries()),
+    );
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: "Validation failed", details: parsed.error.flatten() },
+        { status: 400 },
+      );
+    }
+    const cursor = decodeCursor(parsed.data.cursor, createdAtCursorSchema);
+    const statuses = statusParamToJobStatuses(parsed.data.status);
+    if (statuses === null) {
+      return NextResponse.json({
+        jobs: [],
+        opportunities: [],
+        items: [],
+        nextCursor: null,
+        hasMore: false,
+      });
+    }
+    const jobs = listJobsPaginated({
+      userId: authResult.userId,
+      statuses,
+      cursor,
+      limit: parsed.data.limit,
+    });
+    const page = buildPaginationResult(jobs, parsed.data.limit, (job) => ({
+      lastId: job.id,
+      lastCreatedAt: job.createdAt,
+    }));
+    const opportunities = page.items.map(jobToOpportunity);
     return NextResponse.json({
-      opportunities: listOpportunities(authResult.userId, statuses),
+      jobs: page.items,
+      opportunities,
+      items: opportunities,
+      nextCursor: page.nextCursor,
+      hasMore: page.hasMore,
     });
   } catch (error) {
+    if (error instanceof InvalidCursorError) {
+      return NextResponse.json({ error: "Invalid cursor" }, { status: 400 });
+    }
     console.error("List opportunities error:", error);
     return NextResponse.json(
       { error: "Failed to list opportunities" },

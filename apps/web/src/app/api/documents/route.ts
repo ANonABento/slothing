@@ -5,35 +5,65 @@
  * @response DocumentsListResponse from @/types/api
  */
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { requireAuth, isAuthError } from "@/lib/auth";
-import { getDocuments, getDocumentsByType } from "@/lib/db";
+import { listDocumentsPaginated } from "@/lib/db";
 import { documentTypeSchema } from "@/lib/constants/documents";
+import {
+  buildPaginationResult,
+  decodeCursor,
+  InvalidCursorError,
+  PaginationParamsSchema,
+} from "@/lib/pagination";
 
 export const dynamic = "force-dynamic";
+
+const documentsCursorSchema = z.object({
+  lastId: z.string(),
+  lastCreatedAt: z.string(),
+});
+
+const documentsQuerySchema = PaginationParamsSchema.extend({
+  type: documentTypeSchema.optional(),
+});
 
 export async function GET(request: NextRequest) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
 
   try {
-    const type = request.nextUrl.searchParams.get("type");
-
-    if (!type) {
-      return NextResponse.json({ documents: getDocuments(authResult.userId) });
-    }
-
-    const parsedType = documentTypeSchema.safeParse(type);
-    if (!parsedType.success) {
+    const parsed = documentsQuerySchema.safeParse(
+      Object.fromEntries(request.nextUrl.searchParams.entries()),
+    );
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: "Invalid document type" },
+        { error: "Validation failed", details: parsed.error.flatten() },
         { status: 400 },
       );
     }
 
+    const cursor = decodeCursor(parsed.data.cursor, documentsCursorSchema);
+    const rows = listDocumentsPaginated({
+      userId: authResult.userId,
+      type: parsed.data.type,
+      cursor,
+      limit: parsed.data.limit,
+    });
+    const page = buildPaginationResult(rows, parsed.data.limit, (document) => ({
+      lastId: document.id,
+      lastCreatedAt: document.uploadedAt,
+    }));
+
     return NextResponse.json({
-      documents: getDocumentsByType(parsedType.data, authResult.userId),
+      documents: page.items,
+      items: page.items,
+      nextCursor: page.nextCursor,
+      hasMore: page.hasMore,
     });
   } catch (error) {
+    if (error instanceof InvalidCursorError) {
+      return NextResponse.json({ error: "Invalid cursor" }, { status: 400 });
+    }
     console.error("Get documents error:", error);
     return NextResponse.json(
       { error: "Failed to get documents" },

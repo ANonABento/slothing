@@ -7,7 +7,7 @@ import {
   normalizeQuestion,
 } from "@/lib/answers/answer-bank";
 import { toNullableIsoDateString } from "@/lib/utils";
-import { and, desc, eq, sql as sqlOp } from "drizzle-orm";
+import { and, desc, eq, or, sql as sqlOp } from "drizzle-orm";
 import db from "./index";
 import { ensureAnswerBankSchema } from "./answer-bank-schema";
 import { answerBank } from "./schema";
@@ -47,6 +47,55 @@ export async function listAnswerBank(
     .from(answerBank)
     .where(eq(answerBank.userId, userId))
     .orderBy(desc(answerBank.timesUsed), desc(answerBank.updatedAt));
+
+  return rows.map(mapAnswerBankEntry);
+}
+
+export interface AnswerBankCursor {
+  lastId: string;
+  lastTimesUsed: number;
+  lastUpdatedAt: string;
+}
+
+export async function listAnswerBankPaginated({
+  userId,
+  cursor,
+  limit,
+}: {
+  userId: string;
+  cursor?: AnswerBankCursor | null;
+  limit: number;
+}): Promise<AnswerBankEntry[]> {
+  await ensureSchema();
+  const cursorPredicate = cursor
+    ? or(
+        sqlOp`coalesce(${answerBank.timesUsed}, 1) < ${cursor.lastTimesUsed}`,
+        and(
+          sqlOp`coalesce(${answerBank.timesUsed}, 1) = ${cursor.lastTimesUsed}`,
+          sqlOp`${answerBank.updatedAt} < ${cursor.lastUpdatedAt}`,
+        ),
+        and(
+          sqlOp`coalesce(${answerBank.timesUsed}, 1) = ${cursor.lastTimesUsed}`,
+          eq(answerBank.updatedAt, cursor.lastUpdatedAt),
+          sqlOp`${answerBank.id} < ${cursor.lastId}`,
+        ),
+      )
+    : undefined;
+
+  const rows = await db
+    .select()
+    .from(answerBank)
+    .where(
+      cursorPredicate
+        ? and(eq(answerBank.userId, userId), cursorPredicate)
+        : eq(answerBank.userId, userId),
+    )
+    .orderBy(
+      desc(answerBank.timesUsed),
+      desc(answerBank.updatedAt),
+      desc(answerBank.id),
+    )
+    .limit(limit + 1);
 
   return rows.map(mapAnswerBankEntry);
 }
@@ -298,6 +347,7 @@ export async function promoteAnswerBankEntry(
 }
 
 export const listLearnedAnswers = listAnswerBank;
+export const listLearnedAnswersPaginated = listAnswerBankPaginated;
 export const upsertLearnedAnswer = upsertAnswerBankEntry;
 export const updateLearnedAnswer = updateAnswerBankEntry;
 export const deleteLearnedAnswer = deleteAnswerBankEntry;
