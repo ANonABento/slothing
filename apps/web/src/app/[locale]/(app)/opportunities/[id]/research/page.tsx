@@ -3,14 +3,14 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { Briefcase, Loader2 } from "lucide-react";
+import { Briefcase } from "lucide-react";
 import { CompanyEnrichmentDossier } from "@/components/research/company-enrichment-dossier";
+import { OpportunityResearchSkeleton } from "@/components/skeletons/opportunity-research-skeleton";
 import { Button } from "@/components/ui/button";
 import {
   AppPage,
   PageContent,
   PageHeader,
-  PageLoadingState,
   StandardEmptyState,
 } from "@/components/ui/page-layout";
 import type { JobDescription } from "@/types";
@@ -41,7 +41,7 @@ export default function CompanyResearchPage() {
   }, [jobId]);
 
   if (loading) {
-    return <PageLoadingState icon={Loader2} label="Loading research..." />;
+    return <OpportunityResearchSkeleton />;
   }
 
   if (error || !job) {

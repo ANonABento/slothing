@@ -30,6 +30,7 @@ import {
   Rss,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { CalendarSkeleton } from "@/components/skeletons/calendar-skeleton";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -52,7 +53,6 @@ import {
   AppPage,
   PageContent,
   PageHeader,
-  PageLoadingState,
   PagePanel,
   StandardEmptyState,
 } from "@/components/ui/page-layout";
@@ -359,7 +359,7 @@ export default function CalendarPage() {
   };
 
   if (loading) {
-    return <PageLoadingState icon={Loader2} label="Loading calendar..." />;
+    return <CalendarSkeleton />;
   }
 
   return (
