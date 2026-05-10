@@ -2,7 +2,7 @@
 
 import { nowIso } from "@/lib/format/time";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import {
   Briefcase,
@@ -24,8 +24,6 @@ import {
 } from "lucide-react";
 import { ImportJobDialog } from "@/components/jobs/import-job-dialog";
 import { AddOpportunityWizard } from "@/components/opportunities/add-opportunity-wizard";
-import { OpportunitiesKanbanSkeleton } from "@/components/skeletons/opportunities-kanban-skeleton";
-import { OpportunitiesListSkeleton } from "@/components/skeletons/opportunities-list-skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,6 +42,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  SkeletonButton,
+  SkeletonJobCard,
+  SkeletonKanbanLane,
+} from "@/components/ui/skeleton";
 import { useErrorToast } from "@/hooks/use-error-toast";
 import { readJsonResponse } from "@/lib/http";
 import { cn } from "@/lib/utils";
@@ -327,14 +330,6 @@ export default function OpportunitiesPage() {
     }
   }
 
-  if (!hasFetched && !hasCachedData) {
-    return viewMode === "kanban" ? (
-      <OpportunitiesKanbanSkeleton />
-    ) : (
-      <OpportunitiesListSkeleton />
-    );
-  }
-
   return (
     <AppPage>
       <PageHeader
@@ -585,62 +580,70 @@ export default function OpportunitiesPage() {
                 />
               ) : null}
 
-              <div className="mb-6 flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-                <div className="inline-flex w-full rounded-lg border bg-card p-1 sm:w-auto">
-                  {OPPORTUNITY_TYPE_TAB_OPTIONS.map((tab) => (
-                    <button
-                      key={tab.value}
-                      type="button"
-                      onClick={() => updateFilter("typeTab", tab.value)}
-                      className={cn(
-                        "min-h-11 flex-1 rounded-md px-4 text-sm font-medium transition-colors sm:flex-none",
-                        filters.typeTab === tab.value
-                          ? "bg-primary text-primary-foreground shadow-sm"
-                          : "text-muted-foreground hover:bg-muted hover:text-foreground",
-                      )}
-                    >
-                      {translateOpportunityOption(t, tab.label)}
-                    </button>
-                  ))}
-                </div>
-
-                <div className="grid gap-3 sm:grid-cols-[minmax(220px,1fr)_200px] xl:w-[560px]">
-                  <div className="relative">
-                    <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                    <Input
-                      value={filters.searchQuery}
-                      onChange={(event) =>
-                        updateFilter("searchQuery", event.target.value)
-                      }
-                      placeholder={t("filters.searchPlaceholder")}
-                      className="pl-9"
-                      aria-label={t("filters.searchAria")}
-                    />
+              <Suspense fallback={<OpportunitiesFiltersSkeleton />}>
+                <div
+                  className="mb-6 flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between"
+                  data-testid="opportunities-filters"
+                >
+                  <div className="inline-flex w-full rounded-lg border bg-card p-1 sm:w-auto">
+                    {OPPORTUNITY_TYPE_TAB_OPTIONS.map((tab) => (
+                      <button
+                        key={tab.value}
+                        type="button"
+                        onClick={() => updateFilter("typeTab", tab.value)}
+                        className={cn(
+                          "min-h-11 flex-1 rounded-md px-4 text-sm font-medium transition-colors sm:flex-none",
+                          filters.typeTab === tab.value
+                            ? "bg-primary text-primary-foreground shadow-sm"
+                            : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                        )}
+                      >
+                        {translateOpportunityOption(t, tab.label)}
+                      </button>
+                    ))}
                   </div>
-                  <Select
-                    value={filters.sortBy}
-                    onValueChange={(value) =>
-                      updateFilter(
-                        "sortBy",
-                        value as OpportunityFilters["sortBy"],
-                      )
-                    }
-                  >
-                    <SelectTrigger aria-label={t("filters.sortAria")}>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {OPPORTUNITY_SORT_OPTIONS.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {t("filters.sortBy", {
-                            label: translateOpportunityOption(t, option.label),
-                          })}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+
+                  <div className="grid gap-3 sm:grid-cols-[minmax(220px,1fr)_200px] xl:w-[560px]">
+                    <div className="relative">
+                      <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                      <Input
+                        value={filters.searchQuery}
+                        onChange={(event) =>
+                          updateFilter("searchQuery", event.target.value)
+                        }
+                        placeholder={t("filters.searchPlaceholder")}
+                        className="pl-9"
+                        aria-label={t("filters.searchAria")}
+                      />
+                    </div>
+                    <Select
+                      value={filters.sortBy}
+                      onValueChange={(value) =>
+                        updateFilter(
+                          "sortBy",
+                          value as OpportunityFilters["sortBy"],
+                        )
+                      }
+                    >
+                      <SelectTrigger aria-label={t("filters.sortAria")}>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {OPPORTUNITY_SORT_OPTIONS.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {t("filters.sortBy", {
+                              label: translateOpportunityOption(
+                                t,
+                                option.label,
+                              ),
+                            })}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
-              </div>
+              </Suspense>
 
               <div className="mb-4 text-sm text-muted-foreground">
                 {t("summary", {
@@ -655,39 +658,61 @@ export default function OpportunitiesPage() {
                 {t("counts.pending", { count: counts.pending })}
               </div>
 
-              {filteredOpportunities.length === 0 ? (
-                <StandardEmptyState
-                  icon={Briefcase}
-                  title={t("empty.noMatchesTitle")}
-                  description={t("empty.noMatchesDescription")}
-                  action={
-                    <Button variant="outline" onClick={clearFilters}>
-                      {t("empty.clearFilters")}
-                    </Button>
-                  }
-                />
-              ) : viewMode === "kanban" ? (
-                <KanbanBoard
-                  opportunities={filteredOpportunities}
-                  visibleLanes={visibleKanbanLanes}
-                  onStatusChange={(opportunityId, status) =>
-                    void handleStatusChange(opportunityId, status)
-                  }
-                  onShowLane={(lane) => void handleShowKanbanLane(lane)}
-                />
-              ) : (
-                <div className="grid gap-4">
-                  {filteredOpportunities.map((opportunity) => (
-                    <OpportunityRow
-                      key={opportunity.id}
-                      opportunity={opportunity}
-                      onStatusChange={(status) =>
-                        void handleStatusChange(opportunity.id, status)
+              <Suspense fallback={<OpportunitiesKanbanSettingsSkeleton />}>
+                <div data-testid="opportunities-kanban-settings" />
+              </Suspense>
+
+              <Suspense
+                fallback={
+                  viewMode === "kanban" ? (
+                    <OpportunitiesKanbanBodySkeleton />
+                  ) : (
+                    <OpportunitiesListBodySkeleton />
+                  )
+                }
+              >
+                {!hasFetched && !hasCachedData ? (
+                  viewMode === "kanban" ? (
+                    <OpportunitiesKanbanBodySkeleton />
+                  ) : (
+                    <OpportunitiesListBodySkeleton />
+                  )
+                ) : filteredOpportunities.length === 0 ? (
+                  <StandardEmptyState
+                    icon={Briefcase}
+                    title={t("empty.noMatchesTitle")}
+                    description={t("empty.noMatchesDescription")}
+                    action={
+                      <Button variant="outline" onClick={clearFilters}>
+                        {t("empty.clearFilters")}
+                      </Button>
+                    }
+                  />
+                ) : viewMode === "kanban" ? (
+                  <div data-testid="opportunities-list">
+                    <KanbanBoard
+                      opportunities={filteredOpportunities}
+                      visibleLanes={visibleKanbanLanes}
+                      onStatusChange={(opportunityId, status) =>
+                        void handleStatusChange(opportunityId, status)
                       }
+                      onShowLane={(lane) => void handleShowKanbanLane(lane)}
                     />
-                  ))}
-                </div>
-              )}
+                  </div>
+                ) : (
+                  <div className="grid gap-4" data-testid="opportunities-list">
+                    {filteredOpportunities.map((opportunity) => (
+                      <OpportunityRow
+                        key={opportunity.id}
+                        opportunity={opportunity}
+                        onStatusChange={(status) =>
+                          void handleStatusChange(opportunity.id, status)
+                        }
+                      />
+                    ))}
+                  </div>
+                )}
+              </Suspense>
             </section>
           </div>
         )}
@@ -705,6 +730,52 @@ export default function OpportunitiesPage() {
         onJobImported={fetchOpportunities}
       />
     </AppPage>
+  );
+}
+
+function OpportunitiesFiltersSkeleton() {
+  return (
+    <div className="mb-6 flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+      <div className="flex flex-wrap gap-2">
+        {Array.from({ length: 3 }).map((_, index) => (
+          <SkeletonButton key={index} className="h-11 w-24" />
+        ))}
+      </div>
+      <div className="grid gap-3 sm:grid-cols-[minmax(220px,1fr)_200px] xl:w-[560px]">
+        <SkeletonButton className="h-10 w-full" />
+        <SkeletonButton className="h-10 w-full" />
+      </div>
+    </div>
+  );
+}
+
+function OpportunitiesKanbanSettingsSkeleton() {
+  return (
+    <div className="mb-4 flex flex-wrap gap-2">
+      {Array.from({ length: 4 }).map((_, index) => (
+        <SkeletonButton key={index} className="h-9 w-28" />
+      ))}
+    </div>
+  );
+}
+
+function OpportunitiesListBodySkeleton() {
+  return (
+    <div className="space-y-3">
+      {Array.from({ length: 5 }).map((_, index) => (
+        <SkeletonJobCard key={index} />
+      ))}
+    </div>
+  );
+}
+
+function OpportunitiesKanbanBodySkeleton() {
+  return (
+    <div className="grid gap-3 lg:grid-cols-3 xl:grid-cols-6">
+      {Array.from({ length: 6 }).map((_, index) => (
+        <SkeletonKanbanLane key={index} cards={index === 0 ? 3 : 1} />
+      ))}
+    </div>
   );
 }
 
