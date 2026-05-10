@@ -90,4 +90,32 @@ describe("ResumePreview Auto-Tailor", () => {
       expect(onResumeChange).toHaveBeenLastCalledWith(baseResume);
     });
   });
+
+  it("toggles between the tailored resume and the word-level diff", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => {
+        return new Response(JSON.stringify({ resume: improvedResume }), {
+          status: 200,
+        });
+      }),
+    );
+
+    renderPreview();
+
+    fireEvent.click(screen.getByRole("button", { name: "Auto-Tailor" }));
+
+    const toggle = await screen.findByRole("button", {
+      name: "View changes",
+    });
+    expect(toggle).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByText(/^Added:/)).toBeInTheDocument();
+
+    fireEvent.click(toggle);
+
+    expect(toggle).toHaveAttribute("aria-pressed", "false");
+    expect(
+      screen.getByText("React TypeScript GraphQL Kubernetes engineer."),
+    ).toBeInTheDocument();
+  });
 });

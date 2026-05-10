@@ -2,6 +2,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ResumePreview, getPreviewEmptyStateContent } from "./resume-preview";
 import type { TipTapJSONContent } from "@/lib/editor/types";
+import type { TailoredResume } from "@/lib/resume/generator";
 
 const content: TipTapJSONContent = {
   type: "doc",
@@ -17,6 +18,20 @@ const content: TipTapJSONContent = {
       ],
     },
   ],
+};
+
+const baseResume: TailoredResume = {
+  contact: { name: "Jane Doe" },
+  summary: "Product engineer.",
+  experiences: [],
+  skills: ["React"],
+  education: [],
+};
+
+const tailoredResume: TailoredResume = {
+  ...baseResume,
+  summary: "Product engineer with GraphQL experience.",
+  skills: ["React", "GraphQL"],
 };
 
 describe("ResumePreview", () => {
@@ -48,6 +63,31 @@ describe("ResumePreview", () => {
     fireEvent.click(screen.getByRole("button", { name: /add section/i }));
 
     expect(handleAddSection).toHaveBeenCalledTimes(1);
+  });
+
+  it("renders a View changes toggle for structured tailored resumes", async () => {
+    render(
+      <ResumePreview
+        templateId="classic"
+        content={content}
+        baseResume={baseResume}
+        tailoredResume={tailoredResume}
+      />,
+    );
+
+    expect(
+      await screen.findByText("Focused product engineer"),
+    ).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "View changes" }));
+
+    expect(screen.getByText(/^Added:/)).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Summary" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText("Focused product engineer"),
+    ).not.toBeInTheDocument();
   });
 
   it("returns resume empty state content by default", () => {

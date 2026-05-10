@@ -189,6 +189,7 @@ export interface TailorGenerateResponse {
   html: string;
   pdfUrl: string;
   resume: TailoredResume;
+  baseResume: TailoredResume;
   savedResume: { id: string };
   jobId: string;
   analysis: TailorAnalysisResponse["analysis"];
