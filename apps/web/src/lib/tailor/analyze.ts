@@ -1,4 +1,6 @@
 import type { BankEntry, GroupedBankEntries } from "@/types";
+import { extractJdKeywordTerms } from "@/lib/ats/jd-keywords";
+import { containsKeywordTerm } from "@/lib/ats/match-score";
 import type { TailoredResume } from "@/lib/resume/generator";
 import {
   evaluateResultQuality,
@@ -39,144 +41,6 @@ export interface ResumeFitAnalysis {
   quality: ResultQualityRubric;
 }
 
-/**
- * Extract keywords from a job description string.
- * Splits on common delimiters and filters noise words.
- */
-const STOP_WORDS = new Set([
-  "a",
-  "an",
-  "the",
-  "and",
-  "or",
-  "but",
-  "in",
-  "on",
-  "at",
-  "to",
-  "for",
-  "of",
-  "with",
-  "by",
-  "from",
-  "as",
-  "is",
-  "was",
-  "are",
-  "were",
-  "be",
-  "been",
-  "being",
-  "have",
-  "has",
-  "had",
-  "do",
-  "does",
-  "did",
-  "will",
-  "would",
-  "could",
-  "should",
-  "may",
-  "might",
-  "must",
-  "shall",
-  "can",
-  "need",
-  "not",
-  "no",
-  "nor",
-  "so",
-  "if",
-  "then",
-  "than",
-  "too",
-  "very",
-  "just",
-  "about",
-  "above",
-  "after",
-  "again",
-  "all",
-  "also",
-  "am",
-  "any",
-  "because",
-  "before",
-  "below",
-  "between",
-  "both",
-  "each",
-  "few",
-  "more",
-  "most",
-  "other",
-  "our",
-  "out",
-  "over",
-  "own",
-  "same",
-  "some",
-  "such",
-  "that",
-  "their",
-  "them",
-  "these",
-  "they",
-  "this",
-  "those",
-  "through",
-  "under",
-  "until",
-  "up",
-  "we",
-  "what",
-  "when",
-  "where",
-  "which",
-  "while",
-  "who",
-  "whom",
-  "why",
-  "you",
-  "your",
-  "its",
-  "it",
-  "he",
-  "she",
-  "his",
-  "her",
-  "my",
-  "me",
-  "us",
-  "how",
-  "into",
-  "during",
-  "only",
-  "able",
-  "work",
-  "working",
-  "role",
-  "team",
-  "company",
-  "position",
-  "job",
-  "experience",
-  "years",
-  "year",
-  "strong",
-  "excellent",
-  "good",
-  "great",
-  "required",
-  "preferred",
-  "plus",
-  "including",
-  "etc",
-  "well",
-  "new",
-]);
-
 const SKILL_INDICATORS = [
   "python",
   "java",
@@ -191,7 +55,9 @@ const SKILL_INDICATORS = [
   "git",
   "linux",
   "api",
+  "apis",
   "rest",
+  "rest apis",
   "graphql",
   "css",
   "html",
@@ -218,6 +84,7 @@ const SKILL_INDICATORS = [
   "machine learning",
   "deep learning",
   "data science",
+  "data visualization",
   "analytics",
   "tableau",
   "power bi",
@@ -239,25 +106,7 @@ const CERT_INDICATORS = [
 ];
 
 export function extractKeywords(text: string): string[] {
-  const words = text
-    .toLowerCase()
-    .replace(/[^a-z0-9+#./\s-]/g, " ")
-    .split(/\s+/)
-    .filter((w) => w.length > 1 && !STOP_WORDS.has(w));
-
-  // Also extract multi-word phrases (bigrams) for compound skills
-  const normalized = text.toLowerCase().replace(/[^a-z0-9+#./\s-]/g, " ");
-  const tokens = normalized.split(/\s+/).filter(Boolean);
-  const bigrams: string[] = [];
-  for (let i = 0; i < tokens.length - 1; i++) {
-    const bigram = `${tokens[i]} ${tokens[i + 1]}`;
-    if (!STOP_WORDS.has(tokens[i]) && !STOP_WORDS.has(tokens[i + 1])) {
-      bigrams.push(bigram);
-    }
-  }
-
-  // Deduplicate
-  return Array.from(new Set([...words, ...bigrams]));
+  return extractJdKeywordTerms(text, { limit: 40 });
 }
 
 /**
@@ -267,11 +116,11 @@ export function scoreBankEntry(
   entry: BankEntry,
   keywords: string[],
 ): BankMatch | null {
-  const contentStr = JSON.stringify(entry.content).toLowerCase();
+  const contentStr = JSON.stringify(entry.content);
   const matchedKeywords: string[] = [];
 
   for (const kw of keywords) {
-    if (contentStr.includes(kw)) {
+    if (containsKeywordTerm(contentStr, kw)) {
       matchedKeywords.push(kw);
     }
   }
@@ -328,8 +177,12 @@ export function analyzeResumeFit(
 ): ResumeFitAnalysis {
   const keywords = jobKeywords ?? extractKeywords(jobDescription);
   const resumeText = resumeToKeywordSearchText(resume);
-  const keywordsFound = keywords.filter((kw) => resumeText.includes(kw));
-  const keywordsMissing = keywords.filter((kw) => !resumeText.includes(kw));
+  const keywordsFound = keywords.filter((kw) =>
+    containsKeywordTerm(resumeText, kw),
+  );
+  const keywordsMissing = keywords.filter(
+    (kw) => !containsKeywordTerm(resumeText, kw),
+  );
   const matchScore =
     keywords.length > 0
       ? Math.round((keywordsFound.length / keywords.length) * 100)
