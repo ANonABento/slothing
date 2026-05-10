@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   BriefcaseBusiness,
   Check,
@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { CompletenessCard } from "@/components/profile/completeness-card";
 import { ProfileSkeleton } from "@/components/skeletons/profile-skeleton";
 import {
   Card,
@@ -41,6 +42,11 @@ import {
   type ProfileFormValues,
 } from "@/lib/profile-form";
 import { cn } from "@/lib/utils";
+import {
+  getCrossedCompletenessThresholds,
+  scoreProfile,
+  type ProfileCompletenessGap,
+} from "@/lib/profile/completeness";
 import type { Profile } from "@/types";
 import { LifetimeStatsCard } from "@/components/streak/lifetime-stats-card";
 import type { StreakState } from "@/lib/streak/types";
@@ -103,11 +109,38 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [celebratingCompleteness, setCelebratingCompleteness] = useState(false);
+  const previousCompletenessScore = useRef<number | null>(null);
 
   const isDirty = useMemo(
     () => JSON.stringify(form) !== JSON.stringify(savedForm),
     [form, savedForm],
   );
+
+  const liveProfile = useMemo<Profile>(() => {
+    const update = formValuesToProfileUpdate(form, profile);
+    const baseProfile: Profile = profile ?? {
+      id: "live-profile",
+      contact: { name: "" },
+      summary: "",
+      experiences: [],
+      education: [],
+      skills: [],
+      projects: [],
+      certifications: [],
+    };
+
+    return {
+      ...baseProfile,
+      ...update,
+      contact: {
+        ...baseProfile.contact,
+        ...(update.contact ?? {}),
+      },
+    };
+  }, [form, profile]);
+
+  const completeness = useMemo(() => scoreProfile(liveProfile), [liveProfile]);
 
   const loadProfile = useCallback(async () => {
     setLoading(true);
@@ -141,6 +174,29 @@ export default function ProfilePage() {
   useEffect(() => {
     void loadProfile();
   }, [loadProfile]);
+
+  useEffect(() => {
+    if (loading) return;
+    const previousScore = previousCompletenessScore.current;
+    previousCompletenessScore.current = completeness.score;
+
+    if (previousScore === null) return;
+    if (
+      window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ||
+      getCrossedCompletenessThresholds(previousScore, completeness.score)
+        .length === 0
+    ) {
+      return;
+    }
+
+    setCelebratingCompleteness(true);
+    const timeout = window.setTimeout(
+      () => setCelebratingCompleteness(false),
+      900,
+    );
+
+    return () => window.clearTimeout(timeout);
+  }, [completeness.score, loading]);
 
   function updateField<K extends keyof ProfileFormValues>(
     field: K,
@@ -219,6 +275,22 @@ export default function ProfilePage() {
     });
   }
 
+  function focusGap(gap: ProfileCompletenessGap) {
+    if (gap.focus.fieldId) {
+      focusField(gap.focus.tab, gap.focus.fieldId);
+      return;
+    }
+
+    setActiveTab(gap.focus.tab);
+    requestAnimationFrame(() => {
+      const section = gap.focus.sectionId
+        ? document.getElementById(gap.focus.sectionId)
+        : null;
+      section?.scrollIntoView({ behavior: "smooth", block: "center" });
+      if (section instanceof HTMLElement) section.focus();
+    });
+  }
+
   if (loading) {
     return <ProfileSkeleton />;
   }
@@ -277,6 +349,14 @@ export default function ProfilePage() {
           <Button asChild variant="outline" size="sm">
             <Link href="/answer-bank">Open your Answer Bank</Link>
           </Button>
+        </div>
+
+        <div className="mb-6">
+          <CompletenessCard
+            result={completeness}
+            onSelectGap={focusGap}
+            celebrating={celebratingCompleteness}
+          />
         </div>
 
         <div className="grid gap-6 lg:grid-cols-[320px_minmax(0,1fr)]">
@@ -372,7 +452,7 @@ export default function ProfilePage() {
           <section className="space-y-6">
             {activeTab === "overview" ? (
               <>
-                <Card>
+                <Card id="identity" data-section="identity" tabIndex={-1}>
                   <CardHeader>
                     <CardTitle className="text-xl">Identity</CardTitle>
                     <CardDescription>
@@ -516,8 +596,60 @@ export default function ProfilePage() {
                   </CardContent>
                 </Card>
 
+                <Card id="profile-signals" data-section="profile-signals">
+                  <CardHeader>
+                    <CardTitle className="text-xl">Saved Signals</CardTitle>
+                    <CardDescription>
+                      Resume details imported from your saved profile.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+                    {[
+                      {
+                        id: "experience",
+                        label: "Experience",
+                        count: liveProfile.experiences.length,
+                      },
+                      {
+                        id: "education",
+                        label: "Education",
+                        count: liveProfile.education.length,
+                      },
+                      {
+                        id: "skills",
+                        label: "Skills",
+                        count: liveProfile.skills.length,
+                      },
+                      {
+                        id: "projects",
+                        label: "Projects",
+                        count: liveProfile.projects.length,
+                      },
+                      {
+                        id: "achievements",
+                        label: "Awards",
+                        count: liveProfile.certifications.length,
+                      },
+                    ].map((item) => (
+                      <div
+                        key={item.id}
+                        id={item.id}
+                        tabIndex={-1}
+                        className="rounded-md border p-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                      >
+                        <div className="text-2xl font-semibold">
+                          {item.count}
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          {item.label}
+                        </div>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+
                 {careerDetailProfile ? (
-                  <Card>
+                  <Card id="career-details" data-section="career-details">
                     <CardHeader>
                       <CardTitle className="text-xl">Career Details</CardTitle>
                       <CardDescription>
