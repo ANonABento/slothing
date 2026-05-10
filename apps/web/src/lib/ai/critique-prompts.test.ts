@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  applyGenericPhrasePenaltyToCritique,
   buildCoverLetterCritiqueMessages,
   parseCoverLetterCritiqueResponse,
 } from "./critique-prompts";
@@ -16,6 +17,9 @@ describe("cover letter critique prompts", () => {
     expect(messages[0]).toMatchObject({ role: "system" });
     expect(messages[0].content).toContain("Company fit");
     expect(messages[0].content).toContain("range_in_letter");
+    expect(messages[0].content).toContain("exact draft excerpt");
+    expect(messages[0].content).toContain("lower specificity and hook scores");
+    expect(messages[0].content).toContain("Do not invent candidate achievements");
     expect(messages[1]).toEqual({
       role: "user",
       content: expect.stringContaining("Company: Acme"),
@@ -77,5 +81,39 @@ describe("cover letter critique prompts", () => {
         }),
       ),
     ).toThrow();
+  });
+
+  it("applies a bounded generic phrase penalty to specificity and hook", () => {
+    const adjusted = applyGenericPhrasePenaltyToCritique(
+      {
+        scores: { fit: 8, specificity: 7, hook: 6, ask: 9 },
+        overall: 7.5,
+        rationale_per_axis: {
+          fit: "Fit",
+          specificity: "Specific",
+          hook: "Hook",
+          ask: "Ask",
+        },
+        suggested_rewrites: [
+          {
+            range_in_letter: "passionate about",
+            suggestion: "Built API tests",
+            why: "Uses evidence.",
+          },
+          {
+            range_in_letter: "dynamic team",
+            suggestion: "frontend platform team",
+            why: "Names context.",
+          },
+        ],
+      },
+      "I am passionate about this role and excited about this opportunity. My strong background makes me a perfect fit for your dynamic team.",
+    );
+
+    expect(adjusted.scores.specificity).toBeLessThan(7);
+    expect(adjusted.scores.hook).toBeLessThan(6);
+    expect(adjusted.rationale_per_axis.specificity).toContain(
+      '"passionate about"',
+    );
   });
 });

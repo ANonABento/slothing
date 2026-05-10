@@ -237,6 +237,21 @@ describe("buildSystemPrompt", () => {
     expect(prompt).toContain("the company");
     expect(prompt).toContain("the position");
   });
+
+  it("includes evidence-first and no-invention rules", () => {
+    const prompt = buildSystemPrompt({
+      jobDescription: "We need a developer",
+      bankEntries: makePopulatedBank(),
+    });
+
+    expect(prompt).toContain("Preserve evidence");
+    expect(prompt).toContain("never invent metrics, roles, projects");
+    expect(prompt).toContain("Use company facts only");
+    expect(prompt).toContain("Lead with one candidate evidence point");
+    expect(prompt).toContain("one job/company requirement");
+    expect(prompt).toContain("clear call to action");
+    expect(prompt).toContain("generic phrases");
+  });
 });
 
 describe("buildRevisionPrompt", () => {
@@ -248,6 +263,13 @@ describe("buildRevisionPrompt", () => {
   it("asks for only the revised letter", () => {
     const prompt = buildRevisionPrompt("add more detail");
     expect(prompt).toContain("ONLY the revised cover letter");
+  });
+
+  it("preserves supported evidence and forbids unsupported claims", () => {
+    const prompt = buildRevisionPrompt("make it sharper");
+
+    expect(prompt).toContain("Preserve supported evidence");
+    expect(prompt).toContain("do not introduce unsupported claims");
   });
 });
 
@@ -267,5 +289,12 @@ describe("buildSelectionRewritePrompt", () => {
 
     expect(prompt).toContain("ONLY the rewritten passage");
     expect(prompt).not.toContain("full cover letter");
+  });
+
+  it("preserves evidence when rewriting a selection", () => {
+    const prompt = buildSelectionRewritePrompt("Old text", "Rewrite");
+
+    expect(prompt).toContain("Preserve supported evidence");
+    expect(prompt).toContain("Do not add unsupported claims");
   });
 });
