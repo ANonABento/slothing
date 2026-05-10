@@ -6,7 +6,6 @@ const mocks = vi.hoisted(() => ({
   isAuthError: vi.fn(),
   listOpportunities: vi.fn(),
   createJob: vi.fn(),
-  getJobs: vi.fn(),
 }));
 
 vi.mock("@/lib/auth", () => ({
@@ -23,7 +22,6 @@ vi.mock("@/lib/opportunities", () => ({
 
 vi.mock("@/lib/db/jobs", () => ({
   createJob: mocks.createJob,
-  getJobs: mocks.getJobs,
 }));
 
 vi.mock("@/lib/enrichment", () => ({
@@ -50,7 +48,6 @@ describe("opportunities route", () => {
     mocks.requireAuth.mockResolvedValue({ userId: "user-1" });
     mocks.isAuthError.mockReturnValue(false);
     mocks.listOpportunities.mockReturnValue([]);
-    mocks.getJobs.mockReturnValue([]);
   });
 
   it("lists opportunities for the authenticated user with parsed filters", async () => {
@@ -61,10 +58,9 @@ describe("opportunities route", () => {
     const response = await GET(request);
 
     expect(mocks.listOpportunities).toHaveBeenCalledWith("user-1", ["saved"]);
-    await expect(response.json()).resolves.toEqual({
-      jobs: [],
-      opportunities: [],
-    });
+    const body = await response.json();
+    expect(body).toEqual({ opportunities: [] });
+    expect("jobs" in body).toBe(false);
   });
 
   it("creates an opportunity after validating the request body", async () => {

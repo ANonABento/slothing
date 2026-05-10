@@ -14,7 +14,7 @@ import {
   type InterviewDifficulty,
   type SessionQuestionCategory,
 } from "@/lib/constants";
-import type { JobDescription } from "@/types";
+import type { Opportunity } from "@/types/opportunity";
 import type {
   InterviewMode,
   InterviewQuestion,
@@ -22,8 +22,8 @@ import type {
   PastSession,
 } from "@/types/interview";
 
-interface JobsResponse {
-  jobs?: JobDescription[];
+interface OpportunitiesResponse {
+  opportunities?: Opportunity[];
 }
 
 interface InterviewSessionsResponse {
@@ -51,7 +51,7 @@ interface StartInterviewOptions {
 }
 
 interface UseInterviewSessionReturn {
-  jobs: JobDescription[];
+  opportunities: Opportunity[];
   loading: boolean;
   pastSessions: PastSession[];
   session: InterviewSession | null;
@@ -91,7 +91,7 @@ async function fetchJson<T>(
 }
 
 export function useInterviewSession(): UseInterviewSessionReturn {
-  const [jobs, setJobs] = useState<JobDescription[]>([]);
+  const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
   const [loading, setLoading] = useState(true);
   const [pastSessions, setPastSessions] = useState<PastSession[]>([]);
   const [session, setSession] = useState<InterviewSession | null>(null);
@@ -109,12 +109,12 @@ export function useInterviewSession(): UseInterviewSessionReturn {
 
   const fetchJobs = useCallback(async () => {
     try {
-      const data = await fetchJson<JobsResponse>(
+      const data = await fetchJson<OpportunitiesResponse>(
         "/api/opportunities",
         undefined,
         "Failed to fetch jobs",
       );
-      setJobs(data.jobs || []);
+      setOpportunities(data.opportunities || []);
     } catch (error) {
       showErrorToast(error, {
         title: "Could not load interview jobs",
@@ -194,7 +194,9 @@ export function useInterviewSession(): UseInterviewSessionReturn {
     (pastSession: PastSession) => {
       const hasMatchingJob =
         pastSession.jobId === null ||
-        jobs.some((candidateJob) => candidateJob.id === pastSession.jobId);
+        opportunities.some(
+          (candidateJob) => candidateJob.id === pastSession.jobId,
+        );
 
       if (!hasMatchingJob) return;
 
@@ -233,7 +235,7 @@ export function useInterviewSession(): UseInterviewSessionReturn {
         ),
       });
     },
-    [invalidatePendingRequests, jobs],
+    [invalidatePendingRequests, opportunities],
   );
 
   const startInterview = useCallback(
@@ -496,7 +498,7 @@ export function useInterviewSession(): UseInterviewSessionReturn {
   }, [invalidatePendingRequests]);
 
   return {
-    jobs,
+    opportunities,
     loading,
     pastSessions,
     session,
