@@ -1,0 +1,352 @@
+[
+  {
+    "caseId": "c-001",
+    "idealOutput": "Summary: Alex Rivera is a frontend engineer, 2 yrs tailored for Frontend Engineer roles, with evidence in JavaScript, React, TypeScript, HTML/CSS and measurable impact in frontend.\n\nExperience:\n- Reframe Frontend Engineer work around JavaScript and React, using the candidate's existing metric: Built React dashboards for internal support workflows and improved load time by 30%.\n- Emphasize cross-functional delivery, stakeholder communication, and business outcomes that map to BrightPath Systems's consumer SaaS environment.\n- Surface TypeScript and HTML/CSS as supporting keywords without claiming deeper ownership than the resume shows.\n- For this direct match scenario, keep the scope credible and make the transferable strengths easy for an ATS and recruiter to find.",
+    "rubric": {
+      "keywordAlignment": 5,
+      "relevanceEmphasis": 5,
+      "specificity": 5,
+      "clarity": 5,
+      "atsOptimization": 4
+    },
+    "notes": "Promotes the strongest evidence for Frontend Engineer while preserving the candidate's actual frontend background. De-emphasizes unrelated duties and does not invent direct experience where the direct match case only supports transferable framing.",
+    "ratedBy": "benchmark-author",
+    "ratedAt": "2026-05-09"
+  },
+  {
+    "caseId": "c-051",
+    "idealOutput": "Summary: Avery Quinn is a senior mobile engineer, 8 yrs tailored for Senior Mobile Engineer roles, with evidence in Swift, Kotlin, React Native, offline sync and measurable impact in mobile.\n\nExperience:\n- Reframe Senior Mobile Engineer work around Swift and Kotlin, using the candidate's existing metric: Led mobile releases for a patient engagement app with 4.8 store rating.\n- Emphasize cross-functional delivery, stakeholder communication, and business outcomes that map to BrightPath Systems's health technology environment.\n- Surface React Native and offline sync as supporting keywords without claiming deeper ownership than the resume shows.\n- For this direct match scenario, keep the scope credible and make the transferable strengths easy for an ATS and recruiter to find.",
+    "rubric": {
+      "keywordAlignment": 5,
+      "relevanceEmphasis": 5,
+      "specificity": 5,
+      "clarity": 5,
+      "atsOptimization": 4
+    },
+    "notes": "Promotes the strongest evidence for Senior Mobile Engineer while preserving the candidate's actual mobile background. De-emphasizes unrelated duties and does not invent direct experience where the direct match case only supports transferable framing.",
+    "ratedBy": "benchmark-author",
+    "ratedAt": "2026-05-09"
+  },
+  {
+    "caseId": "c-101",
+    "idealOutput": "Summary: Kai Bennett is a director of product, 13 yrs tailored for Director of Product roles, with evidence in portfolio strategy, pricing, roadmaps, team leadership and measurable impact in platform product.\n\nExperience:\n- Reframe Director of Product work around portfolio strategy and pricing, using the candidate's existing metric: Managed a five-PM portfolio and grew platform adoption across 80 enterprise accounts.\n- Emphasize cross-functional delivery, stakeholder communication, and business outcomes that map to BrightPath Systems's workflow automation environment.\n- Surface roadmaps and team leadership as supporting keywords without claiming deeper ownership than the resume shows.\n- For this direct match scenario, keep the scope credible and make the transferable strengths easy for an ATS and recruiter to find.",
+    "rubric": {
+      "keywordAlignment": 5,
+      "relevanceEmphasis": 5,
+      "specificity": 5,
+      "clarity": 5,
+      "atsOptimization": 4
+    },
+    "notes": "Promotes the strongest evidence for Director of Product while preserving the candidate's actual platform product background. De-emphasizes unrelated duties and does not invent direct experience where the direct match case only supports transferable framing.",
+    "ratedBy": "benchmark-author",
+    "ratedAt": "2026-05-09"
+  },
+  {
+    "caseId": "c-151",
+    "idealOutput": "Summary: Rafi Cohen is a enterprise account executive, 9 yrs tailored for Enterprise Account Executive roles, with evidence in enterprise selling, mutual action plans, executive presence, renewals and measurable impact in enterprise sales.\n\nExperience:\n- Reframe Enterprise Account Executive work around enterprise selling and mutual action plans, using the candidate's existing metric: Closed six-figure platform deals with 14-month average contract value growth.\n- Emphasize cross-functional delivery, stakeholder communication, and business outcomes that map to BrightPath Systems's cloud infrastructure environment.\n- Surface executive presence and renewals as supporting keywords without claiming deeper ownership than the resume shows.\n- For this direct match scenario, keep the scope credible and make the transferable strengths easy for an ATS and recruiter to find.",
+    "rubric": {
+      "keywordAlignment": 5,
+      "relevanceEmphasis": 5,
+      "specificity": 5,
+      "clarity": 5,
+      "atsOptimization": 4
+    },
+    "notes": "Promotes the strongest evidence for Enterprise Account Executive while preserving the candidate's actual enterprise sales background. De-emphasizes unrelated duties and does not invent direct experience where the direct match case only supports transferable framing.",
+    "ratedBy": "benchmark-author",
+    "ratedAt": "2026-05-09"
+  },
+  {
+    "caseId": "c-201",
+    "idealOutput": "Summary: Ren Ito is a clinical operations lead, 8 yrs tailored for Clinical Operations Lead roles, with evidence in clinical workflows, quality improvement, HIPAA, training and measurable impact in clinical operations.\n\nExperience:\n- Reframe Clinical Operations Lead work around clinical workflows and quality improvement, using the candidate's existing metric: Standardized care escalation protocols and reduced response delays by 31%.\n- Emphasize cross-functional delivery, stakeholder communication, and business outcomes that map to BrightPath Systems's telehealth environment.\n- Surface HIPAA and training as supporting keywords without claiming deeper ownership than the resume shows.\n- For this direct match scenario, keep the scope credible and make the transferable strengths easy for an ATS and recruiter to find.",
+    "rubric": {
+      "keywordAlignment": 5,
+      "relevanceEmphasis": 5,
+      "specificity": 5,
+      "clarity": 5,
+      "atsOptimization": 4
+    },
+    "notes": "Promotes the strongest evidence for Clinical Operations Lead while preserving the candidate's actual clinical operations background. De-emphasizes unrelated duties and does not invent direct experience where the direct match case only supports transferable framing.",
+    "ratedBy": "benchmark-author",
+    "ratedAt": "2026-05-09"
+  },
+  {
+    "caseId": "c-007",
+    "idealOutput": "Summary: Priya Shah is a marketing manager, 5 yrs tailored for Senior Marketing Manager roles, with evidence in SEO, SEM, content strategy, analytics and measurable impact in digital marketing.\n\nExperience:\n- Reframe Marketing Manager work around SEO and SEM, using the candidate's existing metric: Managed a $500K paid media budget and grew organic traffic 120% year over year.\n- Emphasize cross-functional delivery, stakeholder communication, and business outcomes that map to Silverline Apps's B2B SaaS environment.\n- Surface content strategy and analytics as supporting keywords without claiming deeper ownership than the resume shows.\n- For this stretch up scenario, keep the scope credible and make the transferable strengths easy for an ATS and recruiter to find.",
+    "rubric": {
+      "keywordAlignment": 5,
+      "relevanceEmphasis": 5,
+      "specificity": 5,
+      "clarity": 5,
+      "atsOptimization": 4
+    },
+    "notes": "Promotes the strongest evidence for Senior Marketing Manager while preserving the candidate's actual digital marketing background. De-emphasizes unrelated duties and does not invent direct experience where the stretch up case only supports transferable framing.",
+    "ratedBy": "benchmark-author",
+    "ratedAt": "2026-05-09"
+  },
+  {
+    "caseId": "c-057",
+    "idealOutput": "Summary: Noah Grant is a machine learning engineer, 7 yrs tailored for Senior Machine Learning Engineer roles, with evidence in Python, PyTorch, feature stores, model monitoring and measurable impact in machine learning.\n\nExperience:\n- Reframe Machine Learning Engineer work around Python and PyTorch, using the candidate's existing metric: Shipped ranking models that increased qualified matches by 18%.\n- Emphasize cross-functional delivery, stakeholder communication, and business outcomes that map to Silverline Apps's marketplace environment.\n- Surface feature stores and model monitoring as supporting keywords without claiming deeper ownership than the resume shows.\n- For this stretch up scenario, keep the scope credible and make the transferable strengths easy for an ATS and recruiter to find.",
+    "rubric": {
+      "keywordAlignment": 5,
+      "relevanceEmphasis": 5,
+      "specificity": 5,
+      "clarity": 5,
+      "atsOptimization": 4
+    },
+    "notes": "Promotes the strongest evidence for Senior Machine Learning Engineer while preserving the candidate's actual machine learning background. De-emphasizes unrelated duties and does not invent direct experience where the stretch up case only supports transferable framing.",
+    "ratedBy": "benchmark-author",
+    "ratedAt": "2026-05-09"
+  },
+  {
+    "caseId": "c-107",
+    "idealOutput": "Summary: Mira Lawson is a associate product manager, 2 yrs tailored for Senior Associate Product Manager roles, with evidence in user stories, analytics, QA, customer interviews and measurable impact in associate product.\n\nExperience:\n- Reframe Associate Product Manager work around user stories and analytics, using the candidate's existing metric: Coordinated gradebook improvements used by 40K teachers.\n- Emphasize cross-functional delivery, stakeholder communication, and business outcomes that map to Silverline Apps's education software environment.\n- Surface QA and customer interviews as supporting keywords without claiming deeper ownership than the resume shows.\n- For this stretch up scenario, keep the scope credible and make the transferable strengths easy for an ATS and recruiter to find.",
+    "rubric": {
+      "keywordAlignment": 5,
+      "relevanceEmphasis": 5,
+      "specificity": 5,
+      "clarity": 5,
+      "atsOptimization": 4
+    },
+    "notes": "Promotes the strongest evidence for Senior Associate Product Manager while preserving the candidate's actual associate product background. De-emphasizes unrelated duties and does not invent direct experience where the stretch up case only supports transferable framing.",
+    "ratedBy": "benchmark-author",
+    "ratedAt": "2026-05-09"
+  },
+  {
+    "caseId": "c-157",
+    "idealOutput": "Summary: Gia Flores is a customer success manager, 4 yrs tailored for Senior Customer Success Manager roles, with evidence in QBRs, renewal management, adoption planning, health scoring and measurable impact in customer success.\n\nExperience:\n- Reframe Customer Success Manager work around QBRs and renewal management, using the candidate's existing metric: Managed $4M ARR book and improved gross retention to 93%.\n- Emphasize cross-functional delivery, stakeholder communication, and business outcomes that map to Silverline Apps's B2B software environment.\n- Surface adoption planning and health scoring as supporting keywords without claiming deeper ownership than the resume shows.\n- For this stretch up scenario, keep the scope credible and make the transferable strengths easy for an ATS and recruiter to find.",
+    "rubric": {
+      "keywordAlignment": 5,
+      "relevanceEmphasis": 5,
+      "specificity": 5,
+      "clarity": 5,
+      "atsOptimization": 4
+    },
+    "notes": "Promotes the strongest evidence for Senior Customer Success Manager while preserving the candidate's actual customer success background. De-emphasizes unrelated duties and does not invent direct experience where the stretch up case only supports transferable framing.",
+    "ratedBy": "benchmark-author",
+    "ratedAt": "2026-05-09"
+  },
+  {
+    "caseId": "c-207",
+    "idealOutput": "Summary: Elle Hart is a research associate, 4 yrs tailored for Senior Research Associate roles, with evidence in cell culture, ELISA, PCR, lab documentation and measurable impact in biotech research.\n\nExperience:\n- Reframe Research Associate work around cell culture and ELISA, using the candidate's existing metric: Supported assay validation that improved sample throughput 20%.\n- Emphasize cross-functional delivery, stakeholder communication, and business outcomes that map to Silverline Apps's biotech environment.\n- Surface PCR and lab documentation as supporting keywords without claiming deeper ownership than the resume shows.\n- For this stretch up scenario, keep the scope credible and make the transferable strengths easy for an ATS and recruiter to find.",
+    "rubric": {
+      "keywordAlignment": 5,
+      "relevanceEmphasis": 5,
+      "specificity": 5,
+      "clarity": 5,
+      "atsOptimization": 4
+    },
+    "notes": "Promotes the strongest evidence for Senior Research Associate while preserving the candidate's actual biotech research background. De-emphasizes unrelated duties and does not invent direct experience where the stretch up case only supports transferable framing.",
+    "ratedBy": "benchmark-author",
+    "ratedAt": "2026-05-09"
+  },
+  {
+    "caseId": "c-013",
+    "idealOutput": "Summary: Jordan Lee is a data analyst, 3 yrs tailored for Analytics Engineer roles, with evidence in SQL, Python, Tableau, A/B testing and measurable impact in analytics.\n\nExperience:\n- Reframe Data Analyst work around SQL and Python, using the candidate's existing metric: Built executive dashboards and ran checkout experiments that lifted conversion by 8%.\n- Emphasize cross-functional delivery, stakeholder communication, and business outcomes that map to Riverbend Analytics's e-commerce environment.\n- Surface Tableau and A/B testing as supporting keywords without claiming deeper ownership than the resume shows.\n- For this adjacent role scenario, keep the scope credible and make the transferable strengths easy for an ATS and recruiter to find.",
+    "rubric": {
+      "keywordAlignment": 5,
+      "relevanceEmphasis": 5,
+      "specificity": 5,
+      "clarity": 5,
+      "atsOptimization": 4
+    },
+    "notes": "Promotes the strongest evidence for Analytics Engineer while preserving the candidate's actual analytics background. De-emphasizes unrelated duties and does not invent direct experience where the adjacent role case only supports transferable framing.",
+    "ratedBy": "benchmark-author",
+    "ratedAt": "2026-05-09"
+  },
+  {
+    "caseId": "c-063",
+    "idealOutput": "Summary: Iris Coleman is a security engineer, 9 yrs tailored for Full-Stack Engineer roles, with evidence in threat modeling, appsec, SAST, incident response and measurable impact in security.\n\nExperience:\n- Reframe Security Engineer work around threat modeling and appsec, using the candidate's existing metric: Built secure SDLC reviews and cut critical vulnerability remediation time by 45%.\n- Emphasize cross-functional delivery, stakeholder communication, and business outcomes that map to Riverbend Analytics's fintech environment.\n- Surface SAST and incident response as supporting keywords without claiming deeper ownership than the resume shows.\n- For this adjacent role scenario, keep the scope credible and make the transferable strengths easy for an ATS and recruiter to find.",
+    "rubric": {
+      "keywordAlignment": 5,
+      "relevanceEmphasis": 5,
+      "specificity": 5,
+      "clarity": 5,
+      "atsOptimization": 4
+    },
+    "notes": "Promotes the strongest evidence for Full-Stack Engineer while preserving the candidate's actual security background. De-emphasizes unrelated duties and does not invent direct experience where the adjacent role case only supports transferable framing.",
+    "ratedBy": "benchmark-author",
+    "ratedAt": "2026-05-09"
+  },
+  {
+    "caseId": "c-113",
+    "idealOutput": "Summary: Jonah Reed is a brand designer, 2 yrs tailored for UX Researcher roles, with evidence in Adobe Creative Suite, Figma, campaign design, motion basics and measurable impact in brand design.\n\nExperience:\n- Reframe Brand Designer work around Adobe Creative Suite and Figma, using the candidate's existing metric: Produced campaign assets that improved email click-through by 18%.\n- Emphasize cross-functional delivery, stakeholder communication, and business outcomes that map to Riverbend Analytics's direct-to-consumer environment.\n- Surface campaign design and motion basics as supporting keywords without claiming deeper ownership than the resume shows.\n- For this adjacent role scenario, keep the scope credible and make the transferable strengths easy for an ATS and recruiter to find.",
+    "rubric": {
+      "keywordAlignment": 5,
+      "relevanceEmphasis": 5,
+      "specificity": 5,
+      "clarity": 5,
+      "atsOptimization": 4
+    },
+    "notes": "Promotes the strongest evidence for UX Researcher while preserving the candidate's actual brand design background. De-emphasizes unrelated duties and does not invent direct experience where the adjacent role case only supports transferable framing.",
+    "ratedBy": "benchmark-author",
+    "ratedAt": "2026-05-09"
+  },
+  {
+    "caseId": "c-163",
+    "idealOutput": "Summary: Ben Park is a regional sales director, 13 yrs tailored for Customer Success Manager roles, with evidence in team leadership, forecasting, territory planning, coaching and measurable impact in sales leadership.\n\nExperience:\n- Reframe Regional Sales Director work around team leadership and forecasting, using the candidate's existing metric: Led eight sellers to 118% regional quota and rebuilt partner coverage model.\n- Emphasize cross-functional delivery, stakeholder communication, and business outcomes that map to Riverbend Analytics's industrial technology environment.\n- Surface territory planning and coaching as supporting keywords without claiming deeper ownership than the resume shows.\n- For this adjacent role scenario, keep the scope credible and make the transferable strengths easy for an ATS and recruiter to find.",
+    "rubric": {
+      "keywordAlignment": 5,
+      "relevanceEmphasis": 5,
+      "specificity": 5,
+      "clarity": 5,
+      "atsOptimization": 4
+    },
+    "notes": "Promotes the strongest evidence for Customer Success Manager while preserving the candidate's actual sales leadership background. De-emphasizes unrelated duties and does not invent direct experience where the adjacent role case only supports transferable framing.",
+    "ratedBy": "benchmark-author",
+    "ratedAt": "2026-05-09"
+  },
+  {
+    "caseId": "c-213",
+    "idealOutput": "Summary: Hugo Silva is a high school math teacher, 2 yrs tailored for Learning Experience Designer roles, with evidence in lesson planning, classroom management, assessment design, data-informed instruction and measurable impact in secondary teaching.\n\nExperience:\n- Reframe High School Math Teacher work around lesson planning and classroom management, using the candidate's existing metric: Raised algebra proficiency 11 points across two sections.\n- Emphasize cross-functional delivery, stakeholder communication, and business outcomes that map to Riverbend Analytics's public education environment.\n- Surface assessment design and data-informed instruction as supporting keywords without claiming deeper ownership than the resume shows.\n- For this adjacent role scenario, keep the scope credible and make the transferable strengths easy for an ATS and recruiter to find.",
+    "rubric": {
+      "keywordAlignment": 5,
+      "relevanceEmphasis": 5,
+      "specificity": 5,
+      "clarity": 5,
+      "atsOptimization": 4
+    },
+    "notes": "Promotes the strongest evidence for Learning Experience Designer while preserving the candidate's actual secondary teaching background. De-emphasizes unrelated duties and does not invent direct experience where the adjacent role case only supports transferable framing.",
+    "ratedBy": "benchmark-author",
+    "ratedAt": "2026-05-09"
+  },
+  {
+    "caseId": "c-019",
+    "idealOutput": "Summary: Maya Chen is a product manager, 4 yrs tailored for Product Manager roles, with evidence in roadmapping, user research, experimentation, analytics and measurable impact in growth product.\n\nExperience:\n- Reframe Product Manager work around roadmapping and user research, using the candidate's existing metric: Launched mobile onboarding improvements used by 200K users and lifted retention 15%.\n- Emphasize cross-functional delivery, stakeholder communication, and business outcomes that map to North Harbor Health's health technology environment.\n- Surface experimentation and analytics as supporting keywords without claiming deeper ownership than the resume shows.\n- For this lateral industry scenario, keep the scope credible and make the transferable strengths easy for an ATS and recruiter to find.",
+    "rubric": {
+      "keywordAlignment": 5,
+      "relevanceEmphasis": 5,
+      "specificity": 5,
+      "clarity": 5,
+      "atsOptimization": 4
+    },
+    "notes": "Promotes the strongest evidence for Product Manager while preserving the candidate's actual growth product background. De-emphasizes unrelated duties and does not invent direct experience where the lateral industry case only supports transferable framing.",
+    "ratedBy": "benchmark-author",
+    "ratedAt": "2026-05-09"
+  },
+  {
+    "caseId": "c-069",
+    "idealOutput": "Summary: Tara Singh is a staff platform engineer, 14 yrs tailored for Staff Platform Engineer roles, with evidence in distributed systems, Kubernetes, Go, service mesh and measurable impact in platform.\n\nExperience:\n- Reframe Staff Platform Engineer work around distributed systems and Kubernetes, using the candidate's existing metric: Owned platform architecture for 120 engineers and improved service reliability to 99.95%.\n- Emphasize cross-functional delivery, stakeholder communication, and business outcomes that map to North Harbor Health's health technology environment.\n- Surface Go and service mesh as supporting keywords without claiming deeper ownership than the resume shows.\n- For this lateral industry scenario, keep the scope credible and make the transferable strengths easy for an ATS and recruiter to find.",
+    "rubric": {
+      "keywordAlignment": 5,
+      "relevanceEmphasis": 5,
+      "specificity": 5,
+      "clarity": 5,
+      "atsOptimization": 4
+    },
+    "notes": "Promotes the strongest evidence for Staff Platform Engineer while preserving the candidate's actual platform background. De-emphasizes unrelated duties and does not invent direct experience where the lateral industry case only supports transferable framing.",
+    "ratedBy": "benchmark-author",
+    "ratedAt": "2026-05-09"
+  },
+  {
+    "caseId": "c-119",
+    "idealOutput": "Summary: Anika Rao is a senior service designer, 9 yrs tailored for Senior Service Designer roles, with evidence in journey mapping, facilitation, research synthesis, prototyping and measurable impact in service design.\n\nExperience:\n- Reframe Senior Service Designer work around journey mapping and facilitation, using the candidate's existing metric: Mapped high-friction permit workflows and reduced in-person visits by 22%.\n- Emphasize cross-functional delivery, stakeholder communication, and business outcomes that map to North Harbor Health's health technology environment.\n- Surface research synthesis and prototyping as supporting keywords without claiming deeper ownership than the resume shows.\n- For this lateral industry scenario, keep the scope credible and make the transferable strengths easy for an ATS and recruiter to find.",
+    "rubric": {
+      "keywordAlignment": 5,
+      "relevanceEmphasis": 5,
+      "specificity": 5,
+      "clarity": 5,
+      "atsOptimization": 4
+    },
+    "notes": "Promotes the strongest evidence for Senior Service Designer while preserving the candidate's actual service design background. De-emphasizes unrelated duties and does not invent direct experience where the lateral industry case only supports transferable framing.",
+    "ratedBy": "benchmark-author",
+    "ratedAt": "2026-05-09"
+  },
+  {
+    "caseId": "c-169",
+    "idealOutput": "Summary: Amara Wells is a fp&a analyst, 5 yrs tailored for FP&A Analyst roles, with evidence in forecasting, variance analysis, SQL, Excel and measurable impact in fp&a.\n\nExperience:\n- Reframe FP&A Analyst work around forecasting and variance analysis, using the candidate's existing metric: Created rolling forecast model improving revenue forecast accuracy by 14%.\n- Emphasize cross-functional delivery, stakeholder communication, and business outcomes that map to North Harbor Health's health technology environment.\n- Surface SQL and Excel as supporting keywords without claiming deeper ownership than the resume shows.\n- For this lateral industry scenario, keep the scope credible and make the transferable strengths easy for an ATS and recruiter to find.",
+    "rubric": {
+      "keywordAlignment": 5,
+      "relevanceEmphasis": 5,
+      "specificity": 5,
+      "clarity": 5,
+      "atsOptimization": 4
+    },
+    "notes": "Promotes the strongest evidence for FP&A Analyst while preserving the candidate's actual fp&a background. De-emphasizes unrelated duties and does not invent direct experience where the lateral industry case only supports transferable framing.",
+    "ratedBy": "benchmark-author",
+    "ratedAt": "2026-05-09"
+  },
+  {
+    "caseId": "c-219",
+    "idealOutput": "Summary: Mina Clarke is a instructional designer, 9 yrs tailored for Instructional Designer roles, with evidence in curriculum design, LMS, adult learning, accessibility and measurable impact in curriculum design.\n\nExperience:\n- Reframe Instructional Designer work around curriculum design and LMS, using the candidate's existing metric: Built blended courses completed by 18K learners with 92% satisfaction.\n- Emphasize cross-functional delivery, stakeholder communication, and business outcomes that map to North Harbor Health's health technology environment.\n- Surface adult learning and accessibility as supporting keywords without claiming deeper ownership than the resume shows.\n- For this lateral industry scenario, keep the scope credible and make the transferable strengths easy for an ATS and recruiter to find.",
+    "rubric": {
+      "keywordAlignment": 5,
+      "relevanceEmphasis": 5,
+      "specificity": 5,
+      "clarity": 5,
+      "atsOptimization": 4
+    },
+    "notes": "Promotes the strongest evidence for Instructional Designer while preserving the candidate's actual curriculum design background. De-emphasizes unrelated duties and does not invent direct experience where the lateral industry case only supports transferable framing.",
+    "ratedBy": "benchmark-author",
+    "ratedAt": "2026-05-09"
+  },
+  {
+    "caseId": "c-025",
+    "idealOutput": "Summary: Sam Morgan is a ux/ui designer, 3 yrs tailored for Head of Design roles, with evidence in Figma, user research, prototyping, design systems and measurable impact in product design.\n\nExperience:\n- Reframe UX/UI Designer work around Figma and user research, using the candidate's existing metric: Redesigned onboarding and created a 60-component design system for three products.\n- Emphasize cross-functional delivery, stakeholder communication, and business outcomes that map to Nimbus Works's enterprise software environment.\n- Surface prototyping and design systems as supporting keywords without claiming deeper ownership than the resume shows.\n- For this reach scenario, keep the scope credible and make the transferable strengths easy for an ATS and recruiter to find.",
+    "rubric": {
+      "keywordAlignment": 5,
+      "relevanceEmphasis": 5,
+      "specificity": 4,
+      "clarity": 5,
+      "atsOptimization": 4
+    },
+    "notes": "Promotes the strongest evidence for Head of Design while preserving the candidate's actual product design background. De-emphasizes unrelated duties and does not invent direct experience where the reach case only supports transferable framing.",
+    "ratedBy": "benchmark-author",
+    "ratedAt": "2026-05-09"
+  },
+  {
+    "caseId": "c-075",
+    "idealOutput": "Summary: Miles Carter is a senior data engineer, 8 yrs tailored for Machine Learning Product Manager roles, with evidence in dbt, Airflow, Spark, Snowflake and measurable impact in data engineering.\n\nExperience:\n- Reframe Senior Data Engineer work around dbt and Airflow, using the candidate's existing metric: Rebuilt batch pipelines to reduce reporting latency from 12 hours to 90 minutes.\n- Emphasize cross-functional delivery, stakeholder communication, and business outcomes that map to Nimbus Works's enterprise software environment.\n- Surface Spark and Snowflake as supporting keywords without claiming deeper ownership than the resume shows.\n- For this reach scenario, keep the scope credible and make the transferable strengths easy for an ATS and recruiter to find.",
+    "rubric": {
+      "keywordAlignment": 5,
+      "relevanceEmphasis": 5,
+      "specificity": 4,
+      "clarity": 5,
+      "atsOptimization": 4
+    },
+    "notes": "Promotes the strongest evidence for Machine Learning Product Manager while preserving the candidate's actual data engineering background. De-emphasizes unrelated duties and does not invent direct experience where the reach case only supports transferable framing.",
+    "ratedBy": "benchmark-author",
+    "ratedAt": "2026-05-09"
+  },
+  {
+    "caseId": "c-125",
+    "idealOutput": "Summary: Cal Ellis is a lead product designer, 12 yrs tailored for Head of Design roles, with evidence in design systems, Figma libraries, tokens, accessibility and measurable impact in design systems.\n\nExperience:\n- Reframe Lead Product Designer work around design systems and Figma libraries, using the candidate's existing metric: Led a design system adopted by 14 product squads.\n- Emphasize cross-functional delivery, stakeholder communication, and business outcomes that map to Nimbus Works's enterprise software environment.\n- Surface tokens and accessibility as supporting keywords without claiming deeper ownership than the resume shows.\n- For this reach scenario, keep the scope credible and make the transferable strengths easy for an ATS and recruiter to find.",
+    "rubric": {
+      "keywordAlignment": 5,
+      "relevanceEmphasis": 5,
+      "specificity": 4,
+      "clarity": 5,
+      "atsOptimization": 4
+    },
+    "notes": "Promotes the strongest evidence for Head of Design while preserving the candidate's actual design systems background. De-emphasizes unrelated duties and does not invent direct experience where the reach case only supports transferable framing.",
+    "ratedBy": "benchmark-author",
+    "ratedAt": "2026-05-09"
+  },
+  {
+    "caseId": "c-175",
+    "idealOutput": "Summary: Ivy Brooks is a finance manager, 8 yrs tailored for Corporate Development Associate roles, with evidence in cost accounting, budgeting, pricing analysis, Power BI and measurable impact in operations finance.\n\nExperience:\n- Reframe Finance Manager work around cost accounting and budgeting, using the candidate's existing metric: Identified $3.2M in margin improvements through SKU profitability analysis.\n- Emphasize cross-functional delivery, stakeholder communication, and business outcomes that map to Nimbus Works's enterprise software environment.\n- Surface pricing analysis and Power BI as supporting keywords without claiming deeper ownership than the resume shows.\n- For this reach scenario, keep the scope credible and make the transferable strengths easy for an ATS and recruiter to find.",
+    "rubric": {
+      "keywordAlignment": 5,
+      "relevanceEmphasis": 5,
+      "specificity": 4,
+      "clarity": 5,
+      "atsOptimization": 4
+    },
+    "notes": "Promotes the strongest evidence for Corporate Development Associate while preserving the candidate's actual operations finance background. De-emphasizes unrelated duties and does not invent direct experience where the reach case only supports transferable framing.",
+    "ratedBy": "benchmark-author",
+    "ratedAt": "2026-05-09"
+  },
+  {
+    "caseId": "c-225",
+    "idealOutput": "Summary: Tess Nguyen is a paralegal, 5 yrs tailored for Trust and Safety Operations Lead roles, with evidence in legal research, case management, discovery, document review and measurable impact in paralegal.\n\nExperience:\n- Reframe Paralegal work around legal research and case management, using the candidate's existing metric: Managed discovery trackers for 40 active matters with zero missed deadlines.\n- Emphasize cross-functional delivery, stakeholder communication, and business outcomes that map to Nimbus Works's enterprise software environment.\n- Surface discovery and document review as supporting keywords without claiming deeper ownership than the resume shows.\n- For this reach scenario, keep the scope credible and make the transferable strengths easy for an ATS and recruiter to find.",
+    "rubric": {
+      "keywordAlignment": 5,
+      "relevanceEmphasis": 5,
+      "specificity": 4,
+      "clarity": 5,
+      "atsOptimization": 4
+    },
+    "notes": "Promotes the strongest evidence for Trust and Safety Operations Lead while preserving the candidate's actual paralegal background. De-emphasizes unrelated duties and does not invent direct experience where the reach case only supports transferable framing.",
+    "ratedBy": "benchmark-author",
+    "ratedAt": "2026-05-09"
+  }
+]
