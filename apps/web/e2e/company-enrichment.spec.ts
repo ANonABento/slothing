@@ -76,7 +76,7 @@ test.describe("company enrichment dossier", () => {
       });
     });
 
-    await page.goto(`/opportunities/${jobId}/research`);
+    await page.goto(`/en/opportunities/${jobId}/research`);
 
     await expect(
       page.getByRole("heading", { name: "Anthropic" }),

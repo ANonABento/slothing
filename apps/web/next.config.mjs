@@ -1,21 +1,25 @@
+import createNextIntlPlugin from 'next-intl/plugin';
+
+const withNextIntl = createNextIntlPlugin('./src/i18n.ts');
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   distDir: process.env.NEXT_DIST_DIR || '.next',
   async redirects() {
     return [
       {
-        source: '/jobs',
-        destination: '/opportunities',
+        source: '/:locale/jobs',
+        destination: '/:locale/opportunities',
         permanent: true,
       },
       {
-        source: '/jobs/research/:id',
-        destination: '/opportunities/:id/research',
+        source: '/:locale/jobs/research/:id',
+        destination: '/:locale/opportunities/:id/research',
         permanent: true,
       },
       {
-        source: '/jobs/:id',
-        destination: '/opportunities/:id',
+        source: '/:locale/jobs/:id',
+        destination: '/:locale/opportunities/:id',
         permanent: true,
       },
     ];
@@ -39,4 +43,4 @@ const nextConfig = {
   },
 };
 
-export default nextConfig;
+export default withNextIntl(nextConfig);

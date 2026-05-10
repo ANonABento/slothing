@@ -9,19 +9,19 @@ vi.mock("next/og", () => ({
 
 const OG_ROUTES = [
   () => import("./opengraph-image"),
-  () => import("./(marketing)/opengraph-image"),
-  () => import("./(marketing)/ats-scanner/opengraph-image"),
-  () => import("./(app)/dashboard/opengraph-image"),
-  () => import("./(app)/studio/opengraph-image"),
-  () => import("./(app)/opportunities/opengraph-image"),
-  () => import("./(app)/opportunities/[id]/opengraph-image"),
-  () => import("./(app)/bank/opengraph-image"),
-  () => import("./(app)/analytics/opengraph-image"),
-  () => import("./(app)/calendar/opengraph-image"),
-  () => import("./(app)/profile/opengraph-image"),
-  () => import("./(app)/settings/opengraph-image"),
-  () => import("./privacy/opengraph-image"),
-  () => import("./terms/opengraph-image"),
+  () => import("./[locale]/(marketing)/opengraph-image"),
+  () => import("./[locale]/(marketing)/ats-scanner/opengraph-image"),
+  () => import("./[locale]/(app)/dashboard/opengraph-image"),
+  () => import("./[locale]/(app)/studio/opengraph-image"),
+  () => import("./[locale]/(app)/opportunities/opengraph-image"),
+  () => import("./[locale]/(app)/opportunities/[id]/opengraph-image"),
+  () => import("./[locale]/(app)/bank/opengraph-image"),
+  () => import("./[locale]/(app)/analytics/opengraph-image"),
+  () => import("./[locale]/(app)/calendar/opengraph-image"),
+  () => import("./[locale]/(app)/profile/opengraph-image"),
+  () => import("./[locale]/(app)/settings/opengraph-image"),
+  () => import("./[locale]/privacy/opengraph-image"),
+  () => import("./[locale]/terms/opengraph-image"),
 ];
 
 describe("Open Graph image route modules", () => {

@@ -46,7 +46,7 @@ import {
   type OpportunityLevel,
   type OpportunitySource,
   type RemoteType,
-} from "@/app/(app)/opportunities/utils";
+} from "@/app/[locale]/(app)/opportunities/utils";
 
 type WizardStep = 0 | 1 | 2 | 3;
 type ConfirmMode = "save-exit" | "discard" | null;

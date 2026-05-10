@@ -5,7 +5,7 @@ const onboardingHeading = (page: Page) =>
 
 test.describe("Onboarding Flow", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto("/dashboard");
+    await page.goto("/en/dashboard");
     await page.evaluate(() => {
       localStorage.removeItem("get_me_job_onboarding_completed");
     });

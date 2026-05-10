@@ -10,11 +10,11 @@ test.describe("Smoke Tests", () => {
     page,
   }) => {
     const pages = [
-      { url: "/dashboard", name: "Dashboard" },
-      { url: "/bank", name: "Documents" },
-      { url: "/studio", name: "Document Studio" },
-      { url: "/opportunities", name: "Opportunities" },
-      { url: "/settings", name: "Settings" },
+      { url: "/en/dashboard", name: "Dashboard" },
+      { url: "/en/bank", name: "Documents" },
+      { url: "/en/studio", name: "Document Studio" },
+      { url: "/en/opportunities", name: "Opportunities" },
+      { url: "/en/settings", name: "Settings" },
     ];
 
     for (const p of pages) {

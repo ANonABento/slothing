@@ -43,7 +43,7 @@ async function stubDashboardApis(page: Parameters<typeof prepareAppPage>[0]) {
 test.describe("Dashboard coverage", () => {
   test.beforeEach(async ({ page }) => {
     await stubDashboardApis(page);
-    await prepareAppPage(page, "/dashboard");
+    await prepareAppPage(page, "/en/dashboard");
   });
 
   test("renders the onboarding dashboard and stats scaffold", async ({
@@ -73,13 +73,13 @@ test.describe("Dashboard coverage", () => {
   }) => {
     await page.getByRole("button", { name: /skip onboarding/i }).click();
     await page.getByRole("link", { name: /upload document/i }).click();
-    await expect(page).toHaveURL("/bank");
+    await expect(page).toHaveURL("/en/bank");
 
     await stubDashboardApis(page);
-    await prepareAppPage(page, "/dashboard");
+    await prepareAppPage(page, "/en/dashboard");
     await page.getByRole("button", { name: /skip onboarding/i }).click();
     await page.getByRole("link", { name: /add opportunity/i }).click();
-    await expect(page).toHaveURL("/opportunities");
+    await expect(page).toHaveURL("/en/opportunities");
   });
 
   test("marks the sidebar Dashboard link active", async ({ page }) => {

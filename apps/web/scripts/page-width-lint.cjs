@@ -3,7 +3,9 @@
 const fs = require("node:fs");
 const path = require("node:path");
 
-const SCAN_ROOT = "src/app/(app)";
+const SCAN_ROOTS = ["src/app/[locale]/(app)", "src/app/(app)"].filter(
+  (scanRoot) => fs.existsSync(scanRoot),
+);
 const PAGE_FILE = "page.tsx";
 const ALLOW_DIRECTIVE = "page-width-lint-allow";
 const FORBIDDEN_WIDTH_PATTERN = /width\s*=\s*["']narrow["']/g;
@@ -41,7 +43,7 @@ function lineForIndex(source, index) {
 
 const violations = [];
 
-for (const filePath of walk(SCAN_ROOT)) {
+for (const filePath of SCAN_ROOTS.flatMap((scanRoot) => walk(scanRoot))) {
   const relativePath = filePath.split(path.sep).join("/");
   const source = fs.readFileSync(filePath, "utf8");
 

@@ -67,7 +67,7 @@ describe("scroll behavior", () => {
   });
 
   it("uses a non-bouncing vertical scroller for app pages", () => {
-    const appLayout = readAppFile("(app)/layout.tsx");
+    const appLayout = readAppFile("[locale]/(app)/layout.tsx");
 
     expect(appLayout).toContain("overflow-y-auto overscroll-y-none");
   });
