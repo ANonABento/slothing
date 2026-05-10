@@ -14,7 +14,7 @@ const BENEFITS = [
     icon: Eye,
     title: "Detailed Breakdown",
     description:
-      "Five scoring axes: parseability, sections, keywords, dates, and content",
+      "Five scoring axes plus JD keyword matching when you paste a job",
   },
   {
     icon: Sparkles,
