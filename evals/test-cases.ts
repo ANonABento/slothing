@@ -1,3 +1,9 @@
+/**
+ * @deprecated Use the 250-case benchmark dataset in `evals/data/` instead.
+ * This file is retained only as a fallback when `evals/data/cases.json` is
+ * missing during incremental dataset migrations and is not the source of truth
+ * for `npm run eval`. See `evals/data/to-eval-cases.ts`.
+ */
 import type { TestCase } from "./types.js";
 
 export const TEST_CASES: TestCase[] = [

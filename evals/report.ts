@@ -14,7 +14,7 @@ export { generateCSVReport } from "./report-csv.js";
 
 export function determineWinner(
   gpt55Score: number,
-  claudeScore: number
+  claudeScore: number,
 ): "gpt55" | "claude" | "tie" {
   if (gpt55Score > claudeScore) return "gpt55";
   if (claudeScore > gpt55Score) return "claude";
@@ -22,15 +22,13 @@ export function determineWinner(
 }
 
 export function buildSummary(results: TestCaseResult[]): RunSummary {
-  const successful = results.filter(
-    (r) => !r.gpt55.error && !r.claude.error
-  );
+  const successful = results.filter((r) => !r.gpt55.error && !r.claude.error);
 
   const gpt55Wins = results.filter((r) => r.winner === "gpt55").length;
   const claudeWins = results.filter((r) => r.winner === "claude").length;
   const ties = results.filter((r) => r.winner === "tie").length;
   const errorCount = results.filter(
-    (r) => r.gpt55.error || r.claude.error
+    (r) => r.gpt55.error || r.claude.error,
   ).length;
 
   const avgScoreGpt55 =
@@ -55,7 +53,9 @@ export function buildSummary(results: TestCaseResult[]): RunSummary {
   };
 }
 
-export function generateJSONReport(results: TestCaseResult[]): ComparisonReport {
+export function generateJSONReport(
+  results: TestCaseResult[],
+): ComparisonReport {
   const summary = buildSummary(results);
   return {
     runAt: new Date().toISOString(),
@@ -79,8 +79,8 @@ export function generateMarkdownReport(report: ComparisonReport): string {
     summary.avgScoreGpt55 > summary.avgScoreClaude
       ? `**GPT-5.5** (${summary.avgScoreGpt55} vs ${summary.avgScoreClaude})`
       : summary.avgScoreClaude > summary.avgScoreGpt55
-      ? `**Claude Sonnet** (${summary.avgScoreClaude} vs ${summary.avgScoreGpt55})`
-      : `**Tie** (${summary.avgScoreGpt55} each)`;
+        ? `**Claude Sonnet** (${summary.avgScoreClaude} vs ${summary.avgScoreGpt55})`
+        : `**Tie** (${summary.avgScoreGpt55} each)`;
 
   const lines: string[] = [
     `# LLM Judge Comparison Report`,
@@ -111,8 +111,8 @@ export function generateMarkdownReport(report: ComparisonReport): string {
       result.winner === "gpt55"
         ? "GPT-5.5 wins"
         : result.winner === "claude"
-        ? "Claude wins"
-        : "Tie";
+          ? "Claude wins"
+          : "Tie";
 
     lines.push(`### ${result.testCaseId}: ${result.testCaseLabel}`);
     lines.push(``);
@@ -123,19 +123,29 @@ export function generateMarkdownReport(report: ComparisonReport): string {
     lines.push(`| Score | ${gptScore}/5 | ${claudeScore}/5 |`);
 
     if (result.gpt55.error || result.claude.error) {
-      lines.push(`| Error | ${result.gpt55.error ?? "—"} | ${result.claude.error ?? "—"} |`);
+      lines.push(
+        `| Error | ${result.gpt55.error ?? "—"} | ${result.claude.error ?? "—"} |`,
+      );
     }
 
     lines.push(``);
     lines.push(`**GPT-5.5 reasoning:** ${result.judgeScores.gpt55.reasoning}`);
     lines.push(``);
     lines.push(`*Strengths:* ${result.judgeScores.gpt55.strengths.join("; ")}`);
-    lines.push(`*Weaknesses:* ${result.judgeScores.gpt55.weaknesses.join("; ")}`);
+    lines.push(
+      `*Weaknesses:* ${result.judgeScores.gpt55.weaknesses.join("; ")}`,
+    );
     lines.push(``);
-    lines.push(`**Claude Sonnet reasoning:** ${result.judgeScores.claude.reasoning}`);
+    lines.push(
+      `**Claude Sonnet reasoning:** ${result.judgeScores.claude.reasoning}`,
+    );
     lines.push(``);
-    lines.push(`*Strengths:* ${result.judgeScores.claude.strengths.join("; ")}`);
-    lines.push(`*Weaknesses:* ${result.judgeScores.claude.weaknesses.join("; ")}`);
+    lines.push(
+      `*Strengths:* ${result.judgeScores.claude.strengths.join("; ")}`,
+    );
+    lines.push(
+      `*Weaknesses:* ${result.judgeScores.claude.weaknesses.join("; ")}`,
+    );
     lines.push(``);
     lines.push(`---`);
     lines.push(``);
@@ -145,6 +155,10 @@ export function generateMarkdownReport(report: ComparisonReport): string {
 }
 
 export function generateEvalMarkdownReport(report: EvalRunReport): string {
+  const casesLabel =
+    report.datasetTotal && report.datasetTotal > report.summary.totalCases
+      ? `${report.summary.totalCases} of ${report.datasetTotal}`
+      : String(report.summary.totalCases);
   const lines = [
     `# Eval Report`,
     ``,
@@ -152,7 +166,7 @@ export function generateEvalMarkdownReport(report: EvalRunReport): string {
     `**Mode:** ${report.mode}`,
     `**Generator:** ${report.generator}`,
     `**Judge:** ${report.judge}`,
-    `**Cases:** ${report.summary.totalCases}`,
+    `**Cases:** ${casesLabel}`,
     `**Errors:** ${report.summary.errorCount}`,
     `**Average overall score:** ${report.summary.avgOverallScore}`,
     ``,
@@ -181,7 +195,9 @@ export function generateEvalMarkdownReport(report: EvalRunReport): string {
     }
     if (result.judgeScore) {
       lines.push(``);
-      lines.push(`Judge: ${result.judgeScore.score}/5 - ${result.judgeScore.reasoning}`);
+      lines.push(
+        `Judge: ${result.judgeScore.score}/5 - ${result.judgeScore.reasoning}`,
+      );
     }
     lines.push(``);
   }
