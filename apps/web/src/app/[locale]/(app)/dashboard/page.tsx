@@ -47,6 +47,7 @@ import {
 } from "@/lib/onboarding/steps";
 import { computeOnboardingActive } from "@/lib/onboarding/state";
 import type { OnboardingStep } from "@/lib/onboarding/types";
+import { hasExtensionConnectionToken } from "@/lib/extension/detect";
 import {
   getPipelineCount,
   getPipelineTotal,
@@ -60,6 +61,7 @@ interface DashboardStats {
   resumesGenerated: number;
   profileCompleteness: ProfileCompletenessResult;
   jobsByStatus: Record<string, number>;
+  extensionInstalled: boolean;
 }
 
 interface RecentJob {
@@ -83,6 +85,7 @@ export default function Dashboard() {
     resumesGenerated: 0,
     profileCompleteness: { percentage: 0, sections: [], nextAction: null },
     jobsByStatus: {},
+    extensionInstalled: false,
   });
   const [recentJobs, setRecentJobs] = useState<RecentJob[]>([]);
   const [streak, setStreak] = useState<StreakState | null>(null);
@@ -122,12 +125,12 @@ export default function Dashboard() {
           onboardingData,
           streakData,
         ] = await Promise.all([
-            fetchJson("/api/profile"),
-            fetchJson("/api/documents?limit=200"),
-            fetchJson("/api/analytics"),
-            fetchJson("/api/onboarding/dismiss"),
-            fetchJson("/api/streak"),
-          ]);
+          fetchJson("/api/profile"),
+          fetchJson("/api/documents?limit=200"),
+          fetchJson("/api/analytics"),
+          fetchJson("/api/onboarding/dismiss"),
+          fetchJson("/api/streak"),
+        ]);
 
         const profile = profileData.profile;
         const documents = documentsData.documents || [];
@@ -140,6 +143,7 @@ export default function Dashboard() {
           resumesGenerated,
           profileCompleteness: completeness,
           jobsByStatus: analyticsData.jobs?.byStatus || {},
+          extensionInstalled: hasExtensionConnectionToken(window.localStorage),
         });
 
         const recentJobsList = analyticsData.recent?.jobs || [];

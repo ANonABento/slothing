@@ -6,6 +6,7 @@ import { getMetadataBase } from "@/lib/seo";
 const PUBLIC_ROUTES = [
   { path: "/", priority: 1, changeFrequency: "weekly" },
   { path: "/ats-scanner", priority: 0.8, changeFrequency: "weekly" },
+  { path: "/extension", priority: 0.8, changeFrequency: "weekly" },
   { path: "/pricing", priority: 0.7, changeFrequency: "monthly" },
   { path: "/sign-in", priority: 0.5, changeFrequency: "weekly" },
   { path: "/privacy", priority: 0.3, changeFrequency: "monthly" },

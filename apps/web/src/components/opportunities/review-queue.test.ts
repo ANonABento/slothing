@@ -106,6 +106,23 @@ describe("getDescriptionPreview", () => {
 });
 
 describe("OpportunityReviewQueue", () => {
+  it("shows the extension CTA first when the queue is empty", () => {
+    render(
+      React.createElement(OpportunityReviewQueue, {
+        jobs: [],
+        updating: false,
+        onStatusChange: vi.fn(),
+        onApplyNow: vi.fn(),
+      }),
+    );
+
+    const installLink = screen.getByRole("link", {
+      name: "Install the browser extension to auto-capture jobs",
+    });
+    expect(installLink).toHaveAttribute("href", "/extension");
+    expect(screen.getByText("Queue cleared")).toBeInTheDocument();
+  });
+
   it("saves and dismisses the active pending opportunity", async () => {
     const onStatusChange = vi.fn().mockResolvedValue(undefined);
     const onApplyNow = vi.fn().mockResolvedValue(undefined);

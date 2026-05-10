@@ -6,6 +6,7 @@ export interface OnboardingStats {
   documentsCount: number;
   resumesGenerated: number;
   jobsByStatus: Record<string, number>;
+  extensionInstalled?: boolean;
 }
 
 export interface OnboardingStep {

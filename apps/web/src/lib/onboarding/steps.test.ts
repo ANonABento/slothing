@@ -20,10 +20,11 @@ describe("onboarding step registry", () => {
   it("defines the basic onboarding steps in product order", () => {
     expect(BASIC_ONBOARDING_STEPS.map((step) => step.id)).toEqual([
       "upload-resume",
+      "install-extension",
       "add-opportunity",
       "create-tailored-doc",
     ]);
-    expect(BASIC_ONBOARDING_STEPS).toHaveLength(3);
+    expect(BASIC_ONBOARDING_STEPS).toHaveLength(4);
     expect(BASIC_ONBOARDING_STEPS.every((step) => step.tier === "basic")).toBe(
       true,
     );
@@ -41,7 +42,7 @@ describe("onboarding step registry", () => {
     expect(
       getActiveStepIndex(
         BASIC_ONBOARDING_STEPS,
-        stats({ documentsCount: 1, jobsByStatus: { applied: 1 } }),
+        stats({ documentsCount: 1, extensionInstalled: true }),
       ),
     ).toBe(2);
     expect(
@@ -49,6 +50,7 @@ describe("onboarding step registry", () => {
         BASIC_ONBOARDING_STEPS,
         stats({
           documentsCount: 1,
+          extensionInstalled: true,
           jobsByStatus: { applied: 1 },
           resumesGenerated: 1,
         }),
@@ -61,18 +63,34 @@ describe("onboarding step registry", () => {
     expect(
       countCompletedSteps(
         BASIC_ONBOARDING_STEPS,
-        stats({ documentsCount: 1, jobsByStatus: { pending: 1 } }),
+        stats({
+          documentsCount: 1,
+          extensionInstalled: true,
+          jobsByStatus: { pending: 1 },
+        }),
       ),
-    ).toBe(2);
+    ).toBe(3);
     expect(
       countCompletedSteps(
         BASIC_ONBOARDING_STEPS,
         stats({
           documentsCount: 1,
+          extensionInstalled: true,
           jobsByStatus: { offered: 1 },
           resumesGenerated: 1,
         }),
       ),
-    ).toBe(3);
+    ).toBe(4);
+  });
+
+  it("marks the extension step complete only when detected", () => {
+    const extensionStep = BASIC_ONBOARDING_STEPS.find(
+      (step) => step.id === "install-extension",
+    );
+
+    expect(extensionStep?.isComplete(stats())).toBe(false);
+    expect(extensionStep?.isComplete(stats({ extensionInstalled: true }))).toBe(
+      true,
+    );
   });
 });

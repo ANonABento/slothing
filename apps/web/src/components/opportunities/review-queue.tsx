@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { AnimatePresence, motion, type PanInfo } from "framer-motion";
 import { Check, ExternalLink, MapPin, Settings, X } from "lucide-react";
+import { ExtensionInstallButtons } from "@/components/marketing/extension-install-buttons";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { StandardEmptyState } from "@/components/ui/page-layout";
@@ -146,16 +147,24 @@ export function OpportunityReviewQueue({
           description="New pending opportunities will appear here when Slothing finds roles that need review."
           className="w-full"
           action={
-            <div className="flex flex-wrap justify-center gap-2">
+            <div className="flex flex-col items-center gap-3">
               <Button asChild>
-                <Link href="/opportunities">Open opportunities</Link>
-              </Button>
-              <Button asChild variant="outline">
-                <Link href="/settings">
-                  <Settings className="mr-2 h-4 w-4" />
-                  Review settings
+                <Link href="/extension">
+                  Install the browser extension to auto-capture jobs
                 </Link>
               </Button>
+              <ExtensionInstallButtons variant="compact" onlyDetected />
+              <div className="flex flex-wrap justify-center gap-2">
+                <Button asChild variant="outline">
+                  <Link href="/opportunities">Open opportunities</Link>
+                </Button>
+                <Button asChild variant="outline">
+                  <Link href="/settings">
+                    <Settings className="mr-2 h-4 w-4" />
+                    Review settings
+                  </Link>
+                </Button>
+              </div>
             </div>
           }
         />
