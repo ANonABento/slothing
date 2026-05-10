@@ -20,9 +20,9 @@ describe("useStudioKeyboardShortcuts", () => {
       onSave: vi.fn(),
       onExport: vi.fn(),
       onToggleAiPanel: vi.fn(),
+      onFocusAiInput: vi.fn(),
       onToggleFilesPanel: vi.fn(),
       onTogglePreviewOnly: vi.fn(),
-      onCommandPalette: vi.fn(),
     };
 
     renderHook(() => useStudioKeyboardShortcuts(handlers));
@@ -50,6 +50,12 @@ describe("useStudioKeyboardShortcuts", () => {
           category: "actions",
         }),
         expect.objectContaining({
+          key: "k",
+          ctrl: true,
+          description: "Focus AI input",
+          category: "actions",
+        }),
+        expect.objectContaining({
           key: "b",
           ctrl: true,
           description: "Toggle files panel",
@@ -61,12 +67,6 @@ describe("useStudioKeyboardShortcuts", () => {
           description: "Preview only",
           category: "actions",
         }),
-        expect.objectContaining({
-          key: "k",
-          ctrl: true,
-          description: "Focus AI assistant",
-          category: "actions",
-        }),
       ]),
     );
 
@@ -76,16 +76,16 @@ describe("useStudioKeyboardShortcuts", () => {
     shortcuts.find((shortcut) => shortcut.key === "s")?.action();
     shortcuts.find((shortcut) => shortcut.key === "e")?.action();
     shortcuts.find((shortcut) => shortcut.key === "/")?.action();
+    shortcuts.find((shortcut) => shortcut.key === "k")?.action();
     shortcuts.find((shortcut) => shortcut.key === "b")?.action();
     shortcuts.find((shortcut) => shortcut.key === "p")?.action();
-    shortcuts.find((shortcut) => shortcut.key === "k")?.action();
 
     expect(handlers.onSave).toHaveBeenCalledOnce();
     expect(handlers.onExport).toHaveBeenCalledOnce();
     expect(handlers.onToggleAiPanel).toHaveBeenCalledOnce();
+    expect(handlers.onFocusAiInput).toHaveBeenCalledOnce();
     expect(handlers.onToggleFilesPanel).toHaveBeenCalledOnce();
     expect(handlers.onTogglePreviewOnly).toHaveBeenCalledOnce();
-    expect(handlers.onCommandPalette).toHaveBeenCalledOnce();
   });
 
   it("keeps the shortcut list stable when handler refs are stable", () => {
@@ -93,17 +93,17 @@ describe("useStudioKeyboardShortcuts", () => {
       const onSave = useCallback(() => {}, []);
       const onExport = useCallback(() => {}, []);
       const onToggleAiPanel = useCallback(() => {}, []);
+      const onFocusAiInput = useCallback(() => {}, []);
       const onToggleFilesPanel = useCallback(() => {}, []);
       const onTogglePreviewOnly = useCallback(() => {}, []);
-      const onCommandPalette = useCallback(() => {}, []);
 
       useStudioKeyboardShortcuts({
         onSave,
         onExport,
         onToggleAiPanel,
+        onFocusAiInput,
         onToggleFilesPanel,
         onTogglePreviewOnly,
-        onCommandPalette,
       });
     }
 

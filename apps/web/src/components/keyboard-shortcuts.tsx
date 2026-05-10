@@ -11,6 +11,7 @@ import {
 } from "react";
 import { useRouter } from "next/navigation";
 import { ShortcutsHelpDialog } from "@/components/keyboard-shortcuts-dialog";
+import { useOptionalCommandPalette } from "@/components/command-palette/command-palette-provider";
 import {
   matchesShortcut,
   isInputTarget,
@@ -38,6 +39,7 @@ export function KeyboardShortcutsProvider({
   children: React.ReactNode;
 }) {
   const router = useRouter();
+  const commandPalette = useOptionalCommandPalette();
   const [showHelp, setShowHelp] = useState(false);
   // Ref for handleKeyDown — always reads latest shortcuts without stale closure
   const pageShortcutsRef = useRef<Map<string, Shortcut[]>>(new Map());
@@ -89,6 +91,13 @@ export function KeyboardShortcutsProvider({
       },
       // General
       {
+        key: "k",
+        ctrl: true,
+        description: "Open command palette",
+        action: () => commandPalette?.toggle(),
+        category: "general",
+      },
+      {
         key: "?",
         shift: true,
         description: "Show keyboard shortcuts",
@@ -102,7 +111,7 @@ export function KeyboardShortcutsProvider({
         category: "general",
       },
     ],
-    [router],
+    [commandPalette, router],
   );
 
   const allShortcuts = useMemo(() => {

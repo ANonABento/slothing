@@ -10,18 +10,18 @@ interface StudioShortcutHandlers {
   onSave: () => void;
   onExport: () => void;
   onToggleAiPanel: () => void;
+  onFocusAiInput: () => void;
   onToggleFilesPanel: () => void;
   onTogglePreviewOnly: () => void;
-  onCommandPalette: () => void;
 }
 
 export function useStudioKeyboardShortcuts({
   onSave,
   onExport,
   onToggleAiPanel,
+  onFocusAiInput,
   onToggleFilesPanel,
   onTogglePreviewOnly,
-  onCommandPalette,
 }: StudioShortcutHandlers): void {
   const shortcuts = useMemo<Shortcut[]>(
     () => [
@@ -47,6 +47,13 @@ export function useStudioKeyboardShortcuts({
         action: onToggleAiPanel,
       },
       {
+        key: "k",
+        ctrl: true,
+        description: "Focus AI input",
+        category: "actions",
+        action: onFocusAiInput,
+      },
+      {
         key: "b",
         ctrl: true,
         description: "Toggle files panel",
@@ -60,17 +67,10 @@ export function useStudioKeyboardShortcuts({
         category: "actions",
         action: onTogglePreviewOnly,
       },
-      {
-        key: "k",
-        ctrl: true,
-        description: "Focus AI assistant",
-        category: "actions",
-        action: onCommandPalette,
-      },
     ],
     [
-      onCommandPalette,
       onExport,
+      onFocusAiInput,
       onSave,
       onToggleAiPanel,
       onToggleFilesPanel,

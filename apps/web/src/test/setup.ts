@@ -38,6 +38,8 @@ Object.defineProperty(window, "matchMedia", {
   })),
 });
 
+Element.prototype.scrollIntoView = vi.fn();
+
 // Mock ResizeObserver (must be constructable because components call `new ResizeObserver`).
 global.ResizeObserver = class ResizeObserver {
   observe = vi.fn();
