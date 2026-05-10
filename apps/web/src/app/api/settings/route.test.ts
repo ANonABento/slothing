@@ -14,6 +14,12 @@ vi.mock("@/lib/settings/opportunity-review", () =>
   ),
 );
 
+vi.mock("@/lib/settings/digest", () =>
+  globalThis.__contractRouteMocks!.createContractModuleMock(
+    "@/lib/settings/digest",
+  ),
+);
+
 vi.mock("@/lib/settings/locale", () =>
   globalThis.__contractRouteMocks!.createContractModuleMock(
     "@/lib/settings/locale",

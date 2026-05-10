@@ -17,6 +17,7 @@ import {
   createEmailSend,
   getEmailSends,
   getRecentEmailSendForRecipient,
+  hasDailyDigestSentSince,
 } from "./email-sends";
 
 describe("Email Send Database Functions", () => {
@@ -94,5 +95,18 @@ describe("Email Send Database Functions", () => {
       "cold_outreach",
       "2026-01-01T00:00:00.000Z",
     );
+  });
+
+  it("checks whether a daily digest has already been sent since a timestamp", () => {
+    const mockGet = vi.fn().mockReturnValue({ id: "send-1" });
+    (db.prepare as Mock).mockReturnValue({ get: mockGet });
+
+    expect(hasDailyDigestSentSince("user-1", "2026-05-10T00:00:00.000Z")).toBe(
+      true,
+    );
+    expect(db.prepare).toHaveBeenCalledWith(
+      expect.stringContaining("type = 'daily_digest' AND sent_at >= ?"),
+    );
+    expect(mockGet).toHaveBeenCalledWith("user-1", "2026-05-10T00:00:00.000Z");
   });
 });

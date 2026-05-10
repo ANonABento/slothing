@@ -14,7 +14,10 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { ESTIMATED_CARD_HEIGHT_DRAFT } from "@/lib/constants/virtualization";
-import { TEMPLATE_CONFIG } from "../_data/templates";
+import {
+  TEMPLATE_CONFIG,
+  type UserEmailTemplateType,
+} from "../_data/templates";
 import type { EmailTemplateType } from "@/types";
 import type { Opportunity } from "@/types/opportunity";
 
@@ -27,6 +30,12 @@ export interface EmailDraftForSheet {
   context?: Record<string, string>;
   createdAt: string;
   updatedAt: string;
+}
+
+function getTemplateConfig(type: EmailTemplateType) {
+  const userType: UserEmailTemplateType =
+    type === "daily_digest" ? "follow_up" : type;
+  return TEMPLATE_CONFIG[userType];
 }
 
 interface DraftsSheetProps {
@@ -60,7 +69,7 @@ export function DraftsSheet({
     if (!normalizedQuery) return drafts;
 
     return drafts.filter((draft) => {
-      const template = TEMPLATE_CONFIG[draft.type];
+      const template = getTemplateConfig(draft.type);
       return (
         draft.subject.toLowerCase().includes(normalizedQuery) ||
         template.title.toLowerCase().includes(normalizedQuery)
@@ -73,7 +82,7 @@ export function DraftsSheet({
   }
 
   function renderDraft({ item: draft }: { item: EmailDraftForSheet }) {
-    const config = TEMPLATE_CONFIG[draft.type];
+    const config = getTemplateConfig(draft.type);
     const Icon = config.icon;
     const job = draft.jobId
       ? jobs.find((candidate) => candidate.id === draft.jobId)
