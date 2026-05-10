@@ -35,7 +35,7 @@ export default function InterviewPage() {
     setCurrentAnswer: interview.setCurrentAnswer,
   });
 
-  const selectedJobData = interview.jobs.find(
+  const selectedJobData = interview.opportunities.find(
     (job) => job.id === interview.selectedJob,
   );
   const isComplete =
@@ -133,7 +133,7 @@ export default function InterviewPage() {
         {!interview.session ? (
           <Suspense fallback={<SkeletonCard />}>
             <InterviewJobSelection
-              jobs={interview.jobs}
+              opportunities={interview.opportunities}
               selectedJob={interview.selectedJob}
               generating={interview.generating}
               onStartInterview={handleStartInterview}

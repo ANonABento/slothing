@@ -16,7 +16,7 @@ import { pluralize } from "@/lib/text/pluralize";
 import { SkeletonButton } from "@/components/ui/skeleton";
 import { CategoryBadge } from "@/lib/interview/category-display";
 import { formatInterviewForDocs } from "@/lib/interview/format-for-docs";
-import type { JobDescription } from "@/types";
+import type { Opportunity } from "@/types/opportunity";
 import type { InterviewSession } from "@/types/interview";
 
 const SaveToDocsButton = dynamic(
@@ -26,7 +26,7 @@ const SaveToDocsButton = dynamic(
 
 interface InterviewSummaryProps {
   session: InterviewSession;
-  selectedJob?: JobDescription;
+  selectedJob?: Opportunity;
   onReset: () => void;
 }
 

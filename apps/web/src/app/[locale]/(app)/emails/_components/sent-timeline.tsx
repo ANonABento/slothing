@@ -11,7 +11,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import type { EmailTemplateType, JobDescription } from "@/types";
+import type { EmailTemplateType } from "@/types";
+import type { Opportunity } from "@/types/opportunity";
 
 export interface EmailSendForTimeline {
   id: string;
@@ -31,7 +32,7 @@ interface SentTimelineProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   sends: EmailSendForTimeline[];
-  jobs: JobDescription[];
+  jobs: Opportunity[];
   selectedJobId?: string;
 }
 

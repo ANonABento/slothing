@@ -5,7 +5,7 @@ import {
   jobToOpportunity,
   listOpportunities,
 } from "@/lib/opportunities";
-import { createJob, getJobs } from "@/lib/db/jobs";
+import { createJob } from "@/lib/db/jobs";
 import { enrichCompany } from "@/lib/enrichment";
 import { getLLMConfig } from "@/lib/db";
 import { LLMClient, parseJSONFromLLM } from "@/lib/llm/client";
@@ -25,9 +25,7 @@ export async function GET(request: NextRequest) {
     .filter(Boolean);
 
   try {
-    const jobs = getJobs(authResult.userId);
     return NextResponse.json({
-      jobs,
       opportunities: listOpportunities(authResult.userId, statuses),
     });
   } catch (error) {

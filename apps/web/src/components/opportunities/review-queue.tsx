@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { StandardEmptyState } from "@/components/ui/page-layout";
 import { cn } from "@/lib/utils";
-import type { JobDescription } from "@/types";
+import type { Opportunity } from "@/types/opportunity";
 
 import { toNullableEpoch } from "@/lib/format/time";
 type QueueAction = "save" | "dismiss" | "apply";
@@ -17,6 +17,9 @@ type QueueAction = "save" | "dismiss" | "apply";
 const DESCRIPTION_PREVIEW_LENGTH = 260;
 const SWIPE_DISTANCE_THRESHOLD = 110;
 const SWIPE_VELOCITY_THRESHOLD = 650;
+const salaryFormatter = new Intl.NumberFormat("en-US", {
+  maximumFractionDigits: 0,
+});
 
 function getDeadlineTime(deadline?: string): number {
   if (!deadline) {
@@ -30,9 +33,7 @@ function getCreatedAtTime(createdAt: string): number {
   return toNullableEpoch(createdAt) ?? 0;
 }
 
-export function getPendingOpportunities(
-  jobs: JobDescription[],
-): JobDescription[] {
+export function getPendingOpportunities(jobs: Opportunity[]): Opportunity[] {
   return jobs
     .filter((job) => job.status === "pending")
     .sort((a, b) => {
@@ -47,8 +48,8 @@ export function getPendingOpportunities(
     });
 }
 
-export function getOpportunityTags(job: JobDescription, limit = 6): string[] {
-  const tags = [...(job.keywords || []), ...(job.requirements || [])]
+export function getOpportunityTags(job: Opportunity, limit = 6): string[] {
+  const tags = [...(job.tags || []), ...(job.requiredSkills || [])]
     .map((tag) => tag.trim())
     .filter(Boolean);
 
@@ -64,13 +65,13 @@ export function getDescriptionPreview(description: string): string {
 }
 
 interface OpportunityReviewQueueProps {
-  jobs: JobDescription[];
+  jobs: Opportunity[];
   updating: boolean;
   onStatusChange: (
-    job: JobDescription,
-    status: JobDescription["status"],
+    job: Opportunity,
+    status: Opportunity["status"],
   ) => Promise<void>;
-  onApplyNow: (job: JobDescription) => Promise<void>;
+  onApplyNow: (job: Opportunity) => Promise<void>;
 }
 
 export function OpportunityReviewQueue({
@@ -96,7 +97,7 @@ export function OpportunityReviewQueue({
         await onStatusChange(activeJob, "saved");
       } else if (action === "dismiss") {
         await onStatusChange(activeJob, "dismissed");
-      } else if (activeJob.url) {
+      } else if (activeJob.sourceUrl) {
         await onApplyNow(activeJob);
       } else {
         return;
@@ -164,9 +165,19 @@ export function OpportunityReviewQueue({
 
   const tags = getOpportunityTags(activeJob);
   const preview = expanded
-    ? activeJob.description
-    : getDescriptionPreview(activeJob.description);
-  const canApply = Boolean(activeJob.url);
+    ? activeJob.summary
+    : getDescriptionPreview(activeJob.summary);
+  const canApply = Boolean(activeJob.sourceUrl);
+  const location = [activeJob.city, activeJob.province, activeJob.country]
+    .filter(Boolean)
+    .join(", ");
+  const salary =
+    activeJob.salaryMin != null || activeJob.salaryMax != null
+      ? [activeJob.salaryMin, activeJob.salaryMax]
+          .filter((value): value is number => value != null)
+          .map((value) => `$${salaryFormatter.format(value)}`)
+          .join(" - ")
+      : null;
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -231,17 +242,19 @@ export function OpportunityReviewQueue({
                       {activeJob.title}
                     </h2>
                   </div>
-                  {activeJob.remote && <Badge variant="info">Remote</Badge>}
+                  {activeJob.remoteType === "remote" && (
+                    <Badge variant="info">Remote</Badge>
+                  )}
                 </div>
 
                 <div className="mt-5 flex flex-wrap gap-2 text-sm text-muted-foreground">
-                  {activeJob.location && (
+                  {location && (
                     <span className="inline-flex items-center gap-1.5">
                       <MapPin className="h-4 w-4" />
-                      {activeJob.location}
+                      {location}
                     </span>
                   )}
-                  {activeJob.salary && <span>{activeJob.salary}</span>}
+                  {salary && <span>{salary}</span>}
                   {activeJob.deadline && (
                     <span>Deadline {activeJob.deadline}</span>
                   )}
@@ -261,8 +274,7 @@ export function OpportunityReviewQueue({
                   <p className="whitespace-pre-line text-sm leading-6 text-muted-foreground">
                     {preview}
                   </p>
-                  {activeJob.description.length >
-                    DESCRIPTION_PREVIEW_LENGTH && (
+                  {activeJob.summary.length > DESCRIPTION_PREVIEW_LENGTH && (
                     <Button
                       type="button"
                       variant="ghost"
