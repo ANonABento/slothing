@@ -24,6 +24,7 @@ import { generateId } from "@/lib/utils";
 import { PATHS } from "@/lib/constants";
 import { requireUserAuth, isAuthError } from "@/lib/auth";
 import { checkTailorQuota } from "@/lib/plan/quota";
+import { safeTrackActivity } from "@/lib/streak/track";
 
 export const dynamic = "force-dynamic";
 
@@ -217,6 +218,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const { unlocked } = await safeTrackActivity(
+      authResult.userId,
+      "tailor_generated",
+    );
+
     return NextResponse.json({
       success: true,
       html,
@@ -231,6 +237,7 @@ export async function POST(request: NextRequest) {
         gaps: analysis.gaps,
         matchedEntriesCount: analysis.matchedEntries.length,
       },
+      unlocked,
     });
   } catch (error) {
     console.error(

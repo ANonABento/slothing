@@ -10,6 +10,10 @@ vi.mock("@/lib/auth", () =>
   globalThis.__contractRouteMocks!.createAuthModuleMock(),
 );
 
+vi.mock("@/lib/streak/track", () => ({
+  safeTrackActivity: vi.fn(async () => ({ unlocked: [] })),
+}));
+
 import { GET, POST } from "./route";
 import {
   expectRouteResponseContract,

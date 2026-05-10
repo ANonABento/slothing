@@ -1,6 +1,7 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { KeyboardShortcutsProvider } from "@/components/keyboard-shortcuts";
+import { ToastProvider } from "@/components/ui/toast";
 import StudioPage from "./page";
 import type { BankEntry } from "@/types";
 
@@ -157,9 +158,11 @@ function mockStudioFetch(
 
 function renderStudioPage() {
   return render(
-    <KeyboardShortcutsProvider>
-      <StudioPage />
-    </KeyboardShortcutsProvider>,
+    <ToastProvider>
+      <KeyboardShortcutsProvider>
+        <StudioPage />
+      </KeyboardShortcutsProvider>
+    </ToastProvider>,
   );
 }
 
@@ -175,6 +178,10 @@ describe("StudioPage", () => {
         json: async () => ({ entries: [] }),
       }),
     );
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
   });
 
   it("renders resume builder mode by default with a file panel", async () => {

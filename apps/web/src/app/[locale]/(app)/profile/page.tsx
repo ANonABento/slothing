@@ -42,6 +42,8 @@ import {
 } from "@/lib/profile-form";
 import { cn } from "@/lib/utils";
 import type { Profile } from "@/types";
+import { LifetimeStatsCard } from "@/components/streak/lifetime-stats-card";
+import type { StreakState } from "@/lib/streak/types";
 
 type ProfileTab = "overview" | "preferences" | "privacy";
 
@@ -89,6 +91,7 @@ function Field({
 export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState<ProfileTab>("overview");
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [streak, setStreak] = useState<StreakState | null>(null);
   const [form, setForm] = useState<ProfileFormValues>(() =>
     profileToFormValues(null),
   );
@@ -111,11 +114,20 @@ export default function ProfilePage() {
     setError(null);
 
     try {
-      const response = await fetch("/api/profile");
-      if (!response.ok) throw new Error("Could not load profile");
-      const data = (await response.json()) as { profile: Profile | null };
+      const [profileResponse, streakResponse] = await Promise.all([
+        fetch("/api/profile"),
+        fetch("/api/streak"),
+      ]);
+      if (!profileResponse.ok) throw new Error("Could not load profile");
+      const data = (await profileResponse.json()) as {
+        profile: Profile | null;
+      };
+      const streakData = streakResponse.ok
+        ? ((await streakResponse.json()) as { streak?: StreakState })
+        : {};
       const nextForm = profileToFormValues(data.profile);
       setProfile(data.profile);
+      setStreak(streakData.streak ?? null);
       setForm(nextForm);
       setSavedForm(nextForm);
       setTargetRolesText(joinProfileList(nextForm.targetRoles));
@@ -325,6 +337,8 @@ export default function ProfilePage() {
                 </div>
               </CardContent>
             </Card>
+
+            <LifetimeStatsCard streak={streak} />
 
             <div
               role="tablist"

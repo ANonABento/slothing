@@ -45,6 +45,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { showAchievementToasts } from "@/components/streak/achievement-toast";
+import { useToast } from "@/components/ui/toast";
+import { extractUnlockedFromResponse } from "@/lib/streak/client";
 import { cn } from "@/lib/utils";
 import type { Opportunity } from "@/types";
 import {
@@ -82,6 +85,7 @@ interface AiAssistantPanelProps extends HTMLAttributes<HTMLElement> {
 interface AssistantResponse {
   content?: string;
   error?: string;
+  unlocked?: unknown[];
 }
 
 interface CritiqueResponse {
@@ -143,6 +147,7 @@ export function AiAssistantPanel({
   onToggleCollapsed,
   ...asideProps
 }: AiAssistantPanelProps) {
+  const { addToast } = useToast();
   const panelRef = useRef<HTMLElement>(null);
   const runningActionRef = useRef<AssistantRunAction | null>(null);
   const [jobDescription, setJobDescription] = useState("");
@@ -411,8 +416,10 @@ export function AiAssistantPanel({
     }
 
     onCoverLetterGenerated?.(data.content);
+    showAchievementToasts(extractUnlockedFromResponse(data), addToast);
     setStatusMessage("Generated a cover letter draft.");
   }, [
+    addToast,
     jobDescription,
     onCoverLetterGenerated,
     onOpenBank,

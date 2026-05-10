@@ -15,6 +15,7 @@ const mocks = vi.hoisted(() => ({
   saveCoverLetter: vi.fn(),
   getOpportunity: vi.fn(),
   linkOpportunityDocument: vi.fn(),
+  safeTrackActivity: vi.fn(),
 }));
 
 vi.mock("@/lib/auth", () => ({
@@ -54,6 +55,10 @@ vi.mock("@/lib/opportunities", () => ({
   linkOpportunityDocument: mocks.linkOpportunityDocument,
 }));
 
+vi.mock("@/lib/streak/track", () => ({
+  safeTrackActivity: mocks.safeTrackActivity,
+}));
+
 import { POST } from "./route";
 
 function jsonRequest(body: unknown) {
@@ -89,6 +94,7 @@ describe("cover letter generate route", () => {
     mocks.getTotalBankEntries.mockReturnValue(1);
     mocks.getOpportunity.mockReturnValue(null);
     mocks.saveCoverLetter.mockReturnValue({ id: "cover-1" });
+    mocks.safeTrackActivity.mockResolvedValue({ unlocked: [] });
   });
 
   it("routes selection rewrites to the rewrite helper", async () => {
@@ -182,6 +188,7 @@ describe("cover letter generate route", () => {
       success: true,
       content: "Dear Acme...",
       savedCoverLetter: { id: "cover-1" },
+      unlocked: [],
     });
     expect(mocks.saveCoverLetter).toHaveBeenCalledWith(
       "job-1",

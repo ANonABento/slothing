@@ -62,6 +62,10 @@ vi.mock("@/lib/plan/quota", () =>
   globalThis.__contractRouteMocks!.createContractModuleMock("@/lib/plan/quota"),
 );
 
+vi.mock("@/lib/streak/track", () => ({
+  safeTrackActivity: vi.fn(async () => ({ unlocked: [] })),
+}));
+
 import { GET, POST } from "./route";
 import { checkTailorQuota } from "@/lib/plan/quota";
 import { getGroupedBankEntries } from "@/lib/db/profile-bank";

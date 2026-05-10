@@ -8,6 +8,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createEmailSend, getEmailSends } from "@/lib/db/email-sends";
 import { createEmailSendSchema } from "@/lib/constants";
 import { requireAuth, isAuthError } from "@/lib/auth";
+import { safeTrackActivity } from "@/lib/streak/track";
 
 export const dynamic = "force-dynamic";
 
@@ -63,7 +64,11 @@ export async function POST(request: NextRequest) {
     }
 
     const send = createEmailSend(parseResult.data, authResult.userId);
-    return NextResponse.json({ send });
+    const { unlocked } =
+      send.status === "sent"
+        ? await safeTrackActivity(authResult.userId, "email_sent")
+        : { unlocked: [] };
+    return NextResponse.json({ send, unlocked });
   } catch (error) {
     console.error("Create email send error:", error);
     return NextResponse.json(

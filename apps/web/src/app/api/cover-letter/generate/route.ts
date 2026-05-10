@@ -13,6 +13,7 @@ import {
   getTotalBankEntries,
 } from "@/lib/cover-letter/generate";
 import type { CoverLetterInput } from "@/lib/cover-letter/generate";
+import { safeTrackActivity } from "@/lib/streak/track";
 
 export const dynamic = "force-dynamic";
 
@@ -217,7 +218,12 @@ export async function POST(request: NextRequest) {
       response.savedCoverLetter = { id: savedCoverLetter.id };
     }
 
-    return NextResponse.json(response);
+    const { unlocked } = await safeTrackActivity(
+      authResult.userId,
+      "cover_letter_generated",
+    );
+
+    return NextResponse.json({ ...response, unlocked });
   } catch (error) {
     console.error(
       "Cover letter generation error:",
