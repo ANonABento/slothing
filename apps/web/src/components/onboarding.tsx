@@ -9,33 +9,51 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import {
-  ArrowRight,
-  X,
-  MessageSquare,
-  Upload,
-  FileText,
-  Briefcase,
-  Rocket,
-} from "lucide-react";
+import { ArrowRight, X } from "lucide-react";
 import { STORAGE_KEYS } from "@/lib/constants";
 import {
+  BuilderStep,
   WelcomeStep,
   UploadStep,
   ReviewStep,
   ConfigureStep,
   DoneStep,
+  type OnboardingPath,
 } from "@/components/onboarding/steps";
 
 export const ONBOARDING_STEP_COUNT = 5;
 
-const STEP_TITLES = [
-  "Welcome to Slothing",
-  "Upload Your Resume",
-  "Review Your Profile",
-  "Configure AI",
-  "All Set",
-] as const;
+type StepId =
+  | "welcome"
+  | "upload"
+  | "review"
+  | "builder"
+  | "configure"
+  | "done";
+
+interface OnboardingStep {
+  id: StepId;
+  title: string;
+}
+
+const RESUME_PATH_STEPS: OnboardingStep[] = [
+  { id: "welcome", title: "Welcome to Slothing" },
+  { id: "upload", title: "Upload Your Resume" },
+  { id: "review", title: "Review Your Profile" },
+  { id: "configure", title: "Configure AI" },
+  { id: "done", title: "All Set" },
+];
+
+const SCRATCH_PATH_STEPS: OnboardingStep[] = [
+  { id: "welcome", title: "Welcome to Slothing" },
+  { id: "builder", title: "Build Your Starter Profile" },
+  { id: "configure", title: "Configure AI" },
+  { id: "done", title: "All Set" },
+];
+
+function getActiveSteps(path: OnboardingPath | null): OnboardingStep[] {
+  return path === "scratch" ? SCRATCH_PATH_STEPS : RESUME_PATH_STEPS;
+}
 
 function readOnboardingCompleted(): string | null {
   try {
@@ -70,17 +88,27 @@ function shouldAutoOpenOnboarding(): boolean {
   }
 }
 
-function StepContent({ step }: { step: number }) {
-  switch (step) {
-    case 0:
-      return <WelcomeStep />;
-    case 1:
+function StepContent({
+  step,
+  onSelectPath,
+  onAdvance,
+}: {
+  step: OnboardingStep;
+  onSelectPath: (path: OnboardingPath) => void;
+  onAdvance: () => void;
+}) {
+  switch (step.id) {
+    case "welcome":
+      return <WelcomeStep onSelectPath={onSelectPath} />;
+    case "upload":
       return <UploadStep />;
-    case 2:
+    case "review":
       return <ReviewStep />;
-    case 3:
+    case "builder":
+      return <BuilderStep onAdvance={onAdvance} />;
+    case "configure":
       return <ConfigureStep />;
-    case 4:
+    case "done":
       return <DoneStep />;
     default:
       return null;
@@ -122,52 +150,12 @@ export function ProgressDots({
     </div>
   );
 }
-const steps = [
-  {
-    title: "Welcome to Slothing",
-    description:
-      "Your AI-powered job application command center. Let's get you set up for success.",
-    icon: Rocket,
-    gradient: "from-primary to-accent",
-  },
-  {
-    title: "Upload Your Resume",
-    description:
-      "Start by uploading your resume. Slothing will automatically extract and organize your professional information.",
-    icon: Upload,
-    gradient: "from-primary to-accent",
-    action: "/bank",
-  },
-  {
-    title: "Build Your Profile",
-    description:
-      "Review and enhance your extracted profile. Add missing details to strengthen your applications.",
-    icon: FileText,
-    gradient: "from-primary to-accent",
-    action: "/bank",
-  },
-  {
-    title: "Create Application Documents",
-    description: "Build application-ready resumes in Document Studio.",
-    icon: Briefcase,
-    gradient: "from-primary to-accent",
-    action: "/studio",
-  },
-  {
-    title: "Ace Your Interviews",
-    description:
-      "Practice with AI-powered mock interviews customized to your target roles. Get instant feedback.",
-    icon: MessageSquare,
-    gradient: "from-primary to-accent",
-    action: "/interview",
-  },
-];
-
 export function OnboardingDialog() {
   const router = useRouter();
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
+  const [path, setPath] = useState<OnboardingPath | null>(null);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -185,18 +173,28 @@ export function OnboardingDialog() {
     setOpen(false);
   }, []);
 
+  const activeSteps = getActiveSteps(path);
+  const activeStep = activeSteps[currentStep] ?? activeSteps[0];
+  const isLastStep = currentStep === activeSteps.length - 1;
+  const hidePrimaryAction =
+    activeStep.id === "welcome" || activeStep.id === "builder";
+
   const handleNext = useCallback(() => {
-    if (currentStep < ONBOARDING_STEP_COUNT - 1) {
+    if (currentStep < activeSteps.length - 1) {
       setCurrentStep((s) => s + 1);
     } else {
       markComplete();
       router.push("/studio");
     }
-  }, [currentStep, markComplete, router]);
+  }, [activeSteps.length, currentStep, markComplete, router]);
+
+  const handleSelectPath = useCallback((selectedPath: OnboardingPath) => {
+    setPath(selectedPath);
+    setCurrentStep(1);
+  }, []);
 
   if (!mounted) return null;
 
-  const isLastStep = currentStep === ONBOARDING_STEP_COUNT - 1;
   const onboardingCompleted = readOnboardingCompleted();
   const showLauncher =
     pathname === "/dashboard" &&
@@ -220,11 +218,9 @@ export function OnboardingDialog() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-lg">
           {/* Accessible but hidden title/description for the dialog */}
-          <DialogTitle className="sr-only">
-            {STEP_TITLES[currentStep]}
-          </DialogTitle>
+          <DialogTitle className="sr-only">{activeStep.title}</DialogTitle>
           <DialogDescription className="sr-only">
-            Onboarding step {currentStep + 1} of {ONBOARDING_STEP_COUNT}
+            Onboarding step {currentStep + 1} of {activeSteps.length}
           </DialogDescription>
 
           {/* Skip button */}
@@ -238,21 +234,27 @@ export function OnboardingDialog() {
 
           {/* Progress dots */}
           <div className="mb-6">
-            <ProgressDots total={ONBOARDING_STEP_COUNT} current={currentStep} />
+            <ProgressDots total={activeSteps.length} current={currentStep} />
           </div>
 
           {/* Step content */}
-          <StepContent step={currentStep} />
+          <StepContent
+            step={activeStep}
+            onSelectPath={handleSelectPath}
+            onAdvance={handleNext}
+          />
 
           {/* Actions */}
           <div className="flex flex-col gap-3 mt-6">
-            <Button
-              onClick={handleNext}
-              className="gradient-bg text-primary-foreground hover:opacity-90"
-            >
-              {isLastStep ? "Get Started" : "Continue"}
-              <ArrowRight className="h-4 w-4 ml-2" />
-            </Button>
+            {!hidePrimaryAction && (
+              <Button
+                onClick={handleNext}
+                className="gradient-bg text-primary-foreground hover:opacity-90"
+              >
+                {isLastStep ? "Get Started" : "Continue"}
+                <ArrowRight className="h-4 w-4 ml-2" />
+              </Button>
+            )}
             {!isLastStep && (
               <Button variant="ghost" onClick={markComplete}>
                 Skip setup

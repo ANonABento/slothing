@@ -20,7 +20,7 @@ test.describe("Onboarding Flow", () => {
   test("should navigate through onboarding steps", async ({ page }) => {
     // Step 1: Welcome
     await expect(onboardingHeading(page)).toHaveText("Welcome to Slothing");
-    await page.getByRole("button", { name: /continue/i }).click();
+    await page.getByRole("button", { name: /I have a resume/i }).click();
 
     // Step 2: Upload Resume
     await expect(onboardingHeading(page)).toHaveText(/Upload Your Resume/i);
@@ -45,7 +45,8 @@ test.describe("Onboarding Flow", () => {
 
   test("should close onboarding and persist completion", async ({ page }) => {
     // Navigate through all steps
-    for (let i = 0; i < 4; i++) {
+    await page.getByRole("button", { name: /I have a resume/i }).click();
+    for (let i = 0; i < 3; i++) {
       const continueButton = page.getByRole("button", { name: /continue/i });
       if (await continueButton.isVisible({ timeout: 500 }).catch(() => false)) {
         await continueButton.click();
@@ -68,5 +69,23 @@ test.describe("Onboarding Flow", () => {
 
     // Dialog should not appear after completion
     await expect(page.getByRole("dialog")).not.toBeVisible({ timeout: 2000 });
+  });
+
+  test("from-scratch path saves seed profile", async ({ page }) => {
+    await page
+      .getByRole("button", { name: /I'm starting from scratch/i })
+      .click();
+
+    await expect(onboardingHeading(page)).toHaveText(
+      /Build Your Starter Profile/i,
+    );
+    await page.getByLabel("Name").fill("Ada Lovelace");
+    await page.getByLabel("Email").fill("ada@example.com");
+    await page.getByLabel("Target role").fill("Frontend intern");
+    await page.getByLabel("Background summary").fill("Building my first role.");
+    await page.getByLabel("Top skills").fill("Research, Excel");
+    await page.getByRole("button", { name: /Save and continue/i }).click();
+
+    await expect(onboardingHeading(page)).toHaveText(/Configure AI/i);
   });
 });
