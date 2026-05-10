@@ -12,10 +12,54 @@ test.describe("i18n routing", () => {
     await page.goto("/es/dashboard");
     await page.waitForLoadState("networkidle");
 
+    await expect(page.getByRole("heading", { name: "Tablero" })).toBeVisible();
     await expect(
-      page.getByRole("heading", { name: "Tablero" }),
+      page.getByRole("link", { name: /Configuración/ }),
     ).toBeVisible();
-    await expect(page.getByRole("link", { name: /Configuración/ })).toBeVisible();
+  });
+
+  test("renders dashboard chrome in Simplified Chinese", async ({ page }) => {
+    await page.goto("/zh-CN/dashboard");
+    await page.waitForLoadState("networkidle");
+
+    const heading = await page
+      .getByRole("heading", { level: 1 })
+      .first()
+      .innerText();
+    expect(heading).toMatch(/[一-鿿]/u);
+    await expect(page.getByRole("link", { name: /添加机会/ })).toBeVisible();
+    await expect(page.getByText("今日")).toBeVisible();
+  });
+
+  test("renders dashboard chrome in Brazilian Portuguese", async ({ page }) => {
+    await page.goto("/pt-BR/dashboard");
+    await page.waitForLoadState("networkidle");
+
+    const heading = await page
+      .getByRole("heading", { level: 1 })
+      .first()
+      .innerText();
+    expect(heading).toBe("Painel");
+    await expect(
+      page.getByRole("link", { name: /Add opportunity/i }),
+    ).toHaveCount(0);
+    await expect(
+      page.getByRole("link", { name: /Adicionar oportunidade/ }),
+    ).toBeVisible();
+    await expect(page.getByText("Hoje")).toBeVisible();
+  });
+
+  test("renders dashboard chrome in Hindi", async ({ page }) => {
+    await page.goto("/hi/dashboard");
+    await page.waitForLoadState("networkidle");
+
+    const heading = await page
+      .getByRole("heading", { level: 1 })
+      .first()
+      .innerText();
+    expect(heading).toMatch(/[ऀ-ॿ]/u);
+    await expect(page.getByRole("link", { name: /अवसर जोड़ें/ })).toBeVisible();
+    await expect(page.getByText("आज")).toBeVisible();
   });
 
   test("switches language from settings while preserving the route", async ({
@@ -28,6 +72,8 @@ test.describe("i18n routing", () => {
     await page.getByRole("option", { name: "Español" }).click();
 
     await expect(page).toHaveURL(/\/es\/settings$/);
-    await expect(page.getByRole("link", { name: /Configuración/ })).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: /Configuración/ }),
+    ).toBeVisible();
   });
 });

@@ -85,7 +85,7 @@ describe("Dashboard onboarding", () => {
     renderDashboard();
 
     expect(
-      await screen.findByText("Hey Kevin, let's set up your workspace."),
+      await screen.findByText("Welcome, Kevin. Let's set up your workspace."),
     ).toBeInTheDocument();
     expect(
       screen.getByText((_content, element) =>
@@ -107,7 +107,9 @@ describe("Dashboard onboarding", () => {
     renderDashboard();
 
     expect(
-      await screen.findByText("Hey Kevin, welcome back."),
+      await screen.findByText(
+        "Welcome back, Kevin. Here's what needs your attention.",
+      ),
     ).toBeInTheDocument();
     expect(screen.getByText("Today")).toBeInTheDocument();
   });
@@ -127,7 +129,9 @@ describe("Dashboard onboarding", () => {
       });
     });
     expect(
-      await screen.findByText("Hey Kevin, welcome back."),
+      await screen.findByText(
+        "Welcome back, Kevin. Here's what needs your attention.",
+      ),
     ).toBeInTheDocument();
   });
 
