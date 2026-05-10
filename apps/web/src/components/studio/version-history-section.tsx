@@ -52,6 +52,7 @@ export function VersionHistorySection({
       <div className="mt-2 flex items-center gap-2">
         <input
           type="text"
+          aria-label="Version name"
           placeholder="Version name..."
           value={manualVersionName}
           onChange={(event) => onManualVersionNameChange(event.target.value)}

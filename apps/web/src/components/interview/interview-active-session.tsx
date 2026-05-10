@@ -103,6 +103,7 @@ export function InterviewActiveSession({
   });
 
   const currentQuestion = session.questions[session.currentIndex];
+  const currentQuestionId = "interview-current-question";
   const timerEnabled = Boolean(session.timer?.enabled && !followUpMode);
   const timerExpired = timerEnabled && remainingMs <= 0;
 
@@ -294,7 +295,10 @@ export function InterviewActiveSession({
                       <Zap className="h-4 w-4" />
                       Follow-up Question
                     </span>
-                    <h2 className="text-xl font-semibold leading-relaxed">
+                    <h2
+                      id={currentQuestionId}
+                      className="text-xl font-semibold leading-relaxed"
+                    >
                       {currentFollowUp.question}
                     </h2>
                     {currentFollowUp.reason.trim() && (
@@ -320,7 +324,10 @@ export function InterviewActiveSession({
                     {currentQuestion && (
                       <CategoryBadge category={currentQuestion.category} />
                     )}
-                    <h2 className="text-xl font-semibold leading-relaxed">
+                    <h2
+                      id={currentQuestionId}
+                      className="text-xl font-semibold leading-relaxed"
+                    >
                       {currentQuestion?.question}
                     </h2>
                   </>
@@ -347,6 +354,7 @@ export function InterviewActiveSession({
           <div className="space-y-4 p-6">
             <div className="relative">
               <Textarea
+                aria-labelledby={currentQuestionId}
                 rows={8}
                 value={currentAnswer}
                 onChange={(event) => onChangeAnswer(event.target.value)}
