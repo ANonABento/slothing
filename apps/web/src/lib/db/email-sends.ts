@@ -149,6 +149,25 @@ export function getRecentEmailSendForRecipient(
   return row ? mapEmailSend(row) : null;
 }
 
+export function hasDailyDigestSentSince(
+  userId: string,
+  sinceIso: string,
+): boolean {
+  ensureSchema();
+  const row = db
+    .prepare(
+      `
+      SELECT id
+      FROM email_sends
+      WHERE user_id = ? AND type = 'daily_digest' AND sent_at >= ?
+      LIMIT 1
+    `,
+    )
+    .get(userId, sinceIso) as { id: string } | undefined;
+
+  return Boolean(row);
+}
+
 export function createEmailSend(
   input: CreateEmailSendInput,
   userId: string = "default",

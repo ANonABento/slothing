@@ -55,6 +55,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (parseResult.data.type === "daily_digest") {
+      return NextResponse.json(
+        { error: "daily_digest is a system email type" },
+        { status: 400 },
+      );
+    }
+
     const send = createEmailSend(parseResult.data, authResult.userId);
     return NextResponse.json({ send });
   } catch (error) {

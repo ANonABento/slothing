@@ -32,6 +32,11 @@ export const updateSettingsSchema = z.object({
       enabled: z.boolean(),
     })
     .optional(),
+  digest: z
+    .object({
+      enabled: z.boolean(),
+    })
+    .optional(),
   kanbanVisibleLanes: kanbanVisibleLanesSchema.optional(),
   locale: z.string().optional(),
 });
