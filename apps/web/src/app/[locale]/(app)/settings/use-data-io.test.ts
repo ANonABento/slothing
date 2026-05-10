@@ -9,9 +9,9 @@ import {
 describe("getExportFileName", () => {
   const date = new Date("2026-04-24T12:00:00.000Z");
 
-  it("keeps the taida filenames for legacy exports", () => {
+  it("uses the slothing filenames for all exports", () => {
     expect(getExportFileName("profile", date)).toBe(
-      "taida-profile-2026-04-24.json",
+      "slothing-profile-2026-04-24.json",
     );
     expect(getExportFileName("jobs-json", date)).toBe(
       "slothing-opportunities-2026-04-24.json",
