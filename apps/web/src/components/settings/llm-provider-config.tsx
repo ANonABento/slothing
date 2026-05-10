@@ -64,8 +64,9 @@ export function LLMProviderConfig(props: LLMProviderConfigProps) {
       <div className="space-y-4">
         {selectedProvider?.requiresKey && (
           <div className="space-y-2">
-            <Label>API Key</Label>
+            <Label htmlFor="llm-api-key">API Key</Label>
             <Input
+              id="llm-api-key"
               type="password"
               value={config.apiKey || ""}
               onChange={(event) =>
@@ -82,8 +83,9 @@ export function LLMProviderConfig(props: LLMProviderConfigProps) {
 
         {config.provider === "ollama" && (
           <div className="space-y-2">
-            <Label>Ollama URL</Label>
+            <Label htmlFor="llm-ollama-url">Ollama URL</Label>
             <Input
+              id="llm-ollama-url"
               value={config.baseUrl || "http://localhost:11434"}
               onChange={(event) =>
                 onConfigChange({ baseUrl: event.target.value })

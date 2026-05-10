@@ -29,6 +29,13 @@ describe("SearchBar", () => {
     ).toBeInTheDocument();
   });
 
+  it("should name the search input without relying on placeholder text", () => {
+    render(<SearchBar {...defaultProps} />);
+    expect(
+      screen.getByRole("textbox", { name: /search knowledge bank/i }),
+    ).toBeInTheDocument();
+  });
+
   it("should render All chip with total count badge", () => {
     render(<SearchBar {...defaultProps} />);
     const allTab = screen.getByRole("tab", { name: /All/i });
