@@ -119,7 +119,7 @@ export default function OptionsApp() {
   return (
     <div className="options-container">
       <header>
-        <h1>Columbus Settings</h1>
+        <h1>Slothing Settings</h1>
         <p className="subtitle">Configure your job application assistant</p>
       </header>
 
@@ -131,8 +131,8 @@ export default function OptionsApp() {
         <h2>Connection</h2>
         <div className="setting-group">
           <label>
-            <span>Columbus API URL</span>
-            <small>The URL where your Columbus app is running</small>
+            <span>Slothing API URL</span>
+            <small>The URL where your Slothing app is running</small>
           </label>
           <div className="input-group">
             <input
@@ -310,11 +310,11 @@ export default function OptionsApp() {
       <section>
         <h2>About</h2>
         <p className="about">
-          Columbus Browser Extension v{chrome.runtime.getManifest().version}
+          Slothing Browser Extension v{chrome.runtime.getManifest().version}
         </p>
         <p className="about">
           <a
-            href="https://github.com/your-repo/columbus"
+            href="https://github.com/your-repo/slothing"
             target="_blank"
             rel="noopener noreferrer"
           >

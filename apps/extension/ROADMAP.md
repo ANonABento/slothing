@@ -1,4 +1,4 @@
-# Columbus Extension Roadmap
+# Slothing Extension Roadmap
 
 ## What Was Built
 
@@ -126,4 +126,4 @@
 11. **Taleo scraper** - Legacy ATS system
 12. **Resume file upload** - Detect file inputs and auto-attach resume
 13. **Application tracking** - Auto-update job status after form submission
-14. **Profile sync** - Push edits from extension back to Columbus
+14. **Profile sync** - Push edits from extension back to Slothing

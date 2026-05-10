@@ -1,4 +1,4 @@
-// Launches Chromium with the Columbus extension loaded + opens the demo job form.
+// Launches Chromium with the Slothing extension loaded + opens the demo job form.
 // Run: node demo/launch-with-extension.mjs
 //
 // Uses Playwright's chromium with --load-extension. Persistent context required
@@ -13,7 +13,7 @@ const extensionPath = path.resolve(__dirname, '..', 'dist')
 const userDataDir = path.resolve(__dirname, '.user-data-dir')
 const demoFile = `file://${path.resolve(__dirname, 'job-form.html')}`
 
-console.log('🧭 Launching Chromium with Columbus extension')
+console.log('🧭 Launching Chromium with Slothing extension')
 console.log('  extension:', extensionPath)
 console.log('  user data:', userDataDir)
 console.log('  demo page:', demoFile)
@@ -42,7 +42,7 @@ await page.goto(demoFile)
 console.log('✓ demo job form opened')
 console.log()
 console.log('Try:')
-console.log('  • Click the Columbus icon in the toolbar (puzzle piece menu if not pinned)')
+console.log('  • Click the Slothing icon in the toolbar (puzzle piece menu if not pinned)')
 console.log('  • Look for the "!" badge on the icon (PR #185 — fires on JOB_DETECTED)')
 console.log('  • Press Cmd+Shift+F to auto-fill the form (needs auth — connect via popup)')
 console.log('  • Press Cmd+Shift+I to import the job listing to your opportunity bank')
