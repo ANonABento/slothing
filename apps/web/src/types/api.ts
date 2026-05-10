@@ -527,6 +527,13 @@ export interface SettingsResponse {
   opportunityReview?: {
     enabled: boolean;
   };
+  gmailAutoStatus?: {
+    enabled: boolean;
+    lastScannedAt?: string | null;
+  };
+  digest?: {
+    enabled: boolean;
+  };
   kanbanVisibleLanes?: import("@/types/opportunity").KanbanLaneId[];
 }
 

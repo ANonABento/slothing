@@ -22,6 +22,22 @@ describe("updateSettingsSchema", () => {
     });
   });
 
+  it("accepts Gmail auto-status updates", () => {
+    expect(
+      updateSettingsSchema.parse({
+        gmailAutoStatus: { enabled: false },
+      }),
+    ).toEqual({
+      gmailAutoStatus: { enabled: false },
+    });
+  });
+
+  it("rejects malformed Gmail auto-status updates", () => {
+    expect(() =>
+      updateSettingsSchema.parse({ gmailAutoStatus: { enabled: "yes" } }),
+    ).toThrow();
+  });
+
   it("rejects empty lane visibility updates", () => {
     expect(() =>
       updateSettingsSchema.parse({ kanbanVisibleLanes: [] }),

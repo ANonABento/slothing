@@ -5,6 +5,7 @@ import { SettingsSkeleton } from "@/components/skeletons/settings-skeleton";
 import { DataManagement } from "@/components/settings/data-management";
 import { EvalHealthSection } from "@/components/settings/eval-health-section";
 import { GoogleIntegration } from "@/components/settings/google-integration";
+import { GmailAutoStatusSection } from "@/components/settings/gmail-auto-status-section";
 import { HelpCards } from "@/components/settings/help-cards";
 import { KanbanLanesSection } from "@/components/settings/kanban-lanes-section";
 import { LLMProviderConfig } from "@/components/settings/llm-provider-config";
@@ -97,6 +98,7 @@ export default function SettingsPage() {
               onCancelImportPreview={dataIO.clearImportPreview}
             />
             <GoogleIntegration />
+            <GmailAutoStatusSection />
           </div>
         </div>
       </PageContent>
