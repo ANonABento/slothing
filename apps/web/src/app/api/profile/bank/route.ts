@@ -2,7 +2,11 @@
  * @route GET /api/profile/bank
  * @description Get grouped bank entries by category
  * @auth Required
+ * @bodyShape none - GET-only endpoint, no JSON body accepted.
+ * @querySchema none - no query parameters; use /api/profile/bank/search for filtered queries.
  * @response BankEntriesResponse from @/types/api
+ *
+ * audit:bug-15 no-input - see search/route.ts for the validated query variant.
  */
 import { NextResponse } from "next/server";
 import { getGroupedBankEntries } from "@/lib/db/profile-bank";

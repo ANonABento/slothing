@@ -145,8 +145,8 @@ export function jsonRequest(
 export function invalidJsonRequest(url: string, method = "POST") {
   return new NextRequest(url, {
     method,
-    body: "{",
     headers: { "content-type": "application/json" },
+    ...(!["GET", "HEAD"].includes(method.toUpperCase()) ? { body: "{" } : {}),
   });
 }
 
