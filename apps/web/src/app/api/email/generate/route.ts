@@ -12,8 +12,25 @@ import { LLMClient, parseJSONFromLLM } from "@/lib/llm/client";
 import { generateEmail, EMAIL_TEMPLATE_INFO } from "@/lib/email/templates";
 import { generateEmailSchema } from "@/lib/constants";
 import { requireAuth, isAuthError } from "@/lib/auth";
+import { buildEmailGenerationPrompt } from "@/lib/email/generate-prompt";
+import {
+  detectGenericPhrases,
+  mergeGenericPhraseMatches,
+} from "@/lib/ai/prompt-quality";
 
 export const dynamic = "force-dynamic";
+
+interface LLMEmailResponse {
+  subject: string;
+  body: string;
+  selfCheck?: {
+    evidencePoint: string;
+    matchedReason: string;
+    unsupportedFacts: string[];
+    genericPhrases: string[];
+    hasClearCTA: boolean;
+  };
+}
 
 function getTemplateGuidelines(
   type: string,
@@ -107,16 +124,7 @@ Status: ${job.status || "saved"}
           `.trim()
           : "No job selected";
 
-        const prompt = `Generate a professional ${templateInfo.title.toLowerCase()} for a job seeker.
-
-CANDIDATE PROFILE:
-${profileSummary}
-
-JOB DETAILS:
-${jobSummary}
-
-ADDITIONAL CONTEXT:
-${contextParams.interviewerName ? `Interviewer: ${contextParams.interviewerName}` : ""}
+        const additionalContext = `${contextParams.interviewerName ? `Interviewer: ${contextParams.interviewerName}` : ""}
 ${contextParams.interviewDate ? `Interview Date: ${contextParams.interviewDate}` : ""}
 ${contextParams.targetCompany ? `Target Company: ${contextParams.targetCompany}` : ""}
 ${contextParams.connectionName ? `Connection: ${contextParams.connectionName}` : ""}
@@ -127,21 +135,18 @@ ${contextParams.recruiterStance ? `Recruiter Reply Stance: ${contextParams.recru
 ${contextParams.referenceName ? `Reference Name: ${contextParams.referenceName}` : ""}
 ${contextParams.applyingRole ? `Applying Role: ${contextParams.applyingRole}` : ""}
 ${contextParams.interviewStage ? `Interview Stage: ${contextParams.interviewStage}` : ""}
-${contextParams.customNote ? `Custom Note: ${contextParams.customNote}` : ""}
+${contextParams.customNote ? `Custom Note: ${contextParams.customNote}` : ""}`;
 
-Return a JSON object with:
-{
-  "subject": "Email subject line",
-  "body": "Full email body with proper formatting and paragraphs"
-}
-
-Guidelines:
-- Keep it professional but warm
-- Be concise (under 200 words for the body)
-- Use specific details from the context provided
-- Include a clear call-to-action
-- Sign off with the candidate's name
-${getTemplateGuidelines(type, contextParams.recruiterStance)}`;
+        const prompt = buildEmailGenerationPrompt({
+          templateTitle: templateInfo.title,
+          profileSummary,
+          jobSummary,
+          additionalContext,
+          templateGuidelines: getTemplateGuidelines(
+            type,
+            contextParams.recruiterStance,
+          ),
+        });
 
         const response = await client.complete({
           messages: [{ role: "user", content: prompt }],
@@ -149,10 +154,18 @@ ${getTemplateGuidelines(type, contextParams.recruiterStance)}`;
           maxTokens: 1000,
         });
 
-        const parsed = parseJSONFromLLM<{ subject: string; body: string }>(
-          response,
-        );
+        const parsed = parseJSONFromLLM<LLMEmailResponse>(response);
         if (parsed.subject && parsed.body) {
+          const selfCheck = parsed.selfCheck
+            ? {
+                ...parsed.selfCheck,
+                genericPhrases: mergeGenericPhraseMatches(
+                  parsed.selfCheck.genericPhrases,
+                  detectGenericPhrases(parsed.body),
+                ),
+              }
+            : undefined;
+
           return NextResponse.json({
             success: true,
             email: {
@@ -160,6 +173,7 @@ ${getTemplateGuidelines(type, contextParams.recruiterStance)}`;
               body: parsed.body,
               placeholders: [],
             },
+            ...(selfCheck ? { selfCheck } : {}),
             usedLLM: true,
           });
         }
