@@ -1,7 +1,4 @@
 import type { JobDescription, Profile } from "@/types";
-import { extractJdKeywordTerms } from "@/lib/ats/jd-keywords";
-import { containsExactKeywordTerm } from "@/lib/ats/match-score";
-import { getSynonyms, SYNONYM_MATCH_WEIGHT } from "@/lib/ats/synonyms";
 import { scoreToLetterGrade } from "@/lib/ats/analyzer";
 import type {
   ATSAnalysisResult,
@@ -9,6 +6,11 @@ import type {
   KeywordAnalysis,
 } from "@/lib/ats/analyzer";
 import { nowDate, nowIso, parseToDate } from "@/lib/format/time";
+import { extractJdKeywords } from "@/lib/ats/jd-keywords";
+import {
+  analyzeKeywordEvidence,
+  type KeywordEvidenceSegment,
+} from "@/lib/ats/keyword-evidence";
 import type { ATSScanResult, AxisKey, AxisScore, FileMeta } from "./types";
 
 export type { ATSScanResult, AxisKey, AxisScore, FileMeta } from "./types";
@@ -64,7 +66,7 @@ function clampScore(score: number) {
 function normalizeText(text: string) {
   return text
     .toLowerCase()
-    .replace(/[^a-z0-9+#.\s]/g, " ")
+    .replace(/[^a-z0-9+#.\s-]/g, " ")
     .replace(/\s+/g, " ")
     .trim();
 }
@@ -79,10 +81,6 @@ function wordBoundaryRegex(term: string, flags = "") {
 
 function containsWord(text: string, term: string) {
   return wordBoundaryRegex(term).test(text);
-}
-
-function countWordOccurrences(text: string, term: string) {
-  return (text.match(wordBoundaryRegex(term, "g")) || []).length;
 }
 
 function profileText(profile: Profile) {
@@ -381,6 +379,177 @@ function extractKeywords(text: string) {
     .map(([word]) => word);
 }
 
+function rawTextSegments(text: string): KeywordEvidenceSegment[] {
+  return text
+    .split(/\n|(?<=\.)\s+/)
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0)
+    .slice(0, 120)
+    .map((line) => ({
+      text: line,
+      location: "raw text",
+      kind: "raw" as const,
+      evidencePreferred: /^[-*•]\s+/.test(line),
+    }));
+}
+
+function isEvidenceLikeExperienceText(text: string) {
+  const normalized = normalizeText(text);
+  if (!normalized) return false;
+
+  const hasAction = ACTION_VERBS.some((verb) => containsWord(normalized, verb));
+  const hasResult =
+    /\b(\d+%|\$\d+|\b\d+x\b|\b\d+\s+(users|customers|clients|projects|people|engineers|reports|hours|minutes|dashboards|tests)\b|latency|revenue|coverage|conversion|retention|performance|production|impact|saved|faster|slower)\b/i.test(
+      text,
+    );
+  const enoughContext = text.trim().split(/\s+/).length >= 8;
+
+  return (hasAction && enoughContext) || hasResult;
+}
+
+function profileSegments(
+  profile: Profile,
+  rawText: string,
+): KeywordEvidenceSegment[] {
+  const segments: KeywordEvidenceSegment[] = [];
+
+  if (profile.summary) {
+    segments.push({
+      text: profile.summary,
+      location: "summary",
+      kind: "summary",
+    });
+  }
+
+  if (profile.skills.length > 0) {
+    segments.push({
+      text: profile.skills.map((skillItem) => skillItem.name).join(", "),
+      location: "skills",
+      kind: "skills",
+    });
+  }
+
+  for (const experience of profile.experiences) {
+    const location = `experience: ${experience.title || experience.company || "role"}`;
+    const hasRoleEvidence = [
+      experience.description,
+      ...experience.highlights,
+    ].some((textValue) =>
+      isEvidenceLikeExperienceText(String(textValue || "")),
+    );
+
+    for (const textValue of [
+      experience.title,
+      experience.company,
+      experience.description,
+      ...experience.highlights,
+    ].filter(Boolean)) {
+      segments.push({
+        text: textValue,
+        location,
+        kind: "experience",
+        evidencePreferred: experience.highlights.includes(textValue),
+      });
+    }
+    if (experience.skills.length > 0) {
+      segments.push({
+        text: experience.skills.join(", "),
+        location: `${location} skills`,
+        kind: "skills",
+        evidencePreferred: hasRoleEvidence,
+      });
+    }
+  }
+
+  for (const project of profile.projects) {
+    const location = `project: ${project.name || "project"}`;
+    const hasProjectEvidence = [
+      project.description,
+      ...project.highlights,
+    ].some((textValue) =>
+      isEvidenceLikeExperienceText(String(textValue || "")),
+    );
+
+    for (const textValue of [
+      project.name,
+      project.description,
+      ...project.highlights,
+    ].filter(Boolean)) {
+      segments.push({
+        text: textValue,
+        location,
+        kind: "project",
+        evidencePreferred: project.highlights.includes(textValue),
+      });
+    }
+    if (project.technologies.length > 0) {
+      segments.push({
+        text: project.technologies.join(", "),
+        location: `${location} technologies`,
+        kind: "skills",
+        evidencePreferred: hasProjectEvidence,
+      });
+    }
+  }
+
+  for (const education of profile.education) {
+    segments.push({
+      text: [
+        education.institution,
+        education.degree,
+        education.field,
+        ...education.highlights,
+      ]
+        .filter(Boolean)
+        .join(" "),
+      location: "education",
+      kind: "education",
+    });
+  }
+
+  for (const certification of profile.certifications) {
+    segments.push({
+      text: [certification.name, certification.issuer]
+        .filter(Boolean)
+        .join(" "),
+      location: "certification",
+      kind: "certification",
+    });
+  }
+
+  const raw = rawText.trim() || profile.rawText || "";
+  if (raw) segments.push(...rawTextSegments(raw));
+
+  return segments.filter((segment) => segment.text.trim().length > 0);
+}
+
+function uniqueNormalizedKeywords(keywords: string[]) {
+  return Array.from(new Set(keywords.map(normalizeText).filter(Boolean)));
+}
+
+function buildJobKeywords(job: JobDescription) {
+  const explicit = uniqueNormalizedKeywords([
+    ...job.keywords,
+    ...job.requirements.flatMap((requirement) =>
+      extractJdKeywords(requirement, { limit: 8 }).map(
+        (keyword) => keyword.term,
+      ),
+    ),
+  ]);
+
+  if (explicit.length >= 4) return explicit.slice(0, 24);
+
+  return uniqueNormalizedKeywords([
+    ...explicit,
+    ...extractJdKeywords(
+      [job.title, job.description, ...job.requirements, ...job.responsibilities]
+        .filter(Boolean)
+        .join("\n"),
+      { limit: 24 },
+    ).map((keyword) => keyword.term),
+  ]).slice(0, 24);
+}
+
 function scoreKeywords(profile: Profile, text: string, job?: JobDescription) {
   const keywords: KeywordAnalysis[] = [];
   const issues: ATSIssue[] = [];
@@ -388,13 +557,7 @@ function scoreKeywords(profile: Profile, text: string, job?: JobDescription) {
   const evidence: string[] = [];
   const normalizedResume = normalizeText(text || profileText(profile));
   const importantKeywords = job
-    ? Array.from(
-        new Set([
-          ...job.keywords,
-          ...extractJdKeywordTerms(job.requirements.join("\n")),
-          ...extractJdKeywordTerms(job.description),
-        ]),
-      ).slice(0, 24)
+    ? buildJobKeywords(job)
     : extractKeywords(normalizedResume).slice(0, 10);
 
   if (importantKeywords.length === 0) {
@@ -408,61 +571,45 @@ function scoreKeywords(profile: Profile, text: string, job?: JobDescription) {
       ),
       keywords,
       issues,
+      keywordEvidence: undefined,
     };
   }
 
-  let weightedMatches = 0;
-  for (const keyword of importantKeywords) {
-    const normalizedKeyword = normalizeText(keyword);
-    let found = containsExactKeywordTerm(normalizedResume, keyword);
-    let matchType: "exact" | "synonym" | undefined = found
-      ? "exact"
-      : undefined;
-    let matchedTerm: string | undefined;
-    let frequency = found
-      ? countWordOccurrences(normalizedResume, normalizedKeyword)
-      : 0;
+  const keywordEvidence = analyzeKeywordEvidence(
+    importantKeywords,
+    profileSegments(profile, text),
+  );
+  const weightedMatches = keywordEvidence.matches.reduce(
+    (sum, match) => sum + match.scoreWeight,
+    0,
+  );
 
-    if (!found) {
-      for (const synonym of getSynonyms(normalizedKeyword)) {
-        const normalizedSynonym = normalizeText(synonym);
-        if (
-          normalizedSynonym !== normalizedKeyword &&
-          containsExactKeywordTerm(normalizedResume, normalizedSynonym)
-        ) {
-          found = true;
-          matchType = "synonym";
-          matchedTerm = synonym;
-          frequency = countWordOccurrences(normalizedResume, normalizedSynonym);
-          break;
-        }
-      }
-    }
-
-    if (found)
-      weightedMatches += matchType === "synonym" ? SYNONYM_MATCH_WEIGHT : 1;
+  for (const match of keywordEvidence.matches) {
     keywords.push({
-      keyword,
-      found,
-      frequency,
-      locations: found ? ["resume"] : [],
-      matchType,
-      matchedTerm,
+      keyword: match.keyword,
+      found: match.status !== "missing",
+      frequency: match.frequency,
+      locations: match.locations,
+      matchType: match.matchType,
+      matchedTerm: match.matchedTerm,
+      status: match.status,
+      evidenceSnippets: match.evidenceSnippets,
     });
   }
 
   let score = job ? (weightedMatches / importantKeywords.length) * 100 : 85;
-  const stuffed = keywords.filter((keyword) => keyword.frequency > 10);
-  if (stuffed.length > 0) {
-    score -= 10;
-    notes.push("A few terms repeat unusually often.");
+  const stuffed = keywordEvidence.stuffed;
+  if (job && stuffed.length > 0) {
+    const penalty = Math.min(20, 8 + stuffed.length * 4);
+    score -= penalty;
+    notes.push("Some JD terms repeat without enough supporting evidence.");
     issues.push(
       issue(
         "warning",
         "keywords",
-        "Potential keyword stuffing",
-        "Some keywords appear very frequently.",
-        "Use keywords naturally in context instead of repeating them.",
+        "Keyword stuffing or thin evidence",
+        "Some keywords appear repeatedly without supporting bullets or projects.",
+        "Use keywords naturally inside specific achievements instead of repeating them.",
       ),
     );
   }
@@ -491,16 +638,32 @@ function scoreKeywords(profile: Profile, text: string, job?: JobDescription) {
 
   notes.push(
     job
-      ? "Compared resume language against the pasted/imported job posting."
+      ? "Compared JD terms as evidence-backed matches, mentions, and missing keywords."
       : "No job description supplied; keyword score uses a neutral baseline.",
   );
   evidence.push(
-    `${keywords.filter((k) => k.found).length}/${keywords.length} keyword(s) found.`,
+    `${keywordEvidence.matchedWithEvidence.length}/${keywords.length} keyword(s) matched with evidence; ${keywordEvidence.mentionedOnly.length} mentioned only.`,
   );
+  for (const match of keywordEvidence.matches.slice(0, 8)) {
+    if (match.status === "matched_with_evidence") {
+      evidence.push(
+        `${match.keyword} matched with evidence: "${match.evidenceSnippets[0]}"`,
+      );
+    } else if (match.status === "mentioned_only") {
+      evidence.push(
+        `${match.keyword} mentioned only in ${match.locations.join(", ")}.`,
+      );
+    } else {
+      evidence.push(`${match.keyword} missing.`);
+    }
+  }
+  keywordEvidence.warnings.forEach((warning) => notes.push(warning));
+
   return {
     axis: axis("keywordMatch", "Keyword match", score, notes, evidence),
     keywords,
     issues,
+    keywordEvidence,
   };
 }
 
@@ -755,6 +918,7 @@ export function scanResume(
     axes,
     issues,
     keywords: keywords.keywords,
+    keywordEvidence: keywords.keywordEvidence,
     summary: legacy.summary,
     recommendations: legacy.recommendations,
     scannedAt: nowIso(),

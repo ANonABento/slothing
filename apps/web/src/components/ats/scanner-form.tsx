@@ -108,6 +108,30 @@ function opportunityToText(opportunity: ScrapedOpportunity) {
     .join("\n\n");
 }
 
+function buildCurrentJobForScan(
+  currentJobText: string,
+  importedJob: JobDescription | null,
+  importedJobText: string,
+) {
+  const text = currentJobText.trim();
+  if (text.length <= 20) return undefined;
+
+  const parsed = textToJob(text);
+  if (importedJob && text === importedJobText.trim()) {
+    return {
+      ...parsed,
+      id: importedJob.id,
+      title: importedJob.title,
+      company: importedJob.company,
+      url: importedJob.url,
+      description: text,
+      createdAt: importedJob.createdAt,
+    };
+  }
+
+  return parsed;
+}
+
 function profileToMatchText(profile: Profile, fallbackText: string) {
   const parts = [
     fallbackText,
@@ -154,6 +178,7 @@ export function ScannerForm({ locale = "en" }: ScannerFormProps = {}) {
   const [parseError, setParseError] = useState("");
   const [showPasteResume, setShowPasteResume] = useState(false);
   const [scrapedJob, setScrapedJob] = useState<JobDescription | null>(null);
+  const [scrapedJobText, setScrapedJobText] = useState("");
   const [scrapeStatus, setScrapeStatus] = useState("");
   const [scrapeError, setScrapeError] = useState("");
   const [parsing, setParsing] = useState(false);
@@ -255,11 +280,14 @@ export function ScannerForm({ locale = "en" }: ScannerFormProps = {}) {
       }
 
       const job = opportunityToJob(data.opportunity);
+      const importedText = opportunityToText(data.opportunity);
       setScrapedJob(job);
-      setJobText(opportunityToText(data.opportunity));
+      setScrapedJobText(importedText);
+      setJobText(importedText);
       setScrapeStatus(`Imported from ${new URL(url).hostname}`);
     } catch (error) {
       setScrapedJob(null);
+      setScrapedJobText("");
       setScrapeError(
         `${error instanceof Error ? error.message : "Could not import that job posting."} Paste manually instead.`,
       );
@@ -283,12 +311,10 @@ export function ScannerForm({ locale = "en" }: ScannerFormProps = {}) {
     setAnalyzing(true);
 
     requestAnimationFrame(() => {
-      const job =
-        scrapedJob ||
-        (jobText.trim().length > 20 ? textToJob(jobText) : undefined);
-      const jdText = job?.description || jobText;
+      const jdText = jobText.trim();
+      const job = buildCurrentJobForScan(jobText, scrapedJob, scrapedJobText);
       const analysis = scanResume(profile, resumeText, job, fileMeta);
-      const jdMatchResult = jdText.trim()
+      const jdMatchResult = jdText
         ? computeJdMatch(profileToMatchText(profile, resumeText), jdText, {
             missingLimit: 10,
           })
@@ -303,7 +329,7 @@ export function ScannerForm({ locale = "en" }: ScannerFormProps = {}) {
           atsIssues: analysis.issues,
           keywords: analysis.keywords,
           profile,
-          hasJobDescription: Boolean(jdText.trim()),
+          hasJobDescription: Boolean(jdText),
         }),
       );
       setAnalyzing(false);
@@ -323,6 +349,7 @@ export function ScannerForm({ locale = "en" }: ScannerFormProps = {}) {
     setParseMessage("");
     setParseError("");
     setScrapedJob(null);
+    setScrapedJobText("");
     setScrapeStatus("");
     setScrapeError("");
     setShowPasteResume(false);
@@ -545,7 +572,10 @@ export function ScannerForm({ locale = "en" }: ScannerFormProps = {}) {
           value={jobText}
           onChange={(event) => {
             setJobText(event.target.value);
-            setScrapedJob(null);
+            if (event.target.value.trim() !== scrapedJobText.trim()) {
+              setScrapedJob(null);
+              setScrapedJobText("");
+            }
           }}
         />
         <p className="mt-1 text-xs text-muted-foreground">

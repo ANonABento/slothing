@@ -104,9 +104,6 @@ describe("ScannerForm", () => {
       expect(screen.getByText(/Scoring axes/i)).toBeInTheDocument();
     });
     expect(screen.queryByText(/JD Match/i)).not.toBeInTheDocument();
-    expect(
-      screen.getByText(/Paste the target job description to judge role fit/i),
-    ).toBeInTheDocument();
   });
 
   it("renders JD match results and copies missing keyword chips", async () => {
@@ -139,8 +136,15 @@ describe("ScannerForm", () => {
       expect(screen.getByText(/JD Match/i)).toBeInTheDocument();
     });
     expect(
-      screen.getByText(/Ready to apply|Needs light tailoring|Needs evidence|Not a fit/i),
+      screen.getByText(
+        /Ready to apply|Needs light tailoring|Needs evidence|Not a fit/i,
+      ),
     ).toBeInTheDocument();
+    expect(screen.getByText(/Matched with evidence/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /Mentioned only/i }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/^Missing$/i)).toBeInTheDocument();
 
     fireEvent.click(
       screen.getByRole("button", {
@@ -151,6 +155,95 @@ describe("ScannerForm", () => {
     await waitFor(() => {
       expect(writeText).toHaveBeenCalledWith("typescript");
       expect(screen.getByText(/Keyword copied/i)).toBeInTheDocument();
+    });
+  });
+
+  it("uses edited manual JD text after importing a different job", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          opportunity: {
+            title: "Senior Frontend Engineer",
+            company: "Frontend Co",
+            description:
+              "Build React and TypeScript interfaces with Playwright tests.",
+            requirements: ["React", "TypeScript", "Playwright"],
+            responsibilities: [],
+            keywords: ["React", "TypeScript", "Playwright"],
+            url: "https://example.com/frontend",
+          },
+        }),
+        {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        },
+      ),
+    );
+
+    renderWithToast();
+
+    fireEvent.click(
+      screen.getByRole("button", { name: /Paste text instead/i }),
+    );
+    fireEvent.change(screen.getByLabelText(/Paste your resume text/i), {
+      target: {
+        value:
+          "Built React and TypeScript dashboards for 25,000 users and added Playwright release tests.",
+      },
+    });
+    fireEvent.change(screen.getByLabelText(/Import job from URL/i), {
+      target: { value: "https://example.com/frontend" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /Import/i }));
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(/Imported from example.com/i),
+      ).toBeInTheDocument();
+    });
+
+    fireEvent.change(screen.getByLabelText(/Paste job description/i), {
+      target: {
+        value:
+          "Data scientist role requiring Python, SQL, machine learning, statistics, and dashboards.",
+      },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /Scan Resume/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/JD Match/i)).toBeInTheDocument();
+    });
+    expect(
+      screen.getByRole("button", { name: /Copy missing keyword python/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /Copy missing keyword react/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("shows a warning for repeated keywords without evidence", async () => {
+    renderWithToast();
+
+    fireEvent.click(
+      screen.getByRole("button", { name: /Paste text instead/i }),
+    );
+    fireEvent.change(screen.getByLabelText(/Paste your resume text/i), {
+      target: {
+        value:
+          "React TypeScript Playwright React TypeScript Playwright React TypeScript Playwright React TypeScript Playwright",
+      },
+    });
+    fireEvent.change(screen.getByLabelText(/Paste job description/i), {
+      target: {
+        value: "React, TypeScript, and Playwright are required.",
+      },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /Scan Resume/i }));
+
+    await waitFor(() => {
+      expect(
+        screen.getAllByText(/Keyword stuffing or thin evidence/i).length,
+      ).toBeGreaterThan(0);
     });
   });
 

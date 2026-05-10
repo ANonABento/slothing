@@ -4,7 +4,7 @@ import { computeJdMatch, normalizeForMatch } from "./match-score";
 describe("computeJdMatch", () => {
   it("scores highly when the resume contains most JD keywords", () => {
     const result = computeJdMatch(
-      "Senior engineer using React, TypeScript, Node.js, SQL, and AWS.",
+      "Built React and TypeScript dashboards, shipped Node.js APIs, and used SQL and AWS.",
       "We need React, TypeScript, Node.js, SQL, AWS, and Docker.",
       { keywordLimit: 6 },
     );
@@ -12,6 +12,9 @@ describe("computeJdMatch", () => {
     expect(result.score).toBeGreaterThanOrEqual(80);
     expect(result.matchedKeywords).toEqual(
       expect.arrayContaining(["react", "typescript", "node.js", "sql", "aws"]),
+    );
+    expect(result.matchedWithEvidence).toEqual(
+      expect.arrayContaining(["react", "typescript"]),
     );
   });
 
@@ -45,12 +48,22 @@ describe("computeJdMatch", () => {
       matchedKeywords: [],
       missingKeywords: [],
       totalKeywords: 0,
+      matchedWithEvidence: [],
+      mentionedOnly: [],
+      stuffedKeywords: [],
+      evidenceByKeyword: {},
+      warnings: [],
     });
     expect(computeJdMatch("React", "")).toEqual({
       score: 0,
       matchedKeywords: [],
       missingKeywords: [],
       totalKeywords: 0,
+      matchedWithEvidence: [],
+      mentionedOnly: [],
+      stuffedKeywords: [],
+      evidenceByKeyword: {},
+      warnings: [],
     });
   });
 
@@ -73,7 +86,7 @@ describe("computeJdMatch", () => {
 
     const result = computeJdMatch(resume, jd, { keywordLimit: 12 });
 
-    expect(result.score).toBeGreaterThanOrEqual(80);
+    expect(result.score).toBeGreaterThan(40);
     expect(result.matchedKeywords).toEqual(
       expect.arrayContaining([
         "graphql",
@@ -148,6 +161,41 @@ describe("computeJdMatch", () => {
     expect(result.missingKeywords).not.toEqual(
       expect.arrayContaining(["front end", "intern", "role requiring"]),
     );
+  });
+
+  it("scores supported keyword matches above repeated keyword-only text", () => {
+    const jd = "React, TypeScript, and Playwright are required.";
+    const supported = computeJdMatch(
+      "- Built React and TypeScript dashboards for 25,000 users.\n- Added Playwright tests that improved release confidence.",
+      jd,
+      { keywordLimit: 3 },
+    );
+    const stuffed = computeJdMatch(
+      "React TypeScript Playwright React TypeScript Playwright React TypeScript Playwright React TypeScript Playwright",
+      jd,
+      { keywordLimit: 3 },
+    );
+
+    expect(supported.matchedWithEvidence).toEqual(
+      expect.arrayContaining(["react", "typescript", "playwright"]),
+    );
+    expect(stuffed.stuffedKeywords).toEqual(
+      expect.arrayContaining(["react", "typescript", "playwright"]),
+    );
+    expect(stuffed.score).toBeLessThan(supported.score);
+  });
+
+  it("keeps skills-list matches in mentioned only", () => {
+    const result = computeJdMatch(
+      "Skills: React, TypeScript, Playwright",
+      "React, TypeScript, and Playwright are required.",
+      { keywordLimit: 3 },
+    );
+
+    expect(result.mentionedOnly).toEqual(
+      expect.arrayContaining(["react", "typescript", "playwright"]),
+    );
+    expect(result.matchedWithEvidence).toHaveLength(0);
   });
 });
 
