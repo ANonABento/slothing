@@ -15,6 +15,7 @@ import {
   getOpportunityReviewEnabled,
   setOpportunityReviewEnabled,
 } from "@/lib/settings/opportunity-review";
+import { getDigestEnabled, setDigestEnabled } from "@/lib/settings/digest";
 import {
   getKanbanVisibleLanes,
   setKanbanVisibleLanes,
@@ -38,6 +39,9 @@ export async function GET() {
       locale: getStoredLocaleSetting(authResult.userId),
       opportunityReview: {
         enabled: getOpportunityReviewEnabled(authResult.userId),
+      },
+      digest: {
+        enabled: getDigestEnabled(authResult.userId),
       },
       kanbanVisibleLanes: getKanbanVisibleLanes(authResult.userId),
     });
@@ -80,6 +84,9 @@ export async function PUT(request: NextRequest) {
         data.opportunityReview.enabled,
         authResult.userId,
       );
+    }
+    if (data.digest) {
+      setDigestEnabled(data.digest.enabled, authResult.userId);
     }
     if (data.kanbanVisibleLanes) {
       setKanbanVisibleLanes(data.kanbanVisibleLanes, authResult.userId);

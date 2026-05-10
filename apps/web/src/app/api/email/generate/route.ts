@@ -55,6 +55,13 @@ export async function POST(request: NextRequest) {
 
     const { type, jobId, useLLM, ...contextParams } = parseResult.data;
 
+    if (type === "daily_digest") {
+      return NextResponse.json(
+        { error: "daily_digest is a system email type" },
+        { status: 400 },
+      );
+    }
+
     if (!EMAIL_TEMPLATE_INFO[type]) {
       return NextResponse.json(
         { error: "Invalid email type" },
