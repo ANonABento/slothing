@@ -1,0 +1,83 @@
+import { describe, expect, it } from "vitest";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { NextIntlClientProvider } from "next-intl";
+import messages from "@/messages/en.json";
+import { Navbar } from "./navbar";
+
+function renderNavbar(locale: string) {
+  return render(
+    <NextIntlClientProvider locale={locale} messages={messages}>
+      <Navbar />
+    </NextIntlClientProvider>,
+  );
+}
+
+function internalHrefs() {
+  return screen
+    .getAllByRole("link")
+    .map((link) => link.getAttribute("href") ?? "")
+    .filter((href) => href.startsWith("/") && !href.startsWith("//"));
+}
+
+function anchorHrefs() {
+  return screen
+    .getAllByRole("link")
+    .map((link) => link.getAttribute("href") ?? "")
+    .filter((href) => href.startsWith("#"));
+}
+
+function expectLocalePrefixedInternalHrefs(locale: string) {
+  const escapedLocale = locale.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+  for (const href of internalHrefs()) {
+    expect(href, `navbar link "${href}" missing /${locale} prefix`).toMatch(
+      new RegExp(`^/${escapedLocale}(?:/|$|\\?)`),
+    );
+  }
+}
+
+describe("Navbar", () => {
+  it.each(["es", "zh-CN"])(
+    "prefixes internal links with %s",
+    (locale) => {
+      renderNavbar(locale);
+
+      expectLocalePrefixedInternalHrefs(locale);
+      expect(anchorHrefs()).toEqual([
+        "#features",
+        "#how-it-works",
+        "#testimonials",
+      ]);
+    },
+  );
+
+  it("prefixes mobile menu CTAs and keeps section anchors literal", () => {
+    renderNavbar("es");
+
+    fireEvent.click(screen.getByRole("button", { name: "Toggle menu" }));
+
+    expectLocalePrefixedInternalHrefs("es");
+    expect(anchorHrefs()).toEqual([
+      "#features",
+      "#how-it-works",
+      "#testimonials",
+      "#features",
+      "#how-it-works",
+      "#testimonials",
+    ]);
+
+    const signInLinks = screen.getAllByRole("link", { name: "Sign In" });
+    const getStartedLinks = screen.getAllByRole("link", {
+      name: "Get Started",
+    });
+
+    expect(signInLinks).toHaveLength(2);
+    expect(getStartedLinks).toHaveLength(2);
+
+    for (const link of [...signInLinks, ...getStartedLinks]) {
+      expect(link.getAttribute("href")).toMatch(
+        /^\/es\/sign-in\?callbackUrl=(%2Fes%2Fdashboard|\/es\/dashboard)$/,
+      );
+    }
+  });
+});
