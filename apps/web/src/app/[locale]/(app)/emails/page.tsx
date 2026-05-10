@@ -46,7 +46,8 @@ import {
   TEMPLATE_CONFIG,
   TEMPLATE_ORDER,
 } from "./_data/templates";
-import type { EmailTemplateType, JobDescription } from "@/types";
+import type { EmailTemplateType } from "@/types";
+import type { Opportunity } from "@/types/opportunity";
 
 const SendViaGmailButton = dynamic(
   () => import("@/components/google").then((m) => m.SendViaGmailButton),
@@ -64,8 +65,8 @@ interface EmailDraft {
   updatedAt: string;
 }
 
-interface JobsResponse {
-  jobs?: JobDescription[];
+interface OpportunitiesResponse {
+  opportunities?: Opportunity[];
 }
 
 interface EmailDraftsResponse {
@@ -101,7 +102,7 @@ export default function EmailTemplatesPage() {
   const [selectedType, setSelectedType] = useState<EmailTemplateType | null>(
     null,
   );
-  const [jobs, setJobs] = useState<JobDescription[]>([]);
+  const [jobs, setJobs] = useState<Opportunity[]>([]);
   const [selectedJobId, setSelectedJobId] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -144,11 +145,11 @@ export default function EmailTemplatesPage() {
   const fetchJobs = useCallback(async () => {
     try {
       const res = await fetch("/api/opportunities");
-      const data = await readJsonResponse<JobsResponse>(
+      const data = await readJsonResponse<OpportunitiesResponse>(
         res,
         "Failed to load jobs",
       );
-      setJobs(data.jobs || []);
+      setJobs(data.opportunities || []);
     } catch (error) {
       showErrorToast(error, {
         title: "Could not load jobs",
@@ -569,13 +570,13 @@ export default function EmailTemplatesPage() {
                 </SelectTrigger>
                 <SelectContent>
                   {jobs
-                    .filter((j) => j.status === "offered")
+                    .filter((j) => j.status === "offer")
                     .map((job) => (
                       <SelectItem key={job.id} value={job.id}>
                         {job.title} at {job.company}
                       </SelectItem>
                     ))}
-                  {jobs.filter((j) => j.status === "offered").length === 0 && (
+                  {jobs.filter((j) => j.status === "offer").length === 0 && (
                     <SelectItem value="" disabled>
                       No offers yet
                     </SelectItem>

@@ -31,6 +31,7 @@ describe("Footer", () => {
         `/${locale}`,
         "#features",
         "#how-it-works",
+        `/${locale}/pricing`,
         `/${locale}/ats-scanner`,
         `/${locale}/dashboard`,
         `/${locale}/bank`,

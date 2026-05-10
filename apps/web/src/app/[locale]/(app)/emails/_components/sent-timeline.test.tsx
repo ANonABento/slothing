@@ -1,12 +1,34 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { SentTimeline, type EmailSendForTimeline } from "./sent-timeline";
-import type { JobDescription } from "@/types";
+import type { Opportunity } from "@/types/opportunity";
 
 const jobs = [
-  { id: "job-1", title: "Engineer", company: "Acme" },
-  { id: "job-2", title: "Designer", company: "Nimbus" },
-] as JobDescription[];
+  {
+    id: "job-1",
+    type: "job",
+    title: "Engineer",
+    company: "Acme",
+    source: "manual",
+    summary: "Build product flows",
+    status: "saved",
+    tags: [],
+    createdAt: "2026-05-01T00:00:00.000Z",
+    updatedAt: "2026-05-01T00:00:00.000Z",
+  },
+  {
+    id: "job-2",
+    type: "job",
+    title: "Designer",
+    company: "Nimbus",
+    source: "manual",
+    summary: "Design product flows",
+    status: "saved",
+    tags: [],
+    createdAt: "2026-05-01T00:00:00.000Z",
+    updatedAt: "2026-05-01T00:00:00.000Z",
+  },
+] satisfies Opportunity[];
 
 function makeSend(
   overrides: Partial<EmailSendForTimeline> = {},

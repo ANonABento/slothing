@@ -1,10 +1,10 @@
 import type { InterviewSession } from "@/types/interview";
-import type { JobDescription } from "@/types";
+import type { Opportunity } from "@/types/opportunity";
 
 import { formatDateOnly, nowIso } from "@/lib/format/time";
 export function formatInterviewForDocs(
   session: InterviewSession,
-  job?: JobDescription,
+  job?: Pick<Opportunity, "title" | "company">,
 ): string {
   const lines: string[] = [];
   lines.push(`Interview Preparation Notes`);

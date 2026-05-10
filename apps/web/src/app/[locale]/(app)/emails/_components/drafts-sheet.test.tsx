@@ -1,11 +1,22 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { DraftsSheet, type EmailDraftForSheet } from "./drafts-sheet";
-import type { JobDescription } from "@/types";
+import type { Opportunity } from "@/types/opportunity";
 
 const jobs = [
-  { id: "job-1", title: "Designer", company: "Acme" },
-] as JobDescription[];
+  {
+    id: "job-1",
+    type: "job",
+    title: "Designer",
+    company: "Acme",
+    source: "manual",
+    summary: "Design product flows",
+    status: "saved",
+    tags: [],
+    createdAt: "2026-05-01T00:00:00.000Z",
+    updatedAt: "2026-05-01T00:00:00.000Z",
+  },
+] satisfies Opportunity[];
 
 function makeDraft(
   overrides: Partial<EmailDraftForSheet> = {},

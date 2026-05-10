@@ -31,7 +31,7 @@ import {
   type InterviewDifficulty,
   type SessionQuestionCategory,
 } from "@/lib/constants";
-import type { JobDescription } from "@/types";
+import type { Opportunity } from "@/types/opportunity";
 import type { InterviewMode, PastSession } from "@/types/interview";
 
 const INTERVIEW_DIFFICULTY_LABELS: Record<InterviewDifficulty, string> = {
@@ -45,7 +45,7 @@ const QUESTION_COUNT_STORAGE_KEY = "taida:interview:question-count";
 const TIMER_STORAGE_KEY = "taida:interview:timer-enabled";
 
 interface InterviewJobSelectionProps {
-  jobs: JobDescription[];
+  opportunities: Opportunity[];
   selectedJob: string | null;
   generating: boolean;
   onStartInterview: (
@@ -62,7 +62,7 @@ interface InterviewJobSelectionProps {
 }
 
 export function InterviewJobSelection({
-  jobs,
+  opportunities,
   selectedJob,
   generating,
   onStartInterview,
@@ -108,7 +108,7 @@ export function InterviewJobSelection({
   const togglePrepGuide = (id: string) =>
     setShowPrepGuide(showPrepGuide === id ? null : id);
 
-  if (jobs.length === 0) {
+  if (opportunities.length === 0) {
     return (
       <div className="rounded-lg border bg-card p-12 text-center">
         <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-muted text-muted-foreground mb-6">
@@ -141,7 +141,7 @@ export function InterviewJobSelection({
     <div className="space-y-6 animate-enter">
       <PastSessionsList
         pastSessions={pastSessions}
-        jobs={jobs}
+        opportunities={opportunities}
         showHistory={showHistory}
         onToggleHistory={() => setShowHistory(!showHistory)}
         onResumeSession={onResumeSession}
@@ -209,7 +209,7 @@ export function InterviewJobSelection({
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
-        {jobs.map((job) => (
+        {opportunities.map((job) => (
           <div key={job.id} className="space-y-4">
             <div className="group rounded-lg border bg-card p-6 transition-all hover:shadow-lg hover:border-primary/20">
               <div className="flex items-start gap-4 mb-4">

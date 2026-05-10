@@ -13,15 +13,15 @@ import {
 } from "@/components/ui/page-layout";
 import { useErrorToast } from "@/hooks/use-error-toast";
 import { readJsonResponse } from "@/lib/http";
-import type { JobDescription } from "@/types";
 import type { SettingsResponse } from "@/types/api";
+import type { Opportunity } from "@/types/opportunity";
 
-interface JobsResponse {
-  jobs?: JobDescription[];
+interface OpportunitiesResponse {
+  opportunities?: Opportunity[];
 }
 
 export default function OpportunityReviewPage() {
-  const [jobs, setJobs] = useState<JobDescription[]>([]);
+  const [jobs, setJobs] = useState<Opportunity[]>([]);
   const [enabled, setEnabled] = useState(true);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
@@ -38,13 +38,13 @@ export default function OpportunityReviewPage() {
         settingsResponse,
         "Failed to load settings",
       );
-      const jobsData = await readJsonResponse<JobsResponse>(
+      const jobsData = await readJsonResponse<OpportunitiesResponse>(
         jobsResponse,
         "Failed to load opportunities",
       );
 
       setEnabled(settingsData.opportunityReview?.enabled ?? true);
-      setJobs(jobsData.jobs || []);
+      setJobs(jobsData.opportunities || []);
     } catch (error) {
       showErrorToast(error, {
         title: "Could not load review queue",
@@ -60,8 +60,8 @@ export default function OpportunityReviewPage() {
   }, [fetchPageData]);
 
   const updateJobStatus = async (
-    job: JobDescription,
-    status: JobDescription["status"],
+    job: Opportunity,
+    status: Opportunity["status"],
   ) => {
     if (!status) {
       return;
@@ -91,9 +91,9 @@ export default function OpportunityReviewPage() {
     }
   };
 
-  const applyNow = async (job: JobDescription) => {
-    if (job.url) {
-      window.open(job.url, "_blank", "noopener,noreferrer");
+  const applyNow = async (job: Opportunity) => {
+    if (job.sourceUrl) {
+      window.open(job.sourceUrl, "_blank", "noopener,noreferrer");
     }
     await updateJobStatus(job, "applied");
   };

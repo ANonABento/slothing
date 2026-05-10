@@ -63,6 +63,12 @@ function normalizeStatusFilter(status: string): OpportunityStatus | null {
 }
 
 export function jobToOpportunity(job: JobDescription): Opportunity {
+  const [city, province, ...countryParts] = (job.location ?? "")
+    .split(",")
+    .map((part) => part.trim())
+    .filter(Boolean);
+  const salaryRange = parseSalaryRange(job.salary);
+
   return {
     id: job.id,
     type: "job",
@@ -70,8 +76,18 @@ export function jobToOpportunity(job: JobDescription): Opportunity {
     company: job.company,
     source: "manual",
     sourceUrl: job.url,
+    city,
+    province,
+    country: countryParts.join(", ") || undefined,
+    remoteType: job.remote ? "remote" : undefined,
+    jobType: job.type === "internship" ? "internship" : job.type,
     summary: job.description.trim(),
+    responsibilities: job.responsibilities,
+    requiredSkills: job.requirements,
+    salaryMin: salaryRange.salaryMin,
+    salaryMax: salaryRange.salaryMax,
     status: normalizeStatus(job.status),
+    appliedAt: job.appliedAt,
     deadline: job.deadline,
     tags: job.keywords,
     notes: job.notes,
@@ -79,6 +95,25 @@ export function jobToOpportunity(job: JobDescription): Opportunity {
     linkedCoverLetterId: job.linkedCoverLetterId,
     createdAt: job.createdAt,
     updatedAt: job.createdAt,
+  };
+}
+
+function parseSalaryRange(salary?: string): {
+  salaryMin?: number;
+  salaryMax?: number;
+} {
+  if (!salary) return {};
+
+  const values = salary
+    .match(/\d[\d,]*(?:\.\d+)?/g)
+    ?.map((value) => Number(value.replace(/,/g, "")))
+    .filter((value) => Number.isFinite(value));
+
+  if (!values?.length) return {};
+
+  return {
+    salaryMin: values[0],
+    salaryMax: values[1],
   };
 }
 

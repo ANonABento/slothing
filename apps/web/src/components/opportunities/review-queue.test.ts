@@ -1,7 +1,7 @@
 import React from "react";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import type { JobDescription } from "@/types";
+import type { Opportunity } from "@/types/opportunity";
 import {
   getDescriptionPreview,
   getOpportunityTags,
@@ -9,20 +9,23 @@ import {
   OpportunityReviewQueue,
 } from "./review-queue";
 
-const baseJob: JobDescription = {
+const baseJob: Opportunity = {
   id: "job-1",
+  type: "job",
   title: "Frontend Engineer",
   company: "Acme",
-  description: "Build product experiences",
-  requirements: [],
+  source: "manual",
+  summary: "Build product experiences",
+  status: "pending",
+  tags: [],
   responsibilities: [],
-  keywords: [],
   createdAt: "2026-04-20T00:00:00.000Z",
+  updatedAt: "2026-04-20T00:00:00.000Z",
 };
 
 describe("getPendingOpportunities", () => {
   it("returns only pending jobs ordered by nearest deadline then newest", () => {
-    const jobs: JobDescription[] = [
+    const jobs: Opportunity[] = [
       { ...baseJob, id: "saved", status: "saved" },
       {
         ...baseJob,
@@ -54,7 +57,7 @@ describe("getPendingOpportunities", () => {
   });
 
   it("treats invalid deadlines as missing deadlines", () => {
-    const jobs: JobDescription[] = [
+    const jobs: Opportunity[] = [
       {
         ...baseJob,
         id: "invalid",
@@ -79,13 +82,13 @@ describe("getPendingOpportunities", () => {
 });
 
 describe("getOpportunityTags", () => {
-  it("deduplicates and limits keywords plus requirements", () => {
+  it("deduplicates and limits tags plus required skills", () => {
     expect(
       getOpportunityTags(
         {
           ...baseJob,
-          keywords: ["React", "TypeScript", "React"],
-          requirements: ["Node", " ", "SQL"],
+          tags: ["React", "TypeScript", "React"],
+          requiredSkills: ["Node", "SQL"],
         },
         3,
       ),
@@ -151,7 +154,11 @@ describe("OpportunityReviewQueue", () => {
     rerender(
       React.createElement(OpportunityReviewQueue, {
         jobs: [
-          { ...baseJob, status: "pending", url: "https://example.com/job" },
+          {
+            ...baseJob,
+            status: "pending",
+            sourceUrl: "https://example.com/job",
+          },
         ],
         updating: false,
         onStatusChange,
@@ -162,7 +169,7 @@ describe("OpportunityReviewQueue", () => {
     fireEvent.click(screen.getByRole("button", { name: /apply/i }));
     await waitFor(() => {
       expect(onApplyNow).toHaveBeenCalledWith(
-        expect.objectContaining({ url: "https://example.com/job" }),
+        expect.objectContaining({ sourceUrl: "https://example.com/job" }),
       );
     });
   });
