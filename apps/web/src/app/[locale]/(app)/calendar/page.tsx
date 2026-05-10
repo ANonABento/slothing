@@ -166,7 +166,7 @@ export default function CalendarPage() {
 
   useEffect(() => {
     Promise.all([
-      fetch("/api/opportunities").then((r) => r.json()),
+      fetch("/api/opportunities?limit=200").then((r) => r.json()),
       fetch("/api/reminders").then((r) => r.json()),
       fetch("/api/calendar/feed-url?type=all").then((r) => r.json()),
       fetch("/api/google/auth")

@@ -4,11 +4,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   requireAuth: vi.fn(),
   isAuthError: vi.fn(),
-  getBankEntries: vi.fn(),
-  getBankEntriesByCategory: vi.fn(),
+  listBankEntriesPaginated: vi.fn(),
   insertBankEntry: vi.fn(),
-  searchBankEntries: vi.fn(),
-  searchBankEntriesByCategory: vi.fn(),
 }));
 
 vi.mock("@/lib/auth", () => ({
@@ -17,11 +14,8 @@ vi.mock("@/lib/auth", () => ({
 }));
 
 vi.mock("@/lib/db/profile-bank", () => ({
-  getBankEntries: mocks.getBankEntries,
-  getBankEntriesByCategory: mocks.getBankEntriesByCategory,
+  listBankEntriesPaginated: mocks.listBankEntriesPaginated,
   insertBankEntry: mocks.insertBankEntry,
-  searchBankEntries: mocks.searchBankEntries,
-  searchBankEntriesByCategory: mocks.searchBankEntriesByCategory,
 }));
 
 import { GET, POST } from "./route";
@@ -51,10 +45,7 @@ describe("bank route", () => {
     vi.clearAllMocks();
     mocks.requireAuth.mockResolvedValue({ userId: "user-1" });
     mocks.isAuthError.mockReturnValue(false);
-    mocks.getBankEntries.mockReturnValue([]);
-    mocks.getBankEntriesByCategory.mockReturnValue([]);
-    mocks.searchBankEntries.mockReturnValue([]);
-    mocks.searchBankEntriesByCategory.mockReturnValue([]);
+    mocks.listBankEntriesPaginated.mockReturnValue([]);
     mocks.insertBankEntry.mockReturnValue("entry-1");
   });
 
@@ -62,17 +53,19 @@ describe("bank route", () => {
     const response = await GET(bankRequest("/api/bank?type=hackathon"));
 
     expect(response.status).toBe(200);
-    expect(mocks.getBankEntriesByCategory).toHaveBeenCalledWith(
-      "hackathon",
-      "user-1",
-    );
-    expect(mocks.getBankEntries).not.toHaveBeenCalled();
+    expect(mocks.listBankEntriesPaginated).toHaveBeenCalledWith({
+      userId: "user-1",
+      query: undefined,
+      category: "hackathon",
+      sourceDocumentId: undefined,
+      cursor: null,
+      limit: 50,
+    });
   });
 
   it("filters returned entries by source document id", async () => {
-    mocks.getBankEntries.mockReturnValue([
+    mocks.listBankEntriesPaginated.mockReturnValue([
       { id: "entry-1", sourceDocumentId: "doc-1" },
-      { id: "entry-2", sourceDocumentId: "doc-2" },
     ]);
 
     const response = await GET(bankRequest("/api/bank?sourceDocumentId=doc-1"));
@@ -80,18 +73,34 @@ describe("bank route", () => {
     expect(response.status).toBe(200);
     await expect(response.json()).resolves.toEqual({
       entries: [{ id: "entry-1", sourceDocumentId: "doc-1" }],
+      items: [{ id: "entry-1", sourceDocumentId: "doc-1" }],
+      nextCursor: null,
+      hasMore: false,
     });
   });
 
   it("searches within hackathons when q and type=hackathon are provided", async () => {
     await GET(bankRequest("/api/bank?q=ai&type=hackathon"));
 
-    expect(mocks.searchBankEntriesByCategory).toHaveBeenCalledWith(
-      "ai",
-      "hackathon",
-      "user-1",
-    );
-    expect(mocks.searchBankEntries).not.toHaveBeenCalled();
+    expect(mocks.listBankEntriesPaginated).toHaveBeenCalledWith({
+      userId: "user-1",
+      query: "ai",
+      category: "hackathon",
+      sourceDocumentId: undefined,
+      cursor: null,
+      limit: 50,
+    });
+  });
+
+  it("rejects unsupported category filters", async () => {
+    const response = await GET(bankRequest("/api/bank?category=invoice"));
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toMatchObject({
+      error: "Validation failed",
+      details: { fieldErrors: { category: ["Invalid category"] } },
+    });
+    expect(mocks.listBankEntriesPaginated).not.toHaveBeenCalled();
   });
 
   it("accepts hackathon entries on create", async () => {

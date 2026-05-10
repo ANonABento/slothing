@@ -158,7 +158,11 @@ describe("API Types", () => {
 
   describe("Bank types", () => {
     it("BankEntriesResponse should have entries array", () => {
-      const response: BankEntriesResponse = { entries: [] };
+      const response: BankEntriesResponse = {
+        entries: [],
+        hasMore: false,
+        nextCursor: null,
+      };
       expect(response.entries).toEqual([]);
     });
 

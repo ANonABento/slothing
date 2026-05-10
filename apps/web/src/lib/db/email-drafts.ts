@@ -29,28 +29,32 @@ export interface UpdateEmailDraftInput {
   context?: Record<string, string>;
 }
 
-// Get all email drafts for a user
-export function getEmailDrafts(userId: string = "default"): EmailDraft[] {
-  const stmt = db.prepare(`
-    SELECT id, user_id, type, job_id, subject, body, context_json, created_at, updated_at
-    FROM email_drafts
-    WHERE user_id = ?
-    ORDER BY updated_at DESC
-  `);
+export interface EmailDraftCursor {
+  lastId: string;
+  lastCreatedAt: string;
+}
 
-  const rows = stmt.all(userId) as Array<{
-    id: string;
-    user_id: string;
-    type: string;
-    job_id: string | null;
-    subject: string;
-    body: string;
-    context_json: string | null;
-    created_at: string;
-    updated_at: string;
-  }>;
+export interface ListEmailDraftsPaginatedParams {
+  userId?: string;
+  type?: EmailTemplateType;
+  cursor?: EmailDraftCursor | null;
+  limit: number;
+}
 
-  return rows.map((row) => ({
+type EmailDraftRow = {
+  id: string;
+  user_id: string;
+  type: string;
+  job_id: string | null;
+  subject: string;
+  body: string;
+  context_json: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+function rowToEmailDraft(row: EmailDraftRow): EmailDraft {
+  return {
     id: row.id,
     userId: row.user_id,
     type: row.type as EmailTemplateType,
@@ -60,7 +64,55 @@ export function getEmailDrafts(userId: string = "default"): EmailDraft[] {
     context: row.context_json ? JSON.parse(row.context_json) : undefined,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
-  }));
+  };
+}
+
+// Get all email drafts for a user
+export function getEmailDrafts(userId: string = "default"): EmailDraft[] {
+  const stmt = db.prepare(`
+    SELECT id, user_id, type, job_id, subject, body, context_json, created_at, updated_at
+    FROM email_drafts
+    WHERE user_id = ?
+    ORDER BY updated_at DESC
+  `);
+
+  const rows = stmt.all(userId) as EmailDraftRow[];
+
+  return rows.map(rowToEmailDraft);
+}
+
+export function listEmailDraftsPaginated({
+  userId = "default",
+  type,
+  cursor,
+  limit,
+}: ListEmailDraftsPaginatedParams): EmailDraft[] {
+  const whereClauses = ["user_id = ?"];
+  const params: Array<string | number> = [userId];
+
+  if (type) {
+    whereClauses.push("type = ?");
+    params.push(type);
+  }
+
+  if (cursor) {
+    whereClauses.push("(updated_at < ? OR (updated_at = ? AND id < ?))");
+    params.push(cursor.lastCreatedAt, cursor.lastCreatedAt, cursor.lastId);
+  }
+
+  params.push(limit + 1);
+
+  const rows = db
+    .prepare(
+      `SELECT id, user_id, type, job_id, subject, body, context_json, created_at, updated_at
+       FROM email_drafts
+       WHERE ${whereClauses.join(" AND ")}
+       ORDER BY updated_at DESC, id DESC
+       LIMIT ?`,
+    )
+    .all(...params) as EmailDraftRow[];
+
+  return rows.map(rowToEmailDraft);
 }
 
 // Get a single email draft by ID

@@ -7,24 +7,71 @@
  * @response EmailDraftsResponse | EmailDraftResponse from @/types/api
  */
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { parseJsonBody } from "@/lib/api-utils";
-import { getEmailDrafts, createEmailDraft } from "@/lib/db/email-drafts";
+import {
+  createEmailDraft,
+  listEmailDraftsPaginated,
+} from "@/lib/db/email-drafts";
 import { getJob } from "@/lib/db/jobs";
 import { requireAuth, isAuthError } from "@/lib/auth";
 import { createEmailDraftSchema } from "@/lib/schemas";
+import {
+  buildPaginationResult,
+  decodeCursor,
+  InvalidCursorError,
+  PaginationParamsSchema,
+} from "@/lib/pagination";
 
 export const dynamic = "force-dynamic";
 
+const emailDraftCursorSchema = z.object({
+  lastId: z.string(),
+  lastCreatedAt: z.string(),
+});
+
+const emailDraftsQuerySchema = PaginationParamsSchema.extend({
+  type: createEmailDraftSchema.shape.type.optional(),
+});
+
 // GET - List all email drafts
-export async function GET() {
+export async function GET(request: NextRequest) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
 
   try {
-    const drafts = getEmailDrafts(authResult.userId);
+    const parsed = emailDraftsQuerySchema.safeParse(
+      Object.fromEntries(request.nextUrl.searchParams.entries()),
+    );
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: "Validation failed", details: parsed.error.flatten() },
+        { status: 400 },
+      );
+    }
 
-    return NextResponse.json({ drafts });
+    const cursor = decodeCursor(parsed.data.cursor, emailDraftCursorSchema);
+    const rows = listEmailDraftsPaginated({
+      userId: authResult.userId,
+      type: parsed.data.type,
+      cursor,
+      limit: parsed.data.limit,
+    });
+    const page = buildPaginationResult(rows, parsed.data.limit, (draft) => ({
+      lastId: draft.id,
+      lastCreatedAt: draft.updatedAt,
+    }));
+
+    return NextResponse.json({
+      drafts: page.items,
+      items: page.items,
+      nextCursor: page.nextCursor,
+      hasMore: page.hasMore,
+    });
   } catch (error) {
+    if (error instanceof InvalidCursorError) {
+      return NextResponse.json({ error: "Invalid cursor" }, { status: 400 });
+    }
     console.error("Get drafts error:", error);
     return NextResponse.json(
       { error: "Failed to get email drafts" },

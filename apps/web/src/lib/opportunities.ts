@@ -1,4 +1,12 @@
-import { getJob, getJobs, updateJob, updateJobStatus } from "@/lib/db/jobs";
+import {
+  getJob,
+  getJobs,
+  listJobsPaginated,
+  updateJob,
+  updateJobStatus,
+  type CreatedAtCursor,
+} from "@/lib/db/jobs";
+import { buildPaginationResult } from "@/lib/pagination";
 import type { JobDescription, Opportunity, OpportunityStatus } from "@/types";
 
 export interface OpportunityLinkInput {
@@ -117,7 +125,47 @@ function parseSalaryRange(salary?: string): {
   };
 }
 
-export function listOpportunities(
+export interface ListOpportunitiesParams {
+  userId?: string;
+  statuses?: string[];
+  cursor?: CreatedAtCursor | null;
+  limit: number;
+}
+
+export function listOpportunities({
+  userId = "default",
+  statuses,
+  cursor,
+  limit,
+}: ListOpportunitiesParams) {
+  const requestedStatuses = statuses?.filter(Boolean) ?? [];
+  const allowedStatuses = requestedStatuses
+    .map(normalizeStatusFilter)
+    .filter((status): status is OpportunityStatus => status !== null)
+    .map((status) => OPPORTUNITY_STATUS_TO_JOB_STATUS[status]);
+
+  if (requestedStatuses.length > 0 && allowedStatuses.length === 0) {
+    return { items: [], nextCursor: null, hasMore: false };
+  }
+
+  const jobs = listJobsPaginated({
+    userId,
+    statuses: requestedStatuses.length > 0 ? allowedStatuses : undefined,
+    cursor,
+    limit,
+  });
+
+  return buildPaginationResult(
+    jobs.map(jobToOpportunity),
+    limit,
+    (opportunity) => ({
+      lastId: opportunity.id,
+      lastCreatedAt: opportunity.createdAt,
+    }),
+  );
+}
+
+export function listAllOpportunities(
   userId = "default",
   statuses?: string[],
 ): Opportunity[] {

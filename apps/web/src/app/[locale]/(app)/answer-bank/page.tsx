@@ -123,6 +123,9 @@ export default function AnswerBankPage() {
   );
   const [activeSource, setActiveSource] = useState<SourceFilter>("all");
   const [sort, setSort] = useState<AnswerSort>("most_used");
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [hasMoreAnswers, setHasMoreAnswers] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingEntry, setEditingEntry] = useState<AnswerBankEntry | null>(
     null,
@@ -145,12 +148,36 @@ export default function AnswerBankPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to fetch answers");
       setAnswers(data.answers || []);
+      setNextCursor(data.nextCursor ?? null);
+      setHasMoreAnswers(Boolean(data.hasMore));
     } catch (err) {
       setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
   }, []);
+
+  const loadMoreAnswers = useCallback(async () => {
+    if (!nextCursor) return;
+    setLoadingMore(true);
+    try {
+      const res = await fetch(
+        `/api/answer-bank?cursor=${encodeURIComponent(nextCursor)}`,
+      );
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to fetch answers");
+      setAnswers((current) => [...current, ...(data.answers || [])]);
+      setNextCursor(data.nextCursor ?? null);
+      setHasMoreAnswers(Boolean(data.hasMore));
+    } catch (err) {
+      showErrorToast(err, {
+        title: "Could not load more answers",
+        fallbackDescription: "Please try again.",
+      });
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [nextCursor, showErrorToast]);
 
   useEffect(() => {
     fetchAnswers();
@@ -595,14 +622,27 @@ export default function AnswerBankPage() {
                 }
               />
             ) : (
-              <AnswerGrid
-                entries={filteredAnswers}
-                onCopy={copyAnswer}
-                onDuplicate={duplicateAnswer}
-                onEdit={openEditDialog}
-                onDelete={deleteAnswer}
-                onPromote={promoteAnswer}
-              />
+              <div className="space-y-4">
+                <AnswerGrid
+                  entries={filteredAnswers}
+                  onCopy={copyAnswer}
+                  onDuplicate={duplicateAnswer}
+                  onEdit={openEditDialog}
+                  onDelete={deleteAnswer}
+                  onPromote={promoteAnswer}
+                />
+                {hasMoreAnswers ? (
+                  <div className="flex justify-center">
+                    <Button
+                      variant="outline"
+                      onClick={() => void loadMoreAnswers()}
+                      disabled={loadingMore}
+                    >
+                      {loadingMore ? "Loading..." : "Load more answers"}
+                    </Button>
+                  </div>
+                ) : null}
+              </div>
             )}
           </section>
         </Suspense>
