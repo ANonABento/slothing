@@ -112,6 +112,19 @@ export interface ScrapedJob {
   keywords?: string[];
 }
 
+export interface PageSnapshot {
+  url: string;
+  host: string;
+  title: string;
+  headline?: string;
+  submittedAt: string;
+  thumbnailDataUrl?: string;
+}
+
+export interface TrackedApplicationPayload extends PageSnapshot {
+  scrapedJob?: ScrapedJob | null;
+}
+
 // Learning types
 export interface LearnedAnswer {
   id: string;
@@ -140,6 +153,10 @@ export type MessageType =
   | "SCRAPE_JOB_LIST"
   | "IMPORT_JOB"
   | "IMPORT_JOBS_BATCH"
+  | "TRACK_APPLIED"
+  | "OPEN_DASHBOARD"
+  | "CAPTURE_VISIBLE_TAB"
+  | "GET_SETTINGS"
   | "SAVE_ANSWER"
   | "SEARCH_ANSWERS"
   | "GET_LEARNED_ANSWERS"
@@ -176,6 +193,8 @@ export interface ExtensionSettings {
   minimumConfidence: number;
   learnFromAnswers: boolean;
   notifyOnJobDetected: boolean;
+  autoTrackApplicationsEnabled: boolean;
+  captureScreenshotEnabled: boolean;
 }
 
 export const DEFAULT_SETTINGS: ExtensionSettings = {
@@ -184,6 +203,8 @@ export const DEFAULT_SETTINGS: ExtensionSettings = {
   minimumConfidence: 0.5,
   learnFromAnswers: true,
   notifyOnJobDetected: true,
+  autoTrackApplicationsEnabled: true,
+  captureScreenshotEnabled: false,
 };
 
 export const DEFAULT_API_BASE_URL = "http://localhost:3000";

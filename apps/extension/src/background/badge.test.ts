@@ -33,6 +33,8 @@ const enabledSettings: ExtensionSettings = {
   minimumConfidence: 0.5,
   learnFromAnswers: true,
   notifyOnJobDetected: true,
+  autoTrackApplicationsEnabled: true,
+  captureScreenshotEnabled: false,
 };
 
 describe("setBadgeForTab", () => {
