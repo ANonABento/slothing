@@ -6,7 +6,7 @@ import { Link } from "@/i18n/navigation";
 const benefits = [
   "Free ATS scanner included",
   "Smart resume parsing",
-  "Unlimited tailored resumes",
+  "5 free tailored resumes/month",
   "Knowledge bank for your career",
 ];
 

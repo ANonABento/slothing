@@ -3,9 +3,9 @@ import { Database, FileSearch, Wand2, ScanSearch } from "lucide-react";
 const features = [
   {
     icon: Database,
-    title: "Knowledge Bank",
+    title: "Career profile",
     description:
-      "Upload resumes, cover letters, and career docs. Slothing chunks and indexes everything into a searchable knowledge bank — your career history, always ready.",
+      "Upload resumes, cover letters, and career docs. Slothing organizes everything into a searchable career profile — your career history, always ready.",
     gradient: "from-violet-500 to-purple-400",
   },
   {

@@ -12,6 +12,8 @@ import { getJobs } from "@/lib/db/jobs";
 import { getAllGeneratedResumes } from "@/lib/db/resumes";
 import { getAnalyticsSnapshots } from "@/lib/db/analytics";
 import { getInsights, clearInsightCache } from "@/lib/resume/insights";
+import { parseSearchParams } from "@/lib/api-utils";
+import { insightsQuerySchema } from "@/lib/schemas";
 
 export const dynamic = "force-dynamic";
 
@@ -21,7 +23,10 @@ export async function GET(request: Request) {
 
   try {
     const url = new URL(request.url);
-    const refresh = url.searchParams.get("refresh") === "true";
+    const parsed = parseSearchParams(url.searchParams, insightsQuerySchema);
+    if (!parsed.ok) return parsed.response;
+
+    const { refresh } = parsed.data;
 
     if (refresh) {
       clearInsightCache(authResult.userId);

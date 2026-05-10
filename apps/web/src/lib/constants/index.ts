@@ -1,5 +1,16 @@
 export { PATHS } from "./paths";
 
+export {
+  PLAN_TIERS,
+  planTierSchema,
+  DEFAULT_PLAN_TIER,
+  FREE_TIER_TAILOR_MONTHLY_LIMIT,
+  PRO_TIER_TAILOR_MONTHLY_LIMIT,
+  STUDENT_TIER_TAILOR_MONTHLY_LIMIT,
+  PLAN_TIER_LABELS,
+} from "./plans";
+export type { PlanTier } from "./plans";
+
 export { THEMES, themeSchema, STORAGE_KEYS } from "./storage";
 export type { Theme } from "./storage";
 

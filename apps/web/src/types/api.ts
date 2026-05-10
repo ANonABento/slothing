@@ -692,19 +692,6 @@ export interface GoogleSheetsExportResponse {
   spreadsheetUrl: string;
 }
 
-export interface GoogleTasksSyncResponse {
-  success: true;
-  synced: number;
-  failed: number;
-  results: Array<Record<string, unknown>>;
-}
-
-export interface GoogleTasksListResponse {
-  success: true;
-  count: number;
-  tasks: Array<Record<string, unknown>>;
-}
-
 // ---------------------------------------------------------------------------
 // Import
 // ---------------------------------------------------------------------------

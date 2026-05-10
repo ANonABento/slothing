@@ -63,10 +63,8 @@ function clearOnboardingCompleted(): void {
 
 function shouldAutoOpenOnboarding(): boolean {
   try {
-    return (
-      localStorage.getItem(STORAGE_KEYS.ONBOARDING_COMPLETED) ===
-      "show-onboarding"
-    );
+    const completed = localStorage.getItem(STORAGE_KEYS.ONBOARDING_COMPLETED);
+    return completed === null || completed === "show-onboarding";
   } catch {
     return false;
   }
@@ -199,8 +197,13 @@ export function OnboardingDialog() {
   if (!mounted) return null;
 
   const isLastStep = currentStep === ONBOARDING_STEP_COUNT - 1;
+  const onboardingCompleted = readOnboardingCompleted();
   const showLauncher =
-    pathname === "/dashboard" && !open && !readOnboardingCompleted();
+    pathname === "/dashboard" &&
+    !open &&
+    onboardingCompleted !== null &&
+    onboardingCompleted !== "true" &&
+    onboardingCompleted !== "show-onboarding";
 
   return (
     <>

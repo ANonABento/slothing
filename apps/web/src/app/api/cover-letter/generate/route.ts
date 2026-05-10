@@ -219,9 +219,12 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(response);
   } catch (error) {
-    console.error("Cover letter generation error:", error);
+    console.error(
+      "Cover letter generation error:",
+      error instanceof Error ? error.stack : error,
+    );
     return NextResponse.json(
-      { error: "Failed to generate cover letter", details: String(error) },
+      { error: "Failed to generate cover letter" },
       { status: 500 },
     );
   }

@@ -240,11 +240,11 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("CSV parse error:", error);
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Failed to parse CSV" },
-      { status: 400 },
+    console.error(
+      "CSV parse error:",
+      error instanceof Error ? error.stack : error,
     );
+    return NextResponse.json({ error: "Failed to parse CSV" }, { status: 400 });
   }
 }
 

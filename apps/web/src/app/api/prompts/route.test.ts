@@ -11,6 +11,7 @@ vi.mock("@/lib/db/prompt-variants", () =>
 );
 
 import { GET, POST } from "./route";
+import { createPromptVariant } from "@/lib/db/prompt-variants";
 import {
   expectRouteResponseContract,
   getRequest,
@@ -86,5 +87,30 @@ describe("/api/prompts route contract", () => {
     );
 
     await expectRouteResponseContract(response);
+  });
+
+  it("does not leak raw error messages on 500", async () => {
+    const probe = "INTERNAL_LEAK_PROBE_PROMPTS_CREATE_4A30A145";
+    setAuthSuccess();
+    vi.mocked(createPromptVariant).mockImplementationOnce(() => {
+      throw new Error(probe);
+    });
+
+    const response = await invokeRouteHandler(
+      POST,
+      jsonRequest(
+        "http://localhost/api/prompts",
+        { name: "Default", content: "Write a tailored resume." },
+        "POST",
+        { "x-extension-token": "test-token" },
+      ),
+      routeContext(),
+    );
+
+    expect(response.status).toBe(500);
+    const body = await response.json();
+    expect(JSON.stringify(body)).not.toContain(probe);
+    expect(body).not.toHaveProperty("details");
+    expect(body.error).toBe("Failed to create prompt variant");
   });
 });

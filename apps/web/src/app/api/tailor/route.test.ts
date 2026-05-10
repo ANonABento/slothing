@@ -58,7 +58,13 @@ vi.mock("@/lib/auth", () =>
   globalThis.__contractRouteMocks!.createAuthModuleMock(),
 );
 
+vi.mock("@/lib/plan/quota", () =>
+  globalThis.__contractRouteMocks!.createContractModuleMock("@/lib/plan/quota"),
+);
+
 import { GET, POST } from "./route";
+import { checkTailorQuota } from "@/lib/plan/quota";
+import { getGroupedBankEntries } from "@/lib/db/profile-bank";
 import {
   expectRouteResponseContract,
   getRequest,
@@ -161,5 +167,70 @@ describe("/api/tailor route contract", () => {
       error: "Validation failed",
       errors: [{ field: "jobDescription" }],
     });
+  });
+
+  it("returns a structured 429 when the free tailor quota is exhausted", async () => {
+    setAuthSuccess();
+    vi.mocked(checkTailorQuota).mockReturnValueOnce({
+      allowed: false,
+      tier: "free",
+      used: 5,
+      limit: 5,
+      resetAt: "2026-06-01T00:00:00.000Z",
+    });
+    const response = await invokeRouteHandler(
+      POST,
+      jsonRequest(
+        "http://localhost/api/tailor",
+        representativeBody({
+          action: "generate",
+          jobDescription:
+            "We need a frontend engineer who can build polished TypeScript applications.",
+        }),
+        "POST",
+        {
+          "x-extension-token": "test-token",
+        },
+      ),
+      routeContext(),
+    );
+
+    expect(response.status).toBe(429);
+    await expect(response.json()).resolves.toMatchObject({
+      code: "free_tier_quota_exceeded",
+      limit: 5,
+      used: 5,
+      resetAt: "2026-06-01T00:00:00.000Z",
+      upgradeUrl: "/pricing",
+    });
+  });
+
+  it("does not leak raw error messages on 500", async () => {
+    const probe = "INTERNAL_LEAK_PROBE_TAILOR_4A30A145";
+    setAuthSuccess();
+    vi.mocked(getGroupedBankEntries).mockImplementationOnce(() => {
+      throw new Error(probe);
+    });
+
+    const response = await invokeRouteHandler(
+      POST,
+      jsonRequest(
+        "http://localhost/api/tailor",
+        {
+          jobDescription:
+            "We need a frontend engineer who can improve reliability across customer-facing systems.",
+          action: "analyze",
+        },
+        "POST",
+        { "x-extension-token": "test-token" },
+      ),
+      routeContext(),
+    );
+
+    expect(response.status).toBe(500);
+    const body = await response.json();
+    expect(JSON.stringify(body)).not.toContain(probe);
+    expect(body).not.toHaveProperty("details");
+    expect(body.error).toBe("Failed to tailor resume");
   });
 });

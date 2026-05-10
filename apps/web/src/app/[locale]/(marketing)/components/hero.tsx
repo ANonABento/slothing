@@ -43,8 +43,8 @@ export async function Hero() {
 
           {/* Subheadline */}
           <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
-            Slothing builds a knowledge bank from your career history, then
-            generates perfectly tailored resumes for every job — so you can stop
+            Slothing remembers your full career history in one place, then
+            writes a perfectly tailored resume for every job — so you can stop
             rewriting and start interviewing.
           </p>
 
