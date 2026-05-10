@@ -26,6 +26,12 @@ vi.mock("@/lib/settings/locale", () =>
   ),
 );
 
+vi.mock("@/lib/settings/gmail-auto-status", () =>
+  globalThis.__contractRouteMocks!.createContractModuleMock(
+    "@/lib/settings/gmail-auto-status",
+  ),
+);
+
 import { GET, PUT, POST } from "./route";
 import {
   expectRouteResponseContract,
