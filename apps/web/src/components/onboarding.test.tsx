@@ -128,21 +128,32 @@ describe("OnboardingDialog", () => {
     expect(hasVisibleHeading("Welcome to Slothing")).toBe(false);
   });
 
-  it("should show a non-blocking launcher when onboarding is not completed", () => {
+  it("auto-opens for new users with empty localStorage on /dashboard after 500ms", () => {
     render(<OnboardingDialog />);
     expect(hasVisibleHeading("Welcome to Slothing")).toBe(false);
 
     act(() => {
-      vi.advanceTimersByTime(600);
+      vi.advanceTimersByTime(500);
     });
 
-    expect(hasVisibleHeading("Welcome to Slothing")).toBe(false);
-    expect(
-      screen.getByRole("button", { name: "Setup guide" }),
-    ).toBeInTheDocument();
+    expect(getVisibleHeading("Welcome to Slothing")).toBeInTheDocument();
   });
 
-  it("should open the dialog from the setup launcher", () => {
+  it("does not show launcher for new users (auto-open path takes over)", () => {
+    render(<OnboardingDialog />);
+    expect(
+      screen.queryByRole("button", { name: "Setup guide" }),
+    ).not.toBeInTheDocument();
+
+    act(() => {
+      vi.advanceTimersByTime(500);
+    });
+
+    expect(getVisibleHeading("Welcome to Slothing")).toBeInTheDocument();
+  });
+
+  it("should open the dialog from the setup launcher when stored value is unexpected", () => {
+    localStorageMock.setItem(STORAGE_KEYS.ONBOARDING_COMPLETED, "unknown");
     render(<OnboardingDialog />);
 
     fireEvent.click(screen.getByRole("button", { name: "Setup guide" }));
