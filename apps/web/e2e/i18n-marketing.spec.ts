@@ -10,12 +10,20 @@ const NON_EN_LOCALES = [
   "ko",
 ] as const;
 
+const DEFAULT_LOCALE_WALK = ["es", "zh-CN", "pt-BR"] as const;
+
 function escapeRegExp(value: string) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 function pickThree(): readonly string[] {
-  const seed = Number(process.env.PLAYWRIGHT_LOCALE_SEED ?? Date.now());
+  const seedValue = process.env.PLAYWRIGHT_LOCALE_SEED;
+
+  if (!seedValue) {
+    return DEFAULT_LOCALE_WALK;
+  }
+
+  const seed = Number(seedValue);
 
   return [...NON_EN_LOCALES]
     .sort((a, b) => {
@@ -68,6 +76,36 @@ test.describe("marketing locale preservation", () => {
       );
     });
   }
+
+  test("marketing markup has no unprefixed internal URLs on /es", async ({
+    page,
+  }) => {
+    await page.goto("/es");
+
+    const unprefixedHrefs = await page
+      .locator("a[href]")
+      .evaluateAll((anchors) =>
+        anchors
+          .map((anchor) => anchor.getAttribute("href") ?? "")
+          .filter((href) => href.startsWith("/") && !href.startsWith("//"))
+          .filter((href) => !/^\/es(?:\/|$|\?)/.test(href)),
+      );
+
+    expect(unprefixedHrefs).toEqual([]);
+
+    const unprefixedJsonLdUrls = await page
+      .locator('script[type="application/ld+json"]')
+      .evaluateAll((scripts) =>
+        scripts.flatMap((script) => {
+          const text = script.textContent ?? "";
+          return [...text.matchAll(/"(\/(?!es(?:\/|$|\?))[^"]*)"/g)].map(
+            (match) => match[1],
+          );
+        }),
+      );
+
+    expect(unprefixedJsonLdUrls).toEqual([]);
+  });
 
   test("header and footer links preserve locale on /es", async ({ page }) => {
     await page.goto("/es");
