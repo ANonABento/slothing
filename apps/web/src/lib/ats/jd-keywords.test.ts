@@ -32,14 +32,14 @@ describe("extractJdKeywords", () => {
 
   it("detects and ranks multi-word phrases", () => {
     const keywords = extractJdKeywords(
-      "Requirements: project management, data analysis, and customer success. Project management partners with data analysis teams.",
+      "Requirements: machine learning, data analysis, and data visualization. Machine learning partners with data analysis teams.",
     );
 
     expect(keywords.slice(0, 4).map((keyword) => keyword.term)).toEqual(
-      expect.arrayContaining(["project management", "data analysis"]),
+      expect.arrayContaining(["machine learning", "data analysis"]),
     );
     expect(
-      keywords.find((keyword) => keyword.term === "customer success"),
+      keywords.find((keyword) => keyword.term === "data visualization"),
     ).toMatchObject({ kind: "phrase" });
   });
 
@@ -49,5 +49,66 @@ describe("extractJdKeywords", () => {
         limit: 3,
       }),
     ).toHaveLength(3);
+  });
+
+  it("extracts useful frontend internship skills without filler", () => {
+    const terms = extractJdKeywords(
+      `Frontend Intern
+      Responsibilities: use React to build interfaces. Write unit tests.
+      Requirements: GraphQL, REST APIs, data visualization, Figma, responsive design.
+      Bonus: passion for collaboration.`,
+    ).map((keyword) => keyword.term);
+
+    expect(terms).toEqual(
+      expect.arrayContaining([
+        "graphql",
+        "rest apis",
+        "data visualization",
+        "figma",
+      ]),
+    );
+    expect(terms).not.toEqual(
+      expect.arrayContaining([
+        "bonus",
+        "use",
+        "intern",
+        "intern.",
+        "graphql.",
+        "interfaces write unit",
+        "write unit",
+      ]),
+    );
+  });
+
+  it("dedupes rest api aliases and singular/plural variants", () => {
+    const terms = extractJdKeywords(
+      "Build REST API, REST APIs, and RESTful APIs. API integrations are helpful.",
+    ).map((keyword) => keyword.term);
+
+    expect(terms.filter((term) => term === "rest apis")).toHaveLength(1);
+    expect(terms.filter((term) => term === "api")).toHaveLength(1);
+    expect(
+      extractJdKeywords("REST API, REST APIs, and RESTful APIs.").map(
+        (keyword) => keyword.term,
+      ),
+    ).toEqual(["rest apis"]);
+  });
+
+  it("strips punctuation while preserving meaningful tech punctuation", () => {
+    const terms = extractJdKeywords(
+      "GraphQL. Node.js, C++, C#, .NET, and CI/CD pipelines.",
+    ).map((keyword) => keyword.term);
+
+    expect(terms).toEqual(
+      expect.arrayContaining([
+        "graphql",
+        "node.js",
+        "c++",
+        "c#",
+        ".net",
+        "ci/cd",
+      ]),
+    );
+    expect(terms).not.toContain("graphql.");
   });
 });

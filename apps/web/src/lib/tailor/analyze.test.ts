@@ -69,8 +69,8 @@ describe("extractKeywords", () => {
     const text = "We need a React developer with TypeScript experience";
     const keywords = extractKeywords(text);
     expect(keywords).toContain("react");
-    expect(keywords).toContain("developer");
     expect(keywords).toContain("typescript");
+    expect(keywords).not.toContain("developer");
   });
 
   it("should filter out stop words", () => {
@@ -84,10 +84,10 @@ describe("extractKeywords", () => {
   });
 
   it("should extract bigrams", () => {
-    const text = "machine learning and deep learning skills required";
+    const text = "machine learning and data visualization skills required";
     const keywords = extractKeywords(text);
     expect(keywords).toContain("machine learning");
-    expect(keywords).toContain("deep learning");
+    expect(keywords).toContain("data visualization");
   });
 
   it("should deduplicate keywords", () => {
@@ -236,6 +236,122 @@ describe("analyzeJobFit", () => {
     const skillGaps = result.gaps.filter((g) => g.category === "skill");
     expect(skillGaps.length).toBeGreaterThan(0);
     expect(skillGaps[0].suggestion).toMatch(/Skills|experience bullet/);
+  });
+
+  it("uses clean shared JD keywords for frontend internship gaps", () => {
+    const bank = makeEmptyBank();
+    bank.skill = [
+      makeBankEntry({
+        id: "s1",
+        content: {
+          name: "Frontend",
+          context: "React and TypeScript coursework with HTML and CSS.",
+        },
+      }),
+    ];
+
+    const result = analyzeJobFit(
+      "Frontend intern: use React, TypeScript, GraphQL, REST APIs, data visualization, and Figma. Bonus if you write unit tests.",
+      bank,
+    );
+
+    expect(result.keywordsMissing).toEqual(
+      expect.arrayContaining([
+        "graphql",
+        "rest apis",
+        "data visualization",
+        "figma",
+      ]),
+    );
+    expect([...result.keywordsFound, ...result.keywordsMissing]).not.toEqual(
+      expect.arrayContaining(["bonus", "use", "intern", "write unit"]),
+    );
+  });
+
+  it("does not mark frontend internship skills missing when bank covers them", () => {
+    const bank = makeEmptyBank();
+    bank.project = [
+      makeBankEntry({
+        id: "p1",
+        category: "project",
+        content: {
+          name: "Internship portfolio",
+          description:
+            "React TypeScript app with GraphQL, REST APIs, data visualization, Figma mockups, accessible UI, and unit tests.",
+        },
+      }),
+    ];
+
+    const result = analyzeJobFit(
+      "Frontend internship requiring GraphQL, REST APIs, data visualization, Figma, accessibility, and unit testing.",
+      bank,
+    );
+
+    expect(result.keywordsFound).toEqual(
+      expect.arrayContaining([
+        "graphql",
+        "rest apis",
+        "data visualization",
+        "figma",
+      ]),
+    );
+    expect(result.keywordsMissing).not.toEqual(
+      expect.arrayContaining([
+        "graphql",
+        "rest apis",
+        "data visualization",
+        "figma",
+      ]),
+    );
+  });
+
+  it("keeps keyword-stuffed bank matches unique and filler-free", () => {
+    const bank = makeEmptyBank();
+    bank.skill = [
+      makeBankEntry({
+        id: "s1",
+        content: { name: "React React React GraphQL GraphQL REST APIs Figma" },
+      }),
+    ];
+
+    const result = analyzeJobFit(
+      "React GraphQL REST APIs Figma. Bonus: use these skills as an intern.",
+      bank,
+    );
+
+    expect(new Set(result.keywordsFound).size).toBe(
+      result.keywordsFound.length,
+    );
+    expect([...result.keywordsFound, ...result.keywordsMissing]).not.toEqual(
+      expect.arrayContaining(["bonus", "use", "intern"]),
+    );
+  });
+
+  it("keeps unrelated data JDs focused on data gaps", () => {
+    const bank = makeEmptyBank();
+    bank.skill = [
+      makeBankEntry({ id: "s1", content: { name: "React Figma" } }),
+    ];
+
+    const result = analyzeJobFit(
+      "Data analyst role requiring Python, SQL, Tableau, Power BI, ETL, data pipelines, and statistics.",
+      bank,
+    );
+
+    expect(result.keywordsMissing).toEqual(
+      expect.arrayContaining([
+        "python",
+        "sql",
+        "tableau",
+        "power bi",
+        "etl",
+        "data pipelines",
+        "statistics",
+      ]),
+    );
+    expect(result.keywordsMissing).not.toEqual(
+      expect.arrayContaining(["front end", "intern", "role requiring"]),
+    );
   });
 });
 
