@@ -2,6 +2,7 @@
 
 import { Loader2, Settings } from "lucide-react";
 import { DataManagement } from "@/components/settings/data-management";
+import { EvalHealthSection } from "@/components/settings/eval-health-section";
 import { GoogleIntegration } from "@/components/settings/google-integration";
 import { HelpCards } from "@/components/settings/help-cards";
 import { LLMProviderConfig } from "@/components/settings/llm-provider-config";
@@ -70,6 +71,7 @@ export default function SettingsPage() {
             </div>
             <PromptVariantsSection />
             <HelpCards />
+            <EvalHealthSection />
           </div>
 
           <div className="space-y-6">

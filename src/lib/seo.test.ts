@@ -81,7 +81,6 @@ const ALL_PAGES = [
   "calendar",
   "emails",
   "analytics",
-  "adminEvals",
   "profile",
   "salary",
   "settings",

@@ -53,6 +53,10 @@ vi.mock("@/components/settings/help-cards", () => ({
   HelpCards: () => <section data-testid="help-cards" />,
 }));
 
+vi.mock("@/components/settings/eval-health-section", () => ({
+  EvalHealthSection: () => <section data-testid="eval-health-section" />,
+}));
+
 vi.mock("@/components/settings/theme-section", () => ({
   ThemeSection: () => <section data-testid="theme-section" />,
 }));
@@ -130,9 +134,12 @@ describe("SettingsPage", () => {
     expect(screen.getByTestId("what-ai-powers")).toBeInTheDocument();
     expect(screen.getByTestId("prompt-variants-section")).toBeInTheDocument();
     expect(screen.getByTestId("help-cards")).toBeInTheDocument();
+    expect(screen.getByTestId("eval-health-section")).toBeInTheDocument();
     expect(screen.getByTestId("theme-section")).toBeInTheDocument();
     expect(screen.getByTestId("locale-section")).toBeInTheDocument();
-    expect(screen.getByTestId("opportunity-review-section")).toBeInTheDocument();
+    expect(
+      screen.getByTestId("opportunity-review-section"),
+    ).toBeInTheDocument();
     expect(screen.getByTestId("data-management")).toBeInTheDocument();
     expect(screen.getByTestId("google-integration")).toBeInTheDocument();
   });
@@ -142,9 +149,7 @@ describe("SettingsPage", () => {
 
     const { unmount } = render(<SettingsPage />);
 
-    expect(
-      screen.getByText("Make sure Ollama is running"),
-    ).toBeInTheDocument();
+    expect(screen.getByText("Make sure Ollama is running")).toBeInTheDocument();
 
     const aiGroup = screen
       .getByTestId("llm-provider-selector")
