@@ -76,6 +76,19 @@ export function getJob(
   return mapRowToJob(row);
 }
 
+/**
+ * Looks up an opportunity without a user predicate for share-card generation.
+ * Only use this from OG image routes: opportunity IDs are random share tokens,
+ * but titles and companies become visible to anyone with the exact URL.
+ */
+export function getJobByIdAnyUser(id: string): JobDescription | null {
+  const row = db.prepare("SELECT * FROM jobs WHERE id = ?").get(id) as
+    | JobRow
+    | undefined;
+  if (!row) return null;
+  return mapRowToJob(row);
+}
+
 // Create job
 export function createJob(
   job: Omit<JobDescription, "id" | "createdAt">,
