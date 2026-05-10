@@ -485,15 +485,16 @@ export default function ProfilePage() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <Textarea
-                      id="summaryText"
-                      aria-label="Professional summary"
-                      value={form.summary}
-                      rows={8}
-                      onChange={(event) =>
-                        updateField("summary", event.target.value)
-                      }
-                    />
+                    <Field id="summaryText" label="Professional summary">
+                      <Textarea
+                        id="summaryText"
+                        value={form.summary}
+                        rows={8}
+                        onChange={(event) =>
+                          updateField("summary", event.target.value)
+                        }
+                      />
+                    </Field>
                   </CardContent>
                 </Card>
               </>
@@ -540,18 +541,20 @@ export default function ProfilePage() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <Textarea
-                      id="targetRoles"
-                      value={targetRolesText}
-                      rows={4}
-                      onChange={(event) => {
-                        setTargetRolesText(event.target.value);
-                        updateField(
-                          "targetRoles",
-                          splitProfileList(event.target.value),
-                        );
-                      }}
-                    />
+                    <Field id="targetRoles" label="Target roles">
+                      <Textarea
+                        id="targetRoles"
+                        value={targetRolesText}
+                        rows={4}
+                        onChange={(event) => {
+                          setTargetRolesText(event.target.value);
+                          updateField(
+                            "targetRoles",
+                            splitProfileList(event.target.value),
+                          );
+                        }}
+                      />
+                    </Field>
                   </CardContent>
                 </Card>
 

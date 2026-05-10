@@ -42,4 +42,18 @@ describe("ProfilePage", () => {
     );
     await waitFor(() => expect(screen.getByLabelText("Minimum")).toHaveFocus());
   });
+
+  it("labels long-form profile textareas with explicit accessible names", async () => {
+    render(<ProfilePage />);
+
+    expect(
+      await screen.findByRole("textbox", { name: "Professional summary" }),
+    ).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("tab", { name: /Preferences/i }));
+
+    expect(
+      screen.getByRole("textbox", { name: "Target roles" }),
+    ).toBeInTheDocument();
+  });
 });
