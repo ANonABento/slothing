@@ -1,9 +1,12 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import {
   Calendar,
   Cloud,
+  Loader2,
+  RefreshCw,
   FileText,
   FolderOpen,
   Mail,
@@ -14,6 +17,7 @@ import {
 import { PageSection } from "@/components/ui/page-layout";
 import { SkeletonButton } from "@/components/ui/skeleton";
 import { GOOGLE_FEATURES } from "@/lib/google/types";
+import type { SettingsResponse } from "@/types/api";
 
 const GoogleConnectButton = dynamic(
   () =>
@@ -31,6 +35,48 @@ const iconMap: Record<string, LucideIcon> = {
 };
 
 export function GoogleIntegration() {
+  const [pullEnabled, setPullEnabled] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    fetch("/api/settings")
+      .then((response) => response.json() as Promise<SettingsResponse>)
+      .then((data) => {
+        if (!mounted) return;
+        setPullEnabled(data.calendarSync?.pullEnabled ?? false);
+      })
+      .catch(() => {
+        if (mounted) setPullEnabled(false);
+      })
+      .finally(() => {
+        if (mounted) setLoaded(true);
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const handleToggle = async () => {
+    const next = !pullEnabled;
+    setPullEnabled(next);
+    setSaving(true);
+    try {
+      const response = await fetch("/api/settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ calendarSync: { pullEnabled: next } }),
+      });
+      if (!response.ok) throw new Error("Failed to save calendar sync setting");
+    } catch {
+      setPullEnabled(!next);
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <PageSection
       title="Google Integration"
@@ -61,6 +107,36 @@ export function GoogleIntegration() {
             Connect your Google account to enable these features. Your data
             stays private and secure.
           </p>
+        </div>
+
+        <div className="flex items-center justify-between gap-4 border-t pt-4">
+          <div className="min-w-0">
+            <h3 className="text-sm font-medium">
+              Auto-link detected interviews
+            </h3>
+            <p className="text-xs text-muted-foreground mt-1">
+              Google Calendar is checked every 30 minutes. Leave this off to get
+              suggested updates you can accept or dismiss.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={handleToggle}
+            disabled={!loaded || saving}
+            aria-pressed={pullEnabled}
+            className={`inline-flex h-9 shrink-0 items-center gap-2 rounded-lg border px-3 text-sm font-medium transition-colors ${
+              pullEnabled
+                ? "border-primary bg-primary text-primary-foreground"
+                : "border-input bg-background hover:bg-muted"
+            } disabled:cursor-not-allowed disabled:opacity-60`}
+          >
+            {saving ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <RefreshCw className="h-4 w-4" />
+            )}
+            {pullEnabled ? "On" : "Off"}
+          </button>
         </div>
       </div>
     </PageSection>

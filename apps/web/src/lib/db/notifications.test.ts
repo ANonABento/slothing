@@ -84,6 +84,15 @@ describe("Notification Database Functions", () => {
   });
 
   describe("getNotifications", () => {
+    function mockNotificationQuery(rows: unknown[] = []) {
+      const mockAll = vi.fn().mockReturnValue(rows);
+      (db.prepare as Mock)
+        .mockReturnValueOnce({ run: vi.fn() })
+        .mockReturnValueOnce({ run: vi.fn() })
+        .mockReturnValueOnce({ all: mockAll });
+      return mockAll;
+    }
+
     it("should return all notifications ordered by created_at DESC", () => {
       const mockRows = [
         {
@@ -106,13 +115,12 @@ describe("Notification Database Functions", () => {
         },
       ];
 
-      const mockAll = vi.fn().mockReturnValue(mockRows);
-      (db.prepare as Mock).mockReturnValue({ all: mockAll });
+      const mockAll = mockNotificationQuery(mockRows);
 
       const result = getNotifications();
 
-      expect(db.prepare).toHaveBeenCalledWith(
-        "SELECT * FROM notifications WHERE user_id = ? ORDER BY created_at DESC LIMIT ?",
+      expect(db.prepare).toHaveBeenLastCalledWith(
+        expect.stringContaining("LEFT JOIN suggested_status_updates"),
       );
       expect(mockAll).toHaveBeenCalledWith("default", 50);
       expect(result).toHaveLength(2);
@@ -124,19 +132,17 @@ describe("Notification Database Functions", () => {
     });
 
     it("should filter unread only when specified", () => {
-      const mockAll = vi.fn().mockReturnValue([]);
-      (db.prepare as Mock).mockReturnValue({ all: mockAll });
+      mockNotificationQuery();
 
       getNotifications({ unreadOnly: true });
 
-      expect(db.prepare).toHaveBeenCalledWith(
-        "SELECT * FROM notifications WHERE user_id = ? AND read = 0 ORDER BY created_at DESC LIMIT ?",
+      expect(db.prepare).toHaveBeenLastCalledWith(
+        expect.stringContaining("AND notifications.read = 0"),
       );
     });
 
     it("should respect limit parameter", () => {
-      const mockAll = vi.fn().mockReturnValue([]);
-      (db.prepare as Mock).mockReturnValue({ all: mockAll });
+      const mockAll = mockNotificationQuery();
 
       getNotifications({ limit: 10 });
 
@@ -144,8 +150,7 @@ describe("Notification Database Functions", () => {
     });
 
     it("should use default limit of 50", () => {
-      const mockAll = vi.fn().mockReturnValue([]);
-      (db.prepare as Mock).mockReturnValue({ all: mockAll });
+      const mockAll = mockNotificationQuery();
 
       getNotifications();
 
