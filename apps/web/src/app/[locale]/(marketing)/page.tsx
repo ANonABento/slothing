@@ -22,18 +22,18 @@ const jsonLd = {
   },
 };
 
-export default function LandingPage() {
+export default async function LandingPage() {
   return (
     <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <Hero />
+      {await Hero()}
       <Features />
       <HowItWorks />
       <Testimonials />
-      <CTASection />
+      {await CTASection()}
     </>
   );
 }

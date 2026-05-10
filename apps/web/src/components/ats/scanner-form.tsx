@@ -12,6 +12,7 @@ import {
   UploadCloud,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Link } from "@/i18n/navigation";
 import { Textarea } from "@/components/ui/textarea";
 import { cn, formatFileSize } from "@/lib/utils";
 import {
@@ -45,6 +46,10 @@ interface ScrapedOpportunity {
   responsibilities?: string[];
   keywords?: string[];
   url?: string;
+}
+
+interface ScannerFormProps {
+  locale?: string;
 }
 
 function completeProfile(profile: Partial<Profile>, rawText?: string): Profile {
@@ -96,7 +101,7 @@ function opportunityToText(opportunity: ScrapedOpportunity) {
     .join("\n\n");
 }
 
-export function ScannerForm() {
+export function ScannerForm({ locale = "en" }: ScannerFormProps = {}) {
   const [resumeText, setResumeText] = useState("");
   const [jobText, setJobText] = useState("");
   const [jobUrl, setJobUrl] = useState("");
@@ -262,6 +267,7 @@ export function ScannerForm() {
     Boolean(parsedProfile || resumeText.trim().length >= MIN_RESUME_LENGTH) &&
     !analyzing &&
     !parsing;
+  const callbackUrl = `/${locale}/dashboard`;
 
   if (result) {
     const legacyResult: ATSAnalysisResult = result.legacy;
@@ -301,7 +307,9 @@ export function ScannerForm() {
           </p>
           <div className="flex flex-wrap items-center justify-center gap-4">
             <Button variant="gradient" size="pill" asChild>
-              <a href="/sign-in?callbackUrl=/dashboard">Sign up free &rarr;</a>
+              <Link href={{ pathname: "/sign-in", query: { callbackUrl } }}>
+                Sign up free &rarr;
+              </Link>
             </Button>
             <Button variant="outline" onClick={handleReset}>
               Scan another resume
