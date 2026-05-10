@@ -5,50 +5,100 @@ import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { CenteredPagePanel } from "@/components/ui/page-layout";
 import { isNextAuthConfiguredOnClient } from "@/lib/auth-client";
+import { parseDeviceName } from "@/lib/extension/device-name";
 import { CheckCircle, Loader2, Chrome, AlertCircle } from "lucide-react";
 
 type ConnectStatus = "loading" | "connecting" | "success" | "error";
+type ExtensionTransport = "runtime" | "localstorage";
+type ChromeRuntimeGlobal = {
+  chrome?: {
+    runtime?: {
+      sendMessage?: (
+        extensionId: string,
+        message: unknown,
+        responseCallback: (response: unknown) => void,
+      ) => void;
+    };
+  };
+};
+
+const EXTENSION_UNREACHABLE_MESSAGE =
+  "We couldn't reach the extension. Make sure the extension is installed and enabled at chrome://extensions.";
+
+function messageForStatus(status: number): string {
+  if (status === 401) return "Sign in expired. Reload the page to retry.";
+  if (status === 403) {
+    return "This account isn't allowed to connect the extension.";
+  }
+  if (status >= 500) {
+    return "Slothing servers are having a problem. Please try again in a minute.";
+  }
+  return "We couldn't connect the extension. Please try again.";
+}
 
 function useTokenGenerator() {
   const [status, setStatus] = useState<ConnectStatus>("loading");
   const [error, setError] = useState<string | null>(null);
+  const [canCloseTab, setCanCloseTab] = useState(true);
+
+  function attemptClose() {
+    window.close();
+    setTimeout(() => {
+      if (!document.hidden) setCanCloseTab(false);
+    }, 100);
+  }
 
   async function generateToken() {
     setStatus("connecting");
+    setError(null);
+    setCanCloseTab(true);
+
     try {
-      const response = await fetch("/api/extension/auth", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ deviceInfo: navigator.userAgent }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to generate token");
-      }
-
-      const { token, expiresAt } = await response.json();
-
       const params = new URLSearchParams(window.location.search);
       const extensionId = params.get("extensionId");
 
       // chrome.runtime is only injected on pages that match an extension's
       // externally_connectable manifest entry. Access through globalThis to
       // keep this file typecheckable without @types/chrome in the main app.
-      const chromeGlobal = (
-        globalThis as unknown as {
-          chrome?: {
-            runtime?: {
-              sendMessage?: (
-                extensionId: string,
-                message: unknown,
-                responseCallback: (response: unknown) => void,
-              ) => void;
-            };
-          };
-        }
-      ).chrome;
+      const chromeGlobal = (globalThis as unknown as ChromeRuntimeGlobal)
+        .chrome;
+      const canUseRuntime = Boolean(
+        extensionId && chromeGlobal?.runtime?.sendMessage,
+      );
+
+      if (extensionId && !canUseRuntime) {
+        setError(EXTENSION_UNREACHABLE_MESSAGE);
+        setStatus("error");
+        return;
+      }
+
+      const transport: ExtensionTransport = canUseRuntime
+        ? "runtime"
+        : "localstorage";
+      const userAgent = navigator.userAgent;
+
+      const response = await fetch("/api/extension/auth", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          deviceInfo: parseDeviceName(userAgent),
+          userAgent,
+          transport,
+        }),
+      });
+
+      if (!response.ok) {
+        setError(messageForStatus(response.status));
+        setStatus("error");
+        return;
+      }
+
+      const { token, expiresAt } = await response.json();
 
       const fallbackToLocalStorage = () => {
+        // Fallback for when chrome.runtime.sendMessage is unreachable from this
+        // page. The extension polls this key on next activation and deletes it
+        // after pickup. Server-minted localStorage tokens use a 5-minute TTL.
         localStorage.setItem(
           "columbus_extension_token",
           JSON.stringify({ token, expiresAt }),
@@ -75,25 +125,27 @@ function useTokenGenerator() {
       } catch {
         fallbackToLocalStorage();
       }
-
-      setTimeout(() => window.close(), 2000);
-    } catch (err) {
-      setError((err as Error).message);
+    } catch {
+      setError("Couldn't reach Slothing. Check your internet connection.");
       setStatus("error");
     }
   }
 
-  return { status, error, generateToken };
+  return { status, error, canCloseTab, generateToken, attemptClose };
 }
 
 function StatusCard({
   status,
   error,
+  canCloseTab,
   onRetry,
+  onClose,
 }: {
   status: ConnectStatus;
   error: string | null;
+  canCloseTab: boolean;
   onRetry: () => void;
+  onClose: () => void;
 }) {
   if (status === "loading") {
     return (
@@ -137,11 +189,13 @@ function StatusCard({
               Extension connected successfully.
             </p>
             <p className="text-center text-sm text-muted-foreground">
-              You can now close this tab and use the extension.
+              Return to your browser to use the extension.
             </p>
-            <Button variant="outline" onClick={() => window.close()}>
-              Close Tab
-            </Button>
+            {canCloseTab && (
+              <Button variant="outline" onClick={onClose}>
+                Close tab
+              </Button>
+            )}
           </>
         )}
 
@@ -166,7 +220,8 @@ function ExtensionConnectPageWithAuth() {
   const { status: sessionStatus } = useSession();
   const isLoaded = sessionStatus !== "loading";
   const isSignedIn = sessionStatus === "authenticated";
-  const { status, error, generateToken } = useTokenGenerator();
+  const { status, error, canCloseTab, generateToken, attemptClose } =
+    useTokenGenerator();
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -181,21 +236,46 @@ function ExtensionConnectPageWithAuth() {
   }, [isLoaded, isSignedIn]);
 
   if (!isLoaded) {
-    return <StatusCard status="loading" error={null} onRetry={generateToken} />;
+    return (
+      <StatusCard
+        status="loading"
+        error={null}
+        canCloseTab={canCloseTab}
+        onRetry={generateToken}
+        onClose={attemptClose}
+      />
+    );
   }
 
-  return <StatusCard status={status} error={error} onRetry={generateToken} />;
+  return (
+    <StatusCard
+      status={status}
+      error={error}
+      canCloseTab={canCloseTab}
+      onRetry={generateToken}
+      onClose={attemptClose}
+    />
+  );
 }
 
 function ExtensionConnectPageLocalDev() {
-  const { status, error, generateToken } = useTokenGenerator();
+  const { status, error, canCloseTab, generateToken, attemptClose } =
+    useTokenGenerator();
 
   useEffect(() => {
     generateToken();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return <StatusCard status={status} error={error} onRetry={generateToken} />;
+  return (
+    <StatusCard
+      status={status}
+      error={error}
+      canCloseTab={canCloseTab}
+      onRetry={generateToken}
+      onClose={attemptClose}
+    />
+  );
 }
 
 export default function ExtensionConnectPage() {

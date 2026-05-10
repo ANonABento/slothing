@@ -531,6 +531,7 @@ export const extensionSessions = sqliteTable(
     userId: text("user_id").notNull().default(DEFAULT_USER_ID),
     token: text("token").notNull().unique(),
     deviceInfo: text("device_info"),
+    deviceUserAgent: text("device_user_agent"),
     createdAt: text("created_at").default(sql`CURRENT_TIMESTAMP`),
     expiresAt: text("expires_at").notNull(),
     lastUsedAt: text("last_used_at"),

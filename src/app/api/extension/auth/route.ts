@@ -9,6 +9,11 @@ import { nowEpoch, toIso } from "@/lib/format/time";
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth, isAuthError } from "@/lib/auth";
 import db from "@/lib/db/legacy";
+import {
+  ensureExtensionSessionsColumns,
+  EXTENSION_TOKEN_TTL_LOCALSTORAGE_MS,
+  EXTENSION_TOKEN_TTL_RUNTIME_MS,
+} from "@/lib/db/extension-sessions";
 import { randomUUID } from "crypto";
 
 export const dynamic = "force-dynamic";
@@ -21,21 +26,38 @@ export async function POST(request: NextRequest) {
     const { userId } = authResult;
 
     const body = await request.json().catch(() => ({}));
-    const { deviceInfo } = body as { deviceInfo?: string };
+    const { deviceInfo, userAgent, transport } = body as {
+      deviceInfo?: string;
+      userAgent?: string;
+      transport?: "runtime" | "localstorage";
+    };
+
+    ensureExtensionSessionsColumns();
 
     // Generate a secure token
     const token = `${randomUUID()}-${randomUUID()}`;
-    const expiresAt = new Date(nowEpoch() + 30 * 24 * 60 * 60 * 1000); // 30 days
+    const ttlMs =
+      transport === "localstorage"
+        ? EXTENSION_TOKEN_TTL_LOCALSTORAGE_MS
+        : EXTENSION_TOKEN_TTL_RUNTIME_MS;
+    const expiresAt = new Date(nowEpoch() + ttlMs);
 
     const id = randomUUID();
 
     // Insert new session
     db.prepare(
       `
-      INSERT INTO extension_sessions (id, user_id, token, device_info, expires_at)
-      VALUES (?, ?, ?, ?, ?)
+      INSERT INTO extension_sessions (id, user_id, token, device_info, device_user_agent, expires_at)
+      VALUES (?, ?, ?, ?, ?, ?)
     `,
-    ).run(id, userId, token, deviceInfo || null, toIso(expiresAt));
+    ).run(
+      id,
+      userId,
+      token,
+      deviceInfo || null,
+      userAgent || null,
+      toIso(expiresAt),
+    );
 
     return NextResponse.json({
       token,
