@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useCallback } from "react";
+import { Suspense, useCallback, useMemo } from "react";
 import { Loader2, Plus } from "lucide-react";
 import { SectionList } from "@/components/builder/section-list";
 import { StudioSkeleton } from "@/components/skeletons/studio-skeleton";
@@ -11,6 +11,7 @@ import { StudioFilePanel } from "@/components/studio/studio-file-panel";
 import { StudioHeader } from "@/components/studio/studio-header";
 import { useStudioKeyboardShortcuts } from "@/components/studio/use-studio-keyboard-shortcuts";
 import { useStudioPageState } from "@/components/studio/use-studio-page-state";
+import { VersionDiffView } from "@/components/studio/version-diff-view";
 import { VersionHistorySection } from "@/components/studio/version-history-section";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -21,6 +22,13 @@ import { cn } from "@/lib/utils";
 function StudioPageContent() {
   const studio = useStudioPageState();
   const { setAiPanelCollapsed, setExportMenuOpen } = studio;
+  const compareVersion = useMemo(
+    () =>
+      studio.versions.find(
+        (version) => version.id === studio.compareVersionId,
+      ) ?? null,
+    [studio.compareVersionId, studio.versions],
+  );
   const handleShortcutExport = useCallback(() => {
     setExportMenuOpen(true);
   }, [setExportMenuOpen]);
@@ -100,6 +108,7 @@ function StudioPageContent() {
                   versions={studio.versions}
                   previewVersionId={studio.previewVersionId}
                   manualVersionName={studio.manualVersionName}
+                  onCompareVersion={studio.handleCompareVersion}
                   onPreviewVersion={studio.handlePreviewVersion}
                   onManualVersionNameChange={studio.setManualVersionName}
                   onSaveVersion={studio.handleSaveManualVersion}
@@ -192,6 +201,14 @@ function StudioPageContent() {
           />
         </div>
       </div>
+      <VersionDiffView
+        currentDraftState={studio.currentDraftState}
+        onOpenChange={(open) => {
+          if (!open) studio.handleCloseVersionDiff();
+        }}
+        open={Boolean(compareVersion)}
+        version={compareVersion}
+      />
     </PageWorkspace>
   );
 }
