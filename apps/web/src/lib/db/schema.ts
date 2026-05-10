@@ -341,6 +341,33 @@ export const emailSends = sqliteTable(
   ],
 );
 
+// Opportunity contacts table
+export const opportunityContacts = sqliteTable(
+  "opportunity_contacts",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id").notNull().default(DEFAULT_USER_ID),
+    opportunityId: text("opportunity_id").notNull(),
+    name: text("name").notNull(),
+    email: text("email"),
+    phone: text("phone"),
+    company: text("company"),
+    title: text("title"),
+    source: text("source").notNull().default("google"),
+    googleResourceName: text("google_resource_name"),
+    createdAt: text("created_at").default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    index("idx_opportunity_contacts_user_opp").on(
+      table.userId,
+      table.opportunityId,
+    ),
+    uniqueIndex("uniq_opp_contacts_user_opp_resource")
+      .on(table.userId, table.opportunityId, table.googleResourceName)
+      .where(sql`google_resource_name IS NOT NULL`),
+  ],
+);
+
 // Analytics snapshots table for historical tracking
 export const analyticsSnapshots = sqliteTable(
   "analytics_snapshots",
@@ -790,6 +817,8 @@ export type EmailDraft = typeof emailDrafts.$inferSelect;
 export type NewEmailDraft = typeof emailDrafts.$inferInsert;
 export type EmailSend = typeof emailSends.$inferSelect;
 export type NewEmailSend = typeof emailSends.$inferInsert;
+export type OpportunityContact = typeof opportunityContacts.$inferSelect;
+export type NewOpportunityContact = typeof opportunityContacts.$inferInsert;
 
 export type AnalyticsSnapshot = typeof analyticsSnapshots.$inferSelect;
 export type NewAnalyticsSnapshot = typeof analyticsSnapshots.$inferInsert;

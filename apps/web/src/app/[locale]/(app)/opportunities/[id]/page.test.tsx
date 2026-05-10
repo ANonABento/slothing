@@ -76,6 +76,10 @@ function mockOpportunityFetch(initialJob: JobDescription = baseOpportunity) {
       );
     }
 
+    if (url === "/api/opportunities/job-1/contacts") {
+      return new Response(JSON.stringify({ contacts: [] }), { status: 200 });
+    }
+
     if (url === "/api/opportunities/templates") {
       return new Response(
         JSON.stringify({

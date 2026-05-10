@@ -221,11 +221,6 @@ export async function createSheetsClient() {
   return google.sheets({ version: "v4", auth: authClient });
 }
 
-export async function createTasksClient() {
-  const authClient = await createGoogleClient();
-  return google.tasks({ version: "v1", auth: authClient });
-}
-
 export async function createPeopleClient() {
   const authClient = await createGoogleClient();
   return google.people({ version: "v1", auth: authClient });
