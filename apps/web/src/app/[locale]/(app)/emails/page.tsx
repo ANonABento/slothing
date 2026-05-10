@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { Suspense, useState, useEffect, useCallback } from "react";
 import dynamic from "next/dynamic";
 import {
   Mail,
@@ -36,9 +36,7 @@ import { SkeletonButton } from "@/components/ui/skeleton";
 import { useErrorToast } from "@/hooks/use-error-toast";
 import { readJsonResponse } from "@/lib/http";
 import { getResponsiveDetailGridClass } from "../shared-layout-utils";
-import { DraftsSheet } from "./_components/drafts-sheet";
 import { DuplicateSendWarning } from "./_components/duplicate-send-warning";
-import { SentTimeline } from "./_components/sent-timeline";
 import { findRecentDuplicateSend } from "./_data/duplicate-send";
 import {
   DUPLICATE_SEND_WINDOW_DAYS,
@@ -52,6 +50,16 @@ import type { Opportunity } from "@/types/opportunity";
 const SendViaGmailButton = dynamic(
   () => import("@/components/google").then((m) => m.SendViaGmailButton),
   { loading: () => <SkeletonButton className="w-36" />, ssr: false },
+);
+
+const DraftsSheet = dynamic(
+  () => import("./_components/drafts-sheet").then((m) => m.DraftsSheet),
+  { loading: () => null, ssr: false },
+);
+
+const SentTimeline = dynamic(
+  () => import("./_components/sent-timeline").then((m) => m.SentTimeline),
+  { loading: () => null, ssr: false },
 );
 
 interface EmailDraft {
@@ -129,16 +137,19 @@ export default function EmailTemplatesPage() {
 
   // Drafts state
   const [drafts, setDrafts] = useState<EmailDraft[]>([]);
+  const [draftsLoaded, setDraftsLoaded] = useState(false);
   const [draftsSheetOpen, setDraftsSheetOpen] = useState(false);
   const [savingDraft, setSavingDraft] = useState(false);
   const [editingDraftId, setEditingDraftId] = useState<string | null>(null);
 
   // Sent state
   const [sends, setSends] = useState<EmailSend[]>([]);
+  const [sendsLoaded, setSendsLoaded] = useState(false);
   const [sentSheetOpen, setSentSheetOpen] = useState(false);
 
   // Gmail state
   const [recipientEmail, setRecipientEmail] = useState("");
+  const [jobsLoaded, setJobsLoaded] = useState(false);
   const showErrorToast = useErrorToast();
   const { confirm, dialog: confirmDialog } = useConfirmDialog();
 
@@ -155,6 +166,8 @@ export default function EmailTemplatesPage() {
         title: "Could not load jobs",
         fallbackDescription: "Please refresh the page and try again.",
       });
+    } finally {
+      setJobsLoaded(true);
     }
   }, [showErrorToast]);
 
@@ -171,6 +184,8 @@ export default function EmailTemplatesPage() {
         title: "Could not load drafts",
         fallbackDescription: "Please refresh the page and try again.",
       });
+    } finally {
+      setDraftsLoaded(true);
     }
   }, [showErrorToast]);
 
@@ -187,6 +202,8 @@ export default function EmailTemplatesPage() {
         title: "Could not load sent emails",
         fallbackDescription: "Please refresh the page and try again.",
       });
+    } finally {
+      setSendsLoaded(true);
     }
   }, [showErrorToast]);
 
@@ -736,67 +753,88 @@ export default function EmailTemplatesPage() {
                 title="Choose Template"
                 className="mb-4"
                 action={
-                  <div className="flex flex-wrap justify-end gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setDraftsSheetOpen(true)}
+                  <Suspense fallback={<EmailActionsSkeleton />}>
+                    <div
+                      className="flex flex-wrap justify-end gap-2"
+                      data-testid="emails-actions"
                     >
-                      <FileText className="mr-2 h-4 w-4" />
-                      Drafts ({drafts.length})
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setSentSheetOpen(true)}
-                    >
-                      <Send className="mr-2 h-4 w-4" />
-                      Sent ({sends.length})
-                    </Button>
-                  </div>
+                      {draftsLoaded ? (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setDraftsSheetOpen(true)}
+                        >
+                          <FileText className="mr-2 h-4 w-4" />
+                          Drafts ({drafts.length})
+                        </Button>
+                      ) : (
+                        <SkeletonButton className="h-9 w-32" />
+                      )}
+                      {sendsLoaded ? (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setSentSheetOpen(true)}
+                        >
+                          <Send className="mr-2 h-4 w-4" />
+                          Sent ({sends.length})
+                        </Button>
+                      ) : (
+                        <SkeletonButton className="h-9 w-28" />
+                      )}
+                    </div>
+                  </Suspense>
                 }
               />
-              <div className="grid gap-3 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-                {TEMPLATE_ORDER.map((type) => {
-                  const config = TEMPLATE_CONFIG[type];
-                  const Icon = config.icon;
-                  const isSelected = selectedType === type;
+              <Suspense fallback={<EmailTemplateFormSkeleton />}>
+                <div data-testid="emails-template-form">
+                  <div className="grid gap-3 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+                    {TEMPLATE_ORDER.map((type) => {
+                      const config = TEMPLATE_CONFIG[type];
+                      const Icon = config.icon;
+                      const isSelected = selectedType === type;
 
-                  return (
-                    <button
-                      key={type}
-                      onClick={() => {
-                        setSelectedType(type);
-                        setGeneratedEmail(null);
-                      }}
-                      className={`flex items-start gap-4 rounded-lg border p-4 text-left transition-all ${
-                        isSelected
-                          ? "border-primary bg-primary/5"
-                          : "hover:border-primary/50 hover:bg-muted/50"
-                      }`}
-                    >
-                      <div
-                        className={`p-2 rounded-lg bg-muted ${config.color}`}
-                      >
-                        <Icon className="h-5 w-5" />
-                      </div>
-                      <div>
-                        <p className="font-medium">{config.title}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {config.description}
-                        </p>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
+                      return (
+                        <button
+                          key={type}
+                          onClick={() => {
+                            setSelectedType(type);
+                            setGeneratedEmail(null);
+                          }}
+                          className={`flex items-start gap-4 rounded-lg border p-4 text-left transition-all ${
+                            isSelected
+                              ? "border-primary bg-primary/5"
+                              : "hover:border-primary/50 hover:bg-muted/50"
+                          }`}
+                        >
+                          <div
+                            className={`p-2 rounded-lg bg-muted ${config.color}`}
+                          >
+                            <Icon className="h-5 w-5" />
+                          </div>
+                          <div>
+                            <p className="font-medium">{config.title}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {config.description}
+                            </p>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </Suspense>
             </PagePanel>
 
             {/* Context Fields */}
             {selectedType && (
               <PagePanel>
                 <PagePanelHeader title="Customize" className="mb-4" />
-                {renderContextFields()}
+                {jobsLoaded ? (
+                  renderContextFields()
+                ) : (
+                  <SkeletonButton className="h-10 w-full" />
+                )}
 
                 <Button
                   onClick={generateEmail}
@@ -815,7 +853,10 @@ export default function EmailTemplatesPage() {
           </div>
 
           {selectedType && (
-            <PagePanel className="opacity-100 transition-all duration-300 ease-out animate-in fade-in slide-in-from-right-4">
+            <PagePanel
+              className="opacity-100 transition-all duration-300 ease-out animate-in fade-in slide-in-from-right-4"
+              data-testid="emails-preview"
+            >
               <div className="flex items-center justify-between mb-4">
                 <h2 className="font-semibold">Preview</h2>
                 {generatedEmail && (
@@ -869,12 +910,16 @@ export default function EmailTemplatesPage() {
                     />
                   </div>
 
-                  {duplicateSend ? (
-                    <DuplicateSendWarning
-                      recipient={recipientEmail}
-                      sentAt={duplicateSend.sentAt}
-                    />
-                  ) : null}
+                  <Suspense
+                    fallback={<SkeletonButton className="h-10 w-full" />}
+                  >
+                    {sendsLoaded && duplicateSend ? (
+                      <DuplicateSendWarning
+                        recipient={recipientEmail}
+                        sentAt={duplicateSend.sentAt}
+                      />
+                    ) : null}
+                  </Suspense>
 
                   {/* Actions */}
                   <div className="flex gap-2 pt-2">
@@ -959,5 +1004,32 @@ export default function EmailTemplatesPage() {
       />
       {confirmDialog}
     </AppPage>
+  );
+}
+
+function EmailActionsSkeleton() {
+  return (
+    <div className="flex flex-wrap justify-end gap-2">
+      <SkeletonButton className="h-9 w-32" />
+      <SkeletonButton className="h-9 w-28" />
+    </div>
+  );
+}
+
+function EmailTemplateFormSkeleton() {
+  return (
+    <div className="grid gap-3 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+      {Array.from({ length: 6 }).map((_, index) => (
+        <div key={index} className="rounded-lg border p-4">
+          <div className="flex items-start gap-4">
+            <SkeletonButton className="h-9 w-9" />
+            <div className="flex-1 space-y-2">
+              <SkeletonButton className="h-4 w-32" />
+              <SkeletonButton className="h-4 w-full" />
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
   );
 }
