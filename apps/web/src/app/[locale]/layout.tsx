@@ -1,6 +1,6 @@
 import { NextIntlClientProvider } from "next-intl";
 import { notFound } from "next/navigation";
-import { isAppLocale, type AppLocale } from "@/i18n";
+import { isAppLocale, locales, type AppLocale } from "@/i18n";
 
 type LocaleLayoutProps = {
   children: React.ReactNode;
@@ -10,7 +10,7 @@ type LocaleLayoutProps = {
 };
 
 export function generateStaticParams() {
-  return [];
+  return locales.map((locale) => ({ locale }));
 }
 
 export default async function LocaleLayout({
