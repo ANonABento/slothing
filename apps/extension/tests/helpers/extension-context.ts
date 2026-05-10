@@ -9,6 +9,18 @@ export const demoPath = path.join(__dirname, "../../demo");
 
 export const CONTENT_SCRIPT_INIT_MS = 800;
 
+const FIXTURE_URL_MAP: Record<string, string> = {
+  "linkedin-mock.html": "https://www.linkedin.com/jobs/view/linkedin-mock.html",
+  "indeed-mock.html": "https://www.indeed.com/viewjob?file=indeed-mock.html",
+  "greenhouse-mock.html":
+    "https://boards.greenhouse.io/fixture/greenhouse-mock.html",
+  "lever-mock.html": "https://jobs.lever.co/fixture/lever-mock.html",
+  "workday-mock.html":
+    "https://fixture.myworkdayjobs.com/job/workday-mock.html",
+};
+
+const DEMO_BASE_URL = "https://www.linkedin.com/jobs/view/demo";
+
 export interface ExtensionContext {
   context: BrowserContext;
   extensionId: string;
@@ -52,14 +64,29 @@ export async function closeExtensionContext(
 
 export async function loadFixture(page: Page, fixtureName: string) {
   const fixturePath = path.resolve(fixturesPath, fixtureName);
-  await page.goto(`file://${fixturePath}`);
+  const body = fs.readFileSync(fixturePath, "utf-8");
+  const url = FIXTURE_URL_MAP[fixtureName];
+  if (!url) {
+    throw new Error(`No URL mapping for fixture ${fixtureName}`);
+  }
+
+  await page.route(url, (route) =>
+    route.fulfill({ status: 200, contentType: "text/html", body }),
+  );
+  await page.goto(url);
   await page.waitForLoadState("domcontentloaded");
   await page.waitForTimeout(CONTENT_SCRIPT_INIT_MS);
 }
 
 export async function loadDemoPage(page: Page, fileName: string) {
   const filePath = path.resolve(demoPath, fileName);
-  await page.goto(`file://${filePath}`);
+  const body = fs.readFileSync(filePath, "utf-8");
+  const url = `${DEMO_BASE_URL}/${fileName}`;
+
+  await page.route(url, (route) =>
+    route.fulfill({ status: 200, contentType: "text/html", body }),
+  );
+  await page.goto(url);
   await page.waitForLoadState("domcontentloaded");
   await page.waitForTimeout(CONTENT_SCRIPT_INIT_MS);
 }
