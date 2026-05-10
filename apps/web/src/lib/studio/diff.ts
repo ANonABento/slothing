@@ -170,7 +170,7 @@ function addCounts(
     added: first.added + second.added,
     removed: first.removed + second.removed,
     reworded: first.reworded + second.reworded,
-    unchanged: first.unchanged + second.unchanged,
+    unchanged: (first.unchanged ?? 0) + (second.unchanged ?? 0),
     total: first.total + second.total,
   };
 }

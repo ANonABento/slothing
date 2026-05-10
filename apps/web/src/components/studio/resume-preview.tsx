@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { ResumeEditor } from "@/lib/editor/resume-editor";
 import { EditorFormattingControls } from "@/components/studio/editor-toolbar";
 import { EditorPageSettings } from "@/components/studio/editor-page-settings";
+import { TailorDiffView } from "@/components/tailor/diff-view";
+import { createTailorDiff } from "@/lib/tailor/diff";
 import {
   DEFAULT_PAGE_SETTINGS,
   PAGE_SIZES,
@@ -20,6 +22,7 @@ import type {
   TemplateStyles,
 } from "@/lib/resume/template-data";
 import type { TipTapJSONContent } from "@/lib/editor/types";
+import type { TailoredResume } from "@/lib/resume/generator";
 import type { DocumentMode } from "./studio-documents";
 
 const PAGE_WIDTH_PX = 816; // 8.5in at 96dpi
@@ -52,6 +55,8 @@ export interface ResumePreviewProps {
   onPageSettingsChange?: (pageSettings: PageSettings) => void;
   onAddSection?: () => void;
   onAddFromBank?: () => void;
+  baseResume?: TailoredResume;
+  tailoredResume?: TailoredResume;
 }
 
 interface PreviewEmptyStateContent {
@@ -101,10 +106,13 @@ export function ResumePreview({
   onPageSettingsChange,
   onAddSection,
   onAddFromBank,
+  baseResume,
+  tailoredResume,
 }: ResumePreviewProps) {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const [fitScale, setFitScale] = useState(1);
   const [editor, setEditor] = useState<Editor | null>(null);
+  const [showDiff, setShowDiff] = useState(false);
 
   const template = getTemplateForDocumentMode(documentMode, templateId);
   const isCoverLetter = documentMode === "cover_letter";
@@ -141,12 +149,27 @@ export function ResumePreview({
   const scale = fitScale * (zoomPercent / 100);
   const emptyStateContent = getPreviewEmptyStateContent(documentMode);
   const EmptyStateIcon = documentMode === "cover_letter" ? PenLine : FileText;
+  const diff =
+    documentMode === "resume" && baseResume && tailoredResume
+      ? createTailorDiff(baseResume, tailoredResume)
+      : null;
 
   return (
     <div ref={wrapperRef} className="h-full overflow-auto bg-muted/30 p-4">
       {content && (
         <div className="sticky top-0 z-20 mx-auto mb-3 flex w-fit max-w-full flex-wrap items-center gap-2 rounded-md border bg-background/95 p-2 shadow-sm backdrop-blur">
-          <EditorFormattingControls editor={editor} />
+          {diff && (
+            <Button
+              type="button"
+              variant={showDiff ? "default" : "outline"}
+              size="sm"
+              onClick={() => setShowDiff((current) => !current)}
+              aria-pressed={showDiff}
+            >
+              View changes
+            </Button>
+          )}
+          {!showDiff && <EditorFormattingControls editor={editor} />}
           {onPageSettingsChange && (
             <EditorPageSettings
               pageSettings={normalizedPageSettings}
@@ -174,7 +197,11 @@ export function ResumePreview({
             transform: `scale(${scale})`,
           }}
         >
-          {content ? (
+          {showDiff && diff ? (
+            <div className="px-12 py-10">
+              <TailorDiffView diff={diff} />
+            </div>
+          ) : content ? (
             <>
               <ResumeEditor
                 content={content}

@@ -62,7 +62,11 @@ function SegmentText({
             segment.type === "reworded" && "bg-warning/10 text-warning",
           )}
         >
-          {segment.text}
+          {segment.type === "reworded"
+            ? side === "before"
+              ? (segment.beforeText ?? segment.text)
+              : (segment.afterText ?? segment.text)
+            : segment.text}
           {index < visibleSegments.length - 1 ? " " : ""}
         </span>
       ))}
