@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { KeyboardShortcutsProvider } from "@/components/keyboard-shortcuts";
 import StudioPage from "./page";
 import type { BankEntry } from "@/types";
 
@@ -154,6 +155,14 @@ function mockStudioFetch(
   };
 }
 
+function renderStudioPage() {
+  return render(
+    <KeyboardShortcutsProvider>
+      <StudioPage />
+    </KeyboardShortcutsProvider>,
+  );
+}
+
 describe("StudioPage", () => {
   beforeEach(() => {
     mockShowErrorToast.mockClear();
@@ -169,7 +178,7 @@ describe("StudioPage", () => {
   });
 
   it("renders resume builder mode by default with a file panel", async () => {
-    render(<StudioPage />);
+    renderStudioPage();
 
     expect(await screen.findByText("Resume sections")).toBeInTheDocument();
     expect(screen.getByText("Resume preview")).toBeInTheDocument();
@@ -178,7 +187,7 @@ describe("StudioPage", () => {
   });
 
   it("renders document mode controls in the studio header", async () => {
-    render(<StudioPage />);
+    renderStudioPage();
 
     expect(await screen.findByText("Document Studio")).toBeInTheDocument();
     expect(
@@ -190,17 +199,156 @@ describe("StudioPage", () => {
   });
 
   it("shows the draft as saved on fresh load", async () => {
-    render(<StudioPage />);
+    renderStudioPage();
 
     expect(await screen.findByText("Document Studio")).toBeInTheDocument();
     expect(screen.getAllByText(/Saved/)[0]).toBeInTheDocument();
     expect(screen.queryByText("Unsaved changes")).not.toBeInTheDocument();
   });
 
+  it("saves the current document with Cmd+S", async () => {
+    renderStudioPage();
+
+    expect(await screen.findByText("Document Studio")).toBeInTheDocument();
+
+    fireEvent.keyDown(window, { key: "s", metaKey: true });
+
+    expect(screen.getAllByText("Saving...")[0]).toBeInTheDocument();
+  });
+
+  it("toggles the files panel with Cmd+B", async () => {
+    renderStudioPage();
+
+    expect(
+      await screen.findByRole("button", { name: "Collapse files panel" }),
+    ).toBeInTheDocument();
+
+    fireEvent.keyDown(window, { key: "b", metaKey: true });
+
+    expect(
+      screen.getByRole("button", { name: "Expand files panel" }),
+    ).toBeInTheDocument();
+  });
+
+  it("toggles the AI panel with Cmd+/", async () => {
+    renderStudioPage();
+
+    expect(
+      await screen.findByRole("button", {
+        name: "Collapse AI assistant panel",
+      }),
+    ).toBeInTheDocument();
+
+    fireEvent.keyDown(window, { key: "/", metaKey: true });
+
+    expect(
+      screen.getByRole("button", { name: "Expand AI assistant panel" }),
+    ).toBeInTheDocument();
+  });
+
+  it("focuses the AI assistant input with Cmd+K", async () => {
+    mockStorage({ "taida:studio:aiPanelCollapsed": "true" });
+    vi.stubGlobal("requestAnimationFrame", (callback: FrameRequestCallback) => {
+      window.setTimeout(() => callback(0), 0);
+      return 0;
+    });
+    renderStudioPage();
+
+    expect(
+      await screen.findByRole("button", {
+        name: "Expand AI assistant panel",
+      }),
+    ).toBeInTheDocument();
+
+    fireEvent.keyDown(window, { key: "k", metaKey: true });
+
+    const textarea = await screen.findByLabelText("Job description");
+    await waitFor(() => expect(textarea).toBe(document.activeElement));
+    expect(
+      screen.getByRole("button", { name: "Collapse AI assistant panel" }),
+    ).toBeInTheDocument();
+  });
+
+  it("uses Cmd+P to enter and restore preview-only mode", async () => {
+    renderStudioPage();
+
+    expect(
+      await screen.findByRole("button", { name: "Collapse files panel" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Collapse AI assistant panel" }),
+    ).toBeInTheDocument();
+
+    fireEvent.keyDown(window, { key: "p", metaKey: true });
+
+    expect(
+      screen.getByRole("button", { name: "Expand files panel" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Expand AI assistant panel" }),
+    ).toBeInTheDocument();
+
+    fireEvent.keyDown(window, { key: "p", metaKey: true });
+
+    expect(
+      screen.getByRole("button", { name: "Collapse files panel" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Collapse AI assistant panel" }),
+    ).toBeInTheDocument();
+  });
+
+  it("opens the export menu with Cmd+E", async () => {
+    mockStudioFetch(bankEntries);
+    renderStudioPage();
+
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Toggle entry" }),
+    );
+    await waitFor(() =>
+      expect(screen.getByTestId("resume-html")).toHaveTextContent(
+        "Current HTML",
+      ),
+    );
+
+    fireEvent.keyDown(window, { key: "e", metaKey: true });
+
+    expect(
+      screen.getByRole("menuitem", { name: "Download PDF" }),
+    ).toBeInTheDocument();
+  });
+
+  it("does not trigger non-modifier shortcuts while typing in the JD textarea", async () => {
+    renderStudioPage();
+
+    const textarea = await screen.findByLabelText("Job description");
+    textarea.focus();
+
+    fireEvent.keyDown(textarea, { key: "b" });
+
+    expect(
+      screen.getByRole("button", { name: "Collapse files panel" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Expand files panel" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("fires modifier shortcuts while focused in the JD textarea", async () => {
+    renderStudioPage();
+
+    const textarea = await screen.findByLabelText("Job description");
+    textarea.focus();
+
+    fireEvent.keyDown(textarea, { key: "s", metaKey: true });
+
+    expect(screen.getAllByText("Saving...")[0]).toBeInTheDocument();
+  });
+
   it("shows the draft as unsaved after a content edit", async () => {
     mockStudioFetch(bankEntries);
 
-    render(<StudioPage />);
+    renderStudioPage();
 
     fireEvent.click(
       await screen.findByRole("button", { name: "Toggle entry" }),
@@ -212,7 +360,7 @@ describe("StudioPage", () => {
   it("keeps untouched documents saved after another document is edited", async () => {
     mockStudioFetch(bankEntries);
 
-    render(<StudioPage />);
+    renderStudioPage();
 
     fireEvent.click(
       await screen.findByRole("button", { name: "Toggle entry" }),
@@ -228,7 +376,7 @@ describe("StudioPage", () => {
   });
 
   it("uses a freeform cover letter editor instead of the resume section picker", async () => {
-    render(<StudioPage />);
+    renderStudioPage();
 
     fireEvent.click(
       await screen.findByRole("button", { name: "Cover Letter" }),
@@ -245,7 +393,7 @@ describe("StudioPage", () => {
   it("renders cover letter drafts without calling the resume builder API", async () => {
     const fetchMock = mockStudioFetch(bankEntries);
 
-    render(<StudioPage />);
+    renderStudioPage();
 
     fireEvent.click(
       await screen.findByRole("button", { name: "Cover Letter" }),
@@ -264,7 +412,7 @@ describe("StudioPage", () => {
   it("does not overwrite manually edited cover letter text when bank selections change", async () => {
     mockStudioFetch(bankEntries);
 
-    render(<StudioPage />);
+    renderStudioPage();
 
     fireEvent.click(
       await screen.findByRole("button", { name: "Cover Letter" }),
@@ -295,7 +443,7 @@ describe("StudioPage", () => {
   it("opens the bank entry picker from the add button", async () => {
     mockStudioFetch(bankEntries);
 
-    render(<StudioPage />);
+    renderStudioPage();
 
     fireEvent.click(
       await screen.findByRole("button", { name: /add from bank/i }),
@@ -310,7 +458,7 @@ describe("StudioPage", () => {
     });
     mockStudioFetch(bankEntries);
 
-    render(<StudioPage />);
+    renderStudioPage();
 
     await waitFor(() =>
       expect(screen.getByText("Selected 2")).toBeInTheDocument(),
@@ -339,7 +487,7 @@ describe("StudioPage", () => {
       }),
     );
 
-    render(<StudioPage />);
+    renderStudioPage();
 
     fireEvent.click(
       await screen.findByRole("button", { name: "Toggle entry" }),
@@ -356,7 +504,7 @@ describe("StudioPage", () => {
   it("passes generated TipTap content to the resume preview for inline editing", async () => {
     mockStudioFetch(bankEntries);
 
-    render(<StudioPage />);
+    renderStudioPage();
 
     fireEvent.click(
       await screen.findByRole("button", { name: "Toggle entry" }),
@@ -390,7 +538,7 @@ describe("StudioPage", () => {
       () => `<p>Saved preview ${++previewCount}</p>`,
     );
 
-    render(<StudioPage />);
+    renderStudioPage();
 
     fireEvent.click(
       await screen.findByRole("button", { name: "Toggle entry" }),
@@ -440,7 +588,7 @@ describe("StudioPage", () => {
       values.set(key, value);
     });
 
-    render(<StudioPage />);
+    renderStudioPage();
 
     fireEvent.click(await screen.findByRole("button", { name: "Save" }));
 
@@ -514,7 +662,7 @@ describe("StudioPage", () => {
       }),
     );
 
-    render(<StudioPage />);
+    renderStudioPage();
 
     fireEvent.click(
       await screen.findByRole("button", {
