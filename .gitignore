@@ -1,11 +1,16 @@
 # Dependencies
 node_modules
+**/node_modules/
 .pnpm-store
+.turbo/
 
 # Next.js
 .next
+**/.next/
 out
 build
+**/dist/
+**/dist-firefox/
 
 # Local data
 data/

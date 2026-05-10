@@ -1,0 +1,133 @@
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import Dashboard from "./page";
+import { BASIC_ONBOARDING_STEPS } from "@/lib/onboarding/steps";
+
+const toastMock = vi.hoisted(() => vi.fn());
+
+vi.mock("@/hooks/use-error-toast", () => ({
+  useErrorToast: () => toastMock,
+}));
+
+function mockFetch({
+  dismissedAt = null,
+  firstName = "Kevin",
+  documents = [],
+  jobsByStatus = {},
+  resumesGenerated = 0,
+}: {
+  dismissedAt?: string | null;
+  firstName?: string | null;
+  documents?: Array<Record<string, unknown>>;
+  jobsByStatus?: Record<string, number>;
+  resumesGenerated?: number;
+} = {}) {
+  global.fetch = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+    const url = String(input);
+
+    if (url === "/api/profile") {
+      return jsonResponse({ profile: null });
+    }
+
+    if (url === "/api/documents") {
+      return jsonResponse({ documents });
+    }
+
+    if (url === "/api/analytics") {
+      return jsonResponse({
+        overview: { totalResumesGenerated: resumesGenerated },
+        jobs: { byStatus: jobsByStatus },
+        recent: { jobs: [] },
+      });
+    }
+
+    if (url === "/api/onboarding/dismiss" && init?.method === "POST") {
+      return jsonResponse({
+        dismissedAt: "2026-05-09T10:00:00.000Z",
+        firstName,
+      });
+    }
+
+    if (url === "/api/onboarding/dismiss") {
+      return jsonResponse({ dismissedAt, firstName });
+    }
+
+    throw new Error(`Unexpected fetch: ${url}`);
+  }) as typeof fetch;
+}
+
+function jsonResponse(body: unknown): Response {
+  return {
+    ok: true,
+    status: 200,
+    json: async () => body,
+  } as Response;
+}
+
+describe("Dashboard onboarding", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("renders basic onboarding steps from the registry", async () => {
+    mockFetch();
+
+    render(<Dashboard />);
+
+    expect(
+      await screen.findByText("Hey Kevin, let's set up your workspace."),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText((_content, element) =>
+        Boolean(
+          element?.textContent ===
+          `0of ${BASIC_ONBOARDING_STEPS.length} complete`,
+        ),
+      ),
+    ).toBeInTheDocument();
+    for (const step of BASIC_ONBOARDING_STEPS) {
+      expect(screen.getByText(step.title)).toBeInTheDocument();
+    }
+    expect(screen.queryByText("Next best move")).not.toBeInTheDocument();
+  });
+
+  it("renders the active dashboard when onboarding is dismissed", async () => {
+    mockFetch({ dismissedAt: "2026-05-09T10:00:00.000Z" });
+
+    render(<Dashboard />);
+
+    expect(
+      await screen.findByText("Hey Kevin, welcome back."),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Today")).toBeInTheDocument();
+  });
+
+  it("posts skip and moves to active dashboard without reloading", async () => {
+    mockFetch();
+
+    render(<Dashboard />);
+
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Skip onboarding" }),
+    );
+
+    await waitFor(() => {
+      expect(global.fetch).toHaveBeenCalledWith("/api/onboarding/dismiss", {
+        method: "POST",
+      });
+    });
+    expect(
+      await screen.findByText("Hey Kevin, welcome back."),
+    ).toBeInTheDocument();
+  });
+
+  it("drops the name when onboarding state has no first name", async () => {
+    mockFetch({ firstName: null });
+
+    render(<Dashboard />);
+
+    expect(
+      await screen.findByText("Let's set up your workspace."),
+    ).toBeInTheDocument();
+  });
+});

@@ -3,11 +3,15 @@ name: Columbus Extension E2E Tests
 on:
   push:
     paths:
-      - 'columbus-extension/**'
+      - 'apps/extension/**'
+      - 'packages/shared/**'
+      - 'pnpm-lock.yaml'
       - '.github/workflows/extension-e2e.yml'
   pull_request:
     paths:
-      - 'columbus-extension/**'
+      - 'apps/extension/**'
+      - 'packages/shared/**'
+      - 'pnpm-lock.yaml'
       - '.github/workflows/extension-e2e.yml'
   workflow_dispatch:
 
@@ -16,29 +20,34 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: columbus-extension
+        working-directory: apps/extension
 
     steps:
       - uses: actions/checkout@v4
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: columbus-extension/package-lock.json
+          cache: 'pnpm'
+          cache-dependency-path: pnpm-lock.yaml
 
       - name: Install dependencies
-        run: npm ci
+        working-directory: .
+        run: pnpm install --frozen-lockfile
 
       - name: Install Playwright Chromium browser
-        run: npx playwright install chromium --with-deps
+        run: pnpm exec playwright install chromium --with-deps
 
       - name: Build extension
-        run: npm run build
+        run: pnpm run build
 
-      # headless: false requires a virtual display on Linux
       - name: Run E2E tests
-        run: xvfb-run --auto-servernum -- npx playwright test
+        run: xvfb-run --auto-servernum -- pnpm exec playwright test
         env:
           CI: true
 
@@ -47,5 +56,5 @@ jobs:
         if: always()
         with:
           name: playwright-report
-          path: columbus-extension/playwright-report/
+          path: apps/extension/playwright-report/
           retention-days: 7
