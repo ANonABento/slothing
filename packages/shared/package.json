@@ -1,0 +1,29 @@
+{
+  "name": "@slothing/shared",
+  "version": "0.0.0",
+  "private": true,
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./types": "./src/types.ts",
+    "./schemas": "./src/schemas.ts",
+    "./scoring": "./src/scoring/index.ts",
+    "./formatters": "./src/formatters/index.ts",
+    "./api-contracts": "./src/api-contracts.ts"
+  },
+  "scripts": {
+    "build": "tsc --emitDeclarationOnly",
+    "type-check": "tsc --noEmit",
+    "lint": "tsc --noEmit",
+    "test": "vitest",
+    "test:run": "vitest run"
+  },
+  "dependencies": {
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "typescript": "^5",
+    "vitest": "4.0.18"
+  }
+}

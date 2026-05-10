@@ -1,0 +1,33 @@
+export {
+  createOpportunitySchema,
+  OPPORTUNITY_JOB_TYPES,
+  OPPORTUNITY_LEVELS,
+  OPPORTUNITY_REMOTE_TYPES,
+  OPPORTUNITY_SOURCES,
+  OPPORTUNITY_STATUSES,
+  OPPORTUNITY_TYPES,
+  opportunityFiltersSchema,
+  opportunityJobTypeSchema,
+  opportunityLevelSchema,
+  opportunityRemoteTypeSchema,
+  opportunitySchema,
+  opportunitySourceSchema,
+  opportunityStatusChangeSchema,
+  opportunityStatusSchema,
+  opportunityTypeSchema,
+  updateOpportunitySchema,
+} from "@slothing/shared/schemas";
+
+export type {
+  CreateOpportunityInput,
+  Opportunity,
+  OpportunityFilters,
+  OpportunityJobType,
+  OpportunityLevel,
+  OpportunityRemoteType,
+  OpportunitySource,
+  OpportunityStatus,
+  OpportunityStatusChangeInput,
+  OpportunityType,
+  UpdateOpportunityInput,
+} from "@slothing/shared/schemas";

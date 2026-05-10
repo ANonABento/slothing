@@ -5,6 +5,12 @@
 
 The product is branded **Slothing** (domain: slothing.work). The repo path is still `get-me-job` and the data file `data/get-me-job.db` for backwards compatibility — both names refer to the same app. Prefer "Slothing" in user-facing copy, "get-me-job" for repo-relative paths and the SQLite filename. Browser localStorage keys still use the `taida:` prefix to preserve existing user data.
 
+This repo is a pnpm + Turborepo monorepo:
+- `apps/web` is the Next.js application. Most older `src/...` references in this guide mean `apps/web/src/...`.
+- `apps/extension` is the Columbus browser extension.
+- `packages/shared` contains shared types, Zod schemas, formatters, and scoring logic consumed by both apps.
+- Run workspace commands from the repo root with `pnpm`.
+
 ---
 
 ## Project Overview
@@ -20,7 +26,7 @@ The product is branded **Slothing** (domain: slothing.work). The repo path is st
 - Columbus browser extension for in-page job capture
 - **Google Integration**: Calendar sync, Drive import/backup, Gmail import/send, Docs/Sheets export, Contacts, Tasks
 
-Common pitfall: dashboard onboarding steps live in `src/lib/onboarding/steps.ts` now; add/remove steps there, and restore dismissed onboarding later with `setOnboardingDismissedAt(userId, null)`.
+Common pitfall: dashboard onboarding steps live in `apps/web/src/lib/onboarding/steps.ts` now; add/remove steps there, and restore dismissed onboarding later with `setOnboardingDismissedAt(userId, null)`.
 
 **Target users:** Early-career professionals seeking jobs.
 
@@ -46,7 +52,7 @@ Common pitfall: dashboard onboarding steps live in `src/lib/onboarding/steps.ts`
 ## Project Structure
 
 ```
-src/
+apps/web/src/
 ├── app/
 │   ├── (app)/              # Authenticated app routes
 │   │   ├── dashboard/
@@ -179,7 +185,7 @@ The right-hand Studio panel is reserved for contextual AI assistance. Keep AI do
 
 ## Database Schema
 
-**Location:** `src/lib/db/schema.ts`. SQLite via better-sqlite3, Drizzle config in `drizzle.config.ts`.
+**Location:** `apps/web/src/lib/db/schema.ts`. SQLite via better-sqlite3, Drizzle config in `apps/web/drizzle.config.ts`.
 
 Tables (selected):
 - `profile`, `experiences`, `education`, `skills`, `projects`, `certifications` — profile data
@@ -349,8 +355,8 @@ Configuration: `/settings` page persists provider config in `settings` table. En
 ### Unit Tests (Vitest)
 
 ```bash
-npm run test       # watch
-npm run test:run   # one-shot (used in CI + by quality scripts)
+pnpm --filter @slothing/web test       # watch
+pnpm --filter @slothing/web test:run   # one-shot (used in CI + by quality scripts)
 ```
 
 Tests are colocated with source as `*.test.ts(x)`. Studio, version history, document export, dedupe schema, opportunities review queue, undoable actions, confirm dialogs, pluralize, time formatting, SEO helpers, and route redirects all have unit coverage.
@@ -358,11 +364,11 @@ Tests are colocated with source as `*.test.ts(x)`. Studio, version history, docu
 ### E2E Tests (Playwright)
 
 ```bash
-npm run test:e2e
+pnpm --filter @slothing/web test:e2e
 npx playwright test --ui
 ```
 
-Tests live in `e2e/`. Columbus extension has its own E2E pipeline under `columbus-extension/tests/`.
+Tests live in `apps/web/e2e/`. Columbus extension has its own E2E pipeline under `apps/extension/tests/`.
 
 ### Test pattern
 
@@ -381,11 +387,11 @@ describe("MyFunction", () => {
 ## CI Gates
 
 `.github/workflows/ci.yml` runs on every PR and push to main:
-1. `npm run type-check` — strict TS via `tsconfig.typecheck.json`
-2. `npm run test:run` — full Vitest run
-3. `npm run lint` — `next lint` **and** the forbidden-color hard-fail lint
+1. `pnpm run type-check` — strict TS across workspaces
+2. `pnpm run test:run` — full Vitest run
+3. `pnpm run lint` — `next lint` **and** the forbidden-color hard-fail lint
 
-A pre-commit Husky hook runs `npm run lint-staged` + `npm run type-check`. Don't bypass with `--no-verify`.
+A pre-commit Husky hook runs `pnpm lint-staged` + `pnpm run type-check`. Don't bypass with `--no-verify`.
 
 The Columbus extension has a separate workflow (`.github/workflows/extension-e2e.yml`).
 
@@ -460,13 +466,13 @@ The Columbus extension has a separate workflow (`.github/workflows/extension-e2e
 ## Development Commands
 
 ```bash
-npm run dev          # Start dev server (port 3000)
-npm run build        # Production build
-npm run lint         # ESLint + forbidden-color hard-fail
-npm run type-check   # TypeScript strict check
-npm run test         # Vitest watch
-npm run test:run     # Vitest one-shot (CI)
-npm run test:e2e     # Playwright e2e
+pnpm dev             # Start web dev server (port 3000)
+pnpm run build       # Production build for all workspaces
+pnpm run lint        # Workspace lint
+pnpm run type-check  # TypeScript strict check
+pnpm --filter @slothing/web test       # Web Vitest watch
+pnpm run test:run    # Vitest one-shot (CI)
+pnpm --filter @slothing/web test:e2e   # Playwright e2e
 ```
 
 ---
