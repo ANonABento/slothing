@@ -164,6 +164,15 @@ export async function isGoogleConnectedForUser(
   return token !== null;
 }
 
+export async function listGoogleConnectedUserIds(): Promise<string[]> {
+  const rows = await getDb()
+    .select({ userId: accounts.userId })
+    .from(accounts)
+    .where(eq(accounts.provider, GOOGLE_PROVIDER));
+
+  return Array.from(new Set(rows.map((row) => row.userId)));
+}
+
 /**
  * Get Google connection status with user info.
  */
@@ -220,6 +229,11 @@ function createGoogleClientFromToken(tokenResult: GoogleTokenResult | null) {
 
 export async function createCalendarClient() {
   const authClient = await createGoogleClient();
+  return google.calendar({ version: "v3", auth: authClient });
+}
+
+export async function createCalendarClientForUser(userId: string) {
+  const authClient = await createGoogleClientForUser(userId);
   return google.calendar({ version: "v3", auth: authClient });
 }
 

@@ -29,6 +29,11 @@ import {
   getGmailLastScannedAt,
   setGmailAutoStatusEnabled,
 } from "@/lib/settings/gmail-auto-status";
+import {
+  getCalendarLastPulledAt,
+  getCalendarPullEnabled,
+  setCalendarPullEnabled,
+} from "@/lib/settings/calendar-sync";
 import { LOCALE_COOKIE_NAME } from "@/lib/format/time";
 
 export const dynamic = "force-dynamic";
@@ -51,6 +56,10 @@ export async function GET() {
       gmailAutoStatus: {
         enabled: getGmailAutoStatusEnabled(authResult.userId),
         lastScannedAt: getGmailLastScannedAt(authResult.userId),
+      },
+      calendarSync: {
+        pullEnabled: getCalendarPullEnabled(authResult.userId),
+        lastPulledAt: getCalendarLastPulledAt(authResult.userId),
       },
       kanbanVisibleLanes: getKanbanVisibleLanes(authResult.userId),
     });
@@ -102,6 +111,9 @@ export async function PUT(request: NextRequest) {
         data.gmailAutoStatus.enabled,
         authResult.userId,
       );
+    }
+    if (data.calendarSync) {
+      setCalendarPullEnabled(data.calendarSync.pullEnabled, authResult.userId);
     }
     if (data.kanbanVisibleLanes) {
       setKanbanVisibleLanes(data.kanbanVisibleLanes, authResult.userId);

@@ -42,6 +42,11 @@ export const updateSettingsSchema = z.object({
       enabled: z.boolean(),
     })
     .optional(),
+  calendarSync: z
+    .object({
+      pullEnabled: z.boolean(),
+    })
+    .optional(),
   kanbanVisibleLanes: kanbanVisibleLanesSchema.optional(),
   locale: z.string().optional(),
 });
