@@ -1,9 +1,9 @@
 /**
  * @route GET /api/resume/export
  * @route POST /api/resume/export
- * @description GET: List available export templates. POST: Export a resume as PDF, HTML, or LaTeX.
+ * @description GET: List available export templates. POST: Export a resume as PDF, DOCX, HTML, or LaTeX.
  * @auth Required
- * @request { resumeId: string, template: string, format: "pdf" | "html" | "latex" } (POST)
+ * @request { resumeId: string, template: string, format: "pdf" | "docx" | "html" | "latex" } (POST)
  * @response ResumeTemplatesResponse from @/types/api
  */
 import { NextRequest, NextResponse } from "next/server";
@@ -12,6 +12,10 @@ import { requireAuth, isAuthError } from "@/lib/auth";
 import { getGeneratedResume } from "@/lib/db";
 import type { TailoredResume } from "@/lib/resume/generator";
 import type { LatexOptions } from "@/lib/resume/latex-generator";
+import {
+  getCoverLetterTemplate,
+  getTemplate,
+} from "@/lib/resume/template-data";
 import { getTemplateWithCustom } from "@/lib/resume/templates";
 import {
   DEFAULT_PAGE_SETTINGS,
@@ -52,8 +56,10 @@ export async function GET() {
 const exportSchema = z.object({
   resumeId: z.string().min(1).optional(),
   html: z.string().min(1).optional(),
+  content: z.unknown().optional(),
+  mode: z.enum(["resume", "cover_letter"]).default("resume"),
   templateId: z.string().min(1).default("classic"),
-  format: z.enum(["pdf", "latex", "html"]).default("pdf"),
+  format: z.enum(["pdf", "latex", "html", "docx"]).default("pdf"),
   latexOptions: z.record(z.string(), z.unknown()).optional(),
   compilePdf: z.boolean().default(false),
   pageSettings: z
@@ -101,6 +107,8 @@ export async function POST(request: NextRequest) {
     const {
       resumeId,
       html: rawHtml,
+      content,
+      mode,
       templateId,
       format,
       latexOptions,
@@ -122,6 +130,42 @@ export async function POST(request: NextRequest) {
     }
 
     // Route by format
+    if (format === "docx") {
+      if (!content || typeof content !== "object") {
+        return NextResponse.json(
+          { error: "content required for DOCX export" },
+          { status: 400 },
+        );
+      }
+
+      const { convertContentToDocx } =
+        await import("@/lib/builder/docx-export");
+      const template =
+        mode === "cover_letter"
+          ? getCoverLetterTemplate(templateId)
+          : getTemplate(templateId);
+      const docxBuffer = await convertContentToDocx({
+        content,
+        mode,
+        templateStyles: template?.styles,
+        pageSettings: pageSettings as Partial<PageSettings> | undefined,
+        title:
+          mode === "cover_letter"
+            ? `${template?.name ?? "Studio"} Cover Letter`
+            : `${template?.name ?? "Studio"} Resume`,
+      });
+
+      return new NextResponse(new Uint8Array(docxBuffer), {
+        status: 200,
+        headers: {
+          "Content-Type":
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "Content-Disposition": 'attachment; filename="document.docx"',
+          "Content-Length": String(docxBuffer.length),
+        },
+      });
+    }
+
     if (format === "latex") {
       if (!resume) {
         return NextResponse.json(

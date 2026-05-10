@@ -30,7 +30,9 @@ import {
 } from "@/lib/builder/version-history";
 import { getCoverLetterTemplate } from "@/lib/builder/cover-letter-document";
 import {
+  createDatedExportFilename,
   createDocumentFilename,
+  downloadContentAsDocx,
   downloadHtmlAsPdf,
 } from "@/lib/builder/document-export";
 import { buildCoverLetterPreviewContent } from "@/lib/builder/cover-letter-preview-fallback";
@@ -108,6 +110,7 @@ interface StudioPageState {
   handleCopyHtml: () => Promise<void>;
   handleCreateDocument: () => void;
   handleDeleteDocument: (id: string) => void;
+  handleDownloadDocx: () => Promise<void>;
   handleDownloadPdf: () => Promise<void>;
   handlePreviewVersion: (id: string) => void;
   handleRenameDocument: (id: string, name: string) => void;
@@ -1203,6 +1206,37 @@ export function useStudioPageState(): StudioPageState {
     showErrorToast,
   ]);
 
+  const handleDownloadDocx = useCallback(async () => {
+    if (!content) return;
+
+    setIsExporting(true);
+    try {
+      const mode = documentMode === "cover_letter" ? "cover_letter" : "resume";
+      await downloadContentAsDocx(
+        content,
+        createDatedExportFilename(
+          documentMode === "cover_letter" ? "cover-letter" : "resume",
+          "docx",
+        ),
+        {
+          mode,
+          templateId,
+          pageSettings,
+        },
+      );
+    } catch (err) {
+      showErrorToast(err, {
+        title: "Could not download DOCX",
+        fallbackDescription:
+          documentMode === "cover_letter"
+            ? "Please try exporting the cover letter again."
+            : "Please try exporting the resume again.",
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  }, [content, documentMode, pageSettings, showErrorToast, templateId]);
+
   const handleCopyHtml = useCallback(async () => {
     const currentHtml = getPrintableHtml() || html;
     if (!currentHtml) return;
@@ -1230,6 +1264,7 @@ export function useStudioPageState(): StudioPageState {
     handleCopyHtml,
     handleCreateDocument,
     handleDeleteDocument,
+    handleDownloadDocx,
     handleDownloadPdf,
     handlePreviewVersion,
     handleRenameDocument,

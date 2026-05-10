@@ -14,11 +14,13 @@ function createStudioHeaderProps(
     saveStatus: { state: "saved", lastSavedAt: Date.now() },
     templateId: "classic",
     canCopyHtml: true,
+    canDownloadDocx: true,
     canDownloadPdf: true,
     isExporting: false,
     onDocumentModeChange: vi.fn(),
     onTemplateSelect: vi.fn(),
     onCopyHtml: vi.fn(),
+    onDownloadDocx: vi.fn(),
     onDownloadPdf: vi.fn(),
     ...props,
   };
@@ -282,7 +284,11 @@ describe("StudioHeader", () => {
   });
 
   it("explains why export actions are disabled before content exists", () => {
-    renderStudioHeader({ canCopyHtml: false, canDownloadPdf: false });
+    renderStudioHeader({
+      canCopyHtml: false,
+      canDownloadDocx: false,
+      canDownloadPdf: false,
+    });
 
     const downloadButton = screen.getByRole("button", {
       name: /download resume pdf/i,
@@ -313,8 +319,9 @@ describe("StudioHeader", () => {
 
   it("uses the export split button for primary PDF export and menu actions", () => {
     const onCopyHtml = vi.fn();
+    const onDownloadDocx = vi.fn();
     const onDownloadPdf = vi.fn();
-    renderStudioHeader({ onCopyHtml, onDownloadPdf });
+    renderStudioHeader({ onCopyHtml, onDownloadDocx, onDownloadPdf });
 
     fireEvent.click(
       screen.getByRole("button", { name: /download resume pdf/i }),
@@ -325,8 +332,26 @@ describe("StudioHeader", () => {
       screen.getByRole("button", { name: /resume export options/i }),
     );
     const menu = screen.getByRole("menu", { name: /resume export actions/i });
-    expect(within(menu).getByRole("menuitem", { name: /download pdf/i }));
-    fireEvent.click(within(menu).getByRole("menuitem", { name: /copy html/i }));
+    const menuItems = within(menu).getAllByRole("menuitem");
+    expect(menuItems.map((item) => item.textContent)).toEqual([
+      "Download PDF",
+      "Download DOCX",
+      "Copy HTML",
+    ]);
+    fireEvent.click(
+      within(menu).getByRole("menuitem", { name: /download docx/i }),
+    );
+    expect(onDownloadDocx).toHaveBeenCalledTimes(1);
+
+    fireEvent.click(
+      screen.getByRole("button", { name: /resume export options/i }),
+    );
+    const reopenedMenu = screen.getByRole("menu", {
+      name: /resume export actions/i,
+    });
+    fireEvent.click(
+      within(reopenedMenu).getByRole("menuitem", { name: /copy html/i }),
+    );
 
     expect(onCopyHtml).toHaveBeenCalledTimes(1);
   });
