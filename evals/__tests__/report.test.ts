@@ -1,13 +1,19 @@
 import { describe, it, expect } from "vitest";
-import { determineWinner, buildSummary, generateJSONReport, generateMarkdownReport } from "../report.js";
-import type { TestCaseResult } from "../types.js";
+import {
+  determineWinner,
+  buildSummary,
+  generateJSONReport,
+  generateMarkdownReport,
+  generateEvalMarkdownReport,
+} from "../report.js";
+import type { EvalRunReport, TestCaseResult } from "../types.js";
 
 function makeResult(
   id: string,
   gpt55Score: number,
   claudeScore: number,
   gpt55Error?: string,
-  claudeError?: string
+  claudeError?: string,
 ): TestCaseResult {
   const winner = determineWinner(gpt55Score, claudeScore);
   return {
@@ -86,10 +92,7 @@ describe("buildSummary", () => {
   });
 
   it("counts errors in errorCount", () => {
-    const results = [
-      makeResult("1", 4, 3),
-      makeResult("2", 0, 0, "API error"),
-    ];
+    const results = [makeResult("1", 4, 3), makeResult("2", 0, 0, "API error")];
 
     const summary = buildSummary(results);
     expect(summary.errorCount).toBe(1);
@@ -104,10 +107,7 @@ describe("buildSummary", () => {
   });
 
   it("excludes errored cases from average calculation", () => {
-    const results = [
-      makeResult("1", 4, 2),
-      makeResult("2", 0, 0, "error"),
-    ];
+    const results = [makeResult("1", 4, 2), makeResult("2", 0, 0, "error")];
     const summary = buildSummary(results);
     expect(summary.avgScoreGpt55).toBe(4);
     expect(summary.avgScoreClaude).toBe(2);
@@ -129,10 +129,7 @@ describe("generateJSONReport", () => {
   });
 
   it("sets successfulCases correctly", () => {
-    const results = [
-      makeResult("1", 4, 3),
-      makeResult("2", 0, 0, "error"),
-    ];
+    const results = [makeResult("1", 4, 3), makeResult("2", 0, 0, "error")];
     const report = generateJSONReport(results);
     expect(report.totalCases).toBe(2);
     expect(report.successfulCases).toBe(1);
@@ -183,12 +180,36 @@ describe("generateMarkdownReport", () => {
 
   it("produces non-empty output for multiple cases", () => {
     const results = Array.from({ length: 10 }, (_, i) =>
-      makeResult(`tc-0${i + 1}`, (i % 5) + 1, ((i + 2) % 5) + 1)
+      makeResult(`tc-0${i + 1}`, (i % 5) + 1, ((i + 2) % 5) + 1),
     );
     const report = generateJSONReport(results);
     const md = generateMarkdownReport(report);
 
     expect(md.length).toBeGreaterThan(500);
     expect(md).toContain("## Results by Test Case");
+  });
+});
+
+describe("generateEvalMarkdownReport", () => {
+  it("shows sampled case count when dataset total is provided", () => {
+    const report: EvalRunReport = {
+      runAt: "2026-01-01T00:00:00.000Z",
+      mode: "resume",
+      generator: "tailor",
+      judgeEnabled: false,
+      judge: "disabled",
+      datasetTotal: 250,
+      cases: [],
+      summary: {
+        totalCases: 20,
+        errorCount: 0,
+        avgOverallScore: 0,
+        avgScoreByMetric: {},
+      },
+    };
+
+    expect(generateEvalMarkdownReport(report)).toContain(
+      "**Cases:** 20 of 250",
+    );
   });
 });

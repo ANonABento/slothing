@@ -115,4 +115,4 @@ console.log(dataset.resumes.length); // 50
 4. If adding a gold reference, add it to `references.json` with rubric scores and notes.
 5. Run `npm run test:run -- evals/__tests__/dataset.test.ts`.
 
-Keep final benchmark counts aligned with the loader and tests. A future harness task can wire this dataset into `evals/harness.ts`; the current benchmark files are intentionally additive.
+Keep final benchmark counts aligned with the loader and tests. The eval harness consumes this dataset through `evals/data/to-eval-cases.ts`.

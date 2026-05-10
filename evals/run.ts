@@ -14,13 +14,19 @@ interface RunEvalOptions {
   mode: EvalMode;
   generatorName: string;
   generator: EvalGenerator;
+  datasetTotal?: number;
   metrics?: EvalMetric[];
-  judge?: (testCase: EvalCase, output: Awaited<ReturnType<EvalGenerator>>) => Promise<JudgeScore | undefined>;
+  judge?: (
+    testCase: EvalCase,
+    output: Awaited<ReturnType<EvalGenerator>>,
+  ) => Promise<JudgeScore | undefined>;
 }
 
 function summarize(cases: EvalRunReport["cases"]): EvalRunReport["summary"] {
   const metricNames = Array.from(
-    new Set(cases.flatMap((result) => result.metrics.map((metric) => metric.name))),
+    new Set(
+      cases.flatMap((result) => result.metrics.map((metric) => metric.name)),
+    ),
   );
 
   const avgScoreByMetric: Record<string, number> = {};
@@ -31,7 +37,11 @@ function summarize(cases: EvalRunReport["cases"]): EvalRunReport["summary"] {
       .map((metric) => metric.score);
     avgScoreByMetric[metricName] =
       scores.length > 0
-        ? Number((scores.reduce((sum, score) => sum + score, 0) / scores.length).toFixed(4))
+        ? Number(
+            (
+              scores.reduce((sum, score) => sum + score, 0) / scores.length
+            ).toFixed(4),
+          )
         : 0;
   }
 
@@ -58,7 +68,11 @@ export async function runEval(options: RunEvalOptions): Promise<EvalRunReport> {
 
   for (const testCase of options.cases) {
     const output = await options.generator(testCase);
-    const metrics = runMetrics(testCase, output, options.metrics ?? DEFAULT_METRICS);
+    const metrics = runMetrics(
+      testCase,
+      output,
+      options.metrics ?? DEFAULT_METRICS,
+    );
     const overallScore = aggregateMetrics(metrics);
     const judgeScore = options.judge
       ? await options.judge(testCase, output)
@@ -83,6 +97,7 @@ export async function runEval(options: RunEvalOptions): Promise<EvalRunReport> {
     generator: options.generatorName,
     judgeEnabled: Boolean(options.judge),
     judge: options.judge ? "enabled" : "disabled",
+    datasetTotal: options.datasetTotal,
     cases: caseResults,
     summary: summarize(caseResults),
   };
