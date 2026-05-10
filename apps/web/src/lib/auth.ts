@@ -1,6 +1,8 @@
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 import { auth, isNextAuthConfigured } from "@/auth";
+import { requireExtensionAuth } from "@/lib/extension-auth";
 
 export interface AuthResult {
   userId: string;
@@ -48,6 +50,25 @@ export async function requireAuth(): Promise<AuthResult | NextResponse> {
   }
 
   return { userId };
+}
+
+/**
+ * Require a user for routes that may be called by either the web app or the
+ * browser extension. When X-Extension-Token is present, that token wins even if
+ * a browser session also exists, because extension requests represent the
+ * connected extension account.
+ */
+export async function requireUserAuth(
+  request: NextRequest,
+): Promise<AuthResult | NextResponse> {
+  if (request.headers.get("X-Extension-Token")) {
+    const extensionAuth = requireExtensionAuth(request);
+    return extensionAuth.success
+      ? { userId: extensionAuth.userId }
+      : extensionAuth.response;
+  }
+
+  return requireAuth();
 }
 
 /**

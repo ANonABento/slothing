@@ -13,4 +13,15 @@ describe("TailorRedirectPage", () => {
 
     expect(redirectMock).toHaveBeenCalledWith("/en/studio");
   });
+
+  it("preserves extension tailor params for Studio loading", () => {
+    TailorRedirectPage({
+      params: { locale: "en" },
+      searchParams: { from: "extension", tailorId: "resume-1" },
+    });
+
+    expect(redirectMock).toHaveBeenCalledWith(
+      "/en/studio?from=extension&tailorId=resume-1",
+    );
+  });
 });

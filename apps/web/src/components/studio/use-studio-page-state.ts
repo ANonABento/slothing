@@ -3,6 +3,7 @@
 import { nowEpoch } from "@/lib/format/time";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   getDefaultTemplateIdForDocumentMode,
   getTemplateForDocumentMode,
@@ -74,6 +75,24 @@ import {
 interface BuilderPreviewResponse {
   html?: string;
   resume?: TailoredResume;
+}
+
+interface ExtensionResumeResponse {
+  resume?: {
+    id: string;
+    content?: unknown;
+    contentJson?: string;
+    jobId?: string;
+    templateId?: string;
+  };
+}
+
+interface ExtensionCoverLetterResponse {
+  coverLetter?: {
+    id: string;
+    content: string;
+    jobId?: string;
+  };
 }
 
 interface StudioPageState {
@@ -255,6 +274,9 @@ export function applyCoverLetterCritiqueSuggestionToText(
 }
 
 export function useStudioPageState(): StudioPageState {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [entries, setEntries] = useState<BankEntry[]>([]);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [sections, setSections] = useState<SectionState[]>(
@@ -302,6 +324,7 @@ export function useStudioPageState(): StudioPageState {
   const lastPreviewErrorToastRef = useRef("");
   const lastActiveDocumentIdRef = useRef<string | null>(null);
   const lastCoverLetterEntryKeyRef = useRef<string | null>(null);
+  const extensionLoadStartedRef = useRef(false);
   const contentRef = useRef<TipTapJSONContent | undefined>(undefined);
 
   useEffect(() => {
@@ -319,6 +342,122 @@ export function useStudioPageState(): StudioPageState {
       ),
     );
   }, []);
+
+  useEffect(() => {
+    if (extensionLoadStartedRef.current) return;
+    if (searchParams.get("from") !== "extension") return;
+
+    const tailorId = searchParams.get("tailorId");
+    const coverLetterId = searchParams.get("coverLetterId");
+    if (!tailorId && !coverLetterId) return;
+
+    extensionLoadStartedRef.current = true;
+    let cancelled = false;
+
+    async function loadExtensionDocument() {
+      try {
+        if (tailorId) {
+          const response = await fetch(
+            `/api/resumes/${encodeURIComponent(tailorId)}`,
+          );
+          const data = await readJsonResponse<ExtensionResumeResponse>(
+            response,
+            "Failed to load tailored resume",
+          );
+          const resume = data.resume;
+          const resumeContent =
+            resume?.content ??
+            (resume?.contentJson ? JSON.parse(resume.contentJson) : null);
+          if (!resume || !resumeContent) {
+            throw new Error("Saved resume was not found.");
+          }
+
+          const nextContent = tailoredResumeToTipTapDocument(
+            resumeContent as TailoredResume,
+          );
+          const nextHtml = createEditorBodyHtml(nextContent);
+          const document = createStudioDocument("resume", {
+            name: "Tailored resume from extension",
+          });
+          const nextDocument: StudioDocument = {
+            ...document,
+            content: nextContent,
+            html: nextHtml,
+            templateId:
+              resume.templateId ||
+              getDefaultTemplateIdForDocumentMode("resume"),
+            source: "extension",
+          };
+
+          if (!cancelled) {
+            contentRef.current = nextContent;
+            setDocuments((current) => [...current, nextDocument]);
+            setActiveDocumentIds((current) => ({
+              ...current,
+              resume: nextDocument.id,
+            }));
+            setDocumentMode("resume");
+            setContent(nextContent);
+            setHtml(nextHtml);
+          }
+        } else if (coverLetterId) {
+          const response = await fetch(
+            `/api/cover-letters/${encodeURIComponent(coverLetterId)}`,
+          );
+          const data = await readJsonResponse<ExtensionCoverLetterResponse>(
+            response,
+            "Failed to load cover letter",
+          );
+          const coverLetter = data.coverLetter;
+          if (!coverLetter?.content) {
+            throw new Error("Saved cover letter was not found.");
+          }
+
+          const nextContent = coverLetterTextToTipTapDocument(
+            coverLetter.content,
+          );
+          const nextHtml = createEditorBodyHtml(nextContent);
+          const document = createStudioDocument("cover_letter", {
+            name: "Cover letter from extension",
+          });
+          const nextDocument: StudioDocument = {
+            ...document,
+            content: nextContent,
+            html: nextHtml,
+            templateId: getDefaultTemplateIdForDocumentMode("cover_letter"),
+            source: "extension",
+          };
+
+          if (!cancelled) {
+            contentRef.current = nextContent;
+            setDocuments((current) => [...current, nextDocument]);
+            setActiveDocumentIds((current) => ({
+              ...current,
+              cover_letter: nextDocument.id,
+            }));
+            setDocumentMode("cover_letter");
+            setContent(nextContent);
+            setHtml(nextHtml);
+          }
+        }
+      } catch (error) {
+        if (!cancelled) {
+          showErrorToast(error, {
+            title: "Could not load generated document",
+            fallbackDescription: "Studio is ready with a blank document.",
+          });
+        }
+      } finally {
+        if (!cancelled) router.replace(pathname);
+      }
+    }
+
+    loadExtensionDocument();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [pathname, router, searchParams, showErrorToast]);
 
   const setFilesPanelCollapsed = useCallback((collapsed: boolean) => {
     setFilesPanelCollapsedState(collapsed);
@@ -552,6 +691,10 @@ export function useStudioPageState(): StudioPageState {
     }
 
     if (orderedEntries.length === 0) {
+      if (activeDocument.source === "extension") {
+        setGenerating(false);
+        return;
+      }
       setHtml("");
       contentRef.current = undefined;
       setContent(undefined);
@@ -662,6 +805,7 @@ export function useStudioPageState(): StudioPageState {
   }, [
     documentMode,
     activeDocument.id,
+    activeDocument.source,
     orderedEntries,
     previewVersionId,
     showErrorToast,
