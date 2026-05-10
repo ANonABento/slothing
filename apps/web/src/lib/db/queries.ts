@@ -252,7 +252,7 @@ export function getProfile(userId: string = "default"): Profile | null {
       id: s.id,
       name: s.name,
       category: s.category,
-      proficiency: s.proficiency,
+      proficiency: s.proficiency ?? undefined,
     })),
     projects: projects.map((p) => ({
       id: p.id,
@@ -378,7 +378,7 @@ export function updateProfile(
           userId,
           skill.name,
           skill.category,
-          skill.proficiency,
+          skill.proficiency ?? null,
         );
       }
     }

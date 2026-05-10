@@ -16,6 +16,7 @@ import { parseResumeWithLLM, parseResumeBasic } from "@/lib/parser/resume";
 import { parseDocumentSchema } from "@/lib/constants";
 import { requireAuth, isAuthError } from "@/lib/auth";
 import { populateBankFromProfile } from "@/lib/resume/info-bank";
+import { mergeParsedProfileForAutoPromote } from "@/lib/profile/auto-promote";
 import type { LLMConfig, Profile } from "@/types";
 
 export const dynamic = "force-dynamic";
@@ -108,8 +109,15 @@ export async function POST(request: NextRequest) {
     );
     console.log(`[parse] Parse complete: ${sections.join(", ")}`);
 
-    // Save to profile
-    updateProfile(parsedProfile, authResult.userId);
+    // Save only into empty profile fields, preserving manual edits.
+    const existingProfile = getProfile(authResult.userId);
+    const promoted = mergeParsedProfileForAutoPromote(
+      existingProfile,
+      parsedProfile,
+    );
+    if (Object.keys(promoted).length > 0) {
+      updateProfile(promoted, authResult.userId);
+    }
 
     // Populate information bank from parsed profile (non-fatal)
     try {
