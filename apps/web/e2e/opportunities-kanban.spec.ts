@@ -8,7 +8,7 @@ test.skip(
 
 test.describe("Opportunities Kanban lanes", () => {
   test("persists configured lane visibility", async ({ page }) => {
-    await prepareAppPage(page, "/opportunities");
+    await prepareAppPage(page, "/en/opportunities");
 
     await page.getByRole("button", { name: /kanban/i }).click();
     const board = page.getByRole("region", {
@@ -18,10 +18,10 @@ test.describe("Opportunities Kanban lanes", () => {
     await expect(board.locator("section")).toHaveCount(6);
     await expect(page.getByText("Member of Technical Staff")).toBeVisible();
 
-    await prepareAppPage(page, "/settings");
+    await prepareAppPage(page, "/en/settings");
     await page.getByRole("button", { name: "Pending" }).click();
 
-    await prepareAppPage(page, "/opportunities");
+    await prepareAppPage(page, "/en/opportunities");
     await page.getByRole("button", { name: /kanban/i }).click();
     await expect(
       page.getByRole("region", { name: "Pending opportunities" }),

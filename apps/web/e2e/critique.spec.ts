@@ -50,7 +50,7 @@ test.describe("Cover Letter Critique", () => {
     });
 
     await skipOnboardingSetup(page);
-    await page.goto("/studio");
+    await page.goto("/en/studio");
     await page.waitForLoadState("networkidle");
 
     await page.getByRole("button", { name: /^cover letter$/i }).click();

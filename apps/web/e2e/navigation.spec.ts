@@ -1,6 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 
-async function preparePage(page: Page, path = "/dashboard") {
+async function preparePage(page: Page, path = "/en/dashboard") {
   await page.addInitScript(() => {
     localStorage.setItem("get_me_job_onboarding_completed", "true");
   });
@@ -56,11 +56,11 @@ test.describe("Navigation", () => {
   });
 
   test("should navigate to Dashboard", async ({ page }) => {
-    await preparePage(page, "/bank");
+    await preparePage(page, "/en/bank");
     await ensureSidebarOpen(page);
     const sidebar = page.locator("aside");
     await sidebar.getByRole("link", { name: /Dashboard/i }).click();
-    await expect(page).toHaveURL("/dashboard");
+    await expect(page).toHaveURL("/en/dashboard");
   });
 
   test("should navigate to Documents (Bank) page", async ({ page }) => {
@@ -68,7 +68,7 @@ test.describe("Navigation", () => {
     await ensureSidebarOpen(page);
     const sidebar = page.locator("aside");
     await sidebar.getByRole("link", { name: /Documents/i }).click();
-    await expect(page).toHaveURL("/bank");
+    await expect(page).toHaveURL("/en/bank");
   });
 
   test("should navigate to Document Studio page @smoke", async ({ page }) => {
@@ -76,7 +76,7 @@ test.describe("Navigation", () => {
     await ensureSidebarOpen(page);
     const sidebar = page.locator("aside");
     await sidebar.getByRole("link", { name: /Document Studio/i }).click();
-    await expect(page).toHaveURL("/studio");
+    await expect(page).toHaveURL("/en/studio");
   });
 
   test("should navigate to Settings page @smoke", async ({ page }) => {
@@ -84,7 +84,7 @@ test.describe("Navigation", () => {
     await ensureSidebarOpen(page);
     const sidebar = page.locator("aside");
     await sidebar.getByRole("link", { name: /Settings/i }).click();
-    await expect(page).toHaveURL("/settings");
+    await expect(page).toHaveURL("/en/settings");
   });
 
   test("should navigate to Interview Prep page", async ({ page }) => {
@@ -92,7 +92,7 @@ test.describe("Navigation", () => {
     await ensureSidebarOpen(page);
     const sidebar = page.locator("aside");
     await sidebar.getByRole("link", { name: /Interview Prep/i }).click();
-    await expect(page).toHaveURL("/interview");
+    await expect(page).toHaveURL("/en/interview");
   });
 
   test("should navigate to Analytics page", async ({ page }) => {
@@ -100,11 +100,11 @@ test.describe("Navigation", () => {
     await ensureSidebarOpen(page);
     const sidebar = page.locator("aside");
     await sidebar.getByRole("link", { name: /Analytics/i }).click();
-    await expect(page).toHaveURL("/analytics");
+    await expect(page).toHaveURL("/en/analytics");
   });
 
   test("should highlight active navigation item", async ({ page }) => {
-    await preparePage(page, "/bank");
+    await preparePage(page, "/en/bank");
     await ensureSidebarOpen(page);
     const sidebar = page.locator("aside");
     const activeLink = sidebar.getByRole("link", { name: /Documents/i });
@@ -141,7 +141,7 @@ test.describe("Keyboard Shortcuts", () => {
 
     // Press 's' to go to Settings
     await page.keyboard.press("s");
-    await expect(page).toHaveURL("/settings");
+    await expect(page).toHaveURL("/en/settings");
   });
 
   test("should close keyboard shortcuts dialog with Escape", async ({

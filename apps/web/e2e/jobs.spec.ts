@@ -24,7 +24,7 @@ test.describe("Opportunities Page", () => {
     await page.evaluate(() => {
       localStorage.setItem("get_me_job_onboarding_completed", "true");
     });
-    await page.goto("/opportunities");
+    await page.goto("/en/opportunities");
   });
 
   test("should display opportunities page header", async ({ page }) => {
@@ -99,7 +99,7 @@ test.describe("Opportunity Status Updates", () => {
     await page.evaluate(() => {
       localStorage.setItem("get_me_job_onboarding_completed", "true");
     });
-    await page.goto("/opportunities");
+    await page.goto("/en/opportunities");
   });
 
   test("should be able to change opportunity status", async ({ page }) => {

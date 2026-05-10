@@ -18,7 +18,7 @@ import type {
   ExportType,
   ImportPreview,
   ImportResult,
-} from "@/app/(app)/settings/use-data-io";
+} from "@/app/[locale]/(app)/settings/use-data-io";
 
 interface DataManagementProps {
   exporting: ExportType | null;

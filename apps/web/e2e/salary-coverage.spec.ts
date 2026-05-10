@@ -17,7 +17,7 @@ test.describe("Salary coverage", () => {
       });
     });
 
-    await prepareAppPage(page, "/salary");
+    await prepareAppPage(page, "/en/salary");
   });
 
   test("renders salary tools and tab navigation", async ({ page }) => {

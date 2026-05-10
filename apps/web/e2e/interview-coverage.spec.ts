@@ -10,7 +10,7 @@ test.describe("Interview coverage", () => {
       await route.fulfill({ json: { sessions: [] } });
     });
 
-    await prepareAppPage(page, "/interview");
+    await prepareAppPage(page, "/en/interview");
   });
 
   test("renders the interview prep empty state", async ({ page }) => {
@@ -22,7 +22,7 @@ test.describe("Interview coverage", () => {
     ).toBeVisible();
     await expect(
       page.getByRole("link", { name: /add an opportunity/i }),
-    ).toHaveAttribute("href", "/opportunities");
+    ).toHaveAttribute("href", "/en/opportunities");
   });
 
   test("opens and closes quick practice from a category tile", async ({
