@@ -71,6 +71,13 @@
       "when": 1778406026110,
       "tag": "0009_huge_kitty_pryde",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "6",
+      "when": 1778457600000,
+      "tag": "0010_jobs_user_url_index",
+      "breakpoints": true
     }
   ]
 }

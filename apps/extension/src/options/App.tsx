@@ -225,6 +225,46 @@ export default function OptionsApp() {
       </section>
 
       <section>
+        <h2>Auto-track applications</h2>
+        <div className="setting-group">
+          <label className="checkbox-label">
+            <input
+              type="checkbox"
+              checked={settings.autoTrackApplicationsEnabled}
+              onChange={(e) =>
+                handleSettingChange(
+                  "autoTrackApplicationsEnabled",
+                  e.target.checked,
+                )
+              }
+            />
+            <span>Track submitted applications</span>
+          </label>
+          <small>
+            Create an applied opportunity when an autofilled application form is
+            submitted
+          </small>
+        </div>
+
+        <div className="setting-group">
+          <label className="checkbox-label">
+            <input
+              type="checkbox"
+              checked={settings.captureScreenshotEnabled}
+              onChange={(e) =>
+                handleSettingChange(
+                  "captureScreenshotEnabled",
+                  e.target.checked,
+                )
+              }
+            />
+            <span>Capture screenshot when tracking</span>
+          </label>
+          <small>Off by default; form values are never captured</small>
+        </div>
+      </section>
+
+      <section>
         <h2>Notifications</h2>
         <div className="setting-group">
           <label className="checkbox-label">

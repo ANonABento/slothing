@@ -4,7 +4,7 @@ import type {
   ExtensionMessage,
   ExtensionResponse,
   ScrapedJob,
-  DetectedField,
+  TrackedApplicationPayload,
 } from "@/shared/types";
 import { getAPIClient, resetAPIClient } from "./api-client";
 import {
@@ -14,6 +14,7 @@ import {
   getCachedProfile,
   setCachedProfile,
   getApiBaseUrl,
+  getSettings,
 } from "./storage";
 import { setBadgeForTab, clearBadgeForTab } from "./badge";
 
@@ -49,11 +50,23 @@ async function handleMessage(
     case "GET_PROFILE":
       return handleGetProfile();
 
+    case "GET_SETTINGS":
+      return handleGetSettings();
+
     case "IMPORT_JOB":
       return handleImportJob(message.payload as ScrapedJob);
 
     case "IMPORT_JOBS_BATCH":
       return handleImportJobsBatch(message.payload as ScrapedJob[]);
+
+    case "TRACK_APPLIED":
+      return handleTrackApplied(message.payload as TrackedApplicationPayload);
+
+    case "OPEN_DASHBOARD":
+      return handleOpenDashboard();
+
+    case "CAPTURE_VISIBLE_TAB":
+      return handleCaptureVisibleTab();
 
     case "SAVE_ANSWER":
       return handleSaveAnswer(
@@ -151,6 +164,14 @@ async function handleGetProfile(): Promise<ExtensionResponse> {
   }
 }
 
+async function handleGetSettings(): Promise<ExtensionResponse> {
+  try {
+    return { success: true, data: await getSettings() };
+  } catch (error) {
+    return { success: false, error: (error as Error).message };
+  }
+}
+
 async function handleImportJob(job: ScrapedJob): Promise<ExtensionResponse> {
   try {
     const client = await getAPIClient();
@@ -170,6 +191,40 @@ async function handleImportJobsBatch(
     return { success: true, data: result };
   } catch (error) {
     return { success: false, error: (error as Error).message };
+  }
+}
+
+async function handleTrackApplied(
+  payload: TrackedApplicationPayload,
+): Promise<ExtensionResponse> {
+  try {
+    const client = await getAPIClient();
+    const result = await client.trackApplied(payload);
+    return { success: true, data: result };
+  } catch (error) {
+    return { success: false, error: (error as Error).message };
+  }
+}
+
+async function handleOpenDashboard(): Promise<ExtensionResponse> {
+  try {
+    const apiBaseUrl = await getApiBaseUrl();
+    await chrome.tabs.create({ url: `${apiBaseUrl}/dashboard` });
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: (error as Error).message };
+  }
+}
+
+async function handleCaptureVisibleTab(): Promise<ExtensionResponse> {
+  try {
+    const dataUrl = await chrome.tabs.captureVisibleTab(undefined, {
+      format: "jpeg",
+      quality: 35,
+    });
+    return { success: true, data: { dataUrl } };
+  } catch {
+    return { success: false };
   }
 }
 

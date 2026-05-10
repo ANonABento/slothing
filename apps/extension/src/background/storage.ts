@@ -17,8 +17,8 @@ export async function getStorage(): Promise<ExtensionStorage> {
         | undefined;
       resolve({
         apiBaseUrl: DEFAULT_API_BASE_URL,
-        settings: DEFAULT_SETTINGS,
         ...stored,
+        settings: { ...DEFAULT_SETTINGS, ...stored?.settings },
       });
     });
   });

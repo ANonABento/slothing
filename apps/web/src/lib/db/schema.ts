@@ -166,7 +166,10 @@ export const jobs = sqliteTable(
     notes: text("notes"),
     createdAt: text("created_at").default(sql`CURRENT_TIMESTAMP`),
   },
-  (table) => [index("idx_jobs_user_created").on(table.userId, table.createdAt)],
+  (table) => [
+    index("idx_jobs_user_created").on(table.userId, table.createdAt),
+    index("idx_jobs_user_url").on(table.userId, table.url),
+  ],
 );
 
 // Generated resumes table

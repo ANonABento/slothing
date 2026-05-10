@@ -5,6 +5,8 @@ const mocks = vi.hoisted(() => ({
   requireExtensionAuth: vi.fn(),
   createJob: vi.fn(),
   countJobsByStatus: vi.fn(),
+  getJobByUrl: vi.fn(),
+  updateJobStatus: vi.fn(),
   createNotification: vi.fn(),
 }));
 
@@ -15,6 +17,8 @@ vi.mock("@/lib/extension-auth", () => ({
 vi.mock("@/lib/db/jobs", () => ({
   createJob: mocks.createJob,
   countJobsByStatus: mocks.countJobsByStatus,
+  getJobByUrl: mocks.getJobByUrl,
+  updateJobStatus: mocks.updateJobStatus,
 }));
 
 vi.mock("@/lib/db/notifications", () => ({
@@ -47,6 +51,7 @@ describe("opportunities from-extension route", () => {
       userId: "user-1",
     });
     mocks.countJobsByStatus.mockReturnValue(4);
+    mocks.getJobByUrl.mockReturnValue(null);
   });
 
   it("creates a pending opportunity and notification for a single scraped job", async () => {
@@ -70,6 +75,7 @@ describe("opportunities from-extension route", () => {
       imported: 1,
       opportunityIds: ["job-1"],
       pendingCount: 4,
+      dedupedIds: [],
     });
     expect(mocks.createJob).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -117,6 +123,7 @@ describe("opportunities from-extension route", () => {
       imported: 2,
       opportunityIds: ["job-1", "job-2"],
       pendingCount: 4,
+      dedupedIds: [],
     });
     expect(mocks.createJob).toHaveBeenCalledTimes(2);
     expect(mocks.createNotification).toHaveBeenCalledWith(
@@ -165,5 +172,77 @@ describe("opportunities from-extension route", () => {
     });
     expect(mocks.createJob).not.toHaveBeenCalled();
     expect(mocks.createNotification).not.toHaveBeenCalled();
+  });
+
+  it("promotes an existing URL match to applied without creating a duplicate", async () => {
+    mocks.getJobByUrl.mockReturnValueOnce({
+      id: "job-1",
+      title: "Frontend Engineer",
+      company: "Acme",
+      url: "https://example.com/jobs/frontend",
+    });
+    mocks.updateJobStatus.mockReturnValueOnce({
+      id: "job-1",
+      title: "Frontend Engineer",
+      company: "Acme",
+      status: "applied",
+    });
+
+    const response = await POST(
+      jsonRequest({
+        title: "Frontend Engineer",
+        company: "Acme",
+        url: "https://example.com/jobs/frontend",
+        status: "applied",
+        appliedAt: "2026-05-10T12:00:00.000Z",
+      }),
+    );
+
+    await expect(response.json()).resolves.toEqual({
+      imported: 1,
+      opportunityIds: ["job-1"],
+      pendingCount: 4,
+      dedupedIds: ["job-1"],
+    });
+    expect(mocks.createJob).not.toHaveBeenCalled();
+    expect(mocks.updateJobStatus).toHaveBeenCalledWith(
+      "job-1",
+      "applied",
+      "2026-05-10T12:00:00.000Z",
+      "user-1",
+    );
+  });
+
+  it("creates an applied opportunity when no URL duplicate exists", async () => {
+    mocks.createJob.mockReturnValueOnce({
+      id: "job-1",
+      title: "Frontend Engineer",
+      company: "Acme",
+      status: "applied",
+    });
+
+    const response = await POST(
+      jsonRequest({
+        title: "Frontend Engineer",
+        company: "Acme",
+        url: "https://example.com/jobs/frontend",
+        status: "applied",
+        appliedAt: "2026-05-10T12:00:00.000Z",
+      }),
+    );
+
+    await expect(response.json()).resolves.toEqual({
+      imported: 1,
+      opportunityIds: ["job-1"],
+      pendingCount: 4,
+      dedupedIds: [],
+    });
+    expect(mocks.createJob).toHaveBeenCalledWith(
+      expect.objectContaining({
+        status: "applied",
+        appliedAt: "2026-05-10T12:00:00.000Z",
+      }),
+      "user-1",
+    );
   });
 });
