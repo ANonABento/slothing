@@ -32,6 +32,7 @@ function StudioPageContent() {
         saveStatus={studio.saveStatus}
         templateId={studio.templateId}
         canCopyHtml={Boolean(studio.content || studio.html)}
+        canDownloadDocx={Boolean(studio.content || studio.html)}
         canDownloadPdf={Boolean(studio.content || studio.html)}
         isExporting={studio.isExporting}
         onDocumentModeChange={studio.setDocumentMode}
@@ -39,6 +40,7 @@ function StudioPageContent() {
         onFilesPanelToggle={() => studio.setMobileView("edit")}
         onTemplateSelect={studio.handleTemplateSelect}
         onCopyHtml={studio.handleCopyHtml}
+        onDownloadDocx={studio.handleDownloadDocx}
         onDownloadPdf={studio.handleDownloadPdf}
       />
 

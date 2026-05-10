@@ -47,6 +47,7 @@ interface StudioHeaderProps {
   saveStatus: StudioSaveStatus;
   templateId: string;
   canCopyHtml: boolean;
+  canDownloadDocx: boolean;
   canDownloadPdf: boolean;
   isExporting: boolean;
   onDocumentModeChange: (mode: DocumentMode) => void;
@@ -54,6 +55,7 @@ interface StudioHeaderProps {
   onFilesPanelToggle?: () => void;
   onTemplateSelect: (templateId: string) => void;
   onCopyHtml: () => void;
+  onDownloadDocx: () => void;
   onDownloadPdf: () => void;
 }
 
@@ -70,6 +72,7 @@ export function StudioHeader({
   saveStatus,
   templateId,
   canCopyHtml,
+  canDownloadDocx,
   canDownloadPdf,
   isExporting,
   onDocumentModeChange,
@@ -77,6 +80,7 @@ export function StudioHeader({
   onFilesPanelToggle,
   onTemplateSelect,
   onCopyHtml,
+  onDownloadDocx,
   onDownloadPdf,
 }: StudioHeaderProps) {
   const [templateOpen, setTemplateOpen] = useState(false);
@@ -113,10 +117,10 @@ export function StudioHeader({
   const saveStatusLabel = getStudioSaveStatusLabel(saveStatus, now);
   const saveStatusIcon = getStudioSaveStatusIcon(saveStatus);
   const exportHelpText =
-    !canCopyHtml || !canDownloadPdf
+    !canCopyHtml || !canDownloadPdf || !canDownloadDocx
       ? `Add bank entries or edit the ${documentLabel} to enable export.`
       : null;
-  const canExport = canCopyHtml && canDownloadPdf;
+  const canExport = canCopyHtml && canDownloadPdf && canDownloadDocx;
   const exportDisabled = !canExport || isExporting;
 
   useEffect(() => {
@@ -412,7 +416,6 @@ export function StudioHeader({
                 aria-label={`${modeLabel} export actions`}
                 className="absolute right-0 top-full z-50 mt-2 w-48 overflow-hidden rounded-[var(--radius)] border-[length:var(--border-width)] bg-popover p-1 text-popover-foreground shadow-[var(--shadow-elevated)]"
               >
-                {/* TODO: add "Download DOCX" once exporter exists. */}
                 <button
                   type="button"
                   role="menuitem"
@@ -424,6 +427,18 @@ export function StudioHeader({
                 >
                   <Download className="h-4 w-4" />
                   Download PDF
+                </button>
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => {
+                    setExportOpen(false);
+                    onDownloadDocx();
+                  }}
+                  className="flex min-h-9 w-full items-center gap-2 rounded-[calc(var(--radius)_-_2px)] px-3 text-left text-sm transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <Download className="h-4 w-4" />
+                  Download DOCX
                 </button>
                 <button
                   type="button"
