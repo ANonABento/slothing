@@ -70,8 +70,8 @@ export const SearchBar = forwardRef<HTMLInputElement, SearchBarProps>(
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               ref={ref}
-              aria-label="Search knowledge bank"
-              placeholder="Search your knowledge bank..."
+              aria-label="Search your career profile"
+              placeholder="Search your career profile..."
               value={query}
               onChange={(e) => onQueryChange(e.target.value)}
               className="pl-10 pr-12"

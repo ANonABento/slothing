@@ -30,7 +30,7 @@ async function ensureBankContent(page: Page): Promise<void> {
   }
 
   await expect(
-    page.getByPlaceholder(/search your knowledge bank/i),
+    page.getByPlaceholder(/search your career profile/i),
   ).toBeVisible();
 }
 
