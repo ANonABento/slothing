@@ -26,6 +26,13 @@ const initialAnswers: ScratchProfileAnswers = {
   educationDegree: "",
   educationField: "",
   skillsCsv: "",
+  experienceCompany: "",
+  experienceTitle: "",
+  experienceHighlights: "",
+  projectName: "",
+  projectSummary: "",
+  projectHighlights: "",
+  achievements: "",
 };
 
 interface BuilderStepProps {
@@ -36,6 +43,7 @@ export function BuilderStep({ onAdvance }: BuilderStepProps) {
   const [answers, setAnswers] = useState<ScratchProfileAnswers>(initialAnswers);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [expanded, setExpanded] = useState(false);
 
   const canSubmit = useMemo(
     () =>
@@ -179,6 +187,98 @@ export function BuilderStep({ onAdvance }: BuilderStepProps) {
             placeholder="Customer service, Excel, Python"
           />
         </label>
+
+        <div className="rounded-[var(--radius)] border-[length:var(--border-width)] border-border/70">
+          <button
+            type="button"
+            className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left text-sm text-muted-foreground"
+            aria-expanded={expanded}
+            onClick={() => setExpanded((current) => !current)}
+          >
+            <span className="font-medium text-foreground">
+              Add a role, project, or honour (optional)
+            </span>
+            <span aria-hidden="true">{expanded ? "Hide" : "Add"}</span>
+          </button>
+
+          {expanded && (
+            <div className="space-y-4 border-t border-border/70 px-4 py-4">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <label className="space-y-1.5">
+                  <span className="text-sm font-medium">
+                    Company / organisation
+                  </span>
+                  <Input
+                    value={answers.experienceCompany}
+                    onChange={updateAnswer("experienceCompany")}
+                    placeholder="Campus cafe"
+                  />
+                </label>
+                <label className="space-y-1.5">
+                  <span className="text-sm font-medium">Role / title</span>
+                  <Input
+                    value={answers.experienceTitle}
+                    onChange={updateAnswer("experienceTitle")}
+                    placeholder="Barista"
+                  />
+                </label>
+              </div>
+
+              <label className="space-y-1.5 block">
+                <span className="text-sm font-medium">
+                  Role highlights (one per line, up to 3)
+                </span>
+                <Textarea
+                  value={answers.experienceHighlights}
+                  onChange={updateAnswer("experienceHighlights")}
+                  placeholder={"Pulled espresso shots\nTrained 3 new baristas"}
+                />
+              </label>
+
+              <label className="space-y-1.5 block">
+                <span className="text-sm font-medium">Project name</span>
+                <Input
+                  value={answers.projectName}
+                  onChange={updateAnswer("projectName")}
+                  placeholder="Community pantry dashboard"
+                />
+              </label>
+
+              <label className="space-y-1.5 block">
+                <span className="text-sm font-medium">What did you build?</span>
+                <Textarea
+                  value={answers.projectSummary}
+                  onChange={updateAnswer("projectSummary")}
+                  placeholder="A class project that tracked donations and volunteer shifts"
+                />
+              </label>
+
+              <label className="space-y-1.5 block">
+                <span className="text-sm font-medium">
+                  Project highlights (one per line)
+                </span>
+                <Textarea
+                  value={answers.projectHighlights}
+                  onChange={updateAnswer("projectHighlights")}
+                  placeholder={
+                    "Built a filterable tracker\nPresented findings to class"
+                  }
+                />
+              </label>
+
+              <label className="space-y-1.5 block">
+                <span className="text-sm font-medium">
+                  Honours, awards, leadership (comma-separated)
+                </span>
+                <Input
+                  value={answers.achievements}
+                  onChange={updateAnswer("achievements")}
+                  placeholder="Residence council secretary, Dean's list"
+                />
+              </label>
+            </div>
+          )}
+        </div>
 
         {error && (
           <div

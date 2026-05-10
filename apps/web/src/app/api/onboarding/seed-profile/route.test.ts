@@ -57,6 +57,25 @@ const seedBody = {
   skills: [{ id: "skill-1", name: "TypeScript", category: "other" }],
 };
 
+const seedExperience = {
+  id: "exp-1",
+  company: "Campus Cafe",
+  title: "Barista",
+  startDate: "",
+  current: false,
+  description: "Trained 3 new baristas.",
+  highlights: ["Trained 3 new baristas."],
+  skills: [],
+};
+
+const seedProject = {
+  id: "project-1",
+  name: "Community pantry dashboard",
+  description: "Tracked donations and volunteer shifts.",
+  technologies: [],
+  highlights: ["Presented findings to class."],
+};
+
 describe("/api/onboarding/seed-profile", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -124,6 +143,60 @@ describe("/api/onboarding/seed-profile", () => {
     await expect(response.json()).resolves.toMatchObject({
       success: true,
       profile: updatedProfile,
+    });
+  });
+
+  it("accepts experiences and projects", async () => {
+    const body = {
+      ...seedBody,
+      experiences: [seedExperience],
+      projects: [seedProject],
+    };
+    const updatedProfile = profile({
+      contact: seedBody.contact,
+      summary: seedBody.summary,
+      skills: seedBody.skills as Profile["skills"],
+      experiences: [seedExperience],
+      projects: [seedProject],
+    });
+    routeMocks.getProfile
+      .mockReturnValueOnce(profile())
+      .mockReturnValueOnce(updatedProfile);
+
+    const response = await POST(jsonRequest(body));
+
+    expect(response.status).toBe(200);
+    expect(routeMocks.updateProfile).toHaveBeenCalledWith(
+      expect.objectContaining({
+        experiences: [seedExperience],
+        projects: [seedProject],
+      }),
+      "user-1",
+    );
+    expect(routeMocks.populateBankFromProfile).toHaveBeenCalledWith(
+      expect.objectContaining({
+        experiences: [seedExperience],
+        projects: [seedProject],
+      }),
+      undefined,
+      "user-1",
+    );
+  });
+
+  it("rejects malformed experience entries", async () => {
+    const response = await POST(
+      jsonRequest({
+        ...seedBody,
+        experiences: [{ company: "" }],
+      }),
+    );
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toMatchObject({
+      error: "Validation failed",
+      errors: expect.arrayContaining([
+        expect.objectContaining({ field: "experiences.0.company" }),
+      ]),
     });
   });
 
