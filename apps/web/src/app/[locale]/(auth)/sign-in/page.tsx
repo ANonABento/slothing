@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { isEmailMagicLinkConfigured, isNextAuthConfigured } from "@/auth";
+import {
+  isDevAuthBypassAllowed,
+  isEmailMagicLinkConfigured,
+  isNextAuthConfigured,
+} from "@/auth";
 import { SignInCard } from "./sign-in-card";
 
 export const metadata: Metadata = {
@@ -16,7 +20,24 @@ interface SignInPageProps {
 
 export default function SignInPage({ params, searchParams }: SignInPageProps) {
   if (!isNextAuthConfigured()) {
-    redirect(`/${params.locale}/dashboard`);
+    if (isDevAuthBypassAllowed()) {
+      redirect(`/${params.locale}/dashboard`);
+    }
+
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background px-4 py-10 text-foreground">
+        <main className="w-full max-w-md rounded-lg border bg-card p-6 shadow-sm">
+          <h1 className="text-2xl font-semibold tracking-normal">
+            Sign-in unavailable
+          </h1>
+          <p className="mt-3 text-sm leading-6 text-muted-foreground">
+            Authentication is not configured for this deployment. Set
+            GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, and NEXTAUTH_SECRET, then
+            restart the app.
+          </p>
+        </main>
+      </div>
+    );
   }
 
   const callbackUrl = searchParams?.callbackUrl ?? `/${params.locale}/dashboard`;
