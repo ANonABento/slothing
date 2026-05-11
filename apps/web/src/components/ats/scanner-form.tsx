@@ -188,6 +188,7 @@ export function ScannerForm({ locale = "en" }: ScannerFormProps = {}) {
   const [resultQuality, setResultQuality] =
     useState<ResultQualityRubric | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
+  const scrapingRef = useRef(false);
   const jobTextareaRef = useRef<HTMLTextAreaElement>(null);
 
   const parseFile = useCallback(async (file: File) => {
@@ -259,8 +260,9 @@ export function ScannerForm({ locale = "en" }: ScannerFormProps = {}) {
 
   async function handleScrapeJob() {
     const url = jobUrl.trim();
-    if (!url || scraping) return;
+    if (!url || scrapingRef.current) return;
 
+    scrapingRef.current = true;
     setScrapeError("");
     setScrapeStatus("");
     setScraping(true);
@@ -292,6 +294,7 @@ export function ScannerForm({ locale = "en" }: ScannerFormProps = {}) {
         `${error instanceof Error ? error.message : "Could not import that job posting."} Paste manually instead.`,
       );
     } finally {
+      scrapingRef.current = false;
       setScraping(false);
     }
   }
