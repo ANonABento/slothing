@@ -118,7 +118,9 @@ describe("runDailyDigest", () => {
   it("skips users already sent today", async () => {
     mocks.hasDailyDigestSentSince.mockReturnValue(true);
 
-    const result = await runDailyDigest();
+    const result = await runDailyDigest({
+      now: new Date("2026-05-10T08:00:00.000Z"),
+    });
 
     expect(result).toMatchObject({ sent: 0, skipped: 1, errors: 0 });
     expect(result.outcomes[0]).toMatchObject({ reason: "already_sent" });
@@ -134,7 +136,9 @@ describe("runDailyDigest", () => {
       },
     ]);
 
-    const result = await runDailyDigest();
+    const result = await runDailyDigest({
+      now: new Date("2026-05-10T08:00:00.000Z"),
+    });
 
     expect(result).toMatchObject({ sent: 0, skipped: 1, errors: 0 });
     expect(result.outcomes[0]).toMatchObject({ reason: "digest_disabled" });
@@ -143,7 +147,9 @@ describe("runDailyDigest", () => {
   it("skips when email is not configured without writing idempotency", async () => {
     mocks.isTransactionalEmailConfigured.mockReturnValue(false);
 
-    const result = await runDailyDigest();
+    const result = await runDailyDigest({
+      now: new Date("2026-05-10T08:00:00.000Z"),
+    });
 
     expect(result).toMatchObject({ sent: 0, skipped: 1, errors: 0 });
     expect(result.outcomes[0]).toMatchObject({
@@ -157,7 +163,10 @@ describe("runDailyDigest", () => {
       .fn()
       .mockResolvedValue({ ok: false, status: 500, error: "down" });
 
-    const result = await runDailyDigest({ sender });
+    const result = await runDailyDigest({
+      now: new Date("2026-05-10T08:00:00.000Z"),
+      sender,
+    });
 
     expect(result).toMatchObject({ sent: 0, skipped: 0, errors: 1 });
     expect(mocks.createEmailSend).toHaveBeenCalledWith(

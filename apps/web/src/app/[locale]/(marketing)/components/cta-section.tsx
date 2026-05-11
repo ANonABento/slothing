@@ -57,9 +57,8 @@ export async function CTASection() {
               <span className="gradient-text">resumes</span>?
             </h2>
             <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-              Join thousands of job seekers who build tailored resumes in
-              minutes, not hours. Join thousands of successful job seekers who
-              have transformed their career journey with Slothing.
+              Build tailored resumes in minutes, not hours, and keep every
+              version organized.
             </p>
 
             {/* Benefits */}
