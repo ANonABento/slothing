@@ -23,8 +23,6 @@ import { buildTailorAutofixPrompt } from "@/lib/tailor/prompt-builders";
 
 export const dynamic = "force-dynamic";
 
-export { buildTailorAutofixPrompt as buildAutofixPrompt };
-
 export async function POST(request: NextRequest) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
