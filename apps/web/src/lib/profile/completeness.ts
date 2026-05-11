@@ -19,6 +19,8 @@ export type ProfileCompletenessFocusTab =
 export interface ProfileCompletenessGap {
   id: ProfileCompletenessGapId;
   label: string;
+  labelKey?: string;
+  labelValues?: Record<string, string | number>;
   points: number;
   priority: number;
   focus: {
@@ -137,11 +139,20 @@ export function scoreProfile(
     const experienceLabel = bestExperience?.company
       ? `Add ${Math.max(1, 3 - countHighlights(bestExperience))} more bullet${3 - countHighlights(bestExperience) === 1 ? "" : "s"} to your ${bestExperience.company} role`
       : "Add one experience with at least 3 bullets";
+    const missing = bestExperience
+      ? Math.max(1, 3 - countHighlights(bestExperience))
+      : 3;
     gaps.push(
       makeGap(
         {
           id: "experience-bullets",
           label: experienceLabel,
+          labelKey: bestExperience?.company
+            ? "experience-bullets.role"
+            : "experience-bullets.empty",
+          labelValues: bestExperience?.company
+            ? { missing, company: bestExperience.company }
+            : { missing },
           points: 20,
           focus: { tab: "overview", sectionId: "experience" },
         },
@@ -163,6 +174,12 @@ export function scoreProfile(
         {
           id: "quantified-bullets",
           label: `Add ${missing} quantified bullet${missing === 1 ? "" : "s"}${experienceName}`,
+          labelKey: bestExperience?.company
+            ? "quantified-bullets.role"
+            : "quantified-bullets.empty",
+          labelValues: bestExperience?.company
+            ? { missing, company: bestExperience.company }
+            : { missing },
           points: 10,
           focus: { tab: "overview", sectionId: "experience" },
         },
@@ -197,6 +214,7 @@ export function scoreProfile(
         {
           id: "skills",
           label: `Add ${5 - skillCount} more skill${5 - skillCount === 1 ? "" : "s"}`,
+          labelValues: { missing: 5 - skillCount },
           points: 10,
           focus: { tab: "overview", sectionId: "skills" },
         },
