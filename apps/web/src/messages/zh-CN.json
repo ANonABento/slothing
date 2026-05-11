@@ -262,5 +262,156 @@
     "title": "页面未找到",
     "description": "我们找不到该页面。",
     "action": "返回仪表盘"
+  },
+  "profile": {
+    "title": "个人资料",
+    "description": "维护 Slothing 用于简历、求职信和匹配度检查的源资料。",
+    "actions": {
+      "discard": "放弃",
+      "saveChanges": "保存更改"
+    },
+    "status": {
+      "saving": "正在保存...",
+      "saved": "已保存"
+    },
+    "errors": {
+      "loadProfile": "无法加载个人资料",
+      "saveProfile": "无法保存个人资料"
+    },
+    "unsavedChanges": {
+      "prompt": "你有未保存的个人资料更改。确定不保存就离开吗？"
+    },
+    "tabs": {
+      "ariaLabel": "个人资料分区",
+      "overview": "概览",
+      "preferences": "偏好",
+      "privacy": "隐私"
+    },
+    "answerBankPrompt": {
+      "text": "想让资料更丰富？在答案库中保存可复用的故事和事实。",
+      "action": "打开答案库"
+    },
+    "emptyState": {
+      "title": "让我们设置你的个人资料",
+      "description": "从简历开始，Slothing 可以填入基础信息；也可以打开表单手动添加细节。",
+      "uploadResume": "上传简历来填充资料",
+      "fillManually": "或手动填写"
+    },
+    "sidebar": {
+      "yourName": "你的姓名",
+      "addHeadline": "添加一句简介",
+      "noEmail": "无邮箱",
+      "noLocation": "无地点",
+      "noTargetSalary": "无目标薪资",
+      "salaryRange": "{currency} {min}-{max}",
+      "salaryMinimum": "{currency} {min} 起",
+      "salaryMaximum": "最高 {currency} {max}",
+      "profilePhoto": "头像",
+      "profilePhotoNamed": "{name} 的头像"
+    },
+    "placeholders": {
+      "headline": "高级产品工程师"
+    },
+    "sections": {
+      "identity": {
+        "title": "身份信息",
+        "description": "用于在生成材料中介绍你的头像和简介。"
+      },
+      "contact": {
+        "title": "联系方式",
+        "description": "你愿意复用的链接和联系信息。"
+      },
+      "summary": {
+        "title": "职业总结",
+        "description": "Slothing 可针对不同岗位改写的简洁职业总结。"
+      },
+      "savedSignals": {
+        "title": "已保存的资料信号",
+        "description": "从简历、机会和引导流程导入的结构化信息。"
+      },
+      "careerDetails": {
+        "title": "职业详情",
+        "description": "当前用于生成文档的经历和项目亮点。"
+      }
+    },
+    "fields": {
+      "avatarUrl": "头像 URL",
+      "fullName": "姓名",
+      "headline": "简介",
+      "email": "邮箱地址",
+      "phone": "电话",
+      "location": "地点",
+      "linkedin": "LinkedIn",
+      "github": "GitHub",
+      "website": "网站",
+      "summary": "职业总结",
+      "targetRoles": "目标岗位",
+      "currency": "货币",
+      "minimum": "最低",
+      "maximum": "最高"
+    },
+    "signals": {
+      "experience": "经历",
+      "education": "教育",
+      "skills": "技能",
+      "projects": "项目",
+      "awards": "奖项"
+    },
+    "workStyle": {
+      "title": "工作方式",
+      "description": "选择你希望 Slothing 优先考虑的岗位和工作环境。",
+      "options": {
+        "remote": "远程",
+        "hybrid": "混合办公",
+        "onsite": "现场办公",
+        "fullTime": "全职",
+        "contract": "合同制"
+      }
+    },
+    "targetRoles": {
+      "title": "目标岗位",
+      "description": "列出你希望生成材料重点突出的职位或方向。"
+    },
+    "salary": {
+      "title": "薪酬目标",
+      "description": "可选薪资范围，用于匹配度检查和机会比较。"
+    },
+    "privacy": {
+      "title": "隐私",
+      "description": "控制你的资料如何在面向招聘方的流程中复用。",
+      "openToRecruiters": {
+        "title": "愿意接受招聘方联系",
+        "description": "允许生成材料提到你愿意与招聘方沟通。"
+      },
+      "shareContactInfo": {
+        "title": "默认共享联系方式",
+        "description": "在导出的招聘方可见文档中包含邮箱、电话和链接。"
+      }
+    },
+    "completeness": {
+      "readiness": "资料就绪度",
+      "summary": "个人资料已完成 {score}% · {count, plural, one {# 个快速改进项} other {# 个快速改进项}}",
+      "completeLabel": "已完成",
+      "progressLabel": "个人资料完整度",
+      "noGaps": "关键内容都已填写。",
+      "points": "+{points, plural, one {# 分} other {# 分}}",
+      "gaps": {
+        "contact-info": "添加姓名、邮箱和简介",
+        "summary": "添加职业总结",
+        "experience-bullets": {
+          "empty": "添加一段至少包含 3 条要点的经历",
+          "role": "为你在 {company} 的经历再添加 {missing, plural, one {# 条要点} other {# 条要点}}"
+        },
+        "quantified-bullets": {
+          "empty": "添加 {missing, plural, one {# 条量化要点} other {# 条量化要点}}",
+          "role": "为你在 {company} 的经历添加 {missing, plural, one {# 条量化要点} other {# 条量化要点}}"
+        },
+        "education": "添加教育经历",
+        "skills": "再添加 {missing, plural, one {# 项技能} other {# 项技能}}",
+        "career-depth": "添加一个项目或另一段经历",
+        "achievements": "添加成就、奖项或认证",
+        "social-url": "添加 LinkedIn 或 GitHub URL"
+      }
+    }
   }
 }
