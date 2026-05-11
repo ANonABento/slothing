@@ -8,6 +8,7 @@ import {
   ShieldCheck,
   Sparkles,
 } from "lucide-react";
+import Image from "next/image";
 
 import { ExtensionInstallButtons } from "@/components/marketing/extension-install-buttons";
 import { Badge } from "@/components/ui/badge";
@@ -24,7 +25,7 @@ const featureBlocks = [
     description:
       "Save roles from LinkedIn, Indeed, Greenhouse, Lever, Workable, and niche boards without copying details by hand.",
     icon: Globe2,
-    visual: "job-board",
+    screenshot: "/marketing/extension/job-board-capture.png",
     visualLabel: "Slothing Columbus popover saving a LinkedIn job posting",
   },
   {
@@ -32,7 +33,7 @@ const featureBlocks = [
     description:
       "Turn recruiter outreach into pending opportunities so promising leads do not disappear inside your inbox.",
     icon: Mail,
-    visual: "gmail-import",
+    screenshot: "/marketing/extension/gmail-import.png",
     visualLabel: "Gmail recruiter import view showing pending opportunities",
   },
   {
@@ -40,7 +41,7 @@ const featureBlocks = [
     description:
       "Send captured roles straight into Slothing for review, prioritization, and tailored document work.",
     icon: MousePointerClick,
-    visual: "review-queue",
+    screenshot: "/marketing/extension/review-queue.png",
     visualLabel: "Review queue with three captured roles",
   },
 ] as const;
@@ -139,7 +140,7 @@ export default async function ExtensionLandingPage() {
                   </div>
                   <div className="rounded-lg border bg-muted/40 p-5">
                     <FeatureVisual
-                      variant={feature.visual}
+                      src={feature.screenshot}
                       ariaLabel={feature.visualLabel}
                     />
                   </div>
@@ -265,151 +266,21 @@ export default async function ExtensionLandingPage() {
 }
 
 function FeatureVisual({
-  variant,
+  src,
   ariaLabel,
 }: {
-  variant: (typeof featureBlocks)[number]["visual"];
+  src: (typeof featureBlocks)[number]["screenshot"];
   ariaLabel: string;
 }) {
-  if (variant === "job-board") {
-    return (
-      <div
-        role="img"
-        aria-label={ariaLabel}
-        className="min-h-48 overflow-hidden rounded-lg border bg-background shadow-sm"
-      >
-        <div className="flex items-center gap-2 border-b bg-card px-4 py-3">
-          <span className="h-2.5 w-2.5 rounded-full bg-destructive/70" />
-          <span className="h-2.5 w-2.5 rounded-full bg-warning/70" />
-          <span className="h-2.5 w-2.5 rounded-full bg-success/70" />
-          <span className="ml-2 h-6 flex-1 rounded bg-muted" />
-        </div>
-        <div className="grid gap-4 p-4 sm:grid-cols-[1fr_170px]">
-          <div className="space-y-3">
-            <div className="h-4 w-20 rounded bg-primary/20" />
-            <div className="h-6 w-4/5 rounded bg-foreground/15" />
-            <div className="h-3 w-32 rounded bg-muted" />
-            <div className="space-y-2 pt-2">
-              <div className="h-2.5 rounded bg-muted" />
-              <div className="h-2.5 rounded bg-muted" />
-              <div className="h-2.5 w-2/3 rounded bg-muted" />
-            </div>
-          </div>
-          <div className="rounded-lg border border-primary/30 bg-card p-3 shadow-md">
-            <div className="flex items-center gap-2 text-sm font-semibold">
-              <Database className="h-4 w-4 text-primary" />
-              Save to Slothing
-            </div>
-            <div className="mt-3 space-y-2 text-xs">
-              {["Product Designer", "LinkedIn", "Remote"].map((item) => (
-                <div key={item} className="flex items-center gap-1.5">
-                  <CheckCircle2 className="h-3.5 w-3.5 text-success" />
-                  <span>{item}</span>
-                </div>
-              ))}
-            </div>
-            <div className="mt-4 rounded-md bg-primary px-3 py-2 text-center text-xs font-semibold text-primary-foreground">
-              Capture role
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (variant === "gmail-import") {
-    return (
-      <div
-        role="img"
-        aria-label={ariaLabel}
-        className="min-h-48 overflow-hidden rounded-lg border bg-background shadow-sm"
-      >
-        <div className="flex items-center justify-between border-b bg-card px-4 py-3">
-          <div className="flex items-center gap-2">
-            <Mail className="h-4 w-4 text-primary" />
-            <span className="text-sm font-semibold">Recruiter inbox</span>
-          </div>
-          <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
-            3 pending
-          </span>
-        </div>
-        <div className="grid gap-4 p-4 sm:grid-cols-[1fr_0.8fr]">
-          <div className="space-y-2">
-            {[
-              ["Maya Chen", "Senior PM role at Northstar"],
-              ["Alex Rivera", "Following up on design systems role"],
-              ["Priya Shah", "Backend opening, remote"],
-            ].map(([sender, subject]) => (
-              <div key={subject} className="rounded-md border bg-card p-3">
-                <div className="flex items-center gap-2">
-                  <span className="h-2 w-2 rounded-full bg-primary" />
-                  <span className="text-xs font-semibold">{sender}</span>
-                </div>
-                <div className="mt-1 h-2.5 w-4/5 rounded bg-muted" />
-                <p className="sr-only">{subject}</p>
-              </div>
-            ))}
-          </div>
-          <div className="rounded-lg border border-primary/20 bg-primary/5 p-3">
-            <div className="text-xs font-semibold uppercase text-primary">
-              Pending opportunity
-            </div>
-            <div className="mt-3 space-y-2">
-              <div className="h-4 w-3/4 rounded bg-foreground/15" />
-              <div className="h-3 w-1/2 rounded bg-muted-foreground/20" />
-              <div className="h-3 w-2/3 rounded bg-muted-foreground/20" />
-            </div>
-            <div className="mt-4 rounded-md border bg-background px-3 py-2 text-center text-xs font-semibold">
-              Review lead
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div
-      role="img"
-      aria-label={ariaLabel}
-      className="min-h-48 rounded-lg border bg-background p-4 shadow-sm"
-    >
-      <div className="grid gap-3 sm:grid-cols-3">
-        {[
-          { label: "Capture", detail: "2 new roles", icon: Globe2 },
-          { label: "Pending", detail: "3 to review", icon: Database },
-          { label: "Apply", detail: "Tailor docs", icon: CheckCircle2 },
-        ].map(({ label, detail, icon: Icon }, index) => (
-          <div key={label} className="relative rounded-lg border bg-card p-3">
-            {index < 2 ? (
-              <ArrowRight className="absolute -right-4 top-1/2 hidden h-5 w-5 -translate-y-1/2 text-primary sm:block" />
-            ) : null}
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
-              <Icon className="h-4 w-4" />
-            </div>
-            <div className="mt-4 text-sm font-semibold">{label}</div>
-            <div className="mt-1 text-xs text-muted-foreground">{detail}</div>
-            <div className="mt-4 space-y-1.5">
-              <div className="h-2 rounded bg-muted" />
-              <div className="h-2 w-2/3 rounded bg-muted" />
-            </div>
-          </div>
-        ))}
-      </div>
-      <div className="mt-4 rounded-lg border border-primary/20 bg-primary/5 p-3">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <div className="text-sm font-semibold">Review queue</div>
-            <div className="mt-1 text-xs text-muted-foreground">
-              Three captured roles ready to prioritize.
-            </div>
-          </div>
-          <span className="rounded-full bg-success/15 px-2.5 py-1 text-xs font-semibold text-success">
-            Synced
-          </span>
-        </div>
-      </div>
-    </div>
+    <Image
+      src={src}
+      alt={ariaLabel}
+      width={960}
+      height={600}
+      sizes="(min-width: 768px) 50vw, 100vw"
+      className="aspect-[8/5] w-full rounded-lg border bg-background object-cover shadow-sm"
+    />
   );
 }
 
