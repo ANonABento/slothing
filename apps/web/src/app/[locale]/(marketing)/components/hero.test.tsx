@@ -55,16 +55,20 @@ describe("Hero", () => {
     ).toBeInTheDocument();
   });
 
-  it("should render Try Free ATS Scanner CTA linking to /ats-scanner", async () => {
+  it("should render Scan your resume free CTA linking to /ats-scanner", async () => {
     await renderHero();
-    const atsLink = screen.getByRole("link", { name: /Try Free ATS Scanner/ });
+    const atsLink = screen.getByRole("link", {
+      name: /Scan your resume free/,
+    });
     expect(atsLink).toHaveAttribute("href", "/en/ats-scanner");
   });
 
-  it("should render Get Started CTA linking to sign-in", async () => {
+  it("should render Create a free account link to sign-in", async () => {
     await renderHero();
-    const getStarted = screen.getByRole("link", { name: /Get Started/ });
-    expectLocalizedHref(getStarted, "en");
+    const accountLink = screen.getByRole("link", {
+      name: /Create a free account/,
+    });
+    expectLocalizedHref(accountLink, "en");
   });
 
   it.each(["es", "zh-CN", "pt-BR"])(
@@ -73,12 +77,14 @@ describe("Hero", () => {
       await renderHero(locale);
 
       const atsLink = screen.getByRole("link", {
-        name: /Try Free ATS Scanner/,
+        name: /Scan your resume free/,
       });
-      const getStarted = screen.getByRole("link", { name: /Get Started/ });
+      const accountLink = screen.getByRole("link", {
+        name: /Create a free account/,
+      });
 
       expect(atsLink).toHaveAttribute("href", `/${locale}/ats-scanner`);
-      expectLocalizedHref(getStarted, locale);
+      expectLocalizedHref(accountLink, locale);
     },
   );
 

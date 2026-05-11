@@ -7,13 +7,10 @@ const footerLinks = {
     { name: "Features", href: "#features" },
     { name: "How It Works", href: "#how-it-works" },
     { name: "Pricing", href: "/pricing" },
-    { name: "Extension", href: "/extension" },
-    { name: "ATS Scanner", href: "/ats-scanner" },
   ],
   resources: [
-    { name: "Dashboard", href: "/dashboard" },
-    { name: "Documents", href: "/bank" },
-    { name: "Interview Prep", href: "/interview" },
+    { name: "ATS Scanner", href: "/ats-scanner" },
+    { name: "Browser Extension", href: "/extension" },
   ],
   legal: [
     { name: "Privacy Policy", href: "/privacy" },
