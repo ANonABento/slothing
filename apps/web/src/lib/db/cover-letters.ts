@@ -1,4 +1,4 @@
-import { nanoid } from "nanoid";
+import { randomUUID } from "crypto";
 import db from "./legacy";
 
 import { nowIso } from "@/lib/format/time";
@@ -38,9 +38,9 @@ export function saveCoverLetter(
   jobId: string,
   content: string,
   highlights: string[] = [],
-  userId: string = "default",
+  userId: string,
 ): CoverLetter {
-  const id = nanoid();
+  const id = randomUUID();
 
   // Get next version number for this job
   const existing = db
@@ -86,7 +86,7 @@ export function saveCoverLetter(
 
 export function getCoverLettersByJob(
   jobId: string,
-  userId: string = "default",
+  userId: string,
 ): CoverLetter[] {
   const rows = db
     .prepare(
@@ -99,7 +99,7 @@ export function getCoverLettersByJob(
 
 export function getLatestCoverLetter(
   jobId: string,
-  userId: string = "default",
+  userId: string,
 ): CoverLetter | null {
   const row = db
     .prepare(
@@ -110,10 +110,7 @@ export function getLatestCoverLetter(
   return row ? rowToCoverLetter(row) : null;
 }
 
-export function getCoverLetter(
-  id: string,
-  userId: string = "default",
-): CoverLetter | null {
+export function getCoverLetter(id: string, userId: string): CoverLetter | null {
   const row = db
     .prepare("SELECT * FROM cover_letters WHERE id = ? AND user_id = ?")
     .get(id, userId) as CoverLetterRow | undefined;
@@ -121,20 +118,14 @@ export function getCoverLetter(
   return row ? rowToCoverLetter(row) : null;
 }
 
-export function deleteCoverLetter(
-  id: string,
-  userId: string = "default",
-): boolean {
+export function deleteCoverLetter(id: string, userId: string): boolean {
   const result = db
     .prepare("DELETE FROM cover_letters WHERE id = ? AND user_id = ?")
     .run(id, userId);
   return result.changes > 0;
 }
 
-export function getCoverLetterCount(
-  jobId: string,
-  userId: string = "default",
-): number {
+export function getCoverLetterCount(jobId: string, userId: string): number {
   const result = db
     .prepare(
       "SELECT COUNT(*) as count FROM cover_letters WHERE job_id = ? AND user_id = ?",
@@ -143,7 +134,7 @@ export function getCoverLetterCount(
   return result.count;
 }
 
-export function getAllCoverLetters(userId: string = "default"): CoverLetter[] {
+export function getAllCoverLetters(userId: string): CoverLetter[] {
   const rows = db
     .prepare(
       "SELECT * FROM cover_letters WHERE user_id = ? ORDER BY created_at DESC",

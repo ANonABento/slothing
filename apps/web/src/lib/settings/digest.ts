@@ -11,13 +11,13 @@ export function parseDigestEnabled(value: string | null): boolean {
   return value === "true";
 }
 
-export function getDigestEnabled(userId: string = "default"): boolean {
+export function getDigestEnabled(userId: string): boolean {
   return parseDigestEnabled(getSetting(DIGEST_ENABLED_SETTING_KEY, userId));
 }
 
 export function setDigestEnabled(
   enabled: boolean,
-  userId: string = "default",
+  userId: string,
 ): void {
   setSetting(DIGEST_ENABLED_SETTING_KEY, String(enabled), userId);
 }

@@ -475,5 +475,156 @@
     "startFreeWithSlothing": "Empieza gratis con Slothing",
     "extensionPopoverPreviewOnAJobPosting": "Vista previa emergente de extensión en una publicación de trabajo",
     "dashboardPreview": "Vista previa del panel"
+  },
+  "profile": {
+    "title": "Perfil",
+    "description": "Mantén el perfil fuente que Slothing usa para currículums, cartas de presentación y comprobaciones de ajuste.",
+    "actions": {
+      "discard": "Descartar",
+      "saveChanges": "Guardar cambios"
+    },
+    "status": {
+      "saving": "Guardando...",
+      "saved": "Guardado"
+    },
+    "errors": {
+      "loadProfile": "No se pudo cargar el perfil",
+      "saveProfile": "No se pudo guardar el perfil"
+    },
+    "unsavedChanges": {
+      "prompt": "Tienes cambios de perfil sin guardar. ¿Salir sin guardar?"
+    },
+    "tabs": {
+      "ariaLabel": "Secciones del perfil",
+      "overview": "Resumen",
+      "preferences": "Preferencias",
+      "privacy": "Privacidad"
+    },
+    "answerBankPrompt": {
+      "text": "¿Quieres detalles de perfil más completos? Guarda historias y datos reutilizables en tu banco de respuestas.",
+      "action": "Abrir banco de respuestas"
+    },
+    "emptyState": {
+      "title": "Configuremos tu perfil",
+      "description": "Empieza con un currículum para que Slothing complete lo básico, o abre el formulario y añade detalles manualmente.",
+      "uploadResume": "Sube tu currículum para completar esto",
+      "fillManually": "O rellenar manualmente"
+    },
+    "sidebar": {
+      "yourName": "Tu nombre",
+      "addHeadline": "Añadir un titular",
+      "noEmail": "Sin correo",
+      "noLocation": "Sin ubicación",
+      "noTargetSalary": "Sin salario objetivo",
+      "salaryRange": "{currency} {min}–{max}",
+      "salaryMinimum": "{currency} {min}+",
+      "salaryMaximum": "Hasta {currency} {max}",
+      "profilePhoto": "Foto de perfil",
+      "profilePhotoNamed": "Foto de perfil de {name}"
+    },
+    "placeholders": {
+      "headline": "Ingeniero sénior de producto"
+    },
+    "sections": {
+      "identity": {
+        "title": "Identidad",
+        "description": "Mantén el perfil fuente que Slothing usa para currículums, cartas de presentación y comprobaciones de ajuste."
+      },
+      "contact": {
+        "title": "Contacto",
+        "description": "Mantén el perfil fuente que Slothing usa para currículums, cartas de presentación y comprobaciones de ajuste."
+      },
+      "summary": {
+        "title": "Resumen profesional",
+        "description": "Mantén el perfil fuente que Slothing usa para currículums, cartas de presentación y comprobaciones de ajuste."
+      },
+      "savedSignals": {
+        "title": "Señales de perfil guardadas",
+        "description": "Mantén el perfil fuente que Slothing usa para currículums, cartas de presentación y comprobaciones de ajuste."
+      },
+      "careerDetails": {
+        "title": "Detalles profesionales",
+        "description": "Mantén el perfil fuente que Slothing usa para currículums, cartas de presentación y comprobaciones de ajuste."
+      }
+    },
+    "fields": {
+      "avatarUrl": "URL del avatar",
+      "fullName": "Nombre completo",
+      "headline": "Titular",
+      "email": "Correo electrónico",
+      "phone": "Teléfono",
+      "location": "Ubicación",
+      "linkedin": "Perfil de LinkedIn",
+      "github": "Perfil de GitHub",
+      "website": "Sitio web",
+      "summary": "Resumen profesional",
+      "targetRoles": "Puestos objetivo",
+      "currency": "Moneda",
+      "minimum": "Mínimo",
+      "maximum": "Máximo"
+    },
+    "signals": {
+      "experience": "Experiencia",
+      "education": "Educación",
+      "skills": "Habilidades",
+      "projects": "Proyectos",
+      "awards": "Premios"
+    },
+    "workStyle": {
+      "title": "Estilo de trabajo",
+      "description": "Mantén el perfil fuente que Slothing usa para currículums, cartas de presentación y comprobaciones de ajuste.",
+      "options": {
+        "remote": "Remoto",
+        "hybrid": "Híbrido",
+        "onsite": "Presencial",
+        "fullTime": "Tiempo completo",
+        "contract": "Contrato"
+      }
+    },
+    "targetRoles": {
+      "title": "Puestos objetivo",
+      "description": "Mantén el perfil fuente que Slothing usa para currículums, cartas de presentación y comprobaciones de ajuste."
+    },
+    "salary": {
+      "title": "Objetivo de compensación",
+      "description": "Mantén el perfil fuente que Slothing usa para currículums, cartas de presentación y comprobaciones de ajuste."
+    },
+    "privacy": {
+      "title": "Privacidad",
+      "description": "Mantén el perfil fuente que Slothing usa para currículums, cartas de presentación y comprobaciones de ajuste.",
+      "openToRecruiters": {
+        "title": "Aberto a contato de recrutadores",
+        "description": "Mantén el perfil fuente que Slothing usa para currículums, cartas de presentación y comprobaciones de ajuste."
+      },
+      "shareContactInfo": {
+        "title": "Compartilhar dados de contato por padrão",
+        "description": "Mantén el perfil fuente que Slothing usa para currículums, cartas de presentación y comprobaciones de ajuste."
+      }
+    },
+    "completeness": {
+      "readiness": "Preparación del perfil",
+      "summary": "El perfil está completo al {score}% · {count, plural, one {# mejora rápida disponible} other {# mejoras rápidas disponibles}}",
+      "completeLabel": "completo",
+      "progressLabel": "Completitud del perfil",
+      "noGaps": "Todo lo esencial está completo.",
+      "points": "+{points, plural, one {# punto} other {# puntos}}",
+      "gaps": {
+        "contact-info": "Añade tu nombre, correo y titular",
+        "summary": "Añade un resumen profesional",
+        "experience-bullets": {
+          "empty": "Añade una experiencia con al menos 3 viñetas",
+          "role": "Añade {missing, plural, one {# viñeta más} other {# viñetas más}} a tu puesto en {company}"
+        },
+        "quantified-bullets": {
+          "empty": "Añade {missing, plural, one {# viñeta cuantificada} other {# viñetas cuantificadas}}",
+          "role": "Añade {missing, plural, one {# viñeta cuantificada} other {# viñetas cuantificadas}} a tu puesto en {company}"
+        },
+        "education": "Añade tu educación",
+        "skills": "Añade {missing, plural, one {# habilidad más} other {# habilidades más}}",
+        "career-depth": "Añade un proyecto u otra experiencia",
+        "achievements": "Añade un logro, premio o certificación",
+        "social-url": "Añade una URL de LinkedIn o GitHub"
+      }
+    }
   }
 }

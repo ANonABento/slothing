@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
-import { useDropzone } from "react-dropzone";
+import { useDropzone, type FileRejection } from "react-dropzone";
 import {
   AlertCircle,
   CheckCircle2,
@@ -46,6 +46,21 @@ interface ParseResponse {
   warnings: string[];
 }
 
+type ParseErrorCode =
+  | "file_too_large"
+  | "password_protected"
+  | "invalid_file_type"
+  | "invalid_file_content";
+
+const API_PARSE_ERROR_MESSAGES: Record<ParseErrorCode, string> = {
+  file_too_large: `File too large. Maximum size is ${formatFileSize(MAX_UPLOAD_SIZE)}.`,
+  password_protected:
+    "This PDF is password-protected. Remove the password and try again.",
+  invalid_file_type: "Upload a PDF or TXT file.",
+  invalid_file_content:
+    "The file content does not match its type. Upload a valid PDF or TXT file.",
+};
+
 interface ScrapedOpportunity {
   title: string;
   company: string;
@@ -75,6 +90,18 @@ function completeProfile(profile: Partial<Profile>, rawText?: string): Profile {
     createdAt: profile.createdAt || now,
     updatedAt: profile.updatedAt || now,
   };
+}
+
+function hasMinimumContent(profile: Profile, fileMeta?: FileMeta) {
+  const hasProfileContent =
+    profile.experiences.length > 0 ||
+    profile.skills.length > 0 ||
+    (profile.summary?.trim().length ?? 0) >= MIN_RESUME_LENGTH;
+  const hasUsableParse =
+    !fileMeta ||
+    (fileMeta.parseConfidence >= 0.25 && fileMeta.sectionsDetected.length > 0);
+
+  return hasProfileContent && hasUsableParse;
 }
 
 function opportunityToJob(opportunity: ScrapedOpportunity): JobDescription {
@@ -168,6 +195,28 @@ function profileToMatchText(profile: Profile, fallbackText: string) {
   return parts.filter(Boolean).join(" ");
 }
 
+function getDropRejectionMessage(rejection: FileRejection) {
+  const error = rejection.errors[0];
+
+  if (error?.code === "file-too-large") {
+    return `File too large. Maximum size is ${formatFileSize(MAX_UPLOAD_SIZE)}.`;
+  }
+
+  if (error?.code === "file-invalid-type") {
+    return "Upload a PDF or TXT file.";
+  }
+
+  return error?.message || "Could not accept that file.";
+}
+
+function getParseApiErrorMessage(code: unknown, fallback?: string) {
+  if (typeof code === "string" && code in API_PARSE_ERROR_MESSAGES) {
+    return API_PARSE_ERROR_MESSAGES[code as ParseErrorCode];
+  }
+
+  return fallback || "Could not parse that resume.";
+}
+
 export function ScannerForm({ locale = "en" }: ScannerFormProps = {}) {
   const a11yT = useA11yTranslations();
 
@@ -191,6 +240,7 @@ export function ScannerForm({ locale = "en" }: ScannerFormProps = {}) {
   const [resultQuality, setResultQuality] =
     useState<ResultQualityRubric | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
+  const scrapingRef = useRef(false);
   const jobTextareaRef = useRef<HTMLTextAreaElement>(null);
 
   const parseFile = useCallback(async (file: File) => {
@@ -207,11 +257,11 @@ export function ScannerForm({ locale = "en" }: ScannerFormProps = {}) {
         body: formData,
       });
       const data = (await response.json().catch(() => null)) as
-        | (ParseResponse & { error?: string })
+        | (ParseResponse & { error?: string; code?: string })
         | null;
 
       if (!response.ok || !data) {
-        throw new Error(data?.error || "Could not parse that resume.");
+        throw new Error(getParseApiErrorMessage(data?.code, data?.error));
       }
 
       const rawText =
@@ -249,9 +299,21 @@ export function ScannerForm({ locale = "en" }: ScannerFormProps = {}) {
     [parseFile],
   );
 
+  const onDropRejected = useCallback((rejections: FileRejection[]) => {
+    const [rejection] = rejections;
+    if (!rejection) return;
+
+    setParseError(getDropRejectionMessage(rejection));
+    setParseMessage("");
+    setUploadedFile(null);
+    setParsedProfile(null);
+    setFileMeta(undefined);
+  }, []);
+
   const { getRootProps, getInputProps, isDragActive, isDragReject } =
     useDropzone({
       onDrop,
+      onDropRejected,
       accept: {
         "application/pdf": [".pdf"],
         "text/plain": [".txt"],
@@ -262,8 +324,9 @@ export function ScannerForm({ locale = "en" }: ScannerFormProps = {}) {
 
   async function handleScrapeJob() {
     const url = jobUrl.trim();
-    if (!url || scraping) return;
+    if (!url || scrapingRef.current) return;
 
+    scrapingRef.current = true;
     setScrapeError("");
     setScrapeStatus("");
     setScraping(true);
@@ -295,6 +358,7 @@ export function ScannerForm({ locale = "en" }: ScannerFormProps = {}) {
         `${error instanceof Error ? error.message : "Could not import that job posting."} Paste manually instead.`,
       );
     } finally {
+      scrapingRef.current = false;
       setScraping(false);
     }
   }
@@ -304,11 +368,13 @@ export function ScannerForm({ locale = "en" }: ScannerFormProps = {}) {
   }
 
   function handleAnalyze() {
-    const profile =
-      parsedProfile ||
-      (resumeText.trim().length >= MIN_RESUME_LENGTH
+    const profile = parsedProfile
+      ? hasMinimumContent(parsedProfile, fileMeta)
+        ? parsedProfile
+        : null
+      : resumeText.trim().length >= MIN_RESUME_LENGTH
         ? textToProfile(resumeText)
-        : null);
+        : null;
     if (!profile) return;
 
     setAnalyzing(true);
@@ -358,8 +424,15 @@ export function ScannerForm({ locale = "en" }: ScannerFormProps = {}) {
     setShowPasteResume(false);
   }
 
+  const parsedProfileHasMinimumContent =
+    parsedProfile && hasMinimumContent(parsedProfile, fileMeta);
+  const uploadedProfileNeedsManualText =
+    Boolean(parsedProfile) && !parsedProfileHasMinimumContent;
+  const parseWarnings = fileMeta?.warnings.filter(Boolean) ?? [];
+  const hasManualResumeText =
+    !parsedProfile && resumeText.trim().length >= MIN_RESUME_LENGTH;
   const canAnalyze =
-    Boolean(parsedProfile || resumeText.trim().length >= MIN_RESUME_LENGTH) &&
+    Boolean(parsedProfileHasMinimumContent || hasManualResumeText) &&
     !analyzing &&
     !parsing;
   const callbackUrl = `/${locale}/dashboard`;
@@ -462,19 +535,53 @@ export function ScannerForm({ locale = "en" }: ScannerFormProps = {}) {
           <p className="mt-1 text-xs text-muted-foreground">
             PDF preferred, TXT fallback, up to {formatFileSize(MAX_UPLOAD_SIZE)}
           </p>
+          <p className="mt-2 text-xs text-muted-foreground">
+            Your file is sent to our servers for temporary parsing and is not
+            saved after the scan completes.
+          </p>
         </div>
 
         {parseMessage ? (
-          <div className="mt-3 flex items-center gap-2 rounded-md border border-border bg-muted/30 px-3 py-2 text-sm">
-            <CheckCircle2 className="h-4 w-4 text-success" />
-            <span>{parseMessage}</span>
-            <button
-              type="button"
-              className="ml-auto text-xs font-medium text-primary underline-offset-4 hover:underline"
-              onClick={() => setUploadedFile(null)}
-            >
-              Replace file
-            </button>
+          <div className="mt-3 rounded-md border border-border bg-muted/30 px-3 py-2 text-sm">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="h-4 w-4 text-success" />
+              <span>{parseMessage}</span>
+              <button
+                type="button"
+                className="ml-auto text-xs font-medium text-primary underline-offset-4 hover:underline"
+                onClick={() => setUploadedFile(null)}
+              >
+                Replace file
+              </button>
+            </div>
+            {parseWarnings.length > 0 ? (
+              <ul className="mt-2 space-y-1 pl-6 text-xs text-muted-foreground">
+                {parseWarnings.map((warning) => (
+                  <li key={warning} className="list-disc">
+                    {warning}
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </div>
+        ) : null}
+
+        {uploadedProfileNeedsManualText ? (
+          <div className="mt-3 flex items-start gap-2 rounded-md border border-warning/30 bg-warning/5 px-3 py-2 text-sm">
+            <AlertCircle className="mt-0.5 h-4 w-4 text-warning" />
+            <div className="flex-1">
+              <p>
+                We couldn&apos;t extract enough content from this PDF. Try a
+                text-based PDF, or paste your resume text below.
+              </p>
+              <button
+                type="button"
+                className="mt-2 text-xs font-medium text-primary underline-offset-4 hover:underline"
+                onClick={() => setShowPasteResume(true)}
+              >
+                Paste text instead
+              </button>
+            </div>
           </div>
         ) : null}
 
@@ -562,6 +669,10 @@ export function ScannerForm({ locale = "en" }: ScannerFormProps = {}) {
             {scrapeError}
           </button>
         ) : null}
+        <p className="mt-2 text-xs text-muted-foreground">
+          Job URLs are sent to our servers for temporary scraping and are not
+          saved after import.
+        </p>
 
         <label htmlFor="job-text" className="mt-4 block text-sm font-medium">
           Paste job description{" "}

@@ -475,5 +475,156 @@
     "startFreeWithSlothing": "Slothing से निःशुल्क शुरुआत करें",
     "extensionPopoverPreviewOnAJobPosting": "नौकरी पोस्टिंग पर एक्सटेंशन पॉपओवर पूर्वावलोकन",
     "dashboardPreview": "डैशबोर्ड पूर्वावलोकन"
+  },
+  "profile": {
+    "title": "प्रोफ़ाइल",
+    "description": "वह स्रोत प्रोफ़ाइल संभालें जिसका उपयोग Slothing रिज्यूमे, कवर लेटर और फिट जांचों के लिए करता है।",
+    "actions": {
+      "discard": "छोड़ें",
+      "saveChanges": "बदलाव सहेजें"
+    },
+    "status": {
+      "saving": "सहेजा जा रहा है...",
+      "saved": "सहेजा गया"
+    },
+    "errors": {
+      "loadProfile": "प्रोफ़ाइल लोड नहीं हो सकी",
+      "saveProfile": "प्रोफ़ाइल सहेजी नहीं जा सकी"
+    },
+    "unsavedChanges": {
+      "prompt": "आपकी प्रोफ़ाइल में असहेजे बदलाव हैं। बिना सहेजे छोड़ना है?"
+    },
+    "tabs": {
+      "ariaLabel": "प्रोफ़ाइल अनुभाग",
+      "overview": "अवलोकन",
+      "preferences": "पसंद",
+      "privacy": "गोपनीयता"
+    },
+    "answerBankPrompt": {
+      "text": "और समृद्ध प्रोफ़ाइल चाहिए? अपने उत्तर बैंक में दोबारा उपयोग होने वाली कहानियां और तथ्य सहेजें।",
+      "action": "उत्तर बैंक खोलें"
+    },
+    "emptyState": {
+      "title": "आइए आपकी प्रोफ़ाइल सेट करें",
+      "description": "रिज्यूमे से शुरू करें ताकि Slothing बुनियादी जानकारी भर सके, या फ़ॉर्म खोलकर विवरण खुद जोड़ें।",
+      "uploadResume": "इसे भरने के लिए रिज्यूमे अपलोड करें",
+      "fillManually": "या खुद भरें"
+    },
+    "sidebar": {
+      "yourName": "आपका नाम",
+      "addHeadline": "हेडलाइन जोड़ें",
+      "noEmail": "ईमेल नहीं",
+      "noLocation": "स्थान नहीं",
+      "noTargetSalary": "लक्ष्य वेतन नहीं",
+      "salaryRange": "{currency} {min}–{max}",
+      "salaryMinimum": "{currency} {min}+",
+      "salaryMaximum": "अधिकतम {currency} {max}",
+      "profilePhoto": "प्रोफ़ाइल फोटो",
+      "profilePhotoNamed": "{name} की प्रोफ़ाइल फोटो"
+    },
+    "placeholders": {
+      "headline": "सीनियर प्रोडक्ट इंजीनियर"
+    },
+    "sections": {
+      "identity": {
+        "title": "पहचान",
+        "description": "वह स्रोत प्रोफ़ाइल संभालें जिसका उपयोग Slothing रिज्यूमे, कवर लेटर और फिट जांचों के लिए करता है।"
+      },
+      "contact": {
+        "title": "संपर्क",
+        "description": "वह स्रोत प्रोफ़ाइल संभालें जिसका उपयोग Slothing रिज्यूमे, कवर लेटर और फिट जांचों के लिए करता है।"
+      },
+      "summary": {
+        "title": "पेशेवर सारांश",
+        "description": "वह स्रोत प्रोफ़ाइल संभालें जिसका उपयोग Slothing रिज्यूमे, कवर लेटर और फिट जांचों के लिए करता है।"
+      },
+      "savedSignals": {
+        "title": "सहेजे गए प्रोफ़ाइल संकेत",
+        "description": "वह स्रोत प्रोफ़ाइल संभालें जिसका उपयोग Slothing रिज्यूमे, कवर लेटर और फिट जांचों के लिए करता है।"
+      },
+      "careerDetails": {
+        "title": "करियर विवरण",
+        "description": "वह स्रोत प्रोफ़ाइल संभालें जिसका उपयोग Slothing रिज्यूमे, कवर लेटर और फिट जांचों के लिए करता है।"
+      }
+    },
+    "fields": {
+      "avatarUrl": "अवतार URL",
+      "fullName": "पूरा नाम",
+      "headline": "हेडलाइन",
+      "email": "ईमेल पता",
+      "phone": "फ़ोन",
+      "location": "स्थान",
+      "linkedin": "LinkedIn प्रोफ़ाइल",
+      "github": "GitHub प्रोफ़ाइल",
+      "website": "वेबसाइट",
+      "summary": "पेशेवर सारांश",
+      "targetRoles": "लक्षित भूमिकाएं",
+      "currency": "मुद्रा",
+      "minimum": "न्यूनतम",
+      "maximum": "अधिकतम"
+    },
+    "signals": {
+      "experience": "अनुभव",
+      "education": "शिक्षा",
+      "skills": "कौशल",
+      "projects": "प्रोजेक्ट",
+      "awards": "पुरस्कार"
+    },
+    "workStyle": {
+      "title": "काम की शैली",
+      "description": "वह स्रोत प्रोफ़ाइल संभालें जिसका उपयोग Slothing रिज्यूमे, कवर लेटर और फिट जांचों के लिए करता है।",
+      "options": {
+        "remote": "रिमोट",
+        "hybrid": "हाइब्रिड",
+        "onsite": "ऑनसाइट",
+        "fullTime": "पूर्णकालिक",
+        "contract": "कॉन्ट्रैक्ट"
+      }
+    },
+    "targetRoles": {
+      "title": "लक्षित भूमिकाएं",
+      "description": "वह स्रोत प्रोफ़ाइल संभालें जिसका उपयोग Slothing रिज्यूमे, कवर लेटर और फिट जांचों के लिए करता है।"
+    },
+    "salary": {
+      "title": "मुआवजा लक्ष्य",
+      "description": "वह स्रोत प्रोफ़ाइल संभालें जिसका उपयोग Slothing रिज्यूमे, कवर लेटर और फिट जांचों के लिए करता है।"
+    },
+    "privacy": {
+      "title": "गोपनीयता",
+      "description": "वह स्रोत प्रोफ़ाइल संभालें जिसका उपयोग Slothing रिज्यूमे, कवर लेटर और फिट जांचों के लिए करता है।",
+      "openToRecruiters": {
+        "title": "Open to recruiter outreach",
+        "description": "वह स्रोत प्रोफ़ाइल संभालें जिसका उपयोग Slothing रिज्यूमे, कवर लेटर और फिट जांचों के लिए करता है।"
+      },
+      "shareContactInfo": {
+        "title": "Share contact info by default",
+        "description": "वह स्रोत प्रोफ़ाइल संभालें जिसका उपयोग Slothing रिज्यूमे, कवर लेटर और फिट जांचों के लिए करता है।"
+      }
+    },
+    "completeness": {
+      "readiness": "प्रोफ़ाइल तैयारी",
+      "summary": "प्रोफ़ाइल {score}% पूरी है · {count, plural, one {# त्वरित सुधार उपलब्ध} other {# त्वरित सुधार उपलब्ध}}",
+      "completeLabel": "पूरा",
+      "progressLabel": "प्रोफ़ाइल पूर्णता",
+      "noGaps": "सभी जरूरी चीजें भरी हुई हैं।",
+      "points": "+{points, plural, one {# अंक} other {# अंक}}",
+      "gaps": {
+        "contact-info": "अपना नाम, ईमेल और हेडलाइन जोड़ें",
+        "summary": "पेशेवर सारांश जोड़ें",
+        "experience-bullets": {
+          "empty": "कम से कम 3 बुलेट वाली एक अनुभव प्रविष्टि जोड़ें",
+          "role": "{company} भूमिका में {missing, plural, one {# और बुलेट} other {# और बुलेट}} जोड़ें"
+        },
+        "quantified-bullets": {
+          "empty": "{missing, plural, one {# मात्रात्मक बुलेट} other {# मात्रात्मक बुलेट}} जोड़ें",
+          "role": "{company} भूमिका में {missing, plural, one {# मात्रात्मक बुलेट} other {# मात्रात्मक बुलेट}} जोड़ें"
+        },
+        "education": "अपनी शिक्षा जोड़ें",
+        "skills": "{missing, plural, one {# और कौशल} other {# और कौशल}} जोड़ें",
+        "career-depth": "एक प्रोजेक्ट या दूसरा अनुभव जोड़ें",
+        "achievements": "उपलब्धि, पुरस्कार या प्रमाणन जोड़ें",
+        "social-url": "LinkedIn या GitHub URL जोड़ें"
+      }
+    }
   }
 }

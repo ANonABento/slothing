@@ -82,8 +82,8 @@ interface CustomTemplateSource {
 export function saveCustomTemplate(
   name: string,
   analyzedStyles: AnalyzedTemplate,
-  sourceDocumentId?: string,
-  userId: string = "default",
+  sourceDocumentId: string | undefined,
+  userId: string,
   source?: CustomTemplateSource,
 ): CustomTemplate {
   ensureCustomTemplatesSourceColumns();
@@ -130,7 +130,7 @@ export function saveCustomTemplate(
 }
 
 export function getCustomTemplates(
-  userId: string = "default",
+  userId: string,
 ): CustomTemplate[] {
   ensureCustomTemplatesSourceColumns();
   const stmt = db.prepare(`
@@ -146,7 +146,7 @@ export function getCustomTemplates(
 
 export function getCustomTemplate(
   id: string,
-  userId: string = "default",
+  userId: string,
 ): CustomTemplate | null {
   ensureCustomTemplatesSourceColumns();
   const stmt = db.prepare(`
@@ -163,7 +163,7 @@ export function getCustomTemplate(
 
 export function deleteCustomTemplate(
   id: string,
-  userId: string = "default",
+  userId: string,
 ): boolean {
   ensureCustomTemplatesSourceColumns();
   const stmt = db.prepare(
@@ -176,7 +176,7 @@ export function deleteCustomTemplate(
 export function updateCustomTemplateName(
   id: string,
   name: string,
-  userId: string = "default",
+  userId: string,
 ): boolean {
   ensureCustomTemplatesSourceColumns();
   const stmt = db.prepare(

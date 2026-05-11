@@ -117,7 +117,7 @@ export function bankEntryToText(
  */
 export function searchKnowledgeBank(
   query: string,
-  userId: string = "default",
+  userId: string,
   limit: number = 20,
   category?: BankCategory,
 ): RankedChunk[] {
@@ -147,7 +147,7 @@ export function searchKnowledgeBank(
  */
 export function multiQuerySearch(
   queries: string[],
-  userId: string = "default",
+  userId: string,
   limitPerQuery: number = 20,
 ): RankedChunk[] {
   const chunkMap = new Map<string, RankedChunk>();
@@ -269,7 +269,7 @@ export function insertChunks(
 
 export function getChunksByHash(
   hashes: string[],
-  userId: string = "default",
+  userId: string,
 ): KnowledgeChunk[] {
   if (hashes.length === 0) return [];
   const placeholders = hashes.map(() => "?").join(",");
@@ -285,7 +285,7 @@ export function getChunksByHash(
 
 export function getChunksByDocument(
   documentId: string,
-  userId: string = "default",
+  userId: string,
 ): KnowledgeChunk[] {
   const rows = db
     .prepare(
@@ -298,7 +298,7 @@ export function getChunksByDocument(
 }
 
 export function getAllChunksWithEmbeddings(
-  userId: string = "default",
+  userId: string,
 ): KnowledgeChunk[] {
   const rows = db
     .prepare(
@@ -312,7 +312,7 @@ export function getAllChunksWithEmbeddings(
 
 export function deleteChunksByDocument(
   documentId: string,
-  userId: string = "default",
+  userId: string,
 ): number {
   const result = db
     .prepare(

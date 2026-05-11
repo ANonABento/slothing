@@ -2,6 +2,8 @@ import { notFound } from "next/navigation";
 import { getRequestConfig } from "next-intl/server";
 import { defineRouting } from "next-intl/routing";
 
+export { localeDir } from "@/i18n/dir";
+
 export const locales = [
   "en",
   "es",

@@ -469,5 +469,156 @@
     "startFreeWithSlothing": "Start free with Slothing",
     "extensionPopoverPreviewOnAJobPosting": "Extension popover preview on a job posting",
     "dashboardPreview": "Dashboard preview"
+  },
+  "profile": {
+    "title": "Profile",
+    "description": "Keep the source profile Slothing uses for resumes, cover letters, and fit checks.",
+    "actions": {
+      "discard": "Discard",
+      "saveChanges": "Save changes"
+    },
+    "status": {
+      "saving": "Saving...",
+      "saved": "Saved"
+    },
+    "errors": {
+      "loadProfile": "Could not load profile",
+      "saveProfile": "Could not save profile"
+    },
+    "unsavedChanges": {
+      "prompt": "You have unsaved profile changes. Leave without saving?"
+    },
+    "tabs": {
+      "ariaLabel": "Profile sections",
+      "overview": "Overview",
+      "preferences": "Preferences",
+      "privacy": "Privacy"
+    },
+    "answerBankPrompt": {
+      "text": "Want richer profile details? Save reusable stories and facts in your answer bank.",
+      "action": "Open answer bank"
+    },
+    "emptyState": {
+      "title": "Let's set up your profile",
+      "description": "Start from a resume so Slothing can fill in the basics, or open the form and add details manually.",
+      "uploadResume": "Upload your resume to fill this in",
+      "fillManually": "Or fill manually"
+    },
+    "sidebar": {
+      "yourName": "Your name",
+      "addHeadline": "Add a headline",
+      "noEmail": "No email",
+      "noLocation": "No location",
+      "noTargetSalary": "No target salary",
+      "salaryRange": "{currency} {min}-{max}",
+      "salaryMinimum": "{currency} {min}+",
+      "salaryMaximum": "Up to {currency} {max}",
+      "profilePhoto": "Profile photo",
+      "profilePhotoNamed": "Profile photo for {name}"
+    },
+    "placeholders": {
+      "headline": "Senior product engineer"
+    },
+    "sections": {
+      "identity": {
+        "title": "Identity",
+        "description": "The headline and photo that introduce you across generated materials."
+      },
+      "contact": {
+        "title": "Contact",
+        "description": "Links and contact details you are comfortable reusing."
+      },
+      "summary": {
+        "title": "Professional summary",
+        "description": "A concise career summary Slothing can adapt for different roles."
+      },
+      "savedSignals": {
+        "title": "Saved profile signals",
+        "description": "Structured details imported from resumes, opportunities, and onboarding."
+      },
+      "careerDetails": {
+        "title": "Career details",
+        "description": "Experience and project highlights currently powering your generated documents."
+      }
+    },
+    "fields": {
+      "avatarUrl": "Avatar URL",
+      "fullName": "Full name",
+      "headline": "Headline",
+      "email": "Email address",
+      "phone": "Phone",
+      "location": "Location",
+      "linkedin": "LinkedIn",
+      "github": "GitHub",
+      "website": "Website",
+      "summary": "Professional summary",
+      "targetRoles": "Target roles",
+      "currency": "Currency",
+      "minimum": "Minimum",
+      "maximum": "Maximum"
+    },
+    "signals": {
+      "experience": "Experience",
+      "education": "Education",
+      "skills": "Skills",
+      "projects": "Projects",
+      "awards": "Awards"
+    },
+    "workStyle": {
+      "title": "Work style",
+      "description": "Choose the roles and environments you want Slothing to prioritize.",
+      "options": {
+        "remote": "Remote",
+        "hybrid": "Hybrid",
+        "onsite": "Onsite",
+        "fullTime": "Full-time",
+        "contract": "Contract"
+      }
+    },
+    "targetRoles": {
+      "title": "Target roles",
+      "description": "List titles or tracks you want generated materials to emphasize."
+    },
+    "salary": {
+      "title": "Compensation target",
+      "description": "Optional salary range used for fit checks and opportunity comparisons."
+    },
+    "privacy": {
+      "title": "Privacy",
+      "description": "Control how your profile is reused across recruiter-facing workflows.",
+      "openToRecruiters": {
+        "title": "Open to recruiter outreach",
+        "description": "Allow generated materials to mention that you are open to recruiter conversations."
+      },
+      "shareContactInfo": {
+        "title": "Share contact info by default",
+        "description": "Include email, phone, and links in exported recruiter-facing documents."
+      }
+    },
+    "completeness": {
+      "readiness": "Profile readiness",
+      "summary": "Profile is {score}% complete · {count, plural, one {# quick win available} other {# quick wins available}}",
+      "completeLabel": "complete",
+      "progressLabel": "Profile completeness",
+      "noGaps": "Everything essential is filled in.",
+      "points": "+{points, plural, one {# point} other {# points}}",
+      "gaps": {
+        "contact-info": "Add your name, email, and headline",
+        "summary": "Add a professional summary",
+        "experience-bullets": {
+          "empty": "Add one experience with at least 3 bullets",
+          "role": "Add {missing, plural, one {# more bullet} other {# more bullets}} to your {company} role"
+        },
+        "quantified-bullets": {
+          "empty": "Add {missing, plural, one {# quantified bullet} other {# quantified bullets}}",
+          "role": "Add {missing, plural, one {# quantified bullet} other {# quantified bullets}} to your {company} role"
+        },
+        "education": "Add your education",
+        "skills": "Add {missing, plural, one {# more skill} other {# more skills}}",
+        "career-depth": "Add a project or another experience",
+        "achievements": "Add an achievement, award, or certification",
+        "social-url": "Add a LinkedIn or GitHub URL"
+      }
+    }
   }
 }
