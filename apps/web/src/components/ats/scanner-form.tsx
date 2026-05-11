@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
-import { useDropzone } from "react-dropzone";
+import { useDropzone, type FileRejection } from "react-dropzone";
 import {
   AlertCircle,
   CheckCircle2,
@@ -44,6 +44,21 @@ interface ParseResponse {
   confidence: number;
   warnings: string[];
 }
+
+type ParseErrorCode =
+  | "file_too_large"
+  | "password_protected"
+  | "invalid_file_type"
+  | "invalid_file_content";
+
+const API_PARSE_ERROR_MESSAGES: Record<ParseErrorCode, string> = {
+  file_too_large: `File too large. Maximum size is ${formatFileSize(MAX_UPLOAD_SIZE)}.`,
+  password_protected:
+    "This PDF is password-protected. Remove the password and try again.",
+  invalid_file_type: "Upload a PDF or TXT file.",
+  invalid_file_content:
+    "The file content does not match its type. Upload a valid PDF or TXT file.",
+};
 
 interface ScrapedOpportunity {
   title: string;
@@ -167,6 +182,28 @@ function profileToMatchText(profile: Profile, fallbackText: string) {
   return parts.filter(Boolean).join(" ");
 }
 
+function getDropRejectionMessage(rejection: FileRejection) {
+  const error = rejection.errors[0];
+
+  if (error?.code === "file-too-large") {
+    return `File too large. Maximum size is ${formatFileSize(MAX_UPLOAD_SIZE)}.`;
+  }
+
+  if (error?.code === "file-invalid-type") {
+    return "Upload a PDF or TXT file.";
+  }
+
+  return error?.message || "Could not accept that file.";
+}
+
+function getParseApiErrorMessage(code: unknown, fallback?: string) {
+  if (typeof code === "string" && code in API_PARSE_ERROR_MESSAGES) {
+    return API_PARSE_ERROR_MESSAGES[code as ParseErrorCode];
+  }
+
+  return fallback || "Could not parse that resume.";
+}
+
 export function ScannerForm({ locale = "en" }: ScannerFormProps = {}) {
   const [resumeText, setResumeText] = useState("");
   const [jobText, setJobText] = useState("");
@@ -204,11 +241,11 @@ export function ScannerForm({ locale = "en" }: ScannerFormProps = {}) {
         body: formData,
       });
       const data = (await response.json().catch(() => null)) as
-        | (ParseResponse & { error?: string })
+        | (ParseResponse & { error?: string; code?: string })
         | null;
 
       if (!response.ok || !data) {
-        throw new Error(data?.error || "Could not parse that resume.");
+        throw new Error(getParseApiErrorMessage(data?.code, data?.error));
       }
 
       const rawText =
@@ -246,9 +283,21 @@ export function ScannerForm({ locale = "en" }: ScannerFormProps = {}) {
     [parseFile],
   );
 
+  const onDropRejected = useCallback((rejections: FileRejection[]) => {
+    const [rejection] = rejections;
+    if (!rejection) return;
+
+    setParseError(getDropRejectionMessage(rejection));
+    setParseMessage("");
+    setUploadedFile(null);
+    setParsedProfile(null);
+    setFileMeta(undefined);
+  }, []);
+
   const { getRootProps, getInputProps, isDragActive, isDragReject } =
     useDropzone({
       onDrop,
+      onDropRejected,
       accept: {
         "application/pdf": [".pdf"],
         "text/plain": [".txt"],
