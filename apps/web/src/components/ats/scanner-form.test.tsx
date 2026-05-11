@@ -1,4 +1,10 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ToastProvider } from "@/components/ui/toast";
@@ -121,6 +127,67 @@ describe("ScannerForm", () => {
 
     await waitFor(() => {
       expect(screen.getByText(/Paste manually instead/i)).toBeInTheDocument();
+    });
+  });
+
+  it("does not double-submit URL scraping when Enter is followed by blur", async () => {
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockImplementation(() =>
+      Promise.resolve(
+        new Response(
+          JSON.stringify({
+            opportunity: {
+              title: "Senior Frontend Engineer",
+              company: "Frontend Co",
+              description:
+                "Build React and TypeScript interfaces with Playwright tests.",
+              requirements: ["React", "TypeScript", "Playwright"],
+              responsibilities: [],
+              keywords: ["React", "TypeScript", "Playwright"],
+              url: "https://example.com/frontend",
+            },
+          }),
+          {
+            status: 200,
+            headers: { "content-type": "application/json" },
+          },
+        ),
+      ),
+    );
+
+    render(<ScannerForm />);
+
+    const url = screen.getByLabelText(/Import job from URL/i);
+    fireEvent.change(url, {
+      target: { value: "https://example.com/frontend" },
+    });
+    act(() => {
+      url.dispatchEvent(
+        new KeyboardEvent("keydown", {
+          key: "Enter",
+          bubbles: true,
+          cancelable: true,
+        }),
+      );
+      url.dispatchEvent(new FocusEvent("focusout", { bubbles: true }));
+    });
+
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    expect(fetchSpy).toHaveBeenCalledWith("/api/scanner/scrape-job", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ url: "https://example.com/frontend" }),
+    });
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(/Imported from example.com/i),
+      ).toBeInTheDocument();
+    });
+
+    fireEvent.keyDown(url, { key: "Enter" });
+
+    await waitFor(() => {
+      expect(fetchSpy).toHaveBeenCalledTimes(2);
     });
   });
 

@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import { timingSafeEqual } from "node:crypto";
 
 const CRON_AUTH_HEADER = "authorization";
-
-let warnedAboutMissingSecret = false;
+const BEARER_PREFIX = "Bearer ";
 
 /**
  * Vercel evaluates cron schedules in UTC and sends
@@ -15,26 +15,26 @@ export async function requireCronAuth(
   const header = request.headers.get(CRON_AUTH_HEADER);
 
   if (!secret) {
-    if (process.env.NODE_ENV === "production") {
-      return NextResponse.json(
-        { error: "CRON_SECRET not configured" },
-        { status: 500 },
-      );
-    }
-
-    if (!warnedAboutMissingSecret) {
-      console.warn(
-        "[cron-auth] CRON_SECRET unset; allowing request in non-production env",
-      );
-      warnedAboutMissingSecret = true;
-    }
-
-    return null;
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  if (header !== `Bearer ${secret}`) {
+  const token = header?.startsWith(BEARER_PREFIX)
+    ? header.slice(BEARER_PREFIX.length)
+    : "";
+
+  if (!constantTimeEquals(token, secret)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   return null;
+}
+
+function constantTimeEquals(actual: string, expected: string): boolean {
+  const actualBuffer = Buffer.from(actual);
+  const expectedBuffer = Buffer.from(expected);
+
+  return (
+    actualBuffer.length === expectedBuffer.length &&
+    timingSafeEqual(actualBuffer, expectedBuffer)
+  );
 }
