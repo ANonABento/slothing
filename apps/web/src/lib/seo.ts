@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { defaultLocale, locales } from "@/i18n";
 
 /**
  * Per-route SEO metadata for app pages.
@@ -164,12 +165,26 @@ const marketingHomePage = {
   absoluteTitle: true,
 } satisfies RouteSeo;
 
+export function getAlternateLanguages(path: string): Record<string, string> {
+  const suffix = path === "/" ? "" : path;
+  const languages: Record<string, string> = {
+    "x-default": `/${defaultLocale}${suffix}`,
+  };
+
+  for (const locale of locales) {
+    languages[locale] = `/${locale}${suffix}`;
+  }
+
+  return languages;
+}
+
 function buildMetadata(seo: RouteSeo): Metadata {
   return {
     title: seo.absoluteTitle ? { absolute: seo.title } : seo.title,
     description: seo.description,
     alternates: {
       canonical: seo.path,
+      languages: getAlternateLanguages(seo.path),
     },
     openGraph: {
       type: "website",
@@ -209,6 +224,10 @@ export function getSiteMetadata(): Metadata {
     },
     description: SITE_DESCRIPTION,
     metadataBase: getMetadataBase(),
+    alternates: {
+      canonical: "/",
+      languages: getAlternateLanguages("/"),
+    },
     openGraph: {
       type: "website",
       locale: DEFAULT_LOCALE,
