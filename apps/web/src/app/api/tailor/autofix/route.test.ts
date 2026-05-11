@@ -12,7 +12,8 @@ vi.mock("@/lib/auth", () =>
   globalThis.__contractRouteMocks!.createAuthModuleMock(),
 );
 
-import { buildAutofixPrompt, POST } from "./route";
+import { POST } from "./route";
+import { buildTailorAutofixPrompt } from "@/lib/tailor/prompt-builders";
 import {
   expectRouteResponseContract,
   getRequest,
@@ -120,7 +121,7 @@ describe("/api/tailor/autofix route contract", () => {
   });
 
   it("builds prompt rules that refuse unsupported keywords and preserve trusted fields", () => {
-    const prompt = buildAutofixPrompt({
+    const prompt = buildTailorAutofixPrompt({
       resume: {
         contact: { name: "Jane Doe", email: "jane@example.com" },
         summary: "Frontend engineer with GraphQL experience.",
