@@ -89,7 +89,82 @@
       "unlocks": "O que será liberado a seguir",
       "afterStep": "Após este passo",
       "skip": "Pular configuração por enquanto",
-      "recommended": "Recomendado"
+      "recommended": "Recomendado",
+      "steps": {
+        "upload-resume": {
+          "title": "Envie seu currículo",
+          "description": "Vamos organizar sua experiência para que ela possa ser reutilizada.",
+          "actionLabel": "Enviar currículo"
+        },
+        "install-extension": {
+          "title": "Instale a extensão do navegador",
+          "description": "Capture vagas em sites de emprego enquanto navega.",
+          "actionLabel": "Instalar extensão"
+        },
+        "add-opportunity": {
+          "title": "Adicione sua primeira oportunidade",
+          "description": "Acompanhe uma vaga e veja quais documentos você precisa.",
+          "actionLabel": "Adicionar oportunidade"
+        },
+        "create-tailored-doc": {
+          "title": "Crie um documento sob medida",
+          "description": "Use seu currículo e a vaga-alvo para criar uma candidatura mais forte.",
+          "actionLabel": "Abrir Studio"
+        }
+      },
+      "unlockPreview": {
+        "upload-resume": {
+          "intro": "Depois que seu currículo estiver no banco, o Slothing terá material base para o resto do fluxo.",
+          "items": {
+            "0": {
+              "title": "Banco de documentos reutilizável",
+              "description": "Mantenha seu material base organizado para cada vaga."
+            },
+            "1": {
+              "title": "Melhor correspondência de oportunidades",
+              "description": "Compare vagas com experiência e habilidades reais."
+            },
+            "2": {
+              "title": "Rascunhos sob medida no Studio",
+              "description": "Comece com material existente em vez de uma página em branco."
+            }
+          }
+        },
+        "add-opportunity": {
+          "intro": "Depois que sua primeira vaga for acompanhada, o Slothing pode conectar documentos e próximos passos a um alvo real.",
+          "items": {
+            "0": {
+              "title": "Planos de candidatura focados",
+              "description": "Veja os documentos e a preparação que cada vaga exige."
+            },
+            "1": {
+              "title": "Tempo de acompanhamento",
+              "description": "Mantenha entrevistas, prazos e lembretes visíveis."
+            },
+            "2": {
+              "title": "Clareza do pipeline",
+              "description": "Acompanhe vagas salvas, aplicadas e em entrevista avançando."
+            }
+          }
+        },
+        "create-tailored-doc": {
+          "intro": "Depois que houver um documento sob medida, seu espaço começa a transformar material base em impulso reutilizável para candidaturas.",
+          "items": {
+            "0": {
+              "title": "Rascunhos prontos para candidatura",
+              "description": "Transforme seu currículo e a vaga-alvo em documentos mais fortes."
+            },
+            "1": {
+              "title": "Acompanhamentos reutilizáveis",
+              "description": "Mantenha notas para recrutadores alinhadas ao contexto da vaga."
+            },
+            "2": {
+              "title": "Sinais de prontidão",
+              "description": "Saiba o que está polido e o que ainda precisa de ajustes."
+            }
+          }
+        }
+      }
     },
     "stats": {
       "readiness": "Prontidão",

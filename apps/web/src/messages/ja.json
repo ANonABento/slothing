@@ -89,7 +89,82 @@
       "unlocks": "次に解放される項目",
       "afterStep": "このステップの後",
       "skip": "セットアップを後回しにする",
-      "recommended": "おすすめ"
+      "recommended": "おすすめ",
+      "steps": {
+        "upload-resume": {
+          "title": "レジュメをアップロード",
+          "description": "経験を整理して再利用できるようにします。",
+          "actionLabel": "レジュメをアップロード"
+        },
+        "install-extension": {
+          "title": "ブラウザ拡張機能をインストール",
+          "description": "求人サイトを見ながら職種情報を取り込めます。",
+          "actionLabel": "拡張機能をインストール"
+        },
+        "add-opportunity": {
+          "title": "最初の応募先を追加",
+          "description": "職種を追跡し、必要な書類を確認します。",
+          "actionLabel": "応募先を追加"
+        },
+        "create-tailored-doc": {
+          "title": "カスタマイズ文書を作成",
+          "description": "レジュメと対象職種を使って、より強い応募書類を作成します。",
+          "actionLabel": "Studio を開く"
+        }
+      },
+      "unlockPreview": {
+        "upload-resume": {
+          "intro": "レジュメがバンクに入ると、Slothing は残りのワークフローに使う素材を得られます。",
+          "items": {
+            "0": {
+              "title": "再利用できる文書バンク",
+              "description": "各職種向けの元資料を整理して保管します。"
+            },
+            "1": {
+              "title": "応募先とのより良い照合",
+              "description": "求人を実際の経験やスキルと比較します。"
+            },
+            "2": {
+              "title": "Studio のカスタム下書き",
+              "description": "白紙ではなく既存素材から始められます。"
+            }
+          }
+        },
+        "add-opportunity": {
+          "intro": "最初の職種を追跡すると、Slothing は書類と次の行動を実際の対象に結び付けられます。",
+          "items": {
+            "0": {
+              "title": "焦点のある応募計画",
+              "description": "各職種に必要な書類と準備を確認できます。"
+            },
+            "1": {
+              "title": "フォローアップのタイミング",
+              "description": "面接、締切、リマインダーを見える状態に保ちます。"
+            },
+            "2": {
+              "title": "パイプラインの見通し",
+              "description": "保存済み、応募済み、面接中の職種の進行を追跡します。"
+            }
+          }
+        },
+        "create-tailored-doc": {
+          "intro": "カスタマイズ文書ができると、ワークスペースは元資料を再利用できる応募の推進力に変え始めます。",
+          "items": {
+            "0": {
+              "title": "応募に使える下書き",
+              "description": "レジュメと対象職種をより強い文書に変換します。"
+            },
+            "1": {
+              "title": "再利用できるフォローアップ",
+              "description": "採用担当者向けメモを職種の文脈に合わせて保ちます。"
+            },
+            "2": {
+              "title": "準備状況のシグナル",
+              "description": "仕上がっている部分と追加作業が必要な部分を把握します。"
+            }
+          }
+        }
+      }
     },
     "stats": {
       "readiness": "準備状況",

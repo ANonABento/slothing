@@ -94,7 +94,82 @@
       "unlocks": "What unlocks next",
       "afterStep": "After this step",
       "skip": "Skip setup for now",
-      "recommended": "Recommended"
+      "recommended": "Recommended",
+      "steps": {
+        "upload-resume": {
+          "title": "Upload your resume",
+          "description": "We'll organize your experience and make it reusable.",
+          "actionLabel": "Upload resume"
+        },
+        "install-extension": {
+          "title": "Install the browser extension",
+          "description": "Capture roles from job boards while you browse.",
+          "actionLabel": "Install extension"
+        },
+        "add-opportunity": {
+          "title": "Add your first opportunity",
+          "description": "Track a role and see what documents you need.",
+          "actionLabel": "Add opportunity"
+        },
+        "create-tailored-doc": {
+          "title": "Create a tailored document",
+          "description": "Use your resume and target role to draft a stronger application.",
+          "actionLabel": "Open Studio"
+        }
+      },
+      "unlockPreview": {
+        "upload-resume": {
+          "intro": "Once your resume is in the bank, Slothing has source material for the rest of the workflow.",
+          "items": {
+            "0": {
+              "title": "Reusable document bank",
+              "description": "Keep your source material organized for every role."
+            },
+            "1": {
+              "title": "Better opportunity matching",
+              "description": "Compare jobs against real experience and skills."
+            },
+            "2": {
+              "title": "Tailored Studio drafts",
+              "description": "Start from existing material instead of a blank page."
+            }
+          }
+        },
+        "add-opportunity": {
+          "intro": "Once your first role is tracked, Slothing can connect documents and next steps to a real target.",
+          "items": {
+            "0": {
+              "title": "Focused application plans",
+              "description": "See the documents and prep work each role needs."
+            },
+            "1": {
+              "title": "Follow-up timing",
+              "description": "Keep interviews, deadlines, and reminders visible."
+            },
+            "2": {
+              "title": "Pipeline clarity",
+              "description": "Watch saved, applied, and interviewing roles move."
+            }
+          }
+        },
+        "create-tailored-doc": {
+          "intro": "Once a tailored document exists, your workspace starts turning source material into reusable application momentum.",
+          "items": {
+            "0": {
+              "title": "Application-ready drafts",
+              "description": "Turn your resume and target role into stronger docs."
+            },
+            "1": {
+              "title": "Reusable follow-ups",
+              "description": "Keep recruiter notes aligned with the role context."
+            },
+            "2": {
+              "title": "Readiness signals",
+              "description": "Know what is polished and what still needs work."
+            }
+          }
+        }
+      }
     },
     "stats": {
       "readiness": "Readiness",

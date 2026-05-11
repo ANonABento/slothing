@@ -89,7 +89,82 @@
       "unlocks": "다음에 열리는 기능",
       "afterStep": "이 단계 이후",
       "skip": "지금은 설정 건너뛰기",
-      "recommended": "추천"
+      "recommended": "추천",
+      "steps": {
+        "upload-resume": {
+          "title": "이력서 업로드",
+          "description": "경험을 정리해 다시 사용할 수 있게 합니다.",
+          "actionLabel": "이력서 업로드"
+        },
+        "install-extension": {
+          "title": "브라우저 확장 프로그램 설치",
+          "description": "구직 사이트를 탐색하면서 공고를 캡처하세요.",
+          "actionLabel": "확장 프로그램 설치"
+        },
+        "add-opportunity": {
+          "title": "첫 번째 기회 추가",
+          "description": "역할을 추적하고 필요한 문서를 확인하세요.",
+          "actionLabel": "기회 추가"
+        },
+        "create-tailored-doc": {
+          "title": "맞춤 문서 만들기",
+          "description": "이력서와 목표 역할로 더 강한 지원서를 작성하세요.",
+          "actionLabel": "Studio 열기"
+        }
+      },
+      "unlockPreview": {
+        "upload-resume": {
+          "intro": "이력서가 은행에 들어오면 Slothing이 나머지 워크플로에 쓸 원본 자료를 갖게 됩니다.",
+          "items": {
+            "0": {
+              "title": "재사용 가능한 문서 은행",
+              "description": "모든 역할에 쓸 원본 자료를 정리해 두세요."
+            },
+            "1": {
+              "title": "더 나은 기회 매칭",
+              "description": "공고를 실제 경험과 기술에 비교하세요."
+            },
+            "2": {
+              "title": "Studio 맞춤 초안",
+              "description": "빈 페이지 대신 기존 자료에서 시작하세요."
+            }
+          }
+        },
+        "add-opportunity": {
+          "intro": "첫 역할을 추적하면 Slothing이 문서와 다음 단계를 실제 목표에 연결할 수 있습니다.",
+          "items": {
+            "0": {
+              "title": "집중된 지원 계획",
+              "description": "각 역할에 필요한 문서와 준비 작업을 확인하세요."
+            },
+            "1": {
+              "title": "후속 연락 타이밍",
+              "description": "면접, 마감일, 알림을 계속 볼 수 있게 하세요."
+            },
+            "2": {
+              "title": "파이프라인 명확성",
+              "description": "저장, 지원, 면접 중인 역할의 흐름을 확인하세요."
+            }
+          }
+        },
+        "create-tailored-doc": {
+          "intro": "맞춤 문서가 생기면 워크스페이스가 원본 자료를 재사용 가능한 지원 동력으로 바꾸기 시작합니다.",
+          "items": {
+            "0": {
+              "title": "지원 준비가 된 초안",
+              "description": "이력서와 목표 역할을 더 강한 문서로 바꾸세요."
+            },
+            "1": {
+              "title": "재사용 가능한 후속 연락",
+              "description": "채용 담당자 메모를 역할 맥락에 맞게 유지하세요."
+            },
+            "2": {
+              "title": "준비 상태 신호",
+              "description": "무엇이 다듬어졌고 무엇이 더 필요한지 확인하세요."
+            }
+          }
+        }
+      }
     },
     "stats": {
       "readiness": "준비도",

@@ -89,7 +89,82 @@
       "unlocks": "Ce qui est débloqué ensuite",
       "afterStep": "Après cette étape",
       "skip": "Ignorer la configuration pour l'instant",
-      "recommended": "Recommandé"
+      "recommended": "Recommandé",
+      "steps": {
+        "upload-resume": {
+          "title": "Téléversez votre CV",
+          "description": "Nous organiserons votre expérience pour la rendre réutilisable.",
+          "actionLabel": "Téléverser le CV"
+        },
+        "install-extension": {
+          "title": "Installez l'extension du navigateur",
+          "description": "Capturez des postes depuis les sites d'emploi pendant votre navigation.",
+          "actionLabel": "Installer l'extension"
+        },
+        "add-opportunity": {
+          "title": "Ajoutez votre première opportunité",
+          "description": "Suivez un poste et voyez les documents nécessaires.",
+          "actionLabel": "Ajouter une opportunité"
+        },
+        "create-tailored-doc": {
+          "title": "Créez un document personnalisé",
+          "description": "Utilisez votre CV et le poste cible pour rédiger une candidature plus solide.",
+          "actionLabel": "Ouvrir Studio"
+        }
+      },
+      "unlockPreview": {
+        "upload-resume": {
+          "intro": "Une fois votre CV dans la banque, Slothing dispose de la matière source pour le reste du flux.",
+          "items": {
+            "0": {
+              "title": "Banque de documents réutilisable",
+              "description": "Gardez votre matière source organisée pour chaque poste."
+            },
+            "1": {
+              "title": "Meilleure correspondance des opportunités",
+              "description": "Comparez les postes à votre expérience et vos compétences réelles."
+            },
+            "2": {
+              "title": "Brouillons personnalisés dans Studio",
+              "description": "Commencez avec du contenu existant plutôt qu'une page blanche."
+            }
+          }
+        },
+        "add-opportunity": {
+          "intro": "Une fois votre premier poste suivi, Slothing peut relier les documents et prochaines étapes à une cible réelle.",
+          "items": {
+            "0": {
+              "title": "Plans de candidature ciblés",
+              "description": "Voyez les documents et la préparation nécessaires pour chaque poste."
+            },
+            "1": {
+              "title": "Calendrier de relance",
+              "description": "Gardez les entretiens, échéances et rappels visibles."
+            },
+            "2": {
+              "title": "Clarté du pipeline",
+              "description": "Suivez les postes enregistrés, postulés et en entretien."
+            }
+          }
+        },
+        "create-tailored-doc": {
+          "intro": "Une fois un document personnalisé créé, votre espace transforme la matière source en élan de candidature réutilisable.",
+          "items": {
+            "0": {
+              "title": "Brouillons prêts à postuler",
+              "description": "Transformez votre CV et le poste cible en documents plus solides."
+            },
+            "1": {
+              "title": "Relances réutilisables",
+              "description": "Gardez les notes recruteur alignées sur le contexte du poste."
+            },
+            "2": {
+              "title": "Signaux de préparation",
+              "description": "Voyez ce qui est prêt et ce qui demande encore du travail."
+            }
+          }
+        }
+      }
     },
     "stats": {
       "readiness": "Préparation",

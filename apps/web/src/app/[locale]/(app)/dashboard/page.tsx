@@ -374,7 +374,7 @@ function NewUserDashboard({
           </div>
           <h2 className="text-lg font-semibold">{t("onboarding.unlocks")}</h2>
           <p className="mt-2 text-sm leading-6 text-muted-foreground">
-            {getUnlockPreviewIntro(activeStep)}
+            {getUnlockPreviewIntro(activeStep, t)}
           </p>
           <div className="mt-6 border-t pt-5">
             <h3 className="text-sm font-medium text-muted-foreground">
@@ -382,7 +382,7 @@ function NewUserDashboard({
             </h3>
           </div>
           <div className="mt-3 space-y-3">
-            {getUnlockPreviewItems(activeStep).map((item) => (
+            {getUnlockPreviewItems(activeStep, t).map((item) => (
               <UnlockItem
                 key={item.title}
                 icon={item.icon}
@@ -445,9 +445,11 @@ function SetupStep({
         </span>
       </div>
       <div className="min-w-0 flex-1">
-        <h3 className="font-semibold">{step.title}</h3>
+        <h3 className="font-semibold">
+          {t(`onboarding.steps.${step.id}.title`)}
+        </h3>
         <p className="mt-1 text-sm leading-6 text-muted-foreground">
-          {step.description}
+          {t(`onboarding.steps.${step.id}.description`)}
         </p>
       </div>
       <span
@@ -457,7 +459,9 @@ function SetupStep({
             : "border bg-card text-foreground"
         }`}
       >
-        {active ? t("onboarding.recommended") : step.actionLabel}
+        {active
+          ? t("onboarding.recommended")
+          : t(`onboarding.steps.${step.id}.actionLabel`)}
         {!active ? <ArrowRight className="h-3.5 w-3.5" /> : null}
       </span>
     </Link>
@@ -958,19 +962,22 @@ function getDashboardGreeting(
     : t("greeting.active");
 }
 
-function getUnlockPreviewIntro(step: OnboardingStep | undefined): string {
-  switch (step?.id) {
-    case "add-opportunity":
-      return "Once your first role is tracked, Slothing can connect documents and next steps to a real target.";
-    case "create-tailored-doc":
-      return "Once a tailored document exists, your workspace starts turning source material into reusable application momentum.";
-    case "upload-resume":
-    default:
-      return "Once your resume is in the bank, Slothing has source material for the rest of the workflow.";
-  }
+function getUnlockPreviewIntro(
+  step: OnboardingStep | undefined,
+  t: ReturnType<typeof useTranslations<"dashboard">>,
+): string {
+  const previewId =
+    step?.id === "add-opportunity" || step?.id === "create-tailored-doc"
+      ? step.id
+      : "upload-resume";
+
+  return t(`onboarding.unlockPreview.${previewId}.intro`);
 }
 
-function getUnlockPreviewItems(step: OnboardingStep | undefined): Array<{
+function getUnlockPreviewItems(
+  step: OnboardingStep | undefined,
+  t: ReturnType<typeof useTranslations<"dashboard">>,
+): Array<{
   icon: LucideIcon;
   title: string;
   description: string;
@@ -980,36 +987,48 @@ function getUnlockPreviewItems(step: OnboardingStep | undefined): Array<{
       return [
         {
           icon: Target,
-          title: "Focused application plans",
-          description: "See the documents and prep work each role needs.",
+          title: t("onboarding.unlockPreview.add-opportunity.items.0.title"),
+          description: t(
+            "onboarding.unlockPreview.add-opportunity.items.0.description",
+          ),
         },
         {
           icon: Calendar,
-          title: "Follow-up timing",
-          description: "Keep interviews, deadlines, and reminders visible.",
+          title: t("onboarding.unlockPreview.add-opportunity.items.1.title"),
+          description: t(
+            "onboarding.unlockPreview.add-opportunity.items.1.description",
+          ),
         },
         {
           icon: BarChart3,
-          title: "Pipeline clarity",
-          description: "Watch saved, applied, and interviewing roles move.",
+          title: t("onboarding.unlockPreview.add-opportunity.items.2.title"),
+          description: t(
+            "onboarding.unlockPreview.add-opportunity.items.2.description",
+          ),
         },
       ];
     case "create-tailored-doc":
       return [
         {
           icon: CheckCircle2,
-          title: "Application-ready drafts",
-          description: "Turn your resume and target role into stronger docs.",
+          title: t("onboarding.unlockPreview.create-tailored-doc.items.0.title"),
+          description: t(
+            "onboarding.unlockPreview.create-tailored-doc.items.0.description",
+          ),
         },
         {
           icon: Mail,
-          title: "Reusable follow-ups",
-          description: "Keep recruiter notes aligned with the role context.",
+          title: t("onboarding.unlockPreview.create-tailored-doc.items.1.title"),
+          description: t(
+            "onboarding.unlockPreview.create-tailored-doc.items.1.description",
+          ),
         },
         {
           icon: UserCheck,
-          title: "Readiness signals",
-          description: "Know what is polished and what still needs work.",
+          title: t("onboarding.unlockPreview.create-tailored-doc.items.2.title"),
+          description: t(
+            "onboarding.unlockPreview.create-tailored-doc.items.2.description",
+          ),
         },
       ];
     case "upload-resume":
@@ -1017,18 +1036,24 @@ function getUnlockPreviewItems(step: OnboardingStep | undefined): Array<{
       return [
         {
           icon: FileText,
-          title: "Reusable document bank",
-          description: "Keep your source material organized for every role.",
+          title: t("onboarding.unlockPreview.upload-resume.items.0.title"),
+          description: t(
+            "onboarding.unlockPreview.upload-resume.items.0.description",
+          ),
         },
         {
           icon: Briefcase,
-          title: "Better opportunity matching",
-          description: "Compare jobs against real experience and skills.",
+          title: t("onboarding.unlockPreview.upload-resume.items.1.title"),
+          description: t(
+            "onboarding.unlockPreview.upload-resume.items.1.description",
+          ),
         },
         {
           icon: Target,
-          title: "Tailored Studio drafts",
-          description: "Start from existing material instead of a blank page.",
+          title: t("onboarding.unlockPreview.upload-resume.items.2.title"),
+          description: t(
+            "onboarding.unlockPreview.upload-resume.items.2.description",
+          ),
         },
       ];
   }

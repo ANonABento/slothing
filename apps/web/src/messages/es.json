@@ -89,7 +89,82 @@
       "unlocks": "Qué se desbloquea a continuación",
       "afterStep": "Después de este paso",
       "skip": "Omitir configuración por ahora",
-      "recommended": "Recomendado"
+      "recommended": "Recomendado",
+      "steps": {
+        "upload-resume": {
+          "title": "Sube tu currículum",
+          "description": "Organizaremos tu experiencia para que puedas reutilizarla.",
+          "actionLabel": "Subir currículum"
+        },
+        "install-extension": {
+          "title": "Instala la extensión del navegador",
+          "description": "Captura puestos desde bolsas de trabajo mientras navegas.",
+          "actionLabel": "Instalar extensión"
+        },
+        "add-opportunity": {
+          "title": "Agrega tu primera oportunidad",
+          "description": "Haz seguimiento de un puesto y ve qué documentos necesitas.",
+          "actionLabel": "Agregar oportunidad"
+        },
+        "create-tailored-doc": {
+          "title": "Crea un documento personalizado",
+          "description": "Usa tu currículum y el puesto objetivo para redactar una solicitud más sólida.",
+          "actionLabel": "Abrir Studio"
+        }
+      },
+      "unlockPreview": {
+        "upload-resume": {
+          "intro": "Cuando tu currículum esté en el banco, Slothing tendrá material base para el resto del flujo.",
+          "items": {
+            "0": {
+              "title": "Banco de documentos reutilizable",
+              "description": "Mantén tu material base organizado para cada puesto."
+            },
+            "1": {
+              "title": "Mejor comparación de oportunidades",
+              "description": "Compara empleos con tu experiencia y habilidades reales."
+            },
+            "2": {
+              "title": "Borradores personalizados en Studio",
+              "description": "Empieza con material existente en lugar de una página en blanco."
+            }
+          }
+        },
+        "add-opportunity": {
+          "intro": "Cuando registres tu primer puesto, Slothing podrá conectar documentos y próximos pasos con un objetivo real.",
+          "items": {
+            "0": {
+              "title": "Planes de solicitud enfocados",
+              "description": "Ve los documentos y la preparación que necesita cada puesto."
+            },
+            "1": {
+              "title": "Seguimiento en el momento adecuado",
+              "description": "Mantén visibles entrevistas, fechas límite y recordatorios."
+            },
+            "2": {
+              "title": "Claridad del pipeline",
+              "description": "Observa cómo avanzan los puestos guardados, enviados y en entrevista."
+            }
+          }
+        },
+        "create-tailored-doc": {
+          "intro": "Cuando exista un documento personalizado, tu espacio empezará a convertir material base en impulso reutilizable para solicitudes.",
+          "items": {
+            "0": {
+              "title": "Borradores listos para enviar",
+              "description": "Convierte tu currículum y puesto objetivo en documentos más sólidos."
+            },
+            "1": {
+              "title": "Seguimientos reutilizables",
+              "description": "Mantén las notas para reclutadores alineadas con el contexto del puesto."
+            },
+            "2": {
+              "title": "Señales de preparación",
+              "description": "Sabe qué está pulido y qué aún necesita trabajo."
+            }
+          }
+        }
+      }
     },
     "stats": {
       "readiness": "Preparación",

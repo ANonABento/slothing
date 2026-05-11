@@ -89,7 +89,82 @@
       "unlocks": "接下来将解锁",
       "afterStep": "完成此步骤后",
       "skip": "暂时跳过设置",
-      "recommended": "推荐"
+      "recommended": "推荐",
+      "steps": {
+        "upload-resume": {
+          "title": "上传您的简历",
+          "description": "我们会整理您的经历，让它可以反复使用。",
+          "actionLabel": "上传简历"
+        },
+        "install-extension": {
+          "title": "安装浏览器扩展",
+          "description": "浏览招聘网站时直接捕获职位。",
+          "actionLabel": "安装扩展"
+        },
+        "add-opportunity": {
+          "title": "添加第一个机会",
+          "description": "跟踪一个职位，并查看需要哪些文档。",
+          "actionLabel": "添加机会"
+        },
+        "create-tailored-doc": {
+          "title": "创建定制文档",
+          "description": "用您的简历和目标职位起草更有力的申请材料。",
+          "actionLabel": "打开 Studio"
+        }
+      },
+      "unlockPreview": {
+        "upload-resume": {
+          "intro": "简历进入资料库后，Slothing 就有了支撑后续流程的素材。",
+          "items": {
+            "0": {
+              "title": "可复用文档库",
+              "description": "为每个职位整理好您的源材料。"
+            },
+            "1": {
+              "title": "更好的机会匹配",
+              "description": "用真实经历和技能对比职位。"
+            },
+            "2": {
+              "title": "Studio 定制草稿",
+              "description": "从已有材料开始，而不是面对空白页。"
+            }
+          }
+        },
+        "add-opportunity": {
+          "intro": "第一个职位被跟踪后，Slothing 可以把文档和下一步连接到真实目标。",
+          "items": {
+            "0": {
+              "title": "聚焦的申请计划",
+              "description": "查看每个职位需要的文档和准备工作。"
+            },
+            "1": {
+              "title": "跟进时间安排",
+              "description": "让面试、截止日期和提醒保持可见。"
+            },
+            "2": {
+              "title": "清晰的流程视图",
+              "description": "观察已保存、已申请和面试中的职位流转。"
+            }
+          }
+        },
+        "create-tailored-doc": {
+          "intro": "有了定制文档后，您的工作台会开始把源材料转化为可复用的申请推进力。",
+          "items": {
+            "0": {
+              "title": "可直接申请的草稿",
+              "description": "把简历和目标职位转化为更强的文档。"
+            },
+            "1": {
+              "title": "可复用跟进内容",
+              "description": "让招聘人员备注与职位上下文保持一致。"
+            },
+            "2": {
+              "title": "准备度信号",
+              "description": "了解哪些已经完善，哪些还需要打磨。"
+            }
+          }
+        }
+      }
     },
     "stats": {
       "readiness": "就绪度",

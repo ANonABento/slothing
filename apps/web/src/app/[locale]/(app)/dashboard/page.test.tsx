@@ -100,7 +100,11 @@ describe("Dashboard onboarding", () => {
       ),
     ).toBeInTheDocument();
     for (const step of BASIC_ONBOARDING_STEPS) {
-      expect(screen.getByText(step.title)).toBeInTheDocument();
+      const stepMessages =
+        messages.dashboard.onboarding.steps[
+          step.id as keyof typeof messages.dashboard.onboarding.steps
+        ];
+      expect(screen.getByText(stepMessages.title)).toBeInTheDocument();
     }
     expect(screen.queryByText("Next best move")).not.toBeInTheDocument();
   });

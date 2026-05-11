@@ -12,7 +12,7 @@ test.describe("i18n routing", () => {
     await page.goto("/es/dashboard");
     await page.waitForLoadState("networkidle");
 
-    await expect(page.getByRole("heading", { name: "Tablero" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Panel" })).toBeVisible();
     await expect(
       page.getByRole("link", { name: /Configuración/ }),
     ).toBeVisible();
@@ -27,8 +27,8 @@ test.describe("i18n routing", () => {
       .first()
       .innerText();
     expect(heading).toMatch(/[一-鿿]/u);
-    await expect(page.getByRole("link", { name: /添加机会/ })).toBeVisible();
-    await expect(page.getByText("今日")).toBeVisible();
+    await expect(page.getByRole("link", { name: /添加.*机会/ })).toBeVisible();
+    await expect(page.getByText("从这里开始")).toBeVisible();
   });
 
   test("renders dashboard chrome in Brazilian Portuguese", async ({ page }) => {
@@ -46,7 +46,7 @@ test.describe("i18n routing", () => {
     await expect(
       page.getByRole("link", { name: /Adicionar oportunidade/ }),
     ).toBeVisible();
-    await expect(page.getByText("Hoje")).toBeVisible();
+    await expect(page.getByText("Comece por aqui")).toBeVisible();
   });
 
   test("renders dashboard chrome in Hindi", async ({ page }) => {
@@ -59,7 +59,7 @@ test.describe("i18n routing", () => {
       .innerText();
     expect(heading).toMatch(/[ऀ-ॿ]/u);
     await expect(page.getByRole("link", { name: /अवसर जोड़ें/ })).toBeVisible();
-    await expect(page.getByText("आज")).toBeVisible();
+    await expect(page.getByText("यहाँ से शुरू करें")).toBeVisible();
   });
 
   test("switches language from settings while preserving the route", async ({
