@@ -2,6 +2,7 @@
 
 import type React from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Search, Loader2, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -42,6 +43,8 @@ function contactSearchText(contact: GooglePickerContact): string {
 }
 
 export function ContactPicker({ onSelect, trigger }: ContactPickerProps) {
+  const t = useTranslations("integrations.google.contacts");
+  const commonT = useTranslations("common");
   const [open, setOpen] = useState(false);
   const [contacts, setContacts] = useState<GooglePickerContact[]>([]);
   const [query, setQuery] = useState("");
@@ -62,7 +65,7 @@ export function ContactPicker({ onSelect, trigger }: ContactPickerProps) {
         .catch(() => ({}))) as ContactsResponse;
 
       if (!response.ok) {
-        const message = data.error || "Failed to load contacts";
+        const message = data.error || t("errors.load");
         setError(message);
         setNeedsConnection(message === "Google account not connected");
         return;
@@ -71,11 +74,10 @@ export function ContactPicker({ onSelect, trigger }: ContactPickerProps) {
       setContacts(data.contacts || []);
     } catch (err) {
       showErrorToast(err, {
-        title: "Could not load Google contacts",
-        fallbackDescription:
-          "Please check your Google connection and try again.",
+        title: t("errors.loadTitle"),
+        fallbackDescription: t("errors.loadDescription"),
       });
-      setError("Failed to load contacts from Google");
+      setError(t("errors.load"));
     } finally {
       setLoading(false);
     }
@@ -107,7 +109,7 @@ export function ContactPicker({ onSelect, trigger }: ContactPickerProps) {
         {trigger || (
           <Button variant="outline">
             <Users className="mr-2 h-4 w-4" />
-            Add from Google
+            {t("trigger")}
           </Button>
         )}
       </DialogTrigger>
@@ -115,10 +117,10 @@ export function ContactPicker({ onSelect, trigger }: ContactPickerProps) {
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Users className="h-5 w-5 text-primary" />
-            Select Google Contact
+            {t("title")}
           </DialogTitle>
           <DialogDescription>
-            Choose a contact to attach to this opportunity.
+            {t("description")}
           </DialogDescription>
         </DialogHeader>
 
@@ -128,7 +130,7 @@ export function ContactPicker({ onSelect, trigger }: ContactPickerProps) {
             <Input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search contacts"
+              placeholder={t("searchPlaceholder")}
               className="pl-9"
             />
           </div>
@@ -137,7 +139,7 @@ export function ContactPicker({ onSelect, trigger }: ContactPickerProps) {
             <div className="flex flex-col items-center justify-center gap-3 py-12">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
               <p className="text-sm text-muted-foreground">
-                Loading contacts...
+                {t("loading")}
               </p>
             </div>
           ) : error ? (
@@ -146,11 +148,11 @@ export function ContactPicker({ onSelect, trigger }: ContactPickerProps) {
               <div className="mt-4 flex justify-center gap-2">
                 {needsConnection ? (
                   <Button asChild variant="outline" size="sm">
-                    <a href="/settings">Open Settings</a>
+                    <a href="/settings">{t("openSettings")}</a>
                   </Button>
                 ) : null}
                 <Button variant="outline" size="sm" onClick={loadContacts}>
-                  Try Again
+                  {commonT("tryAgain")}
                 </Button>
               </div>
             </div>
@@ -159,8 +161,8 @@ export function ContactPicker({ onSelect, trigger }: ContactPickerProps) {
               <Users className="mx-auto mb-3 h-12 w-12 text-muted-foreground/50" />
               <p className="text-sm text-muted-foreground">
                 {contacts.length === 0
-                  ? "No contacts found. Reconnect Google in Settings if you connected before contacts support."
-                  : "No contacts match your search."}
+                  ? t("empty.noContacts")
+                  : t("empty.noMatches")}
               </p>
             </div>
           ) : (

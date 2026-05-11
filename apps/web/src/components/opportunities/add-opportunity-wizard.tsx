@@ -10,6 +10,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { useTranslations } from "next-intl";
 import { HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -168,6 +169,7 @@ export function AddOpportunityWizard({
   onOpenChange,
   onSaved,
 }: AddOpportunityWizardProps) {
+  const dialogsT = useTranslations("dialogs.opportunities.addOpportunity");
   const [form, setForm] = useState(DEFAULT_WIZARD_STATE);
   const [step, setStep] = useState<WizardStep>(0);
   const [furthestStep, setFurthestStep] = useState<WizardStep>(0);
@@ -759,7 +761,7 @@ export function AddOpportunityWizard({
               </button>
             ))}
           </div>
-          <DialogTitle>Add Opportunity</DialogTitle>
+          <DialogTitle>{dialogsT("title")}</DialogTitle>
           <DialogDescription>{getStepDescription(step)}</DialogDescription>
         </DialogHeader>
 

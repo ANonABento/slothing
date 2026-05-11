@@ -8,6 +8,7 @@ import {
   type HTMLAttributes,
 } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import {
   BarChart3,
   BriefcaseBusiness,
@@ -147,6 +148,7 @@ export function AiAssistantPanel({
   onToggleCollapsed,
   ...asideProps
 }: AiAssistantPanelProps) {
+  const dialogsT = useTranslations("dialogs.studio.aiAssistant");
   const { addToast } = useToast();
   const panelRef = useRef<HTMLElement>(null);
   const runningActionRef = useRef<AssistantRunAction | null>(null);
@@ -948,9 +950,9 @@ export function AiAssistantPanel({
       >
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Select from Opportunity Bank</DialogTitle>
+            <DialogTitle>{dialogsT("opportunityPickerTitle")}</DialogTitle>
             <DialogDescription>
-              Choose a saved or applied opportunity to load its description.
+              {dialogsT("opportunityPickerDescription")}
             </DialogDescription>
           </DialogHeader>
 

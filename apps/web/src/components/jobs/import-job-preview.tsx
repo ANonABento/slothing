@@ -9,6 +9,7 @@ import {
   Loader2,
   MapPin,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -36,6 +37,9 @@ export function ImportJobPreview({
   onEdit,
   onSave,
 }: ImportJobPreviewProps) {
+  const t = useTranslations("jobs.import.preview");
+  const commonT = useTranslations("common");
+
   return (
     <div className="space-y-4 py-4">
       <div className={cn(THEME_MUTED_SURFACE_CLASSES, "p-4")}>
@@ -61,7 +65,7 @@ export function ImportJobPreview({
               )}
               {preview.remote && (
                 <Badge variant="secondary" className="text-xs">
-                  Remote
+                  {t("remote")}
                 </Badge>
               )}
             </div>
@@ -73,7 +77,7 @@ export function ImportJobPreview({
           </div>
           <Button variant="outline" size="sm" onClick={onEdit}>
             <Edit2 className="h-4 w-4 mr-1" />
-            Edit
+            {commonT("edit")}
           </Button>
         </div>
 
@@ -85,13 +89,13 @@ export function ImportJobPreview({
             className="inline-flex items-center gap-1 text-sm text-primary hover:underline mt-3"
           >
             <ExternalLink className="h-3 w-3" />
-            View Original Posting
+            {t("viewOriginalPosting")}
           </a>
         )}
       </div>
 
       <div>
-        <Label className="text-sm font-medium">Description</Label>
+        <Label className="text-sm font-medium">{t("description")}</Label>
         <p className="mt-1 text-sm text-muted-foreground line-clamp-4">
           {preview.description}
         </p>
@@ -99,7 +103,7 @@ export function ImportJobPreview({
 
       {preview.requirements.length > 0 && (
         <div>
-          <Label className="text-sm font-medium">Requirements</Label>
+          <Label className="text-sm font-medium">{t("requirements")}</Label>
           <ul className="mt-1 space-y-1">
             {preview.requirements.slice(0, 5).map((req, i) => (
               <li
@@ -112,7 +116,9 @@ export function ImportJobPreview({
             ))}
             {preview.requirements.length > 5 && (
               <li className="text-sm text-muted-foreground">
-                +{preview.requirements.length - 5} more
+                {t("moreRequirements", {
+                  count: preview.requirements.length - 5,
+                })}
               </li>
             )}
           </ul>
@@ -121,7 +127,9 @@ export function ImportJobPreview({
 
       {preview.keywords.length > 0 && (
         <div>
-          <Label className="text-sm font-medium">Extracted Keywords</Label>
+          <Label className="text-sm font-medium">
+            {t("extractedKeywords")}
+          </Label>
           <div className="mt-2 flex flex-wrap gap-1.5">
             {preview.keywords.map((kw, i) => (
               <Badge key={i} variant="secondary" className="text-xs">
@@ -134,17 +142,17 @@ export function ImportJobPreview({
 
       {preview.source && (
         <div className="text-xs text-muted-foreground">
-          Source: {preview.source}
+          {t("source", { source: preview.source })}
         </div>
       )}
 
       <div className="flex justify-between gap-3 pt-2">
         <Button variant="outline" onClick={onBack}>
-          Back
+          {commonT("back")}
         </Button>
         <div className="flex gap-3">
           <Button variant="outline" onClick={onCancel}>
-            Cancel
+            {commonT("cancel")}
           </Button>
           <Button
             onClick={onSave}
@@ -156,7 +164,7 @@ export function ImportJobPreview({
             ) : (
               <Check className="h-4 w-4 mr-2" />
             )}
-            Import Job
+            {t("actions.import")}
           </Button>
         </div>
       </div>

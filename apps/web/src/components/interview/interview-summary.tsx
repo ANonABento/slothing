@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import {
   CheckCircle2,
   Info,
@@ -14,7 +15,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AnswerFeedbackCard } from "@/components/interview/answer-feedback-card";
 import { SessionFeedbackSummary } from "@/components/interview/session-feedback-summary";
-import { pluralize } from "@/lib/text/pluralize";
 import { SkeletonButton } from "@/components/ui/skeleton";
 import { CategoryBadge } from "@/lib/interview/category-display";
 import {
@@ -41,6 +41,7 @@ export function InterviewSummary({
   selectedJob,
   onReset,
 }: InterviewSummaryProps) {
+  const t = useTranslations("interview.summary");
   const answeredCount = session.answers.filter((answer, index) => {
     const trimmedAnswer = answer.trim();
     return (
@@ -76,10 +77,9 @@ export function InterviewSummary({
         <div className="mb-6 inline-flex h-20 w-20 items-center justify-center rounded-full bg-success/20 text-success">
           <Trophy className="h-10 w-10" />
         </div>
-        <h2 className="text-2xl font-bold">Interview Complete!</h2>
+        <h2 className="text-2xl font-bold">{t("title")}</h2>
         <p className="mt-2 text-muted-foreground">
-          You answered all {pluralize(session.questions.length, "question")}.
-          Review your responses and feedback below.
+          {t("description", { count: session.questions.length })}
         </p>
         <div className="mt-6 flex justify-center gap-3">
           <Button
@@ -87,7 +87,7 @@ export function InterviewSummary({
             className="gradient-bg text-primary-foreground hover:opacity-90"
           >
             <RotateCcw className="mr-2 h-4 w-4" />
-            Start New Interview
+            {t("actions.startNew")}
           </Button>
           <SaveToDocsButton
             title={practiceTitle}
@@ -97,7 +97,7 @@ export function InterviewSummary({
             <Link href={`/opportunities/${selectedJob.id}/research`}>
               <Button variant="outline">
                 <Info className="mr-2 h-4 w-4" />
-                Research {selectedJob.company}
+                {t("actions.research", { company: selectedJob.company })}
               </Button>
             </Link>
           )}
@@ -107,33 +107,39 @@ export function InterviewSummary({
       <div className="rounded-xl border bg-card p-5">
         <h3 className="mb-4 flex items-center gap-2 font-semibold">
           <Target className="h-5 w-5 text-primary" />
-          Performance Insights
+          {t("insights.title")}
         </h3>
         <div className="grid grid-cols-3 gap-4 text-center">
           <div className="rounded-lg bg-muted/50 p-3">
             <p className="text-2xl font-bold text-primary">
               {answeredCount}/{session.questions.length}
             </p>
-            <p className="text-xs text-muted-foreground">Questions Answered</p>
+            <p className="text-xs text-muted-foreground">
+              {t("insights.questionsAnswered")}
+            </p>
           </div>
           <div className="rounded-lg bg-muted/50 p-3">
             <p className="text-2xl font-bold capitalize text-primary">
-              {performanceLevel}
+              {t(`performanceLevels.${performanceLevel}`)}
             </p>
-            <p className="text-xs text-muted-foreground">Response Quality</p>
+            <p className="text-xs text-muted-foreground">
+              {t("insights.responseQuality")}
+            </p>
           </div>
           <div className="rounded-lg bg-muted/50 p-3">
             <p className="text-2xl font-bold text-primary">
               {feedbackEntries.length}
             </p>
-            <p className="text-xs text-muted-foreground">Feedback Received</p>
+            <p className="text-xs text-muted-foreground">
+              {t("insights.feedbackReceived")}
+            </p>
           </div>
         </div>
       </div>
 
       <SessionFeedbackSummary summary={coachingSummary} />
 
-      <h3 className="text-xl font-semibold">Your Responses</h3>
+      <h3 className="text-xl font-semibold">{t("responses.title")}</h3>
       {session.questions.map((question, questionIndex) => {
         const skipped =
           session.skipped?.[questionIndex] ||
@@ -158,30 +164,33 @@ export function InterviewSummary({
                   category={question.category}
                   className="text-xs"
                 />
-                {skipped ? <Badge variant="outline">Skipped</Badge> : null}
+                {skipped ? (
+                  <Badge variant="outline">{t("responses.skipped")}</Badge>
+                ) : null}
               </div>
               <h4 className="font-semibold">{question.question}</h4>
             </div>
             <div className="space-y-4 p-5">
               <div>
                 <p className="mb-2 text-sm font-medium text-muted-foreground">
-                  Your Answer
+                  {t("responses.yourAnswer")}
                 </p>
                 <p className="text-sm">
                   {skipped
-                    ? "Skipped - revisit later"
-                    : session.answers[questionIndex] || "No answer provided"}
+                    ? t("responses.skippedShort")
+                    : session.answers[questionIndex] ||
+                      t("responses.noAnswer")}
                 </p>
               </div>
               {skipped ? (
                 <div className="rounded-xl border border-warning/30 bg-warning/5 p-4 text-sm text-warning">
-                  Skipped - revisit this prompt when you are ready.
+                  {t("responses.skippedHint")}
                 </div>
               ) : session.feedback[questionIndex] ? (
                 <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
                   <p className="mb-2 flex items-center gap-2 text-sm font-medium text-primary">
                     <CheckCircle2 className="h-4 w-4" />
-                    AI Feedback
+                    {t("responses.aiFeedback")}
                   </p>
                   <p className="text-sm">{session.feedback[questionIndex]}</p>
                 </div>

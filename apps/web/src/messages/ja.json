@@ -17,7 +17,10 @@
     "search": "検索",
     "selectLocale": "言語を選択",
     "show": "表示",
-    "tryAgain": "再試行"
+    "tryAgain": "再試行",
+    "back": "[ja] Back",
+    "delete": "[ja] Delete",
+    "edit": "[ja] Edit"
   },
   "nav": {
     "brand": "Slothing",
@@ -135,6 +138,15 @@
       "viewAll": "すべて表示",
       "emptyTitle": "機会はまだありません",
       "emptyDescription": "機会を保存またはインポートして、ここで管理を開始しましょう。"
+    },
+    "recentActivity": {
+      "title": "[ja] Recent Activity",
+      "types": {
+        "document_uploaded": "[ja] Uploaded",
+        "resume_generated": "[ja] Generated resume for",
+        "job_added": "[ja] Added job",
+        "job_applied": "[ja] Applied to"
+      }
     }
   },
   "opportunities": {
@@ -256,11 +268,550 @@
         "ja": "日本語",
         "ko": "한국어"
       }
+    },
+    "help": {
+      "ollama": {
+        "title": "[ja] Using Ollama (Free)",
+        "installFrom": "[ja] Install from",
+        "run": "[ja] Run",
+        "testConnection": "[ja] Test the connection above"
+      },
+      "apiKeys": {
+        "title": "[ja] Using API Keys",
+        "description": "[ja] Connect your own API keys from OpenAI, Anthropic, or OpenRouter for cloud-based processing. Your keys are stored locally and never leave your device."
+      }
+    },
+    "dataManagement": {
+      "title": "[ja] Data Management",
+      "description": "[ja] Export your data or import from backups.",
+      "export": {
+        "title": "[ja] Export Data",
+        "profileJson": "[ja] Export Profile (JSON)",
+        "opportunitiesJson": "[ja] Export Opportunities (JSON)",
+        "opportunitiesCsv": "[ja] Export Opportunities (CSV)",
+        "fullBackup": "[ja] Full Backup",
+        "allDataJson": "[ja] Export All Data (JSON)"
+      },
+      "import": {
+        "title": "[ja] Import Data",
+        "jobsAria": "[ja] Import jobs from JSON or CSV file",
+        "opportunitiesJsonCsv": "[ja] Import Opportunities (JSON/CSV)",
+        "restoreBackupAria": "[ja] Restore backup from JSON file",
+        "restoreBackup": "[ja] Restore Backup",
+        "allDataAria": "[ja] Import all data from JSON file",
+        "allDataJson": "[ja] Import All Data (JSON)"
+      },
+      "confirm": {
+        "title": "[ja] Confirm Import",
+        "description": "[ja] The following data will be imported (duplicates will be skipped):",
+        "importing": "[ja] Importing...",
+        "action": "[ja] Confirm Import"
+      }
     }
   },
   "notFound": {
     "title": "ページが見つかりません",
     "description": "そのページを見つけられませんでした。",
     "action": "ダッシュボードへ戻る"
+  },
+  "marketing": {
+    "nav": {
+      "features": "機能",
+      "extension": "拡張機能",
+      "howItWorks": "仕組み",
+      "pricing": "料金",
+      "signIn": "サインイン",
+      "getStarted": "はじめる",
+      "toggleMenu": "メニューを切り替え"
+    }
+  },
+  "onboarding": {
+    "steps": {
+      "upload": {
+        "title": "[ja] Upload Your Resume",
+        "description": "[ja] Drag and drop your resume to get started, or skip this step and add it later.",
+        "dropHint": "[ja] Drop your PDF or DOCX here, or head to <documents>Documents</documents> after setup to add it later."
+      },
+      "review": {
+        "title": "[ja] Review Your Profile",
+        "description": "[ja] After uploading, review the extracted entries and edit anything that needs fixing.",
+        "sections": {
+          "contactInfo": "[ja] Contact info",
+          "workExperience": "[ja] Work experience",
+          "education": "[ja] Education",
+          "skillsProjects": "[ja] Skills & projects"
+        }
+      },
+      "builder": {
+        "title": "[ja] Build Your Starter Profile",
+        "description": "[ja] Answer a few quick prompts so Slothing can organize your career details without a resume upload.",
+        "fields": {
+          "name": "[ja] Name",
+          "email": "[ja] Email",
+          "targetRole": "[ja] Target role",
+          "backgroundSummary": "[ja] Background summary",
+          "education": "[ja] Education",
+          "school": "[ja] School",
+          "degree": "[ja] Degree",
+          "field": "[ja] Field",
+          "topSkills": "[ja] Top skills",
+          "company": "[ja] Company / organisation",
+          "roleTitle": "[ja] Role / title",
+          "roleHighlights": "[ja] Role highlights (one per line, up to 3)",
+          "projectName": "[ja] Project name",
+          "projectSummary": "[ja] What did you build?",
+          "projectHighlights": "[ja] Project highlights (one per line)",
+          "achievements": "[ja] Honours, awards, leadership (comma-separated)"
+        },
+        "placeholders": {
+          "targetRole": "[ja] Frontend intern, project manager, data analyst",
+          "backgroundSummary": "[ja] A sentence about your background, interests, or next move",
+          "topSkills": "[ja] Customer service, Excel, Python",
+          "company": "[ja] Campus cafe",
+          "roleTitle": "[ja] Barista",
+          "roleHighlights": "[ja] Pulled espresso shots\nTrained 3 new baristas",
+          "projectName": "[ja] Community pantry dashboard",
+          "projectSummary": "[ja] A class project that tracked donations and volunteer shifts",
+          "projectHighlights": "[ja] Built a filterable tracker\nPresented findings to class",
+          "achievements": "[ja] Residence council secretary, Dean's list"
+        },
+        "optional": {
+          "title": "[ja] Add a role, project, or honour (optional)",
+          "hide": "[ja] Hide",
+          "add": "[ja] Add"
+        },
+        "actions": {
+          "saving": "[ja] Saving",
+          "saveContinue": "[ja] Save and continue"
+        },
+        "errors": {
+          "save": "[ja] Unable to save your profile starter."
+        }
+      }
+    }
+  },
+  "interview": {
+    "summary": {
+      "title": "[ja] Interview Complete!",
+      "description": "[ja] You answered all {count, plural, one {# question} other {# questions}}. Review your responses and feedback below.",
+      "actions": {
+        "startNew": "[ja] Start New Interview",
+        "research": "[ja] Research {company}"
+      },
+      "insights": {
+        "title": "[ja] Performance Insights",
+        "questionsAnswered": "[ja] Questions Answered",
+        "responseQuality": "[ja] Response Quality",
+        "feedbackReceived": "[ja] Feedback Received"
+      },
+      "performanceLevels": {
+        "detailed": "[ja] Detailed",
+        "good": "[ja] Good",
+        "brief": "[ja] Brief"
+      },
+      "responses": {
+        "title": "[ja] Your Responses",
+        "skipped": "[ja] Skipped",
+        "skippedShort": "[ja] Skipped - revisit later",
+        "noAnswer": "[ja] No answer provided",
+        "skippedHint": "[ja] Skipped - revisit this prompt when you are ready.",
+        "yourAnswer": "[ja] Your Answer",
+        "aiFeedback": "[ja] AI Feedback"
+      }
+    },
+    "jobSelection": {
+      "title": "[ja] Select a job to practice for:",
+      "empty": {
+        "title": "[ja] No Opportunities to Practice For",
+        "description": "[ja] Add a job description first to get personalized interview questions based on the role.",
+        "addOpportunity": "[ja] Add an Opportunity"
+      },
+      "actions": {
+        "quickPractice": "[ja] Quick Practice",
+        "textPractice": "[ja] Text Practice",
+        "voicePractice": "[ja] Voice Practice",
+        "prepGuide": "[ja] Prep Guide",
+        "hidePrepGuide": "[ja] Hide Prep Guide",
+        "companyResearch": "[ja] Company Research"
+      },
+      "controls": {
+        "difficulty": "[ja] Difficulty:",
+        "questionCount": "[ja] {count} questions",
+        "timer": "[ja] Timer"
+      },
+      "difficulty": {
+        "entry": "[ja] Entry Level",
+        "mid": "[ja] Mid Level",
+        "senior": "[ja] Senior Level",
+        "executive": "[ja] Executive"
+      }
+    },
+    "quickPractice": {
+      "title": "[ja] Practice {category}",
+      "description": "[ja] Pick a short warm-up and jump straight into questions.",
+      "fields": {
+        "category": "[ja] Category",
+        "questions": "[ja] Questions",
+        "difficulty": "[ja] Difficulty"
+      },
+      "categories": {
+        "behavioral": "[ja] Behavioral",
+        "technical": "[ja] Technical",
+        "situational": "[ja] Situational",
+        "company": "[ja] Company",
+        "system-design": "[ja] System Design",
+        "general": "[ja] General"
+      },
+      "questionCount": "[ja] {count} questions",
+      "difficulty": {
+        "entry": "[ja] Easy",
+        "mid": "[ja] Mid",
+        "senior": "[ja] Hard",
+        "executive": "[ja] Executive"
+      },
+      "timer": "[ja] Practice with a timer",
+      "actions": {
+        "start": "[ja] Start"
+      }
+    },
+    "prepGuide": {
+      "title": "[ja] Interview Prep Guide",
+      "jobAtCompany": "[ja] {jobTitle} at {company}",
+      "loading": "[ja] Generating your prep guide...",
+      "progress": "[ja] Preparation Progress",
+      "questionTips": "[ja] Tips",
+      "actions": {
+        "export": "[ja] Export"
+      },
+      "tabs": {
+        "overview": "[ja] Overview",
+        "checklist": "[ja] Checklist",
+        "questions": "[ja] Questions"
+      },
+      "sections": {
+        "keyTopics": "[ja] Key Topics to Prepare",
+        "strengths": "[ja] Your Strengths",
+        "gaps": "[ja] Potential Gaps",
+        "talkingPoints": "[ja] Key Talking Points"
+      },
+      "checklist": {
+        "before": "[ja] Before the Interview",
+        "during": "[ja] During the Interview",
+        "after": "[ja] After the Interview"
+      },
+      "categories": {
+        "behavioral": "[ja] Behavioral",
+        "technical": "[ja] Technical",
+        "situational": "[ja] Situational",
+        "company": "[ja] Company"
+      },
+      "errors": {
+        "fetch": "[ja] Failed to fetch guide",
+        "load": "[ja] Failed to load guide",
+        "download": "[ja] Failed to download guide",
+        "downloadTitle": "[ja] Could not download prep guide",
+        "downloadDescription": "[ja] Please try downloading the guide again."
+      }
+    }
+  },
+  "jobs": {
+    "toolbar": {
+      "searchPlaceholder": "[ja] Search jobs by title, company, or keywords...",
+      "clearSearch": "[ja] Clear search",
+      "filters": {
+        "status": "[ja] Status",
+        "type": "[ja] Type",
+        "location": "[ja] Location",
+        "allStatuses": "[ja] All Statuses",
+        "allTypes": "[ja] All Types",
+        "allLocations": "[ja] All Locations"
+      },
+      "statuses": {
+        "pending": "[ja] Pending",
+        "saved": "[ja] Saved",
+        "applied": "[ja] Applied",
+        "interviewing": "[ja] Interviewing",
+        "offered": "[ja] Offered",
+        "rejected": "[ja] Rejected"
+      },
+      "types": {
+        "fullTime": "[ja] Full-time",
+        "partTime": "[ja] Part-time",
+        "contract": "[ja] Contract",
+        "internship": "[ja] Internship"
+      },
+      "locations": {
+        "remote": "[ja] Remote",
+        "onsite": "[ja] On-site"
+      },
+      "sort": {
+        "placeholder": "[ja] Sort",
+        "newest": "[ja] Newest First",
+        "oldest": "[ja] Oldest First",
+        "company": "[ja] Company A-Z",
+        "title": "[ja] Title A-Z"
+      },
+      "showing": "[ja] Showing {filteredCount} of {totalCount, plural, one {# job} other {# jobs}}"
+    },
+    "import": {
+      "csvPreview": {
+        "summaryTitle": "[ja] Import Summary",
+        "stats": {
+          "totalRows": "[ja] Total Rows",
+          "validOpportunities": "[ja] Valid Opportunities",
+          "invalid": "[ja] Invalid"
+        },
+        "validationErrors": "[ja] Validation Errors",
+        "moreErrors": "[ja] ...and {count} more errors",
+        "opportunitiesToImport": "[ja] Opportunities to Import ({count})",
+        "moreOpportunities": "[ja] ...and {count, plural, one {# more opportunity} other {# more opportunities}}",
+        "actions": {
+          "import": "[ja] Import {count, plural, one {# Opportunity} other {# Opportunities}}"
+        }
+      },
+      "textMode": {
+        "jobUrlLabel": "[ja] Job URL (optional)",
+        "jobUrlPlaceholder": "[ja] https://linkedin.com/jobs/... or https://indeed.com/...",
+        "jobUrlHelp": "[ja] The URL will be saved with the job for reference",
+        "jobContentLabel": "[ja] Job Content",
+        "jobContentPlaceholder": "[ja] Paste the full job posting here...\n\nExample:\nSenior Software Engineer\nAcme Corp - San Francisco, CA (Remote)\n\nAbout the role:\nWe're looking for an experienced software engineer...\n\nRequirements:\n- 5+ years of experience\n- Python, TypeScript\n...",
+        "jobContentHelp": "[ja] Paste the entire job description. We'll extract the title, company, requirements, and keywords.",
+        "actions": {
+          "parse": "[ja] Parse Job"
+        }
+      },
+      "urlMode": {
+        "jobUrlLabel": "[ja] Job Posting URL",
+        "jobUrlPlaceholder": "[ja] https://linkedin.com/jobs/... or https://indeed.com/...",
+        "jobUrlHelp": "[ja] We'll fetch the job posting and extract the details automatically.",
+        "fetchingNote": "[ja] Note: Some sites may block automated fetching. If the import fails, try pasting the job content directly.",
+        "actions": {
+          "fetch": "[ja] Fetch Job"
+        }
+      },
+      "editForm": {
+        "fields": {
+          "jobTitle": "[ja] Job Title",
+          "company": "[ja] Company",
+          "location": "[ja] Location",
+          "jobType": "[ja] Job Type",
+          "salary": "[ja] Salary",
+          "remote": "[ja] Remote",
+          "url": "[ja] URL"
+        },
+        "placeholders": {
+          "location": "[ja] San Francisco, CA",
+          "selectType": "[ja] Select type"
+        },
+        "types": {
+          "fullTime": "[ja] Full-time",
+          "partTime": "[ja] Part-time",
+          "contract": "[ja] Contract",
+          "internship": "[ja] Internship"
+        },
+        "remote": {
+          "remote": "[ja] Remote",
+          "onsite": "[ja] On-site"
+        },
+        "actions": {
+          "backToPreview": "[ja] Back to Preview",
+          "import": "[ja] Import Job"
+        }
+      },
+      "preview": {
+        "remote": "[ja] Remote",
+        "viewOriginalPosting": "[ja] View Original Posting",
+        "description": "[ja] Description",
+        "requirements": "[ja] Requirements",
+        "moreRequirements": "[ja] +{count} more",
+        "extractedKeywords": "[ja] Extracted Keywords",
+        "source": "[ja] Source: {source}",
+        "actions": {
+          "import": "[ja] Import Job"
+        }
+      }
+    },
+    "addDialog": {
+      "title": "[ja] Add New Opportunity",
+      "description": "[ja] Paste the opportunity description to analyze your match and generate a tailored resume.",
+      "fields": {
+        "title": "[ja] Opportunity Title",
+        "company": "[ja] Company",
+        "url": "[ja] Opportunity URL (optional)",
+        "description": "[ja] Opportunity Description"
+      },
+      "placeholders": {
+        "title": "[ja] Software Engineer",
+        "company": "[ja] Acme Corp",
+        "description": "[ja] Paste the full opportunity description here..."
+      },
+      "actions": {
+        "add": "[ja] Add Opportunity"
+      },
+      "errors": {
+        "add": "[ja] Failed to add opportunity",
+        "addTitle": "[ja] Could not add opportunity",
+        "addDescription": "[ja] Please check the opportunity details and try again."
+      }
+    }
+  },
+  "resume": {
+    "comparison": {
+      "title": "[ja] Resume Comparison",
+      "loading": "[ja] Comparing resumes...",
+      "before": "[ja] Before",
+      "after": "[ja] After",
+      "score": "[ja] Score: {score}%",
+      "matchScoreChange": "[ja] Match Score Change",
+      "empty": "[ja] No differences found between these versions.",
+      "actions": {
+        "close": "[ja] Close"
+      },
+      "summary": {
+        "additions": "[ja] Additions",
+        "removals": "[ja] Removals",
+        "changes": "[ja] Changes"
+      },
+      "errors": {
+        "compare": "[ja] Failed to compare resumes",
+        "comparison": "[ja] Comparison failed",
+        "load": "[ja] Failed to load comparison"
+      }
+    }
+  },
+  "integrations": {
+    "google": {
+      "calendar": {
+        "connectInSettings": "[ja] Connect Google in Settings to sync calendar",
+        "checking": "[ja] Checking...",
+        "syncing": "[ja] Syncing...",
+        "selectPlaceholder": "[ja] Select what to sync",
+        "actions": {
+          "sync": "[ja] Sync to Google Calendar"
+        },
+        "syncTypes": {
+          "all": "[ja] All Events",
+          "interviews": "[ja] Interviews Only",
+          "deadlines": "[ja] Deadlines Only",
+          "reminders": "[ja] Reminders Only"
+        },
+        "result": {
+          "synced": "[ja] Synced {count, plural, one {# event} other {# events}}",
+          "partial": "[ja] {synced} synced, {failed} failed",
+          "success": "[ja] Successfully synced {count, plural, one {# event} other {# events}}",
+          "failed": "[ja] Synced {synced, plural, one {# event} other {# events}}, {failed} failed",
+          "more": "[ja] And {count} more..."
+        },
+        "errors": {
+          "syncTitle": "[ja] Could not sync calendar",
+          "syncDescription": "[ja] Please check your Google connection and try again.",
+          "syncFailed": "[ja] Sync failed"
+        }
+      },
+      "contacts": {
+        "trigger": "[ja] Add from Google",
+        "title": "[ja] Select Google Contact",
+        "description": "[ja] Choose a contact to attach to this opportunity.",
+        "searchPlaceholder": "[ja] Search contacts",
+        "loading": "[ja] Loading contacts...",
+        "openSettings": "[ja] Open Settings",
+        "empty": {
+          "noContacts": "[ja] No contacts found. Reconnect Google in Settings if you connected before contacts support.",
+          "noMatches": "[ja] No contacts match your search."
+        },
+        "errors": {
+          "load": "[ja] Failed to load contacts from Google",
+          "loadTitle": "[ja] Could not load Google contacts",
+          "loadDescription": "[ja] Please check your Google connection and try again."
+        }
+      },
+      "drive": {
+        "connectInSettings": "[ja] Connect Google in Settings to save to Drive",
+        "checking": "[ja] Checking...",
+        "saved": "[ja] Saved to Drive",
+        "saving": "[ja] Saving...",
+        "actions": {
+          "save": "[ja] Save to Drive",
+          "saveAndGetLink": "[ja] Save & Get Link"
+        },
+        "errors": {
+          "save": "[ja] Failed to save to Drive",
+          "saveTitle": "[ja] Could not save to Drive",
+          "saveDescription": "[ja] Please check your Google connection and try again."
+        }
+      }
+    }
+  },
+  "dialogs": {
+    "upload": {
+      "failedTitle": "[ja] Upload Failed",
+      "actions": {
+        "retry": "[ja] Retry",
+        "dismiss": "[ja] Dismiss",
+        "replace": "[ja] Replace"
+      },
+      "replace": {
+        "title": "[ja] Replace existing upload?",
+        "description": "[ja] Looks like you uploaded \"{filename}\" on {date}. Replace it, or cancel?"
+      }
+    },
+    "bank": {
+      "addEntry": {
+        "trigger": "[ja] Add Entry",
+        "title": "[ja] Add New Entry",
+        "description": "[ja] Manually add an entry to your profile bank.",
+        "category": "[ja] Category",
+        "hackathonTemplates": "[ja] Hackathon Templates",
+        "actions": {
+          "add": "[ja] Add Entry"
+        }
+      },
+      "sourceDocuments": {
+        "sourceFiles": "[ja] Source Files",
+        "selected": "[ja] {count} selected",
+        "actions": {
+          "deleteSelected": "[ja] Delete Selected",
+          "selectFile": "[ja] Select {filename}",
+          "deleteFile": "[ja] Delete {filename}"
+        },
+        "deleteOne": {
+          "title": "[ja] Delete source document?",
+          "description": "[ja] This will permanently delete <strong>{filename}</strong> and all {count, plural, one {# associated bullet} other {# associated bullets}}. This action cannot be undone."
+        },
+        "deleteMany": {
+          "title": "[ja] Delete selected source files?",
+          "description": "[ja] This will permanently delete {count, plural, one {# source file} other {# source files}} and all associated bullets. This action cannot be undone."
+        },
+        "errors": {
+          "loadTitle": "[ja] Could not load source files",
+          "loadDescription": "[ja] Please refresh the page and try again.",
+          "deleteOneTitle": "[ja] Could not delete source file",
+          "deleteOneDescription": "[ja] Please try deleting the file again.",
+          "deleteManyTitle": "[ja] Could not delete source files",
+          "deleteManyDescription": "[ja] Please try deleting the selected files again."
+        }
+      }
+    },
+    "builder": {
+      "sectionList": {
+        "pickerTitle": "[ja] Bank Entry Picker",
+        "pickerDescription": "[ja] Select entries to add them to the document."
+      }
+    },
+    "studio": {
+      "versionDiff": {
+        "title": "[ja] Compare to current",
+        "selectVersion": "[ja] Select a version to compare."
+      },
+      "aiAssistant": {
+        "opportunityPickerTitle": "[ja] Select from Opportunity Bank",
+        "opportunityPickerDescription": "[ja] Choose a saved or applied opportunity to load its description."
+      }
+    },
+    "opportunities": {
+      "addOpportunity": {
+        "title": "[ja] Add Opportunity"
+      }
+    }
   }
 }

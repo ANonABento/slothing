@@ -17,7 +17,10 @@
     "search": "搜索",
     "selectLocale": "选择语言",
     "show": "显示",
-    "tryAgain": "重试"
+    "tryAgain": "重试",
+    "back": "[zh-CN] Back",
+    "delete": "[zh-CN] Delete",
+    "edit": "[zh-CN] Edit"
   },
   "nav": {
     "brand": "Slothing",
@@ -135,6 +138,15 @@
       "viewAll": "查看全部",
       "emptyTitle": "暂无机会",
       "emptyDescription": "保存或导入机会即可在此处开始追踪。"
+    },
+    "recentActivity": {
+      "title": "[zh-CN] Recent Activity",
+      "types": {
+        "document_uploaded": "[zh-CN] Uploaded",
+        "resume_generated": "[zh-CN] Generated resume for",
+        "job_added": "[zh-CN] Added job",
+        "job_applied": "[zh-CN] Applied to"
+      }
     }
   },
   "opportunities": {
@@ -256,11 +268,550 @@
         "ja": "日本語",
         "ko": "한국어"
       }
+    },
+    "help": {
+      "ollama": {
+        "title": "[zh-CN] Using Ollama (Free)",
+        "installFrom": "[zh-CN] Install from",
+        "run": "[zh-CN] Run",
+        "testConnection": "[zh-CN] Test the connection above"
+      },
+      "apiKeys": {
+        "title": "[zh-CN] Using API Keys",
+        "description": "[zh-CN] Connect your own API keys from OpenAI, Anthropic, or OpenRouter for cloud-based processing. Your keys are stored locally and never leave your device."
+      }
+    },
+    "dataManagement": {
+      "title": "[zh-CN] Data Management",
+      "description": "[zh-CN] Export your data or import from backups.",
+      "export": {
+        "title": "[zh-CN] Export Data",
+        "profileJson": "[zh-CN] Export Profile (JSON)",
+        "opportunitiesJson": "[zh-CN] Export Opportunities (JSON)",
+        "opportunitiesCsv": "[zh-CN] Export Opportunities (CSV)",
+        "fullBackup": "[zh-CN] Full Backup",
+        "allDataJson": "[zh-CN] Export All Data (JSON)"
+      },
+      "import": {
+        "title": "[zh-CN] Import Data",
+        "jobsAria": "[zh-CN] Import jobs from JSON or CSV file",
+        "opportunitiesJsonCsv": "[zh-CN] Import Opportunities (JSON/CSV)",
+        "restoreBackupAria": "[zh-CN] Restore backup from JSON file",
+        "restoreBackup": "[zh-CN] Restore Backup",
+        "allDataAria": "[zh-CN] Import all data from JSON file",
+        "allDataJson": "[zh-CN] Import All Data (JSON)"
+      },
+      "confirm": {
+        "title": "[zh-CN] Confirm Import",
+        "description": "[zh-CN] The following data will be imported (duplicates will be skipped):",
+        "importing": "[zh-CN] Importing...",
+        "action": "[zh-CN] Confirm Import"
+      }
     }
   },
   "notFound": {
     "title": "页面未找到",
     "description": "我们找不到该页面。",
     "action": "返回仪表盘"
+  },
+  "marketing": {
+    "nav": {
+      "features": "[zh-CN] Features",
+      "extension": "[zh-CN] Extension",
+      "howItWorks": "[zh-CN] How It Works",
+      "pricing": "[zh-CN] Pricing",
+      "signIn": "[zh-CN] Sign In",
+      "getStarted": "[zh-CN] Get Started",
+      "toggleMenu": "[zh-CN] Toggle menu"
+    }
+  },
+  "onboarding": {
+    "steps": {
+      "upload": {
+        "title": "[zh-CN] Upload Your Resume",
+        "description": "[zh-CN] Drag and drop your resume to get started, or skip this step and add it later.",
+        "dropHint": "[zh-CN] Drop your PDF or DOCX here, or head to <documents>Documents</documents> after setup to add it later."
+      },
+      "review": {
+        "title": "[zh-CN] Review Your Profile",
+        "description": "[zh-CN] After uploading, review the extracted entries and edit anything that needs fixing.",
+        "sections": {
+          "contactInfo": "[zh-CN] Contact info",
+          "workExperience": "[zh-CN] Work experience",
+          "education": "[zh-CN] Education",
+          "skillsProjects": "[zh-CN] Skills & projects"
+        }
+      },
+      "builder": {
+        "title": "[zh-CN] Build Your Starter Profile",
+        "description": "[zh-CN] Answer a few quick prompts so Slothing can organize your career details without a resume upload.",
+        "fields": {
+          "name": "[zh-CN] Name",
+          "email": "[zh-CN] Email",
+          "targetRole": "[zh-CN] Target role",
+          "backgroundSummary": "[zh-CN] Background summary",
+          "education": "[zh-CN] Education",
+          "school": "[zh-CN] School",
+          "degree": "[zh-CN] Degree",
+          "field": "[zh-CN] Field",
+          "topSkills": "[zh-CN] Top skills",
+          "company": "[zh-CN] Company / organisation",
+          "roleTitle": "[zh-CN] Role / title",
+          "roleHighlights": "[zh-CN] Role highlights (one per line, up to 3)",
+          "projectName": "[zh-CN] Project name",
+          "projectSummary": "[zh-CN] What did you build?",
+          "projectHighlights": "[zh-CN] Project highlights (one per line)",
+          "achievements": "[zh-CN] Honours, awards, leadership (comma-separated)"
+        },
+        "placeholders": {
+          "targetRole": "[zh-CN] Frontend intern, project manager, data analyst",
+          "backgroundSummary": "[zh-CN] A sentence about your background, interests, or next move",
+          "topSkills": "[zh-CN] Customer service, Excel, Python",
+          "company": "[zh-CN] Campus cafe",
+          "roleTitle": "[zh-CN] Barista",
+          "roleHighlights": "[zh-CN] Pulled espresso shots\nTrained 3 new baristas",
+          "projectName": "[zh-CN] Community pantry dashboard",
+          "projectSummary": "[zh-CN] A class project that tracked donations and volunteer shifts",
+          "projectHighlights": "[zh-CN] Built a filterable tracker\nPresented findings to class",
+          "achievements": "[zh-CN] Residence council secretary, Dean's list"
+        },
+        "optional": {
+          "title": "[zh-CN] Add a role, project, or honour (optional)",
+          "hide": "[zh-CN] Hide",
+          "add": "[zh-CN] Add"
+        },
+        "actions": {
+          "saving": "[zh-CN] Saving",
+          "saveContinue": "[zh-CN] Save and continue"
+        },
+        "errors": {
+          "save": "[zh-CN] Unable to save your profile starter."
+        }
+      }
+    }
+  },
+  "interview": {
+    "summary": {
+      "title": "[zh-CN] Interview Complete!",
+      "description": "[zh-CN] You answered all {count, plural, one {# question} other {# questions}}. Review your responses and feedback below.",
+      "actions": {
+        "startNew": "[zh-CN] Start New Interview",
+        "research": "[zh-CN] Research {company}"
+      },
+      "insights": {
+        "title": "[zh-CN] Performance Insights",
+        "questionsAnswered": "[zh-CN] Questions Answered",
+        "responseQuality": "[zh-CN] Response Quality",
+        "feedbackReceived": "[zh-CN] Feedback Received"
+      },
+      "performanceLevels": {
+        "detailed": "[zh-CN] Detailed",
+        "good": "[zh-CN] Good",
+        "brief": "[zh-CN] Brief"
+      },
+      "responses": {
+        "title": "[zh-CN] Your Responses",
+        "skipped": "[zh-CN] Skipped",
+        "skippedShort": "[zh-CN] Skipped - revisit later",
+        "noAnswer": "[zh-CN] No answer provided",
+        "skippedHint": "[zh-CN] Skipped - revisit this prompt when you are ready.",
+        "yourAnswer": "[zh-CN] Your Answer",
+        "aiFeedback": "[zh-CN] AI Feedback"
+      }
+    },
+    "jobSelection": {
+      "title": "[zh-CN] Select a job to practice for:",
+      "empty": {
+        "title": "[zh-CN] No Opportunities to Practice For",
+        "description": "[zh-CN] Add a job description first to get personalized interview questions based on the role.",
+        "addOpportunity": "[zh-CN] Add an Opportunity"
+      },
+      "actions": {
+        "quickPractice": "[zh-CN] Quick Practice",
+        "textPractice": "[zh-CN] Text Practice",
+        "voicePractice": "[zh-CN] Voice Practice",
+        "prepGuide": "[zh-CN] Prep Guide",
+        "hidePrepGuide": "[zh-CN] Hide Prep Guide",
+        "companyResearch": "[zh-CN] Company Research"
+      },
+      "controls": {
+        "difficulty": "[zh-CN] Difficulty:",
+        "questionCount": "[zh-CN] {count} questions",
+        "timer": "[zh-CN] Timer"
+      },
+      "difficulty": {
+        "entry": "[zh-CN] Entry Level",
+        "mid": "[zh-CN] Mid Level",
+        "senior": "[zh-CN] Senior Level",
+        "executive": "[zh-CN] Executive"
+      }
+    },
+    "quickPractice": {
+      "title": "[zh-CN] Practice {category}",
+      "description": "[zh-CN] Pick a short warm-up and jump straight into questions.",
+      "fields": {
+        "category": "[zh-CN] Category",
+        "questions": "[zh-CN] Questions",
+        "difficulty": "[zh-CN] Difficulty"
+      },
+      "categories": {
+        "behavioral": "[zh-CN] Behavioral",
+        "technical": "[zh-CN] Technical",
+        "situational": "[zh-CN] Situational",
+        "company": "[zh-CN] Company",
+        "system-design": "[zh-CN] System Design",
+        "general": "[zh-CN] General"
+      },
+      "questionCount": "[zh-CN] {count} questions",
+      "difficulty": {
+        "entry": "[zh-CN] Easy",
+        "mid": "[zh-CN] Mid",
+        "senior": "[zh-CN] Hard",
+        "executive": "[zh-CN] Executive"
+      },
+      "timer": "[zh-CN] Practice with a timer",
+      "actions": {
+        "start": "[zh-CN] Start"
+      }
+    },
+    "prepGuide": {
+      "title": "[zh-CN] Interview Prep Guide",
+      "jobAtCompany": "[zh-CN] {jobTitle} at {company}",
+      "loading": "[zh-CN] Generating your prep guide...",
+      "progress": "[zh-CN] Preparation Progress",
+      "questionTips": "[zh-CN] Tips",
+      "actions": {
+        "export": "[zh-CN] Export"
+      },
+      "tabs": {
+        "overview": "[zh-CN] Overview",
+        "checklist": "[zh-CN] Checklist",
+        "questions": "[zh-CN] Questions"
+      },
+      "sections": {
+        "keyTopics": "[zh-CN] Key Topics to Prepare",
+        "strengths": "[zh-CN] Your Strengths",
+        "gaps": "[zh-CN] Potential Gaps",
+        "talkingPoints": "[zh-CN] Key Talking Points"
+      },
+      "checklist": {
+        "before": "[zh-CN] Before the Interview",
+        "during": "[zh-CN] During the Interview",
+        "after": "[zh-CN] After the Interview"
+      },
+      "categories": {
+        "behavioral": "[zh-CN] Behavioral",
+        "technical": "[zh-CN] Technical",
+        "situational": "[zh-CN] Situational",
+        "company": "[zh-CN] Company"
+      },
+      "errors": {
+        "fetch": "[zh-CN] Failed to fetch guide",
+        "load": "[zh-CN] Failed to load guide",
+        "download": "[zh-CN] Failed to download guide",
+        "downloadTitle": "[zh-CN] Could not download prep guide",
+        "downloadDescription": "[zh-CN] Please try downloading the guide again."
+      }
+    }
+  },
+  "jobs": {
+    "toolbar": {
+      "searchPlaceholder": "[zh-CN] Search jobs by title, company, or keywords...",
+      "clearSearch": "[zh-CN] Clear search",
+      "filters": {
+        "status": "[zh-CN] Status",
+        "type": "[zh-CN] Type",
+        "location": "[zh-CN] Location",
+        "allStatuses": "[zh-CN] All Statuses",
+        "allTypes": "[zh-CN] All Types",
+        "allLocations": "[zh-CN] All Locations"
+      },
+      "statuses": {
+        "pending": "[zh-CN] Pending",
+        "saved": "[zh-CN] Saved",
+        "applied": "[zh-CN] Applied",
+        "interviewing": "[zh-CN] Interviewing",
+        "offered": "[zh-CN] Offered",
+        "rejected": "[zh-CN] Rejected"
+      },
+      "types": {
+        "fullTime": "[zh-CN] Full-time",
+        "partTime": "[zh-CN] Part-time",
+        "contract": "[zh-CN] Contract",
+        "internship": "[zh-CN] Internship"
+      },
+      "locations": {
+        "remote": "[zh-CN] Remote",
+        "onsite": "[zh-CN] On-site"
+      },
+      "sort": {
+        "placeholder": "[zh-CN] Sort",
+        "newest": "[zh-CN] Newest First",
+        "oldest": "[zh-CN] Oldest First",
+        "company": "[zh-CN] Company A-Z",
+        "title": "[zh-CN] Title A-Z"
+      },
+      "showing": "[zh-CN] Showing {filteredCount} of {totalCount, plural, one {# job} other {# jobs}}"
+    },
+    "import": {
+      "csvPreview": {
+        "summaryTitle": "[zh-CN] Import Summary",
+        "stats": {
+          "totalRows": "[zh-CN] Total Rows",
+          "validOpportunities": "[zh-CN] Valid Opportunities",
+          "invalid": "[zh-CN] Invalid"
+        },
+        "validationErrors": "[zh-CN] Validation Errors",
+        "moreErrors": "[zh-CN] ...and {count} more errors",
+        "opportunitiesToImport": "[zh-CN] Opportunities to Import ({count})",
+        "moreOpportunities": "[zh-CN] ...and {count, plural, one {# more opportunity} other {# more opportunities}}",
+        "actions": {
+          "import": "[zh-CN] Import {count, plural, one {# Opportunity} other {# Opportunities}}"
+        }
+      },
+      "textMode": {
+        "jobUrlLabel": "[zh-CN] Job URL (optional)",
+        "jobUrlPlaceholder": "[zh-CN] https://linkedin.com/jobs/... or https://indeed.com/...",
+        "jobUrlHelp": "[zh-CN] The URL will be saved with the job for reference",
+        "jobContentLabel": "[zh-CN] Job Content",
+        "jobContentPlaceholder": "[zh-CN] Paste the full job posting here...\n\nExample:\nSenior Software Engineer\nAcme Corp - San Francisco, CA (Remote)\n\nAbout the role:\nWe're looking for an experienced software engineer...\n\nRequirements:\n- 5+ years of experience\n- Python, TypeScript\n...",
+        "jobContentHelp": "[zh-CN] Paste the entire job description. We'll extract the title, company, requirements, and keywords.",
+        "actions": {
+          "parse": "[zh-CN] Parse Job"
+        }
+      },
+      "urlMode": {
+        "jobUrlLabel": "[zh-CN] Job Posting URL",
+        "jobUrlPlaceholder": "[zh-CN] https://linkedin.com/jobs/... or https://indeed.com/...",
+        "jobUrlHelp": "[zh-CN] We'll fetch the job posting and extract the details automatically.",
+        "fetchingNote": "[zh-CN] Note: Some sites may block automated fetching. If the import fails, try pasting the job content directly.",
+        "actions": {
+          "fetch": "[zh-CN] Fetch Job"
+        }
+      },
+      "editForm": {
+        "fields": {
+          "jobTitle": "[zh-CN] Job Title",
+          "company": "[zh-CN] Company",
+          "location": "[zh-CN] Location",
+          "jobType": "[zh-CN] Job Type",
+          "salary": "[zh-CN] Salary",
+          "remote": "[zh-CN] Remote",
+          "url": "[zh-CN] URL"
+        },
+        "placeholders": {
+          "location": "[zh-CN] San Francisco, CA",
+          "selectType": "[zh-CN] Select type"
+        },
+        "types": {
+          "fullTime": "[zh-CN] Full-time",
+          "partTime": "[zh-CN] Part-time",
+          "contract": "[zh-CN] Contract",
+          "internship": "[zh-CN] Internship"
+        },
+        "remote": {
+          "remote": "[zh-CN] Remote",
+          "onsite": "[zh-CN] On-site"
+        },
+        "actions": {
+          "backToPreview": "[zh-CN] Back to Preview",
+          "import": "[zh-CN] Import Job"
+        }
+      },
+      "preview": {
+        "remote": "[zh-CN] Remote",
+        "viewOriginalPosting": "[zh-CN] View Original Posting",
+        "description": "[zh-CN] Description",
+        "requirements": "[zh-CN] Requirements",
+        "moreRequirements": "[zh-CN] +{count} more",
+        "extractedKeywords": "[zh-CN] Extracted Keywords",
+        "source": "[zh-CN] Source: {source}",
+        "actions": {
+          "import": "[zh-CN] Import Job"
+        }
+      }
+    },
+    "addDialog": {
+      "title": "[zh-CN] Add New Opportunity",
+      "description": "[zh-CN] Paste the opportunity description to analyze your match and generate a tailored resume.",
+      "fields": {
+        "title": "[zh-CN] Opportunity Title",
+        "company": "[zh-CN] Company",
+        "url": "[zh-CN] Opportunity URL (optional)",
+        "description": "[zh-CN] Opportunity Description"
+      },
+      "placeholders": {
+        "title": "[zh-CN] Software Engineer",
+        "company": "[zh-CN] Acme Corp",
+        "description": "[zh-CN] Paste the full opportunity description here..."
+      },
+      "actions": {
+        "add": "[zh-CN] Add Opportunity"
+      },
+      "errors": {
+        "add": "[zh-CN] Failed to add opportunity",
+        "addTitle": "[zh-CN] Could not add opportunity",
+        "addDescription": "[zh-CN] Please check the opportunity details and try again."
+      }
+    }
+  },
+  "resume": {
+    "comparison": {
+      "title": "[zh-CN] Resume Comparison",
+      "loading": "[zh-CN] Comparing resumes...",
+      "before": "[zh-CN] Before",
+      "after": "[zh-CN] After",
+      "score": "[zh-CN] Score: {score}%",
+      "matchScoreChange": "[zh-CN] Match Score Change",
+      "empty": "[zh-CN] No differences found between these versions.",
+      "actions": {
+        "close": "[zh-CN] Close"
+      },
+      "summary": {
+        "additions": "[zh-CN] Additions",
+        "removals": "[zh-CN] Removals",
+        "changes": "[zh-CN] Changes"
+      },
+      "errors": {
+        "compare": "[zh-CN] Failed to compare resumes",
+        "comparison": "[zh-CN] Comparison failed",
+        "load": "[zh-CN] Failed to load comparison"
+      }
+    }
+  },
+  "integrations": {
+    "google": {
+      "calendar": {
+        "connectInSettings": "[zh-CN] Connect Google in Settings to sync calendar",
+        "checking": "[zh-CN] Checking...",
+        "syncing": "[zh-CN] Syncing...",
+        "selectPlaceholder": "[zh-CN] Select what to sync",
+        "actions": {
+          "sync": "[zh-CN] Sync to Google Calendar"
+        },
+        "syncTypes": {
+          "all": "[zh-CN] All Events",
+          "interviews": "[zh-CN] Interviews Only",
+          "deadlines": "[zh-CN] Deadlines Only",
+          "reminders": "[zh-CN] Reminders Only"
+        },
+        "result": {
+          "synced": "[zh-CN] Synced {count, plural, one {# event} other {# events}}",
+          "partial": "[zh-CN] {synced} synced, {failed} failed",
+          "success": "[zh-CN] Successfully synced {count, plural, one {# event} other {# events}}",
+          "failed": "[zh-CN] Synced {synced, plural, one {# event} other {# events}}, {failed} failed",
+          "more": "[zh-CN] And {count} more..."
+        },
+        "errors": {
+          "syncTitle": "[zh-CN] Could not sync calendar",
+          "syncDescription": "[zh-CN] Please check your Google connection and try again.",
+          "syncFailed": "[zh-CN] Sync failed"
+        }
+      },
+      "contacts": {
+        "trigger": "[zh-CN] Add from Google",
+        "title": "[zh-CN] Select Google Contact",
+        "description": "[zh-CN] Choose a contact to attach to this opportunity.",
+        "searchPlaceholder": "[zh-CN] Search contacts",
+        "loading": "[zh-CN] Loading contacts...",
+        "openSettings": "[zh-CN] Open Settings",
+        "empty": {
+          "noContacts": "[zh-CN] No contacts found. Reconnect Google in Settings if you connected before contacts support.",
+          "noMatches": "[zh-CN] No contacts match your search."
+        },
+        "errors": {
+          "load": "[zh-CN] Failed to load contacts from Google",
+          "loadTitle": "[zh-CN] Could not load Google contacts",
+          "loadDescription": "[zh-CN] Please check your Google connection and try again."
+        }
+      },
+      "drive": {
+        "connectInSettings": "[zh-CN] Connect Google in Settings to save to Drive",
+        "checking": "[zh-CN] Checking...",
+        "saved": "[zh-CN] Saved to Drive",
+        "saving": "[zh-CN] Saving...",
+        "actions": {
+          "save": "[zh-CN] Save to Drive",
+          "saveAndGetLink": "[zh-CN] Save & Get Link"
+        },
+        "errors": {
+          "save": "[zh-CN] Failed to save to Drive",
+          "saveTitle": "[zh-CN] Could not save to Drive",
+          "saveDescription": "[zh-CN] Please check your Google connection and try again."
+        }
+      }
+    }
+  },
+  "dialogs": {
+    "upload": {
+      "failedTitle": "[zh-CN] Upload Failed",
+      "actions": {
+        "retry": "[zh-CN] Retry",
+        "dismiss": "[zh-CN] Dismiss",
+        "replace": "[zh-CN] Replace"
+      },
+      "replace": {
+        "title": "[zh-CN] Replace existing upload?",
+        "description": "[zh-CN] Looks like you uploaded \"{filename}\" on {date}. Replace it, or cancel?"
+      }
+    },
+    "bank": {
+      "addEntry": {
+        "trigger": "[zh-CN] Add Entry",
+        "title": "[zh-CN] Add New Entry",
+        "description": "[zh-CN] Manually add an entry to your profile bank.",
+        "category": "[zh-CN] Category",
+        "hackathonTemplates": "[zh-CN] Hackathon Templates",
+        "actions": {
+          "add": "[zh-CN] Add Entry"
+        }
+      },
+      "sourceDocuments": {
+        "sourceFiles": "[zh-CN] Source Files",
+        "selected": "[zh-CN] {count} selected",
+        "actions": {
+          "deleteSelected": "[zh-CN] Delete Selected",
+          "selectFile": "[zh-CN] Select {filename}",
+          "deleteFile": "[zh-CN] Delete {filename}"
+        },
+        "deleteOne": {
+          "title": "[zh-CN] Delete source document?",
+          "description": "[zh-CN] This will permanently delete <strong>{filename}</strong> and all {count, plural, one {# associated bullet} other {# associated bullets}}. This action cannot be undone."
+        },
+        "deleteMany": {
+          "title": "[zh-CN] Delete selected source files?",
+          "description": "[zh-CN] This will permanently delete {count, plural, one {# source file} other {# source files}} and all associated bullets. This action cannot be undone."
+        },
+        "errors": {
+          "loadTitle": "[zh-CN] Could not load source files",
+          "loadDescription": "[zh-CN] Please refresh the page and try again.",
+          "deleteOneTitle": "[zh-CN] Could not delete source file",
+          "deleteOneDescription": "[zh-CN] Please try deleting the file again.",
+          "deleteManyTitle": "[zh-CN] Could not delete source files",
+          "deleteManyDescription": "[zh-CN] Please try deleting the selected files again."
+        }
+      }
+    },
+    "builder": {
+      "sectionList": {
+        "pickerTitle": "[zh-CN] Bank Entry Picker",
+        "pickerDescription": "[zh-CN] Select entries to add them to the document."
+      }
+    },
+    "studio": {
+      "versionDiff": {
+        "title": "[zh-CN] Compare to current",
+        "selectVersion": "[zh-CN] Select a version to compare."
+      },
+      "aiAssistant": {
+        "opportunityPickerTitle": "[zh-CN] Select from Opportunity Bank",
+        "opportunityPickerDescription": "[zh-CN] Choose a saved or applied opportunity to load its description."
+      }
+    },
+    "opportunities": {
+      "addOpportunity": {
+        "title": "[zh-CN] Add Opportunity"
+      }
+    }
   }
 }

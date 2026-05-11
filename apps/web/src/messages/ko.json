@@ -17,7 +17,10 @@
     "search": "검색",
     "selectLocale": "언어 선택",
     "show": "표시",
-    "tryAgain": "다시 시도"
+    "tryAgain": "다시 시도",
+    "back": "[ko] Back",
+    "delete": "[ko] Delete",
+    "edit": "[ko] Edit"
   },
   "nav": {
     "brand": "Slothing",
@@ -135,6 +138,15 @@
       "viewAll": "모두 보기",
       "emptyTitle": "아직 기회가 없습니다",
       "emptyDescription": "기회를 저장하거나 가져와 여기서 추적을 시작하세요."
+    },
+    "recentActivity": {
+      "title": "[ko] Recent Activity",
+      "types": {
+        "document_uploaded": "[ko] Uploaded",
+        "resume_generated": "[ko] Generated resume for",
+        "job_added": "[ko] Added job",
+        "job_applied": "[ko] Applied to"
+      }
     }
   },
   "opportunities": {
@@ -256,11 +268,550 @@
         "ja": "日本語",
         "ko": "한국어"
       }
+    },
+    "help": {
+      "ollama": {
+        "title": "[ko] Using Ollama (Free)",
+        "installFrom": "[ko] Install from",
+        "run": "[ko] Run",
+        "testConnection": "[ko] Test the connection above"
+      },
+      "apiKeys": {
+        "title": "[ko] Using API Keys",
+        "description": "[ko] Connect your own API keys from OpenAI, Anthropic, or OpenRouter for cloud-based processing. Your keys are stored locally and never leave your device."
+      }
+    },
+    "dataManagement": {
+      "title": "[ko] Data Management",
+      "description": "[ko] Export your data or import from backups.",
+      "export": {
+        "title": "[ko] Export Data",
+        "profileJson": "[ko] Export Profile (JSON)",
+        "opportunitiesJson": "[ko] Export Opportunities (JSON)",
+        "opportunitiesCsv": "[ko] Export Opportunities (CSV)",
+        "fullBackup": "[ko] Full Backup",
+        "allDataJson": "[ko] Export All Data (JSON)"
+      },
+      "import": {
+        "title": "[ko] Import Data",
+        "jobsAria": "[ko] Import jobs from JSON or CSV file",
+        "opportunitiesJsonCsv": "[ko] Import Opportunities (JSON/CSV)",
+        "restoreBackupAria": "[ko] Restore backup from JSON file",
+        "restoreBackup": "[ko] Restore Backup",
+        "allDataAria": "[ko] Import all data from JSON file",
+        "allDataJson": "[ko] Import All Data (JSON)"
+      },
+      "confirm": {
+        "title": "[ko] Confirm Import",
+        "description": "[ko] The following data will be imported (duplicates will be skipped):",
+        "importing": "[ko] Importing...",
+        "action": "[ko] Confirm Import"
+      }
     }
   },
   "notFound": {
     "title": "페이지를 찾을 수 없습니다",
     "description": "해당 페이지를 찾을 수 없습니다.",
     "action": "대시보드로 이동"
+  },
+  "marketing": {
+    "nav": {
+      "features": "기능",
+      "extension": "확장 프로그램",
+      "howItWorks": "작동 방식",
+      "pricing": "가격",
+      "signIn": "로그인",
+      "getStarted": "시작하기",
+      "toggleMenu": "메뉴 전환"
+    }
+  },
+  "onboarding": {
+    "steps": {
+      "upload": {
+        "title": "[ko] Upload Your Resume",
+        "description": "[ko] Drag and drop your resume to get started, or skip this step and add it later.",
+        "dropHint": "[ko] Drop your PDF or DOCX here, or head to <documents>Documents</documents> after setup to add it later."
+      },
+      "review": {
+        "title": "[ko] Review Your Profile",
+        "description": "[ko] After uploading, review the extracted entries and edit anything that needs fixing.",
+        "sections": {
+          "contactInfo": "[ko] Contact info",
+          "workExperience": "[ko] Work experience",
+          "education": "[ko] Education",
+          "skillsProjects": "[ko] Skills & projects"
+        }
+      },
+      "builder": {
+        "title": "[ko] Build Your Starter Profile",
+        "description": "[ko] Answer a few quick prompts so Slothing can organize your career details without a resume upload.",
+        "fields": {
+          "name": "[ko] Name",
+          "email": "[ko] Email",
+          "targetRole": "[ko] Target role",
+          "backgroundSummary": "[ko] Background summary",
+          "education": "[ko] Education",
+          "school": "[ko] School",
+          "degree": "[ko] Degree",
+          "field": "[ko] Field",
+          "topSkills": "[ko] Top skills",
+          "company": "[ko] Company / organisation",
+          "roleTitle": "[ko] Role / title",
+          "roleHighlights": "[ko] Role highlights (one per line, up to 3)",
+          "projectName": "[ko] Project name",
+          "projectSummary": "[ko] What did you build?",
+          "projectHighlights": "[ko] Project highlights (one per line)",
+          "achievements": "[ko] Honours, awards, leadership (comma-separated)"
+        },
+        "placeholders": {
+          "targetRole": "[ko] Frontend intern, project manager, data analyst",
+          "backgroundSummary": "[ko] A sentence about your background, interests, or next move",
+          "topSkills": "[ko] Customer service, Excel, Python",
+          "company": "[ko] Campus cafe",
+          "roleTitle": "[ko] Barista",
+          "roleHighlights": "[ko] Pulled espresso shots\nTrained 3 new baristas",
+          "projectName": "[ko] Community pantry dashboard",
+          "projectSummary": "[ko] A class project that tracked donations and volunteer shifts",
+          "projectHighlights": "[ko] Built a filterable tracker\nPresented findings to class",
+          "achievements": "[ko] Residence council secretary, Dean's list"
+        },
+        "optional": {
+          "title": "[ko] Add a role, project, or honour (optional)",
+          "hide": "[ko] Hide",
+          "add": "[ko] Add"
+        },
+        "actions": {
+          "saving": "[ko] Saving",
+          "saveContinue": "[ko] Save and continue"
+        },
+        "errors": {
+          "save": "[ko] Unable to save your profile starter."
+        }
+      }
+    }
+  },
+  "interview": {
+    "summary": {
+      "title": "[ko] Interview Complete!",
+      "description": "[ko] You answered all {count, plural, one {# question} other {# questions}}. Review your responses and feedback below.",
+      "actions": {
+        "startNew": "[ko] Start New Interview",
+        "research": "[ko] Research {company}"
+      },
+      "insights": {
+        "title": "[ko] Performance Insights",
+        "questionsAnswered": "[ko] Questions Answered",
+        "responseQuality": "[ko] Response Quality",
+        "feedbackReceived": "[ko] Feedback Received"
+      },
+      "performanceLevels": {
+        "detailed": "[ko] Detailed",
+        "good": "[ko] Good",
+        "brief": "[ko] Brief"
+      },
+      "responses": {
+        "title": "[ko] Your Responses",
+        "skipped": "[ko] Skipped",
+        "skippedShort": "[ko] Skipped - revisit later",
+        "noAnswer": "[ko] No answer provided",
+        "skippedHint": "[ko] Skipped - revisit this prompt when you are ready.",
+        "yourAnswer": "[ko] Your Answer",
+        "aiFeedback": "[ko] AI Feedback"
+      }
+    },
+    "jobSelection": {
+      "title": "[ko] Select a job to practice for:",
+      "empty": {
+        "title": "[ko] No Opportunities to Practice For",
+        "description": "[ko] Add a job description first to get personalized interview questions based on the role.",
+        "addOpportunity": "[ko] Add an Opportunity"
+      },
+      "actions": {
+        "quickPractice": "[ko] Quick Practice",
+        "textPractice": "[ko] Text Practice",
+        "voicePractice": "[ko] Voice Practice",
+        "prepGuide": "[ko] Prep Guide",
+        "hidePrepGuide": "[ko] Hide Prep Guide",
+        "companyResearch": "[ko] Company Research"
+      },
+      "controls": {
+        "difficulty": "[ko] Difficulty:",
+        "questionCount": "[ko] {count} questions",
+        "timer": "[ko] Timer"
+      },
+      "difficulty": {
+        "entry": "[ko] Entry Level",
+        "mid": "[ko] Mid Level",
+        "senior": "[ko] Senior Level",
+        "executive": "[ko] Executive"
+      }
+    },
+    "quickPractice": {
+      "title": "[ko] Practice {category}",
+      "description": "[ko] Pick a short warm-up and jump straight into questions.",
+      "fields": {
+        "category": "[ko] Category",
+        "questions": "[ko] Questions",
+        "difficulty": "[ko] Difficulty"
+      },
+      "categories": {
+        "behavioral": "[ko] Behavioral",
+        "technical": "[ko] Technical",
+        "situational": "[ko] Situational",
+        "company": "[ko] Company",
+        "system-design": "[ko] System Design",
+        "general": "[ko] General"
+      },
+      "questionCount": "[ko] {count} questions",
+      "difficulty": {
+        "entry": "[ko] Easy",
+        "mid": "[ko] Mid",
+        "senior": "[ko] Hard",
+        "executive": "[ko] Executive"
+      },
+      "timer": "[ko] Practice with a timer",
+      "actions": {
+        "start": "[ko] Start"
+      }
+    },
+    "prepGuide": {
+      "title": "[ko] Interview Prep Guide",
+      "jobAtCompany": "[ko] {jobTitle} at {company}",
+      "loading": "[ko] Generating your prep guide...",
+      "progress": "[ko] Preparation Progress",
+      "questionTips": "[ko] Tips",
+      "actions": {
+        "export": "[ko] Export"
+      },
+      "tabs": {
+        "overview": "[ko] Overview",
+        "checklist": "[ko] Checklist",
+        "questions": "[ko] Questions"
+      },
+      "sections": {
+        "keyTopics": "[ko] Key Topics to Prepare",
+        "strengths": "[ko] Your Strengths",
+        "gaps": "[ko] Potential Gaps",
+        "talkingPoints": "[ko] Key Talking Points"
+      },
+      "checklist": {
+        "before": "[ko] Before the Interview",
+        "during": "[ko] During the Interview",
+        "after": "[ko] After the Interview"
+      },
+      "categories": {
+        "behavioral": "[ko] Behavioral",
+        "technical": "[ko] Technical",
+        "situational": "[ko] Situational",
+        "company": "[ko] Company"
+      },
+      "errors": {
+        "fetch": "[ko] Failed to fetch guide",
+        "load": "[ko] Failed to load guide",
+        "download": "[ko] Failed to download guide",
+        "downloadTitle": "[ko] Could not download prep guide",
+        "downloadDescription": "[ko] Please try downloading the guide again."
+      }
+    }
+  },
+  "jobs": {
+    "toolbar": {
+      "searchPlaceholder": "[ko] Search jobs by title, company, or keywords...",
+      "clearSearch": "[ko] Clear search",
+      "filters": {
+        "status": "[ko] Status",
+        "type": "[ko] Type",
+        "location": "[ko] Location",
+        "allStatuses": "[ko] All Statuses",
+        "allTypes": "[ko] All Types",
+        "allLocations": "[ko] All Locations"
+      },
+      "statuses": {
+        "pending": "[ko] Pending",
+        "saved": "[ko] Saved",
+        "applied": "[ko] Applied",
+        "interviewing": "[ko] Interviewing",
+        "offered": "[ko] Offered",
+        "rejected": "[ko] Rejected"
+      },
+      "types": {
+        "fullTime": "[ko] Full-time",
+        "partTime": "[ko] Part-time",
+        "contract": "[ko] Contract",
+        "internship": "[ko] Internship"
+      },
+      "locations": {
+        "remote": "[ko] Remote",
+        "onsite": "[ko] On-site"
+      },
+      "sort": {
+        "placeholder": "[ko] Sort",
+        "newest": "[ko] Newest First",
+        "oldest": "[ko] Oldest First",
+        "company": "[ko] Company A-Z",
+        "title": "[ko] Title A-Z"
+      },
+      "showing": "[ko] Showing {filteredCount} of {totalCount, plural, one {# job} other {# jobs}}"
+    },
+    "import": {
+      "csvPreview": {
+        "summaryTitle": "[ko] Import Summary",
+        "stats": {
+          "totalRows": "[ko] Total Rows",
+          "validOpportunities": "[ko] Valid Opportunities",
+          "invalid": "[ko] Invalid"
+        },
+        "validationErrors": "[ko] Validation Errors",
+        "moreErrors": "[ko] ...and {count} more errors",
+        "opportunitiesToImport": "[ko] Opportunities to Import ({count})",
+        "moreOpportunities": "[ko] ...and {count, plural, one {# more opportunity} other {# more opportunities}}",
+        "actions": {
+          "import": "[ko] Import {count, plural, one {# Opportunity} other {# Opportunities}}"
+        }
+      },
+      "textMode": {
+        "jobUrlLabel": "[ko] Job URL (optional)",
+        "jobUrlPlaceholder": "[ko] https://linkedin.com/jobs/... or https://indeed.com/...",
+        "jobUrlHelp": "[ko] The URL will be saved with the job for reference",
+        "jobContentLabel": "[ko] Job Content",
+        "jobContentPlaceholder": "[ko] Paste the full job posting here...\n\nExample:\nSenior Software Engineer\nAcme Corp - San Francisco, CA (Remote)\n\nAbout the role:\nWe're looking for an experienced software engineer...\n\nRequirements:\n- 5+ years of experience\n- Python, TypeScript\n...",
+        "jobContentHelp": "[ko] Paste the entire job description. We'll extract the title, company, requirements, and keywords.",
+        "actions": {
+          "parse": "[ko] Parse Job"
+        }
+      },
+      "urlMode": {
+        "jobUrlLabel": "[ko] Job Posting URL",
+        "jobUrlPlaceholder": "[ko] https://linkedin.com/jobs/... or https://indeed.com/...",
+        "jobUrlHelp": "[ko] We'll fetch the job posting and extract the details automatically.",
+        "fetchingNote": "[ko] Note: Some sites may block automated fetching. If the import fails, try pasting the job content directly.",
+        "actions": {
+          "fetch": "[ko] Fetch Job"
+        }
+      },
+      "editForm": {
+        "fields": {
+          "jobTitle": "[ko] Job Title",
+          "company": "[ko] Company",
+          "location": "[ko] Location",
+          "jobType": "[ko] Job Type",
+          "salary": "[ko] Salary",
+          "remote": "[ko] Remote",
+          "url": "[ko] URL"
+        },
+        "placeholders": {
+          "location": "[ko] San Francisco, CA",
+          "selectType": "[ko] Select type"
+        },
+        "types": {
+          "fullTime": "[ko] Full-time",
+          "partTime": "[ko] Part-time",
+          "contract": "[ko] Contract",
+          "internship": "[ko] Internship"
+        },
+        "remote": {
+          "remote": "[ko] Remote",
+          "onsite": "[ko] On-site"
+        },
+        "actions": {
+          "backToPreview": "[ko] Back to Preview",
+          "import": "[ko] Import Job"
+        }
+      },
+      "preview": {
+        "remote": "[ko] Remote",
+        "viewOriginalPosting": "[ko] View Original Posting",
+        "description": "[ko] Description",
+        "requirements": "[ko] Requirements",
+        "moreRequirements": "[ko] +{count} more",
+        "extractedKeywords": "[ko] Extracted Keywords",
+        "source": "[ko] Source: {source}",
+        "actions": {
+          "import": "[ko] Import Job"
+        }
+      }
+    },
+    "addDialog": {
+      "title": "[ko] Add New Opportunity",
+      "description": "[ko] Paste the opportunity description to analyze your match and generate a tailored resume.",
+      "fields": {
+        "title": "[ko] Opportunity Title",
+        "company": "[ko] Company",
+        "url": "[ko] Opportunity URL (optional)",
+        "description": "[ko] Opportunity Description"
+      },
+      "placeholders": {
+        "title": "[ko] Software Engineer",
+        "company": "[ko] Acme Corp",
+        "description": "[ko] Paste the full opportunity description here..."
+      },
+      "actions": {
+        "add": "[ko] Add Opportunity"
+      },
+      "errors": {
+        "add": "[ko] Failed to add opportunity",
+        "addTitle": "[ko] Could not add opportunity",
+        "addDescription": "[ko] Please check the opportunity details and try again."
+      }
+    }
+  },
+  "resume": {
+    "comparison": {
+      "title": "[ko] Resume Comparison",
+      "loading": "[ko] Comparing resumes...",
+      "before": "[ko] Before",
+      "after": "[ko] After",
+      "score": "[ko] Score: {score}%",
+      "matchScoreChange": "[ko] Match Score Change",
+      "empty": "[ko] No differences found between these versions.",
+      "actions": {
+        "close": "[ko] Close"
+      },
+      "summary": {
+        "additions": "[ko] Additions",
+        "removals": "[ko] Removals",
+        "changes": "[ko] Changes"
+      },
+      "errors": {
+        "compare": "[ko] Failed to compare resumes",
+        "comparison": "[ko] Comparison failed",
+        "load": "[ko] Failed to load comparison"
+      }
+    }
+  },
+  "integrations": {
+    "google": {
+      "calendar": {
+        "connectInSettings": "[ko] Connect Google in Settings to sync calendar",
+        "checking": "[ko] Checking...",
+        "syncing": "[ko] Syncing...",
+        "selectPlaceholder": "[ko] Select what to sync",
+        "actions": {
+          "sync": "[ko] Sync to Google Calendar"
+        },
+        "syncTypes": {
+          "all": "[ko] All Events",
+          "interviews": "[ko] Interviews Only",
+          "deadlines": "[ko] Deadlines Only",
+          "reminders": "[ko] Reminders Only"
+        },
+        "result": {
+          "synced": "[ko] Synced {count, plural, one {# event} other {# events}}",
+          "partial": "[ko] {synced} synced, {failed} failed",
+          "success": "[ko] Successfully synced {count, plural, one {# event} other {# events}}",
+          "failed": "[ko] Synced {synced, plural, one {# event} other {# events}}, {failed} failed",
+          "more": "[ko] And {count} more..."
+        },
+        "errors": {
+          "syncTitle": "[ko] Could not sync calendar",
+          "syncDescription": "[ko] Please check your Google connection and try again.",
+          "syncFailed": "[ko] Sync failed"
+        }
+      },
+      "contacts": {
+        "trigger": "[ko] Add from Google",
+        "title": "[ko] Select Google Contact",
+        "description": "[ko] Choose a contact to attach to this opportunity.",
+        "searchPlaceholder": "[ko] Search contacts",
+        "loading": "[ko] Loading contacts...",
+        "openSettings": "[ko] Open Settings",
+        "empty": {
+          "noContacts": "[ko] No contacts found. Reconnect Google in Settings if you connected before contacts support.",
+          "noMatches": "[ko] No contacts match your search."
+        },
+        "errors": {
+          "load": "[ko] Failed to load contacts from Google",
+          "loadTitle": "[ko] Could not load Google contacts",
+          "loadDescription": "[ko] Please check your Google connection and try again."
+        }
+      },
+      "drive": {
+        "connectInSettings": "[ko] Connect Google in Settings to save to Drive",
+        "checking": "[ko] Checking...",
+        "saved": "[ko] Saved to Drive",
+        "saving": "[ko] Saving...",
+        "actions": {
+          "save": "[ko] Save to Drive",
+          "saveAndGetLink": "[ko] Save & Get Link"
+        },
+        "errors": {
+          "save": "[ko] Failed to save to Drive",
+          "saveTitle": "[ko] Could not save to Drive",
+          "saveDescription": "[ko] Please check your Google connection and try again."
+        }
+      }
+    }
+  },
+  "dialogs": {
+    "upload": {
+      "failedTitle": "[ko] Upload Failed",
+      "actions": {
+        "retry": "[ko] Retry",
+        "dismiss": "[ko] Dismiss",
+        "replace": "[ko] Replace"
+      },
+      "replace": {
+        "title": "[ko] Replace existing upload?",
+        "description": "[ko] Looks like you uploaded \"{filename}\" on {date}. Replace it, or cancel?"
+      }
+    },
+    "bank": {
+      "addEntry": {
+        "trigger": "[ko] Add Entry",
+        "title": "[ko] Add New Entry",
+        "description": "[ko] Manually add an entry to your profile bank.",
+        "category": "[ko] Category",
+        "hackathonTemplates": "[ko] Hackathon Templates",
+        "actions": {
+          "add": "[ko] Add Entry"
+        }
+      },
+      "sourceDocuments": {
+        "sourceFiles": "[ko] Source Files",
+        "selected": "[ko] {count} selected",
+        "actions": {
+          "deleteSelected": "[ko] Delete Selected",
+          "selectFile": "[ko] Select {filename}",
+          "deleteFile": "[ko] Delete {filename}"
+        },
+        "deleteOne": {
+          "title": "[ko] Delete source document?",
+          "description": "[ko] This will permanently delete <strong>{filename}</strong> and all {count, plural, one {# associated bullet} other {# associated bullets}}. This action cannot be undone."
+        },
+        "deleteMany": {
+          "title": "[ko] Delete selected source files?",
+          "description": "[ko] This will permanently delete {count, plural, one {# source file} other {# source files}} and all associated bullets. This action cannot be undone."
+        },
+        "errors": {
+          "loadTitle": "[ko] Could not load source files",
+          "loadDescription": "[ko] Please refresh the page and try again.",
+          "deleteOneTitle": "[ko] Could not delete source file",
+          "deleteOneDescription": "[ko] Please try deleting the file again.",
+          "deleteManyTitle": "[ko] Could not delete source files",
+          "deleteManyDescription": "[ko] Please try deleting the selected files again."
+        }
+      }
+    },
+    "builder": {
+      "sectionList": {
+        "pickerTitle": "[ko] Bank Entry Picker",
+        "pickerDescription": "[ko] Select entries to add them to the document."
+      }
+    },
+    "studio": {
+      "versionDiff": {
+        "title": "[ko] Compare to current",
+        "selectVersion": "[ko] Select a version to compare."
+      },
+      "aiAssistant": {
+        "opportunityPickerTitle": "[ko] Select from Opportunity Bank",
+        "opportunityPickerDescription": "[ko] Choose a saved or applied opportunity to load its description."
+      }
+    },
+    "opportunities": {
+      "addOpportunity": {
+        "title": "[ko] Add Opportunity"
+      }
+    }
   }
 }
