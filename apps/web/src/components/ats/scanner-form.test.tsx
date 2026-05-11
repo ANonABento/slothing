@@ -27,6 +27,12 @@ describe("ScannerForm", () => {
     );
   }
 
+  function uploadResumeFile(file: File) {
+    fireEvent.change(screen.getByLabelText(/Upload resume PDF or text file/i), {
+      target: { files: [file] },
+    });
+  }
+
   it("shows a drag-drop upload area by default", () => {
     render(<ScannerForm />);
 
@@ -36,6 +42,96 @@ describe("ScannerForm", () => {
     expect(
       screen.getByLabelText(/Upload resume PDF or text file/i),
     ).toBeInTheDocument();
+  });
+
+  it("keeps Scan Resume disabled when a PDF parse has no usable content", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          profile: {
+            contact: { name: "" },
+            experiences: [],
+            skills: [],
+            summary: "",
+          },
+          sectionsDetected: [],
+          confidence: 0,
+          warnings: ["No readable text found in the PDF."],
+        }),
+        {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        },
+      ),
+    );
+    render(<ScannerForm />);
+
+    uploadResumeFile(
+      new File([""], "scanned-resume.pdf", { type: "application/pdf" }),
+    );
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(/Parsed 0 sections, confidence 0%/i),
+      ).toBeInTheDocument();
+    });
+    expect(
+      screen.getByText(/No readable text found in the PDF/i),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/couldn't extract enough content from this PDF/i),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Scan Resume/i })).toBeDisabled();
+  });
+
+  it("enables Scan Resume when a PDF parse has extractable content", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          profile: {
+            contact: { name: "Alex Morgan", email: "alex@example.com" },
+            experiences: [
+              {
+                id: "exp-1",
+                company: "Acme",
+                title: "Frontend Engineer",
+                startDate: "2022-01",
+                current: true,
+                description: "Built React dashboards with TypeScript.",
+                highlights: ["Improved reporting workflows."],
+                skills: ["React", "TypeScript"],
+              },
+            ],
+            skills: [
+              {
+                id: "skill-1",
+                name: "React",
+                category: "technical",
+              },
+            ],
+          },
+          sectionsDetected: ["contact", "experience", "skills"],
+          confidence: 0.85,
+          warnings: [],
+        }),
+        {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        },
+      ),
+    );
+    render(<ScannerForm />);
+
+    uploadResumeFile(
+      new File(["pdf"], "resume.pdf", { type: "application/pdf" }),
+    );
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(/Parsed 3 sections, confidence 85%/i),
+      ).toBeInTheDocument();
+    });
+    expect(screen.getByRole("button", { name: /Scan Resume/i })).toBeEnabled();
   });
 
   it("keeps paste text as a prominent fallback", () => {
