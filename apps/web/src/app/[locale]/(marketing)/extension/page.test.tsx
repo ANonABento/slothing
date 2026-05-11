@@ -33,8 +33,35 @@ describe("ExtensionLandingPage", () => {
       }),
     ).toBeInTheDocument();
     expect(
+      screen.getByText(/Columbus, the Slothing browser extension/i),
+    ).toBeInTheDocument();
+    expect(
       screen.getByRole("heading", { name: "Less copying, more deciding" }),
     ).toBeInTheDocument();
+    expect(
+      screen.getByRole("img", {
+        name: "Slothing Columbus popover saving a LinkedIn job posting",
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("img", {
+        name: "Gmail recruiter import view showing pending opportunities",
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("img", {
+        name: "Review queue with three captured roles",
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText("LinkedIn, Indeed, Greenhouse, Lever, Workable"),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("Recruiter outreach -> review queue"),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("Capture -> pending -> apply"),
+    ).not.toBeInTheDocument();
     expect(
       screen.getByRole("heading", { name: "How it works" }),
     ).toBeInTheDocument();
