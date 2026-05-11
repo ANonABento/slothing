@@ -13,11 +13,24 @@ export const GOOGLE_OAUTH_SCOPES = [
   "https://www.googleapis.com/auth/contacts.readonly",
 ];
 
+export const DEV_AUTH_BYPASS_HEADER = {
+  name: "X-Slothing-Dev-Auth",
+  value: "default-user",
+} as const;
+
 export function isNextAuthConfigured(
   env: Record<string, string | undefined> = process.env,
 ): boolean {
   return Boolean(
     env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET && env.NEXTAUTH_SECRET,
+  );
+}
+
+export function isDevAuthBypassAllowed(
+  env: Record<string, string | undefined> = process.env,
+): boolean {
+  return (
+    env.NODE_ENV !== "production" && env.SLOTHING_ALLOW_UNAUTHED_DEV === "1"
   );
 }
 
