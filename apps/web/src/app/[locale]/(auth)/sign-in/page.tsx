@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
-import { redirect } from "next/navigation";
 import { isEmailMagicLinkConfigured, isNextAuthConfigured } from "@/auth";
-import { SignInCard } from "./sign-in-card";
+import { AuthDisabledCard, SignInCard } from "./sign-in-card";
 
 export const metadata: Metadata = {
   title: "Sign In",
@@ -15,12 +14,10 @@ interface SignInPageProps {
 }
 
 export default function SignInPage({ params, searchParams }: SignInPageProps) {
-  if (!isNextAuthConfigured()) {
-    redirect(`/${params.locale}/dashboard`);
-  }
-
-  const callbackUrl = searchParams?.callbackUrl ?? `/${params.locale}/dashboard`;
+  const callbackUrl =
+    searchParams?.callbackUrl ?? `/${params.locale}/dashboard`;
   const enableEmailMagicLink = isEmailMagicLinkConfigured();
+  const isAuthConfigured = isNextAuthConfigured();
 
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-gradient-to-br from-background via-background to-muted px-4 py-10">
@@ -29,10 +26,17 @@ export default function SignInPage({ params, searchParams }: SignInPageProps) {
         <div className="absolute -right-1/3 -top-1/3 h-2/3 w-2/3 rounded-full bg-gradient-to-bl from-primary/8 via-transparent to-transparent blur-3xl" />
         <div className="absolute -bottom-1/3 -left-1/3 h-2/3 w-2/3 rounded-full bg-gradient-to-tr from-accent/6 via-transparent to-transparent blur-3xl" />
       </div>
-      <SignInCard
-        callbackUrl={callbackUrl}
-        enableEmailMagicLink={enableEmailMagicLink}
-      />
+      {isAuthConfigured ? (
+        <SignInCard
+          callbackUrl={callbackUrl}
+          enableEmailMagicLink={enableEmailMagicLink}
+        />
+      ) : (
+        <AuthDisabledCard
+          locale={params.locale}
+          showDevDashboardLink={process.env.NODE_ENV !== "production"}
+        />
+      )}
     </div>
   );
 }

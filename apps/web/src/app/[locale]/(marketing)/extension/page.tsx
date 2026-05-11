@@ -8,6 +8,7 @@ import {
   ShieldCheck,
   Sparkles,
 } from "lucide-react";
+import Image from "next/image";
 
 import { ExtensionInstallButtons } from "@/components/marketing/extension-install-buttons";
 import { Badge } from "@/components/ui/badge";
@@ -24,21 +25,24 @@ const featureBlocks = [
     description:
       "Save roles from LinkedIn, Indeed, Greenhouse, Lever, Workable, and niche boards without copying details by hand.",
     icon: Globe2,
-    visual: "LinkedIn, Indeed, Greenhouse, Lever, Workable",
+    screenshot: "/marketing/extension/job-board-capture.png",
+    visualLabel: "Slothing Columbus popover saving a LinkedIn job posting",
   },
   {
     title: "Gmail recruiter import",
     description:
       "Turn recruiter outreach into pending opportunities so promising leads do not disappear inside your inbox.",
     icon: Mail,
-    visual: "Recruiter outreach -> review queue",
+    screenshot: "/marketing/extension/gmail-import.png",
+    visualLabel: "Gmail recruiter import view showing pending opportunities",
   },
   {
     title: "One-click review queue",
     description:
       "Send captured roles straight into Slothing for review, prioritization, and tailored document work.",
     icon: MousePointerClick,
-    visual: "Capture -> pending -> apply",
+    screenshot: "/marketing/extension/review-queue.png",
+    visualLabel: "Review queue with three captured roles",
   },
 ] as const;
 
@@ -94,8 +98,8 @@ export default async function ExtensionLandingPage() {
             Capture jobs from any site, instantly.
           </h1>
           <p className="mt-5 max-w-2xl text-lg leading-8 text-muted-foreground">
-            The Slothing browser extension turns any LinkedIn, Indeed, or
-            company careers page into a one-click save.
+            Columbus, the Slothing browser extension, turns any LinkedIn,
+            Indeed, or company careers page into a one-click save.
           </p>
           <div className="mt-8">
             <ExtensionInstallButtons variant="primary" />
@@ -135,9 +139,10 @@ export default async function ExtensionLandingPage() {
                     </p>
                   </div>
                   <div className="rounded-lg border bg-muted/40 p-5">
-                    <div className="flex min-h-40 items-center justify-center rounded-lg bg-card text-center text-sm font-medium text-muted-foreground">
-                      {feature.visual}
-                    </div>
+                    <FeatureVisual
+                      src={feature.screenshot}
+                      ariaLabel={feature.visualLabel}
+                    />
                   </div>
                 </article>
               );
@@ -250,13 +255,29 @@ export default async function ExtensionLandingPage() {
             <a href="mailto:support@slothing.work" className="hover:underline">
               support@slothing.work
             </a>
-            <a href="/changelog" className="hover:underline">
-              Changelog
-            </a>
           </div>
         </div>
       </section>
     </main>
+  );
+}
+
+function FeatureVisual({
+  src,
+  ariaLabel,
+}: {
+  src: (typeof featureBlocks)[number]["screenshot"];
+  ariaLabel: string;
+}) {
+  return (
+    <Image
+      src={src}
+      alt={ariaLabel}
+      width={960}
+      height={600}
+      sizes="(min-width: 768px) 50vw, 100vw"
+      className="aspect-[8/5] w-full rounded-lg border bg-background object-cover shadow-sm"
+    />
   );
 }
 
