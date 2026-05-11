@@ -49,26 +49,28 @@ export async function Hero() {
           </p>
 
           {/* CTAs */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300">
-            <Button asChild size="lg" variant="outline">
-              <Link href="/ats-scanner" prefetch={false}>
-                <ScanSearch className="mr-2 h-5 w-5" />
-                Try Free ATS Scanner
-              </Link>
-            </Button>
+          <div className="flex flex-col items-center gap-3 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300">
             <Button
               asChild
               size="lg"
               className="gradient-bg text-primary-foreground hover:opacity-90 shadow-lg shadow-primary/25"
             >
-              <Link
-                href={{ pathname: "/sign-in", query: { callbackUrl } }}
-                prefetch={false}
-              >
-                Get Started
+              <Link href="/ats-scanner" prefetch={false}>
+                <ScanSearch className="mr-2 h-5 w-5" />
+                Scan your resume free
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
             </Button>
+            <p className="text-sm text-muted-foreground">
+              or{" "}
+              <Link
+                href={{ pathname: "/sign-in", query: { callbackUrl } }}
+                className="font-medium text-primary underline-offset-4 hover:underline"
+                prefetch={false}
+              >
+                Create a free account
+              </Link>
+            </p>
           </div>
 
           {/* Social proof */}
