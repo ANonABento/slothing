@@ -250,9 +250,6 @@ export default async function ExtensionLandingPage() {
             <a href="mailto:support@slothing.work" className="hover:underline">
               support@slothing.work
             </a>
-            <a href="/changelog" className="hover:underline">
-              Changelog
-            </a>
           </div>
         </div>
       </section>
