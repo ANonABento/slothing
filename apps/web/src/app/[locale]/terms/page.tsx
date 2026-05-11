@@ -175,9 +175,10 @@ export default function TermsPage() {
               Governing law
             </h2>
             <p className="mt-2">
-              These Terms are governed by the laws of Ontario and the federal
-              laws of Canada that apply there, without regard to conflict-of-law
-              rules.
+              These Terms are governed by the laws of [JURISDICTION TBD before
+              public launch], without regard to conflict-of-law rules. This
+              section must be finalized by legal review before any paid plan is
+              made publicly available.
             </p>
           </section>
 
@@ -192,9 +193,11 @@ export default function TermsPage() {
                 support@slothing.work
               </a>{" "}
               so we can try to resolve the issue informally. If we cannot
-              resolve it, disputes must be brought in the courts located in
-              Ontario, Canada, except where applicable law gives you the right
-              to bring a claim in another forum.
+              resolve it, the required forum, arbitration process, class-action
+              waiver, and any small-claims exceptions are [DISPUTE RESOLUTION
+              TBD before public launch] and must be finalized by legal review,
+              except where applicable law gives you the right to bring a claim
+              in another forum.
             </p>
           </section>
         </div>
