@@ -39,7 +39,7 @@ afterEach(() => {
 });
 
 describe("/api/auth/[...nextauth]", () => {
-  it("returns a structured 503 disabled response instead of invoking NextAuth when auth env is missing", async () => {
+  it("returns a structured 404 disabled response instead of invoking NextAuth when auth env is missing", async () => {
     process.env.GOOGLE_CLIENT_ID = "test-id";
     delete process.env.GOOGLE_CLIENT_SECRET;
     delete process.env.NEXTAUTH_SECRET;
@@ -49,7 +49,7 @@ describe("/api/auth/[...nextauth]", () => {
       new NextRequest("http://localhost/api/auth/csrf"),
     );
 
-    expect(response.status).toBe(503);
+    expect(response.status).toBe(404);
     expect(response.headers.get("Cache-Control")).toBe("no-store");
     await expect(response.json()).resolves.toEqual({
       error: "auth_disabled",
