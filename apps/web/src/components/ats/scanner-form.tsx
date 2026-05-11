@@ -459,6 +459,10 @@ export function ScannerForm({ locale = "en" }: ScannerFormProps = {}) {
           <p className="mt-1 text-xs text-muted-foreground">
             PDF preferred, TXT fallback, up to {formatFileSize(MAX_UPLOAD_SIZE)}
           </p>
+          <p className="mt-2 text-xs text-muted-foreground">
+            Your file is sent to our servers for temporary parsing and is not
+            saved after the scan completes.
+          </p>
         </div>
 
         {parseMessage ? (
@@ -559,6 +563,10 @@ export function ScannerForm({ locale = "en" }: ScannerFormProps = {}) {
             {scrapeError}
           </button>
         ) : null}
+        <p className="mt-2 text-xs text-muted-foreground">
+          Job URLs are sent to our servers for temporary scraping and are not
+          saved after import.
+        </p>
 
         <label htmlFor="job-text" className="mt-4 block text-sm font-medium">
           Paste job description{" "}

@@ -65,6 +65,11 @@ describe("ScannerForm", () => {
     expect(
       url.compareDocumentPosition(job) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
+    expect(
+      screen.getByText(
+        /Job URLs are sent to our servers for temporary scraping/i,
+      ),
+    ).toBeInTheDocument();
   });
 
   it("shows a manual paste hint when URL scraping fails", async () => {
