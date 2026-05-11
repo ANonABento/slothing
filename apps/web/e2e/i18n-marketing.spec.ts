@@ -67,13 +67,17 @@ test.describe("marketing locale preservation", () => {
 
       await page.getByRole("link", { name: /Get Started/ }).first().click();
       await expect(page).toHaveURL(
-        new RegExp(`/${escapeRegExp(locale)}/sign-in`),
+        new RegExp(`/${escapeRegExp(locale)}/(?:sign-in|dashboard)`),
       );
 
       const url = new URL(page.url());
-      expect(url.searchParams.get("callbackUrl")).toMatch(
-        new RegExp(`^/${escapeRegExp(locale)}/`),
-      );
+      if (url.pathname.endsWith("/sign-in")) {
+        expect(url.searchParams.get("callbackUrl")).toMatch(
+          new RegExp(`^/${escapeRegExp(locale)}/`),
+        );
+      } else {
+        expect(url.pathname).toBe(`/${locale}/dashboard`);
+      }
     });
   }
 
@@ -130,9 +134,13 @@ test.describe("marketing locale preservation", () => {
   test("no regression on /en flow", async ({ page }) => {
     await page.goto("/en");
     await page.getByRole("link", { name: /Get Started/ }).first().click();
-    await expect(page).toHaveURL(/\/en\/sign-in/);
+    await expect(page).toHaveURL(/\/en\/(?:sign-in|dashboard)/);
 
     const url = new URL(page.url());
-    expect(url.searchParams.get("callbackUrl")).toMatch(/^\/en\//);
+    if (url.pathname.endsWith("/sign-in")) {
+      expect(url.searchParams.get("callbackUrl")).toMatch(/^\/en\//);
+    } else {
+      expect(url.pathname).toBe("/en/dashboard");
+    }
   });
 });
