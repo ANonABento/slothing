@@ -38,7 +38,7 @@ export function saveCoverLetter(
   jobId: string,
   content: string,
   highlights: string[] = [],
-  userId: string = "default",
+  userId: string,
 ): CoverLetter {
   const id = nanoid();
 
@@ -86,7 +86,7 @@ export function saveCoverLetter(
 
 export function getCoverLettersByJob(
   jobId: string,
-  userId: string = "default",
+  userId: string,
 ): CoverLetter[] {
   const rows = db
     .prepare(
@@ -99,7 +99,7 @@ export function getCoverLettersByJob(
 
 export function getLatestCoverLetter(
   jobId: string,
-  userId: string = "default",
+  userId: string,
 ): CoverLetter | null {
   const row = db
     .prepare(
@@ -112,7 +112,7 @@ export function getLatestCoverLetter(
 
 export function getCoverLetter(
   id: string,
-  userId: string = "default",
+  userId: string,
 ): CoverLetter | null {
   const row = db
     .prepare("SELECT * FROM cover_letters WHERE id = ? AND user_id = ?")
@@ -123,7 +123,7 @@ export function getCoverLetter(
 
 export function deleteCoverLetter(
   id: string,
-  userId: string = "default",
+  userId: string,
 ): boolean {
   const result = db
     .prepare("DELETE FROM cover_letters WHERE id = ? AND user_id = ?")
@@ -133,7 +133,7 @@ export function deleteCoverLetter(
 
 export function getCoverLetterCount(
   jobId: string,
-  userId: string = "default",
+  userId: string,
 ): number {
   const result = db
     .prepare(
@@ -143,7 +143,7 @@ export function getCoverLetterCount(
   return result.count;
 }
 
-export function getAllCoverLetters(userId: string = "default"): CoverLetter[] {
+export function getAllCoverLetters(userId: string): CoverLetter[] {
   const rows = db
     .prepare(
       "SELECT * FROM cover_letters WHERE user_id = ? ORDER BY created_at DESC",

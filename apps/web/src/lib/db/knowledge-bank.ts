@@ -64,7 +64,7 @@ export interface InsertChunk {
 
 export function insertChunk(
   chunk: InsertChunk,
-  userId: string = "default",
+  userId: string,
 ): string {
   const id = generateId();
   db.prepare(

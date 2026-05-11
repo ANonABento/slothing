@@ -49,7 +49,7 @@ export function clearInsightCache(userId: string): void {
 
 export function getInsights(
   data: InsightData,
-  userId: string = "default",
+  userId: string,
 ): Insight[] {
   const cached = cache.get(userId);
   if (cached && nowEpoch() - cached.generatedAt < CACHE_TTL_MS) {

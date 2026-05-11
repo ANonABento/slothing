@@ -39,7 +39,7 @@ export interface JobStatusChange {
 // Save today's analytics snapshot
 export function saveAnalyticsSnapshot(
   data: Omit<AnalyticsSnapshot, "id" | "createdAt">,
-  userId: string = "default",
+  userId: string,
 ): AnalyticsSnapshot {
   const id = generateId();
   const now = nowIso();
@@ -103,7 +103,7 @@ export function saveAnalyticsSnapshot(
 export function getAnalyticsSnapshots(
   startDate: string,
   endDate: string,
-  userId: string = "default",
+  userId: string,
 ): AnalyticsSnapshot[] {
   const stmt = db.prepare(`
     SELECT id, user_id, snapshot_date, total_jobs, jobs_saved, jobs_applied,
@@ -153,7 +153,7 @@ export function getAnalyticsSnapshots(
 
 // Get the most recent snapshot
 export function getLatestSnapshot(
-  userId: string = "default",
+  userId: string,
 ): AnalyticsSnapshot | null {
   const stmt = db.prepare(`
     SELECT id, user_id, snapshot_date, total_jobs, jobs_saved, jobs_applied,
@@ -211,8 +211,8 @@ export function recordJobStatusChange(
   jobId: string,
   fromStatus: string | null,
   toStatus: string,
-  notes?: string,
-  userId: string = "default",
+  notes: string | undefined,
+  userId: string,
 ): JobStatusChange {
   const id = generateId();
   const now = nowIso();
@@ -253,7 +253,7 @@ export function recordJobStatusChange(
 // Get status history for a job
 export function getJobStatusHistory(
   jobId: string,
-  userId: string = "default",
+  userId: string,
 ): JobStatusChange[] {
   const stmt = db.prepare(`
     SELECT id, user_id, job_id, from_status, to_status, changed_at, notes
@@ -284,7 +284,7 @@ export function getJobStatusHistory(
 }
 
 // Calculate week-over-week changes
-export function getWeekOverWeekChange(userId: string = "default"): {
+export function getWeekOverWeekChange(userId: string): {
   jobsChange: number;
   appliedChange: number;
   interviewsChange: number;
@@ -324,7 +324,7 @@ export function getWeekOverWeekChange(userId: string = "default"): {
 
 // Get time spent in each status for jobs (average)
 export function getAverageTimeInStatus(
-  userId: string = "default",
+  userId: string,
 ): Record<string, number> {
   // Get all status changes
   const stmt = db.prepare(`
