@@ -5,7 +5,9 @@ import { users, accounts, sessions, verificationTokens } from "@/lib/db/schema";
 import { authConfig } from "@/auth.config";
 
 export {
+  DEV_AUTH_BYPASS_HEADER,
   GOOGLE_OAUTH_SCOPES,
+  isDevAuthBypassAllowed,
   isEmailMagicLinkConfigured,
   isNextAuthConfigured,
 } from "@/auth.config";

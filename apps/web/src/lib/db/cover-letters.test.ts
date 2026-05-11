@@ -8,10 +8,6 @@ vi.mock("./legacy", () => {
   return { default: mockDb };
 });
 
-vi.mock("nanoid", () => ({
-  nanoid: () => "test-cover-letter-id",
-}));
-
 import db from "./legacy";
 import {
   saveCoverLetter,
@@ -44,7 +40,7 @@ describe("Cover Letter Database Functions", () => {
       );
 
       expect(result).toEqual({
-        id: "test-cover-letter-id",
+        id: expect.any(String),
         jobId: "job-1",
         profileId: "user-1",
         content: "Dear hiring manager...",
@@ -53,7 +49,7 @@ describe("Cover Letter Database Functions", () => {
         createdAt: expect.any(String),
       });
       expect(mockRun).toHaveBeenCalledWith(
-        "test-cover-letter-id",
+        result.id,
         "user-1",
         "job-1",
         "user-1",
