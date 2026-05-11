@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { pluralize } from "@/lib/text/pluralize";
 import type { BankEntry, BankCategory } from "@/types";
@@ -74,6 +75,7 @@ export function SectionList({
   showSections = true,
   emptySelectionHint,
 }: SectionListProps) {
+  const t = useTranslations("dialogs.builder.sectionList");
   const [expandedSections, setExpandedSections] = useState<Set<BankCategory>>(
     new Set(),
   );
@@ -187,9 +189,9 @@ export function SectionList({
       <Dialog open={pickerOpen} onOpenChange={onPickerOpenChange}>
         <DialogContent className="max-h-[85vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Bank Entry Picker</DialogTitle>
+            <DialogTitle>{t("pickerTitle")}</DialogTitle>
             <DialogDescription>
-              Select entries to add them to the document.
+              {t("pickerDescription")}
             </DialogDescription>
           </DialogHeader>
 

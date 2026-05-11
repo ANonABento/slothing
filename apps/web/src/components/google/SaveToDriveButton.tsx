@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { useErrorToast } from "@/hooks/use-error-toast";
 import { Cloud, Loader2, CheckCircle, Link, AlertCircle } from "lucide-react";
@@ -20,6 +21,8 @@ export function SaveToDriveButton({
   onSuccess,
   compact = false,
 }: SaveToDriveButtonProps) {
+  const t = useTranslations("integrations.google.drive");
+  const commonT = useTranslations("common");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -70,15 +73,14 @@ export function SaveToDriveButton({
           shareableLink: data.shareableLink,
         });
       } else {
-        setError(data.error || "Failed to save");
+        setError(data.error || t("errors.save"));
       }
     } catch (err) {
       showErrorToast(err, {
-        title: "Could not save to Drive",
-        fallbackDescription:
-          "Please check your Google connection and try again.",
+        title: t("errors.saveTitle"),
+        fallbackDescription: t("errors.saveDescription"),
       });
-      setError("Failed to save to Drive");
+      setError(t("errors.save"));
     } finally {
       setSaving(false);
     }
@@ -89,7 +91,7 @@ export function SaveToDriveButton({
     return (
       <div className="flex items-center gap-2 text-sm text-muted-foreground">
         <AlertCircle className="h-4 w-4" />
-        <span>Connect Google in Settings to save to Drive</span>
+        <span>{t("connectInSettings")}</span>
       </div>
     );
   }
@@ -99,7 +101,7 @@ export function SaveToDriveButton({
     return (
       <Button variant="outline" disabled size={compact ? "sm" : "default"}>
         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-        Checking...
+        {t("checking")}
       </Button>
     );
   }
@@ -114,7 +116,7 @@ export function SaveToDriveButton({
         size={compact ? "sm" : "default"}
       >
         <CheckCircle className="mr-2 h-4 w-4" />
-        Saved to Drive
+        {t("saved")}
       </Button>
     );
   }
@@ -134,7 +136,7 @@ export function SaveToDriveButton({
             size={compact ? "sm" : "default"}
             variant="outline"
           >
-            Try Again
+            {commonT("tryAgain")}
           </Button>
         </div>
       </div>
@@ -155,7 +157,7 @@ export function SaveToDriveButton({
         ) : (
           <Cloud className="mr-2 h-4 w-4" />
         )}
-        {saving ? "Saving..." : "Save to Drive"}
+        {saving ? t("saving") : t("actions.save")}
       </Button>
     );
   }
@@ -169,7 +171,7 @@ export function SaveToDriveButton({
         ) : (
           <Cloud className="mr-2 h-4 w-4" />
         )}
-        {saving ? "Saving..." : "Save to Drive"}
+        {saving ? t("saving") : t("actions.save")}
       </Button>
       <Button
         variant="outline"
@@ -177,7 +179,7 @@ export function SaveToDriveButton({
         disabled={saving}
       >
         <Link className="mr-2 h-4 w-4" />
-        Save & Get Link
+        {t("actions.saveAndGetLink")}
       </Button>
     </div>
   );

@@ -1,6 +1,7 @@
 "use client";
 
 import { Sparkles } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -25,44 +26,33 @@ export function ImportJobTextMode({
   onCancel,
   onParse,
 }: ImportJobTextModeProps) {
+  const t = useTranslations("jobs.import.textMode");
+
   return (
     <>
       <div className="space-y-2">
-        <Label>Job URL (optional)</Label>
+        <Label>{t("jobUrlLabel")}</Label>
         <Input
           value={jobUrl}
           onChange={(e) => onJobUrlChange(e.target.value)}
-          placeholder="https://linkedin.com/jobs/... or https://indeed.com/..."
+          placeholder={t("jobUrlPlaceholder")}
         />
         <p className="text-xs text-muted-foreground">
-          The URL will be saved with the job for reference
+          {t("jobUrlHelp")}
         </p>
       </div>
 
       <div className="space-y-2">
-        <Label>Job Content</Label>
+        <Label>{t("jobContentLabel")}</Label>
         <Textarea
           rows={12}
           value={jobText}
           onChange={(e) => onJobTextChange(e.target.value)}
-          placeholder={`Paste the full job posting here...
-
-Example:
-Senior Software Engineer
-Acme Corp - San Francisco, CA (Remote)
-
-About the role:
-We're looking for an experienced software engineer...
-
-Requirements:
-• 5+ years of experience
-• Python, TypeScript
-...`}
+          placeholder={t("jobContentPlaceholder")}
           className="resize-none font-mono text-sm"
         />
         <p className="text-xs text-muted-foreground">
-          Paste the entire job description. We&apos;ll extract the title,
-          company, requirements, and keywords.
+          {t("jobContentHelp")}
         </p>
       </div>
 
@@ -70,7 +60,7 @@ Requirements:
         disabled={parsing || !jobText.trim()}
         loading={parsing}
         icon={Sparkles}
-        submitLabel="Parse Job"
+        submitLabel={t("actions.parse")}
         onCancel={onCancel}
         onSubmit={onParse}
       />

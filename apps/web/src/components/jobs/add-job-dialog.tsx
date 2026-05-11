@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { Briefcase, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -47,6 +48,8 @@ export function AddJobDialog({
   onOpenChange,
   onCreated,
 }: AddJobDialogProps) {
+  const t = useTranslations("jobs.addDialog");
+  const commonT = useTranslations("common");
   const [form, setForm] = useState<NewJobForm>(EMPTY_FORM);
   const [addingJob, setAddingJob] = useState(false);
   const showErrorToast = useErrorToast();
@@ -66,11 +69,11 @@ export function AddJobDialog({
       });
       const data = await readJsonResponse<CreateJobResponse>(
         response,
-        "Failed to add opportunity",
+        t("errors.add"),
       );
 
       if (!data.job) {
-        throw new Error("Failed to add opportunity");
+        throw new Error(t("errors.add"));
       }
 
       setForm(EMPTY_FORM);
@@ -78,9 +81,8 @@ export function AddJobDialog({
       onOpenChange(false);
     } catch (error) {
       showErrorToast(error, {
-        title: "Could not add opportunity",
-        fallbackDescription:
-          "Please check the opportunity details and try again.",
+        title: t("errors.addTitle"),
+        fallbackDescription: t("errors.addDescription"),
       });
     } finally {
       setAddingJob(false);
@@ -93,39 +95,38 @@ export function AddJobDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Briefcase className="h-5 w-5 text-primary" />
-            Add New Opportunity
+            {t("title")}
           </DialogTitle>
           <DialogDescription>
-            Paste the opportunity description to analyze your match and generate
-            a tailored resume.
+            {t("description")}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label>Opportunity Title</Label>
+              <Label>{t("fields.title")}</Label>
               <Input
                 value={form.title}
                 onChange={(event) =>
                   setForm((prev) => ({ ...prev, title: event.target.value }))
                 }
-                placeholder="Software Engineer"
+                placeholder={t("placeholders.title")}
               />
             </div>
             <div className="space-y-2">
-              <Label>Company</Label>
+              <Label>{t("fields.company")}</Label>
               <Input
                 value={form.company}
                 onChange={(event) =>
                   setForm((prev) => ({ ...prev, company: event.target.value }))
                 }
-                placeholder="Acme Corp"
+                placeholder={t("placeholders.company")}
               />
             </div>
           </div>
           <div className="space-y-2">
-            <Label>Opportunity URL (optional)</Label>
+            <Label>{t("fields.url")}</Label>
             <Input
               value={form.url}
               onChange={(event) =>
@@ -135,7 +136,7 @@ export function AddJobDialog({
             />
           </div>
           <div className="space-y-2">
-            <Label>Opportunity Description</Label>
+            <Label>{t("fields.description")}</Label>
             <Textarea
               rows={10}
               value={form.description}
@@ -145,7 +146,7 @@ export function AddJobDialog({
                   description: event.target.value,
                 }))
               }
-              placeholder="Paste the full opportunity description here..."
+              placeholder={t("placeholders.description")}
               className="resize-none"
             />
           </div>
@@ -153,7 +154,7 @@ export function AddJobDialog({
 
         <div className="flex justify-end gap-3">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            {commonT("cancel")}
           </Button>
           <Button
             onClick={handleSubmit}
@@ -163,7 +164,7 @@ export function AddJobDialog({
             className={THEME_PRIMARY_GRADIENT_BUTTON_CLASSES}
           >
             {addingJob && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-            Add Opportunity
+            {t("actions.add")}
           </Button>
         </div>
       </DialogContent>

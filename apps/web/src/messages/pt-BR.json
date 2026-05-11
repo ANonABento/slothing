@@ -17,7 +17,10 @@
     "search": "Buscar",
     "selectLocale": "Selecionar idioma",
     "show": "Mostrar",
-    "tryAgain": "Tentar novamente"
+    "tryAgain": "Tentar novamente",
+    "back": "[pt-BR] Back",
+    "delete": "[pt-BR] Delete",
+    "edit": "[pt-BR] Edit"
   },
   "nav": {
     "brand": "Slothing",
@@ -135,6 +138,15 @@
       "viewAll": "Ver tudo",
       "emptyTitle": "Nenhuma oportunidade ainda",
       "emptyDescription": "Salve ou importe oportunidades para começar a acompanhá-las aqui."
+    },
+    "recentActivity": {
+      "title": "[pt-BR] Recent Activity",
+      "types": {
+        "document_uploaded": "[pt-BR] Uploaded",
+        "resume_generated": "[pt-BR] Generated resume for",
+        "job_added": "[pt-BR] Added job",
+        "job_applied": "[pt-BR] Applied to"
+      }
     }
   },
   "opportunities": {
@@ -256,11 +268,550 @@
         "ja": "日本語",
         "ko": "한국어"
       }
+    },
+    "help": {
+      "ollama": {
+        "title": "[pt-BR] Using Ollama (Free)",
+        "installFrom": "[pt-BR] Install from",
+        "run": "[pt-BR] Run",
+        "testConnection": "[pt-BR] Test the connection above"
+      },
+      "apiKeys": {
+        "title": "[pt-BR] Using API Keys",
+        "description": "[pt-BR] Connect your own API keys from OpenAI, Anthropic, or OpenRouter for cloud-based processing. Your keys are stored locally and never leave your device."
+      }
+    },
+    "dataManagement": {
+      "title": "[pt-BR] Data Management",
+      "description": "[pt-BR] Export your data or import from backups.",
+      "export": {
+        "title": "[pt-BR] Export Data",
+        "profileJson": "[pt-BR] Export Profile (JSON)",
+        "opportunitiesJson": "[pt-BR] Export Opportunities (JSON)",
+        "opportunitiesCsv": "[pt-BR] Export Opportunities (CSV)",
+        "fullBackup": "[pt-BR] Full Backup",
+        "allDataJson": "[pt-BR] Export All Data (JSON)"
+      },
+      "import": {
+        "title": "[pt-BR] Import Data",
+        "jobsAria": "[pt-BR] Import jobs from JSON or CSV file",
+        "opportunitiesJsonCsv": "[pt-BR] Import Opportunities (JSON/CSV)",
+        "restoreBackupAria": "[pt-BR] Restore backup from JSON file",
+        "restoreBackup": "[pt-BR] Restore Backup",
+        "allDataAria": "[pt-BR] Import all data from JSON file",
+        "allDataJson": "[pt-BR] Import All Data (JSON)"
+      },
+      "confirm": {
+        "title": "[pt-BR] Confirm Import",
+        "description": "[pt-BR] The following data will be imported (duplicates will be skipped):",
+        "importing": "[pt-BR] Importing...",
+        "action": "[pt-BR] Confirm Import"
+      }
     }
   },
   "notFound": {
     "title": "Página não encontrada",
     "description": "Não conseguimos encontrar essa página.",
     "action": "Ir para o painel"
+  },
+  "marketing": {
+    "nav": {
+      "features": "[pt-BR] Features",
+      "extension": "[pt-BR] Extension",
+      "howItWorks": "[pt-BR] How It Works",
+      "pricing": "[pt-BR] Pricing",
+      "signIn": "[pt-BR] Sign In",
+      "getStarted": "[pt-BR] Get Started",
+      "toggleMenu": "[pt-BR] Toggle menu"
+    }
+  },
+  "onboarding": {
+    "steps": {
+      "upload": {
+        "title": "[pt-BR] Upload Your Resume",
+        "description": "[pt-BR] Drag and drop your resume to get started, or skip this step and add it later.",
+        "dropHint": "[pt-BR] Drop your PDF or DOCX here, or head to <documents>Documents</documents> after setup to add it later."
+      },
+      "review": {
+        "title": "[pt-BR] Review Your Profile",
+        "description": "[pt-BR] After uploading, review the extracted entries and edit anything that needs fixing.",
+        "sections": {
+          "contactInfo": "[pt-BR] Contact info",
+          "workExperience": "[pt-BR] Work experience",
+          "education": "[pt-BR] Education",
+          "skillsProjects": "[pt-BR] Skills & projects"
+        }
+      },
+      "builder": {
+        "title": "[pt-BR] Build Your Starter Profile",
+        "description": "[pt-BR] Answer a few quick prompts so Slothing can organize your career details without a resume upload.",
+        "fields": {
+          "name": "[pt-BR] Name",
+          "email": "[pt-BR] Email",
+          "targetRole": "[pt-BR] Target role",
+          "backgroundSummary": "[pt-BR] Background summary",
+          "education": "[pt-BR] Education",
+          "school": "[pt-BR] School",
+          "degree": "[pt-BR] Degree",
+          "field": "[pt-BR] Field",
+          "topSkills": "[pt-BR] Top skills",
+          "company": "[pt-BR] Company / organisation",
+          "roleTitle": "[pt-BR] Role / title",
+          "roleHighlights": "[pt-BR] Role highlights (one per line, up to 3)",
+          "projectName": "[pt-BR] Project name",
+          "projectSummary": "[pt-BR] What did you build?",
+          "projectHighlights": "[pt-BR] Project highlights (one per line)",
+          "achievements": "[pt-BR] Honours, awards, leadership (comma-separated)"
+        },
+        "placeholders": {
+          "targetRole": "[pt-BR] Frontend intern, project manager, data analyst",
+          "backgroundSummary": "[pt-BR] A sentence about your background, interests, or next move",
+          "topSkills": "[pt-BR] Customer service, Excel, Python",
+          "company": "[pt-BR] Campus cafe",
+          "roleTitle": "[pt-BR] Barista",
+          "roleHighlights": "[pt-BR] Pulled espresso shots\nTrained 3 new baristas",
+          "projectName": "[pt-BR] Community pantry dashboard",
+          "projectSummary": "[pt-BR] A class project that tracked donations and volunteer shifts",
+          "projectHighlights": "[pt-BR] Built a filterable tracker\nPresented findings to class",
+          "achievements": "[pt-BR] Residence council secretary, Dean's list"
+        },
+        "optional": {
+          "title": "[pt-BR] Add a role, project, or honour (optional)",
+          "hide": "[pt-BR] Hide",
+          "add": "[pt-BR] Add"
+        },
+        "actions": {
+          "saving": "[pt-BR] Saving",
+          "saveContinue": "[pt-BR] Save and continue"
+        },
+        "errors": {
+          "save": "[pt-BR] Unable to save your profile starter."
+        }
+      }
+    }
+  },
+  "interview": {
+    "summary": {
+      "title": "[pt-BR] Interview Complete!",
+      "description": "[pt-BR] You answered all {count, plural, one {# question} other {# questions}}. Review your responses and feedback below.",
+      "actions": {
+        "startNew": "[pt-BR] Start New Interview",
+        "research": "[pt-BR] Research {company}"
+      },
+      "insights": {
+        "title": "[pt-BR] Performance Insights",
+        "questionsAnswered": "[pt-BR] Questions Answered",
+        "responseQuality": "[pt-BR] Response Quality",
+        "feedbackReceived": "[pt-BR] Feedback Received"
+      },
+      "performanceLevels": {
+        "detailed": "[pt-BR] Detailed",
+        "good": "[pt-BR] Good",
+        "brief": "[pt-BR] Brief"
+      },
+      "responses": {
+        "title": "[pt-BR] Your Responses",
+        "skipped": "[pt-BR] Skipped",
+        "skippedShort": "[pt-BR] Skipped - revisit later",
+        "noAnswer": "[pt-BR] No answer provided",
+        "skippedHint": "[pt-BR] Skipped - revisit this prompt when you are ready.",
+        "yourAnswer": "[pt-BR] Your Answer",
+        "aiFeedback": "[pt-BR] AI Feedback"
+      }
+    },
+    "jobSelection": {
+      "title": "[pt-BR] Select a job to practice for:",
+      "empty": {
+        "title": "[pt-BR] No Opportunities to Practice For",
+        "description": "[pt-BR] Add a job description first to get personalized interview questions based on the role.",
+        "addOpportunity": "[pt-BR] Add an Opportunity"
+      },
+      "actions": {
+        "quickPractice": "[pt-BR] Quick Practice",
+        "textPractice": "[pt-BR] Text Practice",
+        "voicePractice": "[pt-BR] Voice Practice",
+        "prepGuide": "[pt-BR] Prep Guide",
+        "hidePrepGuide": "[pt-BR] Hide Prep Guide",
+        "companyResearch": "[pt-BR] Company Research"
+      },
+      "controls": {
+        "difficulty": "[pt-BR] Difficulty:",
+        "questionCount": "[pt-BR] {count} questions",
+        "timer": "[pt-BR] Timer"
+      },
+      "difficulty": {
+        "entry": "[pt-BR] Entry Level",
+        "mid": "[pt-BR] Mid Level",
+        "senior": "[pt-BR] Senior Level",
+        "executive": "[pt-BR] Executive"
+      }
+    },
+    "quickPractice": {
+      "title": "[pt-BR] Practice {category}",
+      "description": "[pt-BR] Pick a short warm-up and jump straight into questions.",
+      "fields": {
+        "category": "[pt-BR] Category",
+        "questions": "[pt-BR] Questions",
+        "difficulty": "[pt-BR] Difficulty"
+      },
+      "categories": {
+        "behavioral": "[pt-BR] Behavioral",
+        "technical": "[pt-BR] Technical",
+        "situational": "[pt-BR] Situational",
+        "company": "[pt-BR] Company",
+        "system-design": "[pt-BR] System Design",
+        "general": "[pt-BR] General"
+      },
+      "questionCount": "[pt-BR] {count} questions",
+      "difficulty": {
+        "entry": "[pt-BR] Easy",
+        "mid": "[pt-BR] Mid",
+        "senior": "[pt-BR] Hard",
+        "executive": "[pt-BR] Executive"
+      },
+      "timer": "[pt-BR] Practice with a timer",
+      "actions": {
+        "start": "[pt-BR] Start"
+      }
+    },
+    "prepGuide": {
+      "title": "[pt-BR] Interview Prep Guide",
+      "jobAtCompany": "[pt-BR] {jobTitle} at {company}",
+      "loading": "[pt-BR] Generating your prep guide...",
+      "progress": "[pt-BR] Preparation Progress",
+      "questionTips": "[pt-BR] Tips",
+      "actions": {
+        "export": "[pt-BR] Export"
+      },
+      "tabs": {
+        "overview": "[pt-BR] Overview",
+        "checklist": "[pt-BR] Checklist",
+        "questions": "[pt-BR] Questions"
+      },
+      "sections": {
+        "keyTopics": "[pt-BR] Key Topics to Prepare",
+        "strengths": "[pt-BR] Your Strengths",
+        "gaps": "[pt-BR] Potential Gaps",
+        "talkingPoints": "[pt-BR] Key Talking Points"
+      },
+      "checklist": {
+        "before": "[pt-BR] Before the Interview",
+        "during": "[pt-BR] During the Interview",
+        "after": "[pt-BR] After the Interview"
+      },
+      "categories": {
+        "behavioral": "[pt-BR] Behavioral",
+        "technical": "[pt-BR] Technical",
+        "situational": "[pt-BR] Situational",
+        "company": "[pt-BR] Company"
+      },
+      "errors": {
+        "fetch": "[pt-BR] Failed to fetch guide",
+        "load": "[pt-BR] Failed to load guide",
+        "download": "[pt-BR] Failed to download guide",
+        "downloadTitle": "[pt-BR] Could not download prep guide",
+        "downloadDescription": "[pt-BR] Please try downloading the guide again."
+      }
+    }
+  },
+  "jobs": {
+    "toolbar": {
+      "searchPlaceholder": "[pt-BR] Search jobs by title, company, or keywords...",
+      "clearSearch": "[pt-BR] Clear search",
+      "filters": {
+        "status": "[pt-BR] Status",
+        "type": "[pt-BR] Type",
+        "location": "[pt-BR] Location",
+        "allStatuses": "[pt-BR] All Statuses",
+        "allTypes": "[pt-BR] All Types",
+        "allLocations": "[pt-BR] All Locations"
+      },
+      "statuses": {
+        "pending": "[pt-BR] Pending",
+        "saved": "[pt-BR] Saved",
+        "applied": "[pt-BR] Applied",
+        "interviewing": "[pt-BR] Interviewing",
+        "offered": "[pt-BR] Offered",
+        "rejected": "[pt-BR] Rejected"
+      },
+      "types": {
+        "fullTime": "[pt-BR] Full-time",
+        "partTime": "[pt-BR] Part-time",
+        "contract": "[pt-BR] Contract",
+        "internship": "[pt-BR] Internship"
+      },
+      "locations": {
+        "remote": "[pt-BR] Remote",
+        "onsite": "[pt-BR] On-site"
+      },
+      "sort": {
+        "placeholder": "[pt-BR] Sort",
+        "newest": "[pt-BR] Newest First",
+        "oldest": "[pt-BR] Oldest First",
+        "company": "[pt-BR] Company A-Z",
+        "title": "[pt-BR] Title A-Z"
+      },
+      "showing": "[pt-BR] Showing {filteredCount} of {totalCount, plural, one {# job} other {# jobs}}"
+    },
+    "import": {
+      "csvPreview": {
+        "summaryTitle": "[pt-BR] Import Summary",
+        "stats": {
+          "totalRows": "[pt-BR] Total Rows",
+          "validOpportunities": "[pt-BR] Valid Opportunities",
+          "invalid": "[pt-BR] Invalid"
+        },
+        "validationErrors": "[pt-BR] Validation Errors",
+        "moreErrors": "[pt-BR] ...and {count} more errors",
+        "opportunitiesToImport": "[pt-BR] Opportunities to Import ({count})",
+        "moreOpportunities": "[pt-BR] ...and {count, plural, one {# more opportunity} other {# more opportunities}}",
+        "actions": {
+          "import": "[pt-BR] Import {count, plural, one {# Opportunity} other {# Opportunities}}"
+        }
+      },
+      "textMode": {
+        "jobUrlLabel": "[pt-BR] Job URL (optional)",
+        "jobUrlPlaceholder": "[pt-BR] https://linkedin.com/jobs/... or https://indeed.com/...",
+        "jobUrlHelp": "[pt-BR] The URL will be saved with the job for reference",
+        "jobContentLabel": "[pt-BR] Job Content",
+        "jobContentPlaceholder": "[pt-BR] Paste the full job posting here...\n\nExample:\nSenior Software Engineer\nAcme Corp - San Francisco, CA (Remote)\n\nAbout the role:\nWe're looking for an experienced software engineer...\n\nRequirements:\n- 5+ years of experience\n- Python, TypeScript\n...",
+        "jobContentHelp": "[pt-BR] Paste the entire job description. We'll extract the title, company, requirements, and keywords.",
+        "actions": {
+          "parse": "[pt-BR] Parse Job"
+        }
+      },
+      "urlMode": {
+        "jobUrlLabel": "[pt-BR] Job Posting URL",
+        "jobUrlPlaceholder": "[pt-BR] https://linkedin.com/jobs/... or https://indeed.com/...",
+        "jobUrlHelp": "[pt-BR] We'll fetch the job posting and extract the details automatically.",
+        "fetchingNote": "[pt-BR] Note: Some sites may block automated fetching. If the import fails, try pasting the job content directly.",
+        "actions": {
+          "fetch": "[pt-BR] Fetch Job"
+        }
+      },
+      "editForm": {
+        "fields": {
+          "jobTitle": "[pt-BR] Job Title",
+          "company": "[pt-BR] Company",
+          "location": "[pt-BR] Location",
+          "jobType": "[pt-BR] Job Type",
+          "salary": "[pt-BR] Salary",
+          "remote": "[pt-BR] Remote",
+          "url": "[pt-BR] URL"
+        },
+        "placeholders": {
+          "location": "[pt-BR] San Francisco, CA",
+          "selectType": "[pt-BR] Select type"
+        },
+        "types": {
+          "fullTime": "[pt-BR] Full-time",
+          "partTime": "[pt-BR] Part-time",
+          "contract": "[pt-BR] Contract",
+          "internship": "[pt-BR] Internship"
+        },
+        "remote": {
+          "remote": "[pt-BR] Remote",
+          "onsite": "[pt-BR] On-site"
+        },
+        "actions": {
+          "backToPreview": "[pt-BR] Back to Preview",
+          "import": "[pt-BR] Import Job"
+        }
+      },
+      "preview": {
+        "remote": "[pt-BR] Remote",
+        "viewOriginalPosting": "[pt-BR] View Original Posting",
+        "description": "[pt-BR] Description",
+        "requirements": "[pt-BR] Requirements",
+        "moreRequirements": "[pt-BR] +{count} more",
+        "extractedKeywords": "[pt-BR] Extracted Keywords",
+        "source": "[pt-BR] Source: {source}",
+        "actions": {
+          "import": "[pt-BR] Import Job"
+        }
+      }
+    },
+    "addDialog": {
+      "title": "[pt-BR] Add New Opportunity",
+      "description": "[pt-BR] Paste the opportunity description to analyze your match and generate a tailored resume.",
+      "fields": {
+        "title": "[pt-BR] Opportunity Title",
+        "company": "[pt-BR] Company",
+        "url": "[pt-BR] Opportunity URL (optional)",
+        "description": "[pt-BR] Opportunity Description"
+      },
+      "placeholders": {
+        "title": "[pt-BR] Software Engineer",
+        "company": "[pt-BR] Acme Corp",
+        "description": "[pt-BR] Paste the full opportunity description here..."
+      },
+      "actions": {
+        "add": "[pt-BR] Add Opportunity"
+      },
+      "errors": {
+        "add": "[pt-BR] Failed to add opportunity",
+        "addTitle": "[pt-BR] Could not add opportunity",
+        "addDescription": "[pt-BR] Please check the opportunity details and try again."
+      }
+    }
+  },
+  "resume": {
+    "comparison": {
+      "title": "[pt-BR] Resume Comparison",
+      "loading": "[pt-BR] Comparing resumes...",
+      "before": "[pt-BR] Before",
+      "after": "[pt-BR] After",
+      "score": "[pt-BR] Score: {score}%",
+      "matchScoreChange": "[pt-BR] Match Score Change",
+      "empty": "[pt-BR] No differences found between these versions.",
+      "actions": {
+        "close": "[pt-BR] Close"
+      },
+      "summary": {
+        "additions": "[pt-BR] Additions",
+        "removals": "[pt-BR] Removals",
+        "changes": "[pt-BR] Changes"
+      },
+      "errors": {
+        "compare": "[pt-BR] Failed to compare resumes",
+        "comparison": "[pt-BR] Comparison failed",
+        "load": "[pt-BR] Failed to load comparison"
+      }
+    }
+  },
+  "integrations": {
+    "google": {
+      "calendar": {
+        "connectInSettings": "[pt-BR] Connect Google in Settings to sync calendar",
+        "checking": "[pt-BR] Checking...",
+        "syncing": "[pt-BR] Syncing...",
+        "selectPlaceholder": "[pt-BR] Select what to sync",
+        "actions": {
+          "sync": "[pt-BR] Sync to Google Calendar"
+        },
+        "syncTypes": {
+          "all": "[pt-BR] All Events",
+          "interviews": "[pt-BR] Interviews Only",
+          "deadlines": "[pt-BR] Deadlines Only",
+          "reminders": "[pt-BR] Reminders Only"
+        },
+        "result": {
+          "synced": "[pt-BR] Synced {count, plural, one {# event} other {# events}}",
+          "partial": "[pt-BR] {synced} synced, {failed} failed",
+          "success": "[pt-BR] Successfully synced {count, plural, one {# event} other {# events}}",
+          "failed": "[pt-BR] Synced {synced, plural, one {# event} other {# events}}, {failed} failed",
+          "more": "[pt-BR] And {count} more..."
+        },
+        "errors": {
+          "syncTitle": "[pt-BR] Could not sync calendar",
+          "syncDescription": "[pt-BR] Please check your Google connection and try again.",
+          "syncFailed": "[pt-BR] Sync failed"
+        }
+      },
+      "contacts": {
+        "trigger": "[pt-BR] Add from Google",
+        "title": "[pt-BR] Select Google Contact",
+        "description": "[pt-BR] Choose a contact to attach to this opportunity.",
+        "searchPlaceholder": "[pt-BR] Search contacts",
+        "loading": "[pt-BR] Loading contacts...",
+        "openSettings": "[pt-BR] Open Settings",
+        "empty": {
+          "noContacts": "[pt-BR] No contacts found. Reconnect Google in Settings if you connected before contacts support.",
+          "noMatches": "[pt-BR] No contacts match your search."
+        },
+        "errors": {
+          "load": "[pt-BR] Failed to load contacts from Google",
+          "loadTitle": "[pt-BR] Could not load Google contacts",
+          "loadDescription": "[pt-BR] Please check your Google connection and try again."
+        }
+      },
+      "drive": {
+        "connectInSettings": "[pt-BR] Connect Google in Settings to save to Drive",
+        "checking": "[pt-BR] Checking...",
+        "saved": "[pt-BR] Saved to Drive",
+        "saving": "[pt-BR] Saving...",
+        "actions": {
+          "save": "[pt-BR] Save to Drive",
+          "saveAndGetLink": "[pt-BR] Save & Get Link"
+        },
+        "errors": {
+          "save": "[pt-BR] Failed to save to Drive",
+          "saveTitle": "[pt-BR] Could not save to Drive",
+          "saveDescription": "[pt-BR] Please check your Google connection and try again."
+        }
+      }
+    }
+  },
+  "dialogs": {
+    "upload": {
+      "failedTitle": "[pt-BR] Upload Failed",
+      "actions": {
+        "retry": "[pt-BR] Retry",
+        "dismiss": "[pt-BR] Dismiss",
+        "replace": "[pt-BR] Replace"
+      },
+      "replace": {
+        "title": "[pt-BR] Replace existing upload?",
+        "description": "[pt-BR] Looks like you uploaded \"{filename}\" on {date}. Replace it, or cancel?"
+      }
+    },
+    "bank": {
+      "addEntry": {
+        "trigger": "[pt-BR] Add Entry",
+        "title": "[pt-BR] Add New Entry",
+        "description": "[pt-BR] Manually add an entry to your profile bank.",
+        "category": "[pt-BR] Category",
+        "hackathonTemplates": "[pt-BR] Hackathon Templates",
+        "actions": {
+          "add": "[pt-BR] Add Entry"
+        }
+      },
+      "sourceDocuments": {
+        "sourceFiles": "[pt-BR] Source Files",
+        "selected": "[pt-BR] {count} selected",
+        "actions": {
+          "deleteSelected": "[pt-BR] Delete Selected",
+          "selectFile": "[pt-BR] Select {filename}",
+          "deleteFile": "[pt-BR] Delete {filename}"
+        },
+        "deleteOne": {
+          "title": "[pt-BR] Delete source document?",
+          "description": "[pt-BR] This will permanently delete <strong>{filename}</strong> and all {count, plural, one {# associated bullet} other {# associated bullets}}. This action cannot be undone."
+        },
+        "deleteMany": {
+          "title": "[pt-BR] Delete selected source files?",
+          "description": "[pt-BR] This will permanently delete {count, plural, one {# source file} other {# source files}} and all associated bullets. This action cannot be undone."
+        },
+        "errors": {
+          "loadTitle": "[pt-BR] Could not load source files",
+          "loadDescription": "[pt-BR] Please refresh the page and try again.",
+          "deleteOneTitle": "[pt-BR] Could not delete source file",
+          "deleteOneDescription": "[pt-BR] Please try deleting the file again.",
+          "deleteManyTitle": "[pt-BR] Could not delete source files",
+          "deleteManyDescription": "[pt-BR] Please try deleting the selected files again."
+        }
+      }
+    },
+    "builder": {
+      "sectionList": {
+        "pickerTitle": "[pt-BR] Bank Entry Picker",
+        "pickerDescription": "[pt-BR] Select entries to add them to the document."
+      }
+    },
+    "studio": {
+      "versionDiff": {
+        "title": "[pt-BR] Compare to current",
+        "selectVersion": "[pt-BR] Select a version to compare."
+      },
+      "aiAssistant": {
+        "opportunityPickerTitle": "[pt-BR] Select from Opportunity Bank",
+        "opportunityPickerDescription": "[pt-BR] Choose a saved or applied opportunity to load its description."
+      }
+    },
+    "opportunities": {
+      "addOpportunity": {
+        "title": "[pt-BR] Add Opportunity"
+      }
+    }
   }
 }

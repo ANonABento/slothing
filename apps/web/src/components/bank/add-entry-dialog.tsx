@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -39,6 +40,7 @@ export function AddEntryDialog({
   onOpenChange,
   trigger,
 }: AddEntryDialogProps) {
+  const t = useTranslations("dialogs.bank.addEntry");
   const [internalOpen, setInternalOpen] = useState(false);
   const [category, setCategory] = useState<BankCategory>("experience");
   const [content, setContent] = useState<Record<string, unknown>>({});
@@ -86,22 +88,24 @@ export function AddEntryDialog({
         <DialogTrigger asChild>
           <Button variant="outline">
             <Plus className="h-4 w-4 mr-2" />
-            Add Entry
+            {t("trigger")}
           </Button>
         </DialogTrigger>
       )}
       <DialogContent className="max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Add New Entry</DialogTitle>
+          <DialogTitle>{t("title")}</DialogTitle>
           <DialogDescription>
-            Manually add an entry to your profile bank.
+            {t("description")}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 pt-2">
           {/* Category picker */}
           <div className="space-y-1">
-            <Label className="text-xs text-muted-foreground">Category</Label>
+            <Label className="text-xs text-muted-foreground">
+              {t("category")}
+            </Label>
             <div className="flex flex-wrap gap-2">
               {BANK_CATEGORIES.map((cat) => {
                 const cfg = CATEGORY_CONFIG[cat];
@@ -129,7 +133,7 @@ export function AddEntryDialog({
           {category === "hackathon" && (
             <div className="space-y-2">
               <Label className="text-xs text-muted-foreground">
-                Hackathon Templates
+                {t("hackathonTemplates")}
               </Label>
               <div className="grid gap-2 sm:grid-cols-3">
                 {HACKATHON_TEMPLATES.map((template) => (
@@ -164,7 +168,7 @@ export function AddEntryDialog({
           <div className="flex justify-end pt-2">
             <Button onClick={handleSubmit}>
               <Plus className="h-3 w-3 mr-1" />
-              Add Entry
+              {t("actions.add")}
             </Button>
           </div>
         </div>

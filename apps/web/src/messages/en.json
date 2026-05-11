@@ -1,8 +1,11 @@
 {
   "common": {
     "cancel": "Cancel",
+    "back": "Back",
     "clear": "Clear",
     "clearAll": "Clear all",
+    "delete": "Delete",
+    "edit": "Edit",
     "filters": "Filters",
     "import": "Import",
     "loading": "Loading",
@@ -47,6 +50,17 @@
       "analytics": "Analytics",
       "profile": "Profile",
       "settings": "Settings"
+    }
+  },
+  "marketing": {
+    "nav": {
+      "features": "Features",
+      "extension": "Extension",
+      "howItWorks": "How It Works",
+      "pricing": "Pricing",
+      "signIn": "Sign In",
+      "getStarted": "Get Started",
+      "toggleMenu": "Toggle menu"
     }
   },
   "dashboard": {
@@ -129,6 +143,80 @@
       "viewAll": "View all",
       "emptyTitle": "No opportunities yet",
       "emptyDescription": "Save or import opportunities to start tracking them here."
+    },
+    "recentActivity": {
+      "title": "Recent Activity",
+      "types": {
+        "document_uploaded": "Uploaded",
+        "resume_generated": "Generated resume for",
+        "job_added": "Added job",
+        "job_applied": "Applied to"
+      }
+    }
+  },
+  "onboarding": {
+    "steps": {
+      "upload": {
+        "title": "Upload Your Resume",
+        "description": "Drag and drop your resume to get started, or skip this step and add it later.",
+        "dropHint": "Drop your PDF or DOCX here, or head to <documents>Documents</documents> after setup to add it later."
+      },
+      "review": {
+        "title": "Review Your Profile",
+        "description": "After uploading, review the extracted entries and edit anything that needs fixing.",
+        "sections": {
+          "contactInfo": "Contact info",
+          "workExperience": "Work experience",
+          "education": "Education",
+          "skillsProjects": "Skills & projects"
+        }
+      },
+      "builder": {
+        "title": "Build Your Starter Profile",
+        "description": "Answer a few quick prompts so Slothing can organize your career details without a resume upload.",
+        "fields": {
+          "name": "Name",
+          "email": "Email",
+          "targetRole": "Target role",
+          "backgroundSummary": "Background summary",
+          "education": "Education",
+          "school": "School",
+          "degree": "Degree",
+          "field": "Field",
+          "topSkills": "Top skills",
+          "company": "Company / organisation",
+          "roleTitle": "Role / title",
+          "roleHighlights": "Role highlights (one per line, up to 3)",
+          "projectName": "Project name",
+          "projectSummary": "What did you build?",
+          "projectHighlights": "Project highlights (one per line)",
+          "achievements": "Honours, awards, leadership (comma-separated)"
+        },
+        "placeholders": {
+          "targetRole": "Frontend intern, project manager, data analyst",
+          "backgroundSummary": "A sentence about your background, interests, or next move",
+          "topSkills": "Customer service, Excel, Python",
+          "company": "Campus cafe",
+          "roleTitle": "Barista",
+          "roleHighlights": "Pulled espresso shots\nTrained 3 new baristas",
+          "projectName": "Community pantry dashboard",
+          "projectSummary": "A class project that tracked donations and volunteer shifts",
+          "projectHighlights": "Built a filterable tracker\nPresented findings to class",
+          "achievements": "Residence council secretary, Dean's list"
+        },
+        "optional": {
+          "title": "Add a role, project, or honour (optional)",
+          "hide": "Hide",
+          "add": "Add"
+        },
+        "actions": {
+          "saving": "Saving",
+          "saveContinue": "Save and continue"
+        },
+        "errors": {
+          "save": "Unable to save your profile starter."
+        }
+      }
     }
   },
   "opportunities": {
@@ -232,6 +320,430 @@
       "moveClosedDescription": "Pick the final state for {title}."
     }
   },
+  "interview": {
+    "summary": {
+      "title": "Interview Complete!",
+      "description": "You answered all {count, plural, one {# question} other {# questions}}. Review your responses and feedback below.",
+      "actions": {
+        "startNew": "Start New Interview",
+        "research": "Research {company}"
+      },
+      "insights": {
+        "title": "Performance Insights",
+        "questionsAnswered": "Questions Answered",
+        "responseQuality": "Response Quality",
+        "feedbackReceived": "Feedback Received"
+      },
+      "performanceLevels": {
+        "detailed": "Detailed",
+        "good": "Good",
+        "brief": "Brief"
+      },
+      "responses": {
+        "title": "Your Responses",
+        "skipped": "Skipped",
+        "skippedShort": "Skipped - revisit later",
+        "noAnswer": "No answer provided",
+        "skippedHint": "Skipped - revisit this prompt when you are ready.",
+        "yourAnswer": "Your Answer",
+        "aiFeedback": "AI Feedback"
+      }
+    },
+    "jobSelection": {
+      "title": "Select a job to practice for:",
+      "empty": {
+        "title": "No Opportunities to Practice For",
+        "description": "Add a job description first to get personalized interview questions based on the role.",
+        "addOpportunity": "Add an Opportunity"
+      },
+      "actions": {
+        "quickPractice": "Quick Practice",
+        "textPractice": "Text Practice",
+        "voicePractice": "Voice Practice",
+        "prepGuide": "Prep Guide",
+        "hidePrepGuide": "Hide Prep Guide",
+        "companyResearch": "Company Research"
+      },
+      "controls": {
+        "difficulty": "Difficulty:",
+        "questionCount": "{count} questions",
+        "timer": "Timer"
+      },
+      "difficulty": {
+        "entry": "Entry Level",
+        "mid": "Mid Level",
+        "senior": "Senior Level",
+        "executive": "Executive"
+      }
+    },
+    "quickPractice": {
+      "title": "Practice {category}",
+      "description": "Pick a short warm-up and jump straight into questions.",
+      "fields": {
+        "category": "Category",
+        "questions": "Questions",
+        "difficulty": "Difficulty"
+      },
+      "categories": {
+        "behavioral": "Behavioral",
+        "technical": "Technical",
+        "situational": "Situational",
+        "company": "Company",
+        "system-design": "System Design",
+        "general": "General"
+      },
+      "questionCount": "{count} questions",
+      "difficulty": {
+        "entry": "Easy",
+        "mid": "Mid",
+        "senior": "Hard",
+        "executive": "Executive"
+      },
+      "timer": "Practice with a timer",
+      "actions": {
+        "start": "Start"
+      }
+    },
+    "prepGuide": {
+      "title": "Interview Prep Guide",
+      "jobAtCompany": "{jobTitle} at {company}",
+      "loading": "Generating your prep guide...",
+      "progress": "Preparation Progress",
+      "questionTips": "Tips",
+      "actions": {
+        "export": "Export"
+      },
+      "tabs": {
+        "overview": "Overview",
+        "checklist": "Checklist",
+        "questions": "Questions"
+      },
+      "sections": {
+        "keyTopics": "Key Topics to Prepare",
+        "strengths": "Your Strengths",
+        "gaps": "Potential Gaps",
+        "talkingPoints": "Key Talking Points"
+      },
+      "checklist": {
+        "before": "Before the Interview",
+        "during": "During the Interview",
+        "after": "After the Interview"
+      },
+      "categories": {
+        "behavioral": "Behavioral",
+        "technical": "Technical",
+        "situational": "Situational",
+        "company": "Company"
+      },
+      "errors": {
+        "fetch": "Failed to fetch guide",
+        "load": "Failed to load guide",
+        "download": "Failed to download guide",
+        "downloadTitle": "Could not download prep guide",
+        "downloadDescription": "Please try downloading the guide again."
+      }
+    }
+  },
+  "jobs": {
+    "toolbar": {
+      "searchPlaceholder": "Search jobs by title, company, or keywords...",
+      "clearSearch": "Clear search",
+      "filters": {
+        "status": "Status",
+        "type": "Type",
+        "location": "Location",
+        "allStatuses": "All Statuses",
+        "allTypes": "All Types",
+        "allLocations": "All Locations"
+      },
+      "statuses": {
+        "pending": "Pending",
+        "saved": "Saved",
+        "applied": "Applied",
+        "interviewing": "Interviewing",
+        "offered": "Offered",
+        "rejected": "Rejected"
+      },
+      "types": {
+        "fullTime": "Full-time",
+        "partTime": "Part-time",
+        "contract": "Contract",
+        "internship": "Internship"
+      },
+      "locations": {
+        "remote": "Remote",
+        "onsite": "On-site"
+      },
+      "sort": {
+        "placeholder": "Sort",
+        "newest": "Newest First",
+        "oldest": "Oldest First",
+        "company": "Company A-Z",
+        "title": "Title A-Z"
+      },
+      "showing": "Showing {filteredCount} of {totalCount, plural, one {# job} other {# jobs}}"
+    },
+    "import": {
+      "csvPreview": {
+        "summaryTitle": "Import Summary",
+        "stats": {
+          "totalRows": "Total Rows",
+          "validOpportunities": "Valid Opportunities",
+          "invalid": "Invalid"
+        },
+        "validationErrors": "Validation Errors",
+        "moreErrors": "...and {count} more errors",
+        "opportunitiesToImport": "Opportunities to Import ({count})",
+        "moreOpportunities": "...and {count, plural, one {# more opportunity} other {# more opportunities}}",
+        "actions": {
+          "import": "Import {count, plural, one {# Opportunity} other {# Opportunities}}"
+        }
+      },
+      "textMode": {
+        "jobUrlLabel": "Job URL (optional)",
+        "jobUrlPlaceholder": "https://linkedin.com/jobs/... or https://indeed.com/...",
+        "jobUrlHelp": "The URL will be saved with the job for reference",
+        "jobContentLabel": "Job Content",
+        "jobContentPlaceholder": "Paste the full job posting here...\n\nExample:\nSenior Software Engineer\nAcme Corp - San Francisco, CA (Remote)\n\nAbout the role:\nWe're looking for an experienced software engineer...\n\nRequirements:\n- 5+ years of experience\n- Python, TypeScript\n...",
+        "jobContentHelp": "Paste the entire job description. We'll extract the title, company, requirements, and keywords.",
+        "actions": {
+          "parse": "Parse Job"
+        }
+      },
+      "urlMode": {
+        "jobUrlLabel": "Job Posting URL",
+        "jobUrlPlaceholder": "https://linkedin.com/jobs/... or https://indeed.com/...",
+        "jobUrlHelp": "We'll fetch the job posting and extract the details automatically.",
+        "fetchingNote": "Note: Some sites may block automated fetching. If the import fails, try pasting the job content directly.",
+        "actions": {
+          "fetch": "Fetch Job"
+        }
+      },
+      "editForm": {
+        "fields": {
+          "jobTitle": "Job Title",
+          "company": "Company",
+          "location": "Location",
+          "jobType": "Job Type",
+          "salary": "Salary",
+          "remote": "Remote",
+          "url": "URL"
+        },
+        "placeholders": {
+          "location": "San Francisco, CA",
+          "selectType": "Select type"
+        },
+        "types": {
+          "fullTime": "Full-time",
+          "partTime": "Part-time",
+          "contract": "Contract",
+          "internship": "Internship"
+        },
+        "remote": {
+          "remote": "Remote",
+          "onsite": "On-site"
+        },
+        "actions": {
+          "backToPreview": "Back to Preview",
+          "import": "Import Job"
+        }
+      },
+      "preview": {
+        "remote": "Remote",
+        "viewOriginalPosting": "View Original Posting",
+        "description": "Description",
+        "requirements": "Requirements",
+        "moreRequirements": "+{count} more",
+        "extractedKeywords": "Extracted Keywords",
+        "source": "Source: {source}",
+        "actions": {
+          "import": "Import Job"
+        }
+      }
+    },
+    "addDialog": {
+      "title": "Add New Opportunity",
+      "description": "Paste the opportunity description to analyze your match and generate a tailored resume.",
+      "fields": {
+        "title": "Opportunity Title",
+        "company": "Company",
+        "url": "Opportunity URL (optional)",
+        "description": "Opportunity Description"
+      },
+      "placeholders": {
+        "title": "Software Engineer",
+        "company": "Acme Corp",
+        "description": "Paste the full opportunity description here..."
+      },
+      "actions": {
+        "add": "Add Opportunity"
+      },
+      "errors": {
+        "add": "Failed to add opportunity",
+        "addTitle": "Could not add opportunity",
+        "addDescription": "Please check the opportunity details and try again."
+      }
+    }
+  },
+  "resume": {
+    "comparison": {
+      "title": "Resume Comparison",
+      "loading": "Comparing resumes...",
+      "before": "Before",
+      "after": "After",
+      "score": "Score: {score}%",
+      "matchScoreChange": "Match Score Change",
+      "empty": "No differences found between these versions.",
+      "actions": {
+        "close": "Close"
+      },
+      "summary": {
+        "additions": "Additions",
+        "removals": "Removals",
+        "changes": "Changes"
+      },
+      "errors": {
+        "compare": "Failed to compare resumes",
+        "comparison": "Comparison failed",
+        "load": "Failed to load comparison"
+      }
+    }
+  },
+  "integrations": {
+    "google": {
+      "calendar": {
+        "connectInSettings": "Connect Google in Settings to sync calendar",
+        "checking": "Checking...",
+        "syncing": "Syncing...",
+        "selectPlaceholder": "Select what to sync",
+        "actions": {
+          "sync": "Sync to Google Calendar"
+        },
+        "syncTypes": {
+          "all": "All Events",
+          "interviews": "Interviews Only",
+          "deadlines": "Deadlines Only",
+          "reminders": "Reminders Only"
+        },
+        "result": {
+          "synced": "Synced {count, plural, one {# event} other {# events}}",
+          "partial": "{synced} synced, {failed} failed",
+          "success": "Successfully synced {count, plural, one {# event} other {# events}}",
+          "failed": "Synced {synced, plural, one {# event} other {# events}}, {failed} failed",
+          "more": "And {count} more..."
+        },
+        "errors": {
+          "syncTitle": "Could not sync calendar",
+          "syncDescription": "Please check your Google connection and try again.",
+          "syncFailed": "Sync failed"
+        }
+      },
+      "contacts": {
+        "trigger": "Add from Google",
+        "title": "Select Google Contact",
+        "description": "Choose a contact to attach to this opportunity.",
+        "searchPlaceholder": "Search contacts",
+        "loading": "Loading contacts...",
+        "openSettings": "Open Settings",
+        "empty": {
+          "noContacts": "No contacts found. Reconnect Google in Settings if you connected before contacts support.",
+          "noMatches": "No contacts match your search."
+        },
+        "errors": {
+          "load": "Failed to load contacts from Google",
+          "loadTitle": "Could not load Google contacts",
+          "loadDescription": "Please check your Google connection and try again."
+        }
+      },
+      "drive": {
+        "connectInSettings": "Connect Google in Settings to save to Drive",
+        "checking": "Checking...",
+        "saved": "Saved to Drive",
+        "saving": "Saving...",
+        "actions": {
+          "save": "Save to Drive",
+          "saveAndGetLink": "Save & Get Link"
+        },
+        "errors": {
+          "save": "Failed to save to Drive",
+          "saveTitle": "Could not save to Drive",
+          "saveDescription": "Please check your Google connection and try again."
+        }
+      }
+    }
+  },
+  "dialogs": {
+    "upload": {
+      "failedTitle": "Upload Failed",
+      "actions": {
+        "retry": "Retry",
+        "dismiss": "Dismiss",
+        "replace": "Replace"
+      },
+      "replace": {
+        "title": "Replace existing upload?",
+        "description": "Looks like you uploaded \"{filename}\" on {date}. Replace it, or cancel?"
+      }
+    },
+    "bank": {
+      "addEntry": {
+        "trigger": "Add Entry",
+        "title": "Add New Entry",
+        "description": "Manually add an entry to your profile bank.",
+        "category": "Category",
+        "hackathonTemplates": "Hackathon Templates",
+        "actions": {
+          "add": "Add Entry"
+        }
+      },
+      "sourceDocuments": {
+        "sourceFiles": "Source Files",
+        "selected": "{count} selected",
+        "actions": {
+          "deleteSelected": "Delete Selected",
+          "selectFile": "Select {filename}",
+          "deleteFile": "Delete {filename}"
+        },
+        "deleteOne": {
+          "title": "Delete source document?",
+          "description": "This will permanently delete <strong>{filename}</strong> and all {count, plural, one {# associated bullet} other {# associated bullets}}. This action cannot be undone."
+        },
+        "deleteMany": {
+          "title": "Delete selected source files?",
+          "description": "This will permanently delete {count, plural, one {# source file} other {# source files}} and all associated bullets. This action cannot be undone."
+        },
+        "errors": {
+          "loadTitle": "Could not load source files",
+          "loadDescription": "Please refresh the page and try again.",
+          "deleteOneTitle": "Could not delete source file",
+          "deleteOneDescription": "Please try deleting the file again.",
+          "deleteManyTitle": "Could not delete source files",
+          "deleteManyDescription": "Please try deleting the selected files again."
+        }
+      }
+    },
+    "builder": {
+      "sectionList": {
+        "pickerTitle": "Bank Entry Picker",
+        "pickerDescription": "Select entries to add them to the document."
+      }
+    },
+    "studio": {
+      "versionDiff": {
+        "title": "Compare to current",
+        "selectVersion": "Select a version to compare."
+      },
+      "aiAssistant": {
+        "opportunityPickerTitle": "Select from Opportunity Bank",
+        "opportunityPickerDescription": "Choose a saved or applied opportunity to load its description."
+      }
+    },
+    "opportunities": {
+      "addOpportunity": {
+        "title": "Add Opportunity"
+      }
+    }
+  },
   "settings": {
     "title": "Settings",
     "description": "Configure your AI provider for resume parsing and interview preparation.",
@@ -249,6 +761,45 @@
         "fr": "Français",
         "ja": "日本語",
         "ko": "한국어"
+      }
+    },
+    "help": {
+      "ollama": {
+        "title": "Using Ollama (Free)",
+        "installFrom": "Install from",
+        "run": "Run",
+        "testConnection": "Test the connection above"
+      },
+      "apiKeys": {
+        "title": "Using API Keys",
+        "description": "Connect your own API keys from OpenAI, Anthropic, or OpenRouter for cloud-based processing. Your keys are stored locally and never leave your device."
+      }
+    },
+    "dataManagement": {
+      "title": "Data Management",
+      "description": "Export your data or import from backups.",
+      "export": {
+        "title": "Export Data",
+        "profileJson": "Export Profile (JSON)",
+        "opportunitiesJson": "Export Opportunities (JSON)",
+        "opportunitiesCsv": "Export Opportunities (CSV)",
+        "fullBackup": "Full Backup",
+        "allDataJson": "Export All Data (JSON)"
+      },
+      "import": {
+        "title": "Import Data",
+        "jobsAria": "Import jobs from JSON or CSV file",
+        "opportunitiesJsonCsv": "Import Opportunities (JSON/CSV)",
+        "restoreBackupAria": "Restore backup from JSON file",
+        "restoreBackup": "Restore Backup",
+        "allDataAria": "Import all data from JSON file",
+        "allDataJson": "Import All Data (JSON)"
+      },
+      "confirm": {
+        "title": "Confirm Import",
+        "description": "The following data will be imported (duplicates will be skipped):",
+        "importing": "Importing...",
+        "action": "Confirm Import"
       }
     }
   },

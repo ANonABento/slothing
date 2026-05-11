@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import type {
   BuilderDraftState,
   BuilderVersion,
@@ -98,6 +99,7 @@ export function VersionDiffView({
   open,
   version,
 }: VersionDiffViewProps) {
+  const t = useTranslations("dialogs.studio.versionDiff");
   const [mode, setMode] = useState<DiffMode>("diff");
   const diff = useMemo(
     () =>
@@ -123,11 +125,11 @@ export function VersionDiffView({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-6xl">
         <DialogHeader className="pr-10">
-          <DialogTitle>Compare to current</DialogTitle>
+          <DialogTitle>{t("title")}</DialogTitle>
           <DialogDescription>
             {version
               ? `${versionName} saved ${savedAt}`
-              : "Select a version to compare."}
+              : t("selectVersion")}
           </DialogDescription>
         </DialogHeader>
 
