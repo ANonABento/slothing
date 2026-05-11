@@ -78,6 +78,35 @@ describe("opportunities route", () => {
     });
   });
 
+  it("lists opportunities without status predicates when no filter is present", async () => {
+    const response = await GET(
+      new NextRequest("http://localhost/api/opportunities"),
+    );
+
+    expect(mocks.listJobsPaginated).toHaveBeenCalledWith({
+      userId: "user-1",
+      statuses: undefined,
+      cursor: null,
+      limit: 50,
+    });
+    expect(response.status).toBe(200);
+  });
+
+  it("normalizes comma-delimited status filters", async () => {
+    await GET(
+      new NextRequest(
+        "http://localhost/api/opportunities?status=applied,interviewing,offered",
+      ),
+    );
+
+    expect(mocks.listJobsPaginated).toHaveBeenCalledWith({
+      userId: "user-1",
+      statuses: ["applied", "interviewing", "offered"],
+      cursor: null,
+      limit: 50,
+    });
+  });
+
   it("creates an opportunity after validating the request body", async () => {
     const job = {
       id: "job-1",
