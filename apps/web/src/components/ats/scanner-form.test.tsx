@@ -38,6 +38,44 @@ describe("ScannerForm", () => {
     ).toBeInTheDocument();
   });
 
+  it("shows UI feedback when the selected resume is too large", async () => {
+    const fetchSpy = vi.spyOn(globalThis, "fetch");
+    render(<ScannerForm />);
+
+    const file = new File([new Uint8Array(5 * 1024 * 1024 + 1)], "resume.pdf", {
+      type: "application/pdf",
+    });
+    fireEvent.change(screen.getByLabelText(/Upload resume PDF or text file/i), {
+      target: { files: [file] },
+    });
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(/File too large\. Maximum size is 5 MB\./i),
+      ).toBeInTheDocument();
+    });
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it("shows UI feedback when the selected resume has an unsupported type", async () => {
+    const fetchSpy = vi.spyOn(globalThis, "fetch");
+    render(<ScannerForm />);
+
+    const file = new File(["not a resume"], "resume.png", {
+      type: "image/png",
+    });
+    fireEvent.change(screen.getByLabelText(/Upload resume PDF or text file/i), {
+      target: { files: [file] },
+    });
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(/Upload a PDF or TXT file\./i),
+      ).toBeInTheDocument();
+    });
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
   it("keeps paste text as a prominent fallback", () => {
     render(<ScannerForm />);
 
