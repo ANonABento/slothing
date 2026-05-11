@@ -1,5 +1,6 @@
 import { NextIntlClientProvider } from "next-intl";
 import { notFound } from "next/navigation";
+import { getMessages } from "next-intl/server";
 import { isAppLocale, locales, type AppLocale } from "@/i18n";
 
 type LocaleLayoutProps = {
@@ -22,7 +23,7 @@ export default async function LocaleLayout({
   }
 
   const locale = params.locale as AppLocale;
-  const messages = (await import(`@/messages/${locale}.json`)).default;
+  const messages = await getMessages({ locale });
 
   return (
     <NextIntlClientProvider locale={locale} messages={messages} timeZone="UTC">

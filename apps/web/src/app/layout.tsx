@@ -1,25 +1,31 @@
 import type { CSSProperties } from "react";
 import "./globals.css";
+import { headers } from "next/headers";
+import { AuthSessionProvider } from "@/components/auth/session-provider";
 import { ThemeProvider } from "@/components/theme-provider";
+import { defaultLocale, isAppLocale, localeDir } from "@/i18n";
 import { ensureEnvValidated } from "@/lib/env";
 import { getSiteMetadata } from "@/lib/seo";
 import { themeTokensToCssVariables } from "@/lib/theme/apply";
 import { getThemePreloadScript } from "@/lib/theme/preload-script";
 import { getTheme } from "@/lib/theme/registry";
-import { AuthSessionProvider } from "@/components/auth/session-provider";
 
 ensureEnvValidated();
 
 export const metadata = getSiteMetadata();
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const requestLocale = headers().get("x-next-intl-locale") ?? undefined;
+  const locale = isAppLocale(requestLocale) ? requestLocale : defaultLocale;
+
   return (
     <html
-      lang="en"
+      lang={locale}
+      dir={localeDir(locale)}
       suppressHydrationWarning
       style={
         themeTokensToCssVariables(getTheme("default").light) as CSSProperties
