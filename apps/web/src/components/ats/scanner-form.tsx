@@ -76,6 +76,19 @@ function completeProfile(profile: Partial<Profile>, rawText?: string): Profile {
   };
 }
 
+function hasMinimumContent(profile: Profile, fileMeta?: FileMeta) {
+  const hasProfileContent =
+    profile.experiences.length > 0 ||
+    profile.skills.length > 0 ||
+    (profile.summary?.trim().length ?? 0) >= MIN_RESUME_LENGTH;
+  const hasUsableParse =
+    !fileMeta ||
+    (fileMeta.parseConfidence >= 0.25 &&
+      fileMeta.sectionsDetected.length > 0);
+
+  return hasProfileContent && hasUsableParse;
+}
+
 function opportunityToJob(opportunity: ScrapedOpportunity): JobDescription {
   return {
     id: "scanner-imported-job",
@@ -301,11 +314,13 @@ export function ScannerForm({ locale = "en" }: ScannerFormProps = {}) {
   }
 
   function handleAnalyze() {
-    const profile =
-      parsedProfile ||
-      (resumeText.trim().length >= MIN_RESUME_LENGTH
+    const profile = parsedProfile
+      ? hasMinimumContent(parsedProfile, fileMeta)
+        ? parsedProfile
+        : null
+      : resumeText.trim().length >= MIN_RESUME_LENGTH
         ? textToProfile(resumeText)
-        : null);
+        : null;
     if (!profile) return;
 
     setAnalyzing(true);
@@ -355,8 +370,15 @@ export function ScannerForm({ locale = "en" }: ScannerFormProps = {}) {
     setShowPasteResume(false);
   }
 
+  const parsedProfileHasMinimumContent =
+    parsedProfile && hasMinimumContent(parsedProfile, fileMeta);
+  const uploadedProfileNeedsManualText =
+    Boolean(parsedProfile) && !parsedProfileHasMinimumContent;
+  const parseWarnings = fileMeta?.warnings.filter(Boolean) ?? [];
+  const hasManualResumeText =
+    !parsedProfile && resumeText.trim().length >= MIN_RESUME_LENGTH;
   const canAnalyze =
-    Boolean(parsedProfile || resumeText.trim().length >= MIN_RESUME_LENGTH) &&
+    Boolean(parsedProfileHasMinimumContent || hasManualResumeText) &&
     !analyzing &&
     !parsing;
   const callbackUrl = `/${locale}/dashboard`;
@@ -462,16 +484,46 @@ export function ScannerForm({ locale = "en" }: ScannerFormProps = {}) {
         </div>
 
         {parseMessage ? (
-          <div className="mt-3 flex items-center gap-2 rounded-md border border-border bg-muted/30 px-3 py-2 text-sm">
-            <CheckCircle2 className="h-4 w-4 text-success" />
-            <span>{parseMessage}</span>
-            <button
-              type="button"
-              className="ml-auto text-xs font-medium text-primary underline-offset-4 hover:underline"
-              onClick={() => setUploadedFile(null)}
-            >
-              Replace file
-            </button>
+          <div className="mt-3 rounded-md border border-border bg-muted/30 px-3 py-2 text-sm">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="h-4 w-4 text-success" />
+              <span>{parseMessage}</span>
+              <button
+                type="button"
+                className="ml-auto text-xs font-medium text-primary underline-offset-4 hover:underline"
+                onClick={() => setUploadedFile(null)}
+              >
+                Replace file
+              </button>
+            </div>
+            {parseWarnings.length > 0 ? (
+              <ul className="mt-2 space-y-1 pl-6 text-xs text-muted-foreground">
+                {parseWarnings.map((warning) => (
+                  <li key={warning} className="list-disc">
+                    {warning}
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </div>
+        ) : null}
+
+        {uploadedProfileNeedsManualText ? (
+          <div className="mt-3 flex items-start gap-2 rounded-md border border-warning/30 bg-warning/5 px-3 py-2 text-sm">
+            <AlertCircle className="mt-0.5 h-4 w-4 text-warning" />
+            <div className="flex-1">
+              <p>
+                We couldn&apos;t extract enough content from this PDF. Try a
+                text-based PDF, or paste your resume text below.
+              </p>
+              <button
+                type="button"
+                className="mt-2 text-xs font-medium text-primary underline-offset-4 hover:underline"
+                onClick={() => setShowPasteResume(true)}
+              >
+                Paste text instead
+              </button>
+            </div>
           </div>
         ) : null}
 
