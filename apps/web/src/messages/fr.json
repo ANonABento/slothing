@@ -262,5 +262,156 @@
     "title": "Page introuvable",
     "description": "Nous n'avons pas trouvé cette page.",
     "action": "Aller au tableau de bord"
+  },
+  "profile": {
+    "title": "Profil",
+    "description": "Gardez à jour le profil source que Slothing utilise pour les CV, lettres de motivation et contrôles de compatibilité.",
+    "actions": {
+      "discard": "Annuler",
+      "saveChanges": "Enregistrer les modifications"
+    },
+    "status": {
+      "saving": "Enregistrement...",
+      "saved": "Enregistré"
+    },
+    "errors": {
+      "loadProfile": "Impossible de charger le profil",
+      "saveProfile": "Impossible d’enregistrer le profil"
+    },
+    "unsavedChanges": {
+      "prompt": "Vous avez des modifications de profil non enregistrées. Quitter sans enregistrer ?"
+    },
+    "tabs": {
+      "ariaLabel": "Sections du profil",
+      "overview": "Aperçu",
+      "preferences": "Préférences",
+      "privacy": "Confidentialité"
+    },
+    "answerBankPrompt": {
+      "text": "Vous voulez un profil plus riche ? Enregistrez des histoires et faits réutilisables dans votre banque de réponses.",
+      "action": "Ouvrir la banque de réponses"
+    },
+    "emptyState": {
+      "title": "Configurons votre profil",
+      "description": "Commencez par un CV pour que Slothing remplisse les bases, ou ouvrez le formulaire et ajoutez les détails manuellement.",
+      "uploadResume": "Importer votre CV pour remplir ceci",
+      "fillManually": "Ou remplir manuellement"
+    },
+    "sidebar": {
+      "yourName": "Votre nom",
+      "addHeadline": "Ajouter un titre",
+      "noEmail": "Aucun e-mail",
+      "noLocation": "Aucun lieu",
+      "noTargetSalary": "Aucun salaire cible",
+      "salaryRange": "{currency} {min}–{max}",
+      "salaryMinimum": "{currency} {min}+",
+      "salaryMaximum": "Jusqu’à {currency} {max}",
+      "profilePhoto": "Photo de profil",
+      "profilePhotoNamed": "Photo de profil de {name}"
+    },
+    "placeholders": {
+      "headline": "Ingénieur produit senior"
+    },
+    "sections": {
+      "identity": {
+        "title": "Identité",
+        "description": "Gardez à jour le profil source que Slothing utilise pour les CV, lettres de motivation et contrôles de compatibilité."
+      },
+      "contact": {
+        "title": "Contact",
+        "description": "Gardez à jour le profil source que Slothing utilise pour les CV, lettres de motivation et contrôles de compatibilité."
+      },
+      "summary": {
+        "title": "Résumé professionnel",
+        "description": "Gardez à jour le profil source que Slothing utilise pour les CV, lettres de motivation et contrôles de compatibilité."
+      },
+      "savedSignals": {
+        "title": "Signaux de profil enregistrés",
+        "description": "Gardez à jour le profil source que Slothing utilise pour les CV, lettres de motivation et contrôles de compatibilité."
+      },
+      "careerDetails": {
+        "title": "Détails de carrière",
+        "description": "Gardez à jour le profil source que Slothing utilise pour les CV, lettres de motivation et contrôles de compatibilité."
+      }
+    },
+    "fields": {
+      "avatarUrl": "URL de l'avatar",
+      "fullName": "Nom complet",
+      "headline": "Titre",
+      "email": "Adresse e-mail",
+      "phone": "Téléphone",
+      "location": "Lieu",
+      "linkedin": "Profil LinkedIn",
+      "github": "Profil GitHub",
+      "website": "Site web",
+      "summary": "Résumé professionnel",
+      "targetRoles": "Postes cibles",
+      "currency": "Devise",
+      "minimum": "Minimum",
+      "maximum": "Maximum"
+    },
+    "signals": {
+      "experience": "Expérience",
+      "education": "Formation",
+      "skills": "Compétences",
+      "projects": "Projets",
+      "awards": "Récompenses"
+    },
+    "workStyle": {
+      "title": "Mode de travail",
+      "description": "Gardez à jour le profil source que Slothing utilise pour les CV, lettres de motivation et contrôles de compatibilité.",
+      "options": {
+        "remote": "Télétravail",
+        "hybrid": "Hybride",
+        "onsite": "Sur site",
+        "fullTime": "Temps plein",
+        "contract": "Contrat"
+      }
+    },
+    "targetRoles": {
+      "title": "Postes cibles",
+      "description": "Gardez à jour le profil source que Slothing utilise pour les CV, lettres de motivation et contrôles de compatibilité."
+    },
+    "salary": {
+      "title": "Objectif de rémunération",
+      "description": "Gardez à jour le profil source que Slothing utilise pour les CV, lettres de motivation et contrôles de compatibilité."
+    },
+    "privacy": {
+      "title": "Confidentialité",
+      "description": "Gardez à jour le profil source que Slothing utilise pour les CV, lettres de motivation et contrôles de compatibilité.",
+      "openToRecruiters": {
+        "title": "Open to recruiter outreach",
+        "description": "Gardez à jour le profil source que Slothing utilise pour les CV, lettres de motivation et contrôles de compatibilité."
+      },
+      "shareContactInfo": {
+        "title": "Share contact info by default",
+        "description": "Gardez à jour le profil source que Slothing utilise pour les CV, lettres de motivation et contrôles de compatibilité."
+      }
+    },
+    "completeness": {
+      "readiness": "Préparation du profil",
+      "summary": "Profil complété à {score}% · {count, plural, one {# amélioration rapide disponible} other {# améliorations rapides disponibles}}",
+      "completeLabel": "terminé",
+      "progressLabel": "Complétude du profil",
+      "noGaps": "Tous les éléments essentiels sont remplis.",
+      "points": "+{points, plural, one {# point} other {# points}}",
+      "gaps": {
+        "contact-info": "Ajoutez votre nom, e-mail et titre",
+        "summary": "Ajoutez un résumé professionnel",
+        "experience-bullets": {
+          "empty": "Ajoutez une expérience avec au moins 3 points",
+          "role": "Ajoutez {missing, plural, one {# point de plus} other {# points de plus}} à votre poste chez {company}"
+        },
+        "quantified-bullets": {
+          "empty": "Ajoutez {missing, plural, one {# point quantifié} other {# points quantifiés}}",
+          "role": "Ajoutez {missing, plural, one {# point quantifié} other {# points quantifiés}} à votre poste chez {company}"
+        },
+        "education": "Ajoutez votre formation",
+        "skills": "Ajoutez {missing, plural, one {# compétence de plus} other {# compétences de plus}}",
+        "career-depth": "Ajoutez un projet ou une autre expérience",
+        "achievements": "Ajoutez une réussite, récompense ou certification",
+        "social-url": "Ajoutez une URL LinkedIn ou GitHub"
+      }
+    }
   }
 }
