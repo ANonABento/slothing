@@ -131,7 +131,7 @@ export function createInterviewSession(
   jobId: string | null,
   questions: InterviewQuestion[],
   mode: SessionMode = "text",
-  userId: string = "default",
+  userId: string,
   category?: SessionQuestionCategory | null,
 ): InterviewSession {
   ensureInterviewSessionsSchema();
@@ -191,7 +191,7 @@ export function createInterviewSession(
 // Get interview session by ID
 export function getInterviewSession(
   id: string,
-  userId: string = "default",
+  userId: string,
 ): InterviewSessionWithAnswers | null {
   ensureInterviewSessionsSchema();
   const sessionStmt = db.prepare(`
@@ -255,8 +255,8 @@ export function getInterviewSession(
 
 // Get all interview sessions (optionally filter by job)
 export function getInterviewSessions(
-  jobId?: string,
-  userId: string = "default",
+  jobId: string | undefined,
+  userId: string,
 ): InterviewSession[] {
   ensureInterviewSessionsSchema();
   let query = `
@@ -305,8 +305,8 @@ export function addInterviewAnswer(
   sessionId: string,
   questionIndex: number,
   answer: string,
-  feedback?: string,
-  userId: string = "default",
+  feedback: string | undefined,
+  userId: string,
 ): InterviewAnswer {
   ensureInterviewSessionsSchema();
   const id = generateId();
@@ -350,7 +350,7 @@ export function addInterviewAnswer(
 // Complete an interview session
 export function completeInterviewSession(
   sessionId: string,
-  userId: string = "default",
+  userId: string,
 ): void {
   ensureInterviewSessionsSchema();
   const now = nowIso();
@@ -367,7 +367,7 @@ export function completeInterviewSession(
 // Delete an interview session (cascades to answers)
 export function deleteInterviewSession(
   id: string,
-  userId: string = "default",
+  userId: string,
 ): void {
   ensureInterviewSessionsSchema();
   const session = db
@@ -392,7 +392,7 @@ export function deleteInterviewSession(
 // Get recent interview sessions for dashboard
 export function getRecentInterviewSessions(
   limit: number = 5,
-  userId: string = "default",
+  userId: string,
 ): InterviewSession[] {
   ensureInterviewSessionsSchema();
   const stmt = db.prepare(`

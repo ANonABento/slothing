@@ -12,7 +12,7 @@ export function parseOpportunityReviewEnabled(value: string | null): boolean {
 }
 
 export function getOpportunityReviewEnabled(
-  userId: string = "default",
+  userId: string,
 ): boolean {
   return parseOpportunityReviewEnabled(
     getSetting(OPPORTUNITY_REVIEW_SETTING_KEY, userId),
@@ -21,7 +21,7 @@ export function getOpportunityReviewEnabled(
 
 export function setOpportunityReviewEnabled(
   enabled: boolean,
-  userId: string = "default",
+  userId: string,
 ): void {
   setSetting(OPPORTUNITY_REVIEW_SETTING_KEY, String(enabled), userId);
 }

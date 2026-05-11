@@ -12,7 +12,7 @@ export function parseKanbanVisibleLanes(value: string | null): KanbanLaneId[] {
 }
 
 export function getKanbanVisibleLanes(
-  userId: string = "default",
+  userId: string,
 ): KanbanLaneId[] {
   return parseKanbanVisibleLanes(
     getSetting(KANBAN_VISIBLE_LANES_SETTING_KEY, userId),
@@ -21,7 +21,7 @@ export function getKanbanVisibleLanes(
 
 export function setKanbanVisibleLanes(
   lanes: readonly KanbanLaneId[],
-  userId: string = "default",
+  userId: string,
 ): void {
   const normalized = normalizeKanbanVisibleLanes(lanes);
   const ordered = KANBAN_LANE_IDS.filter((lane) => normalized.includes(lane));
