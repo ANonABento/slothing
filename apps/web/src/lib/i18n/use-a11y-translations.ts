@@ -1,18 +1,17 @@
 "use client";
 
-import { useMessages, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import enMessages from "@/messages/en.json";
 
 type A11yKey = keyof typeof enMessages.a11y;
+type A11yTranslator = (key: A11yKey) => string;
+
+const fallbackA11yT: A11yTranslator = (key) => enMessages.a11y[key] ?? key;
 
 export function useA11yTranslations() {
   try {
-    const messages = useMessages();
-    if (!messages || typeof messages !== "object" || !("a11y" in messages)) {
-      return (key: A11yKey) => enMessages.a11y[key] ?? key;
-    }
-    return useTranslations("a11y");
+    return useTranslations("a11y") as A11yTranslator;
   } catch {
-    return (key: A11yKey) => enMessages.a11y[key] ?? key;
+    return fallbackA11yT;
   }
 }

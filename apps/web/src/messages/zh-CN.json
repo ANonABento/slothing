@@ -445,7 +445,7 @@
     "clickOnADateToViewEvents": "单击日期即可查看事件",
     "noUpcomingEvents": "没有即将举行的活动",
     "addNotesOrDetails": "添加注释或详细信息...",
-    "copyUrl": "复制网址",
+    "copyUrl": "复制 URL",
     "salaryTools": "薪资工具",
     "marketRateCalculator": "市场利率计算器",
     "selectRole": "选择角色",
@@ -472,7 +472,7 @@
     "cancel": "取消",
     "searchDrafts": "搜索草稿",
     "answerScorecard": "答案记分卡",
-    "startFreeWithSlothing": "开始自由地懒惰",
+    "startFreeWithSlothing": "免费开始使用 Slothing",
     "extensionPopoverPreviewOnAJobPosting": "职位发布上的扩展弹出窗口预览",
     "dashboardPreview": "仪表板预览"
   }
