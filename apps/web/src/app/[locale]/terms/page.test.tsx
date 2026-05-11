@@ -40,13 +40,15 @@ describe("TermsPage", () => {
     ).toBeGreaterThan(0);
   });
 
-  it("states jurisdiction without placeholder legal copy", () => {
+  it("flags jurisdiction and dispute terms for legal review", () => {
     const { container } = render(<TermsPage />);
 
     expect(container).toHaveTextContent(
-      /laws of Ontario and the federal laws of Canada/i,
+      /laws of \[JURISDICTION TBD before public launch\]/i,
     );
-    expect(container).toHaveTextContent(/courts located in Ontario, Canada/i);
-    expect(container).not.toHaveTextContent(/TBD|pending legal review/i);
+    expect(container).toHaveTextContent(
+      /\[DISPUTE RESOLUTION TBD before public launch\]/i,
+    );
+    expect(container).toHaveTextContent(/finalized by legal review/i);
   });
 });
