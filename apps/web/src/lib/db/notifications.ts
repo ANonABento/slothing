@@ -33,7 +33,7 @@ export interface Notification {
 // Create a new notification
 export function createNotification(
   notification: Omit<Notification, "id" | "read" | "createdAt">,
-  userId: string = "default",
+  userId: string,
 ): Notification {
   const id = generateId();
   const now = nowIso();
@@ -65,12 +65,12 @@ export function createNotification(
 }
 
 // Get all notifications
-export function getNotifications(options?: {
+export function getNotifications(options: {
   unreadOnly?: boolean;
   limit?: number;
-  userId?: string;
+  userId: string;
 }): Notification[] {
-  const { unreadOnly = false, limit = 50, userId = "default" } = options || {};
+  const { unreadOnly = false, limit = 50, userId } = options || {};
   ensureSuggestedStatusUpdatesSchema();
 
   let query = `
@@ -152,7 +152,7 @@ function parseEvidence(value: string | null | undefined): string[] {
 // Mark notification as read
 export function markNotificationRead(
   id: string,
-  userId: string = "default",
+  userId: string,
 ): void {
   const stmt = db.prepare(
     "UPDATE notifications SET read = 1 WHERE id = ? AND user_id = ?",
@@ -161,7 +161,7 @@ export function markNotificationRead(
 }
 
 // Mark all notifications as read
-export function markAllNotificationsRead(userId: string = "default"): void {
+export function markAllNotificationsRead(userId: string): void {
   const stmt = db.prepare(
     "UPDATE notifications SET read = 1 WHERE read = 0 AND user_id = ?",
   );
@@ -171,7 +171,7 @@ export function markAllNotificationsRead(userId: string = "default"): void {
 // Delete a notification
 export function deleteNotification(
   id: string,
-  userId: string = "default",
+  userId: string,
 ): void {
   const stmt = db.prepare(
     "DELETE FROM notifications WHERE id = ? AND user_id = ?",
@@ -180,7 +180,7 @@ export function deleteNotification(
 }
 
 // Delete all read notifications
-export function deleteReadNotifications(userId: string = "default"): void {
+export function deleteReadNotifications(userId: string): void {
   const stmt = db.prepare(
     "DELETE FROM notifications WHERE read = 1 AND user_id = ?",
   );
@@ -188,7 +188,7 @@ export function deleteReadNotifications(userId: string = "default"): void {
 }
 
 // Get unread notification count
-export function getUnreadNotificationCount(userId: string = "default"): number {
+export function getUnreadNotificationCount(userId: string): number {
   const stmt = db.prepare(
     "SELECT COUNT(*) as count FROM notifications WHERE read = 0 AND user_id = ?",
   );
@@ -202,7 +202,7 @@ export function createReminderNotification(
   jobTitle: string,
   isOverdue: boolean,
   jobId: string,
-  userId: string = "default",
+  userId: string,
 ): Notification {
   return createNotification(
     {
@@ -220,11 +220,15 @@ export function createApplicationUpdateNotification(
   jobTitle: string,
   newStatus: string,
   jobId: string,
+  userId: string,
 ): Notification {
-  return createNotification({
-    type: "application_update",
-    title: "Application Status Updated",
-    message: `${jobTitle} is now "${newStatus}"`,
-    link: `/opportunities?id=${jobId}`,
-  });
+  return createNotification(
+    {
+      type: "application_update",
+      title: "Application Status Updated",
+      message: `${jobTitle} is now "${newStatus}"`,
+      link: `/opportunities?id=${jobId}`,
+    },
+    userId,
+  );
 }

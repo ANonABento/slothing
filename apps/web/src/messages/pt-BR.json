@@ -475,5 +475,156 @@
     "startFreeWithSlothing": "Comece gratuitamente com Slothing",
     "extensionPopoverPreviewOnAJobPosting": "Visualização popover de extensão em um anúncio de emprego",
     "dashboardPreview": "Visualização do painel"
+  },
+  "profile": {
+    "title": "Perfil",
+    "description": "Mantenha o perfil de origem que o Slothing usa para currículos, cartas e verificações de aderência.",
+    "actions": {
+      "discard": "Descartar",
+      "saveChanges": "Salvar alterações"
+    },
+    "status": {
+      "saving": "Salvando...",
+      "saved": "Salvo"
+    },
+    "errors": {
+      "loadProfile": "Não foi possível carregar o perfil",
+      "saveProfile": "Não foi possível salvar o perfil"
+    },
+    "unsavedChanges": {
+      "prompt": "Você tem alterações de perfil não salvas. Sair sem salvar?"
+    },
+    "tabs": {
+      "ariaLabel": "Seções do perfil",
+      "overview": "Visão geral",
+      "preferences": "Preferências",
+      "privacy": "Privacidade"
+    },
+    "answerBankPrompt": {
+      "text": "Quer detalhes de perfil mais ricos? Salve histórias e fatos reutilizáveis no seu banco de respostas.",
+      "action": "Abrir banco de respostas"
+    },
+    "emptyState": {
+      "title": "Vamos configurar seu perfil",
+      "description": "Comece por um currículo para o Slothing preencher o básico, ou abra o formulário e adicione detalhes manualmente.",
+      "uploadResume": "Enviar currículo para preencher isto",
+      "fillManually": "Ou preencher manualmente"
+    },
+    "sidebar": {
+      "yourName": "Seu nome",
+      "addHeadline": "Adicionar um título",
+      "noEmail": "Sem e-mail",
+      "noLocation": "Sem localização",
+      "noTargetSalary": "Sem salário-alvo",
+      "salaryRange": "{currency} {min}–{max}",
+      "salaryMinimum": "{currency} {min}+",
+      "salaryMaximum": "Até {currency} {max}",
+      "profilePhoto": "Foto do perfil",
+      "profilePhotoNamed": "Foto do perfil de {name}"
+    },
+    "placeholders": {
+      "headline": "Engenheiro de produto sênior"
+    },
+    "sections": {
+      "identity": {
+        "title": "Identidade",
+        "description": "Mantenha o perfil de origem que o Slothing usa para currículos, cartas e verificações de aderência."
+      },
+      "contact": {
+        "title": "Contato",
+        "description": "Mantenha o perfil de origem que o Slothing usa para currículos, cartas e verificações de aderência."
+      },
+      "summary": {
+        "title": "Resumo profissional",
+        "description": "Mantenha o perfil de origem que o Slothing usa para currículos, cartas e verificações de aderência."
+      },
+      "savedSignals": {
+        "title": "Sinais de perfil salvos",
+        "description": "Mantenha o perfil de origem que o Slothing usa para currículos, cartas e verificações de aderência."
+      },
+      "careerDetails": {
+        "title": "Detalhes de carreira",
+        "description": "Mantenha o perfil de origem que o Slothing usa para currículos, cartas e verificações de aderência."
+      }
+    },
+    "fields": {
+      "avatarUrl": "URL do avatar",
+      "fullName": "Nome completo",
+      "headline": "Título",
+      "email": "Endereço de e-mail",
+      "phone": "Telefone",
+      "location": "Localização",
+      "linkedin": "Perfil do LinkedIn",
+      "github": "Perfil do GitHub",
+      "website": "Site",
+      "summary": "Resumo profissional",
+      "targetRoles": "Cargos-alvo",
+      "currency": "Moeda",
+      "minimum": "Mínimo",
+      "maximum": "Máximo"
+    },
+    "signals": {
+      "experience": "Experiência",
+      "education": "Formação",
+      "skills": "Competências",
+      "projects": "Projetos",
+      "awards": "Prêmios"
+    },
+    "workStyle": {
+      "title": "Estilo de trabalho",
+      "description": "Mantenha o perfil de origem que o Slothing usa para currículos, cartas e verificações de aderência.",
+      "options": {
+        "remote": "Remoto",
+        "hybrid": "Híbrido",
+        "onsite": "Presencial",
+        "fullTime": "Tempo integral",
+        "contract": "Contrato"
+      }
+    },
+    "targetRoles": {
+      "title": "Cargos-alvo",
+      "description": "Mantenha o perfil de origem que o Slothing usa para currículos, cartas e verificações de aderência."
+    },
+    "salary": {
+      "title": "Meta de remuneração",
+      "description": "Mantenha o perfil de origem que o Slothing usa para currículos, cartas e verificações de aderência."
+    },
+    "privacy": {
+      "title": "Privacidade",
+      "description": "Mantenha o perfil de origem que o Slothing usa para currículos, cartas e verificações de aderência.",
+      "openToRecruiters": {
+        "title": "Aberto a contato de recrutadores",
+        "description": "Mantenha o perfil de origem que o Slothing usa para currículos, cartas e verificações de aderência."
+      },
+      "shareContactInfo": {
+        "title": "Compartilhar dados de contato por padrão",
+        "description": "Mantenha o perfil de origem que o Slothing usa para currículos, cartas e verificações de aderência."
+      }
+    },
+    "completeness": {
+      "readiness": "Prontidão do perfil",
+      "summary": "Perfil {score}% completo · {count, plural, one {# melhoria rápida disponível} other {# melhorias rápidas disponíveis}}",
+      "completeLabel": "concluído",
+      "progressLabel": "Completude do perfil",
+      "noGaps": "Tudo que é essencial está preenchido.",
+      "points": "+{points, plural, one {# ponto} other {# pontos}}",
+      "gaps": {
+        "contact-info": "Adicione nome, e-mail e título",
+        "summary": "Adicione um resumo profissional",
+        "experience-bullets": {
+          "empty": "Adicione uma experiência com pelo menos 3 tópicos",
+          "role": "Adicione {missing, plural, one {# tópico a mais} other {# tópicos a mais}} ao seu cargo na {company}"
+        },
+        "quantified-bullets": {
+          "empty": "Adicione {missing, plural, one {# tópico quantificado} other {# tópicos quantificados}}",
+          "role": "Adicione {missing, plural, one {# tópico quantificado} other {# tópicos quantificados}} ao seu cargo na {company}"
+        },
+        "education": "Adicione sua formação",
+        "skills": "Adicione {missing, plural, one {# competência a mais} other {# competências a mais}}",
+        "career-depth": "Adicione um projeto ou outra experiência",
+        "achievements": "Adicione uma conquista, prêmio ou certificação",
+        "social-url": "Adicione uma URL do LinkedIn ou GitHub"
+      }
+    }
   }
 }

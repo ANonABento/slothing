@@ -87,7 +87,7 @@ function selectContactByGoogleResource(
 
 export function getContactsForOpportunity(
   opportunityId: string,
-  userId: string = "default",
+  userId: string,
 ): OpportunityContact[] {
   ensureSchema();
   const rows = db
@@ -107,7 +107,7 @@ export function getContactsForOpportunity(
 
 export function addContactToOpportunity(
   input: AddOpportunityContactInput,
-  userId: string = "default",
+  userId: string,
 ): OpportunityContact {
   ensureSchema();
   const id = generateId();
@@ -166,7 +166,7 @@ export function addContactToOpportunity(
 
 export function deleteOpportunityContact(
   id: string,
-  userId: string = "default",
+  userId: string,
 ): boolean {
   ensureSchema();
   const result = db

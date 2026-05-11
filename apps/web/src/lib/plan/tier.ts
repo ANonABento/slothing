@@ -10,7 +10,7 @@ import { getSetting, setSetting } from "@/lib/db/queries";
 
 export const PLAN_TIER_SETTING_KEY = "plan_tier";
 
-export function getUserTier(userId: string = "default"): PlanTier {
+export function getUserTier(userId: string): PlanTier {
   const storedTier = getSetting(PLAN_TIER_SETTING_KEY, userId);
   const parsedTier = planTierSchema.safeParse(storedTier);
 
@@ -18,7 +18,7 @@ export function getUserTier(userId: string = "default"): PlanTier {
 }
 
 export function setUserTier(
-  userId: string = "default",
+  userId: string,
   tier: PlanTier,
 ): PlanTier {
   const parsedTier = planTierSchema.parse(tier);

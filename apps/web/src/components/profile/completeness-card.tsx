@@ -1,6 +1,7 @@
 "use client";
 
 import { CheckCircle2, Sparkles } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { GapList } from "@/components/profile/gap-list";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,7 +10,6 @@ import type {
   ProfileCompletenessGap,
   ProfileCompletenessResult,
 } from "@/lib/profile/completeness";
-import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 
 interface CompletenessCardProps {
   result: ProfileCompletenessResult;
@@ -31,12 +31,7 @@ export function CompletenessCard({
   onSelectGap,
   celebrating = false,
 }: CompletenessCardProps) {
-  const a11yT = useA11yTranslations();
-
-  const quickWinText =
-    result.gaps.length === 1
-      ? "1 quick win available"
-      : `${result.gaps.length} quick wins available`;
+  const t = useTranslations("profile.completeness");
   const isComplete = result.score === 100;
 
   return (
@@ -63,21 +58,23 @@ export function CompletenessCard({
             ) : (
               <Sparkles className="h-4 w-4" />
             )}
-            Profile readiness
+            {t("readiness")}
           </div>
           <CardTitle className="text-xl sm:text-2xl">
-            Profile is {result.score}% complete · {quickWinText}
+            {t("summary", { score: result.score, count: result.gaps.length })}
           </CardTitle>
         </div>
         <div className="shrink-0 rounded-[var(--radius)] border bg-background px-4 py-3 text-center">
           <div className="text-3xl font-semibold">{result.score}%</div>
-          <div className="text-xs text-muted-foreground">complete</div>
+          <div className="text-xs text-muted-foreground">
+            {t("completeLabel")}
+          </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
         <Progress
           value={result.score}
-          aria-label={a11yT("profileCompleteness")}
+          aria-label={t("progressLabel")}
           variant={progressVariant(result.score)}
         />
         <GapList gaps={result.gaps} onSelectGap={onSelectGap} />

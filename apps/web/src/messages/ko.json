@@ -475,5 +475,156 @@
     "startFreeWithSlothing": "Slothing으로 무료로 시작해보세요",
     "extensionPopoverPreviewOnAJobPosting": "채용 공고의 확장 팝오버 미리보기",
     "dashboardPreview": "대시보드 미리보기"
+  },
+  "profile": {
+    "title": "프로필",
+    "description": "Slothing이 이력서, 커버레터, 적합도 확인에 사용하는 원본 프로필을 관리합니다.",
+    "actions": {
+      "discard": "취소",
+      "saveChanges": "변경 사항 저장"
+    },
+    "status": {
+      "saving": "저장 중...",
+      "saved": "저장됨"
+    },
+    "errors": {
+      "loadProfile": "프로필을 불러올 수 없습니다",
+      "saveProfile": "프로필을 저장할 수 없습니다"
+    },
+    "unsavedChanges": {
+      "prompt": "저장하지 않은 프로필 변경 사항이 있습니다. 저장하지 않고 나가시겠습니까?"
+    },
+    "tabs": {
+      "ariaLabel": "프로필 섹션",
+      "overview": "개요",
+      "preferences": "선호사항",
+      "privacy": "개인정보"
+    },
+    "answerBankPrompt": {
+      "text": "더 풍부한 프로필이 필요하신가요? 재사용 가능한 이야기와 사실을 답변 뱅크에 저장하세요.",
+      "action": "답변 뱅크 열기"
+    },
+    "emptyState": {
+      "title": "프로필을 설정해 보세요",
+      "description": "이력서로 시작하면 Slothing이 기본 정보를 채울 수 있습니다. 양식을 열어 직접 입력할 수도 있습니다.",
+      "uploadResume": "이력서를 업로드해 채우기",
+      "fillManually": "또는 직접 입력"
+    },
+    "sidebar": {
+      "yourName": "이름",
+      "addHeadline": "헤드라인 추가",
+      "noEmail": "이메일 없음",
+      "noLocation": "위치 없음",
+      "noTargetSalary": "목표 연봉 없음",
+      "salaryRange": "{currency} {min}–{max}",
+      "salaryMinimum": "{currency} {min}+",
+      "salaryMaximum": "최대 {currency} {max}",
+      "profilePhoto": "프로필 사진",
+      "profilePhotoNamed": "{name}의 프로필 사진"
+    },
+    "placeholders": {
+      "headline": "시니어 제품 엔지니어"
+    },
+    "sections": {
+      "identity": {
+        "title": "신원 정보",
+        "description": "Slothing이 이력서, 커버레터, 적합도 확인에 사용하는 원본 프로필을 관리합니다."
+      },
+      "contact": {
+        "title": "연락처",
+        "description": "Slothing이 이력서, 커버레터, 적합도 확인에 사용하는 원본 프로필을 관리합니다."
+      },
+      "summary": {
+        "title": "전문 요약",
+        "description": "Slothing이 이력서, 커버레터, 적합도 확인에 사용하는 원본 프로필을 관리합니다."
+      },
+      "savedSignals": {
+        "title": "저장된 프로필 신호",
+        "description": "Slothing이 이력서, 커버레터, 적합도 확인에 사용하는 원본 프로필을 관리합니다."
+      },
+      "careerDetails": {
+        "title": "경력 세부정보",
+        "description": "Slothing이 이력서, 커버레터, 적합도 확인에 사용하는 원본 프로필을 관리합니다."
+      }
+    },
+    "fields": {
+      "avatarUrl": "아바타 URL",
+      "fullName": "전체 이름",
+      "headline": "헤드라인",
+      "email": "이메일 주소",
+      "phone": "전화번호",
+      "location": "위치",
+      "linkedin": "LinkedIn 프로필",
+      "github": "GitHub 프로필",
+      "website": "웹사이트",
+      "summary": "전문 요약",
+      "targetRoles": "목표 직무",
+      "currency": "통화",
+      "minimum": "최소",
+      "maximum": "최대"
+    },
+    "signals": {
+      "experience": "경험",
+      "education": "학력",
+      "skills": "기술",
+      "projects": "프로젝트",
+      "awards": "수상"
+    },
+    "workStyle": {
+      "title": "근무 방식",
+      "description": "Slothing이 이력서, 커버레터, 적합도 확인에 사용하는 원본 프로필을 관리합니다.",
+      "options": {
+        "remote": "원격",
+        "hybrid": "하이브리드",
+        "onsite": "현장",
+        "fullTime": "정규직",
+        "contract": "계약직"
+      }
+    },
+    "targetRoles": {
+      "title": "목표 직무",
+      "description": "Slothing이 이력서, 커버레터, 적합도 확인에 사용하는 원본 프로필을 관리합니다."
+    },
+    "salary": {
+      "title": "보상 목표",
+      "description": "Slothing이 이력서, 커버레터, 적합도 확인에 사용하는 원본 프로필을 관리합니다."
+    },
+    "privacy": {
+      "title": "개인정보",
+      "description": "Slothing이 이력서, 커버레터, 적합도 확인에 사용하는 원본 프로필을 관리합니다.",
+      "openToRecruiters": {
+        "title": "Open to recruiter outreach",
+        "description": "Slothing이 이력서, 커버레터, 적합도 확인에 사용하는 원본 프로필을 관리합니다."
+      },
+      "shareContactInfo": {
+        "title": "Share contact info by default",
+        "description": "Slothing이 이력서, 커버레터, 적합도 확인에 사용하는 원본 프로필을 관리합니다."
+      }
+    },
+    "completeness": {
+      "readiness": "프로필 준비도",
+      "summary": "프로필 {score}% 완료 · {count, plural, one {빠른 개선 #개} other {빠른 개선 #개}}",
+      "completeLabel": "완료",
+      "progressLabel": "프로필 완성도",
+      "noGaps": "필수 항목이 모두 채워졌습니다.",
+      "points": "+{points, plural, one {#점} other {#점}}",
+      "gaps": {
+        "contact-info": "이름, 이메일, 헤드라인 추가",
+        "summary": "전문 요약 추가",
+        "experience-bullets": {
+          "empty": "최소 3개의 bullet이 있는 경험 추가",
+          "role": "{company} 역할에 {missing, plural, one {bullet #개} other {bullet #개}} 더 추가"
+        },
+        "quantified-bullets": {
+          "empty": "{missing, plural, one {정량 bullet #개} other {정량 bullet #개}} 추가",
+          "role": "{company} 역할에 {missing, plural, one {정량 bullet #개} other {정량 bullet #개}} 추가"
+        },
+        "education": "학력 추가",
+        "skills": "{missing, plural, one {기술 #개} other {기술 #개}} 더 추가",
+        "career-depth": "프로젝트 또는 다른 경험 추가",
+        "achievements": "성과, 수상 또는 자격증 추가",
+        "social-url": "LinkedIn 또는 GitHub URL 추가"
+      }
+    }
   }
 }

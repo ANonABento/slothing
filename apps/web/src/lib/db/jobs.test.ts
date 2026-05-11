@@ -25,6 +25,8 @@ import {
   deleteJob,
 } from "./jobs";
 
+const TEST_USER_ID = "test-user";
+
 describe("Job Database Functions", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -57,12 +59,12 @@ describe("Job Database Functions", () => {
       const mockAll = vi.fn().mockReturnValue(mockRows);
       (db.prepare as Mock).mockReturnValue({ all: mockAll });
 
-      const result = getJobs();
+      const result = getJobs(TEST_USER_ID);
 
       expect(db.prepare).toHaveBeenCalledWith(
         "SELECT * FROM jobs WHERE user_id = ? ORDER BY created_at DESC",
       );
-      expect(mockAll).toHaveBeenCalledWith("default");
+      expect(mockAll).toHaveBeenCalledWith(TEST_USER_ID);
       expect(result).toHaveLength(1);
       expect(result[0]).toEqual({
         id: "job-1",
@@ -89,7 +91,7 @@ describe("Job Database Functions", () => {
       const mockAll = vi.fn().mockReturnValue([]);
       (db.prepare as Mock).mockReturnValue({ all: mockAll });
 
-      const result = getJobs();
+      const result = getJobs(TEST_USER_ID);
 
       expect(result).toEqual([]);
     });
@@ -111,7 +113,7 @@ describe("Job Database Functions", () => {
       const mockAll = vi.fn().mockReturnValue(mockRows);
       (db.prepare as Mock).mockReturnValue({ all: mockAll });
 
-      const result = getJobs();
+      const result = getJobs(TEST_USER_ID);
 
       expect(result[0].requirements).toEqual([]);
       expect(result[0].responsibilities).toEqual([]);
@@ -137,12 +139,12 @@ describe("Job Database Functions", () => {
       const mockGet = vi.fn().mockReturnValue(mockRow);
       (db.prepare as Mock).mockReturnValue({ get: mockGet });
 
-      const result = getJob("job-1");
+      const result = getJob("job-1", TEST_USER_ID);
 
       expect(db.prepare).toHaveBeenCalledWith(
         "SELECT * FROM jobs WHERE id = ? AND user_id = ?",
       );
-      expect(mockGet).toHaveBeenCalledWith("job-1", "default");
+      expect(mockGet).toHaveBeenCalledWith("job-1", TEST_USER_ID);
       expect(result?.id).toBe("job-1");
       expect(result?.title).toBe("Software Engineer");
     });
@@ -151,7 +153,7 @@ describe("Job Database Functions", () => {
       const mockGet = vi.fn().mockReturnValue(undefined);
       (db.prepare as Mock).mockReturnValue({ get: mockGet });
 
-      const result = getJob("non-existent");
+      const result = getJob("non-existent", TEST_USER_ID);
 
       expect(result).toBeNull();
     });
@@ -186,7 +188,7 @@ describe("Job Database Functions", () => {
         requirements: [],
         responsibilities: [],
         keywords: [],
-      });
+      }, TEST_USER_ID);
 
       expect(mockRun).toHaveBeenCalledWith(
         "test-id-123",
@@ -205,7 +207,7 @@ describe("Job Database Functions", () => {
         null,
         null,
         null,
-        "default",
+        TEST_USER_ID,
       );
       expect(result.id).toBe("test-id-123");
     });
@@ -247,7 +249,7 @@ describe("Job Database Functions", () => {
         responsibilities: ["Task"],
         keywords: ["key"],
         url: "https://job.com",
-      });
+      }, TEST_USER_ID);
 
       expect(mockRun).toHaveBeenCalledWith(
         "test-id-123",
@@ -266,7 +268,7 @@ describe("Job Database Functions", () => {
         null,
         null,
         null,
-        "default",
+        TEST_USER_ID,
       );
       expect(result.remote).toBe(true);
     });
@@ -304,7 +306,7 @@ describe("Job Database Functions", () => {
         status: "pending",
         deadline: "2026-05-01",
         notes: "Review later",
-      });
+      }, TEST_USER_ID);
 
       const runArgs = mockRun.mock.calls[0];
       expect(runArgs[12]).toBe("pending");
@@ -368,12 +370,12 @@ describe("Job Database Functions", () => {
         return { run: mockRun };
       });
 
-      updateJob("job-1", { title: "New Title" });
+      updateJob("job-1", { title: "New Title" }, TEST_USER_ID);
 
       expect(mockRun).toHaveBeenCalled();
       const runArgs = mockRun.mock.calls[0];
       expect(runArgs[0]).toBe("New Title"); // First arg is title
-      expect(runArgs[16]).toBe("default");
+      expect(runArgs[16]).toBe(TEST_USER_ID);
     });
 
     it("should do nothing for non-existent job", () => {
@@ -387,7 +389,7 @@ describe("Job Database Functions", () => {
         return { run: mockRun };
       });
 
-      updateJob("non-existent", { title: "New Title" });
+      updateJob("non-existent", { title: "New Title" }, TEST_USER_ID);
 
       expect(mockRun).not.toHaveBeenCalled();
     });
@@ -415,7 +417,7 @@ describe("Job Database Functions", () => {
         return { get: mockGet };
       });
 
-      const result = updateJobStatus("job-1", "applied");
+      const result = updateJobStatus("job-1", "applied", undefined, TEST_USER_ID);
 
       expect(mockRun).toHaveBeenCalled();
       expect(result?.status).toBe("applied");
@@ -443,14 +445,14 @@ describe("Job Database Functions", () => {
         return { get: mockGet };
       });
 
-      updateJobStatus("job-1", "applied");
+      updateJobStatus("job-1", "applied", undefined, TEST_USER_ID);
 
       const runArgs = mockRun.mock.calls[0];
       expect(runArgs[0]).toBe("applied");
       // Second arg should be set (the auto-generated timestamp)
       expect(runArgs[1]).toBeTruthy();
       expect(runArgs[2]).toBe("job-1");
-      expect(runArgs[3]).toBe("default");
+      expect(runArgs[3]).toBe(TEST_USER_ID);
     });
   });
 
@@ -459,12 +461,12 @@ describe("Job Database Functions", () => {
       const mockRun = vi.fn();
       (db.prepare as Mock).mockReturnValue({ run: mockRun });
 
-      deleteJob("job-1");
+      deleteJob("job-1", TEST_USER_ID);
 
       expect(db.prepare).toHaveBeenCalledWith(
         "DELETE FROM jobs WHERE id = ? AND user_id = ?",
       );
-      expect(mockRun).toHaveBeenCalledWith("job-1", "default");
+      expect(mockRun).toHaveBeenCalledWith("job-1", TEST_USER_ID);
     });
   });
 });

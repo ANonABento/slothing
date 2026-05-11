@@ -5,35 +5,42 @@ import { Testimonials } from "./testimonials";
 describe("Testimonials", () => {
   it("should render the section header", () => {
     render(<Testimonials />);
-    expect(screen.getByText("Social Proof")).toBeInTheDocument();
-    expect(screen.getByText(/Trusted by job seekers/)).toBeInTheDocument();
-  });
-
-  it("should render stat values", () => {
-    render(<Testimonials />);
-    expect(screen.getByText("10,000+")).toBeInTheDocument();
-    expect(screen.getByText("50,000+")).toBeInTheDocument();
-    expect(screen.getByText("85%")).toBeInTheDocument();
-  });
-
-  it("should render stat labels", () => {
-    render(<Testimonials />);
-    expect(screen.getByText("Job seekers using Slothing")).toBeInTheDocument();
-    expect(screen.getByText("Tailored resumes generated")).toBeInTheDocument();
+    expect(screen.getByText("How Slothing Helps")).toBeInTheDocument();
     expect(
-      screen.getByText("ATS pass rate after optimization"),
+      screen.getByText(/Turn every application into a/),
     ).toBeInTheDocument();
   });
 
-  it("should render a testimonial quote", () => {
+  it("should render outcome card titles", () => {
     render(<Testimonials />);
+    expect(screen.getByText("ATS-aware tailoring")).toBeInTheDocument();
     expect(
-      screen.getByText(/Slothing turned my 3-hour resume rewrite/),
+      screen.getByText("One career profile, infinite resumes"),
     ).toBeInTheDocument();
+    expect(screen.getByText("Track every application")).toBeInTheDocument();
   });
 
-  it("should disclose illustrative social proof", () => {
+  it("should render outcome card descriptions", () => {
     render(<Testimonials />);
-    expect(screen.getByText(/real numbers are coming/)).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /matches resume language against the exact ATS keywords/,
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/Generate a tailored resume for every role/),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/never lose a promising lead/)).toBeInTheDocument();
+  });
+
+  it("should not render fabricated testimonials or illustrative metrics", () => {
+    render(<Testimonials />);
+    expect(screen.queryByText(/^[A-Z][a-z]+ [A-Z]\.$/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/^Now at /)).not.toBeInTheDocument();
+    expect(screen.queryByText(/^\d{2},\d{3}\+$/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/^\d{2}%$/)).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/real numbers are coming/),
+    ).not.toBeInTheDocument();
   });
 });
