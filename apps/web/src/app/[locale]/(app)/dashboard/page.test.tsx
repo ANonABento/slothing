@@ -17,13 +17,17 @@ function mockFetch({
   documents = [],
   jobsByStatus = {},
   resumesGenerated = 0,
+  streakFails = false,
 }: {
   dismissedAt?: string | null;
   firstName?: string | null;
   documents?: Array<Record<string, unknown>>;
   jobsByStatus?: Record<string, number>;
   resumesGenerated?: number;
+  streakFails?: boolean;
 } = {}) {
+  let shouldFailStreak = streakFails;
+
   global.fetch = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
     const url = String(input);
 
@@ -50,22 +54,32 @@ function mockFetch({
       });
     }
 
-    if (url === "/api/onboarding/dismiss") {
+    if (url === "/api/onboarding/state") {
       return jsonResponse({ dismissedAt, firstName });
     }
 
     if (url === "/api/streak") {
+      if (shouldFailStreak) {
+        return jsonResponse({ error: "Failed to get streak state" }, 400);
+      }
+
       return jsonResponse({ streak: null });
     }
 
     throw new Error(`Unexpected fetch: ${url}`);
   }) as typeof fetch;
+
+  return {
+    resolveStreak() {
+      shouldFailStreak = false;
+    },
+  };
 }
 
-function jsonResponse(body: unknown): Response {
+function jsonResponse(body: unknown, status = 200): Response {
   return {
-    ok: true,
-    status: 200,
+    ok: status >= 200 && status < 300,
+    status,
     json: async () => body,
   } as Response;
 }
@@ -118,6 +132,35 @@ describe("Dashboard onboarding", () => {
     expect(screen.getByText("Today")).toBeInTheDocument();
   });
 
+  it("deep-links pipeline stages to matching opportunity status filters", async () => {
+    mockFetch({
+      dismissedAt: "2026-05-09T10:00:00.000Z",
+      jobsByStatus: {
+        saved: 1,
+        applied: 2,
+        interviewing: 3,
+        offered: 4,
+      },
+    });
+
+    renderDashboard();
+
+    expect(
+      await screen.findByRole("link", { name: /Saved\s*1/ }),
+    ).toHaveAttribute("href", "/en/opportunities?status=saved");
+    expect(screen.getByRole("link", { name: /Applied\s*2/ })).toHaveAttribute(
+      "href",
+      "/en/opportunities?status=applied",
+    );
+    expect(
+      screen.getByRole("link", { name: /Interviewing\s*3/ }),
+    ).toHaveAttribute("href", "/en/opportunities?status=interviewing");
+    expect(screen.getByRole("link", { name: /Offer\s*4/ })).toHaveAttribute(
+      "href",
+      "/en/opportunities?status=offered",
+    );
+  });
+
   it("posts skip and moves to active dashboard without reloading", async () => {
     mockFetch();
 
@@ -147,5 +190,36 @@ describe("Dashboard onboarding", () => {
     expect(
       await screen.findByText("Let's set up your workspace."),
     ).toBeInTheDocument();
+  });
+
+  it("renders available dashboard panels when streak fails and retries only that panel", async () => {
+    const fetchMock = mockFetch({
+      dismissedAt: "2026-05-09T10:00:00.000Z",
+      documents: [{ id: "doc-1" }],
+      jobsByStatus: { saved: 2 },
+      streakFails: true,
+    });
+
+    renderDashboard();
+
+    expect(
+      await screen.findByText(
+        "Welcome back, Kevin. Here's what needs your attention.",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getAllByText("Documents").length).toBeGreaterThan(0);
+    expect(screen.getByText("Recent opportunities")).toBeInTheDocument();
+    expect(screen.getByText("Couldn't load this section")).toBeInTheDocument();
+
+    fetchMock.resolveStreak();
+    fireEvent.click(screen.getByRole("button", { name: /try again/i }));
+
+    await waitFor(() => {
+      expect(
+        (global.fetch as ReturnType<typeof vi.fn>).mock.calls.filter(
+          ([input]) => String(input) === "/api/streak",
+        ),
+      ).toHaveLength(2);
+    });
   });
 });

@@ -262,5 +262,156 @@
     "title": "ページが見つかりません",
     "description": "そのページを見つけられませんでした。",
     "action": "ダッシュボードへ戻る"
+  },
+  "profile": {
+    "title": "プロフィール",
+    "description": "Slothing が履歴書、カバーレター、適合度チェックに使う元プロフィールを管理します。",
+    "actions": {
+      "discard": "破棄",
+      "saveChanges": "変更を保存"
+    },
+    "status": {
+      "saving": "保存中...",
+      "saved": "保存済み"
+    },
+    "errors": {
+      "loadProfile": "プロフィールを読み込めませんでした",
+      "saveProfile": "プロフィールを保存できませんでした"
+    },
+    "unsavedChanges": {
+      "prompt": "未保存のプロフィール変更があります。保存せずに移動しますか？"
+    },
+    "tabs": {
+      "ariaLabel": "プロフィールセクション",
+      "overview": "概要",
+      "preferences": "希望条件",
+      "privacy": "プライバシー"
+    },
+    "answerBankPrompt": {
+      "text": "より詳しいプロフィールにしたい場合は、再利用できるエピソードや事実を回答バンクに保存してください。",
+      "action": "回答バンクを開く"
+    },
+    "emptyState": {
+      "title": "プロフィールを設定しましょう",
+      "description": "履歴書から始めると Slothing が基本情報を入力できます。フォームを開いて手動で追加することもできます。",
+      "uploadResume": "履歴書をアップロードして入力",
+      "fillManually": "または手動で入力"
+    },
+    "sidebar": {
+      "yourName": "あなたの名前",
+      "addHeadline": "見出しを追加",
+      "noEmail": "メールなし",
+      "noLocation": "所在地なし",
+      "noTargetSalary": "希望給与なし",
+      "salaryRange": "{currency} {min}–{max}",
+      "salaryMinimum": "{currency} {min}+",
+      "salaryMaximum": "最大 {currency} {max}",
+      "profilePhoto": "プロフィール写真",
+      "profilePhotoNamed": "{name} のプロフィール写真"
+    },
+    "placeholders": {
+      "headline": "シニアプロダクトエンジニア"
+    },
+    "sections": {
+      "identity": {
+        "title": "基本情報",
+        "description": "Slothing が履歴書、カバーレター、適合度チェックに使う元プロフィールを管理します。"
+      },
+      "contact": {
+        "title": "連絡先",
+        "description": "Slothing が履歴書、カバーレター、適合度チェックに使う元プロフィールを管理します。"
+      },
+      "summary": {
+        "title": "職務要約",
+        "description": "Slothing が履歴書、カバーレター、適合度チェックに使う元プロフィールを管理します。"
+      },
+      "savedSignals": {
+        "title": "保存済みプロフィール情報",
+        "description": "Slothing が履歴書、カバーレター、適合度チェックに使う元プロフィールを管理します。"
+      },
+      "careerDetails": {
+        "title": "職務詳細",
+        "description": "Slothing が履歴書、カバーレター、適合度チェックに使う元プロフィールを管理します。"
+      }
+    },
+    "fields": {
+      "avatarUrl": "アバターURL",
+      "fullName": "氏名",
+      "headline": "見出し",
+      "email": "メールアドレス",
+      "phone": "電話",
+      "location": "所在地",
+      "linkedin": "LinkedInプロフィール",
+      "github": "GitHubプロフィール",
+      "website": "Webサイト",
+      "summary": "職務要約",
+      "targetRoles": "希望職種",
+      "currency": "通貨",
+      "minimum": "下限",
+      "maximum": "上限"
+    },
+    "signals": {
+      "experience": "経験",
+      "education": "学歴",
+      "skills": "スキル",
+      "projects": "プロジェクト",
+      "awards": "受賞"
+    },
+    "workStyle": {
+      "title": "働き方",
+      "description": "Slothing が履歴書、カバーレター、適合度チェックに使う元プロフィールを管理します。",
+      "options": {
+        "remote": "リモート",
+        "hybrid": "ハイブリッド",
+        "onsite": "出社",
+        "fullTime": "フルタイム",
+        "contract": "契約"
+      }
+    },
+    "targetRoles": {
+      "title": "希望職種",
+      "description": "Slothing が履歴書、カバーレター、適合度チェックに使う元プロフィールを管理します。"
+    },
+    "salary": {
+      "title": "報酬目標",
+      "description": "Slothing が履歴書、カバーレター、適合度チェックに使う元プロフィールを管理します。"
+    },
+    "privacy": {
+      "title": "プライバシー",
+      "description": "Slothing が履歴書、カバーレター、適合度チェックに使う元プロフィールを管理します。",
+      "openToRecruiters": {
+        "title": "Open to recruiter outreach",
+        "description": "Slothing が履歴書、カバーレター、適合度チェックに使う元プロフィールを管理します。"
+      },
+      "shareContactInfo": {
+        "title": "Share contact info by default",
+        "description": "Slothing が履歴書、カバーレター、適合度チェックに使う元プロフィールを管理します。"
+      }
+    },
+    "completeness": {
+      "readiness": "プロフィール準備度",
+      "summary": "プロフィールは {score}% 完了 · {count, plural, one {# 件のクイック改善} other {# 件のクイック改善}}",
+      "completeLabel": "完了",
+      "progressLabel": "プロフィール完成度",
+      "noGaps": "重要項目はすべて入力済みです。",
+      "points": "+{points, plural, one {# ポイント} other {# ポイント}}",
+      "gaps": {
+        "contact-info": "名前、メール、見出しを追加",
+        "summary": "職務要約を追加",
+        "experience-bullets": {
+          "empty": "3つ以上の箇条書きを含む経験を追加",
+          "role": "{company} の職務に {missing, plural, one {# 件の箇条書き} other {# 件の箇条書き}}を追加"
+        },
+        "quantified-bullets": {
+          "empty": "{missing, plural, one {# 件の定量的な箇条書き} other {# 件の定量的な箇条書き}}を追加",
+          "role": "{company} の職務に {missing, plural, one {# 件の定量的な箇条書き} other {# 件の定量的な箇条書き}}を追加"
+        },
+        "education": "学歴を追加",
+        "skills": "{missing, plural, one {# 件のスキル} other {# 件のスキル}}を追加",
+        "career-depth": "プロジェクトまたは別の経験を追加",
+        "achievements": "実績、受賞、認定を追加",
+        "social-url": "LinkedIn または GitHub URL を追加"
+      }
+    }
   }
 }

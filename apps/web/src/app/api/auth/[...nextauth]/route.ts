@@ -14,7 +14,7 @@ function authDisabledResponse() {
       missing: getMissingAuthEnv(),
       docs: "https://slothing.dev/docs/self-hosting#auth",
     },
-    { status: 404, headers: { "Cache-Control": "no-store" } },
+    { status: 503, headers: { "Cache-Control": "no-store" } },
   );
 }
 
