@@ -55,6 +55,7 @@ import {
 import { Link } from "@/i18n/navigation";
 import { StreakHeroCard } from "@/components/streak/streak-hero-card";
 import type { StreakState } from "@/lib/streak/types";
+import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 
 interface DashboardStats {
   documentsCount: number;
@@ -321,6 +322,8 @@ function NewUserDashboard({
   onSkip: () => void;
   skipSubmitting: boolean;
 }) {
+  const a11yT = useA11yTranslations();
+
   const t = useTranslations("dashboard");
   const steps = BASIC_ONBOARDING_STEPS;
   const completedCount = countCompletedSteps(steps, stats);
@@ -398,7 +401,7 @@ function NewUserDashboard({
               className="w-full"
               onClick={onSkip}
               disabled={skipSubmitting}
-              aria-label="Skip onboarding"
+              aria-label={a11yT("skipOnboarding")}
             >
               {t("onboarding.skip")}
             </Button>

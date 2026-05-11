@@ -26,6 +26,7 @@ import {
   TRACKED_JOB_STATUS_LABELS,
 } from "@/lib/constants/jobs";
 import { pluralize } from "@/lib/text/pluralize";
+import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 
 interface JobsToolbarProps {
   searchQuery: string;
@@ -46,6 +47,8 @@ interface JobsToolbarProps {
 }
 
 export function JobsToolbar(props: JobsToolbarProps) {
+  const a11yT = useA11yTranslations();
+
   const {
     searchQuery,
     statusFilter,
@@ -72,14 +75,14 @@ export function JobsToolbar(props: JobsToolbarProps) {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search jobs by title, company, or keywords..."
+            placeholder={a11yT("searchJobsByTitleCompanyOrKeywords")}
             value={searchQuery}
             onChange={(event) => onSearchChange(event.target.value)}
             className="pl-10 pr-12"
           />
           {searchQuery && (
             <button
-              aria-label="Clear search"
+              aria-label={a11yT("clearSearch")}
               onClick={() => onSearchChange("")}
               className="absolute right-0 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center text-muted-foreground hover:text-foreground"
             >
@@ -94,7 +97,7 @@ export function JobsToolbar(props: JobsToolbarProps) {
             onValueChange={(value) => onStatusChange(value as JobStatusFilter)}
           >
             <SelectTrigger className="w-32">
-              <SelectValue placeholder="Status" />
+              <SelectValue placeholder={a11yT("status")} />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Statuses</SelectItem>
@@ -111,7 +114,7 @@ export function JobsToolbar(props: JobsToolbarProps) {
             onValueChange={(value) => onTypeChange(value as JobTypeFilter)}
           >
             <SelectTrigger className="w-32">
-              <SelectValue placeholder="Type" />
+              <SelectValue placeholder={a11yT("type")} />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Types</SelectItem>
@@ -127,7 +130,7 @@ export function JobsToolbar(props: JobsToolbarProps) {
             onValueChange={(value) => onRemoteChange(value as JobRemoteFilter)}
           >
             <SelectTrigger className="w-32">
-              <SelectValue placeholder="Location" />
+              <SelectValue placeholder={a11yT("location")} />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Locations</SelectItem>
@@ -142,7 +145,7 @@ export function JobsToolbar(props: JobsToolbarProps) {
           >
             <SelectTrigger className="w-32">
               <SortAsc className="h-4 w-4 mr-2" />
-              <SelectValue placeholder="Sort" />
+              <SelectValue placeholder={a11yT("sort")} />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="newest">Newest First</SelectItem>

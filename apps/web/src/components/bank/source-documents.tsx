@@ -17,6 +17,7 @@ import { useErrorToast } from "@/hooks/use-error-toast";
 import { cn } from "@/lib/utils";
 import { THEME_INTERACTIVE_SURFACE_CLASSES } from "@/lib/theme/component-classes";
 import { pluralize } from "@/lib/text/pluralize";
+import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 
 interface SourceDocumentsProps {
   refreshKey: number;
@@ -39,6 +40,8 @@ export function SourceDocuments({
   onDelete,
   onDocumentsChange,
 }: SourceDocumentsProps) {
+  const a11yT = useA11yTranslations();
+
   const [documents, setDocuments] = useState<SourceDocument[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleteTarget, setDeleteTarget] = useState<SourceDocument | null>(null);
@@ -175,7 +178,7 @@ export function SourceDocuments({
             checked={allSelected}
             onChange={toggleAllDocuments}
             className="h-4 w-4 rounded border-input accent-primary"
-            aria-label="Select all source files"
+            aria-label={a11yT("selectAllSourceFiles")}
           />
           Source Files
         </label>

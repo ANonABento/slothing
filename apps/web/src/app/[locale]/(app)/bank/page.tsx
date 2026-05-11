@@ -81,6 +81,7 @@ import {
   getBulletReviewReason,
   isBulletNeedsReview,
 } from "@/lib/bank/bullet-review";
+import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 
 const DriveFilePicker = dynamic(
   () => import("@/components/google").then((m) => m.DriveFilePicker),
@@ -266,6 +267,8 @@ function buildChildContentForParent(
 }
 
 export default function BankPage() {
+  const a11yT = useA11yTranslations();
+
   const [entries, setEntries] = useState<BankEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -1446,7 +1449,7 @@ export default function BankPage() {
 
         <PageHeader
           icon={Database}
-          title="Documents"
+          title={a11yT("documents")}
           description="Store reusable resumes, projects, achievements, and career notes for tailored applications."
           actions={
             <div className="flex flex-wrap gap-2">
@@ -1472,7 +1475,7 @@ export default function BankPage() {
               <Button
                 onClick={() => fileInputRef.current?.click()}
                 disabled={uploading}
-                title="Upload file (Ctrl+U)"
+                title={a11yT("uploadFile")}
               >
                 {uploading ? (
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -1600,7 +1603,7 @@ export default function BankPage() {
               <BankEntriesSkeleton />
             ) : error ? (
               <ErrorState
-                title="Failed to load documents"
+                title={a11yT("failedToLoadDocuments")}
                 message={error}
                 onRetry={fetchEntries}
                 variant="card"
@@ -1938,6 +1941,8 @@ function EntryTable({
   onDeselectEntries: (ids: string[]) => void;
   reviewEntries: BankEntry[];
 }) {
+  const a11yT = useA11yTranslations();
+
   // Future work: virtualize table rows separately from the document grid.
   const [expandedRowId, setExpandedRowId] = useState<string | null>(null);
   const sourceNames = new Map(
@@ -1963,7 +1968,10 @@ function EntryTable({
         >
           <thead className="border-b bg-muted/40 text-xs uppercase text-muted-foreground">
             <tr>
-              <th className="w-10 px-3 py-3 font-medium" aria-label="Expand" />
+              <th
+                className="w-10 px-3 py-3 font-medium"
+                aria-label={a11yT("expand")}
+              />
               <th className="w-12 px-4 py-3 font-medium">
                 <input
                   type="checkbox"
@@ -1977,7 +1985,7 @@ function EntryTable({
                     }
                   }}
                   className="h-4 w-4 rounded border-input accent-primary"
-                  aria-label="Select all visible components"
+                  aria-label={a11yT("selectAllVisibleComponents")}
                 />
               </th>
               <th className="px-4 py-3 font-medium">Component</th>
@@ -2144,6 +2152,8 @@ function UploadReviewEntries({
   ) => void;
   onAttachBullet: (bullet: BankEntry, parent: BankEntry) => void;
 }) {
+  const a11yT = useA11yTranslations();
+
   const roots = useMemo(() => entries.filter(isReviewRootEntry), [entries]);
   const needsReviewBullets = useMemo(
     () => entries.filter((entry) => isBulletNeedsReview(entry, entries)),
@@ -2228,7 +2238,7 @@ function UploadReviewEntries({
     return (
       <StandardEmptyState
         icon={Database}
-        title="No components detected"
+        title={a11yT("noComponentsDetected")}
         description="The file uploaded, but there were no structured resume components to review."
       />
     );
@@ -2443,7 +2453,7 @@ function UploadReviewEntries({
         ) : (
           <StandardEmptyState
             icon={Database}
-            title="No components left"
+            title={a11yT("noComponentsLeft")}
             description="All detected components have been removed from this upload review."
           />
         )}

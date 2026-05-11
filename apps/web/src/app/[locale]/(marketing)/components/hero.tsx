@@ -13,9 +13,11 @@ import {
 import { getLocale } from "next-intl/server";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
+import { getA11yTranslations } from "@/lib/i18n/get-a11y-translations";
 
 export async function Hero() {
   const locale = await getLocale();
+  const a11yT = await getA11yTranslations();
   const callbackUrl = `/${locale}/dashboard`;
 
   return (
@@ -124,7 +126,7 @@ export async function Hero() {
               </div>
             </div>
             <div className="p-8 bg-gradient-to-br from-muted/20 to-muted/50">
-              <div aria-label="Dashboard preview" className="space-y-3">
+              <div aria-label={a11yT("dashboardPreview")} className="space-y-3">
                 <div className="flex flex-col gap-3 rounded-xl border bg-card p-4 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <div className="text-base font-semibold text-foreground">

@@ -19,6 +19,7 @@ import type {
   ImportPreview,
   ImportResult,
 } from "@/app/[locale]/(app)/settings/use-data-io";
+import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 
 interface DataManagementProps {
   exporting: ExportType | null;
@@ -36,6 +37,8 @@ interface DataManagementProps {
 }
 
 export function DataManagement(props: DataManagementProps) {
+  const a11yT = useA11yTranslations();
+
   const {
     exporting,
     importing,
@@ -50,7 +53,7 @@ export function DataManagement(props: DataManagementProps) {
 
   return (
     <PageSection
-      title="Data Management"
+      title={a11yT("dataManagement")}
       description="Export your data or import from backups."
       icon={Database}
       contentClassName="space-y-6"
@@ -142,7 +145,7 @@ export function DataManagement(props: DataManagementProps) {
                 accept=".json,.csv"
                 onChange={(event) => void onImportFile(event, "jobs")}
                 disabled={importing}
-                aria-label="Import jobs from JSON or CSV file"
+                aria-label={a11yT("importJobsFromJsonOrCsvFile")}
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
               />
               <Button
@@ -164,7 +167,7 @@ export function DataManagement(props: DataManagementProps) {
                 accept=".json"
                 onChange={(event) => void onImportFile(event, "backup")}
                 disabled={importing}
-                aria-label="Restore backup from JSON file"
+                aria-label={a11yT("restoreBackupFromJsonFile")}
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
               />
               <Button
@@ -186,7 +189,7 @@ export function DataManagement(props: DataManagementProps) {
                 accept=".json"
                 onChange={(event) => void onFullImportPreview(event)}
                 disabled={importing}
-                aria-label="Import all data from JSON file"
+                aria-label={a11yT("importAllDataFromJsonFile")}
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
               />
               <Button

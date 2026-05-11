@@ -4,12 +4,15 @@ import { Briefcase, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StandardEmptyState } from "@/components/ui/page-layout";
 import { THEME_PRIMARY_GRADIENT_BUTTON_CLASSES } from "@/lib/theme/component-classes";
+import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 
 export function JobsEmptyState({ onAdd }: { onAdd: () => void }) {
+  const a11yT = useA11yTranslations();
+
   return (
     <StandardEmptyState
       icon={Briefcase}
-      title="No opportunities tracked yet"
+      title={a11yT("noOpportunitiesTrackedYet")}
       description="Add an opportunity description to analyze your match score and generate a tailored resume."
       action={
         <Button

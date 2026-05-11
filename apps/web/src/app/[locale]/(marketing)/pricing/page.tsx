@@ -10,6 +10,7 @@ import { getLocale } from "next-intl/server";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { FREE_TIER_TAILOR_MONTHLY_LIMIT } from "@/lib/constants";
+import { getA11yTranslations } from "@/lib/i18n/get-a11y-translations";
 import { getPageMetadata } from "@/lib/seo";
 import { cn } from "@/lib/utils";
 
@@ -86,6 +87,7 @@ const faqs = [
 
 export default async function PricingPage() {
   const locale = await getLocale();
+  const a11yT = await getA11yTranslations();
   const callbackUrl = `/${locale}/dashboard`;
 
   return (
@@ -164,7 +166,7 @@ export default async function PricingPage() {
                           query: { callbackUrl },
                         }}
                         prefetch={false}
-                        aria-label="Start free with Slothing"
+                        aria-label={a11yT("startFreeWithSlothing")}
                       >
                         {tier.cta}
                       </Link>

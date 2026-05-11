@@ -34,6 +34,7 @@ import {
   evaluateResultQuality,
   type ResultQualityRubric,
 } from "@/lib/result-quality/rubric";
+import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 
 const MIN_RESUME_LENGTH = 50;
 const MAX_UPLOAD_SIZE = 5 * 1024 * 1024;
@@ -168,6 +169,8 @@ function profileToMatchText(profile: Profile, fallbackText: string) {
 }
 
 export function ScannerForm({ locale = "en" }: ScannerFormProps = {}) {
+  const a11yT = useA11yTranslations();
+
   const [resumeText, setResumeText] = useState("");
   const [jobText, setJobText] = useState("");
   const [jobUrl, setJobUrl] = useState("");
@@ -442,7 +445,7 @@ export function ScannerForm({ locale = "en" }: ScannerFormProps = {}) {
         >
           <input
             {...getInputProps()}
-            aria-label="Upload resume PDF or text file"
+            aria-label={a11yT("uploadResumePdfOrTextFile")}
           />
           {parsing ? (
             <Loader2 className="mx-auto mb-3 h-8 w-8 animate-spin text-primary" />
@@ -492,7 +495,7 @@ export function ScannerForm({ locale = "en" }: ScannerFormProps = {}) {
             </label>
             <Textarea
               id="resume-text"
-              placeholder="Paste your full resume text here..."
+              placeholder={a11yT("pasteYourFullResumeTextHere")}
               className="min-h-[200px] font-mono text-sm"
               value={resumeText}
               onChange={(event) => {
@@ -567,7 +570,7 @@ export function ScannerForm({ locale = "en" }: ScannerFormProps = {}) {
         <Textarea
           id="job-text"
           ref={jobTextareaRef}
-          placeholder="Optional: paste the job description to check keyword matching..."
+          placeholder={a11yT("optionalPasteTheJobDescriptionToCheckKeyword")}
           className="mt-2 min-h-[96px] border-border bg-background/70 font-mono text-sm placeholder:italic focus:min-h-[140px]"
           value={jobText}
           onChange={(event) => {

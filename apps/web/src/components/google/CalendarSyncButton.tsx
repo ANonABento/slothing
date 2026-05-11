@@ -18,6 +18,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { useErrorToast } from "@/hooks/use-error-toast";
+import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 
 type SyncType = "all" | "interviews" | "deadlines" | "reminders";
 
@@ -47,6 +48,8 @@ export function CalendarSyncButton({
   compact = false,
   hideWhenDisconnected = false,
 }: CalendarSyncButtonProps) {
+  const a11yT = useA11yTranslations();
+
   const [syncing, setSyncing] = useState(false);
   const [syncType, setSyncType] = useState<SyncType>("all");
   const [result, setResult] = useState<SyncResponse | null>(null);
@@ -173,7 +176,7 @@ export function CalendarSyncButton({
           onValueChange={(v) => setSyncType(v as SyncType)}
         >
           <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Select what to sync" />
+            <SelectValue placeholder={a11yT("selectWhatToSync")} />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Events</SelectItem>

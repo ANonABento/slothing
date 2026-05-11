@@ -9,6 +9,7 @@ import type {
   ProfileCompletenessGap,
   ProfileCompletenessResult,
 } from "@/lib/profile/completeness";
+import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 
 interface CompletenessCardProps {
   result: ProfileCompletenessResult;
@@ -30,6 +31,8 @@ export function CompletenessCard({
   onSelectGap,
   celebrating = false,
 }: CompletenessCardProps) {
+  const a11yT = useA11yTranslations();
+
   const quickWinText =
     result.gaps.length === 1
       ? "1 quick win available"
@@ -74,7 +77,7 @@ export function CompletenessCard({
       <CardContent className="space-y-4">
         <Progress
           value={result.score}
-          aria-label="Profile completeness"
+          aria-label={a11yT("profileCompleteness")}
           variant={progressVariant(result.score)}
         />
         <GapList gaps={result.gaps} onSelectGap={onSelectGap} />

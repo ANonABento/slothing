@@ -68,6 +68,7 @@ import {
   THEME_INTERACTIVE_SURFACE_CLASSES,
 } from "@/lib/theme/component-classes";
 import { cn } from "@/lib/utils";
+import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 
 interface AnswerFormState {
   question: string;
@@ -113,6 +114,8 @@ function entryToForm(entry: AnswerBankEntry): AnswerFormState {
 }
 
 export default function AnswerBankPage() {
+  const a11yT = useA11yTranslations();
+
   const [answers, setAnswers] = useState<AnswerBankEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -480,7 +483,7 @@ export default function AnswerBankPage() {
     <AppPage>
       <PageHeader
         icon={ClipboardList}
-        title="Answer Bank"
+        title={a11yT("answerBank")}
         description="Manage reusable answers for repeated application questions, extension autofill, and future personal fact workflows."
         actions={
           <Button onClick={openCreateDialog}>
@@ -522,7 +525,7 @@ export default function AnswerBankPage() {
                 <input
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
-                  placeholder="Search questions, answers, or sources"
+                  placeholder={a11yT("searchQuestionsAnswersOrSources")}
                   className={cn(THEME_CONTROL_CLASSES, "w-full pl-9")}
                 />
               </div>
@@ -533,7 +536,7 @@ export default function AnswerBankPage() {
                 value={sort}
                 onChange={(event) => setSort(event.target.value as AnswerSort)}
                 className={cn(THEME_CONTROL_CLASSES, "w-full sm:w-40")}
-                aria-label="Sort answers"
+                aria-label={a11yT("sortAnswers")}
               >
                 <option value="most_used">Most used</option>
                 <option value="newest">Newest</option>
@@ -598,7 +601,7 @@ export default function AnswerBankPage() {
               </div>
             ) : error ? (
               <ErrorState
-                title="Failed to load answers"
+                title={a11yT("failedToLoadAnswers")}
                 message={error}
                 onRetry={fetchAnswers}
                 variant="card"
@@ -823,6 +826,8 @@ function AnswerCard({
   onDelete: (entry: AnswerBankEntry) => void;
   onPromote: (entry: AnswerBankEntry) => void;
 }) {
+  const a11yT = useA11yTranslations();
+
   const sourceLabel =
     entry.source === "extension"
       ? "From extension"
@@ -863,8 +868,8 @@ function AnswerCard({
             variant="ghost"
             size="icon"
             onClick={() => void onCopy(entry)}
-            aria-label="Copy answer"
-            title="Copy answer"
+            aria-label={a11yT("copyAnswer")}
+            title={a11yT("copyAnswer")}
           >
             <Copy className="h-4 w-4" />
           </Button>
@@ -872,8 +877,8 @@ function AnswerCard({
             variant="ghost"
             size="icon"
             onClick={() => void onDuplicate(entry)}
-            aria-label="Duplicate answer"
-            title="Duplicate answer"
+            aria-label={a11yT("duplicateAnswer")}
+            title={a11yT("duplicateAnswer")}
           >
             <CopyPlus className="h-4 w-4" />
           </Button>
@@ -881,8 +886,8 @@ function AnswerCard({
             variant="ghost"
             size="icon"
             onClick={() => onEdit(entry)}
-            aria-label="Edit answer"
-            title="Edit answer"
+            aria-label={a11yT("editAnswer")}
+            title={a11yT("editAnswer")}
           >
             <Edit3 className="h-4 w-4" />
           </Button>
@@ -890,8 +895,8 @@ function AnswerCard({
             variant="ghost"
             size="icon"
             onClick={() => void onDelete(entry)}
-            aria-label="Delete answer"
-            title="Delete answer"
+            aria-label={a11yT("deleteAnswer")}
+            title={a11yT("deleteAnswer")}
             className="text-destructive hover:text-destructive"
           >
             <Trash2 className="h-4 w-4" />
@@ -943,6 +948,8 @@ function AnswerDialog({
   onTabChange: (tab: "edit" | "history") => void;
   onRestoreVersion: (version: AnswerVersion) => void;
 }) {
+  const a11yT = useA11yTranslations();
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[88vh] overflow-y-auto">
@@ -983,7 +990,7 @@ function AnswerDialog({
                   onFormChange("question", event.target.value)
                 }
                 className={cn(THEME_CONTROL_CLASSES, "w-full")}
-                placeholder="Example: Will you now or in the future require sponsorship?"
+                placeholder={a11yT("exampleWillYouNowOrInTheFuture")}
               />
             </label>
             <label className="block space-y-1">
@@ -995,7 +1002,7 @@ function AnswerDialog({
                   THEME_CONTROL_CLASSES,
                   "min-h-36 w-full resize-y",
                 )}
-                placeholder="Write the answer you want reused by autofill."
+                placeholder={a11yT("writeTheAnswerYouWantReusedByAutofill")}
               />
             </label>
             <div className="grid gap-3 sm:grid-cols-2">
@@ -1007,7 +1014,7 @@ function AnswerDialog({
                     onFormChange("sourceCompany", event.target.value)
                   }
                   className={cn(THEME_CONTROL_CLASSES, "w-full")}
-                  placeholder="Optional"
+                  placeholder={a11yT("optional")}
                 />
               </label>
               <label className="block space-y-1">
@@ -1018,7 +1025,7 @@ function AnswerDialog({
                     onFormChange("sourceUrl", event.target.value)
                   }
                   className={cn(THEME_CONTROL_CLASSES, "w-full")}
-                  placeholder="Optional"
+                  placeholder={a11yT("optional")}
                 />
               </label>
             </div>

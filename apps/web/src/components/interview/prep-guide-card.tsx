@@ -24,6 +24,7 @@ import type {
   PrepChecklistItem,
   PrepQuestion,
 } from "@/lib/interview/prep-guide";
+import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 
 interface PrepGuideCardProps {
   jobId: string;
@@ -153,6 +154,8 @@ function QuestionCard({
 }
 
 export function PrepGuideCard({ jobId }: PrepGuideCardProps) {
+  const a11yT = useA11yTranslations();
+
   const [guide, setGuide] = useState<InterviewPrepGuide | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -389,17 +392,17 @@ export function PrepGuideCard({ jobId }: PrepGuideCardProps) {
         {activeTab === "checklist" && (
           <div className="space-y-6">
             <ChecklistSection
-              title="Before the Interview"
+              title={a11yT("beforeTheInterview")}
               items={guide.checklist.filter((i) => i.category === "before")}
               onToggle={handleToggleChecklistItem}
             />
             <ChecklistSection
-              title="During the Interview"
+              title={a11yT("duringTheInterview")}
               items={guide.checklist.filter((i) => i.category === "during")}
               onToggle={handleToggleChecklistItem}
             />
             <ChecklistSection
-              title="After the Interview"
+              title={a11yT("afterTheInterview")}
               items={guide.checklist.filter((i) => i.category === "after")}
               onToggle={handleToggleChecklistItem}
             />

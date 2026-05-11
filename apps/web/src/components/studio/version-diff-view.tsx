@@ -17,6 +17,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { formatVersionTimestamp } from "./studio-documents";
+import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 
 interface VersionDiffViewProps {
   currentDraftState: BuilderDraftState;
@@ -81,8 +82,13 @@ function SectionCounts({
     typeof createStudioVersionDiff
   >["sections"][number]["counts"];
 }) {
+  const a11yT = useA11yTranslations();
+
   return (
-    <div className="flex flex-wrap gap-1.5" aria-label="Section change counts">
+    <div
+      className="flex flex-wrap gap-1.5"
+      aria-label={a11yT("sectionChangeCounts")}
+    >
       <Badge variant="success">{countLabel(counts.added, "added")}</Badge>
       <Badge variant="destructive">
         {countLabel(counts.removed, "removed")}
@@ -98,6 +104,8 @@ export function VersionDiffView({
   open,
   version,
 }: VersionDiffViewProps) {
+  const a11yT = useA11yTranslations();
+
   const [mode, setMode] = useState<DiffMode>("diff");
   const diff = useMemo(
     () =>
@@ -134,7 +142,7 @@ export function VersionDiffView({
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div
             className="flex flex-wrap gap-2"
-            aria-label="Total change counts"
+            aria-label={a11yT("totalChangeCounts")}
           >
             <Badge variant="success">
               {countLabel(diff.totals.added, "added")}
