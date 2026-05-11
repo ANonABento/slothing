@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
-import { auth, isNextAuthConfigured } from "@/auth";
+import { auth, isDevAuthBypassAllowed, isNextAuthConfigured } from "@/auth";
 import { Sidebar } from "@/components/layout/sidebar";
 import { ToastProvider } from "@/components/ui/toast";
 import { KeyboardShortcutsProvider } from "@/components/keyboard-shortcuts";
@@ -51,7 +51,11 @@ export default async function AppLayout({
   params: { locale: string };
 }) {
   if (!isNextAuthConfigured()) {
-    return <AppShell>{children}</AppShell>;
+    if (isDevAuthBypassAllowed()) {
+      return <AppShell>{children}</AppShell>;
+    }
+
+    redirect(`/${params.locale}/sign-in?error=auth-unavailable`);
   }
 
   const session = await auth();
