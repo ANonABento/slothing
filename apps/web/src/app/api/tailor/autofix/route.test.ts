@@ -12,8 +12,8 @@ vi.mock("@/lib/auth", () =>
   globalThis.__contractRouteMocks!.createAuthModuleMock(),
 );
 
-import { buildTailorAutofixPrompt } from "@/lib/tailor/prompt-builders";
 import { POST } from "./route";
+import { buildTailorAutofixPrompt } from "@/lib/tailor/prompt-builders";
 import {
   expectRouteResponseContract,
   getRequest,
