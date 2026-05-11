@@ -836,18 +836,22 @@ function PipelineSummary({
     {
       label: opportunitiesT("status.saved"),
       count: getPipelineCount(stats.jobsByStatus, "saved"),
+      href: "/opportunities?status=saved",
     },
     {
       label: opportunitiesT("status.applied"),
       count: getPipelineCount(stats.jobsByStatus, "applied"),
+      href: "/opportunities?status=applied",
     },
     {
       label: opportunitiesT("status.interviewing"),
       count: getPipelineCount(stats.jobsByStatus, "interviewing"),
+      href: "/opportunities?status=interviewing",
     },
     {
       label: opportunitiesT("status.offer"),
       count: getPipelineCount(stats.jobsByStatus, "offered"),
+      href: "/opportunities?status=offered",
     },
   ];
 
@@ -865,9 +869,10 @@ function PipelineSummary({
           const percent =
             total > 0 ? Math.max((stage.count / total) * 100, 4) : 0;
           return (
-            <div
+            <Link
               key={stage.label}
-              className="rounded-lg border bg-background/40 p-3"
+              href={stage.href}
+              className="rounded-lg border bg-background/40 p-3 transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             >
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">
@@ -881,7 +886,7 @@ function PipelineSummary({
                   style={{ width: `${percent}%` }}
                 />
               </div>
-            </div>
+            </Link>
           );
         })}
       </div>

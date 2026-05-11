@@ -1,4 +1,4 @@
-import { nanoid } from "nanoid";
+import { randomUUID } from "crypto";
 import db from "./legacy";
 
 import { nowIso } from "@/lib/format/time";
@@ -40,7 +40,7 @@ export function saveCoverLetter(
   highlights: string[] = [],
   userId: string = "default",
 ): CoverLetter {
-  const id = nanoid();
+  const id = randomUUID();
 
   // Get next version number for this job
   const existing = db
