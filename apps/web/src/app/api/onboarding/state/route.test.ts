@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   requireAuth: vi.fn(),
   isAuthError: vi.fn(),
-  setOnboardingDismissedAt: vi.fn(),
+  getOnboardingState: vi.fn(),
 }));
 
 vi.mock("@/lib/auth", () => ({
@@ -12,31 +12,28 @@ vi.mock("@/lib/auth", () => ({
 }));
 
 vi.mock("@/lib/db/onboarding", () => ({
-  setOnboardingDismissedAt: mocks.setOnboardingDismissedAt,
+  getOnboardingState: mocks.getOnboardingState,
 }));
 
-import { POST } from "./route";
+import { GET } from "./route";
 
-describe("onboarding dismiss route", () => {
+describe("onboarding state route", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.requireAuth.mockResolvedValue({ userId: "user-1" });
     mocks.isAuthError.mockReturnValue(false);
-    mocks.setOnboardingDismissedAt.mockResolvedValue({
-      dismissedAt: "2026-05-09T10:00:00.000Z",
+    mocks.getOnboardingState.mockResolvedValue({
+      dismissedAt: null,
       firstName: "Kevin",
     });
   });
 
-  it("sets onboarding dismissal for the current user", async () => {
-    const response = await POST();
+  it("returns current onboarding state", async () => {
+    const response = await GET();
 
-    expect(mocks.setOnboardingDismissedAt).toHaveBeenCalledWith(
-      "user-1",
-      expect.stringMatching(/^\d{4}-\d{2}-\d{2}T/),
-    );
+    expect(mocks.getOnboardingState).toHaveBeenCalledWith("user-1");
     await expect(response.json()).resolves.toEqual({
-      dismissedAt: "2026-05-09T10:00:00.000Z",
+      dismissedAt: null,
       firstName: "Kevin",
     });
   });
@@ -51,9 +48,9 @@ describe("onboarding dismiss route", () => {
     mocks.requireAuth.mockResolvedValue(authResponse);
     mocks.isAuthError.mockReturnValue(true);
 
-    const response = await POST();
+    const response = await GET();
 
     expect(response.status).toBe(401);
-    expect(mocks.setOnboardingDismissedAt).not.toHaveBeenCalled();
+    expect(mocks.getOnboardingState).not.toHaveBeenCalled();
   });
 });
