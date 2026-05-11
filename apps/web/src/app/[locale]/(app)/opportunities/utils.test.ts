@@ -7,11 +7,13 @@ import {
   formatOpportunityDate,
   formatOpportunityLocation,
   formatOpportunitySalary,
+  getOpportunityFiltersFromStatusSearchParam,
   getOpportunityFilterOptions,
   groupOpportunitiesByLane,
   groupOpportunitiesByStatus,
   hasActiveOpportunityFilters,
   parseOptionalNumber,
+  parseOpportunityStatusSearchParam,
   parseOpportunityViewMode,
   readOpportunityViewMode,
   splitDelimitedList,
@@ -80,6 +82,33 @@ const opportunities: Opportunity[] = [
   },
 ];
 
+describe("parseOpportunityStatusSearchParam", () => {
+  it("normalizes user-facing aliases and ignores unknown statuses", () => {
+    expect(
+      parseOpportunityStatusSearchParam(
+        "applied, interviewing, offered,unknown,applied",
+      ),
+    ).toMatchInlineSnapshot(`
+      [
+        "applied",
+        "interviewing",
+        "offer",
+      ]
+    `);
+  });
+
+  it("uses a local status filter only for a single URL status", () => {
+    expect(getOpportunityFiltersFromStatusSearchParam("offered").status).toBe(
+      "offer",
+    );
+    expect(
+      getOpportunityFiltersFromStatusSearchParam(
+        "applied,interviewing,offered",
+      ).status,
+    ).toBe("all");
+  });
+});
+
 describe("filterOpportunities", () => {
   it("sorts default results by nearest deadline", () => {
     expect(
@@ -147,6 +176,15 @@ describe("filterOpportunities", () => {
         techStack: "React",
       }).map((opportunity) => opportunity.id),
     ).toEqual(["2", "1"]);
+  });
+
+  it("honors URL status filters before local filters and sorting", () => {
+    expect(
+      filterOpportunities(opportunities, DEFAULT_OPPORTUNITY_FILTERS, [
+        "saved",
+        "interviewing",
+      ]).map((opportunity) => opportunity.id),
+    ).toEqual(["1", "3"]);
   });
 
   it("sorts by scraped date, company, and salary", () => {
