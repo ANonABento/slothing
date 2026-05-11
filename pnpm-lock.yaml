@@ -268,6 +268,9 @@ importers:
       '@axe-core/playwright':
         specifier: ^4.11.1
         version: 4.11.3(playwright-core@1.59.1)
+      '@next/env':
+        specifier: 14.2.35
+        version: 14.2.35
       '@playwright/test':
         specifier: ^1.58.1
         version: 1.59.1
