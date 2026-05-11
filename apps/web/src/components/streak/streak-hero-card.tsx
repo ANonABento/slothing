@@ -5,12 +5,15 @@ import { PagePanel } from "@/components/ui/page-layout";
 import { pluralize } from "@/lib/text/pluralize";
 import { cn } from "@/lib/utils";
 import type { StreakState } from "@/lib/streak/types";
+import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 
 interface StreakHeroCardProps {
   streak: StreakState | null;
 }
 
 export function StreakHeroCard({ streak }: StreakHeroCardProps) {
+  const a11yT = useA11yTranslations();
+
   const currentStreak = streak?.currentStreak ?? 0;
   const longestStreak = streak?.longestStreak ?? 0;
   const weekDays = streak?.weekDays ?? [];
@@ -50,7 +53,10 @@ export function StreakHeroCard({ streak }: StreakHeroCardProps) {
               </p>
             </div>
           </div>
-          <div className="grid grid-cols-7 gap-2" aria-label="Weekly activity">
+          <div
+            className="grid grid-cols-7 gap-2"
+            aria-label={a11yT("weeklyActivity")}
+          >
             {weekDays.map((day) => (
               <div
                 key={day.date}

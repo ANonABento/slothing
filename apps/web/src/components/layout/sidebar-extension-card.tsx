@@ -9,10 +9,13 @@ import {
   hasExtensionConnectionToken,
 } from "@/lib/extension/detect";
 import { cn } from "@/lib/utils";
+import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 
 const DISMISS_STORAGE_KEY = "taida:sidebar:extension-card-dismissed";
 
 export function SidebarExtensionCard({ collapsed }: { collapsed: boolean }) {
+  const a11yT = useA11yTranslations();
+
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -40,7 +43,7 @@ export function SidebarExtensionCard({ collapsed }: { collapsed: boolean }) {
           "group block rounded-lg border border-primary/20 bg-primary/5 p-3 text-left shadow-sm transition-colors",
           "hover:border-primary/35 hover:bg-primary/10 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
         )}
-        aria-label="Install the Slothing browser extension"
+        aria-label={a11yT("installTheSlothingBrowserExtension")}
       >
         <div className="flex min-h-[96px] flex-col justify-between gap-3 pr-6">
           <div className="flex items-start gap-3">
@@ -64,7 +67,7 @@ export function SidebarExtensionCard({ collapsed }: { collapsed: boolean }) {
       <button
         type="button"
         className="absolute right-2 top-3 flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-background hover:text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-        aria-label="Dismiss extension promo"
+        aria-label={a11yT("dismissExtensionPromo")}
         onClick={(event) => {
           event.preventDefault();
           event.stopPropagation();

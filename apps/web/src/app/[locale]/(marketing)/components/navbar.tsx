@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { Sparkles, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
+import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 
 const navLinks = [
   { labelKey: "features", href: "#features" },
@@ -15,6 +16,8 @@ const navLinks = [
 ] as const;
 
 export function Navbar() {
+  const a11yT = useA11yTranslations();
+
   const locale = useLocale();
   const t = useTranslations("marketing.nav");
   const [scrolled, setScrolled] = useState(false);
@@ -102,7 +105,7 @@ export function Navbar() {
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
             className="flex h-11 w-11 items-center justify-center text-muted-foreground hover:text-foreground md:hidden"
-            aria-label={t("toggleMenu")}
+            aria-label={a11yT("toggleMenu")}
           >
             {mobileOpen ? (
               <X className="h-6 w-6" />

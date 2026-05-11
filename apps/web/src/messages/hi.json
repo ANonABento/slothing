@@ -7,8 +7,11 @@
   },
   "common": {
     "cancel": "रद्द करें",
+    "back": "[hi] Back",
     "clear": "साफ़ करें",
     "clearAll": "सभी साफ़ करें",
+    "delete": "[hi] Delete",
+    "edit": "[hi] Edit",
     "filters": "फ़िल्टर",
     "import": "आयात करें",
     "loading": "लोड हो रहा है",
@@ -17,10 +20,7 @@
     "search": "खोजें",
     "selectLocale": "भाषा चुनें",
     "show": "दिखाएँ",
-    "tryAgain": "पुनः प्रयास करें",
-    "back": "[hi] Back",
-    "delete": "[hi] Delete",
-    "edit": "[hi] Edit"
+    "tryAgain": "पुनः प्रयास करें"
   },
   "nav": {
     "brand": "Slothing",
@@ -56,6 +56,17 @@
       "analytics": "एनालिटिक्स",
       "profile": "प्रोफ़ाइल",
       "settings": "सेटिंग्स"
+    }
+  },
+  "marketing": {
+    "nav": {
+      "features": "[hi] Features",
+      "extension": "[hi] Extension",
+      "howItWorks": "[hi] How It Works",
+      "pricing": "[hi] Pricing",
+      "signIn": "[hi] Sign In",
+      "getStarted": "[hi] Get Started",
+      "toggleMenu": "[hi] Toggle menu"
     }
   },
   "dashboard": {
@@ -224,6 +235,71 @@
       }
     }
   },
+  "onboarding": {
+    "steps": {
+      "upload": {
+        "title": "[hi] Upload Your Resume",
+        "description": "[hi] Drag and drop your resume to get started, or skip this step and add it later.",
+        "dropHint": "[hi] Drop your PDF or DOCX here, or head to <documents>Documents</documents> after setup to add it later."
+      },
+      "review": {
+        "title": "[hi] Review Your Profile",
+        "description": "[hi] After uploading, review the extracted entries and edit anything that needs fixing.",
+        "sections": {
+          "contactInfo": "[hi] Contact info",
+          "workExperience": "[hi] Work experience",
+          "education": "[hi] Education",
+          "skillsProjects": "[hi] Skills & projects"
+        }
+      },
+      "builder": {
+        "title": "[hi] Build Your Starter Profile",
+        "description": "[hi] Answer a few quick prompts so Slothing can organize your career details without a resume upload.",
+        "fields": {
+          "name": "[hi] Name",
+          "email": "[hi] Email",
+          "targetRole": "[hi] Target role",
+          "backgroundSummary": "[hi] Background summary",
+          "education": "[hi] Education",
+          "school": "[hi] School",
+          "degree": "[hi] Degree",
+          "field": "[hi] Field",
+          "topSkills": "[hi] Top skills",
+          "company": "[hi] Company / organisation",
+          "roleTitle": "[hi] Role / title",
+          "roleHighlights": "[hi] Role highlights (one per line, up to 3)",
+          "projectName": "[hi] Project name",
+          "projectSummary": "[hi] What did you build?",
+          "projectHighlights": "[hi] Project highlights (one per line)",
+          "achievements": "[hi] Honours, awards, leadership (comma-separated)"
+        },
+        "placeholders": {
+          "targetRole": "[hi] Frontend intern, project manager, data analyst",
+          "backgroundSummary": "[hi] A sentence about your background, interests, or next move",
+          "topSkills": "[hi] Customer service, Excel, Python",
+          "company": "[hi] Campus cafe",
+          "roleTitle": "[hi] Barista",
+          "roleHighlights": "[hi] Pulled espresso shots\nTrained 3 new baristas",
+          "projectName": "[hi] Community pantry dashboard",
+          "projectSummary": "[hi] A class project that tracked donations and volunteer shifts",
+          "projectHighlights": "[hi] Built a filterable tracker\nPresented findings to class",
+          "achievements": "[hi] Residence council secretary, Dean's list"
+        },
+        "optional": {
+          "title": "[hi] Add a role, project, or honour (optional)",
+          "hide": "[hi] Hide",
+          "add": "[hi] Add"
+        },
+        "actions": {
+          "saving": "[hi] Saving",
+          "saveContinue": "[hi] Save and continue"
+        },
+        "errors": {
+          "save": "[hi] Unable to save your profile starter."
+        }
+      }
+    }
+  },
   "opportunities": {
     "title": "अवसर",
     "description": "सहेजे गए अवसरों की समीक्षा करें, फिट संकेतों की तुलना करें, और एक ही सूची से आवेदन का काम आगे बढ़ाते रहें।",
@@ -323,146 +399,6 @@
       "hiddenSummary": "{label} · {count}",
       "moveClosedTitle": "बंद में ले जाएँ",
       "moveClosedDescription": "{title} के लिए अंतिम स्थिति चुनें।"
-    }
-  },
-  "settings": {
-    "title": "सेटिंग्स",
-    "description": "रिज़्यूमे पार्सिंग और इंटरव्यू तैयारी के लिए अपना AI प्रदाता कॉन्फ़िगर करें।",
-    "loading": "सेटिंग्स लोड हो रही हैं...",
-    "language": {
-      "title": "भाषा",
-      "description": "नेविगेशन और ऐप स्क्रीन के लिए उपयोग की जाने वाली भाषा चुनें।",
-      "label": "भाषा",
-      "options": {
-        "en": "English",
-        "es": "Español",
-        "zh-CN": "中文（简体）",
-        "pt-BR": "Português (BR)",
-        "hi": "हिन्दी",
-        "fr": "Français",
-        "ja": "日本語",
-        "ko": "한국어"
-      }
-    },
-    "help": {
-      "ollama": {
-        "title": "[hi] Using Ollama (Free)",
-        "installFrom": "[hi] Install from",
-        "run": "[hi] Run",
-        "testConnection": "[hi] Test the connection above"
-      },
-      "apiKeys": {
-        "title": "[hi] Using API Keys",
-        "description": "[hi] Connect your own API keys from OpenAI, Anthropic, or OpenRouter for cloud-based processing. Your keys are stored locally and never leave your device."
-      }
-    },
-    "dataManagement": {
-      "title": "[hi] Data Management",
-      "description": "[hi] Export your data or import from backups.",
-      "export": {
-        "title": "[hi] Export Data",
-        "profileJson": "[hi] Export Profile (JSON)",
-        "opportunitiesJson": "[hi] Export Opportunities (JSON)",
-        "opportunitiesCsv": "[hi] Export Opportunities (CSV)",
-        "fullBackup": "[hi] Full Backup",
-        "allDataJson": "[hi] Export All Data (JSON)"
-      },
-      "import": {
-        "title": "[hi] Import Data",
-        "jobsAria": "[hi] Import jobs from JSON or CSV file",
-        "opportunitiesJsonCsv": "[hi] Import Opportunities (JSON/CSV)",
-        "restoreBackupAria": "[hi] Restore backup from JSON file",
-        "restoreBackup": "[hi] Restore Backup",
-        "allDataAria": "[hi] Import all data from JSON file",
-        "allDataJson": "[hi] Import All Data (JSON)"
-      },
-      "confirm": {
-        "title": "[hi] Confirm Import",
-        "description": "[hi] The following data will be imported (duplicates will be skipped):",
-        "importing": "[hi] Importing...",
-        "action": "[hi] Confirm Import"
-      }
-    }
-  },
-  "notFound": {
-    "title": "पेज नहीं मिला",
-    "description": "हम वह पेज नहीं ढूँढ सके।",
-    "action": "डैशबोर्ड पर जाएँ"
-  },
-  "marketing": {
-    "nav": {
-      "features": "[hi] Features",
-      "extension": "[hi] Extension",
-      "howItWorks": "[hi] How It Works",
-      "pricing": "[hi] Pricing",
-      "signIn": "[hi] Sign In",
-      "getStarted": "[hi] Get Started",
-      "toggleMenu": "[hi] Toggle menu"
-    }
-  },
-  "onboarding": {
-    "steps": {
-      "upload": {
-        "title": "[hi] Upload Your Resume",
-        "description": "[hi] Drag and drop your resume to get started, or skip this step and add it later.",
-        "dropHint": "[hi] Drop your PDF or DOCX here, or head to <documents>Documents</documents> after setup to add it later."
-      },
-      "review": {
-        "title": "[hi] Review Your Profile",
-        "description": "[hi] After uploading, review the extracted entries and edit anything that needs fixing.",
-        "sections": {
-          "contactInfo": "[hi] Contact info",
-          "workExperience": "[hi] Work experience",
-          "education": "[hi] Education",
-          "skillsProjects": "[hi] Skills & projects"
-        }
-      },
-      "builder": {
-        "title": "[hi] Build Your Starter Profile",
-        "description": "[hi] Answer a few quick prompts so Slothing can organize your career details without a resume upload.",
-        "fields": {
-          "name": "[hi] Name",
-          "email": "[hi] Email",
-          "targetRole": "[hi] Target role",
-          "backgroundSummary": "[hi] Background summary",
-          "education": "[hi] Education",
-          "school": "[hi] School",
-          "degree": "[hi] Degree",
-          "field": "[hi] Field",
-          "topSkills": "[hi] Top skills",
-          "company": "[hi] Company / organisation",
-          "roleTitle": "[hi] Role / title",
-          "roleHighlights": "[hi] Role highlights (one per line, up to 3)",
-          "projectName": "[hi] Project name",
-          "projectSummary": "[hi] What did you build?",
-          "projectHighlights": "[hi] Project highlights (one per line)",
-          "achievements": "[hi] Honours, awards, leadership (comma-separated)"
-        },
-        "placeholders": {
-          "targetRole": "[hi] Frontend intern, project manager, data analyst",
-          "backgroundSummary": "[hi] A sentence about your background, interests, or next move",
-          "topSkills": "[hi] Customer service, Excel, Python",
-          "company": "[hi] Campus cafe",
-          "roleTitle": "[hi] Barista",
-          "roleHighlights": "[hi] Pulled espresso shots\nTrained 3 new baristas",
-          "projectName": "[hi] Community pantry dashboard",
-          "projectSummary": "[hi] A class project that tracked donations and volunteer shifts",
-          "projectHighlights": "[hi] Built a filterable tracker\nPresented findings to class",
-          "achievements": "[hi] Residence council secretary, Dean's list"
-        },
-        "optional": {
-          "title": "[hi] Add a role, project, or honour (optional)",
-          "hide": "[hi] Hide",
-          "add": "[hi] Add"
-        },
-        "actions": {
-          "saving": "[hi] Saving",
-          "saveContinue": "[hi] Save and continue"
-        },
-        "errors": {
-          "save": "[hi] Unable to save your profile starter."
-        }
-      }
     }
   },
   "interview": {
@@ -865,6 +801,19 @@
           "deleteManyTitle": "[hi] Could not delete source files",
           "deleteManyDescription": "[hi] Please try deleting the selected files again."
         }
+      },
+      "page": {
+        "review": {
+          "title": "पहचाने गए दस्तावेज़ घटकों की समीक्षा करें",
+          "description": "{filename} को {count, plural, one {# संपादन योग्य घटक} other {# संपादन योग्य घटकों}} में बांटा गया था। सुधार करते समय सहेजते रहें।",
+          "keepEditing": "बाद में संपादन जारी रखें",
+          "done": "हो गया"
+        },
+        "moveBullets": {
+          "title": "चुने गए बुलेट्स ले जाएं",
+          "description": "{count, plural, one {# चुने गए बुलेट} other {# चुने गए बुलेट्स}} को किसी अनुभव या प्रोजेक्ट से जोड़ें।",
+          "parentComponent": "मूल घटक"
+        }
       }
     },
     "builder": {
@@ -886,6 +835,440 @@
     "opportunities": {
       "addOpportunity": {
         "title": "[hi] Add Opportunity"
+      }
+    },
+    "calendar": {
+      "create": {
+        "title": "इवेंट बनाएं",
+        "description": "अपने कैलेंडर में नया रिमाइंडर या इवेंट जोड़ें।"
+      }
+    }
+  },
+  "settings": {
+    "title": "सेटिंग्स",
+    "description": "रिज़्यूमे पार्सिंग और इंटरव्यू तैयारी के लिए अपना AI प्रदाता कॉन्फ़िगर करें।",
+    "loading": "सेटिंग्स लोड हो रही हैं...",
+    "language": {
+      "title": "भाषा",
+      "description": "नेविगेशन और ऐप स्क्रीन के लिए उपयोग की जाने वाली भाषा चुनें।",
+      "label": "भाषा",
+      "options": {
+        "en": "English",
+        "es": "Español",
+        "zh-CN": "中文（简体）",
+        "pt-BR": "Português (BR)",
+        "hi": "हिन्दी",
+        "fr": "Français",
+        "ja": "日本語",
+        "ko": "한국어"
+      }
+    },
+    "help": {
+      "ollama": {
+        "title": "[hi] Using Ollama (Free)",
+        "installFrom": "[hi] Install from",
+        "run": "[hi] Run",
+        "testConnection": "[hi] Test the connection above"
+      },
+      "apiKeys": {
+        "title": "[hi] Using API Keys",
+        "description": "[hi] Connect your own API keys from OpenAI, Anthropic, or OpenRouter for cloud-based processing. Your keys are stored locally and never leave your device."
+      }
+    },
+    "dataManagement": {
+      "title": "[hi] Data Management",
+      "description": "[hi] Export your data or import from backups.",
+      "export": {
+        "title": "[hi] Export Data",
+        "profileJson": "[hi] Export Profile (JSON)",
+        "opportunitiesJson": "[hi] Export Opportunities (JSON)",
+        "opportunitiesCsv": "[hi] Export Opportunities (CSV)",
+        "fullBackup": "[hi] Full Backup",
+        "allDataJson": "[hi] Export All Data (JSON)"
+      },
+      "import": {
+        "title": "[hi] Import Data",
+        "jobsAria": "[hi] Import jobs from JSON or CSV file",
+        "opportunitiesJsonCsv": "[hi] Import Opportunities (JSON/CSV)",
+        "restoreBackupAria": "[hi] Restore backup from JSON file",
+        "restoreBackup": "[hi] Restore Backup",
+        "allDataAria": "[hi] Import all data from JSON file",
+        "allDataJson": "[hi] Import All Data (JSON)"
+      },
+      "confirm": {
+        "title": "[hi] Confirm Import",
+        "description": "[hi] The following data will be imported (duplicates will be skipped):",
+        "importing": "[hi] Importing...",
+        "action": "[hi] Confirm Import"
+      }
+    }
+  },
+  "notFound": {
+    "title": "पेज नहीं मिला",
+    "description": "हम वह पेज नहीं ढूँढ सके।",
+    "action": "डैशबोर्ड पर जाएँ"
+  },
+  "a11y": {
+    "weCouldnTLoadThisPage": "हम इस पृष्ठ को लोड नहीं कर सके",
+    "toggleMenu": "मेनू टॉगल करें",
+    "dismissError": "त्रुटि ख़ारिज करें",
+    "applicationError": "आवेदन के त्रुटि",
+    "dismissNotification": "अधिसूचना खारिज करें",
+    "trackYourFirstOpportunity": "अपना पहला अवसर ट्रैक करें",
+    "resumeTemplate": "टेम्पलेट को जारी रखें",
+    "titleRequired": "शीर्षक आवश्यक",
+    "companyRequired": "कंपनी की आवश्यकता है",
+    "theSiteMayNotBeSupportedOrThe": "हो सकता है कि साइट समर्थित न हो या पोस्टिंग तक नहीं पहुंचा जा सका हो।",
+    "reactTypescript": "प्रतिक्रिया, टाइपस्क्रिप्ट",
+    "accessibilityTesting": "अभिगम्यता, परीक्षण",
+    "wizardProgress": "जादूगर प्रगति",
+    "queueCleared": "कतार साफ़ हो गई",
+    "opportunityNotFound": "अवसर नहीं मिला",
+    "addPrivateNotesAboutThisOpportunity": "इस अवसर के बारे में निजी नोट्स जोड़ें.",
+    "downloadPdf": "पीडीएफ डाउनलोड करें (Ctrl+E)",
+    "reviewQueueDisabled": "समीक्षा कतार अक्षम की गई",
+    "openOpportunities": "खुले अवसर",
+    "navigation": "मार्गदर्शन",
+    "pageActions": "पृष्ठ क्रियाएँ",
+    "general": "सामान्य",
+    "dataManagement": "डेटा प्रबंधन",
+    "importJobsFromJsonOrCsvFile": "JSON या CSV फ़ाइल से नौकरियाँ आयात करें",
+    "restoreBackupFromJsonFile": "JSON फ़ाइल से बैकअप पुनर्स्थापित करें",
+    "importAllDataFromJsonFile": "JSON फ़ाइल से सभी डेटा आयात करें",
+    "applicationRate": "आवेदन दर",
+    "responseRate": "प्रतिक्रिया दर",
+    "interviewRate": "साक्षात्कार दर",
+    "successRate": "सफलता दर",
+    "summary": "सारांश",
+    "experience": "अनुभव",
+    "skills": "कौशल",
+    "promptABTesting": "शीघ्र ए/बी परीक्षण",
+    "writeTheTailoringInstructionsForThisPromptVariant": "इस शीघ्र संस्करण के लिए सिलाई निर्देश लिखें...",
+    "builderView": "बिल्डर दृश्य",
+    "selectWhatToSync": "चुनें कि क्या सिंक करना है",
+    "model": "नमूना",
+    "selectAModel": "एक मॉडल चुनें",
+    "refreshAvailableModels": "उपलब्ध मॉडलों को ताज़ा करें",
+    "noOpportunitiesMatchYourFilters": "कोई भी अवसर आपके फ़िल्टर से मेल नहीं खाता",
+    "selectAllSourceFiles": "सभी स्रोत फ़ाइलें चुनें",
+    "insertTable": "टेबल इंसर्ट करें",
+    "imageUpload": "छवि अपलोड करें",
+    "previewZoom": "पूर्वावलोकन ज़ूम करें",
+    "whatAiPowers": "एआई शक्तियां क्या हैं?",
+    "weeklyActivity": "साप्ताहिक गतिविधि",
+    "googleProfile": "गूगल प्रोफाइल",
+    "opportunityReviewQueue": "अवसर समीक्षा कतार",
+    "searchContacts": "संपर्क खोजें",
+    "gmailAutoStatus": "जीमेल ऑटो-स्टेटस",
+    "moveBulletUp": "गोली ऊपर ले जाएँ",
+    "moveBulletDown": "गोली नीचे ले जाएँ",
+    "editBullet": "बुलेट संपादित करें",
+    "deleteBullet": "बुलेट हटाएँ",
+    "openFilesPanel": "फ़ाइलें पैनल खोलें",
+    "searchTemplates": "टेम्पलेट खोजें",
+    "openAiAssistantPanel": "AI सहायक पैनल खोलें",
+    "theme": "विषय",
+    "locale": "स्थान",
+    "savingLocale": "स्थान सहेजा जा रहा है",
+    "selectLocale": "स्थान चुनें",
+    "softwareEngineer": "सॉफ्टवेयर इंजीनियर",
+    "acmeCorp": "एक्मे कार्पोरेशन",
+    "pasteTheFullOpportunityDescriptionHere": "पूर्ण अवसर विवरण यहाँ चिपकाएँ...",
+    "googleIntegration": "गूगल एकीकरण",
+    "uploadResumeFile": "बायोडाटा फ़ाइल अपलोड करें",
+    "removeFile": "फ़ाइल हटाएँ",
+    "searchYourCareerProfile": "अपना करियर प्रोफ़ाइल खोजें",
+    "searchYourCareerProfile2": "अपना करियर प्रोफ़ाइल खोजें...",
+    "pressToFocus": "फोकस करने के लिए / दबाएँ",
+    "clearSearch": "स्पष्ट खोज",
+    "sortOrder": "क्रमबद्ध करेन का आदेश",
+    "filterByCategory": "श्रेणी के अनुसार फ़िल्टर करें",
+    "pageSize": "पृष्ठ का आकार",
+    "kanbanLanes": "कानबन गलियाँ",
+    "jobKanbanBoard": "जॉब कंबन बोर्ड",
+    "versionName": "संस्करण का नाम",
+    "versionName2": "संस्करण का नाम...",
+    "opportunities": "अवसर",
+    "opportunityViewMode": "अवसर दृश्य मोड",
+    "searchJobsByTitleCompanyOrKeywords": "शीर्षक, कंपनी या कीवर्ड के आधार पर नौकरियाँ खोजें...",
+    "status": "स्थिति",
+    "type": "प्रकार",
+    "location": "जगह",
+    "sort": "क्रम से लगाना",
+    "sectionChangeCounts": "अनुभाग परिवर्तन मायने रखता है",
+    "totalChangeCounts": "कुल परिवर्तन मायने रखता है",
+    "evalHealth": "इवल स्वास्थ्य",
+    "averageScoreTrend": "औसत स्कोर प्रवृत्ति",
+    "uploadResumePdfOrTextFile": "बायोडाटा पीडीएफ या टेक्स्ट फ़ाइल अपलोड करें",
+    "pasteYourFullResumeTextHere": "अपना पूरा बायोडाटा टेक्स्ट यहां चिपकाएँ...",
+    "optionalPasteTheJobDescriptionToCheckKeyword": "वैकल्पिक: कीवर्ड मिलान जांचने के लिए नौकरी विवरण चिपकाएँ...",
+    "beforeTheInterview": "इंटरव्यू से पहले",
+    "duringTheInterview": "साक्षात्कार के दौरान",
+    "afterTheInterview": "इंटरव्यू के बाद",
+    "expandAiAssistantPanel": "AI सहायक पैनल का विस्तार करें",
+    "showAiAssistant": "एआई सहायक दिखाएँ",
+    "showTailorToJd": "जेडी को दर्जी दिखाओ",
+    "showGenerateFromBank": "बैंक से जनरेट दिखाएँ",
+    "collapseAiAssistantPanel": "AI सहायक पैनल को संक्षिप्त करें",
+    "pasteTheJdHere": "जेडी को यहां चिपकाएं",
+    "rewriteSection": "अनुभाग पुनः लिखें",
+    "chooseSection": "अनुभाग चुनें",
+    "rewriteSelectedSection": "चयनित अनुभाग को पुनः लिखें",
+    "selectedTextQuickActions": "चयनित पाठ त्वरित कार्रवाई",
+    "coverLetterCritique": "कवर लेटर आलोचना",
+    "noOpportunitiesTrackedYet": "अभी तक कोई अवसर ट्रैक नहीं किया गया",
+    "onboardingProgress": "ऑनबोर्डिंग प्रगति",
+    "skipOnboarding": "ऑनबोर्डिंग छोड़ें",
+    "expandFilesPanel": "फ़ाइल पैनल का विस्तार करें",
+    "showFiles": "फ़ाइलें दिखाएँ",
+    "newStudioFile": "नई स्टूडियो फ़ाइल",
+    "showVersionHistory": "संस्करण इतिहास दिखाएँ",
+    "collapseFilesPanel": "फ़ाइल पैनल को संक्षिप्त करें",
+    "notifications": "सूचनाएं",
+    "markAllAsRead": "सभी को पढ़ा हुआ मार्क करें",
+    "deleteReadNotifications": "पढ़ी गई सूचनाएं हटाएं",
+    "closeNotifications": "सूचनाएं बंद करें",
+    "markAsRead": "पढ़े हुए का चिह्न",
+    "delete": "मिटाना",
+    "deleteNotification": "अधिसूचना हटाएँ",
+    "sanFranciscoCa": "सैन फ्रांसिस्को, सीए",
+    "selectType": "प्रकार चुनें",
+    "frontendInternProjectManagerDataAnalyst": "फ्रंटएंड इंटर्न, प्रोजेक्ट मैनेजर, डेटा विश्लेषक",
+    "school": "विद्यालय",
+    "degree": "डिग्री",
+    "field": "मैदान",
+    "customerServiceExcelPython": "ग्राहक सेवा, एक्सेल, पायथन",
+    "campusCafe": "कैम्पस कैफे",
+    "barista": "बरिस्ता",
+    "communityPantryDashboard": "सामुदायिक पेंट्री डैशबोर्ड",
+    "residenceCouncilSecretaryDeanSList": "निवास परिषद सचिव, डीन की सूची",
+    "typeACommandOrSearch": "एक कमांड टाइप करें या खोजें...",
+    "profileCompleteness": "प्रोफ़ाइल पूर्णता",
+    "coverLetterContent": "कवर लेटर सामग्री",
+    "documents": "दस्तावेज़",
+    "uploadFile": "फ़ाइल अपलोड करें (Ctrl+U)",
+    "failedToLoadDocuments": "दस्तावेज़ लोड करने में विफल",
+    "expand": "बढ़ाना",
+    "selectAllVisibleComponents": "सभी दृश्यमान घटकों का चयन करें",
+    "noComponentsDetected": "कोई घटक नहीं पाया गया",
+    "noComponentsLeft": "कोई घटक नहीं बचा",
+    "answerBank": "उत्तर बैंक",
+    "searchQuestionsAnswersOrSources": "प्रश्न, उत्तर या स्रोत खोजें",
+    "sortAnswers": "उत्तर क्रमबद्ध करें",
+    "failedToLoadAnswers": "उत्तर लोड करने में विफल",
+    "copyAnswer": "उत्तर कॉपी करें",
+    "duplicateAnswer": "डुप्लिकेट उत्तर",
+    "editAnswer": "उत्तर संपादित करें",
+    "deleteAnswer": "उत्तर हटाएँ",
+    "exampleWillYouNowOrInTheFuture": "उदाहरण: क्या आपको अभी या भविष्य में प्रायोजन की आवश्यकता होगी?",
+    "writeTheAnswerYouWantReusedByAutofill": "वह उत्तर लिखें जिसे आप ऑटोफ़िल द्वारा पुन: उपयोग करना चाहते हैं।",
+    "optional": "वैकल्पिक",
+    "installTheSlothingBrowserExtension": "Slothing ब्राउज़र एक्सटेंशन इंस्टॉल करें",
+    "dismissExtensionPromo": "एक्सटेंशन प्रोमो ख़ारिज करें",
+    "analyticsDashboard": "एनालिटिक्स डैशबोर्ड",
+    "exportDateRange": "निर्यात तिथि सीमा",
+    "dateRange": "तिथि सीमा",
+    "applicationPipeline": "अनुप्रयोग पाइपलाइन",
+    "skillsOverview": "कौशल अवलोकन",
+    "recentOpportunityActivity": "हालिया अवसर गतिविधि",
+    "interviewPreparation": "साक्षात्कार की तैयारी",
+    "github": "GitHub",
+    "news": "समाचार",
+    "levels": "स्तरों",
+    "engBlog": "इंजी ब्लॉग",
+    "profile": "प्रोफ़ाइल",
+    "profileSections": "प्रोफ़ाइल अनुभाग",
+    "seniorProductEngineer": "वरिष्ठ उत्पाद इंजीनियर",
+    "loadingSource": "स्रोत लोड हो रहा है",
+    "calendar": "कैलेंडर",
+    "filterEventsByType": "घटनाओं को प्रकार के अनुसार फ़िल्टर करें",
+    "filter": "फ़िल्टर",
+    "subscribeToYourCalendarFeedViewInYour": "अपने कैलेंडर फ़ीड (.ics) की सदस्यता लें - अपने डिफ़ॉल्ट कैलेंडर ऐप में देखें।",
+    "previousMonth": "पिछला महीना",
+    "nextMonth": "अगले महीने",
+    "noEventsScheduledForThisDay": "इस दिन के लिए कोई कार्यक्रम निर्धारित नहीं है",
+    "clickOnADateToViewEvents": "इवेंट देखने के लिए दिनांक पर क्लिक करें",
+    "noUpcomingEvents": "कोई आगामी ईवेंट नहीं",
+    "addNotesOrDetails": "नोट्स या विवरण जोड़ें...",
+    "copyUrl": "URL कॉपी करें",
+    "salaryTools": "वेतन उपकरण",
+    "marketRateCalculator": "बाज़ार दर कैलक्यूलेटर",
+    "selectRole": "भूमिका चुनें",
+    "selectYourRole": "अपनी भूमिका चुनें",
+    "selectLocation": "स्थान चुनें",
+    "addOffer": "प्रस्ताव जोड़ें",
+    "noOffersYet": "अभी तक कोई ऑफर नहीं",
+    "generateNegotiationScript": "बातचीत स्क्रिप्ट तैयार करें",
+    "chooseAJobApplication": "नौकरी आवेदन चुनें",
+    "chooseTheJobYouInterviewedFor": "वह नौकरी चुनें जिसके लिए आपने साक्षात्कार दिया था",
+    "mentionARecentProjectSharedInterestOrCompany": "किसी हालिया प्रोजेक्ट, साझा रुचि या कंपनी अपडेट का उल्लेख करें...",
+    "chooseTheJobOffer": "नौकरी की पेशकश चुनें",
+    "addAnySpecificPointsYouWantToMention": "कोई भी विशिष्ट बिंदु जोड़ें जिसका आप उल्लेख करना चाहते हैं...",
+    "chooseAReplyType": "उत्तर प्रकार चुनें",
+    "addConstraintsTimingCompensationExpectationsOrAFuture": "बाधाएँ, समय, मुआवज़े की अपेक्षाएँ, या भविष्य के लिए उपयुक्त नोट जोड़ें...",
+    "chooseTheRoleYouReApplyingFor": "वह भूमिका चुनें जिसके लिए आप आवेदन कर रहे हैं",
+    "addARecentAccomplishmentOrProjectToRemind": "उन्हें याद दिलाने के लिए कोई हालिया उपलब्धि या प्रोजेक्ट जोड़ें...",
+    "emailTemplates": "ईमेल टेम्प्लेट",
+    "chooseTemplate": "टेम्पलेट चुनें",
+    "customize": "अनुकूलित करें",
+    "editGithubOrg": "GitHub संगठन संपादित करें",
+    "githubOrg": "GitHub ऑर्ग",
+    "saveGithubOrg": "GitHub संगठन सहेजें",
+    "cancel": "रद्द करना",
+    "searchDrafts": "ड्राफ्ट खोजें",
+    "answerScorecard": "उत्तर स्कोरकार्ड",
+    "startFreeWithSlothing": "Slothing से निःशुल्क शुरुआत करें",
+    "extensionPopoverPreviewOnAJobPosting": "नौकरी पोस्टिंग पर एक्सटेंशन पॉपओवर पूर्वावलोकन",
+    "dashboardPreview": "डैशबोर्ड पूर्वावलोकन"
+  },
+  "profile": {
+    "title": "प्रोफ़ाइल",
+    "description": "वह स्रोत प्रोफ़ाइल संभालें जिसका उपयोग Slothing रिज्यूमे, कवर लेटर और फिट जांचों के लिए करता है।",
+    "actions": {
+      "discard": "छोड़ें",
+      "saveChanges": "बदलाव सहेजें"
+    },
+    "status": {
+      "saving": "सहेजा जा रहा है...",
+      "saved": "सहेजा गया"
+    },
+    "errors": {
+      "loadProfile": "प्रोफ़ाइल लोड नहीं हो सकी",
+      "saveProfile": "प्रोफ़ाइल सहेजी नहीं जा सकी"
+    },
+    "unsavedChanges": {
+      "prompt": "आपकी प्रोफ़ाइल में असहेजे बदलाव हैं। बिना सहेजे छोड़ना है?"
+    },
+    "tabs": {
+      "ariaLabel": "प्रोफ़ाइल अनुभाग",
+      "overview": "अवलोकन",
+      "preferences": "पसंद",
+      "privacy": "गोपनीयता"
+    },
+    "answerBankPrompt": {
+      "text": "और समृद्ध प्रोफ़ाइल चाहिए? अपने उत्तर बैंक में दोबारा उपयोग होने वाली कहानियां और तथ्य सहेजें।",
+      "action": "उत्तर बैंक खोलें"
+    },
+    "emptyState": {
+      "title": "आइए आपकी प्रोफ़ाइल सेट करें",
+      "description": "रिज्यूमे से शुरू करें ताकि Slothing बुनियादी जानकारी भर सके, या फ़ॉर्म खोलकर विवरण खुद जोड़ें।",
+      "uploadResume": "इसे भरने के लिए रिज्यूमे अपलोड करें",
+      "fillManually": "या खुद भरें"
+    },
+    "sidebar": {
+      "yourName": "आपका नाम",
+      "addHeadline": "हेडलाइन जोड़ें",
+      "noEmail": "ईमेल नहीं",
+      "noLocation": "स्थान नहीं",
+      "noTargetSalary": "लक्ष्य वेतन नहीं",
+      "salaryRange": "{currency} {min}–{max}",
+      "salaryMinimum": "{currency} {min}+",
+      "salaryMaximum": "अधिकतम {currency} {max}",
+      "profilePhoto": "प्रोफ़ाइल फोटो",
+      "profilePhotoNamed": "{name} की प्रोफ़ाइल फोटो"
+    },
+    "placeholders": {
+      "headline": "सीनियर प्रोडक्ट इंजीनियर"
+    },
+    "sections": {
+      "identity": {
+        "title": "पहचान",
+        "description": "वह स्रोत प्रोफ़ाइल संभालें जिसका उपयोग Slothing रिज्यूमे, कवर लेटर और फिट जांचों के लिए करता है।"
+      },
+      "contact": {
+        "title": "संपर्क",
+        "description": "वह स्रोत प्रोफ़ाइल संभालें जिसका उपयोग Slothing रिज्यूमे, कवर लेटर और फिट जांचों के लिए करता है।"
+      },
+      "summary": {
+        "title": "पेशेवर सारांश",
+        "description": "वह स्रोत प्रोफ़ाइल संभालें जिसका उपयोग Slothing रिज्यूमे, कवर लेटर और फिट जांचों के लिए करता है।"
+      },
+      "savedSignals": {
+        "title": "सहेजे गए प्रोफ़ाइल संकेत",
+        "description": "वह स्रोत प्रोफ़ाइल संभालें जिसका उपयोग Slothing रिज्यूमे, कवर लेटर और फिट जांचों के लिए करता है।"
+      },
+      "careerDetails": {
+        "title": "करियर विवरण",
+        "description": "वह स्रोत प्रोफ़ाइल संभालें जिसका उपयोग Slothing रिज्यूमे, कवर लेटर और फिट जांचों के लिए करता है।"
+      }
+    },
+    "fields": {
+      "avatarUrl": "अवतार URL",
+      "fullName": "पूरा नाम",
+      "headline": "हेडलाइन",
+      "email": "ईमेल पता",
+      "phone": "फ़ोन",
+      "location": "स्थान",
+      "linkedin": "LinkedIn प्रोफ़ाइल",
+      "github": "GitHub प्रोफ़ाइल",
+      "website": "वेबसाइट",
+      "summary": "पेशेवर सारांश",
+      "targetRoles": "लक्षित भूमिकाएं",
+      "currency": "मुद्रा",
+      "minimum": "न्यूनतम",
+      "maximum": "अधिकतम"
+    },
+    "signals": {
+      "experience": "अनुभव",
+      "education": "शिक्षा",
+      "skills": "कौशल",
+      "projects": "प्रोजेक्ट",
+      "awards": "पुरस्कार"
+    },
+    "workStyle": {
+      "title": "काम की शैली",
+      "description": "वह स्रोत प्रोफ़ाइल संभालें जिसका उपयोग Slothing रिज्यूमे, कवर लेटर और फिट जांचों के लिए करता है।",
+      "options": {
+        "remote": "रिमोट",
+        "hybrid": "हाइब्रिड",
+        "onsite": "ऑनसाइट",
+        "fullTime": "पूर्णकालिक",
+        "contract": "कॉन्ट्रैक्ट"
+      }
+    },
+    "targetRoles": {
+      "title": "लक्षित भूमिकाएं",
+      "description": "वह स्रोत प्रोफ़ाइल संभालें जिसका उपयोग Slothing रिज्यूमे, कवर लेटर और फिट जांचों के लिए करता है।"
+    },
+    "salary": {
+      "title": "मुआवजा लक्ष्य",
+      "description": "वह स्रोत प्रोफ़ाइल संभालें जिसका उपयोग Slothing रिज्यूमे, कवर लेटर और फिट जांचों के लिए करता है।"
+    },
+    "privacy": {
+      "title": "गोपनीयता",
+      "description": "वह स्रोत प्रोफ़ाइल संभालें जिसका उपयोग Slothing रिज्यूमे, कवर लेटर और फिट जांचों के लिए करता है।",
+      "openToRecruiters": {
+        "title": "Open to recruiter outreach",
+        "description": "वह स्रोत प्रोफ़ाइल संभालें जिसका उपयोग Slothing रिज्यूमे, कवर लेटर और फिट जांचों के लिए करता है।"
+      },
+      "shareContactInfo": {
+        "title": "Share contact info by default",
+        "description": "वह स्रोत प्रोफ़ाइल संभालें जिसका उपयोग Slothing रिज्यूमे, कवर लेटर और फिट जांचों के लिए करता है।"
+      }
+    },
+    "completeness": {
+      "readiness": "प्रोफ़ाइल तैयारी",
+      "summary": "प्रोफ़ाइल {score}% पूरी है · {count, plural, one {# त्वरित सुधार उपलब्ध} other {# त्वरित सुधार उपलब्ध}}",
+      "completeLabel": "पूरा",
+      "progressLabel": "प्रोफ़ाइल पूर्णता",
+      "noGaps": "सभी जरूरी चीजें भरी हुई हैं।",
+      "points": "+{points, plural, one {# अंक} other {# अंक}}",
+      "gaps": {
+        "contact-info": "अपना नाम, ईमेल और हेडलाइन जोड़ें",
+        "summary": "पेशेवर सारांश जोड़ें",
+        "experience-bullets": {
+          "empty": "कम से कम 3 बुलेट वाली एक अनुभव प्रविष्टि जोड़ें",
+          "role": "{company} भूमिका में {missing, plural, one {# और बुलेट} other {# और बुलेट}} जोड़ें"
+        },
+        "quantified-bullets": {
+          "empty": "{missing, plural, one {# मात्रात्मक बुलेट} other {# मात्रात्मक बुलेट}} जोड़ें",
+          "role": "{company} भूमिका में {missing, plural, one {# मात्रात्मक बुलेट} other {# मात्रात्मक बुलेट}} जोड़ें"
+        },
+        "education": "अपनी शिक्षा जोड़ें",
+        "skills": "{missing, plural, one {# और कौशल} other {# और कौशल}} जोड़ें",
+        "career-depth": "एक प्रोजेक्ट या दूसरा अनुभव जोड़ें",
+        "achievements": "उपलब्धि, पुरस्कार या प्रमाणन जोड़ें",
+        "social-url": "LinkedIn या GitHub URL जोड़ें"
       }
     }
   }

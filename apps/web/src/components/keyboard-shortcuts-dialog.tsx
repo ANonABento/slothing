@@ -21,6 +21,7 @@ import {
   type ShortcutDefinition,
 } from "@/lib/keyboard-shortcuts";
 import type { Shortcut } from "@/components/keyboard-shortcuts";
+import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 
 export function ShortcutsHelpDialog({
   open,
@@ -31,6 +32,8 @@ export function ShortcutsHelpDialog({
   onOpenChange: (open: boolean) => void;
   shortcuts: Shortcut[];
 }) {
+  const a11yT = useA11yTranslations();
+
   const navigationShortcuts = shortcuts.filter(
     (s) => s.category === "navigation",
   );
@@ -62,7 +65,7 @@ export function ShortcutsHelpDialog({
         <div className="space-y-6 py-4">
           {navigationShortcuts.length > 0 && (
             <ShortcutSection
-              title="Navigation"
+              title={a11yT("navigation")}
               shortcuts={navigationShortcuts}
               icons={icons}
               keyPrefix="nav"
@@ -71,7 +74,7 @@ export function ShortcutsHelpDialog({
 
           {actionShortcuts.length > 0 && (
             <ShortcutSection
-              title="Page Actions"
+              title={a11yT("pageActions")}
               shortcuts={actionShortcuts}
               icons={icons}
               keyPrefix="act"
@@ -80,7 +83,7 @@ export function ShortcutsHelpDialog({
 
           {generalShortcuts.length > 0 && (
             <ShortcutSection
-              title="General"
+              title={a11yT("general")}
               shortcuts={generalShortcuts}
               icons={icons}
               keyPrefix="gen"

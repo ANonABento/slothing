@@ -8,6 +8,7 @@ import { useErrorToast } from "@/hooks/use-error-toast";
 import { isNextAuthConfiguredOnClient } from "@/lib/auth-client";
 import { Loader2, CheckCircle, AlertCircle } from "lucide-react";
 import { GoogleIcon } from "./GoogleIcon";
+import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 
 interface ConnectionStatus {
   connected: boolean;
@@ -25,6 +26,8 @@ function GoogleConnectButtonWithSession({
   onConnectionChange,
   showStatus = true,
 }: GoogleConnectButtonProps) {
+  const a11yT = useA11yTranslations();
+
   const { status: sessionStatus } = useSession();
   const isSignedIn = sessionStatus === "authenticated";
   const sessionLoading = sessionStatus === "loading";
@@ -105,7 +108,7 @@ function GoogleConnectButtonWithSession({
           {status.picture && (
             <Image
               src={status.picture}
-              alt="Google profile"
+              alt={a11yT("googleProfile")}
               width={32}
               height={32}
               className="rounded-full"

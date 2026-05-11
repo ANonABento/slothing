@@ -32,6 +32,8 @@ import {
   deleteSourceDocuments,
 } from "./profile-bank";
 
+const TEST_USER_ID = "test-user";
+
 describe("Profile Bank DB Functions", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -42,17 +44,20 @@ describe("Profile Bank DB Functions", () => {
       const mockRun = vi.fn();
       (db.prepare as Mock).mockReturnValue({ run: mockRun });
 
-      const id = insertBankEntry({
-        category: "experience",
-        content: { company: "Acme", title: "Engineer" },
-        sourceDocumentId: "doc-1",
-        confidenceScore: 0.9,
-      });
+      const id = insertBankEntry(
+        {
+          category: "experience",
+          content: { company: "Acme", title: "Engineer" },
+          sourceDocumentId: "doc-1",
+          confidenceScore: 0.9,
+        },
+        TEST_USER_ID,
+      );
 
       expect(id).toBe("test-id");
       expect(mockRun).toHaveBeenCalledWith(
         "test-id",
-        "default",
+        TEST_USER_ID,
         "experience",
         JSON.stringify({ company: "Acme", title: "Engineer" }),
         "doc-1",
@@ -68,14 +73,17 @@ describe("Profile Bank DB Functions", () => {
       const mockRun = vi.fn();
       (db.prepare as Mock).mockReturnValue({ run: mockRun });
 
-      insertBankEntry({
-        category: "skill",
-        content: { name: "React" },
-      });
+      insertBankEntry(
+        {
+          category: "skill",
+          content: { name: "React" },
+        },
+        TEST_USER_ID,
+      );
 
       expect(mockRun).toHaveBeenCalledWith(
         "test-id",
-        "default",
+        TEST_USER_ID,
         "skill",
         JSON.stringify({ name: "React" }),
         null,
@@ -91,20 +99,23 @@ describe("Profile Bank DB Functions", () => {
       const mockRun = vi.fn();
       (db.prepare as Mock).mockReturnValue({ run: mockRun });
 
-      insertBankEntry({
-        category: "bullet",
-        content: {
-          description: "Built parser",
-          parentId: "parent-1",
-          parentType: "experience",
-          order: 2,
-          sourceSection: "experience",
+      insertBankEntry(
+        {
+          category: "bullet",
+          content: {
+            description: "Built parser",
+            parentId: "parent-1",
+            parentType: "experience",
+            order: 2,
+            sourceSection: "experience",
+          },
         },
-      });
+        TEST_USER_ID,
+      );
 
       expect(mockRun).toHaveBeenCalledWith(
         "test-id",
-        "default",
+        TEST_USER_ID,
         "bullet",
         JSON.stringify({
           description: "Built parser",
@@ -129,10 +140,13 @@ describe("Profile Bank DB Functions", () => {
       (db.prepare as Mock).mockReturnValue({ run: mockRun });
       (db.transaction as Mock).mockImplementation((fn) => fn);
 
-      const ids = insertBankEntries([
-        { category: "skill", content: { name: "React" } },
-        { category: "skill", content: { name: "TypeScript" } },
-      ]);
+      const ids = insertBankEntries(
+        [
+          { category: "skill", content: { name: "React" } },
+          { category: "skill", content: { name: "TypeScript" } },
+        ],
+        TEST_USER_ID,
+      );
 
       expect(ids).toHaveLength(2);
       expect(db.transaction).toHaveBeenCalled();
@@ -144,7 +158,7 @@ describe("Profile Bank DB Functions", () => {
       const mockRows = [
         {
           id: "entry-1",
-          user_id: "default",
+          user_id: TEST_USER_ID,
           category: "skill",
           content: '{"name":"React"}',
           source_document_id: "doc-1",
@@ -156,12 +170,12 @@ describe("Profile Bank DB Functions", () => {
         all: vi.fn().mockReturnValue(mockRows),
       });
 
-      const result = getBankEntries();
+      const result = getBankEntries(TEST_USER_ID);
 
       expect(result).toEqual([
         {
           id: "entry-1",
-          userId: "default",
+          userId: TEST_USER_ID,
           category: "skill",
           content: { name: "React" },
           sourceDocumentId: "doc-1",
@@ -175,7 +189,7 @@ describe("Profile Bank DB Functions", () => {
       const mockRows = [
         {
           id: "entry-1",
-          user_id: "default",
+          user_id: TEST_USER_ID,
           category: "achievement",
           content: '{"description":"Built parser"}',
           source_document_id: "doc-1",
@@ -191,7 +205,7 @@ describe("Profile Bank DB Functions", () => {
         all: vi.fn().mockReturnValue(mockRows),
       });
 
-      const result = getBankEntries();
+      const result = getBankEntries(TEST_USER_ID);
 
       expect(result[0].content).toEqual({
         description: "Built parser",
@@ -206,7 +220,7 @@ describe("Profile Bank DB Functions", () => {
       const parentRows = [
         {
           id: "parent-1",
-          user_id: "default",
+          user_id: TEST_USER_ID,
           category: "experience",
           content: '{"title":"Engineer","company":"Acme","childCount":0}',
           source_document_id: null,
@@ -215,7 +229,7 @@ describe("Profile Bank DB Functions", () => {
         },
         {
           id: "parent-2",
-          user_id: "default",
+          user_id: TEST_USER_ID,
           category: "project",
           content: '{"name":"Portfolio"}',
           source_document_id: null,
@@ -233,7 +247,7 @@ describe("Profile Bank DB Functions", () => {
             .mockReturnValue([{ parent_id: "parent-1", child_count: 3 }]),
         });
 
-      const result = getBankEntries();
+      const result = getBankEntries(TEST_USER_ID);
 
       expect(result[0].content.childCount).toBe(3);
       expect(result[1].content.childCount).toBe(0);
@@ -244,7 +258,7 @@ describe("Profile Bank DB Functions", () => {
         all: vi.fn().mockReturnValue([]),
       });
 
-      const result = getBankEntries();
+      const result = getBankEntries(TEST_USER_ID);
       expect(result).toEqual([]);
     });
   });
@@ -254,16 +268,16 @@ describe("Profile Bank DB Functions", () => {
       const mockAll = vi.fn().mockReturnValue([]);
       (db.prepare as Mock).mockReturnValue({ all: mockAll });
 
-      getBankEntriesByCategory("skill");
+      getBankEntriesByCategory("skill", TEST_USER_ID);
 
-      expect(mockAll).toHaveBeenCalledWith("default", "skill");
+      expect(mockAll).toHaveBeenCalledWith(TEST_USER_ID, "skill");
     });
 
     it("rolls up child counts when filtering to parent categories", () => {
       const mockCategoryAll = vi.fn().mockReturnValue([
         {
           id: "parent-1",
-          user_id: "default",
+          user_id: TEST_USER_ID,
           category: "experience",
           content: '{"title":"Engineer","company":"Acme"}',
           source_document_id: null,
@@ -278,10 +292,10 @@ describe("Profile Bank DB Functions", () => {
         .mockReturnValueOnce({ all: mockCategoryAll })
         .mockReturnValueOnce({ all: mockCountAll });
 
-      const result = getBankEntriesByCategory("experience");
+      const result = getBankEntriesByCategory("experience", TEST_USER_ID);
 
-      expect(mockCategoryAll).toHaveBeenCalledWith("default", "experience");
-      expect(mockCountAll).toHaveBeenCalledWith("default");
+      expect(mockCategoryAll).toHaveBeenCalledWith(TEST_USER_ID, "experience");
+      expect(mockCountAll).toHaveBeenCalledWith(TEST_USER_ID);
       expect(result[0].content.childCount).toBe(2);
     });
   });
@@ -291,7 +305,7 @@ describe("Profile Bank DB Functions", () => {
       const mockRows = [
         {
           id: "e1",
-          user_id: "default",
+          user_id: TEST_USER_ID,
           category: "skill",
           content: '{"name":"React"}',
           source_document_id: null,
@@ -300,7 +314,7 @@ describe("Profile Bank DB Functions", () => {
         },
         {
           id: "e2",
-          user_id: "default",
+          user_id: TEST_USER_ID,
           category: "experience",
           content: '{"company":"Acme"}',
           source_document_id: null,
@@ -312,7 +326,7 @@ describe("Profile Bank DB Functions", () => {
         all: vi.fn().mockReturnValue(mockRows),
       });
 
-      const result = getGroupedBankEntries();
+      const result = getGroupedBankEntries(TEST_USER_ID);
 
       expect(result.skill).toHaveLength(1);
       expect(result.experience).toHaveLength(1);
@@ -330,9 +344,9 @@ describe("Profile Bank DB Functions", () => {
       const mockAll = vi.fn().mockReturnValue([]);
       (db.prepare as Mock).mockReturnValue({ all: mockAll });
 
-      searchBankEntries("react");
+      searchBankEntries("react", TEST_USER_ID);
 
-      expect(mockAll).toHaveBeenCalledWith("default", "%react%");
+      expect(mockAll).toHaveBeenCalledWith(TEST_USER_ID, "%react%");
     });
 
     it("rolls up child counts for parent search results", () => {
@@ -341,7 +355,7 @@ describe("Profile Bank DB Functions", () => {
           all: vi.fn().mockReturnValue([
             {
               id: "project-1",
-              user_id: "default",
+              user_id: TEST_USER_ID,
               category: "project",
               content: '{"name":"Portfolio"}',
               source_document_id: null,
@@ -356,7 +370,7 @@ describe("Profile Bank DB Functions", () => {
             .mockReturnValue([{ parent_id: "project-1", child_count: 4 }]),
         });
 
-      const result = searchBankEntries("portfolio");
+      const result = searchBankEntries("portfolio", TEST_USER_ID);
 
       expect(result[0].content.childCount).toBe(4);
     });
@@ -367,10 +381,10 @@ describe("Profile Bank DB Functions", () => {
       const mockRun = vi.fn().mockReturnValue({ changes: 3 });
       (db.prepare as Mock).mockReturnValue({ run: mockRun });
 
-      const count = deleteBankEntriesBySource("doc-1");
+      const count = deleteBankEntriesBySource("doc-1", TEST_USER_ID);
 
       expect(count).toBe(3);
-      expect(mockRun).toHaveBeenCalledWith("default", "doc-1");
+      expect(mockRun).toHaveBeenCalledWith(TEST_USER_ID, "doc-1");
     });
   });
 
@@ -379,9 +393,9 @@ describe("Profile Bank DB Functions", () => {
       const mockRun = vi.fn();
       (db.prepare as Mock).mockReturnValue({ run: mockRun });
 
-      clearBankEntries();
+      clearBankEntries(TEST_USER_ID);
 
-      expect(mockRun).toHaveBeenCalledWith("default");
+      expect(mockRun).toHaveBeenCalledWith(TEST_USER_ID);
     });
   });
 
@@ -389,7 +403,7 @@ describe("Profile Bank DB Functions", () => {
     it("should return entry when duplicate found", () => {
       const mockRow = {
         id: "existing-1",
-        user_id: "default",
+        user_id: TEST_USER_ID,
         category: "skill",
         content: '{"name":"React"}',
         source_document_id: null,
@@ -400,7 +414,7 @@ describe("Profile Bank DB Functions", () => {
         all: vi.fn().mockReturnValue([mockRow]),
       });
 
-      const result = findDuplicateEntry("skill", "react");
+      const result = findDuplicateEntry("skill", "react", TEST_USER_ID);
 
       expect(result).not.toBeNull();
       expect(result?.id).toBe("existing-1");
@@ -411,7 +425,7 @@ describe("Profile Bank DB Functions", () => {
         all: vi.fn().mockReturnValue([]),
       });
 
-      const result = findDuplicateEntry("skill", "unknown-skill");
+      const result = findDuplicateEntry("skill", "unknown-skill", TEST_USER_ID);
 
       expect(result).toBeNull();
     });
@@ -437,6 +451,7 @@ describe("Profile Bank DB Functions", () => {
         "entry-1",
         { name: "React", proficiency: "expert" },
         0.95,
+        TEST_USER_ID,
       );
 
       expect(mockRun).toHaveBeenCalledWith(
@@ -447,7 +462,7 @@ describe("Profile Bank DB Functions", () => {
         null,
         0.95,
         "entry-1",
-        "default",
+        TEST_USER_ID,
       );
     });
 
@@ -501,7 +516,7 @@ describe("Profile Bank DB Functions", () => {
         all: vi.fn().mockReturnValue(mockRows),
       });
 
-      const result = getSourceDocuments();
+      const result = getSourceDocuments(TEST_USER_ID);
 
       expect(result).toEqual([
         {
@@ -519,7 +534,7 @@ describe("Profile Bank DB Functions", () => {
         all: vi.fn().mockReturnValue([]),
       });
 
-      const result = getSourceDocuments();
+      const result = getSourceDocuments(TEST_USER_ID);
       expect(result).toEqual([]);
     });
 
@@ -539,11 +554,11 @@ describe("Profile Bank DB Functions", () => {
       (db.prepare as Mock).mockReturnValue({ run: mockRun });
       (db.transaction as Mock).mockImplementation((fn) => fn);
 
-      const count = deleteSourceDocument("doc-1");
+      const count = deleteSourceDocument("doc-1", TEST_USER_ID);
 
       expect(count).toBe(3);
       // First call: delete from profile_bank
-      expect(mockRun).toHaveBeenCalledWith("doc-1", "default");
+      expect(mockRun).toHaveBeenCalledWith("doc-1", TEST_USER_ID);
       // Second call: delete from documents
       expect(mockRun).toHaveBeenCalledTimes(2);
     });
@@ -561,7 +576,7 @@ describe("Profile Bank DB Functions", () => {
 
   describe("deleteSourceDocuments", () => {
     it("should return zero counts when no document ids are provided", () => {
-      const result = deleteSourceDocuments([]);
+      const result = deleteSourceDocuments([], TEST_USER_ID);
 
       expect(result).toEqual({ documentsDeleted: 0, chunksDeleted: 0 });
       expect(db.prepare).not.toHaveBeenCalled();

@@ -10,6 +10,7 @@ import type {
   EvalRunSummary,
 } from "@/lib/admin/evals/types";
 import { cn } from "@/lib/utils";
+import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 
 const EVAL_RAW_EXPORT_URL = "/api/admin/evals";
 
@@ -20,6 +21,8 @@ type FetchState =
   | { status: "ready"; payload: EvalDashboardPayload };
 
 export function EvalHealthSection() {
+  const a11yT = useA11yTranslations();
+
   const [state, setState] = useState<FetchState>({ status: "loading" });
 
   useEffect(() => {
@@ -57,7 +60,7 @@ export function EvalHealthSection() {
 
   return (
     <PageSection
-      title="Eval health"
+      title={a11yT("evalHealth")}
       description="LLM eval runs across configured judges and generators."
       icon={Activity}
     >
@@ -77,6 +80,8 @@ export function EvalHealthSection() {
 }
 
 function EvalHealthBody({ payload }: { payload: EvalDashboardPayload }) {
+  const a11yT = useA11yTranslations();
+
   const runs = payload.runs;
   const stats = useMemo(() => buildEvalStats(runs), [runs]);
   const sparklinePoints = useMemo(() => buildSparklinePoints(runs), [runs]);
@@ -97,7 +102,7 @@ function EvalHealthBody({ payload }: { payload: EvalDashboardPayload }) {
       <div className="flex flex-col gap-3 border-t pt-4 sm:flex-row sm:items-center sm:justify-between">
         {sparklinePoints ? (
           <svg
-            aria-label="Average score trend"
+            aria-label={a11yT("averageScoreTrend")}
             className="h-6 w-20 text-primary"
             role="img"
             viewBox="0 0 80 24"

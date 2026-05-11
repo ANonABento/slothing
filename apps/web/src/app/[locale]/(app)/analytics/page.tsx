@@ -57,6 +57,7 @@ import {
   SkeletonStatCard,
 } from "@/components/ui/skeleton";
 import { useErrorToast } from "@/hooks/use-error-toast";
+import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 
 const TrendCharts = dynamic(
   () =>
@@ -146,6 +147,8 @@ const STATUS_CONFIG: Record<
 };
 
 export default function AnalyticsPage() {
+  const a11yT = useA11yTranslations();
+
   const [analytics, setAnalytics] = useState<Analytics | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -270,13 +273,16 @@ export default function AnalyticsPage() {
     <AppPage>
       <PageHeader
         icon={BarChart3}
-        title="Analytics Dashboard"
+        title={a11yT("analyticsDashboard")}
         description="Track your job search progress and identify areas for improvement."
         actions={
           <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center">
             <Select value={exportRange} onValueChange={setExportRange}>
-              <SelectTrigger className="w-36" aria-label="Export date range">
-                <SelectValue placeholder="Date range" />
+              <SelectTrigger
+                className="w-36"
+                aria-label={a11yT("exportDateRange")}
+              >
+                <SelectValue placeholder={a11yT("dateRange")} />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="7d">Last 7 Days</SelectItem>
@@ -358,7 +364,7 @@ export default function AnalyticsPage() {
                 <h3 className="font-medium mb-2">Profile Complete</h3>
                 <Progress
                   value={analytics.overview.profileCompleteness}
-                  aria-label="Profile completeness"
+                  aria-label={a11yT("profileCompleteness")}
                   className="h-2"
                 />
                 {analytics.overview.profileCompleteness < 100 && (
@@ -440,7 +446,7 @@ export default function AnalyticsPage() {
               {/* Job Pipeline */}
               <PagePanel>
                 <PagePanelHeader
-                  title="Application Pipeline"
+                  title={a11yT("applicationPipeline")}
                   icon={TrendingUp}
                 />
 
@@ -506,7 +512,7 @@ export default function AnalyticsPage() {
 
               {/* Skills Overview */}
               <PagePanel>
-                <PagePanelHeader title="Skills Overview" icon={Users} />
+                <PagePanelHeader title={a11yT("skillsOverview")} icon={Users} />
 
                 {/* Skills by Category */}
                 <div className="space-y-4 mb-6">
@@ -562,7 +568,7 @@ export default function AnalyticsPage() {
             <div data-testid="analytics-recent">
               <PagePanel>
                 <PagePanelHeader
-                  title="Recent Opportunity Activity"
+                  title={a11yT("recentOpportunityActivity")}
                   icon={Clock}
                 />
 
@@ -609,7 +615,7 @@ export default function AnalyticsPage() {
                 ) : (
                   <StandardEmptyState
                     icon={Briefcase}
-                    title="No opportunities tracked yet"
+                    title={a11yT("noOpportunitiesTrackedYet")}
                     action={
                       <div className="flex flex-col items-center gap-3">
                         <p className="max-w-sm text-center text-sm text-muted-foreground">

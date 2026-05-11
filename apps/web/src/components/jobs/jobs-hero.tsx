@@ -14,6 +14,7 @@ import {
 import { pluralize } from "@/lib/text/pluralize";
 import { cn } from "@/lib/utils";
 import type { JobsViewMode } from "./job-kanban-utils";
+import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 
 const GmailImportModal = dynamic(
   () => import("@/components/google").then((module) => module.GmailImportModal),
@@ -39,13 +40,15 @@ export function JobsHero({
   onGmailImportSuccess,
   width = "wide",
 }: JobsHeroProps) {
+  const a11yT = useA11yTranslations();
+
   const showErrorToast = useErrorToast();
 
   return (
     <PageHeader
       width={width}
       icon={Target}
-      title="Opportunities"
+      title={a11yT("opportunities")}
       description="Track target opportunities, analyze match scores, and generate tailored resumes."
       actions={
         <>
@@ -58,7 +61,7 @@ export function JobsHero({
           <div className="flex flex-wrap justify-end gap-2">
             <div
               className={cn(THEME_SURFACE_CLASSES, "flex p-1")}
-              aria-label="Opportunity view mode"
+              aria-label={a11yT("opportunityViewMode")}
             >
               <Button
                 type="button"

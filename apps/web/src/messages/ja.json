@@ -7,8 +7,11 @@
   },
   "common": {
     "cancel": "キャンセル",
+    "back": "[ja] Back",
     "clear": "クリア",
     "clearAll": "すべてクリア",
+    "delete": "[ja] Delete",
+    "edit": "[ja] Edit",
     "filters": "フィルター",
     "import": "インポート",
     "loading": "読み込み中",
@@ -17,10 +20,7 @@
     "search": "検索",
     "selectLocale": "言語を選択",
     "show": "表示",
-    "tryAgain": "再試行",
-    "back": "[ja] Back",
-    "delete": "[ja] Delete",
-    "edit": "[ja] Edit"
+    "tryAgain": "再試行"
   },
   "nav": {
     "brand": "Slothing",
@@ -56,6 +56,17 @@
       "analytics": "分析",
       "profile": "プロフィール",
       "settings": "設定"
+    }
+  },
+  "marketing": {
+    "nav": {
+      "features": "機能",
+      "extension": "拡張機能",
+      "howItWorks": "仕組み",
+      "pricing": "料金",
+      "signIn": "サインイン",
+      "getStarted": "はじめる",
+      "toggleMenu": "メニューを切り替え"
     }
   },
   "dashboard": {
@@ -224,6 +235,71 @@
       }
     }
   },
+  "onboarding": {
+    "steps": {
+      "upload": {
+        "title": "[ja] Upload Your Resume",
+        "description": "[ja] Drag and drop your resume to get started, or skip this step and add it later.",
+        "dropHint": "[ja] Drop your PDF or DOCX here, or head to <documents>Documents</documents> after setup to add it later."
+      },
+      "review": {
+        "title": "[ja] Review Your Profile",
+        "description": "[ja] After uploading, review the extracted entries and edit anything that needs fixing.",
+        "sections": {
+          "contactInfo": "[ja] Contact info",
+          "workExperience": "[ja] Work experience",
+          "education": "[ja] Education",
+          "skillsProjects": "[ja] Skills & projects"
+        }
+      },
+      "builder": {
+        "title": "[ja] Build Your Starter Profile",
+        "description": "[ja] Answer a few quick prompts so Slothing can organize your career details without a resume upload.",
+        "fields": {
+          "name": "[ja] Name",
+          "email": "[ja] Email",
+          "targetRole": "[ja] Target role",
+          "backgroundSummary": "[ja] Background summary",
+          "education": "[ja] Education",
+          "school": "[ja] School",
+          "degree": "[ja] Degree",
+          "field": "[ja] Field",
+          "topSkills": "[ja] Top skills",
+          "company": "[ja] Company / organisation",
+          "roleTitle": "[ja] Role / title",
+          "roleHighlights": "[ja] Role highlights (one per line, up to 3)",
+          "projectName": "[ja] Project name",
+          "projectSummary": "[ja] What did you build?",
+          "projectHighlights": "[ja] Project highlights (one per line)",
+          "achievements": "[ja] Honours, awards, leadership (comma-separated)"
+        },
+        "placeholders": {
+          "targetRole": "[ja] Frontend intern, project manager, data analyst",
+          "backgroundSummary": "[ja] A sentence about your background, interests, or next move",
+          "topSkills": "[ja] Customer service, Excel, Python",
+          "company": "[ja] Campus cafe",
+          "roleTitle": "[ja] Barista",
+          "roleHighlights": "[ja] Pulled espresso shots\nTrained 3 new baristas",
+          "projectName": "[ja] Community pantry dashboard",
+          "projectSummary": "[ja] A class project that tracked donations and volunteer shifts",
+          "projectHighlights": "[ja] Built a filterable tracker\nPresented findings to class",
+          "achievements": "[ja] Residence council secretary, Dean's list"
+        },
+        "optional": {
+          "title": "[ja] Add a role, project, or honour (optional)",
+          "hide": "[ja] Hide",
+          "add": "[ja] Add"
+        },
+        "actions": {
+          "saving": "[ja] Saving",
+          "saveContinue": "[ja] Save and continue"
+        },
+        "errors": {
+          "save": "[ja] Unable to save your profile starter."
+        }
+      }
+    }
+  },
   "opportunities": {
     "title": "求人・機会",
     "description": "保存した機会を確認し、適合度を比較して、応募作業をひとつのリストから進めましょう。",
@@ -323,146 +399,6 @@
       "hiddenSummary": "{label} · {count}",
       "moveClosedTitle": "クローズへ移動",
       "moveClosedDescription": "{title} の最終ステータスを選択してください。"
-    }
-  },
-  "settings": {
-    "title": "設定",
-    "description": "レジュメ解析と面接対策に使用する AI プロバイダーを設定します。",
-    "loading": "設定を読み込み中...",
-    "language": {
-      "title": "言語",
-      "description": "ナビゲーションとアプリ画面で使用する言語を選びます。",
-      "label": "言語",
-      "options": {
-        "en": "English",
-        "es": "Español",
-        "zh-CN": "中文（简体）",
-        "pt-BR": "Português (BR)",
-        "hi": "हिन्दी",
-        "fr": "Français",
-        "ja": "日本語",
-        "ko": "한국어"
-      }
-    },
-    "help": {
-      "ollama": {
-        "title": "[ja] Using Ollama (Free)",
-        "installFrom": "[ja] Install from",
-        "run": "[ja] Run",
-        "testConnection": "[ja] Test the connection above"
-      },
-      "apiKeys": {
-        "title": "[ja] Using API Keys",
-        "description": "[ja] Connect your own API keys from OpenAI, Anthropic, or OpenRouter for cloud-based processing. Your keys are stored locally and never leave your device."
-      }
-    },
-    "dataManagement": {
-      "title": "[ja] Data Management",
-      "description": "[ja] Export your data or import from backups.",
-      "export": {
-        "title": "[ja] Export Data",
-        "profileJson": "[ja] Export Profile (JSON)",
-        "opportunitiesJson": "[ja] Export Opportunities (JSON)",
-        "opportunitiesCsv": "[ja] Export Opportunities (CSV)",
-        "fullBackup": "[ja] Full Backup",
-        "allDataJson": "[ja] Export All Data (JSON)"
-      },
-      "import": {
-        "title": "[ja] Import Data",
-        "jobsAria": "[ja] Import jobs from JSON or CSV file",
-        "opportunitiesJsonCsv": "[ja] Import Opportunities (JSON/CSV)",
-        "restoreBackupAria": "[ja] Restore backup from JSON file",
-        "restoreBackup": "[ja] Restore Backup",
-        "allDataAria": "[ja] Import all data from JSON file",
-        "allDataJson": "[ja] Import All Data (JSON)"
-      },
-      "confirm": {
-        "title": "[ja] Confirm Import",
-        "description": "[ja] The following data will be imported (duplicates will be skipped):",
-        "importing": "[ja] Importing...",
-        "action": "[ja] Confirm Import"
-      }
-    }
-  },
-  "notFound": {
-    "title": "ページが見つかりません",
-    "description": "そのページを見つけられませんでした。",
-    "action": "ダッシュボードへ戻る"
-  },
-  "marketing": {
-    "nav": {
-      "features": "機能",
-      "extension": "拡張機能",
-      "howItWorks": "仕組み",
-      "pricing": "料金",
-      "signIn": "サインイン",
-      "getStarted": "はじめる",
-      "toggleMenu": "メニューを切り替え"
-    }
-  },
-  "onboarding": {
-    "steps": {
-      "upload": {
-        "title": "[ja] Upload Your Resume",
-        "description": "[ja] Drag and drop your resume to get started, or skip this step and add it later.",
-        "dropHint": "[ja] Drop your PDF or DOCX here, or head to <documents>Documents</documents> after setup to add it later."
-      },
-      "review": {
-        "title": "[ja] Review Your Profile",
-        "description": "[ja] After uploading, review the extracted entries and edit anything that needs fixing.",
-        "sections": {
-          "contactInfo": "[ja] Contact info",
-          "workExperience": "[ja] Work experience",
-          "education": "[ja] Education",
-          "skillsProjects": "[ja] Skills & projects"
-        }
-      },
-      "builder": {
-        "title": "[ja] Build Your Starter Profile",
-        "description": "[ja] Answer a few quick prompts so Slothing can organize your career details without a resume upload.",
-        "fields": {
-          "name": "[ja] Name",
-          "email": "[ja] Email",
-          "targetRole": "[ja] Target role",
-          "backgroundSummary": "[ja] Background summary",
-          "education": "[ja] Education",
-          "school": "[ja] School",
-          "degree": "[ja] Degree",
-          "field": "[ja] Field",
-          "topSkills": "[ja] Top skills",
-          "company": "[ja] Company / organisation",
-          "roleTitle": "[ja] Role / title",
-          "roleHighlights": "[ja] Role highlights (one per line, up to 3)",
-          "projectName": "[ja] Project name",
-          "projectSummary": "[ja] What did you build?",
-          "projectHighlights": "[ja] Project highlights (one per line)",
-          "achievements": "[ja] Honours, awards, leadership (comma-separated)"
-        },
-        "placeholders": {
-          "targetRole": "[ja] Frontend intern, project manager, data analyst",
-          "backgroundSummary": "[ja] A sentence about your background, interests, or next move",
-          "topSkills": "[ja] Customer service, Excel, Python",
-          "company": "[ja] Campus cafe",
-          "roleTitle": "[ja] Barista",
-          "roleHighlights": "[ja] Pulled espresso shots\nTrained 3 new baristas",
-          "projectName": "[ja] Community pantry dashboard",
-          "projectSummary": "[ja] A class project that tracked donations and volunteer shifts",
-          "projectHighlights": "[ja] Built a filterable tracker\nPresented findings to class",
-          "achievements": "[ja] Residence council secretary, Dean's list"
-        },
-        "optional": {
-          "title": "[ja] Add a role, project, or honour (optional)",
-          "hide": "[ja] Hide",
-          "add": "[ja] Add"
-        },
-        "actions": {
-          "saving": "[ja] Saving",
-          "saveContinue": "[ja] Save and continue"
-        },
-        "errors": {
-          "save": "[ja] Unable to save your profile starter."
-        }
-      }
     }
   },
   "interview": {
@@ -865,6 +801,19 @@
           "deleteManyTitle": "[ja] Could not delete source files",
           "deleteManyDescription": "[ja] Please try deleting the selected files again."
         }
+      },
+      "page": {
+        "review": {
+          "title": "検出されたドキュメント要素を確認",
+          "description": "{filename} は {count, plural, one {# 個の編集可能な要素} other {# 個の編集可能な要素}} に分割されました。修正しながら保存してください。",
+          "keepEditing": "後で編集を続ける",
+          "done": "完了"
+        },
+        "moveBullets": {
+          "title": "選択した箇条書きを移動",
+          "description": "{count, plural, one {# 個の選択した箇条書き} other {# 個の選択した箇条書き}} を経験またはプロジェクトに紐づけます。",
+          "parentComponent": "親コンポーネント"
+        }
       }
     },
     "builder": {
@@ -886,6 +835,440 @@
     "opportunities": {
       "addOpportunity": {
         "title": "[ja] Add Opportunity"
+      }
+    },
+    "calendar": {
+      "create": {
+        "title": "イベントを作成",
+        "description": "カレンダーに新しいリマインダーまたはイベントを追加します。"
+      }
+    }
+  },
+  "settings": {
+    "title": "設定",
+    "description": "レジュメ解析と面接対策に使用する AI プロバイダーを設定します。",
+    "loading": "設定を読み込み中...",
+    "language": {
+      "title": "言語",
+      "description": "ナビゲーションとアプリ画面で使用する言語を選びます。",
+      "label": "言語",
+      "options": {
+        "en": "English",
+        "es": "Español",
+        "zh-CN": "中文（简体）",
+        "pt-BR": "Português (BR)",
+        "hi": "हिन्दी",
+        "fr": "Français",
+        "ja": "日本語",
+        "ko": "한국어"
+      }
+    },
+    "help": {
+      "ollama": {
+        "title": "[ja] Using Ollama (Free)",
+        "installFrom": "[ja] Install from",
+        "run": "[ja] Run",
+        "testConnection": "[ja] Test the connection above"
+      },
+      "apiKeys": {
+        "title": "[ja] Using API Keys",
+        "description": "[ja] Connect your own API keys from OpenAI, Anthropic, or OpenRouter for cloud-based processing. Your keys are stored locally and never leave your device."
+      }
+    },
+    "dataManagement": {
+      "title": "[ja] Data Management",
+      "description": "[ja] Export your data or import from backups.",
+      "export": {
+        "title": "[ja] Export Data",
+        "profileJson": "[ja] Export Profile (JSON)",
+        "opportunitiesJson": "[ja] Export Opportunities (JSON)",
+        "opportunitiesCsv": "[ja] Export Opportunities (CSV)",
+        "fullBackup": "[ja] Full Backup",
+        "allDataJson": "[ja] Export All Data (JSON)"
+      },
+      "import": {
+        "title": "[ja] Import Data",
+        "jobsAria": "[ja] Import jobs from JSON or CSV file",
+        "opportunitiesJsonCsv": "[ja] Import Opportunities (JSON/CSV)",
+        "restoreBackupAria": "[ja] Restore backup from JSON file",
+        "restoreBackup": "[ja] Restore Backup",
+        "allDataAria": "[ja] Import all data from JSON file",
+        "allDataJson": "[ja] Import All Data (JSON)"
+      },
+      "confirm": {
+        "title": "[ja] Confirm Import",
+        "description": "[ja] The following data will be imported (duplicates will be skipped):",
+        "importing": "[ja] Importing...",
+        "action": "[ja] Confirm Import"
+      }
+    }
+  },
+  "notFound": {
+    "title": "ページが見つかりません",
+    "description": "そのページを見つけられませんでした。",
+    "action": "ダッシュボードへ戻る"
+  },
+  "a11y": {
+    "weCouldnTLoadThisPage": "このページを読み込めませんでした",
+    "toggleMenu": "メニューの切り替え",
+    "dismissError": "エラーを無視",
+    "applicationError": "アプリケーションエラー",
+    "dismissNotification": "通知を閉じる",
+    "trackYourFirstOpportunity": "最初の機会を追跡する",
+    "resumeTemplate": "履歴書のテンプレート",
+    "titleRequired": "タイトルは必須です",
+    "companyRequired": "会社名は必須です",
+    "theSiteMayNotBeSupportedOrThe": "サイトがサポートされていないか、投稿にアクセスできなかった可能性があります。",
+    "reactTypescript": "React、TypeScript",
+    "accessibilityTesting": "アクセシビリティ、テスト",
+    "wizardProgress": "ウィザードの進行状況",
+    "queueCleared": "キューがクリアされました",
+    "opportunityNotFound": "機会が見つかりませんでした",
+    "addPrivateNotesAboutThisOpportunity": "この機会に関する個人的なメモを追加します。",
+    "downloadPdf": "PDF をダウンロード (Ctrl+E)",
+    "reviewQueueDisabled": "レビューキューが無効になっています",
+    "openOpportunities": "開かれた機会",
+    "navigation": "ナビゲーション",
+    "pageActions": "ページアクション",
+    "general": "一般的な",
+    "dataManagement": "データ管理",
+    "importJobsFromJsonOrCsvFile": "JSON または CSV ファイルからジョブをインポート",
+    "restoreBackupFromJsonFile": "JSONファイルからバックアップを復元する",
+    "importAllDataFromJsonFile": "JSONファイルからすべてのデータをインポート",
+    "applicationRate": "申請率",
+    "responseRate": "応答率",
+    "interviewRate": "面接率",
+    "successRate": "成功率",
+    "summary": "まとめ",
+    "experience": "経験",
+    "skills": "スキル",
+    "promptABTesting": "迅速な A/B テスト",
+    "writeTheTailoringInstructionsForThisPromptVariant": "このプロンプト バリアントの調整手順を書いてください...",
+    "builderView": "ビルダービュー",
+    "selectWhatToSync": "同期するものを選択してください",
+    "model": "モデル",
+    "selectAModel": "モデルを選択してください",
+    "refreshAvailableModels": "利用可能なモデルを更新する",
+    "noOpportunitiesMatchYourFilters": "フィルターに一致する機会はありません",
+    "selectAllSourceFiles": "すべてのソース ファイルを選択します",
+    "insertTable": "テーブルの挿入",
+    "imageUpload": "画像のアップロード",
+    "previewZoom": "プレビューズーム",
+    "whatAiPowers": "AI がもたらすもの",
+    "weeklyActivity": "毎週のアクティビティ",
+    "googleProfile": "Googleプロフィール",
+    "opportunityReviewQueue": "商談レビューキュー",
+    "searchContacts": "連絡先の検索",
+    "gmailAutoStatus": "Gmail の自動ステータス",
+    "moveBulletUp": "弾丸を上に移動",
+    "moveBulletDown": "箇条書きを下に移動",
+    "editBullet": "箇条書きの編集",
+    "deleteBullet": "箇条書きの削除",
+    "openFilesPanel": "ファイルパネルを開く",
+    "searchTemplates": "検索テンプレート",
+    "openAiAssistantPanel": "AI アシスタント パネルを開く",
+    "theme": "テーマ",
+    "locale": "ロケール",
+    "savingLocale": "ロケールの保存",
+    "selectLocale": "ロケールの選択",
+    "softwareEngineer": "ソフトウェアエンジニア",
+    "acmeCorp": "アクメ コーポレーション",
+    "pasteTheFullOpportunityDescriptionHere": "商談の説明全体をここに貼り付けてください...",
+    "googleIntegration": "Googleの統合",
+    "uploadResumeFile": "履歴書ファイルをアップロードする",
+    "removeFile": "ファイルを削除する",
+    "searchYourCareerProfile": "あなたのキャリアプロフィールを検索",
+    "searchYourCareerProfile2": "あなたのキャリアプロフィールを検索してください...",
+    "pressToFocus": "/ を押してフォーカスします",
+    "clearSearch": "検索をクリア",
+    "sortOrder": "並べ替え順序",
+    "filterByCategory": "カテゴリでフィルタリングする",
+    "pageSize": "ページサイズ",
+    "kanbanLanes": "カンバンレーン",
+    "jobKanbanBoard": "ジョブかんばんボード",
+    "versionName": "バージョン名",
+    "versionName2": "バージョン名...",
+    "opportunities": "機会",
+    "opportunityViewMode": "オポチュニティビューモード",
+    "searchJobsByTitleCompanyOrKeywords": "役職、会社名、キーワードで求人を検索します...",
+    "status": "状態",
+    "type": "タイプ",
+    "location": "位置",
+    "sort": "選別",
+    "sectionChangeCounts": "セクション変更数",
+    "totalChangeCounts": "合計変更数",
+    "evalHealth": "健康状態を評価する",
+    "averageScoreTrend": "平均スコアの推移",
+    "uploadResumePdfOrTextFile": "履歴書のPDFまたはテキストファイルをアップロードする",
+    "pasteYourFullResumeTextHere": "履歴書の全文をここに貼り付けてください...",
+    "optionalPasteTheJobDescriptionToCheckKeyword": "オプション: ジョブの説明を貼り付けて、キーワードの一致を確認します...",
+    "beforeTheInterview": "面接の前に",
+    "duringTheInterview": "インタビュー中",
+    "afterTheInterview": "面接後",
+    "expandAiAssistantPanel": "AI アシスタント パネルを展開する",
+    "showAiAssistant": "AIアシスタントを表示",
+    "showTailorToJd": "JD に合わせて表示",
+    "showGenerateFromBank": "バンクから生成を表示",
+    "collapseAiAssistantPanel": "AI アシスタント パネルを折りたたむ",
+    "pasteTheJdHere": "ここに JD を貼り付けます",
+    "rewriteSection": "リライトセクション",
+    "chooseSection": "セクションを選択してください",
+    "rewriteSelectedSection": "選択したセクションを書き換える",
+    "selectedTextQuickActions": "選択したテキストのクイックアクション",
+    "coverLetterCritique": "カバーレターの批評",
+    "noOpportunitiesTrackedYet": "まだ追跡された機会はありません",
+    "onboardingProgress": "オンボーディングの進捗状況",
+    "skipOnboarding": "オンボーディングをスキップ",
+    "expandFilesPanel": "ファイルパネルを展開する",
+    "showFiles": "ファイルを表示する",
+    "newStudioFile": "新しいスタジオファイル",
+    "showVersionHistory": "バージョン履歴を表示する",
+    "collapseFilesPanel": "ファイルパネルを折りたたむ",
+    "notifications": "通知",
+    "markAllAsRead": "すべて既読としてマークする",
+    "deleteReadNotifications": "既読通知を削除する",
+    "closeNotifications": "通知を閉じる",
+    "markAsRead": "既読としてマークする",
+    "delete": "消去",
+    "deleteNotification": "通知の削除",
+    "sanFranciscoCa": "カリフォルニア州サンフランシスコ",
+    "selectType": "タイプを選択してください",
+    "frontendInternProjectManagerDataAnalyst": "フロントエンドインターン、プロジェクトマネージャー、データアナリスト",
+    "school": "学校",
+    "degree": "程度",
+    "field": "分野",
+    "customerServiceExcelPython": "カスタマーサービス、Excel、Python",
+    "campusCafe": "キャンパスカフェ",
+    "barista": "バリスタ",
+    "communityPantryDashboard": "コミュニティ パントリー ダッシュボード",
+    "residenceCouncilSecretaryDeanSList": "寮評議会書記、学部長のリスト",
+    "typeACommandOrSearch": "コマンドを入力するか検索...",
+    "profileCompleteness": "プロファイルの完全性",
+    "coverLetterContent": "カバーレターの内容",
+    "documents": "書類",
+    "uploadFile": "ファイルのアップロード (Ctrl+U)",
+    "failedToLoadDocuments": "ドキュメントのロードに失敗しました",
+    "expand": "拡大する",
+    "selectAllVisibleComponents": "表示されているコンポーネントをすべて選択します",
+    "noComponentsDetected": "コンポーネントが検出されませんでした",
+    "noComponentsLeft": "コンポーネントが残っていない",
+    "answerBank": "アンサーバンク",
+    "searchQuestionsAnswersOrSources": "質問、回答、ソースを検索する",
+    "sortAnswers": "回答を並べ替える",
+    "failedToLoadAnswers": "回答をロードできませんでした",
+    "copyAnswer": "回答をコピーする",
+    "duplicateAnswer": "重複した回答",
+    "editAnswer": "回答を編集",
+    "deleteAnswer": "回答を削除",
+    "exampleWillYouNowOrInTheFuture": "例: 現在または将来、スポンサーが必要になりますか?",
+    "writeTheAnswerYouWantReusedByAutofill": "自動入力で再利用したい回答を書きます。",
+    "optional": "オプション",
+    "installTheSlothingBrowserExtension": "Slothing ブラウザ拡張機能をインストールする",
+    "dismissExtensionPromo": "延長プロモーションを閉じる",
+    "analyticsDashboard": "分析ダッシュボード",
+    "exportDateRange": "エクスポートの日付範囲",
+    "dateRange": "日付範囲",
+    "applicationPipeline": "アプリケーションパイプライン",
+    "skillsOverview": "スキルの概要",
+    "recentOpportunityActivity": "最近の機会活動",
+    "interviewPreparation": "面接の準備",
+    "github": "GitHub",
+    "news": "ニュース",
+    "levels": "レベル",
+    "engBlog": "英語ブログ",
+    "profile": "プロフィール",
+    "profileSections": "プロフィールセクション",
+    "seniorProductEngineer": "シニアプロダクトエンジニア",
+    "loadingSource": "ソースをロードしています",
+    "calendar": "カレンダー",
+    "filterEventsByType": "イベントをタイプ別にフィルタリングする",
+    "filter": "フィルター",
+    "subscribeToYourCalendarFeedViewInYour": "カレンダー フィード (.ics) を購読します - デフォルトのカレンダー アプリで表示します。",
+    "previousMonth": "前月",
+    "nextMonth": "来月",
+    "noEventsScheduledForThisDay": "この日は予定されているイベントはありません",
+    "clickOnADateToViewEvents": "日付をクリックしてイベントを表示します",
+    "noUpcomingEvents": "今後のイベントはありません",
+    "addNotesOrDetails": "メモや詳細を追加...",
+    "copyUrl": "URLをコピー",
+    "salaryTools": "給与ツール",
+    "marketRateCalculator": "市場レート計算ツール",
+    "selectRole": "役割の選択",
+    "selectYourRole": "役割を選択してください",
+    "selectLocation": "場所を選択してください",
+    "addOffer": "オファーを追加",
+    "noOffersYet": "まだオファーはありません",
+    "generateNegotiationScript": "ネゴシエーションスクリプトの生成",
+    "chooseAJobApplication": "求人応募を選択してください",
+    "chooseTheJobYouInterviewedFor": "面接した仕事を選択してください",
+    "mentionARecentProjectSharedInterestOrCompany": "最近のプロジェクト、共通の関心事、または会社の最新情報について言及します...",
+    "chooseTheJobOffer": "求人を選択してください",
+    "addAnySpecificPointsYouWantToMention": "言及したい具体的な点があれば追加してください...",
+    "chooseAReplyType": "返信タイプを選択してください",
+    "addConstraintsTimingCompensationExpectationsOrAFuture": "制約、タイミング、報酬の期待、将来に向けたメモなどを追加します...",
+    "chooseTheRoleYouReApplyingFor": "応募する役割を選択してください",
+    "addARecentAccomplishmentOrProjectToRemind": "最近の成果やプロジェクトを追加して思い出してもらいましょう...",
+    "emailTemplates": "メールテンプレート",
+    "chooseTemplate": "テンプレートの選択",
+    "customize": "カスタマイズ",
+    "editGithubOrg": "GitHub 組織を編集する",
+    "githubOrg": "GitHub組織",
+    "saveGithubOrg": "GitHub 組織を保存する",
+    "cancel": "キャンセル",
+    "searchDrafts": "下書きの検索",
+    "answerScorecard": "解答スコアカード",
+    "startFreeWithSlothing": "Slothing を無料で始めましょう",
+    "extensionPopoverPreviewOnAJobPosting": "求人情報の拡張機能ポップオーバー プレビュー",
+    "dashboardPreview": "ダッシュボードのプレビュー"
+  },
+  "profile": {
+    "title": "プロフィール",
+    "description": "Slothing が履歴書、カバーレター、適合度チェックに使う元プロフィールを管理します。",
+    "actions": {
+      "discard": "破棄",
+      "saveChanges": "変更を保存"
+    },
+    "status": {
+      "saving": "保存中...",
+      "saved": "保存済み"
+    },
+    "errors": {
+      "loadProfile": "プロフィールを読み込めませんでした",
+      "saveProfile": "プロフィールを保存できませんでした"
+    },
+    "unsavedChanges": {
+      "prompt": "未保存のプロフィール変更があります。保存せずに移動しますか？"
+    },
+    "tabs": {
+      "ariaLabel": "プロフィールセクション",
+      "overview": "概要",
+      "preferences": "希望条件",
+      "privacy": "プライバシー"
+    },
+    "answerBankPrompt": {
+      "text": "より詳しいプロフィールにしたい場合は、再利用できるエピソードや事実を回答バンクに保存してください。",
+      "action": "回答バンクを開く"
+    },
+    "emptyState": {
+      "title": "プロフィールを設定しましょう",
+      "description": "履歴書から始めると Slothing が基本情報を入力できます。フォームを開いて手動で追加することもできます。",
+      "uploadResume": "履歴書をアップロードして入力",
+      "fillManually": "または手動で入力"
+    },
+    "sidebar": {
+      "yourName": "あなたの名前",
+      "addHeadline": "見出しを追加",
+      "noEmail": "メールなし",
+      "noLocation": "所在地なし",
+      "noTargetSalary": "希望給与なし",
+      "salaryRange": "{currency} {min}–{max}",
+      "salaryMinimum": "{currency} {min}+",
+      "salaryMaximum": "最大 {currency} {max}",
+      "profilePhoto": "プロフィール写真",
+      "profilePhotoNamed": "{name} のプロフィール写真"
+    },
+    "placeholders": {
+      "headline": "シニアプロダクトエンジニア"
+    },
+    "sections": {
+      "identity": {
+        "title": "基本情報",
+        "description": "Slothing が履歴書、カバーレター、適合度チェックに使う元プロフィールを管理します。"
+      },
+      "contact": {
+        "title": "連絡先",
+        "description": "Slothing が履歴書、カバーレター、適合度チェックに使う元プロフィールを管理します。"
+      },
+      "summary": {
+        "title": "職務要約",
+        "description": "Slothing が履歴書、カバーレター、適合度チェックに使う元プロフィールを管理します。"
+      },
+      "savedSignals": {
+        "title": "保存済みプロフィール情報",
+        "description": "Slothing が履歴書、カバーレター、適合度チェックに使う元プロフィールを管理します。"
+      },
+      "careerDetails": {
+        "title": "職務詳細",
+        "description": "Slothing が履歴書、カバーレター、適合度チェックに使う元プロフィールを管理します。"
+      }
+    },
+    "fields": {
+      "avatarUrl": "アバターURL",
+      "fullName": "氏名",
+      "headline": "見出し",
+      "email": "メールアドレス",
+      "phone": "電話",
+      "location": "所在地",
+      "linkedin": "LinkedInプロフィール",
+      "github": "GitHubプロフィール",
+      "website": "Webサイト",
+      "summary": "職務要約",
+      "targetRoles": "希望職種",
+      "currency": "通貨",
+      "minimum": "下限",
+      "maximum": "上限"
+    },
+    "signals": {
+      "experience": "経験",
+      "education": "学歴",
+      "skills": "スキル",
+      "projects": "プロジェクト",
+      "awards": "受賞"
+    },
+    "workStyle": {
+      "title": "働き方",
+      "description": "Slothing が履歴書、カバーレター、適合度チェックに使う元プロフィールを管理します。",
+      "options": {
+        "remote": "リモート",
+        "hybrid": "ハイブリッド",
+        "onsite": "出社",
+        "fullTime": "フルタイム",
+        "contract": "契約"
+      }
+    },
+    "targetRoles": {
+      "title": "希望職種",
+      "description": "Slothing が履歴書、カバーレター、適合度チェックに使う元プロフィールを管理します。"
+    },
+    "salary": {
+      "title": "報酬目標",
+      "description": "Slothing が履歴書、カバーレター、適合度チェックに使う元プロフィールを管理します。"
+    },
+    "privacy": {
+      "title": "プライバシー",
+      "description": "Slothing が履歴書、カバーレター、適合度チェックに使う元プロフィールを管理します。",
+      "openToRecruiters": {
+        "title": "Open to recruiter outreach",
+        "description": "Slothing が履歴書、カバーレター、適合度チェックに使う元プロフィールを管理します。"
+      },
+      "shareContactInfo": {
+        "title": "Share contact info by default",
+        "description": "Slothing が履歴書、カバーレター、適合度チェックに使う元プロフィールを管理します。"
+      }
+    },
+    "completeness": {
+      "readiness": "プロフィール準備度",
+      "summary": "プロフィールは {score}% 完了 · {count, plural, one {# 件のクイック改善} other {# 件のクイック改善}}",
+      "completeLabel": "完了",
+      "progressLabel": "プロフィール完成度",
+      "noGaps": "重要項目はすべて入力済みです。",
+      "points": "+{points, plural, one {# ポイント} other {# ポイント}}",
+      "gaps": {
+        "contact-info": "名前、メール、見出しを追加",
+        "summary": "職務要約を追加",
+        "experience-bullets": {
+          "empty": "3つ以上の箇条書きを含む経験を追加",
+          "role": "{company} の職務に {missing, plural, one {# 件の箇条書き} other {# 件の箇条書き}}を追加"
+        },
+        "quantified-bullets": {
+          "empty": "{missing, plural, one {# 件の定量的な箇条書き} other {# 件の定量的な箇条書き}}を追加",
+          "role": "{company} の職務に {missing, plural, one {# 件の定量的な箇条書き} other {# 件の定量的な箇条書き}}を追加"
+        },
+        "education": "学歴を追加",
+        "skills": "{missing, plural, one {# 件のスキル} other {# 件のスキル}}を追加",
+        "career-depth": "プロジェクトまたは別の経験を追加",
+        "achievements": "実績、受賞、認定を追加",
+        "social-url": "LinkedIn または GitHub URL を追加"
       }
     }
   }

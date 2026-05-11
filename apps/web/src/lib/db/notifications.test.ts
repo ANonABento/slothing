@@ -27,6 +27,8 @@ import {
   createApplicationUpdateNotification,
 } from "./notifications";
 
+const TEST_USER_ID = "test-user";
+
 describe("Notification Database Functions", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -37,12 +39,15 @@ describe("Notification Database Functions", () => {
       const mockRun = vi.fn();
       (db.prepare as Mock).mockReturnValue({ run: mockRun });
 
-      const result = createNotification({
-        type: "info",
-        title: "Test Notification",
-        message: "This is a test",
-        link: "/test",
-      });
+      const result = createNotification(
+        {
+          type: "info",
+          title: "Test Notification",
+          message: "This is a test",
+          link: "/test",
+        },
+        TEST_USER_ID,
+      );
 
       expect(db.prepare).toHaveBeenCalled();
       expect(mockRun).toHaveBeenCalledWith(
@@ -52,7 +57,7 @@ describe("Notification Database Functions", () => {
         "This is a test",
         "/test",
         expect.any(String),
-        "default",
+        TEST_USER_ID,
       );
       expect(result.id).toBe("test-notification-id");
       expect(result.type).toBe("info");
@@ -64,10 +69,13 @@ describe("Notification Database Functions", () => {
       const mockRun = vi.fn();
       (db.prepare as Mock).mockReturnValue({ run: mockRun });
 
-      const result = createNotification({
-        type: "system",
-        title: "System Alert",
-      });
+      const result = createNotification(
+        {
+          type: "system",
+          title: "System Alert",
+        },
+        TEST_USER_ID,
+      );
 
       expect(mockRun).toHaveBeenCalledWith(
         "test-notification-id",
@@ -76,7 +84,7 @@ describe("Notification Database Functions", () => {
         null,
         null,
         expect.any(String),
-        "default",
+        TEST_USER_ID,
       );
       expect(result.message).toBeUndefined();
       expect(result.link).toBeUndefined();
@@ -142,12 +150,12 @@ describe("Notification Database Functions", () => {
 
       const mockAll = mockNotificationQuery(mockRows);
 
-      const result = getNotifications();
+      const result = getNotifications({ userId: TEST_USER_ID });
 
       expect(db.prepare).toHaveBeenLastCalledWith(
         expect.stringContaining("LEFT JOIN suggested_status_updates"),
       );
-      expect(mockAll).toHaveBeenCalledWith("default", 50);
+      expect(mockAll).toHaveBeenCalledWith(TEST_USER_ID, 50);
       expect(result).toHaveLength(2);
       expect(result[0].id).toBe("notif-1");
       expect(result[0].read).toBe(false);
@@ -159,7 +167,7 @@ describe("Notification Database Functions", () => {
     it("should filter unread only when specified", () => {
       mockNotificationQuery();
 
-      getNotifications({ unreadOnly: true });
+      getNotifications({ userId: TEST_USER_ID, unreadOnly: true });
 
       expect(db.prepare).toHaveBeenLastCalledWith(
         expect.stringContaining("AND notifications.read = 0"),
@@ -169,17 +177,17 @@ describe("Notification Database Functions", () => {
     it("should respect limit parameter", () => {
       const mockAll = mockNotificationQuery();
 
-      getNotifications({ limit: 10 });
+      getNotifications({ userId: TEST_USER_ID, limit: 10 });
 
-      expect(mockAll).toHaveBeenCalledWith("default", 10);
+      expect(mockAll).toHaveBeenCalledWith(TEST_USER_ID, 10);
     });
 
     it("should use default limit of 50", () => {
       const mockAll = mockNotificationQuery();
 
-      getNotifications();
+      getNotifications({ userId: TEST_USER_ID });
 
-      expect(mockAll).toHaveBeenCalledWith("default", 50);
+      expect(mockAll).toHaveBeenCalledWith(TEST_USER_ID, 50);
     });
 
     it("should include suggested status metadata", () => {
@@ -201,7 +209,9 @@ describe("Notification Database Functions", () => {
         },
       ]);
 
-      expect(getNotifications()[0].suggestedStatusUpdate).toEqual({
+      expect(
+        getNotifications({ userId: TEST_USER_ID })[0].suggestedStatusUpdate,
+      ).toEqual({
         state: "pending",
         opportunityId: "opp-1",
         suggestedStatus: "interviewing",
@@ -230,7 +240,10 @@ describe("Notification Database Functions", () => {
         },
       ]);
 
-      expect(getNotifications()[0].suggestedStatusUpdate?.evidence).toEqual([]);
+      expect(
+        getNotifications({ userId: TEST_USER_ID })[0].suggestedStatusUpdate
+          ?.evidence,
+      ).toEqual([]);
     });
   });
 
@@ -239,12 +252,12 @@ describe("Notification Database Functions", () => {
       const mockRun = vi.fn();
       (db.prepare as Mock).mockReturnValue({ run: mockRun });
 
-      markNotificationRead("notif-1");
+      markNotificationRead("notif-1", TEST_USER_ID);
 
       expect(db.prepare).toHaveBeenCalledWith(
         "UPDATE notifications SET read = 1 WHERE id = ? AND user_id = ?",
       );
-      expect(mockRun).toHaveBeenCalledWith("notif-1", "default");
+      expect(mockRun).toHaveBeenCalledWith("notif-1", TEST_USER_ID);
     });
   });
 
@@ -253,12 +266,12 @@ describe("Notification Database Functions", () => {
       const mockRun = vi.fn();
       (db.prepare as Mock).mockReturnValue({ run: mockRun });
 
-      markAllNotificationsRead();
+      markAllNotificationsRead(TEST_USER_ID);
 
       expect(db.prepare).toHaveBeenCalledWith(
         "UPDATE notifications SET read = 1 WHERE read = 0 AND user_id = ?",
       );
-      expect(mockRun).toHaveBeenCalledWith("default");
+      expect(mockRun).toHaveBeenCalledWith(TEST_USER_ID);
     });
   });
 
@@ -267,12 +280,12 @@ describe("Notification Database Functions", () => {
       const mockRun = vi.fn();
       (db.prepare as Mock).mockReturnValue({ run: mockRun });
 
-      deleteNotification("notif-1");
+      deleteNotification("notif-1", TEST_USER_ID);
 
       expect(db.prepare).toHaveBeenCalledWith(
         "DELETE FROM notifications WHERE id = ? AND user_id = ?",
       );
-      expect(mockRun).toHaveBeenCalledWith("notif-1", "default");
+      expect(mockRun).toHaveBeenCalledWith("notif-1", TEST_USER_ID);
     });
   });
 
@@ -281,12 +294,12 @@ describe("Notification Database Functions", () => {
       const mockRun = vi.fn();
       (db.prepare as Mock).mockReturnValue({ run: mockRun });
 
-      deleteReadNotifications();
+      deleteReadNotifications(TEST_USER_ID);
 
       expect(db.prepare).toHaveBeenCalledWith(
         "DELETE FROM notifications WHERE read = 1 AND user_id = ?",
       );
-      expect(mockRun).toHaveBeenCalledWith("default");
+      expect(mockRun).toHaveBeenCalledWith(TEST_USER_ID);
     });
   });
 
@@ -295,12 +308,12 @@ describe("Notification Database Functions", () => {
       const mockGet = vi.fn().mockReturnValue({ count: 5 });
       (db.prepare as Mock).mockReturnValue({ get: mockGet });
 
-      const result = getUnreadNotificationCount();
+      const result = getUnreadNotificationCount(TEST_USER_ID);
 
       expect(db.prepare).toHaveBeenCalledWith(
         "SELECT COUNT(*) as count FROM notifications WHERE read = 0 AND user_id = ?",
       );
-      expect(mockGet).toHaveBeenCalledWith("default");
+      expect(mockGet).toHaveBeenCalledWith(TEST_USER_ID);
       expect(result).toBe(5);
     });
 
@@ -308,9 +321,9 @@ describe("Notification Database Functions", () => {
       const mockGet = vi.fn().mockReturnValue({ count: 0 });
       (db.prepare as Mock).mockReturnValue({ get: mockGet });
 
-      const result = getUnreadNotificationCount();
+      const result = getUnreadNotificationCount(TEST_USER_ID);
 
-      expect(mockGet).toHaveBeenCalledWith("default");
+      expect(mockGet).toHaveBeenCalledWith(TEST_USER_ID);
       expect(result).toBe(0);
     });
   });
@@ -369,6 +382,7 @@ describe("Notification Database Functions", () => {
         "Frontend Developer",
         "interviewing",
         "job-789",
+        TEST_USER_ID,
       );
 
       expect(result.type).toBe("application_update");

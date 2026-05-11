@@ -15,12 +15,15 @@ import { useErrorToast } from "@/hooks/use-error-toast";
 import { readJsonResponse } from "@/lib/http";
 import type { SettingsResponse } from "@/types/api";
 import type { Opportunity } from "@/types/opportunity";
+import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 
 interface OpportunitiesResponse {
   opportunities?: Opportunity[];
 }
 
 export default function OpportunityReviewPage() {
+  const a11yT = useA11yTranslations();
+
   const [jobs, setJobs] = useState<Opportunity[]>([]);
   const [enabled, setEnabled] = useState(true);
   const [loading, setLoading] = useState(true);
@@ -108,7 +111,7 @@ export default function OpportunityReviewPage() {
         <PageContent>
           <StandardEmptyState
             icon={Settings}
-            title="Review queue disabled"
+            title={a11yT("reviewQueueDisabled")}
             description="Enable it in Settings to review pending opportunities."
             action={
               <Button asChild>
@@ -126,7 +129,7 @@ export default function OpportunityReviewPage() {
       <Link
         href="/opportunities"
         className="fixed left-4 top-4 z-30 inline-flex h-11 w-11 items-center justify-center rounded-full border bg-card/90 text-muted-foreground shadow-sm backdrop-blur transition-colors hover:text-foreground"
-        aria-label="Open opportunities"
+        aria-label={a11yT("openOpportunities")}
       >
         <ArrowLeft className="h-5 w-5" />
       </Link>
