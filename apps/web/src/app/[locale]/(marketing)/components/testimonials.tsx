@@ -1,30 +1,23 @@
 import { Users, FileText, ScanSearch } from "lucide-react";
 
-const stats = [
+const outcomes = [
   {
-    icon: Users,
-    value: "10,000+",
-    label: "Job seekers using Slothing",
-    quote:
-      "Slothing completely transformed my job search. The AI resume optimization helped me get callbacks from companies that never responded before.",
-    author: "Sarah M.",
-    role: "Software Engineer",
-    company: "Now at Google",
+    icon: ScanSearch,
+    title: "ATS-aware tailoring",
+    description:
+      "Slothing matches resume language against the exact ATS keywords most likely to be parsed.",
   },
   {
     icon: FileText,
-    value: "50,000+",
-    label: "Tailored resumes generated",
+    title: "One career profile, infinite resumes",
+    description:
+      "Upload once. Generate a tailored resume for every role in under a minute.",
   },
   {
-    icon: ScanSearch,
-    value: "85%",
-    label: "ATS pass rate after optimization",
-    quote:
-      "I was applying to 50+ jobs with no response. After using Slothing to tailor my resume, my response rate went from 2% to 40%. Game changer!",
-    author: "Jennifer L.",
-    role: "Marketing Director",
-    company: "Now at HubSpot",
+    icon: Users,
+    title: "Track every application",
+    description:
+      "Capture, prioritize, and follow up - never lose a promising lead in your inbox.",
   },
 ];
 
@@ -35,59 +28,35 @@ export function Testimonials() {
         {/* Section Header */}
         <div className="text-center max-w-2xl mx-auto mb-16">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4">
-            Social Proof
+            How Slothing Helps
           </div>
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">
-            Trusted by job seekers{" "}
-            <span className="gradient-text">everywhere</span>
+            Turn every application into a{" "}
+            <span className="gradient-text">tailored opportunity</span>
           </h2>
           <p className="text-lg text-muted-foreground">
-            Thousands of professionals rely on Slothing to land interviews
-            faster. See what our users have to say about their experience with
-            Slothing.
+            Slothing helps you adapt your resume, manage applications, and keep
+            your job search moving without relying on fabricated social proof.
           </p>
         </div>
 
-        {/* Stats Grid */}
+        {/* Outcomes Grid */}
         <div className="grid md:grid-cols-3 gap-6">
-          {stats.map((stat) => (
+          {outcomes.map((outcome) => (
             <div
-              key={stat.label}
-              className="relative p-8 rounded-2xl border bg-card text-center hover:shadow-lg transition-shadow duration-300"
+              key={outcome.title}
+              className="relative p-8 rounded-2xl border bg-card hover:shadow-lg transition-shadow duration-300"
             >
               <div className="inline-flex p-3 rounded-xl bg-primary/10 text-primary mb-4">
-                <stat.icon className="h-6 w-6" />
+                <outcome.icon className="h-6 w-6" />
               </div>
-              <div className="text-3xl md:text-4xl font-bold gradient-text mb-2">
-                {stat.value}
-              </div>
-              <div className="text-sm text-muted-foreground">{stat.label}</div>
+              <h3 className="text-xl font-semibold mb-3">{outcome.title}</h3>
+              <p className="text-sm leading-6 text-muted-foreground">
+                {outcome.description}
+              </p>
             </div>
           ))}
         </div>
-
-        {/* Testimonial placeholder */}
-        <div className="mt-12 p-8 rounded-2xl border bg-card text-center">
-          <p className="text-muted-foreground italic">
-            &quot;Slothing turned my 3-hour resume rewrite into a 5-minute task.
-            I got callbacks from companies that never responded before.&quot;
-          </p>
-          <div className="mt-4 flex items-center justify-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center text-sm font-medium">
-              S
-            </div>
-            <div className="text-left">
-              <div className="font-medium">Sarah M.</div>
-              <div className="text-sm text-muted-foreground">
-                Software Engineer
-              </div>
-            </div>
-          </div>
-        </div>
-        <p className="mt-8 text-center text-xs italic text-muted-foreground">
-          Stats, ratings, and testimonials are illustrative placeholders.
-          Slothing is in active development — real numbers are coming.
-        </p>
       </div>
     </section>
   );
