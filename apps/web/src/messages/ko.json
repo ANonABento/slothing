@@ -7,8 +7,11 @@
   },
   "common": {
     "cancel": "취소",
+    "back": "[ko] Back",
     "clear": "지우기",
     "clearAll": "모두 지우기",
+    "delete": "[ko] Delete",
+    "edit": "[ko] Edit",
     "filters": "필터",
     "import": "가져오기",
     "loading": "로딩 중",
@@ -17,10 +20,7 @@
     "search": "검색",
     "selectLocale": "언어 선택",
     "show": "표시",
-    "tryAgain": "다시 시도",
-    "back": "[ko] Back",
-    "delete": "[ko] Delete",
-    "edit": "[ko] Edit"
+    "tryAgain": "다시 시도"
   },
   "nav": {
     "brand": "Slothing",
@@ -56,6 +56,17 @@
       "analytics": "분석",
       "profile": "프로필",
       "settings": "설정"
+    }
+  },
+  "marketing": {
+    "nav": {
+      "features": "기능",
+      "extension": "확장 프로그램",
+      "howItWorks": "작동 방식",
+      "pricing": "가격",
+      "signIn": "로그인",
+      "getStarted": "시작하기",
+      "toggleMenu": "메뉴 전환"
     }
   },
   "dashboard": {
@@ -224,6 +235,71 @@
       }
     }
   },
+  "onboarding": {
+    "steps": {
+      "upload": {
+        "title": "[ko] Upload Your Resume",
+        "description": "[ko] Drag and drop your resume to get started, or skip this step and add it later.",
+        "dropHint": "[ko] Drop your PDF or DOCX here, or head to <documents>Documents</documents> after setup to add it later."
+      },
+      "review": {
+        "title": "[ko] Review Your Profile",
+        "description": "[ko] After uploading, review the extracted entries and edit anything that needs fixing.",
+        "sections": {
+          "contactInfo": "[ko] Contact info",
+          "workExperience": "[ko] Work experience",
+          "education": "[ko] Education",
+          "skillsProjects": "[ko] Skills & projects"
+        }
+      },
+      "builder": {
+        "title": "[ko] Build Your Starter Profile",
+        "description": "[ko] Answer a few quick prompts so Slothing can organize your career details without a resume upload.",
+        "fields": {
+          "name": "[ko] Name",
+          "email": "[ko] Email",
+          "targetRole": "[ko] Target role",
+          "backgroundSummary": "[ko] Background summary",
+          "education": "[ko] Education",
+          "school": "[ko] School",
+          "degree": "[ko] Degree",
+          "field": "[ko] Field",
+          "topSkills": "[ko] Top skills",
+          "company": "[ko] Company / organisation",
+          "roleTitle": "[ko] Role / title",
+          "roleHighlights": "[ko] Role highlights (one per line, up to 3)",
+          "projectName": "[ko] Project name",
+          "projectSummary": "[ko] What did you build?",
+          "projectHighlights": "[ko] Project highlights (one per line)",
+          "achievements": "[ko] Honours, awards, leadership (comma-separated)"
+        },
+        "placeholders": {
+          "targetRole": "[ko] Frontend intern, project manager, data analyst",
+          "backgroundSummary": "[ko] A sentence about your background, interests, or next move",
+          "topSkills": "[ko] Customer service, Excel, Python",
+          "company": "[ko] Campus cafe",
+          "roleTitle": "[ko] Barista",
+          "roleHighlights": "[ko] Pulled espresso shots\nTrained 3 new baristas",
+          "projectName": "[ko] Community pantry dashboard",
+          "projectSummary": "[ko] A class project that tracked donations and volunteer shifts",
+          "projectHighlights": "[ko] Built a filterable tracker\nPresented findings to class",
+          "achievements": "[ko] Residence council secretary, Dean's list"
+        },
+        "optional": {
+          "title": "[ko] Add a role, project, or honour (optional)",
+          "hide": "[ko] Hide",
+          "add": "[ko] Add"
+        },
+        "actions": {
+          "saving": "[ko] Saving",
+          "saveContinue": "[ko] Save and continue"
+        },
+        "errors": {
+          "save": "[ko] Unable to save your profile starter."
+        }
+      }
+    }
+  },
   "opportunities": {
     "title": "채용 기회",
     "description": "저장한 기회를 검토하고, 적합도 신호를 비교하며, 한 곳에서 지원 작업을 진행하세요.",
@@ -323,146 +399,6 @@
       "hiddenSummary": "{label} · {count}",
       "moveClosedTitle": "종료로 이동",
       "moveClosedDescription": "{title}의 최종 상태를 선택하세요."
-    }
-  },
-  "settings": {
-    "title": "설정",
-    "description": "이력서 분석과 면접 준비를 위한 AI 제공자를 구성하세요.",
-    "loading": "설정 불러오는 중...",
-    "language": {
-      "title": "언어",
-      "description": "내비게이션과 앱 화면에 사용할 언어를 선택하세요.",
-      "label": "언어",
-      "options": {
-        "en": "English",
-        "es": "Español",
-        "zh-CN": "中文（简体）",
-        "pt-BR": "Português (BR)",
-        "hi": "हिन्दी",
-        "fr": "Français",
-        "ja": "日本語",
-        "ko": "한국어"
-      }
-    },
-    "help": {
-      "ollama": {
-        "title": "[ko] Using Ollama (Free)",
-        "installFrom": "[ko] Install from",
-        "run": "[ko] Run",
-        "testConnection": "[ko] Test the connection above"
-      },
-      "apiKeys": {
-        "title": "[ko] Using API Keys",
-        "description": "[ko] Connect your own API keys from OpenAI, Anthropic, or OpenRouter for cloud-based processing. Your keys are stored locally and never leave your device."
-      }
-    },
-    "dataManagement": {
-      "title": "[ko] Data Management",
-      "description": "[ko] Export your data or import from backups.",
-      "export": {
-        "title": "[ko] Export Data",
-        "profileJson": "[ko] Export Profile (JSON)",
-        "opportunitiesJson": "[ko] Export Opportunities (JSON)",
-        "opportunitiesCsv": "[ko] Export Opportunities (CSV)",
-        "fullBackup": "[ko] Full Backup",
-        "allDataJson": "[ko] Export All Data (JSON)"
-      },
-      "import": {
-        "title": "[ko] Import Data",
-        "jobsAria": "[ko] Import jobs from JSON or CSV file",
-        "opportunitiesJsonCsv": "[ko] Import Opportunities (JSON/CSV)",
-        "restoreBackupAria": "[ko] Restore backup from JSON file",
-        "restoreBackup": "[ko] Restore Backup",
-        "allDataAria": "[ko] Import all data from JSON file",
-        "allDataJson": "[ko] Import All Data (JSON)"
-      },
-      "confirm": {
-        "title": "[ko] Confirm Import",
-        "description": "[ko] The following data will be imported (duplicates will be skipped):",
-        "importing": "[ko] Importing...",
-        "action": "[ko] Confirm Import"
-      }
-    }
-  },
-  "notFound": {
-    "title": "페이지를 찾을 수 없습니다",
-    "description": "해당 페이지를 찾을 수 없습니다.",
-    "action": "대시보드로 이동"
-  },
-  "marketing": {
-    "nav": {
-      "features": "기능",
-      "extension": "확장 프로그램",
-      "howItWorks": "작동 방식",
-      "pricing": "가격",
-      "signIn": "로그인",
-      "getStarted": "시작하기",
-      "toggleMenu": "메뉴 전환"
-    }
-  },
-  "onboarding": {
-    "steps": {
-      "upload": {
-        "title": "[ko] Upload Your Resume",
-        "description": "[ko] Drag and drop your resume to get started, or skip this step and add it later.",
-        "dropHint": "[ko] Drop your PDF or DOCX here, or head to <documents>Documents</documents> after setup to add it later."
-      },
-      "review": {
-        "title": "[ko] Review Your Profile",
-        "description": "[ko] After uploading, review the extracted entries and edit anything that needs fixing.",
-        "sections": {
-          "contactInfo": "[ko] Contact info",
-          "workExperience": "[ko] Work experience",
-          "education": "[ko] Education",
-          "skillsProjects": "[ko] Skills & projects"
-        }
-      },
-      "builder": {
-        "title": "[ko] Build Your Starter Profile",
-        "description": "[ko] Answer a few quick prompts so Slothing can organize your career details without a resume upload.",
-        "fields": {
-          "name": "[ko] Name",
-          "email": "[ko] Email",
-          "targetRole": "[ko] Target role",
-          "backgroundSummary": "[ko] Background summary",
-          "education": "[ko] Education",
-          "school": "[ko] School",
-          "degree": "[ko] Degree",
-          "field": "[ko] Field",
-          "topSkills": "[ko] Top skills",
-          "company": "[ko] Company / organisation",
-          "roleTitle": "[ko] Role / title",
-          "roleHighlights": "[ko] Role highlights (one per line, up to 3)",
-          "projectName": "[ko] Project name",
-          "projectSummary": "[ko] What did you build?",
-          "projectHighlights": "[ko] Project highlights (one per line)",
-          "achievements": "[ko] Honours, awards, leadership (comma-separated)"
-        },
-        "placeholders": {
-          "targetRole": "[ko] Frontend intern, project manager, data analyst",
-          "backgroundSummary": "[ko] A sentence about your background, interests, or next move",
-          "topSkills": "[ko] Customer service, Excel, Python",
-          "company": "[ko] Campus cafe",
-          "roleTitle": "[ko] Barista",
-          "roleHighlights": "[ko] Pulled espresso shots\nTrained 3 new baristas",
-          "projectName": "[ko] Community pantry dashboard",
-          "projectSummary": "[ko] A class project that tracked donations and volunteer shifts",
-          "projectHighlights": "[ko] Built a filterable tracker\nPresented findings to class",
-          "achievements": "[ko] Residence council secretary, Dean's list"
-        },
-        "optional": {
-          "title": "[ko] Add a role, project, or honour (optional)",
-          "hide": "[ko] Hide",
-          "add": "[ko] Add"
-        },
-        "actions": {
-          "saving": "[ko] Saving",
-          "saveContinue": "[ko] Save and continue"
-        },
-        "errors": {
-          "save": "[ko] Unable to save your profile starter."
-        }
-      }
     }
   },
   "interview": {
@@ -865,6 +801,19 @@
           "deleteManyTitle": "[ko] Could not delete source files",
           "deleteManyDescription": "[ko] Please try deleting the selected files again."
         }
+      },
+      "page": {
+        "review": {
+          "title": "감지된 문서 구성 요소 검토",
+          "description": "{filename}이(가) {count, plural, one {#개의 편집 가능한 구성 요소} other {#개의 편집 가능한 구성 요소}}로 분할되었습니다. 수정하면서 저장하세요.",
+          "keepEditing": "나중에 계속 편집",
+          "done": "완료"
+        },
+        "moveBullets": {
+          "title": "선택한 불릿 이동",
+          "description": "{count, plural, one {#개의 선택한 불릿} other {#개의 선택한 불릿}}을 경험 또는 프로젝트에 연결합니다.",
+          "parentComponent": "상위 구성 요소"
+        }
       }
     },
     "builder": {
@@ -886,6 +835,440 @@
     "opportunities": {
       "addOpportunity": {
         "title": "[ko] Add Opportunity"
+      }
+    },
+    "calendar": {
+      "create": {
+        "title": "이벤트 만들기",
+        "description": "캘린더에 새 알림 또는 이벤트를 추가합니다."
+      }
+    }
+  },
+  "settings": {
+    "title": "설정",
+    "description": "이력서 분석과 면접 준비를 위한 AI 제공자를 구성하세요.",
+    "loading": "설정 불러오는 중...",
+    "language": {
+      "title": "언어",
+      "description": "내비게이션과 앱 화면에 사용할 언어를 선택하세요.",
+      "label": "언어",
+      "options": {
+        "en": "English",
+        "es": "Español",
+        "zh-CN": "中文（简体）",
+        "pt-BR": "Português (BR)",
+        "hi": "हिन्दी",
+        "fr": "Français",
+        "ja": "日本語",
+        "ko": "한국어"
+      }
+    },
+    "help": {
+      "ollama": {
+        "title": "[ko] Using Ollama (Free)",
+        "installFrom": "[ko] Install from",
+        "run": "[ko] Run",
+        "testConnection": "[ko] Test the connection above"
+      },
+      "apiKeys": {
+        "title": "[ko] Using API Keys",
+        "description": "[ko] Connect your own API keys from OpenAI, Anthropic, or OpenRouter for cloud-based processing. Your keys are stored locally and never leave your device."
+      }
+    },
+    "dataManagement": {
+      "title": "[ko] Data Management",
+      "description": "[ko] Export your data or import from backups.",
+      "export": {
+        "title": "[ko] Export Data",
+        "profileJson": "[ko] Export Profile (JSON)",
+        "opportunitiesJson": "[ko] Export Opportunities (JSON)",
+        "opportunitiesCsv": "[ko] Export Opportunities (CSV)",
+        "fullBackup": "[ko] Full Backup",
+        "allDataJson": "[ko] Export All Data (JSON)"
+      },
+      "import": {
+        "title": "[ko] Import Data",
+        "jobsAria": "[ko] Import jobs from JSON or CSV file",
+        "opportunitiesJsonCsv": "[ko] Import Opportunities (JSON/CSV)",
+        "restoreBackupAria": "[ko] Restore backup from JSON file",
+        "restoreBackup": "[ko] Restore Backup",
+        "allDataAria": "[ko] Import all data from JSON file",
+        "allDataJson": "[ko] Import All Data (JSON)"
+      },
+      "confirm": {
+        "title": "[ko] Confirm Import",
+        "description": "[ko] The following data will be imported (duplicates will be skipped):",
+        "importing": "[ko] Importing...",
+        "action": "[ko] Confirm Import"
+      }
+    }
+  },
+  "notFound": {
+    "title": "페이지를 찾을 수 없습니다",
+    "description": "해당 페이지를 찾을 수 없습니다.",
+    "action": "대시보드로 이동"
+  },
+  "a11y": {
+    "weCouldnTLoadThisPage": "이 페이지를 로드할 수 없습니다.",
+    "toggleMenu": "토글 메뉴",
+    "dismissError": "오류 무시",
+    "applicationError": "애플리케이션 오류",
+    "dismissNotification": "알림 닫기",
+    "trackYourFirstOpportunity": "첫 번째 기회 추적",
+    "resumeTemplate": "이력서 템플릿",
+    "titleRequired": "제목이 필요합니다",
+    "companyRequired": "회사 필수",
+    "theSiteMayNotBeSupportedOrThe": "해당 사이트가 지원되지 않거나 게시물에 접근할 수 없습니다.",
+    "reactTypescript": "리액트, 타입스크립트",
+    "accessibilityTesting": "접근성, 테스트",
+    "wizardProgress": "마법사 진행",
+    "queueCleared": "대기열이 삭제되었습니다.",
+    "opportunityNotFound": "기회를 찾을 수 없습니다",
+    "addPrivateNotesAboutThisOpportunity": "이 기회에 대한 비공개 메모를 추가하세요.",
+    "downloadPdf": "PDF 다운로드(Ctrl+E)",
+    "reviewQueueDisabled": "검토 대기열이 비활성화되었습니다.",
+    "openOpportunities": "열린 기회",
+    "navigation": "항해",
+    "pageActions": "페이지 작업",
+    "general": "일반적인",
+    "dataManagement": "데이터 관리",
+    "importJobsFromJsonOrCsvFile": "JSON 또는 CSV 파일에서 작업 가져오기",
+    "restoreBackupFromJsonFile": "JSON 파일에서 백업 복원",
+    "importAllDataFromJsonFile": "JSON 파일에서 모든 데이터 가져오기",
+    "applicationRate": "신청률",
+    "responseRate": "응답률",
+    "interviewRate": "면접률",
+    "successRate": "성공률",
+    "summary": "요약",
+    "experience": "경험",
+    "skills": "기술",
+    "promptABTesting": "신속한 A/B 테스트",
+    "writeTheTailoringInstructionsForThisPromptVariant": "이 프롬프트 변형에 대한 맞춤 지침을 작성하세요...",
+    "builderView": "빌더 보기",
+    "selectWhatToSync": "동기화할 대상 선택",
+    "model": "모델",
+    "selectAModel": "모델을 선택하세요",
+    "refreshAvailableModels": "사용 가능한 모델 새로 고침",
+    "noOpportunitiesMatchYourFilters": "필터와 일치하는 추천이 없습니다.",
+    "selectAllSourceFiles": "모든 소스 파일 선택",
+    "insertTable": "표 삽입",
+    "imageUpload": "이미지 업로드",
+    "previewZoom": "미리보기 확대/축소",
+    "whatAiPowers": "AI의 힘",
+    "weeklyActivity": "주간 활동",
+    "googleProfile": "구글 프로필",
+    "opportunityReviewQueue": "기회 검토 대기열",
+    "searchContacts": "연락처 검색",
+    "gmailAutoStatus": "Gmail 자동 상태",
+    "moveBulletUp": "글머리 기호를 위로 이동",
+    "moveBulletDown": "총알을 아래로 이동",
+    "editBullet": "글머리 기호 수정",
+    "deleteBullet": "글머리 기호 삭제",
+    "openFilesPanel": "파일 패널 열기",
+    "searchTemplates": "템플릿 검색",
+    "openAiAssistantPanel": "AI 보조 패널 열기",
+    "theme": "주제",
+    "locale": "장소",
+    "savingLocale": "로캘 저장 중",
+    "selectLocale": "로케일 선택",
+    "softwareEngineer": "소프트웨어 엔지니어",
+    "acmeCorp": "애크미 주식회사",
+    "pasteTheFullOpportunityDescriptionHere": "여기에 전체 기회 설명을 붙여넣으세요...",
+    "googleIntegration": "구글 통합",
+    "uploadResumeFile": "이력서 파일 업로드",
+    "removeFile": "파일 제거",
+    "searchYourCareerProfile": "경력 프로필 검색",
+    "searchYourCareerProfile2": "경력 프로필을 검색해 보세요...",
+    "pressToFocus": "초점을 맞추려면 / 를 누르세요.",
+    "clearSearch": "검색 지우기",
+    "sortOrder": "정렬 순서",
+    "filterByCategory": "카테고리별로 필터링",
+    "pageSize": "페이지 크기",
+    "kanbanLanes": "칸반 레인",
+    "jobKanbanBoard": "작업 칸반 보드",
+    "versionName": "버전 이름",
+    "versionName2": "버전 이름...",
+    "opportunities": "기회",
+    "opportunityViewMode": "기회 보기 모드",
+    "searchJobsByTitleCompanyOrKeywords": "직위, 회사 또는 키워드로 채용 공고를 검색하세요...",
+    "status": "상태",
+    "type": "유형",
+    "location": "위치",
+    "sort": "종류",
+    "sectionChangeCounts": "섹션 변경 횟수",
+    "totalChangeCounts": "총 변경 횟수",
+    "evalHealth": "평가 상태",
+    "averageScoreTrend": "평균 점수 추세",
+    "uploadResumePdfOrTextFile": "이력서 PDF 또는 텍스트 파일 업로드",
+    "pasteYourFullResumeTextHere": "전체 이력서 텍스트를 여기에 붙여넣으세요...",
+    "optionalPasteTheJobDescriptionToCheckKeyword": "선택사항: 직무 설명을 붙여넣어 키워드 일치를 확인하세요...",
+    "beforeTheInterview": "인터뷰 전",
+    "duringTheInterview": "인터뷰 중",
+    "afterTheInterview": "인터뷰 후",
+    "expandAiAssistantPanel": "AI 보조 패널 확장",
+    "showAiAssistant": "AI 어시스턴트 표시",
+    "showTailorToJd": "JD에 맞춤 표시",
+    "showGenerateFromBank": "은행에서 생성 표시",
+    "collapseAiAssistantPanel": "AI 보조 패널 축소",
+    "pasteTheJdHere": "여기에 JD를 붙여넣으세요.",
+    "rewriteSection": "섹션 다시 작성",
+    "chooseSection": "섹션 선택",
+    "rewriteSelectedSection": "선택한 섹션 다시 작성",
+    "selectedTextQuickActions": "선택한 텍스트 빠른 작업",
+    "coverLetterCritique": "커버레터 비평",
+    "noOpportunitiesTrackedYet": "아직 추적된 기회가 없습니다.",
+    "onboardingProgress": "온보딩 진행",
+    "skipOnboarding": "온보딩 건너뛰기",
+    "expandFilesPanel": "파일 패널 확장",
+    "showFiles": "파일 표시",
+    "newStudioFile": "새 스튜디오 파일",
+    "showVersionHistory": "버전 기록 표시",
+    "collapseFilesPanel": "파일 패널 축소",
+    "notifications": "알림",
+    "markAllAsRead": "모두 읽음으로 표시",
+    "deleteReadNotifications": "읽은 알림 삭제",
+    "closeNotifications": "알림 닫기",
+    "markAsRead": "읽음으로 표시",
+    "delete": "삭제",
+    "deleteNotification": "알림 삭제",
+    "sanFranciscoCa": "캘리포니아주 샌프란시스코",
+    "selectType": "유형 선택",
+    "frontendInternProjectManagerDataAnalyst": "프론트엔드 인턴, 프로젝트 관리자, 데이터 분석가",
+    "school": "학교",
+    "degree": "도",
+    "field": "필드",
+    "customerServiceExcelPython": "고객 서비스, 엑셀, 파이썬",
+    "campusCafe": "캠퍼스 카페",
+    "barista": "바리스타",
+    "communityPantryDashboard": "커뮤니티 식료품 저장실 대시보드",
+    "residenceCouncilSecretaryDeanSList": "기숙사 비서, 학장 목록",
+    "typeACommandOrSearch": "명령을 입력하거나 검색하세요...",
+    "profileCompleteness": "프로필 완전성",
+    "coverLetterContent": "자기 소개서 내용",
+    "documents": "서류",
+    "uploadFile": "파일 업로드(Ctrl+U)",
+    "failedToLoadDocuments": "문서를 로드하지 못했습니다.",
+    "expand": "확장하다",
+    "selectAllVisibleComponents": "보이는 구성요소를 모두 선택하세요.",
+    "noComponentsDetected": "감지된 구성 요소가 없습니다.",
+    "noComponentsLeft": "남은 구성품 없음",
+    "answerBank": "답안 은행",
+    "searchQuestionsAnswersOrSources": "질문, 답변, 출처 검색",
+    "sortAnswers": "답변 정렬",
+    "failedToLoadAnswers": "답변을 로드하지 못했습니다.",
+    "copyAnswer": "답변 복사",
+    "duplicateAnswer": "중복된 답변",
+    "editAnswer": "답변 수정",
+    "deleteAnswer": "답변 삭제",
+    "exampleWillYouNowOrInTheFuture": "예: 현재 또는 미래에 후원이 필요합니까?",
+    "writeTheAnswerYouWantReusedByAutofill": "자동완성으로 재사용하고 싶은 답변을 작성하세요.",
+    "optional": "선택 과목",
+    "installTheSlothingBrowserExtension": "Slothing 브라우저 확장 프로그램 설치",
+    "dismissExtensionPromo": "확장 프로그램 프로모션 닫기",
+    "analyticsDashboard": "분석 대시보드",
+    "exportDateRange": "내보내기 날짜 범위",
+    "dateRange": "기간",
+    "applicationPipeline": "애플리케이션 파이프라인",
+    "skillsOverview": "기술 개요",
+    "recentOpportunityActivity": "최근 기회 활동",
+    "interviewPreparation": "면접 준비",
+    "github": "GitHub",
+    "news": "소식",
+    "levels": "레벨",
+    "engBlog": "영어 블로그",
+    "profile": "윤곽",
+    "profileSections": "프로필 섹션",
+    "seniorProductEngineer": "수석 제품 엔지니어",
+    "loadingSource": "소스 로드 중",
+    "calendar": "달력",
+    "filterEventsByType": "유형별로 이벤트 필터링",
+    "filter": "필터",
+    "subscribeToYourCalendarFeedViewInYour": "캘린더 피드(.ics)를 구독하세요 - 기본 캘린더 앱에서 확인하세요.",
+    "previousMonth": "지난달",
+    "nextMonth": "다음 달",
+    "noEventsScheduledForThisDay": "이 날 예정된 이벤트가 없습니다.",
+    "clickOnADateToViewEvents": "이벤트를 보려면 날짜를 클릭하세요.",
+    "noUpcomingEvents": "다가오는 이벤트가 없습니다",
+    "addNotesOrDetails": "메모 또는 세부정보 추가...",
+    "copyUrl": "URL 복사",
+    "salaryTools": "급여 도구",
+    "marketRateCalculator": "시장 환율 계산기",
+    "selectRole": "역할 선택",
+    "selectYourRole": "귀하의 역할을 선택하세요",
+    "selectLocation": "위치 선택",
+    "addOffer": "제안 추가",
+    "noOffersYet": "아직 쿠폰이 없습니다.",
+    "generateNegotiationScript": "협상 스크립트 생성",
+    "chooseAJobApplication": "입사지원서를 선택하세요",
+    "chooseTheJobYouInterviewedFor": "인터뷰한 직업을 선택하세요",
+    "mentionARecentProjectSharedInterestOrCompany": "최근 프로젝트, 공통 관심사 또는 회사 업데이트를 언급하세요...",
+    "chooseTheJobOffer": "채용 제안을 선택하세요",
+    "addAnySpecificPointsYouWantToMention": "언급하고 싶은 특정 사항을 추가하세요.",
+    "chooseAReplyType": "답장 유형을 선택하세요",
+    "addConstraintsTimingCompensationExpectationsOrAFuture": "제약 조건, 시기, 보상 기대치 또는 향후 적합성 메모를 추가하세요...",
+    "chooseTheRoleYouReApplyingFor": "지원하려는 역할을 선택하세요.",
+    "addARecentAccomplishmentOrProjectToRemind": "최근 성과나 프로젝트를 추가해 기억하세요.",
+    "emailTemplates": "이메일 템플릿",
+    "chooseTemplate": "템플릿 선택",
+    "customize": "사용자 정의",
+    "editGithubOrg": "GitHub 조직 편집",
+    "githubOrg": "GitHub 조직",
+    "saveGithubOrg": "GitHub 조직 저장",
+    "cancel": "취소",
+    "searchDrafts": "초안 검색",
+    "answerScorecard": "스코어카드에 답하기",
+    "startFreeWithSlothing": "Slothing으로 무료로 시작해보세요",
+    "extensionPopoverPreviewOnAJobPosting": "채용 공고의 확장 팝오버 미리보기",
+    "dashboardPreview": "대시보드 미리보기"
+  },
+  "profile": {
+    "title": "프로필",
+    "description": "Slothing이 이력서, 커버레터, 적합도 확인에 사용하는 원본 프로필을 관리합니다.",
+    "actions": {
+      "discard": "취소",
+      "saveChanges": "변경 사항 저장"
+    },
+    "status": {
+      "saving": "저장 중...",
+      "saved": "저장됨"
+    },
+    "errors": {
+      "loadProfile": "프로필을 불러올 수 없습니다",
+      "saveProfile": "프로필을 저장할 수 없습니다"
+    },
+    "unsavedChanges": {
+      "prompt": "저장하지 않은 프로필 변경 사항이 있습니다. 저장하지 않고 나가시겠습니까?"
+    },
+    "tabs": {
+      "ariaLabel": "프로필 섹션",
+      "overview": "개요",
+      "preferences": "선호사항",
+      "privacy": "개인정보"
+    },
+    "answerBankPrompt": {
+      "text": "더 풍부한 프로필이 필요하신가요? 재사용 가능한 이야기와 사실을 답변 뱅크에 저장하세요.",
+      "action": "답변 뱅크 열기"
+    },
+    "emptyState": {
+      "title": "프로필을 설정해 보세요",
+      "description": "이력서로 시작하면 Slothing이 기본 정보를 채울 수 있습니다. 양식을 열어 직접 입력할 수도 있습니다.",
+      "uploadResume": "이력서를 업로드해 채우기",
+      "fillManually": "또는 직접 입력"
+    },
+    "sidebar": {
+      "yourName": "이름",
+      "addHeadline": "헤드라인 추가",
+      "noEmail": "이메일 없음",
+      "noLocation": "위치 없음",
+      "noTargetSalary": "목표 연봉 없음",
+      "salaryRange": "{currency} {min}–{max}",
+      "salaryMinimum": "{currency} {min}+",
+      "salaryMaximum": "최대 {currency} {max}",
+      "profilePhoto": "프로필 사진",
+      "profilePhotoNamed": "{name}의 프로필 사진"
+    },
+    "placeholders": {
+      "headline": "시니어 제품 엔지니어"
+    },
+    "sections": {
+      "identity": {
+        "title": "신원 정보",
+        "description": "Slothing이 이력서, 커버레터, 적합도 확인에 사용하는 원본 프로필을 관리합니다."
+      },
+      "contact": {
+        "title": "연락처",
+        "description": "Slothing이 이력서, 커버레터, 적합도 확인에 사용하는 원본 프로필을 관리합니다."
+      },
+      "summary": {
+        "title": "전문 요약",
+        "description": "Slothing이 이력서, 커버레터, 적합도 확인에 사용하는 원본 프로필을 관리합니다."
+      },
+      "savedSignals": {
+        "title": "저장된 프로필 신호",
+        "description": "Slothing이 이력서, 커버레터, 적합도 확인에 사용하는 원본 프로필을 관리합니다."
+      },
+      "careerDetails": {
+        "title": "경력 세부정보",
+        "description": "Slothing이 이력서, 커버레터, 적합도 확인에 사용하는 원본 프로필을 관리합니다."
+      }
+    },
+    "fields": {
+      "avatarUrl": "아바타 URL",
+      "fullName": "전체 이름",
+      "headline": "헤드라인",
+      "email": "이메일 주소",
+      "phone": "전화번호",
+      "location": "위치",
+      "linkedin": "LinkedIn 프로필",
+      "github": "GitHub 프로필",
+      "website": "웹사이트",
+      "summary": "전문 요약",
+      "targetRoles": "목표 직무",
+      "currency": "통화",
+      "minimum": "최소",
+      "maximum": "최대"
+    },
+    "signals": {
+      "experience": "경험",
+      "education": "학력",
+      "skills": "기술",
+      "projects": "프로젝트",
+      "awards": "수상"
+    },
+    "workStyle": {
+      "title": "근무 방식",
+      "description": "Slothing이 이력서, 커버레터, 적합도 확인에 사용하는 원본 프로필을 관리합니다.",
+      "options": {
+        "remote": "원격",
+        "hybrid": "하이브리드",
+        "onsite": "현장",
+        "fullTime": "정규직",
+        "contract": "계약직"
+      }
+    },
+    "targetRoles": {
+      "title": "목표 직무",
+      "description": "Slothing이 이력서, 커버레터, 적합도 확인에 사용하는 원본 프로필을 관리합니다."
+    },
+    "salary": {
+      "title": "보상 목표",
+      "description": "Slothing이 이력서, 커버레터, 적합도 확인에 사용하는 원본 프로필을 관리합니다."
+    },
+    "privacy": {
+      "title": "개인정보",
+      "description": "Slothing이 이력서, 커버레터, 적합도 확인에 사용하는 원본 프로필을 관리합니다.",
+      "openToRecruiters": {
+        "title": "Open to recruiter outreach",
+        "description": "Slothing이 이력서, 커버레터, 적합도 확인에 사용하는 원본 프로필을 관리합니다."
+      },
+      "shareContactInfo": {
+        "title": "Share contact info by default",
+        "description": "Slothing이 이력서, 커버레터, 적합도 확인에 사용하는 원본 프로필을 관리합니다."
+      }
+    },
+    "completeness": {
+      "readiness": "프로필 준비도",
+      "summary": "프로필 {score}% 완료 · {count, plural, one {빠른 개선 #개} other {빠른 개선 #개}}",
+      "completeLabel": "완료",
+      "progressLabel": "프로필 완성도",
+      "noGaps": "필수 항목이 모두 채워졌습니다.",
+      "points": "+{points, plural, one {#점} other {#점}}",
+      "gaps": {
+        "contact-info": "이름, 이메일, 헤드라인 추가",
+        "summary": "전문 요약 추가",
+        "experience-bullets": {
+          "empty": "최소 3개의 bullet이 있는 경험 추가",
+          "role": "{company} 역할에 {missing, plural, one {bullet #개} other {bullet #개}} 더 추가"
+        },
+        "quantified-bullets": {
+          "empty": "{missing, plural, one {정량 bullet #개} other {정량 bullet #개}} 추가",
+          "role": "{company} 역할에 {missing, plural, one {정량 bullet #개} other {정량 bullet #개}} 추가"
+        },
+        "education": "학력 추가",
+        "skills": "{missing, plural, one {기술 #개} other {기술 #개}} 더 추가",
+        "career-depth": "프로젝트 또는 다른 경험 추가",
+        "achievements": "성과, 수상 또는 자격증 추가",
+        "social-url": "LinkedIn 또는 GitHub URL 추가"
       }
     }
   }

@@ -5,14 +5,17 @@ import { Button } from "@/components/ui/button";
 import { PageSection } from "@/components/ui/page-layout";
 import { useTheme } from "@/components/theme-provider";
 import type { ThemePreset } from "@/lib/theme/tokens";
+import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 
 export function ThemeSection() {
+  const a11yT = useA11yTranslations();
+
   const { isDark, toggleDark, themeId, setThemeId, availableThemes } =
     useTheme();
 
   return (
     <PageSection
-      title="Theme"
+      title={a11yT("theme")}
       description="Choose a preset or adjust workspace colors."
       icon={Palette}
       action={

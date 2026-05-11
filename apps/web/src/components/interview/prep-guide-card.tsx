@@ -25,6 +25,7 @@ import type {
   PrepChecklistItem,
   PrepQuestion,
 } from "@/lib/interview/prep-guide";
+import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 
 interface PrepGuideCardProps {
   jobId: string;
@@ -229,9 +230,7 @@ export function PrepGuideCard({ jobId }: PrepGuideCardProps) {
     return (
       <div className="rounded-xl border bg-card p-6 text-center">
         <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
-        <p className="mt-4 text-muted-foreground">
-          {t("loading")}
-        </p>
+        <p className="mt-4 text-muted-foreground">{t("loading")}</p>
       </div>
     );
   }

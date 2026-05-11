@@ -23,6 +23,7 @@ import type {
 } from "@/lib/jobs/filter-jobs";
 import { cn } from "@/lib/utils";
 import { TRACKED_JOB_STATUSES } from "@/lib/constants/jobs";
+import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 
 interface JobsToolbarProps {
   searchQuery: string;
@@ -45,6 +46,7 @@ interface JobsToolbarProps {
 export function JobsToolbar(props: JobsToolbarProps) {
   const t = useTranslations("jobs.toolbar");
   const commonT = useTranslations("common");
+  const a11yT = useA11yTranslations();
   const {
     searchQuery,
     statusFilter,
@@ -78,7 +80,7 @@ export function JobsToolbar(props: JobsToolbarProps) {
           />
           {searchQuery && (
             <button
-              aria-label={t("clearSearch")}
+              aria-label={a11yT("clearSearch")}
               onClick={() => onSearchChange("")}
               className="absolute right-0 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center text-muted-foreground hover:text-foreground"
             >
@@ -170,9 +172,7 @@ export function JobsToolbar(props: JobsToolbarProps) {
       {hasActiveFilters && (
         <div className="flex items-center gap-2 mt-4 text-sm text-muted-foreground">
           <Filter className="h-4 w-4" />
-          <span>
-            {t("showing", { filteredCount, totalCount })}
-          </span>
+          <span>{t("showing", { filteredCount, totalCount })}</span>
         </div>
       )}
     </div>

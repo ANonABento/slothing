@@ -11,6 +11,7 @@ import {
   type PageSettings,
   type PageSizeId,
 } from "@/lib/editor/page-settings";
+import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 
 interface EditorPageSettingsProps {
   pageSettings: PageSettings;
@@ -28,6 +29,8 @@ export function EditorPageSettings({
   pageSettings,
   onChange,
 }: EditorPageSettingsProps) {
+  const a11yT = useA11yTranslations();
+
   const normalized = normalizePageSettings(pageSettings);
   const custom = normalized.marginPreset === "custom";
 
@@ -62,7 +65,7 @@ export function EditorPageSettings({
           </span>
           <select
             className="mt-1 h-9 w-full rounded-md border bg-background px-2"
-            aria-label="Page size"
+            aria-label={a11yT("pageSize")}
             value={normalized.size}
             onChange={(event) =>
               update({ size: event.currentTarget.value as PageSizeId })

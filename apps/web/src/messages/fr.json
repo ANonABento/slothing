@@ -7,8 +7,11 @@
   },
   "common": {
     "cancel": "Annuler",
+    "back": "[fr] Back",
     "clear": "Effacer",
     "clearAll": "Tout effacer",
+    "delete": "[fr] Delete",
+    "edit": "[fr] Edit",
     "filters": "Filtres",
     "import": "Importer",
     "loading": "Chargement",
@@ -17,10 +20,7 @@
     "search": "Rechercher",
     "selectLocale": "Sélectionner la langue",
     "show": "Afficher",
-    "tryAgain": "Réessayer",
-    "back": "[fr] Back",
-    "delete": "[fr] Delete",
-    "edit": "[fr] Edit"
+    "tryAgain": "Réessayer"
   },
   "nav": {
     "brand": "Slothing",
@@ -56,6 +56,17 @@
       "analytics": "Analyses",
       "profile": "Profil",
       "settings": "Paramètres"
+    }
+  },
+  "marketing": {
+    "nav": {
+      "features": "[fr] Features",
+      "extension": "[fr] Extension",
+      "howItWorks": "[fr] How It Works",
+      "pricing": "[fr] Pricing",
+      "signIn": "[fr] Sign In",
+      "getStarted": "[fr] Get Started",
+      "toggleMenu": "[fr] Toggle menu"
     }
   },
   "dashboard": {
@@ -224,6 +235,71 @@
       }
     }
   },
+  "onboarding": {
+    "steps": {
+      "upload": {
+        "title": "[fr] Upload Your Resume",
+        "description": "[fr] Drag and drop your resume to get started, or skip this step and add it later.",
+        "dropHint": "[fr] Drop your PDF or DOCX here, or head to <documents>Documents</documents> after setup to add it later."
+      },
+      "review": {
+        "title": "[fr] Review Your Profile",
+        "description": "[fr] After uploading, review the extracted entries and edit anything that needs fixing.",
+        "sections": {
+          "contactInfo": "[fr] Contact info",
+          "workExperience": "[fr] Work experience",
+          "education": "[fr] Education",
+          "skillsProjects": "[fr] Skills & projects"
+        }
+      },
+      "builder": {
+        "title": "[fr] Build Your Starter Profile",
+        "description": "[fr] Answer a few quick prompts so Slothing can organize your career details without a resume upload.",
+        "fields": {
+          "name": "[fr] Name",
+          "email": "[fr] Email",
+          "targetRole": "[fr] Target role",
+          "backgroundSummary": "[fr] Background summary",
+          "education": "[fr] Education",
+          "school": "[fr] School",
+          "degree": "[fr] Degree",
+          "field": "[fr] Field",
+          "topSkills": "[fr] Top skills",
+          "company": "[fr] Company / organisation",
+          "roleTitle": "[fr] Role / title",
+          "roleHighlights": "[fr] Role highlights (one per line, up to 3)",
+          "projectName": "[fr] Project name",
+          "projectSummary": "[fr] What did you build?",
+          "projectHighlights": "[fr] Project highlights (one per line)",
+          "achievements": "[fr] Honours, awards, leadership (comma-separated)"
+        },
+        "placeholders": {
+          "targetRole": "[fr] Frontend intern, project manager, data analyst",
+          "backgroundSummary": "[fr] A sentence about your background, interests, or next move",
+          "topSkills": "[fr] Customer service, Excel, Python",
+          "company": "[fr] Campus cafe",
+          "roleTitle": "[fr] Barista",
+          "roleHighlights": "[fr] Pulled espresso shots\nTrained 3 new baristas",
+          "projectName": "[fr] Community pantry dashboard",
+          "projectSummary": "[fr] A class project that tracked donations and volunteer shifts",
+          "projectHighlights": "[fr] Built a filterable tracker\nPresented findings to class",
+          "achievements": "[fr] Residence council secretary, Dean's list"
+        },
+        "optional": {
+          "title": "[fr] Add a role, project, or honour (optional)",
+          "hide": "[fr] Hide",
+          "add": "[fr] Add"
+        },
+        "actions": {
+          "saving": "[fr] Saving",
+          "saveContinue": "[fr] Save and continue"
+        },
+        "errors": {
+          "save": "[fr] Unable to save your profile starter."
+        }
+      }
+    }
+  },
   "opportunities": {
     "title": "Opportunités",
     "description": "Examinez les opportunités enregistrées, comparez les signaux de pertinence et faites avancer vos candidatures depuis une seule liste.",
@@ -323,146 +399,6 @@
       "hiddenSummary": "{label} · {count}",
       "moveClosedTitle": "Déplacer vers Clôturé",
       "moveClosedDescription": "Choisissez l'état final de {title}."
-    }
-  },
-  "settings": {
-    "title": "Paramètres",
-    "description": "Configurez votre fournisseur d'IA pour l'analyse de CV et la préparation d'entretien.",
-    "loading": "Chargement des paramètres...",
-    "language": {
-      "title": "Langue",
-      "description": "Choisissez la langue utilisée pour la navigation et les écrans de l'application.",
-      "label": "Langue",
-      "options": {
-        "en": "English",
-        "es": "Español",
-        "zh-CN": "中文（简体）",
-        "pt-BR": "Português (BR)",
-        "hi": "हिन्दी",
-        "fr": "Français",
-        "ja": "日本語",
-        "ko": "한국어"
-      }
-    },
-    "help": {
-      "ollama": {
-        "title": "[fr] Using Ollama (Free)",
-        "installFrom": "[fr] Install from",
-        "run": "[fr] Run",
-        "testConnection": "[fr] Test the connection above"
-      },
-      "apiKeys": {
-        "title": "[fr] Using API Keys",
-        "description": "[fr] Connect your own API keys from OpenAI, Anthropic, or OpenRouter for cloud-based processing. Your keys are stored locally and never leave your device."
-      }
-    },
-    "dataManagement": {
-      "title": "[fr] Data Management",
-      "description": "[fr] Export your data or import from backups.",
-      "export": {
-        "title": "[fr] Export Data",
-        "profileJson": "[fr] Export Profile (JSON)",
-        "opportunitiesJson": "[fr] Export Opportunities (JSON)",
-        "opportunitiesCsv": "[fr] Export Opportunities (CSV)",
-        "fullBackup": "[fr] Full Backup",
-        "allDataJson": "[fr] Export All Data (JSON)"
-      },
-      "import": {
-        "title": "[fr] Import Data",
-        "jobsAria": "[fr] Import jobs from JSON or CSV file",
-        "opportunitiesJsonCsv": "[fr] Import Opportunities (JSON/CSV)",
-        "restoreBackupAria": "[fr] Restore backup from JSON file",
-        "restoreBackup": "[fr] Restore Backup",
-        "allDataAria": "[fr] Import all data from JSON file",
-        "allDataJson": "[fr] Import All Data (JSON)"
-      },
-      "confirm": {
-        "title": "[fr] Confirm Import",
-        "description": "[fr] The following data will be imported (duplicates will be skipped):",
-        "importing": "[fr] Importing...",
-        "action": "[fr] Confirm Import"
-      }
-    }
-  },
-  "notFound": {
-    "title": "Page introuvable",
-    "description": "Nous n'avons pas trouvé cette page.",
-    "action": "Aller au tableau de bord"
-  },
-  "marketing": {
-    "nav": {
-      "features": "[fr] Features",
-      "extension": "[fr] Extension",
-      "howItWorks": "[fr] How It Works",
-      "pricing": "[fr] Pricing",
-      "signIn": "[fr] Sign In",
-      "getStarted": "[fr] Get Started",
-      "toggleMenu": "[fr] Toggle menu"
-    }
-  },
-  "onboarding": {
-    "steps": {
-      "upload": {
-        "title": "[fr] Upload Your Resume",
-        "description": "[fr] Drag and drop your resume to get started, or skip this step and add it later.",
-        "dropHint": "[fr] Drop your PDF or DOCX here, or head to <documents>Documents</documents> after setup to add it later."
-      },
-      "review": {
-        "title": "[fr] Review Your Profile",
-        "description": "[fr] After uploading, review the extracted entries and edit anything that needs fixing.",
-        "sections": {
-          "contactInfo": "[fr] Contact info",
-          "workExperience": "[fr] Work experience",
-          "education": "[fr] Education",
-          "skillsProjects": "[fr] Skills & projects"
-        }
-      },
-      "builder": {
-        "title": "[fr] Build Your Starter Profile",
-        "description": "[fr] Answer a few quick prompts so Slothing can organize your career details without a resume upload.",
-        "fields": {
-          "name": "[fr] Name",
-          "email": "[fr] Email",
-          "targetRole": "[fr] Target role",
-          "backgroundSummary": "[fr] Background summary",
-          "education": "[fr] Education",
-          "school": "[fr] School",
-          "degree": "[fr] Degree",
-          "field": "[fr] Field",
-          "topSkills": "[fr] Top skills",
-          "company": "[fr] Company / organisation",
-          "roleTitle": "[fr] Role / title",
-          "roleHighlights": "[fr] Role highlights (one per line, up to 3)",
-          "projectName": "[fr] Project name",
-          "projectSummary": "[fr] What did you build?",
-          "projectHighlights": "[fr] Project highlights (one per line)",
-          "achievements": "[fr] Honours, awards, leadership (comma-separated)"
-        },
-        "placeholders": {
-          "targetRole": "[fr] Frontend intern, project manager, data analyst",
-          "backgroundSummary": "[fr] A sentence about your background, interests, or next move",
-          "topSkills": "[fr] Customer service, Excel, Python",
-          "company": "[fr] Campus cafe",
-          "roleTitle": "[fr] Barista",
-          "roleHighlights": "[fr] Pulled espresso shots\nTrained 3 new baristas",
-          "projectName": "[fr] Community pantry dashboard",
-          "projectSummary": "[fr] A class project that tracked donations and volunteer shifts",
-          "projectHighlights": "[fr] Built a filterable tracker\nPresented findings to class",
-          "achievements": "[fr] Residence council secretary, Dean's list"
-        },
-        "optional": {
-          "title": "[fr] Add a role, project, or honour (optional)",
-          "hide": "[fr] Hide",
-          "add": "[fr] Add"
-        },
-        "actions": {
-          "saving": "[fr] Saving",
-          "saveContinue": "[fr] Save and continue"
-        },
-        "errors": {
-          "save": "[fr] Unable to save your profile starter."
-        }
-      }
     }
   },
   "interview": {
@@ -865,6 +801,19 @@
           "deleteManyTitle": "[fr] Could not delete source files",
           "deleteManyDescription": "[fr] Please try deleting the selected files again."
         }
+      },
+      "page": {
+        "review": {
+          "title": "Examiner les composants détectés du document",
+          "description": "{filename} a été divisé en {count, plural, one {# composant modifiable} other {# composants modifiables}}. Enregistrez les corrections au fil de l’eau.",
+          "keepEditing": "Continuer la modification plus tard",
+          "done": "Terminé"
+        },
+        "moveBullets": {
+          "title": "Déplacer les puces sélectionnées",
+          "description": "Associez {count, plural, one {# puce sélectionnée} other {# puces sélectionnées}} à une expérience ou à un projet.",
+          "parentComponent": "Composant parent"
+        }
       }
     },
     "builder": {
@@ -886,6 +835,440 @@
     "opportunities": {
       "addOpportunity": {
         "title": "[fr] Add Opportunity"
+      }
+    },
+    "calendar": {
+      "create": {
+        "title": "Créer un événement",
+        "description": "Ajoutez un nouveau rappel ou événement à votre calendrier."
+      }
+    }
+  },
+  "settings": {
+    "title": "Paramètres",
+    "description": "Configurez votre fournisseur d'IA pour l'analyse de CV et la préparation d'entretien.",
+    "loading": "Chargement des paramètres...",
+    "language": {
+      "title": "Langue",
+      "description": "Choisissez la langue utilisée pour la navigation et les écrans de l'application.",
+      "label": "Langue",
+      "options": {
+        "en": "English",
+        "es": "Español",
+        "zh-CN": "中文（简体）",
+        "pt-BR": "Português (BR)",
+        "hi": "हिन्दी",
+        "fr": "Français",
+        "ja": "日本語",
+        "ko": "한국어"
+      }
+    },
+    "help": {
+      "ollama": {
+        "title": "[fr] Using Ollama (Free)",
+        "installFrom": "[fr] Install from",
+        "run": "[fr] Run",
+        "testConnection": "[fr] Test the connection above"
+      },
+      "apiKeys": {
+        "title": "[fr] Using API Keys",
+        "description": "[fr] Connect your own API keys from OpenAI, Anthropic, or OpenRouter for cloud-based processing. Your keys are stored locally and never leave your device."
+      }
+    },
+    "dataManagement": {
+      "title": "[fr] Data Management",
+      "description": "[fr] Export your data or import from backups.",
+      "export": {
+        "title": "[fr] Export Data",
+        "profileJson": "[fr] Export Profile (JSON)",
+        "opportunitiesJson": "[fr] Export Opportunities (JSON)",
+        "opportunitiesCsv": "[fr] Export Opportunities (CSV)",
+        "fullBackup": "[fr] Full Backup",
+        "allDataJson": "[fr] Export All Data (JSON)"
+      },
+      "import": {
+        "title": "[fr] Import Data",
+        "jobsAria": "[fr] Import jobs from JSON or CSV file",
+        "opportunitiesJsonCsv": "[fr] Import Opportunities (JSON/CSV)",
+        "restoreBackupAria": "[fr] Restore backup from JSON file",
+        "restoreBackup": "[fr] Restore Backup",
+        "allDataAria": "[fr] Import all data from JSON file",
+        "allDataJson": "[fr] Import All Data (JSON)"
+      },
+      "confirm": {
+        "title": "[fr] Confirm Import",
+        "description": "[fr] The following data will be imported (duplicates will be skipped):",
+        "importing": "[fr] Importing...",
+        "action": "[fr] Confirm Import"
+      }
+    }
+  },
+  "notFound": {
+    "title": "Page introuvable",
+    "description": "Nous n'avons pas trouvé cette page.",
+    "action": "Aller au tableau de bord"
+  },
+  "a11y": {
+    "weCouldnTLoadThisPage": "Nous n'avons pas pu charger cette page",
+    "toggleMenu": "Basculer le menu",
+    "dismissError": "Ignorer l'erreur",
+    "applicationError": "Erreur d'application",
+    "dismissNotification": "Rejeter la notification",
+    "trackYourFirstOpportunity": "Suivez votre première opportunité",
+    "resumeTemplate": "Modèle de CV",
+    "titleRequired": "Titre requis",
+    "companyRequired": "Entreprise requise",
+    "theSiteMayNotBeSupportedOrThe": "Le site n'est peut-être pas pris en charge ou la publication n'a pas pu être atteinte.",
+    "reactTypescript": "Réagir, TypeScript",
+    "accessibilityTesting": "Accessibilité, tests",
+    "wizardProgress": "Progression de l'assistant",
+    "queueCleared": "File d'attente effacée",
+    "opportunityNotFound": "Opportunité introuvable",
+    "addPrivateNotesAboutThisOpportunity": "Ajoutez des notes privées sur cette opportunité.",
+    "downloadPdf": "Télécharger le PDF (Ctrl+E)",
+    "reviewQueueDisabled": "File d'attente de révision désactivée",
+    "openOpportunities": "Opportunités ouvertes",
+    "navigation": "Navigation",
+    "pageActions": "Actions des pages",
+    "general": "Général",
+    "dataManagement": "Gestion des données",
+    "importJobsFromJsonOrCsvFile": "Importer des tâches à partir d'un fichier JSON ou CSV",
+    "restoreBackupFromJsonFile": "Restaurer la sauvegarde à partir du fichier JSON",
+    "importAllDataFromJsonFile": "Importer toutes les données du fichier JSON",
+    "applicationRate": "Taux d'application",
+    "responseRate": "Taux de réponse",
+    "interviewRate": "Taux d'entretien",
+    "successRate": "Taux de réussite",
+    "summary": "Résumé",
+    "experience": "Expérience",
+    "skills": "Compétences",
+    "promptABTesting": "Tests A/B rapides",
+    "writeTheTailoringInstructionsForThisPromptVariant": "Écrivez les instructions de couture pour cette variante rapide...",
+    "builderView": "Vue constructeur",
+    "selectWhatToSync": "Sélectionnez quoi synchroniser",
+    "model": "Modèle",
+    "selectAModel": "Sélectionnez un modèle",
+    "refreshAvailableModels": "Actualiser les modèles disponibles",
+    "noOpportunitiesMatchYourFilters": "Aucune opportunité ne correspond à vos filtres",
+    "selectAllSourceFiles": "Sélectionnez tous les fichiers sources",
+    "insertTable": "Insérer un tableau",
+    "imageUpload": "Téléchargement d'images",
+    "previewZoom": "Zoom d'aperçu",
+    "whatAiPowers": "Quels pouvoirs l’IA",
+    "weeklyActivity": "Activité hebdomadaire",
+    "googleProfile": "Profil Google",
+    "opportunityReviewQueue": "File d'attente de révision des opportunités",
+    "searchContacts": "Rechercher des contacts",
+    "gmailAutoStatus": "Statut automatique de Gmail",
+    "moveBulletUp": "Déplacer la balle vers le haut",
+    "moveBulletDown": "Déplacer la balle vers le bas",
+    "editBullet": "Modifier la puce",
+    "deleteBullet": "Supprimer la puce",
+    "openFilesPanel": "Panneau Ouvrir les fichiers",
+    "searchTemplates": "Modèles de recherche",
+    "openAiAssistantPanel": "Ouvrir le panneau de l'assistant IA",
+    "theme": "Thème",
+    "locale": "Lieu",
+    "savingLocale": "Enregistrement des paramètres régionaux",
+    "selectLocale": "Sélectionnez les paramètres régionaux",
+    "softwareEngineer": "Ingénieur logiciel",
+    "acmeCorp": "Acme Corp.",
+    "pasteTheFullOpportunityDescriptionHere": "Collez la description complète de l'opportunité ici...",
+    "googleIntegration": "Intégration Google",
+    "uploadResumeFile": "Télécharger le fichier de CV",
+    "removeFile": "Supprimer le fichier",
+    "searchYourCareerProfile": "Recherchez votre profil de carrière",
+    "searchYourCareerProfile2": "Recherchez votre profil de carrière...",
+    "pressToFocus": "Appuyez sur / pour faire la mise au point",
+    "clearSearch": "Effacer la recherche",
+    "sortOrder": "Ordre de tri",
+    "filterByCategory": "Filtrer par catégorie",
+    "pageSize": "Taille des pages",
+    "kanbanLanes": "Voies Kanban",
+    "jobKanbanBoard": "Tableau Kanban des tâches",
+    "versionName": "Nom de la version",
+    "versionName2": "Nom de la version...",
+    "opportunities": "Opportunités",
+    "opportunityViewMode": "Mode d'affichage des opportunités",
+    "searchJobsByTitleCompanyOrKeywords": "Recherchez des emplois par titre, entreprise ou mots-clés...",
+    "status": "Statut",
+    "type": "Taper",
+    "location": "Emplacement",
+    "sort": "Trier",
+    "sectionChangeCounts": "Les changements de section comptent",
+    "totalChangeCounts": "Le changement total compte",
+    "evalHealth": "Évaluer la santé",
+    "averageScoreTrend": "Tendance du score moyen",
+    "uploadResumePdfOrTextFile": "Télécharger un CV PDF ou un fichier texte",
+    "pasteYourFullResumeTextHere": "Collez le texte complet de votre CV ici...",
+    "optionalPasteTheJobDescriptionToCheckKeyword": "Facultatif : collez la description du poste pour vérifier la correspondance des mots clés...",
+    "beforeTheInterview": "Avant l'entretien",
+    "duringTheInterview": "Pendant l'entretien",
+    "afterTheInterview": "Après l'entretien",
+    "expandAiAssistantPanel": "Développer le panneau de l'assistant IA",
+    "showAiAssistant": "Afficher l'assistant IA",
+    "showTailorToJd": "Afficher Adapté à JD",
+    "showGenerateFromBank": "Afficher Générer à partir de la banque",
+    "collapseAiAssistantPanel": "Réduire le panneau de l'assistant IA",
+    "pasteTheJdHere": "Collez le JD ici",
+    "rewriteSection": "Section de réécriture",
+    "chooseSection": "Choisir la rubrique",
+    "rewriteSelectedSection": "Réécrire la section sélectionnée",
+    "selectedTextQuickActions": "Actions rapides du texte sélectionné",
+    "coverLetterCritique": "Critique de la lettre de motivation",
+    "noOpportunitiesTrackedYet": "Aucune opportunité suivie pour le moment",
+    "onboardingProgress": "Progression de l'intégration",
+    "skipOnboarding": "Passer l'intégration",
+    "expandFilesPanel": "Développer le panneau des fichiers",
+    "showFiles": "Afficher les fichiers",
+    "newStudioFile": "Nouveau fichier studio",
+    "showVersionHistory": "Afficher l'historique des versions",
+    "collapseFilesPanel": "Panneau Réduire les fichiers",
+    "notifications": "Notifications",
+    "markAllAsRead": "Marquer tout comme lu",
+    "deleteReadNotifications": "Supprimer les notifications de lecture",
+    "closeNotifications": "Fermer les notifications",
+    "markAsRead": "Marquer comme lu",
+    "delete": "Supprimer",
+    "deleteNotification": "Supprimer la notification",
+    "sanFranciscoCa": "San Francisco, Californie",
+    "selectType": "Sélectionnez le type",
+    "frontendInternProjectManagerDataAnalyst": "Stagiaire frontend, chef de projet, analyste de données",
+    "school": "École",
+    "degree": "Degré",
+    "field": "Champ",
+    "customerServiceExcelPython": "Service client, Excel, Python",
+    "campusCafe": "Café universitaire",
+    "barista": "Barista",
+    "communityPantryDashboard": "Tableau de bord du garde-manger communautaire",
+    "residenceCouncilSecretaryDeanSList": "Secrétaire du conseil de résidence, liste du doyen",
+    "typeACommandOrSearch": "Tapez une commande ou recherchez...",
+    "profileCompleteness": "Complétude du profil",
+    "coverLetterContent": "Contenu de la lettre de motivation",
+    "documents": "Documents",
+    "uploadFile": "Télécharger le fichier (Ctrl+U)",
+    "failedToLoadDocuments": "Échec du chargement des documents",
+    "expand": "Développer",
+    "selectAllVisibleComponents": "Sélectionnez tous les composants visibles",
+    "noComponentsDetected": "Aucun composant détecté",
+    "noComponentsLeft": "Il ne reste plus aucun composant",
+    "answerBank": "Banque de réponses",
+    "searchQuestionsAnswersOrSources": "Rechercher des questions, des réponses ou des sources",
+    "sortAnswers": "Trier les réponses",
+    "failedToLoadAnswers": "Échec du chargement des réponses",
+    "copyAnswer": "Copier la réponse",
+    "duplicateAnswer": "Réponse en double",
+    "editAnswer": "Modifier la réponse",
+    "deleteAnswer": "Supprimer la réponse",
+    "exampleWillYouNowOrInTheFuture": "Exemple : Aurez-vous besoin, maintenant ou à l'avenir, d'un parrainage ?",
+    "writeTheAnswerYouWantReusedByAutofill": "Écrivez la réponse que vous souhaitez réutiliser par saisie automatique.",
+    "optional": "Facultatif",
+    "installTheSlothingBrowserExtension": "Installez l'extension du navigateur Slothing",
+    "dismissExtensionPromo": "Ignorer la promotion d'extension",
+    "analyticsDashboard": "Tableau de bord d'analyse",
+    "exportDateRange": "Plage de dates d'exportation",
+    "dateRange": "Plage de dates",
+    "applicationPipeline": "Pipeline de candidatures",
+    "skillsOverview": "Aperçu des compétences",
+    "recentOpportunityActivity": "Activité d'opportunité récente",
+    "interviewPreparation": "Préparation à l'entretien",
+    "github": "GitHub",
+    "news": "Nouvelles",
+    "levels": "Niveaux",
+    "engBlog": "Blog fr",
+    "profile": "Profil",
+    "profileSections": "Sections de profil",
+    "seniorProductEngineer": "Ingénieur produit senior",
+    "loadingSource": "Source de chargement",
+    "calendar": "Calendrier",
+    "filterEventsByType": "Filtrer les événements par type",
+    "filter": "Filtre",
+    "subscribeToYourCalendarFeedViewInYour": "Abonnez-vous à votre flux de calendrier (.ics) - affichez-le dans votre application de calendrier par défaut.",
+    "previousMonth": "Mois précédent",
+    "nextMonth": "Mois prochain",
+    "noEventsScheduledForThisDay": "Aucun événement prévu pour cette journée",
+    "clickOnADateToViewEvents": "Cliquez sur une date pour voir les événements",
+    "noUpcomingEvents": "Aucun événement à venir",
+    "addNotesOrDetails": "Ajouter des notes ou des détails...",
+    "copyUrl": "Copier l'URL",
+    "salaryTools": "Outils salariaux",
+    "marketRateCalculator": "Calculateur de taux de marché",
+    "selectRole": "Sélectionnez un rôle",
+    "selectYourRole": "Sélectionnez votre rôle",
+    "selectLocation": "Sélectionnez un emplacement",
+    "addOffer": "Ajouter une offre",
+    "noOffersYet": "Aucune offre pour l'instant",
+    "generateNegotiationScript": "Générer un script de négociation",
+    "chooseAJobApplication": "Choisissez une candidature",
+    "chooseTheJobYouInterviewedFor": "Choisissez l'emploi pour lequel vous avez passé un entretien",
+    "mentionARecentProjectSharedInterestOrCompany": "Mentionnez un projet récent, un intérêt commun ou une mise à jour de l'entreprise...",
+    "chooseTheJobOffer": "Choisissez l'offre d'emploi",
+    "addAnySpecificPointsYouWantToMention": "Ajoutez tous les points spécifiques que vous souhaitez mentionner...",
+    "chooseAReplyType": "Choisissez un type de réponse",
+    "addConstraintsTimingCompensationExpectationsOrAFuture": "Ajoutez des contraintes, des délais, des attentes en matière de rémunération ou une note d'avenir...",
+    "chooseTheRoleYouReApplyingFor": "Choisissez le poste pour lequel vous postulez",
+    "addARecentAccomplishmentOrProjectToRemind": "Ajoutez une réalisation ou un projet récent pour leur rappeler...",
+    "emailTemplates": "Modèles d'e-mails",
+    "chooseTemplate": "Choisir un modèle",
+    "customize": "Personnaliser",
+    "editGithubOrg": "Modifier l'organisation GitHub",
+    "githubOrg": "Organisation GitHub",
+    "saveGithubOrg": "Enregistrer l’organisation GitHub",
+    "cancel": "Annuler",
+    "searchDrafts": "Rechercher des brouillons",
+    "answerScorecard": "Tableau de bord des réponses",
+    "startFreeWithSlothing": "Commencez gratuitement avec Slothing",
+    "extensionPopoverPreviewOnAJobPosting": "Aperçu contextuel de l'extension sur une offre d'emploi",
+    "dashboardPreview": "Aperçu du tableau de bord"
+  },
+  "profile": {
+    "title": "Profil",
+    "description": "Gardez à jour le profil source que Slothing utilise pour les CV, lettres de motivation et contrôles de compatibilité.",
+    "actions": {
+      "discard": "Annuler",
+      "saveChanges": "Enregistrer les modifications"
+    },
+    "status": {
+      "saving": "Enregistrement...",
+      "saved": "Enregistré"
+    },
+    "errors": {
+      "loadProfile": "Impossible de charger le profil",
+      "saveProfile": "Impossible d’enregistrer le profil"
+    },
+    "unsavedChanges": {
+      "prompt": "Vous avez des modifications de profil non enregistrées. Quitter sans enregistrer ?"
+    },
+    "tabs": {
+      "ariaLabel": "Sections du profil",
+      "overview": "Aperçu",
+      "preferences": "Préférences",
+      "privacy": "Confidentialité"
+    },
+    "answerBankPrompt": {
+      "text": "Vous voulez un profil plus riche ? Enregistrez des histoires et faits réutilisables dans votre banque de réponses.",
+      "action": "Ouvrir la banque de réponses"
+    },
+    "emptyState": {
+      "title": "Configurons votre profil",
+      "description": "Commencez par un CV pour que Slothing remplisse les bases, ou ouvrez le formulaire et ajoutez les détails manuellement.",
+      "uploadResume": "Importer votre CV pour remplir ceci",
+      "fillManually": "Ou remplir manuellement"
+    },
+    "sidebar": {
+      "yourName": "Votre nom",
+      "addHeadline": "Ajouter un titre",
+      "noEmail": "Aucun e-mail",
+      "noLocation": "Aucun lieu",
+      "noTargetSalary": "Aucun salaire cible",
+      "salaryRange": "{currency} {min}–{max}",
+      "salaryMinimum": "{currency} {min}+",
+      "salaryMaximum": "Jusqu’à {currency} {max}",
+      "profilePhoto": "Photo de profil",
+      "profilePhotoNamed": "Photo de profil de {name}"
+    },
+    "placeholders": {
+      "headline": "Ingénieur produit senior"
+    },
+    "sections": {
+      "identity": {
+        "title": "Identité",
+        "description": "Gardez à jour le profil source que Slothing utilise pour les CV, lettres de motivation et contrôles de compatibilité."
+      },
+      "contact": {
+        "title": "Contact",
+        "description": "Gardez à jour le profil source que Slothing utilise pour les CV, lettres de motivation et contrôles de compatibilité."
+      },
+      "summary": {
+        "title": "Résumé professionnel",
+        "description": "Gardez à jour le profil source que Slothing utilise pour les CV, lettres de motivation et contrôles de compatibilité."
+      },
+      "savedSignals": {
+        "title": "Signaux de profil enregistrés",
+        "description": "Gardez à jour le profil source que Slothing utilise pour les CV, lettres de motivation et contrôles de compatibilité."
+      },
+      "careerDetails": {
+        "title": "Détails de carrière",
+        "description": "Gardez à jour le profil source que Slothing utilise pour les CV, lettres de motivation et contrôles de compatibilité."
+      }
+    },
+    "fields": {
+      "avatarUrl": "URL de l'avatar",
+      "fullName": "Nom complet",
+      "headline": "Titre",
+      "email": "Adresse e-mail",
+      "phone": "Téléphone",
+      "location": "Lieu",
+      "linkedin": "Profil LinkedIn",
+      "github": "Profil GitHub",
+      "website": "Site web",
+      "summary": "Résumé professionnel",
+      "targetRoles": "Postes cibles",
+      "currency": "Devise",
+      "minimum": "Minimum",
+      "maximum": "Maximum"
+    },
+    "signals": {
+      "experience": "Expérience",
+      "education": "Formation",
+      "skills": "Compétences",
+      "projects": "Projets",
+      "awards": "Récompenses"
+    },
+    "workStyle": {
+      "title": "Mode de travail",
+      "description": "Gardez à jour le profil source que Slothing utilise pour les CV, lettres de motivation et contrôles de compatibilité.",
+      "options": {
+        "remote": "Télétravail",
+        "hybrid": "Hybride",
+        "onsite": "Sur site",
+        "fullTime": "Temps plein",
+        "contract": "Contrat"
+      }
+    },
+    "targetRoles": {
+      "title": "Postes cibles",
+      "description": "Gardez à jour le profil source que Slothing utilise pour les CV, lettres de motivation et contrôles de compatibilité."
+    },
+    "salary": {
+      "title": "Objectif de rémunération",
+      "description": "Gardez à jour le profil source que Slothing utilise pour les CV, lettres de motivation et contrôles de compatibilité."
+    },
+    "privacy": {
+      "title": "Confidentialité",
+      "description": "Gardez à jour le profil source que Slothing utilise pour les CV, lettres de motivation et contrôles de compatibilité.",
+      "openToRecruiters": {
+        "title": "Open to recruiter outreach",
+        "description": "Gardez à jour le profil source que Slothing utilise pour les CV, lettres de motivation et contrôles de compatibilité."
+      },
+      "shareContactInfo": {
+        "title": "Share contact info by default",
+        "description": "Gardez à jour le profil source que Slothing utilise pour les CV, lettres de motivation et contrôles de compatibilité."
+      }
+    },
+    "completeness": {
+      "readiness": "Préparation du profil",
+      "summary": "Profil complété à {score}% · {count, plural, one {# amélioration rapide disponible} other {# améliorations rapides disponibles}}",
+      "completeLabel": "terminé",
+      "progressLabel": "Complétude du profil",
+      "noGaps": "Tous les éléments essentiels sont remplis.",
+      "points": "+{points, plural, one {# point} other {# points}}",
+      "gaps": {
+        "contact-info": "Ajoutez votre nom, e-mail et titre",
+        "summary": "Ajoutez un résumé professionnel",
+        "experience-bullets": {
+          "empty": "Ajoutez une expérience avec au moins 3 points",
+          "role": "Ajoutez {missing, plural, one {# point de plus} other {# points de plus}} à votre poste chez {company}"
+        },
+        "quantified-bullets": {
+          "empty": "Ajoutez {missing, plural, one {# point quantifié} other {# points quantifiés}}",
+          "role": "Ajoutez {missing, plural, one {# point quantifié} other {# points quantifiés}} à votre poste chez {company}"
+        },
+        "education": "Ajoutez votre formation",
+        "skills": "Ajoutez {missing, plural, one {# compétence de plus} other {# compétences de plus}}",
+        "career-depth": "Ajoutez un projet ou une autre expérience",
+        "achievements": "Ajoutez une réussite, récompense ou certification",
+        "social-url": "Ajoutez une URL LinkedIn ou GitHub"
       }
     }
   }
