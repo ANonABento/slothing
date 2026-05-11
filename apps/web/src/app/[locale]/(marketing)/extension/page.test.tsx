@@ -38,21 +38,20 @@ describe("ExtensionLandingPage", () => {
     expect(
       screen.getByRole("heading", { name: "Less copying, more deciding" }),
     ).toBeInTheDocument();
-    expect(
-      screen.getByRole("img", {
-        name: "Slothing Columbus popover saving a LinkedIn job posting",
-      }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("img", {
-        name: "Gmail recruiter import view showing pending opportunities",
-      }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("img", {
-        name: "Review queue with three captured roles",
-      }),
-    ).toBeInTheDocument();
+    const jobBoardScreenshot = screen.getByRole("img", {
+      name: "Slothing Columbus popover saving a LinkedIn job posting",
+    });
+    const gmailScreenshot = screen.getByRole("img", {
+      name: "Gmail recruiter import view showing pending opportunities",
+    });
+    const reviewQueueScreenshot = screen.getByRole("img", {
+      name: "Review queue with three captured roles",
+    });
+    expect(jobBoardScreenshot.getAttribute("src")).toContain(
+      "job-board-capture",
+    );
+    expect(gmailScreenshot.getAttribute("src")).toContain("gmail-import");
+    expect(reviewQueueScreenshot.getAttribute("src")).toContain("review-queue");
     expect(
       screen.queryByText("LinkedIn, Indeed, Greenhouse, Lever, Workable"),
     ).not.toBeInTheDocument();
