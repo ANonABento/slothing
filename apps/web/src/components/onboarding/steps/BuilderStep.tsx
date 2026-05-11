@@ -16,6 +16,7 @@ import {
   scratchProfileFromAnswers,
   type ScratchProfileAnswers,
 } from "@/lib/onboarding/scratch-profile";
+import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 
 const initialAnswers: ScratchProfileAnswers = {
   name: "",
@@ -40,6 +41,8 @@ interface BuilderStepProps {
 }
 
 export function BuilderStep({ onAdvance }: BuilderStepProps) {
+  const a11yT = useA11yTranslations();
+
   const [answers, setAnswers] = useState<ScratchProfileAnswers>(initialAnswers);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -138,7 +141,7 @@ export function BuilderStep({ onAdvance }: BuilderStepProps) {
           <Input
             value={answers.headline}
             onChange={updateAnswer("headline")}
-            placeholder="Frontend intern, project manager, data analyst"
+            placeholder={a11yT("frontendInternProjectManagerDataAnalyst")}
             required
           />
         </label>
@@ -159,22 +162,22 @@ export function BuilderStep({ onAdvance }: BuilderStepProps) {
           </div>
           <div className="grid gap-3 sm:grid-cols-3">
             <Input
-              aria-label="School"
+              aria-label={a11yT("school")}
               value={answers.educationInstitution}
               onChange={updateAnswer("educationInstitution")}
-              placeholder="School"
+              placeholder={a11yT("school")}
             />
             <Input
-              aria-label="Degree"
+              aria-label={a11yT("degree")}
               value={answers.educationDegree}
               onChange={updateAnswer("educationDegree")}
-              placeholder="Degree"
+              placeholder={a11yT("degree")}
             />
             <Input
-              aria-label="Field"
+              aria-label={a11yT("field")}
               value={answers.educationField}
               onChange={updateAnswer("educationField")}
-              placeholder="Field"
+              placeholder={a11yT("field")}
             />
           </div>
         </div>
@@ -184,7 +187,7 @@ export function BuilderStep({ onAdvance }: BuilderStepProps) {
           <Input
             value={answers.skillsCsv}
             onChange={updateAnswer("skillsCsv")}
-            placeholder="Customer service, Excel, Python"
+            placeholder={a11yT("customerServiceExcelPython")}
           />
         </label>
 
@@ -211,7 +214,7 @@ export function BuilderStep({ onAdvance }: BuilderStepProps) {
                   <Input
                     value={answers.experienceCompany}
                     onChange={updateAnswer("experienceCompany")}
-                    placeholder="Campus cafe"
+                    placeholder={a11yT("campusCafe")}
                   />
                 </label>
                 <label className="space-y-1.5">
@@ -219,7 +222,7 @@ export function BuilderStep({ onAdvance }: BuilderStepProps) {
                   <Input
                     value={answers.experienceTitle}
                     onChange={updateAnswer("experienceTitle")}
-                    placeholder="Barista"
+                    placeholder={a11yT("barista")}
                   />
                 </label>
               </div>
@@ -240,7 +243,7 @@ export function BuilderStep({ onAdvance }: BuilderStepProps) {
                 <Input
                   value={answers.projectName}
                   onChange={updateAnswer("projectName")}
-                  placeholder="Community pantry dashboard"
+                  placeholder={a11yT("communityPantryDashboard")}
                 />
               </label>
 
@@ -273,7 +276,7 @@ export function BuilderStep({ onAdvance }: BuilderStepProps) {
                 <Input
                   value={answers.achievements}
                   onChange={updateAnswer("achievements")}
-                  placeholder="Residence council secretary, Dean's list"
+                  placeholder={a11yT("residenceCouncilSecretaryDeanSList")}
                 />
               </label>
             </div>

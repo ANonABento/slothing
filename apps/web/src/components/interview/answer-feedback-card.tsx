@@ -1,3 +1,5 @@
+"use client";
+
 import { CheckCircle2, Lightbulb, TrendingUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -6,6 +8,7 @@ import type {
   InterviewAnswerScorecard,
   InterviewFeedbackRating,
 } from "@/lib/interview/feedback";
+import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 
 interface AnswerFeedbackCardProps {
   scorecard: InterviewAnswerScorecard;
@@ -37,9 +40,11 @@ export function AnswerFeedbackCard({
   scorecard,
   compact = false,
 }: AnswerFeedbackCardProps) {
+  const a11yT = useA11yTranslations();
+
   return (
     <section
-      aria-label="Answer scorecard"
+      aria-label={a11yT("answerScorecard")}
       className={cn("rounded-lg border bg-card p-5", compact && "p-4")}
     >
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">

@@ -29,6 +29,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 
 interface UploadedFile {
   file: File;
@@ -73,6 +74,8 @@ export function Dropzone({
     "text/plain": [".txt"],
   },
 }: DropzoneProps) {
+  const a11yT = useA11yTranslations();
+
   const [files, setFiles] = useState<UploadedFile[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadConflict, setUploadConflict] =
@@ -256,7 +259,7 @@ export function Dropzone({
       >
         <input
           {...getInputProps()}
-          aria-label="Upload resume file"
+          aria-label={a11yT("uploadResumeFile")}
           aria-describedby="dropzone-help"
         />
 
@@ -387,7 +390,7 @@ export function Dropzone({
                         e.stopPropagation();
                         removeFile(index);
                       }}
-                      aria-label="Remove file"
+                      aria-label={a11yT("removeFile")}
                     >
                       <X className="h-4 w-4" />
                     </Button>
@@ -408,7 +411,7 @@ export function Dropzone({
                           e.stopPropagation();
                           removeFile(index);
                         }}
-                        aria-label="Remove file"
+                        aria-label={a11yT("removeFile")}
                       >
                         <X className="h-4 w-4" />
                       </Button>

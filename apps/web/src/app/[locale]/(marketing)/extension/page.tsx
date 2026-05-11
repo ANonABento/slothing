@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { getCurrentUserId } from "@/lib/auth";
+import { getA11yTranslations } from "@/lib/i18n/get-a11y-translations";
 import { getPageMetadata } from "@/lib/seo";
 
 export const metadata = getPageMetadata("extension");
@@ -82,6 +83,7 @@ const faqs = [
 
 export default async function ExtensionLandingPage() {
   const userId = await getCurrentUserId();
+  const a11yT = await getA11yTranslations();
 
   return (
     <main className="pt-24">
@@ -102,7 +104,7 @@ export default async function ExtensionLandingPage() {
           </div>
         </div>
 
-        <HeroMockup />
+        <HeroMockup ariaLabel={a11yT("extensionPopoverPreviewOnAJobPosting")} />
       </section>
 
       <section id="features" className="border-t bg-card/45 px-6 py-16">
@@ -260,11 +262,11 @@ export default async function ExtensionLandingPage() {
   );
 }
 
-function HeroMockup() {
+function HeroMockup({ ariaLabel }: { ariaLabel: string }) {
   return (
     <div
       className="relative min-h-[420px] rounded-lg border bg-card p-4 shadow-xl"
-      aria-label="Extension popover preview on a job posting"
+      aria-label={ariaLabel}
     >
       <div className="mb-4 flex items-center gap-2 border-b pb-3">
         <span className="h-3 w-3 rounded-full bg-destructive/70" />

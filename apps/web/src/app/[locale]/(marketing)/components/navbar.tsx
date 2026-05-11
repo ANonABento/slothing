@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useLocale } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { cn } from "@/lib/utils";
 import { Sparkles, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
+import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 
 const navLinks = [
   { name: "Features", href: "#features" },
@@ -15,6 +16,8 @@ const navLinks = [
 ];
 
 export function Navbar() {
+  const a11yT = useA11yTranslations();
+
   const locale = useLocale();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -101,7 +104,7 @@ export function Navbar() {
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
             className="flex h-11 w-11 items-center justify-center text-muted-foreground hover:text-foreground md:hidden"
-            aria-label="Toggle menu"
+            aria-label={a11yT("toggleMenu")}
           >
             {mobileOpen ? (
               <X className="h-6 w-6" />

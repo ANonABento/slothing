@@ -60,6 +60,7 @@ import { SkeletonButton, SkeletonCard } from "@/components/ui/skeleton";
 import { usePreferredLocale } from "@/components/format/time-ago";
 import { useErrorToast } from "@/hooks/use-error-toast";
 import type { Opportunity } from "@/types/opportunity";
+import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 
 const CalendarSyncButton = dynamic(
   () => import("@/components/google").then((m) => m.CalendarSyncButton),
@@ -123,6 +124,8 @@ function getMonthDate(year: number, monthIndex: number, day: number): Date {
 }
 
 export default function CalendarPage() {
+  const a11yT = useA11yTranslations();
+
   const locale = usePreferredLocale();
   const [jobs, setJobs] = useState<Opportunity[]>([]);
   const [reminders, setReminders] = useState<Reminder[]>([]);
@@ -366,16 +369,16 @@ export default function CalendarPage() {
     <AppPage>
       <PageHeader
         icon={CalendarIcon}
-        title="Calendar"
+        title={a11yT("calendar")}
         description="Track interviews, deadlines, and reminders in one place."
         actions={
           <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center">
             <Select value={filterType} onValueChange={setFilterType}>
               <SelectTrigger
                 className="w-36"
-                aria-label="Filter events by type"
+                aria-label={a11yT("filterEventsByType")}
               >
-                <SelectValue placeholder="Filter" />
+                <SelectValue placeholder={a11yT("filter")} />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Events</SelectItem>
@@ -399,7 +402,7 @@ export default function CalendarPage() {
                 variant="outline"
                 size="sm"
                 onClick={() => setShowSubscribeDialog(true)}
-                title="Subscribe to your calendar feed (.ics) - view in your default calendar app."
+                title={a11yT("subscribeToYourCalendarFeedViewInYour")}
               >
                 <Rss className="h-4 w-4 mr-2" />
                 Subscribe
@@ -453,7 +456,7 @@ export default function CalendarPage() {
                     variant="ghost"
                     size="icon"
                     onClick={goToPreviousMonth}
-                    aria-label="Previous month"
+                    aria-label={a11yT("previousMonth")}
                   >
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
@@ -461,7 +464,7 @@ export default function CalendarPage() {
                     variant="ghost"
                     size="icon"
                     onClick={goToNextMonth}
-                    aria-label="Next month"
+                    aria-label={a11yT("nextMonth")}
                   >
                     <ChevronRight className="h-4 w-4" />
                   </Button>
@@ -607,13 +610,13 @@ export default function CalendarPage() {
               ) : selectedDate ? (
                 <StandardEmptyState
                   icon={CalendarIcon}
-                  title="No events scheduled for this day"
+                  title={a11yT("noEventsScheduledForThisDay")}
                   className="min-h-48"
                 />
               ) : (
                 <StandardEmptyState
                   icon={CalendarSearch}
-                  title="Click on a date to view events"
+                  title={a11yT("clickOnADateToViewEvents")}
                   className="min-h-48"
                 />
               )}
@@ -644,7 +647,7 @@ export default function CalendarPage() {
                 {events.filter((e) => e.date >= nowDate()).length === 0 && (
                   <StandardEmptyState
                     icon={ListChecks}
-                    title="No upcoming events"
+                    title={a11yT("noUpcomingEvents")}
                     className="min-h-40"
                   />
                 )}
@@ -745,7 +748,7 @@ export default function CalendarPage() {
               <Label htmlFor="event-description">Description</Label>
               <Textarea
                 id="event-description"
-                placeholder="Add notes or details..."
+                placeholder={a11yT("addNotesOrDetails")}
                 value={newEvent.description}
                 onChange={(e) =>
                   setNewEvent({ ...newEvent, description: e.target.value })
@@ -813,7 +816,7 @@ export default function CalendarPage() {
                   variant="outline"
                   size="icon"
                   onClick={copyFeedUrl}
-                  aria-label="Copy URL"
+                  aria-label={a11yT("copyUrl")}
                 >
                   {copiedUrl ? (
                     <Check className="h-4 w-4 text-success" />

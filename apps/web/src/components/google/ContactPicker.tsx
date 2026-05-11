@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { useErrorToast } from "@/hooks/use-error-toast";
+import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 
 export interface GooglePickerContact {
   resourceName: string;
@@ -42,6 +43,8 @@ function contactSearchText(contact: GooglePickerContact): string {
 }
 
 export function ContactPicker({ onSelect, trigger }: ContactPickerProps) {
+  const a11yT = useA11yTranslations();
+
   const [open, setOpen] = useState(false);
   const [contacts, setContacts] = useState<GooglePickerContact[]>([]);
   const [query, setQuery] = useState("");
@@ -128,7 +131,7 @@ export function ContactPicker({ onSelect, trigger }: ContactPickerProps) {
             <Input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search contacts"
+              placeholder={a11yT("searchContacts")}
               className="pl-9"
             />
           </div>

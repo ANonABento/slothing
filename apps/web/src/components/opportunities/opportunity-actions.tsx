@@ -25,6 +25,7 @@ import { useErrorToast } from "@/hooks/use-error-toast";
 import type { ATSAnalysisResult } from "@/lib/ats/analyzer";
 import { readJsonResponse } from "@/lib/http";
 import type { JobDescription, JobMatch } from "@/types";
+import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 
 const ATSScoreBreakdown = dynamic(
   () =>
@@ -96,6 +97,8 @@ export function OpportunityActions({
   onApply,
   onGeneratedDocument,
 }: OpportunityActionsProps) {
+  const a11yT = useA11yTranslations();
+
   const [templates, setTemplates] =
     useState<ResumeTemplate[]>(FALLBACK_TEMPLATES);
   const [selectedTemplate, setSelectedTemplate] = useState("classic");
@@ -251,7 +254,7 @@ export function OpportunityActions({
               value={selectedTemplate}
               onValueChange={setSelectedTemplate}
             >
-              <SelectTrigger aria-label="Resume template">
+              <SelectTrigger aria-label={a11yT("resumeTemplate")}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

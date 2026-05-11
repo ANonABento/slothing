@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/select";
 import { THEME_PRIMARY_GRADIENT_BUTTON_CLASSES } from "@/lib/theme/component-classes";
 import type { ParsedJobPreview } from "./import-job-dialog.types";
+import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 
 interface ImportJobEditFormProps {
   preview: ParsedJobPreview;
@@ -34,6 +35,8 @@ export function ImportJobEditForm({
   onCancel,
   onSave,
 }: ImportJobEditFormProps) {
+  const a11yT = useA11yTranslations();
+
   return (
     <div className="space-y-4 py-4">
       <div className="grid gap-4 sm:grid-cols-2">
@@ -59,7 +62,7 @@ export function ImportJobEditForm({
           <Input
             value={preview.location}
             onChange={(e) => onFieldChange("location", e.target.value)}
-            placeholder="San Francisco, CA"
+            placeholder={a11yT("sanFranciscoCa")}
           />
         </div>
         <div className="space-y-2">
@@ -69,7 +72,7 @@ export function ImportJobEditForm({
             onValueChange={(value) => onFieldChange("type", value)}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Select type" />
+              <SelectValue placeholder={a11yT("selectType")} />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="full-time">Full-time</SelectItem>

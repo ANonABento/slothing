@@ -17,6 +17,7 @@ import { useErrorToast } from "@/hooks/use-error-toast";
 import { readJsonResponse } from "@/lib/http";
 import { THEME_PRIMARY_GRADIENT_BUTTON_CLASSES } from "@/lib/theme/component-classes";
 import type { JobDescription } from "@/types";
+import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 
 interface AddJobDialogProps {
   open: boolean;
@@ -47,6 +48,8 @@ export function AddJobDialog({
   onOpenChange,
   onCreated,
 }: AddJobDialogProps) {
+  const a11yT = useA11yTranslations();
+
   const [form, setForm] = useState<NewJobForm>(EMPTY_FORM);
   const [addingJob, setAddingJob] = useState(false);
   const showErrorToast = useErrorToast();
@@ -110,7 +113,7 @@ export function AddJobDialog({
                 onChange={(event) =>
                   setForm((prev) => ({ ...prev, title: event.target.value }))
                 }
-                placeholder="Software Engineer"
+                placeholder={a11yT("softwareEngineer")}
               />
             </div>
             <div className="space-y-2">
@@ -120,7 +123,7 @@ export function AddJobDialog({
                 onChange={(event) =>
                   setForm((prev) => ({ ...prev, company: event.target.value }))
                 }
-                placeholder="Acme Corp"
+                placeholder={a11yT("acmeCorp")}
               />
             </div>
           </div>
@@ -145,7 +148,7 @@ export function AddJobDialog({
                   description: event.target.value,
                 }))
               }
-              placeholder="Paste the full opportunity description here..."
+              placeholder={a11yT("pasteTheFullOpportunityDescriptionHere")}
               className="resize-none"
             />
           </div>

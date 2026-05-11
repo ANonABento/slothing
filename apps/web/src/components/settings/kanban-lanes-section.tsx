@@ -12,8 +12,11 @@ import {
   type KanbanLaneId,
 } from "@/app/[locale]/(app)/opportunities/utils";
 import type { SettingsResponse } from "@/types/api";
+import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 
 export function KanbanLanesSection() {
+  const a11yT = useA11yTranslations();
+
   const [visibleLanes, setVisibleLanes] = useState<KanbanLaneId[]>([
     ...DEFAULT_KANBAN_VISIBLE_LANES,
   ]);
@@ -85,7 +88,7 @@ export function KanbanLanesSection() {
 
   return (
     <PageSection
-      title="Kanban lanes"
+      title={a11yT("kanbanLanes")}
       description="Pick which lanes appear on the Opportunities Kanban. Order is fixed by the pipeline."
       icon={Columns3}
       action={

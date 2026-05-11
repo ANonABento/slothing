@@ -50,6 +50,7 @@ import {
 import type { Profile } from "@/types";
 import { LifetimeStatsCard } from "@/components/streak/lifetime-stats-card";
 import type { StreakState } from "@/lib/streak/types";
+import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 
 type ProfileTab = "overview" | "preferences" | "privacy";
 
@@ -95,6 +96,8 @@ function Field({
 }
 
 export default function ProfilePage() {
+  const a11yT = useA11yTranslations();
+
   const [activeTab, setActiveTab] = useState<ProfileTab>("overview");
   const [profile, setProfile] = useState<Profile | null>(null);
   const [streak, setStreak] = useState<StreakState | null>(null);
@@ -300,7 +303,7 @@ export default function ProfilePage() {
       <PageHeader
         width="wide"
         icon={User}
-        title="Profile"
+        title={a11yT("profile")}
         description="Maintain the profile details used for resumes, autofill, matching, and job search preferences."
         actions={
           <>
@@ -422,7 +425,7 @@ export default function ProfilePage() {
 
             <div
               role="tablist"
-              aria-label="Profile sections"
+              aria-label={a11yT("profileSections")}
               className="grid gap-2 rounded-md border bg-card p-2"
             >
               {tabs.map((tab) => {
@@ -484,7 +487,7 @@ export default function ProfilePage() {
                         <Input
                           id="headline"
                           value={form.headline}
-                          placeholder="Senior product engineer"
+                          placeholder={a11yT("seniorProductEngineer")}
                           onChange={(event) =>
                             updateField("headline", event.target.value)
                           }
