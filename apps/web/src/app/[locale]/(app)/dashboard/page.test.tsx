@@ -118,6 +118,35 @@ describe("Dashboard onboarding", () => {
     expect(screen.getByText("Today")).toBeInTheDocument();
   });
 
+  it("deep-links pipeline stages to matching opportunity status filters", async () => {
+    mockFetch({
+      dismissedAt: "2026-05-09T10:00:00.000Z",
+      jobsByStatus: {
+        saved: 1,
+        applied: 2,
+        interviewing: 3,
+        offered: 4,
+      },
+    });
+
+    renderDashboard();
+
+    expect(
+      await screen.findByRole("link", { name: /Saved\s*1/ }),
+    ).toHaveAttribute("href", "/en/opportunities?status=saved");
+    expect(screen.getByRole("link", { name: /Applied\s*2/ })).toHaveAttribute(
+      "href",
+      "/en/opportunities?status=applied",
+    );
+    expect(
+      screen.getByRole("link", { name: /Interviewing\s*3/ }),
+    ).toHaveAttribute("href", "/en/opportunities?status=interviewing");
+    expect(screen.getByRole("link", { name: /Offer\s*4/ })).toHaveAttribute(
+      "href",
+      "/en/opportunities?status=offered",
+    );
+  });
+
   it("posts skip and moves to active dashboard without reloading", async () => {
     mockFetch();
 
