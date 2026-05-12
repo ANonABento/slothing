@@ -8,8 +8,8 @@ vi.mock("./legacy", () => {
   return { default: mockDb };
 });
 
-vi.mock("nanoid", () => ({
-  nanoid: () => "test-cover-letter-id",
+vi.mock("@/lib/utils", () => ({
+  generateId: () => "test-cover-letter-id",
 }));
 
 import db from "./legacy";

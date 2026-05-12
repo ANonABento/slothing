@@ -234,7 +234,7 @@ Every user-owned table has `user_id TEXT NOT NULL DEFAULT 'default'` plus a `idx
 - `POST /api/opportunities/scrape` — URL auto-scrape used by the Add Opportunity wizard
 - `POST /api/opportunities/from-extension` — Columbus extension ingest
 - `GET /api/opportunities/templates`
-- `GET/POST/PATCH /api/jobs/*` — legacy aliases that share the `jobs` table
+- `/api/jobs` and `/api/jobs/*` — removed; use `/api/opportunities`
 
 Columbus is the browser-extension sub-brand inside Slothing. Keep extension UI strings as Columbus unless a product naming task explicitly asks for a rename.
 
@@ -476,7 +476,7 @@ The Columbus extension has a separate workflow (`.github/workflows/extension-e2e
 
 1. **Never add `bg-white`, `bg-black`, or `text-gray-*` (or any forbidden grayscale family) anywhere in `src/`.** `npm run lint` calls `scripts/forbidden-color-lint.cjs`, which is a hard fail in CI. Pick `bg-card`, `bg-paper`, `bg-background`, `bg-muted`, or another semantic token. Same applies to inline `style={{ color: "#fff" }}` — use a CSS variable.
 2. **Destructive actions need a confirm dialog or undo snackbar.** Don't ship a bare `<Button onClick={() => deleteX()}>`. Read `docs/destructive-actions-pattern.md` first and update its Current Actions table when you add or change a destructive flow.
-3. **`/jobs` no longer exists.** It was consolidated into `/opportunities` in T2. The DB table is still named `jobs`, and `/api/jobs/*` routes still work as legacy aliases — but UI navigation must point at `/opportunities`. Don't add a sidebar item for `/jobs`.
+3. **`/jobs` no longer exists.** It was consolidated into `/opportunities` in T2. The DB table is still named `jobs`, but `/api/jobs` and `/api/jobs/*` route aliases have been removed. UI navigation and API clients must point at `/opportunities`.
 4. **`/builder`, `/tailor`, `/cover-letter` are redirect-only.** All resume + cover letter editing happens in `/studio`. If you find yourself building UI in those routes, you're in the wrong place.
 5. **Don't reach into `Math.random()` for IDs.** Use `crypto.randomBytes()` (server) or stable hashes (client/dedupe). The activity feed and dedupe pipeline rely on stable IDs.
 6. **Don't write inline pluralization or `Date.toLocaleString()` calls.** Use `pluralize()` and the `format/time` helpers / `<TimeAgo />`. Locale is user-configurable.
@@ -520,7 +520,7 @@ See `ROADMAP.md` for planned improvements.
 ## Recent Improvements (Session shipped May 2026)
 
 - **T1 — Dedupe pipeline:** file uploads (sha256 `documents.file_hash`), bank entries (chunk hash uniqueness), and dashboard activity feed now dedupe correctly. Closed #218–#222.
-- **T2 — Routes consolidation:** `/jobs` removed; everything moved to `/opportunities`. `/api/jobs/*` kept as legacy alias.
+- **T2 — Routes consolidation:** `/jobs` removed; everything moved to `/opportunities`; `/api/jobs` and `/api/jobs/*` aliases were removed.
 - **T3 — Token migration + hard-fail lint:** all hardcoded grayscale/hex colors removed from `src/`; `scripts/forbidden-color-lint.cjs` enforces semantic tokens in CI.
 - **T4 — Studio overhaul:** collapsible drawers, scalable template picker, persistent save status, save-status tests.
 - **T5 — Add Opportunity wizard:** 4-step flow with URL auto-scrape via `/api/opportunities/scrape`.
