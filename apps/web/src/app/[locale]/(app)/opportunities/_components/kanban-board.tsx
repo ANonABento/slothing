@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import type { DragEvent } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Eye, GripVertical } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -55,6 +55,7 @@ export function KanbanBoard({
   onStatusChange,
   onShowLane,
 }: KanbanBoardProps) {
+  const locale = useLocale();
   const t = useTranslations("opportunities.kanbanBoard");
   const commonT = useTranslations("common");
   const normalizedVisibleLanes = normalizeKanbanVisibleLanes(visibleLanes);
@@ -160,6 +161,7 @@ export function KanbanBoard({
 
                 <KanbanLaneCards
                   opportunities={laneOpportunities}
+                  locale={locale}
                   draggedOpportunityId={draggedOpportunityId}
                   emptyLabel={t("dropHere")}
                   onDragStart={handleDragStart}
@@ -235,12 +237,14 @@ export function KanbanBoard({
 
 function KanbanLaneCards({
   opportunities,
+  locale,
   draggedOpportunityId,
   emptyLabel,
   onDragStart,
   onDragEnd,
 }: {
   opportunities: Opportunity[];
+  locale: string;
   draggedOpportunityId: string | null;
   emptyLabel: string;
   onDragStart: (event: DragEvent<HTMLElement>, opportunityId: string) => void;
@@ -258,6 +262,7 @@ function KanbanLaneCards({
     return (
       <OpportunityKanbanCard
         opportunity={opportunity}
+        locale={locale}
         isDragging={draggedOpportunityId === opportunity.id}
         onDragStart={handleCardDragStart}
         onDragEnd={onDragEnd}
@@ -339,18 +344,20 @@ export function ClosedSubstateDialog({
 
 function OpportunityKanbanCard({
   opportunity,
+  locale,
   isDragging,
   onDragStart,
   onDragEnd,
 }: {
   opportunity: Opportunity;
+  locale: string;
   isDragging: boolean;
   onDragStart: (event: DragEvent<HTMLElement>) => void;
   onDragEnd: () => void;
 }) {
   const location = formatOpportunityLocation(opportunity);
   const deadline = opportunity.deadline
-    ? `Due ${formatOpportunityDate(opportunity.deadline)}`
+    ? `Due ${formatOpportunityDate(opportunity.deadline, locale)}`
     : undefined;
 
   return (

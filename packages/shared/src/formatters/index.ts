@@ -1,4 +1,5 @@
 export const DEFAULT_LOCALE = "en-US";
+const NUMERIC_PARTS_LOCALE = `${DEFAULT_LOCALE}-u-nu-latn`;
 export const LOCALE_COOKIE_NAME = "taida_locale";
 export const LOCALE_CHANGE_EVENT = "taida:locale-change";
 
@@ -316,7 +317,7 @@ function formatRelativeBucket(
 }
 
 function getZonedParts(date: Date, timeZone: string) {
-  const parts = new Intl.DateTimeFormat("en-US", {
+  const parts = new Intl.DateTimeFormat(NUMERIC_PARTS_LOCALE, {
     timeZone,
     year: "numeric",
     month: "2-digit",

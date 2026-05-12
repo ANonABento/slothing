@@ -2,6 +2,7 @@
 
 import type { DragEvent } from "react";
 import { useMemo, useState } from "react";
+import { useLocale } from "next-intl";
 import {
   Briefcase,
   CalendarClock,
@@ -25,6 +26,7 @@ import {
   groupJobsByKanbanStatus,
   type JobKanbanStatus,
 } from "./job-kanban-utils";
+import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 
 interface JobKanbanViewProps {
   jobs: JobDescription[];
@@ -41,6 +43,8 @@ const COLUMN_STYLES: Record<JobKanbanStatus, string> = {
 };
 
 export function JobKanbanView({ jobs, onStatusChange }: JobKanbanViewProps) {
+  const locale = useLocale();
+  const a11yT = useA11yTranslations();
   const groupedJobs = useMemo(() => groupJobsByKanbanStatus(jobs), [jobs]);
   const [draggedJobId, setDraggedJobId] = useState<string | null>(null);
 
@@ -68,7 +72,7 @@ export function JobKanbanView({ jobs, onStatusChange }: JobKanbanViewProps) {
     <div
       className="overflow-x-auto pb-4"
       role="region"
-      aria-label="Job kanban board"
+      aria-label={a11yT("jobKanbanBoard")}
       aria-roledescription="kanban board"
       tabIndex={0}
     >
@@ -113,6 +117,7 @@ export function JobKanbanView({ jobs, onStatusChange }: JobKanbanViewProps) {
                     <JobKanbanCard
                       key={job.id}
                       job={job}
+                      locale={locale}
                       isDragging={draggedJobId === job.id}
                       onDragStart={(event) => handleDragStart(event, job.id)}
                       onDragEnd={() => setDraggedJobId(null)}
@@ -130,6 +135,7 @@ export function JobKanbanView({ jobs, onStatusChange }: JobKanbanViewProps) {
 
 interface JobKanbanCardProps {
   job: JobDescription;
+  locale: string;
   isDragging: boolean;
   onDragStart: (event: DragEvent<HTMLElement>) => void;
   onDragEnd: () => void;
@@ -137,11 +143,12 @@ interface JobKanbanCardProps {
 
 function JobKanbanCard({
   job,
+  locale,
   isDragging,
   onDragStart,
   onDragEnd,
 }: JobKanbanCardProps) {
-  const deadlineLabel = formatJobDeadline(job.deadline);
+  const deadlineLabel = formatJobDeadline(job.deadline, locale);
   const tags = job.keywords.slice(0, 4);
 
   return (

@@ -4,6 +4,7 @@ import { ArrowDown, ArrowUp, Check, Pencil, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { BankEntry } from "@/types";
 import type { FieldDef } from "./chunk-card.types";
+import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 
 interface ChunkExpandedContentProps {
   fields: FieldDef[];
@@ -28,6 +29,8 @@ export function ChunkExpandedContent({
   onEdit,
   onDeleteClick,
 }: ChunkExpandedContentProps) {
+  const a11yT = useA11yTranslations();
+
   const visibleFields = fields.filter((field) => {
     if (childEntries.length === 0) return true;
     return field.key !== "highlights";
@@ -118,7 +121,7 @@ export function ChunkExpandedContent({
                         variant="ghost"
                         size="icon"
                         className="h-7 w-7"
-                        title="Move bullet up"
+                        title={a11yT("moveBulletUp")}
                         disabled={index === 0}
                         onClick={() => onChildReorder(child.id, "up")}
                       >
@@ -128,7 +131,7 @@ export function ChunkExpandedContent({
                         variant="ghost"
                         size="icon"
                         className="h-7 w-7"
-                        title="Move bullet down"
+                        title={a11yT("moveBulletDown")}
                         disabled={index === childEntries.length - 1}
                         onClick={() => onChildReorder(child.id, "down")}
                       >
@@ -140,7 +143,7 @@ export function ChunkExpandedContent({
                     variant="ghost"
                     size="icon"
                     className="h-7 w-7"
-                    title="Edit bullet"
+                    title={a11yT("editBullet")}
                     onClick={() => onChildEdit?.(child)}
                   >
                     <Pencil className="h-3 w-3" />
@@ -149,7 +152,7 @@ export function ChunkExpandedContent({
                     variant="ghost"
                     size="icon"
                     className="h-7 w-7 text-destructive hover:text-destructive"
-                    title="Delete bullet"
+                    title={a11yT("deleteBullet")}
                     onClick={() => onChildDelete?.(child.id)}
                   >
                     <Trash2 className="h-3 w-3" />

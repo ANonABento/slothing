@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useFormatter } from "next-intl";
 import {
   DollarSign,
   Calculator,
@@ -39,6 +40,7 @@ import {
 } from "@/components/ui/page-layout";
 import { cn } from "@/lib/utils";
 import { getResponsiveDetailGridClass } from "../shared-layout-utils";
+import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 
 interface SalaryRange {
   min: number;
@@ -100,17 +102,17 @@ const ROLES = [
   "UX Designer",
 ];
 
-function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 0,
-  }).format(amount);
-}
-
 type TabType = "calculator" | "compare" | "negotiate";
 
 export default function SalaryToolsPage() {
+  const format = useFormatter();
+  const formatCurrency = (amount: number): string =>
+    format.number(amount, {
+      style: "currency",
+      currency: "USD",
+      maximumFractionDigits: 0,
+    });
+  const a11yT = useA11yTranslations();
   const [activeTab, setActiveTab] = useState<TabType>("calculator");
 
   // Calculator state
@@ -293,7 +295,7 @@ ${script.close}
     <AppPage>
       <PageHeader
         icon={DollarSign}
-        title="Salary Tools"
+        title={a11yT("salaryTools")}
         description="Research market rates, compare offers, and prepare for salary negotiations."
       />
 
@@ -328,7 +330,7 @@ ${script.close}
             {/* Input */}
             <PagePanel>
               <PagePanelHeader
-                title="Market Rate Calculator"
+                title={a11yT("marketRateCalculator")}
                 icon={Calculator}
               />
 
@@ -339,8 +341,8 @@ ${script.close}
                     Role
                   </Label>
                   <Select value={role} onValueChange={setRole}>
-                    <SelectTrigger aria-label="Select role">
-                      <SelectValue placeholder="Select your role" />
+                    <SelectTrigger aria-label={a11yT("selectRole")}>
+                      <SelectValue placeholder={a11yT("selectYourRole")} />
                     </SelectTrigger>
                     <SelectContent>
                       {ROLES.map((r) => (
@@ -358,8 +360,8 @@ ${script.close}
                     Location
                   </Label>
                   <Select value={location} onValueChange={setLocation}>
-                    <SelectTrigger aria-label="Select location">
-                      <SelectValue placeholder="Select location" />
+                    <SelectTrigger aria-label={a11yT("selectLocation")}>
+                      <SelectValue placeholder={a11yT("selectLocation")} />
                     </SelectTrigger>
                     <SelectContent>
                       {LOCATIONS.map((l) => (
@@ -468,7 +470,11 @@ ${script.close}
           <div className="space-y-6">
             {/* Add Offer Form */}
             <PagePanel>
-              <PagePanelHeader title="Add Offer" icon={Plus} className="mb-4" />
+              <PagePanelHeader
+                title={a11yT("addOffer")}
+                icon={Plus}
+                className="mb-4"
+              />
 
               <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div>
@@ -644,7 +650,7 @@ ${script.close}
             {offers.length === 0 && (
               <StandardEmptyState
                 icon={Building2}
-                title="No offers yet"
+                title={a11yT("noOffersYet")}
                 description="Add at least 2 offers to compare total compensation."
               />
             )}
@@ -657,7 +663,7 @@ ${script.close}
             {/* Input */}
             <PagePanel>
               <PagePanelHeader
-                title="Generate Negotiation Script"
+                title={a11yT("generateNegotiationScript")}
                 icon={TrendingUp}
               />
 
@@ -677,7 +683,7 @@ ${script.close}
                     onValueChange={setNegotiateRole}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select role" />
+                      <SelectValue placeholder={a11yT("selectRole")} />
                     </SelectTrigger>
                     <SelectContent>
                       {ROLES.map((r) => (

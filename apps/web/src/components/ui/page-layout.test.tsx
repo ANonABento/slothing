@@ -16,6 +16,11 @@ import {
   getPageWidthClassName,
 } from "./page-layout";
 
+const settingsTitle = "Settings";
+const emptyTitle = "Nothing here";
+const panelTitle = "Panel title";
+const sectionTitle = "Shared section";
+
 describe("page layout helpers", () => {
   it("returns the expected width classes", () => {
     expect(getPageWidthClassName("full")).toBe("");
@@ -27,7 +32,7 @@ describe("page layout helpers", () => {
     render(
       <PageHeader
         icon={Settings}
-        title="Settings"
+        title={settingsTitle}
         description="Configure the app."
         actions={<button>Save</button>}
         width="narrow"
@@ -46,7 +51,7 @@ describe("page layout helpers", () => {
     render(
       <PageHeader
         icon={Settings}
-        title="Settings"
+        title={settingsTitle}
         description="Configure the app."
       />,
     );
@@ -79,7 +84,7 @@ describe("page layout helpers", () => {
     render(
       <StandardEmptyState
         icon={Settings}
-        title="Nothing here"
+        title={emptyTitle}
         description="Try another filter."
         action={<button>Reset</button>}
       />,
@@ -98,7 +103,7 @@ describe("page layout helpers", () => {
         <PageWorkspace>Workspace body</PageWorkspace>
         <CenteredPagePanel>Centered body</CenteredPagePanel>
         <PagePanel>
-          <PagePanelHeader icon={Settings} title="Panel title" />
+          <PagePanelHeader icon={Settings} title={panelTitle} />
           Panel body
         </PagePanel>
         <PageIconTile icon={Settings} />
@@ -128,7 +133,7 @@ describe("page layout helpers", () => {
     render(
       <PageSection
         icon={Settings}
-        title="Shared section"
+        title={sectionTitle}
         description="Consistent surface."
         action={<button>Manage</button>}
       >

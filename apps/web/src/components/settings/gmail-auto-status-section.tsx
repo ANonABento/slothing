@@ -7,8 +7,11 @@ import { PageSection } from "@/components/ui/page-layout";
 import { formatAbsolute } from "@/lib/format/time";
 import { readJsonResponse } from "@/lib/http";
 import type { SettingsResponse } from "@/types/api";
+import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 
 export function GmailAutoStatusSection() {
+  const a11yT = useA11yTranslations();
+
   const [enabled, setEnabled] = useState(false);
   const [lastScannedAt, setLastScannedAt] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -71,7 +74,7 @@ export function GmailAutoStatusSection() {
 
   return (
     <PageSection
-      title="Gmail Auto-Status"
+      title={a11yT("gmailAutoStatus")}
       description="Opt in to daily Gmail scans that advance matched opportunity statuses."
       icon={MailCheck}
       action={

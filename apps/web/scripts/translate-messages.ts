@@ -32,6 +32,55 @@ const localeOverrides: Partial<Record<TargetLocale, Record<string, string>>> = {
   es: {
     "nav.groups.pipeline": "Pipeline",
   },
+  fr: {
+    "common.openSource": "Code source ouvert",
+    "nav.groups.documents": "Fichiers",
+    "nav.groups.pipeline": "Suivi",
+    "nav.items.documents": "Fichiers",
+    "dashboard.stats.documents": "Fichiers",
+    "dashboard.stats.pipeline": "Suivi",
+    "dashboard.pipeline.title": "Suivi",
+    "opportunities.filters.type": "Catégorie",
+    "opportunities.filters.source": "Origine",
+    "opportunities.tabs.hackathon": "Marathons de code",
+    "opportunities.types.hackathon": "Marathon de code",
+    "opportunities.counts.hackathons":
+      "{count, plural, one {# marathon de code} other {# marathons de code}}",
+    "a11y.navigation": "Menu de navigation",
+    "a11y.notifications": "Alertes",
+    "a11y.barista": "Serveur de café",
+    "a11y.documents": "Fichiers",
+    "a11y.github": "Profil GitHub",
+    "profile.sidebar.salaryMinimum": "À partir de {currency} {min}",
+    "profile.sections.contact.title": "Coordonnées",
+    "profile.fields.minimum": "Valeur minimale",
+    "profile.fields.maximum": "Valeur maximale",
+    "profile.privacy.openToRecruiters.title":
+      "Ouvert aux contacts de recruteurs",
+    "profile.privacy.shareContactInfo.title":
+      "Partager les coordonnées par défaut",
+    "profile.completeness.points":
+      "+{points, plural, one {# pt} other {# pts}}",
+  },
+  "pt-BR": {
+    "nav.groups.pipeline": "Funil",
+    "dashboard.stats.pipeline": "Funil",
+    "dashboard.pipeline.title": "Funil",
+    "opportunities.filters.status": "Situação",
+    "opportunities.filters.tags": "Etiquetas",
+    "opportunities.filters.activeStatus": "Situação: {value}",
+    "opportunities.filters.activeTag": "Etiqueta: {value}",
+    "opportunities.filters.activeTech": "Tecnologia: {value}",
+    "opportunities.tabs.hackathon": "Maratonas de programação",
+    "opportunities.types.hackathon": "Maratona de programação",
+    "opportunities.sources.manual": "Inserção manual",
+    "opportunities.counts.hackathons":
+      "{count, plural, one {# maratona de programação} other {# maratonas de programação}}",
+    "a11y.status": "Situação",
+    "a11y.barista": "Atendente de cafeteria",
+    "a11y.github": "Perfil do GitHub",
+    "profile.sidebar.salaryMinimum": "A partir de {currency} {min}",
+  },
 };
 
 const passthroughPaths = new Set([
@@ -136,6 +185,7 @@ function buildPrompt(locale: TargetLocale, entries: FlatMessages) {
     "Preserve ICU MessageFormat argument names and syntax. You may translate human text inside plural/select branches, but keep placeholders like {name}, {count}, {percentage}, {provider}, {date}, {min}-{max}, {label}, {value}, {lane}, {title}, {shown}, and {total} usable.",
     `Leave these brand and product terms untranslated: ${brandTerms.join(", ")}.`,
     `Leave these exact key/value pairs unchanged: ${JSON.stringify(protectedEntries)}.`,
+    "Translate every value. If an English term is commonly used in the target language as a loanword, still provide the localized equivalent; never return the English source verbatim except for brand terms, product terms, and the exact key/value pairs listed above.",
     "Use concise, natural in-product UI language, not literal word-for-word phrasing.",
     "Input JSON:",
     JSON.stringify(entries, null, 2),
