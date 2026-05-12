@@ -183,3 +183,88 @@ export async function getApiBaseUrl(): Promise<string> {
   const storage = await getStorage();
   return storage.apiBaseUrl;
 }
+
+// ---- Session-scoped auth cache (#30) ------------------------------------
+//
+// `chrome.storage.session` is in-memory only — it survives suspending the
+// service worker but is wiped on browser restart, which is exactly what we
+// want for a short-lived auth verdict cache. Using session (not local)
+// also means we never persist the verdict to disk.
+//
+// The cache stores `{ authenticated: boolean, at: ISO string }` so the
+// popup can return a result in <50ms on the second open within a minute,
+// while the background script revalidates in the background.
+
+export const AUTH_CACHE_TTL_MS = 60 * 1000;
+const AUTH_CACHE_KEY = "columbus_auth_cache";
+
+export interface AuthCacheEntry {
+  authenticated: boolean;
+  at: string;
+}
+
+/**
+ * Reads the session-scoped auth verdict cache. Returns null when:
+ * - the entry has never been written,
+ * - the entry is older than AUTH_CACHE_TTL_MS,
+ * - the entry's timestamp is unparseable, or
+ * - chrome.storage.session is unavailable (e.g. older browsers).
+ *
+ * Optional `now` parameter exists for tests.
+ */
+export async function getSessionAuthCache(
+  now: number = Date.now(),
+): Promise<AuthCacheEntry | null> {
+  const sessionStore = chrome.storage?.session;
+  if (!sessionStore) return null;
+
+  return new Promise((resolve) => {
+    sessionStore.get(AUTH_CACHE_KEY, (result) => {
+      const entry = result?.[AUTH_CACHE_KEY] as AuthCacheEntry | undefined;
+      if (!entry || typeof entry.at !== "string") {
+        resolve(null);
+        return;
+      }
+      const at = new Date(entry.at).getTime();
+      if (!Number.isFinite(at)) {
+        resolve(null);
+        return;
+      }
+      if (now - at > AUTH_CACHE_TTL_MS) {
+        resolve(null);
+        return;
+      }
+      resolve({ authenticated: !!entry.authenticated, at: entry.at });
+    });
+  });
+}
+
+/**
+ * Writes a fresh verdict to the session-scoped cache. No-ops when
+ * chrome.storage.session is unavailable so callers don't need to guard.
+ */
+export async function setSessionAuthCache(
+  authenticated: boolean,
+): Promise<void> {
+  const sessionStore = chrome.storage?.session;
+  if (!sessionStore) return;
+  const entry: AuthCacheEntry = {
+    authenticated,
+    at: new Date().toISOString(),
+  };
+  return new Promise((resolve) => {
+    sessionStore.set({ [AUTH_CACHE_KEY]: entry }, () => resolve());
+  });
+}
+
+/**
+ * Drops the cached verdict. Call this on any 401 so the next popup open
+ * doesn't trust a stale "authenticated" answer.
+ */
+export async function clearSessionAuthCache(): Promise<void> {
+  const sessionStore = chrome.storage?.session;
+  if (!sessionStore) return;
+  return new Promise((resolve) => {
+    sessionStore.remove(AUTH_CACHE_KEY, () => resolve());
+  });
+}
