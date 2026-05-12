@@ -14,6 +14,22 @@ interface PageStatus {
   scrapedJob: ScrapedJob | null;
 }
 
+type WwPageKind = "list" | "detail" | "other";
+interface WwPageState {
+  kind: WwPageKind;
+  rowCount: number;
+  hasNextPage: boolean;
+  currentPage?: string;
+}
+
+type WwBulkMode = "visible" | "paginated";
+interface WwBulkResult {
+  imported: number;
+  attempted: number;
+  pages: number;
+  errors: string[];
+}
+
 export default function App() {
   const [viewState, setViewState] = useState<ViewState>("loading");
   const [profile, setProfile] = useState<ExtensionProfile | null>(null);
@@ -22,6 +38,10 @@ export default function App() {
   const [actionInFlight, setActionInFlight] = useState<PageAction | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionSuccess, setActionSuccess] = useState<PageAction | null>(null);
+  const [wwState, setWwState] = useState<WwPageState | null>(null);
+  const [wwBulkInFlight, setWwBulkInFlight] = useState<WwBulkMode | null>(null);
+  const [wwBulkResult, setWwBulkResult] = useState<WwBulkResult | null>(null);
+  const [wwBulkError, setWwBulkError] = useState<string | null>(null);
   const profileScore = profile ? scoreResume({ profile }).overall : null;
 
   useEffect(() => {
@@ -75,6 +95,48 @@ export default function App() {
       } catch {
         // Content script not loaded
       }
+      // Probe for WaterlooWorks-specific state when applicable
+      if (tab.url && /waterlooworks\.uwaterloo\.ca/.test(tab.url)) {
+        try {
+          const r = await chrome.tabs.sendMessage(tab.id, {
+            type: "WW_GET_PAGE_STATE",
+          });
+          if (r?.success) setWwState(r.data);
+        } catch {
+          // Content script not yet loaded — that's ok, button section just hides.
+        }
+      }
+    }
+  }
+
+  async function handleWwBulkScrape(mode: WwBulkMode) {
+    setWwBulkInFlight(mode);
+    setWwBulkError(null);
+    setWwBulkResult(null);
+    try {
+      const [tab] = await chrome.tabs.query({
+        active: true,
+        currentWindow: true,
+      });
+      if (!tab?.id) throw new Error("No active tab");
+      const message =
+        mode === "visible"
+          ? Messages.wwScrapeAllVisible()
+          : Messages.wwScrapeAllPaginated();
+      const response: {
+        success: boolean;
+        data?: WwBulkResult;
+        error?: string;
+      } = await chrome.tabs.sendMessage(tab.id, message);
+      if (response?.success && response.data) {
+        setWwBulkResult(response.data);
+      } else {
+        setWwBulkError(response?.error || "Bulk scrape failed");
+      }
+    } catch (err) {
+      setWwBulkError((err as Error).message);
+    } finally {
+      setWwBulkInFlight(null);
     }
   }
 
@@ -284,11 +346,88 @@ export default function App() {
               </div>
             )}
 
-            {!pageStatus.hasForm && !pageStatus.hasJobListing && (
+            {!pageStatus.hasForm && !pageStatus.hasJobListing && !wwState && (
               <p className="muted">
                 No job application form or listing detected on this page.
               </p>
             )}
+          </div>
+        )}
+
+        {/* WaterlooWorks bulk-scrape section */}
+        {wwState && wwState.kind !== "other" && (
+          <div className="section">
+            <h3>Detected: WaterlooWorks</h3>
+            <div className="ww-bulk">
+              <button
+                className="primary small"
+                onClick={handleImportJob}
+                disabled={
+                  wwState.kind !== "detail" ||
+                  !pageStatus?.scrapedJob ||
+                  actionInFlight !== null
+                }
+                title={
+                  wwState.kind !== "detail"
+                    ? "Click into a posting row to open its details first."
+                    : ""
+                }
+              >
+                {actionInFlight === "import"
+                  ? "Importing..."
+                  : "Import this job"}
+              </button>
+              <button
+                className="secondary small"
+                onClick={() => handleWwBulkScrape("visible")}
+                disabled={
+                  wwBulkInFlight !== null ||
+                  wwState.kind !== "list" ||
+                  wwState.rowCount === 0
+                }
+                title={
+                  wwState.kind !== "list"
+                    ? "Open the postings list view to enable bulk scrape."
+                    : ""
+                }
+              >
+                {wwBulkInFlight === "visible"
+                  ? "Scraping..."
+                  : `Scrape all visible${wwState.rowCount ? ` (${wwState.rowCount})` : ""}`}
+              </button>
+              <button
+                className="secondary small"
+                onClick={() => handleWwBulkScrape("paginated")}
+                disabled={
+                  wwBulkInFlight !== null ||
+                  wwState.kind !== "list" ||
+                  wwState.rowCount === 0
+                }
+                title={
+                  wwState.kind !== "list"
+                    ? "Open the postings list view to enable bulk scrape."
+                    : "Walks every page in your current filter set; capped at 200 jobs."
+                }
+              >
+                {wwBulkInFlight === "paginated"
+                  ? "Scraping all pages..."
+                  : "Scrape entire filtered set"}
+              </button>
+
+              {wwBulkResult && (
+                <p className="muted">
+                  Imported {wwBulkResult.imported} / attempted{" "}
+                  {wwBulkResult.attempted}
+                  {wwBulkResult.pages > 1
+                    ? ` across ${wwBulkResult.pages} pages`
+                    : ""}
+                  {wwBulkResult.errors.length > 0
+                    ? ` · ${wwBulkResult.errors.length} errors`
+                    : ""}
+                </p>
+              )}
+              {wwBulkError && <p className="error-inline">{wwBulkError}</p>}
+            </div>
           </div>
         )}
 

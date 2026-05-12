@@ -6,17 +6,18 @@ The extension ships under the Slothing brand. `Columbus` survives as an internal
 
 ## Prerequisites
 
-- Slothing main app running locally (`npm run dev` in parent directory)
-- Node.js 18+
+- Slothing main app running locally (`pnpm dev` from the repo root)
+- Node.js 18+, pnpm 9+
 - Chrome or Firefox browser
 
 ## Setup
 
+From the repo root:
+
 ```bash
-cd columbus-extension
-npm install
-npm run build          # Chrome    → dist/
-npm run build:firefox  # Firefox   → dist-firefox/
+pnpm install
+pnpm --filter @slothing/extension build:chrome   # → apps/extension/dist/
+pnpm --filter @slothing/extension build:firefox  # → apps/extension/dist-firefox/
 ```
 
 The build pipeline pulls icons from `icons/source/columbus.svg` (a branded compass design), renders them at 16/32/48/128 via `sharp`, and copies them into `src/assets/icons/`, `dist/icons/`, and `dist-firefox/icons/` automatically. All four PNGs stay under 4KB.
@@ -26,24 +27,24 @@ The build pipeline pulls icons from `icons/source/columbus.svg` (a branded compa
 1. Open `chrome://extensions`
 2. Enable **Developer mode** (top right toggle)
 3. Click **Load unpacked**
-4. Select the `columbus-extension/dist/` directory
+4. Select `apps/extension/dist/`
 5. Pin the Slothing icon in the toolbar
 
 ### Load in Firefox
 
 1. Open `about:debugging#/runtime/this-firefox`
 2. Click **Load Temporary Add-on...**
-3. Select `columbus-extension/dist-firefox/manifest.json`
+3. Select `apps/extension/dist-firefox/manifest.json`
 
 ### Quick demo (no real job site needed)
 
 A self-contained demo launcher boots a fresh Chromium, loads the unpacked extension, and opens a sample job application form with embedded `JobPosting` JSON-LD:
 
 ```bash
-node demo/launch-with-extension.mjs
+node apps/extension/demo/launch-with-extension.mjs
 ```
 
-This launches a clean Chromium profile (`demo/.user-data-dir/`) so you can try auto-fill, the badge notification, and the scraper against a known-good fixture without leaving the extension's directory. Press `Ctrl+C` in the terminal to close.
+This launches a clean Chromium profile (`apps/extension/demo/.user-data-dir/`) so you can try auto-fill, the badge notification, and the scraper against a known-good fixture. Press `Ctrl+C` in the terminal to close.
 
 The demo form has 18 form fields (name / contact / address / URLs / current role / years of experience), 4 free-text custom questions, a visa-status select, and a date picker — covers all the major field-detector patterns.
 
@@ -53,10 +54,10 @@ The demo form has 18 form fields (name / contact / address / URLs / current role
 
 The extension needs to authenticate with your Slothing account:
 
-1. Start the Slothing app (`npm run dev` in the parent directory)
+1. Start the Slothing app (`pnpm dev` from the repo root)
 2. Click the Slothing extension icon in your toolbar
 3. Click **Connect Account**
-4. A new tab opens at `/extension/connect` - sign in with NextAuth
+4. A new tab opens at `/extension/connect` — sign in with NextAuth (or use the local-dev bypass, see root README)
 5. Token is generated and stored automatically
 6. The popup now shows your profile info
 
@@ -89,7 +90,17 @@ When you answer custom questions on job applications:
 3. On future applications with similar questions, your saved answer is suggested
 4. Manage saved answers in **Settings** (right-click extension icon > Options)
 
-### 5. Toolbar badge (job-detected indicator)
+### 5. WaterlooWorks bulk import
+
+When the active tab is on `waterlooworks.uwaterloo.ca`, the popup shows a **Detected: WaterlooWorks** section with three actions:
+
+- **Import this job** — captures the posting whose side-panel detail view is currently open. Disabled (with a tooltip) until you click into a row.
+- **Scrape all visible** — walks every row on the current page, opens each detail panel in turn, scrapes it, and bulk-imports the results to your review queue.
+- **Scrape entire filtered set** — same as above, then clicks the Next-page link and repeats until the pagination is exhausted. Hard-capped at 200 jobs.
+
+Bulk scrapes respect whatever filters you've already applied in the WaterlooWorks UI (search, posting type, etc.) — the orchestrator just iterates whatever the table currently shows. Progress is reported back in the popup; rows that fail to render are logged and skipped, never blocking the rest.
+
+### 6. Toolbar badge (job-detected indicator)
 
 When the content script's scraper successfully detects a job listing on the current page, the extension's toolbar icon shows a `!` badge (blue `#3b82f6`) with the hover title `Job detected — press Cmd+Shift+I to import`. The badge clears automatically when the tab navigates to a new URL.
 
@@ -97,7 +108,7 @@ The behavior is controlled by the `notifyOnJobDetected` setting (default: enable
 
 Implementation: content script sends a `JOB_DETECTED` message to the background once per page after the first successful scrape; the background calls `chrome.action.setBadgeText/Color/Title` and tracks per-tab state. Reset on `chrome.tabs.onUpdated` when the URL changes. SPA navigation (URL changes without a full reload) is handled by re-arming the notify-once flag.
 
-### 6. Settings
+### 7. Settings
 
 Right-click the Slothing icon > **Options** to configure:
 
@@ -140,7 +151,7 @@ All extension endpoints use token auth via `X-Extension-Token` header:
 
 | Endpoint                                | Method | Purpose                                                      |
 | --------------------------------------- | ------ | ------------------------------------------------------------ |
-| `/api/extension/auth`                   | POST   | Generate token (uses NextAuth session)                       |
+| `/api/extension/auth`                   | POST   | Generate token (uses NextAuth session)                          |
 | `/api/extension/auth`                   | DELETE | Revoke token(s)                                              |
 | `/api/extension/auth/verify`            | GET    | Validate token                                               |
 | `/api/extension/profile`                | GET    | Fetch profile with computed fields                           |
@@ -203,14 +214,16 @@ The app creates each imported job with `status: "pending"`, adds an unread notif
 
 ### Commands
 
+All commands run from the repo root via pnpm filter:
+
 ```bash
-npm run dev           # Watch mode (Chrome)
-npm run build         # Production build (Chrome -> dist/)
-npm run build:firefox # Production build (Firefox -> dist-firefox/)
-npm run type-check    # TypeScript validation (strict: false)
-npm run lint          # ESLint
-npm run test          # Vitest
-npm run generate-icons # Regenerate placeholder icons
+pnpm --filter @slothing/extension dev            # Watch mode (Chrome)
+pnpm --filter @slothing/extension build:chrome   # Production build (Chrome -> dist/)
+pnpm --filter @slothing/extension build:firefox  # Production build (Firefox -> dist-firefox/)
+pnpm --filter @slothing/extension type-check     # TypeScript validation (strict: false)
+pnpm --filter @slothing/extension lint           # tsc --noEmit
+pnpm --filter @slothing/extension test:run       # Vitest one-shot
+pnpm --filter @slothing/extension generate-icons # Regenerate placeholder icons
 ```
 
 ### Adding a New Scraper
@@ -241,16 +254,16 @@ npm run generate-icons # Regenerate placeholder icons
 Unit tests (vitest):
 
 ```bash
-npm test                # watch mode
-npm run test:run        # single run
+pnpm --filter @slothing/extension test          # watch mode
+pnpm --filter @slothing/extension test:run      # single run
 ```
 
-Currently covers `src/background/badge.ts` (badge notification module).
+Coverage includes the WaterlooWorks scraper (fixture-based) and orchestrator (multi-row + paginated), plus existing badge/sidebar/api-client/tracking modules.
 
 End-to-end tests (Playwright + persistent Chromium with extension loaded):
 
 ```bash
-npm run test:e2e
+pnpm --filter @slothing/extension test:e2e
 ```
 
 Coverage includes:
@@ -275,16 +288,16 @@ Additional fixture snapshots live under `tests/fixtures/`:
 The Slothing integration spec is skipped by default. Run it explicitly with:
 
 ```bash
-SLOTHING_INTEGRATION=1 npm run test:e2e -- tests/e2e/slothing-integration.spec.ts
+SLOTHING_INTEGRATION=1 pnpm --filter @slothing/extension test:e2e -- tests/e2e/slothing-integration.spec.ts
 ```
 
-CI workflow at `.github/workflows/extension-e2e.yml` runs the e2e suite on every push that touches `columbus-extension/`.
+CI workflow at `.github/workflows/extension-e2e.yml` runs the e2e suite on every push that touches `apps/extension/`.
 
 ### Manual Testing Checklist
 
 #### Extension Loading
 
-- [ ] Build completes without errors (`npm run build`)
+- [ ] Build completes without errors (`pnpm --filter @slothing/extension build:chrome`)
 - [ ] Extension loads in Chrome without errors
 - [ ] Extension icon appears in toolbar
 - [ ] Popup opens and shows "Connect Account"

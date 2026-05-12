@@ -167,7 +167,11 @@ export type MessageType =
   | "GET_AUTH_STATUS"
   | "OPEN_AUTH"
   | "LOGOUT"
-  | "JOB_DETECTED";
+  | "JOB_DETECTED"
+  | "WW_GET_PAGE_STATE"
+  | "WW_SCRAPE_ALL_VISIBLE"
+  | "WW_SCRAPE_ALL_PAGINATED"
+  | "WW_BULK_PROGRESS";
 
 export interface ExtensionMessage<T = unknown> {
   type: MessageType;
