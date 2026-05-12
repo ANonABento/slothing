@@ -35,14 +35,12 @@ function expectLocalizedHref(link: HTMLElement, locale: string) {
 describe("Hero", () => {
   it("should render the Slothing headline", async () => {
     await renderHero();
-    // Text appears in both badge and h1; verify at least one instance exists
     expect(screen.getAllByText(/You're not lazy\./)[0]).toBeInTheDocument();
     expect(screen.getAllByText(/Your system is\./)[0]).toBeInTheDocument();
   });
 
   it("should render the badge text", async () => {
     await renderHero();
-    // Badge text is mixed with icons in a container; use regex to find substring
     expect(
       screen.getByText(/AI-Powered Resume Intelligence/),
     ).toBeInTheDocument();
@@ -55,7 +53,7 @@ describe("Hero", () => {
     ).toBeInTheDocument();
   });
 
-  it("should render Scan your resume free CTA linking to /ats-scanner", async () => {
+  it("should render Scan your resume free primary CTA linking to /ats-scanner", async () => {
     await renderHero();
     const atsLink = screen.getByRole("link", {
       name: /Scan your resume free/,
@@ -63,7 +61,7 @@ describe("Hero", () => {
     expect(atsLink).toHaveAttribute("href", "/en/ats-scanner");
   });
 
-  it("should render Create a free account link to sign-in", async () => {
+  it("should render Create a free account secondary CTA to sign-in", async () => {
     await renderHero();
     const accountLink = screen.getByRole("link", {
       name: /Create a free account/,
@@ -88,27 +86,38 @@ describe("Hero", () => {
     },
   );
 
-  it("should render social proof section", async () => {
+  it("should render honest trust cues instead of fabricated metrics", async () => {
     await renderHero();
-    expect(screen.getByText(/Join 10,000\+ job seekers/)).toBeInTheDocument();
-    expect(screen.getByText("4.9/5 rating")).toBeInTheDocument();
+    const trustRow = screen.getByTestId("hero-social-proof");
+
+    expect(trustRow).toBeInTheDocument();
+    expect(trustRow).toHaveTextContent(/Free ATS scan/);
+    expect(trustRow).toHaveTextContent(/No credit card/);
+    expect(trustRow).toHaveTextContent(/Open early access/);
+    expect(trustRow).toHaveTextContent(/Your data, your control/);
   });
 
-  it("should keep mobile social proof readable", async () => {
+  it("should keep mobile trust cues readable", async () => {
     await renderHero();
 
-    const socialProof = screen.getByTestId("hero-social-proof");
+    const trustRow = screen.getByTestId("hero-social-proof");
 
-    expect(socialProof).toHaveClass("bg-card/80");
-    expect(socialProof).toHaveClass("text-foreground");
-    expect(socialProof).toHaveClass("sm:text-muted-foreground");
+    expect(trustRow).toHaveClass("bg-card/80");
+    expect(trustRow).toHaveClass("text-foreground");
+    expect(trustRow).toHaveClass("sm:text-muted-foreground");
   });
 
-  it("should disclose illustrative hero stats", async () => {
+  it("should disclose that Slothing is in active development", async () => {
     await renderHero();
-    const disclaimer = screen.getByText(/Stats and ratings are illustrative/);
+    expect(
+      screen.getByText(/Slothing is in active development/),
+    ).toBeInTheDocument();
+  });
 
-    expect(disclaimer).toBeInTheDocument();
-    expect(disclaimer).toHaveClass("text-foreground/70");
+  it("should not render fabricated user counts or star ratings", async () => {
+    await renderHero();
+    expect(screen.queryByText(/10,000\+ job seekers/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/4\.9\/5 rating/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/^\d{2},\d{3}\+$/)).not.toBeInTheDocument();
   });
 });
