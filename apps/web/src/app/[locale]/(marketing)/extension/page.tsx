@@ -295,6 +295,7 @@ function FeatureVisual({
 function HeroMockup({ ariaLabel }: { ariaLabel: string }) {
   return (
     <div
+      role="img"
       className="relative min-h-[420px] rounded-lg border bg-card p-4 shadow-xl"
       aria-label={ariaLabel}
     >
