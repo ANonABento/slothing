@@ -1,7 +1,7 @@
-import { nanoid } from "nanoid";
 import db from "./legacy";
 
 import { nowIso } from "@/lib/format/time";
+import { generateId } from "@/lib/utils";
 export interface CoverLetter {
   id: string;
   jobId: string;
@@ -40,7 +40,7 @@ export function saveCoverLetter(
   highlights: string[] = [],
   userId: string = "default",
 ): CoverLetter {
-  const id = nanoid();
+  const id = generateId();
 
   // Get next version number for this job
   const existing = db
