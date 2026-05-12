@@ -100,6 +100,30 @@ async function handleMessage(
       return { success: true };
     }
 
+    case "AUTH_CALLBACK": {
+      // Sent by the content script when it picks up a localStorage-transported
+      // token from the Slothing connect page (the localStorage path is used on
+      // browsers without externally_connectable — Firefox in particular).
+      const payload = message as {
+        type: string;
+        token?: string;
+        expiresAt?: string;
+      };
+      if (!payload.token || !payload.expiresAt) {
+        return { success: false, error: "Missing token or expiresAt" };
+      }
+      try {
+        await setAuthToken(payload.token, payload.expiresAt);
+        resetAPIClient();
+        return { success: true };
+      } catch (error) {
+        return {
+          success: false,
+          error: (error as Error).message,
+        };
+      }
+    }
+
     default:
       return { success: false, error: `Unknown message type: ${message.type}` };
   }

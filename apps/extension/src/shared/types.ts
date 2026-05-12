@@ -171,7 +171,8 @@ export type MessageType =
   | "WW_GET_PAGE_STATE"
   | "WW_SCRAPE_ALL_VISIBLE"
   | "WW_SCRAPE_ALL_PAGINATED"
-  | "WW_BULK_PROGRESS";
+  | "WW_BULK_PROGRESS"
+  | "AUTH_CALLBACK";
 
 export interface ExtensionMessage<T = unknown> {
   type: MessageType;

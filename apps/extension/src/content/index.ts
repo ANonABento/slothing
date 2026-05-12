@@ -410,3 +410,56 @@ function debounce<T extends (...args: unknown[]) => unknown>(
 }
 
 console.log("[Columbus] Content script loaded");
+
+// Pick up a localStorage-transported auth token from the Slothing connect page.
+// Used on browsers that don't honor externally_connectable (Firefox in
+// particular). The connect page writes the token under this key; we forward it
+// to the background, which stores it in chrome.storage.local and clears the
+// localStorage entry. Polls for ~30s in case the script runs before the page
+// has written the key.
+const SLOTHING_TOKEN_KEY = "columbus_extension_token";
+
+function pickUpSlothingToken(): boolean {
+  try {
+    const raw = localStorage.getItem(SLOTHING_TOKEN_KEY);
+    if (!raw) return false;
+    const parsed = JSON.parse(raw) as { token?: string; expiresAt?: string };
+    if (!parsed?.token || !parsed?.expiresAt) return false;
+    chrome.runtime.sendMessage(
+      {
+        type: "AUTH_CALLBACK",
+        token: parsed.token,
+        expiresAt: parsed.expiresAt,
+      },
+      (response: { success?: boolean } | undefined) => {
+        if (response?.success) {
+          try {
+            localStorage.removeItem(SLOTHING_TOKEN_KEY);
+          } catch {
+            // ignore quota/security errors
+          }
+          console.log("[Columbus] picked up localStorage token");
+        }
+      },
+    );
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+if (
+  /(^|\.)localhost(:|$)|^127\.0\.0\.1(:|$)|^\[::1\](:|$)/.test(
+    window.location.host,
+  )
+) {
+  if (!pickUpSlothingToken()) {
+    let elapsedMs = 0;
+    const intervalId = setInterval(() => {
+      elapsedMs += 500;
+      if (pickUpSlothingToken() || elapsedMs >= 30_000) {
+        clearInterval(intervalId);
+      }
+    }, 500);
+  }
+}
