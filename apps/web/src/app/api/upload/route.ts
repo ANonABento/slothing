@@ -103,11 +103,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
 
-    log.debug("upload", "file received", {
-      filename: file.name,
-      size: file.size,
-      mimeType: file.type,
-    });
+    log.debug("upload", "file received");
 
     // Validate file size
     if (file.size > MAX_FILE_SIZE_BYTES) {
