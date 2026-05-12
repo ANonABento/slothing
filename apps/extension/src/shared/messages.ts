@@ -119,6 +119,51 @@ export const Messages = {
   }),
   wwGetPageState: (): ExtensionMessage => ({ type: "WW_GET_PAGE_STATE" }),
 
+  // P3/#39 — Bulk scraping for public ATS board hosts. Popup → content-script.
+  // Each pair mirrors the WW shape so the same `BulkSourceCard` UX can drive
+  // every source. Each orchestrator caps at 200/session (overridable below).
+  bulkGreenhouseGetPageState: (): ExtensionMessage => ({
+    type: "BULK_GREENHOUSE_GET_PAGE_STATE",
+  }),
+  bulkGreenhouseScrapeVisible: (): ExtensionMessage => ({
+    type: "BULK_GREENHOUSE_SCRAPE_VISIBLE",
+  }),
+  bulkGreenhouseScrapePaginated: (opts?: {
+    maxJobs?: number;
+    maxPages?: number;
+  }): ExtensionMessage<{ maxJobs?: number; maxPages?: number }> => ({
+    type: "BULK_GREENHOUSE_SCRAPE_PAGINATED",
+    payload: opts ?? {},
+  }),
+
+  bulkLeverGetPageState: (): ExtensionMessage => ({
+    type: "BULK_LEVER_GET_PAGE_STATE",
+  }),
+  bulkLeverScrapeVisible: (): ExtensionMessage => ({
+    type: "BULK_LEVER_SCRAPE_VISIBLE",
+  }),
+  bulkLeverScrapePaginated: (opts?: {
+    maxJobs?: number;
+    maxPages?: number;
+  }): ExtensionMessage<{ maxJobs?: number; maxPages?: number }> => ({
+    type: "BULK_LEVER_SCRAPE_PAGINATED",
+    payload: opts ?? {},
+  }),
+
+  bulkWorkdayGetPageState: (): ExtensionMessage => ({
+    type: "BULK_WORKDAY_GET_PAGE_STATE",
+  }),
+  bulkWorkdayScrapeVisible: (): ExtensionMessage => ({
+    type: "BULK_WORKDAY_SCRAPE_VISIBLE",
+  }),
+  bulkWorkdayScrapePaginated: (opts?: {
+    maxJobs?: number;
+    maxPages?: number;
+  }): ExtensionMessage<{ maxJobs?: number; maxPages?: number }> => ({
+    type: "BULK_WORKDAY_SCRAPE_PAGINATED",
+    payload: opts ?? {},
+  }),
+
   // Corrections feedback loop (#33). Fired when a user edits an autofilled
   // field and the final value differs from the original suggestion — the
   // background forwards it to /api/extension/field-mappings/correct so
@@ -197,6 +242,25 @@ export interface WwPageStateResponse extends ExtensionResponse<{
 }> {}
 
 export interface WwBulkScrapeResponse extends ExtensionResponse<{
+  imported: number;
+  attempted: number;
+  pages: number;
+  errors: string[];
+}> {}
+
+/** P3/#39 — Page-state probe for the generic bulk sources (GH/Lever/Workday). */
+export interface BulkSourcePageStateResponse extends ExtensionResponse<{
+  detected: boolean;
+  rowCount: number;
+  hasNextPage: boolean;
+}> {}
+
+/**
+ * P3/#39 — Result of a bulk scrape run against one of the generic ATS sources.
+ * Shape mirrors `WwBulkScrapeResponse` so the popup can render every source
+ * with the same `BulkSourceCard` component without per-source casts.
+ */
+export interface BulkSourceScrapeResponse extends ExtensionResponse<{
   imported: number;
   attempted: number;
   pages: number;

@@ -9,6 +9,11 @@ import { scoreResume } from "@slothing/shared/scoring";
 import { sendMessage, Messages } from "@/shared/messages";
 import { messageForError } from "@/shared/error-messages";
 import { opportunityDetailUrl, opportunityReviewUrl } from "./deep-links";
+import {
+  BulkSourceCard,
+  type BulkScrapeMode,
+  type BulkScrapeResult,
+} from "./BulkSourceCard";
 
 /** Sentinel value used for the picker's "Master profile" option (#34). */
 const MASTER_RESUME_OPTION = "__master__";
@@ -45,12 +50,42 @@ interface WwPageState {
   currentPage?: string;
 }
 
-type WwBulkMode = "visible" | "paginated";
-interface WwBulkResult {
-  imported: number;
-  attempted: number;
-  pages: number;
-  errors: string[];
+// Generic bulk-scrape modes/results are exported by BulkSourceCard so popup
+// state can share one shape across every source (WW + GH + Lever + Workday).
+
+/**
+ * P3/#39 — per-source bulk-scrape page state for the generic ATS hosts. Mirrors
+ * the WW shape but expressed in BulkSourceCard's vocabulary.
+ */
+type BulkSourceKey = "greenhouse" | "lever" | "workday";
+
+interface BulkSourceState {
+  detected: boolean;
+  rowCount: number;
+  hasNextPage: boolean;
+}
+
+const BULK_SOURCE_LABELS: Record<BulkSourceKey, string> = {
+  greenhouse: "Greenhouse",
+  lever: "Lever",
+  workday: "Workday",
+};
+
+const BULK_SOURCE_URL_PATTERNS: Record<BulkSourceKey, RegExp[]> = {
+  greenhouse: [
+    /boards\.greenhouse\.io\//,
+    /[\w-]+\.greenhouse\.io\//,
+  ],
+  lever: [/jobs\.lever\.co\//, /[\w-]+\.lever\.co\//],
+  workday: [/\.myworkdayjobs\.com\//, /\.workdayjobs\.com\//],
+};
+
+function matchBulkSource(url: string | undefined): BulkSourceKey | null {
+  if (!url) return null;
+  for (const key of Object.keys(BULK_SOURCE_URL_PATTERNS) as BulkSourceKey[]) {
+    if (BULK_SOURCE_URL_PATTERNS[key].some((p) => p.test(url))) return key;
+  }
+  return null;
 }
 
 export default function App() {
@@ -68,9 +103,27 @@ export default function App() {
   // on first load and kept stable for the lifetime of the popup.
   const [apiBaseUrl, setApiBaseUrl] = useState<string | null>(null);
   const [wwState, setWwState] = useState<WwPageState | null>(null);
-  const [wwBulkInFlight, setWwBulkInFlight] = useState<WwBulkMode | null>(null);
-  const [wwBulkResult, setWwBulkResult] = useState<WwBulkResult | null>(null);
+  const [wwBulkInFlight, setWwBulkInFlight] = useState<BulkScrapeMode | null>(
+    null,
+  );
+  const [wwBulkResult, setWwBulkResult] = useState<BulkScrapeResult | null>(
+    null,
+  );
   const [wwBulkError, setWwBulkError] = useState<string | null>(null);
+  // P3/#39 — Per-source state for Greenhouse / Lever / Workday. Keyed by
+  // BulkSourceKey so a future source is a one-line addition.
+  const [bulkStates, setBulkStates] = useState<
+    Partial<Record<BulkSourceKey, BulkSourceState>>
+  >({});
+  const [bulkInFlight, setBulkInFlight] = useState<
+    Partial<Record<BulkSourceKey, BulkScrapeMode>>
+  >({});
+  const [bulkResults, setBulkResults] = useState<
+    Partial<Record<BulkSourceKey, BulkScrapeResult>>
+  >({});
+  const [bulkErrors, setBulkErrors] = useState<
+    Partial<Record<BulkSourceKey, string>>
+  >({});
   const [confirmingLogout, setConfirmingLogout] = useState(false);
   // #34 — multi-resume picker. Loaded lazily once we know we're authenticated;
   // selection defaults to the master profile and is reset whenever a new
@@ -167,10 +220,74 @@ export default function App() {
           // Content script not yet loaded
         }
       }
+      // P3/#39 — probe Greenhouse/Lever/Workday listing pages. Only one
+      // matcher fires per visit (the user is on a single host).
+      const bulkKey = matchBulkSource(tab.url);
+      if (bulkKey) {
+        try {
+          const messageType = bulkPageStateMessage(bulkKey);
+          const r = await chrome.tabs.sendMessage(tab.id, {
+            type: messageType,
+          });
+          if (r?.success && r.data) {
+            setBulkStates((prev) => ({ ...prev, [bulkKey]: r.data }));
+          }
+        } catch {
+          // Content script not yet loaded
+        }
+      }
     }
   }
 
-  async function handleWwBulkScrape(mode: WwBulkMode) {
+  function bulkPageStateMessage(key: BulkSourceKey): string {
+    return `BULK_${key.toUpperCase()}_GET_PAGE_STATE`;
+  }
+  function bulkScrapeMessage(key: BulkSourceKey, mode: BulkScrapeMode): string {
+    const suffix = mode === "visible" ? "SCRAPE_VISIBLE" : "SCRAPE_PAGINATED";
+    return `BULK_${key.toUpperCase()}_${suffix}`;
+  }
+
+  async function handleBulkSourceScrape(
+    key: BulkSourceKey,
+    mode: BulkScrapeMode,
+  ) {
+    setBulkInFlight((prev) => ({ ...prev, [key]: mode }));
+    setBulkErrors((prev) => ({ ...prev, [key]: undefined }));
+    setBulkResults((prev) => ({ ...prev, [key]: undefined }));
+    try {
+      const [tab] = await chrome.tabs.query({
+        active: true,
+        currentWindow: true,
+      });
+      if (!tab?.id) throw new Error("No active tab");
+      const message = { type: bulkScrapeMessage(key, mode), payload: {} };
+      const response: {
+        success: boolean;
+        data?: BulkScrapeResult;
+        error?: string;
+      } = await chrome.tabs.sendMessage(tab.id, message);
+      if (response?.success && response.data) {
+        setBulkResults((prev) => ({ ...prev, [key]: response.data }));
+      } else {
+        setBulkErrors((prev) => ({
+          ...prev,
+          [key]: messageForError(
+            new Error(response?.error || "Bulk scrape failed"),
+          ),
+        }));
+      }
+    } catch (err) {
+      setBulkErrors((prev) => ({ ...prev, [key]: messageForError(err) }));
+    } finally {
+      setBulkInFlight((prev) => {
+        const next = { ...prev };
+        delete next[key];
+        return next;
+      });
+    }
+  }
+
+  async function handleWwBulkScrape(mode: BulkScrapeMode) {
     setWwBulkInFlight(mode);
     setWwBulkError(null);
     setWwBulkResult(null);
@@ -186,7 +303,7 @@ export default function App() {
           : Messages.wwScrapeAllPaginated();
       const response: {
         success: boolean;
-        data?: WwBulkResult;
+        data?: BulkScrapeResult;
         error?: string;
       } = await chrome.tabs.sendMessage(tab.id, message);
       if (response?.success && response.data) {
@@ -404,11 +521,17 @@ export default function App() {
 
   const detectedJob = pageStatus?.scrapedJob;
   const showWwBulk = wwState && wwState.kind === "list";
+  const detectedBulkSources = (
+    Object.keys(BULK_SOURCE_LABELS) as BulkSourceKey[]
+  ).filter((key) => bulkStates[key]?.detected);
   const showImportJobCard =
     detectedJob ||
     (wwState && wwState.kind === "detail" && pageStatus?.scrapedJob);
   const nothingDetected =
-    !pageStatus?.hasForm && !showImportJobCard && !showWwBulk;
+    !pageStatus?.hasForm &&
+    !showImportJobCard &&
+    !showWwBulk &&
+    detectedBulkSources.length === 0;
 
   return (
     <div className="popup">
@@ -554,55 +677,39 @@ export default function App() {
         )}
 
         {showWwBulk && wwState && (
-          <article className="card">
-            <header className="card-head">
-              <span className="card-title">WaterlooWorks list</span>
-              <span className="badge">
-                {wwState.rowCount} row{wwState.rowCount === 1 ? "" : "s"}
-              </span>
-            </header>
-            <div className="action-grid">
-              <button
-                className="btn primary full"
-                onClick={() => handleWwBulkScrape("visible")}
-                disabled={wwBulkInFlight !== null || wwState.rowCount === 0}
-              >
-                {wwBulkInFlight === "visible"
-                  ? "Scraping visible…"
-                  : `Scrape ${wwState.rowCount} visible`}
-              </button>
-              <button
-                className="btn full"
-                onClick={() => handleWwBulkScrape("paginated")}
-                disabled={wwBulkInFlight !== null || wwState.rowCount === 0}
-                title="Walks every page in your current filter set; capped at 200 jobs."
-              >
-                {wwBulkInFlight === "paginated"
-                  ? "Walking pages…"
-                  : "Scrape filtered set"}
-              </button>
-            </div>
-            {wwBulkResult && (
-              <div className="bulk-result">
-                <p className="inline-note">
-                  Imported {wwBulkResult.imported}/{wwBulkResult.attempted}
-                  {wwBulkResult.pages > 1 && ` · ${wwBulkResult.pages} pages`}
-                  {wwBulkResult.errors.length > 0 &&
-                    ` · ${wwBulkResult.errors.length} errors`}
-                </p>
-                {wwBulkResult.imported > 0 && (
-                  <button
-                    className="success-link"
-                    onClick={handleViewReviewQueue}
-                  >
-                    View tracker →
-                  </button>
-                )}
-              </div>
-            )}
-            {wwBulkError && <p className="inline-error">{wwBulkError}</p>}
-          </article>
+          <BulkSourceCard
+            sourceLabel="WaterlooWorks"
+            detectedCount={wwState.rowCount}
+            busy={wwBulkInFlight}
+            lastResult={wwBulkResult}
+            lastError={wwBulkError}
+            onScrapeVisible={() => handleWwBulkScrape("visible")}
+            onScrapePaginated={() => handleWwBulkScrape("paginated")}
+            onViewTracker={handleViewReviewQueue}
+          />
         )}
+
+        {/* P3/#39 — Generic bulk sources (Greenhouse, Lever, Workday). Only
+           one will render at a time because the user is on a single host. */}
+        {detectedBulkSources.map((key) => {
+          const state = bulkStates[key];
+          if (!state) return null;
+          return (
+            <BulkSourceCard
+              key={key}
+              sourceLabel={BULK_SOURCE_LABELS[key]}
+              detectedCount={state.rowCount}
+              busy={bulkInFlight[key] ?? null}
+              lastResult={bulkResults[key] ?? null}
+              lastError={bulkErrors[key] ?? null}
+              onScrapeVisible={() => handleBulkSourceScrape(key, "visible")}
+              onScrapePaginated={() =>
+                handleBulkSourceScrape(key, "paginated")
+              }
+              onViewTracker={handleViewReviewQueue}
+            />
+          );
+        })}
 
         {nothingDetected && (
           <div className="idle">
