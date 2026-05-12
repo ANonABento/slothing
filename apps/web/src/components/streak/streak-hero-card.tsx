@@ -1,6 +1,7 @@
 "use client";
 
 import { Flame, Trophy } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { PagePanel } from "@/components/ui/page-layout";
 import { pluralize } from "@/lib/text/pluralize";
 import { cn } from "@/lib/utils";
@@ -12,6 +13,7 @@ interface StreakHeroCardProps {
 }
 
 export function StreakHeroCard({ streak }: StreakHeroCardProps) {
+  const t = useTranslations("streak");
   const a11yT = useA11yTranslations();
 
   const currentStreak = streak?.currentStreak ?? 0;
@@ -24,7 +26,7 @@ export function StreakHeroCard({ streak }: StreakHeroCardProps) {
         <div className="min-w-0">
           <div className="inline-flex items-center gap-2 rounded-lg bg-primary/10 px-3 py-1 text-xs font-semibold uppercase text-primary">
             <Flame className="h-3.5 w-3.5" />
-            Daily rhythm
+            {t("badgeLabel")}
           </div>
           <div className="mt-4 flex items-end gap-3">
             <span className="text-5xl font-bold leading-none text-foreground">
@@ -35,9 +37,7 @@ export function StreakHeroCard({ streak }: StreakHeroCardProps) {
             </span>
           </div>
           <p className="mt-3 text-sm leading-6 text-muted-foreground">
-            {currentStreak > 0
-              ? "One meaningful action today keeps the system moving."
-              : "Start your streak today with one saved opportunity, application, or tailored document."}
+            {currentStreak > 0 ? t("activeMessage") : t("startMessage")}
           </p>
         </div>
 
@@ -45,7 +45,7 @@ export function StreakHeroCard({ streak }: StreakHeroCardProps) {
           <div className="mb-4 flex items-center justify-between gap-3">
             <div>
               <p className="text-xs font-medium uppercase text-muted-foreground">
-                Best streak
+                {t("bestStreak")}
               </p>
               <p className="mt-1 flex items-center gap-2 text-sm font-semibold">
                 <Trophy className="h-4 w-4 text-warning" />

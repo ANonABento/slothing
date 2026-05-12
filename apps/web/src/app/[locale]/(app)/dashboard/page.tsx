@@ -20,6 +20,7 @@ import {
   Target,
   BarChart3,
   RefreshCw,
+  Puzzle,
   type LucideIcon,
 } from "lucide-react";
 import {
@@ -751,11 +752,13 @@ function DashboardSectionError({
   retryLabel: string;
   retrying?: boolean;
 }) {
+  const t = useTranslations("dashboard");
+
   return (
     <PagePanel>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm font-medium text-muted-foreground">
-          Couldn&apos;t load this section
+          {t("errors.loadSection")}
         </p>
         <Button
           type="button"
@@ -1163,13 +1166,23 @@ function RecentOpportunitiesPanel({ recentJobs }: { recentJobs: RecentJob[] }) {
           ))}
         </div>
       ) : (
-        <Link
-          href="/opportunities"
-          className="flex min-h-24 items-center justify-center gap-2 rounded-lg border border-dashed bg-background/40 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
-        >
-          <Plus className="h-4 w-4" />
-          {t("recent.emptyTitle")}
-        </Link>
+        <div className="flex flex-col items-center gap-4 rounded-lg border border-dashed bg-background/40 px-6 py-8 text-center">
+          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+            <Briefcase className="h-6 w-6" />
+          </div>
+          <div className="space-y-1">
+            <p className="text-sm font-medium">{t("recent.emptyTitle")}</p>
+            <p className="text-xs text-muted-foreground">
+              {t("recent.emptyDescription")}
+            </p>
+          </div>
+          <Button asChild variant="outline" size="sm">
+            <Link href="/opportunities">
+              <Plus className="mr-1.5 h-3.5 w-3.5" />
+              {t("actions.addOpportunity")}
+            </Link>
+          </Button>
+        </div>
       )}
     </PagePanel>
   );
@@ -1195,10 +1208,14 @@ function getUnlockPreviewIntro(
   step: OnboardingStep | undefined,
   t: ReturnType<typeof useTranslations<"dashboard">>,
 ): string {
+  const knownIds = [
+    "upload-resume",
+    "install-extension",
+    "add-opportunity",
+    "create-tailored-doc",
+  ];
   const previewId =
-    step?.id === "add-opportunity" || step?.id === "create-tailored-doc"
-      ? step.id
-      : "upload-resume";
+    step?.id && knownIds.includes(step.id) ? step.id : "upload-resume";
 
   return t(`onboarding.unlockPreview.${previewId}.intro`);
 }
@@ -1212,6 +1229,36 @@ function getUnlockPreviewItems(
   description: string;
 }> {
   switch (step?.id) {
+    case "install-extension":
+      return [
+        {
+          icon: Puzzle,
+          title: t(
+            "onboarding.unlockPreview.install-extension.items.0.title",
+          ),
+          description: t(
+            "onboarding.unlockPreview.install-extension.items.0.description",
+          ),
+        },
+        {
+          icon: FileText,
+          title: t(
+            "onboarding.unlockPreview.install-extension.items.1.title",
+          ),
+          description: t(
+            "onboarding.unlockPreview.install-extension.items.1.description",
+          ),
+        },
+        {
+          icon: Briefcase,
+          title: t(
+            "onboarding.unlockPreview.install-extension.items.2.title",
+          ),
+          description: t(
+            "onboarding.unlockPreview.install-extension.items.2.description",
+          ),
+        },
+      ];
     case "add-opportunity":
       return [
         {

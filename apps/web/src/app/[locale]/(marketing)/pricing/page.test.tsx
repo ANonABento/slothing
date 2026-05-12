@@ -134,6 +134,42 @@ describe("PricingPage", () => {
     ).toBeInTheDocument();
   });
 
+  it("clarifies that Pro and Student waitlists require no payment", async () => {
+    await renderPricingPage();
+
+    expect(
+      screen.getByText("No payment or card required to join."),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("No payment until verification is complete."),
+    ).toBeInTheDocument();
+  });
+
+  it("renders the trust and security section", async () => {
+    await renderPricingPage();
+
+    expect(
+      screen.getByRole("heading", { name: "Security and data handling" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Encrypted in transit")).toBeInTheDocument();
+    expect(screen.getByText("No data selling")).toBeInTheDocument();
+    expect(screen.getByText("Delete anytime")).toBeInTheDocument();
+    expect(screen.getByText(/AI outputs are assistive/)).toBeInTheDocument();
+  });
+
+  it("aligns refund answer with billing terms", async () => {
+    await renderPricingPage();
+
+    const refundHeading = screen.getByRole("heading", {
+      name: "Is there a refund policy?",
+    });
+
+    expect(refundHeading).toBeInTheDocument();
+    expect(
+      screen.getByText(/Cancellation stops future renewal/),
+    ).toBeInTheDocument();
+  });
+
   it("preserves non-English locale in internal links", async () => {
     await renderPricingPage("es");
 
