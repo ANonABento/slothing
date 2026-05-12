@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   LOCAL_DEV_CLEAN_SLATE_SETTING,
+  LOCAL_DEV_USER_ID,
   buildLocalDevCleanSlateStatements,
   type CleanSlateDatabase,
   runLocalDevCleanSlateMigration,
@@ -81,7 +82,7 @@ describe("buildLocalDevCleanSlateStatements", () => {
   });
 
   it("deletes job-owned rows before jobs", () => {
-    const sql = buildLocalDevCleanSlateStatements().map(
+    const sql = buildLocalDevCleanSlateStatements(LOCAL_DEV_USER_ID).map(
       (statement) => statement.sql,
     );
 

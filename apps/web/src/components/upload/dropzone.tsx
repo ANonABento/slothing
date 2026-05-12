@@ -1,7 +1,9 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
+import { useLocale } from "next-intl";
 import { useDropzone } from "react-dropzone";
+import { useTranslations } from "next-intl";
 import { pluralize } from "@/lib/text/pluralize";
 import {
   Upload,
@@ -29,6 +31,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 
 interface UploadedFile {
   file: File;
@@ -73,6 +76,10 @@ export function Dropzone({
     "text/plain": [".txt"],
   },
 }: DropzoneProps) {
+  const locale = useLocale();
+  const t = useTranslations("dialogs.upload");
+  const commonT = useTranslations("common");
+  const a11yT = useA11yTranslations();
   const [files, setFiles] = useState<UploadedFile[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadConflict, setUploadConflict] =
@@ -220,10 +227,16 @@ export function Dropzone({
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Replace existing upload?</DialogTitle>
+            <DialogTitle>{t("replace.title")}</DialogTitle>
             <DialogDescription>
               {uploadConflict
-                ? `Looks like you uploaded "${uploadConflict.existing.filename}" on ${formatExistingUploadDate(getExistingUploadTimestamp(uploadConflict.existing))}. Replace it, or cancel?`
+                ? t("replace.description", {
+                    filename: uploadConflict.existing.filename,
+                    date: formatExistingUploadDate(
+                      getExistingUploadTimestamp(uploadConflict.existing),
+                      locale,
+                    ),
+                  })
                 : ""}
             </DialogDescription>
           </DialogHeader>
@@ -232,10 +245,10 @@ export function Dropzone({
               variant="outline"
               onClick={() => resolveUploadConflict(false)}
             >
-              Cancel
+              {commonT("cancel")}
             </Button>
             <Button onClick={() => resolveUploadConflict(true)} autoFocus>
-              Replace
+              {t("actions.replace")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -256,7 +269,7 @@ export function Dropzone({
       >
         <input
           {...getInputProps()}
-          aria-label="Upload resume file"
+          aria-label={a11yT("uploadResumeFile")}
           aria-describedby="dropzone-help"
         />
 
@@ -387,7 +400,7 @@ export function Dropzone({
                         e.stopPropagation();
                         removeFile(index);
                       }}
-                      aria-label="Remove file"
+                      aria-label={a11yT("removeFile")}
                     >
                       <X className="h-4 w-4" />
                     </Button>
@@ -408,7 +421,7 @@ export function Dropzone({
                           e.stopPropagation();
                           removeFile(index);
                         }}
-                        aria-label="Remove file"
+                        aria-label={a11yT("removeFile")}
                       >
                         <X className="h-4 w-4" />
                       </Button>

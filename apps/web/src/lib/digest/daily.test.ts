@@ -48,6 +48,8 @@ vi.mock("./match", () => ({
 
 import { runDailyDigest } from "./daily";
 
+const digestNow = new Date("2026-05-10T08:00:00.000Z");
+
 const profile: Profile = {
   id: "profile-1",
   contact: { name: "Ada" },
@@ -120,7 +122,7 @@ describe("runDailyDigest", () => {
   it("skips users already sent today", async () => {
     mocks.hasDailyDigestSentSince.mockReturnValue(true);
 
-    const result = await runDailyDigest();
+    const result = await runDailyDigest({ now: digestNow });
 
     expect(result).toMatchObject({ sent: 0, skipped: 1, errors: 0 });
     expect(result.outcomes[0]).toMatchObject({ reason: "already_sent" });
@@ -136,7 +138,7 @@ describe("runDailyDigest", () => {
       },
     ]);
 
-    const result = await runDailyDigest();
+    const result = await runDailyDigest({ now: digestNow });
 
     expect(result).toMatchObject({ sent: 0, skipped: 1, errors: 0 });
     expect(result.outcomes[0]).toMatchObject({ reason: "digest_disabled" });
