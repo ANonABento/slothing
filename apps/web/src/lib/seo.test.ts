@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   getAlternateLanguages,
+  getAlternateLinksHeader,
   getMarketingPageMetadata,
   getMetadataBase,
   getOgSeo,
@@ -143,6 +144,22 @@ describe("getAlternateLanguages", () => {
       ja: "/ja/ats-scanner",
       ko: "/ko/ats-scanner",
     });
+  });
+});
+
+describe("getAlternateLinksHeader", () => {
+  it("formats localized alternate link headers with x-default on English", () => {
+    const header = getAlternateLinksHeader(
+      "/pricing",
+      "https://slothing.work",
+    );
+
+    expect(header).toContain(
+      '<https://slothing.work/en/pricing>; rel="alternate"; hreflang="x-default"',
+    );
+    expect(header).toContain(
+      '<https://slothing.work/ja/pricing>; rel="alternate"; hreflang="ja"',
+    );
   });
 });
 
