@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { JobDescription, Profile } from "@/types";
 
 const mocks = vi.hoisted(() => ({
@@ -75,6 +75,8 @@ function job(id: number): JobDescription {
 describe("runDailyDigest", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-05-10T08:00:00.000Z"));
     process.env.NEXTAUTH_SECRET = "secret";
     process.env.NEXTAUTH_URL = "https://example.com";
     mocks.getEligibleDigestUsers.mockReturnValue([
@@ -89,6 +91,10 @@ describe("runDailyDigest", () => {
     mocks.getProfile.mockReturnValue(profile);
     mocks.listJobsPaginated.mockReturnValue([1, 2, 3, 4, 5, 6].map(job));
     mocks.isTransactionalEmailConfigured.mockReturnValue(true);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it("sends the top five matches and records an email send", async () => {
