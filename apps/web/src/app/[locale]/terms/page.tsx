@@ -22,6 +22,28 @@ export default function TermsPage() {
           <p className="mt-3 text-muted-foreground">
             Last updated: May 11, 2026.
           </p>
+          <div
+            role="note"
+            className="mt-6 rounded-lg border border-warning/40 bg-warning/10 p-4 text-sm leading-6 text-foreground"
+          >
+            <p className="font-semibold">Pre-launch draft</p>
+            <p className="mt-1 text-muted-foreground">
+              These Terms are a working draft published for review while
+              Slothing is in pre-launch. The governing-law and dispute-
+              resolution sections are still being finalized with legal counsel
+              and are marked &ldquo;TBD&rdquo; below. Slothing is not yet
+              offering paid plans; if you continue to use the free preview, you
+              acknowledge that any paid plan or final Terms will be presented
+              for separate acceptance before billing begins. Questions:{" "}
+              <a
+                href="mailto:support@slothing.work"
+                className="text-primary hover:underline"
+              >
+                support@slothing.work
+              </a>
+              .
+            </p>
+          </div>
         </div>
 
         <div className="space-y-8 text-sm leading-7 text-muted-foreground">
