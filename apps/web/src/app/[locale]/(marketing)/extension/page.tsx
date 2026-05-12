@@ -32,9 +32,9 @@ const featureBlocks = [
     visualLabel: "Slothing Columbus popover saving a LinkedIn job posting",
   },
   {
-    title: "Gmail recruiter import",
+    title: "Gmail recruiter import (Slothing web app)",
     description:
-      "Turn recruiter outreach into pending opportunities so promising leads do not disappear inside your inbox.",
+      "Once you sign in to Slothing with Google, the web app can turn recruiter outreach into pending opportunities. The extension itself never reads Gmail — the import runs in your Slothing dashboard.",
     icon: Mail,
     screenshot: "/marketing/extension/gmail-import.png",
     visualLabel: "Gmail recruiter import view showing pending opportunities",
@@ -78,7 +78,7 @@ const faqs = [
   {
     question: "Can I import existing Gmail history?",
     answer:
-      "The Gmail import is designed for recruiter outreach and can bring messages into your pending opportunity workflow once connected.",
+      "Gmail recruiter import runs inside the Slothing web app, not the extension. After you sign in to Slothing with Google, the dashboard can bring recruiter outreach into your pending opportunity workflow. The extension itself does not request Gmail access.",
   },
   {
     question: "How do I uninstall?",
@@ -182,17 +182,24 @@ export default async function ExtensionLandingPage() {
               Privacy and trust
             </h2>
             <p className="mt-3 text-sm leading-6 text-muted-foreground">
-              Your data stays in your Slothing account. We don&apos;t sell or
-              share.
+              Captured job data goes to your Slothing account over HTTPS. We
+              don&apos;t sell or share it. See the Privacy Policy linked below
+              for details.
             </p>
           </div>
           <div className="grid gap-4 md:grid-cols-3">
             {[
-              ["Tabs", "Used to read the current job page when you capture."],
-              ["Storage", "Keeps a secure connection token on your device."],
               [
-                "Gmail read",
-                "Optional, and only for recruiter import workflows.",
+                "Active tab + supported sites",
+                "Runs on the job sites you visit (LinkedIn, Indeed, Greenhouse, Lever, Workday, Waterloo Works) so it can show the capture popup and detect listings. It does not run on other pages.",
+              ],
+              [
+                "Local storage",
+                "Stores your Slothing connection token on your device using the browser's extension storage. The token is sent only to Slothing when you capture or sync.",
+              ],
+              [
+                "No Gmail permission",
+                "The extension does not request Gmail access. Gmail recruiter import runs in the Slothing web app under your Google sign-in, not in the extension.",
               ],
             ].map(([title, description]) => (
               <div key={title} className="rounded-lg border bg-background p-5">
@@ -288,6 +295,7 @@ function FeatureVisual({
 function HeroMockup({ ariaLabel }: { ariaLabel: string }) {
   return (
     <div
+      role="img"
       className="relative min-h-[420px] rounded-lg border bg-card p-4 shadow-xl"
       aria-label={ariaLabel}
     >

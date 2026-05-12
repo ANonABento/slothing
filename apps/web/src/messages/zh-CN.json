@@ -88,7 +88,8 @@
       "signInRequired": "需要登录",
       "loadData": "我们无法加载您的仪表盘数据。",
       "skipTitle": "无法跳过设置",
-      "skipFallback": "请重试。"
+      "skipFallback": "请重试。",
+      "loadSection": "无法加载此部分"
     },
     "greeting": {
       "onboardingNamed": "{name}，欢迎使用。让我们来设置您的工作台。",
@@ -176,6 +177,23 @@
             "2": {
               "title": "准备度信号",
               "description": "了解哪些已经完善，哪些还需要打磨。"
+            }
+          }
+        },
+        "install-extension": {
+          "intro": "安装扩展后，你可以直接从招聘网站将职位导入 Slothing，无需手动输入。",
+          "items": {
+            "0": {
+              "title": "一键保存职位",
+              "description": "无需离开页面，即可保存来自 LinkedIn、Indeed 等平台的职位信息。"
+            },
+            "1": {
+              "title": "自动预填信息",
+              "description": "自动抓取职位详情，无需手动复制职位描述。"
+            },
+            "2": {
+              "title": "待办队列",
+              "description": "新职位进入审核队列，快速接受或忽略。"
             }
           }
         }
@@ -933,6 +951,7 @@
     "reviewQueueDisabled": "审阅队列已禁用",
     "openOpportunities": "开放机会",
     "navigation": "导航",
+    "mobileNavigation": "移动导航",
     "pageActions": "页面操作",
     "general": "一般的",
     "dataManagement": "数据管理",
@@ -1275,5 +1294,12 @@
         "social-url": "添加 LinkedIn 或 GitHub URL"
       }
     }
+  },
+  "streak": {
+    "badgeLabel": "每日节奏",
+    "dayUnit": "{count, plural, other {天}}",
+    "activeMessage": "今天一个有意义的行动让系统持续运转。",
+    "startMessage": "今天就开始你的连续记录——保存一个机会、申请或定制文档。",
+    "bestStreak": "最长连续记录"
   }
 }

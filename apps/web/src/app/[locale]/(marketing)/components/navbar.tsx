@@ -56,7 +56,10 @@ export function Navbar() {
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-8">
+          <nav
+            aria-label={a11yT("navigation")}
+            className="hidden md:flex items-center gap-8"
+          >
             {navLinks.map((link) =>
               link.href.startsWith("#") ? (
                 <a
@@ -108,6 +111,8 @@ export function Navbar() {
             onClick={() => setMobileOpen(!mobileOpen)}
             className="flex h-11 w-11 items-center justify-center text-muted-foreground hover:text-foreground md:hidden"
             aria-label={a11yT("toggleMenu")}
+            aria-expanded={mobileOpen}
+            aria-controls="mobile-nav-menu"
           >
             {mobileOpen ? (
               <X className="h-6 w-6" />
@@ -118,56 +123,61 @@ export function Navbar() {
         </div>
 
         {/* Mobile Navigation */}
-        {mobileOpen && (
-          <div className="md:hidden mt-4 pb-4 border-t pt-4">
-            <nav className="flex flex-col gap-4">
-              {navLinks.map((link) =>
-                link.href.startsWith("#") ? (
-                  <a
-                    key={link.labelKey}
-                    href={link.href}
-                    onClick={() => setMobileOpen(false)}
-                    className="flex min-h-11 items-center text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-                  >
-                    {t(link.labelKey)}
-                  </a>
-                ) : (
-                  <Link
-                    key={link.labelKey}
-                    href={link.href}
-                    prefetch={false}
-                    onClick={() => setMobileOpen(false)}
-                    className="flex min-h-11 items-center text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-                  >
-                    {t(link.labelKey)}
-                  </Link>
-                ),
-              )}
-              <LocaleSwitcherCompact className="mt-2" />
-              <div className="flex flex-col gap-2 mt-2">
-                <Button variant="outline" asChild>
-                  <Link
-                    href={{ pathname: "/sign-in", query: { callbackUrl } }}
-                    prefetch={false}
-                  >
-                    {t("signIn")}
-                  </Link>
-                </Button>
-                <Button
-                  asChild
-                  className="gradient-bg text-primary-foreground hover:opacity-90"
+        <div
+          id="mobile-nav-menu"
+          hidden={!mobileOpen}
+          className="md:hidden mt-4 pb-4 border-t pt-4"
+        >
+          <nav
+            aria-label={a11yT("mobileNavigation")}
+            className="flex flex-col gap-4"
+          >
+            {navLinks.map((link) =>
+              link.href.startsWith("#") ? (
+                <a
+                  key={link.labelKey}
+                  href={link.href}
+                  onClick={() => setMobileOpen(false)}
+                  className="flex min-h-11 items-center text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
                 >
-                  <Link
-                    href={{ pathname: "/sign-in", query: { callbackUrl } }}
-                    prefetch={false}
-                  >
-                    {t("getStarted")}
-                  </Link>
-                </Button>
-              </div>
-            </nav>
-          </div>
-        )}
+                  {t(link.labelKey)}
+                </a>
+              ) : (
+                <Link
+                  key={link.labelKey}
+                  href={link.href}
+                  prefetch={false}
+                  onClick={() => setMobileOpen(false)}
+                  className="flex min-h-11 items-center text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  {t(link.labelKey)}
+                </Link>
+              ),
+            )}
+            <LocaleSwitcherCompact className="mt-2" />
+            <div className="flex flex-col gap-2 mt-2">
+              <Button variant="outline" asChild>
+                <Link
+                  href={{ pathname: "/sign-in", query: { callbackUrl } }}
+                  prefetch={false}
+                >
+                  {t("signIn")}
+                </Link>
+              </Button>
+              <Button
+                asChild
+                className="gradient-bg text-primary-foreground hover:opacity-90"
+              >
+                <Link
+                  href={{ pathname: "/sign-in", query: { callbackUrl } }}
+                  prefetch={false}
+                >
+                  {t("getStarted")}
+                </Link>
+              </Button>
+            </div>
+          </nav>
+        </div>
       </div>
     </header>
   );
