@@ -52,6 +52,9 @@ describe("Navbar", () => {
   it.each(["es", "zh-CN"])("prefixes internal links with %s", (locale) => {
     renderNavbar(locale);
 
+    expect(screen.getAllByLabelText("Change language").length).toBeGreaterThan(
+      0,
+    );
     expectLocalePrefixedInternalHrefs(locale);
     expect(anchorHrefs()).toEqual(["#features", "#how-it-works"]);
   });
@@ -61,6 +64,9 @@ describe("Navbar", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Toggle menu" }));
 
+    expect(screen.getAllByLabelText("Change language").length).toBeGreaterThan(
+      1,
+    );
     expectLocalePrefixedInternalHrefs("es");
     expect(anchorHrefs()).toEqual([
       "#features",
