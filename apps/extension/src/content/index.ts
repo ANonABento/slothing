@@ -19,6 +19,7 @@ import { sendMessage, Messages } from "@/shared/messages";
 import { showAppliedToast } from "./tracking/applied-toast";
 import { SubmitWatcher, extractCompanyHint } from "./tracking/submit-watcher";
 import { JobPageSidebarController } from "./sidebar/controller";
+import { CorrectionsTracker } from "./corrections-tracker";
 
 // Initialize components
 const fieldDetector = new FieldDetector();
@@ -31,6 +32,7 @@ let scrapedJob: ScrapedJob | null = null;
 let jobDetectedForUrl: string | null = null;
 let profileLoadPromise: Promise<ExtensionProfile | null> | null = null;
 const sidebarController = new JobPageSidebarController();
+const correctionsTracker = new CorrectionsTracker();
 
 const submitWatcher = new SubmitWatcher({
   getDetectedFields: (form) => detectedFieldsByForm.get(form) || [],
@@ -286,8 +288,13 @@ async function handleFillForm() {
   const mapper = new FieldMapper(cachedProfile);
   autoFillEngine = new AutoFillEngine(fieldDetector, mapper);
 
-  // Fill the form
-  const result = await autoFillEngine.fillForm(detectedFields);
+  // Fill the form. Hand each successful fill to the corrections tracker so
+  // edits-after-fill flow back into the per-domain field mapping (#33).
+  const result = await autoFillEngine.fillForm(detectedFields, {
+    onFilled: ({ field, value }) => {
+      correctionsTracker.track(field, value);
+    },
+  });
   if (result.filled >= 2) {
     for (const form of new Set(
       detectedFields
@@ -395,6 +402,7 @@ async function loadProfileForSidebar(): Promise<ExtensionProfile | null> {
 window.addEventListener("pagehide", () => {
   submitWatcher.detach();
   sidebarController.destroy();
+  correctionsTracker.clear();
 });
 
 // Utility: debounce function

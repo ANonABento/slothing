@@ -10,6 +10,7 @@ import type {
   SimilarAnswer,
   DetectedField,
   TrackedApplicationPayload,
+  SaveCorrectionPayload,
 } from "./types";
 
 /**
@@ -109,7 +110,23 @@ export const Messages = {
     payload: opts ?? {},
   }),
   wwGetPageState: (): ExtensionMessage => ({ type: "WW_GET_PAGE_STATE" }),
+
+  // Corrections feedback loop (#33). Fired when a user edits an autofilled
+  // field and the final value differs from the original suggestion — the
+  // background forwards it to /api/extension/field-mappings/correct so
+  // future autofills on the same domain prefer the corrected value.
+  saveCorrection: (
+    payload: SaveCorrectionPayload,
+  ): ExtensionMessage<SaveCorrectionPayload> => ({
+    type: "SAVE_CORRECTION",
+    payload,
+  }),
 };
+
+export interface SaveCorrectionResponse extends ExtensionResponse<{
+  saved: boolean;
+  hitCount: number;
+}> {}
 
 // Response type helpers
 export interface AuthStatusResponse extends ExtensionResponse<{
