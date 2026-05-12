@@ -1,0 +1,36 @@
+Slothing Cloud — Proprietary Source Code
+Copyright (C) 2026 Kevin Jiang. All rights reserved.
+
+The files within this directory (apps/web/src/cloud/ and its
+subdirectories) are NOT covered by the GNU Affero General Public License
+v3 that governs the rest of this repository (see the root LICENSE file).
+
+These files are proprietary. They power the hosted Slothing service at
+slothing.work and are released for transparency, not for commercial
+reuse. Without an explicit written commercial license from Kevin Jiang,
+you may NOT:
+
+  1. Run a competing hosted service that incorporates this code, in
+     whole or in part.
+  2. Redistribute or republish this code, modified or unmodified.
+  3. Incorporate this code into derivative works that you distribute,
+     sell, or sublicense.
+
+You MAY:
+
+  1. Read this code to understand how slothing.work operates.
+  2. Reference patterns or APIs (not source) for educational or
+     interoperability purposes.
+  3. Contribute fixes via pull request, on the understanding that any
+     accepted contribution will be relicensed under the same terms.
+
+This restriction applies only to files within this `apps/web/src/cloud/`
+directory tree. Code outside this directory remains under AGPL-3.0 and
+may be self-hosted, modified, and forked under those terms.
+
+Self-hosters: the standard build (SLOTHING_CLOUD unset or set to "0")
+excludes this directory entirely. You do not need a license to anything
+in here to run Slothing yourself with your own LLM keys.
+
+Commercial licensing inquiries: licensing@slothing.work
+General licensing context: see LICENSING.md at the repository root.
