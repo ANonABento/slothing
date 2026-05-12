@@ -3,7 +3,7 @@
 import { nowIso } from "@/lib/format/time";
 
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import {
   Briefcase,
   CalendarClock,
@@ -103,6 +103,7 @@ interface UpdateOpportunityResponse {
 }
 
 export default function OpportunitiesPage() {
+  const locale = useLocale();
   const t = useTranslations("opportunities");
   const commonT = useTranslations("common");
   const [opportunities, setOpportunities] =
@@ -385,6 +386,7 @@ export default function OpportunitiesPage() {
     return (
       <OpportunityRow
         opportunity={opportunity}
+        locale={locale}
         onStatusChange={updateRowStatus}
       />
     );
@@ -1048,9 +1050,11 @@ function translateOpportunityOption(
 
 function OpportunityRow({
   opportunity,
+  locale,
   onStatusChange,
 }: {
   opportunity: Opportunity;
+  locale: string;
   onStatusChange: (status: OpportunityStatus) => void;
 }) {
   const isHackathon = opportunity.type === "hackathon";
@@ -1113,13 +1117,13 @@ function OpportunityRow({
             icon={CalendarClock}
             value={
               opportunity.deadline
-                ? `Due ${formatOpportunityDate(opportunity.deadline)}`
+                ? `Due ${formatOpportunityDate(opportunity.deadline, locale)}`
                 : "No deadline"
             }
           />
           <Meta
             icon={DollarSign}
-            value={formatOpportunitySalary(opportunity)}
+            value={formatOpportunitySalary(opportunity, locale)}
           />
           <Select
             value={opportunity.status}

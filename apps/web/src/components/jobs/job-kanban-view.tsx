@@ -2,6 +2,7 @@
 
 import type { DragEvent } from "react";
 import { useMemo, useState } from "react";
+import { useLocale } from "next-intl";
 import {
   Briefcase,
   CalendarClock,
@@ -41,6 +42,7 @@ const COLUMN_STYLES: Record<JobKanbanStatus, string> = {
 };
 
 export function JobKanbanView({ jobs, onStatusChange }: JobKanbanViewProps) {
+  const locale = useLocale();
   const groupedJobs = useMemo(() => groupJobsByKanbanStatus(jobs), [jobs]);
   const [draggedJobId, setDraggedJobId] = useState<string | null>(null);
 
@@ -113,6 +115,7 @@ export function JobKanbanView({ jobs, onStatusChange }: JobKanbanViewProps) {
                     <JobKanbanCard
                       key={job.id}
                       job={job}
+                      locale={locale}
                       isDragging={draggedJobId === job.id}
                       onDragStart={(event) => handleDragStart(event, job.id)}
                       onDragEnd={() => setDraggedJobId(null)}
@@ -130,6 +133,7 @@ export function JobKanbanView({ jobs, onStatusChange }: JobKanbanViewProps) {
 
 interface JobKanbanCardProps {
   job: JobDescription;
+  locale: string;
   isDragging: boolean;
   onDragStart: (event: DragEvent<HTMLElement>) => void;
   onDragEnd: () => void;
@@ -137,11 +141,12 @@ interface JobKanbanCardProps {
 
 function JobKanbanCard({
   job,
+  locale,
   isDragging,
   onDragStart,
   onDragEnd,
 }: JobKanbanCardProps) {
-  const deadlineLabel = formatJobDeadline(job.deadline);
+  const deadlineLabel = formatJobDeadline(job.deadline, locale);
   const tags = job.keywords.slice(0, 4);
 
   return (

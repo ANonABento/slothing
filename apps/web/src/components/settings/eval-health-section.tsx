@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
+import { useFormatter } from "next-intl";
 import { Activity, ExternalLink } from "lucide-react";
 import { TimeAgo } from "@/components/format/time-ago";
 import { PageSection, pageGridClasses } from "@/components/ui/page-layout";
@@ -77,6 +78,7 @@ export function EvalHealthSection() {
 }
 
 function EvalHealthBody({ payload }: { payload: EvalDashboardPayload }) {
+  const format = useFormatter();
   const runs = payload.runs;
   const stats = useMemo(() => buildEvalStats(runs), [runs]);
   const sparklinePoints = useMemo(() => buildSparklinePoints(runs), [runs]);
@@ -87,11 +89,18 @@ function EvalHealthBody({ payload }: { payload: EvalDashboardPayload }) {
         <MiniKpi label="Last run">
           {runs[0] ? <TimeAgo date={runs[0].runAt} /> : "Unknown"}
         </MiniKpi>
-        <MiniKpi label="Runs">{formatInteger(runs.length)}</MiniKpi>
+        <MiniKpi label="Runs">{format.number(runs.length)}</MiniKpi>
         <MiniKpi label="Avg score">
           {stats.avgScore === null ? "N/A" : stats.avgScore.toFixed(2)}
         </MiniKpi>
-        <MiniKpi label="Est. cost">{formatCurrency(stats.totalCost)}</MiniKpi>
+        <MiniKpi label="Est. cost">
+          {format.number(stats.totalCost, {
+            style: "currency",
+            currency: "USD",
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })}
+        </MiniKpi>
       </dl>
 
       <div className="flex flex-col gap-3 border-t pt-4 sm:flex-row sm:items-center sm:justify-between">
@@ -187,19 +196,6 @@ function buildSparklinePoints(runs: EvalRunSummary[]) {
       return `${roundCoordinate(x)},${roundCoordinate(y)}`;
     })
     .join(" ");
-}
-
-function formatCurrency(usd: number) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(usd);
-}
-
-function formatInteger(value: number) {
-  return new Intl.NumberFormat("en-US").format(value);
 }
 
 function roundCoordinate(value: number) {

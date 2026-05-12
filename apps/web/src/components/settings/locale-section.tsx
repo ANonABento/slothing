@@ -2,6 +2,7 @@
 
 import { Globe2, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useLocale } from "next-intl";
 import {
   Select,
   SelectContent,
@@ -20,7 +21,8 @@ import { readJsonResponse } from "@/lib/http";
 import type { SettingsResponse } from "@/types/api";
 
 export function LocaleSection() {
-  const [locale, setLocale] = useState("en-US");
+  const activeLocale = useLocale();
+  const [locale, setLocale] = useState(() => normalizeLocale(activeLocale));
   const [saving, setSaving] = useState(false);
   const showErrorToast = useErrorToast();
 

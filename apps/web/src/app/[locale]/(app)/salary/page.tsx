@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useFormatter } from "next-intl";
 import {
   DollarSign,
   Calculator,
@@ -100,17 +101,16 @@ const ROLES = [
   "UX Designer",
 ];
 
-function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 0,
-  }).format(amount);
-}
-
 type TabType = "calculator" | "compare" | "negotiate";
 
 export default function SalaryToolsPage() {
+  const format = useFormatter();
+  const formatCurrency = (amount: number): string =>
+    format.number(amount, {
+      style: "currency",
+      currency: "USD",
+      maximumFractionDigits: 0,
+    });
   const [activeTab, setActiveTab] = useState<TabType>("calculator");
 
   // Calculator state
