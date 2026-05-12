@@ -8,6 +8,7 @@ import { GoogleIntegration } from "@/components/settings/google-integration";
 import { GmailAutoStatusSection } from "@/components/settings/gmail-auto-status-section";
 import { HelpCards } from "@/components/settings/help-cards";
 import { KanbanLanesSection } from "@/components/settings/kanban-lanes-section";
+import { ByokExplainer } from "@/components/settings/byok-explainer";
 import { LLMProviderConfig } from "@/components/settings/llm-provider-config";
 import { LocaleSection } from "@/components/settings/locale-section";
 import { LanguageSection } from "@/components/settings/language-section";
@@ -49,6 +50,7 @@ export default function SettingsPage() {
       <PageContent width="wide">
         <div className="space-y-8">
           <div className="space-y-6">
+            <ByokExplainer />
             <LLMProviderSelector
               provider={llmSettings.config.provider}
               apiKey={llmSettings.config.apiKey}

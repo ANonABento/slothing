@@ -38,114 +38,144 @@ describe("PricingPage", () => {
     );
   });
 
-  it("renders the Free, Pro, and Student tiers with prices", async () => {
+  it("renders the four tiers with their prices", async () => {
     await renderPricingPage();
 
-    expect(screen.getByRole("heading", { name: "Free" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Pro" })).toBeInTheDocument();
     expect(
-      screen.getByRole("heading", { name: "Student" }),
+      screen.getByRole("heading", { name: "Self-host" }),
     ).toBeInTheDocument();
-    expect(screen.getByText("$0")).toBeInTheDocument();
-    expect(screen.getByText("$8/mo")).toBeInTheDocument();
-    expect(screen.getByText("$3/mo")).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Hosted Free" }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Weekly" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Monthly" }),
+    ).toBeInTheDocument();
+    expect(screen.getAllByText("$0")).toHaveLength(2);
+    expect(screen.getByText("$6.99")).toBeInTheDocument();
+    expect(screen.getByText("$19.99")).toBeInTheDocument();
   });
 
-  it("links the Free CTA to localized sign-in", async () => {
+  it("links Self-host to the GitHub repository", async () => {
+    await renderPricingPage();
+
+    const selfHostCta = screen.getByRole("link", { name: /View on GitHub/i });
+    expect(selfHostCta).toHaveAttribute("data-tier-cta", "self-host");
+    expect(selfHostCta).toHaveAttribute(
+      "href",
+      "https://github.com/ANonABento/slothing",
+    );
+    expect(selfHostCta).toHaveAttribute("target", "_blank");
+    expect(selfHostCta).toHaveAttribute("rel", "noopener noreferrer");
+  });
+
+  it("links Hosted Free to localized sign-in", async () => {
     await renderPricingPage();
 
     expectLocalizedSignInHref(
-      screen.getByRole("link", { name: /Start free/i }),
+      screen.getByRole("link", { name: /Start with your key/i }),
       "en",
     );
   });
 
-  it("uses clearly labelled email CTAs for Pro and Student", async () => {
+  it("routes Weekly and Monthly CTAs to the waitlist mailto for now", async () => {
     await renderPricingPage();
 
-    const proCta = screen.getByRole("link", {
-      name: /Email us for waitlist access/i,
-    });
-    const studentCta = screen.getByRole("link", {
-      name: /Email us to verify student status/i,
-    });
+    const weeklyCta = screen.getAllByRole("link", {
+      name: /Email us for early access/i,
+    })[0];
+    const monthlyCta = screen.getAllByRole("link", {
+      name: /Email us for early access/i,
+    })[1];
 
-    expect(proCta).toHaveAttribute("data-pro-cta", "waitlist");
-    expect(proCta).toHaveAttribute(
-      "href",
-      "mailto:waitlist@slothing.work?subject=Pro%20waitlist",
-    );
-    expect(proCta).toHaveAttribute("target", "_blank");
-    expect(proCta).toHaveAttribute("rel", "noopener noreferrer");
-    expect(studentCta).toHaveAttribute(
-      "href",
-      "mailto:students@slothing.work?subject=Student%20verification",
-    );
-    expect(studentCta).toHaveAttribute("target", "_blank");
-    expect(studentCta).toHaveAttribute("rel", "noopener noreferrer");
+    expect(weeklyCta).toHaveAttribute("data-tier-cta", "weekly");
+    expect(weeklyCta.getAttribute("href")).toMatch(/^mailto:waitlist@slothing\.work\?subject=/);
+
+    expect(monthlyCta).toHaveAttribute("data-tier-cta", "monthly");
+    expect(monthlyCta.getAttribute("href")).toMatch(/^mailto:waitlist@slothing\.work\?subject=/);
   });
 
-  it("clarifies Pro status in the badge", async () => {
+  it("highlights Monthly as the most popular tier and Self-host as open source", async () => {
+    await renderPricingPage();
+
+    expect(screen.getByText("Most popular")).toBeInTheDocument();
+    // "Open source" appears in both the Self-host badge and the trust section heading
+    expect(screen.getAllByText("Open source").length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("shows the open-source / self-host banner at the top", async () => {
     await renderPricingPage();
 
     expect(
       screen.getByText(
-        "Pro is invite-only while billing ships. Email us for early access.",
+        "Self-host today, AGPL-3.0. Hosted plans launching soon.",
       ),
     ).toBeInTheDocument();
   });
 
-  it("renders plan comparison rows that highlight Pro upgrades", async () => {
+  it("answers the new pricing FAQ questions", async () => {
     await renderPricingPage();
 
     expect(
-      screen.getByRole("heading", { name: "Compare plans" }),
+      screen.getByRole("heading", { name: "Why weekly billing?" }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("row", { name: /Tailored resumes/i }),
-    ).toHaveTextContent("Unlimited");
-    expect(
-      screen.getByRole("row", { name: /Generation priority/i }),
-    ).toHaveTextContent("Priority");
-    expect(
-      screen.getByRole("row", { name: /Resume variants/i }),
-    ).toHaveTextContent("Advanced variants");
-  });
-
-  it("answers core billing and upgrade questions in the FAQ", async () => {
-    await renderPricingPage();
-
-    expect(
-      screen.getByRole("heading", { name: "Can I cancel Pro anytime?" }),
+      screen.getByRole("heading", { name: "What's BYOK (bring your own key)?" }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("heading", { name: "Are prices in USD?" }),
+      screen.getByRole("heading", { name: "Can I really self-host?" }),
     ).toBeInTheDocument();
     expect(
       screen.getByRole("heading", {
-        name: "What happens to my Free tier resumes if I upgrade?",
+        name: "What's open source vs proprietary?",
       }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("heading", { name: "When does Pro launch?" }),
+      screen.getByRole("heading", { name: "Can I cancel anytime?" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Are prices in USD?" }),
     ).toBeInTheDocument();
     expect(
       screen.getByRole("heading", { name: "Is there a refund policy?" }),
     ).toBeInTheDocument();
   });
 
-  it("clarifies that Pro and Student waitlists require no payment", async () => {
+  it("rejects annual pricing in the FAQ", async () => {
     await renderPricingPage();
 
     expect(
-      screen.getByText("No payment or card required to join."),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText("No payment until verification is complete."),
+      screen.getByRole("heading", { name: "Is annual pricing available?" }),
     ).toBeInTheDocument();
   });
 
-  it("renders the trust and security section", async () => {
+  it("renders the plan comparison with all four columns", async () => {
+    await renderPricingPage();
+
+    expect(
+      screen.getByRole("heading", { name: "Compare plans" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("columnheader", { name: "Self-host" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("columnheader", { name: "Hosted Free" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("columnheader", { name: "Weekly" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("columnheader", { name: "Monthly" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("row", { name: /AI provider/i }),
+    ).toHaveTextContent("Bring your own key");
+    expect(
+      screen.getByRole("row", { name: /Hosting/i }),
+    ).toHaveTextContent("Your machine");
+  });
+
+  it("renders the trust and security section with open-source pillar", async () => {
     await renderPricingPage();
 
     expect(
@@ -153,18 +183,33 @@ describe("PricingPage", () => {
     ).toBeInTheDocument();
     expect(screen.getByText("Encrypted in transit")).toBeInTheDocument();
     expect(screen.getByText("No data selling")).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Open source" }),
+    ).toBeInTheDocument();
     expect(screen.getByText("Delete anytime")).toBeInTheDocument();
     expect(screen.getByText(/AI outputs are assistive/)).toBeInTheDocument();
+  });
+
+  it("shows a waitlist-and-selfhost CTA pair at the bottom", async () => {
+    await renderPricingPage();
+
+    expect(
+      screen.getByRole("heading", { name: "Hosted billing launches soon" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /Join the waitlist/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /Self-host on GitHub/i }),
+    ).toBeInTheDocument();
   });
 
   it("aligns refund answer with billing terms", async () => {
     await renderPricingPage();
 
-    const refundHeading = screen.getByRole("heading", {
-      name: "Is there a refund policy?",
-    });
-
-    expect(refundHeading).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Is there a refund policy?" }),
+    ).toBeInTheDocument();
     expect(
       screen.getByText(/Cancellation stops future renewal/),
     ).toBeInTheDocument();
@@ -174,7 +219,7 @@ describe("PricingPage", () => {
     await renderPricingPage("es");
 
     expectLocalizedSignInHref(
-      screen.getByRole("link", { name: /Start free/i }),
+      screen.getByRole("link", { name: /Start with your key/i }),
       "es",
     );
   });
