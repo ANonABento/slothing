@@ -26,6 +26,81 @@ interface DocumentRow {
   uploaded_at: string;
 }
 
+export interface ProfileRow {
+  id: string;
+  user_id: string;
+  contact_json: string | null;
+  summary: string | null;
+  raw_text: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+}
+
+interface ExperienceRow {
+  id: string;
+  user_id: string;
+  profile_id: string;
+  company: string;
+  title: string;
+  location: string | null;
+  start_date: string | null;
+  end_date: string | null;
+  current: number | boolean | null;
+  description: string | null;
+  highlights_json: string | null;
+  skills_json: string | null;
+  created_at: string | null;
+}
+
+interface EducationRow {
+  id: string;
+  user_id: string;
+  profile_id: string;
+  institution: string;
+  degree: string;
+  field: string | null;
+  start_date: string | null;
+  end_date: string | null;
+  gpa: string | null;
+  highlights_json: string | null;
+  created_at: string | null;
+}
+
+interface SkillRow {
+  id: string;
+  user_id: string;
+  profile_id: string;
+  name: string;
+  category: string | null;
+  proficiency: string | null;
+  created_at: string | null;
+}
+
+interface ProjectRow {
+  id: string;
+  user_id: string;
+  profile_id: string;
+  name: string;
+  description: string | null;
+  url: string | null;
+  technologies_json: string | null;
+  highlights_json: string | null;
+  created_at: string | null;
+}
+
+interface CertificationRow {
+  id: string;
+  user_id: string;
+  profile_id: string;
+  name: string;
+  issuer: string;
+  issue_date: string | null;
+  expiry_date: string | null;
+  credential_id: string | null;
+  url: string | null;
+  created_at: string | null;
+}
+
 export interface DocumentCursor {
   lastId: string;
   lastCreatedAt: string;
@@ -244,41 +319,41 @@ export function deleteDocument(
 export function getProfile(userId: string = "default"): Profile | null {
   const profileRow = db
     .prepare("SELECT * FROM profile WHERE id = ?")
-    .get(userId) as any;
+    .get(userId) as ProfileRow | undefined;
   if (!profileRow) return null;
 
   const experiences = db
     .prepare("SELECT * FROM experiences WHERE profile_id = ?")
-    .all(userId) as any[];
+    .all(userId) as ExperienceRow[];
   const education = db
     .prepare("SELECT * FROM education WHERE profile_id = ?")
-    .all(userId) as any[];
+    .all(userId) as EducationRow[];
   const skills = db
     .prepare("SELECT * FROM skills WHERE profile_id = ?")
-    .all(userId) as any[];
+    .all(userId) as SkillRow[];
   const projects = db
     .prepare("SELECT * FROM projects WHERE profile_id = ?")
-    .all(userId) as any[];
+    .all(userId) as ProjectRow[];
   const certifications = db
     .prepare("SELECT * FROM certifications WHERE profile_id = ?")
-    .all(userId) as any[];
+    .all(userId) as CertificationRow[];
 
   return {
     id: profileRow.id,
     contact: profileRow.contact_json
       ? JSON.parse(profileRow.contact_json)
       : { name: "" },
-    summary: profileRow.summary,
-    rawText: profileRow.raw_text,
+    summary: profileRow.summary ?? undefined,
+    rawText: profileRow.raw_text ?? undefined,
     experiences: experiences.map((e) => ({
       id: e.id,
       company: e.company,
       title: e.title,
-      location: e.location,
-      startDate: e.start_date,
-      endDate: e.end_date,
+      location: e.location ?? undefined,
+      startDate: e.start_date ?? "",
+      endDate: e.end_date ?? undefined,
       current: Boolean(e.current),
-      description: e.description,
+      description: e.description ?? "",
       highlights: e.highlights_json ? JSON.parse(e.highlights_json) : [],
       skills: e.skills_json ? JSON.parse(e.skills_json) : [],
     })),
@@ -286,23 +361,25 @@ export function getProfile(userId: string = "default"): Profile | null {
       id: e.id,
       institution: e.institution,
       degree: e.degree,
-      field: e.field,
-      startDate: e.start_date,
-      endDate: e.end_date,
-      gpa: e.gpa,
+      field: e.field ?? "",
+      startDate: e.start_date ?? undefined,
+      endDate: e.end_date ?? undefined,
+      gpa: e.gpa ?? undefined,
       highlights: e.highlights_json ? JSON.parse(e.highlights_json) : [],
     })),
     skills: skills.map((s) => ({
       id: s.id,
       name: s.name,
-      category: s.category,
-      proficiency: s.proficiency ?? undefined,
+      category: (s.category ?? "other") as Skill["category"],
+      proficiency: s.proficiency
+        ? (s.proficiency as Skill["proficiency"])
+        : undefined,
     })),
     projects: projects.map((p) => ({
       id: p.id,
       name: p.name,
-      description: p.description,
-      url: p.url,
+      description: p.description ?? "",
+      url: p.url ?? undefined,
       technologies: p.technologies_json ? JSON.parse(p.technologies_json) : [],
       highlights: p.highlights_json ? JSON.parse(p.highlights_json) : [],
     })),
@@ -310,11 +387,11 @@ export function getProfile(userId: string = "default"): Profile | null {
       id: c.id,
       name: c.name,
       issuer: c.issuer,
-      date: c.issue_date,
-      url: c.url,
+      date: c.issue_date ?? undefined,
+      url: c.url ?? undefined,
     })),
-    createdAt: profileRow.created_at,
-    updatedAt: profileRow.updated_at,
+    createdAt: profileRow.created_at ?? undefined,
+    updatedAt: profileRow.updated_at ?? undefined,
   };
 }
 
