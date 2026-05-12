@@ -174,11 +174,14 @@ describe("upload route dedupe flow", () => {
     expect(mocks.saveDocument).not.toHaveBeenCalled();
   });
 
-  it("does not write long raw filenames to debug logs", async () => {
+  it("does not write per-request filenames, sizes, or hashes to debug logs", async () => {
     const rawFilename =
       "Jane_Doe_Private_Resume_2026_With_Confidential_Client_List.pdf";
+    const expectedFileHash =
+      "39d0e488b426fbbabef21b84b1f8195e16a1e55e39c25b2508d2576489c84214";
+    const file = pdfFile(rawFilename);
 
-    const response = await POST(uploadRequest(pdfFile(rawFilename)));
+    const response = await POST(uploadRequest(file));
 
     expect(response.status).toBe(200);
     const debugOutput = debugSpy.mock.calls
@@ -190,8 +193,24 @@ describe("upload route dedupe flow", () => {
           .join(" "),
       )
       .join("\n");
+    const debugFields = debugSpy.mock.calls.flatMap((args: unknown[]) =>
+      args.filter(
+        (arg): arg is Record<string, unknown> =>
+          typeof arg === "object" && arg !== null && !Array.isArray(arg),
+      ),
+    );
+
     expect(debugOutput).not.toContain(rawFilename);
-    expect(debugOutput).toContain("filenameHash");
+    expect(debugOutput).not.toContain(expectedFileHash);
+    expect(debugFields).not.toContainEqual(
+      expect.objectContaining({ filenameHash: expect.any(String) }),
+    );
+    expect(debugFields).not.toContainEqual(
+      expect.objectContaining({ size: file.size }),
+    );
+    expect(debugFields).not.toContainEqual(
+      expect.objectContaining({ fileHash: expectedFileHash }),
+    );
   });
 
   it("returns 409 with existing document metadata when the file hash already exists", async () => {
