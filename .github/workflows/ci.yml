@@ -47,6 +47,8 @@ jobs:
         include:
           - name: Type check
             command: pnpm run type-check
+          - name: Translation drift
+            command: pnpm --filter @slothing/web check:translations
           - name: Test
             command: pnpm run test:run
           - name: Lint

@@ -71,3 +71,37 @@ translation, so human-reviewed phrasing wins.
 
 Each generated locale file records `_meta.source`, `_meta.model`, and
 `_meta.generatedAt` for auditability.
+
+## Drift Checks
+
+Run the standalone guardrail before sending translation-related changes:
+
+```sh
+cd apps/web
+pnpm check:translations
+```
+
+The check compares every non-English catalog against `en.json`. Missing or
+extra keys fail the command. Strings that are still identical to English are
+reported as warnings, excluding pinned passthrough paths and standalone brand
+terms.
+
+`pnpm test` also runs the drift check before Vitest, and CI has a dedicated
+translation drift job. If CI fails with missing or extra keys, refresh the
+catalogs with `pnpm translate:messages`, commit the changed locale JSON files,
+and re-run `pnpm check:translations`.
+
+## Automatic Fanout
+
+Changes to `apps/web/src/messages/en.json` trigger the `i18n fanout` GitHub
+Actions workflow. The workflow runs `pnpm translate:messages` with
+`ANTHROPIC_API_KEY`, validates the result, and then:
+
+- commits the generated locale changes back to same-repository pull request
+  branches, or
+- opens an `i18n-fanout` pull request after `main` receives an English catalog
+  change.
+
+Add `[skip-i18n]` to a commit message, pull request title, or pull request body
+to skip the fanout workflow for a known-safe change. Forked pull requests still
+rely on the CI drift check because repository secrets are not exposed there.
