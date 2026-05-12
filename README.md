@@ -4,7 +4,7 @@
 
 Your personal job application command center. Upload your career documents, build tailored resumes and cover letters in one workspace, match with opportunities, and prepare for interviews. Slothing does the work for you.
 
-The code lives in the `get-me-job` repo as a pnpm + Turborepo monorepo. Domain: [slothing.work](https://slothing.work).
+The code lives in the `slothing` monorepo (pnpm + Turborepo). The on-disk database file and a few storage keys still use the legacy `get-me-job` / `taida` / `columbus` names for backwards compatibility; user-facing copy is Slothing. Domain: [slothing.work](https://slothing.work).
 
 ## Features
 
@@ -45,13 +45,27 @@ The code lives in the `get-me-job` repo as a pnpm + Turborepo monorepo. Domain: 
 pnpm install
 
 # Configure environment
-cp .env.example .env.local
+cp .env.example apps/web/.env.local
 
 # Start development server
 pnpm dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000)
+
+#### Local-dev quickstart (no Google OAuth)
+
+If you just want to poke around without setting up Google OAuth, add the dev-auth bypass to `apps/web/.env.local`:
+
+```env
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET=$(openssl rand -base64 32)
+NEXT_PUBLIC_NEXTAUTH_ENABLED=false
+SLOTHING_ALLOW_UNAUTHED_DEV=1
+TURSO_DATABASE_URL=file:./.local.db
+```
+
+All requests are served as the `default` user. Don't ship this in production — it has no auth.
 
 ### Setting up AI
 
@@ -96,14 +110,14 @@ The Columbus extension auto-fills job applications and imports listings from sup
 **Quick setup:**
 
 ```bash
-pnpm --filter @slothing/extension build          # Chrome    → apps/extension/dist/
-pnpm --filter @slothing/extension build:firefox  # Firefox   → apps/extension/dist-firefox/
+pnpm --filter @slothing/extension build:chrome   # → apps/extension/dist/
+pnpm --filter @slothing/extension build:firefox  # → apps/extension/dist-firefox/
 ```
 
 **Load it:**
 
 - Chrome: `chrome://extensions` → enable Developer mode → Load unpacked → pick `apps/extension/dist/`
-- Firefox: `about:debugging` → Load Temporary Add-on → pick `apps/extension/dist-firefox/manifest.json`
+- Firefox: `about:debugging#/runtime/this-firefox` → Load Temporary Add-on → pick `apps/extension/dist-firefox/manifest.json`
 
 **Try the demo first** (a sample job application form with embedded `JobPosting` JSON-LD, no auth needed):
 
@@ -113,7 +127,9 @@ node apps/extension/demo/launch-with-extension.mjs
 
 Boots a fresh Chromium with the extension pre-loaded and opens the demo form so you can see scraping, the badge, and the popup behavior end-to-end.
 
-**Connect:** click the Columbus icon → **Connect Account**. Opens `/extension/connect` on your locally-running Slothing, generates a token tied to your Slothing session, stores it in extension storage. After connecting, `Cmd+Shift+F` auto-fills, `Cmd+Shift+I` imports a listing.
+**Connect:** click the Slothing icon → **Connect Account**. Opens `/extension/connect` on your locally-running Slothing, generates a token tied to your Slothing session, stores it in extension storage. After connecting, `Cmd+Shift+F` auto-fills, `Cmd+Shift+I` imports a listing.
+
+**WaterlooWorks bulk import:** when the active tab is on `waterlooworks.uwaterloo.ca` the popup shows a **Detected: WaterlooWorks** section with three buttons — single-posting import, scrape all visible rows, or scrape the entire filtered set (paginated, capped at 200). See [apps/extension/README.md](./apps/extension/README.md#5-waterlooworks-bulk-import) for details.
 
 Full docs: [`apps/extension/README.md`](./apps/extension/README.md).
 

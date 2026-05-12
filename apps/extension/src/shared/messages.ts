@@ -79,6 +79,20 @@ export const Messages = {
     type: "JOB_DETECTED",
     payload: meta,
   }),
+
+  // WaterlooWorks-specific bulk scraping (driven from popup, executed in content
+  // script by waterloo-works-orchestrator.ts).
+  wwScrapeAllVisible: (): ExtensionMessage => ({
+    type: "WW_SCRAPE_ALL_VISIBLE",
+  }),
+  wwScrapeAllPaginated: (opts?: {
+    maxJobs?: number;
+    maxPages?: number;
+  }): ExtensionMessage<{ maxJobs?: number; maxPages?: number }> => ({
+    type: "WW_SCRAPE_ALL_PAGINATED",
+    payload: opts ?? {},
+  }),
+  wwGetPageState: (): ExtensionMessage => ({ type: "WW_GET_PAGE_STATE" }),
 };
 
 // Response type helpers
@@ -116,6 +130,22 @@ export interface GenerateCoverLetterFromPageResponse extends ExtensionResponse<{
 export interface SearchAnswersResponse extends ExtensionResponse<
   SimilarAnswer[]
 > {}
+
+export type WwPageKind = "list" | "detail" | "other";
+
+export interface WwPageStateResponse extends ExtensionResponse<{
+  kind: WwPageKind;
+  rowCount: number;
+  hasNextPage: boolean;
+  currentPage?: string;
+}> {}
+
+export interface WwBulkScrapeResponse extends ExtensionResponse<{
+  imported: number;
+  attempted: number;
+  pages: number;
+  errors: string[];
+}> {}
 
 // Send message to background script
 export async function sendMessage<T>(

@@ -163,6 +163,17 @@ button:disabled {
   line-height: 1.3;
 }
 
+/* WaterlooWorks bulk-scrape buttons */
+.ww-bulk {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ww-bulk button {
+  width: 100%;
+}
+
 /* Quick Actions */
 .quick-actions {
   display: flex;

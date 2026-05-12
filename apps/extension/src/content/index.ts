@@ -7,6 +7,7 @@ import { FieldDetector } from "./auto-fill/field-detector";
 import { FieldMapper } from "./auto-fill/field-mapper";
 import { AutoFillEngine } from "./auto-fill/engine";
 import { getScraperForUrl } from "./scrapers/scraper-registry";
+import { WaterlooWorksOrchestrator } from "./scrapers/waterloo-works-orchestrator";
 import type {
   ExtensionProfile,
   ScrapedJob,
@@ -150,9 +151,121 @@ async function handleMessage(message: { type: string; payload?: unknown }) {
       }
       return { success: false, error: "No scraper available for this site" };
 
+    case "WW_GET_PAGE_STATE":
+      return getWwPageState();
+
+    case "WW_SCRAPE_ALL_VISIBLE":
+      return runWwBulkScrape({ paginated: false });
+
+    case "WW_SCRAPE_ALL_PAGINATED":
+      return runWwBulkScrape({
+        paginated: true,
+        ...(message.payload as object),
+      });
+
     default:
       return { success: false, error: `Unknown message type: ${message.type}` };
   }
+}
+
+function isWaterlooWorks(): boolean {
+  return /waterlooworks\.uwaterloo\.ca/.test(window.location.href);
+}
+
+function getWwPageState() {
+  if (!isWaterlooWorks()) {
+    return {
+      success: true,
+      data: { kind: "other", rowCount: 0, hasNextPage: false },
+    };
+  }
+  const rows = document.querySelectorAll(
+    "table.data-viewer-table tbody tr.table__row--body",
+  );
+  const nextBtn = document.querySelector<HTMLAnchorElement>(
+    'a.pagination__link[aria-label="Go to next page"]',
+  );
+  const currentPage = document
+    .querySelector<HTMLAnchorElement>("a.pagination__link.active")
+    ?.textContent?.trim();
+  const hasDetail = !!document.querySelector(
+    ".dashboard-header__posting-title",
+  );
+  return {
+    success: true,
+    data: {
+      kind: hasDetail ? "detail" : rows.length > 0 ? "list" : "other",
+      rowCount: rows.length,
+      hasNextPage: !!nextBtn && !nextBtn.classList.contains("disabled"),
+      currentPage,
+    },
+  };
+}
+
+async function runWwBulkScrape(opts: {
+  paginated: boolean;
+  maxJobs?: number;
+  maxPages?: number;
+}) {
+  if (!isWaterlooWorks()) {
+    return { success: false, error: "Not a WaterlooWorks page" };
+  }
+  const orchestrator = new WaterlooWorksOrchestrator();
+  let errors: string[] = [];
+  let pages = 1;
+  const onProgress = (p: {
+    scrapedCount: number;
+    attemptedCount: number;
+    currentPage: number;
+    totalRowsOnPage: number;
+    done: boolean;
+    errors: string[];
+  }) => {
+    pages = p.currentPage;
+    errors = p.errors;
+    // Fire-and-forget progress event to the background, which can fan it out
+    // to the popup if open.
+    sendMessage({
+      type: "WW_BULK_PROGRESS",
+      payload: p,
+    } as never).catch(() => undefined);
+  };
+  const jobs = opts.paginated
+    ? await orchestrator.scrapeAllPaginated({
+        onProgress,
+        maxJobs: opts.maxJobs,
+        maxPages: opts.maxPages,
+      })
+    : await orchestrator.scrapeAllVisible({ onProgress });
+
+  if (jobs.length === 0) {
+    return {
+      success: true,
+      data: { imported: 0, attempted: 0, pages, errors },
+    };
+  }
+  // Hand off to background to bulk-import to Slothing.
+  const importResp = await sendMessage<{
+    imported: number;
+    opportunityIds: string[];
+    pendingCount: number;
+    dedupedIds?: string[];
+  }>(Messages.importJobsBatch(jobs));
+  if (!importResp.success) {
+    return {
+      success: false,
+      error: importResp.error || "Bulk import failed",
+    };
+  }
+  return {
+    success: true,
+    data: {
+      imported: importResp.data?.imported ?? jobs.length,
+      attempted: jobs.length,
+      pages,
+      errors,
+    },
+  };
 }
 
 async function handleFillForm() {
