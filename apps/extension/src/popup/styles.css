@@ -265,6 +265,69 @@ body {
   grid-column: 1 / -1;
 }
 
+/* ---------- Resume picker (#34) ---------- */
+.resume-picker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--bg-soft);
+}
+
+.resume-picker-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.resume-picker-select {
+  flex: 1;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text);
+  background: transparent;
+  border: none;
+  padding: 2px 0;
+  cursor: pointer;
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  background-image: linear-gradient(
+      45deg,
+      transparent 50%,
+      var(--text-muted) 50%
+    ),
+    linear-gradient(135deg, var(--text-muted) 50%, transparent 50%);
+  background-position:
+    calc(100% - 9px) center,
+    calc(100% - 5px) center;
+  background-size:
+    4px 4px,
+    4px 4px;
+  background-repeat: no-repeat;
+  padding-right: 16px;
+}
+
+.resume-picker-select:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.resume-picker-select:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 /* ---------- Buttons ---------- */
 .btn {
   display: inline-flex;
