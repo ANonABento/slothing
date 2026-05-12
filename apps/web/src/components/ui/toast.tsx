@@ -4,6 +4,7 @@ import * as React from "react";
 import { createContext, useContext, useState, useCallback } from "react";
 import { X, CheckCircle, AlertCircle, AlertTriangle, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 
 type ToastType = "success" | "error" | "warning" | "info";
 
@@ -83,6 +84,8 @@ const toastStyles = {
 };
 
 function ToastContainer() {
+  const a11yT = useA11yTranslations();
+
   const { toasts, removeToast } = useToast();
 
   if (toasts.length === 0) return null;
@@ -126,7 +129,7 @@ function ToastContainer() {
               type="button"
               onClick={() => removeToast(toast.id)}
               className="text-muted-foreground hover:text-foreground transition-colors"
-              aria-label="Dismiss notification"
+              aria-label={a11yT("dismissNotification")}
             >
               <X className="h-4 w-4" />
             </button>

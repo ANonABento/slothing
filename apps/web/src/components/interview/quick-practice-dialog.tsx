@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Timer, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -26,13 +27,6 @@ import {
   type SessionQuestionCategory,
 } from "@/lib/constants";
 
-const DIFFICULTY_LABELS: Record<InterviewDifficulty, string> = {
-  entry: "Easy",
-  mid: "Mid",
-  senior: "Hard",
-  executive: "Executive",
-};
-
 interface QuickPracticeDialogProps {
   open: boolean;
   defaultCategory?: SessionQuestionCategory | null;
@@ -57,6 +51,8 @@ export function QuickPracticeDialog({
   onOpenChange,
   onSubmit,
 }: QuickPracticeDialogProps) {
+  const t = useTranslations("interview.quickPractice");
+  const commonT = useTranslations("common");
   const [category, setCategory] = useState<SessionQuestionCategory>(
     defaultCategory || "behavioral",
   );
@@ -83,15 +79,15 @@ export function QuickPracticeDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Practice {category.replace("-", " ")}</DialogTitle>
-          <DialogDescription>
-            Pick a short warm-up and jump straight into questions.
-          </DialogDescription>
+          <DialogTitle>
+            {t("title", { category: t(`categories.${category}`) })}
+          </DialogTitle>
+          <DialogDescription>{t("description")}</DialogDescription>
         </DialogHeader>
 
         <div className="grid gap-4">
           <label className="grid gap-2 text-sm font-medium">
-            Category
+            {t("fields.category")}
             <Select
               value={category}
               onValueChange={(value) =>
@@ -106,12 +102,7 @@ export function QuickPracticeDialog({
                   (option) => option !== "general",
                 ).map((option) => (
                   <SelectItem key={option} value={option}>
-                    {option
-                      .split("-")
-                      .map(
-                        (part) => part.charAt(0).toUpperCase() + part.slice(1),
-                      )
-                      .join(" ")}
+                    {t(`categories.${option}`)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -119,7 +110,7 @@ export function QuickPracticeDialog({
           </label>
 
           <label className="grid gap-2 text-sm font-medium">
-            Questions
+            {t("fields.questions")}
             <Select
               value={String(questionCount)}
               onValueChange={(value) => setQuestionCount(Number(value))}
@@ -130,7 +121,7 @@ export function QuickPracticeDialog({
               <SelectContent>
                 {INTERVIEW_QUESTION_COUNTS.map((count) => (
                   <SelectItem key={count} value={String(count)}>
-                    {count} questions
+                    {t("questionCount", { count })}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -138,7 +129,7 @@ export function QuickPracticeDialog({
           </label>
 
           <label className="grid gap-2 text-sm font-medium">
-            Difficulty
+            {t("fields.difficulty")}
             <Select
               value={difficulty}
               onValueChange={(value) =>
@@ -151,7 +142,7 @@ export function QuickPracticeDialog({
               <SelectContent>
                 {INTERVIEW_DIFFICULTIES.map((level) => (
                   <SelectItem key={level} value={level}>
-                    {DIFFICULTY_LABELS[level]}
+                    {t(`difficulty.${level}`)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -167,7 +158,7 @@ export function QuickPracticeDialog({
             />
             <span className="flex items-center gap-2">
               <Timer className="h-4 w-4 text-primary" />
-              Practice with a timer
+              {t("timer")}
             </span>
           </label>
         </div>
@@ -178,7 +169,7 @@ export function QuickPracticeDialog({
             variant="ghost"
             onClick={() => onOpenChange(false)}
           >
-            Cancel
+            {commonT("cancel")}
           </Button>
           <Button
             type="button"
@@ -188,7 +179,7 @@ export function QuickPracticeDialog({
             }
           >
             <Zap className="mr-2 h-4 w-4" />
-            Start
+            {t("actions.start")}
           </Button>
         </DialogFooter>
       </DialogContent>

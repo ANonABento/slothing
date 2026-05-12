@@ -3,7 +3,7 @@
 import { FormEvent, useState } from "react";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
-import { ArrowLeft, Loader2, Mail, Rocket } from "lucide-react";
+import { AlertTriangle, ArrowLeft, Loader2, Mail, Rocket } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -19,6 +19,82 @@ import { GoogleIcon } from "@/components/google/GoogleIcon";
 interface SignInCardProps {
   callbackUrl: string;
   enableEmailMagicLink: boolean;
+}
+
+interface AuthDisabledCardProps {
+  locale: string;
+  showDevDashboardLink: boolean;
+}
+
+function AuthBrandLink() {
+  return (
+    <Link
+      href="/"
+      className="flex min-h-11 items-center gap-3 rounded-[var(--radius)] px-2"
+    >
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-[var(--shadow-button)]">
+        <Rocket className="h-5 w-5" />
+      </span>
+      <span className="text-xl font-bold leading-tight gradient-text">
+        Slothing
+      </span>
+    </Link>
+  );
+}
+
+export function AuthDisabledCard({
+  locale,
+  showDevDashboardLink,
+}: AuthDisabledCardProps) {
+  return (
+    <div className="relative z-10 flex w-full max-w-md flex-col items-center gap-5">
+      <AuthBrandLink />
+
+      <Card className="w-full shadow-[var(--shadow-elevated)]">
+        <CardHeader className="space-y-3 text-center">
+          <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-[var(--radius)] bg-destructive/10 text-destructive">
+            <AlertTriangle className="h-5 w-5" />
+          </div>
+          <CardTitle>Sign-in is disabled in this environment</CardTitle>
+          <CardDescription className="inline-flex flex-wrap justify-center gap-x-1">
+            <span>
+              This Slothing instance is running without Google OAuth
+              credentials. Missing:
+            </span>
+            <code>GOOGLE_CLIENT_ID</code>
+            <span>,</span>
+            <code>GOOGLE_CLIENT_SECRET</code>
+            <span>,</span>
+            <code>NEXTAUTH_SECRET</code>
+            <span>. See</span>
+            <code>.env.example</code>
+            <span>.</span>
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4 text-center">
+          {showDevDashboardLink ? (
+            <Button asChild className="w-full">
+              <Link href={`/${locale}/dashboard`}>
+                Continue to dashboard (dev mode)
+              </Link>
+            </Button>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              Contact your administrator.
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
+      <Link
+        href="/"
+        className="inline-flex min-h-11 items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Back to home
+      </Link>
+    </div>
+  );
 }
 
 export function SignInCard({
@@ -75,17 +151,7 @@ export function SignInCard({
 
   return (
     <div className="relative z-10 flex w-full max-w-md flex-col items-center gap-5">
-      <Link
-        href="/"
-        className="flex min-h-11 items-center gap-3 rounded-[var(--radius)] px-2"
-      >
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-[var(--shadow-button)]">
-          <Rocket className="h-5 w-5" />
-        </span>
-        <span className="text-xl font-bold leading-tight gradient-text">
-          Slothing
-        </span>
-      </Link>
+      <AuthBrandLink />
 
       <Card className="w-full shadow-[var(--shadow-elevated)]">
         <CardHeader className="space-y-2 text-center">

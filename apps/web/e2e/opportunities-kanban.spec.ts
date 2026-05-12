@@ -3,7 +3,7 @@ import { prepareAppPage } from "./utils/test-helpers";
 
 test.skip(
   true,
-  "Requires an authenticated Clerk test fixture and seeded app data.",
+  "Requires an authenticated NextAuth test fixture and seeded app data.",
 );
 
 test.describe("Opportunities Kanban lanes", () => {

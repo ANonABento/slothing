@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useLocale } from "next-intl";
 import { cn } from "@/lib/utils";
 import { TimeAgo } from "@/components/format/time-ago";
 import {
@@ -25,6 +26,7 @@ import type {
   TimeRange,
   DataPoint,
 } from "@/lib/analytics/time-series";
+import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 
 interface TrendChartsProps {
   initialRange?: TimeRange;
@@ -223,6 +225,8 @@ function ActivityTimelineItem({ event }: { event: ActivityEvent }) {
 }
 
 export function TrendCharts({ initialRange = "30d" }: TrendChartsProps) {
+  const locale = useLocale();
+  const a11yT = useA11yTranslations();
   const [range, setRange] = useState<TimeRange>(initialRange);
   const [data, setData] = useState<TrendData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -232,7 +236,8 @@ export function TrendCharts({ initialRange = "30d" }: TrendChartsProps) {
     async function fetchTrends() {
       try {
         setLoading(true);
-        const res = await fetch(`/api/analytics/trends?range=${range}`);
+        const params = new URLSearchParams({ range, locale });
+        const res = await fetch(`/api/analytics/trends?${params.toString()}`);
         const result = await res.json();
 
         if (!res.ok) {
@@ -248,7 +253,7 @@ export function TrendCharts({ initialRange = "30d" }: TrendChartsProps) {
     }
 
     fetchTrends();
-  }, [range]);
+  }, [range, locale]);
 
   if (loading && !data) {
     return (
@@ -323,7 +328,7 @@ export function TrendCharts({ initialRange = "30d" }: TrendChartsProps) {
       {/* Trend metrics */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <MetricCard
-          title="Application Rate"
+          title={a11yT("applicationRate")}
           value={data.trends.applicationRate.current}
           trend={data.trends.applicationRate.trend}
           change={data.trends.applicationRate.change}
@@ -331,7 +336,7 @@ export function TrendCharts({ initialRange = "30d" }: TrendChartsProps) {
           description="Applications this period"
         />
         <MetricCard
-          title="Response Rate"
+          title={a11yT("responseRate")}
           value={data.trends.responseRate.current}
           trend={data.trends.responseRate.trend}
           change={data.trends.responseRate.change}
@@ -339,7 +344,7 @@ export function TrendCharts({ initialRange = "30d" }: TrendChartsProps) {
           description="Got any response"
         />
         <MetricCard
-          title="Interview Rate"
+          title={a11yT("interviewRate")}
           value={data.trends.interviewRate.current}
           trend={data.trends.interviewRate.trend}
           change={data.trends.interviewRate.change}
@@ -347,7 +352,7 @@ export function TrendCharts({ initialRange = "30d" }: TrendChartsProps) {
           description="Got to interview stage"
         />
         <MetricCard
-          title="Success Rate"
+          title={a11yT("successRate")}
           value={data.trends.successRate.current}
           trend={data.trends.successRate.trend}
           change={data.trends.successRate.change}

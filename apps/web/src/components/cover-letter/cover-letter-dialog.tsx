@@ -22,6 +22,7 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { TimeAgo } from "@/components/format/time-ago";
+import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 
 interface CoverLetterVersion {
   id: string;
@@ -46,6 +47,8 @@ export function CoverLetterDialog({
   jobTitle,
   company,
 }: CoverLetterDialogProps) {
+  const a11yT = useA11yTranslations();
+
   const [content, setContent] = useState("");
   const [highlights, setHighlights] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
@@ -255,7 +258,7 @@ export function CoverLetterDialog({
             ref={contentRef}
             className="flex-1 min-h-[300px] max-h-[400px] overflow-y-auto rounded-lg border bg-muted/30 p-4"
             aria-live="polite"
-            aria-label="Cover letter content"
+            aria-label={a11yT("coverLetterContent")}
           >
             {loading ? (
               <div className="space-y-2">

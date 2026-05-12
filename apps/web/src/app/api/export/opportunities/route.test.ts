@@ -1,5 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+vi.mock("@/lib/db/jobs", () =>
+  globalThis.__contractRouteMocks!.createContractModuleMock("@/lib/db/jobs"),
+);
+
+vi.mock("@/lib/auth", () =>
+  globalThis.__contractRouteMocks!.createAuthModuleMock(),
+);
+
 import { GET } from "./route";
 import {
   expectRouteResponseContract,

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
+import { useFormatter } from "next-intl";
 import { Activity, ExternalLink } from "lucide-react";
 import { TimeAgo } from "@/components/format/time-ago";
 import { PageSection, pageGridClasses } from "@/components/ui/page-layout";
@@ -10,6 +11,7 @@ import type {
   EvalRunSummary,
 } from "@/lib/admin/evals/types";
 import { cn } from "@/lib/utils";
+import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 
 const EVAL_RAW_EXPORT_URL = "/api/admin/evals";
 
@@ -20,6 +22,8 @@ type FetchState =
   | { status: "ready"; payload: EvalDashboardPayload };
 
 export function EvalHealthSection() {
+  const a11yT = useA11yTranslations();
+
   const [state, setState] = useState<FetchState>({ status: "loading" });
 
   useEffect(() => {
@@ -57,7 +61,7 @@ export function EvalHealthSection() {
 
   return (
     <PageSection
-      title="Eval health"
+      title={a11yT("evalHealth")}
       description="LLM eval runs across configured judges and generators."
       icon={Activity}
     >
@@ -77,6 +81,8 @@ export function EvalHealthSection() {
 }
 
 function EvalHealthBody({ payload }: { payload: EvalDashboardPayload }) {
+  const format = useFormatter();
+  const a11yT = useA11yTranslations();
   const runs = payload.runs;
   const stats = useMemo(() => buildEvalStats(runs), [runs]);
   const sparklinePoints = useMemo(() => buildSparklinePoints(runs), [runs]);
@@ -87,17 +93,24 @@ function EvalHealthBody({ payload }: { payload: EvalDashboardPayload }) {
         <MiniKpi label="Last run">
           {runs[0] ? <TimeAgo date={runs[0].runAt} /> : "Unknown"}
         </MiniKpi>
-        <MiniKpi label="Runs">{formatInteger(runs.length)}</MiniKpi>
+        <MiniKpi label="Runs">{format.number(runs.length)}</MiniKpi>
         <MiniKpi label="Avg score">
           {stats.avgScore === null ? "N/A" : stats.avgScore.toFixed(2)}
         </MiniKpi>
-        <MiniKpi label="Est. cost">{formatCurrency(stats.totalCost)}</MiniKpi>
+        <MiniKpi label="Est. cost">
+          {format.number(stats.totalCost, {
+            style: "currency",
+            currency: "USD",
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })}
+        </MiniKpi>
       </dl>
 
       <div className="flex flex-col gap-3 border-t pt-4 sm:flex-row sm:items-center sm:justify-between">
         {sparklinePoints ? (
           <svg
-            aria-label="Average score trend"
+            aria-label={a11yT("averageScoreTrend")}
             className="h-6 w-20 text-primary"
             role="img"
             viewBox="0 0 80 24"
@@ -187,19 +200,6 @@ function buildSparklinePoints(runs: EvalRunSummary[]) {
       return `${roundCoordinate(x)},${roundCoordinate(y)}`;
     })
     .join(" ");
-}
-
-function formatCurrency(usd: number) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(usd);
-}
-
-function formatInteger(value: number) {
-  return new Intl.NumberFormat("en-US").format(value);
 }
 
 function roundCoordinate(value: number) {
