@@ -2,11 +2,7 @@ import { ScannerForm } from "@/components/ats/scanner-form";
 import { getLocalizedPageMetadata } from "@/lib/seo";
 import { ShieldCheck, Zap, Eye, Sparkles } from "lucide-react";
 
-export function generateMetadata({
-  params,
-}: {
-  params: { locale: string };
-}) {
+export function generateMetadata({ params }: { params: { locale: string } }) {
   return getLocalizedPageMetadata("atsScanner", params.locale);
 }
 
@@ -25,7 +21,8 @@ const BENEFITS = [
   {
     icon: Sparkles,
     title: "Free and Private",
-    description: "Your resume is scored in your browser and nothing is stored",
+    description:
+      "We parse resumes on our servers, do not save them to your account, and do not share them",
   },
 ];
 

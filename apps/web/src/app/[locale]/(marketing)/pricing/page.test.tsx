@@ -60,12 +60,14 @@ describe("PricingPage", () => {
     );
   });
 
-  it("uses mailto CTAs for Pro and Student", async () => {
+  it("uses clearly labelled email CTAs for Pro and Student", async () => {
     await renderPricingPage();
 
-    const proCta = screen.getByRole("link", { name: /Join waitlist/i });
+    const proCta = screen.getByRole("link", {
+      name: /Email us for waitlist access/i,
+    });
     const studentCta = screen.getByRole("link", {
-      name: /Verify with .edu email/i,
+      name: /Email us to verify student status/i,
     });
 
     expect(proCta).toHaveAttribute("data-pro-cta", "waitlist");
@@ -73,10 +75,63 @@ describe("PricingPage", () => {
       "href",
       "mailto:waitlist@slothing.work?subject=Pro%20waitlist",
     );
+    expect(proCta).toHaveAttribute("target", "_blank");
+    expect(proCta).toHaveAttribute("rel", "noopener noreferrer");
     expect(studentCta).toHaveAttribute(
       "href",
       "mailto:students@slothing.work?subject=Student%20verification",
     );
+    expect(studentCta).toHaveAttribute("target", "_blank");
+    expect(studentCta).toHaveAttribute("rel", "noopener noreferrer");
+  });
+
+  it("clarifies Pro status in the badge", async () => {
+    await renderPricingPage();
+
+    expect(
+      screen.getByText(
+        "Pro is invite-only while billing ships. Email us for early access.",
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it("renders plan comparison rows that highlight Pro upgrades", async () => {
+    await renderPricingPage();
+
+    expect(
+      screen.getByRole("heading", { name: "Compare plans" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("row", { name: /Tailored resumes/i }),
+    ).toHaveTextContent("Unlimited");
+    expect(
+      screen.getByRole("row", { name: /Generation priority/i }),
+    ).toHaveTextContent("Priority");
+    expect(
+      screen.getByRole("row", { name: /Resume variants/i }),
+    ).toHaveTextContent("Advanced variants");
+  });
+
+  it("answers core billing and upgrade questions in the FAQ", async () => {
+    await renderPricingPage();
+
+    expect(
+      screen.getByRole("heading", { name: "Can I cancel Pro anytime?" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Are prices in USD?" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", {
+        name: "What happens to my Free tier resumes if I upgrade?",
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "When does Pro launch?" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Is there a refund policy?" }),
+    ).toBeInTheDocument();
   });
 
   it("preserves non-English locale in internal links", async () => {

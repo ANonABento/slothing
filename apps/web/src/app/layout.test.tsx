@@ -14,10 +14,26 @@ vi.mock("@/components/theme-provider", () => ({
   ThemeProvider: ({ children }: { children: ReactNode }) => children,
 }));
 
-import { metadata } from "./layout";
+import { generateMetadata } from "./[locale]/layout";
 
-describe("app layout metadata", () => {
+describe("localized app layout metadata", () => {
   it("uses the shared site metadata", () => {
-    expect(metadata).toEqual(getSiteMetadata());
+    expect(generateMetadata({ params: { locale: "en" } })).toEqual({
+      ...getSiteMetadata(),
+      alternates: {
+        canonical: "/en",
+        languages: {
+          "x-default": "/en",
+          en: "/en",
+          es: "/es",
+          "zh-CN": "/zh-CN",
+          "pt-BR": "/pt-BR",
+          hi: "/hi",
+          fr: "/fr",
+          ja: "/ja",
+          ko: "/ko",
+        },
+      },
+    });
   });
 });

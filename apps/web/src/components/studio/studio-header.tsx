@@ -40,6 +40,7 @@ import {
   type StudioSaveStatus,
 } from "./save-status";
 import { TemplatePreviewThumbnail } from "./template-preview-thumbnail";
+import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 
 interface StudioHeaderProps {
   documentMode: DocumentMode;
@@ -87,6 +88,8 @@ export function StudioHeader({
   onDownloadDocx,
   onDownloadPdf,
 }: StudioHeaderProps) {
+  const a11yT = useA11yTranslations();
+
   const [templateOpen, setTemplateOpen] = useState(false);
   const [templateSearch, setTemplateSearch] = useState("");
   const [now, setNow] = useState(() => nowEpoch());
@@ -230,7 +233,7 @@ export function StudioHeader({
           size="icon"
           className="lg:hidden"
           onClick={onFilesPanelToggle}
-          aria-label="Open files panel"
+          aria-label={a11yT("openFilesPanel")}
         >
           <PanelLeft className="h-5 w-5" />
         </Button>
@@ -300,8 +303,8 @@ export function StudioHeader({
                       onChange={(event) =>
                         setTemplateSearch(event.target.value)
                       }
-                      placeholder="Search templates"
-                      aria-label="Search templates"
+                      placeholder={a11yT("searchTemplates")}
+                      aria-label={a11yT("searchTemplates")}
                       className="h-10 w-full rounded-[var(--radius)] border-[length:var(--border-width)] bg-background pl-9 pr-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     />
                   </div>
@@ -487,7 +490,7 @@ export function StudioHeader({
           size="icon"
           className="lg:hidden"
           onClick={onAiPanelToggle}
-          aria-label="Open AI assistant panel"
+          aria-label={a11yT("openAiAssistantPanel")}
         >
           <PanelRight className="h-5 w-5" />
         </Button>

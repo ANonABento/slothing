@@ -48,6 +48,13 @@ describe("CTASection", () => {
   it("should render the Get Started CTA", async () => {
     await renderCTASection();
     expect(screen.getByText(/Ready to stop rewriting/)).toBeInTheDocument();
+    const ctaCopy = screen.getByText(
+      "Build tailored resumes in minutes, not hours, and keep every version organized.",
+    );
+
+    expect(ctaCopy).toBeInTheDocument();
+    expect(ctaCopy.textContent?.match(/[.!?]/g)).toHaveLength(1);
+    expect(screen.queryByText(/Join thousands/i)).not.toBeInTheDocument();
   });
 
   it("should link Get Started to sign-in", async () => {

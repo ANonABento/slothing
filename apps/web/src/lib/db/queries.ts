@@ -26,13 +26,88 @@ interface DocumentRow {
   uploaded_at: string;
 }
 
+export interface ProfileRow {
+  id: string;
+  user_id: string;
+  contact_json: string | null;
+  summary: string | null;
+  raw_text: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+}
+
+interface ExperienceRow {
+  id: string;
+  user_id: string;
+  profile_id: string;
+  company: string;
+  title: string;
+  location: string | null;
+  start_date: string | null;
+  end_date: string | null;
+  current: number | boolean | null;
+  description: string | null;
+  highlights_json: string | null;
+  skills_json: string | null;
+  created_at: string | null;
+}
+
+interface EducationRow {
+  id: string;
+  user_id: string;
+  profile_id: string;
+  institution: string;
+  degree: string;
+  field: string | null;
+  start_date: string | null;
+  end_date: string | null;
+  gpa: string | null;
+  highlights_json: string | null;
+  created_at: string | null;
+}
+
+interface SkillRow {
+  id: string;
+  user_id: string;
+  profile_id: string;
+  name: string;
+  category: string | null;
+  proficiency: string | null;
+  created_at: string | null;
+}
+
+interface ProjectRow {
+  id: string;
+  user_id: string;
+  profile_id: string;
+  name: string;
+  description: string | null;
+  url: string | null;
+  technologies_json: string | null;
+  highlights_json: string | null;
+  created_at: string | null;
+}
+
+interface CertificationRow {
+  id: string;
+  user_id: string;
+  profile_id: string;
+  name: string;
+  issuer: string;
+  issue_date: string | null;
+  expiry_date: string | null;
+  credential_id: string | null;
+  url: string | null;
+  created_at: string | null;
+}
+
 export interface DocumentCursor {
   lastId: string;
   lastCreatedAt: string;
 }
 
 export interface ListDocumentsPaginatedParams {
-  userId?: string;
+  userId: string;
   type?: DocumentType;
   cursor?: DocumentCursor | null;
   limit: number;
@@ -54,21 +129,14 @@ function rowToDocument(row: DocumentRow): Document {
 }
 
 // Settings
-export function getSetting(
-  key: string,
-  userId: string = "default",
-): string | null {
+export function getSetting(key: string, userId: string): string | null {
   const row = db
     .prepare("SELECT value FROM settings WHERE key = ? AND user_id = ?")
     .get(key, userId) as { value: string } | undefined;
   return row?.value || null;
 }
 
-export function setSetting(
-  key: string,
-  value: string,
-  userId: string = "default",
-): void {
+export function setSetting(key: string, value: string, userId: string): void {
   db.prepare(
     `INSERT INTO settings (key, user_id, value, updated_at)
      VALUES (?, ?, ?, CURRENT_TIMESTAMP)
@@ -78,15 +146,12 @@ export function setSetting(
   ).run(key, userId, value);
 }
 
-export function getLLMConfig(userId: string = "default"): LLMConfig | null {
+export function getLLMConfig(userId: string): LLMConfig | null {
   const config = getSetting("llm_config", userId);
   return config ? JSON.parse(config) : null;
 }
 
-export function setLLMConfig(
-  config: LLMConfig,
-  userId: string = "default",
-): void {
+export function setLLMConfig(config: LLMConfig, userId: string): void {
   setSetting("llm_config", JSON.stringify(config), userId);
 }
 
@@ -118,7 +183,7 @@ function isUniqueConstraintError(error: unknown): boolean {
 
 export function saveDocument(
   doc: Omit<Document, "uploadedAt">,
-  userId: string = "default",
+  userId: string,
 ): void {
   try {
     db.prepare(
@@ -148,7 +213,7 @@ export function saveDocument(
 
 export function getDocumentByFileHash(
   fileHash: string,
-  userId: string = "default",
+  userId: string,
 ): Document | null {
   const row = db
     .prepare(
@@ -161,7 +226,7 @@ export function getDocumentByFileHash(
   return row ? rowToDocument(row) : null;
 }
 
-export function getDocuments(userId: string = "default"): Document[] {
+export function getDocuments(userId: string): Document[] {
   const rows = db
     .prepare(
       "SELECT * FROM documents WHERE user_id = ? ORDER BY uploaded_at DESC",
@@ -172,7 +237,7 @@ export function getDocuments(userId: string = "default"): Document[] {
 
 export function getDocumentsByType(
   type: DocumentType,
-  userId: string = "default",
+  userId: string,
 ): Document[] {
   const rows = db
     .prepare(
@@ -183,7 +248,7 @@ export function getDocumentsByType(
 }
 
 export function listDocumentsPaginated({
-  userId = "default",
+  userId,
   type,
   cursor,
   limit,
@@ -214,20 +279,14 @@ export function listDocumentsPaginated({
   return rows.map(rowToDocument);
 }
 
-export function getDocument(
-  id: string,
-  userId: string = "default",
-): Document | null {
+export function getDocument(id: string, userId: string): Document | null {
   const row = db
     .prepare("SELECT * FROM documents WHERE id = ? AND user_id = ?")
     .get(id, userId) as DocumentRow | undefined;
   return row ? rowToDocument(row) : null;
 }
 
-export function deleteDocument(
-  id: string,
-  userId: string = "default",
-): string | null {
+export function deleteDocument(id: string, userId: string): string | null {
   const row = db
     .prepare("SELECT path FROM documents WHERE id = ? AND user_id = ?")
     .get(id, userId) as { path: string } | undefined;
@@ -241,44 +300,44 @@ export function deleteDocument(
 }
 
 // Profile
-export function getProfile(userId: string = "default"): Profile | null {
+export function getProfile(userId: string): Profile | null {
   const profileRow = db
     .prepare("SELECT * FROM profile WHERE id = ?")
-    .get(userId) as any;
+    .get(userId) as ProfileRow | undefined;
   if (!profileRow) return null;
 
   const experiences = db
     .prepare("SELECT * FROM experiences WHERE profile_id = ?")
-    .all(userId) as any[];
+    .all(userId) as ExperienceRow[];
   const education = db
     .prepare("SELECT * FROM education WHERE profile_id = ?")
-    .all(userId) as any[];
+    .all(userId) as EducationRow[];
   const skills = db
     .prepare("SELECT * FROM skills WHERE profile_id = ?")
-    .all(userId) as any[];
+    .all(userId) as SkillRow[];
   const projects = db
     .prepare("SELECT * FROM projects WHERE profile_id = ?")
-    .all(userId) as any[];
+    .all(userId) as ProjectRow[];
   const certifications = db
     .prepare("SELECT * FROM certifications WHERE profile_id = ?")
-    .all(userId) as any[];
+    .all(userId) as CertificationRow[];
 
   return {
     id: profileRow.id,
     contact: profileRow.contact_json
       ? JSON.parse(profileRow.contact_json)
       : { name: "" },
-    summary: profileRow.summary,
-    rawText: profileRow.raw_text,
+    summary: profileRow.summary ?? undefined,
+    rawText: profileRow.raw_text ?? undefined,
     experiences: experiences.map((e) => ({
       id: e.id,
       company: e.company,
       title: e.title,
-      location: e.location,
-      startDate: e.start_date,
-      endDate: e.end_date,
+      location: e.location ?? undefined,
+      startDate: e.start_date ?? "",
+      endDate: e.end_date ?? undefined,
       current: Boolean(e.current),
-      description: e.description,
+      description: e.description ?? "",
       highlights: e.highlights_json ? JSON.parse(e.highlights_json) : [],
       skills: e.skills_json ? JSON.parse(e.skills_json) : [],
     })),
@@ -286,23 +345,25 @@ export function getProfile(userId: string = "default"): Profile | null {
       id: e.id,
       institution: e.institution,
       degree: e.degree,
-      field: e.field,
-      startDate: e.start_date,
-      endDate: e.end_date,
-      gpa: e.gpa,
+      field: e.field ?? "",
+      startDate: e.start_date ?? undefined,
+      endDate: e.end_date ?? undefined,
+      gpa: e.gpa ?? undefined,
       highlights: e.highlights_json ? JSON.parse(e.highlights_json) : [],
     })),
     skills: skills.map((s) => ({
       id: s.id,
       name: s.name,
-      category: s.category,
-      proficiency: s.proficiency ?? undefined,
+      category: (s.category ?? "other") as Skill["category"],
+      proficiency: s.proficiency
+        ? (s.proficiency as Skill["proficiency"])
+        : undefined,
     })),
     projects: projects.map((p) => ({
       id: p.id,
       name: p.name,
-      description: p.description,
-      url: p.url,
+      description: p.description ?? "",
+      url: p.url ?? undefined,
       technologies: p.technologies_json ? JSON.parse(p.technologies_json) : [],
       highlights: p.highlights_json ? JSON.parse(p.highlights_json) : [],
     })),
@@ -310,18 +371,15 @@ export function getProfile(userId: string = "default"): Profile | null {
       id: c.id,
       name: c.name,
       issuer: c.issuer,
-      date: c.issue_date,
-      url: c.url,
+      date: c.issue_date ?? undefined,
+      url: c.url ?? undefined,
     })),
-    createdAt: profileRow.created_at,
-    updatedAt: profileRow.updated_at,
+    createdAt: profileRow.created_at ?? undefined,
+    updatedAt: profileRow.updated_at ?? undefined,
   };
 }
 
-export function updateProfile(
-  profile: Partial<Profile>,
-  userId: string = "default",
-): void {
+export function updateProfile(profile: Partial<Profile>, userId: string): void {
   const currentProfile = getProfile(userId);
   if (currentProfile) {
     createProfileSnapshot(userId, JSON.stringify(currentProfile));
@@ -471,7 +529,7 @@ export function updateProfile(
 }
 
 // Clear all profile data
-export function clearProfile(userId: string = "default"): void {
+export function clearProfile(userId: string): void {
   const clear = db.transaction(() => {
     db.prepare("DELETE FROM experiences WHERE profile_id = ?").run(userId);
     db.prepare("DELETE FROM education WHERE profile_id = ?").run(userId);

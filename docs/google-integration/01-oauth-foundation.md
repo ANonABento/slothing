@@ -1,6 +1,6 @@
 # Phase 1: OAuth Foundation
 
-> Google OAuth setup via Clerk with token management
+> Google OAuth setup via NextAuth with token management
 
 ---
 
@@ -11,14 +11,14 @@
 | **Phase** | 1 |
 | **Priority** | High |
 | **Effort** | Medium (3-5 days) |
-| **Dependencies** | Clerk auth (already installed) |
+| **Dependencies** | NextAuth auth (already installed) |
 | **Blocks** | All other Google integration phases |
 
 ---
 
 ## Goals
 
-1. Enable Google OAuth sign-in/connection via Clerk
+1. Enable Google OAuth sign-in/connection via NextAuth
 2. Request and store appropriate scopes
 3. Create utility to retrieve Google access tokens
 4. Build UI for connecting/disconnecting Google account
@@ -28,9 +28,9 @@
 
 ## Tasks
 
-### 1.1 Clerk Dashboard Configuration
+### 1.1 NextAuth Dashboard Configuration
 
-- [ ] Enable Google OAuth provider in Clerk Dashboard
+- [ ] Enable Google OAuth provider in NextAuth Dashboard
 - [ ] Configure OAuth scopes:
   - `openid`, `email`, `profile` (default)
   - `https://www.googleapis.com/auth/calendar`
@@ -56,7 +56,7 @@
 **File:** `src/lib/google/client.ts`
 
 ```typescript
-import { auth, clerkClient } from '@clerk/nextjs/server';
+import { auth, authClient } from 'next-auth';
 import { google } from 'googleapis';
 
 export interface GoogleTokenResult {
@@ -65,14 +65,14 @@ export interface GoogleTokenResult {
 }
 
 /**
- * Get the current user's Google OAuth access token via Clerk
+ * Get the current user's Google OAuth access token via NextAuth
  */
 export async function getGoogleAccessToken(): Promise<GoogleTokenResult | null> {
   const { userId } = await auth();
   if (!userId) return null;
 
   try {
-    const client = await clerkClient();
+    const client = await authClient();
     const tokens = await client.users.getUserOauthAccessToken(userId, 'oauth_google');
 
     if (!tokens.data || tokens.data.length === 0) {
@@ -167,13 +167,13 @@ export async function GET() {
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useUser, useClerk } from '@clerk/nextjs';
+import { useUser, useNextAuth } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
 import { Chrome, Loader2, CheckCircle, XCircle } from 'lucide-react';
 
 export function GoogleConnectButton() {
   const { user } = useUser();
-  const { openUserProfile } = useClerk();
+  const { openUserProfile } = useNextAuth();
   const [connected, setConnected] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -195,7 +195,7 @@ export function GoogleConnectButton() {
   }
 
   function handleConnect() {
-    // Opens Clerk's user profile where they can connect Google
+    // Opens NextAuth's user profile where they can connect Google
     openUserProfile();
   }
 
@@ -319,7 +319,7 @@ npm install googleapis
 
 ### Manual Testing Checklist
 
-- [ ] Can connect Google account via Clerk
+- [ ] Can connect Google account via NextAuth
 - [ ] Token is retrieved successfully
 - [ ] Connection status shows correctly in UI
 - [ ] Can disconnect and reconnect
@@ -334,7 +334,7 @@ import { isGoogleConnected } from './client';
 
 describe('Google Client', () => {
   it('should return false when no token available', async () => {
-    vi.mock('@clerk/nextjs/server', () => ({
+    vi.mock('next-auth', () => ({
       auth: vi.fn().mockResolvedValue({ userId: null }),
     }));
 
@@ -351,7 +351,7 @@ describe('Google Client', () => {
 1. [ ] User can connect Google account from Settings page
 2. [ ] Connection status is displayed correctly
 3. [ ] Access token can be retrieved programmatically
-4. [ ] Token refresh is handled by Clerk automatically
+4. [ ] Token refresh is handled by NextAuth automatically
 5. [ ] User can disconnect Google account
 6. [ ] Error states are handled gracefully
 
@@ -360,7 +360,7 @@ describe('Google Client', () => {
 ## Rollback Plan
 
 If issues arise:
-1. Disable Google OAuth provider in Clerk Dashboard
+1. Disable Google OAuth provider in NextAuth Dashboard
 2. Remove Google-specific UI components
 3. Google features gracefully degrade (show "not connected")
 
@@ -368,7 +368,7 @@ If issues arise:
 
 ## Notes
 
-- Clerk handles token storage and refresh automatically
+- NextAuth handles token storage and refresh automatically
 - No need to store tokens in our database
 - Scopes can be incrementally requested as features are added
 - Test with personal Gmail before production deployment
