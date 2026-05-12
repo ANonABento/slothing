@@ -25,6 +25,8 @@ import {
   getRecentInterviewSessions,
 } from "./interviews";
 
+const TEST_USER_ID = "test-user";
+
 describe("Interview Database Functions", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -40,27 +42,32 @@ describe("Interview Database Functions", () => {
         { question: "What is React?", category: "technical" as const },
       ];
 
-      const result = createInterviewSession("job-123", questions, "text");
+      const result = createInterviewSession(
+        "job-123",
+        questions,
+        "text",
+        TEST_USER_ID,
+      );
 
       expect(db.prepare).toHaveBeenCalledWith(
         expect.stringContaining("WHERE EXISTS"),
       );
       expect(mockRun).toHaveBeenLastCalledWith(
         "test-session-id",
-        "default",
+        TEST_USER_ID,
         "job-123",
         null,
-        "default",
+        TEST_USER_ID,
         "text",
         JSON.stringify(questions),
         expect.any(String),
         "job-123",
-        "default",
+        TEST_USER_ID,
       );
       expect(result).toEqual({
         id: "test-session-id",
         jobId: "job-123",
-        profileId: "default",
+        profileId: TEST_USER_ID,
         mode: "text",
         category: null,
         questions,
@@ -84,7 +91,7 @@ describe("Interview Database Functions", () => {
         null,
         questions,
         "generic-text",
-        "default",
+        TEST_USER_ID,
         "behavioral",
       );
 
@@ -93,9 +100,9 @@ describe("Interview Database Functions", () => {
       );
       expect(mockRun).toHaveBeenLastCalledWith(
         "test-session-id",
-        "default",
+        TEST_USER_ID,
         "behavioral",
-        "default",
+        TEST_USER_ID,
         "generic-text",
         JSON.stringify(questions),
         expect.any(String),
@@ -133,7 +140,12 @@ describe("Interview Database Functions", () => {
       const mockRun = vi.fn();
       (db.prepare as Mock).mockReturnValue({ run: mockRun });
 
-      const result = createInterviewSession("job-123", []);
+      const result = createInterviewSession(
+        "job-123",
+        [],
+        undefined,
+        TEST_USER_ID,
+      );
 
       expect(result.mode).toBe("text");
     });
@@ -142,7 +154,12 @@ describe("Interview Database Functions", () => {
       const mockRun = vi.fn();
       (db.prepare as Mock).mockReturnValue({ run: mockRun });
 
-      const result = createInterviewSession("job-123", [], "voice");
+      const result = createInterviewSession(
+        "job-123",
+        [],
+        "voice",
+        TEST_USER_ID,
+      );
 
       expect(result.mode).toBe("voice");
     });
@@ -153,7 +170,7 @@ describe("Interview Database Functions", () => {
       const mockSessionRow = {
         id: "session-1",
         job_id: "job-123",
-        profile_id: "default",
+        profile_id: TEST_USER_ID,
         mode: "text",
         questions_json: '[{"question": "Q1", "category": "behavioral"}]',
         status: "in_progress",
@@ -182,7 +199,7 @@ describe("Interview Database Functions", () => {
         return { get: vi.fn(), all: vi.fn() };
       });
 
-      const result = getInterviewSession("session-1");
+      const result = getInterviewSession("session-1", TEST_USER_ID);
 
       expect(db.prepare).toHaveBeenCalledWith(
         expect.stringContaining("WHERE id = ? AND user_id = ?"),
@@ -190,7 +207,7 @@ describe("Interview Database Functions", () => {
       expect(result).toEqual({
         id: "session-1",
         jobId: "job-123",
-        profileId: "default",
+        profileId: TEST_USER_ID,
         mode: "text",
         category: null,
         questions: [{ question: "Q1", category: "behavioral" }],
@@ -216,7 +233,7 @@ describe("Interview Database Functions", () => {
         all: vi.fn().mockReturnValue([]),
       });
 
-      const result = getInterviewSession("non-existent");
+      const result = getInterviewSession("non-existent", TEST_USER_ID);
 
       expect(result).toBeNull();
     });
@@ -225,7 +242,7 @@ describe("Interview Database Functions", () => {
       const mockSessionRow = {
         id: "session-1",
         job_id: "job-123",
-        profile_id: "default",
+        profile_id: TEST_USER_ID,
         mode: "voice",
         questions_json: "[]",
         status: "completed",
@@ -240,7 +257,7 @@ describe("Interview Database Functions", () => {
         return { all: vi.fn().mockReturnValue([]) };
       });
 
-      const result = getInterviewSession("session-1");
+      const result = getInterviewSession("session-1", TEST_USER_ID);
 
       expect(result?.status).toBe("completed");
       expect(result?.completedAt).toBe("2024-01-15T11:00:00.000Z");
@@ -253,7 +270,7 @@ describe("Interview Database Functions", () => {
         {
           id: "session-2",
           job_id: "job-456",
-          profile_id: "default",
+          profile_id: TEST_USER_ID,
           mode: "text",
           questions_json: "[]",
           status: "in_progress",
@@ -263,7 +280,7 @@ describe("Interview Database Functions", () => {
         {
           id: "session-1",
           job_id: "job-123",
-          profile_id: "default",
+          profile_id: TEST_USER_ID,
           mode: "voice",
           questions_json: "[]",
           status: "completed",
@@ -276,7 +293,7 @@ describe("Interview Database Functions", () => {
         all: vi.fn().mockReturnValue(mockRows),
       });
 
-      const result = getInterviewSessions();
+      const result = getInterviewSessions(undefined, TEST_USER_ID);
 
       expect(db.prepare as Mock).toHaveBeenCalledWith(
         expect.stringContaining("WHERE user_id = ?"),
@@ -290,9 +307,9 @@ describe("Interview Database Functions", () => {
       const mockAll = vi.fn().mockReturnValue([]);
       (db.prepare as Mock).mockReturnValue({ all: mockAll });
 
-      getInterviewSessions("job-123");
+      getInterviewSessions("job-123", TEST_USER_ID);
 
-      expect(mockAll).toHaveBeenCalledWith("default", "job-123");
+      expect(mockAll).toHaveBeenCalledWith(TEST_USER_ID, "job-123");
     });
 
     it("should return empty array when no sessions exist", () => {
@@ -300,7 +317,7 @@ describe("Interview Database Functions", () => {
         all: vi.fn().mockReturnValue([]),
       });
 
-      const result = getInterviewSessions();
+      const result = getInterviewSessions(undefined, TEST_USER_ID);
 
       expect(db.prepare as Mock).toHaveBeenCalledWith(
         expect.stringContaining("WHERE user_id = ?"),
@@ -314,18 +331,24 @@ describe("Interview Database Functions", () => {
       const mockRun = vi.fn();
       (db.prepare as Mock).mockReturnValue({ run: mockRun });
 
-      const result = addInterviewAnswer("session-1", 0, "My answer", "Good!");
+      const result = addInterviewAnswer(
+        "session-1",
+        0,
+        "My answer",
+        "Good!",
+        TEST_USER_ID,
+      );
 
       expect(mockRun).toHaveBeenCalledWith(
         "test-session-id",
-        "default",
+        TEST_USER_ID,
         "session-1",
         0,
         "My answer",
         "Good!",
         expect.any(String),
         "session-1",
-        "default",
+        TEST_USER_ID,
       );
       expect(result).toEqual({
         id: "test-session-id",
@@ -361,7 +384,13 @@ describe("Interview Database Functions", () => {
       const mockRun = vi.fn();
       (db.prepare as Mock).mockReturnValue({ run: mockRun });
 
-      const result = addInterviewAnswer("session-1", 0, "My answer");
+      const result = addInterviewAnswer(
+        "session-1",
+        0,
+        "My answer",
+        undefined,
+        TEST_USER_ID,
+      );
 
       expect(result.feedback).toBeUndefined();
       const runArgs = mockRun.mock.calls[0];
@@ -383,13 +412,13 @@ describe("Interview Database Functions", () => {
       const mockRun = vi.fn();
       (db.prepare as Mock).mockReturnValue({ run: mockRun });
 
-      completeInterviewSession("session-1");
+      completeInterviewSession("session-1", TEST_USER_ID);
 
       expect(mockRun).toHaveBeenCalled();
       const runArgs = mockRun.mock.calls[0];
       expect(runArgs[0]).toBeTruthy(); // timestamp
       expect(runArgs[1]).toBe("session-1");
-      expect(runArgs[2]).toBe("default");
+      expect(runArgs[2]).toBe(TEST_USER_ID);
     });
   });
 
@@ -405,12 +434,12 @@ describe("Interview Database Functions", () => {
         return { run: mockRun };
       });
 
-      deleteInterviewSession("session-1");
+      deleteInterviewSession("session-1", TEST_USER_ID);
 
-      expect(mockGet).toHaveBeenCalledWith("session-1", "default");
+      expect(mockGet).toHaveBeenCalledWith("session-1", TEST_USER_ID);
       expect(mockRun).toHaveBeenCalledTimes(2);
-      expect(mockRun).toHaveBeenCalledWith("session-1", "default");
-      expect(mockRun).toHaveBeenCalledWith("session-1", "default");
+      expect(mockRun).toHaveBeenCalledWith("session-1", TEST_USER_ID);
+      expect(mockRun).toHaveBeenCalledWith("session-1", TEST_USER_ID);
     });
   });
 
@@ -420,7 +449,7 @@ describe("Interview Database Functions", () => {
         {
           id: "session-1",
           job_id: "job-123",
-          profile_id: "default",
+          profile_id: TEST_USER_ID,
           mode: "text",
           questions_json: "[]",
           status: "in_progress",
@@ -432,9 +461,9 @@ describe("Interview Database Functions", () => {
       const mockAll = vi.fn().mockReturnValue(mockRows);
       (db.prepare as Mock).mockReturnValue({ all: mockAll });
 
-      const result = getRecentInterviewSessions(5);
+      const result = getRecentInterviewSessions(5, TEST_USER_ID);
 
-      expect(mockAll).toHaveBeenCalledWith("default", 5);
+      expect(mockAll).toHaveBeenCalledWith(TEST_USER_ID, 5);
       expect(result).toHaveLength(1);
     });
 
@@ -442,9 +471,9 @@ describe("Interview Database Functions", () => {
       const mockAll = vi.fn().mockReturnValue([]);
       (db.prepare as Mock).mockReturnValue({ all: mockAll });
 
-      getRecentInterviewSessions();
+      getRecentInterviewSessions(undefined, TEST_USER_ID);
 
-      expect(mockAll).toHaveBeenCalledWith("default", 5);
+      expect(mockAll).toHaveBeenCalledWith(TEST_USER_ID, 5);
     });
   });
 });

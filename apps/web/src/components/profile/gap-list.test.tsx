@@ -1,8 +1,19 @@
 import { fireEvent, render, screen } from "@testing-library/react";
+import { NextIntlClientProvider } from "next-intl";
+import type { ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
 
 import { GapList } from "./gap-list";
 import type { ProfileCompletenessGap } from "@/lib/profile/completeness";
+import messages from "@/messages/en.json";
+
+function renderWithIntl(ui: ReactNode) {
+  return render(
+    <NextIntlClientProvider locale="en" messages={messages}>
+      {ui}
+    </NextIntlClientProvider>,
+  );
+}
 
 const gaps: ProfileCompletenessGap[] = [
   {
@@ -37,7 +48,7 @@ const gaps: ProfileCompletenessGap[] = [
 
 describe("GapList", () => {
   it("renders only the top 3 gaps", () => {
-    render(<GapList gaps={gaps} onSelectGap={vi.fn()} />);
+    renderWithIntl(<GapList gaps={gaps} onSelectGap={vi.fn()} />);
 
     expect(
       screen.getByRole("button", { name: /Add a professional summary/i }),
@@ -49,7 +60,7 @@ describe("GapList", () => {
 
   it("invokes the focus callback with the selected gap", () => {
     const onSelectGap = vi.fn();
-    render(<GapList gaps={gaps} onSelectGap={onSelectGap} />);
+    renderWithIntl(<GapList gaps={gaps} onSelectGap={onSelectGap} />);
 
     fireEvent.click(screen.getByRole("button", { name: /Add 2 more skills/i }));
 

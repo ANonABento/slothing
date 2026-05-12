@@ -2,6 +2,8 @@ import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { Input } from "./input";
 
+const namePlaceholder = "Enter your name";
+
 describe("Input", () => {
   it("should render input element", () => {
     render(<Input data-testid="input" />);
@@ -26,7 +28,7 @@ describe("Input", () => {
   });
 
   it("should display placeholder text", () => {
-    render(<Input placeholder="Enter your name" />);
+    render(<Input placeholder={namePlaceholder} />);
     expect(screen.getByPlaceholderText("Enter your name")).toBeInTheDocument();
   });
 

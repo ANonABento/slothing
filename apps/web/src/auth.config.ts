@@ -13,11 +13,36 @@ export const GOOGLE_OAUTH_SCOPES = [
   "https://www.googleapis.com/auth/contacts.readonly",
 ];
 
+const REQUIRED_NEXTAUTH_ENV = [
+  "GOOGLE_CLIENT_ID",
+  "GOOGLE_CLIENT_SECRET",
+  "NEXTAUTH_SECRET",
+] as const;
+
+type NextAuthEnvKey = (typeof REQUIRED_NEXTAUTH_ENV)[number];
+
+export function getMissingAuthEnv(
+  env: Record<string, string | undefined> = process.env,
+): NextAuthEnvKey[] {
+  return REQUIRED_NEXTAUTH_ENV.filter((key) => !env[key]?.trim());
+}
+
+export const DEV_AUTH_BYPASS_HEADER = {
+  name: "X-Slothing-Dev-Auth",
+  value: "default-user",
+} as const;
+
 export function isNextAuthConfigured(
   env: Record<string, string | undefined> = process.env,
 ): boolean {
-  return Boolean(
-    env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET && env.NEXTAUTH_SECRET,
+  return getMissingAuthEnv(env).length === 0;
+}
+
+export function isDevAuthBypassAllowed(
+  env: Record<string, string | undefined> = process.env,
+): boolean {
+  return (
+    env.NODE_ENV !== "production" && env.SLOTHING_ALLOW_UNAUTHED_DEV === "1"
   );
 }
 

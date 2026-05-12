@@ -69,9 +69,7 @@ function readCount(
   return row?.count ?? 0;
 }
 
-export function getJobsAnalyticsView(
-  userId: string = "default",
-): AnalyticsJobRow[] {
+export function getJobsAnalyticsView(userId: string): AnalyticsJobRow[] {
   const rows = db
     .prepare(
       `
@@ -104,9 +102,7 @@ export function getJobsAnalyticsView(
   }));
 }
 
-export function getAnalyticsJobDescriptions(
-  userId: string = "default",
-): JobDescription[] {
+export function getAnalyticsJobDescriptions(userId: string): JobDescription[] {
   return getJobsAnalyticsView(userId).map((job) => ({
     id: job.id,
     title: job.title,
@@ -124,7 +120,7 @@ export function getAnalyticsJobDescriptions(
 }
 
 export function getProfileAnalyticsView(
-  userId: string = "default",
+  userId: string,
 ): ProfileAnalyticsView | null {
   const profile = db
     .prepare("SELECT id, contact_json, summary FROM profile WHERE id = ?")
@@ -171,7 +167,7 @@ export function getProfileAnalyticsView(
   };
 }
 
-export function getDocumentCount(userId: string = "default"): number {
+export function getDocumentCount(userId: string): number {
   return readCount(
     "SELECT COUNT(*) as count FROM documents WHERE user_id = ?",
     userId,
@@ -179,7 +175,7 @@ export function getDocumentCount(userId: string = "default"): number {
 }
 
 export function getInterviewSessionStats(
-  userId: string = "default",
+  userId: string,
 ): InterviewSessionStats {
   const rows = db
     .prepare(
@@ -204,7 +200,7 @@ export function getInterviewSessionStats(
   };
 }
 
-export function getGeneratedResumeCount(userId: string = "default"): number {
+export function getGeneratedResumeCount(userId: string): number {
   return readCount(
     "SELECT COUNT(*) as count FROM generated_resumes WHERE user_id = ?",
     userId,
@@ -212,7 +208,7 @@ export function getGeneratedResumeCount(userId: string = "default"): number {
 }
 
 export function getGeneratedResumeAnalyticsView(
-  userId: string = "default",
+  userId: string,
 ): GeneratedResume[] {
   const rows = db
     .prepare(

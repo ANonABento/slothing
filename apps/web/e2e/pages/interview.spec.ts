@@ -7,7 +7,7 @@ import { test, expect } from "@playwright/test";
 
 test.skip(
   true,
-  "Requires an authenticated Clerk test fixture and interview seed data.",
+  "Requires an authenticated NextAuth test fixture and interview seed data.",
 );
 
 test.describe("Interview - Layout", () => {

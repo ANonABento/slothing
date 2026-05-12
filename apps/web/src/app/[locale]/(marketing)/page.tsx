@@ -1,15 +1,13 @@
+import { headers } from "next/headers";
 import { Hero } from "./components/hero";
 import { Features } from "./components/features";
 import { HowItWorks } from "./components/how-it-works";
 import { Testimonials } from "./components/testimonials";
 import { CTASection } from "./components/cta-section";
 import { getLocalizedMarketingPageMetadata } from "@/lib/seo";
+import { CSP_NONCE_HEADER } from "@/lib/security/headers";
 
-export function generateMetadata({
-  params,
-}: {
-  params: { locale: string };
-}) {
+export function generateMetadata({ params }: { params: { locale: string } }) {
   return getLocalizedMarketingPageMetadata(params.locale);
 }
 
@@ -29,9 +27,12 @@ const jsonLd = {
 };
 
 export default async function LandingPage() {
+  const nonce = headers().get(CSP_NONCE_HEADER) ?? undefined;
+
   return (
     <>
       <script
+        nonce={nonce}
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />

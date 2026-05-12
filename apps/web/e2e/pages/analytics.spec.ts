@@ -7,7 +7,7 @@ import { test, expect } from "@playwright/test";
 
 test.skip(
   true,
-  "Requires an authenticated Clerk test fixture and analytics seed data.",
+  "Requires an authenticated NextAuth test fixture and analytics seed data.",
 );
 
 test.describe("Analytics - Layout", () => {

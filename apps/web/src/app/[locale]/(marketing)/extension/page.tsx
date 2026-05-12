@@ -8,19 +8,17 @@ import {
   ShieldCheck,
   Sparkles,
 } from "lucide-react";
+import Image from "next/image";
 
 import { ExtensionInstallButtons } from "@/components/marketing/extension-install-buttons";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { getCurrentUserId } from "@/lib/auth";
+import { getA11yTranslations } from "@/lib/i18n/get-a11y-translations";
 import { getLocalizedPageMetadata } from "@/lib/seo";
 
-export function generateMetadata({
-  params,
-}: {
-  params: { locale: string };
-}) {
+export function generateMetadata({ params }: { params: { locale: string } }) {
   return getLocalizedPageMetadata("extension", params.locale);
 }
 
@@ -30,21 +28,24 @@ const featureBlocks = [
     description:
       "Save roles from LinkedIn, Indeed, Greenhouse, Lever, Workable, and niche boards without copying details by hand.",
     icon: Globe2,
-    visual: "LinkedIn, Indeed, Greenhouse, Lever, Workable",
+    screenshot: "/marketing/extension/job-board-capture.png",
+    visualLabel: "Slothing Columbus popover saving a LinkedIn job posting",
   },
   {
     title: "Gmail recruiter import",
     description:
       "Turn recruiter outreach into pending opportunities so promising leads do not disappear inside your inbox.",
     icon: Mail,
-    visual: "Recruiter outreach -> review queue",
+    screenshot: "/marketing/extension/gmail-import.png",
+    visualLabel: "Gmail recruiter import view showing pending opportunities",
   },
   {
     title: "One-click review queue",
     description:
       "Send captured roles straight into Slothing for review, prioritization, and tailored document work.",
     icon: MousePointerClick,
-    visual: "Capture -> pending -> apply",
+    screenshot: "/marketing/extension/review-queue.png",
+    visualLabel: "Review queue with three captured roles",
   },
 ] as const;
 
@@ -88,6 +89,7 @@ const faqs = [
 
 export default async function ExtensionLandingPage() {
   const userId = await getCurrentUserId();
+  const a11yT = await getA11yTranslations();
 
   return (
     <main className="pt-24">
@@ -100,15 +102,15 @@ export default async function ExtensionLandingPage() {
             Capture jobs from any site, instantly.
           </h1>
           <p className="mt-5 max-w-2xl text-lg leading-8 text-muted-foreground">
-            The Slothing browser extension turns any LinkedIn, Indeed, or
-            company careers page into a one-click save.
+            Columbus, the Slothing browser extension, turns any LinkedIn,
+            Indeed, or company careers page into a one-click save.
           </p>
           <div className="mt-8">
             <ExtensionInstallButtons variant="primary" />
           </div>
         </div>
 
-        <HeroMockup />
+        <HeroMockup ariaLabel={a11yT("extensionPopoverPreviewOnAJobPosting")} />
       </section>
 
       <section id="features" className="border-t bg-card/45 px-6 py-16">
@@ -141,9 +143,10 @@ export default async function ExtensionLandingPage() {
                     </p>
                   </div>
                   <div className="rounded-lg border bg-muted/40 p-5">
-                    <div className="flex min-h-40 items-center justify-center rounded-lg bg-card text-center text-sm font-medium text-muted-foreground">
-                      {feature.visual}
-                    </div>
+                    <FeatureVisual
+                      src={feature.screenshot}
+                      ariaLabel={feature.visualLabel}
+                    />
                   </div>
                 </article>
               );
@@ -256,9 +259,6 @@ export default async function ExtensionLandingPage() {
             <a href="mailto:support@slothing.work" className="hover:underline">
               support@slothing.work
             </a>
-            <a href="/changelog" className="hover:underline">
-              Changelog
-            </a>
           </div>
         </div>
       </section>
@@ -266,11 +266,30 @@ export default async function ExtensionLandingPage() {
   );
 }
 
-function HeroMockup() {
+function FeatureVisual({
+  src,
+  ariaLabel,
+}: {
+  src: (typeof featureBlocks)[number]["screenshot"];
+  ariaLabel: string;
+}) {
+  return (
+    <Image
+      src={src}
+      alt={ariaLabel}
+      width={960}
+      height={600}
+      sizes="(min-width: 768px) 50vw, 100vw"
+      className="aspect-[8/5] w-full rounded-lg border bg-background object-cover shadow-sm"
+    />
+  );
+}
+
+function HeroMockup({ ariaLabel }: { ariaLabel: string }) {
   return (
     <div
       className="relative min-h-[420px] rounded-lg border bg-card p-4 shadow-xl"
-      aria-label="Extension popover preview on a job posting"
+      aria-label={ariaLabel}
     >
       <div className="mb-4 flex items-center gap-2 border-b pb-3">
         <span className="h-3 w-3 rounded-full bg-destructive/70" />

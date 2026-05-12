@@ -4,13 +4,13 @@
 
 **Branch.** `bentoya/security-audit-owasp-top-10-auth-uploads-deps`
 
-**Stack.** Next.js 14 (App Router), TypeScript, Drizzle + libSQL/SQLite, Clerk auth (with local-dev fallback), TipTap editor, multi-provider LLM client.
+**Stack.** Next.js 14 (App Router), TypeScript, Drizzle + libSQL/SQLite, NextAuth auth (with local-dev fallback), TipTap editor, multi-provider LLM client.
 
 ---
 
 ## Executive summary
 
-Eight distinct issues were uncovered. **One CRITICAL** (Clerk middleware bypass via vulnerable @clerk/* versions) and **one HIGH IDOR** (prompt-variants table had no `user_id` column → any authenticated user could read/modify another user's prompt variants by id) were fixed in this PR. Defense-in-depth fixes were added for SSRF, security headers, error leakage, and rate-limiting. The two remaining vulnerabilities (Next.js 14 advisories and esbuild dev-only) require breaking-change upgrades and are tracked as accepted risk pending a separate Next 16 migration.
+Eight distinct issues were uncovered. **One CRITICAL** (NextAuth middleware bypass via vulnerable retired auth packages versions) and **one HIGH IDOR** (prompt-variants table had no `user_id` column → any authenticated user could read/modify another user's prompt variants by id) were fixed in this PR. Defense-in-depth fixes were added for SSRF, security headers, error leakage, and rate-limiting. The two remaining vulnerabilities (Next.js 14 advisories and esbuild dev-only) require breaking-change upgrades and are tracked as accepted risk pending a separate Next 16 migration.
 
 | Severity | Count | Fixed in PR | Accepted-risk |
 | --- | --- | --- | --- |
@@ -44,7 +44,7 @@ Once the rewritten prompt becomes active, every resume tailor for user B uses A'
 
 ### A02 Cryptographic Failures
 
-**Finding A02-1 — Passwords are not stored locally.** Authentication is delegated to Clerk; the app never sees plaintext passwords. No bcrypt/argon2 needed in this codebase. Hashes used (`crypto.createHash("sha256")` for file dedupe, in `dedupe-backfill.ts` and `/api/upload`) are content-identity hashes, not credentials. **No issue.**
+**Finding A02-1 — Passwords are not stored locally.** Authentication is delegated to NextAuth; the app never sees plaintext passwords. No bcrypt/argon2 needed in this codebase. Hashes used (`crypto.createHash("sha256")` for file dedupe, in `dedupe-backfill.ts` and `/api/upload`) are content-identity hashes, not credentials. **No issue.**
 
 **Finding A02-2 — No MD5 or SHA1 usage in source.** Verified via grep.
 
@@ -56,16 +56,16 @@ Once the rewritten prompt becomes active, every resume tailor for user B uses A'
 
 ### A04 Insecure Design
 
-**Finding A04-1 — No password reset flow to attack.** Auth is delegated to Clerk. Clerk's own password reset flow follows industry practices.
+**Finding A04-1 — No password reset flow to attack.** Auth is delegated to NextAuth. NextAuth's own password reset flow follows industry practices.
 
-**Finding A04-2 — No account enumeration on local-dev endpoints.** Local-dev fallback resolves all unauthenticated requests to a single shared `default` user. This is fine for local dev but **must not** be deployed without Clerk env vars set. `requireAuth()` already returns the local-dev user only when both `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` and `CLERK_SECRET_KEY` are missing (`src/lib/auth.ts:15`).
+**Finding A04-2 — No account enumeration on local-dev endpoints.** Local-dev fallback resolves all unauthenticated requests to a single shared `default` user. This is fine for local dev but **must not** be deployed without NextAuth env vars set. `requireAuth()` already returns the local-dev user only when both `GOOGLE_CLIENT_ID` and `NEXTAUTH_SECRET` are missing (`src/lib/auth.ts:15`).
 
 ### A05 Security Misconfiguration
 
 **Finding A05-1 — HIGH: Zero security headers were emitted.** No CSP, HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, or Permissions-Policy. `next.config.mjs` set none, middleware set none.
 
-**Fix.** Added `src/lib/security/headers.ts::applySecurityHeaders` and wired it into `src/middleware.ts` for both Clerk-authenticated and Clerk-disabled paths. Headers applied:
-- `Content-Security-Policy` with `default-src 'self'`, `object-src 'none'`, `frame-ancestors 'none'`, `base-uri 'self'`, no `unsafe-eval`. Allows Clerk origins under `script-src`/`connect-src`/`frame-src`.
+**Fix.** Added `src/lib/security/headers.ts::applySecurityHeaders` and wired it into `src/middleware.ts` for both NextAuth-authenticated and NextAuth-disabled paths. Headers applied:
+- `Content-Security-Policy` with `default-src 'self'`, `object-src 'none'`, `frame-ancestors 'none'`, `base-uri 'self'`, no `unsafe-eval`. Allows NextAuth origins under `script-src`/`connect-src`/`frame-src`.
 - `Strict-Transport-Security: max-age=31536000; includeSubDomains; preload` (HTTPS only — local http://localhost dev still works).
 - `X-Frame-Options: DENY`
 - `X-Content-Type-Options: nosniff`
@@ -82,8 +82,8 @@ Coverage proven by `src/lib/security/headers.test.ts` (7 tests).
 
 | Package | Advisory | Severity | Status |
 | --- | --- | --- | --- |
-| @clerk/nextjs | GHSA-vqx2-fgx2-5wq9 (middleware bypass) | **Critical** | Fixed |
-| @clerk/shared, @clerk/clerk-react, @clerk/backend | GHSA-w24r-5266-9c3c (auth bypass when combining org/billing/reverify) | High | Fixed |
+| next-auth/react | GHSA-vqx2-fgx2-5wq9 (middleware bypass) | **Critical** | Fixed |
+| retired auth packages | GHSA-w24r-5266-9c3c (auth bypass when combining org/billing/reverify) | High | Fixed |
 | drizzle-orm | GHSA-gpj5-g38j-94v9 (SQLi via identifier escaping) | High | Fixed |
 | @xmldom/xmldom | GHSA-2v35-w6hq-6mfw + 3 others (XML injection / DoS) | High | Fixed |
 | brace-expansion | GHSA-f886-m6hf-6m8v | Moderate | Fixed |
@@ -96,7 +96,7 @@ Coverage proven by `src/lib/security/headers.test.ts` (7 tests).
 
 ### A07 Identification & Authentication
 
-Clerk handles all session lifecycle. Middleware (`src/middleware.ts`) enforces `auth.protect()` for non-public routes when Clerk is configured. CSRF: Clerk session tokens are HttpOnly + same-site by default; the cover-letter, prompts, etc. endpoints are POST/PATCH/DELETE only, so simple `<form>` CSRF is mitigated by content-type checks (JSON bodies).
+NextAuth handles all session lifecycle. Middleware (`src/middleware.ts`) enforces `auth.protect()` for non-public routes when NextAuth is configured. CSRF: NextAuth session tokens are HttpOnly + same-site by default; the cover-letter, prompts, etc. endpoints are POST/PATCH/DELETE only, so simple `<form>` CSRF is mitigated by content-type checks (JSON bodies).
 
 ### A08 Software & Data Integrity
 
@@ -162,7 +162,7 @@ The activity feed, resume bank, knowledge bank, opportunities tracker, calendar,
 
 ### OAuth-pending state
 
-NextAuth is not wired up; Clerk is. The local-dev fallback (`getLocalDevUserId`) is gated on `!isClerkConfigured`. Production deployments must set both Clerk env vars. **Documented as accepted risk for local-only dev.**
+NextAuth is not wired up; NextAuth is. The local-dev fallback (`getLocalDevUserId`) is gated on `!isNextAuthConfigured`. Production deployments must set both NextAuth env vars. **Documented as accepted risk for local-only dev.**
 
 ---
 
@@ -192,7 +192,7 @@ CORS: no `Access-Control-Allow-Origin` is set anywhere. Next.js does not emit it
 - No raw error stacks returned to clients (after the cover-letter stream fix).
 - `package-lock.json` is committed and pinned.
 - No hardcoded secrets in source — all sensitive env vars accessed via `process.env` and only on the server.
-- `NEXT_PUBLIC_*` is only used for the Clerk publishable key (intentionally public).
+- `NEXT_PUBLIC_*` is only used for the NextAuth publishable key (intentionally public).
 
 ---
 

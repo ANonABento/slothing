@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { TimeAgo } from "@/components/format/time-ago";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,6 +18,7 @@ import { useErrorToast } from "@/hooks/use-error-toast";
 import { cn } from "@/lib/utils";
 import { THEME_INTERACTIVE_SURFACE_CLASSES } from "@/lib/theme/component-classes";
 import { pluralize } from "@/lib/text/pluralize";
+import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 
 interface SourceDocumentsProps {
   refreshKey: number;
@@ -39,6 +41,9 @@ export function SourceDocuments({
   onDelete,
   onDocumentsChange,
 }: SourceDocumentsProps) {
+  const t = useTranslations("dialogs.bank.sourceDocuments");
+  const commonT = useTranslations("common");
+  const a11yT = useA11yTranslations();
   const [documents, setDocuments] = useState<SourceDocument[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleteTarget, setDeleteTarget] = useState<SourceDocument | null>(null);
@@ -60,8 +65,8 @@ export function SourceDocuments({
       onDocumentsChange?.(nextDocuments);
     } catch (error) {
       showErrorToast(error, {
-        title: "Could not load source files",
-        fallbackDescription: "Please refresh the page and try again.",
+        title: t("errors.loadTitle"),
+        fallbackDescription: t("errors.loadDescription"),
       });
     } finally {
       setLoading(false);
@@ -124,8 +129,8 @@ export function SourceDocuments({
       onDelete?.();
     } catch (err) {
       showErrorToast(err, {
-        title: "Could not delete source file",
-        fallbackDescription: "Please try deleting the file again.",
+        title: t("errors.deleteOneTitle"),
+        fallbackDescription: t("errors.deleteOneDescription"),
       });
     } finally {
       setDeleting(false);
@@ -153,8 +158,8 @@ export function SourceDocuments({
       onDelete?.();
     } catch (err) {
       showErrorToast(err, {
-        title: "Could not delete source files",
-        fallbackDescription: "Please try deleting the selected files again.",
+        title: t("errors.deleteManyTitle"),
+        fallbackDescription: t("errors.deleteManyDescription"),
       });
     } finally {
       setDeleting(false);
@@ -175,14 +180,14 @@ export function SourceDocuments({
             checked={allSelected}
             onChange={toggleAllDocuments}
             className="h-4 w-4 rounded border-input accent-primary"
-            aria-label="Select all source files"
+            aria-label={a11yT("selectAllSourceFiles")}
           />
-          Source Files
+          {t("sourceFiles")}
         </label>
         {selectedCount > 0 && (
           <div className="flex items-center gap-3">
             <span className="text-sm text-muted-foreground">
-              {selectedCount} selected
+              {t("selected", { count: selectedCount })}
             </span>
             <Button
               variant="destructive"
@@ -190,7 +195,7 @@ export function SourceDocuments({
               onClick={() => setBulkDeleteDialogOpen(true)}
             >
               <Trash2 className="h-4 w-4 mr-2" />
-              Delete Selected
+              {t("actions.deleteSelected")}
             </Button>
           </div>
         )}
@@ -217,7 +222,7 @@ export function SourceDocuments({
               }}
               onClick={(e) => e.stopPropagation()}
               className="h-4 w-4 shrink-0 rounded border-input accent-primary"
-              aria-label={`Select ${doc.filename}`}
+              aria-label={t("actions.selectFile", { filename: doc.filename })}
             />
             <FileText className="h-5 w-5 shrink-0 text-muted-foreground" />
             <div className="min-w-0 flex-1">
@@ -236,7 +241,7 @@ export function SourceDocuments({
                 e.stopPropagation();
                 setDeleteTarget(doc);
               }}
-              aria-label={`Delete ${doc.filename}`}
+              aria-label={t("actions.deleteFile", { filename: doc.filename })}
             >
               <Trash2 className="h-4 w-4" />
             </Button>
@@ -250,12 +255,13 @@ export function SourceDocuments({
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete source document?</DialogTitle>
+            <DialogTitle>{t("deleteOne.title")}</DialogTitle>
             <DialogDescription>
-              This will permanently delete{" "}
-              <strong>{deleteTarget?.filename}</strong> and all{" "}
-              {pluralize(deleteTarget?.chunkCount ?? 0, "associated bullet")}.
-              This action cannot be undone.
+              {t.rich("deleteOne.description", {
+                filename: deleteTarget?.filename ?? "",
+                count: deleteTarget?.chunkCount ?? 0,
+                strong: (chunks) => <strong>{chunks}</strong>,
+              })}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -264,7 +270,7 @@ export function SourceDocuments({
               onClick={() => setDeleteTarget(null)}
               disabled={deleting}
             >
-              Cancel
+              {commonT("cancel")}
             </Button>
             <Button
               variant="destructive"
@@ -272,7 +278,7 @@ export function SourceDocuments({
               disabled={deleting}
             >
               {deleting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              Delete
+              {commonT("delete")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -284,11 +290,9 @@ export function SourceDocuments({
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete selected source files?</DialogTitle>
+            <DialogTitle>{t("deleteMany.title")}</DialogTitle>
             <DialogDescription>
-              This will permanently delete{" "}
-              {pluralize(selectedCount, "source file")}
-              and all associated bullets. This action cannot be undone.
+              {t("deleteMany.description", { count: selectedCount })}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -297,7 +301,7 @@ export function SourceDocuments({
               onClick={() => setBulkDeleteDialogOpen(false)}
               disabled={deleting}
             >
-              Cancel
+              {commonT("cancel")}
             </Button>
             <Button
               variant="destructive"
@@ -305,7 +309,7 @@ export function SourceDocuments({
               disabled={deleting || selectedCount === 0}
             >
               {deleting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              Delete Selected
+              {t("actions.deleteSelected")}
             </Button>
           </DialogFooter>
         </DialogContent>

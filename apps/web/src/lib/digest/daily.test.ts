@@ -48,8 +48,6 @@ vi.mock("./match", () => ({
 
 import { runDailyDigest } from "./daily";
 
-const TEST_NOW = new Date("2026-05-10T08:00:00.000Z");
-
 const profile: Profile = {
   id: "profile-1",
   contact: { name: "Ada" },
@@ -75,6 +73,8 @@ function job(id: number): JobDescription {
 }
 
 describe("runDailyDigest", () => {
+  const digestNow = new Date("2026-05-10T08:00:00.000Z");
+
   beforeEach(() => {
     vi.clearAllMocks();
     process.env.NEXTAUTH_SECRET = "secret";
@@ -97,7 +97,7 @@ describe("runDailyDigest", () => {
     const sender = vi.fn().mockResolvedValue({ ok: true, status: 202 });
 
     const result = await runDailyDigest({
-      now: TEST_NOW,
+      now: digestNow,
       sender,
     });
 
@@ -120,7 +120,7 @@ describe("runDailyDigest", () => {
   it("skips users already sent today", async () => {
     mocks.hasDailyDigestSentSince.mockReturnValue(true);
 
-    const result = await runDailyDigest({ now: TEST_NOW });
+    const result = await runDailyDigest({ now: digestNow });
 
     expect(result).toMatchObject({ sent: 0, skipped: 1, errors: 0 });
     expect(result.outcomes[0]).toMatchObject({ reason: "already_sent" });
@@ -136,7 +136,7 @@ describe("runDailyDigest", () => {
       },
     ]);
 
-    const result = await runDailyDigest({ now: TEST_NOW });
+    const result = await runDailyDigest({ now: digestNow });
 
     expect(result).toMatchObject({ sent: 0, skipped: 1, errors: 0 });
     expect(result.outcomes[0]).toMatchObject({ reason: "digest_disabled" });
@@ -145,7 +145,7 @@ describe("runDailyDigest", () => {
   it("skips when email is not configured without writing idempotency", async () => {
     mocks.isTransactionalEmailConfigured.mockReturnValue(false);
 
-    const result = await runDailyDigest({ now: TEST_NOW });
+    const result = await runDailyDigest({ now: digestNow });
 
     expect(result).toMatchObject({ sent: 0, skipped: 1, errors: 0 });
     expect(result.outcomes[0]).toMatchObject({
@@ -159,7 +159,7 @@ describe("runDailyDigest", () => {
       .fn()
       .mockResolvedValue({ ok: false, status: 500, error: "down" });
 
-    const result = await runDailyDigest({ now: TEST_NOW, sender });
+    const result = await runDailyDigest({ now: digestNow, sender });
 
     expect(result).toMatchObject({ sent: 0, skipped: 0, errors: 1 });
     expect(mocks.createEmailSend).toHaveBeenCalledWith(

@@ -10,14 +10,11 @@ import { getLocale } from "next-intl/server";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { FREE_TIER_TAILOR_MONTHLY_LIMIT } from "@/lib/constants";
+import { getA11yTranslations } from "@/lib/i18n/get-a11y-translations";
 import { getLocalizedPageMetadata } from "@/lib/seo";
 import { cn } from "@/lib/utils";
 
-export function generateMetadata({
-  params,
-}: {
-  params: { locale: string };
-}) {
+export function generateMetadata({ params }: { params: { locale: string } }) {
   return getLocalizedPageMetadata("pricing", params.locale);
 }
 
@@ -26,7 +23,7 @@ const tiers = [
     name: "Free",
     price: "$0",
     cadence: "forever",
-    description: "Start tailoring better applications with no credit card.",
+    description: `Create ${FREE_TIER_TAILOR_MONTHLY_LIMIT} tailored resumes each month. No credit card.`,
     icon: Sparkles,
     cta: "Start free",
     href: null,
@@ -44,7 +41,7 @@ const tiers = [
     cadence: "waitlist",
     description: "For active searches where every application needs polish.",
     icon: Rocket,
-    cta: "Join waitlist",
+    cta: "Email us for waitlist access",
     href: "mailto:waitlist@slothing.work?subject=Pro%20waitlist",
     highlighted: true,
     features: [
@@ -60,7 +57,7 @@ const tiers = [
     cadence: "with verification",
     description: "Lower pricing for students moving from class to career.",
     icon: GraduationCap,
-    cta: "Verify with .edu email",
+    cta: "Email us to verify student status",
     href: "mailto:students@slothing.work?subject=Student%20verification",
     highlighted: false,
     features: [
@@ -84,14 +81,77 @@ const faqs = [
       "Pro is waitlist-only while billing is being built. Joining the waitlist helps us prioritize access.",
   },
   {
+    question: "Can I cancel Pro anytime?",
+    answer:
+      "Yes. Pro is monthly and you can cancel before the next renewal from your account settings.",
+  },
+  {
+    question: "Are prices in USD?",
+    answer: "Yes. Local taxes may apply depending on your billing country.",
+  },
+  {
+    question: "What happens to my Free tier resumes if I upgrade?",
+    answer:
+      "All resumes you've already generated stay in your account. Upgrading just removes the monthly cap.",
+  },
+  {
+    question: "When does Pro launch?",
+    answer:
+      "We will email everyone on the waitlist when Pro is ready. We are not promising a launch date until billing is live.",
+  },
+  {
+    question: "Is there a refund policy?",
+    answer:
+      "Yes. If Pro does not fit your search, contact support within 14 days of purchase and we will review the charge.",
+  },
+  {
+    question: "Is annual pricing available?",
+    answer:
+      "Not yet. Pro will launch as a monthly plan first so you can keep it only while your search is active.",
+  },
+  {
     question: "How does Student verification work?",
     answer:
       "Email from a school account and we will follow up with the lightweight verification path.",
   },
 ] as const;
 
+const comparisonRows = [
+  {
+    feature: "Tailored resumes",
+    free: `${FREE_TIER_TAILOR_MONTHLY_LIMIT}/month`,
+    pro: "Unlimited",
+    student: "Unlimited after verification",
+  },
+  {
+    feature: "Generation priority",
+    free: "Standard",
+    pro: "Priority",
+    student: "Priority",
+  },
+  {
+    feature: "Resume variants",
+    free: "Core tailoring",
+    pro: "Advanced variants",
+    student: "Advanced variants",
+  },
+  {
+    feature: "New tools",
+    free: "General release",
+    pro: "Early access",
+    student: "Early access",
+  },
+  {
+    feature: "Best for",
+    free: "Light search",
+    pro: "Active search",
+    student: "Students and new grads",
+  },
+] as const;
+
 export default async function PricingPage() {
   const locale = await getLocale();
+  const a11yT = await getA11yTranslations();
   const callbackUrl = `/${locale}/dashboard`;
 
   return (
@@ -100,7 +160,7 @@ export default async function PricingPage() {
         <div className="mx-auto max-w-3xl text-center">
           <div className="mb-6 inline-flex items-center gap-2 rounded-lg border bg-card px-3 py-2 text-sm font-medium text-muted-foreground">
             <Hourglass className="h-4 w-4 text-primary" />
-            Pro is opening from the waitlist
+            Pro is invite-only while billing ships. Email us for early access.
           </div>
           <h1 className="text-4xl font-bold tracking-tight md:text-5xl">
             Pricing for every job search pace
@@ -147,7 +207,7 @@ export default async function PricingPage() {
                       {tier.cadence}
                     </span>
                   </div>
-                  <p className="mt-4 min-h-14 text-sm text-muted-foreground">
+                  <p className="mt-4 text-sm text-muted-foreground">
                     {tier.description}
                   </p>
                 </div>
@@ -170,7 +230,7 @@ export default async function PricingPage() {
                           query: { callbackUrl },
                         }}
                         prefetch={false}
-                        aria-label="Start free with Slothing"
+                        aria-label={a11yT("startFreeWithSlothing")}
                       >
                         {tier.cta}
                       </Link>
@@ -183,6 +243,8 @@ export default async function PricingPage() {
                     >
                       <a
                         href={tier.href ?? "#"}
+                        target="_blank"
+                        rel="noopener noreferrer"
                         data-pro-cta={
                           tier.name === "Pro" ? "waitlist" : undefined
                         }
@@ -197,11 +259,63 @@ export default async function PricingPage() {
           })}
         </div>
 
+        <section
+          className="mt-10 overflow-hidden rounded-lg border bg-card"
+          aria-labelledby="plan-comparison-heading"
+        >
+          <div className="border-b px-5 py-4">
+            <h2
+              id="plan-comparison-heading"
+              className="text-lg font-semibold tracking-tight"
+            >
+              Compare plans
+            </h2>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[680px] text-left text-sm">
+              <thead className="bg-muted/40 text-muted-foreground">
+                <tr>
+                  <th className="px-5 py-3 font-medium" scope="col">
+                    Feature
+                  </th>
+                  <th className="px-5 py-3 font-medium" scope="col">
+                    Free
+                  </th>
+                  <th className="px-5 py-3 font-medium" scope="col">
+                    Pro
+                  </th>
+                  <th className="px-5 py-3 font-medium" scope="col">
+                    Student
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y">
+                {comparisonRows.map((row) => (
+                  <tr key={row.feature}>
+                    <th className="px-5 py-4 font-medium" scope="row">
+                      {row.feature}
+                    </th>
+                    <td className="px-5 py-4 text-muted-foreground">
+                      {row.free}
+                    </td>
+                    <td className="px-5 py-4 font-medium text-primary">
+                      {row.pro}
+                    </td>
+                    <td className="px-5 py-4 text-muted-foreground">
+                      {row.student}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
         <section className="mt-16 border-t pt-10">
           <h2 className="text-2xl font-semibold tracking-tight">
             Plan questions
           </h2>
-          <div className="mt-6 grid gap-6 md:grid-cols-3">
+          <div className="mt-6 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {faqs.map((faq) => (
               <div key={faq.question}>
                 <h3 className="font-medium">{faq.question}</h3>

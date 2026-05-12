@@ -21,6 +21,7 @@ export const SITE_DESCRIPTION =
 const DEFAULT_SITE_URL = "https://slothing.work";
 const DEFAULT_LOCALE = "en_US";
 const DEFAULT_TWITTER_CARD = "summary_large_image";
+export const CANONICAL_ROUTE_PATH_HEADER = "x-slothing-route-path";
 
 const pages = {
   dashboard: {

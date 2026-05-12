@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { SignInCard } from "./sign-in-card";
+import { AuthDisabledCard, SignInCard } from "./sign-in-card";
 
 const signInMock = vi.hoisted(() => vi.fn());
 
@@ -146,5 +146,43 @@ describe("SignInCard", () => {
     resolveSignIn({ ok: true });
 
     expect(await screen.findByText("Check your inbox")).toBeInTheDocument();
+  });
+});
+
+describe("AuthDisabledCard", () => {
+  it("renders the disabled auth state with the dev dashboard action", () => {
+    const { asFragment } = render(
+      <AuthDisabledCard locale="en" showDevDashboardLink />,
+    );
+
+    expect(asFragment()).toMatchSnapshot();
+    expect(
+      screen.getByRole("heading", {
+        name: "Sign-in is disabled in this environment",
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/without Google OAuth credentials/i),
+    ).toBeInTheDocument();
+    expect(screen.getByText("GOOGLE_CLIENT_ID")).toBeInTheDocument();
+    expect(screen.getByText("GOOGLE_CLIENT_SECRET")).toBeInTheDocument();
+    expect(screen.getByText("NEXTAUTH_SECRET")).toBeInTheDocument();
+    expect(screen.getByText(".env.example")).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", {
+        name: "Continue to dashboard (dev mode)",
+      }),
+    ).toHaveAttribute("href", "/en/dashboard");
+  });
+
+  it("omits the dev dashboard action in production mode", () => {
+    render(<AuthDisabledCard locale="en" showDevDashboardLink={false} />);
+
+    expect(
+      screen.queryByRole("link", {
+        name: "Continue to dashboard (dev mode)",
+      }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByText("Contact your administrator.")).toBeInTheDocument();
   });
 });

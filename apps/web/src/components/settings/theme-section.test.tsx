@@ -46,7 +46,7 @@ describe("ThemeSection", () => {
       screen.getByRole("button", { name: /select warm earth theme/i }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /select neon theme/i }),
+      screen.getByRole("button", { name: /select electric theme/i }),
     ).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: /select premium theme/i }),
@@ -57,7 +57,7 @@ describe("ThemeSection", () => {
     renderThemeSection();
 
     fireEvent.click(
-      await screen.findByRole("button", { name: /select neon theme/i }),
+      await screen.findByRole("button", { name: /select electric theme/i }),
     );
 
     await waitFor(() => {

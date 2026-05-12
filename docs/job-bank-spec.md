@@ -221,7 +221,7 @@ POST   /api/opportunities/:id/link     — Link resume/cover letter to opportuni
 
 New table `opportunities` with all fields from the schema above. Indexed on: status, type, source, deadline, createdAt. Full-text search on title + company + summary.
 
-For MVP (no Neon): use localStorage like Document Studio. Migration path to Neon same as rest of app.
+For MVP (no Turso): use localStorage like Document Studio. Migration path to Turso same as rest of app.
 
 ## Implementation Phases
 
