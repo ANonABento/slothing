@@ -146,6 +146,18 @@ export interface SimilarAnswer {
   timesUsed: number;
 }
 
+// Answer-bank match result returned by /api/answer-bank/match.
+// Differs from SimilarAnswer (legacy /api/extension/learned-answers/search):
+// the match route returns a normalized `score` (0..1) and an optional category
+// rather than `similarity` + `timesUsed`.
+export interface AnswerBankMatch {
+  id: string;
+  question: string;
+  answer: string;
+  score: number;
+  category?: string;
+}
+
 // Message types for background/content communication
 export type MessageType =
   | "GET_PROFILE"
@@ -163,6 +175,7 @@ export type MessageType =
   | "LIST_RESUMES"
   | "SAVE_ANSWER"
   | "SEARCH_ANSWERS"
+  | "MATCH_ANSWER_BANK"
   | "GET_LEARNED_ANSWERS"
   | "DELETE_ANSWER"
   | "GET_AUTH_STATUS"

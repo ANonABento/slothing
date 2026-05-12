@@ -1,6 +1,7 @@
 // Message passing utilities for extension communication
 
 import type {
+  AnswerBankMatch,
   ExtensionMessage,
   ExtensionResponse,
   ExtensionProfile,
@@ -89,6 +90,13 @@ export const Messages = {
     type: "SEARCH_ANSWERS",
     payload: question,
   }),
+  matchAnswerBank: (payload: {
+    q: string;
+    limit?: number;
+  }): ExtensionMessage<{ q: string; limit?: number }> => ({
+    type: "MATCH_ANSWER_BANK",
+    payload,
+  }),
 
   jobDetected: (
     meta: Pick<ScrapedJob, "title" | "company" | "url">,
@@ -174,6 +182,10 @@ export interface SearchAnswersResponse extends ExtensionResponse<
 export interface ListResumesResponse extends ExtensionResponse<{
   resumes: ExtensionResumeSummary[];
 }> {}
+
+export interface MatchAnswerBankResponse extends ExtensionResponse<
+  AnswerBankMatch[]
+> {}
 
 export type WwPageKind = "list" | "detail" | "other";
 
