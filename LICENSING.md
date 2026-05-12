@@ -43,8 +43,8 @@ The AGPL means:
 
 The `apps/web/src/cloud/` directory contains hosted-only features that power
 **slothing.work**. These files are governed by a separate proprietary license
-([LICENSE-CLOUD](./apps/web/src/cloud/LICENSE-CLOUD), present once Phase 3 ships)
-and are **not covered by AGPL**.
+([LICENSE-CLOUD](./apps/web/src/cloud/LICENSE-CLOUD)) and are **not covered by
+AGPL**.
 
 This carve-out covers:
 

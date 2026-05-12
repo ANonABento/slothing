@@ -2,9 +2,16 @@ import createNextIntlPlugin from 'next-intl/plugin';
 
 const withNextIntl = createNextIntlPlugin('./src/i18n.ts');
 
+const isCloudBuild = process.env.SLOTHING_CLOUD === '1';
+const baseExtensions = ['tsx', 'ts', 'jsx', 'js'];
+const cloudExtensions = ['cloud.tsx', 'cloud.ts'];
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   distDir: process.env.NEXT_DIST_DIR || '.next',
+  pageExtensions: isCloudBuild
+    ? [...cloudExtensions, ...baseExtensions]
+    : baseExtensions,
   async redirects() {
     return [
       {
