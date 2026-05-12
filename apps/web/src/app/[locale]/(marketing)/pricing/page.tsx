@@ -1,19 +1,20 @@
 import {
   Check,
-  GraduationCap,
+  Github,
+  HardDrive,
   Hourglass,
+  KeyRound,
   Lock,
   Rocket,
   ShieldCheck,
   Sparkles,
   Trash2,
+  Zap,
 } from "lucide-react";
 import { getLocale } from "next-intl/server";
 
 import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
-import { FREE_TIER_TAILOR_MONTHLY_LIMIT } from "@/lib/constants";
-import { getA11yTranslations } from "@/lib/i18n/get-a11y-translations";
 import { getLocalizedPageMetadata } from "@/lib/seo";
 import { cn } from "@/lib/utils";
 
@@ -21,144 +22,212 @@ export function generateMetadata({ params }: { params: { locale: string } }) {
   return getLocalizedPageMetadata("pricing", params.locale);
 }
 
-const tiers = [
+const SLOTHING_REPO_URL = "https://github.com/ANonABento/slothing";
+
+type TierCta =
+  | { kind: "internal"; pathname: string }
+  | { kind: "external"; href: string };
+
+interface Tier {
+  name: string;
+  price: string;
+  cadence: string;
+  description: string;
+  icon: typeof Sparkles;
+  cta: string;
+  ctaAction: TierCta;
+  highlighted: boolean;
+  ctaNote: string;
+  badge?: string;
+  features: readonly string[];
+}
+
+const tiers: readonly Tier[] = [
   {
-    name: "Free",
+    name: "Self-host",
     price: "$0",
     cadence: "forever",
-    description: `Create ${FREE_TIER_TAILOR_MONTHLY_LIMIT} tailored resumes each month. No credit card.`,
-    icon: Sparkles,
-    cta: "Start free",
-    href: null,
+    description:
+      "The whole app, AGPL-3.0, run on your own machine. Your data never leaves your laptop. Bring any LLM (Ollama, OpenAI, Anthropic, OpenRouter).",
+    icon: HardDrive,
+    cta: "View on GitHub",
+    ctaAction: { kind: "external", href: SLOTHING_REPO_URL },
     highlighted: false,
-    ctaNote: "",
+    ctaNote: "MIT-style ease, AGPL-grade freedom.",
+    badge: "Open source",
     features: [
-      `${FREE_TIER_TAILOR_MONTHLY_LIMIT} tailored resumes/month`,
-      "Free ATS scanner",
-      "Career profile uploads",
-      "Application tracker",
+      "Full feature set",
+      "All AI tools (with your keys)",
+      "Columbus browser extension",
+      "Self-hosted, no telemetry",
+      "AGPL-3.0 licensed",
     ],
   },
   {
-    name: "Pro",
-    price: "$8/mo",
-    cadence: "waitlist",
+    name: "Hosted Free",
+    price: "$0",
+    cadence: "bring your own key",
     description:
-      "For active searches where every application needs polish. Billing is not live yet — joining the waitlist costs nothing.",
-    icon: Rocket,
-    cta: "Email us for waitlist access",
-    href: "mailto:waitlist@slothing.work?subject=Pro%20waitlist",
-    highlighted: true,
-    ctaNote: "No payment or card required to join.",
+      "Skip the setup. Sign in, paste your OpenAI / Anthropic / OpenRouter key, and use Slothing.work with zero billing from us.",
+    icon: KeyRound,
+    cta: "Start with your key",
+    ctaAction: { kind: "internal", pathname: "/sign-in" },
+    highlighted: false,
+    ctaNote: "No credit card. Your key, your provider bill.",
     features: [
-      "Unlimited tailored resumes",
+      "Hosted at slothing.work",
+      "Bring your own LLM key (BYOK)",
+      "Full tracker + Studio + extension",
+      "Cancel any time — it's free",
+    ],
+  },
+  {
+    name: "Weekly",
+    price: "$6.99",
+    cadence: "per week",
+    description:
+      "Sprint pricing for active job searches. Slothing should help you land fast — pay only for the weeks you need.",
+    icon: Zap,
+    cta: "Email us for early access",
+    ctaAction: {
+      kind: "external",
+      href: "mailto:waitlist@slothing.work?subject=Weekly%20plan%20early%20access",
+    },
+    highlighted: false,
+    ctaNote: "Billing launches soon. No card needed to join the waitlist.",
+    features: [
+      "Everything in Hosted Free",
+      "Slothing-provided AI credits",
       "Priority generation",
+      "Cancel any time, week-by-week",
+    ],
+  },
+  {
+    name: "Monthly",
+    price: "$19.99",
+    cadence: "per month",
+    description:
+      "The default plan for serious job searches. Roughly 28% cheaper than weekly when you commit to a full month.",
+    icon: Rocket,
+    cta: "Email us for early access",
+    ctaAction: {
+      kind: "external",
+      href: "mailto:waitlist@slothing.work?subject=Monthly%20plan%20early%20access",
+    },
+    highlighted: true,
+    ctaNote: "Billing launches soon. No card needed to join the waitlist.",
+    badge: "Most popular",
+    features: [
+      "Everything in Weekly",
+      "Larger monthly credit pool",
       "Advanced resume variants",
       "Early access to new tools",
-    ],
-  },
-  {
-    name: "Student",
-    price: "$3/mo",
-    cadence: "with verification",
-    description: "Lower pricing for students moving from class to career.",
-    icon: GraduationCap,
-    cta: "Email us to verify student status",
-    href: "mailto:students@slothing.work?subject=Student%20verification",
-    highlighted: false,
-    ctaNote: "No payment until verification is complete.",
-    features: [
-      "Unlimited tailored resumes",
-      "Student-friendly pricing",
-      "Internship and early-career workflows",
-      "All Pro features after verification",
     ],
   },
 ] as const;
 
 const faqs = [
   {
-    question: "Do I need a credit card for Free?",
+    question: "Why weekly billing?",
     answer:
-      "No. Start with the ATS scanner, your career profile, tracker, and five tailored resumes each month.",
+      "Slothing should make your search shorter, not longer. Weekly billing means you only pay for the weeks you actively need help. Landed an offer in three weeks? Cancel and stop paying. Most tools charge monthly or yearly because that's better for them — weekly is better for you.",
   },
   {
-    question: "Can I buy Pro today?",
+    question: "What's BYOK (bring your own key)?",
     answer:
-      "Pro is waitlist-only while billing is being built. Joining the waitlist helps us prioritize access.",
+      "On the Hosted Free tier, AI features run against your own OpenAI, Anthropic, or OpenRouter API key. We never proxy your data through our LLM bill, so your usage is your problem — and your privacy. Paste your key in Settings; it's stored encrypted and only sent directly to the provider you chose.",
   },
   {
-    question: "Can I cancel Pro anytime?",
+    question: "Can I really self-host?",
     answer:
-      "Yes. Pro is monthly and you can cancel before the next renewal from your account settings.",
+      "Yes. Slothing is AGPL-3.0 open source. Clone the repo, run pnpm install, and you have the whole app on your machine — including the Columbus browser extension, Document Studio, opportunity tracker, and all AI features. See the Self-host quickstart in the README.",
+  },
+  {
+    question: "What's open source vs proprietary?",
+    answer:
+      "Almost everything is AGPL-3.0 open source. A small carve-out under apps/web/src/cloud/ contains the Stripe billing integration and credit ledger that power slothing.work — those files are proprietary so others can't clone the hosted business. Self-hosters don't need that code and the build excludes it by default.",
+  },
+  {
+    question: "Can I cancel anytime?",
+    answer:
+      "Yes. Weekly and Monthly both cancel from your account settings, no questions asked. Weekly stops at the end of your current week; Monthly stops at the end of your current month. No retention dark patterns — we want you to leave when you've landed an offer.",
   },
   {
     question: "Are prices in USD?",
-    answer: "Yes. Local taxes may apply depending on your billing country.",
+    answer:
+      "Yes. Local taxes may apply depending on your billing country.",
   },
   {
-    question: "What happens to my Free tier resumes if I upgrade?",
+    question: "What if I'm a student?",
     answer:
-      "All resumes you've already generated stay in your account. Upgrading just removes the monthly cap.",
-  },
-  {
-    question: "When does Pro launch?",
-    answer:
-      "We will email everyone on the waitlist when Pro is ready. We are not promising a launch date until billing is live.",
+      "Self-hosting is genuinely free forever, so the simplest answer is to run it yourself. We may bring back a discounted hosted Student plan in the future — email students@slothing.work if you want to be notified.",
   },
   {
     question: "Is there a refund policy?",
     answer:
-      "Cancellation stops future renewal; it does not automatically refund past use. Within 14 days of a charge, contact support@slothing.work if you need a refund reviewed and we will consider it.",
+      "Cancellation stops future renewal; it does not automatically refund past use. Within 14 days of a charge, contact support@slothing.work and we will consider refund requests on a case-by-case basis.",
   },
   {
     question: "Is annual pricing available?",
     answer:
-      "Not yet. Pro will launch as a monthly plan first so you can keep it only while your search is active.",
-  },
-  {
-    question: "How does Student verification work?",
-    answer:
-      "Email from a school account and we will follow up with the lightweight verification path.",
+      "No, and we don't plan to add one. Annual pricing rewards staying subscribed forever, which is the opposite of what Slothing is for.",
   },
 ] as const;
 
 const comparisonRows = [
   {
+    feature: "Hosting",
+    selfHost: "Your machine",
+    free: "slothing.work",
+    weekly: "slothing.work",
+    monthly: "slothing.work",
+  },
+  {
+    feature: "AI provider",
+    selfHost: "Any (Ollama, BYOK)",
+    free: "Bring your own key",
+    weekly: "Slothing credits",
+    monthly: "Slothing credits",
+  },
+  {
     feature: "Tailored resumes",
-    free: `${FREE_TIER_TAILOR_MONTHLY_LIMIT}/month`,
-    pro: "Unlimited",
-    student: "Unlimited after verification",
+    selfHost: "Unlimited (your compute)",
+    free: "Unlimited (your key)",
+    weekly: "Generous credits",
+    monthly: "Larger pool",
   },
   {
     feature: "Generation priority",
+    selfHost: "Local",
     free: "Standard",
-    pro: "Priority",
-    student: "Priority",
+    weekly: "Priority",
+    monthly: "Priority",
   },
   {
     feature: "Resume variants",
-    free: "Core tailoring",
-    pro: "Advanced variants",
-    student: "Advanced variants",
+    selfHost: "Advanced",
+    free: "Core",
+    weekly: "Core",
+    monthly: "Advanced",
   },
   {
     feature: "New tools",
+    selfHost: "Self-merge",
     free: "General release",
-    pro: "Early access",
-    student: "Early access",
+    weekly: "Early access",
+    monthly: "Early access",
   },
   {
     feature: "Best for",
-    free: "Light search",
-    pro: "Active search",
-    student: "Students and new grads",
+    selfHost: "Devs, privacy fans",
+    free: "Testing with your key",
+    weekly: "3–4 week sprint",
+    monthly: "Active multi-month search",
   },
 ] as const;
 
 export default async function PricingPage() {
   const locale = await getLocale();
-  const a11yT = await getA11yTranslations();
   const callbackUrl = `/${locale}/dashboard`;
 
   return (
@@ -166,22 +235,29 @@ export default async function PricingPage() {
       <section className="mx-auto max-w-6xl">
         <div className="mx-auto max-w-3xl text-center">
           <div className="mb-6 inline-flex items-center gap-2 rounded-lg border bg-card px-3 py-2 text-sm font-medium text-muted-foreground">
-            <Hourglass className="h-4 w-4 text-primary" />
-            Pro is invite-only while billing ships. Email us for early access.
+            <Github className="h-4 w-4 text-primary" />
+            Self-host today, AGPL-3.0. Hosted plans launching soon.
           </div>
           <h1 className="text-4xl font-bold tracking-tight md:text-5xl">
-            Pricing for every job search pace
+            Pay for the weeks you need. Not a day more.
           </h1>
           <p className="mx-auto mt-4 max-w-2xl text-lg text-muted-foreground">
-            Start free, keep the cap honest, and move to Pro or Student when
-            your search needs unlimited tailored resumes.
+            Slothing is open source. Run it free on your own machine, or pay a
+            small convenience fee for the hosted version at slothing.work — by
+            the week or by the month.
           </p>
         </div>
 
-        <div className="mt-12 grid gap-6 lg:grid-cols-3">
+        <div className="mt-12 grid gap-6 lg:grid-cols-4">
           {tiers.map((tier) => {
             const Icon = tier.icon;
-            const isFree = tier.name === "Free";
+            const isInternal = tier.ctaAction.kind === "internal";
+            const internalPath =
+              tier.ctaAction.kind === "internal"
+                ? tier.ctaAction.pathname
+                : null;
+            const externalHref =
+              tier.ctaAction.kind === "external" ? tier.ctaAction.href : null;
 
             return (
               <article
@@ -191,16 +267,16 @@ export default async function PricingPage() {
                   tier.highlighted && "border-primary ring-2 ring-primary/30",
                 )}
               >
-                <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
                     <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-primary/10 text-primary">
                       <Icon className="h-5 w-5" />
                     </div>
                     <h2 className="text-2xl font-semibold">{tier.name}</h2>
                   </div>
-                  {tier.highlighted && (
-                    <span className="rounded-lg bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
-                      Most flexible
+                  {tier.badge && (
+                    <span className="rounded-lg bg-primary/10 px-2 py-1 text-xs font-semibold text-primary">
+                      {tier.badge}
                     </span>
                   )}
                 </div>
@@ -228,16 +304,15 @@ export default async function PricingPage() {
                   ))}
                 </ul>
 
-                <div className="mt-8">
-                  {isFree ? (
+                <div className="mt-auto pt-8">
+                  {isInternal && internalPath ? (
                     <Button asChild className="w-full">
                       <Link
                         href={{
-                          pathname: "/sign-in",
+                          pathname: internalPath,
                           query: { callbackUrl },
                         }}
                         prefetch={false}
-                        aria-label={a11yT("startFreeWithSlothing")}
                       >
                         {tier.cta}
                       </Link>
@@ -249,12 +324,12 @@ export default async function PricingPage() {
                       variant={tier.highlighted ? "default" : "outline"}
                     >
                       <a
-                        href={tier.href ?? "#"}
+                        href={externalHref ?? "#"}
                         target="_blank"
                         rel="noopener noreferrer"
-                        data-pro-cta={
-                          tier.name === "Pro" ? "waitlist" : undefined
-                        }
+                        data-tier-cta={tier.name
+                          .toLowerCase()
+                          .replace(/\s+/g, "-")}
                       >
                         {tier.cta}
                       </a>
@@ -284,20 +359,23 @@ export default async function PricingPage() {
             </h2>
           </div>
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[680px] text-left text-sm">
+            <table className="w-full min-w-[820px] text-left text-sm">
               <thead className="bg-muted/40 text-muted-foreground">
                 <tr>
                   <th className="px-5 py-3 font-medium" scope="col">
                     Feature
                   </th>
                   <th className="px-5 py-3 font-medium" scope="col">
-                    Free
+                    Self-host
                   </th>
                   <th className="px-5 py-3 font-medium" scope="col">
-                    Pro
+                    Hosted Free
                   </th>
                   <th className="px-5 py-3 font-medium" scope="col">
-                    Student
+                    Weekly
+                  </th>
+                  <th className="px-5 py-3 font-medium" scope="col">
+                    Monthly
                   </th>
                 </tr>
               </thead>
@@ -308,13 +386,16 @@ export default async function PricingPage() {
                       {row.feature}
                     </th>
                     <td className="px-5 py-4 text-muted-foreground">
-                      {row.free}
-                    </td>
-                    <td className="px-5 py-4 font-medium text-primary">
-                      {row.pro}
+                      {row.selfHost}
                     </td>
                     <td className="px-5 py-4 text-muted-foreground">
-                      {row.student}
+                      {row.free}
+                    </td>
+                    <td className="px-5 py-4 text-muted-foreground">
+                      {row.weekly}
+                    </td>
+                    <td className="px-5 py-4 font-medium text-primary">
+                      {row.monthly}
                     </td>
                   </tr>
                 ))}
@@ -352,7 +433,7 @@ export default async function PricingPage() {
           <p className="mt-2 text-sm text-muted-foreground">
             What Slothing does — and does not — do with your data.
           </p>
-          <div className="mt-6 grid gap-6 md:grid-cols-3">
+          <div className="mt-6 grid gap-6 md:grid-cols-4">
             <div>
               <Lock className="mb-3 h-5 w-5 text-primary" />
               <h3 className="font-medium">Encrypted in transit</h3>
@@ -367,6 +448,22 @@ export default async function PricingPage() {
               <p className="mt-2 text-sm text-muted-foreground">
                 We do not sell your personal job search data. Third parties only
                 process data needed to operate features you enable.
+              </p>
+            </div>
+            <div>
+              <Sparkles className="mb-3 h-5 w-5 text-primary" />
+              <h3 className="font-medium">Open source</h3>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Every line of code that touches your résumé is{" "}
+                <a
+                  href={SLOTHING_REPO_URL}
+                  className="text-primary hover:underline"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  on GitHub
+                </a>{" "}
+                under AGPL-3.0. Audit it, fork it, self-host it.
               </p>
             </div>
             <div>
@@ -391,6 +488,36 @@ export default async function PricingPage() {
             any application. Slothing does not guarantee hiring outcomes,
             interview results, or offer decisions.
           </p>
+        </section>
+
+        <section className="mt-16 flex flex-col items-center gap-4 rounded-lg border border-primary/30 bg-primary/5 p-8 text-center">
+          <Hourglass className="h-8 w-8 text-primary" />
+          <h2 className="text-xl font-semibold">Hosted billing launches soon</h2>
+          <p className="max-w-xl text-sm text-muted-foreground">
+            Weekly and Monthly plans are live as a waitlist while Stripe
+            billing ships. Self-hosting is fully available today.
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <Button asChild>
+              <a
+                href="mailto:waitlist@slothing.work?subject=Hosted%20plan%20waitlist"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Join the waitlist
+              </a>
+            </Button>
+            <Button asChild variant="outline">
+              <a
+                href={SLOTHING_REPO_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Github className="mr-2 h-4 w-4" />
+                Self-host on GitHub
+              </a>
+            </Button>
+          </div>
         </section>
       </section>
     </main>
