@@ -5,6 +5,7 @@ import type {
   ExtensionResponse,
   ScrapedJob,
   TrackedApplicationPayload,
+  SaveCorrectionPayload,
 } from "@/shared/types";
 import type { TailorFromPagePayload } from "@/shared/messages";
 import { getAPIClient, resetAPIClient } from "./api-client";
@@ -103,6 +104,9 @@ async function handleMessage(
 
     case "DELETE_ANSWER":
       return handleDeleteAnswer(message.payload as string);
+
+    case "SAVE_CORRECTION":
+      return handleSaveCorrection(message.payload as SaveCorrectionPayload);
 
     case "JOB_DETECTED": {
       const tabId = sender.tab?.id;
@@ -446,6 +450,18 @@ async function handleDeleteAnswer(id: string): Promise<ExtensionResponse> {
     const client = await getAPIClient();
     await client.deleteLearnedAnswer(id);
     return { success: true };
+  } catch (error) {
+    return { success: false, error: (error as Error).message };
+  }
+}
+
+async function handleSaveCorrection(
+  payload: SaveCorrectionPayload,
+): Promise<ExtensionResponse> {
+  try {
+    const client = await getAPIClient();
+    const result = await client.saveCorrection(payload);
+    return { success: true, data: result };
   } catch (error) {
     return { success: false, error: (error as Error).message };
   }

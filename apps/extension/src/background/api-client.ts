@@ -7,6 +7,7 @@ import type {
   LearnedAnswer,
   SimilarAnswer,
   TrackedApplicationPayload,
+  SaveCorrectionPayload,
 } from "@/shared/types";
 import { createOpportunitySchema } from "@slothing/shared/schemas";
 import {
@@ -340,6 +341,22 @@ export class ColumbusAPIClient {
     return this.authenticatedFetch(`/api/extension/learned-answers/${id}`, {
       method: "PATCH",
       body: JSON.stringify({ answer }),
+    });
+  }
+
+  /**
+   * Persist a user correction so the per-domain field mapping grows stronger
+   * over time. See task #33 in docs/extension-roadmap-2026-05.md. The server
+   * upserts into `field_mappings`, bumping `hit_count` on existing rows and
+   * inserting fresh rows otherwise.
+   */
+  async saveCorrection(payload: SaveCorrectionPayload): Promise<{
+    saved: boolean;
+    hitCount: number;
+  }> {
+    return this.authenticatedFetch("/api/extension/field-mappings/correct", {
+      method: "POST",
+      body: JSON.stringify(payload),
     });
   }
 }
