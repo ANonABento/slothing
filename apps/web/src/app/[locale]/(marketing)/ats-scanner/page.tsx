@@ -19,7 +19,8 @@ const BENEFITS = [
   {
     icon: Sparkles,
     title: "Free and Private",
-    description: "Your resume is scored in your browser and nothing is stored",
+    description:
+      "We parse resumes on our servers, do not save them to your account, and do not share them",
   },
 ];
 

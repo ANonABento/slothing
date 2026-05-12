@@ -38,6 +38,7 @@ import {
   formatOpportunityFieldValue,
   type OpportunityFieldConfig,
 } from "./utils";
+import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 
 interface OpportunityResponse {
   job?: JobDescription;
@@ -244,6 +245,8 @@ export default function OpportunityDetailPage({
 }: {
   params: { id: string };
 }) {
+  const a11yT = useA11yTranslations();
+
   const [opportunity, setOpportunity] = useState<JobDescription | null>(null);
   const [loading, setLoading] = useState(true);
   const [editingField, setEditingField] = useState<string | null>(null);
@@ -459,7 +462,7 @@ export default function OpportunityDetailPage({
         <PageContent>
           <StandardEmptyState
             icon={XCircle}
-            title="Opportunity not found"
+            title={a11yT("opportunityNotFound")}
             description="This opportunity may have been deleted or is no longer available."
           />
         </PageContent>
@@ -516,7 +519,7 @@ export default function OpportunityDetailPage({
                   <Textarea
                     value={notes}
                     onChange={(event) => setNotes(event.target.value)}
-                    placeholder="Add private notes about this opportunity."
+                    placeholder={a11yT("addPrivateNotesAboutThisOpportunity")}
                     className="min-h-36"
                   />
                 </div>

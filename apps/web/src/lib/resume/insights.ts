@@ -47,10 +47,7 @@ export function clearInsightCache(userId: string): void {
   cache.delete(userId);
 }
 
-export function getInsights(
-  data: InsightData,
-  userId: string = "default",
-): Insight[] {
+export function getInsights(data: InsightData, userId: string): Insight[] {
   const cached = cache.get(userId);
   if (cached && nowEpoch() - cached.generatedAt < CACHE_TTL_MS) {
     return cached.insights;

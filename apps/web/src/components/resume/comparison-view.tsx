@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { cn, formatRelativeTime } from "@/lib/utils";
 import {
   GitCompare,
@@ -73,6 +74,7 @@ function DiffBadge({ type }: { type: DiffItem["type"] }) {
 }
 
 function DiffItemRow({ diff }: { diff: DiffItem }) {
+  const t = useTranslations("resume.comparison");
   const [expanded, setExpanded] = useState(false);
 
   return (
@@ -102,7 +104,7 @@ function DiffItemRow({ diff }: { diff: DiffItem }) {
               )}
             >
               <p className="text-xs font-medium text-muted-foreground mb-1">
-                Before
+                {t("before")}
               </p>
               <p className="text-sm whitespace-pre-wrap">{diff.oldValue}</p>
             </div>
@@ -115,7 +117,7 @@ function DiffItemRow({ diff }: { diff: DiffItem }) {
               )}
             >
               <p className="text-xs font-medium text-muted-foreground mb-1">
-                After
+                {t("after")}
               </p>
               <p className="text-sm whitespace-pre-wrap">{diff.newValue}</p>
             </div>
@@ -131,6 +133,7 @@ function ScoreChangeIndicator({
 }: {
   scoreChange: NonNullable<ResumeComparison["matchScoreChange"]>;
 }) {
+  const t = useTranslations("resume.comparison");
   const isPositive = scoreChange.change > 0;
   const isNegative = scoreChange.change < 0;
 
@@ -144,7 +147,7 @@ function ScoreChangeIndicator({
       )}
     >
       <div className="text-center">
-        <p className="text-xs text-muted-foreground">Before</p>
+        <p className="text-xs text-muted-foreground">{t("before")}</p>
         <p className="text-2xl font-bold">{scoreChange.before}%</p>
       </div>
 
@@ -169,7 +172,7 @@ function ScoreChangeIndicator({
       </div>
 
       <div className="text-center">
-        <p className="text-xs text-muted-foreground">After</p>
+        <p className="text-xs text-muted-foreground">{t("after")}</p>
         <p className="text-2xl font-bold">{scoreChange.after}%</p>
       </div>
     </div>
@@ -181,6 +184,7 @@ export function ComparisonView({
   afterId,
   onClose,
 }: ComparisonViewProps) {
+  const t = useTranslations("resume.comparison");
   const [data, setData] = useState<ComparisonData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -198,12 +202,12 @@ export function ComparisonView({
         const result = await res.json();
 
         if (!res.ok) {
-          throw new Error(result.error || "Failed to compare resumes");
+          throw new Error(result.error || t("errors.compare"));
         }
 
         setData(result);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Comparison failed");
+        setError(err instanceof Error ? err.message : t("errors.comparison"));
       } finally {
         setLoading(false);
       }
@@ -216,7 +220,7 @@ export function ComparisonView({
     return (
       <div className="rounded-xl border bg-card p-8 text-center">
         <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
-        <p className="mt-4 text-muted-foreground">Comparing resumes...</p>
+        <p className="mt-4 text-muted-foreground">{t("loading")}</p>
       </div>
     );
   }
@@ -224,9 +228,7 @@ export function ComparisonView({
   if (error || !data) {
     return (
       <div className="rounded-xl border bg-card p-8 text-center">
-        <p className="text-destructive">
-          {error || "Failed to load comparison"}
-        </p>
+        <p className="text-destructive">{error || t("errors.load")}</p>
       </div>
     );
   }
@@ -240,14 +242,14 @@ export function ComparisonView({
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <GitCompare className="h-5 w-5 text-primary" />
-            <h3 className="font-semibold">Resume Comparison</h3>
+            <h3 className="font-semibold">{t("title")}</h3>
           </div>
           {onClose && (
             <button
               onClick={onClose}
               className="text-sm text-muted-foreground hover:text-foreground"
             >
-              Close
+              {t("actions.close")}
             </button>
           )}
         </div>
@@ -257,26 +259,26 @@ export function ComparisonView({
           <div className="flex-1 p-3 rounded-lg bg-card border">
             <div className="flex items-center gap-2 text-muted-foreground mb-1">
               <Clock className="h-3.5 w-3.5" />
-              <span>Before</span>
+              <span>{t("before")}</span>
             </div>
             <p className="font-medium">
               {formatRelativeTime(before.createdAt)}
             </p>
             {before.matchScore && (
               <p className="text-xs text-muted-foreground">
-                Score: {before.matchScore}%
+                {t("score", { score: before.matchScore })}
               </p>
             )}
           </div>
           <div className="flex-1 p-3 rounded-lg bg-card border">
             <div className="flex items-center gap-2 text-muted-foreground mb-1">
               <Clock className="h-3.5 w-3.5" />
-              <span>After</span>
+              <span>{t("after")}</span>
             </div>
             <p className="font-medium">{formatRelativeTime(after.createdAt)}</p>
             {after.matchScore && (
               <p className="text-xs text-muted-foreground">
-                Score: {after.matchScore}%
+                {t("score", { score: after.matchScore })}
               </p>
             )}
           </div>
@@ -287,7 +289,7 @@ export function ComparisonView({
       {comparison.matchScoreChange && (
         <div className="p-4 border-b">
           <h4 className="text-sm font-medium text-muted-foreground mb-3">
-            Match Score Change
+            {t("matchScoreChange")}
           </h4>
           <ScoreChangeIndicator scoreChange={comparison.matchScoreChange} />
         </div>
@@ -299,28 +301,26 @@ export function ComparisonView({
           <p className="text-2xl font-bold text-success">
             {comparison.summary.additions}
           </p>
-          <p className="text-xs text-success">Additions</p>
+          <p className="text-xs text-success">{t("summary.additions")}</p>
         </div>
         <div className="text-center p-3 rounded-lg bg-destructive/10">
           <p className="text-2xl font-bold text-destructive">
             {comparison.summary.removals}
           </p>
-          <p className="text-xs text-destructive">Removals</p>
+          <p className="text-xs text-destructive">{t("summary.removals")}</p>
         </div>
         <div className="text-center p-3 rounded-lg bg-warning/10">
           <p className="text-2xl font-bold text-warning">
             {comparison.summary.modifications}
           </p>
-          <p className="text-xs text-warning">Changes</p>
+          <p className="text-xs text-warning">{t("summary.changes")}</p>
         </div>
       </div>
 
       {/* Diff list */}
       <div className="p-4 space-y-2 max-h-96 overflow-y-auto">
         {comparison.diffs.length === 0 ? (
-          <p className="text-center text-muted-foreground py-8">
-            No differences found between these versions.
-          </p>
+          <p className="text-center text-muted-foreground py-8">{t("empty")}</p>
         ) : (
           comparison.diffs.map((diff, i) => <DiffItemRow key={i} diff={diff} />)
         )}

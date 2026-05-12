@@ -1,22 +1,26 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { Sparkles, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LocaleSwitcherCompact } from "@/components/i18n/locale-switcher";
 import { Link } from "@/i18n/navigation";
+import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 
 const navLinks = [
-  { name: "Features", href: "#features" },
-  { name: "Extension", href: "/extension" },
-  { name: "How It Works", href: "#how-it-works" },
-  { name: "Pricing", href: "/pricing" },
-];
+  { labelKey: "features", href: "#features" },
+  { labelKey: "extension", href: "/extension" },
+  { labelKey: "howItWorks", href: "#how-it-works" },
+  { labelKey: "pricing", href: "/pricing" },
+] as const;
 
 export function Navbar() {
+  const a11yT = useA11yTranslations();
+
   const locale = useLocale();
+  const t = useTranslations("marketing.nav");
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const callbackUrl = `/${locale}/dashboard`;
@@ -56,20 +60,20 @@ export function Navbar() {
             {navLinks.map((link) =>
               link.href.startsWith("#") ? (
                 <a
-                  key={link.name}
+                  key={link.labelKey}
                   href={link.href}
                   className="inline-flex min-h-11 items-center text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
                 >
-                  {link.name}
+                  {t(link.labelKey)}
                 </a>
               ) : (
                 <Link
-                  key={link.name}
+                  key={link.labelKey}
                   href={link.href}
                   prefetch={false}
                   className="inline-flex min-h-11 items-center text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
                 >
-                  {link.name}
+                  {t(link.labelKey)}
                 </Link>
               ),
             )}
@@ -83,7 +87,7 @@ export function Navbar() {
                 href={{ pathname: "/sign-in", query: { callbackUrl } }}
                 prefetch={false}
               >
-                Sign In
+                {t("signIn")}
               </Link>
             </Button>
             <Button
@@ -94,7 +98,7 @@ export function Navbar() {
                 href={{ pathname: "/sign-in", query: { callbackUrl } }}
                 prefetch={false}
               >
-                Get Started
+                {t("getStarted")}
               </Link>
             </Button>
           </div>
@@ -103,7 +107,7 @@ export function Navbar() {
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
             className="flex h-11 w-11 items-center justify-center text-muted-foreground hover:text-foreground md:hidden"
-            aria-label="Toggle menu"
+            aria-label={a11yT("toggleMenu")}
           >
             {mobileOpen ? (
               <X className="h-6 w-6" />
@@ -120,22 +124,22 @@ export function Navbar() {
               {navLinks.map((link) =>
                 link.href.startsWith("#") ? (
                   <a
-                    key={link.name}
+                    key={link.labelKey}
                     href={link.href}
                     onClick={() => setMobileOpen(false)}
                     className="flex min-h-11 items-center text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
                   >
-                    {link.name}
+                    {t(link.labelKey)}
                   </a>
                 ) : (
                   <Link
-                    key={link.name}
+                    key={link.labelKey}
                     href={link.href}
                     prefetch={false}
                     onClick={() => setMobileOpen(false)}
                     className="flex min-h-11 items-center text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
                   >
-                    {link.name}
+                    {t(link.labelKey)}
                   </Link>
                 ),
               )}
@@ -146,7 +150,7 @@ export function Navbar() {
                     href={{ pathname: "/sign-in", query: { callbackUrl } }}
                     prefetch={false}
                   >
-                    Sign In
+                    {t("signIn")}
                   </Link>
                 </Button>
                 <Button
@@ -157,7 +161,7 @@ export function Navbar() {
                     href={{ pathname: "/sign-in", query: { callbackUrl } }}
                     prefetch={false}
                   >
-                    Get Started
+                    {t("getStarted")}
                   </Link>
                 </Button>
               </div>

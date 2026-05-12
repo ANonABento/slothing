@@ -29,10 +29,11 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const range = (searchParams.get("range") as TimeRange) || "30d";
+    const locale = searchParams.get("locale") || undefined;
 
     const jobs = getAnalyticsJobDescriptions(authResult.userId);
 
-    const timeSeries = generateTimeSeriesData(jobs, range);
+    const timeSeries = generateTimeSeriesData(jobs, range, locale);
     const trends = calculateTrendMetrics(jobs, range);
     const timeline = generateActivityTimeline(jobs, 20);
 
