@@ -160,6 +160,7 @@ export type MessageType =
   | "GET_SETTINGS"
   | "TAILOR_FROM_PAGE"
   | "GENERATE_COVER_LETTER_FROM_PAGE"
+  | "LIST_RESUMES"
   | "SAVE_ANSWER"
   | "SEARCH_ANSWERS"
   | "GET_LEARNED_ANSWERS"
@@ -173,6 +174,17 @@ export type MessageType =
   | "WW_SCRAPE_ALL_PAGINATED"
   | "WW_BULK_PROGRESS"
   | "AUTH_CALLBACK";
+
+/**
+ * Summary of a previously-generated tailored resume, surfaced by
+ * GET /api/extension/resumes for the popup's multi-resume picker (#34).
+ */
+export interface ExtensionResumeSummary {
+  id: string;
+  name: string;
+  targetRole: string;
+  updatedAt: string;
+}
 
 export interface ExtensionMessage<T = unknown> {
   type: MessageType;

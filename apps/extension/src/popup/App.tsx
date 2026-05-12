@@ -1,10 +1,17 @@
 import React, { useEffect, useState } from "react";
-import type { ExtensionProfile, ScrapedJob } from "@/shared/types";
+import type {
+  ExtensionProfile,
+  ExtensionResumeSummary,
+  ScrapedJob,
+} from "@/shared/types";
 import { formatRelative } from "@slothing/shared/formatters";
 import { scoreResume } from "@slothing/shared/scoring";
 import { sendMessage, Messages } from "@/shared/messages";
 import { messageForError } from "@/shared/error-messages";
 import { opportunityDetailUrl, opportunityReviewUrl } from "./deep-links";
+
+/** Sentinel value used for the picker's "Master profile" option (#34). */
+const MASTER_RESUME_OPTION = "__master__";
 
 type ViewState =
   | "loading"
@@ -65,6 +72,14 @@ export default function App() {
   const [wwBulkResult, setWwBulkResult] = useState<WwBulkResult | null>(null);
   const [wwBulkError, setWwBulkError] = useState<string | null>(null);
   const [confirmingLogout, setConfirmingLogout] = useState(false);
+  // #34 — multi-resume picker. Loaded lazily once we know we're authenticated;
+  // selection defaults to the master profile and is reset whenever a new
+  // success/error finishes so a follow-up tailor starts from a clean slate.
+  const [resumeOptions, setResumeOptions] = useState<ExtensionResumeSummary[]>(
+    [],
+  );
+  const [selectedResumeId, setSelectedResumeId] =
+    useState<string>(MASTER_RESUME_OPTION);
   const profileScore = profile ? scoreResume({ profile }).overall : null;
 
   useEffect(() => {
@@ -107,6 +122,22 @@ export default function App() {
     const response = await sendMessage<ExtensionProfile>(Messages.getProfile());
     if (response.success && response.data) {
       setProfile(response.data);
+    }
+    // Fire-and-forget the resume list (#34). Failure is non-fatal — the picker
+    // just doesn't render, falling back to the previous master-only flow.
+    loadResumes();
+  }
+
+  async function loadResumes() {
+    try {
+      const response = await sendMessage<{
+        resumes: ExtensionResumeSummary[];
+      }>(Messages.listResumes());
+      if (response.success && response.data?.resumes) {
+        setResumeOptions(response.data.resumes);
+      }
+    } catch {
+      // Non-fatal: leave the picker hidden.
     }
   }
 
@@ -234,9 +265,16 @@ export default function App() {
     setActionInFlight(action);
     setActionError(null);
     try {
+      // #34 — only thread `baseResumeId` through when the user actually picked
+      // a non-master resume. Cover-letter generation doesn't take a base today,
+      // so we only honor the selection for the tailor action.
+      const baseResumeId =
+        action === "tailor" && selectedResumeId !== MASTER_RESUME_OPTION
+          ? selectedResumeId
+          : undefined;
       const message =
         action === "tailor"
-          ? Messages.tailorFromPage(pageStatus.scrapedJob)
+          ? Messages.tailorFromPage(pageStatus.scrapedJob, baseResumeId)
           : Messages.generateCoverLetterFromPage(pageStatus.scrapedJob);
       const response = await sendMessage<{ url: string }>(message);
       if (response.success && response.data?.url) {
@@ -458,33 +496,58 @@ export default function App() {
                   )}
               </div>
             ) : (
-              <div className="action-grid">
-                <button
-                  className="btn primary"
-                  onClick={() => handleGenerateFromPage("tailor")}
-                  disabled={actionInFlight !== null}
-                >
-                  {actionInFlight === "tailor" ? "Tailoring…" : "Tailor resume"}
-                </button>
-                <button
-                  className="btn"
-                  onClick={() => handleGenerateFromPage("cover-letter")}
-                  disabled={actionInFlight !== null}
-                >
-                  {actionInFlight === "cover-letter"
-                    ? "Writing…"
-                    : "Cover letter"}
-                </button>
-                <button
-                  className="btn ghost full"
-                  onClick={handleImportJob}
-                  disabled={actionInFlight !== null}
-                >
-                  {actionInFlight === "import"
-                    ? "Importing…"
-                    : "Just import to tracker"}
-                </button>
-              </div>
+              <>
+                {resumeOptions.length > 0 && (
+                  <label className="resume-picker">
+                    <span className="resume-picker-label">Base on</span>
+                    <select
+                      className="resume-picker-select"
+                      value={selectedResumeId}
+                      onChange={(e) => setSelectedResumeId(e.target.value)}
+                      disabled={actionInFlight !== null}
+                      aria-label="Choose the resume to tailor from"
+                    >
+                      <option value={MASTER_RESUME_OPTION}>
+                        Master profile
+                      </option>
+                      {resumeOptions.map((resume) => (
+                        <option key={resume.id} value={resume.id}>
+                          {resume.name}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                )}
+                <div className="action-grid">
+                  <button
+                    className="btn primary"
+                    onClick={() => handleGenerateFromPage("tailor")}
+                    disabled={actionInFlight !== null}
+                  >
+                    {actionInFlight === "tailor"
+                      ? "Tailoring…"
+                      : "Tailor resume"}
+                  </button>
+                  <button
+                    className="btn"
+                    onClick={() => handleGenerateFromPage("cover-letter")}
+                    disabled={actionInFlight !== null}
+                  >
+                    {actionInFlight === "cover-letter"
+                      ? "Writing…"
+                      : "Cover letter"}
+                  </button>
+                  <button
+                    className="btn ghost full"
+                    onClick={handleImportJob}
+                    disabled={actionInFlight !== null}
+                  >
+                    {actionInFlight === "import"
+                      ? "Importing…"
+                      : "Just import to tracker"}
+                  </button>
+                </div>
+              </>
             )}
             {actionError && <p className="inline-error">{actionError}</p>}
           </article>
