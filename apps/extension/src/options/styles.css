@@ -92,6 +92,60 @@ section h2 {
   margin-bottom: 14px;
 }
 
+.section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.section-head h2 {
+  margin-bottom: 0;
+}
+
+/* ---------- Save status indicator (#29) ---------- */
+.save-status {
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1;
+  padding: 4px 8px;
+  border-radius: 999px;
+  transition: opacity 200ms ease;
+  white-space: nowrap;
+}
+
+.save-status-saving {
+  background: var(--bg-muted);
+  color: var(--text-muted);
+}
+
+.save-status-saved {
+  background: var(--success-bg);
+  color: var(--success-text);
+  animation: save-status-fade 2200ms ease 200ms forwards;
+}
+
+.save-status-error {
+  background: var(--danger-bg);
+  color: var(--danger-text);
+}
+
+@keyframes save-status-fade {
+  0%,
+  60% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.55;
+  }
+}
+
+/* In the API URL input row, the badge follows the Save button. */
+.input-group .save-status {
+  align-self: center;
+}
+
 .setting-group {
   margin-bottom: 16px;
 }
