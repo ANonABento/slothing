@@ -52,7 +52,7 @@ export interface CompanyResearch {
 
 export function getCompanyResearch(
   companyName: string,
-  userId: string = "default",
+  userId: string,
 ): CompanyResearch | null {
   ensureCompanyResearchSchema();
   const normalized = companyName.toLowerCase().trim();
@@ -93,7 +93,7 @@ export function getCompanyResearch(
 
 export function saveCompanyResearch(
   research: Omit<CompanyResearch, "id" | "createdAt" | "updatedAt">,
-  userId: string = "default",
+  userId: string,
 ): CompanyResearch {
   ensureCompanyResearchSchema();
   const id = generateId();
@@ -135,10 +135,7 @@ export function saveCompanyResearch(
   return saved;
 }
 
-export function deleteCompanyResearch(
-  id: string,
-  userId: string = "default",
-): void {
+export function deleteCompanyResearch(id: string, userId: string): void {
   ensureCompanyResearchSchema();
   const stmt = db.prepare(
     "DELETE FROM company_research WHERE id = ? AND user_id = ?",
@@ -148,7 +145,7 @@ export function deleteCompanyResearch(
 
 export function getCompanyEnrichment(
   companyName: string,
-  userId: string = "default",
+  userId: string,
 ): { snapshot: EnrichmentSnapshot; enrichedAt: string } | null {
   ensureCompanyResearchSchema();
   const normalized = companyName.toLowerCase().trim();
@@ -215,7 +212,7 @@ export function saveCompanyEnrichment(
 
 export function getCompanyGithubSlug(
   companyName: string,
-  userId: string = "default",
+  userId: string,
 ): string | null {
   ensureCompanyResearchSchema();
   const normalized = companyName.toLowerCase().trim();

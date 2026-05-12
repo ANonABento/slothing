@@ -56,9 +56,7 @@ export function createProfileSnapshot(
 /**
  * List all profile versions (most recent first).
  */
-export function listProfileVersions(
-  userId: string = "default",
-): ProfileVersionSummary[] {
+export function listProfileVersions(userId: string): ProfileVersionSummary[] {
   const rows = db
     .prepare(
       "SELECT id, version, created_at FROM profile_versions WHERE user_id = ? ORDER BY version DESC",
@@ -77,7 +75,7 @@ export function listProfileVersions(
  */
 export function getProfileVersion(
   versionId: string,
-  userId: string = "default",
+  userId: string,
 ): ProfileVersion | null {
   const row = db
     .prepare("SELECT * FROM profile_versions WHERE id = ? AND user_id = ?")
@@ -105,7 +103,7 @@ export function getProfileVersion(
 /**
  * Remove oldest versions beyond MAX_VERSIONS limit.
  */
-export function pruneVersions(userId: string = "default"): number {
+export function pruneVersions(userId: string): number {
   const countRow = db
     .prepare("SELECT COUNT(*) as count FROM profile_versions WHERE user_id = ?")
     .get(userId) as { count: number };

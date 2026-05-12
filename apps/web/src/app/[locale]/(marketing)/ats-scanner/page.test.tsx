@@ -7,8 +7,23 @@ describe("ATSScannerPage", () => {
     const { container } = render(<ATSScannerPage params={{ locale: "en" }} />);
 
     expect(screen.getByText("Free and Private")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "We parse resumes on our servers, do not save them to your account, and do not share them",
+      ),
+    ).toBeInTheDocument();
     expect(container.querySelector(".lucide-dollar-sign")).toBeNull();
     expect(container.querySelector(".lucide-sparkles")).not.toBeNull();
+  });
+
+  it("does not claim the public scanner runs entirely in the browser", () => {
+    const { container } = render(<ATSScannerPage params={{ locale: "en" }} />);
+
+    expect(container).not.toHaveTextContent(/in your browser/i);
+    expect(container).not.toHaveTextContent(/nothing is stored/i);
+    expect(
+      screen.getByText(/sent to our servers for temporary parsing/i),
+    ).toBeInTheDocument();
   });
 
   it("links the ATS filtering stat to the HBS Hidden Workers source", () => {

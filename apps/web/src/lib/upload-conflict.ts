@@ -1,4 +1,4 @@
-import { formatAbsolute, parseToDate } from "@/lib/format/time";
+import { DEFAULT_LOCALE, formatAbsolute, parseToDate } from "@/lib/format/time";
 export interface UploadConflictExisting {
   id?: string;
   filename: string;
@@ -16,11 +16,14 @@ export function getExistingUploadTimestamp(
   return existing.uploadedAt ?? existing.uploaded_at;
 }
 
-export function formatExistingUploadDate(timestamp?: string): string {
+export function formatExistingUploadDate(
+  timestamp?: string,
+  locale = DEFAULT_LOCALE,
+): string {
   if (!timestamp) return "an earlier date";
 
   const date = parseToDate(timestamp)!;
   if (Number.isNaN(date.getTime())) return "an earlier date";
 
-  return formatAbsolute(date, { locale: "en-US" });
+  return formatAbsolute(date, { locale });
 }
