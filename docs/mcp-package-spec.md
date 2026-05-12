@@ -1,169 +1,169 @@
 # `@slothing/mcp` — Agent Integration Spec
 
-> Status: spec / design doc. Not implemented yet. Owners: TBD.
+> Status: **v1 shipped** as of 2026-05-12 (PR #265). v2 (write-heavy push/queue surface) deferred — see "Deferred to v2" below.
 
 ## Why
 
 Slothing today exposes a token-authenticated HTTP surface that the Columbus browser extension uses to push scraped jobs into the review queue. The same surface is sufficient for any external agent (a Claude Agent SDK script, a Choomfie skill, a Hermes overlay) to drive Slothing — but it's plain REST, not a discoverable MCP toolset.
 
-This spec describes a thin MCP server package, `@slothing/mcp`, that wraps the existing extension-side endpoints as MCP tools. The goal is to make Slothing legible to agent runtimes without adding a new auth model or duplicating business logic on the Slothing side.
+`@slothing/mcp` is a thin MCP server package that wraps Slothing's extension-side endpoints as MCP tools. The goal is to make Slothing legible to agent runtimes without adding a new auth model or duplicating business logic on the Slothing side.
 
 ## Non-goals
 
 - Not a new API. The MCP server is a thin adapter over existing routes — no new database tables, no new auth code paths.
 - Not a hosted product. Each user runs the MCP server locally against their own Slothing instance with their own extension token.
-- Not a substitute for the browser extension. The extension still owns in-page scraping + autofill. MCP is for agents that already have a job payload or a URL.
+- Not a substitute for the browser extension. The extension still owns in-page scraping + autofill. MCP is for agents that already have the context they need.
 
-## Package layout
+## Package layout (as shipped)
 
 ```
 packages/mcp/
 ├── package.json              # @slothing/mcp, bin entry "slothing-mcp"
 ├── tsconfig.json
+├── bin/slothing-mcp.mjs      # CLI shim
 ├── src/
 │   ├── index.ts              # stdio server bootstrap
 │   ├── server.ts             # MCP Server instance + tool registration
-│   ├── tools/
-│   │   ├── push-job.ts
-│   │   ├── list-queue.ts
-│   │   ├── update-status.ts
-│   │   └── scrape-url.ts
-│   ├── client.ts             # tiny HTTP wrapper around /api/extension/* + /api/opportunities/*
+│   ├── api-client.ts         # HTTP wrapper around /api/extension/*
 │   ├── config.ts             # env loading + validation
-│   └── types.ts              # request/response shapes
+│   ├── types.ts              # shared request/response shapes
+│   └── tools/
+│       ├── index.ts
+│       ├── get-profile.ts
+│       ├── list-opportunities.ts
+│       ├── get-opportunity-detail.ts
+│       ├── search-answer-bank.ts
+│       └── save-answer.ts
+├── tests/                    # vitest integration tests via InMemoryTransport
 └── README.md
 ```
 
-`packages/mcp/` lives inside the existing pnpm monorepo so it can share the `ScrapedJob` and opportunity types from `packages/shared/`.
+`packages/mcp/` lives inside the existing pnpm monorepo so it can share types from `packages/shared/`.
 
 ## Configuration
 
-Two env vars, set wherever the MCP server is launched (the user's Claude Code config, choomfie's plugin config, etc):
+Two env vars, set wherever the MCP server is launched:
 
 | Var | Required | Default | Description |
 | --- | --- | --- | --- |
-| `SLOTHING_BASE_URL` | yes | — | e.g. `http://localhost:3000` (local dev) or the user's Slothing deployment |
-| `SLOTHING_EXTENSION_TOKEN` | yes | — | a token minted via `POST /api/extension/auth`; same as the Columbus extension uses |
+| `SLOTHING_API_URL` | yes | — | e.g. `http://localhost:3000` (local dev) or the user's Slothing deployment. Legacy alias: `SLOTHING_BASE_URL`. |
+| `SLOTHING_TOKEN`   | yes | — | A token minted via `POST /api/extension/auth`; same as the Columbus extension uses. Legacy alias: `SLOTHING_EXTENSION_TOKEN`. |
 
-A one-time token-minting helper lives in the package — `slothing-mcp init` mints a token (requires the user to be signed in to Slothing locally) and prints it for the user to paste into their MCP config. Mirrors the Columbus connect-account flow.
+Bad token → MCP tool error with the missing-var details. Token-minting helper is deferred to v2; for now, mint via the extension's connect-account flow and copy the token.
 
-## Tool surface
+## Tool surface (v1, shipped)
 
-All four tools take a JSON object and return a JSON object. Errors come back as MCP tool errors with HTTP status preserved in the message.
+The v1 surface is **read-heavy** — designed for agents that need to ask about your data, draft against it, and write back targeted answers. All five tools take a JSON object and return a JSON object. Errors come back as MCP tool errors with HTTP status preserved.
 
-### `slothing_push_job`
+### `get_profile`
 
-Push one scraped/discovered job into the review queue.
+Read the authenticated user's profile (contact, experience, education, skills, etc).
 
 ```ts
-input: {
-  title: string;
-  company: string;
-  url: string;
-  description?: string;
-  location?: string;
-  salary?: string;
-  type?: "full-time" | "part-time" | "contract" | "internship";
-  remote?: boolean;
-  source?: string;        // free-form, defaults to "mcp"
-  sourceJobId?: string;
-  deadline?: string;
-  requirements?: string[];
-  responsibilities?: string[];
-  keywords?: string[];
-}
+input: {}
 
 output: {
-  opportunityId: string;
-  deduped: boolean;       // true when the URL already existed
-  pendingCount: number;   // size of the review queue after this push
+  profile: ExtensionProfile;
 }
 ```
 
-Implementation: POST `/api/opportunities/from-extension` with `X-Extension-Token`. Dedup is automatic on `(user_id, url)`.
+Implementation: `GET /api/extension/profile` with `X-Extension-Token`.
 
-### `slothing_list_queue`
+### `list_opportunities`
 
-Read the user's current opportunities. Status filter optional; defaults to `pending` (review queue).
+Read the user's opportunities. Status filter optional; defaults to all statuses.
 
 ```ts
 input: {
   status?: "pending" | "applied" | "interviewing" | "offer" | "rejected" | "all";
-  limit?: number;         // capped server-side
+  limit?: number;        // capped server-side
 }
 
 output: {
-  jobs: Array<{
+  opportunities: Array<{
     id: string; title: string; company: string; url: string;
     status: string; createdAt: string; deadline?: string;
   }>;
-  totalPending: number;
+  total: number;
 }
 ```
 
-Implementation: GET `/api/opportunities?status=...&limit=...` with the same auth header.
+Implementation: `GET /api/extension/opportunities` (added by PR #265).
 
-### `slothing_update_status`
+### `get_opportunity_detail`
 
-Move an opportunity to a new status (or attach notes).
+Read a single opportunity's full payload (description, requirements, linked documents).
 
 ```ts
-input: {
-  opportunityId: string;
-  status?: "pending" | "applied" | "interviewing" | "offer" | "rejected";
-  notes?: string;
-}
+input: { id: string }
 
-output: { ok: true; updatedAt: string }
+output: { opportunity: OpportunityDetail }
 ```
 
-Implementation: PATCH `/api/opportunities/[id]`.
+Implementation: `GET /api/extension/opportunities/[id]` (added by PR #265).
 
-### `slothing_scrape_url`
+### `search_answer_bank`
 
-Ask Slothing to scrape a URL server-side (no browser needed). Useful for agents that have a job URL but not the rendered HTML.
+Semantic search across the user's answer bank for prior answers to similar questions.
 
 ```ts
-input: { url: string; pushToQueue?: boolean }
+input: { query: string; limit?: number }
 
 output: {
-  scraped: {
-    title: string; company: string; description: string; /* ... */
-  };
-  opportunityId?: string;  // present iff pushToQueue was true
+  matches: Array<{
+    id: string;
+    question: string;
+    answer: string;
+    similarity: number;
+  }>;
 }
 ```
 
-Implementation: POST `/api/opportunities/scrape` (existing server-side scraper). When `pushToQueue: true`, chain to `from-extension` in the same call to keep it one tool round-trip.
+Implementation: `POST /api/extension/answer-bank/match`.
+
+### `save_answer`
+
+Save a new question/answer pair into the answer bank.
+
+```ts
+input: { question: string; answer: string; tags?: string[] }
+
+output: { id: string; created: true }
+```
+
+Implementation: `POST /api/extension/answer-bank` (write).
 
 ## Consumer examples
 
-### Choomfie skill
-
-```yaml
-# choomfie plugin config
-mcp_servers:
-  slothing:
-    command: pnpm
-    args: [exec, slothing-mcp]
-    env:
-      SLOTHING_BASE_URL: http://localhost:3000
-      SLOTHING_EXTENSION_TOKEN: ${SLOTHING_TOKEN}
-```
-
-Then a Choomfie skill can invoke `slothing_push_job` when the user asks "queue this job for me to apply to later."
-
-### Claude Code
+### Claude Desktop
 
 ```jsonc
-// .mcp.json
+// ~/Library/Application Support/Claude/claude_desktop_config.json
+{
+  "mcpServers": {
+    "slothing": {
+      "command": "pnpm",
+      "args": ["exec", "slothing-mcp"],
+      "env": {
+        "SLOTHING_API_URL": "http://localhost:3000",
+        "SLOTHING_TOKEN": "ext_..."
+      }
+    }
+  }
+}
+```
+
+### Cursor / Claude Code
+
+```jsonc
+// .mcp.json (project-local)
 {
   "slothing": {
     "command": "pnpm",
     "args": ["exec", "slothing-mcp"],
     "env": {
-      "SLOTHING_BASE_URL": "http://localhost:3000",
-      "SLOTHING_EXTENSION_TOKEN": "...mint via /api/extension/auth..."
+      "SLOTHING_API_URL": "http://localhost:3000",
+      "SLOTHING_TOKEN": "ext_..."
     }
   }
 }
@@ -173,27 +173,40 @@ Then a Choomfie skill can invoke `slothing_push_job` when the user asks "queue t
 
 ```ts
 import { ClaudeAgentSdkClient } from "@anthropic-ai/claude-agent-sdk";
+
 const client = new ClaudeAgentSdkClient({
   mcpServers: { slothing: { command: "pnpm", args: ["exec", "slothing-mcp"] } },
 });
 ```
 
-## Open questions
+## Deferred to v2
 
-1. **Token lifetime / rotation.** Extension tokens currently have a 30-day TTL via `EXTENSION_TOKEN_TTL_RUNTIME_MS`. For headless MCP usage, do we want a longer "service" token type or just expect the user to re-mint monthly? Suggest reusing the existing TTL for v1 and adding a `slothing-mcp refresh` helper if it gets annoying.
-2. **Per-tool rate limiting.** The existing routes go through `src/lib/rate-limit.ts`. For agent loops that push many jobs in succession the per-user limit will bite. Need to confirm thresholds work for agentic flows or expose a higher limit for extension-token requests.
-3. **Status transitions.** `slothing_update_status` is a generic patch. Should it enforce the destructive-action confirm-dialog convention (per `docs/destructive-actions-pattern.md`)? Probably exempt — the agent is the user's deputy, not a UI button. Worth a one-line acknowledgement in the response if a status transition was destructive (e.g. `pending → rejected`).
-4. **MCP transports.** v1 = stdio. SSE/HTTP transport is straightforward to add but not needed until someone wants to host the server remotely. Out of scope here.
-5. **Bundling.** Bun vs Node for the server runtime. Node is the lowest common denominator and matches the rest of the monorepo; Bun would shave startup time. Default to Node for v1.
+The original design doc described a **write-heavy** surface — pushing jobs into Slothing from external agent runtimes (Choomfie skills, scraper bots, Hermes overlays). That surface is deferred:
 
-## Done definition
+| Tool | Purpose | Underlying route |
+| --- | --- | --- |
+| `slothing_push_job` | Enqueue a scraped job into the review queue | `POST /api/opportunities/from-extension` |
+| `slothing_list_queue` | Variant of `list_opportunities` filtered to the review queue | — (subsumed by v1's `list_opportunities`) |
+| `slothing_update_status` | Move an opportunity through the status pipeline | `PATCH /api/opportunities/[id]` |
+| `slothing_scrape_url` | Server-side scrape of an arbitrary URL | `POST /api/opportunities/scrape` |
 
-`pnpm exec slothing-mcp` starts a stdio MCP server. A Claude Code session with the server configured can run the following round-trip with no manual UI clicks:
+These exist as REST endpoints today — agents that need them can call them directly via `fetch` with the extension token. Promote to MCP tools when a concrete consumer (Choomfie skill, etc.) needs the discoverability.
 
-1. `slothing_scrape_url` against a real Greenhouse/Lever URL → returns scraped payload
-2. `slothing_push_job` with that payload → returns opportunityId, pending=N+1
-3. `slothing_list_queue` → returns the job we just pushed
-4. `slothing_update_status` → moves it to `applied`, returns ok
-5. Verify in the Slothing web UI at `/opportunities/[id]`
+## Open questions (carried over, still open)
 
-That's v1. Anything beyond — LLM tailoring tools, cover letter generation, interview scheduling, calendar integration — is v2+.
+1. **Token lifetime / rotation.** Extension tokens have a 30-day TTL via `EXTENSION_TOKEN_TTL_RUNTIME_MS`. For headless MCP usage, do we want a longer "service" token type or just expect monthly re-mint? Suggest reusing the existing TTL for v1 and adding a `slothing-mcp refresh` helper if it gets annoying.
+2. **Per-tool rate limiting.** Existing routes go through `src/lib/rate-limit.ts`. For agent loops that hit `search_answer_bank` rapidly, the per-user limit may bite — confirm thresholds work for agentic flows.
+3. **MCP transports.** v1 = stdio (shipped). SSE/HTTP transport is straightforward to add but not needed until someone wants to host the server remotely.
+
+## Done definition (v1, ✅)
+
+`pnpm exec slothing-mcp` starts a stdio MCP server. A Claude Desktop / Claude Code session with the server configured can:
+
+1. Call `get_profile` → returns the user's profile.
+2. Call `list_opportunities` with `status: "pending"` → returns the review queue.
+3. Call `get_opportunity_detail` against a returned id → returns full payload.
+4. Call `search_answer_bank` with a question → returns similar prior answers.
+5. Call `save_answer` to record a new Q/A pair → confirms write.
+6. Bad token → clear MCP error mentioning `SLOTHING_TOKEN`.
+
+All six paths covered by integration tests in `packages/mcp/tests/` using `InMemoryTransport` + stubbed `fetch`.
