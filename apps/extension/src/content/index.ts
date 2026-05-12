@@ -288,9 +288,20 @@ async function handleFillForm() {
   const mapper = new FieldMapper(cachedProfile);
   autoFillEngine = new AutoFillEngine(fieldDetector, mapper);
 
+  // Read the cold-zone floor from settings. Defaults to the legacy 0.5 if
+  // settings aren't available (e.g. transient background-storage failure).
+  let minimumConfidence = 0.5;
+  try {
+    const settings = await getExtensionSettings();
+    minimumConfidence = settings.minimumConfidence;
+  } catch (err) {
+    console.warn("[Columbus] Failed to load settings; using default 0.5", err);
+  }
+
   // Fill the form. Hand each successful fill to the corrections tracker so
   // edits-after-fill flow back into the per-domain field mapping (#33).
   const result = await autoFillEngine.fillForm(detectedFields, {
+    minimumConfidence,
     onFilled: ({ field, value }) => {
       correctionsTracker.track(field, value);
     },
