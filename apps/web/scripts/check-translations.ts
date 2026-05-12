@@ -78,7 +78,9 @@ function renderKeyList(keys: string[]) {
 
 async function main() {
   const messagesDir = path.join(process.cwd(), "src/messages");
-  const source = withoutMeta(flattenMessages(await loadMessages(messagesDir, "en")));
+  const source = withoutMeta(
+    flattenMessages(await loadMessages(messagesDir, "en")),
+  );
   const sourceKeys = Object.keys(source).sort();
   const sourceKeySet = new Set(sourceKeys);
 
@@ -87,12 +89,16 @@ async function main() {
     missing: string[];
     extra: string[];
     identical: string[];
+    placeholders: string[];
   }> = [];
 
   for (const locale of targetLocales) {
-    const target = withoutMeta(flattenMessages(await loadMessages(messagesDir, locale)));
+    const target = withoutMeta(
+      flattenMessages(await loadMessages(messagesDir, locale)),
+    );
     const targetKeys = Object.keys(target).sort();
     const targetKeySet = new Set(targetKeys);
+    const placeholderPrefix = `[${locale}] `;
 
     const missing = sourceKeys.filter((key) => !targetKeySet.has(key));
     const extra = targetKeys.filter((key) => !sourceKeySet.has(key));
@@ -100,17 +106,22 @@ async function main() {
       (key) =>
         target[key] === source[key] && !isExpectedIdentical(key, source[key]),
     );
+    const placeholders = sourceKeys.filter((key) =>
+      target[key]?.startsWith(placeholderPrefix),
+    );
 
-    rows.push({ locale, missing, extra, identical });
+    rows.push({ locale, missing, extra, identical, placeholders });
   }
 
   console.error("## Translation Drift Check");
   console.error("");
-  console.error("| Locale | Missing | Extra | Identical-to-en warnings |");
-  console.error("| --- | ---: | ---: | ---: |");
+  console.error(
+    "| Locale | Missing | Extra | Identical-to-en warnings | Placeholders |",
+  );
+  console.error("| --- | ---: | ---: | ---: | ---: |");
   for (const row of rows) {
     console.error(
-      `| ${row.locale} | ${row.missing.length} | ${row.extra.length} | ${row.identical.length} |`,
+      `| ${row.locale} | ${row.missing.length} | ${row.extra.length} | ${row.identical.length} | ${row.placeholders.length} |`,
     );
   }
   console.error("");
@@ -119,7 +130,8 @@ async function main() {
     if (
       row.missing.length === 0 &&
       row.extra.length === 0 &&
-      row.identical.length === 0
+      row.identical.length === 0 &&
+      row.placeholders.length === 0
     ) {
       continue;
     }
@@ -129,6 +141,9 @@ async function main() {
     console.error(`- Extra: ${renderKeyList(row.extra)}`);
     console.error(
       `- Identical-to-en warnings: ${renderKeyList(row.identical)}`,
+    );
+    console.error(
+      `- Placeholders (\`[${row.locale}] …\`): ${row.placeholders.length} (warn-only, see TODO)`,
     );
     console.error("");
   }
@@ -152,6 +167,18 @@ async function main() {
   if (warningCount > 0) {
     console.error(
       `${warningCount} identical-to-English string(s) were found. These are warnings only; review them when refreshing translations.`,
+    );
+  }
+
+  const placeholderCount = rows.reduce(
+    (total, row) => total + row.placeholders.length,
+    0,
+  );
+  if (placeholderCount > 0) {
+    // TODO(i18n): once placeholder counts reach 0, flip this to a hard fail
+    // by setting process.exitCode = 1 here.
+    console.error(
+      `${placeholderCount} placeholder string(s) (\`[locale] …\`) remain across locales. Run \`pnpm translate:messages\` and review the output to clear these.`,
     );
   }
 }
