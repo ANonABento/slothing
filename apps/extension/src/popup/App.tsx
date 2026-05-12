@@ -3,6 +3,7 @@ import type { ExtensionProfile, ScrapedJob } from "@/shared/types";
 import { formatRelative } from "@slothing/shared/formatters";
 import { scoreResume } from "@slothing/shared/scoring";
 import { sendMessage, Messages } from "@/shared/messages";
+import { messageForError } from "@/shared/error-messages";
 
 type ViewState =
   | "loading"
@@ -138,10 +139,12 @@ export default function App() {
       if (response?.success && response.data) {
         setWwBulkResult(response.data);
       } else {
-        setWwBulkError(response?.error || "Bulk scrape failed");
+        setWwBulkError(
+          messageForError(new Error(response?.error || "Bulk scrape failed")),
+        );
       }
     } catch (err) {
-      setWwBulkError((err as Error).message);
+      setWwBulkError(messageForError(err));
     } finally {
       setWwBulkInFlight(null);
     }
@@ -187,10 +190,12 @@ export default function App() {
         setActionSuccess("import");
         setTimeout(() => window.close(), 1500);
       } else {
-        setActionError(response.error || "Failed to import job");
+        setActionError(
+          messageForError(new Error(response.error || "Failed to import job")),
+        );
       }
     } catch (err) {
-      setActionError((err as Error).message);
+      setActionError(messageForError(err));
     } finally {
       setActionInFlight(null);
     }
@@ -211,10 +216,14 @@ export default function App() {
         setActionSuccess(action);
         setTimeout(() => window.close(), 1500);
       } else {
-        setActionError(response.error || "Failed to generate document");
+        setActionError(
+          messageForError(
+            new Error(response.error || "Failed to generate document"),
+          ),
+        );
       }
     } catch (err) {
-      setActionError((err as Error).message);
+      setActionError(messageForError(err));
     } finally {
       setActionInFlight(null);
     }
