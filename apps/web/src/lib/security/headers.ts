@@ -4,10 +4,11 @@ import type { NextRequest, NextResponse } from "next/server";
  * Build a Content-Security-Policy header value.
  *
  * Notes on the chosen directives:
- * - `script-src` allows `'unsafe-inline'` because Next.js injects an inline
- *   bootstrap script for hydration. `'unsafe-eval'` is permitted in dev only —
- *   Next dev mode uses eval() for hot module replacement, and without it the
- *   client bundle fails to hydrate, breaking onClick handlers like sign-in.
+ * - `script-src` uses a per-request nonce in production so Next.js bootstrap
+ *   scripts and intentionally-inline app scripts can run without allowing
+ *   arbitrary inline script execution. `'unsafe-inline'` and `'unsafe-eval'`
+ *   are permitted in dev only — Next dev mode needs them for hot module
+ *   replacement and reliable local hydration.
  * - `style-src` allows `'unsafe-inline'` for Tailwind/CSS-in-JS runtime styles.
  * - `connect-src` includes Google (NextAuth callbacks) and the configured LLM
  *   providers — outbound fetches happen server-side, not from the browser, so
@@ -15,12 +16,13 @@ import type { NextRequest, NextResponse } from "next/server";
  * - `frame-ancestors 'none'` is enforced by both CSP and X-Frame-Options.
  * - `object-src 'none'` blocks Flash/legacy plugin XSS vectors.
  */
-function buildContentSecurityPolicy(): string {
+export const CSP_NONCE_HEADER = "x-csp-nonce";
+
+export function buildContentSecurityPolicy(nonce?: string): string {
   const isProduction = process.env.NODE_ENV === "production";
-  const scriptSrc = ["'self'", "'unsafe-inline'"];
-  if (!isProduction) {
-    scriptSrc.push("'unsafe-eval'");
-  }
+  const scriptSrc = isProduction
+    ? ["'self'", ...(nonce ? [`'nonce-${nonce}'`] : [])]
+    : ["'self'", "'unsafe-inline'", "'unsafe-eval'"];
 
   const directives: Record<string, string[]> = {
     "default-src": ["'self'"],
@@ -53,8 +55,6 @@ function buildContentSecurityPolicy(): string {
     .join("; ");
 }
 
-const CSP_HEADER_VALUE = buildContentSecurityPolicy();
-
 const PERMISSIONS_POLICY =
   "camera=(), microphone=(self), geolocation=(), payment=(), usb=()";
 
@@ -79,11 +79,14 @@ const PERMISSIONS_POLICY =
 export function applySecurityHeaders(
   response: NextResponse,
   request: NextRequest,
+  cspHeaderValue = buildContentSecurityPolicy(
+    request.headers.get(CSP_NONCE_HEADER) ?? undefined,
+  ),
 ): NextResponse {
   const headers = response.headers;
 
   if (!headers.has("Content-Security-Policy")) {
-    headers.set("Content-Security-Policy", CSP_HEADER_VALUE);
+    headers.set("Content-Security-Policy", cspHeaderValue);
   }
   headers.set("X-Frame-Options", "DENY");
   headers.set("X-Content-Type-Options", "nosniff");
@@ -106,6 +109,5 @@ export function applySecurityHeaders(
 
 // Exported for unit tests that don't have access to a real NextResponse.
 export const __testables = {
-  CSP_HEADER_VALUE,
   computeCspForTesting: buildContentSecurityPolicy,
 };

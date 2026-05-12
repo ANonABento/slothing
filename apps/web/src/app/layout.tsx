@@ -1,8 +1,10 @@
 import type { CSSProperties } from "react";
+import { headers } from "next/headers";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ensureEnvValidated } from "@/lib/env";
 import { getSiteMetadata } from "@/lib/seo";
+import { CSP_NONCE_HEADER } from "@/lib/security/headers";
 import { themeTokensToCssVariables } from "@/lib/theme/apply";
 import { getThemePreloadScript } from "@/lib/theme/preload-script";
 import { getTheme } from "@/lib/theme/registry";
@@ -17,6 +19,8 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const nonce = headers().get(CSP_NONCE_HEADER) ?? undefined;
+
   return (
     <html
       lang="en"
@@ -26,7 +30,10 @@ export default function RootLayout({
       }
     >
       <head>
-        <script dangerouslySetInnerHTML={{ __html: getThemePreloadScript() }} />
+        <script
+          nonce={nonce}
+          dangerouslySetInnerHTML={{ __html: getThemePreloadScript() }}
+        />
       </head>
       <body className="font-sans">
         <AuthSessionProvider>
