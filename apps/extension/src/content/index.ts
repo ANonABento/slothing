@@ -8,6 +8,9 @@ import { FieldMapper } from "./auto-fill/field-mapper";
 import { AutoFillEngine } from "./auto-fill/engine";
 import { getScraperForUrl } from "./scrapers/scraper-registry";
 import { WaterlooWorksOrchestrator } from "./scrapers/waterloo-works-orchestrator";
+import { GreenhouseOrchestrator } from "./scrapers/greenhouse-orchestrator";
+import { LeverOrchestrator } from "./scrapers/lever-orchestrator";
+import { WorkdayOrchestrator } from "./scrapers/workday-orchestrator";
 import type {
   AnswerBankMatch,
   ExtensionProfile,
@@ -192,6 +195,37 @@ async function handleMessage(message: { type: string; payload?: unknown }) {
         ...(message.payload as object),
       });
 
+    // P3/#39 — Generic bulk-scrape orchestrators for public ATS hosts.
+    case "BULK_GREENHOUSE_GET_PAGE_STATE":
+      return getBulkSourcePageState("greenhouse");
+    case "BULK_GREENHOUSE_SCRAPE_VISIBLE":
+      return runBulkSourceScrape("greenhouse", { paginated: false });
+    case "BULK_GREENHOUSE_SCRAPE_PAGINATED":
+      return runBulkSourceScrape("greenhouse", {
+        paginated: true,
+        ...(message.payload as object),
+      });
+
+    case "BULK_LEVER_GET_PAGE_STATE":
+      return getBulkSourcePageState("lever");
+    case "BULK_LEVER_SCRAPE_VISIBLE":
+      return runBulkSourceScrape("lever", { paginated: false });
+    case "BULK_LEVER_SCRAPE_PAGINATED":
+      return runBulkSourceScrape("lever", {
+        paginated: true,
+        ...(message.payload as object),
+      });
+
+    case "BULK_WORKDAY_GET_PAGE_STATE":
+      return getBulkSourcePageState("workday");
+    case "BULK_WORKDAY_SCRAPE_VISIBLE":
+      return runBulkSourceScrape("workday", { paginated: false });
+    case "BULK_WORKDAY_SCRAPE_PAGINATED":
+      return runBulkSourceScrape("workday", {
+        paginated: true,
+        ...(message.payload as object),
+      });
+
     default:
       return { success: false, error: `Unknown message type: ${message.type}` };
   }
@@ -227,6 +261,208 @@ function getWwPageState() {
       rowCount: rows.length,
       hasNextPage: !!nextBtn && !nextBtn.classList.contains("disabled"),
       currentPage,
+    },
+  };
+}
+
+// P3/#39 — Generic bulk-source plumbing for Greenhouse/Lever/Workday.
+type BulkSource = "greenhouse" | "lever" | "workday";
+
+interface BulkOrchestratorLike {
+  scrapeAllVisible(opts: {
+    throttleMs?: number;
+    maxJobs?: number;
+    onProgress?: (p: {
+      scrapedCount: number;
+      attemptedCount: number;
+      currentPage: number;
+      totalRowsOnPage: number;
+      done: boolean;
+      errors: string[];
+    }) => void;
+  }): Promise<ScrapedJob[]>;
+  scrapeAllPaginated(opts: {
+    throttleMs?: number;
+    maxJobs?: number;
+    maxPages?: number;
+    onProgress?: (p: {
+      scrapedCount: number;
+      attemptedCount: number;
+      currentPage: number;
+      totalRowsOnPage: number;
+      done: boolean;
+      errors: string[];
+    }) => void;
+  }): Promise<ScrapedJob[]>;
+}
+
+function getOrchestratorForSource(source: BulkSource): BulkOrchestratorLike {
+  switch (source) {
+    case "greenhouse":
+      return new GreenhouseOrchestrator();
+    case "lever":
+      return new LeverOrchestrator();
+    case "workday":
+      return new WorkdayOrchestrator();
+  }
+}
+
+function isBulkSourceHandled(source: BulkSource, url: string): boolean {
+  switch (source) {
+    case "greenhouse":
+      return GreenhouseOrchestrator.canHandle(url);
+    case "lever":
+      return LeverOrchestrator.canHandle(url);
+    case "workday":
+      return WorkdayOrchestrator.canHandle(url);
+  }
+}
+
+/**
+ * Selectors used to count visible rows for the popup's "Detected: <source> —
+ * N rows" badge. Each list mirrors the orchestrator's row selectors but stays
+ * out-of-band so we can probe the page cheaply without instantiating the
+ * orchestrator just to count.
+ */
+const BULK_ROW_SELECTORS: Record<BulkSource, string[]> = {
+  greenhouse: [
+    "div.opening",
+    ".job-post",
+    '[data-mapped="true"]',
+    "section.level-0 div.opening",
+  ],
+  lever: [".posting", '[data-qa="posting-name"]'],
+  workday: [
+    '[data-automation-id="jobResults"] li',
+    '[data-automation-id="jobResults"] [role="listitem"]',
+    'ul[role="list"] li[data-automation-id*="job"]',
+    "li.css-1q2dra3",
+  ],
+};
+
+const BULK_NEXT_SELECTORS: Record<BulkSource, string[]> = {
+  greenhouse: [
+    'a[rel="next"]',
+    'a[aria-label="Next page" i]',
+    'button[aria-label="Next" i]',
+    ".pagination .next a",
+  ],
+  lever: [
+    'a[rel="next"]',
+    'button[aria-label="Next" i]',
+    'button[aria-label="Load more" i]',
+  ],
+  workday: [
+    'button[data-uxi-element-id="next"]',
+    'nav[aria-label="pagination"] button[aria-label*="next" i]',
+    'button[aria-label="next" i]',
+  ],
+};
+
+function countBulkRows(source: BulkSource): number {
+  for (const selector of BULK_ROW_SELECTORS[source]) {
+    const matches = document.querySelectorAll(selector);
+    if (matches.length > 0) return matches.length;
+  }
+  return 0;
+}
+
+function bulkHasNextPage(source: BulkSource): boolean {
+  for (const selector of BULK_NEXT_SELECTORS[source]) {
+    const el = document.querySelector<HTMLElement>(selector);
+    if (!el) continue;
+    if (
+      el.hasAttribute("disabled") ||
+      el.getAttribute("aria-disabled") === "true" ||
+      el.classList.contains("disabled")
+    ) {
+      continue;
+    }
+    return true;
+  }
+  return false;
+}
+
+function getBulkSourcePageState(source: BulkSource) {
+  const url = window.location.href;
+  if (!isBulkSourceHandled(source, url)) {
+    return {
+      success: true,
+      data: { detected: false, rowCount: 0, hasNextPage: false },
+    };
+  }
+  const rowCount = countBulkRows(source);
+  return {
+    success: true,
+    data: {
+      detected: rowCount > 0,
+      rowCount,
+      hasNextPage: bulkHasNextPage(source),
+    },
+  };
+}
+
+async function runBulkSourceScrape(
+  source: BulkSource,
+  opts: { paginated: boolean; maxJobs?: number; maxPages?: number },
+) {
+  const url = window.location.href;
+  if (!isBulkSourceHandled(source, url)) {
+    return { success: false, error: `Not a ${source} listing page` };
+  }
+  const orchestrator = getOrchestratorForSource(source);
+  let errors: string[] = [];
+  let pages = 1;
+  const onProgress = (p: {
+    scrapedCount: number;
+    attemptedCount: number;
+    currentPage: number;
+    totalRowsOnPage: number;
+    done: boolean;
+    errors: string[];
+  }) => {
+    pages = p.currentPage;
+    errors = p.errors;
+    // Best-effort progress fan-out. The background routes it to the popup.
+    sendMessage({
+      type: `BULK_${source.toUpperCase()}_PROGRESS`,
+      payload: p,
+    } as never).catch(() => undefined);
+  };
+
+  const jobs = opts.paginated
+    ? await orchestrator.scrapeAllPaginated({
+        onProgress,
+        maxJobs: opts.maxJobs,
+        maxPages: opts.maxPages,
+      })
+    : await orchestrator.scrapeAllVisible({ onProgress });
+
+  if (jobs.length === 0) {
+    return {
+      success: true,
+      data: { imported: 0, attempted: 0, pages, errors },
+    };
+  }
+  const importResp = await sendMessage<{
+    imported: number;
+    opportunityIds: string[];
+    pendingCount: number;
+    dedupedIds?: string[];
+  }>(Messages.importJobsBatch(jobs));
+  if (!importResp.success) {
+    return {
+      success: false,
+      error: importResp.error || "Bulk import failed",
+    };
+  }
+  return {
+    success: true,
+    data: {
+      imported: importResp.data?.imported ?? jobs.length,
+      attempted: jobs.length,
+      pages,
+      errors,
     },
   };
 }
