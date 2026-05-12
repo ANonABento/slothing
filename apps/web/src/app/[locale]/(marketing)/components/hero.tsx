@@ -150,6 +150,7 @@ export async function Hero() {
 
               {/* Preview body */}
               <div
+                role="img"
                 aria-label={a11yT("dashboardPreview")}
                 className="space-y-3 bg-gradient-to-br from-muted/15 via-card to-muted/40 p-5"
               >
