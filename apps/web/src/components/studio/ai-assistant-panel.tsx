@@ -8,6 +8,7 @@ import {
   type HTMLAttributes,
 } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import {
   BarChart3,
   BriefcaseBusiness,
@@ -55,6 +56,7 @@ import {
   type CoverLetterCritique,
 } from "@/lib/ai/critique-prompts";
 import type { DocumentMode } from "./studio-documents";
+import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 
 type AssistantRunAction =
   | DocumentAssistantAction
@@ -147,6 +149,8 @@ export function AiAssistantPanel({
   onToggleCollapsed,
   ...asideProps
 }: AiAssistantPanelProps) {
+  const dialogsT = useTranslations("dialogs.studio.aiAssistant");
+  const a11yT = useA11yTranslations();
   const { addToast } = useToast();
   const panelRef = useRef<HTMLElement>(null);
   const runningActionRef = useRef<AssistantRunAction | null>(null);
@@ -614,7 +618,7 @@ export function AiAssistantPanel({
           variant="ghost"
           size="icon"
           onClick={onToggleCollapsed}
-          aria-label="Expand AI assistant panel"
+          aria-label={a11yT("expandAiAssistantPanel")}
         >
           <PanelRightOpen className="h-4 w-4" />
         </Button>
@@ -623,7 +627,7 @@ export function AiAssistantPanel({
           variant="ghost"
           size="icon"
           onClick={expandPanel}
-          aria-label="Show AI assistant"
+          aria-label={a11yT("showAiAssistant")}
         >
           <Sparkles className="h-4 w-4" />
         </Button>
@@ -632,7 +636,7 @@ export function AiAssistantPanel({
           variant="ghost"
           size="icon"
           onClick={expandPanel}
-          aria-label="Show Tailor to JD"
+          aria-label={a11yT("showTailorToJd")}
         >
           <Wand2 className="h-4 w-4" />
         </Button>
@@ -641,7 +645,7 @@ export function AiAssistantPanel({
           variant="ghost"
           size="icon"
           onClick={expandPanel}
-          aria-label="Show Generate from Bank"
+          aria-label={a11yT("showGenerateFromBank")}
         >
           <FileText className="h-4 w-4" />
         </Button>
@@ -671,7 +675,7 @@ export function AiAssistantPanel({
               size="icon"
               variant="ghost"
               onClick={onToggleCollapsed}
-              aria-label="Collapse AI assistant panel"
+              aria-label={a11yT("collapseAiAssistantPanel")}
             >
               <PanelRightClose className="h-4 w-4" />
             </Button>
@@ -727,7 +731,7 @@ export function AiAssistantPanel({
               setSelectedOpportunityRole("");
               onOpportunityClear?.();
             }}
-            placeholder="Paste the JD here"
+            placeholder={a11yT("pasteTheJdHere")}
             className="min-h-[132px] resize-none"
           />
           <Button
@@ -791,9 +795,9 @@ export function AiAssistantPanel({
             >
               <SelectTrigger
                 id="rewrite-section-trigger"
-                aria-label="Rewrite Section"
+                aria-label={a11yT("rewriteSection")}
               >
-                <SelectValue placeholder="Choose section" />
+                <SelectValue placeholder={a11yT("chooseSection")} />
               </SelectTrigger>
               <SelectContent>
                 {REWRITE_SECTIONS.map((section) => (
@@ -810,7 +814,7 @@ export function AiAssistantPanel({
               disabled={isBusy}
               onMouseDown={(event) => event.preventDefault()}
               onClick={() => handleAssistantAction("rewrite-section")}
-              aria-label="Rewrite selected section"
+              aria-label={a11yT("rewriteSelectedSection")}
             >
               {isRunning("rewrite-section") ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -824,7 +828,7 @@ export function AiAssistantPanel({
         {hasSelection && (
           <section
             className="space-y-3 rounded-[var(--radius)] border-[length:var(--border-width)] bg-muted/30 p-3"
-            aria-label="Selected text quick actions"
+            aria-label={a11yT("selectedTextQuickActions")}
           >
             <div>
               <p className="text-sm font-medium">Selected text</p>
@@ -861,7 +865,7 @@ export function AiAssistantPanel({
         {coverLetterCritique && isCoverLetter && (
           <section
             className="space-y-4 rounded-[var(--radius)] border-[length:var(--border-width)] bg-muted/30 p-3"
-            aria-label="Cover letter critique"
+            aria-label={a11yT("coverLetterCritique")}
           >
             <div className="flex items-center justify-between gap-3">
               <p className="text-sm font-medium">Critique</p>
@@ -948,9 +952,9 @@ export function AiAssistantPanel({
       >
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Select from Opportunity Bank</DialogTitle>
+            <DialogTitle>{dialogsT("opportunityPickerTitle")}</DialogTitle>
             <DialogDescription>
-              Choose a saved or applied opportunity to load its description.
+              {dialogsT("opportunityPickerDescription")}
             </DialogDescription>
           </DialogHeader>
 

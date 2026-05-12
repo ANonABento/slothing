@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import type { ReactNode } from "react";
+import { useFormatter } from "next-intl";
 import { AnimatePresence, motion, type PanInfo } from "framer-motion";
 import { Check, ExternalLink, MapPin, Settings, X } from "lucide-react";
 import { ExtensionInstallButtons } from "@/components/marketing/extension-install-buttons";
@@ -13,14 +14,12 @@ import { cn } from "@/lib/utils";
 import type { Opportunity } from "@/types/opportunity";
 
 import { toNullableEpoch } from "@/lib/format/time";
+import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 type QueueAction = "save" | "dismiss" | "apply";
 
 const DESCRIPTION_PREVIEW_LENGTH = 260;
 const SWIPE_DISTANCE_THRESHOLD = 110;
 const SWIPE_VELOCITY_THRESHOLD = 650;
-const salaryFormatter = new Intl.NumberFormat("en-US", {
-  maximumFractionDigits: 0,
-});
 
 function getDeadlineTime(deadline?: string): number {
   if (!deadline) {
@@ -81,6 +80,8 @@ export function OpportunityReviewQueue({
   onStatusChange,
   onApplyNow,
 }: OpportunityReviewQueueProps) {
+  const format = useFormatter();
+  const a11yT = useA11yTranslations();
   const [expanded, setExpanded] = useState(false);
   const [activeAction, setActiveAction] = useState<QueueAction | null>(null);
   const queue = useMemo(() => getPendingOpportunities(jobs), [jobs]);
@@ -143,7 +144,7 @@ export function OpportunityReviewQueue({
         <h1 className="sr-only">Review Queue</h1>
         <StandardEmptyState
           icon={Check}
-          title="Queue cleared"
+          title={a11yT("queueCleared")}
           description="New pending opportunities will appear here when Slothing finds roles that need review."
           className="w-full"
           action={
@@ -184,7 +185,13 @@ export function OpportunityReviewQueue({
     activeJob.salaryMin != null || activeJob.salaryMax != null
       ? [activeJob.salaryMin, activeJob.salaryMax]
           .filter((value): value is number => value != null)
-          .map((value) => `$${salaryFormatter.format(value)}`)
+          .map((value) =>
+            format.number(value, {
+              style: "currency",
+              currency: activeJob.salaryCurrency ?? "USD",
+              maximumFractionDigits: 0,
+            }),
+          )
           .join(" - ")
       : null;
 

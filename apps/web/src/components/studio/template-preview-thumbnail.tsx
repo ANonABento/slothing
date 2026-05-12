@@ -7,6 +7,7 @@ import type {
   TemplateStyles,
 } from "@/lib/resume/template-data";
 import { cn } from "@/lib/utils";
+import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 
 interface TemplatePreviewThumbnailProps {
   template: ResumeTemplate | CoverLetterTemplate;
@@ -129,6 +130,8 @@ export function TemplatePreviewThumbnail({
 }
 
 function ResumeThumbnail({ traits }: { traits: TemplateThumbnailTraits }) {
+  const a11yT = useA11yTranslations();
+
   return (
     <>
       <header
@@ -152,12 +155,12 @@ function ResumeThumbnail({ traits }: { traits: TemplateThumbnailTraits }) {
         {traits.isTwoColumn && <ThumbnailSidebar traits={traits} />}
 
         <div className="space-y-1">
-          <PreviewSection traits={traits} title="Summary">
+          <PreviewSection traits={traits} title={a11yT("summary")}>
             <p className="line-clamp-2 text-paper-foreground/60">
               {SAMPLE_RESUME.summary}
             </p>
           </PreviewSection>
-          <PreviewSection traits={traits} title="Experience">
+          <PreviewSection traits={traits} title={a11yT("experience")}>
             {SAMPLE_RESUME.experience.map((item) => (
               <PreviewBullet key={item} traits={traits}>
                 {item}
@@ -198,12 +201,14 @@ function LetterThumbnail({ traits }: { traits: TemplateThumbnailTraits }) {
 }
 
 function ThumbnailSidebar({ traits }: { traits: TemplateThumbnailTraits }) {
+  const a11yT = useA11yTranslations();
+
   return (
     <aside
       className="space-y-1 rounded-[calc(var(--radius)_-_4px)] p-1"
       style={{ backgroundColor: `${traits.accentColor}14` }}
     >
-      <PreviewSection traits={traits} title="Skills" compact>
+      <PreviewSection traits={traits} title={a11yT("skills")} compact>
         {SAMPLE_RESUME.skills.map((skill) => (
           <p key={skill} className="truncate text-paper-foreground/60">
             {skill}

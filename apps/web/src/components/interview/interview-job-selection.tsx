@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import {
   Briefcase,
   Building2,
@@ -33,13 +34,6 @@ import {
 } from "@/lib/constants";
 import type { Opportunity } from "@/types/opportunity";
 import type { InterviewMode, PastSession } from "@/types/interview";
-
-const INTERVIEW_DIFFICULTY_LABELS: Record<InterviewDifficulty, string> = {
-  entry: "Entry Level",
-  mid: "Mid Level",
-  senior: "Senior Level",
-  executive: "Executive",
-};
 
 const QUESTION_COUNT_STORAGE_KEY = "taida:interview:question-count";
 const TIMER_STORAGE_KEY = "taida:interview:timer-enabled";
@@ -73,6 +67,7 @@ export function InterviewJobSelection({
   onResumeSession,
   onDeleteSession,
 }: InterviewJobSelectionProps) {
+  const t = useTranslations("interview.jobSelection");
   const [showPrepGuide, setShowPrepGuide] = useState<string | null>(null);
   const [showHistory, setShowHistory] = useState(false);
   const [questionCount, setQuestionCount] = useState(5);
@@ -114,17 +109,16 @@ export function InterviewJobSelection({
         <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-muted text-muted-foreground mb-6">
           <MessageSquare className="h-10 w-10" />
         </div>
-        <h2 className="text-2xl font-bold">No Opportunities to Practice For</h2>
+        <h2 className="text-2xl font-bold">{t("empty.title")}</h2>
         <p className="text-muted-foreground mt-2 max-w-md mx-auto">
-          Add a job description first to get personalized interview questions
-          based on the role.
+          {t("empty.description")}
         </p>
         <Link
           href="/opportunities"
           className="inline-flex items-center justify-center gap-2 px-6 py-3 mt-6 rounded-xl gradient-bg text-primary-foreground font-medium hover:opacity-90 transition-opacity"
         >
           <Briefcase className="h-5 w-5" />
-          Add an Opportunity
+          {t("empty.addOpportunity")}
         </Link>
 
         <div className="mt-12">
@@ -149,7 +143,7 @@ export function InterviewJobSelection({
       />
 
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <h2 className="text-xl font-semibold">Select a job to practice for:</h2>
+        <h2 className="text-xl font-semibold">{t("title")}</h2>
         <div className="flex flex-wrap items-center gap-2">
           <Button
             type="button"
@@ -157,11 +151,11 @@ export function InterviewJobSelection({
             onClick={() => onStartQuickPractice()}
           >
             <Plus className="mr-2 h-4 w-4" />
-            Quick Practice
+            {t("actions.quickPractice")}
           </Button>
           <label className="flex items-center gap-2 text-sm text-muted-foreground">
             <GraduationCap className="h-4 w-4" />
-            <span>Difficulty:</span>
+            <span>{t("controls.difficulty")}</span>
           </label>
           <Select
             value={difficulty}
@@ -175,7 +169,7 @@ export function InterviewJobSelection({
             <SelectContent>
               {INTERVIEW_DIFFICULTIES.map((level) => (
                 <SelectItem key={level} value={level}>
-                  {INTERVIEW_DIFFICULTY_LABELS[level]}
+                  {t(`difficulty.${level}`)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -190,7 +184,7 @@ export function InterviewJobSelection({
             <SelectContent>
               {INTERVIEW_QUESTION_COUNTS.map((count) => (
                 <SelectItem key={count} value={String(count)}>
-                  {count} questions
+                  {t("controls.questionCount", { count })}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -203,7 +197,7 @@ export function InterviewJobSelection({
               className="h-4 w-4 accent-primary"
             />
             <Timer className="h-4 w-4" />
-            Timer
+            {t("controls.timer")}
           </label>
         </div>
       </div>
@@ -236,7 +230,7 @@ export function InterviewJobSelection({
                   ) : (
                     <MessageSquare className="h-4 w-4 mr-2" />
                   )}
-                  Text Practice
+                  {t("actions.textPractice")}
                 </Button>
                 <Button
                   variant="outline"
@@ -245,7 +239,7 @@ export function InterviewJobSelection({
                   className="flex-1"
                 >
                   <Mic className="h-4 w-4 mr-2" />
-                  Voice Practice
+                  {t("actions.voicePractice")}
                 </Button>
               </div>
 
@@ -257,14 +251,16 @@ export function InterviewJobSelection({
                   className="text-muted-foreground hover:text-foreground"
                 >
                   <Target className="h-4 w-4 mr-1" />
-                  {showPrepGuide === job.id ? "Hide Prep Guide" : "Prep Guide"}
+                  {showPrepGuide === job.id
+                    ? t("actions.hidePrepGuide")
+                    : t("actions.prepGuide")}
                 </Button>
                 <Link
                   href={`/opportunities/${job.id}/research`}
                   className="inline-flex items-center gap-1 px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground rounded-lg hover:bg-muted transition-colors"
                 >
                   <Info className="h-4 w-4" />
-                  Company Research
+                  {t("actions.companyResearch")}
                 </Link>
               </div>
             </div>

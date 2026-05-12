@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { BuilderVersion } from "@/lib/builder/version-history";
 import { formatVersionTimestamp } from "./studio-documents";
+import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 
 interface VersionHistorySectionProps {
   versions: BuilderVersion[];
@@ -24,6 +25,8 @@ export function VersionHistorySection({
   onManualVersionNameChange,
   onSaveVersion,
 }: VersionHistorySectionProps) {
+  const a11yT = useA11yTranslations();
+
   return (
     <div className="border-b-[length:var(--border-width)] px-4 py-3">
       <h2 className="mb-2 text-sm font-semibold">Version History</h2>
@@ -66,8 +69,8 @@ export function VersionHistorySection({
       <div className="mt-2 flex items-center gap-2">
         <input
           type="text"
-          aria-label="Version name"
-          placeholder="Version name..."
+          aria-label={a11yT("versionName")}
+          placeholder={a11yT("versionName2")}
           value={manualVersionName}
           onChange={(event) => onManualVersionNameChange(event.target.value)}
           className="min-w-0 flex-1 rounded-[var(--radius)] border-[length:var(--border-width)] bg-background px-2 py-1 text-xs"

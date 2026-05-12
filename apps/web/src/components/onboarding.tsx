@@ -20,6 +20,7 @@ import {
   DoneStep,
   type OnboardingPath,
 } from "@/components/onboarding/steps";
+import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 
 export const ONBOARDING_STEP_COUNT = 5;
 
@@ -122,11 +123,13 @@ export function ProgressDots({
   total: number;
   current: number;
 }) {
+  const a11yT = useA11yTranslations();
+
   return (
     <div
       className="flex items-center justify-center gap-1.5"
       role="group"
-      aria-label="Onboarding progress"
+      aria-label={a11yT("onboardingProgress")}
     >
       {Array.from({ length: total }, (_, i) => (
         <div
@@ -151,6 +154,8 @@ export function ProgressDots({
   );
 }
 export function OnboardingDialog() {
+  const a11yT = useA11yTranslations();
+
   const router = useRouter();
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
@@ -227,7 +232,7 @@ export function OnboardingDialog() {
           <button
             onClick={markComplete}
             className="absolute right-4 top-4 p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-            aria-label="Skip onboarding"
+            aria-label={a11yT("skipOnboarding")}
           >
             <X className="h-4 w-4" />
           </button>

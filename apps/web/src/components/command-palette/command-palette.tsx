@@ -32,6 +32,7 @@ import {
 } from "@/lib/command-palette";
 import { useCommandPalette } from "./use-command-palette";
 import { runSearchProviders, type SearchGroup } from "./command-palette-search";
+import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 
 const COMMAND_ICONS: Record<string, LucideIcon> = {
   "nav-dashboard": Home,
@@ -132,6 +133,8 @@ function CommandGroup({
 }
 
 export function CommandPalette() {
+  const a11yT = useA11yTranslations();
+
   const router = useRouter();
   const { open, setOpen } = useCommandPalette();
   const [query, setQuery] = useState("");
@@ -233,7 +236,7 @@ export function CommandPalette() {
         <Command.Input
           value={query}
           onValueChange={setQuery}
-          placeholder="Type a command or search..."
+          placeholder={a11yT("typeACommandOrSearch")}
           className="h-12 flex-1 bg-transparent px-3 text-sm outline-none placeholder:text-muted-foreground"
         />
         <kbd className="hidden rounded-[calc(var(--radius)-4px)] bg-muted px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground sm:inline-flex">

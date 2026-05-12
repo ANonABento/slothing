@@ -7,8 +7,11 @@ import { Button } from "@/components/ui/button";
 import { PageSection } from "@/components/ui/page-layout";
 import { readJsonResponse } from "@/lib/http";
 import type { SettingsResponse } from "@/types/api";
+import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 
 export function OpportunityReviewSection() {
+  const a11yT = useA11yTranslations();
+
   const [enabled, setEnabled] = useState(true);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -69,7 +72,7 @@ export function OpportunityReviewSection() {
 
   return (
     <PageSection
-      title="Opportunity Review Queue"
+      title={a11yT("opportunityReviewQueue")}
       description="Review pending opportunities with a swipe-first card stack."
       icon={Rows3}
       action={

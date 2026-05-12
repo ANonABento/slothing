@@ -25,6 +25,8 @@ import {
   getGeneratedResumeCount,
 } from "./resumes";
 
+const TEST_USER_ID = "test-user";
+
 describe("Resume Database Functions", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -42,13 +44,14 @@ describe("Resume Database Functions", () => {
         content,
         "/path/to/resume.html",
         85,
+        TEST_USER_ID,
       );
 
       expect(mockRun).toHaveBeenCalled();
       expect(result).toEqual({
         id: "test-resume-id",
         jobId: "job-123",
-        profileId: "default",
+        profileId: TEST_USER_ID,
         templateId: "professional",
         contentJson: JSON.stringify(content),
         htmlPath: "/path/to/resume.html",
@@ -66,18 +69,20 @@ describe("Resume Database Functions", () => {
         "modern",
         {},
         "/path/to/resume.html",
+        undefined,
+        TEST_USER_ID,
       );
 
       expect(result.matchScore).toBeUndefined();
       const runArgs = mockRun.mock.calls[0];
-      expect(runArgs[1]).toBe("default");
+      expect(runArgs[1]).toBe(TEST_USER_ID);
       expect(runArgs[2]).toBe("job-123");
       expect(runArgs[4]).toBe(JSON.stringify({}));
       expect(runArgs[5]).toBe("/path/to/resume.html");
       expect(runArgs[6]).toBeNull();
       expect(runArgs[7]).toEqual(expect.any(String));
       expect(runArgs[8]).toBe("job-123");
-      expect(runArgs[9]).toBe("default");
+      expect(runArgs[9]).toBe(TEST_USER_ID);
     });
 
     it("should reject resumes for jobs outside the provided user", () => {
@@ -129,7 +134,7 @@ describe("Resume Database Functions", () => {
         {
           id: "resume-1",
           job_id: "job-123",
-          profile_id: "default",
+          profile_id: TEST_USER_ID,
           content_json: '{"name": "John"}',
           pdf_path: "/path/resume1.html",
           match_score: 90,
@@ -138,7 +143,7 @@ describe("Resume Database Functions", () => {
         {
           id: "resume-2",
           job_id: "job-123",
-          profile_id: "default",
+          profile_id: TEST_USER_ID,
           content_json: '{"name": "John v2"}',
           pdf_path: "/path/resume2.html",
           match_score: 95,
@@ -149,14 +154,14 @@ describe("Resume Database Functions", () => {
       const mockAll = vi.fn().mockReturnValue(mockRows);
       (db.prepare as Mock).mockReturnValue({ all: mockAll });
 
-      const result = getGeneratedResumes("job-123");
+      const result = getGeneratedResumes("job-123", TEST_USER_ID);
 
-      expect(mockAll).toHaveBeenCalledWith("job-123", "default");
+      expect(mockAll).toHaveBeenCalledWith("job-123", TEST_USER_ID);
       expect(result).toHaveLength(2);
       expect(result[0]).toEqual({
         id: "resume-1",
         jobId: "job-123",
-        profileId: "default",
+        profileId: TEST_USER_ID,
         templateId: "",
         contentJson: '{"name": "John"}',
         htmlPath: "/path/resume1.html",
@@ -170,7 +175,7 @@ describe("Resume Database Functions", () => {
         all: vi.fn().mockReturnValue([]),
       });
 
-      const result = getGeneratedResumes("job-123");
+      const result = getGeneratedResumes("job-123", TEST_USER_ID);
 
       expect(result).toEqual([]);
     });
@@ -180,7 +185,7 @@ describe("Resume Database Functions", () => {
         {
           id: "resume-1",
           job_id: "job-123",
-          profile_id: "default",
+          profile_id: TEST_USER_ID,
           content_json: "{}",
           pdf_path: "/path/resume.html",
           match_score: null,
@@ -192,7 +197,7 @@ describe("Resume Database Functions", () => {
         all: vi.fn().mockReturnValue(mockRows),
       });
 
-      const result = getGeneratedResumes("job-123");
+      const result = getGeneratedResumes("job-123", TEST_USER_ID);
 
       expect(result[0].matchScore).toBeUndefined();
     });
@@ -203,7 +208,7 @@ describe("Resume Database Functions", () => {
       const mockRow = {
         id: "resume-1",
         job_id: "job-123",
-        profile_id: "default",
+        profile_id: TEST_USER_ID,
         content_json: '{"skills": ["React"]}',
         pdf_path: "/path/resume.html",
         match_score: 88,
@@ -214,7 +219,7 @@ describe("Resume Database Functions", () => {
         get: vi.fn().mockReturnValue(mockRow),
       });
 
-      const result = getGeneratedResume("resume-1");
+      const result = getGeneratedResume("resume-1", TEST_USER_ID);
 
       expect(db.prepare as Mock).toHaveBeenCalledWith(
         expect.stringContaining("WHERE id = ? AND user_id = ?"),
@@ -222,7 +227,7 @@ describe("Resume Database Functions", () => {
       expect(result).toEqual({
         id: "resume-1",
         jobId: "job-123",
-        profileId: "default",
+        profileId: TEST_USER_ID,
         templateId: "",
         contentJson: '{"skills": ["React"]}',
         htmlPath: "/path/resume.html",
@@ -236,7 +241,7 @@ describe("Resume Database Functions", () => {
         get: vi.fn().mockReturnValue(undefined),
       });
 
-      const result = getGeneratedResume("non-existent");
+      const result = getGeneratedResume("non-existent", TEST_USER_ID);
 
       expect(result).toBeNull();
     });
@@ -247,12 +252,12 @@ describe("Resume Database Functions", () => {
       const mockRun = vi.fn();
       (db.prepare as Mock).mockReturnValue({ run: mockRun });
 
-      deleteGeneratedResume("resume-1");
+      deleteGeneratedResume("resume-1", TEST_USER_ID);
 
       expect(db.prepare).toHaveBeenCalledWith(
         "DELETE FROM generated_resumes WHERE id = ? AND user_id = ?",
       );
-      expect(mockRun).toHaveBeenCalledWith("resume-1", "default");
+      expect(mockRun).toHaveBeenCalledWith("resume-1", TEST_USER_ID);
     });
   });
 
@@ -262,7 +267,7 @@ describe("Resume Database Functions", () => {
         {
           id: "resume-1",
           job_id: "job-123",
-          profile_id: "default",
+          profile_id: TEST_USER_ID,
           content_json: "{}",
           pdf_path: "/path/r1.html",
           match_score: 90,
@@ -271,7 +276,7 @@ describe("Resume Database Functions", () => {
         {
           id: "resume-2",
           job_id: "job-456",
-          profile_id: "default",
+          profile_id: TEST_USER_ID,
           content_json: "{}",
           pdf_path: "/path/r2.html",
           match_score: 85,
@@ -283,7 +288,7 @@ describe("Resume Database Functions", () => {
         all: vi.fn().mockReturnValue(mockRows),
       });
 
-      const result = getAllGeneratedResumes();
+      const result = getAllGeneratedResumes(TEST_USER_ID);
 
       expect(result).toHaveLength(2);
       expect(result[0].jobId).toBe("job-123");
@@ -295,7 +300,7 @@ describe("Resume Database Functions", () => {
         all: vi.fn().mockReturnValue([]),
       });
 
-      const result = getAllGeneratedResumes();
+      const result = getAllGeneratedResumes(TEST_USER_ID);
 
       expect(result).toEqual([]);
     });
@@ -307,7 +312,7 @@ describe("Resume Database Functions", () => {
         get: vi.fn().mockReturnValue({ count: 42 }),
       });
 
-      const result = getGeneratedResumeCount();
+      const result = getGeneratedResumeCount(TEST_USER_ID);
 
       expect(db.prepare as Mock).toHaveBeenCalledWith(
         "SELECT COUNT(*) as count FROM generated_resumes WHERE user_id = ?",
@@ -320,7 +325,7 @@ describe("Resume Database Functions", () => {
         get: vi.fn().mockReturnValue({ count: 0 }),
       });
 
-      const result = getGeneratedResumeCount();
+      const result = getGeneratedResumeCount(TEST_USER_ID);
 
       expect(db.prepare as Mock).toHaveBeenCalledWith(
         "SELECT COUNT(*) as count FROM generated_resumes WHERE user_id = ?",

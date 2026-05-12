@@ -16,7 +16,7 @@ async function stubDashboardApis(page: Parameters<typeof prepareAppPage>[0]) {
       },
     });
   });
-  await page.route("**/api/documents", async (route) => {
+  await page.route("**/api/documents**", async (route) => {
     await route.fulfill({ json: { documents: [] } });
   });
   await page.route("**/api/analytics", async (route) => {
@@ -28,15 +28,19 @@ async function stubDashboardApis(page: Parameters<typeof prepareAppPage>[0]) {
       },
     });
   });
-  await page.route("**/api/onboarding/dismiss", async (route) => {
-    if (route.request().method() === "POST") {
-      await route.fulfill({
-        json: { dismissedAt: "2026-05-09T12:00:00.000Z", firstName: "E2E" },
-      });
-      return;
-    }
-
+  await page.route("**/api/onboarding/state", async (route) => {
     await route.fulfill({ json: { dismissedAt: null, firstName: "E2E" } });
+  });
+  await page.route("**/api/onboarding/dismiss", async (route) => {
+    await route.fulfill({
+      json: { dismissedAt: "2026-05-09T12:00:00.000Z", firstName: "E2E" },
+    });
+  });
+  await page.route("**/api/streak", async (route) => {
+    await route.fulfill({ json: { streak: null } });
+  });
+  await page.route("**/api/settings/status", async (route) => {
+    await route.fulfill({ json: { configured: false, providers: [] } });
   });
 }
 
@@ -57,15 +61,17 @@ test.describe("Dashboard coverage", () => {
         name: "Build your workspace in three steps",
       }),
     ).toBeVisible();
-    await expect(page.getByText("of 3 complete")).toBeVisible();
+    await expect(page.getByText(/of 4 complete/)).toBeVisible();
   });
 
   test("dismisses onboarding into the active dashboard", async ({ page }) => {
     await page.getByRole("button", { name: /skip onboarding/i }).click();
 
     await expect(page.getByRole("heading", { name: "Today" })).toBeVisible();
-    await expect(page.getByText("Readiness")).toBeVisible();
-    await expect(page.getByText("Pipeline")).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Readiness" }),
+    ).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Pipeline" })).toBeVisible();
   });
 
   test("quick actions route to documents and opportunities", async ({
@@ -85,7 +91,9 @@ test.describe("Dashboard coverage", () => {
   test("marks the sidebar Dashboard link active", async ({ page }) => {
     await ensureSidebarOpen(page);
     await expect(
-      page.locator("aside").getByRole("link", { name: /dashboard/i }),
+      page
+        .getByRole("complementary", { name: "Main navigation" })
+        .getByRole("link", { name: /dashboard/i }),
     ).toHaveAttribute("data-active", "true");
   });
 });

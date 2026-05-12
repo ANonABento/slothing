@@ -51,7 +51,7 @@ export interface UpdateSalaryOfferInput {
 }
 
 // Get all salary offers for a user
-export function getSalaryOffers(userId: string = "default"): SalaryOffer[] {
+export function getSalaryOffers(userId: string): SalaryOffer[] {
   const stmt = db.prepare(`
     SELECT id, user_id, job_id, company, role, base_salary, signing_bonus,
            annual_bonus, equity_value, vesting_years, location, status, notes,
@@ -105,10 +105,7 @@ export function getSalaryOffers(userId: string = "default"): SalaryOffer[] {
 }
 
 // Get a single salary offer
-export function getSalaryOffer(
-  id: string,
-  userId: string = "default",
-): SalaryOffer | null {
+export function getSalaryOffer(id: string, userId: string): SalaryOffer | null {
   const stmt = db.prepare(`
     SELECT id, user_id, job_id, company, role, base_salary, signing_bonus,
            annual_bonus, equity_value, vesting_years, location, status, notes,
@@ -167,7 +164,7 @@ export function getSalaryOffer(
 // Create a new salary offer
 export function createSalaryOffer(
   input: CreateSalaryOfferInput,
-  userId: string = "default",
+  userId: string,
 ): SalaryOffer {
   const id = generateId();
   const now = nowIso();
@@ -232,7 +229,7 @@ export function createSalaryOffer(
 export function updateSalaryOffer(
   id: string,
   input: UpdateSalaryOfferInput,
-  userId: string = "default",
+  userId: string,
 ): SalaryOffer | null {
   const existing = getSalaryOffer(id, userId);
   if (!existing) return null;
@@ -304,10 +301,7 @@ export function updateSalaryOffer(
 }
 
 // Delete a salary offer
-export function deleteSalaryOffer(
-  id: string,
-  userId: string = "default",
-): boolean {
+export function deleteSalaryOffer(id: string, userId: string): boolean {
   const stmt = db.prepare(`
     DELETE FROM salary_offers
     WHERE id = ? AND user_id = ?
@@ -318,7 +312,7 @@ export function deleteSalaryOffer(
 }
 
 // Get salary statistics
-export function getSalaryStats(userId: string = "default"): {
+export function getSalaryStats(userId: string): {
   totalOffers: number;
   pendingOffers: number;
   acceptedOffers: number;

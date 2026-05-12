@@ -1,6 +1,7 @@
 "use client";
 
 import { Filter, Search, SortAsc, X } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -21,11 +22,8 @@ import type {
   JobTypeFilter,
 } from "@/lib/jobs/filter-jobs";
 import { cn } from "@/lib/utils";
-import {
-  TRACKED_JOB_STATUSES,
-  TRACKED_JOB_STATUS_LABELS,
-} from "@/lib/constants/jobs";
-import { pluralize } from "@/lib/text/pluralize";
+import { TRACKED_JOB_STATUSES } from "@/lib/constants/jobs";
+import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 
 interface JobsToolbarProps {
   searchQuery: string;
@@ -46,6 +44,9 @@ interface JobsToolbarProps {
 }
 
 export function JobsToolbar(props: JobsToolbarProps) {
+  const t = useTranslations("jobs.toolbar");
+  const commonT = useTranslations("common");
+  const a11yT = useA11yTranslations();
   const {
     searchQuery,
     statusFilter,
@@ -72,14 +73,14 @@ export function JobsToolbar(props: JobsToolbarProps) {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search jobs by title, company, or keywords..."
+            placeholder={t("searchPlaceholder")}
             value={searchQuery}
             onChange={(event) => onSearchChange(event.target.value)}
             className="pl-10 pr-12"
           />
           {searchQuery && (
             <button
-              aria-label="Clear search"
+              aria-label={a11yT("clearSearch")}
               onClick={() => onSearchChange("")}
               className="absolute right-0 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center text-muted-foreground hover:text-foreground"
             >
@@ -94,13 +95,13 @@ export function JobsToolbar(props: JobsToolbarProps) {
             onValueChange={(value) => onStatusChange(value as JobStatusFilter)}
           >
             <SelectTrigger className="w-32">
-              <SelectValue placeholder="Status" />
+              <SelectValue placeholder={t("filters.status")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Statuses</SelectItem>
+              <SelectItem value="all">{t("filters.allStatuses")}</SelectItem>
               {TRACKED_JOB_STATUSES.map((status) => (
                 <SelectItem key={status} value={status}>
-                  {TRACKED_JOB_STATUS_LABELS[status]}
+                  {t(`statuses.${status}`)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -111,14 +112,16 @@ export function JobsToolbar(props: JobsToolbarProps) {
             onValueChange={(value) => onTypeChange(value as JobTypeFilter)}
           >
             <SelectTrigger className="w-32">
-              <SelectValue placeholder="Type" />
+              <SelectValue placeholder={t("filters.type")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Types</SelectItem>
-              <SelectItem value="full-time">Full-time</SelectItem>
-              <SelectItem value="part-time">Part-time</SelectItem>
-              <SelectItem value="contract">Contract</SelectItem>
-              <SelectItem value="internship">Internship</SelectItem>
+              <SelectItem value="all">{t("filters.allTypes")}</SelectItem>
+              <SelectItem value="full-time">{t("types.fullTime")}</SelectItem>
+              <SelectItem value="part-time">{t("types.partTime")}</SelectItem>
+              <SelectItem value="contract">{t("types.contract")}</SelectItem>
+              <SelectItem value="internship">
+                {t("types.internship")}
+              </SelectItem>
             </SelectContent>
           </Select>
 
@@ -127,12 +130,12 @@ export function JobsToolbar(props: JobsToolbarProps) {
             onValueChange={(value) => onRemoteChange(value as JobRemoteFilter)}
           >
             <SelectTrigger className="w-32">
-              <SelectValue placeholder="Location" />
+              <SelectValue placeholder={t("filters.location")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Locations</SelectItem>
-              <SelectItem value="remote">Remote</SelectItem>
-              <SelectItem value="onsite">On-site</SelectItem>
+              <SelectItem value="all">{t("filters.allLocations")}</SelectItem>
+              <SelectItem value="remote">{t("locations.remote")}</SelectItem>
+              <SelectItem value="onsite">{t("locations.onsite")}</SelectItem>
             </SelectContent>
           </Select>
 
@@ -142,13 +145,13 @@ export function JobsToolbar(props: JobsToolbarProps) {
           >
             <SelectTrigger className="w-32">
               <SortAsc className="h-4 w-4 mr-2" />
-              <SelectValue placeholder="Sort" />
+              <SelectValue placeholder={t("sort.placeholder")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="newest">Newest First</SelectItem>
-              <SelectItem value="oldest">Oldest First</SelectItem>
-              <SelectItem value="company">Company A-Z</SelectItem>
-              <SelectItem value="title">Title A-Z</SelectItem>
+              <SelectItem value="newest">{t("sort.newest")}</SelectItem>
+              <SelectItem value="oldest">{t("sort.oldest")}</SelectItem>
+              <SelectItem value="company">{t("sort.company")}</SelectItem>
+              <SelectItem value="title">{t("sort.title")}</SelectItem>
             </SelectContent>
           </Select>
 
@@ -160,7 +163,7 @@ export function JobsToolbar(props: JobsToolbarProps) {
               className="text-muted-foreground"
             >
               <X className="h-4 w-4 mr-1" />
-              Clear
+              {commonT("clear")}
             </Button>
           )}
         </div>
@@ -169,9 +172,7 @@ export function JobsToolbar(props: JobsToolbarProps) {
       {hasActiveFilters && (
         <div className="flex items-center gap-2 mt-4 text-sm text-muted-foreground">
           <Filter className="h-4 w-4" />
-          <span>
-            Showing {filteredCount} of {pluralize(totalCount, "job")}
-          </span>
+          <span>{t("showing", { filteredCount, totalCount })}</span>
         </div>
       )}
     </div>

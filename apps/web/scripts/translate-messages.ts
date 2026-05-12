@@ -46,6 +46,21 @@ const localeOverrides: Partial<Record<TargetLocale, Record<string, string>>> = {
     "opportunities.types.hackathon": "Marathon de code",
     "opportunities.counts.hackathons":
       "{count, plural, one {# marathon de code} other {# marathons de code}}",
+    "a11y.navigation": "Menu de navigation",
+    "a11y.notifications": "Alertes",
+    "a11y.barista": "Serveur de café",
+    "a11y.documents": "Fichiers",
+    "a11y.github": "Profil GitHub",
+    "profile.sidebar.salaryMinimum": "À partir de {currency} {min}",
+    "profile.sections.contact.title": "Coordonnées",
+    "profile.fields.minimum": "Valeur minimale",
+    "profile.fields.maximum": "Valeur maximale",
+    "profile.privacy.openToRecruiters.title":
+      "Ouvert aux contacts de recruteurs",
+    "profile.privacy.shareContactInfo.title":
+      "Partager les coordonnées par défaut",
+    "profile.completeness.points":
+      "+{points, plural, one {# pt} other {# pts}}",
   },
   "pt-BR": {
     "nav.groups.pipeline": "Funil",
@@ -61,6 +76,10 @@ const localeOverrides: Partial<Record<TargetLocale, Record<string, string>>> = {
     "opportunities.sources.manual": "Inserção manual",
     "opportunities.counts.hackathons":
       "{count, plural, one {# maratona de programação} other {# maratonas de programação}}",
+    "a11y.status": "Situação",
+    "a11y.barista": "Atendente de cafeteria",
+    "a11y.github": "Perfil do GitHub",
+    "profile.sidebar.salaryMinimum": "A partir de {currency} {min}",
   },
 };
 
