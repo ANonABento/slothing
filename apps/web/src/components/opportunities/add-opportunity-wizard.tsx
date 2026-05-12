@@ -10,6 +10,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { useTranslations } from "next-intl";
 import { HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -49,6 +50,7 @@ import {
   type OpportunitySource,
   type RemoteType,
 } from "@/app/[locale]/(app)/opportunities/utils";
+import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 
 type WizardStep = 0 | 1 | 2 | 3;
 type ConfirmMode = "save-exit" | "discard" | null;
@@ -168,6 +170,8 @@ export function AddOpportunityWizard({
   onOpenChange,
   onSaved,
 }: AddOpportunityWizardProps) {
+  const dialogsT = useTranslations("dialogs.opportunities.addOpportunity");
+  const a11yT = useA11yTranslations();
   const [form, setForm] = useState(DEFAULT_WIZARD_STATE);
   const [step, setStep] = useState<WizardStep>(0);
   const [furthestStep, setFurthestStep] = useState<WizardStep>(0);
@@ -426,7 +430,7 @@ export function AddOpportunityWizard({
               ref={titleRef}
               id="opportunity-title"
               value={form.title}
-              aria-label="Title required"
+              aria-label={a11yT("titleRequired")}
               aria-required="true"
               aria-invalid={titleIsInvalid}
               aria-describedby={
@@ -451,7 +455,7 @@ export function AddOpportunityWizard({
             <Input
               id="opportunity-company"
               value={form.company}
-              aria-label="Company required"
+              aria-label={a11yT("companyRequired")}
               aria-required="true"
               aria-invalid={companyIsInvalid}
               aria-describedby={
@@ -474,7 +478,7 @@ export function AddOpportunityWizard({
               ) : scrapeHint ? (
                 <span
                   className="inline-flex items-center gap-1 text-xs text-muted-foreground"
-                  title="The site may not be supported or the posting could not be reached."
+                  title={a11yT("theSiteMayNotBeSupportedOrThe")}
                 >
                   <HelpCircle className="h-3.5 w-3.5" />
                   Couldn&apos;t auto-fill
@@ -693,7 +697,7 @@ export function AddOpportunityWizard({
               id="opportunity-tech-stack"
               value={form.techStack}
               onChange={(event) => updateForm("techStack", event.target.value)}
-              placeholder="React, TypeScript"
+              placeholder={a11yT("reactTypescript")}
             />
           </WizardField>
           <WizardField
@@ -707,7 +711,7 @@ export function AddOpportunityWizard({
               onChange={(event) =>
                 updateForm("requiredSkills", event.target.value)
               }
-              placeholder="Accessibility, Testing"
+              placeholder={a11yT("accessibilityTesting")}
             />
           </WizardField>
         </div>
@@ -733,7 +737,7 @@ export function AddOpportunityWizard({
         <DialogHeader>
           <div
             className="mb-2 grid gap-2 sm:grid-cols-4"
-            aria-label="Wizard progress"
+            aria-label={a11yT("wizardProgress")}
           >
             {WIZARD_STEPS.map((wizardStep, index) => (
               <button
@@ -759,7 +763,7 @@ export function AddOpportunityWizard({
               </button>
             ))}
           </div>
-          <DialogTitle>Add Opportunity</DialogTitle>
+          <DialogTitle>{dialogsT("title")}</DialogTitle>
           <DialogDescription>{getStepDescription(step)}</DialogDescription>
         </DialogHeader>
 

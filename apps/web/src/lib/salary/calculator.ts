@@ -1,4 +1,5 @@
 // Salary calculation utilities
+import { DEFAULT_LOCALE } from "@/lib/format/time";
 
 export interface SalaryRange {
   min: number;
@@ -232,8 +233,11 @@ export function generateCounterOffer(
   };
 }
 
-export function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat("en-US", {
+export function formatCurrency(
+  amount: number,
+  locale = DEFAULT_LOCALE,
+): string {
+  return new Intl.NumberFormat(locale, {
     style: "currency",
     currency: "USD",
     maximumFractionDigits: 0,

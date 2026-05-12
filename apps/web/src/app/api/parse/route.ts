@@ -71,7 +71,6 @@ export async function POST(request: NextRequest) {
     const { filename, documentId } = parseResult.data;
 
     log.debug("parse", "starting parse", {
-      documentId,
       filename,
     });
 

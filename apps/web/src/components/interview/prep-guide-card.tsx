@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { useErrorToast } from "@/hooks/use-error-toast";
 import {
@@ -24,6 +25,7 @@ import type {
   PrepChecklistItem,
   PrepQuestion,
 } from "@/lib/interview/prep-guide";
+import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 
 interface PrepGuideCardProps {
   jobId: string;
@@ -92,6 +94,7 @@ function QuestionCard({
   question: PrepQuestion;
   index: number;
 }) {
+  const t = useTranslations("interview.prepGuide");
   const [expanded, setExpanded] = useState(false);
 
   const categoryColors = {
@@ -118,7 +121,7 @@ function QuestionCard({
               categoryColors[question.category],
             )}
           >
-            {question.category}
+            {t(`categories.${question.category}`)}
           </span>
         </div>
         {expanded ? (
@@ -132,7 +135,7 @@ function QuestionCard({
           <div className="pl-9 pt-2">
             <p className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1">
               <Lightbulb className="h-3 w-3" />
-              Tips
+              {t("questionTips")}
             </p>
             <ul className="space-y-1">
               {question.tips.map((tip, i) => (
@@ -153,6 +156,7 @@ function QuestionCard({
 }
 
 export function PrepGuideCard({ jobId }: PrepGuideCardProps) {
+  const t = useTranslations("interview.prepGuide");
   const [guide, setGuide] = useState<InterviewPrepGuide | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -170,12 +174,12 @@ export function PrepGuideCard({ jobId }: PrepGuideCardProps) {
         const data = await res.json();
 
         if (!res.ok) {
-          throw new Error(data.error || "Failed to fetch guide");
+          throw new Error(data.error || t("errors.fetch"));
         }
 
         setGuide(data);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load guide");
+        setError(err instanceof Error ? err.message : t("errors.load"));
       } finally {
         setLoading(false);
       }
@@ -201,7 +205,7 @@ export function PrepGuideCard({ jobId }: PrepGuideCardProps) {
         `/api/interview/prep-guide?jobId=${jobId}&format=markdown`,
       );
       if (!res.ok) {
-        throw new Error("Failed to download guide");
+        throw new Error(t("errors.download"));
       }
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
@@ -214,8 +218,8 @@ export function PrepGuideCard({ jobId }: PrepGuideCardProps) {
       URL.revokeObjectURL(url);
     } catch (err) {
       showErrorToast(err, {
-        title: "Could not download prep guide",
-        fallbackDescription: "Please try downloading the guide again.",
+        title: t("errors.downloadTitle"),
+        fallbackDescription: t("errors.downloadDescription"),
       });
     } finally {
       setDownloading(false);
@@ -226,9 +230,7 @@ export function PrepGuideCard({ jobId }: PrepGuideCardProps) {
     return (
       <div className="rounded-xl border bg-card p-6 text-center">
         <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
-        <p className="mt-4 text-muted-foreground">
-          Generating your prep guide...
-        </p>
+        <p className="mt-4 text-muted-foreground">{t("loading")}</p>
       </div>
     );
   }
@@ -236,7 +238,7 @@ export function PrepGuideCard({ jobId }: PrepGuideCardProps) {
   if (error || !guide) {
     return (
       <div className="rounded-xl border bg-card p-6 text-center">
-        <p className="text-destructive">{error || "Failed to load guide"}</p>
+        <p className="text-destructive">{error || t("errors.load")}</p>
       </div>
     );
   }
@@ -254,9 +256,12 @@ export function PrepGuideCard({ jobId }: PrepGuideCardProps) {
               <BookOpen className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <h3 className="font-semibold">Interview Prep Guide</h3>
+              <h3 className="font-semibold">{t("title")}</h3>
               <p className="text-sm text-muted-foreground">
-                {guide.jobTitle} at {guide.company}
+                {t("jobAtCompany", {
+                  jobTitle: guide.jobTitle,
+                  company: guide.company,
+                })}
               </p>
             </div>
           </div>
@@ -270,14 +275,14 @@ export function PrepGuideCard({ jobId }: PrepGuideCardProps) {
             ) : (
               <Download className="h-4 w-4" />
             )}
-            Export
+            {t("actions.export")}
           </button>
         </div>
 
         {/* Progress bar */}
         <div className="mt-4">
           <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
-            <span>Preparation Progress</span>
+            <span>{t("progress")}</span>
             <span>{Math.round(checklistProgress * 100)}%</span>
           </div>
           <div className="h-2 bg-muted rounded-full overflow-hidden">
@@ -292,9 +297,9 @@ export function PrepGuideCard({ jobId }: PrepGuideCardProps) {
       {/* Tabs */}
       <div className="flex border-b">
         {[
-          { id: "overview", label: "Overview", icon: Target },
-          { id: "checklist", label: "Checklist", icon: CheckCircle2 },
-          { id: "questions", label: "Questions", icon: MessageSquare },
+          { id: "overview", labelKey: "overview", icon: Target },
+          { id: "checklist", labelKey: "checklist", icon: CheckCircle2 },
+          { id: "questions", labelKey: "questions", icon: MessageSquare },
         ].map((tab) => (
           <button
             key={tab.id}
@@ -307,7 +312,7 @@ export function PrepGuideCard({ jobId }: PrepGuideCardProps) {
             )}
           >
             <tab.icon className="h-4 w-4" />
-            {tab.label}
+            {t(`tabs.${tab.labelKey}`)}
           </button>
         ))}
       </div>
@@ -321,7 +326,7 @@ export function PrepGuideCard({ jobId }: PrepGuideCardProps) {
             <div>
               <h4 className="text-sm font-medium flex items-center gap-2 mb-2">
                 <Target className="h-4 w-4 text-primary" />
-                Key Topics to Prepare
+                {t("sections.keyTopics")}
               </h4>
               <div className="flex flex-wrap gap-2">
                 {guide.keyTopics.map((topic, i) => (
@@ -339,7 +344,7 @@ export function PrepGuideCard({ jobId }: PrepGuideCardProps) {
               <div>
                 <h4 className="text-sm font-medium flex items-center gap-2 mb-2">
                   <Sparkles className="h-4 w-4 text-success" />
-                  Your Strengths
+                  {t("sections.strengths")}
                 </h4>
                 <ul className="space-y-1">
                   {guide.yourStrengths.map((strength, i) => (
@@ -354,7 +359,7 @@ export function PrepGuideCard({ jobId }: PrepGuideCardProps) {
               <div>
                 <h4 className="text-sm font-medium flex items-center gap-2 mb-2">
                   <AlertTriangle className="h-4 w-4 text-warning" />
-                  Potential Gaps
+                  {t("sections.gaps")}
                 </h4>
                 <ul className="space-y-1">
                   {guide.potentialGaps.map((gap, i) => (
@@ -370,7 +375,7 @@ export function PrepGuideCard({ jobId }: PrepGuideCardProps) {
             <div>
               <h4 className="text-sm font-medium flex items-center gap-2 mb-2">
                 <MessageSquare className="h-4 w-4 text-primary" />
-                Key Talking Points
+                {t("sections.talkingPoints")}
               </h4>
               <ol className="space-y-2">
                 {guide.talkingPoints.map((point, i) => (
@@ -389,17 +394,17 @@ export function PrepGuideCard({ jobId }: PrepGuideCardProps) {
         {activeTab === "checklist" && (
           <div className="space-y-6">
             <ChecklistSection
-              title="Before the Interview"
+              title={t("checklist.before")}
               items={guide.checklist.filter((i) => i.category === "before")}
               onToggle={handleToggleChecklistItem}
             />
             <ChecklistSection
-              title="During the Interview"
+              title={t("checklist.during")}
               items={guide.checklist.filter((i) => i.category === "during")}
               onToggle={handleToggleChecklistItem}
             />
             <ChecklistSection
-              title="After the Interview"
+              title={t("checklist.after")}
               items={guide.checklist.filter((i) => i.category === "after")}
               onToggle={handleToggleChecklistItem}
             />

@@ -9,6 +9,7 @@ import {
   Sparkles,
   User,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -40,6 +41,7 @@ interface BuilderStepProps {
 }
 
 export function BuilderStep({ onAdvance }: BuilderStepProps) {
+  const t = useTranslations("onboarding.steps.builder");
   const [answers, setAnswers] = useState<ScratchProfileAnswers>(initialAnswers);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -76,15 +78,13 @@ export function BuilderStep({ onAdvance }: BuilderStepProps) {
       });
 
       if (!response.ok) {
-        throw new Error("Unable to save your profile starter.");
+        throw new Error(t("errors.save"));
       }
 
       onAdvance();
     } catch (submitError) {
       setError(
-        submitError instanceof Error
-          ? submitError.message
-          : "Unable to save your profile starter.",
+        submitError instanceof Error ? submitError.message : t("errors.save"),
       );
     } finally {
       setSubmitting(false);
@@ -97,10 +97,9 @@ export function BuilderStep({ onAdvance }: BuilderStepProps) {
         <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-primary to-accent text-primary-foreground shadow-lg mb-6">
           <Sparkles className="h-10 w-10" />
         </div>
-        <h2 className="text-2xl font-semibold">Build Your Starter Profile</h2>
+        <h2 className="text-2xl font-semibold">{t("title")}</h2>
         <p className="text-base mt-2 text-muted-foreground">
-          Answer a few quick prompts so Slothing can organize your career
-          details without a resume upload.
+          {t("description")}
         </p>
       </div>
 
@@ -109,7 +108,7 @@ export function BuilderStep({ onAdvance }: BuilderStepProps) {
           <label className="space-y-1.5">
             <span className="flex items-center gap-2 text-sm font-medium">
               <User className="h-4 w-4 text-primary" />
-              Name
+              {t("fields.name")}
             </span>
             <Input
               value={answers.name}
@@ -119,7 +118,7 @@ export function BuilderStep({ onAdvance }: BuilderStepProps) {
             />
           </label>
           <label className="space-y-1.5">
-            <span className="text-sm font-medium">Email</span>
+            <span className="text-sm font-medium">{t("fields.email")}</span>
             <Input
               type="email"
               value={answers.email}
@@ -133,58 +132,60 @@ export function BuilderStep({ onAdvance }: BuilderStepProps) {
         <label className="space-y-1.5 block">
           <span className="flex items-center gap-2 text-sm font-medium">
             <BriefcaseBusiness className="h-4 w-4 text-primary" />
-            Target role
+            {t("fields.targetRole")}
           </span>
           <Input
             value={answers.headline}
             onChange={updateAnswer("headline")}
-            placeholder="Frontend intern, project manager, data analyst"
+            placeholder={t("placeholders.targetRole")}
             required
           />
         </label>
 
         <label className="space-y-1.5 block">
-          <span className="text-sm font-medium">Background summary</span>
+          <span className="text-sm font-medium">
+            {t("fields.backgroundSummary")}
+          </span>
           <Textarea
             value={answers.summary}
             onChange={updateAnswer("summary")}
-            placeholder="A sentence about your background, interests, or next move"
+            placeholder={t("placeholders.backgroundSummary")}
           />
         </label>
 
         <div className="space-y-2">
           <div className="flex items-center gap-2 text-sm font-medium">
             <GraduationCap className="h-4 w-4 text-primary" />
-            Education
+            {t("fields.education")}
           </div>
           <div className="grid gap-3 sm:grid-cols-3">
             <Input
-              aria-label="School"
+              aria-label={t("fields.school")}
               value={answers.educationInstitution}
               onChange={updateAnswer("educationInstitution")}
-              placeholder="School"
+              placeholder={t("fields.school")}
             />
             <Input
-              aria-label="Degree"
+              aria-label={t("fields.degree")}
               value={answers.educationDegree}
               onChange={updateAnswer("educationDegree")}
-              placeholder="Degree"
+              placeholder={t("fields.degree")}
             />
             <Input
-              aria-label="Field"
+              aria-label={t("fields.field")}
               value={answers.educationField}
               onChange={updateAnswer("educationField")}
-              placeholder="Field"
+              placeholder={t("fields.field")}
             />
           </div>
         </div>
 
         <label className="space-y-1.5 block">
-          <span className="text-sm font-medium">Top skills</span>
+          <span className="text-sm font-medium">{t("fields.topSkills")}</span>
           <Input
             value={answers.skillsCsv}
             onChange={updateAnswer("skillsCsv")}
-            placeholder="Customer service, Excel, Python"
+            placeholder={t("placeholders.topSkills")}
           />
         </label>
 
@@ -196,9 +197,11 @@ export function BuilderStep({ onAdvance }: BuilderStepProps) {
             onClick={() => setExpanded((current) => !current)}
           >
             <span className="font-medium text-foreground">
-              Add a role, project, or honour (optional)
+              {t("optional.title")}
             </span>
-            <span aria-hidden="true">{expanded ? "Hide" : "Add"}</span>
+            <span aria-hidden="true">
+              {expanded ? t("optional.hide") : t("optional.add")}
+            </span>
           </button>
 
           {expanded && (
@@ -206,74 +209,78 @@ export function BuilderStep({ onAdvance }: BuilderStepProps) {
               <div className="grid gap-3 sm:grid-cols-2">
                 <label className="space-y-1.5">
                   <span className="text-sm font-medium">
-                    Company / organisation
+                    {t("fields.company")}
                   </span>
                   <Input
                     value={answers.experienceCompany}
                     onChange={updateAnswer("experienceCompany")}
-                    placeholder="Campus cafe"
+                    placeholder={t("placeholders.company")}
                   />
                 </label>
                 <label className="space-y-1.5">
-                  <span className="text-sm font-medium">Role / title</span>
+                  <span className="text-sm font-medium">
+                    {t("fields.roleTitle")}
+                  </span>
                   <Input
                     value={answers.experienceTitle}
                     onChange={updateAnswer("experienceTitle")}
-                    placeholder="Barista"
+                    placeholder={t("placeholders.roleTitle")}
                   />
                 </label>
               </div>
 
               <label className="space-y-1.5 block">
                 <span className="text-sm font-medium">
-                  Role highlights (one per line, up to 3)
+                  {t("fields.roleHighlights")}
                 </span>
                 <Textarea
                   value={answers.experienceHighlights}
                   onChange={updateAnswer("experienceHighlights")}
-                  placeholder={"Pulled espresso shots\nTrained 3 new baristas"}
-                />
-              </label>
-
-              <label className="space-y-1.5 block">
-                <span className="text-sm font-medium">Project name</span>
-                <Input
-                  value={answers.projectName}
-                  onChange={updateAnswer("projectName")}
-                  placeholder="Community pantry dashboard"
-                />
-              </label>
-
-              <label className="space-y-1.5 block">
-                <span className="text-sm font-medium">What did you build?</span>
-                <Textarea
-                  value={answers.projectSummary}
-                  onChange={updateAnswer("projectSummary")}
-                  placeholder="A class project that tracked donations and volunteer shifts"
+                  placeholder={t("placeholders.roleHighlights")}
                 />
               </label>
 
               <label className="space-y-1.5 block">
                 <span className="text-sm font-medium">
-                  Project highlights (one per line)
+                  {t("fields.projectName")}
+                </span>
+                <Input
+                  value={answers.projectName}
+                  onChange={updateAnswer("projectName")}
+                  placeholder={t("placeholders.projectName")}
+                />
+              </label>
+
+              <label className="space-y-1.5 block">
+                <span className="text-sm font-medium">
+                  {t("fields.projectSummary")}
+                </span>
+                <Textarea
+                  value={answers.projectSummary}
+                  onChange={updateAnswer("projectSummary")}
+                  placeholder={t("placeholders.projectSummary")}
+                />
+              </label>
+
+              <label className="space-y-1.5 block">
+                <span className="text-sm font-medium">
+                  {t("fields.projectHighlights")}
                 </span>
                 <Textarea
                   value={answers.projectHighlights}
                   onChange={updateAnswer("projectHighlights")}
-                  placeholder={
-                    "Built a filterable tracker\nPresented findings to class"
-                  }
+                  placeholder={t("placeholders.projectHighlights")}
                 />
               </label>
 
               <label className="space-y-1.5 block">
                 <span className="text-sm font-medium">
-                  Honours, awards, leadership (comma-separated)
+                  {t("fields.achievements")}
                 </span>
                 <Input
                   value={answers.achievements}
                   onChange={updateAnswer("achievements")}
-                  placeholder="Residence council secretary, Dean's list"
+                  placeholder={t("placeholders.achievements")}
                 />
               </label>
             </div>
@@ -298,10 +305,10 @@ export function BuilderStep({ onAdvance }: BuilderStepProps) {
           {submitting ? (
             <>
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              Saving
+              {t("actions.saving")}
             </>
           ) : (
-            "Save and continue"
+            t("actions.saveContinue")
           )}
         </Button>
       </form>

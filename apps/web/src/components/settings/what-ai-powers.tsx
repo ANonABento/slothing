@@ -2,6 +2,7 @@
 
 import { FileText, Mail, Sparkles } from "lucide-react";
 import { PageIconTile, PageSection } from "@/components/ui/page-layout";
+import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 
 const FEATURE_DESCRIPTIONS = [
   {
@@ -31,9 +32,11 @@ const FEATURE_DESCRIPTIONS = [
 ];
 
 export function WhatAiPowers() {
+  const a11yT = useA11yTranslations();
+
   return (
     <PageSection
-      title="What AI Powers"
+      title={a11yT("whatAiPowers")}
       description="Your configured provider enables these features."
       icon={Sparkles}
     >

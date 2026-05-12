@@ -35,7 +35,7 @@ export interface EmailDraftCursor {
 }
 
 export interface ListEmailDraftsPaginatedParams {
-  userId?: string;
+  userId: string;
   type?: EmailTemplateType;
   cursor?: EmailDraftCursor | null;
   limit: number;
@@ -68,7 +68,7 @@ function rowToEmailDraft(row: EmailDraftRow): EmailDraft {
 }
 
 // Get all email drafts for a user
-export function getEmailDrafts(userId: string = "default"): EmailDraft[] {
+export function getEmailDrafts(userId: string): EmailDraft[] {
   const stmt = db.prepare(`
     SELECT id, user_id, type, job_id, subject, body, context_json, created_at, updated_at
     FROM email_drafts
@@ -82,7 +82,7 @@ export function getEmailDrafts(userId: string = "default"): EmailDraft[] {
 }
 
 export function listEmailDraftsPaginated({
-  userId = "default",
+  userId,
   type,
   cursor,
   limit,
@@ -116,10 +116,7 @@ export function listEmailDraftsPaginated({
 }
 
 // Get a single email draft by ID
-export function getEmailDraft(
-  id: string,
-  userId: string = "default",
-): EmailDraft | null {
+export function getEmailDraft(id: string, userId: string): EmailDraft | null {
   const stmt = db.prepare(`
     SELECT id, user_id, type, job_id, subject, body, context_json, created_at, updated_at
     FROM email_drafts
@@ -158,7 +155,7 @@ export function getEmailDraft(
 // Create a new email draft
 export function createEmailDraft(
   input: CreateEmailDraftInput,
-  userId: string = "default",
+  userId: string,
 ): EmailDraft {
   const id = generateId();
   const now = nowIso();
@@ -208,7 +205,7 @@ export function createEmailDraft(
 export function updateEmailDraft(
   id: string,
   input: UpdateEmailDraftInput,
-  userId: string = "default",
+  userId: string,
 ): EmailDraft | null {
   const existing = getEmailDraft(id, userId);
   if (!existing) return null;
@@ -249,10 +246,7 @@ export function updateEmailDraft(
 }
 
 // Delete an email draft
-export function deleteEmailDraft(
-  id: string,
-  userId: string = "default",
-): boolean {
+export function deleteEmailDraft(id: string, userId: string): boolean {
   const stmt = db.prepare(`
     DELETE FROM email_drafts
     WHERE id = ? AND user_id = ?
@@ -265,7 +259,7 @@ export function deleteEmailDraft(
 // Get drafts by type
 export function getEmailDraftsByType(
   type: EmailTemplateType,
-  userId: string = "default",
+  userId: string,
 ): EmailDraft[] {
   const stmt = db.prepare(`
     SELECT id, user_id, type, job_id, subject, body, context_json, created_at, updated_at

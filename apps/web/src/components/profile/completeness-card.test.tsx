@@ -1,11 +1,22 @@
 import { render, screen } from "@testing-library/react";
+import { NextIntlClientProvider } from "next-intl";
+import type { ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
 
 import { CompletenessCard } from "./completeness-card";
+import messages from "@/messages/en.json";
+
+function renderWithIntl(ui: ReactNode) {
+  return render(
+    <NextIntlClientProvider locale="en" messages={messages}>
+      {ui}
+    </NextIntlClientProvider>,
+  );
+}
 
 describe("CompletenessCard", () => {
   it("renders the score, quick-win count, and progress value", () => {
-    render(
+    renderWithIntl(
       <CompletenessCard
         result={{
           score: 73,
@@ -55,7 +66,7 @@ describe("CompletenessCard", () => {
   });
 
   it("renders complete state without actionable gaps", () => {
-    render(
+    renderWithIntl(
       <CompletenessCard
         result={{ score: 100, gaps: [] }}
         onSelectGap={vi.fn()}

@@ -49,6 +49,7 @@ import {
 } from "./_data/templates";
 import type { EmailTemplateType } from "@/types";
 import type { Opportunity } from "@/types/opportunity";
+import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 
 const SendViaGmailButton = dynamic(
   () => import("@/components/google").then((m) => m.SendViaGmailButton),
@@ -112,6 +113,8 @@ interface GeneratedEmailResponse {
 }
 
 export default function EmailTemplatesPage() {
+  const a11yT = useA11yTranslations();
+
   const [selectedType, setSelectedType] = useState<EmailTemplateType | null>(
     null,
   );
@@ -497,7 +500,7 @@ export default function EmailTemplatesPage() {
               <Label>Select Job (optional)</Label>
               <Select value={selectedJobId} onValueChange={setSelectedJobId}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Choose a job application" />
+                  <SelectValue placeholder={a11yT("chooseAJobApplication")} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="">No job selected</SelectItem>
@@ -519,7 +522,9 @@ export default function EmailTemplatesPage() {
               <Label>Select Job</Label>
               <Select value={selectedJobId} onValueChange={setSelectedJobId}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Choose the job you interviewed for" />
+                  <SelectValue
+                    placeholder={a11yT("chooseTheJobYouInterviewedFor")}
+                  />
                 </SelectTrigger>
                 <SelectContent>
                   {jobs.map((job) => (
@@ -595,7 +600,9 @@ export default function EmailTemplatesPage() {
               <Textarea
                 value={hookNote}
                 onChange={(e) => setHookNote(e.target.value)}
-                placeholder="Mention a recent project, shared interest, or company update..."
+                placeholder={a11yT(
+                  "mentionARecentProjectSharedInterestOrCompany",
+                )}
                 rows={3}
               />
             </div>
@@ -609,7 +616,7 @@ export default function EmailTemplatesPage() {
               <Label>Select Job</Label>
               <Select value={selectedJobId} onValueChange={setSelectedJobId}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Choose the job offer" />
+                  <SelectValue placeholder={a11yT("chooseTheJobOffer")} />
                 </SelectTrigger>
                 <SelectContent>
                   {jobs
@@ -632,7 +639,7 @@ export default function EmailTemplatesPage() {
               <Textarea
                 value={customNote}
                 onChange={(e) => setCustomNote(e.target.value)}
-                placeholder="Add any specific points you want to mention..."
+                placeholder={a11yT("addAnySpecificPointsYouWantToMention")}
                 rows={3}
               />
             </div>
@@ -669,7 +676,7 @@ export default function EmailTemplatesPage() {
                 }
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Choose a reply type" />
+                  <SelectValue placeholder={a11yT("chooseAReplyType")} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="interested">Interested</SelectItem>
@@ -682,7 +689,9 @@ export default function EmailTemplatesPage() {
               <Textarea
                 value={customNote}
                 onChange={(e) => setCustomNote(e.target.value)}
-                placeholder="Add constraints, timing, compensation expectations, or a future-fit note..."
+                placeholder={a11yT(
+                  "addConstraintsTimingCompensationExpectationsOrAFuture",
+                )}
                 rows={3}
               />
             </div>
@@ -706,7 +715,9 @@ export default function EmailTemplatesPage() {
                 }}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Choose the role you're applying for" />
+                  <SelectValue
+                    placeholder={a11yT("chooseTheRoleYouReApplyingFor")}
+                  />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="">No job selected</SelectItem>
@@ -755,7 +766,7 @@ export default function EmailTemplatesPage() {
               <Textarea
                 value={customNote}
                 onChange={(e) => setCustomNote(e.target.value)}
-                placeholder="Add a recent accomplishment or project to remind them of..."
+                placeholder={a11yT("addARecentAccomplishmentOrProjectToRemind")}
                 rows={3}
               />
             </div>
@@ -771,7 +782,7 @@ export default function EmailTemplatesPage() {
     <AppPage>
       <PageHeader
         icon={Mail}
-        title="Email Templates"
+        title={a11yT("emailTemplates")}
         description="Generate professional emails for follow-ups, thank you notes, and networking."
       />
 
@@ -789,7 +800,7 @@ export default function EmailTemplatesPage() {
             {/* Template Selection */}
             <PagePanel>
               <PagePanelHeader
-                title="Choose Template"
+                title={a11yT("chooseTemplate")}
                 className="mb-4"
                 action={
                   <Suspense fallback={<EmailActionsSkeleton />}>
@@ -868,7 +879,7 @@ export default function EmailTemplatesPage() {
             {/* Context Fields */}
             {selectedType && (
               <PagePanel>
-                <PagePanelHeader title="Customize" className="mb-4" />
+                <PagePanelHeader title={a11yT("customize")} className="mb-4" />
                 {jobsLoaded ? (
                   renderContextFields()
                 ) : (

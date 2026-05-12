@@ -18,6 +18,7 @@ import Link from "next/link";
 import type { Notification, NotificationType } from "@/lib/db/notifications";
 import { useConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useErrorToast } from "@/hooks/use-error-toast";
+import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 
 const typeIcons: Record<NotificationType, typeof Bell> = {
   reminder_due: Clock,
@@ -70,6 +71,8 @@ interface NotificationCenterProps {
 export function NotificationCenter({
   collapsed = false,
 }: NotificationCenterProps) {
+  const a11yT = useA11yTranslations();
+
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -319,7 +322,7 @@ export function NotificationCenter({
           {/* Panel */}
           <div
             role="dialog"
-            aria-label="Notifications"
+            aria-label={a11yT("notifications")}
             className={cn(
               "absolute z-50 w-80 max-h-[70vh] flex flex-col bg-card border rounded-xl shadow-xl",
               collapsed
@@ -336,8 +339,8 @@ export function NotificationCenter({
                   <button
                     onClick={handleMarkAllRead}
                     className="p-1.5 text-muted-foreground hover:text-foreground rounded-lg hover:bg-muted transition-colors"
-                    title="Mark all as read"
-                    aria-label="Mark all as read"
+                    title={a11yT("markAllAsRead")}
+                    aria-label={a11yT("markAllAsRead")}
                   >
                     <CheckCheck className="h-4 w-4" />
                   </button>
@@ -346,8 +349,8 @@ export function NotificationCenter({
                   <button
                     onClick={handleDeleteRead}
                     className="p-1.5 text-muted-foreground hover:text-foreground rounded-lg hover:bg-muted transition-colors"
-                    title="Delete read notifications"
-                    aria-label="Delete read notifications"
+                    title={a11yT("deleteReadNotifications")}
+                    aria-label={a11yT("deleteReadNotifications")}
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>
@@ -355,7 +358,7 @@ export function NotificationCenter({
                 <button
                   onClick={() => setIsOpen(false)}
                   className="p-1.5 text-muted-foreground hover:text-foreground rounded-lg hover:bg-muted transition-colors"
-                  aria-label="Close notifications"
+                  aria-label={a11yT("closeNotifications")}
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -415,8 +418,8 @@ export function NotificationCenter({
                                       handleMarkRead(notification.id);
                                     }}
                                     className="p-1 text-muted-foreground hover:text-foreground rounded hover:bg-muted transition-colors"
-                                    title="Mark as read"
-                                    aria-label="Mark as read"
+                                    title={a11yT("markAsRead")}
+                                    aria-label={a11yT("markAsRead")}
                                   >
                                     <Check className="h-3.5 w-3.5" />
                                   </button>
@@ -428,8 +431,8 @@ export function NotificationCenter({
                                     void handleDelete(notification.id);
                                   }}
                                   className="p-1 text-muted-foreground hover:text-destructive rounded hover:bg-muted transition-colors"
-                                  title="Delete"
-                                  aria-label="Delete notification"
+                                  title={a11yT("delete")}
+                                  aria-label={a11yT("deleteNotification")}
                                 >
                                   <X className="h-3.5 w-3.5" />
                                 </button>

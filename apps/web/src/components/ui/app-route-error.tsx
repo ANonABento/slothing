@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { ErrorState } from "@/components/ui/error-state";
+import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 
 export interface AppRouteErrorProps {
   error: Error & { digest?: string };
@@ -9,6 +10,8 @@ export interface AppRouteErrorProps {
 }
 
 export function AppRouteError({ error, reset }: AppRouteErrorProps) {
+  const a11yT = useA11yTranslations();
+
   useEffect(() => {
     console.error("App route render failed:", error);
   }, [error]);
@@ -16,7 +19,7 @@ export function AppRouteError({ error, reset }: AppRouteErrorProps) {
   return (
     <div className="flex min-h-[calc(100vh-12rem)] items-center justify-center px-4 py-10">
       <ErrorState
-        title="We couldn't load this page"
+        title={a11yT("weCouldnTLoadThisPage")}
         message="Something went wrong while loading this page. Try again to reload it."
         onRetry={reset}
         variant="card"

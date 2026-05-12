@@ -49,6 +49,7 @@ import {
 } from "@/lib/editor/toolbar";
 import type { ResumeTemplate } from "@/lib/resume/template-types";
 import { cn } from "@/lib/utils";
+import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 
 interface EditorToolbarProps {
   editor: Editor | null;
@@ -176,6 +177,8 @@ function TableGridPicker({
   editor: Editor | null;
   disabled: boolean;
 }) {
+  const a11yT = useA11yTranslations();
+
   const [hovered, setHovered] = useState({ rows: 1, cols: 1 });
   const cells = Array.from({ length: 64 }, (_, index) => {
     const row = Math.floor(index / 8) + 1;
@@ -213,8 +216,8 @@ function TableGridPicker({
           "flex cursor-pointer list-none items-center justify-center rounded-md",
           disabled && "pointer-events-none opacity-50",
         )}
-        aria-label="Insert table"
-        title="Insert table"
+        aria-label={a11yT("insertTable")}
+        title={a11yT("insertTable")}
       >
         <Table2 className="h-4 w-4" />
       </summary>
@@ -245,6 +248,8 @@ function InsertImageButton({
   editor: Editor | null;
   disabled: boolean;
 }) {
+  const a11yT = useA11yTranslations();
+
   const inputRef = useRef<HTMLInputElement>(null);
 
   return (
@@ -261,7 +266,7 @@ function InsertImageButton({
         type="file"
         accept="image/*"
         className="hidden"
-        aria-label="Image upload"
+        aria-label={a11yT("imageUpload")}
         onChange={(event) => {
           insertImageFromFile(editor, event.currentTarget.files?.[0]);
           event.currentTarget.value = "";
@@ -730,6 +735,8 @@ export function StudioEditorToolbar({
   onDownloadPdf,
   onPrint,
 }: EditorToolbarProps) {
+  const a11yT = useA11yTranslations();
+
   const exportDisabled = !canExport || isExporting;
 
   return (
@@ -749,7 +756,7 @@ export function StudioEditorToolbar({
               onZoomChange(clampZoomPercent(event.currentTarget.valueAsNumber))
             }
             className="w-28 accent-primary"
-            aria-label="Preview zoom"
+            aria-label={a11yT("previewZoom")}
           />
           <span className="w-10 text-right tabular-nums text-muted-foreground">
             {zoomPercent}%
@@ -762,7 +769,7 @@ export function StudioEditorToolbar({
             value={templateId}
             onChange={(event) => onTemplateChange(event.currentTarget.value)}
             className="max-w-40 bg-transparent text-sm outline-none"
-            aria-label="Resume template"
+            aria-label={a11yT("resumeTemplate")}
           >
             {templates.map((template) => (
               <option key={template.id} value={template.id}>
