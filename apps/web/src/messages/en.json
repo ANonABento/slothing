@@ -49,6 +49,14 @@
       "settings": "Settings"
     }
   },
+  "marketing": {
+    "nav": {
+      "languageSwitcher": {
+        "label": "Change language",
+        "description": "Choose the language for this page."
+      }
+    }
+  },
   "dashboard": {
     "title": "Dashboard",
     "actions": {

@@ -55,6 +55,14 @@
       "settings": "Configuración"
     }
   },
+  "marketing": {
+    "nav": {
+      "languageSwitcher": {
+        "label": "Cambiar idioma",
+        "description": "Elige el idioma para esta página."
+      }
+    }
+  },
   "dashboard": {
     "title": "Panel",
     "actions": {

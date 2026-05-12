@@ -55,6 +55,14 @@
       "settings": "设置"
     }
   },
+  "marketing": {
+    "nav": {
+      "languageSwitcher": {
+        "label": "切换语言",
+        "description": "选择此页面的语言。"
+      }
+    }
+  },
   "dashboard": {
     "title": "仪表盘",
     "actions": {

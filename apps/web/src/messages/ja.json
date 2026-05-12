@@ -55,6 +55,14 @@
       "settings": "設定"
     }
   },
+  "marketing": {
+    "nav": {
+      "languageSwitcher": {
+        "label": "言語を変更",
+        "description": "このページの言語を選択します。"
+      }
+    }
+  },
   "dashboard": {
     "title": "ダッシュボード",
     "actions": {

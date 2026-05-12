@@ -1,8 +1,20 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
 import messages from "@/messages/en.json";
 import { Navbar } from "./navbar";
+
+vi.mock("@/i18n/navigation", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/i18n/navigation")>();
+
+  return {
+    ...actual,
+    usePathname: () => "/pricing",
+    useRouter: () => ({
+      replace: vi.fn(),
+    }),
+  };
+});
 
 function renderNavbar(locale: string) {
   return render(
