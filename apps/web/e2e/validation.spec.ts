@@ -7,7 +7,7 @@ import {
 
 test.skip(
   true,
-  "Requires an authenticated Clerk test fixture and interactive app forms.",
+  "Requires an authenticated NextAuth test fixture and interactive app forms.",
 );
 
 test.describe("Opportunity Form Validation", () => {

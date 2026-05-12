@@ -7,7 +7,7 @@ const VIEWPORTS = {
   wide: { width: 1920, height: 1080 },
 };
 
-// Pages accessible with auth bypass (no Clerk keys)
+// Pages accessible with auth bypass (no NextAuth keys)
 const APP_PAGES = [
   "/en/dashboard",
   "/en/bank",

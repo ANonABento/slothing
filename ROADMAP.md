@@ -71,27 +71,27 @@ Columbus is a **feature-complete single-user MVP** with enhanced features:
 ### 1.1 Authentication System
 **Status:** In Progress (80% Complete)
 **Effort:** Large
-**Stack:** Clerk
+**Stack:** NextAuth
 
-- [x] Add Clerk authentication provider
+- [x] Add NextAuth authentication provider
 - [x] User registration and login flows (sign-in/sign-up pages)
-- [x] Session management (ClerkProvider + middleware)
+- [x] Session management (NextAuth session provider + middleware)
 - [x] Protected API routes (middleware + route guards)
 - [x] UserButton in sidebar for profile/logout
-- [ ] Password reset functionality (handled by Clerk hosted pages)
-- [ ] User-specific data isolation (pending Neon setup)
+- [ ] Password reset functionality
+- [ ] User-specific data isolation (pending Turso setup)
 
 ### 1.2 Database Migration
 **Status:** In Progress (70% Complete)
 **Effort:** Medium
-**Stack:** Neon PostgreSQL + Drizzle ORM
+**Stack:** libSQL/Turso + Drizzle ORM
 
 - [x] Drizzle schema created with all tables
 - [x] userId column added to all tables
 - [x] Drizzle query functions created (async, userId param)
 - [x] Database connection module ready
 - [x] Drizzle config for migrations
-- [ ] Create Neon database (requires account setup)
+- [ ] Create Turso database (requires account setup)
 - [ ] Run initial migrations
 - [ ] Data migration script from SQLite
 
@@ -102,9 +102,9 @@ Columbus is a **feature-complete single-user MVP** with enhanced features:
 
 - [x] New query layer accepts userId parameter
 - [x] Schema supports multi-tenant data
-- [ ] Switch API routes to Drizzle queries (pending Neon)
+- [ ] Switch API routes to Drizzle queries (pending Turso)
 - [ ] Per-user settings and preferences
-- [ ] User profile sync with Clerk
+- [ ] User profile sync with NextAuth
 - [ ] Data deletion (GDPR compliance)
 
 ---
@@ -116,14 +116,14 @@ Columbus is a **feature-complete single-user MVP** with enhanced features:
 ### 2.1 OAuth Foundation
 **Status:** Not Started
 **Effort:** Medium (3-5 days)
-**Dependencies:** 1.1 (Clerk Auth)
+**Dependencies:** 1.1 (NextAuth Auth)
 **Ticket:** [01-oauth-foundation.md](./docs/google-integration/01-oauth-foundation.md)
 
-- [ ] Enable Google OAuth in Clerk Dashboard
+- [ ] Enable Google OAuth in Google Cloud Console
 - [ ] Configure OAuth scopes (Calendar, Drive, Gmail)
 - [ ] Create token retrieval utility
 - [ ] Build "Connect Google" UI in Settings
-- [ ] Handle token refresh via Clerk
+- [ ] Handle token refresh via NextAuth
 
 ### 2.2 Calendar Sync
 **Status:** Not Started
@@ -336,8 +336,8 @@ These don't depend on other phases:
 
 | Layer | Technology | Status |
 |-------|------------|--------|
-| **Auth** | Clerk | ✅ Installed |
-| **Database** | Neon (PostgreSQL) + Drizzle | ✅ Schema ready |
+| **Auth** | NextAuth | ✅ Installed |
+| **Database** | libSQL/Turso + Drizzle | ✅ Schema ready |
 | **Google APIs** | googleapis npm | Planned |
 | **Email** | Resend | Planned |
 | **Hosting** | Vercel | Planned |
@@ -348,8 +348,8 @@ These don't depend on other phases:
 
 ## Next Steps
 
-1. **Create Neon Account** - Set up PostgreSQL database at https://console.neon.tech
-2. **Add DATABASE_URL** - Configure connection string in `.env.local`
+1. **Create Turso Account** - Set up a hosted libSQL database at https://turso.tech
+2. **Add TURSO_DATABASE_URL** - Configure connection string in `.env.local`
 3. **Run Migrations** - Execute `npm run db:push` to create tables
 4. **Test Auth Flow** - Sign up, sign in, verify data isolation
 5. **Deploy to Vercel** - Connect repo and deploy
@@ -360,10 +360,10 @@ These don't depend on other phases:
 
 - Prioritize **Phase 1** before any public launch
 - **LinkedIn integration** is complex due to API restrictions
-- **Clerk** is installed and configured - handles auth flows
-- **Drizzle schema** is ready - just needs Neon database connection
+- **NextAuth** is installed and configured - handles auth flows
+- **Drizzle schema** is ready - just needs Turso database connection
 - **Job board APIs** may require partnerships or scraping (legal gray area)
-- Keep **SQLite for local dev**, PostgreSQL for production
+- Keep local libSQL for local dev and Turso for production
 - Documentation is complete in `docs/` directory
 
 ---

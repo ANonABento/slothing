@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { defaultLocale, locales } from "@/i18n";
 
 /**
  * Per-route SEO metadata for app pages.
@@ -20,6 +21,7 @@ export const SITE_DESCRIPTION =
 const DEFAULT_SITE_URL = "https://slothing.work";
 const DEFAULT_LOCALE = "en_US";
 const DEFAULT_TWITTER_CARD = "summary_large_image";
+export const CANONICAL_ROUTE_PATH_HEADER = "x-slothing-route-path";
 
 const pages = {
   dashboard: {
@@ -164,12 +166,42 @@ const marketingHomePage = {
   absoluteTitle: true,
 } satisfies RouteSeo;
 
-function buildMetadata(seo: RouteSeo): Metadata {
+export function getAlternateLanguages(path: string): Record<string, string> {
+  const suffix = path === "/" ? "" : path;
+  const languages: Record<string, string> = {
+    "x-default": `/${defaultLocale}${suffix}`,
+  };
+
+  for (const locale of locales) {
+    languages[locale] = `/${locale}${suffix}`;
+  }
+
+  return languages;
+}
+
+function getLocalizedPath(path: string, locale: string): string {
+  return path === "/" ? `/${locale}` : `/${locale}${path}`;
+}
+
+export function getAlternateLinksHeader(path: string, origin: string): string {
+  return Object.entries(getAlternateLanguages(path))
+    .map(([language, href]) => {
+      const absoluteHref = new URL(href, origin).toString();
+
+      return `<${absoluteHref}>; rel="alternate"; hreflang="${language}"`;
+    })
+    .join(", ");
+}
+
+function buildMetadata(seo: RouteSeo, locale?: string): Metadata {
+  const url = locale ? getLocalizedPath(seo.path, locale) : seo.path;
+
   return {
     title: seo.absoluteTitle ? { absolute: seo.title } : seo.title,
     description: seo.description,
     alternates: {
-      canonical: seo.path,
+      canonical: url,
+      languages: getAlternateLanguages(seo.path),
     },
     openGraph: {
       type: "website",
@@ -177,7 +209,7 @@ function buildMetadata(seo: RouteSeo): Metadata {
       siteName: SITE_NAME,
       title: seo.title,
       description: seo.description,
-      url: seo.path,
+      url,
     },
     twitter: {
       card: DEFAULT_TWITTER_CARD,
@@ -209,6 +241,10 @@ export function getSiteMetadata(): Metadata {
     },
     description: SITE_DESCRIPTION,
     metadataBase: getMetadataBase(),
+    alternates: {
+      canonical: "/",
+      languages: getAlternateLanguages("/"),
+    },
     openGraph: {
       type: "website",
       locale: DEFAULT_LOCALE,
@@ -229,8 +265,19 @@ export function getPageMetadata(page: keyof typeof pages): Metadata {
   return buildMetadata(pages[page]);
 }
 
+export function getLocalizedPageMetadata(
+  page: keyof typeof pages,
+  locale: string,
+): Metadata {
+  return buildMetadata(pages[page], locale);
+}
+
 export function getMarketingPageMetadata(): Metadata {
   return buildMetadata(marketingHomePage);
+}
+
+export function getLocalizedMarketingPageMetadata(locale: string): Metadata {
+  return buildMetadata(marketingHomePage, locale);
 }
 
 export function getOgSeo(page: keyof typeof pages | "marketingHome") {

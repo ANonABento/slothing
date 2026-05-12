@@ -41,4 +41,16 @@ describe("middleware", () => {
 
     expect(response.headers.get("X-Slothing-Dev-Auth")).toBeNull();
   });
+
+  it("preserves next-intl request overrides when adding the CSP nonce", () => {
+    const response = middleware(new NextRequest("http://localhost/en"));
+    const overriddenHeaders =
+      response.headers.get("x-middleware-override-headers")?.split(",") ?? [];
+
+    expect(
+      response.headers.get("x-middleware-request-x-next-intl-locale"),
+    ).toBe("en");
+    expect(overriddenHeaders).toContain("x-next-intl-locale");
+    expect(overriddenHeaders).toContain("x-csp-nonce");
+  });
 });

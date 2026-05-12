@@ -31,6 +31,19 @@ export interface RecordExternalCalendarEventInput {
   eventStart?: string | null;
 }
 
+interface ExternalCalendarEventRow {
+  id: string;
+  user_id: string;
+  provider: string;
+  external_event_id: string;
+  calendar_id: string | null;
+  matched_opportunity_id: string | null;
+  action: ExternalCalendarEventAction;
+  event_title: string | null;
+  event_start: string | null;
+  processed_at: string;
+}
+
 export function ensureExternalCalendarEventsSchema(): void {
   db.prepare(
     `CREATE TABLE IF NOT EXISTS external_calendar_events (
@@ -53,7 +66,9 @@ export function ensureExternalCalendarEventsSchema(): void {
   ).run();
 }
 
-function rowToRecord(row: any): ExternalCalendarEventRecord {
+function rowToRecord(
+  row: ExternalCalendarEventRow,
+): ExternalCalendarEventRecord {
   return {
     id: row.id,
     userId: row.user_id,
@@ -79,7 +94,9 @@ export function getExternalCalendarEvent(
       `SELECT * FROM external_calendar_events
        WHERE user_id = ? AND provider = ? AND external_event_id = ?`,
     )
-    .get(userId, provider, externalEventId);
+    .get(userId, provider, externalEventId) as
+    | ExternalCalendarEventRow
+    | undefined;
   return row ? rowToRecord(row) : null;
 }
 

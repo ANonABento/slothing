@@ -11,10 +11,12 @@ import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { FREE_TIER_TAILOR_MONTHLY_LIMIT } from "@/lib/constants";
 import { getA11yTranslations } from "@/lib/i18n/get-a11y-translations";
-import { getPageMetadata } from "@/lib/seo";
+import { getLocalizedPageMetadata } from "@/lib/seo";
 import { cn } from "@/lib/utils";
 
-export const metadata = getPageMetadata("pricing");
+export function generateMetadata({ params }: { params: { locale: string } }) {
+  return getLocalizedPageMetadata("pricing", params.locale);
+}
 
 const tiers = [
   {

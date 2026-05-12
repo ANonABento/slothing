@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { NextRequest, NextResponse } from "next/server";
-import { applySecurityHeaders, __testables } from "./headers";
+import { applySecurityHeaders, CSP_NONCE_HEADER, __testables } from "./headers";
 
 function makeRequest(
   url: string,
@@ -9,6 +9,15 @@ function makeRequest(
   return new NextRequest(new URL(url), {
     headers: new Headers(headers),
   });
+}
+
+function getDirective(csp: string | null, directive: string): string {
+  return (
+    csp
+      ?.split(";")
+      .map((part) => part.trim())
+      .find((part) => part.startsWith(`${directive} `)) ?? ""
+  );
 }
 
 describe("applySecurityHeaders", () => {
@@ -30,13 +39,35 @@ describe("applySecurityHeaders", () => {
   });
 
   it("disallows unsafe-eval in production builds", () => {
-    // CSP_HEADER_VALUE is computed once at module load. In test/dev it
-    // includes 'unsafe-eval' so Next.js HMR can hydrate the client bundle. The
-    // build path that matters is production, so assert the production
-    // directives directly rather than relying on the cached value.
     vi.stubEnv("NODE_ENV", "production");
-    const csp = __testables.computeCspForTesting();
+    const csp = __testables.computeCspForTesting("testnonce");
     expect(csp).not.toContain("unsafe-eval");
+  });
+
+  it("uses a nonce instead of unsafe-inline for production scripts", () => {
+    vi.stubEnv("NODE_ENV", "production");
+    const csp = __testables.computeCspForTesting("testnonce");
+    const scriptSrc = getDirective(csp, "script-src");
+    expect(scriptSrc).toBe("script-src 'self' 'nonce-testnonce'");
+    expect(scriptSrc).not.toContain("unsafe-inline");
+  });
+
+  it("keeps unsafe-inline and unsafe-eval in development for Next HMR", () => {
+    vi.stubEnv("NODE_ENV", "development");
+    const csp = __testables.computeCspForTesting();
+    expect(csp).toContain("script-src 'self' 'unsafe-inline' 'unsafe-eval'");
+  });
+
+  it("reads the production CSP nonce from the request header", () => {
+    vi.stubEnv("NODE_ENV", "production");
+    const res = applySecurityHeaders(
+      NextResponse.next(),
+      makeRequest("https://taida.app/", { [CSP_NONCE_HEADER]: "testnonce" }),
+    );
+    const csp = res.headers.get("Content-Security-Policy");
+    const scriptSrc = getDirective(csp, "script-src");
+    expect(scriptSrc).toBe("script-src 'self' 'nonce-testnonce'");
+    expect(scriptSrc).not.toContain("unsafe-inline");
   });
 
   it("emits HSTS only over HTTPS", () => {

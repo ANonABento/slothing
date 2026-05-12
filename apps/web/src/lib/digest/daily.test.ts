@@ -48,8 +48,6 @@ vi.mock("./match", () => ({
 
 import { runDailyDigest } from "./daily";
 
-const digestNow = new Date("2026-05-10T08:00:00.000Z");
-
 const profile: Profile = {
   id: "profile-1",
   contact: { name: "Ada" },
