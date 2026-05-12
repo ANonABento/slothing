@@ -23,9 +23,6 @@ type ChromeRuntimeGlobal = {
   };
 };
 
-const EXTENSION_UNREACHABLE_MESSAGE =
-  "We couldn't reach the extension. Make sure the extension is installed and enabled at chrome://extensions.";
-
 function messageForStatus(status: number): string {
   if (status === 401) return "Sign in expired. Reload the page to retry.";
   if (status === 403) {
@@ -63,16 +60,14 @@ function useTokenGenerator() {
       // keep this file typecheckable without @types/chrome in the main app.
       const chromeGlobal = (globalThis as unknown as ChromeRuntimeGlobal)
         .chrome;
+      // chrome.runtime.sendMessage to an extension is only available on
+      // browsers that honor MV3 externally_connectable (Chromium-family).
+      // Firefox extensions can't be reached via runtime messaging from a
+      // regular web page, so fall back to the localStorage transport — the
+      // extension polls that key on next activation and picks up the token.
       const canUseRuntime = Boolean(
         extensionId && chromeGlobal?.runtime?.sendMessage,
       );
-
-      if (extensionId && !canUseRuntime) {
-        setError(EXTENSION_UNREACHABLE_MESSAGE);
-        setStatus("error");
-        return;
-      }
-
       const transport: ExtensionTransport = canUseRuntime
         ? "runtime"
         : "localstorage";
