@@ -9,6 +9,7 @@ import { AutoFillEngine } from "./auto-fill/engine";
 import { getScraperForUrl } from "./scrapers/scraper-registry";
 import { WaterlooWorksOrchestrator } from "./scrapers/waterloo-works-orchestrator";
 import type {
+  AnswerBankMatch,
   ExtensionProfile,
   ScrapedJob,
   DetectedField,
@@ -20,6 +21,11 @@ import { showAppliedToast } from "./tracking/applied-toast";
 import { SubmitWatcher, extractCompanyHint } from "./tracking/submit-watcher";
 import { JobPageSidebarController } from "./sidebar/controller";
 import { CorrectionsTracker } from "./corrections-tracker";
+import {
+  mountAnswerBankButton,
+  shouldDecorateTextarea,
+  unmountAllAnswerBankButtons,
+} from "./ui/answer-bank-button";
 
 // Initialize components
 const fieldDetector = new FieldDetector();
@@ -75,6 +81,12 @@ async function scanPage() {
       console.log("[Columbus] Detected fields:", fields.length);
     }
   }
+
+  // P2/#35 — decorate long essay textareas with the inline answer-bank
+  // popover. This runs in addition to the field detector above because the
+  // textareas we care about often aren't owned by a recognised form (some
+  // ATS portals use bare <textarea> with dynamic labels).
+  scanForAnswerBankTextareas();
 
   // Check for job listing
   const scraper = getScraperForUrl(window.location.href);
@@ -320,6 +332,62 @@ async function handleFillForm() {
   return { success: true, data: result };
 }
 
+// Opens the web answer-bank page in a new tab, pre-seeded with the question
+// label. Used by the "Generate new" button in the inline popover. The
+// background returns the configured Slothing API base URL alongside the auth
+// status, which is the same host the user's logged-in answer bank lives on.
+async function openAnswerBankSeed(question: string) {
+  const auth = await sendMessage<{ apiBaseUrl: string }>(
+    Messages.getAuthStatus(),
+  );
+  const base =
+    (auth.success && auth.data?.apiBaseUrl) || "http://localhost:3000";
+  const url = `${base.replace(/\/$/, "")}/en/bank?seed=${encodeURIComponent(question)}`;
+  window.open(url, "_blank", "noopener,noreferrer");
+}
+
+// P2/#35 — scan textareas + decorate matches with the floating 💡 popover.
+// Idempotent: the decorator marks each textarea so re-scans don't double-mount.
+function scanForAnswerBankTextareas() {
+  // querySelectorAll across the whole document. Workday/Greenhouse essay
+  // fields don't always live inside a <form>, so we don't scope this to forms.
+  const textareas = document.querySelectorAll<HTMLTextAreaElement>("textarea");
+  for (const textarea of textareas) {
+    try {
+      if (!shouldDecorateTextarea(textarea)) continue;
+      mountAnswerBankButton(textarea, {
+        onMatch: async (q, limit) => {
+          const response = await sendMessage<AnswerBankMatch[]>(
+            Messages.matchAnswerBank({ q, limit: limit ?? 3 }),
+          );
+          if (!response.success) {
+            throw new Error(
+              response.error || "Couldn't reach the Slothing answer bank.",
+            );
+          }
+          return response.data || [];
+        },
+        onPick: () => {
+          // The decorator handles the DOM insertion (value + input/change
+          // events). Nothing else to do here — kept as a hook for future
+          // analytics / corrections (#33).
+        },
+        onGenerate: (q) => {
+          // V1: ask the background to open the web answer-bank page with the
+          // question pre-seeded. A streamed generation endpoint is deferred
+          // to a follow-up (called out in the PR body).
+          openAnswerBankSeed(q).catch((err) =>
+            console.warn("[Columbus] open bank failed:", err),
+          );
+        },
+      });
+    } catch (err) {
+      // A single textarea failure shouldn't abort the scan.
+      console.warn("[Columbus] answer-bank decorate failed:", err);
+    }
+  }
+}
+
 async function getExtensionSettings(): Promise<ExtensionSettings> {
   const response = await sendMessage<ExtensionSettings>(Messages.getSettings());
   if (!response.success || !response.data) {
@@ -414,6 +482,9 @@ window.addEventListener("pagehide", () => {
   submitWatcher.detach();
   sidebarController.destroy();
   correctionsTracker.clear();
+  // P2/#35 — tear down every mounted answer-bank decoration so we don't leak
+  // ResizeObservers or React roots when the page is bfcache-restored.
+  unmountAllAnswerBankButtons();
 });
 
 // Utility: debounce function

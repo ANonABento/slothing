@@ -1,11 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { isAuthError, requireAuth } from "@/lib/auth";
+import { isAuthError, requireUserAuth } from "@/lib/auth";
 import { matchAnswers } from "@/lib/answer-bank/match";
 
 export const dynamic = "force-dynamic";
 
+// Accepts either a NextAuth session (web app) or the X-Extension-Token header
+// (Columbus extension, e.g. the P2/#35 inline answer-bank popover on long
+// textareas). The underlying matcher is user-scoped, so the same logic works
+// for both transports.
 export async function GET(request: NextRequest) {
-  const authResult = await requireAuth();
+  const authResult = await requireUserAuth(request);
   if (isAuthError(authResult)) return authResult;
 
   const q = request.nextUrl.searchParams.get("q")?.trim() ?? "";
