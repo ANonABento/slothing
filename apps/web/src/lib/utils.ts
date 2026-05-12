@@ -4,6 +4,7 @@ import { randomBytes } from "crypto";
 import {
   formatDateRelative,
   formatMonthYear,
+  DEFAULT_LOCALE,
   nowIso,
   toIso,
 } from "@/lib/format/time";
@@ -35,8 +36,11 @@ export function toNullableIsoDateString(
   return value ? toIsoDateString(value) : null;
 }
 
-export function formatDate(date: string | Date): string {
-  return formatMonthYear(date, { locale: "en-US" });
+export function formatDate(
+  date: string | Date,
+  locale = DEFAULT_LOCALE,
+): string {
+  return formatMonthYear(date, { locale });
 }
 
 export function formatFileSize(bytes: number): string {

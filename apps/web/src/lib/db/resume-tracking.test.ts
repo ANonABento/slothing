@@ -24,6 +24,8 @@ import {
   deleteTrackingEntry,
 } from "./resume-tracking";
 
+const TEST_USER_ID = "test-user";
+
 describe("Resume A/B Tracking Database Functions", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -34,7 +36,7 @@ describe("Resume A/B Tracking Database Functions", () => {
       const mockRun = vi.fn().mockReturnValue({ changes: 1 });
       (db.prepare as Mock).mockReturnValue({ run: mockRun });
 
-      const result = trackResumeSent("resume-123", "job-456");
+      const result = trackResumeSent("resume-123", "job-456", TEST_USER_ID);
 
       expect(db.prepare).toHaveBeenCalledWith(
         expect.stringContaining("INSERT INTO resume_ab_tracking"),
@@ -53,21 +55,21 @@ describe("Resume A/B Tracking Database Functions", () => {
       const result = trackResumeSent(
         "resume-123",
         "job-456",
-        "default",
+        TEST_USER_ID,
         "Tailored for role",
       );
 
       expect(result.notes).toBe("Tailored for role");
     });
 
-    it("should default to 'default' user", () => {
+    it("should default to TEST_USER_ID user", () => {
       const mockRun = vi.fn().mockReturnValue({ changes: 1 });
       (db.prepare as Mock).mockReturnValue({ run: mockRun });
 
-      trackResumeSent("resume-123", "job-456");
+      trackResumeSent("resume-123", "job-456", TEST_USER_ID);
 
       const args = mockRun.mock.calls[0];
-      expect(args[3]).toBe("default"); // userId is 4th arg
+      expect(args[3]).toBe(TEST_USER_ID); // userId is 4th arg
     });
 
     it("should reject tracking when the resume or job is outside the user", () => {
@@ -98,7 +100,11 @@ describe("Resume A/B Tracking Database Functions", () => {
       const mockRun = vi.fn().mockReturnValue({ changes: 1 });
       (db.prepare as Mock).mockReturnValue({ run: mockRun });
 
-      const result = updateTrackingOutcome("entry-1", "interviewing");
+      const result = updateTrackingOutcome(
+        "entry-1",
+        "interviewing",
+        TEST_USER_ID,
+      );
 
       expect(result).toBe(true);
       expect(db.prepare).toHaveBeenCalledWith(
@@ -110,7 +116,11 @@ describe("Resume A/B Tracking Database Functions", () => {
       const mockRun = vi.fn().mockReturnValue({ changes: 0 });
       (db.prepare as Mock).mockReturnValue({ run: mockRun });
 
-      const result = updateTrackingOutcome("nonexistent", "offered");
+      const result = updateTrackingOutcome(
+        "nonexistent",
+        "offered",
+        TEST_USER_ID,
+      );
 
       expect(result).toBe(false);
     });
@@ -131,7 +141,7 @@ describe("Resume A/B Tracking Database Functions", () => {
       ]);
       (db.prepare as Mock).mockReturnValue({ all: mockAll });
 
-      const result = getTrackingEntries();
+      const result = getTrackingEntries(TEST_USER_ID);
 
       expect(result).toHaveLength(1);
       expect(result[0]).toEqual({
@@ -159,7 +169,7 @@ describe("Resume A/B Tracking Database Functions", () => {
       ]);
       (db.prepare as Mock).mockReturnValue({ all: mockAll });
 
-      const result = getTrackingEntries();
+      const result = getTrackingEntries(TEST_USER_ID);
 
       expect(result[0].notes).toBeUndefined();
     });
@@ -168,7 +178,7 @@ describe("Resume A/B Tracking Database Functions", () => {
       const mockAll = vi.fn().mockReturnValue([]);
       (db.prepare as Mock).mockReturnValue({ all: mockAll });
 
-      const result = getTrackingEntries();
+      const result = getTrackingEntries(TEST_USER_ID);
 
       expect(result).toEqual([]);
     });
@@ -179,9 +189,9 @@ describe("Resume A/B Tracking Database Functions", () => {
       const mockAll = vi.fn().mockReturnValue([]);
       (db.prepare as Mock).mockReturnValue({ all: mockAll });
 
-      getTrackingEntriesByResume("resume-123");
+      getTrackingEntriesByResume("resume-123", TEST_USER_ID);
 
-      expect(mockAll).toHaveBeenCalledWith("resume-123", "default");
+      expect(mockAll).toHaveBeenCalledWith("resume-123", TEST_USER_ID);
     });
   });
 
@@ -192,7 +202,7 @@ describe("Resume A/B Tracking Database Functions", () => {
         .mockReturnValue([{ resume_id: "r1" }, { resume_id: "r2" }]);
       (db.prepare as Mock).mockReturnValue({ all: mockAll });
 
-      const result = getTrackedResumeIds();
+      const result = getTrackedResumeIds(TEST_USER_ID);
 
       expect(result).toEqual(["r1", "r2"]);
     });
@@ -203,7 +213,7 @@ describe("Resume A/B Tracking Database Functions", () => {
       const mockRun = vi.fn().mockReturnValue({ changes: 1 });
       (db.prepare as Mock).mockReturnValue({ run: mockRun });
 
-      const result = deleteTrackingEntry("entry-1");
+      const result = deleteTrackingEntry("entry-1", TEST_USER_ID);
 
       expect(result).toBe(true);
     });
@@ -212,7 +222,7 @@ describe("Resume A/B Tracking Database Functions", () => {
       const mockRun = vi.fn().mockReturnValue({ changes: 0 });
       (db.prepare as Mock).mockReturnValue({ run: mockRun });
 
-      const result = deleteTrackingEntry("nonexistent");
+      const result = deleteTrackingEntry("nonexistent", TEST_USER_ID);
 
       expect(result).toBe(false);
     });

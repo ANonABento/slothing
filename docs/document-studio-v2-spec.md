@@ -48,7 +48,7 @@ Replace the current 3-tab Document Studio with a proper two-workspace editor. Ea
 - Each tab shows a list of saved documents (like files in a folder)
 - Click to switch between documents
 - "+ New" creates a blank document
-- Documents persist in localStorage (later: DB when Neon is active)
+- Documents persist in localStorage (later: DB when Turso is active)
 - Each document has: name, templateId, sections/content, createdAt, updatedAt
 
 ### 3. Version History (per document)

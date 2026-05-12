@@ -1,8 +1,20 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
 import messages from "@/messages/en.json";
 import { Navbar } from "./navbar";
+
+vi.mock("@/i18n/navigation", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/i18n/navigation")>();
+
+  return {
+    ...actual,
+    usePathname: () => "/pricing",
+    useRouter: () => ({
+      replace: vi.fn(),
+    }),
+  };
+});
 
 function renderNavbar(locale: string) {
   return render(
@@ -40,6 +52,9 @@ describe("Navbar", () => {
   it.each(["es", "zh-CN"])("prefixes internal links with %s", (locale) => {
     renderNavbar(locale);
 
+    expect(screen.getAllByLabelText("Change language").length).toBeGreaterThan(
+      0,
+    );
     expectLocalePrefixedInternalHrefs(locale);
     expect(anchorHrefs()).toEqual(["#features", "#how-it-works"]);
   });
@@ -49,6 +64,9 @@ describe("Navbar", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Toggle menu" }));
 
+    expect(screen.getAllByLabelText("Change language").length).toBeGreaterThan(
+      1,
+    );
     expectLocalePrefixedInternalHrefs("es");
     expect(anchorHrefs()).toEqual([
       "#features",

@@ -77,8 +77,8 @@ interface ThemeTokens {
   
   // ─── Effects (optional, theme-specific) ───
   backdropBlur?: string;         // Glass: "blur(20px)"
-  glowColor?: string;            // Neon: "rgba(0,212,255,0.3)"
-  glowColorSecondary?: string;   // Neon: "rgba(255,0,102,0.15)"
+  glowColor?: string;            // Electric: "rgba(0,212,255,0.3)"
+  glowColorSecondary?: string;   // Electric: "rgba(255,0,102,0.15)"
   offsetShadowX?: string;        // Bloxy: "4px"
   offsetShadowY?: string;        // Bloxy: "4px"
   gradientBg?: string;           // Glass: "linear-gradient(135deg, ...)"
@@ -192,7 +192,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 | bloxy | Bloxy | Sharp corners, 3px borders, offset shadows, monospace, uppercase, yellow/red |
 | glass | Glassmorphism | Extra-rounded, no borders, backdrop-blur, gradient bg, translucent cards |
 | minimal | Minimal | Thin borders, barely-there shadows, lots of whitespace, monochrome |
-| neon | Neon Cyberpunk | Rounded, glow shadows, cyan+magenta, border-left indicators |
+| neon | Electric Cyberpunk | Rounded, glow shadows, cyan+magenta, border-left indicators |
 | earth | Warm Earth | Extra-rounded, terracotta accent, warm shadows, organic feel |
 | premium | Premium Software | Medium-rounded, layered shadows, blue accent, tight letter-spacing |
 

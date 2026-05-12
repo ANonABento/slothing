@@ -29,7 +29,7 @@ function rowToEntry(row: TrackingRow): ABTrackingEntry {
 export function trackResumeSent(
   resumeId: string,
   jobId: string,
-  userId: string = "default",
+  userId: string,
   notes?: string,
 ): ABTrackingEntry {
   const id = generateId();
@@ -75,7 +75,7 @@ export function trackResumeSent(
 export function updateTrackingOutcome(
   id: string,
   outcome: ABOutcome,
-  userId: string = "default",
+  userId: string,
 ): boolean {
   const now = nowIso();
   const stmt = db.prepare(`
@@ -89,9 +89,7 @@ export function updateTrackingOutcome(
 }
 
 // Get all tracking entries for a user
-export function getTrackingEntries(
-  userId: string = "default",
-): ABTrackingEntry[] {
+export function getTrackingEntries(userId: string): ABTrackingEntry[] {
   const stmt = db.prepare(`
     SELECT id, resume_id, job_id, outcome, sent_at, updated_at, notes
     FROM resume_ab_tracking
@@ -105,7 +103,7 @@ export function getTrackingEntries(
 // Get tracking entries for a specific resume
 export function getTrackingEntriesByResume(
   resumeId: string,
-  userId: string = "default",
+  userId: string,
 ): ABTrackingEntry[] {
   const stmt = db.prepare(`
     SELECT id, resume_id, job_id, outcome, sent_at, updated_at, notes
@@ -118,7 +116,7 @@ export function getTrackingEntriesByResume(
 }
 
 // Get distinct resume IDs that have been tracked
-export function getTrackedResumeIds(userId: string = "default"): string[] {
+export function getTrackedResumeIds(userId: string): string[] {
   const stmt = db.prepare(`
     SELECT DISTINCT resume_id
     FROM resume_ab_tracking
@@ -130,10 +128,7 @@ export function getTrackedResumeIds(userId: string = "default"): string[] {
 }
 
 // Delete a tracking entry
-export function deleteTrackingEntry(
-  id: string,
-  userId: string = "default",
-): boolean {
+export function deleteTrackingEntry(id: string, userId: string): boolean {
   const stmt = db.prepare(
     "DELETE FROM resume_ab_tracking WHERE id = ? AND user_id = ?",
   );

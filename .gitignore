@@ -57,8 +57,6 @@ next-env.d.ts
 playwright-report/
 test-results/
 
-# clerk configuration (can include secrets)
-/.clerk/
 .worktrees/
 .audit/
 evals/reports/
