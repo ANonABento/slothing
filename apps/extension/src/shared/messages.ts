@@ -174,6 +174,33 @@ export const Messages = {
     type: "SAVE_CORRECTION",
     payload,
   }),
+
+  // P3 / #36 #37 — multi-step form support (Workday, Greenhouse).
+  /** Background → content: a step transition just fired for this tab. */
+  multistepStepTransition: (
+    payload: { url: string; transitionType: "webNavigation" | "fallback" },
+  ): ExtensionMessage<{
+    url: string;
+    transitionType: "webNavigation" | "fallback";
+  }> => ({
+    type: "MULTISTEP_STEP_TRANSITION",
+    payload,
+  }),
+  /** Content → background: return the current tab id. */
+  getTabId: (): ExtensionMessage => ({ type: "GET_TAB_ID" }),
+  /**
+   * Content → background: ensure the `webNavigation` permission is granted.
+   * In Chrome MV3 it's declared at install time and the response is always
+   * `{ granted: true }`. In Firefox MV2 the background calls
+   * `browser.permissions.request(...)` and returns the user's verdict.
+   */
+  requestWebNavigationPermission: (): ExtensionMessage => ({
+    type: "REQUEST_WEBNAVIGATION_PERMISSION",
+  }),
+  /** Content → background: is `webNavigation` currently usable? */
+  hasWebNavigationPermission: (): ExtensionMessage => ({
+    type: "HAS_WEBNAVIGATION_PERMISSION",
+  }),
 };
 
 export interface SaveCorrectionResponse extends ExtensionResponse<{
