@@ -77,14 +77,15 @@ test("background service worker registers with a valid extension ID", () => {
   expect(extensionId).toMatch(/^[a-z]{32}$/);
 });
 
-test("popup renders Slothing heading and Connect Account button", async () => {
+test("popup renders Slothing heading and Connect account button", async () => {
   const page = await context.newPage();
   try {
     await page.goto(`chrome-extension://${extensionId}/popup.html`);
 
-    // Wait for React to mount and auth check to complete (transitions out of loading state)
+    // Wait for React to mount and auth check to complete (transitions out of
+    // loading state). Match case-insensitively so a copy tweak doesn't break.
     await expect(
-      page.locator('button:has-text("Connect Account")'),
+      page.locator("button").filter({ hasText: /^Connect account$/i }),
     ).toBeVisible({
       timeout: 10_000,
     });
@@ -92,8 +93,8 @@ test("popup renders Slothing heading and Connect Account button", async () => {
     // Heading — use hasText to avoid matching on the first h1 regardless of content
     await expect(page.locator("h1", { hasText: "Slothing" })).toBeVisible();
 
-    // Subtitle visible in unauthenticated state
-    await expect(page.locator(".popup-container")).toBeVisible();
+    // Root container is visible (hero or topbar layout)
+    await expect(page.locator(".popup")).toBeVisible();
   } finally {
     await page.close();
   }
