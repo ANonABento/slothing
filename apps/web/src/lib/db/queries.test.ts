@@ -21,6 +21,7 @@ vi.mock("./profile-versions", () => ({
 }));
 
 import db from "./legacy";
+import type { ProfileRow } from "./queries";
 import {
   getSetting,
   setSetting,
@@ -36,6 +37,8 @@ import {
   clearProfile,
 } from "./queries";
 
+const TEST_USER_ID = "test-user";
+
 describe("Settings Functions", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -46,12 +49,12 @@ describe("Settings Functions", () => {
       const mockGet = vi.fn().mockReturnValue({ value: "test-value" });
       (db.prepare as Mock).mockReturnValue({ get: mockGet });
 
-      const result = getSetting("test-key");
+      const result = getSetting("test-key", TEST_USER_ID);
 
       expect(db.prepare).toHaveBeenCalledWith(
         "SELECT value FROM settings WHERE key = ? AND user_id = ?",
       );
-      expect(mockGet).toHaveBeenCalledWith("test-key", "default");
+      expect(mockGet).toHaveBeenCalledWith("test-key", TEST_USER_ID);
       expect(result).toBe("test-value");
     });
 
@@ -70,7 +73,7 @@ describe("Settings Functions", () => {
         get: vi.fn().mockReturnValue(undefined),
       });
 
-      const result = getSetting("non-existent");
+      const result = getSetting("non-existent", TEST_USER_ID);
 
       expect(result).toBeNull();
     });
@@ -81,12 +84,12 @@ describe("Settings Functions", () => {
       const mockRun = vi.fn();
       (db.prepare as Mock).mockReturnValue({ run: mockRun });
 
-      setSetting("my-key", "my-value");
+      setSetting("my-key", "my-value", TEST_USER_ID);
 
       expect(db.prepare).toHaveBeenCalledWith(
         expect.stringContaining("ON CONFLICT(key, user_id)"),
       );
-      expect(mockRun).toHaveBeenCalledWith("my-key", "default", "my-value");
+      expect(mockRun).toHaveBeenCalledWith("my-key", TEST_USER_ID, "my-value");
     });
   });
 
@@ -97,7 +100,7 @@ describe("Settings Functions", () => {
         get: vi.fn().mockReturnValue({ value: JSON.stringify(config) }),
       });
 
-      const result = getLLMConfig();
+      const result = getLLMConfig(TEST_USER_ID);
 
       expect(result).toEqual(config);
     });
@@ -107,7 +110,7 @@ describe("Settings Functions", () => {
         get: vi.fn().mockReturnValue(undefined),
       });
 
-      const result = getLLMConfig();
+      const result = getLLMConfig(TEST_USER_ID);
 
       expect(result).toBeNull();
     });
@@ -123,11 +126,11 @@ describe("Settings Functions", () => {
         model: "claude-3",
         apiKey: "sk-ant-xxx",
       };
-      setLLMConfig(config);
+      setLLMConfig(config, TEST_USER_ID);
 
       expect(mockRun).toHaveBeenCalledWith(
         "llm_config",
-        "default",
+        TEST_USER_ID,
         JSON.stringify(config),
       );
     });
@@ -144,15 +147,18 @@ describe("Document Functions", () => {
       const mockRun = vi.fn();
       (db.prepare as Mock).mockReturnValue({ run: mockRun });
 
-      saveDocument({
-        id: "doc-1",
-        filename: "resume.pdf",
-        type: "resume",
-        mimeType: "application/pdf",
-        size: 1024,
-        path: "/uploads/resume.pdf",
-        extractedText: "John Doe, Software Engineer",
-      });
+      saveDocument(
+        {
+          id: "doc-1",
+          filename: "resume.pdf",
+          type: "resume",
+          mimeType: "application/pdf",
+          size: 1024,
+          path: "/uploads/resume.pdf",
+          extractedText: "John Doe, Software Engineer",
+        },
+        TEST_USER_ID,
+      );
 
       expect(mockRun).toHaveBeenCalledWith(
         "doc-1",
@@ -164,7 +170,7 @@ describe("Document Functions", () => {
         "John Doe, Software Engineer",
         null,
         null,
-        "default",
+        TEST_USER_ID,
       );
     });
   });
@@ -188,7 +194,7 @@ describe("Document Functions", () => {
         all: vi.fn().mockReturnValue(mockRows),
       });
 
-      const result = getDocuments();
+      const result = getDocuments(TEST_USER_ID);
 
       expect(db.prepare).toHaveBeenCalledWith(
         "SELECT * FROM documents WHERE user_id = ? ORDER BY uploaded_at DESC",
@@ -214,7 +220,7 @@ describe("Document Functions", () => {
         all: vi.fn().mockReturnValue([]),
       });
 
-      const result = getDocuments();
+      const result = getDocuments(TEST_USER_ID);
 
       expect(db.prepare).toHaveBeenCalledWith(
         "SELECT * FROM documents WHERE user_id = ? ORDER BY uploaded_at DESC",
@@ -341,19 +347,36 @@ describe("Profile Functions", () => {
   });
 
   describe("getProfile", () => {
+    it("keeps profile row fixtures aligned with SQLite column names", () => {
+      const profileRow = {
+        id: TEST_USER_ID,
+        user_id: TEST_USER_ID,
+        contact_json: null,
+        summary: "Profile summary",
+        raw_text: null,
+        created_at: null,
+        updated_at: null,
+      } satisfies ProfileRow;
+
+      expect(profileRow.summary).toBe("Profile summary");
+    });
+
     it("should return full profile with related data", () => {
       const mockProfileRow = {
-        id: "default",
+        id: TEST_USER_ID,
+        user_id: TEST_USER_ID,
         contact_json: '{"name": "John Doe", "email": "john@example.com"}',
         summary: "Experienced developer",
         raw_text: "Resume text",
         created_at: "2024-01-01T00:00:00.000Z",
         updated_at: "2024-01-15T00:00:00.000Z",
-      };
+      } satisfies ProfileRow;
 
       const mockExperiences = [
         {
           id: "exp-1",
+          user_id: "default",
+          profile_id: "default",
           company: "Tech Corp",
           title: "Senior Dev",
           location: "NYC",
@@ -363,12 +386,15 @@ describe("Profile Functions", () => {
           description: "Building stuff",
           highlights_json: '["Led team", "Shipped features"]',
           skills_json: '["JavaScript", "React"]',
+          created_at: "2024-01-01T00:00:00.000Z",
         },
       ];
 
       const mockEducation = [
         {
           id: "edu-1",
+          user_id: "default",
+          profile_id: "default",
           institution: "MIT",
           degree: "BS",
           field: "Computer Science",
@@ -376,36 +402,48 @@ describe("Profile Functions", () => {
           end_date: "2020-05-01",
           gpa: "3.8",
           highlights_json: '["Deans List"]',
+          created_at: "2024-01-01T00:00:00.000Z",
         },
       ];
 
       const mockSkills = [
         {
           id: "skill-1",
+          user_id: "default",
+          profile_id: "default",
           name: "JavaScript",
           category: "technical",
           proficiency: "expert",
+          created_at: "2024-01-01T00:00:00.000Z",
         },
       ];
 
       const mockProjects = [
         {
           id: "proj-1",
+          user_id: "default",
+          profile_id: "default",
           name: "Portfolio",
           description: "My portfolio site",
           url: "https://portfolio.com",
           technologies_json: '["React", "Next.js"]',
           highlights_json: '["1000 visitors"]',
+          created_at: "2024-01-01T00:00:00.000Z",
         },
       ];
 
       const mockCertifications = [
         {
           id: "cert-1",
+          user_id: "default",
+          profile_id: "default",
           name: "AWS Solutions Architect",
           issuer: "Amazon",
           issue_date: "2023-06-01",
+          expiry_date: null,
+          credential_id: null,
           url: "https://aws.com/cert",
+          created_at: "2024-01-01T00:00:00.000Z",
         },
       ];
 
@@ -431,10 +469,10 @@ describe("Profile Functions", () => {
         return { get: vi.fn(), all: vi.fn() };
       });
 
-      const result = getProfile();
+      const result = getProfile(TEST_USER_ID);
 
       expect(result).toEqual({
-        id: "default",
+        id: TEST_USER_ID,
         contact: { name: "John Doe", email: "john@example.com" },
         summary: "Experienced developer",
         rawText: "Resume text",
@@ -445,7 +483,7 @@ describe("Profile Functions", () => {
             title: "Senior Dev",
             location: "NYC",
             startDate: "2020-01-01",
-            endDate: null,
+            endDate: undefined,
             current: true,
             description: "Building stuff",
             highlights: ["Led team", "Shipped features"],
@@ -502,20 +540,21 @@ describe("Profile Functions", () => {
         all: vi.fn().mockReturnValue([]),
       });
 
-      const result = getProfile();
+      const result = getProfile(TEST_USER_ID);
 
       expect(result).toBeNull();
     });
 
     it("should handle null JSON fields", () => {
       const mockProfileRow = {
-        id: "default",
+        id: TEST_USER_ID,
+        user_id: TEST_USER_ID,
         contact_json: null,
         summary: null,
         raw_text: null,
         created_at: "2024-01-01T00:00:00.000Z",
         updated_at: "2024-01-01T00:00:00.000Z",
-      };
+      } satisfies ProfileRow;
 
       (db.prepare as Mock).mockImplementation((sql: string) => {
         if (sql.includes("FROM profile")) {
@@ -524,10 +563,10 @@ describe("Profile Functions", () => {
         return { all: vi.fn().mockReturnValue([]) };
       });
 
-      const result = getProfile();
+      const result = getProfile(TEST_USER_ID);
 
       expect(result?.contact).toEqual({ name: "" });
-      expect(result?.summary).toBeNull();
+      expect(result?.summary).toBeUndefined();
     });
   });
 
@@ -537,7 +576,7 @@ describe("Profile Functions", () => {
       const mockRun = vi.fn();
       (db.prepare as Mock).mockImplementation((sql: string) => {
         if (sql.includes("SELECT id FROM profile")) {
-          return { get: vi.fn().mockReturnValue({ id: "default" }) };
+          return { get: vi.fn().mockReturnValue({ id: TEST_USER_ID }) };
         }
         // getProfile queries called during snapshotting
         if (sql.includes("FROM profile")) {
@@ -552,9 +591,12 @@ describe("Profile Functions", () => {
     it("should update profile contact info", () => {
       const mockRun = setupUpdateMocks();
 
-      updateProfile({
-        contact: { name: "Jane Doe", email: "jane@example.com" },
-      });
+      updateProfile(
+        {
+          contact: { name: "Jane Doe", email: "jane@example.com" },
+        },
+        TEST_USER_ID,
+      );
 
       expect(mockRun).toHaveBeenCalled();
     });
@@ -562,10 +604,13 @@ describe("Profile Functions", () => {
     it("should persist empty summary when clearing profile text", () => {
       const mockRun = setupUpdateMocks();
 
-      updateProfile({
-        contact: { name: "Jane Doe", email: "jane@example.com" },
-        summary: "",
-      });
+      updateProfile(
+        {
+          contact: { name: "Jane Doe", email: "jane@example.com" },
+          summary: "",
+        },
+        TEST_USER_ID,
+      );
 
       expect(mockRun).toHaveBeenCalledWith(
         1,
@@ -574,28 +619,31 @@ describe("Profile Functions", () => {
         "",
         0,
         null,
-        "default",
+        TEST_USER_ID,
       );
     });
 
     it("should update experiences", () => {
       const mockRun = setupUpdateMocks();
 
-      updateProfile({
-        experiences: [
-          {
-            id: "exp-1",
-            company: "New Corp",
-            title: "Lead",
-            location: "SF",
-            startDate: "2021-01-01",
-            current: true,
-            description: "Leading",
-            highlights: ["Achievement"],
-            skills: ["TypeScript"],
-          },
-        ],
-      });
+      updateProfile(
+        {
+          experiences: [
+            {
+              id: "exp-1",
+              company: "New Corp",
+              title: "Lead",
+              location: "SF",
+              startDate: "2021-01-01",
+              current: true,
+              description: "Leading",
+              highlights: ["Achievement"],
+              skills: ["TypeScript"],
+            },
+          ],
+        },
+        TEST_USER_ID,
+      );
 
       // Should delete existing and insert new
       expect(mockRun).toHaveBeenCalled();
@@ -605,7 +653,7 @@ describe("Profile Functions", () => {
       setupUpdateMocks();
 
       // Empty update - transaction should still work
-      updateProfile({});
+      updateProfile({}, TEST_USER_ID);
 
       // Transaction is still called, but nothing happens
       expect(db.transaction).toHaveBeenCalled();
@@ -618,7 +666,7 @@ describe("Profile Functions", () => {
       (db.prepare as Mock).mockReturnValue({ run: mockRun });
       (db.transaction as Mock).mockImplementation((fn) => fn);
 
-      clearProfile();
+      clearProfile(TEST_USER_ID);
 
       // Should call delete for experiences, education, skills, projects, certifications
       // and update profile to clear contact, summary, raw_text

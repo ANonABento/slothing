@@ -6,7 +6,7 @@ import {
   type TrackedJobStatus,
 } from "@/lib/constants/jobs";
 
-import { parseToDate } from "@/lib/format/time";
+import { DEFAULT_LOCALE, parseToDate } from "@/lib/format/time";
 export type JobsViewMode = "list" | "kanban";
 export type JobKanbanStatus = TrackedJobStatus;
 
@@ -87,13 +87,16 @@ export function groupJobsByKanbanStatus(
   return grouped;
 }
 
-export function formatJobDeadline(deadline: string | undefined): string | null {
+export function formatJobDeadline(
+  deadline: string | undefined,
+  locale = DEFAULT_LOCALE,
+): string | null {
   if (!deadline) return null;
 
   const date = parseDeadlineDate(deadline);
   if (!date) return null;
 
-  return `Due ${new Intl.DateTimeFormat("en-US", {
+  return `Due ${new Intl.DateTimeFormat(locale, {
     month: "short",
     day: "numeric",
     timeZone: "UTC",

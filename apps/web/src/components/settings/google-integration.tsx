@@ -18,6 +18,7 @@ import { PageSection } from "@/components/ui/page-layout";
 import { SkeletonButton } from "@/components/ui/skeleton";
 import { GOOGLE_FEATURES } from "@/lib/google/types";
 import type { SettingsResponse } from "@/types/api";
+import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 
 const GoogleConnectButton = dynamic(
   () =>
@@ -35,6 +36,8 @@ const iconMap: Record<string, LucideIcon> = {
 };
 
 export function GoogleIntegration() {
+  const a11yT = useA11yTranslations();
+
   const [pullEnabled, setPullEnabled] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -79,7 +82,7 @@ export function GoogleIntegration() {
 
   return (
     <PageSection
-      title="Google Integration"
+      title={a11yT("googleIntegration")}
       description="Connect your Google account to sync calendars, store documents, and more."
       icon={Cloud}
       iconClassName="gradient-bg text-primary-foreground"

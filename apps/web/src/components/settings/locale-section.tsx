@@ -2,6 +2,7 @@
 
 import { Globe2, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useLocale } from "next-intl";
 import {
   Select,
   SelectContent,
@@ -18,9 +19,12 @@ import { useErrorToast } from "@/hooks/use-error-toast";
 import { SUPPORTED_LOCALES, normalizeLocale } from "@/lib/format/time";
 import { readJsonResponse } from "@/lib/http";
 import type { SettingsResponse } from "@/types/api";
+import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 
 export function LocaleSection() {
-  const [locale, setLocale] = useState("en-US");
+  const activeLocale = useLocale();
+  const [locale, setLocale] = useState(() => normalizeLocale(activeLocale));
+  const a11yT = useA11yTranslations();
   const [saving, setSaving] = useState(false);
   const showErrorToast = useErrorToast();
 
@@ -85,14 +89,14 @@ export function LocaleSection() {
 
   return (
     <PageSection
-      title="Locale"
+      title={a11yT("locale")}
       description="Format dates and numbers for your region."
       icon={Globe2}
       action={
         saving ? (
           <Loader2
             className="mt-1 h-4 w-4 animate-spin text-muted-foreground"
-            aria-label="Saving locale"
+            aria-label={a11yT("savingLocale")}
           />
         ) : null
       }
@@ -101,8 +105,8 @@ export function LocaleSection() {
         value={locale}
         onValueChange={(value) => void handleLocaleChange(value)}
       >
-        <SelectTrigger aria-label="Locale">
-          <SelectValue placeholder="Select locale" />
+        <SelectTrigger aria-label={a11yT("locale")}>
+          <SelectValue placeholder={a11yT("selectLocale")} />
         </SelectTrigger>
         <SelectContent>
           {SUPPORTED_LOCALES.map((option) => (

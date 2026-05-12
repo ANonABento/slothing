@@ -298,7 +298,7 @@ export async function POST(request: NextRequest) {
         },
         authResult.userId,
       );
-      log.debug("upload", "document saved", { documentId: id });
+      log.debug("upload", "document saved");
     } catch (err) {
       if (err instanceof DuplicateDocumentError) {
         // A racing request beat us to the insert. Drop our on-disk copy and

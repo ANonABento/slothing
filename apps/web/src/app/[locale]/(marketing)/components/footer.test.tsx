@@ -19,6 +19,27 @@ function hrefs() {
 }
 
 describe("Footer", () => {
+  it("links marketing visitors only to public routes", () => {
+    renderFooter("en");
+
+    expect(screen.getByRole("heading", { name: "Resources" })).toBeVisible();
+    expect(screen.queryByRole("link", { name: "Dashboard" })).toBeNull();
+    expect(screen.queryByRole("link", { name: "Documents" })).toBeNull();
+    expect(screen.queryByRole("link", { name: "Interview Prep" })).toBeNull();
+
+    expect(screen.getByRole("link", { name: "ATS Scanner" })).toHaveAttribute(
+      "href",
+      "/en/ats-scanner",
+    );
+    expect(
+      screen.getByRole("link", { name: "Browser Extension" }),
+    ).toHaveAttribute("href", "/en/extension");
+
+    expect(hrefs()).not.toEqual(
+      expect.arrayContaining(["/en/dashboard", "/en/bank", "/en/interview"]),
+    );
+  });
+
   it.each(["es", "zh-CN"])(
     "prefixes internal links with %s and leaves section anchors unchanged",
     (locale) => {
@@ -32,11 +53,8 @@ describe("Footer", () => {
         "#features",
         "#how-it-works",
         `/${locale}/pricing`,
-        `/${locale}/extension`,
         `/${locale}/ats-scanner`,
-        `/${locale}/dashboard`,
-        `/${locale}/bank`,
-        `/${locale}/interview`,
+        `/${locale}/extension`,
         `/${locale}/privacy`,
         `/${locale}/terms`,
       ]);

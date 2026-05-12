@@ -1,4 +1,4 @@
-import { parseToDate } from "@/lib/format/time";
+import { DEFAULT_LOCALE, parseToDate } from "@/lib/format/time";
 import {
   CLOSED_SUB_STATUSES,
   DEFAULT_KANBAN_VISIBLE_LANES,
@@ -177,6 +177,58 @@ export const OPPORTUNITY_STATUS_OPTIONS: OpportunityOption<
   { value: "expired", label: "Expired" },
   { value: "dismissed", label: "Dismissed" },
 ];
+
+const OPPORTUNITY_STATUS_VALUES = new Set<OpportunityStatus>(
+  OPPORTUNITY_STATUS_OPTIONS.filter(
+    (option): option is OpportunityOption<OpportunityStatus> =>
+      option.value !== "all",
+  ).map((option) => option.value),
+);
+
+export function parseOpportunityStatusSearchParam(
+  value: string | null | undefined,
+): OpportunityStatus[] {
+  if (!value) return [];
+
+  const statuses: OpportunityStatus[] = [];
+  const seenStatuses = new Set<OpportunityStatus>();
+
+  for (const rawStatus of value.split(",")) {
+    const normalizedStatus = normalizeOpportunityStatusSearchValue(rawStatus);
+    if (!normalizedStatus || seenStatuses.has(normalizedStatus)) continue;
+
+    statuses.push(normalizedStatus);
+    seenStatuses.add(normalizedStatus);
+  }
+
+  return statuses;
+}
+
+export function getOpportunityFiltersFromStatusSearchParam(
+  value: string | null | undefined,
+): OpportunityFilters {
+  const statuses = parseOpportunityStatusSearchParam(value);
+  return {
+    ...DEFAULT_OPPORTUNITY_FILTERS,
+    status: statuses.length === 1 ? statuses[0] : "all",
+  };
+}
+
+function normalizeOpportunityStatusSearchValue(
+  value: string,
+): OpportunityStatus | null {
+  const status = value.trim();
+  const normalizedStatus =
+    status === "offered"
+      ? "offer"
+      : status === "withdrawn"
+        ? "dismissed"
+        : status;
+
+  return OPPORTUNITY_STATUS_VALUES.has(normalizedStatus as OpportunityStatus)
+    ? (normalizedStatus as OpportunityStatus)
+    : null;
+}
 
 export const OPPORTUNITY_KANBAN_COLUMNS: readonly OpportunityOption<OpportunityStatus>[] =
   OPPORTUNITY_STATUS_OPTIONS.filter(
@@ -381,9 +433,16 @@ export const SAMPLE_OPPORTUNITIES: Opportunity[] = [
 export function filterOpportunities(
   opportunities: Opportunity[],
   filters: OpportunityFilters,
+  allowedStatuses: readonly OpportunityStatus[] = [],
 ): Opportunity[] {
+  const allowedStatusSet =
+    allowedStatuses.length > 0 ? new Set(allowedStatuses) : null;
   return [...opportunities]
-    .filter((opportunity) => matchesOpportunityFilters(opportunity, filters))
+    .filter(
+      (opportunity) =>
+        (!allowedStatusSet || allowedStatusSet.has(opportunity.status)) &&
+        matchesOpportunityFilters(opportunity, filters),
+    )
     .sort((a, b) => sortOpportunities(a, b, filters.sortBy));
 }
 
@@ -544,11 +603,14 @@ export function formatOpportunityLocation(opportunity: Opportunity): string {
     : "Location TBD";
 }
 
-export function formatOpportunitySalary(opportunity: Opportunity): string {
+export function formatOpportunitySalary(
+  opportunity: Opportunity,
+  locale = DEFAULT_LOCALE,
+): string {
   if (opportunity.salaryMin == null && opportunity.salaryMax == null)
     return "Compensation TBD";
 
-  const formatter = getCurrencyFormatter(opportunity.salaryCurrency);
+  const formatter = getCurrencyFormatter(opportunity.salaryCurrency, locale);
 
   if (opportunity.salaryMin != null && opportunity.salaryMax != null) {
     return `${formatter.format(opportunity.salaryMin)} - ${formatter.format(opportunity.salaryMax)}`;
@@ -559,11 +621,14 @@ export function formatOpportunitySalary(opportunity: Opportunity): string {
   return `Up to ${formatter.format(opportunity.salaryMax ?? 0)}`;
 }
 
-export function formatOpportunityDate(value: string): string {
+export function formatOpportunityDate(
+  value: string,
+  locale = DEFAULT_LOCALE,
+): string {
   const parsedDate = parseDateOnly(value) ?? parseGenericDate(value);
   if (!parsedDate) return "Invalid date";
 
-  return new Intl.DateTimeFormat("en-US", {
+  return new Intl.DateTimeFormat(locale, {
     month: "short",
     day: "numeric",
     year: "numeric",
@@ -718,17 +783,20 @@ function capitalize(value: string): string {
   return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
-function getCurrencyFormatter(currencyValue?: string): Intl.NumberFormat {
+function getCurrencyFormatter(
+  currencyValue?: string,
+  locale = DEFAULT_LOCALE,
+): Intl.NumberFormat {
   const currency = currencyValue?.trim().toUpperCase() || "USD";
 
   try {
-    return new Intl.NumberFormat("en-US", {
+    return new Intl.NumberFormat(locale, {
       style: "currency",
       currency,
       maximumFractionDigits: 0,
     });
   } catch {
-    return new Intl.NumberFormat("en-US", {
+    return new Intl.NumberFormat(locale, {
       style: "currency",
       currency: "USD",
       maximumFractionDigits: 0,

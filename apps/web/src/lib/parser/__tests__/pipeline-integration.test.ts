@@ -198,6 +198,8 @@ const llmConfig: LLMConfig = {
 
 // ─── Tests ──────────────────────────────────────────────────────────────
 
+const TEST_USER_ID = "test-user";
+
 describe("Pipeline Integration: upload → parse → bank", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -353,14 +355,18 @@ describe("Pipeline Integration: upload → parse → bank", () => {
     it("inserts duplicate content from a different source document", async () => {
       const parseResult = await smartParseResume(STANDARD_RESUME);
 
-      const result1 = populateBankFromProfile(parseResult.profile, "doc-1");
+      const result1 = populateBankFromProfile(
+        parseResult.profile,
+        "doc-1",
+        TEST_USER_ID,
+      );
       expect(result1.inserted).toBeGreaterThan(0);
       expect(result1.skipped).toBe(0);
 
       (findDuplicateEntry as ReturnType<typeof vi.fn>).mockImplementation(
         (category, contentKey) => ({
           id: `existing-${contentKey}`,
-          userId: "default",
+          userId: TEST_USER_ID,
           category,
           content: {},
           confidenceScore: 0.95,
@@ -368,7 +374,11 @@ describe("Pipeline Integration: upload → parse → bank", () => {
         }),
       );
 
-      const result2 = populateBankFromProfile(parseResult.profile, "doc-2");
+      const result2 = populateBankFromProfile(
+        parseResult.profile,
+        "doc-2",
+        TEST_USER_ID,
+      );
       expect(result2.inserted).toBeGreaterThan(0);
       expect(result2.skipped).toBe(0);
       expect(updateBankEntry).not.toHaveBeenCalled();
@@ -381,7 +391,7 @@ describe("Pipeline Integration: upload → parse → bank", () => {
       (findDuplicateEntry as ReturnType<typeof vi.fn>).mockImplementation(
         (category, contentKey) => ({
           id: `existing-${contentKey}`,
-          userId: "default",
+          userId: TEST_USER_ID,
           category,
           content: {},
           confidenceScore: 0.5, // Lower than all new entries
@@ -389,12 +399,16 @@ describe("Pipeline Integration: upload → parse → bank", () => {
         }),
       );
 
-      const result = populateBankFromProfile(parseResult.profile, "doc-new");
+      const result = populateBankFromProfile(
+        parseResult.profile,
+        "doc-new",
+        TEST_USER_ID,
+      );
       expect(result.updated).toBe(0);
       expect(result.inserted).toBeGreaterThan(0);
       expect(deleteBankEntriesBySource).toHaveBeenCalledWith(
         "doc-new",
-        "default",
+        TEST_USER_ID,
       );
       expect(updateBankEntry).not.toHaveBeenCalled();
     });
@@ -557,7 +571,11 @@ describe("Pipeline Integration: upload → parse → bank", () => {
     it("populates bank from a full parse result", async () => {
       const parseResult = await smartParseResume(STANDARD_RESUME);
 
-      const result = populateBankFromProfile(parseResult.profile, "doc-e2e-1");
+      const result = populateBankFromProfile(
+        parseResult.profile,
+        "doc-e2e-1",
+        TEST_USER_ID,
+      );
 
       expect(result.inserted).toBeGreaterThan(0);
       expect(insertBankEntries).toHaveBeenCalled();
@@ -580,11 +598,19 @@ describe("Pipeline Integration: upload → parse → bank", () => {
       const result2 = await smartParseResume(ALL_CAPS_RESUME);
 
       // First upload
-      const bank1 = populateBankFromProfile(result1.profile, "doc-1");
+      const bank1 = populateBankFromProfile(
+        result1.profile,
+        "doc-1",
+        TEST_USER_ID,
+      );
       expect(bank1.inserted).toBeGreaterThan(0);
 
       // Second upload — no duplicates since different people
-      const bank2 = populateBankFromProfile(result2.profile, "doc-2");
+      const bank2 = populateBankFromProfile(
+        result2.profile,
+        "doc-2",
+        TEST_USER_ID,
+      );
       expect(bank2.inserted).toBeGreaterThan(0);
       // Should not have skipped anything (different content)
       expect(bank2.skipped).toBe(0);
