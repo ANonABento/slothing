@@ -419,12 +419,32 @@ console.log("[Columbus] Content script loaded");
 // has written the key.
 const SLOTHING_TOKEN_KEY = "columbus_extension_token";
 
-function pickUpSlothingToken(): boolean {
+// Returns "picked" when the token was forwarded to the background AND the
+// localStorage entry was cleared (i.e., success), "empty" when there is
+// nothing to do, or "pending" when a token is present but pickup is still in
+// flight. The polling loop keeps going until the LS entry is gone (success)
+// or the deadline lapses, so a single failed sendMessage doesn't strand the
+// token forever on Firefox where this path is the only transport.
+type PickupResult = "picked" | "empty" | "pending";
+
+let pickupInFlight = false;
+
+function pickUpSlothingToken(): PickupResult {
   try {
     const raw = localStorage.getItem(SLOTHING_TOKEN_KEY);
-    if (!raw) return false;
+    if (!raw) return "empty";
     const parsed = JSON.parse(raw) as { token?: string; expiresAt?: string };
-    if (!parsed?.token || !parsed?.expiresAt) return false;
+    if (!parsed?.token || !parsed?.expiresAt) {
+      // Malformed payload — purge so we stop polling.
+      try {
+        localStorage.removeItem(SLOTHING_TOKEN_KEY);
+      } catch {
+        // ignore
+      }
+      return "empty";
+    }
+    if (pickupInFlight) return "pending";
+    pickupInFlight = true;
     chrome.runtime.sendMessage(
       {
         type: "AUTH_CALLBACK",
@@ -432,19 +452,20 @@ function pickUpSlothingToken(): boolean {
         expiresAt: parsed.expiresAt,
       },
       (response: { success?: boolean } | undefined) => {
+        pickupInFlight = false;
         if (response?.success) {
           try {
             localStorage.removeItem(SLOTHING_TOKEN_KEY);
           } catch {
-            // ignore quota/security errors
+            // ignore
           }
           console.log("[Columbus] picked up localStorage token");
         }
       },
     );
-    return true;
+    return "pending";
   } catch {
-    return false;
+    return "empty";
   }
 }
 
@@ -453,11 +474,23 @@ if (
     window.location.host,
   )
 ) {
-  if (!pickUpSlothingToken()) {
+  // Initial probe: if there's nothing to pick up and we're not on the connect
+  // page itself, there's no reason to poll — the page hasn't been opened.
+  // On the connect page (or anywhere else if the user is about to land on
+  // /extension/connect via SPA nav), keep polling for 30s.
+  const initial = pickUpSlothingToken();
+  const onConnectPath = /\/extension\/connect(\b|\/)/.test(
+    window.location.pathname,
+  );
+  if (initial !== "empty" || onConnectPath) {
     let elapsedMs = 0;
     const intervalId = setInterval(() => {
       elapsedMs += 500;
-      if (pickUpSlothingToken() || elapsedMs >= 30_000) {
+      const result = pickUpSlothingToken();
+      if (
+        (result === "empty" && !pickupInFlight && elapsedMs > 2000) ||
+        elapsedMs >= 30_000
+      ) {
         clearInterval(intervalId);
       }
     }, 500);

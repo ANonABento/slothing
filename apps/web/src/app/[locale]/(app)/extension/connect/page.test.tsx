@@ -128,22 +128,31 @@ describe("ExtensionConnectPage", () => {
     expect(localStorage.setItem).not.toHaveBeenCalled();
   });
 
-  it("shows the extension reachability hint without minting when runtime is missing", async () => {
+  it("falls back to localStorage transport when chrome.runtime is unavailable (e.g. Firefox)", async () => {
     window.history.replaceState(
       null,
       "",
       "/extension/connect?extensionId=abc123",
     );
+    mockFetchResponse(200, {
+      token: "token-1",
+      expiresAt: "2026-05-09T12:00:00.000Z",
+    });
 
     renderPage();
 
-    expect(await screen.findByText("Connection failed")).toBeInTheDocument();
+    await screen.findByText("Extension connected successfully.");
+
     expect(
-      screen.getByText(
-        "We couldn't reach the extension. Make sure the extension is installed and enabled at chrome://extensions.",
-      ),
-    ).toBeInTheDocument();
-    expect(fetch).not.toHaveBeenCalled();
+      JSON.parse(vi.mocked(fetch).mock.calls[0][1]?.body as string),
+    ).toEqual(expect.objectContaining({ transport: "localstorage" }));
+    expect(localStorage.setItem).toHaveBeenCalledWith(
+      "columbus_extension_token",
+      JSON.stringify({
+        token: "token-1",
+        expiresAt: "2026-05-09T12:00:00.000Z",
+      }),
+    );
   });
 
   it.each([
