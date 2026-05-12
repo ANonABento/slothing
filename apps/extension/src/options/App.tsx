@@ -119,8 +119,13 @@ export default function OptionsApp() {
   return (
     <div className="options-container">
       <header>
-        <h1>Slothing Settings</h1>
-        <p className="subtitle">Configure your job application assistant</p>
+        <div className="header-mark" aria-hidden>
+          S
+        </div>
+        <div className="header-text">
+          <h1>Slothing Settings</h1>
+          <p className="subtitle">Configure your job application assistant</p>
+        </div>
       </header>
 
       {message && (

@@ -92,7 +92,12 @@ export default function middleware(request: NextRequest) {
     );
   }
 
-  applyRequestHeaderOverrides(response, requestHeaders);
+  // Header overrides drop original request headers in Next.js 14 — only apply
+  // them on HTML routes that need the CSP nonce. API routes must keep their
+  // original headers (X-Extension-Token, Authorization, Cookie, …).
+  if (!isApiRoute) {
+    applyRequestHeaderOverrides(response, requestHeaders);
+  }
 
   if (isDevAuthBypassAllowed()) {
     response.headers.set(

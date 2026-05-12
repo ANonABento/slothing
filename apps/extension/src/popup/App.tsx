@@ -42,6 +42,7 @@ export default function App() {
   const [wwBulkInFlight, setWwBulkInFlight] = useState<WwBulkMode | null>(null);
   const [wwBulkResult, setWwBulkResult] = useState<WwBulkResult | null>(null);
   const [wwBulkError, setWwBulkError] = useState<string | null>(null);
+  const [confirmingLogout, setConfirmingLogout] = useState(false);
   const profileScore = profile ? scoreResume({ profile }).overall : null;
 
   useEffect(() => {
@@ -79,7 +80,6 @@ export default function App() {
   }
 
   async function checkPageStatus() {
-    // Get current tab and send message to content script
     const [tab] = await chrome.tabs.query({
       active: true,
       currentWindow: true,
@@ -95,7 +95,6 @@ export default function App() {
       } catch {
         // Content script not loaded
       }
-      // Probe for WaterlooWorks-specific state when applicable
       if (tab.url && /waterlooworks\.uwaterloo\.ca/.test(tab.url)) {
         try {
           const r = await chrome.tabs.sendMessage(tab.id, {
@@ -103,7 +102,7 @@ export default function App() {
           });
           if (r?.success) setWwState(r.data);
         } catch {
-          // Content script not yet loaded — that's ok, button section just hides.
+          // Content script not yet loaded
         }
       }
     }
@@ -146,9 +145,15 @@ export default function App() {
   }
 
   async function handleLogout() {
+    if (!confirmingLogout) {
+      setConfirmingLogout(true);
+      setTimeout(() => setConfirmingLogout(false), 4000);
+      return;
+    }
     await sendMessage(Messages.logout());
     setViewState("unauthenticated");
     setProfile(null);
+    setConfirmingLogout(false);
   }
 
   async function handleFillForm() {
@@ -164,7 +169,6 @@ export default function App() {
 
   async function handleImportJob() {
     if (!pageStatus?.scrapedJob) return;
-
     setActionInFlight("import");
     setActionError(null);
     try {
@@ -186,7 +190,6 @@ export default function App() {
 
   async function handleGenerateFromPage(action: Exclude<PageAction, "import">) {
     if (!pageStatus?.scrapedJob) return;
-
     setActionInFlight(action);
     setActionError(null);
     try {
@@ -217,12 +220,19 @@ export default function App() {
     window.close();
   }
 
+  function profileInitial(): string {
+    const name = profile?.contact?.name?.trim();
+    if (name) return name.charAt(0).toUpperCase();
+    const email = profile?.contact?.email;
+    return email ? email.charAt(0).toUpperCase() : "S";
+  }
+
   if (viewState === "loading") {
     return (
-      <div className="popup-container">
-        <div className="loading">
-          <div className="spinner"></div>
-          <p>Loading...</p>
+      <div className="popup">
+        <div className="state-center">
+          <div className="spinner" />
+          <p className="state-text">Connecting…</p>
         </div>
       </div>
     );
@@ -230,11 +240,16 @@ export default function App() {
 
   if (viewState === "error") {
     return (
-      <div className="popup-container">
-        <div className="error">
-          <h2>Error</h2>
-          <p>{error}</p>
-          <button onClick={() => checkAuthStatus()}>Retry</button>
+      <div className="popup">
+        <div className="state-center">
+          <div className="state-icon error" aria-hidden>
+            !
+          </div>
+          <h2 className="state-title">Something went wrong</h2>
+          <p className="state-text">{error}</p>
+          <button className="btn primary" onClick={() => checkAuthStatus()}>
+            Try again
+          </button>
         </div>
       </div>
     );
@@ -242,256 +257,225 @@ export default function App() {
 
   if (viewState === "unauthenticated") {
     return (
-      <div className="popup-container">
-        <div className="header">
-          <h1>Slothing</h1>
-          <p className="subtitle">Job Application Assistant</p>
-        </div>
-        <div className="content">
-          <p>
-            Connect your Slothing account to start auto-filling job
-            applications.
+      <div className="popup">
+        <div className="hero">
+          <div className="hero-mark">S</div>
+          <h1 className="hero-title">Slothing</h1>
+          <p className="hero-sub">
+            Auto-fill applications. Import jobs. Track everything.
           </p>
-          <button className="primary" onClick={handleConnect}>
-            Connect Account
+          <button className="btn primary block" onClick={handleConnect}>
+            Connect account
           </button>
+          <p className="hero-foot">You'll sign in once — Slothing remembers.</p>
         </div>
       </div>
     );
   }
 
+  const detectedJob = pageStatus?.scrapedJob;
+  const showWwBulk = wwState && wwState.kind === "list";
+  const showImportJobCard =
+    detectedJob ||
+    (wwState && wwState.kind === "detail" && pageStatus?.scrapedJob);
+  const nothingDetected =
+    !pageStatus?.hasForm && !showImportJobCard && !showWwBulk;
+
   return (
-    <div className="popup-container">
-      <div className="header">
-        <h1>Slothing</h1>
-        {profile && (
-          <p className="subtitle">
-            {profile.contact?.name || "No profile name"}
-          </p>
+    <div className="popup">
+      <header className="topbar">
+        <div className="brand">
+          <span className="brand-mark">S</span>
+          <span className="brand-name">Slothing</span>
+        </div>
+        <span className="pill ok" title="Extension connected">
+          <span className="pill-dot" />
+          Connected
+        </span>
+      </header>
+
+      <section className="profile-card">
+        <div className="avatar">{profileInitial()}</div>
+        <div className="profile-meta">
+          <div className="profile-name">
+            {profile?.contact?.name ||
+              profile?.contact?.email ||
+              "Set up your profile"}
+          </div>
+          <div className="profile-sub">
+            {profile?.computed?.currentTitle &&
+            profile?.computed?.currentCompany
+              ? `${profile.computed.currentTitle} · ${profile.computed.currentCompany}`
+              : profile?.contact?.email ||
+                "Add your work history so Slothing can tailor"}
+          </div>
+        </div>
+        {profileScore !== null ? (
+          <div
+            className={`score ${profileScore >= 80 ? "high" : profileScore >= 50 ? "mid" : "low"}`}
+            title="Profile completeness"
+          >
+            <span className="score-num">{profileScore}</span>
+            <span className="score-unit">/100</span>
+          </div>
+        ) : (
+          <button className="btn ghost tight" onClick={handleOpenDashboard}>
+            Open
+          </button>
         )}
-      </div>
+      </section>
 
-      <div className="content">
-        {/* Page Actions */}
-        {pageStatus && (
-          <div className="section">
-            <h3>Current Page</h3>
+      <main className="content">
+        {pageStatus?.hasForm && (
+          <article className="card accent">
+            <header className="card-head">
+              <span className="card-title">Application form detected</span>
+              <span className="badge">{pageStatus.detectedFields} fields</span>
+            </header>
+            <button className="btn primary block" onClick={handleFillForm}>
+              Auto-fill form
+            </button>
+          </article>
+        )}
 
-            {pageStatus.hasForm && (
-              <div className="action-card">
-                <div className="action-info">
-                  <span className="action-title">
-                    Application Form Detected
-                  </span>
-                  <span className="action-subtitle">
-                    {pageStatus.detectedFields} fields found
-                  </span>
-                </div>
-                <button className="primary small" onClick={handleFillForm}>
-                  Fill Form
+        {showImportJobCard && detectedJob && (
+          <article className="card">
+            <header className="card-head">
+              <span className="card-title clip" title={detectedJob.title}>
+                {detectedJob.title}
+              </span>
+              <span className="card-sub clip">{detectedJob.company}</span>
+            </header>
+            {actionSuccess ? (
+              <div className="success-row">
+                <span className="check">✓</span>
+                {actionSuccess === "import"
+                  ? "Imported to opportunities"
+                  : "Opening tab…"}
+              </div>
+            ) : (
+              <div className="action-grid">
+                <button
+                  className="btn primary"
+                  onClick={() => handleGenerateFromPage("tailor")}
+                  disabled={actionInFlight !== null}
+                >
+                  {actionInFlight === "tailor" ? "Tailoring…" : "Tailor resume"}
+                </button>
+                <button
+                  className="btn"
+                  onClick={() => handleGenerateFromPage("cover-letter")}
+                  disabled={actionInFlight !== null}
+                >
+                  {actionInFlight === "cover-letter"
+                    ? "Writing…"
+                    : "Cover letter"}
+                </button>
+                <button
+                  className="btn ghost full"
+                  onClick={handleImportJob}
+                  disabled={actionInFlight !== null}
+                >
+                  {actionInFlight === "import"
+                    ? "Importing…"
+                    : "Just import to tracker"}
                 </button>
               </div>
             )}
-
-            {pageStatus.hasJobListing && pageStatus.scrapedJob && (
-              <div className="action-card">
-                <div className="action-info">
-                  <span className="action-title">
-                    {pageStatus.scrapedJob.title}
-                  </span>
-                  <span className="action-subtitle">
-                    {pageStatus.scrapedJob.company}
-                  </span>
-                </div>
-                {actionSuccess ? (
-                  <span className="success-badge">
-                    {actionSuccess === "import"
-                      ? "Imported!"
-                      : "Generated! Opening..."}
-                  </span>
-                ) : (
-                  <div className="action-stack">
-                    <button
-                      className="primary small"
-                      onClick={() => handleGenerateFromPage("tailor")}
-                      disabled={actionInFlight !== null}
-                    >
-                      {actionInFlight === "tailor"
-                        ? "Tailoring..."
-                        : "Tailor my resume for this"}
-                    </button>
-                    <button
-                      className="secondary small"
-                      onClick={() => handleGenerateFromPage("cover-letter")}
-                      disabled={actionInFlight !== null}
-                    >
-                      {actionInFlight === "cover-letter"
-                        ? "Generating..."
-                        : "Generate cover letter"}
-                    </button>
-                    <button
-                      className="text-button small"
-                      onClick={handleImportJob}
-                      disabled={actionInFlight !== null}
-                    >
-                      {actionInFlight === "import"
-                        ? "Importing..."
-                        : "Just import"}
-                    </button>
-                    {actionError && (
-                      <p className="error-inline">{actionError}</p>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {!pageStatus.hasForm && !pageStatus.hasJobListing && !wwState && (
-              <p className="muted">
-                No job application form or listing detected on this page.
-              </p>
-            )}
-          </div>
+            {actionError && <p className="inline-error">{actionError}</p>}
+          </article>
         )}
 
-        {/* WaterlooWorks bulk-scrape section */}
-        {wwState && wwState.kind !== "other" && (
-          <div className="section">
-            <h3>Detected: WaterlooWorks</h3>
-            <div className="ww-bulk">
+        {showWwBulk && wwState && (
+          <article className="card">
+            <header className="card-head">
+              <span className="card-title">WaterlooWorks list</span>
+              <span className="badge">
+                {wwState.rowCount} row{wwState.rowCount === 1 ? "" : "s"}
+              </span>
+            </header>
+            <div className="action-grid">
               <button
-                className="primary small"
-                onClick={handleImportJob}
-                disabled={
-                  wwState.kind !== "detail" ||
-                  !pageStatus?.scrapedJob ||
-                  actionInFlight !== null
-                }
-                title={
-                  wwState.kind !== "detail"
-                    ? "Click into a posting row to open its details first."
-                    : ""
-                }
-              >
-                {actionInFlight === "import"
-                  ? "Importing..."
-                  : "Import this job"}
-              </button>
-              <button
-                className="secondary small"
+                className="btn primary full"
                 onClick={() => handleWwBulkScrape("visible")}
-                disabled={
-                  wwBulkInFlight !== null ||
-                  wwState.kind !== "list" ||
-                  wwState.rowCount === 0
-                }
-                title={
-                  wwState.kind !== "list"
-                    ? "Open the postings list view to enable bulk scrape."
-                    : ""
-                }
+                disabled={wwBulkInFlight !== null || wwState.rowCount === 0}
               >
                 {wwBulkInFlight === "visible"
-                  ? "Scraping..."
-                  : `Scrape all visible${wwState.rowCount ? ` (${wwState.rowCount})` : ""}`}
+                  ? "Scraping visible…"
+                  : `Scrape ${wwState.rowCount} visible`}
               </button>
               <button
-                className="secondary small"
+                className="btn full"
                 onClick={() => handleWwBulkScrape("paginated")}
-                disabled={
-                  wwBulkInFlight !== null ||
-                  wwState.kind !== "list" ||
-                  wwState.rowCount === 0
-                }
-                title={
-                  wwState.kind !== "list"
-                    ? "Open the postings list view to enable bulk scrape."
-                    : "Walks every page in your current filter set; capped at 200 jobs."
-                }
+                disabled={wwBulkInFlight !== null || wwState.rowCount === 0}
+                title="Walks every page in your current filter set; capped at 200 jobs."
               >
                 {wwBulkInFlight === "paginated"
-                  ? "Scraping all pages..."
-                  : "Scrape entire filtered set"}
+                  ? "Walking pages…"
+                  : "Scrape filtered set"}
               </button>
+            </div>
+            {wwBulkResult && (
+              <p className="inline-note">
+                Imported {wwBulkResult.imported}/{wwBulkResult.attempted}
+                {wwBulkResult.pages > 1 && ` · ${wwBulkResult.pages} pages`}
+                {wwBulkResult.errors.length > 0 &&
+                  ` · ${wwBulkResult.errors.length} errors`}
+              </p>
+            )}
+            {wwBulkError && <p className="inline-error">{wwBulkError}</p>}
+          </article>
+        )}
 
-              {wwBulkResult && (
-                <p className="muted">
-                  Imported {wwBulkResult.imported} / attempted{" "}
-                  {wwBulkResult.attempted}
-                  {wwBulkResult.pages > 1
-                    ? ` across ${wwBulkResult.pages} pages`
-                    : ""}
-                  {wwBulkResult.errors.length > 0
-                    ? ` · ${wwBulkResult.errors.length} errors`
-                    : ""}
-                </p>
-              )}
-              {wwBulkError && <p className="error-inline">{wwBulkError}</p>}
+        {nothingDetected && (
+          <div className="idle">
+            <p className="idle-title">No job detected on this page</p>
+            <p className="idle-sub">
+              Open a posting on any of these and Slothing wakes up:
+            </p>
+            <div className="site-chips">
+              <span className="site-chip">LinkedIn</span>
+              <span className="site-chip">Indeed</span>
+              <span className="site-chip">Greenhouse</span>
+              <span className="site-chip">Lever</span>
+              <span className="site-chip">WaterlooWorks</span>
+              <span className="site-chip">Workday</span>
             </div>
           </div>
         )}
 
-        {/* Quick Actions */}
-        <div className="section">
-          <h3>Quick Actions</h3>
-          <div className="quick-actions">
-            <button className="secondary" onClick={handleOpenDashboard}>
-              Open Dashboard
-            </button>
-            <button
-              className="secondary"
-              onClick={() => chrome.runtime.openOptionsPage()}
-            >
-              Settings
-            </button>
-          </div>
+        <div className="quick-row">
+          <button className="quick" onClick={handleOpenDashboard}>
+            <span className="quick-icon" aria-hidden>
+              ↗
+            </span>
+            <span>Dashboard</span>
+          </button>
+          <button
+            className="quick"
+            onClick={() => chrome.runtime.openOptionsPage()}
+          >
+            <span className="quick-icon" aria-hidden>
+              ⚙
+            </span>
+            <span>Settings</span>
+          </button>
         </div>
+      </main>
 
-        {/* Profile Preview */}
-        {profile && (
-          <div className="section">
-            <h3>Profile</h3>
-            <div className="profile-preview">
-              {profile.contact?.email && <p>{profile.contact.email}</p>}
-              {profile.computed?.currentTitle &&
-                profile.computed?.currentCompany && (
-                  <p className="muted">
-                    {profile.computed.currentTitle} at{" "}
-                    {profile.computed.currentCompany}
-                  </p>
-                )}
-              {profile.skills && profile.skills.length > 0 && (
-                <div className="skills-preview">
-                  {profile.skills.slice(0, 5).map((skill) => (
-                    <span key={skill.id} className="skill-tag">
-                      {skill.name}
-                    </span>
-                  ))}
-                  {profile.skills.length > 5 && (
-                    <span className="skill-tag more">
-                      +{profile.skills.length - 5}
-                    </span>
-                  )}
-                </div>
-              )}
-              {profileScore !== null && (
-                <p className="muted">Profile score {profileScore}/100</p>
-              )}
-              {profile.updatedAt && (
-                <p className="muted">
-                  Updated {formatRelative(profile.updatedAt)}
-                </p>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
-
-      <div className="footer">
-        <button className="text-button" onClick={handleLogout}>
-          Disconnect
+      <footer className="footbar">
+        <button
+          className={`link ${confirmingLogout ? "warn" : ""}`}
+          onClick={handleLogout}
+        >
+          {confirmingLogout ? "Click again to disconnect" : "Disconnect"}
         </button>
-      </div>
+        {profile?.updatedAt && (
+          <span className="updated">
+            Synced {formatRelative(profile.updatedAt)}
+          </span>
+        )}
+      </footer>
     </div>
   );
 }
