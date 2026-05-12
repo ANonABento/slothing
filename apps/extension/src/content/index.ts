@@ -30,6 +30,7 @@ import {
   shouldDecorateTextarea,
   unmountAllAnswerBankButtons,
 } from "./ui/answer-bank-button";
+import { MultistepController } from "./multistep/controller";
 
 // Initialize components
 const fieldDetector = new FieldDetector();
@@ -43,6 +44,12 @@ let jobDetectedForUrl: string | null = null;
 let profileLoadPromise: Promise<ExtensionProfile | null> | null = null;
 const sidebarController = new JobPageSidebarController();
 const correctionsTracker = new CorrectionsTracker();
+// P3 / #36 #37 — wires Workday + Greenhouse multi-step handlers. The
+// controller itself decides per-URL whether it should attach.
+const multistepController = new MultistepController({
+  getProfile: () => loadProfileForSidebar(),
+});
+multistepController.init();
 
 const submitWatcher = new SubmitWatcher({
   getDetectedFields: (form) => detectedFieldsByForm.get(form) || [],
@@ -225,6 +232,13 @@ async function handleMessage(message: { type: string; payload?: unknown }) {
         paginated: true,
         ...(message.payload as object),
       });
+
+    case "MULTISTEP_STEP_TRANSITION":
+      // P3 / #36 #37 — background's webNavigation listener saw a step
+      // transition for this tab. The controller dispatches to the active
+      // provider handler (Workday / Greenhouse), which re-fills the new DOM.
+      await multistepController.onWebNavigationTransition();
+      return { success: true };
 
     default:
       return { success: false, error: `Unknown message type: ${message.type}` };
@@ -681,6 +695,24 @@ async function updateSidebar() {
       }
     },
     onAutoFill: async () => {
+      // P3 / #36 #37 — Workday / Greenhouse get the multi-step pipeline so
+      // subsequent steps in the application are filled automatically. Other
+      // sites fall through to the single-page `handleFillForm` path.
+      const provider = multistepController.init();
+      if (provider) {
+        const ok = await multistepController.confirm();
+        if (!ok) {
+          // The controller's confirm() returns false when there were no
+          // fillable fields detected on the current page. Fall back to the
+          // single-page path so users still get a meaningful error.
+          const response = await handleFillForm();
+          if (!response.success) {
+            throw new Error(response.error || "Failed to auto-fill form");
+          }
+        }
+        return;
+      }
+
       const response = await handleFillForm();
       if (!response.success) {
         throw new Error(response.error || "Failed to auto-fill form");
@@ -736,6 +768,9 @@ window.addEventListener("pagehide", () => {
   // P2/#35 — tear down every mounted answer-bank decoration so we don't leak
   // ResizeObservers or React roots when the page is bfcache-restored.
   unmountAllAnswerBankButtons();
+  // P3 / #36 #37 — destroy the per-provider observers + dismiss any
+  // in-flight fallback toast.
+  multistepController.destroy();
 });
 
 // Utility: debounce function

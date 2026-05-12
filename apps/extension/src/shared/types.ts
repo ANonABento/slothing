@@ -200,7 +200,25 @@ export type MessageType =
   | "BULK_WORKDAY_SCRAPE_PAGINATED"
   | "BULK_WORKDAY_PROGRESS"
   | "AUTH_CALLBACK"
-  | "SAVE_CORRECTION";
+  | "SAVE_CORRECTION"
+  // P3 / #36 #37 — multi-step form support (Workday, Greenhouse).
+  // Background → content: a `webNavigation.onHistoryStateUpdated` event fired
+  // for a tab that has an in-progress multi-step application. The content
+  // script re-runs the autofill engine against the new DOM.
+  | "MULTISTEP_STEP_TRANSITION"
+  // Background → content: poll for the current tab id. Used by the content
+  // script to scope `chrome.storage.session` entries (see session.ts).
+  | "GET_TAB_ID"
+  // Content → background: ask the background to ensure the `webNavigation`
+  // permission is granted. On Chrome MV3 this is a no-op (declared in
+  // `permissions`); on Firefox MV2 the background calls
+  // `browser.permissions.request(...)` and returns whether the user
+  // accepted.
+  | "REQUEST_WEBNAVIGATION_PERMISSION"
+  // Content → background: query whether `webNavigation` is currently
+  // available. The result determines whether we wait for a step transition
+  // event from the background or fall back to the prompted in-page toast.
+  | "HAS_WEBNAVIGATION_PERMISSION";
 
 /**
  * Payload for the SAVE_CORRECTION message (#33). Sent by the content script's
