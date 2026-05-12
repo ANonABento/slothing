@@ -32,7 +32,7 @@ export interface DocumentCursor {
 }
 
 export interface ListDocumentsPaginatedParams {
-  userId?: string;
+  userId: string;
   type?: DocumentType;
   cursor?: DocumentCursor | null;
   limit: number;
@@ -54,21 +54,14 @@ function rowToDocument(row: DocumentRow): Document {
 }
 
 // Settings
-export function getSetting(
-  key: string,
-  userId: string = "default",
-): string | null {
+export function getSetting(key: string, userId: string): string | null {
   const row = db
     .prepare("SELECT value FROM settings WHERE key = ? AND user_id = ?")
     .get(key, userId) as { value: string } | undefined;
   return row?.value || null;
 }
 
-export function setSetting(
-  key: string,
-  value: string,
-  userId: string = "default",
-): void {
+export function setSetting(key: string, value: string, userId: string): void {
   db.prepare(
     `INSERT INTO settings (key, user_id, value, updated_at)
      VALUES (?, ?, ?, CURRENT_TIMESTAMP)
@@ -78,15 +71,12 @@ export function setSetting(
   ).run(key, userId, value);
 }
 
-export function getLLMConfig(userId: string = "default"): LLMConfig | null {
+export function getLLMConfig(userId: string): LLMConfig | null {
   const config = getSetting("llm_config", userId);
   return config ? JSON.parse(config) : null;
 }
 
-export function setLLMConfig(
-  config: LLMConfig,
-  userId: string = "default",
-): void {
+export function setLLMConfig(config: LLMConfig, userId: string): void {
   setSetting("llm_config", JSON.stringify(config), userId);
 }
 
@@ -118,7 +108,7 @@ function isUniqueConstraintError(error: unknown): boolean {
 
 export function saveDocument(
   doc: Omit<Document, "uploadedAt">,
-  userId: string = "default",
+  userId: string,
 ): void {
   try {
     db.prepare(
@@ -148,7 +138,7 @@ export function saveDocument(
 
 export function getDocumentByFileHash(
   fileHash: string,
-  userId: string = "default",
+  userId: string,
 ): Document | null {
   const row = db
     .prepare(
@@ -161,7 +151,7 @@ export function getDocumentByFileHash(
   return row ? rowToDocument(row) : null;
 }
 
-export function getDocuments(userId: string = "default"): Document[] {
+export function getDocuments(userId: string): Document[] {
   const rows = db
     .prepare(
       "SELECT * FROM documents WHERE user_id = ? ORDER BY uploaded_at DESC",
@@ -172,7 +162,7 @@ export function getDocuments(userId: string = "default"): Document[] {
 
 export function getDocumentsByType(
   type: DocumentType,
-  userId: string = "default",
+  userId: string,
 ): Document[] {
   const rows = db
     .prepare(
@@ -183,7 +173,7 @@ export function getDocumentsByType(
 }
 
 export function listDocumentsPaginated({
-  userId = "default",
+  userId,
   type,
   cursor,
   limit,
@@ -214,20 +204,14 @@ export function listDocumentsPaginated({
   return rows.map(rowToDocument);
 }
 
-export function getDocument(
-  id: string,
-  userId: string = "default",
-): Document | null {
+export function getDocument(id: string, userId: string): Document | null {
   const row = db
     .prepare("SELECT * FROM documents WHERE id = ? AND user_id = ?")
     .get(id, userId) as DocumentRow | undefined;
   return row ? rowToDocument(row) : null;
 }
 
-export function deleteDocument(
-  id: string,
-  userId: string = "default",
-): string | null {
+export function deleteDocument(id: string, userId: string): string | null {
   const row = db
     .prepare("SELECT path FROM documents WHERE id = ? AND user_id = ?")
     .get(id, userId) as { path: string } | undefined;
@@ -241,7 +225,7 @@ export function deleteDocument(
 }
 
 // Profile
-export function getProfile(userId: string = "default"): Profile | null {
+export function getProfile(userId: string): Profile | null {
   const profileRow = db
     .prepare("SELECT * FROM profile WHERE id = ?")
     .get(userId) as any;
@@ -318,10 +302,7 @@ export function getProfile(userId: string = "default"): Profile | null {
   };
 }
 
-export function updateProfile(
-  profile: Partial<Profile>,
-  userId: string = "default",
-): void {
+export function updateProfile(profile: Partial<Profile>, userId: string): void {
   const currentProfile = getProfile(userId);
   if (currentProfile) {
     createProfileSnapshot(userId, JSON.stringify(currentProfile));
@@ -471,7 +452,7 @@ export function updateProfile(
 }
 
 // Clear all profile data
-export function clearProfile(userId: string = "default"): void {
+export function clearProfile(userId: string): void {
   const clear = db.transaction(() => {
     db.prepare("DELETE FROM experiences WHERE profile_id = ?").run(userId);
     db.prepare("DELETE FROM education WHERE profile_id = ?").run(userId);

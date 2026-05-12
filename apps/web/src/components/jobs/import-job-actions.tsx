@@ -2,6 +2,7 @@
 
 import type { LucideIcon } from "lucide-react";
 import { Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { THEME_PRIMARY_GRADIENT_BUTTON_CLASSES } from "@/lib/theme/component-classes";
 
@@ -22,10 +23,12 @@ export function ImportJobActions({
   onCancel,
   onSubmit,
 }: ImportJobActionsProps) {
+  const commonT = useTranslations("common");
+
   return (
     <div className="flex justify-end gap-3 pt-2">
       <Button variant="outline" onClick={onCancel}>
-        Cancel
+        {commonT("cancel")}
       </Button>
       <Button
         onClick={onSubmit}

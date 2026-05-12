@@ -31,7 +31,7 @@ export function createReminder(
     Reminder,
     "id" | "completed" | "dismissed" | "createdAt" | "completedAt" | "firedAt"
   >,
-  userId: string = "default",
+  userId: string,
 ): Reminder {
   ensureRemindersFiringSchema();
   const id = generateId();
@@ -78,17 +78,17 @@ export function createReminder(
 }
 
 // Get all reminders
-export function getReminders(options?: {
+export function getReminders(options: {
   jobId?: string;
   includeCompleted?: boolean;
   includeDismissed?: boolean;
-  userId?: string;
+  userId: string;
 }): ReminderWithJob[] {
   const {
     jobId,
     includeCompleted = false,
     includeDismissed = false,
-    userId = "default",
+    userId,
   } = options || {};
 
   let query = `
@@ -154,7 +154,7 @@ export function getReminders(options?: {
 // Get upcoming reminders (due within specified days)
 export function getUpcomingReminders(
   days: number = 7,
-  userId: string = "default",
+  userId: string,
 ): ReminderWithJob[] {
   const futureDate = nowDate();
   futureDate.setDate(futureDate.getDate() + days);
@@ -207,9 +207,7 @@ export function getUpcomingReminders(
 }
 
 // Get overdue reminders
-export function getOverdueReminders(
-  userId: string = "default",
-): ReminderWithJob[] {
+export function getOverdueReminders(userId: string): ReminderWithJob[] {
   const now = nowIso();
 
   const stmt = db.prepare(`
@@ -260,7 +258,7 @@ export function getOverdueReminders(
 }
 
 // Complete a reminder
-export function completeReminder(id: string, userId: string = "default"): void {
+export function completeReminder(id: string, userId: string): void {
   const now = nowIso();
 
   const stmt = db.prepare(`
@@ -274,7 +272,7 @@ export function completeReminder(id: string, userId: string = "default"): void {
 }
 
 // Dismiss a reminder
-export function dismissReminder(id: string, userId: string = "default"): void {
+export function dismissReminder(id: string, userId: string): void {
   const stmt = db.prepare(`
     UPDATE reminders
     SET dismissed = 1
@@ -286,7 +284,7 @@ export function dismissReminder(id: string, userId: string = "default"): void {
 }
 
 // Delete a reminder
-export function deleteReminder(id: string, userId: string = "default"): void {
+export function deleteReminder(id: string, userId: string): void {
   const stmt = db.prepare(`
     DELETE FROM reminders
     WHERE id = ?
@@ -304,7 +302,7 @@ export function updateReminder(
       "title" | "description" | "dueDate" | "type" | "notifyByEmail"
     >
   >,
-  userId: string = "default",
+  userId: string,
 ): void {
   const fields: string[] = [];
   const values: (string | number | null)[] = [];
@@ -348,7 +346,7 @@ export function updateReminder(
 export function createFollowUpReminder(
   jobId: string,
   daysFromNow: number = 7,
-  userId: string = "default",
+  userId: string,
 ): Reminder {
   const dueDate = nowDate();
   dueDate.setDate(dueDate.getDate() + daysFromNow);
@@ -366,7 +364,7 @@ export function createFollowUpReminder(
 }
 
 // Get reminder counts for dashboard
-export function getReminderCounts(userId: string = "default"): {
+export function getReminderCounts(userId: string): {
   total: number;
   overdue: number;
   upcoming: number;

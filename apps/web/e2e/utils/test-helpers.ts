@@ -193,7 +193,9 @@ export async function ensureSidebarOpen(page: Page): Promise<void> {
     await openMenuButton.click();
   }
 
-  await expect(page.locator("aside")).toBeVisible();
+  await expect(
+    page.getByRole("complementary", { name: "Main navigation" }),
+  ).toBeVisible();
 }
 
 /**

@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 import type { Opportunity } from "@/types/opportunity";
 
 import { toNullableEpoch } from "@/lib/format/time";
+import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 type QueueAction = "save" | "dismiss" | "apply";
 
 const DESCRIPTION_PREVIEW_LENGTH = 260;
@@ -80,6 +81,7 @@ export function OpportunityReviewQueue({
   onApplyNow,
 }: OpportunityReviewQueueProps) {
   const format = useFormatter();
+  const a11yT = useA11yTranslations();
   const [expanded, setExpanded] = useState(false);
   const [activeAction, setActiveAction] = useState<QueueAction | null>(null);
   const queue = useMemo(() => getPendingOpportunities(jobs), [jobs]);
@@ -142,7 +144,7 @@ export function OpportunityReviewQueue({
         <h1 className="sr-only">Review Queue</h1>
         <StandardEmptyState
           icon={Check}
-          title="Queue cleared"
+          title={a11yT("queueCleared")}
           description="New pending opportunities will appear here when Slothing finds roles that need review."
           className="w-full"
           action={

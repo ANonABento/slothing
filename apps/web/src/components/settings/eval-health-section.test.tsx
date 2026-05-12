@@ -3,11 +3,12 @@ import { NextIntlClientProvider } from "next-intl";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { buildDashboardPayload } from "@/lib/admin/evals/aggregate";
 import { SAMPLE_COMPARISON_REPORTS } from "@/lib/admin/evals/sample-data";
+import messages from "@/messages/en.json";
 import { EvalHealthSection } from "./eval-health-section";
 
 function renderEvalHealthSection() {
   return render(
-    <NextIntlClientProvider locale="en-US" messages={{}}>
+    <NextIntlClientProvider locale="en-US" messages={messages}>
       <EvalHealthSection />
     </NextIntlClientProvider>,
   );

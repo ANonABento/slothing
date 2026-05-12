@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
-import { pluralize } from "@/lib/text/pluralize";
 import {
   Select,
   SelectContent,
@@ -47,6 +47,7 @@ export function CalendarSyncButton({
   compact = false,
   hideWhenDisconnected = false,
 }: CalendarSyncButtonProps) {
+  const t = useTranslations("integrations.google.calendar");
   const [syncing, setSyncing] = useState(false);
   const [syncType, setSyncType] = useState<SyncType>("all");
   const [result, setResult] = useState<SyncResponse | null>(null);
@@ -83,9 +84,8 @@ export function CalendarSyncButton({
       onSyncComplete?.(data);
     } catch (error) {
       showErrorToast(error, {
-        title: "Could not sync calendar",
-        fallbackDescription:
-          "Please check your Google connection and try again.",
+        title: t("errors.syncTitle"),
+        fallbackDescription: t("errors.syncDescription"),
       });
       setResult({
         success: false,
@@ -94,7 +94,7 @@ export function CalendarSyncButton({
         results: [
           {
             type: "interview",
-            title: "Sync failed",
+            title: t("errors.syncFailed"),
             success: false,
             error: "Network error",
           },
@@ -111,7 +111,7 @@ export function CalendarSyncButton({
     return (
       <div className="flex items-center gap-2 text-sm text-muted-foreground">
         <AlertCircle className="h-4 w-4" />
-        <span>Connect Google in Settings to sync calendar</span>
+        <span>{t("connectInSettings")}</span>
       </div>
     );
   }
@@ -121,7 +121,7 @@ export function CalendarSyncButton({
     return (
       <Button variant="outline" disabled>
         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-        Checking...
+        {t("checking")}
       </Button>
     );
   }
@@ -138,12 +138,12 @@ export function CalendarSyncButton({
           {syncing ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Syncing...
+              {t("syncing")}
             </>
           ) : (
             <>
               <Calendar className="mr-2 h-4 w-4" />
-              Sync to Google Calendar
+              {t("actions.sync")}
             </>
           )}
         </Button>
@@ -152,11 +152,14 @@ export function CalendarSyncButton({
           <p className="text-xs text-center">
             {result.success ? (
               <span className="text-success">
-                Synced {pluralize(result.synced, "event")}
+                {t("result.synced", { count: result.synced })}
               </span>
             ) : (
               <span className="text-warning">
-                {result.synced} synced, {result.failed} failed
+                {t("result.partial", {
+                  synced: result.synced,
+                  failed: result.failed,
+                })}
               </span>
             )}
           </p>
@@ -173,13 +176,19 @@ export function CalendarSyncButton({
           onValueChange={(v) => setSyncType(v as SyncType)}
         >
           <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Select what to sync" />
+            <SelectValue placeholder={t("selectPlaceholder")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Events</SelectItem>
-            <SelectItem value="interviews">Interviews Only</SelectItem>
-            <SelectItem value="deadlines">Deadlines Only</SelectItem>
-            <SelectItem value="reminders">Reminders Only</SelectItem>
+            <SelectItem value="all">{t("syncTypes.all")}</SelectItem>
+            <SelectItem value="interviews">
+              {t("syncTypes.interviews")}
+            </SelectItem>
+            <SelectItem value="deadlines">
+              {t("syncTypes.deadlines")}
+            </SelectItem>
+            <SelectItem value="reminders">
+              {t("syncTypes.reminders")}
+            </SelectItem>
           </SelectContent>
         </Select>
 
@@ -187,12 +196,12 @@ export function CalendarSyncButton({
           {syncing ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Syncing...
+              {t("syncing")}
             </>
           ) : (
             <>
               <Calendar className="mr-2 h-4 w-4" />
-              Sync to Google Calendar
+              {t("actions.sync")}
             </>
           )}
         </Button>
@@ -215,8 +224,11 @@ export function CalendarSyncButton({
             )}
             <span className="font-medium">
               {result.success
-                ? `Successfully synced ${pluralize(result.synced, "event")}`
-                : `Synced ${pluralize(result.synced, "event")}, ${result.failed} failed`}
+                ? t("result.success", { count: result.synced })
+                : t("result.failed", {
+                    synced: result.synced,
+                    failed: result.failed,
+                  })}
             </span>
           </div>
 
@@ -249,7 +261,7 @@ export function CalendarSyncButton({
               ))}
               {result.results.length > 10 && (
                 <p className="text-xs text-muted-foreground pt-1">
-                  And {result.results.length - 10} more...
+                  {t("result.more", { count: result.results.length - 10 })}
                 </p>
               )}
             </div>

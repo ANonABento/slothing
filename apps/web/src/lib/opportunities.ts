@@ -126,14 +126,14 @@ function parseSalaryRange(salary?: string): {
 }
 
 export interface ListOpportunitiesParams {
-  userId?: string;
+  userId: string;
   statuses?: string[];
   cursor?: CreatedAtCursor | null;
   limit: number;
 }
 
 export function listOpportunities({
-  userId = "default",
+  userId,
   statuses,
   cursor,
   limit,
@@ -166,7 +166,7 @@ export function listOpportunities({
 }
 
 export function listAllOpportunities(
-  userId = "default",
+  userId: string,
   statuses?: string[],
 ): Opportunity[] {
   const requestedStatuses = statuses?.filter(Boolean) ?? [];
@@ -184,10 +184,7 @@ export function listAllOpportunities(
     );
 }
 
-export function getOpportunity(
-  id: string,
-  userId = "default",
-): Opportunity | null {
+export function getOpportunity(id: string, userId: string): Opportunity | null {
   const job = getJob(id, userId);
   return job ? jobToOpportunity(job) : null;
 }
@@ -195,7 +192,7 @@ export function getOpportunity(
 export function linkOpportunityDocument(
   id: string,
   input: OpportunityLinkInput,
-  userId = "default",
+  userId: string,
 ): Opportunity | null {
   const existing = getJob(id, userId);
   if (!existing) return null;
@@ -218,7 +215,7 @@ export function linkOpportunityDocument(
 export function changeOpportunityStatus(
   id: string,
   status: string,
-  userId = "default",
+  userId: string,
 ): Opportunity | null {
   const existing = getJob(id, userId);
   if (!existing) return null;

@@ -23,6 +23,7 @@ import {
 import type { LLMConfig } from "@/types";
 import type { LLMTestResult } from "@/app/[locale]/(app)/settings/use-llm-settings";
 import type { ProviderOption } from "./llm-provider-selector";
+import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 
 interface LLMProviderConfigProps {
   config: LLMConfig;
@@ -38,6 +39,8 @@ interface LLMProviderConfigProps {
 }
 
 export function LLMProviderConfig(props: LLMProviderConfigProps) {
+  const a11yT = useA11yTranslations();
+
   const {
     config,
     selectedProvider,
@@ -109,9 +112,9 @@ export function LLMProviderConfig(props: LLMProviderConfigProps) {
               <SelectTrigger
                 id="llm-model-trigger"
                 className="flex-1"
-                aria-label="Model"
+                aria-label={a11yT("model")}
               >
-                <SelectValue placeholder="Select a model" />
+                <SelectValue placeholder={a11yT("selectAModel")} />
               </SelectTrigger>
               <SelectContent>
                 {models.map((model) => (
@@ -127,7 +130,7 @@ export function LLMProviderConfig(props: LLMProviderConfigProps) {
                 size="icon"
                 onClick={onTestConnection}
                 disabled={testing}
-                title="Refresh available models"
+                title={a11yT("refreshAvailableModels")}
               >
                 <RefreshCw
                   className={`h-4 w-4 ${testing ? "animate-spin" : ""}`}

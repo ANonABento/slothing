@@ -7,8 +7,11 @@
   },
   "common": {
     "cancel": "取消",
+    "back": "[zh-CN] Back",
     "clear": "清除",
     "clearAll": "全部清除",
+    "delete": "[zh-CN] Delete",
+    "edit": "[zh-CN] Edit",
     "filters": "筛选",
     "import": "导入",
     "loading": "加载中",
@@ -55,6 +58,17 @@
       "settings": "设置"
     }
   },
+  "marketing": {
+    "nav": {
+      "features": "[zh-CN] Features",
+      "extension": "[zh-CN] Extension",
+      "howItWorks": "[zh-CN] How It Works",
+      "pricing": "[zh-CN] Pricing",
+      "signIn": "[zh-CN] Sign In",
+      "getStarted": "[zh-CN] Get Started",
+      "toggleMenu": "[zh-CN] Toggle menu"
+    }
+  },
   "dashboard": {
     "title": "仪表盘",
     "actions": {
@@ -86,7 +100,82 @@
       "unlocks": "接下来将解锁",
       "afterStep": "完成此步骤后",
       "skip": "暂时跳过设置",
-      "recommended": "推荐"
+      "recommended": "推荐",
+      "steps": {
+        "upload-resume": {
+          "title": "上传您的简历",
+          "description": "我们会整理您的经历，让它可以反复使用。",
+          "actionLabel": "上传简历"
+        },
+        "install-extension": {
+          "title": "安装浏览器扩展",
+          "description": "浏览招聘网站时直接捕获职位。",
+          "actionLabel": "安装扩展"
+        },
+        "add-opportunity": {
+          "title": "添加第一个机会",
+          "description": "跟踪一个职位，并查看需要哪些文档。",
+          "actionLabel": "添加机会"
+        },
+        "create-tailored-doc": {
+          "title": "创建定制文档",
+          "description": "用您的简历和目标职位起草更有力的申请材料。",
+          "actionLabel": "打开 Studio"
+        }
+      },
+      "unlockPreview": {
+        "upload-resume": {
+          "intro": "简历进入资料库后，Slothing 就有了支撑后续流程的素材。",
+          "items": {
+            "0": {
+              "title": "可复用文档库",
+              "description": "为每个职位整理好您的源材料。"
+            },
+            "1": {
+              "title": "更好的机会匹配",
+              "description": "用真实经历和技能对比职位。"
+            },
+            "2": {
+              "title": "Studio 定制草稿",
+              "description": "从已有材料开始，而不是面对空白页。"
+            }
+          }
+        },
+        "add-opportunity": {
+          "intro": "第一个职位被跟踪后，Slothing 可以把文档和下一步连接到真实目标。",
+          "items": {
+            "0": {
+              "title": "聚焦的申请计划",
+              "description": "查看每个职位需要的文档和准备工作。"
+            },
+            "1": {
+              "title": "跟进时间安排",
+              "description": "让面试、截止日期和提醒保持可见。"
+            },
+            "2": {
+              "title": "清晰的流程视图",
+              "description": "观察已保存、已申请和面试中的职位流转。"
+            }
+          }
+        },
+        "create-tailored-doc": {
+          "intro": "有了定制文档后，您的工作台会开始把源材料转化为可复用的申请推进力。",
+          "items": {
+            "0": {
+              "title": "可直接申请的草稿",
+              "description": "把简历和目标职位转化为更强的文档。"
+            },
+            "1": {
+              "title": "可复用跟进内容",
+              "description": "让招聘人员备注与职位上下文保持一致。"
+            },
+            "2": {
+              "title": "准备度信号",
+              "description": "了解哪些已经完善，哪些还需要打磨。"
+            }
+          }
+        }
+      }
     },
     "stats": {
       "readiness": "就绪度",
@@ -135,6 +224,80 @@
       "viewAll": "查看全部",
       "emptyTitle": "暂无机会",
       "emptyDescription": "保存或导入机会即可在此处开始追踪。"
+    },
+    "recentActivity": {
+      "title": "[zh-CN] Recent Activity",
+      "types": {
+        "document_uploaded": "[zh-CN] Uploaded",
+        "resume_generated": "[zh-CN] Generated resume for",
+        "job_added": "[zh-CN] Added job",
+        "job_applied": "[zh-CN] Applied to"
+      }
+    }
+  },
+  "onboarding": {
+    "steps": {
+      "upload": {
+        "title": "[zh-CN] Upload Your Resume",
+        "description": "[zh-CN] Drag and drop your resume to get started, or skip this step and add it later.",
+        "dropHint": "[zh-CN] Drop your PDF or DOCX here, or head to <documents>Documents</documents> after setup to add it later."
+      },
+      "review": {
+        "title": "[zh-CN] Review Your Profile",
+        "description": "[zh-CN] After uploading, review the extracted entries and edit anything that needs fixing.",
+        "sections": {
+          "contactInfo": "[zh-CN] Contact info",
+          "workExperience": "[zh-CN] Work experience",
+          "education": "[zh-CN] Education",
+          "skillsProjects": "[zh-CN] Skills & projects"
+        }
+      },
+      "builder": {
+        "title": "[zh-CN] Build Your Starter Profile",
+        "description": "[zh-CN] Answer a few quick prompts so Slothing can organize your career details without a resume upload.",
+        "fields": {
+          "name": "[zh-CN] Name",
+          "email": "[zh-CN] Email",
+          "targetRole": "[zh-CN] Target role",
+          "backgroundSummary": "[zh-CN] Background summary",
+          "education": "[zh-CN] Education",
+          "school": "[zh-CN] School",
+          "degree": "[zh-CN] Degree",
+          "field": "[zh-CN] Field",
+          "topSkills": "[zh-CN] Top skills",
+          "company": "[zh-CN] Company / organisation",
+          "roleTitle": "[zh-CN] Role / title",
+          "roleHighlights": "[zh-CN] Role highlights (one per line, up to 3)",
+          "projectName": "[zh-CN] Project name",
+          "projectSummary": "[zh-CN] What did you build?",
+          "projectHighlights": "[zh-CN] Project highlights (one per line)",
+          "achievements": "[zh-CN] Honours, awards, leadership (comma-separated)"
+        },
+        "placeholders": {
+          "targetRole": "[zh-CN] Frontend intern, project manager, data analyst",
+          "backgroundSummary": "[zh-CN] A sentence about your background, interests, or next move",
+          "topSkills": "[zh-CN] Customer service, Excel, Python",
+          "company": "[zh-CN] Campus cafe",
+          "roleTitle": "[zh-CN] Barista",
+          "roleHighlights": "[zh-CN] Pulled espresso shots\nTrained 3 new baristas",
+          "projectName": "[zh-CN] Community pantry dashboard",
+          "projectSummary": "[zh-CN] A class project that tracked donations and volunteer shifts",
+          "projectHighlights": "[zh-CN] Built a filterable tracker\nPresented findings to class",
+          "achievements": "[zh-CN] Residence council secretary, Dean's list"
+        },
+        "optional": {
+          "title": "[zh-CN] Add a role, project, or honour (optional)",
+          "hide": "[zh-CN] Hide",
+          "add": "[zh-CN] Add"
+        },
+        "actions": {
+          "saving": "[zh-CN] Saving",
+          "saveContinue": "[zh-CN] Save and continue"
+        },
+        "errors": {
+          "save": "[zh-CN] Unable to save your profile starter."
+        }
+      }
     }
   },
   "opportunities": {
@@ -238,6 +401,449 @@
       "moveClosedDescription": "为 {title} 选择最终状态。"
     }
   },
+  "interview": {
+    "summary": {
+      "title": "[zh-CN] Interview Complete!",
+      "description": "[zh-CN] You answered all {count, plural, one {# question} other {# questions}}. Review your responses and feedback below.",
+      "actions": {
+        "startNew": "[zh-CN] Start New Interview",
+        "research": "[zh-CN] Research {company}"
+      },
+      "insights": {
+        "title": "[zh-CN] Performance Insights",
+        "questionsAnswered": "[zh-CN] Questions Answered",
+        "responseQuality": "[zh-CN] Response Quality",
+        "feedbackReceived": "[zh-CN] Feedback Received"
+      },
+      "performanceLevels": {
+        "detailed": "[zh-CN] Detailed",
+        "good": "[zh-CN] Good",
+        "brief": "[zh-CN] Brief"
+      },
+      "responses": {
+        "title": "[zh-CN] Your Responses",
+        "skipped": "[zh-CN] Skipped",
+        "skippedShort": "[zh-CN] Skipped - revisit later",
+        "noAnswer": "[zh-CN] No answer provided",
+        "skippedHint": "[zh-CN] Skipped - revisit this prompt when you are ready.",
+        "yourAnswer": "[zh-CN] Your Answer",
+        "aiFeedback": "[zh-CN] AI Feedback"
+      }
+    },
+    "jobSelection": {
+      "title": "[zh-CN] Select a job to practice for:",
+      "empty": {
+        "title": "[zh-CN] No Opportunities to Practice For",
+        "description": "[zh-CN] Add a job description first to get personalized interview questions based on the role.",
+        "addOpportunity": "[zh-CN] Add an Opportunity"
+      },
+      "actions": {
+        "quickPractice": "[zh-CN] Quick Practice",
+        "textPractice": "[zh-CN] Text Practice",
+        "voicePractice": "[zh-CN] Voice Practice",
+        "prepGuide": "[zh-CN] Prep Guide",
+        "hidePrepGuide": "[zh-CN] Hide Prep Guide",
+        "companyResearch": "[zh-CN] Company Research"
+      },
+      "controls": {
+        "difficulty": "[zh-CN] Difficulty:",
+        "questionCount": "[zh-CN] {count} questions",
+        "timer": "[zh-CN] Timer"
+      },
+      "difficulty": {
+        "entry": "[zh-CN] Entry Level",
+        "mid": "[zh-CN] Mid Level",
+        "senior": "[zh-CN] Senior Level",
+        "executive": "[zh-CN] Executive"
+      }
+    },
+    "quickPractice": {
+      "title": "[zh-CN] Practice {category}",
+      "description": "[zh-CN] Pick a short warm-up and jump straight into questions.",
+      "fields": {
+        "category": "[zh-CN] Category",
+        "questions": "[zh-CN] Questions",
+        "difficulty": "[zh-CN] Difficulty"
+      },
+      "categories": {
+        "behavioral": "[zh-CN] Behavioral",
+        "technical": "[zh-CN] Technical",
+        "situational": "[zh-CN] Situational",
+        "company": "[zh-CN] Company",
+        "system-design": "[zh-CN] System Design",
+        "general": "[zh-CN] General"
+      },
+      "questionCount": "[zh-CN] {count} questions",
+      "difficulty": {
+        "entry": "[zh-CN] Easy",
+        "mid": "[zh-CN] Mid",
+        "senior": "[zh-CN] Hard",
+        "executive": "[zh-CN] Executive"
+      },
+      "timer": "[zh-CN] Practice with a timer",
+      "actions": {
+        "start": "[zh-CN] Start"
+      }
+    },
+    "prepGuide": {
+      "title": "[zh-CN] Interview Prep Guide",
+      "jobAtCompany": "[zh-CN] {jobTitle} at {company}",
+      "loading": "[zh-CN] Generating your prep guide...",
+      "progress": "[zh-CN] Preparation Progress",
+      "questionTips": "[zh-CN] Tips",
+      "actions": {
+        "export": "[zh-CN] Export"
+      },
+      "tabs": {
+        "overview": "[zh-CN] Overview",
+        "checklist": "[zh-CN] Checklist",
+        "questions": "[zh-CN] Questions"
+      },
+      "sections": {
+        "keyTopics": "[zh-CN] Key Topics to Prepare",
+        "strengths": "[zh-CN] Your Strengths",
+        "gaps": "[zh-CN] Potential Gaps",
+        "talkingPoints": "[zh-CN] Key Talking Points"
+      },
+      "checklist": {
+        "before": "[zh-CN] Before the Interview",
+        "during": "[zh-CN] During the Interview",
+        "after": "[zh-CN] After the Interview"
+      },
+      "categories": {
+        "behavioral": "[zh-CN] Behavioral",
+        "technical": "[zh-CN] Technical",
+        "situational": "[zh-CN] Situational",
+        "company": "[zh-CN] Company"
+      },
+      "errors": {
+        "fetch": "[zh-CN] Failed to fetch guide",
+        "load": "[zh-CN] Failed to load guide",
+        "download": "[zh-CN] Failed to download guide",
+        "downloadTitle": "[zh-CN] Could not download prep guide",
+        "downloadDescription": "[zh-CN] Please try downloading the guide again."
+      }
+    }
+  },
+  "jobs": {
+    "toolbar": {
+      "searchPlaceholder": "[zh-CN] Search jobs by title, company, or keywords...",
+      "clearSearch": "[zh-CN] Clear search",
+      "filters": {
+        "status": "[zh-CN] Status",
+        "type": "[zh-CN] Type",
+        "location": "[zh-CN] Location",
+        "allStatuses": "[zh-CN] All Statuses",
+        "allTypes": "[zh-CN] All Types",
+        "allLocations": "[zh-CN] All Locations"
+      },
+      "statuses": {
+        "pending": "[zh-CN] Pending",
+        "saved": "[zh-CN] Saved",
+        "applied": "[zh-CN] Applied",
+        "interviewing": "[zh-CN] Interviewing",
+        "offered": "[zh-CN] Offered",
+        "rejected": "[zh-CN] Rejected"
+      },
+      "types": {
+        "fullTime": "[zh-CN] Full-time",
+        "partTime": "[zh-CN] Part-time",
+        "contract": "[zh-CN] Contract",
+        "internship": "[zh-CN] Internship"
+      },
+      "locations": {
+        "remote": "[zh-CN] Remote",
+        "onsite": "[zh-CN] On-site"
+      },
+      "sort": {
+        "placeholder": "[zh-CN] Sort",
+        "newest": "[zh-CN] Newest First",
+        "oldest": "[zh-CN] Oldest First",
+        "company": "[zh-CN] Company A-Z",
+        "title": "[zh-CN] Title A-Z"
+      },
+      "showing": "[zh-CN] Showing {filteredCount} of {totalCount, plural, one {# job} other {# jobs}}"
+    },
+    "import": {
+      "csvPreview": {
+        "summaryTitle": "[zh-CN] Import Summary",
+        "stats": {
+          "totalRows": "[zh-CN] Total Rows",
+          "validOpportunities": "[zh-CN] Valid Opportunities",
+          "invalid": "[zh-CN] Invalid"
+        },
+        "validationErrors": "[zh-CN] Validation Errors",
+        "moreErrors": "[zh-CN] ...and {count} more errors",
+        "opportunitiesToImport": "[zh-CN] Opportunities to Import ({count})",
+        "moreOpportunities": "[zh-CN] ...and {count, plural, one {# more opportunity} other {# more opportunities}}",
+        "actions": {
+          "import": "[zh-CN] Import {count, plural, one {# Opportunity} other {# Opportunities}}"
+        }
+      },
+      "textMode": {
+        "jobUrlLabel": "[zh-CN] Job URL (optional)",
+        "jobUrlPlaceholder": "[zh-CN] https://linkedin.com/jobs/... or https://indeed.com/...",
+        "jobUrlHelp": "[zh-CN] The URL will be saved with the job for reference",
+        "jobContentLabel": "[zh-CN] Job Content",
+        "jobContentPlaceholder": "[zh-CN] Paste the full job posting here...\n\nExample:\nSenior Software Engineer\nAcme Corp - San Francisco, CA (Remote)\n\nAbout the role:\nWe're looking for an experienced software engineer...\n\nRequirements:\n- 5+ years of experience\n- Python, TypeScript\n...",
+        "jobContentHelp": "[zh-CN] Paste the entire job description. We'll extract the title, company, requirements, and keywords.",
+        "actions": {
+          "parse": "[zh-CN] Parse Job"
+        }
+      },
+      "urlMode": {
+        "jobUrlLabel": "[zh-CN] Job Posting URL",
+        "jobUrlPlaceholder": "[zh-CN] https://linkedin.com/jobs/... or https://indeed.com/...",
+        "jobUrlHelp": "[zh-CN] We'll fetch the job posting and extract the details automatically.",
+        "fetchingNote": "[zh-CN] Note: Some sites may block automated fetching. If the import fails, try pasting the job content directly.",
+        "actions": {
+          "fetch": "[zh-CN] Fetch Job"
+        }
+      },
+      "editForm": {
+        "fields": {
+          "jobTitle": "[zh-CN] Job Title",
+          "company": "[zh-CN] Company",
+          "location": "[zh-CN] Location",
+          "jobType": "[zh-CN] Job Type",
+          "salary": "[zh-CN] Salary",
+          "remote": "[zh-CN] Remote",
+          "url": "[zh-CN] URL"
+        },
+        "placeholders": {
+          "location": "[zh-CN] San Francisco, CA",
+          "selectType": "[zh-CN] Select type"
+        },
+        "types": {
+          "fullTime": "[zh-CN] Full-time",
+          "partTime": "[zh-CN] Part-time",
+          "contract": "[zh-CN] Contract",
+          "internship": "[zh-CN] Internship"
+        },
+        "remote": {
+          "remote": "[zh-CN] Remote",
+          "onsite": "[zh-CN] On-site"
+        },
+        "actions": {
+          "backToPreview": "[zh-CN] Back to Preview",
+          "import": "[zh-CN] Import Job"
+        }
+      },
+      "preview": {
+        "remote": "[zh-CN] Remote",
+        "viewOriginalPosting": "[zh-CN] View Original Posting",
+        "description": "[zh-CN] Description",
+        "requirements": "[zh-CN] Requirements",
+        "moreRequirements": "[zh-CN] +{count} more",
+        "extractedKeywords": "[zh-CN] Extracted Keywords",
+        "source": "[zh-CN] Source: {source}",
+        "actions": {
+          "import": "[zh-CN] Import Job"
+        }
+      }
+    },
+    "addDialog": {
+      "title": "[zh-CN] Add New Opportunity",
+      "description": "[zh-CN] Paste the opportunity description to analyze your match and generate a tailored resume.",
+      "fields": {
+        "title": "[zh-CN] Opportunity Title",
+        "company": "[zh-CN] Company",
+        "url": "[zh-CN] Opportunity URL (optional)",
+        "description": "[zh-CN] Opportunity Description"
+      },
+      "placeholders": {
+        "title": "[zh-CN] Software Engineer",
+        "company": "[zh-CN] Acme Corp",
+        "description": "[zh-CN] Paste the full opportunity description here..."
+      },
+      "actions": {
+        "add": "[zh-CN] Add Opportunity"
+      },
+      "errors": {
+        "add": "[zh-CN] Failed to add opportunity",
+        "addTitle": "[zh-CN] Could not add opportunity",
+        "addDescription": "[zh-CN] Please check the opportunity details and try again."
+      }
+    }
+  },
+  "resume": {
+    "comparison": {
+      "title": "[zh-CN] Resume Comparison",
+      "loading": "[zh-CN] Comparing resumes...",
+      "before": "[zh-CN] Before",
+      "after": "[zh-CN] After",
+      "score": "[zh-CN] Score: {score}%",
+      "matchScoreChange": "[zh-CN] Match Score Change",
+      "empty": "[zh-CN] No differences found between these versions.",
+      "actions": {
+        "close": "[zh-CN] Close"
+      },
+      "summary": {
+        "additions": "[zh-CN] Additions",
+        "removals": "[zh-CN] Removals",
+        "changes": "[zh-CN] Changes"
+      },
+      "errors": {
+        "compare": "[zh-CN] Failed to compare resumes",
+        "comparison": "[zh-CN] Comparison failed",
+        "load": "[zh-CN] Failed to load comparison"
+      }
+    }
+  },
+  "integrations": {
+    "google": {
+      "calendar": {
+        "connectInSettings": "[zh-CN] Connect Google in Settings to sync calendar",
+        "checking": "[zh-CN] Checking...",
+        "syncing": "[zh-CN] Syncing...",
+        "selectPlaceholder": "[zh-CN] Select what to sync",
+        "actions": {
+          "sync": "[zh-CN] Sync to Google Calendar"
+        },
+        "syncTypes": {
+          "all": "[zh-CN] All Events",
+          "interviews": "[zh-CN] Interviews Only",
+          "deadlines": "[zh-CN] Deadlines Only",
+          "reminders": "[zh-CN] Reminders Only"
+        },
+        "result": {
+          "synced": "[zh-CN] Synced {count, plural, one {# event} other {# events}}",
+          "partial": "[zh-CN] {synced} synced, {failed} failed",
+          "success": "[zh-CN] Successfully synced {count, plural, one {# event} other {# events}}",
+          "failed": "[zh-CN] Synced {synced, plural, one {# event} other {# events}}, {failed} failed",
+          "more": "[zh-CN] And {count} more..."
+        },
+        "errors": {
+          "syncTitle": "[zh-CN] Could not sync calendar",
+          "syncDescription": "[zh-CN] Please check your Google connection and try again.",
+          "syncFailed": "[zh-CN] Sync failed"
+        }
+      },
+      "contacts": {
+        "trigger": "[zh-CN] Add from Google",
+        "title": "[zh-CN] Select Google Contact",
+        "description": "[zh-CN] Choose a contact to attach to this opportunity.",
+        "searchPlaceholder": "[zh-CN] Search contacts",
+        "loading": "[zh-CN] Loading contacts...",
+        "openSettings": "[zh-CN] Open Settings",
+        "empty": {
+          "noContacts": "[zh-CN] No contacts found. Reconnect Google in Settings if you connected before contacts support.",
+          "noMatches": "[zh-CN] No contacts match your search."
+        },
+        "errors": {
+          "load": "[zh-CN] Failed to load contacts from Google",
+          "loadTitle": "[zh-CN] Could not load Google contacts",
+          "loadDescription": "[zh-CN] Please check your Google connection and try again."
+        }
+      },
+      "drive": {
+        "connectInSettings": "[zh-CN] Connect Google in Settings to save to Drive",
+        "checking": "[zh-CN] Checking...",
+        "saved": "[zh-CN] Saved to Drive",
+        "saving": "[zh-CN] Saving...",
+        "actions": {
+          "save": "[zh-CN] Save to Drive",
+          "saveAndGetLink": "[zh-CN] Save & Get Link"
+        },
+        "errors": {
+          "save": "[zh-CN] Failed to save to Drive",
+          "saveTitle": "[zh-CN] Could not save to Drive",
+          "saveDescription": "[zh-CN] Please check your Google connection and try again."
+        }
+      }
+    }
+  },
+  "dialogs": {
+    "upload": {
+      "failedTitle": "[zh-CN] Upload Failed",
+      "actions": {
+        "retry": "[zh-CN] Retry",
+        "dismiss": "[zh-CN] Dismiss",
+        "replace": "[zh-CN] Replace"
+      },
+      "replace": {
+        "title": "[zh-CN] Replace existing upload?",
+        "description": "[zh-CN] Looks like you uploaded \"{filename}\" on {date}. Replace it, or cancel?"
+      }
+    },
+    "bank": {
+      "addEntry": {
+        "trigger": "[zh-CN] Add Entry",
+        "title": "[zh-CN] Add New Entry",
+        "description": "[zh-CN] Manually add an entry to your profile bank.",
+        "category": "[zh-CN] Category",
+        "hackathonTemplates": "[zh-CN] Hackathon Templates",
+        "actions": {
+          "add": "[zh-CN] Add Entry"
+        }
+      },
+      "sourceDocuments": {
+        "sourceFiles": "[zh-CN] Source Files",
+        "selected": "[zh-CN] {count} selected",
+        "actions": {
+          "deleteSelected": "[zh-CN] Delete Selected",
+          "selectFile": "[zh-CN] Select {filename}",
+          "deleteFile": "[zh-CN] Delete {filename}"
+        },
+        "deleteOne": {
+          "title": "[zh-CN] Delete source document?",
+          "description": "[zh-CN] This will permanently delete <strong>{filename}</strong> and all {count, plural, one {# associated bullet} other {# associated bullets}}. This action cannot be undone."
+        },
+        "deleteMany": {
+          "title": "[zh-CN] Delete selected source files?",
+          "description": "[zh-CN] This will permanently delete {count, plural, one {# source file} other {# source files}} and all associated bullets. This action cannot be undone."
+        },
+        "errors": {
+          "loadTitle": "[zh-CN] Could not load source files",
+          "loadDescription": "[zh-CN] Please refresh the page and try again.",
+          "deleteOneTitle": "[zh-CN] Could not delete source file",
+          "deleteOneDescription": "[zh-CN] Please try deleting the file again.",
+          "deleteManyTitle": "[zh-CN] Could not delete source files",
+          "deleteManyDescription": "[zh-CN] Please try deleting the selected files again."
+        }
+      },
+      "page": {
+        "review": {
+          "title": "查看检测到的文档组件",
+          "description": "{filename} 已拆分为 {count, plural, one {# 个可编辑组件} other {# 个可编辑组件}}。请边修正边保存。",
+          "keepEditing": "稍后继续编辑",
+          "done": "完成"
+        },
+        "moveBullets": {
+          "title": "移动所选要点",
+          "description": "将 {count, plural, one {# 个所选要点} other {# 个所选要点}} 附加到经历或项目。",
+          "parentComponent": "父组件"
+        }
+      }
+    },
+    "builder": {
+      "sectionList": {
+        "pickerTitle": "[zh-CN] Bank Entry Picker",
+        "pickerDescription": "[zh-CN] Select entries to add them to the document."
+      }
+    },
+    "studio": {
+      "versionDiff": {
+        "title": "[zh-CN] Compare to current",
+        "selectVersion": "[zh-CN] Select a version to compare."
+      },
+      "aiAssistant": {
+        "opportunityPickerTitle": "[zh-CN] Select from Opportunity Bank",
+        "opportunityPickerDescription": "[zh-CN] Choose a saved or applied opportunity to load its description."
+      }
+    },
+    "opportunities": {
+      "addOpportunity": {
+        "title": "[zh-CN] Add Opportunity"
+      }
+    },
+    "calendar": {
+      "create": {
+        "title": "创建事件",
+        "description": "向日历添加新的提醒或事件。"
+      }
+    }
+  },
   "settings": {
     "title": "设置",
     "description": "配置用于简历解析和面试准备的 AI 服务提供商。",
@@ -256,11 +862,414 @@
         "ja": "日本語",
         "ko": "한국어"
       }
+    },
+    "help": {
+      "ollama": {
+        "title": "[zh-CN] Using Ollama (Free)",
+        "installFrom": "[zh-CN] Install from",
+        "run": "[zh-CN] Run",
+        "testConnection": "[zh-CN] Test the connection above"
+      },
+      "apiKeys": {
+        "title": "[zh-CN] Using API Keys",
+        "description": "[zh-CN] Connect your own API keys from OpenAI, Anthropic, or OpenRouter for cloud-based processing. Your keys are stored locally and never leave your device."
+      }
+    },
+    "dataManagement": {
+      "title": "[zh-CN] Data Management",
+      "description": "[zh-CN] Export your data or import from backups.",
+      "export": {
+        "title": "[zh-CN] Export Data",
+        "profileJson": "[zh-CN] Export Profile (JSON)",
+        "opportunitiesJson": "[zh-CN] Export Opportunities (JSON)",
+        "opportunitiesCsv": "[zh-CN] Export Opportunities (CSV)",
+        "fullBackup": "[zh-CN] Full Backup",
+        "allDataJson": "[zh-CN] Export All Data (JSON)"
+      },
+      "import": {
+        "title": "[zh-CN] Import Data",
+        "jobsAria": "[zh-CN] Import jobs from JSON or CSV file",
+        "opportunitiesJsonCsv": "[zh-CN] Import Opportunities (JSON/CSV)",
+        "restoreBackupAria": "[zh-CN] Restore backup from JSON file",
+        "restoreBackup": "[zh-CN] Restore Backup",
+        "allDataAria": "[zh-CN] Import all data from JSON file",
+        "allDataJson": "[zh-CN] Import All Data (JSON)"
+      },
+      "confirm": {
+        "title": "[zh-CN] Confirm Import",
+        "description": "[zh-CN] The following data will be imported (duplicates will be skipped):",
+        "importing": "[zh-CN] Importing...",
+        "action": "[zh-CN] Confirm Import"
+      }
     }
   },
   "notFound": {
     "title": "页面未找到",
     "description": "我们找不到该页面。",
     "action": "返回仪表盘"
+  },
+  "a11y": {
+    "weCouldnTLoadThisPage": "我们无法加载此页面",
+    "toggleMenu": "切换菜单",
+    "dismissError": "消除错误",
+    "applicationError": "应用程序错误",
+    "dismissNotification": "关闭通知",
+    "trackYourFirstOpportunity": "追踪您的第一次机会",
+    "resumeTemplate": "简历模板",
+    "titleRequired": "需要标题",
+    "companyRequired": "公司要求",
+    "theSiteMayNotBeSupportedOrThe": "该网站可能不受支持或无法到达该帖子。",
+    "reactTypescript": "反应、打字稿",
+    "accessibilityTesting": "辅助功能、测试",
+    "wizardProgress": "向导进度",
+    "queueCleared": "队列已清",
+    "opportunityNotFound": "未找到机会",
+    "addPrivateNotesAboutThisOpportunity": "添加有关此机会的私人注释。",
+    "downloadPdf": "下载 PDF（Ctrl+E）",
+    "reviewQueueDisabled": "审阅队列已禁用",
+    "openOpportunities": "开放机会",
+    "navigation": "导航",
+    "pageActions": "页面操作",
+    "general": "一般的",
+    "dataManagement": "数据管理",
+    "importJobsFromJsonOrCsvFile": "从 JSON 或 CSV 文件导入作业",
+    "restoreBackupFromJsonFile": "从 JSON 文件恢复备份",
+    "importAllDataFromJsonFile": "从 JSON 文件导入所有数据",
+    "applicationRate": "施用率",
+    "responseRate": "回应率",
+    "interviewRate": "面试率",
+    "successRate": "成功率",
+    "summary": "概括",
+    "experience": "经验",
+    "skills": "技能",
+    "promptABTesting": "即时 A/B 测试",
+    "writeTheTailoringInstructionsForThisPromptVariant": "为这个提示变体编写定制说明......",
+    "builderView": "构建器视图",
+    "selectWhatToSync": "选择要同步的内容",
+    "model": "模型",
+    "selectAModel": "选择型号",
+    "refreshAvailableModels": "刷新可用模型",
+    "noOpportunitiesMatchYourFilters": "没有机会符合您的筛选条件",
+    "selectAllSourceFiles": "选择所有源文件",
+    "insertTable": "插入表格",
+    "imageUpload": "图片上传",
+    "previewZoom": "预览缩放",
+    "whatAiPowers": "人工智能的力量是什么",
+    "weeklyActivity": "每周活动",
+    "googleProfile": "谷歌个人资料",
+    "opportunityReviewQueue": "机会审核队列",
+    "searchContacts": "搜索联系人",
+    "gmailAutoStatus": "Gmail 自动状态",
+    "moveBulletUp": "向上移动子弹",
+    "moveBulletDown": "向下移动子弹",
+    "editBullet": "编辑项目符号",
+    "deleteBullet": "删除项目符号",
+    "openFilesPanel": "打开文件面板",
+    "searchTemplates": "搜索模板",
+    "openAiAssistantPanel": "打开AI助手面板",
+    "theme": "主题",
+    "locale": "语言环境",
+    "savingLocale": "保存语言环境",
+    "selectLocale": "选择区域设置",
+    "softwareEngineer": "软件工程师",
+    "acmeCorp": "艾克美公司",
+    "pasteTheFullOpportunityDescriptionHere": "将完整的机会描述粘贴到此处...",
+    "googleIntegration": "谷歌集成",
+    "uploadResumeFile": "上传简历文件",
+    "removeFile": "删除文件",
+    "searchYourCareerProfile": "搜索您的职业档案",
+    "searchYourCareerProfile2": "搜索您的职业档案...",
+    "pressToFocus": "按 / 对焦",
+    "clearSearch": "清除搜索",
+    "sortOrder": "排序顺序",
+    "filterByCategory": "按类别过滤",
+    "pageSize": "页面尺寸",
+    "kanbanLanes": "看板通道",
+    "jobKanbanBoard": "工作看板",
+    "versionName": "版本名称",
+    "versionName2": "版本名称...",
+    "opportunities": "机会",
+    "opportunityViewMode": "机会查看模式",
+    "searchJobsByTitleCompanyOrKeywords": "按职位、公司或关键字搜索职位...",
+    "status": "地位",
+    "type": "类型",
+    "location": "地点",
+    "sort": "种类",
+    "sectionChangeCounts": "部分更改计数",
+    "totalChangeCounts": "总变更计数",
+    "evalHealth": "评估健康状况",
+    "averageScoreTrend": "平均分趋势",
+    "uploadResumePdfOrTextFile": "上传简历 PDF 或文本文件",
+    "pasteYourFullResumeTextHere": "将您的完整简历文本粘贴到此处...",
+    "optionalPasteTheJobDescriptionToCheckKeyword": "可选：粘贴职位描述以检查关键字匹配...",
+    "beforeTheInterview": "面试前",
+    "duringTheInterview": "面试期间",
+    "afterTheInterview": "面试后",
+    "expandAiAssistantPanel": "展开AI助手面板",
+    "showAiAssistant": "显示AI助手",
+    "showTailorToJd": "展示京东定制",
+    "showGenerateFromBank": "显示从银行生成",
+    "collapseAiAssistantPanel": "折叠AI助手面板",
+    "pasteTheJdHere": "将 JD 粘贴到此处",
+    "rewriteSection": "重写部分",
+    "chooseSection": "选择栏目",
+    "rewriteSelectedSection": "重写选定的部分",
+    "selectedTextQuickActions": "选定的文本快速操作",
+    "coverLetterCritique": "求职信批评",
+    "noOpportunitiesTrackedYet": "尚未追踪机会",
+    "onboardingProgress": "入职进度",
+    "skipOnboarding": "跳过入职",
+    "expandFilesPanel": "展开文件面板",
+    "showFiles": "显示文件",
+    "newStudioFile": "新工作室文件",
+    "showVersionHistory": "显示版本历史记录",
+    "collapseFilesPanel": "折叠文件面板",
+    "notifications": "通知",
+    "markAllAsRead": "全部标记为已读",
+    "deleteReadNotifications": "删除已读通知",
+    "closeNotifications": "关闭通知",
+    "markAsRead": "标记为已读",
+    "delete": "删除",
+    "deleteNotification": "删除通知",
+    "sanFranciscoCa": "加利福尼亚州旧金山",
+    "selectType": "选择类型",
+    "frontendInternProjectManagerDataAnalyst": "前端实习生、项目经理、数据分析师",
+    "school": "学校",
+    "degree": "程度",
+    "field": "场地",
+    "customerServiceExcelPython": "客户服务、Excel、Python",
+    "campusCafe": "校园咖啡厅",
+    "barista": "咖啡师",
+    "communityPantryDashboard": "社区食品储藏室仪表板",
+    "residenceCouncilSecretaryDeanSList": "住宿理事会秘书、院长名单",
+    "typeACommandOrSearch": "输入命令或搜索...",
+    "profileCompleteness": "个人资料完整性",
+    "coverLetterContent": "求职信内容",
+    "documents": "文件",
+    "uploadFile": "上传文件（Ctrl+U）",
+    "failedToLoadDocuments": "加载文档失败",
+    "expand": "扩张",
+    "selectAllVisibleComponents": "选择所有可见组件",
+    "noComponentsDetected": "未检测到任何组件",
+    "noComponentsLeft": "没有留下任何组件",
+    "answerBank": "答案库",
+    "searchQuestionsAnswersOrSources": "搜索问题、答案或来源",
+    "sortAnswers": "对答案进行排序",
+    "failedToLoadAnswers": "无法加载答案",
+    "copyAnswer": "复制答案",
+    "duplicateAnswer": "重复答案",
+    "editAnswer": "编辑答案",
+    "deleteAnswer": "删除答案",
+    "exampleWillYouNowOrInTheFuture": "示例：您现在或将来需要赞助吗？",
+    "writeTheAnswerYouWantReusedByAutofill": "写下您希望自动填充重复使用的答案。",
+    "optional": "选修的",
+    "installTheSlothingBrowserExtension": "安装 Slothing 浏览器扩展",
+    "dismissExtensionPromo": "取消延期促销",
+    "analyticsDashboard": "分析仪表板",
+    "exportDateRange": "导出日期范围",
+    "dateRange": "日期范围",
+    "applicationPipeline": "应用管道",
+    "skillsOverview": "技能概览",
+    "recentOpportunityActivity": "最近的机会活动",
+    "interviewPreparation": "面试准备",
+    "github": "GitHub",
+    "news": "消息",
+    "levels": "等级",
+    "engBlog": "工程博客",
+    "profile": "轮廓",
+    "profileSections": "型材截面",
+    "seniorProductEngineer": "高级产品工程师",
+    "loadingSource": "加载源",
+    "calendar": "日历",
+    "filterEventsByType": "按类型过滤事件",
+    "filter": "筛选",
+    "subscribeToYourCalendarFeedViewInYour": "订阅您的日历源 (.ics) - 在默认日历应用程序中查看。",
+    "previousMonth": "上个月",
+    "nextMonth": "下个月",
+    "noEventsScheduledForThisDay": "这一天没有安排任何活动",
+    "clickOnADateToViewEvents": "单击日期即可查看事件",
+    "noUpcomingEvents": "没有即将举行的活动",
+    "addNotesOrDetails": "添加注释或详细信息...",
+    "copyUrl": "复制 URL",
+    "salaryTools": "薪资工具",
+    "marketRateCalculator": "市场利率计算器",
+    "selectRole": "选择角色",
+    "selectYourRole": "选择您的角色",
+    "selectLocation": "选择地点",
+    "addOffer": "添加优惠",
+    "noOffersYet": "还没有优惠",
+    "generateNegotiationScript": "生成谈判脚本",
+    "chooseAJobApplication": "选择职位申请",
+    "chooseTheJobYouInterviewedFor": "选择您面试的职位",
+    "mentionARecentProjectSharedInterestOrCompany": "提及最近的项目、共同兴趣或公司动态...",
+    "chooseTheJobOffer": "选择工作机会",
+    "addAnySpecificPointsYouWantToMention": "添加您想要提及的任何具体要点...",
+    "chooseAReplyType": "选择回复类型",
+    "addConstraintsTimingCompensationExpectationsOrAFuture": "添加约束、时间安排、薪酬预期或适合未来的说明...",
+    "chooseTheRoleYouReApplyingFor": "选择您要申请的角色",
+    "addARecentAccomplishmentOrProjectToRemind": "添加最近的成就或项目以提醒他们...",
+    "emailTemplates": "电子邮件模板",
+    "chooseTemplate": "选择模板",
+    "customize": "定制",
+    "editGithubOrg": "编辑 GitHub 组织",
+    "githubOrg": "GitHub 组织",
+    "saveGithubOrg": "保存 GitHub 组织",
+    "cancel": "取消",
+    "searchDrafts": "搜索草稿",
+    "answerScorecard": "答案记分卡",
+    "startFreeWithSlothing": "免费开始使用 Slothing",
+    "extensionPopoverPreviewOnAJobPosting": "职位发布上的扩展弹出窗口预览",
+    "dashboardPreview": "仪表板预览"
+  },
+  "profile": {
+    "title": "个人资料",
+    "description": "维护 Slothing 用于简历、求职信和匹配度检查的源资料。",
+    "actions": {
+      "discard": "放弃",
+      "saveChanges": "保存更改"
+    },
+    "status": {
+      "saving": "正在保存...",
+      "saved": "已保存"
+    },
+    "errors": {
+      "loadProfile": "无法加载个人资料",
+      "saveProfile": "无法保存个人资料"
+    },
+    "unsavedChanges": {
+      "prompt": "你有未保存的个人资料更改。确定不保存就离开吗？"
+    },
+    "tabs": {
+      "ariaLabel": "个人资料分区",
+      "overview": "概览",
+      "preferences": "偏好",
+      "privacy": "隐私"
+    },
+    "answerBankPrompt": {
+      "text": "想让资料更丰富？在答案库中保存可复用的故事和事实。",
+      "action": "打开答案库"
+    },
+    "emptyState": {
+      "title": "让我们设置你的个人资料",
+      "description": "从简历开始，Slothing 可以填入基础信息；也可以打开表单手动添加细节。",
+      "uploadResume": "上传简历来填充资料",
+      "fillManually": "或手动填写"
+    },
+    "sidebar": {
+      "yourName": "你的姓名",
+      "addHeadline": "添加一句简介",
+      "noEmail": "无邮箱",
+      "noLocation": "无地点",
+      "noTargetSalary": "无目标薪资",
+      "salaryRange": "{currency} {min}-{max}",
+      "salaryMinimum": "{currency} {min} 起",
+      "salaryMaximum": "最高 {currency} {max}",
+      "profilePhoto": "头像",
+      "profilePhotoNamed": "{name} 的头像"
+    },
+    "placeholders": {
+      "headline": "高级产品工程师"
+    },
+    "sections": {
+      "identity": {
+        "title": "身份信息",
+        "description": "用于在生成材料中介绍你的头像和简介。"
+      },
+      "contact": {
+        "title": "联系方式",
+        "description": "你愿意复用的链接和联系信息。"
+      },
+      "summary": {
+        "title": "职业总结",
+        "description": "Slothing 可针对不同岗位改写的简洁职业总结。"
+      },
+      "savedSignals": {
+        "title": "已保存的资料信号",
+        "description": "从简历、机会和引导流程导入的结构化信息。"
+      },
+      "careerDetails": {
+        "title": "职业详情",
+        "description": "当前用于生成文档的经历和项目亮点。"
+      }
+    },
+    "fields": {
+      "avatarUrl": "头像 URL",
+      "fullName": "姓名",
+      "headline": "简介",
+      "email": "邮箱地址",
+      "phone": "电话",
+      "location": "地点",
+      "linkedin": "LinkedIn",
+      "github": "GitHub",
+      "website": "网站",
+      "summary": "职业总结",
+      "targetRoles": "目标岗位",
+      "currency": "货币",
+      "minimum": "最低",
+      "maximum": "最高"
+    },
+    "signals": {
+      "experience": "经历",
+      "education": "教育",
+      "skills": "技能",
+      "projects": "项目",
+      "awards": "奖项"
+    },
+    "workStyle": {
+      "title": "工作方式",
+      "description": "选择你希望 Slothing 优先考虑的岗位和工作环境。",
+      "options": {
+        "remote": "远程",
+        "hybrid": "混合办公",
+        "onsite": "现场办公",
+        "fullTime": "全职",
+        "contract": "合同制"
+      }
+    },
+    "targetRoles": {
+      "title": "目标岗位",
+      "description": "列出你希望生成材料重点突出的职位或方向。"
+    },
+    "salary": {
+      "title": "薪酬目标",
+      "description": "可选薪资范围，用于匹配度检查和机会比较。"
+    },
+    "privacy": {
+      "title": "隐私",
+      "description": "控制你的资料如何在面向招聘方的流程中复用。",
+      "openToRecruiters": {
+        "title": "愿意接受招聘方联系",
+        "description": "允许生成材料提到你愿意与招聘方沟通。"
+      },
+      "shareContactInfo": {
+        "title": "默认共享联系方式",
+        "description": "在导出的招聘方可见文档中包含邮箱、电话和链接。"
+      }
+    },
+    "completeness": {
+      "readiness": "资料就绪度",
+      "summary": "个人资料已完成 {score}% · {count, plural, one {# 个快速改进项} other {# 个快速改进项}}",
+      "completeLabel": "已完成",
+      "progressLabel": "个人资料完整度",
+      "noGaps": "关键内容都已填写。",
+      "points": "+{points, plural, one {# 分} other {# 分}}",
+      "gaps": {
+        "contact-info": "添加姓名、邮箱和简介",
+        "summary": "添加职业总结",
+        "experience-bullets": {
+          "empty": "添加一段至少包含 3 条要点的经历",
+          "role": "为你在 {company} 的经历再添加 {missing, plural, one {# 条要点} other {# 条要点}}"
+        },
+        "quantified-bullets": {
+          "empty": "添加 {missing, plural, one {# 条量化要点} other {# 条量化要点}}",
+          "role": "为你在 {company} 的经历添加 {missing, plural, one {# 条量化要点} other {# 条量化要点}}"
+        },
+        "education": "添加教育经历",
+        "skills": "再添加 {missing, plural, one {# 项技能} other {# 项技能}}",
+        "career-depth": "添加一个项目或另一段经历",
+        "achievements": "添加成就、奖项或认证",
+        "social-url": "添加 LinkedIn 或 GitHub URL"
+      }
+    }
   }
 }

@@ -34,6 +34,7 @@ import type {
 } from "@/lib/enrichment";
 import { pluralize } from "@/lib/text/pluralize";
 import { cn } from "@/lib/utils";
+import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 
 interface CompanyEnrichmentDossierProps {
   jobId: string;
@@ -44,6 +45,8 @@ export function CompanyEnrichmentDossier({
   jobId,
   companyName,
 }: CompanyEnrichmentDossierProps) {
+  const a11yT = useA11yTranslations();
+
   const [snapshot, setSnapshot] = useState<EnrichmentSnapshot | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -152,7 +155,7 @@ export function CompanyEnrichmentDossier({
         ) : (
           <>
             <SourceCard
-              title="GitHub"
+              title={a11yT("github")}
               icon={Github}
               state={sourceState(snapshot?.github ?? null, isInitialLoading)}
               errorMessage={sourceError("GitHub", snapshot?.github ?? null)}
@@ -173,7 +176,7 @@ export function CompanyEnrichmentDossier({
             </SourceCard>
 
             <SourceCard
-              title="News"
+              title={a11yT("news")}
               icon={Newspaper}
               state={sourceState(
                 snapshot?.news ?? null,
@@ -187,7 +190,7 @@ export function CompanyEnrichmentDossier({
             </SourceCard>
 
             <SourceCard
-              title="Levels"
+              title={a11yT("levels")}
               icon={BarChart3}
               state={sourceState(
                 snapshot?.levels ?? null,
@@ -202,7 +205,7 @@ export function CompanyEnrichmentDossier({
             </SourceCard>
 
             <SourceCard
-              title="Eng Blog"
+              title={a11yT("engBlog")}
               icon={Rss}
               state={sourceState(
                 snapshot?.blog ?? null,
