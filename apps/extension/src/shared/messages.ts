@@ -99,6 +99,13 @@ export const Messages = {
 export interface AuthStatusResponse extends ExtensionResponse<{
   isAuthenticated: boolean;
   apiBaseUrl: string;
+  /**
+   * True when we recently observed a working auth state but the token is
+   * currently missing (e.g. after a service-worker reload corrupted storage).
+   * The popup uses this to render a distinct "session lost" reconnect view
+   * instead of the fresh-install hero. See #27.
+   */
+  sessionLost?: boolean;
 }> {}
 
 export interface ProfileResponse extends ExtensionResponse<ExtensionProfile> {}

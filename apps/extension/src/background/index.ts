@@ -11,10 +11,15 @@ import {
   getStorage,
   setAuthToken,
   clearAuthToken,
+  forgetAuthHistory,
   getCachedProfile,
   setCachedProfile,
   getApiBaseUrl,
   getSettings,
+  isSessionLost,
+  getSessionAuthCache,
+  setSessionAuthCache,
+  clearSessionAuthCache,
 } from "./storage";
 import { setBadgeForTab, clearBadgeForTab } from "./badge";
 
@@ -174,20 +179,70 @@ async function handleGenerateCoverLetterFromPage(
 }
 
 async function handleGetAuthStatus(): Promise<ExtensionResponse> {
+  // Fast-path (#30): return a cached verdict if it's <60s old, then
+  // revalidate in the background so a flipped server state still
+  // self-corrects on the *next* popup open.
+  try {
+    const cached = await getSessionAuthCache();
+    if (cached) {
+      const apiBaseUrl = await getApiBaseUrl();
+      const storage = await getStorage();
+      const sessionLost = !cached.authenticated && isSessionLost(storage);
+
+      // Fire-and-forget revalidation. We deliberately don't await it so
+      // the popup gets its response immediately.
+      void revalidateAuthInBackground();
+
+      return {
+        success: true,
+        data: {
+          isAuthenticated: cached.authenticated,
+          apiBaseUrl,
+          sessionLost,
+        },
+      };
+    }
+  } catch {
+    // Cache lookup failure is non-fatal; fall through to the verify path.
+  }
+
   try {
     const client = await getAPIClient();
     const isAuthenticated = await client.isAuthenticated();
     const apiBaseUrl = await getApiBaseUrl();
+    const storage = await getStorage();
+    const sessionLost = !isAuthenticated && isSessionLost(storage);
+
+    await setSessionAuthCache(isAuthenticated);
 
     return {
       success: true,
-      data: { isAuthenticated, apiBaseUrl },
+      data: { isAuthenticated, apiBaseUrl, sessionLost },
     };
   } catch (error) {
+    const apiBaseUrl = await getApiBaseUrl();
+    const storage = await getStorage().catch(() => null);
+    const sessionLost = storage ? isSessionLost(storage) : false;
     return {
       success: true,
-      data: { isAuthenticated: false, apiBaseUrl: await getApiBaseUrl() },
+      data: { isAuthenticated: false, apiBaseUrl, sessionLost },
     };
+  }
+}
+
+/**
+ * Background revalidation that runs after we return a cached verdict.
+ * Refreshes the session cache so subsequent reads stay fresh; on a 401
+ * the api-client's authenticatedFetch clears `authToken` + the cache
+ * already.
+ */
+async function revalidateAuthInBackground(): Promise<void> {
+  try {
+    const client = await getAPIClient();
+    const verdict = await client.isAuthenticated();
+    await setSessionAuthCache(verdict);
+  } catch {
+    // Network blip — leave the cache alone; next miss will revalidate.
   }
 }
 
@@ -210,6 +265,11 @@ async function handleOpenAuth(): Promise<ExtensionResponse> {
 async function handleLogout(): Promise<ExtensionResponse> {
   try {
     await clearAuthToken();
+    // Explicit logout — also drop the "we've seen you before" breadcrumb so
+    // the popup doesn't fall into the #27 "session lost" branch.
+    await forgetAuthHistory();
+    // And the fast-path cache (#30) so the next popup open re-verifies.
+    await clearSessionAuthCache();
     resetAPIClient();
     return { success: true };
   } catch (error) {

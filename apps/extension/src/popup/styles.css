@@ -430,6 +430,41 @@ body {
   font-size: 13px;
 }
 
+.success-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Inline link-styled button for "View in tracker →" deep-links (#31). */
+.success-link {
+  background: none;
+  border: none;
+  font: inherit;
+  font-weight: 600;
+  font-size: 12px;
+  color: var(--primary);
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.success-link:hover {
+  color: var(--primary-hover);
+  background: var(--primary-soft);
+}
+
+.bulk-result {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 6px;
+}
+
 .check {
   display: inline-flex;
   width: 18px;
@@ -514,6 +549,10 @@ body {
   font-size: 20px;
   box-shadow: var(--shadow-md);
   margin-bottom: 4px;
+}
+
+.hero-mark.warn {
+  background: linear-gradient(135deg, var(--warn), var(--rose));
 }
 
 .hero-title {

@@ -3,9 +3,25 @@ import type { ExtensionProfile, ScrapedJob } from "@/shared/types";
 import { formatRelative } from "@slothing/shared/formatters";
 import { scoreResume } from "@slothing/shared/scoring";
 import { sendMessage, Messages } from "@/shared/messages";
+import { messageForError } from "@/shared/error-messages";
+import { opportunityDetailUrl, opportunityReviewUrl } from "./deep-links";
 
-type ViewState = "loading" | "unauthenticated" | "authenticated" | "error";
+type ViewState =
+  | "loading"
+  | "unauthenticated"
+  | "session-lost"
+  | "authenticated"
+  | "error";
 type PageAction = "tailor" | "cover-letter" | "import";
+
+/**
+ * Success state for the single-job action card. `opportunityId` is populated
+ * for imports so the popup can render a "View in tracker →" deep-link (#31).
+ */
+interface ActionSuccess {
+  action: PageAction;
+  opportunityId?: string;
+}
 
 interface PageStatus {
   hasForm: boolean;
@@ -37,7 +53,13 @@ export default function App() {
   const [error, setError] = useState<string | null>(null);
   const [actionInFlight, setActionInFlight] = useState<PageAction | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
-  const [actionSuccess, setActionSuccess] = useState<PageAction | null>(null);
+  const [actionSuccess, setActionSuccess] = useState<ActionSuccess | null>(
+    null,
+  );
+  // Cached so the success row can render "View in tracker" links without
+  // querying GET_AUTH_STATUS again. Populated from the auth-status response
+  // on first load and kept stable for the lifetime of the popup.
+  const [apiBaseUrl, setApiBaseUrl] = useState<string | null>(null);
   const [wwState, setWwState] = useState<WwPageState | null>(null);
   const [wwBulkInFlight, setWwBulkInFlight] = useState<WwBulkMode | null>(null);
   const [wwBulkResult, setWwBulkResult] = useState<WwBulkResult | null>(null);
@@ -54,12 +76,21 @@ export default function App() {
     try {
       const response = await sendMessage(Messages.getAuthStatus());
       if (response.success && response.data) {
-        const { isAuthenticated } = response.data as {
+        const {
+          isAuthenticated,
+          sessionLost,
+          apiBaseUrl: url,
+        } = response.data as {
           isAuthenticated: boolean;
+          sessionLost?: boolean;
+          apiBaseUrl?: string;
         };
+        if (url) setApiBaseUrl(url);
         if (isAuthenticated) {
           setViewState("authenticated");
           loadProfile();
+        } else if (sessionLost) {
+          setViewState("session-lost");
         } else {
           setViewState("unauthenticated");
         }
@@ -130,10 +161,12 @@ export default function App() {
       if (response?.success && response.data) {
         setWwBulkResult(response.data);
       } else {
-        setWwBulkError(response?.error || "Bulk scrape failed");
+        setWwBulkError(
+          messageForError(new Error(response?.error || "Bulk scrape failed")),
+        );
       }
     } catch (err) {
-      setWwBulkError((err as Error).message);
+      setWwBulkError(messageForError(err));
     } finally {
       setWwBulkInFlight(null);
     }
@@ -172,17 +205,25 @@ export default function App() {
     setActionInFlight("import");
     setActionError(null);
     try {
-      const response = await sendMessage(
-        Messages.importJob(pageStatus.scrapedJob),
-      );
+      const response = await sendMessage<{
+        opportunityIds?: string[];
+      }>(Messages.importJob(pageStatus.scrapedJob));
       if (response.success) {
-        setActionSuccess("import");
-        setTimeout(() => window.close(), 1500);
+        // Capture the opportunity id so the success row can deep-link into
+        // /opportunities/[id] (#31). The import endpoint guarantees at least
+        // one id on success, but be defensive about the array shape.
+        const opportunityId = response.data?.opportunityIds?.[0];
+        setActionSuccess({ action: "import", opportunityId });
+        // Don't auto-close anymore — the success row now offers a follow-up
+        // action ("View in tracker →"), so leave the popup open until the
+        // user dismisses or clicks through.
       } else {
-        setActionError(response.error || "Failed to import job");
+        setActionError(
+          messageForError(new Error(response.error || "Failed to import job")),
+        );
       }
     } catch (err) {
-      setActionError((err as Error).message);
+      setActionError(messageForError(err));
     } finally {
       setActionInFlight(null);
     }
@@ -200,23 +241,52 @@ export default function App() {
       const response = await sendMessage<{ url: string }>(message);
       if (response.success && response.data?.url) {
         chrome.tabs.create({ url: response.data.url });
-        setActionSuccess(action);
+        setActionSuccess({ action });
         setTimeout(() => window.close(), 1500);
       } else {
-        setActionError(response.error || "Failed to generate document");
+        setActionError(
+          messageForError(
+            new Error(response.error || "Failed to generate document"),
+          ),
+        );
       }
     } catch (err) {
-      setActionError((err as Error).message);
+      setActionError(messageForError(err));
     } finally {
       setActionInFlight(null);
     }
   }
 
   async function handleOpenDashboard() {
-    const response = await sendMessage(Messages.getAuthStatus());
-    const data = response.data as { apiBaseUrl: string } | undefined;
-    const baseUrl = data?.apiBaseUrl || "http://localhost:3000";
+    const baseUrl = await resolveApiBaseUrl();
     chrome.tabs.create({ url: `${baseUrl}/dashboard` });
+    window.close();
+  }
+
+  /**
+   * Resolves the configured Slothing API base URL, preferring the value we
+   * cached at first paint (`apiBaseUrl`) and falling back to a fresh
+   * GET_AUTH_STATUS roundtrip if we haven't seen one yet. Used by all the
+   * deep-link handlers (#31).
+   */
+  async function resolveApiBaseUrl(): Promise<string> {
+    if (apiBaseUrl) return apiBaseUrl;
+    const response = await sendMessage(Messages.getAuthStatus());
+    const data = response.data as { apiBaseUrl?: string } | undefined;
+    return data?.apiBaseUrl || "http://localhost:3000";
+  }
+
+  /** Opens the imported opportunity in a new tab and closes the popup. (#31) */
+  async function handleViewOpportunity(opportunityId: string) {
+    const baseUrl = await resolveApiBaseUrl();
+    chrome.tabs.create({ url: opportunityDetailUrl(baseUrl, opportunityId) });
+    window.close();
+  }
+
+  /** Opens the review queue for the user to triage their bulk imports. (#31) */
+  async function handleViewReviewQueue() {
+    const baseUrl = await resolveApiBaseUrl();
+    chrome.tabs.create({ url: opportunityReviewUrl(baseUrl) });
     window.close();
   }
 
@@ -268,6 +338,27 @@ export default function App() {
             Connect account
           </button>
           <p className="hero-foot">You'll sign in once — Slothing remembers.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (viewState === "session-lost") {
+    return (
+      <div className="popup">
+        <div className="hero session-lost">
+          <div className="hero-mark warn" aria-hidden>
+            !
+          </div>
+          <h1 className="hero-title">Session lost</h1>
+          <p className="hero-sub">
+            Slothing got reset by your browser. Reconnect to pick up where you
+            left off — your profile and data are safe.
+          </p>
+          <button className="btn primary block" onClick={handleConnect}>
+            Reconnect
+          </button>
+          <p className="hero-foot">Takes about five seconds.</p>
         </div>
       </div>
     );
@@ -349,9 +440,22 @@ export default function App() {
             {actionSuccess ? (
               <div className="success-row">
                 <span className="check">✓</span>
-                {actionSuccess === "import"
-                  ? "Imported to opportunities"
-                  : "Opening tab…"}
+                <span className="success-label">
+                  {actionSuccess.action === "import"
+                    ? "Imported to opportunities"
+                    : "Opening tab…"}
+                </span>
+                {actionSuccess.action === "import" &&
+                  actionSuccess.opportunityId && (
+                    <button
+                      className="success-link"
+                      onClick={() =>
+                        handleViewOpportunity(actionSuccess.opportunityId!)
+                      }
+                    >
+                      View in tracker →
+                    </button>
+                  )}
               </div>
             ) : (
               <div className="action-grid">
@@ -416,12 +520,22 @@ export default function App() {
               </button>
             </div>
             {wwBulkResult && (
-              <p className="inline-note">
-                Imported {wwBulkResult.imported}/{wwBulkResult.attempted}
-                {wwBulkResult.pages > 1 && ` · ${wwBulkResult.pages} pages`}
-                {wwBulkResult.errors.length > 0 &&
-                  ` · ${wwBulkResult.errors.length} errors`}
-              </p>
+              <div className="bulk-result">
+                <p className="inline-note">
+                  Imported {wwBulkResult.imported}/{wwBulkResult.attempted}
+                  {wwBulkResult.pages > 1 && ` · ${wwBulkResult.pages} pages`}
+                  {wwBulkResult.errors.length > 0 &&
+                    ` · ${wwBulkResult.errors.length} errors`}
+                </p>
+                {wwBulkResult.imported > 0 && (
+                  <button
+                    className="success-link"
+                    onClick={handleViewReviewQueue}
+                  >
+                    View tracker →
+                  </button>
+                )}
+              </div>
             )}
             {wwBulkError && <p className="inline-error">{wwBulkError}</p>}
           </article>

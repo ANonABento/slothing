@@ -8,7 +8,12 @@ import type {
   TrackedApplicationPayload,
 } from "@/shared/types";
 import { createOpportunitySchema } from "@slothing/shared/schemas";
-import { getStorage, setStorage } from "./storage";
+import {
+  clearSessionAuthCache,
+  getStorage,
+  markAuthSeen,
+  setStorage,
+} from "./storage";
 
 export class ColumbusAPIClient {
   private baseUrl: string;
@@ -54,8 +59,10 @@ export class ColumbusAPIClient {
 
     if (!response.ok) {
       if (response.status === 401) {
-        // Clear invalid token
+        // Clear invalid token AND the fast-path session cache (#30) so the
+        // next popup open re-verifies instead of trusting a stale verdict.
         await setStorage({ authToken: undefined, tokenExpiry: undefined });
+        await clearSessionAuthCache();
         throw new Error("Authentication expired");
       }
       const error = await response
@@ -73,6 +80,10 @@ export class ColumbusAPIClient {
 
     try {
       await this.authenticatedFetch("/api/extension/auth/verify");
+      // Record the working-auth breadcrumb so the popup can distinguish a
+      // true logout from a service-worker state-loss after this point.
+      // See #27.
+      await markAuthSeen();
       return true;
     } catch {
       return false;
