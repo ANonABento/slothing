@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Check, Loader2, Pencil, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 
 interface EditGithubSlugButtonProps {
   jobId: string;
@@ -16,6 +17,8 @@ export function EditGithubSlugButton({
   currentSlug,
   onSlugSaved,
 }: EditGithubSlugButtonProps) {
+  const a11yT = useA11yTranslations();
+
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState(currentSlug ?? "");
   const [saving, setSaving] = useState(false);
@@ -53,7 +56,7 @@ export function EditGithubSlugButton({
         variant="ghost"
         size="icon"
         className="h-7 w-7"
-        title="Edit GitHub org"
+        title={a11yT("editGithubOrg")}
         onClick={() => setEditing(true)}
       >
         <Pencil className="h-3.5 w-3.5" />
@@ -64,7 +67,7 @@ export function EditGithubSlugButton({
   return (
     <div className="flex max-w-full flex-wrap items-center justify-end gap-1">
       <Input
-        aria-label="GitHub org"
+        aria-label={a11yT("githubOrg")}
         value={value}
         onChange={(event) => setValue(event.target.value)}
         className="h-7 w-28 text-xs"
@@ -78,7 +81,7 @@ export function EditGithubSlugButton({
         className="h-7 w-7"
         onClick={save}
         disabled={saving}
-        title="Save GitHub org"
+        title={a11yT("saveGithubOrg")}
       >
         {saving ? (
           <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -97,7 +100,7 @@ export function EditGithubSlugButton({
           setError(null);
         }}
         disabled={saving}
-        title="Cancel"
+        title={a11yT("cancel")}
       >
         <X className="h-3.5 w-3.5" />
       </Button>

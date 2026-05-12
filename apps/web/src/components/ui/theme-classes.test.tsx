@@ -11,6 +11,8 @@ import {
 } from "./select";
 import { Textarea } from "./textarea";
 
+const selectPlaceholder = "Pick one";
+
 describe("theme variable classes", () => {
   it("applies theme variables to Card surfaces and text", () => {
     render(
@@ -56,7 +58,7 @@ describe("theme variable classes", () => {
     render(
       <Select open value="one">
         <SelectTrigger data-testid="trigger">
-          <SelectValue placeholder="Pick one" />
+          <SelectValue placeholder={selectPlaceholder} />
         </SelectTrigger>
         <SelectContent data-testid="content">
           <SelectItem value="one">One</SelectItem>

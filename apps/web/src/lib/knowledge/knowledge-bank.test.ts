@@ -109,6 +109,8 @@ const mockEntries: BankEntry[] = [
   },
 ];
 
+const TEST_USER_ID = "test-user";
+
 describe("bankEntryToText", () => {
   it("should extract experience fields", () => {
     const text = bankEntryToText(mockEntries[0]);
@@ -187,7 +189,10 @@ describe("searchKnowledgeBank", () => {
   });
 
   it("should return ranked results for a query", () => {
-    const results = searchKnowledgeBank("React TypeScript developer");
+    const results = searchKnowledgeBank(
+      "React TypeScript developer",
+      TEST_USER_ID,
+    );
 
     expect(results.length).toBeGreaterThan(0);
     // The experience entry with React/TypeScript should rank highly
@@ -210,12 +215,15 @@ describe("searchKnowledgeBank", () => {
   });
 
   it("should return empty for non-matching query", () => {
-    const results = searchKnowledgeBank("xyznonexistent gibberish");
+    const results = searchKnowledgeBank(
+      "xyznonexistent gibberish",
+      TEST_USER_ID,
+    );
     expect(results).toEqual([]);
   });
 
   it("should include score and content in results", () => {
-    const results = searchKnowledgeBank("React");
+    const results = searchKnowledgeBank("React", TEST_USER_ID);
 
     for (const r of results) {
       expect(r.score).toBeGreaterThan(0);
@@ -233,10 +241,10 @@ describe("multiQuerySearch", () => {
   });
 
   it("should merge results from multiple queries", () => {
-    const results = multiQuerySearch([
-      "React developer",
-      "Python data science",
-    ]);
+    const results = multiQuerySearch(
+      ["React developer", "Python data science"],
+      TEST_USER_ID,
+    );
 
     // Should have results from both queries
     const ids = results.map((r) => r.id);
@@ -245,10 +253,10 @@ describe("multiQuerySearch", () => {
   });
 
   it("should deduplicate by chunk ID and keep highest score", () => {
-    const results = multiQuerySearch([
-      "React TypeScript Node.js",
-      "React applications frontend",
-    ]);
+    const results = multiQuerySearch(
+      ["React TypeScript Node.js", "React applications frontend"],
+      TEST_USER_ID,
+    );
 
     // entry-1 should appear only once
     const entry1Count = results.filter((r) => r.id === "entry-1").length;
@@ -256,7 +264,10 @@ describe("multiQuerySearch", () => {
   });
 
   it("should sort by score descending", () => {
-    const results = multiQuerySearch(["React developer", "Python"]);
+    const results = multiQuerySearch(
+      ["React developer", "Python"],
+      TEST_USER_ID,
+    );
 
     for (let i = 1; i < results.length; i++) {
       expect(results[i - 1].score).toBeGreaterThanOrEqual(results[i].score);
@@ -264,7 +275,7 @@ describe("multiQuerySearch", () => {
   });
 
   it("should handle empty queries array", () => {
-    const results = multiQuerySearch([]);
+    const results = multiQuerySearch([], TEST_USER_ID);
     expect(results).toEqual([]);
   });
 });

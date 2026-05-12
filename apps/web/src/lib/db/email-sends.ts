@@ -74,7 +74,7 @@ function mapEmailSend(row: EmailSendRow): EmailSend {
 }
 
 export function getEmailSends(
-  userId: string = "default",
+  userId: string,
   options: GetEmailSendsOptions = {},
 ): EmailSend[] {
   ensureSchema();
@@ -107,10 +107,7 @@ export function getEmailSends(
   return rows.map(mapEmailSend);
 }
 
-export function getEmailSend(
-  id: string,
-  userId: string = "default",
-): EmailSend | null {
+export function getEmailSend(id: string, userId: string): EmailSend | null {
   ensureSchema();
   const row = db
     .prepare(
@@ -170,7 +167,7 @@ export function hasDailyDigestSentSince(
 
 export function createEmailSend(
   input: CreateEmailSendInput,
-  userId: string = "default",
+  userId: string,
 ): EmailSend {
   ensureSchema();
   const id = generateId();

@@ -72,6 +72,7 @@ const sourceKeys = Object.keys(sourceMessages).sort();
 const languageOptionKeys = sourceKeys.filter((key) =>
   key.startsWith("settings.language.options."),
 );
+const localesWithReviewedNewStrings = ["fr", "pt-BR"] as const;
 
 function flattenMessages(record: JsonRecord, prefix = ""): FlatMessages {
   const entries: FlatMessages = {};
@@ -155,3 +156,20 @@ describe.each(nonEnglishLocales)("messages/%s.json", (locale) => {
     expect(identicalStrings.length).toBeLessThan(25);
   });
 });
+
+describe.each(localesWithReviewedNewStrings)(
+  "messages/%s.json reviewed strings",
+  (locale) => {
+    it("has no unallowlisted English fallbacks", () => {
+      const flatMessages = flattenMessages(files[locale]);
+      const identicalStrings = Object.keys(sourceMessages).filter(
+        (key) =>
+          !allowlistIdenticalPaths.has(key) &&
+          !languageOptionKeys.includes(key) &&
+          sourceMessages[key] === flatMessages[key],
+      );
+
+      expect(identicalStrings).toEqual([]);
+    });
+  },
+);
