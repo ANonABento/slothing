@@ -6,6 +6,7 @@ import type {
   ScrapedJob,
   TrackedApplicationPayload,
 } from "@/shared/types";
+import type { TailorFromPagePayload } from "@/shared/messages";
 import { getAPIClient, resetAPIClient } from "./api-client";
 import {
   getStorage,
@@ -74,10 +75,15 @@ async function handleMessage(
       return handleCaptureVisibleTab();
 
     case "TAILOR_FROM_PAGE":
-      return handleTailorFromPage(message.payload as ScrapedJob);
+      return handleTailorFromPage(
+        message.payload as TailorFromPagePayload | ScrapedJob,
+      );
 
     case "GENERATE_COVER_LETTER_FROM_PAGE":
       return handleGenerateCoverLetterFromPage(message.payload as ScrapedJob);
+
+    case "LIST_RESUMES":
+      return handleListResumes();
 
     case "SAVE_ANSWER":
       return handleSaveAnswer(
@@ -135,22 +141,53 @@ async function handleMessage(
 }
 
 async function handleTailorFromPage(
-  job: ScrapedJob,
+  payload: TailorFromPagePayload | ScrapedJob,
 ): Promise<ExtensionResponse> {
+  // Support both the new wrapped payload ({job, baseResumeId}) used by the
+  // popup picker (#34) and the legacy bare ScrapedJob still sent by the
+  // content-script Tailor action. The "url" presence on the inner object is
+  // the cheapest discriminator (ScrapedJob has it, TailorFromPagePayload
+  // doesn't).
+  const isLegacy = "url" in payload && !("job" in payload);
+  const job: ScrapedJob = isLegacy
+    ? (payload as ScrapedJob)
+    : (payload as TailorFromPagePayload).job;
+  const baseResumeId = isLegacy
+    ? undefined
+    : (payload as TailorFromPagePayload).baseResumeId;
+
   try {
     const client = await getAPIClient();
-    const result = await client.tailorFromJob(job);
+    const result = await client.tailorFromJob(job, baseResumeId);
     const apiBaseUrl = await getApiBaseUrl();
     const resumeId = result.savedResume.id;
+
+    const studioParams = new URLSearchParams({
+      from: "extension",
+      tailorId: resumeId,
+    });
+    if (baseResumeId) {
+      studioParams.set("baseResumeId", baseResumeId);
+    }
 
     return {
       success: true,
       data: {
-        url: `${apiBaseUrl}/studio?from=extension&tailorId=${encodeURIComponent(resumeId)}`,
+        url: `${apiBaseUrl}/studio?${studioParams.toString()}`,
         opportunityId: result.opportunityId,
         resumeId,
       },
     };
+  } catch (error) {
+    return { success: false, error: (error as Error).message };
+  }
+}
+
+async function handleListResumes(): Promise<ExtensionResponse> {
+  try {
+    const client = await getAPIClient();
+    const resumes = await client.listResumes();
+    return { success: true, data: { resumes } };
   } catch (error) {
     return { success: false, error: (error as Error).message };
   }

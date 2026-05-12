@@ -4,12 +4,23 @@ import type {
   ExtensionMessage,
   ExtensionResponse,
   ExtensionProfile,
+  ExtensionResumeSummary,
   ScrapedJob,
   LearnedAnswer,
   SimilarAnswer,
   DetectedField,
   TrackedApplicationPayload,
 } from "./types";
+
+/**
+ * Tailor-from-page payload (#34). `baseResumeId`, when present, asks the
+ * tailor flow to seed from an existing saved resume instead of the master
+ * profile. The popup populates this from its multi-resume picker dropdown.
+ */
+export interface TailorFromPagePayload {
+  job: ScrapedJob;
+  baseResumeId?: string;
+}
 
 // Type-safe message creators
 export const Messages = {
@@ -47,9 +58,12 @@ export const Messages = {
   }),
   openDashboard: (): ExtensionMessage => ({ type: "OPEN_DASHBOARD" }),
   captureVisibleTab: (): ExtensionMessage => ({ type: "CAPTURE_VISIBLE_TAB" }),
-  tailorFromPage: (job: ScrapedJob): ExtensionMessage<ScrapedJob> => ({
+  tailorFromPage: (
+    job: ScrapedJob,
+    baseResumeId?: string,
+  ): ExtensionMessage<TailorFromPagePayload> => ({
     type: "TAILOR_FROM_PAGE",
-    payload: job,
+    payload: { job, baseResumeId },
   }),
   generateCoverLetterFromPage: (
     job: ScrapedJob,
@@ -57,6 +71,8 @@ export const Messages = {
     type: "GENERATE_COVER_LETTER_FROM_PAGE",
     payload: job,
   }),
+  /** #34 — fetch the user's recently-saved tailored resumes for the picker. */
+  listResumes: (): ExtensionMessage => ({ type: "LIST_RESUMES" }),
 
   // Learning messages
   saveAnswer: (data: {
@@ -137,6 +153,10 @@ export interface GenerateCoverLetterFromPageResponse extends ExtensionResponse<{
 export interface SearchAnswersResponse extends ExtensionResponse<
   SimilarAnswer[]
 > {}
+
+export interface ListResumesResponse extends ExtensionResponse<{
+  resumes: ExtensionResumeSummary[];
+}> {}
 
 export type WwPageKind = "list" | "detail" | "other";
 

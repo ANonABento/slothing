@@ -2,6 +2,7 @@
 
 import type {
   ExtensionProfile,
+  ExtensionResumeSummary,
   ScrapedJob,
   LearnedAnswer,
   SimilarAnswer,
@@ -207,7 +208,10 @@ export class ColumbusAPIClient {
     };
   }
 
-  async tailorFromJob(job: ScrapedJob): Promise<{
+  async tailorFromJob(
+    job: ScrapedJob,
+    baseResumeId?: string,
+  ): Promise<{
     opportunityId: string;
     savedResume: { id: string };
     jobId: string;
@@ -216,18 +220,33 @@ export class ColumbusAPIClient {
     const imported = await this.importJob(job);
     const opportunityId = getImportedOpportunityId(imported.opportunityIds);
 
+    const requestBody: {
+      action: "generate";
+      jobDescription: string;
+      jobTitle: string;
+      company: string;
+      opportunityId: string;
+      baseResumeId?: string;
+    } = {
+      action: "generate",
+      jobDescription,
+      jobTitle: job.title,
+      company: job.company,
+      opportunityId,
+    };
+    // Only thread the id through when the popup picked a non-default resume —
+    // omitting the field keeps the request body byte-identical to the legacy
+    // shape, so existing tests + telemetry don't churn for the master case.
+    if (baseResumeId) {
+      requestBody.baseResumeId = baseResumeId;
+    }
+
     const response = await this.authenticatedFetch<{
       savedResume?: { id?: string };
       jobId?: string;
     }>("/api/tailor", {
       method: "POST",
-      body: JSON.stringify({
-        action: "generate",
-        jobDescription,
-        jobTitle: job.title,
-        company: job.company,
-        opportunityId,
-      }),
+      body: JSON.stringify(requestBody),
     });
 
     if (!response.savedResume?.id || !response.jobId) {
@@ -239,6 +258,13 @@ export class ColumbusAPIClient {
       savedResume: { id: response.savedResume.id },
       jobId: response.jobId,
     };
+  }
+
+  async listResumes(): Promise<ExtensionResumeSummary[]> {
+    const response = await this.authenticatedFetch<{
+      resumes: ExtensionResumeSummary[];
+    }>("/api/extension/resumes");
+    return response.resumes ?? [];
   }
 
   async generateCoverLetterFromJob(job: ScrapedJob): Promise<{
