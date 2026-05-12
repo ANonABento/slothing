@@ -88,7 +88,8 @@
       "signInRequired": "サインインが必要です",
       "loadData": "ダッシュボードのデータを読み込めませんでした。",
       "skipTitle": "セットアップをスキップできませんでした",
-      "skipFallback": "もう一度お試しください。"
+      "skipFallback": "もう一度お試しください。",
+      "loadSection": "このセクションを読み込めませんでした"
     },
     "greeting": {
       "onboardingNamed": "ようこそ、{name} さん。ワークスペースを設定しましょう。",
@@ -176,6 +177,23 @@
             "2": {
               "title": "準備状況のシグナル",
               "description": "仕上がっている部分と追加作業が必要な部分を把握します。"
+            }
+          }
+        },
+        "install-extension": {
+          "intro": "拡張機能をインストールすると、手動入力なしで求人サイトから直接 Slothing に求人を取り込めます。",
+          "items": {
+            "0": {
+              "title": "ワンクリックで求人を保存",
+              "description": "ページを離れることなく、LinkedIn、Indeed などから求人情報を保存できます。"
+            },
+            "1": {
+              "title": "自動入力",
+              "description": "求人詳細が自動取得されるため、求人内容を手動でコピーする必要がありません。"
+            },
+            "2": {
+              "title": "トリアージキュー",
+              "description": "新しい求人がレビューキューに入り、すぐに承認または却下できます。"
             }
           }
         }
@@ -1275,5 +1293,12 @@
         "social-url": "LinkedIn または GitHub URL を追加"
       }
     }
+  },
+  "streak": {
+    "badgeLabel": "デイリーリズム",
+    "dayUnit": "{count, plural, other {日}}",
+    "activeMessage": "今日一つの意味ある行動がシステムを動かし続けます。",
+    "startMessage": "保存した求人、応募、またはカスタマイズした書類で今日ストリークを始めましょう。",
+    "bestStreak": "最長ストリーク"
   }
 }

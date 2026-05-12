@@ -88,7 +88,8 @@
       "signInRequired": "Connexion requise",
       "loadData": "Impossible de charger les données de votre tableau de bord.",
       "skipTitle": "Impossible d'ignorer la configuration",
-      "skipFallback": "Veuillez réessayer."
+      "skipFallback": "Veuillez réessayer.",
+      "loadSection": "Impossible de charger cette section"
     },
     "greeting": {
       "onboardingNamed": "Bienvenue, {name}. Configurons votre espace de travail.",
@@ -176,6 +177,23 @@
             "2": {
               "title": "Signaux de préparation",
               "description": "Voyez ce qui est prêt et ce qui demande encore du travail."
+            }
+          }
+        },
+        "install-extension": {
+          "intro": "Une fois l'extension installée, vous pouvez capturer des offres depuis les plateformes d'emploi directement dans Slothing sans saisie manuelle.",
+          "items": {
+            "0": {
+              "title": "Capture en un clic",
+              "description": "Enregistrez des offres d'emploi depuis LinkedIn, Indeed et d'autres sites sans quitter la page."
+            },
+            "1": {
+              "title": "Pré-remplissage automatique",
+              "description": "Les détails du poste sont extraits automatiquement pour éviter de copier les descriptions à la main."
+            },
+            "2": {
+              "title": "File de tri",
+              "description": "Les nouvelles offres arrivent dans la file de révision pour accepter ou ignorer rapidement."
             }
           }
         }
@@ -1275,5 +1293,12 @@
         "social-url": "Ajoutez une URL LinkedIn ou GitHub"
       }
     }
+  },
+  "streak": {
+    "badgeLabel": "Rythme quotidien",
+    "dayUnit": "{count, plural, one {jour} other {jours}}",
+    "activeMessage": "Une action significative aujourd'hui maintient le système en mouvement.",
+    "startMessage": "Commencez votre série aujourd'hui avec une opportunité enregistrée, une candidature ou un document personnalisé.",
+    "bestStreak": "Meilleure série"
   }
 }
