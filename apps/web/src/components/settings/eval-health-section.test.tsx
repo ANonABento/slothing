@@ -1,8 +1,18 @@
 import { render, screen, waitFor } from "@testing-library/react";
+import { NextIntlClientProvider } from "next-intl";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { buildDashboardPayload } from "@/lib/admin/evals/aggregate";
 import { SAMPLE_COMPARISON_REPORTS } from "@/lib/admin/evals/sample-data";
+import messages from "@/messages/en.json";
 import { EvalHealthSection } from "./eval-health-section";
+
+function renderEvalHealthSection() {
+  return render(
+    <NextIntlClientProvider locale="en-US" messages={messages}>
+      <EvalHealthSection />
+    </NextIntlClientProvider>,
+  );
+}
 
 describe("EvalHealthSection", () => {
   let fetchMock: ReturnType<typeof vi.spyOn>;
@@ -23,7 +33,7 @@ describe("EvalHealthSection", () => {
       new Response(JSON.stringify(payload), { status: 200 }),
     );
 
-    render(<EvalHealthSection />);
+    renderEvalHealthSection();
 
     expect(await screen.findByText("Eval health")).toBeInTheDocument();
     expect(screen.getByText("Last run")).toBeInTheDocument();
@@ -44,7 +54,7 @@ describe("EvalHealthSection", () => {
       new Response(JSON.stringify(payload), { status: 200 }),
     );
 
-    render(<EvalHealthSection />);
+    renderEvalHealthSection();
 
     expect(
       await screen.findByText(/No eval runs recorded/i),
@@ -57,7 +67,7 @@ describe("EvalHealthSection", () => {
       new Response(JSON.stringify({ error: "Forbidden" }), { status: 403 }),
     );
 
-    const { container } = render(<EvalHealthSection />);
+    const { container } = renderEvalHealthSection();
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalled());
     expect(container).toBeEmptyDOMElement();
@@ -66,7 +76,7 @@ describe("EvalHealthSection", () => {
   it("renders nothing on a network error", async () => {
     fetchMock.mockRejectedValue(new Error("network"));
 
-    const { container } = render(<EvalHealthSection />);
+    const { container } = renderEvalHealthSection();
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalled());
     expect(container).toBeEmptyDOMElement();

@@ -4,9 +4,9 @@
 
 **Status: Complete** - All 6 phases implemented and integrated into UI.
 
-> **Note on auth examples in this folder:** Some Clerk-era code snippets remain
+> **Note on auth examples in this folder:** Some NextAuth-era code snippets remain
 > in the per-phase tickets (`01-oauth-foundation.md` etc.) for historical
-> reference. Slothing migrated from Clerk to NextAuth.js (Google provider) in
+> reference. Slothing migrated from NextAuth to NextAuth.js (Google provider) in
 > PR #243. The canonical auth surface now lives in `src/auth.ts`,
 > `src/auth.config.ts`, and `src/lib/auth.ts` — read those first; treat the
 > ticket snippets as architectural intent, not literal code.
@@ -64,7 +64,7 @@ This integration connects Slothing with Google Workspace services to streamline 
                                │
                                ▼
 ┌──────────────────────────────────────────────────────────────────┐
-│                         Clerk OAuth                              │
+│                         NextAuth OAuth                              │
 │              (Manages Google tokens & refresh)                   │
 └──────────────────────────────┬───────────────────────────────────┘
                                │
@@ -96,7 +96,7 @@ This integration connects Slothing with Google Workspace services to streamline 
 
 | Component  | Technology                                         | Purpose                    |
 | ---------- | -------------------------------------------------- | -------------------------- |
-| OAuth      | Clerk Social Connection                            | Token management, refresh  |
+| OAuth      | NextAuth Social Connection                            | Token management, refresh  |
 | API Client | `googleapis` npm                                   | Official Google API client |
 | Calendar   | `google.calendar()` via `src/lib/google/client.ts` | Calendar operations        |
 | Drive      | `google.drive()` via `src/lib/google/client.ts`    | File storage               |
@@ -223,7 +223,7 @@ CREATE TABLE gmail_imports (
 
 ## Security Considerations
 
-1. **Token Storage**: Clerk handles OAuth tokens securely
+1. **Token Storage**: NextAuth handles OAuth tokens securely
 2. **Scope Minimization**: Request only needed scopes per feature
 3. **User Consent**: Clear UI explaining what access is requested
 4. **Revocation**: Allow users to disconnect Google at any time
@@ -269,7 +269,7 @@ const GOOGLE_ERRORS = {
 ## References
 
 - [Google Workspace CLI](https://github.com/googleworkspace/cli)
-- [Clerk Google OAuth](https://clerk.com/blog/using-clerk-sso-access-google-calendar)
+- [NextAuth Google OAuth](https://authjs.dev/getting-started/providers/google)
 - [googleapis npm](https://www.npmjs.com/package/googleapis)
 - [Google Calendar API](https://developers.google.com/calendar/api)
 - [Google Drive API](https://developers.google.com/drive/api)

@@ -3,7 +3,7 @@ import { THEME_DARK_STORAGE_KEY } from "../src/lib/theme/storage-keys";
 
 const PUBLIC_PAGES = [{ path: "/", name: "landing" }];
 
-// Pages accessible with auth bypass (no Clerk keys configured)
+// Pages accessible with auth bypass (no NextAuth keys configured)
 const APP_PAGES = [
   "/en/dashboard",
   "/en/bank",
@@ -62,7 +62,7 @@ test.describe("Visual Audit - Public Pages", () => {
 });
 
 test.describe("Visual Audit - Auth Bypass Behavior", () => {
-  test("app pages are accessible without Clerk keys (auth bypass)", async ({
+  test("app pages are accessible without NextAuth keys (auth bypass)", async ({
     page,
   }) => {
     await preparePage(page);

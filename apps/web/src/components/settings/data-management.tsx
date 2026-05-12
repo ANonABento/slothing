@@ -1,6 +1,7 @@
 "use client";
 
 import type { ChangeEvent } from "react";
+import { useTranslations } from "next-intl";
 import {
   CheckCircle,
   Database,
@@ -36,6 +37,8 @@ interface DataManagementProps {
 }
 
 export function DataManagement(props: DataManagementProps) {
+  const t = useTranslations("settings.dataManagement");
+  const commonT = useTranslations("common");
   const {
     exporting,
     importing,
@@ -50,8 +53,8 @@ export function DataManagement(props: DataManagementProps) {
 
   return (
     <PageSection
-      title="Data Management"
-      description="Export your data or import from backups."
+      title={t("title")}
+      description={t("description")}
       icon={Database}
       contentClassName="space-y-6"
     >
@@ -59,7 +62,7 @@ export function DataManagement(props: DataManagementProps) {
         <div className="space-y-3">
           <h3 className="text-sm font-medium flex items-center gap-2">
             <Download className="h-4 w-4" />
-            Export Data
+            {t("export.title")}
           </h3>
           <div className="grid gap-2 sm:grid-cols-2">
             <Button
@@ -73,7 +76,7 @@ export function DataManagement(props: DataManagementProps) {
               ) : (
                 <FileJson className="h-4 w-4 mr-2 text-info" />
               )}
-              Export Profile (JSON)
+              {t("export.profileJson")}
             </Button>
             <Button
               variant="outline"
@@ -86,7 +89,7 @@ export function DataManagement(props: DataManagementProps) {
               ) : (
                 <FileJson className="h-4 w-4 mr-2 text-success" />
               )}
-              Export Opportunities (JSON)
+              {t("export.opportunitiesJson")}
             </Button>
             <Button
               variant="outline"
@@ -99,7 +102,7 @@ export function DataManagement(props: DataManagementProps) {
               ) : (
                 <FileSpreadsheet className="h-4 w-4 mr-2 text-success" />
               )}
-              Export Opportunities (CSV)
+              {t("export.opportunitiesCsv")}
             </Button>
             <Button
               variant="outline"
@@ -112,7 +115,7 @@ export function DataManagement(props: DataManagementProps) {
               ) : (
                 <HardDrive className="h-4 w-4 mr-2 text-primary" />
               )}
-              Full Backup
+              {t("export.fullBackup")}
             </Button>
             <Button
               variant="outline"
@@ -125,7 +128,7 @@ export function DataManagement(props: DataManagementProps) {
               ) : (
                 <Database className="h-4 w-4 mr-2 text-primary" />
               )}
-              Export All Data (JSON)
+              {t("export.allDataJson")}
             </Button>
           </div>
         </div>
@@ -133,7 +136,7 @@ export function DataManagement(props: DataManagementProps) {
         <div className="space-y-3">
           <h3 className="text-sm font-medium flex items-center gap-2">
             <Upload className="h-4 w-4" />
-            Import Data
+            {t("import.title")}
           </h3>
           <div className="grid gap-2 sm:grid-cols-2">
             <div className="relative">
@@ -142,7 +145,7 @@ export function DataManagement(props: DataManagementProps) {
                 accept=".json,.csv"
                 onChange={(event) => void onImportFile(event, "jobs")}
                 disabled={importing}
-                aria-label="Import jobs from JSON or CSV file"
+                aria-label={t("import.jobsAria")}
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
               />
               <Button
@@ -155,7 +158,7 @@ export function DataManagement(props: DataManagementProps) {
                 ) : (
                   <FileJson className="h-4 w-4 mr-2 text-info" />
                 )}
-                Import Opportunities (JSON/CSV)
+                {t("import.opportunitiesJsonCsv")}
               </Button>
             </div>
             <div className="relative">
@@ -164,7 +167,7 @@ export function DataManagement(props: DataManagementProps) {
                 accept=".json"
                 onChange={(event) => void onImportFile(event, "backup")}
                 disabled={importing}
-                aria-label="Restore backup from JSON file"
+                aria-label={t("import.restoreBackupAria")}
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
               />
               <Button
@@ -177,7 +180,7 @@ export function DataManagement(props: DataManagementProps) {
                 ) : (
                   <HardDrive className="h-4 w-4 mr-2 text-primary" />
                 )}
-                Restore Backup
+                {t("import.restoreBackup")}
               </Button>
             </div>
             <div className="relative sm:col-span-2">
@@ -186,7 +189,7 @@ export function DataManagement(props: DataManagementProps) {
                 accept=".json"
                 onChange={(event) => void onFullImportPreview(event)}
                 disabled={importing}
-                aria-label="Import all data from JSON file"
+                aria-label={t("import.allDataAria")}
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
               />
               <Button
@@ -199,7 +202,7 @@ export function DataManagement(props: DataManagementProps) {
                 ) : (
                   <Database className="h-4 w-4 mr-2 text-primary" />
                 )}
-                Import All Data (JSON)
+                {t("import.allDataJson")}
               </Button>
             </div>
           </div>
@@ -207,9 +210,9 @@ export function DataManagement(props: DataManagementProps) {
 
         {showImportPreview && (
           <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 space-y-3">
-            <h4 className="font-medium text-sm">Confirm Import</h4>
+            <h4 className="font-medium text-sm">{t("confirm.title")}</h4>
             <p className="text-sm text-muted-foreground">
-              The following data will be imported (duplicates will be skipped):
+              {t("confirm.description")}
             </p>
             <ul className="text-sm space-y-1">
               {Object.entries(showImportPreview.stats).map(([key, count]) => (
@@ -231,10 +234,10 @@ export function DataManagement(props: DataManagementProps) {
                 {importing ? (
                   <>
                     <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
-                    Importing...
+                    {t("confirm.importing")}
                   </>
                 ) : (
-                  "Confirm Import"
+                  t("confirm.action")
                 )}
               </Button>
               <Button
@@ -243,7 +246,7 @@ export function DataManagement(props: DataManagementProps) {
                 onClick={onCancelImportPreview}
                 disabled={importing}
               >
-                Cancel
+                {commonT("cancel")}
               </Button>
             </div>
           </div>

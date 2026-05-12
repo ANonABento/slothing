@@ -54,15 +54,16 @@ Configure your provider in the app at `/settings`.
 
 ## Google Integration Setup
 
-Google integration uses Clerk for OAuth. No additional environment variables are needed - Clerk manages Google tokens.
+Google integration uses NextAuth for OAuth. Configure the Google OAuth credentials in `.env.local`.
 
-### Clerk Dashboard Setup
+### Google Cloud Console Setup
 
-1. Go to [Clerk Dashboard](https://dashboard.clerk.com)
-2. Select your application
-3. Navigate to **User & Authentication** → **Social Connections**
-4. Enable **Google**
-5. Configure OAuth scopes:
+1. Go to [Google Cloud Console](https://console.cloud.google.com)
+2. Create or select a project
+3. Create OAuth 2.0 credentials (Web application type)
+4. Add `http://localhost:3000/api/auth/callback/google` as an authorized redirect URI
+5. Copy the Client ID and Secret to `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`
+6. Configure OAuth scopes:
 
 ```
 openid
@@ -80,10 +81,9 @@ https://www.googleapis.com/auth/contacts.readonly
 https://www.googleapis.com/auth/tasks
 ```
 
-### Google Cloud Console Setup
+### Google API Setup
 
-1. Create a project at [Google Cloud Console](https://console.cloud.google.com)
-2. Enable these APIs:
+1. Enable these APIs:
    - Google Calendar API
    - Google Drive API
    - Gmail API
@@ -91,9 +91,6 @@ https://www.googleapis.com/auth/tasks
    - Google Sheets API
    - People API
    - Tasks API
-3. Create OAuth 2.0 credentials (Web application type)
-4. Add redirect URIs from Clerk dashboard
-5. Copy Client ID and Secret to Clerk's Google provider settings
 
 ### Testing Locally
 

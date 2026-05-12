@@ -82,8 +82,8 @@ interface CustomTemplateSource {
 export function saveCustomTemplate(
   name: string,
   analyzedStyles: AnalyzedTemplate,
-  sourceDocumentId?: string,
-  userId: string = "default",
+  sourceDocumentId: string | undefined,
+  userId: string,
   source?: CustomTemplateSource,
 ): CustomTemplate {
   ensureCustomTemplatesSourceColumns();
@@ -129,9 +129,7 @@ export function saveCustomTemplate(
   };
 }
 
-export function getCustomTemplates(
-  userId: string = "default",
-): CustomTemplate[] {
+export function getCustomTemplates(userId: string): CustomTemplate[] {
   ensureCustomTemplatesSourceColumns();
   const stmt = db.prepare(`
     SELECT id, user_id, name, source_document_id, source_filename, source_type, analyzed_styles, created_at, updated_at
@@ -146,7 +144,7 @@ export function getCustomTemplates(
 
 export function getCustomTemplate(
   id: string,
-  userId: string = "default",
+  userId: string,
 ): CustomTemplate | null {
   ensureCustomTemplatesSourceColumns();
   const stmt = db.prepare(`
@@ -161,10 +159,7 @@ export function getCustomTemplate(
   return rowToCustomTemplate(row);
 }
 
-export function deleteCustomTemplate(
-  id: string,
-  userId: string = "default",
-): boolean {
+export function deleteCustomTemplate(id: string, userId: string): boolean {
   ensureCustomTemplatesSourceColumns();
   const stmt = db.prepare(
     "DELETE FROM custom_templates WHERE id = ? AND user_id = ?",
@@ -176,7 +171,7 @@ export function deleteCustomTemplate(
 export function updateCustomTemplateName(
   id: string,
   name: string,
-  userId: string = "default",
+  userId: string,
 ): boolean {
   ensureCustomTemplatesSourceColumns();
   const stmt = db.prepare(

@@ -37,6 +37,7 @@ import { sanitizeFilename } from "@/lib/upload/filename";
 import { requireAuth, isAuthError } from "@/lib/auth";
 import { mergeParsedProfileForAutoPromote } from "@/lib/profile/auto-promote";
 import { uploadQuerySchema } from "@/lib/schemas";
+import { log } from "@/lib/log";
 
 export const dynamic = "force-dynamic";
 
@@ -102,9 +103,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
 
-    console.log(
-      `[upload] File received: ${file.name} (${file.size} bytes, ${file.type})`,
-    );
+    log.debug("upload", "file received");
 
     // Validate file size
     if (file.size > MAX_FILE_SIZE_BYTES) {
@@ -134,7 +133,7 @@ export async function POST(request: NextRequest) {
 
     // Validate magic bytes match claimed MIME type
     const magicBytesValid = validateFileMagicBytes(buffer, file.type);
-    console.log(`[upload] Magic bytes validated: ${magicBytesValid}`);
+    log.debug("upload", "magic bytes validated", { valid: magicBytesValid });
     if (!magicBytesValid) {
       return NextResponse.json(
         {
@@ -177,7 +176,9 @@ export async function POST(request: NextRequest) {
     let extractedText: string;
     try {
       extractedText = await extractTextFromFile(filePath);
-      console.log(`[upload] Text extracted: ${extractedText.length} chars`);
+      log.debug("upload", "text extracted", {
+        chars: extractedText.length,
+      });
     } catch (err) {
       console.error(
         "[upload] Text extraction failed:",
@@ -232,15 +233,16 @@ export async function POST(request: NextRequest) {
           // Use smart parser pipeline for resumes
           smartResult = await smartParseResume(extractedText, llmConfig);
           parsedData = { docType: "resume", data: smartResult.profile };
-          console.log(
-            `[upload] Smart parse: confidence=${smartResult.confidence.toFixed(2)}, ` +
-              `sections=${smartResult.sectionsDetected.join(",")}, ` +
-              `llmUsed=${smartResult.llmUsed}, llmSections=${smartResult.llmSectionsCount}`,
-          );
+          log.debug("upload", "smart parse complete", {
+            confidence: smartResult.confidence,
+            sections: smartResult.sectionsDetected,
+            llmUsed: smartResult.llmUsed,
+            llmSections: smartResult.llmSectionsCount,
+          });
           if (smartResult.warnings.length > 0) {
-            console.log(
-              `[upload] Parse warnings: ${smartResult.warnings.join("; ")}`,
-            );
+            log.debug("upload", "parse warnings", {
+              warnings: smartResult.warnings,
+            });
           }
         } else if (llmConfig) {
           // Non-resume doc types still use LLM-based parsing
@@ -296,7 +298,7 @@ export async function POST(request: NextRequest) {
         },
         authResult.userId,
       );
-      console.log(`[upload] Document saved: ${id}`);
+      log.debug("upload", "document saved");
     } catch (err) {
       if (err instanceof DuplicateDocumentError) {
         // A racing request beat us to the insert. Drop our on-disk copy and
@@ -328,9 +330,9 @@ export async function POST(request: NextRequest) {
         );
         entriesCreated = result.inserted;
         if (entriesCreated > 0) {
-          console.log(`[upload] Ingested ${entriesCreated} entries into bank`);
+          log.debug("upload", "bank entries ingested", { entriesCreated });
         } else {
-          console.log("[upload] No structured bank entries found");
+          log.debug("upload", "no structured bank entries found");
         }
       } catch (err) {
         console.error(
@@ -347,7 +349,7 @@ export async function POST(request: NextRequest) {
         );
         if (Object.keys(promoted).length > 0) {
           updateProfile(promoted, authResult.userId);
-          console.log("[upload] Auto-promoted parsed resume into profile");
+          log.debug("upload", "auto-promoted parsed resume into profile");
         }
       } catch (err) {
         console.error(

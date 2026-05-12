@@ -1,5 +1,5 @@
 import type { NextRequest } from "next/server";
-import { isNextAuthConfigured } from "@/auth.config";
+import { getMissingAuthEnv, isNextAuthConfigured } from "@/auth.config";
 
 export const dynamic = "force-dynamic";
 
@@ -8,8 +8,13 @@ export const runtime = "nodejs";
 
 function authDisabledResponse() {
   return Response.json(
-    { error: "NextAuth is disabled in local development." },
-    { status: 404 },
+    {
+      error: "auth_disabled",
+      message: "Authentication is not configured on this instance.",
+      missing: getMissingAuthEnv(),
+      docs: "https://slothing.dev/docs/self-hosting#auth",
+    },
+    { status: 503, headers: { "Cache-Control": "no-store" } },
   );
 }
 

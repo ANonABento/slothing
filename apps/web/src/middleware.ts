@@ -1,5 +1,6 @@
 import createMiddleware from "next-intl/middleware";
 import { NextResponse, type NextRequest } from "next/server";
+import { DEV_AUTH_BYPASS_HEADER, isDevAuthBypassAllowed } from "@/auth.config";
 import { routing } from "@/i18n";
 import {
   applySecurityHeaders,
@@ -17,6 +18,7 @@ function applyRequestHeaderOverrides(
   response: NextResponse,
   requestHeaders: Headers,
 ): void {
+  const overrideHeaderName = "x-middleware-override-headers";
   const overrideResponse = NextResponse.next({
     request: {
       headers: requestHeaders,
@@ -24,10 +26,16 @@ function applyRequestHeaderOverrides(
   });
 
   overrideResponse.headers.forEach((value, key) => {
-    if (
-      key === "x-middleware-override-headers" ||
-      key.startsWith("x-middleware-request-")
-    ) {
+    if (key === overrideHeaderName) {
+      const existing = response.headers.get(overrideHeaderName);
+      response.headers.set(
+        overrideHeaderName,
+        existing ? `${existing},${value}` : value,
+      );
+      return;
+    }
+
+    if (key.startsWith("x-middleware-request-")) {
       response.headers.set(key, value);
     }
   });
@@ -46,12 +54,16 @@ export default function middleware(request: NextRequest) {
 
   applyRequestHeaderOverrides(response, requestHeaders);
 
+  if (isDevAuthBypassAllowed()) {
+    response.headers.set(
+      DEV_AUTH_BYPASS_HEADER.name,
+      DEV_AUTH_BYPASS_HEADER.value,
+    );
+  }
+
   return applySecurityHeaders(response, request, cspHeaderValue);
 }
 
 export const config = {
-  matcher: [
-    "/((?!_next|_vercel|.*\\..*).*)",
-    "/(api|trpc)(.*)",
-  ],
+  matcher: ["/((?!_next|_vercel|.*\\..*).*)", "/(api|trpc)(.*)"],
 };

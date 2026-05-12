@@ -2,7 +2,7 @@ import type { ThemePreset } from "../tokens";
 import { createThemeTokens, sansFont, sharedStatusTokens } from "./shared";
 
 const id = "neon";
-const name = "Neon";
+const name = "Electric";
 const description = "Cyberpunk cyan and magenta accents with electric glow.";
 
 export const neonTheme = {

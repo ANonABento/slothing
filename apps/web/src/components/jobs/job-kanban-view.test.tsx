@@ -1,4 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react";
+import { NextIntlClientProvider } from "next-intl";
+import type { ComponentProps } from "react";
 import { describe, expect, it, vi } from "vitest";
 import type { JobDescription } from "@/types";
 import { JobKanbanView } from "./job-kanban-view";
@@ -37,9 +39,17 @@ function createDataTransfer(): DataTransfer {
   } as unknown as DataTransfer;
 }
 
+function renderJobKanbanView(props: ComponentProps<typeof JobKanbanView>) {
+  return render(
+    <NextIntlClientProvider locale="en-US" messages={{}}>
+      <JobKanbanView {...props} />
+    </NextIntlClientProvider>,
+  );
+}
+
 describe("JobKanbanView", () => {
   it("renders expected columns and card details", () => {
-    render(<JobKanbanView jobs={[baseJob]} onStatusChange={vi.fn()} />);
+    renderJobKanbanView({ jobs: [baseJob], onStatusChange: vi.fn() });
 
     const pendingColumn = screen.getByLabelText("Pending jobs");
     expect(pendingColumn).toBeInTheDocument();
@@ -69,7 +79,7 @@ describe("JobKanbanView", () => {
 
   it("calls onStatusChange when a card is dropped into another column", () => {
     const onStatusChange = vi.fn();
-    render(<JobKanbanView jobs={[baseJob]} onStatusChange={onStatusChange} />);
+    renderJobKanbanView({ jobs: [baseJob], onStatusChange });
     const card = screen.getByText("Frontend Engineer").closest("article");
     const appliedColumn = screen.getByLabelText("Applied jobs");
     const dataTransfer = createDataTransfer();
@@ -84,7 +94,7 @@ describe("JobKanbanView", () => {
 
   it("does not call onStatusChange when dropped into the current column", () => {
     const onStatusChange = vi.fn();
-    render(<JobKanbanView jobs={[baseJob]} onStatusChange={onStatusChange} />);
+    renderJobKanbanView({ jobs: [baseJob], onStatusChange });
     const card = screen.getByText("Frontend Engineer").closest("article");
     const savedColumn = screen.getByLabelText("Saved jobs");
     const dataTransfer = createDataTransfer();

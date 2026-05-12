@@ -44,6 +44,24 @@ function localePathPattern(locale: string) {
   return new RegExp(`^/${escapeRegExp(locale)}(?:/|$|\\?)`);
 }
 
+async function expectLocalizedSignInCta(
+  page: import("@playwright/test").Page,
+  locale: string,
+) {
+  const href = await page
+    .getByRole("link", { name: /Get Started/ })
+    .first()
+    .getAttribute("href");
+
+  expect(href).toBeTruthy();
+
+  const url = new URL(href!, "http://localhost");
+  expect(url.pathname).toBe(`/${locale}/sign-in`);
+  expect(url.searchParams.get("callbackUrl")).toMatch(
+    new RegExp(`^/${escapeRegExp(locale)}/`),
+  );
+}
+
 test.describe("marketing locale preservation", () => {
   for (const locale of pickThree()) {
     test(`internal marketing links stay in /${locale}`, async ({ page }) => {
@@ -53,27 +71,22 @@ test.describe("marketing locale preservation", () => {
         page.getByRole("link", { name: /Get Started/ }).first(),
       ).toBeVisible();
 
-      const internalHrefs = await page.locator("a[href]").evaluateAll((anchors) =>
-        anchors
-          .map((anchor) => anchor.getAttribute("href") ?? "")
-          .filter((href) => href.startsWith("/") && !href.startsWith("//")),
-      );
+      const internalHrefs = await page
+        .locator("a[href]")
+        .evaluateAll((anchors) =>
+          anchors
+            .map((anchor) => anchor.getAttribute("href") ?? "")
+            .filter((href) => href.startsWith("/") && !href.startsWith("//")),
+        );
 
       for (const href of internalHrefs) {
-        expect(href, `marketing link "${href}" missing /${locale} prefix`).toMatch(
-          localePathPattern(locale),
-        );
+        expect(
+          href,
+          `marketing link "${href}" missing /${locale} prefix`,
+        ).toMatch(localePathPattern(locale));
       }
 
-      await page.getByRole("link", { name: /Get Started/ }).first().click();
-      await expect(page).toHaveURL(
-        new RegExp(`/${escapeRegExp(locale)}/sign-in`),
-      );
-
-      const url = new URL(page.url());
-      expect(url.searchParams.get("callbackUrl")).toMatch(
-        new RegExp(`^/${escapeRegExp(locale)}/`),
-      );
+      await expectLocalizedSignInCta(page, locale);
     });
   }
 
@@ -129,10 +142,6 @@ test.describe("marketing locale preservation", () => {
 
   test("no regression on /en flow", async ({ page }) => {
     await page.goto("/en");
-    await page.getByRole("link", { name: /Get Started/ }).first().click();
-    await expect(page).toHaveURL(/\/en\/sign-in/);
-
-    const url = new URL(page.url());
-    expect(url.searchParams.get("callbackUrl")).toMatch(/^\/en\//);
+    await expectLocalizedSignInCta(page, "en");
   });
 });

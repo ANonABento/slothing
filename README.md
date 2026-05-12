@@ -23,7 +23,8 @@ The code lives in the `get-me-job` repo as a pnpm + Turborepo monorepo. Domain: 
 
 - **Framework**: Next.js 14 with App Router
 - **Workspace**: Turborepo + pnpm workspaces
-- **Database**: SQLite with Drizzle schema management
+- **Auth**: NextAuth v5 with Google OAuth, optional Resend magic links
+- **Database**: libSQL/Turso with Drizzle schema management
 - **AI**: Supports Ollama (free/local) or BYOK (OpenAI, Anthropic, OpenRouter)
 - **Document Parsing**: pdf-parse, mammoth, OCR utilities
 - **Rich Text Editing**: TipTap
@@ -80,10 +81,11 @@ Connect your Google account to enable:
 
 **Setup:**
 
-1. The app uses Clerk for authentication and OAuth
-2. Go to Settings → Google Integrations
-3. Click "Connect Google Account"
-4. Grant the requested permissions
+1. Configure `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, and `NEXTAUTH_SECRET` in `.env.local`
+2. Set the Google OAuth redirect URI to `http://localhost:3000/api/auth/callback/google`
+3. Go to Settings → Google Integrations
+4. Click "Connect Google Account"
+5. Grant the requested permissions
 
 See [docs/google-integration/README.md](docs/google-integration/README.md) for detailed setup instructions.
 
@@ -111,7 +113,7 @@ node apps/extension/demo/launch-with-extension.mjs
 
 Boots a fresh Chromium with the extension pre-loaded and opens the demo form so you can see scraping, the badge, and the popup behavior end-to-end.
 
-**Connect:** click the Columbus icon → **Connect Account**. Opens `/extension/connect` on your locally-running Slothing, generates a token tied to your Clerk session, stores in extension storage. After connecting, `Cmd+Shift+F` auto-fills, `Cmd+Shift+I` imports a listing.
+**Connect:** click the Columbus icon → **Connect Account**. Opens `/extension/connect` on your locally-running Slothing, generates a token tied to your Slothing session, stores it in extension storage. After connecting, `Cmd+Shift+F` auto-fills, `Cmd+Shift+I` imports a listing.
 
 Full docs: [`apps/extension/README.md`](./apps/extension/README.md).
 
@@ -194,10 +196,10 @@ Vercel should use `apps/web` as the project Root Directory, or build from the re
 
 ## Data Storage
 
-Application data is stored in SQLite using the schema in `apps/web/src/lib/db/schema.ts`.
+Application data is stored in libSQL/Turso using the schema in `apps/web/src/lib/db/schema.ts`. Local development defaults to `file:./.local.db`; hosted deployments should set `TURSO_DATABASE_URL` and, when required, `TURSO_AUTH_TOKEN`.
 Uploaded documents and generated files are stored on disk during local development:
 
-- `data/get-me-job.db` - Local SQLite database
+- `.local.db` - Local libSQL database
 - `uploads/` - Uploaded documents
 - `public/resumes/` - Generated resume files
 - Browser storage - Studio version history snapshots
