@@ -4,7 +4,12 @@ import { formatRelative } from "@slothing/shared/formatters";
 import { scoreResume } from "@slothing/shared/scoring";
 import { sendMessage, Messages } from "@/shared/messages";
 
-type ViewState = "loading" | "unauthenticated" | "authenticated" | "error";
+type ViewState =
+  | "loading"
+  | "unauthenticated"
+  | "session-lost"
+  | "authenticated"
+  | "error";
 type PageAction = "tailor" | "cover-letter" | "import";
 
 interface PageStatus {
@@ -54,12 +59,15 @@ export default function App() {
     try {
       const response = await sendMessage(Messages.getAuthStatus());
       if (response.success && response.data) {
-        const { isAuthenticated } = response.data as {
+        const { isAuthenticated, sessionLost } = response.data as {
           isAuthenticated: boolean;
+          sessionLost?: boolean;
         };
         if (isAuthenticated) {
           setViewState("authenticated");
           loadProfile();
+        } else if (sessionLost) {
+          setViewState("session-lost");
         } else {
           setViewState("unauthenticated");
         }
@@ -268,6 +276,27 @@ export default function App() {
             Connect account
           </button>
           <p className="hero-foot">You'll sign in once — Slothing remembers.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (viewState === "session-lost") {
+    return (
+      <div className="popup">
+        <div className="hero session-lost">
+          <div className="hero-mark warn" aria-hidden>
+            !
+          </div>
+          <h1 className="hero-title">Session lost</h1>
+          <p className="hero-sub">
+            Slothing got reset by your browser. Reconnect to pick up where you
+            left off — your profile and data are safe.
+          </p>
+          <button className="btn primary block" onClick={handleConnect}>
+            Reconnect
+          </button>
+          <p className="hero-foot">Takes about five seconds.</p>
         </div>
       </div>
     );

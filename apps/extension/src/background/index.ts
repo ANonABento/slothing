@@ -11,10 +11,12 @@ import {
   getStorage,
   setAuthToken,
   clearAuthToken,
+  forgetAuthHistory,
   getCachedProfile,
   setCachedProfile,
   getApiBaseUrl,
   getSettings,
+  isSessionLost,
 } from "./storage";
 import { setBadgeForTab, clearBadgeForTab } from "./badge";
 
@@ -178,15 +180,20 @@ async function handleGetAuthStatus(): Promise<ExtensionResponse> {
     const client = await getAPIClient();
     const isAuthenticated = await client.isAuthenticated();
     const apiBaseUrl = await getApiBaseUrl();
+    const storage = await getStorage();
+    const sessionLost = !isAuthenticated && isSessionLost(storage);
 
     return {
       success: true,
-      data: { isAuthenticated, apiBaseUrl },
+      data: { isAuthenticated, apiBaseUrl, sessionLost },
     };
   } catch (error) {
+    const apiBaseUrl = await getApiBaseUrl();
+    const storage = await getStorage().catch(() => null);
+    const sessionLost = storage ? isSessionLost(storage) : false;
     return {
       success: true,
-      data: { isAuthenticated: false, apiBaseUrl: await getApiBaseUrl() },
+      data: { isAuthenticated: false, apiBaseUrl, sessionLost },
     };
   }
 }
@@ -210,6 +217,9 @@ async function handleOpenAuth(): Promise<ExtensionResponse> {
 async function handleLogout(): Promise<ExtensionResponse> {
   try {
     await clearAuthToken();
+    // Explicit logout — also drop the "we've seen you before" breadcrumb so
+    // the popup doesn't fall into the #27 "session lost" branch.
+    await forgetAuthHistory();
     resetAPIClient();
     return { success: true };
   } catch (error) {

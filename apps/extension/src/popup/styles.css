@@ -516,6 +516,10 @@ body {
   margin-bottom: 4px;
 }
 
+.hero-mark.warn {
+  background: linear-gradient(135deg, var(--warn), var(--rose));
+}
+
 .hero-title {
   font-weight: 700;
   font-size: 22px;

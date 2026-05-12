@@ -8,7 +8,7 @@ import type {
   TrackedApplicationPayload,
 } from "@/shared/types";
 import { createOpportunitySchema } from "@slothing/shared/schemas";
-import { getStorage, setStorage } from "./storage";
+import { getStorage, markAuthSeen, setStorage } from "./storage";
 
 export class ColumbusAPIClient {
   private baseUrl: string;
@@ -73,6 +73,10 @@ export class ColumbusAPIClient {
 
     try {
       await this.authenticatedFetch("/api/extension/auth/verify");
+      // Record the working-auth breadcrumb so the popup can distinguish a
+      // true logout from a service-worker state-loss after this point.
+      // See #27.
+      await markAuthSeen();
       return true;
     } catch {
       return false;
