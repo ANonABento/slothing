@@ -26,6 +26,9 @@
     "http://127.0.0.1:3000/*",
     "http://127.0.0.1:3001/*"
   ],
+  "optional_permissions": [
+    "webNavigation"
+  ],
   "background": {
     "scripts": ["background.js"],
     "type": "module"

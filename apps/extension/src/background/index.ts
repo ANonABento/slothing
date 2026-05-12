@@ -24,6 +24,11 @@ import {
   clearSessionAuthCache,
 } from "./storage";
 import { setBadgeForTab, clearBadgeForTab } from "./badge";
+import {
+  clearSession,
+  listSessions,
+  purgeExpiredSessions,
+} from "@/content/multistep/session";
 
 // Handle messages from content scripts and popup
 chrome.runtime.onMessage.addListener(
@@ -112,6 +117,16 @@ async function handleMessage(
 
     case "SAVE_CORRECTION":
       return handleSaveCorrection(message.payload as SaveCorrectionPayload);
+
+    // P3 / #36 #37 — multi-step support.
+    case "GET_TAB_ID":
+      return { success: true, data: { tabId: sender.tab?.id ?? null } };
+
+    case "HAS_WEBNAVIGATION_PERMISSION":
+      return handleHasWebNavigationPermission();
+
+    case "REQUEST_WEBNAVIGATION_PERMISSION":
+      return handleRequestWebNavigationPermission();
 
     case "JOB_DETECTED": {
       const tabId = sender.tab?.id;
@@ -487,6 +502,141 @@ async function handleSaveCorrection(
     return { success: false, error: (error as Error).message };
   }
 }
+
+// ----- Multi-step (P3 / #36 #37) ------------------------------------------
+
+/**
+ * Returns whether the `webNavigation` permission is granted right now.
+ * In Chrome MV3 this is always true because the permission is in the
+ * required `permissions` array. In Firefox MV2 it's in `optional_permissions`
+ * and the user may not have approved it yet.
+ */
+async function handleHasWebNavigationPermission(): Promise<ExtensionResponse> {
+  try {
+    // chrome.permissions exists in both MV2 (via the polyfill) and MV3.
+    const granted = await new Promise<boolean>((resolve) => {
+      try {
+        chrome.permissions.contains(
+          { permissions: ["webNavigation"] },
+          (has: boolean) => resolve(!!has),
+        );
+      } catch {
+        resolve(false);
+      }
+    });
+    return { success: true, data: { granted } };
+  } catch (error) {
+    return { success: false, error: (error as Error).message };
+  }
+}
+
+/**
+ * Ask the browser to request `webNavigation`. In Chrome MV3 the permission
+ * is required at install time so this resolves instantly with true. In
+ * Firefox MV2 the browser shows a permission prompt and the resolved value
+ * reflects the user's verdict — a "No" leaves us on the prompted-toast
+ * fallback path, which is exactly what we want.
+ *
+ * Important: `chrome.permissions.request` must be called from a user-gesture
+ * context. The Firefox background can do this if invoked from a content-
+ * script message handler that fired inside a button click; if Firefox
+ * rejects with "may only be called from a user input handler" the
+ * controller catches the failure and continues with the fallback path.
+ */
+async function handleRequestWebNavigationPermission(): Promise<ExtensionResponse> {
+  try {
+    const granted = await new Promise<boolean>((resolve) => {
+      try {
+        chrome.permissions.request(
+          { permissions: ["webNavigation"] },
+          (has: boolean) => resolve(!!has),
+        );
+      } catch {
+        resolve(false);
+      }
+    });
+    if (granted) {
+      attachWebNavigationListener();
+    }
+    return { success: true, data: { granted } };
+  } catch (error) {
+    return { success: false, error: (error as Error).message };
+  }
+}
+
+let webNavigationListenerAttached = false;
+
+/**
+ * Subscribe to `webNavigation.onHistoryStateUpdated`. Multi-step ATSes drive
+ * step transitions via `history.pushState`, so this is the right event to
+ * watch — `onCompleted` only fires for full document loads.
+ *
+ * Idempotent: safe to call after every install/update and after every
+ * permission grant. Wrapped in try/catch because the API may not be
+ * available in MV2 until the user grants the optional permission.
+ */
+function attachWebNavigationListener(): void {
+  if (webNavigationListenerAttached) return;
+  try {
+    if (
+      typeof chrome.webNavigation === "undefined" ||
+      !chrome.webNavigation.onHistoryStateUpdated
+    ) {
+      return;
+    }
+    chrome.webNavigation.onHistoryStateUpdated.addListener(
+      (details) => {
+        if (details.frameId !== 0 && details.frameId !== undefined) {
+          // We only care about the top frame here. Iframed Greenhouse is
+          // handled by the per-provider MutationObserver inside the content
+          // script.
+          return;
+        }
+        void notifyTabOfStepTransition(details.tabId, details.url);
+      },
+    );
+    webNavigationListenerAttached = true;
+  } catch (err) {
+    console.warn("[Columbus] webNavigation listener attach failed:", err);
+  }
+}
+
+async function notifyTabOfStepTransition(
+  tabId: number,
+  url: string,
+): Promise<void> {
+  // Only fire when the tab has an in-progress multi-step session — keeps
+  // us from spamming every tab on every history event.
+  const sessions = await listSessions();
+  if (!sessions.some((s) => s.tabId === tabId)) return;
+  try {
+    await chrome.tabs.sendMessage(tabId, {
+      type: "MULTISTEP_STEP_TRANSITION",
+      payload: { url, transitionType: "webNavigation" },
+    });
+  } catch {
+    // Tab might be closed or the content script might not be loaded yet —
+    // both are non-fatal.
+  }
+}
+
+// Try to attach on startup. If the permission isn't granted yet (Firefox
+// first run) this is a no-op; the listener attaches lazily when the user
+// approves via `handleRequestWebNavigationPermission`.
+attachWebNavigationListener();
+
+// Clear the in-flight session when its tab closes. webNavigation's
+// `onHistoryStateUpdated` also fires for back/forward inside the same tab;
+// we deliberately keep the session in that case so the user doesn't lose
+// state by accidentally hitting Back.
+chrome.tabs.onRemoved.addListener((tabId) => {
+  void clearSession(tabId);
+});
+
+// Sweep stale sessions on service-worker startup. Not strictly necessary —
+// `getSession` already evicts expired entries on read — but it keeps the
+// storage area small after a crash.
+void purgeExpiredSessions();
 
 // Handle auth callback from Columbus web app
 chrome.runtime.onMessageExternal.addListener(
