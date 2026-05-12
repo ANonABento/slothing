@@ -192,6 +192,13 @@ export interface ExtensionStorage {
   apiBaseUrl: string;
   cachedProfile?: ExtensionProfile;
   profileCachedAt?: string;
+  /**
+   * ISO timestamp of the most recent time we observed a working auth state
+   * (either via setAuthToken or a successful isAuthenticated() call).
+   * Used by the popup to distinguish a real logout from a service-worker
+   * state-loss event (e.g. after extension auto-update). See #27.
+   */
+  lastSeenAuthAt?: string;
   settings: ExtensionSettings;
 }
 
