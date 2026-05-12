@@ -21,6 +21,7 @@ import { showAppliedToast } from "./tracking/applied-toast";
 import { SubmitWatcher, extractCompanyHint } from "./tracking/submit-watcher";
 import { JobPageSidebarController } from "./sidebar/controller";
 import { CorrectionsTracker } from "./corrections-tracker";
+import { tryCaptureLinkedInJob } from "./scrapers/linkedin-passive-capture";
 import {
   mountAnswerBankButton,
   shouldDecorateTextarea,
@@ -108,6 +109,20 @@ async function scanPage() {
           ).catch((err) =>
             console.error("[Columbus] Failed to notify job detected:", err),
           );
+
+          // P3/#38 — passive LinkedIn capture. Only runs on detail pages the
+          // user navigated to themselves; the scraper already enforces this
+          // because `sourceJobId` is only populated when the URL matches the
+          // `/jobs/view/:id` pattern. Failures here are fire-and-forget so a
+          // capture hiccup never blocks the visible scrape/sidebar UX.
+          if (nextScrapedJob.source === "linkedin") {
+            void tryCaptureLinkedInJob(nextScrapedJob, {
+              sendMessage,
+              buildImportMessage: Messages.importJob,
+            }).catch((err) =>
+              console.warn("[Columbus] LinkedIn passive capture failed:", err),
+            );
+          }
         }
       }
     } catch (err) {
