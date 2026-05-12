@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
+import { useLocale } from "next-intl";
 import {
   CloudUpload,
   FileText,
@@ -130,6 +131,7 @@ export function UploadOverlay({
   onComplete,
   onUploadStart,
 }: UploadOverlayProps) {
+  const locale = useLocale();
   const [step, setStep] = useState<OverlayStep>("idle");
   const [dragCount, setDragCount] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -503,7 +505,7 @@ export function UploadOverlay({
             <DialogTitle>Replace existing upload?</DialogTitle>
             <DialogDescription>
               {uploadConflict
-                ? `Looks like you uploaded "${uploadConflict.existing.filename}" on ${formatExistingUploadDate(getExistingUploadTimestamp(uploadConflict.existing))}. Replace it, or cancel?`
+                ? `Looks like you uploaded "${uploadConflict.existing.filename}" on ${formatExistingUploadDate(getExistingUploadTimestamp(uploadConflict.existing), locale)}. Replace it, or cancel?`
                 : ""}
             </DialogDescription>
           </DialogHeader>

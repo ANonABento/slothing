@@ -1,4 +1,4 @@
-import { parseToDate } from "@/lib/format/time";
+import { DEFAULT_LOCALE, parseToDate } from "@/lib/format/time";
 import {
   CLOSED_SUB_STATUSES,
   DEFAULT_KANBAN_VISIBLE_LANES,
@@ -544,11 +544,14 @@ export function formatOpportunityLocation(opportunity: Opportunity): string {
     : "Location TBD";
 }
 
-export function formatOpportunitySalary(opportunity: Opportunity): string {
+export function formatOpportunitySalary(
+  opportunity: Opportunity,
+  locale = DEFAULT_LOCALE,
+): string {
   if (opportunity.salaryMin == null && opportunity.salaryMax == null)
     return "Compensation TBD";
 
-  const formatter = getCurrencyFormatter(opportunity.salaryCurrency);
+  const formatter = getCurrencyFormatter(opportunity.salaryCurrency, locale);
 
   if (opportunity.salaryMin != null && opportunity.salaryMax != null) {
     return `${formatter.format(opportunity.salaryMin)} - ${formatter.format(opportunity.salaryMax)}`;
@@ -559,11 +562,14 @@ export function formatOpportunitySalary(opportunity: Opportunity): string {
   return `Up to ${formatter.format(opportunity.salaryMax ?? 0)}`;
 }
 
-export function formatOpportunityDate(value: string): string {
+export function formatOpportunityDate(
+  value: string,
+  locale = DEFAULT_LOCALE,
+): string {
   const parsedDate = parseDateOnly(value) ?? parseGenericDate(value);
   if (!parsedDate) return "Invalid date";
 
-  return new Intl.DateTimeFormat("en-US", {
+  return new Intl.DateTimeFormat(locale, {
     month: "short",
     day: "numeric",
     year: "numeric",
@@ -718,17 +724,20 @@ function capitalize(value: string): string {
   return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
-function getCurrencyFormatter(currencyValue?: string): Intl.NumberFormat {
+function getCurrencyFormatter(
+  currencyValue?: string,
+  locale = DEFAULT_LOCALE,
+): Intl.NumberFormat {
   const currency = currencyValue?.trim().toUpperCase() || "USD";
 
   try {
-    return new Intl.NumberFormat("en-US", {
+    return new Intl.NumberFormat(locale, {
       style: "currency",
       currency,
       maximumFractionDigits: 0,
     });
   } catch {
-    return new Intl.NumberFormat("en-US", {
+    return new Intl.NumberFormat(locale, {
       style: "currency",
       currency: "USD",
       maximumFractionDigits: 0,

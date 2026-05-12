@@ -1,6 +1,11 @@
 import type { JobDescription } from "@/types";
 
-import { nowDate, parseToDate, toEpoch } from "@/lib/format/time";
+import {
+  DEFAULT_LOCALE,
+  nowDate,
+  parseToDate,
+  toEpoch,
+} from "@/lib/format/time";
 export type TimeRange = "7d" | "30d" | "90d" | "1y" | "all";
 
 export interface DataPoint {
@@ -68,18 +73,22 @@ function getDateRange(range: TimeRange): { start: Date; end: Date } {
   return { start, end };
 }
 
-function formatDateKey(date: Date, range: TimeRange): string {
+function formatDateKey(
+  date: Date,
+  range: TimeRange,
+  locale = DEFAULT_LOCALE,
+): string {
   if (range === "7d") {
-    return date.toLocaleDateString("en-US", {
+    return date.toLocaleDateString(locale, {
       weekday: "short",
       month: "short",
       day: "numeric",
     });
   }
   if (range === "30d") {
-    return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+    return date.toLocaleDateString(locale, { month: "short", day: "numeric" });
   }
-  return date.toLocaleDateString("en-US", { month: "short", year: "2-digit" });
+  return date.toLocaleDateString(locale, { month: "short", year: "2-digit" });
 }
 
 function getDateKey(date: Date, range: TimeRange): string {
@@ -97,7 +106,10 @@ function getDateKey(date: Date, range: TimeRange): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 }
 
-function generateDateBuckets(range: TimeRange): Map<string, DataPoint> {
+function generateDateBuckets(
+  range: TimeRange,
+  locale = DEFAULT_LOCALE,
+): Map<string, DataPoint> {
   const { start, end } = getDateRange(range);
   const buckets = new Map<string, DataPoint>();
   const current = parseToDate(start)!;
@@ -108,7 +120,7 @@ function generateDateBuckets(range: TimeRange): Map<string, DataPoint> {
       buckets.set(key, {
         date: key,
         value: 0,
-        label: formatDateKey(current, range),
+        label: formatDateKey(current, range, locale),
       });
     }
 
@@ -127,6 +139,7 @@ function generateDateBuckets(range: TimeRange): Map<string, DataPoint> {
 export function generateTimeSeriesData(
   jobs: JobDescription[],
   range: TimeRange,
+  locale = DEFAULT_LOCALE,
 ): TimeSeriesData {
   const { start, end } = getDateRange(range);
 
@@ -138,10 +151,10 @@ export function generateTimeSeriesData(
   });
 
   // Initialize buckets
-  const applicationBuckets = generateDateBuckets(range);
-  const responseBuckets = generateDateBuckets(range);
-  const interviewBuckets = generateDateBuckets(range);
-  const offerBuckets = generateDateBuckets(range);
+  const applicationBuckets = generateDateBuckets(range, locale);
+  const responseBuckets = generateDateBuckets(range, locale);
+  const interviewBuckets = generateDateBuckets(range, locale);
+  const offerBuckets = generateDateBuckets(range, locale);
 
   // Populate application data
   filteredJobs.forEach((job) => {

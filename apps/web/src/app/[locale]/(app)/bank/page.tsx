@@ -13,6 +13,7 @@ import {
   type ReactNode,
 } from "react";
 import dynamic from "next/dynamic";
+import { useLocale } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -266,6 +267,7 @@ function buildChildContentForParent(
 }
 
 export default function BankPage() {
+  const locale = useLocale();
   const [entries, setEntries] = useState<BankEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -1331,7 +1333,7 @@ export default function BankPage() {
               <DialogTitle>Replace existing upload?</DialogTitle>
               <DialogDescription>
                 {uploadConflict
-                  ? `Looks like you uploaded "${uploadConflict.existing.filename}" on ${formatExistingUploadDate(getExistingUploadTimestamp(uploadConflict.existing))}. Replace it, or cancel?`
+                  ? `Looks like you uploaded "${uploadConflict.existing.filename}" on ${formatExistingUploadDate(getExistingUploadTimestamp(uploadConflict.existing), locale)}. Replace it, or cancel?`
                   : ""}
               </DialogDescription>
             </DialogHeader>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
+import { useLocale } from "next-intl";
 import { useDropzone } from "react-dropzone";
 import { pluralize } from "@/lib/text/pluralize";
 import {
@@ -73,6 +74,7 @@ export function Dropzone({
     "text/plain": [".txt"],
   },
 }: DropzoneProps) {
+  const locale = useLocale();
   const [files, setFiles] = useState<UploadedFile[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadConflict, setUploadConflict] =
@@ -223,7 +225,7 @@ export function Dropzone({
             <DialogTitle>Replace existing upload?</DialogTitle>
             <DialogDescription>
               {uploadConflict
-                ? `Looks like you uploaded "${uploadConflict.existing.filename}" on ${formatExistingUploadDate(getExistingUploadTimestamp(uploadConflict.existing))}. Replace it, or cancel?`
+                ? `Looks like you uploaded "${uploadConflict.existing.filename}" on ${formatExistingUploadDate(getExistingUploadTimestamp(uploadConflict.existing), locale)}. Replace it, or cancel?`
                 : ""}
             </DialogDescription>
           </DialogHeader>

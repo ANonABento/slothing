@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import { useCallback, useEffect, useState } from "react";
+import { useFormatter } from "next-intl";
 import {
   BarChart3,
   Building2,
@@ -280,6 +281,9 @@ function GithubSection({
 }: {
   result: SourceResult<GithubData> | null;
 }) {
+  const format = useFormatter();
+  const formatNumber = (value: number) => format.number(value);
+
   if (!result?.ok) return <EmptySource result={result} />;
   const data = result.data;
   return (
@@ -467,8 +471,4 @@ function ExternalLinkText({
       <ExternalLink className="h-3.5 w-3.5" />
     </a>
   );
-}
-
-function formatNumber(value: number): string {
-  return new Intl.NumberFormat("en-US").format(value);
 }

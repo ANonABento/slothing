@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useLocale } from "next-intl";
 import { cn } from "@/lib/utils";
 import { TimeAgo } from "@/components/format/time-ago";
 import {
@@ -223,6 +224,7 @@ function ActivityTimelineItem({ event }: { event: ActivityEvent }) {
 }
 
 export function TrendCharts({ initialRange = "30d" }: TrendChartsProps) {
+  const locale = useLocale();
   const [range, setRange] = useState<TimeRange>(initialRange);
   const [data, setData] = useState<TrendData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -232,7 +234,8 @@ export function TrendCharts({ initialRange = "30d" }: TrendChartsProps) {
     async function fetchTrends() {
       try {
         setLoading(true);
-        const res = await fetch(`/api/analytics/trends?range=${range}`);
+        const params = new URLSearchParams({ range, locale });
+        const res = await fetch(`/api/analytics/trends?${params.toString()}`);
         const result = await res.json();
 
         if (!res.ok) {
@@ -248,7 +251,7 @@ export function TrendCharts({ initialRange = "30d" }: TrendChartsProps) {
     }
 
     fetchTrends();
-  }, [range]);
+  }, [range, locale]);
 
   if (loading && !data) {
     return (
