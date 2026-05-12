@@ -1,6 +1,7 @@
 // Columbus API client for extension
 
 import type {
+  AnswerBankMatch,
   ExtensionProfile,
   ExtensionResumeSummary,
   ScrapedJob,
@@ -318,6 +319,20 @@ export class ColumbusAPIClient {
       method: "POST",
       body: JSON.stringify({ question }),
     });
+    return response.results;
+  }
+
+  // P2/#35 — inline answer-bank search on long textareas.
+  // Calls /api/answer-bank/match with `q` and optional `limit` (defaults to 5
+  // server-side, capped). Used by the floating bulb popover decorator.
+  async matchAnswerBank(q: string, limit?: number): Promise<AnswerBankMatch[]> {
+    const params = new URLSearchParams({ q });
+    if (typeof limit === "number" && Number.isFinite(limit)) {
+      params.set("limit", String(limit));
+    }
+    const response = await this.authenticatedFetch<{
+      results: AnswerBankMatch[];
+    }>(`/api/answer-bank/match?${params.toString()}`);
     return response.results;
   }
 

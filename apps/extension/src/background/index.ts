@@ -99,6 +99,11 @@ async function handleMessage(
     case "SEARCH_ANSWERS":
       return handleSearchAnswers(message.payload as string);
 
+    case "MATCH_ANSWER_BANK":
+      return handleMatchAnswerBank(
+        message.payload as { q: string; limit?: number },
+      );
+
     case "GET_LEARNED_ANSWERS":
       return handleGetLearnedAnswers();
 
@@ -429,6 +434,22 @@ async function handleSearchAnswers(
   try {
     const client = await getAPIClient();
     const results = await client.searchSimilarAnswers(question);
+    return { success: true, data: results };
+  } catch (error) {
+    return { success: false, error: (error as Error).message };
+  }
+}
+
+async function handleMatchAnswerBank(payload: {
+  q: string;
+  limit?: number;
+}): Promise<ExtensionResponse> {
+  try {
+    if (!payload?.q?.trim()) {
+      return { success: false, error: "Question is required" };
+    }
+    const client = await getAPIClient();
+    const results = await client.matchAnswerBank(payload.q, payload.limit);
     return { success: true, data: results };
   } catch (error) {
     return { success: false, error: (error as Error).message };
