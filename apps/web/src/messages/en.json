@@ -81,6 +81,7 @@
       "unavailable": "Dashboard unavailable",
       "signInRequired": "Sign in required",
       "loadData": "We couldn't load your dashboard data.",
+      "loadSection": "Couldn't load this section",
       "skipTitle": "Could not skip setup",
       "skipFallback": "Please try again."
     },
@@ -92,7 +93,7 @@
     },
     "onboarding": {
       "startHere": "Start here",
-      "title": "Build your workspace in three steps",
+      "title": "Set up your workspace",
       "description": "Slothing works best once it has your resume, a target role, and a place to draft tailored documents.",
       "complete": "of {total} complete",
       "unlocks": "What unlocks next",
@@ -153,6 +154,23 @@
             "2": {
               "title": "Pipeline clarity",
               "description": "Watch saved, applied, and interviewing roles move."
+            }
+          }
+        },
+        "install-extension": {
+          "intro": "Once the extension is installed, you can capture roles from job boards directly into Slothing without manual entry.",
+          "items": {
+            "0": {
+              "title": "One-click role capture",
+              "description": "Save job listings from LinkedIn, Indeed, and more without leaving the page."
+            },
+            "1": {
+              "title": "Automatic pre-fill",
+              "description": "Role details are scraped so you skip copying job descriptions by hand."
+            },
+            "2": {
+              "title": "Triage queue",
+              "description": "New roles land in the review queue for a quick accept or dismiss."
             }
           }
         },
@@ -927,6 +945,7 @@
     "reviewQueueDisabled": "Review queue disabled",
     "openOpportunities": "Open opportunities",
     "navigation": "Navigation",
+    "mobileNavigation": "Mobile navigation",
     "pageActions": "Page Actions",
     "general": "General",
     "dataManagement": "Data Management",
@@ -1269,5 +1288,12 @@
         "social-url": "Add a LinkedIn or GitHub URL"
       }
     }
+  },
+  "streak": {
+    "badgeLabel": "Daily rhythm",
+    "dayUnit": "{count, plural, one {day} other {days}}",
+    "activeMessage": "One meaningful action today keeps the system moving.",
+    "startMessage": "Start your streak today with one saved opportunity, application, or tailored document.",
+    "bestStreak": "Best streak"
   }
 }

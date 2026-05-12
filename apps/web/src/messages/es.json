@@ -88,7 +88,8 @@
       "signInRequired": "Se requiere iniciar sesión",
       "loadData": "No pudimos cargar los datos de tu panel.",
       "skipTitle": "No se pudo omitir la configuración",
-      "skipFallback": "Inténtalo de nuevo."
+      "skipFallback": "Inténtalo de nuevo.",
+      "loadSection": "No se pudo cargar esta sección"
     },
     "greeting": {
       "onboardingNamed": "Bienvenido, {name}. Configuremos tu espacio de trabajo.",
@@ -176,6 +177,23 @@
             "2": {
               "title": "Señales de preparación",
               "description": "Sabe qué está pulido y qué aún necesita trabajo."
+            }
+          }
+        },
+        "install-extension": {
+          "intro": "Una vez instalada la extensión, puedes capturar puestos desde bolsas de trabajo directamente en Slothing sin ingreso manual.",
+          "items": {
+            "0": {
+              "title": "Captura de puestos con un clic",
+              "description": "Guarda ofertas de LinkedIn, Indeed y más sin salir de la página."
+            },
+            "1": {
+              "title": "Completado automático",
+              "description": "Los detalles del puesto se extraen para que no copies descripciones a mano."
+            },
+            "2": {
+              "title": "Cola de revisión",
+              "description": "Los nuevos puestos llegan a la cola de revisión para aceptar o descartar rápidamente."
             }
           }
         }
@@ -933,6 +951,7 @@
     "reviewQueueDisabled": "Cola de revisión inhabilitada",
     "openOpportunities": "Oportunidades abiertas",
     "navigation": "Navegación",
+    "mobileNavigation": "Navegación móvil",
     "pageActions": "Acciones de página",
     "general": "General",
     "dataManagement": "Gestión de datos",
@@ -1275,5 +1294,12 @@
         "social-url": "Añade una URL de LinkedIn o GitHub"
       }
     }
+  },
+  "streak": {
+    "badgeLabel": "Ritmo diario",
+    "dayUnit": "{count, plural, one {día} other {días}}",
+    "activeMessage": "Una acción significativa hoy mantiene el sistema en marcha.",
+    "startMessage": "Empieza tu racha hoy con una oportunidad guardada, una solicitud o un documento personalizado.",
+    "bestStreak": "Mejor racha"
   }
 }
