@@ -68,6 +68,26 @@ export default function PrivacyPage() {
               by law, to protect rights and safety, or as part of a corporate
               transaction.
             </p>
+            <p className="mt-4">
+              <strong>Google sign-in scopes.</strong> When you sign in with
+              Google, Slothing currently requests the following scopes together
+              so connected workflows are ready when you need them: basic
+              account profile and email, Google Calendar, Drive (files created
+              by the app), Gmail read and send, and read-only Contacts. You
+              will be shown these scopes by Google before you grant access, and
+              you can revoke them at any time from your Google Account
+              permissions page. Slothing only calls these APIs in response to
+              features you trigger, and does not background-scan your inbox or
+              files outside of features you explicitly use.
+            </p>
+            <p className="mt-4">
+              <strong>Browser extension.</strong> The Columbus browser
+              extension requests only the permissions needed to read job pages
+              you visit on supported job sites and to keep your connection
+              token in extension storage. It does not request Gmail, Calendar,
+              Drive, or Contacts permissions — those workflows run in the
+              Slothing web app under your Google sign-in instead.
+            </p>
           </section>
 
           <section>

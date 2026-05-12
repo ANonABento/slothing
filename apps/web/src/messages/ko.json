@@ -88,7 +88,8 @@
       "signInRequired": "로그인이 필요합니다",
       "loadData": "대시보드 데이터를 불러올 수 없습니다.",
       "skipTitle": "설정을 건너뛸 수 없습니다",
-      "skipFallback": "다시 시도해 주세요."
+      "skipFallback": "다시 시도해 주세요.",
+      "loadSection": "이 섹션을 불러올 수 없습니다"
     },
     "greeting": {
       "onboardingNamed": "환영합니다, {name}님. 워크스페이스를 설정해 봅시다.",
@@ -176,6 +177,23 @@
             "2": {
               "title": "준비 상태 신호",
               "description": "무엇이 다듬어졌고 무엇이 더 필요한지 확인하세요."
+            }
+          }
+        },
+        "install-extension": {
+          "intro": "확장 프로그램이 설치되면 채용 게시판에서 직접 Slothing으로 수동 입력 없이 채용 정보를 가져올 수 있습니다.",
+          "items": {
+            "0": {
+              "title": "한 번 클릭으로 채용 저장",
+              "description": "페이지를 벗어나지 않고 LinkedIn, Indeed 등에서 채용 공고를 저장하세요."
+            },
+            "1": {
+              "title": "자동 미리 채우기",
+              "description": "채용 세부 정보가 자동으로 수집되어 채용 설명을 직접 복사할 필요가 없습니다."
+            },
+            "2": {
+              "title": "분류 대기열",
+              "description": "새 채용 정보가 검토 대기열에 추가되어 빠르게 수락하거나 거부할 수 있습니다."
             }
           }
         }
@@ -933,6 +951,7 @@
     "reviewQueueDisabled": "검토 대기열이 비활성화되었습니다.",
     "openOpportunities": "열린 기회",
     "navigation": "항해",
+    "mobileNavigation": "모바일 탐색",
     "pageActions": "페이지 작업",
     "general": "일반적인",
     "dataManagement": "데이터 관리",
@@ -1275,5 +1294,12 @@
         "social-url": "LinkedIn 또는 GitHub URL 추가"
       }
     }
+  },
+  "streak": {
+    "badgeLabel": "일일 리듬",
+    "dayUnit": "{count, plural, other {일}}",
+    "activeMessage": "오늘 의미 있는 한 가지 행동이 시스템을 움직이게 합니다.",
+    "startMessage": "저장된 기회, 지원서 또는 맞춤 문서로 오늘 연속 기록을 시작하세요.",
+    "bestStreak": "최고 연속 기록"
   }
 }
