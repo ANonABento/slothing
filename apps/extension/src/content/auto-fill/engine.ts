@@ -15,6 +15,16 @@ export interface FillResult {
   }>;
 }
 
+/**
+ * Optional per-field callback fired when a field has been filled successfully.
+ * Used by the corrections tracker (#33) to register the original suggestion
+ * so later edits can be diff'd against it.
+ */
+export type OnFilledCallback = (info: {
+  field: DetectedField;
+  value: string;
+}) => void;
+
 export class AutoFillEngine {
   private detector: FieldDetector;
   private mapper: FieldMapper;
@@ -24,7 +34,10 @@ export class AutoFillEngine {
     this.mapper = mapper;
   }
 
-  async fillForm(fields: DetectedField[]): Promise<FillResult> {
+  async fillForm(
+    fields: DetectedField[],
+    options: { onFilled?: OnFilledCallback } = {},
+  ): Promise<FillResult> {
     const result: FillResult = {
       filled: 0,
       skipped: 0,
@@ -53,6 +66,11 @@ export class AutoFillEngine {
             fieldType: field.fieldType,
             filled: true,
           });
+          try {
+            options.onFilled?.({ field, value });
+          } catch (cbErr) {
+            console.error("[Columbus] onFilled callback failed:", cbErr);
+          }
         } else {
           result.skipped++;
           result.details.push({

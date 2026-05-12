@@ -173,7 +173,24 @@ export type MessageType =
   | "WW_SCRAPE_ALL_VISIBLE"
   | "WW_SCRAPE_ALL_PAGINATED"
   | "WW_BULK_PROGRESS"
-  | "AUTH_CALLBACK";
+  | "AUTH_CALLBACK"
+  | "SAVE_CORRECTION";
+
+/**
+ * Payload for the SAVE_CORRECTION message (#33). Sent by the content script's
+ * corrections tracker when a user edits a field we autofilled and the final
+ * value differs from the original suggestion. The background script forwards
+ * this to /api/extension/field-mappings/correct so the per-domain mapping
+ * grows stronger over time.
+ */
+export interface SaveCorrectionPayload {
+  domain: string;
+  fieldSignature: string;
+  fieldType: FieldType;
+  originalSuggestion: string;
+  userValue: string;
+  confidence?: number;
+}
 
 /**
  * Summary of a previously-generated tailored resume, surfaced by
