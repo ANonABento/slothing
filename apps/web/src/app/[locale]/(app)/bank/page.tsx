@@ -13,7 +13,7 @@ import {
   type ReactNode,
 } from "react";
 import dynamic from "next/dynamic";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -82,6 +82,7 @@ import {
   getBulletReviewReason,
   isBulletNeedsReview,
 } from "@/lib/bank/bullet-review";
+import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 
 const DriveFilePicker = dynamic(
   () => import("@/components/google").then((m) => m.DriveFilePicker),
@@ -268,6 +269,10 @@ function buildChildContentForParent(
 
 export default function BankPage() {
   const locale = useLocale();
+  const a11yT = useA11yTranslations();
+  const dialogsT = useTranslations("dialogs.bank.page");
+  const uploadT = useTranslations("dialogs.upload");
+  const commonT = useTranslations("common");
   const [entries, setEntries] = useState<BankEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -1330,7 +1335,7 @@ export default function BankPage() {
         >
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Replace existing upload?</DialogTitle>
+              <DialogTitle>{uploadT("replace.title")}</DialogTitle>
               <DialogDescription>
                 {uploadConflict
                   ? `Looks like you uploaded "${uploadConflict.existing.filename}" on ${formatExistingUploadDate(getExistingUploadTimestamp(uploadConflict.existing), locale)}. Replace it, or cancel?`
@@ -1339,10 +1344,10 @@ export default function BankPage() {
             </DialogHeader>
             <DialogFooter>
               <Button variant="outline" onClick={() => setUploadConflict(null)}>
-                Cancel
+                {commonT("cancel")}
               </Button>
               <Button onClick={replaceConflictingUpload} autoFocus>
-                Replace
+                {uploadT("actions.replace")}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -1358,11 +1363,14 @@ export default function BankPage() {
             <DialogHeader className="border-b px-6 py-5">
               <DialogTitle className="flex items-center gap-2">
                 <CheckCircle2 className="h-5 w-5 text-success" />
-                Review detected document components
+                {dialogsT("review.title")}
               </DialogTitle>
               <DialogDescription>
                 {uploadReview
-                  ? `${uploadReview.filename} was split into ${uploadReview.entries.length} editable components. Save corrections as you go.`
+                  ? dialogsT("review.description", {
+                      filename: uploadReview.filename,
+                      count: uploadReview.entries.length,
+                    })
                   : ""}
               </DialogDescription>
             </DialogHeader>
@@ -1383,9 +1391,11 @@ export default function BankPage() {
             </div>
             <DialogFooter className="border-t px-6 py-4">
               <Button variant="outline" onClick={() => setUploadReview(null)}>
-                Keep editing later
+                {dialogsT("review.keepEditing")}
               </Button>
-              <Button onClick={() => setUploadReview(null)}>Done</Button>
+              <Button onClick={() => setUploadReview(null)}>
+                {dialogsT("review.done")}
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -1393,11 +1403,11 @@ export default function BankPage() {
         <Dialog open={moveBulletsOpen} onOpenChange={setMoveBulletsOpen}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Move selected bullets</DialogTitle>
+              <DialogTitle>{dialogsT("moveBullets.title")}</DialogTitle>
               <DialogDescription>
-                Attach {selectedBulletCount} selected bullet
-                {selectedBulletCount === 1 ? "" : "s"} to an experience or
-                project.
+                {dialogsT("moveBullets.description", {
+                  count: selectedBulletCount,
+                })}
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-2">
@@ -1405,7 +1415,7 @@ export default function BankPage() {
                 htmlFor="move-bullets-target"
                 className="text-sm font-medium"
               >
-                Parent component
+                {dialogsT("moveBullets.parentComponent")}
               </label>
               <select
                 id="move-bullets-target"
@@ -1448,7 +1458,7 @@ export default function BankPage() {
 
         <PageHeader
           icon={Database}
-          title="Documents"
+          title={a11yT("documents")}
           description="Store reusable resumes, projects, achievements, and career notes for tailored applications."
           actions={
             <div className="flex flex-wrap gap-2">
@@ -1474,7 +1484,7 @@ export default function BankPage() {
               <Button
                 onClick={() => fileInputRef.current?.click()}
                 disabled={uploading}
-                title="Upload file (Ctrl+U)"
+                title={a11yT("uploadFile")}
               >
                 {uploading ? (
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -1602,7 +1612,7 @@ export default function BankPage() {
               <BankEntriesSkeleton />
             ) : error ? (
               <ErrorState
-                title="Failed to load documents"
+                title={a11yT("failedToLoadDocuments")}
                 message={error}
                 onRetry={fetchEntries}
                 variant="card"
@@ -1940,6 +1950,8 @@ function EntryTable({
   onDeselectEntries: (ids: string[]) => void;
   reviewEntries: BankEntry[];
 }) {
+  const a11yT = useA11yTranslations();
+
   // Future work: virtualize table rows separately from the document grid.
   const [expandedRowId, setExpandedRowId] = useState<string | null>(null);
   const sourceNames = new Map(
@@ -1965,7 +1977,10 @@ function EntryTable({
         >
           <thead className="border-b bg-muted/40 text-xs uppercase text-muted-foreground">
             <tr>
-              <th className="w-10 px-3 py-3 font-medium" aria-label="Expand" />
+              <th
+                className="w-10 px-3 py-3 font-medium"
+                aria-label={a11yT("expand")}
+              />
               <th className="w-12 px-4 py-3 font-medium">
                 <input
                   type="checkbox"
@@ -1979,7 +1994,7 @@ function EntryTable({
                     }
                   }}
                   className="h-4 w-4 rounded border-input accent-primary"
-                  aria-label="Select all visible components"
+                  aria-label={a11yT("selectAllVisibleComponents")}
                 />
               </th>
               <th className="px-4 py-3 font-medium">Component</th>
@@ -2146,6 +2161,8 @@ function UploadReviewEntries({
   ) => void;
   onAttachBullet: (bullet: BankEntry, parent: BankEntry) => void;
 }) {
+  const a11yT = useA11yTranslations();
+
   const roots = useMemo(() => entries.filter(isReviewRootEntry), [entries]);
   const needsReviewBullets = useMemo(
     () => entries.filter((entry) => isBulletNeedsReview(entry, entries)),
@@ -2230,7 +2247,7 @@ function UploadReviewEntries({
     return (
       <StandardEmptyState
         icon={Database}
-        title="No components detected"
+        title={a11yT("noComponentsDetected")}
         description="The file uploaded, but there were no structured resume components to review."
       />
     );
@@ -2445,7 +2462,7 @@ function UploadReviewEntries({
         ) : (
           <StandardEmptyState
             icon={Database}
-            title="No components left"
+            title={a11yT("noComponentsLeft")}
             description="All detected components have been removed from this upload review."
           />
         )}

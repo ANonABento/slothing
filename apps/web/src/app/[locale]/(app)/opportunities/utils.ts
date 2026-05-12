@@ -178,6 +178,58 @@ export const OPPORTUNITY_STATUS_OPTIONS: OpportunityOption<
   { value: "dismissed", label: "Dismissed" },
 ];
 
+const OPPORTUNITY_STATUS_VALUES = new Set<OpportunityStatus>(
+  OPPORTUNITY_STATUS_OPTIONS.filter(
+    (option): option is OpportunityOption<OpportunityStatus> =>
+      option.value !== "all",
+  ).map((option) => option.value),
+);
+
+export function parseOpportunityStatusSearchParam(
+  value: string | null | undefined,
+): OpportunityStatus[] {
+  if (!value) return [];
+
+  const statuses: OpportunityStatus[] = [];
+  const seenStatuses = new Set<OpportunityStatus>();
+
+  for (const rawStatus of value.split(",")) {
+    const normalizedStatus = normalizeOpportunityStatusSearchValue(rawStatus);
+    if (!normalizedStatus || seenStatuses.has(normalizedStatus)) continue;
+
+    statuses.push(normalizedStatus);
+    seenStatuses.add(normalizedStatus);
+  }
+
+  return statuses;
+}
+
+export function getOpportunityFiltersFromStatusSearchParam(
+  value: string | null | undefined,
+): OpportunityFilters {
+  const statuses = parseOpportunityStatusSearchParam(value);
+  return {
+    ...DEFAULT_OPPORTUNITY_FILTERS,
+    status: statuses.length === 1 ? statuses[0] : "all",
+  };
+}
+
+function normalizeOpportunityStatusSearchValue(
+  value: string,
+): OpportunityStatus | null {
+  const status = value.trim();
+  const normalizedStatus =
+    status === "offered"
+      ? "offer"
+      : status === "withdrawn"
+        ? "dismissed"
+        : status;
+
+  return OPPORTUNITY_STATUS_VALUES.has(normalizedStatus as OpportunityStatus)
+    ? (normalizedStatus as OpportunityStatus)
+    : null;
+}
+
 export const OPPORTUNITY_KANBAN_COLUMNS: readonly OpportunityOption<OpportunityStatus>[] =
   OPPORTUNITY_STATUS_OPTIONS.filter(
     (option): option is OpportunityOption<OpportunityStatus> =>
@@ -381,9 +433,16 @@ export const SAMPLE_OPPORTUNITIES: Opportunity[] = [
 export function filterOpportunities(
   opportunities: Opportunity[],
   filters: OpportunityFilters,
+  allowedStatuses: readonly OpportunityStatus[] = [],
 ): Opportunity[] {
+  const allowedStatusSet =
+    allowedStatuses.length > 0 ? new Set(allowedStatuses) : null;
   return [...opportunities]
-    .filter((opportunity) => matchesOpportunityFilters(opportunity, filters))
+    .filter(
+      (opportunity) =>
+        (!allowedStatusSet || allowedStatusSet.has(opportunity.status)) &&
+        matchesOpportunityFilters(opportunity, filters),
+    )
     .sort((a, b) => sortOpportunities(a, b, filters.sortBy));
 }
 

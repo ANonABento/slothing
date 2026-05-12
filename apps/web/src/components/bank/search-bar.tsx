@@ -6,6 +6,7 @@ import { BANK_CATEGORIES, type BankCategory } from "@/types";
 import { Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { THEME_CONTROL_CLASSES } from "@/lib/theme/component-classes";
+import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 
 const CATEGORY_LABELS: Record<BankCategory, string> = {
   experience: "Experience",
@@ -60,6 +61,8 @@ export const SearchBar = forwardRef<HTMLInputElement, SearchBarProps>(
     },
     ref,
   ) {
+    const a11yT = useA11yTranslations();
+
     const totalCount = Object.values(counts).reduce((a, b) => a + b, 0);
 
     return (
@@ -70,18 +73,18 @@ export const SearchBar = forwardRef<HTMLInputElement, SearchBarProps>(
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               ref={ref}
-              aria-label="Search your career profile"
-              placeholder="Search your career profile..."
+              aria-label={a11yT("searchYourCareerProfile")}
+              placeholder={a11yT("searchYourCareerProfile2")}
               value={query}
               onChange={(e) => onQueryChange(e.target.value)}
               className="pl-10 pr-12"
-              title="Press / to focus"
+              title={a11yT("pressToFocus")}
             />
             {query && (
               <button
                 onClick={() => onQueryChange("")}
                 className="absolute right-0 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center text-muted-foreground hover:text-foreground"
-                aria-label="Clear search"
+                aria-label={a11yT("clearSearch")}
               >
                 <X className="h-4 w-4" />
               </button>
@@ -91,7 +94,7 @@ export const SearchBar = forwardRef<HTMLInputElement, SearchBarProps>(
             value={sortBy}
             onChange={(e) => onSortChange(e.target.value as SortOption)}
             className={cn(THEME_CONTROL_CLASSES, "px-3 py-2 text-sm lg:w-36")}
-            aria-label="Sort order"
+            aria-label={a11yT("sortOrder")}
           >
             <option value="date">Newest</option>
             <option value="confidence">Confidence</option>
@@ -105,7 +108,7 @@ export const SearchBar = forwardRef<HTMLInputElement, SearchBarProps>(
         <div
           className="flex flex-wrap gap-2"
           role="tablist"
-          aria-label="Filter by category"
+          aria-label={a11yT("filterByCategory")}
         >
           <button
             role="tab"

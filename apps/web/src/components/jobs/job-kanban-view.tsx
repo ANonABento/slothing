@@ -26,6 +26,7 @@ import {
   groupJobsByKanbanStatus,
   type JobKanbanStatus,
 } from "./job-kanban-utils";
+import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 
 interface JobKanbanViewProps {
   jobs: JobDescription[];
@@ -43,6 +44,7 @@ const COLUMN_STYLES: Record<JobKanbanStatus, string> = {
 
 export function JobKanbanView({ jobs, onStatusChange }: JobKanbanViewProps) {
   const locale = useLocale();
+  const a11yT = useA11yTranslations();
   const groupedJobs = useMemo(() => groupJobsByKanbanStatus(jobs), [jobs]);
   const [draggedJobId, setDraggedJobId] = useState<string | null>(null);
 
@@ -70,7 +72,7 @@ export function JobKanbanView({ jobs, onStatusChange }: JobKanbanViewProps) {
     <div
       className="overflow-x-auto pb-4"
       role="region"
-      aria-label="Job kanban board"
+      aria-label={a11yT("jobKanbanBoard")}
       aria-roledescription="kanban board"
       tabIndex={0}
     >

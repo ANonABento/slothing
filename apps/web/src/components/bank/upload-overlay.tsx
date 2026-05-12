@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import {
   CloudUpload,
   FileText,
@@ -132,6 +132,8 @@ export function UploadOverlay({
   onUploadStart,
 }: UploadOverlayProps) {
   const locale = useLocale();
+  const t = useTranslations("dialogs.upload");
+  const commonT = useTranslations("common");
   const [step, setStep] = useState<OverlayStep>("idle");
   const [dragCount, setDragCount] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -460,7 +462,7 @@ export function UploadOverlay({
             <div className="mx-auto w-20 h-20 rounded-[var(--radius)] bg-destructive/20 text-destructive flex items-center justify-center mb-6">
               <X className="h-10 w-10" />
             </div>
-            <h2 className="text-2xl font-bold">Upload Failed</h2>
+            <h2 className="text-2xl font-bold">{t("failedTitle")}</h2>
             <p className="text-destructive mt-2">{error}</p>
             <div className="mt-4 flex justify-center gap-3">
               {fileQueue.length > 0 && (
@@ -473,7 +475,7 @@ export function UploadOverlay({
                   }}
                 >
                   <RotateCcw className="h-4 w-4 mr-1.5" />
-                  Retry
+                  {t("actions.retry")}
                 </Button>
               )}
               <Button
@@ -487,7 +489,7 @@ export function UploadOverlay({
                   processingRef.current = false;
                 }}
               >
-                Dismiss
+                {t("actions.dismiss")}
               </Button>
             </div>
           </>
@@ -502,10 +504,16 @@ export function UploadOverlay({
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Replace existing upload?</DialogTitle>
+            <DialogTitle>{t("replace.title")}</DialogTitle>
             <DialogDescription>
               {uploadConflict
-                ? `Looks like you uploaded "${uploadConflict.existing.filename}" on ${formatExistingUploadDate(getExistingUploadTimestamp(uploadConflict.existing), locale)}. Replace it, or cancel?`
+                ? t("replace.description", {
+                    filename: uploadConflict.existing.filename,
+                    date: formatExistingUploadDate(
+                      getExistingUploadTimestamp(uploadConflict.existing),
+                      locale,
+                    ),
+                  })
                 : ""}
             </DialogDescription>
           </DialogHeader>
@@ -514,10 +522,10 @@ export function UploadOverlay({
               variant="outline"
               onClick={() => resolveUploadConflict(false)}
             >
-              Cancel
+              {commonT("cancel")}
             </Button>
             <Button onClick={() => resolveUploadConflict(true)} autoFocus>
-              Replace
+              {t("actions.replace")}
             </Button>
           </DialogFooter>
         </DialogContent>

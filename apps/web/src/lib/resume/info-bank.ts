@@ -231,7 +231,7 @@ export function extractBankEntries(
 export function populateBankFromProfile(
   profile: Partial<Profile>,
   sourceDocumentId: string | undefined,
-  userId: string = "default",
+  userId: string,
 ): { inserted: number; updated: number; skipped: number } {
   const entries = extractBankEntries(profile, sourceDocumentId);
 

@@ -14,9 +14,9 @@ vi.mock("@/components/theme-provider", () => ({
   ThemeProvider: ({ children }: { children: ReactNode }) => children,
 }));
 
-import { metadata } from "./layout";
+import { metadata } from "./[locale]/layout";
 
-describe("app layout metadata", () => {
+describe("localized app layout metadata", () => {
   it("uses the shared site metadata", () => {
     expect(metadata).toEqual(getSiteMetadata());
   });

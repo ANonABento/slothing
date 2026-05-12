@@ -5,6 +5,7 @@ import type { LucideIcon } from "lucide-react";
 import { AlertTriangle, CheckCircle2, Loader2, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 
 export type SourceCardState = "loading" | "has-data" | "no-data" | "error";
 
@@ -78,8 +79,10 @@ export function SourceCard({
 }
 
 function LoadingBody() {
+  const a11yT = useA11yTranslations();
+
   return (
-    <div className="space-y-3" aria-label="Loading source">
+    <div className="space-y-3" aria-label={a11yT("loadingSource")}>
       <div className="h-4 w-3/4 rounded bg-muted" />
       <div className="h-4 w-full rounded bg-muted" />
       <div className="h-4 w-2/3 rounded bg-muted" />

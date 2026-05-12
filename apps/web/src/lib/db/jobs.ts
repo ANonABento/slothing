@@ -29,7 +29,7 @@ export interface CreatedAtCursor {
 }
 
 export interface ListJobsParams {
-  userId?: string;
+  userId: string;
   statuses?: JobStatus[];
   cursor?: CreatedAtCursor | null;
   limit: number;
@@ -69,7 +69,7 @@ function mapRowToJob(row: JobRow): JobDescription {
 }
 
 // Get all jobs
-export function getJobs(userId: string = "default"): JobDescription[] {
+export function getJobs(userId: string): JobDescription[] {
   const rows = db
     .prepare("SELECT * FROM jobs WHERE user_id = ? ORDER BY created_at DESC")
     .all(userId) as JobRow[];
@@ -77,7 +77,7 @@ export function getJobs(userId: string = "default"): JobDescription[] {
 }
 
 export function listJobsPaginated({
-  userId = "default",
+  userId,
   statuses,
   cursor,
   limit,
@@ -109,10 +109,7 @@ export function listJobsPaginated({
 }
 
 // Get single job
-export function getJob(
-  id: string,
-  userId: string = "default",
-): JobDescription | null {
+export function getJob(id: string, userId: string): JobDescription | null {
   const row = db
     .prepare("SELECT * FROM jobs WHERE id = ? AND user_id = ?")
     .get(id, userId) as JobRow | undefined;
@@ -135,7 +132,7 @@ export function getJobByIdAnyUser(id: string): JobDescription | null {
 
 export function getJobByUrl(
   url: string,
-  userId: string = "default",
+  userId: string,
 ): JobDescription | null {
   const row = db
     .prepare("SELECT * FROM jobs WHERE url = ? AND user_id = ?")
@@ -147,7 +144,7 @@ export function getJobByUrl(
 // Create job
 export function createJob(
   job: Omit<JobDescription, "id" | "createdAt">,
-  userId: string = "default",
+  userId: string,
 ): JobDescription {
   const id = generateId();
   db.prepare(
@@ -181,7 +178,7 @@ export function createJob(
 export function updateJob(
   id: string,
   updates: Partial<JobDescription>,
-  userId: string = "default",
+  userId: string,
 ): void {
   const existing = getJob(id, userId);
   if (!existing) return;
@@ -232,8 +229,8 @@ export function updateJob(
 export function updateJobStatus(
   id: string,
   status: JobStatus,
-  appliedAt?: string,
-  userId: string = "default",
+  appliedAt: string | undefined,
+  userId: string,
 ): JobDescription | null {
   const now = nowIso();
 
@@ -255,14 +252,11 @@ export function updateJobStatus(
 }
 
 // Delete job
-export function deleteJob(id: string, userId: string = "default"): void {
+export function deleteJob(id: string, userId: string): void {
   db.prepare("DELETE FROM jobs WHERE id = ? AND user_id = ?").run(id, userId);
 }
 
-export function countJobsByStatus(
-  status: string,
-  userId: string = "default",
-): number {
+export function countJobsByStatus(status: string, userId: string): number {
   const result = db
     .prepare(
       "SELECT COUNT(*) as count FROM jobs WHERE status = ? AND user_id = ?",

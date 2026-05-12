@@ -72,9 +72,11 @@ import {
   formatOpportunityLocation,
   formatOpportunitySalary,
   getOpportunitiesViewStorage,
+  getOpportunityFiltersFromStatusSearchParam,
   getOpportunityFilterOptions,
   hasActiveOpportunityFilters,
   normalizeKanbanVisibleLanes,
+  parseOpportunityStatusSearchParam,
   readOpportunityViewMode,
   writeOpportunityViewMode,
   type KanbanLaneId,
@@ -102,14 +104,31 @@ interface UpdateOpportunityResponse {
   unlocked?: unknown[];
 }
 
-export default function OpportunitiesPage() {
+export default function OpportunitiesPage({
+  searchParams = {},
+}: {
+  searchParams?: { status?: string | string[] };
+}) {
   const locale = useLocale();
   const t = useTranslations("opportunities");
   const commonT = useTranslations("common");
+  const statusSearchParam = Array.isArray(searchParams.status)
+    ? searchParams.status.join(",")
+    : searchParams.status;
+  const opportunityStatusQuery = useMemo(() => {
+    if (!statusSearchParam) return "";
+    const params = new URLSearchParams();
+    params.set("status", statusSearchParam);
+    return params.toString();
+  }, [statusSearchParam]);
+  const urlStatusFilters = useMemo(
+    () => parseOpportunityStatusSearchParam(statusSearchParam),
+    [statusSearchParam],
+  );
   const [opportunities, setOpportunities] =
     useState<Opportunity[]>(SAMPLE_OPPORTUNITIES);
-  const [filters, setFilters] = useState<OpportunityFilters>(
-    DEFAULT_OPPORTUNITY_FILTERS,
+  const [filters, setFilters] = useState<OpportunityFilters>(() =>
+    getOpportunityFiltersFromStatusSearchParam(statusSearchParam),
   );
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isImportOpen, setIsImportOpen] = useState(false);
@@ -133,7 +152,11 @@ export default function OpportunitiesPage() {
 
   const fetchOpportunities = useCallback(async () => {
     try {
-      const response = await fetch("/api/opportunities");
+      const response = await fetch(
+        opportunityStatusQuery
+          ? `/api/opportunities?${opportunityStatusQuery}`
+          : "/api/opportunities",
+      );
       const data = await readJsonResponse<OpportunitiesResponse>(
         response,
         "Failed to load opportunities",
@@ -155,7 +178,7 @@ export default function OpportunitiesPage() {
     } finally {
       setHasFetched(true);
     }
-  }, [showErrorToast]);
+  }, [opportunityStatusQuery, showErrorToast]);
 
   const loadMoreOpportunities = useCallback(async () => {
     if (!nextCursor) return;
@@ -163,7 +186,10 @@ export default function OpportunitiesPage() {
     setIsLoadingMore(true);
     try {
       const response = await fetch(
-        `/api/opportunities?cursor=${encodeURIComponent(nextCursor)}`,
+        `/api/opportunities?${new URLSearchParams({
+          ...(statusSearchParam ? { status: statusSearchParam } : {}),
+          cursor: nextCursor,
+        }).toString()}`,
       );
       const data = await readJsonResponse<OpportunitiesResponse>(
         response,
@@ -183,7 +209,7 @@ export default function OpportunitiesPage() {
     } finally {
       setIsLoadingMore(false);
     }
-  }, [nextCursor, showErrorToast]);
+  }, [nextCursor, showErrorToast, statusSearchParam]);
 
   useEffect(() => {
     const saved = window.localStorage.getItem(STORAGE_KEY);
@@ -205,6 +231,10 @@ export default function OpportunitiesPage() {
     setViewMode(readOpportunityViewMode(getOpportunitiesViewStorage()));
     void fetchOpportunities();
   }, [fetchOpportunities]);
+
+  useEffect(() => {
+    setFilters(getOpportunityFiltersFromStatusSearchParam(statusSearchParam));
+  }, [statusSearchParam]);
 
   useEffect(() => {
     async function fetchKanbanSettings() {
@@ -239,8 +269,8 @@ export default function OpportunitiesPage() {
   }, [hasLoadedFiltersPreference, isFiltersOpen]);
 
   const filteredOpportunities = useMemo(
-    () => filterOpportunities(opportunities, filters),
-    [opportunities, filters],
+    () => filterOpportunities(opportunities, filters, urlStatusFilters),
+    [opportunities, filters, urlStatusFilters],
   );
 
   const filterOptions = useMemo(

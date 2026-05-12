@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { useConfirmDialog } from "@/components/ui/confirm-dialog";
 import { cn } from "@/lib/utils";
 import type { StudioDocument } from "./studio-documents";
+import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 
 interface StudioFilePanelProps {
   documents: StudioDocument[];
@@ -35,6 +36,8 @@ export function StudioFilePanel({
   collapsed = false,
   onToggleCollapsed,
 }: StudioFilePanelProps) {
+  const a11yT = useA11yTranslations();
+
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [draftName, setDraftName] = useState("");
   const { confirm, dialog: confirmDialog } = useConfirmDialog();
@@ -84,7 +87,7 @@ export function StudioFilePanel({
           variant="ghost"
           size="icon"
           onClick={onToggleCollapsed}
-          aria-label="Expand files panel"
+          aria-label={a11yT("expandFilesPanel")}
         >
           <PanelLeftOpen className="h-4 w-4" />
         </Button>
@@ -93,7 +96,7 @@ export function StudioFilePanel({
           variant="ghost"
           size="icon"
           onClick={expandPanel}
-          aria-label="Show files"
+          aria-label={a11yT("showFiles")}
         >
           <FileText className="h-4 w-4" />
         </Button>
@@ -102,7 +105,7 @@ export function StudioFilePanel({
           variant="ghost"
           size="icon"
           onClick={handleCollapsedCreate}
-          aria-label="New studio file"
+          aria-label={a11yT("newStudioFile")}
         >
           <Plus className="h-4 w-4" />
         </Button>
@@ -111,7 +114,7 @@ export function StudioFilePanel({
           variant="ghost"
           size="icon"
           onClick={expandPanel}
-          aria-label="Show version history"
+          aria-label={a11yT("showVersionHistory")}
         >
           <History className="h-4 w-4" />
         </Button>
@@ -135,7 +138,7 @@ export function StudioFilePanel({
               size="icon"
               variant="ghost"
               onClick={onToggleCollapsed}
-              aria-label="Collapse files panel"
+              aria-label={a11yT("collapseFilesPanel")}
             >
               <PanelLeftClose className="h-4 w-4" />
             </Button>
