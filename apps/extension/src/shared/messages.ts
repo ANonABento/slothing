@@ -164,6 +164,19 @@ export const Messages = {
     payload: opts ?? {},
   }),
 
+  // P4/#40 — Helper for the chat-port start frame. The actual stream uses a
+  // long-lived chrome.runtime.connect port (CHAT_PORT_NAME) rather than
+  // chrome.runtime.sendMessage, but exposing a typed builder keeps callsites
+  // self-documenting.
+  chatStreamStart: (payload: {
+    prompt: string;
+    jobContext?: import("./types").ChatJobContext;
+  }): import("./types").ChatStreamStartPayload => ({
+    type: "CHAT_STREAM_START",
+    prompt: payload.prompt,
+    jobContext: payload.jobContext,
+  }),
+
   // Corrections feedback loop (#33). Fired when a user edits an autofilled
   // field and the final value differs from the original suggestion — the
   // background forwards it to /api/extension/field-mappings/correct so

@@ -2,6 +2,7 @@
 
 import type {
   AnswerBankMatch,
+  ChatJobContext,
   ExtensionProfile,
   ExtensionResumeSummary,
   ScrapedJob,
@@ -357,6 +358,103 @@ export class ColumbusAPIClient {
       method: "PATCH",
       body: JSON.stringify({ answer }),
     });
+  }
+
+  /**
+   * P4/#40 — Inline AI assistant streaming consumer.
+   *
+   * Opens an SSE request to /api/extension/chat and yields tokens as they
+   * arrive. Service workers DO have `fetch` + `body.getReader()` (verified on
+   * Chrome MV3 + Firefox MV2), so we don't need `EventSource` here — which
+   * matters because EventSource can't attach the X-Extension-Token header.
+   *
+   * The server emits three SSE frame shapes:
+   *   data: {"token": "..."}     // per token chunk
+   *   data: {"done": true}        // end of stream
+   *   data: {"error": "..."}      // mid-stream failure (followed by done:true)
+   *
+   * We yield string tokens to the caller and throw on `{error}` frames so the
+   * background's port handler can forward a CHAT_STREAM_ERROR to the UI.
+   */
+  async *chat(
+    prompt: string,
+    jobContext?: ChatJobContext,
+  ): AsyncGenerator<string, void, void> {
+    const token = await this.getAuthToken();
+    if (!token) {
+      throw new Error("Not authenticated");
+    }
+
+    const response = await fetch(`${this.baseUrl}/api/extension/chat`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Extension-Token": token,
+        Accept: "text/event-stream",
+      },
+      body: JSON.stringify({ prompt, jobContext }),
+    });
+
+    if (!response.ok) {
+      // 401: invalidate the token, mirror authenticatedFetch() so the popup
+      // notices the session lost state on the next open.
+      if (response.status === 401) {
+        await setStorage({ authToken: undefined, tokenExpiry: undefined });
+        await clearSessionAuthCache();
+        throw new Error("Authentication expired");
+      }
+      let errMessage = `Request failed: ${response.status}`;
+      try {
+        const body = (await response.json()) as { error?: string };
+        if (body?.error) errMessage = body.error;
+      } catch {
+        // Body wasn't JSON; keep the generic message.
+      }
+      throw new Error(errMessage);
+    }
+
+    const reader = response.body?.getReader();
+    if (!reader) {
+      throw new Error("No response body");
+    }
+    const decoder = new TextDecoder();
+    let buffer = "";
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+
+      // SSE frames are separated by a blank line (\n\n). We split on it and
+      // hold the trailing partial in `buffer`.
+      const frames = buffer.split("\n\n");
+      buffer = frames.pop() ?? "";
+
+      for (const frame of frames) {
+        const line = frame
+          .split("\n")
+          .find((l) => l.startsWith("data: "));
+        if (!line) continue;
+        const dataStr = line.slice(6).trim();
+        if (!dataStr) continue;
+        let parsed: { token?: string; done?: boolean; error?: string };
+        try {
+          parsed = JSON.parse(dataStr);
+        } catch {
+          continue;
+        }
+        if (parsed.error) {
+          throw new Error(parsed.error);
+        }
+        if (parsed.token) {
+          yield parsed.token;
+        }
+        if (parsed.done) {
+          return;
+        }
+      }
+    }
   }
 
   /**
