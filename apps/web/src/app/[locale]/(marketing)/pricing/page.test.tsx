@@ -1,8 +1,9 @@
 import { render, screen } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
 import { describe, expect, it, vi } from "vitest";
+import { getLocalizedPageMetadata } from "@/lib/seo";
 import messages from "@/messages/en.json";
-import PricingPage from "./page";
+import PricingPage, { generateMetadata } from "./page";
 
 const localeState = vi.hoisted(() => ({ current: "en" }));
 
@@ -31,6 +32,12 @@ function expectLocalizedSignInHref(link: HTMLElement, locale: string) {
 }
 
 describe("PricingPage", () => {
+  it("uses localized metadata for alternates and canonical URLs", () => {
+    expect(generateMetadata({ params: { locale: "es" } })).toEqual(
+      getLocalizedPageMetadata("pricing", "es"),
+    );
+  });
+
   it("renders the Free, Pro, and Student tiers with prices", async () => {
     await renderPricingPage();
 

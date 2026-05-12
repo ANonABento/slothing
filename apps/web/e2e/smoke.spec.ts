@@ -6,7 +6,7 @@ test.describe("Smoke Tests", () => {
     await expect(page).toHaveTitle(/Slothing/i);
   });
 
-  test("protected pages are accessible with auth bypass (no Clerk keys) @smoke", async ({
+  test("protected pages are accessible with auth bypass (no NextAuth keys) @smoke", async ({
     page,
   }) => {
     const pages = [
@@ -20,7 +20,7 @@ test.describe("Smoke Tests", () => {
     for (const p of pages) {
       await page.goto(p.url);
       await page.waitForLoadState("networkidle");
-      // With auth bypass (no Clerk keys), pages should NOT redirect to sign-in
+      // With auth bypass (no NextAuth keys), pages should NOT redirect to sign-in
       expect(page.url()).not.toContain("/sign-in");
     }
   });

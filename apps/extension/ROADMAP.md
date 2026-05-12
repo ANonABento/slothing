@@ -12,7 +12,7 @@
 - `answer_bank` table for Q&A storage (normalized questions, usage counting)
 - `field_mappings` table for custom site overrides
 - 6 API routes under `/api/extension/` with token auth (`X-Extension-Token`)
-- Extension connect page at `/extension/connect` (Clerk auth -> token generation)
+- Extension connect page at `/extension/connect` (NextAuth auth -> token generation)
 - `src/lib/extension-auth.ts` for token validation and Jaccard similarity
 
 ### Phase 3: Auto-Fill Engine
@@ -48,7 +48,7 @@
 - README with setup, usage, testing guides
 
 ### Bug Fixes
-- Job import routed to `/api/extension/jobs` (was hitting Clerk-only `/api/jobs`)
+- Job import routed to `/api/extension/jobs` (was hitting NextAuth-only `/api/jobs`)
 - Batch import endpoint created (was calling nonexistent `/api/extension/scrape/batch`)
 - Options page learned answers wired to background API (was stubbed)
 - Content CSS bundled via import (was missing from webpack output)

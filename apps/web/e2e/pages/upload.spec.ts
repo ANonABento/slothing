@@ -7,7 +7,7 @@ import { test, expect } from "@playwright/test";
 
 test.skip(
   true,
-  "Requires an authenticated Clerk test fixture for upload flows.",
+  "Requires an authenticated NextAuth test fixture for upload flows.",
 );
 
 test.describe("Upload - Layout", () => {

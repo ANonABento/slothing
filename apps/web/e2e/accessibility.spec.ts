@@ -9,7 +9,7 @@ import {
 
 const LANDING_PAGE = { path: "/", name: "Landing" };
 
-// Pages that exist in the app (accessible with auth bypass when no Clerk keys)
+// Pages that exist in the app (accessible with auth bypass when no NextAuth keys)
 const APP_PAGES = [
   "/en/dashboard",
   "/en/bank",
@@ -45,7 +45,7 @@ const AUDIT_ROUTES = [
   { path: "/en/extension/connect", name: "extension-connect" },
 ];
 
-const AXE_IGNORED_TARGET_FRAGMENTS = ["nextjs-portal", "clerk"];
+const AXE_IGNORED_TARGET_FRAGMENTS = ["nextjs-portal", "legacy-auth"];
 
 function filterIgnoredViolations(
   violations: Awaited<ReturnType<AxeBuilder["analyze"]>>["violations"],
@@ -131,7 +131,7 @@ test.describe("Accessibility - WCAG 2.1 AA Compliance", () => {
     });
   }
 
-  test("app pages are accessible with auth bypass (no Clerk keys)", async ({
+  test("app pages are accessible with auth bypass (no NextAuth keys)", async ({
     page,
   }) => {
     for (const path of APP_PAGES) {

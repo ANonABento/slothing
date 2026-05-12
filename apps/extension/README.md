@@ -56,7 +56,7 @@ The extension needs to authenticate with your Slothing account:
 1. Start the Slothing app (`npm run dev` in the parent directory)
 2. Click the Slothing extension icon in your toolbar
 3. Click **Connect Account**
-4. A new tab opens at `/extension/connect` - sign in with Clerk
+4. A new tab opens at `/extension/connect` - sign in with NextAuth
 5. Token is generated and stored automatically
 6. The popup now shows your profile info
 
@@ -140,7 +140,7 @@ All extension endpoints use token auth via `X-Extension-Token` header:
 
 | Endpoint                                | Method | Purpose                                                      |
 | --------------------------------------- | ------ | ------------------------------------------------------------ |
-| `/api/extension/auth`                   | POST   | Generate token (uses Clerk session)                          |
+| `/api/extension/auth`                   | POST   | Generate token (uses NextAuth session)                       |
 | `/api/extension/auth`                   | DELETE | Revoke token(s)                                              |
 | `/api/extension/auth/verify`            | GET    | Validate token                                               |
 | `/api/extension/profile`                | GET    | Fetch profile with computed fields                           |
@@ -193,7 +193,7 @@ The app creates each imported job with `status: "pending"`, adds an unread notif
 
 1. User clicks "Connect" in popup
 2. Background opens `/extension/connect` in new tab
-3. Connect page authenticates via Clerk, calls `POST /api/extension/auth`
+3. Connect page authenticates via NextAuth, calls `POST /api/extension/auth`
 4. Token stored in `localStorage` for extension pickup
 5. Extension stores token in `chrome.storage.local`
 6. All subsequent API calls include `X-Extension-Token` header

@@ -1,6 +1,8 @@
-import { getPageMetadata } from "@/lib/seo";
+import { getLocalizedPageMetadata } from "@/lib/seo";
 
-export const metadata = getPageMetadata("profile");
+export function generateMetadata({ params }: { params: { locale: string } }) {
+  return getLocalizedPageMetadata("profile", params.locale);
+}
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return children;

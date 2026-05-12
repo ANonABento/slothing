@@ -21,6 +21,7 @@ vi.mock("./profile-versions", () => ({
 }));
 
 import db from "./legacy";
+import type { ProfileRow } from "./queries";
 import {
   getSetting,
   setSetting,
@@ -346,19 +347,36 @@ describe("Profile Functions", () => {
   });
 
   describe("getProfile", () => {
+    it("keeps profile row fixtures aligned with SQLite column names", () => {
+      const profileRow = {
+        id: TEST_USER_ID,
+        user_id: TEST_USER_ID,
+        contact_json: null,
+        summary: "Profile summary",
+        raw_text: null,
+        created_at: null,
+        updated_at: null,
+      } satisfies ProfileRow;
+
+      expect(profileRow.summary).toBe("Profile summary");
+    });
+
     it("should return full profile with related data", () => {
       const mockProfileRow = {
         id: TEST_USER_ID,
+        user_id: TEST_USER_ID,
         contact_json: '{"name": "John Doe", "email": "john@example.com"}',
         summary: "Experienced developer",
         raw_text: "Resume text",
         created_at: "2024-01-01T00:00:00.000Z",
         updated_at: "2024-01-15T00:00:00.000Z",
-      };
+      } satisfies ProfileRow;
 
       const mockExperiences = [
         {
           id: "exp-1",
+          user_id: "default",
+          profile_id: "default",
           company: "Tech Corp",
           title: "Senior Dev",
           location: "NYC",
@@ -368,12 +386,15 @@ describe("Profile Functions", () => {
           description: "Building stuff",
           highlights_json: '["Led team", "Shipped features"]',
           skills_json: '["JavaScript", "React"]',
+          created_at: "2024-01-01T00:00:00.000Z",
         },
       ];
 
       const mockEducation = [
         {
           id: "edu-1",
+          user_id: "default",
+          profile_id: "default",
           institution: "MIT",
           degree: "BS",
           field: "Computer Science",
@@ -381,36 +402,48 @@ describe("Profile Functions", () => {
           end_date: "2020-05-01",
           gpa: "3.8",
           highlights_json: '["Deans List"]',
+          created_at: "2024-01-01T00:00:00.000Z",
         },
       ];
 
       const mockSkills = [
         {
           id: "skill-1",
+          user_id: "default",
+          profile_id: "default",
           name: "JavaScript",
           category: "technical",
           proficiency: "expert",
+          created_at: "2024-01-01T00:00:00.000Z",
         },
       ];
 
       const mockProjects = [
         {
           id: "proj-1",
+          user_id: "default",
+          profile_id: "default",
           name: "Portfolio",
           description: "My portfolio site",
           url: "https://portfolio.com",
           technologies_json: '["React", "Next.js"]',
           highlights_json: '["1000 visitors"]',
+          created_at: "2024-01-01T00:00:00.000Z",
         },
       ];
 
       const mockCertifications = [
         {
           id: "cert-1",
+          user_id: "default",
+          profile_id: "default",
           name: "AWS Solutions Architect",
           issuer: "Amazon",
           issue_date: "2023-06-01",
+          expiry_date: null,
+          credential_id: null,
           url: "https://aws.com/cert",
+          created_at: "2024-01-01T00:00:00.000Z",
         },
       ];
 
@@ -450,7 +483,7 @@ describe("Profile Functions", () => {
             title: "Senior Dev",
             location: "NYC",
             startDate: "2020-01-01",
-            endDate: null,
+            endDate: undefined,
             current: true,
             description: "Building stuff",
             highlights: ["Led team", "Shipped features"],
@@ -515,12 +548,13 @@ describe("Profile Functions", () => {
     it("should handle null JSON fields", () => {
       const mockProfileRow = {
         id: TEST_USER_ID,
+        user_id: TEST_USER_ID,
         contact_json: null,
         summary: null,
         raw_text: null,
         created_at: "2024-01-01T00:00:00.000Z",
         updated_at: "2024-01-01T00:00:00.000Z",
-      };
+      } satisfies ProfileRow;
 
       (db.prepare as Mock).mockImplementation((sql: string) => {
         if (sql.includes("FROM profile")) {
@@ -532,7 +566,7 @@ describe("Profile Functions", () => {
       const result = getProfile(TEST_USER_ID);
 
       expect(result?.contact).toEqual({ name: "" });
-      expect(result?.summary).toBeNull();
+      expect(result?.summary).toBeUndefined();
     });
   });
 
