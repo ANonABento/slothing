@@ -79,7 +79,7 @@ export function LLMProviderConfig(props: LLMProviderConfigProps) {
             />
             <p className="text-xs text-muted-foreground flex items-center gap-1">
               <Shield className="h-3 w-3" />
-              Your key is stored locally and never sent to our servers
+              Encrypted at rest. Only ever sent to {selectedProvider.label}, never used for any other call.
             </p>
           </div>
         )}
