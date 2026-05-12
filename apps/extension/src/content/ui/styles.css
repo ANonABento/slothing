@@ -150,6 +150,14 @@
   outline-offset: 2px;
 }
 
+/* P3/#38 — passive LinkedIn capture toast. Same base look as
+ * .columbus-toast but shifted hue so users can distinguish "saved for later"
+ * from the apply-tracking confirmation. */
+.columbus-toast-linkedin-capture {
+  background: #0a66c2;
+  cursor: default;
+}
+
 @keyframes columbus-slide-up {
   from {
     transform: translateY(20px);
