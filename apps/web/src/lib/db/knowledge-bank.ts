@@ -62,10 +62,7 @@ export interface InsertChunk {
   hash: string;
 }
 
-export function insertChunk(
-  chunk: InsertChunk,
-  userId: string = "default",
-): string {
+export function insertChunk(chunk: InsertChunk, userId: string): string {
   const id = generateId();
   db.prepare(
     `

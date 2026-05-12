@@ -203,7 +203,7 @@ import { getLLMConfig } from "@/lib/db";
 
 const OPENAI_EMBEDDINGS_URL = "https://api.openai.com/v1/embeddings";
 const EMBEDDING_MODEL = "text-embedding-3-small";
-function getOpenAIKey(userId: string = "default"): string | null {
+function getOpenAIKey(userId: string): string | null {
   const config = getLLMConfig(userId);
   if (config?.provider === "openai" && config.apiKey) {
     return config.apiKey;
@@ -221,7 +221,7 @@ function arrayToFloat32Array(arr: number[]): Float32Array {
 
 export async function embedBatch(
   texts: string[],
-  userId: string = "default",
+  userId: string,
 ): Promise<Float32Array[] | null> {
   if (texts.length === 0) return [];
 

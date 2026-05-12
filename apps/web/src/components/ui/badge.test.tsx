@@ -2,6 +2,8 @@ import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { Badge } from "./badge";
 
+const badgeTooltip = "Badge tooltip";
+
 describe("Badge", () => {
   it("should render badge with text", () => {
     render(<Badge>New</Badge>);
@@ -80,7 +82,7 @@ describe("Badge", () => {
 
   it("should pass through additional HTML attributes", () => {
     render(
-      <Badge id="my-badge" title="Badge tooltip">
+      <Badge id="my-badge" title={badgeTooltip}>
         Hover me
       </Badge>,
     );

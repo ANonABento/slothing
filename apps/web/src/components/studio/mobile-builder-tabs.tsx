@@ -3,6 +3,7 @@
 import { Bot, Eye, Pencil, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { BuilderPanel } from "@/lib/builder/section-manager";
+import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 
 const RESUME_MOBILE_TABS: Array<{
   panel: BuilderPanel;
@@ -23,10 +24,12 @@ export function MobileBuilderTabs({
   mobileView,
   onMobileViewChange,
 }: MobileBuilderTabsProps) {
+  const a11yT = useA11yTranslations();
+
   return (
     <div
       role="tablist"
-      aria-label="Builder view"
+      aria-label={a11yT("builderView")}
       className="flex border-b-[length:var(--border-width)] bg-background md:hidden"
     >
       {RESUME_MOBILE_TABS.map(({ panel, label, Icon }) => (

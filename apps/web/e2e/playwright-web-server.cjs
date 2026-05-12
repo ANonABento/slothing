@@ -1,5 +1,5 @@
 const { spawn } = require("child_process");
-const { rmSync } = require("fs");
+const { mkdirSync, rmSync } = require("fs");
 const path = require("path");
 
 const distDir = ".next/e2e";
@@ -7,6 +7,7 @@ const port = process.env.PORT || "8888";
 const sqlitePath =
   process.env.GET_ME_JOB_SQLITE_PATH ||
   path.join(process.cwd(), "data", "get-me-job-e2e.db");
+const sqliteUrl = process.env.TURSO_DATABASE_URL || `file:${sqlitePath}`;
 const nextBin = require.resolve("next/dist/bin/next");
 let child;
 
@@ -15,6 +16,9 @@ function getServerEnv() {
     ...process.env,
     NEXT_DIST_DIR: distDir,
     GET_ME_JOB_SQLITE_PATH: sqlitePath,
+    TURSO_DATABASE_URL: sqliteUrl,
+    NEXTAUTH_SECRET:
+      process.env.NEXTAUTH_SECRET || "slothing-playwright-e2e-secret",
     SLOTHING_SUPPRESS_OPTIONAL_ENV_WARNINGS: "1",
   };
 
@@ -76,6 +80,15 @@ process.once("SIGTERM", stop);
   rmSync(sqlitePath, { force: true });
   rmSync(`${sqlitePath}-shm`, { force: true });
   rmSync(`${sqlitePath}-wal`, { force: true });
+  mkdirSync(path.dirname(sqlitePath), { recursive: true });
+  await run("pnpm", [
+    "exec",
+    "drizzle-kit",
+    "push",
+    "--config",
+    "drizzle.config.ts",
+    "--force",
+  ]);
   await run("node", [nextBin, "build"]);
   await start("node", [nextBin, "start", "-p", port]);
 })().catch((error) => {
