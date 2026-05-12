@@ -55,6 +55,14 @@
       "settings": "Paramètres"
     }
   },
+  "marketing": {
+    "nav": {
+      "languageSwitcher": {
+        "label": "Changer de langue",
+        "description": "Choisissez la langue de cette page."
+      }
+    }
+  },
   "dashboard": {
     "title": "Tableau de bord",
     "actions": {

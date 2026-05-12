@@ -5,6 +5,7 @@ import { useLocale } from "next-intl";
 import { cn } from "@/lib/utils";
 import { Sparkles, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LocaleSwitcherCompact } from "@/components/i18n/locale-switcher";
 import { Link } from "@/i18n/navigation";
 
 const navLinks = [
@@ -76,6 +77,7 @@ export function Navbar() {
 
           {/* CTA Buttons */}
           <div className="hidden md:flex items-center gap-3">
+            <LocaleSwitcherCompact />
             <Button variant="ghost" asChild>
               <Link
                 href={{ pathname: "/sign-in", query: { callbackUrl } }}
@@ -137,6 +139,7 @@ export function Navbar() {
                   </Link>
                 ),
               )}
+              <LocaleSwitcherCompact className="mt-2" />
               <div className="flex flex-col gap-2 mt-2">
                 <Button variant="outline" asChild>
                   <Link

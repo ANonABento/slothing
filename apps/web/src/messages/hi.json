@@ -55,6 +55,14 @@
       "settings": "सेटिंग्स"
     }
   },
+  "marketing": {
+    "nav": {
+      "languageSwitcher": {
+        "label": "भाषा बदलें",
+        "description": "इस पेज की भाषा चुनें।"
+      }
+    }
+  },
   "dashboard": {
     "title": "डैशबोर्ड",
     "actions": {
