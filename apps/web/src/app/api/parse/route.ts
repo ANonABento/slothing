@@ -18,6 +18,7 @@ import { requireAuth, isAuthError } from "@/lib/auth";
 import { populateBankFromProfile } from "@/lib/resume/info-bank";
 import { mergeParsedProfileForAutoPromote } from "@/lib/profile/auto-promote";
 import type { LLMConfig, Profile } from "@/types";
+import { log } from "@/lib/log";
 
 export const dynamic = "force-dynamic";
 
@@ -42,7 +43,7 @@ async function parseResumeText(
     }
   }
 
-  console.log("No LLM configured — using basic regex parsing");
+  log.debug("parse", "no LLM configured; using basic regex parsing");
   const parsedProfile = parseResumeBasic(text);
   return { parsedProfile, parsingMethod: "basic", llmFallback: false };
 }
@@ -69,9 +70,10 @@ export async function POST(request: NextRequest) {
 
     const { filename, documentId } = parseResult.data;
 
-    console.log(
-      `[parse] Starting parse for document ${documentId || filename}`,
-    );
+    log.debug("parse", "starting parse", {
+      documentId,
+      filename,
+    });
 
     // Find the document
     const documents = getDocuments(authResult.userId);
@@ -95,9 +97,9 @@ export async function POST(request: NextRequest) {
 
     // Get LLM config and parse resume
     const llmConfig = getLLMConfig(authResult.userId);
-    console.log(
-      `[parse] LLM config: ${llmConfig ? llmConfig.provider : "none"}`,
-    );
+    log.debug("parse", "LLM config loaded", {
+      provider: llmConfig?.provider ?? "none",
+    });
 
     const { parsedProfile, parsingMethod, llmFallback } = await parseResumeText(
       doc.extractedText,
@@ -107,7 +109,7 @@ export async function POST(request: NextRequest) {
     const sections = Object.keys(parsedProfile).filter(
       (k) => parsedProfile[k as keyof typeof parsedProfile] != null,
     );
-    console.log(`[parse] Parse complete: ${sections.join(", ")}`);
+    log.debug("parse", "parse complete", { sections });
 
     // Save only into empty profile fields, preserving manual edits.
     const existingProfile = getProfile(authResult.userId);

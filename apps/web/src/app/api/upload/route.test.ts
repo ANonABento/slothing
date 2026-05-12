@@ -1,5 +1,5 @@
 import type { NextRequest } from "next/server";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   requireAuth: vi.fn(),
@@ -101,8 +101,11 @@ function exeMasqueradingAsPdf() {
 }
 
 describe("upload route dedupe flow", () => {
+  let debugSpy: ReturnType<typeof vi.spyOn>;
+
   beforeEach(() => {
     vi.clearAllMocks();
+    debugSpy = vi.spyOn(console, "debug").mockImplementation(() => undefined);
     mocks.requireAuth.mockResolvedValue({ userId: "user-1" });
     mocks.isAuthError.mockReturnValue(false);
     mocks.getLLMConfig.mockReturnValue(null);
@@ -129,6 +132,10 @@ describe("upload route dedupe flow", () => {
       updated: 0,
       skipped: 0,
     });
+  });
+
+  afterEach(() => {
+    debugSpy.mockRestore();
   });
 
   it("rejects an .exe masquerading as a .pdf via magic-byte validation", async () => {
@@ -165,6 +172,26 @@ describe("upload route dedupe flow", () => {
     });
     expect(mocks.extractTextFromFile).not.toHaveBeenCalled();
     expect(mocks.saveDocument).not.toHaveBeenCalled();
+  });
+
+  it("does not write long raw filenames to debug logs", async () => {
+    const rawFilename =
+      "Jane_Doe_Private_Resume_2026_With_Confidential_Client_List.pdf";
+
+    const response = await POST(uploadRequest(pdfFile(rawFilename)));
+
+    expect(response.status).toBe(200);
+    const debugOutput = debugSpy.mock.calls
+      .map((args: unknown[]) =>
+        args
+          .map((arg: unknown) =>
+            typeof arg === "string" ? arg : JSON.stringify(arg),
+          )
+          .join(" "),
+      )
+      .join("\n");
+    expect(debugOutput).not.toContain(rawFilename);
+    expect(debugOutput).toContain("filenameHash");
   });
 
   it("returns 409 with existing document metadata when the file hash already exists", async () => {
