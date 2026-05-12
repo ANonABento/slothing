@@ -1,6 +1,11 @@
 import db from "./legacy";
 import { generateId } from "@/lib/utils";
 import { createProfileSnapshot } from "./profile-versions";
+import {
+  encryptString,
+  isEncryptedEnvelope,
+  tryDecryptOrPassthrough,
+} from "@/lib/crypto/encryption";
 import type {
   Profile,
   Experience,
@@ -147,12 +152,21 @@ export function setSetting(key: string, value: string, userId: string): void {
 }
 
 export function getLLMConfig(userId: string): LLMConfig | null {
-  const config = getSetting("llm_config", userId);
-  return config ? JSON.parse(config) : null;
+  const raw = getSetting("llm_config", userId);
+  if (!raw) return null;
+  const parsed = JSON.parse(raw) as LLMConfig;
+  if (parsed.apiKey && isEncryptedEnvelope(parsed.apiKey)) {
+    parsed.apiKey = tryDecryptOrPassthrough(parsed.apiKey);
+  }
+  return parsed;
 }
 
 export function setLLMConfig(config: LLMConfig, userId: string): void {
-  setSetting("llm_config", JSON.stringify(config), userId);
+  const toStore: LLMConfig = { ...config };
+  if (toStore.apiKey && !isEncryptedEnvelope(toStore.apiKey)) {
+    toStore.apiKey = encryptString(toStore.apiKey);
+  }
+  setSetting("llm_config", JSON.stringify(toStore), userId);
 }
 
 // Documents

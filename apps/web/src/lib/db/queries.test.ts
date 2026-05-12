@@ -94,7 +94,7 @@ describe("Settings Functions", () => {
   });
 
   describe("getLLMConfig", () => {
-    it("should return parsed LLM config", () => {
+    it("returns plaintext config unchanged (legacy passthrough)", () => {
       const config = { provider: "openai", model: "gpt-4", apiKey: "sk-xxx" };
       (db.prepare as Mock).mockReturnValue({
         get: vi.fn().mockReturnValue({ value: JSON.stringify(config) }),
@@ -105,7 +105,24 @@ describe("Settings Functions", () => {
       expect(result).toEqual(config);
     });
 
-    it("should return null when no config exists", () => {
+    it("decrypts an encrypted apiKey on read", async () => {
+      const { encryptString } = await import("@/lib/crypto/encryption");
+      const stored = {
+        provider: "anthropic",
+        model: "claude-3",
+        apiKey: encryptString("sk-ant-actual-secret"),
+      };
+      (db.prepare as Mock).mockReturnValue({
+        get: vi.fn().mockReturnValue({ value: JSON.stringify(stored) }),
+      });
+
+      const result = getLLMConfig(TEST_USER_ID);
+
+      expect(result?.apiKey).toBe("sk-ant-actual-secret");
+      expect(result?.provider).toBe("anthropic");
+    });
+
+    it("returns null when no config exists", () => {
       (db.prepare as Mock).mockReturnValue({
         get: vi.fn().mockReturnValue(undefined),
       });
@@ -117,7 +134,7 @@ describe("Settings Functions", () => {
   });
 
   describe("setLLMConfig", () => {
-    it("should stringify and save LLM config", () => {
+    it("encrypts apiKey before storing and preserves other fields", () => {
       const mockRun = vi.fn();
       (db.prepare as Mock).mockReturnValue({ run: mockRun });
 
@@ -128,11 +145,47 @@ describe("Settings Functions", () => {
       };
       setLLMConfig(config, TEST_USER_ID);
 
-      expect(mockRun).toHaveBeenCalledWith(
-        "llm_config",
+      expect(mockRun).toHaveBeenCalledTimes(1);
+      const [key, userId, storedValue] = mockRun.mock.calls[0];
+      expect(key).toBe("llm_config");
+      expect(userId).toBe(TEST_USER_ID);
+
+      const parsed = JSON.parse(storedValue as string);
+      expect(parsed.provider).toBe("anthropic");
+      expect(parsed.model).toBe("claude-3");
+      expect(parsed.apiKey).toMatch(/^enc:v1:/);
+      expect(parsed.apiKey).not.toContain("sk-ant-xxx");
+    });
+
+    it("does not double-encrypt an already-encrypted apiKey", async () => {
+      const { encryptString } = await import("@/lib/crypto/encryption");
+      const mockRun = vi.fn();
+      (db.prepare as Mock).mockReturnValue({ run: mockRun });
+
+      const preEncrypted = encryptString("sk-real");
+      setLLMConfig(
+        { provider: "openai" as const, model: "gpt-4", apiKey: preEncrypted },
         TEST_USER_ID,
-        JSON.stringify(config),
       );
+
+      const storedValue = mockRun.mock.calls[0][2] as string;
+      const parsed = JSON.parse(storedValue);
+      expect(parsed.apiKey).toBe(preEncrypted);
+    });
+
+    it("stores configs without an apiKey (Ollama) as-is", () => {
+      const mockRun = vi.fn();
+      (db.prepare as Mock).mockReturnValue({ run: mockRun });
+
+      setLLMConfig(
+        { provider: "ollama" as const, model: "llama3.2" },
+        TEST_USER_ID,
+      );
+
+      const storedValue = mockRun.mock.calls[0][2] as string;
+      const parsed = JSON.parse(storedValue);
+      expect(parsed.provider).toBe("ollama");
+      expect(parsed.apiKey).toBeUndefined();
     });
   });
 });
