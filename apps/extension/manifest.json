@@ -18,8 +18,10 @@
     "*://waterlooworks.uwaterloo.ca/*",
     "*://*.workdayjobs.com/*",
     "*://*.myworkdayjobs.com/*",
-    "http://localhost:3000/*",
-    "https://localhost:3000/*"
+    "http://localhost/*",
+    "http://localhost:*/*",
+    "http://127.0.0.1/*",
+    "http://127.0.0.1:*/*"
   ],
   "background": {
     "service_worker": "background.js",
@@ -36,7 +38,11 @@
         "*://jobs.lever.co/*",
         "*://waterlooworks.uwaterloo.ca/*",
         "*://*.workdayjobs.com/*",
-        "*://*.myworkdayjobs.com/*"
+        "*://*.myworkdayjobs.com/*",
+        "http://localhost/*",
+        "http://localhost:*/*",
+        "http://127.0.0.1/*",
+        "http://127.0.0.1:*/*"
       ],
       "js": ["content.js"],
       "css": ["content.css"],
