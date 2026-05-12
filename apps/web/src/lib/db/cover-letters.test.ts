@@ -8,10 +8,6 @@ vi.mock("./legacy", () => {
   return { default: mockDb };
 });
 
-vi.mock("@/lib/utils", () => ({
-  generateId: () => "test-cover-letter-id",
-}));
-
 import db from "./legacy";
 import {
   saveCoverLetter,
@@ -22,6 +18,8 @@ import {
   getCoverLetterCount,
   getAllCoverLetters,
 } from "./cover-letters";
+
+const TEST_USER_ID = "test-user";
 
 describe("Cover Letter Database Functions", () => {
   beforeEach(() => {
@@ -44,7 +42,7 @@ describe("Cover Letter Database Functions", () => {
       );
 
       expect(result).toEqual({
-        id: "test-cover-letter-id",
+        id: expect.any(String),
         jobId: "job-1",
         profileId: "user-1",
         content: "Dear hiring manager...",
@@ -53,7 +51,7 @@ describe("Cover Letter Database Functions", () => {
         createdAt: expect.any(String),
       });
       expect(mockRun).toHaveBeenCalledWith(
-        "test-cover-letter-id",
+        result.id,
         "user-1",
         "job-1",
         "user-1",
@@ -72,7 +70,12 @@ describe("Cover Letter Database Functions", () => {
         .mockReturnValueOnce({ get: mockGet })
         .mockReturnValueOnce({ run: mockRun });
 
-      const result = saveCoverLetter("job-1", "Content");
+      const result = saveCoverLetter(
+        "job-1",
+        "Content",
+        undefined,
+        TEST_USER_ID,
+      );
 
       expect(result.version).toBe(1);
     });
@@ -96,7 +99,7 @@ describe("Cover Letter Database Functions", () => {
         {
           id: "cl-1",
           job_id: "job-1",
-          profile_id: "default",
+          profile_id: TEST_USER_ID,
           content: "Letter content",
           highlights_json: JSON.stringify(["highlight1"]),
           version: 1,
@@ -106,19 +109,19 @@ describe("Cover Letter Database Functions", () => {
       const mockAll = vi.fn().mockReturnValue(mockRows);
       (db.prepare as Mock).mockReturnValue({ all: mockAll });
 
-      const result = getCoverLettersByJob("job-1");
+      const result = getCoverLettersByJob("job-1", TEST_USER_ID);
 
       expect(result).toHaveLength(1);
       expect(result[0]).toEqual({
         id: "cl-1",
         jobId: "job-1",
-        profileId: "default",
+        profileId: TEST_USER_ID,
         content: "Letter content",
         highlights: ["highlight1"],
         version: 1,
         createdAt: "2024-01-01T00:00:00.000Z",
       });
-      expect(mockAll).toHaveBeenCalledWith("job-1", "default");
+      expect(mockAll).toHaveBeenCalledWith("job-1", TEST_USER_ID);
     });
   });
 
@@ -127,7 +130,7 @@ describe("Cover Letter Database Functions", () => {
       const mockRow = {
         id: "cl-2",
         job_id: "job-1",
-        profile_id: "default",
+        profile_id: TEST_USER_ID,
         content: "Latest",
         highlights_json: null,
         version: 2,
@@ -136,7 +139,7 @@ describe("Cover Letter Database Functions", () => {
       const mockGet = vi.fn().mockReturnValue(mockRow);
       (db.prepare as Mock).mockReturnValue({ get: mockGet });
 
-      const result = getLatestCoverLetter("job-1");
+      const result = getLatestCoverLetter("job-1", TEST_USER_ID);
 
       expect(result).not.toBeNull();
       expect(result!.highlights).toEqual([]);
@@ -147,7 +150,7 @@ describe("Cover Letter Database Functions", () => {
       const mockGet = vi.fn().mockReturnValue(undefined);
       (db.prepare as Mock).mockReturnValue({ get: mockGet });
 
-      const result = getLatestCoverLetter("job-1");
+      const result = getLatestCoverLetter("job-1", TEST_USER_ID);
       expect(result).toBeNull();
     });
   });
@@ -157,7 +160,7 @@ describe("Cover Letter Database Functions", () => {
       const mockRow = {
         id: "cl-1",
         job_id: "job-1",
-        profile_id: "default",
+        profile_id: TEST_USER_ID,
         content: "Content",
         highlights_json: JSON.stringify(["a"]),
         version: 1,
@@ -166,7 +169,7 @@ describe("Cover Letter Database Functions", () => {
       const mockGet = vi.fn().mockReturnValue(mockRow);
       (db.prepare as Mock).mockReturnValue({ get: mockGet });
 
-      const result = getCoverLetter("cl-1");
+      const result = getCoverLetter("cl-1", TEST_USER_ID);
       expect(result).not.toBeNull();
       expect(result!.id).toBe("cl-1");
     });
@@ -175,7 +178,7 @@ describe("Cover Letter Database Functions", () => {
       const mockGet = vi.fn().mockReturnValue(undefined);
       (db.prepare as Mock).mockReturnValue({ get: mockGet });
 
-      const result = getCoverLetter("nonexistent");
+      const result = getCoverLetter("nonexistent", TEST_USER_ID);
       expect(result).toBeNull();
     });
   });
@@ -185,14 +188,14 @@ describe("Cover Letter Database Functions", () => {
       const mockRun = vi.fn().mockReturnValue({ changes: 1 });
       (db.prepare as Mock).mockReturnValue({ run: mockRun });
 
-      expect(deleteCoverLetter("cl-1")).toBe(true);
+      expect(deleteCoverLetter("cl-1", TEST_USER_ID)).toBe(true);
     });
 
     it("should return false when not found", () => {
       const mockRun = vi.fn().mockReturnValue({ changes: 0 });
       (db.prepare as Mock).mockReturnValue({ run: mockRun });
 
-      expect(deleteCoverLetter("nonexistent")).toBe(false);
+      expect(deleteCoverLetter("nonexistent", TEST_USER_ID)).toBe(false);
     });
   });
 
@@ -201,7 +204,7 @@ describe("Cover Letter Database Functions", () => {
       const mockGet = vi.fn().mockReturnValue({ count: 5 });
       (db.prepare as Mock).mockReturnValue({ get: mockGet });
 
-      expect(getCoverLetterCount("job-1")).toBe(5);
+      expect(getCoverLetterCount("job-1", TEST_USER_ID)).toBe(5);
     });
   });
 
@@ -211,7 +214,7 @@ describe("Cover Letter Database Functions", () => {
         {
           id: "cl-1",
           job_id: "job-1",
-          profile_id: "default",
+          profile_id: TEST_USER_ID,
           content: "First letter",
           highlights_json: JSON.stringify(["h1"]),
           version: 1,
@@ -220,7 +223,7 @@ describe("Cover Letter Database Functions", () => {
         {
           id: "cl-2",
           job_id: "job-2",
-          profile_id: "default",
+          profile_id: TEST_USER_ID,
           content: "Second letter",
           highlights_json: null,
           version: 1,
@@ -230,17 +233,17 @@ describe("Cover Letter Database Functions", () => {
       const mockAll = vi.fn().mockReturnValue(mockRows);
       (db.prepare as Mock).mockReturnValue({ all: mockAll });
 
-      const result = getAllCoverLetters();
+      const result = getAllCoverLetters(TEST_USER_ID);
 
       expect(db.prepare).toHaveBeenCalledWith(
         "SELECT * FROM cover_letters WHERE user_id = ? ORDER BY created_at DESC",
       );
-      expect(mockAll).toHaveBeenCalledWith("default");
+      expect(mockAll).toHaveBeenCalledWith(TEST_USER_ID);
       expect(result).toHaveLength(2);
       expect(result[0]).toEqual({
         id: "cl-1",
         jobId: "job-1",
-        profileId: "default",
+        profileId: TEST_USER_ID,
         content: "First letter",
         highlights: ["h1"],
         version: 1,

@@ -1,4 +1,10 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ToastProvider } from "@/components/ui/toast";
@@ -27,6 +33,12 @@ describe("ScannerForm", () => {
     );
   }
 
+  function uploadResumeFile(file: File) {
+    fireEvent.change(screen.getByLabelText(/Upload resume PDF or text file/i), {
+      target: { files: [file] },
+    });
+  }
+
   it("shows a drag-drop upload area by default", () => {
     render(<ScannerForm />);
 
@@ -36,6 +48,134 @@ describe("ScannerForm", () => {
     expect(
       screen.getByLabelText(/Upload resume PDF or text file/i),
     ).toBeInTheDocument();
+  });
+
+  it("keeps Scan Resume disabled when a PDF parse has no usable content", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          profile: {
+            contact: { name: "" },
+            experiences: [],
+            skills: [],
+            summary: "",
+          },
+          sectionsDetected: [],
+          confidence: 0,
+          warnings: ["No readable text found in the PDF."],
+        }),
+        {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        },
+      ),
+    );
+    render(<ScannerForm />);
+
+    uploadResumeFile(
+      new File([""], "scanned-resume.pdf", { type: "application/pdf" }),
+    );
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(/Parsed 0 sections, confidence 0%/i),
+      ).toBeInTheDocument();
+    });
+    expect(
+      screen.getByText(/No readable text found in the PDF/i),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/couldn't extract enough content from this PDF/i),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Scan Resume/i })).toBeDisabled();
+  });
+
+  it("enables Scan Resume when a PDF parse has extractable content", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          profile: {
+            contact: { name: "Alex Morgan", email: "alex@example.com" },
+            experiences: [
+              {
+                id: "exp-1",
+                company: "Acme",
+                title: "Frontend Engineer",
+                startDate: "2022-01",
+                current: true,
+                description: "Built React dashboards with TypeScript.",
+                highlights: ["Improved reporting workflows."],
+                skills: ["React", "TypeScript"],
+              },
+            ],
+            skills: [
+              {
+                id: "skill-1",
+                name: "React",
+                category: "technical",
+              },
+            ],
+          },
+          sectionsDetected: ["contact", "experience", "skills"],
+          confidence: 0.85,
+          warnings: [],
+        }),
+        {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        },
+      ),
+    );
+    render(<ScannerForm />);
+
+    uploadResumeFile(
+      new File(["pdf"], "resume.pdf", { type: "application/pdf" }),
+    );
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(/Parsed 3 sections, confidence 85%/i),
+      ).toBeInTheDocument();
+    });
+    expect(screen.getByRole("button", { name: /Scan Resume/i })).toBeEnabled();
+  });
+
+  it("shows UI feedback when the selected resume is too large", async () => {
+    const fetchSpy = vi.spyOn(globalThis, "fetch");
+    render(<ScannerForm />);
+
+    const file = new File([new Uint8Array(5 * 1024 * 1024 + 1)], "resume.pdf", {
+      type: "application/pdf",
+    });
+    fireEvent.change(screen.getByLabelText(/Upload resume PDF or text file/i), {
+      target: { files: [file] },
+    });
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(/File too large\. Maximum size is 5 MB\./i),
+      ).toBeInTheDocument();
+    });
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it("shows UI feedback when the selected resume has an unsupported type", async () => {
+    const fetchSpy = vi.spyOn(globalThis, "fetch");
+    render(<ScannerForm />);
+
+    const file = new File(["not a resume"], "resume.png", {
+      type: "image/png",
+    });
+    fireEvent.change(screen.getByLabelText(/Upload resume PDF or text file/i), {
+      target: { files: [file] },
+    });
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(/Upload a PDF or TXT file\./i),
+      ).toBeInTheDocument();
+    });
+    expect(fetchSpy).not.toHaveBeenCalled();
   });
 
   it("keeps paste text as a prominent fallback", () => {
@@ -65,6 +205,11 @@ describe("ScannerForm", () => {
     expect(
       url.compareDocumentPosition(job) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
+    expect(
+      screen.getByText(
+        /Job URLs are sent to our servers for temporary scraping/i,
+      ),
+    ).toBeInTheDocument();
   });
 
   it("shows a manual paste hint when URL scraping fails", async () => {
@@ -83,6 +228,67 @@ describe("ScannerForm", () => {
 
     await waitFor(() => {
       expect(screen.getByText(/Paste manually instead/i)).toBeInTheDocument();
+    });
+  });
+
+  it("does not double-submit URL scraping when Enter is followed by blur", async () => {
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockImplementation(() =>
+      Promise.resolve(
+        new Response(
+          JSON.stringify({
+            opportunity: {
+              title: "Senior Frontend Engineer",
+              company: "Frontend Co",
+              description:
+                "Build React and TypeScript interfaces with Playwright tests.",
+              requirements: ["React", "TypeScript", "Playwright"],
+              responsibilities: [],
+              keywords: ["React", "TypeScript", "Playwright"],
+              url: "https://example.com/frontend",
+            },
+          }),
+          {
+            status: 200,
+            headers: { "content-type": "application/json" },
+          },
+        ),
+      ),
+    );
+
+    render(<ScannerForm />);
+
+    const url = screen.getByLabelText(/Import job from URL/i);
+    fireEvent.change(url, {
+      target: { value: "https://example.com/frontend" },
+    });
+    act(() => {
+      url.dispatchEvent(
+        new KeyboardEvent("keydown", {
+          key: "Enter",
+          bubbles: true,
+          cancelable: true,
+        }),
+      );
+      url.dispatchEvent(new FocusEvent("focusout", { bubbles: true }));
+    });
+
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    expect(fetchSpy).toHaveBeenCalledWith("/api/scanner/scrape-job", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ url: "https://example.com/frontend" }),
+    });
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(/Imported from example.com/i),
+      ).toBeInTheDocument();
+    });
+
+    fireEvent.keyDown(url, { key: "Enter" });
+
+    await waitFor(() => {
+      expect(fetchSpy).toHaveBeenCalledTimes(2);
     });
   });
 

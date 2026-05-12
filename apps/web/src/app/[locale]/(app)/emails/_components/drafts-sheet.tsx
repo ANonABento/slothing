@@ -20,6 +20,7 @@ import {
 } from "../_data/templates";
 import type { EmailTemplateType } from "@/types";
 import type { Opportunity } from "@/types/opportunity";
+import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 
 export interface EmailDraftForSheet {
   id: string;
@@ -61,6 +62,8 @@ export function DraftsSheet({
   loadingMore = false,
   onLoadMore,
 }: DraftsSheetProps) {
+  const a11yT = useA11yTranslations();
+
   const [query, setQuery] = useState("");
   const normalizedQuery = query.trim().toLowerCase();
   const showSearch = drafts.length > 10;
@@ -145,7 +148,7 @@ export function DraftsSheet({
               <Input
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
-                placeholder="Search drafts"
+                placeholder={a11yT("searchDrafts")}
                 className="pl-9"
               />
             </div>

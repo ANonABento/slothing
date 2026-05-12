@@ -1,6 +1,7 @@
 "use client";
 
 import { Check, Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -34,18 +35,21 @@ export function ImportJobEditForm({
   onCancel,
   onSave,
 }: ImportJobEditFormProps) {
+  const t = useTranslations("jobs.import.editForm");
+  const commonT = useTranslations("common");
+
   return (
     <div className="space-y-4 py-4">
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label>Job Title</Label>
+          <Label>{t("fields.jobTitle")}</Label>
           <Input
             value={preview.title}
             onChange={(e) => onFieldChange("title", e.target.value)}
           />
         </div>
         <div className="space-y-2">
-          <Label>Company</Label>
+          <Label>{t("fields.company")}</Label>
           <Input
             value={preview.company}
             onChange={(e) => onFieldChange("company", e.target.value)}
@@ -55,27 +59,29 @@ export function ImportJobEditForm({
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label>Location</Label>
+          <Label>{t("fields.location")}</Label>
           <Input
             value={preview.location}
             onChange={(e) => onFieldChange("location", e.target.value)}
-            placeholder="San Francisco, CA"
+            placeholder={t("placeholders.location")}
           />
         </div>
         <div className="space-y-2">
-          <Label>Job Type</Label>
+          <Label>{t("fields.jobType")}</Label>
           <Select
             value={preview.type}
             onValueChange={(value) => onFieldChange("type", value)}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Select type" />
+              <SelectValue placeholder={t("placeholders.selectType")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="full-time">Full-time</SelectItem>
-              <SelectItem value="part-time">Part-time</SelectItem>
-              <SelectItem value="contract">Contract</SelectItem>
-              <SelectItem value="internship">Internship</SelectItem>
+              <SelectItem value="full-time">{t("types.fullTime")}</SelectItem>
+              <SelectItem value="part-time">{t("types.partTime")}</SelectItem>
+              <SelectItem value="contract">{t("types.contract")}</SelectItem>
+              <SelectItem value="internship">
+                {t("types.internship")}
+              </SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -83,7 +89,7 @@ export function ImportJobEditForm({
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label>Salary</Label>
+          <Label>{t("fields.salary")}</Label>
           <Input
             value={preview.salary}
             onChange={(e) => onFieldChange("salary", e.target.value)}
@@ -91,7 +97,7 @@ export function ImportJobEditForm({
           />
         </div>
         <div className="space-y-2">
-          <Label>Remote</Label>
+          <Label>{t("fields.remote")}</Label>
           <Select
             value={preview.remote ? "yes" : "no"}
             onValueChange={(value) => onFieldChange("remote", value === "yes")}
@@ -100,15 +106,15 @@ export function ImportJobEditForm({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="yes">Remote</SelectItem>
-              <SelectItem value="no">On-site</SelectItem>
+              <SelectItem value="yes">{t("remote.remote")}</SelectItem>
+              <SelectItem value="no">{t("remote.onsite")}</SelectItem>
             </SelectContent>
           </Select>
         </div>
       </div>
 
       <div className="space-y-2">
-        <Label>URL</Label>
+        <Label>{t("fields.url")}</Label>
         <Input
           value={preview.url || ""}
           onChange={(e) => onFieldChange("url", e.target.value)}
@@ -118,11 +124,11 @@ export function ImportJobEditForm({
 
       <div className="flex justify-between gap-3 pt-2">
         <Button variant="outline" onClick={onBack}>
-          Back to Preview
+          {t("actions.backToPreview")}
         </Button>
         <div className="flex gap-3">
           <Button variant="outline" onClick={onCancel}>
-            Cancel
+            {commonT("cancel")}
           </Button>
           <Button
             onClick={onSave}
@@ -134,7 +140,7 @@ export function ImportJobEditForm({
             ) : (
               <Check className="h-4 w-4 mr-2" />
             )}
-            Import Job
+            {t("actions.import")}
           </Button>
         </div>
       </div>
