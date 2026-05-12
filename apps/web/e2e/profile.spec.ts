@@ -3,7 +3,7 @@ import { skipOnboardingSetup, navigateToProfile } from "./utils/test-helpers";
 
 test.skip(
   true,
-  "Requires an authenticated Clerk test fixture and seeded profile data.",
+  "Requires an authenticated NextAuth test fixture and seeded profile data.",
 );
 
 test.describe("Profile Page", () => {

@@ -12,7 +12,9 @@ test.describe("i18n routing", () => {
     await page.goto("/es/dashboard");
     await page.waitForLoadState("networkidle");
 
-    await expect(page.getByRole("heading", { name: "Tablero" })).toBeVisible();
+    await expect(page.locator("html")).toHaveAttribute("lang", "es");
+    await expect(page.getByRole("heading", { name: "Panel" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Panel" })).toBeVisible();
     await expect(
       page.getByRole("link", { name: /Configuración/ }),
     ).toBeVisible();
@@ -22,44 +24,47 @@ test.describe("i18n routing", () => {
     await page.goto("/zh-CN/dashboard");
     await page.waitForLoadState("networkidle");
 
+    await expect(page.locator("html")).toHaveAttribute("lang", "zh-CN");
     const heading = await page
       .getByRole("heading", { level: 1 })
       .first()
       .innerText();
     expect(heading).toMatch(/[一-鿿]/u);
-    await expect(page.getByRole("link", { name: /添加机会/ })).toBeVisible();
-    await expect(page.getByText("今日")).toBeVisible();
+    await expect(page.getByRole("link", { name: /添加.*机会/ })).toBeVisible();
+    await expect(page.getByText("从这里开始")).toBeVisible();
+    await expect(page.getByRole("link", { name: "机会" })).toBeVisible();
+    await expect(page.getByRole("link", { name: /设置/ })).toBeVisible();
   });
 
   test("renders dashboard chrome in Brazilian Portuguese", async ({ page }) => {
     await page.goto("/pt-BR/dashboard");
     await page.waitForLoadState("networkidle");
 
-    const heading = await page
-      .getByRole("heading", { level: 1 })
-      .first()
-      .innerText();
-    expect(heading).toBe("Painel");
+    await expect(page.locator("html")).toHaveAttribute("lang", "pt-BR");
+    await expect(page.getByRole("link", { name: "Painel" })).toBeVisible();
     await expect(
       page.getByRole("link", { name: /Add opportunity/i }),
     ).toHaveCount(0);
     await expect(
-      page.getByRole("link", { name: /Adicionar oportunidade/ }),
+      page.getByRole("link", { name: /Oportunidades/ }),
     ).toBeVisible();
-    await expect(page.getByText("Hoje")).toBeVisible();
+    await expect(page.getByText("Comece por aqui")).toBeVisible();
   });
 
   test("renders dashboard chrome in Hindi", async ({ page }) => {
     await page.goto("/hi/dashboard");
     await page.waitForLoadState("networkidle");
 
+    await expect(page.locator("html")).toHaveAttribute("lang", "hi");
     const heading = await page
       .getByRole("heading", { level: 1 })
       .first()
       .innerText();
     expect(heading).toMatch(/[ऀ-ॿ]/u);
     await expect(page.getByRole("link", { name: /अवसर जोड़ें/ })).toBeVisible();
-    await expect(page.getByText("आज")).toBeVisible();
+    await expect(page.getByText("यहाँ से शुरू करें")).toBeVisible();
+    await expect(page.getByRole("link", { name: "अवसर" })).toBeVisible();
+    await expect(page.getByRole("link", { name: /सेटिंग्स/ })).toBeVisible();
   });
 
   test("switches language from settings while preserving the route", async ({

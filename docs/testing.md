@@ -16,7 +16,7 @@ CI runs a small Chromium-only root smoke set with `npm run test:e2e -- --project
 Current smoke coverage:
 
 - `homepage loads successfully @smoke` checks the public landing route boots.
-- `protected pages are accessible with auth bypass (no Clerk keys) @smoke` checks app routes do not redirect to sign-in in the local auth-bypass mode.
+- `protected pages are accessible with auth bypass (no NextAuth keys) @smoke` checks app routes do not redirect to sign-in in the local auth-bypass mode.
 - `should navigate to Document Studio page @smoke` checks sidebar navigation reaches Studio.
 - `should navigate to Settings page @smoke` checks sidebar navigation reaches Settings.
 

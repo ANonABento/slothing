@@ -27,7 +27,7 @@ function getMonthWindow(now: string) {
 }
 
 export function getMonthlyTailorCount(
-  userId: string = "default",
+  userId: string,
   now: string = nowIso(),
 ): number {
   const { startAt } = getMonthWindow(now);
@@ -44,9 +44,7 @@ export function getMonthlyTailorCount(
   return row?.count ?? 0;
 }
 
-export function checkTailorQuota(
-  userId: string = "default",
-): TailorQuotaStatus {
+export function checkTailorQuota(userId: string): TailorQuotaStatus {
   const now = nowIso();
   const tier = getUserTier(userId);
   const { tailorMonthlyLimit } = getTierLimits(tier);

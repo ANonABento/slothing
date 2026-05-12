@@ -32,6 +32,22 @@ export interface CreateSuggestedStatusUpdateInput {
   evidence?: string[];
 }
 
+interface SuggestedStatusUpdateRow {
+  id: string;
+  user_id: string;
+  notification_id: string;
+  opportunity_id: string;
+  suggested_status: string;
+  source_provider: string | null;
+  source_event_id: string | null;
+  confidence: number | null;
+  reason: string | null;
+  evidence_json: string | null;
+  state: SuggestedStatusUpdateState;
+  created_at: string;
+  resolved_at: string | null;
+}
+
 export function ensureSuggestedStatusUpdatesSchema(): void {
   db.prepare(
     `CREATE TABLE IF NOT EXISTS suggested_status_updates (
@@ -88,7 +104,9 @@ function parseEvidence(value: string | null | undefined): string[] {
   }
 }
 
-function rowToSuggestedStatusUpdate(row: any): SuggestedStatusUpdate {
+function rowToSuggestedStatusUpdate(
+  row: SuggestedStatusUpdateRow,
+): SuggestedStatusUpdate {
   return {
     id: row.id,
     userId: row.user_id,
@@ -150,7 +168,7 @@ export function getSuggestedStatusUpdateByNotification(
       `SELECT * FROM suggested_status_updates
        WHERE notification_id = ? AND user_id = ?`,
     )
-    .get(notificationId, userId);
+    .get(notificationId, userId) as SuggestedStatusUpdateRow | undefined;
   return row ? rowToSuggestedStatusUpdate(row) : null;
 }
 

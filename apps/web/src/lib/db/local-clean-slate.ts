@@ -31,7 +31,7 @@ export function shouldRunLocalDevCleanSlate(
 }
 
 export function buildLocalDevCleanSlateStatements(
-  userId: string = LOCAL_DEV_USER_ID,
+  userId: string,
 ): SqlStatement[] {
   const userParam = [userId] as const;
 
@@ -134,7 +134,9 @@ export function runLocalDevCleanSlateMigration(db: CleanSlateDatabase): void {
   if (isCompletedCleanSlateSetting(existing)) return;
 
   db.transaction(() => {
-    for (const statement of buildLocalDevCleanSlateStatements()) {
+    for (const statement of buildLocalDevCleanSlateStatements(
+      LOCAL_DEV_USER_ID,
+    )) {
       if (statement.requiredTable && !tableExists(db, statement.requiredTable))
         continue;
       runCleanSlateStatement(db, statement);

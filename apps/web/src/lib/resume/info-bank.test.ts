@@ -18,6 +18,8 @@ import {
 } from "@/lib/db/profile-bank";
 import { extractBankEntries, populateBankFromProfile } from "./info-bank";
 
+const TEST_USER_ID = "test-user";
+
 describe("Info Bank", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -331,14 +333,14 @@ describe("Info Bank", () => {
         ],
       };
 
-      const result = populateBankFromProfile(profile, "doc-1");
+      const result = populateBankFromProfile(profile, "doc-1", TEST_USER_ID);
 
       expect(result.inserted).toBe(2);
       expect(result.updated).toBe(0);
       expect(result.skipped).toBe(0);
       expect(deleteBankEntriesBySource).toHaveBeenCalledWith(
         "doc-1",
-        "default",
+        TEST_USER_ID,
       );
       expect(insertBankEntries).toHaveBeenCalled();
     });
@@ -357,7 +359,7 @@ describe("Info Bank", () => {
         ],
       };
 
-      const result = populateBankFromProfile(profile, "doc-2");
+      const result = populateBankFromProfile(profile, "doc-2", TEST_USER_ID);
 
       expect(result.inserted).toBe(1);
       expect(result.updated).toBe(0);
@@ -373,12 +375,12 @@ describe("Info Bank", () => {
             },
           }),
         ]),
-        "default",
+        TEST_USER_ID,
       );
     });
 
     it("should handle empty profile", () => {
-      const result = populateBankFromProfile({}, undefined);
+      const result = populateBankFromProfile({}, undefined, TEST_USER_ID);
 
       expect(result.inserted).toBe(0);
       expect(result.updated).toBe(0);
