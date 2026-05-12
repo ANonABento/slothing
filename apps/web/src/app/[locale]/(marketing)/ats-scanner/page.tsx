@@ -63,7 +63,7 @@ export default function ATSScannerPage({ params }: ATSScannerPageProps) {
         </div>
 
         {/* Benefits */}
-        <div className="grid grid-cols-3 gap-4 mb-12">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-12">
           {BENEFITS.map(({ icon: Icon, title, description }) => (
             <div key={title} className="text-center p-4">
               <Icon className="h-5 w-5 mx-auto mb-2 text-primary" />
