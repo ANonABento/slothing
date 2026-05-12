@@ -178,6 +178,16 @@ export function getAlternateLanguages(path: string): Record<string, string> {
   return languages;
 }
 
+export function getAlternateLinksHeader(path: string, origin: string): string {
+  return Object.entries(getAlternateLanguages(path))
+    .map(([language, href]) => {
+      const absoluteHref = new URL(href, origin).toString();
+
+      return `<${absoluteHref}>; rel="alternate"; hreflang="${language}"`;
+    })
+    .join(", ");
+}
+
 function buildMetadata(seo: RouteSeo): Metadata {
   return {
     title: seo.absoluteTitle ? { absolute: seo.title } : seo.title,
