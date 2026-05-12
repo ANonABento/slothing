@@ -22,7 +22,7 @@ export interface BankEntryCursor {
 }
 
 export interface ListBankEntriesPaginatedParams {
-  userId?: string;
+  userId: string;
   query?: string | null;
   category?: BankCategory | null;
   sourceDocumentId?: string | null;
@@ -61,10 +61,7 @@ function supportsChildCount(entry: BankEntry): boolean {
   return entry.category === "experience" || entry.category === "project";
 }
 
-function attachChildCounts(
-  entries: BankEntry[],
-  userId: string = "default",
-): BankEntry[] {
+function attachChildCounts(entries: BankEntry[], userId: string): BankEntry[] {
   if (!entries.some(supportsChildCount)) return entries;
 
   const rows = db
@@ -170,7 +167,7 @@ function entrySourceSection(entry: InsertBankEntry): string | null {
 
 export function insertBankEntry(
   entry: InsertBankEntry,
-  userId: string = "default",
+  userId: string,
 ): string {
   ensureProfileBankHierarchySchema();
   const id = entry.id ?? generateId();
@@ -200,7 +197,7 @@ export function insertBankEntry(
 
 export function insertBankEntries(
   entries: InsertBankEntry[],
-  userId: string = "default",
+  userId: string,
 ): string[] {
   const ids: string[] = [];
   const insert = db.transaction(() => {
@@ -212,7 +209,7 @@ export function insertBankEntries(
   return ids;
 }
 
-export function getBankEntries(userId: string = "default"): BankEntry[] {
+export function getBankEntries(userId: string): BankEntry[] {
   ensureProfileBankHierarchySchema();
   const rows = db
     .prepare(
@@ -224,7 +221,7 @@ export function getBankEntries(userId: string = "default"): BankEntry[] {
 
 export function getBankEntriesByCategory(
   category: BankCategory,
-  userId: string = "default",
+  userId: string,
 ): BankEntry[] {
   ensureProfileBankHierarchySchema();
   const rows = db
@@ -235,9 +232,7 @@ export function getBankEntriesByCategory(
   return attachChildCounts(rows.map(rowToEntry), userId);
 }
 
-export function getGroupedBankEntries(
-  userId: string = "default",
-): GroupedBankEntries {
+export function getGroupedBankEntries(userId: string): GroupedBankEntries {
   const all = getBankEntries(userId);
   const grouped: GroupedBankEntries = {
     experience: [],
@@ -257,10 +252,7 @@ export function getGroupedBankEntries(
   return grouped;
 }
 
-export function searchBankEntries(
-  query: string,
-  userId: string = "default",
-): BankEntry[] {
+export function searchBankEntries(query: string, userId: string): BankEntry[] {
   ensureProfileBankHierarchySchema();
   const pattern = `%${query}%`;
   const rows = db
@@ -274,7 +266,7 @@ export function searchBankEntries(
 export function searchBankEntriesByCategory(
   query: string,
   category: BankCategory,
-  userId: string = "default",
+  userId: string,
 ): BankEntry[] {
   ensureProfileBankHierarchySchema();
   const pattern = `%${query}%`;
@@ -289,7 +281,7 @@ export function searchBankEntriesByCategory(
 }
 
 export function listBankEntriesPaginated({
-  userId = "default",
+  userId,
   query,
   category,
   sourceDocumentId,
@@ -335,7 +327,7 @@ export function listBankEntriesPaginated({
 
 export function deleteBankEntriesBySource(
   sourceDocumentId: string,
-  userId: string = "default",
+  userId: string,
 ): number {
   ensureProfileBankHierarchySchema();
   const result = db
@@ -372,9 +364,7 @@ function rowToSourceDocument(row: SourceDocumentRow): SourceDocument {
   };
 }
 
-export function getSourceDocuments(
-  userId: string = "default",
-): SourceDocument[] {
+export function getSourceDocuments(userId: string): SourceDocument[] {
   const rows = db
     .prepare(
       `SELECT d.id, d.filename, d.size, d.uploaded_at,
@@ -396,14 +386,14 @@ export interface DeleteSourceDocumentsResult {
 
 export function deleteSourceDocument(
   documentId: string,
-  userId: string = "default",
+  userId: string,
 ): number {
   return deleteSourceDocuments([documentId], userId).chunksDeleted;
 }
 
 export function deleteSourceDocuments(
   documentIds: string[],
-  userId: string = "default",
+  userId: string,
 ): DeleteSourceDocumentsResult {
   if (documentIds.length === 0) {
     return { documentsDeleted: 0, chunksDeleted: 0 };
@@ -432,7 +422,7 @@ export function deleteSourceDocuments(
   return transaction();
 }
 
-export function clearBankEntries(userId: string = "default"): void {
+export function clearBankEntries(userId: string): void {
   db.prepare("DELETE FROM profile_bank WHERE user_id = ?").run(userId);
 }
 
@@ -474,7 +464,7 @@ export function getDeduplicationKey(
 export function findDuplicateEntry(
   category: BankCategory,
   contentKey: string,
-  userId: string = "default",
+  userId: string,
 ): BankEntry | null {
   ensureProfileBankHierarchySchema();
   const rows = db
@@ -497,7 +487,7 @@ export function updateBankEntry(
   id: string,
   content: Record<string, unknown>,
   confidenceScore: number,
-  userId: string = "default",
+  userId: string,
 ): void {
   ensureProfileBankHierarchySchema();
   const metadata = {
@@ -573,10 +563,7 @@ export function updateBankEntryForUser(
 /**
  * Delete a single bank entry. Returns true if the entry existed and was deleted.
  */
-export function deleteBankEntry(
-  id: string,
-  userId: string = "default",
-): boolean {
+export function deleteBankEntry(id: string, userId: string): boolean {
   ensureProfileBankHierarchySchema();
   db.prepare(
     `DELETE FROM profile_bank

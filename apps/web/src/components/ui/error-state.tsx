@@ -2,6 +2,7 @@
 
 import { AlertCircle, RefreshCw, XCircle } from "lucide-react";
 import { Button } from "./button";
+import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 
 interface ErrorStateProps {
   title?: string;
@@ -20,6 +21,8 @@ export function ErrorState({
   variant = "default",
   className = "",
 }: ErrorStateProps) {
+  const a11yT = useA11yTranslations();
+
   if (variant === "inline") {
     return (
       <div
@@ -53,7 +56,7 @@ export function ErrorState({
             size="icon"
             onClick={onDismiss}
             className="shrink-0 h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-            aria-label="Dismiss error"
+            aria-label={a11yT("dismissError")}
           >
             <XCircle className="h-4 w-4" />
           </Button>
@@ -176,9 +179,11 @@ export function ErrorBoundaryFallback({
   error,
   resetErrorBoundary,
 }: ErrorBoundaryFallbackProps) {
+  const a11yT = useA11yTranslations();
+
   return (
     <ErrorState
-      title="Application Error"
+      title={a11yT("applicationError")}
       message={error.message || "Something went wrong"}
       onRetry={resetErrorBoundary}
       variant="card"

@@ -17,11 +17,14 @@ import type {
   SessionQuestionCategory,
 } from "@/lib/constants";
 import type { InterviewMode, PastSession } from "@/types/interview";
+import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 
 const QUESTION_COUNT_STORAGE_KEY = "taida:interview:question-count";
 const TIMER_STORAGE_KEY = "taida:interview:timer-enabled";
 
 export default function InterviewPage() {
+  const a11yT = useA11yTranslations();
+
   const [difficulty, setDifficulty] = useState<InterviewDifficulty>("mid");
   const [quickPracticeOpen, setQuickPracticeOpen] = useState(false);
   const [quickPracticeCategory, setQuickPracticeCategory] =
@@ -125,7 +128,7 @@ export default function InterviewPage() {
       <PageHeader
         width="wide"
         icon={Sparkles}
-        title="Interview Preparation"
+        title={a11yT("interviewPreparation")}
         description="Practice with AI-generated questions tailored to your target jobs and receive instant feedback."
       />
 

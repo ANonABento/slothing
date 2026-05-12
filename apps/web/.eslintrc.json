@@ -1,4 +1,17 @@
 {
   "root": true,
-  "extends": "next/core-web-vitals"
+  "extends": "next/core-web-vitals",
+  "rules": {
+    "no-restricted-syntax": [
+      "error",
+      {
+        "selector": "AssignmentPattern[left.name='userId'][left.typeAnnotation.typeAnnotation.type='TSStringKeyword']",
+        "message": "Do not default userId parameters; thread an explicit authenticated or test userId instead."
+      },
+      {
+        "selector": "Property[key.name='userId'] > AssignmentPattern[left.name='userId']",
+        "message": "Do not default userId destructuring; thread an explicit authenticated or test userId instead."
+      }
+    ]
+  }
 }
