@@ -1,8 +1,14 @@
 import { ScannerForm } from "@/components/ats/scanner-form";
-import { getPageMetadata } from "@/lib/seo";
+import { getLocalizedPageMetadata } from "@/lib/seo";
 import { ShieldCheck, Zap, Eye, Sparkles } from "lucide-react";
 
-export const metadata = getPageMetadata("atsScanner");
+export function generateMetadata({
+  params,
+}: {
+  params: { locale: string };
+}) {
+  return getLocalizedPageMetadata("atsScanner", params.locale);
+}
 
 const BENEFITS = [
   {
