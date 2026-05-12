@@ -3,7 +3,7 @@
     "note": "Auto-translated, needs human review.",
     "source": "llm-anthropic",
     "model": "claude-code",
-    "generatedAt": "2026-05-10T09:49:59.153Z"
+    "generatedAt": "2026-05-12T00:55:14.000Z"
   },
   "common": {
     "cancel": "Cancelar",
@@ -35,7 +35,7 @@
     "groups": {
       "home": "Início",
       "documents": "Documentos",
-      "pipeline": "Pipeline",
+      "pipeline": "Funil",
       "prep": "Preparação",
       "reporting": "Relatórios"
     },
@@ -92,7 +92,7 @@
       "readiness": "Prontidão",
       "documents": "Documentos",
       "tailoredDocs": "Documentos personalizados",
-      "pipeline": "Pipeline"
+      "pipeline": "Funil"
     },
     "today": {
       "title": "Hoje",
@@ -125,7 +125,7 @@
       "tailoredDetail": "{count, plural, one {# currículo} other {# currículos}} criado(s)"
     },
     "pipeline": {
-      "title": "Pipeline",
+      "title": "Funil",
       "description": "Onde estão suas oportunidades ativas.",
       "empty": "Adicione oportunidades para visualizar seu pipeline."
     },
@@ -147,9 +147,9 @@
     "filters": {
       "panel": "Filtros",
       "type": "Tipo",
-      "status": "Status",
+      "status": "Situação",
       "source": "Origem",
-      "tags": "Tags",
+      "tags": "Etiquetas",
       "remote": "Tipo de trabalho remoto",
       "tech": "Stack tecnológica",
       "allTags": "Todas as tags",
@@ -160,16 +160,16 @@
       "sortBy": "Ordenar por {label}",
       "activeSearch": "Busca: {value}",
       "activeType": "Tipo: {value}",
-      "activeStatus": "Status: {value}",
+      "activeStatus": "Situação: {value}",
       "activeSource": "Origem: {value}",
       "activeRemote": "Remoto: {value}",
-      "activeTag": "Tag: {value}",
-      "activeTech": "Tech: {value}",
+      "activeTag": "Etiqueta: {value}",
+      "activeTech": "Tecnologia: {value}",
       "remove": "Remover filtro {label}"
     },
     "tabs": {
       "job": "Vagas",
-      "hackathon": "Hackathons",
+      "hackathon": "Maratonas de programação",
       "all": "Tudo"
     },
     "status": {
@@ -185,7 +185,7 @@
     },
     "types": {
       "job": "Vaga",
-      "hackathon": "Hackathon"
+      "hackathon": "Maratona de programação"
     },
     "sources": {
       "all": "Todas as origens",
@@ -195,7 +195,7 @@
       "greenhouse": "Greenhouse",
       "lever": "Lever",
       "devpost": "Devpost",
-      "manual": "Manual",
+      "manual": "Inserção manual",
       "url": "URL"
     },
     "remote": {
@@ -213,7 +213,7 @@
     "summary": "Mostrando {shown} de {total} oportunidades",
     "counts": {
       "jobs": "{count, plural, one {# vaga} other {# vagas}}",
-      "hackathons": "{count, plural, one {# hackathon} other {# hackathons}}",
+      "hackathons": "{count, plural, one {# maratona de programação} other {# maratonas de programação}}",
       "pending": "{count, plural, one {# pendente} other {# pendentes}}"
     },
     "empty": {

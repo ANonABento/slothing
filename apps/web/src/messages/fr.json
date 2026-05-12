@@ -3,7 +3,7 @@
     "note": "Auto-translated, needs human review.",
     "source": "llm-anthropic",
     "model": "claude-code",
-    "generatedAt": "2026-05-10T09:52:09.947Z"
+    "generatedAt": "2026-05-12T00:55:14.000Z"
   },
   "common": {
     "cancel": "Annuler",
@@ -12,7 +12,7 @@
     "filters": "Filtres",
     "import": "Importer",
     "loading": "Chargement",
-    "openSource": "Open source",
+    "openSource": "Code source ouvert",
     "save": "Enregistrer",
     "search": "Rechercher",
     "selectLocale": "Sélectionner la langue",
@@ -34,14 +34,14 @@
     "llmNotConfigured": "LLM non configuré",
     "groups": {
       "home": "Accueil",
-      "documents": "Documents",
-      "pipeline": "Pipeline",
+      "documents": "Fichiers",
+      "pipeline": "Suivi",
       "prep": "Préparation",
       "reporting": "Rapports"
     },
     "items": {
       "dashboard": "Tableau de bord",
-      "documents": "Documents",
+      "documents": "Fichiers",
       "answerBank": "Banque de réponses",
       "studio": "Studio de documents",
       "opportunities": "Opportunités",
@@ -90,9 +90,9 @@
     },
     "stats": {
       "readiness": "Préparation",
-      "documents": "Documents",
+      "documents": "Fichiers",
       "tailoredDocs": "Documents personnalisés",
-      "pipeline": "Pipeline"
+      "pipeline": "Suivi"
     },
     "today": {
       "title": "Aujourd'hui",
@@ -125,7 +125,7 @@
       "tailoredDetail": "{count, plural, one {# CV} other {# CV}} créés"
     },
     "pipeline": {
-      "title": "Pipeline",
+      "title": "Suivi",
       "description": "Où en sont vos opportunités actives.",
       "empty": "Ajoutez des opportunités pour voir votre pipeline."
     },
@@ -146,9 +146,9 @@
     "addOpportunity": "Ajouter une opportunité",
     "filters": {
       "panel": "Filtres",
-      "type": "Type",
+      "type": "Catégorie",
       "status": "Statut",
-      "source": "Source",
+      "source": "Origine",
       "tags": "Étiquettes",
       "remote": "Type de télétravail",
       "tech": "Stack technique",
@@ -169,7 +169,7 @@
     },
     "tabs": {
       "job": "Postes",
-      "hackathon": "Hackathons",
+      "hackathon": "Marathons de code",
       "all": "Tout"
     },
     "status": {
@@ -185,7 +185,7 @@
     },
     "types": {
       "job": "Poste",
-      "hackathon": "Hackathon"
+      "hackathon": "Marathon de code"
     },
     "sources": {
       "all": "Toutes les sources",
@@ -213,7 +213,7 @@
     "summary": "Affichage de {shown} sur {total} opportunités",
     "counts": {
       "jobs": "{count, plural, one {# poste} other {# postes}}",
-      "hackathons": "{count, plural, one {# hackathon} other {# hackathons}}",
+      "hackathons": "{count, plural, one {# marathon de code} other {# marathons de code}}",
       "pending": "{count, plural, one {# en attente} other {# en attente}}"
     },
     "empty": {
