@@ -11,9 +11,7 @@ export function parseGmailAutoStatusEnabled(value: string | null): boolean {
   return value === "true";
 }
 
-export function getGmailAutoStatusEnabled(
-  userId: string = "default",
-): boolean {
+export function getGmailAutoStatusEnabled(userId: string): boolean {
   return parseGmailAutoStatusEnabled(
     getSetting(GMAIL_AUTO_STATUS_ENABLED_SETTING_KEY, userId),
   );
@@ -21,21 +19,16 @@ export function getGmailAutoStatusEnabled(
 
 export function setGmailAutoStatusEnabled(
   enabled: boolean,
-  userId: string = "default",
+  userId: string,
 ): void {
   setSetting(GMAIL_AUTO_STATUS_ENABLED_SETTING_KEY, String(enabled), userId);
 }
 
-export function getGmailLastScannedAt(
-  userId: string = "default",
-): string | null {
+export function getGmailLastScannedAt(userId: string): string | null {
   return getSetting(GMAIL_LAST_SCANNED_AT_SETTING_KEY, userId);
 }
 
-export function setGmailLastScannedAt(
-  iso: string,
-  userId: string = "default",
-): void {
+export function setGmailLastScannedAt(iso: string, userId: string): void {
   setSetting(GMAIL_LAST_SCANNED_AT_SETTING_KEY, iso, userId);
 }
 

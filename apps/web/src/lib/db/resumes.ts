@@ -21,8 +21,8 @@ export function saveGeneratedResume(
   templateId: string,
   content: unknown,
   htmlPath: string,
-  matchScore?: number,
-  userId: string = "default",
+  matchScore: number | undefined,
+  userId: string,
 ): GeneratedResume {
   const id = generateId();
   const now = nowIso();
@@ -71,7 +71,7 @@ export function saveGeneratedResume(
 // Get all generated resumes for a job
 export function getGeneratedResumes(
   jobId: string,
-  userId: string = "default",
+  userId: string,
 ): GeneratedResume[] {
   const stmt = db.prepare(`
     SELECT id, job_id, profile_id, content_json, pdf_path, match_score, created_at
@@ -105,7 +105,7 @@ export function getGeneratedResumes(
 // Get a specific generated resume
 export function getGeneratedResume(
   id: string,
-  userId: string = "default",
+  userId: string,
 ): GeneratedResume | null {
   const stmt = db.prepare(`
     SELECT id, job_id, profile_id, content_json, pdf_path, match_score, created_at
@@ -140,10 +140,7 @@ export function getGeneratedResume(
 }
 
 // Delete a generated resume
-export function deleteGeneratedResume(
-  id: string,
-  userId: string = "default",
-): void {
+export function deleteGeneratedResume(id: string, userId: string): void {
   const stmt = db.prepare(
     "DELETE FROM generated_resumes WHERE id = ? AND user_id = ?",
   );
@@ -151,9 +148,7 @@ export function deleteGeneratedResume(
 }
 
 // Get all generated resumes (for dashboard stats)
-export function getAllGeneratedResumes(
-  userId: string = "default",
-): GeneratedResume[] {
+export function getAllGeneratedResumes(userId: string): GeneratedResume[] {
   const stmt = db.prepare(`
     SELECT id, job_id, profile_id, content_json, pdf_path, match_score, created_at
     FROM generated_resumes
@@ -184,7 +179,7 @@ export function getAllGeneratedResumes(
 }
 
 // Get count of generated resumes
-export function getGeneratedResumeCount(userId: string = "default"): number {
+export function getGeneratedResumeCount(userId: string): number {
   const stmt = db.prepare(
     "SELECT COUNT(*) as count FROM generated_resumes WHERE user_id = ?",
   );

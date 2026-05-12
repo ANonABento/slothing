@@ -11,6 +11,7 @@ import type {
   PromptVariant,
   PromptVariantStats,
 } from "@/lib/db/prompt-variants";
+import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 
 interface VariantWithStats extends PromptVariant {
   resultCount: number;
@@ -18,6 +19,8 @@ interface VariantWithStats extends PromptVariant {
 }
 
 export function PromptVariantsSection() {
+  const a11yT = useA11yTranslations();
+
   const [variants, setVariants] = useState<VariantWithStats[]>([]);
   const [loading, setLoading] = useState(true);
   const [activating, setActivating] = useState<string | null>(null);
@@ -117,7 +120,7 @@ export function PromptVariantsSection() {
 
   return (
     <PageSection
-      title="Prompt A/B Testing"
+      title={a11yT("promptABTesting")}
       description="Manage tailoring prompt versions. The active version is used for all resume generations."
       icon={FlaskConical}
       action={
@@ -163,7 +166,9 @@ export function PromptVariantsSection() {
               value={newContent}
               onChange={(e) => setNewContent(e.target.value)}
               rows={6}
-              placeholder="Write the tailoring instructions for this prompt variant..."
+              placeholder={a11yT(
+                "writeTheTailoringInstructionsForThisPromptVariant",
+              )}
               className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm font-mono"
             />
           </div>

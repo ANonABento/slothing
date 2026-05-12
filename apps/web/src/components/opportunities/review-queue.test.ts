@@ -1,6 +1,8 @@
 import React from "react";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { NextIntlClientProvider } from "next-intl";
 import { describe, expect, it, vi } from "vitest";
+import messages from "@/messages/en.json";
 import type { Opportunity } from "@/types/opportunity";
 import {
   getDescriptionPreview,
@@ -22,6 +24,25 @@ const baseJob: Opportunity = {
   createdAt: "2026-04-20T00:00:00.000Z",
   updatedAt: "2026-04-20T00:00:00.000Z",
 };
+
+const IntlProvider = NextIntlClientProvider as React.ComponentType<{
+  locale: string;
+  messages: typeof messages;
+  children?: React.ReactNode;
+}>;
+
+function renderWithIntl(element: React.ReactElement) {
+  return render(
+    React.createElement(
+      IntlProvider,
+      {
+        locale: "en-US",
+        messages,
+      },
+      element,
+    ),
+  );
+}
 
 describe("getPendingOpportunities", () => {
   it("returns only pending jobs ordered by nearest deadline then newest", () => {
@@ -107,7 +128,7 @@ describe("getDescriptionPreview", () => {
 
 describe("OpportunityReviewQueue", () => {
   it("shows the extension CTA first when the queue is empty", () => {
-    render(
+    renderWithIntl(
       React.createElement(OpportunityReviewQueue, {
         jobs: [],
         updating: false,
@@ -127,7 +148,7 @@ describe("OpportunityReviewQueue", () => {
     const onStatusChange = vi.fn().mockResolvedValue(undefined);
     const onApplyNow = vi.fn().mockResolvedValue(undefined);
 
-    render(
+    renderWithIntl(
       React.createElement(OpportunityReviewQueue, {
         jobs: [{ ...baseJob, status: "pending" }],
         updating: false,
@@ -157,7 +178,7 @@ describe("OpportunityReviewQueue", () => {
     const onStatusChange = vi.fn().mockResolvedValue(undefined);
     const onApplyNow = vi.fn().mockResolvedValue(undefined);
 
-    const { rerender } = render(
+    const { rerender } = renderWithIntl(
       React.createElement(OpportunityReviewQueue, {
         jobs: [{ ...baseJob, status: "pending" }],
         updating: false,
@@ -169,18 +190,25 @@ describe("OpportunityReviewQueue", () => {
     expect(screen.getByRole("button", { name: /apply/i })).toBeDisabled();
 
     rerender(
-      React.createElement(OpportunityReviewQueue, {
-        jobs: [
-          {
-            ...baseJob,
-            status: "pending",
-            sourceUrl: "https://example.com/job",
-          },
-        ],
-        updating: false,
-        onStatusChange,
-        onApplyNow,
-      }),
+      React.createElement(
+        IntlProvider,
+        {
+          locale: "en-US",
+          messages,
+        },
+        React.createElement(OpportunityReviewQueue, {
+          jobs: [
+            {
+              ...baseJob,
+              status: "pending",
+              sourceUrl: "https://example.com/job",
+            },
+          ],
+          updating: false,
+          onStatusChange,
+          onApplyNow,
+        }),
+      ),
     );
 
     fireEvent.click(screen.getByRole("button", { name: /apply/i }));

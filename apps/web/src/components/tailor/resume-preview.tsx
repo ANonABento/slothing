@@ -25,6 +25,7 @@ import { createTailorDiff } from "@/lib/tailor/diff";
 import { ScoreRing, SCORE_STRONG, SCORE_MODERATE } from "./gap-analysis";
 import type { ResultQualityRubric } from "@/lib/result-quality/rubric";
 import { ResultQualityCard } from "@/components/result-quality/result-quality-card";
+import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 
 interface ResumePreviewProps {
   resume: TailoredResume;
@@ -103,6 +104,8 @@ export function ResumePreview({
   onResumeChange,
   quality,
 }: ResumePreviewProps) {
+  const a11yT = useA11yTranslations();
+
   const [expanded, setExpanded] = useState(true);
   const [autoTailorLoading, setAutoTailorLoading] = useState(false);
   const [autoTailorResult, setAutoTailorResult] =
@@ -241,7 +244,7 @@ export function ResumePreview({
               Preview
             </a>
           </Button>
-          <Button size="sm" asChild title="Download PDF (Ctrl+E)">
+          <Button size="sm" asChild title={a11yT("downloadPdf")}>
             <a href={pdfUrl} target="_blank" rel="noopener noreferrer">
               <Download className="h-4 w-4 mr-1.5" />
               Download PDF
