@@ -218,7 +218,70 @@ export type MessageType =
   // Content → background: query whether `webNavigation` is currently
   // available. The result determines whether we wait for a step transition
   // event from the background or fall back to the prompted in-page toast.
-  | "HAS_WEBNAVIGATION_PERMISSION";
+  | "HAS_WEBNAVIGATION_PERMISSION"
+  // P4/#40 — Inline AI assistant in the in-page sidebar. The content script
+  // opens a `chrome.runtime.connect` Port (name = CHAT_PORT_NAME) and posts a
+  // CHAT_STREAM_START to the background, which streams tokens back on the same
+  // port. We deliberately use a Port (not chrome.tabs.sendMessage) so the
+  // service worker can deliver back-pressure-friendly token frames without
+  // needing the tab id, and so the channel cleanly tears down on either side.
+  | "CHAT_STREAM_START"
+  | "CHAT_STREAM_TOKEN"
+  | "CHAT_STREAM_END"
+  | "CHAT_STREAM_ERROR";
+
+/**
+ * P4/#40 — Long-lived port name used by the inline AI assistant. The content
+ * script calls `chrome.runtime.connect({ name: CHAT_PORT_NAME })` and the
+ * background's `chrome.runtime.onConnect` listener filters by this name.
+ */
+export const CHAT_PORT_NAME = "slothing-chat-stream";
+
+/**
+ * P4/#40 — Trimmed job-context payload the sidebar sends to the chat route.
+ * Sized to fit the LLM context window comfortably; the server truncates
+ * `description` again as a safety net.
+ */
+export interface ChatJobContext {
+  title?: string;
+  company?: string;
+  location?: string;
+  description?: string;
+  requirements?: string[];
+  url?: string;
+  /** Stable per-source job id when the scraper has one (e.g. Greenhouse). */
+  sourceJobId?: string;
+}
+
+/** P4/#40 — Payload posted from content script → background on the chat port. */
+export interface ChatStreamStartPayload {
+  type: "CHAT_STREAM_START";
+  prompt: string;
+  jobContext?: ChatJobContext;
+}
+
+/** P4/#40 — Token frame pushed from background → content script. */
+export interface ChatStreamTokenPayload {
+  type: "CHAT_STREAM_TOKEN";
+  token: string;
+}
+
+/** P4/#40 — Terminal success frame: stream completed. */
+export interface ChatStreamEndPayload {
+  type: "CHAT_STREAM_END";
+}
+
+/** P4/#40 — Terminal error frame: human-readable message for the UI. */
+export interface ChatStreamErrorPayload {
+  type: "CHAT_STREAM_ERROR";
+  error: string;
+}
+
+export type ChatPortMessage =
+  | ChatStreamStartPayload
+  | ChatStreamTokenPayload
+  | ChatStreamEndPayload
+  | ChatStreamErrorPayload;
 
 /**
  * Payload for the SAVE_CORRECTION message (#33). Sent by the content script's

@@ -1,13 +1,17 @@
 // Background service worker for Columbus extension
 
 import type {
+  ChatPortMessage,
+  ChatStreamStartPayload,
   ExtensionMessage,
   ExtensionResponse,
   ScrapedJob,
   TrackedApplicationPayload,
   SaveCorrectionPayload,
 } from "@/shared/types";
+import { CHAT_PORT_NAME } from "@/shared/types";
 import type { TailorFromPagePayload } from "@/shared/messages";
+import { messageForError } from "@/shared/error-messages";
 import { getAPIClient, resetAPIClient } from "./api-client";
 import {
   getStorage,
@@ -637,6 +641,70 @@ chrome.tabs.onRemoved.addListener((tabId) => {
 // `getSession` already evicts expired entries on read — but it keeps the
 // storage area small after a crash.
 void purgeExpiredSessions();
+
+/**
+ * P4/#40 — Long-lived port handler for the inline AI assistant.
+ *
+ * The content-script sidebar opens `chrome.runtime.connect({name:
+ * CHAT_PORT_NAME})` and posts a CHAT_STREAM_START frame. We translate that
+ * into an SSE call via api-client.chat() and stream tokens back on the same
+ * port until the generator completes (CHAT_STREAM_END) or throws
+ * (CHAT_STREAM_ERROR). If the content-script disconnects mid-stream we set a
+ * cancelled flag so the iterator stops enqueueing.
+ */
+chrome.runtime.onConnect.addListener((port: chrome.runtime.Port) => {
+  if (port.name !== CHAT_PORT_NAME) return;
+
+  let cancelled = false;
+  port.onDisconnect.addListener(() => {
+    cancelled = true;
+  });
+
+  port.onMessage.addListener((message: ChatPortMessage) => {
+    if (message.type !== "CHAT_STREAM_START") return;
+    void runChatStream(port, message, () => cancelled).catch((error) => {
+      console.error("[Columbus] chat stream failure:", error);
+    });
+  });
+});
+
+async function runChatStream(
+  port: chrome.runtime.Port,
+  message: ChatStreamStartPayload,
+  isCancelled: () => boolean,
+): Promise<void> {
+  const safePost = (frame: ChatPortMessage): boolean => {
+    if (isCancelled()) return false;
+    try {
+      port.postMessage(frame);
+      return true;
+    } catch {
+      // Port closed between cancellation checks — bail out quietly.
+      return false;
+    }
+  };
+
+  try {
+    const client = await getAPIClient();
+    const iterator = client.chat(message.prompt, message.jobContext);
+    for await (const token of iterator) {
+      if (isCancelled()) return;
+      if (!safePost({ type: "CHAT_STREAM_TOKEN", token })) return;
+    }
+    safePost({ type: "CHAT_STREAM_END" });
+  } catch (error) {
+    safePost({
+      type: "CHAT_STREAM_ERROR",
+      error: messageForError(error),
+    });
+  } finally {
+    try {
+      port.disconnect();
+    } catch {
+      // Already disconnected — nothing to do.
+    }
+  }
+}
 
 // Handle auth callback from Columbus web app
 chrome.runtime.onMessageExternal.addListener(
