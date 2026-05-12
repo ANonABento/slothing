@@ -139,7 +139,7 @@ const pages = {
   atsScanner: {
     title: "Free ATS Resume Checker",
     description:
-      "Check your resume's ATS compatibility score for free with private, in-browser scoring feedback.",
+      "Check your resume's ATS compatibility score for free. Resumes are parsed on our servers without being saved to your account and scored locally in your browser.",
     path: "/ats-scanner",
   },
   pricing: {
