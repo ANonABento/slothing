@@ -3,9 +3,15 @@ import { Features } from "./components/features";
 import { HowItWorks } from "./components/how-it-works";
 import { Testimonials } from "./components/testimonials";
 import { CTASection } from "./components/cta-section";
-import { getMarketingPageMetadata } from "@/lib/seo";
+import { getLocalizedMarketingPageMetadata } from "@/lib/seo";
 
-export const metadata = getMarketingPageMetadata();
+export function generateMetadata({
+  params,
+}: {
+  params: { locale: string };
+}) {
+  return getLocalizedMarketingPageMetadata(params.locale);
+}
 
 const jsonLd = {
   "@context": "https://schema.org",

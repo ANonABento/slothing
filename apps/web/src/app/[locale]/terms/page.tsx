@@ -1,7 +1,13 @@
 import { Link } from "@/i18n/navigation";
-import { getPageMetadata } from "@/lib/seo";
+import { getLocalizedPageMetadata } from "@/lib/seo";
 
-export const metadata = getPageMetadata("terms");
+export function generateMetadata({
+  params,
+}: {
+  params: { locale: string };
+}) {
+  return getLocalizedPageMetadata("terms", params.locale);
+}
 
 export default function TermsPage() {
   return (

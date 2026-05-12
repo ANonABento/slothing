@@ -2,6 +2,8 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   getAlternateLanguages,
   getAlternateLinksHeader,
+  getLocalizedMarketingPageMetadata,
+  getLocalizedPageMetadata,
   getMarketingPageMetadata,
   getMetadataBase,
   getOgSeo,
@@ -95,6 +97,22 @@ describe("getMarketingPageMetadata", () => {
       card: "summary_large_image",
       title: SITE_TITLE,
     });
+  });
+});
+
+describe("getLocalizedMarketingPageMetadata", () => {
+  it("canonicalizes the localized landing page to the current locale", () => {
+    const meta = getLocalizedMarketingPageMetadata("ja");
+
+    expect(meta.alternates).toMatchObject({ canonical: "/ja" });
+    expect(meta.alternates).toMatchObject({
+      languages: {
+        "x-default": "/en",
+        en: "/en",
+        ja: "/ja",
+      },
+    });
+    expect(meta.openGraph).toMatchObject({ url: "/ja" });
   });
 });
 
@@ -214,6 +232,23 @@ describe("getPageMetadata", () => {
   it("returns unique descriptions for each page", () => {
     const descriptions = ALL_PAGES.map((p) => getPageMetadata(p).description);
     expect(new Set(descriptions).size).toBe(ALL_PAGES.length);
+  });
+});
+
+describe("getLocalizedPageMetadata", () => {
+  it("canonicalizes localized route pages to the current locale", () => {
+    const meta = getLocalizedPageMetadata("pricing", "es");
+
+    expect(meta.alternates).toMatchObject({ canonical: "/es/pricing" });
+    expect(meta.alternates).toMatchObject({
+      languages: {
+        "x-default": "/en/pricing",
+        en: "/en/pricing",
+        es: "/es/pricing",
+        ja: "/ja/pricing",
+      },
+    });
+    expect(meta.openGraph).toMatchObject({ url: "/es/pricing" });
   });
 });
 

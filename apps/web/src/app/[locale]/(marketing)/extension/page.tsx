@@ -14,9 +14,15 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { getCurrentUserId } from "@/lib/auth";
-import { getPageMetadata } from "@/lib/seo";
+import { getLocalizedPageMetadata } from "@/lib/seo";
 
-export const metadata = getPageMetadata("extension");
+export function generateMetadata({
+  params,
+}: {
+  params: { locale: string };
+}) {
+  return getLocalizedPageMetadata("extension", params.locale);
+}
 
 const featureBlocks = [
   {
