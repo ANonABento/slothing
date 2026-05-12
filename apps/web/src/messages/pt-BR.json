@@ -88,7 +88,8 @@
       "signInRequired": "Login necessário",
       "loadData": "Não conseguimos carregar os dados do seu painel.",
       "skipTitle": "Não foi possível pular a configuração",
-      "skipFallback": "Tente novamente."
+      "skipFallback": "Tente novamente.",
+      "loadSection": "Não foi possível carregar esta seção"
     },
     "greeting": {
       "onboardingNamed": "Boas-vindas, {name}. Vamos configurar seu espaço.",
@@ -176,6 +177,23 @@
             "2": {
               "title": "Sinais de prontidão",
               "description": "Saiba o que está polido e o que ainda precisa de ajustes."
+            }
+          }
+        },
+        "install-extension": {
+          "intro": "Com a extensão instalada, você pode capturar vagas de portais de emprego diretamente no Slothing sem inserção manual.",
+          "items": {
+            "0": {
+              "title": "Captura de vagas com um clique",
+              "description": "Salve vagas do LinkedIn, Indeed e outros sites sem sair da página."
+            },
+            "1": {
+              "title": "Preenchimento automático",
+              "description": "Os detalhes da vaga são extraídos automaticamente para você não precisar copiar descrições à mão."
+            },
+            "2": {
+              "title": "Fila de triagem",
+              "description": "Novas vagas chegam na fila de revisão para aceitar ou descartar rapidamente."
             }
           }
         }
@@ -1275,5 +1293,12 @@
         "social-url": "Adicione uma URL do LinkedIn ou GitHub"
       }
     }
+  },
+  "streak": {
+    "badgeLabel": "Ritmo diário",
+    "dayUnit": "{count, plural, one {dia} other {dias}}",
+    "activeMessage": "Uma ação significativa hoje mantém o sistema em movimento.",
+    "startMessage": "Comece sua sequência hoje com uma oportunidade salva, candidatura ou documento personalizado.",
+    "bestStreak": "Melhor sequência"
   }
 }
