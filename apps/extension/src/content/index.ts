@@ -13,13 +13,19 @@ import { LeverOrchestrator } from "./scrapers/lever-orchestrator";
 import { WorkdayOrchestrator } from "./scrapers/workday-orchestrator";
 import type {
   AnswerBankMatch,
+  ChatJobContext,
+  ChatPortMessage,
+  ChatStreamStartPayload,
   ExtensionProfile,
   ScrapedJob,
   DetectedField,
   ExtensionSettings,
   SimilarAnswer,
 } from "@/shared/types";
+import { CHAT_PORT_NAME } from "@/shared/types";
 import { sendMessage, Messages } from "@/shared/messages";
+import { messageForError } from "@/shared/error-messages";
+import type { ChatIntent } from "./sidebar/chat-panel";
 import { showAppliedToast } from "./tracking/applied-toast";
 import { SubmitWatcher, extractCompanyHint } from "./tracking/submit-watcher";
 import { JobPageSidebarController } from "./sidebar/controller";
@@ -738,7 +744,151 @@ async function updateSidebar() {
         active.dispatchEvent(new Event("change", { bubbles: true }));
       }
     },
+    onChatStream: ({ prompt, intent, onToken, signal }) =>
+      streamChat({ prompt, intent, onToken, signal }),
+    onUseInCoverLetter: (seedText) => {
+      void openCoverLetterStudio(seedText);
+    },
   });
+}
+
+/**
+ * P4/#40 — Build the trimmed job-context payload sent to the background's
+ * chat port. We deliberately drop large fields like `responsibilities` and
+ * cap the description here too so we don't blow message-size limits before
+ * the SW even sees it; the server clamps again as a safety net.
+ */
+function buildChatJobContext(): ChatJobContext | undefined {
+  if (!scrapedJob) return undefined;
+  const context: ChatJobContext = {
+    title: scrapedJob.title,
+    company: scrapedJob.company,
+  };
+  if (scrapedJob.location) context.location = scrapedJob.location;
+  if (scrapedJob.description) {
+    context.description = scrapedJob.description.slice(0, 2400);
+  }
+  if (scrapedJob.requirements?.length) {
+    context.requirements = scrapedJob.requirements.slice(0, 10);
+  }
+  if (scrapedJob.url) context.url = scrapedJob.url;
+  if (scrapedJob.sourceJobId) context.sourceJobId = scrapedJob.sourceJobId;
+  return context;
+}
+
+/**
+ * P4/#40 — Open a long-lived `chrome.runtime.connect` Port to the background
+ * service worker, post a CHAT_STREAM_START frame, and resolve / reject the
+ * returned Promise based on the terminal frame the background sends back.
+ *
+ * We chose a Port (rather than chrome.tabs.sendMessage round-trips) because:
+ *   1. The SW can stream tokens back-to-back without needing the tab id.
+ *   2. Either side disconnecting cleanly tears down the other half — so an
+ *      AbortSignal from the React UI can cancel the upstream LLM call by
+ *      simply disconnecting the port.
+ */
+async function streamChat(params: {
+  prompt: string;
+  intent: ChatIntent;
+  onToken: (token: string) => void;
+  signal: AbortSignal;
+}): Promise<void> {
+  const startFrame: ChatStreamStartPayload = {
+    type: "CHAT_STREAM_START",
+    prompt: params.prompt,
+    jobContext: buildChatJobContext(),
+  };
+
+  return new Promise<void>((resolve, reject) => {
+    let port: chrome.runtime.Port;
+    try {
+      port = chrome.runtime.connect({ name: CHAT_PORT_NAME });
+    } catch (error) {
+      reject(new Error(messageForError(error)));
+      return;
+    }
+
+    let settled = false;
+    const finish = (err?: Error) => {
+      if (settled) return;
+      settled = true;
+      params.signal.removeEventListener("abort", onAbort);
+      try {
+        port.disconnect();
+      } catch {
+        // Already torn down.
+      }
+      if (err) reject(err);
+      else resolve();
+    };
+
+    const onAbort = () => finish(new Error("Cancelled"));
+    params.signal.addEventListener("abort", onAbort);
+
+    port.onMessage.addListener((message: ChatPortMessage) => {
+      switch (message.type) {
+        case "CHAT_STREAM_TOKEN":
+          params.onToken(message.token);
+          break;
+        case "CHAT_STREAM_END":
+          finish();
+          break;
+        case "CHAT_STREAM_ERROR":
+          finish(new Error(message.error));
+          break;
+        default:
+          break;
+      }
+    });
+
+    port.onDisconnect.addListener(() => {
+      // Background-initiated disconnect with no terminal frame = treat as a
+      // generic failure so the UI surfaces a sensible message.
+      if (!settled) {
+        const runtimeError = chrome.runtime.lastError?.message;
+        finish(
+          new Error(
+            runtimeError || "Chat stream closed unexpectedly.",
+          ),
+        );
+      }
+    });
+
+    try {
+      port.postMessage(startFrame);
+    } catch (error) {
+      finish(new Error(messageForError(error)));
+    }
+  });
+}
+
+/**
+ * P4/#40 — Open `/studio?mode=cover_letter&jobId=...&seed=...` in a new tab,
+ * URL-encoding the seed text and truncating to keep the URL short.
+ */
+async function openCoverLetterStudio(seedText: string): Promise<void> {
+  const auth = await sendMessage<{ apiBaseUrl: string }>(
+    Messages.getAuthStatus(),
+  );
+  const base = (
+    (auth.success && auth.data?.apiBaseUrl) ||
+    "http://localhost:3000"
+  ).replace(/\/$/, "");
+
+  const params = new URLSearchParams({
+    mode: "cover_letter",
+    seed: seedText,
+  });
+  if (scrapedJob?.sourceJobId) {
+    params.set("jobId", scrapedJob.sourceJobId);
+  } else if (scrapedJob?.url) {
+    params.set("jobUrl", scrapedJob.url);
+  }
+  window.open(
+    `${base}/studio?${params.toString()}`,
+    "_blank",
+    "noopener,noreferrer",
+  );
 }
 
 async function loadProfileForSidebar(): Promise<ExtensionProfile | null> {
