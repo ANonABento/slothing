@@ -2,8 +2,11 @@ import {
   Check,
   GraduationCap,
   Hourglass,
+  Lock,
   Rocket,
+  ShieldCheck,
   Sparkles,
+  Trash2,
 } from "lucide-react";
 import { getLocale } from "next-intl/server";
 
@@ -28,6 +31,7 @@ const tiers = [
     cta: "Start free",
     href: null,
     highlighted: false,
+    ctaNote: "",
     features: [
       `${FREE_TIER_TAILOR_MONTHLY_LIMIT} tailored resumes/month`,
       "Free ATS scanner",
@@ -39,11 +43,13 @@ const tiers = [
     name: "Pro",
     price: "$8/mo",
     cadence: "waitlist",
-    description: "For active searches where every application needs polish.",
+    description:
+      "For active searches where every application needs polish. Billing is not live yet — joining the waitlist costs nothing.",
     icon: Rocket,
     cta: "Email us for waitlist access",
     href: "mailto:waitlist@slothing.work?subject=Pro%20waitlist",
     highlighted: true,
+    ctaNote: "No payment or card required to join.",
     features: [
       "Unlimited tailored resumes",
       "Priority generation",
@@ -60,6 +66,7 @@ const tiers = [
     cta: "Email us to verify student status",
     href: "mailto:students@slothing.work?subject=Student%20verification",
     highlighted: false,
+    ctaNote: "No payment until verification is complete.",
     features: [
       "Unlimited tailored resumes",
       "Student-friendly pricing",
@@ -102,7 +109,7 @@ const faqs = [
   {
     question: "Is there a refund policy?",
     answer:
-      "Yes. If Pro does not fit your search, contact support within 14 days of purchase and we will review the charge.",
+      "Cancellation stops future renewal; it does not automatically refund past use. Within 14 days of a charge, contact support@slothing.work if you need a refund reviewed and we will consider it.",
   },
   {
     question: "Is annual pricing available?",
@@ -253,6 +260,11 @@ export default async function PricingPage() {
                       </a>
                     </Button>
                   )}
+                  {tier.ctaNote && (
+                    <p className="mt-2 text-center text-xs text-muted-foreground">
+                      {tier.ctaNote}
+                    </p>
+                  )}
                 </div>
               </article>
             );
@@ -325,6 +337,60 @@ export default async function PricingPage() {
               </div>
             ))}
           </div>
+        </section>
+
+        <section
+          className="mt-16 border-t pt-10"
+          aria-labelledby="trust-section-heading"
+        >
+          <h2
+            id="trust-section-heading"
+            className="text-2xl font-semibold tracking-tight"
+          >
+            Security and data handling
+          </h2>
+          <p className="mt-2 text-sm text-muted-foreground">
+            What Slothing does — and does not — do with your data.
+          </p>
+          <div className="mt-6 grid gap-6 md:grid-cols-3">
+            <div>
+              <Lock className="mb-3 h-5 w-5 text-primary" />
+              <h3 className="font-medium">Encrypted in transit</h3>
+              <p className="mt-2 text-sm text-muted-foreground">
+                All data travels over HTTPS. Resume content and credentials are
+                never sent in plain text.
+              </p>
+            </div>
+            <div>
+              <ShieldCheck className="mb-3 h-5 w-5 text-primary" />
+              <h3 className="font-medium">No data selling</h3>
+              <p className="mt-2 text-sm text-muted-foreground">
+                We do not sell your personal job search data. Third parties only
+                process data needed to operate features you enable.
+              </p>
+            </div>
+            <div>
+              <Trash2 className="mb-3 h-5 w-5 text-primary" />
+              <h3 className="font-medium">Delete anytime</h3>
+              <p className="mt-2 text-sm text-muted-foreground">
+                You can delete opportunities, documents, and your account at any
+                time. See our{" "}
+                <Link href="/privacy" className="text-primary hover:underline">
+                  Privacy Policy
+                </Link>{" "}
+                for full details.
+              </p>
+            </div>
+          </div>
+          <p className="mt-8 rounded-lg border bg-card p-4 text-sm text-muted-foreground">
+            <strong className="font-medium text-foreground">
+              AI outputs are assistive:
+            </strong>{" "}
+            Slothing generates tailored resumes and interview feedback to
+            support your workflow. Review AI-generated content before submitting
+            any application. Slothing does not guarantee hiring outcomes,
+            interview results, or offer decisions.
+          </p>
         </section>
       </section>
     </main>

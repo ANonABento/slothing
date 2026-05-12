@@ -102,6 +102,14 @@ export default function TermsPage() {
               fees. Unless a checkout flow or applicable law states otherwise,
               fees are non-refundable after the paid period begins, and
               cancellation stops future renewal rather than refunding past use.
+              To request a refund within 14 days of a charge, contact{" "}
+              <a
+                href="mailto:support@slothing.work"
+                className="text-primary hover:underline"
+              >
+                support@slothing.work
+              </a>{" "}
+              and we will review your request.
             </p>
           </section>
 
@@ -177,10 +185,16 @@ export default function TermsPage() {
               Governing law
             </h2>
             <p className="mt-2">
-              These Terms are governed by the laws of [JURISDICTION TBD before
-              public launch], without regard to conflict-of-law rules. This
-              section must be finalized by legal review before any paid plan is
-              made publicly available.
+              The specific governing jurisdiction for these Terms will be
+              disclosed before any paid plan is made publicly available. Until
+              that time, please direct any legal concerns to{" "}
+              <a
+                href="mailto:support@slothing.work"
+                className="text-primary hover:underline"
+              >
+                support@slothing.work
+              </a>{" "}
+              for informal resolution.
             </p>
           </section>
 
@@ -195,11 +209,11 @@ export default function TermsPage() {
                 support@slothing.work
               </a>{" "}
               so we can try to resolve the issue informally. If we cannot
-              resolve it, the required forum, arbitration process, class-action
-              waiver, and any small-claims exceptions are [DISPUTE RESOLUTION
-              TBD before public launch] and must be finalized by legal review,
-              except where applicable law gives you the right to bring a claim
-              in another forum.
+              resolve it, formal dispute resolution terms — including the
+              required forum, any arbitration provisions, and applicable waivers
+              — will be disclosed before any paid plan is made publicly
+              available. Nothing in these Terms limits rights granted to you
+              under applicable law.
             </p>
           </section>
         </div>

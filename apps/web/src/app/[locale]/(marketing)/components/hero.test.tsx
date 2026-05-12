@@ -95,6 +95,8 @@ describe("Hero", () => {
     expect(trustRow).toHaveTextContent(/No credit card/);
     expect(trustRow).toHaveTextContent(/Open early access/);
     expect(trustRow).toHaveTextContent(/Your data, your control/);
+    expect(screen.queryByText(/\d{1,3},\d{3}\+/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/\/5 rating/)).not.toBeInTheDocument();
   });
 
   it("should keep mobile trust cues readable", async () => {
