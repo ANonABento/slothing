@@ -1,5 +1,5 @@
 import { randomBytes } from "node:crypto";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   EncryptionConfigError,
@@ -13,7 +13,6 @@ import {
 } from "./encryption";
 
 const ORIGINAL_KEY = process.env.SLOTHING_ENCRYPTION_KEY;
-const ORIGINAL_NODE_ENV = process.env.NODE_ENV;
 
 function setKey(buf: Buffer) {
   process.env.SLOTHING_ENCRYPTION_KEY = buf.toString("base64");
@@ -36,7 +35,7 @@ describe("encryption", () => {
     } else {
       delete process.env.SLOTHING_ENCRYPTION_KEY;
     }
-    process.env.NODE_ENV = ORIGINAL_NODE_ENV;
+    vi.unstubAllEnvs();
     resetMasterKeyCacheForTests();
   });
 
@@ -87,7 +86,7 @@ describe("encryption", () => {
 
   it("getMasterKey throws in production when SLOTHING_ENCRYPTION_KEY is missing", () => {
     clearKey();
-    process.env.NODE_ENV = "production";
+    vi.stubEnv("NODE_ENV", "production");
     expect(() => getMasterKey()).toThrow(EncryptionConfigError);
   });
 
@@ -99,7 +98,7 @@ describe("encryption", () => {
 
   it("getMasterKey falls back to a dev key when unset outside production", () => {
     clearKey();
-    process.env.NODE_ENV = "test";
+    vi.stubEnv("NODE_ENV", "test");
     expect(() => getMasterKey()).not.toThrow();
     const k = getMasterKey();
     expect(k.length).toBe(32);
