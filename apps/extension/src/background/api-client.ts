@@ -1,14 +1,23 @@
 // Columbus API client for extension
 
 import type {
+  AnswerBankMatch,
+  ChatJobContext,
   ExtensionProfile,
+  ExtensionResumeSummary,
   ScrapedJob,
   LearnedAnswer,
   SimilarAnswer,
   TrackedApplicationPayload,
+  SaveCorrectionPayload,
 } from "@/shared/types";
 import { createOpportunitySchema } from "@slothing/shared/schemas";
-import { getStorage, setStorage } from "./storage";
+import {
+  clearSessionAuthCache,
+  getStorage,
+  markAuthSeen,
+  setStorage,
+} from "./storage";
 
 export class ColumbusAPIClient {
   private baseUrl: string;
@@ -54,8 +63,10 @@ export class ColumbusAPIClient {
 
     if (!response.ok) {
       if (response.status === 401) {
-        // Clear invalid token
+        // Clear invalid token AND the fast-path session cache (#30) so the
+        // next popup open re-verifies instead of trusting a stale verdict.
         await setStorage({ authToken: undefined, tokenExpiry: undefined });
+        await clearSessionAuthCache();
         throw new Error("Authentication expired");
       }
       const error = await response
@@ -73,6 +84,10 @@ export class ColumbusAPIClient {
 
     try {
       await this.authenticatedFetch("/api/extension/auth/verify");
+      // Record the working-auth breadcrumb so the popup can distinguish a
+      // true logout from a service-worker state-loss after this point.
+      // See #27.
+      await markAuthSeen();
       return true;
     } catch {
       return false;
@@ -196,7 +211,10 @@ export class ColumbusAPIClient {
     };
   }
 
-  async tailorFromJob(job: ScrapedJob): Promise<{
+  async tailorFromJob(
+    job: ScrapedJob,
+    baseResumeId?: string,
+  ): Promise<{
     opportunityId: string;
     savedResume: { id: string };
     jobId: string;
@@ -205,18 +223,33 @@ export class ColumbusAPIClient {
     const imported = await this.importJob(job);
     const opportunityId = getImportedOpportunityId(imported.opportunityIds);
 
+    const requestBody: {
+      action: "generate";
+      jobDescription: string;
+      jobTitle: string;
+      company: string;
+      opportunityId: string;
+      baseResumeId?: string;
+    } = {
+      action: "generate",
+      jobDescription,
+      jobTitle: job.title,
+      company: job.company,
+      opportunityId,
+    };
+    // Only thread the id through when the popup picked a non-default resume —
+    // omitting the field keeps the request body byte-identical to the legacy
+    // shape, so existing tests + telemetry don't churn for the master case.
+    if (baseResumeId) {
+      requestBody.baseResumeId = baseResumeId;
+    }
+
     const response = await this.authenticatedFetch<{
       savedResume?: { id?: string };
       jobId?: string;
     }>("/api/tailor", {
       method: "POST",
-      body: JSON.stringify({
-        action: "generate",
-        jobDescription,
-        jobTitle: job.title,
-        company: job.company,
-        opportunityId,
-      }),
+      body: JSON.stringify(requestBody),
     });
 
     if (!response.savedResume?.id || !response.jobId) {
@@ -228,6 +261,13 @@ export class ColumbusAPIClient {
       savedResume: { id: response.savedResume.id },
       jobId: response.jobId,
     };
+  }
+
+  async listResumes(): Promise<ExtensionResumeSummary[]> {
+    const response = await this.authenticatedFetch<{
+      resumes: ExtensionResumeSummary[];
+    }>("/api/extension/resumes");
+    return response.resumes ?? [];
   }
 
   async generateCoverLetterFromJob(job: ScrapedJob): Promise<{
@@ -283,6 +323,20 @@ export class ColumbusAPIClient {
     return response.results;
   }
 
+  // P2/#35 — inline answer-bank search on long textareas.
+  // Calls /api/answer-bank/match with `q` and optional `limit` (defaults to 5
+  // server-side, capped). Used by the floating bulb popover decorator.
+  async matchAnswerBank(q: string, limit?: number): Promise<AnswerBankMatch[]> {
+    const params = new URLSearchParams({ q });
+    if (typeof limit === "number" && Number.isFinite(limit)) {
+      params.set("limit", String(limit));
+    }
+    const response = await this.authenticatedFetch<{
+      results: AnswerBankMatch[];
+    }>(`/api/answer-bank/match?${params.toString()}`);
+    return response.results;
+  }
+
   async getLearnedAnswers(): Promise<LearnedAnswer[]> {
     const response = await this.authenticatedFetch<{
       answers: LearnedAnswer[];
@@ -303,6 +357,117 @@ export class ColumbusAPIClient {
     return this.authenticatedFetch(`/api/extension/learned-answers/${id}`, {
       method: "PATCH",
       body: JSON.stringify({ answer }),
+    });
+  }
+
+  /**
+   * P4/#40 — Inline AI assistant streaming consumer.
+   *
+   * Opens an SSE request to /api/extension/chat and yields tokens as they
+   * arrive. Service workers DO have `fetch` + `body.getReader()` (verified on
+   * Chrome MV3 + Firefox MV2), so we don't need `EventSource` here — which
+   * matters because EventSource can't attach the X-Extension-Token header.
+   *
+   * The server emits three SSE frame shapes:
+   *   data: {"token": "..."}     // per token chunk
+   *   data: {"done": true}        // end of stream
+   *   data: {"error": "..."}      // mid-stream failure (followed by done:true)
+   *
+   * We yield string tokens to the caller and throw on `{error}` frames so the
+   * background's port handler can forward a CHAT_STREAM_ERROR to the UI.
+   */
+  async *chat(
+    prompt: string,
+    jobContext?: ChatJobContext,
+  ): AsyncGenerator<string, void, void> {
+    const token = await this.getAuthToken();
+    if (!token) {
+      throw new Error("Not authenticated");
+    }
+
+    const response = await fetch(`${this.baseUrl}/api/extension/chat`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Extension-Token": token,
+        Accept: "text/event-stream",
+      },
+      body: JSON.stringify({ prompt, jobContext }),
+    });
+
+    if (!response.ok) {
+      // 401: invalidate the token, mirror authenticatedFetch() so the popup
+      // notices the session lost state on the next open.
+      if (response.status === 401) {
+        await setStorage({ authToken: undefined, tokenExpiry: undefined });
+        await clearSessionAuthCache();
+        throw new Error("Authentication expired");
+      }
+      let errMessage = `Request failed: ${response.status}`;
+      try {
+        const body = (await response.json()) as { error?: string };
+        if (body?.error) errMessage = body.error;
+      } catch {
+        // Body wasn't JSON; keep the generic message.
+      }
+      throw new Error(errMessage);
+    }
+
+    const reader = response.body?.getReader();
+    if (!reader) {
+      throw new Error("No response body");
+    }
+    const decoder = new TextDecoder();
+    let buffer = "";
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+
+      // SSE frames are separated by a blank line (\n\n). We split on it and
+      // hold the trailing partial in `buffer`.
+      const frames = buffer.split("\n\n");
+      buffer = frames.pop() ?? "";
+
+      for (const frame of frames) {
+        const line = frame.split("\n").find((l) => l.startsWith("data: "));
+        if (!line) continue;
+        const dataStr = line.slice(6).trim();
+        if (!dataStr) continue;
+        let parsed: { token?: string; done?: boolean; error?: string };
+        try {
+          parsed = JSON.parse(dataStr);
+        } catch {
+          continue;
+        }
+        if (parsed.error) {
+          throw new Error(parsed.error);
+        }
+        if (parsed.token) {
+          yield parsed.token;
+        }
+        if (parsed.done) {
+          return;
+        }
+      }
+    }
+  }
+
+  /**
+   * Persist a user correction so the per-domain field mapping grows stronger
+   * over time. See task #33 in docs/extension-roadmap-2026-05.md. The server
+   * upserts into `field_mappings`, bumping `hit_count` on existing rows and
+   * inserting fresh rows otherwise.
+   */
+  async saveCorrection(payload: SaveCorrectionPayload): Promise<{
+    saved: boolean;
+    hitCount: number;
+  }> {
+    return this.authenticatedFetch("/api/extension/field-mappings/correct", {
+      method: "POST",
+      body: JSON.stringify(payload),
     });
   }
 }

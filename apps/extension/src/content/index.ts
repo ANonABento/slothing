@@ -8,17 +8,35 @@ import { FieldMapper } from "./auto-fill/field-mapper";
 import { AutoFillEngine } from "./auto-fill/engine";
 import { getScraperForUrl } from "./scrapers/scraper-registry";
 import { WaterlooWorksOrchestrator } from "./scrapers/waterloo-works-orchestrator";
+import { GreenhouseOrchestrator } from "./scrapers/greenhouse-orchestrator";
+import { LeverOrchestrator } from "./scrapers/lever-orchestrator";
+import { WorkdayOrchestrator } from "./scrapers/workday-orchestrator";
 import type {
+  AnswerBankMatch,
+  ChatJobContext,
+  ChatPortMessage,
+  ChatStreamStartPayload,
   ExtensionProfile,
   ScrapedJob,
   DetectedField,
   ExtensionSettings,
   SimilarAnswer,
 } from "@/shared/types";
+import { CHAT_PORT_NAME } from "@/shared/types";
 import { sendMessage, Messages } from "@/shared/messages";
+import { messageForError } from "@/shared/error-messages";
+import type { ChatIntent } from "./sidebar/chat-panel";
 import { showAppliedToast } from "./tracking/applied-toast";
 import { SubmitWatcher, extractCompanyHint } from "./tracking/submit-watcher";
 import { JobPageSidebarController } from "./sidebar/controller";
+import { CorrectionsTracker } from "./corrections-tracker";
+import { tryCaptureLinkedInJob } from "./scrapers/linkedin-passive-capture";
+import {
+  mountAnswerBankButton,
+  shouldDecorateTextarea,
+  unmountAllAnswerBankButtons,
+} from "./ui/answer-bank-button";
+import { MultistepController } from "./multistep/controller";
 
 // Initialize components
 const fieldDetector = new FieldDetector();
@@ -31,6 +49,13 @@ let scrapedJob: ScrapedJob | null = null;
 let jobDetectedForUrl: string | null = null;
 let profileLoadPromise: Promise<ExtensionProfile | null> | null = null;
 const sidebarController = new JobPageSidebarController();
+const correctionsTracker = new CorrectionsTracker();
+// P3 / #36 #37 — wires Workday + Greenhouse multi-step handlers. The
+// controller itself decides per-URL whether it should attach.
+const multistepController = new MultistepController({
+  getProfile: () => loadProfileForSidebar(),
+});
+multistepController.init();
 
 const submitWatcher = new SubmitWatcher({
   getDetectedFields: (form) => detectedFieldsByForm.get(form) || [],
@@ -74,6 +99,12 @@ async function scanPage() {
     }
   }
 
+  // P2/#35 — decorate long essay textareas with the inline answer-bank
+  // popover. This runs in addition to the field detector above because the
+  // textareas we care about often aren't owned by a recognised form (some
+  // ATS portals use bare <textarea> with dynamic labels).
+  scanForAnswerBankTextareas();
+
   // Check for job listing
   const scraper = getScraperForUrl(window.location.href);
   let nextScrapedJob: ScrapedJob | null = null;
@@ -94,6 +125,20 @@ async function scanPage() {
           ).catch((err) =>
             console.error("[Columbus] Failed to notify job detected:", err),
           );
+
+          // P3/#38 — passive LinkedIn capture. Only runs on detail pages the
+          // user navigated to themselves; the scraper already enforces this
+          // because `sourceJobId` is only populated when the URL matches the
+          // `/jobs/view/:id` pattern. Failures here are fire-and-forget so a
+          // capture hiccup never blocks the visible scrape/sidebar UX.
+          if (nextScrapedJob.source === "linkedin") {
+            void tryCaptureLinkedInJob(nextScrapedJob, {
+              sendMessage,
+              buildImportMessage: Messages.importJob,
+            }).catch((err) =>
+              console.warn("[Columbus] LinkedIn passive capture failed:", err),
+            );
+          }
         }
       }
     } catch (err) {
@@ -163,6 +208,44 @@ async function handleMessage(message: { type: string; payload?: unknown }) {
         ...(message.payload as object),
       });
 
+    // P3/#39 — Generic bulk-scrape orchestrators for public ATS hosts.
+    case "BULK_GREENHOUSE_GET_PAGE_STATE":
+      return getBulkSourcePageState("greenhouse");
+    case "BULK_GREENHOUSE_SCRAPE_VISIBLE":
+      return runBulkSourceScrape("greenhouse", { paginated: false });
+    case "BULK_GREENHOUSE_SCRAPE_PAGINATED":
+      return runBulkSourceScrape("greenhouse", {
+        paginated: true,
+        ...(message.payload as object),
+      });
+
+    case "BULK_LEVER_GET_PAGE_STATE":
+      return getBulkSourcePageState("lever");
+    case "BULK_LEVER_SCRAPE_VISIBLE":
+      return runBulkSourceScrape("lever", { paginated: false });
+    case "BULK_LEVER_SCRAPE_PAGINATED":
+      return runBulkSourceScrape("lever", {
+        paginated: true,
+        ...(message.payload as object),
+      });
+
+    case "BULK_WORKDAY_GET_PAGE_STATE":
+      return getBulkSourcePageState("workday");
+    case "BULK_WORKDAY_SCRAPE_VISIBLE":
+      return runBulkSourceScrape("workday", { paginated: false });
+    case "BULK_WORKDAY_SCRAPE_PAGINATED":
+      return runBulkSourceScrape("workday", {
+        paginated: true,
+        ...(message.payload as object),
+      });
+
+    case "MULTISTEP_STEP_TRANSITION":
+      // P3 / #36 #37 — background's webNavigation listener saw a step
+      // transition for this tab. The controller dispatches to the active
+      // provider handler (Workday / Greenhouse), which re-fills the new DOM.
+      await multistepController.onWebNavigationTransition();
+      return { success: true };
+
     default:
       return { success: false, error: `Unknown message type: ${message.type}` };
   }
@@ -198,6 +281,208 @@ function getWwPageState() {
       rowCount: rows.length,
       hasNextPage: !!nextBtn && !nextBtn.classList.contains("disabled"),
       currentPage,
+    },
+  };
+}
+
+// P3/#39 — Generic bulk-source plumbing for Greenhouse/Lever/Workday.
+type BulkSource = "greenhouse" | "lever" | "workday";
+
+interface BulkOrchestratorLike {
+  scrapeAllVisible(opts: {
+    throttleMs?: number;
+    maxJobs?: number;
+    onProgress?: (p: {
+      scrapedCount: number;
+      attemptedCount: number;
+      currentPage: number;
+      totalRowsOnPage: number;
+      done: boolean;
+      errors: string[];
+    }) => void;
+  }): Promise<ScrapedJob[]>;
+  scrapeAllPaginated(opts: {
+    throttleMs?: number;
+    maxJobs?: number;
+    maxPages?: number;
+    onProgress?: (p: {
+      scrapedCount: number;
+      attemptedCount: number;
+      currentPage: number;
+      totalRowsOnPage: number;
+      done: boolean;
+      errors: string[];
+    }) => void;
+  }): Promise<ScrapedJob[]>;
+}
+
+function getOrchestratorForSource(source: BulkSource): BulkOrchestratorLike {
+  switch (source) {
+    case "greenhouse":
+      return new GreenhouseOrchestrator();
+    case "lever":
+      return new LeverOrchestrator();
+    case "workday":
+      return new WorkdayOrchestrator();
+  }
+}
+
+function isBulkSourceHandled(source: BulkSource, url: string): boolean {
+  switch (source) {
+    case "greenhouse":
+      return GreenhouseOrchestrator.canHandle(url);
+    case "lever":
+      return LeverOrchestrator.canHandle(url);
+    case "workday":
+      return WorkdayOrchestrator.canHandle(url);
+  }
+}
+
+/**
+ * Selectors used to count visible rows for the popup's "Detected: <source> —
+ * N rows" badge. Each list mirrors the orchestrator's row selectors but stays
+ * out-of-band so we can probe the page cheaply without instantiating the
+ * orchestrator just to count.
+ */
+const BULK_ROW_SELECTORS: Record<BulkSource, string[]> = {
+  greenhouse: [
+    "div.opening",
+    ".job-post",
+    '[data-mapped="true"]',
+    "section.level-0 div.opening",
+  ],
+  lever: [".posting", '[data-qa="posting-name"]'],
+  workday: [
+    '[data-automation-id="jobResults"] li',
+    '[data-automation-id="jobResults"] [role="listitem"]',
+    'ul[role="list"] li[data-automation-id*="job"]',
+    "li.css-1q2dra3",
+  ],
+};
+
+const BULK_NEXT_SELECTORS: Record<BulkSource, string[]> = {
+  greenhouse: [
+    'a[rel="next"]',
+    'a[aria-label="Next page" i]',
+    'button[aria-label="Next" i]',
+    ".pagination .next a",
+  ],
+  lever: [
+    'a[rel="next"]',
+    'button[aria-label="Next" i]',
+    'button[aria-label="Load more" i]',
+  ],
+  workday: [
+    'button[data-uxi-element-id="next"]',
+    'nav[aria-label="pagination"] button[aria-label*="next" i]',
+    'button[aria-label="next" i]',
+  ],
+};
+
+function countBulkRows(source: BulkSource): number {
+  for (const selector of BULK_ROW_SELECTORS[source]) {
+    const matches = document.querySelectorAll(selector);
+    if (matches.length > 0) return matches.length;
+  }
+  return 0;
+}
+
+function bulkHasNextPage(source: BulkSource): boolean {
+  for (const selector of BULK_NEXT_SELECTORS[source]) {
+    const el = document.querySelector<HTMLElement>(selector);
+    if (!el) continue;
+    if (
+      el.hasAttribute("disabled") ||
+      el.getAttribute("aria-disabled") === "true" ||
+      el.classList.contains("disabled")
+    ) {
+      continue;
+    }
+    return true;
+  }
+  return false;
+}
+
+function getBulkSourcePageState(source: BulkSource) {
+  const url = window.location.href;
+  if (!isBulkSourceHandled(source, url)) {
+    return {
+      success: true,
+      data: { detected: false, rowCount: 0, hasNextPage: false },
+    };
+  }
+  const rowCount = countBulkRows(source);
+  return {
+    success: true,
+    data: {
+      detected: rowCount > 0,
+      rowCount,
+      hasNextPage: bulkHasNextPage(source),
+    },
+  };
+}
+
+async function runBulkSourceScrape(
+  source: BulkSource,
+  opts: { paginated: boolean; maxJobs?: number; maxPages?: number },
+) {
+  const url = window.location.href;
+  if (!isBulkSourceHandled(source, url)) {
+    return { success: false, error: `Not a ${source} listing page` };
+  }
+  const orchestrator = getOrchestratorForSource(source);
+  let errors: string[] = [];
+  let pages = 1;
+  const onProgress = (p: {
+    scrapedCount: number;
+    attemptedCount: number;
+    currentPage: number;
+    totalRowsOnPage: number;
+    done: boolean;
+    errors: string[];
+  }) => {
+    pages = p.currentPage;
+    errors = p.errors;
+    // Best-effort progress fan-out. The background routes it to the popup.
+    sendMessage({
+      type: `BULK_${source.toUpperCase()}_PROGRESS`,
+      payload: p,
+    } as never).catch(() => undefined);
+  };
+
+  const jobs = opts.paginated
+    ? await orchestrator.scrapeAllPaginated({
+        onProgress,
+        maxJobs: opts.maxJobs,
+        maxPages: opts.maxPages,
+      })
+    : await orchestrator.scrapeAllVisible({ onProgress });
+
+  if (jobs.length === 0) {
+    return {
+      success: true,
+      data: { imported: 0, attempted: 0, pages, errors },
+    };
+  }
+  const importResp = await sendMessage<{
+    imported: number;
+    opportunityIds: string[];
+    pendingCount: number;
+    dedupedIds?: string[];
+  }>(Messages.importJobsBatch(jobs));
+  if (!importResp.success) {
+    return {
+      success: false,
+      error: importResp.error || "Bulk import failed",
+    };
+  }
+  return {
+    success: true,
+    data: {
+      imported: importResp.data?.imported ?? jobs.length,
+      attempted: jobs.length,
+      pages,
+      errors,
     },
   };
 }
@@ -286,8 +571,24 @@ async function handleFillForm() {
   const mapper = new FieldMapper(cachedProfile);
   autoFillEngine = new AutoFillEngine(fieldDetector, mapper);
 
-  // Fill the form
-  const result = await autoFillEngine.fillForm(detectedFields);
+  // Read the cold-zone floor from settings. Defaults to the legacy 0.5 if
+  // settings aren't available (e.g. transient background-storage failure).
+  let minimumConfidence = 0.5;
+  try {
+    const settings = await getExtensionSettings();
+    minimumConfidence = settings.minimumConfidence;
+  } catch (err) {
+    console.warn("[Columbus] Failed to load settings; using default 0.5", err);
+  }
+
+  // Fill the form. Hand each successful fill to the corrections tracker so
+  // edits-after-fill flow back into the per-domain field mapping (#33).
+  const result = await autoFillEngine.fillForm(detectedFields, {
+    minimumConfidence,
+    onFilled: ({ field, value }) => {
+      correctionsTracker.track(field, value);
+    },
+  });
   if (result.filled >= 2) {
     for (const form of new Set(
       detectedFields
@@ -300,6 +601,62 @@ async function handleFillForm() {
     }
   }
   return { success: true, data: result };
+}
+
+// Opens the web answer-bank page in a new tab, pre-seeded with the question
+// label. Used by the "Generate new" button in the inline popover. The
+// background returns the configured Slothing API base URL alongside the auth
+// status, which is the same host the user's logged-in answer bank lives on.
+async function openAnswerBankSeed(question: string) {
+  const auth = await sendMessage<{ apiBaseUrl: string }>(
+    Messages.getAuthStatus(),
+  );
+  const base =
+    (auth.success && auth.data?.apiBaseUrl) || "http://localhost:3000";
+  const url = `${base.replace(/\/$/, "")}/en/bank?seed=${encodeURIComponent(question)}`;
+  window.open(url, "_blank", "noopener,noreferrer");
+}
+
+// P2/#35 — scan textareas + decorate matches with the floating 💡 popover.
+// Idempotent: the decorator marks each textarea so re-scans don't double-mount.
+function scanForAnswerBankTextareas() {
+  // querySelectorAll across the whole document. Workday/Greenhouse essay
+  // fields don't always live inside a <form>, so we don't scope this to forms.
+  const textareas = document.querySelectorAll<HTMLTextAreaElement>("textarea");
+  for (const textarea of textareas) {
+    try {
+      if (!shouldDecorateTextarea(textarea)) continue;
+      mountAnswerBankButton(textarea, {
+        onMatch: async (q, limit) => {
+          const response = await sendMessage<AnswerBankMatch[]>(
+            Messages.matchAnswerBank({ q, limit: limit ?? 3 }),
+          );
+          if (!response.success) {
+            throw new Error(
+              response.error || "Couldn't reach the Slothing answer bank.",
+            );
+          }
+          return response.data || [];
+        },
+        onPick: () => {
+          // The decorator handles the DOM insertion (value + input/change
+          // events). Nothing else to do here — kept as a hook for future
+          // analytics / corrections (#33).
+        },
+        onGenerate: (q) => {
+          // V1: ask the background to open the web answer-bank page with the
+          // question pre-seeded. A streamed generation endpoint is deferred
+          // to a follow-up (called out in the PR body).
+          openAnswerBankSeed(q).catch((err) =>
+            console.warn("[Columbus] open bank failed:", err),
+          );
+        },
+      });
+    } catch (err) {
+      // A single textarea failure shouldn't abort the scan.
+      console.warn("[Columbus] answer-bank decorate failed:", err);
+    }
+  }
 }
 
 async function getExtensionSettings(): Promise<ExtensionSettings> {
@@ -344,6 +701,24 @@ async function updateSidebar() {
       }
     },
     onAutoFill: async () => {
+      // P3 / #36 #37 — Workday / Greenhouse get the multi-step pipeline so
+      // subsequent steps in the application are filled automatically. Other
+      // sites fall through to the single-page `handleFillForm` path.
+      const provider = multistepController.init();
+      if (provider) {
+        const ok = await multistepController.confirm();
+        if (!ok) {
+          // The controller's confirm() returns false when there were no
+          // fillable fields detected on the current page. Fall back to the
+          // single-page path so users still get a meaningful error.
+          const response = await handleFillForm();
+          if (!response.success) {
+            throw new Error(response.error || "Failed to auto-fill form");
+          }
+        }
+        return;
+      }
+
       const response = await handleFillForm();
       if (!response.success) {
         throw new Error(response.error || "Failed to auto-fill form");
@@ -369,7 +744,147 @@ async function updateSidebar() {
         active.dispatchEvent(new Event("change", { bubbles: true }));
       }
     },
+    onChatStream: ({ prompt, intent, onToken, signal }) =>
+      streamChat({ prompt, intent, onToken, signal }),
+    onUseInCoverLetter: (seedText) => {
+      void openCoverLetterStudio(seedText);
+    },
   });
+}
+
+/**
+ * P4/#40 — Build the trimmed job-context payload sent to the background's
+ * chat port. We deliberately drop large fields like `responsibilities` and
+ * cap the description here too so we don't blow message-size limits before
+ * the SW even sees it; the server clamps again as a safety net.
+ */
+function buildChatJobContext(): ChatJobContext | undefined {
+  if (!scrapedJob) return undefined;
+  const context: ChatJobContext = {
+    title: scrapedJob.title,
+    company: scrapedJob.company,
+  };
+  if (scrapedJob.location) context.location = scrapedJob.location;
+  if (scrapedJob.description) {
+    context.description = scrapedJob.description.slice(0, 2400);
+  }
+  if (scrapedJob.requirements?.length) {
+    context.requirements = scrapedJob.requirements.slice(0, 10);
+  }
+  if (scrapedJob.url) context.url = scrapedJob.url;
+  if (scrapedJob.sourceJobId) context.sourceJobId = scrapedJob.sourceJobId;
+  return context;
+}
+
+/**
+ * P4/#40 — Open a long-lived `chrome.runtime.connect` Port to the background
+ * service worker, post a CHAT_STREAM_START frame, and resolve / reject the
+ * returned Promise based on the terminal frame the background sends back.
+ *
+ * We chose a Port (rather than chrome.tabs.sendMessage round-trips) because:
+ *   1. The SW can stream tokens back-to-back without needing the tab id.
+ *   2. Either side disconnecting cleanly tears down the other half — so an
+ *      AbortSignal from the React UI can cancel the upstream LLM call by
+ *      simply disconnecting the port.
+ */
+async function streamChat(params: {
+  prompt: string;
+  intent: ChatIntent;
+  onToken: (token: string) => void;
+  signal: AbortSignal;
+}): Promise<void> {
+  const startFrame: ChatStreamStartPayload = {
+    type: "CHAT_STREAM_START",
+    prompt: params.prompt,
+    jobContext: buildChatJobContext(),
+  };
+
+  return new Promise<void>((resolve, reject) => {
+    let port: chrome.runtime.Port;
+    try {
+      port = chrome.runtime.connect({ name: CHAT_PORT_NAME });
+    } catch (error) {
+      reject(new Error(messageForError(error)));
+      return;
+    }
+
+    let settled = false;
+    const finish = (err?: Error) => {
+      if (settled) return;
+      settled = true;
+      params.signal.removeEventListener("abort", onAbort);
+      try {
+        port.disconnect();
+      } catch {
+        // Already torn down.
+      }
+      if (err) reject(err);
+      else resolve();
+    };
+
+    const onAbort = () => finish(new Error("Cancelled"));
+    params.signal.addEventListener("abort", onAbort);
+
+    port.onMessage.addListener((message: ChatPortMessage) => {
+      switch (message.type) {
+        case "CHAT_STREAM_TOKEN":
+          params.onToken(message.token);
+          break;
+        case "CHAT_STREAM_END":
+          finish();
+          break;
+        case "CHAT_STREAM_ERROR":
+          finish(new Error(message.error));
+          break;
+        default:
+          break;
+      }
+    });
+
+    port.onDisconnect.addListener(() => {
+      // Background-initiated disconnect with no terminal frame = treat as a
+      // generic failure so the UI surfaces a sensible message.
+      if (!settled) {
+        const runtimeError = chrome.runtime.lastError?.message;
+        finish(new Error(runtimeError || "Chat stream closed unexpectedly."));
+      }
+    });
+
+    try {
+      port.postMessage(startFrame);
+    } catch (error) {
+      finish(new Error(messageForError(error)));
+    }
+  });
+}
+
+/**
+ * P4/#40 — Open `/studio?mode=cover_letter&jobId=...&seed=...` in a new tab,
+ * URL-encoding the seed text and truncating to keep the URL short.
+ */
+async function openCoverLetterStudio(seedText: string): Promise<void> {
+  const auth = await sendMessage<{ apiBaseUrl: string }>(
+    Messages.getAuthStatus(),
+  );
+  const base = (
+    (auth.success && auth.data?.apiBaseUrl) ||
+    "http://localhost:3000"
+  ).replace(/\/$/, "");
+
+  const params = new URLSearchParams({
+    mode: "cover_letter",
+    seed: seedText,
+  });
+  if (scrapedJob?.sourceJobId) {
+    params.set("jobId", scrapedJob.sourceJobId);
+  } else if (scrapedJob?.url) {
+    params.set("jobUrl", scrapedJob.url);
+  }
+  window.open(
+    `${base}/studio?${params.toString()}`,
+    "_blank",
+    "noopener,noreferrer",
+  );
 }
 
 async function loadProfileForSidebar(): Promise<ExtensionProfile | null> {
@@ -395,6 +910,13 @@ async function loadProfileForSidebar(): Promise<ExtensionProfile | null> {
 window.addEventListener("pagehide", () => {
   submitWatcher.detach();
   sidebarController.destroy();
+  correctionsTracker.clear();
+  // P2/#35 — tear down every mounted answer-bank decoration so we don't leak
+  // ResizeObservers or React roots when the page is bfcache-restored.
+  unmountAllAnswerBankButtons();
+  // P3 / #36 #37 — destroy the per-provider observers + dismiss any
+  // in-flight fallback toast.
+  multistepController.destroy();
 });
 
 // Utility: debounce function

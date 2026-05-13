@@ -265,6 +265,69 @@ body {
   grid-column: 1 / -1;
 }
 
+/* ---------- Resume picker (#34) ---------- */
+.resume-picker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--bg-soft);
+}
+
+.resume-picker-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.resume-picker-select {
+  flex: 1;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text);
+  background: transparent;
+  border: none;
+  padding: 2px 0;
+  cursor: pointer;
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  background-image: linear-gradient(
+      45deg,
+      transparent 50%,
+      var(--text-muted) 50%
+    ),
+    linear-gradient(135deg, var(--text-muted) 50%, transparent 50%);
+  background-position:
+    calc(100% - 9px) center,
+    calc(100% - 5px) center;
+  background-size:
+    4px 4px,
+    4px 4px;
+  background-repeat: no-repeat;
+  padding-right: 16px;
+}
+
+.resume-picker-select:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.resume-picker-select:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 /* ---------- Buttons ---------- */
 .btn {
   display: inline-flex;
@@ -430,6 +493,41 @@ body {
   font-size: 13px;
 }
 
+.success-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Inline link-styled button for "View in tracker →" deep-links (#31). */
+.success-link {
+  background: none;
+  border: none;
+  font: inherit;
+  font-weight: 600;
+  font-size: 12px;
+  color: var(--primary);
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.success-link:hover {
+  color: var(--primary-hover);
+  background: var(--primary-soft);
+}
+
+.bulk-result {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 6px;
+}
+
 .check {
   display: inline-flex;
   width: 18px;
@@ -514,6 +612,10 @@ body {
   font-size: 20px;
   box-shadow: var(--shadow-md);
   margin-bottom: 4px;
+}
+
+.hero-mark.warn {
+  background: linear-gradient(135deg, var(--warn), var(--rose));
 }
 
 .hero-title {

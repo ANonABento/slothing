@@ -60,8 +60,9 @@ jobs:
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: 9
+        # Version is read from `packageManager` in package.json — do not
+        # also pass `version:` here or pnpm/action-setup@v4 errors with
+        # ERR_PNPM_BAD_PM_VERSION.
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -87,12 +88,15 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        # Version comes from `packageManager` in package.json.
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: package-lock.json
+          cache: 'pnpm'
 
       - name: Restore dependency and tool caches
         id: cache
@@ -100,21 +104,24 @@ jobs:
         with:
           path: |
             node_modules
+            apps/web/node_modules
+            apps/extension/node_modules
+            packages/shared/node_modules
             .next/cache
             node_modules/.vite/vitest
-          key: ${{ runner.os }}-node20-ci-${{ hashFiles('package.json', 'package-lock.json') }}
+          key: ${{ runner.os }}-node20-ci-${{ hashFiles('pnpm-lock.yaml') }}
           restore-keys: |
             ${{ runner.os }}-node20-ci-
 
       - name: Install dependencies
         if: steps.cache.outputs.cache-hit != 'true'
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium
+        run: pnpm --filter @slothing/web exec playwright install --with-deps chromium
 
       - name: Run smoke e2e
-        run: npm run test:e2e -- --project=chromium --grep "@smoke"
+        run: pnpm --filter @slothing/web exec playwright test --project=chromium --grep "@smoke"
         env:
           CI: 'true'
 

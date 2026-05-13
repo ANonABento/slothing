@@ -1,15 +1,28 @@
 // Message passing utilities for extension communication
 
 import type {
+  AnswerBankMatch,
   ExtensionMessage,
   ExtensionResponse,
   ExtensionProfile,
+  ExtensionResumeSummary,
   ScrapedJob,
   LearnedAnswer,
   SimilarAnswer,
   DetectedField,
   TrackedApplicationPayload,
+  SaveCorrectionPayload,
 } from "./types";
+
+/**
+ * Tailor-from-page payload (#34). `baseResumeId`, when present, asks the
+ * tailor flow to seed from an existing saved resume instead of the master
+ * profile. The popup populates this from its multi-resume picker dropdown.
+ */
+export interface TailorFromPagePayload {
+  job: ScrapedJob;
+  baseResumeId?: string;
+}
 
 // Type-safe message creators
 export const Messages = {
@@ -47,9 +60,12 @@ export const Messages = {
   }),
   openDashboard: (): ExtensionMessage => ({ type: "OPEN_DASHBOARD" }),
   captureVisibleTab: (): ExtensionMessage => ({ type: "CAPTURE_VISIBLE_TAB" }),
-  tailorFromPage: (job: ScrapedJob): ExtensionMessage<ScrapedJob> => ({
+  tailorFromPage: (
+    job: ScrapedJob,
+    baseResumeId?: string,
+  ): ExtensionMessage<TailorFromPagePayload> => ({
     type: "TAILOR_FROM_PAGE",
-    payload: job,
+    payload: { job, baseResumeId },
   }),
   generateCoverLetterFromPage: (
     job: ScrapedJob,
@@ -57,6 +73,8 @@ export const Messages = {
     type: "GENERATE_COVER_LETTER_FROM_PAGE",
     payload: job,
   }),
+  /** #34 — fetch the user's recently-saved tailored resumes for the picker. */
+  listResumes: (): ExtensionMessage => ({ type: "LIST_RESUMES" }),
 
   // Learning messages
   saveAnswer: (data: {
@@ -71,6 +89,13 @@ export const Messages = {
   searchAnswers: (question: string): ExtensionMessage<string> => ({
     type: "SEARCH_ANSWERS",
     payload: question,
+  }),
+  matchAnswerBank: (payload: {
+    q: string;
+    limit?: number;
+  }): ExtensionMessage<{ q: string; limit?: number }> => ({
+    type: "MATCH_ANSWER_BANK",
+    payload,
   }),
 
   jobDetected: (
@@ -93,12 +118,121 @@ export const Messages = {
     payload: opts ?? {},
   }),
   wwGetPageState: (): ExtensionMessage => ({ type: "WW_GET_PAGE_STATE" }),
+
+  // P3/#39 — Bulk scraping for public ATS board hosts. Popup → content-script.
+  // Each pair mirrors the WW shape so the same `BulkSourceCard` UX can drive
+  // every source. Each orchestrator caps at 200/session (overridable below).
+  bulkGreenhouseGetPageState: (): ExtensionMessage => ({
+    type: "BULK_GREENHOUSE_GET_PAGE_STATE",
+  }),
+  bulkGreenhouseScrapeVisible: (): ExtensionMessage => ({
+    type: "BULK_GREENHOUSE_SCRAPE_VISIBLE",
+  }),
+  bulkGreenhouseScrapePaginated: (opts?: {
+    maxJobs?: number;
+    maxPages?: number;
+  }): ExtensionMessage<{ maxJobs?: number; maxPages?: number }> => ({
+    type: "BULK_GREENHOUSE_SCRAPE_PAGINATED",
+    payload: opts ?? {},
+  }),
+
+  bulkLeverGetPageState: (): ExtensionMessage => ({
+    type: "BULK_LEVER_GET_PAGE_STATE",
+  }),
+  bulkLeverScrapeVisible: (): ExtensionMessage => ({
+    type: "BULK_LEVER_SCRAPE_VISIBLE",
+  }),
+  bulkLeverScrapePaginated: (opts?: {
+    maxJobs?: number;
+    maxPages?: number;
+  }): ExtensionMessage<{ maxJobs?: number; maxPages?: number }> => ({
+    type: "BULK_LEVER_SCRAPE_PAGINATED",
+    payload: opts ?? {},
+  }),
+
+  bulkWorkdayGetPageState: (): ExtensionMessage => ({
+    type: "BULK_WORKDAY_GET_PAGE_STATE",
+  }),
+  bulkWorkdayScrapeVisible: (): ExtensionMessage => ({
+    type: "BULK_WORKDAY_SCRAPE_VISIBLE",
+  }),
+  bulkWorkdayScrapePaginated: (opts?: {
+    maxJobs?: number;
+    maxPages?: number;
+  }): ExtensionMessage<{ maxJobs?: number; maxPages?: number }> => ({
+    type: "BULK_WORKDAY_SCRAPE_PAGINATED",
+    payload: opts ?? {},
+  }),
+
+  // P4/#40 — Helper for the chat-port start frame. The actual stream uses a
+  // long-lived chrome.runtime.connect port (CHAT_PORT_NAME) rather than
+  // chrome.runtime.sendMessage, but exposing a typed builder keeps callsites
+  // self-documenting.
+  chatStreamStart: (payload: {
+    prompt: string;
+    jobContext?: import("./types").ChatJobContext;
+  }): import("./types").ChatStreamStartPayload => ({
+    type: "CHAT_STREAM_START",
+    prompt: payload.prompt,
+    jobContext: payload.jobContext,
+  }),
+
+  // Corrections feedback loop (#33). Fired when a user edits an autofilled
+  // field and the final value differs from the original suggestion — the
+  // background forwards it to /api/extension/field-mappings/correct so
+  // future autofills on the same domain prefer the corrected value.
+  saveCorrection: (
+    payload: SaveCorrectionPayload,
+  ): ExtensionMessage<SaveCorrectionPayload> => ({
+    type: "SAVE_CORRECTION",
+    payload,
+  }),
+
+  // P3 / #36 #37 — multi-step form support (Workday, Greenhouse).
+  /** Background → content: a step transition just fired for this tab. */
+  multistepStepTransition: (payload: {
+    url: string;
+    transitionType: "webNavigation" | "fallback";
+  }): ExtensionMessage<{
+    url: string;
+    transitionType: "webNavigation" | "fallback";
+  }> => ({
+    type: "MULTISTEP_STEP_TRANSITION",
+    payload,
+  }),
+  /** Content → background: return the current tab id. */
+  getTabId: (): ExtensionMessage => ({ type: "GET_TAB_ID" }),
+  /**
+   * Content → background: ensure the `webNavigation` permission is granted.
+   * In Chrome MV3 it's declared at install time and the response is always
+   * `{ granted: true }`. In Firefox MV2 the background calls
+   * `browser.permissions.request(...)` and returns the user's verdict.
+   */
+  requestWebNavigationPermission: (): ExtensionMessage => ({
+    type: "REQUEST_WEBNAVIGATION_PERMISSION",
+  }),
+  /** Content → background: is `webNavigation` currently usable? */
+  hasWebNavigationPermission: (): ExtensionMessage => ({
+    type: "HAS_WEBNAVIGATION_PERMISSION",
+  }),
 };
+
+export interface SaveCorrectionResponse extends ExtensionResponse<{
+  saved: boolean;
+  hitCount: number;
+}> {}
 
 // Response type helpers
 export interface AuthStatusResponse extends ExtensionResponse<{
   isAuthenticated: boolean;
   apiBaseUrl: string;
+  /**
+   * True when we recently observed a working auth state but the token is
+   * currently missing (e.g. after a service-worker reload corrupted storage).
+   * The popup uses this to render a distinct "session lost" reconnect view
+   * instead of the fresh-install hero. See #27.
+   */
+  sessionLost?: boolean;
 }> {}
 
 export interface ProfileResponse extends ExtensionResponse<ExtensionProfile> {}
@@ -131,6 +265,14 @@ export interface SearchAnswersResponse extends ExtensionResponse<
   SimilarAnswer[]
 > {}
 
+export interface ListResumesResponse extends ExtensionResponse<{
+  resumes: ExtensionResumeSummary[];
+}> {}
+
+export interface MatchAnswerBankResponse extends ExtensionResponse<
+  AnswerBankMatch[]
+> {}
+
 export type WwPageKind = "list" | "detail" | "other";
 
 export interface WwPageStateResponse extends ExtensionResponse<{
@@ -141,6 +283,25 @@ export interface WwPageStateResponse extends ExtensionResponse<{
 }> {}
 
 export interface WwBulkScrapeResponse extends ExtensionResponse<{
+  imported: number;
+  attempted: number;
+  pages: number;
+  errors: string[];
+}> {}
+
+/** P3/#39 — Page-state probe for the generic bulk sources (GH/Lever/Workday). */
+export interface BulkSourcePageStateResponse extends ExtensionResponse<{
+  detected: boolean;
+  rowCount: number;
+  hasNextPage: boolean;
+}> {}
+
+/**
+ * P3/#39 — Result of a bulk scrape run against one of the generic ATS sources.
+ * Shape mirrors `WwBulkScrapeResponse` so the popup can render every source
+ * with the same `BulkSourceCard` component without per-source casts.
+ */
+export interface BulkSourceScrapeResponse extends ExtensionResponse<{
   imported: number;
   attempted: number;
   pages: number;

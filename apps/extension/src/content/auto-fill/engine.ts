@@ -3,16 +3,50 @@
 import type { DetectedField } from "@/shared/types";
 import { FieldDetector } from "./field-detector";
 import { FieldMapper } from "./field-mapper";
+import {
+  applyYellowMarker,
+  classifyConfidence,
+  createColdBadge,
+  showColdPopover,
+  type ColdCandidate,
+  type ConfidenceZone,
+} from "../ui/confidence-band";
 
 export interface FillResult {
   filled: number;
   skipped: number;
   errors: number;
+  /** Count of fields placed in the cold zone (skipped fill, badge attached). */
+  cold: number;
+  /** Count of fields filled with a yellow-band marker. */
+  yellow: number;
   details: Array<{
     fieldType: string;
     filled: boolean;
+    zone?: ConfidenceZone;
     error?: string;
   }>;
+}
+
+/**
+ * Optional per-field callback fired when a field has been filled successfully.
+ * Used by the corrections tracker (#33) to register the original suggestion
+ * so later edits can be diff'd against it.
+ */
+export type OnFilledCallback = (info: {
+  field: DetectedField;
+  value: string;
+}) => void;
+
+export interface FillFormOptions {
+  /**
+   * Cold-zone floor. Fields with confidence below this value are ignored
+   * entirely (no fill, no badge). Mirrors `settings.minimumConfidence`.
+   * Defaults to 0 so callers without settings still see the cold badge.
+   */
+  minimumConfidence?: number;
+  /** Fired after each successful fill (corrections tracking — #33). */
+  onFilled?: OnFilledCallback;
 }
 
 export class AutoFillEngine {
@@ -24,23 +58,50 @@ export class AutoFillEngine {
     this.mapper = mapper;
   }
 
-  async fillForm(fields: DetectedField[]): Promise<FillResult> {
+  async fillForm(
+    fields: DetectedField[],
+    options: FillFormOptions = {},
+  ): Promise<FillResult> {
     const result: FillResult = {
       filled: 0,
       skipped: 0,
       errors: 0,
+      cold: 0,
+      yellow: 0,
       details: [],
     };
+
+    const minimumConfidence = options.minimumConfidence ?? 0;
 
     for (const field of fields) {
       try {
         const value = this.mapper.mapFieldToValue(field);
+        const zone = classifyConfidence(field.confidence);
+
+        if (zone === "cold") {
+          // Cold zone: don't fill. Optionally add a "?" badge so the user can
+          // pick from candidates. Fields below the minimumConfidence floor get
+          // no badge either (existing semantics: settings.minimumConfidence is
+          // now the cold-zone floor).
+          result.skipped++;
+          result.details.push({
+            fieldType: field.fieldType,
+            filled: false,
+            zone,
+          });
+          if (field.confidence >= minimumConfidence && value) {
+            this.attachColdBadge(field, value);
+            result.cold++;
+          }
+          continue;
+        }
 
         if (!value) {
           result.skipped++;
           result.details.push({
             fieldType: field.fieldType,
             filled: false,
+            zone,
           });
           continue;
         }
@@ -52,12 +113,23 @@ export class AutoFillEngine {
           result.details.push({
             fieldType: field.fieldType,
             filled: true,
+            zone,
           });
+          if (zone === "yellow") {
+            applyYellowMarker(field.element);
+            result.yellow++;
+          }
+          try {
+            options.onFilled?.({ field, value });
+          } catch (cbErr) {
+            console.error("[Columbus] onFilled callback failed:", cbErr);
+          }
         } else {
           result.skipped++;
           result.details.push({
             fieldType: field.fieldType,
             filled: false,
+            zone,
           });
         }
       } catch (err) {
@@ -71,6 +143,41 @@ export class AutoFillEngine {
     }
 
     return result;
+  }
+
+  private attachColdBadge(field: DetectedField, primary: string): void {
+    if (typeof document === "undefined") return;
+    const anchor = field.element;
+    if (!anchor.parentElement) return;
+
+    // De-dupe: if a badge already exists for this field, leave it alone.
+    const existing = anchor.parentElement.querySelector(
+      `[data-columbus-badge-for="${cssEscape(fieldKey(field))}"]`,
+    );
+    if (existing) return;
+
+    const candidates: ColdCandidate[] = [
+      { label: field.fieldType, value: primary },
+    ];
+
+    const badge = createColdBadge({
+      candidateCount: candidates.length,
+      onPick: () => {
+        showColdPopover({
+          anchor: badge,
+          candidates,
+          onSelect: (chosen) => {
+            void this.fillField(anchor, chosen);
+          },
+        });
+      },
+    });
+    badge.setAttribute("data-columbus-badge-for", fieldKey(field));
+
+    // Place the badge in a small wrapper so it can be positioned next to the
+    // field without disturbing the host layout. If the field already has a
+    // positioned parent, append directly.
+    anchor.parentElement.appendChild(badge);
   }
 
   private async fillField(
@@ -258,4 +365,19 @@ export class AutoFillEngine {
       element.dispatchEvent(new Event("input", { bubbles: true }));
     }
   }
+}
+
+function fieldKey(field: DetectedField): string {
+  // Stable per-field marker so repeat fills don't stack badges.
+  const el = field.element;
+  return el.id || el.name || `${field.fieldType}-${el.tagName}`;
+}
+
+function cssEscape(value: string): string {
+  // Minimal escape sufficient for attribute selectors built from element ids /
+  // names. Avoids pulling in a polyfill for environments without CSS.escape.
+  if (typeof CSS !== "undefined" && typeof CSS.escape === "function") {
+    return CSS.escape(value);
+  }
+  return value.replace(/(["\\\[\]])/g, "\\$1");
 }

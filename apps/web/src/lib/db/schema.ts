@@ -698,17 +698,43 @@ export const answerBankVersions = sqliteTable(
   ],
 );
 
-// Custom field mappings for specific sites
-export const fieldMappings = sqliteTable("field_mappings", {
-  id: text("id").primaryKey(),
-  userId: text("user_id").notNull().default(DEFAULT_USER_ID),
-  sitePattern: text("site_pattern").notNull(),
-  fieldSelector: text("field_selector").notNull(),
-  fieldType: text("field_type").notNull(),
-  customValue: text("custom_value"),
-  enabled: integer("enabled", { mode: "boolean" }).default(true),
-  createdAt: text("created_at").default(sql`CURRENT_TIMESTAMP`),
-});
+// Custom field mappings for specific sites. The original (`site_pattern`,
+// `field_selector`, `custom_value`, `enabled`) columns are kept for backwards
+// compatibility; the corrections feedback loop (#33) adds `domain`,
+// `field_signature`, `observed_value`, `hit_count`, and `last_seen_at`.
+// Uniqueness on (user_id, domain, field_signature) — applied as a unique
+// partial index rather than a composite PK so the existing PK on `id` and
+// existing rows (with NULL signature) keep working.
+export const fieldMappings = sqliteTable(
+  "field_mappings",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id").notNull().default(DEFAULT_USER_ID),
+    sitePattern: text("site_pattern").notNull(),
+    fieldSelector: text("field_selector").notNull(),
+    fieldType: text("field_type").notNull(),
+    customValue: text("custom_value"),
+    enabled: integer("enabled", { mode: "boolean" }).default(true),
+    createdAt: text("created_at").default(sql`CURRENT_TIMESTAMP`),
+    // #33 corrections feedback loop columns:
+    domain: text("domain"),
+    fieldSignature: text("field_signature"),
+    observedValue: text("observed_value"),
+    hitCount: integer("hit_count").default(1),
+    lastSeenAt: text("last_seen_at"),
+  },
+  (table) => ({
+    userDomainSignatureUniq: uniqueIndex(
+      "uniq_field_mappings_user_domain_signature",
+    )
+      .on(table.userId, table.domain, table.fieldSignature)
+      .where(sql`domain IS NOT NULL AND field_signature IS NOT NULL`),
+    userDomainIdx: index("idx_field_mappings_user_domain").on(
+      table.userId,
+      table.domain,
+    ),
+  }),
+);
 
 // Resume A/B tracking table
 export const resumeAbTracking = sqliteTable(

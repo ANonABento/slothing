@@ -57,10 +57,23 @@ vi.mock("next-intl", async (importOriginal) => {
       }
     },
     useTranslations: (namespace?: string) => {
+      const originalConsoleError = console.error;
       try {
+        console.error = (...args: Parameters<typeof console.error>) => {
+          const firstArg = args[0];
+          if (
+            firstArg instanceof Error &&
+            firstArg.message.includes("MISSING_MESSAGE")
+          ) {
+            return;
+          }
+          originalConsoleError(...args);
+        };
         return actual.useTranslations(namespace);
       } catch {
         return fallbackTranslations(namespace);
+      } finally {
+        console.error = originalConsoleError;
       }
     },
   };
