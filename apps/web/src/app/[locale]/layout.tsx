@@ -121,8 +121,12 @@ export default async function LocaleLayout({
     >
       <head>
         <AlternateLanguageLinks path={routePath} />
+        {/* Theme preload script mutates documentElement before React hydration;
+            suppress the dangerouslySetInnerHTML mismatch warning React would
+            otherwise emit on every page in dev. */}
         <script
           {...(nonce ? { nonce } : {})}
+          suppressHydrationWarning
           dangerouslySetInnerHTML={{ __html: getThemePreloadScript() }}
         />
       </head>

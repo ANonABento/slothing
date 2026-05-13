@@ -5,13 +5,17 @@
 **Owner:** Claude (driven by user)
 **Design handoff:** `.design-ref/` (Kev's slothing-kev bundle — gitignored, copy at `/tmp/slothing-kev-design/`)
 
-### Worktree dev-server setup gotcha
+### Worktree dev-server setup gotchas
 
-`apps/web/.env.local` is gitignored, so a fresh `git worktree add` boots without auth flags and the `(app)` layout redirects every authed route to `/sign-in?error=auth-unavailable`. Fix once per new worktree by symlinking back to main:
+`apps/web/.env.local` and `apps/web/.local.db` are both gitignored, so a fresh `git worktree add` boots without auth flags **and** with an empty SQLite — the `(app)` layout redirects authed routes to `/sign-in?error=auth-unavailable`, and `/api/opportunities` 500s with `no such table: jobs`. Fix once per new worktree by symlinking both back to main:
 
 ```bash
-ln -sf $(git rev-parse --git-common-dir | xargs dirname)/apps/web/.env.local apps/web/.env.local
+MAIN=$(dirname "$(git rev-parse --git-common-dir)")
+ln -sf "$MAIN/apps/web/.env.local" apps/web/.env.local
+ln -sf "$MAIN/apps/web/.local.db"  apps/web/.local.db
 ```
+
+Sharing the DB across worktrees is fine for dev — both see the same data. If you need an isolated DB, copy instead of symlinking and let the schema bootstrap auto-run on first DB connection.
 
 Done for this worktree on 2026-05-13.
 
