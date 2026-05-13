@@ -98,7 +98,7 @@ export async function seedExtensionStorage(
 ) {
   const page = await context.newPage();
   try {
-    await page.goto(`chrome-extension://${extensionId}/popup.html`);
+    await page.goto(`chrome-extension://${extensionId}/options.html`);
     await page.evaluate(
       (storageData) =>
         chrome.storage.local.set({ columbus_extension: storageData }),
