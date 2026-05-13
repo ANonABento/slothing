@@ -358,6 +358,44 @@ export const llmSettings = sqliteTable("llm_settings", {
   updatedAt: text("updated_at").default(sql`CURRENT_TIMESTAMP`),
 });
 
+export const stripeCustomers = sqliteTable(
+  "stripe_customers",
+  {
+    userId: text("user_id").primaryKey().notNull().default(DEFAULT_USER_ID),
+    stripeCustomerId: text("stripe_customer_id").notNull().unique(),
+    email: text("email"),
+    createdAt: text("created_at").default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at").default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    index("idx_stripe_customers_stripe_id").on(table.stripeCustomerId),
+  ],
+);
+
+export const subscriptions = sqliteTable(
+  "subscriptions",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id").notNull().default(DEFAULT_USER_ID),
+    stripeCustomerId: text("stripe_customer_id").notNull(),
+    planKey: text("plan_key").notNull(),
+    status: text("status").notNull(),
+    stripePriceId: text("stripe_price_id"),
+    currentPeriodStart: text("current_period_start"),
+    currentPeriodEnd: text("current_period_end"),
+    cancelAtPeriodEnd: integer("cancel_at_period_end", {
+      mode: "boolean",
+    }).notNull().default(false),
+    canceledAt: text("canceled_at"),
+    createdAt: text("created_at").default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at").default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    index("idx_subscriptions_user_status").on(table.userId, table.status),
+    index("idx_subscriptions_customer").on(table.stripeCustomerId),
+  ],
+);
+
 // Email drafts table
 export const emailDrafts = sqliteTable("email_drafts", {
   id: text("id").primaryKey(),

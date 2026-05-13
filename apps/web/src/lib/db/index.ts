@@ -137,6 +137,8 @@ export {
   companyResearch,
   coverLetters,
   llmSettings,
+  stripeCustomers,
+  subscriptions,
   emailDrafts,
   analyticsSnapshots,
   jobStatusHistory,
@@ -172,6 +174,7 @@ export * from "./answer-bank-versions";
 export * from "./answer-bank-migration";
 export * from "./profile-versions";
 export * from "./knowledge-bank";
+export * from "./subscriptions";
 export * from "./streak";
 
 export {
