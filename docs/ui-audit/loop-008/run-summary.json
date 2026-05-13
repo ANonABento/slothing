@@ -1,0 +1,23 @@
+{
+  "loop": "008",
+  "base": "http://localhost:3010",
+  "widths": [
+    1280
+  ],
+  "viewportHeight": 900,
+  "startedAt": "2026-05-13T18:18:17.310Z",
+  "routesAudited": 1,
+  "results": [
+    {
+      "slug": "home",
+      "path": "/en",
+      "group": "marketing",
+      "width": 1280,
+      "status": "ok",
+      "ms": 3334,
+      "errors": 0,
+      "finalUrl": "http://localhost:3010/en"
+    }
+  ],
+  "consoleErrorTotal": 0
+}

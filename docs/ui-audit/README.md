@@ -45,9 +45,18 @@ Loop terminates when one full audit pass surfaces **zero high** and **zero mediu
 
 ## Status
 
-| Loop | Status | Findings (H/M/L) | Fixes shipped | Notes |
-| ---- | ------ | ---------------- | ------------- | ----- |
-| 001  | done | 29 / 100 / 46 | G-H1, G-H2, G-M1, A1, B1, B6 | First baseline pass — see `loop-001/summary.md` |
+**Loop terminated at iteration 8** (hard cap per LOOP-RUNBOOK). 16 H + 26 M findings closed across 8 iterations; console-error noise dropped 55%. See `loop-008/summary.md` for the carry-over list if you want to re-open the loop.
+
+| Loop | Status | Findings (H/M [STILL]) | Fixes shipped | Notes |
+| ---- | ------ | --------------------- | ------------- | ----- |
+| 001  | done | 29 H / 100 M / 46 L baseline | G-H1, G-H2, G-M1, A1, B1, B6 | First full audit; 5-agent baseline |
+| 002  | done | regression check | A2, B3 + prod-build capture pipeline | Verified loop-001 globals held; console errors 435→195 |
+| 003  | done | regression check | B2, B5 + modal/locale user-flagged polish | Columbus → Slothing rebrand also landed (commit eb498c8) |
+| 004  | done | 13 H / 80 M still | B4, N1, C1 (StatusPill) | Full 5-agent re-audit; first Tier C primitive |
+| 005  | done | lighter audit | vs-index/ats-scanner/pricing marketing polish | C2 OpportunityCard re-evaluated and deferred |
+| 006  | done | infrastructure | C3 marketing primitives (home sections adopt) | New `<MarketingSection>`/`<MarketingSectionHeader>` |
+| 007  | done | infrastructure | C3 expanded (MarketingSection +compact/+borderTop/+prose) | `/extension` adopts 5 of 6 sections |
+| 008  | terminated | ~13 H / ~74 M est. | none (final pass) | Visual verify + status-table wrap-up |
 
 ## Files
 
