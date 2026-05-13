@@ -25,6 +25,20 @@ const localeLang: Record<AppLocale, string> = {
   ko: "ko",
 };
 
+// Two-character display label per locale. Avoids the awkward "ZH-CN"/"PT-BR"
+// chrome look when capitalized; callers wanting the full code should fall back
+// to the locale value directly.
+const localeShortLabel: Record<AppLocale, string> = {
+  en: "EN",
+  es: "ES",
+  "zh-CN": "中",
+  "pt-BR": "PT",
+  hi: "हि",
+  fr: "FR",
+  ja: "日",
+  ko: "한",
+};
+
 function useLocaleSwitcher() {
   const locale = useLocale() as AppLocale;
   const router = useRouter();
@@ -90,12 +104,16 @@ export function LocaleSwitcherCompact({
         <SelectTrigger
           aria-label={t("label")}
           aria-describedby={descriptionId}
-          className="h-11 w-11 justify-center px-0 [&>svg:last-child]:hidden"
+          className="h-11 w-auto gap-1.5 px-2.5 [&>span]:line-clamp-none"
+          lang={localeLang[locale]}
         >
-          <Globe2 className="h-5 w-5" aria-hidden="true" />
-          {/* sr-only must override SelectTrigger's `[&>span]:line-clamp-1`, which */}
-          {/* otherwise lets the active locale label ("English") leak as visible text. */}
-          <span className="!absolute !h-px !w-px !overflow-hidden !whitespace-nowrap !border-0 !p-0 [clip:rect(0,0,0,0)]">
+          <Globe2 className="h-4 w-4 shrink-0" aria-hidden="true" />
+          <span className="text-xs font-semibold uppercase tracking-wide">
+            {localeShortLabel[locale]}
+          </span>
+          {/* SelectValue carries the full language name for screen readers; */}
+          {/* the visible chip stays compact via the localeShortLabel above. */}
+          <span className="sr-only">
             <SelectValue />
           </span>
         </SelectTrigger>
