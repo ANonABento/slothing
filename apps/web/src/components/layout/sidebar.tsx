@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import { useLLMStatus } from "@/hooks/useLLMStatus";
 import { useProfileSnapshot } from "@/hooks/use-profile-snapshot";
+import { CreditBalanceBadge } from "@/components/billing/credit-status";
 import { SidebarExtensionCard } from "./sidebar-extension-card";
 
 export interface NavItem {
@@ -490,6 +491,7 @@ export function Sidebar() {
 
         {/* Bottom navigation */}
         <div className="border-t bg-card/40 p-3 space-y-1">
+          <CreditBalanceBadge collapsed={collapsed} />
           {bottomNavigation.map((item) => {
             const isActive = activeHref === item.href;
             const label = t(item.messageKey);

@@ -6,7 +6,11 @@
  * @response TemplateAnalyzeResponse from @/types/api
  */
 import { NextRequest } from "next/server";
-import { getLLMConfig } from "@/lib/db";
+import {
+  gateAiFeature,
+  isAiGateResponse,
+  type AiGatePass,
+} from "@/lib/billing/ai-gate";
 import { LLMClient } from "@/lib/llm/client";
 import { analyzeTemplateWithLLM } from "@/lib/resume/template-analyzer";
 import { requireAuth, isAuthError } from "@/lib/auth";
@@ -17,6 +21,7 @@ export const dynamic = "force-dynamic";
 export async function POST(request: NextRequest) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
+  let aiGate: AiGatePass | null = null;
 
   try {
     const body = await request.json();
@@ -29,8 +34,14 @@ export async function POST(request: NextRequest) {
       return ApiErrors.badRequest("Resume text is too short to analyze");
     }
 
-    const llmConfig = getLLMConfig(authResult.userId);
-    const llmClient = llmConfig ? new LLMClient(llmConfig) : null;
+    const gate = gateAiFeature(
+      authResult.userId,
+      "document_assistant",
+      "template-analyze",
+    );
+    if (isAiGateResponse(gate)) return gate;
+    aiGate = gate;
+    const llmClient = new LLMClient(gate.llmConfig);
 
     const analyzed = await analyzeTemplateWithLLM(body.text, llmClient);
 
@@ -39,6 +50,7 @@ export async function POST(request: NextRequest) {
       usedLLM: llmClient !== null,
     });
   } catch (error) {
+    aiGate?.refund();
     console.error("Template analysis error:", error);
     return errorResponse("internal_error", "Failed to analyze template");
   }

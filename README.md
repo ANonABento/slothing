@@ -5,7 +5,7 @@
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](./LICENSE)
 [![Status: Active development](https://img.shields.io/badge/status-active%20development-success.svg)](./ROADMAP.md)
 
-**Open source. Self-host free. Or skip setup at [slothing.work](https://slothing.work).**
+**Open source. Privacy-first. Self-host free, or use [slothing.work](https://slothing.work) weekly while you are actively searching.**
 
 Slothing is your personal job-application command center. Upload your career
 documents, build tailored resumes and cover letters in one workspace, track
@@ -56,6 +56,12 @@ search. Slothing inverts both:
   Docs/Sheets export.
 - **Analytics, Calendar, Salary tools, Email templates** — the rest of the
   command center.
+
+## Screenshots
+
+| Columbus review queue | Gmail import | Job-board capture |
+|---|---|---|
+| ![Review queue screenshot](./apps/web/public/marketing/extension/review-queue.png) | ![Gmail import screenshot](./apps/web/public/marketing/extension/gmail-import.png) | ![Job-board capture screenshot](./apps/web/public/marketing/extension/job-board-capture.png) |
 
 ## Tech stack
 
@@ -124,8 +130,8 @@ except directly to the LLM provider.
 
 ### Deploying
 
-For a real self-hosted deployment (docker-compose, env vars, backups), see
-[`docs/self-hosting.md`](./docs/self-hosting.md) *(coming with Phase 7)*.
+For a real self-hosted deployment with Docker Compose, env vars, BYOK setup,
+and backup guidance, see [`docs/self-hosting.md`](./docs/self-hosting.md).
 
 ---
 

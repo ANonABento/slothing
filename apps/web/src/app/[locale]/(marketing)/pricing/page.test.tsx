@@ -78,25 +78,19 @@ describe("PricingPage", () => {
     );
   });
 
-  it("routes Weekly and Monthly CTAs to the waitlist mailto for now", async () => {
+  it("routes Weekly and Monthly CTAs to Stripe checkout buttons", async () => {
     await renderPricingPage();
 
-    const weeklyCta = screen.getAllByRole("link", {
-      name: /Email us for early access/i,
-    })[0];
-    const monthlyCta = screen.getAllByRole("link", {
-      name: /Email us for early access/i,
-    })[1];
+    expect(
+      screen.getAllByRole("button", { name: /Start Weekly/i }),
+    ).not.toHaveLength(0);
+    expect(
+      screen.getAllByRole("button", { name: /Start Monthly/i }),
+    ).not.toHaveLength(0);
 
-    expect(weeklyCta).toHaveAttribute("data-tier-cta", "weekly");
-    expect(weeklyCta.getAttribute("href")).toMatch(
-      /^mailto:waitlist@slothing\.work\?subject=/,
-    );
-
-    expect(monthlyCta).toHaveAttribute("data-tier-cta", "monthly");
-    expect(monthlyCta.getAttribute("href")).toMatch(
-      /^mailto:waitlist@slothing\.work\?subject=/,
-    );
+    expect(
+      screen.queryByRole("link", { name: /Email us for early access/i }),
+    ).not.toBeInTheDocument();
   });
 
   it("highlights Monthly as the most popular tier and Self-host as open source", async () => {
@@ -112,7 +106,7 @@ describe("PricingPage", () => {
 
     expect(
       screen.getByText(
-        "Self-host today, AGPL-3.0. Hosted plans launching soon.",
+        "Self-host today, AGPL-3.0. Hosted plans available now.",
       ),
     ).toBeInTheDocument();
   });
@@ -196,15 +190,24 @@ describe("PricingPage", () => {
     expect(screen.getByText(/AI outputs are assistive/)).toBeInTheDocument();
   });
 
-  it("shows a waitlist-and-selfhost CTA pair at the bottom", async () => {
+  it("shows checkout and self-host CTAs at the bottom", async () => {
     await renderPricingPage();
 
     expect(
-      screen.getByRole("heading", { name: "Hosted billing launches soon" }),
+      screen.getByRole("heading", { name: "Hosted billing is live" }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: /Join the waitlist/i }),
-    ).toBeInTheDocument();
+      screen.getAllByRole("button", { name: /Start Weekly/i }).length,
+    ).toBeGreaterThan(0);
+    expect(
+      screen.getAllByRole("button", { name: /Start Monthly/i }).length,
+    ).toBeGreaterThan(0);
+    expect(
+      screen.queryByRole("link", { name: /Join the waitlist/i }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: /^mailto:/i }),
+    ).not.toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: /Self-host on GitHub/i }),
     ).toBeInTheDocument();
@@ -216,42 +219,6 @@ describe("PricingPage", () => {
     expect(
       screen.getByRole("heading", { name: "Is there a refund policy?" }),
     ).toBeInTheDocument();
-    expect(
-      screen.getByText(/Cancellation stops future renewal/),
-    ).toBeInTheDocument();
-  });
-
-  it("clarifies that Pro and Student waitlists require no payment", async () => {
-    await renderPricingPage();
-
-    expect(
-      screen.getByText("No payment or card required to join."),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText("No payment until verification is complete."),
-    ).toBeInTheDocument();
-  });
-
-  it("renders the trust and security section", async () => {
-    await renderPricingPage();
-
-    expect(
-      screen.getByRole("heading", { name: "Security and data handling" }),
-    ).toBeInTheDocument();
-    expect(screen.getByText("Encrypted in transit")).toBeInTheDocument();
-    expect(screen.getByText("No data selling")).toBeInTheDocument();
-    expect(screen.getByText("Delete anytime")).toBeInTheDocument();
-    expect(screen.getByText(/AI outputs are assistive/)).toBeInTheDocument();
-  });
-
-  it("aligns refund answer with billing terms", async () => {
-    await renderPricingPage();
-
-    const refundHeading = screen.getByRole("heading", {
-      name: "Is there a refund policy?",
-    });
-
-    expect(refundHeading).toBeInTheDocument();
     expect(
       screen.getByText(/Cancellation stops future renewal/),
     ).toBeInTheDocument();

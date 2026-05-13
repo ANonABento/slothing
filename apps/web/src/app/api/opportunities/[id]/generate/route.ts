@@ -9,7 +9,12 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { getJob } from "@/lib/db/jobs";
-import { getProfile, getLLMConfig, saveGeneratedResume } from "@/lib/db";
+import { getProfile, saveGeneratedResume } from "@/lib/db";
+import {
+  gateAiFeature,
+  isAiGateResponse,
+  type AiGatePass,
+} from "@/lib/billing/ai-gate";
 import { generateTailoredResume } from "@/lib/resume/generator";
 import { generateResumeHTML, TEMPLATES } from "@/lib/resume/pdf";
 import { getTemplateWithCustom } from "@/lib/resume/templates";
@@ -37,6 +42,7 @@ export async function POST(
 ) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
+  let aiGate: AiGatePass | null = null;
 
   try {
     // Get template from request body
@@ -66,13 +72,15 @@ export async function POST(
       );
     }
 
-    const llmConfig = getLLMConfig(authResult.userId);
+    const gate = gateAiFeature(authResult.userId, "tailor", params.id);
+    if (isAiGateResponse(gate)) return gate;
+    aiGate = gate;
 
     // Generate tailored resume content
     const tailoredResume = await generateTailoredResume(
       profile,
       job,
-      llmConfig,
+      gate.llmConfig,
     );
 
     // Generate HTML with selected template
@@ -107,6 +115,7 @@ export async function POST(
       savedResume,
     });
   } catch (error) {
+    aiGate?.refund();
     console.error(
       "Generate error:",
       error instanceof Error ? error.stack : error,

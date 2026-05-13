@@ -1,13 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requireAuth, isAuthError } from "@/lib/auth";
-import { getLLMConfig } from "@/lib/db";
+import {
+  gateAiFeature,
+  isAiGateResponse,
+  type AiGatePass,
+} from "@/lib/billing/ai-gate";
 import { LLMClient } from "@/lib/llm/client";
 import {
   applyGenericPhrasePenaltyToCritique,
   buildCoverLetterCritiqueMessages,
   parseCoverLetterCritiqueResponse,
 } from "@/lib/ai/critique-prompts";
+import { nowEpoch } from "@/lib/format/time";
 import { getClientIdentifier, rateLimiters } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
@@ -22,6 +27,7 @@ const critiqueRequestSchema = z.object({
 export async function POST(request: NextRequest) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
+  let aiGate: AiGatePass | null = null;
 
   const clientId = getClientIdentifier(request, authResult.userId);
   const rateLimit = rateLimiters.llm(clientId);
@@ -44,15 +50,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const llmConfig = getLLMConfig(authResult.userId);
-    if (!llmConfig) {
-      return NextResponse.json(
-        { error: "No LLM provider configured. Go to Settings to set one up." },
-        { status: 400 },
-      );
-    }
+    const gate = gateAiFeature(
+      authResult.userId,
+      "cover_letter",
+      `critique:${nowEpoch()}`,
+    );
+    if (isAiGateResponse(gate)) return gate;
+    aiGate = gate;
 
-    const client = new LLMClient(llmConfig);
+    const client = new LLMClient(gate.llmConfig);
     const rawResponse = await client.complete({
       messages: buildCoverLetterCritiqueMessages(parseResult.data),
       temperature: 0.2,
@@ -67,6 +73,7 @@ export async function POST(request: NextRequest) {
       ),
     });
   } catch (error) {
+    aiGate?.refund();
     console.error(
       "[ai/critique-cover-letter] error:",
       error instanceof Error ? error.stack : error,

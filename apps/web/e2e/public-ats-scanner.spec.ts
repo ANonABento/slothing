@@ -67,6 +67,9 @@ test.describe("ATS Scanner page", () => {
     const scanButton = page.getByRole("button", { name: /Scan Resume/i });
     await expect(scanButton).toBeVisible();
     await expect(scanButton).toBeDisabled();
+    await expect(
+      page.getByText(/Upload a resume or paste at least 50 characters/i),
+    ).toBeVisible();
   });
 
   test("Paste text instead toggle reveals resume text area", async ({
@@ -105,6 +108,24 @@ test.describe("ATS Scanner page", () => {
     await expect(jobUrlInput).toBeVisible();
   });
 
+  test("job URL field does not import on blur", async ({ page }) => {
+    let scrapeCalls = 0;
+    await page.route("**/api/scanner/scrape-job", async (route) => {
+      scrapeCalls += 1;
+      await route.fulfill({
+        status: 500,
+        contentType: "application/json",
+        body: JSON.stringify({ error: "Unexpected scrape" }),
+      });
+    });
+
+    await page.locator("#job-url").fill("https://example.com/jobs/123");
+    await page.locator("#job-text").focus();
+    await page.waitForTimeout(300);
+
+    expect(scrapeCalls).toBe(0);
+  });
+
   test("text-only scan produces a results panel @smoke", async ({ page }) => {
     // Open paste mode and provide resume text
     await page.getByRole("button", { name: /Paste text instead/i }).click();
@@ -125,7 +146,31 @@ test.describe("ATS Scanner page", () => {
     await page.getByLabel(/Paste your resume text/i).fill(SAMPLE_RESUME_TEXT);
     await page.getByRole("button", { name: /Scan Resume/i }).click();
 
-    await expect(page.getByText("Scoring axes")).toBeVisible({ timeout: 5000 });
+    await expect(
+      page.getByRole("heading", { name: "Scoring axes" }),
+    ).toBeVisible({ timeout: 5000 });
+  });
+
+  test("scan results include platform, content, and referral insights", async ({
+    page,
+  }) => {
+    await page.getByRole("button", { name: /Paste text instead/i }).click();
+    await page.getByLabel(/Paste your resume text/i).fill(SAMPLE_RESUME_TEXT);
+    await page
+      .locator("#job-url")
+      .fill("https://acme.myworkdayjobs.com/en-US/careers/job/123");
+    await page.getByRole("button", { name: /Scan Resume/i }).click();
+
+    await expect(
+      page.getByRole("button", { name: /Scan another resume/i }),
+    ).toBeVisible({ timeout: 5000 });
+    await expect(
+      page.getByRole("heading", { name: /Detected ATS: Workday Recruiting/i }),
+    ).toBeVisible({ timeout: 5000 });
+    await expect(
+      page.getByRole("heading", { name: /Content checks/i }),
+    ).toBeVisible();
+    await expect(page.getByText(/referrals convert ~30/i)).toBeVisible();
   });
 
   test("scan results show sign-up upsell", async ({ page }) => {

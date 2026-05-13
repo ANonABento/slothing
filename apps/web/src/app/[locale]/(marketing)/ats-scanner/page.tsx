@@ -1,3 +1,4 @@
+import { HonestyPanel } from "@/components/ats/honesty-panel";
 import { ScannerForm } from "@/components/ats/scanner-form";
 import { getLocalizedPageMetadata } from "@/lib/seo";
 import { ShieldCheck, Zap, Eye, Sparkles } from "lucide-react";
@@ -47,8 +48,10 @@ export default function ATSScannerPage({ params }: ATSScannerPageProps) {
             Free ATS Resume Scanner
           </h1>
           <p className="text-lg text-muted-foreground max-w-xl mx-auto">
-            88% of employers say their ATS filters out qualified candidates
-            before a human reviews them. Check yours in seconds.
+            88% of executives in Harvard&apos;s Hidden Workers study say their
+            ATS configuration excludes viable candidates. We check the
+            mechanical and content issues that actually trip parsers and
+            recruiters.
           </p>
           <p className="mt-3 text-xs leading-5 text-muted-foreground">
             <a
@@ -75,6 +78,11 @@ export default function ATSScannerPage({ params }: ATSScannerPageProps) {
 
         {/* Scanner Form */}
         <ScannerForm locale={locale} />
+
+        {/* Honesty panel — explains what the score does and doesn't mean. */}
+        <div className="mt-16">
+          <HonestyPanel />
+        </div>
       </div>
     </div>
   );

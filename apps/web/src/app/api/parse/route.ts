@@ -6,12 +6,12 @@
  * @response ParseResponse from @/types/api
  */
 import { NextRequest, NextResponse } from "next/server";
+import { getDocuments, updateProfile, getProfile } from "@/lib/db";
 import {
-  getDocuments,
-  getLLMConfig,
-  updateProfile,
-  getProfile,
-} from "@/lib/db";
+  gateOptionalAiFeature,
+  isAiGateResponse,
+  type OptionalAiGatePass,
+} from "@/lib/billing/ai-gate";
 import { parseResumeWithLLM, parseResumeBasic } from "@/lib/parser/resume";
 import { parseDocumentSchema } from "@/lib/constants";
 import { requireAuth, isAuthError } from "@/lib/auth";
@@ -51,6 +51,7 @@ async function parseResumeText(
 export async function POST(request: NextRequest) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
+  let aiGate: OptionalAiGatePass | null = null;
 
   try {
     const rawData = await request.json();
@@ -94,16 +95,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get LLM config and parse resume
-    const llmConfig = getLLMConfig(authResult.userId);
+    // Gate AI parsing by plan / BYOK state before invoking the LLM parser.
+    const gate = gateOptionalAiFeature(
+      authResult.userId,
+      "tailor",
+      `parse:${doc.id}`,
+    );
+    if (isAiGateResponse(gate)) return gate;
+    aiGate = gate;
     log.debug("parse", "LLM config loaded", {
-      provider: llmConfig?.provider ?? "none",
+      provider: gate.llmConfig?.provider ?? "none",
     });
 
     const { parsedProfile, parsingMethod, llmFallback } = await parseResumeText(
       doc.extractedText,
-      llmConfig,
+      gate.llmConfig,
     );
+    if (llmFallback) aiGate.refund();
 
     const sections = Object.keys(parsedProfile).filter(
       (k) => parsedProfile[k as keyof typeof parsedProfile] != null,
@@ -138,9 +146,10 @@ export async function POST(request: NextRequest) {
       profile,
       parsingMethod,
       llmFallback,
-      llmConfigured: !!llmConfig,
+      llmConfigured: !!gate.llmConfig,
     });
   } catch (error) {
+    aiGate?.refund();
     console.error(
       "[parse] Parse error:",
       error instanceof Error ? error.stack : error,

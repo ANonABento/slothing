@@ -772,29 +772,34 @@ function extractSectionText(profile: Profile, section: string): string {
     case "summary":
       return profile.summary || "";
     case "skills":
-      return profile.skills.map((s) => s.name).join(" ");
+      return (profile.skills ?? []).map((s) => s.name).join(" ");
     case "experience":
-      return profile.experiences
+      return (profile.experiences ?? [])
         .map((e) =>
           [
             e.title,
             e.company,
             e.description,
-            ...e.highlights,
-            ...e.skills,
+            ...(e.highlights ?? []),
+            ...(e.skills ?? []),
           ].join(" "),
         )
         .join(" ");
     case "education":
-      return profile.education
+      return (profile.education ?? [])
         .map((e) =>
-          [e.institution, e.degree, e.field, ...e.highlights].join(" "),
+          [e.institution, e.degree, e.field, ...(e.highlights ?? [])].join(" "),
         )
         .join(" ");
     case "projects":
-      return profile.projects
+      return (profile.projects ?? [])
         .map((p) =>
-          [p.name, p.description, ...p.technologies, ...p.highlights].join(" "),
+          [
+            p.name,
+            p.description,
+            ...(p.technologies ?? []),
+            ...(p.highlights ?? []),
+          ].join(" "),
         )
         .join(" ");
     default:

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useDropzone, type FileRejection } from "react-dropzone";
 import {
   AlertCircle,
@@ -26,10 +26,15 @@ import { textToProfile, textToJob } from "@/lib/ats/text-to-profile";
 import { computeJdMatch, type JdMatchResult } from "@/lib/ats/match-score";
 import { nowIso } from "@/lib/format/time";
 import type { JobDescription, Profile } from "@/types";
+import type { PdfLayoutReport } from "@/lib/ats/pdf-layout";
 import { ScoreDisplay } from "./score-display";
 import { FixSuggestionsList } from "./fix-suggestions";
 import { JdMatchCard } from "./jd-match-card";
+import { ContentInsightsCard } from "@/components/ats/content-insights-card";
+import { PlatformCard } from "@/components/ats/platform-card";
+import { ReferralHint } from "@/components/ats/referral-hint";
 import { ResultQualityCard } from "@/components/result-quality/result-quality-card";
+import { detectAndDescribe } from "@/lib/ats/platform-detection";
 import {
   evaluateResultQuality,
   type ResultQualityRubric,
@@ -44,6 +49,7 @@ interface ParseResponse {
   sectionsDetected: string[];
   confidence: number;
   warnings: string[];
+  pdfLayout?: PdfLayoutReport;
 }
 
 type ParseErrorCode =
@@ -161,32 +167,38 @@ function buildCurrentJobForScan(
 }
 
 function profileToMatchText(profile: Profile, fallbackText: string) {
+  const experiences = profile.experiences ?? [];
+  const education = profile.education ?? [];
+  const skills = profile.skills ?? [];
+  const projects = profile.projects ?? [];
+  const certifications = profile.certifications ?? [];
+
   const parts = [
     fallbackText,
     profile.rawText,
     profile.contact?.name,
     profile.summary,
-    ...profile.experiences.flatMap((experience) => [
+    ...experiences.flatMap((experience) => [
       experience.title,
       experience.company,
       experience.description,
-      ...experience.highlights,
-      ...experience.skills,
+      ...(experience.highlights ?? []),
+      ...(experience.skills ?? []),
     ]),
-    ...profile.education.flatMap((education) => [
-      education.institution,
-      education.degree,
-      education.field,
-      ...education.highlights,
+    ...education.flatMap((educationItem) => [
+      educationItem.institution,
+      educationItem.degree,
+      educationItem.field,
+      ...(educationItem.highlights ?? []),
     ]),
-    ...profile.skills.map((skill) => skill.name),
-    ...profile.projects.flatMap((project) => [
+    ...skills.map((skill) => skill.name),
+    ...projects.flatMap((project) => [
       project.name,
       project.description,
-      ...project.technologies,
-      ...project.highlights,
+      ...(project.technologies ?? []),
+      ...(project.highlights ?? []),
     ]),
-    ...profile.certifications.flatMap((certification) => [
+    ...certifications.flatMap((certification) => [
       certification.name,
       certification.issuer,
     ]),
@@ -225,6 +237,7 @@ export function ScannerForm({ locale = "en" }: ScannerFormProps = {}) {
   const [jobUrl, setJobUrl] = useState("");
   const [parsedProfile, setParsedProfile] = useState<Profile | null>(null);
   const [fileMeta, setFileMeta] = useState<FileMeta | undefined>();
+  const [pdfLayout, setPdfLayout] = useState<PdfLayoutReport | undefined>();
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [parseMessage, setParseMessage] = useState("");
   const [parseError, setParseError] = useState("");
@@ -242,6 +255,13 @@ export function ScannerForm({ locale = "en" }: ScannerFormProps = {}) {
   const [analyzing, setAnalyzing] = useState(false);
   const scrapingRef = useRef(false);
   const jobTextareaRef = useRef<HTMLTextAreaElement>(null);
+  const resultRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (result) {
+      resultRef.current?.focus();
+    }
+  }, [result]);
 
   const parseFile = useCallback(async (file: File) => {
     setParseError("");
@@ -276,12 +296,14 @@ export function ScannerForm({ locale = "en" }: ScannerFormProps = {}) {
         parseConfidence: data.confidence,
         warnings: data.warnings,
       });
+      setPdfLayout(data.pdfLayout);
       setParseMessage(
         `Parsed ${pluralize(data.sectionsDetected.length, "section")}, confidence ${Math.round(data.confidence * 100)}%`,
       );
     } catch (error) {
       setParsedProfile(null);
       setFileMeta(undefined);
+      setPdfLayout(undefined);
       setParseError(
         error instanceof Error ? error.message : "Could not parse that resume.",
       );
@@ -308,6 +330,7 @@ export function ScannerForm({ locale = "en" }: ScannerFormProps = {}) {
     setUploadedFile(null);
     setParsedProfile(null);
     setFileMeta(undefined);
+    setPdfLayout(undefined);
   }, []);
 
   const { getRootProps, getInputProps, isDragActive, isDragReject } =
@@ -382,7 +405,11 @@ export function ScannerForm({ locale = "en" }: ScannerFormProps = {}) {
     requestAnimationFrame(() => {
       const jdText = jobText.trim();
       const job = buildCurrentJobForScan(jobText, scrapedJob, scrapedJobText);
-      const analysis = scanResume(profile, resumeText, job, fileMeta);
+      const analysis = scanResume(profile, resumeText, job, {
+        fileMeta,
+        pdfLayout:
+          fileMeta?.mimeType === "application/pdf" ? pdfLayout : undefined,
+      });
       const jdMatchResult = jdText
         ? computeJdMatch(profileToMatchText(profile, resumeText), jdText, {
             missingLimit: 10,
@@ -414,6 +441,7 @@ export function ScannerForm({ locale = "en" }: ScannerFormProps = {}) {
     setJobUrl("");
     setParsedProfile(null);
     setFileMeta(undefined);
+    setPdfLayout(undefined);
     setUploadedFile(null);
     setParseMessage("");
     setParseError("");
@@ -435,13 +463,24 @@ export function ScannerForm({ locale = "en" }: ScannerFormProps = {}) {
     Boolean(parsedProfileHasMinimumContent || hasManualResumeText) &&
     !analyzing &&
     !parsing;
+  const scanHelpText = canAnalyze
+    ? "Ready to scan."
+    : "Upload a resume or paste at least 50 characters to scan.";
   const callbackUrl = `/${locale}/dashboard`;
 
   if (result) {
     const legacyResult: ATSAnalysisResult = result.legacy;
+    const platformInfo = jobUrl ? detectAndDescribe(jobUrl) : null;
     return (
-      <div className="space-y-8">
+      <div
+        ref={resultRef}
+        tabIndex={-1}
+        className="space-y-8 focus:outline-none"
+        aria-label="ATS scan results"
+      >
         <ScoreDisplay result={legacyResult} />
+
+        {platformInfo ? <PlatformCard info={platformInfo} /> : null}
 
         {resultQuality ? <ResultQualityCard rubric={resultQuality} /> : null}
 
@@ -468,6 +507,12 @@ export function ScannerForm({ locale = "en" }: ScannerFormProps = {}) {
         </div>
 
         <FixSuggestionsList issues={legacyResult.issues} />
+
+        {result.contentChecks ? (
+          <ContentInsightsCard checks={result.contentChecks} />
+        ) : null}
+
+        <ReferralHint />
 
         <div className="rounded-xl border-2 border-primary/20 bg-primary/5 p-8 text-center">
           <h3 className="mb-2 text-xl font-bold">
@@ -497,7 +542,10 @@ export function ScannerForm({ locale = "en" }: ScannerFormProps = {}) {
       <div>
         <div className="mb-2 flex items-center justify-between gap-3">
           <label className="block text-sm font-medium">
-            Upload your resume <span className="text-destructive">*</span>
+            Upload your resume{" "}
+            <span className="text-destructive" aria-hidden="true">
+              *
+            </span>
           </label>
           <button
             type="button"
@@ -509,7 +557,10 @@ export function ScannerForm({ locale = "en" }: ScannerFormProps = {}) {
         </div>
 
         <div
-          {...getRootProps()}
+          {...getRootProps({
+            "aria-describedby": "resume-upload-help",
+            "aria-required": "true",
+          })}
           className={cn(
             "cursor-pointer rounded-lg border border-dashed border-border bg-muted/30 p-6 text-center transition-colors",
             isDragActive && "border-primary bg-primary/5",
@@ -519,6 +570,7 @@ export function ScannerForm({ locale = "en" }: ScannerFormProps = {}) {
           <input
             {...getInputProps()}
             aria-label={a11yT("uploadResumePdfOrTextFile")}
+            aria-required="true"
           />
           {parsing ? (
             <Loader2 className="mx-auto mb-3 h-8 w-8 animate-spin text-primary" />
@@ -532,7 +584,10 @@ export function ScannerForm({ locale = "en" }: ScannerFormProps = {}) {
               ? uploadedFile.name
               : "Drop a PDF here or click to browse"}
           </p>
-          <p className="mt-1 text-xs text-muted-foreground">
+          <p
+            id="resume-upload-help"
+            className="mt-1 text-xs text-muted-foreground"
+          >
             PDF preferred, TXT fallback, up to {formatFileSize(MAX_UPLOAD_SIZE)}
           </p>
           <p className="mt-2 text-xs text-muted-foreground">
@@ -549,7 +604,13 @@ export function ScannerForm({ locale = "en" }: ScannerFormProps = {}) {
               <button
                 type="button"
                 className="ml-auto text-xs font-medium text-primary underline-offset-4 hover:underline"
-                onClick={() => setUploadedFile(null)}
+                onClick={() => {
+                  setUploadedFile(null);
+                  setParsedProfile(null);
+                  setFileMeta(undefined);
+                  setPdfLayout(undefined);
+                  setParseMessage("");
+                }}
               >
                 Replace file
               </button>
@@ -598,10 +659,14 @@ export function ScannerForm({ locale = "en" }: ScannerFormProps = {}) {
               htmlFor="resume-text"
               className="mb-2 block text-sm font-medium"
             >
-              Paste your resume text <span className="text-destructive">*</span>
+              Paste your resume text{" "}
+              <span className="text-destructive" aria-hidden="true">
+                *
+              </span>
             </label>
             <Textarea
               id="resume-text"
+              aria-required="true"
               placeholder={a11yT("pasteYourFullResumeTextHere")}
               className="min-h-[200px] font-mono text-sm"
               value={resumeText}
@@ -609,6 +674,7 @@ export function ScannerForm({ locale = "en" }: ScannerFormProps = {}) {
                 setResumeText(event.target.value);
                 setParsedProfile(null);
                 setFileMeta(undefined);
+                setPdfLayout(undefined);
               }}
             />
             <p className="mt-1 text-xs text-muted-foreground">
@@ -635,7 +701,6 @@ export function ScannerForm({ locale = "en" }: ScannerFormProps = {}) {
               placeholder="https://www.linkedin.com/jobs/..."
               value={jobUrl}
               onChange={(event) => setJobUrl(event.target.value)}
-              onBlur={handleScrapeJob}
               onKeyDown={(event) => {
                 if (event.key === "Enter") {
                   event.preventDefault();
@@ -700,6 +765,8 @@ export function ScannerForm({ locale = "en" }: ScannerFormProps = {}) {
       <Button
         onClick={handleAnalyze}
         disabled={!canAnalyze}
+        aria-describedby="ats-scan-help"
+        title={canAnalyze ? undefined : scanHelpText}
         variant="gradient"
         size="lg"
         className="w-full"
@@ -716,6 +783,12 @@ export function ScannerForm({ locale = "en" }: ScannerFormProps = {}) {
           </>
         )}
       </Button>
+      <p
+        id="ats-scan-help"
+        className="text-center text-xs text-muted-foreground"
+      >
+        {scanHelpText}
+      </p>
     </div>
   );
 }

@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { validateFileMagicBytes } from "@/lib/constants";
 import { parsePdfResume, parseResumeText } from "@/lib/parsers/pdf-resume";
+import type { ParsedResumeResult } from "@/lib/parsers/pdf-resume";
+import { extractPdfLayoutReport } from "@/lib/ats/pdf-layout/pdfjs-adapter";
+import type { PdfLayoutReport } from "@/lib/ats/pdf-layout";
 import { getClientIdentifier, rateLimiters } from "@/lib/rate-limit";
 import { nowEpoch } from "@/lib/format/time";
 
@@ -30,7 +33,7 @@ function rateLimitResponse(request: NextRequest) {
 }
 
 function publicParsePayload(
-  result: Awaited<ReturnType<typeof parsePdfResume>>,
+  result: ParsedResumeResult & { pdfLayout?: PdfLayoutReport },
 ) {
   const { rawText: _rawText, ...safeResult } = result;
   return safeResult;
@@ -39,6 +42,21 @@ function publicParsePayload(
 function isPasswordProtectedPdfError(error: unknown) {
   const message = error instanceof Error ? error.message : String(error);
   return /encrypt|password|permission denied/i.test(message);
+}
+
+async function parsePdfWithLayout(buffer: Buffer) {
+  const [parsed, layoutResult] = await Promise.allSettled([
+    parsePdfResume(buffer),
+    extractPdfLayoutReport(buffer),
+  ]);
+
+  if (parsed.status === "rejected") throw parsed.reason;
+
+  return {
+    ...parsed.value,
+    pdfLayout:
+      layoutResult.status === "fulfilled" ? layoutResult.value : undefined,
+  };
 }
 
 export async function POST(request: NextRequest) {
@@ -109,7 +127,7 @@ export async function POST(request: NextRequest) {
     try {
       const result =
         file.type === "application/pdf"
-          ? await parsePdfResume(buffer)
+          ? await parsePdfWithLayout(buffer)
           : parseResumeText(buffer.toString("utf8"));
 
       return NextResponse.json(publicParsePayload(result));

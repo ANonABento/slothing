@@ -7,7 +7,12 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { getJob } from "@/lib/db/jobs";
-import { getProfile, getLLMConfig } from "@/lib/db";
+import { getProfile } from "@/lib/db";
+import {
+  gateAiFeature,
+  isAiGateResponse,
+  type AiGatePass,
+} from "@/lib/billing/ai-gate";
 import { LLMClient, parseJSONFromLLM } from "@/lib/llm/client";
 import { generateEmail, EMAIL_TEMPLATE_INFO } from "@/lib/email/templates";
 import { generateEmailSchema } from "@/lib/constants";
@@ -35,6 +40,7 @@ interface LLMEmailResponse {
 export async function POST(request: NextRequest) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
+  let aiGate: AiGatePass | null = null;
 
   try {
     const rawData = await request.json();
@@ -78,10 +84,16 @@ export async function POST(request: NextRequest) {
     };
 
     // Try LLM-enhanced generation first
-    const llmConfig = getLLMConfig(authResult.userId);
-    if (useLLM && llmConfig) {
+    if (useLLM) {
+      const gate = gateAiFeature(
+        authResult.userId,
+        "email",
+        `${type}:${jobId ?? "general"}`,
+      );
+      if (isAiGateResponse(gate)) return gate;
+      aiGate = gate;
       try {
-        const client = new LLMClient(llmConfig);
+        const client = new LLMClient(gate.llmConfig);
         const templateInfo = EMAIL_TEMPLATE_INFO[type];
 
         const prompt = buildEmailGenerationPrompt({
@@ -122,6 +134,7 @@ export async function POST(request: NextRequest) {
           });
         }
       } catch (llmError) {
+        aiGate?.refund();
         console.error(
           "LLM generation failed, falling back to template:",
           llmError,
@@ -138,6 +151,7 @@ export async function POST(request: NextRequest) {
       usedLLM: false,
     });
   } catch (error) {
+    aiGate?.refund();
     console.error("Email generation error:", error);
     return NextResponse.json(
       { error: "Failed to generate email" },
