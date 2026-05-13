@@ -1,26 +1,26 @@
 import { expect, test } from "@playwright/test";
 
 const EN_ROUTES = [
-  "/en/opengraph-image",
-  "/en/dashboard/opengraph-image",
-  "/en/profile/opengraph-image",
-  "/en/studio/opengraph-image",
-  "/en/bank/opengraph-image",
-  "/en/answer-bank/opengraph-image",
-  "/en/calendar/opengraph-image",
-  "/en/emails/opengraph-image",
-  "/en/interview/opengraph-image",
-  "/en/salary/opengraph-image",
-  "/en/analytics/opengraph-image",
-  "/en/settings/opengraph-image",
-  "/en/opportunities/opengraph-image",
-  "/en/opportunities/review/opengraph-image",
+  "/en",
+  "/en/dashboard",
+  "/en/profile",
+  "/en/studio",
+  "/en/bank",
+  "/en/answer-bank",
+  "/en/calendar",
+  "/en/emails",
+  "/en/interview",
+  "/en/salary",
+  "/en/analytics",
+  "/en/settings",
+  "/en/opportunities",
+  "/en/opportunities/review",
 ] as const;
 
 const NON_EN_SAMPLES = [
-  "/es/dashboard/opengraph-image",
-  "/zh-CN/dashboard/opengraph-image",
-  "/pt-BR/dashboard/opengraph-image",
+  "/es/dashboard",
+  "/zh-CN/dashboard",
+  "/pt-BR/dashboard",
 ] as const;
 
 const INFRASTRUCTURE_FILES: Array<{ path: string; type: RegExp }> = [
@@ -31,9 +31,23 @@ const INFRASTRUCTURE_FILES: Array<{ path: string; type: RegExp }> = [
 ];
 
 test.describe("OG image endpoints @smoke", () => {
-  for (const url of [...EN_ROUTES, ...NON_EN_SAMPLES]) {
-    test(`OG image ${url} returns image/png`, async ({ request }) => {
-      const res = await request.get(url);
+  for (const path of [...EN_ROUTES, ...NON_EN_SAMPLES]) {
+    test(`OG image for ${path} returns image/png`, async ({ request }) => {
+      const page = await request.get(path);
+      expect(page.status()).toBe(200);
+
+      const html = await page.text();
+      const ogImage = html
+        .match(/<meta\s+property="og:image"\s+content="([^"]+)"/)
+        ?.at(1)
+        ?.replaceAll("&amp;", "&");
+
+      expect(ogImage).toBeTruthy();
+
+      const ogImageUrl = new URL(ogImage!);
+      const res = await request.get(
+        `${ogImageUrl.pathname}${ogImageUrl.search}`,
+      );
 
       expect(res.status()).toBe(200);
       expect(res.headers()["content-type"]).toContain("image/png");

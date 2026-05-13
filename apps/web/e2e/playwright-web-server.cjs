@@ -19,6 +19,8 @@ function getServerEnv() {
     TURSO_DATABASE_URL: sqliteUrl,
     NEXTAUTH_SECRET:
       process.env.NEXTAUTH_SECRET || "slothing-playwright-e2e-secret",
+    SLOTHING_ALLOW_UNAUTHED_DEV: process.env.SLOTHING_ALLOW_UNAUTHED_DEV || "1",
+    SLOTHING_E2E_AUTH_BYPASS: process.env.SLOTHING_E2E_AUTH_BYPASS || "1",
     SLOTHING_SUPPRESS_OPTIONAL_ENV_WARNINGS: "1",
   };
 

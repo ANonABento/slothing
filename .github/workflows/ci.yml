@@ -121,7 +121,7 @@ jobs:
         run: pnpm --filter @slothing/web exec playwright install --with-deps chromium
 
       - name: Run smoke e2e
-        run: pnpm --filter @slothing/web test:e2e -- --project=chromium --grep "@smoke"
+        run: pnpm --filter @slothing/web exec playwright test --project=chromium --grep "@smoke"
         env:
           CI: 'true'
 

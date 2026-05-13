@@ -44,11 +44,14 @@ describe("TermsPage", () => {
     const { container } = render(<TermsPage />);
 
     expect(container).toHaveTextContent(
-      /laws of \[JURISDICTION TBD before public launch\]/i,
+      /governing-law and dispute-?\s*resolution sections are still being finalized with legal counsel/i,
     );
     expect(container).toHaveTextContent(
-      /\[DISPUTE RESOLUTION TBD before public launch\]/i,
+      /specific governing jurisdiction .* disclosed before any paid plan is made publicly available/i,
     );
-    expect(container).toHaveTextContent(/finalized by legal review/i);
+    expect(container).toHaveTextContent(/finalized with legal counsel/i);
+    expect(container).toHaveTextContent(
+      /formal dispute resolution terms .* will be disclosed before any paid plan is made publicly available/i,
+    );
   });
 });

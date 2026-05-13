@@ -192,6 +192,129 @@ The original design doc described a **write-heavy** surface — pushing jobs int
 
 These exist as REST endpoints today — agents that need them can call them directly via `fetch` with the extension token. Promote to MCP tools when a concrete consumer (Choomfie skill, etc.) needs the discoverability.
 
+### v2 implementation scope
+
+Keep v2 as a thin adapter over existing Slothing routes. Do not add a new auth model, database tables, hosted transport, or browser-extension dependency.
+
+#### `slothing_push_job`
+
+Purpose: let an agent enqueue a job it already discovered or scraped.
+
+```ts
+input: {
+  title: string;
+  company: string;
+  url: string;
+  description?: string;
+  location?: string;
+  salary?: string;
+  type?: "full-time" | "part-time" | "contract" | "internship";
+  remote?: boolean;
+  source?: string;        // default: "mcp"
+  sourceJobId?: string;
+  deadline?: string;
+  requirements?: string[];
+  responsibilities?: string[];
+  keywords?: string[];
+}
+
+output: {
+  opportunityIds?: string[];
+  opportunityId?: string;
+  deduped?: boolean;
+  pendingCount?: number;
+  message?: string;
+}
+```
+
+Implementation: `POST /api/opportunities/from-extension` with `X-Extension-Token`. Preserve the existing route response shape instead of inventing a separate MCP contract. Normalize only enough to make common fields obvious to the agent.
+
+Validation:
+
+- Reject missing `title`, `company`, or `url` before making the HTTP call.
+- Require `url` to be an absolute `http` or `https` URL.
+- Preserve server-side validation errors as MCP tool errors with HTTP status.
+
+#### `slothing_update_status`
+
+Purpose: let an agent move an opportunity through the pipeline or attach notes after user instruction.
+
+```ts
+input: {
+  opportunityId: string;
+  status?: "pending" | "applied" | "interviewing" | "offer" | "rejected";
+  notes?: string;
+}
+
+output: {
+  ok: true;
+  opportunity?: unknown;
+  updatedAt?: string;
+}
+```
+
+Implementation: `PATCH /api/opportunities/[id]` with `X-Extension-Token`.
+
+Validation:
+
+- Require at least one of `status` or `notes`.
+- Percent-encode `opportunityId` in the path.
+- Return a clear MCP error on 404 so agents can refresh with `list_opportunities`.
+
+Behavior note: status changes are user-directed agent actions, not UI button clicks. Do not add a confirm-dialog equivalent inside MCP, but tool descriptions should tell agents to ask the user before destructive or ambiguous transitions like moving to `rejected`.
+
+#### `slothing_scrape_url`
+
+Purpose: let an agent turn a public job URL into a structured payload and optionally enqueue it.
+
+```ts
+input: {
+  url: string;
+  pushToQueue?: boolean; // default: false
+}
+
+output: {
+  scraped: {
+    title?: string;
+    company?: string;
+    description?: string;
+    location?: string;
+    salary?: string;
+    sourceUrl: string;
+  };
+  opportunityId?: string;
+  opportunityIds?: string[];
+}
+```
+
+Implementation: `POST /api/opportunities/scrape`. If `pushToQueue` is true and the route does not already enqueue, chain the scraped payload through `POST /api/opportunities/from-extension` in the MCP client so the agent gets one tool round-trip.
+
+Validation:
+
+- Require an absolute `http` or `https` URL.
+- Do not support authenticated browser-only pages in v2; those remain extension-owned.
+- Surface scrape failures as MCP tool errors with the route's HTTP status and message.
+
+#### Code changes
+
+- Add `patch<T>(path, body)` to `packages/mcp/src/api-client.ts`.
+- Add tool files under `packages/mcp/src/tools/`:
+  - `push-job.ts`
+  - `update-status.ts`
+  - `scrape-url.ts`
+- Register the three tools in `packages/mcp/src/tools/index.ts`.
+- Extend `packages/mcp/tests/server.test.ts` with one happy path and one validation/error path per new tool.
+- Update `packages/mcp/README.md` and this spec with the shipped v2 surface.
+
+#### Done definition (v2)
+
+1. `client.listTools()` includes all v1 tools plus `slothing_push_job`, `slothing_update_status`, and `slothing_scrape_url`.
+2. `slothing_push_job` posts a valid payload to `/api/opportunities/from-extension` and returns the server response.
+3. `slothing_update_status` PATCHes an encoded opportunity id and rejects empty updates locally.
+4. `slothing_scrape_url` returns a scraped payload and can enqueue when `pushToQueue: true`.
+5. Bad token and 404 responses remain MCP tool errors, not protocol-level crashes.
+6. `pnpm --filter @slothing/mcp test:run`, `pnpm --filter @slothing/mcp type-check`, and repo `pnpm run lint` pass.
+
 ## Open questions (carried over, still open)
 
 1. **Token lifetime / rotation.** Extension tokens have a 30-day TTL via `EXTENSION_TOKEN_TTL_RUNTIME_MS`. For headless MCP usage, do we want a longer "service" token type or just expect monthly re-mint? Suggest reusing the existing TTL for v1 and adding a `slothing-mcp refresh` helper if it gets annoying.
