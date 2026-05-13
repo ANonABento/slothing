@@ -1,9 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireUserAuth, isAuthError } from "@/lib/auth";
-import { getLLMConfig, getProfile } from "@/lib/db";
+import { getProfile } from "@/lib/db";
+import {
+  gateAiFeature,
+  isAiGateResponse,
+  type AiGatePass,
+} from "@/lib/billing/ai-gate";
 import { saveCoverLetter } from "@/lib/db/cover-letters";
 import { getGroupedBankEntries } from "@/lib/db/profile-bank";
 import { getOpportunity, linkOpportunityDocument } from "@/lib/opportunities";
+import { nowEpoch } from "@/lib/format/time";
 import { rateLimiters, getClientIdentifier } from "@/lib/rate-limit";
 import {
   filterBankEntriesByIds,
@@ -43,6 +49,7 @@ function isCoverLetterAction(action: unknown): action is CoverLetterAction {
 export async function POST(request: NextRequest) {
   const authResult = await requireUserAuth(request);
   if (isAuthError(authResult)) return authResult;
+  let aiGate: AiGatePass | null = null;
 
   const clientId = getClientIdentifier(request, authResult.userId);
   const rateLimit = rateLimiters.llm(clientId);
@@ -110,14 +117,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const llmConfig = getLLMConfig(authResult.userId);
-    if (!llmConfig) {
-      return NextResponse.json(
-        { error: "No LLM provider configured. Go to Settings to set one up." },
-        { status: 400 },
-      );
-    }
-
     const allBankEntries = getGroupedBankEntries(authResult.userId);
     const selectedIds = Array.isArray(selectedBankEntryIds)
       ? selectedBankEntryIds.filter(
@@ -148,6 +147,15 @@ export async function POST(request: NextRequest) {
       bankEntries,
       userName,
     };
+
+    const gate = gateAiFeature(
+      authResult.userId,
+      "cover_letter",
+      opportunityId || `${action}:${nowEpoch()}`,
+    );
+    if (isAiGateResponse(gate)) return gate;
+    aiGate = gate;
+    const llmConfig = gate.llmConfig;
 
     if (action === "revise") {
       if (!currentContent?.trim() || !instruction?.trim()) {
@@ -225,6 +233,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ ...response, unlocked });
   } catch (error) {
+    aiGate?.refund();
     console.error(
       "Cover letter generation error:",
       error instanceof Error ? error.stack : error,

@@ -5,8 +5,13 @@
  * @response LearningPathsResponse from @/types/api
  */
 import { NextRequest, NextResponse } from "next/server";
-import { getProfile, getLLMConfig } from "@/lib/db";
+import { getProfile } from "@/lib/db";
 import { getJobs } from "@/lib/db/jobs";
+import {
+  gateAiFeature,
+  isAiGateResponse,
+  type AiGatePass,
+} from "@/lib/billing/ai-gate";
 import {
   generateLearningPaths,
   enhanceLearningPathsWithLLM,
@@ -18,6 +23,7 @@ export const dynamic = "force-dynamic";
 export async function GET(request: NextRequest) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
+  let aiGate: AiGatePass | null = null;
 
   try {
     const { searchParams } = new URL(request.url);
@@ -46,18 +52,23 @@ export async function GET(request: NextRequest) {
     let result = generateLearningPaths(profile, jobs, limit);
 
     // Optionally enhance with LLM for better resource suggestions
-    if (enhance) {
-      const llmConfig = getLLMConfig(authResult.userId);
-      if (llmConfig && result.paths.length > 0) {
-        result = {
-          ...result,
-          paths: await enhanceLearningPathsWithLLM(result.paths, llmConfig),
-        };
-      }
+    if (enhance && result.paths.length > 0) {
+      const gate = gateAiFeature(
+        authResult.userId,
+        "document_assistant",
+        `learning:${limit}`,
+      );
+      if (isAiGateResponse(gate)) return gate;
+      aiGate = gate;
+      result = {
+        ...result,
+        paths: await enhanceLearningPathsWithLLM(result.paths, gate.llmConfig),
+      };
     }
 
     return NextResponse.json(result);
   } catch (error) {
+    aiGate?.refund();
     console.error("Learning paths error:", error);
     return NextResponse.json(
       { error: "Failed to generate learning paths" },

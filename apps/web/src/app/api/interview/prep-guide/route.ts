@@ -6,7 +6,12 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { getJob } from "@/lib/db/jobs";
-import { getProfile, getLLMConfig } from "@/lib/db";
+import { getProfile } from "@/lib/db";
+import {
+  gateAiFeature,
+  isAiGateResponse,
+  type AiGatePass,
+} from "@/lib/billing/ai-gate";
 import { getCompanyResearch } from "@/lib/db/company-research";
 import {
   generatePrepGuide,
@@ -19,6 +24,7 @@ export const dynamic = "force-dynamic";
 export async function GET(request: NextRequest) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
+  let aiGate: AiGatePass | null = null;
 
   try {
     const { searchParams } = new URL(request.url);
@@ -38,14 +44,16 @@ export async function GET(request: NextRequest) {
     }
 
     const profile = getProfile(authResult.userId);
-    const llmConfig = getLLMConfig(authResult.userId);
+    const gate = gateAiFeature(authResult.userId, "interview_turn", jobId);
+    if (isAiGateResponse(gate)) return gate;
+    aiGate = gate;
     const companyResearch = getCompanyResearch(job.company, authResult.userId);
 
     const guide = await generatePrepGuide(
       job,
       profile,
       companyResearch,
-      llmConfig,
+      gate.llmConfig,
     );
 
     if (format === "markdown") {
@@ -60,6 +68,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(guide);
   } catch (error) {
+    aiGate?.refund();
     console.error("Prep guide error:", error);
     return NextResponse.json(
       { error: "Failed to generate preparation guide" },

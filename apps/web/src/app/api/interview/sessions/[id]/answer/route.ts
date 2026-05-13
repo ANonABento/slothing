@@ -11,7 +11,11 @@ import {
   addInterviewAnswer,
   completeInterviewSession,
 } from "@/lib/db/interviews";
-import { getLLMConfig } from "@/lib/db";
+import {
+  gateAiFeature,
+  isAiGateResponse,
+  type AiGatePass,
+} from "@/lib/billing/ai-gate";
 import { LLMClient, parseJSONFromLLM } from "@/lib/llm/client";
 import { requireAuth, isAuthError } from "@/lib/auth";
 
@@ -24,6 +28,7 @@ export async function POST(
 ) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
+  let aiGate: AiGatePass | null = null;
 
   try {
     const { questionIndex, answer } = await request.json();
@@ -72,20 +77,25 @@ export async function POST(
 
     // Generate feedback using LLM if available
     let feedback = "";
-    const llmConfig = getLLMConfig(authResult.userId);
+    const gate = gateAiFeature(
+      authResult.userId,
+      "interview_turn",
+      `${params.id}:${questionIndex}`,
+    );
+    if (isAiGateResponse(gate)) return gate;
+    aiGate = gate;
     const promptIntro =
       session.jobId === null
         ? `Provide brief, constructive feedback for this ${session.category || question.category} interview answer. Do not reference a specific role or company.`
         : "Provide brief, constructive feedback for this interview answer.";
 
-    if (llmConfig) {
-      try {
-        const client = new LLMClient(llmConfig);
-        const response = await client.complete({
-          messages: [
-            {
-              role: "user",
-              content: `${promptIntro}
+    try {
+      const client = new LLMClient(gate.llmConfig);
+      const response = await client.complete({
+        messages: [
+          {
+            role: "user",
+            content: `${promptIntro}
 
 Question: ${question.question}
 Category: ${question.category}
@@ -99,22 +109,19 @@ Provide feedback in JSON format:
 }
 
 Be encouraging but also point out areas for improvement.`,
-            },
-          ],
-          temperature: 0.5,
-          maxTokens: 300,
-        });
+          },
+        ],
+        temperature: 0.5,
+        maxTokens: 300,
+      });
 
-        const parsed = parseJSONFromLLM<{ feedback: string }>(response);
-        feedback = parsed.feedback || "";
-      } catch (llmError) {
-        console.error("LLM feedback error:", llmError);
-        feedback =
-          "Good effort! Consider using the STAR method (Situation, Task, Action, Result) to structure your answers for behavioral questions.";
-      }
-    } else {
+      const parsed = parseJSONFromLLM<{ feedback: string }>(response);
+      feedback = parsed.feedback || "";
+    } catch (llmError) {
+      aiGate?.refund();
+      console.error("LLM feedback error:", llmError);
       feedback =
-        "Answer recorded. To get AI-powered feedback, configure an LLM provider in Settings.";
+        "Good effort! Consider using the STAR method (Situation, Task, Action, Result) to structure your answers for behavioral questions.";
     }
 
     // Save the answer
@@ -138,6 +145,7 @@ Be encouraging but also point out areas for improvement.`,
       isComplete,
     });
   } catch (error) {
+    aiGate?.refund();
     console.error("Add answer error:", error);
     return NextResponse.json(
       { error: "Failed to add answer" },

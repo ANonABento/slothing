@@ -8,7 +8,12 @@ import { nowEpoch } from "@/lib/format/time";
  */
 import { NextRequest, NextResponse } from "next/server";
 import { getJob } from "@/lib/db/jobs";
-import { getProfile, getLLMConfig } from "@/lib/db";
+import { getProfile } from "@/lib/db";
+import {
+  gateAiFeature,
+  isAiGateResponse,
+  type AiGatePass,
+} from "@/lib/billing/ai-gate";
 import { LLMClient, parseJSONFromLLM } from "@/lib/llm/client";
 import {
   startInterviewSchema,
@@ -23,6 +28,7 @@ import {
   buildJobInterviewQuestionsPrompt,
   SESSION_CATEGORY_VALUES,
 } from "@/lib/interview/prompt-builders";
+import type { LLMConfig } from "@/types";
 
 export const dynamic = "force-dynamic";
 
@@ -36,6 +42,7 @@ interface InterviewQuestion {
 export async function POST(request: NextRequest) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
+  let aiGate: AiGatePass | null = null;
 
   // Rate limit LLM operations - 10 per minute per user
   const userId = await getCurrentUserId();
@@ -73,7 +80,13 @@ export async function POST(request: NextRequest) {
     const { jobId, difficulty, category, questionCount } = parseResult.data;
 
     const profile = getProfile(authResult.userId);
-    const llmConfig = getLLMConfig(authResult.userId);
+    const gate = gateAiFeature(
+      authResult.userId,
+      "interview_turn",
+      `start:${jobId ?? category}`,
+    );
+    if (isAiGateResponse(gate)) return gate;
+    aiGate = gate;
 
     let questions: InterviewQuestion[];
 
@@ -82,7 +95,7 @@ export async function POST(request: NextRequest) {
         category: category as SessionQuestionCategory,
         difficulty,
         questionCount,
-        llmConfig,
+        llmConfig: gate.llmConfig,
       });
       return NextResponse.json({ questions, difficulty });
     }
@@ -92,8 +105,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Job not found" }, { status: 404 });
     }
 
-    if (llmConfig) {
-      const client = new LLMClient(llmConfig);
+    if (gate.llmConfig) {
+      const client = new LLMClient(gate.llmConfig);
 
       const response = await client.complete({
         messages: [
@@ -128,6 +141,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ questions, difficulty });
   } catch (error) {
+    aiGate?.refund();
     console.error("Start interview error:", error);
     return NextResponse.json(
       { error: "Failed to generate interview questions" },
@@ -145,12 +159,8 @@ async function getGenericQuestions({
   category: SessionQuestionCategory;
   difficulty: InterviewDifficulty;
   questionCount: number;
-  llmConfig: ReturnType<typeof getLLMConfig>;
+  llmConfig: LLMConfig;
 }): Promise<InterviewQuestion[]> {
-  if (!llmConfig) {
-    return getGenericDefaultQuestions(category, difficulty, questionCount);
-  }
-
   const client = new LLMClient(llmConfig);
   try {
     const response = await client.complete({

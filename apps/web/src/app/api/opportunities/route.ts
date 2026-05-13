@@ -7,7 +7,11 @@ import {
 } from "@/lib/opportunities";
 import { createJob, listJobsPaginated } from "@/lib/db/jobs";
 import { enrichCompany } from "@/lib/enrichment";
-import { getLLMConfig } from "@/lib/db";
+import {
+  gateAiFeature,
+  isAiGateResponse,
+  type AiGatePass,
+} from "@/lib/billing/ai-gate";
 import { LLMClient, parseJSONFromLLM } from "@/lib/llm/client";
 import { createJobSchema, TECH_KEYWORDS } from "@/lib/constants";
 import { createOpportunitySchema } from "@/types/opportunity";
@@ -122,39 +126,43 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
+  let aiGate: AiGatePass | null = null;
 
   try {
     const body = await request.json();
     const legacyJobParseResult = createJobSchema.safeParse(body);
     if (legacyJobParseResult.success) {
       const data = legacyJobParseResult.data;
-      const llmConfig = getLLMConfig(authResult.userId);
       let keywords: string[] = [];
 
-      if (llmConfig) {
-        try {
-          const client = new LLMClient(llmConfig);
-          const response = await client.complete({
-            messages: [
-              {
-                role: "user",
-                content: `Extract the key skills, technologies, and requirements from this job description. Return ONLY a JSON array of strings, nothing else.
+      const gate = gateAiFeature(
+        authResult.userId,
+        "document_assistant",
+        `opportunity:${data.company}:${data.title}`,
+      );
+      if (isAiGateResponse(gate)) return gate;
+      aiGate = gate;
+      try {
+        const client = new LLMClient(gate.llmConfig);
+        const response = await client.complete({
+          messages: [
+            {
+              role: "user",
+              content: `Extract the key skills, technologies, and requirements from this job description. Return ONLY a JSON array of strings, nothing else.
 
 Job Description:
 ${data.description}
 
 Return format: ["skill1", "skill2", "skill3", ...]`,
-              },
-            ],
-            temperature: 0.1,
-            maxTokens: 500,
-          });
-          keywords = parseJSONFromLLM<string[]>(response);
-        } catch (llmError) {
-          console.error("Failed to extract keywords:", llmError);
-          keywords = extractKeywordsBasic(data.description);
-        }
-      } else {
+            },
+          ],
+          temperature: 0.1,
+          maxTokens: 500,
+        });
+        keywords = parseJSONFromLLM<string[]>(response);
+      } catch (llmError) {
+        aiGate?.refund();
+        console.error("Failed to extract keywords:", llmError);
         keywords = extractKeywordsBasic(data.description);
       }
 
@@ -223,6 +231,7 @@ Return format: ["skill1", "skill2", "skill3", ...]`,
       { status: 201 },
     );
   } catch (error) {
+    aiGate?.refund();
     console.error("Create opportunity error:", error);
     return NextResponse.json(
       { error: "Failed to create opportunity" },

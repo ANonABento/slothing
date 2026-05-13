@@ -6,7 +6,12 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { getJob } from "@/lib/db/jobs";
-import { getProfile, getLLMConfig } from "@/lib/db";
+import { getProfile } from "@/lib/db";
+import {
+  gateAiFeature,
+  isAiGateResponse,
+  type AiGatePass,
+} from "@/lib/billing/ai-gate";
 import { LLMClient, parseJSONFromLLM } from "@/lib/llm/client";
 import type { JobMatch } from "@/types";
 import { requireAuth, isAuthError } from "@/lib/auth";
@@ -19,6 +24,7 @@ export async function POST(
 ) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
+  let aiGate: AiGatePass | null = null;
 
   try {
     const job = getJob(params.id, authResult.userId);
@@ -37,13 +43,19 @@ export async function POST(
       );
     }
 
-    const llmConfig = getLLMConfig(authResult.userId);
+    const gate = gateAiFeature(
+      authResult.userId,
+      "tailor",
+      `analyze:${params.id}`,
+    );
+    if (isAiGateResponse(gate)) return gate;
+    aiGate = gate;
 
     let analysis: JobMatch;
 
-    if (llmConfig) {
+    if (gate.llmConfig) {
       // Use LLM for analysis
-      const client = new LLMClient(llmConfig);
+      const client = new LLMClient(gate.llmConfig);
 
       const profileSummary = `
 Name: ${profile.contact.name}
@@ -141,6 +153,7 @@ Return ONLY the JSON object, no explanation.`,
 
     return NextResponse.json({ analysis });
   } catch (error) {
+    aiGate?.refund();
     console.error(
       "Analyze error:",
       error instanceof Error ? error.stack : error,

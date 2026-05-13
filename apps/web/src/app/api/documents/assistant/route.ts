@@ -1,11 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth, isAuthError } from "@/lib/auth";
-import { getLLMConfig } from "@/lib/db";
+import {
+  gateAiFeature,
+  isAiGateResponse,
+  type AiGatePass,
+} from "@/lib/billing/ai-gate";
 import { rateLimiters, getClientIdentifier } from "@/lib/rate-limit";
 import {
   isDocumentAssistantAction,
   rewriteDocumentSelection,
 } from "@/lib/document-assistant";
+import { nowEpoch } from "@/lib/format/time";
 
 export const dynamic = "force-dynamic";
 
@@ -19,6 +24,7 @@ type DocumentAssistantRequestBody = {
 export async function POST(request: NextRequest) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
+  let aiGate: AiGatePass | null = null;
 
   const clientId = getClientIdentifier(request, authResult.userId);
   const rateLimit = rateLimiters.llm(clientId);
@@ -65,13 +71,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const llmConfig = getLLMConfig(authResult.userId);
-    if (!llmConfig) {
-      return NextResponse.json(
-        { error: "No LLM provider configured. Go to Settings to set one up." },
-        { status: 400 },
-      );
-    }
+    const gate = gateAiFeature(
+      authResult.userId,
+      "document_assistant",
+      `${body.action}:${nowEpoch()}`,
+    );
+    if (isAiGateResponse(gate)) return gate;
+    aiGate = gate;
 
     const content = await rewriteDocumentSelection(
       {
@@ -83,7 +89,7 @@ export async function POST(request: NextRequest) {
             ? body.jobDescription
             : undefined,
       },
-      llmConfig,
+      gate.llmConfig,
     );
 
     if (!content.trim()) {
@@ -95,6 +101,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, content });
   } catch (error) {
+    aiGate?.refund();
     console.error(
       "Document assistant error:",
       error instanceof Error ? error.stack : error,

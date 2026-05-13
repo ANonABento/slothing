@@ -8,11 +8,17 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { parseJsonBody } from "@/lib/api-utils";
-import { getProfile, getLLMConfig, saveGeneratedResume } from "@/lib/db";
+import { getProfile, saveGeneratedResume } from "@/lib/db";
+import {
+  gateAiFeature,
+  isAiGateResponse,
+  type AiGatePass,
+} from "@/lib/billing/ai-gate";
 import { logPromptVariantResult } from "@/lib/db/prompt-variants";
 import { getGroupedBankEntries } from "@/lib/db/profile-bank";
 import { createJob, getJob } from "@/lib/db/jobs";
 import { linkOpportunityDocument } from "@/lib/opportunities";
+import { nowEpoch } from "@/lib/format/time";
 import { analyzeJobFit, extractKeywords } from "@/lib/tailor/analyze";
 import { generateFromBank } from "@/lib/tailor/generate";
 import { generateResumeHTML, TEMPLATES } from "@/lib/resume/pdf";
@@ -56,6 +62,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   const authResult = await requireUserAuth(request);
   if (isAuthError(authResult)) return authResult;
+  let aiGate: AiGatePass | null = null;
 
   try {
     const parsed = await parseJsonBody(request, tailorRequestSchema);
@@ -147,7 +154,14 @@ export async function POST(request: NextRequest) {
       location: "",
     };
 
-    const llmConfig = getLLMConfig(authResult.userId);
+    const gate = gateAiFeature(
+      authResult.userId,
+      "tailor",
+      opportunityId || `${company}:${nowEpoch()}`,
+    );
+    if (isAiGateResponse(gate)) return gate;
+    aiGate = gate;
+    const llmConfig = gate.llmConfig;
 
     const {
       resume: tailoredResume,
@@ -247,6 +261,7 @@ export async function POST(request: NextRequest) {
       unlocked,
     });
   } catch (error) {
+    aiGate?.refund();
     console.error(
       "Tailor error:",
       error instanceof Error ? error.stack : error,
