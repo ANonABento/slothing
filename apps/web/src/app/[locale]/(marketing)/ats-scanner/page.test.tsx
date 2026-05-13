@@ -29,7 +29,7 @@ describe("ATSScannerPage", () => {
   it("links the ATS filtering stat to the HBS Hidden Workers source", () => {
     render(<ATSScannerPage params={{ locale: "en" }} />);
 
-    expect(screen.queryByText(/75%/)).not.toBeInTheDocument();
+    expect(screen.getByText(/88% of executives/i)).toBeInTheDocument();
     const source = screen.getByRole("link", { name: /Hidden Workers/i });
     expect(source).toHaveAttribute(
       "href",

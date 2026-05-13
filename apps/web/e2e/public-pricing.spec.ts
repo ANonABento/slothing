@@ -16,25 +16,30 @@ test.describe("Pricing page", () => {
 
   test("page heading is visible @smoke", async ({ page }) => {
     await expect(
-      page.getByRole("heading", { name: /Pricing for every job search pace/i }),
+      page.getByRole("heading", { name: /Pay for the weeks you need/i }),
     ).toBeVisible();
   });
 
-  test("shows all three pricing tier cards", async ({ page }) => {
-    await expect(page.getByRole("article")).toHaveCount(3);
+  test("shows all four pricing tier cards", async ({ page }) => {
+    await expect(page.getByRole("article")).toHaveCount(4);
     await expect(
-      page.getByRole("heading", { name: "Free", level: 2 }),
+      page.getByRole("heading", { name: "Self-host", level: 2 }),
     ).toBeVisible();
     await expect(
-      page.getByRole("heading", { name: "Pro", level: 2 }),
+      page.getByRole("heading", { name: "Hosted Free", level: 2 }),
     ).toBeVisible();
     await expect(
-      page.getByRole("heading", { name: "Student", level: 2 }),
+      page.getByRole("heading", { name: "Weekly", level: 2 }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Monthly", level: 2 }),
     ).toBeVisible();
   });
 
-  test("Free tier Start free CTA links to sign-in", async ({ page }) => {
-    const startFreeLink = page.getByRole("link", { name: /Start free/i });
+  test("Hosted Free CTA links to sign-in", async ({ page }) => {
+    const startFreeLink = page.getByRole("link", {
+      name: /Start with your key/i,
+    });
     await expect(startFreeLink).toBeVisible();
 
     const href = await startFreeLink.getAttribute("href");
@@ -42,24 +47,14 @@ test.describe("Pricing page", () => {
     expect(href).toMatch(/callbackUrl/);
   });
 
-  test("Pro tier waitlist CTA links to email", async ({ page }) => {
-    const proCtaLink = page.locator('[data-pro-cta="waitlist"]');
-    await expect(proCtaLink).toBeVisible();
-
-    const href = await proCtaLink.getAttribute("href");
-    expect(href).toMatch(/^mailto:waitlist@slothing\.work/);
-  });
-
-  test("Student tier CTA links to student verification email", async ({
-    page,
-  }) => {
-    const studentLink = page.getByRole("link", {
-      name: /Email us to verify student status/i,
-    });
-    await expect(studentLink).toBeVisible();
-
-    const href = await studentLink.getAttribute("href");
-    expect(href).toMatch(/^mailto:students@slothing\.work/);
+  test("paid tier CTAs use checkout buttons", async ({ page }) => {
+    await expect(
+      page.getByRole("button", { name: /Start Weekly/i }).first(),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: /Start Monthly/i }).first(),
+    ).toBeVisible();
+    await expect(page.locator('a[href^="mailto:"]')).toHaveCount(0);
   });
 
   test("plan comparison table renders with correct column headers", async ({
@@ -72,10 +67,17 @@ test.describe("Pricing page", () => {
     const table = page.getByRole("table");
     await expect(table).toBeVisible();
 
-    await expect(table.getByRole("columnheader", { name: "Free" })).toBeVisible();
-    await expect(table.getByRole("columnheader", { name: "Pro" })).toBeVisible();
     await expect(
-      table.getByRole("columnheader", { name: "Student" }),
+      table.getByRole("columnheader", { name: "Self-host" }),
+    ).toBeVisible();
+    await expect(
+      table.getByRole("columnheader", { name: "Hosted Free" }),
+    ).toBeVisible();
+    await expect(
+      table.getByRole("columnheader", { name: "Weekly" }),
+    ).toBeVisible();
+    await expect(
+      table.getByRole("columnheader", { name: "Monthly" }),
     ).toBeVisible();
   });
 
@@ -84,16 +86,20 @@ test.describe("Pricing page", () => {
       page.getByRole("heading", { name: /Plan questions/i }),
     ).toBeVisible();
     await expect(
-      page.getByText(/Do I need a credit card for Free/i),
+      page.getByText(/Why weekly billing/i),
     ).toBeVisible();
-    await expect(page.getByText(/Can I buy Pro today/i)).toBeVisible();
+    await expect(page.getByText(/What's BYOK/i)).toBeVisible();
   });
 
-  test("Pro card has Most flexible badge", async ({ page }) => {
-    await expect(page.getByText(/Most flexible/i)).toBeVisible();
+  test("Monthly card has Most popular badge", async ({ page }) => {
+    await expect(page.getByText(/Most popular/i)).toBeVisible();
   });
 
-  test("Free tier lists ATS scanner as a feature", async ({ page }) => {
-    await expect(page.getByText("Free ATS scanner")).toBeVisible();
+  test("Self-host links to GitHub", async ({ page }) => {
+    const selfHostLink = page.getByRole("link", { name: /View on GitHub/i });
+    await expect(selfHostLink).toBeVisible();
+    expect(await selfHostLink.getAttribute("href")).toBe(
+      "https://github.com/ANonABento/slothing",
+    );
   });
 });
