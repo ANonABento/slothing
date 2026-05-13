@@ -246,6 +246,9 @@ importers:
       pdf-to-img:
         specifier: ^6.0.0
         version: 6.0.0
+      pdfjs-dist:
+        specifier: 5.6.205
+        version: 5.6.205
       react:
         specifier: ^18
         version: 18.3.1

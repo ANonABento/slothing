@@ -8,6 +8,7 @@ import {
 import { NextIntlClientProvider } from "next-intl";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ToastProvider } from "@/components/ui/toast";
+import enMessages from "@/messages/en.json";
 import { ScannerForm } from "./scanner-form";
 
 describe("ScannerForm", () => {
@@ -25,7 +26,7 @@ describe("ScannerForm", () => {
 
   function renderWithToast() {
     return render(
-      <NextIntlClientProvider locale="en" messages={{}}>
+      <NextIntlClientProvider locale="en" messages={enMessages}>
         <ToastProvider>
           <ScannerForm />
         </ToastProvider>
@@ -40,7 +41,7 @@ describe("ScannerForm", () => {
   }
 
   it("shows a drag-drop upload area by default", () => {
-    render(<ScannerForm />);
+    renderWithToast();
 
     expect(
       screen.getByText(/Drop a PDF here or click to browse/i),
@@ -48,6 +49,11 @@ describe("ScannerForm", () => {
     expect(
       screen.getByLabelText(/Upload resume PDF or text file/i),
     ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /Scan Resume/i }),
+    ).toHaveAccessibleDescription(
+      /Upload a resume or paste at least 50 characters to scan/i,
+    );
   });
 
   it("keeps Scan Resume disabled when a PDF parse has no usable content", async () => {
@@ -70,7 +76,7 @@ describe("ScannerForm", () => {
         },
       ),
     );
-    render(<ScannerForm />);
+    renderWithToast();
 
     uploadResumeFile(
       new File([""], "scanned-resume.pdf", { type: "application/pdf" }),
@@ -119,6 +125,23 @@ describe("ScannerForm", () => {
           sectionsDetected: ["contact", "experience", "skills"],
           confidence: 0.85,
           warnings: [],
+          pdfLayout: {
+            pageCount: 1,
+            hasMultiColumnRisk: true,
+            hasHeaderFooterRisk: false,
+            hasTableRisk: false,
+            hasReadingOrderRisk: true,
+            findings: [
+              {
+                type: "multi-column",
+                severity: "warning",
+                pageNumber: 1,
+                title: "Multi-column PDF layout",
+                evidence: "Two dense columns overlap vertically.",
+                recommendation: "Use a single-column ATS copy.",
+              },
+            ],
+          },
         }),
         {
           status: 200,
@@ -126,7 +149,7 @@ describe("ScannerForm", () => {
         },
       ),
     );
-    render(<ScannerForm />);
+    renderWithToast();
 
     uploadResumeFile(
       new File(["pdf"], "resume.pdf", { type: "application/pdf" }),
@@ -138,6 +161,15 @@ describe("ScannerForm", () => {
       ).toBeInTheDocument();
     });
     expect(screen.getByRole("button", { name: /Scan Resume/i })).toBeEnabled();
+
+    fireEvent.click(screen.getByRole("button", { name: /Scan Resume/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/PDF layout/i)).toBeInTheDocument();
+    });
+    expect(
+      screen.getByText(/Use a single-column ATS copy/i),
+    ).toBeInTheDocument();
   });
 
   it("shows UI feedback when the selected resume is too large", async () => {
@@ -290,6 +322,26 @@ describe("ScannerForm", () => {
     await waitFor(() => {
       expect(fetchSpy).toHaveBeenCalledTimes(2);
     });
+  });
+
+  it("only imports job URLs after an explicit command", async () => {
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(JSON.stringify({ error: "Unexpected import." }), {
+        status: 400,
+        headers: { "content-type": "application/json" },
+      }),
+    );
+
+    render(<ScannerForm />);
+
+    const url = screen.getByLabelText(/Import job from URL/i);
+    fireEvent.change(url, {
+      target: { value: "https://example.com/frontend" },
+    });
+    fireEvent.blur(url);
+    fireEvent.focus(screen.getByLabelText(/Paste job description/i));
+
+    expect(fetchSpy).not.toHaveBeenCalled();
   });
 
   it("keeps JD matching optional when analyzing a resume only", async () => {
