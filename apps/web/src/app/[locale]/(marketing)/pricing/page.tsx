@@ -366,19 +366,34 @@ export default async function PricingPage() {
             <table className="w-full min-w-[820px] text-left text-sm">
               <thead className="bg-muted/40 text-muted-foreground">
                 <tr>
-                  <th className="px-5 py-3 font-medium" scope="col">
+                  <th
+                    className="whitespace-nowrap px-5 py-3 font-medium"
+                    scope="col"
+                  >
                     Feature
                   </th>
-                  <th className="px-5 py-3 font-medium" scope="col">
+                  <th
+                    className="whitespace-nowrap px-5 py-3 font-medium"
+                    scope="col"
+                  >
                     Self-host
                   </th>
-                  <th className="px-5 py-3 font-medium" scope="col">
+                  <th
+                    className="whitespace-nowrap px-5 py-3 font-medium"
+                    scope="col"
+                  >
                     Hosted Free
                   </th>
-                  <th className="px-5 py-3 font-medium" scope="col">
+                  <th
+                    className="whitespace-nowrap px-5 py-3 font-medium"
+                    scope="col"
+                  >
                     Weekly
                   </th>
-                  <th className="px-5 py-3 font-medium" scope="col">
+                  <th
+                    className="whitespace-nowrap px-5 py-3 font-medium"
+                    scope="col"
+                  >
                     Monthly
                   </th>
                 </tr>
