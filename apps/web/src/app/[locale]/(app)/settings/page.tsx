@@ -9,6 +9,7 @@ import { GmailAutoStatusSection } from "@/components/settings/gmail-auto-status-
 import { HelpCards } from "@/components/settings/help-cards";
 import { KanbanLanesSection } from "@/components/settings/kanban-lanes-section";
 import { ByokExplainer } from "@/components/settings/byok-explainer";
+import { BillingSection } from "@/components/settings/billing-section";
 import { LLMProviderConfig } from "@/components/settings/llm-provider-config";
 import { LocaleSection } from "@/components/settings/locale-section";
 import { LanguageSection } from "@/components/settings/language-section";
@@ -78,6 +79,7 @@ export default function SettingsPage() {
           </div>
 
           <div className="space-y-6">
+            <BillingSection />
             <ThemeSection />
             <div className="grid gap-6 lg:grid-cols-2">
               <LocaleSection />

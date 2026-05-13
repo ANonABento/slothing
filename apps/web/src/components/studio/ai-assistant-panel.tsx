@@ -30,6 +30,7 @@ import {
 } from "@/lib/document-assistant";
 import { coverLetterHtmlToText } from "@/lib/editor/cover-letter-tiptap";
 import { Button } from "@/components/ui/button";
+import { CheckoutButton } from "@/components/billing/billing-actions";
 import {
   Dialog,
   DialogContent,
@@ -689,15 +690,22 @@ export function AiAssistantPanel({
             className="rounded-[var(--radius)] border-[length:var(--border-width)] border-primary/30 bg-primary/5 p-3 text-sm"
             role="status"
           >
-            <p className="font-medium">
-              Set up an LLM provider to use AI tools.
+            <p className="font-medium">AI tools need BYOK or Pro credits.</p>
+            <p className="mt-1 text-muted-foreground">
+              Add your own provider key in Settings, or upgrade to a hosted Pro
+              plan and use Slothing credits.
             </p>
-            <Link
-              href="/settings"
-              className="mt-2 inline-flex text-sm font-medium text-primary underline-offset-4 hover:underline"
-            >
-              Open Settings
-            </Link>
+            <div className="mt-3 grid gap-2">
+              <CheckoutButton plan="pro_weekly" variant="default">
+                Upgrade Weekly
+              </CheckoutButton>
+              <CheckoutButton plan="pro_monthly" variant="outline">
+                Upgrade Monthly
+              </CheckoutButton>
+              <Button asChild variant="ghost" className="w-full">
+                <Link href="/settings">Use my own key</Link>
+              </Button>
+            </div>
           </div>
         )}
 
