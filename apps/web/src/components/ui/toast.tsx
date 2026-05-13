@@ -13,6 +13,13 @@ interface Toast {
   type: ToastType;
   title: string;
   description?: string;
+  // Optional collision key. When two `addToast` calls land while a toast
+  // with the same `dedupeKey` is still active, the second call is skipped
+  // and the existing toast's id is returned. This is what keeps multiple
+  // parallel fetch failures (opportunities list + settings + kanban)
+  // from stacking three copies of the same "Failed to get settings"
+  // error in the corner.
+  dedupeKey?: string;
   action?: {
     label: string;
     onClick: () => void;
@@ -32,19 +39,45 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
 
   const addToast = useCallback(
     (
-      { type, title, description, action }: Omit<Toast, "id">,
+      { type, title, description, dedupeKey, action }: Omit<Toast, "id">,
       durationMs = 5000,
     ) => {
-      const id = Math.random().toString(36).slice(2);
-      setToasts((prev) => [...prev, { id, type, title, description, action }]);
+      let assignedId = "";
+      let isDuplicate = false;
 
-      if (durationMs > 0) {
+      setToasts((prev) => {
+        if (dedupeKey) {
+          const existing = prev.find((t) => t.dedupeKey === dedupeKey);
+          if (existing) {
+            assignedId = existing.id;
+            isDuplicate = true;
+            return prev;
+          }
+        }
+        assignedId = Math.random().toString(36).slice(2);
+        return [
+          ...prev,
+          {
+            id: assignedId,
+            type,
+            title,
+            description,
+            dedupeKey,
+            action,
+          },
+        ];
+      });
+
+      // Only schedule a fresh auto-dismiss when we actually appended a new
+      // toast. The original toast's timer is still in flight on a duplicate.
+      if (durationMs > 0 && !isDuplicate) {
+        const id = assignedId;
         setTimeout(() => {
           setToasts((prev) => prev.filter((t) => t.id !== id));
         }, durationMs);
       }
 
-      return id;
+      return assignedId;
     },
     [],
   );
