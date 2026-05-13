@@ -5,6 +5,16 @@ import type {
   KeywordEvidenceSummary,
   LetterGrade,
 } from "@/lib/ats/analyzer";
+import type {
+  AcronymPairReport,
+  ActionVerbStrengthReport,
+  BuzzwordReport,
+  DateFormatReport,
+  FirstPersonReport,
+  HiddenTextReport,
+  WeakLanguageReport,
+} from "@/lib/ats/content-checks";
+import type { PdfLayoutReport } from "@/lib/ats/pdf-layout";
 
 export type AxisKey =
   | "parseability"
@@ -12,6 +22,17 @@ export type AxisKey =
   | "keywordMatch"
   | "datesAndTenure"
   | "contentQuality";
+
+export interface ContentChecks {
+  weakLanguage: WeakLanguageReport;
+  buzzwords: BuzzwordReport;
+  acronymPairs: AcronymPairReport;
+  actionVerbStrength: ActionVerbStrengthReport;
+  firstPerson: FirstPersonReport;
+  dateFormat: DateFormatReport;
+  hiddenText: HiddenTextReport;
+  pdfLayout?: PdfLayoutReport;
+}
 
 export interface AxisScore {
   key: AxisKey;
@@ -37,6 +58,7 @@ export interface ATSScanResult {
   issues: ATSIssue[];
   keywords: KeywordAnalysis[];
   keywordEvidence?: KeywordEvidenceSummary;
+  contentChecks?: ContentChecks;
   summary: string;
   recommendations: string[];
   scannedAt: string;

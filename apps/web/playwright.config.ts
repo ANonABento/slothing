@@ -88,6 +88,6 @@ export default defineConfig({
     command: "node e2e/playwright-web-server.cjs",
     url: baseURL,
     reuseExistingServer: false,
-    timeout: 180 * 1000,
+    timeout: 300 * 1000,
   },
 });
