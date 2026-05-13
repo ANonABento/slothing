@@ -1,0 +1,765 @@
+{
+  "loop": "007",
+  "base": "http://localhost:3010",
+  "widths": [
+    1280,
+    1440,
+    1920
+  ],
+  "viewportHeight": 900,
+  "startedAt": "2026-05-13T18:07:46.000Z",
+  "routesAudited": 25,
+  "results": [
+    {
+      "slug": "home",
+      "path": "/en",
+      "group": "marketing",
+      "width": 1280,
+      "status": "ok",
+      "ms": 3374,
+      "errors": 0,
+      "finalUrl": "http://localhost:3010/en"
+    },
+    {
+      "slug": "pricing",
+      "path": "/en/pricing",
+      "group": "marketing",
+      "width": 1280,
+      "status": "ok",
+      "ms": 2135,
+      "errors": 0,
+      "finalUrl": "http://localhost:3010/en/pricing"
+    },
+    {
+      "slug": "ats-scanner",
+      "path": "/en/ats-scanner",
+      "group": "marketing",
+      "width": 1280,
+      "status": "ok",
+      "ms": 1951,
+      "errors": 0,
+      "finalUrl": "http://localhost:3010/en/ats-scanner"
+    },
+    {
+      "slug": "extension-marketing",
+      "path": "/en/extension",
+      "group": "marketing",
+      "width": 1280,
+      "status": "ok",
+      "ms": 2424,
+      "errors": 0,
+      "finalUrl": "http://localhost:3010/en/extension"
+    },
+    {
+      "slug": "vs-index",
+      "path": "/en/vs",
+      "group": "marketing",
+      "width": 1280,
+      "status": "ok",
+      "ms": 1818,
+      "errors": 0,
+      "finalUrl": "http://localhost:3010/en/vs"
+    },
+    {
+      "slug": "privacy",
+      "path": "/en/privacy",
+      "group": "marketing",
+      "width": 1280,
+      "status": "ok",
+      "ms": 1926,
+      "errors": 0,
+      "finalUrl": "http://localhost:3010/en/privacy"
+    },
+    {
+      "slug": "terms",
+      "path": "/en/terms",
+      "group": "marketing",
+      "width": 1280,
+      "status": "ok",
+      "ms": 1923,
+      "errors": 0,
+      "finalUrl": "http://localhost:3010/en/terms"
+    },
+    {
+      "slug": "sign-in",
+      "path": "/en/sign-in",
+      "group": "auth",
+      "width": 1280,
+      "status": "ok",
+      "ms": 1673,
+      "errors": 0,
+      "finalUrl": "http://localhost:3010/en/sign-in"
+    },
+    {
+      "slug": "dashboard",
+      "path": "/en/dashboard",
+      "group": "app",
+      "width": 1280,
+      "status": "ok",
+      "ms": 3238,
+      "errors": 13,
+      "finalUrl": "http://localhost:3010/en/dashboard"
+    },
+    {
+      "slug": "profile",
+      "path": "/en/profile",
+      "group": "app",
+      "width": 1280,
+      "status": "ok",
+      "ms": 1946,
+      "errors": 2,
+      "finalUrl": "http://localhost:3010/en/profile"
+    },
+    {
+      "slug": "upload",
+      "path": "/en/upload",
+      "group": "app",
+      "width": 1280,
+      "status": "ok",
+      "ms": 2177,
+      "errors": 4,
+      "finalUrl": "http://localhost:3010/en/bank"
+    },
+    {
+      "slug": "documents",
+      "path": "/en/documents",
+      "group": "app",
+      "width": 1280,
+      "status": "ok",
+      "ms": 2018,
+      "errors": 4,
+      "finalUrl": "http://localhost:3010/en/bank"
+    },
+    {
+      "slug": "bank",
+      "path": "/en/bank",
+      "group": "app",
+      "width": 1280,
+      "status": "ok",
+      "ms": 1980,
+      "errors": 4,
+      "finalUrl": "http://localhost:3010/en/bank"
+    },
+    {
+      "slug": "answer-bank",
+      "path": "/en/answer-bank",
+      "group": "app",
+      "width": 1280,
+      "status": "ok",
+      "ms": 1951,
+      "errors": 3,
+      "finalUrl": "http://localhost:3010/en/answer-bank"
+    },
+    {
+      "slug": "studio",
+      "path": "/en/studio",
+      "group": "app",
+      "width": 1280,
+      "status": "ok",
+      "ms": 2085,
+      "errors": 2,
+      "finalUrl": "http://localhost:3010/en/studio"
+    },
+    {
+      "slug": "opportunities",
+      "path": "/en/opportunities",
+      "group": "app",
+      "width": 1280,
+      "status": "ok",
+      "ms": 2760,
+      "errors": 3,
+      "finalUrl": "http://localhost:3010/en/opportunities"
+    },
+    {
+      "slug": "opportunities-review",
+      "path": "/en/opportunities/review",
+      "group": "app",
+      "width": 1280,
+      "status": "ok",
+      "ms": 2149,
+      "errors": 3,
+      "finalUrl": "http://localhost:3010/en/opportunities/review"
+    },
+    {
+      "slug": "applications",
+      "path": "/en/applications",
+      "group": "app",
+      "width": 1280,
+      "status": "ok",
+      "ms": 2125,
+      "errors": 3,
+      "finalUrl": "http://localhost:3010/en/opportunities?status=applied%2Cinterviewing%2Coffered"
+    },
+    {
+      "slug": "interview",
+      "path": "/en/interview",
+      "group": "app",
+      "width": 1280,
+      "status": "ok",
+      "ms": 2023,
+      "errors": 3,
+      "finalUrl": "http://localhost:3010/en/interview"
+    },
+    {
+      "slug": "analytics",
+      "path": "/en/analytics",
+      "group": "app",
+      "width": 1280,
+      "status": "ok",
+      "ms": 2003,
+      "errors": 2,
+      "finalUrl": "http://localhost:3010/en/analytics"
+    },
+    {
+      "slug": "salary",
+      "path": "/en/salary",
+      "group": "app",
+      "width": 1280,
+      "status": "ok",
+      "ms": 2063,
+      "errors": 1,
+      "finalUrl": "http://localhost:3010/en/salary"
+    },
+    {
+      "slug": "calendar",
+      "path": "/en/calendar",
+      "group": "app",
+      "width": 1280,
+      "status": "ok",
+      "ms": 3163,
+      "errors": 6,
+      "finalUrl": "http://localhost:3010/en/calendar"
+    },
+    {
+      "slug": "emails",
+      "path": "/en/emails",
+      "group": "app",
+      "width": 1280,
+      "status": "ok",
+      "ms": 1968,
+      "errors": 3,
+      "finalUrl": "http://localhost:3010/en/emails"
+    },
+    {
+      "slug": "settings",
+      "path": "/en/settings",
+      "group": "app",
+      "width": 1280,
+      "status": "ok",
+      "ms": 2016,
+      "errors": 7,
+      "finalUrl": "http://localhost:3010/en/settings"
+    },
+    {
+      "slug": "extension-connect",
+      "path": "/en/extension/connect",
+      "group": "app",
+      "width": 1280,
+      "status": "ok",
+      "ms": 1924,
+      "errors": 2,
+      "finalUrl": "http://localhost:3010/en/extension/connect"
+    },
+    {
+      "slug": "home",
+      "path": "/en",
+      "group": "marketing",
+      "width": 1440,
+      "status": "ok",
+      "ms": 2804,
+      "errors": 0,
+      "finalUrl": "http://localhost:3010/en"
+    },
+    {
+      "slug": "pricing",
+      "path": "/en/pricing",
+      "group": "marketing",
+      "width": 1440,
+      "status": "ok",
+      "ms": 2234,
+      "errors": 0,
+      "finalUrl": "http://localhost:3010/en/pricing"
+    },
+    {
+      "slug": "ats-scanner",
+      "path": "/en/ats-scanner",
+      "group": "marketing",
+      "width": 1440,
+      "status": "ok",
+      "ms": 1869,
+      "errors": 0,
+      "finalUrl": "http://localhost:3010/en/ats-scanner"
+    },
+    {
+      "slug": "extension-marketing",
+      "path": "/en/extension",
+      "group": "marketing",
+      "width": 1440,
+      "status": "ok",
+      "ms": 2273,
+      "errors": 0,
+      "finalUrl": "http://localhost:3010/en/extension"
+    },
+    {
+      "slug": "vs-index",
+      "path": "/en/vs",
+      "group": "marketing",
+      "width": 1440,
+      "status": "ok",
+      "ms": 1755,
+      "errors": 0,
+      "finalUrl": "http://localhost:3010/en/vs"
+    },
+    {
+      "slug": "privacy",
+      "path": "/en/privacy",
+      "group": "marketing",
+      "width": 1440,
+      "status": "ok",
+      "ms": 1884,
+      "errors": 0,
+      "finalUrl": "http://localhost:3010/en/privacy"
+    },
+    {
+      "slug": "terms",
+      "path": "/en/terms",
+      "group": "marketing",
+      "width": 1440,
+      "status": "ok",
+      "ms": 1892,
+      "errors": 0,
+      "finalUrl": "http://localhost:3010/en/terms"
+    },
+    {
+      "slug": "sign-in",
+      "path": "/en/sign-in",
+      "group": "auth",
+      "width": 1440,
+      "status": "ok",
+      "ms": 1643,
+      "errors": 0,
+      "finalUrl": "http://localhost:3010/en/sign-in"
+    },
+    {
+      "slug": "dashboard",
+      "path": "/en/dashboard",
+      "group": "app",
+      "width": 1440,
+      "status": "ok",
+      "ms": 2186,
+      "errors": 13,
+      "finalUrl": "http://localhost:3010/en/dashboard"
+    },
+    {
+      "slug": "profile",
+      "path": "/en/profile",
+      "group": "app",
+      "width": 1440,
+      "status": "ok",
+      "ms": 1908,
+      "errors": 2,
+      "finalUrl": "http://localhost:3010/en/profile"
+    },
+    {
+      "slug": "upload",
+      "path": "/en/upload",
+      "group": "app",
+      "width": 1440,
+      "status": "ok",
+      "ms": 2099,
+      "errors": 4,
+      "finalUrl": "http://localhost:3010/en/bank"
+    },
+    {
+      "slug": "documents",
+      "path": "/en/documents",
+      "group": "app",
+      "width": 1440,
+      "status": "ok",
+      "ms": 2176,
+      "errors": 4,
+      "finalUrl": "http://localhost:3010/en/bank"
+    },
+    {
+      "slug": "bank",
+      "path": "/en/bank",
+      "group": "app",
+      "width": 1440,
+      "status": "ok",
+      "ms": 2043,
+      "errors": 4,
+      "finalUrl": "http://localhost:3010/en/bank"
+    },
+    {
+      "slug": "answer-bank",
+      "path": "/en/answer-bank",
+      "group": "app",
+      "width": 1440,
+      "status": "ok",
+      "ms": 2068,
+      "errors": 3,
+      "finalUrl": "http://localhost:3010/en/answer-bank"
+    },
+    {
+      "slug": "studio",
+      "path": "/en/studio",
+      "group": "app",
+      "width": 1440,
+      "status": "ok",
+      "ms": 2202,
+      "errors": 2,
+      "finalUrl": "http://localhost:3010/en/studio"
+    },
+    {
+      "slug": "opportunities",
+      "path": "/en/opportunities",
+      "group": "app",
+      "width": 1440,
+      "status": "ok",
+      "ms": 2407,
+      "errors": 3,
+      "finalUrl": "http://localhost:3010/en/opportunities"
+    },
+    {
+      "slug": "opportunities-review",
+      "path": "/en/opportunities/review",
+      "group": "app",
+      "width": 1440,
+      "status": "ok",
+      "ms": 2035,
+      "errors": 3,
+      "finalUrl": "http://localhost:3010/en/opportunities/review"
+    },
+    {
+      "slug": "applications",
+      "path": "/en/applications",
+      "group": "app",
+      "width": 1440,
+      "status": "ok",
+      "ms": 2177,
+      "errors": 3,
+      "finalUrl": "http://localhost:3010/en/opportunities?status=applied%2Cinterviewing%2Coffered"
+    },
+    {
+      "slug": "interview",
+      "path": "/en/interview",
+      "group": "app",
+      "width": 1440,
+      "status": "ok",
+      "ms": 2002,
+      "errors": 3,
+      "finalUrl": "http://localhost:3010/en/interview"
+    },
+    {
+      "slug": "analytics",
+      "path": "/en/analytics",
+      "group": "app",
+      "width": 1440,
+      "status": "ok",
+      "ms": 2056,
+      "errors": 2,
+      "finalUrl": "http://localhost:3010/en/analytics"
+    },
+    {
+      "slug": "salary",
+      "path": "/en/salary",
+      "group": "app",
+      "width": 1440,
+      "status": "ok",
+      "ms": 2482,
+      "errors": 1,
+      "finalUrl": "http://localhost:3010/en/salary"
+    },
+    {
+      "slug": "calendar",
+      "path": "/en/calendar",
+      "group": "app",
+      "width": 1440,
+      "status": "ok",
+      "ms": 2169,
+      "errors": 6,
+      "finalUrl": "http://localhost:3010/en/calendar"
+    },
+    {
+      "slug": "emails",
+      "path": "/en/emails",
+      "group": "app",
+      "width": 1440,
+      "status": "ok",
+      "ms": 2723,
+      "errors": 3,
+      "finalUrl": "http://localhost:3010/en/emails"
+    },
+    {
+      "slug": "settings",
+      "path": "/en/settings",
+      "group": "app",
+      "width": 1440,
+      "status": "ok",
+      "ms": 2456,
+      "errors": 7,
+      "finalUrl": "http://localhost:3010/en/settings"
+    },
+    {
+      "slug": "extension-connect",
+      "path": "/en/extension/connect",
+      "group": "app",
+      "width": 1440,
+      "status": "ok",
+      "ms": 1917,
+      "errors": 2,
+      "finalUrl": "http://localhost:3010/en/extension/connect"
+    },
+    {
+      "slug": "home",
+      "path": "/en",
+      "group": "marketing",
+      "width": 1920,
+      "status": "ok",
+      "ms": 3223,
+      "errors": 0,
+      "finalUrl": "http://localhost:3010/en"
+    },
+    {
+      "slug": "pricing",
+      "path": "/en/pricing",
+      "group": "marketing",
+      "width": 1920,
+      "status": "ok",
+      "ms": 2151,
+      "errors": 0,
+      "finalUrl": "http://localhost:3010/en/pricing"
+    },
+    {
+      "slug": "ats-scanner",
+      "path": "/en/ats-scanner",
+      "group": "marketing",
+      "width": 1920,
+      "status": "ok",
+      "ms": 1798,
+      "errors": 0,
+      "finalUrl": "http://localhost:3010/en/ats-scanner"
+    },
+    {
+      "slug": "extension-marketing",
+      "path": "/en/extension",
+      "group": "marketing",
+      "width": 1920,
+      "status": "ok",
+      "ms": 2136,
+      "errors": 0,
+      "finalUrl": "http://localhost:3010/en/extension"
+    },
+    {
+      "slug": "vs-index",
+      "path": "/en/vs",
+      "group": "marketing",
+      "width": 1920,
+      "status": "ok",
+      "ms": 1728,
+      "errors": 0,
+      "finalUrl": "http://localhost:3010/en/vs"
+    },
+    {
+      "slug": "privacy",
+      "path": "/en/privacy",
+      "group": "marketing",
+      "width": 1920,
+      "status": "ok",
+      "ms": 1925,
+      "errors": 0,
+      "finalUrl": "http://localhost:3010/en/privacy"
+    },
+    {
+      "slug": "terms",
+      "path": "/en/terms",
+      "group": "marketing",
+      "width": 1920,
+      "status": "ok",
+      "ms": 1923,
+      "errors": 0,
+      "finalUrl": "http://localhost:3010/en/terms"
+    },
+    {
+      "slug": "sign-in",
+      "path": "/en/sign-in",
+      "group": "auth",
+      "width": 1920,
+      "status": "ok",
+      "ms": 1705,
+      "errors": 0,
+      "finalUrl": "http://localhost:3010/en/sign-in"
+    },
+    {
+      "slug": "dashboard",
+      "path": "/en/dashboard",
+      "group": "app",
+      "width": 1920,
+      "status": "ok",
+      "ms": 2237,
+      "errors": 13,
+      "finalUrl": "http://localhost:3010/en/dashboard"
+    },
+    {
+      "slug": "profile",
+      "path": "/en/profile",
+      "group": "app",
+      "width": 1920,
+      "status": "ok",
+      "ms": 1926,
+      "errors": 2,
+      "finalUrl": "http://localhost:3010/en/profile"
+    },
+    {
+      "slug": "upload",
+      "path": "/en/upload",
+      "group": "app",
+      "width": 1920,
+      "status": "ok",
+      "ms": 2171,
+      "errors": 4,
+      "finalUrl": "http://localhost:3010/en/bank"
+    },
+    {
+      "slug": "documents",
+      "path": "/en/documents",
+      "group": "app",
+      "width": 1920,
+      "status": "ok",
+      "ms": 2087,
+      "errors": 4,
+      "finalUrl": "http://localhost:3010/en/bank"
+    },
+    {
+      "slug": "bank",
+      "path": "/en/bank",
+      "group": "app",
+      "width": 1920,
+      "status": "ok",
+      "ms": 1990,
+      "errors": 4,
+      "finalUrl": "http://localhost:3010/en/bank"
+    },
+    {
+      "slug": "answer-bank",
+      "path": "/en/answer-bank",
+      "group": "app",
+      "width": 1920,
+      "status": "ok",
+      "ms": 2052,
+      "errors": 3,
+      "finalUrl": "http://localhost:3010/en/answer-bank"
+    },
+    {
+      "slug": "studio",
+      "path": "/en/studio",
+      "group": "app",
+      "width": 1920,
+      "status": "ok",
+      "ms": 2094,
+      "errors": 2,
+      "finalUrl": "http://localhost:3010/en/studio"
+    },
+    {
+      "slug": "opportunities",
+      "path": "/en/opportunities",
+      "group": "app",
+      "width": 1920,
+      "status": "ok",
+      "ms": 2205,
+      "errors": 3,
+      "finalUrl": "http://localhost:3010/en/opportunities"
+    },
+    {
+      "slug": "opportunities-review",
+      "path": "/en/opportunities/review",
+      "group": "app",
+      "width": 1920,
+      "status": "ok",
+      "ms": 2079,
+      "errors": 3,
+      "finalUrl": "http://localhost:3010/en/opportunities/review"
+    },
+    {
+      "slug": "applications",
+      "path": "/en/applications",
+      "group": "app",
+      "width": 1920,
+      "status": "ok",
+      "ms": 2209,
+      "errors": 3,
+      "finalUrl": "http://localhost:3010/en/opportunities?status=applied%2Cinterviewing%2Coffered"
+    },
+    {
+      "slug": "interview",
+      "path": "/en/interview",
+      "group": "app",
+      "width": 1920,
+      "status": "ok",
+      "ms": 2062,
+      "errors": 3,
+      "finalUrl": "http://localhost:3010/en/interview"
+    },
+    {
+      "slug": "analytics",
+      "path": "/en/analytics",
+      "group": "app",
+      "width": 1920,
+      "status": "ok",
+      "ms": 2014,
+      "errors": 2,
+      "finalUrl": "http://localhost:3010/en/analytics"
+    },
+    {
+      "slug": "salary",
+      "path": "/en/salary",
+      "group": "app",
+      "width": 1920,
+      "status": "ok",
+      "ms": 2009,
+      "errors": 1,
+      "finalUrl": "http://localhost:3010/en/salary"
+    },
+    {
+      "slug": "calendar",
+      "path": "/en/calendar",
+      "group": "app",
+      "width": 1920,
+      "status": "ok",
+      "ms": 2269,
+      "errors": 6,
+      "finalUrl": "http://localhost:3010/en/calendar"
+    },
+    {
+      "slug": "emails",
+      "path": "/en/emails",
+      "group": "app",
+      "width": 1920,
+      "status": "ok",
+      "ms": 2024,
+      "errors": 3,
+      "finalUrl": "http://localhost:3010/en/emails"
+    },
+    {
+      "slug": "settings",
+      "path": "/en/settings",
+      "group": "app",
+      "width": 1920,
+      "status": "ok",
+      "ms": 2204,
+      "errors": 7,
+      "finalUrl": "http://localhost:3010/en/settings"
+    },
+    {
+      "slug": "extension-connect",
+      "path": "/en/extension/connect",
+      "group": "app",
+      "width": 1920,
+      "status": "ok",
+      "ms": 2001,
+      "errors": 2,
+      "finalUrl": "http://localhost:3010/en/extension/connect"
+    }
+  ],
+  "consoleErrorTotal": 195
+}
