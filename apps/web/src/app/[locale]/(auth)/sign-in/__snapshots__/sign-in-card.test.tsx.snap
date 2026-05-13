@@ -117,7 +117,7 @@ exports[`AuthDisabledCard > renders the disabled auth state with the dev dashboa
         class="p-6 pt-0 space-y-4 text-center"
       >
         <a
-          class="inline-flex items-center justify-center whitespace-nowrap rounded-[var(--radius)] text-sm font-medium [letter-spacing:var(--letter-spacing)] ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [box-shadow:var(--shadow-button)] bg-primary text-primary-foreground hover:bg-primary/90 h-11 px-4 py-2 w-full"
+          class="inline-flex items-center justify-center whitespace-nowrap rounded-[var(--radius)] text-sm font-medium [letter-spacing:var(--letter-spacing)] ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [box-shadow:var(--shadow-button)] bg-primary text-primary-foreground hover:bg-brand-dark hover:text-primary-foreground h-11 px-4 py-2 w-full"
           href="/en/dashboard"
         >
           Continue to dashboard (dev mode)
@@ -423,7 +423,7 @@ exports[`SignInCard > submits a Resend magic link and renders the confirmation s
             />
           </div>
           <button
-            class="inline-flex items-center justify-center whitespace-nowrap rounded-[var(--radius)] text-sm font-medium [letter-spacing:var(--letter-spacing)] ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [box-shadow:var(--shadow-button)] bg-primary text-primary-foreground hover:bg-primary/90 h-11 px-4 py-2 w-full gap-2"
+            class="inline-flex items-center justify-center whitespace-nowrap rounded-[var(--radius)] text-sm font-medium [letter-spacing:var(--letter-spacing)] ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [box-shadow:var(--shadow-button)] bg-primary text-primary-foreground hover:bg-brand-dark hover:text-primary-foreground h-11 px-4 py-2 w-full gap-2"
             type="submit"
           >
             <svg

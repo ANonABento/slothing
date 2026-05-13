@@ -17,8 +17,43 @@ const config: Config = {
           "system-ui",
           "sans-serif",
         ],
+        display: ["var(--display)", "system-ui", "sans-serif"],
+        body: ["var(--font-body)", "system-ui", "sans-serif"],
+        mono: ["var(--font-mono)", "ui-monospace", "monospace"],
       },
       colors: {
+        // Editorial tokens (Kev handoff) — direct passthrough, not HSL-wrapped
+        page: "var(--bg)",
+        "page-2": "var(--bg-2)",
+        paper: {
+          DEFAULT: "var(--paper)",
+          foreground: "var(--ink)",
+          border: "var(--rule)",
+          // Legacy aliases — keep until callsites migrate
+          surface: "hsl(var(--surface-paper))",
+          "surface-foreground": "hsl(var(--paper-foreground))",
+          "surface-border": "hsl(var(--surface-paper-border))",
+        },
+        ink: {
+          DEFAULT: "var(--ink)",
+          2: "var(--ink-2)",
+          3: "var(--ink-3)",
+        },
+        rule: {
+          DEFAULT: "var(--rule)",
+          strong: "var(--rule-strong)",
+          "strong-bg": "var(--rule-strong-bg)",
+        },
+        brand: {
+          DEFAULT: "var(--brand)",
+          dark: "var(--brand-dark)",
+          soft: "var(--brand-soft)",
+        },
+        inverse: {
+          DEFAULT: "var(--inverse-bg)",
+          ink: "var(--inverse-ink)",
+        },
+        // shadcn tokens (HSL-wrapped) — preset system drives these
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         card: {
@@ -61,15 +96,51 @@ const config: Config = {
           DEFAULT: "hsl(var(--info))",
           foreground: "hsl(var(--info-foreground))",
         },
-        paper: {
-          DEFAULT: "hsl(var(--surface-paper))",
-          foreground: "hsl(var(--paper-foreground))",
-          border: "hsl(var(--surface-paper-border))",
-        },
         scrim: "hsl(var(--surface-scrim))",
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
+      },
+      fontSize: {
+        "2xs": ["0.625rem", { lineHeight: "0.75rem" }],
+        "hero-h1": [
+          "clamp(54px, 7vw, 96px)",
+          {
+            lineHeight: "0.96",
+            letterSpacing: "var(--display-letter)",
+            fontWeight: "700",
+          },
+        ],
+        "section-h2": [
+          "clamp(40px, 5vw, 64px)",
+          {
+            lineHeight: "1.0",
+            letterSpacing: "var(--display-letter)",
+            fontWeight: "700",
+          },
+        ],
+        "closer-h2": [
+          "clamp(36px, 4.5vw, 56px)",
+          {
+            lineHeight: "1.02",
+            letterSpacing: "var(--display-letter)",
+            fontWeight: "700",
+          },
+        ],
+        preview: [
+          "32px",
+          {
+            lineHeight: "1.1",
+            letterSpacing: "var(--display-letter)",
+            fontWeight: "700",
+          },
+        ],
+        "hero-sub": ["17.5px", { lineHeight: "1.55" }],
+        lede: ["17px", { lineHeight: "1.6" }],
+        "mono-cap": ["11px", { lineHeight: "1.5", letterSpacing: "0.14em" }],
+      },
+      maxWidth: {
+        wrap: "1240px",
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -88,6 +159,11 @@ const config: Config = {
         lg: "var(--shadow-lg)",
         xl: "var(--shadow-xl)",
         glow: "0 0 20px var(--glow-color)",
+        // Editorial paper shadows
+        "paper-card":
+          "0 18px 40px var(--paper-shadow), 0 1px 0 rgba(255,255,255,0.7) inset",
+        "paper-elevated": "0 30px 80px var(--paper-shadow)",
+        panel: "0 20px 50px var(--paper-shadow-strong)",
       },
       borderWidth: {
         DEFAULT: "var(--border-width)",
@@ -129,6 +205,13 @@ const config: Config = {
           from: { transform: "translateX(0)", opacity: "1" },
           to: { transform: "translateX(100%)", opacity: "0" },
         },
+        "kb-drop": {
+          from: { opacity: "0", transform: "translateX(-12px)" },
+          to: { opacity: "1", transform: "translateX(0)" },
+        },
+        "caret-blink": {
+          "50%": { opacity: "0" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -140,6 +223,9 @@ const config: Config = {
         "pulse-subtle": "pulse-subtle 2s ease-in-out infinite",
         "slide-in-right": "slide-in-right 0.3s ease-out",
         "slide-out-right": "slide-out-right 0.3s ease-out",
+        "kb-drop": "kb-drop 600ms ease backwards",
+        "caret-blink": "caret-blink 1s steps(2) infinite",
+        "spin-slow": "spin 0.9s linear infinite",
       },
       spacing: {
         "0": "var(--spacing-0)",
@@ -157,11 +243,9 @@ const config: Config = {
         "24": "var(--spacing-24)",
         "88": "var(--spacing-88)",
       },
-      fontSize: {
-        "2xs": ["0.625rem", { lineHeight: "0.75rem" }],
-      },
       letterSpacing: {
         theme: "var(--letter-spacing)",
+        display: "var(--display-letter)",
       },
     },
   },

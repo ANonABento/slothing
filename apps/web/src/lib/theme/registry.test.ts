@@ -2,8 +2,9 @@ import { describe, expect, it } from "vitest";
 import { ALL_THEMES, getTheme, getThemeIds, isThemeId } from "./registry";
 
 describe("theme registry", () => {
-  it("registers the seven built-in theme presets in display order", () => {
+  it("registers the eight built-in theme presets in display order", () => {
     expect(getThemeIds()).toEqual([
+      "slothing",
       "default",
       "bloxy",
       "glass",
@@ -12,12 +13,12 @@ describe("theme registry", () => {
       "earth",
       "premium",
     ]);
-    expect(ALL_THEMES).toHaveLength(7);
+    expect(ALL_THEMES).toHaveLength(8);
   });
 
-  it("resolves known theme ids and falls back to default for unknown ids", () => {
+  it("resolves known theme ids and falls back to slothing for unknown ids", () => {
     expect(getTheme("premium").name).toBe("Premium");
-    expect(getTheme("missing").id).toBe("default");
+    expect(getTheme("missing").id).toBe("slothing");
   });
 
   it("validates theme ids", () => {

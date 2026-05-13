@@ -4,6 +4,12 @@ import { getSiteMetadata } from "@/lib/seo";
 
 vi.mock("next/font/google", () => ({
   Plus_Jakarta_Sans: () => ({ variable: "--font-sans" }),
+  JetBrains_Mono: () => ({ variable: "--font-jetbrains" }),
+  Outfit: () => ({ variable: "--font-outfit" }),
+}));
+
+vi.mock("geist/font/sans", () => ({
+  GeistSans: { variable: "--font-geist-sans" },
 }));
 
 vi.mock("@/components/auth/session-provider", () => ({

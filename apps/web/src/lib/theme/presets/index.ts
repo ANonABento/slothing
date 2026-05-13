@@ -5,3 +5,4 @@ export { glassTheme } from "./glass";
 export { minimalTheme } from "./minimal";
 export { neonTheme } from "./neon";
 export { premiumTheme } from "./premium";
+export { slothingTheme } from "./slothing";
