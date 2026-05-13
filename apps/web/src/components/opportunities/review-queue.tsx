@@ -9,6 +9,7 @@ import { Check, ExternalLink, MapPin, Settings, X } from "lucide-react";
 import { ExtensionInstallButtons } from "@/components/marketing/extension-install-buttons";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { StatusPill } from "@/components/opportunities/status-pill";
 import { StandardEmptyState } from "@/components/ui/page-layout";
 import { cn } from "@/lib/utils";
 import type { Opportunity } from "@/types/opportunity";
@@ -257,10 +258,13 @@ export function OpportunityReviewQueue({
                     <h2 className="mt-2 text-3xl font-bold leading-tight">
                       {activeJob.title}
                     </h2>
+                    <div className="mt-3 flex flex-wrap items-center gap-2">
+                      <StatusPill status={activeJob.status} />
+                      {activeJob.remoteType === "remote" && (
+                        <Badge variant="info">Remote</Badge>
+                      )}
+                    </div>
                   </div>
-                  {activeJob.remoteType === "remote" && (
-                    <Badge variant="info">Remote</Badge>
-                  )}
                 </div>
 
                 <div className="mt-5 flex flex-wrap gap-2 text-sm text-muted-foreground">

@@ -25,6 +25,7 @@ import {
 import { ImportJobDialog } from "@/components/jobs/import-job-dialog";
 import { AddOpportunityWizard } from "@/components/opportunities/add-opportunity-wizard";
 import { Badge } from "@/components/ui/badge";
+import { StatusPill } from "@/components/opportunities/status-pill";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -1100,9 +1101,7 @@ function OpportunityRow({
             >
               {isHackathon ? "Hackathon" : "Job"}
             </Badge>
-            <Badge variant="outline" className="capitalize">
-              {opportunity.status}
-            </Badge>
+            <StatusPill status={opportunity.status} />
             <span className="text-sm text-muted-foreground">
               {opportunity.source}
             </span>
