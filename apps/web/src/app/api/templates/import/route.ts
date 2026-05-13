@@ -1,7 +1,11 @@
 import { nowEpoch } from "@/lib/format/time";
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth, isAuthError } from "@/lib/auth";
-import { getLLMConfig } from "@/lib/db";
+import {
+  gateAiFeature,
+  isAiGateResponse,
+  type AiGatePass,
+} from "@/lib/billing/ai-gate";
 import { saveCustomTemplate } from "@/lib/db/custom-templates";
 import { LLMClient } from "@/lib/llm/client";
 import { getClientIdentifier, rateLimiters } from "@/lib/rate-limit";
@@ -17,6 +21,7 @@ const MAX_TEMPLATE_FILE_BYTES = 10 * 1024 * 1024;
 export async function POST(request: NextRequest) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
+  let aiGate: AiGatePass | null = null;
 
   const rateLimit = rateLimiters.standard(
     getClientIdentifier(request, authResult.userId),
@@ -71,8 +76,14 @@ export async function POST(request: NextRequest) {
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
-    const llmConfig = getLLMConfig(authResult.userId);
-    const llmClient = llmConfig ? new LLMClient(llmConfig) : null;
+    const gate = gateAiFeature(
+      authResult.userId,
+      "document_assistant",
+      `template-import:${nowEpoch()}`,
+    );
+    if (isAiGateResponse(gate)) return gate;
+    aiGate = gate;
+    const llmClient = new LLMClient(gate.llmConfig);
     const extracted = await extractTemplateFromFile({
       buffer,
       filename: file.name,
@@ -112,6 +123,7 @@ export async function POST(request: NextRequest) {
       sectionsFound: extracted.sectionsFound,
     });
   } catch (error) {
+    aiGate?.refund();
     console.error("Template import error:", error);
     return NextResponse.json(
       {

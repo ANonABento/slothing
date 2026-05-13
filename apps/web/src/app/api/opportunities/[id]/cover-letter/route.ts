@@ -6,7 +6,12 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { getJob } from "@/lib/db/jobs";
-import { getProfile, getLLMConfig } from "@/lib/db";
+import { getProfile } from "@/lib/db";
+import {
+  gateAiFeature,
+  isAiGateResponse,
+  type AiGatePass,
+} from "@/lib/billing/ai-gate";
 import { LLMClient, parseJSONFromLLM } from "@/lib/llm/client";
 import { requireAuth, isAuthError } from "@/lib/auth";
 import { buildOpportunityCoverLetterJsonPrompt } from "@/lib/cover-letter/opportunity-prompts";
@@ -35,6 +40,7 @@ export async function POST(
 ) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
+  let aiGate: AiGatePass | null = null;
 
   try {
     const job = getJob(params.id, authResult.userId);
@@ -53,14 +59,16 @@ export async function POST(
       );
     }
 
-    const llmConfig = getLLMConfig(authResult.userId);
+    const gate = gateAiFeature(authResult.userId, "cover_letter", params.id);
+    if (isAiGateResponse(gate)) return gate;
+    aiGate = gate;
 
     let coverLetter: string;
     let highlights: string[] = [];
     let selfCheck: CoverLetterResponse["selfCheck"] | undefined;
 
-    if (llmConfig) {
-      const client = new LLMClient(llmConfig);
+    if (gate.llmConfig) {
+      const client = new LLMClient(gate.llmConfig);
 
       const profileSummary = `
 Name: ${profile.contact.name}
@@ -136,9 +144,10 @@ Skills: ${profile.skills.map((s) => s.name).join(", ")}
       coverLetter,
       highlights,
       ...(selfCheck ? { selfCheck } : {}),
-      usedLLM: !!llmConfig,
+      usedLLM: true,
     });
   } catch (error) {
+    aiGate?.refund();
     console.error("Cover letter generation error:", error);
     return NextResponse.json(
       { error: "Failed to generate cover letter" },

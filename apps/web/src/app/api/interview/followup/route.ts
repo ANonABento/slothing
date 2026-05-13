@@ -7,7 +7,12 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { getJob } from "@/lib/db/jobs";
-import { getProfile, getLLMConfig } from "@/lib/db";
+import { getProfile } from "@/lib/db";
+import {
+  gateAiFeature,
+  isAiGateResponse,
+  type AiGatePass,
+} from "@/lib/billing/ai-gate";
 import { LLMClient, parseJSONFromLLM } from "@/lib/llm/client";
 import { requireAuth, isAuthError } from "@/lib/auth";
 
@@ -22,6 +27,7 @@ interface FollowUpResponse {
 export async function POST(request: NextRequest) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
+  let aiGate: AiGatePass | null = null;
 
   try {
     const { jobId, originalQuestion, userAnswer, questionCategory } =
@@ -36,12 +42,18 @@ export async function POST(request: NextRequest) {
 
     const job = jobId ? getJob(jobId, authResult.userId) : null;
     const profile = getProfile(authResult.userId);
-    const llmConfig = getLLMConfig(authResult.userId);
+    const gate = gateAiFeature(
+      authResult.userId,
+      "interview_turn",
+      `followup:${jobId ?? "general"}`,
+    );
+    if (isAiGateResponse(gate)) return gate;
+    aiGate = gate;
 
     let followUp: FollowUpResponse;
 
-    if (llmConfig) {
-      const client = new LLMClient(llmConfig);
+    if (gate.llmConfig) {
+      const client = new LLMClient(gate.llmConfig);
 
       const jobContext = job
         ? `The candidate is interviewing for ${job.title} at ${job.company}.`
@@ -115,6 +127,7 @@ Return a JSON object with:
       ...followUp,
     });
   } catch (error) {
+    aiGate?.refund();
     console.error("Follow-up question error:", error);
     return NextResponse.json(
       { error: "Failed to generate follow-up question" },
