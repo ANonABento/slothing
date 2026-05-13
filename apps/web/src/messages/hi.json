@@ -7,11 +7,11 @@
   },
   "common": {
     "cancel": "रद्द करें",
-    "back": "[hi] Back",
+    "back": "वापस",
     "clear": "साफ़ करें",
     "clearAll": "सभी साफ़ करें",
-    "delete": "[hi] Delete",
-    "edit": "[hi] Edit",
+    "delete": "हटाएँ",
+    "edit": "संपादित करें",
     "filters": "फ़िल्टर",
     "import": "आयात करें",
     "loading": "लोड हो रहा है",
@@ -64,13 +64,13 @@
         "label": "भाषा बदलें",
         "description": "इस पेज की भाषा चुनें।"
       },
-      "features": "[hi] Features",
-      "extension": "[hi] Extension",
-      "howItWorks": "[hi] How It Works",
-      "pricing": "[hi] Pricing",
-      "signIn": "[hi] Sign In",
-      "getStarted": "[hi] Get Started",
-      "toggleMenu": "[hi] Toggle menu"
+      "features": "सुविधाएँ",
+      "extension": "एक्सटेंशन",
+      "howItWorks": "यह कैसे काम करता है",
+      "pricing": "मूल्य",
+      "signIn": "साइन इन करें",
+      "getStarted": "शुरू करें",
+      "toggleMenu": "मेनू टॉगल करें"
     }
   },
   "dashboard": {
@@ -248,76 +248,76 @@
       "emptyDescription": "अवसरों को यहाँ ट्रैक करना शुरू करने के लिए उन्हें सहेजें या आयात करें।"
     },
     "recentActivity": {
-      "title": "[hi] Recent Activity",
+      "title": "हाल की गतिविधि",
       "types": {
-        "document_uploaded": "[hi] Uploaded",
-        "resume_generated": "[hi] Generated resume for",
-        "job_added": "[hi] Added job",
-        "job_applied": "[hi] Applied to"
+        "document_uploaded": "अपलोड किया गया",
+        "resume_generated": "इसके लिए रिज़्यूमे बनाया गया",
+        "job_added": "अवसर जोड़ा गया",
+        "job_applied": "यहाँ आवेदन किया गया"
       }
     }
   },
   "onboarding": {
     "steps": {
       "upload": {
-        "title": "[hi] Upload Your Resume",
-        "description": "[hi] Drag and drop your resume to get started, or skip this step and add it later.",
-        "dropHint": "[hi] Drop your PDF or DOCX here, or head to <documents>Documents</documents> after setup to add it later."
+        "title": "अपना रिज़्यूमे अपलोड करें",
+        "description": "शुरू करने के लिए अपना रिज़्यूमे खींचकर छोड़ें, या यह चरण छोड़कर बाद में जोड़ें।",
+        "dropHint": "अपना PDF या DOCX यहाँ छोड़ें, या सेटअप के बाद इसे जोड़ने के लिए <documents>दस्तावेज़</documents> पर जाएँ।"
       },
       "review": {
-        "title": "[hi] Review Your Profile",
-        "description": "[hi] After uploading, review the extracted entries and edit anything that needs fixing.",
+        "title": "अपनी प्रोफ़ाइल की समीक्षा करें",
+        "description": "अपलोड के बाद निकाली गई प्रविष्टियाँ देखें और जिन्हें सुधारना हो उन्हें संपादित करें।",
         "sections": {
-          "contactInfo": "[hi] Contact info",
-          "workExperience": "[hi] Work experience",
-          "education": "[hi] Education",
-          "skillsProjects": "[hi] Skills & projects"
+          "contactInfo": "संपर्क जानकारी",
+          "workExperience": "कार्य अनुभव",
+          "education": "शिक्षा",
+          "skillsProjects": "कौशल और प्रोजेक्ट"
         }
       },
       "builder": {
-        "title": "[hi] Build Your Starter Profile",
-        "description": "[hi] Answer a few quick prompts so Slothing can organize your career details without a resume upload.",
+        "title": "अपनी प्रारंभिक प्रोफ़ाइल बनाएँ",
+        "description": "कुछ छोटे सवालों के जवाब दें ताकि Slothing बिना रिज़्यूमे अपलोड के आपकी करियर जानकारी व्यवस्थित कर सके।",
         "fields": {
-          "name": "[hi] Name",
-          "email": "[hi] Email",
-          "targetRole": "[hi] Target role",
-          "backgroundSummary": "[hi] Background summary",
-          "education": "[hi] Education",
-          "school": "[hi] School",
-          "degree": "[hi] Degree",
-          "field": "[hi] Field",
-          "topSkills": "[hi] Top skills",
-          "company": "[hi] Company / organisation",
-          "roleTitle": "[hi] Role / title",
-          "roleHighlights": "[hi] Role highlights (one per line, up to 3)",
-          "projectName": "[hi] Project name",
-          "projectSummary": "[hi] What did you build?",
-          "projectHighlights": "[hi] Project highlights (one per line)",
-          "achievements": "[hi] Honours, awards, leadership (comma-separated)"
+          "name": "नाम",
+          "email": "ईमेल",
+          "targetRole": "लक्षित भूमिका",
+          "backgroundSummary": "पृष्ठभूमि सारांश",
+          "education": "शिक्षा",
+          "school": "संस्थान",
+          "degree": "डिग्री",
+          "field": "क्षेत्र",
+          "topSkills": "मुख्य कौशल",
+          "company": "कंपनी या संगठन",
+          "roleTitle": "भूमिका या पदनाम",
+          "roleHighlights": "भूमिका की मुख्य बातें (प्रति पंक्ति एक, अधिकतम 3)",
+          "projectName": "प्रोजेक्ट का नाम",
+          "projectSummary": "आपने क्या बनाया?",
+          "projectHighlights": "प्रोजेक्ट की मुख्य बातें (प्रति पंक्ति एक)",
+          "achievements": "सम्मान, पुरस्कार, नेतृत्व (कॉमा से अलग)"
         },
         "placeholders": {
-          "targetRole": "[hi] Frontend intern, project manager, data analyst",
-          "backgroundSummary": "[hi] A sentence about your background, interests, or next move",
-          "topSkills": "[hi] Customer service, Excel, Python",
-          "company": "[hi] Campus cafe",
-          "roleTitle": "[hi] Barista",
-          "roleHighlights": "[hi] Pulled espresso shots\nTrained 3 new baristas",
-          "projectName": "[hi] Community pantry dashboard",
-          "projectSummary": "[hi] A class project that tracked donations and volunteer shifts",
-          "projectHighlights": "[hi] Built a filterable tracker\nPresented findings to class",
-          "achievements": "[hi] Residence council secretary, Dean's list"
+          "targetRole": "फ्रंटएंड इंटर्न, प्रोजेक्ट मैनेजर, डेटा विश्लेषक",
+          "backgroundSummary": "आपकी पृष्ठभूमि, रुचियों या अगले कदम के बारे में एक वाक्य",
+          "topSkills": "ग्राहक सेवा, Excel, Python",
+          "company": "कैंपस कैफ़े",
+          "roleTitle": "बरिस्ता",
+          "roleHighlights": "एस्प्रेसो शॉट तैयार किए\n3 नए बरिस्ता को प्रशिक्षित किया",
+          "projectName": "कम्युनिटी पैंट्री डैशबोर्ड",
+          "projectSummary": "एक कक्षा प्रोजेक्ट जिसने दान और स्वयंसेवी शिफ्ट ट्रैक कीं",
+          "projectHighlights": "फ़िल्टर करने योग्य ट्रैकर बनाया\nकक्षा में निष्कर्ष प्रस्तुत किए",
+          "achievements": "रेज़िडेंस काउंसिल सचिव, डीन की सूची"
         },
         "optional": {
-          "title": "[hi] Add a role, project, or honour (optional)",
-          "hide": "[hi] Hide",
-          "add": "[hi] Add"
+          "title": "भूमिका, प्रोजेक्ट या सम्मान जोड़ें (वैकल्पिक)",
+          "hide": "छिपाएँ",
+          "add": "जोड़ें"
         },
         "actions": {
-          "saving": "[hi] Saving",
-          "saveContinue": "[hi] Save and continue"
+          "saving": "सहेजा जा रहा है",
+          "saveContinue": "सहेजें और जारी रखें"
         },
         "errors": {
-          "save": "[hi] Unable to save your profile starter."
+          "save": "आपकी प्रारंभिक प्रोफ़ाइल सहेजी नहीं जा सकी।"
         }
       }
     }
@@ -425,402 +425,402 @@
   },
   "interview": {
     "summary": {
-      "title": "[hi] Interview Complete!",
-      "description": "[hi] You answered all {count, plural, one {# question} other {# questions}}. Review your responses and feedback below.",
+      "title": "इंटरव्यू पूरा हुआ",
+      "description": "आपने {count, plural, one {# सवाल} other {# सवालों}} का जवाब दिया। नीचे अपने जवाब और फ़ीडबैक देखें।",
       "actions": {
-        "startNew": "[hi] Start New Interview",
-        "research": "[hi] Research {company}"
+        "startNew": "नया इंटरव्यू शुरू करें",
+        "research": "{company} पर शोध करें"
       },
       "insights": {
-        "title": "[hi] Performance Insights",
-        "questionsAnswered": "[hi] Questions Answered",
-        "responseQuality": "[hi] Response Quality",
-        "feedbackReceived": "[hi] Feedback Received"
+        "title": "प्रदर्शन जानकारी",
+        "questionsAnswered": "जवाब दिए गए सवाल",
+        "responseQuality": "जवाब की गुणवत्ता",
+        "feedbackReceived": "प्राप्त फ़ीडबैक"
       },
       "performanceLevels": {
-        "detailed": "[hi] Detailed",
-        "good": "[hi] Good",
-        "brief": "[hi] Brief"
+        "detailed": "विस्तृत",
+        "good": "अच्छा",
+        "brief": "संक्षिप्त"
       },
       "responses": {
-        "title": "[hi] Your Responses",
-        "skipped": "[hi] Skipped",
-        "skippedShort": "[hi] Skipped - revisit later",
-        "noAnswer": "[hi] No answer provided",
-        "skippedHint": "[hi] Skipped - revisit this prompt when you are ready.",
-        "yourAnswer": "[hi] Your Answer",
-        "aiFeedback": "[hi] AI Feedback"
+        "title": "आपके जवाब",
+        "skipped": "छोड़ा गया",
+        "skippedShort": "छोड़ा गया; बाद में देखें",
+        "noAnswer": "कोई जवाब नहीं दिया गया",
+        "skippedHint": "छोड़ा गया; तैयार होने पर इस प्रश्न पर वापस आएँ।",
+        "yourAnswer": "आपका जवाब",
+        "aiFeedback": "AI फ़ीडबैक"
       }
     },
     "jobSelection": {
-      "title": "[hi] Select a job to practice for:",
+      "title": "अभ्यास के लिए अवसर चुनें:",
       "empty": {
-        "title": "[hi] No Opportunities to Practice For",
-        "description": "[hi] Add a job description first to get personalized interview questions based on the role.",
-        "addOpportunity": "[hi] Add an Opportunity"
+        "title": "अभ्यास के लिए कोई अवसर नहीं",
+        "description": "भूमिका के आधार पर व्यक्तिगत इंटरव्यू सवाल पाने के लिए पहले नौकरी विवरण जोड़ें।",
+        "addOpportunity": "अवसर जोड़ें"
       },
       "actions": {
-        "quickPractice": "[hi] Quick Practice",
-        "textPractice": "[hi] Text Practice",
-        "voicePractice": "[hi] Voice Practice",
-        "prepGuide": "[hi] Prep Guide",
-        "hidePrepGuide": "[hi] Hide Prep Guide",
-        "companyResearch": "[hi] Company Research"
+        "quickPractice": "त्वरित अभ्यास",
+        "textPractice": "टेक्स्ट अभ्यास",
+        "voicePractice": "वॉइस अभ्यास",
+        "prepGuide": "तैयारी गाइड",
+        "hidePrepGuide": "गाइड छिपाएँ",
+        "companyResearch": "कंपनी शोध"
       },
       "controls": {
-        "difficulty": "[hi] Difficulty:",
-        "questionCount": "[hi] {count} questions",
-        "timer": "[hi] Timer"
+        "difficulty": "कठिनाई:",
+        "questionCount": "{count} सवाल",
+        "timer": "टाइमर"
       },
       "difficulty": {
-        "entry": "[hi] Entry Level",
-        "mid": "[hi] Mid Level",
-        "senior": "[hi] Senior Level",
-        "executive": "[hi] Executive"
+        "entry": "प्रारंभिक स्तर",
+        "mid": "मध्य स्तर",
+        "senior": "वरिष्ठ स्तर",
+        "executive": "कार्यकारी"
       }
     },
     "quickPractice": {
-      "title": "[hi] Practice {category}",
-      "description": "[hi] Pick a short warm-up and jump straight into questions.",
+      "title": "{category} अभ्यास",
+      "description": "एक छोटा वार्म-अप चुनें और सीधे सवालों पर जाएँ।",
       "fields": {
-        "category": "[hi] Category",
-        "questions": "[hi] Questions",
-        "difficulty": "[hi] Difficulty"
+        "category": "श्रेणी",
+        "questions": "सवाल",
+        "difficulty": "कठिनाई"
       },
       "categories": {
-        "behavioral": "[hi] Behavioral",
-        "technical": "[hi] Technical",
-        "situational": "[hi] Situational",
-        "general": "[hi] General",
-        "cultural-fit": "[hi] Cultural Fit"
+        "behavioral": "व्यवहारिक",
+        "technical": "तकनीकी",
+        "situational": "स्थितिजन्य",
+        "general": "सामान्य",
+        "cultural-fit": "सांस्कृतिक अनुकूलता"
       },
-      "questionCount": "[hi] {count} questions",
+      "questionCount": "{count} सवाल",
       "difficulty": {
-        "entry": "[hi] Easy",
-        "mid": "[hi] Mid",
-        "senior": "[hi] Hard",
-        "executive": "[hi] Executive"
+        "entry": "आसान",
+        "mid": "मध्यम",
+        "senior": "कठिन",
+        "executive": "कार्यकारी"
       },
-      "timer": "[hi] Practice with a timer",
+      "timer": "टाइमर के साथ अभ्यास",
       "actions": {
-        "start": "[hi] Start"
+        "start": "शुरू करें"
       }
     },
     "prepGuide": {
-      "title": "[hi] Interview Prep Guide",
-      "jobAtCompany": "[hi] {jobTitle} at {company}",
-      "loading": "[hi] Generating your prep guide...",
-      "progress": "[hi] Preparation Progress",
-      "questionTips": "[hi] Tips",
+      "title": "इंटरव्यू तैयारी गाइड",
+      "jobAtCompany": "{company} में {jobTitle}",
+      "loading": "आपकी तैयारी गाइड बनाई जा रही है...",
+      "progress": "तैयारी प्रगति",
+      "questionTips": "सुझाव",
       "actions": {
-        "export": "[hi] Export"
+        "export": "निर्यात करें"
       },
       "tabs": {
-        "overview": "[hi] Overview",
-        "checklist": "[hi] Checklist",
-        "questions": "[hi] Questions"
+        "overview": "सारांश",
+        "checklist": "चेकलिस्ट",
+        "questions": "सवाल"
       },
       "sections": {
-        "keyTopics": "[hi] Key Topics to Prepare",
-        "strengths": "[hi] Your Strengths",
-        "gaps": "[hi] Potential Gaps",
-        "talkingPoints": "[hi] Key Talking Points"
+        "keyTopics": "तैयार करने के मुख्य विषय",
+        "strengths": "आपकी ताकतें",
+        "gaps": "संभावित कमियाँ",
+        "talkingPoints": "मुख्य बातचीत बिंदु"
       },
       "checklist": {
-        "before": "[hi] Before the Interview",
-        "during": "[hi] During the Interview",
-        "after": "[hi] After the Interview"
+        "before": "इंटरव्यू से पहले",
+        "during": "इंटरव्यू के दौरान",
+        "after": "इंटरव्यू के बाद"
       },
       "categories": {
-        "behavioral": "[hi] Behavioral",
-        "technical": "[hi] Technical",
-        "situational": "[hi] Situational",
-        "company": "[hi] Company"
+        "behavioral": "व्यवहारिक",
+        "technical": "तकनीकी",
+        "situational": "स्थितिजन्य",
+        "company": "कंपनी"
       },
       "errors": {
-        "fetch": "[hi] Failed to fetch guide",
-        "load": "[hi] Failed to load guide",
-        "download": "[hi] Failed to download guide",
-        "downloadTitle": "[hi] Could not download prep guide",
-        "downloadDescription": "[hi] Please try downloading the guide again."
+        "fetch": "गाइड प्राप्त नहीं हो सकी",
+        "load": "गाइड लोड नहीं हो सकी",
+        "download": "गाइड डाउनलोड नहीं हो सकी",
+        "downloadTitle": "तैयारी गाइड डाउनलोड नहीं हो सकी",
+        "downloadDescription": "कृपया गाइड फिर से डाउनलोड करने की कोशिश करें।"
       }
     }
   },
   "jobs": {
     "toolbar": {
-      "searchPlaceholder": "[hi] Search jobs by title, company, or keywords...",
-      "clearSearch": "[hi] Clear search",
+      "searchPlaceholder": "शीर्षक, कंपनी या कीवर्ड से नौकरियाँ खोजें...",
+      "clearSearch": "खोज साफ़ करें",
       "filters": {
-        "status": "[hi] Status",
-        "type": "[hi] Type",
-        "location": "[hi] Location",
-        "allStatuses": "[hi] All Statuses",
-        "allTypes": "[hi] All Types",
-        "allLocations": "[hi] All Locations"
+        "status": "स्थिति",
+        "type": "प्रकार",
+        "location": "स्थान",
+        "allStatuses": "सभी स्थितियाँ",
+        "allTypes": "सभी प्रकार",
+        "allLocations": "सभी स्थान"
       },
       "statuses": {
-        "pending": "[hi] Pending",
-        "saved": "[hi] Saved",
-        "applied": "[hi] Applied",
-        "interviewing": "[hi] Interviewing",
-        "offered": "[hi] Offered",
-        "rejected": "[hi] Rejected"
+        "pending": "लंबित",
+        "saved": "सहेजा गया",
+        "applied": "आवेदन किया गया",
+        "interviewing": "साक्षात्कार में",
+        "offered": "ऑफ़र मिला",
+        "rejected": "अस्वीकृत"
       },
       "types": {
-        "fullTime": "[hi] Full-time",
-        "partTime": "[hi] Part-time",
-        "contract": "[hi] Contract",
-        "internship": "[hi] Internship"
+        "fullTime": "पूर्णकालिक",
+        "partTime": "अंशकालिक",
+        "contract": "अनुबंध",
+        "internship": "इंटर्नशिप"
       },
       "locations": {
-        "remote": "[hi] Remote",
-        "onsite": "[hi] On-site"
+        "remote": "रिमोट",
+        "onsite": "ऑन-साइट"
       },
       "sort": {
-        "placeholder": "[hi] Sort",
-        "newest": "[hi] Newest First",
-        "oldest": "[hi] Oldest First",
-        "company": "[hi] Company A-Z",
-        "title": "[hi] Title A-Z"
+        "placeholder": "क्रमबद्ध करें",
+        "newest": "नवीनतम पहले",
+        "oldest": "सबसे पुराने पहले",
+        "company": "कंपनी A-Z",
+        "title": "शीर्षक A-Z"
       },
-      "showing": "[hi] Showing {filteredCount} of {totalCount, plural, one {# job} other {# jobs}}"
+      "showing": "{totalCount, plural, one {# नौकरी} other {# नौकरियों}} में से {filteredCount} दिखा रहे हैं"
     },
     "import": {
       "csvPreview": {
-        "summaryTitle": "[hi] Import Summary",
+        "summaryTitle": "आयात सारांश",
         "stats": {
-          "totalRows": "[hi] Total Rows",
-          "validOpportunities": "[hi] Valid Opportunities",
-          "invalid": "[hi] Invalid"
+          "totalRows": "कुल पंक्तियाँ",
+          "validOpportunities": "मान्य अवसर",
+          "invalid": "अमान्य"
         },
-        "validationErrors": "[hi] Validation Errors",
-        "moreErrors": "[hi] ...and {count} more errors",
-        "opportunitiesToImport": "[hi] Opportunities to Import ({count})",
-        "moreOpportunities": "[hi] ...and {count, plural, one {# more opportunity} other {# more opportunities}}",
+        "validationErrors": "मान्यकरण त्रुटियाँ",
+        "moreErrors": "...और {count} त्रुटियाँ",
+        "opportunitiesToImport": "आयात करने के अवसर ({count})",
+        "moreOpportunities": "...और {count, plural, one {# अवसर} other {# अवसर}}",
         "actions": {
-          "import": "[hi] Import {count, plural, one {# Opportunity} other {# Opportunities}}"
+          "import": "{count, plural, one {# अवसर} other {# अवसर}} आयात करें"
         }
       },
       "textMode": {
-        "jobUrlLabel": "[hi] Job URL (optional)",
-        "jobUrlPlaceholder": "[hi] https://linkedin.com/jobs/... or https://indeed.com/...",
-        "jobUrlHelp": "[hi] The URL will be saved with the job for reference",
-        "jobContentLabel": "[hi] Job Content",
-        "jobContentPlaceholder": "[hi] Paste the full job posting here...\n\nExample:\nSenior Software Engineer\nAcme Corp - San Francisco, CA (Remote)\n\nAbout the role:\nWe're looking for an experienced software engineer...\n\nRequirements:\n- 5+ years of experience\n- Python, TypeScript\n...",
-        "jobContentHelp": "[hi] Paste the entire job description. We'll extract the title, company, requirements, and keywords.",
+        "jobUrlLabel": "नौकरी URL (वैकल्पिक)",
+        "jobUrlPlaceholder": "उदा.: https://linkedin.com/jobs/... या https://indeed.com/...",
+        "jobUrlHelp": "संदर्भ के लिए URL नौकरी के साथ सहेजा जाएगा",
+        "jobContentLabel": "नौकरी सामग्री",
+        "jobContentPlaceholder": "पूरी नौकरी पोस्टिंग यहाँ पेस्ट करें...\n\nउदाहरण:\nसीनियर सॉफ़्टवेयर इंजीनियर\nAcme Corp - San Francisco, CA (रिमोट)\n\nभूमिका के बारे में:\nहम एक अनुभवी सॉफ़्टवेयर इंजीनियर की तलाश कर रहे हैं...\n\nआवश्यकताएँ:\n- 5+ वर्षों का अनुभव\n- Python, TypeScript\n...",
+        "jobContentHelp": "पूरी नौकरी विवरण पेस्ट करें। हम शीर्षक, कंपनी, आवश्यकताएँ और कीवर्ड निकालेंगे।",
         "actions": {
-          "parse": "[hi] Parse Job"
+          "parse": "नौकरी पार्स करें"
         }
       },
       "urlMode": {
-        "jobUrlLabel": "[hi] Job Posting URL",
-        "jobUrlPlaceholder": "[hi] https://linkedin.com/jobs/... or https://indeed.com/...",
-        "jobUrlHelp": "[hi] We'll fetch the job posting and extract the details automatically.",
-        "fetchingNote": "[hi] Note: Some sites may block automated fetching. If the import fails, try pasting the job content directly.",
+        "jobUrlLabel": "नौकरी पोस्टिंग URL",
+        "jobUrlPlaceholder": "उदा.: https://linkedin.com/jobs/... या https://indeed.com/...",
+        "jobUrlHelp": "हम नौकरी पोस्टिंग लाएँगे और विवरण अपने-आप निकालेंगे।",
+        "fetchingNote": "नोट: कुछ साइटें स्वचालित फ़ेचिंग रोक सकती हैं। यदि आयात विफल हो, तो नौकरी सामग्री सीधे पेस्ट करें।",
         "actions": {
-          "fetch": "[hi] Fetch Job"
+          "fetch": "नौकरी फ़ेच करें"
         }
       },
       "editForm": {
         "fields": {
-          "jobTitle": "[hi] Job Title",
-          "company": "[hi] Company",
-          "location": "[hi] Location",
-          "jobType": "[hi] Job Type",
-          "salary": "[hi] Salary",
-          "remote": "[hi] Remote",
-          "url": "[hi] URL"
+          "jobTitle": "नौकरी शीर्षक",
+          "company": "कंपनी",
+          "location": "स्थान",
+          "jobType": "नौकरी प्रकार",
+          "salary": "वेतन",
+          "remote": "रिमोट",
+          "url": "URL"
         },
         "placeholders": {
-          "location": "[hi] San Francisco, CA",
-          "selectType": "[hi] Select type"
+          "location": "उदा.: San Francisco, CA",
+          "selectType": "प्रकार चुनें"
         },
         "types": {
-          "fullTime": "[hi] Full-time",
-          "partTime": "[hi] Part-time",
-          "contract": "[hi] Contract",
-          "internship": "[hi] Internship"
+          "fullTime": "पूर्णकालिक",
+          "partTime": "अंशकालिक",
+          "contract": "अनुबंध",
+          "internship": "इंटर्नशिप"
         },
         "remote": {
-          "remote": "[hi] Remote",
-          "onsite": "[hi] On-site"
+          "remote": "रिमोट",
+          "onsite": "ऑन-साइट"
         },
         "actions": {
-          "backToPreview": "[hi] Back to Preview",
-          "import": "[hi] Import Job"
+          "backToPreview": "पूर्वावलोकन पर वापस जाएँ",
+          "import": "नौकरी आयात करें"
         }
       },
       "preview": {
-        "remote": "[hi] Remote",
-        "viewOriginalPosting": "[hi] View Original Posting",
-        "description": "[hi] Description",
-        "requirements": "[hi] Requirements",
-        "moreRequirements": "[hi] +{count} more",
-        "extractedKeywords": "[hi] Extracted Keywords",
-        "source": "[hi] Source: {source}",
+        "remote": "रिमोट",
+        "viewOriginalPosting": "मूल पोस्टिंग देखें",
+        "description": "विवरण",
+        "requirements": "आवश्यकताएँ",
+        "moreRequirements": "+{count} और",
+        "extractedKeywords": "निकाले गए कीवर्ड",
+        "source": "स्रोत: {source}",
         "actions": {
-          "import": "[hi] Import Job"
+          "import": "नौकरी आयात करें"
         }
       }
     },
     "addDialog": {
-      "title": "[hi] Add New Opportunity",
-      "description": "[hi] Paste the opportunity description to analyze your match and generate a tailored resume.",
+      "title": "नया अवसर जोड़ें",
+      "description": "अपना मैच विश्लेषण करने और अनुकूलित रिज़्यूमे बनाने के लिए अवसर विवरण पेस्ट करें।",
       "fields": {
-        "title": "[hi] Opportunity Title",
-        "company": "[hi] Company",
-        "url": "[hi] Opportunity URL (optional)",
-        "description": "[hi] Opportunity Description"
+        "title": "अवसर शीर्षक",
+        "company": "कंपनी",
+        "url": "अवसर URL (वैकल्पिक)",
+        "description": "अवसर विवरण"
       },
       "placeholders": {
-        "title": "[hi] Software Engineer",
-        "company": "[hi] Acme Corp",
-        "description": "[hi] Paste the full opportunity description here..."
+        "title": "सॉफ़्टवेयर इंजीनियर",
+        "company": "Acme कंपनी",
+        "description": "पूरा अवसर विवरण यहाँ पेस्ट करें..."
       },
       "actions": {
-        "add": "[hi] Add Opportunity"
+        "add": "अवसर जोड़ें"
       },
       "errors": {
-        "add": "[hi] Failed to add opportunity",
-        "addTitle": "[hi] Could not add opportunity",
-        "addDescription": "[hi] Please check the opportunity details and try again."
+        "add": "अवसर जोड़ा नहीं जा सका",
+        "addTitle": "अवसर नहीं जोड़ा जा सका",
+        "addDescription": "कृपया अवसर विवरण जाँचें और फिर कोशिश करें।"
       }
     }
   },
   "resume": {
     "comparison": {
-      "title": "[hi] Resume Comparison",
-      "loading": "[hi] Comparing resumes...",
-      "before": "[hi] Before",
-      "after": "[hi] After",
-      "score": "[hi] Score: {score}%",
-      "matchScoreChange": "[hi] Match Score Change",
-      "empty": "[hi] No differences found between these versions.",
+      "title": "रिज़्यूमे तुलना",
+      "loading": "रिज़्यूमे की तुलना हो रही है...",
+      "before": "पहले",
+      "after": "बाद में",
+      "score": "स्कोर: {score}%",
+      "matchScoreChange": "मैच स्कोर में बदलाव",
+      "empty": "इन संस्करणों के बीच कोई अंतर नहीं मिला।",
       "actions": {
-        "close": "[hi] Close"
+        "close": "बंद करें"
       },
       "summary": {
-        "additions": "[hi] Additions",
-        "removals": "[hi] Removals",
-        "changes": "[hi] Changes"
+        "additions": "जोड़े गए",
+        "removals": "हटाए गए",
+        "changes": "बदलाव"
       },
       "errors": {
-        "compare": "[hi] Failed to compare resumes",
-        "comparison": "[hi] Comparison failed",
-        "load": "[hi] Failed to load comparison"
+        "compare": "रिज़्यूमे की तुलना नहीं हो सकी",
+        "comparison": "तुलना असफल रही",
+        "load": "तुलना लोड नहीं हो सकी"
       }
     }
   },
   "integrations": {
     "google": {
       "calendar": {
-        "connectInSettings": "[hi] Connect Google in Settings to sync calendar",
-        "checking": "[hi] Checking...",
-        "syncing": "[hi] Syncing...",
-        "selectPlaceholder": "[hi] Select what to sync",
+        "connectInSettings": "कैलेंडर सिंक करने के लिए सेटिंग्स में Google कनेक्ट करें",
+        "checking": "जाँच हो रही है...",
+        "syncing": "सिंक हो रहा है...",
+        "selectPlaceholder": "सिंक करने के लिए चुनें",
         "actions": {
-          "sync": "[hi] Sync to Google Calendar"
+          "sync": "Google Calendar में सिंक करें"
         },
         "syncTypes": {
-          "all": "[hi] All Events",
-          "interviews": "[hi] Interviews Only",
-          "deadlines": "[hi] Deadlines Only",
-          "reminders": "[hi] Reminders Only"
+          "all": "सभी इवेंट",
+          "interviews": "केवल इंटरव्यू",
+          "deadlines": "केवल समय-सीमाएँ",
+          "reminders": "केवल रिमाइंडर"
         },
         "result": {
-          "synced": "[hi] Synced {count, plural, one {# event} other {# events}}",
-          "partial": "[hi] {synced} synced, {failed} failed",
-          "success": "[hi] Successfully synced {count, plural, one {# event} other {# events}}",
-          "failed": "[hi] Synced {synced, plural, one {# event} other {# events}}, {failed} failed",
-          "more": "[hi] And {count} more..."
+          "synced": "{count, plural, one {# इवेंट सिंक हुआ} other {# इवेंट सिंक हुए}}",
+          "partial": "{synced} सिंक हुए, {failed} असफल",
+          "success": "{count, plural, one {# इवेंट सफलतापूर्वक सिंक हुआ} other {# इवेंट सफलतापूर्वक सिंक हुए}}",
+          "failed": "{synced, plural, one {# इवेंट सिंक हुआ} other {# इवेंट सिंक हुए}}, {failed} असफल",
+          "more": "और {count}..."
         },
         "errors": {
-          "syncTitle": "[hi] Could not sync calendar",
-          "syncDescription": "[hi] Please check your Google connection and try again.",
-          "syncFailed": "[hi] Sync failed"
+          "syncTitle": "कैलेंडर सिंक नहीं हो सका",
+          "syncDescription": "कृपया अपना Google कनेक्शन जाँचें और फिर कोशिश करें।",
+          "syncFailed": "सिंक असफल रहा"
         }
       },
       "contacts": {
-        "trigger": "[hi] Add from Google",
-        "title": "[hi] Select Google Contact",
-        "description": "[hi] Choose a contact to attach to this opportunity.",
-        "searchPlaceholder": "[hi] Search contacts",
-        "loading": "[hi] Loading contacts...",
-        "openSettings": "[hi] Open Settings",
+        "trigger": "Google से जोड़ें",
+        "title": "Google संपर्क चुनें",
+        "description": "इस अवसर से जोड़ने के लिए संपर्क चुनें।",
+        "searchPlaceholder": "संपर्क खोजें",
+        "loading": "संपर्क लोड हो रहे हैं...",
+        "openSettings": "सेटिंग्स खोलें",
         "empty": {
-          "noContacts": "[hi] No contacts found. Reconnect Google in Settings if you connected before contacts support.",
-          "noMatches": "[hi] No contacts match your search."
+          "noContacts": "कोई संपर्क नहीं मिला। यदि आपने संपर्क समर्थन से पहले कनेक्ट किया था, तो सेटिंग्स में Google फिर से कनेक्ट करें।",
+          "noMatches": "आपकी खोज से कोई संपर्क मेल नहीं खाता।"
         },
         "errors": {
-          "load": "[hi] Failed to load contacts from Google",
-          "loadTitle": "[hi] Could not load Google contacts",
-          "loadDescription": "[hi] Please check your Google connection and try again."
+          "load": "Google से संपर्क लोड नहीं हो सके",
+          "loadTitle": "Google संपर्क लोड नहीं हो सके",
+          "loadDescription": "कृपया अपना Google कनेक्शन जाँचें और फिर कोशिश करें।"
         }
       },
       "drive": {
-        "connectInSettings": "[hi] Connect Google in Settings to save to Drive",
-        "checking": "[hi] Checking...",
-        "saved": "[hi] Saved to Drive",
-        "saving": "[hi] Saving...",
+        "connectInSettings": "Drive में सहेजने के लिए सेटिंग्स में Google कनेक्ट करें",
+        "checking": "जाँच हो रही है...",
+        "saved": "Drive में सहेजा गया",
+        "saving": "सहेजा जा रहा है...",
         "actions": {
-          "save": "[hi] Save to Drive",
-          "saveAndGetLink": "[hi] Save & Get Link"
+          "save": "Drive में सहेजें",
+          "saveAndGetLink": "सहेजें और लिंक पाएँ"
         },
         "errors": {
-          "save": "[hi] Failed to save to Drive",
-          "saveTitle": "[hi] Could not save to Drive",
-          "saveDescription": "[hi] Please check your Google connection and try again."
+          "save": "Drive में सहेजा नहीं जा सका",
+          "saveTitle": "Drive में सहेजा नहीं जा सका",
+          "saveDescription": "कृपया अपना Google कनेक्शन जाँचें और फिर कोशिश करें।"
         }
       }
     }
   },
   "dialogs": {
     "upload": {
-      "failedTitle": "[hi] Upload Failed",
+      "failedTitle": "अपलोड असफल रहा",
       "actions": {
-        "retry": "[hi] Retry",
-        "dismiss": "[hi] Dismiss",
-        "replace": "[hi] Replace"
+        "retry": "फिर कोशिश करें",
+        "dismiss": "खारिज करें",
+        "replace": "बदलें"
       },
       "replace": {
-        "title": "[hi] Replace existing upload?",
-        "description": "[hi] Looks like you uploaded \"{filename}\" on {date}. Replace it, or cancel?"
+        "title": "मौजूदा अपलोड बदलें?",
+        "description": "लगता है आपने {date} को \"{filename}\" अपलोड किया था। इसे बदलें या रद्द करें?"
       }
     },
     "bank": {
       "addEntry": {
-        "trigger": "[hi] Add Entry",
-        "title": "[hi] Add New Entry",
-        "description": "[hi] Manually add an entry to your profile bank.",
-        "category": "[hi] Category",
-        "hackathonTemplates": "[hi] Hackathon Templates",
+        "trigger": "प्रविष्टि जोड़ें",
+        "title": "नई प्रविष्टि जोड़ें",
+        "description": "अपने प्रोफ़ाइल बैंक में मैन्युअल रूप से प्रविष्टि जोड़ें।",
+        "category": "श्रेणी",
+        "hackathonTemplates": "हैकाथॉन टेम्पलेट",
         "actions": {
-          "add": "[hi] Add Entry"
+          "add": "प्रविष्टि जोड़ें"
         }
       },
       "sourceDocuments": {
-        "sourceFiles": "[hi] Source Files",
-        "selected": "[hi] {count} selected",
+        "sourceFiles": "स्रोत फ़ाइलें",
+        "selected": "{count} चयनित",
         "actions": {
-          "deleteSelected": "[hi] Delete Selected",
-          "selectFile": "[hi] Select {filename}",
-          "deleteFile": "[hi] Delete {filename}"
+          "deleteSelected": "चयनित हटाएँ",
+          "selectFile": "{filename} चुनें",
+          "deleteFile": "{filename} हटाएँ"
         },
         "deleteOne": {
-          "title": "[hi] Delete source document?",
-          "description": "[hi] This will permanently delete <strong>{filename}</strong> and all {count, plural, one {# associated bullet} other {# associated bullets}}. This action cannot be undone."
+          "title": "स्रोत दस्तावेज़ हटाएँ?",
+          "description": "यह <strong>{filename}</strong> और सभी {count, plural, one {# संबंधित बुलेट} other {# संबंधित बुलेट}} को स्थायी रूप से हटा देगा। यह कार्रवाई वापस नहीं की जा सकती।"
         },
         "deleteMany": {
-          "title": "[hi] Delete selected source files?",
-          "description": "[hi] This will permanently delete {count, plural, one {# source file} other {# source files}} and all associated bullets. This action cannot be undone."
+          "title": "चयनित स्रोत फ़ाइलें हटाएँ?",
+          "description": "यह {count, plural, one {# स्रोत फ़ाइल} other {# स्रोत फ़ाइलें}} और सभी संबंधित बुलेट को स्थायी रूप से हटा देगा। यह कार्रवाई वापस नहीं की जा सकती।"
         },
         "errors": {
-          "loadTitle": "[hi] Could not load source files",
-          "loadDescription": "[hi] Please refresh the page and try again.",
-          "deleteOneTitle": "[hi] Could not delete source file",
-          "deleteOneDescription": "[hi] Please try deleting the file again.",
-          "deleteManyTitle": "[hi] Could not delete source files",
-          "deleteManyDescription": "[hi] Please try deleting the selected files again."
+          "loadTitle": "स्रोत फ़ाइलें लोड नहीं हो सकीं",
+          "loadDescription": "कृपया पेज रीफ़्रेश करें और फिर कोशिश करें।",
+          "deleteOneTitle": "स्रोत फ़ाइल हटाई नहीं जा सकी",
+          "deleteOneDescription": "कृपया फ़ाइल हटाने की फिर कोशिश करें।",
+          "deleteManyTitle": "स्रोत फ़ाइलें हटाई नहीं जा सकीं",
+          "deleteManyDescription": "कृपया चयनित फ़ाइलें हटाने की फिर कोशिश करें।"
         }
       },
       "page": {
@@ -839,23 +839,23 @@
     },
     "builder": {
       "sectionList": {
-        "pickerTitle": "[hi] Bank Entry Picker",
-        "pickerDescription": "[hi] Select entries to add them to the document."
+        "pickerTitle": "बैंक प्रविष्टि चयनकर्ता",
+        "pickerDescription": "दस्तावेज़ में जोड़ने के लिए प्रविष्टियाँ चुनें।"
       }
     },
     "studio": {
       "versionDiff": {
-        "title": "[hi] Compare to current",
-        "selectVersion": "[hi] Select a version to compare."
+        "title": "वर्तमान से तुलना करें",
+        "selectVersion": "तुलना के लिए संस्करण चुनें।"
       },
       "aiAssistant": {
-        "opportunityPickerTitle": "[hi] Select from Opportunity Bank",
-        "opportunityPickerDescription": "[hi] Choose a saved or applied opportunity to load its description."
+        "opportunityPickerTitle": "अवसर बैंक से चुनें",
+        "opportunityPickerDescription": "विवरण लोड करने के लिए सहेजा गया या आवेदन किया गया अवसर चुनें।"
       }
     },
     "opportunities": {
       "addOpportunity": {
-        "title": "[hi] Add Opportunity"
+        "title": "अवसर जोड़ें"
       }
     },
     "calendar": {
@@ -886,41 +886,41 @@
     },
     "help": {
       "ollama": {
-        "title": "[hi] Using Ollama (Free)",
-        "installFrom": "[hi] Install from",
-        "run": "[hi] Run",
-        "testConnection": "[hi] Test the connection above"
+        "title": "Ollama का उपयोग (मुफ़्त)",
+        "installFrom": "यहाँ से इंस्टॉल करें",
+        "run": "चलाएँ",
+        "testConnection": "ऊपर दिया कनेक्शन जाँचें"
       },
       "apiKeys": {
-        "title": "[hi] Using API Keys",
-        "description": "[hi] Connect your own API keys from OpenAI, Anthropic, or OpenRouter for cloud-based processing. Your keys are stored locally and never leave your device."
+        "title": "API कुंजियों का उपयोग",
+        "description": "क्लाउड-आधारित प्रोसेसिंग के लिए OpenAI, Anthropic या OpenRouter की अपनी API कुंजियाँ कनेक्ट करें। आपकी कुंजियाँ स्थानीय रूप से संग्रहीत रहती हैं और आपके डिवाइस से बाहर नहीं जातीं।"
       }
     },
     "dataManagement": {
-      "title": "[hi] Data Management",
-      "description": "[hi] Export your data or import from backups.",
+      "title": "डेटा प्रबंधन",
+      "description": "अपना डेटा निर्यात करें या बैकअप से आयात करें।",
       "export": {
-        "title": "[hi] Export Data",
-        "profileJson": "[hi] Export Profile (JSON)",
-        "opportunitiesJson": "[hi] Export Opportunities (JSON)",
-        "opportunitiesCsv": "[hi] Export Opportunities (CSV)",
-        "fullBackup": "[hi] Full Backup",
-        "allDataJson": "[hi] Export All Data (JSON)"
+        "title": "डेटा निर्यात करें",
+        "profileJson": "प्रोफ़ाइल निर्यात करें (JSON)",
+        "opportunitiesJson": "अवसर निर्यात करें (JSON)",
+        "opportunitiesCsv": "अवसर निर्यात करें (CSV)",
+        "fullBackup": "पूरा बैकअप",
+        "allDataJson": "सारा डेटा निर्यात करें (JSON)"
       },
       "import": {
-        "title": "[hi] Import Data",
-        "jobsAria": "[hi] Import jobs from JSON or CSV file",
-        "opportunitiesJsonCsv": "[hi] Import Opportunities (JSON/CSV)",
-        "restoreBackupAria": "[hi] Restore backup from JSON file",
-        "restoreBackup": "[hi] Restore Backup",
-        "allDataAria": "[hi] Import all data from JSON file",
-        "allDataJson": "[hi] Import All Data (JSON)"
+        "title": "डेटा आयात करें",
+        "jobsAria": "JSON या CSV फ़ाइल से नौकरियाँ आयात करें",
+        "opportunitiesJsonCsv": "अवसर आयात करें (JSON/CSV)",
+        "restoreBackupAria": "JSON फ़ाइल से बैकअप पुनर्स्थापित करें",
+        "restoreBackup": "बैकअप पुनर्स्थापित करें",
+        "allDataAria": "JSON फ़ाइल से सारा डेटा आयात करें",
+        "allDataJson": "सारा डेटा आयात करें (JSON)"
       },
       "confirm": {
-        "title": "[hi] Confirm Import",
-        "description": "[hi] The following data will be imported (duplicates will be skipped):",
-        "importing": "[hi] Importing...",
-        "action": "[hi] Confirm Import"
+        "title": "आयात की पुष्टि करें",
+        "description": "निम्न डेटा आयात किया जाएगा (डुप्लिकेट छोड़े जाएँगे):",
+        "importing": "आयात हो रहा है...",
+        "action": "आयात की पुष्टि करें"
       }
     }
   },
@@ -1260,11 +1260,11 @@
       "title": "गोपनीयता",
       "description": "वह स्रोत प्रोफ़ाइल संभालें जिसका उपयोग Slothing रिज्यूमे, कवर लेटर और फिट जांचों के लिए करता है।",
       "openToRecruiters": {
-        "title": "Open to recruiter outreach",
+        "title": "भर्तीकर्ताओं के संपर्क के लिए खुला",
         "description": "वह स्रोत प्रोफ़ाइल संभालें जिसका उपयोग Slothing रिज्यूमे, कवर लेटर और फिट जांचों के लिए करता है।"
       },
       "shareContactInfo": {
-        "title": "Share contact info by default",
+        "title": "डिफ़ॉल्ट रूप से संपर्क जानकारी साझा करें",
         "description": "वह स्रोत प्रोफ़ाइल संभालें जिसका उपयोग Slothing रिज्यूमे, कवर लेटर और फिट जांचों के लिए करता है।"
       }
     },

@@ -18,29 +18,32 @@ export const EXTENSION_STORES: ExtensionStore[] = [
   {
     key: "chrome",
     label: "Chrome Web Store",
-    ctaLabel: "Install for Chrome",
-    compactLabel: "Chrome",
+    ctaLabel: "Chrome listing coming soon",
+    compactLabel: "Chrome soon",
     // TODO: Replace with the live Chrome Web Store listing once submitted.
-    url: "https://chromewebstore.google.com/detail/slothing-slothing-extension/placeholder",
+    url: null,
     icon: Chrome,
+    disabled: true,
   },
   {
     key: "edge",
     label: "Microsoft Edge Add-ons",
-    ctaLabel: "Install for Edge",
-    compactLabel: "Edge",
+    ctaLabel: "Edge listing coming soon",
+    compactLabel: "Edge soon",
     // TODO: Replace with the live Microsoft Edge Add-ons listing once submitted.
-    url: "https://microsoftedge.microsoft.com/addons/detail/slothing-slothing/placeholder",
+    url: null,
     icon: Compass,
+    disabled: true,
   },
   {
     key: "firefox",
     label: "Firefox Add-ons",
-    ctaLabel: "Install for Firefox",
-    compactLabel: "Firefox",
+    ctaLabel: "Firefox listing coming soon",
+    compactLabel: "Firefox soon",
     // TODO: Replace with the live Firefox AMO listing once submitted.
-    url: "https://addons.mozilla.org/firefox/addon/slothing-slothing/placeholder",
+    url: null,
     icon: Globe,
+    disabled: true,
   },
   {
     key: "safari",

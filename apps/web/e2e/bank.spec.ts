@@ -5,6 +5,15 @@ import { navigateToBank } from "./utils/test-helpers";
 
 const TEST_PDF = path.join(__dirname, "fixtures", "test-resume.pdf");
 const TEST_FILENAME = path.basename(TEST_PDF);
+const DOGFOOD_DOCX = path.join(
+  __dirname,
+  "..",
+  "tests",
+  "fixtures",
+  "dogfood",
+  "table-docx-resume.docx",
+);
+const DOGFOOD_DOCX_FILENAME = path.basename(DOGFOOD_DOCX);
 
 const bankApiResponse = (resp: { url: () => string; status: () => number }) =>
   new URL(resp.url()).pathname === "/api/bank" && resp.status() === 200;
@@ -107,6 +116,50 @@ test.describe("Bank Page - File Upload Flow", () => {
 
     await expect(page.getByText("No documents yet")).not.toBeVisible({
       timeout: 10000,
+    });
+  });
+
+  test("uploads the dogfood DOCX fixture and shows parsed source metadata", async ({
+    page,
+  }) => {
+    test.setTimeout(60_000);
+    const fileInput = page.locator("input[type='file']");
+    const uploadResponsePromise = page.waitForResponse(
+      (resp) =>
+        new URL(resp.url()).pathname === "/api/upload" &&
+        resp.request().method() === "POST",
+    );
+
+    await fileInput.setInputFiles(DOGFOOD_DOCX);
+    const uploadResponse = await uploadResponsePromise;
+
+    expect(uploadResponse.status()).toBe(200);
+    const uploadData = await uploadResponse.json();
+    expect(uploadData.document).toMatchObject({
+      filename: DOGFOOD_DOCX_FILENAME,
+      type: "resume",
+    });
+    expect(uploadData.entriesCreated).toBeGreaterThan(0);
+    expect(uploadData.document.extractedText).toContain("Alex Rivera");
+
+    const reviewDialog = page.getByRole("dialog");
+    await expect(reviewDialog).toContainText(DOGFOOD_DOCX_FILENAME, {
+      timeout: 15000,
+    });
+    await reviewDialog.getByRole("button", { name: /^done$/i }).click();
+    await expect(reviewDialog).not.toBeVisible();
+
+    await page
+      .locator("button")
+      .filter({ hasText: /^Source$/ })
+      .first()
+      .click();
+
+    await expect(
+      page.getByText(DOGFOOD_DOCX_FILENAME, { exact: true }).first(),
+    ).toBeVisible({ timeout: 15000 });
+    await expect(page.getByText("Source Files")).toBeVisible({
+      timeout: 5000,
     });
   });
 });

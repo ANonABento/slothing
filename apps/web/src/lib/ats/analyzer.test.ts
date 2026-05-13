@@ -1,4 +1,6 @@
 import { describe, it, expect } from "vitest";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import {
   analyzeATS,
   generateScanReport,
@@ -473,5 +475,98 @@ describe("generateScanReport", () => {
 
     expect(report.scannedAt).toBeTruthy();
     expect(() => new Date(report.scannedAt)).not.toThrow();
+  });
+
+  it("scores the dogfood ambiguous hybrid job fixture with explicit found and missing evidence", () => {
+    const description = readFileSync(
+      resolve("tests/fixtures/dogfood/ambiguous-hybrid-job.md"),
+      "utf8",
+    );
+    const profile = createMinimalProfile();
+    profile.summary =
+      "Software engineer building React tools, data pipelines, accessibility and performance improvements. Bilingual English and French.";
+    profile.experiences[0] = {
+      ...profile.experiences[0],
+      title: "Product Engineer",
+      company: "Northstar Analytics",
+      location: "Toronto, ON",
+      description:
+        "Rebuilt a React and TypeScript reporting workflow. Added GraphQL caching and PostgreSQL query tuning.",
+      highlights: [
+        "Rebuilt a React and TypeScript workflow used by 42 account managers",
+        "Improved p95 load time from 3.8s to 1.4s",
+        "Fixed keyboard traps, heading order, and contrast issues",
+      ],
+      skills: ["React", "TypeScript", "GraphQL", "PostgreSQL"],
+    };
+    profile.skills = [
+      "TypeScript",
+      "React",
+      "Node.js",
+      "PostgreSQL",
+      "GraphQL",
+      "Python",
+      "SQL",
+      "Docker",
+      "accessibility",
+      "performance",
+      "French",
+    ].map((name, index) => ({
+      id: `skill-${index}`,
+      name,
+      category: "technical",
+    }));
+    const job = {
+      ...createMinimalJob(),
+      title: "Senior Product Engineer",
+      company: "ExampleWorks",
+      description,
+      requirements: [
+        "6+ years building production web applications with TypeScript and React",
+        "Backend experience with Node.js, PostgreSQL, queues, and API design",
+        "Evidence of improving reliability, accessibility, or performance",
+      ],
+      keywords: [
+        "TypeScript",
+        "React",
+        "Node.js",
+        "PostgreSQL",
+        "queues",
+        "API design",
+        "reliability",
+        "accessibility",
+        "performance",
+        "GraphQL",
+        "SOC 2",
+        "audit logging",
+        "fintech",
+        "French",
+      ],
+    };
+
+    const report = generateScanReport(profile, job);
+    const found = report.keywordHeatmap.found.map((item) =>
+      item.keyword.toLowerCase(),
+    );
+    const missing = report.keywordHeatmap.missing.map((item) =>
+      item.keyword.toLowerCase(),
+    );
+
+    expect(report.keywordHeatmap.matchRate).toBeGreaterThan(0.5);
+    expect(found).toEqual(
+      expect.arrayContaining([
+        "typescript",
+        "react",
+        "node.js",
+        "postgresql",
+        "graphql",
+        "accessibility",
+        "performance",
+        "french",
+      ]),
+    );
+    expect(missing).toEqual(
+      expect.arrayContaining(["soc 2", "audit logging", "fintech", "queues"]),
+    );
   });
 });

@@ -11,6 +11,8 @@ out
 build
 **/dist/
 **/dist-firefox/
+!apps/extension/dist/
+!apps/extension/dist/sharedUi.js
 
 # Local data
 data/

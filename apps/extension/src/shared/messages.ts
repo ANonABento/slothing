@@ -286,6 +286,8 @@ export interface WwBulkScrapeResponse extends ExtensionResponse<{
   imported: number;
   attempted: number;
   pages: number;
+  duplicateCount?: number;
+  dedupedIds?: string[];
   errors: string[];
 }> {}
 
@@ -305,6 +307,8 @@ export interface BulkSourceScrapeResponse extends ExtensionResponse<{
   imported: number;
   attempted: number;
   pages: number;
+  duplicateCount?: number;
+  dedupedIds?: string[];
   errors: string[];
 }> {}
 

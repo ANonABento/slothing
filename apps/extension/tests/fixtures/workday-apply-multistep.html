@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Workday Multi-Step Apply Fixture</title>
+  </head>
+  <body>
+    <main data-automation-id="applyFlowContainer" data-fixture-step="contact">
+      <div data-automation-id="progressBarActiveItem">My Information</div>
+      <div data-automation-id="progressBarItem">Voluntary Disclosures</div>
+      <div data-automation-id="progressBarItem">Review</div>
+
+      <div data-automation-id="formField-firstName">
+        <label for="firstName">First Name</label>
+        <input
+          id="firstName"
+          name="firstName"
+          autocomplete="given-name"
+          data-automation-id="textInputBox"
+        />
+      </div>
+
+      <div data-automation-id="formField-lastName">
+        <label for="lastName">Last Name</label>
+        <input
+          id="lastName"
+          name="lastName"
+          autocomplete="family-name"
+          data-automation-id="textInputBox"
+        />
+      </div>
+
+      <div data-automation-id="formField-email">
+        <label for="email">Email Address</label>
+        <input
+          id="email"
+          name="email"
+          type="email"
+          autocomplete="email"
+          data-automation-id="textInputBox"
+        />
+      </div>
+
+      <div data-automation-id="formField-legalName">
+        <label for="legalName">Legal name from previous application</label>
+        <input
+          id="legalName"
+          name="legalName"
+          value="Locked Candidate"
+          disabled
+          data-automation-id="textInputBox"
+        />
+      </div>
+
+      <div data-automation-id="formField-resumeUpload">
+        <label for="resumeUpload">Upload your resume</label>
+        <input
+          id="resumeUpload"
+          name="resumeUpload"
+          type="file"
+          data-automation-id="fileUpload"
+        />
+      </div>
+
+      <button data-automation-id="bottom-navigation-next-button" type="button">
+        Next
+      </button>
+    </main>
+
+    <template id="step-demographics">
+      <main
+        data-automation-id="applyFlowContainer"
+        data-fixture-step="demographics"
+      >
+        <div data-automation-id="progressBarItem">My Information</div>
+        <div data-automation-id="progressBarActiveItem">
+          Voluntary Disclosures
+        </div>
+        <div data-automation-id="progressBarItem">Review</div>
+
+        <div data-automation-id="formField-employeeId">
+          <label for="employeeId">Employee ID</label>
+          <input
+            id="employeeId"
+            name="employeeId"
+            value="readonly-employee-id"
+            disabled
+            data-automation-id="textInputBox"
+          />
+        </div>
+
+        <div data-automation-id="formField-gender">
+          <label for="gender">Gender</label>
+          <select id="gender" name="gender" data-automation-id="selectWidget">
+            <option value="">Select one</option>
+            <option value="woman">Woman</option>
+            <option value="man">Man</option>
+            <option value="decline">I do not wish to answer</option>
+          </select>
+        </div>
+
+        <div data-automation-id="formField-veteranStatus">
+          <label for="veteranStatus">Veteran Status</label>
+          <select
+            id="veteranStatus"
+            name="veteranStatus"
+            data-automation-id="selectWidget"
+          >
+            <option value="">Select one</option>
+            <option value="protected">Protected veteran</option>
+            <option value="not-protected">Not a protected veteran</option>
+            <option value="decline">I do not wish to answer</option>
+          </select>
+        </div>
+
+        <div data-automation-id="formField-disability">
+          <label for="disability">Disability Status</label>
+          <select
+            id="disability"
+            name="disability"
+            data-automation-id="selectWidget"
+          >
+            <option value="">Select one</option>
+            <option value="yes">Yes, I have a disability</option>
+            <option value="no">No, I do not have a disability</option>
+            <option value="decline">I do not wish to answer</option>
+          </select>
+        </div>
+
+        <button
+          data-automation-id="bottom-navigation-next-button"
+          type="button"
+        >
+          Next
+        </button>
+      </main>
+    </template>
+
+    <template id="step-review">
+      <main data-automation-id="applyFlowContainer" data-fixture-step="review">
+        <div data-automation-id="progressBarItem">My Information</div>
+        <div data-automation-id="progressBarItem">Voluntary Disclosures</div>
+        <div data-automation-id="progressBarActiveItem">Review</div>
+
+        <div data-automation-id="formField-reviewPhone">
+          <label for="reviewPhone">Phone Number</label>
+          <input
+            id="reviewPhone"
+            name="reviewPhone"
+            type="tel"
+            autocomplete="tel"
+            data-automation-id="textInputBox"
+          />
+        </div>
+
+        <button
+          data-automation-id="bottom-navigation-next-button"
+          type="button"
+        >
+          Review and Submit
+        </button>
+      </main>
+    </template>
+  </body>
+</html>

@@ -188,6 +188,34 @@ describe("BulkSourceCard", () => {
     expect(onViewTracker).toHaveBeenCalledTimes(1);
   });
 
+  it("renders duplicate counts and deduped row identities when present", () => {
+    render(
+      <BulkSourceCard
+        sourceLabel="Greenhouse"
+        detectedCount={3}
+        busy={null}
+        lastResult={{
+          imported: 2,
+          attempted: 3,
+          pages: 1,
+          duplicateCount: 1,
+          dedupedIds: ["gh-duplicate-1"],
+          errors: [],
+        }}
+        lastError={null}
+        onScrapeVisible={vi.fn()}
+        onScrapePaginated={vi.fn()}
+      />,
+    );
+
+    const note = container.querySelector(".inline-note");
+    expect(note?.textContent).toContain("Imported 2/3");
+    expect(note?.textContent).toContain("1 duplicates");
+    expect(container.querySelector(".bulk-duplicates")?.textContent).toContain(
+      "gh-duplicate-1",
+    );
+  });
+
   it("renders the error message when lastError is set", () => {
     render(
       <BulkSourceCard
