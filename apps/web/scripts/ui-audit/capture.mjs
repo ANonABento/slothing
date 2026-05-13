@@ -25,10 +25,12 @@ function parseArgs(argv) {
     base: "http://localhost:3010",
     widths: null,
     only: null,
+    next: false,
   };
   for (let i = 2; i < argv.length; i++) {
     const a = argv[i];
     if (a === "--loop") args.loop = argv[++i];
+    else if (a === "--next") args.next = true;
     else if (a === "--base") args.base = argv[++i];
     else if (a === "--widths")
       args.widths = argv[++i].split(",").map((n) => Number(n.trim()));
@@ -36,9 +38,23 @@ function parseArgs(argv) {
       args.only = argv[++i].split(",").map((s) => s.trim());
     else throw new Error(`Unknown arg: ${a}`);
   }
-  if (!args.loop) throw new Error("--loop <N> is required");
-  args.loop = String(args.loop).padStart(3, "0");
+  if (!args.loop && !args.next)
+    throw new Error("Pass --loop <N> or --next (auto-detect next iteration)");
   return args;
+}
+
+async function detectNextLoopNumber() {
+  const { readdir } = await import("node:fs/promises");
+  const auditDir = resolve(repoRoot, "docs", "ui-audit");
+  let max = 0;
+  try {
+    const entries = await readdir(auditDir);
+    for (const name of entries) {
+      const m = /^loop-(\d{3})$/.exec(name);
+      if (m) max = Math.max(max, Number(m[1]));
+    }
+  } catch {}
+  return String(max + 1).padStart(3, "0");
 }
 
 function pad(num, width = 3) {
@@ -51,6 +67,11 @@ async function ensureDir(path) {
 
 async function main() {
   const args = parseArgs(process.argv);
+  if (args.next) {
+    args.loop = await detectNextLoopNumber();
+  } else {
+    args.loop = String(args.loop).padStart(3, "0");
+  }
 
   const routesConfig = JSON.parse(
     await readFile(resolve(__dirname, "routes.json"), "utf8"),

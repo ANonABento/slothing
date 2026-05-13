@@ -47,15 +47,17 @@ Loop terminates when one full audit pass surfaces **zero high** and **zero mediu
 
 | Loop | Status | Findings (H/M/L) | Fixes shipped | Notes |
 | ---- | ------ | ---------------- | ------------- | ----- |
-| 001  | running | — | — | First baseline pass |
+| 001  | done | 29 / 100 / 46 | G-H1, G-H2, G-M1, A1, B1, B6 | First baseline pass — see `loop-001/summary.md` |
 
 ## Files
 
+- `LOOP-RUNBOOK.md` — protocol every iteration follows (read this if you're picking up the loop)
 - `routes.md` — route inventory with auth requirements + sample data needs
 - `templates/findings-template.md` — per-route audit template
 - `loop-NNN/screenshots/` — PNG screenshots per `<route-slug>-<width>.png`
 - `loop-NNN/findings/<route-slug>.md` — per-route findings
-- `loop-NNN/summary.md` — aggregated, prioritized fix list
+- `loop-NNN/findings/_global.md` — cross-cutting framework / shared-component issues
+- `loop-NNN/summary.md` — aggregated, prioritized fix list (Tier A / B / C)
 
 ## Reproducing locally
 
