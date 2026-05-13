@@ -21,6 +21,7 @@ import {
   BarChart3,
   RefreshCw,
   Puzzle,
+  Home,
   type LucideIcon,
 } from "lucide-react";
 import {
@@ -31,10 +32,11 @@ import { ErrorBoundary } from "@/components/ui/error-boundary";
 import { useErrorToast } from "@/hooks/use-error-toast";
 import { JobStatusBadge } from "@/components/jobs/job-status-badge";
 import {
-  InsetPageHeader,
+  AppPage,
+  PageContent,
+  PageHeader,
   PagePanel,
   PagePanelHeader,
-  PageShell,
   pageGridClasses,
 } from "@/components/ui/page-layout";
 import { Button } from "@/components/ui/button";
@@ -372,67 +374,60 @@ export default function Dashboard() {
     [retryingResources],
   );
 
+  const headerDescription = onboardingActive
+    ? getDashboardGreeting(onboardingState.firstName, "onboarding", t)
+    : getDashboardGreeting(onboardingState.firstName, "active", t);
+  const headerActions =
+    !loading && !onboardingActive ? (
+      <>
+        <Button asChild>
+          <Link href="/opportunities">
+            <Plus className="mr-2 h-4 w-4" />
+            {t("actions.addOpportunity")}
+          </Link>
+        </Button>
+        <Button asChild variant="secondary">
+          <Link href="/bank">
+            <Upload className="mr-2 h-4 w-4" />
+            {t("actions.uploadDocument")}
+          </Link>
+        </Button>
+      </>
+    ) : null;
+
   return (
     <ErrorBoundary>
-      <PageShell>
-        {loading ? (
-          <DashboardSkeleton />
-        ) : onboardingActive ? (
-          <NewUserDashboard
-            stats={stats}
-            firstName={onboardingState.firstName}
-            onSkip={handleSkipOnboarding}
-            skipSubmitting={dismissSubmitting}
-          />
-        ) : (
-          <ActiveDashboard
-            stats={stats}
-            recentJobs={recentJobs}
-            firstName={onboardingState.firstName}
-            streak={streak}
-            errors={loadErrors}
-            retrying={retrying}
-            onRetry={retryResources}
-          />
-        )}
-      </PageShell>
+      <AppPage padding="none">
+        <PageHeader
+          icon={Home}
+          title={t("title")}
+          description={headerDescription}
+          actions={headerActions}
+        />
+        <PageContent width="wide" className="space-y-4 lg:py-8">
+          {loading ? (
+            <DashboardSkeleton />
+          ) : onboardingActive ? (
+            <NewUserDashboard
+              stats={stats}
+              firstName={onboardingState.firstName}
+              onSkip={handleSkipOnboarding}
+              skipSubmitting={dismissSubmitting}
+            />
+          ) : (
+            <ActiveDashboard
+              stats={stats}
+              recentJobs={recentJobs}
+              firstName={onboardingState.firstName}
+              streak={streak}
+              errors={loadErrors}
+              retrying={retrying}
+              onRetry={retryResources}
+            />
+          )}
+        </PageContent>
+      </AppPage>
     </ErrorBoundary>
-  );
-}
-
-function DashboardHeader({
-  description,
-  showActions = true,
-}: {
-  description: string;
-  showActions?: boolean;
-}) {
-  const t = useTranslations("dashboard");
-
-  return (
-    <InsetPageHeader
-      title={t("title")}
-      description={description}
-      className="mb-2"
-      actions={
-        showActions ? (
-          <>
-            <Button asChild>
-              <Link href="/opportunities">
-                <Plus className="mr-2 h-4 w-4" />
-                {t("actions.addOpportunity")}
-              </Link>
-            </Button>
-            <Button asChild variant="secondary">
-              <Link href="/bank">
-                <Upload className="mr-2 h-4 w-4" />
-                {t("actions.uploadDocument")}
-              </Link>
-            </Button>
-          </>
-        ) : null
-      }
-    />
   );
 }
 
@@ -457,10 +452,6 @@ function NewUserDashboard({
 
   return (
     <div className="space-y-5">
-      <DashboardHeader
-        description={getDashboardGreeting(firstName, "onboarding", t)}
-        showActions={false}
-      />
       <div className={pageGridClasses.primaryAside}>
         <PagePanel>
           <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -656,9 +647,6 @@ function ActiveDashboard({
 
   return (
     <div className="space-y-5">
-      <DashboardHeader
-        description={getDashboardGreeting(firstName, "active", t)}
-      />
       <Suspense fallback={<SkeletonCard />}>
         {errors.streak ? (
           <DashboardSectionError
@@ -1233,27 +1221,21 @@ function getUnlockPreviewItems(
       return [
         {
           icon: Puzzle,
-          title: t(
-            "onboarding.unlockPreview.install-extension.items.0.title",
-          ),
+          title: t("onboarding.unlockPreview.install-extension.items.0.title"),
           description: t(
             "onboarding.unlockPreview.install-extension.items.0.description",
           ),
         },
         {
           icon: FileText,
-          title: t(
-            "onboarding.unlockPreview.install-extension.items.1.title",
-          ),
+          title: t("onboarding.unlockPreview.install-extension.items.1.title"),
           description: t(
             "onboarding.unlockPreview.install-extension.items.1.description",
           ),
         },
         {
           icon: Briefcase,
-          title: t(
-            "onboarding.unlockPreview.install-extension.items.2.title",
-          ),
+          title: t("onboarding.unlockPreview.install-extension.items.2.title"),
           description: t(
             "onboarding.unlockPreview.install-extension.items.2.description",
           ),
