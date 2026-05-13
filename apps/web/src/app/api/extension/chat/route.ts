@@ -1,6 +1,6 @@
 /**
  * @route POST /api/extension/chat
- * @description Stream a one-shot AI chat response for the Columbus inline
+ * @description Stream a one-shot AI chat response for the Slothing inline
  * assistant (P4 #40). Accepts `{prompt, jobContext}` from the extension's
  * job-page sidebar and streams tokens via SSE. There is no conversational
  * history in v1 — each call is fresh.

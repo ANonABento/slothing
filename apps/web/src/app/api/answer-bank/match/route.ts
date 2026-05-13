@@ -5,7 +5,7 @@ import { matchAnswers } from "@/lib/answer-bank/match";
 export const dynamic = "force-dynamic";
 
 // Accepts either a NextAuth session (web app) or the X-Extension-Token header
-// (Columbus extension, e.g. the P2/#35 inline answer-bank popover on long
+// (Slothing extension, e.g. the P2/#35 inline answer-bank popover on long
 // textareas). The underlying matcher is user-scoped, so the same logic works
 // for both transports.
 export async function GET(request: NextRequest) {

@@ -27,7 +27,7 @@ export class GenericScraper extends BaseScraper {
     const description = this.findDescription();
 
     if (!title || !description) {
-      console.log("[Columbus] Generic scraper: Could not find required fields");
+      console.log("[Slothing] Generic scraper: Could not find required fields");
       return null;
     }
 
@@ -91,7 +91,7 @@ export class GenericScraper extends BaseScraper {
         }
       }
     } catch (err) {
-      console.log("[Columbus] Could not parse structured data:", err);
+      console.log("[Slothing] Could not parse structured data:", err);
     }
 
     return null;

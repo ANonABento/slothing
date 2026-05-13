@@ -26,7 +26,7 @@ export default defineConfig({
     "**/test-results/**",
     // Subprojects with their own @playwright/test install must be excluded here
     // so the root runner never loads two Playwright packages in one process.
-    "**/columbus-extension/**",
+    "**/slothing-extension/**",
   ],
   fullyParallel: false,
   forbidOnly: !!process.env.CI,

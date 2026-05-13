@@ -38,7 +38,7 @@ export default function ATSScannerPage({ params }: ATSScannerPageProps) {
 
   return (
     <div className="py-16 px-4">
-      <div className="max-w-3xl mx-auto">
+      <div className="max-w-4xl mx-auto">
         {/* Hero */}
         <div className="text-center mb-12">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/10 mb-6">

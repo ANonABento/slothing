@@ -53,9 +53,9 @@ type FillableElement =
   | HTMLSelectElement;
 
 /** Class names used by the yellow band + cold badge. Mirrors styles.css. */
-export const ZONE_YELLOW_CLASS = "columbus-zone-yellow";
-export const ZONE_BADGE_CLASS = "columbus-zone-badge";
-export const ZONE_POPOVER_CLASS = "columbus-zone-popover";
+export const ZONE_YELLOW_CLASS = "slothing-zone-yellow";
+export const ZONE_BADGE_CLASS = "slothing-zone-badge";
+export const ZONE_POPOVER_CLASS = "slothing-zone-popover";
 
 const YELLOW_TOOLTIP = "Press Enter to accept · Esc to clear";
 const COLD_TOOLTIP_PREFIX = "Slothing has";
@@ -81,9 +81,9 @@ export function applyYellowMarker(
   if (typeof document === "undefined") return () => undefined;
 
   element.classList.add(ZONE_YELLOW_CLASS);
-  element.setAttribute("data-columbus-zone", "yellow");
+  element.setAttribute("data-slothing-zone", "yellow");
   element.setAttribute(
-    "data-columbus-zone-tooltip",
+    "data-slothing-zone-tooltip",
     options.tooltip ?? YELLOW_TOOLTIP,
   );
 
@@ -94,8 +94,8 @@ export function applyYellowMarker(
     if (cleared) return;
     cleared = true;
     element.classList.remove(ZONE_YELLOW_CLASS);
-    element.removeAttribute("data-columbus-zone");
-    element.removeAttribute("data-columbus-zone-tooltip");
+    element.removeAttribute("data-slothing-zone");
+    element.removeAttribute("data-slothing-zone-tooltip");
     element.removeEventListener("input", onInput);
     element.removeEventListener("blur", onBlur);
     element.removeEventListener("keydown", onKeyDown);
@@ -145,7 +145,7 @@ export function createColdBadge(opts: {
   const badge = document.createElement("button");
   badge.type = "button";
   badge.className = ZONE_BADGE_CLASS;
-  badge.setAttribute("data-columbus-zone", "cold");
+  badge.setAttribute("data-slothing-zone", "cold");
   badge.setAttribute(
     "aria-label",
     `${COLD_TOOLTIP_PREFIX} ${opts.candidateCount} ${COLD_TOOLTIP_SUFFIX}`,

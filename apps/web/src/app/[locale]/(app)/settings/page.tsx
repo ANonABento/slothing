@@ -102,7 +102,9 @@ export default function SettingsPage() {
               onCancelImportPreview={dataIO.clearImportPreview}
             />
             <GoogleIntegration />
-            <GmailAutoStatusSection />
+            <div className="lg:col-span-2">
+              <GmailAutoStatusSection />
+            </div>
           </div>
         </div>
       </PageContent>

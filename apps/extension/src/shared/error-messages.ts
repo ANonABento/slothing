@@ -1,5 +1,5 @@
 /**
- * User-facing error string mapping for the Columbus extension.
+ * User-facing error string mapping for the Slothing extension.
  *
  * The popup (and any other extension surface) should never show raw
  * `"Request failed: 503"` / `"Authentication expired"` strings. Wrap any
@@ -46,7 +46,7 @@ export function messageForError(err: unknown): string {
   const raw = err instanceof Error ? err.message : "";
   if (!raw) return "Something went wrong. Please try again.";
 
-  // Auth-shaped messages from ColumbusAPIClient.
+  // Auth-shaped messages from SlothingAPIClient.
   if (
     raw === "Authentication expired" ||
     raw === "Not authenticated" ||

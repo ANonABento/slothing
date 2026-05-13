@@ -1,4 +1,4 @@
-// Columbus API client for extension
+// Slothing API client for extension
 
 import type {
   AnswerBankMatch,
@@ -19,7 +19,7 @@ import {
   setStorage,
 } from "./storage";
 
-export class ColumbusAPIClient {
+export class SlothingAPIClient {
   private baseUrl: string;
 
   constructor(baseUrl: string) {
@@ -500,12 +500,12 @@ function normalizeOpportunitySource(source: string) {
 }
 
 // Singleton instance
-let client: ColumbusAPIClient | null = null;
+let client: SlothingAPIClient | null = null;
 
-export async function getAPIClient(): Promise<ColumbusAPIClient> {
+export async function getAPIClient(): Promise<SlothingAPIClient> {
   if (!client) {
     const storage = await getStorage();
-    client = new ColumbusAPIClient(storage.apiBaseUrl);
+    client = new SlothingAPIClient(storage.apiBaseUrl);
   }
   return client;
 }

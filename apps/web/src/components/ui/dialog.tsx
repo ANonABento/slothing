@@ -34,7 +34,13 @@ const DialogContent = React.forwardRef<
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        "fixed left-[50%] top-[50%] z-50 grid max-h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 overflow-y-auto border-[length:var(--border-width)] bg-background p-6 shadow-[var(--shadow-elevated)] [backdrop-filter:var(--backdrop-blur)] duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 sm:rounded-[var(--radius)]",
+        // Dialog content is positioned with `translate(-50%, -50%)` so its
+        // CENTER lands at screen center. The animate-in `zoom-in-95` preset
+        // also relies on translate, and the two compose into a visible
+        // bottom-right→center slide artifact instead of a centered zoom.
+        // Drop the zoom and keep the overlay's fade for an unambiguous,
+        // non-distracting open transition.
+        "fixed left-[50%] top-[50%] z-50 grid max-h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 overflow-y-auto border-[length:var(--border-width)] bg-background p-6 shadow-[var(--shadow-elevated)] [backdrop-filter:var(--backdrop-blur)] duration-150 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 sm:rounded-[var(--radius)]",
         className,
       )}
       {...props}

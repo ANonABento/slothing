@@ -485,9 +485,8 @@
         "behavioral": "Behavioral",
         "technical": "Technical",
         "situational": "Situational",
-        "company": "Company",
-        "system-design": "System Design",
-        "general": "General"
+        "general": "General",
+        "cultural-fit": "Cultural Fit"
       },
       "questionCount": "{count} questions",
       "difficulty": {

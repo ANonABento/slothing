@@ -60,7 +60,7 @@ const tiers: readonly Tier[] = [
     features: [
       "Full feature set",
       "All AI tools (with your keys)",
-      "Columbus browser extension",
+      "Slothing browser extension",
       "Self-hosted, no telemetry",
       "AGPL-3.0 licensed",
     ],
@@ -136,7 +136,7 @@ const faqs = [
   {
     question: "Can I really self-host?",
     answer:
-      "Yes. Slothing is AGPL-3.0 open source. Clone the repo, run pnpm install, and you have the whole app on your machine — including the Columbus browser extension, Document Studio, opportunity tracker, and all AI features. See the Self-host quickstart in the README.",
+      "Yes. Slothing is AGPL-3.0 open source. Clone the repo, run pnpm install, and you have the whole app on your machine — including the Slothing browser extension, Document Studio, opportunity tracker, and all AI features. See the Self-host quickstart in the README.",
   },
   {
     question: "What's open source vs proprietary?",
@@ -366,19 +366,34 @@ export default async function PricingPage() {
             <table className="w-full min-w-[820px] text-left text-sm">
               <thead className="bg-muted/40 text-muted-foreground">
                 <tr>
-                  <th className="px-5 py-3 font-medium" scope="col">
+                  <th
+                    className="whitespace-nowrap px-5 py-3 font-medium"
+                    scope="col"
+                  >
                     Feature
                   </th>
-                  <th className="px-5 py-3 font-medium" scope="col">
+                  <th
+                    className="whitespace-nowrap px-5 py-3 font-medium"
+                    scope="col"
+                  >
                     Self-host
                   </th>
-                  <th className="px-5 py-3 font-medium" scope="col">
+                  <th
+                    className="whitespace-nowrap px-5 py-3 font-medium"
+                    scope="col"
+                  >
                     Hosted Free
                   </th>
-                  <th className="px-5 py-3 font-medium" scope="col">
+                  <th
+                    className="whitespace-nowrap px-5 py-3 font-medium"
+                    scope="col"
+                  >
                     Weekly
                   </th>
-                  <th className="px-5 py-3 font-medium" scope="col">
+                  <th
+                    className="whitespace-nowrap px-5 py-3 font-medium"
+                    scope="col"
+                  >
                     Monthly
                   </th>
                 </tr>

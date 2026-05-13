@@ -59,7 +59,7 @@ function AlternateLanguageLinks({ path }: { path: string }) {
       key={`hreflang-${language}`}
       rel="alternate"
       href={new URL(href, metadataBase).toString()}
-      {...({ hreflang: language } as Record<string, string>)}
+      hrefLang={language}
     />
   ));
 }
@@ -75,7 +75,14 @@ export default async function LocaleLayout({
   const locale = params.locale as AppLocale;
   const messages = await getMessages({ locale });
   const requestHeaders = headers();
-  const nonce = requestHeaders.get(CSP_NONCE_HEADER) ?? undefined;
+  // Only forward the per-request nonce to the inline script in production,
+  // where the CSP actually consumes it. In dev the CSP falls back to
+  // 'unsafe-inline' (see lib/security/headers.ts), and emitting the dynamic
+  // nonce attribute causes a hydration mismatch on every page render.
+  const nonce =
+    process.env.NODE_ENV === "production"
+      ? (requestHeaders.get(CSP_NONCE_HEADER) ?? undefined)
+      : undefined;
   const routePath = requestHeaders.get(CANONICAL_ROUTE_PATH_HEADER) ?? "/";
 
   return (
@@ -90,7 +97,7 @@ export default async function LocaleLayout({
       <head>
         <AlternateLanguageLinks path={routePath} />
         <script
-          nonce={nonce}
+          {...(nonce ? { nonce } : {})}
           dangerouslySetInnerHTML={{ __html: getThemePreloadScript() }}
         />
       </head>

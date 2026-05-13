@@ -42,7 +42,7 @@ async function gotoLinkedInFixture(page: Page) {
 }
 
 test.beforeAll(async () => {
-  userDataDir = fs.mkdtempSync(path.join(os.tmpdir(), "columbus-pw-"));
+  userDataDir = fs.mkdtempSync(path.join(os.tmpdir(), "slothing-pw-"));
 
   context = await chromium.launchPersistentContext(userDataDir, {
     headless: false,
@@ -139,7 +139,7 @@ test("content script injects on fixture page without throwing errors", async () 
 
     // No uncaught errors should originate from the extension content script
     const contentScriptErrors = errors.filter(
-      (e) => e.includes("[Columbus]") || e.includes("content.js"),
+      (e) => e.includes("[Slothing]") || e.includes("content.js"),
     );
     expect(contentScriptErrors).toHaveLength(0);
   } finally {

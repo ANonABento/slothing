@@ -24,7 +24,7 @@ import type { ExtensionProfile } from "@/shared/types";
 export const MULTISTEP_SESSION_TTL_MS = 30 * 60 * 1000;
 
 /** Storage key under chrome.storage.session. Keyed by tabId. */
-const MULTISTEP_SESSION_KEY = "columbus_multistep_sessions";
+const MULTISTEP_SESSION_KEY = "slothing_multistep_sessions";
 
 /** ATS provider that owns this multi-step session. */
 export type MultistepProvider = "workday" | "greenhouse";

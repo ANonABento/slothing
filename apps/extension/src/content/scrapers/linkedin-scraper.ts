@@ -33,7 +33,7 @@ export class LinkedInScraper extends BaseScraper {
     const description = this.extractDescription();
 
     if (!title || !company || !description) {
-      console.log("[Columbus] LinkedIn scraper: Missing required fields", {
+      console.log("[Slothing] LinkedIn scraper: Missing required fields", {
         title,
         company,
         description: !!description,
@@ -99,7 +99,7 @@ export class LinkedInScraper extends BaseScraper {
           });
         }
       } catch (err) {
-        console.error("[Columbus] Error scraping job card:", err);
+        console.error("[Slothing] Error scraping job card:", err);
       }
     }
 

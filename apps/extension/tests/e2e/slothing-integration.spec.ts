@@ -31,7 +31,7 @@ test.beforeAll(async ({ request }) => {
     `${slothingBaseUrl}/api/extension/auth`,
     {
       data: {
-        deviceInfo: "Playwright Columbus integration",
+        deviceInfo: "Playwright Slothing integration",
         transport: "runtime",
       },
     },

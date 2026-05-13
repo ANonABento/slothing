@@ -30,9 +30,9 @@ import type {
 } from "../../shared/types";
 
 export const LINKEDIN_SEEN_KEY = "linkedInSeen";
-export const LINKEDIN_DAILY_KEY = "columbusLinkedInDailyCap";
+export const LINKEDIN_DAILY_KEY = "slothingLinkedInDailyCap";
 export const LINKEDIN_DAILY_CAP = 50;
-export const LINKEDIN_TOAST_CLASS = "columbus-toast-linkedin-capture";
+export const LINKEDIN_TOAST_CLASS = "slothing-toast-linkedin-capture";
 
 export interface LinkedInDailyCapState {
   /** Local-time `YYYY-MM-DD` stamp; rolls the counter when the date changes. */
@@ -169,7 +169,7 @@ export function showLinkedInCaptureToast(count: number): void {
   document.querySelector(`.${LINKEDIN_TOAST_CLASS}`)?.remove();
 
   const toast = document.createElement("div");
-  toast.className = `columbus-toast ${LINKEDIN_TOAST_CLASS}`;
+  toast.className = `slothing-toast ${LINKEDIN_TOAST_CLASS}`;
   toast.setAttribute("role", "status");
   toast.setAttribute("aria-live", "polite");
   // Pluralisation is local rather than via @slothing/web's pluralize() because
