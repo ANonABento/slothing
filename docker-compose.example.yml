@@ -1,0 +1,28 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        SLOTHING_CLOUD: "0"
+    environment:
+      NODE_ENV: production
+      NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+      NEXT_PUBLIC_NEXTAUTH_ENABLED: ${NEXT_PUBLIC_NEXTAUTH_ENABLED:-false}
+      SLOTHING_ALLOW_UNAUTHED_DEV: ${SLOTHING_ALLOW_UNAUTHED_DEV:-1}
+      SLOTHING_CLOUD: "0"
+      SLOTHING_ENCRYPTION_KEY: ${SLOTHING_ENCRYPTION_KEY}
+      TURSO_DATABASE_URL: file:/data/slothing.db
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      CALENDAR_FEED_SECRET: ${CALENDAR_FEED_SECRET:-}
+    ports:
+      - "3000:3000"
+    volumes:
+      - slothing-data:/data
+    restart: unless-stopped
+
+volumes:
+  slothing-data:
