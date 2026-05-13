@@ -138,32 +138,53 @@ async function main() {
         const startedAt = Date.now();
         let status = "ok";
         let finalUrl = url;
-        try {
-          const resp = await page.goto(url, {
-            waitUntil: "networkidle",
-            timeout: 30_000,
-          });
-          finalUrl = page.url();
-          if (!resp || !resp.ok()) {
-            status = `http_${resp?.status() ?? "unknown"}`;
-          }
-          // Settle hydration + any animations.
-          await page.waitForTimeout(750);
-          await page.screenshot({
-            path: resolve(shotsDir, `${r.slug}-${width}.png`),
-            fullPage: true,
-            scale: "css",
-            type: "png",
-          });
-        } catch (err) {
-          status = `error: ${err.message}`;
+        let attempt = 0;
+        while (true) {
+          attempt += 1;
           try {
+            const resp = await page.goto(url, {
+              waitUntil: "networkidle",
+              timeout: 30_000,
+            });
+            finalUrl = page.url();
+            if (!resp || !resp.ok()) {
+              status = `http_${resp?.status() ?? "unknown"}`;
+            } else {
+              status = "ok";
+            }
+            await page.waitForTimeout(750);
             await page.screenshot({
-              path: resolve(shotsDir, `${r.slug}-${width}-error.png`),
-              fullPage: false,
+              path: resolve(shotsDir, `${r.slug}-${width}.png`),
+              fullPage: true,
+              scale: "css",
               type: "png",
             });
-          } catch {}
+            break;
+          } catch (err) {
+            const msg = String(err.message ?? err);
+            const isConnRefused =
+              msg.includes("ERR_CONNECTION_REFUSED") ||
+              msg.includes("ECONNREFUSED");
+            // Dev-server crashes (HMR memory pressure) tend to manifest as
+            // ECONNREFUSED. Wait + retry once; the calling shell is expected
+            // to have restarted dev-server out-of-band.
+            if (isConnRefused && attempt < 3) {
+              console.log(
+                `    [retry ${attempt}/2] ${r.slug} ECONNREFUSED — waiting 15s for dev to recover`,
+              );
+              await new Promise((r) => setTimeout(r, 15_000));
+              continue;
+            }
+            status = `error: ${msg}`;
+            try {
+              await page.screenshot({
+                path: resolve(shotsDir, `${r.slug}-${width}-error.png`),
+                fullPage: false,
+                type: "png",
+              });
+            } catch {}
+            break;
+          }
         }
         const ms = Date.now() - startedAt;
         const errsForThis = consoleErrors.filter(
