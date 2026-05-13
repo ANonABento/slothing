@@ -7,13 +7,21 @@ import { cn } from "@/lib/utils";
 // every region, plus the eyebrow + title + lead block above each. The
 // repetition is what the audit means by "no shared marketing primitives".
 
-type SectionWidth = "wide" | "narrow";
-type SectionBackground = "default" | "muted";
+type SectionWidth = "wide" | "narrow" | "prose";
+type SectionBackground = "default" | "muted" | "subtle-card";
+type SectionPadding = "default" | "compact";
 
 interface MarketingSectionProps {
   id?: string;
   width?: SectionWidth;
   background?: SectionBackground;
+  // `default` = py-20 lg:py-32 (home hero/feature/cta cadence).
+  // `compact` = py-16 (extension marketing page rhythm; tighter sections).
+  padding?: SectionPadding;
+  // The extension marketing page uses border-t/border-y between
+  // alternating sections instead of background contrast alone.
+  borderTop?: boolean;
+  borderY?: boolean;
   className?: string;
   innerClassName?: string;
   children: ReactNode;
@@ -22,12 +30,27 @@ interface MarketingSectionProps {
 const widthClass: Record<SectionWidth, string> = {
   wide: "max-w-6xl",
   narrow: "max-w-4xl",
+  prose: "max-w-3xl",
+};
+
+const paddingClass: Record<SectionPadding, string> = {
+  default: "py-20 lg:py-32",
+  compact: "py-16",
+};
+
+const backgroundClass: Record<SectionBackground, string> = {
+  default: "",
+  muted: "bg-muted/30",
+  "subtle-card": "bg-card/45",
 };
 
 export function MarketingSection({
   id,
   width = "wide",
   background = "default",
+  padding = "default",
+  borderTop = false,
+  borderY = false,
   className,
   innerClassName,
   children,
@@ -36,8 +59,9 @@ export function MarketingSection({
     <section
       id={id}
       className={cn(
-        "py-20 lg:py-32",
-        background === "muted" && "bg-muted/30",
+        paddingClass[padding],
+        backgroundClass[background],
+        borderY ? "border-y" : borderTop && "border-t",
         className,
       )}
     >
