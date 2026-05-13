@@ -42,6 +42,13 @@ const jobFieldsSchema = z.object({
   jobTitle: z.string().trim().min(1).optional().default("Unknown Position"),
   company: z.string().trim().min(1).optional().default("Unknown Company"),
   opportunityId: z.string().trim().optional().default(""),
+  /**
+   * Optional id of a previously-generated tailored resume to use as the seed
+   * for this run. Wired up by the extension popup's multi-resume picker (#34).
+   * When omitted, the tailor route falls back to seeding from the user's
+   * master profile + knowledge bank as before.
+   */
+  baseResumeId: z.string().trim().optional().default(""),
 });
 
 const tailorRequestUnionSchema = z.discriminatedUnion("action", [

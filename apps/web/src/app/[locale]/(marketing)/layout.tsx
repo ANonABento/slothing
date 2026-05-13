@@ -8,6 +8,8 @@ export default async function MarketingLayout({
 }: {
   children: React.ReactNode;
 }) {
+  // skipToMain lives in the `nav` namespace, not `a11y` — using the
+  // a11yT translator here was the source of a type-check break on main.
   const navT = await getTranslations("nav");
 
   return (

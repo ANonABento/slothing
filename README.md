@@ -193,6 +193,10 @@ shows a **Detected: WaterlooWorks** section with single-posting, visible-rows,
 and full-set scrape buttons (paginated, capped at 200). See
 [`apps/extension/README.md`](./apps/extension/README.md#5-waterlooworks-bulk-import).
 
+**New permission:** Columbus requests `webNavigation` so it can detect user-driven step changes inside Workday and Greenhouse application flows after you start autofill. The extension does not collect browsing history and does not submit applications. If the permission is unavailable, Columbus falls back to asking before filling each new step. See [docs/extension-release-followthrough-2026-05.md](./docs/extension-release-followthrough-2026-05.md) for the release note and verification checklist.
+
+Full docs: [`apps/extension/README.md`](./apps/extension/README.md).
+
 ---
 
 ## Project structure

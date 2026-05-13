@@ -30,6 +30,13 @@ export interface BankResumeInput {
   company: string;
   jobDescription: string;
   userId: string;
+  /**
+   * Optional pre-existing tailored resume to seed from instead of computing a
+   * fresh base from the knowledge bank. Wired up by the extension popup's
+   * multi-resume picker (#34). When supplied, the LLM step still re-tailors
+   * against the JD; we only swap out the deterministic base.
+   */
+  seedResume?: TailoredResume;
 }
 
 export interface GenerateFromBankResult {
@@ -47,7 +54,7 @@ export async function generateFromBank(
   input: BankResumeInput,
   llmConfig: LLMConfig | null,
 ): Promise<GenerateFromBankResult> {
-  const baseResume = generateBaseFromBank(input);
+  const baseResume = input.seedResume ?? generateBaseFromBank(input);
   if (llmConfig) {
     const activeVariant = getActivePromptVariant(input.userId);
     const resume = await generateWithLLM(input, llmConfig, activeVariant);

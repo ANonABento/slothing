@@ -92,9 +92,36 @@ function flattenMessages(record: JsonRecord, prefix = ""): FlatMessages {
 }
 
 function extractArgumentNames(message: string) {
-  return Array.from(message.matchAll(/\{\s*([\w-]+)(?=[,}\s])/gu)).map(
-    (match) => match[1],
-  );
+  const argumentNames = new Set<string>();
+
+  for (let index = 0; index < message.length; index += 1) {
+    if (message[index] !== "{") continue;
+
+    const start = index + 1;
+    const argumentMatch = /^[\s]*([\w-]+)/u.exec(message.slice(start));
+    if (!argumentMatch) continue;
+
+    const argumentName = argumentMatch[1];
+    const afterName = start + argumentMatch[0].length;
+    const nextToken = message.slice(afterName).match(/^\s*([,}])/u)?.[1];
+    if (!nextToken) continue;
+
+    argumentNames.add(argumentName);
+
+    if (nextToken === ",") {
+      let depth = 1;
+      for (let end = afterName + 1; end < message.length; end += 1) {
+        if (message[end] === "{") depth += 1;
+        if (message[end] === "}") depth -= 1;
+        if (depth === 0) {
+          index = end;
+          break;
+        }
+      }
+    }
+  }
+
+  return Array.from(argumentNames);
 }
 
 describe.each(nonEnglishLocales)("messages/%s.json", (locale) => {

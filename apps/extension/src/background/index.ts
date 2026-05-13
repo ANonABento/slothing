@@ -1,22 +1,38 @@
 // Background service worker for Columbus extension
 
 import type {
+  ChatPortMessage,
+  ChatStreamStartPayload,
   ExtensionMessage,
   ExtensionResponse,
   ScrapedJob,
   TrackedApplicationPayload,
+  SaveCorrectionPayload,
 } from "@/shared/types";
+import { CHAT_PORT_NAME } from "@/shared/types";
+import type { TailorFromPagePayload } from "@/shared/messages";
+import { messageForError } from "@/shared/error-messages";
 import { getAPIClient, resetAPIClient } from "./api-client";
 import {
   getStorage,
   setAuthToken,
   clearAuthToken,
+  forgetAuthHistory,
   getCachedProfile,
   setCachedProfile,
   getApiBaseUrl,
   getSettings,
+  isSessionLost,
+  getSessionAuthCache,
+  setSessionAuthCache,
+  clearSessionAuthCache,
 } from "./storage";
 import { setBadgeForTab, clearBadgeForTab } from "./badge";
+import {
+  clearSession,
+  listSessions,
+  purgeExpiredSessions,
+} from "@/content/multistep/session";
 
 // Handle messages from content scripts and popup
 chrome.runtime.onMessage.addListener(
@@ -69,10 +85,15 @@ async function handleMessage(
       return handleCaptureVisibleTab();
 
     case "TAILOR_FROM_PAGE":
-      return handleTailorFromPage(message.payload as ScrapedJob);
+      return handleTailorFromPage(
+        message.payload as TailorFromPagePayload | ScrapedJob,
+      );
 
     case "GENERATE_COVER_LETTER_FROM_PAGE":
       return handleGenerateCoverLetterFromPage(message.payload as ScrapedJob);
+
+    case "LIST_RESUMES":
+      return handleListResumes();
 
     case "SAVE_ANSWER":
       return handleSaveAnswer(
@@ -87,11 +108,29 @@ async function handleMessage(
     case "SEARCH_ANSWERS":
       return handleSearchAnswers(message.payload as string);
 
+    case "MATCH_ANSWER_BANK":
+      return handleMatchAnswerBank(
+        message.payload as { q: string; limit?: number },
+      );
+
     case "GET_LEARNED_ANSWERS":
       return handleGetLearnedAnswers();
 
     case "DELETE_ANSWER":
       return handleDeleteAnswer(message.payload as string);
+
+    case "SAVE_CORRECTION":
+      return handleSaveCorrection(message.payload as SaveCorrectionPayload);
+
+    // P3 / #36 #37 — multi-step support.
+    case "GET_TAB_ID":
+      return { success: true, data: { tabId: sender.tab?.id ?? null } };
+
+    case "HAS_WEBNAVIGATION_PERMISSION":
+      return handleHasWebNavigationPermission();
+
+    case "REQUEST_WEBNAVIGATION_PERMISSION":
+      return handleRequestWebNavigationPermission();
 
     case "JOB_DETECTED": {
       const tabId = sender.tab?.id;
@@ -130,22 +169,53 @@ async function handleMessage(
 }
 
 async function handleTailorFromPage(
-  job: ScrapedJob,
+  payload: TailorFromPagePayload | ScrapedJob,
 ): Promise<ExtensionResponse> {
+  // Support both the new wrapped payload ({job, baseResumeId}) used by the
+  // popup picker (#34) and the legacy bare ScrapedJob still sent by the
+  // content-script Tailor action. The "url" presence on the inner object is
+  // the cheapest discriminator (ScrapedJob has it, TailorFromPagePayload
+  // doesn't).
+  const isLegacy = "url" in payload && !("job" in payload);
+  const job: ScrapedJob = isLegacy
+    ? (payload as ScrapedJob)
+    : (payload as TailorFromPagePayload).job;
+  const baseResumeId = isLegacy
+    ? undefined
+    : (payload as TailorFromPagePayload).baseResumeId;
+
   try {
     const client = await getAPIClient();
-    const result = await client.tailorFromJob(job);
+    const result = await client.tailorFromJob(job, baseResumeId);
     const apiBaseUrl = await getApiBaseUrl();
     const resumeId = result.savedResume.id;
+
+    const studioParams = new URLSearchParams({
+      from: "extension",
+      tailorId: resumeId,
+    });
+    if (baseResumeId) {
+      studioParams.set("baseResumeId", baseResumeId);
+    }
 
     return {
       success: true,
       data: {
-        url: `${apiBaseUrl}/studio?from=extension&tailorId=${encodeURIComponent(resumeId)}`,
+        url: `${apiBaseUrl}/studio?${studioParams.toString()}`,
         opportunityId: result.opportunityId,
         resumeId,
       },
     };
+  } catch (error) {
+    return { success: false, error: (error as Error).message };
+  }
+}
+
+async function handleListResumes(): Promise<ExtensionResponse> {
+  try {
+    const client = await getAPIClient();
+    const resumes = await client.listResumes();
+    return { success: true, data: { resumes } };
   } catch (error) {
     return { success: false, error: (error as Error).message };
   }
@@ -174,20 +244,70 @@ async function handleGenerateCoverLetterFromPage(
 }
 
 async function handleGetAuthStatus(): Promise<ExtensionResponse> {
+  // Fast-path (#30): return a cached verdict if it's <60s old, then
+  // revalidate in the background so a flipped server state still
+  // self-corrects on the *next* popup open.
+  try {
+    const cached = await getSessionAuthCache();
+    if (cached) {
+      const apiBaseUrl = await getApiBaseUrl();
+      const storage = await getStorage();
+      const sessionLost = !cached.authenticated && isSessionLost(storage);
+
+      // Fire-and-forget revalidation. We deliberately don't await it so
+      // the popup gets its response immediately.
+      void revalidateAuthInBackground();
+
+      return {
+        success: true,
+        data: {
+          isAuthenticated: cached.authenticated,
+          apiBaseUrl,
+          sessionLost,
+        },
+      };
+    }
+  } catch {
+    // Cache lookup failure is non-fatal; fall through to the verify path.
+  }
+
   try {
     const client = await getAPIClient();
     const isAuthenticated = await client.isAuthenticated();
     const apiBaseUrl = await getApiBaseUrl();
+    const storage = await getStorage();
+    const sessionLost = !isAuthenticated && isSessionLost(storage);
+
+    await setSessionAuthCache(isAuthenticated);
 
     return {
       success: true,
-      data: { isAuthenticated, apiBaseUrl },
+      data: { isAuthenticated, apiBaseUrl, sessionLost },
     };
   } catch (error) {
+    const apiBaseUrl = await getApiBaseUrl();
+    const storage = await getStorage().catch(() => null);
+    const sessionLost = storage ? isSessionLost(storage) : false;
     return {
       success: true,
-      data: { isAuthenticated: false, apiBaseUrl: await getApiBaseUrl() },
+      data: { isAuthenticated: false, apiBaseUrl, sessionLost },
     };
+  }
+}
+
+/**
+ * Background revalidation that runs after we return a cached verdict.
+ * Refreshes the session cache so subsequent reads stay fresh; on a 401
+ * the api-client's authenticatedFetch clears `authToken` + the cache
+ * already.
+ */
+async function revalidateAuthInBackground(): Promise<void> {
+  try {
+    const client = await getAPIClient();
+    const verdict = await client.isAuthenticated();
+    await setSessionAuthCache(verdict);
+  } catch {
+    // Network blip — leave the cache alone; next miss will revalidate.
   }
 }
 
@@ -210,6 +330,11 @@ async function handleOpenAuth(): Promise<ExtensionResponse> {
 async function handleLogout(): Promise<ExtensionResponse> {
   try {
     await clearAuthToken();
+    // Explicit logout — also drop the "we've seen you before" breadcrumb so
+    // the popup doesn't fall into the #27 "session lost" branch.
+    await forgetAuthHistory();
+    // And the fast-path cache (#30) so the next popup open re-verifies.
+    await clearSessionAuthCache();
     resetAPIClient();
     return { success: true };
   } catch (error) {
@@ -334,6 +459,22 @@ async function handleSearchAnswers(
   }
 }
 
+async function handleMatchAnswerBank(payload: {
+  q: string;
+  limit?: number;
+}): Promise<ExtensionResponse> {
+  try {
+    if (!payload?.q?.trim()) {
+      return { success: false, error: "Question is required" };
+    }
+    const client = await getAPIClient();
+    const results = await client.matchAnswerBank(payload.q, payload.limit);
+    return { success: true, data: results };
+  } catch (error) {
+    return { success: false, error: (error as Error).message };
+  }
+}
+
 async function handleGetLearnedAnswers(): Promise<ExtensionResponse> {
   try {
     const client = await getAPIClient();
@@ -351,6 +492,217 @@ async function handleDeleteAnswer(id: string): Promise<ExtensionResponse> {
     return { success: true };
   } catch (error) {
     return { success: false, error: (error as Error).message };
+  }
+}
+
+async function handleSaveCorrection(
+  payload: SaveCorrectionPayload,
+): Promise<ExtensionResponse> {
+  try {
+    const client = await getAPIClient();
+    const result = await client.saveCorrection(payload);
+    return { success: true, data: result };
+  } catch (error) {
+    return { success: false, error: (error as Error).message };
+  }
+}
+
+// ----- Multi-step (P3 / #36 #37) ------------------------------------------
+
+/**
+ * Returns whether the `webNavigation` permission is granted right now.
+ * In Chrome MV3 this is always true because the permission is in the
+ * required `permissions` array. In Firefox MV2 it's in `optional_permissions`
+ * and the user may not have approved it yet.
+ */
+async function handleHasWebNavigationPermission(): Promise<ExtensionResponse> {
+  try {
+    // chrome.permissions exists in both MV2 (via the polyfill) and MV3.
+    const granted = await new Promise<boolean>((resolve) => {
+      try {
+        chrome.permissions.contains(
+          { permissions: ["webNavigation"] },
+          (has: boolean) => resolve(!!has),
+        );
+      } catch {
+        resolve(false);
+      }
+    });
+    return { success: true, data: { granted } };
+  } catch (error) {
+    return { success: false, error: (error as Error).message };
+  }
+}
+
+/**
+ * Ask the browser to request `webNavigation`. In Chrome MV3 the permission
+ * is required at install time so this resolves instantly with true. In
+ * Firefox MV2 the browser shows a permission prompt and the resolved value
+ * reflects the user's verdict — a "No" leaves us on the prompted-toast
+ * fallback path, which is exactly what we want.
+ *
+ * Important: `chrome.permissions.request` must be called from a user-gesture
+ * context. The Firefox background can do this if invoked from a content-
+ * script message handler that fired inside a button click; if Firefox
+ * rejects with "may only be called from a user input handler" the
+ * controller catches the failure and continues with the fallback path.
+ */
+async function handleRequestWebNavigationPermission(): Promise<ExtensionResponse> {
+  try {
+    const granted = await new Promise<boolean>((resolve) => {
+      try {
+        chrome.permissions.request(
+          { permissions: ["webNavigation"] },
+          (has: boolean) => resolve(!!has),
+        );
+      } catch {
+        resolve(false);
+      }
+    });
+    if (granted) {
+      attachWebNavigationListener();
+    }
+    return { success: true, data: { granted } };
+  } catch (error) {
+    return { success: false, error: (error as Error).message };
+  }
+}
+
+let webNavigationListenerAttached = false;
+
+/**
+ * Subscribe to `webNavigation.onHistoryStateUpdated`. Multi-step ATSes drive
+ * step transitions via `history.pushState`, so this is the right event to
+ * watch — `onCompleted` only fires for full document loads.
+ *
+ * Idempotent: safe to call after every install/update and after every
+ * permission grant. Wrapped in try/catch because the API may not be
+ * available in MV2 until the user grants the optional permission.
+ */
+function attachWebNavigationListener(): void {
+  if (webNavigationListenerAttached) return;
+  try {
+    if (
+      typeof chrome.webNavigation === "undefined" ||
+      !chrome.webNavigation.onHistoryStateUpdated
+    ) {
+      return;
+    }
+    chrome.webNavigation.onHistoryStateUpdated.addListener(
+      (details) => {
+        if (details.frameId !== 0 && details.frameId !== undefined) {
+          // We only care about the top frame here. Iframed Greenhouse is
+          // handled by the per-provider MutationObserver inside the content
+          // script.
+          return;
+        }
+        void notifyTabOfStepTransition(details.tabId, details.url);
+      },
+    );
+    webNavigationListenerAttached = true;
+  } catch (err) {
+    console.warn("[Columbus] webNavigation listener attach failed:", err);
+  }
+}
+
+async function notifyTabOfStepTransition(
+  tabId: number,
+  url: string,
+): Promise<void> {
+  // Only fire when the tab has an in-progress multi-step session — keeps
+  // us from spamming every tab on every history event.
+  const sessions = await listSessions();
+  if (!sessions.some((s) => s.tabId === tabId)) return;
+  try {
+    await chrome.tabs.sendMessage(tabId, {
+      type: "MULTISTEP_STEP_TRANSITION",
+      payload: { url, transitionType: "webNavigation" },
+    });
+  } catch {
+    // Tab might be closed or the content script might not be loaded yet —
+    // both are non-fatal.
+  }
+}
+
+// Try to attach on startup. If the permission isn't granted yet (Firefox
+// first run) this is a no-op; the listener attaches lazily when the user
+// approves via `handleRequestWebNavigationPermission`.
+attachWebNavigationListener();
+
+// Clear the in-flight session when its tab closes. webNavigation's
+// `onHistoryStateUpdated` also fires for back/forward inside the same tab;
+// we deliberately keep the session in that case so the user doesn't lose
+// state by accidentally hitting Back.
+chrome.tabs.onRemoved.addListener((tabId) => {
+  void clearSession(tabId);
+});
+
+// Sweep stale sessions on service-worker startup. Not strictly necessary —
+// `getSession` already evicts expired entries on read — but it keeps the
+// storage area small after a crash.
+void purgeExpiredSessions();
+
+/**
+ * P4/#40 — Long-lived port handler for the inline AI assistant.
+ *
+ * The content-script sidebar opens `chrome.runtime.connect({name:
+ * CHAT_PORT_NAME})` and posts a CHAT_STREAM_START frame. We translate that
+ * into an SSE call via api-client.chat() and stream tokens back on the same
+ * port until the generator completes (CHAT_STREAM_END) or throws
+ * (CHAT_STREAM_ERROR). If the content-script disconnects mid-stream we set a
+ * cancelled flag so the iterator stops enqueueing.
+ */
+chrome.runtime.onConnect.addListener((port: chrome.runtime.Port) => {
+  if (port.name !== CHAT_PORT_NAME) return;
+
+  let cancelled = false;
+  port.onDisconnect.addListener(() => {
+    cancelled = true;
+  });
+
+  port.onMessage.addListener((message: ChatPortMessage) => {
+    if (message.type !== "CHAT_STREAM_START") return;
+    void runChatStream(port, message, () => cancelled).catch((error) => {
+      console.error("[Columbus] chat stream failure:", error);
+    });
+  });
+});
+
+async function runChatStream(
+  port: chrome.runtime.Port,
+  message: ChatStreamStartPayload,
+  isCancelled: () => boolean,
+): Promise<void> {
+  const safePost = (frame: ChatPortMessage): boolean => {
+    if (isCancelled()) return false;
+    try {
+      port.postMessage(frame);
+      return true;
+    } catch {
+      // Port closed between cancellation checks — bail out quietly.
+      return false;
+    }
+  };
+
+  try {
+    const client = await getAPIClient();
+    const iterator = client.chat(message.prompt, message.jobContext);
+    for await (const token of iterator) {
+      if (isCancelled()) return;
+      if (!safePost({ type: "CHAT_STREAM_TOKEN", token })) return;
+    }
+    safePost({ type: "CHAT_STREAM_END" });
+  } catch (error) {
+    safePost({
+      type: "CHAT_STREAM_ERROR",
+      error: messageForError(error),
+    });
+  } finally {
+    try {
+      port.disconnect();
+    } catch {
+      // Already disconnected — nothing to do.
+    }
   }
 }
 

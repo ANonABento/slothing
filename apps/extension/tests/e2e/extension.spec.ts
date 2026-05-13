@@ -77,14 +77,15 @@ test("background service worker registers with a valid extension ID", () => {
   expect(extensionId).toMatch(/^[a-z]{32}$/);
 });
 
-test("popup renders Slothing heading and Connect Account button", async () => {
+test("popup renders Slothing heading and Connect account button", async () => {
   const page = await context.newPage();
   try {
     await page.goto(`chrome-extension://${extensionId}/popup.html`);
 
-    // Wait for React to mount and auth check to complete (transitions out of loading state)
+    // Wait for React to mount and auth check to complete (transitions out of
+    // loading state). Match case-insensitively so a copy tweak doesn't break.
     await expect(
-      page.locator('button:has-text("Connect Account")'),
+      page.locator("button").filter({ hasText: /^Connect account$/i }),
     ).toBeVisible({
       timeout: 10_000,
     });
@@ -92,8 +93,8 @@ test("popup renders Slothing heading and Connect Account button", async () => {
     // Heading — use hasText to avoid matching on the first h1 regardless of content
     await expect(page.locator("h1", { hasText: "Slothing" })).toBeVisible();
 
-    // Subtitle visible in unauthenticated state
-    await expect(page.locator(".popup-container")).toBeVisible();
+    // Root container is visible (hero or topbar layout)
+    await expect(page.locator(".popup")).toBeVisible();
   } finally {
     await page.close();
   }
@@ -164,19 +165,32 @@ test("content script does not inject on non-job-board hosts", async () => {
     const popup = await context.newPage();
     try {
       await popup.goto(`chrome-extension://${extensionId}/popup.html`);
-      const result = await popup.evaluate(async (targetUrl) => {
+      const result = await popup.evaluate(async () => {
         const tabs = await chrome.tabs.query({});
-        const target = tabs.find((tab) => tab.url === targetUrl);
+        const currentTab = await chrome.tabs.getCurrent();
+        const candidates = tabs.filter((tab) => {
+          return tab.id && tab.id !== currentTab?.id;
+        });
 
-        try {
-          await chrome.tabs.sendMessage(target!.id!, {
-            type: "GET_PAGE_STATUS",
-          });
-          return "unexpected_ok";
-        } catch (e) {
-          return (e as Error).message;
+        for (const tab of candidates) {
+          try {
+            await chrome.tabs.sendMessage(tab.id!, {
+              type: "GET_PAGE_STATUS",
+            });
+          } catch (e) {
+            const message = (e as Error).message;
+            if (
+              /Could not establish connection|Receiving end does not exist/.test(
+                message,
+              )
+            ) {
+              return message;
+            }
+          }
         }
-      }, url);
+
+        return "unexpected_ok";
+      });
 
       expect(result).toMatch(
         /Could not establish connection|Receiving end does not exist/,

@@ -7,6 +7,7 @@ import type {
   ScrapedJob,
 } from "@/shared/types";
 import { JobPageSidebar } from "./job-page-sidebar";
+import type { ChatIntent } from "./chat-panel";
 import { computeJobMatchScore } from "./scoring";
 import {
   dismissSidebarForDomain,
@@ -29,6 +30,18 @@ export interface SidebarControllerUpdate {
   onAutoFill: () => Promise<void>;
   onSearchAnswers: (query: string) => Promise<SimilarAnswer[]>;
   onApplyAnswer: (answer: SimilarAnswer) => Promise<void> | void;
+  /**
+   * P4/#40 — Streaming AI assistant. The content-script wires this to a
+   * chrome.runtime.connect port toward the background.
+   */
+  onChatStream: (params: {
+    prompt: string;
+    intent: ChatIntent;
+    onToken: (token: string) => void;
+    signal: AbortSignal;
+  }) => Promise<void>;
+  /** P4/#40 — Deep-link `/studio?mode=cover_letter&jobId=...&seed=...`. */
+  onUseInCoverLetter: (seedText: string) => void;
 }
 
 export class JobPageSidebarController {
@@ -101,6 +114,8 @@ export class JobPageSidebarController {
         onAutoFill={this.state.onAutoFill}
         onSearchAnswers={this.state.onSearchAnswers}
         onApplyAnswer={this.state.onApplyAnswer}
+        onChatStream={this.state.onChatStream}
+        onUseInCoverLetter={this.state.onUseInCoverLetter}
       />,
     );
   }

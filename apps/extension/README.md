@@ -275,6 +275,7 @@ Coverage includes:
 - LinkedInScraper extracts title / company / location / description from a static fixture (`tests/fixtures/linkedin-mock.html`)
 - LinkedIn job-list selectors match two cards in the fixture
 - Greenhouse, Lever, Indeed, and Workday fixture scrape coverage with from-extension payload validation
+- Workday and Greenhouse multi-step fixture coverage for first-step fill, step-transition re-fill, session persistence, and prompted fallback
 - Autofill coverage against `demo/job-form.html`, including sensitive/custom field non-fill assertions and idempotency
 - Env-gated Slothing integration coverage for extension scrape/import into `/api/opportunities/from-extension`
 
@@ -352,6 +353,8 @@ CI workflow at `.github/workflows/extension-e2e.yml` runs the e2e suite on every
 | Waterloo Works | `waterlooworks.uwaterloo.ca`            | Requires SSO auth first                         |
 | Generic        | Any site with `JobPosting` JSON-LD      | Fallback scraper works                          |
 
+Before broad release, run the Workday and Greenhouse live checklist in [`docs/extension-release-followthrough-2026-05.md`](../../docs/extension-release-followthrough-2026-05.md). The automated tests use representative fixtures; live tenants can still vary their selectors and iframe behavior.
+
 ### Debugging
 
 Open DevTools on any page:
@@ -369,3 +372,4 @@ Open DevTools on any page:
 - **Waterloo Works**: Only works when logged into university SSO
 - **Bundle size**: popup.js and options.js are ~400KB (React not tree-shaken; could swap to Preact)
 - **Workday**: Dedicated Workday scraper is still missing; current coverage pins the GenericScraper JSON-LD fallback.
+- **Workday / Greenhouse multi-step**: Application-step support is best-effort until verified on live tenants. The fallback prompt covers missing `webNavigation` events, but tenant-specific selectors may still need patching.
