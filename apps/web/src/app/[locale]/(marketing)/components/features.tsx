@@ -1,4 +1,8 @@
 import { Database, FileSearch, Wand2, ScanSearch } from "lucide-react";
+import {
+  MarketingSection,
+  MarketingSectionHeader,
+} from "@/components/marketing/section";
 
 const features = [
   {
@@ -33,42 +37,38 @@ const features = [
 
 export function Features() {
   return (
-    <section id="features" className="py-20 lg:py-32">
-      <div className="max-w-6xl mx-auto px-6">
-        {/* Section Header */}
-        <div className="text-center max-w-2xl mx-auto mb-16">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4">
+    <MarketingSection id="features">
+      <MarketingSectionHeader
+        eyebrow={
+          <span className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-sm font-medium text-primary">
             Features
-          </div>
-          <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">
+          </span>
+        }
+        title={
+          <>
             Your career data,{" "}
             <span className="gradient-text">working for you</span>
-          </h2>
-          <p className="text-lg text-muted-foreground">
-            Slothing combines smart parsing with AI tailoring to turn your
-            career history into job-winning resumes.
-          </p>
-        </div>
-
-        {/* Features Grid */}
-        <div className="grid md:grid-cols-2 gap-6">
-          {features.map((feature, index) => (
+          </>
+        }
+        description="Slothing combines smart parsing with AI tailoring to turn your career history into job-winning resumes."
+      />
+      <div className="grid gap-6 md:grid-cols-2">
+        {features.map((feature, index) => (
+          <div
+            key={feature.title}
+            className="group rounded-2xl border bg-card p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+            style={{ animationDelay: `${index * 100}ms` }}
+          >
             <div
-              key={feature.title}
-              className="group p-6 rounded-2xl border bg-card hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
-              style={{ animationDelay: `${index * 100}ms` }}
+              className={`mb-4 inline-flex rounded-xl bg-gradient-to-br p-3 ${feature.gradient} text-primary-foreground shadow-lg transition-transform duration-300 group-hover:scale-110`}
             >
-              <div
-                className={`inline-flex p-3 rounded-xl bg-gradient-to-br ${feature.gradient} text-primary-foreground shadow-lg mb-4 group-hover:scale-110 transition-transform duration-300`}
-              >
-                <feature.icon className="h-6 w-6" />
-              </div>
-              <h3 className="text-lg font-semibold mb-2">{feature.title}</h3>
-              <p className="text-muted-foreground">{feature.description}</p>
+              <feature.icon className="h-6 w-6" />
             </div>
-          ))}
-        </div>
+            <h3 className="mb-2 text-lg font-semibold">{feature.title}</h3>
+            <p className="text-muted-foreground">{feature.description}</p>
+          </div>
+        ))}
       </div>
-    </section>
+    </MarketingSection>
   );
 }
