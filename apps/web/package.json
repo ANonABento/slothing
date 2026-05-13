@@ -26,7 +26,8 @@
     "eval": "npx tsx evals/harness.ts",
     "eval:resume": "npx tsx evals/harness.ts --mode=resume",
     "eval:cover-letter": "npx tsx evals/harness.ts --mode=cover-letter",
-    "eval:prompt-qa": "vitest run evals/prompt-qa"
+    "eval:prompt-qa": "vitest run evals/prompt-qa",
+    "stripe:setup": "tsx scripts/stripe-setup.ts"
   },
   "dependencies": {
     "@auth/drizzle-adapter": "^1.11.2",
@@ -40,6 +41,7 @@
     "@radix-ui/react-tabs": "^1.0.4",
     "@react-pdf/renderer": "^3.4.4",
     "@slothing/shared": "workspace:*",
+    "@stripe/stripe-js": "^9.5.0",
     "@tanstack/react-virtual": "^3.13.0",
     "@tiptap/extension-bubble-menu": "^3.22.4",
     "@tiptap/extension-color": "^3.22.4",
@@ -81,6 +83,7 @@
     "react-dom": "^18",
     "react-dropzone": "^14.2.9",
     "sqlite-vec": "^0.1.9",
+    "stripe": "^22.1.1",
     "tailwind-merge": "^2.5.2",
     "tailwindcss-animate": "^1.0.7",
     "tesseract.js": "^7.0.0",

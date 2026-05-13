@@ -60,3 +60,7 @@ test-results/
 .worktrees/
 .audit/
 evals/reports/
+
+# Local Stripe provisioning artifacts (price IDs).
+# Production reads these from env / dashboard, not from this file.
+apps/web/src/cloud/billing/stripe-config.json
