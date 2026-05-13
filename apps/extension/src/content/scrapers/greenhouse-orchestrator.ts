@@ -100,6 +100,7 @@ export class GreenhouseOrchestrator {
       pageIndex: 1,
       opts,
       errors: [],
+      seenKeys: new Set(),
     });
     return jobs;
   }
@@ -114,6 +115,7 @@ export class GreenhouseOrchestrator {
 
     const allJobs: ScrapedJob[] = [];
     const errors: string[] = [];
+    const seenKeys = new Set<string>();
     let pageIndex = 1;
 
     while (pageIndex <= maxPages && allJobs.length < maxJobs) {
@@ -122,6 +124,7 @@ export class GreenhouseOrchestrator {
         pageIndex,
         opts: { ...opts, maxJobs },
         errors,
+        seenKeys,
       });
       allJobs.push(...jobs);
 
@@ -149,8 +152,9 @@ export class GreenhouseOrchestrator {
     pageIndex: number;
     opts: OrchestratorOptions;
     errors: string[];
+    seenKeys: Set<string>;
   }): Promise<{ jobs: ScrapedJob[]; stopReason?: "cap-hit" }> {
-    const { scrapedSoFar, pageIndex, opts, errors } = args;
+    const { scrapedSoFar, pageIndex, opts, errors, seenKeys } = args;
     const maxJobs = opts.maxJobs ?? MAX_JOBS_DEFAULT;
     const throttle = opts.throttleMs ?? DEFAULT_THROTTLE_MS;
 
@@ -171,7 +175,13 @@ export class GreenhouseOrchestrator {
         // Per-row error isolation — never abort the whole batch.
         errors.push(`row ${i}: ${String(err).slice(0, 200)}`);
       }
-      if (job) jobs.push(job);
+      if (job) {
+        const dedupeKey = this.dedupeKey(job);
+        if (!seenKeys.has(dedupeKey)) {
+          seenKeys.add(dedupeKey);
+          jobs.push(job);
+        }
+      }
 
       opts.onProgress?.({
         scrapedCount: scrapedSoFar + jobs.length,
@@ -268,6 +278,12 @@ export class GreenhouseOrchestrator {
   private extractJobIdFromUrl(url: string): string | undefined {
     const match = url.match(/\/jobs\/(\d+)/);
     return match?.[1];
+  }
+
+  private dedupeKey(job: ScrapedJob): string {
+    if (job.sourceJobId) return `id:${job.sourceJobId}`;
+    if (job.url) return `url:${job.url}`;
+    return `title:${job.title}|${job.company}|${job.location ?? ""}`;
   }
 
   private getRows(): Element[] {

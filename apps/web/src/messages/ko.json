@@ -7,11 +7,11 @@
   },
   "common": {
     "cancel": "취소",
-    "back": "[ko] Back",
+    "back": "뒤로",
     "clear": "지우기",
     "clearAll": "모두 지우기",
-    "delete": "[ko] Delete",
-    "edit": "[ko] Edit",
+    "delete": "삭제",
+    "edit": "편집",
     "filters": "필터",
     "import": "가져오기",
     "loading": "로딩 중",
@@ -248,76 +248,76 @@
       "emptyDescription": "기회를 저장하거나 가져와 여기서 추적을 시작하세요."
     },
     "recentActivity": {
-      "title": "[ko] Recent Activity",
+      "title": "최근 활동",
       "types": {
-        "document_uploaded": "[ko] Uploaded",
-        "resume_generated": "[ko] Generated resume for",
-        "job_added": "[ko] Added job",
-        "job_applied": "[ko] Applied to"
+        "document_uploaded": "업로드됨",
+        "resume_generated": "이력서 생성 대상",
+        "job_added": "기회 추가됨",
+        "job_applied": "지원 완료"
       }
     }
   },
   "onboarding": {
     "steps": {
       "upload": {
-        "title": "[ko] Upload Your Resume",
-        "description": "[ko] Drag and drop your resume to get started, or skip this step and add it later.",
-        "dropHint": "[ko] Drop your PDF or DOCX here, or head to <documents>Documents</documents> after setup to add it later."
+        "title": "이력서 업로드",
+        "description": "시작하려면 이력서를 끌어다 놓거나, 이 단계를 건너뛰고 나중에 추가하세요.",
+        "dropHint": "PDF 또는 DOCX를 여기에 놓거나, 설정 후 <documents>문서</documents>에서 나중에 추가하세요."
       },
       "review": {
-        "title": "[ko] Review Your Profile",
-        "description": "[ko] After uploading, review the extracted entries and edit anything that needs fixing.",
+        "title": "프로필 검토",
+        "description": "업로드 후 추출된 항목을 검토하고 수정이 필요한 내용을 편집하세요.",
         "sections": {
-          "contactInfo": "[ko] Contact info",
-          "workExperience": "[ko] Work experience",
-          "education": "[ko] Education",
-          "skillsProjects": "[ko] Skills & projects"
+          "contactInfo": "연락처 정보",
+          "workExperience": "경력",
+          "education": "학력",
+          "skillsProjects": "기술 및 프로젝트"
         }
       },
       "builder": {
-        "title": "[ko] Build Your Starter Profile",
-        "description": "[ko] Answer a few quick prompts so Slothing can organize your career details without a resume upload.",
+        "title": "초기 프로필 만들기",
+        "description": "몇 가지 짧은 질문에 답하면 Slothing이 이력서 업로드 없이 경력 정보를 정리합니다.",
         "fields": {
-          "name": "[ko] Name",
-          "email": "[ko] Email",
-          "targetRole": "[ko] Target role",
-          "backgroundSummary": "[ko] Background summary",
-          "education": "[ko] Education",
-          "school": "[ko] School",
-          "degree": "[ko] Degree",
-          "field": "[ko] Field",
-          "topSkills": "[ko] Top skills",
-          "company": "[ko] Company / organisation",
-          "roleTitle": "[ko] Role / title",
-          "roleHighlights": "[ko] Role highlights (one per line, up to 3)",
-          "projectName": "[ko] Project name",
-          "projectSummary": "[ko] What did you build?",
-          "projectHighlights": "[ko] Project highlights (one per line)",
-          "achievements": "[ko] Honours, awards, leadership (comma-separated)"
+          "name": "이름",
+          "email": "이메일",
+          "targetRole": "목표 역할",
+          "backgroundSummary": "배경 요약",
+          "education": "학력",
+          "school": "학교",
+          "degree": "학위",
+          "field": "분야",
+          "topSkills": "주요 기술",
+          "company": "회사 또는 조직",
+          "roleTitle": "역할 또는 직함",
+          "roleHighlights": "역할 주요 내용(한 줄에 하나, 최대 3개)",
+          "projectName": "프로젝트 이름",
+          "projectSummary": "무엇을 만들었나요?",
+          "projectHighlights": "프로젝트 주요 내용(한 줄에 하나)",
+          "achievements": "수상, 표창, 리더십(쉼표로 구분)"
         },
         "placeholders": {
-          "targetRole": "[ko] Frontend intern, project manager, data analyst",
-          "backgroundSummary": "[ko] A sentence about your background, interests, or next move",
-          "topSkills": "[ko] Customer service, Excel, Python",
-          "company": "[ko] Campus cafe",
-          "roleTitle": "[ko] Barista",
-          "roleHighlights": "[ko] Pulled espresso shots\nTrained 3 new baristas",
-          "projectName": "[ko] Community pantry dashboard",
-          "projectSummary": "[ko] A class project that tracked donations and volunteer shifts",
-          "projectHighlights": "[ko] Built a filterable tracker\nPresented findings to class",
-          "achievements": "[ko] Residence council secretary, Dean's list"
+          "targetRole": "프론트엔드 인턴, 프로젝트 매니저, 데이터 분석가",
+          "backgroundSummary": "본인의 배경, 관심사 또는 다음 단계에 대한 한 문장",
+          "topSkills": "고객 서비스, Excel, Python",
+          "company": "캠퍼스 카페",
+          "roleTitle": "바리스타",
+          "roleHighlights": "에스프레소 샷 추출\n신입 바리스타 3명 교육",
+          "projectName": "지역 푸드 팬트리 대시보드",
+          "projectSummary": "기부와 자원봉사 교대를 추적한 수업 프로젝트",
+          "projectHighlights": "필터링 가능한 추적 도구 구축\n수업에서 결과 발표",
+          "achievements": "기숙사 위원회 서기, 학장 명단"
         },
         "optional": {
-          "title": "[ko] Add a role, project, or honour (optional)",
-          "hide": "[ko] Hide",
-          "add": "[ko] Add"
+          "title": "역할, 프로젝트 또는 수상 경력 추가(선택 사항)",
+          "hide": "숨기기",
+          "add": "추가"
         },
         "actions": {
-          "saving": "[ko] Saving",
-          "saveContinue": "[ko] Save and continue"
+          "saving": "저장 중",
+          "saveContinue": "저장하고 계속"
         },
         "errors": {
-          "save": "[ko] Unable to save your profile starter."
+          "save": "초기 프로필을 저장할 수 없습니다."
         }
       }
     }
@@ -425,402 +425,402 @@
   },
   "interview": {
     "summary": {
-      "title": "[ko] Interview Complete!",
-      "description": "[ko] You answered all {count, plural, one {# question} other {# questions}}. Review your responses and feedback below.",
+      "title": "면접 완료",
+      "description": "{count, plural, other {#개 질문}}에 모두 답했습니다. 아래에서 답변과 피드백을 확인하세요.",
       "actions": {
-        "startNew": "[ko] Start New Interview",
-        "research": "[ko] Research {company}"
+        "startNew": "새 면접 시작",
+        "research": "{company} 조사"
       },
       "insights": {
-        "title": "[ko] Performance Insights",
-        "questionsAnswered": "[ko] Questions Answered",
-        "responseQuality": "[ko] Response Quality",
-        "feedbackReceived": "[ko] Feedback Received"
+        "title": "성과 인사이트",
+        "questionsAnswered": "답변한 질문",
+        "responseQuality": "답변 품질",
+        "feedbackReceived": "받은 피드백"
       },
       "performanceLevels": {
-        "detailed": "[ko] Detailed",
-        "good": "[ko] Good",
-        "brief": "[ko] Brief"
+        "detailed": "상세함",
+        "good": "좋음",
+        "brief": "간단함"
       },
       "responses": {
-        "title": "[ko] Your Responses",
-        "skipped": "[ko] Skipped",
-        "skippedShort": "[ko] Skipped - revisit later",
-        "noAnswer": "[ko] No answer provided",
-        "skippedHint": "[ko] Skipped - revisit this prompt when you are ready.",
-        "yourAnswer": "[ko] Your Answer",
-        "aiFeedback": "[ko] AI Feedback"
+        "title": "내 답변",
+        "skipped": "건너뜀",
+        "skippedShort": "건너뜀, 나중에 다시 보기",
+        "noAnswer": "제공된 답변 없음",
+        "skippedHint": "건너뛰었습니다. 준비되면 이 질문으로 돌아오세요.",
+        "yourAnswer": "내 답변",
+        "aiFeedback": "AI 피드백"
       }
     },
     "jobSelection": {
-      "title": "[ko] Select a job to practice for:",
+      "title": "연습할 기회 선택:",
       "empty": {
-        "title": "[ko] No Opportunities to Practice For",
-        "description": "[ko] Add a job description first to get personalized interview questions based on the role.",
-        "addOpportunity": "[ko] Add an Opportunity"
+        "title": "연습할 기회가 없습니다",
+        "description": "역할에 맞는 맞춤형 면접 질문을 받으려면 먼저 채용 설명을 추가하세요.",
+        "addOpportunity": "기회 추가"
       },
       "actions": {
-        "quickPractice": "[ko] Quick Practice",
-        "textPractice": "[ko] Text Practice",
-        "voicePractice": "[ko] Voice Practice",
-        "prepGuide": "[ko] Prep Guide",
-        "hidePrepGuide": "[ko] Hide Prep Guide",
-        "companyResearch": "[ko] Company Research"
+        "quickPractice": "빠른 연습",
+        "textPractice": "텍스트 연습",
+        "voicePractice": "음성 연습",
+        "prepGuide": "준비 가이드",
+        "hidePrepGuide": "가이드 숨기기",
+        "companyResearch": "회사 조사"
       },
       "controls": {
-        "difficulty": "[ko] Difficulty:",
-        "questionCount": "[ko] {count} questions",
-        "timer": "[ko] Timer"
+        "difficulty": "난이도:",
+        "questionCount": "{count}개 질문",
+        "timer": "타이머"
       },
       "difficulty": {
-        "entry": "[ko] Entry Level",
-        "mid": "[ko] Mid Level",
-        "senior": "[ko] Senior Level",
-        "executive": "[ko] Executive"
+        "entry": "초급",
+        "mid": "중급",
+        "senior": "고급",
+        "executive": "임원급"
       }
     },
     "quickPractice": {
-      "title": "[ko] Practice {category}",
-      "description": "[ko] Pick a short warm-up and jump straight into questions.",
+      "title": "{category} 연습",
+      "description": "짧은 워밍업을 선택하고 바로 질문으로 넘어갑니다.",
       "fields": {
-        "category": "[ko] Category",
-        "questions": "[ko] Questions",
-        "difficulty": "[ko] Difficulty"
+        "category": "카테고리",
+        "questions": "질문",
+        "difficulty": "난이도"
       },
       "categories": {
-        "behavioral": "[ko] Behavioral",
-        "technical": "[ko] Technical",
-        "situational": "[ko] Situational",
-        "general": "[ko] General",
-        "cultural-fit": "[ko] Cultural Fit"
+        "behavioral": "행동",
+        "technical": "기술",
+        "situational": "상황",
+        "general": "일반",
+        "cultural-fit": "문화 적합성"
       },
-      "questionCount": "[ko] {count} questions",
+      "questionCount": "{count}개 질문",
       "difficulty": {
-        "entry": "[ko] Easy",
-        "mid": "[ko] Mid",
-        "senior": "[ko] Hard",
-        "executive": "[ko] Executive"
+        "entry": "쉬움",
+        "mid": "보통",
+        "senior": "어려움",
+        "executive": "임원급"
       },
-      "timer": "[ko] Practice with a timer",
+      "timer": "타이머로 연습",
       "actions": {
-        "start": "[ko] Start"
+        "start": "시작"
       }
     },
     "prepGuide": {
-      "title": "[ko] Interview Prep Guide",
-      "jobAtCompany": "[ko] {jobTitle} at {company}",
-      "loading": "[ko] Generating your prep guide...",
-      "progress": "[ko] Preparation Progress",
-      "questionTips": "[ko] Tips",
+      "title": "면접 준비 가이드",
+      "jobAtCompany": "{company}의 {jobTitle}",
+      "loading": "준비 가이드를 생성하는 중...",
+      "progress": "준비 진행률",
+      "questionTips": "팁",
       "actions": {
-        "export": "[ko] Export"
+        "export": "내보내기"
       },
       "tabs": {
-        "overview": "[ko] Overview",
-        "checklist": "[ko] Checklist",
-        "questions": "[ko] Questions"
+        "overview": "개요",
+        "checklist": "체크리스트",
+        "questions": "질문"
       },
       "sections": {
-        "keyTopics": "[ko] Key Topics to Prepare",
-        "strengths": "[ko] Your Strengths",
-        "gaps": "[ko] Potential Gaps",
-        "talkingPoints": "[ko] Key Talking Points"
+        "keyTopics": "준비할 핵심 주제",
+        "strengths": "나의 강점",
+        "gaps": "잠재적 보완점",
+        "talkingPoints": "핵심 대화 포인트"
       },
       "checklist": {
-        "before": "[ko] Before the Interview",
-        "during": "[ko] During the Interview",
-        "after": "[ko] After the Interview"
+        "before": "면접 전",
+        "during": "면접 중",
+        "after": "면접 후"
       },
       "categories": {
-        "behavioral": "[ko] Behavioral",
-        "technical": "[ko] Technical",
-        "situational": "[ko] Situational",
-        "company": "[ko] Company"
+        "behavioral": "행동",
+        "technical": "기술",
+        "situational": "상황",
+        "company": "회사"
       },
       "errors": {
-        "fetch": "[ko] Failed to fetch guide",
-        "load": "[ko] Failed to load guide",
-        "download": "[ko] Failed to download guide",
-        "downloadTitle": "[ko] Could not download prep guide",
-        "downloadDescription": "[ko] Please try downloading the guide again."
+        "fetch": "가이드를 가져오지 못했습니다",
+        "load": "가이드를 불러오지 못했습니다",
+        "download": "가이드를 다운로드하지 못했습니다",
+        "downloadTitle": "준비 가이드를 다운로드할 수 없습니다",
+        "downloadDescription": "가이드를 다시 다운로드해 보세요."
       }
     }
   },
   "jobs": {
     "toolbar": {
-      "searchPlaceholder": "[ko] Search jobs by title, company, or keywords...",
-      "clearSearch": "[ko] Clear search",
+      "searchPlaceholder": "직무, 회사 또는 키워드로 채용공고 검색...",
+      "clearSearch": "검색 지우기",
       "filters": {
-        "status": "[ko] Status",
-        "type": "[ko] Type",
-        "location": "[ko] Location",
-        "allStatuses": "[ko] All Statuses",
-        "allTypes": "[ko] All Types",
-        "allLocations": "[ko] All Locations"
+        "status": "상태",
+        "type": "유형",
+        "location": "위치",
+        "allStatuses": "모든 상태",
+        "allTypes": "모든 유형",
+        "allLocations": "모든 위치"
       },
       "statuses": {
-        "pending": "[ko] Pending",
-        "saved": "[ko] Saved",
-        "applied": "[ko] Applied",
-        "interviewing": "[ko] Interviewing",
-        "offered": "[ko] Offered",
-        "rejected": "[ko] Rejected"
+        "pending": "대기 중",
+        "saved": "저장됨",
+        "applied": "지원 완료",
+        "interviewing": "면접 중",
+        "offered": "제안 받음",
+        "rejected": "불합격"
       },
       "types": {
-        "fullTime": "[ko] Full-time",
-        "partTime": "[ko] Part-time",
-        "contract": "[ko] Contract",
-        "internship": "[ko] Internship"
+        "fullTime": "정규직",
+        "partTime": "파트타임",
+        "contract": "계약직",
+        "internship": "인턴십"
       },
       "locations": {
-        "remote": "[ko] Remote",
-        "onsite": "[ko] On-site"
+        "remote": "원격",
+        "onsite": "현장"
       },
       "sort": {
-        "placeholder": "[ko] Sort",
-        "newest": "[ko] Newest First",
-        "oldest": "[ko] Oldest First",
-        "company": "[ko] Company A-Z",
-        "title": "[ko] Title A-Z"
+        "placeholder": "정렬",
+        "newest": "최신순",
+        "oldest": "오래된순",
+        "company": "회사 A-Z",
+        "title": "직무 A-Z"
       },
-      "showing": "[ko] Showing {filteredCount} of {totalCount, plural, one {# job} other {# jobs}}"
+      "showing": "{totalCount, plural, other {#개 채용공고}} 중 {filteredCount}개 표시"
     },
     "import": {
       "csvPreview": {
-        "summaryTitle": "[ko] Import Summary",
+        "summaryTitle": "가져오기 요약",
         "stats": {
-          "totalRows": "[ko] Total Rows",
-          "validOpportunities": "[ko] Valid Opportunities",
-          "invalid": "[ko] Invalid"
+          "totalRows": "전체 행",
+          "validOpportunities": "유효한 기회",
+          "invalid": "유효하지 않음"
         },
-        "validationErrors": "[ko] Validation Errors",
-        "moreErrors": "[ko] ...and {count} more errors",
-        "opportunitiesToImport": "[ko] Opportunities to Import ({count})",
-        "moreOpportunities": "[ko] ...and {count, plural, one {# more opportunity} other {# more opportunities}}",
+        "validationErrors": "검증 오류",
+        "moreErrors": "...오류 {count}개 더",
+        "opportunitiesToImport": "가져올 기회 ({count})",
+        "moreOpportunities": "...기회 {count, plural, other {#개}} 더",
         "actions": {
-          "import": "[ko] Import {count, plural, one {# Opportunity} other {# Opportunities}}"
+          "import": "기회 {count, plural, other {#개}} 가져오기"
         }
       },
       "textMode": {
-        "jobUrlLabel": "[ko] Job URL (optional)",
-        "jobUrlPlaceholder": "[ko] https://linkedin.com/jobs/... or https://indeed.com/...",
-        "jobUrlHelp": "[ko] The URL will be saved with the job for reference",
-        "jobContentLabel": "[ko] Job Content",
-        "jobContentPlaceholder": "[ko] Paste the full job posting here...\n\nExample:\nSenior Software Engineer\nAcme Corp - San Francisco, CA (Remote)\n\nAbout the role:\nWe're looking for an experienced software engineer...\n\nRequirements:\n- 5+ years of experience\n- Python, TypeScript\n...",
-        "jobContentHelp": "[ko] Paste the entire job description. We'll extract the title, company, requirements, and keywords.",
+        "jobUrlLabel": "채용공고 URL(선택 사항)",
+        "jobUrlPlaceholder": "예: https://linkedin.com/jobs/... 또는 https://indeed.com/...",
+        "jobUrlHelp": "URL은 참조용으로 채용공고와 함께 저장됩니다",
+        "jobContentLabel": "채용공고 내용",
+        "jobContentPlaceholder": "전체 채용공고를 여기에 붙여넣으세요...\n\n예시:\n시니어 소프트웨어 엔지니어\nAcme Corp - San Francisco, CA(원격)\n\n역할 소개:\n경험 많은 소프트웨어 엔지니어를 찾고 있습니다...\n\n요구사항:\n- 5년 이상의 경험\n- Python, TypeScript\n...",
+        "jobContentHelp": "전체 채용 설명을 붙여넣으세요. 제목, 회사, 요구사항, 키워드를 추출합니다.",
         "actions": {
-          "parse": "[ko] Parse Job"
+          "parse": "채용공고 분석"
         }
       },
       "urlMode": {
-        "jobUrlLabel": "[ko] Job Posting URL",
-        "jobUrlPlaceholder": "[ko] https://linkedin.com/jobs/... or https://indeed.com/...",
-        "jobUrlHelp": "[ko] We'll fetch the job posting and extract the details automatically.",
-        "fetchingNote": "[ko] Note: Some sites may block automated fetching. If the import fails, try pasting the job content directly.",
+        "jobUrlLabel": "채용공고 URL",
+        "jobUrlPlaceholder": "예: https://linkedin.com/jobs/... 또는 https://indeed.com/...",
+        "jobUrlHelp": "채용공고를 가져와 세부 정보를 자동으로 추출합니다.",
+        "fetchingNote": "참고: 일부 사이트는 자동 가져오기를 차단할 수 있습니다. 가져오기에 실패하면 채용공고 내용을 직접 붙여넣어 보세요.",
         "actions": {
-          "fetch": "[ko] Fetch Job"
+          "fetch": "채용공고 가져오기"
         }
       },
       "editForm": {
         "fields": {
-          "jobTitle": "[ko] Job Title",
-          "company": "[ko] Company",
-          "location": "[ko] Location",
-          "jobType": "[ko] Job Type",
-          "salary": "[ko] Salary",
-          "remote": "[ko] Remote",
-          "url": "[ko] URL"
+          "jobTitle": "채용공고 제목",
+          "company": "회사",
+          "location": "위치",
+          "jobType": "고용 형태",
+          "salary": "급여",
+          "remote": "원격",
+          "url": "URL"
         },
         "placeholders": {
-          "location": "[ko] San Francisco, CA",
-          "selectType": "[ko] Select type"
+          "location": "예: San Francisco, CA",
+          "selectType": "유형 선택"
         },
         "types": {
-          "fullTime": "[ko] Full-time",
-          "partTime": "[ko] Part-time",
-          "contract": "[ko] Contract",
-          "internship": "[ko] Internship"
+          "fullTime": "정규직",
+          "partTime": "파트타임",
+          "contract": "계약직",
+          "internship": "인턴십"
         },
         "remote": {
-          "remote": "[ko] Remote",
-          "onsite": "[ko] On-site"
+          "remote": "원격",
+          "onsite": "현장"
         },
         "actions": {
-          "backToPreview": "[ko] Back to Preview",
-          "import": "[ko] Import Job"
+          "backToPreview": "미리보기로 돌아가기",
+          "import": "채용공고 가져오기"
         }
       },
       "preview": {
-        "remote": "[ko] Remote",
-        "viewOriginalPosting": "[ko] View Original Posting",
-        "description": "[ko] Description",
-        "requirements": "[ko] Requirements",
-        "moreRequirements": "[ko] +{count} more",
-        "extractedKeywords": "[ko] Extracted Keywords",
-        "source": "[ko] Source: {source}",
+        "remote": "원격",
+        "viewOriginalPosting": "원본 공고 보기",
+        "description": "설명",
+        "requirements": "요구사항",
+        "moreRequirements": "+{count}개 더",
+        "extractedKeywords": "추출된 키워드",
+        "source": "출처: {source}",
         "actions": {
-          "import": "[ko] Import Job"
+          "import": "채용공고 가져오기"
         }
       }
     },
     "addDialog": {
-      "title": "[ko] Add New Opportunity",
-      "description": "[ko] Paste the opportunity description to analyze your match and generate a tailored resume.",
+      "title": "새 기회 추가",
+      "description": "기회 설명을 붙여넣으면 적합도를 분석하고 맞춤 이력서를 생성합니다.",
       "fields": {
-        "title": "[ko] Opportunity Title",
-        "company": "[ko] Company",
-        "url": "[ko] Opportunity URL (optional)",
-        "description": "[ko] Opportunity Description"
+        "title": "기회 제목",
+        "company": "회사",
+        "url": "기회 URL(선택 사항)",
+        "description": "기회 설명"
       },
       "placeholders": {
-        "title": "[ko] Software Engineer",
-        "company": "[ko] Acme Corp",
-        "description": "[ko] Paste the full opportunity description here..."
+        "title": "소프트웨어 엔지니어",
+        "company": "Acme 회사",
+        "description": "전체 기회 설명을 여기에 붙여넣으세요..."
       },
       "actions": {
-        "add": "[ko] Add Opportunity"
+        "add": "기회 추가"
       },
       "errors": {
-        "add": "[ko] Failed to add opportunity",
-        "addTitle": "[ko] Could not add opportunity",
-        "addDescription": "[ko] Please check the opportunity details and try again."
+        "add": "기회를 추가하지 못했습니다",
+        "addTitle": "기회를 추가할 수 없습니다",
+        "addDescription": "기회 세부 정보를 확인하고 다시 시도하세요."
       }
     }
   },
   "resume": {
     "comparison": {
-      "title": "[ko] Resume Comparison",
-      "loading": "[ko] Comparing resumes...",
-      "before": "[ko] Before",
-      "after": "[ko] After",
-      "score": "[ko] Score: {score}%",
-      "matchScoreChange": "[ko] Match Score Change",
-      "empty": "[ko] No differences found between these versions.",
+      "title": "이력서 비교",
+      "loading": "이력서 비교 중...",
+      "before": "이전",
+      "after": "이후",
+      "score": "점수: {score}%",
+      "matchScoreChange": "매치 점수 변화",
+      "empty": "이 버전들 사이의 차이점을 찾지 못했습니다.",
       "actions": {
-        "close": "[ko] Close"
+        "close": "닫기"
       },
       "summary": {
-        "additions": "[ko] Additions",
-        "removals": "[ko] Removals",
-        "changes": "[ko] Changes"
+        "additions": "추가",
+        "removals": "삭제",
+        "changes": "변경"
       },
       "errors": {
-        "compare": "[ko] Failed to compare resumes",
-        "comparison": "[ko] Comparison failed",
-        "load": "[ko] Failed to load comparison"
+        "compare": "이력서를 비교하지 못했습니다",
+        "comparison": "비교 실패",
+        "load": "비교를 불러오지 못했습니다"
       }
     }
   },
   "integrations": {
     "google": {
       "calendar": {
-        "connectInSettings": "[ko] Connect Google in Settings to sync calendar",
-        "checking": "[ko] Checking...",
-        "syncing": "[ko] Syncing...",
-        "selectPlaceholder": "[ko] Select what to sync",
+        "connectInSettings": "캘린더를 동기화하려면 설정에서 Google을 연결하세요",
+        "checking": "확인 중...",
+        "syncing": "동기화 중...",
+        "selectPlaceholder": "동기화할 항목 선택",
         "actions": {
-          "sync": "[ko] Sync to Google Calendar"
+          "sync": "Google Calendar에 동기화"
         },
         "syncTypes": {
-          "all": "[ko] All Events",
-          "interviews": "[ko] Interviews Only",
-          "deadlines": "[ko] Deadlines Only",
-          "reminders": "[ko] Reminders Only"
+          "all": "모든 일정",
+          "interviews": "면접만",
+          "deadlines": "마감일만",
+          "reminders": "리마인더만"
         },
         "result": {
-          "synced": "[ko] Synced {count, plural, one {# event} other {# events}}",
-          "partial": "[ko] {synced} synced, {failed} failed",
-          "success": "[ko] Successfully synced {count, plural, one {# event} other {# events}}",
-          "failed": "[ko] Synced {synced, plural, one {# event} other {# events}}, {failed} failed",
-          "more": "[ko] And {count} more..."
+          "synced": "{count, plural, other {#개 일정}} 동기화됨",
+          "partial": "{synced}개 동기화, {failed}개 실패",
+          "success": "{count, plural, other {#개 일정}}을 성공적으로 동기화했습니다",
+          "failed": "{synced, plural, other {#개 일정}} 동기화, {failed}개 실패",
+          "more": "{count}개 더..."
         },
         "errors": {
-          "syncTitle": "[ko] Could not sync calendar",
-          "syncDescription": "[ko] Please check your Google connection and try again.",
-          "syncFailed": "[ko] Sync failed"
+          "syncTitle": "캘린더를 동기화할 수 없습니다",
+          "syncDescription": "Google 연결을 확인하고 다시 시도하세요.",
+          "syncFailed": "동기화 실패"
         }
       },
       "contacts": {
-        "trigger": "[ko] Add from Google",
-        "title": "[ko] Select Google Contact",
-        "description": "[ko] Choose a contact to attach to this opportunity.",
-        "searchPlaceholder": "[ko] Search contacts",
-        "loading": "[ko] Loading contacts...",
-        "openSettings": "[ko] Open Settings",
+        "trigger": "Google에서 추가",
+        "title": "Google 연락처 선택",
+        "description": "이 기회에 연결할 연락처를 선택하세요.",
+        "searchPlaceholder": "연락처 검색",
+        "loading": "연락처 불러오는 중...",
+        "openSettings": "설정 열기",
         "empty": {
-          "noContacts": "[ko] No contacts found. Reconnect Google in Settings if you connected before contacts support.",
-          "noMatches": "[ko] No contacts match your search."
+          "noContacts": "연락처를 찾을 수 없습니다. 연락처 지원 전에 연결했다면 설정에서 Google을 다시 연결하세요.",
+          "noMatches": "검색과 일치하는 연락처가 없습니다."
         },
         "errors": {
-          "load": "[ko] Failed to load contacts from Google",
-          "loadTitle": "[ko] Could not load Google contacts",
-          "loadDescription": "[ko] Please check your Google connection and try again."
+          "load": "Google에서 연락처를 불러오지 못했습니다",
+          "loadTitle": "Google 연락처를 불러올 수 없습니다",
+          "loadDescription": "Google 연결을 확인하고 다시 시도하세요."
         }
       },
       "drive": {
-        "connectInSettings": "[ko] Connect Google in Settings to save to Drive",
-        "checking": "[ko] Checking...",
-        "saved": "[ko] Saved to Drive",
-        "saving": "[ko] Saving...",
+        "connectInSettings": "Drive에 저장하려면 설정에서 Google을 연결하세요",
+        "checking": "확인 중...",
+        "saved": "Drive에 저장됨",
+        "saving": "저장 중...",
         "actions": {
-          "save": "[ko] Save to Drive",
-          "saveAndGetLink": "[ko] Save & Get Link"
+          "save": "Drive에 저장",
+          "saveAndGetLink": "저장하고 링크 받기"
         },
         "errors": {
-          "save": "[ko] Failed to save to Drive",
-          "saveTitle": "[ko] Could not save to Drive",
-          "saveDescription": "[ko] Please check your Google connection and try again."
+          "save": "Drive에 저장하지 못했습니다",
+          "saveTitle": "Drive에 저장할 수 없습니다",
+          "saveDescription": "Google 연결을 확인하고 다시 시도하세요."
         }
       }
     }
   },
   "dialogs": {
     "upload": {
-      "failedTitle": "[ko] Upload Failed",
+      "failedTitle": "업로드 실패",
       "actions": {
-        "retry": "[ko] Retry",
-        "dismiss": "[ko] Dismiss",
-        "replace": "[ko] Replace"
+        "retry": "다시 시도",
+        "dismiss": "닫기",
+        "replace": "교체"
       },
       "replace": {
-        "title": "[ko] Replace existing upload?",
-        "description": "[ko] Looks like you uploaded \"{filename}\" on {date}. Replace it, or cancel?"
+        "title": "기존 업로드를 교체할까요?",
+        "description": "{date}에 \"{filename}\"을 업로드한 것 같습니다. 교체하거나 취소하세요."
       }
     },
     "bank": {
       "addEntry": {
-        "trigger": "[ko] Add Entry",
-        "title": "[ko] Add New Entry",
-        "description": "[ko] Manually add an entry to your profile bank.",
-        "category": "[ko] Category",
-        "hackathonTemplates": "[ko] Hackathon Templates",
+        "trigger": "항목 추가",
+        "title": "새 항목 추가",
+        "description": "프로필 뱅크에 항목을 직접 추가합니다.",
+        "category": "카테고리",
+        "hackathonTemplates": "해커톤 템플릿",
         "actions": {
-          "add": "[ko] Add Entry"
+          "add": "항목 추가"
         }
       },
       "sourceDocuments": {
-        "sourceFiles": "[ko] Source Files",
-        "selected": "[ko] {count} selected",
+        "sourceFiles": "소스 파일",
+        "selected": "{count}개 선택됨",
         "actions": {
-          "deleteSelected": "[ko] Delete Selected",
-          "selectFile": "[ko] Select {filename}",
-          "deleteFile": "[ko] Delete {filename}"
+          "deleteSelected": "선택 항목 삭제",
+          "selectFile": "{filename} 선택",
+          "deleteFile": "{filename} 삭제"
         },
         "deleteOne": {
-          "title": "[ko] Delete source document?",
-          "description": "[ko] This will permanently delete <strong>{filename}</strong> and all {count, plural, one {# associated bullet} other {# associated bullets}}. This action cannot be undone."
+          "title": "소스 문서를 삭제할까요?",
+          "description": "<strong>{filename}</strong> 및 연결된 {count, plural, other {#개 항목}}을 영구적으로 삭제합니다. 이 작업은 되돌릴 수 없습니다."
         },
         "deleteMany": {
-          "title": "[ko] Delete selected source files?",
-          "description": "[ko] This will permanently delete {count, plural, one {# source file} other {# source files}} and all associated bullets. This action cannot be undone."
+          "title": "선택한 소스 파일을 삭제할까요?",
+          "description": "{count, plural, other {#개 소스 파일}} 및 연결된 모든 항목을 영구적으로 삭제합니다. 이 작업은 되돌릴 수 없습니다."
         },
         "errors": {
-          "loadTitle": "[ko] Could not load source files",
-          "loadDescription": "[ko] Please refresh the page and try again.",
-          "deleteOneTitle": "[ko] Could not delete source file",
-          "deleteOneDescription": "[ko] Please try deleting the file again.",
-          "deleteManyTitle": "[ko] Could not delete source files",
-          "deleteManyDescription": "[ko] Please try deleting the selected files again."
+          "loadTitle": "소스 파일을 불러올 수 없습니다",
+          "loadDescription": "페이지를 새로고침하고 다시 시도하세요.",
+          "deleteOneTitle": "소스 파일을 삭제할 수 없습니다",
+          "deleteOneDescription": "파일 삭제를 다시 시도하세요.",
+          "deleteManyTitle": "소스 파일을 삭제할 수 없습니다",
+          "deleteManyDescription": "선택한 파일 삭제를 다시 시도하세요."
         }
       },
       "page": {
@@ -839,23 +839,23 @@
     },
     "builder": {
       "sectionList": {
-        "pickerTitle": "[ko] Bank Entry Picker",
-        "pickerDescription": "[ko] Select entries to add them to the document."
+        "pickerTitle": "뱅크 항목 선택",
+        "pickerDescription": "문서에 추가할 항목을 선택하세요."
       }
     },
     "studio": {
       "versionDiff": {
-        "title": "[ko] Compare to current",
-        "selectVersion": "[ko] Select a version to compare."
+        "title": "현재 버전과 비교",
+        "selectVersion": "비교할 버전을 선택하세요."
       },
       "aiAssistant": {
-        "opportunityPickerTitle": "[ko] Select from Opportunity Bank",
-        "opportunityPickerDescription": "[ko] Choose a saved or applied opportunity to load its description."
+        "opportunityPickerTitle": "기회 뱅크에서 선택",
+        "opportunityPickerDescription": "설명을 불러올 저장된 또는 지원한 기회를 선택하세요."
       }
     },
     "opportunities": {
       "addOpportunity": {
-        "title": "[ko] Add Opportunity"
+        "title": "기회 추가"
       }
     },
     "calendar": {
@@ -886,41 +886,41 @@
     },
     "help": {
       "ollama": {
-        "title": "[ko] Using Ollama (Free)",
-        "installFrom": "[ko] Install from",
-        "run": "[ko] Run",
-        "testConnection": "[ko] Test the connection above"
+        "title": "Ollama 사용(무료)",
+        "installFrom": "설치 위치",
+        "run": "실행",
+        "testConnection": "위 연결 테스트"
       },
       "apiKeys": {
-        "title": "[ko] Using API Keys",
-        "description": "[ko] Connect your own API keys from OpenAI, Anthropic, or OpenRouter for cloud-based processing. Your keys are stored locally and never leave your device."
+        "title": "API 키 사용",
+        "description": "클라우드 기반 처리를 위해 OpenAI, Anthropic 또는 OpenRouter의 자체 API 키를 연결하세요. 키는 로컬에 저장되며 기기를 벗어나지 않습니다."
       }
     },
     "dataManagement": {
-      "title": "[ko] Data Management",
-      "description": "[ko] Export your data or import from backups.",
+      "title": "데이터 관리",
+      "description": "데이터를 내보내거나 백업에서 가져옵니다.",
       "export": {
-        "title": "[ko] Export Data",
-        "profileJson": "[ko] Export Profile (JSON)",
-        "opportunitiesJson": "[ko] Export Opportunities (JSON)",
-        "opportunitiesCsv": "[ko] Export Opportunities (CSV)",
-        "fullBackup": "[ko] Full Backup",
-        "allDataJson": "[ko] Export All Data (JSON)"
+        "title": "데이터 내보내기",
+        "profileJson": "프로필 내보내기 (JSON)",
+        "opportunitiesJson": "기회 내보내기 (JSON)",
+        "opportunitiesCsv": "기회 내보내기 (CSV)",
+        "fullBackup": "전체 백업",
+        "allDataJson": "모든 데이터 내보내기 (JSON)"
       },
       "import": {
-        "title": "[ko] Import Data",
-        "jobsAria": "[ko] Import jobs from JSON or CSV file",
-        "opportunitiesJsonCsv": "[ko] Import Opportunities (JSON/CSV)",
-        "restoreBackupAria": "[ko] Restore backup from JSON file",
-        "restoreBackup": "[ko] Restore Backup",
-        "allDataAria": "[ko] Import all data from JSON file",
-        "allDataJson": "[ko] Import All Data (JSON)"
+        "title": "데이터 가져오기",
+        "jobsAria": "JSON 또는 CSV 파일에서 채용공고 가져오기",
+        "opportunitiesJsonCsv": "기회 가져오기 (JSON/CSV)",
+        "restoreBackupAria": "JSON 파일에서 백업 복원",
+        "restoreBackup": "백업 복원",
+        "allDataAria": "JSON 파일에서 모든 데이터 가져오기",
+        "allDataJson": "모든 데이터 가져오기 (JSON)"
       },
       "confirm": {
-        "title": "[ko] Confirm Import",
-        "description": "[ko] The following data will be imported (duplicates will be skipped):",
-        "importing": "[ko] Importing...",
-        "action": "[ko] Confirm Import"
+        "title": "가져오기 확인",
+        "description": "다음 데이터가 가져와집니다(중복은 건너뜁니다):",
+        "importing": "가져오는 중...",
+        "action": "가져오기 확인"
       }
     }
   },
@@ -1260,11 +1260,11 @@
       "title": "개인정보",
       "description": "Slothing이 이력서, 커버레터, 적합도 확인에 사용하는 원본 프로필을 관리합니다.",
       "openToRecruiters": {
-        "title": "Open to recruiter outreach",
+        "title": "채용 담당자의 연락 허용",
         "description": "Slothing이 이력서, 커버레터, 적합도 확인에 사용하는 원본 프로필을 관리합니다."
       },
       "shareContactInfo": {
-        "title": "Share contact info by default",
+        "title": "기본적으로 연락처 정보 공유",
         "description": "Slothing이 이력서, 커버레터, 적합도 확인에 사용하는 원본 프로필을 관리합니다."
       }
     },

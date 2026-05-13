@@ -1,9 +1,12 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 
 import type { ExtensionProfile } from "@/shared/types";
 
 import { isWorkdayApplyUrl, WorkdayMultistepHandler } from "./workday";
+import { getSession } from "./session";
 
 // Same chrome.storage.session mock as session.test.ts — keeping it local so
 // each test file is self-contained.
@@ -17,7 +20,8 @@ function installChromeStorageMock() {
       for (const [k, v] of Object.entries(items)) map.set(k, v);
       cb?.();
     },
-    remove(_key: string, cb?: () => void) {
+    remove(key: string, cb?: () => void) {
+      map.delete(key);
       cb?.();
     },
     clear(cb?: () => void) {
@@ -40,7 +44,7 @@ function makeProfile(): ExtensionProfile {
       phone: "+1-555-0100",
       location: "London, UK",
     },
-    summary: "",
+    summary: "Analytical engine builder focused on reliable product systems.",
     experience: [],
     education: [],
     skills: [],
@@ -86,6 +90,31 @@ function mountWorkdayStepDom() {
       <button data-automation-id="submit-button" type="button">Submit application</button>
     </div>
   `;
+}
+
+const workdayApplyFixture = readFileSync(
+  resolve("tests/fixtures/workday-apply-multistep.html"),
+  "utf8",
+);
+
+function readFixtureDocument(): Document {
+  return new DOMParser().parseFromString(workdayApplyFixture, "text/html");
+}
+
+function mountWorkdayApplyFixtureStep(
+  step: "contact" | "demographics" | "review",
+) {
+  const fixture = readFixtureDocument();
+  if (step === "contact") {
+    document.body.innerHTML = fixture.body.innerHTML;
+    return;
+  }
+
+  const template = fixture.getElementById(
+    `step-${step}`,
+  ) as HTMLTemplateElement | null;
+  if (!template) throw new Error(`Missing Workday fixture step: ${step}`);
+  document.body.innerHTML = template.innerHTML;
 }
 
 describe("isWorkdayApplyUrl", () => {
@@ -204,5 +233,67 @@ describe("WorkdayMultistepHandler", () => {
     });
     const result = await fresh.onStepTransition();
     expect(result).toBeNull();
+  });
+
+  it("dogfoods contact, demographic, upload, disabled, and late review steps from the Workday fixture", async () => {
+    mountWorkdayApplyFixtureStep("contact");
+
+    const firstStep = await handler.confirm();
+    expect(firstStep).toMatchObject({
+      filled: 3,
+      errors: 0,
+    });
+    expect(
+      (document.getElementById("firstName") as HTMLInputElement).value,
+    ).toBe("Ada");
+    expect(
+      (document.getElementById("lastName") as HTMLInputElement).value,
+    ).toBe("Lovelace");
+    expect((document.getElementById("email") as HTMLInputElement).value).toBe(
+      "ada@example.com",
+    );
+    expect(
+      (document.getElementById("legalName") as HTMLInputElement).value,
+    ).toBe("Locked Candidate");
+    expect(
+      (document.getElementById("resumeUpload") as HTMLInputElement).value,
+    ).toBe("");
+
+    mountWorkdayApplyFixtureStep("demographics");
+    const demographicStep = await handler.onStepTransition();
+    expect(demographicStep).toMatchObject({
+      filled: 0,
+      errors: 0,
+    });
+    expect(demographicStep?.skipped).toBeGreaterThanOrEqual(3);
+    expect(
+      (document.getElementById("employeeId") as HTMLInputElement).value,
+    ).toBe("readonly-employee-id");
+    expect((document.getElementById("gender") as HTMLSelectElement).value).toBe(
+      "",
+    );
+    expect(
+      (document.getElementById("veteranStatus") as HTMLSelectElement).value,
+    ).toBe("");
+    expect(
+      (document.getElementById("disability") as HTMLSelectElement).value,
+    ).toBe("");
+
+    mountWorkdayApplyFixtureStep("review");
+    const reviewStep = await handler.onStepTransition();
+    expect(reviewStep).toMatchObject({
+      filled: 1,
+      errors: 0,
+    });
+    expect(
+      (document.getElementById("reviewPhone") as HTMLInputElement).value,
+    ).toBe(profile.contact.phone);
+
+    document
+      .querySelector<HTMLButtonElement>(
+        '[data-automation-id="bottom-navigation-next-button"]',
+      )
+      ?.click();
+    expect(await getSession(1, "workday")).toBeNull();
   });
 });

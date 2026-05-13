@@ -53,6 +53,7 @@ const allowlistIdenticalPaths = new Set([
   "opportunities.sources.devpost",
   "opportunities.sources.manual",
   "opportunities.sources.url",
+  "jobs.import.editForm.fields.url",
   "opportunities.kanbanBoard.hiddenSummary",
 ]);
 

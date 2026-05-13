@@ -1,0 +1,27 @@
+Alex Rivera
+alex.rivera@example.com | 647-555-0198 | Toronto, ON
+linkedin.com/in/alexrivera | github.com/alexrivera
+
+SUMMARY
+Platform engineer who turns fragmented internal workflows into observable,
+documented systems for product, support, and recruiting teams.
+
+EXPERIENCE
+Role | Organization | Dates | Location
+Senior Platform Engineer | Northstar Labs | Jan 2022 - Present | Toronto, ON
+◦ Rebuilt the release dashboard from spreadsheet exports into a typed React and PostgreSQL workflow
+→ Reduced manual deployment checks by 42% through service health gates, Slack alerts, and rollback runbooks
+✓ Mentored 4 engineers on incident review writing and production readiness checklists
+
+Developer Experience Engineer | CivicByte Studio | 2019 - 2021 | Remote
+• Migrated 18 internal scripts into a documented CLI with audit logging and dry-run modes
+▪ Partnered with design to improve keyboard navigation and empty states in admin tools
+
+EDUCATION
+Institution | Credential | Dates
+University of Waterloo | BMath Statistics | 2015 - 2019
+
+SKILLS
+Languages: TypeScript | Python | SQL
+Frameworks: React | Node.js | Next.js
+Tools: PostgreSQL | Docker | Kubernetes | OpenTelemetry
