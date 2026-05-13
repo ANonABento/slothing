@@ -146,6 +146,18 @@ export interface SimilarAnswer {
   timesUsed: number;
 }
 
+// Answer-bank match result returned by /api/answer-bank/match.
+// Differs from SimilarAnswer (legacy /api/extension/learned-answers/search):
+// the match route returns a normalized `score` (0..1) and an optional category
+// rather than `similarity` + `timesUsed`.
+export interface AnswerBankMatch {
+  id: string;
+  question: string;
+  answer: string;
+  score: number;
+  category?: string;
+}
+
 // Message types for background/content communication
 export type MessageType =
   | "GET_PROFILE"
@@ -160,8 +172,10 @@ export type MessageType =
   | "GET_SETTINGS"
   | "TAILOR_FROM_PAGE"
   | "GENERATE_COVER_LETTER_FROM_PAGE"
+  | "LIST_RESUMES"
   | "SAVE_ANSWER"
   | "SEARCH_ANSWERS"
+  | "MATCH_ANSWER_BANK"
   | "GET_LEARNED_ANSWERS"
   | "DELETE_ANSWER"
   | "GET_AUTH_STATUS"
@@ -172,7 +186,129 @@ export type MessageType =
   | "WW_SCRAPE_ALL_VISIBLE"
   | "WW_SCRAPE_ALL_PAGINATED"
   | "WW_BULK_PROGRESS"
-  | "AUTH_CALLBACK";
+  // P3/#39 — Generic bulk-scrape orchestrators for public ATS hosts.
+  | "BULK_GREENHOUSE_GET_PAGE_STATE"
+  | "BULK_GREENHOUSE_SCRAPE_VISIBLE"
+  | "BULK_GREENHOUSE_SCRAPE_PAGINATED"
+  | "BULK_GREENHOUSE_PROGRESS"
+  | "BULK_LEVER_GET_PAGE_STATE"
+  | "BULK_LEVER_SCRAPE_VISIBLE"
+  | "BULK_LEVER_SCRAPE_PAGINATED"
+  | "BULK_LEVER_PROGRESS"
+  | "BULK_WORKDAY_GET_PAGE_STATE"
+  | "BULK_WORKDAY_SCRAPE_VISIBLE"
+  | "BULK_WORKDAY_SCRAPE_PAGINATED"
+  | "BULK_WORKDAY_PROGRESS"
+  | "AUTH_CALLBACK"
+  | "SAVE_CORRECTION"
+  // P3 / #36 #37 — multi-step form support (Workday, Greenhouse).
+  // Background → content: a `webNavigation.onHistoryStateUpdated` event fired
+  // for a tab that has an in-progress multi-step application. The content
+  // script re-runs the autofill engine against the new DOM.
+  | "MULTISTEP_STEP_TRANSITION"
+  // Background → content: poll for the current tab id. Used by the content
+  // script to scope `chrome.storage.session` entries (see session.ts).
+  | "GET_TAB_ID"
+  // Content → background: ask the background to ensure the `webNavigation`
+  // permission is granted. On Chrome MV3 this is a no-op (declared in
+  // `permissions`); on Firefox MV2 the background calls
+  // `browser.permissions.request(...)` and returns whether the user
+  // accepted.
+  | "REQUEST_WEBNAVIGATION_PERMISSION"
+  // Content → background: query whether `webNavigation` is currently
+  // available. The result determines whether we wait for a step transition
+  // event from the background or fall back to the prompted in-page toast.
+  | "HAS_WEBNAVIGATION_PERMISSION"
+  // P4/#40 — Inline AI assistant in the in-page sidebar. The content script
+  // opens a `chrome.runtime.connect` Port (name = CHAT_PORT_NAME) and posts a
+  // CHAT_STREAM_START to the background, which streams tokens back on the same
+  // port. We deliberately use a Port (not chrome.tabs.sendMessage) so the
+  // service worker can deliver back-pressure-friendly token frames without
+  // needing the tab id, and so the channel cleanly tears down on either side.
+  | "CHAT_STREAM_START"
+  | "CHAT_STREAM_TOKEN"
+  | "CHAT_STREAM_END"
+  | "CHAT_STREAM_ERROR";
+
+/**
+ * P4/#40 — Long-lived port name used by the inline AI assistant. The content
+ * script calls `chrome.runtime.connect({ name: CHAT_PORT_NAME })` and the
+ * background's `chrome.runtime.onConnect` listener filters by this name.
+ */
+export const CHAT_PORT_NAME = "slothing-chat-stream";
+
+/**
+ * P4/#40 — Trimmed job-context payload the sidebar sends to the chat route.
+ * Sized to fit the LLM context window comfortably; the server truncates
+ * `description` again as a safety net.
+ */
+export interface ChatJobContext {
+  title?: string;
+  company?: string;
+  location?: string;
+  description?: string;
+  requirements?: string[];
+  url?: string;
+  /** Stable per-source job id when the scraper has one (e.g. Greenhouse). */
+  sourceJobId?: string;
+}
+
+/** P4/#40 — Payload posted from content script → background on the chat port. */
+export interface ChatStreamStartPayload {
+  type: "CHAT_STREAM_START";
+  prompt: string;
+  jobContext?: ChatJobContext;
+}
+
+/** P4/#40 — Token frame pushed from background → content script. */
+export interface ChatStreamTokenPayload {
+  type: "CHAT_STREAM_TOKEN";
+  token: string;
+}
+
+/** P4/#40 — Terminal success frame: stream completed. */
+export interface ChatStreamEndPayload {
+  type: "CHAT_STREAM_END";
+}
+
+/** P4/#40 — Terminal error frame: human-readable message for the UI. */
+export interface ChatStreamErrorPayload {
+  type: "CHAT_STREAM_ERROR";
+  error: string;
+}
+
+export type ChatPortMessage =
+  | ChatStreamStartPayload
+  | ChatStreamTokenPayload
+  | ChatStreamEndPayload
+  | ChatStreamErrorPayload;
+
+/**
+ * Payload for the SAVE_CORRECTION message (#33). Sent by the content script's
+ * corrections tracker when a user edits a field we autofilled and the final
+ * value differs from the original suggestion. The background script forwards
+ * this to /api/extension/field-mappings/correct so the per-domain mapping
+ * grows stronger over time.
+ */
+export interface SaveCorrectionPayload {
+  domain: string;
+  fieldSignature: string;
+  fieldType: FieldType;
+  originalSuggestion: string;
+  userValue: string;
+  confidence?: number;
+}
+
+/**
+ * Summary of a previously-generated tailored resume, surfaced by
+ * GET /api/extension/resumes for the popup's multi-resume picker (#34).
+ */
+export interface ExtensionResumeSummary {
+  id: string;
+  name: string;
+  targetRole: string;
+  updatedAt: string;
+}
 
 export interface ExtensionMessage<T = unknown> {
   type: MessageType;
@@ -192,6 +328,13 @@ export interface ExtensionStorage {
   apiBaseUrl: string;
   cachedProfile?: ExtensionProfile;
   profileCachedAt?: string;
+  /**
+   * ISO timestamp of the most recent time we observed a working auth state
+   * (either via setAuthToken or a successful isAuthenticated() call).
+   * Used by the popup to distinguish a real logout from a service-worker
+   * state-loss event (e.g. after extension auto-update). See #27.
+   */
+  lastSeenAuthAt?: string;
   settings: ExtensionSettings;
 }
 

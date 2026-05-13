@@ -13,9 +13,16 @@ import { writeFile, mkdir } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import path from "node:path";
 import os from "node:os";
+import { fileURLToPath } from "node:url";
 
 const MODE = process.env.MODE || "launch";
-const EXT_PATH = "/home/anonabento/slothing/apps/extension/dist";
+// Resolve EXT_PATH relative to this script so the harness works correctly
+// from a worktree (e.g. .claude/worktrees/agent-*). Previously this was
+// hardcoded to the main repo's `dist/`, which meant worktree agents loaded
+// the stale main-repo build and silently tested against the wrong code.
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const EXT_PATH = process.env.EXT_PATH ?? path.resolve(__dirname, "../dist");
 const PROFILE = path.join(os.tmpdir(), "slothing-harness-profile");
 const CDP_PORT = 9333;
 const SCREENSHOT_DIR = "/tmp/slothing-screenshots";

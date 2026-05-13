@@ -9,7 +9,7 @@ import {
 
 const integrationEnabled = process.env.SLOTHING_INTEGRATION === "1";
 const slothingBaseUrl =
-  process.env.SLOTHING_BASE_URL || "http://localhost:3100";
+  process.env.SLOTHING_BASE_URL || "http://localhost:3000";
 
 test.skip(
   !integrationEnabled,
@@ -94,10 +94,10 @@ test("imports a scraped fixture job through the extension into Slothing", async 
 
     const appPage = await context.newPage();
     await appPage.goto(`${slothingBaseUrl}/opportunities`);
-    await expect(appPage.getByText("Senior Software Engineer")).toBeVisible({
-      timeout: 30_000,
-    });
-    await expect(appPage.getByText("Acme Corp")).toBeVisible();
+    await expect(
+      appPage.getByRole("link", { name: "Senior Software Engineer" }).first(),
+    ).toBeVisible({ timeout: 30_000 });
+    await expect(appPage.getByText("Acme Corp").first()).toBeVisible();
     await appPage.close();
   } finally {
     await jobPage.close();

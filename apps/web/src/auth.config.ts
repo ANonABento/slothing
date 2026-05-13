@@ -42,7 +42,8 @@ export function isDevAuthBypassAllowed(
   env: Record<string, string | undefined> = process.env,
 ): boolean {
   return (
-    env.NODE_ENV !== "production" && env.SLOTHING_ALLOW_UNAUTHED_DEV === "1"
+    env.SLOTHING_ALLOW_UNAUTHED_DEV === "1" &&
+    (env.NODE_ENV !== "production" || env.SLOTHING_E2E_AUTH_BYPASS === "1")
   );
 }
 

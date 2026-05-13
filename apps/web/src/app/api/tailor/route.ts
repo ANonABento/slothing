@@ -8,7 +8,7 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { parseJsonBody } from "@/lib/api-utils";
-import { getProfile, saveGeneratedResume } from "@/lib/db";
+import { getGeneratedResume, getProfile, saveGeneratedResume } from "@/lib/db";
 import {
   gateAiFeature,
   isAiGateResponse,
@@ -17,6 +17,7 @@ import {
 import { logPromptVariantResult } from "@/lib/db/prompt-variants";
 import { getGroupedBankEntries } from "@/lib/db/profile-bank";
 import { createJob, getJob } from "@/lib/db/jobs";
+import type { TailoredResume } from "@/lib/resume/generator";
 import { linkOpportunityDocument } from "@/lib/opportunities";
 import { nowEpoch } from "@/lib/format/time";
 import { analyzeJobFit, extractKeywords } from "@/lib/tailor/analyze";
@@ -85,7 +86,8 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const { jobDescription, jobTitle, company, opportunityId } = body;
+    const { jobDescription, jobTitle, company, opportunityId, baseResumeId } =
+      body;
 
     const existingOpportunity = opportunityId
       ? getJob(opportunityId, authResult.userId)
@@ -163,6 +165,22 @@ export async function POST(request: NextRequest) {
     aiGate = gate;
     const llmConfig = gate.llmConfig;
 
+    // #34 — when the popup picks a previously-tailored resume as the base,
+    // hydrate it and pass it through to `generateFromBank` as the deterministic
+    // seed. Falls back to the bank-derived base on any lookup miss so the
+    // tailor flow keeps working if the chosen id has been deleted.
+    let seedResume: TailoredResume | undefined;
+    if (baseResumeId) {
+      const baseRecord = getGeneratedResume(baseResumeId, authResult.userId);
+      if (baseRecord?.contentJson) {
+        try {
+          seedResume = JSON.parse(baseRecord.contentJson) as TailoredResume;
+        } catch {
+          seedResume = undefined;
+        }
+      }
+    }
+
     const {
       resume: tailoredResume,
       baseResume,
@@ -177,6 +195,7 @@ export async function POST(request: NextRequest) {
         company,
         jobDescription,
         userId: authResult.userId,
+        seedResume,
       },
       llmConfig,
     );

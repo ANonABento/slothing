@@ -10,7 +10,11 @@ async function preparePage(page: Page, path = "/en/dashboard") {
     // network-idle; visible shell readiness is enough for navigation checks.
   });
   await expect(page.getByRole("main", { name: /main content/i })).toBeVisible();
-  await expect(page.locator("aside")).toBeVisible();
+  await expect(getSidebar(page)).toBeVisible();
+}
+
+function getSidebar(page: Page) {
+  return page.getByRole("complementary", { name: /main navigation/i });
 }
 
 async function ensureSidebarOpen(page: Page) {
@@ -21,7 +25,7 @@ async function ensureSidebarOpen(page: Page) {
     await openMenuButton.click();
   }
 
-  await expect(page.locator("aside")).toBeVisible();
+  await expect(getSidebar(page)).toBeVisible();
 }
 
 test.describe("Navigation", () => {
@@ -34,7 +38,7 @@ test.describe("Navigation", () => {
     await ensureSidebarOpen(page);
 
     // Get sidebar navigation
-    const sidebar = page.locator("aside");
+    const sidebar = getSidebar(page);
 
     // Check main navigation items visible in sidebar
     await expect(
@@ -60,7 +64,7 @@ test.describe("Navigation", () => {
   test("should navigate to Dashboard", async ({ page }) => {
     await preparePage(page, "/en/bank");
     await ensureSidebarOpen(page);
-    const sidebar = page.locator("aside");
+    const sidebar = getSidebar(page);
     await sidebar.getByRole("link", { name: /Dashboard/i }).click();
     await expect(page).toHaveURL("/en/dashboard");
   });
@@ -68,7 +72,7 @@ test.describe("Navigation", () => {
   test("should navigate to Documents (Bank) page", async ({ page }) => {
     await preparePage(page);
     await ensureSidebarOpen(page);
-    const sidebar = page.locator("aside");
+    const sidebar = getSidebar(page);
     await sidebar.getByRole("link", { name: /Documents/i }).click();
     await expect(page).toHaveURL("/en/bank");
   });
@@ -76,7 +80,7 @@ test.describe("Navigation", () => {
   test("should navigate to Document Studio page @smoke", async ({ page }) => {
     await preparePage(page);
     await ensureSidebarOpen(page);
-    const sidebar = page.locator("aside");
+    const sidebar = getSidebar(page);
     await sidebar.getByRole("link", { name: /Document Studio/i }).click();
     await expect(page).toHaveURL("/en/studio");
   });
@@ -84,7 +88,7 @@ test.describe("Navigation", () => {
   test("should navigate to Settings page @smoke", async ({ page }) => {
     await preparePage(page);
     await ensureSidebarOpen(page);
-    const sidebar = page.locator("aside");
+    const sidebar = getSidebar(page);
     await sidebar.getByRole("link", { name: /Settings/i }).click();
     await expect(page).toHaveURL("/en/settings");
   });
@@ -92,7 +96,7 @@ test.describe("Navigation", () => {
   test("should navigate to Interview Prep page", async ({ page }) => {
     await preparePage(page);
     await ensureSidebarOpen(page);
-    const sidebar = page.locator("aside");
+    const sidebar = getSidebar(page);
     await sidebar.getByRole("link", { name: /Interview Prep/i }).click();
     await expect(page).toHaveURL("/en/interview");
   });
@@ -100,7 +104,7 @@ test.describe("Navigation", () => {
   test("should navigate to Analytics page", async ({ page }) => {
     await preparePage(page);
     await ensureSidebarOpen(page);
-    const sidebar = page.locator("aside");
+    const sidebar = getSidebar(page);
     await sidebar.getByRole("link", { name: /Analytics/i }).click();
     await expect(page).toHaveURL("/en/analytics");
   });
@@ -108,7 +112,7 @@ test.describe("Navigation", () => {
   test("should highlight active navigation item", async ({ page }) => {
     await preparePage(page, "/en/bank");
     await ensureSidebarOpen(page);
-    const sidebar = page.locator("aside");
+    const sidebar = getSidebar(page);
     const activeLink = sidebar.getByRole("link", { name: /Documents/i });
     await expect(activeLink).toHaveAttribute("data-active", "true");
     await expect(activeLink).toHaveClass(/bg-card/);
@@ -119,7 +123,7 @@ test.describe("Navigation", () => {
   test("should show app logo in sidebar", async ({ page }) => {
     await preparePage(page);
     await ensureSidebarOpen(page);
-    const sidebar = page.locator("aside");
+    const sidebar = getSidebar(page);
     await expect(sidebar.getByText("Slothing")).toBeVisible();
   });
 });

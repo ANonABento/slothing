@@ -1,0 +1,46 @@
+{
+  "name": "@slothing/mcp",
+  "version": "0.1.0",
+  "private": false,
+  "description": "Model Context Protocol server for Slothing - exposes profile, opportunities, and answer-bank tools to MCP clients (Claude Desktop, Cursor, etc.) via the same extension-token auth surface the Columbus browser extension uses.",
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "slothing",
+    "claude",
+    "agent"
+  ],
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "slothing-mcp": "./bin/slothing-mcp.mjs"
+  },
+  "files": [
+    "dist",
+    "bin",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsc -p tsconfig.json --watch",
+    "start": "node bin/slothing-mcp.mjs",
+    "type-check": "tsc -p tsconfig.json --noEmit",
+    "lint": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest",
+    "test:run": "vitest run"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.29.0",
+    "zod": "^3.25.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "typescript": "^5",
+    "vitest": "4.0.18"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
