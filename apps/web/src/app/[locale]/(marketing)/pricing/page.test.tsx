@@ -118,7 +118,9 @@ describe("PricingPage", () => {
       screen.getByRole("heading", { name: "Why weekly billing?" }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("heading", { name: "What's BYOK (bring your own key)?" }),
+      screen.getByRole("heading", {
+        name: "What's BYOK (bring your own key)?",
+      }),
     ).toBeInTheDocument();
     expect(
       screen.getByRole("heading", { name: "Can I really self-host?" }),
@@ -165,12 +167,12 @@ describe("PricingPage", () => {
     expect(
       screen.getByRole("columnheader", { name: "Monthly" }),
     ).toBeInTheDocument();
-    expect(
-      screen.getByRole("row", { name: /AI provider/i }),
-    ).toHaveTextContent("Bring your own key");
-    expect(
-      screen.getByRole("row", { name: /Hosting/i }),
-    ).toHaveTextContent("Your machine");
+    expect(screen.getByRole("row", { name: /AI provider/i })).toHaveTextContent(
+      "Bring your own key",
+    );
+    expect(screen.getByRole("row", { name: /Hosting/i })).toHaveTextContent(
+      "Your machine",
+    );
   });
 
   it("renders the trust and security section with open-source pillar", async () => {
@@ -217,31 +219,6 @@ describe("PricingPage", () => {
     expect(
       screen.getByRole("heading", { name: "Is there a refund policy?" }),
     ).toBeInTheDocument();
-    expect(
-      screen.getByText(/Cancellation stops future renewal/),
-    ).toBeInTheDocument();
-  });
-
-  it("renders the trust and security section", async () => {
-    await renderPricingPage();
-
-    expect(
-      screen.getByRole("heading", { name: "Security and data handling" }),
-    ).toBeInTheDocument();
-    expect(screen.getByText("Encrypted in transit")).toBeInTheDocument();
-    expect(screen.getByText("No data selling")).toBeInTheDocument();
-    expect(screen.getByText("Delete anytime")).toBeInTheDocument();
-    expect(screen.getByText(/AI outputs are assistive/)).toBeInTheDocument();
-  });
-
-  it("aligns refund answer with billing terms", async () => {
-    await renderPricingPage();
-
-    const refundHeading = screen.getByRole("heading", {
-      name: "Is there a refund policy?",
-    });
-
-    expect(refundHeading).toBeInTheDocument();
     expect(
       screen.getByText(/Cancellation stops future renewal/),
     ).toBeInTheDocument();

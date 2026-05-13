@@ -258,7 +258,9 @@ export class GreenhouseOrchestrator {
 
     const match = window.location.pathname.match(/^\/([^/]+)/);
     if (match && match[1] && match[1] !== "embed" && match[1] !== "jobs") {
-      return match[1].replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+      return match[1]
+        .replace(/-/g, " ")
+        .replace(/\b\w/g, (c) => c.toUpperCase());
     }
     return "Unknown Employer";
   }

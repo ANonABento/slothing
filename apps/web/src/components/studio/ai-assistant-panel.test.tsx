@@ -137,10 +137,9 @@ describe("AiAssistantPanel", () => {
     expect(
       screen.getByRole("button", { name: /Upgrade Monthly/i }),
     ).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Use my own key" })).toHaveAttribute(
-      "href",
-      "/settings",
-    );
+    expect(
+      screen.getByRole("link", { name: "Use my own key" }),
+    ).toHaveAttribute("href", "/settings");
   });
 
   it("shows a loading state while checking setup", async () => {

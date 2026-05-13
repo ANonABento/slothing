@@ -73,10 +73,7 @@ async function waitFor(
 
 export class LeverOrchestrator {
   static canHandle(url: string): boolean {
-    return (
-      /jobs\.lever\.co\//.test(url) ||
-      /[\w-]+\.lever\.co\//.test(url)
-    );
+    return /jobs\.lever\.co\//.test(url) || /[\w-]+\.lever\.co\//.test(url);
   }
 
   async scrapeAllVisible(

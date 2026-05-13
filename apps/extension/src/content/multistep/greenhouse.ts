@@ -65,7 +65,9 @@ export function isGreenhouseApplyUrl(url: string): boolean {
  * outer document, which is harmless because the detector finds zero fields
  * there and the caller no-ops).
  */
-export function getGreenhouseScopeDocument(root: Document = document): Document {
+export function getGreenhouseScopeDocument(
+  root: Document = document,
+): Document {
   // Direct page: the current document already is the Greenhouse form.
   if (GREENHOUSE_HOST_RE.test(root.location.host)) return root;
 
@@ -111,7 +113,9 @@ export class GreenhouseMultistepHandler {
     return !!document.querySelector('iframe[src*="greenhouse.io"]');
   }
 
-  async confirm(options: { baseResumeId?: string } = {}): Promise<FillResult | null> {
+  async confirm(
+    options: { baseResumeId?: string } = {},
+  ): Promise<FillResult | null> {
     if (!this.isActive()) return null;
 
     const [tabId, profile] = await Promise.all([
@@ -230,10 +234,7 @@ export class GreenhouseMultistepHandler {
     for (const el of inputs) {
       if (shouldSkipForGreenhouse(el)) continue;
       const detected = this.detector.detectFieldType(el);
-      if (
-        detected.fieldType !== "unknown" ||
-        detected.confidence > 0.1
-      ) {
+      if (detected.fieldType !== "unknown" || detected.confidence > 0.1) {
         results.push(detected);
       }
     }
@@ -332,7 +333,8 @@ function matchesGreenhouseSubmitButton(button: HTMLElement): boolean {
     }
   });
   if (!matches) return false;
-  const text = (button.textContent ?? "").trim() ||
+  const text =
+    (button.textContent ?? "").trim() ||
     (button as HTMLInputElement).value ||
     "";
   return GREENHOUSE_SUBMIT_LABELS_RE.test(text);

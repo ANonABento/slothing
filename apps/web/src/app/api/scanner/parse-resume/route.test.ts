@@ -4,11 +4,16 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   parsePdfResume: vi.fn(),
   parseResumeText: vi.fn(),
+  extractPdfLayoutReport: vi.fn(),
 }));
 
 vi.mock("@/lib/parsers/pdf-resume", () => ({
   parsePdfResume: mocks.parsePdfResume,
   parseResumeText: mocks.parseResumeText,
+}));
+
+vi.mock("@/lib/ats/pdf-layout/pdfjs-adapter", () => ({
+  extractPdfLayoutReport: mocks.extractPdfLayoutReport,
 }));
 
 import { POST } from "./route";
@@ -74,6 +79,23 @@ describe("scanner parse-resume route", () => {
     vi.clearAllMocks();
     mocks.parsePdfResume.mockResolvedValue(parsedResult());
     mocks.parseResumeText.mockReturnValue(parsedResult("plain text"));
+    mocks.extractPdfLayoutReport.mockResolvedValue({
+      pageCount: 1,
+      hasMultiColumnRisk: true,
+      hasHeaderFooterRisk: false,
+      hasTableRisk: false,
+      hasReadingOrderRisk: true,
+      findings: [
+        {
+          type: "multi-column",
+          severity: "warning",
+          pageNumber: 1,
+          title: "Multi-column PDF layout",
+          evidence: "Two dense text bands.",
+          recommendation: "Use one column.",
+        },
+      ],
+    });
   });
 
   it("parses a PDF upload without requiring auth and omits rawText", async () => {
@@ -93,8 +115,42 @@ describe("scanner parse-resume route", () => {
       sectionsDetected: ["contact", "experience"],
       confidence: 0.82,
       warnings: [],
+      pdfLayout: {
+        pageCount: 1,
+        hasMultiColumnRisk: true,
+        hasHeaderFooterRisk: false,
+        hasTableRisk: false,
+        hasReadingOrderRisk: true,
+        findings: [
+          {
+            type: "multi-column",
+            severity: "warning",
+            pageNumber: 1,
+            title: "Multi-column PDF layout",
+            evidence: "Two dense text bands.",
+            recommendation: "Use one column.",
+          },
+        ],
+      },
     });
     expect(body.rawText).toBeUndefined();
+  });
+
+  it("still parses a PDF when layout extraction fails", async () => {
+    mocks.extractPdfLayoutReport.mockRejectedValueOnce(new Error("pdfjs down"));
+    const file = scannerFile(
+      Buffer.from("%PDF-1.7\nresume"),
+      "resume.pdf",
+      "application/pdf",
+    );
+
+    const response = await POST(requestWithFile(file, "203.0.113.14"));
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(mocks.parsePdfResume).toHaveBeenCalled();
+    expect(body.rawText).toBeUndefined();
+    expect(body.pdfLayout).toBeUndefined();
   });
 
   it("supports text fallback requests", async () => {

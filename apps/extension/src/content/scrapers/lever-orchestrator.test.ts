@@ -15,7 +15,12 @@ function buildLeverPage(args: {
   totalPages?: number;
   currentPage?: number;
   nextPagesData?: Array<
-    Array<{ title: string; location?: string; commitment?: string; jobId?: string }>
+    Array<{
+      title: string;
+      location?: string;
+      commitment?: string;
+      jobId?: string;
+    }>
   >;
   malformedAt?: number;
 }) {
@@ -100,7 +105,11 @@ describe("LeverOrchestrator", () => {
       company: "Anthropic",
       rows: [
         { title: "Frontier Engineer", location: "SF", commitment: "Full-time" },
-        { title: "Research Scientist", location: "Remote", commitment: "Full-time" },
+        {
+          title: "Research Scientist",
+          location: "Remote",
+          commitment: "Full-time",
+        },
         { title: "PMM", commitment: "Contract" },
       ],
     });
@@ -152,10 +161,7 @@ describe("LeverOrchestrator", () => {
   });
 
   it("scrapeAllPaginated walks multiple pages until disabled", async () => {
-    const pages = [
-      [{ title: "P1-A" }, { title: "P1-B" }],
-      [{ title: "P2-A" }],
-    ];
+    const pages = [[{ title: "P1-A" }, { title: "P1-B" }], [{ title: "P2-A" }]];
     buildLeverPage({
       company: "Anthropic",
       rows: pages[0],

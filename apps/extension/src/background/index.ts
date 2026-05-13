@@ -588,17 +588,15 @@ function attachWebNavigationListener(): void {
     ) {
       return;
     }
-    chrome.webNavigation.onHistoryStateUpdated.addListener(
-      (details) => {
-        if (details.frameId !== 0 && details.frameId !== undefined) {
-          // We only care about the top frame here. Iframed Greenhouse is
-          // handled by the per-provider MutationObserver inside the content
-          // script.
-          return;
-        }
-        void notifyTabOfStepTransition(details.tabId, details.url);
-      },
-    );
+    chrome.webNavigation.onHistoryStateUpdated.addListener((details) => {
+      if (details.frameId !== 0 && details.frameId !== undefined) {
+        // We only care about the top frame here. Iframed Greenhouse is
+        // handled by the per-provider MutationObserver inside the content
+        // script.
+        return;
+      }
+      void notifyTabOfStepTransition(details.tabId, details.url);
+    });
     webNavigationListenerAttached = true;
   } catch (err) {
     console.warn("[Columbus] webNavigation listener attach failed:", err);

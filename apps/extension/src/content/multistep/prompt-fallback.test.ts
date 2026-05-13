@@ -1,10 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import {
-  dismissStepFallback,
-  promptStepFallback,
-} from "./prompt-fallback";
+import { dismissStepFallback, promptStepFallback } from "./prompt-fallback";
 
 describe("promptStepFallback", () => {
   beforeEach(() => {

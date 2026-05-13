@@ -23,7 +23,11 @@
 //   chrome.storage.local[LINKEDIN_DAILY_KEY]  : { date: "YYYY-MM-DD",
 //                                                 count: number }
 
-import type { ExtensionMessage, ExtensionResponse, ScrapedJob } from "../../shared/types";
+import type {
+  ExtensionMessage,
+  ExtensionResponse,
+  ScrapedJob,
+} from "../../shared/types";
 
 export const LINKEDIN_SEEN_KEY = "linkedInSeen";
 export const LINKEDIN_DAILY_KEY = "columbusLinkedInDailyCap";

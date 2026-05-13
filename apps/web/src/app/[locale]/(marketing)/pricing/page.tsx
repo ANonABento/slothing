@@ -150,8 +150,7 @@ const faqs = [
   },
   {
     question: "Are prices in USD?",
-    answer:
-      "Yes. Local taxes may apply depending on your billing country.",
+    answer: "Yes. Local taxes may apply depending on your billing country.",
   },
   {
     question: "What if I'm a student?",

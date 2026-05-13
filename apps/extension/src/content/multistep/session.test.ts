@@ -18,10 +18,7 @@ import {
 function installChromeStorageMock() {
   const map = new Map<string, unknown>();
   const area = {
-    get(
-      key: string,
-      cb: (result: Record<string, unknown>) => void,
-    ) {
+    get(key: string, cb: (result: Record<string, unknown>) => void) {
       cb({ [key]: map.get(key) });
     },
     set(items: Record<string, unknown>, cb?: () => void) {
@@ -44,7 +41,11 @@ function installChromeStorageMock() {
 
 function makeProfile(): ExtensionProfile {
   return {
-    contact: { firstName: "Ada", lastName: "Lovelace", email: "ada@example.com" },
+    contact: {
+      firstName: "Ada",
+      lastName: "Lovelace",
+      email: "ada@example.com",
+    },
     summary: "",
     experience: [],
     education: [],
@@ -55,11 +56,14 @@ function makeProfile(): ExtensionProfile {
   } as unknown as ExtensionProfile;
 }
 
-function makeSession(overrides: Partial<MultistepSession> = {}): MultistepSession {
+function makeSession(
+  overrides: Partial<MultistepSession> = {},
+): MultistepSession {
   return {
     tabId: 42,
     provider: "workday",
-    jobUrl: "https://acme.wd5.myworkdayjobs.com/en-US/Acme/job/Remote/SWE_R1/apply",
+    jobUrl:
+      "https://acme.wd5.myworkdayjobs.com/en-US/Acme/job/Remote/SWE_R1/apply",
     profile: makeProfile(),
     confirmedAt: new Date().toISOString(),
     ...overrides,
@@ -89,7 +93,9 @@ describe("multistep/session", () => {
   });
 
   it("evicts expired sessions on read", async () => {
-    const old = new Date(Date.now() - MULTISTEP_SESSION_TTL_MS - 1000).toISOString();
+    const old = new Date(
+      Date.now() - MULTISTEP_SESSION_TTL_MS - 1000,
+    ).toISOString();
     await setSession(makeSession({ confirmedAt: old }));
     expect(await getSession(42)).toBeNull();
     // And the next read shouldn't find it lingering in storage.
@@ -104,7 +110,9 @@ describe("multistep/session", () => {
   });
 
   it("purgeExpiredSessions sweeps stale entries but keeps fresh ones", async () => {
-    const old = new Date(Date.now() - MULTISTEP_SESSION_TTL_MS - 1).toISOString();
+    const old = new Date(
+      Date.now() - MULTISTEP_SESSION_TTL_MS - 1,
+    ).toISOString();
     await setSession(makeSession({ tabId: 1, confirmedAt: old }));
     await setSession(makeSession({ tabId: 2 }));
     await purgeExpiredSessions();

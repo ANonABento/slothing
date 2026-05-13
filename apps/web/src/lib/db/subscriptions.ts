@@ -203,15 +203,13 @@ export function upsertSubscription(
 
 export function getSubscriptionById(id: string): SubscriptionRecord | null {
   ensureBillingSchema();
-  const row = db
-    .prepare("SELECT * FROM subscriptions WHERE id = ?")
-    .get(id) as SubscriptionRow | undefined;
+  const row = db.prepare("SELECT * FROM subscriptions WHERE id = ?").get(id) as
+    | SubscriptionRow
+    | undefined;
   return row ? mapSubscription(row) : null;
 }
 
-export function getUserSubscription(
-  userId: string,
-): SubscriptionRecord | null {
+export function getUserSubscription(userId: string): SubscriptionRecord | null {
   ensureBillingSchema();
   const row = db
     .prepare(

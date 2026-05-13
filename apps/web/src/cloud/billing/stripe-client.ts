@@ -1,4 +1,4 @@
-import Stripe from 'stripe';
+import Stripe from "stripe";
 
 let cached: Stripe | null = null;
 
@@ -7,38 +7,39 @@ export function getStripe(): Stripe {
   const key = process.env.STRIPE_SECRET_KEY;
   if (!key) {
     throw new Error(
-      'STRIPE_SECRET_KEY is not set. Required when SLOTHING_CLOUD=1. See .env.example.',
+      "STRIPE_SECRET_KEY is not set. Required when SLOTHING_CLOUD=1. See .env.example.",
     );
   }
   cached = new Stripe(key, {
-    apiVersion: '2026-04-22.dahlia',
+    apiVersion: "2026-04-22.dahlia",
     typescript: true,
     appInfo: {
-      name: 'Slothing',
-      url: 'https://slothing.work',
+      name: "Slothing",
+      url: "https://slothing.work",
     },
   });
   return cached;
 }
 
 export const PRO_MONTHLY = {
-  productKey: 'pro_monthly' as const,
-  name: 'Slothing Pro Monthly',
-  description: 'Unlimited features, 1000 credits per month, priority email support.',
+  productKey: "pro_monthly" as const,
+  name: "Slothing Pro Monthly",
+  description:
+    "Unlimited features, 1000 credits per month, priority email support.",
   amountCents: 1999,
-  currency: 'usd',
-  interval: 'month' as const,
+  currency: "usd",
+  interval: "month" as const,
   creditsPerCycle: 1000,
 };
 
 export const PRO_WEEKLY = {
-  productKey: 'pro_weekly' as const,
-  name: 'Slothing Pro Weekly',
+  productKey: "pro_weekly" as const,
+  name: "Slothing Pro Weekly",
   description:
-    'Same Pro features, billed weekly. 250 credits per week. Cancel any time - built for short job-search sprints.',
+    "Same Pro features, billed weekly. 250 credits per week. Cancel any time - built for short job-search sprints.",
   amountCents: 699,
-  currency: 'usd',
-  interval: 'week' as const,
+  currency: "usd",
+  interval: "week" as const,
   creditsPerCycle: 250,
 };
 

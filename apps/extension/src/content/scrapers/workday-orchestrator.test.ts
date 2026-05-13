@@ -176,10 +176,7 @@ describe("WorkdayOrchestrator", () => {
   });
 
   it("scrapeAllPaginated walks pages until next is disabled", async () => {
-    const pages = [
-      [{ title: "P1-A" }, { title: "P1-B" }],
-      [{ title: "P2-A" }],
-    ];
+    const pages = [[{ title: "P1-A" }, { title: "P1-B" }], [{ title: "P2-A" }]];
     buildWorkdayPage({
       tenant: "Anthropic",
       rows: pages[0],
