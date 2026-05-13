@@ -13,6 +13,7 @@ import {
 } from "./encryption";
 
 const ORIGINAL_KEY = process.env.SLOTHING_ENCRYPTION_KEY;
+
 function setKey(buf: Buffer) {
   process.env.SLOTHING_ENCRYPTION_KEY = buf.toString("base64");
   resetMasterKeyCacheForTests();

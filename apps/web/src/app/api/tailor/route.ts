@@ -8,7 +8,7 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { parseJsonBody } from "@/lib/api-utils";
-import { getProfile, saveGeneratedResume, getGeneratedResume } from "@/lib/db";
+import { getGeneratedResume, getProfile, saveGeneratedResume } from "@/lib/db";
 import {
   gateAiFeature,
   isAiGateResponse,
