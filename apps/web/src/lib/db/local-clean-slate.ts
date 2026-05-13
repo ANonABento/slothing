@@ -44,6 +44,11 @@ export function buildLocalDevCleanSlateStatements(
       sql: "DELETE FROM ats_scan_history WHERE user_id = ?",
       params: userParam,
     },
+    { sql: "DELETE FROM subscriptions WHERE user_id = ?", params: userParam },
+    {
+      sql: "DELETE FROM stripe_customers WHERE user_id = ?",
+      params: userParam,
+    },
     {
       sql: "DELETE FROM cover_letters WHERE profile_id = ?",
       params: userParam,
