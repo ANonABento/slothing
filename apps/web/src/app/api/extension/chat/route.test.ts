@@ -12,7 +12,8 @@ vi.mock("@/lib/auth", () =>
   globalThis.__contractRouteMocks!.createAuthModuleMock(),
 );
 
-import { POST, buildProfileSummary, buildSystemPrompt } from "./route";
+import { buildProfileSummary, buildSystemPrompt } from "./prompt";
+import { POST } from "./route";
 import {
   expectRouteResponseContract,
   invalidJsonRequest,
@@ -99,9 +100,7 @@ describe("buildProfileSummary", () => {
     const longDesc = "x".repeat(500);
     const result = buildProfileSummary({
       contact: { name: "A" },
-      experiences: [
-        { title: "T", company: "C", description: longDesc },
-      ],
+      experiences: [{ title: "T", company: "C", description: longDesc }],
       skills: [],
     });
     // 240 chars max in the rendered description

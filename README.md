@@ -131,6 +131,8 @@ Boots a fresh Chromium with the extension pre-loaded and opens the demo form so 
 
 **WaterlooWorks bulk import:** when the active tab is on `waterlooworks.uwaterloo.ca` the popup shows a **Detected: WaterlooWorks** section with three buttons — single-posting import, scrape all visible rows, or scrape the entire filtered set (paginated, capped at 200). See [apps/extension/README.md](./apps/extension/README.md#5-waterlooworks-bulk-import) for details.
 
+**New permission:** Columbus requests `webNavigation` so it can detect user-driven step changes inside Workday and Greenhouse application flows after you start autofill. The extension does not collect browsing history and does not submit applications. If the permission is unavailable, Columbus falls back to asking before filling each new step. See [docs/extension-release-followthrough-2026-05.md](./docs/extension-release-followthrough-2026-05.md) for the release note and verification checklist.
+
 Full docs: [`apps/extension/README.md`](./apps/extension/README.md).
 
 ## Usage
