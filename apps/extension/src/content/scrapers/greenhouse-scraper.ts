@@ -32,7 +32,7 @@ export class GreenhouseScraper extends BaseScraper {
     const description = this.extractDescription();
 
     if (!title || !company || !description) {
-      console.log("[Columbus] Greenhouse scraper: Missing required fields", {
+      console.log("[Slothing] Greenhouse scraper: Missing required fields", {
         title,
         company,
         description: !!description,
@@ -95,7 +95,7 @@ export class GreenhouseScraper extends BaseScraper {
           });
         }
       } catch (err) {
-        console.error("[Columbus] Error scraping Greenhouse job card:", err);
+        console.error("[Slothing] Error scraping Greenhouse job card:", err);
       }
     }
 

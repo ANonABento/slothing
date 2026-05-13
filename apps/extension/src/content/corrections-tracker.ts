@@ -178,7 +178,7 @@ export class CorrectionsTracker {
           confidence: entry.confidence,
         }),
       ).catch((err) => {
-        console.error("[Columbus] saveCorrection failed:", err);
+        console.error("[Slothing] saveCorrection failed:", err);
       });
 
       // Once we've fired the correction we can stop listening — no point

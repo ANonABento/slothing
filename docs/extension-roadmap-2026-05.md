@@ -1,4 +1,4 @@
-# Columbus Extension — May 2026 roadmap
+# Slothing Extension — May 2026 roadmap
 
 > Authored 2026-05-12. Drift-check reference for tasks #27–#41.
 > This is a **plan**, not an implementation. Files and ranges are pointers for follow-up tickets.
@@ -170,7 +170,7 @@ These five are small enough to ship together. Each is <100 LOC of touch.
 **Files.**
 - Find the current fill site: `grep -rn "TRIGGER_FILL" apps/extension/src/` — likely `apps/extension/src/content/index.ts` + a fill helper.
 - New file: `apps/extension/src/content/ui/confidence-band.ts` — exports the zone classification + DOM marker helpers.
-- `apps/extension/src/content/ui/styles.css` — add `.columbus-zone-yellow` outline + popover styles.
+- `apps/extension/src/content/ui/styles.css` — add `.slothing-zone-yellow` outline + popover styles.
 
 **Acceptance.**
 - A field with confidence 0.9 fills with no marker.

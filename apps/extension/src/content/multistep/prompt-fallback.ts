@@ -28,7 +28,7 @@ export interface PromptStepFallbackOptions {
   providerLabel?: string;
 }
 
-const TOAST_CONTAINER_ID = "columbus-multistep-toast";
+const TOAST_CONTAINER_ID = "slothing-multistep-toast";
 const TOAST_TIMEOUT_MS = 12_000;
 
 /**
@@ -44,7 +44,7 @@ export function promptStepFallback(
   // stack toasts on top of each other.
   const existing = document.getElementById(TOAST_CONTAINER_ID);
   if (existing) {
-    existing.dispatchEvent(new CustomEvent("columbus-dismiss"));
+    existing.dispatchEvent(new CustomEvent("slothing-dismiss"));
     existing.remove();
   }
 
@@ -143,7 +143,7 @@ export function promptStepFallback(
 
     yesBtn.addEventListener("click", () => settle(true));
     noBtn.addEventListener("click", () => settle(false));
-    toast.addEventListener("columbus-dismiss", () => settle(false));
+    toast.addEventListener("slothing-dismiss", () => settle(false));
 
     const timeoutId = window.setTimeout(() => settle(false), TOAST_TIMEOUT_MS);
 
@@ -160,6 +160,6 @@ export function promptStepFallback(
 export function dismissStepFallback(): void {
   const existing = document.getElementById(TOAST_CONTAINER_ID);
   if (!existing) return;
-  existing.dispatchEvent(new CustomEvent("columbus-dismiss"));
+  existing.dispatchEvent(new CustomEvent("slothing-dismiss"));
   existing.remove();
 }

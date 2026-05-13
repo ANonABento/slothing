@@ -1,7 +1,7 @@
 /* Content script styles - injected into pages */
 
-/* Columbus extension overlay styles */
-.columbus-overlay {
+/* Slothing extension overlay styles */
+.slothing-overlay {
   position: fixed;
   top: 0;
   right: 0;
@@ -15,7 +15,7 @@
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-.columbus-panel {
+.slothing-panel {
   background: white;
   border-radius: 12px;
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
@@ -25,24 +25,24 @@
   overflow: auto;
 }
 
-.columbus-panel-header {
+.slothing-panel-header {
   padding: 16px 20px;
   background: linear-gradient(135deg, #14b8a6, #0ea5e9);
   border-radius: 12px 12px 0 0;
   color: white;
 }
 
-.columbus-panel-header h2 {
+.slothing-panel-header h2 {
   margin: 0;
   font-size: 18px;
   font-weight: 600;
 }
 
-.columbus-panel-body {
+.slothing-panel-body {
   padding: 20px;
 }
 
-.columbus-panel-footer {
+.slothing-panel-footer {
   padding: 16px 20px;
   border-top: 1px solid #eee;
   display: flex;
@@ -51,24 +51,24 @@
 }
 
 /* Field highlight styles */
-.columbus-field-highlight {
+.slothing-field-highlight {
   outline: 2px solid #14b8a6 !important;
   outline-offset: 2px !important;
   background-color: rgba(20, 184, 166, 0.05) !important;
 }
 
-.columbus-field-highlight-low {
+.slothing-field-highlight-low {
   outline-color: #f59e0b !important;
   background-color: rgba(245, 158, 11, 0.05) !important;
 }
 
-.columbus-field-filled {
+.slothing-field-filled {
   outline-color: #10b981 !important;
   background-color: rgba(16, 185, 129, 0.05) !important;
 }
 
 /* Tooltip styles */
-.columbus-tooltip {
+.slothing-tooltip {
   position: absolute;
   background: #1a1a1a;
   color: white;
@@ -83,7 +83,7 @@
   text-overflow: ellipsis;
 }
 
-.columbus-tooltip::after {
+.slothing-tooltip::after {
   content: '';
   position: absolute;
   top: 100%;
@@ -94,7 +94,7 @@
 }
 
 /* Button styles */
-.columbus-btn {
+.slothing-btn {
   padding: 10px 20px;
   border: none;
   border-radius: 8px;
@@ -104,26 +104,26 @@
   transition: all 0.2s;
 }
 
-.columbus-btn-primary {
+.slothing-btn-primary {
   background: linear-gradient(135deg, #14b8a6, #0ea5e9);
   color: white;
 }
 
-.columbus-btn-primary:hover {
+.slothing-btn-primary:hover {
   opacity: 0.9;
 }
 
-.columbus-btn-secondary {
+.slothing-btn-secondary {
   background: #f0f0f0;
   color: #333;
 }
 
-.columbus-btn-secondary:hover {
+.slothing-btn-secondary:hover {
   background: #e5e5e5;
 }
 
 /* Notification toast */
-.columbus-toast {
+.slothing-toast {
   position: fixed;
   bottom: 20px;
   right: 20px;
@@ -134,31 +134,31 @@
   font-size: 14px;
   font-weight: 500;
   z-index: 999999;
-  animation: columbus-slide-up 0.3s ease;
+  animation: slothing-slide-up 0.3s ease;
 }
 
-.columbus-toast-error {
+.slothing-toast-error {
   background: #ef4444;
 }
 
-.columbus-toast-applied {
+.slothing-toast-applied {
   cursor: pointer;
 }
 
-.columbus-toast-applied:focus-visible {
+.slothing-toast-applied:focus-visible {
   outline: 2px solid white;
   outline-offset: 2px;
 }
 
 /* P3/#38 — passive LinkedIn capture toast. Same base look as
- * .columbus-toast but shifted hue so users can distinguish "saved for later"
+ * .slothing-toast but shifted hue so users can distinguish "saved for later"
  * from the apply-tracking confirmation. */
-.columbus-toast-linkedin-capture {
+.slothing-toast-linkedin-capture {
   background: #0a66c2;
   cursor: default;
 }
 
-@keyframes columbus-slide-up {
+@keyframes slothing-slide-up {
   from {
     transform: translateY(20px);
     opacity: 0;
@@ -170,7 +170,7 @@
 }
 
 /* Badge on detected fields */
-.columbus-field-badge {
+.slothing-field-badge {
   position: absolute;
   top: -8px;
   right: -8px;
@@ -189,12 +189,12 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-.columbus-field-badge:hover {
+.slothing-field-badge:hover {
   transform: scale(1.1);
 }
 
 /* Suggestion dropdown */
-.columbus-suggestions {
+.slothing-suggestions {
   position: absolute;
   top: 100%;
   left: 0;
@@ -209,27 +209,27 @@
   overflow-y: auto;
 }
 
-.columbus-suggestion-item {
+.slothing-suggestion-item {
   padding: 10px 12px;
   cursor: pointer;
   border-bottom: 1px solid #eee;
 }
 
-.columbus-suggestion-item:last-child {
+.slothing-suggestion-item:last-child {
   border-bottom: none;
 }
 
-.columbus-suggestion-item:hover {
+.slothing-suggestion-item:hover {
   background: #f5f5f5;
 }
 
-.columbus-suggestion-question {
+.slothing-suggestion-question {
   font-size: 12px;
   color: #666;
   margin-bottom: 4px;
 }
 
-.columbus-suggestion-answer {
+.slothing-suggestion-answer {
   font-size: 14px;
   color: #333;
   white-space: nowrap;
@@ -237,7 +237,7 @@
   text-overflow: ellipsis;
 }
 
-.columbus-suggestion-similarity {
+.slothing-suggestion-similarity {
   font-size: 11px;
   color: #14b8a6;
   float: right;
@@ -248,7 +248,7 @@
    markers feel continuous with the popup. We intentionally don't import the
    popup stylesheet — content scripts don't share its scope. */
 
-.columbus-zone-yellow {
+.slothing-zone-yellow {
   /* Visible 1px warning-tone outline. We layer a box-shadow ring on top of the
      outline so even browsers/themes that suppress outline rendering on inputs
      still surface the band. */
@@ -259,7 +259,7 @@
   transition: outline-color 120ms ease, background-color 120ms ease;
 }
 
-.columbus-zone-badge {
+.slothing-zone-badge {
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -281,16 +281,16 @@
   z-index: 99999 !important;
 }
 
-.columbus-zone-badge:hover {
+.slothing-zone-badge:hover {
   background: #ddd0f5 !important;
 }
 
-.columbus-zone-badge:focus-visible {
+.slothing-zone-badge:focus-visible {
   outline: 2px solid #6d4aaa !important;
   outline-offset: 2px !important;
 }
 
-.columbus-zone-popover {
+.slothing-zone-popover {
   position: absolute !important;
   display: block !important;
   min-width: 220px !important;
@@ -307,7 +307,7 @@
   line-height: 1.4 !important;
 }
 
-.columbus-zone-popover__title {
+.slothing-zone-popover__title {
   display: block !important;
   font-size: 11px !important;
   font-weight: 600 !important;
@@ -318,7 +318,7 @@
   padding: 0 4px !important;
 }
 
-.columbus-zone-popover__list {
+.slothing-zone-popover__list {
   list-style: none !important;
   padding: 0 !important;
   margin: 0 !important;
@@ -327,14 +327,14 @@
   gap: 2px !important;
 }
 
-.columbus-zone-popover__list > li {
+.slothing-zone-popover__list > li {
   display: block !important;
   list-style: none !important;
   padding: 0 !important;
   margin: 0 !important;
 }
 
-.columbus-zone-popover__item {
+.slothing-zone-popover__item {
   display: flex !important;
   flex-direction: column !important;
   align-items: flex-start !important;
@@ -349,18 +349,18 @@
   color: inherit !important;
 }
 
-.columbus-zone-popover__item:hover {
+.slothing-zone-popover__item:hover {
   background: #f9f6f1 !important;
   border-color: #e6dfd6 !important;
 }
 
-.columbus-zone-popover__label {
+.slothing-zone-popover__label {
   display: block !important;
   font-size: 11px !important;
   color: #6b6373 !important;
 }
 
-.columbus-zone-popover__value {
+.slothing-zone-popover__value {
   display: block !important;
   font-size: 13px !important;
   color: #241c30 !important;

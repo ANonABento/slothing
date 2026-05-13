@@ -430,7 +430,7 @@ describe("DOM contract — capture path must not mutate the LinkedIn page", () =
     expect(linkedInRoot!.outerHTML).toBe(beforeHtml);
 
     // Every observed mutation must target document.body and only add nodes
-    // that are toast containers (the columbus-toast class). No node belonging
+    // that are toast containers (the slothing-toast class). No node belonging
     // to the LinkedIn subtree may appear as a target or as added/removed.
     for (const record of observedMutations) {
       const target = record.target as Node;
@@ -439,14 +439,14 @@ describe("DOM contract — capture path must not mutate the LinkedIn page", () =
       const targetIsBody = target === document.body;
       const targetIsOurToast =
         target instanceof Element &&
-        target.classList?.contains("columbus-toast");
+        target.classList?.contains("slothing-toast");
       expect(targetIsBody || targetIsOurToast).toBe(true);
 
-      // Every added node must be a columbus-toast element (not a LinkedIn
+      // Every added node must be a slothing-toast element (not a LinkedIn
       // node that got re-parented).
       record.addedNodes.forEach((node) => {
         if (node instanceof Element) {
-          expect(node.classList.contains("columbus-toast")).toBe(true);
+          expect(node.classList.contains("slothing-toast")).toBe(true);
         }
       });
       // Nothing should be removed from the LinkedIn-side either.
@@ -454,7 +454,7 @@ describe("DOM contract — capture path must not mutate the LinkedIn page", () =
         if (node instanceof Element) {
           // A toast can replace its older self — that's the only legitimate
           // removal we expect.
-          expect(node.classList.contains("columbus-toast")).toBe(true);
+          expect(node.classList.contains("slothing-toast")).toBe(true);
         }
       });
     }

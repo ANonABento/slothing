@@ -21,7 +21,7 @@ export const EXTENSION_STORES: ExtensionStore[] = [
     ctaLabel: "Install for Chrome",
     compactLabel: "Chrome",
     // TODO: Replace with the live Chrome Web Store listing once submitted.
-    url: "https://chromewebstore.google.com/detail/slothing-columbus-extension/placeholder",
+    url: "https://chromewebstore.google.com/detail/slothing-slothing-extension/placeholder",
     icon: Chrome,
   },
   {
@@ -30,7 +30,7 @@ export const EXTENSION_STORES: ExtensionStore[] = [
     ctaLabel: "Install for Edge",
     compactLabel: "Edge",
     // TODO: Replace with the live Microsoft Edge Add-ons listing once submitted.
-    url: "https://microsoftedge.microsoft.com/addons/detail/slothing-columbus/placeholder",
+    url: "https://microsoftedge.microsoft.com/addons/detail/slothing-slothing/placeholder",
     icon: Compass,
   },
   {
@@ -39,7 +39,7 @@ export const EXTENSION_STORES: ExtensionStore[] = [
     ctaLabel: "Install for Firefox",
     compactLabel: "Firefox",
     // TODO: Replace with the live Firefox AMO listing once submitted.
-    url: "https://addons.mozilla.org/firefox/addon/slothing-columbus/placeholder",
+    url: "https://addons.mozilla.org/firefox/addon/slothing-slothing/placeholder",
     icon: Globe,
   },
   {

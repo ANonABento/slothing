@@ -9,7 +9,7 @@ All routes prefixed with `/en` (default locale; `localePrefix: "always"`). Dev s
 | home | `/en` | Landing page |
 | pricing | `/en/pricing` | |
 | ats-scanner | `/en/ats-scanner` | Public scanner |
-| extension-marketing | `/en/extension` | Columbus marketing page |
+| extension-marketing | `/en/extension` | Slothing marketing page |
 | vs-index | `/en/vs` | Competitor comparison hub |
 | vs-competitor | `/en/vs/<slug>` | Hit a real comparator (e.g. `teal`, `huntr`) — gather slugs from `/en/vs` |
 | privacy | `/en/privacy` | |

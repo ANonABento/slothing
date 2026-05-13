@@ -8,7 +8,7 @@ The product is branded **Slothing** (domain: slothing.work). The repo path is st
 This repo is a pnpm + Turborepo monorepo:
 
 - `apps/web` is the Next.js application. Most older `src/...` references in this guide mean `apps/web/src/...`.
-- `apps/extension` is the Columbus browser extension.
+- `apps/extension` is the Slothing browser extension.
 - `packages/shared` contains shared types, Zod schemas, formatters, and scoring logic consumed by both apps.
 - Run workspace commands from the repo root with `pnpm`.
 
@@ -25,7 +25,7 @@ This repo is a pnpm + Turborepo monorepo:
 - Interview prep (voice + text) with AI feedback
 - Cover letter drafting and editing
 - Analytics, calendar, salary tools, email templates
-- Columbus browser extension for in-page job capture
+- Slothing browser extension for in-page job capture
 - **Google Integration**: Calendar sync, Drive import/backup, Gmail import/send, Docs/Sheets export, Contacts, Tasks
 
 Common pitfall: dashboard onboarding steps live in `apps/web/src/lib/onboarding/steps.ts` now; add/remove steps there, and restore dismissed onboarding later with `setOnboardingDismissedAt(userId, null)`.
@@ -72,7 +72,7 @@ apps/web/src/
 │   │   ├── emails/
 │   │   ├── analytics/
 │   │   ├── salary/
-│   │   ├── extension/      # Columbus extension companion pages
+│   │   ├── extension/      # Slothing extension companion pages
 │   │   └── settings/
 │   ├── (marketing)/        # Public marketing pages
 │   ├── api/                # API routes
@@ -202,7 +202,7 @@ Tables (selected):
 - `analytics_snapshots`, `job_status_history`
 - `salary_offers`, `ats_scan_history`
 - `custom_templates`, `prompt_variants`, `prompt_variant_results`
-- `extension_sessions`, `answer_bank`, `field_mappings` — Columbus extension
+- `extension_sessions`, `answer_bank`, `field_mappings` — Slothing extension
 - `reminders`, `notifications`, `company_research`, `resume_ab_tracking`, `settings`
 
 ### Dedupe constraints (T1)
@@ -232,11 +232,9 @@ Every user-owned table has `user_id TEXT NOT NULL DEFAULT 'default'` plus a `idx
 - `GET/POST /api/opportunities` — list/create
 - `GET/PATCH/DELETE /api/opportunities/[id]`
 - `POST /api/opportunities/scrape` — URL auto-scrape used by the Add Opportunity wizard
-- `POST /api/opportunities/from-extension` — Columbus extension ingest
+- `POST /api/opportunities/from-extension` — Slothing extension ingest
 - `GET /api/opportunities/templates`
 - `/api/jobs` and `/api/jobs/*` — removed; use `/api/opportunities`
-
-Columbus is the browser-extension sub-brand inside Slothing. Keep extension UI strings as Columbus unless a product naming task explicitly asks for a rename.
 
 ### Document Studio
 
@@ -388,7 +386,7 @@ pnpm --filter @slothing/web test:e2e
 npx playwright test --ui
 ```
 
-Tests live in `apps/web/e2e/`. Columbus extension has its own E2E pipeline under `apps/extension/tests/`.
+Tests live in `apps/web/e2e/`. Slothing extension has its own E2E pipeline under `apps/extension/tests/`.
 
 ### Test pattern
 
@@ -414,7 +412,7 @@ describe("MyFunction", () => {
 
 A pre-commit Husky hook runs `pnpm lint-staged` + `pnpm run type-check`. Don't bypass with `--no-verify`.
 
-The Columbus extension has a separate workflow (`.github/workflows/extension-e2e.yml`).
+The Slothing extension has a separate workflow (`.github/workflows/extension-e2e.yml`).
 
 ---
 
@@ -483,9 +481,9 @@ The Columbus extension has a separate workflow (`.github/workflows/extension-e2e
 7. **Always scope DB queries by `user_id`.** Even in single-user dev mode the schema requires it. `lib/auth.ts` resolves it via NextAuth or the local-dev fallback.
 8. **Schema changes are additive migrations, not rewrites.** Use the `PRAGMA table_info` + `ALTER TABLE ... ADD COLUMN` pattern already in `schema.ts`. Don't drop and recreate; existing dev DBs depend on it.
 9. **The `documents.file_hash` and `chunks` unique-hash indexes exist for dedupe (T1).** When ingesting new documents or bank chunks, hash first and short-circuit on collision instead of inserting blindly.
-10. **`/opportunities/review` is the inbound queue for scraped/extension opportunities.** New ingestion paths (URL scrape, Columbus extension, future integrations) should land in the review queue first — not directly in the tracked list.
+10. **`/opportunities/review` is the inbound queue for scraped/extension opportunities.** New ingestion paths (URL scrape, Slothing extension, future integrations) should land in the review queue first — not directly in the tracked list.
 11. **Pre-commit hook runs lint-staged + type-check.** If a hook fails, fix the underlying problem; don't pass `--no-verify`.
-12. **`docs/architecture.md` (lowercase)** is the canonical architecture doc. There used to be an uppercase `ARCHITECTURE.md` referencing the old "Columbus" name — it has been replaced.
+12. **`docs/architecture.md` (lowercase)** is the canonical architecture doc.
 13. **App pages should stay wide by default.** `width="narrow"` in `src/app/(app)/**/page.tsx` is lint-flagged; use `max-w-prose` for text-heavy blocks instead. See `docs/page-width.md`.
 14. **Welcome email series state is JSON on `user.welcome_series_state`.** The cron runs daily via `/api/cron/follow-ups`; all transactional sends should go through `lib/email/transactional.ts`.
 

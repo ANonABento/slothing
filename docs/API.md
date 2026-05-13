@@ -112,7 +112,7 @@ Legacy compatibility: `/api/import/jobs` accepts the same payloads.
 
 ### POST /api/opportunities/from-extension
 
-Import scraped opportunities from the Columbus browser extension. Requires `X-Extension-Token`.
+Import scraped opportunities from the Slothing browser extension. Requires `X-Extension-Token`.
 
 Scraped opportunities are always created with `status: "pending"` so the user can review them before moving them to Saved, Applied, or another workflow status. The endpoint also creates an unread in-app notification and returns the current pending count for badge/review UI.
 

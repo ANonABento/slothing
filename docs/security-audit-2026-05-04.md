@@ -236,7 +236,7 @@ package-lock.json                                            (npm audit fix non-
 
 ## Out of scope
 
-- Columbus extension (`columbus-extension/`) — has a separate task.
+- Slothing extension (`slothing-extension/`) — has a separate task.
 - Refactoring not driven by a finding.
 - Performance work.
 - Adding new features.

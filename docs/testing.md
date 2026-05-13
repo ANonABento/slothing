@@ -5,9 +5,9 @@
 This repo has two Playwright suites that must stay isolated:
 
 - The root app suite runs from `e2e/` and `tests/e2e/` with the root `@playwright/test` install.
-- The Chrome extension suite runs from `columbus-extension/tests/` with the extension package's own `@playwright/test` install.
+- The Chrome extension suite runs from `slothing-extension/tests/` with the extension package's own `@playwright/test` install.
 
-Playwright throws `Requiring @playwright/test second time` when one Node process loads two copies of the package. Any subproject with a nested `node_modules/@playwright/test` must be added to the root `playwright.config.ts` `testIgnore` list. Today that list excludes `columbus-extension/`; add a new glob there before introducing another Playwright workspace.
+Playwright throws `Requiring @playwright/test second time` when one Node process loads two copies of the package. Any subproject with a nested `node_modules/@playwright/test` must be added to the root `playwright.config.ts` `testIgnore` list. Today that list excludes `slothing-extension/`; add a new glob there before introducing another Playwright workspace.
 
 ## Smoke E2E
 
@@ -24,8 +24,8 @@ Current smoke coverage:
 
 - `npm run test:e2e` runs the full root Playwright suite across all configured projects.
 - `npm run test:e2e -- --grep "@smoke"` runs the root smoke set locally.
-- `npm run test:e2e -- --list` verifies root spec discovery; it should list zero `columbus-extension/` specs.
-- From `columbus-extension/`, `npm run test:e2e` runs the extension suite separately.
+- `npm run test:e2e -- --list` verifies root spec discovery; it should list zero `slothing-extension/` specs.
+- From `slothing-extension/`, `npm run test:e2e` runs the extension suite separately.
 
 ## CI Gates
 

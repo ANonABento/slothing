@@ -90,7 +90,7 @@ async function modeConnect() {
 
   // Clear any prior auth so we start fresh
   await sw.evaluate(() => new Promise((res) =>
-    chrome.storage.local.remove("columbus_extension", res),
+    chrome.storage.local.remove("slothing_extension", res),
   ));
   log("cleared prior auth");
 
@@ -127,7 +127,7 @@ async function modeConnect() {
 
   // Check what landed in localStorage on the page side
   const ls = await page.evaluate(() => {
-    try { return localStorage.getItem("columbus_extension_token"); }
+    try { return localStorage.getItem("slothing_extension_token"); }
     catch { return null; }
   });
   log("page localStorage token:", ls ? `<${ls.length} chars>` : "null");
@@ -136,7 +136,7 @@ async function modeConnect() {
   for (let i = 0; i < 10; i++) {
     await page.waitForTimeout(500);
     const storage = await getExtensionStorage(sw);
-    if (storage.columbus_extension?.authToken) {
+    if (storage.slothing_extension?.authToken) {
       log("✅ extension storage has token after", (i + 1) * 0.5, "s");
       break;
     }
@@ -144,9 +144,9 @@ async function modeConnect() {
 
   const finalStorage = await getExtensionStorage(sw);
   log("final extension storage:", JSON.stringify({
-    hasAuth: !!finalStorage.columbus_extension?.authToken,
-    tokenExpiry: finalStorage.columbus_extension?.tokenExpiry,
-    apiBase: finalStorage.columbus_extension?.apiBaseUrl,
+    hasAuth: !!finalStorage.slothing_extension?.authToken,
+    tokenExpiry: finalStorage.slothing_extension?.tokenExpiry,
+    apiBase: finalStorage.slothing_extension?.apiBaseUrl,
   }));
 
   const auth = await getAuthStatus(sw);
@@ -155,7 +155,7 @@ async function modeConnect() {
   // Also tail content-script logs from the page
   const pageLogs = await page.evaluate(() => {
     // We can't retroactively get logs but we can probe localStorage now
-    return { lsAfter: localStorage.getItem("columbus_extension_token") };
+    return { lsAfter: localStorage.getItem("slothing_extension_token") };
   });
   log("localStorage after pickup:", pageLogs.lsAfter ? "STILL THERE (pickup failed!)" : "cleared (pickup OK)");
 }

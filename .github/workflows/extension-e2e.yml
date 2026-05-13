@@ -1,4 +1,4 @@
-name: Columbus Extension E2E Tests
+name: Slothing Extension E2E Tests
 
 on:
   push:

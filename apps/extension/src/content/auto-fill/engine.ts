@@ -122,7 +122,7 @@ export class AutoFillEngine {
           try {
             options.onFilled?.({ field, value });
           } catch (cbErr) {
-            console.error("[Columbus] onFilled callback failed:", cbErr);
+            console.error("[Slothing] onFilled callback failed:", cbErr);
           }
         } else {
           result.skipped++;
@@ -152,7 +152,7 @@ export class AutoFillEngine {
 
     // De-dupe: if a badge already exists for this field, leave it alone.
     const existing = anchor.parentElement.querySelector(
-      `[data-columbus-badge-for="${cssEscape(fieldKey(field))}"]`,
+      `[data-slothing-badge-for="${cssEscape(fieldKey(field))}"]`,
     );
     if (existing) return;
 
@@ -172,7 +172,7 @@ export class AutoFillEngine {
         });
       },
     });
-    badge.setAttribute("data-columbus-badge-for", fieldKey(field));
+    badge.setAttribute("data-slothing-badge-for", fieldKey(field));
 
     // Place the badge in a small wrapper so it can be positioned next to the
     // field without disturbing the host layout. If the field already has a

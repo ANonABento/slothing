@@ -1,6 +1,6 @@
 # Developer Setup Guide
 
-This guide will help you set up Columbus for local development.
+This guide will help you set up Slothing for local development.
 
 ## Prerequisites
 
@@ -13,7 +13,7 @@ This guide will help you set up Columbus for local development.
 ```bash
 # Clone the repository
 git clone <repository-url>
-cd columbus-v1
+cd slothing-v1
 
 # Install dependencies
 npm install
@@ -107,7 +107,7 @@ npm run dev
 
 ## Database
 
-Columbus uses Drizzle ORM with libSQL/SQLite. Local development defaults to `file:./.local.db`; hosted deployments can point `TURSO_DATABASE_URL` at Turso and set `TURSO_AUTH_TOKEN` when required.
+Slothing uses Drizzle ORM with libSQL/SQLite. Local development defaults to `file:./.local.db`; hosted deployments can point `TURSO_DATABASE_URL` at Turso and set `TURSO_AUTH_TOKEN` when required.
 
 **Reset database:**
 ```bash
@@ -208,7 +208,7 @@ Restart the TypeScript server:
 
 ```bash
 # Check database exists
-ls -la columbus.db
+ls -la slothing.db
 
 # Reset if corrupted
 rm .local.db && npm run dev

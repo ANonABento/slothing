@@ -28,7 +28,7 @@ export interface ExtensionContext {
 }
 
 export async function launchExtensionContext(): Promise<ExtensionContext> {
-  const userDataDir = fs.mkdtempSync(path.join(os.tmpdir(), "columbus-pw-"));
+  const userDataDir = fs.mkdtempSync(path.join(os.tmpdir(), "slothing-pw-"));
 
   const context = await chromium.launchPersistentContext(userDataDir, {
     headless: false,
@@ -101,7 +101,7 @@ export async function seedExtensionStorage(
     await page.goto(`chrome-extension://${extensionId}/options.html`);
     await page.evaluate(
       (storageData) =>
-        chrome.storage.local.set({ columbus_extension: storageData }),
+        chrome.storage.local.set({ slothing_extension: storageData }),
       data,
     );
   } finally {

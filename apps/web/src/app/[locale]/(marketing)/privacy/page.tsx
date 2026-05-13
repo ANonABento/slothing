@@ -70,7 +70,7 @@ export default function PrivacyPage() {
             explicitly use.
           </p>
           <p className="mt-4">
-            <strong>Browser extension.</strong> The Columbus browser extension
+            <strong>Browser extension.</strong> The Slothing browser extension
             requests only the permissions needed to read job pages you visit on
             supported job sites and to keep your connection token in extension
             storage. It does not request Gmail, Calendar, Drive, or Contacts

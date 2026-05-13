@@ -96,7 +96,7 @@ function useTokenGenerator() {
         // page. The extension polls this key on next activation and deletes it
         // after pickup. Server-minted localStorage tokens use a 5-minute TTL.
         localStorage.setItem(
-          "columbus_extension_token",
+          "slothing_extension_token",
           JSON.stringify({ token, expiresAt }),
         );
         setStatus("success");

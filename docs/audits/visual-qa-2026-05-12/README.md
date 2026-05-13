@@ -1,7 +1,7 @@
 # Visual QA — Slothing mascot hero + pricing integration — 2026-05-12
 
 **Branch:** `followup/slothing-visual-qa` (based on `integration/overnight-claude-slothing`).
-**Tip:** `c2ef12e` (docs: add Columbus extension follow-up roadmap).
+**Tip:** `c2ef12e` (docs: add Slothing extension follow-up roadmap).
 **Scope:** verify the integrated landing hero (mascot variant), pricing tiers, and security/trust section render correctly on desktop and mobile, with no fabricated metrics and correct CTA targets.
 **Methodology:** Vitest unit suites + Playwright screenshots at 1440×900 (desktop), 768×1024 (tablet), and 390×844 (mobile) against a dev server in this worktree at `http://localhost:3100`.
 

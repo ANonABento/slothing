@@ -2,7 +2,7 @@
 
 Browser extension for Slothing that auto-fills job applications and imports job listings from major job sites.
 
-The extension ships under the Slothing brand. `Columbus` survives as an internal codename in source comments, console-log prefixes (`[Columbus]`), CSS/DOM class names, storage keys, and legacy repo paths; do not reintroduce it into user-facing UI strings.
+The extension ships under the Slothing brand. `Slothing` survives as an internal codename in source comments, console-log prefixes (`[Slothing]`), CSS/DOM class names, storage keys, and legacy repo paths; do not reintroduce it into user-facing UI strings.
 
 ## Prerequisites
 
@@ -20,7 +20,7 @@ pnpm --filter @slothing/extension build:chrome   # → apps/extension/dist/
 pnpm --filter @slothing/extension build:firefox  # → apps/extension/dist-firefox/
 ```
 
-The build pipeline pulls icons from `icons/source/columbus.svg` (a branded compass design), renders them at 16/32/48/128 via `sharp`, and copies them into `src/assets/icons/`, `dist/icons/`, and `dist-firefox/icons/` automatically. All four PNGs stay under 4KB.
+The build pipeline pulls icons from `icons/source/slothing.svg` (a branded compass design), renders them at 16/32/48/128 via `sharp`, and copies them into `src/assets/icons/`, `dist/icons/`, and `dist-firefox/icons/` automatically. All four PNGs stay under 4KB.
 
 ### Load in Chrome
 
@@ -321,7 +321,7 @@ CI workflow at `.github/workflows/extension-e2e.yml` runs the e2e suite on every
 - [ ] Name, email, phone, LinkedIn, GitHub fields populate correctly
 - [ ] Select dropdowns handle partial matching
 - [ ] Fields already filled are not overwritten (current behavior: overwrites)
-- [ ] Console shows `[Columbus] Detected fields: N`
+- [ ] Console shows `[Slothing] Detected fields: N`
 
 #### Job Scraping (test on each supported site)
 
@@ -359,7 +359,7 @@ Before broad release, run the Workday and Greenhouse live checklist in [`docs/ex
 
 Open DevTools on any page:
 
-- **Console**: Filter by `[Columbus]` to see extension logs
+- **Console**: Filter by `[Slothing]` to see extension logs
 - **Network**: Filter by `/api/extension/` to see API calls
 - **Application > Storage > Extension Storage**: View stored auth/settings
 - **Background page**: `chrome://extensions` > Slothing > "service worker" link

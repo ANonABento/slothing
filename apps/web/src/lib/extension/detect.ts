@@ -1,5 +1,5 @@
-export const EXTENSION_CONNECTED_STORAGE_KEY = "columbus_extension_token";
-export const EXTENSION_ID = process.env.NEXT_PUBLIC_COLUMBUS_EXTENSION_ID ?? "";
+export const EXTENSION_CONNECTED_STORAGE_KEY = "slothing_extension_token";
+export const EXTENSION_ID = process.env.NEXT_PUBLIC_SLOTHING_EXTENSION_ID ?? "";
 
 type ChromeRuntimeGlobal = {
   chrome?: {
