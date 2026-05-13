@@ -1,4 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import type { LLMConfig } from "@/types";
 
 const mockComplete = vi.fn();
@@ -12,6 +14,7 @@ vi.mock("@/lib/llm/client", () => ({
 
 // Must import after mock setup
 import { smartParseResume } from "./smart-parser";
+import { extractTextFromFile } from "./pdf";
 
 const WELL_FORMATTED_RESUME = `John Doe
 john@example.com | (555) 123-4567
@@ -272,5 +275,150 @@ Engineer at Corp
       startDate: "Sept 2024",
       endDate: "Present",
     });
+  });
+
+  it("parses dogfood markdown resumes with heading markers and ISO month dates", async () => {
+    const resume = readFileSync(
+      resolve("tests/fixtures/dogfood/edge-case-resume.md"),
+      "utf8",
+    );
+
+    const result = await smartParseResume(resume);
+
+    expect(result.confidence).toBeGreaterThanOrEqual(0.9);
+    expect(result.sectionsDetected).toEqual(
+      expect.arrayContaining([
+        "contact",
+        "summary",
+        "experience",
+        "skills",
+        "education",
+      ]),
+    );
+    expect(result.profile.contact).toMatchObject({
+      name: "Riley Chen",
+      email: "riley.chen@example.test",
+    });
+    expect(result.profile.experiences).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          title: "Product Engineer",
+          company: "Northstar Analytics",
+          startDate: "2025-02",
+          endDate: "Present",
+          highlights: expect.arrayContaining([
+            expect.stringContaining("42 account managers"),
+          ]),
+        }),
+        expect.objectContaining({
+          title: "Career Break",
+          startDate: "2023-04",
+          endDate: "2025-01",
+          highlights: expect.arrayContaining([
+            expect.stringContaining("parental leave"),
+          ]),
+        }),
+        expect.objectContaining({
+          title: "Operations Analyst",
+          company: "Brightline Logistics",
+          startDate: "2019-06",
+          endDate: "2023-03",
+          highlights: expect.arrayContaining([
+            expect.stringContaining("$120k per year"),
+          ]),
+        }),
+      ]),
+    );
+    expect(result.profile.skills?.map((skill) => skill.name)).toEqual(
+      expect.arrayContaining(["TypeScript", "React", "GraphQL", "Docker"]),
+    );
+    expect(result.profile.education?.[0]).toMatchObject({
+      institution: "University of Waterloo",
+      degree: "BMath",
+      field: "Statistics",
+    });
+  });
+
+  it("parses DOCX table-extracted resume text with unusual bullets without LLM", async () => {
+    const resume = readFileSync(
+      resolve("tests/fixtures/dogfood/table-docx-resume.txt"),
+      "utf8",
+    );
+
+    const result = await smartParseResume(resume);
+
+    expect(result.llmUsed).toBe(false);
+    expect(result.profile.contact?.name).toBe("Alex Rivera");
+    expect(
+      result.profile.experiences?.map((experience) => experience.company),
+    ).toEqual(expect.arrayContaining(["Northstar Labs", "CivicByte Studio"]));
+    const northstar = result.profile.experiences?.find(
+      (experience) => experience.company === "Northstar Labs",
+    );
+    expect(northstar).toMatchObject({
+      title: "Senior Platform Engineer",
+      startDate: "Jan 2022",
+      endDate: "Present",
+      current: true,
+    });
+    expect(northstar?.location).toBe("Toronto, ON");
+    expect(northstar?.highlights).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining("release dashboard"),
+        expect.stringContaining("manual deployment checks"),
+        expect.stringContaining("Mentored 4 engineers"),
+      ]),
+    );
+    expect(result.profile.education?.[0]).toMatchObject({
+      institution: "University of Waterloo",
+      degree: "BMath",
+      field: "Statistics",
+      startDate: "2015",
+      endDate: "2019",
+    });
+    expect(result.profile.skills?.map((skill) => skill.name)).toEqual(
+      expect.arrayContaining(["TypeScript", "Kubernetes", "OpenTelemetry"]),
+    );
+  });
+
+  it("extracts and parses the binary DOCX table resume fixture without LLM", async () => {
+    const resume = await extractTextFromFile(
+      resolve("tests/fixtures/dogfood/table-docx-resume.docx"),
+    );
+
+    expect(resume).toContain("Senior Platform Engineer");
+    expect(resume).toContain("Northstar Labs");
+
+    const result = await smartParseResume(resume);
+
+    expect(result.llmUsed).toBe(false);
+    expect(result.profile.contact?.name).toBe("Alex Rivera");
+    expect(result.profile.experiences).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          title: "Senior Platform Engineer",
+          company: "Northstar Labs",
+          startDate: "Jan 2022",
+          endDate: "Present",
+          current: true,
+        }),
+        expect.objectContaining({
+          title: "Developer Experience Engineer",
+          company: "CivicByte Studio",
+          startDate: "2019",
+          endDate: "2021",
+        }),
+      ]),
+    );
+    expect(result.profile.education?.[0]).toMatchObject({
+      institution: "University of Waterloo",
+      degree: "BMath",
+      field: "Statistics",
+      startDate: "2015",
+      endDate: "2019",
+    });
+    expect(result.profile.skills?.map((skill) => skill.name)).toEqual(
+      expect.arrayContaining(["TypeScript", "Kubernetes", "OpenTelemetry"]),
+    );
   });
 });

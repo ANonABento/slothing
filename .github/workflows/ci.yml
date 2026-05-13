@@ -27,7 +27,8 @@ jobs:
         with:
           filters: |
             app:
-              - '.github/workflows/ci.yml'
+              - '.github/workflows/*.yml'
+              - '.github/workflows/*.yaml'
               - 'apps/**'
               - 'packages/**'
               - 'pnpm-lock.yaml'
@@ -48,7 +49,7 @@ jobs:
           - name: Type check
             command: pnpm run type-check
           - name: Translation drift
-            command: pnpm --filter @slothing/web check:translations
+            command: pnpm --filter @slothing/web check:translations:preflight
           - name: Test
             command: pnpm run test:run
           - name: Lint

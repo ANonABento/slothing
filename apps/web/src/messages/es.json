@@ -7,11 +7,11 @@
   },
   "common": {
     "cancel": "Cancelar",
-    "back": "[es] Back",
+    "back": "Volver",
     "clear": "Borrar",
     "clearAll": "Borrar todo",
-    "delete": "[es] Delete",
-    "edit": "[es] Edit",
+    "delete": "Eliminar",
+    "edit": "Editar",
     "filters": "Filtros",
     "import": "Importar",
     "loading": "Cargando",
@@ -38,7 +38,7 @@
     "groups": {
       "home": "Inicio",
       "documents": "Documentos",
-      "pipeline": "Pipeline",
+      "pipeline": "Flujo",
       "prep": "Preparación",
       "reporting": "Informes"
     },
@@ -64,13 +64,13 @@
         "label": "Cambiar idioma",
         "description": "Elige el idioma para esta página."
       },
-      "features": "[es] Features",
-      "extension": "[es] Extension",
-      "howItWorks": "[es] How It Works",
-      "pricing": "[es] Pricing",
-      "signIn": "[es] Sign In",
-      "getStarted": "[es] Get Started",
-      "toggleMenu": "[es] Toggle menu"
+      "features": "Funciones",
+      "extension": "Extensión",
+      "howItWorks": "Cómo funciona",
+      "pricing": "Precios",
+      "signIn": "Iniciar sesión",
+      "getStarted": "Empezar",
+      "toggleMenu": "Alternar menú"
     }
   },
   "dashboard": {
@@ -203,7 +203,7 @@
       "readiness": "Preparación",
       "documents": "Documentos",
       "tailoredDocs": "Documentos personalizados",
-      "pipeline": "Pipeline"
+      "pipeline": "Flujo"
     },
     "today": {
       "title": "Hoy",
@@ -236,7 +236,7 @@
       "tailoredDetail": "{count, plural, one {# currículum} other {# currículums}} creados"
     },
     "pipeline": {
-      "title": "Pipeline",
+      "title": "Flujo",
       "description": "Estado de tus oportunidades activas.",
       "empty": "Agrega oportunidades para ver tu pipeline."
     },
@@ -248,76 +248,76 @@
       "emptyDescription": "Guarda o importa oportunidades para empezar a hacer seguimiento aquí."
     },
     "recentActivity": {
-      "title": "[es] Recent Activity",
+      "title": "Actividad reciente",
       "types": {
-        "document_uploaded": "[es] Uploaded",
-        "resume_generated": "[es] Generated resume for",
-        "job_added": "[es] Added job",
-        "job_applied": "[es] Applied to"
+        "document_uploaded": "Subido",
+        "resume_generated": "Currículum generado para",
+        "job_added": "Oportunidad agregada",
+        "job_applied": "Postulación enviada a"
       }
     }
   },
   "onboarding": {
     "steps": {
       "upload": {
-        "title": "[es] Upload Your Resume",
-        "description": "[es] Drag and drop your resume to get started, or skip this step and add it later.",
-        "dropHint": "[es] Drop your PDF or DOCX here, or head to <documents>Documents</documents> after setup to add it later."
+        "title": "Sube tu currículum",
+        "description": "Arrastra y suelta tu currículum para comenzar, o salta este paso y agrégalo más tarde.",
+        "dropHint": "Suelta tu PDF o DOCX aquí, o ve a <documents>Documentos</documents> después de la configuración para agregarlo más tarde."
       },
       "review": {
-        "title": "[es] Review Your Profile",
-        "description": "[es] After uploading, review the extracted entries and edit anything that needs fixing.",
+        "title": "Revisa tu perfil",
+        "description": "Después de subirlo, revisa las entradas extraídas y edita cualquier dato que necesite corrección.",
         "sections": {
-          "contactInfo": "[es] Contact info",
-          "workExperience": "[es] Work experience",
-          "education": "[es] Education",
-          "skillsProjects": "[es] Skills & projects"
+          "contactInfo": "Información de contacto",
+          "workExperience": "Experiencia laboral",
+          "education": "Educación",
+          "skillsProjects": "Habilidades y proyectos"
         }
       },
       "builder": {
-        "title": "[es] Build Your Starter Profile",
-        "description": "[es] Answer a few quick prompts so Slothing can organize your career details without a resume upload.",
+        "title": "Crea tu perfil inicial",
+        "description": "Responde algunas preguntas rápidas para que Slothing organice tus datos profesionales sin subir un currículum.",
         "fields": {
-          "name": "[es] Name",
-          "email": "[es] Email",
-          "targetRole": "[es] Target role",
-          "backgroundSummary": "[es] Background summary",
-          "education": "[es] Education",
-          "school": "[es] School",
-          "degree": "[es] Degree",
-          "field": "[es] Field",
-          "topSkills": "[es] Top skills",
-          "company": "[es] Company / organisation",
-          "roleTitle": "[es] Role / title",
-          "roleHighlights": "[es] Role highlights (one per line, up to 3)",
-          "projectName": "[es] Project name",
-          "projectSummary": "[es] What did you build?",
-          "projectHighlights": "[es] Project highlights (one per line)",
-          "achievements": "[es] Honours, awards, leadership (comma-separated)"
+          "name": "Nombre",
+          "email": "Correo electrónico",
+          "targetRole": "Puesto objetivo",
+          "backgroundSummary": "Resumen de trayectoria",
+          "education": "Educación",
+          "school": "Institución",
+          "degree": "Título",
+          "field": "Área",
+          "topSkills": "Habilidades principales",
+          "company": "Empresa u organización",
+          "roleTitle": "Puesto o título",
+          "roleHighlights": "Logros del puesto (uno por línea, hasta 3)",
+          "projectName": "Nombre del proyecto",
+          "projectSummary": "¿Qué construiste?",
+          "projectHighlights": "Logros del proyecto (uno por línea)",
+          "achievements": "Reconocimientos, premios, liderazgo (separados por comas)"
         },
         "placeholders": {
-          "targetRole": "[es] Frontend intern, project manager, data analyst",
-          "backgroundSummary": "[es] A sentence about your background, interests, or next move",
-          "topSkills": "[es] Customer service, Excel, Python",
-          "company": "[es] Campus cafe",
-          "roleTitle": "[es] Barista",
-          "roleHighlights": "[es] Pulled espresso shots\nTrained 3 new baristas",
-          "projectName": "[es] Community pantry dashboard",
-          "projectSummary": "[es] A class project that tracked donations and volunteer shifts",
-          "projectHighlights": "[es] Built a filterable tracker\nPresented findings to class",
-          "achievements": "[es] Residence council secretary, Dean's list"
+          "targetRole": "Practicante frontend, gerente de proyectos, analista de datos",
+          "backgroundSummary": "Una frase sobre tu trayectoria, intereses o próximo paso",
+          "topSkills": "Atención al cliente, Excel, Python",
+          "company": "Cafetería del campus",
+          "roleTitle": "Encargado de cafetería",
+          "roleHighlights": "Preparé bebidas espresso\nCapacité a 3 nuevos baristas",
+          "projectName": "Panel de despensa comunitaria",
+          "projectSummary": "Un proyecto de clase que rastreaba donaciones y turnos de voluntariado",
+          "projectHighlights": "Construí un panel filtrable\nPresenté resultados a la clase",
+          "achievements": "Secretaría del consejo residencial, lista del decano"
         },
         "optional": {
-          "title": "[es] Add a role, project, or honour (optional)",
-          "hide": "[es] Hide",
-          "add": "[es] Add"
+          "title": "Agrega un puesto, proyecto o reconocimiento (opcional)",
+          "hide": "Ocultar",
+          "add": "Agregar"
         },
         "actions": {
-          "saving": "[es] Saving",
-          "saveContinue": "[es] Save and continue"
+          "saving": "Guardando",
+          "saveContinue": "Guardar y continuar"
         },
         "errors": {
-          "save": "[es] Unable to save your profile starter."
+          "save": "No se pudo guardar tu perfil inicial."
         }
       }
     }
@@ -380,7 +380,7 @@
       "greenhouse": "Greenhouse",
       "lever": "Lever",
       "devpost": "Devpost",
-      "manual": "Manual",
+      "manual": "Agregado manual",
       "url": "URL"
     },
     "remote": {
@@ -425,402 +425,402 @@
   },
   "interview": {
     "summary": {
-      "title": "[es] Interview Complete!",
-      "description": "[es] You answered all {count, plural, one {# question} other {# questions}}. Review your responses and feedback below.",
+      "title": "Entrevista completada",
+      "description": "Respondiste {count, plural, one {# pregunta} other {# preguntas}}. Revisa tus respuestas y comentarios abajo.",
       "actions": {
-        "startNew": "[es] Start New Interview",
-        "research": "[es] Research {company}"
+        "startNew": "Iniciar nueva entrevista",
+        "research": "Investigar {company}"
       },
       "insights": {
-        "title": "[es] Performance Insights",
-        "questionsAnswered": "[es] Questions Answered",
-        "responseQuality": "[es] Response Quality",
-        "feedbackReceived": "[es] Feedback Received"
+        "title": "Análisis de desempeño",
+        "questionsAnswered": "Preguntas respondidas",
+        "responseQuality": "Calidad de la respuesta",
+        "feedbackReceived": "Comentarios recibidos"
       },
       "performanceLevels": {
-        "detailed": "[es] Detailed",
-        "good": "[es] Good",
-        "brief": "[es] Brief"
+        "detailed": "Detallada",
+        "good": "Buena",
+        "brief": "Breve"
       },
       "responses": {
-        "title": "[es] Your Responses",
-        "skipped": "[es] Skipped",
-        "skippedShort": "[es] Skipped - revisit later",
-        "noAnswer": "[es] No answer provided",
-        "skippedHint": "[es] Skipped - revisit this prompt when you are ready.",
-        "yourAnswer": "[es] Your Answer",
-        "aiFeedback": "[es] AI Feedback"
+        "title": "Tus respuestas",
+        "skipped": "Omitida",
+        "skippedShort": "Omitida; revísala más tarde",
+        "noAnswer": "No se proporcionó respuesta",
+        "skippedHint": "Omitida; vuelve a esta pregunta cuando estés listo.",
+        "yourAnswer": "Tu respuesta",
+        "aiFeedback": "Comentarios de IA"
       }
     },
     "jobSelection": {
-      "title": "[es] Select a job to practice for:",
+      "title": "Selecciona una oportunidad para practicar:",
       "empty": {
-        "title": "[es] No Opportunities to Practice For",
-        "description": "[es] Add a job description first to get personalized interview questions based on the role.",
-        "addOpportunity": "[es] Add an Opportunity"
+        "title": "No hay oportunidades para practicar",
+        "description": "Agrega primero una descripción del puesto para obtener preguntas de entrevista personalizadas.",
+        "addOpportunity": "Agregar una oportunidad"
       },
       "actions": {
-        "quickPractice": "[es] Quick Practice",
-        "textPractice": "[es] Text Practice",
-        "voicePractice": "[es] Voice Practice",
-        "prepGuide": "[es] Prep Guide",
-        "hidePrepGuide": "[es] Hide Prep Guide",
-        "companyResearch": "[es] Company Research"
+        "quickPractice": "Práctica rápida",
+        "textPractice": "Práctica por texto",
+        "voicePractice": "Práctica por voz",
+        "prepGuide": "Guía de preparación",
+        "hidePrepGuide": "Ocultar guía",
+        "companyResearch": "Investigación de la empresa"
       },
       "controls": {
-        "difficulty": "[es] Difficulty:",
-        "questionCount": "[es] {count} questions",
-        "timer": "[es] Timer"
+        "difficulty": "Dificultad:",
+        "questionCount": "{count} preguntas",
+        "timer": "Temporizador"
       },
       "difficulty": {
-        "entry": "[es] Entry Level",
-        "mid": "[es] Mid Level",
-        "senior": "[es] Senior Level",
-        "executive": "[es] Executive"
+        "entry": "Nivel inicial",
+        "mid": "Nivel intermedio",
+        "senior": "Nivel sénior",
+        "executive": "Ejecutivo"
       }
     },
     "quickPractice": {
-      "title": "[es] Practice {category}",
-      "description": "[es] Pick a short warm-up and jump straight into questions.",
+      "title": "Practicar {category}",
+      "description": "Elige un calentamiento breve y pasa directo a las preguntas.",
       "fields": {
-        "category": "[es] Category",
-        "questions": "[es] Questions",
-        "difficulty": "[es] Difficulty"
+        "category": "Categoría",
+        "questions": "Preguntas",
+        "difficulty": "Dificultad"
       },
       "categories": {
-        "behavioral": "[es] Behavioral",
-        "technical": "[es] Technical",
-        "situational": "[es] Situational",
-        "general": "[es] General",
-        "cultural-fit": "[es] Cultural Fit"
+        "behavioral": "Conductual",
+        "technical": "Técnica",
+        "situational": "Situacional",
+        "general": "Común",
+        "cultural-fit": "Ajuste cultural"
       },
-      "questionCount": "[es] {count} questions",
+      "questionCount": "{count} preguntas",
       "difficulty": {
-        "entry": "[es] Easy",
-        "mid": "[es] Mid",
-        "senior": "[es] Hard",
-        "executive": "[es] Executive"
+        "entry": "Fácil",
+        "mid": "Media",
+        "senior": "Difícil",
+        "executive": "Ejecutiva"
       },
-      "timer": "[es] Practice with a timer",
+      "timer": "Practicar con temporizador",
       "actions": {
-        "start": "[es] Start"
+        "start": "Empezar"
       }
     },
     "prepGuide": {
-      "title": "[es] Interview Prep Guide",
-      "jobAtCompany": "[es] {jobTitle} at {company}",
-      "loading": "[es] Generating your prep guide...",
-      "progress": "[es] Preparation Progress",
-      "questionTips": "[es] Tips",
+      "title": "Guía de preparación para entrevistas",
+      "jobAtCompany": "{jobTitle} en {company}",
+      "loading": "Generando tu guía de preparación...",
+      "progress": "Progreso de preparación",
+      "questionTips": "Consejos",
       "actions": {
-        "export": "[es] Export"
+        "export": "Exportar"
       },
       "tabs": {
-        "overview": "[es] Overview",
-        "checklist": "[es] Checklist",
-        "questions": "[es] Questions"
+        "overview": "Resumen",
+        "checklist": "Lista de verificación",
+        "questions": "Preguntas"
       },
       "sections": {
-        "keyTopics": "[es] Key Topics to Prepare",
-        "strengths": "[es] Your Strengths",
-        "gaps": "[es] Potential Gaps",
-        "talkingPoints": "[es] Key Talking Points"
+        "keyTopics": "Temas clave para preparar",
+        "strengths": "Tus fortalezas",
+        "gaps": "Posibles brechas",
+        "talkingPoints": "Puntos clave para mencionar"
       },
       "checklist": {
-        "before": "[es] Before the Interview",
-        "during": "[es] During the Interview",
-        "after": "[es] After the Interview"
+        "before": "Antes de la entrevista",
+        "during": "Durante la entrevista",
+        "after": "Después de la entrevista"
       },
       "categories": {
-        "behavioral": "[es] Behavioral",
-        "technical": "[es] Technical",
-        "situational": "[es] Situational",
-        "company": "[es] Company"
+        "behavioral": "Conductual",
+        "technical": "Técnica",
+        "situational": "Situacional",
+        "company": "Empresa"
       },
       "errors": {
-        "fetch": "[es] Failed to fetch guide",
-        "load": "[es] Failed to load guide",
-        "download": "[es] Failed to download guide",
-        "downloadTitle": "[es] Could not download prep guide",
-        "downloadDescription": "[es] Please try downloading the guide again."
+        "fetch": "No se pudo obtener la guía",
+        "load": "No se pudo cargar la guía",
+        "download": "No se pudo descargar la guía",
+        "downloadTitle": "No se pudo descargar la guía de preparación",
+        "downloadDescription": "Intenta descargar la guía de nuevo."
       }
     }
   },
   "jobs": {
     "toolbar": {
-      "searchPlaceholder": "[es] Search jobs by title, company, or keywords...",
-      "clearSearch": "[es] Clear search",
+      "searchPlaceholder": "Buscar empleos por título, empresa o palabras clave...",
+      "clearSearch": "Borrar búsqueda",
       "filters": {
-        "status": "[es] Status",
-        "type": "[es] Type",
-        "location": "[es] Location",
-        "allStatuses": "[es] All Statuses",
-        "allTypes": "[es] All Types",
-        "allLocations": "[es] All Locations"
+        "status": "Estado",
+        "type": "Tipo",
+        "location": "Ubicación",
+        "allStatuses": "Todos los estados",
+        "allTypes": "Todos los tipos",
+        "allLocations": "Todas las ubicaciones"
       },
       "statuses": {
-        "pending": "[es] Pending",
-        "saved": "[es] Saved",
-        "applied": "[es] Applied",
-        "interviewing": "[es] Interviewing",
-        "offered": "[es] Offered",
-        "rejected": "[es] Rejected"
+        "pending": "Pendiente",
+        "saved": "Guardado",
+        "applied": "Postulado",
+        "interviewing": "En entrevista",
+        "offered": "Con oferta",
+        "rejected": "Rechazado"
       },
       "types": {
-        "fullTime": "[es] Full-time",
-        "partTime": "[es] Part-time",
-        "contract": "[es] Contract",
-        "internship": "[es] Internship"
+        "fullTime": "Tiempo completo",
+        "partTime": "Medio tiempo",
+        "contract": "Contrato",
+        "internship": "Prácticas"
       },
       "locations": {
-        "remote": "[es] Remote",
-        "onsite": "[es] On-site"
+        "remote": "Remoto",
+        "onsite": "Presencial"
       },
       "sort": {
-        "placeholder": "[es] Sort",
-        "newest": "[es] Newest First",
-        "oldest": "[es] Oldest First",
-        "company": "[es] Company A-Z",
-        "title": "[es] Title A-Z"
+        "placeholder": "Ordenar",
+        "newest": "Más recientes primero",
+        "oldest": "Más antiguos primero",
+        "company": "Empresa A-Z",
+        "title": "Título A-Z"
       },
-      "showing": "[es] Showing {filteredCount} of {totalCount, plural, one {# job} other {# jobs}}"
+      "showing": "Mostrando {filteredCount} de {totalCount, plural, one {# empleo} other {# empleos}}"
     },
     "import": {
       "csvPreview": {
-        "summaryTitle": "[es] Import Summary",
+        "summaryTitle": "Resumen de importación",
         "stats": {
-          "totalRows": "[es] Total Rows",
-          "validOpportunities": "[es] Valid Opportunities",
-          "invalid": "[es] Invalid"
+          "totalRows": "Filas totales",
+          "validOpportunities": "Oportunidades válidas",
+          "invalid": "No válidas"
         },
-        "validationErrors": "[es] Validation Errors",
-        "moreErrors": "[es] ...and {count} more errors",
-        "opportunitiesToImport": "[es] Opportunities to Import ({count})",
-        "moreOpportunities": "[es] ...and {count, plural, one {# more opportunity} other {# more opportunities}}",
+        "validationErrors": "Errores de validación",
+        "moreErrors": "...y {count} errores más",
+        "opportunitiesToImport": "Oportunidades para importar ({count})",
+        "moreOpportunities": "...y {count, plural, one {# oportunidad más} other {# oportunidades más}}",
         "actions": {
-          "import": "[es] Import {count, plural, one {# Opportunity} other {# Opportunities}}"
+          "import": "Importar {count, plural, one {# oportunidad} other {# oportunidades}}"
         }
       },
       "textMode": {
-        "jobUrlLabel": "[es] Job URL (optional)",
-        "jobUrlPlaceholder": "[es] https://linkedin.com/jobs/... or https://indeed.com/...",
-        "jobUrlHelp": "[es] The URL will be saved with the job for reference",
-        "jobContentLabel": "[es] Job Content",
-        "jobContentPlaceholder": "[es] Paste the full job posting here...\n\nExample:\nSenior Software Engineer\nAcme Corp - San Francisco, CA (Remote)\n\nAbout the role:\nWe're looking for an experienced software engineer...\n\nRequirements:\n- 5+ years of experience\n- Python, TypeScript\n...",
-        "jobContentHelp": "[es] Paste the entire job description. We'll extract the title, company, requirements, and keywords.",
+        "jobUrlLabel": "URL del empleo (opcional)",
+        "jobUrlPlaceholder": "Ej.: https://linkedin.com/jobs/... o https://indeed.com/...",
+        "jobUrlHelp": "La URL se guardará con el empleo como referencia",
+        "jobContentLabel": "Contenido del empleo",
+        "jobContentPlaceholder": "Pega aquí la publicación completa del empleo...\n\nEjemplo:\nIngeniero de software sénior\nAcme Corp - San Francisco, CA (Remoto)\n\nSobre el puesto:\nBuscamos una persona con experiencia en ingeniería de software...\n\nRequisitos:\n- Más de 5 años de experiencia\n- Python, TypeScript\n...",
+        "jobContentHelp": "Pega la descripción completa del empleo. Extraeremos el título, la empresa, los requisitos y las palabras clave.",
         "actions": {
-          "parse": "[es] Parse Job"
+          "parse": "Analizar empleo"
         }
       },
       "urlMode": {
-        "jobUrlLabel": "[es] Job Posting URL",
-        "jobUrlPlaceholder": "[es] https://linkedin.com/jobs/... or https://indeed.com/...",
-        "jobUrlHelp": "[es] We'll fetch the job posting and extract the details automatically.",
-        "fetchingNote": "[es] Note: Some sites may block automated fetching. If the import fails, try pasting the job content directly.",
+        "jobUrlLabel": "URL de la publicación",
+        "jobUrlPlaceholder": "Ej.: https://linkedin.com/jobs/... o https://indeed.com/...",
+        "jobUrlHelp": "Obtendremos la publicación y extraeremos los detalles automáticamente.",
+        "fetchingNote": "Nota: algunos sitios pueden bloquear la obtención automática. Si la importación falla, intenta pegar el contenido directamente.",
         "actions": {
-          "fetch": "[es] Fetch Job"
+          "fetch": "Obtener empleo"
         }
       },
       "editForm": {
         "fields": {
-          "jobTitle": "[es] Job Title",
-          "company": "[es] Company",
-          "location": "[es] Location",
-          "jobType": "[es] Job Type",
-          "salary": "[es] Salary",
-          "remote": "[es] Remote",
-          "url": "[es] URL"
+          "jobTitle": "Título del empleo",
+          "company": "Empresa",
+          "location": "Ubicación",
+          "jobType": "Tipo de empleo",
+          "salary": "Salario",
+          "remote": "Remoto",
+          "url": "URL"
         },
         "placeholders": {
-          "location": "[es] San Francisco, CA",
-          "selectType": "[es] Select type"
+          "location": "Ej.: San Francisco, CA",
+          "selectType": "Seleccionar tipo"
         },
         "types": {
-          "fullTime": "[es] Full-time",
-          "partTime": "[es] Part-time",
-          "contract": "[es] Contract",
-          "internship": "[es] Internship"
+          "fullTime": "Tiempo completo",
+          "partTime": "Medio tiempo",
+          "contract": "Contrato",
+          "internship": "Prácticas"
         },
         "remote": {
-          "remote": "[es] Remote",
-          "onsite": "[es] On-site"
+          "remote": "Remoto",
+          "onsite": "Presencial"
         },
         "actions": {
-          "backToPreview": "[es] Back to Preview",
-          "import": "[es] Import Job"
+          "backToPreview": "Volver a la vista previa",
+          "import": "Importar empleo"
         }
       },
       "preview": {
-        "remote": "[es] Remote",
-        "viewOriginalPosting": "[es] View Original Posting",
-        "description": "[es] Description",
-        "requirements": "[es] Requirements",
-        "moreRequirements": "[es] +{count} more",
-        "extractedKeywords": "[es] Extracted Keywords",
-        "source": "[es] Source: {source}",
+        "remote": "Remoto",
+        "viewOriginalPosting": "Ver publicación original",
+        "description": "Descripción",
+        "requirements": "Requisitos",
+        "moreRequirements": "+{count} más",
+        "extractedKeywords": "Palabras clave extraídas",
+        "source": "Fuente: {source}",
         "actions": {
-          "import": "[es] Import Job"
+          "import": "Importar empleo"
         }
       }
     },
     "addDialog": {
-      "title": "[es] Add New Opportunity",
-      "description": "[es] Paste the opportunity description to analyze your match and generate a tailored resume.",
+      "title": "Agregar nueva oportunidad",
+      "description": "Pega la descripción de la oportunidad para analizar tu afinidad y generar un currículum adaptado.",
       "fields": {
-        "title": "[es] Opportunity Title",
-        "company": "[es] Company",
-        "url": "[es] Opportunity URL (optional)",
-        "description": "[es] Opportunity Description"
+        "title": "Título de la oportunidad",
+        "company": "Empresa",
+        "url": "URL de la oportunidad (opcional)",
+        "description": "Descripción de la oportunidad"
       },
       "placeholders": {
-        "title": "[es] Software Engineer",
-        "company": "[es] Acme Corp",
-        "description": "[es] Paste the full opportunity description here..."
+        "title": "Ingeniero de software",
+        "company": "Empresa Acme",
+        "description": "Pega aquí la descripción completa de la oportunidad..."
       },
       "actions": {
-        "add": "[es] Add Opportunity"
+        "add": "Agregar oportunidad"
       },
       "errors": {
-        "add": "[es] Failed to add opportunity",
-        "addTitle": "[es] Could not add opportunity",
-        "addDescription": "[es] Please check the opportunity details and try again."
+        "add": "No se pudo agregar la oportunidad",
+        "addTitle": "No se pudo agregar la oportunidad",
+        "addDescription": "Revisa los detalles de la oportunidad e inténtalo de nuevo."
       }
     }
   },
   "resume": {
     "comparison": {
-      "title": "[es] Resume Comparison",
-      "loading": "[es] Comparing resumes...",
-      "before": "[es] Before",
-      "after": "[es] After",
-      "score": "[es] Score: {score}%",
-      "matchScoreChange": "[es] Match Score Change",
-      "empty": "[es] No differences found between these versions.",
+      "title": "Comparación de currículums",
+      "loading": "Comparando currículums...",
+      "before": "Antes",
+      "after": "Después",
+      "score": "Puntuación: {score}%",
+      "matchScoreChange": "Cambio en puntuación de afinidad",
+      "empty": "No se encontraron diferencias entre estas versiones.",
       "actions": {
-        "close": "[es] Close"
+        "close": "Cerrar"
       },
       "summary": {
-        "additions": "[es] Additions",
-        "removals": "[es] Removals",
-        "changes": "[es] Changes"
+        "additions": "Adiciones",
+        "removals": "Eliminaciones",
+        "changes": "Cambios"
       },
       "errors": {
-        "compare": "[es] Failed to compare resumes",
-        "comparison": "[es] Comparison failed",
-        "load": "[es] Failed to load comparison"
+        "compare": "No se pudieron comparar los currículums",
+        "comparison": "La comparación falló",
+        "load": "No se pudo cargar la comparación"
       }
     }
   },
   "integrations": {
     "google": {
       "calendar": {
-        "connectInSettings": "[es] Connect Google in Settings to sync calendar",
-        "checking": "[es] Checking...",
-        "syncing": "[es] Syncing...",
-        "selectPlaceholder": "[es] Select what to sync",
+        "connectInSettings": "Conecta Google en Configuración para sincronizar el calendario",
+        "checking": "Comprobando...",
+        "syncing": "Sincronizando...",
+        "selectPlaceholder": "Selecciona qué sincronizar",
         "actions": {
-          "sync": "[es] Sync to Google Calendar"
+          "sync": "Sincronizar con Google Calendar"
         },
         "syncTypes": {
-          "all": "[es] All Events",
-          "interviews": "[es] Interviews Only",
-          "deadlines": "[es] Deadlines Only",
-          "reminders": "[es] Reminders Only"
+          "all": "Todos los eventos",
+          "interviews": "Solo entrevistas",
+          "deadlines": "Solo fechas límite",
+          "reminders": "Solo recordatorios"
         },
         "result": {
-          "synced": "[es] Synced {count, plural, one {# event} other {# events}}",
-          "partial": "[es] {synced} synced, {failed} failed",
-          "success": "[es] Successfully synced {count, plural, one {# event} other {# events}}",
-          "failed": "[es] Synced {synced, plural, one {# event} other {# events}}, {failed} failed",
-          "more": "[es] And {count} more..."
+          "synced": "{count, plural, one {# evento sincronizado} other {# eventos sincronizados}}",
+          "partial": "{synced} sincronizados, {failed} fallidos",
+          "success": "{count, plural, one {# evento sincronizado correctamente} other {# eventos sincronizados correctamente}}",
+          "failed": "{synced, plural, one {# evento sincronizado} other {# eventos sincronizados}}, {failed} fallidos",
+          "more": "Y {count} más..."
         },
         "errors": {
-          "syncTitle": "[es] Could not sync calendar",
-          "syncDescription": "[es] Please check your Google connection and try again.",
-          "syncFailed": "[es] Sync failed"
+          "syncTitle": "No se pudo sincronizar el calendario",
+          "syncDescription": "Revisa tu conexión de Google e inténtalo de nuevo.",
+          "syncFailed": "La sincronización falló"
         }
       },
       "contacts": {
-        "trigger": "[es] Add from Google",
-        "title": "[es] Select Google Contact",
-        "description": "[es] Choose a contact to attach to this opportunity.",
-        "searchPlaceholder": "[es] Search contacts",
-        "loading": "[es] Loading contacts...",
-        "openSettings": "[es] Open Settings",
+        "trigger": "Agregar desde Google",
+        "title": "Seleccionar contacto de Google",
+        "description": "Elige un contacto para adjuntarlo a esta oportunidad.",
+        "searchPlaceholder": "Buscar contactos",
+        "loading": "Cargando contactos...",
+        "openSettings": "Abrir configuración",
         "empty": {
-          "noContacts": "[es] No contacts found. Reconnect Google in Settings if you connected before contacts support.",
-          "noMatches": "[es] No contacts match your search."
+          "noContacts": "No se encontraron contactos. Vuelve a conectar Google en Configuración si lo conectaste antes de la compatibilidad con contactos.",
+          "noMatches": "Ningún contacto coincide con tu búsqueda."
         },
         "errors": {
-          "load": "[es] Failed to load contacts from Google",
-          "loadTitle": "[es] Could not load Google contacts",
-          "loadDescription": "[es] Please check your Google connection and try again."
+          "load": "No se pudieron cargar contactos de Google",
+          "loadTitle": "No se pudieron cargar los contactos de Google",
+          "loadDescription": "Revisa tu conexión de Google e inténtalo de nuevo."
         }
       },
       "drive": {
-        "connectInSettings": "[es] Connect Google in Settings to save to Drive",
-        "checking": "[es] Checking...",
-        "saved": "[es] Saved to Drive",
-        "saving": "[es] Saving...",
+        "connectInSettings": "Conecta Google en Configuración para guardar en Drive",
+        "checking": "Comprobando...",
+        "saved": "Guardado en Drive",
+        "saving": "Guardando...",
         "actions": {
-          "save": "[es] Save to Drive",
-          "saveAndGetLink": "[es] Save & Get Link"
+          "save": "Guardar en Drive",
+          "saveAndGetLink": "Guardar y obtener enlace"
         },
         "errors": {
-          "save": "[es] Failed to save to Drive",
-          "saveTitle": "[es] Could not save to Drive",
-          "saveDescription": "[es] Please check your Google connection and try again."
+          "save": "No se pudo guardar en Drive",
+          "saveTitle": "No se pudo guardar en Drive",
+          "saveDescription": "Revisa tu conexión de Google e inténtalo de nuevo."
         }
       }
     }
   },
   "dialogs": {
     "upload": {
-      "failedTitle": "[es] Upload Failed",
+      "failedTitle": "La carga falló",
       "actions": {
-        "retry": "[es] Retry",
-        "dismiss": "[es] Dismiss",
-        "replace": "[es] Replace"
+        "retry": "Reintentar",
+        "dismiss": "Descartar",
+        "replace": "Reemplazar"
       },
       "replace": {
-        "title": "[es] Replace existing upload?",
-        "description": "[es] Looks like you uploaded \"{filename}\" on {date}. Replace it, or cancel?"
+        "title": "¿Reemplazar la carga existente?",
+        "description": "Parece que subiste \"{filename}\" el {date}. ¿Quieres reemplazarla o cancelar?"
       }
     },
     "bank": {
       "addEntry": {
-        "trigger": "[es] Add Entry",
-        "title": "[es] Add New Entry",
-        "description": "[es] Manually add an entry to your profile bank.",
-        "category": "[es] Category",
-        "hackathonTemplates": "[es] Hackathon Templates",
+        "trigger": "Agregar entrada",
+        "title": "Agregar nueva entrada",
+        "description": "Agrega manualmente una entrada a tu banco de perfil.",
+        "category": "Categoría",
+        "hackathonTemplates": "Plantillas de hackathon",
         "actions": {
-          "add": "[es] Add Entry"
+          "add": "Agregar entrada"
         }
       },
       "sourceDocuments": {
-        "sourceFiles": "[es] Source Files",
-        "selected": "[es] {count} selected",
+        "sourceFiles": "Archivos de origen",
+        "selected": "{count} seleccionados",
         "actions": {
-          "deleteSelected": "[es] Delete Selected",
-          "selectFile": "[es] Select {filename}",
-          "deleteFile": "[es] Delete {filename}"
+          "deleteSelected": "Eliminar seleccionados",
+          "selectFile": "Seleccionar {filename}",
+          "deleteFile": "Eliminar {filename}"
         },
         "deleteOne": {
-          "title": "[es] Delete source document?",
-          "description": "[es] This will permanently delete <strong>{filename}</strong> and all {count, plural, one {# associated bullet} other {# associated bullets}}. This action cannot be undone."
+          "title": "¿Eliminar documento de origen?",
+          "description": "Esto eliminará permanentemente <strong>{filename}</strong> y {count, plural, one {# viñeta asociada} other {# viñetas asociadas}}. Esta acción no se puede deshacer."
         },
         "deleteMany": {
-          "title": "[es] Delete selected source files?",
-          "description": "[es] This will permanently delete {count, plural, one {# source file} other {# source files}} and all associated bullets. This action cannot be undone."
+          "title": "¿Eliminar archivos de origen seleccionados?",
+          "description": "Esto eliminará permanentemente {count, plural, one {# archivo de origen} other {# archivos de origen}} y todas las viñetas asociadas. Esta acción no se puede deshacer."
         },
         "errors": {
-          "loadTitle": "[es] Could not load source files",
-          "loadDescription": "[es] Please refresh the page and try again.",
-          "deleteOneTitle": "[es] Could not delete source file",
-          "deleteOneDescription": "[es] Please try deleting the file again.",
-          "deleteManyTitle": "[es] Could not delete source files",
-          "deleteManyDescription": "[es] Please try deleting the selected files again."
+          "loadTitle": "No se pudieron cargar los archivos de origen",
+          "loadDescription": "Actualiza la página e inténtalo de nuevo.",
+          "deleteOneTitle": "No se pudo eliminar el archivo de origen",
+          "deleteOneDescription": "Intenta eliminar el archivo de nuevo.",
+          "deleteManyTitle": "No se pudieron eliminar los archivos de origen",
+          "deleteManyDescription": "Intenta eliminar los archivos seleccionados de nuevo."
         }
       },
       "page": {
@@ -839,23 +839,23 @@
     },
     "builder": {
       "sectionList": {
-        "pickerTitle": "[es] Bank Entry Picker",
-        "pickerDescription": "[es] Select entries to add them to the document."
+        "pickerTitle": "Selector de entradas del banco",
+        "pickerDescription": "Selecciona entradas para agregarlas al documento."
       }
     },
     "studio": {
       "versionDiff": {
-        "title": "[es] Compare to current",
-        "selectVersion": "[es] Select a version to compare."
+        "title": "Comparar con la actual",
+        "selectVersion": "Selecciona una versión para comparar."
       },
       "aiAssistant": {
-        "opportunityPickerTitle": "[es] Select from Opportunity Bank",
-        "opportunityPickerDescription": "[es] Choose a saved or applied opportunity to load its description."
+        "opportunityPickerTitle": "Seleccionar del banco de oportunidades",
+        "opportunityPickerDescription": "Elige una oportunidad guardada o postulada para cargar su descripción."
       }
     },
     "opportunities": {
       "addOpportunity": {
-        "title": "[es] Add Opportunity"
+        "title": "Agregar oportunidad"
       }
     },
     "calendar": {
@@ -886,41 +886,41 @@
     },
     "help": {
       "ollama": {
-        "title": "[es] Using Ollama (Free)",
-        "installFrom": "[es] Install from",
-        "run": "[es] Run",
-        "testConnection": "[es] Test the connection above"
+        "title": "Usar Ollama (gratis)",
+        "installFrom": "Instalar desde",
+        "run": "Ejecutar",
+        "testConnection": "Probar la conexión anterior"
       },
       "apiKeys": {
-        "title": "[es] Using API Keys",
-        "description": "[es] Connect your own API keys from OpenAI, Anthropic, or OpenRouter for cloud-based processing. Your keys are stored locally and never leave your device."
+        "title": "Usar claves de API",
+        "description": "Conecta tus propias claves de API de OpenAI, Anthropic u OpenRouter para procesamiento en la nube. Tus claves se almacenan localmente y nunca salen de tu dispositivo."
       }
     },
     "dataManagement": {
-      "title": "[es] Data Management",
-      "description": "[es] Export your data or import from backups.",
+      "title": "Gestión de datos",
+      "description": "Exporta tus datos o importa desde copias de seguridad.",
       "export": {
-        "title": "[es] Export Data",
-        "profileJson": "[es] Export Profile (JSON)",
-        "opportunitiesJson": "[es] Export Opportunities (JSON)",
-        "opportunitiesCsv": "[es] Export Opportunities (CSV)",
-        "fullBackup": "[es] Full Backup",
-        "allDataJson": "[es] Export All Data (JSON)"
+        "title": "Exportar datos",
+        "profileJson": "Exportar perfil (JSON)",
+        "opportunitiesJson": "Exportar oportunidades (JSON)",
+        "opportunitiesCsv": "Exportar oportunidades (CSV)",
+        "fullBackup": "Copia de seguridad completa",
+        "allDataJson": "Exportar todos los datos (JSON)"
       },
       "import": {
-        "title": "[es] Import Data",
-        "jobsAria": "[es] Import jobs from JSON or CSV file",
-        "opportunitiesJsonCsv": "[es] Import Opportunities (JSON/CSV)",
-        "restoreBackupAria": "[es] Restore backup from JSON file",
-        "restoreBackup": "[es] Restore Backup",
-        "allDataAria": "[es] Import all data from JSON file",
-        "allDataJson": "[es] Import All Data (JSON)"
+        "title": "Importar datos",
+        "jobsAria": "Importar empleos desde archivo JSON o CSV",
+        "opportunitiesJsonCsv": "Importar oportunidades (JSON/CSV)",
+        "restoreBackupAria": "Restaurar copia de seguridad desde archivo JSON",
+        "restoreBackup": "Restaurar copia",
+        "allDataAria": "Importar todos los datos desde archivo JSON",
+        "allDataJson": "Importar todos los datos (JSON)"
       },
       "confirm": {
-        "title": "[es] Confirm Import",
-        "description": "[es] The following data will be imported (duplicates will be skipped):",
-        "importing": "[es] Importing...",
-        "action": "[es] Confirm Import"
+        "title": "Confirmar importación",
+        "description": "Se importarán los siguientes datos (los duplicados se omitirán):",
+        "importing": "Importando...",
+        "action": "Confirmar importación"
       }
     }
   },
@@ -952,7 +952,7 @@
     "navigation": "Navegación",
     "mobileNavigation": "Navegación móvil",
     "pageActions": "Acciones de página",
-    "general": "General",
+    "general": "General sin categoría",
     "dataManagement": "Gestión de datos",
     "importJobsFromJsonOrCsvFile": "Importar trabajos desde un archivo JSON o CSV",
     "restoreBackupFromJsonFile": "Restaurar copia de seguridad desde un archivo JSON",
@@ -1061,7 +1061,7 @@
     "field": "Campo",
     "customerServiceExcelPython": "Atención al cliente, Excel, Python",
     "campusCafe": "Café del campus",
-    "barista": "Barista",
+    "barista": "Persona barista",
     "communityPantryDashboard": "Panel de despensa comunitaria",
     "residenceCouncilSecretaryDeanSList": "Secretario del consejo de residencia, lista del decano",
     "typeACommandOrSearch": "Escribe un comando o busca...",
@@ -1260,11 +1260,11 @@
       "title": "Privacidad",
       "description": "Mantén el perfil fuente que Slothing usa para currículums, cartas de presentación y comprobaciones de ajuste.",
       "openToRecruiters": {
-        "title": "Aberto a contato de recrutadores",
+        "title": "Abierto a contactos de reclutadores",
         "description": "Mantén el perfil fuente que Slothing usa para currículums, cartas de presentación y comprobaciones de ajuste."
       },
       "shareContactInfo": {
-        "title": "Compartilhar dados de contato por padrão",
+        "title": "Compartir información de contacto por defecto",
         "description": "Mantén el perfil fuente que Slothing usa para currículums, cartas de presentación y comprobaciones de ajuste."
       }
     },

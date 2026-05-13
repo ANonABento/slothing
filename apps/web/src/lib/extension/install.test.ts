@@ -40,4 +40,17 @@ describe("getExtensionStoresForBrowser", () => {
     expect(safari?.disabled).toBe(true);
     expect(safari?.url).toBeNull();
   });
+
+  it("does not expose placeholder marketplace URLs as install links", () => {
+    const stores = getExtensionStoresForBrowser("unknown");
+
+    expect(stores).toHaveLength(4);
+    for (const store of stores) {
+      if (store.url) {
+        expect(store.url).not.toContain("placeholder");
+      } else {
+        expect(store.disabled).toBe(true);
+      }
+    }
+  });
 });

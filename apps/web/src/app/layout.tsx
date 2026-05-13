@@ -3,6 +3,10 @@
 // this just provides the minimum HTML scaffold so the orphan not-found page
 // can render. If/when src/app/not-found.tsx is consolidated into the
 // locale segment, this file can be deleted.
+import { getSiteMetadata } from "@/lib/seo";
+
+export const metadata = getSiteMetadata();
+
 export default function RootLayout({
   children,
 }: {

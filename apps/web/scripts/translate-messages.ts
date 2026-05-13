@@ -113,6 +113,7 @@ const brandTerms = [
 function parseArgs(argv: string[]) {
   const localesArg = argv.find((arg) => arg.startsWith("--locales="));
   const dryRun = argv.includes("--dry-run");
+  const selfTest = argv.includes("--self-test");
   const locales = localesArg
     ? localesArg
         .slice("--locales=".length)
@@ -129,7 +130,7 @@ function parseArgs(argv: string[]) {
     }
   }
 
-  return { dryRun, locales: locales as TargetLocale[] };
+  return { dryRun, locales: locales as TargetLocale[], selfTest };
 }
 
 function flattenMessages(record: JsonRecord, prefix = ""): FlatMessages {
@@ -337,10 +338,123 @@ function parseTranslatedJson(content: string): FlatMessages {
   return parsed as FlatMessages;
 }
 
+function hasBalancedIcuBraces(message: string) {
+  let depth = 0;
+
+  for (let index = 0; index < message.length; index += 1) {
+    const char = message[index];
+    if (char === "{") depth += 1;
+    if (char === "}") depth -= 1;
+    if (depth < 0) return false;
+  }
+
+  return depth === 0;
+}
+
+function skipWhitespace(message: string, index: number, end = message.length) {
+  while (index < end && /\s/u.test(message[index])) index += 1;
+  return index;
+}
+
+function readIdentifier(message: string, index: number) {
+  const start = index;
+  while (index < message.length && /[\w-]/u.test(message[index])) {
+    index += 1;
+  }
+  return {
+    value: message.slice(start, index),
+    nextIndex: index,
+  };
+}
+
+function findClosingBrace(message: string, openIndex: number) {
+  let depth = 0;
+
+  for (let index = openIndex; index < message.length; index += 1) {
+    const char = message[index];
+    if (char === "{") depth += 1;
+    if (char === "}") depth -= 1;
+    if (depth === 0) return index;
+  }
+
+  return -1;
+}
+
+function collectArgumentsInMessage(
+  message: string,
+  args: Set<string>,
+  start = 0,
+  end = message.length,
+) {
+  for (let index = start; index < end; index += 1) {
+    const char = message[index];
+    if (char !== "{") continue;
+
+    const closeIndex = findClosingBrace(message, index);
+    if (closeIndex < 0 || closeIndex > end) return;
+    let cursor = skipWhitespace(message, index + 1, closeIndex);
+    const argument = readIdentifier(message, cursor);
+    if (!argument.value) {
+      index = closeIndex;
+      continue;
+    }
+
+    cursor = skipWhitespace(message, argument.nextIndex, closeIndex);
+    if (message[cursor] === "}") {
+      args.add(argument.value);
+      index = closeIndex;
+      continue;
+    }
+
+    if (message[cursor] !== ",") {
+      index = closeIndex;
+      continue;
+    }
+
+    args.add(argument.value);
+    cursor = skipWhitespace(message, cursor + 1, closeIndex);
+    const formatType = readIdentifier(message, cursor);
+
+    if (["plural", "select", "selectordinal"].includes(formatType.value)) {
+      cursor = formatType.nextIndex;
+      while (cursor < closeIndex) {
+        cursor = skipWhitespace(message, cursor, closeIndex);
+        if (message.startsWith("offset:", cursor)) {
+          cursor += "offset:".length;
+          while (cursor < closeIndex && /[0-9]/u.test(message[cursor])) {
+            cursor += 1;
+          }
+          continue;
+        }
+
+        while (
+          cursor < closeIndex &&
+          !/\s/u.test(message[cursor]) &&
+          message[cursor] !== "{"
+        ) {
+          cursor += 1;
+        }
+        cursor = skipWhitespace(message, cursor, closeIndex);
+        if (message[cursor] !== "{") {
+          cursor += 1;
+          continue;
+        }
+
+        const branchClose = findClosingBrace(message, cursor);
+        if (branchClose < 0 || branchClose > closeIndex) break;
+        collectArgumentsInMessage(message, args, cursor + 1, branchClose);
+        cursor = branchClose + 1;
+      }
+    }
+
+    index = closeIndex;
+  }
+}
+
 function extractArgumentNames(message: string) {
-  return Array.from(message.matchAll(/\{\s*([\w-]+)(?=[,}\s])/gu)).map(
-    (match) => match[1],
-  );
+  const args = new Set<string>();
+  collectArgumentsInMessage(message, args);
+  return Array.from(args).sort();
 }
 
 function validateTranslated(source: FlatMessages, translated: FlatMessages) {
@@ -359,11 +473,30 @@ function validateTranslated(source: FlatMessages, translated: FlatMessages) {
 
   for (const [key, sourceValue] of Object.entries(source)) {
     const translatedValue = translated[key];
+    if (!hasBalancedIcuBraces(translatedValue)) {
+      throw new Error(`Unbalanced ICU braces in ${key}`);
+    }
 
-    for (const argumentName of extractArgumentNames(sourceValue)) {
-      if (!translatedValue.includes(`{${argumentName}`)) {
+    const sourceArgumentNames = extractArgumentNames(sourceValue);
+    const translatedArgumentNames = extractArgumentNames(translatedValue);
+    const sourceArgumentSet = new Set(sourceArgumentNames);
+    const translatedArgumentSet = new Set(translatedArgumentNames);
+
+    for (const argumentName of sourceArgumentNames) {
+      if (!translatedArgumentSet.has(argumentName)) {
         throw new Error(`Missing ICU argument {${argumentName}} in ${key}`);
       }
+    }
+
+    const extraArguments = translatedArgumentNames.filter(
+      (argumentName) => !sourceArgumentSet.has(argumentName),
+    );
+    if (extraArguments.length > 0) {
+      throw new Error(
+        `Unexpected ICU argument(s) in ${key}: ${extraArguments
+          .map((argumentName) => `{${argumentName}}`)
+          .join(", ")}`,
+      );
     }
 
     for (const brand of brandTerms) {
@@ -376,6 +509,75 @@ function validateTranslated(source: FlatMessages, translated: FlatMessages) {
       throw new Error(`Passthrough key ${key} changed during translation`);
     }
   }
+}
+
+function expectValidationFailure(
+  source: FlatMessages,
+  translated: FlatMessages,
+  expectedMessage: string,
+) {
+  try {
+    validateTranslated(source, translated);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (message.includes(expectedMessage)) return;
+    throw new Error(
+      `Expected validation failure containing "${expectedMessage}", got "${message}"`,
+    );
+  }
+
+  throw new Error(
+    `Expected validation failure containing "${expectedMessage}"`,
+  );
+}
+
+function runValidationSelfTest() {
+  const source = {
+    greeting: "Welcome, {name}.",
+    count: "{count, plural, one {# file} other {# files}}",
+    salary: "{currency} {min}-{max}",
+    brand: "Connect GitHub",
+  };
+
+  validateTranslated(source, {
+    greeting: "Bienvenue, {name}.",
+    count: "{count, plural, one {# fichier} other {# fichiers}}",
+    salary: "{currency} {min}-{max}",
+    brand: "Connecter GitHub",
+  });
+
+  expectValidationFailure(
+    source,
+    {
+      greeting: "Bienvenue.",
+      count: "{count, plural, one {# fichier} other {# fichiers}}",
+      salary: "{currency} {min}-{max}",
+      brand: "Connecter GitHub",
+    },
+    "Missing ICU argument {name}",
+  );
+
+  expectValidationFailure(
+    source,
+    {
+      greeting: "Bienvenue, {name} ({user}).",
+      count: "{count, plural, one {# fichier} other {# fichiers}}",
+      salary: "{currency} {min}-{max}",
+      brand: "Connecter GitHub",
+    },
+    "Unexpected ICU argument(s) in greeting: {user}",
+  );
+
+  expectValidationFailure(
+    source,
+    {
+      greeting: "Bienvenue, {name.",
+      count: "{count, plural, one {# fichier} other {# fichiers}}",
+      salary: "{currency} {min}-{max}",
+      brand: "Connecter GitHub",
+    },
+    "Unbalanced ICU braces in greeting",
+  );
 }
 
 function applyFinalOverrides(
@@ -399,7 +601,14 @@ function countChanged(source: FlatMessages, translated: FlatMessages) {
 }
 
 async function main() {
-  const { dryRun, locales } = parseArgs(process.argv.slice(2));
+  const { dryRun, locales, selfTest } = parseArgs(process.argv.slice(2));
+
+  if (selfTest) {
+    runValidationSelfTest();
+    console.log("Translation validator self-test passed.");
+    return;
+  }
+
   const messagesDir = path.join(process.cwd(), "src/messages");
   const en = JSON.parse(
     await readFile(path.join(messagesDir, "en.json"), "utf8"),

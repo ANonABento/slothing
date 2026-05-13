@@ -38,7 +38,7 @@ const SECTION_HEADER_PATTERNS: Record<SectionType, RegExp> = {
   projects:
     /^(?:PROJECTS|PERSONAL\s+PROJECTS|SIDE\s+PROJECTS|KEY\s+PROJECTS|SELECTED\s+PROJECTS|NOTABLE\s+PROJECTS)$/im,
   certifications:
-    /^(?:CERTIFICATIONS?|LICENSES?\s*(?:&|AND)?\s*CERTIFICATIONS?|CREDENTIALS?|PROFESSIONAL\s+CERTIFICATIONS?|CERTIFICATES?)$/im,
+    /^(?:CERTIFICATIONS?|LICENSES?\s*(?:&|AND)?\s*CERTIFICATIONS?|CREDENTIALS|PROFESSIONAL\s+CERTIFICATIONS?|CERTIFICATES?)$/im,
   awards:
     /^(?:AWARDS?|HONORS?\s*(?:&|AND)?\s*AWARDS?|ACHIEVEMENTS?|RECOGNITION|DISTINCTIONS?)$/im,
   languages:
@@ -72,7 +72,7 @@ const PHONE_PATTERN = /(\+?1?[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/;
 const URL_PATTERN =
   /(?:https?:\/\/[\w.-]+|(?:www\.)?(?:linkedin\.com|github\.com)\/[\w-]+)/i;
 const DEGREE_PATTERN =
-  /\b(?:Bachelor|Master|Ph\.?D|BASc|B\.?A\.?Sc\.?|M\.?S\.?|B\.?S\.?|B\.?A\.?|M\.?A\.?|M\.?B\.?A\.?|Associate|Doctorate|Doctor\s+of)\b/i;
+  /\b(?:Bachelor|Master|Ph\.?D|BMath|BASc|B\.?A\.?Sc\.?|M\.?S\.?|B\.?S\.?|B\.?A\.?|M\.?A\.?|M\.?B\.?A\.?|Associate|Doctorate|Doctor\s+of)\b/i;
 const SKILL_LIST_PATTERN = /^[\w#+.\-/]+(?:\s*[,|•]\s*[\w#+.\-/]+){2,}/;
 const GPA_PATTERN = /\b(?:GPA|Grade)[\s:]*\d\.\d/i;
 
@@ -124,6 +124,7 @@ function detectByHeaders(text: string): Section[] {
     if (trimmed.length > 0 && trimmed.length <= 50) {
       // Strip common formatting: underlines, dashes, colons
       const cleaned = trimmed
+        .replace(/^#{1,6}\s+/, "")
         .replace(/[:\-–—_=]+$/, "")
         .replace(/^[:\-–—_=]+/, "")
         .replace(/[^\p{L}\p{N}\s&/]+$/gu, "")

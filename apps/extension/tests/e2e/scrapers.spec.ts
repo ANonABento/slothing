@@ -1,12 +1,16 @@
 import { expect, test, type BrowserContext } from "@playwright/test";
+import { createServer, type Server } from "node:http";
 import {
   closeExtensionContext,
   loadFixture,
   launchExtensionContext,
+  seedExtensionStorage,
+  sendMessageToTab,
 } from "../helpers/extension-context";
 import { extensionOpportunitySchema } from "../helpers/extension-opportunity-schema";
 
 let context: BrowserContext;
+let extensionId: string;
 let teardownContext:
   | Awaited<ReturnType<typeof launchExtensionContext>>
   | undefined;
@@ -14,6 +18,7 @@ let teardownContext:
 test.beforeAll(async () => {
   teardownContext = await launchExtensionContext();
   context = teardownContext.context;
+  extensionId = teardownContext.extensionId;
 });
 
 test.afterAll(async () => {
@@ -59,6 +64,16 @@ const cases = [
       company: "Meridian Cloud",
       location: "Remote, US, US",
       postedAt: "2026-04-20",
+    },
+  },
+  {
+    source: "unknown",
+    fixture: "unknown-jsonld-job.html",
+    expected: {
+      title: "Principal Platform Engineer",
+      company: "Mosaic Robotics",
+      location: "Remote, Canada, CA",
+      postedAt: "2026-05-12",
     },
   },
 ] as const;
@@ -188,6 +203,24 @@ for (const testCase of cases) {
           };
         }
 
+        if (source === "unknown") {
+          return {
+            title: jobData?.title,
+            company: jobData?.hiringOrganization?.name,
+            location: locationFromStructured(),
+            description: clean(jobData?.description || ""),
+            requirements: [],
+            keywords: ["typescript", "node.js", "postgresql", "kubernetes"],
+            salary: "CAD 190,000 - 240,000",
+            type: "full-time",
+            remote: true,
+            url: window.location.href,
+            source,
+            sourceJobId: "fixture",
+            postedAt: jobData?.datePosted,
+          };
+        }
+
         return {
           title: jobData?.title,
           company: jobData?.hiringOrganization?.name,
@@ -280,5 +313,98 @@ test("Greenhouse, Lever, and Indeed fixtures expose job list cards", async () =>
     });
   } finally {
     await page.close();
+  }
+});
+
+test("Greenhouse bulk import surfaces duplicate counts from the extension response", async () => {
+  const localExtension = await launchExtensionContext();
+  const requests: unknown[] = [];
+  const server = await new Promise<Server>((resolve) => {
+    const instance = createServer((request, response) => {
+      let body = "";
+      request.on("data", (chunk) => {
+        body += chunk;
+      });
+      request.on("end", () => {
+        if (
+          request.method === "POST" &&
+          request.url === "/api/opportunities/from-extension"
+        ) {
+          requests.push(JSON.parse(body));
+          response.writeHead(200, { "Content-Type": "application/json" });
+          response.end(
+            JSON.stringify({
+              imported: 1,
+              opportunityIds: ["opp-platform"],
+              pendingCount: 1,
+              dedupedIds: ["222222"],
+            }),
+          );
+          return;
+        }
+
+        response.writeHead(404, { "Content-Type": "application/json" });
+        response.end(JSON.stringify({ error: "not found" }));
+      });
+    });
+    instance.listen(3001, "127.0.0.1", () => resolve(instance));
+  });
+
+  await seedExtensionStorage(
+    localExtension.context,
+    localExtension.extensionId,
+    {
+      authToken: "test-token",
+      tokenExpiry: "2099-01-01T00:00:00.000Z",
+      cachedProfile: null,
+      apiBaseUrl: "http://127.0.0.1:3001",
+      settings: {
+        autoFillEnabled: true,
+        showConfidenceIndicators: true,
+        minimumConfidence: 0.5,
+        learnFromAnswers: true,
+        notifyOnJobDetected: true,
+      },
+    },
+  );
+  const page = await localExtension.context.newPage();
+  try {
+    await loadFixture(page, "greenhouse-mock.html");
+    const response = await sendMessageToTab<{
+      success: boolean;
+      data?: {
+        imported: number;
+        attempted: number;
+        duplicateCount?: number;
+        dedupedIds?: string[];
+      };
+      error?: string;
+    }>(
+      localExtension.context,
+      localExtension.extensionId,
+      "greenhouse-mock.html",
+      {
+        type: "BULK_GREENHOUSE_SCRAPE_VISIBLE",
+      },
+    );
+
+    expect(response, response.error).toMatchObject({ success: true });
+    expect(response.data).toMatchObject({
+      imported: 1,
+      attempted: 2,
+      duplicateCount: 1,
+      dedupedIds: ["222222"],
+    });
+    expect(requests).toHaveLength(1);
+    expect(requests[0]).toMatchObject({
+      jobs: expect.arrayContaining([
+        expect.objectContaining({ sourceJobId: "111111" }),
+        expect.objectContaining({ sourceJobId: "222222" }),
+      ]),
+    });
+  } finally {
+    await page.close();
+    await new Promise<void>((resolve) => server.close(() => resolve()));
+    await closeExtensionContext(localExtension);
   }
 });

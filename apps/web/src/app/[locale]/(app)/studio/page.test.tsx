@@ -1,5 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import { KeyboardShortcutsProvider } from "@/components/keyboard-shortcuts";
 import { ToastProvider } from "@/components/ui/toast";
 import StudioPage from "./page";
@@ -175,6 +181,21 @@ function renderStudioPage() {
   );
 }
 
+function pressShortcut(
+  target: Window | HTMLElement,
+  init: KeyboardEventInit & { key: string },
+) {
+  act(() => {
+    fireEvent.keyDown(target, init);
+  });
+}
+
+async function flushMicrotasks() {
+  await act(async () => {
+    await Promise.resolve();
+  });
+}
+
 describe("StudioPage", () => {
   beforeEach(() => {
     mockShowErrorToast.mockClear();
@@ -227,9 +248,10 @@ describe("StudioPage", () => {
 
     expect(await screen.findByText("Document Studio")).toBeInTheDocument();
 
-    fireEvent.keyDown(window, { key: "s", metaKey: true });
+    pressShortcut(window, { key: "s", metaKey: true });
 
     expect(screen.getAllByText("Saving...")[0]).toBeInTheDocument();
+    await flushMicrotasks();
   });
 
   it("toggles the files panel with Cmd+B", async () => {
@@ -239,7 +261,7 @@ describe("StudioPage", () => {
       await screen.findByRole("button", { name: "Collapse files panel" }),
     ).toBeInTheDocument();
 
-    fireEvent.keyDown(window, { key: "b", metaKey: true });
+    pressShortcut(window, { key: "b", metaKey: true });
 
     expect(
       screen.getByRole("button", { name: "Expand files panel" }),
@@ -255,7 +277,7 @@ describe("StudioPage", () => {
       }),
     ).toBeInTheDocument();
 
-    fireEvent.keyDown(window, { key: "/", metaKey: true });
+    pressShortcut(window, { key: "/", metaKey: true });
 
     expect(
       screen.getByRole("button", { name: "Expand AI assistant panel" }),
@@ -276,7 +298,7 @@ describe("StudioPage", () => {
       }),
     ).toBeInTheDocument();
 
-    fireEvent.keyDown(window, { key: "k", metaKey: true });
+    pressShortcut(window, { key: "k", metaKey: true });
 
     const textarea = await screen.findByLabelText("Job description");
     await waitFor(() => expect(textarea).toBe(document.activeElement));
@@ -295,7 +317,7 @@ describe("StudioPage", () => {
       screen.getByRole("button", { name: "Collapse AI assistant panel" }),
     ).toBeInTheDocument();
 
-    fireEvent.keyDown(window, { key: "p", metaKey: true });
+    pressShortcut(window, { key: "p", metaKey: true });
 
     expect(
       screen.getByRole("button", { name: "Expand files panel" }),
@@ -304,7 +326,7 @@ describe("StudioPage", () => {
       screen.getByRole("button", { name: "Expand AI assistant panel" }),
     ).toBeInTheDocument();
 
-    fireEvent.keyDown(window, { key: "p", metaKey: true });
+    pressShortcut(window, { key: "p", metaKey: true });
 
     expect(
       screen.getByRole("button", { name: "Collapse files panel" }),
@@ -327,7 +349,7 @@ describe("StudioPage", () => {
       ),
     );
 
-    fireEvent.keyDown(window, { key: "e", metaKey: true });
+    pressShortcut(window, { key: "e", metaKey: true });
 
     expect(
       screen.getByRole("menuitem", { name: "Download PDF" }),
@@ -340,7 +362,7 @@ describe("StudioPage", () => {
     const textarea = await screen.findByLabelText("Job description");
     textarea.focus();
 
-    fireEvent.keyDown(textarea, { key: "b" });
+    pressShortcut(textarea, { key: "b" });
 
     expect(
       screen.getByRole("button", { name: "Collapse files panel" }),
@@ -356,9 +378,10 @@ describe("StudioPage", () => {
     const textarea = await screen.findByLabelText("Job description");
     textarea.focus();
 
-    fireEvent.keyDown(textarea, { key: "s", metaKey: true });
+    pressShortcut(textarea, { key: "s", metaKey: true });
 
     expect(screen.getAllByText("Saving...")[0]).toBeInTheDocument();
+    await flushMicrotasks();
   });
 
   it("shows the draft as unsaved after a content edit", async () => {

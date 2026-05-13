@@ -14,7 +14,7 @@ describe("ExtensionInstallButtons", () => {
     setUserAgent("curl/8.0");
   });
 
-  it("places the detected Chrome listing first", async () => {
+  it("places the detected Chrome listing first without linking to a placeholder store page", async () => {
     setUserAgent(
       "Mozilla/5.0 AppleWebKit/537.36 Chrome/124.0.0.0 Safari/537.36",
     );
@@ -22,8 +22,13 @@ describe("ExtensionInstallButtons", () => {
     render(<ExtensionInstallButtons variant="primary" />);
 
     expect(
-      await screen.findByRole("link", { name: /install for chrome/i }),
-    ).toHaveAttribute("target", "_blank");
+      await screen.findByRole("button", {
+        name: /chrome listing coming soon/i,
+      }),
+    ).toBeDisabled();
+    expect(
+      screen.queryByRole("link", { name: /chrome/i }),
+    ).not.toBeInTheDocument();
   });
 
   it("shows Safari as a disabled coming-soon state", async () => {
@@ -45,8 +50,8 @@ describe("ExtensionInstallButtons", () => {
 
     render(<ExtensionInstallButtons variant="compact" onlyDetected />);
 
-    expect(await screen.findByRole("link", { name: /firefox/i })).toHaveClass(
-      "px-3",
-    );
+    expect(
+      await screen.findByRole("button", { name: /firefox soon/i }),
+    ).toHaveClass("px-3");
   });
 });

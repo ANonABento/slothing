@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { Command } from "cmdk";
 import {
   ArrowRight,
@@ -231,6 +232,12 @@ export function CommandPalette() {
       overlayClassName="fixed inset-0 z-50 bg-background/80"
       className="overflow-hidden"
     >
+      <DialogPrimitive.Title className="sr-only">
+        Command Palette
+      </DialogPrimitive.Title>
+      <DialogPrimitive.Description className="sr-only">
+        Search navigation, recent actions, and available workflow commands.
+      </DialogPrimitive.Description>
       <div className="flex items-center border-b border-border px-4">
         <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
         <Command.Input
