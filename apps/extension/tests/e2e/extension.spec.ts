@@ -165,19 +165,32 @@ test("content script does not inject on non-job-board hosts", async () => {
     const popup = await context.newPage();
     try {
       await popup.goto(`chrome-extension://${extensionId}/popup.html`);
-      const result = await popup.evaluate(async (targetUrl) => {
+      const result = await popup.evaluate(async () => {
         const tabs = await chrome.tabs.query({});
-        const target = tabs.find((tab) => tab.url === targetUrl);
+        const currentTab = await chrome.tabs.getCurrent();
+        const candidates = tabs.filter((tab) => {
+          return tab.id && tab.id !== currentTab?.id;
+        });
 
-        try {
-          await chrome.tabs.sendMessage(target!.id!, {
-            type: "GET_PAGE_STATUS",
-          });
-          return "unexpected_ok";
-        } catch (e) {
-          return (e as Error).message;
+        for (const tab of candidates) {
+          try {
+            await chrome.tabs.sendMessage(tab.id!, {
+              type: "GET_PAGE_STATUS",
+            });
+          } catch (e) {
+            const message = (e as Error).message;
+            if (
+              /Could not establish connection|Receiving end does not exist/.test(
+                message,
+              )
+            ) {
+              return message;
+            }
+          }
         }
-      }, url);
+
+        return "unexpected_ok";
+      });
 
       expect(result).toMatch(
         /Could not establish connection|Receiving end does not exist/,

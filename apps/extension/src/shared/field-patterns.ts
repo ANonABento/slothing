@@ -100,19 +100,24 @@ export const FIELD_PATTERNS: FieldPattern[] = [
   // Social/Professional links
   {
     type: "linkedin",
+    autocompleteValues: ["url"],
     namePatterns: [/linkedin/i],
+    idPatterns: [/linkedin/i],
     labelPatterns: [/linkedin/i],
     placeholderPatterns: [/linkedin\.com/i, /linkedin/i],
   },
   {
     type: "github",
+    autocompleteValues: ["url"],
     namePatterns: [/github/i],
+    idPatterns: [/github/i],
     labelPatterns: [/github/i],
     placeholderPatterns: [/github\.com/i, /github/i],
   },
   {
     type: "website",
     autocompleteValues: ["url"],
+    idPatterns: [/website/i, /portfolio/i, /personal.?site/i, /blog/i],
     namePatterns: [/website/i, /portfolio/i, /personal.?site/i, /blog/i],
     labelPatterns: [/website/i, /portfolio/i, /personal\s*(site|url)/i],
     negativePatterns: [/linkedin/i, /github/i, /company/i],
@@ -144,11 +149,18 @@ export const FIELD_PATTERNS: FieldPattern[] = [
   {
     type: "yearsExperience",
     namePatterns: [/years?.?(of)?.?experience/i, /experience.?years/i, /yoe/i],
+    idPatterns: [
+      /years?.?(of)?.?experience/i,
+      /experience.?years/i,
+      /experience/i,
+      /yoe/i,
+    ],
     labelPatterns: [
       /years?\s*(of\s*)?experience/i,
       /total\s*experience/i,
       /how\s*many\s*years/i,
     ],
+    placeholderPatterns: [/years?/i, /yoe/i],
   },
   // Education fields
   {
