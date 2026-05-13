@@ -148,6 +148,7 @@ input:focus-visible {
 .score-card,
 .actions,
 .answer-bank,
+.chat-panel,
 .status-card {
   border: 1px solid rgba(23, 32, 38, 0.1);
   border-radius: 8px;
@@ -331,6 +332,85 @@ input:focus-visible {
 .small-button.secondary {
   background: #eef3f0;
   color: #243038;
+}
+
+/* P4/#40 — Inline AI assistant chat panel */
+.chat-panel {
+  padding: 12px;
+}
+
+.chat-seed-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.chat-seed-row .small-button {
+  width: 100%;
+  min-height: 32px;
+  padding: 0 8px;
+  font-size: 12px;
+  white-space: normal;
+  line-height: 1.2;
+}
+
+.chat-input-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 6px;
+  align-items: end;
+}
+
+.chat-input-row textarea {
+  width: 100%;
+  min-width: 0;
+  resize: vertical;
+  min-height: 36px;
+  max-height: 120px;
+  border: 1px solid rgba(23, 32, 38, 0.16);
+  border-radius: 6px;
+  padding: 8px 10px;
+  color: #172026;
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.35;
+  background: #ffffff;
+}
+
+.chat-input-row textarea:disabled {
+  background: #f4f7f5;
+  color: #63717a;
+}
+
+.chat-result {
+  margin-top: 10px;
+  min-height: 16px;
+}
+
+.chat-spinner {
+  margin: 0;
+  color: #63717a;
+  font-size: 12px;
+  font-style: italic;
+}
+
+.chat-output {
+  margin: 0;
+  color: #172026;
+  font-size: 13px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.chat-error {
+  margin-top: 8px;
+}
+
+.chat-use-cta {
+  margin-top: 10px;
+  width: 100%;
 }
 
 @media (max-width: 1023px) {

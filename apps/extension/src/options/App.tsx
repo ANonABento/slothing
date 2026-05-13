@@ -1,14 +1,19 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import type { ExtensionSettings, LearnedAnswer } from "@/shared/types";
 import { DEFAULT_SETTINGS, DEFAULT_API_BASE_URL } from "@/shared/types";
 import {
-  getStorage,
-  setStorage,
   updateSettings,
   getSettings,
   getApiBaseUrl,
   setApiBaseUrl,
 } from "../background/storage";
+import { messageForError } from "@/shared/error-messages";
+import {
+  AUTO_SAVE_DEBOUNCE_MS,
+  SAVED_LINGER_MS,
+  labelForStatus,
+  type OptionsSaveStatus,
+} from "./save-status";
 
 export default function OptionsApp() {
   const [settings, setSettingsState] =
@@ -16,15 +21,36 @@ export default function OptionsApp() {
   const [apiUrl, setApiUrl] = useState(DEFAULT_API_BASE_URL);
   const [learnedAnswers, setLearnedAnswers] = useState<LearnedAnswer[]>([]);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState<{
-    type: "success" | "error";
-    text: string;
-  } | null>(null);
+
+  // Save-status indicator (see save-status.ts). One per surface so the URL
+  // save button doesn't flicker the checkbox area, and vice versa.
+  const [apiUrlStatus, setApiUrlStatus] = useState<OptionsSaveStatus>({
+    state: "idle",
+  });
+  const [settingsStatus, setSettingsStatus] = useState<OptionsSaveStatus>({
+    state: "idle",
+  });
+
+  // Auto-save debounce — a single timer is enough because we only ever
+  // need to flush the latest settings object. The pending changes ref
+  // accumulates updates that arrive within the debounce window.
+  const pendingSettingsRef = useRef<Partial<ExtensionSettings>>({});
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const savedFadeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const apiSavedFadeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
 
   useEffect(() => {
     loadSettings();
     loadLearnedAnswers();
+
+    return () => {
+      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+      if (savedFadeTimerRef.current) clearTimeout(savedFadeTimerRef.current);
+      if (apiSavedFadeTimerRef.current)
+        clearTimeout(apiSavedFadeTimerRef.current);
+    };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function loadSettings() {
@@ -36,7 +62,7 @@ export default function OptionsApp() {
       setSettingsState(settingsData);
       setApiUrl(url);
     } catch (err) {
-      showMessage("error", "Failed to load settings");
+      setSettingsStatus({ state: "error", error: messageForError(err) });
     } finally {
       setLoading(false);
     }
@@ -69,43 +95,73 @@ export default function OptionsApp() {
       });
       if (result?.success) {
         setLearnedAnswers((prev) => prev.filter((a) => a.id !== id));
-        showMessage("success", "Answer deleted");
       }
     } catch (err) {
-      showMessage("error", "Failed to delete answer");
+      console.error("Failed to delete answer:", err);
     }
   }
 
-  async function handleSettingChange(
+  /**
+   * Updates a single setting locally and schedules a debounced flush.
+   * Multiple rapid changes (range slider drag, repeated checkbox clicks)
+   * coalesce into a single updateSettings call after AUTO_SAVE_DEBOUNCE_MS
+   * of quiet.
+   */
+  function handleSettingChange(
     key: keyof ExtensionSettings,
     value: boolean | number,
   ) {
-    const newSettings = { ...settings, [key]: value };
-    setSettingsState(newSettings);
+    setSettingsState((prev) => ({ ...prev, [key]: value }));
+    pendingSettingsRef.current = {
+      ...pendingSettingsRef.current,
+      [key]: value,
+    };
 
+    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+    if (savedFadeTimerRef.current) {
+      clearTimeout(savedFadeTimerRef.current);
+      savedFadeTimerRef.current = null;
+    }
+
+    debounceTimerRef.current = setTimeout(() => {
+      flushSettings();
+    }, AUTO_SAVE_DEBOUNCE_MS);
+  }
+
+  async function flushSettings() {
+    const pending = pendingSettingsRef.current;
+    pendingSettingsRef.current = {};
+    if (Object.keys(pending).length === 0) return;
+
+    setSettingsStatus({ state: "saving" });
     try {
-      await updateSettings({ [key]: value });
-      showMessage("success", "Setting saved");
+      await updateSettings(pending);
+      setSettingsStatus({ state: "saved" });
+      savedFadeTimerRef.current = setTimeout(() => {
+        setSettingsStatus({ state: "idle" });
+        savedFadeTimerRef.current = null;
+      }, SAVED_LINGER_MS);
     } catch (err) {
-      showMessage("error", "Failed to save setting");
+      setSettingsStatus({ state: "error", error: messageForError(err) });
     }
   }
 
   async function handleApiUrlChange() {
-    setSaving(true);
+    setApiUrlStatus({ state: "saving" });
+    if (apiSavedFadeTimerRef.current) {
+      clearTimeout(apiSavedFadeTimerRef.current);
+      apiSavedFadeTimerRef.current = null;
+    }
     try {
       await setApiBaseUrl(apiUrl);
-      showMessage("success", "API URL saved");
+      setApiUrlStatus({ state: "saved" });
+      apiSavedFadeTimerRef.current = setTimeout(() => {
+        setApiUrlStatus({ state: "idle" });
+        apiSavedFadeTimerRef.current = null;
+      }, SAVED_LINGER_MS);
     } catch (err) {
-      showMessage("error", "Failed to save API URL");
-    } finally {
-      setSaving(false);
+      setApiUrlStatus({ state: "error", error: messageForError(err) });
     }
-  }
-
-  function showMessage(type: "success" | "error", text: string) {
-    setMessage({ type, text });
-    setTimeout(() => setMessage(null), 3000);
   }
 
   if (loading) {
@@ -128,10 +184,6 @@ export default function OptionsApp() {
         </div>
       </header>
 
-      {message && (
-        <div className={`message ${message.type}`}>{message.text}</div>
-      )}
-
       <section>
         <h2>Connection</h2>
         <div className="setting-group">
@@ -146,15 +198,22 @@ export default function OptionsApp() {
               onChange={(e) => setApiUrl(e.target.value)}
               placeholder="http://localhost:3000"
             />
-            <button onClick={handleApiUrlChange} disabled={saving}>
-              {saving ? "Saving..." : "Save"}
+            <button
+              onClick={handleApiUrlChange}
+              disabled={apiUrlStatus.state === "saving"}
+            >
+              {apiUrlStatus.state === "saving" ? "Saving…" : "Save"}
             </button>
+            <SaveStatusBadge status={apiUrlStatus} />
           </div>
         </div>
       </section>
 
       <section>
-        <h2>Auto-Fill</h2>
+        <div className="section-head">
+          <h2>Auto-Fill</h2>
+          <SaveStatusBadge status={settingsStatus} />
+        </div>
         <div className="setting-group">
           <label className="checkbox-label">
             <input
@@ -213,7 +272,10 @@ export default function OptionsApp() {
       </section>
 
       <section>
-        <h2>Learning</h2>
+        <div className="section-head">
+          <h2>Learning</h2>
+          <SaveStatusBadge status={settingsStatus} />
+        </div>
         <div className="setting-group">
           <label className="checkbox-label">
             <input
@@ -230,7 +292,10 @@ export default function OptionsApp() {
       </section>
 
       <section>
-        <h2>Auto-track applications</h2>
+        <div className="section-head">
+          <h2>Auto-track applications</h2>
+          <SaveStatusBadge status={settingsStatus} />
+        </div>
         <div className="setting-group">
           <label className="checkbox-label">
             <input
@@ -270,7 +335,10 @@ export default function OptionsApp() {
       </section>
 
       <section>
-        <h2>Notifications</h2>
+        <div className="section-head">
+          <h2>Notifications</h2>
+          <SaveStatusBadge status={settingsStatus} />
+        </div>
         <div className="setting-group">
           <label className="checkbox-label">
             <input
@@ -328,5 +396,23 @@ export default function OptionsApp() {
         </p>
       </section>
     </div>
+  );
+}
+
+interface SaveStatusBadgeProps {
+  status: OptionsSaveStatus;
+}
+
+function SaveStatusBadge({ status }: SaveStatusBadgeProps) {
+  if (status.state === "idle") return null;
+  const label = labelForStatus(status);
+  return (
+    <span
+      className={`save-status save-status-${status.state}`}
+      role="status"
+      aria-live="polite"
+    >
+      {label}
+    </span>
   );
 }

@@ -150,6 +150,14 @@
   outline-offset: 2px;
 }
 
+/* P3/#38 — passive LinkedIn capture toast. Same base look as
+ * .columbus-toast but shifted hue so users can distinguish "saved for later"
+ * from the apply-tracking confirmation. */
+.columbus-toast-linkedin-capture {
+  background: #0a66c2;
+  cursor: default;
+}
+
 @keyframes columbus-slide-up {
   from {
     transform: translateY(20px);
@@ -233,4 +241,130 @@
   font-size: 11px;
   color: #14b8a6;
   float: right;
+}
+
+/* ---------- Two-pass confidence bands (task #32) ---------- */
+/* Palette mirrored from apps/extension/src/popup/styles.css so the in-page
+   markers feel continuous with the popup. We intentionally don't import the
+   popup stylesheet — content scripts don't share its scope. */
+
+.columbus-zone-yellow {
+  /* Visible 1px warning-tone outline. We layer a box-shadow ring on top of the
+     outline so even browsers/themes that suppress outline rendering on inputs
+     still surface the band. */
+  outline: 1px solid #c66911 !important;
+  outline-offset: 1px !important;
+  box-shadow: 0 0 0 1px #c66911, 0 0 0 3px rgba(198, 105, 17, 0.18) !important;
+  background-color: rgba(198, 105, 17, 0.06) !important;
+  transition: outline-color 120ms ease, background-color 120ms ease;
+}
+
+.columbus-zone-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 18px !important;
+  height: 18px !important;
+  margin-left: 6px !important;
+  padding: 0 !important;
+  border: 1px solid #6d4aaa !important;
+  background: #ede5fb !important;
+  color: #6d4aaa !important;
+  border-radius: 50% !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  line-height: 1 !important;
+  cursor: pointer !important;
+  vertical-align: middle !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, sans-serif !important;
+  box-shadow: 0 1px 2px rgba(36, 28, 48, 0.08) !important;
+  z-index: 99999 !important;
+}
+
+.columbus-zone-badge:hover {
+  background: #ddd0f5 !important;
+}
+
+.columbus-zone-badge:focus-visible {
+  outline: 2px solid #6d4aaa !important;
+  outline-offset: 2px !important;
+}
+
+.columbus-zone-popover {
+  position: absolute !important;
+  display: block !important;
+  min-width: 220px !important;
+  max-width: 280px !important;
+  background: #ffffff !important;
+  border: 1px solid #e6dfd6 !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 12px rgba(36, 28, 48, 0.12) !important;
+  padding: 8px !important;
+  margin: 0 !important;
+  z-index: 999999 !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, sans-serif !important;
+  color: #241c30 !important;
+  line-height: 1.4 !important;
+}
+
+.columbus-zone-popover__title {
+  display: block !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.04em !important;
+  color: #6b6373 !important;
+  margin: 0 0 6px 0 !important;
+  padding: 0 4px !important;
+}
+
+.columbus-zone-popover__list {
+  list-style: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2px !important;
+}
+
+.columbus-zone-popover__list > li {
+  display: block !important;
+  list-style: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+.columbus-zone-popover__item {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  width: 100% !important;
+  padding: 6px 8px !important;
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  border-radius: 6px !important;
+  cursor: pointer !important;
+  text-align: left !important;
+  font: inherit !important;
+  color: inherit !important;
+}
+
+.columbus-zone-popover__item:hover {
+  background: #f9f6f1 !important;
+  border-color: #e6dfd6 !important;
+}
+
+.columbus-zone-popover__label {
+  display: block !important;
+  font-size: 11px !important;
+  color: #6b6373 !important;
+}
+
+.columbus-zone-popover__value {
+  display: block !important;
+  font-size: 13px !important;
+  color: #241c30 !important;
+  font-weight: 500 !important;
+  margin-top: 2px !important;
+  word-break: break-word !important;
 }

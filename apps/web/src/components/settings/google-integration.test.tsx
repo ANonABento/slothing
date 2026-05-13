@@ -30,6 +30,7 @@ describe("GoogleIntegration", () => {
     render(<GoogleIntegration />);
 
     const toggle = await screen.findByRole("button", { name: "Off" });
+    await waitFor(() => expect(toggle).not.toBeDisabled());
     fireEvent.click(toggle);
 
     await waitFor(() => {

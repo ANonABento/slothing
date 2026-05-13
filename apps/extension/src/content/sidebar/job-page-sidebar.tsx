@@ -1,6 +1,7 @@
 import React, { FormEvent, useMemo, useState } from "react";
 import type { SimilarAnswer, ScrapedJob } from "@/shared/types";
 import type { ResumeScore } from "@slothing/shared/scoring";
+import { ChatPanel, type ChatIntent } from "./chat-panel";
 
 export type SidebarAction = "tailor" | "coverLetter" | "save" | "autoFill";
 
@@ -17,6 +18,22 @@ export interface JobPageSidebarProps {
   onAutoFill: () => Promise<void>;
   onSearchAnswers: (query: string) => Promise<SimilarAnswer[]>;
   onApplyAnswer: (answer: SimilarAnswer) => Promise<void> | void;
+  /**
+   * P4/#40 — Streaming AI assistant. Parent opens a chrome.runtime.connect
+   * port, posts CHAT_STREAM_START, and forwards tokens via `onToken`.
+   * Resolves on stream end; rejects with a user-friendly Error on failure.
+   */
+  onChatStream: (params: {
+    prompt: string;
+    intent: ChatIntent;
+    onToken: (token: string) => void;
+    signal: AbortSignal;
+  }) => Promise<void>;
+  /**
+   * P4/#40 — Deep-link the user into /studio?mode=cover_letter with the
+   * streamed cover-letter opener seeded as a query param.
+   */
+  onUseInCoverLetter: (seedText: string) => void;
 }
 
 type Notice = { kind: "success" | "error"; message: string } | null;
@@ -204,6 +221,11 @@ export function JobPageSidebar(props: JobPageSidebarProps) {
               {notice.message}
             </div>
           )}
+
+          <ChatPanel
+            onStream={props.onChatStream}
+            onUseInCoverLetter={props.onUseInCoverLetter}
+          />
 
           <section className="answer-bank" aria-label="Answer bank search">
             <p className="section-title">Answer bank</p>
