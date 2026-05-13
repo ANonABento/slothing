@@ -10,6 +10,7 @@ const mocks = vi.hoisted(() => ({
   upsertStripeCustomer: vi.fn(),
   upsertSubscription: vi.fn(),
   markSubscriptionDeleted: vi.fn(),
+  grantPlanCredits: vi.fn(),
 }));
 
 vi.mock("@/lib/auth", () => ({
@@ -23,6 +24,10 @@ vi.mock("@/lib/db/subscriptions", () => ({
   upsertStripeCustomer: mocks.upsertStripeCustomer,
   upsertSubscription: mocks.upsertSubscription,
   markSubscriptionDeleted: mocks.markSubscriptionDeleted,
+}));
+
+vi.mock("@/lib/db/credits", () => ({
+  grantPlanCredits: mocks.grantPlanCredits,
 }));
 
 vi.mock("./stripe-client", async (importOriginal) => {
@@ -54,6 +59,7 @@ describe("cloud billing handlers", () => {
     mocks.getStripeCustomerByUserId.mockReturnValue(null);
     mocks.getStripeCustomerByStripeId.mockReturnValue(null);
     mocks.getActivePriceForPlan.mockResolvedValue("price_monthly");
+    mocks.upsertSubscription.mockImplementation((input) => input);
   });
 
   it("creates a checkout session for a valid plan", async () => {
@@ -157,6 +163,46 @@ describe("cloud billing handlers", () => {
         planKey: "pro_monthly",
         status: "active",
       }),
+    );
+  });
+
+  it("grants plan credits when an invoice is paid", async () => {
+    process.env.STRIPE_WEBHOOK_SECRET = "whsec_test";
+    const subscription = subscriptionEvent();
+    const constructEvent = vi.fn().mockReturnValue({
+      type: "invoice.paid",
+      data: {
+        object: {
+          id: "in_123",
+          parent: {
+            type: "subscription_details",
+            subscription_details: { subscription: "sub_123" },
+          },
+        },
+      },
+    });
+    const retrieve = vi.fn().mockResolvedValue(subscription);
+    mocks.getStripe.mockReturnValue({
+      webhooks: { constructEvent },
+      subscriptions: { retrieve },
+    });
+
+    const response = await handleStripeWebhook(
+      request("http://localhost/api/billing/webhook", {
+        method: "POST",
+        body: "{}",
+        headers: { "stripe-signature": "sig_test" },
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(retrieve).toHaveBeenCalledWith("sub_123", {
+      expand: ["items.data.price.product", "customer"],
+    });
+    expect(mocks.grantPlanCredits).toHaveBeenCalledWith(
+      "user-1",
+      "pro_monthly",
+      "in_123",
     );
   });
 });

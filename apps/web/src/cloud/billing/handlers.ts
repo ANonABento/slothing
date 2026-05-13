@@ -10,6 +10,7 @@ import {
   upsertSubscription,
   type SubscriptionStatus,
 } from "@/lib/db/subscriptions";
+import { grantPlanCredits } from "@/lib/db/credits";
 import { toNullableIso } from "@/lib/format/time";
 
 import { getPlanByKey, getStripe } from "./stripe-client";
@@ -180,19 +181,22 @@ async function syncInvoiceSubscription(invoice: Stripe.Invoice) {
       expand: ["items.data.price.product", "customer"],
     },
   );
-  await syncSubscription(subscription);
+  const synced = await syncSubscription(subscription);
+  if (synced) {
+    grantPlanCredits(synced.userId, synced.planKey, invoice.id);
+  }
 }
 
 async function syncSubscription(subscription: Stripe.Subscription) {
   const customerId = getCustomerId(subscription.customer);
-  if (!customerId) return;
+  if (!customerId) return null;
 
   const userId = await resolveUserIdForSubscription(subscription, customerId);
-  if (!userId) return;
+  if (!userId) return null;
 
   const price = subscription.items.data[0]?.price;
   const planKey = price ? getPlanKeyFromPrice(price) : null;
-  if (!planKey) return;
+  if (!planKey) return null;
 
   upsertStripeCustomer({
     userId,
@@ -200,7 +204,7 @@ async function syncSubscription(subscription: Stripe.Subscription) {
     email: getCustomerEmail(subscription.customer),
   });
 
-  upsertSubscription({
+  return upsertSubscription({
     id: subscription.id,
     userId,
     stripeCustomerId: customerId,

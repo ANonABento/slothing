@@ -396,6 +396,31 @@ export const subscriptions = sqliteTable(
   ],
 );
 
+export const creditBalances = sqliteTable("credit_balances", {
+  userId: text("user_id").primaryKey().notNull().default(DEFAULT_USER_ID),
+  balance: integer("balance").notNull().default(0),
+  updatedAt: text("updated_at").default(sql`CURRENT_TIMESTAMP`),
+});
+
+export const creditTransactions = sqliteTable(
+  "credit_transactions",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id").notNull().default(DEFAULT_USER_ID),
+    delta: integer("delta").notNull(),
+    reason: text("reason").notNull(),
+    feature: text("feature"),
+    refId: text("ref_id"),
+    createdAt: text("created_at").default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    index("idx_credit_transactions_user_created").on(
+      table.userId,
+      table.createdAt,
+    ),
+  ],
+);
+
 // Email drafts table
 export const emailDrafts = sqliteTable("email_drafts", {
   id: text("id").primaryKey(),
