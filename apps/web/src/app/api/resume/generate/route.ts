@@ -8,7 +8,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requireAuth, isAuthError } from "@/lib/auth";
-import { getLLMConfig } from "@/lib/db/queries";
+import {
+  gateAiFeature,
+  isAiGateResponse,
+  type AiGatePass,
+} from "@/lib/billing/ai-gate";
 import {
   saveGeneratedResume,
   STANDALONE_RESUME_JOB_ID,
@@ -27,6 +31,7 @@ const generateResumeSchema = z.object({
 export async function POST(request: NextRequest) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
+  let aiGate: AiGatePass | null = null;
 
   try {
     const body = await request.json();
@@ -47,19 +52,19 @@ export async function POST(request: NextRequest) {
 
     const { jobDescription, templateId } = parsed.data;
 
-    const llmConfig = getLLMConfig(authResult.userId);
-    if (!llmConfig) {
-      return NextResponse.json(
-        { error: "No LLM provider configured. Go to Settings to set one up." },
-        { status: 400 },
-      );
-    }
+    const gate = gateAiFeature(
+      authResult.userId,
+      "tailor",
+      `resume:${templateId ?? "retrieval"}`,
+    );
+    if (isAiGateResponse(gate)) return gate;
+    aiGate = gate;
 
     // Run the retrieval pipeline
     const result = await runRetrievalPipeline(
       jobDescription,
       authResult.userId,
-      llmConfig,
+      gate.llmConfig,
     );
 
     // Save generated resume to database
@@ -84,6 +89,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
+    aiGate?.refund();
     console.error(
       "Resume generation error:",
       error instanceof Error ? error.stack : error,

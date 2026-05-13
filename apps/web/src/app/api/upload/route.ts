@@ -13,12 +13,16 @@ import { parseSearchParams } from "@/lib/api-utils";
 import { generateId } from "@/lib/utils";
 import {
   saveDocument,
-  getLLMConfig,
   getDocumentByFileHash,
   DuplicateDocumentError,
   getProfile,
   updateProfile,
 } from "@/lib/db";
+import {
+  gateOptionalAiFeature,
+  isAiGateResponse,
+  type OptionalAiGatePass,
+} from "@/lib/billing/ai-gate";
 import { extractTextFromFile } from "@/lib/parser/pdf";
 import { classifyDocument } from "@/lib/parser/document-classifier";
 import { parseDocumentByType } from "@/lib/parser/resume";
@@ -94,6 +98,7 @@ export async function POST(request: NextRequest) {
 
   // Track the on-disk file (if written) so we can clean up on any error path.
   let writtenFilePath: string | undefined;
+  let aiGate: OptionalAiGatePass | null = null;
 
   try {
     const formData = await request.formData();
@@ -220,9 +225,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Classify document type using LLM with filename fallback
-    const llmConfig = getLLMConfig(authResult.userId);
-    const docType = await classifyDocument(extractedText, file.name, llmConfig);
+    // Classify and parse document type using gated AI access.
+    const gate = gateOptionalAiFeature(
+      authResult.userId,
+      "tailor",
+      `upload:${id}`,
+    );
+    if (isAiGateResponse(gate)) {
+      await unlink(filePath).catch(() => undefined);
+      writtenFilePath = undefined;
+      return gate;
+    }
+    aiGate = gate;
+    const docType = await classifyDocument(
+      extractedText,
+      file.name,
+      gate.llmConfig,
+    );
 
     // Parse document content — smart parser (deterministic first, LLM fallback)
     let parsedData: ParsedDocumentData | undefined;
@@ -231,7 +250,7 @@ export async function POST(request: NextRequest) {
       try {
         if (docType === "resume") {
           // Use smart parser pipeline for resumes
-          smartResult = await smartParseResume(extractedText, llmConfig);
+          smartResult = await smartParseResume(extractedText, gate.llmConfig);
           parsedData = { docType: "resume", data: smartResult.profile };
           log.debug("upload", "smart parse complete", {
             confidence: smartResult.confidence,
@@ -244,12 +263,12 @@ export async function POST(request: NextRequest) {
               warnings: smartResult.warnings,
             });
           }
-        } else if (llmConfig) {
+        } else if (gate.llmConfig) {
           // Non-resume doc types still use LLM-based parsing
           const parseResult = await parseDocumentByType(
             extractedText,
             docType,
-            llmConfig,
+            gate.llmConfig,
           );
           if (parseResult.coverLetter) {
             parsedData = {
@@ -269,6 +288,7 @@ export async function POST(request: NextRequest) {
           }
         }
       } catch (err) {
+        aiGate?.refund();
         console.error(
           "[upload] Document parsing failed:",
           err instanceof Error ? err.stack : err,
@@ -380,6 +400,7 @@ export async function POST(request: NextRequest) {
       }),
     });
   } catch (error) {
+    aiGate?.refund();
     console.error(
       "[upload] Upload error:",
       error instanceof Error ? error.stack : error,

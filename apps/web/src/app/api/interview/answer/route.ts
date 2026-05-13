@@ -7,7 +7,11 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { getJob } from "@/lib/db/jobs";
-import { getProfile, getLLMConfig } from "@/lib/db";
+import {
+  gateAiFeature,
+  isAiGateResponse,
+  type AiGatePass,
+} from "@/lib/billing/ai-gate";
 import { LLMClient } from "@/lib/llm/client";
 import { interviewAnswerSchema } from "@/lib/constants";
 import { requireAuth, isAuthError } from "@/lib/auth";
@@ -18,6 +22,7 @@ export const dynamic = "force-dynamic";
 export async function POST(request: NextRequest) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
+  let aiGate: AiGatePass | null = null;
 
   try {
     const rawData = await request.json();
@@ -42,13 +47,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Job not found" }, { status: 404 });
     }
 
-    const profile = getProfile(authResult.userId);
-    const llmConfig = getLLMConfig(authResult.userId);
+    const gate = gateAiFeature(
+      authResult.userId,
+      "interview_turn",
+      `answer:${jobId ?? "general"}`,
+    );
+    if (isAiGateResponse(gate)) return gate;
+    aiGate = gate;
 
     let feedback = "";
 
-    if (llmConfig) {
-      const client = new LLMClient(llmConfig);
+    if (gate.llmConfig) {
+      const client = new LLMClient(gate.llmConfig);
 
       const response = await client.complete({
         messages: [
@@ -83,6 +93,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ feedback });
   } catch (error) {
+    aiGate?.refund();
     console.error("Answer feedback error:", error);
     return NextResponse.json(
       { error: "Failed to process answer" },

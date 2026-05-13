@@ -11,9 +11,39 @@ import {
   analyzeKeywordEvidence,
   type KeywordEvidenceSegment,
 } from "@/lib/ats/keyword-evidence";
-import type { ATSScanResult, AxisKey, AxisScore, FileMeta } from "./types";
+import {
+  analyzeAcronymPairs,
+  analyzeActionVerbStrength,
+  analyzeBuzzwords,
+  analyzeDateFormatConsistency,
+  analyzeFirstPerson,
+  analyzeWeakLanguage,
+  detectHiddenText,
+  type AcronymPairReport,
+  type ActionVerbStrengthReport,
+  type BuzzwordReport,
+  type DateFormatReport,
+  type FirstPersonReport,
+  type HiddenTextHtmlFragment,
+  type HiddenTextReport,
+  type WeakLanguageReport,
+} from "@/lib/ats/content-checks";
+import type {
+  ATSScanResult,
+  AxisKey,
+  AxisScore,
+  ContentChecks,
+  FileMeta,
+} from "./types";
+import type { PdfLayoutReport } from "@/lib/ats/pdf-layout";
 
-export type { ATSScanResult, AxisKey, AxisScore, FileMeta } from "./types";
+export type {
+  ATSScanResult,
+  AxisKey,
+  AxisScore,
+  ContentChecks,
+  FileMeta,
+} from "./types";
 
 const AXIS_WEIGHTS: Record<AxisKey, number> = {
   parseability: 0.2,
@@ -83,35 +113,112 @@ function containsWord(text: string, term: string) {
   return wordBoundaryRegex(term).test(text);
 }
 
+function collectBullets(
+  profile: Profile,
+): Array<{ text: string; location: string }> {
+  const bullets: Array<{ text: string; location: string }> = [];
+
+  for (const experience of profile.experiences ?? []) {
+    const location = `experience: ${experience.title || experience.company || "role"}`;
+    for (const highlight of experience.highlights ?? []) {
+      if (highlight && highlight.trim().length > 0) {
+        bullets.push({ text: highlight, location });
+      }
+    }
+    // The description on an experience entry is often a short paragraph; we
+    // include it because weak language is just as bad there as in bullets.
+    if (experience.description && experience.description.trim().length > 0) {
+      bullets.push({ text: experience.description, location });
+    }
+  }
+
+  for (const project of profile.projects ?? []) {
+    const location = `project: ${project.name || "project"}`;
+    for (const highlight of project.highlights ?? []) {
+      if (highlight && highlight.trim().length > 0) {
+        bullets.push({ text: highlight, location });
+      }
+    }
+    if (project.description && project.description.trim().length > 0) {
+      bullets.push({ text: project.description, location });
+    }
+  }
+
+  return bullets;
+}
+
+function collectDateInputs(
+  profile: Profile,
+): Array<{ raw: string; location: string }> {
+  const dates: Array<{ raw: string; location: string }> = [];
+
+  (profile.experiences ?? []).forEach((exp, index) => {
+    if (exp.startDate) {
+      dates.push({
+        raw: exp.startDate,
+        location: `experience #${index + 1} start`,
+      });
+    }
+    if (exp.endDate) {
+      dates.push({
+        raw: exp.endDate,
+        location: `experience #${index + 1} end`,
+      });
+    }
+  });
+  (profile.education ?? []).forEach((edu, index) => {
+    if (edu.startDate) {
+      dates.push({
+        raw: edu.startDate,
+        location: `education #${index + 1} start`,
+      });
+    }
+    if (edu.endDate) {
+      dates.push({
+        raw: edu.endDate,
+        location: `education #${index + 1} end`,
+      });
+    }
+  });
+
+  return dates;
+}
+
 function profileText(profile: Profile) {
+  const experiences = profile.experiences ?? [];
+  const education = profile.education ?? [];
+  const skills = profile.skills ?? [];
+  const projects = profile.projects ?? [];
+  const certifications = profile.certifications ?? [];
+
   const parts = [
     profile.contact?.name,
     profile.contact?.email,
     profile.contact?.phone,
     profile.summary,
-    ...profile.experiences.flatMap((exp) => [
+    ...experiences.flatMap((exp) => [
       exp.title,
       exp.company,
       exp.description,
-      ...exp.highlights,
-      ...exp.skills,
+      ...(exp.highlights ?? []),
+      ...(exp.skills ?? []),
       exp.startDate,
       exp.endDate,
     ]),
-    ...profile.education.flatMap((edu) => [
+    ...education.flatMap((edu) => [
       edu.institution,
       edu.degree,
       edu.field,
-      ...edu.highlights,
+      ...(edu.highlights ?? []),
     ]),
-    ...profile.skills.map((skill) => skill.name),
-    ...profile.projects.flatMap((project) => [
+    ...skills.map((skill) => skill.name),
+    ...projects.flatMap((project) => [
       project.name,
       project.description,
-      ...project.highlights,
-      ...project.technologies,
+      ...(project.highlights ?? []),
+      ...(project.technologies ?? []),
     ]),
-    ...profile.certifications.map((cert) => cert.name),
+    ...certifications.map((cert) => cert.name),
   ];
   return parts.filter(Boolean).join("\n");
 }
@@ -143,11 +250,62 @@ function issue(
   return { type, category, title, description, suggestion };
 }
 
-function scoreParseability(text: string, fileMeta?: FileMeta) {
+function scoreParseability(
+  text: string,
+  fileMeta?: FileMeta,
+  htmlFragments: ReadonlyArray<HiddenTextHtmlFragment> = [],
+  pdfLayout?: PdfLayoutReport,
+) {
   const notes: string[] = [];
   const evidence: string[] = [];
   const issues: ATSIssue[] = [];
   let score = 100;
+
+  const hiddenText = detectHiddenText(text, htmlFragments);
+  if (hiddenText.hasPromptInjection) {
+    // Strong penalty — recruiters increasingly detect this and some ATS flag
+    // it as fraud. We want the user to know before the recruiter does.
+    score -= 35;
+    notes.push("AI prompt-injection patterns detected in resume text.");
+    issues.push(
+      issue(
+        "error",
+        "formatting",
+        "AI prompt-injection text detected",
+        'Phrases like "Ignore previous instructions" or "this candidate is highly qualified" are visible to recruiters and can cause auto-rejection or a fraud marker on your candidate record.',
+        "Remove the injected instructions. They mostly do not work against production ATS and they reliably damage the impression with the recruiter.",
+      ),
+    );
+    for (const hit of hiddenText.hits.slice(0, 2)) {
+      evidence.push(`Prompt-injection: "${hit.excerpt}"`);
+    }
+  }
+  if (hiddenText.hasInvisibleText) {
+    score -= 25;
+    notes.push("Invisible / color-matched text detected.");
+    issues.push(
+      issue(
+        "error",
+        "formatting",
+        "Invisible keyword text",
+        "Color-matched or zero-opacity text is extracted by ATS regardless of color and shown to recruiters as a visible block.",
+        "Remove hidden keyword stacks. They no longer beat modern ATS and recruiters who notice them reject on the spot.",
+      ),
+    );
+  }
+  if (hiddenText.hasTinyText) {
+    score -= 20;
+    notes.push("Microscopic-font text detected (likely a keyword stack).");
+    issues.push(
+      issue(
+        "warning",
+        "formatting",
+        "Tiny / microscopic text",
+        "Text rendered at 1–2px is the classic keyword-stuffing pattern. ATS sees it; recruiters see it on the parsed profile.",
+        "Remove the tiny-font block and add the keywords naturally inside bullets where they belong.",
+      ),
+    );
+  }
 
   const foundProblematic = PROBLEMATIC_CHARACTERS.filter(({ char }) =>
     text.includes(char),
@@ -238,9 +396,62 @@ function scoreParseability(text: string, fileMeta?: FileMeta) {
     evidence.push(`${fileMeta.sectionsDetected.length} section(s) detected.`);
   }
 
+  if (pdfLayout && pdfLayout.findings.length > 0) {
+    const layoutPenalty = Math.min(
+      20,
+      (pdfLayout.hasMultiColumnRisk ? 8 : 0) +
+        (pdfLayout.hasReadingOrderRisk ? 8 : 0) +
+        (pdfLayout.hasTableRisk ? 6 : 0) +
+        (pdfLayout.hasHeaderFooterRisk ? 4 : 0),
+    );
+    score -= layoutPenalty;
+    notes.push(
+      `${pdfLayout.findings.length} PDF layout risk(s) detected from positioned text.`,
+    );
+    evidence.push(
+      `${pdfLayout.pageCount} PDF page(s), ${pdfLayout.findings.length} layout finding(s).`,
+    );
+
+    if (pdfLayout.hasMultiColumnRisk || pdfLayout.hasReadingOrderRisk) {
+      issues.push(
+        issue(
+          "warning",
+          "formatting",
+          "PDF reading order risk",
+          "The PDF appears to use columns or text bands that can be flattened in the wrong order by ATS parsers.",
+          "Use a single-column ATS copy where sections read top-to-bottom.",
+        ),
+      );
+    }
+    if (pdfLayout.hasTableRisk) {
+      issues.push(
+        issue(
+          "warning",
+          "formatting",
+          "Table-like PDF layout",
+          "Tables and text boxes often extract as fragmented text, which can break skills and experience parsing.",
+          "Replace table layout with plain headings and bullets.",
+        ),
+      );
+    }
+    if (pdfLayout.hasHeaderFooterRisk) {
+      issues.push(
+        issue(
+          "info",
+          "formatting",
+          "Contact info may be in a header/footer",
+          "Some parsers drop document headers and footers or treat them separately from the resume body.",
+          "Put email, phone, and links in the main document body near the top.",
+        ),
+      );
+    }
+  }
+
   return {
     axis: axis("parseability", "Parseability", score, notes, evidence),
     issues,
+    hiddenText,
+    pdfLayout,
   };
 }
 
@@ -253,6 +464,9 @@ function scoreSections(profile: Profile) {
   const evidence: string[] = [];
   const issues: ATSIssue[] = [];
   let score = 100;
+  const experiences = profile.experiences ?? [];
+  const education = profile.education ?? [];
+  const skills = profile.skills ?? [];
 
   if (!profile.contact?.name || !profile.contact?.email) {
     score -= 20;
@@ -267,7 +481,7 @@ function scoreSections(profile: Profile) {
       ),
     );
   }
-  if (profile.experiences.length === 0) {
+  if (experiences.length === 0) {
     score -= 25;
     notes.push("No work experience section was parsed.");
     issues.push(
@@ -280,7 +494,7 @@ function scoreSections(profile: Profile) {
       ),
     );
   }
-  if (profile.education.length === 0) {
+  if (education.length === 0) {
     score -= 15;
     notes.push("No education section was parsed.");
     issues.push(
@@ -293,7 +507,7 @@ function scoreSections(profile: Profile) {
       ),
     );
   }
-  if (profile.skills.length < 3) {
+  if (skills.length < 3) {
     score -= 20;
     notes.push("Skills section has fewer than three detected skills.");
     issues.push(
@@ -315,8 +529,10 @@ function scoreSections(profile: Profile) {
     notes.push("Professional summary is missing, too short, or too long.");
   }
 
-  const thinEntries = profile.experiences.filter(
-    (exp) => exp.highlights.length === 0 && exp.description.length < 80,
+  const thinEntries = experiences.filter(
+    (exp) =>
+      (exp.highlights ?? []).length === 0 &&
+      (exp.description ?? "").length < 80,
   ).length;
   if (thinEntries > 0) {
     score -= Math.min(15, thinEntries * 5);
@@ -324,7 +540,7 @@ function scoreSections(profile: Profile) {
   }
 
   evidence.push(
-    `${profile.experiences.length} experience, ${profile.education.length} education, ${profile.skills.length} skill entries.`,
+    `${experiences.length} experience, ${education.length} education, ${skills.length} skill entries.`,
   );
   return {
     axis: axis(
@@ -412,6 +628,11 @@ function profileSegments(
   rawText: string,
 ): KeywordEvidenceSegment[] {
   const segments: KeywordEvidenceSegment[] = [];
+  const skills = profile.skills ?? [];
+  const experiences = profile.experiences ?? [];
+  const projects = profile.projects ?? [];
+  const education = profile.education ?? [];
+  const certifications = profile.certifications ?? [];
 
   if (profile.summary) {
     segments.push({
@@ -421,19 +642,19 @@ function profileSegments(
     });
   }
 
-  if (profile.skills.length > 0) {
+  if (skills.length > 0) {
     segments.push({
-      text: profile.skills.map((skillItem) => skillItem.name).join(", "),
+      text: skills.map((skillItem) => skillItem.name).join(", "),
       location: "skills",
       kind: "skills",
     });
   }
 
-  for (const experience of profile.experiences) {
+  for (const experience of experiences) {
     const location = `experience: ${experience.title || experience.company || "role"}`;
     const hasRoleEvidence = [
       experience.description,
-      ...experience.highlights,
+      ...(experience.highlights ?? []),
     ].some((textValue) =>
       isEvidenceLikeExperienceText(String(textValue || "")),
     );
@@ -442,18 +663,18 @@ function profileSegments(
       experience.title,
       experience.company,
       experience.description,
-      ...experience.highlights,
+      ...(experience.highlights ?? []),
     ].filter(Boolean)) {
       segments.push({
         text: textValue,
         location,
         kind: "experience",
-        evidencePreferred: experience.highlights.includes(textValue),
+        evidencePreferred: (experience.highlights ?? []).includes(textValue),
       });
     }
-    if (experience.skills.length > 0) {
+    if ((experience.skills ?? []).length > 0) {
       segments.push({
-        text: experience.skills.join(", "),
+        text: (experience.skills ?? []).join(", "),
         location: `${location} skills`,
         kind: "skills",
         evidencePreferred: hasRoleEvidence,
@@ -461,11 +682,11 @@ function profileSegments(
     }
   }
 
-  for (const project of profile.projects) {
+  for (const project of projects) {
     const location = `project: ${project.name || "project"}`;
     const hasProjectEvidence = [
       project.description,
-      ...project.highlights,
+      ...(project.highlights ?? []),
     ].some((textValue) =>
       isEvidenceLikeExperienceText(String(textValue || "")),
     );
@@ -473,18 +694,18 @@ function profileSegments(
     for (const textValue of [
       project.name,
       project.description,
-      ...project.highlights,
+      ...(project.highlights ?? []),
     ].filter(Boolean)) {
       segments.push({
         text: textValue,
         location,
         kind: "project",
-        evidencePreferred: project.highlights.includes(textValue),
+        evidencePreferred: (project.highlights ?? []).includes(textValue),
       });
     }
-    if (project.technologies.length > 0) {
+    if ((project.technologies ?? []).length > 0) {
       segments.push({
-        text: project.technologies.join(", "),
+        text: (project.technologies ?? []).join(", "),
         location: `${location} technologies`,
         kind: "skills",
         evidencePreferred: hasProjectEvidence,
@@ -492,13 +713,13 @@ function profileSegments(
     }
   }
 
-  for (const education of profile.education) {
+  for (const educationItem of education) {
     segments.push({
       text: [
-        education.institution,
-        education.degree,
-        education.field,
-        ...education.highlights,
+        educationItem.institution,
+        educationItem.degree,
+        educationItem.field,
+        ...(educationItem.highlights ?? []),
       ]
         .filter(Boolean)
         .join(" "),
@@ -507,7 +728,7 @@ function profileSegments(
     });
   }
 
-  for (const certification of profile.certifications) {
+  for (const certification of certifications) {
     segments.push({
       text: [certification.name, certification.issuer]
         .filter(Boolean)
@@ -523,31 +744,139 @@ function profileSegments(
   return segments.filter((segment) => segment.text.trim().length > 0);
 }
 
-function uniqueNormalizedKeywords(keywords: string[]) {
+function uniqueNormalizedKeywords(keywords: readonly string[] = []) {
   return Array.from(new Set(keywords.map(normalizeText).filter(Boolean)));
 }
 
-function buildJobKeywords(job: JobDescription) {
-  const explicit = uniqueNormalizedKeywords([
-    ...job.keywords,
-    ...job.requirements.flatMap((requirement) =>
-      extractJdKeywords(requirement, { limit: 8 }).map(
-        (keyword) => keyword.term,
-      ),
-    ),
-  ]);
+interface WeightedJobKeyword {
+  term: string;
+  weight: number;
+  reasons: string[];
+}
 
-  if (explicit.length >= 4) return explicit.slice(0, 24);
+interface WeightedKeywordCandidate {
+  term: string;
+  priority: number;
+  frequency: number;
+  firstIndex: number;
+  reasons: Set<string>;
+}
 
-  return uniqueNormalizedKeywords([
-    ...explicit,
-    ...extractJdKeywords(
-      [job.title, job.description, ...job.requirements, ...job.responsibilities]
-        .filter(Boolean)
-        .join("\n"),
-      { limit: 24 },
-    ).map((keyword) => keyword.term),
-  ]).slice(0, 24);
+function addWeightedKeyword(
+  candidates: Map<string, WeightedKeywordCandidate>,
+  term: string,
+  priority: number,
+  reason: string,
+  frequency = 1,
+  firstIndex = Number.MAX_SAFE_INTEGER,
+) {
+  const normalized = normalizeText(term);
+  if (!normalized) return;
+  const existing = candidates.get(normalized);
+  if (existing) {
+    existing.priority = Math.max(existing.priority, priority);
+    existing.frequency += frequency;
+    existing.firstIndex = Math.min(existing.firstIndex, firstIndex);
+    existing.reasons.add(reason);
+    return;
+  }
+  candidates.set(normalized, {
+    term: normalized,
+    priority,
+    frequency,
+    firstIndex,
+    reasons: new Set([reason]),
+  });
+}
+
+function addExtractedWeightedKeywords(
+  candidates: Map<string, WeightedKeywordCandidate>,
+  text: string,
+  priority: number,
+  reason: string,
+  limit: number,
+) {
+  for (const keyword of extractJdKeywords(text, { limit })) {
+    addWeightedKeyword(
+      candidates,
+      keyword.term,
+      priority,
+      reason,
+      keyword.frequency,
+    );
+  }
+}
+
+function finalizeWeightedKeywords(
+  candidates: Map<string, WeightedKeywordCandidate>,
+  limit: number,
+): WeightedJobKeyword[] {
+  return [...candidates.values()]
+    .map((candidate) => {
+      const sourceBonus = Math.min(0.3, (candidate.reasons.size - 1) * 0.1);
+      const frequencyBonus = Math.min(0.6, (candidate.frequency - 1) * 0.15);
+      return {
+        term: candidate.term,
+        weight: Math.min(
+          2.5,
+          Math.max(1, candidate.priority + sourceBonus + frequencyBonus),
+        ),
+        reasons: [...candidate.reasons],
+        firstIndex: candidate.firstIndex,
+      };
+    })
+    .sort((a, b) => {
+      const byWeight = b.weight - a.weight;
+      if (byWeight !== 0) return byWeight;
+      if (a.firstIndex !== b.firstIndex) return a.firstIndex - b.firstIndex;
+      return a.term.localeCompare(b.term);
+    })
+    .slice(0, limit)
+    .map(({ term, weight, reasons }) => ({ term, weight, reasons }));
+}
+
+function buildWeightedJobKeywords(job: JobDescription): WeightedJobKeyword[] {
+  const candidates = new Map<string, WeightedKeywordCandidate>();
+
+  for (const keyword of uniqueNormalizedKeywords(job.keywords)) {
+    addWeightedKeyword(candidates, keyword, 1.35, "explicit keyword");
+  }
+
+  for (const requirement of job.requirements ?? []) {
+    addExtractedWeightedKeywords(
+      candidates,
+      requirement,
+      1.25,
+      "requirement",
+      8,
+    );
+  }
+
+  addExtractedWeightedKeywords(
+    candidates,
+    job.title ?? "",
+    1.2,
+    "job title",
+    8,
+  );
+  for (const responsibility of job.responsibilities ?? []) {
+    addExtractedWeightedKeywords(
+      candidates,
+      responsibility,
+      1.1,
+      "responsibility",
+      8,
+    );
+  }
+  addExtractedWeightedKeywords(
+    candidates,
+    job.description ?? "",
+    1,
+    "description",
+    30,
+  );
+
+  return finalizeWeightedKeywords(candidates, 24);
 }
 
 function scoreKeywords(profile: Profile, text: string, job?: JobDescription) {
@@ -556,9 +885,13 @@ function scoreKeywords(profile: Profile, text: string, job?: JobDescription) {
   const notes: string[] = [];
   const evidence: string[] = [];
   const normalizedResume = normalizeText(text || profileText(profile));
+  const weightedJobKeywords = job ? buildWeightedJobKeywords(job) : [];
   const importantKeywords = job
-    ? buildJobKeywords(job)
+    ? weightedJobKeywords.map((keyword) => keyword.term)
     : extractKeywords(normalizedResume).slice(0, 10);
+  const keywordWeights = new Map(
+    weightedJobKeywords.map((keyword) => [keyword.term, keyword.weight]),
+  );
 
   if (importantKeywords.length === 0) {
     return {
@@ -580,9 +913,14 @@ function scoreKeywords(profile: Profile, text: string, job?: JobDescription) {
     profileSegments(profile, text),
   );
   const weightedMatches = keywordEvidence.matches.reduce(
-    (sum, match) => sum + match.scoreWeight,
+    (sum, match) =>
+      sum + match.scoreWeight * (keywordWeights.get(match.keyword) ?? 1),
     0,
   );
+  const totalKeywordWeight =
+    job && weightedJobKeywords.length > 0
+      ? weightedJobKeywords.reduce((sum, keyword) => sum + keyword.weight, 0)
+      : importantKeywords.length;
 
   for (const match of keywordEvidence.matches) {
     keywords.push({
@@ -597,7 +935,7 @@ function scoreKeywords(profile: Profile, text: string, job?: JobDescription) {
     });
   }
 
-  let score = job ? (weightedMatches / importantKeywords.length) * 100 : 85;
+  let score = job ? (weightedMatches / totalKeywordWeight) * 100 : 85;
   const stuffed = keywordEvidence.stuffed;
   if (job && stuffed.length > 0) {
     const penalty = Math.min(20, 8 + stuffed.length * 4);
@@ -638,12 +976,20 @@ function scoreKeywords(profile: Profile, text: string, job?: JobDescription) {
 
   notes.push(
     job
-      ? "Compared JD terms as evidence-backed matches, mentions, and missing keywords."
+      ? "Compared weighted JD terms as evidence-backed matches, mentions, and missing keywords."
       : "No job description supplied; keyword score uses a neutral baseline.",
   );
   evidence.push(
     `${keywordEvidence.matchedWithEvidence.length}/${keywords.length} keyword(s) matched with evidence; ${keywordEvidence.mentionedOnly.length} mentioned only.`,
   );
+  if (job && weightedJobKeywords.length > 0) {
+    evidence.push(
+      `Highest-weight JD terms: ${weightedJobKeywords
+        .slice(0, 5)
+        .map((keyword) => `${keyword.term} (${keyword.weight.toFixed(2)}x)`)
+        .join(", ")}.`,
+    );
+  }
   for (const match of keywordEvidence.matches.slice(0, 8)) {
     if (match.status === "matched_with_evidence") {
       evidence.push(
@@ -709,9 +1055,8 @@ function scoreDates(profile: Profile) {
   const evidence: string[] = [];
   const issues: ATSIssue[] = [];
   let score = 100;
-  const missingStart = profile.experiences.filter(
-    (exp) => !exp.startDate,
-  ).length;
+  const experiences = profile.experiences ?? [];
+  const missingStart = experiences.filter((exp) => !exp.startDate).length;
   if (missingStart > 0) {
     score -= Math.min(50, missingStart * 22);
     notes.push("Some roles are missing start dates.");
@@ -726,7 +1071,7 @@ function scoreDates(profile: Profile) {
     );
   }
 
-  const ranges = profile.experiences
+  const ranges = experiences
     .map((exp) => ({
       start: parseDate(exp.startDate),
       end: parseDate(exp.endDate) || (exp.current ? nowDate() : null),
@@ -751,12 +1096,30 @@ function scoreDates(profile: Profile) {
     notes.push("Large unexplained employment gaps may trigger rigid filters.");
   }
 
+  const dateFormat = analyzeDateFormatConsistency(collectDateInputs(profile));
+  if (dateFormat.inconsistent) {
+    score -= 8;
+    notes.push(
+      `Date formats are mixed across roles (${dateFormat.distinctFormats.join(", ")}).`,
+    );
+    issues.push(
+      issue(
+        "warning",
+        "structure",
+        "Inconsistent date formats",
+        "Older ATS parsers (notably Taleo) can misread chronologies when date formats are mixed.",
+        "Pick one format (e.g., Jan 2021 — Present) and apply it consistently.",
+      ),
+    );
+  }
+
   evidence.push(
-    `${profile.experiences.length - missingStart}/${profile.experiences.length} role(s) include start dates.`,
+    `${experiences.length - missingStart}/${experiences.length} role(s) include start dates.`,
   );
   return {
     axis: axis("datesAndTenure", "Dates & tenure", score, notes, evidence),
     issues,
+    dateFormat,
   };
 }
 
@@ -765,6 +1128,7 @@ function scoreContent(profile: Profile, text: string) {
   const evidence: string[] = [];
   const issues: ATSIssue[] = [];
   let score = 100;
+  const experiences = profile.experiences ?? [];
   const normalized = normalizeText(text || profileText(profile));
   const wordCount = normalized.split(/\s+/).filter(Boolean).length;
   const actionVerbCount = ACTION_VERBS.filter((verb) =>
@@ -776,7 +1140,19 @@ function scoreContent(profile: Profile, text: string) {
     ) || []
   ).length;
 
-  if (actionVerbCount < 5 && profile.experiences.length > 0) {
+  const bullets = collectBullets(profile);
+  const weakLanguage = analyzeWeakLanguage(bullets);
+  const buzzwords = analyzeBuzzwords([
+    ...(profile.summary
+      ? [{ text: profile.summary, location: "summary" }]
+      : []),
+    ...bullets,
+  ]);
+  const verbStrength = analyzeActionVerbStrength(bullets);
+  const firstPerson = analyzeFirstPerson(bullets);
+  const acronymPairs = analyzeAcronymPairs(text || profileText(profile));
+
+  if (actionVerbCount < 5 && experiences.length > 0) {
     score -= 15;
     notes.push("Few strong action verbs were detected.");
     issues.push(
@@ -789,7 +1165,7 @@ function scoreContent(profile: Profile, text: string) {
       ),
     );
   }
-  if (quantified === 0 && profile.experiences.length > 0) {
+  if (quantified === 0 && experiences.length > 0) {
     score -= 18;
     notes.push("No quantified achievements were detected.");
     issues.push(
@@ -813,12 +1189,137 @@ function scoreContent(profile: Profile, text: string) {
     notes.push("Resume length is outside the 300-700 word target band.");
   }
 
+  // Weak/passive language — penalize proportionally to the fraction of bullets
+  // affected. Caps at -15 because it's a writing-quality signal, not a
+  // disqualifier.
+  if (bullets.length > 0 && weakLanguage.weakBulletCount > 0) {
+    const penalty = Math.min(15, Math.round(weakLanguage.weakRatio * 30));
+    score -= penalty;
+    notes.push(
+      `${weakLanguage.weakBulletCount} of ${bullets.length} bullet(s) use weak/passive phrasing.`,
+    );
+    if (weakLanguage.weakRatio >= 0.3) {
+      issues.push(
+        issue(
+          "warning",
+          "content",
+          "Weak or passive phrasing",
+          `Phrases like "responsible for", "helped with", and "worked on" describe duties rather than impact.`,
+          "Rewrite bullets to start with a strong action verb and end with a measurable outcome.",
+        ),
+      );
+    }
+  }
+
+  // Buzzwords / clichés.
+  if (buzzwords.uniquePhrases.length > 0) {
+    const penalty = Math.min(10, buzzwords.uniquePhrases.length * 3);
+    score -= penalty;
+    notes.push(
+      `Detected ${buzzwords.uniquePhrases.length} buzzword phrase(s): ${buzzwords.uniquePhrases.slice(0, 4).join(", ")}.`,
+    );
+    if (buzzwords.uniquePhrases.length >= 2) {
+      issues.push(
+        issue(
+          "warning",
+          "content",
+          "Buzzwords detected",
+          "Phrases like these take up space without conveying evidence and recruiters skim past them.",
+          `Replace with concrete outcomes. Examples flagged: ${buzzwords.uniquePhrases.slice(0, 3).join(", ")}.`,
+        ),
+      );
+    }
+  }
+
+  // Action-verb tiering. We reward strong verbs and gently penalize weak ones.
+  if (bullets.length >= 3) {
+    const total = bullets.length;
+    const strongRatio = verbStrength.strongCount / total;
+    const weakRatio = verbStrength.weakCount / total;
+    if (weakRatio > 0.3) {
+      const penalty = Math.min(10, Math.round(weakRatio * 20));
+      score -= penalty;
+      notes.push(
+        `${verbStrength.weakCount} of ${total} bullets lead with a weak verb.`,
+      );
+      issues.push(
+        issue(
+          "info",
+          "content",
+          "Weak verb tier",
+          "Several bullets lead with low-impact verbs (helped, assisted, used).",
+          "Upgrade openers to strong verbs (Spearheaded, Architected, Shipped, Cut, Drove).",
+        ),
+      );
+    }
+    if (strongRatio >= 0.5) {
+      score = Math.min(100, score + 3);
+      notes.push(
+        `${verbStrength.strongCount} of ${total} bullets lead with a strong action verb.`,
+      );
+    }
+  }
+
+  // First-person pronouns. Industry consensus: implied first-person, no I/my.
+  if (firstPerson.hitCount > 0) {
+    const penalty = Math.min(10, firstPerson.hitCount * 3);
+    score -= penalty;
+    notes.push(
+      `${firstPerson.hitCount} bullet(s) contain first-person pronouns (I/my/me).`,
+    );
+    issues.push(
+      issue(
+        "warning",
+        "content",
+        "First-person pronouns",
+        "Resume bullets conventionally drop I/my/me.",
+        `Rewrite "${firstPerson.hits[0].bullet.slice(0, 80)}${firstPerson.hits[0].bullet.length > 80 ? "..." : ""}" without the pronoun.`,
+      ),
+    );
+  }
+
+  // Acronym ↔ expansion pairs. Advisory penalty — different parsers index
+  // acronyms differently, so having both forms helps.
+  if (acronymPairs.gaps.length > 0) {
+    const penalty = Math.min(8, acronymPairs.gaps.length);
+    score -= penalty;
+    const previewGaps = acronymPairs.gaps
+      .slice(0, 3)
+      .map((gap) =>
+        gap.kind === "expansion-missing"
+          ? `"${gap.acronym}" without "${gap.expansion}"`
+          : `"${gap.expansion}" without "${gap.acronym}"`,
+      );
+    notes.push(
+      `${acronymPairs.gaps.length} acronym/expansion gap(s): ${previewGaps.join("; ")}.`,
+    );
+    if (acronymPairs.gaps.length >= 3) {
+      issues.push(
+        issue(
+          "info",
+          "content",
+          "Acronym/expansion pairs missing",
+          "Different ATS parsers index acronyms differently (Workday treats ML and Machine Learning as distinct tokens).",
+          'Include both forms on first occurrence: "Machine Learning (ML)".',
+        ),
+      );
+    }
+  }
+
   evidence.push(
     `${wordCount} words, ${actionVerbCount} action verbs, ${quantified} quantified result(s).`,
+  );
+  evidence.push(
+    `${verbStrength.strongCount} strong / ${verbStrength.standardCount} standard / ${verbStrength.weakCount} weak verb opener(s) across ${bullets.length} bullet(s).`,
   );
   return {
     axis: axis("contentQuality", "Content quality", score, notes, evidence),
     issues,
+    weakLanguage,
+    buzzwords,
+    acronymPairs,
+    verbStrength,
+    firstPerson,
   };
 }
 
@@ -864,14 +1365,36 @@ function buildRecommendations(
   return recommendations.slice(0, 5);
 }
 
+export interface ScanResumeOptions {
+  fileMeta?: FileMeta;
+  /**
+   * Optional HTML / style-aware text fragments extracted from the original
+   * resume document. Used by the hidden-text detector to catch color-matched
+   * or microscopic-font keyword stacks.
+   */
+  htmlFragments?: ReadonlyArray<HiddenTextHtmlFragment>;
+  pdfLayout?: PdfLayoutReport;
+}
+
 export function scanResume(
   profile: Profile,
   rawText?: string,
   job?: JobDescription,
-  fileMeta?: FileMeta,
+  fileMetaOrOptions?: FileMeta | ScanResumeOptions,
 ): ATSScanResult {
+  // Back-compat: callers used to pass FileMeta directly. Detect by shape.
+  const options: ScanResumeOptions =
+    fileMetaOrOptions && "sectionsDetected" in fileMetaOrOptions
+      ? { fileMeta: fileMetaOrOptions as FileMeta }
+      : ((fileMetaOrOptions as ScanResumeOptions) ?? {});
+
   const text = rawText?.trim() || profile.rawText || profileText(profile);
-  const parseability = scoreParseability(text, fileMeta);
+  const parseability = scoreParseability(
+    text,
+    options.fileMeta,
+    options.htmlFragments,
+    options.pdfLayout,
+  );
   const sections = scoreSections(profile);
   const keywords = scoreKeywords(profile, text, job);
   const dates = scoreDates(profile);
@@ -883,12 +1406,33 @@ export function scanResume(
     datesAndTenure: dates.axis,
     contentQuality: content.axis,
   };
+
+  // Skills-only-keyword warning derived from the existing evidence summary.
+  // A keyword that's only mentioned in the skills list (no experience bullet)
+  // is discounted by recruiters per documented testimony.
+  const extraIssues: ATSIssue[] = [];
+  if (keywords.keywordEvidence) {
+    const mentionedOnly = keywords.keywordEvidence.mentionedOnly;
+    if (job && mentionedOnly.length >= 3) {
+      extraIssues.push(
+        issue(
+          "warning",
+          "keywords",
+          "Keywords listed but not used",
+          `${mentionedOnly.length} JD keyword(s) appear only in the skills section: ${mentionedOnly.slice(0, 4).join(", ")}.`,
+          "Reinforce them inside experience or project bullets so recruiters see how you used them.",
+        ),
+      );
+    }
+  }
+
   const issues = [
     ...parseability.issues,
     ...sections.issues,
     ...keywords.issues,
     ...dates.issues,
     ...content.issues,
+    ...extraIssues,
   ];
   const overall = clampScore(
     Object.values(axes).reduce(
@@ -912,6 +1456,17 @@ export function scanResume(
     recommendations: buildRecommendations(issues, axes),
   };
 
+  const contentChecks: ContentChecks = {
+    weakLanguage: content.weakLanguage,
+    buzzwords: content.buzzwords,
+    acronymPairs: content.acronymPairs,
+    actionVerbStrength: content.verbStrength,
+    firstPerson: content.firstPerson,
+    dateFormat: dates.dateFormat,
+    hiddenText: parseability.hiddenText,
+    pdfLayout: parseability.pdfLayout,
+  };
+
   return {
     overall,
     letterGrade: scoreToLetterGrade(overall),
@@ -919,6 +1474,7 @@ export function scanResume(
     issues,
     keywords: keywords.keywords,
     keywordEvidence: keywords.keywordEvidence,
+    contentChecks,
     summary: legacy.summary,
     recommendations: legacy.recommendations,
     scannedAt: nowIso(),

@@ -129,12 +129,17 @@ describe("AiAssistantPanel", () => {
     fireEvent.click(screen.getByRole("button", { name: "Tailor to JD" }));
 
     expect(
-      await screen.findByText("Set up an LLM provider to use AI tools."),
+      await screen.findByText("AI tools need BYOK or Pro credits."),
     ).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Open Settings" })).toHaveAttribute(
-      "href",
-      "/settings",
-    );
+    expect(
+      screen.getByRole("button", { name: /Upgrade Weekly/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /Upgrade Monthly/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "Use my own key" }),
+    ).toHaveAttribute("href", "/settings");
   });
 
   it("shows a loading state while checking setup", async () => {
@@ -159,7 +164,7 @@ describe("AiAssistantPanel", () => {
     resolveStatus(statusResponse(false));
 
     expect(
-      await screen.findByText("Set up an LLM provider to use AI tools."),
+      await screen.findByText("AI tools need BYOK or Pro credits."),
     ).toBeInTheDocument();
   });
 
@@ -204,7 +209,7 @@ describe("AiAssistantPanel", () => {
 
     resolveStatus(statusResponse(false));
     expect(
-      await screen.findByText("Set up an LLM provider to use AI tools."),
+      await screen.findByText("AI tools need BYOK or Pro credits."),
     ).toBeInTheDocument();
   });
 

@@ -6,7 +6,12 @@
  */
 import { NextRequest } from "next/server";
 import { getJob } from "@/lib/db/jobs";
-import { getProfile, getLLMConfig } from "@/lib/db";
+import { getProfile } from "@/lib/db";
+import {
+  gateAiFeature,
+  isAiGateResponse,
+  type AiGatePass,
+} from "@/lib/billing/ai-gate";
 import { LLMClient } from "@/lib/llm/client";
 import { requireAuth, isAuthError } from "@/lib/auth";
 import { buildOpportunityCoverLetterStreamPrompt } from "@/lib/cover-letter/opportunity-prompts";
@@ -19,6 +24,7 @@ export async function POST(
 ) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
+  let aiGate: AiGatePass | null = null;
 
   try {
     const job = getJob(params.id, authResult.userId);
@@ -37,19 +43,11 @@ export async function POST(
       );
     }
 
-    const llmConfig = getLLMConfig(authResult.userId);
-    if (!llmConfig) {
-      // Return basic cover letter for non-LLM case
-      const basicLetter = generateBasicCoverLetter(profile, job);
-      return new Response(
-        JSON.stringify({ content: basicLetter, done: true }),
-        {
-          headers: { "Content-Type": "application/json" },
-        },
-      );
-    }
+    const gate = gateAiFeature(authResult.userId, "cover_letter", params.id);
+    if (isAiGateResponse(gate)) return gate;
+    aiGate = gate;
 
-    const client = new LLMClient(llmConfig);
+    const client = new LLMClient(gate.llmConfig);
 
     const profileSummary = `
 Name: ${profile.contact.name}
@@ -87,6 +85,7 @@ Skills: ${profile.skills.map((s) => s.name).join(", ")}
           controller.enqueue(encoder.encode(`data: {"done": true}\n\n`));
           controller.close();
         } catch (error) {
+          aiGate?.refund();
           // Log internally but never echo error.message to the client — LLM
           // SDKs occasionally include API keys / request IDs in error strings.
           console.error("[cover-letter/stream] generation error:", error);
@@ -108,6 +107,7 @@ Skills: ${profile.skills.map((s) => s.name).join(", ")}
       },
     });
   } catch (error) {
+    aiGate?.refund();
     console.error("Cover letter stream error:", error);
     return new Response(
       JSON.stringify({ error: "Failed to generate cover letter" }),

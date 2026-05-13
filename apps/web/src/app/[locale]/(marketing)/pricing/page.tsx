@@ -14,6 +14,7 @@ import {
 import { getLocale } from "next-intl/server";
 
 import { Button } from "@/components/ui/button";
+import { CheckoutButton } from "@/components/billing/billing-actions";
 import { Link } from "@/i18n/navigation";
 import { getLocalizedPageMetadata } from "@/lib/seo";
 import { cn } from "@/lib/utils";
@@ -26,7 +27,8 @@ const SLOTHING_REPO_URL = "https://github.com/ANonABento/slothing";
 
 type TierCta =
   | { kind: "internal"; pathname: string }
-  | { kind: "external"; href: string };
+  | { kind: "external"; href: string }
+  | { kind: "checkout"; plan: "pro_weekly" | "pro_monthly" };
 
 interface Tier {
   name: string;
@@ -88,13 +90,10 @@ const tiers: readonly Tier[] = [
     description:
       "Sprint pricing for active job searches. Slothing should help you land fast — pay only for the weeks you need.",
     icon: Zap,
-    cta: "Email us for early access",
-    ctaAction: {
-      kind: "external",
-      href: "mailto:waitlist@slothing.work?subject=Weekly%20plan%20early%20access",
-    },
+    cta: "Start Weekly",
+    ctaAction: { kind: "checkout", plan: "pro_weekly" },
     highlighted: false,
-    ctaNote: "Billing launches soon. No card needed to join the waitlist.",
+    ctaNote: "Stripe checkout. Cancel any time from Settings.",
     features: [
       "Everything in Hosted Free",
       "Slothing-provided AI credits",
@@ -109,13 +108,10 @@ const tiers: readonly Tier[] = [
     description:
       "The default plan for serious job searches. Roughly 28% cheaper than weekly when you commit to a full month.",
     icon: Rocket,
-    cta: "Email us for early access",
-    ctaAction: {
-      kind: "external",
-      href: "mailto:waitlist@slothing.work?subject=Monthly%20plan%20early%20access",
-    },
+    cta: "Start Monthly",
+    ctaAction: { kind: "checkout", plan: "pro_monthly" },
     highlighted: true,
-    ctaNote: "Billing launches soon. No card needed to join the waitlist.",
+    ctaNote: "Stripe checkout. Cancel any time from Settings.",
     badge: "Most popular",
     features: [
       "Everything in Weekly",
@@ -154,8 +150,7 @@ const faqs = [
   },
   {
     question: "Are prices in USD?",
-    answer:
-      "Yes. Local taxes may apply depending on your billing country.",
+    answer: "Yes. Local taxes may apply depending on your billing country.",
   },
   {
     question: "What if I'm a student?",
@@ -236,7 +231,7 @@ export default async function PricingPage() {
         <div className="mx-auto max-w-3xl text-center">
           <div className="mb-6 inline-flex items-center gap-2 rounded-lg border bg-card px-3 py-2 text-sm font-medium text-muted-foreground">
             <Github className="h-4 w-4 text-primary" />
-            Self-host today, AGPL-3.0. Hosted plans launching soon.
+            Self-host today, AGPL-3.0. Hosted plans available now.
           </div>
           <h1 className="text-4xl font-bold tracking-tight md:text-5xl">
             Pay for the weeks you need. Not a day more.
@@ -258,6 +253,8 @@ export default async function PricingPage() {
                 : null;
             const externalHref =
               tier.ctaAction.kind === "external" ? tier.ctaAction.href : null;
+            const checkoutPlan =
+              tier.ctaAction.kind === "checkout" ? tier.ctaAction.plan : null;
 
             return (
               <article
@@ -317,6 +314,13 @@ export default async function PricingPage() {
                         {tier.cta}
                       </Link>
                     </Button>
+                  ) : checkoutPlan ? (
+                    <CheckoutButton
+                      plan={checkoutPlan}
+                      variant={tier.highlighted ? "default" : "outline"}
+                    >
+                      {tier.cta}
+                    </CheckoutButton>
                   ) : (
                     <Button
                       asChild
@@ -492,21 +496,16 @@ export default async function PricingPage() {
 
         <section className="mt-16 flex flex-col items-center gap-4 rounded-lg border border-primary/30 bg-primary/5 p-8 text-center">
           <Hourglass className="h-8 w-8 text-primary" />
-          <h2 className="text-xl font-semibold">Hosted billing launches soon</h2>
+          <h2 className="text-xl font-semibold">Hosted billing is live</h2>
           <p className="max-w-xl text-sm text-muted-foreground">
-            Weekly and Monthly plans are live as a waitlist while Stripe
-            billing ships. Self-hosting is fully available today.
+            Use Stripe checkout for Weekly or Monthly Pro, or self-host the
+            AGPL-3.0 app for free.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-3">
-            <Button asChild>
-              <a
-                href="mailto:waitlist@slothing.work?subject=Hosted%20plan%20waitlist"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Join the waitlist
-              </a>
-            </Button>
+            <CheckoutButton plan="pro_weekly">Start Weekly</CheckoutButton>
+            <CheckoutButton plan="pro_monthly" variant="outline">
+              Start Monthly
+            </CheckoutButton>
             <Button asChild variant="outline">
               <a
                 href={SLOTHING_REPO_URL}

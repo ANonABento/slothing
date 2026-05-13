@@ -7,8 +7,13 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { parseJsonBody } from "@/lib/api-utils";
-import { getLLMConfig } from "@/lib/db";
+import {
+  gateAiFeature,
+  isAiGateResponse,
+  type AiGatePass,
+} from "@/lib/billing/ai-gate";
 import { LLMClient } from "@/lib/llm/client";
+import { nowEpoch } from "@/lib/format/time";
 import { extractJSON } from "@/lib/utils";
 import { requireAuth, isAuthError } from "@/lib/auth";
 import { tailorAutofixSchema } from "@/lib/schemas";
@@ -26,6 +31,7 @@ export const dynamic = "force-dynamic";
 export async function POST(request: NextRequest) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
+  let aiGate: AiGatePass | null = null;
 
   try {
     const parsed = await parseJsonBody(request, tailorAutofixSchema);
@@ -38,15 +44,15 @@ export async function POST(request: NextRequest) {
     } = parsed.data;
     const resume = validatedResume as TailoredResume;
 
-    const llmConfig = getLLMConfig(authResult.userId);
-    if (!llmConfig) {
-      return NextResponse.json(
-        { error: "No LLM provider configured. Visit Settings to set one up." },
-        { status: 400 },
-      );
-    }
+    const gate = gateAiFeature(
+      authResult.userId,
+      "tailor",
+      `autofix:${nowEpoch()}`,
+    );
+    if (isAiGateResponse(gate)) return gate;
+    aiGate = gate;
 
-    const client = new LLMClient(llmConfig);
+    const client = new LLMClient(gate.llmConfig);
 
     const prompt = buildTailorAutofixPrompt({
       resume,
@@ -89,6 +95,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ resume: improved });
   } catch (error) {
+    aiGate?.refund();
     console.error("Auto-fix error:", error);
     return NextResponse.json(
       { error: "Failed to auto-fix resume" },

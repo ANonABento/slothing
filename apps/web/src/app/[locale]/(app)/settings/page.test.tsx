@@ -63,6 +63,10 @@ vi.mock("@/components/settings/theme-section", () => ({
   ThemeSection: () => <section data-testid="theme-section" />,
 }));
 
+vi.mock("@/components/settings/billing-section", () => ({
+  BillingSection: () => <section data-testid="billing-section" />,
+}));
+
 vi.mock("@/components/settings/locale-section", () => ({
   LocaleSection: () => <section data-testid="locale-section" />,
 }));
@@ -159,6 +163,7 @@ describe("SettingsPage", () => {
     expect(screen.getByTestId("prompt-variants-section")).toBeInTheDocument();
     expect(screen.getByTestId("help-cards")).toBeInTheDocument();
     expect(screen.getByTestId("eval-health-section")).toBeInTheDocument();
+    expect(screen.getByTestId("billing-section")).toBeInTheDocument();
     expect(screen.getByTestId("theme-section")).toBeInTheDocument();
     expect(screen.getByTestId("locale-section")).toBeInTheDocument();
     expect(screen.getByTestId("language-section")).toBeInTheDocument();

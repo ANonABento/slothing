@@ -6,7 +6,11 @@
  * @response NegotiationScript from @/types/api
  */
 import { NextRequest, NextResponse } from "next/server";
-import { getLLMConfig } from "@/lib/db";
+import {
+  gateAiFeature,
+  isAiGateResponse,
+  type AiGatePass,
+} from "@/lib/billing/ai-gate";
 import { LLMClient } from "@/lib/llm/client";
 import { formatCurrency } from "@/lib/salary/calculator";
 import { requireAuth, isAuthError } from "@/lib/auth";
@@ -134,6 +138,7 @@ function generateFallbackScript(request: NegotiationRequest) {
 export async function POST(request: NextRequest) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
+  let aiGate: AiGatePass | null = null;
 
   try {
     const body: NegotiationRequest = await request.json();
@@ -154,10 +159,16 @@ export async function POST(request: NextRequest) {
     }
 
     // Try to use LLM if configured
-    const llmConfig = getLLMConfig(authResult.userId);
-    if (llmConfig) {
+    const gate = gateAiFeature(
+      authResult.userId,
+      "document_assistant",
+      `salary:${body.company}:${body.role}`,
+    );
+    if (isAiGateResponse(gate)) return gate;
+    aiGate = gate;
+    if (gate.llmConfig) {
       try {
-        const client = new LLMClient(llmConfig);
+        const client = new LLMClient(gate.llmConfig);
         const prompt = buildPrompt(body);
 
         const content = await client.complete({
@@ -173,6 +184,7 @@ export async function POST(request: NextRequest) {
           return NextResponse.json({ script, source: "ai" });
         }
       } catch (llmError) {
+        aiGate?.refund();
         console.error("LLM generation failed, using fallback:", llmError);
       }
     }
@@ -181,6 +193,7 @@ export async function POST(request: NextRequest) {
     const script = generateFallbackScript(body);
     return NextResponse.json({ script, source: "template" });
   } catch (error) {
+    aiGate?.refund();
     console.error("Negotiation script error:", error);
     return NextResponse.json(
       { error: "Failed to generate negotiation script" },
