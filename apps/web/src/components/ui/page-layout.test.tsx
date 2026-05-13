@@ -25,7 +25,7 @@ describe("page layout helpers", () => {
   it("returns the expected width classes", () => {
     expect(getPageWidthClassName("full")).toBe("");
     expect(getPageWidthClassName("narrow")).toBe("mx-auto max-w-3xl");
-    expect(getPageWidthClassName("wide")).toBe("max-w-screen-2xl");
+    expect(getPageWidthClassName("wide")).toBe("mx-auto max-w-screen-2xl");
   });
 
   it("renders a standard page header", () => {
