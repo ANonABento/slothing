@@ -22,7 +22,7 @@ export function getStripe(): Stripe {
 }
 
 export const PRO_MONTHLY = {
-  productKey: 'pro_monthly',
+  productKey: 'pro_monthly' as const,
   name: 'Slothing Pro Monthly',
   description: 'Unlimited features, 1000 credits per month, priority email support.',
   amountCents: 1999,
@@ -32,7 +32,7 @@ export const PRO_MONTHLY = {
 };
 
 export const PRO_WEEKLY = {
-  productKey: 'pro_weekly',
+  productKey: 'pro_weekly' as const,
   name: 'Slothing Pro Weekly',
   description:
     'Same Pro features, billed weekly. 250 credits per week. Cancel any time - built for short job-search sprints.',
@@ -44,3 +44,8 @@ export const PRO_WEEKLY = {
 
 export const PLANS = [PRO_MONTHLY, PRO_WEEKLY] as const;
 export type PlanConfig = (typeof PLANS)[number];
+export type PlanKey = PlanConfig["productKey"];
+
+export function getPlanByKey(planKey: string): PlanConfig | null {
+  return PLANS.find((plan) => plan.productKey === planKey) ?? null;
+}
