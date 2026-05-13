@@ -482,6 +482,10 @@ async function runBulkSourceScrape(
       imported: importResp.data?.imported ?? jobs.length,
       attempted: jobs.length,
       pages,
+      duplicateCount:
+        importResp.data?.dedupedIds?.length ??
+        Math.max(0, jobs.length - (importResp.data?.imported ?? jobs.length)),
+      dedupedIds: importResp.data?.dedupedIds,
       errors,
     },
   };
@@ -548,6 +552,10 @@ async function runWwBulkScrape(opts: {
       imported: importResp.data?.imported ?? jobs.length,
       attempted: jobs.length,
       pages,
+      duplicateCount:
+        importResp.data?.dedupedIds?.length ??
+        Math.max(0, jobs.length - (importResp.data?.imported ?? jobs.length)),
+      dedupedIds: importResp.data?.dedupedIds,
       errors,
     },
   };

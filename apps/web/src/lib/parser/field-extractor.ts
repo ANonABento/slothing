@@ -29,8 +29,8 @@ const PHONE_REGEX = /(\+?1?[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/;
 const LINKEDIN_REGEX = /linkedin\.com\/in\/[\w-]+/i;
 const GITHUB_REGEX = /github\.com\/[\w-]+/i;
 const URL_REGEX = /https?:\/\/[\w.-]+\.\w{2,}[\w/.-]*/;
-const BULLET_MARKER_REGEX = /^[•●○■▪▸\-–—*]$/;
-const BULLET_LINE_REGEX = /^[•●○■▪▸\-–—*]\s*/;
+const BULLET_MARKER_REGEX = /^[•●○◦■▪▸→✓\-–—*]$/;
+const BULLET_LINE_REGEX = /^[•●○◦■▪▸→✓\-–—*]\s*/;
 const SKILL_SPLIT_REGEX = /[,;|•·]/;
 const SKILL_LABEL_REGEX = /^([\p{L}\s/&+-]{2,32}):\s*(.+)$/u;
 const ORPHAN_SKILL_LABELS = new Set([
@@ -61,6 +61,99 @@ function skillCategoryForLabel(label: string | undefined): Skill["category"] {
   return "technical";
 }
 
+function isLikelyTableHeader(line: string): boolean {
+  const normalized = line
+    .toLowerCase()
+    .replace(/[|:,/]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (!normalized) return false;
+
+  const tokens = new Set(normalized.split(" "));
+  const experienceHeaderHits = [
+    "role",
+    "title",
+    "organization",
+    "company",
+    "employer",
+    "dates",
+    "date",
+    "location",
+  ].filter((token) => tokens.has(token)).length;
+  const educationHeaderHits = [
+    "institution",
+    "school",
+    "credential",
+    "degree",
+    "dates",
+    "date",
+  ].filter((token) => tokens.has(token)).length;
+
+  return experienceHeaderHits >= 3 || educationHeaderHits >= 3;
+}
+
+function normalizedTableCell(line: string): string {
+  return line.toLowerCase().replace(/\s+/g, " ").trim();
+}
+
+function isExperienceTableHeaderSequence(
+  lines: string[],
+  index: number,
+): boolean {
+  const cells = lines.slice(index, index + 4).map(normalizedTableCell);
+  return (
+    /^(role|title|position)$/.test(cells[0] || "") &&
+    /^(organization|company|employer)$/.test(cells[1] || "") &&
+    /^(dates?|date range)$/.test(cells[2] || "") &&
+    /^location$/.test(cells[3] || "")
+  );
+}
+
+function parseExperienceTableRowSequence(lines: string[], index: number) {
+  const [title, company, dates, location] = lines
+    .slice(index, index + 4)
+    .map((line) => line.trim());
+
+  if (
+    !title ||
+    !company ||
+    !hasDateRange(dates) ||
+    hasDateRange(title) ||
+    hasDateRange(company) ||
+    hasDateRange(location) ||
+    !isJobTitle(title) ||
+    BULLET_LINE_REGEX.test(title) ||
+    BULLET_LINE_REGEX.test(company) ||
+    BULLET_LINE_REGEX.test(location) ||
+    isLikelySectionHeader(title) ||
+    isLikelySectionHeader(location) ||
+    isLikelyTableHeader(title) ||
+    normalizedTableCell(title) === "institution"
+  ) {
+    return null;
+  }
+
+  return {
+    title,
+    company,
+    location: location || undefined,
+    dates: extractDateRange(dates),
+    bullets: [],
+  };
+}
+
+function isEducationTableHeaderSequence(
+  lines: string[],
+  index: number,
+): boolean {
+  const cells = lines.slice(index, index + 3).map(normalizedTableCell);
+  return (
+    /^(institution|school)$/.test(cells[0] || "") &&
+    /^(credential|degree)$/.test(cells[1] || "") &&
+    /^(dates?|date range)$/.test(cells[2] || "")
+  );
+}
+
 // Month names (abbreviated and full) for building date patterns
 const MONTH_NAMES =
   "(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sept?(?:ember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)";
@@ -82,6 +175,16 @@ const DATE_RANGE_TO_REGEX = new RegExp(
   `${DATE_TOKEN}\\s+to\\s+${END_TOKEN}`,
   "gi",
 );
+const DATE_RANGE_PARTS_REGEX = new RegExp(
+  `^\\s*(${DATE_TOKEN})\\s*(?:[-–—]|to)\\s*(${END_TOKEN})\\s*$`,
+  "i",
+);
+const SPACED_DATE_RANGE_PARTS_REGEX = new RegExp(
+  `^\\s*(${DATE_TOKEN})\\s+[-–—]\\s+(${END_TOKEN})\\s*$`,
+  "i",
+);
+const YEAR_ONLY_DATE_RANGE_PARTS_REGEX =
+  /^\s*(\d{4})\s*[-–—]\s*(\d{4}|present|current)\s*$/i;
 
 export function hasDateRange(line: string): boolean {
   DATE_RANGE_REGEX.lastIndex = 0;
@@ -137,7 +240,7 @@ function normalizeResumeLines(text: string): string[] {
   const normalized: string[] = [];
   const rawLines = text
     .split("\n")
-    .map((line) => line.trim())
+    .map((line) => line.trim().replace(/^#{1,6}\s+/, ""))
     .filter(Boolean);
   let pendingBullet: string | null = null;
 
@@ -148,7 +251,10 @@ function normalizeResumeLines(text: string): string[] {
     pendingBullet = null;
   }
 
-  for (const line of rawLines) {
+  for (let i = 0; i < rawLines.length; i++) {
+    const line = rawLines[i];
+    const nextLine = rawLines[i + 1] || "";
+
     if (BULLET_MARKER_REGEX.test(line)) {
       flushPendingBullet();
       pendingBullet = "";
@@ -165,7 +271,11 @@ function normalizeResumeLines(text: string): string[] {
     }
 
     if (pendingBullet !== null) {
-      if (isLikelyEntryHeader(line) || isLikelySectionHeader(line)) {
+      if (
+        isLikelyEntryHeader(line) ||
+        isLikelySectionHeader(line) ||
+        (pendingBullet !== "" && line.length < 120 && hasDateRange(nextLine))
+      ) {
         flushPendingBullet();
         normalized.push(line);
       } else {
@@ -185,8 +295,25 @@ export function splitDateRange(dateStr: string): {
   start: string;
   end: string;
 } {
-  // Split on dash/em-dash or " to "
-  const parts = dateStr.split(/\s*[-–—]\s*|\s+to\s+/i);
+  const trimmed = dateStr.trim();
+  const match =
+    trimmed.match(DATE_RANGE_TO_REGEX) && trimmed.match(DATE_RANGE_PARTS_REGEX);
+  const spacedMatch = trimmed.match(SPACED_DATE_RANGE_PARTS_REGEX);
+  const yearOnlyMatch = trimmed.match(YEAR_ONLY_DATE_RANGE_PARTS_REGEX);
+
+  if (match) {
+    return { start: match[1].trim(), end: match[2].trim() };
+  }
+  if (spacedMatch) {
+    return { start: spacedMatch[1].trim(), end: spacedMatch[2].trim() };
+  }
+  if (yearOnlyMatch) {
+    return { start: yearOnlyMatch[1].trim(), end: yearOnlyMatch[2].trim() };
+  }
+
+  // Fallback for unexpected formats. Keep ISO-like YYYY-MM tokens intact by
+  // only splitting on spaced separators here.
+  const parts = trimmed.split(/\s+[-–—]\s+|\s+to\s+/i);
   return {
     start: parts[0]?.trim() || "",
     end: parts[1]?.trim() || "",
@@ -216,14 +343,16 @@ export function extractContact(text: string): {
   const website = text.match(URL_REGEX)?.[0];
 
   const name =
-    lines.find(
-      (l) =>
-        !EMAIL_REGEX.test(l) &&
-        !PHONE_REGEX.test(l) &&
-        !URL_REGEX.test(l) &&
-        l.length > 1 &&
-        l.length < 60,
-    ) || "";
+    lines
+      .find(
+        (l) =>
+          !EMAIL_REGEX.test(l) &&
+          !PHONE_REGEX.test(l) &&
+          !URL_REGEX.test(l) &&
+          l.length > 1 &&
+          l.length < 60,
+      )
+      ?.replace(/^#{1,6}\s+/, "") || "";
 
   const locationMatch = text.match(
     /([A-Z][a-z]+(?:\s[A-Z][a-z]+)*),?\s*[A-Z]{2}(?:\s+\d{5})?/,
@@ -262,6 +391,7 @@ export function extractExperiences(text: string): Experience[] {
     dates: string;
     bullets: string[];
   } | null = null;
+  let pendingHeader = "";
 
   function pushCurrentEntry() {
     if (!currentEntry) return;
@@ -284,6 +414,20 @@ export function extractExperiences(text: string): Experience[] {
     const withoutDates = stripDateRange(line)
       .replace(/\s*[-–—]\s*$/, "")
       .trim();
+    const pipeParts = withoutDates
+      .split(/\s*\|\s*/)
+      .map((part) => part.trim())
+      .filter((part) => part && !/^[-–—]+$/.test(part));
+    if (pipeParts.length >= 2) {
+      return {
+        title: pipeParts[0],
+        company: pipeParts[1],
+        location: pipeParts.slice(2).join(" | ") || undefined,
+        dates: dateStr,
+        bullets: [],
+      };
+    }
+
     const parts = withoutDates
       .split(/\s+(?:[—–]|\||-)\s+/)
       .map((part) => part.trim())
@@ -309,18 +453,69 @@ export function extractExperiences(text: string): Experience[] {
       };
     }
 
+    const commaParts = withoutDates
+      .split(/\s*,\s*/)
+      .map((part) => part.trim())
+      .filter(Boolean);
+    if (commaParts.length >= 2 && isJobTitle(commaParts[0])) {
+      return {
+        title: commaParts[0],
+        company: commaParts[1],
+        location: commaParts.slice(2).join(", ") || undefined,
+        dates: dateStr,
+        bullets: [],
+      };
+    }
+
     const titlePart = removeDateRange(line);
     return { title: titlePart, company: "", dates: dateStr, bullets: [] };
   }
 
-  for (const line of lines) {
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
     const trimmed = line.trim();
     if (!trimmed) continue;
+    const nextLine = lines[i + 1]?.trim() || "";
+
+    if (isExperienceTableHeaderSequence(lines, i)) {
+      i += 3;
+      continue;
+    }
+
+    const tableRow = parseExperienceTableRowSequence(lines, i);
+    if (tableRow) {
+      pushCurrentEntry();
+      currentEntry = tableRow;
+      pendingHeader = "";
+      i += 3;
+      continue;
+    }
+
+    if (
+      currentEntry &&
+      currentEntry.bullets.length > 0 &&
+      !BULLET_LINE_REGEX.test(trimmed) &&
+      trimmed.length < 120 &&
+      hasDateRange(nextLine)
+    ) {
+      pushCurrentEntry();
+      currentEntry = null;
+      pendingHeader = trimmed;
+      continue;
+    }
+
+    if (isLikelyTableHeader(trimmed)) {
+      continue;
+    }
 
     if (hasDateRange(trimmed)) {
       pushCurrentEntry();
       const dateStr = extractDateRange(trimmed);
-      currentEntry = parseHeader(trimmed, dateStr);
+      currentEntry = parseHeader(
+        pendingHeader ? `${pendingHeader} ${trimmed}` : trimmed,
+        dateStr,
+      );
+      pendingHeader = "";
     } else if (currentEntry) {
       if (BULLET_LINE_REGEX.test(trimmed)) {
         currentEntry.bullets.push(trimmed.replace(BULLET_LINE_REGEX, ""));
@@ -362,6 +557,12 @@ export function extractExperiences(text: string): Experience[] {
           }
         }
       }
+    } else if (
+      trimmed.length < 120 &&
+      hasDateRange(nextLine) &&
+      !isLikelyTableHeader(trimmed)
+    ) {
+      pendingHeader = trimmed;
     }
   }
 
@@ -371,14 +572,14 @@ export function extractExperiences(text: string): Experience[] {
 
 // Degree patterns for education parsing
 const DEGREE_PATTERNS =
-  /(?:Bachelor(?:'s)?|Master(?:'s)?|PhD|Ph\.D\.?|Doctorate|Associate(?:'s)?|B\.S\.?|B\.A\.?|BASc|B\.A\.Sc\.?|M\.S\.?|M\.A\.?|MBA|M\.Eng\.?|B\.Eng\.?|J\.D\.?|M\.D\.?|Doctor\s+of)/i;
+  /(?:Bachelor(?:'s)?|Master(?:'s)?|PhD|Ph\.D\.?|Doctorate|Associate(?:'s)?|B\.S\.?|B\.A\.?|BMath|BASc|B\.A\.Sc\.?|M\.S\.?|M\.A\.?|MBA|M\.Eng\.?|B\.Eng\.?|J\.D\.?|M\.D\.?|Doctor\s+of)/i;
 
 // Abbreviated degree initials (B.S., M.S., MBA, Ph.D., …)
 const DEGREE_ABBR_REGEX =
-  /(?:B\.S\.?|B\.A\.?|BASc|B\.A\.Sc\.?|M\.S\.?|M\.A\.?|MBA|M\.Eng\.?|B\.Eng\.?|J\.D\.?|M\.D\.?|Ph\.D\.?)/i;
+  /(?:B\.S\.?|B\.A\.?|BMath|BASc|B\.A\.Sc\.?|M\.S\.?|M\.A\.?|MBA|M\.Eng\.?|B\.Eng\.?|J\.D\.?|M\.D\.?|Ph\.D\.?)/i;
 // Pattern for "B.S. in Computer Science"
 const SHORT_DEGREE_FIELD_REGEX =
-  /(?:B\.S\.?|B\.A\.?|BASc|B\.A\.Sc\.?|M\.S\.?|M\.A\.?|MBA|M\.Eng\.?|B\.Eng\.?|J\.D\.?|M\.D\.?|Ph\.D\.?)\s+(?:in\s+)?(.+?)(?:\s*[,|—–]|\s*$)/i;
+  /(?:B\.S\.?|B\.A\.?|BMath|BASc|B\.A\.Sc\.?|M\.S\.?|M\.A\.?|MBA|M\.Eng\.?|B\.Eng\.?|J\.D\.?|M\.D\.?|Ph\.D\.?)\s+(?:in\s+)?(.+?)(?:\s*[,|—–]|\s*$)/i;
 
 // GPA patterns
 const GPA_LABEL_REGEX = /GPA[:\s]*(\d\.\d+)/i;
@@ -458,19 +659,80 @@ export function extractEducation(text: string): Education[] {
     const line = lines[i].trim();
     if (!line) continue;
 
+    if (isEducationTableHeaderSequence(lines, i)) {
+      i += 2;
+      continue;
+    }
+
+    if (
+      line.length < 100 &&
+      lines[i + 1] &&
+      DEGREE_PATTERNS.test(lines[i + 1]) &&
+      hasDateRange(lines[i + 2] || "") &&
+      !DEGREE_PATTERNS.test(line) &&
+      !isLikelyTableHeader(line)
+    ) {
+      const { degree, field } = parseDegreeAndField(lines[i + 1].trim());
+      const { start, end } = splitDateRange(extractDateRange(lines[i + 2]));
+      education.push({
+        id: generateId(),
+        institution: line,
+        degree,
+        field,
+        startDate: start,
+        endDate: end,
+        gpa: extractGpa([line, lines[i + 1], lines[i + 2]].join(" ")),
+        highlights: [],
+      });
+      i += 2;
+      continue;
+    }
+
     if (DEGREE_PATTERNS.test(line)) {
+      const commaParts = line
+        .split(/\s*,\s*/)
+        .map((part) => part.trim())
+        .filter(Boolean);
+      const degreePartIndex = commaParts.findIndex((part) =>
+        DEGREE_PATTERNS.test(part),
+      );
+      const commaInstitution =
+        degreePartIndex > 0
+          ? commaParts.slice(0, degreePartIndex).join(", ")
+          : undefined;
+      const commaDegreeLine =
+        degreePartIndex > 0
+          ? commaParts.slice(degreePartIndex).join(", ")
+          : undefined;
       const sameLineParts = line
         .split(/\s+[—–]\s+/)
         .map((part) => part.trim())
         .filter(Boolean);
-      const degreeLine =
-        sameLineParts.length > 1 && !DEGREE_PATTERNS.test(sameLineParts[0])
-          ? sameLineParts.slice(1).join(" — ")
-          : line;
-      const sameLineInstitution =
-        sameLineParts.length > 1 && !DEGREE_PATTERNS.test(sameLineParts[0])
-          ? sameLineParts[0]
+      const pipeParts = stripDateRange(line)
+        .split(/\s*\|\s*/)
+        .map((part) => part.trim())
+        .filter(Boolean);
+      const pipeDegreePartIndex = pipeParts.findIndex((part) =>
+        DEGREE_PATTERNS.test(part),
+      );
+      const pipeInstitution =
+        pipeDegreePartIndex > 0
+          ? pipeParts[pipeDegreePartIndex - 1]
           : undefined;
+      const pipeDegreeLine =
+        pipeDegreePartIndex >= 0 ? pipeParts[pipeDegreePartIndex] : undefined;
+      const degreeLine =
+        pipeDegreeLine ||
+        commaDegreeLine ||
+        (sameLineParts.length > 1 && !DEGREE_PATTERNS.test(sameLineParts[0])
+          ? sameLineParts.slice(1).join(" — ")
+          : line);
+      const sameLineInstitution =
+        pipeInstitution ||
+        commaInstitution ||
+        (sameLineParts.length > 1 && !DEGREE_PATTERNS.test(sameLineParts[0])
+          ? sameLineParts[0]
+          : undefined);
       // Parse degree and field
       const { degree, field } = parseDegreeAndField(stripDateRange(degreeLine));
 
@@ -511,6 +773,7 @@ export function extractEducation(text: string): Education[] {
           adjacentLine &&
           !DEGREE_PATTERNS.test(adjacentLine) &&
           !hasDateRange(adjacentLine) &&
+          !isLikelyTableHeader(adjacentLine) &&
           adjacentLine.length > 2 &&
           adjacentLine.length < 100
         ) {

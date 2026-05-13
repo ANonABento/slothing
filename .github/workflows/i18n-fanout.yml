@@ -52,18 +52,20 @@ jobs:
 
       - name: Verify translation secret
         run: |
-          if [[ -z "${ANTHROPIC_API_KEY}" ]]; then
-            echo "ANTHROPIC_API_KEY is required for automatic i18n fanout." >&2
+          if [[ -z "${ANTHROPIC_API_KEY}" && -z "${OPENAI_API_KEY}" ]]; then
+            echo "ANTHROPIC_API_KEY or OPENAI_API_KEY is required for automatic i18n fanout." >&2
             exit 1
           fi
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
       - name: Translate messages
         working-directory: apps/web
         run: pnpm translate:messages
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
       - name: Check for non-English locale changes
         id: diff
@@ -80,17 +82,22 @@ jobs:
             echo "changed=false" >> "${GITHUB_OUTPUT}"
           fi
 
+      - name: Refresh placeholder audit
+        if: steps.diff.outputs.changed == 'true'
+        working-directory: apps/web
+        run: pnpm check:translations:update-report
+
       - name: Validate generated catalogs
         if: steps.diff.outputs.changed == 'true'
         working-directory: apps/web
-        run: pnpm check:translations
+        run: pnpm check:translations:release
 
       - name: Commit updates to PR branch
         if: github.event_name == 'pull_request' && steps.diff.outputs.changed == 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add apps/web/src/messages
+          git add apps/web/src/messages docs/audits/dogfood-2026-05-13/translation-placeholders.md
           git commit -m "chore(i18n): fan out message translations [skip-i18n]"
           git push
 
@@ -102,6 +109,9 @@ jobs:
           commit-message: 'chore(i18n): fan out message translations [skip-i18n]'
           branch: automation/i18n-fanout
           delete-branch: true
+          add-paths: |
+            apps/web/src/messages
+            docs/audits/dogfood-2026-05-13/translation-placeholders.md
           title: 'chore(i18n): fan out message translations'
           body: |
             `apps/web/src/messages/en.json` changed on `main`.
@@ -111,6 +121,7 @@ jobs:
             ```sh
             cd apps/web
             pnpm translate:messages
-            pnpm check:translations
+            pnpm check:translations:update-report
+            pnpm check:translations:release
             ```
           labels: i18n-fanout

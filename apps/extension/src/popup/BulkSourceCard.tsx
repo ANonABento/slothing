@@ -20,6 +20,8 @@ export interface BulkScrapeResult {
   imported: number;
   attempted: number;
   pages: number;
+  duplicateCount?: number;
+  dedupedIds?: string[];
   errors: string[];
 }
 
@@ -88,9 +90,17 @@ export function BulkSourceCard(props: BulkSourceCardProps) {
           <p className="inline-note">
             Imported {lastResult.imported}/{lastResult.attempted}
             {lastResult.pages > 1 && ` · ${lastResult.pages} pages`}
+            {lastResult.duplicateCount
+              ? ` · ${lastResult.duplicateCount} duplicates`
+              : ""}
             {lastResult.errors.length > 0 &&
               ` · ${lastResult.errors.length} errors`}
           </p>
+          {lastResult.dedupedIds?.length ? (
+            <p className="inline-note bulk-duplicates">
+              Duplicates: {lastResult.dedupedIds.join(", ")}
+            </p>
+          ) : null}
           {lastResult.imported > 0 && onViewTracker && (
             <button className="success-link" onClick={onViewTracker}>
               View tracker →

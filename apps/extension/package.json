@@ -7,6 +7,7 @@
     "build": "pnpm generate-icons && webpack --mode production",
     "build:chrome": "pnpm generate-icons && TARGET=chrome webpack --mode production",
     "build:firefox": "pnpm generate-icons && TARGET=firefox webpack --mode production",
+    "check:bundle-size": "node scripts/check-bundle-size.js",
     "generate-icons": "node scripts/generate-icons.js",
     "type-check": "tsc --noEmit",
     "lint": "tsc --noEmit",

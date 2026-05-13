@@ -1,4 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import type { LLMConfig } from "@/types";
 
 const mockComplete = vi.fn();
@@ -11,6 +13,7 @@ vi.mock("@/lib/llm/client", () => ({
 }));
 
 import {
+  classifyDocumentByContent,
   classifyDocumentByFilename,
   classifyDocumentWithLLM,
   classifyDocument,
@@ -68,6 +71,55 @@ describe("classifyDocumentByFilename", () => {
   it("is case insensitive", () => {
     expect(classifyDocumentByFilename("MY_RESUME.PDF")).toBe("resume");
     expect(classifyDocumentByFilename("COVER_LETTER.pdf")).toBe("cover_letter");
+  });
+});
+
+describe("classifyDocumentByContent", () => {
+  it("detects a realistic cover-letter upload even when the filename is generic", () => {
+    const fixture = readFileSync(
+      path.join(
+        process.cwd(),
+        "tests/fixtures/dogfood/cover-letter-upload-prose.md",
+      ),
+      "utf8",
+    );
+
+    expect(classifyDocumentByContent(fixture)).toBe("cover_letter");
+  });
+
+  it("detects a commented tracked-change cover letter that mentions a referral recommendation", () => {
+    const fixture = readFileSync(
+      path.join(
+        process.cwd(),
+        "tests/fixtures/dogfood/cover-letter-tracked-comments.md",
+      ),
+      "utf8",
+    );
+
+    expect(classifyDocumentByContent(fixture)).toBe("cover_letter");
+  });
+
+  it("detects reference letters from explicit recommender language", () => {
+    expect(
+      classifyDocumentByContent(
+        "Dear Hiring Manager,\n\nI am pleased to recommend Jordan Lee for the Software Engineer position. Jordan is an exceptional teammate.\n\nSincerely,\nAvery Patel",
+      ),
+    ).toBe("reference_letter");
+  });
+
+  it("detects a realistic resume upload from content when the filename is generic", () => {
+    const fixture = readFileSync(
+      path.join(process.cwd(), "tests/fixtures/dogfood/edge-case-resume.md"),
+      "utf8",
+    );
+
+    expect(classifyDocumentByContent(fixture)).toBe("resume");
+  });
+
+  it("does not force a classification for unstructured notes", () => {
+    expect(
+      classifyDocumentByContent("Notes from the meetup about hiring trends."),
+    ).toBeNull();
   });
 });
 
@@ -150,6 +202,40 @@ describe("classifyDocument", () => {
     expect(mockComplete).not.toHaveBeenCalled();
   });
 
+  it("uses content heuristics before filename fallback when no LLM config", async () => {
+    const fixture = readFileSync(
+      path.join(
+        process.cwd(),
+        "tests/fixtures/dogfood/cover-letter-upload-prose.md",
+      ),
+      "utf8",
+    );
+
+    const result = await classifyDocument(fixture, "letter-to-team.txt", null);
+
+    expect(result).toBe("cover_letter");
+    expect(mockComplete).not.toHaveBeenCalled();
+  });
+
+  it("does not let referral wording turn a cover-letter upload into a reference letter", async () => {
+    const fixture = readFileSync(
+      path.join(
+        process.cwd(),
+        "tests/fixtures/dogfood/cover-letter-tracked-comments.md",
+      ),
+      "utf8",
+    );
+
+    const result = await classifyDocument(
+      fixture,
+      "application-draft.txt",
+      null,
+    );
+
+    expect(result).toBe("cover_letter");
+    expect(mockComplete).not.toHaveBeenCalled();
+  });
+
   it("falls back to filename when no text", async () => {
     const result = await classifyDocument(
       undefined,
@@ -184,6 +270,9 @@ describe("classifyDocument", () => {
   });
 
   it("falls back to filename when LLM throws", async () => {
+    const consoleError = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => undefined);
     mockComplete.mockRejectedValue(new Error("API error"));
 
     const result = await classifyDocument(
@@ -192,5 +281,10 @@ describe("classifyDocument", () => {
       mockConfig,
     );
     expect(result).toBe("resume");
+    expect(consoleError).toHaveBeenCalledWith(
+      "LLM classification failed, falling back to filename:",
+      expect.any(Error),
+    );
+    consoleError.mockRestore();
   });
 });

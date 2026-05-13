@@ -199,6 +199,7 @@ function buildMetadata(seo: RouteSeo, locale?: string): Metadata {
   return {
     title: seo.absoluteTitle ? { absolute: seo.title } : seo.title,
     description: seo.description,
+    metadataBase: getMetadataBase(),
     alternates: {
       canonical: url,
       languages: getAlternateLanguages(seo.path),

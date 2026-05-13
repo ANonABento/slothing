@@ -14,13 +14,13 @@ function buildBoardPage(args: {
   company: string;
   rows: Array<{
     title: string;
-    location?: string;
+    location?: string | null;
     jobId?: string;
   }>;
   totalPages?: number;
   currentPage?: number;
   nextPagesData?: Array<
-    Array<{ title: string; location?: string; jobId?: string }>
+    Array<{ title: string; location?: string | null; jobId?: string }>
   >;
   malformedAt?: number; // index of a row to corrupt (no title) to test error isolation
 }) {
@@ -58,7 +58,11 @@ function buildBoardPage(args: {
                 <a class="opening-title" href="/${company.toLowerCase()}/jobs/${id}">
                   ${r.title}
                 </a>
-                <span class="location">${r.location ?? "Remote"}</span>
+                ${
+                  r.location === null
+                    ? ""
+                    : `<span class="location">${r.location ?? "Remote"}</span>`
+                }
               </div>
             `;
           })
@@ -202,11 +206,58 @@ describe("GreenhouseOrchestrator", () => {
     expect(errors[0]).toContain("row 1");
   });
 
+  it("dedupes malformed ATS list rows while keeping valid relative URLs and optional fields", async () => {
+    buildBoardPage({
+      company: "Anthropic",
+      rows: [
+        { title: "Platform Engineer", location: "Remote", jobId: "2000" },
+        {
+          title: "Duplicate Platform Engineer",
+          location: "Remote",
+          jobId: "2000",
+        },
+        { title: "ignored-because-malformed", jobId: "2001" },
+        { title: "No Location Engineer", location: null, jobId: "2002" },
+      ],
+      malformedAt: 2,
+    });
+    const errors: string[] = [];
+
+    const jobs = await new GreenhouseOrchestrator().scrapeAllVisible({
+      throttleMs: 0,
+      onProgress: (p) => {
+        for (const e of p.errors) if (!errors.includes(e)) errors.push(e);
+      },
+    });
+
+    expect(jobs.map((job) => job.title)).toEqual([
+      "Platform Engineer",
+      "No Location Engineer",
+    ]);
+    expect(jobs[0]).toMatchObject({
+      sourceJobId: "2000",
+      url: "https://boards.greenhouse.io/anthropic/jobs/2000",
+      location: "Remote",
+    });
+    expect(jobs[1]).toMatchObject({
+      sourceJobId: "2002",
+      url: "https://boards.greenhouse.io/anthropic/jobs/2002",
+    });
+    expect(jobs[1].location).toBeUndefined();
+    expect(errors.some((error) => error.includes("row 2"))).toBe(true);
+  });
+
   it("scrapeAllPaginated walks multiple pages", async () => {
     const pages = [
-      [{ title: "P1-A" }, { title: "P1-B" }],
-      [{ title: "P2-A" }],
-      [{ title: "P3-A" }, { title: "P3-B" }],
+      [
+        { title: "P1-A", jobId: "3001" },
+        { title: "P1-B", jobId: "3002" },
+      ],
+      [{ title: "P2-A", jobId: "3003" }],
+      [
+        { title: "P3-A", jobId: "3004" },
+        { title: "P3-B", jobId: "3005" },
+      ],
     ];
     buildBoardPage({
       company: "Anthropic",

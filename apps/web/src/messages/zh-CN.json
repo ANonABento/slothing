@@ -7,11 +7,11 @@
   },
   "common": {
     "cancel": "取消",
-    "back": "[zh-CN] Back",
+    "back": "返回",
     "clear": "清除",
     "clearAll": "全部清除",
-    "delete": "[zh-CN] Delete",
-    "edit": "[zh-CN] Edit",
+    "delete": "删除",
+    "edit": "编辑",
     "filters": "筛选",
     "import": "导入",
     "loading": "加载中",
@@ -64,13 +64,13 @@
         "label": "切换语言",
         "description": "选择此页面的语言。"
       },
-      "features": "[zh-CN] Features",
-      "extension": "[zh-CN] Extension",
-      "howItWorks": "[zh-CN] How It Works",
-      "pricing": "[zh-CN] Pricing",
-      "signIn": "[zh-CN] Sign In",
-      "getStarted": "[zh-CN] Get Started",
-      "toggleMenu": "[zh-CN] Toggle menu"
+      "features": "功能",
+      "extension": "扩展程序",
+      "howItWorks": "工作原理",
+      "pricing": "价格",
+      "signIn": "登录",
+      "getStarted": "开始使用",
+      "toggleMenu": "切换菜单"
     }
   },
   "dashboard": {
@@ -248,76 +248,76 @@
       "emptyDescription": "保存或导入机会即可在此处开始追踪。"
     },
     "recentActivity": {
-      "title": "[zh-CN] Recent Activity",
+      "title": "最近活动",
       "types": {
-        "document_uploaded": "[zh-CN] Uploaded",
-        "resume_generated": "[zh-CN] Generated resume for",
-        "job_added": "[zh-CN] Added job",
-        "job_applied": "[zh-CN] Applied to"
+        "document_uploaded": "已上传",
+        "resume_generated": "已为其生成简历",
+        "job_added": "已添加机会",
+        "job_applied": "已申请"
       }
     }
   },
   "onboarding": {
     "steps": {
       "upload": {
-        "title": "[zh-CN] Upload Your Resume",
-        "description": "[zh-CN] Drag and drop your resume to get started, or skip this step and add it later.",
-        "dropHint": "[zh-CN] Drop your PDF or DOCX here, or head to <documents>Documents</documents> after setup to add it later."
+        "title": "上传您的简历",
+        "description": "拖放简历即可开始，也可以跳过此步骤，稍后再添加。",
+        "dropHint": "将 PDF 或 DOCX 拖放到这里，或在设置完成后前往<documents>文档</documents>添加。"
       },
       "review": {
-        "title": "[zh-CN] Review Your Profile",
-        "description": "[zh-CN] After uploading, review the extracted entries and edit anything that needs fixing.",
+        "title": "检查您的个人资料",
+        "description": "上传后，请检查提取出的条目，并编辑任何需要修正的内容。",
         "sections": {
-          "contactInfo": "[zh-CN] Contact info",
-          "workExperience": "[zh-CN] Work experience",
-          "education": "[zh-CN] Education",
-          "skillsProjects": "[zh-CN] Skills & projects"
+          "contactInfo": "联系信息",
+          "workExperience": "工作经历",
+          "education": "教育经历",
+          "skillsProjects": "技能和项目"
         }
       },
       "builder": {
-        "title": "[zh-CN] Build Your Starter Profile",
-        "description": "[zh-CN] Answer a few quick prompts so Slothing can organize your career details without a resume upload.",
+        "title": "创建入门个人资料",
+        "description": "回答几个简短问题，让 Slothing 在不上传简历的情况下整理您的职业信息。",
         "fields": {
-          "name": "[zh-CN] Name",
-          "email": "[zh-CN] Email",
-          "targetRole": "[zh-CN] Target role",
-          "backgroundSummary": "[zh-CN] Background summary",
-          "education": "[zh-CN] Education",
-          "school": "[zh-CN] School",
-          "degree": "[zh-CN] Degree",
-          "field": "[zh-CN] Field",
-          "topSkills": "[zh-CN] Top skills",
-          "company": "[zh-CN] Company / organisation",
-          "roleTitle": "[zh-CN] Role / title",
-          "roleHighlights": "[zh-CN] Role highlights (one per line, up to 3)",
-          "projectName": "[zh-CN] Project name",
-          "projectSummary": "[zh-CN] What did you build?",
-          "projectHighlights": "[zh-CN] Project highlights (one per line)",
-          "achievements": "[zh-CN] Honours, awards, leadership (comma-separated)"
+          "name": "姓名",
+          "email": "电子邮箱",
+          "targetRole": "目标职位",
+          "backgroundSummary": "背景摘要",
+          "education": "教育经历",
+          "school": "学校",
+          "degree": "学位",
+          "field": "专业领域",
+          "topSkills": "核心技能",
+          "company": "公司/组织",
+          "roleTitle": "角色/职称",
+          "roleHighlights": "角色亮点（每行一条，最多 3 条）",
+          "projectName": "项目名称",
+          "projectSummary": "你构建了什么？",
+          "projectHighlights": "项目亮点（每行一条）",
+          "achievements": "荣誉、奖项、领导经历（用逗号分隔）"
         },
         "placeholders": {
-          "targetRole": "[zh-CN] Frontend intern, project manager, data analyst",
-          "backgroundSummary": "[zh-CN] A sentence about your background, interests, or next move",
-          "topSkills": "[zh-CN] Customer service, Excel, Python",
-          "company": "[zh-CN] Campus cafe",
-          "roleTitle": "[zh-CN] Barista",
-          "roleHighlights": "[zh-CN] Pulled espresso shots\nTrained 3 new baristas",
-          "projectName": "[zh-CN] Community pantry dashboard",
-          "projectSummary": "[zh-CN] A class project that tracked donations and volunteer shifts",
-          "projectHighlights": "[zh-CN] Built a filterable tracker\nPresented findings to class",
-          "achievements": "[zh-CN] Residence council secretary, Dean's list"
+          "targetRole": "前端实习生、项目经理、数据分析师",
+          "backgroundSummary": "用一句话说明您的背景、兴趣或下一步计划",
+          "topSkills": "客户服务、Excel、Python",
+          "company": "校园咖啡馆",
+          "roleTitle": "咖啡师",
+          "roleHighlights": "制作意式咖啡\n培训了 3 名新咖啡师",
+          "projectName": "社区食品储藏室仪表盘",
+          "projectSummary": "一个追踪捐赠和志愿者排班的课堂项目",
+          "projectHighlights": "构建了可筛选的追踪器\n向班级展示了发现",
+          "achievements": "宿舍委员会秘书、院长名单"
         },
         "optional": {
-          "title": "[zh-CN] Add a role, project, or honour (optional)",
-          "hide": "[zh-CN] Hide",
-          "add": "[zh-CN] Add"
+          "title": "添加职位、项目或荣誉（可选）",
+          "hide": "隐藏",
+          "add": "添加"
         },
         "actions": {
-          "saving": "[zh-CN] Saving",
-          "saveContinue": "[zh-CN] Save and continue"
+          "saving": "正在保存",
+          "saveContinue": "保存并继续"
         },
         "errors": {
-          "save": "[zh-CN] Unable to save your profile starter."
+          "save": "无法保存您的入门个人资料。"
         }
       }
     }
@@ -425,402 +425,402 @@
   },
   "interview": {
     "summary": {
-      "title": "[zh-CN] Interview Complete!",
-      "description": "[zh-CN] You answered all {count, plural, one {# question} other {# questions}}. Review your responses and feedback below.",
+      "title": "面试已完成",
+      "description": "您已回答 {count, plural, one {# 个问题} other {# 个问题}}。请在下方查看您的回答和反馈。",
       "actions": {
-        "startNew": "[zh-CN] Start New Interview",
-        "research": "[zh-CN] Research {company}"
+        "startNew": "开始新面试",
+        "research": "调研 {company}"
       },
       "insights": {
-        "title": "[zh-CN] Performance Insights",
-        "questionsAnswered": "[zh-CN] Questions Answered",
-        "responseQuality": "[zh-CN] Response Quality",
-        "feedbackReceived": "[zh-CN] Feedback Received"
+        "title": "表现洞察",
+        "questionsAnswered": "已回答问题",
+        "responseQuality": "回答质量",
+        "feedbackReceived": "收到的反馈"
       },
       "performanceLevels": {
-        "detailed": "[zh-CN] Detailed",
-        "good": "[zh-CN] Good",
-        "brief": "[zh-CN] Brief"
+        "detailed": "详细",
+        "good": "良好",
+        "brief": "简短"
       },
       "responses": {
-        "title": "[zh-CN] Your Responses",
-        "skipped": "[zh-CN] Skipped",
-        "skippedShort": "[zh-CN] Skipped - revisit later",
-        "noAnswer": "[zh-CN] No answer provided",
-        "skippedHint": "[zh-CN] Skipped - revisit this prompt when you are ready.",
-        "yourAnswer": "[zh-CN] Your Answer",
-        "aiFeedback": "[zh-CN] AI Feedback"
+        "title": "您的回答",
+        "skipped": "已跳过",
+        "skippedShort": "已跳过，稍后再看",
+        "noAnswer": "未提供回答",
+        "skippedHint": "已跳过；准备好后再回到这个问题。",
+        "yourAnswer": "您的回答",
+        "aiFeedback": "AI 反馈"
       }
     },
     "jobSelection": {
-      "title": "[zh-CN] Select a job to practice for:",
+      "title": "选择要练习的机会：",
       "empty": {
-        "title": "[zh-CN] No Opportunities to Practice For",
-        "description": "[zh-CN] Add a job description first to get personalized interview questions based on the role.",
-        "addOpportunity": "[zh-CN] Add an Opportunity"
+        "title": "暂无可练习的机会",
+        "description": "请先添加职位描述，以便根据角色生成个性化面试问题。",
+        "addOpportunity": "添加机会"
       },
       "actions": {
-        "quickPractice": "[zh-CN] Quick Practice",
-        "textPractice": "[zh-CN] Text Practice",
-        "voicePractice": "[zh-CN] Voice Practice",
-        "prepGuide": "[zh-CN] Prep Guide",
-        "hidePrepGuide": "[zh-CN] Hide Prep Guide",
-        "companyResearch": "[zh-CN] Company Research"
+        "quickPractice": "快速练习",
+        "textPractice": "文字练习",
+        "voicePractice": "语音练习",
+        "prepGuide": "准备指南",
+        "hidePrepGuide": "隐藏指南",
+        "companyResearch": "公司调研"
       },
       "controls": {
-        "difficulty": "[zh-CN] Difficulty:",
-        "questionCount": "[zh-CN] {count} questions",
-        "timer": "[zh-CN] Timer"
+        "difficulty": "难度：",
+        "questionCount": "{count} 个问题",
+        "timer": "计时器"
       },
       "difficulty": {
-        "entry": "[zh-CN] Entry Level",
-        "mid": "[zh-CN] Mid Level",
-        "senior": "[zh-CN] Senior Level",
-        "executive": "[zh-CN] Executive"
+        "entry": "入门级",
+        "mid": "中级",
+        "senior": "高级",
+        "executive": "高管级"
       }
     },
     "quickPractice": {
-      "title": "[zh-CN] Practice {category}",
-      "description": "[zh-CN] Pick a short warm-up and jump straight into questions.",
+      "title": "练习 {category}",
+      "description": "选择一个简短热身，然后直接进入问题。",
       "fields": {
-        "category": "[zh-CN] Category",
-        "questions": "[zh-CN] Questions",
-        "difficulty": "[zh-CN] Difficulty"
+        "category": "类别",
+        "questions": "问题",
+        "difficulty": "难度"
       },
       "categories": {
-        "behavioral": "[zh-CN] Behavioral",
-        "technical": "[zh-CN] Technical",
-        "situational": "[zh-CN] Situational",
-        "general": "[zh-CN] General",
-        "cultural-fit": "[zh-CN] Cultural Fit"
+        "behavioral": "行为",
+        "technical": "技术",
+        "situational": "情景",
+        "general": "通用",
+        "cultural-fit": "文化契合"
       },
-      "questionCount": "[zh-CN] {count} questions",
+      "questionCount": "{count} 个问题",
       "difficulty": {
-        "entry": "[zh-CN] Easy",
-        "mid": "[zh-CN] Mid",
-        "senior": "[zh-CN] Hard",
-        "executive": "[zh-CN] Executive"
+        "entry": "简单",
+        "mid": "中等",
+        "senior": "困难",
+        "executive": "高管"
       },
-      "timer": "[zh-CN] Practice with a timer",
+      "timer": "使用计时器练习",
       "actions": {
-        "start": "[zh-CN] Start"
+        "start": "开始"
       }
     },
     "prepGuide": {
-      "title": "[zh-CN] Interview Prep Guide",
-      "jobAtCompany": "[zh-CN] {jobTitle} at {company}",
-      "loading": "[zh-CN] Generating your prep guide...",
-      "progress": "[zh-CN] Preparation Progress",
-      "questionTips": "[zh-CN] Tips",
+      "title": "面试准备指南",
+      "jobAtCompany": "{company} 的 {jobTitle}",
+      "loading": "正在生成您的准备指南...",
+      "progress": "准备进度",
+      "questionTips": "提示",
       "actions": {
-        "export": "[zh-CN] Export"
+        "export": "导出"
       },
       "tabs": {
-        "overview": "[zh-CN] Overview",
-        "checklist": "[zh-CN] Checklist",
-        "questions": "[zh-CN] Questions"
+        "overview": "概览",
+        "checklist": "清单",
+        "questions": "问题"
       },
       "sections": {
-        "keyTopics": "[zh-CN] Key Topics to Prepare",
-        "strengths": "[zh-CN] Your Strengths",
-        "gaps": "[zh-CN] Potential Gaps",
-        "talkingPoints": "[zh-CN] Key Talking Points"
+        "keyTopics": "需要准备的重点主题",
+        "strengths": "您的优势",
+        "gaps": "潜在差距",
+        "talkingPoints": "关键表达要点"
       },
       "checklist": {
-        "before": "[zh-CN] Before the Interview",
-        "during": "[zh-CN] During the Interview",
-        "after": "[zh-CN] After the Interview"
+        "before": "面试前",
+        "during": "面试中",
+        "after": "面试后"
       },
       "categories": {
-        "behavioral": "[zh-CN] Behavioral",
-        "technical": "[zh-CN] Technical",
-        "situational": "[zh-CN] Situational",
-        "company": "[zh-CN] Company"
+        "behavioral": "行为",
+        "technical": "技术",
+        "situational": "情景",
+        "company": "公司"
       },
       "errors": {
-        "fetch": "[zh-CN] Failed to fetch guide",
-        "load": "[zh-CN] Failed to load guide",
-        "download": "[zh-CN] Failed to download guide",
-        "downloadTitle": "[zh-CN] Could not download prep guide",
-        "downloadDescription": "[zh-CN] Please try downloading the guide again."
+        "fetch": "无法获取指南",
+        "load": "无法加载指南",
+        "download": "无法下载指南",
+        "downloadTitle": "无法下载准备指南",
+        "downloadDescription": "请再次尝试下载指南。"
       }
     }
   },
   "jobs": {
     "toolbar": {
-      "searchPlaceholder": "[zh-CN] Search jobs by title, company, or keywords...",
-      "clearSearch": "[zh-CN] Clear search",
+      "searchPlaceholder": "按职位、公司或关键词搜索工作...",
+      "clearSearch": "清除搜索",
       "filters": {
-        "status": "[zh-CN] Status",
-        "type": "[zh-CN] Type",
-        "location": "[zh-CN] Location",
-        "allStatuses": "[zh-CN] All Statuses",
-        "allTypes": "[zh-CN] All Types",
-        "allLocations": "[zh-CN] All Locations"
+        "status": "状态",
+        "type": "类型",
+        "location": "地点",
+        "allStatuses": "所有状态",
+        "allTypes": "所有类型",
+        "allLocations": "所有地点"
       },
       "statuses": {
-        "pending": "[zh-CN] Pending",
-        "saved": "[zh-CN] Saved",
-        "applied": "[zh-CN] Applied",
-        "interviewing": "[zh-CN] Interviewing",
-        "offered": "[zh-CN] Offered",
-        "rejected": "[zh-CN] Rejected"
+        "pending": "待处理",
+        "saved": "已保存",
+        "applied": "已申请",
+        "interviewing": "面试中",
+        "offered": "已获录用",
+        "rejected": "已拒绝"
       },
       "types": {
-        "fullTime": "[zh-CN] Full-time",
-        "partTime": "[zh-CN] Part-time",
-        "contract": "[zh-CN] Contract",
-        "internship": "[zh-CN] Internship"
+        "fullTime": "全职",
+        "partTime": "兼职",
+        "contract": "合同",
+        "internship": "实习"
       },
       "locations": {
-        "remote": "[zh-CN] Remote",
-        "onsite": "[zh-CN] On-site"
+        "remote": "远程",
+        "onsite": "现场"
       },
       "sort": {
-        "placeholder": "[zh-CN] Sort",
-        "newest": "[zh-CN] Newest First",
-        "oldest": "[zh-CN] Oldest First",
-        "company": "[zh-CN] Company A-Z",
-        "title": "[zh-CN] Title A-Z"
+        "placeholder": "排序",
+        "newest": "最新优先",
+        "oldest": "最早优先",
+        "company": "公司 A-Z",
+        "title": "职位 A-Z"
       },
-      "showing": "[zh-CN] Showing {filteredCount} of {totalCount, plural, one {# job} other {# jobs}}"
+      "showing": "显示 {filteredCount} 个，共 {totalCount, plural, one {# 个职位} other {# 个职位}}"
     },
     "import": {
       "csvPreview": {
-        "summaryTitle": "[zh-CN] Import Summary",
+        "summaryTitle": "导入摘要",
         "stats": {
-          "totalRows": "[zh-CN] Total Rows",
-          "validOpportunities": "[zh-CN] Valid Opportunities",
-          "invalid": "[zh-CN] Invalid"
+          "totalRows": "总行数",
+          "validOpportunities": "有效机会",
+          "invalid": "无效"
         },
-        "validationErrors": "[zh-CN] Validation Errors",
-        "moreErrors": "[zh-CN] ...and {count} more errors",
-        "opportunitiesToImport": "[zh-CN] Opportunities to Import ({count})",
-        "moreOpportunities": "[zh-CN] ...and {count, plural, one {# more opportunity} other {# more opportunities}}",
+        "validationErrors": "验证错误",
+        "moreErrors": "...还有 {count} 个错误",
+        "opportunitiesToImport": "要导入的机会 ({count})",
+        "moreOpportunities": "...还有 {count, plural, one {# 个机会} other {# 个机会}}",
         "actions": {
-          "import": "[zh-CN] Import {count, plural, one {# Opportunity} other {# Opportunities}}"
+          "import": "导入 {count, plural, one {# 个机会} other {# 个机会}}"
         }
       },
       "textMode": {
-        "jobUrlLabel": "[zh-CN] Job URL (optional)",
-        "jobUrlPlaceholder": "[zh-CN] https://linkedin.com/jobs/... or https://indeed.com/...",
-        "jobUrlHelp": "[zh-CN] The URL will be saved with the job for reference",
-        "jobContentLabel": "[zh-CN] Job Content",
-        "jobContentPlaceholder": "[zh-CN] Paste the full job posting here...\n\nExample:\nSenior Software Engineer\nAcme Corp - San Francisco, CA (Remote)\n\nAbout the role:\nWe're looking for an experienced software engineer...\n\nRequirements:\n- 5+ years of experience\n- Python, TypeScript\n...",
-        "jobContentHelp": "[zh-CN] Paste the entire job description. We'll extract the title, company, requirements, and keywords.",
+        "jobUrlLabel": "职位 URL（可选）",
+        "jobUrlPlaceholder": "例如：https://linkedin.com/jobs/... 或 https://indeed.com/...",
+        "jobUrlHelp": "该 URL 将随职位保存以供参考",
+        "jobContentLabel": "职位内容",
+        "jobContentPlaceholder": "在此粘贴完整职位发布...\n\n示例：\n高级软件工程师\nAcme 公司 - San Francisco, CA（远程）\n\n职位介绍：\n我们正在寻找经验丰富的软件工程师...\n\n要求：\n- 5 年以上经验\n- Python、TypeScript\n...",
+        "jobContentHelp": "粘贴完整职位描述。我们会提取标题、公司、要求和关键词。",
         "actions": {
-          "parse": "[zh-CN] Parse Job"
+          "parse": "解析职位"
         }
       },
       "urlMode": {
-        "jobUrlLabel": "[zh-CN] Job Posting URL",
-        "jobUrlPlaceholder": "[zh-CN] https://linkedin.com/jobs/... or https://indeed.com/...",
-        "jobUrlHelp": "[zh-CN] We'll fetch the job posting and extract the details automatically.",
-        "fetchingNote": "[zh-CN] Note: Some sites may block automated fetching. If the import fails, try pasting the job content directly.",
+        "jobUrlLabel": "职位发布 URL",
+        "jobUrlPlaceholder": "例如：https://linkedin.com/jobs/... 或 https://indeed.com/...",
+        "jobUrlHelp": "我们会获取职位发布并自动提取详细信息。",
+        "fetchingNote": "注意：某些网站可能会阻止自动获取。如果导入失败，请尝试直接粘贴职位内容。",
         "actions": {
-          "fetch": "[zh-CN] Fetch Job"
+          "fetch": "获取职位"
         }
       },
       "editForm": {
         "fields": {
-          "jobTitle": "[zh-CN] Job Title",
-          "company": "[zh-CN] Company",
-          "location": "[zh-CN] Location",
-          "jobType": "[zh-CN] Job Type",
-          "salary": "[zh-CN] Salary",
-          "remote": "[zh-CN] Remote",
-          "url": "[zh-CN] URL"
+          "jobTitle": "职位名称",
+          "company": "公司",
+          "location": "地点",
+          "jobType": "工作类型",
+          "salary": "薪资",
+          "remote": "远程",
+          "url": "URL"
         },
         "placeholders": {
-          "location": "[zh-CN] San Francisco, CA",
-          "selectType": "[zh-CN] Select type"
+          "location": "例如：San Francisco, CA",
+          "selectType": "选择类型"
         },
         "types": {
-          "fullTime": "[zh-CN] Full-time",
-          "partTime": "[zh-CN] Part-time",
-          "contract": "[zh-CN] Contract",
-          "internship": "[zh-CN] Internship"
+          "fullTime": "全职",
+          "partTime": "兼职",
+          "contract": "合同",
+          "internship": "实习"
         },
         "remote": {
-          "remote": "[zh-CN] Remote",
-          "onsite": "[zh-CN] On-site"
+          "remote": "远程",
+          "onsite": "现场"
         },
         "actions": {
-          "backToPreview": "[zh-CN] Back to Preview",
-          "import": "[zh-CN] Import Job"
+          "backToPreview": "返回预览",
+          "import": "导入职位"
         }
       },
       "preview": {
-        "remote": "[zh-CN] Remote",
-        "viewOriginalPosting": "[zh-CN] View Original Posting",
-        "description": "[zh-CN] Description",
-        "requirements": "[zh-CN] Requirements",
-        "moreRequirements": "[zh-CN] +{count} more",
-        "extractedKeywords": "[zh-CN] Extracted Keywords",
-        "source": "[zh-CN] Source: {source}",
+        "remote": "远程",
+        "viewOriginalPosting": "查看原始发布",
+        "description": "描述",
+        "requirements": "要求",
+        "moreRequirements": "另有 {count} 条",
+        "extractedKeywords": "提取的关键词",
+        "source": "来源：{source}",
         "actions": {
-          "import": "[zh-CN] Import Job"
+          "import": "导入职位"
         }
       }
     },
     "addDialog": {
-      "title": "[zh-CN] Add New Opportunity",
-      "description": "[zh-CN] Paste the opportunity description to analyze your match and generate a tailored resume.",
+      "title": "添加新机会",
+      "description": "粘贴机会描述，以分析匹配度并生成定制简历。",
       "fields": {
-        "title": "[zh-CN] Opportunity Title",
-        "company": "[zh-CN] Company",
-        "url": "[zh-CN] Opportunity URL (optional)",
-        "description": "[zh-CN] Opportunity Description"
+        "title": "机会标题",
+        "company": "公司",
+        "url": "机会 URL（可选）",
+        "description": "机会描述"
       },
       "placeholders": {
-        "title": "[zh-CN] Software Engineer",
-        "company": "[zh-CN] Acme Corp",
-        "description": "[zh-CN] Paste the full opportunity description here..."
+        "title": "软件工程师",
+        "company": "Acme 公司",
+        "description": "在此粘贴完整的机会描述..."
       },
       "actions": {
-        "add": "[zh-CN] Add Opportunity"
+        "add": "添加机会"
       },
       "errors": {
-        "add": "[zh-CN] Failed to add opportunity",
-        "addTitle": "[zh-CN] Could not add opportunity",
-        "addDescription": "[zh-CN] Please check the opportunity details and try again."
+        "add": "添加机会失败",
+        "addTitle": "无法添加机会",
+        "addDescription": "请检查机会详情后重试。"
       }
     }
   },
   "resume": {
     "comparison": {
-      "title": "[zh-CN] Resume Comparison",
-      "loading": "[zh-CN] Comparing resumes...",
-      "before": "[zh-CN] Before",
-      "after": "[zh-CN] After",
-      "score": "[zh-CN] Score: {score}%",
-      "matchScoreChange": "[zh-CN] Match Score Change",
-      "empty": "[zh-CN] No differences found between these versions.",
+      "title": "简历对比",
+      "loading": "正在对比简历...",
+      "before": "之前",
+      "after": "之后",
+      "score": "分数：{score}%",
+      "matchScoreChange": "匹配分数变化",
+      "empty": "未发现这些版本之间的差异。",
       "actions": {
-        "close": "[zh-CN] Close"
+        "close": "关闭"
       },
       "summary": {
-        "additions": "[zh-CN] Additions",
-        "removals": "[zh-CN] Removals",
-        "changes": "[zh-CN] Changes"
+        "additions": "新增",
+        "removals": "删除",
+        "changes": "更改"
       },
       "errors": {
-        "compare": "[zh-CN] Failed to compare resumes",
-        "comparison": "[zh-CN] Comparison failed",
-        "load": "[zh-CN] Failed to load comparison"
+        "compare": "简历对比失败",
+        "comparison": "对比失败",
+        "load": "无法加载对比"
       }
     }
   },
   "integrations": {
     "google": {
       "calendar": {
-        "connectInSettings": "[zh-CN] Connect Google in Settings to sync calendar",
-        "checking": "[zh-CN] Checking...",
-        "syncing": "[zh-CN] Syncing...",
-        "selectPlaceholder": "[zh-CN] Select what to sync",
+        "connectInSettings": "在设置中连接 Google 以同步日历",
+        "checking": "正在检查...",
+        "syncing": "正在同步...",
+        "selectPlaceholder": "选择要同步的内容",
         "actions": {
-          "sync": "[zh-CN] Sync to Google Calendar"
+          "sync": "同步到 Google 日历"
         },
         "syncTypes": {
-          "all": "[zh-CN] All Events",
-          "interviews": "[zh-CN] Interviews Only",
-          "deadlines": "[zh-CN] Deadlines Only",
-          "reminders": "[zh-CN] Reminders Only"
+          "all": "所有事件",
+          "interviews": "仅面试",
+          "deadlines": "仅截止日期",
+          "reminders": "仅提醒"
         },
         "result": {
-          "synced": "[zh-CN] Synced {count, plural, one {# event} other {# events}}",
-          "partial": "[zh-CN] {synced} synced, {failed} failed",
-          "success": "[zh-CN] Successfully synced {count, plural, one {# event} other {# events}}",
-          "failed": "[zh-CN] Synced {synced, plural, one {# event} other {# events}}, {failed} failed",
-          "more": "[zh-CN] And {count} more..."
+          "synced": "已同步 {count, plural, one {# 个事件} other {# 个事件}}",
+          "partial": "已同步 {synced} 个，失败 {failed} 个",
+          "success": "已成功同步 {count, plural, one {# 个事件} other {# 个事件}}",
+          "failed": "已同步 {synced, plural, one {# 个事件} other {# 个事件}}，失败 {failed} 个",
+          "more": "还有 {count} 个..."
         },
         "errors": {
-          "syncTitle": "[zh-CN] Could not sync calendar",
-          "syncDescription": "[zh-CN] Please check your Google connection and try again.",
-          "syncFailed": "[zh-CN] Sync failed"
+          "syncTitle": "无法同步日历",
+          "syncDescription": "请检查您的 Google 连接后重试。",
+          "syncFailed": "同步失败"
         }
       },
       "contacts": {
-        "trigger": "[zh-CN] Add from Google",
-        "title": "[zh-CN] Select Google Contact",
-        "description": "[zh-CN] Choose a contact to attach to this opportunity.",
-        "searchPlaceholder": "[zh-CN] Search contacts",
-        "loading": "[zh-CN] Loading contacts...",
-        "openSettings": "[zh-CN] Open Settings",
+        "trigger": "从 Google 添加",
+        "title": "选择 Google 联系人",
+        "description": "选择要附加到此机会的联系人。",
+        "searchPlaceholder": "搜索联系人",
+        "loading": "正在加载联系人...",
+        "openSettings": "打开设置",
         "empty": {
-          "noContacts": "[zh-CN] No contacts found. Reconnect Google in Settings if you connected before contacts support.",
-          "noMatches": "[zh-CN] No contacts match your search."
+          "noContacts": "未找到联系人。如果您在支持联系人前已连接，请在设置中重新连接 Google。",
+          "noMatches": "没有联系人匹配您的搜索。"
         },
         "errors": {
-          "load": "[zh-CN] Failed to load contacts from Google",
-          "loadTitle": "[zh-CN] Could not load Google contacts",
-          "loadDescription": "[zh-CN] Please check your Google connection and try again."
+          "load": "无法从 Google 加载联系人",
+          "loadTitle": "无法加载 Google 联系人",
+          "loadDescription": "请检查您的 Google 连接后重试。"
         }
       },
       "drive": {
-        "connectInSettings": "[zh-CN] Connect Google in Settings to save to Drive",
-        "checking": "[zh-CN] Checking...",
-        "saved": "[zh-CN] Saved to Drive",
-        "saving": "[zh-CN] Saving...",
+        "connectInSettings": "在设置中连接 Google 以保存到 Drive",
+        "checking": "正在检查...",
+        "saved": "已保存到 Drive",
+        "saving": "正在保存...",
         "actions": {
-          "save": "[zh-CN] Save to Drive",
-          "saveAndGetLink": "[zh-CN] Save & Get Link"
+          "save": "保存到 Drive",
+          "saveAndGetLink": "保存并获取链接"
         },
         "errors": {
-          "save": "[zh-CN] Failed to save to Drive",
-          "saveTitle": "[zh-CN] Could not save to Drive",
-          "saveDescription": "[zh-CN] Please check your Google connection and try again."
+          "save": "无法保存到 Drive",
+          "saveTitle": "无法保存到 Drive",
+          "saveDescription": "请检查您的 Google 连接后重试。"
         }
       }
     }
   },
   "dialogs": {
     "upload": {
-      "failedTitle": "[zh-CN] Upload Failed",
+      "failedTitle": "上传失败",
       "actions": {
-        "retry": "[zh-CN] Retry",
-        "dismiss": "[zh-CN] Dismiss",
-        "replace": "[zh-CN] Replace"
+        "retry": "重试",
+        "dismiss": "关闭",
+        "replace": "替换"
       },
       "replace": {
-        "title": "[zh-CN] Replace existing upload?",
-        "description": "[zh-CN] Looks like you uploaded \"{filename}\" on {date}. Replace it, or cancel?"
+        "title": "替换现有上传？",
+        "description": "看起来您在 {date} 上传了 \"{filename}\"。要替换它还是取消？"
       }
     },
     "bank": {
       "addEntry": {
-        "trigger": "[zh-CN] Add Entry",
-        "title": "[zh-CN] Add New Entry",
-        "description": "[zh-CN] Manually add an entry to your profile bank.",
-        "category": "[zh-CN] Category",
-        "hackathonTemplates": "[zh-CN] Hackathon Templates",
+        "trigger": "添加条目",
+        "title": "添加新条目",
+        "description": "手动向个人资料库添加条目。",
+        "category": "类别",
+        "hackathonTemplates": "黑客松模板",
         "actions": {
-          "add": "[zh-CN] Add Entry"
+          "add": "添加条目"
         }
       },
       "sourceDocuments": {
-        "sourceFiles": "[zh-CN] Source Files",
-        "selected": "[zh-CN] {count} selected",
+        "sourceFiles": "来源文件",
+        "selected": "已选择 {count} 个",
         "actions": {
-          "deleteSelected": "[zh-CN] Delete Selected",
-          "selectFile": "[zh-CN] Select {filename}",
-          "deleteFile": "[zh-CN] Delete {filename}"
+          "deleteSelected": "删除所选",
+          "selectFile": "选择 {filename}",
+          "deleteFile": "删除 {filename}"
         },
         "deleteOne": {
-          "title": "[zh-CN] Delete source document?",
-          "description": "[zh-CN] This will permanently delete <strong>{filename}</strong> and all {count, plural, one {# associated bullet} other {# associated bullets}}. This action cannot be undone."
+          "title": "删除来源文档？",
+          "description": "这将永久删除 <strong>{filename}</strong> 以及所有 {count, plural, one {# 条关联要点} other {# 条关联要点}}。此操作无法撤销。"
         },
         "deleteMany": {
-          "title": "[zh-CN] Delete selected source files?",
-          "description": "[zh-CN] This will permanently delete {count, plural, one {# source file} other {# source files}} and all associated bullets. This action cannot be undone."
+          "title": "删除选中的来源文件？",
+          "description": "这将永久删除 {count, plural, one {# 个来源文件} other {# 个来源文件}} 以及所有关联要点。此操作无法撤销。"
         },
         "errors": {
-          "loadTitle": "[zh-CN] Could not load source files",
-          "loadDescription": "[zh-CN] Please refresh the page and try again.",
-          "deleteOneTitle": "[zh-CN] Could not delete source file",
-          "deleteOneDescription": "[zh-CN] Please try deleting the file again.",
-          "deleteManyTitle": "[zh-CN] Could not delete source files",
-          "deleteManyDescription": "[zh-CN] Please try deleting the selected files again."
+          "loadTitle": "无法加载来源文件",
+          "loadDescription": "请刷新页面后重试。",
+          "deleteOneTitle": "无法删除来源文件",
+          "deleteOneDescription": "请再次尝试删除该文件。",
+          "deleteManyTitle": "无法删除来源文件",
+          "deleteManyDescription": "请再次尝试删除所选文件。"
         }
       },
       "page": {
@@ -839,23 +839,23 @@
     },
     "builder": {
       "sectionList": {
-        "pickerTitle": "[zh-CN] Bank Entry Picker",
-        "pickerDescription": "[zh-CN] Select entries to add them to the document."
+        "pickerTitle": "资料库条目选择器",
+        "pickerDescription": "选择要添加到文档的条目。"
       }
     },
     "studio": {
       "versionDiff": {
-        "title": "[zh-CN] Compare to current",
-        "selectVersion": "[zh-CN] Select a version to compare."
+        "title": "与当前版本比较",
+        "selectVersion": "选择一个版本进行比较。"
       },
       "aiAssistant": {
-        "opportunityPickerTitle": "[zh-CN] Select from Opportunity Bank",
-        "opportunityPickerDescription": "[zh-CN] Choose a saved or applied opportunity to load its description."
+        "opportunityPickerTitle": "从机会库中选择",
+        "opportunityPickerDescription": "选择已保存或已申请的机会以加载其描述。"
       }
     },
     "opportunities": {
       "addOpportunity": {
-        "title": "[zh-CN] Add Opportunity"
+        "title": "添加机会"
       }
     },
     "calendar": {
@@ -886,41 +886,41 @@
     },
     "help": {
       "ollama": {
-        "title": "[zh-CN] Using Ollama (Free)",
-        "installFrom": "[zh-CN] Install from",
-        "run": "[zh-CN] Run",
-        "testConnection": "[zh-CN] Test the connection above"
+        "title": "使用 Ollama（免费）",
+        "installFrom": "安装来源",
+        "run": "运行",
+        "testConnection": "测试上方连接"
       },
       "apiKeys": {
-        "title": "[zh-CN] Using API Keys",
-        "description": "[zh-CN] Connect your own API keys from OpenAI, Anthropic, or OpenRouter for cloud-based processing. Your keys are stored locally and never leave your device."
+        "title": "使用 API 密钥",
+        "description": "连接您自己的 OpenAI、Anthropic 或 OpenRouter API 密钥以进行云端处理。您的密钥会存储在本地，绝不会离开您的设备。"
       }
     },
     "dataManagement": {
-      "title": "[zh-CN] Data Management",
-      "description": "[zh-CN] Export your data or import from backups.",
+      "title": "数据管理",
+      "description": "导出您的数据或从备份导入。",
       "export": {
-        "title": "[zh-CN] Export Data",
-        "profileJson": "[zh-CN] Export Profile (JSON)",
-        "opportunitiesJson": "[zh-CN] Export Opportunities (JSON)",
-        "opportunitiesCsv": "[zh-CN] Export Opportunities (CSV)",
-        "fullBackup": "[zh-CN] Full Backup",
-        "allDataJson": "[zh-CN] Export All Data (JSON)"
+        "title": "导出数据",
+        "profileJson": "导出个人资料 (JSON)",
+        "opportunitiesJson": "导出机会 (JSON)",
+        "opportunitiesCsv": "导出机会 (CSV)",
+        "fullBackup": "完整备份",
+        "allDataJson": "导出所有数据 (JSON)"
       },
       "import": {
-        "title": "[zh-CN] Import Data",
-        "jobsAria": "[zh-CN] Import jobs from JSON or CSV file",
-        "opportunitiesJsonCsv": "[zh-CN] Import Opportunities (JSON/CSV)",
-        "restoreBackupAria": "[zh-CN] Restore backup from JSON file",
-        "restoreBackup": "[zh-CN] Restore Backup",
-        "allDataAria": "[zh-CN] Import all data from JSON file",
-        "allDataJson": "[zh-CN] Import All Data (JSON)"
+        "title": "导入数据",
+        "jobsAria": "从 JSON 或 CSV 文件导入职位",
+        "opportunitiesJsonCsv": "导入机会 (JSON/CSV)",
+        "restoreBackupAria": "从 JSON 文件恢复备份",
+        "restoreBackup": "恢复备份",
+        "allDataAria": "从 JSON 文件导入所有数据",
+        "allDataJson": "导入所有数据 (JSON)"
       },
       "confirm": {
-        "title": "[zh-CN] Confirm Import",
-        "description": "[zh-CN] The following data will be imported (duplicates will be skipped):",
-        "importing": "[zh-CN] Importing...",
-        "action": "[zh-CN] Confirm Import"
+        "title": "确认导入",
+        "description": "将导入以下数据（重复项将被跳过）：",
+        "importing": "正在导入...",
+        "action": "确认导入"
       }
     }
   },

@@ -278,10 +278,14 @@ function shouldSkipForWorkday(
 ): boolean {
   const input = el as HTMLInputElement;
   if (input.disabled) return true;
+  if (input.readOnly) return true;
   if (
     input.type === "hidden" ||
     input.type === "submit" ||
-    input.type === "button"
+    input.type === "button" ||
+    input.type === "reset" ||
+    input.type === "image" ||
+    input.type === "file"
   ) {
     return true;
   }

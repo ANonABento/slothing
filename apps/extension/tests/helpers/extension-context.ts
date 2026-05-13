@@ -17,6 +17,8 @@ const FIXTURE_URL_MAP: Record<string, string> = {
   "lever-mock.html": "https://jobs.lever.co/fixture/lever-mock.html",
   "workday-mock.html":
     "https://fixture.myworkdayjobs.com/job/workday-mock.html",
+  "unknown-jsonld-job.html":
+    "https://careers.example.test/jobs/unknown-jsonld-job.html",
 };
 
 const DEMO_BASE_URL = "https://www.linkedin.com/jobs/view/demo";
@@ -101,7 +103,13 @@ export async function seedExtensionStorage(
     await page.goto(`chrome-extension://${extensionId}/options.html`);
     await page.evaluate(
       (storageData) =>
-        chrome.storage.local.set({ slothing_extension: storageData }),
+        new Promise<void>((resolve, reject) => {
+          chrome.storage.local.set({ slothing_extension: storageData }, () => {
+            const message = chrome.runtime.lastError?.message;
+            if (message) reject(new Error(message));
+            else resolve();
+          });
+        }),
       data,
     );
   } finally {
@@ -115,22 +123,26 @@ export async function sendMessageToTab<T>(
   tabUrlPart: string,
   message: { type: string; payload?: unknown },
 ): Promise<T> {
-  const page = await context.newPage();
-  try {
-    await page.goto(`chrome-extension://${extensionId}/popup.html`);
-    return await page.evaluate(
-      async ({ urlPart, msg }) => {
-        const tabs = await chrome.tabs.query({});
-        const target = tabs.find((tab) => tab.id && tab.url?.includes(urlPart));
-        if (!target?.id) {
-          throw new Error(`No tab found for ${urlPart}`);
-        }
-
-        return await chrome.tabs.sendMessage(target.id, msg);
-      },
-      { urlPart: tabUrlPart, msg: message },
-    );
-  } finally {
-    await page.close();
+  let worker = context
+    .serviceWorkers()
+    .find((candidate) => candidate.url().includes(extensionId));
+  if (!worker) {
+    worker = await context.waitForEvent("serviceworker", {
+      timeout: 10_000,
+      predicate: (candidate) => candidate.url().includes(extensionId),
+    });
   }
+
+  return await worker.evaluate(
+    async ({ urlPart, msg }) => {
+      const tabs = await chrome.tabs.query({});
+      const target = tabs.find((tab) => tab.id && tab.url?.includes(urlPart));
+      if (!target?.id) {
+        throw new Error(`No tab found for ${urlPart}`);
+      }
+
+      return await chrome.tabs.sendMessage(target.id, msg);
+    },
+    { urlPart: tabUrlPart, msg: message },
+  );
 }
