@@ -33,8 +33,8 @@ const OG_ROUTES = [
   () => import("./[locale]/(app)/profile/opengraph-image"),
   () => import("./[locale]/(app)/salary/opengraph-image"),
   () => import("./[locale]/(app)/settings/opengraph-image"),
-  () => import("./[locale]/privacy/opengraph-image"),
-  () => import("./[locale]/terms/opengraph-image"),
+  () => import("./[locale]/(marketing)/privacy/opengraph-image"),
+  () => import("./[locale]/(marketing)/terms/opengraph-image"),
 ];
 
 describe("Open Graph image route modules", () => {
