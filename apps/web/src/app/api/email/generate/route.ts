@@ -85,7 +85,11 @@ export async function POST(request: NextRequest) {
 
     // Try LLM-enhanced generation first
     if (useLLM) {
-      const gate = gateAiFeature(authResult.userId, "email", `${type}:${jobId ?? "general"}`);
+      const gate = gateAiFeature(
+        authResult.userId,
+        "email",
+        `${type}:${jobId ?? "general"}`,
+      );
       if (isAiGateResponse(gate)) return gate;
       aiGate = gate;
       try {

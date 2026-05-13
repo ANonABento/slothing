@@ -19,7 +19,9 @@ function buildBoardPage(args: {
   }>;
   totalPages?: number;
   currentPage?: number;
-  nextPagesData?: Array<Array<{ title: string; location?: string; jobId?: string }>>;
+  nextPagesData?: Array<
+    Array<{ title: string; location?: string; jobId?: string }>
+  >;
   malformedAt?: number; // index of a row to corrupt (no title) to test error isolation
 }) {
   const {
@@ -69,9 +71,7 @@ function buildBoardPage(args: {
   `;
 
   if (nextPagesData) {
-    const nextLink = document.querySelector<HTMLAnchorElement>(
-      'a[rel="next"]',
-    );
+    const nextLink = document.querySelector<HTMLAnchorElement>('a[rel="next"]');
     if (nextLink && !nextLink.classList.contains("disabled")) {
       nextLink.addEventListener("click", (e) => {
         e.preventDefault();

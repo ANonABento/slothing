@@ -59,14 +59,17 @@ type SessionMap = Record<string, MultistepSession>;
 function getSessionArea(): chrome.storage.StorageArea {
   // The `session` API is only present in MV3. webextension-polyfill exposes
   // `local` in both manifest versions, so it's a safe last resort.
-  const area = (chrome.storage as unknown as { session?: chrome.storage.StorageArea }).session;
+  const area = (
+    chrome.storage as unknown as { session?: chrome.storage.StorageArea }
+  ).session;
   return area ?? chrome.storage.local;
 }
 
 async function readMap(): Promise<SessionMap> {
   return new Promise((resolve) => {
     getSessionArea().get(MULTISTEP_SESSION_KEY, (result) => {
-      const raw = (result?.[MULTISTEP_SESSION_KEY] as SessionMap | undefined) ?? {};
+      const raw =
+        (result?.[MULTISTEP_SESSION_KEY] as SessionMap | undefined) ?? {};
       resolve(raw);
     });
   });
@@ -78,7 +81,10 @@ async function writeMap(map: SessionMap): Promise<void> {
   });
 }
 
-function isExpired(session: MultistepSession, now: number = Date.now()): boolean {
+function isExpired(
+  session: MultistepSession,
+  now: number = Date.now(),
+): boolean {
   const confirmed = Date.parse(session.confirmedAt);
   if (!Number.isFinite(confirmed)) return true;
   return now - confirmed > MULTISTEP_SESSION_TTL_MS;
@@ -134,7 +140,9 @@ export async function clearSession(tabId: number): Promise<void> {
  * Sweep every expired entry. Called from the background on startup to keep
  * the session-area small if the browser crashed mid-flow.
  */
-export async function purgeExpiredSessions(now: number = Date.now()): Promise<void> {
+export async function purgeExpiredSessions(
+  now: number = Date.now(),
+): Promise<void> {
   const map = await readMap();
   let changed = false;
   for (const [key, entry] of Object.entries(map)) {

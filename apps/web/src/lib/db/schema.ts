@@ -385,7 +385,9 @@ export const subscriptions = sqliteTable(
     currentPeriodEnd: text("current_period_end"),
     cancelAtPeriodEnd: integer("cancel_at_period_end", {
       mode: "boolean",
-    }).notNull().default(false),
+    })
+      .notNull()
+      .default(false),
     canceledAt: text("canceled_at"),
     createdAt: text("created_at").default(sql`CURRENT_TIMESTAMP`),
     updatedAt: text("updated_at").default(sql`CURRENT_TIMESTAMP`),

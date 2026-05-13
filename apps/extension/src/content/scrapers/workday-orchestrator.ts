@@ -208,9 +208,7 @@ export class WorkdayOrchestrator {
     );
     const location = locationEl?.textContent?.trim() || undefined;
 
-    const reqIdEl = row.querySelector(
-      '[data-automation-id="requisitionId"]',
-    );
+    const reqIdEl = row.querySelector('[data-automation-id="requisitionId"]');
     const sourceJobId =
       reqIdEl?.textContent?.trim() || this.extractJobIdFromUrl(url);
 

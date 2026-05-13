@@ -72,10 +72,7 @@ const BULK_SOURCE_LABELS: Record<BulkSourceKey, string> = {
 };
 
 const BULK_SOURCE_URL_PATTERNS: Record<BulkSourceKey, RegExp[]> = {
-  greenhouse: [
-    /boards\.greenhouse\.io\//,
-    /[\w-]+\.greenhouse\.io\//,
-  ],
+  greenhouse: [/boards\.greenhouse\.io\//, /[\w-]+\.greenhouse\.io\//],
   lever: [/jobs\.lever\.co\//, /[\w-]+\.lever\.co\//],
   workday: [/\.myworkdayjobs\.com\//, /\.workdayjobs\.com\//],
 };
@@ -703,9 +700,7 @@ export default function App() {
               lastResult={bulkResults[key] ?? null}
               lastError={bulkErrors[key] ?? null}
               onScrapeVisible={() => handleBulkSourceScrape(key, "visible")}
-              onScrapePaginated={() =>
-                handleBulkSourceScrape(key, "paginated")
-              }
+              onScrapePaginated={() => handleBulkSourceScrape(key, "paginated")}
               onViewTracker={handleViewReviewQueue}
             />
           );

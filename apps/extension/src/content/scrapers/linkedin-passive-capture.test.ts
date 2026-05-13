@@ -31,18 +31,12 @@ import {
 interface ChromeStub {
   storage: {
     session: {
-      get: (
-        key: string,
-        cb: (result: Record<string, unknown>) => void,
-      ) => void;
+      get: (key: string, cb: (result: Record<string, unknown>) => void) => void;
       set: (entries: Record<string, unknown>, cb: () => void) => void;
       remove: (key: string, cb: () => void) => void;
     };
     local: {
-      get: (
-        key: string,
-        cb: (result: Record<string, unknown>) => void,
-      ) => void;
+      get: (key: string, cb: (result: Record<string, unknown>) => void) => void;
       set: (entries: Record<string, unknown>, cb: () => void) => void;
       remove: (key: string, cb: () => void) => void;
     };
@@ -303,18 +297,9 @@ describe("tryCaptureLinkedInJob — dedupe, cap, and enqueue", () => {
       showToast: toast,
       now: () => new Date("2026-05-12T10:00:00Z"),
     };
-    await tryCaptureLinkedInJob(
-      { ...baseJob, sourceJobId: "11111" },
-      opts,
-    );
-    await tryCaptureLinkedInJob(
-      { ...baseJob, sourceJobId: "22222" },
-      opts,
-    );
-    await tryCaptureLinkedInJob(
-      { ...baseJob, sourceJobId: "33333" },
-      opts,
-    );
+    await tryCaptureLinkedInJob({ ...baseJob, sourceJobId: "11111" }, opts);
+    await tryCaptureLinkedInJob({ ...baseJob, sourceJobId: "22222" }, opts);
+    await tryCaptureLinkedInJob({ ...baseJob, sourceJobId: "33333" }, opts);
     expect(toast).toHaveBeenCalledTimes(1);
     expect(toast).toHaveBeenCalledWith(1);
   });

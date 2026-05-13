@@ -10,26 +10,26 @@
  * Re-running is safe: existing products are reused; mismatched prices trigger a new
  * price + default_price swap (Stripe prices are immutable, the old one is archived).
  */
-import { writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { writeFileSync } from "node:fs";
+import { join } from "node:path";
 
 import {
   getStripe,
   PLANS,
   type PlanConfig,
-} from '../src/cloud/billing/stripe-client';
+} from "../src/cloud/billing/stripe-client";
 
-const WRITE_CONFIG = process.argv.includes('--write-config');
+const WRITE_CONFIG = process.argv.includes("--write-config");
 const CONFIG_PATH = join(
   process.cwd(),
-  'src',
-  'cloud',
-  'billing',
-  'stripe-config.json',
+  "src",
+  "cloud",
+  "billing",
+  "stripe-config.json",
 );
 
 interface ProvisionedPlan {
-  productKey: PlanConfig['productKey'];
+  productKey: PlanConfig["productKey"];
   productId: string;
   priceId: string;
 }
@@ -37,7 +37,10 @@ interface ProvisionedPlan {
 async function findProduct(plan: PlanConfig) {
   const stripe = getStripe();
   // List is more reliable than search (search has ~1min indexing lag).
-  for await (const product of stripe.products.list({ active: true, limit: 100 })) {
+  for await (const product of stripe.products.list({
+    active: true,
+    limit: 100,
+  })) {
     if (product.metadata.slothing_product === plan.productKey) return product;
   }
   return null;
@@ -114,14 +117,16 @@ async function ensureDefaultPrice(productId: string, priceId: string) {
 async function main() {
   if (!process.env.STRIPE_SECRET_KEY) {
     console.error(
-      'STRIPE_SECRET_KEY is not set. Add it to .env.local first (use a test key for dev).',
+      "STRIPE_SECRET_KEY is not set. Add it to .env.local first (use a test key for dev).",
     );
     process.exit(1);
   }
-  console.log('Provisioning Stripe products + prices for Slothing Cloud...\n');
+  console.log("Provisioning Stripe products + prices for Slothing Cloud...\n");
   const provisioned: ProvisionedPlan[] = [];
   for (const plan of PLANS) {
-    console.log(`Plan: ${plan.name} ($${(plan.amountCents / 100).toFixed(2)} / ${plan.interval})`);
+    console.log(
+      `Plan: ${plan.name} ($${(plan.amountCents / 100).toFixed(2)} / ${plan.interval})`,
+    );
     const product = await findOrCreateProduct(plan);
     const price = await findOrCreatePrice(product.id, plan);
     await ensureDefaultPrice(product.id, price.id);
@@ -130,9 +135,9 @@ async function main() {
       productId: product.id,
       priceId: price.id,
     });
-    console.log('');
+    console.log("");
   }
-  console.log('Done. Price IDs:');
+  console.log("Done. Price IDs:");
   for (const p of provisioned) {
     console.log(`  ${p.productKey}: ${p.priceId}`);
   }
@@ -140,11 +145,13 @@ async function main() {
     writeFileSync(CONFIG_PATH, `${JSON.stringify(provisioned, null, 2)}\n`);
     console.log(`\nWrote ${CONFIG_PATH} (gitignored).`);
   } else {
-    console.log('\nTip: re-run with --write-config to persist these to stripe-config.json.');
+    console.log(
+      "\nTip: re-run with --write-config to persist these to stripe-config.json.",
+    );
   }
 }
 
 main().catch((err) => {
-  console.error('stripe-setup failed:', err);
+  console.error("stripe-setup failed:", err);
   process.exit(1);
 });

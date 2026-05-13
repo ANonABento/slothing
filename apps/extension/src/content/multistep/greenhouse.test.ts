@@ -124,12 +124,12 @@ describe("GreenhouseMultistepHandler", () => {
   it("confirm() fills page 1 fields and persists a session", async () => {
     const result = await handler.confirm();
     expect(result).not.toBeNull();
-    expect((document.getElementById("first_name") as HTMLInputElement).value).toBe(
-      "Grace",
-    );
-    expect((document.getElementById("last_name") as HTMLInputElement).value).toBe(
-      "Hopper",
-    );
+    expect(
+      (document.getElementById("first_name") as HTMLInputElement).value,
+    ).toBe("Grace");
+    expect(
+      (document.getElementById("last_name") as HTMLInputElement).value,
+    ).toBe("Hopper");
     expect((document.getElementById("email") as HTMLInputElement).value).toBe(
       "grace@example.com",
     );

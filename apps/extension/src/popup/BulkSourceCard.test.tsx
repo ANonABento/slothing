@@ -13,8 +13,9 @@ import { BulkSourceCard } from "./BulkSourceCard";
 
 // Enable React 18+ act() in jsdom (silences the "current testing environment
 // is not configured to support act(...)" warning).
-(globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT: boolean })
-  .IS_REACT_ACT_ENVIRONMENT = true;
+(
+  globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT: boolean }
+).IS_REACT_ACT_ENVIRONMENT = true;
 
 let container: HTMLDivElement;
 let root: Root;
@@ -125,8 +126,7 @@ describe("BulkSourceCard", () => {
         onScrapePaginated={vi.fn()}
       />,
     );
-    const primary =
-      container.querySelector<HTMLButtonElement>(".btn.primary");
+    const primary = container.querySelector<HTMLButtonElement>(".btn.primary");
     expect(primary?.textContent).toContain("Scrape 5 visible");
     act(() => {
       primary?.click();

@@ -111,7 +111,11 @@ function pass(
     transaction,
     refund() {
       if (transaction?.feature && transaction.refId) {
-        refundCredits(transaction.userId, transaction.feature, transaction.refId);
+        refundCredits(
+          transaction.userId,
+          transaction.feature,
+          transaction.refId,
+        );
       }
     },
   };
@@ -131,7 +135,11 @@ function optionalPass(
     transaction,
     refund() {
       if (transaction?.feature && transaction.refId) {
-        refundCredits(transaction.userId, transaction.feature, transaction.refId);
+        refundCredits(
+          transaction.userId,
+          transaction.feature,
+          transaction.refId,
+        );
       }
     },
   };

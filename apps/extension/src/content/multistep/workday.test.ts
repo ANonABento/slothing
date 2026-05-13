@@ -106,7 +106,9 @@ describe("isWorkdayApplyUrl", () => {
   });
 
   it("rejects non-Workday hosts", () => {
-    expect(isWorkdayApplyUrl("https://boards.greenhouse.io/acme/jobs/123")).toBe(false);
+    expect(
+      isWorkdayApplyUrl("https://boards.greenhouse.io/acme/jobs/123"),
+    ).toBe(false);
   });
 
   it("rejects Workday hosts that aren't on the apply path", () => {
@@ -128,11 +130,7 @@ describe("WorkdayMultistepHandler", () => {
 
   beforeEach(() => {
     installChromeStorageMock();
-    window.history.replaceState(
-      {},
-      "",
-      "/en-US/Acme/job/Remote/SWE_R1/apply",
-    );
+    window.history.replaceState({}, "", "/en-US/Acme/job/Remote/SWE_R1/apply");
     // jsdom doesn't let us change window.location.host, so we stub the URL
     // via Location-mocked URL helpers. The handler reads `window.location.href`
     // — set it via JSDOM's pushState which already updates location.href and

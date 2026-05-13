@@ -89,7 +89,9 @@ export default function CompetitorComparisonPage({
           </div>
 
           <div className="rounded-lg border bg-background p-5">
-            <h2 className="text-base font-semibold">Why people pick Slothing</h2>
+            <h2 className="text-base font-semibold">
+              Why people pick Slothing
+            </h2>
             <ul className="mt-4 space-y-3 text-sm text-muted-foreground">
               <li className="flex gap-2">
                 <Check className="mt-0.5 h-4 w-4 text-success" />

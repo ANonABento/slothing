@@ -60,15 +60,15 @@ describe("encryption", () => {
     // Flip a character inside the payload portion to corrupt it
     const payload = envelope.slice("enc:v1:".length);
     const mutated =
-      "enc:v1:" +
-      (payload[0] === "A" ? "B" : "A") +
-      payload.slice(1);
+      "enc:v1:" + (payload[0] === "A" ? "B" : "A") + payload.slice(1);
     expect(() => decryptString(mutated)).toThrow();
   });
 
   it("isEncryptedEnvelope discriminates prefixed values", () => {
     expect(isEncryptedEnvelope("plain")).toBe(false);
-    expect(isEncryptedEnvelope("enc:v1:" + Buffer.from("x").toString("base64"))).toBe(true);
+    expect(
+      isEncryptedEnvelope("enc:v1:" + Buffer.from("x").toString("base64")),
+    ).toBe(true);
   });
 
   it("tryDecryptOrPassthrough leaves plaintext untouched", () => {
@@ -81,7 +81,9 @@ describe("encryption", () => {
   });
 
   it("decryptString throws EncryptionFormatError on plaintext input", () => {
-    expect(() => decryptString("not-an-envelope")).toThrow(EncryptionFormatError);
+    expect(() => decryptString("not-an-envelope")).toThrow(
+      EncryptionFormatError,
+    );
   });
 
   it("getMasterKey throws in production when SLOTHING_ENCRYPTION_KEY is missing", () => {
@@ -91,7 +93,8 @@ describe("encryption", () => {
   });
 
   it("getMasterKey throws if SLOTHING_ENCRYPTION_KEY is wrong length", () => {
-    process.env.SLOTHING_ENCRYPTION_KEY = Buffer.from("too-short").toString("base64");
+    process.env.SLOTHING_ENCRYPTION_KEY =
+      Buffer.from("too-short").toString("base64");
     resetMasterKeyCacheForTests();
     expect(() => getMasterKey()).toThrow(EncryptionConfigError);
   });

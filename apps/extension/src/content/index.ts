@@ -846,11 +846,7 @@ async function streamChat(params: {
       // generic failure so the UI surfaces a sensible message.
       if (!settled) {
         const runtimeError = chrome.runtime.lastError?.message;
-        finish(
-          new Error(
-            runtimeError || "Chat stream closed unexpectedly.",
-          ),
-        );
+        finish(new Error(runtimeError || "Chat stream closed unexpectedly."));
       }
     });
 

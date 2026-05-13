@@ -53,7 +53,8 @@ const WORKDAY_SUBMIT_SELECTORS = [
 ];
 
 /** Submit-button labels we treat as final (vs. "Next" / "Save and continue"). */
-const WORKDAY_SUBMIT_LABELS_RE = /(submit application|submit|review and submit)/i;
+const WORKDAY_SUBMIT_LABELS_RE =
+  /(submit application|submit|review and submit)/i;
 
 /** True when the given URL is a Workday applicant page. */
 export function isWorkdayApplyUrl(url: string): boolean {
@@ -100,9 +101,11 @@ export class WorkdayMultistepHandler {
    * sidebar action. Captures the snapshot, runs the first fill, and arms
    * the submit-button watcher so a final submit clears state.
    */
-  async confirm(options: {
-    baseResumeId?: string;
-  } = {}): Promise<FillResult | null> {
+  async confirm(
+    options: {
+      baseResumeId?: string;
+    } = {},
+  ): Promise<FillResult | null> {
     if (!this.isActive()) return null;
 
     const [tabId, profile] = await Promise.all([
@@ -222,8 +225,12 @@ export class WorkdayMultistepHandler {
    */
   private collectFields(): DetectedField[] {
     const scope =
-      document.querySelector<HTMLElement>('[data-automation-id="applyFlowContainer"]') ??
-      document.querySelector<HTMLElement>('[data-automation-id*="application"]') ??
+      document.querySelector<HTMLElement>(
+        '[data-automation-id="applyFlowContainer"]',
+      ) ??
+      document.querySelector<HTMLElement>(
+        '[data-automation-id*="application"]',
+      ) ??
       document.body;
     if (!scope) return [];
 
@@ -234,10 +241,7 @@ export class WorkdayMultistepHandler {
     for (const el of inputs) {
       if (shouldSkipForWorkday(el)) continue;
       const detected = this.detector.detectFieldType(el);
-      if (
-        detected.fieldType !== "unknown" ||
-        detected.confidence > 0.1
-      ) {
+      if (detected.fieldType !== "unknown" || detected.confidence > 0.1) {
         results.push(detected);
       }
     }
@@ -274,7 +278,11 @@ function shouldSkipForWorkday(
 ): boolean {
   const input = el as HTMLInputElement;
   if (input.disabled) return true;
-  if (input.type === "hidden" || input.type === "submit" || input.type === "button") {
+  if (
+    input.type === "hidden" ||
+    input.type === "submit" ||
+    input.type === "button"
+  ) {
     return true;
   }
   return false;

@@ -190,9 +190,10 @@ export const Messages = {
 
   // P3 / #36 #37 — multi-step form support (Workday, Greenhouse).
   /** Background → content: a step transition just fired for this tab. */
-  multistepStepTransition: (
-    payload: { url: string; transitionType: "webNavigation" | "fallback" },
-  ): ExtensionMessage<{
+  multistepStepTransition: (payload: {
+    url: string;
+    transitionType: "webNavigation" | "fallback";
+  }): ExtensionMessage<{
     url: string;
     transitionType: "webNavigation" | "fallback";
   }> => ({

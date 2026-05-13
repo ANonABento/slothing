@@ -72,9 +72,7 @@ export function ChatPanel(props: ChatPanelProps) {
         });
         setCompleted(true);
       } catch (err) {
-        setError(
-          err instanceof Error ? err.message : "Something went wrong.",
-        );
+        setError(err instanceof Error ? err.message : "Something went wrong.");
       } finally {
         setStreaming(false);
       }

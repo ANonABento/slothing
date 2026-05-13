@@ -432,9 +432,7 @@ export class ColumbusAPIClient {
       buffer = frames.pop() ?? "";
 
       for (const frame of frames) {
-        const line = frame
-          .split("\n")
-          .find((l) => l.startsWith("data: "));
+        const line = frame.split("\n").find((l) => l.startsWith("data: "));
         if (!line) continue;
         const dataStr = line.slice(6).trim();
         if (!dataStr) continue;

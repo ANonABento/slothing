@@ -11,11 +11,7 @@ export type CreditFeature =
   | "document_assistant"
   | "email";
 
-export type CreditReason =
-  | "invoice_paid"
-  | "usage"
-  | "refund"
-  | "adjustment";
+export type CreditReason = "invoice_paid" | "usage" | "refund" | "adjustment";
 
 export const CREDIT_COSTS: Record<CreditFeature, number> = {
   tailor: 5,
@@ -202,11 +198,9 @@ function addCredits(input: {
            WHERE user_id = ? AND reason = ? AND ref_id = ?
            LIMIT 1`,
         )
-        .get(
-          input.userId,
-          input.reason,
-          input.refId,
-        ) as CreditTransactionRow | undefined;
+        .get(input.userId, input.reason, input.refId) as
+        | CreditTransactionRow
+        | undefined;
       if (existing) {
         const balance = getCreditBalance(input.userId);
         return { ...balance, transaction: mapTransaction(existing) };
