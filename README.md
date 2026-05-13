@@ -50,7 +50,7 @@ search. Slothing inverts both:
 - **AI Tailoring** — Paste a JD, get a tailored résumé and cover letter pulled
   from your knowledge bank. Multi-provider: OpenAI, Anthropic, Ollama, OpenRouter.
 - **Interview Prep** — Text and voice mock interviews with AI feedback.
-- **Columbus Browser Extension** — Auto-fill applications, scrape job postings
+- **Slothing Browser Extension** — Auto-fill applications, scrape job postings
   into your tracker, bulk import from WaterlooWorks.
 - **Google Integration** — Calendar sync, Drive import/backup, Gmail import/send,
   Docs/Sheets export.
@@ -59,7 +59,7 @@ search. Slothing inverts both:
 
 ## Screenshots
 
-| Columbus review queue | Gmail import | Job-board capture |
+| Slothing review queue | Gmail import | Job-board capture |
 |---|---|---|
 | ![Review queue screenshot](./apps/web/public/marketing/extension/review-queue.png) | ![Gmail import screenshot](./apps/web/public/marketing/extension/gmail-import.png) | ![Job-board capture screenshot](./apps/web/public/marketing/extension/job-board-capture.png) |
 
@@ -156,10 +156,10 @@ Setup:
 See [`docs/google-integration/README.md`](docs/google-integration/README.md) for
 the full guide.
 
-## Columbus browser extension
+## Slothing browser extension
 
-Columbus is Slothing's browser-extension sub-brand. It auto-fills job
-applications and imports listings into your opportunity tracker.
+The Slothing browser extension auto-fills job applications and imports
+listings into your opportunity tracker.
 
 **Build it:**
 
@@ -193,7 +193,7 @@ shows a **Detected: WaterlooWorks** section with single-posting, visible-rows,
 and full-set scrape buttons (paginated, capped at 200). See
 [`apps/extension/README.md`](./apps/extension/README.md#5-waterlooworks-bulk-import).
 
-**New permission:** Columbus requests `webNavigation` so it can detect user-driven step changes inside Workday and Greenhouse application flows after you start autofill. The extension does not collect browsing history and does not submit applications. If the permission is unavailable, Columbus falls back to asking before filling each new step. See [docs/extension-release-followthrough-2026-05.md](./docs/extension-release-followthrough-2026-05.md) for the release note and verification checklist.
+**New permission:** Slothing requests `webNavigation` so it can detect user-driven step changes inside Workday and Greenhouse application flows after you start autofill. The extension does not collect browsing history and does not submit applications. If the permission is unavailable, Slothing falls back to asking before filling each new step. See [docs/extension-release-followthrough-2026-05.md](./docs/extension-release-followthrough-2026-05.md) for the release note and verification checklist.
 
 Full docs: [`apps/extension/README.md`](./apps/extension/README.md).
 
@@ -209,7 +209,7 @@ apps/
 │   ├── drizzle/              # Database migrations
 │   ├── e2e/                  # Playwright tests
 │   └── evals/                # Resume + cover-letter eval harness
-└── extension/                # Columbus browser extension
+└── extension/                # Slothing browser extension
 packages/
 └── shared/
     └── src/                  # Shared types, Zod schemas, formatters, scoring
@@ -321,4 +321,4 @@ This repository is licensed under the
 carve-out for hosted-only billing code under `apps/web/src/cloud/`. See
 [LICENSING.md](./LICENSING.md) for the full breakdown.
 
-"Slothing" and "Columbus" are unregistered trademarks of Kevin Jiang.
+"Slothing" is an unregistered trademark of Kevin Jiang.

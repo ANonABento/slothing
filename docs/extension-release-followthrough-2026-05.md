@@ -1,29 +1,29 @@
-# Columbus extension release follow-through — May 2026
+# Slothing extension release follow-through — May 2026
 
 > Status: release-readiness follow-up for the May 2026 extension roadmap.
 > Scope: permission communication, representative Workday/Greenhouse verification, and MCP v2 write-tool planning.
 
 ## Release note: `webNavigation` permission
 
-Columbus now requests the browser `webNavigation` permission.
+Slothing now requests the browser `webNavigation` permission.
 
 Why it is needed:
 
 - Workday and Greenhouse application flows often move between steps with client-side route changes instead of full page loads.
 - `webNavigation` lets the extension notice those in-progress application step changes after the user has explicitly started autofill.
-- When a step changes, Columbus can re-run field detection on the new form page and ask/fill the next step without requiring the user to reopen the popup.
+- When a step changes, Slothing can re-run field detection on the new form page and ask/fill the next step without requiring the user to reopen the popup.
 
 Privacy and behavior boundaries:
 
-- Columbus does not collect browsing history.
+- Slothing does not collect browsing history.
 - The permission is used only to detect navigation events for tabs with an active multi-step application session.
 - Autofill still starts only after explicit user intent.
-- Columbus does not auto-submit applications.
-- If `webNavigation` is unavailable or declined, Columbus falls back to an in-page prompt: "Looks like step N of M — fill this page too?"
+- Slothing does not auto-submit applications.
+- If `webNavigation` is unavailable or declined, Slothing falls back to an in-page prompt: "Looks like step N of M — fill this page too?"
 
 Suggested user-facing release note:
 
-> Columbus asks for a new browser navigation permission so it can follow multi-step Workday and Greenhouse application forms after you start autofill. It does not collect browsing history, and it does not submit applications. If the permission is unavailable, Columbus falls back to asking before filling each new step.
+> Slothing asks for a new browser navigation permission so it can follow multi-step Workday and Greenhouse application forms after you start autofill. It does not collect browsing history, and it does not submit applications. If the permission is unavailable, Slothing falls back to asking before filling each new step.
 
 ## Representative verification
 
@@ -81,21 +81,21 @@ Use a disposable or non-submitted application flow. Do not click final submit.
 
 2. **Workday application flow**
    - Open a public Workday job and enter its apply flow.
-   - Click the explicit Columbus autofill action.
+   - Click the explicit Slothing autofill action.
    - Confirm page 1 fills expected contact fields.
    - Click Next or Save and continue.
    - Confirm the next step is detected via `webNavigation` and fields are filled only after the user-initiated session exists.
-   - Confirm final Submit clears the session but is not clicked by Columbus.
+   - Confirm final Submit clears the session but is not clicked by Slothing.
 
 3. **Greenhouse hosted flow**
    - Open a `boards.greenhouse.io/<company>/jobs/<id>` posting.
-   - Start Columbus autofill.
+   - Start Slothing autofill.
    - Confirm contact fields fill.
    - If the employer has additional pages/sections, navigate to the next section and confirm re-fill behavior.
 
 4. **Greenhouse iframe flow**
    - Open an employer-hosted page embedding `app.greenhouse.io`.
-   - Confirm Columbus either fills same-origin/friendly iframes or no-ops without errors on cross-origin frames.
+   - Confirm Slothing either fills same-origin/friendly iframes or no-ops without errors on cross-origin frames.
    - If `webNavigation` cannot observe the inner flow, confirm the prompted fallback appears.
 
 5. **Bulk board smoke**

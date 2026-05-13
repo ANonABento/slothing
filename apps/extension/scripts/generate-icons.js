@@ -6,7 +6,7 @@ const path = require('path');
 const sharp = require('sharp');
 
 const SIZES = [16, 32, 48, 128];
-const SVG_SOURCE = path.join(__dirname, '../icons/source/columbus.svg');
+const SVG_SOURCE = path.join(__dirname, '../icons/source/slothing.svg');
 const OUTPUT_DIR = path.join(__dirname, '../src/assets/icons');
 
 if (!fs.existsSync(SVG_SOURCE)) {

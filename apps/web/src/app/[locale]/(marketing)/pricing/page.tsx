@@ -60,7 +60,7 @@ const tiers: readonly Tier[] = [
     features: [
       "Full feature set",
       "All AI tools (with your keys)",
-      "Columbus browser extension",
+      "Slothing browser extension",
       "Self-hosted, no telemetry",
       "AGPL-3.0 licensed",
     ],
@@ -136,7 +136,7 @@ const faqs = [
   {
     question: "Can I really self-host?",
     answer:
-      "Yes. Slothing is AGPL-3.0 open source. Clone the repo, run pnpm install, and you have the whole app on your machine — including the Columbus browser extension, Document Studio, opportunity tracker, and all AI features. See the Self-host quickstart in the README.",
+      "Yes. Slothing is AGPL-3.0 open source. Clone the repo, run pnpm install, and you have the whole app on your machine — including the Slothing browser extension, Document Studio, opportunity tracker, and all AI features. See the Self-host quickstart in the README.",
   },
   {
     question: "What's open source vs proprietary?",

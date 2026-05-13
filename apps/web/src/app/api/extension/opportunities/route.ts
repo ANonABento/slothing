@@ -7,7 +7,7 @@
  * @response { opportunities: JobDescription[] }
  *
  * This is the read-side companion to POST /api/opportunities/from-extension. It
- * reuses the same extension-token auth helper the Columbus browser extension
+ * reuses the same extension-token auth helper the Slothing browser extension
  * uses, so the @slothing/mcp server (and any other agent runtime holding an
  * extension token) can list opportunities without going through NextAuth.
  */

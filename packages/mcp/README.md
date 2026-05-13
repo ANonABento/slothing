@@ -5,7 +5,7 @@ small set of read/write tools to MCP-capable agent runtimes (Claude Desktop,
 Claude Code, Cursor, the Anthropic Agent SDK, custom hosts) over stdio.
 
 The server is a thin adapter over the same extension-token endpoints the
-[Columbus browser extension](../../apps/extension) uses — no new auth model,
+[Slothing browser extension](../../apps/extension) uses — no new auth model,
 no new business logic. If your Slothing instance trusts your extension token,
 it trusts this MCP server.
 
@@ -43,7 +43,7 @@ with a clear message telling the user to re-mint the token.
 
 Minting a token: sign in to your local Slothing instance, then `POST` to
 `/api/extension/auth` with your authenticated session — the same flow the
-Columbus extension uses. Tokens currently inherit the extension's TTL.
+Slothing extension uses. Tokens currently inherit the extension's TTL.
 
 ## Claude Desktop
 

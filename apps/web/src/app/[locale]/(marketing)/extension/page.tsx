@@ -29,7 +29,7 @@ const featureBlocks = [
       "Save roles from LinkedIn, Indeed, Greenhouse, Lever, Workable, and niche boards without copying details by hand.",
     icon: Globe2,
     screenshot: "/marketing/extension/job-board-capture.png",
-    visualLabel: "Slothing Columbus popover saving a LinkedIn job posting",
+    visualLabel: "Slothing popover saving a LinkedIn job posting",
   },
   {
     title: "Gmail recruiter import (Slothing web app)",
@@ -52,7 +52,7 @@ const featureBlocks = [
 const steps = [
   {
     title: "Install",
-    description: "Add Columbus to your browser from the store.",
+    description: "Add Slothing to your browser from the store.",
   },
   {
     title: "Sign in",
@@ -83,7 +83,7 @@ const faqs = [
   {
     question: "How do I uninstall?",
     answer:
-      "Remove Columbus from your browser's extensions page. Your saved opportunities stay in your Slothing account.",
+      "Remove Slothing from your browser's extensions page. Your saved opportunities stay in your Slothing account.",
   },
 ] as const;
 
@@ -96,14 +96,14 @@ export default async function ExtensionLandingPage() {
       <section className="mx-auto grid max-w-6xl gap-10 px-6 py-12 lg:grid-cols-[0.92fr_1.08fr] lg:items-center lg:py-20">
         <div>
           <Badge variant="secondary" className="mb-5">
-            Columbus browser extension
+            Slothing browser extension
           </Badge>
           <h1 className="text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
             Capture jobs from any site, instantly.
           </h1>
           <p className="mt-5 max-w-2xl text-lg leading-8 text-muted-foreground">
-            Columbus, the Slothing browser extension, turns any LinkedIn,
-            Indeed, or company careers page into a one-click save.
+            The Slothing browser extension turns any LinkedIn, Indeed, or
+            company careers page into a one-click save.
           </p>
           <div className="mt-8">
             <ExtensionInstallButtons variant="primary" />

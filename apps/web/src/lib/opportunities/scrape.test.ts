@@ -83,7 +83,7 @@ describe("opportunity scraping", () => {
     ).toBeNull();
   });
 
-  it("scrapes a supported job board page with the Columbus scrapers", async () => {
+  it("scrapes a supported job board page with the Slothing scrapers", async () => {
     const opportunity = await scrapeOpportunityFromHtml(
       "https://boards.greenhouse.io/acme/jobs/123",
       greenhouseHtml,

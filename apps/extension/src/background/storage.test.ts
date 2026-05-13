@@ -125,7 +125,7 @@ describe("session auth cache (#30)", () => {
 
   it("returns null once the TTL has elapsed", async () => {
     const stale = new Date(Date.now() - AUTH_CACHE_TTL_MS - 1000).toISOString();
-    store["columbus_auth_cache"] = { authenticated: true, at: stale };
+    store["slothing_auth_cache"] = { authenticated: true, at: stale };
     const result = await getSessionAuthCache();
     expect(result).toBeNull();
   });
@@ -133,13 +133,13 @@ describe("session auth cache (#30)", () => {
   it("returns the entry when it is exactly at the TTL boundary", async () => {
     const now = Date.now();
     const onBoundary = new Date(now - AUTH_CACHE_TTL_MS).toISOString();
-    store["columbus_auth_cache"] = { authenticated: true, at: onBoundary };
+    store["slothing_auth_cache"] = { authenticated: true, at: onBoundary };
     const result = await getSessionAuthCache(now);
     expect(result?.authenticated).toBe(true);
   });
 
   it("returns null for an unparseable timestamp (defensive)", async () => {
-    store["columbus_auth_cache"] = { authenticated: true, at: "not-iso" };
+    store["slothing_auth_cache"] = { authenticated: true, at: "not-iso" };
     const result = await getSessionAuthCache();
     expect(result).toBeNull();
   });

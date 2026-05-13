@@ -79,7 +79,7 @@ describe("ExtensionConnectPage", () => {
       }),
     );
     expect(localStorage.setItem).toHaveBeenCalledWith(
-      "columbus_extension_token",
+      "slothing_extension_token",
       JSON.stringify({
         token: "token-1",
         expiresAt: "2026-05-09T12:00:00.000Z",
@@ -147,7 +147,7 @@ describe("ExtensionConnectPage", () => {
       JSON.parse(vi.mocked(fetch).mock.calls[0][1]?.body as string),
     ).toEqual(expect.objectContaining({ transport: "localstorage" }));
     expect(localStorage.setItem).toHaveBeenCalledWith(
-      "columbus_extension_token",
+      "slothing_extension_token",
       JSON.stringify({
         token: "token-1",
         expiresAt: "2026-05-09T12:00:00.000Z",

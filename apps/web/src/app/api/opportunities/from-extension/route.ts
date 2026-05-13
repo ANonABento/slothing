@@ -1,6 +1,6 @@
 /**
  * @route POST /api/opportunities/from-extension
- * @description Import scraped opportunities from the Columbus browser extension as pending jobs.
+ * @description Import scraped opportunities from the Slothing browser extension as pending jobs.
  * @auth Extension token via X-Extension-Token
  */
 import { NextRequest, NextResponse } from "next/server";
@@ -79,7 +79,11 @@ export async function POST(request: NextRequest) {
         {
           type: "info",
           title: notificationTitle(importedJobs.length, appliedCount),
-          message: notificationMessage(importedJobs, pendingCount, appliedCount),
+          message: notificationMessage(
+            importedJobs,
+            pendingCount,
+            appliedCount,
+          ),
           link: "/opportunities",
         },
         authResult.userId,
@@ -104,7 +108,10 @@ export async function POST(request: NextRequest) {
   }
 }
 
-function notificationTitle(importedCount: number, appliedCount: number): string {
+function notificationTitle(
+  importedCount: number,
+  appliedCount: number,
+): string {
   if (appliedCount > 0) {
     return importedCount === 1
       ? "Tracked application"

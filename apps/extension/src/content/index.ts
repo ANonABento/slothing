@@ -1,4 +1,4 @@
-// Content script entry point for Columbus extension
+// Content script entry point for Slothing extension
 
 // Import styles for content script
 import "./ui/styles.css";
@@ -67,13 +67,13 @@ const submitWatcher = new SubmitWatcher({
       Messages.trackApplied(payload),
     );
     if (!response.success) {
-      console.error("[Columbus] Failed to track application:", response.error);
+      console.error("[Slothing] Failed to track application:", response.error);
       return;
     }
 
     showAppliedToast(extractCompanyHint(scrapedJob, payload.host), () => {
       sendMessage(Messages.openDashboard()).catch((err) =>
-        console.error("[Columbus] Failed to open dashboard:", err),
+        console.error("[Slothing] Failed to open dashboard:", err),
       );
     });
   },
@@ -95,7 +95,7 @@ async function scanPage() {
     if (fields.length > 0) {
       detectedFieldsByForm.set(form, fields);
       detectedFields = fields;
-      console.log("[Columbus] Detected fields:", fields.length);
+      console.log("[Slothing] Detected fields:", fields.length);
     }
   }
 
@@ -113,7 +113,7 @@ async function scanPage() {
       nextScrapedJob = await scraper.scrapeJobListing();
       scrapedJob = nextScrapedJob;
       if (nextScrapedJob) {
-        console.log("[Columbus] Scraped job:", nextScrapedJob.title);
+        console.log("[Slothing] Scraped job:", nextScrapedJob.title);
         if (jobDetectedForUrl !== window.location.href) {
           jobDetectedForUrl = window.location.href;
           sendMessage(
@@ -123,7 +123,7 @@ async function scanPage() {
               url: nextScrapedJob.url,
             }),
           ).catch((err) =>
-            console.error("[Columbus] Failed to notify job detected:", err),
+            console.error("[Slothing] Failed to notify job detected:", err),
           );
 
           // P3/#38 — passive LinkedIn capture. Only runs on detail pages the
@@ -136,13 +136,13 @@ async function scanPage() {
               sendMessage,
               buildImportMessage: Messages.importJob,
             }).catch((err) =>
-              console.warn("[Columbus] LinkedIn passive capture failed:", err),
+              console.warn("[Slothing] LinkedIn passive capture failed:", err),
             );
           }
         }
       }
     } catch (err) {
-      console.error("[Columbus] Scrape error:", err);
+      console.error("[Slothing] Scrape error:", err);
     }
   }
 
@@ -578,7 +578,7 @@ async function handleFillForm() {
     const settings = await getExtensionSettings();
     minimumConfidence = settings.minimumConfidence;
   } catch (err) {
-    console.warn("[Columbus] Failed to load settings; using default 0.5", err);
+    console.warn("[Slothing] Failed to load settings; using default 0.5", err);
   }
 
   // Fill the form. Hand each successful fill to the corrections tracker so
@@ -648,13 +648,13 @@ function scanForAnswerBankTextareas() {
           // question pre-seeded. A streamed generation endpoint is deferred
           // to a follow-up (called out in the PR body).
           openAnswerBankSeed(q).catch((err) =>
-            console.warn("[Columbus] open bank failed:", err),
+            console.warn("[Slothing] open bank failed:", err),
           );
         },
       });
     } catch (err) {
       // A single textarea failure shouldn't abort the scan.
-      console.warn("[Columbus] answer-bank decorate failed:", err);
+      console.warn("[Slothing] answer-bank decorate failed:", err);
     }
   }
 }
@@ -931,7 +931,7 @@ function debounce<T extends (...args: unknown[]) => unknown>(
   };
 }
 
-console.log("[Columbus] Content script loaded");
+console.log("[Slothing] Content script loaded");
 
 // Pick up a localStorage-transported auth token from the Slothing connect page.
 // Used on browsers that don't honor externally_connectable (Firefox in
@@ -939,7 +939,7 @@ console.log("[Columbus] Content script loaded");
 // to the background, which stores it in chrome.storage.local and clears the
 // localStorage entry. Polls for ~30s in case the script runs before the page
 // has written the key.
-const SLOTHING_TOKEN_KEY = "columbus_extension_token";
+const SLOTHING_TOKEN_KEY = "slothing_extension_token";
 
 // Returns "picked" when the token was forwarded to the background AND the
 // localStorage entry was cleared (i.e., success), "empty" when there is
@@ -981,7 +981,7 @@ function pickUpSlothingToken(): PickupResult {
           } catch {
             // ignore
           }
-          console.log("[Columbus] picked up localStorage token");
+          console.log("[Slothing] picked up localStorage token");
         }
       },
     );

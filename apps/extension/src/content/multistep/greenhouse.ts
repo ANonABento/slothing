@@ -123,7 +123,7 @@ export class GreenhouseMultistepHandler {
       this.deps.getProfile(),
     ]);
     if (!tabId || !profile) {
-      console.warn("[Columbus] Greenhouse confirm: missing tabId or profile");
+      console.warn("[Slothing] Greenhouse confirm: missing tabId or profile");
       return null;
     }
 

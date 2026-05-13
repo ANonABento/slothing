@@ -197,7 +197,7 @@ async function run() {
       new Promise((res) =>
         chrome.storage.local.set(
           {
-            columbus_extension: {
+            slothing_extension: {
               authToken: token,
               tokenExpiry: expiresAt,
               apiBaseUrl,

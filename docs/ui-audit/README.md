@@ -1,6 +1,6 @@
 # UI Audit Loop
 
-Iterative desktop UI audit + fix loop for the Slothing web app and Columbus extension.
+Iterative desktop UI audit + fix loop for the Slothing web app and Slothing extension.
 
 ## Goal
 
@@ -16,7 +16,7 @@ Mobile is explicitly out of scope for this loop. A separate mobile audit lives i
 ## Scope
 
 - **Iteration phase 1:** web app (`apps/web`) — marketing routes, auth, full app workspace
-- **Iteration phase 2:** Columbus extension (`apps/extension`) — popup, options, content-script overlays
+- **Iteration phase 2:** Slothing extension (`apps/extension`) — popup, options, content-script overlays
 
 ## Widths
 

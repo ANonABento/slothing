@@ -10,7 +10,7 @@ vi.mock("./storage", () => ({
   setStorage: mocks.setStorage,
 }));
 
-import { ColumbusAPIClient } from "./api-client";
+import { SlothingAPIClient } from "./api-client";
 import type { ScrapedJob } from "@/shared/types";
 
 const job: ScrapedJob = {
@@ -23,7 +23,7 @@ const job: ScrapedJob = {
   source: "greenhouse",
 };
 
-describe("ColumbusAPIClient one-click generation", () => {
+describe("SlothingAPIClient one-click generation", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.getStorage.mockResolvedValue({
@@ -49,7 +49,7 @@ describe("ColumbusAPIClient one-click generation", () => {
         ),
       );
 
-    const client = new ColumbusAPIClient("http://localhost:3000");
+    const client = new SlothingAPIClient("http://localhost:3000");
     const result = await client.tailorFromJob(job);
 
     expect(result.savedResume.id).toBe("resume-1");
@@ -83,7 +83,7 @@ describe("ColumbusAPIClient one-click generation", () => {
         }),
       );
 
-    const client = new ColumbusAPIClient("http://localhost:3000");
+    const client = new SlothingAPIClient("http://localhost:3000");
     const result = await client.generateCoverLetterFromJob(job);
 
     expect(result.savedCoverLetter.id).toBe("cl-1");
@@ -104,7 +104,7 @@ describe("ColumbusAPIClient one-click generation", () => {
   });
 
   it("does not call the API when the scraped description is too short", async () => {
-    const client = new ColumbusAPIClient("http://localhost:3000");
+    const client = new SlothingAPIClient("http://localhost:3000");
 
     await expect(
       client.tailorFromJob({ ...job, description: "Too short" }),
@@ -127,7 +127,7 @@ describe("ColumbusAPIClient one-click generation", () => {
         ),
       );
 
-    const client = new ColumbusAPIClient("http://localhost:3000");
+    const client = new SlothingAPIClient("http://localhost:3000");
     await client.tailorFromJob(job, "base-resume-42");
 
     const tailorCall = vi.mocked(fetch).mock.calls[1];
@@ -146,7 +146,7 @@ describe("ColumbusAPIClient one-click generation", () => {
   });
 });
 
-describe("ColumbusAPIClient.listResumes (#34)", () => {
+describe("SlothingAPIClient.listResumes (#34)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.getStorage.mockResolvedValue({
@@ -174,7 +174,7 @@ describe("ColumbusAPIClient.listResumes (#34)", () => {
       ),
     );
 
-    const client = new ColumbusAPIClient("http://localhost:3000");
+    const client = new SlothingAPIClient("http://localhost:3000");
     const resumes = await client.listResumes();
 
     expect(resumes).toHaveLength(1);
@@ -195,7 +195,7 @@ describe("ColumbusAPIClient.listResumes (#34)", () => {
       new Response(JSON.stringify({}), { status: 200 }),
     );
 
-    const client = new ColumbusAPIClient("http://localhost:3000");
+    const client = new SlothingAPIClient("http://localhost:3000");
     const resumes = await client.listResumes();
 
     expect(resumes).toEqual([]);
@@ -206,7 +206,7 @@ describe("ColumbusAPIClient.listResumes (#34)", () => {
       new Response(JSON.stringify({ error: "boom" }), { status: 500 }),
     );
 
-    const client = new ColumbusAPIClient("http://localhost:3000");
+    const client = new SlothingAPIClient("http://localhost:3000");
     await expect(client.listResumes()).rejects.toThrow();
   });
 });

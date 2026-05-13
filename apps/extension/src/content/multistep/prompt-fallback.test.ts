@@ -21,7 +21,7 @@ describe("promptStepFallback", () => {
     });
 
     // The toast should now be in the DOM.
-    const toast = document.getElementById("columbus-multistep-toast");
+    const toast = document.getElementById("slothing-multistep-toast");
     expect(toast).toBeTruthy();
     expect(toast?.textContent).toContain("step 2 of 4");
     expect(toast?.textContent).toContain("Workday");
@@ -33,18 +33,18 @@ describe("promptStepFallback", () => {
     expect(yesBtn).toBeTruthy();
     yesBtn!.click();
     await expect(pending).resolves.toBe(true);
-    expect(document.getElementById("columbus-multistep-toast")).toBeNull();
+    expect(document.getElementById("slothing-multistep-toast")).toBeNull();
   });
 
   it("resolves false on No", async () => {
     const pending = promptStepFallback({ providerLabel: "Greenhouse" });
-    const toast = document.getElementById("columbus-multistep-toast")!;
+    const toast = document.getElementById("slothing-multistep-toast")!;
     const noBtn = Array.from(toast.querySelectorAll("button")).find((b) =>
       /no/i.test(b.textContent ?? ""),
     );
     noBtn!.click();
     await expect(pending).resolves.toBe(false);
-    expect(document.getElementById("columbus-multistep-toast")).toBeNull();
+    expect(document.getElementById("slothing-multistep-toast")).toBeNull();
   });
 
   it("auto-dismisses to false after the 12s timeout", async () => {
@@ -57,7 +57,7 @@ describe("promptStepFallback", () => {
     const pending = promptStepFallback({});
     dismissStepFallback();
     await expect(pending).resolves.toBe(false);
-    expect(document.getElementById("columbus-multistep-toast")).toBeNull();
+    expect(document.getElementById("slothing-multistep-toast")).toBeNull();
   });
 
   it("only one toast is visible at a time (second call dismisses the first)", async () => {
@@ -65,7 +65,7 @@ describe("promptStepFallback", () => {
     const second = promptStepFallback({ stepNumber: 2 });
     // The first prompt should auto-resolve false (the second one took over).
     await expect(first).resolves.toBe(false);
-    const toast = document.getElementById("columbus-multistep-toast");
+    const toast = document.getElementById("slothing-multistep-toast");
     expect(toast?.textContent).toContain("step 2");
     // Clean up so the test runner doesn't hold an unresolved promise.
     dismissStepFallback();
@@ -74,7 +74,7 @@ describe("promptStepFallback", () => {
 
   it("falls back to a generic message when no step hint is provided", async () => {
     const pending = promptStepFallback({});
-    const toast = document.getElementById("columbus-multistep-toast")!;
+    const toast = document.getElementById("slothing-multistep-toast")!;
     expect(toast.textContent).toContain("Looks like a new step");
     dismissStepFallback();
     await pending;
