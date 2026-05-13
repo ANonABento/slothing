@@ -93,7 +93,11 @@ export function LocaleSwitcherCompact({
           className="h-11 w-11 justify-center px-0 [&>svg:last-child]:hidden"
         >
           <Globe2 className="h-5 w-5" aria-hidden="true" />
-          <SelectValue className="sr-only" />
+          {/* sr-only must override SelectTrigger's `[&>span]:line-clamp-1`, which */}
+          {/* otherwise lets the active locale label ("English") leak as visible text. */}
+          <span className="!absolute !h-px !w-px !overflow-hidden !whitespace-nowrap !border-0 !p-0 [clip:rect(0,0,0,0)]">
+            <SelectValue />
+          </span>
         </SelectTrigger>
         <SelectContent align="end">
           <LocaleSwitcherItems />

@@ -491,9 +491,8 @@
         "behavioral": "[ja] Behavioral",
         "technical": "[ja] Technical",
         "situational": "[ja] Situational",
-        "company": "[ja] Company",
-        "system-design": "[ja] System Design",
-        "general": "[ja] General"
+        "general": "[ja] General",
+        "cultural-fit": "[ja] Cultural Fit"
       },
       "questionCount": "[ja] {count} questions",
       "difficulty": {

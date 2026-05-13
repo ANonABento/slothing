@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 
+import { SESSION_QUESTION_CATEGORIES } from "@/lib/constants/interview";
+
 import en from "./en.json";
 import es from "./es.json";
 import fr from "./fr.json";
@@ -200,3 +202,24 @@ describe.each(localesWithReviewedNewStrings)(
     });
   },
 );
+
+describe.each(locales)("messages/%s.json interview categories", (locale) => {
+  // The interview Quick Practice dialog looks up category labels via
+  // `t(\`categories.${category}\`)`. If the translation map drifts from the
+  // SESSION_QUESTION_CATEGORIES enum, the dialog renders the raw key and
+  // pollutes the console with IntlError. Pin the two together here.
+  const messages = (
+    locale === "en" ? en : files[locale as Exclude<AppLocale, "en">]
+  ) as MessageFile;
+
+  it("category keys match SESSION_QUESTION_CATEGORIES", () => {
+    const categories = (messages.interview as JsonRecord | undefined)
+      ?.quickPractice as JsonRecord | undefined;
+    expect(categories).toBeDefined();
+    const keys = Object.keys(
+      (categories?.categories as JsonRecord) ?? {},
+    ).sort();
+    const expected = [...SESSION_QUESTION_CATEGORIES].sort();
+    expect(keys).toEqual(expected);
+  });
+});

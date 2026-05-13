@@ -6,7 +6,7 @@ export type PageWidth = "full" | "narrow" | "wide";
 const pageWidthClasses: Record<PageWidth, string> = {
   full: "",
   narrow: "mx-auto max-w-3xl",
-  wide: "max-w-screen-2xl",
+  wide: "mx-auto max-w-screen-2xl",
 };
 
 export function getPageWidthClassName(width: PageWidth) {
