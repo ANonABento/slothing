@@ -11,7 +11,7 @@ export const getProfileTool: ToolDefinition<Record<string, never>> = {
   name: "get_profile",
   title: "Get profile",
   description:
-    "Fetch the authenticated Slothing user's profile (contact, experiences, education, skills) plus pre-computed auto-fill values used by the Columbus extension.",
+    "Fetch the authenticated Slothing user's profile (contact, experiences, education, skills) plus pre-computed auto-fill values used by the Slothing extension.",
   inputShape: {},
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   async handler(_args, client) {

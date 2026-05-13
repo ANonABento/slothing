@@ -5,6 +5,7 @@ import type { DragEvent } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Eye, GripVertical } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { StatusPill } from "@/components/opportunities/status-pill";
 import { Button } from "@/components/ui/button";
 import { VirtualList } from "@/components/ui/virtual-list";
 import {
@@ -404,13 +405,7 @@ function OpportunityKanbanCard({
           <Badge variant="outline" className="max-w-full truncate">
             {location}
           </Badge>
-          {isClosedSubStatus(opportunity.status) ? (
-            <Badge
-              variant={CLOSED_SUB_STATUS_BADGE_VARIANTS[opportunity.status]}
-            >
-              {CLOSED_SUB_STATUS_LABELS[opportunity.status]}
-            </Badge>
-          ) : null}
+          <StatusPill status={opportunity.status} />
         </div>
         {deadline ? <div className="truncate">{deadline}</div> : null}
         <div className="flex flex-wrap gap-1.5 pt-1">

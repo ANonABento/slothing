@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { ErrorState } from "@/components/ui/error-state";
 import { CompletenessCard } from "@/components/profile/completeness-card";
 import { ProfileEmptyState } from "@/components/profile/profile-empty-state";
 import { ProfileSkeleton } from "@/components/skeletons/profile-skeleton";
@@ -132,6 +133,9 @@ export default function ProfilePage() {
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showEmptyState, setShowEmptyState] = useState(false);
+  // Bump to re-run the initial load when the user retries after a fetch
+  // failure. The actual reload logic lives in the loadProfile effect below.
+  const [reloadKey, setReloadKey] = useState(0);
   const [celebratingCompleteness, setCelebratingCompleteness] = useState(false);
   const previousCompletenessScore = useRef<number | null>(null);
   const loadProfileError = t("errors.loadProfile");
@@ -218,7 +222,7 @@ export default function ProfilePage() {
     return () => {
       cancelled = true;
     };
-  }, [loadProfileError, locale, router]);
+  }, [loadProfileError, locale, router, reloadKey]);
 
   useEffect(() => {
     if (!isDirty) return;
@@ -394,6 +398,32 @@ export default function ProfilePage() {
 
   if (loading || authRedirecting) {
     return <ProfileSkeleton />;
+  }
+
+  // Initial load failed and no profile is in state. Show ONLY the error
+  // surface with a retry — don't render the editor, otherwise the user
+  // can "Save" the empty default-profile and overwrite their real server
+  // data with garbage on the next successful request.
+  const initialLoadFailed = error !== null && profile === null;
+  if (initialLoadFailed) {
+    return (
+      <AppPage>
+        <PageHeader
+          width="wide"
+          icon={User}
+          title={t("title")}
+          description={t("description")}
+        />
+        <PageContent width="wide">
+          <ErrorState
+            variant="card"
+            title={t("errors.loadProfile")}
+            message={error}
+            onRetry={() => setReloadKey((n) => n + 1)}
+          />
+        </PageContent>
+      </AppPage>
+    );
   }
 
   return (

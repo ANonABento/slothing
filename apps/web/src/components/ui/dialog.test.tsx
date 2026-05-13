@@ -297,7 +297,7 @@ describe("Dialog", () => {
     expect(screen.getByText("Close Me")).toBeInTheDocument();
   });
 
-  it("should not have slide animation classes that cause position jump", async () => {
+  it("should only fade in/out — no slide or zoom that causes corner spawning", async () => {
     render(
       <Dialog open>
         <AccessibleDialogContent>
@@ -309,15 +309,16 @@ describe("Dialog", () => {
     const content = screen.getByRole("dialog");
     const className = content.className;
 
-    // Should NOT have slide-in/slide-out classes that cause corner spawning
     expect(className).not.toContain("slide-in-from-left");
     expect(className).not.toContain("slide-in-from-top");
     expect(className).not.toContain("slide-out-to-left");
     expect(className).not.toContain("slide-out-to-top");
+    // Zoom composed with translate(-50%, -50%) renders as a bottom-right→
+    // center slide, which read as broken to users. Keep the open transition
+    // to a pure overlay+content fade.
+    expect(className).not.toContain("zoom-in-95");
+    expect(className).not.toContain("zoom-out-95");
 
-    // Should still have zoom and fade animations for smooth center appearance
-    expect(className).toContain("zoom-in-95");
-    expect(className).toContain("zoom-out-95");
     expect(className).toContain("fade-in-0");
     expect(className).toContain("fade-out-0");
   });

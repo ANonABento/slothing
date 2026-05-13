@@ -14,7 +14,7 @@ vi.mock("./storage", () => ({
   markAuthSeen: mocks.markAuthSeen,
 }));
 
-import { ColumbusAPIClient } from "./api-client";
+import { SlothingAPIClient } from "./api-client";
 
 /**
  * Build a Response whose body is an SSE stream of the supplied frames.
@@ -33,7 +33,7 @@ function sseResponse(frames: string[], init: ResponseInit = { status: 200 }) {
   return new Response(stream, init);
 }
 
-describe("ColumbusAPIClient.chat (P4/#40)", () => {
+describe("SlothingAPIClient.chat (P4/#40)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.getStorage.mockResolvedValue({
@@ -53,7 +53,7 @@ describe("ColumbusAPIClient.chat (P4/#40)", () => {
       ]),
     );
 
-    const client = new ColumbusAPIClient("http://localhost:3000");
+    const client = new SlothingAPIClient("http://localhost:3000");
     const tokens: string[] = [];
     for await (const t of client.chat("Why am I qualified?")) {
       tokens.push(t);
@@ -65,7 +65,7 @@ describe("ColumbusAPIClient.chat (P4/#40)", () => {
     vi.mocked(fetch).mockResolvedValueOnce(
       sseResponse([JSON.stringify({ done: true })]),
     );
-    const client = new ColumbusAPIClient("http://localhost:3000");
+    const client = new SlothingAPIClient("http://localhost:3000");
     const iterator = client.chat("hi", { title: "FE", company: "Acme" });
     // Drain
     for await (const _ of iterator) {
@@ -93,7 +93,7 @@ describe("ColumbusAPIClient.chat (P4/#40)", () => {
         JSON.stringify({ done: true }),
       ]),
     );
-    const client = new ColumbusAPIClient("http://localhost:3000");
+    const client = new SlothingAPIClient("http://localhost:3000");
     const iterator = client.chat("hi");
     await expect(async () => {
       for await (const _ of iterator) {
@@ -109,7 +109,7 @@ describe("ColumbusAPIClient.chat (P4/#40)", () => {
         { status: 429 },
       ),
     );
-    const client = new ColumbusAPIClient("http://localhost:3000");
+    const client = new SlothingAPIClient("http://localhost:3000");
     await expect(async () => {
       for await (const _ of client.chat("hi")) {
         // no-op
@@ -123,7 +123,7 @@ describe("ColumbusAPIClient.chat (P4/#40)", () => {
         status: 401,
       }),
     );
-    const client = new ColumbusAPIClient("http://localhost:3000");
+    const client = new SlothingAPIClient("http://localhost:3000");
     await expect(async () => {
       for await (const _ of client.chat("hi")) {
         // no-op
@@ -143,7 +143,7 @@ describe("ColumbusAPIClient.chat (P4/#40)", () => {
       apiBaseUrl: "http://localhost:3000",
       settings: {},
     });
-    const client = new ColumbusAPIClient("http://localhost:3000");
+    const client = new SlothingAPIClient("http://localhost:3000");
     await expect(async () => {
       for await (const _ of client.chat("hi")) {
         // no-op
@@ -169,7 +169,7 @@ describe("ColumbusAPIClient.chat (P4/#40)", () => {
       },
     });
     vi.mocked(fetch).mockResolvedValueOnce(new Response(stream));
-    const client = new ColumbusAPIClient("http://localhost:3000");
+    const client = new SlothingAPIClient("http://localhost:3000");
     const tokens: string[] = [];
     for await (const t of client.chat("hi")) {
       tokens.push(t);

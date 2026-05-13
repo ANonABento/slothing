@@ -33,13 +33,13 @@ describe("ExtensionLandingPage", () => {
       }),
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/Columbus, the Slothing browser extension/i),
+      screen.getByText(/The Slothing browser extension turns/i),
     ).toBeInTheDocument();
     expect(
       screen.getByRole("heading", { name: "Less copying, more deciding" }),
     ).toBeInTheDocument();
     const jobBoardScreenshot = screen.getByRole("img", {
-      name: "Slothing Columbus popover saving a LinkedIn job posting",
+      name: "Slothing popover saving a LinkedIn job posting",
     });
     const gmailScreenshot = screen.getByRole("img", {
       name: "Gmail recruiter import view showing pending opportunities",

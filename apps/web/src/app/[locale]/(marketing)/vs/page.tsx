@@ -49,14 +49,17 @@ export default function CompareIndexPage() {
 
       <section className="mx-auto grid max-w-6xl gap-4 px-6 py-12 md:grid-cols-3">
         {competitors.map((competitor) => (
-          <article key={competitor.slug} className="rounded-lg border p-5">
+          <article
+            key={competitor.slug}
+            className="flex flex-col rounded-lg border bg-card p-6 shadow-sm transition-colors hover:border-primary/40"
+          >
             <h2 className="text-xl font-semibold">
               Slothing vs {competitor.name}
             </h2>
-            <p className="mt-2 text-sm text-muted-foreground">
+            <p className="mt-2 flex-1 text-sm leading-6 text-muted-foreground">
               {competitor.summary}
             </p>
-            <Button asChild className="mt-5 w-full">
+            <Button asChild className="mt-6 w-full">
               <Link href={`/vs/${competitor.slug}`}>
                 Compare
                 <ArrowRight className="h-4 w-4" />

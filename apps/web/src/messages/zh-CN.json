@@ -491,9 +491,8 @@
         "behavioral": "[zh-CN] Behavioral",
         "technical": "[zh-CN] Technical",
         "situational": "[zh-CN] Situational",
-        "company": "[zh-CN] Company",
-        "system-design": "[zh-CN] System Design",
-        "general": "[zh-CN] General"
+        "general": "[zh-CN] General",
+        "cultural-fit": "[zh-CN] Cultural Fit"
       },
       "questionCount": "[zh-CN] {count} questions",
       "difficulty": {

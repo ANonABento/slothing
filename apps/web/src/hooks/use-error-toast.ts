@@ -39,13 +39,20 @@ export function useErrorToast() {
 
   return useCallback(
     (error: unknown, options: ShowErrorToastOptions) => {
+      const description = getErrorToastDescription(
+        error,
+        options.fallbackDescription,
+      );
       addToast({
         type: "error",
         title: options.title,
-        description: getErrorToastDescription(
-          error,
-          options.fallbackDescription,
-        ),
+        description,
+        // Multiple parallel fetches with the same failure (opportunities +
+        // settings + kanban, all 500ing on the same dev environment) would
+        // each stack their own copy of the same toast. Collapse on title +
+        // description so the third repeat replaces the second instead of
+        // piling up.
+        dedupeKey: `${options.title}␟${description ?? ""}`,
       });
     },
     [addToast],

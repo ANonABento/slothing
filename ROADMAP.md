@@ -6,7 +6,7 @@
 
 ## Current State: MVP+ Complete ✅
 
-Columbus is a **feature-complete single-user MVP** with enhanced features:
+Slothing is a **feature-complete single-user MVP** with enhanced features:
 
 **Core Features:**
 - Resume parsing, tailoring, and PDF export (4 templates)

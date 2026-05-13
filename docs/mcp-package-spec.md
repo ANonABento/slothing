@@ -4,7 +4,7 @@
 
 ## Why
 
-Slothing today exposes a token-authenticated HTTP surface that the Columbus browser extension uses to push scraped jobs into the review queue. The same surface is sufficient for any external agent (a Claude Agent SDK script, a Choomfie skill, a Hermes overlay) to drive Slothing — but it's plain REST, not a discoverable MCP toolset.
+Slothing today exposes a token-authenticated HTTP surface that the Slothing browser extension uses to push scraped jobs into the review queue. The same surface is sufficient for any external agent (a Claude Agent SDK script, a Choomfie skill, a Hermes overlay) to drive Slothing — but it's plain REST, not a discoverable MCP toolset.
 
 `@slothing/mcp` is a thin MCP server package that wraps Slothing's extension-side endpoints as MCP tools. The goal is to make Slothing legible to agent runtimes without adding a new auth model or duplicating business logic on the Slothing side.
 
@@ -47,7 +47,7 @@ Two env vars, set wherever the MCP server is launched:
 | Var | Required | Default | Description |
 | --- | --- | --- | --- |
 | `SLOTHING_API_URL` | yes | — | e.g. `http://localhost:3000` (local dev) or the user's Slothing deployment. Legacy alias: `SLOTHING_BASE_URL`. |
-| `SLOTHING_TOKEN`   | yes | — | A token minted via `POST /api/extension/auth`; same as the Columbus extension uses. Legacy alias: `SLOTHING_EXTENSION_TOKEN`. |
+| `SLOTHING_TOKEN`   | yes | — | A token minted via `POST /api/extension/auth`; same as the Slothing extension uses. Legacy alias: `SLOTHING_EXTENSION_TOKEN`. |
 
 Bad token → MCP tool error with the missing-var details. Token-minting helper is deferred to v2; for now, mint via the extension's connect-account flow and copy the token.
 

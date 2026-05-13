@@ -113,7 +113,7 @@ export class WorkdayMultistepHandler {
       this.deps.getProfile(),
     ]);
     if (!tabId || !profile) {
-      console.warn("[Columbus] Workday confirm: missing tabId or profile");
+      console.warn("[Slothing] Workday confirm: missing tabId or profile");
       return null;
     }
 

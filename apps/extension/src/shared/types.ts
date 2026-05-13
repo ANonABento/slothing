@@ -1,4 +1,4 @@
-// Shared types for Columbus extension
+// Shared types for Slothing extension
 export type {
   Certification,
   ContactInfo,

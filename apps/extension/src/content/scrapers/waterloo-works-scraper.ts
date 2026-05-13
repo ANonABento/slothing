@@ -59,7 +59,7 @@ export class WaterlooWorksScraper extends BaseScraper {
 
   async scrapeJobListing(): Promise<ScrapedJob | null> {
     if (this.isLoginPage()) {
-      console.log("[Columbus] Waterloo Works: Please log in first");
+      console.log("[Slothing] Waterloo Works: Please log in first");
       return null;
     }
 
@@ -79,7 +79,7 @@ export class WaterlooWorksScraper extends BaseScraper {
 
     if (!title || !description) {
       console.log(
-        "[Columbus] Waterloo Works scraper: Missing title or description",
+        "[Slothing] Waterloo Works scraper: Missing title or description",
       );
       return null;
     }

@@ -1,4 +1,4 @@
-// Background service worker for Columbus extension
+// Background service worker for Slothing extension
 
 import type {
   ChatPortMessage,
@@ -40,7 +40,7 @@ chrome.runtime.onMessage.addListener(
     handleMessage(message, sender)
       .then(sendResponse)
       .catch((error) => {
-        console.error("[Columbus] Message handler error:", error);
+        console.error("[Slothing] Message handler error:", error);
         sendResponse({ success: false, error: error.message });
       });
 
@@ -599,7 +599,7 @@ function attachWebNavigationListener(): void {
     });
     webNavigationListenerAttached = true;
   } catch (err) {
-    console.warn("[Columbus] webNavigation listener attach failed:", err);
+    console.warn("[Slothing] webNavigation listener attach failed:", err);
   }
 }
 
@@ -661,7 +661,7 @@ chrome.runtime.onConnect.addListener((port: chrome.runtime.Port) => {
   port.onMessage.addListener((message: ChatPortMessage) => {
     if (message.type !== "CHAT_STREAM_START") return;
     void runChatStream(port, message, () => cancelled).catch((error) => {
-      console.error("[Columbus] chat stream failure:", error);
+      console.error("[Slothing] chat stream failure:", error);
     });
   });
 });
@@ -704,7 +704,7 @@ async function runChatStream(
   }
 }
 
-// Handle auth callback from Columbus web app
+// Handle auth callback from Slothing web app
 chrome.runtime.onMessageExternal.addListener(
   (message, sender, sendResponse) => {
     if (
@@ -750,14 +750,14 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
 // Handle extension install/update
 chrome.runtime.onInstalled.addListener((details) => {
   if (details.reason === "install") {
-    console.log("[Columbus] Extension installed");
+    console.log("[Slothing] Extension installed");
     // Could open onboarding page here
   } else if (details.reason === "update") {
     console.log(
-      "[Columbus] Extension updated to",
+      "[Slothing] Extension updated to",
       chrome.runtime.getManifest().version,
     );
   }
 });
 
-console.log("[Columbus] Background service worker started");
+console.log("[Slothing] Background service worker started");

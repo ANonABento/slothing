@@ -1,8 +1,8 @@
 export function showAppliedToast(company: string, onClick: () => void): void {
-  document.querySelector(".columbus-toast-applied")?.remove();
+  document.querySelector(".slothing-toast-applied")?.remove();
 
   const toast = document.createElement("div");
-  toast.className = "columbus-toast columbus-toast-applied";
+  toast.className = "slothing-toast slothing-toast-applied";
   toast.tabIndex = 0;
   toast.setAttribute("role", "button");
   toast.setAttribute("aria-label", "Open Slothing dashboard");

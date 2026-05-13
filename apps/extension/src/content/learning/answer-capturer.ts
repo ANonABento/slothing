@@ -65,14 +65,14 @@ export class AnswerCapturer {
   private async promptToSave(question: string, answer: string): Promise<void> {
     // Create a subtle notification
     const notification = document.createElement("div");
-    notification.id = "columbus-save-prompt";
+    notification.id = "slothing-save-prompt";
     notification.innerHTML = `
-      <div class="columbus-prompt-content">
+      <div class="slothing-prompt-content">
         <p>Save this answer for future applications?</p>
-        <p class="columbus-prompt-preview">"${answer.slice(0, 50)}${answer.length > 50 ? "..." : ""}"</p>
-        <div class="columbus-prompt-actions">
-          <button class="columbus-btn-save">Save</button>
-          <button class="columbus-btn-dismiss">Not now</button>
+        <p class="slothing-prompt-preview">"${answer.slice(0, 50)}${answer.length > 50 ? "..." : ""}"</p>
+        <div class="slothing-prompt-actions">
+          <button class="slothing-btn-save">Save</button>
+          <button class="slothing-btn-dismiss">Not now</button>
         </div>
       </div>
     `;
@@ -80,7 +80,7 @@ export class AnswerCapturer {
     // Add styles
     const style = document.createElement("style");
     style.textContent = `
-      #columbus-save-prompt {
+      #slothing-save-prompt {
         position: fixed;
         bottom: 20px;
         right: 20px;
@@ -92,27 +92,27 @@ export class AnswerCapturer {
         z-index: 999999;
         font-family: -apple-system, BlinkMacSystemFont, sans-serif;
         font-size: 14px;
-        animation: columbus-slide-in 0.3s ease;
+        animation: slothing-slide-in 0.3s ease;
       }
-      @keyframes columbus-slide-in {
+      @keyframes slothing-slide-in {
         from { transform: translateY(20px); opacity: 0; }
         to { transform: translateY(0); opacity: 1; }
       }
-      .columbus-prompt-content p {
+      .slothing-prompt-content p {
         margin: 0 0 8px 0;
         color: #333;
       }
-      .columbus-prompt-preview {
+      .slothing-prompt-preview {
         color: #666;
         font-size: 12px;
         font-style: italic;
       }
-      .columbus-prompt-actions {
+      .slothing-prompt-actions {
         display: flex;
         gap: 8px;
         margin-top: 12px;
       }
-      .columbus-btn-save, .columbus-btn-dismiss {
+      .slothing-btn-save, .slothing-btn-dismiss {
         padding: 8px 16px;
         border: none;
         border-radius: 6px;
@@ -120,11 +120,11 @@ export class AnswerCapturer {
         font-size: 13px;
         font-weight: 500;
       }
-      .columbus-btn-save {
+      .slothing-btn-save {
         background: linear-gradient(135deg, #14b8a6, #0ea5e9);
         color: white;
       }
-      .columbus-btn-dismiss {
+      .slothing-btn-dismiss {
         background: #f0f0f0;
         color: #666;
       }
@@ -134,8 +134,8 @@ export class AnswerCapturer {
     document.body.appendChild(notification);
 
     // Handle button clicks
-    const saveBtn = notification.querySelector(".columbus-btn-save");
-    const dismissBtn = notification.querySelector(".columbus-btn-dismiss");
+    const saveBtn = notification.querySelector(".slothing-btn-save");
+    const dismissBtn = notification.querySelector(".slothing-btn-dismiss");
 
     saveBtn?.addEventListener("click", async () => {
       try {
@@ -203,7 +203,7 @@ export class AnswerCapturer {
       font-family: -apple-system, BlinkMacSystemFont, sans-serif;
       font-size: 14px;
       z-index: 999999;
-      animation: columbus-fade-in 0.3s ease;
+      animation: slothing-fade-in 0.3s ease;
     `;
 
     document.body.appendChild(toast);

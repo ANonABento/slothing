@@ -61,7 +61,7 @@ The audit fixed misleading user-facing copy across the extension marketing page,
 ### 6. Extension token revocation UX
 
 - `extension_sessions` table already exists, but the web app has no UI for users to see and revoke connected extensions.
-- If a user loses a device with Columbus installed, today they can only rotate by signing the extension out (which requires the device).
+- If a user loses a device with Slothing installed, today they can only rotate by signing the extension out (which requires the device).
 - Add `/settings/connected-devices` listing extension session ID, last-seen UA / region, and a "Revoke" button that invalidates the token server-side.
 
 ## Low priority / hardening

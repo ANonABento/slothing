@@ -28,9 +28,9 @@ This audit therefore pivots to **source-driven review** of the user journeys: re
 ### P0-1 — Extension install buttons all point at `/placeholder` URLs (broken store links)
 
 **Files:**
-- `apps/web/src/lib/extension/install.ts:24` — Chrome: `https://chromewebstore.google.com/detail/slothing-columbus-extension/placeholder`
-- `apps/web/src/lib/extension/install.ts:33` — Edge: `https://microsoftedge.microsoft.com/addons/detail/slothing-columbus/placeholder`
-- `apps/web/src/lib/extension/install.ts:42` — Firefox: `https://addons.mozilla.org/firefox/addon/slothing-columbus/placeholder`
+- `apps/web/src/lib/extension/install.ts:24` — Chrome: `https://chromewebstore.google.com/detail/slothing-slothing-extension/placeholder`
+- `apps/web/src/lib/extension/install.ts:33` — Edge: `https://microsoftedge.microsoft.com/addons/detail/slothing-slothing/placeholder`
+- `apps/web/src/lib/extension/install.ts:42` — Firefox: `https://addons.mozilla.org/firefox/addon/slothing-slothing/placeholder`
 
 **Surface area (high):**
 - Marketing `/extension` hero and bottom CTA: `apps/web/src/app/[locale]/(marketing)/extension/page.tsx:109, 248` via `<ExtensionInstallButtons variant="primary" />`.

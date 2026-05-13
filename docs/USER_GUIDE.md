@@ -1,6 +1,6 @@
-# Columbus User Guide
+# Slothing User Guide
 
-Welcome to Columbus, your AI-powered job application assistant.
+Welcome to Slothing, your AI-powered job application assistant.
 
 ## Getting Started
 
@@ -29,7 +29,7 @@ Go to **Upload Resume** to import your existing resume:
 In **Opportunities**, add job descriptions you're applying to:
 
 - Paste the full job description
-- Columbus extracts requirements automatically
+- Slothing extracts requirements automatically
 - Track status: Saved → Applied → Interviewing → Offered
 
 ---
@@ -38,7 +38,7 @@ In **Opportunities**, add job descriptions you're applying to:
 
 ### Resume Tailoring
 
-For each opportunity, Columbus can generate a tailored resume:
+For each opportunity, Slothing can generate a tailored resume:
 
 1. Go to **Opportunities** and select an opportunity
 2. Click **Generate Resume**
@@ -190,7 +190,7 @@ Press `?` anywhere to see available keyboard shortcuts.
 
 ## Privacy
 
-Columbus stores all data locally in your browser. No data is sent to external servers except:
+Slothing stores all data locally in your browser. No data is sent to external servers except:
 
 - LLM requests for AI features (sent to your configured provider)
 

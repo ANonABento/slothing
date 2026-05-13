@@ -1,0 +1,47 @@
+{
+  "$schema": "Routes audited by capture.mjs. Slug = filename in screenshots/ and findings/.",
+  "groups": [
+    {
+      "name": "marketing",
+      "routes": [
+        { "slug": "home", "path": "/en" },
+        { "slug": "pricing", "path": "/en/pricing" },
+        { "slug": "ats-scanner", "path": "/en/ats-scanner" },
+        { "slug": "extension-marketing", "path": "/en/extension" },
+        { "slug": "vs-index", "path": "/en/vs" },
+        { "slug": "privacy", "path": "/en/privacy" },
+        { "slug": "terms", "path": "/en/terms" }
+      ]
+    },
+    {
+      "name": "auth",
+      "routes": [
+        { "slug": "sign-in", "path": "/en/sign-in" }
+      ]
+    },
+    {
+      "name": "app",
+      "routes": [
+        { "slug": "dashboard", "path": "/en/dashboard" },
+        { "slug": "profile", "path": "/en/profile" },
+        { "slug": "upload", "path": "/en/upload" },
+        { "slug": "documents", "path": "/en/documents" },
+        { "slug": "bank", "path": "/en/bank" },
+        { "slug": "answer-bank", "path": "/en/answer-bank" },
+        { "slug": "studio", "path": "/en/studio" },
+        { "slug": "opportunities", "path": "/en/opportunities" },
+        { "slug": "opportunities-review", "path": "/en/opportunities/review" },
+        { "slug": "applications", "path": "/en/applications" },
+        { "slug": "interview", "path": "/en/interview" },
+        { "slug": "analytics", "path": "/en/analytics" },
+        { "slug": "salary", "path": "/en/salary" },
+        { "slug": "calendar", "path": "/en/calendar" },
+        { "slug": "emails", "path": "/en/emails" },
+        { "slug": "settings", "path": "/en/settings" },
+        { "slug": "extension-connect", "path": "/en/extension/connect" }
+      ]
+    }
+  ],
+  "widths": [1280, 1440, 1920],
+  "viewportHeight": 900
+}

@@ -7,7 +7,7 @@ import type {
 } from "@/shared/types";
 import { DEFAULT_SETTINGS, DEFAULT_API_BASE_URL } from "@/shared/types";
 
-const STORAGE_KEY = "columbus_extension";
+const STORAGE_KEY = "slothing_extension";
 
 export async function getStorage(): Promise<ExtensionStorage> {
   return new Promise((resolve) => {
@@ -196,7 +196,7 @@ export async function getApiBaseUrl(): Promise<string> {
 // while the background script revalidates in the background.
 
 export const AUTH_CACHE_TTL_MS = 60 * 1000;
-const AUTH_CACHE_KEY = "columbus_auth_cache";
+const AUTH_CACHE_KEY = "slothing_auth_cache";
 
 export interface AuthCacheEntry {
   authenticated: boolean;

@@ -4,7 +4,7 @@
  * The MCP server is a thin adapter: every tool ultimately hits one of the
  * existing extension-token-authenticated routes on the Slothing web app. We
  * deliberately do not add any new server-side endpoints — the same
- * `X-Extension-Token` header path the Columbus browser extension uses covers
+ * `X-Extension-Token` header path the Slothing browser extension uses covers
  * the MCP server too.
  */
 export interface ApiClientConfig {
