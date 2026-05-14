@@ -40,7 +40,7 @@ exports[`ProfilePage > shows an empty state for a brand-new profile 1`] = `
       </svg>
     </div>
     <h3
-      class="font-semibold [letter-spacing:var(--letter-spacing)] [text-transform:var(--text-transform)] text-2xl"
+      class="font-display font-semibold tracking-tight [letter-spacing:var(--letter-spacing)] [text-transform:var(--text-transform)] text-2xl"
     >
       Let's set up your profile
     </h3>
