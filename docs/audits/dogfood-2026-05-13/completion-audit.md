@@ -2,7 +2,7 @@
 
 ## Objective Restated
 
-Dogfood Slothing across the website and Columbus extension in repeated loops:
+Dogfood Slothing across the website and Slothing extension in repeated loops:
 create durable markdown audits, add realistic and edge-case fixtures, run web
 and extension functionality through automated and browser-level checks, fix
 issues found by those checks, and keep iterating until the product is better

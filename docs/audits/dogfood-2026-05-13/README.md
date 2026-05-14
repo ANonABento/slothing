@@ -2,7 +2,7 @@
 
 ## Goal
 
-Exercise Slothing as a real job-search user would: web app, Columbus extension,
+Exercise Slothing as a real job-search user would: web app, Slothing extension,
 resume/document upload, scraping, autofill-adjacent flows, and edge-case data.
 Each loop should leave durable evidence, fixtures, and fixes.
 
@@ -37,7 +37,7 @@ Each loop should leave durable evidence, fixtures, and fixes.
   extension auth/import/profile/resumes/chat/learned answers, Google features,
   reminders, exports, billing gates, eval admin, templates.
 
-### Columbus Extension
+### Slothing Extension
 
 - Popup/options and connection flow.
 - Content scripts: scraping, passive LinkedIn capture, page snapshots, submit
