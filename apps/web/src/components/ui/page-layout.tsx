@@ -393,7 +393,7 @@ export function StandardEmptyState({
   return (
     <div
       className={cn(
-        "flex min-h-[360px] flex-col items-center justify-center rounded-lg border border-dashed bg-card/50 p-8 text-center",
+        "flex min-h-[360px] flex-col items-center justify-center rounded-lg border bg-paper p-8 text-center",
         className,
       )}
     >
