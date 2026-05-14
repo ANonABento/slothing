@@ -1674,7 +1674,7 @@ export default function BankPage() {
                 {displayMode === "source"
                   ? sourceGroupedEntries.map((group) => (
                       <div key={group.key}>
-                        <h2 className="text-lg font-semibold mb-1 flex items-center gap-2">
+                        <h2 className="mb-1 flex items-center gap-2 font-display text-lg font-semibold tracking-tight">
                           {group.document?.filename ?? "Manual entries"}
                           <span className="text-sm font-normal text-muted-foreground">
                             ({group.entries.length})
@@ -1705,7 +1705,7 @@ export default function BankPage() {
                     ))
                   : groupedEntries.map((group) => (
                       <div key={group.category}>
-                        <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                        <h2 className="mb-3 flex items-center gap-2 font-display text-lg font-semibold tracking-tight">
                           {CATEGORY_LABELS[group.category]}
                           <span className="text-sm font-normal text-muted-foreground">
                             ({group.entries.length})
@@ -2259,7 +2259,9 @@ function UploadReviewEntries({
         <div className="border-b px-4 py-3">
           <div className="flex items-center gap-2">
             <FileText className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm font-semibold">Detected components</span>
+            <span className="font-display text-sm font-semibold tracking-tight">
+              Detected components
+            </span>
           </div>
           <div className="mt-2 flex flex-wrap gap-1">
             <Badge variant="outline" className="text-2xs">
@@ -2342,10 +2344,10 @@ function UploadReviewEntries({
           <div className="space-y-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <p className="text-xs font-medium uppercase tracking-normal text-muted-foreground">
+                <p className="font-mono text-xs uppercase tracking-[0.16em] text-muted-foreground">
                   Review component
                 </p>
-                <h3 className="mt-1 text-lg font-semibold">
+                <h3 className="mt-1 font-display text-lg font-semibold tracking-tight">
                   {getEntryLabel(selectedEntry)}
                 </h3>
               </div>

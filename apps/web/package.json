@@ -75,6 +75,7 @@
     "docx": "^9.6.1",
     "drizzle-orm": "^0.45.1",
     "framer-motion": "^11.18.2",
+    "geist": "^1.7.0",
     "googleapis": "^171.4.0",
     "libsql": "^0.4.7",
     "lucide-react": "^0.447.0",

@@ -6,10 +6,12 @@ import {
   minimalTheme,
   neonTheme,
   premiumTheme,
+  slothingTheme,
 } from "./presets";
 import { themeIds, type ThemeId, type ThemePreset } from "./tokens";
 
 export const ALL_THEMES = [
+  slothingTheme,
   defaultTheme,
   bloxyTheme,
   glassTheme,
@@ -20,7 +22,7 @@ export const ALL_THEMES = [
 ] as const satisfies readonly ThemePreset[];
 
 export const THEME_IDS = themeIds;
-export const DEFAULT_THEME_ID: ThemeId = "default";
+export const DEFAULT_THEME_ID: ThemeId = "slothing";
 
 const themesById = new Map<ThemeId, ThemePreset>(
   ALL_THEMES.map((theme) => [theme.id, theme]),

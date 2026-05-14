@@ -664,7 +664,9 @@ export function AiAssistantPanel({
       )}
     >
       <div className="flex items-center justify-between border-b-[length:var(--border-width)] px-4 py-3">
-        <h2 className="text-sm font-semibold">AI Assistant</h2>
+        <h2 className="font-display text-sm font-semibold tracking-tight">
+          AI Assistant
+        </h2>
         <div className="flex items-center gap-1.5">
           <Sparkles
             className="h-4 w-4 text-muted-foreground"
@@ -905,7 +907,7 @@ export function AiAssistantPanel({
             </div>
 
             <div className="space-y-2">
-              <p className="text-xs font-semibold uppercase text-muted-foreground">
+              <p className="font-mono text-xs uppercase tracking-[0.16em] text-muted-foreground">
                 Suggested rewrites
               </p>
               {coverLetterCritique.suggested_rewrites.map((rewrite, index) => (

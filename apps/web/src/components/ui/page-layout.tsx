@@ -61,7 +61,7 @@ export function PageHeader({
           <div className="flex max-w-3xl items-start gap-4">
             <PageIconTile icon={Icon} className="mt-1" />
             <div className="min-w-0 space-y-2">
-              <h1 className="text-3xl font-bold tracking-normal text-foreground sm:text-4xl">
+              <h1 className="font-display text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
                 {title}
               </h1>
               {description ? (
@@ -190,7 +190,7 @@ export function InsetPageHeader({
       )}
     >
       <div>
-        <h1 className="text-3xl font-bold tracking-tight text-foreground">
+        <h1 className="font-display text-3xl font-bold tracking-tight text-foreground">
           {title}
         </h1>
         {description ? (
@@ -257,7 +257,9 @@ export function PagePanelHeader({
               className={cn("h-5 w-5 text-muted-foreground", iconClassName)}
             />
           ) : null}
-          <h2 className="text-xl font-semibold text-foreground">{title}</h2>
+          <h2 className="font-display text-xl font-semibold tracking-tight text-foreground">
+            {title}
+          </h2>
         </div>
         {description ? (
           <p className="mt-1 text-sm leading-6 text-muted-foreground">
@@ -325,7 +327,9 @@ export function PageSection({
         <div className="flex items-start gap-3">
           <PageIconTile icon={icon} className={iconClassName} />
           <div>
-            <h2 className="font-semibold text-foreground">{title}</h2>
+            <h2 className="font-display font-semibold tracking-tight text-foreground">
+              {title}
+            </h2>
             {description ? (
               <p className="mt-1 text-sm leading-6 text-muted-foreground">
                 {description}
@@ -389,12 +393,14 @@ export function StandardEmptyState({
   return (
     <div
       className={cn(
-        "flex min-h-[360px] flex-col items-center justify-center rounded-lg border border-dashed bg-card/50 p-8 text-center",
+        "flex min-h-[360px] flex-col items-center justify-center rounded-lg border bg-paper p-8 text-center",
         className,
       )}
     >
       <Icon className="mb-4 h-10 w-10 text-muted-foreground" />
-      <h2 className="text-lg font-semibold">{title}</h2>
+      <h2 className="font-display text-lg font-semibold tracking-tight">
+        {title}
+      </h2>
       {description ? (
         <p className="mt-2 max-w-md text-sm leading-6 text-muted-foreground">
           {description}

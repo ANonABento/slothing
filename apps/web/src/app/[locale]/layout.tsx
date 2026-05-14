@@ -5,6 +5,8 @@ import { headers } from "next/headers";
 import { NextIntlClientProvider } from "next-intl";
 import { notFound } from "next/navigation";
 import { getMessages } from "next-intl/server";
+import { JetBrains_Mono, Outfit } from "next/font/google";
+import { GeistSans } from "geist/font/sans";
 import { AuthSessionProvider } from "@/components/auth/session-provider";
 import { ThemeProvider } from "@/components/theme-provider";
 import { isAppLocale, localeDir, locales, type AppLocale } from "@/i18n";
@@ -21,6 +23,22 @@ import { getThemePreloadScript } from "@/lib/theme/preload-script";
 import { getTheme } from "@/lib/theme/registry";
 
 ensureEnvValidated();
+
+// Geist Sans ships from Vercel's `geist` package (next/font/google doesn't expose it on Next 14.2).
+// GeistSans.variable already maps to --font-geist-sans; alias to --font-geist via className.
+const geistVariable = GeistSans.variable;
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
+  variable: "--font-jetbrains",
+  weight: ["500"],
+  display: "swap",
+});
+const outfit = Outfit({
+  subsets: ["latin"],
+  variable: "--font-outfit",
+  weight: ["700"],
+  display: "swap",
+});
 
 type LocaleLayoutProps = {
   children: React.ReactNode;
@@ -85,23 +103,34 @@ export default async function LocaleLayout({
       : undefined;
   const routePath = requestHeaders.get(CANONICAL_ROUTE_PATH_HEADER) ?? "/";
 
+  const fontClassName = `${geistVariable} ${jetbrainsMono.variable} ${outfit.variable}`;
+
   return (
     <html
       lang={locale}
       dir={localeDir(locale)}
       suppressHydrationWarning
+      data-palette="cream"
+      data-accent="rust"
+      data-display="outfit"
+      data-radius="soft"
+      className={fontClassName}
       style={
-        themeTokensToCssVariables(getTheme("default").light) as CSSProperties
+        themeTokensToCssVariables(getTheme("slothing").light) as CSSProperties
       }
     >
       <head>
         <AlternateLanguageLinks path={routePath} />
+        {/* Theme preload script mutates documentElement before React hydration;
+            suppress the dangerouslySetInnerHTML mismatch warning React would
+            otherwise emit on every page in dev. */}
         <script
           {...(nonce ? { nonce } : {})}
+          suppressHydrationWarning
           dangerouslySetInnerHTML={{ __html: getThemePreloadScript() }}
         />
       </head>
-      <body className="font-sans">
+      <body className="font-body">
         <AuthSessionProvider>
           <ThemeProvider>
             <NextIntlClientProvider

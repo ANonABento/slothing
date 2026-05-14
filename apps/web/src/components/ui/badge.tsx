@@ -17,6 +17,9 @@ const badgeVariants = cva(
         warning: "border-transparent bg-warning/10 text-warning",
         info: "border-transparent bg-info/10 text-info",
         outline: "text-foreground",
+        // Editorial pill — paper surface, hairline rule border, ink-2 text.
+        // Use for eyebrow chips, kb-chips, feature-pill bar.
+        paper: "border-rule bg-paper text-ink-2 [letter-spacing:0]",
       },
     },
     defaultVariants: {
