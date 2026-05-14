@@ -202,12 +202,14 @@ export function OpportunityReviewQueue({
         <div className="mx-auto flex w-full max-w-md items-center justify-between">
           <div>
             <Badge variant="secondary">Pending review</Badge>
-            <h1 className="mt-3 text-2xl font-semibold tracking-tight">
+            <h1 className="mt-3 font-display text-2xl font-semibold tracking-tight">
               Opportunities
             </h1>
           </div>
           <div className="text-right">
-            <p className="text-3xl font-bold text-primary">{remainingCount}</p>
+            <p className="font-display text-3xl font-bold tracking-tight text-primary">
+              {remainingCount}
+            </p>
             <p className="text-xs text-muted-foreground">remaining</p>
           </div>
         </div>
@@ -255,7 +257,7 @@ export function OpportunityReviewQueue({
                     <p className="text-sm font-medium text-primary">
                       {activeJob.company}
                     </p>
-                    <h2 className="mt-2 text-3xl font-bold leading-tight">
+                    <h2 className="mt-2 font-display text-3xl font-bold leading-tight tracking-tight">
                       {activeJob.title}
                     </h2>
                     <div className="mt-3 flex flex-wrap items-center gap-2">
