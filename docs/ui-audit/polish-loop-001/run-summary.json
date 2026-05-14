@@ -1,0 +1,43 @@
+{
+  "loop": "001",
+  "base": "http://localhost:3010",
+  "widths": [
+    1280
+  ],
+  "viewportHeight": 900,
+  "startedAt": "2026-05-14T07:09:12.877Z",
+  "routesAudited": 3,
+  "results": [
+    {
+      "slug": "pricing",
+      "path": "/en/pricing",
+      "group": "marketing",
+      "width": 1280,
+      "status": "ok",
+      "ms": 7669,
+      "errors": 1,
+      "finalUrl": "http://localhost:3010/en/pricing"
+    },
+    {
+      "slug": "applications",
+      "path": "/en/applications",
+      "group": "app",
+      "width": 1280,
+      "status": "ok",
+      "ms": 9717,
+      "errors": 1,
+      "finalUrl": "http://localhost:3010/en/opportunities?status=applied%2Cinterviewing%2Coffered"
+    },
+    {
+      "slug": "emails",
+      "path": "/en/emails",
+      "group": "app",
+      "width": 1280,
+      "status": "ok",
+      "ms": 7866,
+      "errors": 1,
+      "finalUrl": "http://localhost:3010/en/emails"
+    }
+  ],
+  "consoleErrorTotal": 3
+}
