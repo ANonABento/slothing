@@ -26,12 +26,14 @@ function parseArgs(argv) {
     widths: null,
     only: null,
     next: false,
+    prefix: "loop",
   };
   for (let i = 2; i < argv.length; i++) {
     const a = argv[i];
     if (a === "--loop") args.loop = argv[++i];
     else if (a === "--next") args.next = true;
     else if (a === "--base") args.base = argv[++i];
+    else if (a === "--prefix") args.prefix = argv[++i];
     else if (a === "--widths")
       args.widths = argv[++i].split(",").map((n) => Number(n.trim()));
     else if (a === "--only")
@@ -43,14 +45,15 @@ function parseArgs(argv) {
   return args;
 }
 
-async function detectNextLoopNumber() {
+async function detectNextLoopNumber(prefix) {
   const { readdir } = await import("node:fs/promises");
   const auditDir = resolve(repoRoot, "docs", "ui-audit");
+  const re = new RegExp(`^${prefix}-(\\d{3})$`);
   let max = 0;
   try {
     const entries = await readdir(auditDir);
     for (const name of entries) {
-      const m = /^loop-(\d{3})$/.exec(name);
+      const m = re.exec(name);
       if (m) max = Math.max(max, Number(m[1]));
     }
   } catch {}
@@ -68,7 +71,7 @@ async function ensureDir(path) {
 async function main() {
   const args = parseArgs(process.argv);
   if (args.next) {
-    args.loop = await detectNextLoopNumber();
+    args.loop = await detectNextLoopNumber(args.prefix);
   } else {
     args.loop = String(args.loop).padStart(3, "0");
   }
@@ -86,7 +89,12 @@ async function main() {
     ? allRoutes.filter((r) => args.only.includes(r.slug))
     : allRoutes;
 
-  const loopDir = resolve(repoRoot, "docs", "ui-audit", `loop-${args.loop}`);
+  const loopDir = resolve(
+    repoRoot,
+    "docs",
+    "ui-audit",
+    `${args.prefix}-${args.loop}`,
+  );
   const shotsDir = resolve(loopDir, "screenshots");
   await ensureDir(shotsDir);
 
@@ -94,7 +102,7 @@ async function main() {
   const runResults = []; // [{ slug, path, width, status, ms, errors, finalUrl }]
 
   console.log(
-    `[ui-audit] loop=${args.loop} base=${args.base} routes=${routes.length} widths=${widths.join(",")} repoRoot=${repoRoot}`,
+    `[ui-audit] dir=${args.prefix}-${args.loop} base=${args.base} routes=${routes.length} widths=${widths.join(",")} repoRoot=${repoRoot}`,
   );
 
   const browser = await chromium.launch();
