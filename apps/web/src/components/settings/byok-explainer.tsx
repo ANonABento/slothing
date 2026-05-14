@@ -47,7 +47,9 @@ function BenefitCard({ icon: Icon, title, body }: BenefitCardProps) {
   return (
     <div className="rounded-lg border bg-card p-4">
       <Icon className="mb-2 h-5 w-5 text-primary" />
-      <h3 className="text-sm font-medium">{title}</h3>
+      <h3 className="font-display text-sm font-medium tracking-tight">
+        {title}
+      </h3>
       <p className="mt-1 text-xs text-muted-foreground">{body}</p>
     </div>
   );

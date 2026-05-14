@@ -407,7 +407,9 @@ ${script.close}
 
             {salaryRange && (
               <PagePanel className="opacity-100 transition-all duration-300 ease-out animate-in fade-in slide-in-from-right-4">
-                <h2 className="font-semibold mb-6">Market Salary Range</h2>
+                <h2 className="mb-6 font-display font-semibold tracking-tight">
+                  Market Salary Range
+                </h2>
                 <div className="space-y-6">
                   {/* Range visualization */}
                   <div className="relative pt-6 pb-2">
@@ -426,7 +428,7 @@ ${script.close}
                       <p className="text-xs text-muted-foreground mb-1">
                         25th Percentile
                       </p>
-                      <p className="text-lg font-bold text-warning">
+                      <p className="font-display text-lg font-bold tracking-tight text-warning">
                         {formatCurrency(salaryRange.percentile25)}
                       </p>
                     </div>
@@ -434,7 +436,7 @@ ${script.close}
                       <p className="text-xs text-muted-foreground mb-1">
                         Median
                       </p>
-                      <p className="text-xl font-bold text-success">
+                      <p className="font-display text-xl font-bold tracking-tight text-success">
                         {formatCurrency(salaryRange.median)}
                       </p>
                     </div>
@@ -442,7 +444,7 @@ ${script.close}
                       <p className="text-xs text-muted-foreground mb-1">
                         75th Percentile
                       </p>
-                      <p className="text-lg font-bold text-info">
+                      <p className="font-display text-lg font-bold tracking-tight text-info">
                         {formatCurrency(salaryRange.percentile75)}
                       </p>
                     </div>
@@ -560,7 +562,7 @@ ${script.close}
             {offers.length > 0 && (
               <PagePanel>
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="font-semibold flex items-center gap-2">
+                  <h2 className="flex items-center gap-2 font-display font-semibold tracking-tight">
                     <Building2 className="h-5 w-5 text-primary" />
                     Your Offers ({offers.length})
                   </h2>
@@ -624,7 +626,7 @@ ${script.close}
                           <p className="text-xs text-muted-foreground">
                             Total Annual Comp
                           </p>
-                          <p className="font-bold text-lg">
+                          <p className="font-display text-lg font-bold tracking-tight">
                             {formatCurrency(
                               comparison.ranked.find(
                                 (r) => r.offer.id === offer.id,
@@ -736,7 +738,9 @@ ${script.close}
             {/* Script */}
             <PagePanel>
               <div className="flex items-center justify-between mb-6">
-                <h2 className="font-semibold">Your Negotiation Script</h2>
+                <h2 className="font-display font-semibold tracking-tight">
+                  Your Negotiation Script
+                </h2>
                 {script && (
                   <Button variant="outline" size="sm" onClick={copyScript}>
                     {copied ? (
