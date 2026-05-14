@@ -840,7 +840,10 @@
     "builder": {
       "sectionList": {
         "pickerTitle": "バンクエントリ選択",
-        "pickerDescription": "ドキュメントに追加するエントリを選択します。"
+        "pickerDescription": "ドキュメントに追加するエントリを選択します。",
+        "pickerEmptyTitle": "Your bank is empty",
+        "pickerEmptyDescription": "Upload a resume or add an entry manually to start pulling content into your documents.",
+        "pickerEmptyCta": "Open Documents"
       }
     },
     "studio": {

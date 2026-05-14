@@ -834,7 +834,10 @@
     "builder": {
       "sectionList": {
         "pickerTitle": "Bank Entry Picker",
-        "pickerDescription": "Select entries to add them to the document."
+        "pickerDescription": "Select entries to add them to the document.",
+        "pickerEmptyTitle": "Your bank is empty",
+        "pickerEmptyDescription": "Upload a resume or add an entry manually to start pulling content into your documents.",
+        "pickerEmptyCta": "Open Documents"
       }
     },
     "studio": {

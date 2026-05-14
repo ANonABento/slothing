@@ -840,7 +840,10 @@
     "builder": {
       "sectionList": {
         "pickerTitle": "뱅크 항목 선택",
-        "pickerDescription": "문서에 추가할 항목을 선택하세요."
+        "pickerDescription": "문서에 추가할 항목을 선택하세요.",
+        "pickerEmptyTitle": "Your bank is empty",
+        "pickerEmptyDescription": "Upload a resume or add an entry manually to start pulling content into your documents.",
+        "pickerEmptyCta": "Open Documents"
       }
     },
     "studio": {

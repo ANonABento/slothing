@@ -194,23 +194,40 @@ export function SectionList({
           </DialogHeader>
 
           <div className="space-y-4">
-            {sections.map((section) => {
-              const Icon = SECTION_ICONS[section.id];
-              const sectionEntries = entriesByCategory.get(section.id) || [];
-              if (sectionEntries.length === 0) return null;
+            {sections.every(
+              (section) =>
+                (entriesByCategory.get(section.id) || []).length === 0,
+            ) ? (
+              <div className="rounded-[var(--radius)] border-[length:var(--border-width)] bg-muted/40 p-6 text-center">
+                <p className="font-medium text-foreground">
+                  {t("pickerEmptyTitle")}
+                </p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {t("pickerEmptyDescription")}
+                </p>
+                <Button asChild variant="outline" size="sm" className="mt-4">
+                  <a href="/bank">{t("pickerEmptyCta")}</a>
+                </Button>
+              </div>
+            ) : (
+              sections.map((section) => {
+                const Icon = SECTION_ICONS[section.id];
+                const sectionEntries = entriesByCategory.get(section.id) || [];
+                if (sectionEntries.length === 0) return null;
 
-              return (
-                <div key={section.id} className="space-y-2">
-                  <div className="flex items-center gap-2 text-sm font-medium">
-                    <Icon className="h-4 w-4 text-muted-foreground" />
-                    {SECTION_LABELS[section.id]}
+                return (
+                  <div key={section.id} className="space-y-2">
+                    <div className="flex items-center gap-2 text-sm font-medium">
+                      <Icon className="h-4 w-4 text-muted-foreground" />
+                      {SECTION_LABELS[section.id]}
+                    </div>
+                    <div className="space-y-1">
+                      {sectionEntries.map((entry) => renderEntryToggle(entry))}
+                    </div>
                   </div>
-                  <div className="space-y-1">
-                    {sectionEntries.map((entry) => renderEntryToggle(entry))}
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })
+            )}
           </div>
         </DialogContent>
       </Dialog>

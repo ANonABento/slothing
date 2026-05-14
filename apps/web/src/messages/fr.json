@@ -840,7 +840,10 @@
     "builder": {
       "sectionList": {
         "pickerTitle": "Sélecteur d'entrées de banque",
-        "pickerDescription": "Sélectionnez les entrées à ajouter au document."
+        "pickerDescription": "Sélectionnez les entrées à ajouter au document.",
+        "pickerEmptyTitle": "Votre banque est vide",
+        "pickerEmptyDescription": "Téléchargez un CV ou ajoutez une entrée manuellement pour commencer à inclure du contenu dans vos documents.",
+        "pickerEmptyCta": "Ouvrir Documents"
       }
     },
     "studio": {

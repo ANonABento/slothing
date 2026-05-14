@@ -840,7 +840,10 @@
     "builder": {
       "sectionList": {
         "pickerTitle": "Seletor de entradas do banco",
-        "pickerDescription": "Selecione entradas para adicioná-las ao documento."
+        "pickerDescription": "Selecione entradas para adicioná-las ao documento.",
+        "pickerEmptyTitle": "Seu banco está vazio",
+        "pickerEmptyDescription": "Envie um currículo ou adicione uma entrada manualmente para começar a usar conteúdo em seus documentos.",
+        "pickerEmptyCta": "Abrir Documentos"
       }
     },
     "studio": {
