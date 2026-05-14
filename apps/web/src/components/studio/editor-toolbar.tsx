@@ -122,7 +122,7 @@ function ToolbarGroup({
   children: ReactNode;
 }) {
   return (
-    <div className="flex items-center gap-1 rounded-md border bg-card p-1">
+    <div className="flex flex-wrap items-center gap-1 rounded-md border bg-card p-1">
       <span className="px-1 text-xs font-semibold text-muted-foreground">
         {label}
       </span>
