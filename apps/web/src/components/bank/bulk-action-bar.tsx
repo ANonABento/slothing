@@ -43,10 +43,12 @@ export function BulkActionBar({
   const allSelected = selectedCount === totalCount;
 
   async function handleDelete() {
+    const isOne = selectedCount === 1;
     const confirmed = await confirm({
-      title: `Delete ${selectedCount} selected entries?`,
-      description:
-        "This permanently removes the selected profile bank entries. This cannot be undone.",
+      title: `Delete ${selectedCount} selected ${isOne ? "entry" : "entries"}?`,
+      description: `This permanently removes the selected profile bank ${
+        isOne ? "entry" : "entries"
+      }. This cannot be undone.`,
       confirmLabel: "Delete",
     });
     if (confirmed) {
