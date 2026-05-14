@@ -110,10 +110,10 @@ const toastIcons = {
 };
 
 const toastStyles = {
-  success: "border-success/50 bg-success/10 text-success",
-  error: "border-destructive/50 bg-destructive/10 text-destructive",
-  warning: "border-warning/50 bg-warning/10 text-warning",
-  info: "border-info/50 bg-info/10 text-info",
+  success: "border-success/40 bg-card text-success",
+  error: "border-destructive/40 bg-card text-destructive",
+  warning: "border-warning/40 bg-card text-warning",
+  info: "border-info/40 bg-card text-info",
 };
 
 function ToastContainer() {
