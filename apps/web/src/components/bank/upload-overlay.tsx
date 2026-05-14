@@ -376,7 +376,9 @@ export function UploadOverlay({
             <div className="mx-auto w-20 h-20 rounded-2xl gradient-bg text-primary-foreground flex items-center justify-center mb-6 animate-bounce">
               <CloudUpload className="h-10 w-10" />
             </div>
-            <h2 className="text-2xl font-bold">Drop to upload</h2>
+            <h2 className="font-display text-2xl font-bold tracking-tight">
+              Drop to upload
+            </h2>
             <p className="text-muted-foreground mt-2">
               Resume, cover letter, or any career document
             </p>
@@ -403,7 +405,9 @@ export function UploadOverlay({
             <div className="mx-auto w-20 h-20 rounded-2xl gradient-bg text-primary-foreground flex items-center justify-center mb-6">
               <Loader2 className="h-10 w-10 animate-spin" />
             </div>
-            <h2 className="text-2xl font-bold">{STAGE_LABELS[stage]}</h2>
+            <h2 className="font-display text-2xl font-bold tracking-tight">
+              {STAGE_LABELS[stage]}
+            </h2>
             <p className="text-muted-foreground mt-2">{currentFile}</p>
 
             {/* Progress bar */}
@@ -445,7 +449,7 @@ export function UploadOverlay({
             <div className="mx-auto w-20 h-20 rounded-[var(--radius)] bg-success/20 text-success flex items-center justify-center mb-6">
               <CheckCircle2 className="h-10 w-10" />
             </div>
-            <h2 className="text-2xl font-bold">
+            <h2 className="font-display text-2xl font-bold tracking-tight">
               Added {pluralize(totalEntries, "entry", "entries")}
             </h2>
             <p className="text-muted-foreground mt-2">
@@ -462,7 +466,9 @@ export function UploadOverlay({
             <div className="mx-auto w-20 h-20 rounded-[var(--radius)] bg-destructive/20 text-destructive flex items-center justify-center mb-6">
               <X className="h-10 w-10" />
             </div>
-            <h2 className="text-2xl font-bold">{t("failedTitle")}</h2>
+            <h2 className="font-display text-2xl font-bold tracking-tight">
+              {t("failedTitle")}
+            </h2>
             <p className="text-destructive mt-2">{error}</p>
             <div className="mt-4 flex justify-center gap-3">
               {fileQueue.length > 0 && (
