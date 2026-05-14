@@ -126,7 +126,9 @@ export function StudioFilePanel({
   return (
     <div className="border-b-[length:var(--border-width)] transition-[width] duration-200">
       <div className="flex items-center justify-between px-4 py-3">
-        <h2 className="text-sm font-semibold">Files</h2>
+        <h2 className="font-display text-sm font-semibold tracking-tight">
+          Files
+        </h2>
         <div className="flex items-center gap-1.5">
           <Button size="sm" variant="outline" onClick={onCreate}>
             <Plus className="h-4 w-4 md:mr-1.5" />

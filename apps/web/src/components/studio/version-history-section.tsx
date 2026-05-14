@@ -29,7 +29,9 @@ export function VersionHistorySection({
 
   return (
     <div className="border-b-[length:var(--border-width)] px-4 py-3">
-      <h2 className="mb-2 text-sm font-semibold">Version History</h2>
+      <h2 className="mb-2 font-display text-sm font-semibold tracking-tight">
+        Version History
+      </h2>
       <div className="space-y-1">
         {versions.length === 0 && (
           <p className="text-xs text-muted-foreground">No versions yet</p>
