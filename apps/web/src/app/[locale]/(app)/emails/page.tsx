@@ -908,7 +908,9 @@ export default function EmailTemplatesPage() {
               data-testid="emails-preview"
             >
               <div className="flex items-center justify-between mb-4">
-                <h2 className="font-semibold">Preview</h2>
+                <h2 className="font-display font-semibold tracking-tight">
+                  Preview
+                </h2>
                 {generatedEmail && (
                   <div className="flex items-center gap-2">
                     <Button
