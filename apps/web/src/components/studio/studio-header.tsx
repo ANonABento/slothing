@@ -225,7 +225,7 @@ export function StudioHeader({
         : AlertCircle;
 
   return (
-    <div className="flex flex-wrap items-center gap-3 border-b-[length:var(--border-width)] bg-background/95 px-4 py-3 [backdrop-filter:var(--backdrop-blur)] md:px-6 lg:flex-nowrap">
+    <div className="flex flex-wrap items-center gap-3 border-b-[length:var(--border-width)] bg-background/95 px-4 py-3 [backdrop-filter:var(--backdrop-blur)] md:px-6 xl:flex-nowrap">
       <div className="flex min-w-0 flex-wrap items-center gap-3 md:flex-nowrap">
         <Button
           type="button"
