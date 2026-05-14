@@ -51,7 +51,7 @@ export function SidebarExtensionCard({ collapsed }: { collapsed: boolean }) {
               <Puzzle className="h-4 w-4" />
             </span>
             <span className="min-w-0">
-              <span className="block text-sm font-semibold leading-5 text-foreground">
+              <span className="block font-display text-sm font-semibold leading-5 tracking-tight text-foreground">
                 Capture jobs from any site &rarr;
               </span>
               <span className="mt-1 block text-xs leading-5 text-muted-foreground">
