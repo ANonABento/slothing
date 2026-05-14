@@ -81,7 +81,7 @@ export function AnswerFeedbackCard({
             </div>
             <p
               className={cn(
-                "mt-2 text-2xl font-bold",
+                "mt-2 font-display text-2xl font-bold tracking-tight",
                 ratingTextClasses[metric.rating],
               )}
             >

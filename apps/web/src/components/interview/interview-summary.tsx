@@ -77,7 +77,9 @@ export function InterviewSummary({
         <div className="mb-6 inline-flex h-20 w-20 items-center justify-center rounded-full bg-success/20 text-success">
           <Trophy className="h-10 w-10" />
         </div>
-        <h2 className="text-2xl font-bold">{t("title")}</h2>
+        <h2 className="font-display text-2xl font-bold tracking-tight">
+          {t("title")}
+        </h2>
         <p className="mt-2 text-muted-foreground">
           {t("description", { count: session.questions.length })}
         </p>
