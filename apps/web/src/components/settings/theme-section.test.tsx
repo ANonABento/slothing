@@ -25,7 +25,7 @@ describe("ThemeSection", () => {
     document.documentElement.removeAttribute("data-theme-mode");
   });
 
-  it("renders seven preset theme cards", async () => {
+  it("renders eight preset theme cards", async () => {
     renderThemeSection();
 
     expect(screen.getByRole("heading", { name: "Theme" })).toBeInTheDocument();
@@ -33,9 +33,12 @@ describe("ThemeSection", () => {
     await waitFor(() => {
       expect(
         screen.getAllByRole("button", { name: /select .* theme/i }),
-      ).toHaveLength(7);
+      ).toHaveLength(8);
     });
 
+    expect(
+      screen.getByRole("button", { name: /select slothing theme/i }),
+    ).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: /select bloxy theme/i }),
     ).toBeInTheDocument();

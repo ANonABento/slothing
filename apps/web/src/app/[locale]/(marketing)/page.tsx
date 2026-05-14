@@ -1,9 +1,17 @@
 import { headers } from "next/headers";
-import { Hero } from "./components/hero";
-import { Features } from "./components/features";
-import { HowItWorks } from "./components/how-it-works";
-import { Testimonials } from "./components/testimonials";
-import { CTASection } from "./components/cta-section";
+import { LandingHero } from "@/components/landing/Hero";
+import {
+  ATSMatchSection,
+  ExtensionSection,
+  FormAutofillSection,
+  InterviewPrepSection,
+  KnowledgeBankSection,
+} from "@/components/landing/FeatureSections";
+import {
+  Closer,
+  IntegrationsStrip,
+  JobQueuePreview,
+} from "@/components/landing/ClosingSections";
 import { getLocalizedMarketingPageMetadata } from "@/lib/seo";
 import { CSP_NONCE_HEADER } from "@/lib/security/headers";
 
@@ -16,7 +24,7 @@ const jsonLd = {
   "@type": "WebApplication",
   name: "Slothing",
   description:
-    "You're not lazy. Your job search system is. AI-powered resume tailoring, interview prep, and application tracking.",
+    "A calmer way to job hunt. AI-powered resume tailoring, interview prep, and application tracking — local-first and open source.",
   applicationCategory: "BusinessApplication",
   operatingSystem: "Web",
   offers: {
@@ -26,7 +34,7 @@ const jsonLd = {
   },
 };
 
-export default async function LandingPage() {
+export default function LandingPage() {
   const nonce = headers().get(CSP_NONCE_HEADER) ?? undefined;
 
   return (
@@ -36,11 +44,15 @@ export default async function LandingPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      {await Hero()}
-      <Features />
-      <HowItWorks />
-      <Testimonials />
-      {await CTASection()}
+      <LandingHero />
+      <KnowledgeBankSection />
+      <ExtensionSection />
+      <ATSMatchSection />
+      <FormAutofillSection />
+      <InterviewPrepSection />
+      <IntegrationsStrip />
+      <JobQueuePreview />
+      <Closer />
     </>
   );
 }

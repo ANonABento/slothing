@@ -84,7 +84,7 @@ export function ProfileCompletenessRing({
               </defs>
             </svg>
             {/* Center text — overlays the ring */}
-            <span className="absolute inset-0 flex items-center justify-center text-2xl font-bold pointer-events-none">
+            <span className="pointer-events-none absolute inset-0 flex items-center justify-center font-display text-2xl font-bold tracking-tight">
               {percentage}%
             </span>
           </div>

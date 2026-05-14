@@ -357,7 +357,7 @@ export default function AnalyticsPage() {
               <PagePanel>
                 <div className="flex items-center justify-between mb-4">
                   <PageIconTile icon={Target} />
-                  <span className="text-2xl font-bold">
+                  <span className="font-display text-2xl font-bold tracking-tight">
                     {analytics.overview.profileCompleteness}%
                   </span>
                 </div>
@@ -387,7 +387,7 @@ export default function AnalyticsPage() {
                     icon={Briefcase}
                     className="bg-info/10 text-info"
                   />
-                  <span className="text-2xl font-bold">
+                  <span className="font-display text-2xl font-bold tracking-tight">
                     {analytics.overview.totalJobs}
                   </span>
                 </div>
@@ -404,7 +404,7 @@ export default function AnalyticsPage() {
                     icon={MessageSquare}
                     className="bg-warning/10 text-warning"
                   />
-                  <span className="text-2xl font-bold">
+                  <span className="font-display text-2xl font-bold tracking-tight">
                     {analytics.overview.totalInterviews}
                   </span>
                 </div>
@@ -421,7 +421,7 @@ export default function AnalyticsPage() {
                     icon={FileText}
                     className="bg-success/10 text-success"
                   />
-                  <span className="text-2xl font-bold">
+                  <span className="font-display text-2xl font-bold tracking-tight">
                     {analytics.overview.totalResumesGenerated}
                   </span>
                 </div>
@@ -484,16 +484,18 @@ export default function AnalyticsPage() {
 
                 {/* Conversion Rates */}
                 <div className="mt-6 pt-6 border-t">
-                  <h4 className="text-sm font-medium mb-4">Conversion Rates</h4>
+                  <h4 className="mb-4 font-display text-sm font-medium tracking-tight">
+                    Conversion Rates
+                  </h4>
                   <div className="grid grid-cols-3 gap-4 text-center">
                     <div>
-                      <p className="text-2xl font-bold text-info">
+                      <p className="font-display text-2xl font-bold tracking-tight text-info">
                         {applicationRate}%
                       </p>
                       <p className="text-xs text-muted-foreground">Applied</p>
                     </div>
                     <div>
-                      <p className="text-2xl font-bold text-warning">
+                      <p className="font-display text-2xl font-bold tracking-tight text-warning">
                         {interviewRate}%
                       </p>
                       <p className="text-xs text-muted-foreground">
@@ -501,7 +503,7 @@ export default function AnalyticsPage() {
                       </p>
                     </div>
                     <div>
-                      <p className="text-2xl font-bold text-success">
+                      <p className="font-display text-2xl font-bold tracking-tight text-success">
                         {offerRate}%
                       </p>
                       <p className="text-xs text-muted-foreground">To Offer</p>
@@ -646,7 +648,9 @@ export default function AnalyticsPage() {
                 <Zap className="h-5 w-5" />
               </div>
               <div>
-                <h2 className="text-xl font-bold">Advanced Insights</h2>
+                <h2 className="font-display text-xl font-bold tracking-tight">
+                  Advanced Insights
+                </h2>
                 <p className="text-sm text-muted-foreground">
                   Deep dive into your opportunity search performance
                 </p>
@@ -655,7 +659,7 @@ export default function AnalyticsPage() {
 
             {/* Trends */}
             <div>
-              <h3 className="font-semibold mb-4 flex items-center gap-2">
+              <h3 className="mb-4 flex items-center gap-2 font-display font-semibold tracking-tight">
                 <LineChart className="h-5 w-5 text-primary" />
                 Activity Trends
               </h3>
@@ -668,7 +672,7 @@ export default function AnalyticsPage() {
 
             {/* Success Metrics */}
             <div>
-              <h3 className="font-semibold mb-4 flex items-center gap-2">
+              <h3 className="mb-4 flex items-center gap-2 font-display font-semibold tracking-tight">
                 <Target className="h-5 w-5 text-primary" />
                 Success Metrics
               </h3>
@@ -681,7 +685,7 @@ export default function AnalyticsPage() {
 
             {/* Learning Paths */}
             <div>
-              <h3 className="font-semibold mb-4 flex items-center gap-2">
+              <h3 className="mb-4 flex items-center gap-2 font-display font-semibold tracking-tight">
                 <GraduationCap className="h-5 w-5 text-primary" />
                 Skill Development
               </h3>

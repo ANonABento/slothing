@@ -2,24 +2,213 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ============================================================
+   Slothing editorial tokens (Kev handoff, May 2026)
+   These are STATIC tokens that coexist with the runtime
+   theme-preset system in src/lib/theme/. Preset tokens
+   (--background, --card, --primary…) are applied via JS;
+   the tokens below are applied via CSS only.
+   ============================================================ */
 @layer base {
-  :root {
+  :root,
+  [data-theme="light"] {
     color-scheme: light;
+
+    /* Legacy paper surface vars — kept for back-compat */
     --surface-paper: 0 0% 100%;
     --paper-foreground: 0 0% 0%;
     --surface-paper-border: 0 0% 90%;
     --surface-scrim: 0 0% 0%;
+
+    /* Editorial surfaces — light cream */
+    --bg: #f5efe2;
+    --bg-2: #e9dec8;
+    --paper: #fffaef;
+
+    /* Ink */
+    --ink: #1a1410;
+    --ink-2: #3a2f24;
+    --ink-3: #6a5e4a;
+
+    /* Lines */
+    --rule: rgba(26, 20, 16, 0.12);
+    --rule-strong: rgba(26, 20, 16, 0.4);
+    --rule-strong-bg: rgba(26, 20, 16, 0.07);
+
+    /* Depth */
+    --paper-shadow: rgba(60, 40, 20, 0.14);
+    --paper-shadow-strong: rgba(60, 40, 20, 0.22);
+
+    /* Inverse (closer block) */
+    --inverse-bg: #1a1410;
+    --inverse-ink: #f5efe2;
+
+    /* Typography — consumes next/font vars set on <html> */
+    --font-body: var(--font-geist-sans), "Geist", system-ui, sans-serif;
+    --font-mono: var(--font-jetbrains), "JetBrains Mono", ui-monospace,
+      monospace;
   }
 
-  .dark {
+  .dark,
+  [data-theme="dark"] {
     color-scheme: dark;
+
+    /* Editorial surfaces — Midnight Indigo */
+    --bg: #0f1226;
+    --bg-2: #1a1d38;
+    --paper: #161936;
+
+    /* Ink — warm cream */
+    --ink: #f6ecd6;
+    --ink-2: #d2c5a8;
+    --ink-3: #8a83a8;
+
+    /* Lines */
+    --rule: rgba(246, 236, 214, 0.1);
+    --rule-strong: rgba(246, 236, 214, 0.32);
+    --rule-strong-bg: rgba(246, 236, 214, 0.06);
+
+    /* Depth */
+    --paper-shadow: rgba(0, 0, 0, 0.55);
+    --paper-shadow-strong: rgba(0, 0, 0, 0.7);
+
+    /* Inverse */
+    --inverse-bg: #f6ecd6;
+    --inverse-ink: #0f1226;
   }
 
-  [data-theme] {
-    --surface-paper: 0 0% 100%;
-    --paper-foreground: 0 0% 0%;
-    --surface-paper-border: 0 0% 90%;
-    --surface-scrim: 0 0% 0%;
+  /* Light palette variants — override bg/paper only */
+  [data-palette="ivory"]:not(.dark) {
+    --bg: #fbfaf7;
+    --bg-2: #ece8de;
+    --paper: #ffffff;
+    --rule: rgba(26, 20, 16, 0.1);
+  }
+  [data-palette="sage"]:not(.dark) {
+    --bg: #ecf0e4;
+    --bg-2: #dae3c8;
+    --paper: #fbfaf3;
+  }
+  [data-palette="sand"]:not(.dark) {
+    --bg: #ede0c8;
+    --bg-2: #e0cfa6;
+    --paper: #fffaee;
+  }
+
+  /* Editorial brand accents (separate from shadcn --accent).
+     Default = rust. Switch via [data-accent="…"] on <html>. */
+  :root,
+  [data-accent="rust"] {
+    --brand: #b8704a;
+    --brand-dark: #8e5132;
+    --brand-soft: #f0d9c1;
+  }
+  [data-accent="olive"] {
+    --brand: #6a8a3a;
+    --brand-dark: #4d6b22;
+    --brand-soft: #d8e3c8;
+  }
+  [data-accent="plum"] {
+    --brand: #8e4a7a;
+    --brand-dark: #6a325c;
+    --brand-soft: #e9d5e1;
+  }
+  [data-accent="coral"] {
+    --brand: #d96c5a;
+    --brand-dark: #b04835;
+    --brand-soft: #f6d4cb;
+  }
+  [data-accent="indigo"] {
+    --brand: #4a5dc7;
+    --brand-dark: #2d3e9c;
+    --brand-soft: #d4dafa;
+  }
+  [data-accent="ink"] {
+    --brand: #1a1410;
+    --brand-dark: #000000;
+    --brand-soft: rgba(26, 20, 16, 0.12);
+  }
+
+  /* Dark-mode brand brightening for contrast */
+  .dark[data-accent="rust"],
+  .dark:not([data-accent]) {
+    --brand: #e09060;
+    --brand-dark: #b8704a;
+    --brand-soft: rgba(224, 144, 96, 0.18);
+  }
+  .dark[data-accent="olive"] {
+    --brand: #a3c478;
+    --brand-dark: #6a8a3a;
+    --brand-soft: rgba(163, 196, 120, 0.16);
+  }
+  .dark[data-accent="plum"] {
+    --brand: #d093bc;
+    --brand-dark: #8e4a7a;
+    --brand-soft: rgba(208, 147, 188, 0.16);
+  }
+  .dark[data-accent="coral"] {
+    --brand: #ef9684;
+    --brand-dark: #d96c5a;
+    --brand-soft: rgba(239, 150, 132, 0.16);
+  }
+  .dark[data-accent="indigo"] {
+    --brand: #98a6ee;
+    --brand-dark: #4a5dc7;
+    --brand-soft: rgba(152, 166, 238, 0.18);
+  }
+  .dark[data-accent="ink"] {
+    --brand: #f6ecd6;
+    --brand-dark: #d2c5a8;
+    --brand-soft: rgba(246, 236, 214, 0.1);
+  }
+
+  /* Display font family — switch via [data-display="…"].
+     Default (outfit) consumes next/font's --font-outfit. */
+  :root,
+  [data-display="outfit"] {
+    --display: var(--font-outfit), "Outfit", system-ui, sans-serif;
+    --display-letter: -0.035em;
+  }
+  [data-display="space"] {
+    --display: "Space Grotesk", system-ui, sans-serif;
+    --display-letter: -0.03em;
+  }
+  [data-display="jakarta"] {
+    --display: "Plus Jakarta Sans", system-ui, sans-serif;
+    --display-letter: -0.03em;
+  }
+  [data-display="inter"] {
+    --display: "Inter Tight", system-ui, sans-serif;
+    --display-letter: -0.04em;
+  }
+  [data-display="dm"] {
+    --display: "DM Sans", system-ui, sans-serif;
+    --display-letter: -0.035em;
+  }
+
+  /* Editorial radius scale — switch via [data-radius="…"].
+     Distinct from shadcn --radius which the preset system controls. */
+  :root,
+  [data-radius="soft"] {
+    --r-sm: 6px;
+    --r-md: 10px;
+    --r-lg: 14px;
+    --r-xl: 22px;
+    --r-pill: 999px;
+  }
+  [data-radius="sharp"] {
+    --r-sm: 2px;
+    --r-md: 4px;
+    --r-lg: 6px;
+    --r-xl: 10px;
+    --r-pill: 999px;
+  }
+  [data-radius="round"] {
+    --r-sm: 10px;
+    --r-md: 16px;
+    --r-lg: 22px;
+    --r-xl: 32px;
+    --r-pill: 999px;
   }
 }
 

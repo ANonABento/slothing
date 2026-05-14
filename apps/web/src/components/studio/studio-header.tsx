@@ -239,7 +239,7 @@ export function StudioHeader({
         </Button>
         <FileText className="h-5 w-5 text-primary" />
         <div className="min-w-0">
-          <h1 className="text-lg font-semibold leading-tight">
+          <h1 className="font-display text-lg font-semibold leading-tight tracking-tight">
             Document Studio
           </h1>
         </div>

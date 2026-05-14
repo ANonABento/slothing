@@ -216,6 +216,9 @@ importers:
       framer-motion:
         specifier: ^11.18.2
         version: 11.18.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      geist:
+        specifier: ^1.7.0
+        version: 1.7.0(next@14.2.35(@babel/core@7.29.0)(@playwright/test@1.59.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))
       googleapis:
         specifier: ^171.4.0
         version: 171.4.0
@@ -4022,6 +4025,11 @@ packages:
   gcp-metadata@8.1.2:
     resolution: {integrity: sha512-zV/5HKTfCeKWnxG0Dmrw51hEWFGfcF2xiXqcA3+J90WDuP0SvoiSO5ORvcBsifmx/FoIjgQN3oNOGaQ5PhLFkg==}
     engines: {node: '>=18'}
+
+  geist@1.7.0:
+    resolution: {integrity: sha512-ZaoiZwkSf0DwwB1ncdLKp+ggAldqxl5L1+SXaNIBGkPAqcu+xjVJLxlf3/S8vLt9UHx1xu5fz3lbzKCj5iOVdQ==}
+    peerDependencies:
+      next: '>=13.2.0'
 
   generator-function@2.0.1:
     resolution: {integrity: sha512-SFdFmIJi+ybC0vjlHN0ZGVGHc3lgE0DxPAT0djjVg+kjOnSqclqmj0KQ7ykTOLP6YxoqOvuAODGdcHJn+43q3g==}
@@ -9941,6 +9949,10 @@ snapshots:
       json-bigint: 1.0.0
     transitivePeerDependencies:
       - supports-color
+
+  geist@1.7.0(next@14.2.35(@babel/core@7.29.0)(@playwright/test@1.59.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)):
+    dependencies:
+      next: 14.2.35(@babel/core@7.29.0)(@playwright/test@1.59.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
 
   generator-function@2.0.1: {}
 

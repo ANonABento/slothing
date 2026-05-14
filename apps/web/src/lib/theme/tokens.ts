@@ -1,4 +1,5 @@
 export const themeIds = [
+  "slothing",
   "default",
   "bloxy",
   "glass",
