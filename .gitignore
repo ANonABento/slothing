@@ -54,6 +54,8 @@ next-env.d.ts
 # Misc
 *.log
 .context/
+.claude/
+.playwright-mcp/
 
 # Playwright
 playwright-report/

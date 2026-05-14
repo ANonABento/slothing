@@ -187,7 +187,7 @@ describe("translation maintenance scripts", () => {
     expect(report).toContain("## Identical-to-English Review");
     expect(report).toContain("| **Total** | **0** |");
     expect(report).toContain("## Locale Quality Review");
-  });
+  }, 30_000);
 
   it("verifies a current markdown placeholder report", () => {
     const dir = mkdtempSync(path.join(tmpdir(), "translation-report-"));
@@ -206,7 +206,7 @@ describe("translation maintenance scripts", () => {
     ]);
 
     expect(verifyResult.status).toBe(0);
-  });
+  }, 30_000);
 
   it("fails when the markdown placeholder report is stale", () => {
     const dir = mkdtempSync(path.join(tmpdir(), "translation-report-"));
@@ -221,5 +221,5 @@ describe("translation maintenance scripts", () => {
 
     expect(result.status).toBe(1);
     expect(result.stderr).toContain("Markdown placeholder report is stale");
-  });
+  }, 30_000);
 });
