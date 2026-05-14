@@ -1,0 +1,173 @@
+{
+  "loop": "011",
+  "base": "http://localhost:3010",
+  "widths": [
+    1280
+  ],
+  "viewportHeight": 900,
+  "startedAt": "2026-05-14T08:04:07.585Z",
+  "routesAudited": 16,
+  "results": [
+    {
+      "slug": "sign-in",
+      "path": "/en/sign-in",
+      "group": "auth",
+      "width": 1280,
+      "status": "ok",
+      "ms": 13759,
+      "errors": 1,
+      "finalUrl": "http://localhost:3010/en/sign-in"
+    },
+    {
+      "slug": "dashboard",
+      "path": "/en/dashboard",
+      "group": "app",
+      "width": 1280,
+      "status": "ok",
+      "ms": 3030,
+      "errors": 1,
+      "finalUrl": "http://localhost:3010/en/dashboard"
+    },
+    {
+      "slug": "profile",
+      "path": "/en/profile",
+      "group": "app",
+      "width": 1280,
+      "status": "ok",
+      "ms": 21275,
+      "errors": 1,
+      "finalUrl": "http://localhost:3010/en/profile"
+    },
+    {
+      "slug": "upload",
+      "path": "/en/upload",
+      "group": "app",
+      "width": 1280,
+      "status": "ok",
+      "ms": 11545,
+      "errors": 1,
+      "finalUrl": "http://localhost:3010/en/bank"
+    },
+    {
+      "slug": "documents",
+      "path": "/en/documents",
+      "group": "app",
+      "width": 1280,
+      "status": "ok",
+      "ms": 17035,
+      "errors": 1,
+      "finalUrl": "http://localhost:3010/en/bank"
+    },
+    {
+      "slug": "answer-bank",
+      "path": "/en/answer-bank",
+      "group": "app",
+      "width": 1280,
+      "status": "ok",
+      "ms": 14589,
+      "errors": 1,
+      "finalUrl": "http://localhost:3010/en/answer-bank"
+    },
+    {
+      "slug": "studio",
+      "path": "/en/studio",
+      "group": "app",
+      "width": 1280,
+      "status": "ok",
+      "ms": 10462,
+      "errors": 1,
+      "finalUrl": "http://localhost:3010/en/studio"
+    },
+    {
+      "slug": "opportunities",
+      "path": "/en/opportunities",
+      "group": "app",
+      "width": 1280,
+      "status": "ok",
+      "ms": 5631,
+      "errors": 1,
+      "finalUrl": "http://localhost:3010/en/opportunities"
+    },
+    {
+      "slug": "opportunities-review",
+      "path": "/en/opportunities/review",
+      "group": "app",
+      "width": 1280,
+      "status": "error: page.goto: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3010/en/opportunities/review\", waiting until \"networkidle\"\u001b[22m\n",
+      "ms": 30747,
+      "errors": 0,
+      "finalUrl": "http://localhost:3010/en/opportunities/review"
+    },
+    {
+      "slug": "interview",
+      "path": "/en/interview",
+      "group": "app",
+      "width": 1280,
+      "status": "ok",
+      "ms": 29934,
+      "errors": 2,
+      "finalUrl": "http://localhost:3010/en/interview"
+    },
+    {
+      "slug": "analytics",
+      "path": "/en/analytics",
+      "group": "app",
+      "width": 1280,
+      "status": "ok",
+      "ms": 9731,
+      "errors": 1,
+      "finalUrl": "http://localhost:3010/en/analytics"
+    },
+    {
+      "slug": "salary",
+      "path": "/en/salary",
+      "group": "app",
+      "width": 1280,
+      "status": "ok",
+      "ms": 13507,
+      "errors": 1,
+      "finalUrl": "http://localhost:3010/en/salary"
+    },
+    {
+      "slug": "calendar",
+      "path": "/en/calendar",
+      "group": "app",
+      "width": 1280,
+      "status": "ok",
+      "ms": 6718,
+      "errors": 1,
+      "finalUrl": "http://localhost:3010/en/calendar"
+    },
+    {
+      "slug": "emails",
+      "path": "/en/emails",
+      "group": "app",
+      "width": 1280,
+      "status": "ok",
+      "ms": 26861,
+      "errors": 1,
+      "finalUrl": "http://localhost:3010/en/emails"
+    },
+    {
+      "slug": "settings",
+      "path": "/en/settings",
+      "group": "app",
+      "width": 1280,
+      "status": "ok",
+      "ms": 30897,
+      "errors": 1,
+      "finalUrl": "http://localhost:3010/en/settings"
+    },
+    {
+      "slug": "extension-connect",
+      "path": "/en/extension/connect",
+      "group": "app",
+      "width": 1280,
+      "status": "ok",
+      "ms": 20299,
+      "errors": 1,
+      "finalUrl": "http://localhost:3010/en/extension/connect"
+    }
+  ],
+  "consoleErrorTotal": 16
+}
