@@ -218,7 +218,9 @@ export function SectionList({
       {showSections && (
         <>
           <div className="flex items-center justify-between px-4 py-3 border-b">
-            <h3 className="text-sm font-semibold">Sections</h3>
+            <h3 className="font-display text-sm font-semibold tracking-tight">
+              Sections
+            </h3>
             <span className="text-xs text-muted-foreground">
               Drag to reorder
             </span>

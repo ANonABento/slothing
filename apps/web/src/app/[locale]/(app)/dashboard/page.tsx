@@ -456,10 +456,10 @@ function NewUserDashboard({
         <PagePanel>
           <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div className="min-w-0">
-              <p className="text-xs font-semibold uppercase text-primary">
+              <p className="font-mono text-xs uppercase tracking-[0.16em] text-primary">
                 {t("onboarding.startHere")}
               </p>
-              <h2 className="mt-1 text-xl font-semibold">
+              <h2 className="mt-1 font-display text-xl font-semibold tracking-tight">
                 {t("onboarding.title")}
               </h2>
               <p className="mt-2 max-w-prose text-sm leading-6 text-muted-foreground">
