@@ -237,9 +237,9 @@ export function StudioHeader({
         >
           <PanelLeft className="h-5 w-5" />
         </Button>
-        <FileText className="h-5 w-5 text-primary" />
+        <FileText className="h-5 w-5 shrink-0 text-primary" />
         <div className="min-w-0">
-          <h1 className="font-display text-lg font-semibold leading-tight tracking-tight">
+          <h1 className="whitespace-nowrap font-display text-lg font-semibold leading-tight tracking-tight">
             Document Studio
           </h1>
         </div>
@@ -468,7 +468,7 @@ export function StudioHeader({
         <span
           role="status"
           className={cn(
-            "inline-flex min-h-8 items-center gap-1.5 rounded-[var(--radius)] border-[length:var(--border-width)] px-2 py-1 text-xs font-medium text-muted-foreground",
+            "inline-flex min-h-8 items-center gap-1.5 whitespace-nowrap rounded-[var(--radius)] border-[length:var(--border-width)] px-2 py-1 text-xs font-medium text-muted-foreground",
             saveStatusIcon === "saved" && draftIsSaved
               ? "border-success/20 bg-success/10 text-success"
               : saveStatusIcon === "error"

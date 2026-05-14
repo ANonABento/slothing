@@ -289,7 +289,7 @@ export function PageIconTile({
     <div
       className={cn(
         "flex shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary",
-        size === "sm" ? "h-9 w-9" : "h-10 w-10",
+        size === "sm" ? "h-8 w-8" : "h-9 w-9",
         className,
       )}
     >

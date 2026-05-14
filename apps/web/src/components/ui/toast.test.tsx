@@ -194,8 +194,8 @@ describe("Toast", () => {
     const toast = screen
       .getByText("Success!")
       .closest(".animate-slide-in-right");
-    expect(toast?.className).toContain("border-success/50");
-    expect(toast?.className).toContain("bg-success/10");
+    expect(toast?.className).toContain("border-success/40");
+    expect(toast?.className).toContain("bg-card");
   });
 
   it("should render error toast with correct styling", () => {
@@ -207,8 +207,8 @@ describe("Toast", () => {
 
     fireEvent.click(screen.getByTestId("add-error"));
     const toast = screen.getByText("Error!").closest(".animate-slide-in-right");
-    expect(toast?.className).toContain("border-destructive/50");
-    expect(toast?.className).toContain("bg-destructive/10");
+    expect(toast?.className).toContain("border-destructive/40");
+    expect(toast?.className).toContain("bg-card");
   });
 
   it("should render warning toast with correct styling", () => {
@@ -222,8 +222,8 @@ describe("Toast", () => {
     const toast = screen
       .getByText("Warning!")
       .closest(".animate-slide-in-right");
-    expect(toast?.className).toContain("border-warning/50");
-    expect(toast?.className).toContain("bg-warning/10");
+    expect(toast?.className).toContain("border-warning/40");
+    expect(toast?.className).toContain("bg-card");
   });
 
   it("should render info toast with correct styling", () => {
@@ -235,8 +235,8 @@ describe("Toast", () => {
 
     fireEvent.click(screen.getByTestId("add-info"));
     const toast = screen.getByText("Info").closest(".animate-slide-in-right");
-    expect(toast?.className).toContain("border-info/50");
-    expect(toast?.className).toContain("bg-info/10");
+    expect(toast?.className).toContain("border-info/40");
+    expect(toast?.className).toContain("bg-card");
   });
 
   it("should stack multiple toasts", () => {
