@@ -440,7 +440,7 @@ export function Sidebar() {
               {/* Section label - only show when expanded */}
               {!collapsed && (
                 <div className="px-3 mb-2">
-                  <span className="text-[10px] font-semibold uppercase tracking-normal text-muted-foreground/70">
+                  <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground/70">
                     {t(group.messageKey)}
                   </span>
                 </div>
