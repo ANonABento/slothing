@@ -8,7 +8,15 @@ import { ToastProvider } from "@/components/ui/toast";
 import { KeyboardShortcutsProvider } from "@/components/keyboard-shortcuts";
 import { CommandPalette } from "@/components/command-palette/command-palette";
 import { CommandPaletteProvider } from "@/components/command-palette/command-palette-provider";
+import type { Metadata } from "next";
 import { OnboardingDialog } from "@/components/onboarding";
+
+export const metadata: Metadata = {
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
 
 export const dynamic = "force-dynamic";
 

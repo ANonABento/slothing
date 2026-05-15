@@ -9,12 +9,19 @@ import { LocaleSwitcherCompact } from "@/components/i18n/locale-switcher";
 import { Link } from "@/i18n/navigation";
 import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 
-const navLinks = [
+type MarketingNavLink = {
+  href: string;
+  labelKey?: string;
+  label?: string;
+};
+
+const navLinks: readonly MarketingNavLink[] = [
   { labelKey: "features", href: "#features" },
   { labelKey: "extension", href: "/extension" },
   { labelKey: "howItWorks", href: "#how-it-works" },
   { labelKey: "pricing", href: "/pricing" },
-] as const;
+  { label: "Blog", href: "/blog" },
+];
 
 export function Navbar() {
   const a11yT = useA11yTranslations();
@@ -24,6 +31,14 @@ export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const callbackUrl = `/${locale}/dashboard`;
+
+  const getNavLabel = (link: MarketingNavLink) => {
+    if (link.label) {
+      return link.label;
+    }
+
+    return t(link.labelKey ?? "features");
+  };
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -44,7 +59,7 @@ export function Navbar() {
         <div className="flex items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex min-h-11 items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground font-bold text-lg shadow-md">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl gradient-bg text-primary-foreground font-bold text-lg shadow-md">
               <Sparkles className="h-5 w-5" />
             </div>
             <div className="flex flex-col">
@@ -63,20 +78,20 @@ export function Navbar() {
             {navLinks.map((link) =>
               link.href.startsWith("#") ? (
                 <a
-                  key={link.labelKey}
+                  key={link.label ?? link.labelKey}
                   href={link.href}
                   className="inline-flex min-h-11 items-center text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
                 >
-                  {t(link.labelKey)}
+                  {getNavLabel(link)}
                 </a>
               ) : (
                 <Link
-                  key={link.labelKey}
+                  key={link.label ?? link.labelKey}
                   href={link.href}
                   prefetch={false}
                   className="inline-flex min-h-11 items-center text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
                 >
-                  {t(link.labelKey)}
+                  {getNavLabel(link)}
                 </Link>
               ),
             )}
@@ -95,7 +110,7 @@ export function Navbar() {
             </Button>
             <Button
               asChild
-              className="bg-primary text-primary-foreground hover:opacity-90"
+              className="gradient-bg text-primary-foreground hover:opacity-90"
             >
               <Link
                 href={{ pathname: "/sign-in", query: { callbackUrl } }}
@@ -135,22 +150,22 @@ export function Navbar() {
             {navLinks.map((link) =>
               link.href.startsWith("#") ? (
                 <a
-                  key={link.labelKey}
+                  key={link.label ?? link.labelKey}
                   href={link.href}
                   onClick={() => setMobileOpen(false)}
                   className="flex min-h-11 items-center text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
                 >
-                  {t(link.labelKey)}
+                  {getNavLabel(link)}
                 </a>
               ) : (
                 <Link
-                  key={link.labelKey}
+                  key={link.label ?? link.labelKey}
                   href={link.href}
                   prefetch={false}
                   onClick={() => setMobileOpen(false)}
                   className="flex min-h-11 items-center text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
                 >
-                  {t(link.labelKey)}
+                  {getNavLabel(link)}
                 </Link>
               ),
             )}
@@ -166,7 +181,7 @@ export function Navbar() {
               </Button>
               <Button
                 asChild
-                className="bg-primary text-primary-foreground hover:opacity-90"
+                className="gradient-bg text-primary-foreground hover:opacity-90"
               >
                 <Link
                   href={{ pathname: "/sign-in", query: { callbackUrl } }}
