@@ -9,6 +9,8 @@ import {
   Sparkles,
 } from "lucide-react";
 import Image from "next/image";
+import { getLocale } from "next-intl/server";
+import { headers } from "next/headers";
 
 import { ExtensionInstallButtons } from "@/components/marketing/extension-install-buttons";
 import { MarketingSection } from "@/components/marketing/section";
@@ -17,7 +19,8 @@ import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { getCurrentUserId } from "@/lib/auth";
 import { getA11yTranslations } from "@/lib/i18n/get-a11y-translations";
-import { getLocalizedPageMetadata } from "@/lib/seo";
+import { getLocalizedPageMetadata, getMetadataBase } from "@/lib/seo";
+import { CSP_NONCE_HEADER } from "@/lib/security/headers";
 
 export function generateMetadata({ params }: { params: { locale: string } }) {
   return getLocalizedPageMetadata("extension", params.locale);

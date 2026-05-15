@@ -11,11 +11,13 @@ import {
   Zap,
 } from "lucide-react";
 import { getLocale } from "next-intl/server";
+import { headers } from "next/headers";
 
 import { Button } from "@/components/ui/button";
 import { CheckoutButton } from "@/components/billing/billing-actions";
 import { Link } from "@/i18n/navigation";
-import { getLocalizedPageMetadata } from "@/lib/seo";
+import { CSP_NONCE_HEADER } from "@/lib/security/headers";
+import { getLocalizedPageMetadata, getMetadataBase } from "@/lib/seo";
 import { cn } from "@/lib/utils";
 
 export function generateMetadata({ params }: { params: { locale: string } }) {
@@ -178,6 +180,38 @@ const faqs = [
   },
 ] as const;
 
+const faqSchema = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((faq) => ({
+    "@type": "Question",
+    name: faq.question,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: faq.answer,
+    },
+  })),
+};
+
+const getBreadcrumbSchema = (baseHref: URL, locale: string) => ({
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  itemListElement: [
+    {
+      "@type": "ListItem",
+      position: 1,
+      name: "Home",
+      item: new URL(`/${locale}`, baseHref).toString(),
+    },
+    {
+      "@type": "ListItem",
+      position: 2,
+      name: "Pricing",
+      item: new URL(`/${locale}/pricing`, baseHref).toString(),
+    },
+  ],
+});
+
 const comparisonRows = [
   {
     feature: "Hosting",
@@ -233,9 +267,24 @@ const comparisonRows = [
 export default async function PricingPage() {
   const locale = await getLocale();
   const callbackUrl = `/${locale}/dashboard`;
+  const nonce = headers().get(CSP_NONCE_HEADER) ?? undefined;
+  const metadataBase = getMetadataBase();
+  const breadcrumbSchema = getBreadcrumbSchema(metadataBase, locale);
 
   return (
     <main className="px-4 py-16">
+      <script
+        nonce={nonce}
+        suppressHydrationWarning
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+      />
+      <script
+        nonce={nonce}
+        suppressHydrationWarning
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
       <section className="mx-auto max-w-6xl">
         <div className="mx-auto max-w-3xl text-center">
           <div className="mb-6 inline-flex items-center gap-2 rounded-lg border bg-card px-3 py-2 text-sm font-medium text-muted-foreground">

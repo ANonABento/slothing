@@ -16,6 +16,10 @@ const PRIVATE_ROUTE_PREFIXES = [
   "/salary/",
   "/interview/",
   "/extension/connect/",
+  "/jobs/",
+  "/sign-in",
+  "/sign-up/",
+  "/forgot-password/",
 ] as const;
 
 export default function robots(): MetadataRoute.Robots {

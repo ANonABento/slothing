@@ -3,6 +3,7 @@ import { Check, Github, KeyRound, ShieldCheck, TimerReset } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
+import { getAlternateLanguages } from "@/lib/seo";
 
 const competitors = {
   teal: {
@@ -48,6 +49,10 @@ export function generateMetadata({
   return {
     title: `Slothing vs ${competitor.name}`,
     description: `Compare Slothing with ${competitor.name} on open source, privacy, BYOK, and weekly pricing.`,
+    alternates: {
+      canonical: `/vs/${params.competitor}`,
+      languages: getAlternateLanguages(`/vs/${params.competitor}`),
+    },
   };
 }
 

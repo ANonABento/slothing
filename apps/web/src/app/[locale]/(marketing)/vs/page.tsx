@@ -2,6 +2,7 @@ import { ArrowRight, ShieldCheck } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
+import { getAlternateLanguages } from "@/lib/seo";
 
 const competitors = [
   {
@@ -26,6 +27,10 @@ export function generateMetadata() {
     title: "Slothing comparisons",
     description:
       "Compare Slothing with Teal, Huntr, and Simplify on open source, privacy, BYOK, and weekly pricing.",
+    alternates: {
+      canonical: "/vs",
+      languages: getAlternateLanguages("/vs"),
+    },
   };
 }
 
