@@ -97,7 +97,14 @@ export const BASE_SPACING_VARIABLES = {
 } as const satisfies ThemeCssVariables;
 
 export const BASE_FONT_VARIABLES = {
-  "--font-mono": '"SFMono-Regular", Consolas, "Liberation Mono", monospace',
+  // Use the next/font JetBrains Mono variable (loaded in app/layout.tsx)
+  // as the first font in the chain. Without this, the runtime theme
+  // preset would write the SFMono fallback chain inline on <html>,
+  // beating the globals.css `--font-mono` declaration and starving
+  // every `font-mono` utility (mono-caps eyebrows, sidebar group labels,
+  // ⌘K hints, etc.) of JetBrains Mono.
+  "--font-mono":
+    'var(--font-jetbrains), "JetBrains Mono", "SFMono-Regular", Consolas, "Liberation Mono", monospace',
 } as const satisfies ThemeCssVariables;
 
 export const DEFAULT_EFFECT_VARIABLES = {
