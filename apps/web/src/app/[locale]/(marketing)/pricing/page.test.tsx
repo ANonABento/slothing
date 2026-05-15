@@ -184,7 +184,7 @@ describe("PricingPage", () => {
     expect(screen.getByText("Encrypted in transit")).toBeInTheDocument();
     expect(screen.getByText("No data selling")).toBeInTheDocument();
     expect(
-      screen.getByRole("heading", { name: "Open source" }),
+      screen.getByRole("heading", { name: "Open source core" }),
     ).toBeInTheDocument();
     expect(screen.getByText("Delete anytime")).toBeInTheDocument();
     expect(screen.getByText(/AI outputs are assistive/)).toBeInTheDocument();
@@ -194,7 +194,7 @@ describe("PricingPage", () => {
     await renderPricingPage();
 
     expect(
-      screen.getByRole("heading", { name: "Hosted billing is live" }),
+      screen.getByRole("heading", { name: "Ready to start?" }),
     ).toBeInTheDocument();
     expect(
       screen.getAllByRole("button", { name: /Start Weekly/i }).length,

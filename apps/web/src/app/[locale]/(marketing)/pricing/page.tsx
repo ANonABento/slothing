@@ -7,7 +7,6 @@ import {
   Lock,
   Rocket,
   ShieldCheck,
-  Sparkles,
   Trash2,
   Zap,
 } from "lucide-react";
@@ -35,7 +34,7 @@ interface Tier {
   price: string;
   cadence: string;
   description: string;
-  icon: typeof Sparkles;
+  icon: typeof HardDrive;
   cta: string;
   ctaAction: TierCta;
   highlighted: boolean;
@@ -55,7 +54,7 @@ const tiers: readonly Tier[] = [
     cta: "View on GitHub",
     ctaAction: { kind: "external", href: SLOTHING_REPO_URL },
     highlighted: false,
-    ctaNote: "MIT-style ease, AGPL-grade freedom.",
+    ctaNote: "AGPL-3.0 — free to use, modify, and run locally.",
     badge: "Open source",
     features: [
       "Full feature set",
@@ -93,7 +92,7 @@ const tiers: readonly Tier[] = [
     cta: "Start Weekly",
     ctaAction: { kind: "checkout", plan: "pro_weekly" },
     highlighted: false,
-    ctaNote: "Stripe checkout. Cancel any time from Settings.",
+    ctaNote: "Stripe checkout. Requires a Slothing account — sign in first if you're new.",
     features: [
       "Everything in Hosted Free",
       "Slothing-provided AI credits",
@@ -111,7 +110,7 @@ const tiers: readonly Tier[] = [
     cta: "Start Monthly",
     ctaAction: { kind: "checkout", plan: "pro_monthly" },
     highlighted: true,
-    ctaNote: "Stripe checkout. Cancel any time from Settings.",
+    ctaNote: "Stripe checkout. Requires a Slothing account — sign in first if you're new.",
     badge: "Most popular",
     features: [
       "Everything in Weekly",
@@ -167,6 +166,16 @@ const faqs = [
     answer:
       "No, and we don't plan to add one. Annual pricing rewards staying subscribed forever, which is the opposite of what Slothing is for.",
   },
+  {
+    question: "How many AI generations do paid plans include?",
+    answer:
+      "Credit limits are shown in Settings → Credits after you subscribe. Both Weekly and Monthly are sized for an active search — tailoring several resumes, running ATS checks, and generating cover letters throughout your billing period. If you're unsure, start with Weekly to test the volume before committing to Monthly.",
+  },
+  {
+    question: "What happens if I reach my credit limit?",
+    answer:
+      "AI generation pauses for the rest of your billing period. Everything else — opportunity tracking, document storage, form autofill, and the browser extension — continues working without limits. Credits reset automatically at the start of your next billing week or month.",
+  },
 ] as const;
 
 const comparisonRows = [
@@ -188,8 +197,8 @@ const comparisonRows = [
     feature: "Tailored resumes",
     selfHost: "Unlimited (your compute)",
     free: "Unlimited (your key)",
-    weekly: "Generous credits",
-    monthly: "Larger pool",
+    weekly: "Credits included",
+    monthly: "More credits than weekly",
   },
   {
     feature: "Generation priority",
@@ -243,7 +252,7 @@ export default async function PricingPage() {
           </p>
         </div>
 
-        <div className="mt-12 grid gap-6 lg:grid-cols-4">
+        <div className="mt-12 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
           {tiers.map((tier) => {
             const Icon = tier.icon;
             const isInternal = tier.ctaAction.kind === "internal";
@@ -470,19 +479,20 @@ export default async function PricingPage() {
               </p>
             </div>
             <div>
-              <Sparkles className="mb-3 h-5 w-5 text-primary" />
-              <h3 className="font-medium">Open source</h3>
+              <Github className="mb-3 h-5 w-5 text-primary" />
+              <h3 className="font-medium">Open source core</h3>
               <p className="mt-2 text-sm text-muted-foreground">
-                Every line of code that touches your résumé is{" "}
+                The AI pipeline, Document Studio, and tracker are{" "}
                 <a
                   href={SLOTHING_REPO_URL}
                   className="text-primary hover:underline"
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  on GitHub
-                </a>{" "}
-                under AGPL-3.0. Audit it, fork it, self-host it.
+                  AGPL-3.0 on GitHub
+                </a>
+                . A small billing module for slothing.work is proprietary.
+                Audit or fork the parts that touch your data.
               </p>
             </div>
             <div>
@@ -511,15 +521,22 @@ export default async function PricingPage() {
 
         <section className="mt-16 flex flex-col items-center gap-4 rounded-lg border border-primary/30 bg-primary/5 p-8 text-center">
           <Hourglass className="h-8 w-8 text-primary" />
-          <h2 className="text-xl font-semibold">Hosted billing is live</h2>
+          <h2 className="text-xl font-semibold">Ready to start?</h2>
           <p className="max-w-xl text-sm text-muted-foreground">
-            Use Stripe checkout for Weekly or Monthly Pro, or self-host the
-            AGPL-3.0 app for free.
+            Create a free account to use Slothing with your own AI key. Upgrade
+            to Weekly or Monthly from Settings once you&apos;re inside.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-3">
-            <CheckoutButton plan="pro_weekly">Start Weekly</CheckoutButton>
-            <CheckoutButton plan="pro_monthly" variant="outline">
-              Start Monthly
+            <Button asChild>
+              <Link
+                href={{ pathname: "/sign-in", query: { callbackUrl } }}
+                prefetch={false}
+              >
+                Get started free →
+              </Link>
+            </Button>
+            <CheckoutButton plan="pro_weekly" variant="outline">
+              Start Weekly — $6.99/wk
             </CheckoutButton>
             <Button asChild variant="outline">
               <a
@@ -532,6 +549,16 @@ export default async function PricingPage() {
               </a>
             </Button>
           </div>
+          <p className="text-xs text-muted-foreground">
+            Paid plans require a Slothing account.{" "}
+            <Link
+              href={{ pathname: "/sign-in", query: { callbackUrl } }}
+              className="text-primary hover:underline"
+              prefetch={false}
+            >
+              Sign in or create one free →
+            </Link>
+          </p>
         </section>
       </section>
     </main>
