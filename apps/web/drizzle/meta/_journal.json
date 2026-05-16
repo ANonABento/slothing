@@ -92,6 +92,13 @@
       "when": 1778460600000,
       "tag": "0012_external_calendar_events",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "6",
+      "when": 1778461200000,
+      "tag": "0013_jobs_status_canonical",
+      "breakpoints": true
     }
   ]
 }

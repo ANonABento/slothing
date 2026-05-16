@@ -48,13 +48,18 @@ function daysBetween(date1: string, date2: string): number {
   return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 }
 
+// F2.1 consolidation: previously this list included `withdrawn` (because the
+// legacy enum split "user dropped after applying" from `dismissed` =
+// "dismissed without applying"). The canonical `OpportunityStatus` collapses
+// both into `dismissed`, so we no longer count it as part of the applied
+// lifecycle — funnel rows will now match the "never applied" branch instead
+// of the "applied and withdrew" branch for those previously-withdrawn jobs.
 function isAppliedLifecycleStatus(status?: JobDescription["status"]): boolean {
   return (
     status === "applied" ||
     status === "interviewing" ||
-    status === "offered" ||
-    status === "rejected" ||
-    status === "withdrawn"
+    status === "offer" ||
+    status === "rejected"
   );
 }
 
@@ -80,13 +85,13 @@ export function calculateFunnel(jobs: JobDescription[]): FunnelStage[] {
   const responded = appliedJobs.filter(
     (j) =>
       j.status === "interviewing" ||
-      j.status === "offered" ||
+      j.status === "offer" ||
       j.status === "rejected",
   ).length;
   const interviewed = appliedJobs.filter(
-    (j) => j.status === "interviewing" || j.status === "offered",
+    (j) => j.status === "interviewing" || j.status === "offer",
   ).length;
-  const offered = appliedJobs.filter((j) => j.status === "offered").length;
+  const offered = appliedJobs.filter((j) => j.status === "offer").length;
 
   return [
     {
@@ -123,8 +128,7 @@ export function calculateTimeToInterview(jobs: JobDescription[]): {
   byJobType: TimeToMetric[];
 } {
   const interviewedJobs = jobs.filter(
-    (j) =>
-      (j.status === "interviewing" || j.status === "offered") && j.appliedAt,
+    (j) => (j.status === "interviewing" || j.status === "offer") && j.appliedAt,
   );
 
   const calculateMetric = (
@@ -173,10 +177,8 @@ export function calculateOfferRate(jobs: JobDescription[]): {
   overall: number;
   byJobType: { type: string; rate: number; count: number }[];
 } {
-  const appliedJobs = jobs.filter(
-    (j) => isAppliedLifecycleStatus(j.status) && j.status !== "withdrawn",
-  );
-  const offeredJobs = jobs.filter((j) => j.status === "offered");
+  const appliedJobs = jobs.filter((j) => isAppliedLifecycleStatus(j.status));
+  const offeredJobs = jobs.filter((j) => j.status === "offer");
 
   const overall =
     appliedJobs.length > 0
@@ -192,7 +194,7 @@ export function calculateOfferRate(jobs: JobDescription[]): {
     }
     const stats = byType.get(type)!;
     stats.applied++;
-    if (job.status === "offered") {
+    if (job.status === "offer") {
       stats.offered++;
     }
   });
@@ -221,7 +223,7 @@ export function identifyTopResumes(
   const resumePerformance: ResumePerformance[] = resumes.map((resume) => {
     const job = jobMap.get(resume.jobId);
     const successful =
-      job?.status === "offered" || job?.status === "interviewing";
+      job?.status === "offer" || job?.status === "interviewing";
 
     return {
       id: resume.id,

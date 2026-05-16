@@ -108,30 +108,54 @@ describe("opportunities", () => {
     });
   });
 
-  it("normalizes legacy job statuses to opportunity statuses", () => {
-    expect(jobToOpportunity(job({ status: "offered" })).status).toBe("offer");
-    expect(jobToOpportunity(job({ status: "withdrawn" })).status).toBe(
-      "dismissed",
-    );
+  it("falls back to saved when a legacy status string slips through the type system", () => {
+    // F2.1: the canonical `OpportunityStatus` union no longer includes the
+    // legacy `"offered"` / `"withdrawn"` values. The DB migration rewrites
+    // existing rows, but the type-narrowing in `normalizeStatus` is the
+    // belt-and-suspenders that protects the UI from any straggler bytes.
+    expect(
+      jobToOpportunity(job({ status: "offered" as unknown as "offer" })).status,
+    ).toBe("saved");
+    expect(
+      jobToOpportunity(job({ status: "withdrawn" as unknown as "dismissed" }))
+        .status,
+    ).toBe("saved");
   });
 
-  it("lists only requested opportunity statuses", () => {
+  it("passes canonical opportunity statuses to the underlying job query", () => {
     mocks.listJobsPaginated.mockReturnValue([
       job({ id: "saved", status: "saved" }),
       job({ id: "applied", status: "applied" }),
-      job({ id: "offered", status: "offered" }),
+      job({ id: "offer", status: "offer" }),
     ]);
 
     expect(
       listOpportunities({
         userId: "user-1",
-        statuses: ["saved", "applied", "offered"],
+        statuses: ["saved", "applied", "offer"],
         limit: 50,
       }).items.map((item) => item.id),
-    ).toEqual(["saved", "applied", "offered"]);
+    ).toEqual(["saved", "applied", "offer"]);
     expect(mocks.listJobsPaginated).toHaveBeenCalledWith({
       userId: "user-1",
-      statuses: ["saved", "applied", "offered"],
+      statuses: ["saved", "applied", "offer"],
+      cursor: undefined,
+      limit: 50,
+    });
+  });
+
+  it("translates legacy URL params (offered/withdrawn) to canonical statuses", () => {
+    mocks.listJobsPaginated.mockReturnValue([]);
+
+    listOpportunities({
+      userId: "user-1",
+      statuses: ["offered", "withdrawn"],
+      limit: 50,
+    });
+
+    expect(mocks.listJobsPaginated).toHaveBeenCalledWith({
+      userId: "user-1",
+      statuses: ["offer", "dismissed"],
       cursor: undefined,
       limit: 50,
     });

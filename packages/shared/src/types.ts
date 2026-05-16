@@ -79,15 +79,17 @@ export interface Profile {
   updatedAt?: string;
 }
 
-export type JobStatus =
-  | "pending"
-  | "saved"
-  | "applied"
-  | "interviewing"
-  | "offered"
-  | "rejected"
-  | "withdrawn"
-  | "dismissed";
+/**
+ * @deprecated Use `OpportunityStatus` from `./schemas` directly.
+ * Kept as a type alias during the F2.1 consolidation so existing imports keep
+ * compiling. Value set is identical to `OpportunityStatus`:
+ * `"pending" | "saved" | "applied" | "interviewing" | "offer" | "rejected" | "expired" | "dismissed"`.
+ *
+ * Migration note: callers that previously used the legacy values `"offered"` /
+ * `"withdrawn"` must translate to `"offer"` / `"dismissed"` respectively. The
+ * Drizzle migration `0013_jobs_status_canonical.sql` rewrites existing DB rows.
+ */
+export type JobStatus = import("./schemas").OpportunityStatus;
 
 export interface JobDescription {
   id: string;

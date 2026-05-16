@@ -12,15 +12,18 @@ const validJobTypes = [
 ] as const;
 type ValidJobType = (typeof validJobTypes)[number];
 
-// Valid job statuses
+// Valid job statuses. F2.1 consolidation: this set must stay in sync with the
+// canonical `OPPORTUNITY_STATUSES` from `@slothing/shared/schemas`; the legacy
+// `offered` / `withdrawn` values are rewritten by `0013_jobs_status_canonical`.
 const validJobStatuses = [
   "pending",
   "saved",
   "applied",
   "interviewing",
-  "offered",
+  "offer",
   "rejected",
-  "withdrawn",
+  "expired",
+  "dismissed",
 ] as const;
 type ValidJobStatus = (typeof validJobStatuses)[number];
 

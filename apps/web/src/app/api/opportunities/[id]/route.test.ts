@@ -136,8 +136,11 @@ describe("opportunity detail route", () => {
   it("rejects invalid update payloads", async () => {
     mocks.getJob.mockReturnValueOnce(baseJob);
 
+    // F2.1 consolidation: `offer` is now a canonical `OpportunityStatus`
+    // value, so the test now sends a genuinely invalid status to assert the
+    // schema still gates non-enum input.
     const response = await PATCH(
-      jsonRequest({ status: "offer" }),
+      jsonRequest({ status: "not-a-real-status" }),
       routeContext,
     );
 

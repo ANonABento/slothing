@@ -10,7 +10,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { Link } from "@/i18n/navigation";
-import { JobStatusBadge } from "@/components/jobs/job-status-badge";
+import { OpportunityStatusBadge } from "@/components/opportunities/opportunity-status-badge";
 import { TimeAgo } from "@/components/format/time-ago";
 import { pluralize } from "@/lib/text/pluralize";
 import { getPipelineCount } from "@/lib/opportunities/pipeline";
@@ -201,7 +201,7 @@ const PIPELINE_STAGES = [
     key: "interviewing",
     href: "/opportunities?status=interviewing",
   },
-  { label: "Offered", key: "offered", href: "/opportunities?status=offered" },
+  { label: "Offer", key: "offer", href: "/opportunities?status=offer" },
   {
     label: "Rejected",
     key: "rejected",
@@ -376,7 +376,7 @@ export function EditorialRecentTable({
                   <span style={{ color: "var(--ink-2)" }}>{job.company}</span>
                 </Td>
                 <Td>
-                  <JobStatusBadge status={job.status} />
+                  <OpportunityStatusBadge status={job.status} />
                 </Td>
                 <Td align="right">
                   <span

@@ -1,38 +1,40 @@
 import { z } from "zod";
+import {
+  OPPORTUNITY_STATUSES,
+  opportunityStatusSchema,
+  type OpportunityStatus,
+} from "@slothing/shared/schemas";
 
-// Job application statuses
-export const JOB_STATUSES = [
-  "pending",
-  "saved",
-  "applied",
-  "interviewing",
-  "offered",
-  "rejected",
-  "withdrawn",
-  "dismissed",
-] as const;
+// F2.1 consolidation: the legacy 8-value `JOB_STATUSES` array (with `offered`,
+// `withdrawn`, …) was removed. The canonical status set is
+// `OPPORTUNITY_STATUSES` from `@slothing/shared/schemas` — re-exported here
+// under the legacy names so existing imports keep compiling without having to
+// touch every call-site at once.
+export const JOB_STATUSES = OPPORTUNITY_STATUSES;
 
-export type JobStatus = (typeof JOB_STATUSES)[number];
+export type JobStatus = OpportunityStatus;
 
 export const JOB_STATUS_LABELS: Record<JobStatus, string> = {
   pending: "Pending",
   saved: "Saved",
   applied: "Applied",
   interviewing: "Interviewing",
-  offered: "Offered",
+  offer: "Offer",
   rejected: "Rejected",
-  withdrawn: "Withdrawn",
+  expired: "Expired",
   dismissed: "Dismissed",
 };
 
-export const jobStatusSchema = z.enum(JOB_STATUSES);
+export const jobStatusSchema = opportunityStatusSchema;
 
+// "Tracked" subset = the statuses surfaced by the legacy kanban/filter UI.
+// Now expressed against the canonical names (`offer`, not `offered`).
 export const TRACKED_JOB_STATUSES = [
   "pending",
   "saved",
   "applied",
   "interviewing",
-  "offered",
+  "offer",
   "rejected",
 ] as const;
 
@@ -43,7 +45,7 @@ export const TRACKED_JOB_STATUS_LABELS: Record<TrackedJobStatus, string> = {
   saved: "Saved",
   applied: "Applied",
   interviewing: "Interviewing",
-  offered: "Offered",
+  offer: "Offer",
   rejected: "Rejected",
 };
 

@@ -33,7 +33,6 @@ import {
 } from "@/lib/profile-completeness";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
 import { useErrorToast } from "@/hooks/use-error-toast";
-import { JobStatusBadge } from "@/components/jobs/job-status-badge";
 import {
   AppPage,
   PageContent,

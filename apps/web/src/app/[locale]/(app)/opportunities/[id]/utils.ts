@@ -71,9 +71,9 @@ const OPPORTUNITY_STATUS_LABELS = {
   saved: "Saved",
   applied: "Applied",
   interviewing: "Interviewing",
-  offered: "Offered",
+  offer: "Offer",
   rejected: "Rejected",
-  withdrawn: "Withdrawn",
+  expired: "Expired",
   dismissed: "Dismissed",
 } satisfies Record<JobStatus, string>;
 
