@@ -39,7 +39,6 @@ import {
 import { getTemplate, TEMPLATES } from "@/lib/resume/template-data";
 import { cn } from "@/lib/utils";
 import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
-import { useToast } from "@/components/ui/toast";
 import {
   Tooltip,
   TooltipContent,
@@ -77,6 +76,8 @@ interface StudioSubBarProps {
   onTemplateSelect: (templateId: string) => void;
 
   onTailorAi: () => void;
+  onTailorManual: () => void;
+  onTailorSettings: () => void;
 
   exportMenuOpen: boolean;
   onExportMenuOpenChange: (open: boolean) => void;
@@ -88,6 +89,8 @@ interface StudioSubBarProps {
   onDownloadDocx: () => void;
   onCopyHtml: () => void;
   onExportPlainText: () => void;
+  onLatexExport: () => void;
+  onShareLink: () => void;
 
   onFilesPanelToggle?: () => void;
   onAiPanelToggle?: () => void;
@@ -125,11 +128,14 @@ export function StudioSubBar({
   onDownloadDocx,
   onCopyHtml,
   onExportPlainText,
+  onLatexExport,
+  onShareLink,
+  onTailorManual,
+  onTailorSettings,
   onFilesPanelToggle,
   onAiPanelToggle,
 }: StudioSubBarProps) {
   const a11yT = useA11yTranslations();
-  const { addToast } = useToast();
 
   const [now, setNow] = useState(() => nowEpoch());
   useEffect(() => {
@@ -174,37 +180,14 @@ export function StudioSubBar({
     editor?.chain().focus().redo().run();
   }, [editor]);
 
-  const handleTailorManual = useCallback(() => {
-    addToast({
-      type: "info",
-      title: "Manual tailor — coming soon",
-      description:
-        "Deterministic assembly from selected sections is on the roadmap.",
-    });
-  }, [addToast]);
-  const handleTailorSettings = useCallback(() => {
-    addToast({
-      type: "info",
-      title: "Tailor settings — coming soon",
-      description: "Bullet ranges and ATS rules will be configurable here.",
-    });
-  }, [addToast]);
   const handleLatexExport = useCallback(() => {
-    addToast({
-      type: "info",
-      title: "LaTeX export — coming soon",
-      description: "Raw .tex source for Overleaf is on the roadmap.",
-    });
     onExportMenuOpenChange(false);
-  }, [addToast, onExportMenuOpenChange]);
+    onLatexExport();
+  }, [onExportMenuOpenChange, onLatexExport]);
   const handleShareLink = useCallback(() => {
-    addToast({
-      type: "info",
-      title: "Share link — coming soon",
-      description: "View-only links with 7-day expiry are on the roadmap.",
-    });
     onExportMenuOpenChange(false);
-  }, [addToast, onExportMenuOpenChange]);
+    onShareLink();
+  }, [onExportMenuOpenChange, onShareLink]);
 
   return (
     <TooltipProvider delayDuration={200} skipDelayDuration={300}>
@@ -275,8 +258,8 @@ export function StudioSubBar({
 
           <TailorSplit
             onAiTailor={onTailorAi}
-            onManualTailor={handleTailorManual}
-            onSettings={handleTailorSettings}
+            onManualTailor={onTailorManual}
+            onSettings={onTailorSettings}
           />
 
           <ExportSplit

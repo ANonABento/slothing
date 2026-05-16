@@ -620,6 +620,9 @@ export const profileBank = sqliteTable(
     componentType: text("component_type"),
     componentOrder: integer("component_order").default(0),
     sourceSection: text("source_section"),
+    // PF.2 — positional metadata for the review-modal document preview.
+    sourcePage: integer("source_page"),
+    sourceBbox: text("source_bbox"),
     confidenceScore: real("confidence_score").default(0.8),
     createdAt: text("created_at").default(sql`CURRENT_TIMESTAMP`),
   },
@@ -896,6 +899,29 @@ export const achievementUnlocks = sqliteTable(
   ],
 );
 
+// View-only public shares of a tailored resume. The `id` doubles as the
+// URL-safe public token, so it's generated via `crypto.randomBytes` rather
+// than a UUID — see `src/lib/db/shared-resumes.ts`. Snapshots are stored
+// inline (rather than referencing a `documents` row) so deleting the source
+// document or editing the resume doesn't silently mutate an already-shared
+// link.
+export const sharedResumes = sqliteTable(
+  "shared_resumes",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id").notNull().default(DEFAULT_USER_ID),
+    documentHtml: text("document_html").notNull(),
+    documentTitle: text("document_title").notNull(),
+    createdAt: integer("created_at").notNull(),
+    expiresAt: integer("expires_at").notNull(),
+    viewCount: integer("view_count").notNull().default(0),
+  },
+  (table) => [
+    index("idx_shared_resumes_user_id").on(table.userId),
+    index("idx_shared_resumes_user_created").on(table.userId, table.createdAt),
+  ],
+);
+
 // NextAuth.js (@auth/drizzle-adapter) tables.
 // Adapter-owned columns must match @auth/drizzle-adapter/sqlite exactly — do not
 // customize column names. Nullable app-owned columns are okay; the adapter only
@@ -1073,6 +1099,9 @@ export type NewUserActivity = typeof userActivity.$inferInsert;
 
 export type AchievementUnlockRow = typeof achievementUnlocks.$inferSelect;
 export type NewAchievementUnlockRow = typeof achievementUnlocks.$inferInsert;
+
+export type SharedResume = typeof sharedResumes.$inferSelect;
+export type NewSharedResume = typeof sharedResumes.$inferInsert;
 
 export type AuthUser = typeof users.$inferSelect;
 export type NewAuthUser = typeof users.$inferInsert;

@@ -160,6 +160,7 @@ export {
   promptVariantResults,
   userActivity,
   achievementUnlocks,
+  sharedResumes,
 } from "./schema";
 export * from "./queries";
 export * from "./jobs";

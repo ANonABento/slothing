@@ -18,6 +18,7 @@ import {
   type LeftRailTab,
 } from "@/components/studio/studio-left-rail";
 import { StudioSubBar } from "@/components/studio/studio-sub-bar";
+import { useTailorSettingsDialog } from "@/components/studio/tailor-settings-dialog";
 import { useStudioKeyboardShortcuts } from "@/components/studio/use-studio-keyboard-shortcuts";
 import { useStudioPageState } from "@/components/studio/use-studio-page-state";
 import { VersionDiffView } from "@/components/studio/version-diff-view";
@@ -27,6 +28,9 @@ import { Button } from "@/components/ui/button";
 import { PageWorkspace } from "@/components/ui/page-layout";
 import { useToast } from "@/components/ui/toast";
 import { getMobilePanelClasses } from "@/lib/builder/section-manager";
+import { downloadLatex } from "@/lib/export/latex-client";
+import { createShareLink, copyShareUrl } from "@/lib/share/client";
+import { runManualTailor } from "@/lib/tailor/manual-tailor-handler";
 import { cn } from "@/lib/utils";
 
 function StudioPageContent() {
@@ -109,12 +113,99 @@ function StudioPageContent() {
   }, [activeDocumentName, addToast, studio.html]);
   const handleOpenVersionHistory = useCallback(() => {
     studio.setFilesPanelCollapsed(false);
+    setLeftRailTab("files");
     window.requestAnimationFrame(() => {
       document
         .getElementById("studio-version-history")
         ?.scrollIntoView({ behavior: "smooth", block: "start" });
     });
   }, [studio]);
+  const handleTailorManual = useCallback(() => {
+    try {
+      const result = runManualTailor({
+        entries: studio.entries,
+        selectedIds: studio.selectedIds,
+        sections: studio.sections,
+        documentMode: studio.documentMode,
+        templateId: studio.templateId,
+      });
+      studio.handleContentChange(result.content);
+      addToast({
+        type: "success",
+        title: "Tailored from selected sections",
+        description: `${result.usedEntryCount} entr${result.usedEntryCount === 1 ? "y" : "ies"} assembled.`,
+      });
+    } catch (error) {
+      addToast({
+        type: "error",
+        title: "Could not tailor manually",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Select bank entries first, then try again.",
+      });
+    }
+  }, [
+    addToast,
+    studio.documentMode,
+    studio.entries,
+    studio.handleContentChange,
+    studio.sections,
+    studio.selectedIds,
+    studio.templateId,
+  ]);
+  const { open: openTailorSettings, dialog: tailorSettingsDialog } =
+    useTailorSettingsDialog();
+  const handleLatexExport = useCallback(async () => {
+    if (!studio.html) {
+      addToast({
+        type: "warning",
+        title: "Nothing to export",
+        description: "Add content before exporting LaTeX.",
+      });
+      return;
+    }
+    try {
+      await downloadLatex(studio.html, `${activeDocumentName}.tex`, {
+        title: activeDocumentName,
+      });
+    } catch (error) {
+      addToast({
+        type: "error",
+        title: "LaTeX export failed",
+        description:
+          error instanceof Error ? error.message : "Please try again.",
+      });
+    }
+  }, [activeDocumentName, addToast, studio.html]);
+  const handleShareLink = useCallback(async () => {
+    if (!studio.html) {
+      addToast({
+        type: "warning",
+        title: "Nothing to share",
+        description: "Add content before creating a share link.",
+      });
+      return;
+    }
+    try {
+      const share = await createShareLink(studio.html, activeDocumentName);
+      const copied = await copyShareUrl(share.url);
+      addToast({
+        type: "success",
+        title: copied ? "Share link copied" : "Share link created",
+        description: copied
+          ? `Pasted to clipboard — expires in 7 days.`
+          : share.url,
+      });
+    } catch (error) {
+      addToast({
+        type: "error",
+        title: "Could not create share link",
+        description:
+          error instanceof Error ? error.message : "Please try again.",
+      });
+    }
+  }, [activeDocumentName, addToast, studio.html]);
 
   useStudioKeyboardShortcuts({
     onSave: studio.handleSaveManualVersion,
@@ -146,6 +237,8 @@ function StudioPageContent() {
         templateId={studio.templateId}
         onTemplateSelect={studio.handleTemplateSelect}
         onTailorAi={handleTailorAi}
+        onTailorManual={handleTailorManual}
+        onTailorSettings={openTailorSettings}
         exportMenuOpen={studio.exportMenuOpen}
         onExportMenuOpenChange={studio.setExportMenuOpen}
         isExporting={studio.isExporting}
@@ -156,6 +249,8 @@ function StudioPageContent() {
         onDownloadDocx={studio.handleDownloadDocx}
         onCopyHtml={studio.handleCopyHtml}
         onExportPlainText={handleExportPlainText}
+        onLatexExport={() => void handleLatexExport()}
+        onShareLink={() => void handleShareLink()}
         onAiPanelToggle={() => studio.setMobileView("assistant")}
         onFilesPanelToggle={() => studio.setMobileView("edit")}
       />
@@ -321,6 +416,7 @@ function StudioPageContent() {
         open={Boolean(compareVersion)}
         version={compareVersion}
       />
+      {tailorSettingsDialog}
     </PageWorkspace>
   );
 }
