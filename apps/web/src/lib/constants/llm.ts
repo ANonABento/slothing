@@ -65,13 +65,20 @@ export const DEFAULT_MODELS = {
     "gpt-4o",
     "gpt-4-turbo",
     "gpt-3.5-turbo",
-    // Gemini via Google's OpenAI-compat endpoint (set OPENAI_BASE_URL=
+    // Google models via the OpenAI-compat endpoint (set OPENAI_BASE_URL=
     // https://generativelanguage.googleapis.com/v1beta/openai/ and paste
-    // your Google AI Studio key into the API Key field).
-    "gemini-2.0-flash",
-    "gemini-2.0-flash-lite",
-    "gemini-1.5-flash",
-    "gemini-1.5-pro",
+    // your Google AI Studio key into the API Key field). Gemma 4 26B has
+    // the highest free-tier daily allowance (1,500 RPD / unlimited TPM)
+    // — use it for development. Flash Lite is the highest-RPD Gemini
+    // option in the current free tier.
+    "gemma-4-26b",
+    "gemma-4-31b",
+    "gemini-3.1-flash-lite",
+    "gemini-3.1-pro",
+    "gemini-3-flash",
+    "gemini-2.5-flash-lite",
+    "gemini-2.5-flash",
+    "gemini-2.5-pro",
   ],
   anthropic: [
     "claude-3-haiku-20240307",
