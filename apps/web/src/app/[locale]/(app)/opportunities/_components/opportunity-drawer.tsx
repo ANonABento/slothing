@@ -224,7 +224,7 @@ function DrawerFooter({ opportunity, onStatusChange }: DrawerFooterProps) {
   return (
     <div className="flex flex-wrap items-center gap-2">
       <Link
-        href={`/studio?opportunity=${encodeURIComponent(opportunity.id)}`}
+        href={`/studio?opportunityId=${encodeURIComponent(opportunity.id)}`}
         className={cn(
           "inline-flex items-center gap-1.5 rounded-md bg-ink px-3 py-1.5 text-[12.5px] font-medium text-paper transition-colors hover:bg-brand-dark",
         )}

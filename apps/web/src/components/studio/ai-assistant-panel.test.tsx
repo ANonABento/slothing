@@ -577,6 +577,45 @@ describe("AiAssistantPanel", () => {
     expect(onOpportunitySelect).toHaveBeenCalledWith("job-2");
   });
 
+  it("preloads the legacy URL opportunity parameter into the JD input", async () => {
+    const onOpportunitySelect = vi.fn();
+    window.history.pushState(null, "", "/studio?opportunity=job-2");
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string) => {
+        if (url === "/api/opportunities/job-2") {
+          return new Response(
+            JSON.stringify({
+              opportunity: {
+                id: "job-2",
+                type: "job",
+                title: "Product Engineer",
+                company: "Beta",
+                source: "manual",
+                summary: "Own full-stack product quality.",
+                status: "applied",
+                tags: [],
+                createdAt: "2026-01-01T00:00:00.000Z",
+                updatedAt: "2026-01-01T00:00:00.000Z",
+              },
+            }),
+            { status: 200 },
+          );
+        }
+        return new Response("Not found", { status: 404 });
+      }),
+    );
+
+    renderWithSelectableText("Built APIs quickly.", { onOpportunitySelect });
+
+    await waitFor(() =>
+      expect(screen.getByLabelText("Job description")).toHaveValue(
+        "Own full-stack product quality.",
+      ),
+    );
+    expect(onOpportunitySelect).toHaveBeenCalledWith("job-2");
+  });
+
   it("clears the selected opportunity when the JD is edited manually", async () => {
     const onOpportunityClear = vi.fn();
     vi.stubGlobal(

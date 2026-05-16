@@ -11,11 +11,20 @@ import { NextRequest, NextResponse } from "next/server";
 import { getJob } from "@/lib/db/jobs";
 import { getProfile, saveGeneratedResume } from "@/lib/db";
 import {
-  gateAiFeature,
+  gateOptionalAiFeature,
   isAiGateResponse,
-  type AiGatePass,
+  type OptionalAiGatePass,
 } from "@/lib/billing/ai-gate";
-import { generateTailoredResume } from "@/lib/resume/generator";
+import {
+  isProviderUnavailableError,
+  providerNotConfiguredFallback,
+  providerUnavailableFallback,
+  type ProviderFallbackInfo,
+} from "@/lib/llm/provider-fallback";
+import {
+  generateTailoredResume,
+  type TailoredResume,
+} from "@/lib/resume/generator";
 import { generateResumeHTML, TEMPLATES } from "@/lib/resume/pdf";
 import { getTemplateWithCustom } from "@/lib/resume/templates";
 import { writeFile, mkdir } from "fs/promises";
@@ -42,7 +51,7 @@ export async function POST(
 ) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
-  let aiGate: AiGatePass | null = null;
+  let aiGate: OptionalAiGatePass | null = null;
 
   try {
     // Get template from request body
@@ -72,16 +81,31 @@ export async function POST(
       );
     }
 
-    const gate = gateAiFeature(authResult.userId, "tailor", params.id);
+    const gate = gateOptionalAiFeature(authResult.userId, "tailor", params.id);
     if (isAiGateResponse(gate)) return gate;
     aiGate = gate;
 
     // Generate tailored resume content
-    const tailoredResume = await generateTailoredResume(
-      profile,
-      job,
-      gate.llmConfig,
-    );
+    let fallback: ProviderFallbackInfo | null = null;
+    let tailoredResume: TailoredResume;
+    if (gate.llmConfig) {
+      try {
+        tailoredResume = await generateTailoredResume(
+          profile,
+          job,
+          gate.llmConfig,
+        );
+      } catch (error) {
+        if (!isProviderUnavailableError(error)) throw error;
+        aiGate?.refund();
+        aiGate = null;
+        fallback = providerUnavailableFallback(gate.llmConfig);
+        tailoredResume = await generateTailoredResume(profile, job, null);
+      }
+    } else {
+      fallback = providerNotConfiguredFallback();
+      tailoredResume = await generateTailoredResume(profile, job, null);
+    }
 
     // Generate HTML with selected template
     const template = getTemplateWithCustom(templateId, authResult.userId);
@@ -113,6 +137,9 @@ export async function POST(
       pdfUrl,
       resume: tailoredResume,
       savedResume,
+      ...(fallback
+        ? { fallbackUsed: true, providerError: fallback }
+        : { fallbackUsed: false }),
     });
   } catch (error) {
     aiGate?.refund();

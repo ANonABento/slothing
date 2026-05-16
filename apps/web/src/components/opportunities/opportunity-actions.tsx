@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { CoverLetterDialog } from "@/components/cover-letter/cover-letter-dialog";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/components/ui/toast";
 import {
   Select,
   SelectContent,
@@ -49,10 +50,18 @@ interface TemplatesResponse {
 
 interface AnalyzeOpportunityResponse {
   analysis?: JobMatch;
+  fallbackUsed?: boolean;
+  providerError?: {
+    message?: string;
+  };
 }
 
 interface GenerateResumeResponse {
   pdfUrl?: string;
+  fallbackUsed?: boolean;
+  providerError?: {
+    message?: string;
+  };
 }
 
 const FALLBACK_TEMPLATES: ResumeTemplate[] = [
@@ -110,6 +119,7 @@ export function OpportunityActions({
   const [atsDialogOpen, setAtsDialogOpen] = useState(false);
   const [coverLetterOpen, setCoverLetterOpen] = useState(false);
   const showErrorToast = useErrorToast();
+  const { addToast } = useToast();
 
   useEffect(() => {
     let active = true;
@@ -145,6 +155,15 @@ export function OpportunityActions({
         "Failed to analyze opportunity",
       );
       setAnalysis(data.analysis ?? null);
+      if (data.fallbackUsed) {
+        addToast({
+          type: "warning",
+          title: "Used local fallback",
+          description:
+            data.providerError?.message ??
+            "The AI provider was unavailable, so Slothing used deterministic matching.",
+        });
+      }
     } catch (error) {
       showErrorToast(error, {
         title: "Could not analyze opportunity",
@@ -153,7 +172,7 @@ export function OpportunityActions({
     } finally {
       setAnalyzing(false);
     }
-  }, [opportunity.id, showErrorToast]);
+  }, [addToast, opportunity.id, showErrorToast]);
 
   const generateResume = useCallback(async () => {
     setGenerating(true);
@@ -171,6 +190,15 @@ export function OpportunityActions({
         "Failed to generate resume",
       );
       if (data.pdfUrl) window.open(data.pdfUrl, "_blank");
+      if (data.fallbackUsed) {
+        addToast({
+          type: "warning",
+          title: "Used local fallback",
+          description:
+            data.providerError?.message ??
+            "The AI provider was unavailable, so Slothing generated a deterministic resume.",
+        });
+      }
       await onGeneratedDocument?.();
     } catch (error) {
       showErrorToast(error, {
@@ -180,7 +208,13 @@ export function OpportunityActions({
     } finally {
       setGenerating(false);
     }
-  }, [onGeneratedDocument, opportunity.id, selectedTemplate, showErrorToast]);
+  }, [
+    addToast,
+    onGeneratedDocument,
+    opportunity.id,
+    selectedTemplate,
+    showErrorToast,
+  ]);
 
   const runAtsCheck = useCallback(async () => {
     setAtsAnalyzing(true);
