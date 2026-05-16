@@ -8,12 +8,14 @@ import type { ThemePreset } from "@/lib/theme/tokens";
 import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 import {
   ACCENTS,
+  BODY_FONTS,
   DENSITIES,
   DISPLAY_FONTS,
   INKS,
   RADII,
   useEditorialPrefs,
   type AccentId,
+  type BodyFontId,
   type DensityId,
   type DisplayFontId,
   type InkId,
@@ -190,6 +192,18 @@ function EditorialControlsSection() {
           />
         </ControlGroup>
 
+        <ControlGroup label="Body font">
+          <FontChipRow
+            value={prefs.body}
+            onChange={(value) => setPref("body", value as BodyFontId)}
+            options={BODY_FONTS.map((b) => ({
+              id: b.id,
+              label: b.label,
+              fontFamily: b.previewFamily,
+            }))}
+          />
+        </ControlGroup>
+
         <ControlGroup label="Corners">
           <ChipRow
             value={prefs.radius}
@@ -258,6 +272,48 @@ function ChipRow({
               color: active ? "var(--bg)" : "var(--ink-2)",
               border: active ? "1px solid var(--ink)" : "1px solid var(--rule)",
               borderRadius: "var(--r-pill)",
+            }}
+          >
+            {option.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/**
+ * Font-preview chip row — same shape as `ChipRow` but each chip
+ * renders its label in the font it represents (`fontFamily` prop).
+ * Used by the Body-font picker so users see "Inter" set in Inter,
+ * "Plex" set in Plex, etc., before they click.
+ */
+function FontChipRow({
+  value,
+  onChange,
+  options,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  options: { id: string; label: string; fontFamily: string }[];
+}) {
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {options.map((option) => {
+        const active = option.id === value;
+        return (
+          <button
+            key={option.id}
+            type="button"
+            onClick={() => onChange(option.id)}
+            aria-pressed={active}
+            className={cn("px-3 py-1.5 text-sm font-medium transition-colors")}
+            style={{
+              backgroundColor: active ? "var(--ink)" : "var(--bg)",
+              color: active ? "var(--bg)" : "var(--ink-2)",
+              border: active ? "1px solid var(--ink)" : "1px solid var(--rule)",
+              borderRadius: "var(--r-pill)",
+              fontFamily: option.fontFamily,
             }}
           >
             {option.label}

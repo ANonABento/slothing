@@ -148,6 +148,9 @@ const config: Config = {
         lg: "var(--r-lg)",
         xl: "var(--r-xl)",
         "2xl": "var(--r-xl)",
+        // Editorial pill — always round. Documented as its own token so
+        // future radius slider changes never touch pills/avatars.
+        full: "var(--r-pill)",
       },
       boxShadow: {
         sm: "var(--shadow-sm)",

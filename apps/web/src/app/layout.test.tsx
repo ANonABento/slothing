@@ -9,6 +9,10 @@ vi.mock("next/font/google", () => ({
   Plus_Jakarta_Sans: () => ({ variable: "--font-jakarta" }),
   Inter_Tight: () => ({ variable: "--font-inter" }),
   DM_Sans: () => ({ variable: "--font-dm" }),
+  Inter: () => ({ variable: "--font-inter-body" }),
+  IBM_Plex_Sans: () => ({ variable: "--font-plex" }),
+  Atkinson_Hyperlegible: () => ({ variable: "--font-atkinson" }),
+  Source_Sans_3: () => ({ variable: "--font-source" }),
 }));
 
 vi.mock("geist/font/sans", () => ({

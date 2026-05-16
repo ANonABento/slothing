@@ -6,11 +6,15 @@ import { notFound } from "next/navigation";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 import {
+  Atkinson_Hyperlegible,
   DM_Sans,
+  IBM_Plex_Sans,
+  Inter,
   Inter_Tight,
   JetBrains_Mono,
   Outfit,
   Plus_Jakarta_Sans,
+  Source_Sans_3,
   Space_Grotesk,
 } from "next/font/google";
 import { GeistSans } from "geist/font/sans";
@@ -77,6 +81,61 @@ const dmSans = DM_Sans({
   display: "swap",
 });
 
+// ------------------------------------------------------------------
+// Body font presets — drive `--font-body` via [data-body="…"] in
+// globals.css. Geist is the default (loaded above via the `geist`
+// package). The six families below are *opt-in*: `preload: false`
+// on every one so the head only ships @font-face entries for the
+// active body font, not all seven.
+//
+// Variable names are scoped (e.g. --font-inter-body) so they don't
+// collide with the display-font slots (--font-inter, --font-dm,
+// --font-jakarta), which are loaded at a different weight (700) for
+// headings. Body sticks to 400/500.
+// ------------------------------------------------------------------
+const interBody = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter-body",
+  weight: ["400", "500"],
+  display: "swap",
+  preload: false,
+});
+const plexSans = IBM_Plex_Sans({
+  subsets: ["latin"],
+  variable: "--font-plex",
+  weight: ["400", "500"],
+  display: "swap",
+  preload: false,
+});
+const atkinson = Atkinson_Hyperlegible({
+  subsets: ["latin"],
+  variable: "--font-atkinson",
+  weight: ["400", "700"],
+  display: "swap",
+  preload: false,
+});
+const sourceSans = Source_Sans_3({
+  subsets: ["latin"],
+  variable: "--font-source",
+  weight: ["400", "500"],
+  display: "swap",
+  preload: false,
+});
+const dmSansBody = DM_Sans({
+  subsets: ["latin"],
+  variable: "--font-dm-body",
+  weight: ["400", "500"],
+  display: "swap",
+  preload: false,
+});
+const jakartaBody = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  variable: "--font-jakarta-body",
+  weight: ["400", "500"],
+  display: "swap",
+  preload: false,
+});
+
 export const metadata: Metadata = getSiteMetadata();
 
 function AlternateLanguageLinks({ path }: { path: string }) {
@@ -130,6 +189,13 @@ export default async function RootLayout({
     plusJakarta.variable,
     interTight.variable,
     dmSans.variable,
+    // Body-font presets (preload: false — head only ships the active one)
+    interBody.variable,
+    plexSans.variable,
+    atkinson.variable,
+    sourceSans.variable,
+    dmSansBody.variable,
+    jakartaBody.variable,
   ].join(" ");
 
   return (
@@ -140,6 +206,7 @@ export default async function RootLayout({
       data-palette="cream"
       data-accent="rust"
       data-display="outfit"
+      data-body="geist"
       data-radius="soft"
       className={fontClassName}
       style={

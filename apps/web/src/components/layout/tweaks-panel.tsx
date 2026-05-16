@@ -5,12 +5,14 @@ import { Settings, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   ACCENTS,
+  BODY_FONTS,
   DENSITIES,
   DISPLAY_FONTS,
   INKS,
   RADII,
   useEditorialPrefs,
   type AccentId,
+  type BodyFontId,
   type DensityId,
   type DisplayFontId,
   type InkId,
@@ -178,6 +180,18 @@ export function TweaksPanel() {
               />
             </Section>
 
+            <Section label="Body font">
+              <FontChipRow
+                value={prefs.body}
+                onChange={(value) => setPref("body", value as BodyFontId)}
+                options={BODY_FONTS.map((font) => ({
+                  id: font.id,
+                  label: font.label,
+                  fontFamily: font.previewFamily,
+                }))}
+              />
+            </Section>
+
             <Section label="Corners">
               <ChipRow
                 value={prefs.radius}
@@ -252,6 +266,47 @@ function ChipRow({ value, onChange, options }: ChipRowProps) {
               color: active ? "var(--bg)" : "var(--ink-2)",
               border: active ? "1px solid var(--ink)" : "1px solid var(--rule)",
               borderRadius: "var(--r-pill)",
+            }}
+          >
+            {option.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+interface FontChipRowProps {
+  value: string;
+  onChange: (value: string) => void;
+  options: { id: string; label: string; fontFamily: string }[];
+}
+
+/**
+ * Mirror of `ChipRow` but each chip renders its label set in the font
+ * it represents. Powers the Body-font picker so the preview lives
+ * inside the chip itself instead of needing a separate sample row.
+ */
+function FontChipRow({ value, onChange, options }: FontChipRowProps) {
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {options.map((option) => {
+        const active = option.id === value;
+        return (
+          <button
+            key={option.id}
+            type="button"
+            onClick={() => onChange(option.id)}
+            aria-pressed={active}
+            className={cn(
+              "px-2.5 py-1 text-[12px] font-medium transition-colors",
+            )}
+            style={{
+              backgroundColor: active ? "var(--ink)" : "var(--bg)",
+              color: active ? "var(--bg)" : "var(--ink-2)",
+              border: active ? "1px solid var(--ink)" : "1px solid var(--rule)",
+              borderRadius: "var(--r-pill)",
+              fontFamily: option.fontFamily,
             }}
           >
             {option.label}
