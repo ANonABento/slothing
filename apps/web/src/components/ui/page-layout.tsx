@@ -1,5 +1,43 @@
 import type { ElementType, ReactNode } from "react";
+import { Info } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "./tooltip";
+
+/**
+ * Inline `(i)` info affordance for the compact PageHeader. Surfaces
+ * the page description on hover *or* keyboard focus via Radix.
+ *
+ * The `(app)` layout already mounts a `<TooltipProvider>`, but pages
+ * render in many test/RSC contexts that don't. We wrap a local
+ * provider so this primitive is self-sufficient — Radix tolerates
+ * nested providers (the inner one just scopes delay overrides to its
+ * subtree), and the cost is a single extra context.
+ */
+function PageHeaderInfo({ children }: { children: ReactNode }) {
+  return (
+    <TooltipProvider delayDuration={200} skipDelayDuration={300}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
+            type="button"
+            className="inline-flex h-5 w-5 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            aria-label="About this page"
+          >
+            <Info className="h-3.5 w-3.5" aria-hidden />
+          </button>
+        </TooltipTrigger>
+        <TooltipContent side="bottom" align="start">
+          {children}
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+}
 
 export type PageWidth = "full" | "narrow" | "wide";
 
@@ -42,12 +80,26 @@ export function AppPage({
   );
 }
 
+export type PageHeaderVariant = "default" | "compact";
+
 interface PageHeaderProps {
   title: string;
   description?: string;
   icon: ElementType;
   width?: PageWidth;
   actions?: ReactNode;
+  /**
+   * Optional inline meta slot rendered next to the title — count chip,
+   * status pill, last-synced timestamp, etc. Compact variant only.
+   */
+  meta?: ReactNode;
+  /**
+   * "default" — legacy tall header with description paragraph.
+   * "compact" — single-row ~48px header; description surfaces via an
+   * `(i)` hover/focus tooltip next to the title so the chrome stays
+   * tight but new users can still recall what the page does.
+   */
+  variant?: PageHeaderVariant;
   className?: string;
 }
 
@@ -57,8 +109,54 @@ export function PageHeader({
   icon: Icon,
   width = "wide",
   actions,
+  meta,
+  variant = "default",
   className,
 }: PageHeaderProps) {
+  if (variant === "compact") {
+    // The compact header intentionally drops the page-icon tile: the
+    // sidebar already pairs the same icon with the page name, so showing
+    // it again in the chrome is redundant. `icon` stays on the props
+    // (required by the default variant); compact callers can still pass
+    // it without harm.
+    return (
+      <header
+        className={cn("border-b bg-card/70", className)}
+        data-variant="compact"
+      >
+        <div
+          className={cn(
+            "flex min-h-12 items-center gap-4 px-6 py-3",
+            getPageWidthClassName(width),
+          )}
+        >
+          <div className="flex min-w-0 flex-1 items-center gap-2">
+            {/* `leading-none` collapses the line-box to the glyph
+                height so items-center actually centers the (i) button
+                with the title's optical middle (default Tailwind
+                line-height puts ~4px slack above and below). */}
+            <h1 className="font-display text-xl font-semibold leading-none tracking-tight text-foreground sm:text-2xl">
+              {title}
+            </h1>
+            {description ? (
+              <PageHeaderInfo>{description}</PageHeaderInfo>
+            ) : null}
+            {meta ? (
+              <div className="ml-1 hidden items-center gap-2 text-sm text-muted-foreground sm:flex">
+                {meta}
+              </div>
+            ) : null}
+          </div>
+          {actions ? (
+            <div className="flex shrink-0 flex-wrap items-center gap-2">
+              {actions}
+            </div>
+          ) : null}
+        </div>
+      </header>
+    );
+  }
+
   return (
     <header className={cn("border-b bg-card/70", className)}>
       <div className={cn("px-6 py-6", getPageWidthClassName(width))}>

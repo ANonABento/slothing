@@ -533,6 +533,7 @@ export default function ProfilePage() {
           icon={User}
           title={t("title")}
           description={t("description")}
+          variant="compact"
         />
         <PageContent width="wide">
           <ErrorState
@@ -602,6 +603,7 @@ export default function ProfilePage() {
         icon={User}
         title={t("title")}
         description={t("description")}
+        variant="compact"
         actions={
           <>
             {saving || status ? (
@@ -621,6 +623,7 @@ export default function ProfilePage() {
             <Button
               type="button"
               variant="outline"
+              size="sm"
               disabled={!isDirty || saving}
               onClick={discardChanges}
             >
@@ -629,6 +632,7 @@ export default function ProfilePage() {
             </Button>
             <Button
               type="button"
+              size="sm"
               disabled={!isDirty || saving}
               onClick={() => void saveChanges()}
             >

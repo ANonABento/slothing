@@ -275,6 +275,7 @@ export default function AnalyticsPage() {
         icon={BarChart3}
         title={a11yT("analyticsDashboard")}
         description="Track your job search progress and identify areas for improvement."
+        variant="compact"
         actions={
           <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center">
             <Select value={exportRange} onValueChange={setExportRange}>

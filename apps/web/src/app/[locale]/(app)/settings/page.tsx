@@ -74,6 +74,7 @@ export default function SettingsPage() {
         icon={Settings}
         title={t("title")}
         description={t("description")}
+        variant="compact"
       />
 
       <PageContent width="wide">

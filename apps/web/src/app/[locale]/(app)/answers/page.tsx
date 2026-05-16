@@ -21,6 +21,7 @@ export default function AnswersPage() {
         icon={ClipboardList}
         title="Answers"
         description="Saved responses to application questions and behavioral interview prompts. Reuse across forms, autofill, and prep sessions."
+        variant="compact"
       />
       <PageContent>
         <BankAnswersTab />

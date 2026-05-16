@@ -373,6 +373,7 @@ export default function CalendarPage() {
         icon={CalendarIcon}
         title={a11yT("calendar")}
         description="Track interviews, deadlines, and reminders in one place."
+        variant="compact"
         actions={
           <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center">
             <Select value={filterType} onValueChange={setFilterType}>

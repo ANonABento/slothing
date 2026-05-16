@@ -88,6 +88,12 @@ import {
   getBulletReviewReason,
   isBulletNeedsReview,
 } from "@/lib/bank/bullet-review";
+import {
+  deriveCategoryCounts,
+  deriveSourceDocumentCounts,
+  deriveVisibleEntryCount,
+  isChildEntry,
+} from "@/lib/bank/count-derivation";
 import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 
 const DriveFilePicker = dynamic(
@@ -130,13 +136,6 @@ type LayoutMode = "grid" | "table";
 
 function getParentId(entry: BankEntry): string | null {
   return getBankEntryParentId(entry);
-}
-
-function isChildEntry(entry: BankEntry): boolean {
-  return (
-    (entry.category === "bullet" || entry.category === "achievement") &&
-    getParentId(entry) !== null
-  );
 }
 
 function getChildEntriesFor(
@@ -437,21 +436,41 @@ export function BankComponentsTab({
     refreshAllEntries();
   }, [refreshAllEntries]);
 
-  const categoryCounts = useMemo(() => {
-    const counts: Record<string, number> = {};
-    for (const cat of BANK_CATEGORIES) {
-      counts[cat] = allEntries.filter(
-        (e) => e.category === cat && (cat === "bullet" || !isChildEntry(e)),
-      ).length;
-    }
-    return counts;
-  }, [allEntries]);
+  const categoryCounts = useMemo(
+    () => deriveCategoryCounts(allEntries),
+    [allEntries],
+  );
+
+  const sourceDocumentCounts = useMemo(
+    () => deriveSourceDocumentCounts(allEntries),
+    [allEntries],
+  );
 
   const needsReviewCount = useMemo(
     () =>
       allEntries.filter((entry) => isBulletNeedsReview(entry, allEntries))
         .length,
     [allEntries],
+  );
+
+  const visibleEntryCount = useMemo(
+    () =>
+      deriveVisibleEntryCount({
+        reviewOnly,
+        needsReviewCount,
+        activeDocumentId,
+        sourceDocumentCounts,
+        categoryCounts,
+        activeCategory,
+      }),
+    [
+      reviewOnly,
+      needsReviewCount,
+      activeDocumentId,
+      sourceDocumentCounts,
+      categoryCounts,
+      activeCategory,
+    ],
   );
 
   // Sort & filter entries
@@ -1423,13 +1442,13 @@ export function BankComponentsTab({
   useEffect(() => {
     if (!onCategoryCountsChange) return;
     const next: Partial<Record<BankCategory | "all", number>> = {
-      all: allEntries.filter((entry) => !isChildEntry(entry)).length,
+      all: categoryCounts.all ?? 0,
     };
     for (const cat of BANK_CATEGORIES) {
       next[cat] = categoryCounts[cat] ?? 0;
     }
     onCategoryCountsChange(next);
-  }, [allEntries, categoryCounts, onCategoryCountsChange]);
+  }, [categoryCounts, onCategoryCountsChange]);
 
   // Allow the umbrella's rail to drive activeCategory.
   useEffect(() => {
@@ -1451,9 +1470,9 @@ export function BankComponentsTab({
           description="Reusable bullets, stories, and project chunks pulled from your resume — the source material Studio composes into tailored documents."
           variant="compact"
           meta={
-            entries.length > 0 ? (
+            visibleEntryCount > 0 ? (
               <span data-testid="bank-entry-count">
-                · {pluralize(entries.length, "entry", "entries")}
+                · {pluralize(visibleEntryCount, "entry", "entries")}
               </span>
             ) : null
           }
@@ -1873,7 +1892,10 @@ export function BankComponentsTab({
                             <h2 className="mb-1 flex items-center gap-2 font-display text-lg font-semibold tracking-tight">
                               {group.document?.filename ?? "Manual entries"}
                               <span className="text-sm font-normal text-muted-foreground">
-                                ({group.entries.length})
+                                (
+                                {sourceDocumentCounts[group.key] ??
+                                  group.entries.length}
+                                )
                               </span>
                             </h2>
                             <p className="mb-3 text-sm text-muted-foreground">
@@ -1904,7 +1926,10 @@ export function BankComponentsTab({
                             <h2 className="mb-3 flex items-center gap-2 font-display text-lg font-semibold tracking-tight">
                               {CATEGORY_LABELS[group.category]}
                               <span className="text-sm font-normal text-muted-foreground">
-                                ({group.entries.length})
+                                (
+                                {categoryCounts[group.category] ??
+                                  group.entries.length}
+                                )
                               </span>
                             </h2>
                             <EntryCollection

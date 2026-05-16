@@ -9,6 +9,7 @@ export default function ToolkitPage() {
         icon={Wrench}
         title="Toolkit"
         description="Quick-reach tools for the offer and comms phase — email templates for the outbox, salary research for the table."
+        variant="compact"
       />
       <PageContent>
         <ToolkitTabs />

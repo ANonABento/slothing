@@ -170,9 +170,11 @@ describe("SettingsPage", () => {
     const { container } = renderSettingsPage();
 
     // `wide` is full-bleed now (dropped the `max-w-screen-2xl` cap when
-    // the coach rail came out). Editorial header inset is `px-6 py-6`.
+    // the coach rail came out). Settings uses the compact header variant
+    // (single-row, `px-6 py-3`); content inset stays `px-6 py-6`.
     const header = screen.getByRole("banner");
-    expect(header.firstElementChild).toHaveClass("px-6", "py-6");
+    expect(header).toHaveAttribute("data-variant", "compact");
+    expect(header.firstElementChild).toHaveClass("px-6", "py-3");
 
     const content = container.querySelector(".px-6.py-6");
     expect(content).not.toBeNull();

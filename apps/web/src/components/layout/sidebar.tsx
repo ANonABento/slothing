@@ -1,6 +1,7 @@
 "use client";
 
-import { Fragment, useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
+import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { Link, usePathname } from "@/i18n/navigation";
@@ -20,6 +21,9 @@ import {
   Rows3,
   ClipboardList,
   ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+  PanelTopOpen,
   UserCircle,
   Wrench,
   ScanLine,
@@ -28,6 +32,14 @@ import {
 import { useLLMStatus } from "@/hooks/useLLMStatus";
 import { useProfileSnapshot } from "@/hooks/use-profile-snapshot";
 import { CreditBalanceBadge } from "@/components/billing/credit-status";
+import { useRegisterShortcuts } from "@/components/keyboard-shortcuts";
+import {
+  ConditionalTooltip,
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { useOptionalChrome } from "./chrome-provider";
 import { SidebarExtensionCard } from "./sidebar-extension-card";
 
 export interface NavItem {
@@ -215,6 +227,30 @@ export function Sidebar() {
   );
   const llmStatus = useLLMStatus();
   const profileSnapshot = useProfileSnapshot();
+  // Read collapse state from the shared chrome context. Mobile always
+  // uses the full-width drawer — `collapsed` only applies on desktop.
+  const chrome = useOptionalChrome();
+  const sidebarCollapsed = chrome?.sidebarCollapsed ?? false;
+  const collapsed = isDesktopViewport === true && sidebarCollapsed;
+
+  useRegisterShortcuts(
+    "sidebar-toggle",
+    useMemo(
+      () =>
+        chrome
+          ? [
+              {
+                key: "b",
+                ctrl: true,
+                description: "Toggle sidebar",
+                category: "general" as const,
+                action: chrome.toggleSidebar,
+              },
+            ]
+          : [],
+      [chrome],
+    ),
+  );
   const allNavigationItems = navigationGroups
     .flatMap((group) => group.items)
     .concat(bottomNavigation);
@@ -336,11 +372,14 @@ export function Sidebar() {
         } as Record<string, string | undefined>)}
         className={cn(
           // Mobile: fixed overlay drawer
-          "fixed inset-y-0 left-0 z-50 flex w-[240px] flex-shrink-0 flex-col transition-transform duration-300 ease-in-out",
+          "fixed inset-y-0 left-0 z-50 flex w-[240px] flex-shrink-0 flex-col transition-[transform,width] duration-300 ease-in-out",
           // Desktop: relative-positioned cell inside the (app) flex layout
           "lg:relative lg:inset-auto lg:z-0 lg:translate-x-0",
+          // Desktop rail mode — labels hide, icons center
+          collapsed && "lg:w-[64px]",
           mobileOpen ? "translate-x-0" : "-translate-x-full",
         )}
+        data-collapsed={collapsed ? "true" : "false"}
         style={{
           backgroundColor: "var(--bg)",
           borderRight: "1px solid var(--rule)",
@@ -348,12 +387,26 @@ export function Sidebar() {
       >
         {/* Mobile-only close button row */}
         <div className="flex h-14 items-center justify-between px-3 lg:hidden">
-          <span
-            className="truncate text-sm font-semibold"
-            style={{ color: "var(--ink)" }}
+          <Link
+            href="/dashboard"
+            className="flex items-center gap-2 truncate"
+            style={{
+              fontFamily: "var(--display)",
+              fontSize: "16px",
+              fontWeight: 700,
+              color: "var(--ink)",
+            }}
           >
-            {t("brand")}
-          </span>
+            <Image
+              src="/brand/slothing-mark.png"
+              alt=""
+              width={28}
+              height={28}
+              className="h-7 w-7 flex-shrink-0"
+              priority
+            />
+            <span className="truncate">{t("brand")}</span>
+          </Link>
           <button
             ref={mobileCloseButtonRef}
             type="button"
@@ -365,44 +418,198 @@ export function Sidebar() {
           </button>
         </div>
 
-        <nav className="app-sidebar-nav flex-1 overflow-y-auto px-3 py-3">
+        {/* Desktop sidebar header — logo + chrome toggles. h-14 to
+            match the AppBar row so the horizontal rule below the
+            header aligns with the bottom of the AppBar. */}
+        <div
+          className={cn(
+            "hidden lg:flex h-14 items-center",
+            collapsed ? "justify-center px-2" : "justify-between px-3",
+          )}
+          style={{ borderBottom: "1px solid var(--rule)" }}
+        >
+          <Link
+            href="/dashboard"
+            className={cn(
+              "flex items-center gap-2.5 truncate",
+              collapsed ? "justify-center" : "min-w-0 flex-1",
+            )}
+            style={{
+              fontFamily: "var(--display)",
+              fontSize: "18px",
+              fontWeight: 700,
+              letterSpacing: "-0.02em",
+              color: "var(--ink)",
+            }}
+            aria-label={t("brand")}
+          >
+            <Image
+              src="/brand/slothing-mark.png"
+              alt=""
+              width={32}
+              height={32}
+              className="h-8 w-8 flex-shrink-0"
+              priority
+            />
+            {!collapsed ? <span className="truncate">{t("brand")}</span> : null}
+          </Link>
+
+          {/* In expanded mode, toggles live to the right of the logo.
+              In rail mode the row below the header carries them. */}
+          {!collapsed && chrome ? (
+            <div className="flex flex-shrink-0 items-center gap-1">
+              {chrome.appbarHidden ? (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      onClick={chrome.toggleAppbar}
+                      aria-label="Show top bar"
+                      data-testid="sidebar-show-topbar-toggle"
+                      className="grid h-8 w-8 place-items-center rounded-sm text-muted-foreground transition-colors hover:bg-card/70 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    >
+                      <PanelTopOpen className="h-4 w-4" aria-hidden />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">
+                    Show top bar (Ctrl/Cmd+Shift+B)
+                  </TooltipContent>
+                </Tooltip>
+              ) : null}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    onClick={chrome.toggleSidebar}
+                    aria-label="Collapse sidebar"
+                    aria-pressed={collapsed}
+                    data-testid="sidebar-collapse-toggle"
+                    className="grid h-8 w-8 place-items-center rounded-sm text-muted-foreground transition-colors hover:bg-card/70 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    <ChevronsLeft className="h-4 w-4" aria-hidden />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">
+                  Collapse sidebar (Ctrl/Cmd+B)
+                </TooltipContent>
+              </Tooltip>
+            </div>
+          ) : null}
+        </div>
+
+        {/* Rail-only toggle stack — sits directly below the h-14
+            header so the header itself stays aligned with the
+            AppBar row. */}
+        {collapsed && chrome ? (
+          <div
+            className="hidden lg:flex flex-col items-center gap-1 px-2 py-2"
+            style={{ borderBottom: "1px solid var(--rule)" }}
+          >
+            {chrome.appbarHidden ? (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    onClick={chrome.toggleAppbar}
+                    aria-label="Show top bar"
+                    data-testid="sidebar-show-topbar-toggle"
+                    className="grid h-8 w-8 place-items-center rounded-sm text-muted-foreground transition-colors hover:bg-card/70 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    <PanelTopOpen className="h-4 w-4" aria-hidden />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="right">
+                  Show top bar (Ctrl/Cmd+Shift+B)
+                </TooltipContent>
+              </Tooltip>
+            ) : null}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  onClick={chrome.toggleSidebar}
+                  aria-label="Expand sidebar"
+                  aria-pressed={collapsed}
+                  data-testid="sidebar-collapse-toggle"
+                  className="grid h-8 w-8 place-items-center rounded-sm text-muted-foreground transition-colors hover:bg-card/70 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <ChevronsRight className="h-4 w-4" aria-hidden />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="right">
+                Expand sidebar (Ctrl/Cmd+B)
+              </TooltipContent>
+            </Tooltip>
+          </div>
+        ) : null}
+
+        <nav
+          className={cn(
+            "app-sidebar-nav flex-1 overflow-y-auto py-3",
+            collapsed ? "px-2" : "px-3",
+          )}
+        >
           {navigationGroups.map((group, groupIndex) => (
             <div key={group.label} className={groupIndex > 0 ? "mt-4" : ""}>
-              <div className="px-2 pb-1.5 pt-3">
-                <span
-                  className="font-mono text-[10px] uppercase"
-                  style={{
-                    letterSpacing: "0.14em",
-                    color: "var(--ink-3)",
-                  }}
-                >
-                  {t(group.messageKey)}
-                </span>
-              </div>
+              {/* In expanded mode, each group gets a small caption.
+                  In rail mode we substitute a thin horizontal rule so
+                  the visual rhythm matches expanded mode without
+                  truncating labels at 64px. The first group has no
+                  divider so the rail doesn't open with an orphan line. */}
+              {!collapsed ? (
+                <div className="px-2 pb-1.5 pt-3">
+                  <span
+                    className="font-mono text-[10px] uppercase"
+                    style={{
+                      letterSpacing: "0.14em",
+                      color: "var(--ink-3)",
+                    }}
+                  >
+                    {t(group.messageKey)}
+                  </span>
+                </div>
+              ) : groupIndex > 0 ? (
+                <div
+                  className="mx-2 my-2"
+                  style={{ borderTop: "1px solid var(--rule)" }}
+                  aria-hidden
+                />
+              ) : (
+                <div className="pt-1" aria-hidden />
+              )}
 
               <div className="space-y-0.5">
                 {group.items.map((item) => {
                   const isActive = activeHref === item.href;
                   const label = t(item.messageKey);
                   return (
-                    <Link
+                    <ConditionalTooltip
                       key={item.name}
-                      href={item.href}
-                      aria-current={isActive ? "page" : undefined}
-                      className={getSidebarNavItemClassName({
-                        isActive,
-                        collapsed: false,
-                      })}
-                      {...getSidebarNavItemState(isActive)}
+                      when={collapsed}
+                      label={label}
                     >
-                      <item.icon
-                        className={cn(
-                          "h-4 w-4 flex-shrink-0",
-                          isActive ? "text-primary" : "text-current",
+                      <Link
+                        href={item.href}
+                        aria-current={isActive ? "page" : undefined}
+                        className={getSidebarNavItemClassName({
+                          isActive,
+                          collapsed,
+                        })}
+                        {...getSidebarNavItemState(isActive)}
+                      >
+                        <item.icon
+                          className={cn(
+                            "h-4 w-4 flex-shrink-0",
+                            isActive ? "text-primary" : "text-current",
+                          )}
+                        />
+                        {!collapsed ? (
+                          <span className="min-w-0 truncate">{label}</span>
+                        ) : (
+                          <span className="sr-only">{label}</span>
                         )}
-                      />
-                      <span className="min-w-0 truncate">{label}</span>
-                    </Link>
+                      </Link>
+                    </ConditionalTooltip>
                   );
                 })}
               </div>
@@ -411,101 +618,122 @@ export function Sidebar() {
         </nav>
 
         <div
-          className="space-y-2 p-3"
+          className={cn("space-y-2", collapsed ? "p-2" : "p-3")}
           style={{ borderTop: "1px solid var(--rule)" }}
         >
-          <CreditBalanceBadge collapsed={false} />
-          <SidebarExtensionCard collapsed={false} />
+          <CreditBalanceBadge collapsed={collapsed} />
+          <SidebarExtensionCard collapsed={collapsed} />
 
           {bottomNavigation.map((item) => {
             const isActive = activeHref === item.href;
             const label = t(item.messageKey);
             if (item.href === "/profile") {
               return (
-                <Link
+                <ConditionalTooltip
                   key={item.name}
-                  href={item.href}
-                  aria-current={isActive ? "page" : undefined}
-                  className={getSidebarNavItemClassName({
-                    isActive,
-                    collapsed: false,
-                  })}
-                  {...getSidebarNavItemState(isActive)}
+                  when={collapsed}
+                  label={label}
                 >
-                  <span
-                    className="relative grid h-7 w-7 flex-shrink-0 place-items-center overflow-hidden text-[12px] font-semibold"
-                    style={{
-                      borderRadius: "var(--r-sm)",
-                      backgroundColor: "var(--brand-soft)",
-                      border: "1px solid var(--rule)",
-                      color: "var(--brand-dark)",
-                    }}
+                  <Link
+                    href={item.href}
+                    aria-current={isActive ? "page" : undefined}
+                    className={getSidebarNavItemClassName({
+                      isActive,
+                      collapsed,
+                    })}
+                    {...getSidebarNavItemState(isActive)}
                   >
-                    {/* Initials are the base layer; avatar img covers
-                        them and self-hides on error (handles stale
-                        seed URLs like example.com). */}
-                    <span aria-hidden="true">{profileSnapshot.initials}</span>
-                    {profileSnapshot.avatarUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={profileSnapshot.avatarUrl}
-                        alt=""
-                        className="absolute inset-0 h-full w-full object-cover"
-                        onError={(e) => {
-                          e.currentTarget.style.display = "none";
-                        }}
-                      />
-                    ) : null}
-                  </span>
-                  <span className="min-w-0 flex-1 truncate">
-                    {profileSnapshot.firstName}
-                  </span>
-                  <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
-                </Link>
+                    <span
+                      className="relative grid h-7 w-7 flex-shrink-0 place-items-center overflow-hidden text-[12px] font-semibold"
+                      style={{
+                        borderRadius: "var(--r-sm)",
+                        backgroundColor: "var(--brand-soft)",
+                        border: "1px solid var(--rule)",
+                        color: "var(--brand-dark)",
+                      }}
+                    >
+                      {/* Initials are the base layer; avatar img covers
+                          them and self-hides on error (handles stale
+                          seed URLs like example.com). */}
+                      <span aria-hidden="true">{profileSnapshot.initials}</span>
+                      {profileSnapshot.avatarUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={profileSnapshot.avatarUrl}
+                          alt=""
+                          className="absolute inset-0 h-full w-full object-cover"
+                          onError={(e) => {
+                            e.currentTarget.style.display = "none";
+                          }}
+                        />
+                      ) : null}
+                    </span>
+                    {!collapsed ? (
+                      <>
+                        <span className="min-w-0 flex-1 truncate">
+                          {profileSnapshot.firstName}
+                        </span>
+                        <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
+                      </>
+                    ) : (
+                      <span className="sr-only">{label}</span>
+                    )}
+                  </Link>
+                </ConditionalTooltip>
               );
             }
             return (
               <Fragment key={item.name}>
-                <Link
-                  href={item.href}
-                  aria-current={isActive ? "page" : undefined}
-                  className={getSidebarNavItemClassName({
-                    isActive,
-                    collapsed: false,
-                  })}
-                  {...getSidebarNavItemState(isActive)}
-                >
-                  <div className="relative shrink-0">
-                    <item.icon
-                      className={cn(
-                        "h-4 w-4",
-                        isActive ? "text-primary" : "text-current",
-                      )}
-                    />
-                    {item.href === "/settings" && (
-                      <span
+                <ConditionalTooltip when={collapsed} label={label}>
+                  <Link
+                    href={item.href}
+                    aria-current={isActive ? "page" : undefined}
+                    className={getSidebarNavItemClassName({
+                      isActive,
+                      collapsed,
+                    })}
+                    {...getSidebarNavItemState(isActive)}
+                  >
+                    <div className="relative shrink-0">
+                      <item.icon
                         className={cn(
-                          "absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full border-2",
-                          llmStatus.configured
-                            ? "bg-success"
-                            : "bg-muted-foreground/40",
+                          "h-4 w-4",
+                          isActive ? "text-primary" : "text-current",
                         )}
-                        style={{ borderColor: "var(--bg)" }}
-                        title={
-                          llmStatus.configured
-                            ? t("llmConfigured", {
-                                provider: llmStatus.provider,
-                              })
-                            : t("llmNotConfigured")
-                        }
                       />
+                      {item.href === "/settings" && (
+                        <span
+                          className={cn(
+                            "absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full border-2",
+                            llmStatus.configured
+                              ? "bg-success"
+                              : "bg-muted-foreground/40",
+                          )}
+                          style={{ borderColor: "var(--bg)" }}
+                          title={
+                            llmStatus.configured
+                              ? t("llmConfigured", {
+                                  provider: llmStatus.provider,
+                                })
+                              : t("llmNotConfigured")
+                          }
+                        />
+                      )}
+                    </div>
+                    {!collapsed ? (
+                      <span className="min-w-0 truncate">{label}</span>
+                    ) : (
+                      <span className="sr-only">{label}</span>
                     )}
-                  </div>
-                  <span className="min-w-0 truncate">{label}</span>
-                </Link>
+                  </Link>
+                </ConditionalTooltip>
               </Fragment>
             );
           })}
+
+          {/* Collapse / expand toggle migrated to the sidebar header —
+              see the header block at the top of this <aside>. The
+              bottom area now carries only the profile + settings nav. */}
         </div>
       </aside>
     </>

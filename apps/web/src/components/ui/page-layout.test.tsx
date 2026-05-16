@@ -1,5 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { Settings } from "lucide-react";
+import type { ReactElement } from "react";
 import { describe, expect, it } from "vitest";
 import {
   AppPage,
@@ -15,6 +16,13 @@ import {
   StandardEmptyState,
   getPageWidthClassName,
 } from "./page-layout";
+import { TooltipProvider } from "./tooltip";
+
+// PageHeader (compact + description) renders an `(i)` Radix tooltip,
+// which requires an upstream `<TooltipProvider>` in the tree.
+function renderWithTooltipProvider(ui: ReactElement) {
+  return render(<TooltipProvider>{ui}</TooltipProvider>);
+}
 
 const settingsTitle = "Settings";
 const emptyTitle = "Nothing here";
@@ -47,6 +55,50 @@ describe("page layout helpers", () => {
     );
     expect(screen.getByText("Configure the app.")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Save" })).toBeInTheDocument();
+  });
+
+  it("renders the compact page header variant on a single row", () => {
+    const { container } = renderWithTooltipProvider(
+      <PageHeader
+        icon={Settings}
+        title={settingsTitle}
+        description="What this page does."
+        variant="compact"
+        meta={<span data-testid="meta">· 24</span>}
+        actions={<button>Save</button>}
+      />,
+    );
+
+    const header = screen.getByRole("banner");
+    expect(header).toHaveAttribute("data-variant", "compact");
+    expect(screen.getByRole("heading", { name: "Settings" })).toHaveClass(
+      "text-xl",
+    );
+    expect(screen.getByRole("heading", { name: "Settings" })).not.toHaveClass(
+      "text-3xl",
+    );
+    expect(screen.getByTestId("meta")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Save" })).toBeInTheDocument();
+    // The compact variant intentionally drops the page-icon tile — the
+    // sidebar already shows the same icon next to the page name.
+    expect(container.querySelector(".bg-primary\\/10")).toBeNull();
+    // Description surfaces via a Radix tooltip rooted at an `(i)`
+    // button. Radix portals the content only after the trigger opens,
+    // so we assert the wiring (trigger present) rather than the
+    // content (covered by Radix's own tests).
+    expect(
+      screen.getByRole("button", { name: "About this page" }),
+    ).toBeInTheDocument();
+  });
+
+  it("omits the info tooltip when compact PageHeader has no description", () => {
+    renderWithTooltipProvider(
+      <PageHeader icon={Settings} title={settingsTitle} variant="compact" />,
+    );
+
+    expect(
+      screen.queryByRole("button", { name: "About this page" }),
+    ).not.toBeInTheDocument();
   });
 
   it("keeps page header descriptions at a readable prose width", () => {

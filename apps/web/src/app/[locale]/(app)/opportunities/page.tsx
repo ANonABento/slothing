@@ -525,6 +525,7 @@ export default function OpportunitiesPage({
         icon={Sparkles}
         title={t("title")}
         description={t("description")}
+        variant="compact"
         actions={
           <div className="flex flex-wrap items-center gap-2">
             <SegmentedToggle
@@ -536,11 +537,19 @@ export default function OpportunitiesPage({
               value={viewMode}
               onChange={handleViewModeChange}
             />
-            <Button variant="outline" onClick={() => setIsImportOpen(true)}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsImportOpen(true)}
+            >
               <FileDown className="mr-2 h-4 w-4" />
               {commonT("import")}
             </Button>
-            <Button variant="gradient" onClick={() => setIsFormOpen(true)}>
+            <Button
+              variant="gradient"
+              size="sm"
+              onClick={() => setIsFormOpen(true)}
+            >
               <Plus className="mr-2 h-4 w-4" />
               {t("addOpportunity")}
             </Button>

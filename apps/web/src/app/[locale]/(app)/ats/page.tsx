@@ -22,6 +22,7 @@ export default function AtsPage({ params }: AtsPageProps) {
         icon={ShieldCheck}
         title="ATS Scanner"
         description="Score a resume against an ATS rubric and (optionally) a job description. Save scans to your history so you can compare versions over time."
+        variant="compact"
       />
       <PageContent>
         <AtsScannerPanel locale={params.locale} />

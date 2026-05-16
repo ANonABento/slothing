@@ -188,6 +188,7 @@ export default function InterviewPage() {
         icon={Sparkles}
         title={a11yT("interviewPreparation")}
         description="Practice with AI-generated questions tailored to your target jobs, with the Sloth Coach rail on hand for tips."
+        variant="compact"
       />
 
       <PageContent>

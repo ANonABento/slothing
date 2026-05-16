@@ -67,7 +67,8 @@ export default function CompanyResearchPage() {
       <PageHeader
         icon={Briefcase}
         title={job.company}
-        description={job.title}
+        variant="compact"
+        meta={<span>· {job.title}</span>}
       />
 
       <PageContent>
