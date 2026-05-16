@@ -2,9 +2,10 @@
 
 import Image from "next/image";
 import { useTranslations } from "next-intl";
-import { Bell, ChevronDown, Moon, Plus, Search, Sun } from "lucide-react";
+import { Bell, ChevronDown, Moon, Search, Sun } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { useCommandPalette } from "@/components/command-palette/use-command-palette";
+import { LocaleSwitcherCompact } from "@/components/i18n/locale-switcher";
 import { useTheme } from "@/components/theme-provider";
 import { useProfileSnapshot } from "@/hooks/use-profile-snapshot";
 import { cn } from "@/lib/utils";
@@ -93,21 +94,6 @@ export function AppBar({ className }: AppBarProps) {
       <div className="flex flex-shrink-0 items-center gap-1.5">
         <button
           type="button"
-          className="hidden h-9 items-center gap-1.5 px-3.5 text-[13.5px] font-medium transition-colors md:inline-flex"
-          style={{
-            backgroundColor: "var(--ink)",
-            color: "var(--bg)",
-            borderRadius: "var(--r-md)",
-          }}
-          onClick={() => setPaletteOpen(true)}
-        >
-          <Plus className="h-3.5 w-3.5" aria-hidden="true" />
-          <span>New</span>
-          <ChevronDown className="h-2.5 w-2.5" aria-hidden="true" />
-        </button>
-
-        <button
-          type="button"
           aria-label={isDark ? "Switch to light theme" : "Switch to dark theme"}
           onClick={toggleDark}
           className="grid h-9 w-9 place-items-center transition-colors"
@@ -133,6 +119,8 @@ export function AppBar({ className }: AppBarProps) {
             <Sun className="h-4 w-4" aria-hidden="true" />
           )}
         </button>
+
+        <LocaleSwitcherCompact className="[&_button]:h-9" />
 
         <button
           type="button"
