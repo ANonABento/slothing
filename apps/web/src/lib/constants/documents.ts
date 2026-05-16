@@ -63,7 +63,6 @@ export const parseDocumentSchema = z
   .object({
     filename: z.string().optional(),
     documentId: z.string().optional(),
-    mode: z.enum(["basic", "ai"]).optional(),
   })
   .refine((data) => data.filename || data.documentId, {
     message: "Either filename or documentId is required",

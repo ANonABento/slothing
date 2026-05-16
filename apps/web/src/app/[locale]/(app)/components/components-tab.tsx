@@ -43,7 +43,6 @@ import {
   Rows3,
   AlertTriangle,
   ChevronRight,
-  Plus,
   Upload,
   HardDrive,
 } from "lucide-react";
@@ -57,11 +56,6 @@ import {
   PageHeader,
   StandardEmptyState,
 } from "@/components/ui/page-layout";
-import {
-  OnboardingEmptyState,
-  ZeroResultEmptyState,
-} from "@/components/ui/empty-states";
-import { pluralize } from "@/lib/text/pluralize";
 import {
   SkeletonCard,
   SkeletonButton,
@@ -121,7 +115,6 @@ interface BankUploadResponse {
 interface UploadReviewState {
   documentId: string;
   filename: string;
-  docType: string;
   entries: BankEntry[];
 }
 
@@ -329,7 +322,6 @@ export function BankComponentsTab({
   const [uploadReview, setUploadReview] = useState<UploadReviewState | null>(
     null,
   );
-  const [isReviewParsingWithAi, setIsReviewParsingWithAi] = useState(false);
   const [addEntryOpen, setAddEntryOpen] = useState(false);
   const [moveBulletsOpen, setMoveBulletsOpen] = useState(false);
   const [moveTargetParentId, setMoveTargetParentId] = useState("");
@@ -1054,18 +1046,12 @@ export function BankComponentsTab({
       if (reviewRes.ok) {
         const reviewData = await reviewRes.json();
         const reviewEntries = (reviewData.entries || []) as BankEntry[];
-        if (reviewEntries.length > 0) {
-          setActiveDocumentId(documentId);
-          setUploadReview({
-            documentId,
-            docType: uploadData.document?.type || "other",
-            filename: uploadData.document?.filename || file.name,
-            entries: reviewEntries,
-          });
-        } else {
-          setUploadReview(null);
-          setActiveDocumentId(null);
-        }
+        setActiveDocumentId(documentId);
+        setUploadReview({
+          documentId,
+          filename: uploadData.document?.filename || file.name,
+          entries: reviewEntries,
+        });
       }
     }
 
@@ -1081,78 +1067,6 @@ export function BankComponentsTab({
         block: "start",
       });
     });
-  }
-
-  async function refreshUploadReviewEntries(documentId: string) {
-    const reviewRes = await fetch(
-      `/api/bank?sourceDocumentId=${encodeURIComponent(documentId)}`,
-    );
-    if (!reviewRes.ok) return;
-
-    const reviewData = await reviewRes.json();
-    const reviewEntries = (reviewData.entries || []) as BankEntry[];
-    setUploadReview((prev) =>
-      prev && prev.documentId === documentId
-        ? {
-            ...prev,
-            entries: reviewEntries,
-          }
-        : prev,
-    );
-
-    await handleDataRefresh({ silent: true });
-  }
-
-  async function handleCheckWithAi() {
-    if (!uploadReview) return;
-
-    setIsReviewParsingWithAi(true);
-    try {
-      const parseRes = await fetch("/api/parse", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          documentId: uploadReview.documentId,
-          mode: "ai",
-        }),
-      });
-      const parseData = await parseRes.json().catch(() => null);
-      if (!parseRes.ok) {
-        throw new Error(parseData?.error || "Could not run AI parse");
-      }
-
-      const creditsUsed = parseData?.creditsUsed || 0;
-      const creditSource = parseData?.creditSource;
-      const method = parseData?.parsingMethod;
-      const parsingMode = parseData?.parsingMode;
-
-      const creditMessage =
-        parsingMode === "ai" && creditsUsed > 0
-          ? ` ${creditsUsed} credit${creditsUsed === 1 ? "" : "s"} used.`
-          : "";
-      const sourceMessage =
-        parsingMode === "ai" && creditSource === "none"
-          ? " No provider credits were consumed."
-          : "";
-
-      addToast({
-        type: method === "ai" ? "success" : "info",
-        title:
-          method === "ai"
-            ? "AI review completed"
-            : "AI review fell back to deterministic parsing",
-        description: `${parseData?.parsingMethod ? `Mode: ${method}` : "Checked parsing with AI."}${creditMessage}${sourceMessage}`,
-      });
-
-      await refreshUploadReviewEntries(uploadReview.documentId);
-    } catch (err) {
-      showErrorToast(err, {
-        title: "Could not improve with AI",
-        fallbackDescription: "Please retry your request.",
-      });
-    } finally {
-      setIsReviewParsingWithAi(false);
-    }
   }
 
   async function handleReviewUpdate(
@@ -1449,14 +1363,6 @@ export function BankComponentsTab({
           icon={Database}
           title="Components"
           description="Reusable bullets, stories, and project chunks pulled from your resume — the source material Studio composes into tailored documents."
-          variant="compact"
-          meta={
-            entries.length > 0 ? (
-              <span data-testid="bank-entry-count">
-                · {pluralize(entries.length, "entry", "entries")}
-              </span>
-            ) : null
-          }
           actions={
             <div
               className="flex flex-wrap items-center gap-2"
@@ -1466,18 +1372,12 @@ export function BankComponentsTab({
                 onCreate={handleCreate}
                 open={addEntryOpen}
                 onOpenChange={setAddEntryOpen}
-                trigger={
-                  <Button variant="outline" size="sm">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Entry
-                  </Button>
-                }
               />
               <DriveFilePicker
                 onSelect={handleDriveSelect}
                 accept={["application/pdf", "text/plain"]}
                 trigger={
-                  <Button variant="outline" size="sm" disabled={driveImporting}>
+                  <Button variant="outline" disabled={driveImporting}>
                     {driveImporting ? (
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                     ) : (
@@ -1488,7 +1388,6 @@ export function BankComponentsTab({
                 }
               />
               <Button
-                size="sm"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={uploading}
                 title={a11yT("uploadFile")}
@@ -1540,10 +1439,7 @@ export function BankComponentsTab({
             <Dialog
               open={!!uploadReview}
               onOpenChange={(open) => {
-                if (!open) {
-                  setUploadReview(null);
-                  setIsReviewParsingWithAi(false);
-                }
+                if (!open) setUploadReview(null);
               }}
             >
               <DialogContent className="max-h-[92vh] max-w-6xl overflow-hidden p-0">
@@ -1577,17 +1473,6 @@ export function BankComponentsTab({
                   ) : null}
                 </div>
                 <DialogFooter className="border-t px-6 py-4">
-                  {uploadReview?.docType === "resume" ? (
-                    <Button
-                      variant="secondary"
-                      onClick={handleCheckWithAi}
-                      disabled={isReviewParsingWithAi}
-                    >
-                      {isReviewParsingWithAi
-                        ? "Checking with AI..."
-                        : "Check with AI"}
-                    </Button>
-                  ) : null}
                   <Button
                     variant="outline"
                     onClick={() => setUploadReview(null)}
@@ -1781,86 +1666,19 @@ export function BankComponentsTab({
                     variant="card"
                   />
                 ) : sortedEntries.length === 0 ? (
-                  entries.length === 0 ? (
-                    <OnboardingEmptyState
-                      illustrationName="components-zero"
-                      icon={Database}
-                      title="Components are the building blocks of every tailored document."
-                      description="Upload a resume or paste career notes; Slothing extracts reusable bullets, stories, and project chunks. Studio recomposes them into tailored docs for each opportunity."
-                      steps={[
-                        {
-                          label: "Upload résumé",
-                          description: "PDF, DOCX, or paste plain text.",
-                          icon: Upload,
-                        },
-                        {
-                          label: "We extract bullets",
-                          description: "Reusable chunks land here, tagged.",
-                          icon: Database,
-                        },
-                        {
-                          label: "Studio composes",
-                          description: "Pick a role, get a tailored doc.",
-                          icon: FileText,
-                        },
-                      ]}
-                      primaryAction={
-                        <Button
-                          onClick={() => fileInputRef.current?.click()}
-                          disabled={uploading}
-                        >
-                          {uploading ? (
-                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                          ) : (
-                            <Upload className="h-4 w-4 mr-2" />
-                          )}
-                          {uploading ? "Uploading..." : "Upload résumé"}
-                        </Button>
-                      }
-                      secondaryAction={
-                        <Button
-                          variant="outline"
-                          onClick={() => setAddEntryOpen(true)}
-                        >
-                          Paste manually
-                        </Button>
-                      }
-                    />
-                  ) : (
-                    <ZeroResultEmptyState
-                      title="No matching entries"
-                      description="Adjust your search or filters to see more components."
-                      filters={[
-                        ...(query
-                          ? [
-                              {
-                                label: `Search: ${query}`,
-                                onRemove: () => setQuery(""),
-                              },
-                            ]
-                          : []),
-                        ...(activeCategory !== "all"
-                          ? [
-                              {
-                                label: `Category: ${CATEGORY_LABELS[activeCategory] ?? activeCategory}`,
-                                onRemove: () => setActiveCategory("all"),
-                              },
-                            ]
-                          : []),
-                      ]}
-                      action={
-                        <Button
-                          variant="outline"
-                          onClick={() => {
-                            setQuery("");
-                            setActiveCategory("all");
-                          }}
-                        >
-                          Clear filters
-                        </Button>
-                      }
-                    />
-                  )
+                  <StandardEmptyState
+                    icon={Database}
+                    title={
+                      query || activeCategory !== "all"
+                        ? "No matching entries"
+                        : "Start with your resume"
+                    }
+                    description={
+                      query || activeCategory !== "all"
+                        ? "Try adjusting your search or filters."
+                        : "Upload a resume or career document and Slothing will turn it into reusable building blocks. Use the actions in the page header above to get started."
+                    }
+                  />
                 ) : (
                   <div
                     ref={entriesListRef}

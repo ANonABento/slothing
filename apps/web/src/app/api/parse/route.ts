@@ -17,7 +17,6 @@ import { parseDocumentSchema } from "@/lib/constants";
 import { requireAuth, isAuthError } from "@/lib/auth";
 import { populateBankFromProfile } from "@/lib/resume/info-bank";
 import { mergeParsedProfileForAutoPromote } from "@/lib/profile/auto-promote";
-import { CREDIT_COSTS } from "@/lib/db/credits";
 import type { LLMConfig, Profile } from "@/types";
 import { log } from "@/lib/log";
 
@@ -27,52 +26,26 @@ export interface ParseResumeResult {
   parsedProfile: Partial<Profile>;
   parsingMethod: "ai" | "basic";
   llmFallback: boolean;
-  parsingMode: "basic" | "ai";
-  creditsUsed: number;
-  creditSource: "self-host" | "byok" | "credits" | "none";
 }
 
 async function parseResumeText(
   text: string,
-  mode: "basic" | "ai",
   llmConfig: LLMConfig | null,
-  creditSource: "self-host" | "byok" | "credits" | "none",
 ): Promise<ParseResumeResult> {
-  if (mode === "ai" && llmConfig) {
+  if (llmConfig) {
     try {
       const parsedProfile = await parseResumeWithLLM(text, llmConfig);
-      return {
-        parsedProfile,
-        parsingMethod: "ai",
-        llmFallback: false,
-        parsingMode: "ai",
-        creditsUsed: 0,
-        creditSource,
-      };
+      return { parsedProfile, parsingMethod: "ai", llmFallback: false };
     } catch (llmError) {
       console.error("LLM parsing failed, falling back to basic:", llmError);
       const parsedProfile = parseResumeBasic(text);
-      return {
-        parsedProfile,
-        parsingMethod: "basic",
-        llmFallback: true,
-        parsingMode: "ai",
-        creditsUsed: 0,
-        creditSource: "none",
-      };
+      return { parsedProfile, parsingMethod: "basic", llmFallback: true };
     }
   }
 
   log.debug("parse", "no LLM configured; using basic regex parsing");
   const parsedProfile = parseResumeBasic(text);
-  return {
-    parsedProfile,
-    parsingMethod: "basic",
-    llmFallback: false,
-    parsingMode: "basic",
-    creditsUsed: 0,
-    creditSource: "none",
-  };
+  return { parsedProfile, parsingMethod: "basic", llmFallback: false };
 }
 
 export async function POST(request: NextRequest) {
@@ -96,14 +69,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { filename, documentId, mode = "basic" } = parseResult.data;
-
-    if (!documentId && !filename) {
-      return NextResponse.json(
-        { error: "Either documentId or filename is required" },
-        { status: 400 },
-      );
-    }
+    const { filename, documentId } = parseResult.data;
 
     log.debug("parse", "starting parse", {
       filename,
@@ -111,8 +77,8 @@ export async function POST(request: NextRequest) {
 
     // Find the document
     const documents = getDocuments(authResult.userId);
-    const doc = documents.find((d) =>
-      documentId ? d.id === documentId : d.filename === filename,
+    const doc = documents.find(
+      (d) => d.id === documentId || d.filename === filename,
     );
 
     if (!doc) {
@@ -129,64 +95,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const gate =
-      mode === "ai"
-        ? gateOptionalAiFeature(authResult.userId, "tailor", `parse:${doc.id}`)
-        : null;
+    // Gate AI parsing by plan / BYOK state before invoking the LLM parser.
+    const gate = gateOptionalAiFeature(
+      authResult.userId,
+      "tailor",
+      `parse:${doc.id}`,
+    );
+    if (isAiGateResponse(gate)) return gate;
+    aiGate = gate;
+    log.debug("parse", "LLM config loaded", {
+      provider: gate.llmConfig?.provider ?? "none",
+    });
 
-    let llmConfigured = false;
-    let parsingResult: ParseResumeResult;
-
-    if (mode === "ai") {
-      if (!gate || (gate && isAiGateResponse(gate))) {
-        if (gate && isAiGateResponse(gate)) {
-          return gate;
-        }
-        return NextResponse.json(
-          { error: "AI gate unavailable" },
-          { status: 500 },
-        );
-      }
-
-      aiGate = gate;
-      llmConfigured = !!gate.llmConfig;
-      log.debug("parse", "LLM config loaded", {
-        provider: gate.llmConfig?.provider ?? "none",
-      });
-
-      const result = await parseResumeText(
-        doc.extractedText,
-        "ai",
-        gate.llmConfig,
-        gate.source,
-      );
-      parsingResult = result.llmFallback
-        ? { ...result, creditsUsed: 0, creditSource: "none" }
-        : {
-            ...result,
-            creditsUsed: gate.source === "credits" ? CREDIT_COSTS.tailor : 0,
-            creditSource: gate.source,
-          };
-      if (result.llmFallback) {
-        aiGate.refund();
-      }
-    } else {
-      parsingResult = await parseResumeText(
-        doc.extractedText,
-        "basic",
-        null,
-        "none",
-      );
-    }
-
-    const {
-      parsedProfile,
-      parsingMethod,
-      llmFallback,
-      parsingMode,
-      creditsUsed,
-      creditSource,
-    } = parsingResult;
+    const { parsedProfile, parsingMethod, llmFallback } = await parseResumeText(
+      doc.extractedText,
+      gate.llmConfig,
+    );
+    if (llmFallback) aiGate.refund();
 
     const sections = Object.keys(parsedProfile).filter(
       (k) => parsedProfile[k as keyof typeof parsedProfile] != null,
@@ -221,10 +146,7 @@ export async function POST(request: NextRequest) {
       profile,
       parsingMethod,
       llmFallback,
-      llmConfigured,
-      parsingMode,
-      creditsUsed,
-      creditSource,
+      llmConfigured: !!gate.llmConfig,
     });
   } catch (error) {
     aiGate?.refund();
