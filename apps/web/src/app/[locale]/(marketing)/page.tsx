@@ -9,6 +9,7 @@ import {
 } from "@/components/landing/FeatureSections";
 import {
   Closer,
+  HowItWorks,
   IntegrationsStrip,
   JobQueuePreview,
 } from "@/components/landing/ClosingSections";
@@ -55,6 +56,7 @@ export default function LandingPage() {
       <ATSMatchSection />
       <FormAutofillSection />
       <InterviewPrepSection />
+      <HowItWorks />
       <IntegrationsStrip />
       <JobQueuePreview />
       <Closer />

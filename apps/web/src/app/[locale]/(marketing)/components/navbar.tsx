@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
-import { Sparkles, Menu, X, Moon, Sun } from "lucide-react";
+import Image from "next/image";
+import { Menu, X, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LocaleSwitcherCompact } from "@/components/i18n/locale-switcher";
 import { Link } from "@/i18n/navigation";
@@ -59,17 +60,23 @@ export function Navbar() {
     >
       <div className="max-w-6xl mx-auto px-6">
         <div className="flex items-center justify-between">
-          {/* Logo */}
-          <Link href="/" className="flex min-h-11 items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl gradient-bg text-primary-foreground font-bold text-lg shadow-md">
-              <Sparkles className="h-5 w-5" />
-            </div>
-            <div className="flex flex-col">
-              <span className="text-lg font-bold gradient-text">Slothing</span>
-              <span className="text-2xs text-muted-foreground hidden sm:block">
-                Resume Intelligence 怠惰
-              </span>
-            </div>
+          {/* Logo — circle-spiral mark + display-font wordmark. The
+              short "Resume Intelligence 怠惰" subtitle was dropped per
+              Kev's call; the mark + wordmark stand on their own. */}
+          <Link href="/" className="flex min-h-11 items-center gap-2.5">
+            <span className="grid h-10 w-10 flex-shrink-0 place-items-center">
+              <Image
+                src="/brand/slothing-mark.png"
+                alt=""
+                width={40}
+                height={40}
+                priority
+                className="h-10 w-10"
+              />
+            </span>
+            <span className="font-display text-lg font-bold tracking-tight text-foreground">
+              Slothing
+            </span>
           </Link>
 
           {/* Desktop Navigation */}

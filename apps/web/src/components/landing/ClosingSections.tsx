@@ -74,6 +74,55 @@ export function IntegrationsStrip() {
   );
 }
 
+/* ───────────────── How it works (1-2-3 numbered) ───────────────── */
+export function HowItWorks() {
+  const steps = [
+    {
+      number: "01",
+      title: "Drop in your resume",
+      body: "Slothing parses, atomizes, and stores every bullet, story, and project in your Knowledge Bank. Use the browser extension to grab jobs from any board in one click.",
+    },
+    {
+      number: "02",
+      title: "Score every JD",
+      body: "Paste a job description and Slothing scores it against your bank in seconds. Match thresholds tell you whether to apply, tailor, or skip.",
+    },
+    {
+      number: "03",
+      title: "Tailor + autofill",
+      body: "Studio assembles a tailored resume from your bank. The extension fills application forms with your saved answers. You ship the application, not your weekends.",
+    },
+  ] as const;
+
+  return (
+    <DeepSection id="how-it-works">
+      <div className="flex flex-col items-center gap-4 text-center">
+        <MonoCap>How it works</MonoCap>
+        <h2 className="max-w-[20ch] font-display text-section-h2 text-ink">
+          Three steps, then it&rsquo;s a <HighlighterEm>system</HighlighterEm>.
+        </h2>
+      </div>
+
+      <div className="mt-14 grid gap-5 md:grid-cols-3">
+        {steps.map((step) => (
+          <article
+            key={step.number}
+            className="flex flex-col rounded-xl border border-rule bg-paper p-7"
+          >
+            <span className="font-mono text-[11px] uppercase tracking-[0.14em] text-ink-3">
+              Step {step.number}
+            </span>
+            <h3 className="mt-3 font-display text-[22px] font-bold leading-tight text-ink">
+              {step.title}
+            </h3>
+            <p className="mt-3 text-[14px] leading-6 text-ink-2">{step.body}</p>
+          </article>
+        ))}
+      </div>
+    </DeepSection>
+  );
+}
+
 /* ───────────────── Job-queue product preview ───────────────── */
 export function JobQueuePreview() {
   const rows: [
