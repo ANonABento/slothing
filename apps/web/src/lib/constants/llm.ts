@@ -58,6 +58,7 @@ export const LLM_ENDPOINTS = {
   ollama: "http://localhost:11434",
 } as const satisfies Record<LLMProvider, string>;
 
+// User-pasted model IDs always win in /settings/llm; this list is just the dropdown autocomplete.
 export const DEFAULT_MODELS = {
   ollama: ["llama3.2", "llama3.1", "mistral", "codellama", "phi3"],
   openai: [
@@ -81,9 +82,9 @@ export const DEFAULT_MODELS = {
     "gemini-2.5-pro",
   ],
   anthropic: [
-    "claude-3-haiku-20240307",
-    "claude-3-sonnet-20240229",
-    "claude-3-opus-20240229",
+    "claude-haiku-4-5-20251001",
+    "claude-sonnet-4-6",
+    "claude-opus-4-7",
   ],
   openrouter: [
     "meta-llama/llama-3.2-3b-instruct:free",
@@ -93,7 +94,7 @@ export const DEFAULT_MODELS = {
 
 export const DEFAULT_MODEL_BY_PROVIDER = {
   openai: "gpt-4o-mini",
-  anthropic: "claude-3-haiku-20240307",
+  anthropic: "claude-haiku-4-5-20251001",
   ollama: "llama3.2",
   openrouter: "meta-llama/llama-3.2-3b-instruct:free",
 } as const satisfies Record<LLMProvider, string>;
