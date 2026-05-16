@@ -28,7 +28,10 @@ export function VersionHistorySection({
   const a11yT = useA11yTranslations();
 
   return (
-    <div className="border-b-[length:var(--border-width)] px-4 py-3">
+    <div
+      id="studio-version-history"
+      className="border-b-[length:var(--border-width)] px-4 py-3"
+    >
       <h2 className="mb-2 font-display text-sm font-semibold tracking-tight">
         Version History
       </h2>

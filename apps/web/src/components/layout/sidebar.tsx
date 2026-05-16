@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { Link, usePathname } from "@/i18n/navigation";
 import {
   Home,
-  Database,
+  Folder,
   Briefcase,
   MessageSquare,
   Settings,
@@ -17,7 +17,7 @@ import {
   Mail,
   Calendar,
   DollarSign,
-  FileText,
+  PenTool,
   Rows3,
   ClipboardList,
   ChevronRight,
@@ -78,14 +78,14 @@ export const navigationGroups: NavGroup[] = [
     ],
   },
   {
-    label: "Library",
-    messageKey: "groups.library",
+    label: "Documents",
+    messageKey: "groups.documents",
     items: [
       {
         name: "Components",
         messageKey: "items.components",
         href: "/components",
-        icon: Database,
+        icon: Folder,
       },
       {
         name: "Answers",
@@ -97,7 +97,7 @@ export const navigationGroups: NavGroup[] = [
         name: "Studio",
         messageKey: "items.studio",
         href: "/studio",
-        icon: FileText,
+        icon: PenTool,
       },
     ],
   },

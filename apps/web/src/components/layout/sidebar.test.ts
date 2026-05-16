@@ -36,7 +36,7 @@ describe("navigationGroups", () => {
     const labels = navigationGroups.map((g) => g.label);
     expect(labels).toEqual([
       "Home",
-      "Library",
+      "Documents",
       "Pipeline",
       "Prep",
       "Reporting",
@@ -49,17 +49,17 @@ describe("navigationGroups", () => {
     expect(names).toContain("Dashboard");
   });
 
-  it("should have library tools in Library group", () => {
-    const library = getGroup("Library");
-    const names = getItemNames(library.items);
+  it("should have library tools in Documents group", () => {
+    const documents = getGroup("Documents");
+    const names = getItemNames(documents.items);
     expect(names).toContain("Components");
     expect(names).toContain("Answers");
     expect(names).toContain("Studio");
   });
 
   it("should show one Studio link instead of separate document routes", () => {
-    const library = getGroup("Library");
-    const names = getItemNames(library.items);
+    const documents = getGroup("Documents");
+    const names = getItemNames(documents.items);
     expect(names).toContain("Studio");
     expect(names).not.toContain("Resume Builder");
     expect(names).not.toContain("Tailor Resume");

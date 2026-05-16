@@ -57,6 +57,12 @@ export interface ResumePreviewProps {
   onAddFromBank?: () => void;
   baseResume?: TailoredResume;
   tailoredResume?: TailoredResume;
+  /**
+   * Optional editor passthrough — when set, the editor instance produced
+   * by the inner ResumeEditor is also forwarded here. The page hoists this
+   * up to drive sub-bar undo/redo (`StudioSubBar`).
+   */
+  onEditorReady?: (editor: Editor | null) => void;
 }
 
 interface PreviewEmptyStateContent {
@@ -108,10 +114,18 @@ export function ResumePreview({
   onAddFromBank,
   baseResume,
   tailoredResume,
+  onEditorReady,
 }: ResumePreviewProps) {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const [fitScale, setFitScale] = useState(1);
-  const [editor, setEditor] = useState<Editor | null>(null);
+  const [editor, setEditorState] = useState<Editor | null>(null);
+  const setEditor = useCallback(
+    (next: Editor | null) => {
+      setEditorState(next);
+      onEditorReady?.(next);
+    },
+    [onEditorReady],
+  );
   const [showDiff, setShowDiff] = useState(false);
 
   const template = getTemplateForDocumentMode(documentMode, templateId);

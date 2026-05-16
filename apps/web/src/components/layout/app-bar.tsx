@@ -67,18 +67,21 @@ export function AppBar({ className }: AppBarProps) {
       }}
     >
       {/* Brand / logo migrated to the sidebar header so the AppBar can
-          fully hide without losing the visual anchor. Layout zones:
-          [flex-1 spacer][search, max-w-520, fixed][flex-1 right cluster].
-          Both spacers grow equally so the search ends up visually
-          centered, and the right cluster justifies to the end. */}
-      <div className="flex-1" aria-hidden />
+          fully hide without losing the visual anchor.
 
+          The search is `position: fixed` and pinned to the viewport
+          center (left-1/2 -translate-x-1/2) rather than centered inside
+          the AppBar's flex container, so it sits at the optical center
+          of the screen regardless of sidebar width / rail-mode state.
+          Right cluster stays in the AppBar's normal flex flow and floats
+          right via `ml-auto`. */}
       <button
         type="button"
         onClick={() => setPaletteOpen(true)}
         aria-label="Open search"
-        className="group flex h-9 w-full max-w-[520px] flex-shrink items-center gap-2.5 px-3 text-left text-sm transition-colors"
+        className="group fixed left-1/2 top-2.5 z-40 flex h-9 -translate-x-1/2 items-center gap-2.5 px-3 text-left text-sm transition-colors"
         style={{
+          width: "min(520px, calc(100vw - 480px))",
           backgroundColor: "var(--paper)",
           border: "1px solid var(--rule)",
           borderRadius: "var(--r-md)",
@@ -108,7 +111,7 @@ export function AppBar({ className }: AppBarProps) {
         </span>
       </button>
 
-      <div className="flex flex-1 items-center justify-end gap-1.5">
+      <div className="ml-auto flex items-center gap-1.5">
         <button
           type="button"
           aria-label={isDark ? "Switch to light theme" : "Switch to dark theme"}

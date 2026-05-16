@@ -155,6 +155,25 @@ export function AiAssistantPanel({
   const dialogsT = useTranslations("dialogs.studio.aiAssistant");
   const a11yT = useA11yTranslations();
   const { addToast } = useToast();
+
+  const [aiTab, setAiTab] = useState<"chat" | "suggestions">(
+    coverLetterCritique ? "suggestions" : "chat",
+  );
+  const previousCritiqueRef = useRef(coverLetterCritique);
+  useEffect(() => {
+    // Auto-jump to Suggestions when a critique freshly arrives, so the
+    // user sees the AI's feedback without an extra click. Stays put if
+    // the critique was already present at mount.
+    if (!previousCritiqueRef.current && coverLetterCritique) {
+      setAiTab("suggestions");
+    }
+    previousCritiqueRef.current = coverLetterCritique;
+  }, [coverLetterCritique]);
+
+  const suggestionsCount =
+    documentMode === "cover_letter" && coverLetterCritique
+      ? coverLetterCritique.suggested_rewrites.length + 1
+      : 0;
   const panelRef = useRef<HTMLElement>(null);
   const runningActionRef = useRef<AssistantRunAction | null>(null);
   const [jobDescription, setJobDescription] = useState("");
@@ -673,30 +692,90 @@ export function AiAssistantPanel({
         className,
       )}
     >
-      <div className="flex items-center justify-between border-b-[length:var(--border-width)] px-4 py-3">
-        <h2 className="font-display text-sm font-semibold tracking-tight">
-          AI Assistant
-        </h2>
-        <div className="flex items-center gap-1.5">
-          <Sparkles
-            className="h-4 w-4 text-muted-foreground"
-            aria-hidden="true"
-          />
-          {onToggleCollapsed && (
-            <Button
-              type="button"
-              size="icon"
-              variant="ghost"
-              onClick={onToggleCollapsed}
-              aria-label={a11yT("collapseAiAssistantPanel")}
-            >
-              <PanelRightClose className="h-4 w-4" />
-            </Button>
-          )}
+      <div className="border-b-[length:var(--border-width)]">
+        <div className="flex items-center justify-between px-4 py-3">
+          <h2 className="font-display text-sm font-semibold tracking-tight">
+            AI Assistant
+          </h2>
+          <div className="flex items-center gap-1.5">
+            <Sparkles
+              className="h-4 w-4 text-muted-foreground"
+              aria-hidden="true"
+            />
+            {onToggleCollapsed && (
+              <Button
+                type="button"
+                size="icon"
+                variant="ghost"
+                onClick={onToggleCollapsed}
+                aria-label={a11yT("collapseAiAssistantPanel")}
+              >
+                <PanelRightClose className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+        </div>
+        <div
+          role="tablist"
+          aria-label="AI assistant tabs"
+          className="flex items-center gap-0.5 px-3 pb-2"
+        >
+          <button
+            type="button"
+            role="tab"
+            aria-selected={aiTab === "chat"}
+            onClick={() => setAiTab("chat")}
+            className={cn(
+              "inline-flex h-7 items-center gap-1.5 rounded-sm px-2.5 text-[12px] font-medium transition-colors",
+              aiTab === "chat"
+                ? "bg-card text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            Chat
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={aiTab === "suggestions"}
+            onClick={() => setAiTab("suggestions")}
+            className={cn(
+              "inline-flex h-7 items-center gap-1.5 rounded-sm px-2.5 text-[12px] font-medium transition-colors",
+              aiTab === "suggestions"
+                ? "bg-card text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            Suggestions
+            {suggestionsCount > 0 && (
+              <span
+                className="ml-0.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1 font-mono text-[9.5px] font-semibold tabular-nums"
+                style={{
+                  backgroundColor:
+                    aiTab === "suggestions"
+                      ? "var(--brand-soft)"
+                      : "var(--rule-strong-bg)",
+                  color:
+                    aiTab === "suggestions"
+                      ? "var(--brand-dark)"
+                      : "var(--ink-3)",
+                }}
+              >
+                {suggestionsCount}
+              </span>
+            )}
+          </button>
         </div>
       </div>
 
-      <div className="min-h-0 flex-1 space-y-5 overflow-y-auto p-4">
+      <div
+        role="tabpanel"
+        aria-label="Chat"
+        className={cn(
+          "min-h-0 flex-1 space-y-5 overflow-y-auto p-4",
+          aiTab !== "chat" && "hidden",
+        )}
+      >
         {setupPrompt && (
           <div
             className="rounded-md border-[length:var(--border-width)] border-primary/30 bg-primary/5 p-3 text-sm"
@@ -882,7 +961,29 @@ export function AiAssistantPanel({
           </section>
         )}
 
-        {coverLetterCritique && isCoverLetter && (
+        {(statusMessage || assistantResult) && (
+          <section className="space-y-2 text-sm" role="status">
+            {statusMessage && (
+              <p className="text-muted-foreground">{statusMessage}</p>
+            )}
+            {assistantResult && (
+              <div className="rounded-md border-[length:var(--border-width)] bg-muted/30 p-3 text-foreground">
+                {assistantResult}
+              </div>
+            )}
+          </section>
+        )}
+      </div>
+
+      <div
+        role="tabpanel"
+        aria-label="Suggestions"
+        className={cn(
+          "min-h-0 flex-1 space-y-4 overflow-y-auto p-4",
+          aiTab !== "suggestions" && "hidden",
+        )}
+      >
+        {coverLetterCritique && isCoverLetter ? (
           <section
             className="space-y-4 rounded-md border-[length:var(--border-width)] bg-muted/30 p-3"
             aria-label={a11yT("coverLetterCritique")}
@@ -950,19 +1051,15 @@ export function AiAssistantPanel({
               ))}
             </div>
           </section>
-        )}
-
-        {(statusMessage || assistantResult) && (
-          <section className="space-y-2 text-sm" role="status">
-            {statusMessage && (
-              <p className="text-muted-foreground">{statusMessage}</p>
-            )}
-            {assistantResult && (
-              <div className="rounded-md border-[length:var(--border-width)] bg-muted/30 p-3 text-foreground">
-                {assistantResult}
-              </div>
-            )}
-          </section>
+        ) : (
+          <div
+            className="rounded-md border bg-card/50 px-4 py-8 text-center text-sm text-muted-foreground"
+            role="status"
+          >
+            {isCoverLetter
+              ? "Run Critique from the Chat tab to surface scored feedback and rewrite suggestions."
+              : "Suggestions surface here when the AI has feedback to share — run Critique on a cover letter or Tailor a resume to get started."}
+          </div>
         )}
       </div>
 

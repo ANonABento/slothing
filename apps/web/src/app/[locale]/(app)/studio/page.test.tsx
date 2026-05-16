@@ -226,9 +226,11 @@ describe("StudioPage", () => {
   it("renders document mode controls in the studio header", async () => {
     renderStudioPage();
 
-    expect(await screen.findByText("Document Studio")).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: "Cover Letter" }),
+      await screen.findByRole("tab", { name: /^resume$/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("tab", { name: /cover letter/i }),
     ).toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: /tailored/i }),
@@ -238,7 +240,9 @@ describe("StudioPage", () => {
   it("shows the draft as saved on fresh load", async () => {
     renderStudioPage();
 
-    expect(await screen.findByText("Document Studio")).toBeInTheDocument();
+    expect(
+      await screen.findByRole("tab", { name: /^resume$/i }),
+    ).toBeInTheDocument();
     expect(screen.getAllByText(/Saved/)[0]).toBeInTheDocument();
     expect(screen.queryByText("Unsaved changes")).not.toBeInTheDocument();
   });
@@ -246,7 +250,9 @@ describe("StudioPage", () => {
   it("saves the current document with Cmd+S", async () => {
     renderStudioPage();
 
-    expect(await screen.findByText("Document Studio")).toBeInTheDocument();
+    expect(
+      await screen.findByRole("tab", { name: /^resume$/i }),
+    ).toBeInTheDocument();
 
     pressShortcut(window, { key: "s", metaKey: true });
 
@@ -351,9 +357,7 @@ describe("StudioPage", () => {
 
     pressShortcut(window, { key: "e", metaKey: true });
 
-    expect(
-      screen.getByRole("menuitem", { name: "Download PDF" }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: /^PDF/i })).toBeInTheDocument();
   });
 
   it("does not trigger non-modifier shortcuts while typing in the JD textarea", async () => {
@@ -406,7 +410,7 @@ describe("StudioPage", () => {
     );
     expect(screen.getAllByText("Unsaved changes")[0]).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: "Cover Letter" }));
+    fireEvent.click(screen.getByRole("tab", { name: /cover letter/i }));
 
     await waitFor(() =>
       expect(screen.getAllByText(/Saved/)[0]).toBeInTheDocument(),
@@ -417,9 +421,7 @@ describe("StudioPage", () => {
   it("uses a freeform cover letter editor instead of the resume section picker", async () => {
     renderStudioPage();
 
-    fireEvent.click(
-      await screen.findByRole("button", { name: "Cover Letter" }),
-    );
+    fireEvent.click(await screen.findByRole("tab", { name: /cover letter/i }));
 
     await waitFor(() =>
       expect(screen.getByTestId("resume-content")).toHaveTextContent(
@@ -434,9 +436,7 @@ describe("StudioPage", () => {
 
     renderStudioPage();
 
-    fireEvent.click(
-      await screen.findByRole("button", { name: "Cover Letter" }),
-    );
+    fireEvent.click(await screen.findByRole("tab", { name: /cover letter/i }));
     fireEvent.click(screen.getByRole("button", { name: "Toggle entry" }));
 
     await waitFor(() => {
@@ -453,9 +453,7 @@ describe("StudioPage", () => {
 
     renderStudioPage();
 
-    fireEvent.click(
-      await screen.findByRole("button", { name: "Cover Letter" }),
-    );
+    fireEvent.click(await screen.findByRole("tab", { name: /cover letter/i }));
     fireEvent.click(screen.getByRole("button", { name: "Toggle entry" }));
 
     await waitFor(() =>
@@ -532,11 +530,17 @@ describe("StudioPage", () => {
     expect(
       screen.getByText("Select entries to build your first draft."),
     ).toBeInTheDocument();
-    expect(
-      screen.getByText(
-        "Select bank entries or edit the resume to enable export.",
-      ),
-    ).toBeInTheDocument();
+    // The sub-bar surfaces the same hint via the disabled Export button's
+    // title attribute (tooltip on hover) rather than rendered inline text —
+    // the visible affordance is the button's disabled state itself.
+    const exportButton = screen.getByRole("button", {
+      name: /Download (resume|cover letter) PDF/i,
+    });
+    expect(exportButton).toBeDisabled();
+    expect(exportButton).toHaveAttribute(
+      "title",
+      expect.stringMatching(/Select bank entries/i),
+    );
 
     fireEvent.click(
       screen.getByRole("button", {

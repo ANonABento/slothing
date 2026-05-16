@@ -1,6 +1,7 @@
 "use client";
 
-import { formatDateOnly, nowIso, toEpoch } from "@/lib/format/time";
+import { nowIso, toEpoch } from "@/lib/format/time";
+import { TimeAgo } from "@/components/format/time-ago";
 
 import {
   useCallback,
@@ -24,6 +25,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   SearchBar,
   CATEGORY_LABELS,
@@ -35,17 +37,18 @@ import { UploadOverlay } from "@/components/bank/upload-overlay";
 import { ErrorState, getErrorMessage } from "@/components/ui/error-state";
 import { BANK_CATEGORIES, type BankCategory, type BankEntry } from "@/types";
 import {
+  AlertTriangle,
   CheckCircle2,
+  ChevronRight,
   Database,
   FileText,
+  HardDrive,
   LayoutGrid,
   Loader2,
-  Rows3,
-  AlertTriangle,
-  ChevronRight,
   Plus,
+  Rows3,
+  Sparkles,
   Upload,
-  HardDrive,
 } from "lucide-react";
 import type { SourceDocument } from "@/lib/db/profile-bank";
 import { Badge } from "@/components/ui/badge";
@@ -95,6 +98,10 @@ import {
   deriveVisibleEntryCount,
   isChildEntry,
 } from "@/lib/bank/count-derivation";
+import { ComponentDetailDrawer } from "@/components/bank/component-detail-drawer";
+import { ChunkPeek } from "@/components/bank/chunk-peek";
+import { PdfPreview } from "@/components/bank/preview/pdf-preview";
+import type { HighlightInput } from "@/components/bank/preview/highlight-layer";
 import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 
 const DriveFilePicker = dynamic(
@@ -311,6 +318,11 @@ export function BankComponentsTab({
   const [displayMode, setDisplayMode] = useState<DisplayMode>("category");
   const [layoutMode, setLayoutMode] = useState<LayoutMode>("grid");
   const [reviewOnly, setReviewOnly] = useState(false);
+
+  // Drawer state — opened by clicking a card (grid view) or a table row body
+  // (table view). The chevron in table view continues to control inline peek
+  // and is wired separately inside EntryTable.
+  const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
   const [selectedEntryIds, setSelectedEntryIds] = useState<Set<string>>(
     new Set(),
   );
@@ -338,6 +350,8 @@ export function BankComponentsTab({
   const [moveTargetParentId, setMoveTargetParentId] = useState("");
   const { addToast } = useToast();
   const showErrorToast = useErrorToast();
+  const { confirm: confirmAction, dialog: confirmActionDialog } =
+    useConfirmDialog();
 
   // Register page-specific keyboard shortcuts
   useRegisterShortcuts(
@@ -1210,6 +1224,45 @@ export function BankComponentsTab({
     );
   }
 
+  async function handleDiscardImport() {
+    if (!uploadReview) return;
+    const { filename, entries: importedEntries } = uploadReview;
+    const rootCount = importedEntries.filter(
+      (entry) => !isChildEntry(entry),
+    ).length;
+
+    const confirmed = await confirmAction({
+      title: dialogsT("review.discardConfirmTitle", { count: rootCount }),
+      description: dialogsT("review.discardConfirmDescription", {
+        count: rootCount,
+        filename,
+      }),
+      confirmLabel: dialogsT("review.discardConfirm"),
+      confirmVariant: "destructive",
+    });
+    if (!confirmed) return;
+
+    try {
+      await Promise.all(
+        importedEntries.map((entry) =>
+          fetch(`/api/bank/${entry.id}`, { method: "DELETE" }),
+        ),
+      );
+      const ids = new Set(importedEntries.map((entry) => entry.id));
+      setEntries((prev) => prev.filter((entry) => !ids.has(entry.id)));
+      setAllEntries((prev) => prev.filter((entry) => !ids.has(entry.id)));
+      setUploadReview(null);
+      addToast({ type: "info", title: `Discarded ${filename}.` });
+    } catch (err) {
+      showErrorToast(err, {
+        title: "Could not discard import",
+        fallbackDescription:
+          "Some components may still appear in your bank. Try refreshing the page.",
+      });
+      await handleDataRefresh({ silent: true });
+    }
+  }
+
   async function handleReviewMergeChildren(
     parsedEntry: BankEntry,
     existingEntry: BankEntry,
@@ -1570,7 +1623,7 @@ export function BankComponentsTab({
                 }
               }}
             >
-              <DialogContent className="max-h-[92vh] max-w-6xl overflow-hidden p-0">
+              <DialogContent className="max-h-[92vh] max-w-7xl overflow-hidden p-0">
                 <DialogHeader className="border-b px-6 py-5">
                   <DialogTitle className="flex items-center gap-2">
                     <CheckCircle2 className="h-5 w-5 text-success" />
@@ -1599,38 +1652,68 @@ export function BankComponentsTab({
                   {uploadReview ? (
                     <UploadReviewEntries
                       entries={uploadReview.entries}
-                      existingEntries={allEntries.filter(
-                        (entry) =>
-                          entry.sourceDocumentId !== uploadReview.documentId,
-                      )}
+                      existingEntries={allEntries.filter((entry) => {
+                        // Cross-document duplicate detection (P1.3): exclude
+                        // only the entries from THIS parsed batch so we don't
+                        // self-match. Entries from other source documents stay
+                        // in the candidate pool so a project the user already
+                        // has from another resume gets flagged as a possible
+                        // duplicate instead of silently re-added.
+                        const parsedIds = new Set(
+                          uploadReview.entries.map((e) => e.id),
+                        );
+                        return !parsedIds.has(entry.id);
+                      })}
                       onUpdate={handleReviewUpdate}
                       onDelete={handleReviewDelete}
                       onMergeChildren={handleReviewMergeChildren}
                       onAttachBullet={handleReviewAttachBullet}
+                      documentId={uploadReview.documentId}
+                      documentFilename={uploadReview.filename}
                     />
                   ) : null}
                 </div>
-                <DialogFooter className="border-t px-6 py-4">
-                  {uploadReview?.docType === "resume" ? (
-                    <Button
-                      variant="secondary"
-                      onClick={handleCheckWithAi}
-                      disabled={isReviewParsingWithAi}
-                    >
-                      {isReviewParsingWithAi
-                        ? "Checking with AI..."
-                        : "Check with AI"}
-                    </Button>
-                  ) : null}
+                <DialogFooter className="flex flex-col gap-2 border-t px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
+                  {/* Destructive pinned left; neutral + primary stack right.
+                      All four share `size="sm"` so the row reads as one
+                      cluster instead of four mismatched chips. */}
                   <Button
-                    variant="outline"
-                    onClick={() => setUploadReview(null)}
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => void handleDiscardImport()}
+                    className="text-destructive hover:bg-destructive/10 hover:text-destructive sm:mr-auto"
                   >
-                    {dialogsT("review.keepEditing")}
+                    {dialogsT("review.discardImport")}
                   </Button>
-                  <Button onClick={() => setUploadReview(null)}>
-                    {dialogsT("review.done")}
-                  </Button>
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setUploadReview(null)}
+                    >
+                      {dialogsT("review.keepEditing")}
+                    </Button>
+                    {uploadReview?.docType === "resume" ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleCheckWithAi}
+                        disabled={isReviewParsingWithAi}
+                      >
+                        {isReviewParsingWithAi ? (
+                          <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          <Sparkles className="mr-1.5 h-3.5 w-3.5 text-primary" />
+                        )}
+                        {isReviewParsingWithAi
+                          ? "Checking with AI..."
+                          : "Check with AI"}
+                      </Button>
+                    ) : null}
+                    <Button size="sm" onClick={() => setUploadReview(null)}>
+                      {dialogsT("review.done")}
+                    </Button>
+                  </div>
                 </DialogFooter>
               </DialogContent>
             </Dialog>
@@ -1933,6 +2016,7 @@ export function BankComponentsTab({
                               onSelectEntries={selectEntries}
                               onDeselectEntries={deselectEntries}
                               reviewEntries={allEntries}
+                              onSelectEntry={setSelectedEntryId}
                             />
                           </div>
                         ))
@@ -1962,6 +2046,7 @@ export function BankComponentsTab({
                               onSelectEntries={selectEntries}
                               onDeselectEntries={deselectEntries}
                               reviewEntries={allEntries}
+                              onSelectEntry={setSelectedEntryId}
                             />
                           </div>
                         ))}
@@ -1987,6 +2072,39 @@ export function BankComponentsTab({
             </div>
           </div>
         </PageContent>
+        {confirmActionDialog}
+        <ComponentDetailDrawer
+          entry={
+            selectedEntryId
+              ? (entries.find((e) => e.id === selectedEntryId) ??
+                allEntries.find((e) => e.id === selectedEntryId) ??
+                null)
+              : null
+          }
+          childEntries={
+            selectedEntryId
+              ? getChildEntriesFor(
+                  entries.find((e) => e.id === selectedEntryId) ??
+                    allEntries.find((e) => e.id === selectedEntryId) ??
+                    ({
+                      id: "__missing__",
+                    } as BankEntry),
+                  entries,
+                )
+              : []
+          }
+          open={selectedEntryId !== null}
+          onOpenChange={(next) => {
+            if (!next) setSelectedEntryId(null);
+          }}
+          onUpdate={handleUpdate}
+          onDelete={handleDelete}
+          onCreateChild={handleCreateChild}
+          onReorderChild={handleReorderChild}
+          sourceFilenames={
+            new Map(sourceDocuments.map((doc) => [doc.id, doc.filename]))
+          }
+        />
       </AppPage>
     </ErrorBoundary>
   );
@@ -2005,11 +2123,14 @@ function DisplayModeButton({
     <button
       type="button"
       onClick={onClick}
+      aria-pressed={active}
       className={cn(
-        "min-h-8 rounded-md px-3 text-sm font-medium transition-colors",
+        // P2.5: inactive state gets a subtle bordered pill (not bare text)
+        // so users can tell the inactive option is also a clickable peer.
+        "min-h-8 rounded-md border px-3 text-sm font-medium transition-colors",
         active
-          ? "bg-primary text-primary-foreground"
-          : "text-muted-foreground hover:bg-background/70 hover:text-foreground",
+          ? "border-primary bg-primary text-primary-foreground"
+          : "border-border/60 text-muted-foreground hover:bg-background/70 hover:text-foreground",
       )}
     >
       {children}
@@ -2084,6 +2205,7 @@ function EntryCollection({
   onSelectEntries,
   onDeselectEntries,
   reviewEntries,
+  onSelectEntry,
 }: {
   layoutMode: LayoutMode;
   displayMode: DisplayMode;
@@ -2103,7 +2225,14 @@ function EntryCollection({
   onSelectEntries: (ids: string[]) => void;
   onDeselectEntries: (ids: string[]) => void;
   reviewEntries: BankEntry[];
+  onSelectEntry: (id: string) => void;
 }) {
+  // Hook calls must precede any conditional return — see rules-of-hooks.
+  const sourceFilenames = useMemo(
+    () => new Map(sourceDocuments.map((doc) => [doc.id, doc.filename])),
+    [sourceDocuments],
+  );
+
   if (layoutMode === "table") {
     return (
       <EntryTable
@@ -2120,6 +2249,7 @@ function EntryCollection({
         onSelectEntries={onSelectEntries}
         onDeselectEntries={onDeselectEntries}
         reviewEntries={reviewEntries}
+        onSelectEntry={onSelectEntry}
       />
     );
   }
@@ -2141,6 +2271,8 @@ function EntryCollection({
         onToggleSelect={onToggleSelect}
         anySelected={selectedIds.size > 0}
         highlighted={isBulletNeedsReview(entry, reviewEntries)}
+        onSelect={() => onSelectEntry(entry.id)}
+        sourceFilenames={sourceFilenames}
       />
     );
   }
@@ -2172,6 +2304,7 @@ function EntryTable({
   onSelectEntries,
   onDeselectEntries,
   reviewEntries,
+  onSelectEntry,
 }: {
   entries: BankEntry[];
   allEntries: BankEntry[];
@@ -2190,6 +2323,7 @@ function EntryTable({
   onSelectEntries: (ids: string[]) => void;
   onDeselectEntries: (ids: string[]) => void;
   reviewEntries: BankEntry[];
+  onSelectEntry: (id: string) => void;
 }) {
   const a11yT = useA11yTranslations();
 
@@ -2264,11 +2398,11 @@ function EntryTable({
                     role="button"
                     tabIndex={0}
                     aria-expanded={expanded}
-                    onClick={() => toggleRow(entry.id)}
+                    onClick={() => onSelectEntry(entry.id)}
                     onKeyDown={(event) => {
                       if (event.key === "Enter" || event.key === " ") {
                         event.preventDefault();
-                        toggleRow(entry.id);
+                        onSelectEntry(entry.id);
                       }
                     }}
                     className={cn(
@@ -2278,13 +2412,26 @@ function EntryTable({
                     )}
                   >
                     <td className="px-3 py-3 text-muted-foreground">
-                      <ChevronRight
-                        className={cn(
-                          "h-4 w-4 transition-transform",
-                          expanded && "rotate-90",
-                        )}
-                        aria-hidden="true"
-                      />
+                      <button
+                        type="button"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          toggleRow(entry.id);
+                        }}
+                        className="flex h-7 w-7 items-center justify-center rounded hover:bg-muted"
+                        aria-label={
+                          expanded ? a11yT("collapse") : a11yT("expand")
+                        }
+                        aria-expanded={expanded}
+                      >
+                        <ChevronRight
+                          className={cn(
+                            "h-4 w-4 transition-transform",
+                            expanded && "rotate-90",
+                          )}
+                          aria-hidden="true"
+                        />
+                      </button>
                     </td>
                     <td className="px-4 py-3">
                       <input
@@ -2336,21 +2483,16 @@ function EntryTable({
                       <ConfidenceBadge score={entry.confidenceScore ?? 0} />
                     </td>
                     <td className="px-4 py-3 text-muted-foreground">
-                      {formatDateOnly(entry.createdAt)}
+                      <TimeAgo date={entry.createdAt} />
                     </td>
                   </tr>
                   {expanded ? (
                     <tr>
-                      <td colSpan={columnCount} className="bg-muted/20 p-4">
-                        <ChunkCard
-                          entry={entry}
-                          onUpdate={onUpdate}
-                          onDelete={onDelete}
-                          onCreateChild={onCreateChild}
-                          onReorderChild={onReorderChild}
-                          childEntries={children}
-                          forceExpanded
-                        />
+                      <td
+                        colSpan={columnCount}
+                        className="bg-muted/20 px-6 py-4"
+                      >
+                        <ChunkPeek childEntries={children} />
                       </td>
                     </tr>
                   ) : null}
@@ -2390,6 +2532,8 @@ function UploadReviewEntries({
   onDelete,
   onMergeChildren,
   onAttachBullet,
+  documentId,
+  documentFilename,
 }: {
   entries: BankEntry[];
   existingEntries: BankEntry[];
@@ -2401,6 +2545,8 @@ function UploadReviewEntries({
     parsedChildren: BankEntry[],
   ) => void;
   onAttachBullet: (bullet: BankEntry, parent: BankEntry) => void;
+  documentId?: string;
+  documentFilename?: string;
 }) {
   const a11yT = useA11yTranslations();
 
@@ -2436,6 +2582,59 @@ function UploadReviewEntries({
   }, [existingEntries]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [attachParentId, setAttachParentId] = useState("");
+  // Per-session "keep both" decisions. When a user keeps both copies of a
+  // duplicate (P1.2), the warning panel is dismissed for that parsed entry
+  // until the modal is re-opened.
+  const [keepBothIds, setKeepBothIds] = useState<Set<string>>(new Set());
+  // PF.4 — left-panel tabs. Document tab is the default so users start with
+  // visual context for what was extracted; falls back to "components" if no
+  // PDF document is available for preview (manual entry, non-PDF import).
+  const documentTabAvailable = Boolean(documentId);
+
+  // PF.5 — highlight data fed to the PDF preview. Bboxes come from the
+  // fuzzy-match step in the upload pipeline; entries with no bbox simply
+  // don't render a highlight. Bullets are included even though the right
+  // detail panel only shows roots — clicking a bullet's highlight applies
+  // the selected ring to it AND leaves the right panel on its parent
+  // (which contains the bullet), which is the right mental model.
+  const previewHighlights = useMemo<HighlightInput[]>(
+    () =>
+      entries
+        .filter(
+          (
+            entry,
+          ): entry is BankEntry & {
+            sourceBbox: NonNullable<BankEntry["sourceBbox"]>;
+          } => Array.isArray(entry.sourceBbox) && entry.sourceBbox.length > 0,
+        )
+        .map((entry) => ({
+          entryId: entry.id,
+          category: entry.category,
+          bboxes: entry.sourceBbox,
+        })),
+    [entries],
+  );
+
+  // PF.6 — imperative jump-to-page for "View in document" link.
+  const pdfNavigatorRef = useRef<((entryId: string) => void) | null>(null);
+  const registerPdfNavigator = useCallback(
+    (navigator: (entryId: string) => void) => {
+      pdfNavigatorRef.current = navigator;
+      return () => {
+        if (pdfNavigatorRef.current === navigator) {
+          pdfNavigatorRef.current = null;
+        }
+      };
+    },
+    [],
+  );
+  const handleViewInDocument = useCallback((entryId: string) => {
+    // 3-pane layout: the document preview is always visible alongside the
+    // components list and review pane on lg+, and stacked beneath them on
+    // <lg. The "View in document" CTA only needs to jump the PDF viewer to
+    // the right page; no panel-toggle required anymore.
+    pdfNavigatorRef.current?.(entryId);
+  }, []);
 
   useEffect(() => {
     if (reviewItems.length === 0) {
@@ -2461,7 +2660,13 @@ function UploadReviewEntries({
     ? (existingKeys.get(reviewDuplicateKey(selectedEntry)) ?? [])
     : [];
   const selectedWarnings = selectedEntry
-    ? getReviewWarnings(selectedEntry, childEntries, duplicateEntries)
+    ? getReviewWarnings(selectedEntry, childEntries, duplicateEntries).filter(
+        // P2.6: drop the standalone "Possible duplicate" warning when the
+        // duplicate-resolution panel below already surfaces the same flag —
+        // otherwise the chrome restates itself twice with different visuals.
+        (warning) =>
+          !(warning === "Possible duplicate" && duplicateEntries.length > 0),
+      )
     : [];
   const categoryCounts = reviewItems.reduce<Record<string, number>>(
     (counts, entry) => {
@@ -2494,92 +2699,118 @@ function UploadReviewEntries({
     );
   }
 
-  return (
-    <div className="grid h-[68vh] min-h-0 md:grid-cols-[320px_1fr]">
-      <aside className="min-h-0 border-r bg-muted/20">
-        <div className="border-b px-4 py-3">
-          <div className="flex items-center gap-2">
-            <FileText className="h-4 w-4 text-muted-foreground" />
-            <span className="font-display text-sm font-semibold tracking-tight">
-              Detected components
-            </span>
-          </div>
-          <div className="mt-2 flex flex-wrap gap-1">
-            <Badge variant="outline" className="text-2xs">
-              {roots.length} roots
+  const componentsListPane = (
+    <>
+      <div className="border-b px-4 py-3">
+        <div className="flex items-center gap-2">
+          <FileText className="h-4 w-4 text-muted-foreground" />
+          <span className="font-display text-sm font-semibold tracking-tight">
+            Detected
+          </span>
+          <span className="ml-auto font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+            {reviewItems.length}
+          </span>
+        </div>
+        <div className="mt-2 flex flex-wrap gap-1">
+          <Badge variant="outline" className="text-2xs">
+            {roots.length} roots
+          </Badge>
+          <Badge variant="outline" className="text-2xs">
+            {reviewSummary.bullets} bullets
+          </Badge>
+          {reviewSummary.needsReview > 0 ? (
+            <Badge variant="warning" className="text-2xs">
+              {reviewSummary.needsReview} review
             </Badge>
-            <Badge variant="outline" className="text-2xs">
-              {reviewSummary.bullets} bullets
+          ) : null}
+          {reviewSummary.duplicates > 0 ? (
+            <Badge variant="warning" className="text-2xs">
+              {reviewSummary.duplicates} dup
             </Badge>
-            {reviewSummary.needsReview > 0 ? (
-              <Badge variant="warning" className="text-2xs">
-                {reviewSummary.needsReview} review
-              </Badge>
-            ) : null}
-            {reviewSummary.duplicates > 0 ? (
-              <Badge variant="warning" className="text-2xs">
-                {reviewSummary.duplicates} duplicates
-              </Badge>
-            ) : null}
-            {BANK_CATEGORIES.filter((category) => categoryCounts[category]).map(
-              (category) => (
-                <Badge key={category} variant="secondary" className="text-2xs">
-                  {CATEGORY_LABELS[category]} {categoryCounts[category]}
+          ) : null}
+        </div>
+      </div>
+      <div className="min-h-0 flex-1 space-y-1 overflow-y-auto p-2">
+        {reviewItems.map((entry) => {
+          const active = entry.id === selectedEntry?.id;
+          const children = getChildEntriesFor(entry, entries);
+          const duplicates = existingKeys.get(reviewDuplicateKey(entry)) ?? [];
+          const warnings = getReviewWarnings(entry, children, duplicates);
+          const reviewReason = getBulletReviewReason(entry, entries);
+          return (
+            <button
+              key={entry.id}
+              type="button"
+              onClick={() => setSelectedId(entry.id)}
+              className={cn(
+                "w-full rounded-md border border-transparent px-2.5 py-2 text-left transition-colors",
+                active
+                  ? "border-primary bg-primary/10"
+                  : reviewReason
+                    ? "border-warning/40 bg-warning/5 hover:bg-warning/10"
+                    : "hover:border-border hover:bg-background/70",
+              )}
+            >
+              <div className="flex items-start justify-between gap-1.5">
+                <span className="line-clamp-2 text-[12.5px] font-medium leading-snug">
+                  {getEntryLabel(entry)}
+                </span>
+                <Badge
+                  variant={active ? "default" : "outline"}
+                  className="text-2xs shrink-0"
+                >
+                  {CATEGORY_LABELS[entry.category]}
                 </Badge>
-              ),
-            )}
-          </div>
-        </div>
-        <div className="max-h-full space-y-1 overflow-y-auto p-2">
-          {reviewItems.map((entry) => {
-            const active = entry.id === selectedEntry?.id;
-            const children = getChildEntriesFor(entry, entries);
-            const duplicates =
-              existingKeys.get(reviewDuplicateKey(entry)) ?? [];
-            const warnings = getReviewWarnings(entry, children, duplicates);
-            const reviewReason = getBulletReviewReason(entry, entries);
-            return (
-              <button
-                key={entry.id}
-                type="button"
-                onClick={() => setSelectedId(entry.id)}
-                className={cn(
-                  "w-full rounded-md border border-transparent px-3 py-3 text-left transition-colors",
-                  active
-                    ? "border-primary bg-primary/10"
-                    : reviewReason
-                      ? "border-warning/40 bg-warning/5 hover:bg-warning/10"
-                      : "hover:border-border hover:bg-background/70",
-                )}
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <span className="line-clamp-2 text-sm font-medium">
-                    {getEntryLabel(entry)}
-                  </span>
-                  <Badge variant={active ? "default" : "outline"}>
-                    {CATEGORY_LABELS[entry.category]}
-                  </Badge>
-                </div>
-                <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                  <span>{children.length} bullets</span>
-                  {reviewReason ? (
-                    <span className="text-warning">{reviewReason}</span>
-                  ) : null}
-                  <span>
-                    {Math.round((entry.confidenceScore ?? 0) * 100)}% confidence
-                  </span>
-                  {warnings.length > 0 ? (
-                    <span className="text-warning">
-                      {warnings.length} warning
-                      {warnings.length === 1 ? "" : "s"}
-                    </span>
-                  ) : null}
-                </div>
-              </button>
-            );
-          })}
-        </div>
+              </div>
+              <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[10.5px] text-muted-foreground">
+                <span>{children.length} bullets</span>
+                {reviewReason ? (
+                  <span className="text-warning">{reviewReason}</span>
+                ) : null}
+                <span>{Math.round((entry.confidenceScore ?? 0) * 100)}%</span>
+                {warnings.length > 0 ? (
+                  <span className="text-warning">{warnings.length} warn</span>
+                ) : null}
+              </div>
+            </button>
+          );
+        })}
+      </div>
+    </>
+  );
+
+  return (
+    <div
+      className={cn(
+        "grid h-[68vh] min-h-0 grid-cols-1",
+        // lg+ — 3-pane (or 2-pane when no PDF). Components | Document | Review.
+        // On <lg the same DOM tree stacks vertically — components and document
+        // get capped vertical bands so the review pane below stays usable.
+        documentTabAvailable
+          ? "lg:grid-cols-[220px_minmax(0,1fr)_380px]"
+          : "lg:grid-cols-[minmax(0,1fr)_380px]",
+      )}
+    >
+      {/* Components list — left column on lg+, stacked top band on <lg. */}
+      <aside className="flex min-h-0 flex-col border-r bg-muted/20 max-lg:max-h-[28vh] max-lg:border-b">
+        {componentsListPane}
       </aside>
+
+      {/* Middle column — document preview. On lg+ this is the wide middle
+          pane. On <lg the same single mount stacks beneath the components
+          list, capped to 40vh so the review pane below stays visible. */}
+      {documentTabAvailable && documentId ? (
+        <div className="flex min-h-0 flex-col border-r bg-background max-lg:max-h-[40vh] max-lg:border-b">
+          <PdfPreview
+            documentId={documentId}
+            filename={documentFilename ?? "document.pdf"}
+            highlights={previewHighlights}
+            selectedEntryId={selectedId}
+            onSelectEntry={setSelectedId}
+            onRegisterNavigator={registerPdfNavigator}
+          />
+        </div>
+      ) : null}
       <section className="min-h-0 overflow-y-auto p-5">
         {selectedEntry ? (
           <div className="space-y-4">
@@ -2591,6 +2822,17 @@ function UploadReviewEntries({
                 <h3 className="mt-1 font-display text-lg font-semibold tracking-tight">
                   {getEntryLabel(selectedEntry)}
                 </h3>
+                {documentTabAvailable &&
+                Array.isArray(selectedEntry.sourceBbox) &&
+                selectedEntry.sourceBbox.length > 0 ? (
+                  <button
+                    type="button"
+                    onClick={() => handleViewInDocument(selectedEntry.id)}
+                    className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+                  >
+                    View in document ↗
+                  </button>
+                ) : null}
               </div>
               <div className="flex flex-wrap gap-2">
                 <Badge variant="secondary">
@@ -2612,7 +2854,8 @@ function UploadReviewEntries({
                 ))}
               </div>
             </div>
-            {duplicateEntries.length > 0 ? (
+            {duplicateEntries.length > 0 &&
+            !keepBothIds.has(selectedEntry.id) ? (
               <DuplicateResolutionPanel
                 parsedEntry={selectedEntry}
                 existingEntry={duplicateEntries[0]}
@@ -2628,6 +2871,13 @@ function UploadReviewEntries({
                     duplicateEntries[0],
                     childEntries,
                   )
+                }
+                onKeepBoth={() =>
+                  setKeepBothIds((prev) => {
+                    const next = new Set(prev);
+                    next.add(selectedEntry.id);
+                    return next;
+                  })
                 }
               />
             ) : null}
@@ -2721,6 +2971,7 @@ function DuplicateResolutionPanel({
   existingChildren,
   onDiscard,
   onMergeChildren,
+  onKeepBoth,
 }: {
   parsedEntry: BankEntry;
   existingEntry: BankEntry;
@@ -2728,6 +2979,7 @@ function DuplicateResolutionPanel({
   existingChildren: BankEntry[];
   onDiscard: () => void;
   onMergeChildren: () => void;
+  onKeepBoth: () => void;
 }) {
   const existingDescriptions = new Set(
     existingChildren.map((child) =>
@@ -2738,6 +2990,10 @@ function DuplicateResolutionPanel({
     const description = normalizeReviewText(child.content.description);
     return description && !existingDescriptions.has(description);
   });
+  // Auto-resolve trivial duplicates (P1.1): when the parsed copy adds zero
+  // new bullets, merging is a no-op. Promote `Discard parsed copy` to the
+  // default action and disable `Merge bullets` with an explanatory hover.
+  const nothingNewToMerge = newParsedChildren.length === 0;
 
   return (
     <div className="rounded-md border border-warning/35 bg-warning/10 p-3">
@@ -2750,21 +3006,36 @@ function DuplicateResolutionPanel({
             </span>
           </div>
           <p className="mt-1 text-xs text-muted-foreground">
-            A similar component already exists. Merge only the new parsed
-            bullets, discard this parsed copy, or keep both for now.
+            {nothingNewToMerge
+              ? "This parsed copy adds no new bullets. Discard it to clear the duplicate, or keep both copies in the bank."
+              : "A similar component already exists. Merge only the new parsed bullets, discard this parsed copy, or keep both for now."}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button variant="ghost" size="sm" onClick={onDiscard}>
+          <Button
+            variant={nothingNewToMerge ? "outline" : "ghost"}
+            size="sm"
+            onClick={onDiscard}
+          >
             Discard parsed copy
           </Button>
           <Button
-            variant="outline"
+            variant={nothingNewToMerge ? "ghost" : "outline"}
             size="sm"
             onClick={onMergeChildren}
-            disabled={parsedChildren.length === 0}
+            disabled={parsedChildren.length === 0 || nothingNewToMerge}
+            title={
+              nothingNewToMerge
+                ? "Nothing new to merge"
+                : parsedChildren.length === 0
+                  ? "No bullets to merge"
+                  : undefined
+            }
           >
             Merge bullets
+          </Button>
+          <Button variant="ghost" size="sm" onClick={onKeepBoth}>
+            Keep both
           </Button>
         </div>
       </div>

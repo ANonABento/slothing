@@ -103,6 +103,7 @@ interface StudioPageState {
   compareVersionId: string | null;
   currentDraftState: BuilderDraftState;
   currentDocuments: StudioDocument[];
+  documents: StudioDocument[];
   documentMode: DocumentMode;
   draftIsSaved: boolean;
   entries: BankEntry[];
@@ -139,6 +140,7 @@ interface StudioPageState {
     suggestion: string,
   ) => boolean;
   isExporting: boolean;
+  linkedOpportunityId: string;
   loading: boolean;
   manualVersionName: string;
   mobileView: BuilderPanel;
@@ -1360,6 +1362,7 @@ export function useStudioPageState(): StudioPageState {
     compareVersionId,
     currentDraftState,
     currentDocuments,
+    documents,
     documentMode,
     draftIsSaved,
     entries,
@@ -1393,6 +1396,7 @@ export function useStudioPageState(): StudioPageState {
     handleToggleVisibility,
     html,
     isExporting,
+    linkedOpportunityId,
     loading,
     manualVersionName,
     mobileView,
