@@ -1,5 +1,5 @@
-import { describe, it, expect } from "vitest";
-import { parseJSONFromLLM } from "./client";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { LLMClient, parseJSONFromLLM } from "./client";
 
 describe("parseJSONFromLLM", () => {
   it("should parse plain JSON object", () => {
@@ -97,5 +97,80 @@ I hope this helps!
   it("should throw on invalid JSON", () => {
     const input = "not valid json";
     expect(() => parseJSONFromLLM(input)).toThrow();
+  });
+});
+
+describe("LLMClient OpenAI endpoint resolution", () => {
+  const originalOpenAIBaseUrl = process.env.OPENAI_BASE_URL;
+
+  beforeEach(() => {
+    delete process.env.OPENAI_BASE_URL;
+    vi.restoreAllMocks();
+  });
+
+  afterEach(() => {
+    if (originalOpenAIBaseUrl === undefined) {
+      delete process.env.OPENAI_BASE_URL;
+    } else {
+      process.env.OPENAI_BASE_URL = originalOpenAIBaseUrl;
+    }
+    vi.unstubAllGlobals();
+  });
+
+  it("defaults OpenAI calls to api.openai.com", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(
+        Response.json({ choices: [{ message: { content: "ok" } }] }),
+      );
+    vi.stubGlobal("fetch", fetchMock);
+    const client = new LLMClient({
+      provider: "openai",
+      apiKey: "sk-test",
+      model: "gpt-4o-mini",
+    });
+
+    await expect(
+      client.complete({
+        messages: [{ role: "user", content: "hello" }],
+      }),
+    ).resolves.toBe("ok");
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://api.openai.com/v1/chat/completions",
+      expect.objectContaining({
+        method: "POST",
+      }),
+    );
+  });
+
+  it("uses OPENAI_BASE_URL for OpenAI-compatible local endpoints", async () => {
+    process.env.OPENAI_BASE_URL = "http://127.0.0.1:4141/v1/";
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(
+        Response.json({ choices: [{ message: { content: "choomfie ok" } }] }),
+      );
+    vi.stubGlobal("fetch", fetchMock);
+    const client = new LLMClient({
+      provider: "openai",
+      apiKey: "sk-choomfie-slothing-test",
+      model: "choomfie-claude-sonnet",
+    });
+
+    await expect(
+      client.complete({
+        messages: [{ role: "user", content: "hello" }],
+      }),
+    ).resolves.toBe("choomfie ok");
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "http://127.0.0.1:4141/v1/chat/completions",
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          Authorization: "Bearer sk-choomfie-slothing-test",
+        }),
+      }),
+    );
   });
 });
