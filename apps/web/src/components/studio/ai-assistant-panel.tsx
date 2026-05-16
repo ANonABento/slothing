@@ -208,9 +208,10 @@ export function AiAssistantPanel({
   }, []);
 
   useEffect(() => {
-    const opportunityId = new URLSearchParams(window.location.search)
-      .get("opportunityId")
-      ?.trim();
+    const params = new URLSearchParams(window.location.search);
+    const opportunityId = (
+      params.get("opportunityId") ?? params.get("opportunity")
+    )?.trim();
     if (!opportunityId) return;
 
     const encodedOpportunityId = encodeURIComponent(opportunityId);

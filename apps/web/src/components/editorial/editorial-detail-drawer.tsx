@@ -120,14 +120,14 @@ export function EditorialDetailDrawer({
         type="button"
         aria-label="Dismiss drawer"
         onClick={onClose}
-        className="absolute inset-0 cursor-default bg-scrim/50 backdrop-blur-sm"
+        className="absolute inset-0 z-0 cursor-default bg-scrim/50 backdrop-blur-sm"
       />
       {/* Drawer body */}
       <div
         ref={drawerRef}
         tabIndex={-1}
         className={cn(
-          "ml-auto flex h-full w-full flex-col border-l border-rule bg-paper shadow-panel outline-none animate-slide-in-right",
+          "relative z-10 ml-auto flex h-full w-full flex-col border-l border-rule bg-paper shadow-panel outline-none animate-slide-in-right",
         )}
         style={{ maxWidth: `${widthPx}px` }}
       >

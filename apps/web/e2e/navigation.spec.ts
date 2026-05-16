@@ -48,7 +48,7 @@ test.describe("Navigation", () => {
       sidebar.getByRole("link", { name: /Documents/i }),
     ).toBeVisible();
     await expect(
-      sidebar.getByRole("link", { name: /Document Studio/i }),
+      sidebar.getByRole("link", { name: /^Studio$/i }),
     ).toBeVisible();
     await expect(
       sidebar.getByRole("link", { name: /Interview Prep/i }),
@@ -77,11 +77,11 @@ test.describe("Navigation", () => {
     await expect(page).toHaveURL("/en/bank");
   });
 
-  test("should navigate to Document Studio page @smoke", async ({ page }) => {
+  test("should navigate to Studio page @smoke", async ({ page }) => {
     await preparePage(page);
     await ensureSidebarOpen(page);
     const sidebar = getSidebar(page);
-    await sidebar.getByRole("link", { name: /Document Studio/i }).click();
+    await sidebar.getByRole("link", { name: /^Studio$/i }).click();
     await expect(page).toHaveURL("/en/studio");
   });
 

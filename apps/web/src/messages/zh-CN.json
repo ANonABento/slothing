@@ -846,9 +846,9 @@
       "sectionList": {
         "pickerTitle": "资料库条目选择器",
         "pickerDescription": "选择要添加到文档的条目。",
-        "pickerEmptyTitle": "Your bank is empty",
-        "pickerEmptyDescription": "Upload a resume or add an entry manually to start pulling content into your documents.",
-        "pickerEmptyCta": "Open Documents"
+        "pickerEmptyTitle": "你的素材库是空的",
+        "pickerEmptyDescription": "上传简历或手动添加条目，即可开始把内容放入你的文档。",
+        "pickerEmptyCta": "打开文档"
       }
     },
     "studio": {
