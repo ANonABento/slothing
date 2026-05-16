@@ -835,8 +835,11 @@ export function AiAssistantPanel({
           />
           <Button
             type="button"
+            variant="outline"
+            size="sm"
             className="w-full"
             disabled={isBusy}
+            title="Or use the Tailor split-button in the sub-bar above for AI tailor / Manual tailor / Settings."
             onClick={() => handleAssistantAction("match-jd-keywords")}
           >
             {isRunning("match-jd-keywords") ? (
@@ -846,6 +849,11 @@ export function AiAssistantPanel({
             )}
             {isRunning("match-jd-keywords") ? "Tailoring..." : "Tailor to JD"}
           </Button>
+          <p className="text-[11px] leading-snug text-muted-foreground">
+            Or use{" "}
+            <strong className="font-medium text-foreground">Tailor</strong> in
+            the sub-bar above — same action, with manual + settings options.
+          </p>
         </section>
 
         <section className="space-y-2">
