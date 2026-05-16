@@ -21,6 +21,31 @@ const EMPTY_SNAPSHOT: ProfileSnapshot = {
 let cachedSnapshot: ProfileSnapshot | null = null;
 let inFlight: Promise<ProfileSnapshot> | null = null;
 
+/**
+ * Treat obviously-placeholder URLs as empty so the avatar pills fall
+ * back to initials without firing a network request that 404s and
+ * fills the console with ERR_NAME_NOT_RESOLVED. Covers the dev seed
+ * fixture (example.com/avatar.png) plus any future placeholder hosts.
+ */
+function sanitizeAvatarUrl(raw: string | undefined | null): string {
+  const trimmed = raw?.trim() ?? "";
+  if (!trimmed) return "";
+  try {
+    const url = new URL(trimmed);
+    const placeholderHosts = new Set([
+      "example.com",
+      "www.example.com",
+      "example.org",
+      "placeholder.com",
+    ]);
+    if (placeholderHosts.has(url.hostname.toLowerCase())) return "";
+  } catch {
+    // Not a parseable URL — let it through; the <img onError> handler
+    // hides the broken-image glyph if it fails to load anyway.
+  }
+  return trimmed;
+}
+
 function toSnapshot(profile: Profile | null): ProfileSnapshot {
   const name = profile?.contact?.name?.trim() ?? "";
   const firstName = name.split(/\s+/)[0] || "Your profile";
@@ -28,7 +53,7 @@ function toSnapshot(profile: Profile | null): ProfileSnapshot {
   return {
     name,
     firstName,
-    avatarUrl: profile?.contact?.avatarUrl ?? "",
+    avatarUrl: sanitizeAvatarUrl(profile?.contact?.avatarUrl),
     initials: getProfileInitials(name),
   };
 }
