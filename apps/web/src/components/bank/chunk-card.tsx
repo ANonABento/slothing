@@ -163,7 +163,7 @@ export function ChunkCard({
           {onToggleSelect && (
             <label
               className={cn(
-                "absolute left-3 top-3 z-10 flex h-7 w-7 items-center justify-center rounded-[var(--radius)] border bg-background/95 shadow-[var(--shadow-button)] transition-opacity",
+                "absolute left-3 top-3 z-10 flex h-7 w-7 items-center justify-center rounded-md border bg-background/95 shadow-[var(--shadow-button)] transition-opacity",
                 anySelected
                   ? "opacity-100"
                   : "opacity-0 group-hover:opacity-100 [div:hover>&]:opacity-100",
@@ -186,12 +186,7 @@ export function ChunkCard({
             onClick={() => !editing && setLocalExpanded(!expanded)}
             className="flex flex-1 items-start gap-3 text-left min-w-0"
           >
-            <div
-              className={cn(
-                "p-2 rounded-[var(--radius)] shrink-0",
-                config.color,
-              )}
-            >
+            <div className={cn("p-2 rounded-md shrink-0", config.color)}>
               <Icon className="h-4 w-4" />
             </div>
             <div className="flex-1 min-w-0">
@@ -273,7 +268,7 @@ export function ChunkCard({
             />
           )}
           {editingChildId || creatingChild ? (
-            <div className="rounded-[var(--radius)] border border-border/70 bg-background/60 p-3">
+            <div className="rounded-md border border-border/70 bg-background/60 p-3">
               <div className="mb-3 text-xs font-medium text-muted-foreground">
                 {creatingChild
                   ? "Add bullet component"

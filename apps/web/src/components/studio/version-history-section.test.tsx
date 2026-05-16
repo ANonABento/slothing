@@ -33,7 +33,7 @@ describe("VersionHistorySection", () => {
 
     expect(
       screen.getByText("Initial draft").parentElement?.className,
-    ).toContain("rounded-[var(--radius)]");
+    ).toContain("rounded-md");
     expect(screen.getByPlaceholderText("Version name...").className).toContain(
       "border-[length:var(--border-width)]",
     );

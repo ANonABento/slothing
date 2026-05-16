@@ -42,7 +42,7 @@ export function TailorDiffView({ diff, className }: TailorDiffViewProps) {
             <span
               key={key}
               className={cn(
-                "rounded-[var(--radius)] px-2 py-1 text-xs font-medium",
+                "rounded-md px-2 py-1 text-xs font-medium",
                 labelClassName,
               )}
             >
@@ -68,7 +68,7 @@ export function TailorDiffView({ diff, className }: TailorDiffViewProps) {
             {diff.sections.map((section) => (
               <span
                 key={section.id}
-                className="rounded-[var(--radius)] border bg-muted/30 px-2 py-1 text-muted-foreground"
+                className="rounded-md border bg-muted/30 px-2 py-1 text-muted-foreground"
               >
                 {section.title}: {section.counts.total}
               </span>
@@ -117,7 +117,7 @@ function LegendItem({
   return (
     <span className="inline-flex items-center gap-1.5">
       <span
-        className={cn("h-2.5 w-2.5 rounded-[var(--radius)]", className)}
+        className={cn("h-2.5 w-2.5 rounded-md", className)}
         aria-hidden="true"
       />
       {label}
@@ -142,7 +142,7 @@ function DiffSegment({ segment }: { segment: WordDiffSegment }) {
 
   if (segment.type === "reworded") {
     return (
-      <span className="rounded-[var(--radius)] bg-warning/20 px-0.5 text-warning">
+      <span className="rounded-md bg-warning/20 px-0.5 text-warning">
         <span className="text-warning">{segment.beforeText}</span>
         <RefreshCw
           className="mx-1 inline h-3 w-3 align-[-0.125em]"
@@ -158,7 +158,7 @@ function DiffSegment({ segment }: { segment: WordDiffSegment }) {
   return (
     <span
       className={cn(
-        "rounded-[var(--radius)] px-0.5",
+        "rounded-md px-0.5",
         segment.type === "added" && "bg-success/15 text-success",
         segment.type === "removed" &&
           "bg-destructive/10 text-destructive line-through",

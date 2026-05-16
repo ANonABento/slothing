@@ -58,7 +58,7 @@ function SegmentText({
           key={`${segment.type}-${segment.side}-${index}`}
           data-diff-type={segment.type}
           className={cn(
-            "rounded-[var(--radius)] px-1 py-0.5",
+            "rounded-md px-1 py-0.5",
             segment.type === "added" && "bg-success/10 text-success",
             segment.type === "removed" && "bg-destructive/10 text-destructive",
             segment.type === "reworded" && "bg-warning/10 text-warning",
@@ -153,7 +153,7 @@ export function VersionDiffView({
               {countLabel(diff.totals.reworded, "reworded")}
             </Badge>
           </div>
-          <div className="inline-flex rounded-[var(--radius)] border-[length:var(--border-width)] p-1">
+          <div className="inline-flex rounded-md border-[length:var(--border-width)] p-1">
             <Button
               type="button"
               size="sm"
@@ -174,11 +174,11 @@ export function VersionDiffView({
         </div>
 
         {!version || diff.sections.length === 0 ? (
-          <div className="rounded-[var(--radius)] border-[length:var(--border-width)] p-6 text-sm text-muted-foreground">
+          <div className="rounded-md border-[length:var(--border-width)] p-6 text-sm text-muted-foreground">
             There is no document content to compare yet.
           </div>
         ) : !hasChanges && mode === "diff" ? (
-          <div className="rounded-[var(--radius)] border-[length:var(--border-width)] p-6 text-sm text-muted-foreground">
+          <div className="rounded-md border-[length:var(--border-width)] p-6 text-sm text-muted-foreground">
             No changes between this saved version and the current draft.
           </div>
         ) : (
@@ -186,7 +186,7 @@ export function VersionDiffView({
             {diff.sections.map((section) => (
               <section
                 key={section.id}
-                className="rounded-[var(--radius)] border-[length:var(--border-width)] p-4"
+                className="rounded-md border-[length:var(--border-width)] p-4"
               >
                 <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                   <h3 className="text-sm font-semibold">{section.label}</h3>

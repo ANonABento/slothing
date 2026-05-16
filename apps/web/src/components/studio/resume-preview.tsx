@@ -233,7 +233,7 @@ export function ResumePreview({
           ) : (
             <div className="flex min-h-[11in] items-center justify-center px-14 py-16 text-paper-foreground">
               <div className="w-full max-w-md text-center">
-                <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-[calc(var(--radius)_+_8px)] bg-primary/10 text-primary">
+                <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-xl bg-primary/10 text-primary">
                   <EmptyStateIcon className="h-8 w-8" aria-hidden="true" />
                 </div>
                 <p className="text-xs font-semibold uppercase text-primary">
@@ -250,9 +250,9 @@ export function ResumePreview({
                   {emptyStateContent.steps.map((step, index) => (
                     <li
                       key={step}
-                      className="flex items-center gap-3 rounded-[var(--radius)] bg-muted/40 px-4 py-3 text-sm text-paper-foreground/70"
+                      className="flex items-center gap-3 rounded-md bg-muted/40 px-4 py-3 text-sm text-paper-foreground/70"
                     >
-                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[var(--radius)] bg-background text-xs font-bold text-primary">
+                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-background text-xs font-bold text-primary">
                         {index + 1}
                       </span>
                       <span className="min-w-0 flex-1">{step}</span>

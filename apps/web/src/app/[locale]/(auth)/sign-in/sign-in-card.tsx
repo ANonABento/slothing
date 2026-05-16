@@ -28,10 +28,7 @@ interface AuthDisabledCardProps {
 
 function AuthBrandLink() {
   return (
-    <Link
-      href="/"
-      className="flex min-h-11 items-center gap-3 rounded-[var(--radius)] px-2"
-    >
+    <Link href="/" className="flex min-h-11 items-center gap-3 rounded-md px-2">
       <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-[var(--shadow-button)]">
         <Rocket className="h-5 w-5" />
       </span>
@@ -52,7 +49,7 @@ export function AuthDisabledCard({
 
       <Card className="w-full shadow-[var(--shadow-elevated)]">
         <CardHeader className="space-y-3 text-center">
-          <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-[var(--radius)] bg-destructive/10 text-destructive">
+          <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-md bg-destructive/10 text-destructive">
             <AlertTriangle className="h-5 w-5" />
           </div>
           <CardTitle>Sign-in is disabled in this environment</CardTitle>
@@ -189,9 +186,9 @@ export function SignInCard({
               {magicLinkSentTo ? (
                 <div
                   role="status"
-                  className="rounded-[var(--radius)] border-[length:var(--border-width)] border-border bg-muted/40 p-4 text-center"
+                  className="rounded-md border-[length:var(--border-width)] border-border bg-muted/40 p-4 text-center"
                 >
-                  <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-[var(--radius)] bg-background text-primary shadow-[var(--shadow-button)]">
+                  <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-md bg-background text-primary shadow-[var(--shadow-button)]">
                     <Mail className="h-5 w-5" />
                   </div>
                   <p className="font-medium text-foreground">

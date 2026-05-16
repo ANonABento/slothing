@@ -277,9 +277,7 @@ describe("ChunkCard", () => {
     );
     expect(screen.getByText("Engineer at Acme Corp")).toBeInTheDocument();
     expect(screen.getByText("Experience")).toBeInTheDocument();
-    expect(container.firstElementChild?.className).toContain(
-      "rounded-[var(--radius)]",
-    );
+    expect(container.firstElementChild?.className).toContain("rounded-md");
     expect(container.firstElementChild?.className).toContain(
       "shadow-[var(--shadow-card)]",
     );

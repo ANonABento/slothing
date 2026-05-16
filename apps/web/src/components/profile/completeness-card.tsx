@@ -64,7 +64,7 @@ export function CompletenessCard({
             {t("summary", { score: result.score, count: result.gaps.length })}
           </CardTitle>
         </div>
-        <div className="shrink-0 rounded-[var(--radius)] border bg-background px-4 py-3 text-center">
+        <div className="shrink-0 rounded-md border bg-background px-4 py-3 text-center">
           <div className="text-3xl font-semibold">{result.score}%</div>
           <div className="text-xs text-muted-foreground">
             {t("completeLabel")}

@@ -60,7 +60,7 @@ export function ImportJobCsvPreview({
       </div>
 
       {preview.errors.length > 0 && (
-        <div className="rounded-[var(--radius)] bg-destructive/10 border-[length:var(--border-width)] border-destructive/20 p-3">
+        <div className="rounded-md bg-destructive/10 border-[length:var(--border-width)] border-destructive/20 p-3">
           <div className="flex items-center gap-2 text-sm font-medium text-destructive mb-2">
             <AlertCircle className="h-4 w-4" />
             {t("validationErrors")}
@@ -85,7 +85,7 @@ export function ImportJobCsvPreview({
             {preview.jobs.slice(0, 10).map((job, i) => (
               <div
                 key={i}
-                className="flex items-center justify-between p-2 rounded-[var(--radius)] bg-muted/50 text-sm"
+                className="flex items-center justify-between p-2 rounded-md bg-muted/50 text-sm"
               >
                 <div>
                   <span className="font-medium">{job.title}</span>

@@ -80,7 +80,7 @@ export function ChunkExpandedContent({
         })}
       </div>
       {childEntries.length > 0 ? (
-        <div className="rounded-[var(--radius)] border border-border/70 bg-background/45 p-3">
+        <div className="rounded-md border border-border/70 bg-background/45 p-3">
           <div className="mb-2 flex items-center justify-between gap-3">
             <span className="text-xs font-medium text-muted-foreground">
               Bullet components
@@ -106,7 +106,7 @@ export function ChunkExpandedContent({
             {childEntries.map((child, index) => (
               <div
                 key={child.id}
-                className="flex items-start gap-2 rounded-[var(--radius)] border border-border/50 bg-card/60 px-3 py-2 text-sm"
+                className="flex items-start gap-2 rounded-md border border-border/50 bg-card/60 px-3 py-2 text-sm"
               >
                 <span className="mt-0.5 shrink-0 text-xs text-muted-foreground">
                   {index + 1}
@@ -163,7 +163,7 @@ export function ChunkExpandedContent({
           </div>
         </div>
       ) : onChildCreate ? (
-        <div className="rounded-[var(--radius)] border border-dashed border-border/70 bg-background/30 p-3">
+        <div className="rounded-md border border-dashed border-border/70 bg-background/30 p-3">
           <Button variant="ghost" size="sm" onClick={onChildCreate}>
             <Plus className="h-3 w-3 mr-1" />
             Add bullet component

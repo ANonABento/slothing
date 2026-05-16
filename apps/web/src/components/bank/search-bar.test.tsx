@@ -132,7 +132,7 @@ describe("SearchBar", () => {
     render(<SearchBar {...defaultProps} />);
     const sortSelect = screen.getByRole("combobox", { name: "Sort order" });
     expect(sortSelect).toBeInTheDocument();
-    expect(sortSelect.className).toContain("rounded-[var(--radius)]");
+    expect(sortSelect.className).toContain("rounded-md");
     expect(sortSelect.className).toContain(
       "border-[length:var(--border-width)]",
     );
@@ -154,11 +154,9 @@ describe("SearchBar", () => {
     const expTab = screen.getByRole("tab", { name: /Experience/i });
     expect(expTab).toHaveAttribute("aria-selected", "true");
     expect(expTab.className).toContain("min-h-11");
-    expect(expTab.className).toContain("rounded-[var(--radius)]");
+    expect(expTab.className).toContain("rounded-md");
     expect(expTab.className).toContain("shadow-[var(--shadow-button)]");
-    expect(expTab.querySelector("span")?.className).toContain(
-      "rounded-[var(--radius)]",
-    );
+    expect(expTab.querySelector("span")?.className).toContain("rounded-md");
 
     const allTab = screen.getByRole("tab", { name: /All/i });
     expect(allTab).toHaveAttribute("aria-selected", "false");

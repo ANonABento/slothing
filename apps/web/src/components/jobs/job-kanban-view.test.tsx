@@ -53,7 +53,7 @@ describe("JobKanbanView", () => {
 
     const pendingColumn = screen.getByLabelText("Pending jobs");
     expect(pendingColumn).toBeInTheDocument();
-    expect(pendingColumn.className).toContain("rounded-[var(--radius)]");
+    expect(pendingColumn.className).toContain("rounded-md");
     expect(pendingColumn.className).toContain(
       "border-[length:var(--border-width)]",
     );

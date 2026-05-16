@@ -1,5 +1,5 @@
 const THEME_RADIUS_AND_BORDER_CLASSES =
-  "rounded-[var(--radius)] border-[length:var(--border-width)]";
+  "rounded-md border-[length:var(--border-width)]";
 
 const THEME_GLASS_SURFACE_CLASSES = `glass ${THEME_RADIUS_AND_BORDER_CLASSES} text-card-foreground shadow-[var(--shadow-card)] [backdrop-filter:var(--backdrop-blur)]`;
 

@@ -649,7 +649,7 @@ export default function ProfilePage() {
             {error}
           </div>
         ) : null}
-        <div className="mb-5 flex flex-col gap-2 rounded-[var(--radius)] border bg-card/70 p-4 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+        <div className="mb-5 flex flex-col gap-2 rounded-md border bg-card/70 p-4 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
           <span>{t("answerBankPrompt.text")}</span>
           <Button asChild variant="outline" size="sm">
             <Link href="/answer-bank">{t("answerBankPrompt.action")}</Link>

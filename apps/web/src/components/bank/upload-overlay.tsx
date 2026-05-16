@@ -364,7 +364,7 @@ export function UploadOverlay({
     >
       {/* Animated dashed border (visible during drag) */}
       {isDragging && step === "idle" && (
-        <div className="absolute inset-4 rounded-[var(--radius)] border-[length:var(--border-width)] border-dashed border-primary/50 animate-pulse pointer-events-none" />
+        <div className="absolute inset-4 rounded-md border-[length:var(--border-width)] border-dashed border-primary/50 animate-pulse pointer-events-none" />
       )}
 
       <div
@@ -411,9 +411,9 @@ export function UploadOverlay({
             <p className="text-muted-foreground mt-2">{currentFile}</p>
 
             {/* Progress bar */}
-            <div className="mt-4 w-full bg-muted rounded-[var(--radius)] h-2 overflow-hidden">
+            <div className="mt-4 w-full bg-muted rounded-md h-2 overflow-hidden">
               <div
-                className="h-full bg-primary rounded-[var(--radius)] transition-all duration-500 ease-out"
+                className="h-full bg-primary rounded-md transition-all duration-500 ease-out"
                 style={{ width: `${stageProgress(stage) * 100}%` }}
               />
             </div>
@@ -446,7 +446,7 @@ export function UploadOverlay({
         {/* ── Done ─────────────────────────────────────────────────── */}
         {step === "done" && (
           <>
-            <div className="mx-auto w-20 h-20 rounded-[var(--radius)] bg-success/20 text-success flex items-center justify-center mb-6">
+            <div className="mx-auto w-20 h-20 rounded-md bg-success/20 text-success flex items-center justify-center mb-6">
               <CheckCircle2 className="h-10 w-10" />
             </div>
             <h2 className="font-display text-2xl font-bold tracking-tight">
@@ -463,7 +463,7 @@ export function UploadOverlay({
         {/* ── Error ────────────────────────────────────────────────── */}
         {step === "error" && (
           <>
-            <div className="mx-auto w-20 h-20 rounded-[var(--radius)] bg-destructive/20 text-destructive flex items-center justify-center mb-6">
+            <div className="mx-auto w-20 h-20 rounded-md bg-destructive/20 text-destructive flex items-center justify-center mb-6">
               <X className="h-10 w-10" />
             </div>
             <h2 className="font-display text-2xl font-bold tracking-tight">

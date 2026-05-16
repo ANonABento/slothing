@@ -24,7 +24,7 @@ describe("StudioFilePanel", () => {
     const fileRow = screen.getByRole("button", {
       name: "Resume",
     }).parentElement;
-    expect(fileRow?.className).toContain("rounded-[var(--radius)]");
+    expect(fileRow?.className).toContain("rounded-md");
   });
 
   it("renders an icon strip when collapsed", () => {

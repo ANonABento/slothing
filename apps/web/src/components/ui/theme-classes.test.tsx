@@ -23,7 +23,7 @@ describe("theme variable classes", () => {
     );
 
     const card = screen.getByTestId("card");
-    expect(card.className).toContain("rounded-[var(--radius)]");
+    expect(card.className).toContain("rounded-md");
     expect(card.className).toContain("border-[length:var(--border-width)]");
     expect(card.className).toContain("shadow-[var(--shadow-card)]");
     expect(card.className).toContain("[backdrop-filter:var(--backdrop-blur)]");
@@ -47,7 +47,7 @@ describe("theme variable classes", () => {
       "[letter-spacing:var(--letter-spacing)]",
     );
     const textarea = screen.getByTestId("textarea");
-    expect(textarea.className).toContain("rounded-[var(--radius)]");
+    expect(textarea.className).toContain("rounded-md");
     expect(textarea.className).toContain("border-[length:var(--border-width)]");
     expect(textarea.className).toContain(
       "[letter-spacing:var(--letter-spacing)]",
@@ -67,14 +67,14 @@ describe("theme variable classes", () => {
     );
 
     const trigger = screen.getByTestId("trigger");
-    expect(trigger.className).toContain("rounded-[var(--radius)]");
+    expect(trigger.className).toContain("rounded-md");
     expect(trigger.className).toContain("border-[length:var(--border-width)]");
     expect(trigger.className).toContain(
       "[letter-spacing:var(--letter-spacing)]",
     );
 
     const content = screen.getByTestId("content");
-    expect(content.className).toContain("rounded-[var(--radius)]");
+    expect(content.className).toContain("rounded-md");
     expect(content.className).toContain("border-[length:var(--border-width)]");
     expect(content.className).toContain("shadow-[var(--shadow-elevated)]");
     expect(content.className).toContain(

@@ -54,7 +54,7 @@ const ATSScoreBadge = dynamic(
     ),
   {
     loading: () => (
-      <div className="h-6 w-16 animate-pulse rounded-[var(--radius)] bg-muted" />
+      <div className="h-6 w-16 animate-pulse rounded-md bg-muted" />
     ),
   },
 );
@@ -127,7 +127,7 @@ export function JobCard(props: JobCardProps) {
       <div className="p-5 border-b-[length:var(--border-width)] bg-muted/30 [backdrop-filter:var(--backdrop-blur)]">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-start gap-4 min-w-0">
-            <div className="p-3 rounded-[var(--radius)] bg-primary/10 text-primary shrink-0">
+            <div className="p-3 rounded-md bg-primary/10 text-primary shrink-0">
               <Briefcase className="h-6 w-6" />
             </div>
             <div className="min-w-0">
@@ -344,14 +344,14 @@ export function JobCard(props: JobCardProps) {
         <div className="flex flex-wrap items-center gap-2 border-t pt-3 mt-1">
           <Link
             href={`/opportunities/${job.id}/research`}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-[var(--radius)] border-[length:var(--border-width)] hover:bg-muted transition-colors"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-md border-[length:var(--border-width)] hover:bg-muted transition-colors"
           >
             <Info className="h-3.5 w-3.5" />
             Company Research
           </Link>
           <button
             onClick={onCoverLetter}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-[var(--radius)] border-[length:var(--border-width)] hover:bg-muted transition-colors"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-md border-[length:var(--border-width)] hover:bg-muted transition-colors"
           >
             <FileEdit className="h-3.5 w-3.5" />
             Cover Letter
@@ -360,7 +360,7 @@ export function JobCard(props: JobCardProps) {
           {status === "interviewing" && (
             <Link
               href={`/interview?jobId=${job.id}`}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-[var(--radius)] bg-warning/10 text-warning hover:bg-warning/20 transition-colors"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-md bg-warning/10 text-warning hover:bg-warning/20 transition-colors"
             >
               <MessageSquare className="h-3.5 w-3.5" />
               Interview Prep

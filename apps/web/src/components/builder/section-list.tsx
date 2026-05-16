@@ -198,7 +198,7 @@ export function SectionList({
               (section) =>
                 (entriesByCategory.get(section.id) || []).length === 0,
             ) ? (
-              <div className="rounded-[var(--radius)] border-[length:var(--border-width)] bg-muted/40 p-6 text-center">
+              <div className="rounded-md border-[length:var(--border-width)] bg-muted/40 p-6 text-center">
                 <p className="font-medium text-foreground">
                   {t("pickerEmptyTitle")}
                 </p>

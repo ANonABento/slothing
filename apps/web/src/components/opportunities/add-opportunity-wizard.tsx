@@ -748,7 +748,7 @@ export function AddOpportunityWizard({
                 disabled={index > furthestStep}
                 onClick={() => setStep(index as WizardStep)}
                 className={cn(
-                  "rounded-[var(--radius)] border px-3 py-2 text-left text-xs transition-colors disabled:cursor-not-allowed disabled:opacity-50",
+                  "rounded-md border px-3 py-2 text-left text-xs transition-colors disabled:cursor-not-allowed disabled:opacity-50",
                   step === index
                     ? "border-primary bg-primary/10 text-foreground"
                     : "border-border text-muted-foreground hover:bg-muted",
@@ -833,7 +833,7 @@ export function AddOpportunityWizard({
               role="alertdialog"
               aria-modal="true"
               aria-labelledby="opportunity-wizard-confirm-title"
-              className="w-full max-w-md rounded-[var(--radius)] border bg-background p-5 shadow-[var(--shadow-elevated)]"
+              className="w-full max-w-md rounded-md border bg-background p-5 shadow-[var(--shadow-elevated)]"
             >
               <h2
                 id="opportunity-wizard-confirm-title"

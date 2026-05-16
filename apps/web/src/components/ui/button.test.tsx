@@ -43,7 +43,7 @@ describe("Button", () => {
   it("should use theme variable classes for radius, text, and button shadow", () => {
     render(<Button>Themed</Button>);
     const button = screen.getByRole("button");
-    expect(button.className).toContain("rounded-[var(--radius)]");
+    expect(button.className).toContain("rounded-md");
     expect(button.className).toContain(
       "[letter-spacing:var(--letter-spacing)]",
     );
@@ -86,7 +86,7 @@ describe("Button", () => {
     render(<Button size="lg">Large</Button>);
     const button = screen.getByRole("button");
     expect(button.className).toContain("h-12");
-    expect(button.className).toContain("rounded-[var(--radius)]");
+    expect(button.className).toContain("rounded-md");
     expect(button.className).toContain("px-8");
   });
 

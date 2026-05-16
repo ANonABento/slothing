@@ -138,14 +138,12 @@ describe("ResumePreview", () => {
     expect(
       screen.getByText("Pick the bank entries to include").closest("li")
         ?.className,
-    ).toContain("rounded-[var(--radius)]");
+    ).toContain("rounded-md");
     expect(
       screen.getByText("Pick the bank entries to include").closest("li")
         ?.className,
     ).toContain("bg-muted/40");
-    expect(screen.getByText("1").className).toContain(
-      "rounded-[var(--radius)]",
-    );
+    expect(screen.getByText("1").className).toContain("rounded-md");
 
     fireEvent.click(
       screen.getByRole("button", {

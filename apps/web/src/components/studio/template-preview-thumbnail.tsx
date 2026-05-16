@@ -112,7 +112,7 @@ export function TemplatePreviewThumbnail({
       aria-hidden="true"
       data-testid={`template-thumbnail-${template.id}`}
       className={cn(
-        "h-28 w-full overflow-hidden rounded-[var(--radius)] border-[length:var(--border-width)] border-paper-border bg-paper text-paper-foreground shadow-[var(--shadow-card)]",
+        "h-28 w-full overflow-hidden rounded-md border-[length:var(--border-width)] border-paper-border bg-paper text-paper-foreground shadow-[var(--shadow-card)]",
         className,
       )}
       style={style}
@@ -205,7 +205,7 @@ function ThumbnailSidebar({ traits }: { traits: TemplateThumbnailTraits }) {
 
   return (
     <aside
-      className="space-y-1 rounded-[calc(var(--radius)_-_4px)] p-1"
+      className="space-y-1 rounded-sm p-1"
       style={{ backgroundColor: `${traits.accentColor}14` }}
     >
       <PreviewSection traits={traits} title={a11yT("skills")} compact>

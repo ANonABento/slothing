@@ -26,7 +26,7 @@ export function ErrorState({
   if (variant === "inline") {
     return (
       <div
-        className={`flex items-center gap-3 rounded-[var(--radius)] border-[length:var(--border-width)] border-destructive/50 bg-destructive/5 px-4 py-3 ${className}`}
+        className={`flex items-center gap-3 rounded-md border-[length:var(--border-width)] border-destructive/50 bg-destructive/5 px-4 py-3 ${className}`}
       >
         <AlertCircle className="h-5 w-5 text-destructive shrink-0" />
         <div className="flex-1 min-w-0">
@@ -68,10 +68,10 @@ export function ErrorState({
   if (variant === "card") {
     return (
       <div
-        className={`rounded-[var(--radius)] border-[length:var(--border-width)] border-destructive/50 bg-destructive/5 p-6 ${className}`}
+        className={`rounded-md border-[length:var(--border-width)] border-destructive/50 bg-destructive/5 p-6 ${className}`}
       >
         <div className="flex items-start gap-4">
-          <div className="p-3 rounded-[var(--radius)] bg-destructive/10 text-destructive">
+          <div className="p-3 rounded-md bg-destructive/10 text-destructive">
             <AlertCircle className="h-6 w-6" />
           </div>
           <div className="flex-1">

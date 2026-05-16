@@ -57,7 +57,7 @@ describe("Input", () => {
     expect(input.className).toContain("flex");
     expect(input.className).toContain("h-11");
     expect(input.className).toContain("w-full");
-    expect(input.className).toContain("rounded-[var(--radius)]");
+    expect(input.className).toContain("rounded-md");
     expect(input.className).toContain("border-[length:var(--border-width)]");
     expect(input.className).toContain("[letter-spacing:var(--letter-spacing)]");
   });

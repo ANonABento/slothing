@@ -25,9 +25,7 @@ describe("BulkActionBar", () => {
   it("should show selected count", () => {
     const { container } = render(<BulkActionBar {...defaultProps} />);
     expect(screen.getByText("3 selected")).toBeInTheDocument();
-    expect(container.firstElementChild?.className).toContain(
-      "rounded-[var(--radius)]",
-    );
+    expect(container.firstElementChild?.className).toContain("rounded-md");
     expect(container.firstElementChild?.className).toContain(
       "shadow-[var(--shadow-card)]",
     );

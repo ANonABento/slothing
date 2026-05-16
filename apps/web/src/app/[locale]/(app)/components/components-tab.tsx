@@ -1509,7 +1509,7 @@ export function BankComponentsTab({
                     onChange={(event) =>
                       setMoveTargetParentId(event.target.value)
                     }
-                    className="h-11 w-full rounded-[var(--radius)] border border-input bg-background px-3 text-sm"
+                    className="h-11 w-full rounded-md border border-input bg-background px-3 text-sm"
                   >
                     {parentCandidates.map((entry) => (
                       <option key={entry.id} value={entry.id}>
@@ -1568,7 +1568,7 @@ export function BankComponentsTab({
                         counts={categoryCounts}
                         controls={
                           <>
-                            <div className="flex items-center rounded-[var(--radius)] bg-muted p-1">
+                            <div className="flex items-center rounded-md bg-muted p-1">
                               <DisplayModeButton
                                 active={displayMode === "category"}
                                 onClick={() => {
@@ -1585,7 +1585,7 @@ export function BankComponentsTab({
                                 Source
                               </DisplayModeButton>
                             </div>
-                            <div className="flex items-center rounded-[var(--radius)] bg-muted p-1">
+                            <div className="flex items-center rounded-md bg-muted p-1">
                               <IconModeButton
                                 active={layoutMode === "grid"}
                                 onClick={() => setLayoutMode("grid")}
@@ -1609,7 +1609,7 @@ export function BankComponentsTab({
                                   setActiveCategory("all");
                                 }}
                                 className={cn(
-                                  "inline-flex min-h-10 items-center gap-2 rounded-[var(--radius)] px-3 text-sm font-medium transition-colors",
+                                  "inline-flex min-h-10 items-center gap-2 rounded-md px-3 text-sm font-medium transition-colors",
                                   reviewOnly
                                     ? "bg-warning/15 text-warning"
                                     : "bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground",
@@ -1784,7 +1784,7 @@ function DisplayModeButton({
       type="button"
       onClick={onClick}
       className={cn(
-        "min-h-8 rounded-[var(--radius)] px-3 text-sm font-medium transition-colors",
+        "min-h-8 rounded-md px-3 text-sm font-medium transition-colors",
         active
           ? "bg-primary text-primary-foreground"
           : "text-muted-foreground hover:bg-background/70 hover:text-foreground",
@@ -1813,7 +1813,7 @@ function IconModeButton({
       aria-label={label}
       title={label}
       className={cn(
-        "flex h-8 w-8 items-center justify-center rounded-[var(--radius)] transition-colors",
+        "flex h-8 w-8 items-center justify-center rounded-md transition-colors",
         active
           ? "bg-primary text-primary-foreground"
           : "text-muted-foreground hover:bg-background/70 hover:text-foreground",
@@ -1986,7 +1986,7 @@ function EntryTable({
   }
 
   return (
-    <div className="overflow-hidden rounded-[var(--radius)] border bg-card">
+    <div className="overflow-hidden rounded-md border bg-card">
       <div className="overflow-x-auto">
         <table
           className={cn(
@@ -2322,7 +2322,7 @@ function UploadReviewEntries({
                 type="button"
                 onClick={() => setSelectedId(entry.id)}
                 className={cn(
-                  "w-full rounded-[var(--radius)] border border-transparent px-3 py-3 text-left transition-colors",
+                  "w-full rounded-md border border-transparent px-3 py-3 text-left transition-colors",
                   active
                     ? "border-primary bg-primary/10"
                     : reviewReason
@@ -2410,7 +2410,7 @@ function UploadReviewEntries({
               />
             ) : null}
             {selectedReviewReason ? (
-              <div className="rounded-[var(--radius)] border border-warning/35 bg-warning/10 p-3">
+              <div className="rounded-md border border-warning/35 bg-warning/10 p-3">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <Badge variant="warning">{selectedReviewReason}</Badge>
@@ -2424,7 +2424,7 @@ function UploadReviewEntries({
                   <select
                     value={attachParentId || parentCandidates[0]?.id || ""}
                     onChange={(event) => setAttachParentId(event.target.value)}
-                    className="h-11 flex-1 rounded-[var(--radius)] border border-input bg-background px-3 text-sm"
+                    className="h-11 flex-1 rounded-md border border-input bg-background px-3 text-sm"
                   >
                     {parentCandidates.map((entry) => (
                       <option key={entry.id} value={entry.id}>
@@ -2456,7 +2456,7 @@ function UploadReviewEntries({
                 {selectedWarnings.map((warning) => (
                   <div
                     key={warning}
-                    className="rounded-[var(--radius)] border border-border/70 bg-background/60 px-3 py-2 text-sm"
+                    className="rounded-md border border-border/70 bg-background/60 px-3 py-2 text-sm"
                   >
                     <span className="font-medium">{warning}</span>
                     <p className="mt-1 text-xs text-muted-foreground">
@@ -2518,7 +2518,7 @@ function DuplicateResolutionPanel({
   });
 
   return (
-    <div className="rounded-[var(--radius)] border border-warning/35 bg-warning/10 p-3">
+    <div className="rounded-md border border-warning/35 bg-warning/10 p-3">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <div className="flex flex-wrap items-center gap-2">
@@ -2547,7 +2547,7 @@ function DuplicateResolutionPanel({
         </div>
       </div>
       <div className="mt-3 grid gap-3 md:grid-cols-2">
-        <div className="rounded-[var(--radius)] border border-border/70 bg-background/60 p-3">
+        <div className="rounded-md border border-border/70 bg-background/60 p-3">
           <p className="text-xs font-medium text-muted-foreground">
             Existing bank component
           </p>
@@ -2559,7 +2559,7 @@ function DuplicateResolutionPanel({
             {existingChildren.length === 1 ? "" : "s"} already saved
           </p>
         </div>
-        <div className="rounded-[var(--radius)] border border-border/70 bg-background/60 p-3">
+        <div className="rounded-md border border-border/70 bg-background/60 p-3">
           <p className="text-xs font-medium text-muted-foreground">
             Parsed copy
           </p>

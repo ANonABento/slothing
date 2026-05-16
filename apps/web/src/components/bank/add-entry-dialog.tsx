@@ -114,7 +114,7 @@ export function AddEntryDialog({
                     key={cat}
                     type="button"
                     onClick={() => handleCategoryChange(cat)}
-                    className={`flex items-center gap-1.5 rounded-[var(--radius)] px-3 py-1.5 text-xs font-medium transition-colors ${
+                    className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
                       isActive
                         ? "bg-primary text-primary-foreground"
                         : "bg-muted text-muted-foreground hover:bg-muted/80"

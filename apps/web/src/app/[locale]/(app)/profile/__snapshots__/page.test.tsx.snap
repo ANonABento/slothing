@@ -2,7 +2,7 @@
 
 exports[`ProfilePage > shows an empty state for a brand-new profile 1`] = `
 <div
-  class="rounded-[var(--radius)] border-[length:var(--border-width)] bg-card text-card-foreground shadow-[var(--shadow-card)] [backdrop-filter:var(--backdrop-blur)]"
+  class="rounded-md border-[length:var(--border-width)] bg-card text-card-foreground shadow-[var(--shadow-card)] [backdrop-filter:var(--backdrop-blur)]"
   data-testid="profile-empty-state"
 >
   <div
@@ -54,7 +54,7 @@ exports[`ProfilePage > shows an empty state for a brand-new profile 1`] = `
     class="p-6 pt-0 flex flex-col justify-center gap-3 sm:flex-row"
   >
     <a
-      class="inline-flex items-center justify-center whitespace-nowrap rounded-[var(--radius)] text-sm font-medium [letter-spacing:var(--letter-spacing)] ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [box-shadow:var(--shadow-button)] bg-primary text-primary-foreground hover:bg-brand-dark hover:text-primary-foreground h-11 px-4 py-2"
+      class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium [letter-spacing:var(--letter-spacing)] ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [box-shadow:var(--shadow-button)] bg-primary text-primary-foreground hover:bg-brand-dark hover:text-primary-foreground h-11 px-4 py-2"
       href="/en/components"
     >
       <svg
@@ -85,7 +85,7 @@ exports[`ProfilePage > shows an empty state for a brand-new profile 1`] = `
       Upload your resume to fill this in
     </a>
     <button
-      class="inline-flex items-center justify-center whitespace-nowrap rounded-[var(--radius)] text-sm font-medium [letter-spacing:var(--letter-spacing)] ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [box-shadow:var(--shadow-button)] border-[length:var(--border-width)] border-primary bg-transparent text-primary hover:bg-primary hover:text-primary-foreground h-11 px-4 py-2"
+      class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium [letter-spacing:var(--letter-spacing)] ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [box-shadow:var(--shadow-button)] border-[length:var(--border-width)] border-primary bg-transparent text-primary hover:bg-primary hover:text-primary-foreground h-11 px-4 py-2"
       type="button"
     >
       <svg

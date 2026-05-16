@@ -7,7 +7,7 @@ function Skeleton({
   return (
     <div
       data-skeleton="true"
-      className={cn("skeleton rounded-[var(--radius)]", className)}
+      className={cn("skeleton rounded-md", className)}
       {...props}
     />
   );
@@ -37,7 +37,7 @@ function SkeletonCard({
   return (
     <div
       className={cn(
-        "rounded-[var(--radius)] border-[length:var(--border-width)] bg-card p-6 space-y-4 shadow-[var(--shadow-card)] [backdrop-filter:var(--backdrop-blur)]",
+        "rounded-md border-[length:var(--border-width)] bg-card p-6 space-y-4 shadow-[var(--shadow-card)] [backdrop-filter:var(--backdrop-blur)]",
         className,
       )}
       {...props}
@@ -60,14 +60,14 @@ function SkeletonStatCard({
   return (
     <div
       className={cn(
-        "rounded-[var(--radius)] border-[length:var(--border-width)] bg-card p-5 space-y-3 shadow-[var(--shadow-card)] [backdrop-filter:var(--backdrop-blur)]",
+        "rounded-md border-[length:var(--border-width)] bg-card p-5 space-y-3 shadow-[var(--shadow-card)] [backdrop-filter:var(--backdrop-blur)]",
         className,
       )}
       {...props}
     >
       <div className="flex items-center justify-between">
         <Skeleton className="h-4 w-24" />
-        <Skeleton className="h-10 w-10 rounded-[var(--radius)]" />
+        <Skeleton className="h-10 w-10 rounded-md" />
       </div>
       <Skeleton className="h-8 w-16" />
       <Skeleton className="h-3 w-32" />
@@ -83,7 +83,7 @@ function SkeletonJobCard({
   return (
     <div
       className={cn(
-        "rounded-[var(--radius)] border-[length:var(--border-width)] bg-card p-4 space-y-3 shadow-[var(--shadow-card)] [backdrop-filter:var(--backdrop-blur)]",
+        "rounded-md border-[length:var(--border-width)] bg-card p-4 space-y-3 shadow-[var(--shadow-card)] [backdrop-filter:var(--backdrop-blur)]",
         className,
       )}
       {...props}
@@ -112,13 +112,13 @@ function SkeletonInsights({
   return (
     <div
       className={cn(
-        "rounded-[var(--radius)] border-[length:var(--border-width)] bg-card p-6 space-y-4 shadow-[var(--shadow-card)] [backdrop-filter:var(--backdrop-blur)]",
+        "rounded-md border-[length:var(--border-width)] bg-card p-6 space-y-4 shadow-[var(--shadow-card)] [backdrop-filter:var(--backdrop-blur)]",
         className,
       )}
       {...props}
     >
       <div className="flex items-center gap-3">
-        <Skeleton className="h-10 w-10 rounded-[var(--radius)]" />
+        <Skeleton className="h-10 w-10 rounded-md" />
         <div className="space-y-2">
           <Skeleton className="h-4 w-32" />
           <Skeleton className="h-3 w-24" />
@@ -126,15 +126,15 @@ function SkeletonInsights({
       </div>
       <div className="space-y-3">
         <div className="flex items-center gap-3">
-          <Skeleton className="h-8 w-8 rounded-[var(--radius)]" />
+          <Skeleton className="h-8 w-8 rounded-md" />
           <Skeleton className="h-4 w-full" />
         </div>
         <div className="flex items-center gap-3">
-          <Skeleton className="h-8 w-8 rounded-[var(--radius)]" />
+          <Skeleton className="h-8 w-8 rounded-md" />
           <Skeleton className="h-4 w-4/5" />
         </div>
         <div className="flex items-center gap-3">
-          <Skeleton className="h-8 w-8 rounded-[var(--radius)]" />
+          <Skeleton className="h-8 w-8 rounded-md" />
           <Skeleton className="h-4 w-3/4" />
         </div>
       </div>
@@ -177,12 +177,12 @@ function SkeletonChunkCard({
   return (
     <div
       className={cn(
-        "rounded-[var(--radius)] border-[length:var(--border-width)] bg-card p-4 flex items-start gap-3 shadow-[var(--shadow-card)] [backdrop-filter:var(--backdrop-blur)]",
+        "rounded-md border-[length:var(--border-width)] bg-card p-4 flex items-start gap-3 shadow-[var(--shadow-card)] [backdrop-filter:var(--backdrop-blur)]",
         className,
       )}
       {...props}
     >
-      <Skeleton className="h-8 w-8 rounded-[var(--radius)] shrink-0" />
+      <Skeleton className="h-8 w-8 rounded-md shrink-0" />
       <div className="flex-1 min-w-0 space-y-2">
         <div className="flex items-center gap-2">
           <Skeleton className="h-4 w-2/5" />
@@ -203,14 +203,14 @@ function SkeletonChart({
   return (
     <div
       className={cn(
-        "rounded-[var(--radius)] border-[length:var(--border-width)] bg-card p-6 space-y-4 shadow-[var(--shadow-card)] [backdrop-filter:var(--backdrop-blur)]",
+        "rounded-md border-[length:var(--border-width)] bg-card p-6 space-y-4 shadow-[var(--shadow-card)] [backdrop-filter:var(--backdrop-blur)]",
         className,
       )}
       {...props}
     >
       <div className="flex items-center justify-between">
         <Skeleton className="h-5 w-40" />
-        <Skeleton className="h-8 w-24 rounded-[var(--radius)]" />
+        <Skeleton className="h-8 w-24 rounded-md" />
       </div>
       <Skeleton className="h-48 w-full" />
       <div className="flex gap-3">
@@ -228,10 +228,7 @@ function SkeletonButton({
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) {
   return (
-    <Skeleton
-      className={cn("h-9 w-32 rounded-[var(--radius)]", className)}
-      {...props}
-    />
+    <Skeleton className={cn("h-9 w-32 rounded-md", className)} {...props} />
   );
 }
 
@@ -274,7 +271,7 @@ function SkeletonKanbanLane({
   return (
     <div
       className={cn(
-        "min-h-[28rem] rounded-[var(--radius)] border-[length:var(--border-width)] bg-card p-3 shadow-[var(--shadow-card)] [backdrop-filter:var(--backdrop-blur)]",
+        "min-h-[28rem] rounded-md border-[length:var(--border-width)] bg-card p-3 shadow-[var(--shadow-card)] [backdrop-filter:var(--backdrop-blur)]",
         className,
       )}
       {...props}
@@ -300,13 +297,13 @@ function SkeletonFormSection({
   return (
     <div
       className={cn(
-        "rounded-[var(--radius)] border-[length:var(--border-width)] bg-card p-6 shadow-[var(--shadow-card)] [backdrop-filter:var(--backdrop-blur)]",
+        "rounded-md border-[length:var(--border-width)] bg-card p-6 shadow-[var(--shadow-card)] [backdrop-filter:var(--backdrop-blur)]",
         className,
       )}
       {...props}
     >
       <div className="mb-6 flex items-start gap-3">
-        <Skeleton className="h-10 w-10 rounded-[var(--radius)]" />
+        <Skeleton className="h-10 w-10 rounded-md" />
         <div className="space-y-2">
           <Skeleton className="h-5 w-40" />
           <Skeleton className="h-3 w-56" />

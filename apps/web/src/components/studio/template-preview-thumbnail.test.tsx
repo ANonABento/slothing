@@ -77,7 +77,7 @@ describe("TemplatePreviewThumbnail", () => {
 
     const thumbnail = screen.getByTestId("template-thumbnail-modern");
     expect(thumbnail).toHaveAttribute("aria-hidden", "true");
-    expect(thumbnail.className).toContain("rounded-[var(--radius)]");
+    expect(thumbnail.className).toContain("rounded-md");
     expect(thumbnail.className).toContain(
       "border-[length:var(--border-width)]",
     );

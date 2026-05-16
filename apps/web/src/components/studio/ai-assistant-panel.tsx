@@ -689,7 +689,7 @@ export function AiAssistantPanel({
       <div className="min-h-0 flex-1 space-y-5 overflow-y-auto p-4">
         {setupPrompt && (
           <div
-            className="rounded-[var(--radius)] border-[length:var(--border-width)] border-primary/30 bg-primary/5 p-3 text-sm"
+            className="rounded-md border-[length:var(--border-width)] border-primary/30 bg-primary/5 p-3 text-sm"
             role="status"
           >
             <p className="font-medium">AI tools need BYOK or Pro credits.</p>
@@ -837,7 +837,7 @@ export function AiAssistantPanel({
 
         {hasSelection && (
           <section
-            className="space-y-3 rounded-[var(--radius)] border-[length:var(--border-width)] bg-muted/30 p-3"
+            className="space-y-3 rounded-md border-[length:var(--border-width)] bg-muted/30 p-3"
             aria-label={a11yT("selectedTextQuickActions")}
           >
             <div>
@@ -874,7 +874,7 @@ export function AiAssistantPanel({
 
         {coverLetterCritique && isCoverLetter && (
           <section
-            className="space-y-4 rounded-[var(--radius)] border-[length:var(--border-width)] bg-muted/30 p-3"
+            className="space-y-4 rounded-md border-[length:var(--border-width)] bg-muted/30 p-3"
             aria-label={a11yT("coverLetterCritique")}
           >
             <div className="flex items-center justify-between gap-3">
@@ -948,7 +948,7 @@ export function AiAssistantPanel({
               <p className="text-muted-foreground">{statusMessage}</p>
             )}
             {assistantResult && (
-              <div className="rounded-[var(--radius)] border-[length:var(--border-width)] bg-muted/30 p-3 text-foreground">
+              <div className="rounded-md border-[length:var(--border-width)] bg-muted/30 p-3 text-foreground">
                 {assistantResult}
               </div>
             )}

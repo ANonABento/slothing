@@ -6,7 +6,7 @@ exports[`AuthDisabledCard > renders the disabled auth state with the dev dashboa
     class="relative z-10 flex w-full max-w-md flex-col items-center gap-5"
   >
     <a
-      class="flex min-h-11 items-center gap-3 rounded-[var(--radius)] px-2"
+      class="flex min-h-11 items-center gap-3 rounded-md px-2"
       href="/"
     >
       <span
@@ -45,13 +45,13 @@ exports[`AuthDisabledCard > renders the disabled auth state with the dev dashboa
       </span>
     </a>
     <div
-      class="rounded-[var(--radius)] border-[length:var(--border-width)] bg-card text-card-foreground [backdrop-filter:var(--backdrop-blur)] w-full shadow-[var(--shadow-elevated)]"
+      class="rounded-md border-[length:var(--border-width)] bg-card text-card-foreground [backdrop-filter:var(--backdrop-blur)] w-full shadow-[var(--shadow-elevated)]"
     >
       <div
         class="flex flex-col p-6 space-y-3 text-center"
       >
         <div
-          class="mx-auto flex h-11 w-11 items-center justify-center rounded-[var(--radius)] bg-destructive/10 text-destructive"
+          class="mx-auto flex h-11 w-11 items-center justify-center rounded-md bg-destructive/10 text-destructive"
         >
           <svg
             class="lucide lucide-triangle-alert h-5 w-5"
@@ -117,7 +117,7 @@ exports[`AuthDisabledCard > renders the disabled auth state with the dev dashboa
         class="p-6 pt-0 space-y-4 text-center"
       >
         <a
-          class="inline-flex items-center justify-center whitespace-nowrap rounded-[var(--radius)] text-sm font-medium [letter-spacing:var(--letter-spacing)] ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [box-shadow:var(--shadow-button)] bg-primary text-primary-foreground hover:bg-brand-dark hover:text-primary-foreground h-11 px-4 py-2 w-full"
+          class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium [letter-spacing:var(--letter-spacing)] ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [box-shadow:var(--shadow-button)] bg-primary text-primary-foreground hover:bg-brand-dark hover:text-primary-foreground h-11 px-4 py-2 w-full"
           href="/en/dashboard"
         >
           Continue to dashboard (dev mode)
@@ -159,7 +159,7 @@ exports[`SignInCard > renders the Vercel-style Google-only state 1`] = `
     class="relative z-10 flex w-full max-w-md flex-col items-center gap-5"
   >
     <a
-      class="flex min-h-11 items-center gap-3 rounded-[var(--radius)] px-2"
+      class="flex min-h-11 items-center gap-3 rounded-md px-2"
       href="/"
     >
       <span
@@ -198,7 +198,7 @@ exports[`SignInCard > renders the Vercel-style Google-only state 1`] = `
       </span>
     </a>
     <div
-      class="rounded-[var(--radius)] border-[length:var(--border-width)] bg-card text-card-foreground [backdrop-filter:var(--backdrop-blur)] w-full shadow-[var(--shadow-elevated)]"
+      class="rounded-md border-[length:var(--border-width)] bg-card text-card-foreground [backdrop-filter:var(--backdrop-blur)] w-full shadow-[var(--shadow-elevated)]"
     >
       <div
         class="flex flex-col p-6 space-y-2 text-center"
@@ -218,7 +218,7 @@ exports[`SignInCard > renders the Vercel-style Google-only state 1`] = `
         class="p-6 pt-0 space-y-4"
       >
         <button
-          class="inline-flex items-center justify-center whitespace-nowrap rounded-[var(--radius)] text-sm font-medium [letter-spacing:var(--letter-spacing)] ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [box-shadow:var(--shadow-button)] border-[length:var(--border-width)] border-primary bg-transparent text-primary hover:bg-primary hover:text-primary-foreground h-11 px-4 py-2 w-full gap-2"
+          class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium [letter-spacing:var(--letter-spacing)] ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [box-shadow:var(--shadow-button)] border-[length:var(--border-width)] border-primary bg-transparent text-primary hover:bg-primary hover:text-primary-foreground h-11 px-4 py-2 w-full gap-2"
           type="button"
         >
           <svg
@@ -303,7 +303,7 @@ exports[`SignInCard > submits a Resend magic link and renders the confirmation s
     class="relative z-10 flex w-full max-w-md flex-col items-center gap-5"
   >
     <a
-      class="flex min-h-11 items-center gap-3 rounded-[var(--radius)] px-2"
+      class="flex min-h-11 items-center gap-3 rounded-md px-2"
       href="/"
     >
       <span
@@ -342,7 +342,7 @@ exports[`SignInCard > submits a Resend magic link and renders the confirmation s
       </span>
     </a>
     <div
-      class="rounded-[var(--radius)] border-[length:var(--border-width)] bg-card text-card-foreground [backdrop-filter:var(--backdrop-blur)] w-full shadow-[var(--shadow-elevated)]"
+      class="rounded-md border-[length:var(--border-width)] bg-card text-card-foreground [backdrop-filter:var(--backdrop-blur)] w-full shadow-[var(--shadow-elevated)]"
     >
       <div
         class="flex flex-col p-6 space-y-2 text-center"
@@ -362,7 +362,7 @@ exports[`SignInCard > submits a Resend magic link and renders the confirmation s
         class="p-6 pt-0 space-y-4"
       >
         <button
-          class="inline-flex items-center justify-center whitespace-nowrap rounded-[var(--radius)] text-sm font-medium [letter-spacing:var(--letter-spacing)] ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [box-shadow:var(--shadow-button)] border-[length:var(--border-width)] border-primary bg-transparent text-primary hover:bg-primary hover:text-primary-foreground h-11 px-4 py-2 w-full gap-2"
+          class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium [letter-spacing:var(--letter-spacing)] ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [box-shadow:var(--shadow-button)] border-[length:var(--border-width)] border-primary bg-transparent text-primary hover:bg-primary hover:text-primary-foreground h-11 px-4 py-2 w-full gap-2"
           type="button"
         >
           <svg
@@ -414,7 +414,7 @@ exports[`SignInCard > submits a Resend magic link and renders the confirmation s
             </label>
             <input
               autocomplete="email"
-              class="flex h-11 w-full rounded-[var(--radius)] border-[length:var(--border-width)] border-input bg-background px-3 py-2 text-sm [letter-spacing:var(--letter-spacing)] ring-offset-background file:border-[length:0] file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              class="flex h-11 w-full rounded-md border-[length:var(--border-width)] border-input bg-background px-3 py-2 text-sm [letter-spacing:var(--letter-spacing)] ring-offset-background file:border-[length:0] file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               id="email"
               placeholder="you@example.com"
               required=""
@@ -423,7 +423,7 @@ exports[`SignInCard > submits a Resend magic link and renders the confirmation s
             />
           </div>
           <button
-            class="inline-flex items-center justify-center whitespace-nowrap rounded-[var(--radius)] text-sm font-medium [letter-spacing:var(--letter-spacing)] ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [box-shadow:var(--shadow-button)] bg-primary text-primary-foreground hover:bg-brand-dark hover:text-primary-foreground h-11 px-4 py-2 w-full gap-2"
+            class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium [letter-spacing:var(--letter-spacing)] ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [box-shadow:var(--shadow-button)] bg-primary text-primary-foreground hover:bg-brand-dark hover:text-primary-foreground h-11 px-4 py-2 w-full gap-2"
             type="submit"
           >
             <svg

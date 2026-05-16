@@ -162,7 +162,7 @@ describe("Dialog", () => {
     expect(inner.className).toContain("overflow-y-auto");
     expect(inner.className).toContain("shadow-[var(--shadow-elevated)]");
     expect(inner.className).toContain("[backdrop-filter:var(--backdrop-blur)]");
-    expect(inner.className).toContain("sm:rounded-[var(--radius)]");
+    expect(inner.className).toContain("sm:rounded-md");
   });
 
   it("should render close button in DialogContent", async () => {

@@ -764,7 +764,7 @@ function AnswerGrid({
 
 function CrossLinkBanner() {
   return (
-    <div className="flex flex-col gap-2 rounded-[var(--radius)] border bg-card/70 p-4 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+    <div className="flex flex-col gap-2 rounded-md border bg-card/70 p-4 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
       <span>
         Personal facts (email, phone, location, links) live in your{" "}
         <Link href="/profile" className="font-medium text-primary underline">
@@ -792,7 +792,7 @@ function MigrationBanner({
 }) {
   const count = summary.migratedToProfile.length;
   return (
-    <div className="flex flex-col gap-2 rounded-[var(--radius)] border border-primary/20 bg-primary/5 p-4 text-sm sm:flex-row sm:items-center sm:justify-between">
+    <div className="flex flex-col gap-2 rounded-md border border-primary/20 bg-primary/5 p-4 text-sm sm:flex-row sm:items-center sm:justify-between">
       <span>
         Moved {count} personal {count === 1 ? "fact" : "facts"} into your
         Profile. Please verify the details when you have a moment.
@@ -837,7 +837,7 @@ function AnswerTypeButton({
       onClick={onClick}
       disabled={count === 0 && !active}
       className={cn(
-        "min-h-10 rounded-[var(--radius)] px-3 text-sm font-medium transition-colors",
+        "min-h-10 rounded-md px-3 text-sm font-medium transition-colors",
         active
           ? "bg-primary text-primary-foreground"
           : "bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground",
@@ -847,7 +847,7 @@ function AnswerTypeButton({
       {children}
       <span
         className={cn(
-          "ml-2 inline-flex min-w-5 justify-center rounded-[var(--radius)] px-1 text-xs",
+          "ml-2 inline-flex min-w-5 justify-center rounded-md px-1 text-xs",
           active ? "bg-primary-foreground/20" : "bg-background",
         )}
       >
@@ -1092,7 +1092,7 @@ function AnswerDialog({
               versions.map((version) => (
                 <div
                   key={version.id}
-                  className="rounded-[var(--radius)] border bg-card/50 p-3"
+                  className="rounded-md border bg-card/50 p-3"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">

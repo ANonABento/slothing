@@ -189,7 +189,7 @@ export function BuilderStep({ onAdvance }: BuilderStepProps) {
           />
         </label>
 
-        <div className="rounded-[var(--radius)] border-[length:var(--border-width)] border-border/70">
+        <div className="rounded-md border-[length:var(--border-width)] border-border/70">
           <button
             type="button"
             className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left text-sm text-muted-foreground"
@@ -290,7 +290,7 @@ export function BuilderStep({ onAdvance }: BuilderStepProps) {
         {error && (
           <div
             role="alert"
-            className="flex items-start gap-2 rounded-[var(--radius)] border-[length:var(--border-width)] border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive"
+            className="flex items-start gap-2 rounded-md border-[length:var(--border-width)] border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive"
           >
             <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
             {error}

@@ -244,7 +244,7 @@ export function StudioHeader({
           </h1>
         </div>
 
-        <div className="flex shrink-0 rounded-[var(--radius)] border-[length:var(--border-width)] bg-card">
+        <div className="flex shrink-0 rounded-md border-[length:var(--border-width)] bg-card">
           {DOCUMENT_MODE_OPTIONS.map(({ mode, label }) => (
             <button
               key={mode}
@@ -274,7 +274,7 @@ export function StudioHeader({
             aria-expanded={templateOpen}
             aria-haspopup="menu"
             onClick={() => setTemplateOpen((prev) => !prev)}
-            className="flex min-h-10 items-center gap-2 rounded-[var(--radius)] border-[length:var(--border-width)] bg-card px-3 py-2 text-left text-sm font-medium transition-colors hover:bg-muted"
+            className="flex min-h-10 items-center gap-2 rounded-md border-[length:var(--border-width)] bg-card px-3 py-2 text-left text-sm font-medium transition-colors hover:bg-muted"
           >
             <Palette className="h-4 w-4 shrink-0 text-primary" />
             <span className="hidden md:inline">Template</span>
@@ -292,7 +292,7 @@ export function StudioHeader({
                 role="listbox"
                 aria-label={templateListLabel}
                 style={templatePickerStyle}
-                className="fixed left-0 top-full z-50 mt-2 flex max-h-[60vh] w-[min(26rem,calc(100vw-2rem))] flex-col overflow-hidden rounded-[var(--radius)] border-[length:var(--border-width)] bg-popover p-2 text-popover-foreground shadow-[var(--shadow-elevated)] [backdrop-filter:var(--backdrop-blur)]"
+                className="fixed left-0 top-full z-50 mt-2 flex max-h-[60vh] w-[min(26rem,calc(100vw-2rem))] flex-col overflow-hidden rounded-md border-[length:var(--border-width)] bg-popover p-2 text-popover-foreground shadow-[var(--shadow-elevated)] [backdrop-filter:var(--backdrop-blur)]"
               >
                 {showTemplateSearch && (
                   <div className="relative mb-2 shrink-0">
@@ -305,7 +305,7 @@ export function StudioHeader({
                       }
                       placeholder={a11yT("searchTemplates")}
                       aria-label={a11yT("searchTemplates")}
-                      className="h-10 w-full rounded-[var(--radius)] border-[length:var(--border-width)] bg-background pl-9 pr-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      className="h-10 w-full rounded-md border-[length:var(--border-width)] bg-background pl-9 pr-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     />
                   </div>
                 )}
@@ -326,7 +326,7 @@ export function StudioHeader({
                         aria-selected={isSelected}
                         onClick={selectTemplate}
                         className={cn(
-                          "group rounded-[var(--radius)] border-[length:var(--border-width)] bg-background p-2 text-left text-sm transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                          "group rounded-md border-[length:var(--border-width)] bg-background p-2 text-left text-sm transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                           isSelected
                             ? "border-primary bg-primary/5"
                             : "border-border",
@@ -351,7 +351,7 @@ export function StudioHeader({
                         </span>
                         <span
                           className={cn(
-                            "mt-3 flex h-8 w-full items-center justify-center rounded-[var(--radius)] border-[length:var(--border-width)] px-3 text-xs font-medium transition-colors",
+                            "mt-3 flex h-8 w-full items-center justify-center rounded-md border-[length:var(--border-width)] px-3 text-xs font-medium transition-colors",
                             isSelected
                               ? "border-transparent bg-secondary text-secondary-foreground"
                               : "border-input bg-background group-hover:bg-accent group-hover:text-accent-foreground",
@@ -422,7 +422,7 @@ export function StudioHeader({
               <div
                 role="menu"
                 aria-label={`${modeLabel} export actions`}
-                className="absolute right-0 top-full z-50 mt-2 w-48 overflow-hidden rounded-[var(--radius)] border-[length:var(--border-width)] bg-popover p-1 text-popover-foreground shadow-[var(--shadow-elevated)]"
+                className="absolute right-0 top-full z-50 mt-2 w-48 overflow-hidden rounded-md border-[length:var(--border-width)] bg-popover p-1 text-popover-foreground shadow-[var(--shadow-elevated)]"
               >
                 <button
                   type="button"
@@ -431,7 +431,7 @@ export function StudioHeader({
                     onExportMenuOpenChange(false);
                     onDownloadPdf();
                   }}
-                  className="flex min-h-9 w-full items-center gap-2 rounded-[calc(var(--radius)_-_2px)] px-3 text-left text-sm transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="flex min-h-9 w-full items-center gap-2 rounded-sm px-3 text-left text-sm transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   <Download className="h-4 w-4" />
                   Download PDF
@@ -443,7 +443,7 @@ export function StudioHeader({
                     onExportMenuOpenChange(false);
                     onDownloadDocx();
                   }}
-                  className="flex min-h-9 w-full items-center gap-2 rounded-[calc(var(--radius)_-_2px)] px-3 text-left text-sm transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="flex min-h-9 w-full items-center gap-2 rounded-sm px-3 text-left text-sm transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   <Download className="h-4 w-4" />
                   Download DOCX
@@ -455,7 +455,7 @@ export function StudioHeader({
                     onExportMenuOpenChange(false);
                     onCopyHtml();
                   }}
-                  className="flex min-h-9 w-full items-center gap-2 rounded-[calc(var(--radius)_-_2px)] px-3 text-left text-sm transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="flex min-h-9 w-full items-center gap-2 rounded-sm px-3 text-left text-sm transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   <Copy className="h-4 w-4" />
                   Copy HTML
@@ -468,7 +468,7 @@ export function StudioHeader({
         <span
           role="status"
           className={cn(
-            "inline-flex min-h-8 items-center gap-1.5 whitespace-nowrap rounded-[var(--radius)] border-[length:var(--border-width)] px-2 py-1 text-xs font-medium text-muted-foreground",
+            "inline-flex min-h-8 items-center gap-1.5 whitespace-nowrap rounded-md border-[length:var(--border-width)] px-2 py-1 text-xs font-medium text-muted-foreground",
             saveStatusIcon === "saved" && draftIsSaved
               ? "border-success/20 bg-success/10 text-success"
               : saveStatusIcon === "error"

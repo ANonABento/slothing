@@ -44,7 +44,7 @@ export class ErrorBoundary extends Component<
       }
 
       return (
-        <div className="rounded-[var(--radius)] border-[length:var(--border-width)] bg-card p-6 shadow-[var(--shadow-card)] [backdrop-filter:var(--backdrop-blur)]">
+        <div className="rounded-md border-[length:var(--border-width)] bg-card p-6 shadow-[var(--shadow-card)] [backdrop-filter:var(--backdrop-blur)]">
           <div className="flex flex-col items-center text-center">
             <div className="p-3 rounded-full bg-destructive/10 mb-4">
               <AlertTriangle className="h-6 w-6 text-destructive" />

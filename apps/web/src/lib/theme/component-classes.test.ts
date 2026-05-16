@@ -16,7 +16,7 @@ describe("theme component classes", () => {
     THEME_CONTROL_CLASSES,
     THEME_DASHED_SURFACE_CLASSES,
   ])("uses theme token radius and border width", (classes) => {
-    expect(classes).toContain("rounded-[var(--radius)]");
+    expect(classes).toContain("rounded-md");
     expect(classes).toContain("border-[length:var(--border-width)]");
   });
 

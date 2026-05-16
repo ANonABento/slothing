@@ -35,7 +35,7 @@ export function ImportJobUrlMode({
         <p className="text-xs text-muted-foreground">{t("jobUrlHelp")}</p>
       </div>
 
-      <div className="rounded-[var(--radius)] bg-warning/10 border-[length:var(--border-width)] border-warning/20 p-3 text-sm text-warning">
+      <div className="rounded-md bg-warning/10 border-[length:var(--border-width)] border-warning/20 p-3 text-sm text-warning">
         {t("fetchingNote")}
       </div>
 

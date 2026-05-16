@@ -25,7 +25,7 @@ export function GapList({ gaps, onSelectGap }: GapListProps) {
 
   if (visibleGaps.length === 0) {
     return (
-      <p className="rounded-[var(--radius)] border border-success/30 bg-success/10 px-4 py-3 text-sm font-medium text-success">
+      <p className="rounded-md border border-success/30 bg-success/10 px-4 py-3 text-sm font-medium text-success">
         {t("noGaps")}
       </p>
     );
@@ -44,7 +44,7 @@ export function GapList({ gaps, onSelectGap }: GapListProps) {
             key={gap.id}
             type="button"
             variant="ghost"
-            className="h-auto justify-between gap-3 rounded-[var(--radius)] border bg-background px-4 py-3 text-left hover:bg-accent/10"
+            className="h-auto justify-between gap-3 rounded-md border bg-background px-4 py-3 text-left hover:bg-accent/10"
             onClick={() => onSelectGap(gap)}
           >
             <span className="flex min-w-0 items-start gap-3">

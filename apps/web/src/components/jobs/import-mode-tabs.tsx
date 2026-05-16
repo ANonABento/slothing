@@ -17,7 +17,7 @@ export function ImportModeTabs({ value, onChange }: ImportModeTabsProps) {
   ];
 
   return (
-    <div className="flex gap-1 p-1 bg-muted rounded-[var(--radius)]">
+    <div className="flex gap-1 p-1 bg-muted rounded-md">
       {modes.map((mode) => {
         const Icon = mode.icon;
         return (
@@ -26,7 +26,7 @@ export function ImportModeTabs({ value, onChange }: ImportModeTabsProps) {
             type="button"
             onClick={() => onChange(mode.value)}
             className={cn(
-              "flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-[var(--radius)] text-sm font-medium transition-colors",
+              "flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium transition-colors",
               value === mode.value
                 ? "bg-background shadow-[var(--shadow-button)] text-foreground"
                 : "text-muted-foreground hover:text-foreground",

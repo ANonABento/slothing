@@ -69,7 +69,7 @@ export function ChunkContentPreview({ entry }: { entry: BankEntry }) {
           {cat && (
             <span
               className={cn(
-                "text-2xs px-1.5 py-0.5 rounded-[var(--radius)] font-medium",
+                "text-2xs px-1.5 py-0.5 rounded-md font-medium",
                 SKILL_CATEGORY_COLORS[cat] || SKILL_CATEGORY_COLORS.other,
               )}
             >
@@ -97,7 +97,7 @@ export function ChunkContentPreview({ entry }: { entry: BankEntry }) {
               {techs.slice(0, 5).map((t, i) => (
                 <span
                   key={i}
-                  className="text-2xs px-1.5 py-0.5 rounded-[var(--radius)] bg-accent/10 text-accent font-medium"
+                  className="text-2xs px-1.5 py-0.5 rounded-md bg-accent/10 text-accent font-medium"
                 >
                   {t}
                 </span>
@@ -128,7 +128,7 @@ export function ChunkContentPreview({ entry }: { entry: BankEntry }) {
       return (
         <div className="mt-2 space-y-2">
           <div className="grid grid-cols-2 gap-2 text-xs">
-            <div className="rounded-[var(--radius)] border-[length:var(--border-width)] border-warning/25 bg-background/70 px-2 py-1">
+            <div className="rounded-md border-[length:var(--border-width)] border-warning/25 bg-background/70 px-2 py-1">
               <span className="block text-muted-foreground">Prizes</span>
               <span className="font-medium">
                 {prizes.length > 0
@@ -136,7 +136,7 @@ export function ChunkContentPreview({ entry }: { entry: BankEntry }) {
                   : "Not listed"}
               </span>
             </div>
-            <div className="rounded-[var(--radius)] border-[length:var(--border-width)] border-warning/25 bg-background/70 px-2 py-1">
+            <div className="rounded-md border-[length:var(--border-width)] border-warning/25 bg-background/70 px-2 py-1">
               <span className="block text-muted-foreground">Team</span>
               <span className="font-medium">{teamSize || "Flexible"}</span>
             </div>
@@ -151,7 +151,7 @@ export function ChunkContentPreview({ entry }: { entry: BankEntry }) {
               {tags.slice(0, 5).map((tag, i) => (
                 <span
                   key={`${tag}-${i}`}
-                  className="text-2xs px-1.5 py-0.5 rounded-[var(--radius)] bg-warning/15 text-warning font-medium"
+                  className="text-2xs px-1.5 py-0.5 rounded-md bg-warning/15 text-warning font-medium"
                 >
                   {tag}
                 </span>

@@ -40,7 +40,7 @@ export function VersionHistorySection({
           <div
             key={version.id}
             className={cn(
-              "flex items-center justify-between rounded-[var(--radius)] px-2 py-1.5 text-xs",
+              "flex items-center justify-between rounded-md px-2 py-1.5 text-xs",
               previewVersionId === version.id
                 ? "bg-primary/10 text-foreground"
                 : "text-muted-foreground hover:bg-muted",
@@ -75,7 +75,7 @@ export function VersionHistorySection({
           placeholder={a11yT("versionName2")}
           value={manualVersionName}
           onChange={(event) => onManualVersionNameChange(event.target.value)}
-          className="min-w-0 flex-1 rounded-[var(--radius)] border-[length:var(--border-width)] bg-background px-2 py-1 text-xs"
+          className="min-w-0 flex-1 rounded-md border-[length:var(--border-width)] bg-background px-2 py-1 text-xs"
         />
         <Button
           size="sm"
