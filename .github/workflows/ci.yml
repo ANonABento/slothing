@@ -72,8 +72,14 @@ jobs:
           cache: 'pnpm'
           cache-dependency-path: pnpm-lock.yaml
 
-      - name: Use HTTPS for GitHub git dependencies
-        run: git config --global url."https://github.com/".insteadOf "git@github.com:"
+      - name: Authenticate GitHub git dependencies
+        env:
+          BENTO_ROUTER_READ_TOKEN: ${{ secrets.BENTO_ROUTER_READ_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          token="${BENTO_ROUTER_READ_TOKEN:-$GITHUB_TOKEN}"
+          git config --global url."https://x-access-token:${token}@github.com/".insteadOf "git@github.com:"
+          git config --global url."https://x-access-token:${token}@github.com/".insteadOf "https://github.com/"
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -102,8 +108,14 @@ jobs:
           node-version: '20'
           cache: 'pnpm'
 
-      - name: Use HTTPS for GitHub git dependencies
-        run: git config --global url."https://github.com/".insteadOf "git@github.com:"
+      - name: Authenticate GitHub git dependencies
+        env:
+          BENTO_ROUTER_READ_TOKEN: ${{ secrets.BENTO_ROUTER_READ_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          token="${BENTO_ROUTER_READ_TOKEN:-$GITHUB_TOKEN}"
+          git config --global url."https://x-access-token:${token}@github.com/".insteadOf "git@github.com:"
+          git config --global url."https://x-access-token:${token}@github.com/".insteadOf "https://github.com/"
 
       - name: Restore dependency and tool caches
         id: cache

@@ -35,9 +35,15 @@ jobs:
           cache: "pnpm"
           cache-dependency-path: pnpm-lock.yaml
 
-      - name: Use HTTPS for GitHub git dependencies
+      - name: Authenticate GitHub git dependencies
         working-directory: .
-        run: git config --global url."https://github.com/".insteadOf "git@github.com:"
+        env:
+          BENTO_ROUTER_READ_TOKEN: ${{ secrets.BENTO_ROUTER_READ_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          token="${BENTO_ROUTER_READ_TOKEN:-$GITHUB_TOKEN}"
+          git config --global url."https://x-access-token:${token}@github.com/".insteadOf "git@github.com:"
+          git config --global url."https://x-access-token:${token}@github.com/".insteadOf "https://github.com/"
 
       - name: Install dependencies
         working-directory: .
