@@ -139,7 +139,7 @@ describe("Dialog", () => {
     );
   });
 
-  it("should use theme variable classes on DialogContent", async () => {
+  it("should use theme variable classes on the inner DialogContent panel", async () => {
     render(
       <Dialog open>
         <AccessibleDialogContent>
@@ -148,16 +148,21 @@ describe("Dialog", () => {
       </Dialog>,
     );
 
-    const content = screen.getByRole("dialog");
-    expect(content.className).toContain("border-[length:var(--border-width)]");
-    expect(content.className).toContain("w-[calc(100vw-2rem)]");
-    expect(content.className).toContain("max-h-[calc(100dvh-2rem)]");
-    expect(content.className).toContain("overflow-y-auto");
-    expect(content.className).toContain("shadow-[var(--shadow-elevated)]");
-    expect(content.className).toContain(
-      "[backdrop-filter:var(--backdrop-blur)]",
-    );
-    expect(content.className).toContain("sm:rounded-[var(--radius)]");
+    // Theme/dimension classes moved to the inner panel after the
+    // centering-vs-animation refactor. The role="dialog" outer is now
+    // a flex centerer that owns the open/close animation.
+    const outer = screen.getByRole("dialog");
+    const inner = outer.querySelector(
+      "div[class*='border-[length:var(--border-width)]']",
+    ) as HTMLElement;
+    expect(inner).not.toBeNull();
+    expect(inner.className).toContain("w-full");
+    expect(inner.className).toContain("max-w-lg");
+    expect(inner.className).toContain("max-h-[calc(100dvh-2rem)]");
+    expect(inner.className).toContain("overflow-y-auto");
+    expect(inner.className).toContain("shadow-[var(--shadow-elevated)]");
+    expect(inner.className).toContain("[backdrop-filter:var(--backdrop-blur)]");
+    expect(inner.className).toContain("sm:rounded-[var(--radius)]");
   });
 
   it("should render close button in DialogContent", async () => {
@@ -323,7 +328,7 @@ describe("Dialog", () => {
     expect(className).toContain("fade-out-0");
   });
 
-  it("should be centered with translate-x and translate-y", async () => {
+  it("should be centered via flex (not translate, which composes badly with animate-in)", async () => {
     render(
       <Dialog open>
         <AccessibleDialogContent>
@@ -332,13 +337,20 @@ describe("Dialog", () => {
       </Dialog>,
     );
 
-    const content = screen.getByRole("dialog");
-    const className = content.className;
+    const outer = screen.getByRole("dialog");
+    const className = outer.className;
 
-    expect(className).toContain("left-[50%]");
-    expect(className).toContain("top-[50%]");
-    expect(className).toContain("translate-x-[-50%]");
-    expect(className).toContain("translate-y-[-50%]");
+    // Previous fix used `left-[50%] top-[50%] translate-x-[-50%]
+    // translate-y-[-50%]` which collided with the `animate-in`
+    // keyframe's own transform — that's the bottom-right-to-center
+    // slide bug. The fix is flex centering on a full-screen wrapper.
+    expect(className).toContain("fixed");
+    expect(className).toContain("inset-0");
+    expect(className).toContain("flex");
+    expect(className).toContain("items-center");
+    expect(className).toContain("justify-center");
+    expect(className).not.toContain("translate-x-[-50%]");
+    expect(className).not.toContain("translate-y-[-50%]");
   });
 
   it("should render dialog with full structure", async () => {

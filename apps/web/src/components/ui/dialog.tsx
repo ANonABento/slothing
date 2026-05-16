@@ -31,25 +31,44 @@ const DialogContent = React.forwardRef<
 >(({ className, children, ...props }, ref) => (
   <DialogPortal>
     <DialogOverlay />
+    {/* Root cause of the bottom-right→center slide bug:
+        DialogPrimitive.Content used to combine `translate(-50%, -50%)`
+        for centering AND `data-[state=open]:animate-in` for the fade.
+        tailwindcss-animate's `animate-in` keyframe sets `transform`
+        directly during the animation, overriding the static centering
+        translate. During the animation the element renders at
+        (0, 0) instead of centered, then snaps to center when the
+        animation finishes — exactly the visible drift the user reported.
+        Previous fix-attempt (87a68857) dropped `zoom-in-95` but kept
+        the same composition; the bug remained because the underlying
+        transform conflict was untouched.
+
+        Real fix: split centering and animation onto different
+        elements. The outer (DialogPrimitive.Content) is a full-screen
+        flex centerer that owns the animation; the inner div is the
+        actual panel. The flex centering doesn't use `transform`, so
+        there's no conflict with the keyframe. */}
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        // Dialog content is positioned with `translate(-50%, -50%)` so its
-        // CENTER lands at screen center. The animate-in `zoom-in-95` preset
-        // also relies on translate, and the two compose into a visible
-        // bottom-right→center slide artifact instead of a centered zoom.
-        // Drop the zoom and keep the overlay's fade for an unambiguous,
-        // non-distracting open transition.
-        "fixed left-[50%] top-[50%] z-50 grid max-h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 overflow-y-auto border-[length:var(--border-width)] bg-background p-6 shadow-[var(--shadow-elevated)] [backdrop-filter:var(--backdrop-blur)] duration-150 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 sm:rounded-[var(--radius)]",
-        className,
+        "fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none duration-150",
+        "data-[state=open]:animate-in data-[state=closed]:animate-out",
+        "data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0",
       )}
       {...props}
     >
-      {children}
-      <DialogPrimitive.Close className="absolute right-3 top-3 flex h-11 w-11 items-center justify-center rounded-[var(--radius)] opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground sm:right-4 sm:top-4">
-        <X className="h-4 w-4" />
-        <span className="sr-only">Close</span>
-      </DialogPrimitive.Close>
+      <div
+        className={cn(
+          "relative grid max-h-[calc(100dvh-2rem)] w-full max-w-lg gap-4 overflow-y-auto border-[length:var(--border-width)] bg-background p-6 shadow-[var(--shadow-elevated)] [backdrop-filter:var(--backdrop-blur)] pointer-events-auto sm:rounded-[var(--radius)]",
+          className,
+        )}
+      >
+        {children}
+        <DialogPrimitive.Close className="absolute right-3 top-3 flex h-11 w-11 items-center justify-center rounded-[var(--radius)] opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground sm:right-4 sm:top-4">
+          <X className="h-4 w-4" />
+          <span className="sr-only">Close</span>
+        </DialogPrimitive.Close>
+      </div>
     </DialogPrimitive.Content>
   </DialogPortal>
 ));
