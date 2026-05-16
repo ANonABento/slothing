@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint && node scripts/forbidden-color-lint.cjs && node scripts/forbidden-time-lint.cjs && node scripts/page-width-lint.cjs",
+    "lint": "next lint && node scripts/forbidden-color-lint.cjs && node scripts/forbidden-time-lint.cjs && node scripts/page-width-lint.cjs && node scripts/forbidden-font-lint.cjs && node scripts/forbidden-radius-lint.cjs",
     "codex:terminal-probe": "node scripts/codex-terminal-probe.cjs",
     "pre-commit": "pnpm lint-staged && pnpm type-check",
     "check:translations": "tsx scripts/check-translations.ts",
