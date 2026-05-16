@@ -22,7 +22,11 @@ export default async function MarketingLayout({
       </a>
       <div className="min-h-screen flex flex-col bg-background">
         <Navbar />
-        <main id="main-content" className="flex-1">
+        {/* pt-20 (80px) clears the fixed navbar's unscrolled height
+            (py-5 + h-10 logo = ~80px). The navbar transitions to py-3
+            on scroll but the top of every page should clear the
+            un-scrolled state so heroes don't slip under the bar. */}
+        <main id="main-content" className="flex-1 pt-20">
           {children}
         </main>
         <Footer />

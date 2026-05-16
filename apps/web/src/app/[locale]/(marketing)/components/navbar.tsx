@@ -3,11 +3,12 @@
 import { useState, useEffect } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
-import { Sparkles, Menu, X } from "lucide-react";
+import { Sparkles, Menu, X, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LocaleSwitcherCompact } from "@/components/i18n/locale-switcher";
 import { Link } from "@/i18n/navigation";
 import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
+import { useTheme } from "@/components/theme-provider";
 
 type MarketingNavLink = {
   href: string;
@@ -30,6 +31,7 @@ export function Navbar() {
   const t = useTranslations("marketing.nav");
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { isDark, toggleDark } = useTheme();
   const callbackUrl = `/${locale}/dashboard`;
 
   const getNavLabel = (link: MarketingNavLink) => {
@@ -100,6 +102,20 @@ export function Navbar() {
           {/* CTA Buttons */}
           <div className="hidden lg:flex items-center gap-3">
             <LocaleSwitcherCompact />
+            <button
+              type="button"
+              onClick={toggleDark}
+              aria-label={
+                isDark ? "Switch to light theme" : "Switch to dark theme"
+              }
+              className="grid h-9 w-9 place-items-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            >
+              {isDark ? (
+                <Moon className="h-4 w-4" aria-hidden="true" />
+              ) : (
+                <Sun className="h-4 w-4" aria-hidden="true" />
+              )}
+            </button>
             <Button variant="ghost" asChild>
               <Link
                 href={{ pathname: "/sign-in", query: { callbackUrl } }}

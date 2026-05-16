@@ -1,6 +1,5 @@
 "use client";
 
-import { Globe2 } from "lucide-react";
 import { useId } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import {
@@ -104,10 +103,14 @@ export function LocaleSwitcherCompact({
         <SelectTrigger
           aria-label={t("label")}
           aria-describedby={descriptionId}
-          className="h-11 w-auto gap-1.5 px-2.5 [&>span]:line-clamp-none"
+          // h-9 matches the marketing navbar's Sign In / Get Started
+          // controls so the trigger sits on the same baseline. h-11
+          // overhung the navbar and visually collided with the brand
+          // subtitle below it. Globe icon dropped — the two-letter
+          // code (EN / FR / 日 …) reads as language without it.
+          className="h-9 w-auto gap-1 px-2.5 [&>span]:line-clamp-none"
           lang={localeLang[locale]}
         >
-          <Globe2 className="h-4 w-4 shrink-0" aria-hidden="true" />
           <span className="text-xs font-semibold uppercase tracking-wide">
             {localeShortLabel[locale]}
           </span>
