@@ -77,9 +77,14 @@ function run(editor: Editor | null, command: (current: Chain) => Chain) {
 }
 
 export function toolbarButtonClass(isActive = false): string {
+  // Editorial-palette toolbar buttons. Default state is paper-on-paper so
+  // the toolbar reads as part of the warm cream surface, not a foreign
+  // shadcn island. Hover uses the standard rule-strong-bg wash; the
+  // toggled-active state lights up in brand-soft + brand-dark.
   return cn(
-    "h-8 w-8 border-border text-foreground hover:bg-muted",
-    isActive && "bg-primary text-primary-foreground hover:bg-primary/90",
+    "h-8 w-8 border-transparent text-ink-2 hover:bg-rule-strong-bg hover:text-ink",
+    isActive &&
+      "bg-brand-soft text-brand-dark border-transparent hover:bg-brand-soft hover:text-brand-dark",
   );
 }
 
@@ -121,11 +126,15 @@ function ToolbarGroup({
   label: string;
   children: ReactNode;
 }) {
+  // Drop the bordered chip-cluster around each group — keep the children
+  // flat and let `ToolbarSeparator` between groups carry visual rhythm.
+  // The `label` is still consumed by the group's aria for screen readers.
   return (
-    <div className="flex flex-wrap items-center gap-1 rounded-md border bg-card p-1">
-      <span className="px-1 text-xs font-semibold text-muted-foreground">
-        {label}
-      </span>
+    <div
+      className="flex flex-wrap items-center gap-0.5"
+      role="group"
+      aria-label={label}
+    >
       {children}
     </div>
   );
@@ -136,7 +145,8 @@ function ToolbarSeparator() {
     <span
       role="separator"
       aria-orientation="vertical"
-      className="hidden h-7 w-px bg-border md:block"
+      className="hidden h-6 w-px md:block"
+      style={{ backgroundColor: "var(--rule)" }}
     />
   );
 }

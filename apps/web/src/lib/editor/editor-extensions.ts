@@ -155,7 +155,36 @@ export function getEditorExtensions(
     PageBreak,
     BubbleMenu,
     Placeholder.configure({
-      placeholder: options.placeholder ?? "Click to add your experience...",
+      // Section-aware placeholder: if the empty block sits inside a
+      // `resumeSection`, surface "<Section name>" so Summary doesn't
+      // tell the user to "add your experience" and Skills doesn't
+      // either. Falls back to a generic prompt outside sections.
+      placeholder: ({ editor, node }) => {
+        if (options.placeholder) return options.placeholder;
+        try {
+          const { doc } = editor.state;
+          let sectionTitle = "";
+          doc.descendants((candidate, pos) => {
+            if (sectionTitle) return false;
+            if (candidate.type.name !== "resumeSection") return true;
+            const endPos = pos + candidate.nodeSize;
+            // Walk this section's content to see if it contains our
+            // empty node. Cheap enough for resume-sized docs.
+            candidate.descendants((child) => {
+              if (child === node) sectionTitle = candidate.attrs.title ?? "";
+              return !sectionTitle;
+            });
+            if (sectionTitle) return false;
+            return pos + candidate.nodeSize < endPos;
+          });
+          if (sectionTitle) {
+            return `Add to ${sectionTitle.toLowerCase()} — type or drag an entry from your bank…`;
+          }
+        } catch {
+          // Fall through to the generic copy on any state error.
+        }
+        return "Click to add content or drag an entry from your bank…";
+      },
       includeChildren: true,
       showOnlyCurrent: false,
     }),

@@ -192,9 +192,13 @@ export function StudioSubBar({
   return (
     <TooltipProvider delayDuration={200} skipDelayDuration={300}>
       <div
-        className="flex flex-wrap items-center gap-3 border-b border-rule bg-page px-4 py-2 md:flex-nowrap md:px-6"
+        // Sub-bar surface is `--paper` (lighter cream) so it reads as a
+        // distinct band against the AppBar — AppBar uses `--bg` and a
+        // 1px hairline alone wasn't enough contrast to register them
+        // as separate rows.
+        className="flex flex-wrap items-center gap-3 border-b border-rule bg-paper px-4 py-2 md:flex-nowrap md:px-6"
         style={{
-          backgroundColor: "var(--bg)",
+          backgroundColor: "var(--paper)",
           borderColor: "var(--rule)",
         }}
       >
