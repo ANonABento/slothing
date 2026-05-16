@@ -1,82 +1,191 @@
+import { NextRequest, NextResponse } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("@/lib/db", () =>
-  globalThis.__contractRouteMocks!.createContractModuleMock("@/lib/db"),
-);
+const mocks = vi.hoisted(() => ({
+  requireAuth: vi.fn(),
+  isAuthError: vi.fn(),
+  getDocuments: vi.fn(),
+  updateProfile: vi.fn(),
+  getProfile: vi.fn(),
+  gateOptionalAiFeature: vi.fn(),
+  parseResumeWithLLM: vi.fn(),
+  parseResumeBasic: vi.fn(),
+  populateBankFromProfile: vi.fn(),
+  mergeParsedProfileForAutoPromote: vi.fn(),
+}));
 
-vi.mock("@/lib/parser/resume", () =>
-  globalThis.__contractRouteMocks!.createContractModuleMock(
-    "@/lib/parser/resume",
-  ),
-);
+vi.mock("@/lib/auth", () => ({
+  requireAuth: mocks.requireAuth,
+  isAuthError: mocks.isAuthError,
+}));
 
-vi.mock("@/lib/auth", () =>
-  globalThis.__contractRouteMocks!.createAuthModuleMock(),
-);
+vi.mock("@/lib/db", () => ({
+  getDocuments: mocks.getDocuments,
+  updateProfile: mocks.updateProfile,
+  getProfile: mocks.getProfile,
+}));
 
-vi.mock("@/lib/resume/info-bank", () =>
-  globalThis.__contractRouteMocks!.createContractModuleMock(
-    "@/lib/resume/info-bank",
-  ),
-);
+vi.mock("@/lib/billing/ai-gate", () => ({
+  gateOptionalAiFeature: mocks.gateOptionalAiFeature,
+  isAiGateResponse: (value: unknown) => value instanceof NextResponse,
+}));
 
+vi.mock("@/lib/parser/resume", () => ({
+  parseResumeWithLLM: mocks.parseResumeWithLLM,
+  parseResumeBasic: mocks.parseResumeBasic,
+}));
+
+vi.mock("@/lib/resume/info-bank", () => ({
+  populateBankFromProfile: mocks.populateBankFromProfile,
+}));
+
+vi.mock("@/lib/profile/auto-promote", () => ({
+  mergeParsedProfileForAutoPromote: mocks.mergeParsedProfileForAutoPromote,
+}));
+
+import { CREDIT_COSTS } from "@/lib/db/credits";
 import { POST } from "./route";
-import {
-  expectRouteResponseContract,
-  getRequest,
-  invalidJsonRequest,
-  invokeRouteHandler,
-  jsonRequest,
-  representativeBody,
-  resetContractMocks,
-  routeContext,
-  setAuthFailure,
-  setAuthSuccess,
-} from "@/test/contract";
 
-describe("/api/parse route contract", () => {
+function parseRequest(body: unknown): NextRequest {
+  return new NextRequest("http://localhost/api/parse", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(body),
+  });
+}
+
+describe("/api/parse route", () => {
   beforeEach(() => {
-    resetContractMocks();
+    vi.clearAllMocks();
+    mocks.requireAuth.mockResolvedValue({ userId: "user-1" });
+    mocks.isAuthError.mockReturnValue(false);
+    mocks.getDocuments.mockReturnValue([
+      {
+        id: "doc-1",
+        filename: "resume.pdf",
+        extractedText: "Ada Lovelace resume",
+      },
+    ]);
+    mocks.getProfile.mockReturnValue(null);
+    mocks.updateProfile.mockReturnValue(undefined);
+    mocks.populateBankFromProfile.mockReturnValue({
+      inserted: 0,
+      updated: 0,
+      skipped: 0,
+    });
+    mocks.mergeParsedProfileForAutoPromote.mockImplementation(
+      (existing, parsed) => parsed,
+    );
+    mocks.parseResumeBasic.mockReturnValue({ contact: { name: "Ada" } });
+    mocks.parseResumeWithLLM.mockReturnValue({ contact: { name: "Ada AI" } });
   });
 
-  it("invokes the real POST handler and returns an HTTP response contract", async () => {
-    const response = await invokeRouteHandler(
-      POST,
-      jsonRequest("http://localhost/api/parse", representativeBody(), "POST", {
-        "x-extension-token": "test-token",
+  it("uses basic parsing by default without AI gate checks", async () => {
+    const response = await POST(
+      parseRequest({
+        documentId: "doc-1",
       }),
-      routeContext(),
     );
 
-    await expectRouteResponseContract(response);
-  });
+    expect(response.status).toBe(200);
+    expect(mocks.gateOptionalAiFeature).not.toHaveBeenCalled();
+    expect(mocks.parseResumeWithLLM).not.toHaveBeenCalled();
+    expect(mocks.parseResumeBasic).toHaveBeenCalledWith("Ada Lovelace resume");
 
-  it("returns the shared auth failure contract", async () => {
-    setAuthFailure();
-
-    const response = await invokeRouteHandler(
-      POST,
-      jsonRequest("http://localhost/api/parse", representativeBody(), "POST", {
-        "x-extension-token": "test-token",
-      }),
-      routeContext(),
-    );
-
-    expect(response.status).toBe(401);
-    await expect(response.json()).resolves.toMatchObject({
-      error: expect.any(String),
+    const body = await response.json();
+    expect(body).toMatchObject({
+      success: true,
+      parsingMode: "basic",
+      parsingMethod: "basic",
+      llmConfigured: false,
+      creditsUsed: 0,
+      creditSource: "none",
+      llmFallback: false,
     });
   });
 
-  it("returns an HTTP error response for malformed mutation input", async () => {
-    setAuthSuccess();
+  it("runs AI parse when mode=ai and reports credit usage from source", async () => {
+    const refund = vi.fn();
+    const gatePass = {
+      allowed: true,
+      llmConfig: {
+        provider: "openai",
+        model: "gpt-4o-mini",
+        apiKey: "test-key",
+        baseUrl: undefined,
+      },
+      plan: "pro-monthly",
+      source: "credits" as const,
+      transaction: null,
+      refund,
+    };
+    mocks.gateOptionalAiFeature.mockReturnValue(gatePass);
 
-    const response = await invokeRouteHandler(
-      POST,
-      invalidJsonRequest("http://localhost/api/parse", "POST"),
-      routeContext(),
+    const response = await POST(
+      parseRequest({
+        documentId: "doc-1",
+        mode: "ai",
+      }),
     );
 
-    await expectRouteResponseContract(response);
+    expect(response.status).toBe(200);
+    expect(mocks.gateOptionalAiFeature).toHaveBeenCalledWith(
+      "user-1",
+      "tailor",
+      "parse:doc-1",
+    );
+    expect(mocks.parseResumeWithLLM).toHaveBeenCalledWith(
+      "Ada Lovelace resume",
+      gatePass.llmConfig,
+    );
+    const body = await response.json();
+    expect(body).toMatchObject({
+      success: true,
+      parsingMode: "ai",
+      parsingMethod: "ai",
+      llmConfigured: true,
+      creditsUsed: CREDIT_COSTS.tailor,
+      creditSource: "credits",
+      llmFallback: false,
+    });
+    expect(refund).not.toHaveBeenCalled();
+  });
+
+  it("falls back to basic parsing and refunds credits when AI parse fails", async () => {
+    const refund = vi.fn();
+    const gatePass = {
+      allowed: true,
+      llmConfig: {
+        provider: "openai",
+        model: "gpt-4o-mini",
+        apiKey: "test-key",
+        baseUrl: undefined,
+      },
+      plan: "pro-weekly",
+      source: "credits" as const,
+      transaction: null,
+      refund,
+    };
+    mocks.parseResumeWithLLM.mockRejectedValue(new Error("llm unavailable"));
+    mocks.gateOptionalAiFeature.mockReturnValue(gatePass);
+
+    const response = await POST(
+      parseRequest({
+        documentId: "doc-1",
+        mode: "ai",
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    const body = await response.json();
+    expect(body).toMatchObject({
+      parsingMode: "ai",
+      parsingMethod: "basic",
+      llmConfigured: true,
+      llmFallback: true,
+      creditsUsed: 0,
+      creditSource: "none",
+    });
+    expect(refund).toHaveBeenCalledTimes(1);
   });
 });
