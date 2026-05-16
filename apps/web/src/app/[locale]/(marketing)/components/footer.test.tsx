@@ -55,6 +55,7 @@ describe("Footer", () => {
         `/${locale}/pricing`,
         `/${locale}/ats-scanner`,
         `/${locale}/extension`,
+        `/${locale}/blog`,
         `/${locale}/privacy`,
         `/${locale}/terms`,
       ]);

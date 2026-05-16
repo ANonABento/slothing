@@ -156,7 +156,7 @@ export async function POST(request: NextRequest) {
       location: "",
     };
 
-    const gate = gateAiFeature(
+    const gate = await gateAiFeature(
       authResult.userId,
       "tailor",
       opportunityId || `${company}:${nowEpoch()}`,

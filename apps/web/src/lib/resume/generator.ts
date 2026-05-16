@@ -1,5 +1,5 @@
 import type { Profile, JobDescription, LLMConfig } from "@/types";
-import { LLMClient } from "@/lib/llm/client";
+import { getLLMUserId, runLLMTask } from "@/lib/llm/client";
 import { extractJSON } from "@/lib/utils";
 import { tailoredResumeSchema } from "@/lib/schemas/tailor";
 
@@ -38,9 +38,9 @@ async function generateWithLLM(
   job: JobDescription,
   llmConfig: LLMConfig,
 ): Promise<TailoredResume> {
-  const client = new LLMClient(llmConfig);
-
-  const response = await client.complete({
+  const response = await runLLMTask({
+    task: "slothing.tailor_resume",
+    userId: getLLMUserId(llmConfig),
     messages: [
       {
         role: "user",

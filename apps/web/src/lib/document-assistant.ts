@@ -1,4 +1,4 @@
-import { LLMClient } from "@/lib/llm/client";
+import { getLLMUserId, runLLMTask } from "@/lib/llm/client";
 import type { LLMConfig } from "@/types";
 
 export const DOCUMENT_ASSISTANT_ACTIONS = [
@@ -266,8 +266,9 @@ export async function rewriteDocumentSelection(
   },
   llmConfig: LLMConfig,
 ): Promise<string> {
-  const client = new LLMClient(llmConfig);
-  const result = await client.complete({
+  const result = await runLLMTask({
+    task: "slothing.answer_generate",
+    userId: getLLMUserId(llmConfig),
     messages: [
       {
         role: "system",

@@ -12,7 +12,7 @@ import type {
   LLMConfig,
 } from "@/types";
 import { generateId } from "@/lib/utils";
-import { LLMClient, parseJSONFromLLM } from "@/lib/llm/client";
+import { getLLMUserId, parseJSONFromLLM, runLLMTask } from "@/lib/llm/client";
 import { detectSections, type Section } from "./section-detector";
 
 type DetectedSection = Section & { text: string; confidence: number };
@@ -257,8 +257,9 @@ Sections to parse:
 ${sectionPrompts.join("\n\n")}`;
 
   try {
-    const client = new LLMClient(llmConfig);
-    const response = await client.complete({
+    const response = await runLLMTask({
+      task: "slothing.parse_resume",
+      userId: getLLMUserId(llmConfig),
       messages: [{ role: "user", content: batchPrompt }],
       temperature: 0.1,
       maxTokens: 2048,

@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
 
     const { jobDescription, templateId } = parsed.data;
 
-    const gate = gateAiFeature(
+    const gate = await gateAiFeature(
       authResult.userId,
       "tailor",
       `resume:${templateId ?? "retrieval"}`,

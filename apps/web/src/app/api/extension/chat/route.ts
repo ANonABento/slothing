@@ -19,8 +19,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { isAuthError, requireUserAuth } from "@/lib/auth";
-import { getProfile, getLLMConfig } from "@/lib/db";
-import { LLMClient } from "@/lib/llm/client";
+import { getProfile } from "@/lib/db";
+import { gateAiFeature, isAiGateResponse } from "@/lib/billing/ai-gate";
+import { streamLLMTask } from "@/lib/llm/client";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { buildProfileSummary, buildSystemPrompt } from "./prompt";
 
@@ -87,26 +88,24 @@ export async function POST(request: NextRequest) {
   const { prompt, jobContext } = parsed.data;
 
   const profile = getProfile(authResult.userId);
-  const llmConfig = getLLMConfig(authResult.userId);
+  const gate = await gateAiFeature(
+    authResult.userId,
+    "document_assistant",
+    `extension-chat:${authResult.userId}`,
+  );
 
-  if (!llmConfig) {
-    return NextResponse.json(
-      {
-        error: "No LLM provider configured. Go to Settings to set one up.",
-      },
-      { status: 400 },
-    );
-  }
+  if (isAiGateResponse(gate)) return gate;
 
   const profileSummary = buildProfileSummary(profile);
   const systemPrompt = buildSystemPrompt(profileSummary, jobContext);
-  const client = new LLMClient(llmConfig);
 
   const encoder = new TextEncoder();
   const stream = new ReadableStream({
     async start(controller) {
       try {
-        const generator = client.stream({
+        const generator = streamLLMTask({
+          task: "slothing.answer_generate",
+          userId: authResult.userId,
           messages: [
             { role: "system", content: systemPrompt },
             { role: "user", content: prompt },
@@ -124,6 +123,7 @@ export async function POST(request: NextRequest) {
         controller.enqueue(encoder.encode(`data: {"done":true}\n\n`));
         controller.close();
       } catch (error) {
+        gate.refund();
         // Log internally — never echo error.message; LLM SDKs sometimes
         // include API keys or request IDs in error strings.
         console.error("[extension/chat] generation error:", error);

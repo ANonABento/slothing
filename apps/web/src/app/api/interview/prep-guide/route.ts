@@ -44,7 +44,11 @@ export async function GET(request: NextRequest) {
     }
 
     const profile = getProfile(authResult.userId);
-    const gate = gateAiFeature(authResult.userId, "interview_turn", jobId);
+    const gate = await gateAiFeature(
+      authResult.userId,
+      "interview_turn",
+      jobId,
+    );
     if (isAiGateResponse(gate)) return gate;
     aiGate = gate;
     const companyResearch = getCompanyResearch(job.company, authResult.userId);

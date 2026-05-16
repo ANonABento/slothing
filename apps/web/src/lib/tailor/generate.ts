@@ -7,7 +7,7 @@ import type {
 import type { TailoredResume } from "@/lib/resume/generator";
 import { formatHackathonHighlights } from "@/lib/resume/hackathon-highlights";
 import type { BankMatch } from "./analyze";
-import { LLMClient, parseJSONFromLLM } from "@/lib/llm/client";
+import { getLLMUserId, parseJSONFromLLM, runLLMTask } from "@/lib/llm/client";
 import { tailoredResumeSchema } from "@/lib/schemas/tailor";
 import {
   filterUnsupportedClaims,
@@ -68,11 +68,12 @@ async function generateWithLLM(
   llmConfig: LLMConfig,
   promptVariant: PromptVariant | null,
 ): Promise<TailoredResume> {
-  const client = new LLMClient(llmConfig);
   const instructions = promptVariant?.content ?? DEFAULT_PROMPT_CONTENT;
   const prompt = buildTailoredResumePrompt(input, instructions);
 
-  const response = await client.complete({
+  const response = await runLLMTask({
+    task: "slothing.tailor_resume",
+    userId: getLLMUserId(llmConfig),
     messages: [
       {
         role: "user",

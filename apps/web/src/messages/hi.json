@@ -846,9 +846,9 @@
       "sectionList": {
         "pickerTitle": "बैंक प्रविष्टि चयनकर्ता",
         "pickerDescription": "दस्तावेज़ में जोड़ने के लिए प्रविष्टियाँ चुनें।",
-        "pickerEmptyTitle": "Your bank is empty",
-        "pickerEmptyDescription": "Upload a resume or add an entry manually to start pulling content into your documents.",
-        "pickerEmptyCta": "Open Documents"
+        "pickerEmptyTitle": "आपका बैंक खाली है",
+        "pickerEmptyDescription": "अपने दस्तावेज़ों में सामग्री लाने के लिए रिज्यूमे अपलोड करें या मैन्युअल रूप से प्रविष्टि जोड़ें।",
+        "pickerEmptyCta": "दस्तावेज़ खोलें"
       }
     },
     "studio": {

@@ -7,7 +7,6 @@ import {
   type AiGatePass,
 } from "@/lib/billing/ai-gate";
 import { saveCustomTemplate } from "@/lib/db/custom-templates";
-import { LLMClient } from "@/lib/llm/client";
 import { getClientIdentifier, rateLimiters } from "@/lib/rate-limit";
 import {
   extractTemplateFromFile,
@@ -76,19 +75,18 @@ export async function POST(request: NextRequest) {
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
-    const gate = gateAiFeature(
+    const gate = await gateAiFeature(
       authResult.userId,
       "document_assistant",
       `template-import:${nowEpoch()}`,
     );
     if (isAiGateResponse(gate)) return gate;
     aiGate = gate;
-    const llmClient = new LLMClient(gate.llmConfig);
     const extracted = await extractTemplateFromFile({
       buffer,
       filename: file.name,
       mimeType: file.type,
-      llmClient,
+      llmUserId: authResult.userId,
     });
     const name =
       typeof nameValue === "string" && nameValue.trim()

@@ -148,7 +148,7 @@ export async function POST(request: NextRequest) {
       userName,
     };
 
-    const gate = gateAiFeature(
+    const gate = await gateAiFeature(
       authResult.userId,
       "cover_letter",
       opportunityId || `${action}:${nowEpoch()}`,

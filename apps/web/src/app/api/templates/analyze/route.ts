@@ -11,7 +11,6 @@ import {
   isAiGateResponse,
   type AiGatePass,
 } from "@/lib/billing/ai-gate";
-import { LLMClient } from "@/lib/llm/client";
 import { analyzeTemplateWithLLM } from "@/lib/resume/template-analyzer";
 import { requireAuth, isAuthError } from "@/lib/auth";
 import { ApiErrors, successResponse, errorResponse } from "@/lib/api-utils";
@@ -34,20 +33,19 @@ export async function POST(request: NextRequest) {
       return ApiErrors.badRequest("Resume text is too short to analyze");
     }
 
-    const gate = gateAiFeature(
+    const gate = await gateAiFeature(
       authResult.userId,
       "document_assistant",
       "template-analyze",
     );
     if (isAiGateResponse(gate)) return gate;
     aiGate = gate;
-    const llmClient = new LLMClient(gate.llmConfig);
 
-    const analyzed = await analyzeTemplateWithLLM(body.text, llmClient);
+    const analyzed = await analyzeTemplateWithLLM(body.text, authResult.userId);
 
     return successResponse({
       analyzed,
-      usedLLM: llmClient !== null,
+      usedLLM: true,
     });
   } catch (error) {
     aiGate?.refund();

@@ -16,6 +16,7 @@
     "test:run": "turbo run test:run",
     "test:coverage": "pnpm --filter @slothing/web test:coverage",
     "test:e2e": "pnpm --filter @slothing/web test:e2e",
+    "postinstall": "node scripts/build-bento-router-git-dep.mjs",
     "prepare": "husky",
     "db:generate": "pnpm --filter @slothing/web db:generate",
     "db:migrate": "pnpm --filter @slothing/web db:migrate",

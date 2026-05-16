@@ -72,7 +72,7 @@ export async function POST(
       );
     }
 
-    const gate = gateAiFeature(authResult.userId, "tailor", params.id);
+    const gate = await gateAiFeature(authResult.userId, "tailor", params.id);
     if (isAiGateResponse(gate)) return gate;
     aiGate = gate;
 

@@ -6,7 +6,7 @@ import {
   isAiGateResponse,
   type AiGatePass,
 } from "@/lib/billing/ai-gate";
-import { LLMClient } from "@/lib/llm/client";
+import { runLLMTask } from "@/lib/llm/client";
 import {
   applyGenericPhrasePenaltyToCritique,
   buildCoverLetterCritiqueMessages,
@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const gate = gateAiFeature(
+    const gate = await gateAiFeature(
       authResult.userId,
       "cover_letter",
       `critique:${nowEpoch()}`,
@@ -58,8 +58,9 @@ export async function POST(request: NextRequest) {
     if (isAiGateResponse(gate)) return gate;
     aiGate = gate;
 
-    const client = new LLMClient(gate.llmConfig);
-    const rawResponse = await client.complete({
+    const rawResponse = await runLLMTask({
+      task: "slothing.score_match",
+      userId: authResult.userId,
       messages: buildCoverLetterCritiqueMessages(parseResult.data),
       temperature: 0.2,
       maxTokens: 1800,

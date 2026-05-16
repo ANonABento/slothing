@@ -1,14 +1,23 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
-  getLLMConfig: vi.fn(),
+  listConfiguredProviders: vi.fn(),
+  migrateLegacyLLMSettingsForUser: vi.fn(),
   getUserPlan: vi.fn(),
   deductCredits: vi.fn(),
   refundCredits: vi.fn(),
 }));
 
-vi.mock("@/lib/db", () => ({
-  getLLMConfig: mocks.getLLMConfig,
+vi.mock("@/lib/llm/bentorouter-client", () => ({
+  getBentoRouterClient: vi.fn(async () => ({
+    api: () => ({
+      listConfiguredProviders: mocks.listConfiguredProviders,
+    }),
+  })),
+}));
+
+vi.mock("@/lib/llm/migrate-legacy", () => ({
+  migrateLegacyLLMSettingsForUser: mocks.migrateLegacyLLMSettingsForUser,
 }));
 
 vi.mock("@/lib/db/credits", () => ({
@@ -31,7 +40,11 @@ describe("gateAiFeature", () => {
     vi.clearAllMocks();
     delete process.env.SLOTHING_HOSTED_LLM_API_KEY;
     mocks.getUserPlan.mockReturnValue("hosted-free");
-    mocks.getLLMConfig.mockReturnValue(null);
+    mocks.listConfiguredProviders.mockResolvedValue([]);
+    mocks.migrateLegacyLLMSettingsForUser.mockResolvedValue({
+      migrated: false,
+      taskCount: 0,
+    });
     mocks.deductCredits.mockReturnValue({
       userId: "user-1",
       delta: -5,
@@ -41,32 +54,26 @@ describe("gateAiFeature", () => {
     });
   });
 
-  it("lets self-host users pass with their configured provider", () => {
+  it("lets self-host users pass with their configured provider", async () => {
     mocks.getUserPlan.mockReturnValue("self-host");
-    mocks.getLLMConfig.mockReturnValue({
-      provider: "openai",
-      apiKey: "sk-byok",
-      model: "gpt-test",
-    });
+    mocks.listConfiguredProviders.mockResolvedValue([
+      { id: "openai-personal" },
+    ]);
 
-    const result = gateAiFeature("user-1", "tailor", "job-1");
+    const result = await gateAiFeature("user-1", "tailor", "job-1");
 
     expect(isAiGateResponse(result)).toBe(false);
     if (!isAiGateResponse(result)) {
       expect(result.source).toBe("self-host");
-      expect(result.llmConfig.apiKey).toBe("sk-byok");
+      expect(result.llmConfig.userId).toBe("user-1");
     }
     expect(mocks.deductCredits).not.toHaveBeenCalled();
   });
 
-  it("lets hosted BYOK users pass without deducting credits", () => {
-    mocks.getLLMConfig.mockReturnValue({
-      provider: "anthropic",
-      apiKey: "sk-byok",
-      model: "claude-test",
-    });
+  it("lets hosted BYOK users pass without deducting credits", async () => {
+    mocks.listConfiguredProviders.mockResolvedValue([{ id: "anthropic-work" }]);
 
-    const result = gateAiFeature("user-1", "cover_letter", "letter-1");
+    const result = await gateAiFeature("user-1", "cover_letter", "letter-1");
 
     expect(isAiGateResponse(result)).toBe(false);
     if (!isAiGateResponse(result)) expect(result.source).toBe("byok");
@@ -74,7 +81,7 @@ describe("gateAiFeature", () => {
   });
 
   it("returns 402 for hosted-free users without BYOK", async () => {
-    const result = gateAiFeature("user-1", "tailor", "job-1");
+    const result = await gateAiFeature("user-1", "tailor", "job-1");
 
     expect(isAiGateResponse(result)).toBe(true);
     if (isAiGateResponse(result)) {
@@ -85,16 +92,16 @@ describe("gateAiFeature", () => {
     }
   });
 
-  it("deducts Pro credits and refunds on request", () => {
+  it("deducts Pro credits and refunds on request", async () => {
     process.env.SLOTHING_HOSTED_LLM_API_KEY = "sk-hosted";
     mocks.getUserPlan.mockReturnValue("pro-monthly");
 
-    const result = gateAiFeature("user-1", "tailor", "job-1");
+    const result = await gateAiFeature("user-1", "tailor", "job-1");
 
     expect(isAiGateResponse(result)).toBe(false);
     if (!isAiGateResponse(result)) {
       expect(result.source).toBe("credits");
-      expect(result.llmConfig.apiKey).toBe("sk-hosted");
+      expect(result.llmConfig.apiKey).toBe("hosted");
       result.refund();
     }
     expect(mocks.deductCredits).toHaveBeenCalledWith(
@@ -109,10 +116,10 @@ describe("gateAiFeature", () => {
     );
   });
 
-  it("lets self-host optional AI routes fall back without a provider", () => {
+  it("lets self-host optional AI routes fall back without a provider", async () => {
     mocks.getUserPlan.mockReturnValue("self-host");
 
-    const result = gateOptionalAiFeature("user-1", "tailor", "upload-1");
+    const result = await gateOptionalAiFeature("user-1", "tailor", "upload-1");
 
     expect(isAiGateResponse(result)).toBe(false);
     if (!isAiGateResponse(result)) {

@@ -46,6 +46,7 @@
     "@radix-ui/react-slot": "^1.0.2",
     "@radix-ui/react-tabs": "^1.0.4",
     "@react-pdf/renderer": "^3.4.4",
+    "@anonabento/bento-router": "github:ANonABento/bento-router#0ab850d978aa92ed92e9adfc85d544bd356d0d93",
     "@slothing/shared": "workspace:*",
     "@stripe/stripe-js": "^9.5.0",
     "@tanstack/react-virtual": "^3.13.0",

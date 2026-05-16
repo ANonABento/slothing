@@ -13,7 +13,7 @@ import {
   isAiGateResponse,
   type AiGatePass,
 } from "@/lib/billing/ai-gate";
-import { LLMClient, parseJSONFromLLM } from "@/lib/llm/client";
+import { parseJSONFromLLM, runLLMTask } from "@/lib/llm/client";
 import { generateEmail, EMAIL_TEMPLATE_INFO } from "@/lib/email/templates";
 import { generateEmailSchema } from "@/lib/constants";
 import { requireAuth, isAuthError } from "@/lib/auth";
@@ -85,7 +85,7 @@ export async function POST(request: NextRequest) {
 
     // Try LLM-enhanced generation first
     if (useLLM) {
-      const gate = gateAiFeature(
+      const gate = await gateAiFeature(
         authResult.userId,
         "email",
         `${type}:${jobId ?? "general"}`,
@@ -93,7 +93,6 @@ export async function POST(request: NextRequest) {
       if (isAiGateResponse(gate)) return gate;
       aiGate = gate;
       try {
-        const client = new LLMClient(gate.llmConfig);
         const templateInfo = EMAIL_TEMPLATE_INFO[type];
 
         const prompt = buildEmailGenerationPrompt({
@@ -104,7 +103,9 @@ export async function POST(request: NextRequest) {
           type,
         });
 
-        const response = await client.complete({
+        const response = await runLLMTask({
+          task: "slothing.classify_email",
+          userId: authResult.userId,
           messages: [{ role: "user", content: prompt }],
           temperature: 0.7,
           maxTokens: 1000,

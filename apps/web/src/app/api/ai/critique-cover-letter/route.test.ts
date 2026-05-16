@@ -28,9 +28,7 @@ vi.mock("@/lib/rate-limit", () => ({
 
 vi.mock("@/lib/llm/client", async (importActual) => ({
   ...(await importActual<typeof import("@/lib/llm/client")>()),
-  LLMClient: class MockLLMClient {
-    complete = mocks.complete;
-  },
+  runLLMTask: mocks.complete,
 }));
 
 import { POST } from "./route";
@@ -95,6 +93,7 @@ describe("cover letter critique route", () => {
     expect(mocks.getLLMConfig).toHaveBeenCalledWith("user-1");
     expect(mocks.complete).toHaveBeenCalledWith(
       expect.objectContaining({
+        userId: "user-1",
         temperature: 0.2,
         messages: expect.arrayContaining([
           expect.objectContaining({ role: "system" }),

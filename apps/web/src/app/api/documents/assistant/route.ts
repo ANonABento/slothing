@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const gate = gateAiFeature(
+    const gate = await gateAiFeature(
       authResult.userId,
       "document_assistant",
       `${body.action}:${nowEpoch()}`,

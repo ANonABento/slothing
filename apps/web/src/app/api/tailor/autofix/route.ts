@@ -12,7 +12,7 @@ import {
   isAiGateResponse,
   type AiGatePass,
 } from "@/lib/billing/ai-gate";
-import { LLMClient } from "@/lib/llm/client";
+import { runLLMTask } from "@/lib/llm/client";
 import { nowEpoch } from "@/lib/format/time";
 import { extractJSON } from "@/lib/utils";
 import { requireAuth, isAuthError } from "@/lib/auth";
@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
     } = parsed.data;
     const resume = validatedResume as TailoredResume;
 
-    const gate = gateAiFeature(
+    const gate = await gateAiFeature(
       authResult.userId,
       "tailor",
       `autofix:${nowEpoch()}`,
@@ -52,15 +52,15 @@ export async function POST(request: NextRequest) {
     if (isAiGateResponse(gate)) return gate;
     aiGate = gate;
 
-    const client = new LLMClient(gate.llmConfig);
-
     const prompt = buildTailorAutofixPrompt({
       resume,
       keywordsMissing,
       jobDescription,
     });
 
-    const response = await client.complete({
+    const response = await runLLMTask({
+      task: "slothing.tailor_resume",
+      userId: authResult.userId,
       messages: [{ role: "user", content: prompt }],
       temperature: 0.5,
       maxTokens: 4096,

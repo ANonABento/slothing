@@ -12,7 +12,7 @@ import {
   isAiGateResponse,
   type AiGatePass,
 } from "@/lib/billing/ai-gate";
-import { LLMClient } from "@/lib/llm/client";
+import { streamLLMTask } from "@/lib/llm/client";
 import { requireAuth, isAuthError } from "@/lib/auth";
 import { buildOpportunityCoverLetterStreamPrompt } from "@/lib/cover-letter/opportunity-prompts";
 
@@ -43,11 +43,13 @@ export async function POST(
       );
     }
 
-    const gate = gateAiFeature(authResult.userId, "cover_letter", params.id);
+    const gate = await gateAiFeature(
+      authResult.userId,
+      "cover_letter",
+      params.id,
+    );
     if (isAiGateResponse(gate)) return gate;
     aiGate = gate;
-
-    const client = new LLMClient(gate.llmConfig);
 
     const profileSummary = `
 Name: ${profile.contact.name}
@@ -71,7 +73,9 @@ Skills: ${profile.skills.map((s) => s.name).join(", ")}
     const stream = new ReadableStream({
       async start(controller) {
         try {
-          const generator = client.stream({
+          const generator = streamLLMTask({
+            task: "slothing.cover_letter_generate",
+            userId: authResult.userId,
             messages: [{ role: "user", content: prompt }],
             temperature: 0.7,
             maxTokens: 2000,

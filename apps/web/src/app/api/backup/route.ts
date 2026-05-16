@@ -8,13 +8,7 @@ import { formatIsoDateOnly, nowIso } from "@/lib/format/time";
  * @response BackupRestoreResponse from @/types/api
  */
 import { NextRequest, NextResponse } from "next/server";
-import {
-  getProfile,
-  getDocuments,
-  getLLMConfig,
-  updateProfile,
-  setLLMConfig,
-} from "@/lib/db";
+import { getProfile, getDocuments, updateProfile } from "@/lib/db";
 import { getJobs, createJob } from "@/lib/db/jobs";
 import { getInterviewSessions } from "@/lib/db/interviews";
 import { getAllGeneratedResumes } from "@/lib/db/resumes";
@@ -50,7 +44,6 @@ export async function GET() {
             createdAt: r.createdAt,
           }),
         ),
-        llmConfig: getLLMConfig(authResult.userId),
       },
       stats: {
         totalJobs: getJobs(authResult.userId).length,
@@ -102,7 +95,6 @@ export async function POST(request: NextRequest) {
     const results = {
       profile: false,
       jobs: { imported: 0, skipped: 0 },
-      llmConfig: false,
     };
 
     // Restore profile
@@ -236,34 +228,6 @@ export async function POST(request: NextRequest) {
         );
         existingKeys.add(key);
         results.jobs.imported++;
-      }
-    }
-
-    // Restore LLM config
-    if (backup.data.llmConfig) {
-      const validProviders = [
-        "openai",
-        "anthropic",
-        "ollama",
-        "openrouter",
-      ] as const;
-      const config = backup.data.llmConfig;
-
-      if (
-        validProviders.includes(
-          config.provider as (typeof validProviders)[number],
-        )
-      ) {
-        setLLMConfig(
-          {
-            provider: config.provider as (typeof validProviders)[number],
-            apiKey: config.apiKey,
-            baseUrl: config.baseUrl,
-            model: config.model,
-          },
-          authResult.userId,
-        );
-        results.llmConfig = true;
       }
     }
 

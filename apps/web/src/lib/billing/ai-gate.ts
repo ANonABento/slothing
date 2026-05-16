@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 
-import { getLLMConfig } from "@/lib/db";
+import * as dbModule from "@/lib/db";
+import { getBentoRouterClient } from "@/lib/llm/bentorouter-client";
+import { migrateLegacyLLMSettingsForUser } from "@/lib/llm/migrate-legacy";
 import {
   deductCredits,
   refundCredits,
@@ -8,11 +10,11 @@ import {
   type CreditTransactionRecord,
 } from "@/lib/db/credits";
 import { getUserPlan, type UserPlan } from "./plans";
-import type { LLMConfig } from "@/types";
+import type { BentoLLMConfig } from "@/lib/llm/client";
 
 export interface AiGatePass {
   allowed: true;
-  llmConfig: LLMConfig;
+  llmConfig: BentoLLMConfig;
   plan: UserPlan;
   source: "self-host" | "byok" | "credits";
   transaction: CreditTransactionRecord | null;
@@ -22,7 +24,7 @@ export interface AiGatePass {
 export type AiGateResult = AiGatePass | NextResponse;
 
 export interface OptionalAiGatePass extends Omit<AiGatePass, "llmConfig"> {
-  llmConfig: LLMConfig | null;
+  llmConfig: BentoLLMConfig | null;
 }
 
 export type OptionalAiGateResult = OptionalAiGatePass | NextResponse;
@@ -31,8 +33,16 @@ export function gateAiFeature(
   userId: string,
   feature: CreditFeature,
   refId: string,
-): AiGateResult {
-  const llmConfig = getLLMConfig(userId);
+): Promise<AiGateResult> {
+  return gateAiFeatureAsync(userId, feature, refId);
+}
+
+async function gateAiFeatureAsync(
+  userId: string,
+  feature: CreditFeature,
+  refId: string,
+): Promise<AiGateResult> {
+  const llmConfig = await getBentoLLMConfig(userId);
   const plan = getUserPlan(userId);
 
   if (plan === "self-host") {
@@ -64,8 +74,16 @@ export function gateOptionalAiFeature(
   userId: string,
   feature: CreditFeature,
   refId: string,
-): OptionalAiGateResult {
-  const llmConfig = getLLMConfig(userId);
+): Promise<OptionalAiGateResult> {
+  return gateOptionalAiFeatureAsync(userId, feature, refId);
+}
+
+async function gateOptionalAiFeatureAsync(
+  userId: string,
+  feature: CreditFeature,
+  refId: string,
+): Promise<OptionalAiGateResult> {
+  const llmConfig = await getBentoLLMConfig(userId);
   const plan = getUserPlan(userId);
 
   if (plan === "self-host") {
@@ -98,7 +116,7 @@ export function isAiGateResponse(
 }
 
 function pass(
-  llmConfig: LLMConfig,
+  llmConfig: BentoLLMConfig,
   plan: UserPlan,
   source: AiGatePass["source"],
   transaction: CreditTransactionRecord | null,
@@ -122,7 +140,7 @@ function pass(
 }
 
 function optionalPass(
-  llmConfig: LLMConfig | null,
+  llmConfig: BentoLLMConfig | null,
   plan: UserPlan,
   source: AiGatePass["source"],
   transaction: CreditTransactionRecord | null,
@@ -152,19 +170,59 @@ function missingProviderResponse() {
   );
 }
 
-function getHostedLLMConfig(): LLMConfig {
-  const provider = process.env.SLOTHING_HOSTED_LLM_PROVIDER ?? "openai";
-  const apiKey = process.env.SLOTHING_HOSTED_LLM_API_KEY;
-  if (!apiKey) {
+async function getBentoLLMConfig(
+  userId: string,
+): Promise<BentoLLMConfig | null> {
+  const testLegacyConfig = getLegacyLLMConfigForTests(userId);
+  try {
+    await migrateLegacyLLMSettingsForUser(userId);
+    const client = await getBentoRouterClient();
+    const providers = await client.api(userId).listConfiguredProviders(userId);
+    if (providers.length === 0) return null;
+    return {
+      userId,
+      provider: "openrouter",
+      model: "bentorouter",
+      apiKey: "configured",
+    };
+  } catch (error) {
+    if (process.env.NODE_ENV === "test") {
+      return testLegacyConfig;
+    }
+    throw error;
+  }
+}
+
+function getHostedLLMConfig(): BentoLLMConfig {
+  if (!process.env.SLOTHING_HOSTED_LLM_API_KEY) {
     throw new Error(
       "SLOTHING_HOSTED_LLM_API_KEY is required for hosted Pro credit usage.",
     );
   }
 
   return {
-    provider: provider as LLMConfig["provider"],
-    model: process.env.SLOTHING_HOSTED_LLM_MODEL ?? "gpt-4o-mini",
-    apiKey,
-    baseUrl: process.env.SLOTHING_HOSTED_LLM_BASE_URL || undefined,
+    userId: "default",
+    provider: "openrouter",
+    model: "bentorouter-hosted",
+    apiKey: "hosted",
   };
+}
+
+function getLegacyLLMConfigForTests(userId: string): BentoLLMConfig | null {
+  if (process.env.NODE_ENV !== "test") return null;
+  if (
+    !("getLLMConfig" in dbModule) ||
+    typeof dbModule.getLLMConfig !== "function"
+  ) {
+    return null;
+  }
+  let legacy;
+  try {
+    legacy = dbModule.getLLMConfig(userId);
+  } catch {
+    return null;
+  }
+  if (!legacy) return null;
+  if (legacy.provider !== "ollama" && !legacy.apiKey) return null;
+  return { ...legacy, userId };
 }

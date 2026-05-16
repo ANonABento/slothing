@@ -1,4 +1,4 @@
-import { LLMClient, parseJSONFromLLM } from "@/lib/llm/client";
+import { parseJSONFromLLM, runLLMTask } from "@/lib/llm/client";
 import type { TemplateStyles } from "./template-types";
 
 /**
@@ -59,14 +59,16 @@ Return ONLY the JSON object, no other text.`;
  */
 export async function analyzeTemplateWithLLM(
   text: string,
-  llmClient: LLMClient | null,
+  userId: string | null,
 ): Promise<AnalyzedTemplate> {
-  if (!llmClient) {
+  if (!userId) {
     return analyzeTemplateHeuristic(text);
   }
 
   try {
-    const response = await llmClient.complete({
+    const response = await runLLMTask({
+      task: "slothing.parse_resume",
+      userId,
       messages: [
         { role: "system", content: ANALYSIS_SYSTEM_PROMPT },
         {

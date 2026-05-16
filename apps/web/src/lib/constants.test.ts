@@ -5,14 +5,12 @@ import {
   backupDataSchema,
   compareResumesSchema,
   createInterviewSessionSchema,
-  DEFAULT_MODEL_BY_PROVIDER,
   DOCUMENT_TYPES,
   EMAIL_TEMPLATE_TYPES,
   FILE_SIGNATURES,
   INTERVIEW_CATEGORIES,
   JOB_STATUSES,
   JOB_STATUS_LABELS,
-  LLM_PROVIDERS,
   NOTIFICATION_ACTIONS,
   PATHS,
   REMINDER_TYPES,
@@ -53,9 +51,6 @@ describe("constants barrel", () => {
 
     expect(DOCUMENT_TYPES).toContain("resume");
     expect(DOCUMENT_TYPES).toContain("reference_letter");
-
-    expect(LLM_PROVIDERS).toContain("openai");
-    expect(DEFAULT_MODEL_BY_PROVIDER.openai).toBe("gpt-4o-mini");
 
     expect(EMAIL_TEMPLATE_TYPES).toContain("thank_you");
     expect(EMAIL_TEMPLATE_TYPES).toContain("cold_outreach");
@@ -200,7 +195,6 @@ describe("fullExportDataSchema", () => {
             confidenceScore: 0.9,
           },
         ],
-        llmConfig: { provider: "openai", model: "gpt-4o" },
       },
       stats: { totalJobs: 1, totalCoverLetters: 1, totalBankEntries: 1 },
     };

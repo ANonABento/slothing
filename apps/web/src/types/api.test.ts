@@ -307,11 +307,12 @@ describe("API Types", () => {
   });
 
   describe("Settings types", () => {
-    it("SettingsResponse should have llm config", () => {
+    it("SettingsResponse should expose non-LLM settings", () => {
       const response: SettingsResponse = {
-        llm: { provider: "openai", model: "gpt-4" },
+        locale: "en",
+        opportunityReview: { enabled: true },
       };
-      expect(response.llm.provider).toBe("openai");
+      expect(response.opportunityReview?.enabled).toBe(true);
     });
 
     it("SettingsUpdateResponse should have success and message", () => {

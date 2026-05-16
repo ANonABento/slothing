@@ -157,16 +157,6 @@ const backupGeneratedResumeSchema = z
   })
   .passthrough();
 
-// Backup LLM config schema
-const backupLLMConfigSchema = z
-  .object({
-    provider: z.string(),
-    apiKey: z.string().optional(),
-    baseUrl: z.string().optional(),
-    model: z.string(),
-  })
-  .passthrough();
-
 // Backup data schema
 export const backupDataSchema = z.object({
   version: z.string().min(1, "Version is required"),
@@ -177,7 +167,6 @@ export const backupDataSchema = z.object({
     documents: z.array(backupDocumentSchema).optional(),
     interviewSessions: z.array(backupInterviewSessionSchema).optional(),
     generatedResumes: z.array(backupGeneratedResumeSchema).optional(),
-    llmConfig: backupLLMConfigSchema.optional(),
   }),
   stats: z
     .object({
@@ -225,7 +214,6 @@ export const fullExportDataSchema = z.object({
     generatedResumes: z.array(backupGeneratedResumeSchema).optional(),
     coverLetters: z.array(exportCoverLetterSchema).optional(),
     bankEntries: z.array(exportBankEntrySchema).optional(),
-    llmConfig: backupLLMConfigSchema.optional(),
   }),
   stats: z
     .object({

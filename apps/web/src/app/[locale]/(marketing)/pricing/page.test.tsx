@@ -12,6 +12,10 @@ vi.mock("next-intl/server", () => ({
   getRequestConfig: (createRequestConfig: unknown) => createRequestConfig,
 }));
 
+vi.mock("next/headers", () => ({
+  headers: () => new Headers({ "x-nonce": "test-nonce" }),
+}));
+
 async function renderPricingPage(locale = "en") {
   localeState.current = locale;
   const ui = await PricingPage();

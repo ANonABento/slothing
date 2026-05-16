@@ -16,7 +16,7 @@ import {
   isAiGateResponse,
   type AiGatePass,
 } from "@/lib/billing/ai-gate";
-import { LLMClient, parseJSONFromLLM } from "@/lib/llm/client";
+import { parseJSONFromLLM, runLLMTask } from "@/lib/llm/client";
 import { requireAuth, isAuthError } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
@@ -77,7 +77,7 @@ export async function POST(
 
     // Generate feedback using LLM if available
     let feedback = "";
-    const gate = gateAiFeature(
+    const gate = await gateAiFeature(
       authResult.userId,
       "interview_turn",
       `${params.id}:${questionIndex}`,
@@ -90,8 +90,9 @@ export async function POST(
         : "Provide brief, constructive feedback for this interview answer.";
 
     try {
-      const client = new LLMClient(gate.llmConfig);
-      const response = await client.complete({
+      const response = await runLLMTask({
+        task: "slothing.answer_generate",
+        userId: authResult.userId,
         messages: [
           {
             role: "user",
