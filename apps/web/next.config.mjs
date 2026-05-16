@@ -38,7 +38,10 @@ const nextConfig = {
   },
   experimental: {
     instrumentationHook: true,
-    serverComponentsExternalPackages: ['better-sqlite3'],
+    serverComponentsExternalPackages: [
+      '@anonabento/bento-router',
+      'better-sqlite3',
+    ],
   },
   images: {
     remotePatterns: [
