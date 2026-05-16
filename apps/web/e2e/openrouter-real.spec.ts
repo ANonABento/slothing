@@ -36,7 +36,7 @@ test.describe("OpenRouter BentoRouter smoke", () => {
     });
 
     try {
-      await addOpenRouterProvider(api, userId);
+      await addOpenRouterProviderInSettings(page, userId);
       await preferSmokeModelForParsing(api);
       await uploadResume(api);
       await expectUsageCost(api);
@@ -69,16 +69,25 @@ test.describe("OpenRouter BentoRouter smoke", () => {
   });
 });
 
-async function addOpenRouterProvider(api: APIRequestContext, userId: string) {
-  const response = await api.post("/api/settings/llm/providers", {
-    data: {
-      type: "openrouter",
-      displayName: `OpenRouter smoke ${userId}`,
-      apiKey: OPENROUTER_KEY,
-      defaultModel: SMOKE_MODEL,
-    },
+async function addOpenRouterProviderInSettings(page: Page, userId: string) {
+  const displayName = `OpenRouter smoke ${userId}`;
+
+  await page.setExtraHTTPHeaders(authHeaders(userId));
+  await page.goto("/en/settings/llm");
+  await page.waitForLoadState("networkidle");
+
+  await page.getByLabel("Provider").selectOption("openrouter");
+  await page.getByLabel("Name").fill(displayName);
+  await page.getByLabel("API key").fill(OPENROUTER_KEY ?? "");
+  await page.getByLabel("Default model").fill(SMOKE_MODEL);
+
+  await page.getByRole("button", { name: "Test" }).click();
+  await expect(page.getByText("Provider validated.")).toBeVisible({
+    timeout: 30_000,
   });
-  expect(response.ok(), await response.text()).toBe(true);
+
+  await page.getByRole("button", { name: "Add" }).click();
+  await expect(page.getByText(displayName)).toBeVisible({ timeout: 30_000 });
 }
 
 async function preferSmokeModelForParsing(api: APIRequestContext) {
