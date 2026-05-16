@@ -260,21 +260,21 @@
     --r-md: 10px;
     --r-lg: 14px;
     --r-xl: 22px;
-    --r-pill: 999px;
+    --r-pill: 9999px;
   }
   [data-radius="sharp"] {
     --r-sm: 2px;
     --r-md: 4px;
     --r-lg: 6px;
     --r-xl: 10px;
-    --r-pill: 999px;
+    --r-pill: 9999px;
   }
   [data-radius="round"] {
     --r-sm: 10px;
     --r-md: 16px;
     --r-lg: 22px;
     --r-xl: 32px;
-    --r-pill: 999px;
+    --r-pill: 9999px;
   }
 
   /* Opportunity stage palette (olive / amber / indigo) — used by the

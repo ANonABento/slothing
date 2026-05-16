@@ -148,6 +148,9 @@ const config: Config = {
         sm: "calc(var(--radius) - 4px)",
         xl: "calc(var(--radius) + 4px)",
         "2xl": "calc(var(--radius) + 8px)",
+        // Editorial pill — always round. Documented as its own token so
+        // future radius slider changes never touch pills/avatars.
+        full: "var(--r-pill)",
       },
       boxShadow: {
         sm: "var(--shadow-sm)",
