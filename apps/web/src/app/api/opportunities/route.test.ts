@@ -15,8 +15,10 @@ vi.mock("@/lib/auth", () => ({
 }));
 
 vi.mock("@/lib/opportunities", () => ({
-  getJobStatusForOpportunityStatus: (status: string) =>
-    status === "offer" ? "offered" : status,
+  // After F2.1 the storage layer and the canonical UI vocabulary share one
+  // `OpportunityStatus` union — `getJobStatusForOpportunityStatus` is the
+  // identity passthrough kept for backwards compatibility.
+  getJobStatusForOpportunityStatus: (status: string) => status,
   jobToOpportunity: (job: unknown) => job,
 }));
 
@@ -99,9 +101,11 @@ describe("opportunities route", () => {
       ),
     );
 
+    // Legacy URL value `offered` is rewritten to canonical `offer` so the
+    // underlying SQL query targets the migrated rows.
     expect(mocks.listJobsPaginated).toHaveBeenCalledWith({
       userId: "user-1",
-      statuses: ["applied", "interviewing", "offered"],
+      statuses: ["applied", "interviewing", "offer"],
       cursor: null,
       limit: 50,
     });
@@ -151,7 +155,7 @@ describe("opportunities route", () => {
       title: "Frontend Engineer",
       company: "Acme",
       description: "Build user interfaces.",
-      status: "offered",
+      status: "offer",
       createdAt: "2026-04-29T12:00:00.000Z",
     };
     mocks.createJob.mockReturnValueOnce(job);
@@ -187,7 +191,9 @@ describe("opportunities route", () => {
         keywords: ["TypeScript", "frontend"],
         requirements: ["React"],
         salary: "100000 - 120000",
-        status: "offered",
+        // Storage and UI vocabularies now match — `offer` is written through
+        // unchanged.
+        status: "offer",
         url: "https://example.com/job",
       }),
       "user-1",

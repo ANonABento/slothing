@@ -192,8 +192,7 @@ function ResumePerformanceList({ resumes }: { resumes: ResumePerformance[] }) {
               <span
                 className={cn(
                   "text-xs px-2 py-0.5 rounded capitalize",
-                  resume.jobStatus === "offered" &&
-                    "bg-success/10 text-success",
+                  resume.jobStatus === "offer" && "bg-success/10 text-success",
                   resume.jobStatus === "interviewing" &&
                     "bg-warning/10 text-warning",
                   resume.jobStatus === "rejected" &&

@@ -2,10 +2,10 @@ import { type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 /**
- * Canonical opportunity stage names. The codebase already uses
- * `saved | applied | interviewing | offered | rejected` in the
- * opportunities schema; this primitive widens that with `apply`
- * (a queued / drafted apply that hasn't been submitted) per v2 design.
+ * Canonical opportunity stage names. The opportunities schema uses
+ * `saved | applied | interviewing | offer | rejected` (plus `pending`,
+ * `expired`, `dismissed`); this primitive widens it with `apply` (a queued /
+ * drafted apply that hasn't been submitted) per v2 design.
  */
 export type StageId =
   | "saved"

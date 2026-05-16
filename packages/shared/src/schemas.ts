@@ -1,102 +1,13 @@
 import { z } from "zod";
 
-export const jobStatusSchema = z.enum([
-  "pending",
-  "saved",
-  "applied",
-  "interviewing",
-  "offered",
-  "rejected",
-]);
-
-export const jobTypeSchema = z.enum([
-  "full-time",
-  "part-time",
-  "contract",
-  "internship",
-  "freelance",
-]);
-
-export const createJobSchema = z.object({
-  title: z
-    .string()
-    .min(1, "Job title is required")
-    .max(200, "Title is too long"),
-  company: z
-    .string()
-    .min(1, "Company name is required")
-    .max(200, "Company name is too long"),
-  location: z
-    .string()
-    .max(200, "Location is too long")
-    .optional()
-    .or(z.literal("")),
-  type: jobTypeSchema.optional(),
-  remote: z.boolean().default(false),
-  salary: z
-    .string()
-    .max(100, "Salary is too long")
-    .optional()
-    .or(z.literal("")),
-  description: z.string().min(1, "Job description is required"),
-  requirements: z.array(z.string()).default([]),
-  responsibilities: z.array(z.string()).default([]),
-  keywords: z.array(z.string()).default([]),
-  url: z.string().url("Invalid job URL").optional().or(z.literal("")),
-  status: jobStatusSchema.default("saved"),
-  appliedAt: z.string().optional(),
-  deadline: z.string().optional(),
-  notes: z.string().max(5000, "Notes are too long").optional(),
-});
-
-export const updateJobSchema = createJobSchema.partial();
-
-export const jobStatusUpdateSchema = z.object({
-  status: jobStatusSchema,
-  appliedAt: z.string().optional(),
-});
-
-export type JobStatusInput = z.infer<typeof jobStatusSchema>;
-export type JobTypeInput = z.infer<typeof jobTypeSchema>;
-export type CreateJobInput = z.infer<typeof createJobSchema>;
-export type UpdateJobInput = z.infer<typeof updateJobSchema>;
-export type JobStatusUpdateInput = z.infer<typeof jobStatusUpdateSchema>;
-
-export function validateCreateJob(
-  data: unknown,
-):
-  | { success: true; data: CreateJobInput }
-  | { success: false; errors: z.ZodError } {
-  const result = createJobSchema.safeParse(data);
-  if (result.success) {
-    return { success: true, data: result.data };
-  }
-  return { success: false, errors: result.error };
-}
-
-export function validateUpdateJob(
-  data: unknown,
-):
-  | { success: true; data: UpdateJobInput }
-  | { success: false; errors: z.ZodError } {
-  const result = updateJobSchema.safeParse(data);
-  if (result.success) {
-    return { success: true, data: result.data };
-  }
-  return { success: false, errors: result.error };
-}
-
-export function validateJobStatusUpdate(
-  data: unknown,
-):
-  | { success: true; data: JobStatusUpdateInput }
-  | { success: false; errors: z.ZodError } {
-  const result = jobStatusUpdateSchema.safeParse(data);
-  if (result.success) {
-    return { success: true, data: result.data };
-  }
-  return { success: false, errors: result.error };
-}
+// Legacy `jobStatusSchema` + `createJobSchema` + `updateJobSchema` +
+// `jobStatusUpdateSchema` (plus their `validate*` helpers) used to live here
+// with a *different* value set (`offered` instead of `offer`, no `expired` /
+// `dismissed` / `pending`). They were deleted as part of F2.1 consolidation —
+// nothing outside the shared package consumed them, and the web app already
+// validates opportunity inputs through `opportunityStatusSchema` below. Use
+// `opportunityStatusSchema`, `createOpportunitySchema`, `updateOpportunitySchema`,
+// and `opportunityStatusChangeSchema` instead.
 
 export const OPPORTUNITY_TYPES = ["job", "hackathon"] as const;
 export const OPPORTUNITY_SOURCES = [

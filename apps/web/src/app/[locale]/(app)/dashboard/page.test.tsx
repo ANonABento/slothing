@@ -146,7 +146,8 @@ describe("Dashboard onboarding", () => {
         saved: 1,
         applied: 2,
         interviewing: 3,
-        offered: 4,
+        // F2.1 consolidation: storage and UI both use `offer` now.
+        offer: 4,
       },
     });
 
@@ -162,9 +163,9 @@ describe("Dashboard onboarding", () => {
     expect(
       screen.getByRole("link", { name: /Interviewing\s*3/ }),
     ).toHaveAttribute("href", "/en/opportunities?status=interviewing");
-    expect(screen.getByRole("link", { name: /Offered\s*4/ })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /Offer\s*4/ })).toHaveAttribute(
       "href",
-      "/en/opportunities?status=offered",
+      "/en/opportunities?status=offer",
     );
   });
 

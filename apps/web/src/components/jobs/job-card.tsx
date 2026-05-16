@@ -70,7 +70,7 @@ const STATUS_STYLES: Record<TrackedJobStatus, { bg: string; text: string }> = {
   saved: { bg: "bg-muted", text: "text-muted-foreground" },
   applied: { bg: "bg-info/10", text: "text-info" },
   interviewing: { bg: "bg-warning/10", text: "text-warning" },
-  offered: { bg: "bg-success/10", text: "text-success" },
+  offer: { bg: "bg-success/10", text: "text-success" },
   rejected: { bg: "bg-destructive/10", text: "text-destructive" },
 };
 

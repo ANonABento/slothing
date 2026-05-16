@@ -1,10 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requireAuth, isAuthError } from "@/lib/auth";
-import {
-  getJobStatusForOpportunityStatus,
-  jobToOpportunity,
-} from "@/lib/opportunities";
+import { jobToOpportunity } from "@/lib/opportunities";
 import { createJob, listJobsPaginated } from "@/lib/db/jobs";
 import { enrichCompany } from "@/lib/enrichment";
 import {
@@ -14,6 +11,7 @@ import {
 } from "@/lib/billing/ai-gate";
 import { LLMClient, parseJSONFromLLM } from "@/lib/llm/client";
 import { createJobSchema, TECH_KEYWORDS } from "@/lib/constants";
+import { OPPORTUNITY_STATUSES } from "@slothing/shared/schemas";
 import { createOpportunitySchema } from "@/types/opportunity";
 import { safeTrackActivity } from "@/lib/streak/track";
 import {
@@ -35,17 +33,10 @@ const opportunitiesQuerySchema = PaginationParamsSchema.extend({
   status: z.string().optional(),
 });
 
-const opportunityStatuses = new Set<OpportunityStatus>([
-  "pending",
-  "saved",
-  "applied",
-  "interviewing",
-  "offer",
-  "rejected",
-  "expired",
-  "dismissed",
-]);
+const opportunityStatuses = new Set<OpportunityStatus>(OPPORTUNITY_STATUSES);
 
+// `JobStatus` aliases `OpportunityStatus` after F2.1, but we still translate
+// the legacy URL params `offered` / `withdrawn` so cached clients keep working.
 function statusParamToJobStatuses(
   value?: string,
 ): JobStatus[] | undefined | null {
@@ -63,8 +54,7 @@ function statusParamToJobStatuses(
     )
     .filter((status): status is OpportunityStatus =>
       opportunityStatuses.has(status as OpportunityStatus),
-    )
-    .map(getJobStatusForOpportunityStatus);
+    );
   return statuses.length ? statuses : null;
 }
 
@@ -215,7 +205,7 @@ Return format: ["skill1", "skill2", "skill3", ...]`,
                 .filter((value) => value != null)
                 .join(" - ")
             : undefined,
-        status: getJobStatusForOpportunityStatus(data.status),
+        status: data.status,
         notes: data.notes,
         deadline: data.deadline,
       },

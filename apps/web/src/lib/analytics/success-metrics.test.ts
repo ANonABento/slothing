@@ -56,7 +56,7 @@ describe("calculateFunnel", () => {
       createJob({ status: "applied" }),
       createJob({ status: "applied" }),
       createJob({ status: "interviewing" }),
-      createJob({ status: "offered" }),
+      createJob({ status: "offer" }),
       createJob({ status: "rejected" }),
     ];
 
@@ -72,7 +72,7 @@ describe("calculateFunnel", () => {
     const jobs = [
       createJob({ status: "applied" }),
       createJob({ status: "applied" }),
-      createJob({ status: "offered" }),
+      createJob({ status: "offer" }),
       createJob({ status: "rejected" }),
     ];
 
@@ -86,7 +86,7 @@ describe("calculateFunnel", () => {
     const jobs = [
       createJob({ status: "interviewing" }),
       createJob({ status: "interviewing" }),
-      createJob({ status: "offered" }),
+      createJob({ status: "offer" }),
     ];
 
     const result = calculateFunnel(jobs);
@@ -114,7 +114,7 @@ describe("calculateTimeToInterview", () => {
         appliedAt: "2024-01-05",
       }),
       createJob({
-        status: "offered",
+        status: "offer",
         createdAt: "2024-01-01",
         appliedAt: "2024-01-10",
       }),
@@ -167,7 +167,7 @@ describe("calculateOfferRate", () => {
     const jobs = [
       createJob({ status: "applied" }),
       createJob({ status: "applied" }),
-      createJob({ status: "offered" }),
+      createJob({ status: "offer" }),
       createJob({ status: "rejected" }),
     ];
 
@@ -180,7 +180,7 @@ describe("calculateOfferRate", () => {
   it("groups by job type", () => {
     const jobs = [
       createJob({ status: "applied", type: "full-time" }),
-      createJob({ status: "offered", type: "full-time" }),
+      createJob({ status: "offer", type: "full-time" }),
       createJob({ status: "applied", type: "contract" }),
     ];
 
@@ -200,7 +200,7 @@ describe("identifyTopResumes", () => {
 
   it("sorts successful resumes first", () => {
     const jobs = [
-      createJob({ id: "job-1", status: "offered" }),
+      createJob({ id: "job-1", status: "offer" }),
       createJob({ id: "job-2", status: "saved" }),
     ];
 
@@ -275,7 +275,7 @@ describe("generateInsights", () => {
 
 describe("calculateSuccessMetrics", () => {
   it("returns complete metrics structure", () => {
-    const jobs = [createJob({ status: "offered" })];
+    const jobs = [createJob({ status: "offer" })];
     const resumes = [createResume({ jobId: jobs[0].id })];
 
     const result = calculateSuccessMetrics(jobs, resumes);
@@ -289,7 +289,7 @@ describe("calculateSuccessMetrics", () => {
 
   it("calculates all components correctly", () => {
     const jobs = [
-      createJob({ id: "j1", status: "offered" }),
+      createJob({ id: "j1", status: "offer" }),
       createJob({ id: "j2", status: "interviewing" }),
       createJob({ id: "j3", status: "applied" }),
     ];

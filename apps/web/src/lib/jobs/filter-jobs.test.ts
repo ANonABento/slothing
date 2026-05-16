@@ -206,6 +206,10 @@ describe("getJobStatusValue", () => {
   });
 
   it("defaults unsupported statuses to saved", () => {
-    expect(getJobStatusValue({ status: "withdrawn" })).toBe("saved");
+    // `dismissed` and `expired` are valid canonical statuses but they live
+    // outside the tracked-job-status set, so the kanban/filter UIs collapse
+    // them onto `saved`.
+    expect(getJobStatusValue({ status: "dismissed" })).toBe("saved");
+    expect(getJobStatusValue({ status: "expired" })).toBe("saved");
   });
 });

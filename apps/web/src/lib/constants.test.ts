@@ -35,7 +35,10 @@ describe("constants barrel", () => {
 
     expect(JOB_STATUSES).toContain("pending");
     expect(JOB_STATUSES).toContain("interviewing");
-    expect(JOB_STATUS_LABELS.withdrawn).toBe("Withdrawn");
+    // After F2.1 the legacy `withdrawn` status is gone; the closest semantic
+    // match — and what the backfill migration writes — is `dismissed`.
+    expect(JOB_STATUS_LABELS.dismissed).toBe("Dismissed");
+    expect(JOB_STATUS_LABELS.offer).toBe("Offer");
     expect(
       updateProfileSchema.safeParse({ contact: { name: "Jane Doe" } }).success,
     ).toBe(true);

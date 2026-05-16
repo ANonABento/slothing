@@ -81,7 +81,11 @@ describe("getKanbanStatusValue", () => {
 
   it("defaults missing or unsupported statuses to saved", () => {
     expect(getKanbanStatusValue({ status: undefined })).toBe("saved");
-    expect(getKanbanStatusValue({ status: "withdrawn" })).toBe("saved");
+    // `expired` and `dismissed` are valid canonical statuses but live outside
+    // the tracked-kanban set, so they fall back to saved (alongside any
+    // legacy `withdrawn` strings that survive the migration).
+    expect(getKanbanStatusValue({ status: "dismissed" })).toBe("saved");
+    expect(getKanbanStatusValue({ status: "expired" })).toBe("saved");
   });
 });
 
@@ -92,7 +96,7 @@ describe("groupJobsByKanbanStatus", () => {
       createJob({ id: "saved", status: "saved" }),
       createJob({ id: "applied", status: "applied" }),
       createJob({ id: "interviewing", status: "interviewing" }),
-      createJob({ id: "offered", status: "offered" }),
+      createJob({ id: "offer", status: "offer" }),
       createJob({ id: "rejected", status: "rejected" }),
       createJob({ id: "missing-status" }),
     ]);
@@ -104,7 +108,7 @@ describe("groupJobsByKanbanStatus", () => {
     ]);
     expect(grouped.applied.map((job) => job.id)).toEqual(["applied"]);
     expect(grouped.interviewing.map((job) => job.id)).toEqual(["interviewing"]);
-    expect(grouped.offered.map((job) => job.id)).toEqual(["offered"]);
+    expect(grouped.offer.map((job) => job.id)).toEqual(["offer"]);
     expect(grouped.rejected.map((job) => job.id)).toEqual(["rejected"]);
   });
 });

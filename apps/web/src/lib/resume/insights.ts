@@ -224,7 +224,7 @@ export function analyzeResumePerformance(data: InsightData): Insight[] {
   // Group resumes by job and check which jobs progressed to interviews
   const interviewingJobs = new Set(
     jobs
-      .filter((j) => j.status === "interviewing" || j.status === "offered")
+      .filter((j) => j.status === "interviewing" || j.status === "offer")
       .map((j) => j.id),
   );
 

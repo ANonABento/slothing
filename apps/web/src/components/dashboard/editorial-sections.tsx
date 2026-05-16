@@ -201,7 +201,7 @@ const PIPELINE_STAGES = [
     key: "interviewing",
     href: "/opportunities?status=interviewing",
   },
-  { label: "Offered", key: "offered", href: "/opportunities?status=offered" },
+  { label: "Offer", key: "offer", href: "/opportunities?status=offer" },
   {
     label: "Rejected",
     key: "rejected",

@@ -169,7 +169,7 @@ export function generateTimeSeriesData(
     // Track responses (interviewing, offered, rejected)
     if (
       job.status === "interviewing" ||
-      job.status === "offered" ||
+      job.status === "offer" ||
       job.status === "rejected"
     ) {
       const responseBucket = responseBuckets.get(key);
@@ -179,7 +179,7 @@ export function generateTimeSeriesData(
     }
 
     // Track interviews
-    if (job.status === "interviewing" || job.status === "offered") {
+    if (job.status === "interviewing" || job.status === "offer") {
       const interviewBucket = interviewBuckets.get(key);
       if (interviewBucket) {
         interviewBucket.value++;
@@ -187,7 +187,7 @@ export function generateTimeSeriesData(
     }
 
     // Track offers
-    if (job.status === "offered") {
+    if (job.status === "offer") {
       const offerBucket = offerBuckets.get(key);
       if (offerBucket) {
         offerBucket.value++;
@@ -262,7 +262,7 @@ export function calculateTrendMetrics(
     olderJobs,
     (j) =>
       j.status === "interviewing" ||
-      j.status === "offered" ||
+      j.status === "offer" ||
       j.status === "rejected",
   );
 
@@ -270,14 +270,14 @@ export function calculateTrendMetrics(
   const interviewRate = calculateRate(
     recentJobs,
     olderJobs,
-    (j) => j.status === "interviewing" || j.status === "offered",
+    (j) => j.status === "interviewing" || j.status === "offer",
   );
 
   // Success rate (offers vs total applications)
   const successRate = calculateRate(
     recentJobs,
     olderJobs,
-    (j) => j.status === "offered",
+    (j) => j.status === "offer",
   );
 
   return {
@@ -332,7 +332,7 @@ export function generateActivityTimeline(
       });
     }
 
-    if (job.status === "offered") {
+    if (job.status === "offer") {
       events.push({
         id: `${job.id}-offer`,
         type: "offer",

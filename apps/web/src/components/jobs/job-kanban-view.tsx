@@ -38,7 +38,7 @@ const COLUMN_STYLES: Record<JobKanbanStatus, string> = {
   saved: "border-info/30",
   applied: "border-primary/30",
   interviewing: "border-warning/35",
-  offered: "border-success/35",
+  offer: "border-success/35",
   rejected: "border-destructive/30",
 };
 

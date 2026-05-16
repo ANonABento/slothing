@@ -7,6 +7,7 @@ import {
   type CreatedAtCursor,
 } from "@/lib/db/jobs";
 import { buildPaginationResult } from "@/lib/pagination";
+import { OPPORTUNITY_STATUSES } from "@slothing/shared/schemas";
 import type { JobDescription, Opportunity, OpportunityStatus } from "@/types";
 
 export interface OpportunityLinkInput {
@@ -14,50 +15,25 @@ export interface OpportunityLinkInput {
   coverLetterId?: string;
 }
 
-const OPPORTUNITY_STATUSES = new Set<OpportunityStatus>([
-  "pending",
-  "saved",
-  "applied",
-  "interviewing",
-  "offer",
-  "rejected",
-  "expired",
-  "dismissed",
-]);
+// F2.1 consolidation: previously this file maintained an
+// `OPPORTUNITY_STATUS ↔ JOB_STATUS` translation table because the legacy
+// `JobDescription.status` union used `offered` / `withdrawn`. The shared
+// `JobStatus` type now aliases `OpportunityStatus`, so storage and UI agree on
+// the same vocabulary and no translation is required at the application layer.
+// Legacy DB rows are rewritten by the `0013_jobs_status_canonical.sql`
+// migration (`offered → offer`, `withdrawn → dismissed`).
 
-const JOB_STATUS_TO_OPPORTUNITY_STATUS: Record<
-  NonNullable<JobDescription["status"]>,
-  OpportunityStatus
-> = {
-  pending: "pending",
-  saved: "saved",
-  applied: "applied",
-  interviewing: "interviewing",
-  offered: "offer",
-  rejected: "rejected",
-  withdrawn: "dismissed",
-  dismissed: "dismissed",
-};
-
-const OPPORTUNITY_STATUS_TO_JOB_STATUS: Record<
-  OpportunityStatus,
-  NonNullable<JobDescription["status"]>
-> = {
-  pending: "pending",
-  saved: "saved",
-  applied: "applied",
-  interviewing: "interviewing",
-  offer: "offered",
-  rejected: "rejected",
-  expired: "withdrawn",
-  dismissed: "dismissed",
-};
+const OPPORTUNITY_STATUS_VALUES = new Set<OpportunityStatus>(
+  OPPORTUNITY_STATUSES,
+);
 
 function normalizeStatus(status: JobDescription["status"]): OpportunityStatus {
-  return status ? JOB_STATUS_TO_OPPORTUNITY_STATUS[status] : "saved";
+  return status && OPPORTUNITY_STATUS_VALUES.has(status) ? status : "saved";
 }
 
 function normalizeStatusFilter(status: string): OpportunityStatus | null {
+  // Accept the legacy values one last time so any in-flight URL/query params
+  // from cached clients still resolve to a valid canonical status.
   const trimmedStatus = status.trim();
   const normalized =
     trimmedStatus === "offered"
@@ -65,7 +41,7 @@ function normalizeStatusFilter(status: string): OpportunityStatus | null {
       : trimmedStatus === "withdrawn"
         ? "dismissed"
         : trimmedStatus;
-  return OPPORTUNITY_STATUSES.has(normalized as OpportunityStatus)
+  return OPPORTUNITY_STATUS_VALUES.has(normalized as OpportunityStatus)
     ? (normalized as OpportunityStatus)
     : null;
 }
@@ -141,8 +117,7 @@ export function listOpportunities({
   const requestedStatuses = statuses?.filter(Boolean) ?? [];
   const allowedStatuses = requestedStatuses
     .map(normalizeStatusFilter)
-    .filter((status): status is OpportunityStatus => status !== null)
-    .map((status) => OPPORTUNITY_STATUS_TO_JOB_STATUS[status]);
+    .filter((status): status is OpportunityStatus => status !== null);
 
   if (requestedStatuses.length > 0 && allowedStatuses.length === 0) {
     return { items: [], nextCursor: null, hasMore: false };
@@ -223,13 +198,18 @@ export function changeOpportunityStatus(
   const opportunityStatus = normalizeStatusFilter(status);
   if (!opportunityStatus) return null;
 
-  const jobStatus = OPPORTUNITY_STATUS_TO_JOB_STATUS[opportunityStatus];
-  updateJobStatus(id, jobStatus, undefined, userId);
+  updateJobStatus(id, opportunityStatus, undefined, userId);
   return getOpportunity(id, userId);
 }
 
+/**
+ * Identity passthrough kept for backwards compatibility — the storage layer
+ * and the canonical UI vocabulary now share the same `OpportunityStatus`
+ * union, so callers don't need a translation step. Prefer using the status
+ * value directly; this helper exists only to avoid churning a few call-sites.
+ */
 export function getJobStatusForOpportunityStatus(
   status: OpportunityStatus,
 ): NonNullable<JobDescription["status"]> {
-  return OPPORTUNITY_STATUS_TO_JOB_STATUS[status];
+  return status;
 }

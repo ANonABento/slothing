@@ -354,13 +354,13 @@ export default function OpportunityDetailPage({
 
   const dismissOpportunity = useUndoableAction<DismissUndoInput>({
     action: async () => {
-      await patchOpportunity({ status: "withdrawn" });
+      await patchOpportunity({ status: "dismissed" });
     },
     undoAction: async ({ previousStatus }) => {
       await patchOpportunity({ status: previousStatus });
     },
     message: "Opportunity dismissed.",
-    description: "Status changed to withdrawn.",
+    description: "Status changed to dismissed.",
   });
 
   const startEditing = (field: OpportunityFieldConfig) => {
