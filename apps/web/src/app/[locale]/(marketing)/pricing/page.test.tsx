@@ -2,6 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
 import { describe, expect, it, vi } from "vitest";
 import { getLocalizedPageMetadata } from "@/lib/seo";
+import { CSP_NONCE_HEADER } from "@/lib/security/headers";
 import messages from "@/messages/en.json";
 import PricingPage, { generateMetadata } from "./page";
 
@@ -10,6 +11,14 @@ const localeState = vi.hoisted(() => ({ current: "en" }));
 vi.mock("next-intl/server", () => ({
   getLocale: () => Promise.resolve(localeState.current),
   getRequestConfig: (createRequestConfig: unknown) => createRequestConfig,
+}));
+
+vi.mock("next/headers", () => ({
+  headers: () => ({
+    get: vi.fn((header: string) =>
+      header === CSP_NONCE_HEADER ? null : undefined,
+    ),
+  }),
 }));
 
 async function renderPricingPage(locale = "en") {
