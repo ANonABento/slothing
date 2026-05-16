@@ -9,9 +9,15 @@ const SCAN_ROOTS = ["src"];
 
 // Skip the script directory itself — otherwise this script's own regex
 // strings (e.g. `rounded-[8px]` in error messages) would be flagged.
+// next/og (Satori) renders from inline JSX styles and cannot read CSS
+// variables, Tailwind classes, or app stylesheets, so OG image route files
+// and the shared OG template helpers are exempt from the radius checks.
 const EXEMPT_PATH_PATTERNS = [
   /(^|\/)scripts\//,
   /\.test\.(?:js|jsx|ts|tsx)$/,
+  /^src\/app\/(?:.*\/)?opengraph-image\.tsx$/,
+  /^src\/app\/(?:.*\/)?twitter-image\.tsx$/,
+  /^src\/lib\/og\//,
 ];
 
 // CSS files where raw `border-radius:` declarations are allowed —

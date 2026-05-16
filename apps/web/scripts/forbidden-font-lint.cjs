@@ -17,6 +17,16 @@ const CSS_ALLOWLIST_PATTERNS = [
   /^src\/styles\//,
 ];
 
+// next/og (Satori) renders from inline JSX styles and cannot read CSS
+// variables, Tailwind classes, or app stylesheets, so OG image route files
+// and the shared OG template helpers are exempt from the font-family checks.
+// Mirrors the EXEMPT_PATH_PATTERNS list in forbidden-color-lint.cjs.
+const EXEMPT_PATH_PATTERNS = [
+  /^src\/app\/(?:.*\/)?opengraph-image\.tsx$/,
+  /^src\/app\/(?:.*\/)?twitter-image\.tsx$/,
+  /^src\/lib\/og\//,
+];
+
 // Forbidden Tailwind font-family utilities. Only `font-sans` and `font-serif`
 // bypass the token stack — `font-display`, `font-body`, and `font-mono` are
 // allowed because they map onto editorial tokens.
@@ -253,6 +263,11 @@ function isScriptsPath(filePath) {
   return /(?:^|\/)scripts\//.test(normalized);
 }
 
+function isExemptPath(filePath) {
+  const normalized = filePath.split(path.sep).join("/");
+  return EXEMPT_PATH_PATTERNS.some((pattern) => pattern.test(normalized));
+}
+
 function findForbiddenFontViolations(source, filePath) {
   const ext = path.extname(filePath);
 
@@ -263,6 +278,10 @@ function findForbiddenFontViolations(source, filePath) {
   }
 
   if (!SOURCE_EXTENSIONS.has(ext)) {
+    return [];
+  }
+
+  if (isExemptPath(filePath)) {
     return [];
   }
 
@@ -347,6 +366,7 @@ if (require.main === module) {
 module.exports = {
   findForbiddenFontViolations,
   isCssAllowed,
+  isExemptPath,
   isForbiddenFontClass,
   isAllowedFontFamilyValue,
   runForbiddenFontLint,
