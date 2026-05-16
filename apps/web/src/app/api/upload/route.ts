@@ -18,14 +18,8 @@ import {
   getProfile,
   updateProfile,
 } from "@/lib/db";
-import {
-  gateOptionalAiFeature,
-  isAiGateResponse,
-  type OptionalAiGatePass,
-} from "@/lib/billing/ai-gate";
 import { extractTextFromFile } from "@/lib/parser/pdf";
 import { classifyDocument } from "@/lib/parser/document-classifier";
-import { parseDocumentByType } from "@/lib/parser/resume";
 import {
   smartParseResume,
   type SmartParseResult,
@@ -98,7 +92,6 @@ export async function POST(request: NextRequest) {
 
   // Track the on-disk file (if written) so we can clean up on any error path.
   let writtenFilePath: string | undefined;
-  let aiGate: OptionalAiGatePass | null = null;
 
   try {
     const formData = await request.formData();
@@ -225,70 +218,28 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Classify and parse document type using gated AI access.
-    const gate = gateOptionalAiFeature(
-      authResult.userId,
-      "tailor",
-      `upload:${id}`,
-    );
-    if (isAiGateResponse(gate)) {
-      await unlink(filePath).catch(() => undefined);
-      writtenFilePath = undefined;
-      return gate;
-    }
-    aiGate = gate;
-    const docType = await classifyDocument(
-      extractedText,
-      file.name,
-      gate.llmConfig,
-    );
+    const docType = await classifyDocument(extractedText, file.name, null);
 
-    // Parse document content — smart parser (deterministic first, LLM fallback)
+    // Parse document content — deterministic parser only. All LLM calls are now
+    // reserved for explicit parse actions from the UI.
     let parsedData: ParsedDocumentData | undefined;
     let smartResult: SmartParseResult | undefined;
-    if (docType !== "portfolio" && docType !== "other") {
+    if (docType === "resume") {
       try {
-        if (docType === "resume") {
-          // Use smart parser pipeline for resumes
-          smartResult = await smartParseResume(extractedText, gate.llmConfig);
-          parsedData = { docType: "resume", data: smartResult.profile };
-          log.debug("upload", "smart parse complete", {
-            confidence: smartResult.confidence,
-            sections: smartResult.sectionsDetected,
-            llmUsed: smartResult.llmUsed,
-            llmSections: smartResult.llmSectionsCount,
+        smartResult = await smartParseResume(extractedText, null);
+        parsedData = { docType: "resume", data: smartResult.profile };
+        log.debug("upload", "smart parse complete", {
+          confidence: smartResult.confidence,
+          sections: smartResult.sectionsDetected,
+          llmUsed: smartResult.llmUsed,
+          llmSections: smartResult.llmSectionsCount,
+        });
+        if (smartResult.warnings.length > 0) {
+          log.debug("upload", "parse warnings", {
+            warnings: smartResult.warnings,
           });
-          if (smartResult.warnings.length > 0) {
-            log.debug("upload", "parse warnings", {
-              warnings: smartResult.warnings,
-            });
-          }
-        } else if (gate.llmConfig) {
-          // Non-resume doc types still use LLM-based parsing
-          const parseResult = await parseDocumentByType(
-            extractedText,
-            docType,
-            gate.llmConfig,
-          );
-          if (parseResult.coverLetter) {
-            parsedData = {
-              docType: "cover_letter",
-              data: parseResult.coverLetter,
-            };
-          } else if (parseResult.referenceLetter) {
-            parsedData = {
-              docType: "reference_letter",
-              data: parseResult.referenceLetter,
-            };
-          } else if (parseResult.certificate) {
-            parsedData = {
-              docType: "certificate",
-              data: parseResult.certificate,
-            };
-          }
         }
       } catch (err) {
-        aiGate?.refund();
         console.error(
           "[upload] Document parsing failed:",
           err instanceof Error ? err.stack : err,
@@ -400,7 +351,6 @@ export async function POST(request: NextRequest) {
       }),
     });
   } catch (error) {
-    aiGate?.refund();
     console.error(
       "[upload] Upload error:",
       error instanceof Error ? error.stack : error,

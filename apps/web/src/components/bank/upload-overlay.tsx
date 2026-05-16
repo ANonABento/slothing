@@ -221,30 +221,17 @@ export function UploadOverlay({
       if (!documentId)
         throw new Error("Upload completed without a document ID");
 
-      // Parse
       setStage("extracting");
       // Small visual pause so user sees stage transition
       await new Promise((r) => setTimeout(r, 300));
       setStage("parsing");
 
-      const parseRes = await fetch("/api/parse", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ documentId }),
-      });
-      if (!parseRes.ok) {
-        const errData = await parseRes.json().catch(() => null);
-        throw new Error(errData?.error || "Parse failed");
-      }
-      const parseData = await parseRes.json();
-
       setStage("storing");
       await new Promise((r) => setTimeout(r, 300));
 
       const entryCount =
-        parseData.entriesCreated ??
-        parseData.entries?.length ??
-        parseData.count ??
+        uploadData.entriesCreated ??
+        uploadData.parsing?.sectionsDetected?.length ??
         0;
 
       return { fileName: file.name, entryCount };

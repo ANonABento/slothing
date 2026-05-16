@@ -5,7 +5,6 @@ const mocks = vi.hoisted(() => ({
   requireAuth: vi.fn(),
   isAuthError: vi.fn(),
   saveDocument: vi.fn(),
-  getLLMConfig: vi.fn(),
   getDocumentByFileHash: vi.fn(),
   getProfile: vi.fn(),
   updateProfile: vi.fn(),
@@ -32,7 +31,6 @@ vi.mock("@/lib/auth", () => ({
 
 vi.mock("@/lib/db", () => ({
   saveDocument: mocks.saveDocument,
-  getLLMConfig: mocks.getLLMConfig,
   getDocumentByFileHash: mocks.getDocumentByFileHash,
   getProfile: mocks.getProfile,
   updateProfile: mocks.updateProfile,
@@ -52,10 +50,6 @@ vi.mock("@/lib/parser/pdf", () => ({
 
 vi.mock("@/lib/parser/document-classifier", () => ({
   classifyDocument: mocks.classifyDocument,
-}));
-
-vi.mock("@/lib/parser/resume", () => ({
-  parseDocumentByType: vi.fn(),
 }));
 
 vi.mock("@/lib/parser/smart-parser", () => ({
@@ -108,7 +102,6 @@ describe("upload route dedupe flow", () => {
     debugSpy = vi.spyOn(console, "debug").mockImplementation(() => undefined);
     mocks.requireAuth.mockResolvedValue({ userId: "user-1" });
     mocks.isAuthError.mockReturnValue(false);
-    mocks.getLLMConfig.mockReturnValue(null);
     mocks.getProfile.mockReturnValue(null);
     mocks.extractTextFromFile.mockResolvedValue("resume text");
     mocks.classifyDocument.mockResolvedValue("resume");
@@ -276,6 +269,30 @@ describe("upload route dedupe flow", () => {
       expect.any(String),
       "user-1",
     );
+  });
+
+  it("parses resume upload with deterministic parser only (no AI config)", async () => {
+    await POST(uploadRequest(pdfFile()));
+
+    expect(mocks.smartParseResume).toHaveBeenCalledWith("resume text", null);
+    expect(mocks.classifyDocument).toHaveBeenCalledWith(
+      "resume text",
+      "test-resume.pdf",
+      null,
+    );
+  });
+
+  it("skips smart resume parsing for non-resume documents", async () => {
+    mocks.classifyDocument.mockResolvedValueOnce("cover_letter");
+
+    const response = await POST(uploadRequest(pdfFile("cover-letter.pdf")));
+
+    expect(response.status).toBe(200);
+    expect(mocks.smartParseResume).not.toHaveBeenCalled();
+    await expect(response.json()).resolves.toMatchObject({
+      success: true,
+      entriesCreated: 0,
+    });
   });
 
   it("auto-promotes parsed resume data into all structured profile sections", async () => {

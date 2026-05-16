@@ -293,9 +293,12 @@ export interface UploadResponse {
 export interface ParseResponse {
   success: true;
   profile: Partial<Profile>;
-  parsingMethod: string;
+  parsingMethod: "ai" | "basic";
   llmFallback: boolean;
   llmConfigured: boolean;
+  parsingMode: "basic" | "ai";
+  creditsUsed: number;
+  creditSource: "self-host" | "byok" | "credits" | "none";
 }
 
 // ---------------------------------------------------------------------------
