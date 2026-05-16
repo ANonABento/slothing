@@ -60,7 +60,19 @@ export const LLM_ENDPOINTS = {
 
 export const DEFAULT_MODELS = {
   ollama: ["llama3.2", "llama3.1", "mistral", "codellama", "phi3"],
-  openai: ["gpt-4o-mini", "gpt-4o", "gpt-4-turbo", "gpt-3.5-turbo"],
+  openai: [
+    "gpt-4o-mini",
+    "gpt-4o",
+    "gpt-4-turbo",
+    "gpt-3.5-turbo",
+    // Gemini via Google's OpenAI-compat endpoint (set OPENAI_BASE_URL=
+    // https://generativelanguage.googleapis.com/v1beta/openai/ and paste
+    // your Google AI Studio key into the API Key field).
+    "gemini-2.0-flash",
+    "gemini-2.0-flash-lite",
+    "gemini-1.5-flash",
+    "gemini-1.5-pro",
+  ],
   anthropic: [
     "claude-3-haiku-20240307",
     "claude-3-sonnet-20240229",

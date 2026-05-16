@@ -5,6 +5,22 @@ import {
   DEFAULT_MODEL_BY_PROVIDER,
 } from "@/lib/constants";
 
+/**
+ * Resolve the OpenAI chat-completions URL. Defaults to the public OpenAI API.
+ * Override via `OPENAI_BASE_URL` to point at any OpenAI-compatible endpoint
+ * (Google Gemini's compat layer, LiteLLM proxy, LM Studio, vLLM, Choomfie's
+ * local endpoint, etc.). The env var should be the base URL only —
+ * `/chat/completions` is appended if missing; trailing slashes are normalised.
+ */
+function resolveOpenAIEndpoint(): string {
+  const override = process.env.OPENAI_BASE_URL?.trim();
+  if (!override) return LLM_ENDPOINTS.openai;
+  const trimmed = override.replace(/\/+$/, "");
+  return trimmed.endsWith("/chat/completions")
+    ? trimmed
+    : `${trimmed}/chat/completions`;
+}
+
 interface Message {
   role: "system" | "user" | "assistant";
   content: string;
@@ -138,7 +154,7 @@ export class LLMClient {
     temperature: number,
     maxTokens: number,
   ): AsyncGenerator<string> {
-    const response = await fetch(LLM_ENDPOINTS.openai, {
+    const response = await fetch(resolveOpenAIEndpoint(), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -365,7 +381,7 @@ export class LLMClient {
   ): Promise<string> {
     const { controller, cleanup } = this.createAbortController(timeoutMs);
     try {
-      const response = await fetch(LLM_ENDPOINTS.openai, {
+      const response = await fetch(resolveOpenAIEndpoint(), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
