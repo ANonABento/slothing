@@ -51,9 +51,18 @@ export function EditorPageSettings({
   return (
     <details className="relative">
       <summary className="list-none">
-        <Button type="button" variant="outline" size="sm" asChild>
+        {/* Sized to match the slim toolbar's button height (`h-8`) so it
+            sits flush next to the formatting controls instead of
+            standing out as a taller chip. */}
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          asChild
+          className="h-8 px-2 text-[12px]"
+        >
           <span>
-            <Settings2 className="mr-1.5 h-4 w-4" />
+            <Settings2 className="mr-1 h-3.5 w-3.5" />
             Page setup
           </span>
         </Button>

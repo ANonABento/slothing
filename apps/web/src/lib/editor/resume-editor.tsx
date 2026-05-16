@@ -36,6 +36,12 @@ export function ResumeEditor({
       attributes: {
         "aria-label": "Editable document preview",
         tabindex: "0",
+        // Disable browser spell-check on the resume canvas — resumes
+        // are full of proper nouns (company names, acronyms, product
+        // names) the browser dictionary flags as misspelled, producing
+        // red squiggles on otherwise-correct content. Users can still
+        // run AI critique for substance checks.
+        spellcheck: "false",
       },
     },
     onUpdate: ({ editor: currentEditor }) => {
