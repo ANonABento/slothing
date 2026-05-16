@@ -124,7 +124,8 @@ export async function Hero() {
           {/* Right column — mascot + product preview */}
           <div className="relative mx-auto w-full max-w-md sm:max-w-lg lg:mx-0 lg:max-w-none animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-500">
             {/* Glow behind preview */}
-            <div className="pointer-events-none absolute inset-0 -z-10 rounded-[2.5rem] bg-gradient-to-br from-primary/15 via-accent/10 to-transparent blur-2xl" />
+            {/* rounded-3xl maps to the largest editorial radius token; folded from a literal 2.5rem */}
+            <div className="pointer-events-none absolute inset-0 -z-10 rounded-3xl bg-gradient-to-br from-primary/15 via-accent/10 to-transparent blur-2xl" />
 
             {/* Sloth mascot peeking from the top-right */}
             <div
