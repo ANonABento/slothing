@@ -78,6 +78,13 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
           token="${BENTO_ROUTER_READ_TOKEN:-$GITHUB_TOKEN}"
+          {
+            echo "GIT_CONFIG_COUNT=2"
+            echo "GIT_CONFIG_KEY_0=url.https://x-access-token:${token}@github.com/.insteadOf"
+            echo "GIT_CONFIG_VALUE_0=git@github.com:"
+            echo "GIT_CONFIG_KEY_1=url.https://x-access-token:${token}@github.com/.insteadOf"
+            echo "GIT_CONFIG_VALUE_1=https://github.com/"
+          } >> "$GITHUB_ENV"
           git config --global url."https://x-access-token:${token}@github.com/".insteadOf "git@github.com:"
           git config --global url."https://x-access-token:${token}@github.com/".insteadOf "https://github.com/"
 
@@ -114,6 +121,13 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
           token="${BENTO_ROUTER_READ_TOKEN:-$GITHUB_TOKEN}"
+          {
+            echo "GIT_CONFIG_COUNT=2"
+            echo "GIT_CONFIG_KEY_0=url.https://x-access-token:${token}@github.com/.insteadOf"
+            echo "GIT_CONFIG_VALUE_0=git@github.com:"
+            echo "GIT_CONFIG_KEY_1=url.https://x-access-token:${token}@github.com/.insteadOf"
+            echo "GIT_CONFIG_VALUE_1=https://github.com/"
+          } >> "$GITHUB_ENV"
           git config --global url."https://x-access-token:${token}@github.com/".insteadOf "git@github.com:"
           git config --global url."https://x-access-token:${token}@github.com/".insteadOf "https://github.com/"
 
