@@ -13,7 +13,7 @@ import { OpportunityDetailSkeleton } from "@/components/skeletons/opportunity-de
 import { Badge } from "@/components/ui/badge";
 import { TimeAgo } from "@/components/format/time-ago";
 import { Button } from "@/components/ui/button";
-import { JobStatusBadge } from "@/components/jobs/job-status-badge";
+import { OpportunityStatusBadge } from "@/components/opportunities/opportunity-status-badge";
 import { OpportunityActions } from "@/components/opportunities/opportunity-actions";
 import { OpportunityContacts } from "@/components/opportunities/opportunity-contacts";
 import { Input } from "@/components/ui/input";
@@ -486,7 +486,10 @@ export default function OpportunityDetailPage({
                     {opportunity.location ? ` · ${opportunity.location}` : ""}
                   </p>
                 </div>
-                <JobStatusBadge status={status} className="px-3 py-1 text-sm" />
+                <OpportunityStatusBadge
+                  status={status}
+                  className="px-3 py-1 text-sm"
+                />
               </div>
             </header>
 
