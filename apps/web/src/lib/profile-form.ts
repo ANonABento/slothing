@@ -1,6 +1,6 @@
 import type { ContactInfo, Experience, Profile } from "@/types";
 
-import { toEpoch } from "@/lib/format/time";
+import { toNullableEpoch } from "@/lib/format/time";
 export interface ProfileFormValues {
   avatarUrl: string;
   name: string;
@@ -30,10 +30,16 @@ function cleanList(values: string[] | undefined): string[] {
 }
 
 function mostRecentExperience(profile: Profile | null): Experience | undefined {
+  // LLM-extracted résumé dates can be anything from "Jan 2024" (parseable)
+  // to "Present", "Q1 2024", or a misformatted year — `toEpoch` throws on
+  // those. Sort defensively: treat unparseable dates as oldest (epoch 0)
+  // so the page doesn't crash on one malformed experience row.
   return [...(profile?.experiences ?? [])].sort((a, b) => {
     if (a.current && !b.current) return -1;
     if (b.current && !a.current) return 1;
-    return toEpoch(b.startDate) - toEpoch(a.startDate);
+    return (
+      (toNullableEpoch(b.startDate) ?? 0) - (toNullableEpoch(a.startDate) ?? 0)
+    );
   })[0];
 }
 
