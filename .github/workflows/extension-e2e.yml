@@ -38,9 +38,20 @@ jobs:
       - name: Authenticate GitHub git dependencies
         working-directory: .
         env:
+          BENTO_ROUTER_DEPLOY_KEY: ${{ secrets.BENTO_ROUTER_DEPLOY_KEY }}
           BENTO_ROUTER_READ_TOKEN: ${{ secrets.BENTO_ROUTER_READ_TOKEN }}
           GITHUB_TOKEN: ${{ github.token }}
         run: |
+          if [[ -n "$BENTO_ROUTER_DEPLOY_KEY" ]]; then
+            key_path="${RUNNER_TEMP}/bento-router-deploy-key"
+            printf '%s\n' "$BENTO_ROUTER_DEPLOY_KEY" > "$key_path"
+            chmod 600 "$key_path"
+            mkdir -p ~/.ssh
+            ssh-keyscan github.com >> ~/.ssh/known_hosts
+            echo "GIT_SSH_COMMAND=ssh -i ${key_path} -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes" >> "$GITHUB_ENV"
+            exit 0
+          fi
+
           token="${BENTO_ROUTER_READ_TOKEN:-$GITHUB_TOKEN}"
           {
             echo "GIT_CONFIG_COUNT=2"
