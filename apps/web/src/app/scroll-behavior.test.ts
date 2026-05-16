@@ -32,34 +32,17 @@ describe("scroll behavior", () => {
     expect(globalsCss).toMatch(/body\s*{[^}]*overscroll-behavior:\s*none;/s);
   });
 
-  it("disables overscroll bounce on shared overflow containers", () => {
+  it("keeps scroll chaining enabled on shared overflow containers so nested scrollers don't trap wheel events", () => {
     const globalsCss = readAppFile("globals.css");
 
     for (const utility of scrollableOverflowUtilities) {
-      expect(globalsCss).toMatch(
+      // Bare `.overflow-auto`/`.overflow-y-auto`/`.overflow-x-auto` selectors
+      // must NOT carry `overscroll-behavior: none` — that would block scroll
+      // chaining from nested scrollers (e.g. the components-grid virtualizer)
+      // up to the page, which was the wheel-trap bug in the components page.
+      expect(globalsCss).not.toMatch(
         new RegExp(
-          `\\.${utility}[,\\s{][^}]*overscroll-behavior:\\s*none;`,
-          "s",
-        ),
-      );
-    }
-  });
-
-  it("covers every scrollable overflow utility used by app pages and shared components", () => {
-    const globalsCss = readAppFile("globals.css");
-    const source = readSourceFiles(appDir)
-      .concat(readSourceFiles(componentDir))
-      .join("\n");
-    const usedScrollableUtilities = scrollableOverflowUtilities.filter(
-      (utility) => source.includes(utility),
-    );
-
-    expect(usedScrollableUtilities).not.toHaveLength(0);
-
-    for (const utility of usedScrollableUtilities) {
-      expect(globalsCss).toMatch(
-        new RegExp(
-          `\\.${utility}[,\\s{][^}]*overscroll-behavior:\\s*none;`,
+          `\\.${utility}[,\\s{][^}]*overscroll-behavior:\\s*(none|contain);`,
           "s",
         ),
       );

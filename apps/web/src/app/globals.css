@@ -414,12 +414,15 @@
     }
   }
 
-  /* Prevent overscroll bounce in scrollable containers */
-  .overflow-auto,
-  .overflow-y-auto,
-  .overflow-x-auto {
-    overscroll-behavior: none;
-  }
+  /*
+   * Scroll chaining: scrollable containers (`.overflow-auto`, `.overflow-y-auto`,
+   * `.overflow-x-auto`) must keep the browser default (`overscroll-behavior: auto`)
+   * so wheel events bubble to parent scrollers when the inner container is at
+   * its boundary. Setting `none`/`contain` here blocks chaining and traps the
+   * page scroll under nested scrollers like the components-grid virtualizer.
+   * Overscroll containment for the page itself is enforced on `html`/`body`/
+   * the app-layout main column above.
+   */
 
   /* Custom scrollbar */
   ::-webkit-scrollbar {
