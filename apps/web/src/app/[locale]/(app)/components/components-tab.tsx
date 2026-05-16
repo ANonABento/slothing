@@ -50,7 +50,12 @@ import type { SourceDocument } from "@/lib/db/profile-bank";
 import { Badge } from "@/components/ui/badge";
 import { useRegisterShortcuts } from "@/components/keyboard-shortcuts";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
-import { StandardEmptyState } from "@/components/ui/page-layout";
+import {
+  AppPage,
+  PageContent,
+  PageHeader,
+  StandardEmptyState,
+} from "@/components/ui/page-layout";
 import {
   SkeletonCard,
   SkeletonButton,
@@ -1353,426 +1358,414 @@ export function BankComponentsTab({
 
   return (
     <ErrorBoundary>
-      <div className="space-y-6">
-        {/* Upload overlay for drag-and-drop */}
-        <UploadOverlay onComplete={() => handleDataRefresh()} />
-
-        <Dialog
-          open={!!uploadConflict}
-          onOpenChange={(open) => {
-            if (!open) setUploadConflict(null);
-          }}
-        >
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>{uploadT("replace.title")}</DialogTitle>
-              <DialogDescription>
-                {uploadConflict
-                  ? `Looks like you uploaded "${uploadConflict.existing.filename}" on ${formatExistingUploadDate(getExistingUploadTimestamp(uploadConflict.existing), locale)}. Replace it, or cancel?`
-                  : ""}
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setUploadConflict(null)}>
-                {commonT("cancel")}
-              </Button>
-              <Button onClick={replaceConflictingUpload} autoFocus>
-                {uploadT("actions.replace")}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        <Dialog
-          open={!!uploadReview}
-          onOpenChange={(open) => {
-            if (!open) setUploadReview(null);
-          }}
-        >
-          <DialogContent className="max-h-[92vh] max-w-6xl overflow-hidden p-0">
-            <DialogHeader className="border-b px-6 py-5">
-              <DialogTitle className="flex items-center gap-2">
-                <CheckCircle2 className="h-5 w-5 text-success" />
-                {dialogsT("review.title")}
-              </DialogTitle>
-              <DialogDescription>
-                {uploadReview
-                  ? dialogsT("review.description", {
-                      filename: uploadReview.filename,
-                      count: uploadReview.entries.length,
-                    })
-                  : ""}
-              </DialogDescription>
-            </DialogHeader>
-            <div className="max-h-[68vh] overflow-hidden">
-              {uploadReview ? (
-                <UploadReviewEntries
-                  entries={uploadReview.entries}
-                  existingEntries={allEntries.filter(
-                    (entry) =>
-                      entry.sourceDocumentId !== uploadReview.documentId,
-                  )}
-                  onUpdate={handleReviewUpdate}
-                  onDelete={handleReviewDelete}
-                  onMergeChildren={handleReviewMergeChildren}
-                  onAttachBullet={handleReviewAttachBullet}
-                />
-              ) : null}
-            </div>
-            <DialogFooter className="border-t px-6 py-4">
-              <Button variant="outline" onClick={() => setUploadReview(null)}>
-                {dialogsT("review.keepEditing")}
-              </Button>
-              <Button onClick={() => setUploadReview(null)}>
-                {dialogsT("review.done")}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        <Dialog open={moveBulletsOpen} onOpenChange={setMoveBulletsOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>{dialogsT("moveBullets.title")}</DialogTitle>
-              <DialogDescription>
-                {dialogsT("moveBullets.description", {
-                  count: selectedBulletCount,
-                })}
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-2">
-              <label
-                htmlFor="move-bullets-target"
-                className="text-sm font-medium"
-              >
-                {dialogsT("moveBullets.parentComponent")}
-              </label>
-              <select
-                id="move-bullets-target"
-                value={moveTargetParentId}
-                onChange={(event) => setMoveTargetParentId(event.target.value)}
-                className="h-11 w-full rounded-[var(--radius)] border border-input bg-background px-3 text-sm"
-              >
-                {parentCandidates.map((entry) => (
-                  <option key={entry.id} value={entry.id}>
-                    {getEntryLabel(entry)} ({CATEGORY_LABELS[entry.category]})
-                  </option>
-                ))}
-              </select>
-            </div>
-            <DialogFooter>
+      <AppPage padding="none">
+        <PageHeader
+          icon={Database}
+          title="Components"
+          description="Reusable bullets, stories, and project chunks pulled from your resume — the source material Studio composes into tailored documents."
+          actions={
+            <div
+              className="flex flex-wrap items-center gap-2"
+              data-testid="bank-actions"
+            >
+              <AddEntryDialog
+                onCreate={handleCreate}
+                open={addEntryOpen}
+                onOpenChange={setAddEntryOpen}
+              />
+              <DriveFilePicker
+                onSelect={handleDriveSelect}
+                accept={["application/pdf", "text/plain"]}
+                trigger={
+                  <Button variant="outline" disabled={driveImporting}>
+                    {driveImporting ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                      <HardDrive className="h-4 w-4 mr-2" />
+                    )}
+                    {driveImporting ? "Importing..." : "From Drive"}
+                  </Button>
+                }
+              />
               <Button
-                variant="outline"
-                onClick={() => setMoveBulletsOpen(false)}
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+                title={a11yT("uploadFile")}
               >
-                Cancel
-              </Button>
-              <Button
-                onClick={() => void handleMoveSelectedBullets()}
-                disabled={!moveTargetParentId || selectedBulletCount === 0}
-              >
-                Move bullets
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        {/* Hidden file input */}
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept=".pdf,.txt,.docx"
-          onChange={handleFileInputChange}
-          className="hidden"
-        />
-
-        <div
-          className="flex flex-wrap items-center gap-2"
-          data-testid="bank-actions"
-        >
-          <AddEntryDialog
-            onCreate={handleCreate}
-            open={addEntryOpen}
-            onOpenChange={setAddEntryOpen}
-          />
-          <DriveFilePicker
-            onSelect={handleDriveSelect}
-            accept={["application/pdf", "text/plain"]}
-            trigger={
-              <Button variant="outline" disabled={driveImporting}>
-                {driveImporting ? (
+                {uploading ? (
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                 ) : (
-                  <HardDrive className="h-4 w-4 mr-2" />
+                  <Upload className="h-4 w-4 mr-2" />
                 )}
-                {driveImporting ? "Importing..." : "From Drive"}
+                {uploading ? "Uploading..." : "Upload"}
               </Button>
-            }
-          />
-          <Button
-            onClick={() => fileInputRef.current?.click()}
-            disabled={uploading}
-            title={a11yT("uploadFile")}
-          >
-            {uploading ? (
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-            ) : (
-              <Upload className="h-4 w-4 mr-2" />
-            )}
-            {uploading ? "Uploading..." : "Upload"}
-          </Button>
-        </div>
+            </div>
+          }
+        />
+        <PageContent>
+          <div className="space-y-6">
+            {/* Upload overlay for drag-and-drop */}
+            <UploadOverlay onComplete={() => handleDataRefresh()} />
 
-        <div className="space-y-6">
-          {showLibraryTools ? (
-            <>
-              {/* Keep this in flow: <main> is the scrollport, and nested sticky filter bars can trap wheel scrolling. */}
-              <Suspense fallback={<BankFiltersSkeleton />}>
-                <div
-                  className="border-b border-border/50 bg-background/95 py-3"
-                  data-testid="bank-search-filters"
-                >
-                  <SearchBar
-                    ref={searchInputRef}
-                    query={query}
-                    onQueryChange={setQuery}
-                    activeCategory={activeCategory}
-                    onCategoryChange={(category) => {
-                      setActiveCategory(category);
-                      setReviewOnly(false);
-                    }}
-                    sortBy={sortBy}
-                    onSortChange={setSortBy}
-                    counts={categoryCounts}
-                    controls={
-                      <>
-                        <div className="flex items-center rounded-[var(--radius)] bg-muted p-1">
-                          <DisplayModeButton
-                            active={displayMode === "category"}
-                            onClick={() => {
-                              setDisplayMode("category");
-                              setActiveDocumentId(null);
-                            }}
-                          >
-                            Category
-                          </DisplayModeButton>
-                          <DisplayModeButton
-                            active={displayMode === "source"}
-                            onClick={() => setDisplayMode("source")}
-                          >
-                            Source
-                          </DisplayModeButton>
-                        </div>
-                        <div className="flex items-center rounded-[var(--radius)] bg-muted p-1">
-                          <IconModeButton
-                            active={layoutMode === "grid"}
-                            onClick={() => setLayoutMode("grid")}
-                            label="Grid view"
-                          >
-                            <LayoutGrid className="h-4 w-4" />
-                          </IconModeButton>
-                          <IconModeButton
-                            active={layoutMode === "table"}
-                            onClick={() => setLayoutMode("table")}
-                            label="Table view"
-                          >
-                            <Rows3 className="h-4 w-4" />
-                          </IconModeButton>
-                        </div>
-                        {needsReviewCount > 0 ? (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setReviewOnly((current) => !current);
-                              setActiveCategory("all");
-                            }}
-                            className={cn(
-                              "inline-flex min-h-10 items-center gap-2 rounded-[var(--radius)] px-3 text-sm font-medium transition-colors",
-                              reviewOnly
-                                ? "bg-warning/15 text-warning"
-                                : "bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground",
-                            )}
-                          >
-                            <AlertTriangle className="h-4 w-4" />
-                            Needs review {needsReviewCount}
-                          </button>
-                        ) : null}
-                      </>
-                    }
-                  />
-                </div>
-              </Suspense>
+            <Dialog
+              open={!!uploadConflict}
+              onOpenChange={(open) => {
+                if (!open) setUploadConflict(null);
+              }}
+            >
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>{uploadT("replace.title")}</DialogTitle>
+                  <DialogDescription>
+                    {uploadConflict
+                      ? `Looks like you uploaded "${uploadConflict.existing.filename}" on ${formatExistingUploadDate(getExistingUploadTimestamp(uploadConflict.existing), locale)}. Replace it, or cancel?`
+                      : ""}
+                  </DialogDescription>
+                </DialogHeader>
+                <DialogFooter>
+                  <Button
+                    variant="outline"
+                    onClick={() => setUploadConflict(null)}
+                  >
+                    {commonT("cancel")}
+                  </Button>
+                  <Button onClick={replaceConflictingUpload} autoFocus>
+                    {uploadT("actions.replace")}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
 
-              {/* Source Files */}
-              {displayMode === "source" ? (
-                <Suspense fallback={<SkeletonCard className="min-h-32" />}>
-                  <div data-testid="bank-source-documents">
-                    <SourceDocuments
-                      refreshKey={sourceRefreshKey}
-                      onFilterByDocument={setActiveDocumentId}
-                      activeDocumentId={activeDocumentId}
-                      onDelete={handleDataRefresh}
-                      onDocumentsChange={setSourceDocuments}
+            <Dialog
+              open={!!uploadReview}
+              onOpenChange={(open) => {
+                if (!open) setUploadReview(null);
+              }}
+            >
+              <DialogContent className="max-h-[92vh] max-w-6xl overflow-hidden p-0">
+                <DialogHeader className="border-b px-6 py-5">
+                  <DialogTitle className="flex items-center gap-2">
+                    <CheckCircle2 className="h-5 w-5 text-success" />
+                    {dialogsT("review.title")}
+                  </DialogTitle>
+                  <DialogDescription>
+                    {uploadReview
+                      ? dialogsT("review.description", {
+                          filename: uploadReview.filename,
+                          count: uploadReview.entries.length,
+                        })
+                      : ""}
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="max-h-[68vh] overflow-hidden">
+                  {uploadReview ? (
+                    <UploadReviewEntries
+                      entries={uploadReview.entries}
+                      existingEntries={allEntries.filter(
+                        (entry) =>
+                          entry.sourceDocumentId !== uploadReview.documentId,
+                      )}
+                      onUpdate={handleReviewUpdate}
+                      onDelete={handleReviewDelete}
+                      onMergeChildren={handleReviewMergeChildren}
+                      onAttachBullet={handleReviewAttachBullet}
                     />
-                  </div>
-                </Suspense>
+                  ) : null}
+                </div>
+                <DialogFooter className="border-t px-6 py-4">
+                  <Button
+                    variant="outline"
+                    onClick={() => setUploadReview(null)}
+                  >
+                    {dialogsT("review.keepEditing")}
+                  </Button>
+                  <Button onClick={() => setUploadReview(null)}>
+                    {dialogsT("review.done")}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+
+            <Dialog open={moveBulletsOpen} onOpenChange={setMoveBulletsOpen}>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>{dialogsT("moveBullets.title")}</DialogTitle>
+                  <DialogDescription>
+                    {dialogsT("moveBullets.description", {
+                      count: selectedBulletCount,
+                    })}
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-2">
+                  <label
+                    htmlFor="move-bullets-target"
+                    className="text-sm font-medium"
+                  >
+                    {dialogsT("moveBullets.parentComponent")}
+                  </label>
+                  <select
+                    id="move-bullets-target"
+                    value={moveTargetParentId}
+                    onChange={(event) =>
+                      setMoveTargetParentId(event.target.value)
+                    }
+                    className="h-11 w-full rounded-[var(--radius)] border border-input bg-background px-3 text-sm"
+                  >
+                    {parentCandidates.map((entry) => (
+                      <option key={entry.id} value={entry.id}>
+                        {getEntryLabel(entry)} (
+                        {CATEGORY_LABELS[entry.category]})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <DialogFooter>
+                  <Button
+                    variant="outline"
+                    onClick={() => setMoveBulletsOpen(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={() => void handleMoveSelectedBullets()}
+                    disabled={!moveTargetParentId || selectedBulletCount === 0}
+                  >
+                    Move bullets
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+
+            {/* Hidden file input */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".pdf,.txt,.docx"
+              onChange={handleFileInputChange}
+              className="hidden"
+            />
+
+            <div className="space-y-6">
+              {showLibraryTools ? (
+                <>
+                  {/* Keep this in flow: <main> is the scrollport, and nested sticky filter bars can trap wheel scrolling. */}
+                  <Suspense fallback={<BankFiltersSkeleton />}>
+                    <div
+                      className="border-b border-border/50 bg-background/95 py-3"
+                      data-testid="bank-search-filters"
+                    >
+                      <SearchBar
+                        ref={searchInputRef}
+                        query={query}
+                        onQueryChange={setQuery}
+                        activeCategory={activeCategory}
+                        onCategoryChange={(category) => {
+                          setActiveCategory(category);
+                          setReviewOnly(false);
+                        }}
+                        sortBy={sortBy}
+                        onSortChange={setSortBy}
+                        counts={categoryCounts}
+                        controls={
+                          <>
+                            <div className="flex items-center rounded-[var(--radius)] bg-muted p-1">
+                              <DisplayModeButton
+                                active={displayMode === "category"}
+                                onClick={() => {
+                                  setDisplayMode("category");
+                                  setActiveDocumentId(null);
+                                }}
+                              >
+                                Category
+                              </DisplayModeButton>
+                              <DisplayModeButton
+                                active={displayMode === "source"}
+                                onClick={() => setDisplayMode("source")}
+                              >
+                                Source
+                              </DisplayModeButton>
+                            </div>
+                            <div className="flex items-center rounded-[var(--radius)] bg-muted p-1">
+                              <IconModeButton
+                                active={layoutMode === "grid"}
+                                onClick={() => setLayoutMode("grid")}
+                                label="Grid view"
+                              >
+                                <LayoutGrid className="h-4 w-4" />
+                              </IconModeButton>
+                              <IconModeButton
+                                active={layoutMode === "table"}
+                                onClick={() => setLayoutMode("table")}
+                                label="Table view"
+                              >
+                                <Rows3 className="h-4 w-4" />
+                              </IconModeButton>
+                            </div>
+                            {needsReviewCount > 0 ? (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setReviewOnly((current) => !current);
+                                  setActiveCategory("all");
+                                }}
+                                className={cn(
+                                  "inline-flex min-h-10 items-center gap-2 rounded-[var(--radius)] px-3 text-sm font-medium transition-colors",
+                                  reviewOnly
+                                    ? "bg-warning/15 text-warning"
+                                    : "bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground",
+                                )}
+                              >
+                                <AlertTriangle className="h-4 w-4" />
+                                Needs review {needsReviewCount}
+                              </button>
+                            ) : null}
+                          </>
+                        }
+                      />
+                    </div>
+                  </Suspense>
+
+                  {/* Source Files */}
+                  {displayMode === "source" ? (
+                    <Suspense fallback={<SkeletonCard className="min-h-32" />}>
+                      <div data-testid="bank-source-documents">
+                        <SourceDocuments
+                          refreshKey={sourceRefreshKey}
+                          onFilterByDocument={setActiveDocumentId}
+                          activeDocumentId={activeDocumentId}
+                          onDelete={handleDataRefresh}
+                          onDocumentsChange={setSourceDocuments}
+                        />
+                      </div>
+                    </Suspense>
+                  ) : null}
+
+                  <BulkActionBar
+                    selectedCount={selectedVisibleCount}
+                    totalCount={sortedEntries.length}
+                    onSelectAll={selectAllVisibleEntries}
+                    onDeselectAll={clearEntrySelection}
+                    onDelete={() => void handleBulkDelete()}
+                    onAddToResume={handleAddSelectedToResume}
+                    onExport={handleExportSelected}
+                    selectedBulletCount={selectedBulletCount}
+                    onMoveBullets={openMoveBulletsDialog}
+                  />
+                </>
               ) : null}
 
-              <BulkActionBar
-                selectedCount={selectedVisibleCount}
-                totalCount={sortedEntries.length}
-                onSelectAll={selectAllVisibleEntries}
-                onDeselectAll={clearEntrySelection}
-                onDelete={() => void handleBulkDelete()}
-                onAddToResume={handleAddSelectedToResume}
-                onExport={handleExportSelected}
-                selectedBulletCount={selectedBulletCount}
-                onMoveBullets={openMoveBulletsDialog}
-              />
-            </>
-          ) : null}
-
-          {/* Content */}
-          <Suspense fallback={<BankEntriesSkeleton />}>
-            {loading ? (
-              <BankEntriesSkeleton />
-            ) : error ? (
-              <ErrorState
-                title={a11yT("failedToLoadDocuments")}
-                message={error}
-                onRetry={fetchEntries}
-                variant="card"
-              />
-            ) : sortedEntries.length === 0 ? (
-              <StandardEmptyState
-                icon={Database}
-                title={
-                  query || activeCategory !== "all"
-                    ? "No matching entries"
-                    : "Start with your resume"
-                }
-                description={
-                  query || activeCategory !== "all"
-                    ? "Try adjusting your search or filters."
-                    : "Upload a resume or career document and Slothing will turn it into reusable building blocks."
-                }
-                action={
-                  !query && activeCategory === "all" ? (
-                    <div className="flex flex-col items-center gap-3">
-                      <Button onClick={() => fileInputRef.current?.click()}>
-                        <Upload className="h-4 w-4 mr-2" />
-                        Upload Document
-                      </Button>
-                      <div className="text-xs text-muted-foreground">
-                        or{" "}
-                        <button
-                          type="button"
-                          className="font-medium text-foreground underline underline-offset-4"
-                          onClick={() => setAddEntryOpen(true)}
-                        >
-                          add an entry manually
-                        </button>{" "}
-                        &middot;{" "}
-                        <DriveFilePicker
-                          onSelect={handleDriveSelect}
-                          accept={["application/pdf", "text/plain"]}
-                          trigger={
-                            <button
-                              type="button"
-                              className="font-medium text-foreground underline underline-offset-4"
-                            >
-                              pick from Drive
-                            </button>
+              {/* Content */}
+              <Suspense fallback={<BankEntriesSkeleton />}>
+                {loading ? (
+                  <BankEntriesSkeleton />
+                ) : error ? (
+                  <ErrorState
+                    title={a11yT("failedToLoadDocuments")}
+                    message={error}
+                    onRetry={fetchEntries}
+                    variant="card"
+                  />
+                ) : sortedEntries.length === 0 ? (
+                  <StandardEmptyState
+                    icon={Database}
+                    title={
+                      query || activeCategory !== "all"
+                        ? "No matching entries"
+                        : "Start with your resume"
+                    }
+                    description={
+                      query || activeCategory !== "all"
+                        ? "Try adjusting your search or filters."
+                        : "Upload a resume or career document and Slothing will turn it into reusable building blocks. Use the actions in the page header above to get started."
+                    }
+                  />
+                ) : (
+                  <div
+                    ref={entriesListRef}
+                    className="space-y-8 animate-in fade-in duration-200"
+                    data-testid="bank-entries"
+                  >
+                    {displayMode === "source"
+                      ? sourceGroupedEntries.map((group) => (
+                          <div key={group.key}>
+                            <h2 className="mb-1 flex items-center gap-2 font-display text-lg font-semibold tracking-tight">
+                              {group.document?.filename ?? "Manual entries"}
+                              <span className="text-sm font-normal text-muted-foreground">
+                                ({group.entries.length})
+                              </span>
+                            </h2>
+                            <p className="mb-3 text-sm text-muted-foreground">
+                              {group.document
+                                ? "Parsed components from this uploaded source."
+                                : "Components added directly in the bank."}
+                            </p>
+                            <EntryCollection
+                              layoutMode={layoutMode}
+                              displayMode={displayMode}
+                              entries={group.entries}
+                              allEntries={entries}
+                              sourceDocuments={sourceDocuments}
+                              onUpdate={handleUpdate}
+                              onDelete={handleDelete}
+                              onCreateChild={handleCreateChild}
+                              onReorderChild={handleReorderChild}
+                              selectedIds={selectedEntryIds}
+                              onToggleSelect={toggleEntrySelection}
+                              onSelectEntries={selectEntries}
+                              onDeselectEntries={deselectEntries}
+                              reviewEntries={allEntries}
+                            />
+                          </div>
+                        ))
+                      : groupedEntries.map((group) => (
+                          <div key={group.category}>
+                            <h2 className="mb-3 flex items-center gap-2 font-display text-lg font-semibold tracking-tight">
+                              {CATEGORY_LABELS[group.category]}
+                              <span className="text-sm font-normal text-muted-foreground">
+                                ({group.entries.length})
+                              </span>
+                            </h2>
+                            <EntryCollection
+                              layoutMode={layoutMode}
+                              displayMode={displayMode}
+                              entries={group.entries}
+                              allEntries={entries}
+                              sourceDocuments={sourceDocuments}
+                              onUpdate={handleUpdate}
+                              onDelete={handleDelete}
+                              onCreateChild={handleCreateChild}
+                              onReorderChild={handleReorderChild}
+                              selectedIds={selectedEntryIds}
+                              onToggleSelect={toggleEntrySelection}
+                              onSelectEntries={selectEntries}
+                              onDeselectEntries={deselectEntries}
+                              reviewEntries={allEntries}
+                            />
+                          </div>
+                        ))}
+                    {hasMoreEntries ? (
+                      <div className="flex justify-center">
+                        <Button
+                          variant="outline"
+                          onClick={() =>
+                            void fetchEntries({
+                              silent: true,
+                              cursor: nextCursor,
+                            })
                           }
-                        />{" "}
-                        &middot; or drop files here
+                          disabled={loadingMore || !nextCursor}
+                        >
+                          {loadingMore ? "Loading..." : "Load more entries"}
+                        </Button>
                       </div>
-                    </div>
-                  ) : null
-                }
-              />
-            ) : (
-              <div
-                ref={entriesListRef}
-                className="space-y-8 animate-in fade-in duration-200"
-                data-testid="bank-entries"
-              >
-                {displayMode === "source"
-                  ? sourceGroupedEntries.map((group) => (
-                      <div key={group.key}>
-                        <h2 className="mb-1 flex items-center gap-2 font-display text-lg font-semibold tracking-tight">
-                          {group.document?.filename ?? "Manual entries"}
-                          <span className="text-sm font-normal text-muted-foreground">
-                            ({group.entries.length})
-                          </span>
-                        </h2>
-                        <p className="mb-3 text-sm text-muted-foreground">
-                          {group.document
-                            ? "Parsed components from this uploaded source."
-                            : "Components added directly in the bank."}
-                        </p>
-                        <EntryCollection
-                          layoutMode={layoutMode}
-                          displayMode={displayMode}
-                          entries={group.entries}
-                          allEntries={entries}
-                          sourceDocuments={sourceDocuments}
-                          onUpdate={handleUpdate}
-                          onDelete={handleDelete}
-                          onCreateChild={handleCreateChild}
-                          onReorderChild={handleReorderChild}
-                          selectedIds={selectedEntryIds}
-                          onToggleSelect={toggleEntrySelection}
-                          onSelectEntries={selectEntries}
-                          onDeselectEntries={deselectEntries}
-                          reviewEntries={allEntries}
-                        />
-                      </div>
-                    ))
-                  : groupedEntries.map((group) => (
-                      <div key={group.category}>
-                        <h2 className="mb-3 flex items-center gap-2 font-display text-lg font-semibold tracking-tight">
-                          {CATEGORY_LABELS[group.category]}
-                          <span className="text-sm font-normal text-muted-foreground">
-                            ({group.entries.length})
-                          </span>
-                        </h2>
-                        <EntryCollection
-                          layoutMode={layoutMode}
-                          displayMode={displayMode}
-                          entries={group.entries}
-                          allEntries={entries}
-                          sourceDocuments={sourceDocuments}
-                          onUpdate={handleUpdate}
-                          onDelete={handleDelete}
-                          onCreateChild={handleCreateChild}
-                          onReorderChild={handleReorderChild}
-                          selectedIds={selectedEntryIds}
-                          onToggleSelect={toggleEntrySelection}
-                          onSelectEntries={selectEntries}
-                          onDeselectEntries={deselectEntries}
-                          reviewEntries={allEntries}
-                        />
-                      </div>
-                    ))}
-                {hasMoreEntries ? (
-                  <div className="flex justify-center">
-                    <Button
-                      variant="outline"
-                      onClick={() =>
-                        void fetchEntries({ silent: true, cursor: nextCursor })
-                      }
-                      disabled={loadingMore || !nextCursor}
-                    >
-                      {loadingMore ? "Loading..." : "Load more entries"}
-                    </Button>
+                    ) : null}
                   </div>
-                ) : null}
-              </div>
-            )}
-          </Suspense>
-        </div>
-      </div>
+                )}
+              </Suspense>
+            </div>
+          </div>
+        </PageContent>
+      </AppPage>
     </ErrorBoundary>
   );
 }

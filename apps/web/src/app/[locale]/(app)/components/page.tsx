@@ -11,23 +11,15 @@
  * underlying data models (atomic chunks vs. saved Q&A) and the user
  * intents differ enough that one filter step on every visit was the
  * wrong default.
+ *
+ * The PageHeader + AppPage wrapper now lives inside `BankComponentsTab`
+ * because the header's action buttons (Add Entry / From Drive / Upload)
+ * own state and refs that originate in the tab. See the audit fix that
+ * collapsed three duplicate CTAs down to a single header-only row.
  */
 
-import { Database } from "lucide-react";
-import { AppPage, PageContent, PageHeader } from "@/components/ui/page-layout";
 import { BankComponentsTab } from "./components-tab";
 
 export default function ComponentsPage() {
-  return (
-    <AppPage padding="none">
-      <PageHeader
-        icon={Database}
-        title="Components"
-        description="Reusable bullets, stories, and project chunks pulled from your resume — the source material Studio composes into tailored documents."
-      />
-      <PageContent>
-        <BankComponentsTab />
-      </PageContent>
-    </AppPage>
-  );
+  return <BankComponentsTab />;
 }
