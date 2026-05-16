@@ -1,9 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useState, type CSSProperties } from "react";
+import { BentoRouterAdminPage } from "@anonabento/bento-router/admin/BentoRouterAdminPage";
+import { BentoRouterUsageTable } from "@anonabento/bento-router/admin/BentoRouterUsageTable";
 import {
-  BentoRouterAdminPage,
-  BentoRouterUsageTable,
   type AddProviderInput,
   type ProviderConfigSummary,
   type ValidateProviderInput,

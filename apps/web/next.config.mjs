@@ -1,6 +1,11 @@
 import createNextIntlPlugin from 'next-intl/plugin';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const withNextIntl = createNextIntlPlugin('./src/i18n.ts');
+const bentoRouterDistSrc = fileURLToPath(
+  new URL('./node_modules/@anonabento/bento-router/dist/src/', import.meta.url),
+);
 
 const isCloudBuild = process.env.SLOTHING_CLOUD === '1';
 const baseExtensions = ['tsx', 'ts', 'jsx', 'js'];
@@ -48,6 +53,20 @@ const nextConfig = {
         pathname: '/**',
       },
     ],
+  },
+  webpack(config) {
+    config.resolve.alias = {
+      ...(config.resolve.alias ?? {}),
+      '@anonabento/bento-router/admin/BentoRouterAdminPage': path.join(
+        bentoRouterDistSrc,
+        'admin/BentoRouterAdminPage.js',
+      ),
+      '@anonabento/bento-router/admin/BentoRouterUsageTable': path.join(
+        bentoRouterDistSrc,
+        'admin/BentoRouterUsageTable.js',
+      ),
+    };
+    return config;
   },
 };
 
