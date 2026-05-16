@@ -40,9 +40,17 @@ export default function CompareIndexPage() {
       <section className="border-b bg-card/40">
         <div className="mx-auto max-w-6xl px-6 py-20">
           <div className="flex max-w-3xl flex-col gap-5">
-            <ShieldCheck className="h-10 w-10 text-primary" />
+            {/* Eyebrow groups with the shield so it isn't a floating orphan. */}
+            <div className="inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.14em] text-ink-3">
+              <ShieldCheck className="h-3.5 w-3.5 text-brand" aria-hidden />
+              <span>Compare</span>
+            </div>
             <h1 className="text-4xl font-semibold tracking-normal text-foreground md:text-5xl">
-              Compare Slothing
+              Slothing vs.{" "}
+              <em className="not-italic italic font-display text-brand [background-image:linear-gradient(transparent_70%,var(--brand-soft)_70%)]">
+                everything else
+              </em>
+              .
             </h1>
             <p className="text-lg leading-8 text-muted-foreground">
               Slothing is AGPL open source, self-hostable, BYOK-friendly, and
@@ -53,12 +61,15 @@ export default function CompareIndexPage() {
       </section>
 
       <section className="mx-auto grid max-w-6xl gap-4 px-6 py-12 md:grid-cols-3">
-        {competitors.map((competitor) => (
+        {competitors.map((competitor, index) => (
           <article
             key={competitor.slug}
-            className="flex flex-col rounded-lg border bg-card p-6 shadow-sm transition-colors hover:border-primary/40"
+            className="flex flex-col rounded-lg border border-rule bg-paper p-6 transition-colors hover:border-brand/40"
           >
-            <h2 className="text-xl font-semibold">
+            <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-ink-3">
+              {String(index + 1).padStart(2, "0")} · {competitor.name}
+            </span>
+            <h2 className="mt-2 font-display text-xl font-semibold tracking-tight">
               Slothing vs {competitor.name}
             </h2>
             <p className="mt-2 flex-1 text-sm leading-6 text-muted-foreground">

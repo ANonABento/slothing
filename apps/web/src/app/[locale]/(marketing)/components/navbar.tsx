@@ -73,7 +73,7 @@ export function Navbar() {
           {/* Desktop Navigation */}
           <nav
             aria-label={a11yT("navigation")}
-            className="hidden md:flex items-center gap-8"
+            className="hidden lg:flex items-center gap-8"
           >
             {navLinks.map((link) =>
               link.href.startsWith("#") ? (
@@ -98,7 +98,7 @@ export function Navbar() {
           </nav>
 
           {/* CTA Buttons */}
-          <div className="hidden md:flex items-center gap-3">
+          <div className="hidden lg:flex items-center gap-3">
             <LocaleSwitcherCompact />
             <Button variant="ghost" asChild>
               <Link
@@ -124,7 +124,7 @@ export function Navbar() {
           {/* Mobile Menu Button */}
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
-            className="flex h-11 w-11 items-center justify-center text-muted-foreground hover:text-foreground md:hidden"
+            className="flex h-11 w-11 items-center justify-center text-muted-foreground hover:text-foreground lg:hidden"
             aria-label={a11yT("toggleMenu")}
             aria-expanded={mobileOpen}
             aria-controls="mobile-nav-menu"
@@ -141,7 +141,7 @@ export function Navbar() {
         <div
           id="mobile-nav-menu"
           hidden={!mobileOpen}
-          className="md:hidden mt-4 pb-4 border-t pt-4"
+          className="lg:hidden mt-4 pb-4 border-t pt-4"
         >
           <nav
             aria-label={a11yT("mobileNavigation")}

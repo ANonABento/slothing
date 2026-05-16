@@ -68,14 +68,19 @@ export default function CompetitorComparisonPage({
   return (
     <main className="min-h-screen bg-background">
       <section className="border-b bg-card/40">
-        <div className="mx-auto grid max-w-6xl gap-10 px-6 py-16 lg:grid-cols-[1fr_360px]">
+        {/* pt-12 lg:pt-20 so the eyebrow doesn't collide with the
+            fixed top navbar (~64px tall + brand subtitle line). */}
+        <div className="mx-auto grid max-w-6xl gap-10 px-6 pt-12 pb-16 lg:grid-cols-[1fr_360px] lg:pt-20">
           <div className="flex flex-col gap-5">
-            <div className="flex items-center gap-3 text-sm font-semibold uppercase text-primary">
-              <ShieldCheck className="h-4 w-4" />
-              Open-source alternative
+            <div className="inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.14em] text-ink-3">
+              <ShieldCheck className="h-3.5 w-3.5 text-brand" aria-hidden />
+              <span>Open-source alternative</span>
             </div>
             <h1 className="text-4xl font-semibold tracking-normal text-foreground md:text-5xl">
-              Slothing vs {competitor.name}
+              Slothing vs{" "}
+              <em className="not-italic italic font-display text-brand [background-image:linear-gradient(transparent_70%,var(--brand-soft)_70%)]">
+                {competitor.name}
+              </em>
             </h1>
             <p className="max-w-3xl text-lg leading-8 text-muted-foreground">
               {competitor.contrast}
@@ -93,8 +98,11 @@ export default function CompetitorComparisonPage({
             </div>
           </div>
 
-          <div className="rounded-lg border bg-background p-5">
-            <h2 className="text-base font-semibold">
+          {/* border-rule-strong + bg-paper so the callout reads against
+              the dark Midnight Indigo paper in dark mode. The default
+              `border` token nearly vanishes against bg-background. */}
+          <div className="rounded-lg border border-rule-strong bg-paper p-5 shadow-paper-card">
+            <h2 className="font-display text-base font-semibold tracking-tight">
               Why people pick Slothing
             </h2>
             <ul className="mt-4 space-y-3 text-sm text-muted-foreground">
