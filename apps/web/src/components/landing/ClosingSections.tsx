@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Globe, Lock, Plug } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DeepSection, HighlighterEm, LogoChip, MonoCap } from "./primitives";
+import { CloserStats } from "./RichSections";
 
 /* ───────────────── Integrations strip ───────────────── */
 export function IntegrationsStrip() {
@@ -306,6 +307,7 @@ export function Closer() {
                 </a>
               </Button>
             </div>
+            <CloserStats />
           </div>
           <div className="rounded-xl border border-current/20 bg-inverse-ink/5 p-6">
             <p className="font-display text-[19px] italic leading-snug">

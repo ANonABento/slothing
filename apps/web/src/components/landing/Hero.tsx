@@ -44,6 +44,25 @@ export function LandingHero() {
               </Button>
             </div>
 
+            {/* Hero meta — social proof line, replaces what would be a
+                "trusted by X companies" logo bar for SaaS. Open-source
+                + permissive license + free is the angle. */}
+            <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-ink-3">
+              <a
+                href="https://github.com/ANonABento/slothing"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 transition-colors hover:text-ink-2"
+              >
+                <span aria-hidden>★</span>
+                <span>Star on GitHub</span>
+              </a>
+              <span className="h-1 w-1 rounded-full bg-ink-3/40" aria-hidden />
+              <span>AGPL-3.0 open source</span>
+              <span className="h-1 w-1 rounded-full bg-ink-3/40" aria-hidden />
+              <span>BYOK · self-hostable</span>
+            </div>
+
             <div className="mt-3 flex flex-col gap-3 border-t border-rule pt-5">
               <MonoCap>Inside Slothing</MonoCap>
               <div className="flex flex-wrap gap-2">

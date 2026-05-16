@@ -13,6 +13,7 @@ import {
   IntegrationsStrip,
   JobQueuePreview,
 } from "@/components/landing/ClosingSections";
+import { LogoStrip, ProblemCompare } from "@/components/landing/RichSections";
 import { getLocalizedMarketingPageMetadata } from "@/lib/seo";
 import { CSP_NONCE_HEADER } from "@/lib/security/headers";
 
@@ -51,6 +52,8 @@ export default function LandingPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <LandingHero />
+      <LogoStrip />
+      <ProblemCompare />
       <KnowledgeBankSection />
       <ExtensionSection />
       <ATSMatchSection />
