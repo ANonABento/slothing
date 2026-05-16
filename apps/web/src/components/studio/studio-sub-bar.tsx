@@ -322,12 +322,7 @@ function DocTypeTabs({
     <div
       role="tablist"
       aria-label="Document type"
-      className="flex items-center gap-0.5 rounded-md border border-rule bg-paper p-0.5"
-      style={{
-        backgroundColor: "var(--paper)",
-        borderColor: "var(--rule)",
-        borderRadius: "var(--r-md)",
-      }}
+      className="flex items-center gap-1"
     >
       {DOCUMENT_MODE_OPTIONS.map(({ mode, label }) => {
         const isActive = documentMode === mode;
@@ -340,11 +335,14 @@ function DocTypeTabs({
             aria-selected={isActive}
             onClick={() => onChange(mode)}
             className={cn(
-              "inline-flex h-8 items-center gap-1.5 rounded-sm px-2.5 text-[13px] font-medium transition-colors",
+              "inline-flex h-8 items-center gap-1.5 border-b-2 px-2 text-[13px] font-medium transition-colors",
               isActive
-                ? "bg-card text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground",
+                ? "border-brand text-foreground"
+                : "border-transparent text-muted-foreground hover:text-foreground",
             )}
+            style={{
+              borderColor: isActive ? "var(--brand)" : "transparent",
+            }}
           >
             <Icon className="h-3.5 w-3.5" />
             {label}

@@ -214,13 +214,25 @@ describe("StudioPage", () => {
     vi.unstubAllGlobals();
   });
 
-  it("renders resume builder mode by default with a file panel", async () => {
+  it("renders resume builder mode by default with sections + preview visible", async () => {
     renderStudioPage();
 
+    // Default tab is Knowledge — SectionList + entries are visible.
     expect(await screen.findByText("Resume sections")).toBeInTheDocument();
     expect(screen.getByText("Resume preview")).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Files" })).toBeInTheDocument();
-    expect(screen.getAllByRole("button", { name: "Resume" })).toHaveLength(2);
+    // The doc-type tabs use role="tab" (not role="button") in the new
+    // flat sub-bar; the remaining "Resume"-named button is the SectionList
+    // entry button. Asserting "at least one" lets the test survive future
+    // additions without re-counting.
+    expect(
+      screen.getAllByRole("button", { name: "Resume" }).length,
+    ).toBeGreaterThanOrEqual(1);
+
+    // Files tab still contains the file-panel + version-history group.
+    fireEvent.click(screen.getByRole("tab", { name: /^files/i }));
+    expect(
+      await screen.findByRole("heading", { name: "Files" }),
+    ).toBeInTheDocument();
   });
 
   it("renders document mode controls in the studio header", async () => {
@@ -649,14 +661,21 @@ describe("StudioPage", () => {
       ),
     );
 
+    // Save button lives in VersionHistorySection on the Files tab —
+    // navigate there before clicking, then back to Knowledge for the
+    // Toggle-entry interaction.
+    fireEvent.click(screen.getByRole("tab", { name: /^files/i }));
     fireEvent.click(screen.getByRole("button", { name: "Save" }));
     expect(screen.getAllByText("Saving...")[0]).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("tab", { name: /^knowledge/i }));
     fireEvent.click(screen.getByRole("button", { name: "Toggle entry" }));
 
     await waitFor(() =>
       expect(screen.getByTestId("resume-html")).toHaveTextContent(/^$/),
     );
 
+    // Version history list also lives on the Files tab.
+    fireEvent.click(screen.getByRole("tab", { name: /^files/i }));
     fireEvent.click(
       await screen.findByRole("button", { name: "Saved version" }),
     );
@@ -731,6 +750,8 @@ describe("StudioPage", () => {
 
     renderStudioPage();
 
+    // Save lives in VersionHistorySection on the Files tab.
+    fireEvent.click(await screen.findByRole("tab", { name: /^files/i }));
     fireEvent.click(await screen.findByRole("button", { name: "Save" }));
 
     await waitFor(() =>
@@ -814,6 +835,8 @@ describe("StudioPage", () => {
       await screen.findByRole("button", { name: /frontend engineer/i }),
     );
     fireEvent.click(screen.getByRole("button", { name: "Toggle entry" }));
+    // Save lives in VersionHistorySection on the Files tab.
+    fireEvent.click(screen.getByRole("tab", { name: /^files/i }));
     fireEvent.click(screen.getByRole("button", { name: "Save" }));
 
     await waitFor(() =>

@@ -33,7 +33,11 @@ function StudioPageContent() {
   const studio = useStudioPageState();
   const { setAiPanelCollapsed, setExportMenuOpen } = studio;
   const [editor, setEditor] = useState<Editor | null>(null);
-  const [leftRailTab, setLeftRailTab] = useState<LeftRailTab>("files");
+  // Default to Knowledge — that's where the user picks the entries that
+  // compose the doc, which is the primary day-to-day workflow. Files
+  // (file list + version history) is a secondary nav the user clicks
+  // into deliberately.
+  const [leftRailTab, setLeftRailTab] = useState<LeftRailTab>("knowledge");
   const [canvasMode, setCanvasMode] = useState<CanvasMode>("wysiwyg");
   const { addToast } = useToast();
   const compareVersion = useMemo(
@@ -197,54 +201,52 @@ function StudioPageContent() {
                     onManualVersionNameChange={studio.setManualVersionName}
                     onSaveVersion={studio.handleSaveManualVersion}
                   />
-
-                  <div className="flex-1 overflow-y-auto">
-                    {studio.stagedSelectionCount > 0 ? (
-                      <div className="border-b px-4 py-3">
-                        <Badge variant="success">
-                          Using {studio.stagedSelectionCount} staged bank
-                          component
-                          {studio.stagedSelectionCount === 1 ? "" : "s"}
-                        </Badge>
-                      </div>
-                    ) : null}
-                    <SectionList
-                      sections={studio.sections}
-                      entries={studio.entries}
-                      selectedIds={studio.selectedIds}
-                      onReorder={studio.handleReorder}
-                      onToggleVisibility={studio.handleToggleVisibility}
-                      onToggleEntry={studio.handleToggleEntry}
-                      pickerOpen={studio.entryPickerOpen}
-                      onPickerOpenChange={studio.setEntryPickerOpen}
-                      showSections={studio.documentMode === "resume"}
-                      emptySelectionHint={
-                        isFirstRunSelectionState
-                          ? "Select entries to build your first draft."
-                          : undefined
-                      }
-                    />
-                    <div className="px-4 py-3">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="w-full"
-                        onClick={() => studio.setEntryPickerOpen(true)}
-                      >
-                        <Plus className="mr-1.5 h-4 w-4" />
-                        {isFirstRunSelectionState
-                          ? "Open bank picker"
-                          : "Add from bank"}
-                      </Button>
-                    </div>
-                  </div>
                 </>
               }
               filesCount={studio.currentDocuments.length}
-              entries={studio.entries}
-              selectedEntryIds={studio.selectedIds}
-              onToggleEntry={studio.handleToggleEntry}
-              onOpenBankPicker={() => studio.setEntryPickerOpen(true)}
+              knowledgeContent={
+                <div className="flex flex-col">
+                  {studio.stagedSelectionCount > 0 ? (
+                    <div className="border-b px-4 py-3">
+                      <Badge variant="success">
+                        Using {studio.stagedSelectionCount} staged bank
+                        component
+                        {studio.stagedSelectionCount === 1 ? "" : "s"}
+                      </Badge>
+                    </div>
+                  ) : null}
+                  <SectionList
+                    sections={studio.sections}
+                    entries={studio.entries}
+                    selectedIds={studio.selectedIds}
+                    onReorder={studio.handleReorder}
+                    onToggleVisibility={studio.handleToggleVisibility}
+                    onToggleEntry={studio.handleToggleEntry}
+                    pickerOpen={studio.entryPickerOpen}
+                    onPickerOpenChange={studio.setEntryPickerOpen}
+                    showSections={studio.documentMode === "resume"}
+                    emptySelectionHint={
+                      isFirstRunSelectionState
+                        ? "Select entries to build your first draft."
+                        : undefined
+                    }
+                  />
+                  <div className="px-4 py-3">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full"
+                      onClick={() => studio.setEntryPickerOpen(true)}
+                    >
+                      <Plus className="mr-1.5 h-4 w-4" />
+                      {isFirstRunSelectionState
+                        ? "Open bank picker"
+                        : "Add from bank"}
+                    </Button>
+                  </div>
+                </div>
+              }
+              knowledgeCount={studio.entries.length}
               linkedOpportunityId={studio.linkedOpportunityId}
               onLinkOpportunity={(opportunity) =>
                 studio.setLinkedOpportunityId(opportunity.id)

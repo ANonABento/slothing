@@ -10,14 +10,12 @@ import {
 import {
   AlertCircle,
   Briefcase,
-  Check,
   FolderOpen,
   Library,
   Link2,
   Loader2,
   PanelLeftClose,
   PanelLeftOpen,
-  Plus,
   Search,
 } from "lucide-react";
 import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
@@ -29,7 +27,6 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import type { BankEntry, BankCategory } from "@/types";
 import type { Opportunity } from "@slothing/shared";
 
 export type LeftRailTab = "files" | "knowledge" | "jobs";
@@ -40,15 +37,18 @@ interface StudioLeftRailProps {
   collapsed?: boolean;
   onToggleCollapsed?: () => void;
 
-  /** Files-tab content — rendered when `activeTab === "files"`. */
+  /** Files-tab content — file list + version history. */
   filesContent: ReactNode;
-  /** Count badge for the Files tab. */
   filesCount: number;
 
-  entries: BankEntry[];
-  selectedEntryIds: Set<string>;
-  onToggleEntry: (id: string) => void;
-  onOpenBankPicker: () => void;
+  /**
+   * Knowledge-tab content — bank entries + section grouping +
+   * drag-reorder. This used to be a duplicated category list in
+   * `KnowledgePane`; the SectionList from the Files tab now lives
+   * here as the single source of truth for "what's in this doc".
+   */
+  knowledgeContent: ReactNode;
+  knowledgeCount: number;
 
   linkedOpportunityId: string;
   onLinkOpportunity: (opportunity: Opportunity) => void;
@@ -65,20 +65,12 @@ export function StudioLeftRail({
   onToggleCollapsed,
   filesContent,
   filesCount,
-  entries,
-  selectedEntryIds,
-  onToggleEntry,
-  onOpenBankPicker,
+  knowledgeContent,
+  knowledgeCount,
   linkedOpportunityId,
   onLinkOpportunity,
 }: StudioLeftRailProps) {
   const a11yT = useA11yTranslations();
-
-  const knowledgeCount = entries.length;
-  const inDocCount = useMemo(
-    () => entries.filter((e) => selectedEntryIds.has(e.id)).length,
-    [entries, selectedEntryIds],
-  );
 
   if (collapsed) {
     return (
@@ -130,7 +122,7 @@ export function StudioLeftRail({
         <div
           role="tablist"
           aria-label="Left rail tabs"
-          className="flex items-center gap-0.5 border-b border-rule px-2 py-1.5"
+          className="flex items-center gap-0 overflow-x-hidden border-b border-rule px-1.5 py-1.5"
           style={{ borderColor: "var(--rule)" }}
         >
           <RailTab
@@ -138,20 +130,17 @@ export function StudioLeftRail({
             count={filesCount}
             active={activeTab === "files"}
             onClick={() => onTabChange("files")}
-            icon={<FolderOpen className="h-3.5 w-3.5" />}
           />
           <RailTab
             label="Knowledge"
             count={knowledgeCount}
             active={activeTab === "knowledge"}
             onClick={() => onTabChange("knowledge")}
-            icon={<Library className="h-3.5 w-3.5" />}
           />
           <RailTab
             label="Jobs"
             active={activeTab === "jobs"}
             onClick={() => onTabChange("jobs")}
-            icon={<Briefcase className="h-3.5 w-3.5" />}
           />
           <span className="flex-1" />
           {onToggleCollapsed && (
@@ -161,9 +150,9 @@ export function StudioLeftRail({
                   type="button"
                   onClick={onToggleCollapsed}
                   aria-label={a11yT("collapseFilesPanel")}
-                  className="grid h-7 w-7 place-items-center rounded-sm text-muted-foreground transition-colors hover:bg-rule-strong-bg hover:text-foreground"
+                  className="grid h-6 w-6 flex-shrink-0 place-items-center rounded-sm text-muted-foreground transition-colors hover:bg-rule-strong-bg hover:text-foreground"
                 >
-                  <PanelLeftClose className="h-3.5 w-3.5" />
+                  <PanelLeftClose className="h-3 w-3" />
                 </button>
               </TooltipTrigger>
               <TooltipContent side="bottom">Collapse</TooltipContent>
@@ -173,15 +162,7 @@ export function StudioLeftRail({
 
         <div className="min-h-0 flex-1 overflow-y-auto">
           {activeTab === "files" && filesContent}
-          {activeTab === "knowledge" && (
-            <KnowledgePane
-              entries={entries}
-              selectedEntryIds={selectedEntryIds}
-              inDocCount={inDocCount}
-              onToggleEntry={onToggleEntry}
-              onOpenBankPicker={onOpenBankPicker}
-            />
-          )}
+          {activeTab === "knowledge" && knowledgeContent}
           {activeTab === "jobs" && (
             <JobsPane
               linkedOpportunityId={linkedOpportunityId}
@@ -199,13 +180,11 @@ function RailTab({
   count,
   active,
   onClick,
-  icon,
 }: {
   label: string;
   count?: number;
   active: boolean;
   onClick: () => void;
-  icon: ReactNode;
 }) {
   return (
     <button
@@ -214,17 +193,16 @@ function RailTab({
       aria-selected={active}
       onClick={onClick}
       className={cn(
-        "inline-flex h-7 items-center gap-1.5 rounded-sm px-2 text-[12px] font-medium transition-colors",
+        "inline-flex h-6 items-center gap-1 rounded-sm px-1.5 text-[11px] font-medium transition-colors",
         active
           ? "bg-card text-foreground shadow-sm"
           : "text-muted-foreground hover:text-foreground",
       )}
     >
-      {icon}
       {label}
       {typeof count === "number" && count > 0 && (
         <span
-          className="ml-0.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1 font-mono text-[9.5px] font-semibold tabular-nums"
+          className="ml-0.5 inline-flex h-3.5 min-w-3.5 items-center justify-center rounded-full px-1 font-mono text-[9px] font-semibold tabular-nums"
           style={{
             backgroundColor: active
               ? "var(--brand-soft)"
@@ -269,243 +247,6 @@ function CollapsedIconButton({
       </TooltipTrigger>
       <TooltipContent side="right">{label}</TooltipContent>
     </Tooltip>
-  );
-}
-
-function deriveEntryTitle(entry: BankEntry): string {
-  const content = entry.content;
-  for (const key of ["title", "role", "name", "label", "headline"]) {
-    const value = (content as Record<string, unknown>)[key];
-    if (typeof value === "string" && value.trim()) {
-      return value;
-    }
-  }
-  // Use the first stringy field as a fallback.
-  for (const value of Object.values(content)) {
-    if (typeof value === "string" && value.trim()) {
-      return value.length > 80 ? `${value.slice(0, 77)}…` : value;
-    }
-  }
-  return `Untitled ${entry.category}`;
-}
-
-function deriveEntrySubtitle(entry: BankEntry): string | null {
-  const content = entry.content as Record<string, unknown>;
-  for (const key of ["company", "organization", "issuer", "subtitle"]) {
-    const value = content[key];
-    if (typeof value === "string" && value.trim()) return value;
-  }
-  return null;
-}
-
-const CATEGORY_LABELS: Record<BankCategory, string> = {
-  experience: "Experience",
-  skill: "Skills",
-  project: "Projects",
-  education: "Education",
-  bullet: "Bullets",
-  achievement: "Achievements",
-  certification: "Certifications",
-  hackathon: "Hackathons",
-};
-
-function KnowledgePane({
-  entries,
-  selectedEntryIds,
-  inDocCount,
-  onToggleEntry,
-  onOpenBankPicker,
-}: {
-  entries: BankEntry[];
-  selectedEntryIds: Set<string>;
-  inDocCount: number;
-  onToggleEntry: (id: string) => void;
-  onOpenBankPicker: () => void;
-}) {
-  const [search, setSearch] = useState("");
-
-  const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    if (!q) return entries;
-    return entries.filter((entry) => {
-      const title = deriveEntryTitle(entry).toLowerCase();
-      const subtitle = (deriveEntrySubtitle(entry) ?? "").toLowerCase();
-      return (
-        title.includes(q) ||
-        subtitle.includes(q) ||
-        entry.category.toLowerCase().includes(q)
-      );
-    });
-  }, [entries, search]);
-
-  const grouped = useMemo(() => {
-    const map = new Map<BankCategory, BankEntry[]>();
-    for (const entry of filtered) {
-      const arr = map.get(entry.category) ?? [];
-      arr.push(entry);
-      map.set(entry.category, arr);
-    }
-    return map;
-  }, [filtered]);
-
-  return (
-    <div className="flex flex-col gap-2 px-3 py-3">
-      <div className="relative">
-        <Search
-          className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground"
-          aria-hidden
-        />
-        <input
-          type="search"
-          value={search}
-          onChange={(event) => setSearch(event.target.value)}
-          placeholder="Search knowledge…"
-          aria-label="Search knowledge bank entries"
-          className="h-8 w-full rounded-sm border border-rule bg-paper pl-8 pr-2 text-[12.5px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          style={{
-            backgroundColor: "var(--paper)",
-            borderColor: "var(--rule)",
-          }}
-        />
-      </div>
-
-      <p
-        className="rounded-sm border border-rule bg-paper px-2.5 py-2 text-[11.5px] leading-snug"
-        style={{
-          backgroundColor: "var(--paper)",
-          borderColor: "var(--rule)",
-          color: "var(--ink-3)",
-        }}
-      >
-        Click <Plus className="inline h-3 w-3 align-text-bottom" /> to add an
-        entry to the document. Already-inserted entries show a{" "}
-        <span
-          aria-hidden
-          className="inline-block h-1.5 w-1.5 rounded-full align-middle"
-          style={{ backgroundColor: "var(--brand)" }}
-        />{" "}
-        dot.{" "}
-        <strong style={{ color: "var(--ink-2)" }}>
-          {inDocCount} of {entries.length} in doc
-        </strong>
-      </p>
-
-      {grouped.size === 0 ? (
-        <div
-          className="rounded-sm border border-rule bg-paper px-3 py-6 text-center text-[12px]"
-          style={{
-            backgroundColor: "var(--paper)",
-            borderColor: "var(--rule)",
-            color: "var(--ink-3)",
-          }}
-        >
-          {entries.length === 0
-            ? "No knowledge bank entries yet. Add experience and bullets in /components."
-            : "No entries match your search."}
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {Array.from(grouped.entries()).map(([category, items]) => (
-            <section key={category} className="space-y-1">
-              <header className="flex items-baseline justify-between px-1">
-                <h3
-                  className="font-mono text-[10px] uppercase tracking-[0.14em]"
-                  style={{ color: "var(--ink-3)" }}
-                >
-                  {CATEGORY_LABELS[category] ?? category}
-                </h3>
-                <span
-                  className="font-mono text-[10px] tabular-nums"
-                  style={{ color: "var(--ink-3)" }}
-                >
-                  {items.filter((e) => selectedEntryIds.has(e.id)).length} of{" "}
-                  {items.length} in doc
-                </span>
-              </header>
-              <ul className="space-y-0.5">
-                {items.map((entry) => {
-                  const inDoc = selectedEntryIds.has(entry.id);
-                  const title = deriveEntryTitle(entry);
-                  const subtitle = deriveEntrySubtitle(entry);
-                  return (
-                    <li
-                      key={entry.id}
-                      className="group flex items-start gap-2 rounded-sm border border-transparent px-1.5 py-1.5 transition-colors hover:border-rule hover:bg-paper"
-                    >
-                      <span
-                        aria-hidden
-                        className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full"
-                        style={{
-                          backgroundColor: inDoc
-                            ? "var(--brand)"
-                            : "transparent",
-                          border: inDoc ? "none" : "1px solid var(--rule)",
-                        }}
-                      />
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-[12.5px] font-medium leading-tight text-foreground">
-                          {title}
-                        </p>
-                        {subtitle && (
-                          <p
-                            className="mt-0.5 truncate text-[11px] leading-tight"
-                            style={{ color: "var(--ink-3)" }}
-                          >
-                            {subtitle}
-                          </p>
-                        )}
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => onToggleEntry(entry.id)}
-                        aria-label={inDoc ? "Remove from doc" : "Add to doc"}
-                        className={cn(
-                          "grid h-6 w-6 flex-shrink-0 place-items-center rounded-sm border border-rule transition-colors",
-                          inDoc
-                            ? "bg-brand text-inverse-ink"
-                            : "bg-paper text-muted-foreground hover:bg-rule-strong-bg",
-                        )}
-                        style={
-                          inDoc
-                            ? {
-                                backgroundColor: "var(--brand)",
-                                color: "var(--inverse-ink)",
-                                borderColor: "var(--brand)",
-                              }
-                            : {
-                                backgroundColor: "var(--paper)",
-                                borderColor: "var(--rule)",
-                              }
-                        }
-                      >
-                        {inDoc ? (
-                          <Check className="h-3 w-3" />
-                        ) : (
-                          <Plus className="h-3 w-3" />
-                        )}
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
-            </section>
-          ))}
-        </div>
-      )}
-
-      <button
-        type="button"
-        onClick={onOpenBankPicker}
-        className="mt-2 inline-flex h-8 w-full items-center justify-center gap-1.5 rounded-sm border border-rule bg-paper text-[12px] font-medium transition-colors hover:border-rule-strong"
-        style={{
-          backgroundColor: "var(--paper)",
-          borderColor: "var(--rule)",
-        }}
-      >
-        <FolderOpen className="h-3.5 w-3.5" />
-        Open full bank picker
-      </button>
-    </div>
   );
 }
 
