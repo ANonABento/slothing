@@ -94,10 +94,14 @@ test("imports a scraped fixture job through the extension into Slothing", async 
 
     const appPage = await context.newPage();
     await appPage.goto(`${slothingBaseUrl}/opportunities`);
-    await expect(
-      appPage.getByRole("link", { name: "Senior Software Engineer" }).first(),
-    ).toBeVisible({ timeout: 30_000 });
-    await expect(appPage.getByText("Acme Corp").first()).toBeVisible();
+    const importedOpportunity = appPage
+      .getByTestId("opportunity-row")
+      .filter({ hasText: "Senior Software Engineer" })
+      .first();
+
+    await importedOpportunity.scrollIntoViewIfNeeded({ timeout: 30_000 });
+    await expect(importedOpportunity).toBeVisible();
+    await expect(importedOpportunity).toContainText("Acme Corp");
     await appPage.close();
   } finally {
     await jobPage.close();
