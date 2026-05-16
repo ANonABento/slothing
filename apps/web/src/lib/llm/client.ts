@@ -1,10 +1,10 @@
 import type { LLMConfig } from "@/types";
-import type { LLMProvider } from "@/lib/constants";
 import {
   DEFAULT_LLM_TIMEOUT_MS,
   LLM_ENDPOINTS,
   DEFAULT_MODEL_BY_PROVIDER,
 } from "@/lib/constants";
+import { resolveEnvApiKey } from "@/lib/llm/resolve-env-api-key";
 
 /**
  * Resolve the OpenAI chat-completions URL. Defaults to the public OpenAI API.
@@ -20,25 +20,6 @@ function resolveOpenAIEndpoint(): string {
   return trimmed.endsWith("/chat/completions")
     ? trimmed
     : `${trimmed}/chat/completions`;
-}
-
-/**
- * Fall back to a process-env API key when the user hasn't configured one in
- * /settings. Keeps single-source-of-truth for the DB config (DB always wins
- * when set) while letting dev installs work with only an env var. Returns
- * undefined for Ollama since it doesn't take a key.
- */
-function resolveEnvApiKey(provider: LLMProvider): string | undefined {
-  switch (provider) {
-    case "openai":
-      return process.env.OPENAI_API_KEY;
-    case "anthropic":
-      return process.env.ANTHROPIC_API_KEY;
-    case "openrouter":
-      return process.env.OPENROUTER_API_KEY;
-    case "ollama":
-      return undefined;
-  }
 }
 
 interface Message {
