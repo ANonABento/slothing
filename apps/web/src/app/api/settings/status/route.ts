@@ -12,6 +12,14 @@ export async function GET() {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
 
+  if (!process.env.NEXTAUTH_SECRET) {
+    return NextResponse.json({
+      configured: false,
+      provider: null,
+      providerCount: 0,
+    });
+  }
+
   try {
     const client = await getBentoRouterClient();
     const providers = await client

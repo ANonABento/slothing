@@ -1,8 +1,9 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   requireAuth: vi.fn(),
   isAuthError: vi.fn(),
+  getBentoRouterClient: vi.fn(),
   listConfiguredProviders: vi.fn(),
 }));
 
@@ -12,21 +13,29 @@ vi.mock("@/lib/auth", () => ({
 }));
 
 vi.mock("@/lib/llm/bentorouter-client", () => ({
-  getBentoRouterClient: vi.fn(async () => ({
-    api: () => ({
-      listConfiguredProviders: mocks.listConfiguredProviders,
-    }),
-  })),
+  getBentoRouterClient: mocks.getBentoRouterClient,
 }));
 
 import { GET } from "./route";
 
+const originalNextAuthSecret = process.env.NEXTAUTH_SECRET;
+
 describe("GET /api/settings/status", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    process.env.NEXTAUTH_SECRET = "test-secret";
     mocks.requireAuth.mockResolvedValue({ userId: "user-1" });
     mocks.isAuthError.mockReturnValue(false);
+    mocks.getBentoRouterClient.mockResolvedValue({
+      api: () => ({
+        listConfiguredProviders: mocks.listConfiguredProviders,
+      }),
+    });
     mocks.listConfiguredProviders.mockResolvedValue([]);
+  });
+
+  afterEach(() => {
+    process.env.NEXTAUTH_SECRET = originalNextAuthSecret;
   });
 
   it("reports no configured providers for the authenticated user", async () => {
@@ -52,6 +61,19 @@ describe("GET /api/settings/status", () => {
       configured: true,
       provider: "bentorouter",
       providerCount: 2,
+    });
+  });
+
+  it("does not construct provider encryption when the auth secret is absent", async () => {
+    delete process.env.NEXTAUTH_SECRET;
+
+    const response = await GET();
+
+    expect(mocks.getBentoRouterClient).not.toHaveBeenCalled();
+    await expect(response.json()).resolves.toEqual({
+      configured: false,
+      provider: null,
+      providerCount: 0,
     });
   });
 });
