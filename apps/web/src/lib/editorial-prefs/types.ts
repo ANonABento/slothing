@@ -61,7 +61,7 @@ export interface EditorialPrefs {
 export const DEFAULT_EDITORIAL_PREFS: EditorialPrefs = {
   accent: "rust",
   display: "outfit",
-  radius: "soft",
+  radius: "sharp",
   density: "comfy",
   // Midnight by default — less harsh than pure black against cream paper.
   ink: "midnight",

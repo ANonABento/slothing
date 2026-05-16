@@ -7,7 +7,7 @@ export const editorialPrefsPreloadScript = `(() => {
     const parsed = raw ? JSON.parse(raw) : {};
     const accent = ["rust","olive","plum","coral","indigo","ink"].includes(parsed.accent) ? parsed.accent : "rust";
     const display = ["outfit","space","jakarta","inter","dm"].includes(parsed.display) ? parsed.display : "outfit";
-    const radius = ["sharp","soft","round"].includes(parsed.radius) ? parsed.radius : "soft";
+    const radius = ["sharp","soft","round"].includes(parsed.radius) ? parsed.radius : "sharp";
     const density = ["comfy","compact"].includes(parsed.density) ? parsed.density : "comfy";
     const ink = ["black","midnight","espresso"].includes(parsed.ink) ? parsed.ink : "midnight";
     const root = document.documentElement;

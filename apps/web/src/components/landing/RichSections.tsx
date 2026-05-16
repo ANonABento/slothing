@@ -122,7 +122,7 @@ export function ProblemCompare() {
 
       <div className="grid items-stretch gap-4 md:grid-cols-[1fr_56px_1fr]">
         {/* BEFORE — tab storm */}
-        <article className="flex flex-col rounded-[16px] border border-rule bg-paper p-7 opacity-[0.92]">
+        <article className="flex flex-col rounded-xl border border-rule bg-paper p-7 opacity-[0.92]">
           <span className="font-mono text-[10.5px] uppercase tracking-[0.06em] text-ink-3">
             <span className="mr-1.5 text-[#c75a4a]" aria-hidden>
               ✕
@@ -170,7 +170,7 @@ export function ProblemCompare() {
         </div>
 
         {/* AFTER — unified */}
-        <article className="flex flex-col rounded-[16px] border border-rule bg-paper p-7">
+        <article className="flex flex-col rounded-xl border border-rule bg-paper p-7">
           <span className="font-mono text-[10.5px] uppercase tracking-[0.06em] text-ink-3">
             <span className="mr-1.5 text-brand" aria-hidden>
               ✓
@@ -186,7 +186,7 @@ export function ProblemCompare() {
           </p>
 
           {/* Mini unified queue mock */}
-          <div className="mt-4 overflow-hidden rounded-[10px] border border-rule bg-page">
+          <div className="mt-4 overflow-hidden rounded-xl border border-rule bg-page">
             <div className="flex items-center gap-1.5 border-b border-rule px-3 py-2 font-mono text-[11px] text-ink-3">
               <span className="h-1.5 w-1.5 rounded-full bg-brand" aria-hidden />
               slothing · job queue
