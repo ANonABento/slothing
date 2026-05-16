@@ -9,6 +9,7 @@ import {
   Baseline,
   Bold,
   Brush,
+  ChevronDown,
   Columns3,
   Download,
   Eraser,
@@ -34,7 +35,13 @@ import {
   Underline,
   Undo2,
 } from "lucide-react";
-import { useRef, useState, type ComponentType, type ReactNode } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type ComponentType,
+  type ReactNode,
+} from "react";
 import { Button } from "@/components/ui/button";
 import {
   COLOR_SWATCHES,
@@ -697,6 +704,20 @@ function EditorInsertControls({
   );
 }
 
+/**
+ * Slim formatting toolbar exposed to the resume preview.
+ *
+ * Essentials (always visible) cover the controls most edits actually
+ * use — paragraph style, bold/italic/underline, both list types, and
+ * link. Everything else (font/size/color/highlight/align/spacing/
+ * indent/strike/sub-sup/HR/image/table/page-break/clear-formatting +
+ * table-row-column operations) lives behind a "More formatting"
+ * popover so the editing surface isn't dominated by 30 buttons the
+ * user rarely touches.
+ *
+ * Undo/redo are no longer shown here — the studio sub-bar above the
+ * canvas owns those controls now. Removing them avoids duplication.
+ */
 export function EditorFormattingControls({
   editor,
 }: {
@@ -706,30 +727,393 @@ export function EditorFormattingControls({
 
   return (
     <>
-      <EditorTextControls editor={editor} disabled={controlsDisabled} />
+      <EssentialFormattingControls
+        editor={editor}
+        disabled={controlsDisabled}
+      />
       <ToolbarSeparator />
-      <EditorParagraphControls editor={editor} disabled={controlsDisabled} />
-      <ToolbarSeparator />
-      <EditorInsertControls editor={editor} disabled={controlsDisabled} />
-      <TableContextControls editor={editor} disabled={controlsDisabled} />
-      <ToolbarSeparator />
-      <ToolbarGroup label="History">
-        <ToolbarButton
-          label="Undo"
-          disabled={controlsDisabled}
-          onClick={() => run(editor, (current) => current.undo())}
-        >
-          <Undo2 className="h-4 w-4" />
-        </ToolbarButton>
-        <ToolbarButton
-          label="Redo"
-          disabled={controlsDisabled}
-          onClick={() => run(editor, (current) => current.redo())}
-        >
-          <Redo2 className="h-4 w-4" />
-        </ToolbarButton>
-      </ToolbarGroup>
+      <MoreFormattingMenu editor={editor} disabled={controlsDisabled} />
     </>
+  );
+}
+
+function EssentialFormattingControls({
+  editor,
+  disabled,
+}: {
+  editor: Editor | null;
+  disabled: boolean;
+}) {
+  return (
+    <ToolbarGroup label="Essentials">
+      <SelectControl
+        label="Paragraph style"
+        value={
+          editor?.isActive("heading", { level: 1 })
+            ? "h1"
+            : editor?.isActive("heading", { level: 2 })
+              ? "h2"
+              : editor?.isActive("heading", { level: 3 })
+                ? "h3"
+                : "paragraph"
+        }
+        disabled={disabled}
+        onChange={(value) => {
+          if (value === "paragraph") {
+            run(editor, (current) => current.setParagraph());
+            return;
+          }
+          run(editor, (current) =>
+            current.toggleHeading({
+              level: Number(value.slice(1)) as 1 | 2 | 3,
+            }),
+          );
+        }}
+      >
+        <option value="paragraph">Normal</option>
+        <option value="h1">H1</option>
+        <option value="h2">H2</option>
+        <option value="h3">H3</option>
+      </SelectControl>
+      <ToolbarButton
+        label="Bold"
+        shortcut="⌘B"
+        active={editor?.isActive("bold")}
+        disabled={disabled}
+        onClick={() => run(editor, (current) => current.toggleBold())}
+      >
+        <Bold className="h-4 w-4" />
+      </ToolbarButton>
+      <ToolbarButton
+        label="Italic"
+        shortcut="⌘I"
+        active={editor?.isActive("italic")}
+        disabled={disabled}
+        onClick={() => run(editor, (current) => current.toggleItalic())}
+      >
+        <Italic className="h-4 w-4" />
+      </ToolbarButton>
+      <ToolbarButton
+        label="Underline"
+        shortcut="⌘U"
+        active={editor?.isActive("underline")}
+        disabled={disabled}
+        onClick={() => run(editor, (current) => current.toggleUnderline())}
+      >
+        <Underline className="h-4 w-4" />
+      </ToolbarButton>
+      <ToolbarButton
+        label="Bullet list"
+        active={editor?.isActive("bulletList")}
+        disabled={disabled}
+        onClick={() => run(editor, (current) => current.toggleBulletList())}
+      >
+        <List className="h-4 w-4" />
+      </ToolbarButton>
+      <ToolbarButton
+        label="Numbered list"
+        active={editor?.isActive("orderedList")}
+        disabled={disabled}
+        onClick={() => run(editor, (current) => current.toggleOrderedList())}
+      >
+        <ListOrdered className="h-4 w-4" />
+      </ToolbarButton>
+      <ToolbarButton
+        label="Link"
+        shortcut="⌘K"
+        active={editor?.isActive("link")}
+        disabled={disabled}
+        onClick={() => {
+          const previous = String(editor?.getAttributes("link").href || "");
+          const href = window.prompt("Link URL", previous);
+          if (href === null) return;
+          run(editor, (current) =>
+            href.trim()
+              ? current.extendMarkRange("link").setLink({ href: href.trim() })
+              : current.unsetLink(),
+          );
+        }}
+      >
+        <Link2 className="h-4 w-4" />
+      </ToolbarButton>
+    </ToolbarGroup>
+  );
+}
+
+function MoreFormattingMenu({
+  editor,
+  disabled,
+}: {
+  editor: Editor | null;
+  disabled: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDocClick = (event: MouseEvent) => {
+      if (!wrapperRef.current?.contains(event.target as Node)) setOpen(false);
+    };
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("mousedown", onDocClick);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDocClick);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  return (
+    <div ref={wrapperRef} className="relative inline-flex items-center">
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        aria-label="More formatting"
+        aria-expanded={open}
+        aria-haspopup="menu"
+        disabled={disabled}
+        onClick={() => setOpen((prev) => !prev)}
+        className="inline-flex h-8 items-center gap-1 px-2 text-[12px]"
+        style={{ color: "var(--ink-2)" }}
+      >
+        <MoreHorizontal className="h-4 w-4" />
+        <span className="hidden md:inline">More</span>
+        <ChevronDown className="h-3 w-3" />
+      </Button>
+      {open && (
+        <div
+          role="menu"
+          aria-label="More formatting options"
+          className="absolute right-0 top-full z-50 mt-2 w-[320px] overflow-hidden rounded-md border border-rule bg-popover p-2 shadow-paper-elevated"
+          style={{
+            backgroundColor: "var(--paper)",
+            borderColor: "var(--rule)",
+          }}
+        >
+          <div className="flex flex-wrap items-center gap-1">
+            <ToolbarButton
+              label="Strikethrough"
+              shortcut="⌘⇧X"
+              active={editor?.isActive("strike")}
+              disabled={disabled}
+              onClick={() => run(editor, (current) => current.toggleStrike())}
+            >
+              <Strikethrough className="h-4 w-4" />
+            </ToolbarButton>
+            <ToolbarButton
+              label="Subscript"
+              shortcut="⌘,"
+              active={editor?.isActive("subscript")}
+              disabled={disabled}
+              onClick={() =>
+                run(editor, (current) => current.toggleSubscript())
+              }
+            >
+              <Subscript className="h-4 w-4" />
+            </ToolbarButton>
+            <ToolbarButton
+              label="Superscript"
+              shortcut="⌘."
+              active={editor?.isActive("superscript")}
+              disabled={disabled}
+              onClick={() =>
+                run(editor, (current) => current.toggleSuperscript())
+              }
+            >
+              <Superscript className="h-4 w-4" />
+            </ToolbarButton>
+            <ToolbarButton
+              label="Clear formatting"
+              shortcut="⌘\\"
+              disabled={disabled}
+              onClick={() =>
+                run(editor, (current) =>
+                  current
+                    .unsetAllMarks()
+                    .clearNodes()
+                    .unsetFontFamily()
+                    .unsetFontSize(),
+                )
+              }
+            >
+              <Eraser className="h-4 w-4" />
+            </ToolbarButton>
+          </div>
+
+          <div className="mt-2 grid grid-cols-2 gap-2">
+            <SelectControl
+              label="Font family"
+              value={String(
+                editor?.getAttributes("textStyle").fontFamily || "",
+              )}
+              disabled={disabled}
+              onChange={(value) =>
+                run(editor, (current) =>
+                  value
+                    ? current.setFontFamily(value)
+                    : current.unsetFontFamily(),
+                )
+              }
+            >
+              <option value="">Font</option>
+              {FONT_FAMILIES.map((font) => (
+                <option key={font.label} value={font.value}>
+                  {font.label}
+                </option>
+              ))}
+            </SelectControl>
+            <SelectControl
+              label="Font size"
+              value={String(editor?.getAttributes("textStyle").fontSize || "")}
+              disabled={disabled}
+              onChange={(value) =>
+                run(editor, (current) =>
+                  value ? current.setFontSize(value) : current.unsetFontSize(),
+                )
+              }
+            >
+              <option value="">Size</option>
+              {FONT_SIZES.map((size) => (
+                <option key={size} value={size}>
+                  {size.replace("pt", "")}
+                </option>
+              ))}
+            </SelectControl>
+            <SelectControl
+              label="Text color"
+              value=""
+              disabled={disabled}
+              onChange={(value) =>
+                run(editor, (current) =>
+                  value ? current.setColor(value) : current.unsetColor(),
+                )
+              }
+            >
+              <option value="">Color</option>
+              {COLOR_SWATCHES.map((color) => (
+                <option key={color.label} value={color.value}>
+                  {color.label}
+                </option>
+              ))}
+            </SelectControl>
+            <SelectControl
+              label="Highlight color"
+              value=""
+              disabled={disabled}
+              onChange={(value) =>
+                run(editor, (current) =>
+                  value
+                    ? current.setHighlight({ color: value })
+                    : current.unsetHighlight(),
+                )
+              }
+            >
+              <option value="">Highlight</option>
+              {COLOR_SWATCHES.map((color) => (
+                <option key={color.label} value={color.value}>
+                  {color.label}
+                </option>
+              ))}
+            </SelectControl>
+          </div>
+
+          <div className="mt-2 flex flex-wrap items-center gap-1 border-t border-rule pt-2">
+            {(
+              [
+                ["Align left", "left", AlignLeft],
+                ["Align center", "center", AlignCenter],
+                ["Align right", "right", AlignRight],
+                ["Justify", "justify", AlignJustify],
+              ] as Array<
+                [string, string, ComponentType<{ className?: string }>]
+              >
+            ).map(([label, align, Icon]) => (
+              <ToolbarButton
+                key={String(align)}
+                label={String(label)}
+                active={editor?.isActive({ textAlign: align })}
+                disabled={disabled}
+                onClick={() =>
+                  run(editor, (current) => current.setTextAlign(align))
+                }
+              >
+                <Icon className="h-4 w-4" />
+              </ToolbarButton>
+            ))}
+            <SelectControl
+              label="Line spacing"
+              value=""
+              disabled={disabled}
+              onChange={(value) =>
+                run(editor, (current) => current.setLineHeight(value))
+              }
+            >
+              <option value="">Spacing</option>
+              {LINE_HEIGHTS.map((lineHeight) => (
+                <option key={lineHeight.value} value={lineHeight.value}>
+                  {lineHeight.label}
+                </option>
+              ))}
+            </SelectControl>
+            <ToolbarButton
+              label="Outdent"
+              disabled={disabled}
+              onClick={() =>
+                run(editor, (current) => current.liftListItem("listItem"))
+              }
+            >
+              <Outdent className="h-4 w-4" />
+            </ToolbarButton>
+            <ToolbarButton
+              label="Indent"
+              disabled={disabled}
+              onClick={() =>
+                run(editor, (current) => current.sinkListItem("listItem"))
+              }
+            >
+              <Indent className="h-4 w-4" />
+            </ToolbarButton>
+            <ToolbarButton
+              label="Horizontal rule"
+              disabled={disabled}
+              onClick={() =>
+                run(editor, (current) => current.setHorizontalRule())
+              }
+            >
+              <Minus className="h-4 w-4" />
+            </ToolbarButton>
+          </div>
+
+          <div className="mt-2 flex flex-wrap items-center gap-1 border-t border-rule pt-2">
+            <InsertImageButton editor={editor} disabled={disabled} />
+            <TableGridPicker editor={editor} disabled={disabled} />
+            <ToolbarButton
+              label="Page break"
+              disabled={disabled}
+              onClick={() =>
+                run(editor, (current) =>
+                  current.insertContent({ type: "pageBreak" }),
+                )
+              }
+            >
+              <MoreHorizontal className="h-4 w-4" />
+            </ToolbarButton>
+          </div>
+
+          {/* Table-context controls live here so they're discoverable
+              without being permanently on the toolbar. */}
+          {editor?.isActive("table") && (
+            <div className="mt-2 flex flex-wrap items-center gap-1 border-t border-rule pt-2">
+              <TableContextControls editor={editor} disabled={disabled} />
+            </div>
+          )}
+        </div>
+      )}
+    </div>
   );
 }
 

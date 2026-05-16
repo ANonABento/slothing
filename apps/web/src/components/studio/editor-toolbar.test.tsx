@@ -29,7 +29,7 @@ function makeEditorMock() {
 }
 
 describe("EditorToolbar", () => {
-  it("wires formatting and history buttons to TipTap commands", () => {
+  it("wires essentials inline and surfaces strikethrough behind More", () => {
     const { editor, chain } = makeEditorMock();
 
     render(
@@ -46,22 +46,32 @@ describe("EditorToolbar", () => {
       />,
     );
 
+    // Essentials are always visible on the toolbar.
     fireEvent.click(screen.getByRole("button", { name: "Bold" }));
     fireEvent.click(screen.getByRole("button", { name: "Italic" }));
     fireEvent.click(screen.getByRole("button", { name: "Underline" }));
     fireEvent.click(screen.getByRole("button", { name: "Bullet list" }));
+
+    // Strikethrough now lives behind the "More" popover — open it,
+    // then click the menu item.
+    fireEvent.click(screen.getByRole("button", { name: "More formatting" }));
     fireEvent.click(screen.getByRole("button", { name: "Strikethrough" }));
-    fireEvent.click(screen.getByRole("button", { name: "Undo" }));
-    fireEvent.click(screen.getByRole("button", { name: "Redo" }));
 
     expect(chain.toggleBold).toHaveBeenCalledTimes(1);
     expect(chain.toggleItalic).toHaveBeenCalledTimes(1);
     expect(chain.toggleUnderline).toHaveBeenCalledTimes(1);
     expect(chain.toggleBulletList).toHaveBeenCalledTimes(1);
     expect(chain.toggleStrike).toHaveBeenCalledTimes(1);
-    expect(chain.undo).toHaveBeenCalledTimes(1);
-    expect(chain.redo).toHaveBeenCalledTimes(1);
-    expect(chain.run).toHaveBeenCalledTimes(7);
+    expect(chain.run).toHaveBeenCalledTimes(5);
+
+    // Undo/Redo no longer live on the toolbar — the studio sub-bar
+    // above the canvas owns those controls now.
+    expect(
+      screen.queryByRole("button", { name: "Undo" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Redo" }),
+    ).not.toBeInTheDocument();
   });
 
   it("emits template, zoom, print, and download actions", () => {
