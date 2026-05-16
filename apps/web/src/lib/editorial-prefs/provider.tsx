@@ -44,6 +44,7 @@ function applyToDocument(prefs: EditorialPrefs) {
   const root = document.documentElement;
   root.setAttribute("data-accent", prefs.accent);
   root.setAttribute("data-display", prefs.display);
+  root.setAttribute("data-body", prefs.body);
   root.setAttribute("data-radius", prefs.radius);
   root.setAttribute("data-density", prefs.density);
   root.setAttribute("data-ink", prefs.ink);

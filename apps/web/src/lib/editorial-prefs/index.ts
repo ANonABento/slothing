@@ -2,6 +2,7 @@ export { EditorialPrefsProvider, useEditorialPrefs } from "./provider";
 export {
   ACCENTS,
   DISPLAY_FONTS,
+  BODY_FONTS,
   RADII,
   DENSITIES,
   INKS,
@@ -9,6 +10,7 @@ export {
   EDITORIAL_PREFS_STORAGE_KEY,
   parseEditorialPrefs,
   isAccentId,
+  isBodyFontId,
   isDensityId,
   isDisplayFontId,
   isInkId,
@@ -16,6 +18,7 @@ export {
 } from "./types";
 export type {
   AccentId,
+  BodyFontId,
   DensityId,
   DisplayFontId,
   InkId,
