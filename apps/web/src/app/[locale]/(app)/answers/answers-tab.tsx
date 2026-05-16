@@ -545,7 +545,11 @@ export function BankAnswersTab({
               onDismiss={() => setMigrationSummary(null)}
             />
           ) : null}
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          {/* Search row: search + count grouped on the left, sort
+              flush right. justify-between was pushing the count into
+              dead center between search and sort, which read as a
+              loose layout bug. */}
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
             <div className="relative max-w-xl flex-1">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <input
@@ -555,13 +559,28 @@ export function BankAnswersTab({
                 className={cn(THEME_CONTROL_CLASSES, "w-full pl-9")}
               />
             </div>
-            <span className="text-sm text-muted-foreground">
-              {filteredAnswers.length} shown
-            </span>
+            {filteredAnswers.length > 0 ? (
+              <span className="whitespace-nowrap text-sm text-muted-foreground">
+                {filteredAnswers.length} shown
+              </span>
+            ) : null}
+            {/* Native select w/ custom chevron — appearance-none kills
+                the browser arrow, then we paint our own via inline
+                SVG bg-image and add right padding so text doesn't
+                collide with the chevron. px-3 horizontal padding so
+                text isn't flush to the border. */}
             <select
               value={sort}
               onChange={(event) => setSort(event.target.value as AnswerSort)}
-              className={cn(THEME_CONTROL_CLASSES, "w-full sm:w-40")}
+              className={cn(
+                THEME_CONTROL_CLASSES,
+                "w-full appearance-none bg-no-repeat px-3 pr-9 text-sm sm:ml-auto sm:w-44",
+              )}
+              style={{
+                backgroundImage:
+                  "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%236a5e4a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>\")",
+                backgroundPosition: "right 0.75rem center",
+              }}
               aria-label={a11yT("sortAnswers")}
             >
               <option value="most_used">Most used</option>

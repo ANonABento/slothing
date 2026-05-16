@@ -124,7 +124,7 @@ export function ProblemCompare() {
         {/* BEFORE — tab storm */}
         <article className="flex flex-col rounded-xl border border-rule bg-paper p-7 opacity-[0.92]">
           <span className="font-mono text-[10.5px] uppercase tracking-[0.06em] text-ink-3">
-            <span className="mr-1.5 text-[#c75a4a]" aria-hidden>
+            <span className="mr-1.5 text-destructive" aria-hidden>
               ✕
             </span>
             Before · the tab storm
@@ -280,7 +280,7 @@ const CLOSER_STATS = [
 
 export function CloserStats() {
   return (
-    <div className="mt-10 flex flex-wrap gap-9 border-t border-[rgba(255,255,255,0.12)] pt-8 dark:border-rule">
+    <div className="mt-10 flex flex-wrap gap-9 border-t border-inverse-ink/15 pt-8 dark:border-rule">
       {CLOSER_STATS.map((stat) => (
         <div key={stat.num}>
           <div className="font-display text-[28px] font-bold tracking-tight leading-none text-inverse-ink">

@@ -10,13 +10,14 @@ describe("KbdChip", () => {
     expect(el).toHaveClass("font-mono", "uppercase", "border-rule", "bg-paper");
   });
 
-  it("renders a multi-key combo with one chip per key", () => {
-    render(<KbdChip keys={["⌘", "K"]} />);
-    const wrapper = screen.getByLabelText("⌘ K");
-    const chips = wrapper.querySelectorAll("kbd");
-    expect(chips).toHaveLength(2);
-    expect(chips[0].textContent).toBe("⌘");
-    expect(chips[1].textContent).toBe("K");
+  it("renders a multi-key combo inside ONE chip (not two separate boxes)", () => {
+    const { container } = render(<KbdChip keys={["⌘", "K"]} />);
+    // Whole component renders as exactly one <kbd> element.
+    const chips = container.querySelectorAll("kbd");
+    expect(chips).toHaveLength(1);
+    expect(chips[0].getAttribute("aria-label")).toBe("⌘ K");
+    // Both key tokens live inside that one chip.
+    expect(chips[0].textContent).toBe("⌘K");
   });
 
   it("applies the smaller size class by default", () => {
