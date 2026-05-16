@@ -25,6 +25,7 @@
     "test:e2e:ui": "env -u NO_COLOR playwright test --ui",
     "test:e2e:headed": "env -u NO_COLOR playwright test --headed",
     "test:e2e:chromium": "env -u NO_COLOR playwright test --project=chromium",
+    "test:e2e:openrouter": "env -u NO_COLOR playwright test --project=chromium e2e/openrouter-real.spec.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
