@@ -7,7 +7,6 @@ import {
   analyzeTemplateWithLLM,
   type AnalyzedTemplate,
 } from "@/lib/resume/template-analyzer";
-import type { LLMClient } from "@/lib/llm/client";
 import {
   mergeAnalyzedAndSignals,
   type ImportedTemplate,
@@ -18,7 +17,7 @@ export interface ExtractTemplateOptions {
   buffer: Buffer;
   filename: string;
   mimeType?: string;
-  llmClient?: LLMClient | null;
+  llmUserId?: string | null;
 }
 
 export interface ExtractTemplateResult {
@@ -70,7 +69,7 @@ export async function extractTemplateFromFile({
   buffer,
   filename,
   mimeType,
-  llmClient = null,
+  llmUserId = null,
 }: ExtractTemplateOptions): Promise<ExtractTemplateResult> {
   const sourceType = getTemplateSourceType(filename, mimeType);
   if (!sourceType) {
@@ -95,7 +94,7 @@ export async function extractTemplateFromFile({
 
     const analyzed =
       text.length >= 25
-        ? await analyzeTemplateWithLLM(text, llmClient)
+        ? await analyzeTemplateWithLLM(text, llmUserId)
         : DEFAULT_ANALYZED_TEMPLATE;
     const sections = text.length >= 25 ? detectSections(text) : [];
 

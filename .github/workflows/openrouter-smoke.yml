@@ -1,0 +1,91 @@
+name: OpenRouter real smoke
+
+on:
+  workflow_dispatch:
+    inputs:
+      openrouter_smoke_model:
+        description: OpenRouter model id to use for the smoke.
+        required: false
+        default: openrouter/openai/gpt-4o-mini
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  openrouter-smoke:
+    name: Fresh install and upgrade smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Verify OpenRouter secret
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+        run: |
+          if [[ -z "$OPENROUTER_API_KEY" ]]; then
+            echo "OPENROUTER_API_KEY repository secret is required for the real OpenRouter smoke." >&2
+            exit 1
+          fi
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        # Version comes from `packageManager` in package.json.
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Authenticate GitHub git dependencies
+        env:
+          BENTO_ROUTER_DEPLOY_KEY: ${{ secrets.BENTO_ROUTER_DEPLOY_KEY }}
+          BENTO_ROUTER_READ_TOKEN: ${{ secrets.BENTO_ROUTER_READ_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          if [[ -n "$BENTO_ROUTER_DEPLOY_KEY" ]]; then
+            key_path="${RUNNER_TEMP}/bento-router-deploy-key"
+            printf '%s\n' "$BENTO_ROUTER_DEPLOY_KEY" > "$key_path"
+            chmod 600 "$key_path"
+            mkdir -p ~/.ssh
+            ssh-keyscan github.com >> ~/.ssh/known_hosts
+            echo "GIT_SSH_COMMAND=ssh -i ${key_path} -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes" >> "$GITHUB_ENV"
+            exit 0
+          fi
+
+          token="${BENTO_ROUTER_READ_TOKEN:-$GITHUB_TOKEN}"
+          {
+            echo "GIT_CONFIG_COUNT=2"
+            echo "GIT_CONFIG_KEY_0=url.https://x-access-token:${token}@github.com/.insteadOf"
+            echo "GIT_CONFIG_VALUE_0=git@github.com:"
+            echo "GIT_CONFIG_KEY_1=url.https://x-access-token:${token}@github.com/.insteadOf"
+            echo "GIT_CONFIG_VALUE_1=https://github.com/"
+          } >> "$GITHUB_ENV"
+          git config --global url."https://x-access-token:${token}@github.com/".insteadOf "git@github.com:"
+          git config --global url."https://x-access-token:${token}@github.com/".insteadOf "https://github.com/"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright Chromium
+        run: pnpm --filter @slothing/web exec playwright install --with-deps chromium
+
+      - name: Run real OpenRouter smoke
+        run: pnpm --filter @slothing/web test:e2e:openrouter
+        env:
+          CI: "true"
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          OPENROUTER_SMOKE_MODEL: ${{ inputs.openrouter_smoke_model }}
+
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report-openrouter-smoke
+          path: apps/web/playwright-report/
+          retention-days: 7

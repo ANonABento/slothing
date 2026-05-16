@@ -1,11 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import {
-  getProfile,
-  getDocuments,
-  getLLMConfig,
-  updateProfile,
-  setLLMConfig,
-} from "@/lib/db";
+import { getProfile, getDocuments, updateProfile } from "@/lib/db";
 import { getJobs, createJob } from "@/lib/db/jobs";
 import { getAllGeneratedResumes } from "@/lib/db/resumes";
 import { getAllCoverLetters, saveCoverLetter } from "@/lib/db/cover-letters";
@@ -16,12 +10,7 @@ import {
   findDuplicateEntry,
 } from "@/lib/db/profile-bank";
 import { generateId } from "@/lib/utils";
-import {
-  fullExportDataSchema,
-  JOB_TYPES,
-  JOB_STATUSES,
-  LLM_PROVIDERS,
-} from "@/lib/constants";
+import { fullExportDataSchema, JOB_TYPES, JOB_STATUSES } from "@/lib/constants";
 import { requireAuth, isAuthError } from "@/lib/auth";
 import { BANK_CATEGORIES, type BankCategory } from "@/types";
 
@@ -54,7 +43,6 @@ export async function POST(request: NextRequest) {
       jobs: { imported: 0, skipped: 0 },
       coverLetters: { imported: 0, skipped: 0 },
       bankEntries: { imported: 0, skipped: 0 },
-      llmConfig: false,
     };
 
     // Restore profile
@@ -243,27 +231,6 @@ export async function POST(request: NextRequest) {
           authResult.userId,
         );
         results.bankEntries.imported++;
-      }
-    }
-
-    // Restore LLM config
-    if (exportData.data.llmConfig) {
-      const config = exportData.data.llmConfig;
-      if (
-        LLM_PROVIDERS.includes(
-          config.provider as (typeof LLM_PROVIDERS)[number],
-        )
-      ) {
-        setLLMConfig(
-          {
-            provider: config.provider as (typeof LLM_PROVIDERS)[number],
-            apiKey: config.apiKey,
-            baseUrl: config.baseUrl,
-            model: config.model,
-          },
-          authResult.userId,
-        );
-        results.llmConfig = true;
       }
     }
 

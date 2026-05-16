@@ -20,7 +20,6 @@ import type {
   EmailTemplateType,
   JobMatch,
   Settings,
-  LLMConfig,
   DocumentType,
   Skill,
 } from "./index";
@@ -525,7 +524,6 @@ export interface NotificationsResponse {
 // ---------------------------------------------------------------------------
 
 export interface SettingsResponse {
-  llm: LLMConfig;
   locale?: string | null;
   opportunityReview?: {
     enabled: boolean;

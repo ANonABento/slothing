@@ -12,7 +12,7 @@ import {
   isAiGateResponse,
   type AiGatePass,
 } from "@/lib/billing/ai-gate";
-import { LLMClient, parseJSONFromLLM } from "@/lib/llm/client";
+import { parseJSONFromLLM, runLLMTask } from "@/lib/llm/client";
 import { createJobSchema, TECH_KEYWORDS } from "@/lib/constants";
 import { createOpportunitySchema } from "@/types/opportunity";
 import { safeTrackActivity } from "@/lib/streak/track";
@@ -135,7 +135,7 @@ export async function POST(request: NextRequest) {
       const data = legacyJobParseResult.data;
       let keywords: string[] = [];
 
-      const gate = gateAiFeature(
+      const gate = await gateAiFeature(
         authResult.userId,
         "document_assistant",
         `opportunity:${data.company}:${data.title}`,
@@ -143,8 +143,9 @@ export async function POST(request: NextRequest) {
       if (isAiGateResponse(gate)) return gate;
       aiGate = gate;
       try {
-        const client = new LLMClient(gate.llmConfig);
-        const response = await client.complete({
+        const response = await runLLMTask({
+          task: "slothing.opportunity_extract",
+          userId: authResult.userId,
           messages: [
             {
               role: "user",

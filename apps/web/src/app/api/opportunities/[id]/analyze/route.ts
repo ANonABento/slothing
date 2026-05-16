@@ -12,7 +12,7 @@ import {
   isAiGateResponse,
   type AiGatePass,
 } from "@/lib/billing/ai-gate";
-import { LLMClient, parseJSONFromLLM } from "@/lib/llm/client";
+import { parseJSONFromLLM, runLLMTask } from "@/lib/llm/client";
 import type { JobMatch } from "@/types";
 import { requireAuth, isAuthError } from "@/lib/auth";
 
@@ -43,7 +43,7 @@ export async function POST(
       );
     }
 
-    const gate = gateAiFeature(
+    const gate = await gateAiFeature(
       authResult.userId,
       "tailor",
       `analyze:${params.id}`,
@@ -55,8 +55,6 @@ export async function POST(
 
     if (gate.llmConfig) {
       // Use LLM for analysis
-      const client = new LLMClient(gate.llmConfig);
-
       const profileSummary = `
 Name: ${profile.contact.name}
 Summary: ${profile.summary || "N/A"}
@@ -70,7 +68,9 @@ Education:
 ${profile.education.map((e) => `- ${e.degree} in ${e.field} from ${e.institution}`).join("\n")}
       `.trim();
 
-      const response = await client.complete({
+      const response = await runLLMTask({
+        task: "slothing.score_match",
+        userId: authResult.userId,
         messages: [
           {
             role: "user",

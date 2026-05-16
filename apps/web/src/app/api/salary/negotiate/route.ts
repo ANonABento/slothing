@@ -11,7 +11,7 @@ import {
   isAiGateResponse,
   type AiGatePass,
 } from "@/lib/billing/ai-gate";
-import { LLMClient } from "@/lib/llm/client";
+import { runLLMTask } from "@/lib/llm/client";
 import { formatCurrency } from "@/lib/salary/calculator";
 import { requireAuth, isAuthError } from "@/lib/auth";
 
@@ -159,7 +159,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Try to use LLM if configured
-    const gate = gateAiFeature(
+    const gate = await gateAiFeature(
       authResult.userId,
       "document_assistant",
       `salary:${body.company}:${body.role}`,
@@ -168,10 +168,11 @@ export async function POST(request: NextRequest) {
     aiGate = gate;
     if (gate.llmConfig) {
       try {
-        const client = new LLMClient(gate.llmConfig);
         const prompt = buildPrompt(body);
 
-        const content = await client.complete({
+        const content = await runLLMTask({
+          task: "slothing.answer_generate",
+          userId: authResult.userId,
           messages: [{ role: "user", content: prompt }],
           temperature: 0.7,
           maxTokens: 1500,

@@ -1,4 +1,4 @@
-import { LLMClient, parseJSONFromLLM } from "@/lib/llm/client";
+import { getLLMUserId, parseJSONFromLLM, runLLMTask } from "@/lib/llm/client";
 import type { LLMConfig, DocumentType } from "@/types";
 
 const VALID_DOCUMENT_TYPES: DocumentType[] = [
@@ -33,9 +33,10 @@ export async function classifyDocumentWithLLM(
   llmConfig: LLMConfig,
 ): Promise<DocumentType> {
   const snippet = text.slice(0, 500);
-  const client = new LLMClient(llmConfig);
 
-  const response = await client.complete({
+  const response = await runLLMTask({
+    task: "slothing.parse_resume",
+    userId: getLLMUserId(llmConfig),
     messages: [
       {
         role: "user",

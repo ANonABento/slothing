@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getProfile, getDocuments, getLLMConfig } from "@/lib/db";
+import { getProfile, getDocuments } from "@/lib/db";
 import { getJobs } from "@/lib/db/jobs";
 import { getInterviewSessions } from "@/lib/db/interviews";
 import { getAllGeneratedResumes } from "@/lib/db/resumes";
@@ -44,7 +44,6 @@ export async function GET() {
         generatedResumes,
         coverLetters,
         bankEntries,
-        llmConfig: getLLMConfig(authResult.userId),
       },
       stats: {
         totalJobs: jobs.length,

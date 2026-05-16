@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import {
   parseLLMStatusResponse,
   type LLMStatusResponse,
-} from "@/lib/document-assistant";
+} from "@/lib/document-assistant-core";
 
 /**
  * Hook to check if an LLM provider is configured.

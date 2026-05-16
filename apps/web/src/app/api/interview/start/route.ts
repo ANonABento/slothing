@@ -14,7 +14,7 @@ import {
   isAiGateResponse,
   type AiGatePass,
 } from "@/lib/billing/ai-gate";
-import { LLMClient, parseJSONFromLLM } from "@/lib/llm/client";
+import { getLLMUserId, parseJSONFromLLM, runLLMTask } from "@/lib/llm/client";
 import {
   startInterviewSchema,
   type InterviewDifficulty,
@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
     const { jobId, difficulty, category, questionCount } = parseResult.data;
 
     const profile = getProfile(authResult.userId);
-    const gate = gateAiFeature(
+    const gate = await gateAiFeature(
       authResult.userId,
       "interview_turn",
       `start:${jobId ?? category}`,
@@ -106,9 +106,9 @@ export async function POST(request: NextRequest) {
     }
 
     if (gate.llmConfig) {
-      const client = new LLMClient(gate.llmConfig);
-
-      const response = await client.complete({
+      const response = await runLLMTask({
+        task: "slothing.answer_generate",
+        userId: authResult.userId,
         messages: [
           {
             role: "user",
@@ -161,9 +161,10 @@ async function getGenericQuestions({
   questionCount: number;
   llmConfig: LLMConfig;
 }): Promise<InterviewQuestion[]> {
-  const client = new LLMClient(llmConfig);
   try {
-    const response = await client.complete({
+    const response = await runLLMTask({
+      task: "slothing.answer_generate",
+      userId: getLLMUserId(llmConfig),
       messages: [
         {
           role: "user",

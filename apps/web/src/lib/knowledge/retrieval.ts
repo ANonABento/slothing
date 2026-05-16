@@ -7,7 +7,7 @@
 
 import type { LLMConfig } from "@/types";
 import type { TailoredResume } from "@/lib/resume/generator";
-import { LLMClient, parseJSONFromLLM } from "@/lib/llm/client";
+import { getLLMUserId, parseJSONFromLLM, runLLMTask } from "@/lib/llm/client";
 import {
   multiQuerySearch,
   type RankedChunk,
@@ -32,9 +32,9 @@ export async function expandQuery(
   jobDescription: string,
   llmConfig: LLMConfig,
 ): Promise<string[]> {
-  const client = new LLMClient(llmConfig);
-
-  const response = await client.complete({
+  const response = await runLLMTask({
+    task: "slothing.answer_generate",
+    userId: getLLMUserId(llmConfig),
     messages: [
       {
         role: "system",
@@ -87,12 +87,12 @@ export async function assembleResume(
   jobDescription: string,
   llmConfig: LLMConfig,
 ): Promise<{ resume: TailoredResume; gaps: string[] }> {
-  const client = new LLMClient(llmConfig);
-
   // Group chunks by category for the LLM prompt
   const grouped = groupChunksByCategory(chunks);
 
-  const response = await client.complete({
+  const response = await runLLMTask({
+    task: "slothing.answer_generate",
+    userId: getLLMUserId(llmConfig),
     messages: [
       {
         role: "system",

@@ -18,8 +18,25 @@ vi.mock("@/lib/knowledge/retrieval", () =>
   ),
 );
 
+vi.mock("@/lib/billing/ai-gate", () => ({
+  gateAiFeature: vi.fn(async () => ({
+    allowed: true,
+    llmConfig: {
+      userId: "user-1",
+      provider: "openrouter",
+      model: "bentorouter",
+      apiKey: "configured",
+    },
+    plan: "self-host",
+    source: "byok",
+    transaction: null,
+    refund: vi.fn(),
+  })),
+  isAiGateResponse: vi.fn((result) => result instanceof Response),
+}));
+
 import { POST } from "./route";
-import { getLLMConfig } from "@/lib/db/queries";
+import { runRetrievalPipeline } from "@/lib/knowledge/retrieval";
 import {
   expectRouteResponseContract,
   getRequest,
@@ -88,7 +105,7 @@ describe("/api/resume/generate route contract", () => {
   it("does not leak raw error messages on 500", async () => {
     const probe = "INTERNAL_LEAK_PROBE_RESUME_GENERATE_4A30A145";
     setAuthSuccess();
-    vi.mocked(getLLMConfig).mockImplementationOnce(() => {
+    vi.mocked(runRetrievalPipeline).mockImplementationOnce(() => {
       throw new Error(probe);
     });
 

@@ -226,7 +226,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Classify and parse document type using gated AI access.
-    const gate = gateOptionalAiFeature(
+    const gate = await gateOptionalAiFeature(
       authResult.userId,
       "tailor",
       `upload:${id}`,

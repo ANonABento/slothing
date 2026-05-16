@@ -27,7 +27,7 @@ import {
   parseLLMStatusResponse,
   stripDocumentHtml,
   type DocumentAssistantAction,
-} from "@/lib/document-assistant";
+} from "@/lib/document-assistant-core";
 import { coverLetterHtmlToText } from "@/lib/editor/cover-letter-tiptap";
 import { Button } from "@/components/ui/button";
 import { CheckoutButton } from "@/components/billing/billing-actions";

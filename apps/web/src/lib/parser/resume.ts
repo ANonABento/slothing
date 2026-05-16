@@ -1,4 +1,4 @@
-import { LLMClient, parseJSONFromLLM } from "@/lib/llm/client";
+import { getLLMUserId, parseJSONFromLLM, runLLMTask } from "@/lib/llm/client";
 import type {
   Profile,
   Experience,
@@ -87,8 +87,9 @@ async function callLLMParser<T>(
   llmConfig: LLMConfig,
   maxTokens: number,
 ): Promise<T> {
-  const client = new LLMClient(llmConfig);
-  const response = await client.complete({
+  const response = await runLLMTask({
+    task: "slothing.parse_resume",
+    userId: getLLMUserId(llmConfig),
     messages: [{ role: "user", content: prompt + text }],
     temperature: 0.1,
     maxTokens,
@@ -100,9 +101,9 @@ export async function parseResumeWithLLM(
   text: string,
   llmConfig: LLMConfig,
 ): Promise<Partial<Profile>> {
-  const client = new LLMClient(llmConfig);
-
-  const response = await client.complete({
+  const response = await runLLMTask({
+    task: "slothing.parse_resume",
+    userId: getLLMUserId(llmConfig),
     messages: [
       {
         role: "user",

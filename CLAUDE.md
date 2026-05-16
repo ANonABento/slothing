@@ -31,11 +31,13 @@ The active theme preset is **`slothing`** (`src/lib/theme/presets/slothing.ts`):
 Two coexisting token systems in `src/app/globals.css`:
 
 **1. shadcn HSL stack** (driven by the runtime preset)
+
 - Surfaces: `bg-background`, `bg-card`, `bg-muted`, `bg-popover`
 - Text: `text-foreground`, `text-muted-foreground`, `text-primary`, `text-destructive`
 - Borders: `border-border`, `border-input`, `border-primary`
 
 **2. Static editorial tokens** (Kev's vocabulary — these are direct CSS vars, not HSL-wrapped)
+
 - Surfaces: `bg-page`, `bg-page-2`, `bg-paper`, `bg-inverse`
 - Ink: `text-ink`, `text-ink-2`, `text-ink-3`, `text-inverse-ink`
 - Lines: `border-rule`, `border-rule-strong`, `bg-rule-strong-bg`
@@ -50,11 +52,12 @@ Audit-loop history lives under `docs/ui-audit/redesign-loop-NNN/` (8 loops, PR #
 ## Forbidden-color lint (hard-fail in CI)
 
 `apps/web/scripts/forbidden-color-lint.cjs` runs as part of `pnpm run lint` and fails on:
+
 - Tailwind color utilities: `bg-white`, `bg-black`, `text-gray-500`, `bg-slate-900`, `bg-zinc-*`, etc.
 - Inline style props with hex/rgb/hsl/named colors.
 - Arbitrary values like `bg-[#fff]` or `text-[rgb(0,0,0)]`.
 
-Allowed: `var(--token)`, `transparent`, `inherit`, and any of the semantic utilities above. If you need a neutral surface, pick `bg-card`/`bg-paper`/`bg-background`/`bg-muted`. If you reach for `bg-white` *anywhere*, the build fails — no exceptions.
+Allowed: `var(--token)`, `transparent`, `inherit`, and any of the semantic utilities above. If you need a neutral surface, pick `bg-card`/`bg-paper`/`bg-background`/`bg-muted`. If you reach for `bg-white` _anywhere_, the build fails — no exceptions.
 
 ## Destructive actions
 
@@ -79,6 +82,16 @@ Never ship a bare `<Button onClick={() => deleteX()}>`. When you add a destructi
 - **Dedupe hashes are load-bearing.** `documents.file_hash` (sha256) + `idx_documents_user_file_hash`; `chunks` has unique `idx_chunks_user_hash` on `(user_id, hash)`; `profile_bank` has `idx_profile_bank_user_source`. Schema bootstrap + backfill live in `src/lib/db/dedupe-backfill.ts`. Hash first, short-circuit on collision — never insert blindly.
 
 LLM-touching routes are wrapped with the sliding-window limiter from `src/lib/rate-limit.ts`. Errors flow through `src/lib/api-utils.ts`.
+
+## LLM surface — BentoRouter
+
+Slothing AI calls route through `@anonabento/bento-router`. User-facing provider/model settings are gone; provider keys and per-task policies live under Settings → AI keys and `/api/settings/llm/*`.
+
+- Register Slothing task IDs in `src/lib/llm/tasks.ts`. Every AI call must carry one of those task IDs.
+- Use `getBentoRouterClient()` or the transitional helpers in `src/lib/llm/client.ts`; do not add new direct provider switches.
+- Legacy `getLLMConfig` / `setLLMConfig` exists only for silent migration and legacy import paths. New UI/API code should not expose the old `provider` enum.
+- Provider keys are encrypted with AES-256-GCM using HKDF key material from `NEXTAUTH_SECRET`. Missing `NEXTAUTH_SECRET` is a configuration error for provider storage.
+- BentoRouter file stores live under `~/.slothing/bento-router/` by default: `providers.json`, `policies.json`, and `usage.json`.
 
 ## CI gates
 
@@ -147,24 +160,27 @@ ln -sf "$MAIN/apps/web/.local.db"  apps/web/.local.db
 
 ## Key files
 
-| File | Purpose |
-| ---- | ------- |
-| `src/app/globals.css` | All theme + editorial tokens (light + `.dark`) |
-| `src/lib/theme/presets/slothing.ts` | Active theme preset (cream + Midnight Indigo) |
-| `tailwind.config.ts` | Editorial utilities (`bg-page`, `text-ink`, `font-display`, …) |
-| `apps/web/scripts/forbidden-color-lint.cjs` | Hard-fail color lint |
-| `src/lib/db/schema.ts` | Tables + additive migrations |
-| `src/lib/db/dedupe-backfill.ts` | Dedupe schema bootstrap |
-| `src/lib/auth.ts` | NextAuth helper + local-dev fallback |
-| `src/lib/llm/client.ts` | Provider-agnostic LLM client (`generateText`, `generateJSON`) |
-| `src/lib/rate-limit.ts` | Sliding-window limiter for LLM routes |
-| `src/lib/text/pluralize.ts` | `pluralize(count, singular, plural?)` |
-| `src/lib/format/time.ts` | Locale-aware time helpers |
-| `src/components/format/time-ago.tsx` | `<TimeAgo />` |
-| `src/components/ui/confirm-dialog.tsx` | Destructive Pattern A |
-| `src/hooks/use-undoable-action.ts` | Destructive Pattern B |
-| `src/components/ui/page-layout.tsx` | `PageHeader` / `PagePanel` / `StandardEmptyState` editorial primitives |
-| `docs/architecture.md` | Architecture overview |
-| `docs/destructive-actions-pattern.md` | Destructive-action convention |
-| `docs/ui-redesign-plan.md` | Editorial rollout plan + decisions log |
-| `ROADMAP.md` | Product roadmap |
+| File                                        | Purpose                                                                |
+| ------------------------------------------- | ---------------------------------------------------------------------- |
+| `src/app/globals.css`                       | All theme + editorial tokens (light + `.dark`)                         |
+| `src/lib/theme/presets/slothing.ts`         | Active theme preset (cream + Midnight Indigo)                          |
+| `tailwind.config.ts`                        | Editorial utilities (`bg-page`, `text-ink`, `font-display`, …)         |
+| `apps/web/scripts/forbidden-color-lint.cjs` | Hard-fail color lint                                                   |
+| `src/lib/db/schema.ts`                      | Tables + additive migrations                                           |
+| `src/lib/db/dedupe-backfill.ts`             | Dedupe schema bootstrap                                                |
+| `src/lib/auth.ts`                           | NextAuth helper + local-dev fallback                                   |
+| `src/lib/llm/tasks.ts`                      | Slothing BentoRouter task and model registrations                      |
+| `src/lib/llm/bentorouter-client.ts`         | Embedded BentoRouter client + stores                                   |
+| `src/lib/llm/migrate-legacy.ts`             | Silent legacy LLM settings migration                                   |
+| `src/lib/llm/client.ts`                     | Transitional task-aware LLM helpers                                    |
+| `src/lib/rate-limit.ts`                     | Sliding-window limiter for LLM routes                                  |
+| `src/lib/text/pluralize.ts`                 | `pluralize(count, singular, plural?)`                                  |
+| `src/lib/format/time.ts`                    | Locale-aware time helpers                                              |
+| `src/components/format/time-ago.tsx`        | `<TimeAgo />`                                                          |
+| `src/components/ui/confirm-dialog.tsx`      | Destructive Pattern A                                                  |
+| `src/hooks/use-undoable-action.ts`          | Destructive Pattern B                                                  |
+| `src/components/ui/page-layout.tsx`         | `PageHeader` / `PagePanel` / `StandardEmptyState` editorial primitives |
+| `docs/architecture.md`                      | Architecture overview                                                  |
+| `docs/destructive-actions-pattern.md`       | Destructive-action convention                                          |
+| `docs/ui-redesign-plan.md`                  | Editorial rollout plan + decisions log                                 |
+| `ROADMAP.md`                                | Product roadmap                                                        |

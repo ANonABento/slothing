@@ -13,7 +13,7 @@ import {
   isAiGateResponse,
   type AiGatePass,
 } from "@/lib/billing/ai-gate";
-import { LLMClient, parseJSONFromLLM } from "@/lib/llm/client";
+import { parseJSONFromLLM, runLLMTask } from "@/lib/llm/client";
 import { requireAuth, isAuthError } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
 
     const job = jobId ? getJob(jobId, authResult.userId) : null;
     const profile = getProfile(authResult.userId);
-    const gate = gateAiFeature(
+    const gate = await gateAiFeature(
       authResult.userId,
       "interview_turn",
       `followup:${jobId ?? "general"}`,
@@ -53,8 +53,6 @@ export async function POST(request: NextRequest) {
     let followUp: FollowUpResponse;
 
     if (gate.llmConfig) {
-      const client = new LLMClient(gate.llmConfig);
-
       const jobContext = job
         ? `The candidate is interviewing for ${job.title} at ${job.company}.`
         : "This is a general interview practice.";
@@ -63,7 +61,9 @@ export async function POST(request: NextRequest) {
         ? `The candidate has experience as ${profile.experiences[0]?.title || "a professional"}.`
         : "";
 
-      const response = await client.complete({
+      const response = await runLLMTask({
+        task: "slothing.answer_generate",
+        userId: authResult.userId,
         messages: [
           {
             role: "system",

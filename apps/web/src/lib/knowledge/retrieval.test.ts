@@ -1,13 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-const mockComplete = vi.fn();
+const { mockComplete } = vi.hoisted(() => ({
+  mockComplete: vi.fn(),
+}));
 
-// Mock the LLM client - must use a class-like function for `new`
 vi.mock("@/lib/llm/client", () => {
   return {
-    LLMClient: class MockLLMClient {
-      complete = mockComplete;
-    },
+    getLLMUserId: vi.fn(() => "default"),
+    runLLMTask: mockComplete,
     parseJSONFromLLM: vi.fn(),
   };
 });

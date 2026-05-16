@@ -80,6 +80,7 @@ describe("documents assistant route", () => {
         provider: "openai",
         apiKey: "sk-test",
         model: "gpt-4o-mini",
+        userId: "user-1",
       },
     );
     await expect(response.json()).resolves.toEqual({

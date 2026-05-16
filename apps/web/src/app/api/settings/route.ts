@@ -2,14 +2,12 @@
  * @route GET /api/settings
  * @route PUT /api/settings
  * @route POST /api/settings
- * @description Fetch LLM settings (GET), update settings (PUT), or test LLM connection (POST)
+ * @description Fetch and update user settings. LLM provider management lives under /api/settings/llm.
  * @auth Required
- * @request { provider: string, model: string, ...config } (PUT) | { provider: string, ...config } (POST)
  * @response SettingsResponse | SettingsUpdateResponse from @/types/api
  */
 import { NextRequest, NextResponse } from "next/server";
-import { getLLMConfig, setLLMConfig } from "@/lib/db";
-import { updateSettingsSchema, llmConfigSchema } from "@/lib/constants";
+import { updateSettingsSchema } from "@/lib/constants";
 import { requireAuth, isAuthError } from "@/lib/auth";
 import {
   getOpportunityReviewEnabled,
@@ -43,9 +41,7 @@ export async function GET() {
   if (isAuthError(authResult)) return authResult;
 
   try {
-    const llmConfig = getLLMConfig(authResult.userId);
     return NextResponse.json({
-      llm: llmConfig,
       locale: getStoredLocaleSetting(authResult.userId),
       opportunityReview: {
         enabled: getOpportunityReviewEnabled(authResult.userId),
@@ -93,9 +89,6 @@ export async function PUT(request: NextRequest) {
     }
 
     const data = parseResult.data;
-    if (data.llm) {
-      setLLMConfig(data.llm, authResult.userId);
-    }
     let locale: string | undefined;
     if (data.opportunityReview) {
       setOpportunityReviewEnabled(
@@ -140,53 +133,15 @@ export async function PUT(request: NextRequest) {
   }
 }
 
-// Test LLM connection
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
 
-  try {
-    const rawData = await request.json();
-
-    // Validate LLM config
-    const parseResult = llmConfigSchema.safeParse(rawData.llm);
-    if (!parseResult.success) {
-      const errors = parseResult.error.issues.map((issue) => ({
-        field: issue.path.join("."),
-        message: issue.message,
-      }));
-      return NextResponse.json(
-        { error: "Invalid LLM configuration", errors },
-        { status: 400 },
-      );
-    }
-
-    const llm = parseResult.data;
-
-    // Import dynamically to avoid issues
-    const { LLMClient } = await import("@/lib/llm/client");
-    const client = new LLMClient(llm);
-
-    const response = await client.complete({
-      messages: [
-        {
-          role: "user",
-          content: "Say 'Connection successful!' and nothing else.",
-        },
-      ],
-      temperature: 0,
-      maxTokens: 50,
-    });
-
-    return NextResponse.json({
-      success: true,
-      message: response,
-    });
-  } catch (error) {
-    console.error("Test connection error:", error);
-    return NextResponse.json(
-      { error: "Connection failed. Check your API key and settings." },
-      { status: 400 },
-    );
-  }
+  return NextResponse.json(
+    {
+      error:
+        "LLM provider validation moved to /api/settings/llm/providers/{id}/validate.",
+    },
+    { status: 410 },
+  );
 }

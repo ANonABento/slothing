@@ -12,7 +12,7 @@ import {
   isAiGateResponse,
   type AiGatePass,
 } from "@/lib/billing/ai-gate";
-import { LLMClient } from "@/lib/llm/client";
+import { runLLMTask } from "@/lib/llm/client";
 import { interviewAnswerSchema } from "@/lib/constants";
 import { requireAuth, isAuthError } from "@/lib/auth";
 import { buildInterviewAnswerFeedbackPrompt } from "@/lib/interview/prompt-builders";
@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Job not found" }, { status: 404 });
     }
 
-    const gate = gateAiFeature(
+    const gate = await gateAiFeature(
       authResult.userId,
       "interview_turn",
       `answer:${jobId ?? "general"}`,
@@ -58,9 +58,9 @@ export async function POST(request: NextRequest) {
     let feedback = "";
 
     if (gate.llmConfig) {
-      const client = new LLMClient(gate.llmConfig);
-
-      const response = await client.complete({
+      const response = await runLLMTask({
+        task: "slothing.answer_generate",
+        userId: authResult.userId,
         messages: [
           {
             role: "user",

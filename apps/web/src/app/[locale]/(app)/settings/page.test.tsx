@@ -6,7 +6,6 @@ import messages from "@/messages/en.json";
 
 const mocks = vi.hoisted(() => ({
   useDataIO: vi.fn(),
-  useLLMSettings: vi.fn(),
 }));
 
 // jsdom doesn't ship IntersectionObserver. Stub it so the scroll-spy
@@ -27,50 +26,16 @@ vi.mock("./use-data-io", () => ({
   useDataIO: mocks.useDataIO,
 }));
 
-vi.mock("./use-llm-settings", () => ({
-  useLLMSettings: mocks.useLLMSettings,
-}));
-
-vi.mock("@/components/settings/llm-provider-selector", () => ({
-  PROVIDERS: [
-    { value: "ollama", label: "Ollama", requiresKey: false },
-    { value: "openai", label: "OpenAI", requiresKey: true },
-    { value: "anthropic", label: "Anthropic", requiresKey: true },
-    { value: "openrouter", label: "OpenRouter", requiresKey: true },
-  ],
-  LLMProviderSelector: ({ provider }: { provider: string }) => (
-    <section data-testid="llm-provider-selector">Provider: {provider}</section>
-  ),
-}));
-
-vi.mock("@/components/settings/llm-provider-config", () => ({
-  LLMProviderConfig: ({
-    selectedProvider,
-  }: {
-    selectedProvider?: { label: string };
-  }) => (
-    <section data-testid="llm-provider-config">
-      {selectedProvider?.label} Configuration
-    </section>
-  ),
-}));
-
-vi.mock("@/components/settings/what-ai-powers", () => ({
-  WhatAiPowers: () => <section data-testid="what-ai-powers" />,
-}));
-
 vi.mock("@/components/settings/prompt-variants-section", () => ({
   PromptVariantsSection: () => (
     <section data-testid="prompt-variants-section" />
   ),
 }));
 
-vi.mock("@/components/settings/help-cards", () => ({
-  HelpCards: () => <section data-testid="help-cards" />,
-}));
-
-vi.mock("@/components/settings/eval-health-section", () => ({
-  EvalHealthSection: () => <section data-testid="eval-health-section" />,
+vi.mock("@/components/settings/llm/bentorouter-settings-section", () => ({
+  BentoRouterSettingsSection: () => (
+    <section data-testid="bentorouter-settings-section" />
+  ),
 }));
 
 vi.mock("@/components/settings/theme-section", () => ({
@@ -117,20 +82,7 @@ vi.mock("@/components/settings/danger-zone-section", () => ({
   DangerZoneSection: () => <section data-testid="danger-zone-section" />,
 }));
 
-function mockSettingsPage(provider = "openai") {
-  mocks.useLLMSettings.mockReturnValue({
-    config: { provider, model: "gpt-4o-mini", apiKey: "test-key" },
-    loading: false,
-    saving: false,
-    testing: false,
-    testResult: null,
-    hasChanges: false,
-    availableModels: ["gpt-4o-mini"],
-    updateConfig: vi.fn(),
-    saveSettings: vi.fn(),
-    testConnection: vi.fn(),
-  });
-
+function mockSettingsPage() {
   mocks.useDataIO.mockReturnValue({
     exporting: null,
     importing: false,
@@ -181,14 +133,10 @@ describe("SettingsPage", () => {
   it("keeps every settings section in the reorganized layout", () => {
     renderSettingsPage();
 
-    expect(screen.getByTestId("llm-provider-selector")).toBeInTheDocument();
-    expect(screen.getByTestId("llm-provider-config")).toHaveTextContent(
-      "OpenAI Configuration",
-    );
-    expect(screen.getByTestId("what-ai-powers")).toBeInTheDocument();
+    expect(
+      screen.getByTestId("bentorouter-settings-section"),
+    ).toBeInTheDocument();
     expect(screen.getByTestId("prompt-variants-section")).toBeInTheDocument();
-    expect(screen.getByTestId("help-cards")).toBeInTheDocument();
-    expect(screen.getByTestId("eval-health-section")).toBeInTheDocument();
     expect(screen.getByTestId("billing-section")).toBeInTheDocument();
     expect(screen.getByTestId("theme-section")).toBeInTheDocument();
     expect(screen.getByTestId("locale-section")).toBeInTheDocument();
@@ -240,26 +188,15 @@ describe("SettingsPage", () => {
     }
   });
 
-  it("shows the Ollama warning only for Ollama and keeps it inside the AI keys section", () => {
-    mockSettingsPage("ollama");
-
-    const { unmount } = renderSettingsPage();
-
-    expect(screen.getByText("Make sure Ollama is running")).toBeInTheDocument();
-
+  it("keeps BentoRouter controls inside the AI keys section", () => {
+    renderSettingsPage();
     const aiSection = document.getElementById("ai-keys");
+
     expect(aiSection).not.toBeNull();
     expect(
-      within(aiSection as HTMLElement).getByText("Make sure Ollama is running"),
+      within(aiSection as HTMLElement).getByTestId(
+        "bentorouter-settings-section",
+      ),
     ).toBeInTheDocument();
-
-    unmount();
-    vi.clearAllMocks();
-    mockSettingsPage("anthropic");
-    renderSettingsPage();
-
-    expect(
-      screen.queryByText("Make sure Ollama is running"),
-    ).not.toBeInTheDocument();
   });
 });

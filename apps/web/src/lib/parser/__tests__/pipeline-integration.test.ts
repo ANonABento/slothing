@@ -12,12 +12,13 @@ import type { LLMConfig } from "@/types";
 
 // ─── Mocks ─────────────────────────────────────────────────────────────
 
-const mockComplete = vi.fn();
+const { mockComplete } = vi.hoisted(() => ({
+  mockComplete: vi.fn(),
+}));
 
 vi.mock("@/lib/llm/client", () => ({
-  LLMClient: class MockLLMClient {
-    complete = mockComplete;
-  },
+  getLLMUserId: vi.fn(() => "default"),
+  runLLMTask: mockComplete,
   parseJSONFromLLM: vi.fn((response: string) => JSON.parse(response)),
 }));
 

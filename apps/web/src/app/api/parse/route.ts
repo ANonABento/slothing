@@ -96,7 +96,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Gate AI parsing by plan / BYOK state before invoking the LLM parser.
-    const gate = gateOptionalAiFeature(
+    const gate = await gateOptionalAiFeature(
       authResult.userId,
       "tailor",
       `parse:${doc.id}`,

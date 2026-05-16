@@ -4,6 +4,12 @@ import { createRequire } from "node:module";
 import path from "path";
 
 const nodeRequire = createRequire(import.meta.url);
+const nextAuthDir = path.dirname(nodeRequire.resolve("next-auth/package.json"));
+const authCoreDir = path.resolve(nextAuthDir, "../@auth/core");
+const bentoRouterDistSrc = path.resolve(
+  __dirname,
+  "node_modules/@anonabento/bento-router/dist/src",
+);
 
 export default defineConfig({
   plugins: [react()],
@@ -39,11 +45,21 @@ export default defineConfig({
     },
   },
   resolve: {
+    preserveSymlinks: true,
     alias: {
       "@": path.resolve(__dirname, "./src"),
       // next-auth (v5 beta) imports `next/server` without a file extension; the
       // vitest jsdom resolver is strict about extensions, so map it explicitly.
       "next/server": nodeRequire.resolve("next/server"),
+      "@auth/core": authCoreDir,
+      "@anonabento/bento-router/admin/BentoRouterAdminPage": path.join(
+        bentoRouterDistSrc,
+        "admin/BentoRouterAdminPage.js",
+      ),
+      "@anonabento/bento-router/admin/BentoRouterUsageTable": path.join(
+        bentoRouterDistSrc,
+        "admin/BentoRouterUsageTable.js",
+      ),
     },
   },
 });

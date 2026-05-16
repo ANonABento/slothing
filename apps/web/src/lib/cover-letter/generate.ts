@@ -1,4 +1,4 @@
-import { LLMClient } from "@/lib/llm/client";
+import { getLLMUserId, runLLMTask } from "@/lib/llm/client";
 import {
   BANK_CATEGORIES,
   type BankEntry,
@@ -190,9 +190,9 @@ export async function generateCoverLetter(
   input: CoverLetterInput,
   llmConfig: LLMConfig,
 ): Promise<string> {
-  const client = new LLMClient(llmConfig);
-
-  const result = await client.complete({
+  const result = await runLLMTask({
+    task: "slothing.cover_letter_generate",
+    userId: getLLMUserId(llmConfig),
     messages: buildCoverLetterGenerationMessages(input),
     temperature: 0.7,
     maxTokens: 2048,
@@ -207,10 +207,11 @@ export async function reviseCoverLetter(
   input: CoverLetterInput,
   llmConfig: LLMConfig,
 ): Promise<string> {
-  const client = new LLMClient(llmConfig);
   const systemPrompt = buildSystemPrompt(input);
 
-  const result = await client.complete({
+  const result = await runLLMTask({
+    task: "slothing.cover_letter_generate",
+    userId: getLLMUserId(llmConfig),
     messages: [
       { role: "system", content: systemPrompt },
       {
@@ -234,10 +235,11 @@ export async function rewriteCoverLetterSelection(
   input: CoverLetterInput,
   llmConfig: LLMConfig,
 ): Promise<string> {
-  const client = new LLMClient(llmConfig);
   const systemPrompt = buildSystemPrompt(input);
 
-  const result = await client.complete({
+  const result = await runLLMTask({
+    task: "slothing.cover_letter_generate",
+    userId: getLLMUserId(llmConfig),
     messages: [
       { role: "system", content: systemPrompt },
       {

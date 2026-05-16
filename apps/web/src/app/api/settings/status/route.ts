@@ -1,25 +1,36 @@
 import { NextResponse } from "next/server";
-import { getLLMConfig } from "@/lib/db";
 import { requireAuth, isAuthError } from "@/lib/auth";
-import { isLLMConfigured } from "@/lib/llm/is-configured";
+import { getBentoRouterClient } from "@/lib/llm/bentorouter-client";
 
 export const dynamic = "force-dynamic";
 
 /**
  * Lightweight endpoint to check if LLM is configured.
- * Used by sidebar status indicator — returns only boolean + provider name.
+ * Used by sidebar status indicator — returns only boolean + provider count.
  */
 export async function GET() {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
 
+  if (!process.env.NEXTAUTH_SECRET) {
+    return NextResponse.json({
+      configured: false,
+      provider: null,
+      providerCount: 0,
+    });
+  }
+
   try {
-    const config = getLLMConfig(authResult.userId);
-    const configured = isLLMConfigured(config);
+    const client = await getBentoRouterClient();
+    const providers = await client
+      .api(authResult.userId)
+      .listConfiguredProviders(authResult.userId);
+    const configured = providers.length > 0;
 
     return NextResponse.json({
       configured,
-      provider: configured ? config!.provider : null,
+      provider: configured ? "bentorouter" : null,
+      providerCount: providers.length,
     });
   } catch (error) {
     console.error("LLM status check error:", error);

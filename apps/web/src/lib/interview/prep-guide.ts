@@ -1,6 +1,6 @@
 import type { JobDescription, Profile } from "@/types";
 import type { CompanyResearch } from "@/lib/db/company-research";
-import { LLMClient, parseJSONFromLLM } from "@/lib/llm/client";
+import { getLLMUserId, parseJSONFromLLM, runLLMTask } from "@/lib/llm/client";
 import type { LLMConfig } from "@/types";
 
 import { formatDateOnly, nowIso } from "@/lib/format/time";
@@ -54,8 +54,6 @@ async function generateWithLLM(
   llmConfig: LLMConfig,
   createdAt: string,
 ): Promise<InterviewPrepGuide> {
-  const client = new LLMClient(llmConfig);
-
   const profileContext = profile
     ? `
 Candidate Background:
@@ -74,7 +72,9 @@ Company Research:
 `
     : "";
 
-  const response = await client.complete({
+  const response = await runLLMTask({
+    task: "slothing.answer_generate",
+    userId: getLLMUserId(llmConfig),
     messages: [
       {
         role: "user",

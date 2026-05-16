@@ -6,9 +6,8 @@ const { completeMock } = vi.hoisted(() => ({
 }));
 
 vi.mock("@/lib/llm/client", () => ({
-  LLMClient: class MockLLMClient {
-    complete = completeMock;
-  },
+  getLLMUserId: vi.fn(() => "default"),
+  runLLMTask: completeMock,
 }));
 
 import { buildTailoredResumePrompt, generateTailoredResume } from "./generator";

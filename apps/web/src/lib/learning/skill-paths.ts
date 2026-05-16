@@ -1,5 +1,5 @@
 import type { JobDescription, Profile, Skill } from "@/types";
-import { LLMClient, parseJSONFromLLM } from "@/lib/llm/client";
+import { getLLMUserId, parseJSONFromLLM, runLLMTask } from "@/lib/llm/client";
 import type { LLMConfig } from "@/types";
 
 export interface LearningResource {
@@ -337,11 +337,11 @@ export async function enhanceLearningPathsWithLLM(
   paths: SkillLearningPath[],
   llmConfig: LLMConfig,
 ): Promise<SkillLearningPath[]> {
-  const client = new LLMClient(llmConfig);
-
   const skillList = paths.map((p) => p.skill).join(", ");
 
-  const response = await client.complete({
+  const response = await runLLMTask({
+    task: "slothing.answer_generate",
+    userId: getLLMUserId(llmConfig),
     messages: [
       {
         role: "user",

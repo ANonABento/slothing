@@ -909,6 +909,7 @@ export const users = sqliteTable("user", {
   emailVerified: integer("emailVerified", { mode: "timestamp_ms" }),
   image: text("image"),
   onboardingDismissedAt: text("onboarding_dismissed_at"),
+  llmMigrationStatus: text("llm_migration_status").default("pending"),
   createdAt: text("created_at"),
   welcomeSeriesState: text("welcome_series_state"),
 });

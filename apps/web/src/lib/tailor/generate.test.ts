@@ -10,9 +10,8 @@ vi.mock("@/lib/llm/client", async (importActual) => {
   const actual = await importActual<typeof import("@/lib/llm/client")>();
   return {
     ...actual,
-    LLMClient: class MockLLMClient {
-      complete = completeMock;
-    },
+    getLLMUserId: vi.fn(() => "default"),
+    runLLMTask: completeMock,
   };
 });
 

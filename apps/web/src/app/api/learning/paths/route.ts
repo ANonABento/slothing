@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
 
     // Optionally enhance with LLM for better resource suggestions
     if (enhance && result.paths.length > 0) {
-      const gate = gateAiFeature(
+      const gate = await gateAiFeature(
         authResult.userId,
         "document_assistant",
         `learning:${limit}`,

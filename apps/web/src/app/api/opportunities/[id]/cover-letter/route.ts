@@ -12,7 +12,7 @@ import {
   isAiGateResponse,
   type AiGatePass,
 } from "@/lib/billing/ai-gate";
-import { LLMClient, parseJSONFromLLM } from "@/lib/llm/client";
+import { parseJSONFromLLM, runLLMTask } from "@/lib/llm/client";
 import { requireAuth, isAuthError } from "@/lib/auth";
 import { buildOpportunityCoverLetterJsonPrompt } from "@/lib/cover-letter/opportunity-prompts";
 import {
@@ -59,7 +59,11 @@ export async function POST(
       );
     }
 
-    const gate = gateAiFeature(authResult.userId, "cover_letter", params.id);
+    const gate = await gateAiFeature(
+      authResult.userId,
+      "cover_letter",
+      params.id,
+    );
     if (isAiGateResponse(gate)) return gate;
     aiGate = gate;
 
@@ -68,8 +72,6 @@ export async function POST(
     let selfCheck: CoverLetterResponse["selfCheck"] | undefined;
 
     if (gate.llmConfig) {
-      const client = new LLMClient(gate.llmConfig);
-
       const profileSummary = `
 Name: ${profile.contact.name}
 Email: ${profile.contact.email || "N/A"}
@@ -82,7 +84,9 @@ ${profile.experiences.map((e) => `- ${e.title} at ${e.company}: ${e.description}
 Skills: ${profile.skills.map((s) => s.name).join(", ")}
       `.trim();
 
-      const response = await client.complete({
+      const response = await runLLMTask({
+        task: "slothing.cover_letter_generate",
+        userId: authResult.userId,
         messages: [
           {
             role: "user",

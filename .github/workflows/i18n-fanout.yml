@@ -47,6 +47,33 @@ jobs:
           cache: 'pnpm'
           cache-dependency-path: pnpm-lock.yaml
 
+      - name: Authenticate GitHub git dependencies
+        env:
+          BENTO_ROUTER_DEPLOY_KEY: ${{ secrets.BENTO_ROUTER_DEPLOY_KEY }}
+          BENTO_ROUTER_READ_TOKEN: ${{ secrets.BENTO_ROUTER_READ_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          if [[ -n "$BENTO_ROUTER_DEPLOY_KEY" ]]; then
+            key_path="${RUNNER_TEMP}/bento-router-deploy-key"
+            printf '%s\n' "$BENTO_ROUTER_DEPLOY_KEY" > "$key_path"
+            chmod 600 "$key_path"
+            mkdir -p ~/.ssh
+            ssh-keyscan github.com >> ~/.ssh/known_hosts
+            echo "GIT_SSH_COMMAND=ssh -i ${key_path} -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes" >> "$GITHUB_ENV"
+            exit 0
+          fi
+
+          token="${BENTO_ROUTER_READ_TOKEN:-$GITHUB_TOKEN}"
+          {
+            echo "GIT_CONFIG_COUNT=2"
+            echo "GIT_CONFIG_KEY_0=url.https://x-access-token:${token}@github.com/.insteadOf"
+            echo "GIT_CONFIG_VALUE_0=git@github.com:"
+            echo "GIT_CONFIG_KEY_1=url.https://x-access-token:${token}@github.com/.insteadOf"
+            echo "GIT_CONFIG_VALUE_1=https://github.com/"
+          } >> "$GITHUB_ENV"
+          git config --global url."https://x-access-token:${token}@github.com/".insteadOf "git@github.com:"
+          git config --global url."https://x-access-token:${token}@github.com/".insteadOf "https://github.com/"
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
