@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
+import { ThemeProvider } from "@/components/theme-provider";
 import messages from "@/messages/en.json";
 import { Navbar } from "./navbar";
 
@@ -19,7 +20,9 @@ vi.mock("@/i18n/navigation", async (importOriginal) => {
 function renderNavbar(locale: string) {
   return render(
     <NextIntlClientProvider locale={locale} messages={messages}>
-      <Navbar />
+      <ThemeProvider>
+        <Navbar />
+      </ThemeProvider>
     </NextIntlClientProvider>,
   );
 }
