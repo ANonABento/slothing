@@ -1,29 +1,22 @@
 import { z } from "zod";
 import { kanbanVisibleLanesSchema } from "@/types/opportunity";
+import {
+  LLM_PROVIDERS,
+  llmConfigSchema,
+  llmProviderSchema,
+  type LLMConfigInput,
+  type LLMProvider,
+} from "@slothing/shared/schemas";
 
-// LLM providers
-export const LLM_PROVIDERS = [
-  "openai",
-  "anthropic",
-  "ollama",
-  "openrouter",
-] as const;
-
-export type LLMProvider = (typeof LLM_PROVIDERS)[number];
-
-export const llmProviderSchema = z.enum(LLM_PROVIDERS);
+// Re-export the LLM provider config from `@slothing/shared/schemas` so callers
+// that already import these from `@/lib/constants` keep working. The schema +
+// types live in the shared package now so the Zod validator and the
+// `LLMConfig` TS type stay in lockstep (F6.2).
+export { LLM_PROVIDERS, llmConfigSchema, llmProviderSchema };
+export type { LLMConfigInput, LLMProvider };
 
 // LLM configuration
 export const DEFAULT_LLM_TIMEOUT_MS = 60000; // 60 seconds
-
-export const llmConfigSchema = z.object({
-  provider: llmProviderSchema,
-  apiKey: z.string().optional(),
-  baseUrl: z.string().url().optional().or(z.literal("")),
-  model: z.string().min(1, "Model is required"),
-});
-
-export type LLMConfigInput = z.infer<typeof llmConfigSchema>;
 
 export const updateSettingsSchema = z.object({
   llm: llmConfigSchema.optional(),
