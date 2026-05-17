@@ -161,15 +161,27 @@ const MONTH_NAMES =
   "(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sept?(?:ember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)";
 const MONTH_ABBR_TICK =
   "(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sept?|Oct|Nov|Dec)\\.?\\s*'\\d{2}";
-const SEASON = "(?:Spring|Summer|Fall|Autumn|Winter)\\s+\\d{4}";
+// A year token — accepts a real four-digit year *or* the common
+// template placeholder "20XX" used by career-center sample resumes
+// (Iowa, Harvard, etc.). Without this, placeholder-dated samples
+// produce zero experience entries because the row's date never
+// matches the date-range pattern.
+const YEAR = "(?:\\d{4}|\\d{2}X{2})";
+const SEASON = `(?:Spring|Summer|Fall|Autumn|Winter)\\s+${YEAR}`;
 
 // Single date token: "January 2020", "Jan 2020", "Jan. 2020", "01/2020", "2020", "Jan '20", "Summer 2019"
-const DATE_TOKEN = `(?:${MONTH_NAMES}\\.?\\s*\\d{4}|${MONTH_ABBR_TICK}|${SEASON}|\\d{4}-\\d{2}|\\d{1,2}\\/\\d{4}|\\d{4})`;
+const DATE_TOKEN = `(?:${MONTH_NAMES}\\.?\\s*${YEAR}|${MONTH_ABBR_TICK}|${SEASON}|${YEAR}-\\d{2}|\\d{1,2}\\/${YEAR}|${YEAR})`;
 // End token: same as date token + Present/Current
 const END_TOKEN = `(?:${DATE_TOKEN}|[Pp]resent|[Cc]urrent)`;
-// Full date range: "Jan 2020 - Present", "2020-2024", etc.
+// Separator between start and end of a range. Accepts the obvious
+// ASCII / typographic dashes plus the soft hyphen (U+00AD) used by
+// some LaTeX templates as a visible date-range separator, plus a
+// plain whitespace-only gap that appears after our positions-based
+// extractor strips soft-hyphens to nothing ("Sep. 2023  Mar. 2024").
+const DATE_RANGE_SEP = `(?:\\s*[-–—­]\\s*|\\s+)`;
+// Full date range: "Jan 2020 - Present", "2020-2024", "Sep. 2023 Mar. 2024".
 const DATE_RANGE_REGEX = new RegExp(
-  `${DATE_TOKEN}\\s*[-–—]\\s*${END_TOKEN}`,
+  `${DATE_TOKEN}${DATE_RANGE_SEP}${END_TOKEN}`,
   "g",
 );
 // Also match " to " as separator: "January 2020 to Present"
@@ -178,11 +190,18 @@ const DATE_RANGE_TO_REGEX = new RegExp(
   "gi",
 );
 const DATE_RANGE_PARTS_REGEX = new RegExp(
-  `^\\s*(${DATE_TOKEN})\\s*(?:[-–—]|to)\\s*(${END_TOKEN})\\s*$`,
+  `^\\s*(${DATE_TOKEN})\\s*(?:[-–—­]|to)\\s*(${END_TOKEN})\\s*$`,
   "i",
 );
 const SPACED_DATE_RANGE_PARTS_REGEX = new RegExp(
-  `^\\s*(${DATE_TOKEN})\\s+[-–—]\\s+(${END_TOKEN})\\s*$`,
+  `^\\s*(${DATE_TOKEN})\\s+[-–—­]\\s+(${END_TOKEN})\\s*$`,
+  "i",
+);
+// Two month-year tokens with only whitespace between them — used when
+// the original PDF had a soft-hyphen date separator that got dropped
+// during text extraction (LaTeX awesome-cv style).
+const SPACED_MONTHED_DATE_RANGE_PARTS_REGEX = new RegExp(
+  `^\\s*(${MONTH_NAMES}\\.?\\s*${YEAR})\\s+(${MONTH_NAMES}\\.?\\s*${YEAR}|[Pp]resent|[Cc]urrent)\\s*$`,
   "i",
 );
 const YEAR_ONLY_DATE_RANGE_PARTS_REGEX =
@@ -250,6 +269,35 @@ function isLikelyEntryHeader(line: string): boolean {
   return hasDateRange(line) || (line.includes("|") && line.length < 180);
 }
 
+/**
+ * Heuristic: a wrapped bullet continuation almost always starts with a
+ * lowercase letter (it's mid-sentence). A new experience/project header
+ * almost always starts with an uppercase letter (proper noun job title).
+ *
+ * Used to guard the "short line with date-range below → treat as
+ * pending header" branch from stealing the tail of a wrapped bullet.
+ * The classic failure mode: a bullet's last visual line is short (e.g.
+ * "resolving P2002 races, …, and webhook stall guards") and sits
+ * directly above the next experience's header → without this check
+ * the parser grabbed the tail and glued it onto the next title.
+ */
+function looksLikeUnbulletedHeader(line: string): boolean {
+  const trimmed = line.trim();
+  if (!trimmed) return false;
+  // Proper-noun headers start with an uppercase letter or digit (e.g.,
+  // "3D Animation Studio"). Wrapped continuations almost never do.
+  const first = trimmed[0];
+  if (!/^[\p{Lu}\p{N}]/u.test(first)) return false;
+  // A continuation that happens to start with a capital is usually
+  // mid-sentence after a comma/period and contains run-on prose. Real
+  // headers separate fields with " — ", " | ", " - ", or " at " — if
+  // none of those appear and the line has lots of commas, it's prose.
+  const hasHeaderSeparator = /\s[—–|-]\s|\bat\b/i.test(trimmed);
+  const commaCount = (trimmed.match(/,/g) ?? []).length;
+  if (!hasHeaderSeparator && commaCount > 1) return false;
+  return true;
+}
+
 function normalizeResumeLines(text: string): string[] {
   const normalized: string[] = [];
   const rawLines = text
@@ -288,7 +336,10 @@ function normalizeResumeLines(text: string): string[] {
       if (
         isLikelyEntryHeader(line) ||
         isLikelySectionHeader(line) ||
-        (pendingBullet !== "" && line.length < 120 && hasDateRange(nextLine))
+        (pendingBullet !== "" &&
+          line.length < 120 &&
+          hasDateRange(nextLine) &&
+          looksLikeUnbulletedHeader(line))
       ) {
         flushPendingBullet();
         normalized.push(line);
@@ -313,6 +364,9 @@ export function splitDateRange(dateStr: string): {
   const match =
     trimmed.match(DATE_RANGE_TO_REGEX) && trimmed.match(DATE_RANGE_PARTS_REGEX);
   const spacedMatch = trimmed.match(SPACED_DATE_RANGE_PARTS_REGEX);
+  const spacedMonthedMatch = trimmed.match(
+    SPACED_MONTHED_DATE_RANGE_PARTS_REGEX,
+  );
   const yearOnlyMatch = trimmed.match(YEAR_ONLY_DATE_RANGE_PARTS_REGEX);
 
   if (match) {
@@ -320,6 +374,12 @@ export function splitDateRange(dateStr: string): {
   }
   if (spacedMatch) {
     return { start: spacedMatch[1].trim(), end: spacedMatch[2].trim() };
+  }
+  if (spacedMonthedMatch) {
+    return {
+      start: spacedMonthedMatch[1].trim(),
+      end: spacedMonthedMatch[2].trim(),
+    };
   }
   if (yearOnlyMatch) {
     return { start: yearOnlyMatch[1].trim(), end: yearOnlyMatch[2].trim() };
@@ -491,6 +551,17 @@ export function extractExperiences(text: string): Experience[] {
     if (!trimmed) continue;
     const nextLine = lines[i + 1]?.trim() || "";
 
+    // Treat all-caps short lines ("VOLUNTEER EXPERIENCE", "COLLEGE
+    // ACTIVITIES", "AWARDS & HONORS") as section dividers — even ones
+    // the section-detector doesn't classify. Without this, an
+    // unrecognized header gets glued onto the next entry's title.
+    if (isLikelySectionHeader(trimmed) && !hasDateRange(trimmed)) {
+      pushCurrentEntry();
+      currentEntry = null;
+      pendingHeader = "";
+      continue;
+    }
+
     if (isExperienceTableHeaderSequence(lines, i)) {
       i += 3;
       continue;
@@ -510,7 +581,8 @@ export function extractExperiences(text: string): Experience[] {
       currentEntry.bullets.length > 0 &&
       !BULLET_LINE_REGEX.test(trimmed) &&
       trimmed.length < 120 &&
-      hasDateRange(nextLine)
+      hasDateRange(nextLine) &&
+      looksLikeUnbulletedHeader(trimmed)
     ) {
       pushCurrentEntry();
       currentEntry = null;
@@ -525,6 +597,37 @@ export function extractExperiences(text: string): Experience[] {
     if (hasDateRange(trimmed)) {
       pushCurrentEntry();
       const dateStr = extractDateRange(trimmed);
+      // Two-row entry header (common in LaTeX-rendered résumés like
+      // Awesome-CV): a non-dated line sits above a dated line, with
+      // the upper line carrying "Company | Location" and the lower
+      // line carrying "Title | Date". Without this branch the two
+      // rows get concatenated and pipe-split assigns them in the
+      // wrong order (company ends up in the title field).
+      if (pendingHeader && /\|/.test(pendingHeader)) {
+        const upperParts = pendingHeader
+          .split(/\s*\|\s*/)
+          .map((p) => p.trim())
+          .filter(Boolean);
+        const lowerParts = stripDateRange(trimmed)
+          .replace(/\s*\|\s*$/, "")
+          .split(/\s*\|\s*/)
+          .map((p) => p.trim())
+          .filter(Boolean);
+        if (upperParts.length >= 1 && lowerParts.length >= 1) {
+          currentEntry = {
+            title: lowerParts[0] || "",
+            company: upperParts[0] || "",
+            location:
+              upperParts.slice(1).join(", ") ||
+              lowerParts.slice(1).join(", ") ||
+              undefined,
+            dates: dateStr,
+            bullets: [],
+          };
+          pendingHeader = "";
+          continue;
+        }
+      }
       currentEntry = parseHeader(
         pendingHeader ? `${pendingHeader} ${trimmed}` : trimmed,
         dateStr,

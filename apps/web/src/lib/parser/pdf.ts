@@ -79,24 +79,122 @@ function sanitizeExtractedPdfText(text: string): string {
     .replace(/[ \t]+\n/g, "\n");
 }
 
+/**
+ * Some PDFs ship text as positioned glyphs with no embedded line
+ * structure (LaTeX-compiled resumes are the worst offenders) —
+ * `pdf-parse` then emits one giant line, which breaks the section
+ * detector that relies on per-line headers like "EXPERIENCE". We
+ * re-derive text from pdfjs's per-item positions, grouping items into
+ * lines by y-overlap and joining with newlines. The result has
+ * structural fidelity even when the PDF didn't embed any.
+ */
+async function extractTextFromPositions(dataBuffer: Buffer): Promise<string> {
+  const { extractPdfPositions } = await import("@/lib/parse/pdf-positions");
+  // Keep junk items (bullet glyphs, separators, single-char runs) when
+  // reconstructing text — they carry structural signal that downstream
+  // parsing needs (the bullet `•` tells `extractExperiences` what's a
+  // highlight; the soft-hyphen `­` is often a date-range separator).
+  // The matcher path filters them out elsewhere for its own reasons.
+  const { items, pageDimensions } = await extractPdfPositions(dataBuffer, {
+    includeJunk: true,
+  });
+  if (items.length === 0) return "";
+  const pageOut: string[] = [];
+  for (const { page } of pageDimensions) {
+    const pageItems = items.filter((it) => it.page === page);
+    if (pageItems.length === 0) continue;
+    const lines: {
+      y: number;
+      segs: { x0: number; x1: number; text: string }[];
+    }[] = [];
+    for (const it of pageItems) {
+      const h = Math.max(it.y1 - it.y0, 8);
+      const found = lines.find((l) => Math.abs(l.y - it.y0) < h * 0.6);
+      const seg = { x0: it.x0, x1: it.x1, text: it.text };
+      if (found) found.segs.push(seg);
+      else lines.push({ y: it.y0, segs: [seg] });
+    }
+    lines.sort((a, b) => a.y - b.y);
+    const lineStrings = lines.map((l) => {
+      const sorted = l.segs.sort((a, b) => a.x0 - b.x0);
+      let out = "";
+      let lastRight = -Infinity;
+      for (const seg of sorted) {
+        const gap = seg.x0 - lastRight;
+        // Choose the separator from the horizontal gap between this
+        // segment and the previous one on the same line:
+        //   < 1.5pt → no separator (kerned glyphs, split ligatures —
+        //     pdfjs emits "fi" as separate "f"+"i" runs sometimes;
+        //     inserting a space here breaks email addresses like
+        //     "user@domain.com" into "user @ domain.c om")
+        //   1.5–25pt → single space (normal inter-word gap)
+        //   > 25pt → ` | ` column marker (right-aligned date / location)
+        if (out !== "") {
+          if (gap < 1.5) {
+            // no separator
+          } else if (gap > 25) {
+            out += " | ";
+          } else {
+            out += " ";
+          }
+        }
+        out += seg.text;
+        lastRight = seg.x1;
+      }
+      return out;
+    });
+    pageOut.push(lineStrings.join("\n"));
+  }
+  return pageOut.join("\n\n");
+}
+
+/**
+ * pdf-parse output is "structurally flat" when newlines are too rare
+ * to preserve section structure. Resumes are short (3-8KB of text)
+ * with dozens of natural breaks. If we get fewer than one newline per
+ * ~200 characters, the extractor lost the line structure and we
+ * should re-derive it from pdfjs positions.
+ */
+function isStructurallyFlat(text: string): boolean {
+  if (!text) return true;
+  const lineCount = (text.match(/\n/g) ?? []).length;
+  if (lineCount === 0 && text.length > 200) return true;
+  return text.length / (lineCount + 1) > 200;
+}
+
 export async function extractTextFromPDF(filePath: string): Promise<string> {
   const pdf = (await import("pdf-parse")).default;
   const dataBuffer = fs.readFileSync(toAbsolutePath(filePath));
   const fallbackText = extractPdfTextFallback(dataBuffer);
 
+  let parsedText = "";
+  let parseFailed = false;
   try {
     const data = await pdf(dataBuffer);
-    const parsedText = sanitizeExtractedPdfText(data.text);
-
-    if (!needsOCRFallback(parsedText)) {
-      return parsedText;
-    }
+    parsedText = sanitizeExtractedPdfText(data.text);
   } catch {
-    if (fallbackText) {
-      return sanitizeExtractedPdfText(fallbackText);
-    }
+    parseFailed = true;
+  }
 
-    return sanitizeExtractedPdfText(await extractTextWithOCR(dataBuffer));
+  if (!parseFailed && parsedText && !needsOCRFallback(parsedText)) {
+    // pdf-parse's output is unreliable for layout-heavy PDFs (LaTeX
+    // résumés especially): it routinely loses inter-word spaces or
+    // emits the entire document on one line. The positions path
+    // reads x/y from pdfjs and reconstructs lines + spaces from the
+    // geometry — uniformly more reliable, so we prefer it when it
+    // produces non-flat output. pdf-parse stays as the fallback for
+    // pathological PDFs where positions extraction fails.
+    try {
+      const fromPositions = sanitizeExtractedPdfText(
+        await extractTextFromPositions(dataBuffer),
+      );
+      if (fromPositions && !isStructurallyFlat(fromPositions)) {
+        return fromPositions;
+      }
+    } catch {
+      // Positions extraction unavailable — fall through.
+    }
+    return parsedText;
   }
 
   if (fallbackText) {

@@ -425,13 +425,26 @@ export async function POST(request: NextRequest) {
 
           // Build per-page sorted list of root y0s so each child's
           // anchor band can extend to the next-sibling-root's y0.
+          // Only the TOP y0 per root contributes — a parent header that
+          // matched two visual lines (e.g. "Babysitter" wrapped to a
+          // second line "Private Residence | Waterloo, IA") would
+          // otherwise add its own second-line y0 to the sorted list,
+          // and the anchor for THAT same parent would then cap at its
+          // own second line instead of at the real next sibling.
           const rootsByPage = new Map<number, number[]>();
           for (const bboxes of rootBboxes.values()) {
+            if (bboxes.length === 0) continue;
+            let topY = Infinity;
+            let topPage = bboxes[0][0];
             for (const [page, , y0] of bboxes) {
-              const arr = rootsByPage.get(page) ?? [];
-              arr.push(y0);
-              rootsByPage.set(page, arr);
+              if (y0 < topY) {
+                topY = y0;
+                topPage = page;
+              }
             }
+            const arr = rootsByPage.get(topPage) ?? [];
+            arr.push(topY);
+            rootsByPage.set(topPage, arr);
           }
           for (const arr of rootsByPage.values()) arr.sort((a, b) => a - b);
 
@@ -447,13 +460,24 @@ export async function POST(request: NextRequest) {
               ? rootBboxes.get(parentId)
               : undefined;
             if (parentBboxes && parentBboxes.length > 0) {
-              const [page, , parentY0] = parentBboxes[0];
-              const pageRoots = rootsByPage.get(page) ?? [];
-              const nextRootY = pageRoots.find((y) => y > parentY0 + 1);
+              // Pick the top-most parent bbox as the anchor origin —
+              // a wrapped header (two visual lines) would otherwise
+              // land on its lower line and cut off bullets that sit
+              // between the two parent lines.
+              let topY = Infinity;
+              let topPage = parentBboxes[0][0];
+              for (const [page, , y0] of parentBboxes) {
+                if (y0 < topY) {
+                  topY = y0;
+                  topPage = page;
+                }
+              }
+              const pageRoots = rootsByPage.get(topPage) ?? [];
+              const nextRootY = pageRoots.find((y) => y > topY + 1);
               anchorBbox = {
-                page,
-                y0: parentY0,
-                yMax: nextRootY ?? parentY0 + 400,
+                page: topPage,
+                y0: topY,
+                yMax: nextRootY ?? topY + 400,
               };
             }
             if (matchEntry(entry, anchorBbox).length > 0) {

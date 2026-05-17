@@ -211,6 +211,29 @@ describe("extractGpa", () => {
 });
 
 describe("extractExperiences", () => {
+  it("does not steal a wrapped-bullet tail as the next experience's title", () => {
+    // Regression: pdf-extracted resume bullets often wrap to multiple
+    // lines without bullet markers. The last line of a wrapped bullet
+    // can sit directly above the next experience's header — and the
+    // "short non-bullet line + dates below = pending header" heuristic
+    // used to steal it. Verified against KevinJiang_Resume.pdf where
+    // the Hamming AI bullet "Stabilized production reliability ...
+    // webhook stall guards" wrapped, and "resolving P2002 races, ...
+    // and webhook stall guards" got glued onto the next experience's
+    // title.
+    const text = `Software Engineer — Hamming AI — Austin, TX Dec 2025 — Apr 2026
+• Stabilized production reliability with phased chunked writes for long agent-flow transactions, idempotent creates
+resolving P2002 races, transaction-timeout fixes for large test suites, and webhook stall guards
+Robotics Engineer — Reazon Human Interaction Lab — Tokyo, Japan Jun 2025 — Aug 2025
+• Designed a lightweight exoskeleton wrist controller`;
+    const result = extractExperiences(text);
+    expect(result).toHaveLength(2);
+    expect(result[0].title).toBe("Software Engineer");
+    expect(result[0].highlights[0]).toContain("webhook stall guards");
+    expect(result[1].title).toBe("Robotics Engineer");
+    expect(result[1].title).not.toContain("P2002");
+  });
+
   it("extracts experience with full month dates", () => {
     const text = `Software Engineer  January 2020 - Present
 Google

@@ -129,14 +129,12 @@ export function classifyDocumentByContent(text: string): DocumentType | null {
     return "cover_letter";
   }
 
-  if (
-    /\b(certificate of|certifies that|credential id|certification)\b/.test(
-      normalized,
-    )
-  ) {
-    return "certificate";
-  }
-
+  // Check resume signals BEFORE the certificate heuristic — a resume
+  // that mentions "certification" in a bullet (e.g., "Earned CPR/AED
+  // certification") was previously misclassified as a certificate and
+  // skipped the parse pipeline entirely. Resume signals (contact +
+  // multiple section headers) are a stronger indicator than the word
+  // "certification" appearing anywhere in the body.
   const hasResumeContact =
     /[\w.+-]+@[\w.-]+\.[a-z]{2,}/i.test(text) ||
     /\b(?:linkedin\.com\/in|github\.com\/)\b/i.test(text);
@@ -149,6 +147,13 @@ export function classifyDocumentByContent(text: string): DocumentType | null {
   ].filter((pattern) => pattern.test(normalized)).length;
   if (hasResumeContact && resumeSectionHits >= 2) {
     return "resume";
+  }
+
+  if (
+    /\b(certificate of|certifies that|credential id)\b/.test(normalized) ||
+    /^\s*certificate\s+of\b/im.test(text)
+  ) {
+    return "certificate";
   }
 
   return null;
