@@ -501,15 +501,18 @@ function normalizeOpportunitySource(source: string) {
 
 // Singleton instance
 let client: SlothingAPIClient | null = null;
+let clientBaseUrl: string | null = null;
 
 export async function getAPIClient(): Promise<SlothingAPIClient> {
-  if (!client) {
-    const storage = await getStorage();
+  const storage = await getStorage();
+  if (!client || clientBaseUrl !== storage.apiBaseUrl) {
     client = new SlothingAPIClient(storage.apiBaseUrl);
+    clientBaseUrl = storage.apiBaseUrl;
   }
   return client;
 }
 
 export function resetAPIClient(): void {
   client = null;
+  clientBaseUrl = null;
 }

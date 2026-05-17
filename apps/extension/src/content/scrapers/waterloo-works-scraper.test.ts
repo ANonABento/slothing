@@ -88,6 +88,86 @@ describe("WaterlooWorksScraper (modern UI)", () => {
     expect(job).toBeNull();
   });
 
+  it("ignores WaterlooWorks keep-alive dialogs", async () => {
+    document.body.className = "dashboardController";
+    document.body.innerHTML = `
+      <div role="dialog">
+        <h2>Keep Me Logged In</h2>
+        <p>Your WaterlooWorks session is about to expire.</p>
+        <button>Keep me logged in</button>
+      </div>
+    `;
+    Object.defineProperty(document.body, "innerText", {
+      configurable: true,
+      value: [
+        "Keep Me Logged In",
+        "Your WaterlooWorks session is about to expire.",
+      ].join("\n"),
+    });
+
+    const job = await new WaterlooWorksScraper().scrapeJobListing();
+
+    expect(job).toBeNull();
+  });
+
+  it("scrapes the modal-style WaterlooWorks detail view", async () => {
+    document.body.innerHTML = `
+      <div role="dialog">
+        <header>
+          <div class="dashboard-header__posting-title">
+            <span>471268</span>
+            <h2>Verification and Validation - Load and Performance Testing</h2>
+          </div>
+          <p>Agfa HealthCare Inc - Divisional Office</p>
+        </header>
+        <nav>OVERVIEW MAP WORK TERM RATINGS</nav>
+        <section>
+          <h3>JOB POSTING INFORMATION</h3>
+          <p>Work Term:</p>
+          <p>2026 - Fall</p>
+          <p>Job Type:</p>
+          <p>Co-op Main</p>
+          <p>Job Title:</p>
+          <p>Verification and Validation - Load and Performance Testing</p>
+          <p>Employer Internal Job Number:</p>
+          <p>SK</p>
+          <p>Job Summary:</p>
+          <p>Validate load and performance characteristics for healthcare software.</p>
+        </section>
+      </div>
+    `;
+    Object.defineProperty(document.body, "innerText", {
+      configurable: true,
+      value: [
+        "471268",
+        "Verification and Validation - Load and Performance Testing",
+        "Agfa HealthCare Inc - Divisional Office",
+        "JOB POSTING INFORMATION",
+        "Work Term:",
+        "2026 - Fall",
+        "Job Type:",
+        "Co-op Main",
+        "Job Title:",
+        "Verification and Validation - Load and Performance Testing",
+        "Employer Internal Job Number:",
+        "SK",
+        "Job Summary:",
+        "Validate load and performance characteristics for healthcare software.",
+      ].join("\n"),
+    });
+
+    const job = await new WaterlooWorksScraper().scrapeJobListing();
+
+    expect(job).toMatchObject({
+      source: "waterlooworks",
+      sourceJobId: "471268",
+      title: "Verification and Validation - Load and Performance Testing",
+      company: "Agfa HealthCare Inc - Divisional Office",
+      type: "internship",
+    });
+    expect(job?.description).toContain("healthcare software");
+  });
+
   it("returns null on a login page", async () => {
     document.body.innerHTML = '<input type="password" />';
     const job = await new WaterlooWorksScraper().scrapeJobListing();

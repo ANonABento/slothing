@@ -83,6 +83,7 @@ describe("ExtensionConnectPage", () => {
       JSON.stringify({
         token: "token-1",
         expiresAt: "2026-05-09T12:00:00.000Z",
+        apiBaseUrl: window.location.origin,
       }),
     );
     expect(
@@ -101,7 +102,7 @@ describe("ExtensionConnectPage", () => {
       "/extension/connect?extensionId=abc123",
     );
     const sendMessage = vi.fn((_extensionId, _message, callback) => {
-      callback({ ok: true });
+      callback({ success: true });
     });
     setChromeRuntime(sendMessage);
     mockFetchResponse(200, {
@@ -122,10 +123,40 @@ describe("ExtensionConnectPage", () => {
         type: "AUTH_CALLBACK",
         token: "token-1",
         expiresAt: "2026-05-09T12:00:00.000Z",
+        apiBaseUrl: window.location.origin,
       },
       expect.any(Function),
     );
     expect(localStorage.setItem).not.toHaveBeenCalled();
+  });
+
+  it("falls back to localStorage when runtime rejects the callback", async () => {
+    window.history.replaceState(
+      null,
+      "",
+      "/extension/connect?extensionId=abc123",
+    );
+    const sendMessage = vi.fn((_extensionId, _message, callback) => {
+      callback({ success: false, error: "no receiving end" });
+    });
+    setChromeRuntime(sendMessage);
+    mockFetchResponse(200, {
+      token: "token-1",
+      expiresAt: "2026-05-09T12:00:00.000Z",
+    });
+
+    renderPage();
+
+    await screen.findByText("Extension connected successfully.");
+
+    expect(localStorage.setItem).toHaveBeenCalledWith(
+      "slothing_extension_token",
+      JSON.stringify({
+        token: "token-1",
+        expiresAt: "2026-05-09T12:00:00.000Z",
+        apiBaseUrl: window.location.origin,
+      }),
+    );
   });
 
   it("falls back to localStorage transport when chrome.runtime is unavailable (e.g. Firefox)", async () => {
@@ -151,6 +182,7 @@ describe("ExtensionConnectPage", () => {
       JSON.stringify({
         token: "token-1",
         expiresAt: "2026-05-09T12:00:00.000Z",
+        apiBaseUrl: window.location.origin,
       }),
     );
   });

@@ -5,7 +5,12 @@ import type {
   ExtensionSettings,
   ExtensionProfile,
 } from "@/shared/types";
-import { DEFAULT_SETTINGS, DEFAULT_API_BASE_URL } from "@/shared/types";
+import {
+  DEFAULT_SETTINGS,
+  DEFAULT_API_BASE_URL,
+  LEGACY_LOCAL_API_BASE_URL,
+  SHOULD_PROMOTE_LEGACY_LOCAL_API_BASE_URL,
+} from "@/shared/types";
 
 const STORAGE_KEY = "slothing_extension";
 
@@ -15,9 +20,15 @@ export async function getStorage(): Promise<ExtensionStorage> {
       const stored = result[STORAGE_KEY] as
         | Partial<ExtensionStorage>
         | undefined;
+      const apiBaseUrl =
+        SHOULD_PROMOTE_LEGACY_LOCAL_API_BASE_URL &&
+        stored?.apiBaseUrl === LEGACY_LOCAL_API_BASE_URL &&
+        !stored.authToken
+          ? DEFAULT_API_BASE_URL
+          : stored?.apiBaseUrl || DEFAULT_API_BASE_URL;
       resolve({
-        apiBaseUrl: DEFAULT_API_BASE_URL,
         ...stored,
+        apiBaseUrl,
         settings: { ...DEFAULT_SETTINGS, ...stored?.settings },
       });
     });
@@ -45,12 +56,15 @@ export async function clearStorage(): Promise<void> {
 export async function setAuthToken(
   token: string,
   expiresAt: string,
+  apiBaseUrl?: string,
 ): Promise<void> {
   await setStorage({
     authToken: token,
     tokenExpiry: expiresAt,
+    ...(apiBaseUrl ? { apiBaseUrl } : {}),
     lastSeenAuthAt: new Date().toISOString(),
   });
+  await setSessionAuthCache(true);
 }
 
 /**

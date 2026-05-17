@@ -2,11 +2,17 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   AUTH_CACHE_TTL_MS,
   clearSessionAuthCache,
+  getStorage,
   getSessionAuthCache,
   isSessionLost,
   SESSION_LOST_WINDOW_MS,
+  setAuthToken,
   setSessionAuthCache,
 } from "./storage";
+import {
+  DEFAULT_API_BASE_URL,
+  LEGACY_LOCAL_API_BASE_URL,
+} from "@/shared/types";
 
 describe("isSessionLost", () => {
   const now = new Date("2026-05-12T12:00:00.000Z").getTime();
@@ -71,6 +77,76 @@ describe("isSessionLost", () => {
   });
 });
 
+describe("storage defaults", () => {
+  let store: Record<string, unknown>;
+
+  beforeEach(() => {
+    store = {};
+    vi.stubGlobal("chrome", {
+      storage: {
+        local: {
+          get: (key: string, cb: (result: Record<string, unknown>) => void) => {
+            cb({ [key]: store[key] });
+          },
+          set: (entries: Record<string, unknown>, cb: () => void) => {
+            Object.assign(store, entries);
+            cb();
+          },
+          remove: (key: string, cb: () => void) => {
+            delete store[key];
+            cb();
+          },
+        },
+      },
+    });
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("defaults new installs to the production Slothing host", async () => {
+    await expect(getStorage()).resolves.toMatchObject({
+      apiBaseUrl: DEFAULT_API_BASE_URL,
+    });
+  });
+
+  it("promotes the legacy localhost default after auth has been lost", async () => {
+    store.slothing_extension = {
+      apiBaseUrl: LEGACY_LOCAL_API_BASE_URL,
+      lastSeenAuthAt: new Date().toISOString(),
+    };
+
+    await expect(getStorage()).resolves.toMatchObject({
+      apiBaseUrl: DEFAULT_API_BASE_URL,
+    });
+  });
+
+  it("preserves an explicit localhost base URL while a token is present", async () => {
+    store.slothing_extension = {
+      authToken: "token-1",
+      apiBaseUrl: LEGACY_LOCAL_API_BASE_URL,
+    };
+
+    await expect(getStorage()).resolves.toMatchObject({
+      apiBaseUrl: LEGACY_LOCAL_API_BASE_URL,
+    });
+  });
+
+  it("stores the callback origin with a freshly connected token", async () => {
+    await setAuthToken(
+      "token-1",
+      "2026-05-16T12:00:00.000Z",
+      "https://slothing.work",
+    );
+
+    await expect(getStorage()).resolves.toMatchObject({
+      authToken: "token-1",
+      apiBaseUrl: "https://slothing.work",
+    });
+  });
+});
+
 /**
  * Session-scoped auth verdict cache (#30). Uses chrome.storage.session
  * (NOT local) so the verdict is wiped on browser restart. Tests stub the
@@ -84,6 +160,19 @@ describe("session auth cache (#30)", () => {
     store = {};
     vi.stubGlobal("chrome", {
       storage: {
+        local: {
+          get: (key: string, cb: (result: Record<string, unknown>) => void) => {
+            cb({ [key]: store[key] });
+          },
+          set: (entries: Record<string, unknown>, cb: () => void) => {
+            Object.assign(store, entries);
+            cb();
+          },
+          remove: (key: string, cb: () => void) => {
+            delete store[key];
+            cb();
+          },
+        },
         session: {
           get: (key: string, cb: (result: Record<string, unknown>) => void) => {
             cb({ [key]: store[key] });
@@ -121,6 +210,14 @@ describe("session auth cache (#30)", () => {
     await setSessionAuthCache(false);
     const result = await getSessionAuthCache();
     expect(result?.authenticated).toBe(false);
+  });
+
+  it("promotes the verdict cache when a fresh token is stored", async () => {
+    await setSessionAuthCache(false);
+    await setAuthToken("token-1", "2099-01-01T00:00:00.000Z");
+
+    const result = await getSessionAuthCache();
+    expect(result?.authenticated).toBe(true);
   });
 
   it("returns null once the TTL has elapsed", async () => {

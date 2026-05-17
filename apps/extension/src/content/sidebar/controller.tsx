@@ -3,6 +3,7 @@ import { createRoot, type Root } from "react-dom/client";
 import type {
   ExtensionProfile,
   ExtensionSettings,
+  SidebarLayout,
   SimilarAnswer,
   ScrapedJob,
 } from "@/shared/types";
@@ -10,9 +11,13 @@ import { JobPageSidebar } from "./job-page-sidebar";
 import type { ChatIntent } from "./chat-panel";
 import { computeJobMatchScore } from "./scoring";
 import {
+  DEFAULT_SIDEBAR_LAYOUT,
   dismissSidebarForDomain,
+  getSidebarLayoutForDomain,
   isSidebarDismissedForDomain,
   normalizeSidebarDomain,
+  restoreSidebarForDomain,
+  setSidebarLayoutForDomain,
 } from "./storage";
 import { SIDEBAR_STYLES } from "./styles";
 
@@ -48,7 +53,7 @@ export class JobPageSidebarController {
   private host: HTMLElement | null = null;
   private root: Root | null = null;
   private state: SidebarControllerUpdate | null = null;
-  private collapsed = false;
+  private layout: SidebarLayout = DEFAULT_SIDEBAR_LAYOUT;
   private dismissedDomain: string | null = null;
   private readonly handleResize = () => this.render();
 
@@ -61,11 +66,12 @@ export class JobPageSidebarController {
     this.dismissedDomain = (await isSidebarDismissedForDomain())
       ? normalizeSidebarDomain(window.location.hostname)
       : null;
+    this.layout = await getSidebarLayoutForDomain();
     this.render();
   }
 
   showCollapsed() {
-    this.collapsed = true;
+    void this.updateLayout({ collapsed: true });
     this.render();
   }
 
@@ -73,6 +79,23 @@ export class JobPageSidebarController {
     await dismissSidebarForDomain();
     this.dismissedDomain = normalizeSidebarDomain(window.location.hostname);
     this.unmount();
+  }
+
+  async restoreDomain() {
+    await restoreSidebarForDomain();
+    this.dismissedDomain = null;
+    await this.updateLayout({ collapsed: false });
+    this.render();
+  }
+
+  getStatus() {
+    return {
+      visible: !!this.root && !!this.state?.scrapedJob && !this.dismissedDomain,
+      dismissed:
+        this.dismissedDomain ===
+        normalizeSidebarDomain(window.location.hostname),
+      layout: this.layout,
+    };
   }
 
   destroy() {
@@ -102,10 +125,9 @@ export class JobPageSidebarController {
         scrapedJob={this.state.scrapedJob}
         detectedFieldCount={this.state.detectedFieldCount}
         score={score}
-        isCollapsed={this.collapsed}
-        onCollapseChange={(collapsed) => {
-          this.collapsed = collapsed;
-          this.render();
+        layout={this.layout}
+        onLayoutChange={(updates) => {
+          void this.updateLayout(updates);
         }}
         onDismiss={() => this.dismissDomain()}
         onTailor={this.state.onTailor}
@@ -118,6 +140,16 @@ export class JobPageSidebarController {
         onUseInCoverLetter={this.state.onUseInCoverLetter}
       />,
     );
+  }
+
+  private async updateLayout(updates: Partial<SidebarLayout>) {
+    this.layout = { ...this.layout, ...updates };
+    if (this.layout.dock !== "floating") {
+      this.layout.position = null;
+    }
+    this.render();
+    this.layout = await setSidebarLayoutForDomain(this.layout);
+    this.render();
   }
 
   private ensureRoot(): Root {

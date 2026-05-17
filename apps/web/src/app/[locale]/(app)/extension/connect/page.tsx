@@ -14,6 +14,7 @@ type ExtensionTransport = "runtime" | "localstorage";
 type ChromeRuntimeGlobal = {
   chrome?: {
     runtime?: {
+      lastError?: { message?: string };
       sendMessage?: (
         extensionId: string,
         message: unknown,
@@ -22,6 +23,33 @@ type ChromeRuntimeGlobal = {
     };
   };
 };
+
+const EXTENSION_TOKEN_STORAGE_KEY = "slothing_extension_token";
+
+function sleep(ms: number) {
+  return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
+
+async function waitForLocalStoragePickup(
+  timeoutMs = 10_000,
+  intervalMs = 250,
+): Promise<boolean> {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    if (!localStorage.getItem(EXTENSION_TOKEN_STORAGE_KEY)) return true;
+    await sleep(intervalMs);
+  }
+  return !localStorage.getItem(EXTENSION_TOKEN_STORAGE_KEY);
+}
+
+function runtimeAccepted(response: unknown): boolean {
+  return (
+    !!response &&
+    typeof response === "object" &&
+    "success" in response &&
+    (response as { success?: unknown }).success === true
+  );
+}
 
 function messageForStatus(status: number): string {
   if (status === 401) return "Sign in expired. Reload the page to retry.";
@@ -91,35 +119,54 @@ function useTokenGenerator() {
 
       const { token, expiresAt } = await response.json();
 
-      const fallbackToLocalStorage = () => {
+      const fallbackToLocalStorage = async () => {
         // Fallback for when chrome.runtime.sendMessage is unreachable from this
         // page. The extension polls this key on next activation and deletes it
         // after pickup. Server-minted localStorage tokens use a 5-minute TTL.
         localStorage.setItem(
-          "slothing_extension_token",
-          JSON.stringify({ token, expiresAt }),
+          EXTENSION_TOKEN_STORAGE_KEY,
+          JSON.stringify({
+            token,
+            expiresAt,
+            apiBaseUrl: window.location.origin,
+          }),
         );
-        setStatus("success");
+        if (await waitForLocalStoragePickup()) {
+          setStatus("success");
+          return;
+        }
+        setError(
+          "The extension did not pick up the connection. Reload this tab or reconnect from the extension.",
+        );
+        setStatus("error");
       };
 
       try {
         if (extensionId && chromeGlobal?.runtime?.sendMessage) {
           chromeGlobal.runtime.sendMessage(
             extensionId,
-            { type: "AUTH_CALLBACK", token, expiresAt },
+            {
+              type: "AUTH_CALLBACK",
+              token,
+              expiresAt,
+              apiBaseUrl: window.location.origin,
+            },
             (response: unknown) => {
-              if (!response) {
-                fallbackToLocalStorage();
+              if (
+                chromeGlobal.runtime?.lastError ||
+                !runtimeAccepted(response)
+              ) {
+                void fallbackToLocalStorage();
               } else {
                 setStatus("success");
               }
             },
           );
         } else {
-          fallbackToLocalStorage();
+          await fallbackToLocalStorage();
         }
       } catch {
-        fallbackToLocalStorage();
+        await fallbackToLocalStorage();
       }
     } catch {
       setError("Couldn't reach Slothing. Check your internet connection.");

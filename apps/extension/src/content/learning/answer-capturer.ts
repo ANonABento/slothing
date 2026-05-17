@@ -63,19 +63,39 @@ export class AnswerCapturer {
    * Prompt user to save an answer
    */
   private async promptToSave(question: string, answer: string): Promise<void> {
-    // Create a subtle notification
+    // Create a subtle notification without innerHTML so the preview stays text-only.
     const notification = document.createElement("div");
     notification.id = "slothing-save-prompt";
-    notification.innerHTML = `
-      <div class="slothing-prompt-content">
-        <p>Save this answer for future applications?</p>
-        <p class="slothing-prompt-preview">"${answer.slice(0, 50)}${answer.length > 50 ? "..." : ""}"</p>
-        <div class="slothing-prompt-actions">
-          <button class="slothing-btn-save">Save</button>
-          <button class="slothing-btn-dismiss">Not now</button>
-        </div>
-      </div>
-    `;
+
+    const content = document.createElement("div");
+    content.className = "slothing-prompt-content";
+
+    const title = document.createElement("p");
+    title.textContent = "Save this answer for future applications?";
+
+    const preview = document.createElement("p");
+    preview.className = "slothing-prompt-preview";
+    preview.textContent = `"${answer.slice(0, 50)}${answer.length > 50 ? "..." : ""}"`;
+
+    const actions = document.createElement("div");
+    actions.className = "slothing-prompt-actions";
+
+    const saveBtn = document.createElement("button");
+    saveBtn.className = "slothing-btn-save";
+    saveBtn.type = "button";
+    saveBtn.textContent = "Save";
+
+    const dismissBtn = document.createElement("button");
+    dismissBtn.className = "slothing-btn-dismiss";
+    dismissBtn.type = "button";
+    dismissBtn.textContent = "Not now";
+
+    actions.appendChild(dismissBtn);
+    actions.appendChild(saveBtn);
+    content.appendChild(title);
+    content.appendChild(preview);
+    content.appendChild(actions);
+    notification.appendChild(content);
 
     // Add styles
     const style = document.createElement("style");
@@ -84,13 +104,15 @@ export class AnswerCapturer {
         position: fixed;
         bottom: 20px;
         right: 20px;
-        background: white;
-        border-radius: 12px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        background: #fffaef;
+        color: #1a1530;
+        border: 1px solid rgba(26, 20, 16, 0.12);
+        border-radius: 10px;
+        box-shadow: 0 10px 24px rgba(26, 21, 48, 0.14);
         padding: 16px;
         max-width: 320px;
         z-index: 999999;
-        font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+        font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
         font-size: 14px;
         animation: slothing-slide-in 0.3s ease;
       }
@@ -100,44 +122,47 @@ export class AnswerCapturer {
       }
       .slothing-prompt-content p {
         margin: 0 0 8px 0;
-        color: #333;
+        color: #1a1530;
       }
       .slothing-prompt-preview {
-        color: #666;
+        color: #6a5e4a;
         font-size: 12px;
         font-style: italic;
+        overflow-wrap: anywhere;
       }
       .slothing-prompt-actions {
         display: flex;
         gap: 8px;
+        justify-content: flex-end;
         margin-top: 12px;
       }
       .slothing-btn-save, .slothing-btn-dismiss {
         padding: 8px 16px;
-        border: none;
+        border: 1px solid rgba(26, 20, 16, 0.12);
         border-radius: 6px;
         cursor: pointer;
         font-size: 13px;
         font-weight: 500;
       }
       .slothing-btn-save {
-        background: linear-gradient(135deg, #14b8a6, #0ea5e9);
-        color: white;
+        background: #1a1530;
+        border-color: #1a1530;
+        color: #fffaef;
       }
       .slothing-btn-dismiss {
-        background: #f0f0f0;
-        color: #666;
+        background: #fffaef;
+        color: #6a5e4a;
+      }
+      .slothing-btn-save:focus-visible, .slothing-btn-dismiss:focus-visible {
+        outline: 2px solid #b8704a;
+        outline-offset: 2px;
       }
     `;
 
     document.head.appendChild(style);
     document.body.appendChild(notification);
 
-    // Handle button clicks
-    const saveBtn = notification.querySelector(".slothing-btn-save");
-    const dismissBtn = notification.querySelector(".slothing-btn-dismiss");
-
-    saveBtn?.addEventListener("click", async () => {
+    saveBtn.addEventListener("click", async () => {
       try {
         await sendMessage(
           Messages.saveAnswer({
@@ -154,7 +179,7 @@ export class AnswerCapturer {
       }
     });
 
-    dismissBtn?.addEventListener("click", () => {
+    dismissBtn.addEventListener("click", () => {
       notification.remove();
     });
 
@@ -197,10 +222,11 @@ export class AnswerCapturer {
       bottom: 20px;
       right: 20px;
       padding: 12px 20px;
-      background: ${isError ? "#ef4444" : "#14b8a6"};
-      color: white;
+      background: ${isError ? "#991b1b" : "#1a1530"};
+      color: #fffaef;
+      border: 1px solid rgba(255, 250, 239, 0.16);
       border-radius: 8px;
-      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
       font-size: 14px;
       z-index: 999999;
       animation: slothing-fade-in 0.3s ease;

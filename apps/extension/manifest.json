@@ -5,6 +5,7 @@
   "description": "Auto-fill job applications and import job listings from LinkedIn, Waterloo Works, and more",
   "permissions": [
     "storage",
+    "tabs",
     "activeTab",
     "scripting",
     "webNavigation"
@@ -19,6 +20,10 @@
     "*://waterlooworks.uwaterloo.ca/*",
     "*://*.workdayjobs.com/*",
     "*://*.myworkdayjobs.com/*",
+    "https://slothing.work/*",
+    "https://*.slothing.work/*",
+    "http://localhost/*",
+    "http://127.0.0.1/*",
     "http://localhost:3000/*",
     "http://localhost:3001/*",
     "http://127.0.0.1:3000/*",
@@ -40,6 +45,10 @@
         "*://waterlooworks.uwaterloo.ca/*",
         "*://*.workdayjobs.com/*",
         "*://*.myworkdayjobs.com/*",
+        "https://slothing.work/*",
+        "https://*.slothing.work/*",
+        "http://localhost/*",
+        "http://127.0.0.1/*",
         "http://localhost:3000/*",
         "http://localhost:3001/*",
         "http://127.0.0.1:3000/*",
@@ -68,12 +77,17 @@
   },
   "web_accessible_resources": [
     {
-      "resources": ["*.html", "*.css", "icons/*"],
+      "resources": ["*.html", "*.css", "icons/*", "brand/*"],
       "matches": ["<all_urls>"]
     }
   ],
   "externally_connectable": {
-    "matches": ["http://localhost:3000/*", "https://localhost:3000/*"]
+    "matches": [
+      "http://localhost:3000/*",
+      "https://localhost:3000/*",
+      "https://slothing.work/*",
+      "https://*.slothing.work/*"
+    ]
   },
   "commands": {
     "fill-form": {

@@ -118,7 +118,7 @@ test("options page renders Slothing Settings heading and API URL input", async (
 
     await expect(page.locator('a:has-text("View on GitHub")')).toHaveAttribute(
       "href",
-      "https://github.com/your-repo/slothing",
+      "https://github.com/ANonABento/slothing",
     );
   } finally {
     await page.close();

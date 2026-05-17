@@ -1,5 +1,6 @@
 import { expect, test, type BrowserContext } from "@playwright/test";
 import { createServer, type Server } from "node:http";
+import type { AddressInfo } from "node:net";
 import {
   closeExtensionContext,
   loadFixture,
@@ -316,6 +317,154 @@ test("Greenhouse, Lever, and Indeed fixtures expose job list cards", async () =>
   }
 });
 
+test("WaterlooWorks live-style listing rows surface bulk page state", async () => {
+  const page = await context.newPage();
+  const url =
+    "https://waterlooworks.uwaterloo.ca/myAccount/co-op/full/jobs.htm";
+  try {
+    await page.route(url, (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "text/html; charset=utf-8",
+        body: `<!doctype html>
+          <html>
+            <body class="nPostingController page--1430 is--my-account new-student__posting-search loaded">
+              <main>
+                <h1>Jobs / Applications</h1>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Job Title</th>
+                      <th>Location</th>
+                      <th>Level</th>
+                      <th>Openings</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><a href="javascript:void(0)">AI Toolchain Software Developer</a></td>
+                      <td>Waterloo</td>
+                      <td>Junior, Intermediate</td>
+                      <td>8</td>
+                    </tr>
+                    <tr>
+                      <td><a href="javascript:void(0)">Verification and Validation - Load and Performance Testing</a></td>
+                      <td>Waterloo</td>
+                      <td>Junior, Intermediate</td>
+                      <td>32</td>
+                    </tr>
+                  </tbody>
+                </table>
+                <a class="pagination__link" aria-label="Go to next page" href="javascript:void(0)">Next</a>
+              </main>
+            </body>
+          </html>`,
+      }),
+    );
+    await page.goto(url);
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(800);
+
+    const wwState = await sendMessageToTab<{
+      success: boolean;
+      data: {
+        kind: "list" | "detail" | "other";
+        rowCount: number;
+        hasNextPage: boolean;
+      };
+    }>(context, extensionId, "waterlooworks.uwaterloo.ca", {
+      type: "WW_GET_PAGE_STATE",
+    });
+    expect(wwState).toMatchObject({
+      success: true,
+      data: { kind: "list", rowCount: 2, hasNextPage: true },
+    });
+  } finally {
+    await page.close();
+  }
+});
+
+test("WaterlooWorks detail modal surfaces a detected job", async () => {
+  const page = await context.newPage();
+  const url =
+    "https://waterlooworks.uwaterloo.ca/myAccount/co-op/full/jobs.htm";
+  try {
+    await page.route(url, (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "text/html; charset=utf-8",
+        body: `<!doctype html>
+          <html>
+            <body class="nPostingController page--1430 is--my-account new-student__posting-search loaded">
+              <div class="posting-list-underlay">
+                <table>
+                  <tbody>
+                    <tr><td>AI Toolchain Software Developer</td><td>8</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <div role="dialog" aria-modal="true">
+                <section class="dashboard-header">
+                  <div class="dashboard-header__posting-title">
+                    <span>471264</span>
+                    <h2>AI Toolchain Software Developer</h2>
+                  </div>
+                  <p>onsemi - Industrial Solutions Division</p>
+                </section>
+                <nav>OVERVIEW MAP WORK TERM RATINGS</nav>
+                <section>
+                  <h3>JOB POSTING INFORMATION</h3>
+                  <p>Work Term:</p>
+                  <p>2026 - Fall</p>
+                  <p>Job Type:</p>
+                  <p>Co-op Main</p>
+                  <p>Job Title:</p>
+                  <p>AI Toolchain Software Developer</p>
+                  <p>Employer Internal Job Number:</p>
+                  <p>SK</p>
+                  <p>Number of Job Openings:</p>
+                  <p>1</p>
+                  <p>Level:</p>
+                  <p>Junior</p>
+                  <p>Intermediate</p>
+                  <p>Senior</p>
+                  <p>Region:</p>
+                  <p>ON - Waterloo Region</p>
+                  <p>Job - City:</p>
+                  <p>Waterloo</p>
+                  <p>Job Summary:</p>
+                  <p>Build and maintain internal AI developer tools for industrial semiconductor software teams.</p>
+                </section>
+              </div>
+            </body>
+          </html>`,
+      }),
+    );
+    await page.goto(url);
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(800);
+
+    const surface = await sendMessageToTab<{
+      page: { job: { title: string; company: string; source: string } | null };
+      tab: { supported: boolean; contentScriptReady: boolean };
+    }>(context, extensionId, "waterlooworks.uwaterloo.ca", {
+      type: "GET_SURFACE_CONTEXT",
+    });
+
+    expect(surface.tab).toMatchObject({
+      supported: true,
+      contentScriptReady: true,
+    });
+    expect(surface.page.job).toMatchObject({
+      title: "AI Toolchain Software Developer",
+      company: "onsemi - Industrial Solutions Division",
+      source: "waterlooworks",
+    });
+  } finally {
+    await page.close();
+  }
+});
+
 test("Greenhouse bulk import surfaces duplicate counts from the extension response", async () => {
   const localExtension = await launchExtensionContext();
   const requests: unknown[] = [];
@@ -347,8 +496,9 @@ test("Greenhouse bulk import surfaces duplicate counts from the extension respon
         response.end(JSON.stringify({ error: "not found" }));
       });
     });
-    instance.listen(3001, "127.0.0.1", () => resolve(instance));
+    instance.listen(0, "127.0.0.1", () => resolve(instance));
   });
+  const { port } = server.address() as AddressInfo;
 
   await seedExtensionStorage(
     localExtension.context,
@@ -357,7 +507,7 @@ test("Greenhouse bulk import surfaces duplicate counts from the extension respon
       authToken: "test-token",
       tokenExpiry: "2099-01-01T00:00:00.000Z",
       cachedProfile: null,
-      apiBaseUrl: "http://127.0.0.1:3001",
+      apiBaseUrl: `http://127.0.0.1:${port}`,
       settings: {
         autoFillEnabled: true,
         showConfidenceIndicators: true,

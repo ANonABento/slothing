@@ -9,7 +9,7 @@
 //   <bulk-result> imported/attempted/pages summary + optional "View tracker →"
 //   <inline-error> if a run failed
 //
-// Visual tokens come from `popup/styles.css` (semantic violet/cream palette).
+// Visual tokens come from `popup/styles.css` (paper/ink/rust palette).
 // No hardcoded colors, no inline color styles.
 
 import React from "react";

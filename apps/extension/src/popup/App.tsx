@@ -1,22 +1,20 @@
 import React, { useEffect, useState } from "react";
 import type {
   ExtensionProfile,
-  ExtensionResumeSummary,
+  PageSurfaceContext,
   ScrapedJob,
 } from "@/shared/types";
 import { formatRelative } from "@slothing/shared/formatters";
 import { scoreResume } from "@slothing/shared/scoring";
+import { DEFAULT_API_BASE_URL } from "@/shared/types";
 import { sendMessage, Messages } from "@/shared/messages";
 import { messageForError } from "@/shared/error-messages";
-import { opportunityDetailUrl, opportunityReviewUrl } from "./deep-links";
+import { opportunityReviewUrl } from "./deep-links";
 import {
   BulkSourceCard,
   type BulkScrapeMode,
   type BulkScrapeResult,
 } from "./BulkSourceCard";
-
-/** Sentinel value used for the picker's "Master profile" option (#34). */
-const MASTER_RESUME_OPTION = "__master__";
 
 type ViewState =
   | "loading"
@@ -24,16 +22,6 @@ type ViewState =
   | "session-lost"
   | "authenticated"
   | "error";
-type PageAction = "tailor" | "cover-letter" | "import";
-
-/**
- * Success state for the single-job action card. `opportunityId` is populated
- * for imports so the popup can render a "View in tracker →" deep-link (#31).
- */
-interface ActionSuccess {
-  action: PageAction;
-  opportunityId?: string;
-}
 
 interface PageStatus {
   hasForm: boolean;
@@ -41,6 +29,8 @@ interface PageStatus {
   detectedFields: number;
   scrapedJob: ScrapedJob | null;
 }
+
+type PageProbeState = "unknown" | "ready" | "needs-refresh";
 
 type WwPageKind = "list" | "detail" | "other";
 interface WwPageState {
@@ -77,6 +67,18 @@ const BULK_SOURCE_URL_PATTERNS: Record<BulkSourceKey, RegExp[]> = {
   workday: [/\.myworkdayjobs\.com\//, /\.workdayjobs\.com\//],
 };
 
+const CONTENT_SCRIPT_URL_PATTERNS = [
+  /linkedin\.com\//,
+  /indeed\.com\//,
+  /greenhouse\.io\//,
+  /boards\.greenhouse\.io\//,
+  /lever\.co\//,
+  /jobs\.lever\.co\//,
+  /waterlooworks\.uwaterloo\.ca\//,
+  /workdayjobs\.com\//,
+  /myworkdayjobs\.com\//,
+];
+
 function matchBulkSource(url: string | undefined): BulkSourceKey | null {
   if (!url) return null;
   for (const key of Object.keys(BULK_SOURCE_URL_PATTERNS) as BulkSourceKey[]) {
@@ -85,19 +87,26 @@ function matchBulkSource(url: string | undefined): BulkSourceKey | null {
   return null;
 }
 
+function hasContentScriptHost(url: string | undefined): boolean {
+  return (
+    !!url && CONTENT_SCRIPT_URL_PATTERNS.some((pattern) => pattern.test(url))
+  );
+}
+
 export default function App() {
   const [viewState, setViewState] = useState<ViewState>("loading");
   const [profile, setProfile] = useState<ExtensionProfile | null>(null);
   const [pageStatus, setPageStatus] = useState<PageStatus | null>(null);
+  const [surfaceContext, setSurfaceContext] =
+    useState<PageSurfaceContext | null>(null);
+  const [activeTabId, setActiveTabId] = useState<number | null>(null);
+  const [activeTabUrl, setActiveTabUrl] = useState<string | null>(null);
+  const [pageProbeState, setPageProbeState] =
+    useState<PageProbeState>("unknown");
   const [error, setError] = useState<string | null>(null);
-  const [actionInFlight, setActionInFlight] = useState<PageAction | null>(null);
-  const [actionError, setActionError] = useState<string | null>(null);
-  const [actionSuccess, setActionSuccess] = useState<ActionSuccess | null>(
-    null,
-  );
-  // Cached so the success row can render "View in tracker" links without
-  // querying GET_AUTH_STATUS again. Populated from the auth-status response
-  // on first load and kept stable for the lifetime of the popup.
+  // Cached so dashboard/review links can render without querying
+  // GET_AUTH_STATUS again. Populated from the auth-status response on first
+  // load and kept stable for the lifetime of the popup.
   const [apiBaseUrl, setApiBaseUrl] = useState<string | null>(null);
   const [wwState, setWwState] = useState<WwPageState | null>(null);
   const [wwBulkInFlight, setWwBulkInFlight] = useState<BulkScrapeMode | null>(
@@ -122,20 +131,30 @@ export default function App() {
     Partial<Record<BulkSourceKey, string>>
   >({});
   const [confirmingLogout, setConfirmingLogout] = useState(false);
-  // #34 — multi-resume picker. Loaded lazily once we know we're authenticated;
-  // selection defaults to the master profile and is reset whenever a new
-  // success/error finishes so a follow-up tailor starts from a clean slate.
-  const [resumeOptions, setResumeOptions] = useState<ExtensionResumeSummary[]>(
-    [],
-  );
-  const [selectedResumeId, setSelectedResumeId] =
-    useState<string>(MASTER_RESUME_OPTION);
   const profileScore = profile ? scoreResume({ profile }).overall : null;
 
   useEffect(() => {
     checkAuthStatus();
     checkPageStatus();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    const listener = (message: { type?: string }) => {
+      if (message.type === "AUTH_STATUS_CHANGED") {
+        void checkAuthStatus();
+      }
+    };
+    chrome.runtime.onMessage.addListener(listener);
+    return () => chrome.runtime.onMessage.removeListener(listener);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (viewState !== "session-lost") return;
+    const intervalId = window.setInterval(() => {
+      void checkAuthStatus();
+    }, 1000);
+    return () => window.clearInterval(intervalId);
+  }, [viewState]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function checkAuthStatus() {
     try {
@@ -173,22 +192,6 @@ export default function App() {
     if (response.success && response.data) {
       setProfile(response.data);
     }
-    // Fire-and-forget the resume list (#34). Failure is non-fatal — the picker
-    // just doesn't render, falling back to the previous master-only flow.
-    loadResumes();
-  }
-
-  async function loadResumes() {
-    try {
-      const response = await sendMessage<{
-        resumes: ExtensionResumeSummary[];
-      }>(Messages.listResumes());
-      if (response.success && response.data?.resumes) {
-        setResumeOptions(response.data.resumes);
-      }
-    } catch {
-      // Non-fatal: leave the picker hidden.
-    }
   }
 
   async function checkPageStatus() {
@@ -197,15 +200,30 @@ export default function App() {
       currentWindow: true,
     });
     if (tab?.id) {
+      setActiveTabId(tab.id);
+      setActiveTabUrl(tab.url || null);
       try {
-        const response = await chrome.tabs.sendMessage(tab.id, {
-          type: "GET_PAGE_STATUS",
-        });
+        const response = await chrome.tabs.sendMessage(
+          tab.id,
+          Messages.getSurfaceContext(),
+        );
         if (response) {
-          setPageStatus(response);
+          const context = response as PageSurfaceContext;
+          setSurfaceContext(context);
+          setPageStatus({
+            hasForm: context.page.hasApplicationForm,
+            hasJobListing: context.page.job !== null,
+            detectedFields: context.page.detectedFieldCount,
+            scrapedJob: context.page.job,
+          });
+          setPageProbeState("ready");
         }
       } catch {
-        // Content script not loaded
+        setPageProbeState(
+          !tab.url || hasContentScriptHost(tab.url)
+            ? "needs-refresh"
+            : "unknown",
+        );
       }
       if (tab.url && /waterlooworks\.uwaterloo\.ca/.test(tab.url)) {
         try {
@@ -318,8 +336,19 @@ export default function App() {
   }
 
   async function handleConnect() {
-    await sendMessage(Messages.openAuth());
-    window.close();
+    setError(null);
+    try {
+      const response = await sendMessage(Messages.openAuth());
+      if (response.success) {
+        window.close();
+        return;
+      }
+      setError(messageForError(new Error(response.error || "Failed to open")));
+      setViewState("error");
+    } catch (err) {
+      setError(messageForError(err));
+      setViewState("error");
+    }
   }
 
   async function handleLogout() {
@@ -334,84 +363,32 @@ export default function App() {
     setConfirmingLogout(false);
   }
 
-  async function handleFillForm() {
-    const [tab] = await chrome.tabs.query({
-      active: true,
-      currentWindow: true,
-    });
-    if (tab?.id) {
-      chrome.tabs.sendMessage(tab.id, { type: "TRIGGER_FILL" });
+  async function handleOpenDashboard() {
+    const baseUrl = await resolveApiBaseUrl();
+    chrome.tabs.create({ url: `${baseUrl}/dashboard` });
+    window.close();
+  }
+
+  async function handleShowPanel() {
+    if (!activeTabId) return;
+    try {
+      const response = await chrome.tabs.sendMessage(activeTabId, {
+        type: "SHOW_SLOTHING_PANEL",
+      });
+      if (!response?.success) {
+        await checkPageStatus();
+        return;
+      }
+      window.close();
+    } catch {
+      await chrome.tabs.reload(activeTabId);
       window.close();
     }
   }
 
-  async function handleImportJob() {
-    if (!pageStatus?.scrapedJob) return;
-    setActionInFlight("import");
-    setActionError(null);
-    try {
-      const response = await sendMessage<{
-        opportunityIds?: string[];
-      }>(Messages.importJob(pageStatus.scrapedJob));
-      if (response.success) {
-        // Capture the opportunity id so the success row can deep-link into
-        // /opportunities/[id] (#31). The import endpoint guarantees at least
-        // one id on success, but be defensive about the array shape.
-        const opportunityId = response.data?.opportunityIds?.[0];
-        setActionSuccess({ action: "import", opportunityId });
-        // Don't auto-close anymore — the success row now offers a follow-up
-        // action ("View in tracker →"), so leave the popup open until the
-        // user dismisses or clicks through.
-      } else {
-        setActionError(
-          messageForError(new Error(response.error || "Failed to import job")),
-        );
-      }
-    } catch (err) {
-      setActionError(messageForError(err));
-    } finally {
-      setActionInFlight(null);
-    }
-  }
-
-  async function handleGenerateFromPage(action: Exclude<PageAction, "import">) {
-    if (!pageStatus?.scrapedJob) return;
-    setActionInFlight(action);
-    setActionError(null);
-    try {
-      // #34 — only thread `baseResumeId` through when the user actually picked
-      // a non-master resume. Cover-letter generation doesn't take a base today,
-      // so we only honor the selection for the tailor action.
-      const baseResumeId =
-        action === "tailor" && selectedResumeId !== MASTER_RESUME_OPTION
-          ? selectedResumeId
-          : undefined;
-      const message =
-        action === "tailor"
-          ? Messages.tailorFromPage(pageStatus.scrapedJob, baseResumeId)
-          : Messages.generateCoverLetterFromPage(pageStatus.scrapedJob);
-      const response = await sendMessage<{ url: string }>(message);
-      if (response.success && response.data?.url) {
-        chrome.tabs.create({ url: response.data.url });
-        setActionSuccess({ action });
-        setTimeout(() => window.close(), 1500);
-      } else {
-        setActionError(
-          messageForError(
-            new Error(response.error || "Failed to generate document"),
-          ),
-        );
-      }
-    } catch (err) {
-      setActionError(messageForError(err));
-    } finally {
-      setActionInFlight(null);
-    }
-  }
-
-  async function handleOpenDashboard() {
-    const baseUrl = await resolveApiBaseUrl();
-    chrome.tabs.create({ url: `${baseUrl}/dashboard` });
+  async function handleRefreshTab() {
+    if (!activeTabId) return;
+    await chrome.tabs.reload(activeTabId);
     window.close();
   }
 
@@ -425,14 +402,7 @@ export default function App() {
     if (apiBaseUrl) return apiBaseUrl;
     const response = await sendMessage(Messages.getAuthStatus());
     const data = response.data as { apiBaseUrl?: string } | undefined;
-    return data?.apiBaseUrl || "http://localhost:3000";
-  }
-
-  /** Opens the imported opportunity in a new tab and closes the popup. (#31) */
-  async function handleViewOpportunity(opportunityId: string) {
-    const baseUrl = await resolveApiBaseUrl();
-    chrome.tabs.create({ url: opportunityDetailUrl(baseUrl, opportunityId) });
-    window.close();
+    return data?.apiBaseUrl || DEFAULT_API_BASE_URL;
   }
 
   /** Opens the review queue for the user to triage their bulk imports. (#31) */
@@ -447,6 +417,55 @@ export default function App() {
     if (name) return name.charAt(0).toUpperCase();
     const email = profile?.contact?.email;
     return email ? email.charAt(0).toUpperCase() : "S";
+  }
+
+  function supportedTabLabel(): string | null {
+    const url = surfaceContext?.tab.url || activeTabUrl || undefined;
+    if (!url || !hasContentScriptHost(url)) return null;
+    if (/waterlooworks\.uwaterloo\.ca/.test(url)) return "WaterlooWorks";
+    if (/linkedin\.com/.test(url)) return "LinkedIn";
+    if (/indeed\.com/.test(url)) return "Indeed";
+    if (/greenhouse\.io/.test(url)) return "Greenhouse";
+    if (/lever\.co/.test(url)) return "Lever";
+    if (/workdayjobs\.com/.test(url)) return "Workday";
+    return "this job site";
+  }
+
+  function signedOutContextCopy(): {
+    title: string;
+    body: string;
+    site?: string;
+  } | null {
+    const site = supportedTabLabel();
+    if (wwState?.kind === "list") {
+      return {
+        title: "WaterlooWorks jobs found",
+        body: `Connect Slothing to import and track these ${wwState.rowCount} postings.`,
+        site: "WaterlooWorks",
+      };
+    }
+    if (pageStatus?.scrapedJob) {
+      return {
+        title: "Job detected",
+        body: "Connect Slothing to tailor, save, and autofill from this posting.",
+        site,
+      };
+    }
+    if (pageStatus?.hasForm) {
+      return {
+        title: "Application page detected",
+        body: "Connect Slothing to autofill this application from your profile.",
+        site,
+      };
+    }
+    if (site) {
+      return {
+        title: `${site} is supported`,
+        body: "Connect Slothing to scan jobs, import postings, and open job tools here.",
+        site,
+      };
+    }
+    return null;
   }
 
   if (viewState === "loading") {
@@ -478,16 +497,25 @@ export default function App() {
   }
 
   if (viewState === "unauthenticated") {
+    const contextCopy = signedOutContextCopy();
     return (
       <div className="popup">
-        <div className="hero">
-          <div className="hero-mark">S</div>
-          <h1 className="hero-title">Slothing</h1>
+        <div className={`hero ${contextCopy ? "contextual" : ""}`}>
+          <img
+            className="hero-mark"
+            src={chrome.runtime.getURL("brand/slothing-mark.png")}
+            alt=""
+          />
+          {contextCopy?.site && (
+            <span className="hero-kicker">{contextCopy.site}</span>
+          )}
+          <h1 className="hero-title">{contextCopy?.title || "Slothing"}</h1>
           <p className="hero-sub">
-            Auto-fill applications. Import jobs. Track everything.
+            {contextCopy?.body ||
+              "Auto-fill applications. Import jobs. Track everything."}
           </p>
           <button className="btn primary block" onClick={handleConnect}>
-            Connect account
+            {contextCopy ? "Connect to use job tools" : "Connect account"}
           </button>
           <p className="hero-foot">You'll sign in once — Slothing remembers.</p>
         </div>
@@ -496,16 +524,21 @@ export default function App() {
   }
 
   if (viewState === "session-lost") {
+    const contextCopy = signedOutContextCopy();
     return (
       <div className="popup">
-        <div className="hero session-lost">
+        <div className={`hero session-lost ${contextCopy ? "contextual" : ""}`}>
           <div className="hero-mark warn" aria-hidden>
             !
           </div>
+          {contextCopy?.site && (
+            <span className="hero-kicker">{contextCopy.site}</span>
+          )}
           <h1 className="hero-title">Session lost</h1>
           <p className="hero-sub">
-            Slothing got reset by your browser. Reconnect to pick up where you
-            left off — your profile and data are safe.
+            {contextCopy
+              ? "Reconnect to use Slothing job tools on this page."
+              : "Slothing got reset by your browser. Reconnect to pick up where you left off — your profile and data are safe."}
           </p>
           <button className="btn primary block" onClick={handleConnect}>
             Reconnect
@@ -517,24 +550,38 @@ export default function App() {
   }
 
   const detectedJob = pageStatus?.scrapedJob;
+  const workspaceVisible = !!surfaceContext?.workspace.visible;
   const showWwBulk = wwState && wwState.kind === "list";
   const detectedBulkSources = (
     Object.keys(BULK_SOURCE_LABELS) as BulkSourceKey[]
   ).filter((key) => bulkStates[key]?.detected);
-  const showImportJobCard =
-    detectedJob ||
-    (wwState && wwState.kind === "detail" && pageStatus?.scrapedJob);
   const nothingDetected =
     !pageStatus?.hasForm &&
-    !showImportJobCard &&
+    !detectedJob &&
     !showWwBulk &&
-    detectedBulkSources.length === 0;
+    detectedBulkSources.length === 0 &&
+    pageProbeState !== "needs-refresh";
+  const hasPageStatus =
+    !!detectedJob || !!pageStatus?.hasForm || pageProbeState === "ready";
+  const currentTabTitle = workspaceVisible
+    ? "Job workspace active"
+    : detectedJob
+      ? "Job detected"
+      : pageStatus?.hasForm
+        ? "Application detected"
+        : pageProbeState === "ready"
+          ? "No job detected"
+          : "Unsupported page";
 
   return (
     <div className="popup">
       <header className="topbar">
         <div className="brand">
-          <span className="brand-mark">S</span>
+          <img
+            className="brand-mark"
+            src={chrome.runtime.getURL("brand/slothing-mark.png")}
+            alt=""
+          />
           <span className="brand-name">Slothing</span>
         </div>
         <span className="pill ok" title="Extension connected">
@@ -575,101 +622,55 @@ export default function App() {
       </section>
 
       <main className="content">
-        {pageStatus?.hasForm && (
-          <article className="card accent">
-            <header className="card-head">
-              <span className="card-title">Application form detected</span>
-              <span className="badge">{pageStatus.detectedFields} fields</span>
-            </header>
-            <button className="btn primary block" onClick={handleFillForm}>
-              Auto-fill form
+        {pageProbeState === "needs-refresh" && (
+          <article className="status-card">
+            <div className="status-copy">
+              <span className="status-eyebrow">Current tab</span>
+              <span className="status-title">Page needs refresh</span>
+            </div>
+            <button className="btn block" onClick={handleRefreshTab}>
+              Refresh tab
             </button>
           </article>
         )}
 
-        {showImportJobCard && detectedJob && (
-          <article className="card">
-            <header className="card-head">
-              <span className="card-title clip" title={detectedJob.title}>
-                {detectedJob.title}
-              </span>
-              <span className="card-sub clip">{detectedJob.company}</span>
-            </header>
-            {actionSuccess ? (
-              <div className="success-row">
-                <span className="check">✓</span>
-                <span className="success-label">
-                  {actionSuccess.action === "import"
-                    ? "Imported to opportunities"
-                    : "Opening tab…"}
+        {hasPageStatus && (
+          <article className="status-card active">
+            <header className="status-head">
+              <div className="status-copy">
+                <span className="status-eyebrow">Current tab</span>
+                <span className="status-title">{currentTabTitle}</span>
+              </div>
+              {pageStatus?.hasForm && (
+                <span className="badge">
+                  {pageStatus.detectedFields} fields
                 </span>
-                {actionSuccess.action === "import" &&
-                  actionSuccess.opportunityId && (
-                    <button
-                      className="success-link"
-                      onClick={() =>
-                        handleViewOpportunity(actionSuccess.opportunityId!)
-                      }
-                    >
-                      View in tracker →
-                    </button>
-                  )}
+              )}
+            </header>
+            {detectedJob ? (
+              <div className="page-summary">
+                <span className="clip" title={detectedJob.title}>
+                  {detectedJob.title}
+                </span>
+                <span className="card-sub clip">{detectedJob.company}</span>
               </div>
             ) : (
-              <>
-                {resumeOptions.length > 0 && (
-                  <label className="resume-picker">
-                    <span className="resume-picker-label">Base on</span>
-                    <select
-                      className="resume-picker-select"
-                      value={selectedResumeId}
-                      onChange={(e) => setSelectedResumeId(e.target.value)}
-                      disabled={actionInFlight !== null}
-                      aria-label="Choose the resume to tailor from"
-                    >
-                      <option value={MASTER_RESUME_OPTION}>
-                        Master profile
-                      </option>
-                      {resumeOptions.map((resume) => (
-                        <option key={resume.id} value={resume.id}>
-                          {resume.name}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                )}
-                <div className="action-grid">
-                  <button
-                    className="btn primary"
-                    onClick={() => handleGenerateFromPage("tailor")}
-                    disabled={actionInFlight !== null}
-                  >
-                    {actionInFlight === "tailor"
-                      ? "Tailoring…"
-                      : "Tailor resume"}
-                  </button>
-                  <button
-                    className="btn"
-                    onClick={() => handleGenerateFromPage("cover-letter")}
-                    disabled={actionInFlight !== null}
-                  >
-                    {actionInFlight === "cover-letter"
-                      ? "Writing…"
-                      : "Cover letter"}
-                  </button>
-                  <button
-                    className="btn ghost full"
-                    onClick={handleImportJob}
-                    disabled={actionInFlight !== null}
-                  >
-                    {actionInFlight === "import"
-                      ? "Importing…"
-                      : "Just import to tracker"}
-                  </button>
-                </div>
-              </>
+              <p className="inline-note">
+                {pageStatus?.hasForm
+                  ? "Ready on this application page."
+                  : "Open a job posting, then scan again."}
+              </p>
             )}
-            {actionError && <p className="inline-error">{actionError}</p>}
+            {detectedJob && (
+              <button className="btn primary block" onClick={handleShowPanel}>
+                Open job tools
+              </button>
+            )}
+            {!detectedJob && pageProbeState === "ready" && (
+              <button className="btn block" onClick={checkPageStatus}>
+                Scan again
+              </button>
+            )}
           </article>
         )}
 
@@ -706,20 +707,12 @@ export default function App() {
           );
         })}
 
-        {nothingDetected && (
+        {nothingDetected && !hasPageStatus && (
           <div className="idle">
-            <p className="idle-title">No job detected on this page</p>
+            <p className="idle-title">Unsupported page</p>
             <p className="idle-sub">
-              Open a posting on any of these and Slothing wakes up:
+              Open a supported job posting or application page.
             </p>
-            <div className="site-chips">
-              <span className="site-chip">LinkedIn</span>
-              <span className="site-chip">Indeed</span>
-              <span className="site-chip">Greenhouse</span>
-              <span className="site-chip">Lever</span>
-              <span className="site-chip">WaterlooWorks</span>
-              <span className="site-chip">Workday</span>
-            </div>
           </div>
         )}
 

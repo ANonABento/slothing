@@ -20,7 +20,7 @@ pnpm --filter @slothing/extension build:chrome   # → apps/extension/dist/
 pnpm --filter @slothing/extension build:firefox  # → apps/extension/dist-firefox/
 ```
 
-The build pipeline pulls icons from `icons/source/slothing.svg` (a branded compass design), renders them at 16/32/48/128 via `sharp`, and copies them into `src/assets/icons/`, `dist/icons/`, and `dist-firefox/icons/` automatically. All four PNGs stay under 4KB.
+The build pipeline pulls icons from `icons/source/slothing.svg` (a branded compass design), renders them at 16/32/48/128 via `sharp`, and copies them into `src/assets/icons/`, `dist/icons/`, and `dist-firefox/icons/` automatically. All four PNGs stay under 4KB. UI surfaces use the web app brand assets from `apps/web/public/brand/`; webpack resizes and copies `slothing-mark.png` and `slothing-logo.png` into `dist/brand/` and `dist-firefox/brand/`.
 
 ### Load in Chrome
 
@@ -102,11 +102,11 @@ Bulk scrapes respect whatever filters you've already applied in the WaterlooWork
 
 ### 6. Toolbar badge (job-detected indicator)
 
-When the content script's scraper successfully detects a job listing on the current page, the extension's toolbar icon shows a `!` badge (blue `#3b82f6`) with the hover title `Job detected — press Cmd+Shift+I to import`. The badge clears automatically when the tab navigates to a new URL.
+When the content script's scraper successfully detects a job listing on the current page, the extension's toolbar icon shows a `!` badge (rust `#b8704a`) with the hover title `Job detected — press Cmd+Shift+I to import`. The badge clears automatically when the tab navigates to a new URL.
 
 The behavior is controlled by the `notifyOnJobDetected` setting (default: enabled). Toggle it from the options page if you find it noisy.
 
-Implementation: content script sends a `JOB_DETECTED` message to the background once per page after the first successful scrape; the background calls `chrome.action.setBadgeText/Color/Title` and tracks per-tab state. Reset on `chrome.tabs.onUpdated` when the URL changes. SPA navigation (URL changes without a full reload) is handled by re-arming the notify-once flag.
+Implementation: content script sends a `JOB_DETECTED` message to the background once per page after the first successful scrape; the background calls the toolbar action API (`chrome.action` on MV3, `browserAction` fallback on Firefox MV2) and tracks per-tab state. Reset on `chrome.tabs.onUpdated` when the URL changes. SPA navigation (URL changes without a full reload) is handled by re-arming the notify-once flag.
 
 ### 7. Settings
 
@@ -293,6 +293,59 @@ SLOTHING_INTEGRATION=1 pnpm --filter @slothing/extension test:e2e -- tests/e2e/s
 ```
 
 CI workflow at `.github/workflows/extension-e2e.yml` runs the e2e suite on every push that touches `apps/extension/`.
+
+### Firefox Release QA
+
+Build and lint the Firefox package before AMO submission:
+
+```bash
+pnpm --filter @slothing/extension build:firefox
+pnpm dlx web-ext@latest lint -s apps/extension/dist-firefox
+pnpm --filter @slothing/extension smoke:firefox
+```
+
+`web-ext lint` currently reports 0 errors and 4 warnings. The remaining
+`innerHTML` warnings are emitted by React 18's bundled DOM renderer in
+`sharedUi.js` and the copy bundled into `content.js`; extension source does not
+set untrusted HTML in those paths. The previous source-level WaterlooWorks
+bullet-list parser warning was removed by switching to `DOMParser`.
+
+Firefox manifest notes:
+
+- `browser_specific_settings.gecko.data_collection_permissions` declares the
+  required data categories for auth, user profile details, and job/application
+  page content sent to the Slothing API.
+- `strict_min_version` is set to Firefox 142.0 so the data-collection manifest
+  key is supported by both desktop Firefox and Firefox for Android validators.
+- Toolbar badge calls use `chrome.action` when available and fall back to
+  `browserAction` for the Firefox MV2 build.
+
+Automated Firefox smoke (`smoke:firefox`) launches the built Firefox extension
+through `web-ext`, drives Firefox headlessly over WebDriver BiDi, verifies the
+localStorage connect callback, and covers popup, options, sidebar, autofill,
+save-job import, and disconnect against the local demo form. For headed manual
+debugging, run:
+
+```bash
+pnpm --filter @slothing/extension manual:firefox
+```
+
+Pass a URL to open a specific site:
+
+```bash
+pnpm --filter @slothing/extension manual:firefox https://waterlooworks.uwaterloo.ca/
+```
+
+Use the manual checklist below when a human browser pass is required before AMO
+submission:
+
+- [ ] Build Firefox extension (`pnpm --filter @slothing/extension build:firefox`)
+- [ ] Open `about:debugging#/runtime/this-firefox`
+- [ ] Load `apps/extension/dist-firefox/manifest.json`
+- [ ] Start the Slothing web app locally
+- [ ] Connect account through the popup
+- [ ] Open `apps/extension/demo/job-form.html` through a localhost server
+- [ ] Verify popup state, autofill, import, sidebar, options, and disconnect
 
 ### Manual Testing Checklist
 

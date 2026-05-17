@@ -3,9 +3,13 @@ const webpack = require("webpack");
 const CopyPlugin = require("copy-webpack-plugin");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+const sharp = require("sharp");
 
 const isProduction = process.env.NODE_ENV === "production";
 const target = process.env.TARGET || "chrome"; // 'chrome' or 'firefox'
+const defaultApiBaseUrl =
+  process.env.SLOTHING_EXTENSION_API_BASE_URL ||
+  (isProduction ? "https://slothing.work" : "http://localhost:3000");
 
 // Select manifest based on target
 const manifestFile =
@@ -62,6 +66,8 @@ module.exports = {
   plugins: [
     new webpack.DefinePlugin({
       "process.env.BUILD_TARGET": JSON.stringify(target),
+      "process.env.SLOTHING_EXTENSION_API_BASE_URL":
+        JSON.stringify(defaultApiBaseUrl),
     }),
     new MiniCssExtractPlugin({
       filename: "[name].css",
@@ -80,6 +86,21 @@ module.exports = {
       patterns: [
         { from: manifestFile, to: "manifest.json" },
         { from: "src/assets/icons", to: "icons", noErrorOnMissing: true },
+        {
+          from: path.resolve(__dirname, "../web/public/brand/slothing-mark.png"),
+          to: "brand/slothing-mark.png",
+          transform: (content) =>
+            sharp(content).resize(64, 64).png({ compressionLevel: 9 }).toBuffer(),
+        },
+        {
+          from: path.resolve(__dirname, "../web/public/brand/slothing-logo.png"),
+          to: "brand/slothing-logo.png",
+          transform: (content) =>
+            sharp(content)
+              .resize({ width: 180, withoutEnlargement: true })
+              .png({ compressionLevel: 9 })
+              .toBuffer(),
+        },
       ],
     }),
   ],

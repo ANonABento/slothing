@@ -147,13 +147,19 @@ async function handleMessage(
         type: string;
         token?: string;
         expiresAt?: string;
+        apiBaseUrl?: string;
       };
       if (!payload.token || !payload.expiresAt) {
         return { success: false, error: "Missing token or expiresAt" };
       }
       try {
-        await setAuthToken(payload.token, payload.expiresAt);
+        await setAuthToken(
+          payload.token,
+          payload.expiresAt,
+          authCallbackBaseUrl(payload.apiBaseUrl, sender.url),
+        );
         resetAPIClient();
+        notifyAuthStatusChanged();
         return { success: true };
       } catch (error) {
         return {
@@ -324,6 +330,23 @@ async function handleOpenAuth(): Promise<ExtensionResponse> {
     return { success: true };
   } catch (error) {
     return { success: false, error: (error as Error).message };
+  }
+}
+
+function authCallbackBaseUrl(
+  explicitUrl?: string,
+  senderUrl?: string,
+): string | undefined {
+  const candidate = explicitUrl || senderUrl;
+  if (!candidate) return undefined;
+  try {
+    const url = new URL(candidate);
+    if (url.protocol !== "http:" && url.protocol !== "https:") {
+      return undefined;
+    }
+    return url.origin;
+  } catch {
+    return undefined;
   }
 }
 
@@ -712,9 +735,14 @@ chrome.runtime.onMessageExternal.addListener(
       message.token &&
       message.expiresAt
     ) {
-      setAuthToken(message.token, message.expiresAt)
+      setAuthToken(
+        message.token,
+        message.expiresAt,
+        authCallbackBaseUrl(message.apiBaseUrl, sender.url),
+      )
         .then(() => {
           resetAPIClient();
+          notifyAuthStatusChanged();
           sendResponse({ success: true });
         })
         .catch((error) => {
@@ -724,6 +752,17 @@ chrome.runtime.onMessageExternal.addListener(
     }
   },
 );
+
+function notifyAuthStatusChanged(): void {
+  try {
+    chrome.runtime.sendMessage({ type: "AUTH_STATUS_CHANGED" }, () => {
+      // No popup may be open; consume lastError so Chrome does not log noise.
+      void chrome.runtime.lastError;
+    });
+  } catch {
+    // No active extension page listeners.
+  }
+}
 
 // Handle keyboard shortcuts
 chrome.commands.onCommand.addListener(async (command) => {

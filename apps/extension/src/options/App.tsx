@@ -175,16 +175,20 @@ export default function OptionsApp() {
   return (
     <div className="options-container">
       <header>
-        <div className="header-mark" aria-hidden>
-          S
-        </div>
+        <img
+          className="header-mark"
+          src={chrome.runtime.getURL("brand/slothing-mark.png")}
+          alt=""
+        />
         <div className="header-text">
           <h1>Slothing Settings</h1>
-          <p className="subtitle">Configure your job application assistant</p>
+          <p className="subtitle">
+            Connection, autofill, learning, and tracking
+          </p>
         </div>
       </header>
 
-      <section>
+      <section className="settings-card connection-card">
         <h2>Connection</h2>
         <div className="setting-group">
           <label>
@@ -196,7 +200,7 @@ export default function OptionsApp() {
               type="url"
               value={apiUrl}
               onChange={(e) => setApiUrl(e.target.value)}
-              placeholder="http://localhost:3000"
+              placeholder={DEFAULT_API_BASE_URL}
             />
             <button
               onClick={handleApiUrlChange}
@@ -209,7 +213,7 @@ export default function OptionsApp() {
         </div>
       </section>
 
-      <section>
+      <section className="settings-card autofill-card">
         <div className="section-head">
           <h2>Auto-Fill</h2>
           <SaveStatusBadge status={settingsStatus} />
@@ -271,7 +275,7 @@ export default function OptionsApp() {
         </div>
       </section>
 
-      <section>
+      <section className="settings-card compact-card">
         <div className="section-head">
           <h2>Learning</h2>
           <SaveStatusBadge status={settingsStatus} />
@@ -291,9 +295,9 @@ export default function OptionsApp() {
         </div>
       </section>
 
-      <section>
+      <section className="settings-card tracking-card">
         <div className="section-head">
-          <h2>Auto-track applications</h2>
+          <h2>Tracking</h2>
           <SaveStatusBadge status={settingsStatus} />
         </div>
         <div className="setting-group">
@@ -334,7 +338,7 @@ export default function OptionsApp() {
         </div>
       </section>
 
-      <section>
+      <section className="settings-card compact-card">
         <div className="section-head">
           <h2>Notifications</h2>
           <SaveStatusBadge status={settingsStatus} />
@@ -357,7 +361,7 @@ export default function OptionsApp() {
       </section>
 
       {learnedAnswers.length > 0 && (
-        <section>
+        <section className="settings-card saved-answers-card">
           <h2>Saved Answers ({learnedAnswers.length})</h2>
           <div className="answers-list">
             {learnedAnswers.map((answer) => (
@@ -380,14 +384,14 @@ export default function OptionsApp() {
         </section>
       )}
 
-      <section>
+      <section className="settings-card about-card">
         <h2>About</h2>
         <p className="about">
           Slothing Browser Extension v{chrome.runtime.getManifest().version}
         </p>
         <p className="about">
           <a
-            href="https://github.com/your-repo/slothing"
+            href="https://github.com/ANonABento/slothing"
             target="_blank"
             rel="noopener noreferrer"
           >

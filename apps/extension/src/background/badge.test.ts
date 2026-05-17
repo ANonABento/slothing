@@ -5,13 +5,29 @@ import type { ExtensionSettings } from "@/shared/types";
 const mockSetBadgeText = vi.fn().mockResolvedValue(undefined);
 const mockSetBadgeBackgroundColor = vi.fn().mockResolvedValue(undefined);
 const mockSetTitle = vi.fn().mockResolvedValue(undefined);
+const mockBrowserActionSetBadgeText = vi.fn().mockResolvedValue(undefined);
+const mockBrowserActionSetBadgeBackgroundColor = vi
+  .fn()
+  .mockResolvedValue(undefined);
+const mockBrowserActionSetTitle = vi.fn().mockResolvedValue(undefined);
+
+const mockActionApi = {
+  setBadgeText: mockSetBadgeText,
+  setBadgeBackgroundColor: mockSetBadgeBackgroundColor,
+  setTitle: mockSetTitle,
+};
+
+type MutableChrome = {
+  action?: typeof mockActionApi;
+  browserAction?: typeof mockActionApi;
+};
+
+function mutableChrome(): MutableChrome {
+  return chrome as unknown as MutableChrome;
+}
 
 vi.stubGlobal("chrome", {
-  action: {
-    setBadgeText: mockSetBadgeText,
-    setBadgeBackgroundColor: mockSetBadgeBackgroundColor,
-    setTitle: mockSetTitle,
-  },
+  action: mockActionApi,
 });
 
 vi.mock("./storage", () => ({
@@ -40,6 +56,8 @@ const enabledSettings: ExtensionSettings = {
 describe("setBadgeForTab", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mutableChrome().action = mockActionApi;
+    Reflect.deleteProperty(mutableChrome(), "browserAction");
   });
 
   it("sets badge text, color, and title when notifyOnJobDetected is true", async () => {
@@ -91,9 +109,42 @@ describe("setBadgeForTab", () => {
   });
 });
 
+describe("browserAction fallback", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    Reflect.deleteProperty(mutableChrome(), "action");
+    mutableChrome().browserAction = {
+      setBadgeText: mockBrowserActionSetBadgeText,
+      setBadgeBackgroundColor: mockBrowserActionSetBadgeBackgroundColor,
+      setTitle: mockBrowserActionSetTitle,
+    };
+  });
+
+  it("uses browserAction when chrome.action is unavailable", async () => {
+    vi.mocked(getSettings).mockResolvedValue(enabledSettings);
+
+    await setBadgeForTab(12);
+
+    expect(mockBrowserActionSetBadgeText).toHaveBeenCalledWith({
+      text: BADGE_TEXT,
+      tabId: 12,
+    });
+    expect(mockBrowserActionSetBadgeBackgroundColor).toHaveBeenCalledWith({
+      color: BADGE_COLOR,
+      tabId: 12,
+    });
+    expect(mockBrowserActionSetTitle).toHaveBeenCalledWith({
+      title: BADGE_TITLE,
+      tabId: 12,
+    });
+  });
+});
+
 describe("clearBadgeForTab", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mutableChrome().action = mockActionApi;
+    Reflect.deleteProperty(mutableChrome(), "browserAction");
   });
 
   it("clears badge text and title for the given tab", async () => {

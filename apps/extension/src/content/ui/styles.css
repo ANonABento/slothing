@@ -7,7 +7,7 @@
   right: 0;
   bottom: 0;
   left: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(26, 21, 48, 0.36);
   z-index: 999998;
   display: flex;
   align-items: center;
@@ -16,9 +16,10 @@
 }
 
 .slothing-panel {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+  background: #fffaef;
+  border: 1px solid rgba(26, 20, 16, 0.12);
+  border-radius: 10px;
+  box-shadow: 0 14px 32px rgba(26, 21, 48, 0.18);
   max-width: 400px;
   width: 90%;
   max-height: 80vh;
@@ -27,9 +28,9 @@
 
 .slothing-panel-header {
   padding: 16px 20px;
-  background: linear-gradient(135deg, #14b8a6, #0ea5e9);
-  border-radius: 12px 12px 0 0;
-  color: white;
+  background: #1a1530;
+  border-radius: 10px 10px 0 0;
+  color: #fffaef;
 }
 
 .slothing-panel-header h2 {
@@ -44,7 +45,7 @@
 
 .slothing-panel-footer {
   padding: 16px 20px;
-  border-top: 1px solid #eee;
+  border-top: 1px solid rgba(26, 20, 16, 0.12);
   display: flex;
   gap: 12px;
   justify-content: flex-end;
@@ -52,9 +53,9 @@
 
 /* Field highlight styles */
 .slothing-field-highlight {
-  outline: 2px solid #14b8a6 !important;
+  outline: 2px solid #b8704a !important;
   outline-offset: 2px !important;
-  background-color: rgba(20, 184, 166, 0.05) !important;
+  background-color: rgba(184, 112, 74, 0.08) !important;
 }
 
 .slothing-field-highlight-low {
@@ -63,15 +64,15 @@
 }
 
 .slothing-field-filled {
-  outline-color: #10b981 !important;
-  background-color: rgba(16, 185, 129, 0.05) !important;
+  outline-color: #2f6b4f !important;
+  background-color: rgba(47, 107, 79, 0.08) !important;
 }
 
 /* Tooltip styles */
 .slothing-tooltip {
   position: absolute;
-  background: #1a1a1a;
-  color: white;
+  background: #1a1530;
+  color: #fffaef;
   padding: 6px 10px;
   border-radius: 6px;
   font-size: 12px;
@@ -90,7 +91,7 @@
   left: 50%;
   transform: translateX(-50%);
   border: 6px solid transparent;
-  border-top-color: #1a1a1a;
+  border-top-color: #1a1530;
 }
 
 /* Button styles */
@@ -105,8 +106,8 @@
 }
 
 .slothing-btn-primary {
-  background: linear-gradient(135deg, #14b8a6, #0ea5e9);
-  color: white;
+  background: #1a1530;
+  color: #fffaef;
 }
 
 .slothing-btn-primary:hover {
@@ -114,12 +115,13 @@
 }
 
 .slothing-btn-secondary {
-  background: #f0f0f0;
-  color: #333;
+  border: 1px solid rgba(26, 20, 16, 0.12);
+  background: #fffaef;
+  color: #1a1530;
 }
 
 .slothing-btn-secondary:hover {
-  background: #e5e5e5;
+  background: rgba(26, 20, 16, 0.07);
 }
 
 /* Notification toast */
@@ -128,8 +130,9 @@
   bottom: 20px;
   right: 20px;
   padding: 12px 20px;
-  background: #14b8a6;
-  color: white;
+  background: #1a1530;
+  color: #fffaef;
+  border: 1px solid rgba(255, 250, 239, 0.16);
   border-radius: 8px;
   font-size: 14px;
   font-weight: 500;
@@ -138,7 +141,7 @@
 }
 
 .slothing-toast-error {
-  background: #ef4444;
+  background: #991b1b;
 }
 
 .slothing-toast-applied {
@@ -146,15 +149,12 @@
 }
 
 .slothing-toast-applied:focus-visible {
-  outline: 2px solid white;
+  outline: 2px solid #fffaef;
   outline-offset: 2px;
 }
 
-/* P3/#38 — passive LinkedIn capture toast. Same base look as
- * .slothing-toast but shifted hue so users can distinguish "saved for later"
- * from the apply-tracking confirmation. */
 .slothing-toast-linkedin-capture {
-  background: #0a66c2;
+  background: #b8704a;
   cursor: default;
 }
 
@@ -176,8 +176,9 @@
   right: -8px;
   width: 20px;
   height: 20px;
-  background: #14b8a6;
-  color: white;
+  border: 1px solid rgba(26, 20, 16, 0.12);
+  background: #f0d9c1;
+  color: #1a1530;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -199,10 +200,10 @@
   top: 100%;
   left: 0;
   right: 0;
-  background: white;
-  border: 1px solid #ddd;
+  background: #fffaef;
+  border: 1px solid rgba(26, 20, 16, 0.12);
   border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 10px 24px rgba(26, 21, 48, 0.14);
   margin-top: 4px;
   z-index: 999999;
   max-height: 200px;
@@ -212,7 +213,7 @@
 .slothing-suggestion-item {
   padding: 10px 12px;
   cursor: pointer;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid rgba(26, 20, 16, 0.12);
 }
 
 .slothing-suggestion-item:last-child {
@@ -220,18 +221,18 @@
 }
 
 .slothing-suggestion-item:hover {
-  background: #f5f5f5;
+  background: rgba(26, 20, 16, 0.07);
 }
 
 .slothing-suggestion-question {
   font-size: 12px;
-  color: #666;
+  color: #6a5e4a;
   margin-bottom: 4px;
 }
 
 .slothing-suggestion-answer {
   font-size: 14px;
-  color: #333;
+  color: #1a1530;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -239,14 +240,14 @@
 
 .slothing-suggestion-similarity {
   font-size: 11px;
-  color: #14b8a6;
+  color: #b8704a;
   float: right;
 }
 
 /* ---------- Two-pass confidence bands (task #32) ---------- */
-/* Palette mirrored from apps/extension/src/popup/styles.css so the in-page
-   markers feel continuous with the popup. We intentionally don't import the
-   popup stylesheet — content scripts don't share its scope. */
+/* Palette mirrored from the extension editorial tokens so the in-page markers
+   feel continuous with the popup. We intentionally don't import the popup
+   stylesheet because content scripts don't share its scope. */
 
 .slothing-zone-yellow {
   /* Visible 1px warning-tone outline. We layer a box-shadow ring on top of the
@@ -267,9 +268,9 @@
   height: 18px !important;
   margin-left: 6px !important;
   padding: 0 !important;
-  border: 1px solid #6d4aaa !important;
-  background: #ede5fb !important;
-  color: #6d4aaa !important;
+  border: 1px solid rgba(184, 112, 74, 0.35) !important;
+  background: #f0d9c1 !important;
+  color: #8e5132 !important;
   border-radius: 50% !important;
   font-size: 11px !important;
   font-weight: 700 !important;
@@ -277,16 +278,16 @@
   cursor: pointer !important;
   vertical-align: middle !important;
   font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, sans-serif !important;
-  box-shadow: 0 1px 2px rgba(36, 28, 48, 0.08) !important;
+  box-shadow: 0 1px 2px rgba(26, 21, 48, 0.08) !important;
   z-index: 99999 !important;
 }
 
 .slothing-zone-badge:hover {
-  background: #ddd0f5 !important;
+  background: #e6c9ad !important;
 }
 
 .slothing-zone-badge:focus-visible {
-  outline: 2px solid #6d4aaa !important;
+  outline: 2px solid #b8704a !important;
   outline-offset: 2px !important;
 }
 
@@ -295,15 +296,15 @@
   display: block !important;
   min-width: 220px !important;
   max-width: 280px !important;
-  background: #ffffff !important;
-  border: 1px solid #e6dfd6 !important;
+  background: #fffaef !important;
+  border: 1px solid rgba(26, 20, 16, 0.12) !important;
   border-radius: 8px !important;
-  box-shadow: 0 4px 12px rgba(36, 28, 48, 0.12) !important;
+  box-shadow: 0 10px 24px rgba(26, 21, 48, 0.14) !important;
   padding: 8px !important;
   margin: 0 !important;
   z-index: 999999 !important;
   font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, sans-serif !important;
-  color: #241c30 !important;
+  color: #1a1530 !important;
   line-height: 1.4 !important;
 }
 
@@ -313,7 +314,7 @@
   font-weight: 600 !important;
   text-transform: uppercase !important;
   letter-spacing: 0.04em !important;
-  color: #6b6373 !important;
+  color: #6a5e4a !important;
   margin: 0 0 6px 0 !important;
   padding: 0 4px !important;
 }
@@ -350,20 +351,20 @@
 }
 
 .slothing-zone-popover__item:hover {
-  background: #f9f6f1 !important;
-  border-color: #e6dfd6 !important;
+  background: rgba(26, 20, 16, 0.07) !important;
+  border-color: rgba(26, 20, 16, 0.12) !important;
 }
 
 .slothing-zone-popover__label {
   display: block !important;
   font-size: 11px !important;
-  color: #6b6373 !important;
+  color: #6a5e4a !important;
 }
 
 .slothing-zone-popover__value {
   display: block !important;
   font-size: 13px !important;
-  color: #241c30 !important;
+  color: #1a1530 !important;
   font-weight: 500 !important;
   margin-top: 2px !important;
   word-break: break-word !important;

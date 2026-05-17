@@ -1,22 +1,35 @@
 :root {
-  /* Slothing default theme — violet primary, warm cream surfaces, rose accent. */
-  --bg: #faf9f7;
-  --surface: #ffffff;
-  --bg-muted: #f5f1eb;
-  --border: #e6dfd6;
-  --border-strong: #d8cfc1;
-  --text: #241c30;
-  --text-muted: #6b6373;
-  --text-faint: #9a93a3;
-  --primary: #6d4aaa;
-  --primary-hover: #5a3a8f;
-  --primary-soft: #ede5fb;
-  --accent: #b89aef;
-  --rose: #d77ba0;
-  --success-bg: #d6f0e2;
-  --success-text: #19663f;
-  --danger-bg: #fbe2e2;
+  /* Slothing editorial tokens mirrored from the web app's slothing preset. */
+  --bg: #f5efe2;
+  --bg-2: #e9dec8;
+  --paper: #fffaef;
+  --ink: #1a1530;
+  --ink-2: #3a2f24;
+  --ink-3: #6a5e4a;
+  --rule: rgba(26, 20, 16, 0.12);
+  --rule-strong: rgba(26, 20, 16, 0.4);
+  --rule-strong-bg: rgba(26, 20, 16, 0.07);
+  --brand: #b8704a;
+  --brand-dark: #8e5132;
+  --brand-soft: #f0d9c1;
+  --surface: var(--paper);
+  --bg-muted: var(--bg-2);
+  --border: var(--rule);
+  --border-strong: var(--rule-strong);
+  --text: var(--ink);
+  --text-muted: var(--ink-3);
+  --text-faint: rgba(106, 94, 74, 0.72);
+  --primary: var(--ink);
+  --primary-hover: var(--brand-dark);
+  --primary-soft: var(--brand-soft);
+  --accent: var(--brand);
+  --success-bg: #dcebdc;
+  --success-text: #2f6b4f;
+  --danger-bg: #f3d6d1;
   --danger-text: #991b1b;
+  --r-sm: 6px;
+  --r-md: 10px;
+  --r-pill: 9999px;
 }
 
 * {
@@ -28,59 +41,73 @@
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto,
     Oxygen, Ubuntu, sans-serif;
-  font-size: 14px;
-  line-height: 1.55;
+  font-size: 13px;
+  line-height: 1.45;
   color: var(--text);
   background: var(--bg);
   -webkit-font-smoothing: antialiased;
 }
 
 .options-container {
-  max-width: 680px;
+  max-width: 1120px;
   margin: 0 auto;
-  padding: 40px 24px 64px;
+  padding: 18px 20px 28px;
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 12px;
 }
 
 header {
-  margin-bottom: 28px;
+  grid-column: 1 / -1;
+  margin-bottom: 2px;
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
 .header-mark {
-  width: 40px;
-  height: 40px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 10px;
-  background: linear-gradient(135deg, var(--primary), var(--rose));
-  color: #fff;
-  font-weight: 700;
-  font-size: 18px;
+  width: 34px;
+  height: 34px;
+  display: block;
+  border-radius: 8px;
+  object-fit: cover;
   flex-shrink: 0;
 }
 
 .header-text h1 {
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 700;
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
   color: var(--text);
 }
 
 .header-text .subtitle {
   color: var(--text-muted);
-  font-size: 13px;
-  margin-top: 2px;
+  font-size: 12px;
+  margin-top: 1px;
 }
 
 section {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 20px 24px;
-  margin-bottom: 16px;
+  border-radius: var(--r-md);
+  padding: 14px 16px;
+  margin-bottom: 0;
+  grid-column: span 4;
+}
+
+.connection-card,
+.autofill-card,
+.tracking-card {
+  grid-column: span 4;
+}
+
+.saved-answers-card {
+  grid-column: 1 / -1;
+}
+
+.about-card {
+  grid-column: span 4;
 }
 
 section h2 {
@@ -89,7 +116,7 @@ section h2 {
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--text-muted);
-  margin-bottom: 14px;
+  margin-bottom: 10px;
 }
 
 .section-head {
@@ -97,7 +124,7 @@ section h2 {
   align-items: baseline;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 14px;
+  margin-bottom: 10px;
 }
 
 .section-head h2 {
@@ -110,7 +137,8 @@ section h2 {
   font-weight: 500;
   line-height: 1;
   padding: 4px 8px;
-  border-radius: 999px;
+  border: 1px solid transparent;
+  border-radius: var(--r-pill);
   transition: opacity 200ms ease;
   white-space: nowrap;
 }
@@ -118,17 +146,20 @@ section h2 {
 .save-status-saving {
   background: var(--bg-muted);
   color: var(--text-muted);
+  border-color: var(--border);
 }
 
 .save-status-saved {
   background: var(--success-bg);
   color: var(--success-text);
+  border-color: rgba(47, 107, 79, 0.28);
   animation: save-status-fade 2200ms ease 200ms forwards;
 }
 
 .save-status-error {
   background: var(--danger-bg);
   color: var(--danger-text);
+  border-color: rgba(153, 27, 27, 0.22);
 }
 
 @keyframes save-status-fade {
@@ -147,7 +178,7 @@ section h2 {
 }
 
 .setting-group {
-  margin-bottom: 16px;
+  margin-bottom: 10px;
 }
 
 .setting-group:last-child {
@@ -156,7 +187,7 @@ section h2 {
 
 .setting-group label {
   display: block;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
 }
 
 .setting-group label span {
@@ -168,23 +199,23 @@ section h2 {
 .setting-group small {
   display: block;
   color: var(--text-muted);
-  font-size: 12px;
-  margin-top: 4px;
-  line-height: 1.45;
+  font-size: 11px;
+  margin-top: 2px;
+  line-height: 1.35;
 }
 
 .checkbox-label {
   display: flex !important;
   align-items: flex-start;
-  gap: 10px;
+  gap: 8px;
   cursor: pointer;
-  padding: 8px 0;
+  padding: 4px 0 2px;
 }
 
 .checkbox-label input[type="checkbox"] {
   width: 18px;
   height: 18px;
-  accent-color: var(--primary);
+  accent-color: var(--brand);
   margin-top: 1px;
   flex-shrink: 0;
 }
@@ -192,11 +223,13 @@ section h2 {
 .input-group {
   display: flex;
   gap: 8px;
+  align-items: center;
 }
 
 .input-group input {
   flex: 1;
-  padding: 9px 12px;
+  min-width: 0;
+  padding: 8px 10px;
   border: 1px solid var(--border-strong);
   border-radius: 6px;
   font-size: 13px;
@@ -207,14 +240,14 @@ section h2 {
 
 .input-group input:focus {
   outline: none;
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px var(--primary-soft);
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px rgba(184, 112, 74, 0.22);
 }
 
 .input-group button {
-  padding: 9px 16px;
+  padding: 8px 12px;
   background: var(--primary);
-  color: white;
+  color: var(--paper);
   border: 1px solid var(--primary);
   border-radius: 6px;
   font-weight: 600;
@@ -239,12 +272,12 @@ section h2 {
 .range-group {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 .range-group input[type="range"] {
   flex: 1;
-  accent-color: var(--primary);
+  accent-color: var(--brand);
 }
 
 .range-group span {
@@ -255,7 +288,8 @@ section h2 {
   color: var(--text);
   padding: 4px 8px;
   background: var(--bg-muted);
-  border-radius: 6px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
 }
 
 .message {
@@ -278,6 +312,7 @@ section h2 {
 }
 
 .loading {
+  grid-column: 1 / -1;
   text-align: center;
   padding: 40px;
   color: var(--text-muted);
@@ -299,4 +334,87 @@ section h2 {
 .about a:hover {
   color: var(--primary-hover);
   text-decoration: underline;
+}
+
+.answers-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.answer-item {
+  display: grid;
+  gap: 6px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: rgba(255, 250, 239, 0.72);
+}
+
+@media (max-width: 900px) {
+  .options-container {
+    grid-template-columns: 1fr;
+  }
+
+  section,
+  .connection-card,
+  .autofill-card,
+  .tracking-card,
+  .about-card,
+  .saved-answers-card {
+    grid-column: 1 / -1;
+  }
+
+  .answers-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+.answer-question {
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.answer-text {
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.answer-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  color: var(--text-faint);
+  font-size: 11px;
+}
+
+.delete-btn {
+  margin-left: auto;
+  padding: 4px 8px;
+  border: 1px solid rgba(153, 27, 27, 0.24);
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--danger-text);
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.delete-btn:hover {
+  background: var(--danger-bg);
+}
+
+.delete-btn:focus-visible,
+.input-group button:focus-visible,
+.checkbox-label input[type="checkbox"]:focus-visible,
+.range-group input[type="range"]:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
 }

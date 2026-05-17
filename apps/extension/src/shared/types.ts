@@ -125,6 +125,38 @@ export interface TrackedApplicationPayload extends PageSnapshot {
   scrapedJob?: ScrapedJob | null;
 }
 
+export type SidebarDock = "left" | "right" | "floating";
+
+export interface SidebarPosition {
+  x: number;
+  y: number;
+}
+
+export interface SidebarLayout {
+  dock: SidebarDock;
+  position: SidebarPosition | null;
+  collapsed: boolean;
+}
+
+export interface PageSurfaceContext {
+  tab: {
+    url: string;
+    host: string;
+    supported: boolean;
+    contentScriptReady: boolean;
+  };
+  page: {
+    hasApplicationForm: boolean;
+    detectedFieldCount: number;
+    job: ScrapedJob | null;
+  };
+  workspace: {
+    visible: boolean;
+    dismissed: boolean;
+    layout: SidebarLayout;
+  };
+}
+
 // Learning types
 export interface LearnedAnswer {
   id: string;
@@ -179,6 +211,8 @@ export type MessageType =
   | "GET_LEARNED_ANSWERS"
   | "DELETE_ANSWER"
   | "GET_AUTH_STATUS"
+  | "AUTH_STATUS_CHANGED"
+  | "GET_SURFACE_CONTEXT"
   | "OPEN_AUTH"
   | "LOGOUT"
   | "JOB_DETECTED"
@@ -358,4 +392,8 @@ export const DEFAULT_SETTINGS: ExtensionSettings = {
   captureScreenshotEnabled: false,
 };
 
-export const DEFAULT_API_BASE_URL = "http://localhost:3000";
+export const LEGACY_LOCAL_API_BASE_URL = "http://localhost:3000";
+export const DEFAULT_API_BASE_URL =
+  process.env.SLOTHING_EXTENSION_API_BASE_URL || "https://slothing.work";
+export const SHOULD_PROMOTE_LEGACY_LOCAL_API_BASE_URL =
+  DEFAULT_API_BASE_URL !== LEGACY_LOCAL_API_BASE_URL;

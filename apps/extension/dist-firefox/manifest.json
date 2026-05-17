@@ -6,11 +6,19 @@
   "browser_specific_settings": {
     "gecko": {
       "id": "slothing@slothing.work",
-      "strict_min_version": "112.0"
+      "strict_min_version": "142.0",
+      "data_collection_permissions": {
+        "required": [
+          "authenticationInfo",
+          "personallyIdentifyingInfo",
+          "websiteContent"
+        ]
+      }
     }
   },
   "permissions": [
     "storage",
+    "tabs",
     "activeTab",
     "*://*.linkedin.com/*",
     "*://*.indeed.com/*",
@@ -21,6 +29,10 @@
     "*://waterlooworks.uwaterloo.ca/*",
     "*://*.workdayjobs.com/*",
     "*://*.myworkdayjobs.com/*",
+    "https://slothing.work/*",
+    "https://*.slothing.work/*",
+    "http://localhost/*",
+    "http://127.0.0.1/*",
     "http://localhost:3000/*",
     "http://localhost:3001/*",
     "http://127.0.0.1:3000/*",
@@ -45,6 +57,10 @@
         "*://waterlooworks.uwaterloo.ca/*",
         "*://*.workdayjobs.com/*",
         "*://*.myworkdayjobs.com/*",
+        "https://slothing.work/*",
+        "https://*.slothing.work/*",
+        "http://localhost/*",
+        "http://127.0.0.1/*",
         "http://localhost:3000/*",
         "http://localhost:3001/*",
         "http://127.0.0.1:3000/*",
@@ -74,7 +90,7 @@
     "48": "icons/icon-48.png",
     "128": "icons/icon-128.png"
   },
-  "web_accessible_resources": ["*.html", "*.css", "icons/*"],
+  "web_accessible_resources": ["*.html", "*.css", "icons/*", "brand/*"],
   "commands": {
     "fill-form": {
       "suggested_key": {

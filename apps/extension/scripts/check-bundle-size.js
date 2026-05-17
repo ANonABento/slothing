@@ -10,13 +10,13 @@ const DIST_DIR =
 
 const BUDGETS = {
   "background.js": 890 * 1024,
-  "content.js": 1225 * 1024,
+  "content.js": 1270 * 1024,
   "sharedUi.js": 405 * 1024,
   "popup.js": 220 * 1024,
   "options.js": 80 * 1024,
 };
 
-const TOTAL_JS_BUDGET = 2800 * 1024;
+const TOTAL_JS_BUDGET = 2822 * 1024;
 
 const formatKiB = (bytes) => `${(bytes / 1024).toFixed(1)} KiB`;
 

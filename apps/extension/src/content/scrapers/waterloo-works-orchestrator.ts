@@ -37,7 +37,12 @@ export type OrchestratorOptions = {
 };
 
 const DEFAULT_THROTTLE_MS = 500;
-const ROW_SELECTOR = "table.data-viewer-table tbody tr.table__row--body";
+const ROW_SELECTORS = [
+  "table.data-viewer-table tbody tr.table__row--body",
+  "table.data-viewer-table tbody tr",
+  "table tbody tr.table__row--body",
+  "table tbody tr",
+] as const;
 const ROW_TITLE_LINK_SELECTOR = "td a[href='javascript:void(0)']";
 const POSTING_PANEL_SELECTOR = ".dashboard-header__posting-title";
 const NEXT_PAGE_SELECTOR = 'a.pagination__link[aria-label="Go to next page"]';
@@ -47,6 +52,62 @@ const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 function isHidden(el: HTMLAnchorElement | HTMLElement | null): boolean {
   if (!el) return true;
   return el.classList.contains("disabled");
+}
+
+export function getWaterlooWorksRows(): HTMLElement[] {
+  for (const selector of ROW_SELECTORS) {
+    const rows = Array.from(
+      document.querySelectorAll<HTMLElement>(selector),
+    ).filter(isLikelyPostingRow);
+    if (rows.length > 0) return dedupeElements(rows);
+  }
+
+  const linkRows = Array.from(
+    document.querySelectorAll<HTMLAnchorElement>(
+      "table a[href='javascript:void(0)'], table button",
+    ),
+  )
+    .map((el) => el.closest<HTMLElement>("tr"))
+    .filter((row): row is HTMLElement => !!row)
+    .filter(isLikelyPostingRow);
+  return dedupeElements(linkRows);
+}
+
+export function getWaterlooWorksNextPageLink(): HTMLAnchorElement | null {
+  return (
+    document.querySelector<HTMLAnchorElement>(NEXT_PAGE_SELECTOR) ||
+    Array.from(document.querySelectorAll<HTMLAnchorElement>("a, button"))
+      .filter((el): el is HTMLAnchorElement => el instanceof HTMLAnchorElement)
+      .find((el) =>
+        /next/i.test(el.getAttribute("aria-label") || el.textContent || ""),
+      ) ||
+    null
+  );
+}
+
+function isLikelyPostingRow(row: HTMLElement): boolean {
+  const text = normalizeText(row.textContent || "");
+  if (!text) return false;
+  if (
+    /^(job title|organization|work term|location|level|applications?)$/i.test(
+      text,
+    )
+  ) {
+    return false;
+  }
+  if (row.querySelector("th")) return false;
+  if (row.querySelector(ROW_TITLE_LINK_SELECTOR)) return true;
+  if (row.querySelector("a, button")) return text.length > 8;
+  const cells = row.querySelectorAll("td, [role='cell']");
+  return cells.length >= 2 && text.length > 12;
+}
+
+function normalizeText(value: string): string {
+  return value.replace(/\s+/g, " ").trim();
+}
+
+function dedupeElements<T extends HTMLElement>(items: T[]): T[] {
+  return Array.from(new Set(items));
 }
 
 async function waitFor(
@@ -240,7 +301,7 @@ export class WaterlooWorksOrchestrator {
   }
 
   private getRows(): HTMLElement[] {
-    return Array.from(document.querySelectorAll<HTMLElement>(ROW_SELECTOR));
+    return getWaterlooWorksRows();
   }
 
   private firstRowSignature(): string {

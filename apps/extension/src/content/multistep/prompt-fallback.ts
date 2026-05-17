@@ -13,7 +13,7 @@
 // - 12s timeout → resolve(false). Treated as "No" so a user who tabs away
 //   doesn't come back to a stranded prompt.
 //
-// The toast uses the same violet/cream palette as the popup
+// The toast uses the same paper/ink/rust palette as the popup
 // (apps/extension/src/popup/styles.css) so it doesn't look like a foreign
 // browser dialog. We deliberately avoid the forbidden `bg-white` etc.
 // Tailwind classes — this is plain DOM, but the *values* are mirrored from
@@ -63,11 +63,11 @@ export function promptStepFallback(
       right: "20px",
       maxWidth: "320px",
       padding: "14px 16px",
-      background: "#ffffff",
-      color: "#241c30",
-      border: "1px solid #e6dfd6",
-      borderRadius: "12px",
-      boxShadow: "0 4px 12px rgba(36, 28, 48, 0.12)",
+      background: "#fffaef",
+      color: "#1a1530",
+      border: "1px solid rgba(26, 20, 16, 0.12)",
+      borderRadius: "10px",
+      boxShadow: "0 10px 24px rgba(26, 21, 48, 0.14)",
       fontFamily:
         "-apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, sans-serif",
       fontSize: "14px",
@@ -90,7 +90,7 @@ export function promptStepFallback(
     if (options.providerLabel) {
       const sub = document.createElement("div");
       sub.style.fontSize = "12px";
-      sub.style.color = "#6b6373";
+      sub.style.color = "#6a5e4a";
       sub.style.marginBottom = "10px";
       sub.textContent = `${options.providerLabel} multi-step application`;
       toast.appendChild(sub);
@@ -107,9 +107,9 @@ export function promptStepFallback(
     Object.assign(noBtn.style, {
       padding: "6px 12px",
       background: "transparent",
-      color: "#6b6373",
-      border: "1px solid #e6dfd6",
-      borderRadius: "8px",
+      color: "#6a5e4a",
+      border: "1px solid rgba(26, 20, 16, 0.12)",
+      borderRadius: "6px",
       cursor: "pointer",
       font: "inherit",
     });
@@ -119,10 +119,10 @@ export function promptStepFallback(
     yesBtn.textContent = "Yes, fill";
     Object.assign(yesBtn.style, {
       padding: "6px 12px",
-      background: "#6d4aaa",
-      color: "#ffffff",
-      border: "1px solid #6d4aaa",
-      borderRadius: "8px",
+      background: "#1a1530",
+      color: "#fffaef",
+      border: "1px solid #1a1530",
+      borderRadius: "6px",
       cursor: "pointer",
       fontWeight: "600",
       font: "inherit",

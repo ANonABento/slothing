@@ -7,7 +7,11 @@ import { FieldDetector } from "./auto-fill/field-detector";
 import { FieldMapper } from "./auto-fill/field-mapper";
 import { AutoFillEngine } from "./auto-fill/engine";
 import { getScraperForUrl } from "./scrapers/scraper-registry";
-import { WaterlooWorksOrchestrator } from "./scrapers/waterloo-works-orchestrator";
+import {
+  WaterlooWorksOrchestrator,
+  getWaterlooWorksNextPageLink,
+  getWaterlooWorksRows,
+} from "./scrapers/waterloo-works-orchestrator";
 import { GreenhouseOrchestrator } from "./scrapers/greenhouse-orchestrator";
 import { LeverOrchestrator } from "./scrapers/lever-orchestrator";
 import { WorkdayOrchestrator } from "./scrapers/workday-orchestrator";
@@ -20,9 +24,10 @@ import type {
   ScrapedJob,
   DetectedField,
   ExtensionSettings,
+  PageSurfaceContext,
   SimilarAnswer,
 } from "@/shared/types";
-import { CHAT_PORT_NAME } from "@/shared/types";
+import { CHAT_PORT_NAME, DEFAULT_API_BASE_URL } from "@/shared/types";
 import { sendMessage, Messages } from "@/shared/messages";
 import { messageForError } from "@/shared/error-messages";
 import type { ChatIntent } from "./sidebar/chat-panel";
@@ -105,52 +110,73 @@ async function scanPage() {
   // ATS portals use bare <textarea> with dynamic labels).
   scanForAnswerBankTextareas();
 
-  // Check for job listing
-  const scraper = getScraperForUrl(window.location.href);
-  let nextScrapedJob: ScrapedJob | null = null;
-  if (scraper.canHandle(window.location.href)) {
-    try {
-      nextScrapedJob = await scraper.scrapeJobListing();
-      scrapedJob = nextScrapedJob;
-      if (nextScrapedJob) {
-        console.log("[Slothing] Scraped job:", nextScrapedJob.title);
-        if (jobDetectedForUrl !== window.location.href) {
-          jobDetectedForUrl = window.location.href;
-          sendMessage(
-            Messages.jobDetected({
-              title: nextScrapedJob.title,
-              company: nextScrapedJob.company,
-              url: nextScrapedJob.url,
-            }),
-          ).catch((err) =>
-            console.error("[Slothing] Failed to notify job detected:", err),
-          );
+  await refreshScrapedJob();
+  void updateSidebar();
+}
 
-          // P3/#38 — passive LinkedIn capture. Only runs on detail pages the
-          // user navigated to themselves; the scraper already enforces this
-          // because `sourceJobId` is only populated when the URL matches the
-          // `/jobs/view/:id` pattern. Failures here are fire-and-forget so a
-          // capture hiccup never blocks the visible scrape/sidebar UX.
-          if (nextScrapedJob.source === "linkedin") {
-            void tryCaptureLinkedInJob(nextScrapedJob, {
-              sendMessage,
-              buildImportMessage: Messages.importJob,
-            }).catch((err) =>
-              console.warn("[Slothing] LinkedIn passive capture failed:", err),
-            );
-          }
+async function refreshScrapedJob(): Promise<ScrapedJob | null> {
+  if (isSlothingWebAppPage()) {
+    scrapedJob = null;
+    return null;
+  }
+
+  const scraper = getScraperForUrl(window.location.href);
+  if (!scraper.canHandle(window.location.href)) return null;
+
+  let nextScrapedJob: ScrapedJob | null = null;
+  try {
+    nextScrapedJob = await scraper.scrapeJobListing();
+    scrapedJob = nextScrapedJob;
+    if (nextScrapedJob) {
+      console.log("[Slothing] Scraped job:", nextScrapedJob.title);
+      const detectionKey = nextScrapedJob.sourceJobId || nextScrapedJob.url;
+      if (jobDetectedForUrl !== detectionKey) {
+        jobDetectedForUrl = detectionKey;
+        sendMessage(
+          Messages.jobDetected({
+            title: nextScrapedJob.title,
+            company: nextScrapedJob.company,
+            url: nextScrapedJob.url,
+          }),
+        ).catch((err) =>
+          console.error("[Slothing] Failed to notify job detected:", err),
+        );
+
+        // P3/#38 — passive LinkedIn capture. Only runs on detail pages the
+        // user navigated to themselves; the scraper already enforces this
+        // because `sourceJobId` is only populated when the URL matches the
+        // `/jobs/view/:id` pattern. Failures here are fire-and-forget so a
+        // capture hiccup never blocks the visible scrape/sidebar UX.
+        if (nextScrapedJob.source === "linkedin") {
+          void tryCaptureLinkedInJob(nextScrapedJob, {
+            sendMessage,
+            buildImportMessage: Messages.importJob,
+          }).catch((err) =>
+            console.warn("[Slothing] LinkedIn passive capture failed:", err),
+          );
         }
       }
-    } catch (err) {
-      console.error("[Slothing] Scrape error:", err);
     }
+  } catch (err) {
+    console.error("[Slothing] Scrape error:", err);
   }
 
   if (!nextScrapedJob && scrapedJob?.url !== window.location.href) {
     scrapedJob = null;
   }
 
-  void updateSidebar();
+  return scrapedJob;
+}
+
+function isSlothingWebAppPage(): boolean {
+  const host = window.location.hostname;
+  if (host === "slothing.work" || host.endsWith(".slothing.work")) {
+    return true;
+  }
+  if (host !== "localhost" && host !== "127.0.0.1") return false;
+  return /\/(?:[a-z]{2}(?:-[A-Z]{2})?\/)?extension\/connect(?:\/|$)/.test(
+    window.location.pathname,
+  );
 }
 
 // Handle messages from popup and background
@@ -164,12 +190,25 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 async function handleMessage(message: { type: string; payload?: unknown }) {
   switch (message.type) {
     case "GET_PAGE_STATUS":
+      if (!scrapedJob) {
+        await refreshScrapedJob();
+        void updateSidebar();
+      }
       return {
         hasForm: detectedFields.length > 0,
         hasJobListing: scrapedJob !== null,
         detectedFields: detectedFields.length,
         scrapedJob,
       };
+
+    case "GET_SURFACE_CONTEXT":
+      return getSurfaceContext();
+
+    case "SHOW_SLOTHING_PANEL":
+      await refreshScrapedJob();
+      await sidebarController.restoreDomain();
+      await updateSidebar();
+      return { success: scrapedJob !== null, scrapedJob };
 
     case "TRIGGER_FILL":
       return handleFillForm();
@@ -251,6 +290,28 @@ async function handleMessage(message: { type: string; payload?: unknown }) {
   }
 }
 
+async function getSurfaceContext(): Promise<PageSurfaceContext> {
+  if (!scrapedJob) {
+    await refreshScrapedJob();
+    void updateSidebar();
+  }
+  const sidebar = sidebarController.getStatus();
+  return {
+    tab: {
+      url: window.location.href,
+      host: window.location.hostname,
+      supported: true,
+      contentScriptReady: true,
+    },
+    page: {
+      hasApplicationForm: detectedFields.length > 0,
+      detectedFieldCount: detectedFields.length,
+      job: scrapedJob,
+    },
+    workspace: sidebar,
+  };
+}
+
 function isWaterlooWorks(): boolean {
   return /waterlooworks\.uwaterloo\.ca/.test(window.location.href);
 }
@@ -262,12 +323,8 @@ function getWwPageState() {
       data: { kind: "other", rowCount: 0, hasNextPage: false },
     };
   }
-  const rows = document.querySelectorAll(
-    "table.data-viewer-table tbody tr.table__row--body",
-  );
-  const nextBtn = document.querySelector<HTMLAnchorElement>(
-    'a.pagination__link[aria-label="Go to next page"]',
-  );
+  const rows = getWaterlooWorksRows();
+  const nextBtn = getWaterlooWorksNextPageLink();
   const currentPage = document
     .querySelector<HTMLAnchorElement>("a.pagination__link.active")
     ?.textContent?.trim();
@@ -619,8 +676,7 @@ async function openAnswerBankSeed(question: string) {
   const auth = await sendMessage<{ apiBaseUrl: string }>(
     Messages.getAuthStatus(),
   );
-  const base =
-    (auth.success && auth.data?.apiBaseUrl) || "http://localhost:3000";
+  const base = (auth.success && auth.data?.apiBaseUrl) || DEFAULT_API_BASE_URL;
   const url = `${base.replace(/\/$/, "")}/en/bank?seed=${encodeURIComponent(question)}`;
   window.open(url, "_blank", "noopener,noreferrer");
 }
@@ -876,7 +932,7 @@ async function openCoverLetterStudio(seedText: string): Promise<void> {
   );
   const base = (
     (auth.success && auth.data?.apiBaseUrl) ||
-    "http://localhost:3000"
+    DEFAULT_API_BASE_URL
   ).replace(/\/$/, "");
 
   const params = new URLSearchParams({
@@ -963,7 +1019,11 @@ function pickUpSlothingToken(): PickupResult {
   try {
     const raw = localStorage.getItem(SLOTHING_TOKEN_KEY);
     if (!raw) return "empty";
-    const parsed = JSON.parse(raw) as { token?: string; expiresAt?: string };
+    const parsed = JSON.parse(raw) as {
+      token?: string;
+      expiresAt?: string;
+      apiBaseUrl?: string;
+    };
     if (!parsed?.token || !parsed?.expiresAt) {
       // Malformed payload — purge so we stop polling.
       try {
@@ -980,6 +1040,7 @@ function pickUpSlothingToken(): PickupResult {
         type: "AUTH_CALLBACK",
         token: parsed.token,
         expiresAt: parsed.expiresAt,
+        apiBaseUrl: parsed.apiBaseUrl || window.location.origin,
       },
       (response: { success?: boolean } | undefined) => {
         pickupInFlight = false;
@@ -1002,7 +1063,8 @@ function pickUpSlothingToken(): PickupResult {
 if (
   /(^|\.)localhost(:|$)|^127\.0\.0\.1(:|$)|^\[::1\](:|$)/.test(
     window.location.host,
-  )
+  ) ||
+  /(^|\.)slothing\.work(:|$)/.test(window.location.host)
 ) {
   // Initial probe: if there's nothing to pick up and we're not on the connect
   // page itself, there's no reason to poll — the page hasn't been opened.
@@ -1018,7 +1080,10 @@ if (
       elapsedMs += 500;
       const result = pickUpSlothingToken();
       if (
-        (result === "empty" && !pickupInFlight && elapsedMs > 2000) ||
+        (!onConnectPath &&
+          result === "empty" &&
+          !pickupInFlight &&
+          elapsedMs > 2000) ||
         elapsedMs >= 30_000
       ) {
         clearInterval(intervalId);

@@ -1,7 +1,10 @@
 // @vitest-environment jsdom
 import { describe, expect, it, beforeEach, vi } from "vitest";
 
-import { WaterlooWorksOrchestrator } from "./waterloo-works-orchestrator";
+import {
+  WaterlooWorksOrchestrator,
+  getWaterlooWorksRows,
+} from "./waterloo-works-orchestrator";
 
 // Helper to build a postings-list page with N rows. Each row's title link, when
 // clicked, mutates the DOM to put a single posting panel in place (simulating
@@ -133,6 +136,34 @@ describe("WaterlooWorksOrchestrator", () => {
     expect(jobs.map((j) => j.title)).toEqual(["Job A", "Job B", "Job C"]);
     expect(progressEvents.length).toBeGreaterThanOrEqual(3);
     expect(progressEvents.at(-1)?.scrapedCount).toBe(3);
+  });
+
+  it("detects live-style WaterlooWorks rows without legacy row classes", () => {
+    document.body.className = "new-student__posting-search";
+    document.body.innerHTML = `
+      <table>
+        <thead>
+          <tr><th>Job Title</th><th>Location</th><th>Openings</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><a href="javascript:void(0)">AI Toolchain Software Developer</a></td>
+            <td>Waterloo</td>
+            <td>8</td>
+          </tr>
+          <tr>
+            <td><a href="javascript:void(0)">Verification and Validation</a></td>
+            <td>Waterloo</td>
+            <td>32</td>
+          </tr>
+        </tbody>
+      </table>
+      <a aria-label="Go to next page" href="javascript:void(0)">Next</a>
+    `;
+
+    const rows = document.querySelectorAll("tbody tr");
+    expect(rows.length).toBe(2);
+    expect(getWaterlooWorksRows().length).toBe(2);
   });
 
   it("scrapeAllVisible respects maxJobs cap", async () => {

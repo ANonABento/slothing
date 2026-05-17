@@ -19,7 +19,7 @@ export class LinkedInScraper extends BaseScraper {
     // Wait for job details to load
     try {
       await this.waitForElement(
-        ".job-details-jobs-unified-top-card__job-title, .jobs-unified-top-card__job-title",
+        ".job-details-jobs-unified-top-card__job-title, .jobs-unified-top-card__job-title, .scaffold-layout__detail h1, main h1",
         3000,
       );
     } catch {
@@ -28,11 +28,13 @@ export class LinkedInScraper extends BaseScraper {
 
     // Try multiple selector strategies (LinkedIn changes DOM frequently)
     const title = this.extractJobTitle();
-    const company = this.extractCompany();
-    const location = this.extractLocation();
-    const description = this.extractDescription();
+    const company = this.extractCompany() || this.extractCompanyFromText(title);
+    const location = this.extractLocation() || this.extractLocationFromText();
+    const description =
+      this.extractDescription() ||
+      this.buildFallbackDescription(title, company, location);
 
-    if (!title || !company || !description) {
+    if (!title || !company) {
       console.log("[Slothing] LinkedIn scraper: Missing required fields", {
         title,
         company,
@@ -113,7 +115,10 @@ export class LinkedInScraper extends BaseScraper {
       ".t-24.job-details-jobs-unified-top-card__job-title",
       "h1.t-24",
       ".jobs-top-card__job-title",
+      ".scaffold-layout__detail h1",
+      ".jobs-search__job-details--container h1",
       'h1[class*="job-title"]',
+      "main h1",
     ];
 
     for (const selector of selectors) {
@@ -130,7 +135,9 @@ export class LinkedInScraper extends BaseScraper {
       ".jobs-unified-top-card__company-name",
       ".jobs-top-card__company-url",
       'a[data-tracking-control-name="public_jobs_topcard-org-name"]',
+      ".job-details-jobs-unified-top-card__company-name a",
       ".job-details-jobs-unified-top-card__primary-description-container a",
+      ".jobs-unified-top-card__company-name a",
     ];
 
     for (const selector of selectors) {
@@ -166,6 +173,7 @@ export class LinkedInScraper extends BaseScraper {
       ".jobs-box__html-content",
       "#job-details",
       ".jobs-description",
+      ".jobs-description__container",
     ];
 
     for (const selector of selectors) {
@@ -178,8 +186,24 @@ export class LinkedInScraper extends BaseScraper {
     return null;
   }
 
+  private buildFallbackDescription(
+    title: string | null,
+    company: string | null,
+    location: string | null,
+  ): string {
+    return [
+      title && company ? `${title} at ${company}` : title || company,
+      location,
+      "LinkedIn job details visible; full description not loaded.",
+    ]
+      .filter((part): part is string => !!part)
+      .join("\n");
+  }
+
   private extractJobId(): string | undefined {
-    const match = window.location.href.match(/\/view\/(\d+)/);
+    const match =
+      window.location.href.match(/\/view\/(\d+)/) ||
+      window.location.href.match(/[?&]currentJobId=(\d+)/);
     return match?.[1];
   }
 
@@ -206,5 +230,38 @@ export class LinkedInScraper extends BaseScraper {
     } catch {
       return null;
     }
+  }
+
+  private extractCompanyFromText(title: string | null): string | null {
+    if (!title) return null;
+    const lines = this.visibleLines();
+    const index = lines.findIndex((line) => line === title);
+    const next = index >= 0 ? lines[index + 1] : undefined;
+    if (!next) return null;
+    if (
+      /^(apply|save|viewed|promoted|responses managed|over \d+)/i.test(next)
+    ) {
+      return null;
+    }
+    return next;
+  }
+
+  private extractLocationFromText(): string | null {
+    return (
+      this.visibleLines().find((line) =>
+        /^[A-Z][A-Za-z .'-]+,\s*[A-Z]{2}\b/.test(line),
+      ) || null
+    );
+  }
+
+  private visibleLines(): string[] {
+    const text =
+      (document.body as HTMLElement).innerText ||
+      document.body.textContent ||
+      "";
+    return text
+      .split(/\n+/)
+      .map((line) => line.trim())
+      .filter(Boolean);
   }
 }

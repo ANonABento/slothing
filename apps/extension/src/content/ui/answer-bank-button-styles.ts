@@ -5,36 +5,24 @@
 // the spec says to NOT import from `popup/styles.css`, so any token change in
 // the popup needs a parallel change here.
 //
-// Tokens mirrored from apps/extension/src/popup/styles.css:
-//   --primary:        #6d4aaa
-//   --primary-hover:  #5a3a8f
-//   --primary-soft:   #ede5fb
-//   --bg:             #faf9f7
-//   --bg-soft:        #f9f6f1
-//   --surface:        #ffffff
-//   --border:         #e6dfd6
-//   --border-strong:  #d8cfc1
-//   --text:           #241c30
-//   --text-muted:     #6b6373
-//   --shadow-md:      0 4px 12px rgba(36, 28, 48, 0.08)
-//   --radius:         12px
-//   --radius-sm:       8px
+// Tokens mirrored from the Slothing editorial palette in the popup/options.
 
 export const ANSWER_BANK_BUTTON_STYLES = `
 :host, .slothing-ab-root {
-  --slothing-ab-primary: #6d4aaa;
-  --slothing-ab-primary-hover: #5a3a8f;
-  --slothing-ab-primary-soft: #ede5fb;
-  --slothing-ab-bg: #faf9f7;
-  --slothing-ab-bg-soft: #f9f6f1;
-  --slothing-ab-surface: #ffffff;
-  --slothing-ab-border: #e6dfd6;
-  --slothing-ab-border-strong: #d8cfc1;
-  --slothing-ab-text: #241c30;
-  --slothing-ab-text-muted: #6b6373;
-  --slothing-ab-shadow: 0 4px 12px rgba(36, 28, 48, 0.08);
-  --slothing-ab-radius: 12px;
-  --slothing-ab-radius-sm: 8px;
+  --slothing-ab-primary: #1a1530;
+  --slothing-ab-primary-hover: #8e5132;
+  --slothing-ab-primary-soft: #f0d9c1;
+  --slothing-ab-bg: #f5efe2;
+  --slothing-ab-bg-soft: #e9dec8;
+  --slothing-ab-surface: #fffaef;
+  --slothing-ab-border: rgba(26, 20, 16, 0.12);
+  --slothing-ab-border-strong: rgba(26, 20, 16, 0.4);
+  --slothing-ab-text: #1a1530;
+  --slothing-ab-text-muted: #6a5e4a;
+  --slothing-ab-brand: #b8704a;
+  --slothing-ab-shadow: 0 10px 24px rgba(26, 21, 48, 0.14);
+  --slothing-ab-radius: 10px;
+  --slothing-ab-radius-sm: 6px;
 }
 
 .slothing-ab-root {
@@ -54,7 +42,7 @@ export const ANSWER_BANK_BUTTON_STYLES = `
   border: 1px solid var(--slothing-ab-border-strong);
   border-radius: 50%;
   background: var(--slothing-ab-surface);
-  color: var(--slothing-ab-primary);
+  color: var(--slothing-ab-brand);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -70,7 +58,7 @@ export const ANSWER_BANK_BUTTON_STYLES = `
 }
 
 .slothing-ab-button:focus-visible {
-  outline: 2px solid var(--slothing-ab-primary);
+  outline: 2px solid var(--slothing-ab-brand);
   outline-offset: 2px;
 }
 
@@ -127,7 +115,7 @@ export const ANSWER_BANK_BUTTON_STYLES = `
 
 .slothing-ab-popover__close:hover {
   background: var(--slothing-ab-primary-soft);
-  color: var(--slothing-ab-primary);
+  color: var(--slothing-ab-primary-hover);
 }
 
 .slothing-ab-popover__body {
@@ -197,7 +185,7 @@ export const ANSWER_BANK_BUTTON_STYLES = `
   align-self: start;
   font-size: 10px;
   font-weight: 600;
-  color: var(--slothing-ab-primary);
+  color: var(--slothing-ab-primary-hover);
   background: var(--slothing-ab-primary-soft);
   padding: 1px 6px;
   border-radius: 999px;
@@ -227,7 +215,7 @@ export const ANSWER_BANK_BUTTON_STYLES = `
 }
 
 .slothing-ab-popover__generate:focus-visible {
-  outline: 2px solid var(--slothing-ab-primary-hover);
+  outline: 2px solid var(--slothing-ab-brand);
   outline-offset: 2px;
 }
 `;

@@ -28,6 +28,7 @@ export interface TailorFromPagePayload {
 export const Messages = {
   // Auth messages
   getAuthStatus: (): ExtensionMessage => ({ type: "GET_AUTH_STATUS" }),
+  getSurfaceContext: (): ExtensionMessage => ({ type: "GET_SURFACE_CONTEXT" }),
   openAuth: (): ExtensionMessage => ({ type: "OPEN_AUTH" }),
   logout: (): ExtensionMessage => ({ type: "LOGOUT" }),
 
