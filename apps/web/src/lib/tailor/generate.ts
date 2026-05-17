@@ -20,6 +20,7 @@ import {
   type PromptVariant,
 } from "@/lib/db/prompt-variants";
 import { buildTailoredResumePrompt } from "./prompt-builders";
+import { DEFAULT_TAILOR_SETTINGS, type TailorSettings } from "./settings";
 
 export interface BankResumeInput {
   bankEntries: GroupedBankEntries;
@@ -37,6 +38,15 @@ export interface BankResumeInput {
    * against the JD; we only swap out the deterministic base.
    */
   seedResume?: TailoredResume;
+  /**
+   * Per-user tailor knobs (max roles, bullets per role, drop-short-bullets
+   * threshold, ATS strictness). Persisted in localStorage on the client and
+   * forwarded via the API request body. Falls back to
+   * `DEFAULT_TAILOR_SETTINGS` when omitted, which preserves the prior
+   * hardcoded behaviour (`maxRoles=5` cap → was `slice(0,3)` minimum,
+   * `bulletsPerRole.max=4` → was `slice(0,4)`).
+   */
+  settings?: TailorSettings;
 }
 
 export interface GenerateFromBankResult {
@@ -125,6 +135,11 @@ export function buildBankTailoredResumePrompt(
 }
 
 export function generateBaseFromBank(input: BankResumeInput): TailoredResume {
+  const settings = input.settings ?? DEFAULT_TAILOR_SETTINGS;
+  const maxRoles = Math.max(0, settings.maxRoles);
+  const bulletsPerRoleMax = Math.max(0, settings.bulletsPerRole.max);
+  const dropShorterThan = Math.max(0, settings.dropBulletsShorterThan);
+
   // Use matched entries sorted by relevance
   const usedEntryIds = new Set<string>();
   const topExperiences = input.matchedEntries
@@ -132,21 +147,29 @@ export function generateBaseFromBank(input: BankResumeInput): TailoredResume {
       (m) =>
         m.entry.category === "experience" || m.entry.category === "hackathon",
     )
-    .slice(0, 3)
+    .slice(0, maxRoles)
     .map((m) => {
       usedEntryIds.add(m.entry.id);
-      return entryToResumeExperience(m.entry);
+      return entryToResumeExperience(m.entry, {
+        bulletsPerRoleMax,
+        dropShorterThan,
+      });
     });
 
   // If not enough matched experiences, fill from bank
-  if (topExperiences.length < 2) {
+  if (topExperiences.length < Math.min(2, maxRoles)) {
     for (const entry of [
       ...input.bankEntries.experience,
       ...input.bankEntries.hackathon,
     ]) {
-      if (topExperiences.length >= 3) break;
+      if (topExperiences.length >= maxRoles) break;
       if (!usedEntryIds.has(entry.id)) {
-        topExperiences.push(entryToResumeExperience(entry));
+        topExperiences.push(
+          entryToResumeExperience(entry, {
+            bulletsPerRoleMax,
+            dropShorterThan,
+          }),
+        );
         usedEntryIds.add(entry.id);
       }
     }
@@ -228,8 +251,28 @@ function sanitizeExperiences(
   }));
 }
 
+interface EntryHighlightOpts {
+  /** Cap on highlights per experience block (was hardcoded 4). */
+  bulletsPerRoleMax: number;
+  /** Drop highlights shorter than this many chars (was hardcoded 0 — no filter). */
+  dropShorterThan: number;
+}
+
+function applyHighlightFilters(
+  highlights: string[],
+  opts: EntryHighlightOpts,
+): string[] {
+  return highlights
+    .filter((h) => h.trim().length >= opts.dropShorterThan)
+    .slice(0, opts.bulletsPerRoleMax);
+}
+
 function entryToResumeExperience(
   entry: BankEntry,
+  opts: EntryHighlightOpts = {
+    bulletsPerRoleMax: DEFAULT_TAILOR_SETTINGS.bulletsPerRole.max,
+    dropShorterThan: DEFAULT_TAILOR_SETTINGS.dropBulletsShorterThan,
+  },
 ): TailoredResume["experiences"][number] {
   const c = entry.content;
   if (entry.category === "hackathon") {
@@ -237,17 +280,18 @@ function entryToResumeExperience(
       company: String(c.organizer || "Hackathon"),
       title: String(c.name || ""),
       dates: formatDateRange(c),
-      highlights: formatHackathonHighlights(c).slice(0, 4),
+      highlights: applyHighlightFilters(formatHackathonHighlights(c), opts),
     };
   }
 
+  const rawHighlights = Array.isArray(c.highlights)
+    ? c.highlights.map(String)
+    : [];
   return {
     company: String(c.company || ""),
     title: String(c.title || ""),
     dates: formatDateRange(c),
-    highlights: Array.isArray(c.highlights)
-      ? c.highlights.map(String).slice(0, 4)
-      : [],
+    highlights: applyHighlightFilters(rawHighlights, opts),
   };
 }
 

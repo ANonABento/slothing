@@ -169,6 +169,94 @@ describe("generateFromBank", () => {
     expect(result.resume.experiences[0].company).toBe("Acme Corp");
   });
 
+  it("honors per-user tailor settings — maxRoles, bulletsPerRole.max, dropBulletsShorterThan", async () => {
+    const bank = makeBank();
+    // Add a third experience so we can verify the cap. Also include short
+    // + long bullets to verify the `dropBulletsShorterThan` filter.
+    bank.experience.push(
+      makeBankEntry({
+        id: "e3",
+        category: "experience",
+        content: {
+          company: "Gamma Co",
+          title: "Engineer",
+          startDate: "2017-01",
+          endDate: "2017-12",
+          highlights: [
+            "Bad",
+            "Wrote unit tests",
+            "Built a comprehensive observability stack",
+            "Reduced p95 latency by 40%",
+            "Mentored five engineers across two teams",
+          ],
+          skills: [],
+        },
+      }),
+    );
+
+    const result = await generateFromBank(
+      {
+        bankEntries: bank,
+        matchedEntries: [],
+        contact: { name: "Jane Doe" },
+        jobTitle: "Engineer",
+        company: "Test Corp",
+        jobDescription:
+          "Looking for an experienced engineer with strong fundamentals.",
+        userId: "default",
+        settings: {
+          bulletsPerRole: { min: 1, max: 2 },
+          bulletsPerProject: { min: 0, max: 0 },
+          maxRoles: 1,
+          maxProjects: 0,
+          atsStrictness: "balanced",
+          dropBulletsShorterThan: 10,
+        },
+      },
+      null,
+    );
+
+    // maxRoles=1 → only the first experience survives.
+    expect(result.resume.experiences).toHaveLength(1);
+    // bulletsPerRole.max=2 → at most 2 highlights per experience.
+    expect(result.resume.experiences[0].highlights.length).toBeLessThanOrEqual(
+      2,
+    );
+    // dropBulletsShorterThan=10 → "Bad" (3 chars) must NOT appear.
+    expect(
+      result.resume.experiences.flatMap((e) => e.highlights),
+    ).not.toContain("Bad");
+  });
+
+  it("falls back to default settings when none provided", async () => {
+    const bank = makeBank();
+    bank.experience[0].content.highlights = [
+      "A", // short — kept by default (no length filter)
+      "Built a thing",
+      "Did stuff",
+      "Mentored juniors",
+      "Hit p95 targets",
+    ];
+
+    const result = await generateFromBank(
+      {
+        bankEntries: bank,
+        matchedEntries: [],
+        contact: { name: "Jane Doe" },
+        jobTitle: "Engineer",
+        company: "Test Corp",
+        jobDescription: "Looking for a senior engineer.",
+        userId: "default",
+      },
+      null,
+    );
+
+    // Defaults: bulletsPerRole.max=4, dropBulletsShorterThan=0 (no filter).
+    // 5 highlights → truncated to 4, "A" survives because filter is off.
+    expect(result.resume.experiences[0].highlights).toHaveLength(4);
+    expect(result.resume.experiences[0].highlights[0]).toBe("A");
+  });
+
   it("should fill experiences from bank when few matches", async () => {
     const bank = makeBank();
 

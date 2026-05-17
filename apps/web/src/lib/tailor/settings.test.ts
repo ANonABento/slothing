@@ -58,7 +58,7 @@ describe("tailor settings", () => {
         maxRoles: 5,
         maxProjects: 3,
         atsStrictness: "balanced",
-        dropBulletsShorterThan: 24,
+        dropBulletsShorterThan: 0,
       });
     });
   });

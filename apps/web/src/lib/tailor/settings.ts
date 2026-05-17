@@ -34,7 +34,11 @@ export const DEFAULT_TAILOR_SETTINGS: TailorSettings = {
   maxRoles: 5,
   maxProjects: 3,
   atsStrictness: "balanced",
-  dropBulletsShorterThan: 24,
+  // Default is 0 — no length-based filter. Users opt in via the dialog
+  // if they want to drop stub bullets like "Did stuff". Setting a
+  // non-zero default would silently strip pre-existing short highlights
+  // (some legitimately short — e.g., "Tracks: AI/ML" on hackathons).
+  dropBulletsShorterThan: 0,
 };
 
 /**

@@ -22,6 +22,7 @@ import { linkOpportunityDocument } from "@/lib/opportunities";
 import { nowEpoch } from "@/lib/format/time";
 import { analyzeJobFit, extractKeywords } from "@/lib/tailor/analyze";
 import { generateFromBank } from "@/lib/tailor/generate";
+import { normalizeTailorSettings } from "@/lib/tailor/settings";
 import { generateResumeHTML, TEMPLATES } from "@/lib/resume/pdf";
 import { getTemplateWithCustom } from "@/lib/resume/templates";
 import { isTailoredResume } from "@/lib/builder/tailored-resume-api";
@@ -86,8 +87,14 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const { jobDescription, jobTitle, company, opportunityId, baseResumeId } =
-      body;
+    const {
+      jobDescription,
+      jobTitle,
+      company,
+      opportunityId,
+      baseResumeId,
+      settings: clientSettings,
+    } = body;
 
     const existingOpportunity = opportunityId
       ? getJob(opportunityId, authResult.userId)
@@ -181,6 +188,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    const tailorSettings = normalizeTailorSettings(clientSettings);
     const {
       resume: tailoredResume,
       baseResume,
@@ -196,6 +204,7 @@ export async function POST(request: NextRequest) {
         jobDescription,
         userId: authResult.userId,
         seedResume,
+        settings: tailorSettings,
       },
       llmConfig,
     );

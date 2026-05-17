@@ -49,6 +49,15 @@ const jobFieldsSchema = z.object({
    * master profile + knowledge bank as before.
    */
   baseResumeId: z.string().trim().optional().default(""),
+  /**
+   * Optional per-user tailor knobs forwarded from the browser
+   * (localStorage `taida:tailor:settings`). The server passes whatever
+   * shape arrives through `normalizeTailorSettings` so unrecognized /
+   * malformed values fall back to defaults — keeping the schema loose
+   * here (z.unknown) lets us evolve the shape without breaking the
+   * wire contract.
+   */
+  settings: z.unknown().optional(),
 });
 
 const tailorRequestUnionSchema = z.discriminatedUnion("action", [
