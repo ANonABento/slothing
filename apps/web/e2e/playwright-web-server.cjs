@@ -4,9 +4,7 @@ const path = require("path");
 
 const distDir = ".next/e2e";
 const port = process.env.PORT || "8888";
-const sqlitePath =
-  process.env.GET_ME_JOB_SQLITE_PATH ||
-  path.join(process.cwd(), "data", "get-me-job-e2e.db");
+const sqlitePath = path.join(process.cwd(), "data", "get-me-job-e2e.db");
 const sqliteUrl = process.env.TURSO_DATABASE_URL || `file:${sqlitePath}`;
 const nextBin = require.resolve("next/dist/bin/next");
 let child;
@@ -15,7 +13,6 @@ function getServerEnv() {
   const env = {
     ...process.env,
     NEXT_DIST_DIR: distDir,
-    GET_ME_JOB_SQLITE_PATH: sqlitePath,
     TURSO_DATABASE_URL: sqliteUrl,
     NEXTAUTH_SECRET:
       process.env.NEXTAUTH_SECRET || "slothing-playwright-e2e-secret",

@@ -26,7 +26,7 @@ import {
 
 describe("constants barrel", () => {
   it("should expose representative exports from every domain module", () => {
-    expect(PATHS.DATABASE).toContain("data/get-me-job.db");
+    expect(PATHS.UPLOADS).toContain("uploads");
 
     expect(THEMES).toEqual(["light", "dark", "system"]);
     expect(STORAGE_KEYS.ONBOARDING_COMPLETED).toBe(
