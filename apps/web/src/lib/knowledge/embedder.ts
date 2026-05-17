@@ -200,15 +200,23 @@ export function rankBySimilarity<T>(
   return scored.slice(0, limit);
 }
 import { getLLMConfig } from "@/lib/db";
+import { resolveEnvApiKey } from "@/lib/llm/resolve-env-api-key";
 
 const OPENAI_EMBEDDINGS_URL = "https://api.openai.com/v1/embeddings";
 const EMBEDDING_MODEL = "text-embedding-3-small";
+
+// F1.2 consolidation: previously this helper inlined
+// `process.env.OPENAI_API_KEY` for the env fallback, duplicating the
+// resolution logic that already lives in `resolveEnvApiKey` (shared with
+// `LLMClient` and `isLLMConfigured`). DB-configured OpenAI keys still
+// take precedence over the env fallback — same semantics as before, just
+// routed through the shared helper so fallback order can't drift.
 function getOpenAIKey(userId: string): string | null {
   const config = getLLMConfig(userId);
   if (config?.provider === "openai" && config.apiKey) {
     return config.apiKey;
   }
-  return process.env.OPENAI_API_KEY ?? null;
+  return resolveEnvApiKey("openai") ?? null;
 }
 
 function float32ArrayToBuffer(arr: Float32Array): Buffer {
