@@ -82,57 +82,11 @@ export const JOB_TYPE_LABELS: Record<JobType, string> = {
 
 export const jobTypeSchema = z.enum(JOB_TYPES);
 
-// API validation schemas
-export const createJobSchema = z.object({
-  title: z.string().min(1, "Title is required").max(200),
-  company: z.string().min(1, "Company is required").max(200),
-  description: z
-    .string()
-    .min(10, "Description must be at least 10 characters")
-    .max(50000),
-  location: z.string().max(200).optional(),
-  type: jobTypeSchema.optional(),
-  remote: z.boolean().optional(),
-  salary: z.string().max(100).optional(),
-  requirements: z.array(z.string()).optional(),
-  responsibilities: z.array(z.string()).optional(),
-  keywords: z.array(z.string()).optional(),
-  url: z.string().url().optional().or(z.literal("")),
-  status: jobStatusSchema.optional().default("saved"),
-  deadline: z.string().optional(),
-  notes: z.string().max(5000).optional(),
-});
-
-export type CreateJobInput = z.infer<typeof createJobSchema>;
-
-export const updateJobSchema = createJobSchema.partial().extend({
-  appliedAt: z.string().optional(),
-});
-
-export type UpdateJobInput = z.infer<typeof updateJobSchema>;
-
-// Import job schema (single job)
-export const importJobSchema = z.object({
-  title: z.string().min(1, "Title is required").max(200),
-  company: z.string().min(1, "Company is required").max(200),
-  description: z.string().min(1, "Description is required").max(50000),
-  location: z.string().max(200).optional(),
-  type: jobTypeSchema.optional(),
-  remote: z.boolean().optional(),
-  salary: z.string().max(100).optional(),
-  requirements: z.array(z.string()).optional(),
-  responsibilities: z.array(z.string()).optional(),
-  keywords: z.array(z.string()).optional(),
-  url: z.string().url().optional().or(z.literal("")),
-  status: jobStatusSchema.optional(),
-  deadline: z.string().optional(),
-  notes: z.string().max(5000).optional(),
-});
-
-export type ImportJobInput = z.infer<typeof importJobSchema>;
-
-// Import jobs schema (bulk)
-export const importJobsArraySchema = z.array(importJobSchema);
+// F2.2 consolidation: `createJobSchema`, `updateJobSchema`, `importJobSchema`
+// and `importJobsArraySchema` used to live here next to the status enums.
+// They moved to `@/lib/validation/jobs` (still re-exported via
+// `@/lib/constants` for back-compat) so the schema definitions sit on the
+// validation boundary, not buried in a constants module.
 
 // Tech keywords for job parsing
 export const TECH_KEYWORDS = [

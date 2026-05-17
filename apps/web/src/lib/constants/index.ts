@@ -25,20 +25,24 @@ export {
   JOB_TYPES,
   JOB_TYPE_LABELS,
   jobTypeSchema,
+  TECH_KEYWORDS,
+} from "./jobs";
+export type { JobStatus, TrackedJobStatus, JobType } from "./jobs";
+
+// F2.2 consolidation: schemas live in `@/lib/validation/jobs`; re-exported
+// here so existing `import … from "@/lib/constants"` call-sites keep
+// compiling without churn.
+export {
   createJobSchema,
   updateJobSchema,
   importJobSchema,
   importJobsArraySchema,
-  TECH_KEYWORDS,
-} from "./jobs";
+} from "@/lib/validation/jobs";
 export type {
-  JobStatus,
-  TrackedJobStatus,
-  JobType,
   CreateJobInput,
   UpdateJobInput,
   ImportJobInput,
-} from "./jobs";
+} from "@/lib/validation/jobs";
 
 export {
   SKILL_CATEGORIES,

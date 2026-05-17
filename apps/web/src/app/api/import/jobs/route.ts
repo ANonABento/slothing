@@ -8,7 +8,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createJob, getJobs } from "@/lib/db/jobs";
 import type { JobDescription } from "@/types";
-import { importJobSchema, type ImportJobInput } from "@/lib/constants";
+import { importJobSchema, type ImportJobInput } from "@/lib/validation/jobs";
 import { requireAuth, isAuthError } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";

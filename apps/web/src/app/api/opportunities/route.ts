@@ -10,7 +10,8 @@ import {
   type AiGatePass,
 } from "@/lib/billing/ai-gate";
 import { LLMClient, parseJSONFromLLM } from "@/lib/llm/client";
-import { createJobSchema, TECH_KEYWORDS } from "@/lib/constants";
+import { TECH_KEYWORDS } from "@/lib/constants";
+import { createJobSchema } from "@/lib/validation/jobs";
 import { OPPORTUNITY_STATUSES } from "@slothing/shared/schemas";
 import { createOpportunitySchema } from "@/types/opportunity";
 import { safeTrackActivity } from "@/lib/streak/track";
