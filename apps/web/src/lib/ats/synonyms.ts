@@ -20,6 +20,7 @@ export const SYNONYM_GROUPS: SynonymGroup[] = [
   { canonical: "ruby", synonyms: ["rb"] },
   { canonical: "kotlin", synonyms: ["kt"] },
   { canonical: "objective-c", synonyms: ["objc", "obj-c"] },
+  { canonical: "french", synonyms: ["french language ability"] },
 
   // Frontend Frameworks
   { canonical: "react", synonyms: ["reactjs", "react.js", "react js"] },
@@ -176,6 +177,10 @@ export const SYNONYM_GROUPS: SynonymGroup[] = [
     synonyms: ["time-management", "prioritization", "organization"],
   },
   { canonical: "mentoring", synonyms: ["coaching", "training", "onboarding"] },
+  {
+    canonical: "performance",
+    synonyms: ["performance optimization", "web performance optimization"],
+  },
 
   // Data & ML
   {

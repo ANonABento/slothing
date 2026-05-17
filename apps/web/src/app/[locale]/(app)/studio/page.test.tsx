@@ -491,6 +491,34 @@ describe("StudioPage", () => {
     expect(screen.getByText("Bank Entry Picker")).toBeInTheDocument();
   });
 
+  it("generates from selected bank entries and closes the picker", async () => {
+    mockStudioFetch(bankEntries);
+
+    renderStudioPage();
+
+    fireEvent.click(
+      await screen.findByRole("button", { name: /open bank picker/i }),
+    );
+    expect(screen.getByText("Bank Entry Picker")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Toggle entry" }));
+    await waitFor(() =>
+      expect(screen.getByTestId("resume-html")).toHaveTextContent(
+        "Current HTML",
+      ),
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Generate from Bank" }));
+
+    await waitFor(() =>
+      expect(screen.queryByText("Bank Entry Picker")).not.toBeInTheDocument(),
+    );
+    expect(screen.getByTestId("resume-html")).toHaveTextContent("Current HTML");
+    expect(
+      screen.getByText("Generated a resume draft from selected bank entries."),
+    ).toBeInTheDocument();
+  });
+
   it("shows first-run bank guidance and opens the picker from the preview CTA", async () => {
     mockStudioFetch(bankEntries);
 
@@ -644,6 +672,48 @@ describe("StudioPage", () => {
       ),
     );
     expect(fetchMock.getBuilderRequestCount()).toBe(1);
+  });
+
+  it("restores a saved generated preview after reload with export enabled", async () => {
+    mockStorage({
+      "taida:builder:versions:resume": JSON.stringify([
+        {
+          id: "saved-reload",
+          kind: "manual",
+          name: "Saved version",
+          savedAt: "2026-05-16T12:00:00.000Z",
+          state: {
+            documentMode: "resume",
+            selectedIds: ["entry-1"],
+            sections: [
+              "experience",
+              "skill",
+              "project",
+              "education",
+              "certification",
+            ].map((id) => ({ id, visible: true })),
+            templateId: "classic",
+            html: "<p>Reloaded preview 1</p>",
+          },
+        },
+      ]),
+    });
+    const fetchMock = mockStudioFetch(bankEntries);
+
+    renderStudioPage();
+
+    await waitFor(() =>
+      expect(screen.getByTestId("resume-html")).toHaveTextContent(
+        "Reloaded preview 1",
+      ),
+    );
+    expect(fetchMock.getBuilderRequestCount()).toBe(0);
+
+    pressShortcut(window, { key: "e", metaKey: true });
+
+    expect(
+      screen.getByRole("menuitem", { name: "Download PDF" }),
+    ).toBeInTheDocument();
   });
 
   it("shows a save failure status when browser storage rejects a version", async () => {

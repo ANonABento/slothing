@@ -37,9 +37,23 @@ export interface KeywordAnalysis {
   locations: string[];
   matchType?: "exact" | "synonym";
   matchedTerm?: string;
+  sources?: KeywordSource[];
   status?: KeywordEvidenceStatus;
   evidenceSnippets?: string[];
 }
+
+export type KeywordSource =
+  | "required skill"
+  | "requirement"
+  | "description"
+  | "tag"
+  | "inferred";
+
+type AtsJobDescription = JobDescription & {
+  requiredSkills?: string[];
+  tags?: string[];
+  techStack?: string[];
+};
 
 export interface ATSScore {
   overall: number;
@@ -142,6 +156,93 @@ function normalizeText(text: string): string {
     .replace(/[^a-z0-9\s]/g, " ")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+function normalizeKeywordKey(term: string): string {
+  return normalizeText(term).replace(/\bpostgres\b/g, "postgresql");
+}
+
+function addJobKeyword(
+  orderedKeywords: string[],
+  keywordSources: Map<string, Set<KeywordSource>>,
+  term: string,
+  source: KeywordSource,
+) {
+  const normalized = normalizeKeywordKey(term);
+  if (!normalized) return;
+
+  if (!keywordSources.has(normalized)) {
+    keywordSources.set(normalized, new Set());
+    orderedKeywords.push(term);
+  }
+  keywordSources.get(normalized)?.add(source);
+}
+
+function addExtractedJobKeywords(
+  orderedKeywords: string[],
+  keywordSources: Map<string, Set<KeywordSource>>,
+  values: string[],
+  source: KeywordSource,
+  perValueLimit = 8,
+) {
+  for (const value of values) {
+    const extracted = extractJdKeywordTerms(value, { limit: perValueLimit });
+    for (const term of extracted) {
+      addJobKeyword(orderedKeywords, keywordSources, term, source);
+    }
+  }
+}
+
+function buildJobKeywordPriority(job: JobDescription): {
+  terms: string[];
+  sources: Map<string, KeywordSource[]>;
+} {
+  const extendedJob = job as AtsJobDescription;
+  const orderedKeywords: string[] = [];
+  const keywordSources = new Map<string, Set<KeywordSource>>();
+
+  addExtractedJobKeywords(
+    orderedKeywords,
+    keywordSources,
+    extendedJob.requiredSkills ?? [],
+    "required skill",
+    4,
+  );
+  addExtractedJobKeywords(
+    orderedKeywords,
+    keywordSources,
+    job.requirements ?? [],
+    "requirement",
+    8,
+  );
+  addExtractedJobKeywords(
+    orderedKeywords,
+    keywordSources,
+    [job.description ?? ""],
+    "description",
+    30,
+  );
+  addExtractedJobKeywords(
+    orderedKeywords,
+    keywordSources,
+    [
+      ...(job.keywords ?? []),
+      ...(extendedJob.techStack ?? []),
+      ...(extendedJob.tags ?? []),
+    ],
+    "tag",
+    4,
+  );
+
+  return {
+    terms: orderedKeywords,
+    sources: new Map(
+      [...keywordSources.entries()].map(([term, sources]) => [
+        term,
+        [...sources],
+      ]),
+    ),
+  };
 }
 
 function extractAllText(profile: Profile): string {
@@ -447,14 +548,10 @@ function analyzeKeywords(
   const fullText = extractAllText(profile);
   const normalizedText = normalizeText(fullText);
 
-  // Get keywords from job description if provided
-  const jobKeywords = job
-    ? [...job.keywords, ...extractJdKeywordTerms(job.description)]
-    : [];
-
   // Also include common important keywords
+  const jobKeywordPriority = job ? buildJobKeywordPriority(job) : null;
   const importantKeywords = job
-    ? Array.from(new Set(jobKeywords))
+    ? (jobKeywordPriority?.terms ?? [])
     : extractKeywordsFromText(fullText).slice(0, 10);
 
   if (importantKeywords.length === 0) {
@@ -527,6 +624,7 @@ function analyzeKeywords(
       locations: Array.from(new Set(locations)),
       matchType,
       matchedTerm,
+      sources: jobKeywordPriority?.sources.get(normalizeKeywordKey(keyword)),
     });
   });
 

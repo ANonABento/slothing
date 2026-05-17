@@ -52,7 +52,9 @@ const ORPHAN_SKILL_LABELS = new Set([
 function skillCategoryForLabel(label: string | undefined): Skill["category"] {
   const normalized = label?.toLowerCase().replace(/\s+/g, " ").trim();
   if (!normalized) return "technical";
-  if (/^languages?$/.test(normalized)) return "language";
+  if (/^languages?(?: spoken| proficiency| skills)?$/.test(normalized)) {
+    return "language";
+  }
   if (/^tools?$/.test(normalized)) return "tool";
   if (/^(?:soft skills?|interpersonal)$/.test(normalized)) return "soft";
   if (/^(?:frameworks?|libraries?|databases?)$/.test(normalized)) {
@@ -185,6 +187,7 @@ const SPACED_DATE_RANGE_PARTS_REGEX = new RegExp(
 );
 const YEAR_ONLY_DATE_RANGE_PARTS_REGEX =
   /^\s*(\d{4})\s*[-–—]\s*(\d{4}|present|current)\s*$/i;
+const SINGLE_YEAR_REGEX = /\b(?:19|20)\d{2}\b/;
 
 export function hasDateRange(line: string): boolean {
   DATE_RANGE_REGEX.lastIndex = 0;
@@ -218,6 +221,17 @@ function stripDateRange(line: string): string {
   return line
     .replace(DATE_RANGE_REGEX, "")
     .replace(DATE_RANGE_TO_REGEX, "")
+    .replace(/\s*(?:[-–—|•·,])\s*$/, "")
+    .trim();
+}
+
+function extractSingleYear(line: string): string {
+  return line.match(SINGLE_YEAR_REGEX)?.[0] ?? "";
+}
+
+function stripSingleYear(line: string): string {
+  return line
+    .replace(SINGLE_YEAR_REGEX, "")
     .replace(/\s*(?:[-–—|•·,])\s*$/, "")
     .trim();
 }
@@ -734,7 +748,9 @@ export function extractEducation(text: string): Education[] {
           ? sameLineParts[0]
           : undefined);
       // Parse degree and field
-      const { degree, field } = parseDegreeAndField(stripDateRange(degreeLine));
+      const { degree, field } = parseDegreeAndField(
+        stripSingleYear(stripDateRange(degreeLine)),
+      );
 
       // Extract GPA from current line and up to 4 following lines
       // (GPA can appear after degree, institution, and date range)
@@ -762,6 +778,8 @@ export function extractEducation(text: string): Education[] {
         const parts = splitDateRange(dateStr);
         startDate = parts.start;
         endDate = parts.end;
+      } else {
+        endDate = extractSingleYear(dateContext);
       }
 
       // Institution: look at adjacent lines for non-degree, non-date text
@@ -800,6 +818,36 @@ export function extractEducation(text: string): Education[] {
   return education;
 }
 
+function normalizeSkillName(item: string): string {
+  return item
+    .replace(/\s+/g, " ")
+    .replace(/[.,;:]+$/g, "")
+    .trim();
+}
+
+function expandSkillItems(
+  item: string,
+  category: Skill["category"],
+): Array<{ name: string; category: Skill["category"] }> {
+  const cleaned = normalizeSkillName(item);
+  const isLanguageItem =
+    category === "language" || /\bbilingual\b/i.test(cleaned);
+  if (!isLanguageItem) {
+    return [{ name: cleaned, category }];
+  }
+
+  const languageText = cleaned
+    .replace(/\b(?:bilingual|fluent|native|professional)\b(?:\s+in)?/gi, "")
+    .trim();
+  const parts = languageText
+    .split(/\s*(?:\/|&|\band\b)\s*/i)
+    .map(normalizeSkillName)
+    .filter((part) => part.length >= 2);
+
+  const names = parts.length > 1 ? parts : [cleaned];
+  return names.map((name) => ({ name, category: "language" }));
+}
+
 export function extractSkills(text: string): Skill[] {
   const skills: Skill[] = [];
   const seen = new Set<string>();
@@ -814,25 +862,26 @@ export function extractSkills(text: string): Skill[] {
     const content = labeled ? labeled[2] : line;
     const items = content
       .split(SKILL_SPLIT_REGEX)
-      .map((item) => item.trim())
+      .flatMap((item) => expandSkillItems(item, category))
+      .map((item) => ({ ...item, name: normalizeSkillName(item.name) }))
       .filter((item) => {
-        const normalized = item.toLowerCase();
+        const normalized = item.name.toLowerCase();
         return (
-          item.length >= 2 &&
-          item.length <= 50 &&
-          /[\p{L}\p{N}]/u.test(item) &&
+          item.name.length >= 2 &&
+          item.name.length <= 50 &&
+          /[\p{L}\p{N}]/u.test(item.name) &&
           !ORPHAN_SKILL_LABELS.has(normalized)
         );
       });
 
-    for (const name of items) {
+    for (const { name, category: itemCategory } of items) {
       const dedupeKey = name.toLowerCase();
       if (seen.has(dedupeKey)) continue;
       seen.add(dedupeKey);
       skills.push({
         id: generateId(),
         name,
-        category,
+        category: itemCategory,
       });
     }
   }

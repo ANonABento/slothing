@@ -79,6 +79,7 @@ interface AiAssistantPanelProps extends HTMLAttributes<HTMLElement> {
     suggestion: string,
   ) => boolean;
   onOpenBank: () => void;
+  onGenerateFromBank?: () => void;
   onOpportunityClear?: () => void;
   onOpportunitySelect?: (opportunityId: string) => void;
   collapsed?: boolean;
@@ -144,6 +145,7 @@ export function AiAssistantPanel({
   onCoverLetterGenerated,
   onCoverLetterSuggestionApply,
   onOpenBank,
+  onGenerateFromBank,
   onOpportunityClear,
   onOpportunitySelect,
   collapsed = false,
@@ -518,23 +520,29 @@ export function AiAssistantPanel({
           }
         }
 
-        const configured = await ensureLLMConfigured();
-        if (!configured) return;
-
         if (action === "generate-from-bank") {
           if (documentMode === "cover_letter") {
+            const configured = await ensureLLMConfigured();
+            if (!configured) return;
             await runCoverLetterGenerate();
             return;
           }
 
-          onOpenBank();
+          if (selectedEntryCount > 0) {
+            onGenerateFromBank?.();
+          } else {
+            onOpenBank();
+          }
           setStatusMessage(
             selectedEntryCount > 0
-              ? "Bank entries are ready for the next generation step."
+              ? "Generated a resume draft from selected bank entries."
               : "Choose bank entries to generate a stronger draft.",
           );
           return;
         }
+
+        const configured = await ensureLLMConfigured();
+        if (!configured) return;
 
         if (action === "critique") {
           await runCoverLetterCritique();
@@ -572,6 +580,7 @@ export function AiAssistantPanel({
       ensureLLMConfigured,
       jobDescription,
       onOpenBank,
+      onGenerateFromBank,
       rewriteSection,
       runCoverLetterGenerate,
       runCoverLetterCritique,

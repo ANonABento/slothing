@@ -4,6 +4,7 @@ import type {
   ATSAnalysisResult,
   ATSIssue,
   KeywordAnalysis,
+  KeywordSource,
 } from "@/lib/ats/analyzer";
 import { nowDate, nowIso, parseToDate } from "@/lib/format/time";
 import { extractJdKeywords } from "@/lib/ats/jd-keywords";
@@ -819,7 +820,7 @@ function finalizeWeightedKeywords(
         term: candidate.term,
         weight: Math.min(
           2.5,
-          Math.max(1, candidate.priority + sourceBonus + frequencyBonus),
+          Math.max(0.5, candidate.priority + sourceBonus + frequencyBonus),
         ),
         reasons: [...candidate.reasons],
         firstIndex: candidate.firstIndex,
@@ -835,22 +836,43 @@ function finalizeWeightedKeywords(
     .map(({ term, weight, reasons }) => ({ term, weight, reasons }));
 }
 
+type WeightedKeywordJob = JobDescription & {
+  requiredSkills?: string[];
+  tags?: string[];
+  techStack?: string[];
+};
+
 function buildWeightedJobKeywords(job: JobDescription): WeightedJobKeyword[] {
+  const extendedJob = job as WeightedKeywordJob;
   const candidates = new Map<string, WeightedKeywordCandidate>();
 
-  for (const keyword of uniqueNormalizedKeywords(job.keywords)) {
-    addWeightedKeyword(candidates, keyword, 1.35, "explicit keyword");
+  for (const requiredSkill of extendedJob.requiredSkills ?? []) {
+    addExtractedWeightedKeywords(
+      candidates,
+      requiredSkill,
+      1.55,
+      "required skill",
+      4,
+    );
   }
 
   for (const requirement of job.requirements ?? []) {
     addExtractedWeightedKeywords(
       candidates,
       requirement,
-      1.25,
+      1.45,
       "requirement",
       8,
     );
   }
+
+  addExtractedWeightedKeywords(
+    candidates,
+    job.description ?? "",
+    1.15,
+    "description",
+    30,
+  );
 
   addExtractedWeightedKeywords(
     candidates,
@@ -868,13 +890,14 @@ function buildWeightedJobKeywords(job: JobDescription): WeightedJobKeyword[] {
       8,
     );
   }
-  addExtractedWeightedKeywords(
-    candidates,
-    job.description ?? "",
-    1,
-    "description",
-    30,
-  );
+
+  for (const keyword of uniqueNormalizedKeywords([
+    ...(job.keywords ?? []),
+    ...(extendedJob.techStack ?? []),
+    ...(extendedJob.tags ?? []),
+  ])) {
+    addWeightedKeyword(candidates, keyword, 1, "tag");
+  }
 
   return finalizeWeightedKeywords(candidates, 24);
 }
@@ -891,6 +914,18 @@ function scoreKeywords(profile: Profile, text: string, job?: JobDescription) {
     : extractKeywords(normalizedResume).slice(0, 10);
   const keywordWeights = new Map(
     weightedJobKeywords.map((keyword) => [keyword.term, keyword.weight]),
+  );
+  const keywordSources = new Map(
+    weightedJobKeywords.map((keyword) => [
+      keyword.term,
+      keyword.reasons.map((reason): KeywordSource => {
+        if (reason === "required skill") return "required skill";
+        if (reason === "requirement") return "requirement";
+        if (reason === "description") return "description";
+        if (reason === "tag") return "tag";
+        return "inferred";
+      }),
+    ]),
   );
 
   if (importantKeywords.length === 0) {
@@ -930,6 +965,7 @@ function scoreKeywords(profile: Profile, text: string, job?: JobDescription) {
       locations: match.locations,
       matchType: match.matchType,
       matchedTerm: match.matchedTerm,
+      sources: keywordSources.get(match.keyword),
       status: match.status,
       evidenceSnippets: match.evidenceSnippets,
     });

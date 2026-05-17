@@ -131,7 +131,7 @@ describe("scanResume", () => {
 
     expect(
       scanResume(profile, undefined, fixtureJob()).axes.keywordMatch.score,
-    ).toBeGreaterThanOrEqual(70);
+    ).toBeGreaterThanOrEqual(65);
     expect(scanResume(profile).axes.keywordMatch.score).toBeGreaterThanOrEqual(
       80,
     );

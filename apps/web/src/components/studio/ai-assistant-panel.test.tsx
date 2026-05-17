@@ -22,6 +22,7 @@ function renderWithSelectableText(
   } = {},
 ) {
   const onOpenBank = vi.fn();
+  const onGenerateFromBank = vi.fn();
   const view = render(
     <ToastProvider>
       <div>
@@ -32,6 +33,7 @@ function renderWithSelectableText(
           documentContent="<p>Built APIs quickly.</p>"
           selectedEntryCount={1}
           onOpenBank={onOpenBank}
+          onGenerateFromBank={onGenerateFromBank}
           onOpportunityClear={options.onOpportunityClear}
           onOpportunitySelect={options.onOpportunitySelect}
         />
@@ -39,7 +41,7 @@ function renderWithSelectableText(
     </ToastProvider>,
   );
 
-  return { ...view, onOpenBank };
+  return { ...view, onOpenBank, onGenerateFromBank };
 }
 
 function renderWithToast(ui: ReactElement) {
@@ -326,15 +328,18 @@ describe("AiAssistantPanel", () => {
     ).toBeInTheDocument();
   });
 
-  it("opens the bank picker from the generate action after setup passes", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(statusResponse(true)));
-    const { onOpenBank } = renderWithSelectableText();
+  it("generates from selected bank entries without provider setup", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(statusResponse(false));
+    vi.stubGlobal("fetch", fetchMock);
+    const { onOpenBank, onGenerateFromBank } = renderWithSelectableText();
 
     fireEvent.click(screen.getByRole("button", { name: "Generate from Bank" }));
 
-    await waitFor(() => expect(onOpenBank).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(onGenerateFromBank).toHaveBeenCalledTimes(1));
+    expect(onOpenBank).not.toHaveBeenCalled();
+    expect(fetchMock).not.toHaveBeenCalledWith("/api/settings/status");
     expect(
-      screen.getByText("Bank entries are ready for the next generation step."),
+      screen.getByText("Generated a resume draft from selected bank entries."),
     ).toBeInTheDocument();
   });
 

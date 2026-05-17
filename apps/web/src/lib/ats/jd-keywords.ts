@@ -141,6 +141,7 @@ const CANONICAL_TERMS: CanonicalTerm[] = [
   { term: "excel" },
   { term: "figma" },
   { term: "front end", aliases: ["frontend", "front-end"] },
+  { term: "french", aliases: ["french language ability"] },
   { term: "gcp", aliases: ["google cloud"] },
   { term: "git" },
   { term: "go", aliases: ["golang"] },
@@ -160,6 +161,7 @@ const CANONICAL_TERMS: CanonicalTerm[] = [
   { term: "postgresql", aliases: ["postgres"] },
   { term: "playwright" },
   { term: "power bi", aliases: ["powerbi"] },
+  { term: "performance", aliases: ["performance optimization"] },
   { term: "python" },
   { term: "react", aliases: ["react.js", "reactjs"] },
   { term: "redux" },
@@ -181,7 +183,7 @@ const CANONICAL_TERMS: CanonicalTerm[] = [
     aliases: ["unit tests", "unit and integration tests"],
   },
   { term: "vue", aliases: ["vue.js", "vuejs"] },
-  { term: "web performance", aliases: ["performance optimization"] },
+  { term: "web performance", aliases: ["web performance optimization"] },
   { term: "zustand" },
 ];
 

@@ -2,8 +2,8 @@
 
 ## Status
 
-In progress. Based on the local dogfood run against `http://localhost:3000` on
-2026-05-16.
+Implemented. Based on the local dogfood run against `http://localhost:3000` on
+2026-05-16, with remediation completed on 2026-05-16.
 
 Implemented:
 
@@ -12,11 +12,8 @@ Implemented:
 - Phase 2 - opportunity drawer clickability and Studio deep-link handoff.
 - Phase 0 - initial reusable dogfood E2E harness and Riley/ExampleWorks
   fixtures.
-- Phase 4 - Studio bank picker rows expose native checkbox semantics.
-
-Remaining:
-
 - Phase 3 - durable Studio draft generation and save/reload behavior.
+- Phase 4 - Studio bank picker rows expose native checkbox semantics.
 - Phase 5 - parser normalization improvements.
 - Phase 6 - ATS keyword source priority and synonym coverage.
 - Phase 7 - source-aware upload preview copy for non-PDF inputs.

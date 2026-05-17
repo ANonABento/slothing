@@ -191,6 +191,65 @@ describe("analyzeATS", () => {
     expect(tsKeyword?.found).toBe(false);
   });
 
+  it("prioritizes explicit requirements over supporting tags", () => {
+    const profile = createMinimalProfile();
+    profile.summary =
+      "Product engineer building accessible React, TypeScript, GraphQL, Node.js, and PostgreSQL systems. Bilingual English and French.";
+    profile.skills = [
+      "TypeScript",
+      "React",
+      "Node.js",
+      "PostgreSQL",
+      "GraphQL",
+      "accessibility",
+      "performance",
+      "French",
+    ].map((name, index) => ({
+      id: `skill-${index}`,
+      name,
+      category: "technical",
+    }));
+
+    const job = {
+      ...createMinimalJob(),
+      description:
+        "Build accessible React and TypeScript surfaces, Node.js APIs, GraphQL integrations, and PostgreSQL data models for performance.",
+      requiredSkills: ["French language ability"],
+      requirements: [
+        "TypeScript",
+        "React",
+        "Node.js",
+        "PostgreSQL",
+        "GraphQL",
+        "Accessibility testing",
+        "Performance optimization",
+      ],
+      keywords: ["product engineering", "fintech", "React"],
+    };
+
+    const result = analyzeATS(profile, job);
+    const terms = result.keywords.map((keyword) => keyword.keyword);
+
+    expect(terms.slice(0, 8).map((term) => term.toLowerCase())).toEqual(
+      expect.arrayContaining([
+        "french",
+        "typescript",
+        "react",
+        "node.js",
+        "postgresql",
+        "graphql",
+        "accessibility",
+        "performance",
+      ]),
+    );
+    expect(terms.slice(0, 8).map((term) => term.toLowerCase())).not.toEqual(
+      expect.arrayContaining(["product engineering", "fintech"]),
+    );
+    expect(
+      result.keywords.find((keyword) => keyword.keyword === "french")?.sources,
+    ).toEqual(["required skill"]);
+  });
+
   it("generates appropriate summary based on score", () => {
     const profile = createMinimalProfile();
     const result = analyzeATS(profile);
