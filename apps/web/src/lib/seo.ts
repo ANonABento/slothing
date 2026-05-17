@@ -40,13 +40,16 @@ const pages = {
     title: "Resume Builder",
     description:
       "Open the unified Document Studio to assemble resumes from your bank.",
-    path: "/builder",
+    // `/builder` is a 308 → `/studio`. Canonical points at the destination
+    // so crawlers don't report soft-error redirects on the OG/canonical link.
+    path: "/studio",
   },
   coverLetter: {
     title: "Cover Letter",
     description:
       "Draft and revise tailored cover letters in the Document Studio.",
-    path: "/cover-letter",
+    // `/cover-letter` is a 308 → `/studio`. Canonical points at /studio.
+    path: "/studio",
   },
   documents: {
     title: "Documents",
@@ -70,7 +73,8 @@ const pages = {
     title: "Tailor Resume",
     description:
       "Tailor your resume to a job description in the Document Studio.",
-    path: "/tailor",
+    // `/tailor` is a 308 → `/studio`. Canonical points at /studio.
+    path: "/studio",
   },
   upload: {
     title: "Upload Resume",
