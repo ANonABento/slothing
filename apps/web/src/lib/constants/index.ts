@@ -11,7 +11,13 @@ export {
 } from "./plans";
 export type { PlanTier } from "./plans";
 
-export { THEMES, themeSchema, STORAGE_KEYS } from "./storage";
+export {
+  THEMES,
+  themeSchema,
+  STORAGE_KEYS,
+  LOCAL_STORAGE_KEY_PATTERNS,
+  isSlothingLocalStorageKey,
+} from "./storage";
 export type { Theme } from "./storage";
 
 export {
