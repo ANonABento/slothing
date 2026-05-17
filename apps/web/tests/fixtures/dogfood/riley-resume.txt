@@ -1,0 +1,35 @@
+Riley Chen
+riley.chen@example.test | (555) 123-4567
+Toronto, ON
+linkedin.com/in/rileychen | github.com/rileychen
+
+SUMMARY
+Product-minded software engineer who builds reliable workflow automation for recruiting teams and hiring operations.
+
+EXPERIENCE
+Senior Product Engineer | Acme Talent | Jan 2021 - Present
+- Led migration of resume parsing services to TypeScript and reduced parsing latency by 40%.
+- Built React dashboards used by 42 account managers to review candidate pipelines.
+- Implemented event-driven integrations with ATS and CRM systems.
+- Mentored three engineers and partnered with product on profile completion workflows.
+
+Software Engineer | BrightHire | Jun 2018 - Dec 2020
+- Built Node.js APIs for interview scheduling and candidate feedback loops.
+- Tuned PostgreSQL queries that reduced recruiter report load time by 35%.
+- Added Playwright regression tests for accessibility-critical application flows.
+
+EDUCATION
+B.S. in Computer Science
+Stanford University
+2014 - 2018
+
+SKILLS
+Languages: TypeScript, JavaScript, Python, Go
+Frameworks: React, Next.js, Node.js, GraphQL
+Tools: Docker, GitHub Actions, PostgreSQL, Playwright
+Languages Spoken: English, French
+
+PROJECTS
+Resume Insight CLI | TypeScript | Node.js
+- Built a command line tool that scores resumes against job descriptions.
+- Technologies: TypeScript, Node.js, PostgreSQL

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useId, useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { pluralize } from "@/lib/text/pluralize";
@@ -23,7 +23,6 @@ import {
   Award,
   Shield,
   Sparkles,
-  Check,
   Trophy,
   ListChecks,
   type LucideIcon,
@@ -82,6 +81,7 @@ export function SectionList({
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const dragCounterRef = useRef(0);
+  const checkboxIdPrefix = useId();
 
   const toggleExpanded = useCallback((categoryId: BankCategory) => {
     setExpandedSections((prev) => {
@@ -154,33 +154,30 @@ export function SectionList({
     const unselectedClasses = compact
       ? "text-muted-foreground hover:bg-muted"
       : "border-border text-muted-foreground hover:bg-muted";
+    const checkboxId = `${checkboxIdPrefix}-${compact ? "section" : "picker"}-${entry.id}`;
 
     return (
-      <button
+      <label
         key={entry.id}
-        type="button"
-        onClick={() => onToggleEntry(entry.id)}
+        htmlFor={checkboxId}
         className={cn(
-          "w-full text-left transition-colors",
+          "w-full cursor-pointer text-left transition-colors",
           sizeClasses,
           selected ? selectedClasses : unselectedClasses,
         )}
       >
-        <span
+        <input
+          id={checkboxId}
+          type="checkbox"
+          checked={selected}
+          onChange={() => onToggleEntry(entry.id)}
           className={cn(
-            "flex shrink-0 items-center justify-center rounded border",
+            "shrink-0 rounded border-border text-primary accent-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1",
             compact ? "h-3.5 w-3.5" : "h-4 w-4",
-            selected
-              ? "border-primary bg-primary text-primary-foreground"
-              : "border-border",
           )}
-        >
-          {selected && (
-            <Check className={cn(compact ? "h-2.5 w-2.5" : "h-3 w-3")} />
-          )}
-        </span>
+        />
         <span className="min-w-0 flex-1 truncate">{getEntryTitle(entry)}</span>
-      </button>
+      </label>
     );
   }
 

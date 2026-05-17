@@ -20,7 +20,10 @@ export async function createTestJob(
   data: TestJobData,
 ): Promise<void> {
   // Click "Add Opportunity" button
-  await page.getByRole("button", { name: /add opportunity/i }).click();
+  await page
+    .getByRole("button", { name: /^add opportunity$/i })
+    .first()
+    .click();
 
   // Wait for dialog to appear
   await expect(page.getByRole("dialog")).toBeVisible();
