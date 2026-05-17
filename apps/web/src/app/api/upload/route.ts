@@ -17,6 +17,7 @@ import {
   DuplicateDocumentError,
   getProfile,
   updateProfile,
+  getLLMConfig,
 } from "@/lib/db";
 import { extractTextFromFile } from "@/lib/parser/pdf";
 import { classifyDocument } from "@/lib/parser/document-classifier";
@@ -24,6 +25,7 @@ import {
   smartParseResume,
   type SmartParseResult,
 } from "@/lib/parser/smart-parser";
+import { isLLMConfigured } from "@/lib/llm/is-configured";
 import type { ParsedDocumentData } from "@/types";
 import {
   MAX_FILE_SIZE_BYTES,
@@ -218,7 +220,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const docType = await classifyDocument(extractedText, file.name, null);
+    // Classifier uses the user's configured LLM provider when available so
+    // upload respects /settings/llm (no hardcoded Ollama fallback). Heavy
+    // resume parsing is still gated behind the explicit /api/parse action —
+    // only the lightweight (500-char, 50-token) classifier hits the provider
+    // here. `isLLMConfigured` mirrors the LLMClient env-fallback logic so a
+    // DB-empty config with `OPENAI_API_KEY` set in `.env.local` still routes
+    // through OpenAI instead of falling through to filename heuristics.
+    const userLLMConfig = getLLMConfig(authResult.userId);
+    const classifierConfig = isLLMConfigured(userLLMConfig)
+      ? userLLMConfig
+      : null;
+    const docType = await classifyDocument(
+      extractedText,
+      file.name,
+      classifierConfig,
+    );
 
     // Parse document content — deterministic parser only. All LLM calls are now
     // reserved for explicit parse actions from the UI.

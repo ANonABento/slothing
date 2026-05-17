@@ -8,11 +8,13 @@ const mocks = vi.hoisted(() => ({
   getDocumentByFileHash: vi.fn(),
   getProfile: vi.fn(),
   updateProfile: vi.fn(),
+  getLLMConfig: vi.fn(),
   deleteSourceDocuments: vi.fn(),
   populateBankFromProfile: vi.fn(),
   extractTextFromFile: vi.fn(),
   classifyDocument: vi.fn(),
   smartParseResume: vi.fn(),
+  isLLMConfigured: vi.fn(),
 }));
 
 vi.mock("fs/promises", () => {
@@ -34,6 +36,11 @@ vi.mock("@/lib/db", () => ({
   getDocumentByFileHash: mocks.getDocumentByFileHash,
   getProfile: mocks.getProfile,
   updateProfile: mocks.updateProfile,
+  getLLMConfig: mocks.getLLMConfig,
+}));
+
+vi.mock("@/lib/llm/is-configured", () => ({
+  isLLMConfigured: mocks.isLLMConfigured,
 }));
 
 vi.mock("@/lib/db/profile-bank", () => ({
@@ -103,6 +110,8 @@ describe("upload route dedupe flow", () => {
     mocks.requireAuth.mockResolvedValue({ userId: "user-1" });
     mocks.isAuthError.mockReturnValue(false);
     mocks.getProfile.mockReturnValue(null);
+    mocks.getLLMConfig.mockReturnValue(null);
+    mocks.isLLMConfigured.mockReturnValue(false);
     mocks.extractTextFromFile.mockResolvedValue("resume text");
     mocks.classifyDocument.mockResolvedValue("resume");
     mocks.smartParseResume.mockResolvedValue({
@@ -275,6 +284,53 @@ describe("upload route dedupe flow", () => {
     await POST(uploadRequest(pdfFile()));
 
     expect(mocks.smartParseResume).toHaveBeenCalledWith("resume text", null);
+    expect(mocks.classifyDocument).toHaveBeenCalledWith(
+      "resume text",
+      "test-resume.pdf",
+      null,
+    );
+  });
+
+  it("routes the classifier through the user's configured LLM provider", async () => {
+    // Regression: previously the classifier received `null` even when the user
+    // had configured OpenAI in /settings/llm, leaving the upstream code to
+    // call Ollama via the default fallback. The classifier must now see the
+    // exact provider/model the user selected.
+    const userConfig = {
+      provider: "openai" as const,
+      model: "gpt-4o-mini",
+      apiKey: "sk-user-key",
+    };
+    mocks.getLLMConfig.mockReturnValueOnce(userConfig);
+    mocks.isLLMConfigured.mockReturnValueOnce(true);
+
+    await POST(uploadRequest(pdfFile()));
+
+    expect(mocks.getLLMConfig).toHaveBeenCalledWith("user-1");
+    expect(mocks.isLLMConfigured).toHaveBeenCalledWith(userConfig);
+    expect(mocks.classifyDocument).toHaveBeenCalledWith(
+      "resume text",
+      "test-resume.pdf",
+      userConfig,
+    );
+    // Smart parser stays gated behind /api/parse — upload itself remains
+    // deterministic regardless of provider config.
+    expect(mocks.smartParseResume).toHaveBeenCalledWith("resume text", null);
+  });
+
+  it("passes null to the classifier when the user's LLM config is incomplete", async () => {
+    // E.g. provider chosen but no apiKey + no env fallback. `isLLMConfigured`
+    // returns false; the classifier must not see a half-baked config (which
+    // would surface as a confusing 401/connection error from the provider).
+    const incompleteConfig = {
+      provider: "openai" as const,
+      model: "gpt-4o-mini",
+    };
+    mocks.getLLMConfig.mockReturnValueOnce(incompleteConfig);
+    mocks.isLLMConfigured.mockReturnValueOnce(false);
+
+    await POST(uploadRequest(pdfFile()));
+
     expect(mocks.classifyDocument).toHaveBeenCalledWith(
       "resume text",
       "test-resume.pdf",
