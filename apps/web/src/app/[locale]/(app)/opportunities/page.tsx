@@ -14,6 +14,7 @@ import { useLocale, useTranslations } from "next-intl";
 import {
   ArrowRight,
   Briefcase,
+  ChevronDown,
   Clipboard,
   FileDown,
   LayoutGrid,
@@ -139,6 +140,12 @@ export default function OpportunitiesPage({
   );
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isImportOpen, setIsImportOpen] = useState(false);
+  // PasteBox is collapsed by default — the opportunity list is the
+  // primary content on this page, the JD-paste tool is the secondary
+  // workflow. Open via the disclosure trigger or by clicking elsewhere
+  // (eg the "Analyze a JD" quick action from the dashboard) which
+  // could later set this to true on mount.
+  const [pasteBoxOpen, setPasteBoxOpen] = useState(false);
   const [viewMode, setViewMode] = useState<OpportunityViewMode>("list");
   const [visibleKanbanLanes, setVisibleKanbanLanes] = useState<KanbanLaneId[]>([
     ...DEFAULT_KANBAN_VISIBLE_LANES,
@@ -596,14 +603,46 @@ export default function OpportunitiesPage({
           </Suspense>
         ) : (
           <>
-            <PasteBox
-              ref={pasteRef}
-              icon={Clipboard}
-              title="Paste a job description"
-              subtitle="Slothing scores it against your profile and drafts a tailored resume in seconds."
-              submitLabel="Analyze match"
-              onSubmit={(value) => void handlePasteSubmit(value)}
-            />
+            {pasteBoxOpen ? (
+              <div className="relative">
+                <PasteBox
+                  ref={pasteRef}
+                  icon={Clipboard}
+                  title="Paste a job description"
+                  subtitle="Slothing scores it against your profile and drafts a tailored resume in seconds."
+                  submitLabel="Analyze match"
+                  onSubmit={(value) => void handlePasteSubmit(value)}
+                />
+                <button
+                  type="button"
+                  onClick={() => setPasteBoxOpen(false)}
+                  aria-label="Close paste a job description"
+                  className="absolute right-3 top-3 grid h-7 w-7 place-items-center rounded-sm text-muted-foreground transition-colors hover:bg-rule-strong-bg hover:text-foreground"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setPasteBoxOpen(true)}
+                className="group inline-flex h-9 items-center gap-2 rounded-sm border border-rule bg-paper px-3 text-[13px] font-medium transition-colors hover:border-rule-strong"
+                style={{
+                  backgroundColor: "var(--paper)",
+                  borderColor: "var(--rule)",
+                }}
+              >
+                <Clipboard
+                  className="h-3.5 w-3.5"
+                  style={{ color: "var(--brand)" }}
+                />
+                Paste a job description
+                <ChevronDown
+                  className="h-3 w-3 transition-transform"
+                  style={{ color: "var(--ink-3)" }}
+                />
+              </button>
+            )}
 
             <div
               className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between"

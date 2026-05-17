@@ -2,8 +2,9 @@
 
 import { useRef, useEffect, useState, useCallback } from "react";
 import type { Editor } from "@tiptap/react";
-import { FileText, PenLine, Plus } from "lucide-react";
+import { ArrowRight, FileText, PenLine, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Link } from "@/i18n/navigation";
 import { ResumeEditor } from "@/lib/editor/resume-editor";
 import { EditorFormattingControls } from "@/components/studio/editor-toolbar";
 import { EditorPageSettings } from "@/components/studio/editor-page-settings";
@@ -55,6 +56,12 @@ export interface ResumePreviewProps {
   onPageSettingsChange?: (pageSettings: PageSettings) => void;
   onAddSection?: () => void;
   onAddFromBank?: () => void;
+  /**
+   * When true, the empty-state CTA changes from "Select entries from
+   * your bank" (which is a dead-end if the bank is empty) to a link
+   * pointing at /components where the user actually builds the bank.
+   */
+  bankIsEmpty?: boolean;
   baseResume?: TailoredResume;
   tailoredResume?: TailoredResume;
   /**
@@ -74,7 +81,38 @@ interface PreviewEmptyStateContent {
 
 export function getPreviewEmptyStateContent(
   documentMode: DocumentMode = "resume",
+  bankIsEmpty = false,
 ): PreviewEmptyStateContent {
+  // When the user hasn't built up their knowledge bank yet, "select
+  // entries from your bank" is a dead-end CTA — they have nothing to
+  // select. Send them to /components first.
+  if (bankIsEmpty) {
+    if (documentMode === "cover_letter") {
+      return {
+        eyebrow: "Cover Letter",
+        heading: "Your knowledge bank is empty",
+        description:
+          "Upload a résumé or add experience to /components first. Studio composes cover letters from those entries.",
+        steps: [
+          "Upload a résumé in /components",
+          "Slothing extracts reusable bullets",
+          "Return here to draft your cover letter",
+        ],
+      };
+    }
+    return {
+      eyebrow: "Resume",
+      heading: "Your knowledge bank is empty",
+      description:
+        "Upload a résumé or add experience to /components first. Studio composes tailored resumes from those entries.",
+      steps: [
+        "Upload a résumé in /components",
+        "Slothing extracts reusable bullets",
+        "Return here to compose your resume",
+      ],
+    };
+  }
+
   if (documentMode === "cover_letter") {
     return {
       eyebrow: "Cover Letter",
@@ -112,6 +150,7 @@ export function ResumePreview({
   onPageSettingsChange,
   onAddSection,
   onAddFromBank,
+  bankIsEmpty = false,
   baseResume,
   tailoredResume,
   onEditorReady,
@@ -161,7 +200,10 @@ export function ResumePreview({
 
   const zoomPercent = 100;
   const scale = fitScale * (zoomPercent / 100);
-  const emptyStateContent = getPreviewEmptyStateContent(documentMode);
+  const emptyStateContent = getPreviewEmptyStateContent(
+    documentMode,
+    bankIsEmpty,
+  );
   const EmptyStateIcon = documentMode === "cover_letter" ? PenLine : FileText;
   const diff =
     documentMode === "resume" && baseResume && tailoredResume
@@ -274,15 +316,28 @@ export function ResumePreview({
                   ))}
                 </ol>
 
-                <Button
-                  type="button"
-                  size="lg"
-                  className="mt-7 gradient-bg text-primary-foreground hover:opacity-90"
-                  onClick={onAddFromBank}
-                >
-                  <Plus className="mr-2 h-5 w-5" />
-                  Select entries from your bank
-                </Button>
+                {bankIsEmpty ? (
+                  <Button
+                    asChild
+                    size="lg"
+                    className="mt-7 gradient-bg text-primary-foreground hover:opacity-90"
+                  >
+                    <Link href="/components">
+                      Build your knowledge bank
+                      <ArrowRight className="ml-2 h-5 w-5" />
+                    </Link>
+                  </Button>
+                ) : (
+                  <Button
+                    type="button"
+                    size="lg"
+                    className="mt-7 gradient-bg text-primary-foreground hover:opacity-90"
+                    onClick={onAddFromBank}
+                  >
+                    <Plus className="mr-2 h-5 w-5" />
+                    Select entries from your bank
+                  </Button>
+                )}
               </div>
             </div>
           )}

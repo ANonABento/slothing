@@ -375,6 +375,7 @@ function StudioPageContent() {
                 html={studio.html}
                 documentMode={studio.documentMode}
                 onAddFromBank={() => studio.setEntryPickerOpen(true)}
+                bankIsEmpty={studio.entries.length === 0}
                 content={studio.content}
                 onContentChange={studio.handleContentChange}
                 pageSettings={studio.pageSettings}

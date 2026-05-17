@@ -39,34 +39,53 @@ export function SidebarExtensionCard({ collapsed }: { collapsed: boolean }) {
     <div className="relative py-1">
       <Link
         href="/extension"
+        // Editorial paper-card treatment instead of the heavy primary
+        // tint. In light mode this is a subtle cream chip; in dark mode
+        // it's the `--paper` (midnight-indigo paper) surface — both
+        // recede into the sidebar so the card no longer dominates the
+        // bottom of the nav.
         className={cn(
-          "group block rounded-lg border border-primary/20 bg-primary/5 p-3 text-left shadow-sm transition-colors",
-          "hover:border-primary/35 hover:bg-primary/10 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+          "group block rounded-sm border border-rule bg-paper p-2.5 text-left transition-colors",
+          "hover:border-rule-strong focus:outline-none focus:ring-2 focus:ring-ring",
         )}
+        style={{
+          backgroundColor: "var(--paper)",
+          borderColor: "var(--rule)",
+        }}
         aria-label={a11yT("installTheSlothingBrowserExtension")}
       >
-        <div className="flex min-h-[96px] flex-col justify-between gap-3 pr-6">
-          <div className="flex items-start gap-3">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-              <Puzzle className="h-4 w-4" />
+        <div className="flex min-h-0 flex-col gap-2 pr-5">
+          <div className="flex items-start gap-2">
+            <span
+              className="grid h-6 w-6 shrink-0 place-items-center rounded-sm"
+              style={{
+                backgroundColor: "var(--brand-soft)",
+                color: "var(--brand-dark)",
+              }}
+            >
+              <Puzzle className="h-3.5 w-3.5" />
             </span>
             <span className="min-w-0">
-              <span className="block font-display text-sm font-semibold leading-5 tracking-tight text-foreground">
+              <span
+                className="block text-[12.5px] font-semibold leading-tight"
+                style={{ color: "var(--ink)" }}
+              >
                 Capture jobs from any site &rarr;
               </span>
-              <span className="mt-1 block text-xs leading-5 text-muted-foreground">
-                Install the Slothing extension
+              <span
+                className="mt-1 block font-mono text-[10px] uppercase tracking-[0.14em]"
+                style={{ color: "var(--ink-3)" }}
+              >
+                Chrome · Edge · Firefox
               </span>
             </span>
           </div>
-          <span className="text-xs font-medium text-primary">
-            Chrome, Edge, and Firefox
-          </span>
         </div>
       </Link>
       <button
         type="button"
-        className="absolute right-2 top-3 flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-background hover:text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+        className="absolute right-1.5 top-2 grid h-5 w-5 place-items-center rounded-sm transition-colors hover:bg-rule-strong-bg focus:outline-none focus:ring-2 focus:ring-ring"
+        style={{ color: "var(--ink-3)" }}
         aria-label={a11yT("dismissExtensionPromo")}
         onClick={(event) => {
           event.preventDefault();
@@ -75,7 +94,7 @@ export function SidebarExtensionCard({ collapsed }: { collapsed: boolean }) {
           setVisible(false);
         }}
       >
-        <X className="h-3.5 w-3.5" />
+        <X className="h-3 w-3" />
       </button>
     </div>
   );
