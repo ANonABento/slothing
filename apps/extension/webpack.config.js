@@ -19,8 +19,11 @@ const outputDir = target === "firefox" ? "dist-firefox" : "dist";
 module.exports = {
   entry: {
     background: "./src/background/index.ts",
-    content: "./src/content/index.ts",
     sharedUi: ["react", "react-dom"],
+    content: {
+      import: "./src/content/index.ts",
+      dependOn: "sharedUi",
+    },
     popup: {
       import: "./src/popup/index.tsx",
       dependOn: "sharedUi",

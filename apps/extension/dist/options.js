@@ -576,9 +576,9 @@ function messageForError(err) {
 /* harmony export */   Ri: () => (/* binding */ DEFAULT_API_BASE_URL),
 /* harmony export */   Xf: () => (/* binding */ LEGACY_LOCAL_API_BASE_URL),
 /* harmony export */   a$: () => (/* binding */ DEFAULT_SETTINGS),
-/* harmony export */   eA: () => (/* binding */ SHOULD_PROMOTE_LEGACY_LOCAL_API_BASE_URL)
+/* harmony export */   eA: () => (/* binding */ SHOULD_PROMOTE_LEGACY_LOCAL_API_BASE_URL),
+/* harmony export */   fc: () => (/* binding */ CHAT_PORT_NAME)
 /* harmony export */ });
-/* unused harmony export CHAT_PORT_NAME */
 /**
  * P4/#40 — Long-lived port name used by the inline AI assistant. The content
  * script calls `chrome.runtime.connect({ name: CHAT_PORT_NAME })` and the

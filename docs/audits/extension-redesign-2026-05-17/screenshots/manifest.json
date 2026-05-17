@@ -1,0 +1,15 @@
+{
+  "generatedAt": "2026-05-17T18:43:28.628Z",
+  "extensionId": "kjbmphojcmkpljifogmanjjecjdghbcc",
+  "screenshots": [
+    "01-popup-unauthenticated.png",
+    "02-options-authenticated.png",
+    "03-popup-unsupported.png",
+    "04-popup-job-detected.png",
+    "05-sidebar-right.png",
+    "06-sidebar-collapsed.png",
+    "07-sidebar-left.png",
+    "08-sidebar-floating.png",
+    "09-inline-content-ui.png"
+  ]
+}

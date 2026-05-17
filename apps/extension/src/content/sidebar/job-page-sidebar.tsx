@@ -77,7 +77,6 @@ export function JobPageSidebar(props: JobPageSidebarProps) {
   const dragState = useRef<DragState | null>(null);
 
   const scoreValue = props.score?.overall ?? null;
-  const scoreDegrees = Math.round(((scoreValue ?? 0) / 100) * 360);
   const jobMeta = useMemo(
     () =>
       [props.scrapedJob.company, props.scrapedJob.location]
@@ -310,14 +309,6 @@ export function JobPageSidebar(props: JobPageSidebarProps) {
 
         <div className="body">
           <section className="score-card" aria-label="Match score">
-            <div
-              className="score-number"
-              style={
-                { "--score-deg": `${scoreDegrees}deg` } as React.CSSProperties
-              }
-            >
-              <span>{scoreValue ?? "--"}</span>
-            </div>
             <div>
               <p className="score-label">
                 {scoreValue === null ? "Profile needed" : "Match score"}
@@ -327,6 +318,10 @@ export function JobPageSidebar(props: JobPageSidebarProps) {
                   ? "Connect your profile to score this job."
                   : "Based on your profile and this job description."}
               </p>
+            </div>
+            <div className="score-pill" aria-label="Match score value">
+              <span>{scoreValue ?? "--"}</span>
+              {scoreValue !== null && <small>/100</small>}
             </div>
           </section>
 
@@ -489,9 +484,11 @@ function ActionButton({
       onClick={onClick}
     >
       <span>{active ? activeLabel : feedback || label}</span>
-      <span className={feedback ? "action-status" : ""} aria-hidden="true">
-        {feedback ? "OK" : "-&gt;"}
-      </span>
+      {(active || feedback) && (
+        <span className="action-status" aria-hidden="true">
+          {feedback ? "Done" : "Working"}
+        </span>
+      )}
     </button>
   );
 }

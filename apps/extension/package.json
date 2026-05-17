@@ -9,6 +9,7 @@
     "build:firefox": "pnpm generate-icons && TARGET=firefox webpack --mode production",
     "check:bundle-size": "node scripts/check-bundle-size.js",
     "smoke:firefox": "node scripts/firefox-smoke.mjs",
+    "audit:screenshots": "node scripts/screenshot-audit.mjs",
     "manual:chrome": "node scripts/chrome-manual.mjs",
     "manual:firefox": "node scripts/firefox-manual.mjs",
     "generate-icons": "node scripts/generate-icons.js",

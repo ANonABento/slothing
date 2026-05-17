@@ -222,33 +222,36 @@ input:focus-visible {
 
 .score-card {
   display: grid;
-  grid-template-columns: 60px 1fr;
+  grid-template-columns: 1fr auto;
   gap: 10px;
   align-items: center;
   padding: 10px;
 }
 
-.score-number {
-  display: flex;
+.score-pill {
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  width: 54px;
-  height: 54px;
-  border-radius: 50%;
-  background: conic-gradient(var(--slothing-brand) var(--score-deg), var(--slothing-bg-2) 0);
+  gap: 2px;
+  min-width: 58px;
+  justify-content: flex-end;
+  padding: 5px 8px;
+  border: 1px solid rgba(184, 112, 74, 0.3);
+  border-radius: 999px;
+  background: var(--slothing-brand-soft);
+  color: var(--slothing-ink);
 }
 
-.score-number span {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  background: var(--slothing-paper);
-  color: var(--slothing-ink);
-  font-size: 17px;
+.score-pill span {
+  font-size: 14px;
   font-weight: 900;
+  line-height: 1;
+}
+
+.score-pill small {
+  color: var(--slothing-brand-dark);
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1;
 }
 
 .score-label {
@@ -288,8 +291,9 @@ input:focus-visible {
 
 .action-status {
   color: var(--slothing-success);
-  font-size: 11px;
-  font-weight: 900;
+  font-size: 10px;
+  font-weight: 850;
+  text-transform: uppercase;
 }
 
 .action-button.primary {
