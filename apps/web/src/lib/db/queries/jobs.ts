@@ -1,5 +1,4 @@
 import { db, jobs, eq, and, desc } from "../index";
-import { generateId } from "@/lib/utils";
 import type { JobDescription } from "@/types";
 
 import { nowIso } from "@/lib/format/time";
@@ -78,37 +77,6 @@ export async function getJob(
 
   if (rows.length === 0) return null;
   return mapRowToJob(rows[0]);
-}
-
-// Create job for a user
-export async function createJob(
-  userId: string,
-  job: Omit<JobDescription, "id" | "createdAt">,
-): Promise<JobDescription> {
-  const id = generateId();
-
-  await db.insert(jobs).values({
-    id,
-    userId,
-    title: job.title,
-    company: job.company,
-    location: job.location ?? null,
-    type: job.type ?? null,
-    remote: job.remote ?? false,
-    salary: job.salary ?? null,
-    description: job.description,
-    requirementsJson: JSON.stringify(job.requirements ?? []),
-    responsibilitiesJson: JSON.stringify(job.responsibilities ?? []),
-    keywordsJson: JSON.stringify(job.keywords ?? []),
-    url: job.url ?? null,
-    status: job.status ?? "saved",
-    appliedAt: job.appliedAt ?? null,
-    deadline: job.deadline ?? null,
-    notes: job.notes ?? null,
-  });
-
-  const created = await getJob(userId, id);
-  return created!;
 }
 
 // Update job for a user

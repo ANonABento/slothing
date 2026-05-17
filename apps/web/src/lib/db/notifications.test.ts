@@ -5,6 +5,11 @@ import type { Mock } from "vitest";
 vi.mock("./legacy", () => {
   const mockDb = {
     prepare: vi.fn(),
+    // `ensureSuggestedStatusUpdatesSchema()` (called transitively when
+    // notifications join suggested status updates) runs bootstrap DDL
+    // via `db.exec(...)`. The test only asserts on `prepare()` calls,
+    // so this stub is a no-op.
+    exec: vi.fn(),
   };
   return { default: mockDb };
 });

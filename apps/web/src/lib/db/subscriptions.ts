@@ -1,4 +1,5 @@
 import db from "./legacy";
+import { BILLING_BOOTSTRAP_SQL } from "./bootstrap-sql";
 import { nowIso } from "@/lib/format/time";
 
 export type BillingPlanKey = "pro_monthly" | "pro_weekly";
@@ -83,36 +84,9 @@ let ensured = false;
 export function ensureBillingSchema(): void {
   if (ensured) return;
 
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS stripe_customers (
-      user_id TEXT PRIMARY KEY NOT NULL DEFAULT 'default',
-      stripe_customer_id TEXT NOT NULL UNIQUE,
-      email TEXT,
-      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-      updated_at TEXT DEFAULT CURRENT_TIMESTAMP
-    );
-    CREATE INDEX IF NOT EXISTS idx_stripe_customers_stripe_id
-      ON stripe_customers(stripe_customer_id);
-
-    CREATE TABLE IF NOT EXISTS subscriptions (
-      id TEXT PRIMARY KEY NOT NULL,
-      user_id TEXT NOT NULL DEFAULT 'default',
-      stripe_customer_id TEXT NOT NULL,
-      plan_key TEXT NOT NULL,
-      status TEXT NOT NULL,
-      stripe_price_id TEXT,
-      current_period_start TEXT,
-      current_period_end TEXT,
-      cancel_at_period_end INTEGER NOT NULL DEFAULT 0,
-      canceled_at TEXT,
-      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-      updated_at TEXT DEFAULT CURRENT_TIMESTAMP
-    );
-    CREATE INDEX IF NOT EXISTS idx_subscriptions_user_status
-      ON subscriptions(user_id, status);
-    CREATE INDEX IF NOT EXISTS idx_subscriptions_customer
-      ON subscriptions(stripe_customer_id);
-  `);
+  // DDL co-located with `schema.ts: stripeCustomers` / `subscriptions`.
+  // See `bootstrap-sql.ts`.
+  db.exec(BILLING_BOOTSTRAP_SQL);
 
   ensured = true;
 }

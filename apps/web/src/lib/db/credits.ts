@@ -1,6 +1,7 @@
 import { randomUUID } from "crypto";
 
 import db from "./legacy";
+import { CREDITS_BOOTSTRAP_SQL } from "./bootstrap-sql";
 import { nowIso } from "@/lib/format/time";
 
 export type CreditFeature =
@@ -66,25 +67,10 @@ let ensured = false;
 export function ensureCreditSchema(): void {
   if (ensured) return;
 
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS credit_balances (
-      user_id TEXT PRIMARY KEY NOT NULL DEFAULT 'default',
-      balance INTEGER NOT NULL DEFAULT 0,
-      updated_at TEXT DEFAULT CURRENT_TIMESTAMP
-    );
-
-    CREATE TABLE IF NOT EXISTS credit_transactions (
-      id TEXT PRIMARY KEY NOT NULL,
-      user_id TEXT NOT NULL DEFAULT 'default',
-      delta INTEGER NOT NULL,
-      reason TEXT NOT NULL,
-      feature TEXT,
-      ref_id TEXT,
-      created_at TEXT DEFAULT CURRENT_TIMESTAMP
-    );
-    CREATE INDEX IF NOT EXISTS idx_credit_transactions_user_created
-      ON credit_transactions(user_id, created_at);
-  `);
+  // DDL co-located with the Drizzle table definitions — see
+  // `bootstrap-sql.ts` for the column pins that fail to type-check if
+  // a column is renamed in `schema.ts`.
+  db.exec(CREDITS_BOOTSTRAP_SQL);
 
   ensured = true;
 }

@@ -79,10 +79,24 @@ describe("DangerZoneSection", () => {
     ).toBeInTheDocument();
   });
 
-  it("requires confirm before clearing taida:* keys and reports the count", async () => {
+  it("requires confirm before clearing every Slothing-owned namespace and reports the count", async () => {
+    // One key per documented Slothing namespace.
     window.localStorage.setItem("taida:onboarding-dismissed-at", "2025-01-01");
     window.localStorage.setItem("taida:builder:versions:abc", "[]");
-    window.localStorage.setItem("not-taida-key", "keep-me");
+    window.localStorage.setItem("taida-opportunities", "[]");
+    window.localStorage.setItem(
+      "slothing:selectedBankEntryIds",
+      JSON.stringify(["a"]),
+    );
+    window.localStorage.setItem("slothing-prefs", JSON.stringify({}));
+    window.localStorage.setItem("get_me_job_onboarding_completed", "true");
+    window.localStorage.setItem("theme", "dark");
+    window.localStorage.setItem("theme-dark", "midnight");
+
+    // Foreign keys must survive.
+    window.localStorage.setItem("not-slothing-key", "keep-me");
+    window.localStorage.setItem("themed", "keep-me");
+    window.localStorage.setItem("editorial-prefs", "keep-me");
 
     render(<DangerZoneSection />);
 
@@ -94,17 +108,31 @@ describe("DangerZoneSection", () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText(/Cleared 2 local keys/)).toBeInTheDocument();
+      expect(screen.getByText(/Cleared 8 local keys/)).toBeInTheDocument();
     });
 
-    // Non-taida keys are preserved.
-    expect(window.localStorage.getItem("not-taida-key")).toBe("keep-me");
+    // Every Slothing-owned key is wiped.
     expect(
       window.localStorage.getItem("taida:onboarding-dismissed-at"),
     ).toBeNull();
     expect(
       window.localStorage.getItem("taida:builder:versions:abc"),
     ).toBeNull();
+    expect(window.localStorage.getItem("taida-opportunities")).toBeNull();
+    expect(
+      window.localStorage.getItem("slothing:selectedBankEntryIds"),
+    ).toBeNull();
+    expect(window.localStorage.getItem("slothing-prefs")).toBeNull();
+    expect(
+      window.localStorage.getItem("get_me_job_onboarding_completed"),
+    ).toBeNull();
+    expect(window.localStorage.getItem("theme")).toBeNull();
+    expect(window.localStorage.getItem("theme-dark")).toBeNull();
+
+    // Foreign + neighbouring-but-not-owned keys are preserved.
+    expect(window.localStorage.getItem("not-slothing-key")).toBe("keep-me");
+    expect(window.localStorage.getItem("themed")).toBe("keep-me");
+    expect(window.localStorage.getItem("editorial-prefs")).toBe("keep-me");
   });
 
   it("uses singular copy when exactly one key is cleared", async () => {

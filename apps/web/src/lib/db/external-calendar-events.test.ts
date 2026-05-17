@@ -2,7 +2,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Mock } from "vitest";
 
 vi.mock("./legacy", () => ({
-  default: { prepare: vi.fn() },
+  // Bootstrap DDL runs via `db.exec(...)` (see `bootstrap-sql.ts`); the
+  // mock stubs it as a no-op so we can keep asserting on `prepare()`.
+  default: { prepare: vi.fn(), exec: vi.fn() },
 }));
 
 import db from "./legacy";
@@ -24,7 +26,10 @@ describe("external calendar events", () => {
     ensureExternalCalendarEventsSchema();
     ensureExternalCalendarEventsSchema();
 
-    expect(run).toHaveBeenCalledTimes(4);
+    // Bootstrap DDL runs through `db.exec(...)` (see `bootstrap-sql.ts`)
+    // once per `ensure...()` call. The function is not memoised, so two
+    // calls produce two exec invocations.
+    expect(db.exec).toHaveBeenCalledTimes(2);
   });
 
   it("looks up processed records scoped by user/provider/event", () => {
@@ -36,10 +41,7 @@ describe("external calendar events", () => {
       action: "suggested",
       processed_at: "2026-05-10T00:00:00.000Z",
     });
-    (db.prepare as Mock)
-      .mockReturnValueOnce({ run: vi.fn() })
-      .mockReturnValueOnce({ run: vi.fn() })
-      .mockReturnValueOnce({ get });
+    (db.prepare as Mock).mockReturnValueOnce({ get });
 
     const record = getExternalCalendarEvent("user-1", "google", "event-1");
 
@@ -57,12 +59,11 @@ describe("external calendar events", () => {
       action: "auto_linked",
       processed_at: "2026-05-10T00:00:00.000Z",
     });
+    // After moving the bootstrap DDL to `db.exec(...)`, the only
+    // `prepare()` calls are (1) the INSERT and (2) the SELECT inside
+    // the follow-up `getExternalCalendarEvent` lookup.
     (db.prepare as Mock)
-      .mockReturnValueOnce({ run: vi.fn() })
-      .mockReturnValueOnce({ run: vi.fn() })
       .mockReturnValueOnce({ run })
-      .mockReturnValueOnce({ run: vi.fn() })
-      .mockReturnValueOnce({ run: vi.fn() })
       .mockReturnValueOnce({ get });
 
     const record = recordExternalCalendarEvent({

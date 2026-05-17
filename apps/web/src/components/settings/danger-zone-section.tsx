@@ -10,10 +10,12 @@ import {
   EditorialPanelHeader,
 } from "@/components/editorial";
 import { pluralize } from "@/lib/text/pluralize";
+import { isSlothingLocalStorageKey } from "@/lib/constants";
 
 /**
- * Number of `taida:*` keys that were cleared on the last successful
- * reset. `null` means the action has not been run yet in this session.
+ * Number of Slothing-owned local-storage keys that were cleared on the
+ * last successful reset. `null` means the action has not been run yet
+ * in this session.
  */
 type ResetResult =
   | { kind: "idle" }
@@ -24,11 +26,13 @@ type ResetResult =
  * Danger Zone — currently scopes to *local* destructive actions that
  * don't require a backend mutation:
  *
- * - "Reset local preferences" wipes every `taida:*` key out of
- *   `localStorage`. This restores onboarding, builder version history,
- *   theme tweaks, and dashboard dismissals to defaults. The DB is left
- *   untouched. We document this scope inline so users don't expect a
- *   full account wipe.
+ * - "Reset local preferences" wipes every Slothing-owned localStorage
+ *   namespace (see `LOCAL_STORAGE_KEY_PATTERNS` in
+ *   `lib/constants/storage.ts`). That covers the canonical `taida:*`
+ *   prefix plus the legacy variants we accumulated before
+ *   consolidating: `taida-*`, `slothing:*`, `slothing-prefs`,
+ *   `get_me_job_*`, and the bare `theme` / `theme-dark` keys. The DB
+ *   is left untouched.
  *
  * Adding heavier actions (delete all data, delete account) requires a
  * backend route + Pattern A — leave a clear TODO + tests when wiring
@@ -56,7 +60,7 @@ export function DangerZoneSection() {
       const toRemove: string[] = [];
       for (let i = 0; i < length; i++) {
         const key = window.localStorage.key(i);
-        if (typeof key === "string" && key.startsWith("taida:")) {
+        if (typeof key === "string" && isSlothingLocalStorageKey(key)) {
           toRemove.push(key);
         }
       }

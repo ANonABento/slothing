@@ -4,6 +4,11 @@ import type { Mock } from "vitest";
 vi.mock("./legacy", () => ({
   default: {
     prepare: vi.fn(),
+    // Bootstrap DDL runs via `db.exec(...)` (see `bootstrap-sql.ts`).
+    // The tests don't exercise the bootstrap statements directly — they
+    // assert on the `prepare()`-driven ALTER TABLE migrations — so this
+    // stub is a no-op.
+    exec: vi.fn(),
   },
 }));
 
