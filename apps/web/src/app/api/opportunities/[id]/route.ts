@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth, isAuthError } from "@/lib/auth";
 import { getJob, updateJob, deleteJob } from "@/lib/db/jobs";
-import { updateJobSchema } from "@/lib/constants";
+import { updateJobSchema } from "@/lib/validation/jobs";
 import { recordJobStatusChange } from "@/lib/db/analytics";
 import { jobToOpportunity } from "@/lib/opportunities";
 import { safeTrackActivity } from "@/lib/streak/track";

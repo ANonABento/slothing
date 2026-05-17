@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth, isAuthError } from "@/lib/auth";
-import { importJobSchema } from "@/lib/constants";
+import { importJobSchema } from "@/lib/validation/jobs";
 import { createJob, getJobs } from "@/lib/db/jobs";
 import type { JobDescription } from "@/types";
 

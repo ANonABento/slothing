@@ -18,11 +18,11 @@ import {
   REMINDER_TYPES,
   STORAGE_KEYS,
   THEMES,
-  updateJobSchema,
   updateProfileSchema,
   validateFileMagicBytes,
   fullExportDataSchema,
 } from "./constants";
+import { updateJobSchema } from "./validation/jobs";
 
 describe("constants barrel", () => {
   it("should expose representative exports from every domain module", () => {
