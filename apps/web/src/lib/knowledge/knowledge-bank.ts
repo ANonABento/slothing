@@ -170,6 +170,7 @@ export function multiQuerySearch(
 // --- Below: knowledge chunk storage (from ingest pipeline) ---
 
 import db from "@/lib/db/legacy";
+import { KNOWLEDGE_CHUNKS_BOOTSTRAP_SQL } from "@/lib/db/bootstrap-sql";
 import { generateId } from "@/lib/utils";
 
 export interface KnowledgeChunk {
@@ -196,25 +197,10 @@ interface KnowledgeChunkRow {
   created_at: string;
 }
 
-// Ensure table exists
-db.exec(`
-  CREATE TABLE IF NOT EXISTS knowledge_chunks (
-    id TEXT PRIMARY KEY,
-    user_id TEXT NOT NULL DEFAULT 'default',
-    document_id TEXT NOT NULL,
-    section_type TEXT NOT NULL,
-    content TEXT NOT NULL,
-    content_hash TEXT NOT NULL,
-    embedding BLOB,
-    metadata_json TEXT DEFAULT '{}',
-    created_at TEXT DEFAULT CURRENT_TIMESTAMP
-  );
-
-  CREATE INDEX IF NOT EXISTS idx_knowledge_chunks_user ON knowledge_chunks(user_id);
-  CREATE INDEX IF NOT EXISTS idx_knowledge_chunks_document ON knowledge_chunks(document_id);
-  CREATE INDEX IF NOT EXISTS idx_knowledge_chunks_hash ON knowledge_chunks(content_hash);
-  CREATE INDEX IF NOT EXISTS idx_knowledge_chunks_section ON knowledge_chunks(user_id, section_type);
-`);
+// Ensure table exists. DDL co-located with `schema.ts: knowledgeChunks`
+// via `lib/db/bootstrap-sql.ts` (see F2.7 in the legacy-duplication
+// audit for the original drift footgun).
+db.exec(KNOWLEDGE_CHUNKS_BOOTSTRAP_SQL);
 
 function rowToChunk(row: KnowledgeChunkRow): KnowledgeChunk {
   return {

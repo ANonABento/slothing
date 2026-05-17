@@ -1,4 +1,5 @@
 import db from "./legacy";
+import { SUGGESTED_STATUS_UPDATES_BOOTSTRAP_SQL } from "./bootstrap-sql";
 import { generateId } from "@/lib/utils";
 import { nowIso } from "@/lib/format/time";
 
@@ -49,27 +50,9 @@ interface SuggestedStatusUpdateRow {
 }
 
 export function ensureSuggestedStatusUpdatesSchema(): void {
-  db.prepare(
-    `CREATE TABLE IF NOT EXISTS suggested_status_updates (
-      id TEXT PRIMARY KEY,
-      user_id TEXT NOT NULL DEFAULT 'default',
-      notification_id TEXT NOT NULL UNIQUE,
-      opportunity_id TEXT NOT NULL,
-      suggested_status TEXT NOT NULL,
-      source_provider TEXT,
-      source_event_id TEXT,
-      confidence REAL,
-      reason TEXT,
-      evidence_json TEXT,
-      state TEXT NOT NULL DEFAULT 'pending',
-      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-      resolved_at TEXT
-    )`,
-  ).run();
-  db.prepare(
-    `CREATE INDEX IF NOT EXISTS idx_suggested_status_updates_user_state
-     ON suggested_status_updates(user_id, state)`,
-  ).run();
+  // DDL co-located with `schema.ts: suggestedStatusUpdates`. See
+  // `bootstrap-sql.ts`.
+  db.exec(SUGGESTED_STATUS_UPDATES_BOOTSTRAP_SQL);
   const columns = (
     db.prepare("PRAGMA table_info(suggested_status_updates)").all() as Array<{
       name: string;

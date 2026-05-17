@@ -1,4 +1,5 @@
 import db from "./legacy";
+import { EXTERNAL_CALENDAR_EVENTS_BOOTSTRAP_SQL } from "./bootstrap-sql";
 import { nowIso } from "@/lib/format/time";
 
 export type ExternalCalendarEventAction =
@@ -45,25 +46,9 @@ interface ExternalCalendarEventRow {
 }
 
 export function ensureExternalCalendarEventsSchema(): void {
-  db.prepare(
-    `CREATE TABLE IF NOT EXISTS external_calendar_events (
-      id TEXT PRIMARY KEY,
-      user_id TEXT NOT NULL DEFAULT 'default',
-      provider TEXT NOT NULL,
-      external_event_id TEXT NOT NULL,
-      calendar_id TEXT,
-      matched_opportunity_id TEXT,
-      action TEXT NOT NULL,
-      event_title TEXT,
-      event_start TEXT,
-      processed_at TEXT DEFAULT CURRENT_TIMESTAMP,
-      UNIQUE(user_id, provider, external_event_id)
-    )`,
-  ).run();
-  db.prepare(
-    `CREATE INDEX IF NOT EXISTS idx_external_calendar_events_user_processed
-     ON external_calendar_events(user_id, processed_at)`,
-  ).run();
+  // DDL co-located with `schema.ts: externalCalendarEvents`. See
+  // `bootstrap-sql.ts`.
+  db.exec(EXTERNAL_CALENDAR_EVENTS_BOOTSTRAP_SQL);
 }
 
 function rowToRecord(

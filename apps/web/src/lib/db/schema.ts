@@ -256,6 +256,8 @@ export const notifications = sqliteTable("notifications", {
   createdAt: text("created_at").default(sql`CURRENT_TIMESTAMP`),
 });
 
+// Bootstrap DDL co-located in `./bootstrap-sql.ts`
+// (EXTERNAL_CALENDAR_EVENTS_BOOTSTRAP_SQL). Edit BOTH on column changes.
 export const externalCalendarEvents = sqliteTable(
   "external_calendar_events",
   {
@@ -283,6 +285,8 @@ export const externalCalendarEvents = sqliteTable(
   ],
 );
 
+// Bootstrap DDL co-located in `./bootstrap-sql.ts`
+// (SUGGESTED_STATUS_UPDATES_BOOTSTRAP_SQL). Edit BOTH on column changes.
 export const suggestedStatusUpdates = sqliteTable(
   "suggested_status_updates",
   {
@@ -358,6 +362,8 @@ export const llmSettings = sqliteTable("llm_settings", {
   updatedAt: text("updated_at").default(sql`CURRENT_TIMESTAMP`),
 });
 
+// Bootstrap DDL for stripeCustomers + subscriptions co-located in
+// `./bootstrap-sql.ts` (BILLING_BOOTSTRAP_SQL). Edit BOTH on column changes.
 export const stripeCustomers = sqliteTable(
   "stripe_customers",
   {
@@ -398,6 +404,8 @@ export const subscriptions = sqliteTable(
   ],
 );
 
+// Bootstrap DDL co-located in `./bootstrap-sql.ts` (CREDITS_BOOTSTRAP_SQL).
+// Edit BOTH when adding/renaming a column. See F2.7.
 export const creditBalances = sqliteTable("credit_balances", {
   userId: text("user_id").primaryKey().notNull().default(DEFAULT_USER_ID),
   balance: integer("balance").notNull().default(0),
@@ -436,7 +444,8 @@ export const emailDrafts = sqliteTable("email_drafts", {
   updatedAt: text("updated_at").default(sql`CURRENT_TIMESTAMP`),
 });
 
-// Email sends table
+// Email sends table. Bootstrap DDL co-located in `./bootstrap-sql.ts`
+// (EMAIL_SENDS_BOOTSTRAP_SQL). Edit BOTH on column changes.
 export const emailSends = sqliteTable(
   "email_sends",
   {
@@ -463,7 +472,9 @@ export const emailSends = sqliteTable(
   ],
 );
 
-// Opportunity contacts table
+// Opportunity contacts table. Bootstrap DDL co-located in
+// `./bootstrap-sql.ts` (OPPORTUNITY_CONTACTS_BOOTSTRAP_SQL). Edit BOTH
+// on column changes.
 export const opportunityContacts = sqliteTable(
   "opportunity_contacts",
   {
@@ -676,7 +687,9 @@ export const chunks = sqliteTable(
   ],
 );
 
-// Tailored resume knowledge chunks with optional embeddings
+// Tailored resume knowledge chunks with optional embeddings.
+// Bootstrap DDL co-located in `./bootstrap-sql.ts`
+// (KNOWLEDGE_CHUNKS_BOOTSTRAP_SQL). Edit BOTH on column changes.
 export const knowledgeChunks = sqliteTable(
   "knowledge_chunks",
   {
@@ -821,6 +834,9 @@ export const resumeAbTracking = sqliteTable(
   ],
 );
 
+// Bootstrap DDL for promptVariants + promptVariantResults co-located in
+// `./bootstrap-sql.ts` (PROMPT_VARIANTS_BOOTSTRAP_SQL). Edit BOTH on
+// column changes.
 export const promptVariants = sqliteTable(
   "prompt_variants",
   {
@@ -853,6 +869,9 @@ export const promptVariantResults = sqliteTable(
   ],
 );
 
+// Bootstrap DDL for userActivity + achievementUnlocks co-located in
+// `./bootstrap-sql.ts` (STREAK_BOOTSTRAP_SQL). Edit BOTH on column
+// changes.
 export const userActivity = sqliteTable(
   "user_activity",
   {
