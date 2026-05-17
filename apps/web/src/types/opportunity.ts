@@ -1,9 +1,22 @@
-import { z } from "zod";
-
-import type { OpportunityStatus } from "@slothing/shared/schemas";
+// F2.3 consolidation: the kanban primitives (`KANBAN_LANE_IDS`,
+// `CLOSED_SUB_STATUSES`, `KANBAN_LANE_GROUPS`, `inferLaneFromStatus`,
+// `isClosedSubStatus`, `normalizeKanbanVisibleLanes`, `kanbanLaneIdSchema`,
+// `kanbanVisibleLanesSchema`, `DEFAULT_KANBAN_VISIBLE_LANES`) used to be
+// copy-pasted in this file. They now live solely in
+// `@slothing/shared/schemas`; this module is a thin pass-through so all
+// `@/types/opportunity` import sites keep working without churn.
 
 export {
+  CLOSED_SUB_STATUSES,
   createOpportunitySchema,
+  DEFAULT_KANBAN_VISIBLE_LANES,
+  inferLaneFromStatus,
+  isClosedSubStatus,
+  KANBAN_LANE_GROUPS,
+  KANBAN_LANE_IDS,
+  kanbanLaneIdSchema,
+  kanbanVisibleLanesSchema,
+  normalizeKanbanVisibleLanes,
   OPPORTUNITY_JOB_TYPES,
   OPPORTUNITY_LEVELS,
   OPPORTUNITY_REMOTE_TYPES,
@@ -23,7 +36,9 @@ export {
 } from "@slothing/shared/schemas";
 
 export type {
+  ClosedSubStatus,
   CreateOpportunityInput,
+  KanbanLaneId,
   Opportunity,
   OpportunityFilters,
   OpportunityJobType,
@@ -35,77 +50,3 @@ export type {
   OpportunityType,
   UpdateOpportunityInput,
 } from "@slothing/shared/schemas";
-
-export const KANBAN_LANE_IDS = [
-  "pending",
-  "saved",
-  "applied",
-  "interviewing",
-  "offer",
-  "closed",
-] as const;
-
-export const CLOSED_SUB_STATUSES = [
-  "rejected",
-  "expired",
-  "dismissed",
-] as const;
-
-export type KanbanLaneId = (typeof KANBAN_LANE_IDS)[number];
-export type ClosedSubStatus = (typeof CLOSED_SUB_STATUSES)[number];
-
-export const KANBAN_LANE_GROUPS: Record<
-  KanbanLaneId,
-  readonly OpportunityStatus[]
-> = {
-  pending: ["pending"],
-  saved: ["saved"],
-  applied: ["applied"],
-  interviewing: ["interviewing"],
-  offer: ["offer"],
-  closed: CLOSED_SUB_STATUSES,
-};
-
-export const DEFAULT_KANBAN_VISIBLE_LANES: readonly KanbanLaneId[] =
-  KANBAN_LANE_IDS;
-
-const STATUS_TO_KANBAN_LANE = Object.fromEntries(
-  KANBAN_LANE_IDS.flatMap((lane) =>
-    KANBAN_LANE_GROUPS[lane].map((status) => [status, lane] as const),
-  ),
-) as Record<OpportunityStatus, KanbanLaneId>;
-
-export function inferLaneFromStatus(status: OpportunityStatus): KanbanLaneId {
-  return STATUS_TO_KANBAN_LANE[status];
-}
-
-export function isClosedSubStatus(
-  status: OpportunityStatus,
-): status is ClosedSubStatus {
-  return (CLOSED_SUB_STATUSES as readonly OpportunityStatus[]).includes(status);
-}
-
-export function normalizeKanbanVisibleLanes(input: unknown): KanbanLaneId[] {
-  const parsedInput =
-    typeof input === "string" ? parseJsonSafely(input) : input;
-  if (!Array.isArray(parsedInput)) {
-    return [...DEFAULT_KANBAN_VISIBLE_LANES];
-  }
-
-  const selected = KANBAN_LANE_IDS.filter((lane) => parsedInput.includes(lane));
-
-  return selected.length > 0 ? selected : [...DEFAULT_KANBAN_VISIBLE_LANES];
-}
-
-function parseJsonSafely(value: string): unknown {
-  try {
-    return JSON.parse(value) as unknown;
-  } catch {
-    return null;
-  }
-}
-
-export const kanbanLaneIdSchema = z.enum(KANBAN_LANE_IDS);
-export const kanbanVisibleLanesSchema = z
-  .array(kanbanLaneIdSchema)
-  .min(1, "At least one kanban lane must remain visible");
