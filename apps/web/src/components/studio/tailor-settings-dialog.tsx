@@ -74,7 +74,16 @@ export function TailorSettingsDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-xl">
+      <DialogContent
+        className="max-w-xl"
+        // Prevent Radix from auto-focusing the first input (the Bullets
+        // per role · Min field). Browser auto-selects number-input
+        // contents, which renders the value in `selection-bg = brand`
+        // and reads as a validation error. Focusing the dialog itself
+        // is fine for keyboard a11y — Tab moves into the form when
+        // the user wants to interact.
+        onOpenAutoFocus={(event) => event.preventDefault()}
+      >
         <DialogHeader>
           <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
             Studio · Tailor
@@ -239,7 +248,18 @@ export function TailorSettingsDialog({
 
           {/* ATS strictness */}
           <div className="grid gap-1.5">
-            <Label htmlFor="tailor-ats-strictness">ATS rules</Label>
+            <div className="flex items-center gap-2">
+              <Label htmlFor="tailor-ats-strictness">ATS rules</Label>
+              <span
+                className="inline-flex h-4 items-center rounded-full px-1.5 font-mono text-[9px] font-semibold uppercase tracking-wider"
+                style={{
+                  backgroundColor: "var(--rule-strong-bg)",
+                  color: "var(--ink-3)",
+                }}
+              >
+                Coming soon
+              </span>
+            </div>
             <Select
               value={draft.atsStrictness}
               onValueChange={(value) =>
@@ -268,8 +288,9 @@ export function TailorSettingsDialog({
               </SelectContent>
             </Select>
             <p className="text-xs text-muted-foreground">
-              Controls how aggressively unsupported claims and decorative
-              formatting are stripped before export.
+              Your preference is saved, but the generator doesn&rsquo;t read
+              this knob yet — it&rsquo;ll shape unsupported-claim filtering and
+              formatting strip-down in a later release.
             </p>
           </div>
 
@@ -300,30 +321,38 @@ export function TailorSettingsDialog({
           </div>
         </div>
 
-        <DialogFooter className="gap-2 sm:gap-2">
+        <DialogFooter className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          {/* Reset pinned left (destructive cluster), Cancel + Save
+              cluster right. Same shape as the review-modal footer. */}
           <Button
             type="button"
             variant="ghost"
+            size="sm"
             onClick={handleReset}
             aria-label="Reset tailor settings to defaults"
+            className="text-destructive hover:bg-destructive/10 hover:text-destructive sm:mr-auto"
           >
             Reset to defaults
           </Button>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            aria-label="Cancel tailor settings"
-          >
-            Cancel
-          </Button>
-          <Button
-            type="button"
-            onClick={handleSave}
-            aria-label="Save tailor settings"
-          >
-            Save
-          </Button>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => onOpenChange(false)}
+              aria-label="Cancel tailor settings"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              onClick={handleSave}
+              aria-label="Save tailor settings"
+            >
+              Save
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>

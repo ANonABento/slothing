@@ -799,7 +799,7 @@ function TailorSplit({
       {open && (
         <div
           role="menu"
-          className="absolute right-0 top-full z-50 mt-2 w-[280px] overflow-hidden rounded-md border border-rule bg-popover p-1 text-popover-foreground shadow-paper-elevated"
+          className="absolute right-0 top-full z-50 mt-2 w-[320px] overflow-hidden rounded-md border border-rule bg-popover p-1.5 text-popover-foreground shadow-paper-elevated"
         >
           <MenuItem
             icon={
@@ -938,7 +938,7 @@ function ExportSplit({
         <div
           role="menu"
           aria-label={`${modeLabel} export actions`}
-          className="absolute right-0 top-full z-50 mt-2 w-[280px] overflow-hidden rounded-md border border-rule bg-popover p-1 text-popover-foreground shadow-paper-elevated"
+          className="absolute right-0 top-full z-50 mt-2 w-[320px] overflow-hidden rounded-md border border-rule bg-popover p-1.5 text-popover-foreground shadow-paper-elevated"
         >
           <MenuItem
             icon={<FileText className="h-3.5 w-3.5" />}
