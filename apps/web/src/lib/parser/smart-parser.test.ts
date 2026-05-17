@@ -332,10 +332,20 @@ Engineer at Corp
     expect(result.profile.skills?.map((skill) => skill.name)).toEqual(
       expect.arrayContaining(["TypeScript", "React", "GraphQL", "Docker"]),
     );
+    expect(result.profile.skills).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ name: "English", category: "language" }),
+        expect.objectContaining({ name: "French", category: "language" }),
+      ]),
+    );
+    expect(result.profile.skills?.map((skill) => skill.name)).not.toContain(
+      "bilingual English/French.",
+    );
     expect(result.profile.education?.[0]).toMatchObject({
       institution: "University of Waterloo",
       degree: "BMath",
       field: "Statistics",
+      endDate: "2019",
     });
   });
 

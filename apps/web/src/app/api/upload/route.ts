@@ -336,6 +336,7 @@ export async function POST(request: NextRequest) {
         id,
         filename: safeFilename,
         type: docType,
+        mimeType: file.type,
         size: file.size,
         extractedText: buildExtractedTextPreview(extractedText),
       },

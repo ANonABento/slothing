@@ -122,6 +122,7 @@ interface StudioPageState {
   handleReorder: (fromIndex: number, toIndex: number) => void;
   handleSaveManualVersion: () => void;
   handleSelectDocument: (id: string) => void;
+  handleGenerateFromBank: () => void;
   handleTemplateSelect: (templateId: string) => void;
   handleToggleEntry: (id: string) => void;
   handleToggleVisibility: (categoryId: BankCategory) => void;
@@ -336,6 +337,7 @@ export function useStudioPageState(): StudioPageState {
   const lastPreviewErrorToastRef = useRef("");
   const lastActiveDocumentIdRef = useRef<string | null>(null);
   const lastCoverLetterEntryKeyRef = useRef<string | null>(null);
+  const restoringVersionDocumentIdRef = useRef<string | null>(null);
   const extensionLoadStartedRef = useRef(false);
   const contentRef = useRef<TipTapJSONContent | undefined>(undefined);
   const previousPanelsRef = useRef<{ files: boolean; ai: boolean } | null>(
@@ -575,6 +577,48 @@ export function useStudioPageState(): StudioPageState {
     const nextTemplateId =
       activeDocument.templateId ??
       getDefaultTemplateIdForDocumentMode(activeDocument.mode);
+    const storedVersions =
+      typeof window !== "undefined"
+        ? readBuilderVersions(window.localStorage, activeDocument.id)
+        : [];
+    const latestVersion = storedVersions[0];
+    const shouldRestoreLatestVersion =
+      lastActiveDocumentIdRef.current !== activeDocument.id &&
+      latestVersion &&
+      latestVersion.state.documentMode === activeDocument.mode &&
+      !activeDocument.html &&
+      !activeDocument.content &&
+      (activeDocument.selectedEntryIds ?? []).length === 0;
+
+    if (shouldRestoreLatestVersion) {
+      const restored = latestVersion.state;
+      setSelectedIds(new Set(restored.selectedIds));
+      setSections(restored.sections);
+      setTemplateId(restored.templateId);
+
+      setPreviewVersionId(latestVersion.id);
+      restoringVersionDocumentIdRef.current = activeDocument.id;
+      lastActiveDocumentIdRef.current = activeDocument.id;
+      lastCoverLetterEntryKeyRef.current = null;
+      contentRef.current = restored.content;
+      setHtml(restored.html);
+      setContent(restored.content);
+      setPageSettings(normalizePageSettings(restored.pageSettings));
+      setCoverLetterCritique(restored.coverLetterCritique);
+      setVersions(storedVersions);
+      setDocuments((current) =>
+        updateStudioDocument(current, activeDocument.id, {
+          selectedEntryIds: restored.selectedIds,
+          sections: restored.sections,
+          templateId: restored.templateId,
+          content: restored.content,
+          html: restored.html,
+          pageSettings: restored.pageSettings,
+          coverLetterCritique: restored.coverLetterCritique,
+        }),
+      );
+      return;
+    }
 
     setSelectedIds((current) =>
       areSelectedIdsEqual(current, nextSelectedEntryIds)
@@ -590,6 +634,7 @@ export function useStudioPageState(): StudioPageState {
 
     if (lastActiveDocumentIdRef.current !== activeDocument.id) {
       setPreviewVersionId(null);
+      restoringVersionDocumentIdRef.current = null;
       lastActiveDocumentIdRef.current = activeDocument.id;
       lastCoverLetterEntryKeyRef.current = null;
       contentRef.current = activeDocument.content;
@@ -599,9 +644,7 @@ export function useStudioPageState(): StudioPageState {
       setCoverLetterCritique(activeDocument.coverLetterCritique);
     }
 
-    if (typeof window !== "undefined") {
-      setVersions(readBuilderVersions(window.localStorage, activeDocument.id));
-    }
+    setVersions(storedVersions);
   }, [
     activeDocument.id,
     activeDocument.content,
@@ -613,6 +656,20 @@ export function useStudioPageState(): StudioPageState {
     activeDocument.pageSettings,
     activeDocument.coverLetterCritique,
   ]);
+
+  useEffect(() => {
+    if (dirtyDocumentIds.size === 0) return;
+
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [dirtyDocumentIds]);
 
   const visibleCategoryIds = useMemo(
     () => getVisibleSectionIds(sections),
@@ -698,7 +755,11 @@ export function useStudioPageState(): StudioPageState {
   }, [content]);
 
   useEffect(() => {
-    if (previewVersionId) return;
+    if (previewVersionId) {
+      restoringVersionDocumentIdRef.current = null;
+      return;
+    }
+    if (restoringVersionDocumentIdRef.current === activeDocument.id) return;
 
     if (documentMode === "cover_letter") {
       const entryKey = createEntrySelectionKey(orderedEntries);
@@ -1011,6 +1072,11 @@ export function useStudioPageState(): StudioPageState {
     [markActiveDocumentDirty, updateActiveDocument],
   );
 
+  const handleGenerateFromBank = useCallback(() => {
+    setEntryPickerOpen(false);
+    setMobileView("preview");
+  }, []);
+
   const handleReorder = useCallback(
     (fromIndex: number, toIndex: number) => {
       setPreviewVersionId(null);
@@ -1321,6 +1387,7 @@ export function useStudioPageState(): StudioPageState {
     handleReorder,
     handleSaveManualVersion,
     handleSelectDocument,
+    handleGenerateFromBank,
     handleTemplateSelect,
     handleToggleEntry,
     handleToggleVisibility,

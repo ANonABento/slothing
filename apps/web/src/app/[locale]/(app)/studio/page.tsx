@@ -204,6 +204,7 @@ function StudioPageContent() {
             onCoverLetterSuggestionApply={
               studio.handleCoverLetterSuggestionApply
             }
+            onGenerateFromBank={studio.handleGenerateFromBank}
             onOpenBank={() => studio.setEntryPickerOpen(true)}
             onOpportunityClear={() => studio.setLinkedOpportunityId("")}
             onOpportunitySelect={studio.setLinkedOpportunityId}

@@ -82,6 +82,7 @@ import {
   getExistingUploadTimestamp,
   type UploadConflictExisting,
 } from "@/lib/upload-conflict";
+import { getUploadReviewPreviewStatus } from "./upload-review-preview-status";
 import { cn } from "@/lib/utils";
 import {
   getBankEntryParentId,
@@ -120,7 +121,9 @@ interface BankUploadResponse {
     id: string;
     filename: string;
     type: string;
+    mimeType?: string;
     size: number;
+    extractedText?: string;
   };
 }
 
@@ -128,6 +131,7 @@ interface UploadReviewState {
   documentId: string;
   filename: string;
   docType: string;
+  mimeType?: string;
   entries: BankEntry[];
 }
 
@@ -1079,6 +1083,7 @@ export function BankComponentsTab({
             documentId,
             docType: uploadData.document?.type || "other",
             filename: uploadData.document?.filename || file.name,
+            mimeType: uploadData.document?.mimeType || file.type,
             entries: reviewEntries,
           });
         } else {
@@ -1579,6 +1584,16 @@ export function BankComponentsTab({
                         })
                       : ""}
                   </DialogDescription>
+                  {uploadReview ? (
+                    <div className="mt-3 rounded-md border border-border/70 bg-muted/30 px-3 py-2 text-sm text-muted-foreground">
+                      {
+                        getUploadReviewPreviewStatus({
+                          filename: uploadReview.filename,
+                          mimeType: uploadReview.mimeType,
+                        }).message
+                      }
+                    </div>
+                  ) : null}
                 </DialogHeader>
                 <div className="max-h-[68vh] overflow-hidden">
                   {uploadReview ? (
