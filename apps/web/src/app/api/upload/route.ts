@@ -24,6 +24,16 @@ import {
   smartParseResume,
   type SmartParseResult,
 } from "@/lib/parser/smart-parser";
+import { cachePdfBytes } from "@/lib/parse/pdf-cache";
+import {
+  deriveSearchNeedles,
+  extractPdfPositions,
+  findPositionsForText,
+} from "@/lib/parse/pdf-positions";
+import {
+  listBankEntriesPaginated,
+  updateBankEntryPositions,
+} from "@/lib/db/profile-bank";
 import type { ParsedDocumentData } from "@/types";
 import {
   MAX_FILE_SIZE_BYTES,
@@ -327,6 +337,145 @@ export async function POST(request: NextRequest) {
           "[upload] Profile auto-promote failed:",
           err instanceof Error ? err.stack : err,
         );
+      }
+
+      // PF.1 + PF.3 — best-effort: extract per-text-item positions from the
+      // PDF, fuzzy-match every newly-created bank entry back to its source
+      // location, and stash the original PDF bytes in a TTL cache so the
+      // review modal can render a preview. Wrapped in try/catch — a parse
+      // failure here must not break the upload itself.
+      if (
+        entriesCreated > 0 &&
+        (file.type === "application/pdf" ||
+          file.name.toLowerCase().endsWith(".pdf"))
+      ) {
+        try {
+          cachePdfBytes(id, authResult.userId, buffer, "application/pdf");
+          const positions = await extractPdfPositions(buffer);
+          const docEntries = listBankEntriesPaginated({
+            userId: authResult.userId,
+            sourceDocumentId: id,
+            limit: 1000,
+          });
+          let matched = 0;
+          const misses: { category: string; needle: string }[] = [];
+          // PF P2.1 — Two-pass matching: roots first (experience,
+          // project, education), then bullets anchored under their
+          // parent's bbox. Anchoring lets the matcher accept short
+          // generic bullets that wouldn't pass the global threshold.
+          const ROOT_CATEGORIES = new Set([
+            "experience",
+            "project",
+            "education",
+            "certification",
+            "hackathon",
+          ]);
+          const rootEntries = docEntries.filter((e) =>
+            ROOT_CATEGORIES.has(e.category),
+          );
+          const childEntries = docEntries.filter(
+            (e) => !ROOT_CATEGORIES.has(e.category),
+          );
+
+          /** Resolved root bboxes keyed by entry id, used as anchors. */
+          const rootBboxes = new Map<
+            string,
+            ReturnType<typeof findPositionsForText>
+          >();
+
+          const matchEntry = (
+            entry: (typeof docEntries)[number],
+            anchorBbox?: import("@/lib/parse/pdf-positions").AnchorBbox,
+          ): ReturnType<typeof findPositionsForText> => {
+            const candidates = deriveSearchNeedles(
+              entry.category,
+              entry.content,
+            );
+            if (candidates.length === 0) {
+              misses.push({ category: entry.category, needle: "(empty)" });
+              return [];
+            }
+            let bboxes: ReturnType<typeof findPositionsForText> = [];
+            for (const needle of candidates) {
+              bboxes = findPositionsForText(needle, positions.items, {
+                category: entry.category,
+                anchorBbox,
+              });
+              if (bboxes.length > 0) break;
+            }
+            if (bboxes.length === 0) {
+              misses.push({ category: entry.category, needle: candidates[0] });
+              return [];
+            }
+            const firstPage = bboxes[0][0];
+            updateBankEntryPositions(entry.id, authResult.userId, {
+              page: firstPage,
+              bboxes,
+            });
+            return bboxes;
+          };
+
+          for (const entry of rootEntries) {
+            const bboxes = matchEntry(entry);
+            if (bboxes.length > 0) {
+              rootBboxes.set(entry.id, bboxes);
+              matched += 1;
+            }
+          }
+
+          // Build per-page sorted list of root y0s so each child's
+          // anchor band can extend to the next-sibling-root's y0.
+          const rootsByPage = new Map<number, number[]>();
+          for (const bboxes of rootBboxes.values()) {
+            for (const [page, , y0] of bboxes) {
+              const arr = rootsByPage.get(page) ?? [];
+              arr.push(y0);
+              rootsByPage.set(page, arr);
+            }
+          }
+          for (const arr of rootsByPage.values()) arr.sort((a, b) => a - b);
+
+          for (const entry of childEntries) {
+            let anchorBbox:
+              | import("@/lib/parse/pdf-positions").AnchorBbox
+              | undefined;
+            const parentId =
+              typeof entry.content.parentId === "string"
+                ? entry.content.parentId
+                : undefined;
+            const parentBboxes = parentId
+              ? rootBboxes.get(parentId)
+              : undefined;
+            if (parentBboxes && parentBboxes.length > 0) {
+              const [page, , parentY0] = parentBboxes[0];
+              const pageRoots = rootsByPage.get(page) ?? [];
+              const nextRootY = pageRoots.find((y) => y > parentY0 + 1);
+              anchorBbox = {
+                page,
+                y0: parentY0,
+                yMax: nextRootY ?? parentY0 + 400,
+              };
+            }
+            if (matchEntry(entry, anchorBbox).length > 0) {
+              matched += 1;
+            }
+          }
+          log.debug("upload", "bank entries matched to positions", {
+            matched,
+            total: docEntries.length,
+            misses: misses
+              .slice(0, 20)
+              .map(
+                (m) =>
+                  `  [${m.category}] "${m.needle.slice(0, 80)}${m.needle.length > 80 ? "…" : ""}"`,
+              ),
+          });
+        } catch (err) {
+          console.error(
+            "[upload] PDF position extraction failed (preview unavailable for this upload):",
+            err instanceof Error ? `${err.message}\n${err.stack}` : err,
+          );
+        }
       }
     }
 

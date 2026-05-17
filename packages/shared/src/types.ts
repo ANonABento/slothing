@@ -149,6 +149,27 @@ export interface BankEntry {
   category: BankCategory;
   content: Record<string, unknown>;
   sourceDocumentId?: string;
+  /**
+   * PF.2 — first page (1-indexed) where the entry was located in its source
+   * PDF, or `undefined` if no positional metadata was captured (manual entry,
+   * Drive doc, parse pre-PF.1, or fuzzy match failed).
+   */
+  sourcePage?: number;
+  /**
+   * PF.2 — `[page, x0, y0, x1, y1]` tuples covering every text run that
+   * makes up this entry in the source PDF. Multiple tuples support
+   * entries that span page breaks. `undefined` follows the same rule as
+   * `sourcePage` above.
+   */
+  sourceBbox?: [number, number, number, number, number][];
+  /**
+   * Preview-match cascade P2.2 — which tier resolved this entry's
+   * position. `"fuzzy"` for the free-tier deterministic matcher; future
+   * values `"embedding"`, `"llm-citation"`, `"document-ai"` for the
+   * premium tiers. `undefined` for legacy rows + entries with no PDF
+   * source.
+   */
+  matchMethod?: string;
   confidenceScore: number;
   createdAt: string;
 }

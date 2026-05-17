@@ -1,7 +1,7 @@
 # Review-modal preview feature — spec
 
-**Status:** Draft · 2026-05-16
-**Depends on:** `docs/components-page-rework-spec.md` P0.2 (modal extraction + staging) and P0.3 (drawer primitive).
+**Status:** Implemented · 2026-05-16 — landed via the **fuzzy-match path** (the documented fallback), not the LLM-chunk-ID path the architecture section preferred. See "Implementation status" and "Deviation from spec" at the bottom for the trade-off rationale.
+**Depends on:** `docs/components-page-rework-spec.md` P0.3 (drawer primitive — done).
 **Scope:** Add a document-preview tab to the review-document-parse modal so users can see *where* in the source PDF each parsed component came from, with category-color-coded highlight overlays.
 
 ---
@@ -202,3 +202,62 @@ Each phase is a separate PR. PF.1–PF.3 unblock backend; PF.4+ are frontend on 
 - **Diff view** — when a user re-uploads the same document, show which components changed and which are unchanged.
 - **OCR fallback** for image-only PDFs.
 - **Longer-lived PDF storage** (Option A from §3) — graduate the in-memory cache to durable storage if user research shows people want to revisit previews days/weeks later.
+
+---
+
+# Implementation status (2026-05-16)
+
+## What shipped
+
+| Phase | Outcome |
+| ----- | ------- |
+| **PF.1 — Parser emits positional metadata** | Implemented via the **fuzzy-match path**, not the LLM-chunk-ID path. New `apps/web/src/lib/parse/pdf-positions.ts` extracts per-text-item positions from a PDF buffer with `pdfjs-dist` and exposes `findPositionsForText()` (greedy left-to-right window search) + `deriveSearchNeedle()` (category-aware text extraction). The upload route wires this in as a non-blocking step: for every newly-created bank entry, derive a needle from its category-relevant fields, fuzzy-match against the PDF text items, write `source_page` + `source_bbox[]` back to the row. 9 unit tests in `pdf-positions.test.ts`. |
+| **PF.2 — Schema + API** | Additive migration in `ensureProfileBankHierarchySchema()` adds `source_page INTEGER` and `source_bbox TEXT` columns to `profile_bank`. Drizzle schema mirrors the columns. `BankEntry` type in `packages/shared/src/types.ts` extended with `sourcePage?` and `sourceBbox?` fields. `rowToEntry` parses `source_bbox` JSON; `updateBankEntryPositions()` is the write path. |
+| **PF.3 — PDF cache** | New `apps/web/src/lib/parse/pdf-cache.ts` — in-memory `Map` keyed by `documentId`, 24h TTL, per-user scoping (a brute-forced `documentId` from another user returns null). New `GET /api/bank/documents/[id]/pdf` route streams the cached bytes. Upload route writes the buffer to the cache as part of the non-blocking position-extraction step. 4 unit tests in `pdf-cache.test.ts` cover round-trip, cross-user scoping, eviction, and TTL expiry. |
+| **PF.4 — Modal tabs + PDF viewer** | Left panel of the review modal becomes a tabbed surface: `Document` and `Components (N)`. Document defaults open when a `documentId` is available (i.e., the upload was a PDF). New client component `PdfPreview` renders the PDF page-by-page via raw `pdfjs-dist` to canvas — no `react-pdf` dep, no worker config. Page navigation + zoom controls. Modal grid template flips (`1fr_360px` vs `320px_1fr`) so the active tab gets the larger pane. |
+| **PF.5 — Highlight overlays** | New `HighlightLayer` component places absolutely-positioned divs over the rendered canvas. Color-coded by category (`bg-brand/25`, `bg-primary/25`, `bg-warning/25`, etc.) with hover + selected outlines. Click → selects the entry in the right detail pane. Empty state when no entries have bboxes: explanatory copy below the page. |
+| **PF.6 — Cross-tab navigation** | `View in document ↗` link appears in the right detail pane when the selected entry has bboxes. Clicking it switches `leftTab` to `document` and jumps the PDF to the first matched page via the imperative navigator registered through `onRegisterNavigator`. |
+| **PF.7 — Polish + states** | PDF preview's empty/error states cover loading, `404 Preview unavailable` (cache TTL expired or non-PDF source), and "Couldn't locate parsed components in this PDF" fallback when no entries matched. Non-PDF imports hide the Document tab entirely. Manual entries (no `documentId`) skip the tabs UI. |
+
+## Deviation from spec
+
+The architecture section preferred **modifying the LLM extraction step to emit `source_chunks: number[]`** so each parsed entry carries explicit chunk IDs that map back to bboxes. This session shipped the **fuzzy-match fallback** instead.
+
+**Why the deviation:**
+- Existing parse pipeline (`apps/web/src/lib/parser/pdf.ts` + `smartParseResume`) is a custom regex extractor with no `pdfjs-dist` integration on the parse hot path. Migrating it to chunk-ID emission is a 1-2 week effort that requires LLM-prompt eval testing across many resumes to measure hallucinated-chunk-ID rate (open question #5 in §architecture).
+- The fuzzy-match path uses `pdfjs-dist` only to *augment* the existing pipeline — it runs after parsing succeeds and tags entries with bboxes when it can. If the match fails (parsed text was reformatted, joined, or OCR'd), the entry simply gets no bbox; the modal still works.
+- Per the spec's own §3 fuzzy-match analysis: *"~80% accuracy, no parser refactor. Ship the UX now, upgrade later."* That's the right trade for a feature whose UX-value is mostly in "see the document at all" rather than "every highlight is pixel-perfect."
+
+**When to upgrade:** if highlight-accuracy ends up driving real user friction (people complaining the highlights don't match what was parsed), revisit by:
+1. Adding annotated chunk IDs to the parse-LLM prompt (`smartParseResume`).
+2. Returning `source_chunks: number[]` alongside the structured entry.
+3. Replacing `findPositionsForText` with a chunk-ID lookup in `pdf-positions.ts`.
+The schema (PF.2) and downstream (PF.3–PF.7) don't change.
+
+## Files added / changed
+
+- `apps/web/src/lib/parse/pdf-positions.ts` — new (fuzzy-match + bbox extraction)
+- `apps/web/src/lib/parse/pdf-positions.test.ts` — new
+- `apps/web/src/lib/parse/pdf-cache.ts` — new
+- `apps/web/src/lib/parse/pdf-cache.test.ts` — new
+- `apps/web/src/lib/db/profile-bank.ts` — added `source_page` + `source_bbox` to schema migration + `rowToEntry` + `updateBankEntryPositions()`
+- `apps/web/src/lib/db/schema.ts` — Drizzle columns
+- `packages/shared/src/types.ts` — `sourcePage` / `sourceBbox` on `BankEntry`
+- `apps/web/src/app/api/upload/route.ts` — wires position extraction + cache writes (non-blocking)
+- `apps/web/src/app/api/bank/documents/[id]/pdf/route.ts` — new (PDF stream)
+- `apps/web/src/components/bank/preview/pdf-preview.tsx` — new
+- `apps/web/src/components/bank/preview/highlight-layer.tsx` — new
+- `apps/web/src/app/[locale]/(app)/components/components-tab.tsx` — review-modal tabs, `View in document ↗` link, `documentId`/`documentFilename` plumbing
+
+## Verification
+
+- `pnpm --filter @slothing/web exec tsc --noEmit` — clean
+- `pnpm --filter @slothing/web lint` — 0 errors (4 pre-existing exhaustive-deps warnings, unrelated)
+- `pnpm --filter @slothing/web exec vitest run …` — **382 passed, 0 failed** across components, lib/bank, lib/parse, scroll-behavior
+
+## Known limitations (next-session candidates)
+
+1. **Match accuracy.** Greedy left-to-right matching doesn't handle reordered phrases or paraphrasing. Spec'd "~80% accuracy" — confirm with real-data eval.
+2. **PDF cache is process-local.** Two server instances each have their own cache. For multi-instance deployments, swap the `Map` in `pdf-cache.ts` for Redis (same interface).
+3. **Mobile.** Document tab is hidden in the architecture but not yet conditioned on viewport width — currently usable on tablet+ but cramped on phone. Add a `lg:` breakpoint check before PF.4 visibility.
+4. **LLM-chunk-ID upgrade path** described in §"Deviation from spec" remains the high-fidelity target. Not blocking, but the upgrade is well-scoped now that the surrounding infrastructure is in place.

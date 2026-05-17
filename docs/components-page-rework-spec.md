@@ -1,6 +1,6 @@
 # Components page — rework spec
 
-**Status:** Draft · 2026-05-16
+**Status:** Implemented · 2026-05-16 (see "Implementation status" at bottom)
 **Scope:** `/components` (the bank library page) + the post-upload "Review detected document components" modal.
 **Goal:** Fix the issues surfaced in the audit so the page earns trust as the place users land to triage parsed resume data.
 
@@ -357,3 +357,56 @@ Each phase is a separate PR. Each PR includes the relevant Vitest coverage and a
 # Related specs
 
 - `docs/components-preview-feature-spec.md` — the document-preview tab inside the review modal. Depends on P0.2 (modal extraction) and P0.3 (drawer primitive).
+
+---
+
+# Implementation status (2026-05-16)
+
+## Shipped this session
+
+| Phase | Outcome |
+| ----- | ------- |
+| **P0.1 — Count reconciliation** | Extracted `deriveCategoryCounts` / `deriveSourceDocumentCounts` / `deriveVisibleEntryCount` into `apps/web/src/lib/bank/count-derivation.ts`. Page header reads from a single source-of-truth, section headers use global category counts, tab pills unchanged. 13 unit tests in `count-derivation.test.ts` lock the three-surface alignment. |
+| **P0.4 — Wheel-event scroll trap** | Root cause was `overscroll-behavior: none` set globally on `.overflow-auto` / `.overflow-y-auto` / `.overflow-x-auto` in `globals.css`. Removed the rule; updated `scroll-behavior.test.ts` to assert the opposite (utilities must NOT carry `none`/`contain` — scroll chaining must work). |
+| **P0.3 — Drawer + table read-only peek** | New `Sheet` primitive (`apps/web/src/components/ui/sheet.tsx`). New `ComponentDetailDrawer` (`apps/web/src/components/bank/component-detail-drawer.tsx`). Cards now open the drawer on click (no inline expansion). Table row body click also opens the drawer; the chevron toggles a read-only bullet peek rendered by new `ChunkPeek` (`apps/web/src/components/bank/chunk-peek.tsx`). |
+| **P0.2 (lite path) — Rename + Cancel** | Modal title → "Clean up imported components"; description updated. New `Discard import` button in the modal footer (with confirm dialog) deletes the parsed entries. Translation keys added to all 8 locales. **Real-staging path is NOT implemented** (no `parsed_documents` table). Closing the modal with `X` or `Keep editing later` still leaves entries in the bank — but `Discard import` now provides the missing "throw this away" affordance. |
+| **P1.1 — Auto-resolve trivial duplicates** | When the parsed copy adds zero new bullets, `Discard parsed copy` becomes the visually highlighted CTA and `Merge bullets` is disabled with tooltip "Nothing new to merge." |
+| **P1.2 — Keep both action** | Third button added to the duplicate panel. Per-session `keepBothIds` Set tracks dismissals; warning panel hides for the marked entry. |
+| **P1.3 — Cross-document dedupe** | The filter on `existingEntries` no longer excludes by `sourceDocumentId` — only by entry ID (to avoid self-matching). A project from one resume now matches the same project in another. |
+| **P1.4 — Confidence pill signal** | Inverted the chip logic. High-confidence rows carry no chip; only `Medium confidence` (warning) and `Low confidence` (destructive) variants render. Numeric % stays in the table column. |
+| **P1.5 — Source UUID → filename** | `ChunkCard` accepts a `sourceFilenames` map prop. Card now renders `from <filename>` instead of `from <uuid>`. Raw UUID accessible via `data-source-id` attribute only in debug mode. |
+| **P1.6 — Cancel action** | Implemented as part of P0.2 — `Discard import` button is the cancel action with confirm dialog. |
+| **P2.2 / P2.3 / P2.4 / P2.5 / P2.6** | Line-clamp-2 titles · tag overflow cap 5 → 3 (with hover tooltip) · `<TimeAgo />` in the table (replaces `formatDateOnly`) · `DisplayModeButton` gets a bordered pill on inactive state · de-duped "Possible duplicate" chrome (the standalone warning hides when the duplicate panel is rendering). |
+| **P2.9 / P2.10** | Audited: the page already used `space-y-6` containers and `px-4 py-3` cells consistently. No change needed. |
+
+## Deferred to a separate effort
+
+| Phase | Why |
+| ----- | --- |
+| **P0.2 (real-staging path)** | Requires new `parsed_documents` table (additive migration), split of upload API into `parse` + `commit` phases, resume-from-session UX, and Vitest coverage for both phases. The rename + `Discard import` button covers the user-visible mental model gap for now. |
+| **P2.1 — Split add-button** | UX redesign of the add-action cluster (`Add Entry / From Drive / Upload`). Not blocking other fixes. |
+| **P2.7 — Bulk actions in review modal** | New UI surface (bulk action bar inside the modal); cleanest as its own change. |
+| **P2.8 — Confidence filter** | New filter UI in the search bar; cleanest as its own change. |
+
+## Files changed
+
+- `apps/web/src/app/[locale]/(app)/components/components-tab.tsx` — primary surface edits
+- `apps/web/src/components/bank/chunk-card.tsx` — drawer-mode prop, confidence chip inversion, filename rendering
+- `apps/web/src/components/bank/chunk-card.types.ts` — `onSelect` and `sourceFilenames` props
+- `apps/web/src/components/bank/component-detail-drawer.tsx` — new
+- `apps/web/src/components/bank/chunk-peek.tsx` — new
+- `apps/web/src/components/ui/sheet.tsx` — new (shadcn-style)
+- `apps/web/src/lib/bank/count-derivation.ts` — new
+- `apps/web/src/lib/bank/count-derivation.test.ts` — new
+- `apps/web/src/components/bank/chunk-card.test.tsx` — updated tests for drawer mode + confidence + source filename
+- `apps/web/src/components/bank/chunk-content-preview.tsx` — tag cap 5 → 3
+- `apps/web/src/app/globals.css` — dropped `overscroll-behavior: none` on bare overflow utilities
+- `apps/web/src/app/scroll-behavior.test.ts` — inverted the assertion
+- `apps/web/src/messages/*.json` — added `a11y.collapse` and `dialogs.bank.page.review.discard*` keys to all 8 locales
+
+## Verification
+
+- `pnpm --filter @slothing/web exec tsc --noEmit` — clean
+- `pnpm --filter @slothing/web check:translations` — clean (12 pre-existing identical-to-en warnings, unrelated)
+- `pnpm --filter @slothing/web lint` — 0 errors (4 pre-existing exhaustive-deps warnings, unrelated)
+- `pnpm --filter @slothing/web exec vitest run src/components/bank src/lib/bank src/app/scroll-behavior src/app/[locale]/(app)/components` — 164 passed, 0 failed

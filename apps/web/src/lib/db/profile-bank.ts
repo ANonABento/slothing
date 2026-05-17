@@ -12,6 +12,9 @@ interface BankEntryRow {
   component_type?: string | null;
   component_order?: number | null;
   source_section?: string | null;
+  source_page?: number | null;
+  source_bbox?: string | null;
+  match_method?: string | null;
   confidence_score: number;
   created_at: string;
 }
@@ -46,12 +49,24 @@ function readContent(row: BankEntryRow): Record<string, unknown> {
 }
 
 function rowToEntry(row: BankEntryRow): BankEntry {
+  let sourceBbox: [number, number, number, number, number][] | undefined;
+  if (row.source_bbox) {
+    try {
+      const parsed = JSON.parse(row.source_bbox);
+      if (Array.isArray(parsed)) sourceBbox = parsed;
+    } catch {
+      // Ignore malformed JSON — degrade to "no bbox" rather than fail.
+    }
+  }
   return {
     id: row.id,
     userId: row.user_id,
     category: row.category as BankCategory,
     content: readContent(row),
     sourceDocumentId: row.source_document_id ?? undefined,
+    sourcePage: row.source_page ?? undefined,
+    sourceBbox,
+    matchMethod: row.match_method ?? undefined,
     confidenceScore: row.confidence_score,
     createdAt: row.created_at,
   };
@@ -104,6 +119,19 @@ export function ensureProfileBankHierarchySchema(): void {
     "ALTER TABLE profile_bank ADD COLUMN component_type TEXT",
     "ALTER TABLE profile_bank ADD COLUMN component_order INTEGER DEFAULT 0",
     "ALTER TABLE profile_bank ADD COLUMN source_section TEXT",
+    // PF.2 — positional metadata for review-modal document preview.
+    // `source_page` is 1-indexed (pdfjs convention); `source_bbox` is a JSON
+    // array of tuples `[page, x0, y0, x1, y1]` so a single entry can span
+    // multiple text items or pages. Both are NULL for legacy entries and for
+    // entries that have no PDF source (manual, Drive doc, etc.).
+    "ALTER TABLE profile_bank ADD COLUMN source_page INTEGER",
+    "ALTER TABLE profile_bank ADD COLUMN source_bbox TEXT",
+    // Preview-match cascade P2.2 — records which tier of the cascade
+    // resolved this entry's position. `null` for legacy rows + entries
+    // with no PDF source; `"fuzzy"` for any free-tier deterministic
+    // match. Reserved values for the followup premium spec:
+    // `"embedding"`, `"llm-citation"`, `"document-ai"`.
+    "ALTER TABLE profile_bank ADD COLUMN match_method TEXT",
     "CREATE INDEX IF NOT EXISTS idx_profile_bank_parent ON profile_bank(user_id, parent_id)",
     "CREATE INDEX IF NOT EXISTS idx_profile_bank_component_type ON profile_bank(user_id, component_type)",
   ];
@@ -515,6 +543,40 @@ export function updateBankEntry(
     metadata.componentOrder,
     metadata.sourceSection,
     confidenceScore,
+    id,
+    userId,
+  );
+}
+
+/**
+ * Persist positional metadata for a bank entry (PF.1 + PF.2). Called from
+ * the upload pipeline after fuzzy-matching the parsed entry's text back to
+ * the source PDF's text-item positions. Safe to call repeatedly — overwrites
+ * whatever was there.
+ */
+export function updateBankEntryPositions(
+  id: string,
+  userId: string,
+  positions: {
+    page: number;
+    bboxes: [number, number, number, number, number][];
+    /**
+     * Match-cascade tier that produced these bboxes. Defaults to
+     * `"fuzzy"` for free-tier matches. Premium tiers (when implemented)
+     * pass `"embedding"`, `"llm-citation"`, or `"document-ai"`.
+     */
+    matchMethod?: string;
+  },
+): void {
+  ensureProfileBankHierarchySchema();
+  db.prepare(
+    `UPDATE profile_bank
+     SET source_page = ?, source_bbox = ?, match_method = ?
+     WHERE id = ? AND user_id = ?`,
+  ).run(
+    positions.page,
+    JSON.stringify(positions.bboxes),
+    positions.matchMethod ?? "fuzzy",
     id,
     userId,
   );
