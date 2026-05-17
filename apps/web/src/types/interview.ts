@@ -1,11 +1,13 @@
-import type { InterviewDifficulty } from "@/lib/constants";
+import type {
+  InterviewDifficulty,
+  SessionQuestionCategory,
+} from "@/lib/constants";
 
-export type InterviewQuestionCategory =
-  | "behavioral"
-  | "technical"
-  | "situational"
-  | "general"
-  | "cultural-fit";
+// F2.4 consolidation: `InterviewQuestionCategory` and
+// `SessionQuestionCategory` were two separately-spelled identical
+// unions. Keep the legacy name as an alias so downstream files don't
+// churn, but route through the single canonical union.
+export type InterviewQuestionCategory = SessionQuestionCategory;
 
 export type InterviewMode = "text" | "voice" | "generic-text";
 
