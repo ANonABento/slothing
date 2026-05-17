@@ -734,9 +734,10 @@ describe("StudioPage", () => {
 
     pressShortcut(window, { key: "e", metaKey: true });
 
-    expect(
-      screen.getByRole("menuitem", { name: "Download PDF" }),
-    ).toBeInTheDocument();
+    // Export menu items in the new sub-bar are renamed: "Download PDF"
+    // became just "PDF" (with a description below). Match by regex so
+    // either label survives a future copy revision.
+    expect(screen.getByRole("menuitem", { name: /^PDF/i })).toBeInTheDocument();
   });
 
   it("shows a save failure status when browser storage rejects a version", async () => {
