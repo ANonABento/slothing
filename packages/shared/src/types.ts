@@ -123,12 +123,14 @@ export interface JobMatch {
   suggestions: string[];
 }
 
-export interface LLMConfig {
-  provider: "openai" | "anthropic" | "ollama" | "openrouter";
-  apiKey?: string;
-  baseUrl?: string;
-  model: string;
-}
+/**
+ * Provider configuration shape used by the LLM client / settings UI.
+ *
+ * Derived from `llmConfigSchema` in `./schemas` so the runtime validator and
+ * the static type can't drift on the next field addition (F6.2 in
+ * `docs/legacy-duplication-audit.md`).
+ */
+export type LLMConfig = import("./schemas").LLMConfigInput;
 
 export const BANK_CATEGORIES = [
   "experience",

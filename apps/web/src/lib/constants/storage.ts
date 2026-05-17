@@ -10,5 +10,4 @@ export const themeSchema = z.enum(THEMES);
 // Storage keys
 export const STORAGE_KEYS = {
   ONBOARDING_COMPLETED: "get_me_job_onboarding_completed",
-  THEME: "get_me_job_theme",
 } as const;

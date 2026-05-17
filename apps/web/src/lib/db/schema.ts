@@ -979,9 +979,14 @@ export const verificationTokens = sqliteTable(
   (table) => [primaryKey({ columns: [table.identifier, table.token] })],
 );
 
-// Type exports for use in application code
-export type Settings = typeof settings.$inferSelect;
-export type NewSettings = typeof settings.$inferInsert;
+// Type exports for use in application code.
+//
+// NOTE: the Drizzle row type is named `SettingsRow` (not `Settings`) to avoid
+// collision with the UI shape exported as `Settings` from `@/types`. The two
+// have totally different fields — Drizzle's row is a single key/value record,
+// while the UI shape is `{ llm, theme, locale }`.
+export type SettingsRow = typeof settings.$inferSelect;
+export type NewSettingsRow = typeof settings.$inferInsert;
 
 export type Document = typeof documents.$inferSelect;
 export type NewDocument = typeof documents.$inferInsert;

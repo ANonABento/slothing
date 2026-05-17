@@ -331,3 +331,26 @@ export type OpportunityFilters = z.infer<typeof opportunityFiltersSchema>;
 export type OpportunityStatusChangeInput = z.input<
   typeof opportunityStatusChangeSchema
 >;
+
+// LLM provider configuration. The runtime validation source lives here so the
+// `LLMConfig` type in `./types` can be derived from this schema via `z.infer`
+// (kept in sync automatically — see F6.2 in `docs/legacy-duplication-audit.md`).
+// `apps/web/src/lib/constants/llm.ts` re-exports this schema so existing
+// callers that import from `@/lib/constants` keep working.
+export const LLM_PROVIDERS = [
+  "openai",
+  "anthropic",
+  "ollama",
+  "openrouter",
+] as const;
+export const llmProviderSchema = z.enum(LLM_PROVIDERS);
+export type LLMProvider = (typeof LLM_PROVIDERS)[number];
+
+export const llmConfigSchema = z.object({
+  provider: llmProviderSchema,
+  apiKey: z.string().optional(),
+  baseUrl: z.string().url().optional().or(z.literal("")),
+  model: z.string().min(1, "Model is required"),
+});
+
+export type LLMConfigInput = z.infer<typeof llmConfigSchema>;
