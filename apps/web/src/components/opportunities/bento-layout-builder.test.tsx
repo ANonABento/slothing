@@ -333,6 +333,59 @@ describe("BentoLayoutBuilder — mode prop (modal redesign P1)", () => {
   });
 });
 
+describe("BentoLayoutBuilder — Hidden chunks tray redesign (modal redesign P4)", () => {
+  function layoutWithHidden(): BentoLayoutPreference {
+    // Match the shipped DEFAULT_BENTO_LAYOUT's default disabled list so
+    // the tray has visible cards in the test render.
+    return {
+      ...DEFAULT_BENTO_LAYOUT,
+      desktop: {
+        ...DEFAULT_BENTO_LAYOUT.desktop,
+        // Ensure at least one hidden chunk so we can pin the card UI.
+        disabled: ["status-pill"],
+      },
+    };
+  }
+
+  it("renames 'Hidden chunks' to 'Available chunks' so the tray reads as an add-source", () => {
+    render(
+      <BentoLayoutBuilder value={layoutWithHidden()} onChange={vi.fn()} />,
+    );
+    expect(screen.getByText(/^Available chunks$/)).toBeInTheDocument();
+    expect(screen.queryByText(/^Hidden chunks$/)).toBeNull();
+  });
+
+  it("hidden chunks render as visual cards, not strikethrough chips (no .line-through)", () => {
+    const { container } = render(
+      <BentoLayoutBuilder value={layoutWithHidden()} onChange={vi.fn()} />,
+    );
+    // The old chip carried .line-through. P4 removes it from every
+    // available-chunks button.
+    const dragButtons = screen.getAllByRole("button", {
+      name: /^Drag .* into a cell$/,
+    });
+    expect(dragButtons.length).toBeGreaterThan(0);
+    for (const btn of dragButtons) {
+      expect(btn.className).not.toMatch(/line-through/);
+    }
+    // And no .line-through anywhere in the tray subtree.
+    expect(container.querySelector(".line-through")).toBeNull();
+  });
+
+  it("each available-chunks card is a fixed-size visual target (h-16 w-28)", () => {
+    render(
+      <BentoLayoutBuilder value={layoutWithHidden()} onChange={vi.fn()} />,
+    );
+    const dragButtons = screen.getAllByRole("button", {
+      name: /^Drag .* into a cell$/,
+    });
+    for (const btn of dragButtons) {
+      expect(btn.className).toMatch(/h-16/);
+      expect(btn.className).toMatch(/w-28/);
+    }
+  });
+});
+
 describe("BentoLayoutBuilder — Preview mode visuals (modal redesign P3)", () => {
   it("mode='preview' hides the top toolbar entirely (no Reset, Add cell, columns picker, or Desktop/Mobile tabs)", () => {
     render(

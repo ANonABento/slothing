@@ -961,22 +961,34 @@ function DraggableChunk({ chunk }: { chunk: ChunkKey }) {
   );
 }
 
+/**
+ * P4 of docs/bento-builder-modal-redesign-spec.md: tray of chunks
+ * that aren't on the card. Was a row of strikethrough chips that
+ * read as "deleted". Now renders visual cards that read as
+ * "available to add" — drag any onto a cell to enable.
+ *
+ * Drop target on the tray itself stays: drag a chunk out of a cell
+ * onto the tray to hide it.
+ */
 function DisabledTray({ chunks }: { chunks: ChunkKey[] }) {
   const { setNodeRef, isOver } = useDroppable({ id: DISABLED_TARGET });
   return (
     <div
       ref={setNodeRef}
       className={cn(
-        "rounded-md border bg-card p-3",
-        isOver && "ring-2 ring-destructive ring-offset-1",
+        "rounded-md border bg-card p-4",
+        // P4: drop highlight uses primary ring instead of destructive
+        // ring. Hiding a chunk isn't a destructive act — the chunk
+        // stays available on this same tray.
+        isOver && "ring-2 ring-primary ring-offset-1",
       )}
     >
-      <div className="mb-2 flex items-center justify-between">
+      <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
         <p className="font-mono text-[10px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
-          Hidden chunks
+          Available chunks
         </p>
         <p className="text-xs text-muted-foreground">
-          Drag back into a cell to re-enable.
+          Drag onto the card to add. Drag a chunk back here to hide.
         </p>
       </div>
       {chunks.length === 0 ? (
@@ -988,9 +1000,9 @@ function DisabledTray({ chunks }: { chunks: ChunkKey[] }) {
           items={chunks.map((c) => `${CHUNK_PREFIX}${c}`)}
           strategy={rectSortingStrategy}
         >
-          <div className="flex flex-wrap gap-1">
+          <div className="flex flex-wrap gap-2">
             {chunks.map((chunk) => (
-              <HiddenChunkChip key={chunk} chunk={chunk} />
+              <HiddenChunkCard key={chunk} chunk={chunk} />
             ))}
           </div>
         </SortableContext>
@@ -999,7 +1011,13 @@ function DisabledTray({ chunks }: { chunks: ChunkKey[] }) {
   );
 }
 
-function HiddenChunkChip({ chunk }: { chunk: ChunkKey }) {
+/**
+ * P4: visual card replacement for the old strikethrough chip. Reads
+ * as "available to add" — a Plus icon top-left, the chunk label
+ * underneath, generous tap target. Carries the same dnd-kit drag
+ * payload as cell chunks, so dropping onto a cell adds it there.
+ */
+function HiddenChunkCard({ chunk }: { chunk: ChunkKey }) {
   const {
     attributes,
     listeners,
@@ -1018,15 +1036,17 @@ function HiddenChunkChip({ chunk }: { chunk: ChunkKey }) {
       style={style}
       type="button"
       className={cn(
-        "inline-flex cursor-grab items-center gap-1 rounded-full border bg-bg-2 px-2 py-0.5 text-[11px] text-muted-foreground line-through transition-colors hover:bg-card active:cursor-grabbing",
+        "group/card flex h-16 w-28 cursor-grab flex-col items-start justify-between rounded-md border bg-paper p-2 text-left transition-all hover:border-brand hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary active:cursor-grabbing",
         isDragging && "opacity-40",
       )}
       aria-label={`Drag ${CHUNK_LABELS[chunk]} into a cell`}
       {...attributes}
       {...listeners}
     >
-      <EyeOff className="h-3 w-3" />
-      {CHUNK_LABELS[chunk]}
+      <Plus className="h-3 w-3 text-muted-foreground transition-colors group-hover/card:text-brand" />
+      <span className="line-clamp-2 font-mono text-[10px] font-medium uppercase tracking-[0.12em] text-foreground">
+        {CHUNK_LABELS[chunk]}
+      </span>
     </button>
   );
 }

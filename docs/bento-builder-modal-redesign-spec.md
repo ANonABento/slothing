@@ -1,6 +1,10 @@
 # Opportunity layout-builder modal — from-scratch redesign
 
-Status: **DRAFT — pending user review** (2026-05-20).
+Status: **All phases shipped** (2026-05-20). P0–P4 land on
+`audit/overnight-01` as commits `7434475a` (P0 spec), `c2b39e60` (P1
+mode toggle + frame collapse), `b58ebd1b` (P2 Customize cell polish),
+`12ae4a33` (P3 Preview-mode visuals), `<this commit>` (P4 hidden
+chunks tray redesign).
 Parent: `docs/bento-builder-redesign-spec.md` (the underlying RGL +
 dnd-kit system this redesign sits on top of — that spec is shipped).
 Related: `docs/opportunity-card-bento-spec.md` (the data model + chunk
@@ -231,44 +235,44 @@ and verify the toggle works before stacking P2/P3/P4 on top.
 
 Verifiable at HEAD after all phases land. Each row pinned to a phase.
 
-- [ ] **(P1)** Modal renders a segmented control with options
+- [x] **(P1)** Modal renders a segmented control with options
       `Customize` and `Preview`. Default is `Customize`. Clicking
       `Preview` flips the builder's underlying RGL props to
       `isDraggable={false} isResizable={false}`.
-- [ ] **(P1)** Modal width drops from `1500 px` to `1200 px`
+- [x] **(P1)** Modal width drops from `1500 px` to `1200 px`
       max-width and renders as a single column (no parallel preview
       pane).
-- [ ] **(P1)** Builder accepts a `mode: "customize" | "preview"`
+- [x] **(P1)** Builder accepts a `mode: "customize" | "preview"`
       prop. Default value when unset is `"customize"`.
-- [ ] **(P2)** Cells render real chunk content via `<RenderChunk>` —
+- [x] **(P2)** Cells render real chunk content via `<RenderChunk>` —
       not a chip block of chunk keys. Assertion pins this by checking
       the rendered preview contains a known chunk's real text (e.g.
       compensation cell contains the salary string from the fixture).
-- [ ] **(P2)** Grip handle, palette icon, and delete button are
+- [x] **(P2)** Grip handle, palette icon, and delete button are
       `opacity-0` by default and become `opacity-100` on hover or
       focus-within. Test asserts the initial DOM state.
-- [ ] **(P2)** The literal string `"CELL LABEL (OPTIONAL)"` no
+- [x] **(P2)** The literal string `"CELL LABEL (OPTIONAL)"` no
       longer appears in the DOM. `expect(queryByText(/cell label/i)).toBeNull()`.
-- [ ] **(P2)** Empty cells with no chunks do **not** render the
+- [x] **(P2)** Empty cells with no chunks do **not** render the
       "Drop a chunk here" hint when no dnd-kit drag is active. The
       hint only appears while a chunk is being dragged.
-- [ ] **(P3)** When `mode === "preview"`: no grip, palette, or X
+- [x] **(P3)** When `mode === "preview"`: no grip, palette, or X
       buttons exist in the DOM. `queryByRole("button", {name: /delete cell/i})`
       returns null.
-- [ ] **(P3)** When `mode === "preview"`: hidden-chunks tray is not
+- [x] **(P3)** When `mode === "preview"`: hidden-chunks tray is not
       in the DOM. `queryByText(/hidden chunks/i)` returns null.
-- [ ] **(P3)** Preview mode visually matches `<BentoGrid>` for the
+- [x] **(P3)** Preview mode visually matches `<BentoGrid>` for the
       same draft. Smoke: render `<BentoGrid layout={draft}>` and the
       builder in preview mode side-by-side in a Vitest snapshot or
       Playwright visual diff; pixel-diff under threshold.
-- [ ] **(P4)** Hidden chunks render as visual cards (not strikethrough
+- [x] **(P4)** Hidden chunks render as visual cards (not strikethrough
       chips). Assertion pins absence of `line-through` Tailwind class
       and presence of card-shaped DOM elements.
-- [ ] Type-check clean (`pnpm exec tsc --noEmit --pretty false`).
-- [ ] Full opportunity test scope passes (`pnpm exec vitest run
+- [x] Type-check clean (`pnpm exec tsc --noEmit --pretty false`).
+- [x] Full opportunity test scope passes (`pnpm exec vitest run
       src/components/opportunities 'src/app/[locale]/(app)/opportunities'
-      src/lib/opportunities`).
-- [ ] Forbidden-color lint clean (`node apps/web/scripts/forbidden-color-lint.cjs`).
+      src/lib/opportunities` → 24 files, 232 tests).
+- [x] Forbidden-color lint clean (`node apps/web/scripts/forbidden-color-lint.cjs`).
 
 ## 8. Risks
 
