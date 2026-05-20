@@ -130,9 +130,19 @@ function rglLayoutToBentoUpdates(
   return updates;
 }
 
+export type BentoBuilderMode = "customize" | "preview";
+
 export interface BentoLayoutBuilderProps {
   value: BentoLayoutPreference;
   onChange(next: BentoLayoutPreference): void;
+  /**
+   * P1 of docs/bento-builder-modal-redesign-spec.md. "customize" (default)
+   * leaves all editing affordances live. "preview" freezes RGL drag +
+   * resize so the canvas reads as read-only. Later phases (P2/P3) use
+   * the same flag to suppress hover-revealed chrome and the hidden-
+   * chunks tray when previewing.
+   */
+  mode?: BentoBuilderMode;
 }
 
 /**
@@ -150,7 +160,9 @@ type ActiveTab = "desktop" | "mobile";
 export function BentoLayoutBuilder({
   value,
   onChange,
+  mode = "customize",
 }: BentoLayoutBuilderProps) {
+  const isPreview = mode === "preview";
   const [activeId, setActiveId] = useState<string | null>(null);
   // Split editing into two tabs so the long Mobile-priority panel
   // doesn't push the Desktop grid below the fold. User toggles between
@@ -529,6 +541,8 @@ export function BentoLayoutBuilder({
                 compactType="vertical"
                 preventCollision={false}
                 isBounded={true}
+                isDraggable={!isPreview}
+                isResizable={!isPreview}
                 onLayoutChange={handleRGLLayoutChange}
               >
                 {desktop.cells.map((cell) => (

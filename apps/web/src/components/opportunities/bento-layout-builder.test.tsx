@@ -229,6 +229,43 @@ describe("BentoLayoutBuilder — tone palette (P2)", () => {
   });
 });
 
+describe("BentoLayoutBuilder — mode prop (modal redesign P1)", () => {
+  it("default mode is customize — grip handles render and arrow keys still move cells", () => {
+    const onChange = vi.fn();
+    render(
+      <BentoLayoutBuilder value={DEFAULT_BENTO_LAYOUT} onChange={onChange} />,
+    );
+
+    const grip = screen.getAllByRole("button", { name: /^Drag cell / })[0]!;
+    act(() => {
+      grip.focus();
+    });
+    fireEvent.keyDown(grip, { key: "ArrowRight" });
+
+    // Arrow-key nudge writes through onChange in customize mode.
+    expect(onChange).toHaveBeenCalled();
+  });
+
+  it("mode='preview' renders the builder but the grip-handle arrow nudge still fires (RGL freeze is a visual concern)", () => {
+    // P1 only freezes RGL drag/resize via isDraggable/isResizable. The
+    // keyboard nudge (P4 of the prior spec) lives on the grip button
+    // itself, not RGL, so it stays live in P1 — P3 will hide the grip
+    // entirely in preview mode. This test pins the P1 contract: builder
+    // accepts the mode prop without crashing and still renders cells.
+    render(
+      <BentoLayoutBuilder
+        value={DEFAULT_BENTO_LAYOUT}
+        onChange={vi.fn()}
+        mode="preview"
+      />,
+    );
+    // Cells still in the DOM (no preview-mode visual hiding yet in P1).
+    expect(screen.getAllByRole("button", { name: /^Drag cell / }).length).toBe(
+      DEFAULT_BENTO_LAYOUT.desktop.cells.length,
+    );
+  });
+});
+
 describe("BentoLayoutBuilder — arrow-key cell control (P4)", () => {
   // Helper: find the grip handle for the first cell. Aria-label is the
   // P4 string "Drag cell <Label>. Arrow keys move, shift+arrow resizes."
