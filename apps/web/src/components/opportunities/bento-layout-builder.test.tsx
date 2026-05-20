@@ -229,6 +229,69 @@ describe("BentoLayoutBuilder — tone palette (P2)", () => {
   });
 });
 
+describe("BentoLayoutBuilder — Customize cell polish (modal redesign P2)", () => {
+  it("kills the 'CELL LABEL (OPTIONAL)' placeholder — no input carries that placeholder anywhere", () => {
+    const { container } = render(
+      <BentoLayoutBuilder value={DEFAULT_BENTO_LAYOUT} onChange={vi.fn()} />,
+    );
+    // Pin the negative space — no <input placeholder="Cell label …"> exists.
+    expect(
+      container.querySelector("input[placeholder*='Cell label']"),
+    ).toBeNull();
+    expect(
+      container.querySelector("input[placeholder*='cell label']"),
+    ).toBeNull();
+  });
+
+  it("hover-reveal chrome: grip + remove buttons are opacity-0 at rest (group-hover reveals)", () => {
+    const { container } = render(
+      <BentoLayoutBuilder value={DEFAULT_BENTO_LAYOUT} onChange={vi.fn()} />,
+    );
+    // The chrome cluster is keyed off Tailwind's opacity-0 class; on
+    // group-hover it flips to opacity-100. Pin the at-rest state.
+    const cluster = container.querySelector(".bento-builder-grid .opacity-0");
+    expect(cluster).not.toBeNull();
+  });
+
+  it("editor cells render real chunks via RenderChunk — not chunk-name chip text", () => {
+    render(
+      <BentoLayoutBuilder value={DEFAULT_BENTO_LAYOUT} onChange={vi.fn()} />,
+    );
+    // LAYOUT_PREVIEW_OPPORTUNITY has company "Acme Robotics" — the
+    // 'company' chunk renders it. If real chunks aren't rendering,
+    // this string won't be in the DOM. (Multiple matches OK: the
+    // company chunk + the "Search Acme Robotics" action both echo it.)
+    expect(screen.getAllByText(/Acme Robotics/).length).toBeGreaterThan(0);
+  });
+
+  it("empty cells do not render a 'Drop a chunk here' hint when no drag is active", () => {
+    // Start from a layout with an empty cell, no chunks. The hint
+    // should not appear at rest — only while a chunk-drag is in flight.
+    const layout: BentoLayoutPreference = {
+      desktop: {
+        columns: 4,
+        cells: [
+          {
+            id: "empty-cell",
+            chunks: [],
+            gridCol: 1,
+            gridRow: 1,
+            colSpan: 4,
+            rowSpan: 1,
+            label: undefined,
+          },
+        ],
+        disabled: [],
+        mobilePriority: ["empty-cell"],
+      },
+      mobile: { expandedCount: 4 },
+    };
+    render(<BentoLayoutBuilder value={layout} onChange={vi.fn()} />);
+    expect(screen.queryByText(/Drop a chunk here/i)).toBeNull();
+    expect(screen.queryByText(/Drag chunks here/i)).toBeNull();
+  });
+});
+
 describe("BentoLayoutBuilder — mode prop (modal redesign P1)", () => {
   it("default mode is customize — grip handles render and arrow keys still move cells", () => {
     const onChange = vi.fn();
@@ -246,23 +309,27 @@ describe("BentoLayoutBuilder — mode prop (modal redesign P1)", () => {
     expect(onChange).toHaveBeenCalled();
   });
 
-  it("mode='preview' renders the builder but the grip-handle arrow nudge still fires (RGL freeze is a visual concern)", () => {
-    // P1 only freezes RGL drag/resize via isDraggable/isResizable. The
-    // keyboard nudge (P4 of the prior spec) lives on the grip button
-    // itself, not RGL, so it stays live in P1 — P3 will hide the grip
-    // entirely in preview mode. This test pins the P1 contract: builder
-    // accepts the mode prop without crashing and still renders cells.
-    render(
+  it("mode='preview' renders the builder, hides chrome cluster, freezes RGL drag", () => {
+    // P2 hides the cell chrome cluster (grip / pencil / palette / X)
+    // when mode === "preview" so the canvas reads as a clean preview.
+    // RGL drag/resize is also frozen via isDraggable/isResizable=false.
+    // Cells themselves still render — verified via data-cell-id.
+    const { container } = render(
       <BentoLayoutBuilder
         value={DEFAULT_BENTO_LAYOUT}
         onChange={vi.fn()}
         mode="preview"
       />,
     );
-    // Cells still in the DOM (no preview-mode visual hiding yet in P1).
-    expect(screen.getAllByRole("button", { name: /^Drag cell / }).length).toBe(
+    // Cells still in DOM (data-cell-id is the load-bearing identifier
+    // RGL hangs onto).
+    expect(container.querySelectorAll("[data-cell-id]").length).toBe(
       DEFAULT_BENTO_LAYOUT.desktop.cells.length,
     );
+    // Chrome cluster is gone — no "Drag cell …" grip button anywhere.
+    expect(
+      screen.queryAllByRole("button", { name: /^Drag cell / }).length,
+    ).toBe(0);
   });
 });
 

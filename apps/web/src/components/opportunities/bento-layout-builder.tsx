@@ -31,6 +31,7 @@ import {
   EyeOff,
   GripVertical,
   Palette,
+  Pencil,
   Plus,
   RotateCcw,
   X,
@@ -78,6 +79,29 @@ import {
 } from "@/lib/opportunities/bento-layout";
 import { CHUNK_LABELS, type ChunkKey } from "@/lib/opportunities/layout-chunks";
 import { DEFAULT_BENTO_LAYOUT } from "@/lib/opportunities/default-bento";
+import { LAYOUT_PREVIEW_OPPORTUNITY } from "@/lib/opportunities/layout-preview-fixture";
+import {
+  RenderChunk,
+  type RenderChunkContext,
+} from "@/lib/opportunities/render-chunk";
+
+// P2 of docs/bento-builder-modal-redesign-spec.md: editor cells render
+// real chunks via RenderChunk against the layout-preview fixture, so
+// the canvas IS the preview. The context here mirrors what the modal
+// passes to <BentoGrid> in Preview mode so both modes look identical.
+const BUILDER_RENDER_CONTEXT: RenderChunkContext = {
+  preview:
+    LAYOUT_PREVIEW_OPPORTUNITY.summary.slice(0, 260) +
+    (LAYOUT_PREVIEW_OPPORTUNITY.summary.length > 260 ? "…" : ""),
+  expanded: false,
+  setExpanded: () => undefined,
+  tags: LAYOUT_PREVIEW_OPPORTUNITY.tags ?? [],
+  payDisplayUnit: "annual",
+  payDisplayCurrency: "USD",
+  onAction: () => undefined,
+  actionDisabled: false,
+  canApply: true,
+};
 
 /**
  * react-grid-layout's WidthProvider wires the container width into the
@@ -86,7 +110,11 @@ import { DEFAULT_BENTO_LAYOUT } from "@/lib/opportunities/default-bento";
  */
 const ResponsiveGridLayout = WidthProvider(GridLayout);
 
-const ROW_HEIGHT_PX = 80;
+// P2: bumped from 80 → 120 so default cells (rowSpan: 1) have enough
+// vertical room to render real chunks via <RenderChunk> without
+// immediately clipping their content. Cells smaller than their chunks
+// still clip (overflow-hidden), which is the cue to drag the edge.
+const ROW_HEIGHT_PX = 120;
 
 const COLUMN_OPTIONS: BentoColumns[] = [2, 3, 4];
 
@@ -164,6 +192,11 @@ export function BentoLayoutBuilder({
 }: BentoLayoutBuilderProps) {
   const isPreview = mode === "preview";
   const [activeId, setActiveId] = useState<string | null>(null);
+  // P2: signal to cells that a chunk-drag is active so empty cells can
+  // surface their "Drop a chunk here" hint. We hide that hint at rest
+  // — empty cells should read as empty, not as drop zones, until the
+  // user actually picks up a chunk.
+  const isChunkDragging = activeId?.startsWith(CHUNK_PREFIX) ?? false;
   // Split editing into two tabs so the long Mobile-priority panel
   // doesn't push the Desktop grid below the fold. User toggles between
   // them via the tab strip next to the Columns picker.
@@ -549,10 +582,12 @@ export function BentoLayoutBuilder({
                   <div key={cell.id} data-cell-id={cell.id}>
                     <CellEditor
                       cell={cell}
+                      mode={mode}
+                      isChunkDragging={isChunkDragging}
                       onUpdate={(updates) => updateCell(cell.id, updates)}
                       onRemove={() => removeCell(cell.id)}
-                      onNudge={(direction, mode) =>
-                        nudgeCell(cell.id, direction, mode)
+                      onNudge={(direction, nudgeMode) =>
+                        nudgeCell(cell.id, direction, nudgeMode)
                       }
                     />
                   </div>
@@ -623,11 +658,15 @@ export function BentoLayoutBuilder({
  */
 function CellEditor({
   cell,
+  mode,
+  isChunkDragging,
   onUpdate,
   onRemove,
   onNudge,
 }: {
   cell: BentoCell;
+  mode: BentoBuilderMode;
+  isChunkDragging: boolean;
   onUpdate(updates: Partial<BentoCell>): void;
   onRemove(): void;
   onNudge(
@@ -640,13 +679,17 @@ function CellEditor({
   });
 
   const tone = cell.tone ?? "default";
+  const isCustomize = mode === "customize";
+  // P2: label edit is an explicit affordance, not an always-on input.
+  // Click the pencil in the chrome cluster to swap the read-only
+  // eyebrow for an input; blur or Enter/Escape saves and closes.
+  const [editingLabel, setEditingLabel] = useState(false);
 
   /**
-   * P4 keyboard a11y: arrow keys nudge cell position; Shift+arrow
-   * resizes. The handler lives on the grip button so users tab to a
-   * cell's drag handle, then use the keyboard like they would the
-   * mouse. RGL v1.5 doesn't ship arrow-key support natively, so we
-   * provide it here.
+   * P4 keyboard a11y (kept from prior spec): arrow keys nudge cell
+   * position; Shift+arrow resizes. The handler lives on the grip
+   * button so users tab to a cell's drag handle, then use the keyboard
+   * like they would the mouse.
    */
   const handleGripKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>) => {
     const direction = (
@@ -666,66 +709,107 @@ function CellEditor({
     <div
       ref={setDropRef}
       className={cn(
-        "flex h-full flex-col gap-2 rounded-md border bg-paper p-3",
+        // group/cell so the hover-reveal chrome cluster can react to
+        // any pointer or focus inside the cell. relative so the
+        // absolute-positioned chrome anchors to the cell. overflow-
+        // hidden clips real chunk content to the cell's RGL-assigned
+        // height — undersized cells show their content getting cut
+        // off, which is the direct-manipulation cue to drag the bottom
+        // edge to grow the cell.
+        "group/cell relative flex h-full flex-col overflow-hidden rounded-md border bg-paper p-3",
         tone === "muted" && "bg-rule-strong-bg",
         tone === "accent" && "border-brand bg-brand-soft/40",
         isOver && "ring-2 ring-primary ring-offset-1",
       )}
     >
-      <div className="flex items-center gap-2">
-        {/* The .bento-cell-drag-handle class is RGL's draggableHandle
-            target — only mousedowns on this element start a cell-level
-            drag. Chunks inside the dropzone use data-rgl-cancel-drag
-            via the parent's draggableCancel to keep RGL out of their
-            way. */}
-        <button
-          type="button"
-          onKeyDown={handleGripKeyDown}
-          className="bento-cell-drag-handle cursor-grab rounded p-0.5 text-muted-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary active:cursor-grabbing"
-          aria-label={`Drag cell ${cell.label || cell.id}. Arrow keys move, shift+arrow resizes.`}
-        >
-          <GripVertical className="h-4 w-4" />
-        </button>
+      {/* Optional label eyebrow — only renders when set; no
+          placeholder. Click the pencil in the chrome cluster to edit. */}
+      {cell.label && !editingLabel && (
+        <p className="mb-2 font-mono text-[10px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
+          {cell.label}
+        </p>
+      )}
+      {editingLabel && (
         <input
+          autoFocus
           type="text"
           value={cell.label ?? ""}
-          placeholder="Cell label (optional)"
           onChange={(event) =>
             onUpdate({ label: event.target.value || undefined })
           }
-          className="min-w-0 flex-1 bg-transparent text-xs font-mono uppercase tracking-[0.16em] text-muted-foreground placeholder:text-muted-foreground/60 focus:outline-none"
+          onBlur={() => setEditingLabel(false)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter" || event.key === "Escape") {
+              event.preventDefault();
+              setEditingLabel(false);
+            }
+          }}
+          aria-label="Cell label"
+          className="mb-2 bg-transparent font-mono text-[10px] font-medium uppercase tracking-[0.16em] text-foreground focus:outline-none"
         />
-        <TonePalette
-          value={tone}
-          onChange={(next) =>
-            onUpdate({ tone: next === "default" ? undefined : next })
-          }
-        />
-        <button
-          type="button"
-          onClick={onRemove}
-          aria-label="Remove cell (chunks return to Hidden)"
-          className="rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-        >
-          <X className="h-3.5 w-3.5" />
-        </button>
-      </div>
-      {/* Chunks */}
+      )}
+
+      {/* Chunk content — rendered via RenderChunk so the editor is the
+          preview. Each chunk wraps in a DraggableChunk that adds a
+          hover-revealed grip for dnd-kit drag-between-cells. */}
       <SortableContext
         items={cell.chunks.map((c) => `${CHUNK_PREFIX}${c}`)}
         strategy={rectSortingStrategy}
       >
-        <div className="flex min-h-[40px] flex-1 flex-wrap items-start gap-1 rounded border border-dashed border-rule p-2">
-          {cell.chunks.length === 0 && (
-            <span className="text-[11px] text-muted-foreground">
-              Drag chunks here
-            </span>
-          )}
-          {cell.chunks.map((chunk) => (
-            <ChunkChip key={chunk} chunk={chunk} />
-          ))}
+        <div className="flex min-h-[40px] flex-1 flex-col gap-2">
+          {cell.chunks.length === 0
+            ? // Empty cells stay empty at rest. The "Drop a chunk
+              // here" hint only renders while a chunk-drag is active
+              // so the canvas reads as a card, not as a dropzone grid.
+              isChunkDragging && (
+                <div className="flex flex-1 items-center justify-center rounded border border-dashed border-rule p-3 text-[11px] text-muted-foreground">
+                  Drop a chunk here
+                </div>
+              )
+            : cell.chunks.map((chunk) => (
+                <DraggableChunk key={chunk} chunk={chunk} />
+              ))}
         </div>
       </SortableContext>
+
+      {/* Hover-reveal chrome — top-right cluster. Hidden by default;
+          revealed on hover or focus-within. Customize-mode only;
+          Preview mode keeps the cell clean (modal swaps to BentoGrid,
+          but this is the defensive in-builder fallback for P3). */}
+      {isCustomize && (
+        <div className="pointer-events-none absolute right-1.5 top-1.5 flex items-center gap-0.5 rounded-md border bg-paper/95 px-1 py-0.5 opacity-0 shadow-sm backdrop-blur transition-opacity group-hover/cell:pointer-events-auto group-hover/cell:opacity-100 group-focus-within/cell:pointer-events-auto group-focus-within/cell:opacity-100">
+          <button
+            type="button"
+            onKeyDown={handleGripKeyDown}
+            className="bento-cell-drag-handle cursor-grab rounded p-1 text-muted-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary active:cursor-grabbing"
+            aria-label={`Drag cell ${cell.label || cell.id}. Arrow keys move, shift+arrow resizes.`}
+          >
+            <GripVertical className="h-3.5 w-3.5" />
+          </button>
+          <button
+            type="button"
+            onClick={() => setEditingLabel(true)}
+            aria-label="Edit cell label"
+            className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+          >
+            <Pencil className="h-3.5 w-3.5" />
+          </button>
+          <TonePalette
+            value={tone}
+            onChange={(next) =>
+              onUpdate({ tone: next === "default" ? undefined : next })
+            }
+          />
+          <button
+            type="button"
+            onClick={onRemove}
+            aria-label="Remove cell (chunks return to Hidden)"
+            className="rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      )}
     </div>
   );
 }
@@ -803,7 +887,18 @@ function TonePalette({
   );
 }
 
-function ChunkChip({ chunk }: { chunk: ChunkKey }) {
+/**
+ * P2: chunks render their real shipped JSX via <RenderChunk> against
+ * the layout-preview fixture. The wrapper adds a hover-revealed grip
+ * handle on the left so users can pick the chunk up and drag it to
+ * another cell — same dnd-kit drag flow as before, just with the
+ * affordance hidden until hover so the editor reads as a real card.
+ *
+ * aria-label on the grip stays "Drag <Chunk Label>" because:
+ *   - dnd-kit's KeyboardSensor announces it when grabbed with Space.
+ *   - existing tests pin this contract.
+ */
+function DraggableChunk({ chunk }: { chunk: ChunkKey }) {
   const {
     attributes,
     listeners,
@@ -817,21 +912,32 @@ function ChunkChip({ chunk }: { chunk: ChunkKey }) {
     transition,
   };
   return (
-    <button
+    <div
       ref={setNodeRef}
       style={style}
-      type="button"
       className={cn(
-        "inline-flex cursor-grab items-center gap-1 rounded-full border bg-card px-2 py-0.5 text-[11px] font-medium text-foreground transition-colors hover:bg-muted active:cursor-grabbing",
+        "group/chunk relative rounded border border-transparent px-2 py-1 transition-colors hover:border-rule",
         isDragging && "opacity-40",
       )}
-      aria-label={`Drag ${CHUNK_LABELS[chunk]}`}
-      {...attributes}
-      {...listeners}
     >
-      <GripVertical className="h-3 w-3 text-muted-foreground" />
-      {CHUNK_LABELS[chunk]}
-    </button>
+      <RenderChunk
+        chunk={chunk}
+        opportunity={LAYOUT_PREVIEW_OPPORTUNITY}
+        context={BUILDER_RENDER_CONTEXT}
+      />
+      {/* Grip handle — hidden by default; reveals on chunk hover.
+          Carries the dnd-kit listeners + attributes so the user can
+          grab + drag from here. */}
+      <button
+        type="button"
+        aria-label={`Drag ${CHUNK_LABELS[chunk]}`}
+        className="absolute left-[-18px] top-1/2 -translate-y-1/2 cursor-grab rounded p-0.5 text-muted-foreground opacity-0 transition-opacity hover:bg-muted hover:text-foreground focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary group-hover/chunk:opacity-100 active:cursor-grabbing"
+        {...attributes}
+        {...listeners}
+      >
+        <GripVertical className="h-3 w-3" />
+      </button>
+    </div>
   );
 }
 
