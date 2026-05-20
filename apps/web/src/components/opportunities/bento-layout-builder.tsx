@@ -481,79 +481,85 @@ export function BentoLayoutBuilder({
       onDragEnd={handleDragEnd}
     >
       <div className="flex flex-col gap-4">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex flex-wrap items-center gap-3">
-            {/* Tab toggle — Desktop vs Mobile editing modes. */}
-            <div className="inline-flex rounded-md border bg-card p-0.5">
-              {(["desktop", "mobile"] as ActiveTab[]).map((tab) => (
-                <button
-                  key={tab}
-                  type="button"
-                  onClick={() => setActiveTab(tab)}
-                  className={cn(
-                    "rounded px-2.5 py-1 text-xs font-medium capitalize transition-colors",
-                    activeTab === tab
-                      ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:bg-muted",
-                  )}
-                  aria-pressed={activeTab === tab}
-                >
-                  {tab}
-                </button>
-              ))}
-            </div>
-            {/* Columns picker — only meaningful for the desktop grid. */}
-            {activeTab === "desktop" && (
-              <div className="flex items-center gap-2">
-                <span className="font-mono text-[10px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
-                  Columns
-                </span>
-                <div className="inline-flex rounded-md border bg-card p-0.5">
-                  {COLUMN_OPTIONS.map((option) => (
-                    <button
-                      key={option}
-                      type="button"
-                      onClick={() => handleColumnsChange(option)}
-                      className={cn(
-                        "rounded px-2.5 py-1 text-xs font-medium transition-colors",
-                        desktop.columns === option
-                          ? "bg-primary text-primary-foreground"
-                          : "text-muted-foreground hover:bg-muted",
-                      )}
-                      aria-pressed={desktop.columns === option}
-                    >
-                      {option}
-                    </button>
-                  ))}
-                </div>
+        {/* P3: Preview-mode hides the editor toolbar entirely. Callers
+            who pass mode="preview" directly (e.g. settings preview) get
+            a chrome-free render. The modal already swaps to <BentoGrid>
+            for its preview, so this is the defensive in-builder path. */}
+        {!isPreview && (
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center gap-3">
+              {/* Tab toggle — Desktop vs Mobile editing modes. */}
+              <div className="inline-flex rounded-md border bg-card p-0.5">
+                {(["desktop", "mobile"] as ActiveTab[]).map((tab) => (
+                  <button
+                    key={tab}
+                    type="button"
+                    onClick={() => setActiveTab(tab)}
+                    className={cn(
+                      "rounded px-2.5 py-1 text-xs font-medium capitalize transition-colors",
+                      activeTab === tab
+                        ? "bg-primary text-primary-foreground"
+                        : "text-muted-foreground hover:bg-muted",
+                    )}
+                    aria-pressed={activeTab === tab}
+                  >
+                    {tab}
+                  </button>
+                ))}
               </div>
-            )}
-          </div>
-          <div className="flex items-center gap-2">
-            {activeTab === "desktop" && (
+              {/* Columns picker — only meaningful for the desktop grid. */}
+              {activeTab === "desktop" && (
+                <div className="flex items-center gap-2">
+                  <span className="font-mono text-[10px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
+                    Columns
+                  </span>
+                  <div className="inline-flex rounded-md border bg-card p-0.5">
+                    {COLUMN_OPTIONS.map((option) => (
+                      <button
+                        key={option}
+                        type="button"
+                        onClick={() => handleColumnsChange(option)}
+                        className={cn(
+                          "rounded px-2.5 py-1 text-xs font-medium transition-colors",
+                          desktop.columns === option
+                            ? "bg-primary text-primary-foreground"
+                            : "text-muted-foreground hover:bg-muted",
+                        )}
+                        aria-pressed={desktop.columns === option}
+                      >
+                        {option}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              {activeTab === "desktop" && (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  onClick={addCell}
+                  className="gap-1.5 text-xs"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  Add cell
+                </Button>
+              )}
               <Button
                 type="button"
                 size="sm"
                 variant="ghost"
-                onClick={addCell}
+                onClick={reset}
                 className="gap-1.5 text-xs"
               >
-                <Plus className="h-3.5 w-3.5" />
-                Add cell
+                <RotateCcw className="h-3.5 w-3.5" />
+                Reset
               </Button>
-            )}
-            <Button
-              type="button"
-              size="sm"
-              variant="ghost"
-              onClick={reset}
-              className="gap-1.5 text-xs"
-            >
-              <RotateCcw className="h-3.5 w-3.5" />
-              Reset
-            </Button>
+            </div>
           </div>
-        </div>
+        )}
 
         {activeTab === "desktop" ? (
           <>
@@ -561,7 +567,15 @@ export function BentoLayoutBuilder({
                 resize + push-neighbors collision. Wrapping div carries
                 the bento-builder-grid class for scoped CSS overrides
                 of RGL's default styles. */}
-            <div className="bento-builder-grid rounded-md border bg-bg-2/40 p-3">
+            {/* P3: canvas border + tinted backdrop only in customize.
+                In preview the grid sits on the modal's own paper so
+                the cells read as a single card, not as cells-on-a-tray. */}
+            <div
+              className={cn(
+                "bento-builder-grid",
+                isPreview ? "p-0" : "rounded-md border bg-bg-2/40 p-3",
+              )}
+            >
               <ResponsiveGridLayout
                 className="layout"
                 layout={rglLayout}
@@ -595,8 +609,10 @@ export function BentoLayoutBuilder({
               </ResponsiveGridLayout>
             </div>
 
-            {/* Disabled tray */}
-            <DisabledTray chunks={desktop.disabled} />
+            {/* Disabled tray — customize only. Preview is a read-only
+                surface so the "hidden chunks you could drag in" rail
+                isn't useful there. */}
+            {!isPreview && <DisabledTray chunks={desktop.disabled} />}
           </>
         ) : (
           /* Mobile priority */
@@ -716,7 +732,11 @@ function CellEditor({
         // height — undersized cells show their content getting cut
         // off, which is the direct-manipulation cue to drag the bottom
         // edge to grow the cell.
-        "group/cell relative flex h-full flex-col overflow-hidden rounded-md border bg-paper p-3",
+        "group/cell relative flex h-full flex-col overflow-hidden rounded-md bg-paper p-3",
+        // P3: cell border only in Customize. Preview cells sit flush
+        // so the surface reads like the shipped review card, not like
+        // a grid of separate panes.
+        isCustomize ? "border" : "border-0",
         tone === "muted" && "bg-rule-strong-bg",
         tone === "accent" && "border-brand bg-brand-soft/40",
         isOver && "ring-2 ring-primary ring-offset-1",

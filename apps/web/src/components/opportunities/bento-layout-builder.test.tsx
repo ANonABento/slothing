@@ -333,6 +333,48 @@ describe("BentoLayoutBuilder — mode prop (modal redesign P1)", () => {
   });
 });
 
+describe("BentoLayoutBuilder — Preview mode visuals (modal redesign P3)", () => {
+  it("mode='preview' hides the top toolbar entirely (no Reset, Add cell, columns picker, or Desktop/Mobile tabs)", () => {
+    render(
+      <BentoLayoutBuilder
+        value={DEFAULT_BENTO_LAYOUT}
+        onChange={vi.fn()}
+        mode="preview"
+      />,
+    );
+    expect(screen.queryByRole("button", { name: /^Reset$/ })).toBeNull();
+    expect(screen.queryByRole("button", { name: /^Add cell$/i })).toBeNull();
+    expect(screen.queryByText(/^Columns$/)).toBeNull();
+    // The Desktop/Mobile tabs disappear too.
+    expect(screen.queryByRole("button", { name: /^desktop$/i })).toBeNull();
+    expect(screen.queryByRole("button", { name: /^mobile$/i })).toBeNull();
+  });
+
+  it("mode='preview' hides the hidden-chunks tray", () => {
+    render(
+      <BentoLayoutBuilder
+        value={DEFAULT_BENTO_LAYOUT}
+        onChange={vi.fn()}
+        mode="preview"
+      />,
+    );
+    expect(screen.queryByText(/^Hidden chunks$/)).toBeNull();
+  });
+
+  it("mode='preview' renders cells without a visible border so they read as a flat card", () => {
+    const { container } = render(
+      <BentoLayoutBuilder
+        value={DEFAULT_BENTO_LAYOUT}
+        onChange={vi.fn()}
+        mode="preview"
+      />,
+    );
+    // Cells get border-0 in preview; customize cells have border.
+    const cells = container.querySelectorAll("[data-cell-id] > div.border-0");
+    expect(cells.length).toBe(DEFAULT_BENTO_LAYOUT.desktop.cells.length);
+  });
+});
+
 describe("BentoLayoutBuilder — arrow-key cell control (P4)", () => {
   // Helper: find the grip handle for the first cell. Aria-label is the
   // P4 string "Drag cell <Label>. Arrow keys move, shift+arrow resizes."
