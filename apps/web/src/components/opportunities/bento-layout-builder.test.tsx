@@ -243,14 +243,17 @@ describe("BentoLayoutBuilder — Customize cell polish (modal redesign P2)", () 
     ).toBeNull();
   });
 
-  it("hover-reveal chrome: grip + remove buttons are opacity-0 at rest (group-hover reveals)", () => {
-    const { container } = render(
+  it("cell chrome cluster is always visible at rest (v2 — reverted P2 hover-reveal)", () => {
+    render(
       <BentoLayoutBuilder value={DEFAULT_BENTO_LAYOUT} onChange={vi.fn()} />,
     );
-    // The chrome cluster is keyed off Tailwind's opacity-0 class; on
-    // group-hover it flips to opacity-100. Pin the at-rest state.
-    const cluster = container.querySelector(".bento-builder-grid .opacity-0");
-    expect(cluster).not.toBeNull();
+    // Pin: each cell renders a grip button at rest (no hover needed).
+    const grips = screen.getAllByRole("button", { name: /^Drag cell / });
+    expect(grips.length).toBe(DEFAULT_BENTO_LAYOUT.desktop.cells.length);
+    // The chrome cluster's parent div carries the cell chrome — walk
+    // up to confirm it does NOT carry opacity-0 (v2 always-visible).
+    const cluster = grips[0]!.parentElement!;
+    expect(cluster.className).not.toMatch(/\bopacity-0\b/);
   });
 
   it("editor cells render real chunks via RenderChunk — not chunk-name chip text", () => {

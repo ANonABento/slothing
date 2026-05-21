@@ -792,12 +792,13 @@ function CellEditor({
         </div>
       </SortableContext>
 
-      {/* Hover-reveal chrome — top-right cluster. Hidden by default;
-          revealed on hover or focus-within. Customize-mode only;
-          Preview mode keeps the cell clean (modal swaps to BentoGrid,
-          but this is the defensive in-builder fallback for P3). */}
+      {/* Always-visible chrome cluster (v2 — was hover-reveal in P2).
+          Customize-mode only; Preview mode (defensive path for direct
+          callers) keeps the cell clean. Subtle styling so it doesn't
+          fight the chunk content: no shadow, light translucent paper
+          background, small icons. */}
       {isCustomize && (
-        <div className="pointer-events-none absolute right-1.5 top-1.5 flex items-center gap-0.5 rounded-md border bg-paper/95 px-1 py-0.5 opacity-0 shadow-sm backdrop-blur transition-opacity group-hover/cell:pointer-events-auto group-hover/cell:opacity-100 group-focus-within/cell:pointer-events-auto group-focus-within/cell:opacity-100">
+        <div className="absolute right-1.5 top-1.5 flex items-center gap-0.5 rounded-md border bg-paper/80 px-1 py-0.5 backdrop-blur">
           <button
             type="button"
             onKeyDown={handleGripKeyDown}
@@ -937,6 +938,11 @@ function DraggableChunk({ chunk }: { chunk: ChunkKey }) {
       style={style}
       className={cn(
         "group/chunk relative rounded border border-transparent px-2 py-1 transition-colors hover:border-rule",
+        // v2: compact chunk rendering inside the editor — title chunk
+        // shrinks from text-2xl/md:text-4xl to text-lg/md:text-2xl so
+        // the bento example reads as a "mini" version of the shipped
+        // card, not as a full-size card crammed into a cell.
+        "[&_h2]:!text-lg [&_h2]:!leading-tight [&_h2]:md:!text-2xl",
         isDragging && "opacity-40",
       )}
     >
