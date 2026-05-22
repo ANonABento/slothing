@@ -45,6 +45,8 @@ interface VirtualListProps<T> {
   role?: string;
   ariaLabel?: string;
   renderItem: (args: VirtualRenderArgs<T>) => ReactNode;
+  onEndReached?: () => void;
+  endReachedThreshold?: number;
   /**
    * Test-only measurement escape hatch for jsdom, where element rects are zero.
    */
@@ -68,6 +70,8 @@ function VirtualListInner<T>(
     role = "list",
     ariaLabel,
     renderItem,
+    onEndReached,
+    endReachedThreshold = 5,
     __testRect,
   }: VirtualListProps<T>,
   ref: React.ForwardedRef<VirtualListHandle>,
@@ -120,6 +124,24 @@ function VirtualListInner<T>(
     }),
     [estimateSize, useTestMeasurements, virtualizer],
   );
+
+  const lastFiredCountRef = useRef(0);
+  const lastVisibleIndex = virtualItems.length
+    ? virtualItems[virtualItems.length - 1].index
+    : -1;
+  useEffect(() => {
+    if (!onEndReached) return;
+    if (items.length === 0) {
+      lastFiredCountRef.current = 0;
+      return;
+    }
+    if (lastFiredCountRef.current === items.length) return;
+    if (lastVisibleIndex < 0) return;
+    if (lastVisibleIndex >= items.length - endReachedThreshold) {
+      lastFiredCountRef.current = items.length;
+      onEndReached();
+    }
+  }, [endReachedThreshold, items.length, lastVisibleIndex, onEndReached]);
 
   return (
     <div
