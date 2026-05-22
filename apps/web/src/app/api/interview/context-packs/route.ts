@@ -28,7 +28,10 @@ export async function POST(request: NextRequest) {
       customInput: parsed.data.customInput,
       deepDiveEnabled: parsed.data.deepDiveEnabled,
     });
-    const contextPack = createInterviewContextPack(built, authResult.userId);
+    const contextPack = await createInterviewContextPack(
+      built,
+      authResult.userId,
+    );
 
     return NextResponse.json({ contextPack }, { status: 201 });
   } catch (error) {

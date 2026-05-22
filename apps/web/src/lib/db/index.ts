@@ -1,5 +1,6 @@
-import { createClient, type Client } from "@libsql/client";
+import type { Client } from "@libsql/client";
 import { drizzle, type LibSQLDatabase } from "drizzle-orm/libsql";
+import { getClient, getLibsqlConfig } from "./client";
 import * as schema from "./schema";
 
 type LegacyStatement = {
@@ -15,24 +16,10 @@ type LegacySqlSurface = {
   prepare: (sql: string) => LegacyStatement;
 };
 
-let clientInstance: Client | undefined;
 let dbInstance: (LibSQLDatabase<typeof schema> & LegacySqlSurface) | undefined;
 const dbWarningGlobal = globalThis as typeof globalThis & {
   __slothingVecBootstrapWarned?: boolean;
 };
-
-export function getLibsqlConfig(
-  env: Record<string, string | undefined> = process.env,
-) {
-  const url = env.TURSO_DATABASE_URL?.trim() || "file:./.local.db";
-  const authToken = env.TURSO_AUTH_TOKEN?.trim();
-  return authToken ? { url, authToken } : { url };
-}
-
-export function getClient(): Client {
-  clientInstance ??= createClient(getLibsqlConfig());
-  return clientInstance;
-}
 
 function createLegacySurface(client: Client): LegacySqlSurface {
   return {
@@ -115,6 +102,8 @@ export const db = new Proxy(
 
 export default db;
 
+export { getClient, getLibsqlConfig } from "./client";
+
 export {
   DEFAULT_USER_ID,
   DEFAULT_PROFILE_ID,
@@ -167,7 +156,6 @@ export {
   sharedResumes,
 } from "./schema";
 export * from "./queries";
-export * from "./jobs";
 export * from "./interviews";
 export * from "./resumes";
 export * from "./reminders";

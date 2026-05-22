@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  recordWebVital({
+  await recordWebVital({
     ...parsed.data,
     userAgent: request.headers.get("user-agent"),
   });

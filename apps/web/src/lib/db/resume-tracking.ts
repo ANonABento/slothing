@@ -1,4 +1,4 @@
-import db from "./legacy";
+import { getClient } from "./client";
 import { generateId } from "@/lib/utils";
 import type { ABOutcome, ABTrackingEntry } from "@/lib/resume/compare";
 
@@ -26,37 +26,38 @@ function rowToEntry(row: TrackingRow): ABTrackingEntry {
 }
 
 // Log which resume version was sent to which job
-export function trackResumeSent(
+export async function trackResumeSent(
   resumeId: string,
   jobId: string,
   userId: string,
   notes?: string,
-): ABTrackingEntry {
+): Promise<ABTrackingEntry> {
   const id = generateId();
   const now = nowIso();
 
-  const stmt = db.prepare(`
-    INSERT INTO resume_ab_tracking (id, resume_id, job_id, user_id, outcome, sent_at, updated_at, notes)
-    SELECT ?, ?, ?, ?, 'applied', ?, ?, ?
-    WHERE EXISTS (SELECT 1 FROM generated_resumes WHERE id = ? AND user_id = ?)
-      AND EXISTS (SELECT 1 FROM jobs WHERE id = ? AND user_id = ?)
-  `);
+  const result = await getClient().execute({
+    sql: `
+      INSERT INTO resume_ab_tracking (id, resume_id, job_id, user_id, outcome, sent_at, updated_at, notes)
+      SELECT ?, ?, ?, ?, 'applied', ?, ?, ?
+      WHERE EXISTS (SELECT 1 FROM generated_resumes WHERE id = ? AND user_id = ?)
+        AND EXISTS (SELECT 1 FROM jobs WHERE id = ? AND user_id = ?)
+    `,
+    args: [
+      id,
+      resumeId,
+      jobId,
+      userId,
+      now,
+      now,
+      notes || null,
+      resumeId,
+      userId,
+      jobId,
+      userId,
+    ],
+  });
 
-  const result = stmt.run(
-    id,
-    resumeId,
-    jobId,
-    userId,
-    now,
-    now,
-    notes || null,
-    resumeId,
-    userId,
-    jobId,
-    userId,
-  );
-
-  if (result.changes === 0) {
+  if (result.rowsAffected === 0) {
     throw new Error("Resume or job not found");
   }
 
@@ -72,66 +73,82 @@ export function trackResumeSent(
 }
 
 // Update the outcome for a tracking entry
-export function updateTrackingOutcome(
+export async function updateTrackingOutcome(
   id: string,
   outcome: ABOutcome,
   userId: string,
-): boolean {
+): Promise<boolean> {
   const now = nowIso();
-  const stmt = db.prepare(`
-    UPDATE resume_ab_tracking
-    SET outcome = ?, updated_at = ?
-    WHERE id = ? AND user_id = ?
-  `);
+  const result = await getClient().execute({
+    sql: `
+      UPDATE resume_ab_tracking
+      SET outcome = ?, updated_at = ?
+      WHERE id = ? AND user_id = ?
+    `,
+    args: [outcome, now, id, userId],
+  });
 
-  const result = stmt.run(outcome, now, id, userId);
-  return result.changes > 0;
+  return result.rowsAffected > 0;
 }
 
 // Get all tracking entries for a user
-export function getTrackingEntries(userId: string): ABTrackingEntry[] {
-  const stmt = db.prepare(`
-    SELECT id, resume_id, job_id, outcome, sent_at, updated_at, notes
-    FROM resume_ab_tracking
-    WHERE user_id = ?
-    ORDER BY sent_at DESC
-  `);
+export async function getTrackingEntries(
+  userId: string,
+): Promise<ABTrackingEntry[]> {
+  const result = await getClient().execute({
+    sql: `
+      SELECT id, resume_id, job_id, outcome, sent_at, updated_at, notes
+      FROM resume_ab_tracking
+      WHERE user_id = ?
+      ORDER BY sent_at DESC
+    `,
+    args: [userId],
+  });
 
-  return (stmt.all(userId) as TrackingRow[]).map(rowToEntry);
+  return (result.rows as unknown as TrackingRow[]).map(rowToEntry);
 }
 
 // Get tracking entries for a specific resume
-export function getTrackingEntriesByResume(
+export async function getTrackingEntriesByResume(
   resumeId: string,
   userId: string,
-): ABTrackingEntry[] {
-  const stmt = db.prepare(`
-    SELECT id, resume_id, job_id, outcome, sent_at, updated_at, notes
-    FROM resume_ab_tracking
-    WHERE resume_id = ? AND user_id = ?
-    ORDER BY sent_at DESC
-  `);
+): Promise<ABTrackingEntry[]> {
+  const result = await getClient().execute({
+    sql: `
+      SELECT id, resume_id, job_id, outcome, sent_at, updated_at, notes
+      FROM resume_ab_tracking
+      WHERE resume_id = ? AND user_id = ?
+      ORDER BY sent_at DESC
+    `,
+    args: [resumeId, userId],
+  });
 
-  return (stmt.all(resumeId, userId) as TrackingRow[]).map(rowToEntry);
+  return (result.rows as unknown as TrackingRow[]).map(rowToEntry);
 }
 
 // Get distinct resume IDs that have been tracked
-export function getTrackedResumeIds(userId: string): string[] {
-  const stmt = db.prepare(`
-    SELECT DISTINCT resume_id
-    FROM resume_ab_tracking
-    WHERE user_id = ?
-  `);
+export async function getTrackedResumeIds(userId: string): Promise<string[]> {
+  const result = await getClient().execute({
+    sql: `
+      SELECT DISTINCT resume_id
+      FROM resume_ab_tracking
+      WHERE user_id = ?
+    `,
+    args: [userId],
+  });
 
-  const rows = stmt.all(userId) as Array<{ resume_id: string }>;
+  const rows = result.rows as unknown as Array<{ resume_id: string }>;
   return rows.map((row) => row.resume_id);
 }
 
 // Delete a tracking entry
-export function deleteTrackingEntry(id: string, userId: string): boolean {
-  const stmt = db.prepare(
-    "DELETE FROM resume_ab_tracking WHERE id = ? AND user_id = ?",
-  );
-  const result = stmt.run(id, userId);
-  return result.changes > 0;
+export async function deleteTrackingEntry(
+  id: string,
+  userId: string,
+): Promise<boolean> {
+  const result = await getClient().execute({
+    sql: "DELETE FROM resume_ab_tracking WHERE id = ? AND user_id = ?",
+    args: [id, userId],
+  });
+  return result.rowsAffected > 0;
 }

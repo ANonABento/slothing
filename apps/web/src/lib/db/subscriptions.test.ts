@@ -4,107 +4,103 @@ const mocks = vi.hoisted(() => {
   let customers = new Map<string, Record<string, unknown>>();
   let subscriptions = new Map<string, Record<string, unknown>>();
 
+  function apply(sql: string, args: unknown[]) {
+    if (sql.includes("INSERT INTO stripe_customers")) {
+      const userId = String(args[0]);
+      const existing = customers.get(userId);
+      customers.set(userId, {
+        user_id: userId,
+        stripe_customer_id: args[1],
+        email: args[2],
+        created_at: existing?.created_at ?? "2026-05-13 10:00:00",
+        updated_at: "2026-05-13 10:00:00",
+      });
+      return;
+    }
+
+    if (sql.includes("INSERT INTO subscriptions")) {
+      const id = String(args[0]);
+      const existing = subscriptions.get(id);
+      subscriptions.set(id, {
+        id,
+        user_id: args[1],
+        stripe_customer_id: args[2],
+        plan_key: args[3],
+        status: args[4],
+        stripe_price_id: args[5],
+        current_period_start: args[6],
+        current_period_end: args[7],
+        cancel_at_period_end: args[8],
+        canceled_at: args[9],
+        created_at: existing?.created_at ?? "2026-05-13 10:00:00",
+        updated_at: "2026-05-13 10:00:00",
+      });
+      return;
+    }
+
+    if (sql.includes("UPDATE subscriptions")) {
+      const id = String(args[1]);
+      const existing = subscriptions.get(id);
+      if (!existing) return;
+      subscriptions.set(id, {
+        ...existing,
+        status: "canceled",
+        canceled_at: args[0] ?? existing.canceled_at,
+        updated_at: "2026-05-13 10:00:00",
+      });
+    }
+  }
+
   return {
-    exec: vi.fn(),
-    prepare: vi.fn((sql: string) => {
-      if (sql.includes("INSERT INTO stripe_customers")) {
-        return {
-          run: vi.fn((userId, stripeCustomerId, email) => {
-            const existing = customers.get(userId);
-            customers.set(userId, {
-              user_id: userId,
-              stripe_customer_id: stripeCustomerId,
-              email,
-              created_at: existing?.created_at ?? "2026-05-13 10:00:00",
-              updated_at: "2026-05-13 10:00:00",
-            });
-          }),
-        };
-      }
+    batch: vi.fn(async () => []),
+    execute: vi.fn(async (statement: { sql: string; args?: unknown[] }) => {
+      const { sql, args = [] } = statement;
+      apply(sql, args);
+
       if (sql.includes("FROM stripe_customers WHERE user_id")) {
-        return { get: vi.fn((userId) => customers.get(userId)) };
+        return {
+          rows: customers.get(String(args[0]))
+            ? [customers.get(String(args[0]))]
+            : [],
+        };
       }
       if (sql.includes("FROM stripe_customers WHERE stripe_customer_id")) {
         return {
-          get: vi.fn((stripeCustomerId) =>
+          rows: [
             Array.from(customers.values()).find(
-              (row) => row.stripe_customer_id === stripeCustomerId,
+              (row) => row.stripe_customer_id === args[0],
             ),
-          ),
-        };
-      }
-      if (sql.includes("INSERT INTO subscriptions")) {
-        return {
-          run: vi.fn(
-            (
-              id,
-              userId,
-              stripeCustomerId,
-              planKey,
-              status,
-              stripePriceId,
-              currentPeriodStart,
-              currentPeriodEnd,
-              cancelAtPeriodEnd,
-              canceledAt,
-            ) => {
-              const existing = subscriptions.get(id);
-              subscriptions.set(id, {
-                id,
-                user_id: userId,
-                stripe_customer_id: stripeCustomerId,
-                plan_key: planKey,
-                status,
-                stripe_price_id: stripePriceId,
-                current_period_start: currentPeriodStart,
-                current_period_end: currentPeriodEnd,
-                cancel_at_period_end: cancelAtPeriodEnd,
-                canceled_at: canceledAt,
-                created_at: existing?.created_at ?? "2026-05-13 10:00:00",
-                updated_at: "2026-05-13 10:00:00",
-              });
-            },
-          ),
-        };
-      }
-      if (sql.includes("UPDATE subscriptions")) {
-        return {
-          run: vi.fn((canceledAt, id) => {
-            const existing = subscriptions.get(id);
-            if (!existing) return;
-            subscriptions.set(id, {
-              ...existing,
-              status: "canceled",
-              canceled_at: canceledAt ?? existing.canceled_at,
-              updated_at: "2026-05-13 10:00:00",
-            });
-          }),
+          ].filter(Boolean),
         };
       }
       if (sql.includes("FROM subscriptions WHERE id")) {
-        return { get: vi.fn((id) => subscriptions.get(id)) };
+        return {
+          rows: subscriptions.get(String(args[0]))
+            ? [subscriptions.get(String(args[0]))]
+            : [],
+        };
       }
       if (sql.includes("status IN")) {
         return {
-          get: vi.fn((userId) =>
+          rows: [
             Array.from(subscriptions.values()).find(
               (row) =>
-                row.user_id === userId &&
+                row.user_id === args[0] &&
                 (row.status === "active" || row.status === "trialing"),
             ),
-          ),
+          ].filter(Boolean),
         };
       }
       if (sql.includes("FROM subscriptions")) {
         return {
-          get: vi.fn((userId) =>
+          rows: [
             Array.from(subscriptions.values()).find(
-              (row) => row.user_id === userId,
+              (row) => row.user_id === args[0],
             ),
-          ),
+          ].filter(Boolean),
         };
       }
-      return { run: vi.fn(), get: vi.fn(), all: vi.fn() };
+      return { rows: [], rowsAffected: 1 };
     }),
     reset() {
       customers = new Map();
@@ -113,11 +109,11 @@ const mocks = vi.hoisted(() => {
   };
 });
 
-vi.mock("./legacy", () => ({
-  default: {
-    exec: mocks.exec,
-    prepare: mocks.prepare,
-  },
+vi.mock("./client", () => ({
+  getClient: () => ({
+    batch: mocks.batch,
+    execute: mocks.execute,
+  }),
 }));
 
 import {
@@ -134,8 +130,8 @@ describe("subscription database helpers", () => {
     mocks.reset();
   });
 
-  it("upserts and reads a Stripe customer scoped to one user", () => {
-    const customer = upsertStripeCustomer({
+  it("upserts and reads a Stripe customer scoped to one user", async () => {
+    const customer = await upsertStripeCustomer({
       userId: "user-1",
       stripeCustomerId: "cus_123",
       email: "sam@example.com",
@@ -146,14 +142,16 @@ describe("subscription database helpers", () => {
       stripeCustomerId: "cus_123",
       email: "sam@example.com",
     });
-    expect(getStripeCustomerByStripeId("cus_123")?.userId).toBe("user-1");
-    expect(mocks.exec).toHaveBeenCalledWith(
-      expect.stringContaining("CREATE TABLE IF NOT EXISTS stripe_customers"),
+    await expect(getStripeCustomerByStripeId("cus_123")).resolves.toMatchObject(
+      {
+        userId: "user-1",
+      },
     );
+    expect(mocks.batch).toHaveBeenCalled();
   });
 
-  it("upserts and reads the active user subscription", () => {
-    upsertSubscription({
+  it("upserts and reads the active user subscription", async () => {
+    await upsertSubscription({
       id: "sub_123",
       userId: "user-1",
       stripeCustomerId: "cus_123",
@@ -164,7 +162,7 @@ describe("subscription database helpers", () => {
       currentPeriodEnd: "2026-06-13T00:00:00.000Z",
     });
 
-    const subscription = getActiveUserSubscription("user-1");
+    const subscription = await getActiveUserSubscription("user-1");
 
     expect(subscription).toMatchObject({
       id: "sub_123",
@@ -175,8 +173,8 @@ describe("subscription database helpers", () => {
     });
   });
 
-  it("marks deleted subscriptions as canceled", () => {
-    upsertSubscription({
+  it("marks deleted subscriptions as canceled", async () => {
+    await upsertSubscription({
       id: "sub_123",
       userId: "user-1",
       stripeCustomerId: "cus_123",
@@ -184,7 +182,7 @@ describe("subscription database helpers", () => {
       status: "active",
     });
 
-    const subscription = markSubscriptionDeleted(
+    const subscription = await markSubscriptionDeleted(
       "sub_123",
       "2026-05-13T12:00:00.000Z",
     );
@@ -194,6 +192,6 @@ describe("subscription database helpers", () => {
       status: "canceled",
       canceledAt: "2026-05-13T12:00:00.000Z",
     });
-    expect(getActiveUserSubscription("user-1")).toBeNull();
+    await expect(getActiveUserSubscription("user-1")).resolves.toBeNull();
   });
 });

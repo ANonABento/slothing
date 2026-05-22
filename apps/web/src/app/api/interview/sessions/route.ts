@@ -16,7 +16,7 @@ import {
   createInterviewSession,
   getInterviewContextPack,
 } from "@/lib/db/interviews";
-import { getJob } from "@/lib/db/jobs";
+import { getJob } from "@/lib/db/jobs-async";
 import { createInterviewSessionSchema } from "@/lib/constants";
 import { requireAuth, isAuthError } from "@/lib/auth";
 import { safeTrackActivity } from "@/lib/streak/track";
@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const jobId = searchParams.get("jobId") || undefined;
 
-    const sessions = getInterviewSessions(jobId, authResult.userId);
+    const sessions = await getInterviewSessions(jobId, authResult.userId);
 
     return NextResponse.json({ sessions });
   } catch (error) {
@@ -68,13 +68,13 @@ export async function POST(request: NextRequest) {
     const { jobId, contextPackId, questions, mode, category } =
       parseResult.data;
 
-    const job = jobId ? getJob(jobId, authResult.userId) : null;
+    const job = jobId ? await getJob(jobId, authResult.userId) : null;
     if (jobId && !job) {
       return NextResponse.json({ error: "Job not found" }, { status: 404 });
     }
 
     if (contextPackId) {
-      const contextPack = getInterviewContextPack(
+      const contextPack = await getInterviewContextPack(
         contextPackId,
         authResult.userId,
       );
@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const session = createInterviewSession(
+    const session = await createInterviewSession(
       jobId,
       questions,
       mode,

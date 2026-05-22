@@ -9,8 +9,10 @@ const aiGateMocks = vi.hoisted(() => ({
   gateOptionalAiFeature: vi.fn(),
 }));
 
-vi.mock("@/lib/db/jobs", () =>
-  globalThis.__contractRouteMocks!.createContractModuleMock("@/lib/db/jobs"),
+vi.mock("@/lib/db/jobs-async", () =>
+  globalThis.__contractRouteMocks!.createContractModuleMock(
+    "@/lib/db/jobs-async",
+  ),
 );
 
 vi.mock("@/lib/db", () =>
@@ -37,7 +39,7 @@ vi.mock("@/lib/auth", () =>
 );
 
 import { POST } from "./route";
-import { getJob } from "@/lib/db/jobs";
+import { getJob } from "@/lib/db/jobs-async";
 import { getProfile } from "@/lib/db";
 import {
   expectRouteResponseContract,
@@ -156,7 +158,7 @@ describe("/api/opportunities/[id]/analyze route contract", () => {
       transaction: null,
       refund: aiGateMocks.refund,
     });
-    vi.mocked(getJob).mockReturnValueOnce({
+    vi.mocked(getJob).mockResolvedValueOnce({
       id: "job-1",
       title: "Senior Product Engineer",
       company: "ExampleWorks",

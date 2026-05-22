@@ -3,18 +3,15 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   requireExtensionAuth: vi.fn(),
-  prepare: vi.fn(),
-  all: vi.fn(),
+  execute: vi.fn(),
 }));
 
 vi.mock("@/lib/extension-auth", () => ({
   requireExtensionAuth: mocks.requireExtensionAuth,
 }));
 
-vi.mock("@/lib/db/legacy", () => ({
-  default: {
-    prepare: mocks.prepare,
-  },
+vi.mock("@/lib/db/client", () => ({
+  getClient: () => ({ execute: mocks.execute }),
 }));
 
 import { GET } from "./route";
@@ -26,30 +23,31 @@ describe("GET /api/extension/resumes", () => {
       success: true,
       userId: "user-1",
     });
-    mocks.prepare.mockReturnValue({ all: mocks.all });
   });
 
   it("returns up to 5 tailored resumes for the authed user", async () => {
-    mocks.all.mockReturnValue([
-      {
-        id: "resume-1",
-        created_at: "2026-05-10T12:00:00.000Z",
-        job_title: "Senior Backend Engineer",
-        job_company: "Acme",
-      },
-      {
-        id: "resume-2",
-        created_at: "2026-05-09T12:00:00.000Z",
-        job_title: "Frontend Engineer",
-        job_company: "Globex",
-      },
-      {
-        id: "resume-3",
-        created_at: "2026-05-08T12:00:00.000Z",
-        job_title: null,
-        job_company: null,
-      },
-    ]);
+    mocks.execute.mockResolvedValueOnce({
+      rows: [
+        {
+          id: "resume-1",
+          created_at: "2026-05-10T12:00:00.000Z",
+          job_title: "Senior Backend Engineer",
+          job_company: "Acme",
+        },
+        {
+          id: "resume-2",
+          created_at: "2026-05-09T12:00:00.000Z",
+          job_title: "Frontend Engineer",
+          job_company: "Globex",
+        },
+        {
+          id: "resume-3",
+          created_at: "2026-05-08T12:00:00.000Z",
+          job_title: null,
+          job_company: null,
+        },
+      ],
+    });
 
     const response = await GET(
       new NextRequest("http://localhost/api/extension/resumes"),
@@ -57,7 +55,9 @@ describe("GET /api/extension/resumes", () => {
     const body = await response.json();
 
     expect(response.status).toBe(200);
-    expect(mocks.all).toHaveBeenCalledWith("user-1", 5);
+    expect(mocks.execute).toHaveBeenCalledWith(
+      expect.objectContaining({ args: ["user-1", 5] }),
+    );
     expect(body.resumes).toEqual([
       {
         id: "resume-1",
@@ -81,7 +81,7 @@ describe("GET /api/extension/resumes", () => {
   });
 
   it("returns an empty array when the user has no saved resumes", async () => {
-    mocks.all.mockReturnValue([]);
+    mocks.execute.mockResolvedValueOnce({ rows: [] });
 
     const response = await GET(
       new NextRequest("http://localhost/api/extension/resumes"),
@@ -109,11 +109,11 @@ describe("GET /api/extension/resumes", () => {
     await expect(response.json()).resolves.toEqual({
       error: "No token provided",
     });
-    expect(mocks.prepare).not.toHaveBeenCalled();
+    expect(mocks.execute).not.toHaveBeenCalled();
   });
 
   it("returns 500 when the DB call fails (without leaking the message)", async () => {
-    mocks.all.mockImplementation(() => {
+    mocks.execute.mockImplementationOnce(() => {
       throw new Error("LEAKY_INTERNAL_PROBE_94CFE");
     });
 

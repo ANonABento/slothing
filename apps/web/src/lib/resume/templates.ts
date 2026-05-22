@@ -23,17 +23,17 @@ export {
 } from "./template-data";
 
 // Get template by ID, checking custom templates first (server-only)
-export function getTemplateWithCustom(
+export async function getTemplateWithCustom(
   id: string,
   userId?: string,
-): ResumeTemplate {
+): Promise<ResumeTemplate> {
   // Check built-in templates first
   const builtIn = TEMPLATES.find((t) => t.id === id);
   if (builtIn) return builtIn;
 
   // Check custom templates
   try {
-    const custom = getCustomTemplate(id, userId || "default");
+    const custom = await getCustomTemplate(id, userId || "default");
     if (custom) {
       return {
         id: custom.id,

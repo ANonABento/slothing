@@ -1,25 +1,18 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import type { Mock } from "vitest";
 
-// Mock the database module
-vi.mock("./legacy", () => {
-  const mockDb = {
-    prepare: vi.fn(),
-    // `ensureSuggestedStatusUpdatesSchema()` (called transitively when
-    // notifications join suggested status updates) runs bootstrap DDL
-    // via `db.exec(...)`. The test only asserts on `prepare()` calls,
-    // so this stub is a no-op.
-    exec: vi.fn(),
-  };
-  return { default: mockDb };
-});
+const dbMocks = vi.hoisted(() => ({
+  execute: vi.fn(),
+  batch: vi.fn(),
+}));
 
-// Mock utils to control ID generation
+vi.mock("./client", () => ({
+  getClient: () => dbMocks,
+}));
+
 vi.mock("@/lib/utils", () => ({
   generateId: () => "test-notification-id",
 }));
 
-import db from "./legacy";
 import {
   createNotification,
   getNotifications,
@@ -34,17 +27,42 @@ import {
 
 const TEST_USER_ID = "test-user";
 
+function result(rows: unknown[] = []) {
+  return { rows, rowsAffected: 0 };
+}
+
+function mockExecute(rows: unknown[] = []) {
+  dbMocks.execute.mockImplementation((statement: string | { sql: string }) => {
+    const sql = typeof statement === "string" ? statement : statement.sql;
+    if (sql.startsWith("PRAGMA table_info")) {
+      return Promise.resolve(
+        result([
+          { name: "confidence" },
+          { name: "reason" },
+          { name: "evidence_json" },
+        ]),
+      );
+    }
+    if (sql.includes("SELECT COUNT")) {
+      return Promise.resolve(result([{ count: 5 }]));
+    }
+    if (sql.includes("SELECT") && sql.includes("FROM notifications")) {
+      return Promise.resolve(result(rows));
+    }
+    return Promise.resolve(result());
+  });
+}
+
 describe("Notification Database Functions", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    dbMocks.batch.mockResolvedValue([]);
+    mockExecute();
   });
 
   describe("createNotification", () => {
-    it("should create a notification and return it", () => {
-      const mockRun = vi.fn();
-      (db.prepare as Mock).mockReturnValue({ run: mockRun });
-
-      const result = createNotification(
+    it("should create a notification and return it", async () => {
+      const notification = await createNotification(
         {
           type: "info",
           title: "Test Notification",
@@ -54,27 +72,28 @@ describe("Notification Database Functions", () => {
         TEST_USER_ID,
       );
 
-      expect(db.prepare).toHaveBeenCalled();
-      expect(mockRun).toHaveBeenCalledWith(
-        "test-notification-id",
-        "info",
-        "Test Notification",
-        "This is a test",
-        "/test",
-        expect.any(String),
-        TEST_USER_ID,
-      );
-      expect(result.id).toBe("test-notification-id");
-      expect(result.type).toBe("info");
-      expect(result.title).toBe("Test Notification");
-      expect(result.read).toBe(false);
+      expect(dbMocks.execute).toHaveBeenCalledWith({
+        sql: expect.stringContaining("INSERT INTO notifications"),
+        args: [
+          "test-notification-id",
+          "info",
+          "Test Notification",
+          "This is a test",
+          "/test",
+          expect.any(String),
+          TEST_USER_ID,
+        ],
+      });
+      expect(notification).toMatchObject({
+        id: "test-notification-id",
+        type: "info",
+        title: "Test Notification",
+        read: false,
+      });
     });
 
-    it("should handle optional message and link", () => {
-      const mockRun = vi.fn();
-      (db.prepare as Mock).mockReturnValue({ run: mockRun });
-
-      const result = createNotification(
+    it("should handle optional message and link", async () => {
+      const notification = await createNotification(
         {
           type: "system",
           title: "System Alert",
@@ -82,45 +101,26 @@ describe("Notification Database Functions", () => {
         TEST_USER_ID,
       );
 
-      expect(mockRun).toHaveBeenCalledWith(
-        "test-notification-id",
-        "system",
-        "System Alert",
-        null,
-        null,
-        expect.any(String),
-        TEST_USER_ID,
-      );
-      expect(result.message).toBeUndefined();
-      expect(result.link).toBeUndefined();
+      expect(dbMocks.execute).toHaveBeenCalledWith({
+        sql: expect.stringContaining("INSERT INTO notifications"),
+        args: [
+          "test-notification-id",
+          "system",
+          "System Alert",
+          null,
+          null,
+          expect.any(String),
+          TEST_USER_ID,
+        ],
+      });
+      expect(notification.message).toBeUndefined();
+      expect(notification.link).toBeUndefined();
     });
   });
 
   describe("getNotifications", () => {
-    function mockNotificationQuery(rows: unknown[] = []) {
-      const mockAll = vi.fn().mockReturnValue(rows);
-      (db.prepare as Mock).mockImplementation((sql: string) => {
-        if (sql.startsWith("PRAGMA table_info")) {
-          return {
-            all: vi
-              .fn()
-              .mockReturnValue([
-                { name: "confidence" },
-                { name: "reason" },
-                { name: "evidence_json" },
-              ]),
-          };
-        }
-        if (sql.includes("SELECT")) {
-          return { all: mockAll };
-        }
-        return { run: vi.fn() };
-      });
-      return mockAll;
-    }
-
-    it("should return all notifications ordered by created_at DESC", () => {
-      const mockRows = [
+    it("should return all notifications ordered by created_at DESC", async () => {
+      mockExecute([
         {
           id: "notif-1",
           type: "info",
@@ -151,52 +151,42 @@ describe("Notification Database Functions", () => {
           suggested_reason: null,
           suggested_evidence_json: null,
         },
-      ];
+      ]);
 
-      const mockAll = mockNotificationQuery(mockRows);
+      const notifications = await getNotifications({ userId: TEST_USER_ID });
 
-      const result = getNotifications({ userId: TEST_USER_ID });
-
-      expect(db.prepare).toHaveBeenLastCalledWith(
-        expect.stringContaining("LEFT JOIN suggested_status_updates"),
-      );
-      expect(mockAll).toHaveBeenCalledWith(TEST_USER_ID, 50);
-      expect(result).toHaveLength(2);
-      expect(result[0].id).toBe("notif-1");
-      expect(result[0].read).toBe(false);
-      expect(result[1].read).toBe(true);
-      expect(result[1].message).toBeUndefined();
-      expect(result[1].link).toBeUndefined();
+      expect(dbMocks.execute).toHaveBeenCalledWith({
+        sql: expect.stringContaining("LEFT JOIN suggested_status_updates"),
+        args: [TEST_USER_ID, 50],
+      });
+      expect(notifications).toHaveLength(2);
+      expect(notifications[0].id).toBe("notif-1");
+      expect(notifications[0].read).toBe(false);
+      expect(notifications[1].read).toBe(true);
+      expect(notifications[1].message).toBeUndefined();
+      expect(notifications[1].link).toBeUndefined();
     });
 
-    it("should filter unread only when specified", () => {
-      mockNotificationQuery();
+    it("should filter unread only when specified", async () => {
+      await getNotifications({ userId: TEST_USER_ID, unreadOnly: true });
 
-      getNotifications({ userId: TEST_USER_ID, unreadOnly: true });
-
-      expect(db.prepare).toHaveBeenLastCalledWith(
-        expect.stringContaining("AND notifications.read = 0"),
-      );
+      expect(dbMocks.execute).toHaveBeenCalledWith({
+        sql: expect.stringContaining("AND notifications.read = 0"),
+        args: [TEST_USER_ID, 50],
+      });
     });
 
-    it("should respect limit parameter", () => {
-      const mockAll = mockNotificationQuery();
+    it("should respect limit parameter", async () => {
+      await getNotifications({ userId: TEST_USER_ID, limit: 10 });
 
-      getNotifications({ userId: TEST_USER_ID, limit: 10 });
-
-      expect(mockAll).toHaveBeenCalledWith(TEST_USER_ID, 10);
+      expect(dbMocks.execute).toHaveBeenCalledWith({
+        sql: expect.stringContaining("LIMIT ?"),
+        args: [TEST_USER_ID, 10],
+      });
     });
 
-    it("should use default limit of 50", () => {
-      const mockAll = mockNotificationQuery();
-
-      getNotifications({ userId: TEST_USER_ID });
-
-      expect(mockAll).toHaveBeenCalledWith(TEST_USER_ID, 50);
-    });
-
-    it("should include suggested status metadata", () => {
-      mockNotificationQuery([
+    it("should include suggested status metadata", async () => {
+      mockExecute([
         {
           id: "notif-1",
           type: "application_update",
@@ -214,9 +204,11 @@ describe("Notification Database Functions", () => {
         },
       ]);
 
-      expect(
-        getNotifications({ userId: TEST_USER_ID })[0].suggestedStatusUpdate,
-      ).toEqual({
+      await expect(
+        getNotifications({ userId: TEST_USER_ID }).then(
+          (notifications) => notifications[0].suggestedStatusUpdate,
+        ),
+      ).resolves.toEqual({
         state: "pending",
         opportunityId: "opp-1",
         suggestedStatus: "interviewing",
@@ -226,8 +218,8 @@ describe("Notification Database Functions", () => {
       });
     });
 
-    it("should ignore invalid suggested evidence JSON", () => {
-      mockNotificationQuery([
+    it("should ignore invalid suggested evidence JSON", async () => {
+      mockExecute([
         {
           id: "notif-1",
           type: "application_update",
@@ -245,100 +237,72 @@ describe("Notification Database Functions", () => {
         },
       ]);
 
-      expect(
-        getNotifications({ userId: TEST_USER_ID })[0].suggestedStatusUpdate
-          ?.evidence,
-      ).toEqual([]);
+      await expect(
+        getNotifications({ userId: TEST_USER_ID }).then(
+          (notifications) => notifications[0].suggestedStatusUpdate?.evidence,
+        ),
+      ).resolves.toEqual([]);
     });
   });
 
-  describe("markNotificationRead", () => {
-    it("should mark a single notification as read", () => {
-      const mockRun = vi.fn();
-      (db.prepare as Mock).mockReturnValue({ run: mockRun });
+  describe("mutations", () => {
+    it("should mark a single notification as read", async () => {
+      await markNotificationRead("notif-1", TEST_USER_ID);
 
-      markNotificationRead("notif-1", TEST_USER_ID);
-
-      expect(db.prepare).toHaveBeenCalledWith(
-        "UPDATE notifications SET read = 1 WHERE id = ? AND user_id = ?",
-      );
-      expect(mockRun).toHaveBeenCalledWith("notif-1", TEST_USER_ID);
+      expect(dbMocks.execute).toHaveBeenCalledWith({
+        sql: "UPDATE notifications SET read = 1 WHERE id = ? AND user_id = ?",
+        args: ["notif-1", TEST_USER_ID],
+      });
     });
-  });
 
-  describe("markAllNotificationsRead", () => {
-    it("should mark all unread notifications as read", () => {
-      const mockRun = vi.fn();
-      (db.prepare as Mock).mockReturnValue({ run: mockRun });
+    it("should mark all unread notifications as read", async () => {
+      await markAllNotificationsRead(TEST_USER_ID);
 
-      markAllNotificationsRead(TEST_USER_ID);
-
-      expect(db.prepare).toHaveBeenCalledWith(
-        "UPDATE notifications SET read = 1 WHERE read = 0 AND user_id = ?",
-      );
-      expect(mockRun).toHaveBeenCalledWith(TEST_USER_ID);
+      expect(dbMocks.execute).toHaveBeenCalledWith({
+        sql: "UPDATE notifications SET read = 1 WHERE read = 0 AND user_id = ?",
+        args: [TEST_USER_ID],
+      });
     });
-  });
 
-  describe("deleteNotification", () => {
-    it("should delete a notification by id", () => {
-      const mockRun = vi.fn();
-      (db.prepare as Mock).mockReturnValue({ run: mockRun });
+    it("should delete a notification by id", async () => {
+      await deleteNotification("notif-1", TEST_USER_ID);
 
-      deleteNotification("notif-1", TEST_USER_ID);
-
-      expect(db.prepare).toHaveBeenCalledWith(
-        "DELETE FROM notifications WHERE id = ? AND user_id = ?",
-      );
-      expect(mockRun).toHaveBeenCalledWith("notif-1", TEST_USER_ID);
+      expect(dbMocks.execute).toHaveBeenCalledWith({
+        sql: "DELETE FROM notifications WHERE id = ? AND user_id = ?",
+        args: ["notif-1", TEST_USER_ID],
+      });
     });
-  });
 
-  describe("deleteReadNotifications", () => {
-    it("should delete all read notifications", () => {
-      const mockRun = vi.fn();
-      (db.prepare as Mock).mockReturnValue({ run: mockRun });
+    it("should delete all read notifications", async () => {
+      await deleteReadNotifications(TEST_USER_ID);
 
-      deleteReadNotifications(TEST_USER_ID);
-
-      expect(db.prepare).toHaveBeenCalledWith(
-        "DELETE FROM notifications WHERE read = 1 AND user_id = ?",
-      );
-      expect(mockRun).toHaveBeenCalledWith(TEST_USER_ID);
+      expect(dbMocks.execute).toHaveBeenCalledWith({
+        sql: "DELETE FROM notifications WHERE read = 1 AND user_id = ?",
+        args: [TEST_USER_ID],
+      });
     });
   });
 
   describe("getUnreadNotificationCount", () => {
-    it("should return count of unread notifications", () => {
-      const mockGet = vi.fn().mockReturnValue({ count: 5 });
-      (db.prepare as Mock).mockReturnValue({ get: mockGet });
+    it("should return count of unread notifications", async () => {
+      await expect(getUnreadNotificationCount(TEST_USER_ID)).resolves.toBe(5);
 
-      const result = getUnreadNotificationCount(TEST_USER_ID);
-
-      expect(db.prepare).toHaveBeenCalledWith(
-        "SELECT COUNT(*) as count FROM notifications WHERE read = 0 AND user_id = ?",
-      );
-      expect(mockGet).toHaveBeenCalledWith(TEST_USER_ID);
-      expect(result).toBe(5);
+      expect(dbMocks.execute).toHaveBeenCalledWith({
+        sql: "SELECT COUNT(*) as count FROM notifications WHERE read = 0 AND user_id = ?",
+        args: [TEST_USER_ID],
+      });
     });
 
-    it("should return 0 when no unread notifications", () => {
-      const mockGet = vi.fn().mockReturnValue({ count: 0 });
-      (db.prepare as Mock).mockReturnValue({ get: mockGet });
+    it("should return 0 when no unread row is returned", async () => {
+      dbMocks.execute.mockResolvedValue(result([]));
 
-      const result = getUnreadNotificationCount(TEST_USER_ID);
-
-      expect(mockGet).toHaveBeenCalledWith(TEST_USER_ID);
-      expect(result).toBe(0);
+      await expect(getUnreadNotificationCount(TEST_USER_ID)).resolves.toBe(0);
     });
   });
 
-  describe("createReminderNotification", () => {
-    it("should create a due reminder notification", () => {
-      const mockRun = vi.fn();
-      (db.prepare as Mock).mockReturnValue({ run: mockRun });
-
-      const result = createReminderNotification(
+  describe("helper notification factories", () => {
+    it("should create a due reminder notification", async () => {
+      const notification = await createReminderNotification(
         "Follow up",
         "Software Engineer",
         false,
@@ -346,26 +310,28 @@ describe("Notification Database Functions", () => {
         "user-1",
       );
 
-      expect(mockRun).toHaveBeenCalledWith(
-        expect.any(String),
-        "reminder_due",
-        "Reminder Due",
-        "Follow up for Software Engineer",
-        "/opportunities?id=job-123",
-        expect.any(String),
-        "user-1",
-      );
-      expect(result.type).toBe("reminder_due");
-      expect(result.title).toBe("Reminder Due");
-      expect(result.message).toBe("Follow up for Software Engineer");
-      expect(result.link).toBe("/opportunities?id=job-123");
+      expect(dbMocks.execute).toHaveBeenCalledWith({
+        sql: expect.stringContaining("INSERT INTO notifications"),
+        args: [
+          "test-notification-id",
+          "reminder_due",
+          "Reminder Due",
+          "Follow up for Software Engineer",
+          "/opportunities?id=job-123",
+          expect.any(String),
+          "user-1",
+        ],
+      });
+      expect(notification).toMatchObject({
+        type: "reminder_due",
+        title: "Reminder Due",
+        message: "Follow up for Software Engineer",
+        link: "/opportunities?id=job-123",
+      });
     });
 
-    it("should create an overdue reminder notification", () => {
-      const mockRun = vi.fn();
-      (db.prepare as Mock).mockReturnValue({ run: mockRun });
-
-      const result = createReminderNotification(
+    it("should create an overdue reminder notification", async () => {
+      const notification = await createReminderNotification(
         "Submit application",
         "Data Analyst",
         true,
@@ -373,27 +339,24 @@ describe("Notification Database Functions", () => {
         "user-1",
       );
 
-      expect(result.type).toBe("reminder_overdue");
-      expect(result.title).toBe("Overdue Reminder");
+      expect(notification.type).toBe("reminder_overdue");
+      expect(notification.title).toBe("Overdue Reminder");
     });
-  });
 
-  describe("createApplicationUpdateNotification", () => {
-    it("should create an application update notification", () => {
-      const mockRun = vi.fn();
-      (db.prepare as Mock).mockReturnValue({ run: mockRun });
-
-      const result = createApplicationUpdateNotification(
+    it("should create an application update notification", async () => {
+      const notification = await createApplicationUpdateNotification(
         "Frontend Developer",
         "interviewing",
         "job-789",
         TEST_USER_ID,
       );
 
-      expect(result.type).toBe("application_update");
-      expect(result.title).toBe("Application Status Updated");
-      expect(result.message).toBe('Frontend Developer is now "interviewing"');
-      expect(result.link).toBe("/opportunities?id=job-789");
+      expect(notification.type).toBe("application_update");
+      expect(notification.title).toBe("Application Status Updated");
+      expect(notification.message).toBe(
+        'Frontend Developer is now "interviewing"',
+      );
+      expect(notification.link).toBe("/opportunities?id=job-789");
     });
   });
 });

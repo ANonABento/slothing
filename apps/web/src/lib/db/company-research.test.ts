@@ -1,18 +1,17 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import type { Mock } from "vitest";
 
-vi.mock("./legacy", () => {
-  const mockDb = {
-    prepare: vi.fn(),
-  };
-  return { default: mockDb };
-});
+const dbMocks = vi.hoisted(() => ({
+  execute: vi.fn(),
+}));
+
+vi.mock("./client", () => ({
+  getClient: () => dbMocks,
+}));
 
 vi.mock("@/lib/utils", () => ({
   generateId: () => "research-id",
 }));
 
-import db from "./legacy";
 import {
   deleteCompanyResearch,
   getCompanyEnrichment,
@@ -24,58 +23,62 @@ import {
   setCompanyGithubSlug,
 } from "./company-research";
 
+function result(rows: unknown[] = [], rowsAffected = 0) {
+  return { rows, rowsAffected };
+}
+
+const companyRow = {
+  id: "research-id",
+  user_id: "user-123",
+  company_name: "acme",
+  summary: "Summary",
+  key_facts_json: '["Fact"]',
+  interview_questions_json: '["Question"]',
+  culture_notes: null,
+  recent_news: null,
+  created_at: "2024-01-01T00:00:00.000Z",
+  updated_at: "2024-01-02T00:00:00.000Z",
+};
+
 describe("Company Research DB Functions", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-  });
-
-  it("should fetch company research for a specific user", () => {
-    const mockGet = vi.fn().mockReturnValue({
-      id: "research-id",
-      user_id: "user-123",
-      company_name: "acme",
-      summary: "Summary",
-      key_facts_json: '["Fact"]',
-      interview_questions_json: '["Question"]',
-      culture_notes: null,
-      recent_news: null,
-      created_at: "2024-01-01T00:00:00.000Z",
-      updated_at: "2024-01-02T00:00:00.000Z",
-    });
-    (db.prepare as Mock).mockReturnValue({ get: mockGet });
-
-    const result = getCompanyResearch(" Acme ", "user-123");
-
-    expect(db.prepare).toHaveBeenCalledWith(
-      "SELECT * FROM company_research WHERE user_id = ? AND LOWER(company_name) = ?",
+    dbMocks.execute.mockImplementation(
+      (statement: string | { sql: string }) => {
+        const sql = typeof statement === "string" ? statement : statement.sql;
+        if (sql.startsWith("PRAGMA table_info")) {
+          return Promise.resolve(
+            result([
+              { name: "enrichment_json" },
+              { name: "enriched_at" },
+              { name: "github_slug" },
+            ]),
+          );
+        }
+        if (
+          sql ===
+          "SELECT * FROM company_research WHERE user_id = ? AND LOWER(company_name) = ?"
+        ) {
+          return Promise.resolve(result([companyRow]));
+        }
+        return Promise.resolve(result([], 1));
+      },
     );
-    expect(mockGet).toHaveBeenCalledWith("user-123", "acme");
-    expect(result?.id).toBe("research-id");
-    expect(result?.keyFacts).toEqual(["Fact"]);
   });
 
-  it("should save company research with user ownership", () => {
-    const mockRun = vi.fn();
-    const mockGet = vi.fn().mockReturnValue({
-      id: "research-id",
-      user_id: "user-123",
-      company_name: "acme",
-      summary: "Summary",
-      key_facts_json: "[]",
-      interview_questions_json: "[]",
-      culture_notes: null,
-      recent_news: null,
-      created_at: "2024-01-01T00:00:00.000Z",
-      updated_at: "2024-01-02T00:00:00.000Z",
-    });
-    (db.prepare as Mock).mockImplementation((sql: string) => {
-      if (sql.includes("INSERT INTO company_research")) {
-        return { run: mockRun };
-      }
-      return { get: mockGet };
-    });
+  it("should fetch company research for a specific user", async () => {
+    const research = await getCompanyResearch(" Acme ", "user-123");
 
-    saveCompanyResearch(
+    expect(dbMocks.execute).toHaveBeenCalledWith({
+      sql: "SELECT * FROM company_research WHERE user_id = ? AND LOWER(company_name) = ?",
+      args: ["user-123", "acme"],
+    });
+    expect(research?.id).toBe("research-id");
+    expect(research?.keyFacts).toEqual(["Fact"]);
+  });
+
+  it("should save company research with user ownership", async () => {
+    await saveCompanyResearch(
       {
         companyName: "Acme",
         summary: "Summary",
@@ -85,26 +88,33 @@ describe("Company Research DB Functions", () => {
       "user-123",
     );
 
-    expect(mockRun.mock.calls[0].slice(0, 3)).toEqual([
-      "research-id",
-      "user-123",
-      "acme",
-    ]);
+    expect(dbMocks.execute).toHaveBeenCalledWith({
+      sql: expect.stringContaining("INSERT INTO company_research"),
+      args: [
+        "research-id",
+        "user-123",
+        "acme",
+        "Summary",
+        "[]",
+        "[]",
+        null,
+        null,
+        expect.any(String),
+        expect.any(String),
+      ],
+    });
   });
 
-  it("should delete company research by id and user", () => {
-    const mockRun = vi.fn();
-    (db.prepare as Mock).mockReturnValue({ run: mockRun });
+  it("should delete company research by id and user", async () => {
+    await deleteCompanyResearch("research-id", "user-123");
 
-    deleteCompanyResearch("research-id", "user-123");
-
-    expect(db.prepare).toHaveBeenCalledWith(
-      "DELETE FROM company_research WHERE id = ? AND user_id = ?",
-    );
-    expect(mockRun).toHaveBeenCalledWith("research-id", "user-123");
+    expect(dbMocks.execute).toHaveBeenCalledWith({
+      sql: "DELETE FROM company_research WHERE id = ? AND user_id = ?",
+      args: ["research-id", "user-123"],
+    });
   });
 
-  it("should save and fetch company enrichment", () => {
+  it("should save and fetch company enrichment", async () => {
     const snapshot = {
       version: 1 as const,
       github: null,
@@ -114,52 +124,95 @@ describe("Company Research DB Functions", () => {
       hn: null,
       enrichedAt: "2026-05-01T00:00:00.000Z",
     };
-    const mockRun = vi.fn();
-    const mockGet = vi.fn().mockReturnValue({
-      enrichment_json: JSON.stringify(snapshot),
-      enriched_at: snapshot.enrichedAt,
-    });
-    (db.prepare as Mock).mockImplementation((sql: string) => {
-      if (sql.includes("INSERT INTO company_research")) {
-        return { run: mockRun };
-      }
-      return { get: mockGet };
-    });
+    dbMocks.execute.mockImplementation(
+      (statement: string | { sql: string }) => {
+        const sql = typeof statement === "string" ? statement : statement.sql;
+        if (sql.startsWith("PRAGMA table_info")) {
+          return Promise.resolve(
+            result([
+              { name: "enrichment_json" },
+              { name: "enriched_at" },
+              { name: "github_slug" },
+            ]),
+          );
+        }
+        if (sql.includes("SELECT enrichment_json")) {
+          return Promise.resolve(
+            result([
+              {
+                enrichment_json: JSON.stringify(snapshot),
+                enriched_at: snapshot.enrichedAt,
+              },
+            ]),
+          );
+        }
+        return Promise.resolve(result([], 1));
+      },
+    );
 
-    const saved = saveCompanyEnrichment("user-123", "Acme", snapshot);
-    const fetched = getCompanyEnrichment("Acme", "user-123");
+    const saved = await saveCompanyEnrichment("user-123", "Acme", snapshot);
+    const fetched = await getCompanyEnrichment("Acme", "user-123");
 
     expect(saved).toEqual({ snapshot, enrichedAt: snapshot.enrichedAt });
-    expect(mockRun.mock.calls[0].slice(0, 3)).toEqual([
-      "research-id",
-      "user-123",
-      "acme",
-    ]);
+    expect(dbMocks.execute).toHaveBeenCalledWith({
+      sql: expect.stringContaining("INSERT INTO company_research"),
+      args: [
+        "research-id",
+        "user-123",
+        "acme",
+        "[]",
+        "[]",
+        JSON.stringify(snapshot),
+        snapshot.enrichedAt,
+        null,
+        expect.any(String),
+        expect.any(String),
+      ],
+    });
     expect(fetched).toEqual({ snapshot, enrichedAt: snapshot.enrichedAt });
   });
 
-  it("should save and fetch GitHub slug overrides", () => {
-    const mockRun = vi.fn();
-    const mockGet = vi.fn().mockReturnValue({ github_slug: "anthropics" });
-    (db.prepare as Mock).mockImplementation((sql: string) => {
-      if (sql.includes("INSERT INTO company_research")) {
-        return { run: mockRun };
-      }
-      return { get: mockGet };
-    });
+  it("should save and fetch GitHub slug overrides", async () => {
+    dbMocks.execute.mockImplementation(
+      (statement: string | { sql: string }) => {
+        const sql = typeof statement === "string" ? statement : statement.sql;
+        if (sql.startsWith("PRAGMA table_info")) {
+          return Promise.resolve(
+            result([
+              { name: "enrichment_json" },
+              { name: "enriched_at" },
+              { name: "github_slug" },
+            ]),
+          );
+        }
+        if (sql.includes("SELECT github_slug")) {
+          return Promise.resolve(result([{ github_slug: "anthropics" }]));
+        }
+        return Promise.resolve(result([], 1));
+      },
+    );
 
-    const saved = setCompanyGithubSlug("user-123", "Anthropic", " Anthropics ");
-    const fetched = getCompanyGithubSlug("Anthropic", "user-123");
+    const saved = await setCompanyGithubSlug(
+      "user-123",
+      "Anthropic",
+      " Anthropics ",
+    );
+    const fetched = await getCompanyGithubSlug("Anthropic", "user-123");
 
     expect(saved).toBe("anthropics");
-    expect(mockRun.mock.calls[0].slice(0, 6)).toEqual([
-      "research-id",
-      "user-123",
-      "anthropic",
-      "[]",
-      "[]",
-      "anthropics",
-    ]);
+    expect(dbMocks.execute).toHaveBeenCalledWith({
+      sql: expect.stringContaining("INSERT INTO company_research"),
+      args: [
+        "research-id",
+        "user-123",
+        "anthropic",
+        "[]",
+        "[]",
+        "anthropics",
+        expect.any(String),
+        expect.any(String),
+      ],
+    });
     expect(fetched).toBe("anthropics");
   });
 

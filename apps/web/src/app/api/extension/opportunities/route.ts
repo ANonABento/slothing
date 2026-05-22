@@ -19,7 +19,7 @@ const MAX_LIMIT = 200;
 const DEFAULT_LIMIT = 50;
 
 export async function GET(request: NextRequest) {
-  const authResult = requireExtensionAuth(request);
+  const authResult = await requireExtensionAuth(request);
   if (!authResult.success) {
     return authResult.response;
   }

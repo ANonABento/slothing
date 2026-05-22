@@ -32,11 +32,11 @@ export async function PATCH(
 
     switch (action) {
       case "markRead":
-        markNotificationRead(id, authResult.userId);
+        await markNotificationRead(id, authResult.userId);
         return NextResponse.json({ success: true, action: "markedRead" });
 
       case "acceptSuggestedStatus": {
-        const suggestion = getSuggestedStatusUpdateByNotification(
+        const suggestion = await getSuggestedStatusUpdateByNotification(
           id,
           authResult.userId,
         );
@@ -46,7 +46,7 @@ export async function PATCH(
             { status: 404 },
           );
         }
-        const opportunity = changeOpportunityStatus(
+        const opportunity = await changeOpportunityStatus(
           suggestion.opportunityId,
           suggestion.suggestedStatus,
           authResult.userId,
@@ -57,12 +57,12 @@ export async function PATCH(
             { status: 404 },
           );
         }
-        const updatedSuggestion = updateSuggestedStatusUpdateState(
+        const updatedSuggestion = await updateSuggestedStatusUpdateState(
           id,
           authResult.userId,
           "accepted",
         );
-        markNotificationRead(id, authResult.userId);
+        await markNotificationRead(id, authResult.userId);
         return NextResponse.json({
           success: true,
           action: "acceptedSuggestedStatus",
@@ -72,12 +72,12 @@ export async function PATCH(
       }
 
       case "dismissSuggestedStatus": {
-        const updatedSuggestion = updateSuggestedStatusUpdateState(
+        const updatedSuggestion = await updateSuggestedStatusUpdateState(
           id,
           authResult.userId,
           "dismissed",
         );
-        markNotificationRead(id, authResult.userId);
+        await markNotificationRead(id, authResult.userId);
         return NextResponse.json({
           success: true,
           action: "dismissedSuggestedStatus",
@@ -106,7 +106,7 @@ export async function DELETE(
 
   try {
     const { id } = params;
-    deleteNotification(id, authResult.userId);
+    await deleteNotification(id, authResult.userId);
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Delete notification error:", error);

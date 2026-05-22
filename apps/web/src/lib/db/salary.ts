@@ -1,7 +1,8 @@
-import db from "./legacy";
+import { getClient } from "./client";
 import { generateId } from "@/lib/utils";
 
 import { nowIso } from "@/lib/format/time";
+
 export interface SalaryOffer {
   id: string;
   userId: string;
@@ -50,95 +51,38 @@ export interface UpdateSalaryOfferInput {
   finalTotalComp?: number;
 }
 
-// Get all salary offers for a user
-export function getSalaryOffers(userId: string): SalaryOffer[] {
-  const stmt = db.prepare(`
-    SELECT id, user_id, job_id, company, role, base_salary, signing_bonus,
-           annual_bonus, equity_value, vesting_years, location, status, notes,
-           negotiation_outcome, final_base_salary, final_total_comp, created_at, updated_at
-    FROM salary_offers
-    WHERE user_id = ?
-    ORDER BY created_at DESC
-  `);
-
-  const rows = stmt.all(userId) as Array<{
-    id: string;
-    user_id: string;
-    job_id: string | null;
-    company: string;
-    role: string;
-    base_salary: number;
-    signing_bonus: number | null;
-    annual_bonus: number | null;
-    equity_value: number | null;
-    vesting_years: number | null;
-    location: string | null;
-    status: string;
-    notes: string | null;
-    negotiation_outcome: string | null;
-    final_base_salary: number | null;
-    final_total_comp: number | null;
-    created_at: string;
-    updated_at: string;
-  }>;
-
-  return rows.map((row) => ({
-    id: row.id,
-    userId: row.user_id,
-    jobId: row.job_id || undefined,
-    company: row.company,
-    role: row.role,
-    baseSalary: row.base_salary,
-    signingBonus: row.signing_bonus || undefined,
-    annualBonus: row.annual_bonus || undefined,
-    equityValue: row.equity_value || undefined,
-    vestingYears: row.vesting_years || undefined,
-    location: row.location || undefined,
-    status: row.status as SalaryOffer["status"],
-    notes: row.notes || undefined,
-    negotiationOutcome: row.negotiation_outcome || undefined,
-    finalBaseSalary: row.final_base_salary || undefined,
-    finalTotalComp: row.final_total_comp || undefined,
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
-  }));
+interface SalaryOfferRow {
+  id: string;
+  user_id: string;
+  job_id: string | null;
+  company: string;
+  role: string;
+  base_salary: number;
+  signing_bonus: number | null;
+  annual_bonus: number | null;
+  equity_value: number | null;
+  vesting_years: number | null;
+  location: string | null;
+  status: string;
+  notes: string | null;
+  negotiation_outcome: string | null;
+  final_base_salary: number | null;
+  final_total_comp: number | null;
+  created_at: string;
+  updated_at: string;
 }
 
-// Get a single salary offer
-export function getSalaryOffer(id: string, userId: string): SalaryOffer | null {
-  const stmt = db.prepare(`
-    SELECT id, user_id, job_id, company, role, base_salary, signing_bonus,
-           annual_bonus, equity_value, vesting_years, location, status, notes,
-           negotiation_outcome, final_base_salary, final_total_comp, created_at, updated_at
-    FROM salary_offers
-    WHERE id = ? AND user_id = ?
-  `);
+export interface SalaryStats {
+  totalOffers: number;
+  pendingOffers: number;
+  acceptedOffers: number;
+  declinedOffers: number;
+  avgBaseSalary: number;
+  avgTotalComp: number;
+  highestOffer: number;
+}
 
-  const row = stmt.get(id, userId) as
-    | {
-        id: string;
-        user_id: string;
-        job_id: string | null;
-        company: string;
-        role: string;
-        base_salary: number;
-        signing_bonus: number | null;
-        annual_bonus: number | null;
-        equity_value: number | null;
-        vesting_years: number | null;
-        location: string | null;
-        status: string;
-        notes: string | null;
-        negotiation_outcome: string | null;
-        final_base_salary: number | null;
-        final_total_comp: number | null;
-        created_at: string;
-        updated_at: string;
-      }
-    | undefined;
-
-  if (!row) return null;
-
+function rowToSalaryOffer(row: SalaryOfferRow): SalaryOffer {
   return {
     id: row.id,
     userId: row.user_id,
@@ -161,24 +105,46 @@ export function getSalaryOffer(id: string, userId: string): SalaryOffer | null {
   };
 }
 
+const SALARY_OFFER_SELECT = `
+  SELECT id, user_id, job_id, company, role, base_salary, signing_bonus,
+         annual_bonus, equity_value, vesting_years, location, status, notes,
+         negotiation_outcome, final_base_salary, final_total_comp, created_at, updated_at
+  FROM salary_offers
+`;
+
+// Get all salary offers for a user
+export async function getSalaryOffers(userId: string): Promise<SalaryOffer[]> {
+  const result = await getClient().execute({
+    sql: `${SALARY_OFFER_SELECT}
+      WHERE user_id = ?
+      ORDER BY created_at DESC`,
+    args: [userId],
+  });
+
+  return (result.rows as unknown as SalaryOfferRow[]).map(rowToSalaryOffer);
+}
+
+// Get a single salary offer
+export async function getSalaryOffer(
+  id: string,
+  userId: string,
+): Promise<SalaryOffer | null> {
+  const result = await getClient().execute({
+    sql: `${SALARY_OFFER_SELECT}
+      WHERE id = ? AND user_id = ?`,
+    args: [id, userId],
+  });
+  const row = result.rows[0] as unknown as SalaryOfferRow | undefined;
+  return row ? rowToSalaryOffer(row) : null;
+}
+
 // Create a new salary offer
-export function createSalaryOffer(
+export async function createSalaryOffer(
   input: CreateSalaryOfferInput,
   userId: string,
-): SalaryOffer {
+): Promise<SalaryOffer> {
   const id = generateId();
   const now = nowIso();
-
-  const stmt = db.prepare(`
-    INSERT INTO salary_offers (
-      id, user_id, job_id, company, role, base_salary, signing_bonus,
-      annual_bonus, equity_value, vesting_years, location, status, notes,
-      created_at, updated_at
-    )
-    SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?
-    ${input.jobId ? "WHERE EXISTS (SELECT 1 FROM jobs WHERE id = ? AND user_id = ?)" : ""}
-  `);
-
   const args: Array<string | number | null> = [
     id,
     userId,
@@ -200,9 +166,20 @@ export function createSalaryOffer(
     args.push(input.jobId, userId);
   }
 
-  const result = stmt.run(...args);
+  const result = await getClient().execute({
+    sql: `
+      INSERT INTO salary_offers (
+        id, user_id, job_id, company, role, base_salary, signing_bonus,
+        annual_bonus, equity_value, vesting_years, location, status, notes,
+        created_at, updated_at
+      )
+      SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?
+      ${input.jobId ? "WHERE EXISTS (SELECT 1 FROM jobs WHERE id = ? AND user_id = ?)" : ""}
+    `,
+    args,
+  });
 
-  if (result.changes === 0) {
+  if (result.rowsAffected === 0) {
     throw new Error("Job not found");
   }
 
@@ -226,12 +203,12 @@ export function createSalaryOffer(
 }
 
 // Update a salary offer
-export function updateSalaryOffer(
+export async function updateSalaryOffer(
   id: string,
   input: UpdateSalaryOfferInput,
   userId: string,
-): SalaryOffer | null {
-  const existing = getSalaryOffer(id, userId);
+): Promise<SalaryOffer | null> {
+  const existing = await getSalaryOffer(id, userId);
   if (!existing) return null;
 
   const now = nowIso();
@@ -284,44 +261,38 @@ export function updateSalaryOffer(
   }
 
   updates.push("updated_at = ?");
-  params.push(now);
+  params.push(now, id, userId);
 
-  params.push(id);
-  params.push(userId);
-
-  const stmt = db.prepare(`
-    UPDATE salary_offers
-    SET ${updates.join(", ")}
-    WHERE id = ? AND user_id = ?
-  `);
-
-  stmt.run(...params);
+  await getClient().execute({
+    sql: `
+      UPDATE salary_offers
+      SET ${updates.join(", ")}
+      WHERE id = ? AND user_id = ?
+    `,
+    args: params,
+  });
 
   return getSalaryOffer(id, userId);
 }
 
 // Delete a salary offer
-export function deleteSalaryOffer(id: string, userId: string): boolean {
-  const stmt = db.prepare(`
-    DELETE FROM salary_offers
-    WHERE id = ? AND user_id = ?
-  `);
-
-  const result = stmt.run(id, userId);
-  return result.changes > 0;
+export async function deleteSalaryOffer(
+  id: string,
+  userId: string,
+): Promise<boolean> {
+  const result = await getClient().execute({
+    sql: `
+      DELETE FROM salary_offers
+      WHERE id = ? AND user_id = ?
+    `,
+    args: [id, userId],
+  });
+  return result.rowsAffected > 0;
 }
 
 // Get salary statistics
-export function getSalaryStats(userId: string): {
-  totalOffers: number;
-  pendingOffers: number;
-  acceptedOffers: number;
-  declinedOffers: number;
-  avgBaseSalary: number;
-  avgTotalComp: number;
-  highestOffer: number;
-} {
-  const offers = getSalaryOffers(userId);
+export async function getSalaryStats(userId: string): Promise<SalaryStats> {
+  const offers = await getSalaryOffers(userId);
 
   const pendingOffers = offers.filter((o) => o.status === "pending").length;
   const acceptedOffers = offers.filter((o) => o.status === "accepted").length;
@@ -330,18 +301,19 @@ export function getSalaryStats(userId: string): {
   const baseSalaries = offers.map((o) => o.baseSalary);
   const avgBaseSalary =
     baseSalaries.length > 0
-      ? baseSalaries.reduce((sum, s) => sum + s, 0) / baseSalaries.length
+      ? baseSalaries.reduce((sum, salary) => sum + salary, 0) /
+        baseSalaries.length
       : 0;
 
   const totalComps = offers.map(
-    (o) =>
-      o.baseSalary +
-      (o.annualBonus || 0) +
-      (o.equityValue || 0) / (o.vestingYears || 4),
+    (offer) =>
+      offer.baseSalary +
+      (offer.annualBonus || 0) +
+      (offer.equityValue || 0) / (offer.vestingYears || 4),
   );
   const avgTotalComp =
     totalComps.length > 0
-      ? totalComps.reduce((sum, c) => sum + c, 0) / totalComps.length
+      ? totalComps.reduce((sum, comp) => sum + comp, 0) / totalComps.length
       : 0;
 
   const highestOffer = totalComps.length > 0 ? Math.max(...totalComps) : 0;

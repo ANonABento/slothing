@@ -226,6 +226,25 @@ export const jobs = sqliteTable(
   (table) => [
     index("idx_jobs_user_created").on(table.userId, table.createdAt),
     index("idx_jobs_user_url").on(table.userId, table.url),
+    index("idx_jobs_user_status_created_id").on(
+      table.userId,
+      table.status,
+      table.createdAt,
+      table.id,
+    ),
+    index("idx_jobs_user_deadline_created_id").on(
+      table.userId,
+      table.deadline,
+      table.createdAt,
+      table.id,
+    ),
+    index("idx_jobs_user_company_title_created_id").on(
+      table.userId,
+      table.company,
+      table.title,
+      table.createdAt,
+      table.id,
+    ),
   ],
 );
 

@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const gate = gateOptionalAiFeature(
+    const gate = await gateOptionalAiFeature(
       authResult.userId,
       "document_assistant",
       `visual-template-import:${nowEpoch()}`,

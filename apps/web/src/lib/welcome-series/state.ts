@@ -1,5 +1,5 @@
 import { z } from "zod";
-import db from "@/lib/db/legacy";
+import { getClient } from "@/lib/db/client";
 import { nowIso } from "@/lib/format/time";
 
 export const welcomeSeriesStateSchema = z
@@ -30,14 +30,14 @@ export function resetWelcomeSeriesSchemaForTest(): void {
   welcomeSeriesSchemaEnsured = false;
 }
 
-export function ensureWelcomeSeriesSchema(): void {
+export async function ensureWelcomeSeriesSchema(): Promise<void> {
   if (welcomeSeriesSchemaEnsured) return;
 
-  addColumnIfMissing(
+  await addColumnIfMissing(
     "ALTER TABLE `user` ADD COLUMN `welcome_series_state` TEXT",
   );
-  addColumnIfMissing("ALTER TABLE `user` ADD COLUMN `created_at` TEXT");
-  db.prepare(
+  await addColumnIfMissing("ALTER TABLE `user` ADD COLUMN `created_at` TEXT");
+  await getClient().execute(
     `
       UPDATE \`user\`
       SET created_at = COALESCE(
@@ -50,18 +50,20 @@ export function ensureWelcomeSeriesSchema(): void {
       )
       WHERE created_at IS NULL
     `,
-  ).run();
+  );
 
   welcomeSeriesSchemaEnsured = true;
 }
 
-export function getWelcomeSeriesState(userId: string): WelcomeSeriesState {
-  ensureWelcomeSeriesSchema();
-  const row = db
-    .prepare(
-      "SELECT welcome_series_state FROM `user` WHERE id = ? LIMIT 1",
-    )
-    .get(userId) as WelcomeSeriesRow | undefined;
+export async function getWelcomeSeriesState(
+  userId: string,
+): Promise<WelcomeSeriesState> {
+  await ensureWelcomeSeriesSchema();
+  const result = await getClient().execute({
+    sql: "SELECT welcome_series_state FROM `user` WHERE id = ? LIMIT 1",
+    args: [userId],
+  });
+  const row = result.rows[0] as unknown as WelcomeSeriesRow | undefined;
 
   return parseWelcomeSeriesState(row?.welcome_series_state);
 }
@@ -81,31 +83,31 @@ export function parseWelcomeSeriesState(
   }
 }
 
-export function setWelcomeSeriesState(
+export async function setWelcomeSeriesState(
   userId: string,
   partial: WelcomeSeriesState,
-): WelcomeSeriesState {
-  ensureWelcomeSeriesSchema();
-  const nextState = { ...getWelcomeSeriesState(userId), ...partial };
+): Promise<WelcomeSeriesState> {
+  await ensureWelcomeSeriesSchema();
+  const nextState = { ...(await getWelcomeSeriesState(userId)), ...partial };
 
-  db.prepare("UPDATE `user` SET welcome_series_state = ? WHERE id = ?").run(
-    JSON.stringify(nextState),
-    userId,
-  );
+  await getClient().execute({
+    sql: "UPDATE `user` SET welcome_series_state = ? WHERE id = ?",
+    args: [JSON.stringify(nextState), userId],
+  });
 
   return nextState;
 }
 
-export function markUnsubscribed(
+export async function markUnsubscribed(
   userId: string,
   unsubscribedAt: string = nowIso(),
-): WelcomeSeriesState {
+): Promise<WelcomeSeriesState> {
   return setWelcomeSeriesState(userId, { unsubscribedAt });
 }
 
-function addColumnIfMissing(sql: string): void {
+async function addColumnIfMissing(sql: string): Promise<void> {
   try {
-    db.prepare(sql).run();
+    await getClient().execute(sql);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     if (!message.includes("duplicate column name")) {

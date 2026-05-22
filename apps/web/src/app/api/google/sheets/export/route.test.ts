@@ -10,8 +10,10 @@ vi.mock("@/lib/google/sheets", () =>
   ),
 );
 
-vi.mock("@/lib/db/jobs", () =>
-  globalThis.__contractRouteMocks!.createContractModuleMock("@/lib/db/jobs"),
+vi.mock("@/lib/db/jobs-async", () =>
+  globalThis.__contractRouteMocks!.createContractModuleMock(
+    "@/lib/db/jobs-async",
+  ),
 );
 
 vi.mock("@/lib/google/client", () =>

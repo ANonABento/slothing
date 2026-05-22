@@ -1,5 +1,5 @@
 import { createEmailSend, hasDailyDigestSentSince } from "@/lib/db/email-sends";
-import { listJobsPaginated } from "@/lib/db/jobs";
+import { listJobsPaginated } from "@/lib/db/jobs-async";
 import { getProfile } from "@/lib/db/queries";
 import {
   isTransactionalEmailConfigured,
@@ -61,7 +61,7 @@ export async function runDailyDigest(
   const now = options.now ?? nowDate();
   const dayStart = utcDayStartIso(now);
   const since = toIso(addDays(now, -1));
-  const users = options.users ?? getEligibleDigestUsers();
+  const users = options.users ?? (await getEligibleDigestUsers());
   const sender = options.sender ?? sendTransactionalEmail;
   const outcomes: DailyDigestUserOutcome[] = [];
   let sent = 0;
@@ -82,7 +82,7 @@ export async function runDailyDigest(
         continue;
       }
 
-      if (hasDailyDigestSentSince(user.userId, dayStart)) {
+      if (await hasDailyDigestSentSince(user.userId, dayStart)) {
         skipped += 1;
         outcomes.push(skip(user, "already_sent"));
         continue;
@@ -95,11 +95,13 @@ export async function runDailyDigest(
         continue;
       }
 
-      const candidates = listJobsPaginated({
-        userId: user.userId,
-        statuses: [...ALLOWED_STATUSES],
-        limit: CANDIDATE_LIMIT,
-      }).filter((job) => job.createdAt >= since);
+      const candidates = (
+        await listJobsPaginated({
+          userId: user.userId,
+          statuses: [...ALLOWED_STATUSES],
+          limit: CANDIDATE_LIMIT,
+        })
+      ).filter((job) => job.createdAt >= since);
       const picks = selectTopMatches(profile, candidates, 5, MIN_MATCH_SCORE);
 
       if (picks.length === 0) {
@@ -128,7 +130,7 @@ export async function runDailyDigest(
         tags: [{ name: "type", value: DAILY_DIGEST_TYPE }],
       });
 
-      createEmailSend(
+      await createEmailSend(
         {
           type: DAILY_DIGEST_TYPE,
           recipient: user.email,

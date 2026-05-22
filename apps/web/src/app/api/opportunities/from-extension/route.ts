@@ -10,7 +10,7 @@ import {
   countJobsByStatus,
   getJobByUrl,
   updateJobStatus,
-} from "@/lib/db/jobs";
+} from "@/lib/db/jobs-async";
 import { createNotification } from "@/lib/db/notifications";
 import {
   buildJobFromExtension,
@@ -19,7 +19,7 @@ import {
 import type { JobDescription } from "@/types";
 
 export async function POST(request: NextRequest) {
-  const authResult = requireExtensionAuth(request);
+  const authResult = await requireExtensionAuth(request);
   if (!authResult.success) {
     return authResult.response;
   }
@@ -49,9 +49,12 @@ export async function POST(request: NextRequest) {
 
     for (const opportunity of parseResult.opportunities) {
       if (opportunity.status === "applied" && opportunity.url) {
-        const existingJob = getJobByUrl(opportunity.url, authResult.userId);
+        const existingJob = await getJobByUrl(
+          opportunity.url,
+          authResult.userId,
+        );
         if (existingJob) {
-          const updatedJob = updateJobStatus(
+          const updatedJob = await updateJobStatus(
             existingJob.id,
             "applied",
             existingJob.appliedAt || opportunity.appliedAt,
@@ -64,18 +67,18 @@ export async function POST(request: NextRequest) {
       }
 
       importedJobs.push(
-        createJob(buildJobFromExtension(opportunity), authResult.userId),
+        await createJob(buildJobFromExtension(opportunity), authResult.userId),
       );
     }
 
-    const pendingCount = countJobsByStatus("pending", authResult.userId);
+    const pendingCount = await countJobsByStatus("pending", authResult.userId);
 
     if (importedJobs.length > 0) {
       const appliedCount = parseResult.opportunities.filter(
         (opportunity) => opportunity.status === "applied",
       ).length;
 
-      createNotification(
+      await createNotification(
         {
           type: "info",
           title: notificationTitle(importedJobs.length, appliedCount),

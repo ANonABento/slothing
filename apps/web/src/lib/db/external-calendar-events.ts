@@ -1,4 +1,4 @@
-import db from "./legacy";
+import { getClient } from "./client";
 import { EXTERNAL_CALENDAR_EVENTS_BOOTSTRAP_SQL } from "./bootstrap-sql";
 import { nowIso } from "@/lib/format/time";
 
@@ -45,10 +45,19 @@ interface ExternalCalendarEventRow {
   processed_at: string;
 }
 
-export function ensureExternalCalendarEventsSchema(): void {
+let externalCalendarEventsSchemaEnsured = false;
+
+export async function ensureExternalCalendarEventsSchema(): Promise<void> {
+  if (externalCalendarEventsSchemaEnsured) return;
+
   // DDL co-located with `schema.ts: externalCalendarEvents`. See
   // `bootstrap-sql.ts`.
-  db.exec(EXTERNAL_CALENDAR_EVENTS_BOOTSTRAP_SQL);
+  await getClient().batch(
+    EXTERNAL_CALENDAR_EVENTS_BOOTSTRAP_SQL.split(";")
+      .map((statement) => statement.trim())
+      .filter(Boolean),
+  );
+  externalCalendarEventsSchemaEnsured = true;
 }
 
 function rowToRecord(
@@ -68,61 +77,66 @@ function rowToRecord(
   };
 }
 
-export function getExternalCalendarEvent(
+export async function getExternalCalendarEvent(
   userId: string,
   provider: string,
   externalEventId: string,
-): ExternalCalendarEventRecord | null {
-  ensureExternalCalendarEventsSchema();
-  const row = db
-    .prepare(
-      `SELECT * FROM external_calendar_events
+): Promise<ExternalCalendarEventRecord | null> {
+  await ensureExternalCalendarEventsSchema();
+  const result = await getClient().execute({
+    sql: `SELECT * FROM external_calendar_events
        WHERE user_id = ? AND provider = ? AND external_event_id = ?`,
-    )
-    .get(userId, provider, externalEventId) as
-    | ExternalCalendarEventRow
-    | undefined;
+    args: [userId, provider, externalEventId],
+  });
+  const row = result.rows[0] as unknown as ExternalCalendarEventRow | undefined;
   return row ? rowToRecord(row) : null;
 }
 
-export function hasProcessedExternalCalendarEvent(
+export async function hasProcessedExternalCalendarEvent(
   userId: string,
   provider: string,
   externalEventId: string,
-): boolean {
-  return getExternalCalendarEvent(userId, provider, externalEventId) !== null;
+): Promise<boolean> {
+  return (
+    (await getExternalCalendarEvent(userId, provider, externalEventId)) !== null
+  );
 }
 
-export function recordExternalCalendarEvent(
+export async function recordExternalCalendarEvent(
   input: RecordExternalCalendarEventInput,
-): ExternalCalendarEventRecord {
-  ensureExternalCalendarEventsSchema();
+): Promise<ExternalCalendarEventRecord> {
+  await ensureExternalCalendarEventsSchema();
   const id = `${input.provider}:${input.userId}:${input.externalEventId}`;
   const processedAt = nowIso();
 
-  db.prepare(
-    `INSERT INTO external_calendar_events (
+  await getClient().execute({
+    sql: `INSERT INTO external_calendar_events (
       id, user_id, provider, external_event_id, calendar_id,
       matched_opportunity_id, action, event_title, event_start, processed_at
     )
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(user_id, provider, external_event_id) DO NOTHING`,
-  ).run(
-    id,
-    input.userId,
-    input.provider,
-    input.externalEventId,
-    input.calendarId ?? null,
-    input.matchedOpportunityId ?? null,
-    input.action,
-    input.eventTitle ?? null,
-    input.eventStart ?? null,
-    processedAt,
-  );
+    args: [
+      id,
+      input.userId,
+      input.provider,
+      input.externalEventId,
+      input.calendarId ?? null,
+      input.matchedOpportunityId ?? null,
+      input.action,
+      input.eventTitle ?? null,
+      input.eventStart ?? null,
+      processedAt,
+    ],
+  });
 
-  return getExternalCalendarEvent(
+  const record = await getExternalCalendarEvent(
     input.userId,
     input.provider,
     input.externalEventId,
-  )!;
+  );
+  if (!record) {
+    throw new Error("Failed to record external calendar event");
+  }
+  return record;
 }

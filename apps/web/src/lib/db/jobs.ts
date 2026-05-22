@@ -26,13 +26,22 @@ interface JobRow {
 export interface CreatedAtCursor {
   lastId: string;
   lastCreatedAt: string;
+  lastSortValue?: string | null;
+  sortBy?: JobListSort;
 }
+
+export type JobListSort = "createdAt" | "deadline" | "company" | "salary";
 
 export interface ListJobsParams {
   userId: string;
   statuses?: JobStatus[];
   cursor?: CreatedAtCursor | null;
   limit: number;
+  query?: string | null;
+  remote?: boolean | null;
+  type?: string | null;
+  keyword?: string | null;
+  sortBy?: JobListSort;
 }
 
 function parseJsonArray(value?: string): string[] {
@@ -81,6 +90,11 @@ export function listJobsPaginated({
   statuses,
   cursor,
   limit,
+  query,
+  remote,
+  type,
+  keyword,
+  sortBy = "createdAt",
 }: ListJobsParams): JobDescription[] {
   const whereClauses = ["user_id = ?"];
   const params: Array<string | number> = [userId];
@@ -90,9 +104,48 @@ export function listJobsPaginated({
     params.push(...statuses);
   }
 
+  const trimmedQuery = query?.trim();
+  if (trimmedQuery) {
+    const pattern = `%${escapeLikePattern(trimmedQuery)}%`;
+    whereClauses.push(`(
+      title LIKE ? ESCAPE '\\' OR
+      company LIKE ? ESCAPE '\\' OR
+      location LIKE ? ESCAPE '\\' OR
+      description LIKE ? ESCAPE '\\' OR
+      requirements_json LIKE ? ESCAPE '\\' OR
+      responsibilities_json LIKE ? ESCAPE '\\' OR
+      keywords_json LIKE ? ESCAPE '\\' OR
+      notes LIKE ? ESCAPE '\\'
+    )`);
+    params.push(
+      pattern,
+      pattern,
+      pattern,
+      pattern,
+      pattern,
+      pattern,
+      pattern,
+      pattern,
+    );
+  }
+
+  if (remote != null) {
+    whereClauses.push("remote = ?");
+    params.push(remote ? 1 : 0);
+  }
+
+  if (type?.trim()) {
+    whereClauses.push("type = ?");
+    params.push(type.trim());
+  }
+
+  if (keyword?.trim()) {
+    whereClauses.push("keywords_json LIKE ? ESCAPE '\\'");
+    params.push(`%${escapeLikePattern(keyword.trim())}%`);
+  }
+
   if (cursor) {
-    whereClauses.push("(created_at < ? OR (created_at = ? AND id < ?))");
-    params.push(cursor.lastCreatedAt, cursor.lastCreatedAt, cursor.lastId);
+    appendCursorPredicate(whereClauses, params, cursor, sortBy);
   }
 
   params.push(limit + 1);
@@ -101,11 +154,206 @@ export function listJobsPaginated({
     .prepare(
       `SELECT * FROM jobs
        WHERE ${whereClauses.join(" AND ")}
-       ORDER BY created_at DESC, id DESC
+       ORDER BY ${orderBySql(sortBy)}
        LIMIT ?`,
     )
     .all(...params) as JobRow[];
   return rows.map(mapRowToJob);
+}
+
+export interface CountJobsByStatusParams {
+  userId: string;
+  query?: string | null;
+  remote?: boolean | null;
+  type?: string | null;
+  keyword?: string | null;
+}
+
+export function countJobsGroupedByStatus({
+  userId,
+  query,
+  remote,
+  type,
+  keyword,
+}: CountJobsByStatusParams): Record<string, number> {
+  const whereClauses = ["user_id = ?"];
+  const params: Array<string | number> = [userId];
+
+  const trimmedQuery = query?.trim();
+  if (trimmedQuery) {
+    const pattern = `%${escapeLikePattern(trimmedQuery)}%`;
+    whereClauses.push(`(
+      title LIKE ? ESCAPE '\\' OR
+      company LIKE ? ESCAPE '\\' OR
+      location LIKE ? ESCAPE '\\' OR
+      description LIKE ? ESCAPE '\\' OR
+      requirements_json LIKE ? ESCAPE '\\' OR
+      responsibilities_json LIKE ? ESCAPE '\\' OR
+      keywords_json LIKE ? ESCAPE '\\' OR
+      notes LIKE ? ESCAPE '\\'
+    )`);
+    params.push(
+      pattern,
+      pattern,
+      pattern,
+      pattern,
+      pattern,
+      pattern,
+      pattern,
+      pattern,
+    );
+  }
+
+  if (remote != null) {
+    whereClauses.push("remote = ?");
+    params.push(remote ? 1 : 0);
+  }
+
+  if (type?.trim()) {
+    whereClauses.push("type = ?");
+    params.push(type.trim());
+  }
+
+  if (keyword?.trim()) {
+    whereClauses.push("keywords_json LIKE ? ESCAPE '\\'");
+    params.push(`%${escapeLikePattern(keyword.trim())}%`);
+  }
+
+  const rows = db
+    .prepare(
+      `SELECT COALESCE(status, 'saved') AS status, COUNT(*) AS count
+       FROM jobs
+       WHERE ${whereClauses.join(" AND ")}
+       GROUP BY COALESCE(status, 'saved')`,
+    )
+    .all(...params) as Array<{ status: string; count: number }>;
+
+  return Object.fromEntries(rows.map((row) => [row.status, Number(row.count)]));
+}
+
+export function makeJobCursor(
+  job: JobDescription,
+  sortBy: JobListSort = "createdAt",
+): CreatedAtCursor {
+  return {
+    lastId: job.id,
+    lastCreatedAt: job.createdAt,
+    lastSortValue: sortValueForJob(job, sortBy),
+    sortBy,
+  };
+}
+
+function escapeLikePattern(value: string): string {
+  return value.replace(/[\\%_]/g, (match) => `\\${match}`);
+}
+
+function sortValueForJob(
+  job: JobDescription,
+  sortBy: JobListSort,
+): string | null {
+  switch (sortBy) {
+    case "deadline":
+      return job.deadline || null;
+    case "company":
+      return `${job.company}\u0000${job.title}`;
+    case "salary":
+      return String(parseSalarySortValue(job.salary));
+    case "createdAt":
+    default:
+      return job.createdAt;
+  }
+}
+
+function orderBySql(sortBy: JobListSort): string {
+  switch (sortBy) {
+    case "deadline":
+      return "(deadline IS NULL OR deadline = '') ASC, deadline ASC, created_at DESC, id DESC";
+    case "company":
+      return "company COLLATE NOCASE ASC, title COLLATE NOCASE ASC, created_at DESC, id DESC";
+    case "salary":
+      return "CAST(REPLACE(REPLACE(COALESCE(salary, '0'), ',', ''), '$', '') AS REAL) DESC, created_at DESC, id DESC";
+    case "createdAt":
+    default:
+      return "created_at DESC, id DESC";
+  }
+}
+
+function appendCursorPredicate(
+  whereClauses: string[],
+  params: Array<string | number>,
+  cursor: CreatedAtCursor,
+  sortBy: JobListSort,
+): void {
+  if (sortBy === "deadline") {
+    const value = cursor.lastSortValue || null;
+    if (value) {
+      whereClauses.push(`(
+        (deadline IS NOT NULL AND deadline != '' AND deadline > ?) OR
+        (deadline IS NULL OR deadline = '') OR
+        (deadline = ? AND (created_at < ? OR (created_at = ? AND id < ?)))
+      )`);
+      params.push(
+        value,
+        value,
+        cursor.lastCreatedAt,
+        cursor.lastCreatedAt,
+        cursor.lastId,
+      );
+    } else {
+      whereClauses.push(`(
+        (deadline IS NULL OR deadline = '') AND
+        (created_at < ? OR (created_at = ? AND id < ?))
+      )`);
+      params.push(cursor.lastCreatedAt, cursor.lastCreatedAt, cursor.lastId);
+    }
+    return;
+  }
+
+  if (sortBy === "company") {
+    const [company = "", title = ""] = (cursor.lastSortValue ?? "").split(
+      "\u0000",
+    );
+    whereClauses.push(`(
+      company COLLATE NOCASE > ? COLLATE NOCASE OR
+      (company = ? COLLATE NOCASE AND title COLLATE NOCASE > ? COLLATE NOCASE) OR
+      (company = ? COLLATE NOCASE AND title = ? COLLATE NOCASE AND (created_at < ? OR (created_at = ? AND id < ?)))
+    )`);
+    params.push(
+      company,
+      company,
+      title,
+      company,
+      title,
+      cursor.lastCreatedAt,
+      cursor.lastCreatedAt,
+      cursor.lastId,
+    );
+    return;
+  }
+
+  if (sortBy === "salary") {
+    const value = Number(cursor.lastSortValue ?? 0);
+    whereClauses.push(`(
+      CAST(REPLACE(REPLACE(COALESCE(salary, '0'), ',', ''), '$', '') AS REAL) < ? OR
+      (CAST(REPLACE(REPLACE(COALESCE(salary, '0'), ',', ''), '$', '') AS REAL) = ? AND (created_at < ? OR (created_at = ? AND id < ?)))
+    )`);
+    params.push(
+      value,
+      value,
+      cursor.lastCreatedAt,
+      cursor.lastCreatedAt,
+      cursor.lastId,
+    );
+    return;
+  }
+
+  whereClauses.push("(created_at < ? OR (created_at = ? AND id < ?))");
+  params.push(cursor.lastCreatedAt, cursor.lastCreatedAt, cursor.lastId);
+}
+
+function parseSalarySortValue(salary?: string): number {
+  const firstNumber = salary?.match(/\d[\d,]*(?:\.\d+)?/)?.[0];
+  return firstNumber ? Number(firstNumber.replace(/,/g, "")) || 0 : 0;
 }
 
 // Get single job

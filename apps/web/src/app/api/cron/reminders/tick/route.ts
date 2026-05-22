@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
   try {
     const result = await fireDueReminders();
     const durationMs = nowEpoch() - startedAt;
-    recordCronRun({
+    await recordCronRun({
       cron: "reminders.tick",
       status: result.errors === 0 ? "success" : "failure",
       startedAt: startedIso,
@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Cron tick failed";
-    recordCronRun({
+    await recordCronRun({
       cron: "reminders.tick",
       status: "failure",
       startedAt: startedIso,

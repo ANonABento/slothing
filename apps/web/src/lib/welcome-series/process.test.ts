@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
-  prepare: vi.fn(),
+  execute: vi.fn(),
   sendTransactionalEmail: vi.fn(),
   hasUserApplied: vi.fn(),
   hasUserBookedInterview: vi.fn(),
@@ -9,8 +9,8 @@ const mocks = vi.hoisted(() => ({
   getUserTier: vi.fn(),
 }));
 
-vi.mock("@/lib/db/legacy", () => ({
-  default: { prepare: mocks.prepare },
+vi.mock("@/lib/db/client", () => ({
+  getClient: () => ({ execute: mocks.execute }),
 }));
 
 vi.mock("@/lib/email/transactional", () => ({
@@ -39,9 +39,9 @@ describe("processWelcomeSeriesForUser", () => {
     vi.clearAllMocks();
     process.env.NEXTAUTH_URL = "https://app.example.com";
     mocks.sendTransactionalEmail.mockResolvedValue({ ok: true, status: 202 });
-    mocks.hasUserApplied.mockReturnValue(false);
-    mocks.hasUserBookedInterview.mockReturnValue(false);
-    mocks.getUsageStats.mockReturnValue({
+    mocks.hasUserApplied.mockResolvedValue(false);
+    mocks.hasUserBookedInterview.mockResolvedValue(false);
+    mocks.getUsageStats.mockResolvedValue({
       applicationCount: 3,
       tailoredResumeCount: 5,
     });
@@ -100,7 +100,7 @@ describe("processWelcomeSeriesForUser", () => {
         day1SentAt: "2026-05-11T00:00:00.000Z",
       }),
     });
-    mocks.hasUserApplied.mockReturnValue(true);
+    mocks.hasUserApplied.mockResolvedValue(true);
 
     const result = await processWelcomeSeriesForUser("user-1", { now });
 
@@ -125,7 +125,7 @@ describe("processWelcomeSeriesForUser", () => {
         day3SentAt: "2026-05-04T00:00:00.000Z",
       }),
     });
-    mocks.hasUserBookedInterview.mockReturnValue(true);
+    mocks.hasUserBookedInterview.mockResolvedValue(true);
 
     const result = await processWelcomeSeriesForUser("user-1", { now });
 
@@ -187,11 +187,11 @@ describe("processWelcomeSeriesForUser", () => {
       created_at: "2026-05-01T00:00:00.000Z",
       welcome_series_state: null,
     });
-    await expect(processWelcomeSeriesForUser("user-1", { now })).resolves.toEqual(
-      {
-        results: [{ step: "all", action: "skipped", reason: "no-email" }],
-      },
-    );
+    await expect(
+      processWelcomeSeriesForUser("user-1", { now }),
+    ).resolves.toEqual({
+      results: [{ step: "all", action: "skipped", reason: "no-email" }],
+    });
 
     mockDb({
       id: "user-1",
@@ -202,13 +202,11 @@ describe("processWelcomeSeriesForUser", () => {
         unsubscribedAt: "2026-05-02T00:00:00.000Z",
       }),
     });
-    await expect(processWelcomeSeriesForUser("user-1", { now })).resolves.toEqual(
-      {
-        results: [
-          { step: "all", action: "skipped", reason: "unsubscribed" },
-        ],
-      },
-    );
+    await expect(
+      processWelcomeSeriesForUser("user-1", { now }),
+    ).resolves.toEqual({
+      results: [{ step: "all", action: "skipped", reason: "unsubscribed" }],
+    });
   });
 
   it("retries after send failure by leaving state untouched", async () => {
@@ -236,31 +234,37 @@ function mockDb(user: {
   created_at: string | null;
   welcome_series_state: string | null;
 }) {
-  mocks.prepare.mockImplementation((sql: string) => {
+  mocks.execute.mockImplementation((input: string | { sql: string }) => {
+    const sql = typeof input === "string" ? input : input.sql;
     if (sql.includes("SELECT id, email, name")) {
-      return { get: vi.fn(() => ({ ...user })) };
+      return Promise.resolve({ rows: [{ ...user }] });
     }
     if (sql.includes("SELECT welcome_series_state")) {
-      return {
-        get: vi.fn(() => ({
-          welcome_series_state: user.welcome_series_state,
-        })),
-      };
+      return Promise.resolve({
+        rows: [
+          {
+            welcome_series_state: user.welcome_series_state,
+          },
+        ],
+      });
     }
-    return { run: vi.fn() };
+    return Promise.resolve({ rows: [], rowsAffected: 1 });
   });
 }
 
 function lastStatePatch(): Record<string, unknown> | null {
-  const update = mocks.prepare.mock.results
-    .map((result) => result.value)
-    .map((statement) => statement?.run)
-    .filter(Boolean)
+  const calls = mocks.execute.mock.calls;
+  const update = calls
+    .map(([input]) => input)
+    .filter(
+      (input): input is { sql: string; args: unknown[] } =>
+        typeof input !== "string" &&
+        input.sql.includes("UPDATE `user` SET welcome_series_state"),
+    )
     .at(-1);
-  const calls = update?.mock?.calls;
-  if (!calls?.length || typeof calls.at(-1)?.[0] !== "string") return null;
+  if (!update || typeof update.args[0] !== "string") return null;
   try {
-    return JSON.parse(calls.at(-1)?.[0]);
+    return JSON.parse(update.args[0]);
   } catch {
     return null;
   }

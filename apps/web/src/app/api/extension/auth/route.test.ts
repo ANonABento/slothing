@@ -8,21 +8,17 @@ import {
 const mocks = vi.hoisted(() => ({
   requireAuth: vi.fn(),
   isAuthError: vi.fn(),
-  prepare: vi.fn(),
   nowEpoch: vi.fn(),
-  ensureExtensionSessionsColumns: vi.fn(),
+  createExtensionSession: vi.fn(),
+  deleteExtensionSessionByToken: vi.fn(),
+  deleteExtensionSessionsForUser: vi.fn(),
+  ensureExtensionSessionsColumnsAsync: vi.fn(),
   trackActivationEvent: vi.fn(),
 }));
 
 vi.mock("@/lib/auth", () => ({
   requireAuth: mocks.requireAuth,
   isAuthError: mocks.isAuthError,
-}));
-
-vi.mock("@/lib/db/legacy", () => ({
-  default: {
-    prepare: mocks.prepare,
-  },
 }));
 
 vi.mock("@/lib/format/time", () => ({
@@ -35,7 +31,11 @@ vi.mock("@/lib/db/extension-sessions", async (importOriginal) => {
     await importOriginal<typeof import("@/lib/db/extension-sessions")>();
   return {
     ...actual,
-    ensureExtensionSessionsColumns: mocks.ensureExtensionSessionsColumns,
+    createExtensionSession: mocks.createExtensionSession,
+    deleteExtensionSessionByToken: mocks.deleteExtensionSessionByToken,
+    deleteExtensionSessionsForUser: mocks.deleteExtensionSessionsForUser,
+    ensureExtensionSessionsColumnsAsync:
+      mocks.ensureExtensionSessionsColumnsAsync,
   };
 });
 
@@ -46,13 +46,10 @@ vi.mock("@/lib/db/product-analytics", () => ({
 import { POST } from "./route";
 
 describe("extension auth route", () => {
-  const run = vi.fn();
-
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.requireAuth.mockResolvedValue({ userId: "user-1" });
     mocks.isAuthError.mockReturnValue(false);
-    mocks.prepare.mockReturnValue({ run });
     mocks.nowEpoch.mockReturnValue(Date.UTC(2026, 4, 9, 12, 0, 0));
   });
 
@@ -74,15 +71,15 @@ describe("extension auth route", () => {
         Date.UTC(2026, 4, 9, 12, 0, 0) + EXTENSION_TOKEN_TTL_RUNTIME_MS,
       ).toISOString(),
     );
-    expect(mocks.ensureExtensionSessionsColumns).toHaveBeenCalled();
-    expect(run).toHaveBeenCalledWith(
-      expect.any(String),
-      "user-1",
-      body.token,
-      "Chrome 121 on macOS",
-      "raw user agent",
-      body.expiresAt,
-    );
+    expect(mocks.ensureExtensionSessionsColumnsAsync).toHaveBeenCalled();
+    expect(mocks.createExtensionSession).toHaveBeenCalledWith({
+      id: expect.any(String),
+      userId: "user-1",
+      token: body.token,
+      deviceInfo: "Chrome 121 on macOS",
+      userAgent: "raw user agent",
+      expiresAt: body.expiresAt,
+    });
   });
 
   it("creates a localStorage token with the short TTL", async () => {
@@ -101,13 +98,13 @@ describe("extension auth route", () => {
         Date.UTC(2026, 4, 9, 12, 0, 0) + EXTENSION_TOKEN_TTL_LOCALSTORAGE_MS,
       ).toISOString(),
     );
-    expect(run).toHaveBeenCalledWith(
-      expect.any(String),
-      "user-1",
-      body.token,
-      null,
-      null,
-      body.expiresAt,
-    );
+    expect(mocks.createExtensionSession).toHaveBeenCalledWith({
+      id: expect.any(String),
+      userId: "user-1",
+      token: body.token,
+      deviceInfo: undefined,
+      userAgent: undefined,
+      expiresAt: body.expiresAt,
+    });
   });
 });

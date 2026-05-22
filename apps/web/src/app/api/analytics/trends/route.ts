@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
     const range = (searchParams.get("range") as TimeRange) || "30d";
     const locale = searchParams.get("locale") || undefined;
 
-    const jobs = getAnalyticsJobDescriptions(authResult.userId);
+    const jobs = await getAnalyticsJobDescriptions(authResult.userId);
 
     const timeSeries = generateTimeSeriesData(jobs, range, locale);
     const trends = calculateTrendMetrics(jobs, range);
@@ -49,17 +49,17 @@ export async function GET(request: NextRequest) {
     const startDate = parseToDate(today)!;
     startDate.setDate(startDate.getDate() - daysBack);
 
-    const snapshots = getAnalyticsSnapshots(
+    const snapshots = await getAnalyticsSnapshots(
       formatIsoDateOnly(startDate),
       formatIsoDateOnly(today),
       authResult.userId,
     );
 
     // Get week-over-week changes
-    const weekOverWeek = getWeekOverWeekChange(authResult.userId);
+    const weekOverWeek = await getWeekOverWeekChange(authResult.userId);
 
     // Get average time in status
-    const avgTimeInStatus = getAverageTimeInStatus(authResult.userId);
+    const avgTimeInStatus = await getAverageTimeInStatus(authResult.userId);
 
     return NextResponse.json({
       range,

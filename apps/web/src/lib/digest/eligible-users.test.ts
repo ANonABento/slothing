@@ -1,11 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
-  prepare: vi.fn(),
+  execute: vi.fn(),
 }));
 
-vi.mock("@/lib/db/legacy", () => ({
-  default: { prepare: mocks.prepare },
+vi.mock("@/lib/db/client", () => ({
+  getClient: () => ({ execute: mocks.execute }),
 }));
 
 import { getEligibleDigestUsers } from "./eligible-users";
@@ -15,18 +15,19 @@ describe("getEligibleDigestUsers", () => {
     vi.clearAllMocks();
   });
 
-  it("selects users with emails whose digest setting is enabled by default", () => {
-    const all = vi.fn(() => [
-      {
-        id: "user-1",
-        email: "ada@example.com",
-        name: "Ada",
-        digest_enabled: "true",
-      },
-    ]);
-    mocks.prepare.mockReturnValue({ all });
+  it("selects users with emails whose digest setting is enabled by default", async () => {
+    mocks.execute.mockResolvedValueOnce({
+      rows: [
+        {
+          id: "user-1",
+          email: "ada@example.com",
+          name: "Ada",
+          digest_enabled: "true",
+        },
+      ],
+    });
 
-    expect(getEligibleDigestUsers()).toEqual([
+    await expect(getEligibleDigestUsers()).resolves.toEqual([
       {
         userId: "user-1",
         email: "ada@example.com",
@@ -34,9 +35,13 @@ describe("getEligibleDigestUsers", () => {
         digestEnabled: true,
       },
     ]);
-    expect(mocks.prepare).toHaveBeenCalledWith(
-      expect.stringContaining("COALESCE(s.value, 'true') AS digest_enabled"),
+    expect(mocks.execute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        sql: expect.stringContaining(
+          "COALESCE(s.value, 'true') AS digest_enabled",
+        ),
+        args: [1000],
+      }),
     );
-    expect(all).toHaveBeenCalledWith(1000);
   });
 });

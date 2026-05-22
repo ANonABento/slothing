@@ -13,9 +13,12 @@ vi.mock("@/lib/auth", () => ({
   isAuthError: mocks.isAuthError,
 }));
 
-vi.mock("@/lib/db", () => ({
-  getDocumentParseRun: mocks.getDocumentParseRun,
+vi.mock("@/lib/db/document-artifacts", () => ({
   getLatestDocumentArtifact: mocks.getLatestDocumentArtifact,
+}));
+
+vi.mock("@/lib/db/document-parse-runs", () => ({
+  getDocumentParseRun: mocks.getDocumentParseRun,
   listDocumentParseRuns: mocks.listDocumentParseRuns,
 }));
 

@@ -15,7 +15,7 @@ import {
   createSpreadsheet,
   updateSheet,
 } from "@/lib/google/sheets";
-import { getJobs } from "@/lib/db/jobs";
+import { getJobs } from "@/lib/db/jobs-async";
 import { isGoogleConnected } from "@/lib/google/client";
 
 export const dynamic = "force-dynamic";
@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
 
     switch (type) {
       case "job_tracker":
-        const jobs = getJobs(authResult.userId);
+        const jobs = await getJobs(authResult.userId);
         result = await exportJobTrackerToSheet(jobs);
         break;
 

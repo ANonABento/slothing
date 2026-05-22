@@ -7,7 +7,7 @@ import { nowEpoch } from "@/lib/format/time";
  * @response InterviewStartResponse from @/types/api
  */
 import { NextRequest, NextResponse } from "next/server";
-import { getJob } from "@/lib/db/jobs";
+import { getJob } from "@/lib/db/jobs-async";
 import { getProfile } from "@/lib/db";
 import { getInterviewContextPack } from "@/lib/db/interviews";
 import {
@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
       parseResult.data;
 
     const profile = getProfile(authResult.userId);
-    const gate = gateOptionalAiFeature(
+    const gate = await gateOptionalAiFeature(
       authResult.userId,
       "interview_turn",
       `start:${jobId ?? contextPackId ?? category}`,
@@ -101,7 +101,7 @@ export async function POST(request: NextRequest) {
       gate.llmConfig ? null : "provider_not_configured";
 
     if (contextPackId) {
-      const contextPack = getInterviewContextPack(
+      const contextPack = await getInterviewContextPack(
         contextPackId,
         authResult.userId,
       );
@@ -146,7 +146,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const job = getJob(jobId, authResult.userId);
+    const job = await getJob(jobId, authResult.userId);
     if (!job) {
       return NextResponse.json({ error: "Job not found" }, { status: 404 });
     }

@@ -14,7 +14,7 @@ vi.mock("@/lib/extension-auth", () => ({
   requireExtensionAuth: mocks.requireExtensionAuth,
 }));
 
-vi.mock("@/lib/db/jobs", () => ({
+vi.mock("@/lib/db/jobs-async", () => ({
   createJob: mocks.createJob,
   countJobsByStatus: mocks.countJobsByStatus,
   getJobByUrl: mocks.getJobByUrl,

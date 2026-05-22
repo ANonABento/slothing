@@ -1,47 +1,57 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import type { Mock } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("./legacy", () => {
-  const mockDb = {
-    prepare: vi.fn(),
-  };
-  return { default: mockDb };
-});
+const dbMocks = vi.hoisted(() => ({
+  execute: vi.fn(),
+}));
 
-import db from "./legacy";
+vi.mock("./client", () => ({
+  getClient: () => dbMocks,
+}));
+
 import {
-  saveCoverLetter,
+  deleteCoverLetter,
+  getAllCoverLetters,
+  getCoverLetter,
+  getCoverLetterCount,
   getCoverLettersByJob,
   getLatestCoverLetter,
-  getCoverLetter,
-  deleteCoverLetter,
-  getCoverLetterCount,
-  getAllCoverLetters,
+  saveCoverLetter,
 } from "./cover-letters";
 
 const TEST_USER_ID = "test-user";
 
+const coverLetterRow = {
+  id: "cl-1",
+  job_id: "job-1",
+  profile_id: TEST_USER_ID,
+  content: "Letter content",
+  highlights_json: JSON.stringify(["highlight1"]),
+  version: 1,
+  created_at: "2024-01-01T00:00:00.000Z",
+};
+
+function result(rows: unknown[] = [], rowsAffected = 0) {
+  return { rows, rowsAffected };
+}
+
 describe("Cover Letter Database Functions", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    dbMocks.execute.mockResolvedValue(result([], 1));
   });
 
   describe("saveCoverLetter", () => {
-    it("should save a cover letter with correct version", () => {
-      const mockRun = vi.fn();
-      const mockGet = vi.fn().mockReturnValue({ max_version: 2 });
-      (db.prepare as Mock)
-        .mockReturnValueOnce({ get: mockGet })
-        .mockReturnValueOnce({ run: mockRun });
+    it("saves a cover letter with the next scoped version", async () => {
+      dbMocks.execute.mockResolvedValueOnce(result([{ max_version: 2 }]));
 
-      const result = saveCoverLetter(
+      const saved = await saveCoverLetter(
         "job-1",
         "Dear hiring manager...",
         ["skill1"],
         "user-1",
       );
 
-      expect(result).toEqual({
+      expect(saved).toEqual({
         id: expect.any(String),
         jobId: "job-1",
         profileId: "user-1",
@@ -50,216 +60,153 @@ describe("Cover Letter Database Functions", () => {
         version: 3,
         createdAt: expect.any(String),
       });
-      expect(mockRun).toHaveBeenCalledWith(
-        result.id,
-        "user-1",
-        "job-1",
-        "user-1",
-        "Dear hiring manager...",
-        JSON.stringify(["skill1"]),
-        3,
-        "job-1",
-        "user-1",
-      );
+      expect(dbMocks.execute).toHaveBeenLastCalledWith({
+        sql: expect.stringContaining("WHERE EXISTS"),
+        args: [
+          saved.id,
+          "user-1",
+          "job-1",
+          "user-1",
+          "Dear hiring manager...",
+          JSON.stringify(["skill1"]),
+          3,
+          "job-1",
+          "user-1",
+        ],
+      });
     });
 
-    it("should start at version 1 when no existing letters", () => {
-      const mockRun = vi.fn();
-      const mockGet = vi.fn().mockReturnValue({ max_version: null });
-      (db.prepare as Mock)
-        .mockReturnValueOnce({ get: mockGet })
-        .mockReturnValueOnce({ run: mockRun });
+    it("starts at version 1 when no existing letters exist", async () => {
+      dbMocks.execute.mockResolvedValueOnce(result([{ max_version: null }]));
 
-      const result = saveCoverLetter(
+      const saved = await saveCoverLetter(
         "job-1",
         "Content",
         undefined,
         TEST_USER_ID,
       );
 
-      expect(result.version).toBe(1);
+      expect(saved.version).toBe(1);
     });
 
-    it("should reject cover letters for jobs outside the provided user", () => {
-      const mockRun = vi.fn().mockReturnValue({ changes: 0 });
-      const mockGet = vi.fn().mockReturnValue({ max_version: null });
-      (db.prepare as Mock)
-        .mockReturnValueOnce({ get: mockGet })
-        .mockReturnValueOnce({ run: mockRun });
+    it("rejects cover letters for jobs outside the provided user", async () => {
+      dbMocks.execute
+        .mockResolvedValueOnce(result([{ max_version: null }]))
+        .mockResolvedValueOnce(result([], 0));
 
-      expect(() => saveCoverLetter("job-1", "Content", [], "user-1")).toThrow(
-        "Job not found",
-      );
+      await expect(
+        saveCoverLetter("job-1", "Content", [], "user-1"),
+      ).rejects.toThrow("Job not found");
     });
   });
 
   describe("getCoverLettersByJob", () => {
-    it("should return all cover letters for a job", () => {
-      const mockRows = [
+    it("returns all cover letters for a job", async () => {
+      dbMocks.execute.mockResolvedValueOnce(result([coverLetterRow]));
+
+      await expect(
+        getCoverLettersByJob("job-1", TEST_USER_ID),
+      ).resolves.toEqual([
         {
           id: "cl-1",
-          job_id: "job-1",
-          profile_id: TEST_USER_ID,
+          jobId: "job-1",
+          profileId: TEST_USER_ID,
           content: "Letter content",
-          highlights_json: JSON.stringify(["highlight1"]),
+          highlights: ["highlight1"],
           version: 1,
-          created_at: "2024-01-01T00:00:00.000Z",
+          createdAt: "2024-01-01T00:00:00.000Z",
         },
-      ];
-      const mockAll = vi.fn().mockReturnValue(mockRows);
-      (db.prepare as Mock).mockReturnValue({ all: mockAll });
-
-      const result = getCoverLettersByJob("job-1", TEST_USER_ID);
-
-      expect(result).toHaveLength(1);
-      expect(result[0]).toEqual({
-        id: "cl-1",
-        jobId: "job-1",
-        profileId: TEST_USER_ID,
-        content: "Letter content",
-        highlights: ["highlight1"],
-        version: 1,
-        createdAt: "2024-01-01T00:00:00.000Z",
+      ]);
+      expect(dbMocks.execute).toHaveBeenCalledWith({
+        sql: expect.stringContaining("WHERE job_id = ? AND user_id = ?"),
+        args: ["job-1", TEST_USER_ID],
       });
-      expect(mockAll).toHaveBeenCalledWith("job-1", TEST_USER_ID);
     });
   });
 
   describe("getLatestCoverLetter", () => {
-    it("should return the latest cover letter for a job", () => {
-      const mockRow = {
-        id: "cl-2",
-        job_id: "job-1",
-        profile_id: TEST_USER_ID,
-        content: "Latest",
-        highlights_json: null,
-        version: 2,
-        created_at: "2024-01-02T00:00:00.000Z",
-      };
-      const mockGet = vi.fn().mockReturnValue(mockRow);
-      (db.prepare as Mock).mockReturnValue({ get: mockGet });
+    it("returns the latest cover letter for a job", async () => {
+      dbMocks.execute.mockResolvedValueOnce(
+        result([{ ...coverLetterRow, id: "cl-2", highlights_json: null }]),
+      );
 
-      const result = getLatestCoverLetter("job-1", TEST_USER_ID);
+      const coverLetter = await getLatestCoverLetter("job-1", TEST_USER_ID);
 
-      expect(result).not.toBeNull();
-      expect(result!.highlights).toEqual([]);
-      expect(result!.version).toBe(2);
+      expect(coverLetter?.highlights).toEqual([]);
+      expect(coverLetter?.id).toBe("cl-2");
     });
 
-    it("should return null when no cover letter exists", () => {
-      const mockGet = vi.fn().mockReturnValue(undefined);
-      (db.prepare as Mock).mockReturnValue({ get: mockGet });
-
-      const result = getLatestCoverLetter("job-1", TEST_USER_ID);
-      expect(result).toBeNull();
+    it("returns null when no cover letter exists", async () => {
+      await expect(
+        getLatestCoverLetter("job-1", TEST_USER_ID),
+      ).resolves.toBeNull();
     });
   });
 
   describe("getCoverLetter", () => {
-    it("should return a specific cover letter by id", () => {
-      const mockRow = {
-        id: "cl-1",
-        job_id: "job-1",
-        profile_id: TEST_USER_ID,
-        content: "Content",
-        highlights_json: JSON.stringify(["a"]),
-        version: 1,
-        created_at: "2024-01-01T00:00:00.000Z",
-      };
-      const mockGet = vi.fn().mockReturnValue(mockRow);
-      (db.prepare as Mock).mockReturnValue({ get: mockGet });
+    it("returns a specific cover letter by id", async () => {
+      dbMocks.execute.mockResolvedValueOnce(result([coverLetterRow]));
 
-      const result = getCoverLetter("cl-1", TEST_USER_ID);
-      expect(result).not.toBeNull();
-      expect(result!.id).toBe("cl-1");
+      const coverLetter = await getCoverLetter("cl-1", TEST_USER_ID);
+
+      expect(coverLetter?.id).toBe("cl-1");
     });
 
-    it("should return null when not found", () => {
-      const mockGet = vi.fn().mockReturnValue(undefined);
-      (db.prepare as Mock).mockReturnValue({ get: mockGet });
-
-      const result = getCoverLetter("nonexistent", TEST_USER_ID);
-      expect(result).toBeNull();
+    it("returns null when not found", async () => {
+      await expect(getCoverLetter("missing", TEST_USER_ID)).resolves.toBeNull();
     });
   });
 
   describe("deleteCoverLetter", () => {
-    it("should return true when deleted", () => {
-      const mockRun = vi.fn().mockReturnValue({ changes: 1 });
-      (db.prepare as Mock).mockReturnValue({ run: mockRun });
-
-      expect(deleteCoverLetter("cl-1", TEST_USER_ID)).toBe(true);
+    it("returns true when deleted", async () => {
+      await expect(deleteCoverLetter("cl-1", TEST_USER_ID)).resolves.toBe(true);
     });
 
-    it("should return false when not found", () => {
-      const mockRun = vi.fn().mockReturnValue({ changes: 0 });
-      (db.prepare as Mock).mockReturnValue({ run: mockRun });
+    it("returns false when not found", async () => {
+      dbMocks.execute.mockResolvedValueOnce(result([], 0));
 
-      expect(deleteCoverLetter("nonexistent", TEST_USER_ID)).toBe(false);
+      await expect(deleteCoverLetter("missing", TEST_USER_ID)).resolves.toBe(
+        false,
+      );
     });
   });
 
   describe("getCoverLetterCount", () => {
-    it("should return the count", () => {
-      const mockGet = vi.fn().mockReturnValue({ count: 5 });
-      (db.prepare as Mock).mockReturnValue({ get: mockGet });
+    it("returns the count", async () => {
+      dbMocks.execute.mockResolvedValueOnce(result([{ count: 5 }]));
 
-      expect(getCoverLetterCount("job-1", TEST_USER_ID)).toBe(5);
+      await expect(getCoverLetterCount("job-1", TEST_USER_ID)).resolves.toBe(5);
     });
   });
 
   describe("getAllCoverLetters", () => {
-    it("should return all cover letters for a user", () => {
-      const mockRows = [
-        {
-          id: "cl-1",
-          job_id: "job-1",
-          profile_id: TEST_USER_ID,
-          content: "First letter",
-          highlights_json: JSON.stringify(["h1"]),
-          version: 1,
-          created_at: "2024-01-01T00:00:00.000Z",
-        },
-        {
-          id: "cl-2",
-          job_id: "job-2",
-          profile_id: TEST_USER_ID,
-          content: "Second letter",
-          highlights_json: null,
-          version: 1,
-          created_at: "2024-01-02T00:00:00.000Z",
-        },
-      ];
-      const mockAll = vi.fn().mockReturnValue(mockRows);
-      (db.prepare as Mock).mockReturnValue({ all: mockAll });
-
-      const result = getAllCoverLetters(TEST_USER_ID);
-
-      expect(db.prepare).toHaveBeenCalledWith(
-        "SELECT * FROM cover_letters WHERE user_id = ? ORDER BY created_at DESC",
+    it("returns all cover letters for a user", async () => {
+      dbMocks.execute.mockResolvedValueOnce(
+        result([
+          coverLetterRow,
+          {
+            ...coverLetterRow,
+            id: "cl-2",
+            job_id: "job-2",
+            content: "Second letter",
+            highlights_json: null,
+          },
+        ]),
       );
-      expect(mockAll).toHaveBeenCalledWith(TEST_USER_ID);
-      expect(result).toHaveLength(2);
-      expect(result[0]).toEqual({
-        id: "cl-1",
-        jobId: "job-1",
-        profileId: TEST_USER_ID,
-        content: "First letter",
-        highlights: ["h1"],
-        version: 1,
-        createdAt: "2024-01-01T00:00:00.000Z",
+
+      const rows = await getAllCoverLetters(TEST_USER_ID);
+
+      expect(dbMocks.execute).toHaveBeenCalledWith({
+        sql: "SELECT * FROM cover_letters WHERE user_id = ? ORDER BY created_at DESC",
+        args: [TEST_USER_ID],
       });
-      expect(result[1].highlights).toEqual([]);
+      expect(rows).toHaveLength(2);
+      expect(rows[0].highlights).toEqual(["highlight1"]);
+      expect(rows[1].highlights).toEqual([]);
     });
 
-    it("should return empty array when no cover letters exist", () => {
-      const mockAll = vi.fn().mockReturnValue([]);
-      (db.prepare as Mock).mockReturnValue({ all: mockAll });
-
-      const result = getAllCoverLetters("user-1");
-
-      expect(mockAll).toHaveBeenCalledWith("user-1");
-      expect(result).toEqual([]);
+    it("returns empty array when no cover letters exist", async () => {
+      await expect(getAllCoverLetters("user-1")).resolves.toEqual([]);
     });
   });
 });

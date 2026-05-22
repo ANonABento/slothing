@@ -6,7 +6,7 @@ export async function safeTrackActivity(
   type: ActivityType,
 ): Promise<TrackActivityResult> {
   try {
-    return trackActivity(userId, type);
+    return await trackActivity(userId, type);
   } catch (error) {
     console.error("[streak] Failed to track activity:", error);
     return { unlocked: [] };

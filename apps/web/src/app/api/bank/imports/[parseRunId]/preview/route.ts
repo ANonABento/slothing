@@ -5,7 +5,8 @@
  */
 import { NextResponse } from "next/server";
 import { requireAuth, isAuthError } from "@/lib/auth";
-import { getDocumentArtifact, getDocumentParseRunById } from "@/lib/db";
+import { getDocumentArtifact } from "@/lib/db/document-artifacts";
+import { getDocumentParseRunById } from "@/lib/db/document-parse-runs";
 import { buildParseRunReviewEntries } from "@/lib/ingest/parse-run-bank-import";
 
 export const dynamic = "force-dynamic";
@@ -18,7 +19,7 @@ export async function GET(
   if (isAuthError(authResult)) return authResult;
 
   try {
-    const parseRun = getDocumentParseRunById(
+    const parseRun = await getDocumentParseRunById(
       params.parseRunId,
       authResult.userId,
     );
@@ -35,7 +36,7 @@ export async function GET(
       );
     }
 
-    const artifact = getDocumentArtifact(
+    const artifact = await getDocumentArtifact(
       parseRun.artifactId,
       authResult.userId,
     );

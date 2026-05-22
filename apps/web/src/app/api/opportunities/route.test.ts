@@ -6,6 +6,7 @@ const mocks = vi.hoisted(() => ({
   isAuthError: vi.fn(),
   createJob: vi.fn(),
   listJobsPaginated: vi.fn(),
+  countJobsGroupedByStatus: vi.fn(),
   safeTrackActivity: vi.fn(),
   trackActivationEvent: vi.fn(),
 }));
@@ -23,9 +24,14 @@ vi.mock("@/lib/opportunities", () => ({
   jobToOpportunity: (job: unknown) => job,
 }));
 
-vi.mock("@/lib/db/jobs", () => ({
+vi.mock("@/lib/db/jobs-async", () => ({
+  countJobsGroupedByStatus: mocks.countJobsGroupedByStatus,
   createJob: mocks.createJob,
   listJobsPaginated: mocks.listJobsPaginated,
+  makeJobCursor: (job: { id: string; createdAt: string }) => ({
+    lastId: job.id,
+    lastCreatedAt: job.createdAt,
+  }),
 }));
 
 vi.mock("@/lib/enrichment", () => ({
@@ -60,6 +66,7 @@ describe("opportunities route", () => {
     mocks.requireAuth.mockResolvedValue({ userId: "user-1" });
     mocks.isAuthError.mockReturnValue(false);
     mocks.listJobsPaginated.mockReturnValue([]);
+    mocks.countJobsGroupedByStatus.mockReturnValue({});
     mocks.safeTrackActivity.mockResolvedValue({ unlocked: [] });
   });
 
@@ -75,8 +82,13 @@ describe("opportunities route", () => {
       statuses: ["saved"],
       cursor: null,
       limit: 50,
+      query: undefined,
+      remote: null,
+      type: null,
+      keyword: null,
+      sortBy: "createdAt",
     });
-    await expect(response.json()).resolves.toEqual({
+    await expect(response.json()).resolves.toMatchObject({
       jobs: [],
       opportunities: [],
       items: [],
@@ -95,6 +107,11 @@ describe("opportunities route", () => {
       statuses: undefined,
       cursor: null,
       limit: 50,
+      query: undefined,
+      remote: null,
+      type: null,
+      keyword: null,
+      sortBy: "createdAt",
     });
     expect(response.status).toBe(200);
   });
@@ -113,6 +130,57 @@ describe("opportunities route", () => {
       statuses: ["applied", "interviewing", "offer"],
       cursor: null,
       limit: 50,
+      query: undefined,
+      remote: null,
+      type: null,
+      keyword: null,
+      sortBy: "createdAt",
+    });
+  });
+
+  it("passes server-side search, sort, and filter params to the jobs query", async () => {
+    await GET(
+      new NextRequest(
+        "http://localhost/api/opportunities?q=react&sort=deadline&remoteType=remote&techStack=TypeScript&limit=25",
+      ),
+    );
+
+    expect(mocks.listJobsPaginated).toHaveBeenCalledWith({
+      userId: "user-1",
+      statuses: undefined,
+      cursor: null,
+      limit: 25,
+      query: "react",
+      remote: true,
+      type: null,
+      keyword: "TypeScript",
+      sortBy: "deadline",
+    });
+    expect(mocks.countJobsGroupedByStatus).toHaveBeenCalledWith({
+      userId: "user-1",
+      query: "react",
+      remote: true,
+      type: null,
+      keyword: "TypeScript",
+    });
+  });
+
+  it("returns status counts and selected total matching from the unstatused facet query", async () => {
+    mocks.countJobsGroupedByStatus.mockReturnValue({
+      pending: 3,
+      saved: 7,
+    });
+
+    const response = await GET(
+      new NextRequest("http://localhost/api/opportunities?status=saved"),
+    );
+
+    await expect(response.json()).resolves.toMatchObject({
+      statusCounts: expect.objectContaining({
+        pending: 3,
+        saved: 7,
+      }),
+      totalMatching: 7,
     });
   });
 

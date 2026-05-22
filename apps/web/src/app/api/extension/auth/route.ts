@@ -8,9 +8,11 @@ import { nowEpoch, toIso } from "@/lib/format/time";
  */
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth, isAuthError } from "@/lib/auth";
-import db from "@/lib/db/legacy";
 import {
-  ensureExtensionSessionsColumns,
+  createExtensionSession,
+  deleteExtensionSessionByToken,
+  deleteExtensionSessionsForUser,
+  ensureExtensionSessionsColumnsAsync,
   EXTENSION_TOKEN_TTL_LOCALSTORAGE_MS,
   EXTENSION_TOKEN_TTL_RUNTIME_MS,
 } from "@/lib/db/extension-sessions";
@@ -33,7 +35,7 @@ export async function POST(request: NextRequest) {
       transport?: "runtime" | "localstorage";
     };
 
-    ensureExtensionSessionsColumns();
+    await ensureExtensionSessionsColumnsAsync();
 
     // Generate a secure token
     const token = `${randomUUID()}-${randomUUID()}`;
@@ -45,22 +47,16 @@ export async function POST(request: NextRequest) {
 
     const id = randomUUID();
 
-    // Insert new session
-    db.prepare(
-      `
-      INSERT INTO extension_sessions (id, user_id, token, device_info, device_user_agent, expires_at)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `,
-    ).run(
+    await createExtensionSession({
       id,
       userId,
       token,
-      deviceInfo || null,
-      userAgent || null,
-      toIso(expiresAt),
-    );
+      deviceInfo,
+      userAgent,
+      expiresAt: toIso(expiresAt),
+    });
     try {
-      trackActivationEvent({
+      await trackActivationEvent({
         event: "extension_connected",
         userId,
         source: "api/extension/auth",
@@ -92,15 +88,9 @@ export async function DELETE(request: NextRequest) {
 
     const token = request.headers.get("X-Extension-Token");
     if (token) {
-      // Revoke specific token
-      db.prepare(
-        `DELETE FROM extension_sessions WHERE token = ? AND user_id = ?`,
-      ).run(token, userId);
+      await deleteExtensionSessionByToken(token, userId);
     } else {
-      // Revoke all tokens for user
-      db.prepare(`DELETE FROM extension_sessions WHERE user_id = ?`).run(
-        userId,
-      );
+      await deleteExtensionSessionsForUser(userId);
     }
 
     return NextResponse.json({ success: true });

@@ -1,14 +1,17 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { Mock } from "vitest";
 
-vi.mock("./legacy", () => {
-  const mockDb = {
-    prepare: vi.fn(),
-  };
-  return { default: mockDb };
-});
+const mocks = vi.hoisted(() => ({
+  batch: vi.fn(),
+  execute: vi.fn(),
+}));
 
-import db from "./legacy";
+vi.mock("./client", () => ({
+  getClient: () => ({
+    batch: mocks.batch,
+    execute: mocks.execute,
+  }),
+}));
+
 import {
   createShare,
   deleteShare,
@@ -20,43 +23,16 @@ import {
   MAX_SHARE_HTML_BYTES,
 } from "./shared-resumes";
 
-interface Statement {
-  run: Mock;
-  get: Mock;
-  all: Mock;
-}
-
-function makeStmt(overrides: Partial<Statement> = {}): Statement {
-  return {
-    run: vi.fn().mockReturnValue({ changes: 0 }),
-    get: vi.fn().mockReturnValue(undefined),
-    all: vi.fn().mockReturnValue([]),
-    ...overrides,
-  };
-}
-
-function setupSchemaStubs(): void {
-  // The schema bootstrap fires three `prepare(...).run()` calls (CREATE TABLE
-  // + two CREATE INDEX). Then the test path issues its own statement.
-  (db.prepare as Mock).mockImplementation((sql: string) => {
-    if (sql.includes("CREATE TABLE") || sql.includes("CREATE INDEX")) {
-      return makeStmt();
-    }
-    throw new Error(`Unexpected SQL in test scaffold: ${sql}`);
-  });
-}
-
 describe("shared-resumes db helpers", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    setupSchemaStubs();
+    mocks.batch.mockResolvedValue([]);
   });
 
   describe("generateShareToken", () => {
     it("produces URL-safe base64 (no +, /, or = padding)", () => {
       const token = generateShareToken();
       expect(token).toMatch(/^[A-Za-z0-9_-]+$/);
-      // 16 bytes -> 22 chars, 24 bytes -> 32 chars, etc.
       expect(token.length).toBeGreaterThanOrEqual(20);
       expect(token).not.toContain("+");
       expect(token).not.toContain("/");
@@ -72,16 +48,11 @@ describe("shared-resumes db helpers", () => {
   });
 
   describe("createShare", () => {
-    it("inserts a row with a generated token, snapshotted html, and a 7-day expiry", () => {
-      const insertStmt = makeStmt();
-      (db.prepare as Mock).mockImplementation((sql: string) => {
-        if (sql.includes("INSERT INTO shared_resumes")) return insertStmt;
-        // schema bootstrap
-        return makeStmt();
-      });
+    it("inserts a row with a generated token, snapshotted html, and a 7-day expiry", async () => {
+      mocks.execute.mockResolvedValueOnce({ rows: [], rowsAffected: 1 });
 
       const now = 1_700_000_000_000;
-      const result = createShare({
+      const result = await createShare({
         userId: "user-1",
         html: "<h1>Resume</h1>",
         title: "Senior Engineer",
@@ -96,37 +67,36 @@ describe("shared-resumes db helpers", () => {
       expect(result.viewCount).toBe(0);
       expect(result.id).toMatch(/^[A-Za-z0-9_-]+$/);
 
-      expect(insertStmt.run).toHaveBeenCalledWith(
-        result.id,
-        "user-1",
-        "<h1>Resume</h1>",
-        "Senior Engineer",
-        now,
-        now + DEFAULT_SHARE_TTL_MS,
-      );
-    });
-
-    it("rejects empty HTML", () => {
-      expect(() =>
-        createShare({ userId: "user-1", html: "   ", title: "x" }),
-      ).toThrow(/empty/i);
-    });
-
-    it("rejects HTML beyond the size cap", () => {
-      const oversized = "a".repeat(MAX_SHARE_HTML_BYTES + 1);
-      expect(() =>
-        createShare({ userId: "user-1", html: oversized, title: "x" }),
-      ).toThrow(/maximum share size/);
-    });
-
-    it("falls back to a sensible default title", () => {
-      const insertStmt = makeStmt();
-      (db.prepare as Mock).mockImplementation((sql: string) => {
-        if (sql.includes("INSERT INTO shared_resumes")) return insertStmt;
-        return makeStmt();
+      expect(mocks.execute).toHaveBeenCalledWith({
+        sql: expect.stringContaining("INSERT INTO shared_resumes"),
+        args: [
+          result.id,
+          "user-1",
+          "<h1>Resume</h1>",
+          "Senior Engineer",
+          now,
+          now + DEFAULT_SHARE_TTL_MS,
+        ],
       });
+    });
 
-      const result = createShare({
+    it("rejects empty HTML", async () => {
+      await expect(
+        createShare({ userId: "user-1", html: "   ", title: "x" }),
+      ).rejects.toThrow(/empty/i);
+    });
+
+    it("rejects HTML beyond the size cap", async () => {
+      const oversized = "a".repeat(MAX_SHARE_HTML_BYTES + 1);
+      await expect(
+        createShare({ userId: "user-1", html: oversized, title: "x" }),
+      ).rejects.toThrow(/maximum share size/);
+    });
+
+    it("falls back to a sensible default title", async () => {
+      mocks.execute.mockResolvedValueOnce({ rows: [], rowsAffected: 1 });
+
+      const result = await createShare({
         userId: "user-1",
         html: "<p>hi</p>",
         title: "   ",
@@ -137,7 +107,7 @@ describe("shared-resumes db helpers", () => {
   });
 
   describe("getShareByToken", () => {
-    it("returns the share when not expired", () => {
+    it("returns the share when not expired", async () => {
       const now = 1_700_000_000_000;
       const row = {
         id: "tok-1",
@@ -149,15 +119,9 @@ describe("shared-resumes db helpers", () => {
         view_count: 3,
       };
 
-      (db.prepare as Mock).mockImplementation((sql: string) => {
-        if (sql.startsWith("SELECT * FROM shared_resumes")) {
-          return makeStmt({ get: vi.fn().mockReturnValue(row) });
-        }
-        return makeStmt();
-      });
+      mocks.execute.mockResolvedValueOnce({ rows: [row] });
 
-      const result = getShareByToken("tok-1", now);
-      expect(result).toEqual({
+      await expect(getShareByToken("tok-1", now)).resolves.toEqual({
         id: "tok-1",
         userId: "user-1",
         documentHtml: "<p>hi</p>",
@@ -168,7 +132,7 @@ describe("shared-resumes db helpers", () => {
       });
     });
 
-    it("returns null when the share is expired", () => {
+    it("returns null when the share is expired", async () => {
       const now = 1_700_000_000_000;
       const row = {
         id: "tok-1",
@@ -176,85 +140,60 @@ describe("shared-resumes db helpers", () => {
         document_html: "<p>hi</p>",
         document_title: "Resume",
         created_at: now - 10_000,
-        expires_at: now - 1, // expired one ms ago
+        expires_at: now - 1,
         view_count: 0,
       };
 
-      (db.prepare as Mock).mockImplementation((sql: string) => {
-        if (sql.startsWith("SELECT * FROM shared_resumes")) {
-          return makeStmt({ get: vi.fn().mockReturnValue(row) });
-        }
-        return makeStmt();
-      });
+      mocks.execute.mockResolvedValueOnce({ rows: [row] });
 
-      expect(getShareByToken("tok-1", now)).toBeNull();
+      await expect(getShareByToken("tok-1", now)).resolves.toBeNull();
     });
 
-    it("returns null when the token is unknown", () => {
-      (db.prepare as Mock).mockImplementation((sql: string) => {
-        if (sql.startsWith("SELECT * FROM shared_resumes")) {
-          return makeStmt({ get: vi.fn().mockReturnValue(undefined) });
-        }
-        return makeStmt();
-      });
+    it("returns null when the token is unknown", async () => {
+      mocks.execute.mockResolvedValueOnce({ rows: [] });
 
-      expect(getShareByToken("missing")).toBeNull();
+      await expect(getShareByToken("missing")).resolves.toBeNull();
     });
   });
 
   describe("incrementViewCount", () => {
-    it("issues an UPDATE keyed on the token and current time", () => {
-      const updateStmt = makeStmt({
-        run: vi.fn().mockReturnValue({ changes: 1 }),
-      });
-      (db.prepare as Mock).mockImplementation((sql: string) => {
-        if (sql.startsWith("UPDATE shared_resumes")) return updateStmt;
-        return makeStmt();
-      });
+    it("issues an UPDATE keyed on the token and current time", async () => {
+      mocks.execute.mockResolvedValueOnce({ rows: [], rowsAffected: 1 });
 
       const now = 1_700_000_000_000;
-      const result = incrementViewCount("tok-1", now);
-      expect(result).toBe(1);
-      expect(updateStmt.run).toHaveBeenCalledWith("tok-1", now);
+      await expect(incrementViewCount("tok-1", now)).resolves.toBe(1);
+      expect(mocks.execute).toHaveBeenCalledWith({
+        sql: expect.stringContaining("UPDATE shared_resumes"),
+        args: ["tok-1", now],
+      });
     });
 
-    it("returns 0 when nothing matched (already deleted or expired)", () => {
-      const updateStmt = makeStmt({
-        run: vi.fn().mockReturnValue({ changes: 0 }),
-      });
-      (db.prepare as Mock).mockImplementation((sql: string) => {
-        if (sql.startsWith("UPDATE shared_resumes")) return updateStmt;
-        return makeStmt();
-      });
+    it("returns 0 when nothing matched (already deleted or expired)", async () => {
+      mocks.execute.mockResolvedValueOnce({ rows: [], rowsAffected: 0 });
 
-      expect(incrementViewCount("missing")).toBe(0);
+      await expect(incrementViewCount("missing")).resolves.toBe(0);
     });
   });
 
   describe("listSharesForUser", () => {
-    it("returns rows for the user, summary shape only (no html payload)", () => {
-      const rows = [
-        {
-          id: "tok-1",
-          document_title: "Resume",
-          created_at: 1_000,
-          expires_at: 2_000,
-          view_count: 4,
-        },
-      ];
-      const allStmt = makeStmt({ all: vi.fn().mockReturnValue(rows) });
-      (db.prepare as Mock).mockImplementation((sql: string) => {
-        if (
-          sql.includes("FROM shared_resumes") &&
-          sql.includes("WHERE user_id")
-        ) {
-          return allStmt;
-        }
-        return makeStmt();
+    it("returns rows for the user, summary shape only (no html payload)", async () => {
+      mocks.execute.mockResolvedValueOnce({
+        rows: [
+          {
+            id: "tok-1",
+            document_title: "Resume",
+            created_at: 1_000,
+            expires_at: 2_000,
+            view_count: 4,
+          },
+        ],
       });
 
-      const result = listSharesForUser("user-1");
-      expect(allStmt.all).toHaveBeenCalledWith("user-1");
+      const result = await listSharesForUser("user-1");
+      expect(mocks.execute).toHaveBeenCalledWith({
+        sql: expect.stringContaining("WHERE user_id = ?"),
+        args: ["user-1"],
+      });
       expect(result).toEqual([
         {
           id: "tok-1",
@@ -264,7 +203,6 @@ describe("shared-resumes db helpers", () => {
           viewCount: 4,
         },
       ]);
-      // Critical: don't ship the full html on the list endpoint.
       expect(
         (result[0] as unknown as Record<string, unknown>).documentHtml,
       ).toBeUndefined();
@@ -272,29 +210,20 @@ describe("shared-resumes db helpers", () => {
   });
 
   describe("deleteShare", () => {
-    it("returns true when a row was removed", () => {
-      const deleteStmt = makeStmt({
-        run: vi.fn().mockReturnValue({ changes: 1 }),
-      });
-      (db.prepare as Mock).mockImplementation((sql: string) => {
-        if (sql.startsWith("DELETE FROM shared_resumes")) return deleteStmt;
-        return makeStmt();
-      });
+    it("returns true when a row was removed", async () => {
+      mocks.execute.mockResolvedValueOnce({ rows: [], rowsAffected: 1 });
 
-      expect(deleteShare("tok-1", "user-1")).toBe(true);
-      expect(deleteStmt.run).toHaveBeenCalledWith("tok-1", "user-1");
+      await expect(deleteShare("tok-1", "user-1")).resolves.toBe(true);
+      expect(mocks.execute).toHaveBeenCalledWith({
+        sql: expect.stringContaining("DELETE FROM shared_resumes"),
+        args: ["tok-1", "user-1"],
+      });
     });
 
-    it("returns false when nothing matched (not owner / not found)", () => {
-      const deleteStmt = makeStmt({
-        run: vi.fn().mockReturnValue({ changes: 0 }),
-      });
-      (db.prepare as Mock).mockImplementation((sql: string) => {
-        if (sql.startsWith("DELETE FROM shared_resumes")) return deleteStmt;
-        return makeStmt();
-      });
+    it("returns false when nothing matched (not owner / not found)", async () => {
+      mocks.execute.mockResolvedValueOnce({ rows: [], rowsAffected: 0 });
 
-      expect(deleteShare("tok-1", "user-1")).toBe(false);
+      await expect(deleteShare("tok-1", "user-1")).resolves.toBe(false);
     });
   });
 });

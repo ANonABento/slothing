@@ -361,7 +361,7 @@ describe("/api/tailor route contract", () => {
       status: "saved",
       createdAt: "2026-05-18T00:00:00.000Z",
     });
-    vi.mocked(saveGeneratedResume).mockReturnValueOnce({
+    vi.mocked(saveGeneratedResume).mockResolvedValueOnce({
       id: "resume-1",
       jobId: "job-1",
       profileId: "user-1",

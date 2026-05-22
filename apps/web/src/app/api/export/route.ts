@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getProfile, getDocuments, getLLMConfig } from "@/lib/db";
-import { getJobs } from "@/lib/db/jobs";
+import { getJobs } from "@/lib/db/jobs-async";
 import { getInterviewSessions } from "@/lib/db/interviews";
 import { getAllGeneratedResumes } from "@/lib/db/resumes";
 import { getAllCoverLetters } from "@/lib/db/cover-letters";
@@ -16,14 +16,14 @@ export async function GET() {
   if (isAuthError(authResult)) return authResult;
 
   try {
-    const jobs = getJobs(authResult.userId);
+    const jobs = await getJobs(authResult.userId);
     const documents = getDocuments(authResult.userId);
-    const interviewSessions = getInterviewSessions(
+    const interviewSessions = await getInterviewSessions(
       undefined,
       authResult.userId,
     );
-    const generatedResumes = getAllGeneratedResumes(authResult.userId);
-    const coverLetters = getAllCoverLetters(authResult.userId);
+    const generatedResumes = await getAllGeneratedResumes(authResult.userId);
+    const coverLetters = await getAllCoverLetters(authResult.userId);
     const bankEntries = getBankEntries(authResult.userId);
 
     const exportData = {

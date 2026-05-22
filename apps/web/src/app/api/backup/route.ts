@@ -15,7 +15,7 @@ import {
   updateProfile,
   setLLMConfig,
 } from "@/lib/db";
-import { getJobs, createJob } from "@/lib/db/jobs";
+import { getJobs, createJob } from "@/lib/db/jobs-async";
 import { getInterviewSessions } from "@/lib/db/interviews";
 import { getAllGeneratedResumes } from "@/lib/db/resumes";
 import { generateId } from "@/lib/utils";
@@ -30,34 +30,37 @@ export async function GET() {
   if (isAuthError(authResult)) return authResult;
 
   try {
+    const jobs = await getJobs(authResult.userId);
+    const generatedResumes = await getAllGeneratedResumes(authResult.userId);
+    const interviewSessions = await getInterviewSessions(
+      undefined,
+      authResult.userId,
+    );
     const backup = {
       version: "1.0",
       exportedAt: nowIso(),
       data: {
         profile: getProfile(authResult.userId),
-        jobs: getJobs(authResult.userId),
+        jobs,
         documents: getDocuments(authResult.userId).map((d) => ({
           filename: d.filename,
           type: d.type,
           mimeType: d.mimeType,
           uploadedAt: d.uploadedAt,
         })),
-        interviewSessions: getInterviewSessions(undefined, authResult.userId),
-        generatedResumes: getAllGeneratedResumes(authResult.userId).map(
-          (r) => ({
-            jobId: r.jobId,
-            matchScore: r.matchScore,
-            createdAt: r.createdAt,
-          }),
-        ),
+        interviewSessions,
+        generatedResumes: generatedResumes.map((r) => ({
+          jobId: r.jobId,
+          matchScore: r.matchScore,
+          createdAt: r.createdAt,
+        })),
         llmConfig: getLLMConfig(authResult.userId),
       },
       stats: {
-        totalJobs: getJobs(authResult.userId).length,
+        totalJobs: jobs.length,
         totalDocuments: getDocuments(authResult.userId).length,
-        totalInterviews: getInterviewSessions(undefined, authResult.userId)
-          .length,
-        totalResumes: getAllGeneratedResumes(authResult.userId).length,
+        totalInterviews: interviewSessions.length,
+        totalResumes: generatedResumes.length,
       },
     };
 
@@ -108,7 +111,7 @@ export async function POST(request: NextRequest) {
     // Restore profile
     if (backup.data.profile) {
       const profile = backup.data.profile;
-      updateProfile(
+      await updateProfile(
         {
           contact: profile.contact as
             | {
@@ -184,7 +187,7 @@ export async function POST(request: NextRequest) {
 
     // Restore jobs (skip duplicates)
     if (backup.data.jobs && Array.isArray(backup.data.jobs)) {
-      const existingJobs = getJobs(authResult.userId);
+      const existingJobs = await getJobs(authResult.userId);
       const existingKeys = new Set(
         existingJobs.map(
           (j) => `${j.title.toLowerCase()}-${j.company.toLowerCase()}`,
@@ -216,7 +219,7 @@ export async function POST(request: NextRequest) {
           ? ((job.status || "saved") as (typeof JOB_STATUSES)[number])
           : "saved";
 
-        createJob(
+        await createJob(
           {
             title: job.title,
             company: job.company,

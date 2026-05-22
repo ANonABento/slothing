@@ -19,7 +19,7 @@ export async function GET(
 
   try {
     const { id } = await params;
-    const version = getProfileVersion(id, authResult.userId);
+    const version = await getProfileVersion(id, authResult.userId);
 
     if (!version) {
       return NextResponse.json({ error: "Version not found" }, { status: 404 });

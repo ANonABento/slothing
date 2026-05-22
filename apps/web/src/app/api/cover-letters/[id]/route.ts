@@ -11,7 +11,7 @@ export async function GET(
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
 
-  const coverLetter = getCoverLetter(params.id, authResult.userId);
+  const coverLetter = await getCoverLetter(params.id, authResult.userId);
   if (!coverLetter) {
     return NextResponse.json(
       { error: "Cover letter not found." },

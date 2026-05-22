@@ -1,5 +1,5 @@
-import db from "./legacy";
-import { ensureEmailSendsSchema } from "./email-sends-schema";
+import { getClient } from "./client";
+import { ensureEmailSendsSchemaAsync } from "./email-sends-schema";
 import { nowIso } from "@/lib/format/time";
 import { generateId } from "@/lib/utils";
 import type { EmailTemplateType } from "@/types";
@@ -56,8 +56,8 @@ export interface GetFailedEmailSendsOptions {
   limit?: number;
 }
 
-function ensureSchema(): void {
-  ensureEmailSendsSchema(db);
+async function ensureSchema(): Promise<void> {
+  await ensureEmailSendsSchemaAsync();
 }
 
 function mapEmailSend(row: EmailSendRow): EmailSend {
@@ -77,11 +77,11 @@ function mapEmailSend(row: EmailSendRow): EmailSend {
   };
 }
 
-export function getEmailSends(
+export async function getEmailSends(
   userId: string,
   options: GetEmailSendsOptions = {},
-): EmailSend[] {
-  ensureSchema();
+): Promise<EmailSend[]> {
+  await ensureSchema();
   const limit = Math.min(Math.max(options.limit ?? 50, 1), 200);
   const offset = Math.max(options.offset ?? 0, 0);
   const params: Array<string | number> = [userId];
@@ -94,9 +94,8 @@ export function getEmailSends(
 
   params.push(limit, offset);
 
-  const rows = db
-    .prepare(
-      `
+  const result = await getClient().execute({
+    sql: `
       SELECT id, user_id, type, job_id, recipient, subject, body,
              in_reply_to_draft_id, gmail_message_id, status, error_message, sent_at
       FROM email_sends
@@ -105,38 +104,41 @@ export function getEmailSends(
       ORDER BY sent_at DESC
       LIMIT ? OFFSET ?
     `,
-    )
-    .all(...params) as EmailSendRow[];
+    args: params,
+  });
+  const rows = result.rows as unknown as EmailSendRow[];
 
   return rows.map(mapEmailSend);
 }
 
-export function getEmailSend(id: string, userId: string): EmailSend | null {
-  ensureSchema();
-  const row = db
-    .prepare(
-      `
+export async function getEmailSend(
+  id: string,
+  userId: string,
+): Promise<EmailSend | null> {
+  await ensureSchema();
+  const result = await getClient().execute({
+    sql: `
       SELECT id, user_id, type, job_id, recipient, subject, body,
              in_reply_to_draft_id, gmail_message_id, status, error_message, sent_at
       FROM email_sends
       WHERE id = ? AND user_id = ?
     `,
-    )
-    .get(id, userId) as EmailSendRow | undefined;
+    args: [id, userId],
+  });
+  const row = result.rows[0] as unknown as EmailSendRow | undefined;
 
   return row ? mapEmailSend(row) : null;
 }
 
-export function getRecentEmailSendForRecipient(
+export async function getRecentEmailSendForRecipient(
   userId: string,
   recipient: string,
   type: EmailTemplateType,
   sinceIso: string,
-): EmailSend | null {
-  ensureSchema();
-  const row = db
-    .prepare(
-      `
+): Promise<EmailSend | null> {
+  await ensureSchema();
+  const result = await getClient().execute({
+    sql: `
       SELECT id, user_id, type, job_id, recipient, subject, body,
              in_reply_to_draft_id, gmail_message_id, status, error_message, sent_at
       FROM email_sends
@@ -144,59 +146,59 @@ export function getRecentEmailSendForRecipient(
       ORDER BY sent_at DESC
       LIMIT 1
     `,
-    )
-    .get(userId, recipient, type, sinceIso) as EmailSendRow | undefined;
+    args: [userId, recipient, type, sinceIso],
+  });
+  const row = result.rows[0] as unknown as EmailSendRow | undefined;
 
   return row ? mapEmailSend(row) : null;
 }
 
-export function hasDailyDigestSentSince(
+export async function hasDailyDigestSentSince(
   userId: string,
   sinceIso: string,
-): boolean {
-  ensureSchema();
-  const row = db
-    .prepare(
-      `
+): Promise<boolean> {
+  await ensureSchema();
+  const result = await getClient().execute({
+    sql: `
       SELECT id
       FROM email_sends
       WHERE user_id = ? AND type = 'daily_digest' AND sent_at >= ?
       LIMIT 1
     `,
-    )
-    .get(userId, sinceIso) as { id: string } | undefined;
+    args: [userId, sinceIso],
+  });
+  const row = result.rows[0] as unknown as { id: string } | undefined;
 
   return Boolean(row);
 }
 
-export function hasDigestSentSince(
+export async function hasDigestSentSince(
   userId: string,
   type: string,
   sinceIso: string,
-): boolean {
-  ensureSchema();
-  const row = db
-    .prepare(
-      `
+): Promise<boolean> {
+  await ensureSchema();
+  const result = await getClient().execute({
+    sql: `
       SELECT id
       FROM email_sends
       WHERE user_id = ? AND type = ? AND status = 'sent' AND sent_at >= ?
       LIMIT 1
     `,
-    )
-    .get(userId, type, sinceIso) as { id: string } | undefined;
+    args: [userId, type, sinceIso],
+  });
+  const row = result.rows[0] as unknown as { id: string } | undefined;
 
   return Boolean(row);
 }
 
-export function getFailedEmailSends(
+export async function getFailedEmailSends(
   options: GetFailedEmailSendsOptions = {},
-): EmailSend[] {
-  ensureSchema();
+): Promise<EmailSend[]> {
+  await ensureSchema();
   const limit = Math.min(Math.max(options.limit ?? 25, 1), 100);
-  const rows = db
-    .prepare(
-      `
+  const result = await getClient().execute({
+    sql: `
       SELECT id, user_id, type, job_id, recipient, subject, body,
              in_reply_to_draft_id, gmail_message_id, status, error_message, sent_at
       FROM email_sends
@@ -204,65 +206,64 @@ export function getFailedEmailSends(
       ORDER BY sent_at ASC
       LIMIT ?
     `,
-    )
-    .all(limit) as EmailSendRow[];
+    args: [limit],
+  });
+  const rows = result.rows as unknown as EmailSendRow[];
 
   return rows.map(mapEmailSend);
 }
 
-export function markEmailSendStatus(
+export async function markEmailSendStatus(
   id: string,
   userId: string,
   status: "sent" | "failed",
   errorMessage?: string,
-): boolean {
-  ensureSchema();
-  const result = db
-    .prepare(
-      `
+): Promise<boolean> {
+  await ensureSchema();
+  const result = await getClient().execute({
+    sql: `
       UPDATE email_sends
       SET status = ?, error_message = ?, sent_at = ?
       WHERE id = ? AND user_id = ?
     `,
-    )
-    .run(status, errorMessage || null, nowIso(), id, userId) as
-    | { changes?: number }
-    | undefined;
+    args: [status, errorMessage || null, nowIso(), id, userId],
+  });
 
-  return (result?.changes ?? 0) > 0;
+  return result.rowsAffected > 0;
 }
 
-export function createEmailSend(
+export async function createEmailSend(
   input: CreateEmailSendInput,
   userId: string,
-): EmailSend {
-  ensureSchema();
+): Promise<EmailSend> {
+  await ensureSchema();
   const id = generateId();
   const sentAt = nowIso();
   const status = input.status ?? "sent";
 
-  db.prepare(
-    `
+  await getClient().execute({
+    sql: `
     INSERT INTO email_sends (
       id, user_id, type, job_id, recipient, subject, body,
       in_reply_to_draft_id, gmail_message_id, status, error_message, sent_at
     )
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `,
-  ).run(
-    id,
-    userId,
-    input.type,
-    input.jobId || null,
-    input.recipient,
-    input.subject,
-    input.body,
-    input.inReplyToDraftId || null,
-    input.gmailMessageId || null,
-    status,
-    input.errorMessage || null,
-    sentAt,
-  );
+    args: [
+      id,
+      userId,
+      input.type,
+      input.jobId || null,
+      input.recipient,
+      input.subject,
+      input.body,
+      input.inReplyToDraftId || null,
+      input.gmailMessageId || null,
+      status,
+      input.errorMessage || null,
+      sentAt,
+    ],
+  });
 
   return {
     id,

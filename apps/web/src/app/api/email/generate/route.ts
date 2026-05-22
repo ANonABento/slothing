@@ -6,7 +6,7 @@
  * @response EmailGenerateResponse from @/types/api
  */
 import { NextRequest, NextResponse } from "next/server";
-import { getJob } from "@/lib/db/jobs";
+import { getJob } from "@/lib/db/jobs-async";
 import { getProfile } from "@/lib/db";
 import {
   gateOptionalAiFeature,
@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
     }
 
     const profile = getProfile(authResult.userId);
-    const job = jobId ? getJob(jobId, authResult.userId) : undefined;
+    const job = jobId ? await getJob(jobId, authResult.userId) : undefined;
 
     const context = {
       job: job || undefined,
@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
     // Try LLM-enhanced generation first
     let fallbackReason: "provider_not_configured" | "llm_error" | null = null;
     if (useLLM) {
-      const gate = gateOptionalAiFeature(
+      const gate = await gateOptionalAiFeature(
         authResult.userId,
         "email",
         `${type}:${jobId ?? "general"}`,

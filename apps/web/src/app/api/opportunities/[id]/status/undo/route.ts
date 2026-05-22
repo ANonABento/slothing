@@ -34,7 +34,7 @@ export async function POST(
       return validationErrorResponse(parseResult.error);
     }
 
-    const existing = getOpportunity(params.id, authResult.userId);
+    const existing = await getOpportunity(params.id, authResult.userId);
     if (!existing) {
       return NextResponse.json(
         { error: "Opportunity not found" },
@@ -50,7 +50,7 @@ export async function POST(
       );
     }
 
-    const opportunity = changeOpportunityStatus(
+    const opportunity = await changeOpportunityStatus(
       params.id,
       previousStatus,
       authResult.userId,

@@ -22,7 +22,7 @@ describe("/api/streak route", () => {
     vi.clearAllMocks();
     mocks.requireAuth.mockResolvedValue({ userId: "user-1" });
     mocks.isAuthError.mockReturnValue(false);
-    mocks.getStreakState.mockReturnValue({
+    mocks.getStreakState.mockResolvedValue({
       currentStreak: 0,
       longestStreak: 0,
       lastActivityDay: null,
@@ -55,7 +55,10 @@ describe("/api/streak route", () => {
   });
 
   it("returns auth failures unchanged", async () => {
-    const authResponse = Response.json({ error: "Unauthorized" }, { status: 401 });
+    const authResponse = Response.json(
+      { error: "Unauthorized" },
+      { status: 401 },
+    );
     mocks.requireAuth.mockResolvedValue(authResponse);
     mocks.isAuthError.mockReturnValue(true);
 

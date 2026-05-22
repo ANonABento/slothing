@@ -8,7 +8,7 @@ export async function GET() {
   if (isAuthError(authResult)) return authResult;
 
   return NextResponse.json({
-    balance: getCreditBalance(authResult.userId),
-    transactions: getCreditTransactions(authResult.userId, 30),
+    balance: await getCreditBalance(authResult.userId),
+    transactions: await getCreditTransactions(authResult.userId, 30),
   });
 }

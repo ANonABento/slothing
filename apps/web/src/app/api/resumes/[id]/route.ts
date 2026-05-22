@@ -11,7 +11,7 @@ export async function GET(
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
 
-  const resume = getGeneratedResume(params.id, authResult.userId);
+  const resume = await getGeneratedResume(params.id, authResult.userId);
   if (!resume) {
     return NextResponse.json({ error: "Resume not found." }, { status: 404 });
   }

@@ -131,8 +131,8 @@ function SharedContent({ share }: { share: SharedResume }) {
   );
 }
 
-export default function SharedResumePage({ params }: PageProps) {
-  const share = getShareByToken(params.token);
+export default async function SharedResumePage({ params }: PageProps) {
+  const share = await getShareByToken(params.token);
 
   if (!share) {
     return <ExpiredState />;
@@ -140,7 +140,7 @@ export default function SharedResumePage({ params }: PageProps) {
 
   // Best-effort view counter — render even if the increment fails.
   try {
-    incrementViewCount(params.token);
+    await incrementViewCount(params.token);
   } catch (error) {
     console.warn("[share] view count update failed", error);
   }

@@ -1,4 +1,4 @@
-import db from "./legacy";
+import { getClient } from "./client";
 import { nowIso } from "@/lib/format/time";
 import { generateId } from "@/lib/utils";
 import type { ParsedResumeV2Result } from "@/lib/ingest/types";
@@ -62,10 +62,10 @@ interface DocumentParseRunRow {
 
 let ensured = false;
 
-export function ensureDocumentParseRunsSchema(): void {
+export async function ensureDocumentParseRunsSchema(): Promise<void> {
   if (ensured) return;
 
-  db.prepare(
+  await getClient().batch([
     `CREATE TABLE IF NOT EXISTS document_parse_runs (
       id TEXT PRIMARY KEY,
       document_id TEXT NOT NULL,
@@ -80,19 +80,13 @@ export function ensureDocumentParseRunsSchema(): void {
       structured_json TEXT NOT NULL DEFAULT '{}',
       created_at TEXT DEFAULT CURRENT_TIMESTAMP
     )`,
-  ).run();
-  db.prepare(
     `CREATE INDEX IF NOT EXISTS idx_document_parse_runs_document_created
        ON document_parse_runs(user_id, document_id, created_at)`,
-  ).run();
-  db.prepare(
     `CREATE INDEX IF NOT EXISTS idx_document_parse_runs_artifact_created
        ON document_parse_runs(user_id, artifact_id, created_at)`,
-  ).run();
-  db.prepare(
     `CREATE INDEX IF NOT EXISTS idx_document_parse_runs_user_status
        ON document_parse_runs(user_id, status)`,
-  ).run();
+  ]);
 
   ensured = true;
 }
@@ -124,10 +118,10 @@ function mapParseRunRow(row: DocumentParseRunRow): DocumentParseRun {
   };
 }
 
-export function saveDocumentParseRun(
+export async function saveDocumentParseRun(
   input: SaveDocumentParseRunInput,
-): DocumentParseRun {
-  ensureDocumentParseRunsSchema();
+): Promise<DocumentParseRun> {
+  await ensureDocumentParseRunsSchema();
 
   const run: DocumentParseRun = {
     id: input.id ?? generateId(),
@@ -144,92 +138,89 @@ export function saveDocumentParseRun(
     createdAt: input.createdAt ?? nowIso(),
   };
 
-  db.prepare(
-    `INSERT INTO document_parse_runs (
+  await getClient().execute({
+    sql: `INSERT INTO document_parse_runs (
       id, document_id, artifact_id, user_id, mode, parser_version, status,
       failure_reason, confidence, warnings_json, structured_json, created_at
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-  ).run(
-    run.id,
-    run.documentId,
-    run.artifactId,
-    run.userId,
-    run.mode,
-    run.parserVersion,
-    run.status,
-    run.failureReason ?? null,
-    run.confidence,
-    JSON.stringify(run.warnings),
-    JSON.stringify(run.structured),
-    run.createdAt,
-  );
+    args: [
+      run.id,
+      run.documentId,
+      run.artifactId,
+      run.userId,
+      run.mode,
+      run.parserVersion,
+      run.status,
+      run.failureReason ?? null,
+      run.confidence,
+      JSON.stringify(run.warnings),
+      JSON.stringify(run.structured),
+      run.createdAt,
+    ],
+  });
 
   return run;
 }
 
-export function getDocumentParseRun(
+export async function getDocumentParseRun(
   id: string,
   documentId: string,
   userId: string,
-): DocumentParseRun | null {
-  ensureDocumentParseRunsSchema();
-  const row = db
-    .prepare(
-      `SELECT * FROM document_parse_runs
+): Promise<DocumentParseRun | null> {
+  await ensureDocumentParseRunsSchema();
+  const result = await getClient().execute({
+    sql: `SELECT * FROM document_parse_runs
        WHERE id = ? AND document_id = ? AND user_id = ?`,
-    )
-    .get(id, documentId, userId) as DocumentParseRunRow | undefined;
+    args: [id, documentId, userId],
+  });
+  const row = result.rows[0] as unknown as DocumentParseRunRow | undefined;
   return row ? mapParseRunRow(row) : null;
 }
 
-export function getDocumentParseRunById(
+export async function getDocumentParseRunById(
   id: string,
   userId: string,
-): DocumentParseRun | null {
-  ensureDocumentParseRunsSchema();
-  const row = db
-    .prepare(
-      `SELECT * FROM document_parse_runs
+): Promise<DocumentParseRun | null> {
+  await ensureDocumentParseRunsSchema();
+  const result = await getClient().execute({
+    sql: `SELECT * FROM document_parse_runs
        WHERE id = ? AND user_id = ?`,
-    )
-    .get(id, userId) as DocumentParseRunRow | undefined;
+    args: [id, userId],
+  });
+  const row = result.rows[0] as unknown as DocumentParseRunRow | undefined;
   return row ? mapParseRunRow(row) : null;
 }
 
-export function listDocumentParseRuns(
+export async function listDocumentParseRuns(
   documentId: string,
   userId: string,
-): DocumentParseRun[] {
-  ensureDocumentParseRunsSchema();
-  const rows = db
-    .prepare(
-      `SELECT * FROM document_parse_runs
+): Promise<DocumentParseRun[]> {
+  await ensureDocumentParseRunsSchema();
+  const result = await getClient().execute({
+    sql: `SELECT * FROM document_parse_runs
        WHERE document_id = ? AND user_id = ?
        ORDER BY datetime(created_at) DESC, id DESC`,
-    )
-    .all(documentId, userId) as DocumentParseRunRow[];
+    args: [documentId, userId],
+  });
+  const rows = result.rows as unknown as DocumentParseRunRow[];
   return rows.map(mapParseRunRow);
 }
 
-export function deleteDocumentParseRunsByDocumentIds(
+export async function deleteDocumentParseRunsByDocumentIds(
   documentIds: string[],
   userId: string,
-): number {
+): Promise<number> {
   if (documentIds.length === 0) return 0;
-  ensureDocumentParseRunsSchema();
+  await ensureDocumentParseRunsSchema();
 
   const uniqueDocumentIds = Array.from(new Set(documentIds));
-  const deleteParseRun = db.prepare(
-    "DELETE FROM document_parse_runs WHERE document_id = ? AND user_id = ?",
+  const results = await getClient().batch(
+    uniqueDocumentIds.map((documentId) => ({
+      sql: "DELETE FROM document_parse_runs WHERE document_id = ? AND user_id = ?",
+      args: [documentId, userId],
+    })),
+    "write",
   );
 
-  const transaction = db.transaction(() => {
-    let deleted = 0;
-    for (const documentId of uniqueDocumentIds) {
-      deleted += deleteParseRun.run(documentId, userId).changes;
-    }
-    return deleted;
-  });
-
-  return transaction();
+  return results.reduce((sum, result) => sum + result.rowsAffected, 0);
 }

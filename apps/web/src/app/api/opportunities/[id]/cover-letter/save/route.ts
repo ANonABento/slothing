@@ -7,7 +7,7 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { saveCoverLetter } from "@/lib/db/cover-letters";
-import { getJob } from "@/lib/db/jobs";
+import { getJob } from "@/lib/db/jobs-async";
 import { requireAuth, isAuthError } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
@@ -20,7 +20,7 @@ export async function POST(
   if (isAuthError(authResult)) return authResult;
 
   try {
-    const job = getJob(params.id, authResult.userId);
+    const job = await getJob(params.id, authResult.userId);
     if (!job) {
       return NextResponse.json(
         { error: "Opportunity not found" },
@@ -28,17 +28,34 @@ export async function POST(
       );
     }
 
-    const body = await request.json();
-    const { content, highlights = [] } = body;
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json(
+        { error: "Request body must be valid JSON" },
+        { status: 400 },
+      );
+    }
+    if (!body || typeof body !== "object") {
+      return NextResponse.json(
+        { error: "Request body must be an object" },
+        { status: 400 },
+      );
+    }
+    const { content, highlights = [] } = body as {
+      content?: unknown;
+      highlights?: string[];
+    };
 
-    if (!content) {
+    if (typeof content !== "string" || !content) {
       return NextResponse.json(
         { error: "Cover letter content is required" },
         { status: 400 },
       );
     }
 
-    const coverLetter = saveCoverLetter(
+    const coverLetter = await saveCoverLetter(
       params.id,
       content,
       highlights,

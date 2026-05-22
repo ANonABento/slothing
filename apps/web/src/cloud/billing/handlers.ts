@@ -34,7 +34,7 @@ export async function createCheckoutSession(request: NextRequest) {
     }
 
     const stripe = getStripe();
-    const existingCustomer = getStripeCustomerByUserId(authResult.userId);
+    const existingCustomer = await getStripeCustomerByUserId(authResult.userId);
     const priceId = await getActivePriceForPlan(plan);
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
@@ -63,7 +63,7 @@ export async function createCheckoutSession(request: NextRequest) {
     });
 
     if (session.customer && typeof session.customer === "string") {
-      upsertStripeCustomer({
+      await upsertStripeCustomer({
         userId: authResult.userId,
         stripeCustomerId: session.customer,
         email: session.customer_details?.email ?? null,
@@ -85,7 +85,7 @@ export async function createCustomerPortalSession(request: NextRequest) {
   if (isAuthError(authResult)) return authResult;
 
   try {
-    const customer = getStripeCustomerByUserId(authResult.userId);
+    const customer = await getStripeCustomerByUserId(authResult.userId);
     if (!customer) {
       return NextResponse.json(
         { error: "No Stripe customer found" },
@@ -149,7 +149,7 @@ export async function handleStripeWebhook(request: NextRequest) {
         await syncSubscription(event.data.object);
         break;
       case "customer.subscription.deleted":
-        markSubscriptionDeleted(
+        await markSubscriptionDeleted(
           event.data.object.id,
           unixToIso(event.data.object.canceled_at),
         );
@@ -183,7 +183,7 @@ async function syncInvoiceSubscription(invoice: Stripe.Invoice) {
   );
   const synced = await syncSubscription(subscription);
   if (synced) {
-    grantPlanCredits(synced.userId, synced.planKey, invoice.id);
+    await grantPlanCredits(synced.userId, synced.planKey, invoice.id);
   }
 }
 
@@ -198,13 +198,13 @@ async function syncSubscription(subscription: Stripe.Subscription) {
   const planKey = price ? getPlanKeyFromPrice(price) : null;
   if (!planKey) return null;
 
-  upsertStripeCustomer({
+  await upsertStripeCustomer({
     userId,
     stripeCustomerId: customerId,
     email: getCustomerEmail(subscription.customer),
   });
 
-  return upsertSubscription({
+  return await upsertSubscription({
     id: subscription.id,
     userId,
     stripeCustomerId: customerId,
@@ -225,7 +225,7 @@ async function resolveUserIdForSubscription(
   const metadataUserId = subscription.metadata.user_id;
   if (metadataUserId) return metadataUserId;
 
-  const customer = getStripeCustomerByStripeId(customerId);
+  const customer = await getStripeCustomerByStripeId(customerId);
   if (customer) return customer.userId;
 
   const checkoutSession = await findCheckoutSessionForSubscription(

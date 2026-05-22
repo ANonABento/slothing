@@ -15,11 +15,11 @@ export async function GET(request: NextRequest) {
   const startedMs = nowEpoch();
 
   try {
-    const result = runCleanupCron();
+    const result = await runCleanupCron();
     const durationMs = nowEpoch() - startedMs;
     const ok = result.errors.length === 0;
 
-    recordCronRun({
+    await recordCronRun({
       cron: "cleanup",
       status: ok ? "success" : "failure",
       startedAt,
@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Cleanup cron failed";
-    recordCronRun({
+    await recordCronRun({
       cron: "cleanup",
       status: "failure",
       startedAt,

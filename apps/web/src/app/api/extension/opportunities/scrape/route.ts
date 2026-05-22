@@ -28,7 +28,7 @@ function errorResponse(error: OpportunityScrapeError) {
 }
 
 export async function POST(request: NextRequest) {
-  const authResult = requireExtensionAuth(request);
+  const authResult = await requireExtensionAuth(request);
   if (!authResult.success) return authResult.response;
 
   const rateLimit = rateLimiters.standard(

@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
     } = parsed.data;
     const resume = validatedResume as TailoredResume;
 
-    const gate = gateAiFeature(
+    const gate = await gateAiFeature(
       authResult.userId,
       "tailor",
       `autofix:${nowEpoch()}`,

@@ -5,7 +5,7 @@
  */
 import { NextResponse } from "next/server";
 import { requireAuth, isAuthError } from "@/lib/auth";
-import { getLatestDocumentArtifact } from "@/lib/db";
+import { getLatestDocumentArtifact } from "@/lib/db/document-artifacts";
 
 export const dynamic = "force-dynamic";
 
@@ -17,7 +17,10 @@ export async function GET(
   if (isAuthError(authResult)) return authResult;
 
   try {
-    const artifact = getLatestDocumentArtifact(params.id, authResult.userId);
+    const artifact = await getLatestDocumentArtifact(
+      params.id,
+      authResult.userId,
+    );
     if (!artifact) {
       return NextResponse.json(
         { error: "Document artifact not found" },

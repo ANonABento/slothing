@@ -8,6 +8,18 @@ vi.mock("@/lib/db", () =>
   globalThis.__contractRouteMocks!.createContractModuleMock("@/lib/db"),
 );
 
+vi.mock("@/lib/db/document-artifacts", () =>
+  globalThis.__contractRouteMocks!.createContractModuleMock(
+    "@/lib/db/document-artifacts",
+  ),
+);
+
+vi.mock("@/lib/db/document-parse-runs", () =>
+  globalThis.__contractRouteMocks!.createContractModuleMock(
+    "@/lib/db/document-parse-runs",
+  ),
+);
+
 vi.mock("@/lib/ingest/document-file-cleanup", () => ({
   deleteStoredDocumentFiles: vi.fn().mockResolvedValue({
     filesDeleted: 1,

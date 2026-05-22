@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { useFormatter } from "next-intl";
 import { AnimatePresence, motion, type PanInfo } from "framer-motion";
@@ -68,6 +68,8 @@ export function getDescriptionPreview(description: string): string {
 interface OpportunityReviewQueueProps {
   jobs: Opportunity[];
   updating: boolean;
+  hasMore?: boolean;
+  onLoadMore?: () => Promise<void>;
   onStatusChange: (
     job: Opportunity,
     status: Opportunity["status"],
@@ -78,6 +80,8 @@ interface OpportunityReviewQueueProps {
 export function OpportunityReviewQueue({
   jobs,
   updating,
+  hasMore = false,
+  onLoadMore,
   onStatusChange,
   onApplyNow,
 }: OpportunityReviewQueueProps) {
@@ -197,6 +201,7 @@ export function OpportunityReviewQueue({
     ? activeJob.summary
     : getDescriptionPreview(activeJob.summary);
   const canApply = Boolean(activeJob.sourceUrl);
+  const shouldLoadMore = hasMore && queue.length <= 3 && !updating;
   const location = [activeJob.city, activeJob.province, activeJob.country]
     .filter(Boolean)
     .join(", ");
@@ -234,6 +239,7 @@ export function OpportunityReviewQueue({
       </header>
 
       <main className="flex flex-1 items-center justify-center px-4 pb-28">
+        {shouldLoadMore ? <LoadMorePending onLoadMore={onLoadMore} /> : null}
         <div className="relative h-[min(680px,72vh)] w-full max-w-md">
           {queue[1] && (
             <div
@@ -356,6 +362,14 @@ export function OpportunityReviewQueue({
       </main>
     </div>
   );
+}
+
+function LoadMorePending({ onLoadMore }: { onLoadMore?: () => Promise<void> }) {
+  useEffect(() => {
+    if (onLoadMore) void onLoadMore();
+  }, [onLoadMore]);
+
+  return null;
 }
 
 interface ActionButtonProps {

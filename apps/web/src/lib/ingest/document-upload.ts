@@ -10,11 +10,11 @@ import {
 } from "@/lib/constants";
 import {
   DuplicateDocumentError,
-  deleteDocumentArtifactsByDocumentIds,
-  deleteDocumentParseRunsByDocumentIds,
   getDocumentByFileHash,
   saveDocument,
 } from "@/lib/db";
+import { deleteDocumentArtifactsByDocumentIds } from "@/lib/db/document-artifacts";
+import { deleteDocumentParseRunsByDocumentIds } from "@/lib/db/document-parse-runs";
 import { deleteSourceDocuments } from "@/lib/db/profile-bank";
 import { nowIso } from "@/lib/format/time";
 import { sanitizeFilename } from "@/lib/upload/filename";
@@ -141,8 +141,8 @@ export async function persistDocumentUpload({
         return { document: existing, duplicate: true };
       }
 
-      deleteDocumentParseRunsByDocumentIds([existing.id], userId);
-      deleteDocumentArtifactsByDocumentIds([existing.id], userId);
+      await deleteDocumentParseRunsByDocumentIds([existing.id], userId);
+      await deleteDocumentArtifactsByDocumentIds([existing.id], userId);
       deleteSourceDocuments([existing.id], userId);
       await unlink(existing.path).catch(() => undefined);
     }

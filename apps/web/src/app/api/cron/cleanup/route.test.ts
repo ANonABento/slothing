@@ -6,7 +6,7 @@ vi.mock("@/lib/cron-auth", () => ({
 }));
 
 vi.mock("@/lib/cron/cleanup", () => ({
-  runCleanupCron: vi.fn(() => ({
+  runCleanupCron: vi.fn(async () => ({
     expiredShares: 2,
     expiredAuthSessions: 1,
     expiredVerificationTokens: 0,
@@ -34,7 +34,7 @@ import {
 describe("/api/cron/cleanup route contract", () => {
   beforeEach(() => {
     vi.mocked(requireCronAuth).mockResolvedValue(null);
-    vi.mocked(runCleanupCron).mockReturnValue({
+    vi.mocked(runCleanupCron).mockResolvedValue({
       expiredShares: 2,
       expiredAuthSessions: 1,
       expiredVerificationTokens: 0,

@@ -9,7 +9,7 @@ import { nowDate, parseToDate } from "@/lib/format/time";
 
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth, isAuthError } from "@/lib/auth";
-import { getJobs } from "@/lib/db/jobs";
+import { getJobs } from "@/lib/db/jobs-async";
 import { getReminders } from "@/lib/db/reminders";
 import {
   createCalendarEvent,
@@ -50,8 +50,8 @@ export async function POST(request: NextRequest) {
     const syncType = (body.syncType || "all") as SyncType;
 
     const results: SyncResultItem[] = [];
-    const jobs = getJobs(authResult.userId);
-    const reminders = getReminders({ userId: authResult.userId });
+    const jobs = await getJobs(authResult.userId);
+    const reminders = await getReminders({ userId: authResult.userId });
 
     // Sync interviews (jobs in "interviewing" status)
     if (syncType === "all" || syncType === "interviews") {

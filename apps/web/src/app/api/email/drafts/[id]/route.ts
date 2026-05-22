@@ -28,7 +28,7 @@ export async function GET(
   if (isAuthError(authResult)) return authResult;
 
   try {
-    const draft = getEmailDraft(params.id, authResult.userId);
+    const draft = await getEmailDraft(params.id, authResult.userId);
 
     if (!draft) {
       return NextResponse.json({ error: "Draft not found" }, { status: 404 });
@@ -56,7 +56,11 @@ export async function PUT(
     const parsed = await parseJsonBody(request, updateEmailDraftSchema);
     if (!parsed.ok) return parsed.response;
 
-    const draft = updateEmailDraft(params.id, parsed.data, authResult.userId);
+    const draft = await updateEmailDraft(
+      params.id,
+      parsed.data,
+      authResult.userId,
+    );
 
     if (!draft) {
       return NextResponse.json({ error: "Draft not found" }, { status: 404 });
@@ -81,7 +85,7 @@ export async function DELETE(
   if (isAuthError(authResult)) return authResult;
 
   try {
-    const success = deleteEmailDraft(params.id, authResult.userId);
+    const success = await deleteEmailDraft(params.id, authResult.userId);
 
     if (!success) {
       return NextResponse.json({ error: "Draft not found" }, { status: 404 });

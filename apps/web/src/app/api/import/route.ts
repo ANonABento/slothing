@@ -6,7 +6,7 @@ import {
   updateProfile,
   setLLMConfig,
 } from "@/lib/db";
-import { getJobs, createJob } from "@/lib/db/jobs";
+import { getJobs, createJob } from "@/lib/db/jobs-async";
 import { getAllGeneratedResumes } from "@/lib/db/resumes";
 import { getAllCoverLetters, saveCoverLetter } from "@/lib/db/cover-letters";
 import {
@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
     // Restore profile
     if (exportData.data.profile) {
       const profile = exportData.data.profile;
-      updateProfile(
+      await updateProfile(
         {
           contact: profile.contact as
             | {
@@ -136,7 +136,7 @@ export async function POST(request: NextRequest) {
 
     // Restore jobs (skip duplicates by title+company)
     if (exportData.data.jobs && Array.isArray(exportData.data.jobs)) {
-      const existingJobs = getJobs(authResult.userId);
+      const existingJobs = await getJobs(authResult.userId);
       const existingKeys = new Set(
         existingJobs.map(
           (j) => `${j.title.toLowerCase()}-${j.company.toLowerCase()}`,
@@ -161,7 +161,7 @@ export async function POST(request: NextRequest) {
           ? ((job.status || "saved") as (typeof JOB_STATUSES)[number])
           : "saved";
 
-        createJob(
+        await createJob(
           {
             title: job.title,
             company: job.company,
@@ -190,7 +190,7 @@ export async function POST(request: NextRequest) {
       exportData.data.coverLetters &&
       Array.isArray(exportData.data.coverLetters)
     ) {
-      const existingCoverLetters = getAllCoverLetters(authResult.userId);
+      const existingCoverLetters = await getAllCoverLetters(authResult.userId);
       const existingKeys = new Set(
         existingCoverLetters.map((cl) => `${cl.jobId}-${cl.version}`),
       );
@@ -202,7 +202,12 @@ export async function POST(request: NextRequest) {
           continue;
         }
 
-        saveCoverLetter(cl.jobId, cl.content, cl.highlights, authResult.userId);
+        await saveCoverLetter(
+          cl.jobId,
+          cl.content,
+          cl.highlights,
+          authResult.userId,
+        );
         existingKeys.add(key);
         results.coverLetters.imported++;
       }

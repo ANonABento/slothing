@@ -16,6 +16,8 @@ import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 
 interface OpportunitiesResponse {
   opportunities?: Opportunity[];
+  nextCursor?: string | null;
+  hasMore?: boolean;
 }
 
 export default function OpportunityReviewPage() {
@@ -25,6 +27,8 @@ export default function OpportunityReviewPage() {
   const [enabled, setEnabled] = useState(true);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [hasMore, setHasMore] = useState(false);
   const showErrorToast = useErrorToast();
 
   const fetchPageData = useCallback(async () => {
@@ -32,7 +36,7 @@ export default function OpportunityReviewPage() {
     try {
       const [settingsResponse, jobsResponse] = await Promise.all([
         fetch("/api/settings"),
-        fetch("/api/opportunities"),
+        fetch("/api/opportunities?status=pending&sort=deadline&limit=50"),
       ]);
       const settingsData = await readJsonResponse<SettingsResponse>(
         settingsResponse,
@@ -45,6 +49,8 @@ export default function OpportunityReviewPage() {
 
       setEnabled(settingsData.opportunityReview?.enabled ?? true);
       setJobs(jobsData.opportunities || []);
+      setNextCursor(jobsData.nextCursor ?? null);
+      setHasMore(Boolean(jobsData.hasMore));
     } catch (error) {
       showErrorToast(error, {
         title: "Could not load review queue",
@@ -54,6 +60,36 @@ export default function OpportunityReviewPage() {
       setLoading(false);
     }
   }, [showErrorToast]);
+
+  const loadMorePending = useCallback(async () => {
+    if (!nextCursor || updating) return;
+
+    setUpdating(true);
+    try {
+      const response = await fetch(
+        `/api/opportunities?${new URLSearchParams({
+          status: "pending",
+          sort: "deadline",
+          limit: "50",
+          cursor: nextCursor,
+        }).toString()}`,
+      );
+      const data = await readJsonResponse<OpportunitiesResponse>(
+        response,
+        "Failed to load more pending opportunities",
+      );
+      setJobs((current) => [...current, ...(data.opportunities ?? [])]);
+      setNextCursor(data.nextCursor ?? null);
+      setHasMore(Boolean(data.hasMore));
+    } catch (error) {
+      showErrorToast(error, {
+        title: "Could not load more pending opportunities",
+        fallbackDescription: "Please try again.",
+      });
+    } finally {
+      setUpdating(false);
+    }
+  }, [nextCursor, showErrorToast, updating]);
 
   useEffect(() => {
     void fetchPageData();
@@ -133,6 +169,8 @@ export default function OpportunityReviewPage() {
       <OpportunityReviewQueue
         jobs={jobs}
         updating={updating}
+        hasMore={hasMore}
+        onLoadMore={loadMorePending}
         onStatusChange={updateJobStatus}
         onApplyNow={applyNow}
       />

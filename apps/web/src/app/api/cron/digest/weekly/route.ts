@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
   const message =
     "Weekly digest is disabled until a distinct weekly product email ships.";
 
-  recordCronRun({
+  await recordCronRun({
     cron: "digest.weekly",
     status: "disabled",
     startedAt: nowIso(),

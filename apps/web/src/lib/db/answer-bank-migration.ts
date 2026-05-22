@@ -46,7 +46,7 @@ export async function runPersonalFactsMigration(
   }
 
   if (changed) {
-    updateProfile({ ...(profile ?? ({} as Profile)), contact }, userId);
+    await updateProfile({ ...(profile ?? ({} as Profile)), contact }, userId);
   }
 
   return result;

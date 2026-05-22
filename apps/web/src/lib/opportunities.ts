@@ -5,7 +5,7 @@ import {
   updateJob,
   updateJobStatus,
   type CreatedAtCursor,
-} from "@/lib/db/jobs";
+} from "@/lib/db/jobs-async";
 import { buildPaginationResult } from "@/lib/pagination";
 import { OPPORTUNITY_STATUSES } from "@slothing/shared/schemas";
 import type { JobDescription, Opportunity, OpportunityStatus } from "@/types";
@@ -108,7 +108,7 @@ export interface ListOpportunitiesParams {
   limit: number;
 }
 
-export function listOpportunities({
+export async function listOpportunities({
   userId,
   statuses,
   cursor,
@@ -123,7 +123,7 @@ export function listOpportunities({
     return { items: [], nextCursor: null, hasMore: false };
   }
 
-  const jobs = listJobsPaginated({
+  const jobs = await listJobsPaginated({
     userId,
     statuses: requestedStatuses.length > 0 ? allowedStatuses : undefined,
     cursor,
@@ -140,10 +140,10 @@ export function listOpportunities({
   );
 }
 
-export function listAllOpportunities(
+export async function listAllOpportunities(
   userId: string,
   statuses?: string[],
-): Opportunity[] {
+): Promise<Opportunity[]> {
   const requestedStatuses = statuses?.filter(Boolean) ?? [];
   const allowedStatuses = new Set(
     requestedStatuses
@@ -152,30 +152,33 @@ export function listAllOpportunities(
   );
   const shouldFilter = requestedStatuses.length > 0;
 
-  return getJobs(userId)
+  return (await getJobs(userId))
     .map(jobToOpportunity)
     .filter(
       (opportunity) => !shouldFilter || allowedStatuses.has(opportunity.status),
     );
 }
 
-export function getOpportunity(id: string, userId: string): Opportunity | null {
-  const job = getJob(id, userId);
+export async function getOpportunity(
+  id: string,
+  userId: string,
+): Promise<Opportunity | null> {
+  const job = await getJob(id, userId);
   return job ? jobToOpportunity(job) : null;
 }
 
-export function linkOpportunityDocument(
+export async function linkOpportunityDocument(
   id: string,
   input: OpportunityLinkInput,
   userId: string,
-): Opportunity | null {
-  const existing = getJob(id, userId);
+): Promise<Opportunity | null> {
+  const existing = await getJob(id, userId);
   if (!existing) return null;
 
   const resumeId = input.resumeId?.trim();
   const coverLetterId = input.coverLetterId?.trim();
 
-  updateJob(
+  await updateJob(
     id,
     {
       linkedResumeId: resumeId || existing.linkedResumeId,
@@ -187,18 +190,18 @@ export function linkOpportunityDocument(
   return getOpportunity(id, userId);
 }
 
-export function changeOpportunityStatus(
+export async function changeOpportunityStatus(
   id: string,
   status: string,
   userId: string,
-): Opportunity | null {
-  const existing = getJob(id, userId);
+): Promise<Opportunity | null> {
+  const existing = await getJob(id, userId);
   if (!existing) return null;
 
   const opportunityStatus = normalizeStatusFilter(status);
   if (!opportunityStatus) return null;
 
-  updateJobStatus(id, opportunityStatus, undefined, userId);
+  await updateJobStatus(id, opportunityStatus, undefined, userId);
   return getOpportunity(id, userId);
 }
 

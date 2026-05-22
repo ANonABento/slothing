@@ -1,4 +1,5 @@
 import type Database from "libsql";
+import { getClient } from "./client";
 
 import { EMAIL_SENDS_BOOTSTRAP_SQL } from "./bootstrap-sql";
 
@@ -9,6 +10,18 @@ export function ensureEmailSendsSchema(db: Database.Database): void {
 
   // DDL co-located with `schema.ts: emailSends`. See `bootstrap-sql.ts`.
   db.exec(EMAIL_SENDS_BOOTSTRAP_SQL);
+
+  ensured = true;
+}
+
+export async function ensureEmailSendsSchemaAsync(): Promise<void> {
+  if (ensured) return;
+
+  await getClient().batch(
+    EMAIL_SENDS_BOOTSTRAP_SQL.split(";")
+      .map((statement) => statement.trim())
+      .filter(Boolean),
+  );
 
   ensured = true;
 }

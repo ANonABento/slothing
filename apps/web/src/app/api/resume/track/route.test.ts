@@ -14,8 +14,10 @@ vi.mock("@/lib/db/resumes", () =>
   globalThis.__contractRouteMocks!.createContractModuleMock("@/lib/db/resumes"),
 );
 
-vi.mock("@/lib/db/jobs", () =>
-  globalThis.__contractRouteMocks!.createContractModuleMock("@/lib/db/jobs"),
+vi.mock("@/lib/db/jobs-async", () =>
+  globalThis.__contractRouteMocks!.createContractModuleMock(
+    "@/lib/db/jobs-async",
+  ),
 );
 
 import { POST, PATCH, GET } from "./route";

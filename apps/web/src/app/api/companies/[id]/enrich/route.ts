@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { parseOptionalJsonBody } from "@/lib/api-utils";
-import { getJob } from "@/lib/db/jobs";
+import { getJob } from "@/lib/db/jobs-async";
 import {
   getCompanyEnrichment,
   getCompanyGithubSlug,
@@ -40,7 +40,7 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
   const limited = rateLimitResponse(request, authResult.userId);
   if (limited) return limited;
 
-  const job = getJob(params.id, authResult.userId);
+  const job = await getJob(params.id, authResult.userId);
   if (!job) {
     return NextResponse.json(
       { error: "Opportunity not found" },
@@ -48,7 +48,7 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
     );
   }
 
-  const cached = getCompanyEnrichment(job.company, authResult.userId);
+  const cached = await getCompanyEnrichment(job.company, authResult.userId);
   return NextResponse.json(cached ?? { snapshot: null, enrichedAt: null });
 }
 
@@ -58,7 +58,7 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
   const limited = rateLimitResponse(request, authResult.userId);
   if (limited) return limited;
 
-  const job = getJob(params.id, authResult.userId);
+  const job = await getJob(params.id, authResult.userId);
   if (!job) {
     return NextResponse.json(
       { error: "Opportunity not found" },
@@ -67,12 +67,12 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
   }
 
   const forceRefresh = request.nextUrl.searchParams.get("refresh") === "true";
-  const cached = getCompanyEnrichment(job.company, authResult.userId);
+  const cached = await getCompanyEnrichment(job.company, authResult.userId);
   if (cached && !forceRefresh && !isEnrichmentStale(cached.enrichedAt)) {
     return NextResponse.json({ ...cached, fromCache: true });
   }
 
-  let githubOrg: string | null = getCompanyGithubSlug(
+  let githubOrg: string | null = await getCompanyGithubSlug(
     job.company,
     authResult.userId,
   );

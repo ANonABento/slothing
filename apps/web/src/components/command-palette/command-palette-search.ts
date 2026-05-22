@@ -55,11 +55,11 @@ async function searchOpportunities(
   query: string,
   signal: AbortSignal,
 ): Promise<CommandItem[]> {
-  const data = await fetchJson("/api/opportunities?limit=10", signal);
+  const data = await fetchJson(
+    `/api/opportunities?q=${encodeURIComponent(query)}&limit=5`,
+    signal,
+  );
   return getItems(data, "opportunities")
-    .filter((item) =>
-      includesQuery(query, [text(item.title), text(item.company)]),
-    )
     .slice(0, 5)
     .map((item) => ({
       id: `opportunity-${text(item.id)}`,

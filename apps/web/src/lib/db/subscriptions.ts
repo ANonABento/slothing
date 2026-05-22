@@ -1,5 +1,5 @@
-import db from "./legacy";
 import { BILLING_BOOTSTRAP_SQL } from "./bootstrap-sql";
+import { getClient } from "./client";
 import { nowIso } from "@/lib/format/time";
 
 export type BillingPlanKey = "pro_monthly" | "pro_weekly";
@@ -81,65 +81,76 @@ export interface UpsertSubscriptionInput {
 
 let ensured = false;
 
-export function ensureBillingSchema(): void {
+export async function ensureBillingSchema(): Promise<void> {
   if (ensured) return;
 
   // DDL co-located with `schema.ts: stripeCustomers` / `subscriptions`.
   // See `bootstrap-sql.ts`.
-  db.exec(BILLING_BOOTSTRAP_SQL);
+  await getClient().batch(
+    BILLING_BOOTSTRAP_SQL.split(";")
+      .map((sql) => sql.trim())
+      .filter(Boolean)
+      .map((sql) => ({ sql, args: [] })),
+    "write",
+  );
 
   ensured = true;
 }
 
-export function upsertStripeCustomer(
+export async function upsertStripeCustomer(
   input: UpsertStripeCustomerInput,
-): StripeCustomerRecord {
-  ensureBillingSchema();
+): Promise<StripeCustomerRecord> {
+  await ensureBillingSchema();
 
-  db.prepare(
-    `INSERT INTO stripe_customers
+  await getClient().execute({
+    sql: `INSERT INTO stripe_customers
        (user_id, stripe_customer_id, email, updated_at)
      VALUES (?, ?, ?, CURRENT_TIMESTAMP)
      ON CONFLICT(user_id) DO UPDATE SET
        stripe_customer_id = excluded.stripe_customer_id,
        email = excluded.email,
        updated_at = CURRENT_TIMESTAMP`,
-  ).run(input.userId, input.stripeCustomerId, input.email ?? null);
+    args: [input.userId, input.stripeCustomerId, input.email ?? null],
+  });
 
-  const customer = getStripeCustomerByUserId(input.userId);
+  const customer = await getStripeCustomerByUserId(input.userId);
   if (!customer) {
     throw new Error("Stripe customer upsert failed");
   }
   return customer;
 }
 
-export function getStripeCustomerByUserId(
+export async function getStripeCustomerByUserId(
   userId: string,
-): StripeCustomerRecord | null {
-  ensureBillingSchema();
-  const row = db
-    .prepare("SELECT * FROM stripe_customers WHERE user_id = ?")
-    .get(userId) as StripeCustomerRow | undefined;
+): Promise<StripeCustomerRecord | null> {
+  await ensureBillingSchema();
+  const result = await getClient().execute({
+    sql: "SELECT * FROM stripe_customers WHERE user_id = ?",
+    args: [userId],
+  });
+  const row = result.rows[0] as unknown as StripeCustomerRow | undefined;
   return row ? mapCustomer(row) : null;
 }
 
-export function getStripeCustomerByStripeId(
+export async function getStripeCustomerByStripeId(
   stripeCustomerId: string,
-): StripeCustomerRecord | null {
-  ensureBillingSchema();
-  const row = db
-    .prepare("SELECT * FROM stripe_customers WHERE stripe_customer_id = ?")
-    .get(stripeCustomerId) as StripeCustomerRow | undefined;
+): Promise<StripeCustomerRecord | null> {
+  await ensureBillingSchema();
+  const result = await getClient().execute({
+    sql: "SELECT * FROM stripe_customers WHERE stripe_customer_id = ?",
+    args: [stripeCustomerId],
+  });
+  const row = result.rows[0] as unknown as StripeCustomerRow | undefined;
   return row ? mapCustomer(row) : null;
 }
 
-export function upsertSubscription(
+export async function upsertSubscription(
   input: UpsertSubscriptionInput,
-): SubscriptionRecord {
-  ensureBillingSchema();
+): Promise<SubscriptionRecord> {
+  await ensureBillingSchema();
 
-  db.prepare(
-    `INSERT INTO subscriptions
+  await getClient().execute({
+    sql: `INSERT INTO subscriptions
        (id, user_id, stripe_customer_id, plan_key, status, stripe_price_id,
         current_period_start, current_period_end, cancel_at_period_end,
         canceled_at, updated_at)
@@ -155,75 +166,83 @@ export function upsertSubscription(
        cancel_at_period_end = excluded.cancel_at_period_end,
        canceled_at = excluded.canceled_at,
        updated_at = CURRENT_TIMESTAMP`,
-  ).run(
-    input.id,
-    input.userId,
-    input.stripeCustomerId,
-    input.planKey,
-    input.status,
-    input.stripePriceId ?? null,
-    input.currentPeriodStart ?? null,
-    input.currentPeriodEnd ?? null,
-    input.cancelAtPeriodEnd ? 1 : 0,
-    input.canceledAt ?? null,
-  );
+    args: [
+      input.id,
+      input.userId,
+      input.stripeCustomerId,
+      input.planKey,
+      input.status,
+      input.stripePriceId ?? null,
+      input.currentPeriodStart ?? null,
+      input.currentPeriodEnd ?? null,
+      input.cancelAtPeriodEnd ? 1 : 0,
+      input.canceledAt ?? null,
+    ],
+  });
 
-  const subscription = getSubscriptionById(input.id);
+  const subscription = await getSubscriptionById(input.id);
   if (!subscription) {
     throw new Error("Subscription upsert failed");
   }
   return subscription;
 }
 
-export function getSubscriptionById(id: string): SubscriptionRecord | null {
-  ensureBillingSchema();
-  const row = db.prepare("SELECT * FROM subscriptions WHERE id = ?").get(id) as
-    | SubscriptionRow
-    | undefined;
+export async function getSubscriptionById(
+  id: string,
+): Promise<SubscriptionRecord | null> {
+  await ensureBillingSchema();
+  const result = await getClient().execute({
+    sql: "SELECT * FROM subscriptions WHERE id = ?",
+    args: [id],
+  });
+  const row = result.rows[0] as unknown as SubscriptionRow | undefined;
   return row ? mapSubscription(row) : null;
 }
 
-export function getUserSubscription(userId: string): SubscriptionRecord | null {
-  ensureBillingSchema();
-  const row = db
-    .prepare(
-      `SELECT * FROM subscriptions
+export async function getUserSubscription(
+  userId: string,
+): Promise<SubscriptionRecord | null> {
+  await ensureBillingSchema();
+  const result = await getClient().execute({
+    sql: `SELECT * FROM subscriptions
        WHERE user_id = ?
        ORDER BY updated_at DESC, created_at DESC
        LIMIT 1`,
-    )
-    .get(userId) as SubscriptionRow | undefined;
+    args: [userId],
+  });
+  const row = result.rows[0] as unknown as SubscriptionRow | undefined;
   return row ? mapSubscription(row) : null;
 }
 
-export function getActiveUserSubscription(
+export async function getActiveUserSubscription(
   userId: string,
-): SubscriptionRecord | null {
-  ensureBillingSchema();
-  const row = db
-    .prepare(
-      `SELECT * FROM subscriptions
+): Promise<SubscriptionRecord | null> {
+  await ensureBillingSchema();
+  const result = await getClient().execute({
+    sql: `SELECT * FROM subscriptions
        WHERE user_id = ? AND status IN ('active', 'trialing')
        ORDER BY updated_at DESC, created_at DESC
        LIMIT 1`,
-    )
-    .get(userId) as SubscriptionRow | undefined;
+    args: [userId],
+  });
+  const row = result.rows[0] as unknown as SubscriptionRow | undefined;
   return row ? mapSubscription(row) : null;
 }
 
-export function markSubscriptionDeleted(
+export async function markSubscriptionDeleted(
   id: string,
   canceledAt: string | null = nowIso(),
-): SubscriptionRecord | null {
-  ensureBillingSchema();
-  db.prepare(
-    `UPDATE subscriptions
+): Promise<SubscriptionRecord | null> {
+  await ensureBillingSchema();
+  await getClient().execute({
+    sql: `UPDATE subscriptions
      SET status = 'canceled',
          canceled_at = COALESCE(?, canceled_at),
          updated_at = CURRENT_TIMESTAMP
      WHERE id = ?`,
-  ).run(canceledAt, id);
-  return getSubscriptionById(id);
+    args: [canceledAt, id],
+  });
+  return await getSubscriptionById(id);
 }
 
 function mapCustomer(row: StripeCustomerRow): StripeCustomerRecord {

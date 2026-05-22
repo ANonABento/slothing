@@ -159,7 +159,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Try to use LLM if configured
-    const gate = gateOptionalAiFeature(
+    const gate = await gateOptionalAiFeature(
       authResult.userId,
       "document_assistant",
       `salary:${body.company}:${body.role}`,

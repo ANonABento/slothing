@@ -19,8 +19,8 @@ export async function GET() {
   if (isAuthError(authResult)) return authResult;
 
   try {
-    const jobs = getAnalyticsJobDescriptions(authResult.userId);
-    const resumes = getGeneratedResumeAnalyticsView(authResult.userId);
+    const jobs = await getAnalyticsJobDescriptions(authResult.userId);
+    const resumes = await getGeneratedResumeAnalyticsView(authResult.userId);
 
     const metrics = calculateSuccessMetrics(jobs, resumes);
 

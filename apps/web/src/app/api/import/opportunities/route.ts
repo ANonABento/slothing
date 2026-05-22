@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth, isAuthError } from "@/lib/auth";
 import { importJobSchema } from "@/lib/validation/jobs";
-import { createJob, getJobs } from "@/lib/db/jobs";
+import { createJob, getJobs } from "@/lib/db/jobs-async";
 import type { JobDescription } from "@/types";
 
 export const dynamic = "force-dynamic";
@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const existingJobs = getJobs(authResult.userId);
+    const existingJobs = await getJobs(authResult.userId);
     const existingTitles = new Set(
       existingJobs.map(
         (j) => `${j.title.toLowerCase()}-${j.company.toLowerCase()}`,
@@ -89,7 +89,7 @@ export async function POST(request: NextRequest) {
         continue;
       }
 
-      createJob(
+      await createJob(
         {
           title: job.title,
           company: job.company,

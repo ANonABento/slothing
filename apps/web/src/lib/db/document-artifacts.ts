@@ -1,4 +1,4 @@
-import db from "./legacy";
+import { getClient } from "./client";
 import { nowIso } from "@/lib/format/time";
 import { generateId } from "@/lib/utils";
 import type {
@@ -70,10 +70,10 @@ interface DocumentArtifactRow {
 
 let ensured = false;
 
-export function ensureDocumentArtifactsSchema(): void {
+export async function ensureDocumentArtifactsSchema(): Promise<void> {
   if (ensured) return;
 
-  db.prepare(
+  await getClient().batch([
     `CREATE TABLE IF NOT EXISTS document_artifacts (
       id TEXT PRIMARY KEY,
       document_id TEXT NOT NULL,
@@ -88,15 +88,11 @@ export function ensureDocumentArtifactsSchema(): void {
       ocr_used INTEGER NOT NULL DEFAULT 0,
       created_at TEXT DEFAULT CURRENT_TIMESTAMP
     )`,
-  ).run();
-  db.prepare(
     `CREATE INDEX IF NOT EXISTS idx_document_artifacts_document_created
        ON document_artifacts(user_id, document_id, created_at)`,
-  ).run();
-  db.prepare(
     `CREATE INDEX IF NOT EXISTS idx_document_artifacts_user_status
        ON document_artifacts(user_id, status)`,
-  ).run();
+  ]);
 
   ensured = true;
 }
@@ -165,10 +161,10 @@ function mapArtifactRow(row: DocumentArtifactRow): DocumentArtifact {
   };
 }
 
-export function saveDocumentArtifact(
+export async function saveDocumentArtifact(
   input: SaveDocumentArtifactInput,
-): DocumentArtifact {
-  ensureDocumentArtifactsSchema();
+): Promise<DocumentArtifact> {
+  await ensureDocumentArtifactsSchema();
 
   const sourceMap = input.sourceMap ?? emptySourceMap(input.rawText ?? "");
   const rawText = input.rawText ?? sourceMap.rawText;
@@ -189,90 +185,89 @@ export function saveDocumentArtifact(
     createdAt: input.createdAt ?? nowIso(),
   };
 
-  db.prepare(
-    `INSERT INTO document_artifacts (
+  await getClient().execute({
+    sql: `INSERT INTO document_artifacts (
       id, document_id, user_id, extractor_version, status, failure_reason,
       raw_text, normalized_text, pages_json, links_json, ocr_used, created_at
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-  ).run(
-    artifact.id,
-    artifact.documentId,
-    artifact.userId,
-    artifact.extractorVersion,
-    artifact.status,
-    artifact.failureReason ?? null,
-    artifact.rawText,
-    artifact.normalizedText,
-    pagesJsonForSourceMap(artifact.sourceMap),
-    JSON.stringify(artifact.links),
-    artifact.ocrUsed ? 1 : 0,
-    artifact.createdAt,
-  );
+    args: [
+      artifact.id,
+      artifact.documentId,
+      artifact.userId,
+      artifact.extractorVersion,
+      artifact.status,
+      artifact.failureReason ?? null,
+      artifact.rawText,
+      artifact.normalizedText,
+      pagesJsonForSourceMap(artifact.sourceMap),
+      JSON.stringify(artifact.links),
+      artifact.ocrUsed ? 1 : 0,
+      artifact.createdAt,
+    ],
+  });
 
   return artifact;
 }
 
-export function getDocumentArtifact(
+export async function getDocumentArtifact(
   id: string,
   userId: string,
-): DocumentArtifact | null {
-  ensureDocumentArtifactsSchema();
-  const row = db
-    .prepare("SELECT * FROM document_artifacts WHERE id = ? AND user_id = ?")
-    .get(id, userId) as DocumentArtifactRow | undefined;
+): Promise<DocumentArtifact | null> {
+  await ensureDocumentArtifactsSchema();
+  const result = await getClient().execute({
+    sql: "SELECT * FROM document_artifacts WHERE id = ? AND user_id = ?",
+    args: [id, userId],
+  });
+  const row = result.rows[0] as unknown as DocumentArtifactRow | undefined;
   return row ? mapArtifactRow(row) : null;
 }
 
-export function getLatestDocumentArtifact(
+export async function getLatestDocumentArtifact(
   documentId: string,
   userId: string,
-): DocumentArtifact | null {
-  ensureDocumentArtifactsSchema();
-  const row = db
-    .prepare(
-      `SELECT * FROM document_artifacts
+): Promise<DocumentArtifact | null> {
+  await ensureDocumentArtifactsSchema();
+  const result = await getClient().execute({
+    sql: `SELECT * FROM document_artifacts
        WHERE document_id = ? AND user_id = ?
        ORDER BY datetime(created_at) DESC, id DESC
        LIMIT 1`,
-    )
-    .get(documentId, userId) as DocumentArtifactRow | undefined;
+    args: [documentId, userId],
+  });
+  const row = result.rows[0] as unknown as DocumentArtifactRow | undefined;
   return row ? mapArtifactRow(row) : null;
 }
 
-export function listDocumentArtifacts(
+export async function listDocumentArtifacts(
   documentId: string,
   userId: string,
-): DocumentArtifact[] {
-  ensureDocumentArtifactsSchema();
-  const rows = db
-    .prepare(
-      `SELECT * FROM document_artifacts
+): Promise<DocumentArtifact[]> {
+  await ensureDocumentArtifactsSchema();
+  const result = await getClient().execute({
+    sql: `SELECT * FROM document_artifacts
        WHERE document_id = ? AND user_id = ?
        ORDER BY datetime(created_at) DESC, id DESC`,
-    )
-    .all(documentId, userId) as DocumentArtifactRow[];
+    args: [documentId, userId],
+  });
+  const rows = result.rows as unknown as DocumentArtifactRow[];
   return rows.map(mapArtifactRow);
 }
 
-export function deleteDocumentArtifactsByDocumentIds(
+export async function deleteDocumentArtifactsByDocumentIds(
   documentIds: string[],
   userId: string,
-): number {
+): Promise<number> {
   if (documentIds.length === 0) return 0;
-  ensureDocumentArtifactsSchema();
+  await ensureDocumentArtifactsSchema();
 
   const uniqueDocumentIds = Array.from(new Set(documentIds));
-  const deleteArtifact = db.prepare(
-    "DELETE FROM document_artifacts WHERE document_id = ? AND user_id = ?",
+  const results = await getClient().batch(
+    uniqueDocumentIds.map((documentId) => ({
+      sql: "DELETE FROM document_artifacts WHERE document_id = ? AND user_id = ?",
+      args: [documentId, userId],
+    })),
+    "write",
   );
 
-  const transaction = db.transaction(() => {
-    let deleted = 0;
-    for (const documentId of uniqueDocumentIds) {
-      deleted += deleteArtifact.run(documentId, userId).changes;
-    }
-    return deleted;
-  });
-
-  return transaction();
+  return results.reduce((sum, result) => sum + result.rowsAffected, 0);
 }

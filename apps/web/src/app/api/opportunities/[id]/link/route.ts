@@ -43,7 +43,7 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
       );
     }
 
-    const opportunity = linkOpportunityDocument(
+    const opportunity = await linkOpportunityDocument(
       params.id,
       { resumeId, coverLetterId },
       authResult.userId,

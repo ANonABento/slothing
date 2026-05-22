@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth, isAuthError } from "@/lib/auth";
-import { getJobs } from "@/lib/db/jobs";
+import { getJobs } from "@/lib/db/jobs-async";
 import { formatIsoDateOnly, nowIso } from "@/lib/format/time";
 
 export const dynamic = "force-dynamic";
@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const format = searchParams.get("format") || "json";
 
-    const jobs = getJobs(authResult.userId);
+    const jobs = await getJobs(authResult.userId);
 
     if (format === "csv") {
       const headers = [

@@ -8,7 +8,7 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { getProfile } from "@/lib/db";
-import { getJob } from "@/lib/db/jobs";
+import { getJob } from "@/lib/db/jobs-async";
 import { generateFixSuggestions } from "@/lib/ats/fix-suggestions";
 import { saveScanResult, getScanHistory } from "@/lib/db/ats-scans";
 import { requireAuth, isAuthError } from "@/lib/auth";
@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
     }
 
     const { generateScanReport } = await import("@/lib/ats/analyzer");
-    const job = jobId ? getJob(jobId, authResult.userId) : undefined;
+    const job = jobId ? await getJob(jobId, authResult.userId) : undefined;
     if (jobId && !job) {
       return NextResponse.json({ error: "Job not found" }, { status: 404 });
     }
@@ -43,7 +43,12 @@ export async function POST(request: NextRequest) {
       report.keywords,
     );
 
-    const scanId = saveScanResult(authResult.userId, report, fixes, jobId);
+    const scanId = await saveScanResult(
+      authResult.userId,
+      report,
+      fixes,
+      jobId,
+    );
 
     return NextResponse.json({
       id: scanId,
@@ -70,7 +75,7 @@ export async function GET(request: NextRequest) {
       100,
     );
 
-    const history = getScanHistory(authResult.userId, limit);
+    const history = await getScanHistory(authResult.userId, limit);
 
     return NextResponse.json({ history });
   } catch (error) {

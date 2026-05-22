@@ -85,7 +85,11 @@ export async function POST(
       );
     }
 
-    const gate = gateOptionalAiFeature(authResult.userId, "tailor", params.id);
+    const gate = await gateOptionalAiFeature(
+      authResult.userId,
+      "tailor",
+      params.id,
+    );
     if (isAiGateResponse(gate)) return gate;
     aiGate = gate;
 
@@ -130,7 +134,7 @@ export async function POST(
     const pdfUrl = `/resumes/${filename}`;
 
     // Save to database for tracking
-    const savedResume = saveGeneratedResume(
+    const savedResume = await saveGeneratedResume(
       params.id,
       templateId,
       tailoredResume,

@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
     const promoted = mergeParsedProfileForAutoPromote(existingProfile, seed);
 
     if (Object.keys(promoted).length > 0) {
-      updateProfile(promoted, authResult.userId);
+      await updateProfile(promoted, authResult.userId);
     }
 
     try {

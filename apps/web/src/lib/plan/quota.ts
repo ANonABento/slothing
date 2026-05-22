@@ -1,4 +1,4 @@
-import db from "@/lib/db/legacy";
+import { getClient } from "@/lib/db/client";
 import type { PlanTier } from "@/lib/constants";
 import { nowDate, nowIso, parseToDate, toIso } from "@/lib/format/time";
 import { getTierLimits, getUserTier } from "./tier";
@@ -26,30 +26,32 @@ function getMonthWindow(now: string) {
   };
 }
 
-export function getMonthlyTailorCount(
+export async function getMonthlyTailorCount(
   userId: string,
   now: string = nowIso(),
-): number {
+): Promise<number> {
   const { startAt } = getMonthWindow(now);
-  const row = db
-    .prepare(
-      `
+  const result = await getClient().execute({
+    sql: `
         SELECT COUNT(*) as count
         FROM generated_resumes
         WHERE user_id = ? AND created_at >= ?
       `,
-    )
-    .get(userId, startAt) as { count?: number } | undefined;
+    args: [userId, startAt],
+  });
+  const row = result.rows[0] as unknown as { count?: number } | undefined;
 
   return row?.count ?? 0;
 }
 
-export function checkTailorQuota(userId: string): TailorQuotaStatus {
+export async function checkTailorQuota(
+  userId: string,
+): Promise<TailorQuotaStatus> {
   const now = nowIso();
   const tier = getUserTier(userId);
   const { tailorMonthlyLimit } = getTierLimits(tier);
   const { resetAt } = getMonthWindow(now);
-  const used = getMonthlyTailorCount(userId, now);
+  const used = await getMonthlyTailorCount(userId, now);
 
   return {
     allowed: tailorMonthlyLimit === Infinity || used < tailorMonthlyLimit,

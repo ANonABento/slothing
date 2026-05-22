@@ -14,7 +14,7 @@ interface Params {
 }
 
 export async function GET(_request: NextRequest, { params }: Params) {
-  const share = getShareByToken(params.token);
+  const share = await getShareByToken(params.token);
   if (!share) {
     return errorResponse(
       "not_found",
@@ -24,7 +24,7 @@ export async function GET(_request: NextRequest, { params }: Params) {
 
   // Best-effort view counter — never block the response on the write.
   try {
-    incrementViewCount(params.token);
+    await incrementViewCount(params.token);
   } catch (error) {
     console.warn("[share] view count update failed", error);
   }
@@ -45,7 +45,7 @@ export async function DELETE(_request: NextRequest, { params }: Params) {
   const auth = await requireAuth();
   if (isAuthError(auth)) return auth;
 
-  const removed = deleteShare(params.token, auth.userId);
+  const removed = await deleteShare(params.token, auth.userId);
   if (!removed) {
     return errorResponse("not_found", "Share not found.");
   }

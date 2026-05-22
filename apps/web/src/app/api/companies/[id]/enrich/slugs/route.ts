@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { parseOptionalJsonBody } from "@/lib/api-utils";
 import { requireAuth, isAuthError } from "@/lib/auth";
 import { setCompanyGithubSlug } from "@/lib/db/company-research";
-import { getJob } from "@/lib/db/jobs";
+import { getJob } from "@/lib/db/jobs-async";
 import { nowEpoch } from "@/lib/format/time";
 import { getClientIdentifier, rateLimiters } from "@/lib/rate-limit";
 import { setGithubSlugSchema } from "@/lib/schemas";
@@ -35,7 +35,7 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
   const limited = rateLimitResponse(request, authResult.userId);
   if (limited) return limited;
 
-  const job = getJob(params.id, authResult.userId);
+  const job = await getJob(params.id, authResult.userId);
   if (!job) {
     return NextResponse.json(
       { error: "Opportunity not found" },
@@ -47,7 +47,7 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
   if (!parsed.ok) return parsed.response;
   const githubSlug = parsed.data.githubSlug;
 
-  const saved = setCompanyGithubSlug(
+  const saved = await setCompanyGithubSlug(
     authResult.userId,
     job.company,
     githubSlug ? githubSlug.toLowerCase() : null,

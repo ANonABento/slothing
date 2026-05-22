@@ -1,25 +1,29 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { Mock } from "vitest";
 
-vi.mock("./legacy", () => ({
-  default: {
-    prepare: vi.fn(),
-  },
+const mocks = vi.hoisted(() => ({
+  batch: vi.fn(),
+  execute: vi.fn(),
 }));
 
-import db from "./legacy";
+vi.mock("./client", () => ({
+  getClient: () => ({
+    batch: mocks.batch,
+    execute: mocks.execute,
+  }),
+}));
+
 import { listRecentCronRuns, recordCronRun } from "./cron-runs";
 
 describe("cron run db helpers", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.batch.mockResolvedValue([]);
   });
 
-  it("records cron run metadata", () => {
-    const run = vi.fn();
-    (db.prepare as Mock).mockReturnValue({ run });
+  it("records cron run metadata", async () => {
+    mocks.execute.mockResolvedValueOnce({ rows: [], rowsAffected: 1 });
 
-    recordCronRun({
+    await recordCronRun({
       cron: "cleanup",
       status: "success",
       startedAt: "2026-05-18T03:00:00.000Z",
@@ -27,36 +31,37 @@ describe("cron run db helpers", () => {
       summary: { deleted: 2 },
     });
 
-    expect(db.prepare).toHaveBeenCalledWith(
-      expect.stringContaining("INSERT INTO cron_runs"),
-    );
-    expect(run).toHaveBeenLastCalledWith(
-      "cleanup",
-      "success",
-      "2026-05-18T03:00:00.000Z",
-      expect.any(String),
-      12,
-      JSON.stringify({ deleted: 2 }),
-      null,
-    );
+    expect(mocks.execute).toHaveBeenCalledWith({
+      sql: expect.stringContaining("INSERT INTO cron_runs"),
+      args: [
+        "cleanup",
+        "success",
+        "2026-05-18T03:00:00.000Z",
+        expect.any(String),
+        12,
+        JSON.stringify({ deleted: 2 }),
+        null,
+      ],
+    });
   });
 
-  it("lists recent cron runs with parsed summaries", () => {
-    const all = vi.fn().mockReturnValue([
-      {
-        id: 1,
-        cron: "cleanup",
-        status: "success",
-        started_at: "2026-05-18T03:00:00.000Z",
-        finished_at: "2026-05-18T03:00:01.000Z",
-        duration_ms: 1000,
-        summary_json: '{"deleted":2}',
-        error: null,
-      },
-    ]);
-    (db.prepare as Mock).mockReturnValue({ run: vi.fn(), all });
+  it("lists recent cron runs with parsed summaries", async () => {
+    mocks.execute.mockResolvedValueOnce({
+      rows: [
+        {
+          id: 1,
+          cron: "cleanup",
+          status: "success",
+          started_at: "2026-05-18T03:00:00.000Z",
+          finished_at: "2026-05-18T03:00:01.000Z",
+          duration_ms: 1000,
+          summary_json: '{"deleted":2}',
+          error: null,
+        },
+      ],
+    });
 
-    expect(listRecentCronRuns()).toEqual([
+    await expect(listRecentCronRuns()).resolves.toEqual([
       {
         id: 1,
         cron: "cleanup",
@@ -68,5 +73,9 @@ describe("cron run db helpers", () => {
         error: null,
       },
     ]);
+    expect(mocks.execute).toHaveBeenCalledWith({
+      sql: expect.stringContaining("ORDER BY started_at DESC"),
+      args: [50],
+    });
   });
 });

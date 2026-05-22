@@ -6,7 +6,7 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { getProfile } from "@/lib/db";
-import { getJobs } from "@/lib/db/jobs";
+import { getJobs } from "@/lib/db/jobs-async";
 import {
   gateOptionalAiFeature,
   isAiGateResponse,
@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const jobs = getJobs(authResult.userId);
+    const jobs = await getJobs(authResult.userId);
     if (jobs.length === 0) {
       return NextResponse.json({
         paths: [],
@@ -55,7 +55,7 @@ export async function GET(request: NextRequest) {
 
     // Optionally enhance with LLM for better resource suggestions
     if (enhance && result.paths.length > 0) {
-      const gate = gateOptionalAiFeature(
+      const gate = await gateOptionalAiFeature(
         authResult.userId,
         "document_assistant",
         `learning:${limit}`,

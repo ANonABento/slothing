@@ -34,7 +34,7 @@ import {
   getTrackingEntries,
 } from "@/lib/db/resume-tracking";
 import { getGeneratedResume } from "@/lib/db/resumes";
-import { getJob } from "@/lib/db/jobs";
+import { getJob } from "@/lib/db/jobs-async";
 
 // POST /api/resume/track — log which version sent to which job
 export async function POST(request: NextRequest) {
@@ -42,7 +42,15 @@ export async function POST(request: NextRequest) {
   if (isAuthError(authResult)) return authResult;
 
   try {
-    const rawData = await request.json();
+    let rawData: unknown;
+    try {
+      rawData = await request.json();
+    } catch {
+      return NextResponse.json(
+        { error: "Request body must be valid JSON" },
+        { status: 400 },
+      );
+    }
     const parseResult = trackResumeSentSchema.safeParse(rawData);
 
     if (!parseResult.success) return validationErrorResponse(parseResult.error);
@@ -50,17 +58,22 @@ export async function POST(request: NextRequest) {
     const { resumeId, jobId, notes } = parseResult.data;
 
     // Verify resume exists
-    const resume = getGeneratedResume(resumeId, authResult.userId);
+    const resume = await getGeneratedResume(resumeId, authResult.userId);
     if (!resume) {
       return NextResponse.json({ error: "Resume not found" }, { status: 404 });
     }
 
-    const job = getJob(jobId, authResult.userId);
+    const job = await getJob(jobId, authResult.userId);
     if (!job) {
       return NextResponse.json({ error: "Job not found" }, { status: 404 });
     }
 
-    const entry = trackResumeSent(resumeId, jobId, authResult.userId, notes);
+    const entry = await trackResumeSent(
+      resumeId,
+      jobId,
+      authResult.userId,
+      notes,
+    );
     return NextResponse.json(entry, { status: 201 });
   } catch (error) {
     console.error("Resume tracking error:", error);
@@ -77,13 +90,21 @@ export async function PATCH(request: NextRequest) {
   if (isAuthError(authResult)) return authResult;
 
   try {
-    const rawData = await request.json();
+    let rawData: unknown;
+    try {
+      rawData = await request.json();
+    } catch {
+      return NextResponse.json(
+        { error: "Request body must be valid JSON" },
+        { status: 400 },
+      );
+    }
     const parseResult = updateTrackingOutcomeSchema.safeParse(rawData);
 
     if (!parseResult.success) return validationErrorResponse(parseResult.error);
 
     const { id, outcome } = parseResult.data;
-    const updated = updateTrackingOutcome(id, outcome, authResult.userId);
+    const updated = await updateTrackingOutcome(id, outcome, authResult.userId);
 
     if (!updated) {
       return NextResponse.json(
@@ -108,7 +129,7 @@ export async function GET() {
   if (isAuthError(authResult)) return authResult;
 
   try {
-    const entries = getTrackingEntries(authResult.userId);
+    const entries = await getTrackingEntries(authResult.userId);
     return NextResponse.json({ entries });
   } catch (error) {
     console.error("Tracking list error:", error);

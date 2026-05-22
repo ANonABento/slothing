@@ -1,4 +1,4 @@
-import db from "./legacy";
+import { getClient } from "./client";
 import { generateId } from "@/lib/utils";
 import type { EmailTemplateType } from "@/types";
 
@@ -68,25 +68,27 @@ function rowToEmailDraft(row: EmailDraftRow): EmailDraft {
 }
 
 // Get all email drafts for a user
-export function getEmailDrafts(userId: string): EmailDraft[] {
-  const stmt = db.prepare(`
+export async function getEmailDrafts(userId: string): Promise<EmailDraft[]> {
+  const result = await getClient().execute({
+    sql: `
     SELECT id, user_id, type, job_id, subject, body, context_json, created_at, updated_at
     FROM email_drafts
     WHERE user_id = ?
     ORDER BY updated_at DESC
-  `);
-
-  const rows = stmt.all(userId) as EmailDraftRow[];
+  `,
+    args: [userId],
+  });
+  const rows = result.rows as unknown as EmailDraftRow[];
 
   return rows.map(rowToEmailDraft);
 }
 
-export function listEmailDraftsPaginated({
+export async function listEmailDraftsPaginated({
   userId,
   type,
   cursor,
   limit,
-}: ListEmailDraftsPaginatedParams): EmailDraft[] {
+}: ListEmailDraftsPaginatedParams): Promise<EmailDraft[]> {
   const whereClauses = ["user_id = ?"];
   const params: Array<string | number> = [userId];
 
@@ -102,89 +104,68 @@ export function listEmailDraftsPaginated({
 
   params.push(limit + 1);
 
-  const rows = db
-    .prepare(
-      `SELECT id, user_id, type, job_id, subject, body, context_json, created_at, updated_at
+  const result = await getClient().execute({
+    sql: `SELECT id, user_id, type, job_id, subject, body, context_json, created_at, updated_at
        FROM email_drafts
        WHERE ${whereClauses.join(" AND ")}
        ORDER BY updated_at DESC, id DESC
        LIMIT ?`,
-    )
-    .all(...params) as EmailDraftRow[];
+    args: params,
+  });
+  const rows = result.rows as unknown as EmailDraftRow[];
 
   return rows.map(rowToEmailDraft);
 }
 
 // Get a single email draft by ID
-export function getEmailDraft(id: string, userId: string): EmailDraft | null {
-  const stmt = db.prepare(`
+export async function getEmailDraft(
+  id: string,
+  userId: string,
+): Promise<EmailDraft | null> {
+  const result = await getClient().execute({
+    sql: `
     SELECT id, user_id, type, job_id, subject, body, context_json, created_at, updated_at
     FROM email_drafts
     WHERE id = ? AND user_id = ?
-  `);
-
-  const row = stmt.get(id, userId) as
-    | {
-        id: string;
-        user_id: string;
-        type: string;
-        job_id: string | null;
-        subject: string;
-        body: string;
-        context_json: string | null;
-        created_at: string;
-        updated_at: string;
-      }
-    | undefined;
+  `,
+    args: [id, userId],
+  });
+  const row = result.rows[0] as unknown as EmailDraftRow | undefined;
 
   if (!row) return null;
 
-  return {
-    id: row.id,
-    userId: row.user_id,
-    type: row.type as EmailTemplateType,
-    jobId: row.job_id || undefined,
-    subject: row.subject,
-    body: row.body,
-    context: row.context_json ? JSON.parse(row.context_json) : undefined,
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
-  };
+  return rowToEmailDraft(row);
 }
 
 // Create a new email draft
-export function createEmailDraft(
+export async function createEmailDraft(
   input: CreateEmailDraftInput,
   userId: string,
-): EmailDraft {
+): Promise<EmailDraft> {
   const id = generateId();
   const now = nowIso();
 
-  const stmt = db.prepare(`
+  const result = await getClient().execute({
+    sql: `
     INSERT INTO email_drafts (id, user_id, type, job_id, subject, body, context_json, created_at, updated_at)
     SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?
     ${input.jobId ? "WHERE EXISTS (SELECT 1 FROM jobs WHERE id = ? AND user_id = ?)" : ""}
-  `);
+  `,
+    args: [
+      id,
+      userId,
+      input.type,
+      input.jobId || null,
+      input.subject,
+      input.body,
+      input.context ? JSON.stringify(input.context) : null,
+      now,
+      now,
+      ...(input.jobId ? [input.jobId, userId] : []),
+    ],
+  });
 
-  const args: Array<string | null> = [
-    id,
-    userId,
-    input.type,
-    input.jobId || null,
-    input.subject,
-    input.body,
-    input.context ? JSON.stringify(input.context) : null,
-    now,
-    now,
-  ];
-
-  if (input.jobId) {
-    args.push(input.jobId, userId);
-  }
-
-  const result = stmt.run(...args);
-
-  if (result.changes === 0) {
+  if (result.rowsAffected === 0) {
     throw new Error("Job not found");
   }
 
@@ -202,12 +183,12 @@ export function createEmailDraft(
 }
 
 // Update an email draft
-export function updateEmailDraft(
+export async function updateEmailDraft(
   id: string,
   input: UpdateEmailDraftInput,
   userId: string,
-): EmailDraft | null {
-  const existing = getEmailDraft(id, userId);
+): Promise<EmailDraft | null> {
+  const existing = await getEmailDraft(id, userId);
   if (!existing) return null;
 
   const now = nowIso();
@@ -234,61 +215,49 @@ export function updateEmailDraft(
   params.push(id);
   params.push(userId);
 
-  const stmt = db.prepare(`
+  await getClient().execute({
+    sql: `
     UPDATE email_drafts
     SET ${updates.join(", ")}
     WHERE id = ? AND user_id = ?
-  `);
-
-  stmt.run(...params);
+  `,
+    args: params,
+  });
 
   return getEmailDraft(id, userId);
 }
 
 // Delete an email draft
-export function deleteEmailDraft(id: string, userId: string): boolean {
-  const stmt = db.prepare(`
+export async function deleteEmailDraft(
+  id: string,
+  userId: string,
+): Promise<boolean> {
+  const result = await getClient().execute({
+    sql: `
     DELETE FROM email_drafts
     WHERE id = ? AND user_id = ?
-  `);
+  `,
+    args: [id, userId],
+  });
 
-  const result = stmt.run(id, userId);
-  return result.changes > 0;
+  return result.rowsAffected > 0;
 }
 
 // Get drafts by type
-export function getEmailDraftsByType(
+export async function getEmailDraftsByType(
   type: EmailTemplateType,
   userId: string,
-): EmailDraft[] {
-  const stmt = db.prepare(`
+): Promise<EmailDraft[]> {
+  const result = await getClient().execute({
+    sql: `
     SELECT id, user_id, type, job_id, subject, body, context_json, created_at, updated_at
     FROM email_drafts
     WHERE user_id = ? AND type = ?
     ORDER BY updated_at DESC
-  `);
+  `,
+    args: [userId, type],
+  });
+  const rows = result.rows as unknown as EmailDraftRow[];
 
-  const rows = stmt.all(userId, type) as Array<{
-    id: string;
-    user_id: string;
-    type: string;
-    job_id: string | null;
-    subject: string;
-    body: string;
-    context_json: string | null;
-    created_at: string;
-    updated_at: string;
-  }>;
-
-  return rows.map((row) => ({
-    id: row.id,
-    userId: row.user_id,
-    type: row.type as EmailTemplateType,
-    jobId: row.job_id || undefined,
-    subject: row.subject,
-    body: row.body,
-    context: row.context_json ? JSON.parse(row.context_json) : undefined,
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
-  }));
+  return rows.map(rowToEmailDraft);
 }

@@ -5,7 +5,7 @@
  * @response JobAnalysisResponse from @/types/api
  */
 import { NextRequest, NextResponse } from "next/server";
-import { getJob } from "@/lib/db/jobs";
+import { getJob } from "@/lib/db/jobs-async";
 import { getProfile } from "@/lib/db";
 import {
   gateOptionalAiFeature,
@@ -33,7 +33,7 @@ export async function POST(
   let aiGate: OptionalAiGatePass | null = null;
 
   try {
-    const job = getJob(params.id, authResult.userId);
+    const job = await getJob(params.id, authResult.userId);
     if (!job) {
       return NextResponse.json(
         { error: "Opportunity not found" },
@@ -49,7 +49,7 @@ export async function POST(
       );
     }
 
-    const gate = gateOptionalAiFeature(
+    const gate = await gateOptionalAiFeature(
       authResult.userId,
       "tailor",
       `analyze:${params.id}`,

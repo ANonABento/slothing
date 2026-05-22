@@ -1,5 +1,5 @@
-import db from "./legacy";
-import { ensureOpportunityContactsSchema } from "./opportunity-contacts-schema";
+import { OPPORTUNITY_CONTACTS_BOOTSTRAP_SQL } from "./bootstrap-sql";
+import { getClient } from "./client";
 import { generateId } from "@/lib/utils";
 
 export type OpportunityContactSource = "google" | "manual";
@@ -43,8 +43,16 @@ interface OpportunityContactRow {
   created_at: string;
 }
 
-function ensureSchema(): void {
-  ensureOpportunityContactsSchema(db);
+let schemaEnsured = false;
+
+async function ensureSchema(): Promise<void> {
+  if (schemaEnsured) return;
+  await getClient().batch(
+    OPPORTUNITY_CONTACTS_BOOTSTRAP_SQL.split(";")
+      .map((statement) => statement.trim())
+      .filter(Boolean),
+  );
+  schemaEnsured = true;
 }
 
 function mapContact(row: OpportunityContactRow): OpportunityContact {
@@ -63,80 +71,78 @@ function mapContact(row: OpportunityContactRow): OpportunityContact {
   };
 }
 
-function selectContactByGoogleResource(
+async function selectContactByGoogleResource(
   userId: string,
   opportunityId: string,
   googleResourceName: string,
-): OpportunityContact | null {
-  const row = db
-    .prepare(
-      `
+): Promise<OpportunityContact | null> {
+  const result = await getClient().execute({
+    sql: `
       SELECT id, user_id, opportunity_id, name, email, phone, company, title,
              source, google_resource_name, created_at
       FROM opportunity_contacts
       WHERE user_id = ? AND opportunity_id = ? AND google_resource_name = ?
       LIMIT 1
     `,
-    )
-    .get(userId, opportunityId, googleResourceName) as
-    | OpportunityContactRow
-    | undefined;
+    args: [userId, opportunityId, googleResourceName],
+  });
+  const row = result.rows[0] as unknown as OpportunityContactRow | undefined;
 
   return row ? mapContact(row) : null;
 }
 
-export function getContactsForOpportunity(
+export async function getContactsForOpportunity(
   opportunityId: string,
   userId: string,
-): OpportunityContact[] {
-  ensureSchema();
-  const rows = db
-    .prepare(
-      `
+): Promise<OpportunityContact[]> {
+  await ensureSchema();
+  const result = await getClient().execute({
+    sql: `
       SELECT id, user_id, opportunity_id, name, email, phone, company, title,
              source, google_resource_name, created_at
       FROM opportunity_contacts
       WHERE user_id = ? AND opportunity_id = ?
       ORDER BY created_at DESC, name ASC
     `,
-    )
-    .all(userId, opportunityId) as OpportunityContactRow[];
+    args: [userId, opportunityId],
+  });
 
-  return rows.map(mapContact);
+  return (result.rows as unknown as OpportunityContactRow[]).map(mapContact);
 }
 
-export function addContactToOpportunity(
+export async function addContactToOpportunity(
   input: AddOpportunityContactInput,
   userId: string,
-): OpportunityContact {
-  ensureSchema();
+): Promise<OpportunityContact> {
+  await ensureSchema();
   const id = generateId();
   const source = input.source ?? "google";
 
   try {
-    db.prepare(
-      `
-      INSERT INTO opportunity_contacts (
-        id, user_id, opportunity_id, name, email, phone, company, title,
-        source, google_resource_name
-      )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `,
-    ).run(
-      id,
-      userId,
-      input.opportunityId,
-      input.name,
-      input.email || null,
-      input.phone || null,
-      input.company || null,
-      input.title || null,
-      source,
-      input.googleResourceName || null,
-    );
+    await getClient().execute({
+      sql: `
+        INSERT INTO opportunity_contacts (
+          id, user_id, opportunity_id, name, email, phone, company, title,
+          source, google_resource_name
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `,
+      args: [
+        id,
+        userId,
+        input.opportunityId,
+        input.name,
+        input.email || null,
+        input.phone || null,
+        input.company || null,
+        input.title || null,
+        source,
+        input.googleResourceName || null,
+      ],
+    });
   } catch (error) {
     if (input.googleResourceName) {
-      const existing = selectContactByGoogleResource(
+      const existing = await selectContactByGoogleResource(
         userId,
         input.opportunityId,
         input.googleResourceName,
@@ -146,16 +152,16 @@ export function addContactToOpportunity(
     throw error;
   }
 
-  const row = db
-    .prepare(
-      `
+  const result = await getClient().execute({
+    sql: `
       SELECT id, user_id, opportunity_id, name, email, phone, company, title,
              source, google_resource_name, created_at
       FROM opportunity_contacts
       WHERE id = ? AND user_id = ?
     `,
-    )
-    .get(id, userId) as OpportunityContactRow | undefined;
+    args: [id, userId],
+  });
+  const row = result.rows[0] as unknown as OpportunityContactRow | undefined;
 
   if (!row) {
     throw new Error("Failed to read inserted opportunity contact");
@@ -164,16 +170,18 @@ export function addContactToOpportunity(
   return mapContact(row);
 }
 
-export function deleteOpportunityContact(id: string, userId: string): boolean {
-  ensureSchema();
-  const result = db
-    .prepare(
-      `
+export async function deleteOpportunityContact(
+  id: string,
+  userId: string,
+): Promise<boolean> {
+  await ensureSchema();
+  const result = await getClient().execute({
+    sql: `
       DELETE FROM opportunity_contacts
       WHERE id = ? AND user_id = ?
     `,
-    )
-    .run(id, userId) as { changes?: number };
+    args: [id, userId],
+  });
 
-  return (result.changes ?? 0) > 0;
+  return result.rowsAffected > 0;
 }

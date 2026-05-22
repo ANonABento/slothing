@@ -21,7 +21,10 @@ export async function POST(
   if (isAuthError(authResult)) return authResult;
 
   try {
-    const contextPack = getInterviewContextPack(params.id, authResult.userId);
+    const contextPack = await getInterviewContextPack(
+      params.id,
+      authResult.userId,
+    );
     if (!contextPack) {
       return NextResponse.json(
         { error: "Context pack not found" },
@@ -37,7 +40,10 @@ export async function POST(
       );
     }
 
-    markInterviewContextPackSavedToBank(contextPack.id, authResult.userId);
+    await markInterviewContextPackSavedToBank(
+      contextPack.id,
+      authResult.userId,
+    );
     return NextResponse.json({ success: true, bankEntryId });
   } catch (error) {
     console.error("Promote interview context pack error:", error);

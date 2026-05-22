@@ -1,5 +1,5 @@
 import { randomUUID } from "crypto";
-import db from "./legacy";
+import { getClient } from "./client";
 
 import { nowIso } from "@/lib/format/time";
 export interface CoverLetter {
@@ -34,30 +34,30 @@ function rowToCoverLetter(row: CoverLetterRow): CoverLetter {
   };
 }
 
-export function saveCoverLetter(
+export async function saveCoverLetter(
   jobId: string,
   content: string,
   highlights: string[] = [],
   userId: string,
-): CoverLetter {
+): Promise<CoverLetter> {
   const id = randomUUID();
 
   // Get next version number for this job
-  const existing = db
-    .prepare(
-      "SELECT MAX(version) as max_version FROM cover_letters WHERE job_id = ? AND user_id = ?",
-    )
-    .get(jobId, userId) as { max_version: number | null } | undefined;
+  const existingResult = await getClient().execute({
+    sql: "SELECT MAX(version) as max_version FROM cover_letters WHERE job_id = ? AND user_id = ?",
+    args: [jobId, userId],
+  });
+  const existing = existingResult.rows[0] as unknown as
+    | { max_version: number | null }
+    | undefined;
 
   const version = (existing?.max_version || 0) + 1;
 
-  const result = db
-    .prepare(
-      `INSERT INTO cover_letters (id, user_id, job_id, profile_id, content, highlights_json, version)
-     SELECT ?, ?, ?, ?, ?, ?, ?
-     WHERE EXISTS (SELECT 1 FROM jobs WHERE id = ? AND user_id = ?)`,
-    )
-    .run(
+  const result = await getClient().execute({
+    sql: `INSERT INTO cover_letters (id, user_id, job_id, profile_id, content, highlights_json, version)
+      SELECT ?, ?, ?, ?, ?, ?, ?
+      WHERE EXISTS (SELECT 1 FROM jobs WHERE id = ? AND user_id = ?)`,
+    args: [
       id,
       userId,
       jobId,
@@ -67,9 +67,10 @@ export function saveCoverLetter(
       version,
       jobId,
       userId,
-    ) as { changes?: number } | undefined;
+    ],
+  });
 
-  if (result?.changes === 0) {
+  if (result.rowsAffected === 0) {
     throw new Error("Job not found");
   }
 
@@ -84,62 +85,76 @@ export function saveCoverLetter(
   };
 }
 
-export function getCoverLettersByJob(
+export async function getCoverLettersByJob(
   jobId: string,
   userId: string,
-): CoverLetter[] {
-  const rows = db
-    .prepare(
-      "SELECT * FROM cover_letters WHERE job_id = ? AND user_id = ? ORDER BY version DESC",
-    )
-    .all(jobId, userId) as CoverLetterRow[];
+): Promise<CoverLetter[]> {
+  const result = await getClient().execute({
+    sql: "SELECT * FROM cover_letters WHERE job_id = ? AND user_id = ? ORDER BY version DESC",
+    args: [jobId, userId],
+  });
+  const rows = result.rows as unknown as CoverLetterRow[];
 
   return rows.map(rowToCoverLetter);
 }
 
-export function getLatestCoverLetter(
+export async function getLatestCoverLetter(
   jobId: string,
   userId: string,
-): CoverLetter | null {
-  const row = db
-    .prepare(
-      "SELECT * FROM cover_letters WHERE job_id = ? AND user_id = ? ORDER BY version DESC LIMIT 1",
-    )
-    .get(jobId, userId) as CoverLetterRow | undefined;
+): Promise<CoverLetter | null> {
+  const result = await getClient().execute({
+    sql: "SELECT * FROM cover_letters WHERE job_id = ? AND user_id = ? ORDER BY version DESC LIMIT 1",
+    args: [jobId, userId],
+  });
+  const row = result.rows[0] as unknown as CoverLetterRow | undefined;
 
   return row ? rowToCoverLetter(row) : null;
 }
 
-export function getCoverLetter(id: string, userId: string): CoverLetter | null {
-  const row = db
-    .prepare("SELECT * FROM cover_letters WHERE id = ? AND user_id = ?")
-    .get(id, userId) as CoverLetterRow | undefined;
+export async function getCoverLetter(
+  id: string,
+  userId: string,
+): Promise<CoverLetter | null> {
+  const result = await getClient().execute({
+    sql: "SELECT * FROM cover_letters WHERE id = ? AND user_id = ?",
+    args: [id, userId],
+  });
+  const row = result.rows[0] as unknown as CoverLetterRow | undefined;
 
   return row ? rowToCoverLetter(row) : null;
 }
 
-export function deleteCoverLetter(id: string, userId: string): boolean {
-  const result = db
-    .prepare("DELETE FROM cover_letters WHERE id = ? AND user_id = ?")
-    .run(id, userId);
-  return result.changes > 0;
+export async function deleteCoverLetter(
+  id: string,
+  userId: string,
+): Promise<boolean> {
+  const result = await getClient().execute({
+    sql: "DELETE FROM cover_letters WHERE id = ? AND user_id = ?",
+    args: [id, userId],
+  });
+  return result.rowsAffected > 0;
 }
 
-export function getCoverLetterCount(jobId: string, userId: string): number {
-  const result = db
-    .prepare(
-      "SELECT COUNT(*) as count FROM cover_letters WHERE job_id = ? AND user_id = ?",
-    )
-    .get(jobId, userId) as { count: number };
-  return result.count;
+export async function getCoverLetterCount(
+  jobId: string,
+  userId: string,
+): Promise<number> {
+  const result = await getClient().execute({
+    sql: "SELECT COUNT(*) as count FROM cover_letters WHERE job_id = ? AND user_id = ?",
+    args: [jobId, userId],
+  });
+  const row = result.rows[0] as unknown as { count: number } | undefined;
+  return row?.count ?? 0;
 }
 
-export function getAllCoverLetters(userId: string): CoverLetter[] {
-  const rows = db
-    .prepare(
-      "SELECT * FROM cover_letters WHERE user_id = ? ORDER BY created_at DESC",
-    )
-    .all(userId) as CoverLetterRow[];
+export async function getAllCoverLetters(
+  userId: string,
+): Promise<CoverLetter[]> {
+  const result = await getClient().execute({
+    sql: "SELECT * FROM cover_letters WHERE user_id = ? ORDER BY created_at DESC",
+    args: [userId],
+  });
+  const rows = result.rows as unknown as CoverLetterRow[];
 
   return rows.map(rowToCoverLetter);
 }

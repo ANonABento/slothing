@@ -17,8 +17,8 @@ import {
   getProfile,
   updateProfile,
   getLLMConfig,
-  saveDocumentArtifact,
 } from "@/lib/db";
+import { saveDocumentArtifact } from "@/lib/db/document-artifacts";
 import { extractTextFromFile } from "@/lib/parser/pdf";
 import { classifyDocument } from "@/lib/parser/document-classifier";
 import {
@@ -125,7 +125,7 @@ async function persistParserV2Artifact(input: {
       filename: input.filename,
       mimeType: input.mimeType,
     });
-    const artifact = saveDocumentArtifact({
+    const artifact = await saveDocumentArtifact({
       documentId: input.documentId,
       userId: input.userId,
       extractorVersion: extracted.extractorVersion,
@@ -402,7 +402,7 @@ export async function POST(request: NextRequest) {
           parsedData.data,
         );
         if (Object.keys(promoted).length > 0) {
-          updateProfile(promoted, authResult.userId);
+          await updateProfile(promoted, authResult.userId);
           log.debug("upload", "auto-promoted parsed resume into profile");
         }
       } catch (err) {

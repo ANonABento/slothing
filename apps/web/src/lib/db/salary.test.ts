@@ -1,29 +1,31 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { Mock } from "vitest";
 
-vi.mock("./legacy", () => ({
-  default: {
-    prepare: vi.fn(),
-  },
+const dbMocks = vi.hoisted(() => ({
+  execute: vi.fn(),
+}));
+
+vi.mock("./client", () => ({
+  getClient: () => dbMocks,
 }));
 
 vi.mock("@/lib/utils", () => ({
   generateId: () => "test-offer-id",
 }));
 
-import db from "./legacy";
 import { createSalaryOffer } from "./salary";
+
+function result(rows: unknown[] = [], rowsAffected = 0) {
+  return { rows, rowsAffected };
+}
 
 describe("Salary Database Functions", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    dbMocks.execute.mockResolvedValue(result([], 1));
   });
 
-  it("should create offers without a job link", () => {
-    const mockRun = vi.fn().mockReturnValue({ changes: 1 });
-    (db.prepare as Mock).mockReturnValue({ run: mockRun });
-
-    const offer = createSalaryOffer(
+  it("should create offers without a job link", async () => {
+    const offer = await createSalaryOffer(
       {
         company: "Acme",
         role: "Engineer",
@@ -33,32 +35,31 @@ describe("Salary Database Functions", () => {
     );
 
     expect(offer.id).toBe("test-offer-id");
-    expect(db.prepare).toHaveBeenCalledWith(
-      expect.not.stringContaining("WHERE EXISTS"),
-    );
-    expect(mockRun).toHaveBeenCalledWith(
-      "test-offer-id",
-      "user-1",
-      null,
-      "Acme",
-      "Engineer",
-      120000,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      expect.any(String),
-      expect.any(String),
-    );
+    expect(dbMocks.execute).toHaveBeenCalledWith({
+      sql: expect.not.stringContaining("WHERE EXISTS"),
+      args: [
+        "test-offer-id",
+        "user-1",
+        null,
+        "Acme",
+        "Engineer",
+        120000,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        expect.any(String),
+        expect.any(String),
+      ],
+    });
   });
 
-  it("should reject offers linked to jobs outside the user", () => {
-    const mockRun = vi.fn().mockReturnValue({ changes: 0 });
-    (db.prepare as Mock).mockReturnValue({ run: mockRun });
+  it("should reject offers linked to jobs outside the user", async () => {
+    dbMocks.execute.mockResolvedValueOnce(result([], 0));
 
-    expect(() =>
+    await expect(
       createSalaryOffer(
         {
           jobId: "job-1",
@@ -68,28 +69,28 @@ describe("Salary Database Functions", () => {
         },
         "user-1",
       ),
-    ).toThrow("Job not found");
+    ).rejects.toThrow("Job not found");
 
-    expect(db.prepare).toHaveBeenCalledWith(
-      expect.stringContaining("WHERE EXISTS"),
-    );
-    expect(mockRun).toHaveBeenCalledWith(
-      "test-offer-id",
-      "user-1",
-      "job-1",
-      "Acme",
-      "Engineer",
-      120000,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      expect.any(String),
-      expect.any(String),
-      "job-1",
-      "user-1",
-    );
+    expect(dbMocks.execute).toHaveBeenCalledWith({
+      sql: expect.stringContaining("WHERE EXISTS"),
+      args: [
+        "test-offer-id",
+        "user-1",
+        "job-1",
+        "Acme",
+        "Engineer",
+        120000,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        expect.any(String),
+        expect.any(String),
+        "job-1",
+        "user-1",
+      ],
+    });
   });
 });

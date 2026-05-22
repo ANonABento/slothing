@@ -11,7 +11,7 @@ export async function GET() {
   const authResult = await requireAuth();
   if (isAuthError(authResult)) return authResult;
 
-  seedDefaultPromptVariant(authResult.userId);
-  const stats = getPromptVariantStats(authResult.userId);
+  await seedDefaultPromptVariant(authResult.userId);
+  const stats = await getPromptVariantStats(authResult.userId);
   return NextResponse.json({ stats });
 }

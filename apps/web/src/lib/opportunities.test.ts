@@ -8,7 +8,7 @@ const mocks = vi.hoisted(() => ({
   updateJob: vi.fn(),
 }));
 
-vi.mock("@/lib/db/jobs", () => ({
+vi.mock("@/lib/db/jobs-async", () => ({
   getJob: mocks.getJob,
   getJobs: mocks.getJobs,
   listJobsPaginated: mocks.listJobsPaginated,
@@ -122,19 +122,21 @@ describe("opportunities", () => {
     ).toBe("saved");
   });
 
-  it("passes canonical opportunity statuses to the underlying job query", () => {
-    mocks.listJobsPaginated.mockReturnValue([
+  it("passes canonical opportunity statuses to the underlying job query", async () => {
+    mocks.listJobsPaginated.mockResolvedValue([
       job({ id: "saved", status: "saved" }),
       job({ id: "applied", status: "applied" }),
       job({ id: "offer", status: "offer" }),
     ]);
 
     expect(
-      listOpportunities({
-        userId: "user-1",
-        statuses: ["saved", "applied", "offer"],
-        limit: 50,
-      }).items.map((item) => item.id),
+      (
+        await listOpportunities({
+          userId: "user-1",
+          statuses: ["saved", "applied", "offer"],
+          limit: 50,
+        })
+      ).items.map((item) => item.id),
     ).toEqual(["saved", "applied", "offer"]);
     expect(mocks.listJobsPaginated).toHaveBeenCalledWith({
       userId: "user-1",
@@ -144,10 +146,10 @@ describe("opportunities", () => {
     });
   });
 
-  it("translates legacy URL params (offered/withdrawn) to canonical statuses", () => {
-    mocks.listJobsPaginated.mockReturnValue([]);
+  it("translates legacy URL params (offered/withdrawn) to canonical statuses", async () => {
+    mocks.listJobsPaginated.mockResolvedValue([]);
 
-    listOpportunities({
+    await listOpportunities({
       userId: "user-1",
       statuses: ["offered", "withdrawn"],
       limit: 50,
@@ -161,29 +163,31 @@ describe("opportunities", () => {
     });
   });
 
-  it("does not treat unknown status filters as unfiltered requests", () => {
-    mocks.listJobsPaginated.mockReturnValue([]);
+  it("does not treat unknown status filters as unfiltered requests", async () => {
+    mocks.listJobsPaginated.mockResolvedValue([]);
 
-    expect(
+    await expect(
       listOpportunities({ userId: "user-1", statuses: ["unknown"], limit: 50 }),
-    ).toEqual({ items: [], nextCursor: null, hasMore: false });
+    ).resolves.toEqual({ items: [], nextCursor: null, hasMore: false });
   });
 
-  it("loads a single opportunity by id", () => {
-    mocks.getJob.mockReturnValue(job({ id: "job-2" }));
+  it("loads a single opportunity by id", async () => {
+    mocks.getJob.mockResolvedValue(job({ id: "job-2" }));
 
-    expect(getOpportunity("job-2", "user-1")?.id).toBe("job-2");
+    await expect(getOpportunity("job-2", "user-1")).resolves.toMatchObject({
+      id: "job-2",
+    });
     expect(mocks.getJob).toHaveBeenCalledWith("job-2", "user-1");
   });
 
-  it("links generated document ids without clearing existing links", () => {
+  it("links generated document ids without clearing existing links", async () => {
     mocks.getJob
-      .mockReturnValueOnce(job({ linkedCoverLetterId: "cover-1" }))
-      .mockReturnValueOnce(
+      .mockResolvedValueOnce(job({ linkedCoverLetterId: "cover-1" }))
+      .mockResolvedValueOnce(
         job({ linkedResumeId: "resume-1", linkedCoverLetterId: "cover-1" }),
       );
 
-    const opportunity = linkOpportunityDocument(
+    const opportunity = await linkOpportunityDocument(
       "job-1",
       { resumeId: "resume-1" },
       "user-1",
@@ -200,16 +204,16 @@ describe("opportunities", () => {
     expect(opportunity?.linkedResumeId).toBe("resume-1");
   });
 
-  it("ignores blank document ids when linking", () => {
+  it("ignores blank document ids when linking", async () => {
     mocks.getJob
-      .mockReturnValueOnce(
+      .mockResolvedValueOnce(
         job({ linkedResumeId: "resume-1", linkedCoverLetterId: "cover-1" }),
       )
-      .mockReturnValueOnce(
+      .mockResolvedValueOnce(
         job({ linkedResumeId: "resume-1", linkedCoverLetterId: "cover-1" }),
       );
 
-    linkOpportunityDocument(
+    await linkOpportunityDocument(
       "job-1",
       { resumeId: "  ", coverLetterId: "cover-2" },
       "user-1",

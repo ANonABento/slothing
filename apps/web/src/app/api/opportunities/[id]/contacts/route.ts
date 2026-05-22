@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requireAuth, isAuthError } from "@/lib/auth";
-import { getJob } from "@/lib/db/jobs";
+import { getJob } from "@/lib/db/jobs-async";
 import {
   addContactToOpportunity,
   getContactsForOpportunity,
@@ -28,7 +28,7 @@ export async function GET(_request: NextRequest, { params }: RouteContext) {
   if (isAuthError(authResult)) return authResult;
 
   try {
-    const opportunity = getJob(params.id, authResult.userId);
+    const opportunity = await getJob(params.id, authResult.userId);
     if (!opportunity) {
       return NextResponse.json(
         { error: "Opportunity not found" },
@@ -36,7 +36,10 @@ export async function GET(_request: NextRequest, { params }: RouteContext) {
       );
     }
 
-    const contacts = getContactsForOpportunity(params.id, authResult.userId);
+    const contacts = await getContactsForOpportunity(
+      params.id,
+      authResult.userId,
+    );
     return NextResponse.json({ contacts });
   } catch (error) {
     console.error("List opportunity contacts error:", error);
@@ -52,7 +55,7 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
   if (isAuthError(authResult)) return authResult;
 
   try {
-    const opportunity = getJob(params.id, authResult.userId);
+    const opportunity = await getJob(params.id, authResult.userId);
     if (!opportunity) {
       return NextResponse.json(
         { error: "Opportunity not found" },
@@ -78,7 +81,7 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
       );
     }
 
-    const contact = addContactToOpportunity(
+    const contact = await addContactToOpportunity(
       {
         opportunityId: params.id,
         ...parsed.data,

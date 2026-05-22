@@ -84,7 +84,7 @@ export async function requireUserAuth(
   request: NextRequest,
 ): Promise<AuthResult | NextResponse> {
   if (request.headers.get("X-Extension-Token")) {
-    const extensionAuth = requireExtensionAuth(request);
+    const extensionAuth = await requireExtensionAuth(request);
     return extensionAuth.success
       ? { userId: extensionAuth.userId }
       : extensionAuth.response;

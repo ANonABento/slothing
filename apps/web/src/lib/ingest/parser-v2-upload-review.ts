@@ -3,8 +3,8 @@ import { readFile } from "node:fs/promises";
 import {
   saveDocumentArtifact,
   type DocumentArtifact,
-  type DocumentParseRun,
-} from "@/lib/db";
+} from "@/lib/db/document-artifacts";
+import { type DocumentParseRun } from "@/lib/db/document-parse-runs";
 import { createParserV2Diagnostic } from "@/lib/ingest/diagnostics";
 import { extractDocumentSourceMap } from "@/lib/ingest/extract-document";
 import {
@@ -66,7 +66,7 @@ export async function createParserV2UploadReview(input: {
     filename: upload.document.filename,
     mimeType: upload.document.mimeType,
   });
-  const artifact = saveDocumentArtifact({
+  const artifact = await saveDocumentArtifact({
     documentId: upload.document.id,
     userId: input.userId,
     extractorVersion: extracted.extractorVersion,
@@ -76,7 +76,7 @@ export async function createParserV2UploadReview(input: {
     ocrUsed: extracted.ocrUsed,
   });
 
-  const parseRun = createBasicDocumentParseRun({
+  const parseRun = await createBasicDocumentParseRun({
     documentId: upload.document.id,
     userId: input.userId,
     artifactId: artifact.id,

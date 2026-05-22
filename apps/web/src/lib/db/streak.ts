@@ -1,4 +1,4 @@
-import db from "./legacy";
+import { getClient } from "./client";
 import { ensureStreakSchema } from "./streak-schema";
 import { ACHIEVEMENTS, getAchievement } from "@/lib/streak/achievements";
 import {
@@ -43,19 +43,21 @@ interface TrackActivityOptions {
   now?: Date;
 }
 
-const ACTIVITY_COUNTER_COLUMNS: Record<ActivityType, keyof UserActivityRow | null> =
-  {
-    opp_created: "total_opps_created",
-    opp_status_changed: null,
-    opp_applied: "total_opps_applied",
-    tailor_generated: "total_resumes_tailored",
-    cover_letter_generated: "total_cover_letters",
-    email_sent: "total_emails_sent",
-    interview_started: "total_interviews_started",
-  };
+const ACTIVITY_COUNTER_COLUMNS: Record<
+  ActivityType,
+  keyof UserActivityRow | null
+> = {
+  opp_created: "total_opps_created",
+  opp_status_changed: null,
+  opp_applied: "total_opps_applied",
+  tailor_generated: "total_resumes_tailored",
+  cover_letter_generated: "total_cover_letters",
+  email_sent: "total_emails_sent",
+  interview_started: "total_interviews_started",
+};
 
-function ensureSchema(): void {
-  ensureStreakSchema(db);
+async function ensureSchema(): Promise<void> {
+  await ensureStreakSchema();
 }
 
 function dayToUtcMs(day: string): number {
@@ -99,11 +101,9 @@ function mapUnlock(row: AchievementUnlockRow): AchievementUnlock {
   };
 }
 
-function getActivityRow(userId: string): UserActivityRow | null {
-  return (
-    (db
-      .prepare(
-        `
+async function getActivityRow(userId: string): Promise<UserActivityRow | null> {
+  const result = await getClient().execute({
+    sql: `
         SELECT id, user_id, current_streak, longest_streak, last_activity_day,
                total_opps_created, total_opps_applied, total_resumes_tailored,
                total_cover_letters, total_emails_sent, total_interviews_started,
@@ -111,22 +111,22 @@ function getActivityRow(userId: string): UserActivityRow | null {
         FROM user_activity
         WHERE user_id = ?
       `,
-      )
-      .get(userId) as UserActivityRow | undefined) ?? null
-  );
+    args: [userId],
+  });
+  return (result.rows[0] as unknown as UserActivityRow | undefined) ?? null;
 }
 
-function getUnlockRows(userId: string): AchievementUnlockRow[] {
-  return db
-    .prepare(
-      `
+async function getUnlockRows(userId: string): Promise<AchievementUnlockRow[]> {
+  const result = await getClient().execute({
+    sql: `
       SELECT id, achievement_id, unlocked_at
       FROM achievement_unlocks
       WHERE user_id = ?
       ORDER BY unlocked_at ASC
     `,
-    )
-    .all(userId) as AchievementUnlockRow[];
+    args: [userId],
+  });
+  return result.rows as unknown as AchievementUnlockRow[];
 }
 
 function buildWeekDays(
@@ -157,21 +157,29 @@ function buildState(
   today: string,
 ): StreakState {
   const stale =
-    row?.last_activity_day != null && daysBetween(row.last_activity_day, today) > 1;
+    row?.last_activity_day != null &&
+    daysBetween(row.last_activity_day, today) > 1;
   const currentStreak = row ? (stale ? 0 : row.current_streak) : 0;
 
   return {
     currentStreak,
     longestStreak: row?.longest_streak ?? 0,
     lastActivityDay: row?.last_activity_day ?? null,
-    weekDays: buildWeekDays(today, row?.last_activity_day ?? null, currentStreak),
+    weekDays: buildWeekDays(
+      today,
+      row?.last_activity_day ?? null,
+      currentStreak,
+    ),
     lifetime: rowToCounters(row),
     unlockedIds: unlockRows.map((row) => row.achievement_id as AchievementId),
     unlocked: unlockRows.map(mapUnlock),
   };
 }
 
-function calculateNextStreak(row: UserActivityRow | null, today: string): number {
+function calculateNextStreak(
+  row: UserActivityRow | null,
+  today: string,
+): number {
   if (!row?.last_activity_day) return 1;
   if (row.last_activity_day === today) return row.current_streak;
   if (daysBetween(row.last_activity_day, today) === 1) {
@@ -185,38 +193,54 @@ function counterUpdateSql(type: ActivityType): string {
   return column ? `${column} = ${column} + 1,` : "";
 }
 
-export function getStreakState(
+export async function getStreakState(
   userId: string,
   options: TrackActivityOptions = {},
-): StreakState {
-  ensureSchema();
+): Promise<StreakState> {
+  await ensureSchema();
   const today = utcDay(options.now);
-  return buildState(getActivityRow(userId), getUnlockRows(userId), today);
+  return buildState(
+    await getActivityRow(userId),
+    await getUnlockRows(userId),
+    today,
+  );
 }
 
-export function getLifetimeCounters(userId: string): LifetimeCounters {
-  return getStreakState(userId).lifetime;
+export async function getLifetimeCounters(
+  userId: string,
+): Promise<LifetimeCounters> {
+  return (await getStreakState(userId)).lifetime;
 }
 
-export function trackActivity(
+export async function trackActivity(
   userId: string,
   type: ActivityType,
   options: TrackActivityOptions = {},
-): TrackActivityResult {
-  ensureSchema();
+): Promise<TrackActivityResult> {
+  await ensureSchema();
   const today = utcDay(options.now);
   const timestamp = options.now ? toIso(options.now) : nowIso();
   const activityId = generateId();
 
-  db.exec("BEGIN IMMEDIATE");
-  try {
-    const existing = getActivityRow(userId);
-    const currentStreak = calculateNextStreak(existing, today);
-    const longestStreak = Math.max(existing?.longest_streak ?? 0, currentStreak);
+  const existing = await getActivityRow(userId);
+  const unlockRows = await getUnlockRows(userId);
+  const currentStreak = calculateNextStreak(existing, today);
+  const longestStreak = Math.max(existing?.longest_streak ?? 0, currentStreak);
+  const statements: Array<{ sql: string; args: Array<string | number> }> = [];
+  let updatedRow: UserActivityRow;
 
-    if (existing) {
-      db.prepare(
-        `
+  if (existing) {
+    const column = ACTIVITY_COUNTER_COLUMNS[type];
+    updatedRow = {
+      ...existing,
+      current_streak: currentStreak,
+      longest_streak: longestStreak,
+      last_activity_day: today,
+      updated_at: timestamp,
+      ...(column ? { [column]: Number(existing[column]) + 1 } : {}),
+    };
+    statements.push({
+      sql: `
         UPDATE user_activity
         SET current_streak = ?,
             longest_streak = ?,
@@ -225,18 +249,28 @@ export function trackActivity(
             updated_at = ?
         WHERE user_id = ?
       `,
-      ).run(currentStreak, longestStreak, today, timestamp, userId);
-    } else {
-      const counters = {
-        total_opps_created: type === "opp_created" ? 1 : 0,
-        total_opps_applied: type === "opp_applied" ? 1 : 0,
-        total_resumes_tailored: type === "tailor_generated" ? 1 : 0,
-        total_cover_letters: type === "cover_letter_generated" ? 1 : 0,
-        total_emails_sent: type === "email_sent" ? 1 : 0,
-        total_interviews_started: type === "interview_started" ? 1 : 0,
-      };
-      db.prepare(
-        `
+      args: [currentStreak, longestStreak, today, timestamp, userId],
+    });
+  } else {
+    const counters = {
+      total_opps_created: type === "opp_created" ? 1 : 0,
+      total_opps_applied: type === "opp_applied" ? 1 : 0,
+      total_resumes_tailored: type === "tailor_generated" ? 1 : 0,
+      total_cover_letters: type === "cover_letter_generated" ? 1 : 0,
+      total_emails_sent: type === "email_sent" ? 1 : 0,
+      total_interviews_started: type === "interview_started" ? 1 : 0,
+    };
+    updatedRow = {
+      id: activityId,
+      user_id: userId,
+      current_streak: currentStreak,
+      longest_streak: longestStreak,
+      last_activity_day: today,
+      updated_at: timestamp,
+      ...counters,
+    };
+    statements.push({
+      sql: `
         INSERT INTO user_activity (
           id, user_id, current_streak, longest_streak, last_activity_day,
           total_opps_created, total_opps_applied, total_resumes_tailored,
@@ -245,7 +279,7 @@ export function trackActivity(
         )
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
-      ).run(
+      args: [
         activityId,
         userId,
         currentStreak,
@@ -258,39 +292,37 @@ export function trackActivity(
         counters.total_emails_sent,
         counters.total_interviews_started,
         timestamp,
-      );
-    }
+      ],
+    });
+  }
 
-    const state = buildState(getActivityRow(userId), getUnlockRows(userId), today);
-    const unlockedIds = new Set(state.unlockedIds);
-    const newlyUnlocked = ACHIEVEMENTS.filter(
-      (achievement) =>
-        achievement.isUnlocked(state) && !unlockedIds.has(achievement.id),
-    );
-    const rows: AchievementUnlockRow[] = [];
+  const state = buildState(updatedRow, unlockRows, today);
+  const unlockedIds = new Set(state.unlockedIds);
+  const newlyUnlocked = ACHIEVEMENTS.filter(
+    (achievement) =>
+      achievement.isUnlocked(state) && !unlockedIds.has(achievement.id),
+  );
+  const rows: AchievementUnlockRow[] = [];
 
-    for (const achievement of newlyUnlocked) {
-      const id = generateId();
-      db.prepare(
-        `
+  for (const achievement of newlyUnlocked) {
+    const id = generateId();
+    statements.push({
+      sql: `
         INSERT OR IGNORE INTO achievement_unlocks (
           id, user_id, achievement_id, unlocked_at
         )
         VALUES (?, ?, ?, ?)
       `,
-      ).run(id, userId, achievement.id, timestamp);
+      args: [id, userId, achievement.id, timestamp],
+    });
 
-      rows.push({
-        id,
-        achievement_id: achievement.id,
-        unlocked_at: timestamp,
-      });
-    }
-
-    db.exec("COMMIT");
-    return { unlocked: rows.map(mapUnlock) };
-  } catch (error) {
-    db.exec("ROLLBACK");
-    throw error;
+    rows.push({
+      id,
+      achievement_id: achievement.id,
+      unlocked_at: timestamp,
+    });
   }
+
+  await getClient().batch(statements, "write");
+  return { unlocked: rows.map(mapUnlock) };
 }

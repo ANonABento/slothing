@@ -17,7 +17,7 @@ vi.mock("@/lib/auth", () => ({
   isAuthError: mocks.isAuthError,
 }));
 
-vi.mock("@/lib/db/jobs", () => ({
+vi.mock("@/lib/db/jobs-async", () => ({
   getJob: mocks.getJob,
   updateJob: mocks.updateJob,
   deleteJob: mocks.deleteJob,

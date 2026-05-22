@@ -1,7 +1,7 @@
-import db from "@/lib/db/legacy";
-import { createReminderNotification } from "@/lib/db/notifications";
+import { getClient } from "@/lib/db/client";
 import { nowIso } from "@/lib/format/time";
 import { sendReminderEmail } from "./send-email";
+import { generateId } from "@/lib/utils";
 
 let remindersFiringSchemaEnsured = false;
 
@@ -32,26 +32,27 @@ export interface FireDueRemindersResult {
   results: FiredReminderResult[];
 }
 
-export function ensureRemindersFiringSchema(): void {
+export async function ensureRemindersFiringSchema(): Promise<void> {
   if (remindersFiringSchemaEnsured) return;
 
-  const columns = db.prepare("PRAGMA table_info(reminders)").all() as Array<{
-    name: string;
-  }>;
+  const columnsResult = await getClient().execute(
+    "PRAGMA table_info(reminders)",
+  );
+  const columns = columnsResult.rows as unknown as Array<{ name: string }>;
   const columnNames = new Set(columns.map((column) => column.name));
 
   if (!columnNames.has("fired_at")) {
-    db.prepare("ALTER TABLE reminders ADD COLUMN fired_at TEXT").run();
+    await getClient().execute("ALTER TABLE reminders ADD COLUMN fired_at TEXT");
   }
   if (!columnNames.has("notify_by_email")) {
-    db.prepare(
+    await getClient().execute(
       "ALTER TABLE reminders ADD COLUMN notify_by_email INTEGER NOT NULL DEFAULT 0",
-    ).run();
+    );
   }
 
-  db.prepare(
+  await getClient().execute(
     "CREATE INDEX IF NOT EXISTS idx_reminders_due_unfired ON reminders(due_date, fired_at)",
-  ).run();
+  );
   remindersFiringSchemaEnsured = true;
 }
 
@@ -62,11 +63,10 @@ export function resetRemindersFiringSchemaForTest(): void {
 export async function fireDueReminders(
   now: string = nowIso(),
 ): Promise<FireDueRemindersResult> {
-  ensureRemindersFiringSchema();
+  await ensureRemindersFiringSchema();
 
-  const dueReminders = db
-    .prepare(
-      `
+  const dueResult = await getClient().execute({
+    sql: `
         SELECT r.id, r.user_id, r.job_id, r.title, r.due_date, r.notify_by_email,
                j.title AS job_title, j.company AS job_company,
                u.email AS user_email
@@ -80,8 +80,9 @@ export async function fireDueReminders(
         ORDER BY r.due_date ASC
         LIMIT 500
       `,
-    )
-    .all(now) as DueReminderRow[];
+    args: [now],
+  });
+  const dueReminders = dueResult.rows as unknown as DueReminderRow[];
 
   const results: FiredReminderResult[] = [];
   let fired = 0;
@@ -102,13 +103,12 @@ async function fireReminder(
   reminder: DueReminderRow,
   firedAt: string,
 ): Promise<FiredReminderResult> {
-  const claim = db
-    .prepare(
-      "UPDATE reminders SET fired_at = ? WHERE id = ? AND fired_at IS NULL",
-    )
-    .run(firedAt, reminder.id) as { changes: number };
+  const claim = await getClient().execute({
+    sql: "UPDATE reminders SET fired_at = ? WHERE id = ? AND fired_at IS NULL",
+    args: [firedAt, reminder.id],
+  });
 
-  if (claim.changes === 0) {
+  if (claim.rowsAffected === 0) {
     return {
       id: reminder.id,
       fired: false,
@@ -119,7 +119,7 @@ async function fireReminder(
   }
 
   try {
-    createReminderNotification(
+    await createReminderNotificationAsync(
       reminder.title,
       reminder.job_title || "your application",
       false,
@@ -127,9 +127,10 @@ async function fireReminder(
       reminder.user_id,
     );
   } catch (error) {
-    db.prepare("UPDATE reminders SET fired_at = NULL WHERE id = ?").run(
-      reminder.id,
-    );
+    await getClient().execute({
+      sql: "UPDATE reminders SET fired_at = NULL WHERE id = ?",
+      args: [reminder.id],
+    });
     return {
       id: reminder.id,
       fired: false,
@@ -179,4 +180,28 @@ async function fireReminder(
     emailSent: false,
     emailSkipped: true,
   };
+}
+
+async function createReminderNotificationAsync(
+  reminderTitle: string,
+  jobTitle: string,
+  isOverdue: boolean,
+  jobId: string,
+  userId: string,
+): Promise<void> {
+  await getClient().execute({
+    sql: `
+      INSERT INTO notifications (id, type, title, message, link, created_at, user_id)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `,
+    args: [
+      generateId(),
+      isOverdue ? "reminder_overdue" : "reminder_due",
+      isOverdue ? "Overdue Reminder" : "Reminder Due",
+      `${reminderTitle} for ${jobTitle}`,
+      `/opportunities?id=${jobId}`,
+      nowIso(),
+      userId,
+    ],
+  });
 }

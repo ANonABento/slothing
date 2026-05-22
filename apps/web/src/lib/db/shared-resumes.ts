@@ -1,5 +1,5 @@
 import { randomBytes } from "crypto";
-import db from "./legacy";
+import { getClient } from "./client";
 import { nowEpoch } from "@/lib/format/time";
 
 /**
@@ -53,11 +53,11 @@ let sharedResumesSchemaEnsured = false;
  * `opportunity-contacts-schema.ts`, `company-research.ts`). Safe to call on
  * every read/write — short-circuits after first success.
  */
-export function ensureSharedResumesSchema(): void {
+export async function ensureSharedResumesSchema(): Promise<void> {
   if (sharedResumesSchemaEnsured) return;
 
   try {
-    db.prepare(
+    await getClient().batch([
       `CREATE TABLE IF NOT EXISTS shared_resumes (
         id TEXT PRIMARY KEY NOT NULL,
         user_id TEXT NOT NULL DEFAULT 'default',
@@ -67,18 +67,13 @@ export function ensureSharedResumesSchema(): void {
         expires_at INTEGER NOT NULL,
         view_count INTEGER NOT NULL DEFAULT 0
       )`,
-    ).run();
-
-    db.prepare(
       "CREATE INDEX IF NOT EXISTS idx_shared_resumes_user_id ON shared_resumes(user_id)",
-    ).run();
-    db.prepare(
       "CREATE INDEX IF NOT EXISTS idx_shared_resumes_user_created ON shared_resumes(user_id, created_at)",
-    ).run();
+    ]);
 
     sharedResumesSchemaEnsured = true;
   } catch {
-    // First boot / mocked test envs may not expose `prepare`. Callers should
+    // First boot / mocked test envs may not expose the client. Callers should
     // already have mocked behavior; swallow here to match the rest of the
     // `ensure*Schema` family.
   }
@@ -116,8 +111,10 @@ export interface CreateShareInput {
   now?: number;
 }
 
-export function createShare(input: CreateShareInput): SharedResume {
-  ensureSharedResumesSchema();
+export async function createShare(
+  input: CreateShareInput,
+): Promise<SharedResume> {
+  await ensureSharedResumesSchema();
 
   const now = input.now ?? nowEpoch();
   const ttl = input.ttlMs ?? DEFAULT_SHARE_TTL_MS;
@@ -137,11 +134,12 @@ export function createShare(input: CreateShareInput): SharedResume {
   const id = generateShareToken();
   const expiresAt = now + ttl;
 
-  db.prepare(
-    `INSERT INTO shared_resumes
+  await getClient().execute({
+    sql: `INSERT INTO shared_resumes
        (id, user_id, document_html, document_title, created_at, expires_at, view_count)
      VALUES (?, ?, ?, ?, ?, ?, 0)`,
-  ).run(id, input.userId, html, title || "Untitled resume", now, expiresAt);
+    args: [id, input.userId, html, title || "Untitled resume", now, expiresAt],
+  });
 
   return {
     id,
@@ -159,15 +157,17 @@ export function createShare(input: CreateShareInput): SharedResume {
  * callers can't distinguish the two so an expired link looks like a missing
  * link, which is what we want for the public viewer.
  */
-export function getShareByToken(
+export async function getShareByToken(
   token: string,
   now: number = nowEpoch(),
-): SharedResume | null {
-  ensureSharedResumesSchema();
+): Promise<SharedResume | null> {
+  await ensureSharedResumesSchema();
 
-  const row = db
-    .prepare("SELECT * FROM shared_resumes WHERE id = ?")
-    .get(token) as SharedResumeRow | undefined;
+  const result = await getClient().execute({
+    sql: "SELECT * FROM shared_resumes WHERE id = ?",
+    args: [token],
+  });
+  const row = result.rows[0] as unknown as SharedResumeRow | undefined;
 
   if (!row) return null;
   if (row.expires_at <= now) return null;
@@ -175,30 +175,31 @@ export function getShareByToken(
   return rowToSharedResume(row);
 }
 
-export function incrementViewCount(
+export async function incrementViewCount(
   token: string,
   now: number = nowEpoch(),
-): number {
-  ensureSharedResumesSchema();
-  const result = db
-    .prepare(
-      "UPDATE shared_resumes SET view_count = view_count + 1 WHERE id = ? AND expires_at > ?",
-    )
-    .run(token, now) as { changes?: number } | undefined;
-  return result?.changes ?? 0;
+): Promise<number> {
+  await ensureSharedResumesSchema();
+  const result = await getClient().execute({
+    sql: "UPDATE shared_resumes SET view_count = view_count + 1 WHERE id = ? AND expires_at > ?",
+    args: [token, now],
+  });
+  return result.rowsAffected;
 }
 
-export function listSharesForUser(userId: string): SharedResumeSummary[] {
-  ensureSharedResumesSchema();
+export async function listSharesForUser(
+  userId: string,
+): Promise<SharedResumeSummary[]> {
+  await ensureSharedResumesSchema();
 
-  const rows = db
-    .prepare(
-      `SELECT id, document_title, created_at, expires_at, view_count
+  const result = await getClient().execute({
+    sql: `SELECT id, document_title, created_at, expires_at, view_count
          FROM shared_resumes
         WHERE user_id = ?
         ORDER BY created_at DESC`,
-    )
-    .all(userId) as Array<
+    args: [userId],
+  });
+  const rows = result.rows as unknown as Array<
     Pick<
       SharedResumeRow,
       "id" | "document_title" | "created_at" | "expires_at" | "view_count"
@@ -214,10 +215,14 @@ export function listSharesForUser(userId: string): SharedResumeSummary[] {
   }));
 }
 
-export function deleteShare(token: string, userId: string): boolean {
-  ensureSharedResumesSchema();
-  const result = db
-    .prepare("DELETE FROM shared_resumes WHERE id = ? AND user_id = ?")
-    .run(token, userId);
-  return (result?.changes ?? 0) > 0;
+export async function deleteShare(
+  token: string,
+  userId: string,
+): Promise<boolean> {
+  await ensureSharedResumesSchema();
+  const result = await getClient().execute({
+    sql: "DELETE FROM shared_resumes WHERE id = ? AND user_id = ?",
+    args: [token, userId],
+  });
+  return result.rowsAffected > 0;
 }

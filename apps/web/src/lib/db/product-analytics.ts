@@ -1,4 +1,4 @@
-import db from "./legacy";
+import { getClient } from "./client";
 import { nowIso } from "@/lib/format/time";
 import { generateId } from "@/lib/utils";
 
@@ -27,50 +27,45 @@ export interface ActivationEvent {
 
 let schemaReady = false;
 
-export function ensureProductAnalyticsSchema(): void {
+export async function ensureProductAnalyticsSchema(): Promise<void> {
   if (schemaReady) return;
-  db.prepare(
-    `
-    CREATE TABLE IF NOT EXISTS product_events (
+  await getClient().batch([
+    `CREATE TABLE IF NOT EXISTS product_events (
       id TEXT PRIMARY KEY NOT NULL,
       user_id TEXT,
       event TEXT NOT NULL,
       source TEXT,
       metadata_json TEXT,
       created_at TEXT NOT NULL
-    )
-  `,
-  ).run();
-  db.prepare(
+    )`,
     "CREATE INDEX IF NOT EXISTS idx_product_events_user_created ON product_events(user_id, created_at)",
-  ).run();
-  db.prepare(
     "CREATE INDEX IF NOT EXISTS idx_product_events_event_created ON product_events(event, created_at)",
-  ).run();
+  ]);
   schemaReady = true;
 }
 
-export function trackActivationEvent(
+export async function trackActivationEvent(
   input: TrackActivationEventInput,
-): ActivationEvent {
-  ensureProductAnalyticsSchema();
+): Promise<ActivationEvent> {
+  await ensureProductAnalyticsSchema();
   const id = generateId();
   const createdAt = nowIso();
   const metadataJson = input.metadata ? JSON.stringify(input.metadata) : null;
 
-  db.prepare(
-    `
-    INSERT INTO product_events (id, user_id, event, source, metadata_json, created_at)
-    VALUES (?, ?, ?, ?, ?, ?)
-  `,
-  ).run(
-    id,
-    input.userId ?? null,
-    input.event,
-    input.source ?? null,
-    metadataJson,
-    createdAt,
-  );
+  await getClient().execute({
+    sql: `
+      INSERT INTO product_events (id, user_id, event, source, metadata_json, created_at)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `,
+    args: [
+      id,
+      input.userId ?? null,
+      input.event,
+      input.source ?? null,
+      metadataJson,
+      createdAt,
+    ],
+  });
 
   return {
     id,
@@ -82,25 +77,25 @@ export function trackActivationEvent(
   };
 }
 
-export function getActivationFunnelCounts(
+export async function getActivationFunnelCounts(
   userId?: string | null,
-): Record<ActivationEventName, number> {
-  ensureProductAnalyticsSchema();
-  const rows = (
+): Promise<Record<ActivationEventName, number>> {
+  await ensureProductAnalyticsSchema();
+  const result = await getClient().execute(
     userId
-      ? db
-          .prepare(
-            "SELECT event, COUNT(*) as count FROM product_events WHERE user_id = ? GROUP BY event",
-          )
-          .all(userId)
-      : db
-          .prepare(
-            "SELECT event, COUNT(*) as count FROM product_events GROUP BY event",
-          )
-          .all()
-  ) as Array<{ event: ActivationEventName; count: number }>;
+      ? {
+          sql: "SELECT event, COUNT(*) as count FROM product_events WHERE user_id = ? GROUP BY event",
+          args: [userId],
+        }
+      : "SELECT event, COUNT(*) as count FROM product_events GROUP BY event",
+  );
 
-  return rows.reduce(
+  return (
+    result.rows as unknown as Array<{
+      event: ActivationEventName;
+      count: number;
+    }>
+  ).reduce(
     (acc, row) => {
       acc[row.event] = Number(row.count) || 0;
       return acc;
