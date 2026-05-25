@@ -134,16 +134,16 @@ export function TemplatePreviewThumbnail({
 function VisualTemplateThumbnail() {
   return (
     <div className="relative h-24 overflow-hidden">
-      <div className="absolute left-[4%] top-[4%] h-2 w-24 rounded-[1px] bg-paper-foreground/80" />
-      <div className="absolute right-[4%] top-[7%] h-1.5 w-28 rounded-[1px] bg-paper-foreground/50" />
-      <div className="absolute right-[4%] top-[17%] h-1.5 w-16 rounded-[1px] bg-paper-foreground/40" />
-      <div className="absolute left-[4%] top-[27%] h-1.5 w-16 rounded-[1px] bg-[var(--template-accent)]" />
-      <div className="absolute left-[4%] top-[38%] h-1.5 w-36 rounded-[1px] bg-paper-foreground/70" />
-      <div className="absolute right-[4%] top-[38%] h-1.5 w-14 rounded-[1px] bg-paper-foreground/60" />
+      <div className="absolute left-[4%] top-[4%] h-2 w-24 rounded-sm bg-paper-foreground/80" />
+      <div className="absolute right-[4%] top-[7%] h-1.5 w-28 rounded-sm bg-paper-foreground/50" />
+      <div className="absolute right-[4%] top-[17%] h-1.5 w-16 rounded-sm bg-paper-foreground/40" />
+      <div className="absolute left-[4%] top-[27%] h-1.5 w-16 rounded-sm bg-[var(--template-accent)]" />
+      <div className="absolute left-[4%] top-[38%] h-1.5 w-36 rounded-sm bg-paper-foreground/70" />
+      <div className="absolute right-[4%] top-[38%] h-1.5 w-14 rounded-sm bg-paper-foreground/60" />
       {Array.from({ length: 10 }).map((_, index) => (
         <div
           key={index}
-          className="absolute h-1 rounded-[1px] bg-paper-foreground/35"
+          className="absolute h-1 rounded-sm bg-paper-foreground/35"
           style={{
             left: index % 2 === 0 ? "4%" : "7%",
             top: `${48 + index * 4.2}%`,
@@ -151,8 +151,8 @@ function VisualTemplateThumbnail() {
           }}
         />
       ))}
-      <div className="absolute bottom-0 left-[4%] h-1.5 w-20 rounded-[1px] bg-[var(--template-accent)]" />
-      <div className="absolute bottom-0 right-[4%] h-1.5 w-24 rounded-[1px] bg-paper-foreground/50" />
+      <div className="absolute bottom-0 left-[4%] h-1.5 w-20 rounded-sm bg-[var(--template-accent)]" />
+      <div className="absolute bottom-0 right-[4%] h-1.5 w-24 rounded-sm bg-paper-foreground/50" />
     </div>
   );
 }

@@ -10,11 +10,11 @@ import {
 } from "@/lib/constants";
 import {
   DuplicateDocumentError,
+  deleteDocumentArtifactsByDocumentIds,
+  deleteDocumentParseRunsByDocumentIds,
   getDocumentByFileHash,
   saveDocument,
 } from "@/lib/db";
-import { deleteDocumentArtifactsByDocumentIds } from "@/lib/db/document-artifacts";
-import { deleteDocumentParseRunsByDocumentIds } from "@/lib/db/document-parse-runs";
 import { deleteSourceDocuments } from "@/lib/db/profile-bank";
 import { nowIso } from "@/lib/format/time";
 import { sanitizeFilename } from "@/lib/upload/filename";
