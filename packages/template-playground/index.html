@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Slothing — Template Playground</title>
+    <style>
+      :root { color-scheme: light; font-family: system-ui, sans-serif; }
+      body { margin: 0; display: grid; grid-template-columns: 320px 1fr; height: 100vh; }
+      #controls { padding: 1rem; border-right: 1px solid #ddd; overflow: auto; }
+      #controls h1 { font-size: 1rem; margin: 0 0 1rem; }
+      #controls label { display: block; font-size: 0.8rem; margin: 0.75rem 0 0.2rem; color: #444; }
+      #controls select, #controls input { width: 100%; box-sizing: border-box; }
+      .panes { display: grid; grid-template-rows: auto 1fr; height: 100vh; }
+      .panes header { padding: 0.5rem 1rem; border-bottom: 1px solid #eee; font-size: 0.8rem; color: #666; }
+      iframe { border: 0; width: 100%; height: 100%; background: #fff; }
+      .note { font-size: 0.7rem; color: #999; margin-top: 1rem; line-height: 1.4; }
+    </style>
+  </head>
+  <body>
+    <div id="controls">
+      <h1>Template Playground</h1>
+      <div id="form"></div>
+      <p class="note">
+        Phase 0 harness. Preview uses the <code>stubRenderHtml</code> placeholder.
+        Phase 1 swaps in the real adapter; Phase 3 adds the original-PDF side-by-side
+        and the HTML / Typeset engine toggle.
+      </p>
+    </div>
+    <div class="panes">
+      <header id="status">HTML preview (stub renderer)</header>
+      <iframe id="preview" title="resume preview"></iframe>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

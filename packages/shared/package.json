@@ -10,7 +10,8 @@
     "./schemas": "./src/schemas.ts",
     "./scoring": "./src/scoring/index.ts",
     "./formatters": "./src/formatters/index.ts",
-    "./api-contracts": "./src/api-contracts.ts"
+    "./api-contracts": "./src/api-contracts.ts",
+    "./resume-template": "./src/resume-template/index.ts"
   },
   "scripts": {
     "build": "tsc --emitDeclarationOnly",

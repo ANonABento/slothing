@@ -391,6 +391,19 @@ importers:
         specifier: 4.0.18
         version: 4.0.18(@types/node@20.19.40)(jiti@1.21.7)(jsdom@27.4.0(@noble/hashes@1.8.0))(terser@5.47.1)(tsx@4.21.0)(yaml@2.8.4)
 
+  packages/template-playground:
+    dependencies:
+      '@slothing/shared':
+        specifier: workspace:*
+        version: link:../shared
+    devDependencies:
+      typescript:
+        specifier: ^5
+        version: 5.9.3
+      vite:
+        specifier: ^5
+        version: 5.4.21(@types/node@20.19.40)(terser@5.47.1)
+
 packages:
 
   '@acemir/cssom@0.9.31':
