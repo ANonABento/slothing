@@ -7,4 +7,5 @@ export * from "./layout";
 export * from "./render";
 export * from "./render-html";
 export * from "./render-typeset";
+export * from "./extract";
 export * from "./fixtures";
