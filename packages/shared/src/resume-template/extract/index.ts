@@ -30,6 +30,7 @@ export * from "./fingerprint";
 export * from "./classify";
 export * from "./labels";
 export * from "./content";
+export * from "./xmp";
 
 export type ExtractionRoute = "fingerprint" | "manual";
 
