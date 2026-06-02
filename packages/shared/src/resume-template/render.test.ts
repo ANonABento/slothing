@@ -5,6 +5,7 @@ import { ALL_FIXTURES, SAMPLE_SWE } from "./fixtures";
 import { renderHtml } from "./render-html";
 import { renderTypeset } from "./render-typeset";
 import { createNodeTypstCompiler } from "./compile-node";
+import { applyNudges } from "./nudge";
 import type { ResumeTemplate } from "./template";
 import type { TypesetCompiler } from "./render";
 
@@ -153,6 +154,35 @@ describe("Typst COMPILES WITH NO ERRORS on every fixture × template", () => {
     }
   }
 }, 60_000);
+
+describe("applyNudges — preview+nudge primitive (playground + Studio)", () => {
+  it("layers grammar + token overrides over a base template immutably", () => {
+    const out = applyNudges(primary, {
+      grammar: { density: "airy" },
+      tokens: { accent: "#b4541f" },
+    });
+    expect(out.grammar.density).toBe("airy");
+    expect(out.tokens.accent).toBe("#b4541f");
+    // Untouched axes inherited; base is not mutated.
+    expect(out.grammar.columns).toBe(primary.grammar.columns);
+    expect(primary.grammar.density).not.toBe("airy");
+  });
+});
+
+describe("dual-engine parity — both backends render the SAME fixture without error", () => {
+  it("renderHtml produces and renderTypeset compiles for one definition", async () => {
+    const compiler = createNodeTypstCompiler();
+    const tpl = applyNudges(primary, {
+      tokens: { accent: "#0d7377" },
+      grammar: { bullets: "arrow" },
+    });
+    const { html } = renderHtml(tpl, SAMPLE_SWE);
+    const { src } = renderTypeset(tpl, SAMPLE_SWE);
+    expect(html).toContain("<!doctype html>");
+    const pdf = await compiler.compile(src);
+    expect(pdf.length).toBeGreaterThan(0);
+  }, 30_000);
+});
 
 describe("ATS invariant — exported PDF has a selectable text layer", () => {
   it("Typst PDF text is extractable and contains the candidate's content", async () => {

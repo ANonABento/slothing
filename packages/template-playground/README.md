@@ -10,11 +10,13 @@ pnpm --filter @slothing/template-playground dev   # http://localhost:5180
 Imports the render pipeline straight from TS source via the workspace
 (`@slothing/shared/resume-template`) — no build step, full Chrome devtools, hot reload.
 
-**Phase 1 (now):** pick a template + sample/edge-case resume, nudge the full grammar
-(accent / font / columns / header / section-title / bullets / density), and see the **real**
-`renderHtml` and live in-browser `renderTypeset` (Typst → WASM → PDF) render **side-by-side**
-so HTML vs Typeset drift is tunable. The Typst compiler + renderer WASM run client-side — no
-server (spec §6 / §7).
+**Now (Phase 3 — manual-verify milestone):** three panes — the dropped **original PDF**,
+our **HTML** render, and our live in-browser **Typeset** render (Typst → WASM → PDF) of the
+same template definition, so original ↔ HTML ↔ Typeset drift is tunable. Drop a PDF and the
+real clone pipeline runs: **XMP self-import** (lossless RDM restore) when present, else
+**deterministic fingerprint** (pre-selects + pre-tunes a template, with per-axis confidence)
+plus **OpenResume content extraction** drafting the RDM. Then nudge the full grammar
+(accent / font / columns / header / section-title / bullets / density), switch templates, and
+toggle the engine. Everything runs client-side — no server (spec §6 / §7).
 
-**Roadmap:** Phase 3 adds the original-PDF drag-drop into a third pane (clone-target
-comparison) and folds this preview+nudge loop into the Studio import dialog (Phase 4).
+**Next:** Phase 4 folds this preview+nudge+accept loop into the Studio import dialog.

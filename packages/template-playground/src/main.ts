@@ -7,8 +7,12 @@ import {
   SECTION_TITLE_STYLES,
   BULLET_STYLES,
   ALL_FIXTURES,
+  getDefaultTemplate,
+  applyNudges,
   renderHtml,
   renderTypeset,
+  extractResume,
+  extractRdmFromXmp,
   type ColumnLayout,
   type Density,
   type FontClass,
@@ -16,63 +20,97 @@ import {
   type SectionTitleStyle,
   type BulletStyle,
   type ResumeTemplate,
+  type ResumeDocumentModel,
 } from "@slothing/shared/resume-template";
 
 import { browserTypstCompiler } from "./typst-compiler";
+import { pdfToGeometry } from "./pdf-geometry";
 
 /**
- * Template playground — the manual-verify surface (spec §7/§11). Phase 1 wires the
- * REAL renderHtml + a live in-browser Typst compile, with an engine toggle so HTML
- * and Typeset render side-by-side to tune drift. Phase 3 adds original-PDF drag-drop.
+ * Template playground — the manual-verify milestone (spec §7/§11). Three panes:
+ * the dropped ORIGINAL PDF, our HTML render, and our live Typst (WASM) render of the
+ * SAME template definition. Dropping a PDF runs the real clone pipeline (XMP
+ * self-import → else fingerprint + OpenResume content extraction), pre-selects /
+ * pre-tunes a template, and renders the user's own content beside the original so
+ * drift is tunable. This preview+nudge loop ports into Studio (Phase 4).
  */
 
 type Engine = "html" | "typeset" | "both";
 
+const FIRST = DEFAULT_TEMPLATES[0];
+
 const state = {
-  templateId: DEFAULT_TEMPLATES[0].id,
+  baseTemplateId: FIRST.id,
+  /** Synthesized template from an upload (overrides the dropdown base when set). */
+  syntheticBase: null as ResumeTemplate | null,
   rdmIndex: 0,
+  /** RDM recovered/extracted from a dropped PDF (overrides the sample fixture). */
+  rdmOverride: null as ResumeDocumentModel | null,
   engine: "both" as Engine,
-  accent: DEFAULT_TEMPLATES[0].tokens.accent,
-  fontClass: DEFAULT_TEMPLATES[0].tokens.fontClass as FontClass,
-  columns: DEFAULT_TEMPLATES[0].grammar.columns as ColumnLayout,
-  header: DEFAULT_TEMPLATES[0].grammar.header as HeaderStyle,
-  sectionTitle: DEFAULT_TEMPLATES[0].grammar.sectionTitle as SectionTitleStyle,
-  bullets: DEFAULT_TEMPLATES[0].grammar.bullets as BulletStyle,
-  density: DEFAULT_TEMPLATES[0].grammar.density as Density,
+  // grammar + token nudges
+  accent: FIRST.tokens.accent,
+  fontClass: FIRST.tokens.fontClass as FontClass,
+  columns: FIRST.grammar.columns as ColumnLayout,
+  header: FIRST.grammar.header as HeaderStyle,
+  sectionTitle: FIRST.grammar.sectionTitle as SectionTitleStyle,
+  bullets: FIRST.grammar.bullets as BulletStyle,
+  density: FIRST.grammar.density as Density,
+  originalUrl: null as string | null,
 };
 
+function baseTemplate(): ResumeTemplate {
+  return state.syntheticBase ?? getDefaultTemplate(state.baseTemplateId) ?? FIRST;
+}
+
 function currentTemplate(): ResumeTemplate {
-  const base = DEFAULT_TEMPLATES.find((t) => t.id === state.templateId) ?? DEFAULT_TEMPLATES[0];
-  return {
-    ...base,
+  return applyNudges(baseTemplate(), {
     grammar: {
-      ...base.grammar,
       columns: state.columns,
       header: state.header,
       sectionTitle: state.sectionTitle,
       bullets: state.bullets,
       density: state.density,
     },
-    tokens: { ...base.tokens, accent: state.accent, fontClass: state.fontClass },
-  };
+    tokens: { accent: state.accent, fontClass: state.fontClass },
+  });
+}
+
+function currentRdm(): ResumeDocumentModel {
+  return state.rdmOverride ?? ALL_FIXTURES[state.rdmIndex].rdm;
+}
+
+/** Sync the slider state to a template's axes (used after picking / extracting). */
+function adoptTemplate(tpl: ResumeTemplate) {
+  state.accent = tpl.tokens.accent;
+  state.fontClass = tpl.tokens.fontClass;
+  state.columns = tpl.grammar.columns;
+  state.header = tpl.grammar.header;
+  state.sectionTitle = tpl.grammar.sectionTitle;
+  state.bullets = tpl.grammar.bullets;
+  state.density = tpl.grammar.density;
 }
 
 let typesetToken = 0;
 
 function renderPanes() {
   const tpl = currentTemplate();
-  const rdm = ALL_FIXTURES[state.rdmIndex].rdm;
+  const rdm = currentRdm();
 
+  const originalPane = document.getElementById("original-pane") as HTMLDivElement;
   const htmlPane = document.getElementById("html-pane") as HTMLDivElement;
   const typesetPane = document.getElementById("typeset-pane") as HTMLDivElement;
+
+  const showOriginal = !!state.originalUrl;
+  originalPane.style.display = showOriginal ? "flex" : "none";
   htmlPane.style.display = state.engine === "typeset" ? "none" : "flex";
   typesetPane.style.display = state.engine === "html" ? "none" : "flex";
 
-  // HTML pane — instant.
+  const cols = [showOriginal ? "1fr" : "", htmlPane.style.display !== "none" ? "1fr" : "", typesetPane.style.display !== "none" ? "1fr" : ""].filter(Boolean);
+  (document.getElementById("panes") as HTMLDivElement).style.gridTemplateColumns = cols.join(" ");
+
   const { html } = renderHtml(tpl, rdm);
   (document.getElementById("html-frame") as HTMLIFrameElement).srcdoc = html;
 
-  // Typeset pane — compile Typst → PDF in-browser (async).
   if (state.engine !== "html") {
     const { src } = renderTypeset(tpl, rdm);
     const status = document.getElementById("typeset-status")!;
@@ -81,9 +119,8 @@ function renderPanes() {
     browserTypstCompiler
       .compile(src)
       .then((pdf) => {
-        if (myToken !== typesetToken) return; // a newer render superseded this one
-        const blob = new Blob([pdf.slice() as BlobPart], { type: "application/pdf" });
-        const url = URL.createObjectURL(blob);
+        if (myToken !== typesetToken) return;
+        const url = URL.createObjectURL(new Blob([pdf.slice() as BlobPart], { type: "application/pdf" }));
         const frame = document.getElementById("typeset-frame") as HTMLIFrameElement;
         const prev = frame.dataset.url;
         frame.src = url;
@@ -98,20 +135,67 @@ function renderPanes() {
   }
 }
 
-function opt(v: string, label = v, selected = false): string {
-  return `<option value="${v}"${selected ? " selected" : ""}>${label}</option>`;
+async function handlePdf(file: File) {
+  const extractionEl = document.getElementById("extraction")!;
+  extractionEl.textContent = "Parsing PDF…";
+  const buf = await file.arrayBuffer();
+
+  if (state.originalUrl) URL.revokeObjectURL(state.originalUrl);
+  state.originalUrl = URL.createObjectURL(new Blob([buf], { type: "application/pdf" }));
+  (document.getElementById("original-frame") as HTMLIFrameElement).src = state.originalUrl;
+
+  // Fast path: our own export carries the RDM in XMP — restore it losslessly.
+  const selfImport = extractRdmFromXmp(new Uint8Array(buf));
+  if (selfImport) {
+    state.rdmOverride = selfImport;
+    extractionEl.textContent = "✓ Self-import: exact RDM restored from embedded XMP (no fingerprint/LLM).";
+    renderPanes();
+    return;
+  }
+
+  try {
+    const geometry = await pdfToGeometry(buf);
+    const result = await extractResume(geometry);
+    if (result.route === "manual") {
+      extractionEl.textContent = "Scanned / image PDF — no text layer. Pick a clean template manually.";
+      renderPanes();
+      return;
+    }
+    state.rdmOverride = result.rdm;
+    state.syntheticBase = result.classification?.template ?? null;
+    if (state.syntheticBase) adoptTemplate(state.syntheticBase);
+    const fp = result.fingerprint!;
+    const conf = (n: number) => `${Math.round(n * 100)}%`;
+    extractionEl.textContent =
+      `Fingerprint → synthesized template (pre-selected: ${result.suggestedTemplate.name}).\n` +
+      `columns ${fp.columns.value} (${conf(fp.columns.confidence)}) · ` +
+      `header ${fp.header.value} (${conf(fp.header.confidence)}) · ` +
+      `font ${fp.fontClass.value} (${conf(fp.fontClass.confidence)}) · ` +
+      `accent ${fp.accent.value} (${conf(fp.accent.confidence)})\n` +
+      (result.classification?.usedDefaults.length
+        ? `defaults used for: ${result.classification.usedDefaults.join(", ")}`
+        : "all axes from upload") +
+      (result.unknownHeaders.length ? `\nunknown headers: ${result.unknownHeaders.join(", ")}` : "");
+    syncInputs();
+    renderPanes();
+  } catch (err) {
+    extractionEl.textContent = `Extraction error: ${(err as Error)?.message ?? err}`;
+  }
+}
+
+function opt(v: string, label = v): string {
+  return `<option value="${v}">${label}</option>`;
 }
 
 function buildForm() {
   const form = document.getElementById("form")!;
   form.innerHTML = `
+    <hr />
     <label>Engine</label>
-    <select id="engine">
-      ${opt("both", "HTML + Typeset", true)}${opt("html", "HTML only")}${opt("typeset", "Typeset only")}
-    </select>
+    <select id="engine">${opt("both", "HTML + Typeset")}${opt("html", "HTML only")}${opt("typeset", "Typeset only")}</select>
     <label>Template</label>
     <select id="tpl">${DEFAULT_TEMPLATES.map((t) => opt(t.id, t.name)).join("")}</select>
-    <label>Sample resume</label>
+    <label>Sample resume (when no PDF dropped)</label>
     <select id="rdm">${ALL_FIXTURES.map((f, i) => opt(String(i), f.name)).join("")}</select>
     <hr />
     <label>Accent</label>
@@ -140,15 +224,9 @@ function buildForm() {
 
   onSel("engine", (v) => (state.engine = v as Engine));
   bind<HTMLSelectElement>("tpl").onchange = (e) => {
-    state.templateId = (e.target as HTMLSelectElement).value;
-    const base = DEFAULT_TEMPLATES.find((t) => t.id === state.templateId)!;
-    state.accent = base.tokens.accent;
-    state.fontClass = base.tokens.fontClass;
-    state.columns = base.grammar.columns;
-    state.header = base.grammar.header;
-    state.sectionTitle = base.grammar.sectionTitle;
-    state.bullets = base.grammar.bullets;
-    state.density = base.grammar.density;
+    state.baseTemplateId = (e.target as HTMLSelectElement).value;
+    state.syntheticBase = null;
+    adoptTemplate(getDefaultTemplate(state.baseTemplateId)!);
     syncInputs();
     renderPanes();
   };
@@ -173,7 +251,7 @@ function syncInputs() {
     if (el) el.value = v;
   };
   setVal("engine", state.engine);
-  setVal("tpl", state.templateId);
+  setVal("tpl", state.baseTemplateId);
   setVal("accent", state.accent);
   setVal("font", state.fontClass);
   setVal("columns", state.columns);
@@ -183,5 +261,37 @@ function syncInputs() {
   setVal("density", state.density);
 }
 
+function wireDropzone() {
+  const dz = document.getElementById("dropzone")!;
+  const fileInput = document.getElementById("file") as HTMLInputElement;
+  dz.addEventListener("click", () => fileInput.click());
+  fileInput.addEventListener("change", () => {
+    if (fileInput.files?.[0]) void handlePdf(fileInput.files[0]);
+  });
+  dz.addEventListener("dragover", (e) => {
+    e.preventDefault();
+    dz.classList.add("drag");
+  });
+  dz.addEventListener("dragleave", () => dz.classList.remove("drag"));
+  dz.addEventListener("drop", (e) => {
+    e.preventDefault();
+    dz.classList.remove("drag");
+    const file = e.dataTransfer?.files?.[0];
+    if (file) void handlePdf(file);
+  });
+
+  document.getElementById("clear-original")!.addEventListener("click", () => {
+    if (state.originalUrl) URL.revokeObjectURL(state.originalUrl);
+    state.originalUrl = null;
+    state.rdmOverride = null;
+    state.syntheticBase = null;
+    document.getElementById("extraction")!.textContent = "";
+    adoptTemplate(getDefaultTemplate(state.baseTemplateId)!);
+    syncInputs();
+    renderPanes();
+  });
+}
+
 buildForm();
+wireDropzone();
 renderPanes();

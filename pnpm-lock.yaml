@@ -414,6 +414,9 @@ importers:
       '@slothing/shared':
         specifier: workspace:*
         version: link:../shared
+      pdfjs-dist:
+        specifier: 5.6.205
+        version: 5.6.205
     devDependencies:
       typescript:
         specifier: ^5
