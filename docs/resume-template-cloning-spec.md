@@ -1,6 +1,8 @@
 # Resume Template Cloning & Rendering — Rebuild Spec
 
-> Status: **Planning complete — ready for Phase 0** · Owner: Kev · 2026-06-02
+> Status: **Phases 0–3 + 2.5 COMPLETE; Phase 4 substantially complete** (collapsed model,
+> V4 migration, import/preview/accept loop wired into Studio) · the legacy-machinery
+> DELETION is the one tracked remainder (see §12) · Owner: Kev · 2026-06-02
 >
 > Goal: make "upload your resume → get a reusable template the tailor can fill from
 > the component bank" **consistent and high-success-rate**, and collapse the messy
@@ -485,3 +487,77 @@ breaks on integration). Keep logic in `packages/shared`; only the *harness* is d
 | LaTeX export | `src/lib/export/html-to-latex.ts`, `src/app/api/export/latex/route.ts` | clean; one-way export; `pdflatex` optional |
 | DOCX export | `src/lib/builder/docx-export.ts` | flattens custom nodes |
 | Version history | `src/lib/builder/version-history.ts` | browser localStorage only |
+
+---
+
+## 12. Implementation status (2026-06-02)
+
+The architecture is built and shipped framework-free in `packages/shared/src/resume-template/`
+(pure TS, no React/Next/DB), with the dev-only Vite harness in `packages/template-playground/`
+and the app integration in `apps/web`. Every phase below is committed with CI green
+(`pnpm --filter @slothing/shared test:run`: 159 tests; full web suite: 4332 tests; type-check
++ lint clean).
+
+### ✅ Phase 0 — Scaffolding & types
+RDM (`rdm.ts`), grammar (`grammar.ts`), tokens (`tokens.ts`), the one template model
+(`template.ts`), 5 default templates (`default-templates.ts`), fixtures, Zod schemas.
+
+### ✅ Phase 1 — Render engine (both adapters, all 5 templates)
+- `layout.ts` — the shared render BRAIN (one (template, rdm) → backend-agnostic layout).
+- `render-html.ts` — real `renderHtml` honoring every grammar axis; content-resilient; **no
+  layout tables** (ATS invariant).
+- `render-typeset.ts` — real `renderTypeset` (Typst markup); all user text emitted as Typst
+  string literals so arbitrary content can never break compilation.
+- `compile.ts` interface + `compile-node.ts` (node Typst compiler, test-only; not in index).
+- Tests: grammar coverage, escaping, HTML+Typst snapshots, **Typst compiles with no errors on
+  every fixture × template**, **selectable-text-layer** assertion via pdf.js.
+- Playground: live HTML + in-browser Typst (WASM) with engine toggle and full grammar sliders.
+
+### ✅ Phase 2 — Deterministic fingerprint + classifier + extraction
+pdf.js-FREE core over injected geometry (`extract/geometry.ts`): `fingerprint.ts`
+(per-axis confidence — columns by x-clustering, accent by most-common non-ink heading colour,
+density from line-gap stats, font class from the font dictionary), `classify.ts` (parametric
+synthesis + per-axis curated-default fallback + nearest-match snap + first-class
+`pickCleanTemplate`), `content.ts` (OpenResume pipeline → RDM draft), `labels.ts` (deterministic
+labeling + injectable LLM hook), `isLikelyScanned` routing. Real render→PDF→pdf.js→extract
+round-trip test.
+
+### ✅ Phase 2.5 — Lossless XMP self-re-import
+`extract/xmp.ts` — `embedRdmXmp` (XMP `/Metadata` stream) + `extractRdmFromXmp` (raw-scan,
+schema-validated). Round-trip is lossless on our own exports; foreign/corrupted → null fallback.
+
+### ✅ Phase 3 — Playground (manual-verify milestone)
+Three panes (original PDF drag-drop ↔ HTML ↔ live Typst), full clone loop in-browser
+(XMP self-import / fingerprint + content), live sliders, template switch, engine toggle.
+`nudge.ts` (`applyNudges`) is the shared preview+nudge primitive (reused by Studio).
+
+### 🟢 Phase 4 — Schema collapse + Studio wiring (substantially complete)
+- **Collapsed model + migration (done):** `apps/web/src/lib/db/resume-templates.ts` — the ONE
+  `document_templates` table (user-scoped, additive) storing the new ResumeTemplate + optional
+  RDM; CRUD + idempotent `migrateV4ToCollapsed()`. `lib/resume/template-collapse.ts` maps the
+  legacy V4 IR's style onto the closed model (curated-default fallback per axis). Migration +
+  store tested.
+- **New import loop (done):** `POST /api/templates/import` (XMP self-import → fingerprint +
+  content; scanned/foreign → manual) and `POST /api/templates/import/commit` (accept gate);
+  `lib/resume/pdf-geometry.ts` server adapter. Route tests cover every branch.
+- **Studio dialog (done):** `components/studio/import-resume-dialog.tsx` — preview + nudge +
+  accept loop with the HTML|Typeset engine toggle, wired into `StudioSubBar` ("Import résumé
+  (clone style)"). Component test drives import→preview→nudge→accept→commit.
+- **Dead-code removal (done):** deleted `template-visual-verification.ts` (0 importers).
+
+### ⏳ Remaining (tracked) — delete the legacy V2/V3/V4 + migration + fidelity machinery
+The new collapsed model + import/preview/accept loop are live; what remains is **removing** the
+old machinery: `template-v2/v3{,-renderer}.ts`, `template-migration.ts` (3.6k LOC),
+`universal-template-import.ts` (2k), `template-migration-fidelity.ts`, the
+`/api/templates/{migrate,migrations,v2,v3}` routes + their 15 tests, and the V2/V3/draft
+functions in `lib/db/template-migrations.ts`.
+
+**Why sequenced separately (deviation, per §11 "update the spec if you deviate"):**
+`universal-template-renderer.ts` (the V4 "reusable" renderer) is **still the live render engine**
+for the export, builder, tailor, and opportunities routes — it is not dead sprawl. Removing it
+cleanly requires first bridging the content models (the live `TailoredResume`/semantic IR path ↔
+the new `RDM`) so export/builder/tailor render through the shared `renderHtml`/`renderTypeset`,
+then deleting the V4 renderer and the rest. That is a substantial, **export-critical** change best
+landed as its own focused, separately-reviewed PR rather than bundled here — bundling it risked
+destabilising the 4332-test suite and the live export feature. The collapse foundation, migration,
+and the entire new clone loop are already in place to make that follow-up mechanical.
