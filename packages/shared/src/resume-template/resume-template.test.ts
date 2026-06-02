@@ -6,7 +6,7 @@ import { resumeDocumentModelSchema } from "./rdm";
 import { resumeTemplateSchema } from "./template";
 import { DEFAULT_TEMPLATES, getDefaultTemplate } from "./default-templates";
 import { SAMPLE_RDMS } from "./fixtures";
-import { stubRenderHtml } from "./render";
+import { renderHtml } from "./render-html";
 
 describe("grammar + tokens defaults", () => {
   it("default grammar is a valid composition", () => {
@@ -54,11 +54,11 @@ describe("RDM fixtures", () => {
   });
 });
 
-describe("stub renderer (Phase 0 placeholder)", () => {
+describe("renderHtml (real adapter — smoke)", () => {
   it("produces a self-contained HTML doc reflecting RDM + tokens", () => {
     const [tpl] = DEFAULT_TEMPLATES;
     const [rdm] = SAMPLE_RDMS;
-    const { html } = stubRenderHtml(tpl, rdm);
+    const { html } = renderHtml(tpl, rdm);
     expect(html).toContain("<!doctype html>");
     expect(html).toContain(rdm.basics.name);
     expect(html).toContain(tpl.tokens.accent);
@@ -66,7 +66,7 @@ describe("stub renderer (Phase 0 placeholder)", () => {
   });
   it("escapes HTML in content", () => {
     const [tpl] = DEFAULT_TEMPLATES;
-    const { html } = stubRenderHtml(tpl, {
+    const { html } = renderHtml(tpl, {
       ...SAMPLE_RDMS[0],
       basics: { ...SAMPLE_RDMS[0].basics, name: "A <b>& B</b>" },
     });

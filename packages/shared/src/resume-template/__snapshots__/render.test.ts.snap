@@ -1,0 +1,947 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`HTML snapshots (per template, SWE fixture) > html: classic 1`] = `
+"<!doctype html><html lang="en"><head><meta charset="utf-8">
+<style>
+  @page { size: Letter; margin: 0; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: "Source Serif 4", Georgia, "Times New Roman", serif;
+    font-size: 10.5pt;
+    line-height: 1.350;
+    color: #1a1a1a;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .page { width: 8.5in; min-height: 11in; margin: 0 auto; padding: 0.55in 0.6in; }
+  a { color: #222222; text-decoration: none; }
+  h1, h2 { font-family: "Source Serif 4", Georgia, "Times New Roman", serif; }
+  p { margin: 0; }
+</style></head>
+<body><div class="page"><header style="text-align:center;padding-bottom:0.425em;margin-bottom:0.425em;border-bottom:1px solid rgb(156, 156, 156)"><h1 style="margin:0;font-size:1.9em;font-weight:700;color:#222222;letter-spacing:-0.01em">Avery Chen</h1><div style="color:#555555;font-size:1.02em;margin-top:0.15em">Software Engineer</div><div style="color:#555555;font-size:0.88em;margin-top:0.3em"><a href="mailto:avery.chen@example.com">avery.chen@example.com</a>&nbsp;&nbsp;•&nbsp;&nbsp;(555) 010-2244&nbsp;&nbsp;•&nbsp;&nbsp;Toronto, ON&nbsp;&nbsp;•&nbsp;&nbsp;<a href="https://averychen.dev">averychen.dev</a>&nbsp;&nbsp;•&nbsp;&nbsp;<a href="https://github.com/averychen">github.com/averychen</a></div></header><section style="margin-top:1em;break-inside:avoid"><h2 style="font-weight:700;color:#222222;margin:0 0 0.4em;font-size:0.92em;text-transform:uppercase;letter-spacing:0.08em;border-bottom:2px solid #222222;padding-bottom:0.18em">Summary</h2><p style="margin:0">Backend engineer with 4 years building high-throughput services. Owns reliability and developer-experience tooling.</p></section><section style="margin-top:1em;break-inside:avoid"><h2 style="font-weight:700;color:#222222;margin:0 0 0.4em;font-size:0.92em;text-transform:uppercase;letter-spacing:0.08em;border-bottom:2px solid #222222;padding-bottom:0.18em">Experience</h2><div style="margin-bottom:0.62em"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:1em">
+          <div style="min-width:0"><strong>Senior Software Engineer</strong><span>, Northwind Systems</span></div>
+          <div style="text-align:right;color:#555555;white-space:nowrap;flex:0 0 auto"><div>2022 – Present</div><div style="font-size:0.92em">Toronto, ON</div></div>
+        </div><ul style="list-style:none;margin:0.2em 0 0;padding:0"><li style="display:flex;gap:0.5em;margin-bottom:0.2em"><span style="flex:0 0 auto;color:#222222" aria-hidden="true">•</span><span style="min-width:0">Cut p99 API latency 38% by introducing a read-through cache and query batching.</span></li><li style="display:flex;gap:0.5em;margin-bottom:0.2em"><span style="flex:0 0 auto;color:#222222" aria-hidden="true">•</span><span style="min-width:0">Led migration of 40+ services to a shared async job runtime.</span></li></ul></div><div style="margin-bottom:0.62em"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:1em">
+          <div style="min-width:0"><strong>Software Engineer</strong><span>, Brightloop</span></div>
+          <div style="text-align:right;color:#555555;white-space:nowrap;flex:0 0 auto"><div>2020 – 2022</div><div style="font-size:0.92em">Remote</div></div>
+        </div><ul style="list-style:none;margin:0.2em 0 0;padding:0"><li style="display:flex;gap:0.5em;margin-bottom:0.2em"><span style="flex:0 0 auto;color:#222222" aria-hidden="true">•</span><span style="min-width:0">Shipped the billing ledger handling $12M/yr with zero reconciliation errors.</span></li></ul></div></section><section style="margin-top:1em;break-inside:avoid"><h2 style="font-weight:700;color:#222222;margin:0 0 0.4em;font-size:0.92em;text-transform:uppercase;letter-spacing:0.08em;border-bottom:2px solid #222222;padding-bottom:0.18em">Education</h2><div style="margin-bottom:0.62em"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:1em">
+          <div style="min-width:0"><strong>B.S. Computer Science</strong><span>, University of Waterloo</span></div>
+          <div style="text-align:right;color:#555555;white-space:nowrap;flex:0 0 auto"><div>2016 – 2020</div><div style="font-size:0.92em">GPA 3.8/4.0</div></div>
+        </div></div></section><section style="margin-top:1em;break-inside:avoid"><h2 style="font-weight:700;color:#222222;margin:0 0 0.4em;font-size:0.92em;text-transform:uppercase;letter-spacing:0.08em;border-bottom:2px solid #222222;padding-bottom:0.18em">Skills</h2><div style="margin-bottom:0.2em"><strong>Languages:</strong> TypeScript, Go, Python, SQL</div><div style="margin-bottom:0.2em"><strong>Infra:</strong> Postgres, Redis, Kubernetes, AWS</div></section><section style="margin-top:1em;break-inside:avoid"><h2 style="font-weight:700;color:#222222;margin:0 0 0.4em;font-size:0.92em;text-transform:uppercase;letter-spacing:0.08em;border-bottom:2px solid #222222;padding-bottom:0.18em">Projects</h2><div style="margin-bottom:0.62em"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:1em">
+          <div style="min-width:0"><strong>openledger</strong></div>
+          
+        </div><div style="color:#555555;font-style:italic;margin-top:0.12em"><a href="https://github.com/averychen/openledger">Open-source double-entry ledger library.</a></div><ul style="list-style:none;margin:0.2em 0 0;padding:0"><li style="display:flex;gap:0.5em;margin-bottom:0.2em"><span style="flex:0 0 auto;color:#222222" aria-hidden="true">•</span><span style="min-width:0">1.2k stars; used by 3 fintech startups in production.</span></li></ul></div></section></div></body></html>"
+`;
+
+exports[`HTML snapshots (per template, SWE fixture) > html: compact 1`] = `
+"<!doctype html><html lang="en"><head><meta charset="utf-8">
+<style>
+  @page { size: Letter; margin: 0; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: "Source Sans 3", "Helvetica Neue", Arial, sans-serif;
+    font-size: 9.5pt;
+    line-height: 1.140;
+    color: #1a1a1a;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .page { width: 8.5in; min-height: 11in; margin: 0 auto; padding: 0.55in 0.6in; }
+  a { color: #444444; text-decoration: none; }
+  h1, h2 { font-family: "Source Sans 3", "Helvetica Neue", Arial, sans-serif; }
+  p { margin: 0; }
+</style></head>
+<body><div class="page"><header style="padding-bottom:0.3em;margin-bottom:0.3em;border-bottom:1px solid rgb(171, 171, 171)"><h1 style="margin:0;font-size:1.9em;font-weight:700;color:#444444;letter-spacing:-0.01em">Avery Chen</h1><div style="color:#555555;font-size:1.02em;margin-top:0.15em">Software Engineer</div><div style="color:#555555;font-size:0.88em;margin-top:0.3em"><a href="mailto:avery.chen@example.com">avery.chen@example.com</a>&nbsp;&nbsp;•&nbsp;&nbsp;(555) 010-2244&nbsp;&nbsp;•&nbsp;&nbsp;Toronto, ON&nbsp;&nbsp;•&nbsp;&nbsp;<a href="https://averychen.dev">averychen.dev</a>&nbsp;&nbsp;•&nbsp;&nbsp;<a href="https://github.com/averychen">github.com/averychen</a></div></header><section style="margin-top:0.7em;break-inside:avoid"><h2 style="font-weight:700;color:#444444;margin:0 0 0.28em;font-size:0.92em;font-variant:small-caps;text-transform:lowercase;letter-spacing:0.12em">Summary</h2><p style="margin:0">Backend engineer with 4 years building high-throughput services. Owns reliability and developer-experience tooling.</p></section><section style="margin-top:0.7em;break-inside:avoid"><h2 style="font-weight:700;color:#444444;margin:0 0 0.28em;font-size:0.92em;font-variant:small-caps;text-transform:lowercase;letter-spacing:0.12em">Experience</h2><div style="margin-bottom:0.42em"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:1em">
+          <div style="min-width:0"><strong>Senior Software Engineer</strong><span>, Northwind Systems</span></div>
+          <div style="text-align:right;color:#555555;white-space:nowrap;flex:0 0 auto"><div>2022 – Present</div><div style="font-size:0.92em">Toronto, ON</div></div>
+        </div><ul style="list-style:none;margin:0.12em 0 0;padding:0"><li style="display:flex;gap:0.5em;margin-bottom:0.12em"><span style="flex:0 0 auto;color:#444444" aria-hidden="true">–</span><span style="min-width:0">Cut p99 API latency 38% by introducing a read-through cache and query batching.</span></li><li style="display:flex;gap:0.5em;margin-bottom:0.12em"><span style="flex:0 0 auto;color:#444444" aria-hidden="true">–</span><span style="min-width:0">Led migration of 40+ services to a shared async job runtime.</span></li></ul></div><div style="margin-bottom:0.42em"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:1em">
+          <div style="min-width:0"><strong>Software Engineer</strong><span>, Brightloop</span></div>
+          <div style="text-align:right;color:#555555;white-space:nowrap;flex:0 0 auto"><div>2020 – 2022</div><div style="font-size:0.92em">Remote</div></div>
+        </div><ul style="list-style:none;margin:0.12em 0 0;padding:0"><li style="display:flex;gap:0.5em;margin-bottom:0.12em"><span style="flex:0 0 auto;color:#444444" aria-hidden="true">–</span><span style="min-width:0">Shipped the billing ledger handling $12M/yr with zero reconciliation errors.</span></li></ul></div></section><section style="margin-top:0.7em;break-inside:avoid"><h2 style="font-weight:700;color:#444444;margin:0 0 0.28em;font-size:0.92em;font-variant:small-caps;text-transform:lowercase;letter-spacing:0.12em">Education</h2><div style="margin-bottom:0.42em"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:1em">
+          <div style="min-width:0"><strong>B.S. Computer Science</strong><span>, University of Waterloo</span></div>
+          <div style="text-align:right;color:#555555;white-space:nowrap;flex:0 0 auto"><div>2016 – 2020</div><div style="font-size:0.92em">GPA 3.8/4.0</div></div>
+        </div></div></section><section style="margin-top:0.7em;break-inside:avoid"><h2 style="font-weight:700;color:#444444;margin:0 0 0.28em;font-size:0.92em;font-variant:small-caps;text-transform:lowercase;letter-spacing:0.12em">Skills</h2><div style="margin-bottom:0.12em"><strong>Languages:</strong> TypeScript, Go, Python, SQL</div><div style="margin-bottom:0.12em"><strong>Infra:</strong> Postgres, Redis, Kubernetes, AWS</div></section><section style="margin-top:0.7em;break-inside:avoid"><h2 style="font-weight:700;color:#444444;margin:0 0 0.28em;font-size:0.92em;font-variant:small-caps;text-transform:lowercase;letter-spacing:0.12em">Projects</h2><div style="margin-bottom:0.42em"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:1em">
+          <div style="min-width:0"><strong>openledger</strong></div>
+          
+        </div><div style="color:#555555;font-style:italic;margin-top:0.12em"><a href="https://github.com/averychen/openledger">Open-source double-entry ledger library.</a></div><ul style="list-style:none;margin:0.12em 0 0;padding:0"><li style="display:flex;gap:0.5em;margin-bottom:0.12em"><span style="flex:0 0 auto;color:#444444" aria-hidden="true">–</span><span style="min-width:0">1.2k stars; used by 3 fintech startups in production.</span></li></ul></div></section></div></body></html>"
+`;
+
+exports[`HTML snapshots (per template, SWE fixture) > html: modern 1`] = `
+"<!doctype html><html lang="en"><head><meta charset="utf-8">
+<style>
+  @page { size: Letter; margin: 0; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: "Source Sans 3", "Helvetica Neue", Arial, sans-serif;
+    font-size: 10.5pt;
+    line-height: 1.350;
+    color: #1a1a1a;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .page { width: 8.5in; min-height: 11in; margin: 0 auto; padding: 0.55in 0.6in; }
+  a { color: #1f4e79; text-decoration: none; }
+  h1, h2 { font-family: "Source Sans 3", "Helvetica Neue", Arial, sans-serif; }
+  p { margin: 0; }
+</style></head>
+<body><div class="page"><header style="display:flex;justify-content:space-between;align-items:flex-end;gap:1em;padding-bottom:0.425em;margin-bottom:0.425em;border-bottom:1px solid rgb(154, 175, 195)">
+        <div style="min-width:0"><h1 style="margin:0;font-size:1.9em;font-weight:700;color:#1f4e79;letter-spacing:-0.01em">Avery Chen</h1><div style="color:#555555;font-size:1.02em;margin-top:0.15em">Software Engineer</div></div>
+        <div style="text-align:right;flex:0 0 auto"><div style="color:#555555;font-size:0.88em;margin-top:0"><a href="mailto:avery.chen@example.com">avery.chen@example.com</a>&nbsp;&nbsp;•&nbsp;&nbsp;(555) 010-2244&nbsp;&nbsp;•&nbsp;&nbsp;Toronto, ON&nbsp;&nbsp;•&nbsp;&nbsp;<a href="https://averychen.dev">averychen.dev</a>&nbsp;&nbsp;•&nbsp;&nbsp;<a href="https://github.com/averychen">github.com/averychen</a></div></div>
+      </header><section style="margin-top:1em;break-inside:avoid"><h2 style="font-weight:700;color:#1f4e79;margin:0 0 0.4em;font-size:0.92em;text-transform:uppercase;letter-spacing:0.08em;display:flex;align-items:center;gap:0.5em"><span style="display:inline-block;width:0.85em;height:0.85em;background:#1f4e79;flex:0 0 auto"></span>Summary</h2><p style="margin:0">Backend engineer with 4 years building high-throughput services. Owns reliability and developer-experience tooling.</p></section><section style="margin-top:1em;break-inside:avoid"><h2 style="font-weight:700;color:#1f4e79;margin:0 0 0.4em;font-size:0.92em;text-transform:uppercase;letter-spacing:0.08em;display:flex;align-items:center;gap:0.5em"><span style="display:inline-block;width:0.85em;height:0.85em;background:#1f4e79;flex:0 0 auto"></span>Experience</h2><div style="margin-bottom:0.62em"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:1em">
+          <div style="min-width:0"><strong>Senior Software Engineer</strong><span>, Northwind Systems</span></div>
+          <div style="text-align:right;color:#555555;white-space:nowrap;flex:0 0 auto"><div>2022 – Present</div><div style="font-size:0.92em">Toronto, ON</div></div>
+        </div><ul style="list-style:none;margin:0.2em 0 0;padding:0"><li style="display:flex;gap:0.5em;margin-bottom:0.2em"><span style="flex:0 0 auto;color:#1f4e79" aria-hidden="true">•</span><span style="min-width:0">Cut p99 API latency 38% by introducing a read-through cache and query batching.</span></li><li style="display:flex;gap:0.5em;margin-bottom:0.2em"><span style="flex:0 0 auto;color:#1f4e79" aria-hidden="true">•</span><span style="min-width:0">Led migration of 40+ services to a shared async job runtime.</span></li></ul></div><div style="margin-bottom:0.62em"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:1em">
+          <div style="min-width:0"><strong>Software Engineer</strong><span>, Brightloop</span></div>
+          <div style="text-align:right;color:#555555;white-space:nowrap;flex:0 0 auto"><div>2020 – 2022</div><div style="font-size:0.92em">Remote</div></div>
+        </div><ul style="list-style:none;margin:0.2em 0 0;padding:0"><li style="display:flex;gap:0.5em;margin-bottom:0.2em"><span style="flex:0 0 auto;color:#1f4e79" aria-hidden="true">•</span><span style="min-width:0">Shipped the billing ledger handling $12M/yr with zero reconciliation errors.</span></li></ul></div></section><section style="margin-top:1em;break-inside:avoid"><h2 style="font-weight:700;color:#1f4e79;margin:0 0 0.4em;font-size:0.92em;text-transform:uppercase;letter-spacing:0.08em;display:flex;align-items:center;gap:0.5em"><span style="display:inline-block;width:0.85em;height:0.85em;background:#1f4e79;flex:0 0 auto"></span>Education</h2><div style="margin-bottom:0.62em"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:1em">
+          <div style="min-width:0"><strong>B.S. Computer Science</strong><span>, University of Waterloo</span></div>
+          <div style="text-align:right;color:#555555;white-space:nowrap;flex:0 0 auto"><div>2016 – 2020</div><div style="font-size:0.92em">GPA 3.8/4.0</div></div>
+        </div></div></section><section style="margin-top:1em;break-inside:avoid"><h2 style="font-weight:700;color:#1f4e79;margin:0 0 0.4em;font-size:0.92em;text-transform:uppercase;letter-spacing:0.08em;display:flex;align-items:center;gap:0.5em"><span style="display:inline-block;width:0.85em;height:0.85em;background:#1f4e79;flex:0 0 auto"></span>Skills</h2><div style="margin-bottom:0.2em"><strong>Languages:</strong> TypeScript, Go, Python, SQL</div><div style="margin-bottom:0.2em"><strong>Infra:</strong> Postgres, Redis, Kubernetes, AWS</div></section><section style="margin-top:1em;break-inside:avoid"><h2 style="font-weight:700;color:#1f4e79;margin:0 0 0.4em;font-size:0.92em;text-transform:uppercase;letter-spacing:0.08em;display:flex;align-items:center;gap:0.5em"><span style="display:inline-block;width:0.85em;height:0.85em;background:#1f4e79;flex:0 0 auto"></span>Projects</h2><div style="margin-bottom:0.62em"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:1em">
+          <div style="min-width:0"><strong>openledger</strong></div>
+          
+        </div><div style="color:#555555;font-style:italic;margin-top:0.12em"><a href="https://github.com/averychen/openledger">Open-source double-entry ledger library.</a></div><ul style="list-style:none;margin:0.2em 0 0;padding:0"><li style="display:flex;gap:0.5em;margin-bottom:0.2em"><span style="flex:0 0 auto;color:#1f4e79" aria-hidden="true">•</span><span style="min-width:0">1.2k stars; used by 3 fintech startups in production.</span></li></ul></div></section></div></body></html>"
+`;
+
+exports[`HTML snapshots (per template, SWE fixture) > html: sidebar 1`] = `
+"<!doctype html><html lang="en"><head><meta charset="utf-8">
+<style>
+  @page { size: Letter; margin: 0; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: "Source Sans 3", "Helvetica Neue", Arial, sans-serif;
+    font-size: 10pt;
+    line-height: 1.300;
+    color: #1a1a1a;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .page { width: 8.5in; min-height: 11in; margin: 0 auto; padding: 0.55in 0.6in; }
+  a { color: #0d7377; text-decoration: none; }
+  h1, h2 { font-family: "Source Sans 3", "Helvetica Neue", Arial, sans-serif; }
+  p { margin: 0; }
+</style></head>
+<body><div class="page"><div style="display:grid;grid-template-columns:32% 1fr;gap:1.4em;align-items:start"><aside style="background:rgb(236, 244, 244);padding:0.5em 0.85em;border-radius:0"><section style="margin-top:1em;break-inside:avoid"><h2 style="font-weight:700;color:#0d7377;margin:0 0 0.4em;font-size:0.92em;font-variant:small-caps;text-transform:lowercase;letter-spacing:0.12em">Contact</h2><div style="margin-bottom:0.2em;word-break:break-word"><a href="mailto:avery.chen@example.com">avery.chen@example.com</a></div><div style="margin-bottom:0.2em;word-break:break-word">(555) 010-2244</div><div style="margin-bottom:0.2em;word-break:break-word">Toronto, ON</div><div style="margin-bottom:0.2em;word-break:break-word"><a href="https://averychen.dev">averychen.dev</a></div><div style="margin-bottom:0.2em;word-break:break-word"><a href="https://github.com/averychen">github.com/averychen</a></div></section><section style="margin-top:1em;break-inside:avoid"><h2 style="font-weight:700;color:#0d7377;margin:0 0 0.4em;font-size:0.92em;font-variant:small-caps;text-transform:lowercase;letter-spacing:0.12em">Skills</h2><div style="margin-bottom:0.2em"><strong>Languages:</strong> TypeScript, Go, Python, SQL</div><div style="margin-bottom:0.2em"><strong>Infra:</strong> Postgres, Redis, Kubernetes, AWS</div></section><section style="margin-top:1em;break-inside:avoid"><h2 style="font-weight:700;color:#0d7377;margin:0 0 0.4em;font-size:0.92em;font-variant:small-caps;text-transform:lowercase;letter-spacing:0.12em">Education</h2><div style="margin-bottom:0.62em"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:1em">
+          <div style="min-width:0"><strong>B.S. Computer Science</strong><span>, University of Waterloo</span></div>
+          <div style="text-align:right;color:#555555;white-space:nowrap;flex:0 0 auto"><div>2016 – 2020</div><div style="font-size:0.92em">GPA 3.8/4.0</div></div>
+        </div></div></section></aside><div style="min-width:0"><header style="padding-bottom:0.425em;margin-bottom:0.425em;border-bottom:1px solid rgb(146, 192, 194)"><h1 style="margin:0;font-size:1.9em;font-weight:700;color:#0d7377;letter-spacing:-0.01em">Avery Chen</h1><div style="color:#555555;font-size:1.02em;margin-top:0.15em">Software Engineer</div></header><section style="margin-top:1em;break-inside:avoid"><h2 style="font-weight:700;color:#0d7377;margin:0 0 0.4em;font-size:0.92em;font-variant:small-caps;text-transform:lowercase;letter-spacing:0.12em">Summary</h2><p style="margin:0">Backend engineer with 4 years building high-throughput services. Owns reliability and developer-experience tooling.</p></section><section style="margin-top:1em;break-inside:avoid"><h2 style="font-weight:700;color:#0d7377;margin:0 0 0.4em;font-size:0.92em;font-variant:small-caps;text-transform:lowercase;letter-spacing:0.12em">Experience</h2><div style="margin-bottom:0.62em"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:1em">
+          <div style="min-width:0"><strong>Senior Software Engineer</strong><span>, Northwind Systems</span></div>
+          <div style="text-align:right;color:#555555;white-space:nowrap;flex:0 0 auto"><div>2022 – Present</div><div style="font-size:0.92em">Toronto, ON</div></div>
+        </div><ul style="list-style:none;margin:0.2em 0 0;padding:0"><li style="display:flex;gap:0.5em;margin-bottom:0.2em"><span style="flex:0 0 auto;color:#0d7377" aria-hidden="true">–</span><span style="min-width:0">Cut p99 API latency 38% by introducing a read-through cache and query batching.</span></li><li style="display:flex;gap:0.5em;margin-bottom:0.2em"><span style="flex:0 0 auto;color:#0d7377" aria-hidden="true">–</span><span style="min-width:0">Led migration of 40+ services to a shared async job runtime.</span></li></ul></div><div style="margin-bottom:0.62em"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:1em">
+          <div style="min-width:0"><strong>Software Engineer</strong><span>, Brightloop</span></div>
+          <div style="text-align:right;color:#555555;white-space:nowrap;flex:0 0 auto"><div>2020 – 2022</div><div style="font-size:0.92em">Remote</div></div>
+        </div><ul style="list-style:none;margin:0.2em 0 0;padding:0"><li style="display:flex;gap:0.5em;margin-bottom:0.2em"><span style="flex:0 0 auto;color:#0d7377" aria-hidden="true">–</span><span style="min-width:0">Shipped the billing ledger handling $12M/yr with zero reconciliation errors.</span></li></ul></div></section><section style="margin-top:1em;break-inside:avoid"><h2 style="font-weight:700;color:#0d7377;margin:0 0 0.4em;font-size:0.92em;font-variant:small-caps;text-transform:lowercase;letter-spacing:0.12em">Projects</h2><div style="margin-bottom:0.62em"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:1em">
+          <div style="min-width:0"><strong>openledger</strong></div>
+          
+        </div><div style="color:#555555;font-style:italic;margin-top:0.12em"><a href="https://github.com/averychen/openledger">Open-source double-entry ledger library.</a></div><ul style="list-style:none;margin:0.2em 0 0;padding:0"><li style="display:flex;gap:0.5em;margin-bottom:0.2em"><span style="flex:0 0 auto;color:#0d7377" aria-hidden="true">–</span><span style="min-width:0">1.2k stars; used by 3 fintech startups in production.</span></li></ul></div></section></div></div></div></body></html>"
+`;
+
+exports[`HTML snapshots (per template, SWE fixture) > html: tech 1`] = `
+"<!doctype html><html lang="en"><head><meta charset="utf-8">
+<style>
+  @page { size: Letter; margin: 0; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: "Roboto Slab", "Source Serif 4", Georgia, serif;
+    font-size: 10pt;
+    line-height: 1.188;
+    color: #1a1a1a;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .page { width: 8.5in; min-height: 11in; margin: 0 auto; padding: 0.55in 0.6in; }
+  a { color: #2c3e50; text-decoration: none; }
+  h1, h2 { font-family: "Roboto Slab", "Source Serif 4", Georgia, serif; }
+  p { margin: 0; }
+</style></head>
+<body><div class="page"><div style="display:grid;grid-template-columns:1fr 32%;gap:1.4em;align-items:start"><div style="min-width:0"><header style="text-align:center;padding-bottom:0.3em;margin-bottom:0.3em;border-bottom:1px solid rgb(160, 168, 176)"><h1 style="margin:0;font-size:1.9em;font-weight:700;color:#2c3e50;letter-spacing:-0.01em">Avery Chen</h1><div style="color:#555555;font-size:1.02em;margin-top:0.15em">Software Engineer</div></header><section style="margin-top:0.7em;break-inside:avoid"><h2 style="font-weight:700;color:#2c3e50;margin:0 0 0.28em;font-size:0.92em;text-transform:uppercase;letter-spacing:0.06em"><span style="border-bottom:1.5px solid #2c3e50;padding-bottom:0.12em">Summary</span></h2><p style="margin:0">Backend engineer with 4 years building high-throughput services. Owns reliability and developer-experience tooling.</p></section><section style="margin-top:0.7em;break-inside:avoid"><h2 style="font-weight:700;color:#2c3e50;margin:0 0 0.28em;font-size:0.92em;text-transform:uppercase;letter-spacing:0.06em"><span style="border-bottom:1.5px solid #2c3e50;padding-bottom:0.12em">Experience</span></h2><div style="margin-bottom:0.42em"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:1em">
+          <div style="min-width:0"><strong>Senior Software Engineer</strong><span>, Northwind Systems</span></div>
+          <div style="text-align:right;color:#555555;white-space:nowrap;flex:0 0 auto"><div>2022 – Present</div><div style="font-size:0.92em">Toronto, ON</div></div>
+        </div><ul style="list-style:none;margin:0.12em 0 0;padding:0"><li style="display:flex;gap:0.5em;margin-bottom:0.12em"><span style="flex:0 0 auto;color:#2c3e50" aria-hidden="true">▸</span><span style="min-width:0">Cut p99 API latency 38% by introducing a read-through cache and query batching.</span></li><li style="display:flex;gap:0.5em;margin-bottom:0.12em"><span style="flex:0 0 auto;color:#2c3e50" aria-hidden="true">▸</span><span style="min-width:0">Led migration of 40+ services to a shared async job runtime.</span></li></ul></div><div style="margin-bottom:0.42em"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:1em">
+          <div style="min-width:0"><strong>Software Engineer</strong><span>, Brightloop</span></div>
+          <div style="text-align:right;color:#555555;white-space:nowrap;flex:0 0 auto"><div>2020 – 2022</div><div style="font-size:0.92em">Remote</div></div>
+        </div><ul style="list-style:none;margin:0.12em 0 0;padding:0"><li style="display:flex;gap:0.5em;margin-bottom:0.12em"><span style="flex:0 0 auto;color:#2c3e50" aria-hidden="true">▸</span><span style="min-width:0">Shipped the billing ledger handling $12M/yr with zero reconciliation errors.</span></li></ul></div></section><section style="margin-top:0.7em;break-inside:avoid"><h2 style="font-weight:700;color:#2c3e50;margin:0 0 0.28em;font-size:0.92em;text-transform:uppercase;letter-spacing:0.06em"><span style="border-bottom:1.5px solid #2c3e50;padding-bottom:0.12em">Projects</span></h2><div style="margin-bottom:0.42em"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:1em">
+          <div style="min-width:0"><strong>openledger</strong></div>
+          
+        </div><div style="color:#555555;font-style:italic;margin-top:0.12em"><a href="https://github.com/averychen/openledger">Open-source double-entry ledger library.</a></div><ul style="list-style:none;margin:0.12em 0 0;padding:0"><li style="display:flex;gap:0.5em;margin-bottom:0.12em"><span style="flex:0 0 auto;color:#2c3e50" aria-hidden="true">▸</span><span style="min-width:0">1.2k stars; used by 3 fintech startups in production.</span></li></ul></div></section></div><aside style="background:rgb(238, 240, 241);padding:0.5em 0.85em;border-radius:0"><section style="margin-top:0.7em;break-inside:avoid"><h2 style="font-weight:700;color:#2c3e50;margin:0 0 0.28em;font-size:0.92em;text-transform:uppercase;letter-spacing:0.06em"><span style="border-bottom:1.5px solid #2c3e50;padding-bottom:0.12em">Contact</span></h2><div style="margin-bottom:0.12em;word-break:break-word"><a href="mailto:avery.chen@example.com">avery.chen@example.com</a></div><div style="margin-bottom:0.12em;word-break:break-word">(555) 010-2244</div><div style="margin-bottom:0.12em;word-break:break-word">Toronto, ON</div><div style="margin-bottom:0.12em;word-break:break-word"><a href="https://averychen.dev">averychen.dev</a></div><div style="margin-bottom:0.12em;word-break:break-word"><a href="https://github.com/averychen">github.com/averychen</a></div></section><section style="margin-top:0.7em;break-inside:avoid"><h2 style="font-weight:700;color:#2c3e50;margin:0 0 0.28em;font-size:0.92em;text-transform:uppercase;letter-spacing:0.06em"><span style="border-bottom:1.5px solid #2c3e50;padding-bottom:0.12em">Skills</span></h2><div style="margin-bottom:0.12em"><strong>Languages:</strong> TypeScript, Go, Python, SQL</div><div style="margin-bottom:0.12em"><strong>Infra:</strong> Postgres, Redis, Kubernetes, AWS</div></section><section style="margin-top:0.7em;break-inside:avoid"><h2 style="font-weight:700;color:#2c3e50;margin:0 0 0.28em;font-size:0.92em;text-transform:uppercase;letter-spacing:0.06em"><span style="border-bottom:1.5px solid #2c3e50;padding-bottom:0.12em">Education</span></h2><div style="margin-bottom:0.42em"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:1em">
+          <div style="min-width:0"><strong>B.S. Computer Science</strong><span>, University of Waterloo</span></div>
+          <div style="text-align:right;color:#555555;white-space:nowrap;flex:0 0 auto"><div>2016 – 2020</div><div style="font-size:0.92em">GPA 3.8/4.0</div></div>
+        </div></div></section></aside></div></div></body></html>"
+`;
+
+exports[`Typst snapshots (per template, SWE fixture) > typst: classic 1`] = `
+"#set document(title: "Avery Chen", author: "Avery Chen")
+#set page(width: 8.5in, height: 11in, margin: (x: 0.6in, top: 0.55in, bottom: 0.55in))
+#set text(font: ("Source Serif 4", "Georgia", "Times New Roman"), size: 10.5pt, fill: rgb("#1a1a1a"))
+#set par(leading: 0.918em, justify: false)
+#show link: set text(fill: rgb("#222222"))
+
+#align(center)[#text(size: 1.9em, weight: "bold", fill: rgb("#222222"))[#"Avery Chen"]
+#v(0.12em, weak: true)
+#text(fill: rgb("#555555"), size: 1.02em)[#"Software Engineer"]
+#v(0.28em, weak: true)
+#text(fill: rgb("#555555"), size: 0.88em)[#link("mailto:avery.chen@example.com")[#"avery.chen@example.com"]#"  •  "#"(555) 010-2244"#"  •  "#"Toronto, ON"#"  •  "#link("https://averychen.dev")[#"averychen.dev"]#"  •  "#link("https://github.com/averychen")[#"github.com/averychen"]]]
+#v(0.425em, weak: true)
+#line(length: 100%, stroke: 0.5pt + rgb("#222222"))
+#v(0.425em, weak: true)
+#block(breakable: true, above: 1em)[
+#text(weight: "bold", fill: rgb("#222222"), tracking: 0.08em)[#"SUMMARY"]
+#v(0.18em, weak: true)
+#line(length: 100%, stroke: 1.2pt + rgb("#222222"))
+#v(0.4em, weak: true)
+#par(justify: true)[#"Backend engineer with 4 years building high-throughput services. Owns reliability and developer-experience tooling."]
+]
+#block(breakable: true, above: 1em)[
+#text(weight: "bold", fill: rgb("#222222"), tracking: 0.08em)[#"EXPERIENCE"]
+#v(0.18em, weak: true)
+#line(length: 100%, stroke: 1.2pt + rgb("#222222"))
+#v(0.4em, weak: true)
+#block(breakable: true, below: 0.62em)[#grid(columns: (1fr, auto), column-gutter: 1em, [#text(weight: "bold")[#"Senior Software Engineer"]#", "#"Northwind Systems"], align(right)[#text(fill: rgb("#555555"))[#"2022 – Present" #linebreak() #text(size: 0.92em)[#"Toronto, ON"]]])
+#list(marker: text(fill: rgb("#222222"))[#"•"], spacing: 0.650em, tight: true, [#"Cut p99 API latency 38% by introducing a read-through cache and query batching."], [#"Led migration of 40+ services to a shared async job runtime."])]
+#block(breakable: true, below: 0.62em)[#grid(columns: (1fr, auto), column-gutter: 1em, [#text(weight: "bold")[#"Software Engineer"]#", "#"Brightloop"], align(right)[#text(fill: rgb("#555555"))[#"2020 – 2022" #linebreak() #text(size: 0.92em)[#"Remote"]]])
+#list(marker: text(fill: rgb("#222222"))[#"•"], spacing: 0.650em, tight: true, [#"Shipped the billing ledger handling $12M/yr with zero reconciliation errors."])]
+]
+#block(breakable: true, above: 1em)[
+#text(weight: "bold", fill: rgb("#222222"), tracking: 0.08em)[#"EDUCATION"]
+#v(0.18em, weak: true)
+#line(length: 100%, stroke: 1.2pt + rgb("#222222"))
+#v(0.4em, weak: true)
+#block(breakable: true, below: 0.62em)[#grid(columns: (1fr, auto), column-gutter: 1em, [#text(weight: "bold")[#"B.S. Computer Science"]#", "#"University of Waterloo"], align(right)[#text(fill: rgb("#555555"))[#"2016 – 2020" #linebreak() #text(size: 0.92em)[#"GPA 3.8/4.0"]]])]
+]
+#block(breakable: true, above: 1em)[
+#text(weight: "bold", fill: rgb("#222222"), tracking: 0.08em)[#"SKILLS"]
+#v(0.18em, weak: true)
+#line(length: 100%, stroke: 1.2pt + rgb("#222222"))
+#v(0.4em, weak: true)
+#par[#text(weight: "bold")[#"Languages:"] #"TypeScript, Go, Python, SQL"]
+#v(0.2em, weak: true)
+#par[#text(weight: "bold")[#"Infra:"] #"Postgres, Redis, Kubernetes, AWS"]
+#v(0.2em, weak: true)
+]
+#block(breakable: true, above: 1em)[
+#text(weight: "bold", fill: rgb("#222222"), tracking: 0.08em)[#"PROJECTS"]
+#v(0.18em, weak: true)
+#line(length: 100%, stroke: 1.2pt + rgb("#222222"))
+#v(0.4em, weak: true)
+#block(breakable: true, below: 0.62em)[#par[#text(weight: "bold")[#"openledger"]]
+#text(fill: rgb("#555555"), style: "italic")[#link("https://github.com/averychen/openledger")[#"Open-source double-entry ledger library."]]
+#list(marker: text(fill: rgb("#222222"))[#"•"], spacing: 0.650em, tight: true, [#"1.2k stars; used by 3 fintech startups in production."])]
+]
+"
+`;
+
+exports[`Typst snapshots (per template, SWE fixture) > typst: compact 1`] = `
+"#set document(title: "Avery Chen", author: "Avery Chen")
+#set page(width: 8.5in, height: 11in, margin: (x: 0.6in, top: 0.55in, bottom: 0.55in))
+#set text(font: ("Source Sans 3", "Helvetica Neue", "Arial"), size: 9.5pt, fill: rgb("#1a1a1a"))
+#set par(leading: 0.697em, justify: false)
+#show link: set text(fill: rgb("#444444"))
+
+#text(size: 1.9em, weight: "bold", fill: rgb("#444444"))[#"Avery Chen"]
+#v(0.12em, weak: true)
+#text(fill: rgb("#555555"), size: 1.02em)[#"Software Engineer"]
+#v(0.28em, weak: true)
+#text(fill: rgb("#555555"), size: 0.88em)[#link("mailto:avery.chen@example.com")[#"avery.chen@example.com"]#"  •  "#"(555) 010-2244"#"  •  "#"Toronto, ON"#"  •  "#link("https://averychen.dev")[#"averychen.dev"]#"  •  "#link("https://github.com/averychen")[#"github.com/averychen"]]
+#v(0.300em, weak: true)
+#line(length: 100%, stroke: 0.5pt + rgb("#444444"))
+#v(0.300em, weak: true)
+#block(breakable: true, above: 0.7em)[
+#text(weight: "bold", fill: rgb("#444444"), tracking: 0.12em)[#smallcaps[#"Summary"]]
+#v(0.28em, weak: true)
+#par(justify: true)[#"Backend engineer with 4 years building high-throughput services. Owns reliability and developer-experience tooling."]
+]
+#block(breakable: true, above: 0.7em)[
+#text(weight: "bold", fill: rgb("#444444"), tracking: 0.12em)[#smallcaps[#"Experience"]]
+#v(0.28em, weak: true)
+#block(breakable: true, below: 0.42em)[#grid(columns: (1fr, auto), column-gutter: 1em, [#text(weight: "bold")[#"Senior Software Engineer"]#", "#"Northwind Systems"], align(right)[#text(fill: rgb("#555555"))[#"2022 – Present" #linebreak() #text(size: 0.92em)[#"Toronto, ON"]]])
+#list(marker: text(fill: rgb("#444444"))[#"–"], spacing: 0.570em, tight: true, [#"Cut p99 API latency 38% by introducing a read-through cache and query batching."], [#"Led migration of 40+ services to a shared async job runtime."])]
+#block(breakable: true, below: 0.42em)[#grid(columns: (1fr, auto), column-gutter: 1em, [#text(weight: "bold")[#"Software Engineer"]#", "#"Brightloop"], align(right)[#text(fill: rgb("#555555"))[#"2020 – 2022" #linebreak() #text(size: 0.92em)[#"Remote"]]])
+#list(marker: text(fill: rgb("#444444"))[#"–"], spacing: 0.570em, tight: true, [#"Shipped the billing ledger handling $12M/yr with zero reconciliation errors."])]
+]
+#block(breakable: true, above: 0.7em)[
+#text(weight: "bold", fill: rgb("#444444"), tracking: 0.12em)[#smallcaps[#"Education"]]
+#v(0.28em, weak: true)
+#block(breakable: true, below: 0.42em)[#grid(columns: (1fr, auto), column-gutter: 1em, [#text(weight: "bold")[#"B.S. Computer Science"]#", "#"University of Waterloo"], align(right)[#text(fill: rgb("#555555"))[#"2016 – 2020" #linebreak() #text(size: 0.92em)[#"GPA 3.8/4.0"]]])]
+]
+#block(breakable: true, above: 0.7em)[
+#text(weight: "bold", fill: rgb("#444444"), tracking: 0.12em)[#smallcaps[#"Skills"]]
+#v(0.28em, weak: true)
+#par[#text(weight: "bold")[#"Languages:"] #"TypeScript, Go, Python, SQL"]
+#v(0.12em, weak: true)
+#par[#text(weight: "bold")[#"Infra:"] #"Postgres, Redis, Kubernetes, AWS"]
+#v(0.12em, weak: true)
+]
+#block(breakable: true, above: 0.7em)[
+#text(weight: "bold", fill: rgb("#444444"), tracking: 0.12em)[#smallcaps[#"Projects"]]
+#v(0.28em, weak: true)
+#block(breakable: true, below: 0.42em)[#par[#text(weight: "bold")[#"openledger"]]
+#text(fill: rgb("#555555"), style: "italic")[#link("https://github.com/averychen/openledger")[#"Open-source double-entry ledger library."]]
+#list(marker: text(fill: rgb("#444444"))[#"–"], spacing: 0.570em, tight: true, [#"1.2k stars; used by 3 fintech startups in production."])]
+]
+"
+`;
+
+exports[`Typst snapshots (per template, SWE fixture) > typst: modern 1`] = `
+"#set document(title: "Avery Chen", author: "Avery Chen")
+#set page(width: 8.5in, height: 11in, margin: (x: 0.6in, top: 0.55in, bottom: 0.55in))
+#set text(font: ("Source Sans 3", "Helvetica Neue", "Arial"), size: 10.5pt, fill: rgb("#1a1a1a"))
+#set par(leading: 0.918em, justify: false)
+#show link: set text(fill: rgb("#1f4e79"))
+
+#grid(columns: (1fr, auto), column-gutter: 1em, [#text(size: 1.9em, weight: "bold", fill: rgb("#1f4e79"))[#"Avery Chen"]
+#v(0.12em, weak: true)
+#text(fill: rgb("#555555"), size: 1.02em)[#"Software Engineer"]], align(right + bottom)[#text(fill: rgb("#555555"), size: 0.88em)[#link("mailto:avery.chen@example.com")[#"avery.chen@example.com"]#" #linebreak() "#"(555) 010-2244"#" #linebreak() "#"Toronto, ON"#" #linebreak() "#link("https://averychen.dev")[#"averychen.dev"]#" #linebreak() "#link("https://github.com/averychen")[#"github.com/averychen"]]])
+#v(0.425em, weak: true)
+#line(length: 100%, stroke: 0.5pt + rgb("#1f4e79"))
+#v(0.425em, weak: true)
+#block(breakable: true, above: 1em)[
+#box(baseline: 0.1em)[#box(fill: rgb("#1f4e79"), width: 0.85em, height: 0.85em)] #text(weight: "bold", fill: rgb("#1f4e79"), tracking: 0.08em)[#"SUMMARY"]
+#v(0.4em, weak: true)
+#par(justify: true)[#"Backend engineer with 4 years building high-throughput services. Owns reliability and developer-experience tooling."]
+]
+#block(breakable: true, above: 1em)[
+#box(baseline: 0.1em)[#box(fill: rgb("#1f4e79"), width: 0.85em, height: 0.85em)] #text(weight: "bold", fill: rgb("#1f4e79"), tracking: 0.08em)[#"EXPERIENCE"]
+#v(0.4em, weak: true)
+#block(breakable: true, below: 0.62em)[#grid(columns: (1fr, auto), column-gutter: 1em, [#text(weight: "bold")[#"Senior Software Engineer"]#", "#"Northwind Systems"], align(right)[#text(fill: rgb("#555555"))[#"2022 – Present" #linebreak() #text(size: 0.92em)[#"Toronto, ON"]]])
+#list(marker: text(fill: rgb("#1f4e79"))[#"•"], spacing: 0.650em, tight: true, [#"Cut p99 API latency 38% by introducing a read-through cache and query batching."], [#"Led migration of 40+ services to a shared async job runtime."])]
+#block(breakable: true, below: 0.62em)[#grid(columns: (1fr, auto), column-gutter: 1em, [#text(weight: "bold")[#"Software Engineer"]#", "#"Brightloop"], align(right)[#text(fill: rgb("#555555"))[#"2020 – 2022" #linebreak() #text(size: 0.92em)[#"Remote"]]])
+#list(marker: text(fill: rgb("#1f4e79"))[#"•"], spacing: 0.650em, tight: true, [#"Shipped the billing ledger handling $12M/yr with zero reconciliation errors."])]
+]
+#block(breakable: true, above: 1em)[
+#box(baseline: 0.1em)[#box(fill: rgb("#1f4e79"), width: 0.85em, height: 0.85em)] #text(weight: "bold", fill: rgb("#1f4e79"), tracking: 0.08em)[#"EDUCATION"]
+#v(0.4em, weak: true)
+#block(breakable: true, below: 0.62em)[#grid(columns: (1fr, auto), column-gutter: 1em, [#text(weight: "bold")[#"B.S. Computer Science"]#", "#"University of Waterloo"], align(right)[#text(fill: rgb("#555555"))[#"2016 – 2020" #linebreak() #text(size: 0.92em)[#"GPA 3.8/4.0"]]])]
+]
+#block(breakable: true, above: 1em)[
+#box(baseline: 0.1em)[#box(fill: rgb("#1f4e79"), width: 0.85em, height: 0.85em)] #text(weight: "bold", fill: rgb("#1f4e79"), tracking: 0.08em)[#"SKILLS"]
+#v(0.4em, weak: true)
+#par[#text(weight: "bold")[#"Languages:"] #"TypeScript, Go, Python, SQL"]
+#v(0.2em, weak: true)
+#par[#text(weight: "bold")[#"Infra:"] #"Postgres, Redis, Kubernetes, AWS"]
+#v(0.2em, weak: true)
+]
+#block(breakable: true, above: 1em)[
+#box(baseline: 0.1em)[#box(fill: rgb("#1f4e79"), width: 0.85em, height: 0.85em)] #text(weight: "bold", fill: rgb("#1f4e79"), tracking: 0.08em)[#"PROJECTS"]
+#v(0.4em, weak: true)
+#block(breakable: true, below: 0.62em)[#par[#text(weight: "bold")[#"openledger"]]
+#text(fill: rgb("#555555"), style: "italic")[#link("https://github.com/averychen/openledger")[#"Open-source double-entry ledger library."]]
+#list(marker: text(fill: rgb("#1f4e79"))[#"•"], spacing: 0.650em, tight: true, [#"1.2k stars; used by 3 fintech startups in production."])]
+]
+"
+`;
+
+exports[`Typst snapshots (per template, SWE fixture) > typst: sidebar 1`] = `
+"#set document(title: "Avery Chen", author: "Avery Chen")
+#set page(width: 8.5in, height: 11in, margin: (x: 0.6in, top: 0.55in, bottom: 0.55in))
+#set text(font: ("Source Sans 3", "Helvetica Neue", "Arial"), size: 10pt, fill: rgb("#1a1a1a"))
+#set par(leading: 0.865em, justify: false)
+#show link: set text(fill: rgb("#0d7377"))
+
+#grid(columns: (32%, 1fr), column-gutter: 1.4em, align: top, block(fill: rgb("#0d7377").lighten(92%), inset: (x: 0.7em, y: 0.5em), radius: 0pt, width: 100%)[#block(breakable: true, above: 1em)[
+#text(weight: "bold", fill: rgb("#0d7377"), tracking: 0.12em)[#smallcaps[#"Contact"]]
+#v(0.4em, weak: true)
+#par[#link("mailto:avery.chen@example.com")[#"avery.chen@example.com"]]
+#v(0.2em, weak: true)
+#par[#"(555) 010-2244"]
+#v(0.2em, weak: true)
+#par[#"Toronto, ON"]
+#v(0.2em, weak: true)
+#par[#link("https://averychen.dev")[#"averychen.dev"]]
+#v(0.2em, weak: true)
+#par[#link("https://github.com/averychen")[#"github.com/averychen"]]
+#v(0.2em, weak: true)
+]
+#block(breakable: true, above: 1em)[
+#text(weight: "bold", fill: rgb("#0d7377"), tracking: 0.12em)[#smallcaps[#"Skills"]]
+#v(0.4em, weak: true)
+#par[#text(weight: "bold")[#"Languages:"] #"TypeScript, Go, Python, SQL"]
+#v(0.2em, weak: true)
+#par[#text(weight: "bold")[#"Infra:"] #"Postgres, Redis, Kubernetes, AWS"]
+#v(0.2em, weak: true)
+]
+#block(breakable: true, above: 1em)[
+#text(weight: "bold", fill: rgb("#0d7377"), tracking: 0.12em)[#smallcaps[#"Education"]]
+#v(0.4em, weak: true)
+#block(breakable: true, below: 0.62em)[#grid(columns: (1fr, auto), column-gutter: 1em, [#text(weight: "bold")[#"B.S. Computer Science"]#", "#"University of Waterloo"], align(right)[#text(fill: rgb("#555555"))[#"2016 – 2020" #linebreak() #text(size: 0.92em)[#"GPA 3.8/4.0"]]])]
+]], [#text(size: 1.9em, weight: "bold", fill: rgb("#0d7377"))[#"Avery Chen"]
+#v(0.12em, weak: true)
+#text(fill: rgb("#555555"), size: 1.02em)[#"Software Engineer"]
+#v(0.425em, weak: true)
+#line(length: 100%, stroke: 0.5pt + rgb("#0d7377"))
+#v(0.425em, weak: true)
+#block(breakable: true, above: 1em)[
+#text(weight: "bold", fill: rgb("#0d7377"), tracking: 0.12em)[#smallcaps[#"Summary"]]
+#v(0.4em, weak: true)
+#par(justify: true)[#"Backend engineer with 4 years building high-throughput services. Owns reliability and developer-experience tooling."]
+]
+#block(breakable: true, above: 1em)[
+#text(weight: "bold", fill: rgb("#0d7377"), tracking: 0.12em)[#smallcaps[#"Experience"]]
+#v(0.4em, weak: true)
+#block(breakable: true, below: 0.62em)[#grid(columns: (1fr, auto), column-gutter: 1em, [#text(weight: "bold")[#"Senior Software Engineer"]#", "#"Northwind Systems"], align(right)[#text(fill: rgb("#555555"))[#"2022 – Present" #linebreak() #text(size: 0.92em)[#"Toronto, ON"]]])
+#list(marker: text(fill: rgb("#0d7377"))[#"–"], spacing: 0.650em, tight: true, [#"Cut p99 API latency 38% by introducing a read-through cache and query batching."], [#"Led migration of 40+ services to a shared async job runtime."])]
+#block(breakable: true, below: 0.62em)[#grid(columns: (1fr, auto), column-gutter: 1em, [#text(weight: "bold")[#"Software Engineer"]#", "#"Brightloop"], align(right)[#text(fill: rgb("#555555"))[#"2020 – 2022" #linebreak() #text(size: 0.92em)[#"Remote"]]])
+#list(marker: text(fill: rgb("#0d7377"))[#"–"], spacing: 0.650em, tight: true, [#"Shipped the billing ledger handling $12M/yr with zero reconciliation errors."])]
+]
+#block(breakable: true, above: 1em)[
+#text(weight: "bold", fill: rgb("#0d7377"), tracking: 0.12em)[#smallcaps[#"Projects"]]
+#v(0.4em, weak: true)
+#block(breakable: true, below: 0.62em)[#par[#text(weight: "bold")[#"openledger"]]
+#text(fill: rgb("#555555"), style: "italic")[#link("https://github.com/averychen/openledger")[#"Open-source double-entry ledger library."]]
+#list(marker: text(fill: rgb("#0d7377"))[#"–"], spacing: 0.650em, tight: true, [#"1.2k stars; used by 3 fintech startups in production."])]
+]])
+"
+`;
+
+exports[`Typst snapshots (per template, SWE fixture) > typst: tech 1`] = `
+"#set document(title: "Avery Chen", author: "Avery Chen")
+#set page(width: 8.5in, height: 11in, margin: (x: 0.6in, top: 0.55in, bottom: 0.55in))
+#set text(font: ("Roboto Slab", "Source Serif 4", "Georgia"), size: 10pt, fill: rgb("#1a1a1a"))
+#set par(leading: 0.747em, justify: false)
+#show link: set text(fill: rgb("#2c3e50"))
+
+#grid(columns: (1fr, 32%), column-gutter: 1.4em, align: top, [#align(center)[#text(size: 1.9em, weight: "bold", fill: rgb("#2c3e50"))[#"Avery Chen"]
+#v(0.12em, weak: true)
+#text(fill: rgb("#555555"), size: 1.02em)[#"Software Engineer"]]
+#v(0.300em, weak: true)
+#line(length: 100%, stroke: 0.5pt + rgb("#2c3e50"))
+#v(0.300em, weak: true)
+#block(breakable: true, above: 0.7em)[
+#text(weight: "bold", fill: rgb("#2c3e50"), tracking: 0.06em)[#underline(stroke: 1.2pt + rgb("#2c3e50"), offset: 0.18em)[#"SUMMARY"]]
+#v(0.28em, weak: true)
+#par(justify: true)[#"Backend engineer with 4 years building high-throughput services. Owns reliability and developer-experience tooling."]
+]
+#block(breakable: true, above: 0.7em)[
+#text(weight: "bold", fill: rgb("#2c3e50"), tracking: 0.06em)[#underline(stroke: 1.2pt + rgb("#2c3e50"), offset: 0.18em)[#"EXPERIENCE"]]
+#v(0.28em, weak: true)
+#block(breakable: true, below: 0.42em)[#grid(columns: (1fr, auto), column-gutter: 1em, [#text(weight: "bold")[#"Senior Software Engineer"]#", "#"Northwind Systems"], align(right)[#text(fill: rgb("#555555"))[#"2022 – Present" #linebreak() #text(size: 0.92em)[#"Toronto, ON"]]])
+#list(marker: text(fill: rgb("#2c3e50"))[#"▸"], spacing: 0.570em, tight: true, [#"Cut p99 API latency 38% by introducing a read-through cache and query batching."], [#"Led migration of 40+ services to a shared async job runtime."])]
+#block(breakable: true, below: 0.42em)[#grid(columns: (1fr, auto), column-gutter: 1em, [#text(weight: "bold")[#"Software Engineer"]#", "#"Brightloop"], align(right)[#text(fill: rgb("#555555"))[#"2020 – 2022" #linebreak() #text(size: 0.92em)[#"Remote"]]])
+#list(marker: text(fill: rgb("#2c3e50"))[#"▸"], spacing: 0.570em, tight: true, [#"Shipped the billing ledger handling $12M/yr with zero reconciliation errors."])]
+]
+#block(breakable: true, above: 0.7em)[
+#text(weight: "bold", fill: rgb("#2c3e50"), tracking: 0.06em)[#underline(stroke: 1.2pt + rgb("#2c3e50"), offset: 0.18em)[#"PROJECTS"]]
+#v(0.28em, weak: true)
+#block(breakable: true, below: 0.42em)[#par[#text(weight: "bold")[#"openledger"]]
+#text(fill: rgb("#555555"), style: "italic")[#link("https://github.com/averychen/openledger")[#"Open-source double-entry ledger library."]]
+#list(marker: text(fill: rgb("#2c3e50"))[#"▸"], spacing: 0.570em, tight: true, [#"1.2k stars; used by 3 fintech startups in production."])]
+]], block(fill: rgb("#2c3e50").lighten(92%), inset: (x: 0.7em, y: 0.5em), radius: 0pt, width: 100%)[#block(breakable: true, above: 0.7em)[
+#text(weight: "bold", fill: rgb("#2c3e50"), tracking: 0.06em)[#underline(stroke: 1.2pt + rgb("#2c3e50"), offset: 0.18em)[#"CONTACT"]]
+#v(0.28em, weak: true)
+#par[#link("mailto:avery.chen@example.com")[#"avery.chen@example.com"]]
+#v(0.12em, weak: true)
+#par[#"(555) 010-2244"]
+#v(0.12em, weak: true)
+#par[#"Toronto, ON"]
+#v(0.12em, weak: true)
+#par[#link("https://averychen.dev")[#"averychen.dev"]]
+#v(0.12em, weak: true)
+#par[#link("https://github.com/averychen")[#"github.com/averychen"]]
+#v(0.12em, weak: true)
+]
+#block(breakable: true, above: 0.7em)[
+#text(weight: "bold", fill: rgb("#2c3e50"), tracking: 0.06em)[#underline(stroke: 1.2pt + rgb("#2c3e50"), offset: 0.18em)[#"SKILLS"]]
+#v(0.28em, weak: true)
+#par[#text(weight: "bold")[#"Languages:"] #"TypeScript, Go, Python, SQL"]
+#v(0.12em, weak: true)
+#par[#text(weight: "bold")[#"Infra:"] #"Postgres, Redis, Kubernetes, AWS"]
+#v(0.12em, weak: true)
+]
+#block(breakable: true, above: 0.7em)[
+#text(weight: "bold", fill: rgb("#2c3e50"), tracking: 0.06em)[#underline(stroke: 1.2pt + rgb("#2c3e50"), offset: 0.18em)[#"EDUCATION"]]
+#v(0.28em, weak: true)
+#block(breakable: true, below: 0.42em)[#grid(columns: (1fr, auto), column-gutter: 1em, [#text(weight: "bold")[#"B.S. Computer Science"]#", "#"University of Waterloo"], align(right)[#text(fill: rgb("#555555"))[#"2016 – 2020" #linebreak() #text(size: 0.92em)[#"GPA 3.8/4.0"]]])]
+]])
+"
+`;
+
+exports[`token-permutation snapshots (Classic × SWE) — drift control > html: accent-rust 1`] = `
+"<!doctype html><html lang="en"><head><meta charset="utf-8">
+<style>
+  @page { size: Letter; margin: 0; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: "Source Serif 4", Georgia, "Times New Roman", serif;
+    font-size: 10.5pt;
+    line-height: 1.350;
+    color: #1a1a1a;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .page { width: 8.5in; min-height: 11in; margin: 0 auto; padding: 0.55in 0.6in; }
+  a { color: #b4541f; text-decoration: none; }
+  h1, h2 { font-family: "Source Serif 4", Georgia, "Times New Roman", serif; }
+  p { margin: 0; }
+</style></head>
+<body><div class="page"><header style="text-align:center;padding-bottom:0.425em;margin-bottom:0.425em;border-bottom:1px solid rgb(221, 178, 154)"><h1 style="margin:0;font-size:1.9em;font-weight:700;color:#b4541f;letter-spacing:-0.01em">Avery Chen</h1><div style="color:#555555;font-size:1.02em;margin-top:0.15em">Software Engineer</div><div style="color:#555555;font-size:0.88em;margin-top:0.3em"><a href="mailto:avery.chen@example.com">avery.chen@example.com</a>&nbsp;&nbsp;•&nbsp;&nbsp;(555) 010-2244&nbsp;&nbsp;•&nbsp;&nbsp;Toronto, ON&nbsp;&nbsp;•&nbsp;&nbsp;<a href="https://averychen.dev">averychen.dev</a>&nbsp;&nbsp;•&nbsp;&nbsp;<a href="https://github.com/averychen">github.com/averychen</a></div></header><section style="margin-top:1em;break-inside:avoid"><h2 style="font-weight:700;color:#b4541f;margin:0 0 0.4em;font-size:0.92em;text-transform:uppercase;letter-spacing:0.08em;border-bottom:2px solid #b4541f;padding-bottom:0.18em">Summary</h2><p style="margin:0">Backend engineer with 4 years building high-throughput services. Owns reliability and developer-experience tooling.</p></section><section style="margin-top:1em;break-inside:avoid"><h2 style="font-weight:700;color:#b4541f;margin:0 0 0.4em;font-size:0.92em;text-transform:uppercase;letter-spacing:0.08em;border-bottom:2px solid #b4541f;padding-bottom:0.18em">Experience</h2><div style="margin-bottom:0.62em"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:1em">
+          <div style="min-width:0"><strong>Senior Software Engineer</strong><span>, Northwind Systems</span></div>
+          <div style="text-align:right;color:#555555;white-space:nowrap;flex:0 0 auto"><div>2022 – Present</div><div style="font-size:0.92em">Toronto, ON</div></div>
+        </div><ul style="list-style:none;margin:0.2em 0 0;padding:0"><li style="display:flex;gap:0.5em;margin-bottom:0.2em"><span style="flex:0 0 auto;color:#b4541f" aria-hidden="true">•</span><span style="min-width:0">Cut p99 API latency 38% by introducing a read-through cache and query batching.</span></li><li style="display:flex;gap:0.5em;margin-bottom:0.2em"><span style="flex:0 0 auto;color:#b4541f" aria-hidden="true">•</span><span style="min-width:0">Led migration of 40+ services to a shared async job runtime.</span></li></ul></div><div style="margin-bottom:0.62em"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:1em">
+          <div style="min-width:0"><strong>Software Engineer</strong><span>, Brightloop</span></div>
+          <div style="text-align:right;color:#555555;white-space:nowrap;flex:0 0 auto"><div>2020 – 2022</div><div style="font-size:0.92em">Remote</div></div>
+        </div><ul style="list-style:none;margin:0.2em 0 0;padding:0"><li style="display:flex;gap:0.5em;margin-bottom:0.2em"><span style="flex:0 0 auto;color:#b4541f" aria-hidden="true">•</span><span style="min-width:0">Shipped the billing ledger handling $12M/yr with zero reconciliation errors.</span></li></ul></div></section><section style="margin-top:1em;break-inside:avoid"><h2 style="font-weight:700;color:#b4541f;margin:0 0 0.4em;font-size:0.92em;text-transform:uppercase;letter-spacing:0.08em;border-bottom:2px solid #b4541f;padding-bottom:0.18em">Education</h2><div style="margin-bottom:0.62em"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:1em">
+          <div style="min-width:0"><strong>B.S. Computer Science</strong><span>, University of Waterloo</span></div>
+          <div style="text-align:right;color:#555555;white-space:nowrap;flex:0 0 auto"><div>2016 – 2020</div><div style="font-size:0.92em">GPA 3.8/4.0</div></div>
+        </div></div></section><section style="margin-top:1em;break-inside:avoid"><h2 style="font-weight:700;color:#b4541f;margin:0 0 0.4em;font-size:0.92em;text-transform:uppercase;letter-spacing:0.08em;border-bottom:2px solid #b4541f;padding-bottom:0.18em">Skills</h2><div style="margin-bottom:0.2em"><strong>Languages:</strong> TypeScript, Go, Python, SQL</div><div style="margin-bottom:0.2em"><strong>Infra:</strong> Postgres, Redis, Kubernetes, AWS</div></section><section style="margin-top:1em;break-inside:avoid"><h2 style="font-weight:700;color:#b4541f;margin:0 0 0.4em;font-size:0.92em;text-transform:uppercase;letter-spacing:0.08em;border-bottom:2px solid #b4541f;padding-bottom:0.18em">Projects</h2><div style="margin-bottom:0.62em"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:1em">
+          <div style="min-width:0"><strong>openledger</strong></div>
+          
+        </div><div style="color:#555555;font-style:italic;margin-top:0.12em"><a href="https://github.com/averychen/openledger">Open-source double-entry ledger library.</a></div><ul style="list-style:none;margin:0.2em 0 0;padding:0"><li style="display:flex;gap:0.5em;margin-bottom:0.2em"><span style="flex:0 0 auto;color:#b4541f" aria-hidden="true">•</span><span style="min-width:0">1.2k stars; used by 3 fintech startups in production.</span></li></ul></div></section></div></body></html>"
+`;
+
+exports[`token-permutation snapshots (Classic × SWE) — drift control > html: bullets-arrow 1`] = `
+"<!doctype html><html lang="en"><head><meta charset="utf-8">
+<style>
+  @page { size: Letter; margin: 0; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: "Source Serif 4", Georgia, "Times New Roman", serif;
+    font-size: 10.5pt;
+    line-height: 1.350;
+    color: #1a1a1a;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .page { width: 8.5in; min-height: 11in; margin: 0 auto; padding: 0.55in 0.6in; }
+  a { color: #222222; text-decoration: none; }
+  h1, h2 { font-family: "Source Serif 4", Georgia, "Times New Roman", serif; }
+  p { margin: 0; }
+</style></head>
+<body><div class="page"><header style="text-align:center;padding-bottom:0.425em;margin-bottom:0.425em;border-bottom:1px solid rgb(156, 156, 156)"><h1 style="margin:0;font-size:1.9em;font-weight:700;color:#222222;letter-spacing:-0.01em">Avery Chen</h1><div style="color:#555555;font-size:1.02em;margin-top:0.15em">Software Engineer</div><div style="color:#555555;font-size:0.88em;margin-top:0.3em"><a href="mailto:avery.chen@example.com">avery.chen@example.com</a>&nbsp;&nbsp;•&nbsp;&nbsp;(555) 010-2244&nbsp;&nbsp;•&nbsp;&nbsp;Toronto, ON&nbsp;&nbsp;•&nbsp;&nbsp;<a href="https://averychen.dev">averychen.dev</a>&nbsp;&nbsp;•&nbsp;&nbsp;<a href="https://github.com/averychen">github.com/averychen</a></div></header><section style="margin-top:1em;break-inside:avoid"><h2 style="font-weight:700;color:#222222;margin:0 0 0.4em;font-size:0.92em;text-transform:uppercase;letter-spacing:0.08em;border-bottom:2px solid #222222;padding-bottom:0.18em">Summary</h2><p style="margin:0">Backend engineer with 4 years building high-throughput services. Owns reliability and developer-experience tooling.</p></section><section style="margin-top:1em;break-inside:avoid"><h2 style="font-weight:700;color:#222222;margin:0 0 0.4em;font-size:0.92em;text-transform:uppercase;letter-spacing:0.08em;border-bottom:2px solid #222222;padding-bottom:0.18em">Experience</h2><div style="margin-bottom:0.62em"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:1em">
+          <div style="min-width:0"><strong>Senior Software Engineer</strong><span>, Northwind Systems</span></div>
+          <div style="text-align:right;color:#555555;white-space:nowrap;flex:0 0 auto"><div>2022 – Present</div><div style="font-size:0.92em">Toronto, ON</div></div>
+        </div><ul style="list-style:none;margin:0.2em 0 0;padding:0"><li style="display:flex;gap:0.5em;margin-bottom:0.2em"><span style="flex:0 0 auto;color:#222222" aria-hidden="true">▸</span><span style="min-width:0">Cut p99 API latency 38% by introducing a read-through cache and query batching.</span></li><li style="display:flex;gap:0.5em;margin-bottom:0.2em"><span style="flex:0 0 auto;color:#222222" aria-hidden="true">▸</span><span style="min-width:0">Led migration of 40+ services to a shared async job runtime.</span></li></ul></div><div style="margin-bottom:0.62em"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:1em">
+          <div style="min-width:0"><strong>Software Engineer</strong><span>, Brightloop</span></div>
+          <div style="text-align:right;color:#555555;white-space:nowrap;flex:0 0 auto"><div>2020 – 2022</div><div style="font-size:0.92em">Remote</div></div>
+        </div><ul style="list-style:none;margin:0.2em 0 0;padding:0"><li style="display:flex;gap:0.5em;margin-bottom:0.2em"><span style="flex:0 0 auto;color:#222222" aria-hidden="true">▸</span><span style="min-width:0">Shipped the billing ledger handling $12M/yr with zero reconciliation errors.</span></li></ul></div></section><section style="margin-top:1em;break-inside:avoid"><h2 style="font-weight:700;color:#222222;margin:0 0 0.4em;font-size:0.92em;text-transform:uppercase;letter-spacing:0.08em;border-bottom:2px solid #222222;padding-bottom:0.18em">Education</h2><div style="margin-bottom:0.62em"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:1em">
+          <div style="min-width:0"><strong>B.S. Computer Science</strong><span>, University of Waterloo</span></div>
+          <div style="text-align:right;color:#555555;white-space:nowrap;flex:0 0 auto"><div>2016 – 2020</div><div style="font-size:0.92em">GPA 3.8/4.0</div></div>
+        </div></div></section><section style="margin-top:1em;break-inside:avoid"><h2 style="font-weight:700;color:#222222;margin:0 0 0.4em;font-size:0.92em;text-transform:uppercase;letter-spacing:0.08em;border-bottom:2px solid #222222;padding-bottom:0.18em">Skills</h2><div style="margin-bottom:0.2em"><strong>Languages:</strong> TypeScript, Go, Python, SQL</div><div style="margin-bottom:0.2em"><strong>Infra:</strong> Postgres, Redis, Kubernetes, AWS</div></section><section style="margin-top:1em;break-inside:avoid"><h2 style="font-weight:700;color:#222222;margin:0 0 0.4em;font-size:0.92em;text-transform:uppercase;letter-spacing:0.08em;border-bottom:2px solid #222222;padding-bottom:0.18em">Projects</h2><div style="margin-bottom:0.62em"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:1em">
+          <div style="min-width:0"><strong>openledger</strong></div>
+          
+        </div><div style="color:#555555;font-style:italic;margin-top:0.12em"><a href="https://github.com/averychen/openledger">Open-source double-entry ledger library.</a></div><ul style="list-style:none;margin:0.2em 0 0;padding:0"><li style="display:flex;gap:0.5em;margin-bottom:0.2em"><span style="flex:0 0 auto;color:#222222" aria-hidden="true">▸</span><span style="min-width:0">1.2k stars; used by 3 fintech startups in production.</span></li></ul></div></section></div></body></html>"
+`;
+
+exports[`token-permutation snapshots (Classic × SWE) — drift control > html: density-airy 1`] = `
+"<!doctype html><html lang="en"><head><meta charset="utf-8">
+<style>
+  @page { size: Letter; margin: 0; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: "Source Serif 4", Georgia, "Times New Roman", serif;
+    font-size: 10.5pt;
+    line-height: 1.458;
+    color: #1a1a1a;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .page { width: 8.5in; min-height: 11in; margin: 0 auto; padding: 0.55in 0.6in; }
+  a { color: #222222; text-decoration: none; }
+  h1, h2 { font-family: "Source Serif 4", Georgia, "Times New Roman", serif; }
+  p { margin: 0; }
+</style></head>
+<body><div class="page"><header style="text-align:center;padding-bottom:0.6em;margin-bottom:0.6em;border-bottom:1px solid rgb(156, 156, 156)"><h1 style="margin:0;font-size:1.9em;font-weight:700;color:#222222;letter-spacing:-0.01em">Avery Chen</h1><div style="color:#555555;font-size:1.02em;margin-top:0.15em">Software Engineer</div><div style="color:#555555;font-size:0.88em;margin-top:0.3em"><a href="mailto:avery.chen@example.com">avery.chen@example.com</a>&nbsp;&nbsp;•&nbsp;&nbsp;(555) 010-2244&nbsp;&nbsp;•&nbsp;&nbsp;Toronto, ON&nbsp;&nbsp;•&nbsp;&nbsp;<a href="https://averychen.dev">averychen.dev</a>&nbsp;&nbsp;•&nbsp;&nbsp;<a href="https://github.com/averychen">github.com/averychen</a></div></header><section style="margin-top:1.4em;break-inside:avoid"><h2 style="font-weight:700;color:#222222;margin:0 0 0.55em;font-size:0.92em;text-transform:uppercase;letter-spacing:0.08em;border-bottom:2px solid #222222;padding-bottom:0.18em">Summary</h2><p style="margin:0">Backend engineer with 4 years building high-throughput services. Owns reliability and developer-experience tooling.</p></section><section style="margin-top:1.4em;break-inside:avoid"><h2 style="font-weight:700;color:#222222;margin:0 0 0.55em;font-size:0.92em;text-transform:uppercase;letter-spacing:0.08em;border-bottom:2px solid #222222;padding-bottom:0.18em">Experience</h2><div style="margin-bottom:0.9em"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:1em">
+          <div style="min-width:0"><strong>Senior Software Engineer</strong><span>, Northwind Systems</span></div>
+          <div style="text-align:right;color:#555555;white-space:nowrap;flex:0 0 auto"><div>2022 – Present</div><div style="font-size:0.92em">Toronto, ON</div></div>
+        </div><ul style="list-style:none;margin:0.32em 0 0;padding:0"><li style="display:flex;gap:0.5em;margin-bottom:0.32em"><span style="flex:0 0 auto;color:#222222" aria-hidden="true">•</span><span style="min-width:0">Cut p99 API latency 38% by introducing a read-through cache and query batching.</span></li><li style="display:flex;gap:0.5em;margin-bottom:0.32em"><span style="flex:0 0 auto;color:#222222" aria-hidden="true">•</span><span style="min-width:0">Led migration of 40+ services to a shared async job runtime.</span></li></ul></div><div style="margin-bottom:0.9em"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:1em">
+          <div style="min-width:0"><strong>Software Engineer</strong><span>, Brightloop</span></div>
+          <div style="text-align:right;color:#555555;white-space:nowrap;flex:0 0 auto"><div>2020 – 2022</div><div style="font-size:0.92em">Remote</div></div>
+        </div><ul style="list-style:none;margin:0.32em 0 0;padding:0"><li style="display:flex;gap:0.5em;margin-bottom:0.32em"><span style="flex:0 0 auto;color:#222222" aria-hidden="true">•</span><span style="min-width:0">Shipped the billing ledger handling $12M/yr with zero reconciliation errors.</span></li></ul></div></section><section style="margin-top:1.4em;break-inside:avoid"><h2 style="font-weight:700;color:#222222;margin:0 0 0.55em;font-size:0.92em;text-transform:uppercase;letter-spacing:0.08em;border-bottom:2px solid #222222;padding-bottom:0.18em">Education</h2><div style="margin-bottom:0.9em"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:1em">
+          <div style="min-width:0"><strong>B.S. Computer Science</strong><span>, University of Waterloo</span></div>
+          <div style="text-align:right;color:#555555;white-space:nowrap;flex:0 0 auto"><div>2016 – 2020</div><div style="font-size:0.92em">GPA 3.8/4.0</div></div>
+        </div></div></section><section style="margin-top:1.4em;break-inside:avoid"><h2 style="font-weight:700;color:#222222;margin:0 0 0.55em;font-size:0.92em;text-transform:uppercase;letter-spacing:0.08em;border-bottom:2px solid #222222;padding-bottom:0.18em">Skills</h2><div style="margin-bottom:0.32em"><strong>Languages:</strong> TypeScript, Go, Python, SQL</div><div style="margin-bottom:0.32em"><strong>Infra:</strong> Postgres, Redis, Kubernetes, AWS</div></section><section style="margin-top:1.4em;break-inside:avoid"><h2 style="font-weight:700;color:#222222;margin:0 0 0.55em;font-size:0.92em;text-transform:uppercase;letter-spacing:0.08em;border-bottom:2px solid #222222;padding-bottom:0.18em">Projects</h2><div style="margin-bottom:0.9em"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:1em">
+          <div style="min-width:0"><strong>openledger</strong></div>
+          
+        </div><div style="color:#555555;font-style:italic;margin-top:0.12em"><a href="https://github.com/averychen/openledger">Open-source double-entry ledger library.</a></div><ul style="list-style:none;margin:0.32em 0 0;padding:0"><li style="display:flex;gap:0.5em;margin-bottom:0.32em"><span style="flex:0 0 auto;color:#222222" aria-hidden="true">•</span><span style="min-width:0">1.2k stars; used by 3 fintech startups in production.</span></li></ul></div></section></div></body></html>"
+`;
+
+exports[`token-permutation snapshots (Classic × SWE) — drift control > html: font-slab 1`] = `
+"<!doctype html><html lang="en"><head><meta charset="utf-8">
+<style>
+  @page { size: Letter; margin: 0; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: "Roboto Slab", "Source Serif 4", Georgia, serif;
+    font-size: 10.5pt;
+    line-height: 1.350;
+    color: #1a1a1a;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .page { width: 8.5in; min-height: 11in; margin: 0 auto; padding: 0.55in 0.6in; }
+  a { color: #222222; text-decoration: none; }
+  h1, h2 { font-family: "Roboto Slab", "Source Serif 4", Georgia, serif; }
+  p { margin: 0; }
+</style></head>
+<body><div class="page"><header style="text-align:center;padding-bottom:0.425em;margin-bottom:0.425em;border-bottom:1px solid rgb(156, 156, 156)"><h1 style="margin:0;font-size:1.9em;font-weight:700;color:#222222;letter-spacing:-0.01em">Avery Chen</h1><div style="color:#555555;font-size:1.02em;margin-top:0.15em">Software Engineer</div><div style="color:#555555;font-size:0.88em;margin-top:0.3em"><a href="mailto:avery.chen@example.com">avery.chen@example.com</a>&nbsp;&nbsp;•&nbsp;&nbsp;(555) 010-2244&nbsp;&nbsp;•&nbsp;&nbsp;Toronto, ON&nbsp;&nbsp;•&nbsp;&nbsp;<a href="https://averychen.dev">averychen.dev</a>&nbsp;&nbsp;•&nbsp;&nbsp;<a href="https://github.com/averychen">github.com/averychen</a></div></header><section style="margin-top:1em;break-inside:avoid"><h2 style="font-weight:700;color:#222222;margin:0 0 0.4em;font-size:0.92em;text-transform:uppercase;letter-spacing:0.08em;border-bottom:2px solid #222222;padding-bottom:0.18em">Summary</h2><p style="margin:0">Backend engineer with 4 years building high-throughput services. Owns reliability and developer-experience tooling.</p></section><section style="margin-top:1em;break-inside:avoid"><h2 style="font-weight:700;color:#222222;margin:0 0 0.4em;font-size:0.92em;text-transform:uppercase;letter-spacing:0.08em;border-bottom:2px solid #222222;padding-bottom:0.18em">Experience</h2><div style="margin-bottom:0.62em"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:1em">
+          <div style="min-width:0"><strong>Senior Software Engineer</strong><span>, Northwind Systems</span></div>
+          <div style="text-align:right;color:#555555;white-space:nowrap;flex:0 0 auto"><div>2022 – Present</div><div style="font-size:0.92em">Toronto, ON</div></div>
+        </div><ul style="list-style:none;margin:0.2em 0 0;padding:0"><li style="display:flex;gap:0.5em;margin-bottom:0.2em"><span style="flex:0 0 auto;color:#222222" aria-hidden="true">•</span><span style="min-width:0">Cut p99 API latency 38% by introducing a read-through cache and query batching.</span></li><li style="display:flex;gap:0.5em;margin-bottom:0.2em"><span style="flex:0 0 auto;color:#222222" aria-hidden="true">•</span><span style="min-width:0">Led migration of 40+ services to a shared async job runtime.</span></li></ul></div><div style="margin-bottom:0.62em"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:1em">
+          <div style="min-width:0"><strong>Software Engineer</strong><span>, Brightloop</span></div>
+          <div style="text-align:right;color:#555555;white-space:nowrap;flex:0 0 auto"><div>2020 – 2022</div><div style="font-size:0.92em">Remote</div></div>
+        </div><ul style="list-style:none;margin:0.2em 0 0;padding:0"><li style="display:flex;gap:0.5em;margin-bottom:0.2em"><span style="flex:0 0 auto;color:#222222" aria-hidden="true">•</span><span style="min-width:0">Shipped the billing ledger handling $12M/yr with zero reconciliation errors.</span></li></ul></div></section><section style="margin-top:1em;break-inside:avoid"><h2 style="font-weight:700;color:#222222;margin:0 0 0.4em;font-size:0.92em;text-transform:uppercase;letter-spacing:0.08em;border-bottom:2px solid #222222;padding-bottom:0.18em">Education</h2><div style="margin-bottom:0.62em"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:1em">
+          <div style="min-width:0"><strong>B.S. Computer Science</strong><span>, University of Waterloo</span></div>
+          <div style="text-align:right;color:#555555;white-space:nowrap;flex:0 0 auto"><div>2016 – 2020</div><div style="font-size:0.92em">GPA 3.8/4.0</div></div>
+        </div></div></section><section style="margin-top:1em;break-inside:avoid"><h2 style="font-weight:700;color:#222222;margin:0 0 0.4em;font-size:0.92em;text-transform:uppercase;letter-spacing:0.08em;border-bottom:2px solid #222222;padding-bottom:0.18em">Skills</h2><div style="margin-bottom:0.2em"><strong>Languages:</strong> TypeScript, Go, Python, SQL</div><div style="margin-bottom:0.2em"><strong>Infra:</strong> Postgres, Redis, Kubernetes, AWS</div></section><section style="margin-top:1em;break-inside:avoid"><h2 style="font-weight:700;color:#222222;margin:0 0 0.4em;font-size:0.92em;text-transform:uppercase;letter-spacing:0.08em;border-bottom:2px solid #222222;padding-bottom:0.18em">Projects</h2><div style="margin-bottom:0.62em"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:1em">
+          <div style="min-width:0"><strong>openledger</strong></div>
+          
+        </div><div style="color:#555555;font-style:italic;margin-top:0.12em"><a href="https://github.com/averychen/openledger">Open-source double-entry ledger library.</a></div><ul style="list-style:none;margin:0.2em 0 0;padding:0"><li style="display:flex;gap:0.5em;margin-bottom:0.2em"><span style="flex:0 0 auto;color:#222222" aria-hidden="true">•</span><span style="min-width:0">1.2k stars; used by 3 fintech startups in production.</span></li></ul></div></section></div></body></html>"
+`;
+
+exports[`token-permutation snapshots (Classic × SWE) — drift control > html: left-sidebar 1`] = `
+"<!doctype html><html lang="en"><head><meta charset="utf-8">
+<style>
+  @page { size: Letter; margin: 0; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: "Source Serif 4", Georgia, "Times New Roman", serif;
+    font-size: 10.5pt;
+    line-height: 1.350;
+    color: #1a1a1a;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .page { width: 8.5in; min-height: 11in; margin: 0 auto; padding: 0.55in 0.6in; }
+  a { color: #222222; text-decoration: none; }
+  h1, h2 { font-family: "Source Serif 4", Georgia, "Times New Roman", serif; }
+  p { margin: 0; }
+</style></head>
+<body><div class="page"><div style="display:grid;grid-template-columns:32% 1fr;gap:1.4em;align-items:start"><aside style="background:rgb(237, 237, 237);padding:0.5em 0.85em;border-radius:0"><section style="margin-top:1em;break-inside:avoid"><h2 style="font-weight:700;color:#222222;margin:0 0 0.4em;font-size:0.92em;text-transform:uppercase;letter-spacing:0.08em;border-bottom:2px solid #222222;padding-bottom:0.18em">Contact</h2><div style="margin-bottom:0.2em;word-break:break-word"><a href="mailto:avery.chen@example.com">avery.chen@example.com</a></div><div style="margin-bottom:0.2em;word-break:break-word">(555) 010-2244</div><div style="margin-bottom:0.2em;word-break:break-word">Toronto, ON</div><div style="margin-bottom:0.2em;word-break:break-word"><a href="https://averychen.dev">averychen.dev</a></div><div style="margin-bottom:0.2em;word-break:break-word"><a href="https://github.com/averychen">github.com/averychen</a></div></section><section style="margin-top:1em;break-inside:avoid"><h2 style="font-weight:700;color:#222222;margin:0 0 0.4em;font-size:0.92em;text-transform:uppercase;letter-spacing:0.08em;border-bottom:2px solid #222222;padding-bottom:0.18em">Skills</h2><div style="margin-bottom:0.2em"><strong>Languages:</strong> TypeScript, Go, Python, SQL</div><div style="margin-bottom:0.2em"><strong>Infra:</strong> Postgres, Redis, Kubernetes, AWS</div></section><section style="margin-top:1em;break-inside:avoid"><h2 style="font-weight:700;color:#222222;margin:0 0 0.4em;font-size:0.92em;text-transform:uppercase;letter-spacing:0.08em;border-bottom:2px solid #222222;padding-bottom:0.18em">Education</h2><div style="margin-bottom:0.62em"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:1em">
+          <div style="min-width:0"><strong>B.S. Computer Science</strong><span>, University of Waterloo</span></div>
+          <div style="text-align:right;color:#555555;white-space:nowrap;flex:0 0 auto"><div>2016 – 2020</div><div style="font-size:0.92em">GPA 3.8/4.0</div></div>
+        </div></div></section></aside><div style="min-width:0"><header style="text-align:center;padding-bottom:0.425em;margin-bottom:0.425em;border-bottom:1px solid rgb(156, 156, 156)"><h1 style="margin:0;font-size:1.9em;font-weight:700;color:#222222;letter-spacing:-0.01em">Avery Chen</h1><div style="color:#555555;font-size:1.02em;margin-top:0.15em">Software Engineer</div></header><section style="margin-top:1em;break-inside:avoid"><h2 style="font-weight:700;color:#222222;margin:0 0 0.4em;font-size:0.92em;text-transform:uppercase;letter-spacing:0.08em;border-bottom:2px solid #222222;padding-bottom:0.18em">Summary</h2><p style="margin:0">Backend engineer with 4 years building high-throughput services. Owns reliability and developer-experience tooling.</p></section><section style="margin-top:1em;break-inside:avoid"><h2 style="font-weight:700;color:#222222;margin:0 0 0.4em;font-size:0.92em;text-transform:uppercase;letter-spacing:0.08em;border-bottom:2px solid #222222;padding-bottom:0.18em">Experience</h2><div style="margin-bottom:0.62em"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:1em">
+          <div style="min-width:0"><strong>Senior Software Engineer</strong><span>, Northwind Systems</span></div>
+          <div style="text-align:right;color:#555555;white-space:nowrap;flex:0 0 auto"><div>2022 – Present</div><div style="font-size:0.92em">Toronto, ON</div></div>
+        </div><ul style="list-style:none;margin:0.2em 0 0;padding:0"><li style="display:flex;gap:0.5em;margin-bottom:0.2em"><span style="flex:0 0 auto;color:#222222" aria-hidden="true">•</span><span style="min-width:0">Cut p99 API latency 38% by introducing a read-through cache and query batching.</span></li><li style="display:flex;gap:0.5em;margin-bottom:0.2em"><span style="flex:0 0 auto;color:#222222" aria-hidden="true">•</span><span style="min-width:0">Led migration of 40+ services to a shared async job runtime.</span></li></ul></div><div style="margin-bottom:0.62em"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:1em">
+          <div style="min-width:0"><strong>Software Engineer</strong><span>, Brightloop</span></div>
+          <div style="text-align:right;color:#555555;white-space:nowrap;flex:0 0 auto"><div>2020 – 2022</div><div style="font-size:0.92em">Remote</div></div>
+        </div><ul style="list-style:none;margin:0.2em 0 0;padding:0"><li style="display:flex;gap:0.5em;margin-bottom:0.2em"><span style="flex:0 0 auto;color:#222222" aria-hidden="true">•</span><span style="min-width:0">Shipped the billing ledger handling $12M/yr with zero reconciliation errors.</span></li></ul></div></section><section style="margin-top:1em;break-inside:avoid"><h2 style="font-weight:700;color:#222222;margin:0 0 0.4em;font-size:0.92em;text-transform:uppercase;letter-spacing:0.08em;border-bottom:2px solid #222222;padding-bottom:0.18em">Projects</h2><div style="margin-bottom:0.62em"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:1em">
+          <div style="min-width:0"><strong>openledger</strong></div>
+          
+        </div><div style="color:#555555;font-style:italic;margin-top:0.12em"><a href="https://github.com/averychen/openledger">Open-source double-entry ledger library.</a></div><ul style="list-style:none;margin:0.2em 0 0;padding:0"><li style="display:flex;gap:0.5em;margin-bottom:0.2em"><span style="flex:0 0 auto;color:#222222" aria-hidden="true">•</span><span style="min-width:0">1.2k stars; used by 3 fintech startups in production.</span></li></ul></div></section></div></div></div></body></html>"
+`;
+
+exports[`token-permutation snapshots (Classic × SWE) — drift control > typst: accent-rust 1`] = `
+"#set document(title: "Avery Chen", author: "Avery Chen")
+#set page(width: 8.5in, height: 11in, margin: (x: 0.6in, top: 0.55in, bottom: 0.55in))
+#set text(font: ("Source Serif 4", "Georgia", "Times New Roman"), size: 10.5pt, fill: rgb("#1a1a1a"))
+#set par(leading: 0.918em, justify: false)
+#show link: set text(fill: rgb("#b4541f"))
+
+#align(center)[#text(size: 1.9em, weight: "bold", fill: rgb("#b4541f"))[#"Avery Chen"]
+#v(0.12em, weak: true)
+#text(fill: rgb("#555555"), size: 1.02em)[#"Software Engineer"]
+#v(0.28em, weak: true)
+#text(fill: rgb("#555555"), size: 0.88em)[#link("mailto:avery.chen@example.com")[#"avery.chen@example.com"]#"  •  "#"(555) 010-2244"#"  •  "#"Toronto, ON"#"  •  "#link("https://averychen.dev")[#"averychen.dev"]#"  •  "#link("https://github.com/averychen")[#"github.com/averychen"]]]
+#v(0.425em, weak: true)
+#line(length: 100%, stroke: 0.5pt + rgb("#b4541f"))
+#v(0.425em, weak: true)
+#block(breakable: true, above: 1em)[
+#text(weight: "bold", fill: rgb("#b4541f"), tracking: 0.08em)[#"SUMMARY"]
+#v(0.18em, weak: true)
+#line(length: 100%, stroke: 1.2pt + rgb("#b4541f"))
+#v(0.4em, weak: true)
+#par(justify: true)[#"Backend engineer with 4 years building high-throughput services. Owns reliability and developer-experience tooling."]
+]
+#block(breakable: true, above: 1em)[
+#text(weight: "bold", fill: rgb("#b4541f"), tracking: 0.08em)[#"EXPERIENCE"]
+#v(0.18em, weak: true)
+#line(length: 100%, stroke: 1.2pt + rgb("#b4541f"))
+#v(0.4em, weak: true)
+#block(breakable: true, below: 0.62em)[#grid(columns: (1fr, auto), column-gutter: 1em, [#text(weight: "bold")[#"Senior Software Engineer"]#", "#"Northwind Systems"], align(right)[#text(fill: rgb("#555555"))[#"2022 – Present" #linebreak() #text(size: 0.92em)[#"Toronto, ON"]]])
+#list(marker: text(fill: rgb("#b4541f"))[#"•"], spacing: 0.650em, tight: true, [#"Cut p99 API latency 38% by introducing a read-through cache and query batching."], [#"Led migration of 40+ services to a shared async job runtime."])]
+#block(breakable: true, below: 0.62em)[#grid(columns: (1fr, auto), column-gutter: 1em, [#text(weight: "bold")[#"Software Engineer"]#", "#"Brightloop"], align(right)[#text(fill: rgb("#555555"))[#"2020 – 2022" #linebreak() #text(size: 0.92em)[#"Remote"]]])
+#list(marker: text(fill: rgb("#b4541f"))[#"•"], spacing: 0.650em, tight: true, [#"Shipped the billing ledger handling $12M/yr with zero reconciliation errors."])]
+]
+#block(breakable: true, above: 1em)[
+#text(weight: "bold", fill: rgb("#b4541f"), tracking: 0.08em)[#"EDUCATION"]
+#v(0.18em, weak: true)
+#line(length: 100%, stroke: 1.2pt + rgb("#b4541f"))
+#v(0.4em, weak: true)
+#block(breakable: true, below: 0.62em)[#grid(columns: (1fr, auto), column-gutter: 1em, [#text(weight: "bold")[#"B.S. Computer Science"]#", "#"University of Waterloo"], align(right)[#text(fill: rgb("#555555"))[#"2016 – 2020" #linebreak() #text(size: 0.92em)[#"GPA 3.8/4.0"]]])]
+]
+#block(breakable: true, above: 1em)[
+#text(weight: "bold", fill: rgb("#b4541f"), tracking: 0.08em)[#"SKILLS"]
+#v(0.18em, weak: true)
+#line(length: 100%, stroke: 1.2pt + rgb("#b4541f"))
+#v(0.4em, weak: true)
+#par[#text(weight: "bold")[#"Languages:"] #"TypeScript, Go, Python, SQL"]
+#v(0.2em, weak: true)
+#par[#text(weight: "bold")[#"Infra:"] #"Postgres, Redis, Kubernetes, AWS"]
+#v(0.2em, weak: true)
+]
+#block(breakable: true, above: 1em)[
+#text(weight: "bold", fill: rgb("#b4541f"), tracking: 0.08em)[#"PROJECTS"]
+#v(0.18em, weak: true)
+#line(length: 100%, stroke: 1.2pt + rgb("#b4541f"))
+#v(0.4em, weak: true)
+#block(breakable: true, below: 0.62em)[#par[#text(weight: "bold")[#"openledger"]]
+#text(fill: rgb("#555555"), style: "italic")[#link("https://github.com/averychen/openledger")[#"Open-source double-entry ledger library."]]
+#list(marker: text(fill: rgb("#b4541f"))[#"•"], spacing: 0.650em, tight: true, [#"1.2k stars; used by 3 fintech startups in production."])]
+]
+"
+`;
+
+exports[`token-permutation snapshots (Classic × SWE) — drift control > typst: bullets-arrow 1`] = `
+"#set document(title: "Avery Chen", author: "Avery Chen")
+#set page(width: 8.5in, height: 11in, margin: (x: 0.6in, top: 0.55in, bottom: 0.55in))
+#set text(font: ("Source Serif 4", "Georgia", "Times New Roman"), size: 10.5pt, fill: rgb("#1a1a1a"))
+#set par(leading: 0.918em, justify: false)
+#show link: set text(fill: rgb("#222222"))
+
+#align(center)[#text(size: 1.9em, weight: "bold", fill: rgb("#222222"))[#"Avery Chen"]
+#v(0.12em, weak: true)
+#text(fill: rgb("#555555"), size: 1.02em)[#"Software Engineer"]
+#v(0.28em, weak: true)
+#text(fill: rgb("#555555"), size: 0.88em)[#link("mailto:avery.chen@example.com")[#"avery.chen@example.com"]#"  •  "#"(555) 010-2244"#"  •  "#"Toronto, ON"#"  •  "#link("https://averychen.dev")[#"averychen.dev"]#"  •  "#link("https://github.com/averychen")[#"github.com/averychen"]]]
+#v(0.425em, weak: true)
+#line(length: 100%, stroke: 0.5pt + rgb("#222222"))
+#v(0.425em, weak: true)
+#block(breakable: true, above: 1em)[
+#text(weight: "bold", fill: rgb("#222222"), tracking: 0.08em)[#"SUMMARY"]
+#v(0.18em, weak: true)
+#line(length: 100%, stroke: 1.2pt + rgb("#222222"))
+#v(0.4em, weak: true)
+#par(justify: true)[#"Backend engineer with 4 years building high-throughput services. Owns reliability and developer-experience tooling."]
+]
+#block(breakable: true, above: 1em)[
+#text(weight: "bold", fill: rgb("#222222"), tracking: 0.08em)[#"EXPERIENCE"]
+#v(0.18em, weak: true)
+#line(length: 100%, stroke: 1.2pt + rgb("#222222"))
+#v(0.4em, weak: true)
+#block(breakable: true, below: 0.62em)[#grid(columns: (1fr, auto), column-gutter: 1em, [#text(weight: "bold")[#"Senior Software Engineer"]#", "#"Northwind Systems"], align(right)[#text(fill: rgb("#555555"))[#"2022 – Present" #linebreak() #text(size: 0.92em)[#"Toronto, ON"]]])
+#list(marker: text(fill: rgb("#222222"))[#"▸"], spacing: 0.650em, tight: true, [#"Cut p99 API latency 38% by introducing a read-through cache and query batching."], [#"Led migration of 40+ services to a shared async job runtime."])]
+#block(breakable: true, below: 0.62em)[#grid(columns: (1fr, auto), column-gutter: 1em, [#text(weight: "bold")[#"Software Engineer"]#", "#"Brightloop"], align(right)[#text(fill: rgb("#555555"))[#"2020 – 2022" #linebreak() #text(size: 0.92em)[#"Remote"]]])
+#list(marker: text(fill: rgb("#222222"))[#"▸"], spacing: 0.650em, tight: true, [#"Shipped the billing ledger handling $12M/yr with zero reconciliation errors."])]
+]
+#block(breakable: true, above: 1em)[
+#text(weight: "bold", fill: rgb("#222222"), tracking: 0.08em)[#"EDUCATION"]
+#v(0.18em, weak: true)
+#line(length: 100%, stroke: 1.2pt + rgb("#222222"))
+#v(0.4em, weak: true)
+#block(breakable: true, below: 0.62em)[#grid(columns: (1fr, auto), column-gutter: 1em, [#text(weight: "bold")[#"B.S. Computer Science"]#", "#"University of Waterloo"], align(right)[#text(fill: rgb("#555555"))[#"2016 – 2020" #linebreak() #text(size: 0.92em)[#"GPA 3.8/4.0"]]])]
+]
+#block(breakable: true, above: 1em)[
+#text(weight: "bold", fill: rgb("#222222"), tracking: 0.08em)[#"SKILLS"]
+#v(0.18em, weak: true)
+#line(length: 100%, stroke: 1.2pt + rgb("#222222"))
+#v(0.4em, weak: true)
+#par[#text(weight: "bold")[#"Languages:"] #"TypeScript, Go, Python, SQL"]
+#v(0.2em, weak: true)
+#par[#text(weight: "bold")[#"Infra:"] #"Postgres, Redis, Kubernetes, AWS"]
+#v(0.2em, weak: true)
+]
+#block(breakable: true, above: 1em)[
+#text(weight: "bold", fill: rgb("#222222"), tracking: 0.08em)[#"PROJECTS"]
+#v(0.18em, weak: true)
+#line(length: 100%, stroke: 1.2pt + rgb("#222222"))
+#v(0.4em, weak: true)
+#block(breakable: true, below: 0.62em)[#par[#text(weight: "bold")[#"openledger"]]
+#text(fill: rgb("#555555"), style: "italic")[#link("https://github.com/averychen/openledger")[#"Open-source double-entry ledger library."]]
+#list(marker: text(fill: rgb("#222222"))[#"▸"], spacing: 0.650em, tight: true, [#"1.2k stars; used by 3 fintech startups in production."])]
+]
+"
+`;
+
+exports[`token-permutation snapshots (Classic × SWE) — drift control > typst: density-airy 1`] = `
+"#set document(title: "Avery Chen", author: "Avery Chen")
+#set page(width: 8.5in, height: 11in, margin: (x: 0.6in, top: 0.55in, bottom: 0.55in))
+#set text(font: ("Source Serif 4", "Georgia", "Times New Roman"), size: 10.5pt, fill: rgb("#1a1a1a"))
+#set par(leading: 1.031em, justify: false)
+#show link: set text(fill: rgb("#222222"))
+
+#align(center)[#text(size: 1.9em, weight: "bold", fill: rgb("#222222"))[#"Avery Chen"]
+#v(0.12em, weak: true)
+#text(fill: rgb("#555555"), size: 1.02em)[#"Software Engineer"]
+#v(0.28em, weak: true)
+#text(fill: rgb("#555555"), size: 0.88em)[#link("mailto:avery.chen@example.com")[#"avery.chen@example.com"]#"  •  "#"(555) 010-2244"#"  •  "#"Toronto, ON"#"  •  "#link("https://averychen.dev")[#"averychen.dev"]#"  •  "#link("https://github.com/averychen")[#"github.com/averychen"]]]
+#v(0.600em, weak: true)
+#line(length: 100%, stroke: 0.5pt + rgb("#222222"))
+#v(0.600em, weak: true)
+#block(breakable: true, above: 1.4em)[
+#text(weight: "bold", fill: rgb("#222222"), tracking: 0.08em)[#"SUMMARY"]
+#v(0.18em, weak: true)
+#line(length: 100%, stroke: 1.2pt + rgb("#222222"))
+#v(0.55em, weak: true)
+#par(justify: true)[#"Backend engineer with 4 years building high-throughput services. Owns reliability and developer-experience tooling."]
+]
+#block(breakable: true, above: 1.4em)[
+#text(weight: "bold", fill: rgb("#222222"), tracking: 0.08em)[#"EXPERIENCE"]
+#v(0.18em, weak: true)
+#line(length: 100%, stroke: 1.2pt + rgb("#222222"))
+#v(0.55em, weak: true)
+#block(breakable: true, below: 0.9em)[#grid(columns: (1fr, auto), column-gutter: 1em, [#text(weight: "bold")[#"Senior Software Engineer"]#", "#"Northwind Systems"], align(right)[#text(fill: rgb("#555555"))[#"2022 – Present" #linebreak() #text(size: 0.92em)[#"Toronto, ON"]]])
+#list(marker: text(fill: rgb("#222222"))[#"•"], spacing: 0.770em, tight: true, [#"Cut p99 API latency 38% by introducing a read-through cache and query batching."], [#"Led migration of 40+ services to a shared async job runtime."])]
+#block(breakable: true, below: 0.9em)[#grid(columns: (1fr, auto), column-gutter: 1em, [#text(weight: "bold")[#"Software Engineer"]#", "#"Brightloop"], align(right)[#text(fill: rgb("#555555"))[#"2020 – 2022" #linebreak() #text(size: 0.92em)[#"Remote"]]])
+#list(marker: text(fill: rgb("#222222"))[#"•"], spacing: 0.770em, tight: true, [#"Shipped the billing ledger handling $12M/yr with zero reconciliation errors."])]
+]
+#block(breakable: true, above: 1.4em)[
+#text(weight: "bold", fill: rgb("#222222"), tracking: 0.08em)[#"EDUCATION"]
+#v(0.18em, weak: true)
+#line(length: 100%, stroke: 1.2pt + rgb("#222222"))
+#v(0.55em, weak: true)
+#block(breakable: true, below: 0.9em)[#grid(columns: (1fr, auto), column-gutter: 1em, [#text(weight: "bold")[#"B.S. Computer Science"]#", "#"University of Waterloo"], align(right)[#text(fill: rgb("#555555"))[#"2016 – 2020" #linebreak() #text(size: 0.92em)[#"GPA 3.8/4.0"]]])]
+]
+#block(breakable: true, above: 1.4em)[
+#text(weight: "bold", fill: rgb("#222222"), tracking: 0.08em)[#"SKILLS"]
+#v(0.18em, weak: true)
+#line(length: 100%, stroke: 1.2pt + rgb("#222222"))
+#v(0.55em, weak: true)
+#par[#text(weight: "bold")[#"Languages:"] #"TypeScript, Go, Python, SQL"]
+#v(0.32em, weak: true)
+#par[#text(weight: "bold")[#"Infra:"] #"Postgres, Redis, Kubernetes, AWS"]
+#v(0.32em, weak: true)
+]
+#block(breakable: true, above: 1.4em)[
+#text(weight: "bold", fill: rgb("#222222"), tracking: 0.08em)[#"PROJECTS"]
+#v(0.18em, weak: true)
+#line(length: 100%, stroke: 1.2pt + rgb("#222222"))
+#v(0.55em, weak: true)
+#block(breakable: true, below: 0.9em)[#par[#text(weight: "bold")[#"openledger"]]
+#text(fill: rgb("#555555"), style: "italic")[#link("https://github.com/averychen/openledger")[#"Open-source double-entry ledger library."]]
+#list(marker: text(fill: rgb("#222222"))[#"•"], spacing: 0.770em, tight: true, [#"1.2k stars; used by 3 fintech startups in production."])]
+]
+"
+`;
+
+exports[`token-permutation snapshots (Classic × SWE) — drift control > typst: font-slab 1`] = `
+"#set document(title: "Avery Chen", author: "Avery Chen")
+#set page(width: 8.5in, height: 11in, margin: (x: 0.6in, top: 0.55in, bottom: 0.55in))
+#set text(font: ("Roboto Slab", "Source Serif 4", "Georgia"), size: 10.5pt, fill: rgb("#1a1a1a"))
+#set par(leading: 0.918em, justify: false)
+#show link: set text(fill: rgb("#222222"))
+
+#align(center)[#text(size: 1.9em, weight: "bold", fill: rgb("#222222"))[#"Avery Chen"]
+#v(0.12em, weak: true)
+#text(fill: rgb("#555555"), size: 1.02em)[#"Software Engineer"]
+#v(0.28em, weak: true)
+#text(fill: rgb("#555555"), size: 0.88em)[#link("mailto:avery.chen@example.com")[#"avery.chen@example.com"]#"  •  "#"(555) 010-2244"#"  •  "#"Toronto, ON"#"  •  "#link("https://averychen.dev")[#"averychen.dev"]#"  •  "#link("https://github.com/averychen")[#"github.com/averychen"]]]
+#v(0.425em, weak: true)
+#line(length: 100%, stroke: 0.5pt + rgb("#222222"))
+#v(0.425em, weak: true)
+#block(breakable: true, above: 1em)[
+#text(weight: "bold", fill: rgb("#222222"), tracking: 0.08em)[#"SUMMARY"]
+#v(0.18em, weak: true)
+#line(length: 100%, stroke: 1.2pt + rgb("#222222"))
+#v(0.4em, weak: true)
+#par(justify: true)[#"Backend engineer with 4 years building high-throughput services. Owns reliability and developer-experience tooling."]
+]
+#block(breakable: true, above: 1em)[
+#text(weight: "bold", fill: rgb("#222222"), tracking: 0.08em)[#"EXPERIENCE"]
+#v(0.18em, weak: true)
+#line(length: 100%, stroke: 1.2pt + rgb("#222222"))
+#v(0.4em, weak: true)
+#block(breakable: true, below: 0.62em)[#grid(columns: (1fr, auto), column-gutter: 1em, [#text(weight: "bold")[#"Senior Software Engineer"]#", "#"Northwind Systems"], align(right)[#text(fill: rgb("#555555"))[#"2022 – Present" #linebreak() #text(size: 0.92em)[#"Toronto, ON"]]])
+#list(marker: text(fill: rgb("#222222"))[#"•"], spacing: 0.650em, tight: true, [#"Cut p99 API latency 38% by introducing a read-through cache and query batching."], [#"Led migration of 40+ services to a shared async job runtime."])]
+#block(breakable: true, below: 0.62em)[#grid(columns: (1fr, auto), column-gutter: 1em, [#text(weight: "bold")[#"Software Engineer"]#", "#"Brightloop"], align(right)[#text(fill: rgb("#555555"))[#"2020 – 2022" #linebreak() #text(size: 0.92em)[#"Remote"]]])
+#list(marker: text(fill: rgb("#222222"))[#"•"], spacing: 0.650em, tight: true, [#"Shipped the billing ledger handling $12M/yr with zero reconciliation errors."])]
+]
+#block(breakable: true, above: 1em)[
+#text(weight: "bold", fill: rgb("#222222"), tracking: 0.08em)[#"EDUCATION"]
+#v(0.18em, weak: true)
+#line(length: 100%, stroke: 1.2pt + rgb("#222222"))
+#v(0.4em, weak: true)
+#block(breakable: true, below: 0.62em)[#grid(columns: (1fr, auto), column-gutter: 1em, [#text(weight: "bold")[#"B.S. Computer Science"]#", "#"University of Waterloo"], align(right)[#text(fill: rgb("#555555"))[#"2016 – 2020" #linebreak() #text(size: 0.92em)[#"GPA 3.8/4.0"]]])]
+]
+#block(breakable: true, above: 1em)[
+#text(weight: "bold", fill: rgb("#222222"), tracking: 0.08em)[#"SKILLS"]
+#v(0.18em, weak: true)
+#line(length: 100%, stroke: 1.2pt + rgb("#222222"))
+#v(0.4em, weak: true)
+#par[#text(weight: "bold")[#"Languages:"] #"TypeScript, Go, Python, SQL"]
+#v(0.2em, weak: true)
+#par[#text(weight: "bold")[#"Infra:"] #"Postgres, Redis, Kubernetes, AWS"]
+#v(0.2em, weak: true)
+]
+#block(breakable: true, above: 1em)[
+#text(weight: "bold", fill: rgb("#222222"), tracking: 0.08em)[#"PROJECTS"]
+#v(0.18em, weak: true)
+#line(length: 100%, stroke: 1.2pt + rgb("#222222"))
+#v(0.4em, weak: true)
+#block(breakable: true, below: 0.62em)[#par[#text(weight: "bold")[#"openledger"]]
+#text(fill: rgb("#555555"), style: "italic")[#link("https://github.com/averychen/openledger")[#"Open-source double-entry ledger library."]]
+#list(marker: text(fill: rgb("#222222"))[#"•"], spacing: 0.650em, tight: true, [#"1.2k stars; used by 3 fintech startups in production."])]
+]
+"
+`;
+
+exports[`token-permutation snapshots (Classic × SWE) — drift control > typst: left-sidebar 1`] = `
+"#set document(title: "Avery Chen", author: "Avery Chen")
+#set page(width: 8.5in, height: 11in, margin: (x: 0.6in, top: 0.55in, bottom: 0.55in))
+#set text(font: ("Source Serif 4", "Georgia", "Times New Roman"), size: 10.5pt, fill: rgb("#1a1a1a"))
+#set par(leading: 0.918em, justify: false)
+#show link: set text(fill: rgb("#222222"))
+
+#grid(columns: (32%, 1fr), column-gutter: 1.4em, align: top, block(fill: rgb("#222222").lighten(92%), inset: (x: 0.7em, y: 0.5em), radius: 0pt, width: 100%)[#block(breakable: true, above: 1em)[
+#text(weight: "bold", fill: rgb("#222222"), tracking: 0.08em)[#"CONTACT"]
+#v(0.18em, weak: true)
+#line(length: 100%, stroke: 1.2pt + rgb("#222222"))
+#v(0.4em, weak: true)
+#par[#link("mailto:avery.chen@example.com")[#"avery.chen@example.com"]]
+#v(0.2em, weak: true)
+#par[#"(555) 010-2244"]
+#v(0.2em, weak: true)
+#par[#"Toronto, ON"]
+#v(0.2em, weak: true)
+#par[#link("https://averychen.dev")[#"averychen.dev"]]
+#v(0.2em, weak: true)
+#par[#link("https://github.com/averychen")[#"github.com/averychen"]]
+#v(0.2em, weak: true)
+]
+#block(breakable: true, above: 1em)[
+#text(weight: "bold", fill: rgb("#222222"), tracking: 0.08em)[#"SKILLS"]
+#v(0.18em, weak: true)
+#line(length: 100%, stroke: 1.2pt + rgb("#222222"))
+#v(0.4em, weak: true)
+#par[#text(weight: "bold")[#"Languages:"] #"TypeScript, Go, Python, SQL"]
+#v(0.2em, weak: true)
+#par[#text(weight: "bold")[#"Infra:"] #"Postgres, Redis, Kubernetes, AWS"]
+#v(0.2em, weak: true)
+]
+#block(breakable: true, above: 1em)[
+#text(weight: "bold", fill: rgb("#222222"), tracking: 0.08em)[#"EDUCATION"]
+#v(0.18em, weak: true)
+#line(length: 100%, stroke: 1.2pt + rgb("#222222"))
+#v(0.4em, weak: true)
+#block(breakable: true, below: 0.62em)[#grid(columns: (1fr, auto), column-gutter: 1em, [#text(weight: "bold")[#"B.S. Computer Science"]#", "#"University of Waterloo"], align(right)[#text(fill: rgb("#555555"))[#"2016 – 2020" #linebreak() #text(size: 0.92em)[#"GPA 3.8/4.0"]]])]
+]], [#align(center)[#text(size: 1.9em, weight: "bold", fill: rgb("#222222"))[#"Avery Chen"]
+#v(0.12em, weak: true)
+#text(fill: rgb("#555555"), size: 1.02em)[#"Software Engineer"]]
+#v(0.425em, weak: true)
+#line(length: 100%, stroke: 0.5pt + rgb("#222222"))
+#v(0.425em, weak: true)
+#block(breakable: true, above: 1em)[
+#text(weight: "bold", fill: rgb("#222222"), tracking: 0.08em)[#"SUMMARY"]
+#v(0.18em, weak: true)
+#line(length: 100%, stroke: 1.2pt + rgb("#222222"))
+#v(0.4em, weak: true)
+#par(justify: true)[#"Backend engineer with 4 years building high-throughput services. Owns reliability and developer-experience tooling."]
+]
+#block(breakable: true, above: 1em)[
+#text(weight: "bold", fill: rgb("#222222"), tracking: 0.08em)[#"EXPERIENCE"]
+#v(0.18em, weak: true)
+#line(length: 100%, stroke: 1.2pt + rgb("#222222"))
+#v(0.4em, weak: true)
+#block(breakable: true, below: 0.62em)[#grid(columns: (1fr, auto), column-gutter: 1em, [#text(weight: "bold")[#"Senior Software Engineer"]#", "#"Northwind Systems"], align(right)[#text(fill: rgb("#555555"))[#"2022 – Present" #linebreak() #text(size: 0.92em)[#"Toronto, ON"]]])
+#list(marker: text(fill: rgb("#222222"))[#"•"], spacing: 0.650em, tight: true, [#"Cut p99 API latency 38% by introducing a read-through cache and query batching."], [#"Led migration of 40+ services to a shared async job runtime."])]
+#block(breakable: true, below: 0.62em)[#grid(columns: (1fr, auto), column-gutter: 1em, [#text(weight: "bold")[#"Software Engineer"]#", "#"Brightloop"], align(right)[#text(fill: rgb("#555555"))[#"2020 – 2022" #linebreak() #text(size: 0.92em)[#"Remote"]]])
+#list(marker: text(fill: rgb("#222222"))[#"•"], spacing: 0.650em, tight: true, [#"Shipped the billing ledger handling $12M/yr with zero reconciliation errors."])]
+]
+#block(breakable: true, above: 1em)[
+#text(weight: "bold", fill: rgb("#222222"), tracking: 0.08em)[#"PROJECTS"]
+#v(0.18em, weak: true)
+#line(length: 100%, stroke: 1.2pt + rgb("#222222"))
+#v(0.4em, weak: true)
+#block(breakable: true, below: 0.62em)[#par[#text(weight: "bold")[#"openledger"]]
+#text(fill: rgb("#555555"), style: "italic")[#link("https://github.com/averychen/openledger")[#"Open-source double-entry ledger library."]]
+#list(marker: text(fill: rgb("#222222"))[#"•"], spacing: 0.650em, tight: true, [#"1.2k stars; used by 3 fintech startups in production."])]
+]])
+"
+`;
