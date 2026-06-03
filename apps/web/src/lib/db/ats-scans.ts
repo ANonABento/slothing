@@ -1,4 +1,4 @@
-import db from "./legacy";
+import { getClient } from "./client";
 import { generateId } from "@/lib/utils";
 import type { ATSScanReport } from "@/lib/ats/analyzer";
 import type { ATSScanResult } from "@/lib/ats/analyzer";
@@ -36,22 +36,14 @@ export interface StoredScanRecord {
   scannedAt: string;
 }
 
-export function saveScanResult(
+export async function saveScanResult(
   userId: string,
   report: ATSScanReport,
   fixes: FixSuggestion[],
   jobId?: string,
-): string {
+): Promise<string> {
   const id = generateId();
   const reportWithFixes = { ...report, fixes };
-
-  const stmt = db.prepare(
-    `INSERT INTO ats_scan_history
-     (id, user_id, job_id, overall_score, letter_grade, formatting_score, structure_score, content_score, keywords_score, issue_count, fix_count, report_json, scanned_at)
-     SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
-     ${jobId ? "WHERE EXISTS (SELECT 1 FROM jobs WHERE id = ? AND user_id = ?)" : ""}`,
-  );
-
   const args: Array<string | number | null> = [
     id,
     userId,
@@ -72,9 +64,15 @@ export function saveScanResult(
     args.push(jobId, userId);
   }
 
-  const result = stmt.run(...args);
+  const result = await getClient().execute({
+    sql: `INSERT INTO ats_scan_history
+      (id, user_id, job_id, overall_score, letter_grade, formatting_score, structure_score, content_score, keywords_score, issue_count, fix_count, report_json, scanned_at)
+      SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+      ${jobId ? "WHERE EXISTS (SELECT 1 FROM jobs WHERE id = ? AND user_id = ?)" : ""}`,
+    args,
+  });
 
-  if (result.changes === 0) {
+  if (result.rowsAffected === 0) {
     throw new Error("Job not found");
   }
 
@@ -96,20 +94,13 @@ export interface InAppScanSavePayload {
   jdText?: string;
 }
 
-export function saveInAppScan(
+export async function saveInAppScan(
   userId: string,
   payload: InAppScanSavePayload,
-): string {
+): Promise<string> {
   const id = generateId();
   const { result } = payload;
   const opportunityId = payload.opportunityId?.trim();
-
-  const stmt = db.prepare(
-    `INSERT INTO ats_scan_history
-     (id, user_id, job_id, overall_score, letter_grade, formatting_score, structure_score, content_score, keywords_score, issue_count, fix_count, report_json, scanned_at)
-     SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
-     ${opportunityId ? "WHERE EXISTS (SELECT 1 FROM jobs WHERE id = ? AND user_id = ?)" : ""}`,
-  );
 
   const wrappedReport = {
     label:
@@ -147,35 +138,42 @@ export function saveInAppScan(
     args.push(opportunityId, userId);
   }
 
-  const sqlResult = stmt.run(...args);
+  const sqlResult = await getClient().execute({
+    sql: `INSERT INTO ats_scan_history
+      (id, user_id, job_id, overall_score, letter_grade, formatting_score, structure_score, content_score, keywords_score, issue_count, fix_count, report_json, scanned_at)
+      SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+      ${opportunityId ? "WHERE EXISTS (SELECT 1 FROM jobs WHERE id = ? AND user_id = ?)" : ""}`,
+    args,
+  });
 
-  if (sqlResult.changes === 0) {
+  if (sqlResult.rowsAffected === 0) {
     throw new Error("Opportunity not found");
   }
 
   return id;
 }
 
-export function getScanHistory(
+export async function getScanHistory(
   userId: string,
   limit: number = 20,
-): StoredScanRecord[] {
-  const rows = db
-    .prepare(
-      "SELECT * FROM ats_scan_history WHERE user_id = ? ORDER BY scanned_at DESC LIMIT ?",
-    )
-    .all(userId, limit) as RawScanRow[];
+): Promise<StoredScanRecord[]> {
+  const result = await getClient().execute({
+    sql: "SELECT * FROM ats_scan_history WHERE user_id = ? ORDER BY scanned_at DESC LIMIT ?",
+    args: [userId, limit],
+  });
 
-  return rows.map(mapRow);
+  return (result.rows as unknown as RawScanRow[]).map(mapRow);
 }
 
-export function getScanById(
+export async function getScanById(
   id: string,
   userId: string,
-): StoredScanRecord | null {
-  const row = db
-    .prepare("SELECT * FROM ats_scan_history WHERE id = ? AND user_id = ?")
-    .get(id, userId) as RawScanRow | undefined;
+): Promise<StoredScanRecord | null> {
+  const result = await getClient().execute({
+    sql: "SELECT * FROM ats_scan_history WHERE id = ? AND user_id = ?",
+    args: [id, userId],
+  });
+  const row = result.rows[0] as unknown as RawScanRow | undefined;
 
   if (!row) return null;
   return mapRow(row);

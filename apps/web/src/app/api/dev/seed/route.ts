@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { isAuthError, requireAuth } from "@/lib/auth";
-import { createJob } from "@/lib/db/jobs";
+import { createJob } from "@/lib/db/jobs-async";
 import { createEmailDraft } from "@/lib/db/email-drafts";
 import { insertBankEntries } from "@/lib/db/profile-bank";
 import { getDb } from "@/lib/db";
@@ -17,7 +17,13 @@ const DEV_TOOLS_HEADER = "x-slothing-dev-tools";
 const DEV_TOOLS_HEADER_VALUE = "enabled";
 
 const seedRequestSchema = z.object({
-  preset: z.enum(["empty", "opportunities", "components", "full"]),
+  preset: z.enum([
+    "empty",
+    "opportunities",
+    "opportunities-heavy",
+    "components",
+    "full",
+  ]),
 });
 
 type SeedPreset = z.infer<typeof seedRequestSchema>["preset"];
@@ -61,7 +67,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const reset = await runDevCleanSlate(authResult.userId);
-    const seeded = seedPreset(parsed.data.preset, authResult.userId);
+    const seeded = await seedPreset(parsed.data.preset, authResult.userId);
 
     return NextResponse.json({
       success: true,
@@ -79,7 +85,10 @@ export async function POST(request: NextRequest) {
   }
 }
 
-function seedPreset(preset: SeedPreset, userId: string): SeedSummary {
+async function seedPreset(
+  preset: SeedPreset,
+  userId: string,
+): Promise<SeedSummary> {
   const summary: SeedSummary = {
     opportunities: 0,
     components: 0,
@@ -89,12 +98,19 @@ function seedPreset(preset: SeedPreset, userId: string): SeedSummary {
 
   if (preset === "empty") return summary;
 
-  if (preset === "opportunities" || preset === "full") {
-    const jobs = seedOpportunities(userId);
+  if (
+    preset === "opportunities" ||
+    preset === "opportunities-heavy" ||
+    preset === "full"
+  ) {
+    const jobs =
+      preset === "opportunities-heavy"
+        ? await seedHeavyOpportunities(userId)
+        : await seedOpportunities(userId);
     summary.opportunities = jobs.length;
 
     if (preset === "full") {
-      summary.drafts = seedDrafts(userId, jobs);
+      summary.drafts = await seedDrafts(userId, jobs);
       summary.atsScans = seedAtsScans(userId, jobs);
     }
   }
@@ -106,7 +122,7 @@ function seedPreset(preset: SeedPreset, userId: string): SeedSummary {
   return summary;
 }
 
-function seedOpportunities(userId: string): JobDescription[] {
+async function seedOpportunities(userId: string): Promise<JobDescription[]> {
   const jobs: Array<Omit<JobDescription, "id" | "createdAt">> = [
     {
       title: "AI Toolchain Software Developer",
@@ -206,7 +222,80 @@ function seedOpportunities(userId: string): JobDescription[] {
     },
   ];
 
-  return jobs.map((job) => createJob(job, userId));
+  return Promise.all(jobs.map((job) => createJob(job, userId)));
+}
+
+async function seedHeavyOpportunities(
+  userId: string,
+): Promise<JobDescription[]> {
+  const statuses: NonNullable<JobDescription["status"]>[] = [
+    "saved",
+    "applied",
+    "interviewing",
+    "offer",
+    "rejected",
+    "expired",
+    "dismissed",
+  ];
+  const jobs: Array<Omit<JobDescription, "id" | "createdAt">> = [];
+
+  for (let index = 0; index < 120; index += 1) {
+    const isDeepSearchTarget = index === 87;
+    const isDeepPendingTarget = index === 96;
+    const status = isDeepPendingTarget
+      ? "pending"
+      : index % 9 === 0
+        ? "pending"
+        : statuses[index % statuses.length];
+    const keyword = isDeepSearchTarget
+      ? "deepsearch-sentinel"
+      : index % 2 === 0
+        ? "react"
+        : "python";
+
+    jobs.push({
+      title: isDeepSearchTarget
+        ? "Backend Search Sentinel Engineer"
+        : `Seeded Opportunity ${String(index + 1).padStart(3, "0")}`,
+      company: isDeepSearchTarget
+        ? "Deep Search Systems"
+        : `Seed Company ${(index % 24) + 1}`,
+      location: index % 3 === 0 ? "Remote" : "Toronto, Ontario, Canada",
+      type: index % 4 === 0 ? "internship" : "full-time",
+      remote: index % 3 === 0,
+      description: [
+        "Seeded opportunity used for local backend dogfooding.",
+        `Batch row ${index + 1}.`,
+        isDeepSearchTarget
+          ? "Contains deepsearch-sentinel beyond the first default API page."
+          : "Exercises pagination, counts, and sorting.",
+      ].join(" "),
+      requirements: [keyword, "TypeScript", "SQL"],
+      responsibilities: [
+        "Exercise large opportunity lists",
+        "Verify backend-owned search",
+      ],
+      keywords: [keyword, status],
+      url: `https://example.com/heavy-opportunity-${index + 1}`,
+      status,
+      appliedAt:
+        status === "applied" ||
+        status === "interviewing" ||
+        status === "offer" ||
+        status === "rejected"
+          ? daysAgo((index % 30) + 1)
+          : undefined,
+      deadline:
+        status === "pending"
+          ? daysFromNow((index % 12) + 1)
+          : daysFromNow((index % 45) - 15),
+      notes: isDeepPendingTarget
+        ? "deep-pending-sentinel: pending record intentionally beyond row 50."
+        : "Heavy opportunity seed.",
+    });
+  }
+
+  return Promise.all(jobs.map((job) => createJob(job, userId)));
 }
 
 function seedComponents(userId: string): number {
@@ -365,10 +454,13 @@ function seedComponents(userId: string): number {
   return insertBankEntries(entries, userId).length;
 }
 
-function seedDrafts(userId: string, jobs: JobDescription[]): number {
+async function seedDrafts(
+  userId: string,
+  jobs: JobDescription[],
+): Promise<number> {
   const targetJob =
     jobs.find((job) => job.status === "interviewing") ?? jobs[0];
-  createEmailDraft(
+  await createEmailDraft(
     {
       type: "follow_up",
       jobId: targetJob?.id,

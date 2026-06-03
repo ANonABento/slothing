@@ -6,7 +6,7 @@ import { parseToDate } from "@/lib/format/time";
  * @response ICS file (text/calendar)
  */
 import { NextRequest } from "next/server";
-import { getJobs } from "@/lib/db/jobs";
+import { getJobs } from "@/lib/db/jobs-async";
 import { getReminders } from "@/lib/db/reminders";
 import { getInterviewSessions } from "@/lib/db/interviews";
 import {
@@ -34,8 +34,8 @@ export async function GET(request: NextRequest) {
     }
 
     const events: CalendarEvent[] = [];
-    const jobs = getJobs(userId);
-    const reminders = getReminders({ userId });
+    const jobs = await getJobs(userId);
+    const reminders = await getReminders({ userId });
 
     // Get interview events from jobs in interviewing status
     if (type === "interviews" || type === "all") {
@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
 
       // Also include interview practice sessions
       try {
-        const sessions = getInterviewSessions(undefined, userId);
+        const sessions = await getInterviewSessions(undefined, userId);
         for (const session of sessions) {
           if (session.startedAt) {
             const job = jobs.find((j) => j.id === session.jobId);

@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
 
   try {
     const { searchParams } = new URL(request.url);
-    const sends = getEmailSends(authResult.userId, {
+    const sends = await getEmailSends(authResult.userId, {
       limit: parseIntegerParam(searchParams.get("limit"), 50),
       offset: parseIntegerParam(searchParams.get("offset"), 0),
       jobId: searchParams.get("jobId") || undefined,
@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const send = createEmailSend(parseResult.data, authResult.userId);
+    const send = await createEmailSend(parseResult.data, authResult.userId);
     const { unlocked } =
       send.status === "sent"
         ? await safeTrackActivity(authResult.userId, "email_sent")

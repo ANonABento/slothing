@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
   try {
     const result = await runEmailRetryCron();
     const durationMs = nowEpoch() - startedMs;
-    recordCronRun({
+    await recordCronRun({
       cron: "email.retry",
       status: result.ok ? "success" : "failure",
       startedAt,
@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Email retry cron failed";
-    recordCronRun({
+    await recordCronRun({
       cron: "email.retry",
       status: "failure",
       startedAt,

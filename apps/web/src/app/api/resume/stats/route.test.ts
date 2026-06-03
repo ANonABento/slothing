@@ -4,17 +4,15 @@ vi.mock("@/lib/auth", () =>
   globalThis.__contractRouteMocks!.createAuthModuleMock(),
 );
 
-vi.mock("@/lib/db/resume-tracking", () =>
-  globalThis.__contractRouteMocks!.createContractModuleMock(
-    "@/lib/db/resume-tracking",
-  ),
-);
+vi.mock("@/lib/db/resume-tracking", () => ({
+  getTrackingEntries: vi.fn(async () => []),
+  getTrackedResumeIds: vi.fn(async () => []),
+}));
 
-vi.mock("@/lib/resume/compare", () =>
-  globalThis.__contractRouteMocks!.createContractModuleMock(
-    "@/lib/resume/compare",
-  ),
-);
+vi.mock("@/lib/resume/compare", () => ({
+  calculateVersionStats: vi.fn(() => ({ resumeId: "resume-1" })),
+  generateRecommendation: vi.fn(() => null),
+}));
 
 import { GET } from "./route";
 import {

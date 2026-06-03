@@ -22,9 +22,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const entry = createWaitlistEntry(parsed.data);
+    const entry = await createWaitlistEntry(parsed.data);
     try {
-      trackActivationEvent({
+      await trackActivationEvent({
         event: "waitlist_joined",
         source: parsed.data.source ?? "pricing",
         metadata: { interest: parsed.data.interest ?? null },

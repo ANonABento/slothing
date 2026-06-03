@@ -26,7 +26,7 @@ describe("AiTaskRoutingSection", () => {
     expect(screen.getAllByText("Heuristic").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Optional LLM").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Needs LLM").length).toBeGreaterThan(0);
-    expect(screen.getByText("Template import")).toBeInTheDocument();
+    expect(screen.getByText("Visual template import")).toBeInTheDocument();
     expect(screen.getByText("Salary negotiation script")).toBeInTheDocument();
   });
 
@@ -39,7 +39,7 @@ describe("AiTaskRoutingSection", () => {
 
     expect(screen.getAllByText("Fallback available").length).toBeGreaterThan(0);
     expect(
-      screen.getByText(/deterministic PDF, DOCX, and LaTeX heuristics/i),
+      screen.getByText(/deterministic PDF geometry, DOCX tables/i),
     ).toBeInTheDocument();
   });
 });

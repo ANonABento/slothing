@@ -1,20 +1,17 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import type { Mock } from "vitest";
 
-// Mock the database module
-vi.mock("./legacy", () => {
-  const mockDb = {
-    prepare: vi.fn(),
-  };
-  return { default: mockDb };
-});
+const { executeMock } = vi.hoisted(() => ({
+  executeMock: vi.fn(),
+}));
 
-// Mock utils to control ID generation
+vi.mock("./client", () => ({
+  getClient: () => ({ execute: executeMock }),
+}));
+
 vi.mock("@/lib/utils", () => ({
   generateId: () => "test-session-id",
 }));
 
-import db from "./legacy";
 import {
   createInterviewSession,
   getInterviewSession,
@@ -28,32 +25,78 @@ import {
 
 const TEST_USER_ID = "test-user";
 
+type ExecuteArg = string | { sql: string; args?: unknown[] };
+
+function sqlOf(arg: ExecuteArg): string {
+  return typeof arg === "string" ? arg : arg.sql;
+}
+
+function isSchemaSql(sql: string): boolean {
+  const upper = sql.trim().toUpperCase();
+  return (
+    upper.startsWith("CREATE") ||
+    upper.startsWith("ALTER") ||
+    upper.startsWith("DROP") ||
+    upper.startsWith("PRAGMA") ||
+    upper.startsWith("BEGIN") ||
+    upper.startsWith("COMMIT") ||
+    upper.startsWith("ROLLBACK") ||
+    upper.startsWith("INSERT INTO INTERVIEW_SESSIONS_NEW") ||
+    upper.startsWith("RENAME")
+  );
+}
+
+function setupMock(handler: (sql: string) => unknown): void {
+  executeMock.mockImplementation(async (arg: ExecuteArg) => {
+    const sql = sqlOf(arg);
+    if (isSchemaSql(sql)) {
+      return { rows: [], rowsAffected: 0 };
+    }
+    const result = handler(sql);
+    if (result && typeof result === "object" && "rows" in result) {
+      return result;
+    }
+    return { rows: [], rowsAffected: 0 };
+  });
+}
+
+function nonSchemaCalls(): { sql: string; args: unknown[] }[] {
+  return executeMock.mock.calls
+    .map(([arg]) => {
+      if (typeof arg === "string") return { sql: arg, args: [] as unknown[] };
+      return { sql: arg.sql, args: (arg.args ?? []) as unknown[] };
+    })
+    .filter((call) => !isSchemaSql(call.sql));
+}
+
 describe("Interview Database Functions", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    executeMock.mockReset();
   });
 
   describe("createInterviewSession", () => {
-    it("should create a new interview session", () => {
-      const mockRun = vi.fn();
-      (db.prepare as Mock).mockReturnValue({ run: mockRun });
+    it("creates a new interview session", async () => {
+      setupMock(() => ({ rows: [], rowsAffected: 1 }));
 
       const questions = [
         { question: "Tell me about yourself", category: "behavioral" as const },
         { question: "What is React?", category: "technical" as const },
       ];
 
-      const result = createInterviewSession(
+      const result = await createInterviewSession(
         "job-123",
         questions,
         "text",
         TEST_USER_ID,
       );
 
-      expect(db.prepare).toHaveBeenCalledWith(
-        expect.stringContaining("WHERE EXISTS"),
+      const calls = nonSchemaCalls();
+      const insert = calls.find((c) =>
+        c.sql.includes("INSERT INTO interview_sessions"),
       );
-      expect(mockRun).toHaveBeenLastCalledWith(
+      expect(insert).toBeDefined();
+      expect(insert!.sql).toContain("WHERE EXISTS");
+      expect(insert!.args).toEqual([
         "test-session-id",
         TEST_USER_ID,
         "job-123",
@@ -65,7 +108,7 @@ describe("Interview Database Functions", () => {
         expect.any(String),
         "job-123",
         TEST_USER_ID,
-      );
+      ]);
       expect(result).toEqual({
         id: "test-session-id",
         jobId: "job-123",
@@ -79,9 +122,8 @@ describe("Interview Database Functions", () => {
       });
     });
 
-    it("should create a generic interview session without a job", () => {
-      const mockRun = vi.fn();
-      (db.prepare as Mock).mockReturnValue({ run: mockRun });
+    it("creates a generic interview session without a job", async () => {
+      setupMock(() => ({ rows: [], rowsAffected: 1 }));
 
       const questions = [
         {
@@ -90,7 +132,7 @@ describe("Interview Database Functions", () => {
         },
       ];
 
-      const result = createInterviewSession(
+      const result = await createInterviewSession(
         null,
         questions,
         "generic-text",
@@ -98,10 +140,12 @@ describe("Interview Database Functions", () => {
         "behavioral",
       );
 
-      expect(db.prepare).toHaveBeenCalledWith(
-        expect.stringContaining("VALUES"),
+      const insert = nonSchemaCalls().find((c) =>
+        c.sql.includes("INSERT INTO interview_sessions"),
       );
-      expect(mockRun).toHaveBeenLastCalledWith(
+      expect(insert).toBeDefined();
+      expect(insert!.sql).toContain("VALUES");
+      expect(insert!.args).toEqual([
         "test-session-id",
         TEST_USER_ID,
         null,
@@ -110,7 +154,7 @@ describe("Interview Database Functions", () => {
         "generic-text",
         JSON.stringify(questions),
         expect.any(String),
-      );
+      ]);
       expect(result).toMatchObject({
         id: "test-session-id",
         jobId: null,
@@ -119,14 +163,22 @@ describe("Interview Database Functions", () => {
       });
     });
 
-    it("should reject sessions for jobs outside the provided user", () => {
-      const mockRun = vi.fn().mockReturnValue({ changes: 0 });
-      (db.prepare as Mock).mockReturnValue({ run: mockRun });
+    it("rejects sessions for jobs outside the provided user", async () => {
+      setupMock((sql) => {
+        if (sql.includes("INSERT INTO interview_sessions")) {
+          return { rows: [], rowsAffected: 0 };
+        }
+        return { rows: [], rowsAffected: 1 };
+      });
 
-      expect(() =>
+      await expect(
         createInterviewSession("job-123", [], "text", "user-123"),
-      ).toThrow("Job not found");
-      expect(mockRun).toHaveBeenCalledWith(
+      ).rejects.toThrow("Job not found");
+
+      const insert = nonSchemaCalls().find((c) =>
+        c.sql.includes("INSERT INTO interview_sessions"),
+      );
+      expect(insert!.args).toEqual([
         "test-session-id",
         "user-123",
         "job-123",
@@ -138,14 +190,13 @@ describe("Interview Database Functions", () => {
         expect.any(String),
         "job-123",
         "user-123",
-      );
+      ]);
     });
 
-    it("should default to text mode", () => {
-      const mockRun = vi.fn();
-      (db.prepare as Mock).mockReturnValue({ run: mockRun });
+    it("defaults to text mode", async () => {
+      setupMock(() => ({ rows: [], rowsAffected: 1 }));
 
-      const result = createInterviewSession(
+      const result = await createInterviewSession(
         "job-123",
         [],
         undefined,
@@ -155,11 +206,10 @@ describe("Interview Database Functions", () => {
       expect(result.mode).toBe("text");
     });
 
-    it("should support voice mode", () => {
-      const mockRun = vi.fn();
-      (db.prepare as Mock).mockReturnValue({ run: mockRun });
+    it("supports voice mode", async () => {
+      setupMock(() => ({ rows: [], rowsAffected: 1 }));
 
-      const result = createInterviewSession(
+      const result = await createInterviewSession(
         "job-123",
         [],
         "voice",
@@ -169,9 +219,8 @@ describe("Interview Database Functions", () => {
       expect(result.mode).toBe("voice");
     });
 
-    it("should attach a context pack to a generic session", () => {
-      const mockRun = vi.fn();
-      (db.prepare as Mock).mockReturnValue({ run: mockRun });
+    it("attaches a context pack to a generic session", async () => {
+      setupMock(() => ({ rows: [], rowsAffected: 1 }));
 
       const questions = [
         {
@@ -180,7 +229,7 @@ describe("Interview Database Functions", () => {
         },
       ];
 
-      const result = createInterviewSession(
+      const result = await createInterviewSession(
         null,
         questions,
         "generic-text",
@@ -189,7 +238,10 @@ describe("Interview Database Functions", () => {
         "context-pack-1",
       );
 
-      expect(mockRun).toHaveBeenLastCalledWith(
+      const insert = nonSchemaCalls().find((c) =>
+        c.sql.includes("INSERT INTO interview_sessions"),
+      );
+      expect(insert!.args).toEqual([
         "test-session-id",
         TEST_USER_ID,
         "context-pack-1",
@@ -198,7 +250,7 @@ describe("Interview Database Functions", () => {
         "generic-text",
         JSON.stringify(questions),
         expect.any(String),
-      );
+      ]);
       expect(result).toMatchObject({
         jobId: null,
         contextPackId: "context-pack-1",
@@ -208,10 +260,12 @@ describe("Interview Database Functions", () => {
   });
 
   describe("getInterviewSession", () => {
-    it("should return session with answers", () => {
-      const mockSessionRow = {
+    it("returns session with answers", async () => {
+      const sessionRow = {
         id: "session-1",
         job_id: "job-123",
+        context_pack_id: null,
+        category: null,
         profile_id: TEST_USER_ID,
         mode: "text",
         questions_json: '[{"question": "Q1", "category": "behavioral"}]',
@@ -220,35 +274,30 @@ describe("Interview Database Functions", () => {
         completed_at: null,
       };
 
-      const mockAnswerRows = [
-        {
-          id: "answer-1",
-          session_id: "session-1",
-          question_index: 0,
-          answer: "My answer",
-          feedback: "Good answer",
-          created_at: "2024-01-15T10:05:00.000Z",
-        },
-      ];
+      const answerRow = {
+        id: "answer-1",
+        session_id: "session-1",
+        question_index: 0,
+        answer: "My answer",
+        feedback: "Good answer",
+        created_at: "2024-01-15T10:05:00.000Z",
+      };
 
-      (db.prepare as Mock).mockImplementation((sql: string) => {
-        if (sql.includes("interview_sessions")) {
-          return { get: vi.fn().mockReturnValue(mockSessionRow) };
-        }
-        if (sql.includes("interview_answers")) {
-          return { all: vi.fn().mockReturnValue(mockAnswerRows) };
-        }
-        if (sql.includes("interview_follow_ups")) {
-          return { all: vi.fn().mockReturnValue([]) };
-        }
-        return { get: vi.fn(), all: vi.fn() };
+      setupMock((sql) => {
+        if (sql.includes("FROM interview_sessions"))
+          return { rows: [sessionRow] };
+        if (sql.includes("FROM interview_answers"))
+          return { rows: [answerRow] };
+        if (sql.includes("FROM interview_follow_ups")) return { rows: [] };
+        return { rows: [] };
       });
 
-      const result = getInterviewSession("session-1", TEST_USER_ID);
+      const result = await getInterviewSession("session-1", TEST_USER_ID);
 
-      expect(db.prepare).toHaveBeenCalledWith(
-        expect.stringContaining("WHERE id = ? AND user_id = ?"),
+      const sessionCall = nonSchemaCalls().find((c) =>
+        c.sql.includes("FROM interview_sessions"),
       );
+      expect(sessionCall!.sql).toContain("WHERE id = ? AND user_id = ?");
       expect(result).toEqual({
         id: "session-1",
         jobId: "job-123",
@@ -277,21 +326,20 @@ describe("Interview Database Functions", () => {
       });
     });
 
-    it("should return null for non-existent session", () => {
-      (db.prepare as Mock).mockReturnValue({
-        get: vi.fn().mockReturnValue(undefined),
-        all: vi.fn().mockReturnValue([]),
-      });
+    it("returns null for non-existent session", async () => {
+      setupMock(() => ({ rows: [] }));
 
-      const result = getInterviewSession("non-existent", TEST_USER_ID);
+      const result = await getInterviewSession("non-existent", TEST_USER_ID);
 
       expect(result).toBeNull();
     });
 
-    it("should handle completed sessions", () => {
-      const mockSessionRow = {
+    it("handles completed sessions", async () => {
+      const sessionRow = {
         id: "session-1",
         job_id: "job-123",
+        context_pack_id: null,
+        category: null,
         profile_id: TEST_USER_ID,
         mode: "voice",
         questions_json: "[]",
@@ -300,20 +348,13 @@ describe("Interview Database Functions", () => {
         completed_at: "2024-01-15T11:00:00.000Z",
       };
 
-      (db.prepare as Mock).mockImplementation((sql: string) => {
-        if (sql.includes("interview_sessions")) {
-          return { get: vi.fn().mockReturnValue(mockSessionRow) };
-        }
-        if (sql.includes("interview_answers")) {
-          return { all: vi.fn().mockReturnValue([]) };
-        }
-        if (sql.includes("interview_follow_ups")) {
-          return { all: vi.fn().mockReturnValue([]) };
-        }
-        return { all: vi.fn().mockReturnValue([]) };
+      setupMock((sql) => {
+        if (sql.includes("FROM interview_sessions"))
+          return { rows: [sessionRow] };
+        return { rows: [] };
       });
 
-      const result = getInterviewSession("session-1", TEST_USER_ID);
+      const result = await getInterviewSession("session-1", TEST_USER_ID);
 
       expect(result?.status).toBe("completed");
       expect(result?.completedAt).toBe("2024-01-15T11:00:00.000Z");
@@ -321,11 +362,13 @@ describe("Interview Database Functions", () => {
   });
 
   describe("getInterviewSessions", () => {
-    it("should return all sessions ordered by started_at DESC", () => {
-      const mockRows = [
+    it("returns all sessions ordered by started_at DESC", async () => {
+      const rows = [
         {
           id: "session-2",
           job_id: "job-456",
+          context_pack_id: null,
+          category: null,
           profile_id: TEST_USER_ID,
           mode: "text",
           questions_json: "[]",
@@ -336,6 +379,8 @@ describe("Interview Database Functions", () => {
         {
           id: "session-1",
           job_id: "job-123",
+          context_pack_id: null,
+          category: null,
           profile_id: TEST_USER_ID,
           mode: "voice",
           questions_json: "[]",
@@ -345,55 +390,52 @@ describe("Interview Database Functions", () => {
         },
       ];
 
-      (db.prepare as Mock).mockImplementation((sql: string) => {
-        if (sql.includes("FROM interview_answers")) {
-          return { all: vi.fn().mockReturnValue([]) };
-        }
-        if (sql.includes("FROM interview_follow_ups")) {
-          return { all: vi.fn().mockReturnValue([]) };
-        }
-        return { all: vi.fn().mockReturnValue(mockRows) };
+      setupMock((sql) => {
+        if (sql.includes("FROM interview_sessions")) return { rows };
+        return { rows: [] };
       });
 
-      const result = getInterviewSessions(undefined, TEST_USER_ID);
+      const result = await getInterviewSessions(undefined, TEST_USER_ID);
 
-      expect(db.prepare as Mock).toHaveBeenCalledWith(
-        expect.stringContaining("WHERE user_id = ?"),
+      const sessionCall = nonSchemaCalls().find((c) =>
+        c.sql.includes("FROM interview_sessions"),
       );
+      expect(sessionCall!.sql).toContain("WHERE user_id = ?");
       expect(result).toHaveLength(2);
       expect(result[0].id).toBe("session-2");
       expect(result[1].id).toBe("session-1");
     });
 
-    it("should filter by jobId when provided", () => {
-      const mockAll = vi.fn().mockReturnValue([]);
-      (db.prepare as Mock).mockReturnValue({ all: mockAll });
+    it("filters by jobId when provided", async () => {
+      setupMock(() => ({ rows: [] }));
 
-      getInterviewSessions("job-123", TEST_USER_ID);
+      await getInterviewSessions("job-123", TEST_USER_ID);
 
-      expect(mockAll).toHaveBeenCalledWith(TEST_USER_ID, "job-123");
+      const sessionCall = nonSchemaCalls().find((c) =>
+        c.sql.includes("FROM interview_sessions"),
+      );
+      expect(sessionCall!.sql).toContain("AND job_id = ?");
+      expect(sessionCall!.args).toEqual([TEST_USER_ID, "job-123"]);
     });
 
-    it("should return empty array when no sessions exist", () => {
-      (db.prepare as Mock).mockReturnValue({
-        all: vi.fn().mockReturnValue([]),
-      });
+    it("returns empty array when no sessions exist", async () => {
+      setupMock(() => ({ rows: [] }));
 
-      const result = getInterviewSessions(undefined, TEST_USER_ID);
+      const result = await getInterviewSessions(undefined, TEST_USER_ID);
 
-      expect(db.prepare as Mock).toHaveBeenCalledWith(
-        expect.stringContaining("WHERE user_id = ?"),
+      const sessionCall = nonSchemaCalls().find((c) =>
+        c.sql.includes("FROM interview_sessions"),
       );
+      expect(sessionCall!.sql).toContain("WHERE user_id = ?");
       expect(result).toEqual([]);
     });
   });
 
   describe("addInterviewAnswer", () => {
-    it("should add an answer to a session", () => {
-      const mockRun = vi.fn();
-      (db.prepare as Mock).mockReturnValue({ run: mockRun });
+    it("adds an answer to a session", async () => {
+      setupMock(() => ({ rows: [], rowsAffected: 1 }));
 
-      const result = addInterviewAnswer(
+      const result = await addInterviewAnswer(
         "session-1",
         0,
         "My answer",
@@ -401,7 +443,10 @@ describe("Interview Database Functions", () => {
         TEST_USER_ID,
       );
 
-      expect(mockRun).toHaveBeenCalledWith(
+      const insert = nonSchemaCalls().find((c) =>
+        c.sql.includes("INSERT INTO interview_answers"),
+      );
+      expect(insert!.args).toEqual([
         "test-session-id",
         TEST_USER_ID,
         "session-1",
@@ -411,7 +456,7 @@ describe("Interview Database Functions", () => {
         expect.any(String),
         "session-1",
         TEST_USER_ID,
-      );
+      ]);
       expect(result).toEqual({
         id: "test-session-id",
         sessionId: "session-1",
@@ -422,14 +467,22 @@ describe("Interview Database Functions", () => {
       });
     });
 
-    it("should reject answers for sessions outside the provided user", () => {
-      const mockRun = vi.fn().mockReturnValue({ changes: 0 });
-      (db.prepare as Mock).mockReturnValue({ run: mockRun });
+    it("rejects answers for sessions outside the provided user", async () => {
+      setupMock((sql) => {
+        if (sql.includes("INSERT INTO interview_answers")) {
+          return { rows: [], rowsAffected: 0 };
+        }
+        return { rows: [], rowsAffected: 1 };
+      });
 
-      expect(() =>
+      await expect(
         addInterviewAnswer("session-1", 0, "My answer", undefined, "user-123"),
-      ).toThrow("Session not found");
-      expect(mockRun).toHaveBeenCalledWith(
+      ).rejects.toThrow("Session not found");
+
+      const insert = nonSchemaCalls().find((c) =>
+        c.sql.includes("INSERT INTO interview_answers"),
+      );
+      expect(insert!.args).toEqual([
         "test-session-id",
         "user-123",
         "session-1",
@@ -439,14 +492,13 @@ describe("Interview Database Functions", () => {
         expect.any(String),
         "session-1",
         "user-123",
-      );
+      ]);
     });
 
-    it("should handle answers without feedback", () => {
-      const mockRun = vi.fn();
-      (db.prepare as Mock).mockReturnValue({ run: mockRun });
+    it("handles answers without feedback", async () => {
+      setupMock(() => ({ rows: [], rowsAffected: 1 }));
 
-      const result = addInterviewAnswer(
+      const result = await addInterviewAnswer(
         "session-1",
         0,
         "My answer",
@@ -455,26 +507,35 @@ describe("Interview Database Functions", () => {
       );
 
       expect(result.feedback).toBeUndefined();
-      const runArgs = mockRun.mock.calls[0];
-      expect(runArgs[5]).toBeNull(); // feedback arg should be null
+      const insert = nonSchemaCalls().find((c) =>
+        c.sql.includes("INSERT INTO interview_answers"),
+      );
+      expect(insert!.args[5]).toBeNull();
     });
 
-    it("should save answers for the provided user", () => {
-      const mockRun = vi.fn();
-      (db.prepare as Mock).mockReturnValue({ run: mockRun });
+    it("saves answers for the provided user", async () => {
+      setupMock(() => ({ rows: [], rowsAffected: 1 }));
 
-      addInterviewAnswer("session-1", 0, "My answer", undefined, "user-123");
+      await addInterviewAnswer(
+        "session-1",
+        0,
+        "My answer",
+        undefined,
+        "user-123",
+      );
 
-      expect(mockRun.mock.calls[0][1]).toBe("user-123");
+      const insert = nonSchemaCalls().find((c) =>
+        c.sql.includes("INSERT INTO interview_answers"),
+      );
+      expect(insert!.args[1]).toBe("user-123");
     });
   });
 
   describe("addInterviewFollowUp", () => {
-    it("should add a follow-up answer to a session", () => {
-      const mockRun = vi.fn();
-      (db.prepare as Mock).mockReturnValue({ run: mockRun });
+    it("adds a follow-up answer to a session", async () => {
+      setupMock(() => ({ rows: [], rowsAffected: 1 }));
 
-      const result = addInterviewFollowUp(
+      const result = await addInterviewFollowUp(
         "session-1",
         0,
         "What was the result?",
@@ -483,7 +544,10 @@ describe("Interview Database Functions", () => {
         TEST_USER_ID,
       );
 
-      expect(mockRun).toHaveBeenCalledWith(
+      const insert = nonSchemaCalls().find((c) =>
+        c.sql.includes("INSERT INTO interview_follow_ups"),
+      );
+      expect(insert!.args).toEqual([
         "test-session-id",
         TEST_USER_ID,
         "session-1",
@@ -494,7 +558,7 @@ describe("Interview Database Functions", () => {
         expect.any(String),
         "session-1",
         TEST_USER_ID,
-      );
+      ]);
       expect(result).toEqual({
         id: "test-session-id",
         sessionId: "session-1",
@@ -506,11 +570,15 @@ describe("Interview Database Functions", () => {
       });
     });
 
-    it("should reject follow-ups for sessions outside the provided user", () => {
-      const mockRun = vi.fn().mockReturnValue({ changes: 0 });
-      (db.prepare as Mock).mockReturnValue({ run: mockRun });
+    it("rejects follow-ups for sessions outside the provided user", async () => {
+      setupMock((sql) => {
+        if (sql.includes("INSERT INTO interview_follow_ups")) {
+          return { rows: [], rowsAffected: 0 };
+        }
+        return { rows: [], rowsAffected: 1 };
+      });
 
-      expect(() =>
+      await expect(
         addInterviewFollowUp(
           "session-1",
           0,
@@ -519,8 +587,12 @@ describe("Interview Database Functions", () => {
           undefined,
           "user-123",
         ),
-      ).toThrow("Session not found");
-      expect(mockRun).toHaveBeenCalledWith(
+      ).rejects.toThrow("Session not found");
+
+      const insert = nonSchemaCalls().find((c) =>
+        c.sql.includes("INSERT INTO interview_follow_ups"),
+      );
+      expect(insert!.args).toEqual([
         "test-session-id",
         "user-123",
         "session-1",
@@ -531,52 +603,59 @@ describe("Interview Database Functions", () => {
         expect.any(String),
         "session-1",
         "user-123",
-      );
+      ]);
     });
   });
 
   describe("completeInterviewSession", () => {
-    it("should mark session as completed", () => {
-      const mockRun = vi.fn();
-      (db.prepare as Mock).mockReturnValue({ run: mockRun });
+    it("marks session as completed", async () => {
+      setupMock(() => ({ rows: [], rowsAffected: 1 }));
 
-      completeInterviewSession("session-1", TEST_USER_ID);
+      await completeInterviewSession("session-1", TEST_USER_ID);
 
-      expect(mockRun).toHaveBeenCalled();
-      const runArgs = mockRun.mock.calls[0];
-      expect(runArgs[0]).toBeTruthy(); // timestamp
-      expect(runArgs[1]).toBe("session-1");
-      expect(runArgs[2]).toBe(TEST_USER_ID);
+      const update = nonSchemaCalls().find((c) =>
+        c.sql.includes("UPDATE interview_sessions"),
+      );
+      expect(update).toBeDefined();
+      expect(update!.args[0]).toBeTruthy();
+      expect(update!.args[1]).toBe("session-1");
+      expect(update!.args[2]).toBe(TEST_USER_ID);
     });
   });
 
   describe("deleteInterviewSession", () => {
-    it("should delete session and its answers", () => {
-      const mockRun = vi.fn();
-      const mockGet = vi.fn().mockReturnValue({ id: "session-1" });
-
-      (db.prepare as Mock).mockImplementation((sql: string) => {
+    it("deletes session and its answers", async () => {
+      setupMock((sql) => {
         if (sql.includes("SELECT id FROM interview_sessions")) {
-          return { get: mockGet };
+          return { rows: [{ id: "session-1" }] };
         }
-        return { run: mockRun };
+        return { rows: [], rowsAffected: 1 };
       });
 
-      deleteInterviewSession("session-1", TEST_USER_ID);
+      await deleteInterviewSession("session-1", TEST_USER_ID);
 
-      expect(mockGet).toHaveBeenCalledWith("session-1", TEST_USER_ID);
-      expect(mockRun).toHaveBeenCalledTimes(3);
-      expect(mockRun).toHaveBeenCalledWith("session-1", TEST_USER_ID);
-      expect(mockRun).toHaveBeenCalledWith("session-1", TEST_USER_ID);
+      const calls = nonSchemaCalls();
+      const select = calls.find((c) =>
+        c.sql.includes("SELECT id FROM interview_sessions"),
+      );
+      expect(select!.args).toEqual(["session-1", TEST_USER_ID]);
+
+      const deleteCalls = calls.filter((c) => c.sql.startsWith("DELETE"));
+      expect(deleteCalls).toHaveLength(3);
+      for (const call of deleteCalls) {
+        expect(call.args).toEqual(["session-1", TEST_USER_ID]);
+      }
     });
   });
 
   describe("getRecentInterviewSessions", () => {
-    it("should return limited number of sessions", () => {
-      const mockRows = [
+    it("returns limited number of sessions", async () => {
+      const rows = [
         {
           id: "session-1",
           job_id: "job-123",
+          context_pack_id: null,
+          category: null,
           profile_id: TEST_USER_ID,
           mode: "text",
           questions_json: "[]",
@@ -586,22 +665,29 @@ describe("Interview Database Functions", () => {
         },
       ];
 
-      const mockAll = vi.fn().mockReturnValue(mockRows);
-      (db.prepare as Mock).mockReturnValue({ all: mockAll });
+      setupMock((sql) => {
+        if (sql.includes("FROM interview_sessions")) return { rows };
+        return { rows: [] };
+      });
 
-      const result = getRecentInterviewSessions(5, TEST_USER_ID);
+      const result = await getRecentInterviewSessions(5, TEST_USER_ID);
 
-      expect(mockAll).toHaveBeenCalledWith(TEST_USER_ID, 5);
+      const call = nonSchemaCalls().find((c) =>
+        c.sql.includes("FROM interview_sessions"),
+      );
+      expect(call!.args).toEqual([TEST_USER_ID, 5]);
       expect(result).toHaveLength(1);
     });
 
-    it("should default to 5 sessions", () => {
-      const mockAll = vi.fn().mockReturnValue([]);
-      (db.prepare as Mock).mockReturnValue({ all: mockAll });
+    it("defaults to 5 sessions", async () => {
+      setupMock(() => ({ rows: [] }));
 
-      getRecentInterviewSessions(undefined, TEST_USER_ID);
+      await getRecentInterviewSessions(undefined, TEST_USER_ID);
 
-      expect(mockAll).toHaveBeenCalledWith(TEST_USER_ID, 5);
+      const call = nonSchemaCalls().find((c) =>
+        c.sql.includes("FROM interview_sessions"),
+      );
+      expect(call!.args).toEqual([TEST_USER_ID, 5]);
     });
   });
 });

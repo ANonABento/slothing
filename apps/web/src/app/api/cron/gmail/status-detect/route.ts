@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
   const startedIso = nowIso();
   const result = await runGmailStatusDetectionForEnabledUsers();
   const durationMs = nowEpoch() - startedAt;
-  recordCronRun({
+  await recordCronRun({
     cron: "gmail.status-detect",
     status: result.errors === 0 ? "success" : "failure",
     startedAt: startedIso,

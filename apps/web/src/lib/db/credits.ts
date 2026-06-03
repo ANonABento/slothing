@@ -1,7 +1,7 @@
 import { randomUUID } from "crypto";
 
-import db from "./legacy";
 import { CREDITS_BOOTSTRAP_SQL } from "./bootstrap-sql";
+import { getClient } from "./client";
 import { nowIso } from "@/lib/format/time";
 
 export type CreditFeature =
@@ -64,50 +64,60 @@ export interface CreditTransactionRecord {
 
 let ensured = false;
 
-export function ensureCreditSchema(): void {
+export async function ensureCreditSchema(): Promise<void> {
   if (ensured) return;
 
   // DDL co-located with the Drizzle table definitions — see
   // `bootstrap-sql.ts` for the column pins that fail to type-check if
   // a column is renamed in `schema.ts`.
-  db.exec(CREDITS_BOOTSTRAP_SQL);
+  await getClient().batch(
+    CREDITS_BOOTSTRAP_SQL.split(";")
+      .map((sql) => sql.trim())
+      .filter(Boolean)
+      .map((sql) => ({ sql, args: [] })),
+    "write",
+  );
 
   ensured = true;
 }
 
-export function getCreditBalance(userId: string): CreditBalanceRecord {
-  ensureCreditSchema();
-  const row = db
-    .prepare("SELECT * FROM credit_balances WHERE user_id = ?")
-    .get(userId) as CreditBalanceRow | undefined;
+export async function getCreditBalance(
+  userId: string,
+): Promise<CreditBalanceRecord> {
+  await ensureCreditSchema();
+  const result = await getClient().execute({
+    sql: "SELECT * FROM credit_balances WHERE user_id = ?",
+    args: [userId],
+  });
+  const row = result.rows[0] as unknown as CreditBalanceRow | undefined;
 
   if (row) return mapBalance(row);
   return { userId, balance: 0, updatedAt: nowIso() };
 }
 
-export function getCreditTransactions(
+export async function getCreditTransactions(
   userId: string,
   limit = 30,
-): CreditTransactionRecord[] {
-  ensureCreditSchema();
-  const rows = db
-    .prepare(
-      `SELECT * FROM credit_transactions
+): Promise<CreditTransactionRecord[]> {
+  await ensureCreditSchema();
+  const result = await getClient().execute({
+    sql: `SELECT * FROM credit_transactions
        WHERE user_id = ?
        ORDER BY created_at DESC
        LIMIT ?`,
-    )
-    .all(userId, limit) as CreditTransactionRow[];
+    args: [userId, limit],
+  });
+  const rows = result.rows as unknown as CreditTransactionRow[];
   return rows.map(mapTransaction);
 }
 
-export function grantPlanCredits(
+export async function grantPlanCredits(
   userId: string,
   planKey: CreditPlanKey,
   refId: string,
-): CreditBalanceRecord {
+): Promise<CreditBalanceRecord> {
   const amount = PLAN_CREDIT_GRANTS[planKey];
-  return addCredits({
+  return await addCredits({
     userId,
     delta: amount,
     reason: "invoice_paid",
@@ -117,55 +127,62 @@ export function grantPlanCredits(
   });
 }
 
-export function deductCredits(
+export async function deductCredits(
   userId: string,
   feature: CreditFeature,
   refId: string,
-): CreditTransactionRecord {
+): Promise<CreditTransactionRecord> {
   const cost = CREDIT_COSTS[feature];
-  ensureCreditSchema();
+  await ensureCreditSchema();
 
-  const transaction = db.transaction(() => {
-    const balance = getCreditBalance(userId).balance;
-    if (balance < cost) {
-      throw new InsufficientCreditsError(userId, feature, cost, balance);
-    }
+  const balance = (await getCreditBalance(userId)).balance;
+  if (balance < cost) {
+    throw new InsufficientCreditsError(userId, feature, cost, balance);
+  }
 
-    db.prepare(
-      `INSERT INTO credit_balances (user_id, balance, updated_at)
+  const transaction = buildTransaction({
+    userId,
+    delta: -cost,
+    reason: "usage",
+    feature,
+    refId,
+  });
+
+  await getClient().batch(
+    [
+      {
+        sql: `INSERT INTO credit_balances (user_id, balance, updated_at)
        VALUES (?, ?, CURRENT_TIMESTAMP)
        ON CONFLICT(user_id) DO UPDATE SET
          balance = credit_balances.balance - excluded.balance,
          updated_at = CURRENT_TIMESTAMP`,
-    ).run(userId, cost);
+        args: [userId, cost],
+      },
+      insertTransactionStatement(transaction),
+    ],
+    "write",
+  );
 
-    return insertTransaction({
-      userId,
-      delta: -cost,
-      reason: "usage",
-      feature,
-      refId,
-    });
-  });
-
-  return transaction();
+  return transaction;
 }
 
-export function refundCredits(
+export async function refundCredits(
   userId: string,
   feature: CreditFeature,
   refId: string,
-): CreditTransactionRecord {
-  return addCredits({
-    userId,
-    delta: CREDIT_COSTS[feature],
-    reason: "refund",
-    feature,
-    refId,
-  }).transaction;
+): Promise<CreditTransactionRecord> {
+  return (
+    await addCredits({
+      userId,
+      delta: CREDIT_COSTS[feature],
+      reason: "refund",
+      feature,
+      refId,
+    })
+  ).transaction;
 }
 
-function addCredits(input: {
+async function addCredits(input: {
   userId: string;
   delta: number;
   reason: CreditReason;
@@ -173,55 +190,63 @@ function addCredits(input: {
   refId?: string | null;
   cap?: number;
   idempotent?: boolean;
-}): CreditBalanceRecord & { transaction: CreditTransactionRecord } {
-  ensureCreditSchema();
+}): Promise<CreditBalanceRecord & { transaction: CreditTransactionRecord }> {
+  await ensureCreditSchema();
 
-  const transaction = db.transaction(() => {
-    if (input.idempotent && input.refId) {
-      const existing = db
-        .prepare(
-          `SELECT * FROM credit_transactions
+  if (input.idempotent && input.refId) {
+    const existingResult = await getClient().execute({
+      sql: `SELECT * FROM credit_transactions
            WHERE user_id = ? AND reason = ? AND ref_id = ?
            LIMIT 1`,
-        )
-        .get(input.userId, input.reason, input.refId) as
-        | CreditTransactionRow
-        | undefined;
-      if (existing) {
-        const balance = getCreditBalance(input.userId);
-        return { ...balance, transaction: mapTransaction(existing) };
-      }
+      args: [input.userId, input.reason, input.refId],
+    });
+    const existing = existingResult.rows[0] as unknown as
+      | CreditTransactionRow
+      | undefined;
+    if (existing) {
+      const balance = await getCreditBalance(input.userId);
+      return { ...balance, transaction: mapTransaction(existing) };
     }
+  }
 
-    const current = getCreditBalance(input.userId).balance;
-    const nextBalance =
-      typeof input.cap === "number"
-        ? Math.min(current + input.delta, input.cap)
-        : current + input.delta;
-    const actualDelta = nextBalance - current;
+  const current = (await getCreditBalance(input.userId)).balance;
+  const nextBalance =
+    typeof input.cap === "number"
+      ? Math.min(current + input.delta, input.cap)
+      : current + input.delta;
+  const actualDelta = nextBalance - current;
+  const transaction = buildTransaction({
+    userId: input.userId,
+    delta: actualDelta,
+    reason: input.reason,
+    feature: input.feature ?? null,
+    refId: input.refId ?? null,
+  });
 
-    db.prepare(
-      `INSERT INTO credit_balances (user_id, balance, updated_at)
+  await getClient().batch(
+    [
+      {
+        sql: `INSERT INTO credit_balances (user_id, balance, updated_at)
        VALUES (?, ?, CURRENT_TIMESTAMP)
        ON CONFLICT(user_id) DO UPDATE SET
          balance = excluded.balance,
          updated_at = CURRENT_TIMESTAMP`,
-    ).run(input.userId, nextBalance);
+        args: [input.userId, nextBalance],
+      },
+      insertTransactionStatement(transaction),
+    ],
+    "write",
+  );
 
-    const inserted = insertTransaction({
-      userId: input.userId,
-      delta: actualDelta,
-      reason: input.reason,
-      feature: input.feature ?? null,
-      refId: input.refId ?? null,
-    });
-    return { ...getCreditBalance(input.userId), transaction: inserted };
-  });
-
-  return transaction();
+  return {
+    userId: input.userId,
+    balance: nextBalance,
+    updatedAt: nowIso(),
+    transaction,
+  };
 }
 
-function insertTransaction(input: {
+function buildTransaction(input: {
   userId: string;
   delta: number;
   reason: CreditReason;
@@ -229,24 +254,31 @@ function insertTransaction(input: {
   refId?: string | null;
 }): CreditTransactionRecord {
   const id = randomUUID();
-  db.prepare(
-    `INSERT INTO credit_transactions
+  return {
+    id,
+    userId: input.userId,
+    delta: input.delta,
+    reason: input.reason,
+    feature: input.feature ?? null,
+    refId: input.refId ?? null,
+    createdAt: nowIso(),
+  };
+}
+
+function insertTransactionStatement(transaction: CreditTransactionRecord) {
+  return {
+    sql: `INSERT INTO credit_transactions
        (id, user_id, delta, reason, feature, ref_id)
      VALUES (?, ?, ?, ?, ?, ?)`,
-  ).run(
-    id,
-    input.userId,
-    input.delta,
-    input.reason,
-    input.feature ?? null,
-    input.refId ?? null,
-  );
-
-  const row = db
-    .prepare("SELECT * FROM credit_transactions WHERE id = ?")
-    .get(id) as CreditTransactionRow | undefined;
-  if (!row) throw new Error("Credit transaction insert failed");
-  return mapTransaction(row);
+    args: [
+      transaction.id,
+      transaction.userId,
+      transaction.delta,
+      transaction.reason,
+      transaction.feature,
+      transaction.refId,
+    ],
+  };
 }
 
 function mapBalance(row: CreditBalanceRow): CreditBalanceRecord {

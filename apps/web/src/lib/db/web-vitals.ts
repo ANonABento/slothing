@@ -1,4 +1,4 @@
-import db from "./legacy";
+import { getClient } from "./client";
 import { nowIso } from "@/lib/format/time";
 import { generateId } from "@/lib/utils";
 
@@ -23,11 +23,10 @@ export interface WebVitalRecord extends RecordWebVitalInput {
 
 let schemaReady = false;
 
-export function ensureWebVitalsSchema(): void {
+export async function ensureWebVitalsSchema(): Promise<void> {
   if (schemaReady) return;
-  db.prepare(
-    `
-    CREATE TABLE IF NOT EXISTS web_vitals (
+  await getClient().batch([
+    `CREATE TABLE IF NOT EXISTS web_vitals (
       id TEXT PRIMARY KEY NOT NULL,
       metric_id TEXT NOT NULL,
       name TEXT NOT NULL,
@@ -38,43 +37,41 @@ export function ensureWebVitalsSchema(): void {
       pathname TEXT,
       user_agent TEXT,
       created_at TEXT NOT NULL
-    )
-  `,
-  ).run();
-  db.prepare(
+    )`,
     "CREATE INDEX IF NOT EXISTS idx_web_vitals_name_created ON web_vitals(name, created_at)",
-  ).run();
-  db.prepare(
     "CREATE INDEX IF NOT EXISTS idx_web_vitals_path_created ON web_vitals(pathname, created_at)",
-  ).run();
+  ]);
   schemaReady = true;
 }
 
-export function recordWebVital(input: RecordWebVitalInput): WebVitalRecord {
-  ensureWebVitalsSchema();
+export async function recordWebVital(
+  input: RecordWebVitalInput,
+): Promise<WebVitalRecord> {
+  await ensureWebVitalsSchema();
   const id = generateId();
   const createdAt = nowIso();
 
-  db.prepare(
-    `
-    INSERT INTO web_vitals (
-      id, metric_id, name, value, delta, rating, navigation_type, pathname,
-      user_agent, created_at
-    )
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `,
-  ).run(
-    id,
-    input.metricId,
-    input.name,
-    input.value,
-    input.delta,
-    input.rating,
-    input.navigationType ?? null,
-    input.pathname ?? null,
-    input.userAgent ?? null,
-    createdAt,
-  );
+  await getClient().execute({
+    sql: `
+      INSERT INTO web_vitals (
+        id, metric_id, name, value, delta, rating, navigation_type, pathname,
+        user_agent, created_at
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `,
+    args: [
+      id,
+      input.metricId,
+      input.name,
+      input.value,
+      input.delta,
+      input.rating,
+      input.navigationType ?? null,
+      input.pathname ?? null,
+      input.userAgent ?? null,
+      createdAt,
+    ],
+  });
 
   return { ...input, id, createdAt };
 }

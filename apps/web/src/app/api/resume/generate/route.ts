@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
 
     const { jobDescription, templateId } = parsed.data;
 
-    const gate = gateAiFeature(
+    const gate = await gateAiFeature(
       authResult.userId,
       "tailor",
       `resume:${templateId ?? "retrieval"}`,
@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
     );
 
     // Save generated resume to database
-    const savedResume = saveGeneratedResume(
+    const savedResume = await saveGeneratedResume(
       STANDALONE_RESUME_JOB_ID,
       templateId || "retrieval",
       result.resume,

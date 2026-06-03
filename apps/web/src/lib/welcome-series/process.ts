@@ -1,4 +1,4 @@
-import db from "@/lib/db/legacy";
+import { getClient } from "@/lib/db/client";
 import { sendTransactionalEmail } from "@/lib/email/transactional";
 import { nowDate, parseToDate, toIso } from "@/lib/format/time";
 import { getUserTier } from "@/lib/plan/tier";
@@ -57,8 +57,13 @@ interface StepConfig {
   sentKey: keyof WelcomeSeriesState;
   skippedKey?: keyof WelcomeSeriesState;
   skipReasonKey?: keyof WelcomeSeriesState;
-  getSkipReason?: (userId: string) => WelcomeSkipReason | null;
-  render: (user: UserRow, urls: WelcomeUrls) => WelcomeEmail;
+  getSkipReason?: (
+    userId: string,
+  ) => WelcomeSkipReason | null | Promise<WelcomeSkipReason | null>;
+  render: (
+    user: UserRow,
+    urls: WelcomeUrls,
+  ) => WelcomeEmail | Promise<WelcomeEmail>;
 }
 
 interface WelcomeUrls {
@@ -73,13 +78,13 @@ export async function processWelcomeSeriesForUser(
   userId: string,
   { now = nowDate() }: ProcessOptions = {},
 ): Promise<{ results: WelcomeStepResult[] }> {
-  ensureWelcomeSeriesSchema();
+  await ensureWelcomeSeriesSchema();
 
-  const user = db
-    .prepare(
-      "SELECT id, email, name, created_at, welcome_series_state FROM `user` WHERE id = ? LIMIT 1",
-    )
-    .get(userId) as UserRow | undefined;
+  const userResult = await getClient().execute({
+    sql: "SELECT id, email, name, created_at, welcome_series_state FROM `user` WHERE id = ? LIMIT 1",
+    args: [userId],
+  });
+  const user = userResult.rows[0] as unknown as UserRow | undefined;
 
   if (!user) {
     return { results: [{ step: "all", action: "skipped", reason: "missing" }] };
@@ -87,18 +92,16 @@ export async function processWelcomeSeriesForUser(
 
   if (!user.created_at) {
     user.created_at = toIso(now);
-    db.prepare("UPDATE `user` SET created_at = ? WHERE id = ?").run(
-      user.created_at,
-      userId,
-    );
+    await getClient().execute({
+      sql: "UPDATE `user` SET created_at = ? WHERE id = ?",
+      args: [user.created_at, userId],
+    });
   }
 
   const state = parseWelcomeSeriesState(user.welcome_series_state);
   if (state.unsubscribedAt) {
     return {
-      results: [
-        { step: "all", action: "skipped", reason: "unsubscribed" },
-      ],
+      results: [{ step: "all", action: "skipped", reason: "unsubscribed" }],
     };
   }
 
@@ -117,7 +120,9 @@ export async function processWelcomeSeriesForUser(
   const results: WelcomeStepResult[] = [];
 
   for (const step of buildStepConfigs()) {
-    results.push(await processStep(user, step, state, urls, accountAgeDays, now));
+    results.push(
+      await processStep(user, step, state, urls, accountAgeDays, now),
+    );
   }
 
   return { results };
@@ -139,17 +144,17 @@ async function processStep(
     return { step: step.step, action: "not-eligible" };
   }
 
-  const skipReason = step.getSkipReason?.(user.id);
+  const skipReason = await step.getSkipReason?.(user.id);
   if (skipReason && step.skippedKey && step.skipReasonKey) {
     const patch = {
       [step.skippedKey]: toIso(now),
       [step.skipReasonKey]: skipReason,
     } as WelcomeSeriesState;
-    Object.assign(state, setWelcomeSeriesState(user.id, patch));
+    Object.assign(state, await setWelcomeSeriesState(user.id, patch));
     return { step: step.step, action: "skipped", reason: skipReason };
   }
 
-  const email = step.render(user, urls);
+  const email = await step.render(user, urls);
   const result = await sendTransactionalEmail({
     to: user.email!,
     subject: email.subject,
@@ -176,7 +181,7 @@ async function processStep(
 
   Object.assign(
     state,
-    setWelcomeSeriesState(user.id, {
+    await setWelcomeSeriesState(user.id, {
       [step.sentKey]: toIso(now),
     } as WelcomeSeriesState),
   );
@@ -203,8 +208,10 @@ function buildStepConfigs(): StepConfig[] {
       sentKey: "day3SentAt",
       skippedKey: "day3SkippedAt",
       skipReasonKey: "day3SkipReason",
-      getSkipReason: (userId) =>
-        hasUserApplied(userId) ? WELCOME_SKIP_REASONS.alreadyApplied : null,
+      getSkipReason: async (userId) =>
+        (await hasUserApplied(userId))
+          ? WELCOME_SKIP_REASONS.alreadyApplied
+          : null,
       render: (_user, urls) =>
         welcomeDay3({
           firstName: firstName(_user.name),
@@ -218,8 +225,8 @@ function buildStepConfigs(): StepConfig[] {
       sentKey: "day7SentAt",
       skippedKey: "day7SkippedAt",
       skipReasonKey: "day7SkipReason",
-      getSkipReason: (userId) =>
-        hasUserBookedInterview(userId)
+      getSkipReason: async (userId) =>
+        (await hasUserBookedInterview(userId))
           ? WELCOME_SKIP_REASONS.alreadyInterviewed
           : null,
       render: (_user, urls) =>
@@ -236,11 +243,9 @@ function buildStepConfigs(): StepConfig[] {
       skippedKey: "day14SkippedAt",
       skipReasonKey: "day14SkipReason",
       getSkipReason: (userId) =>
-        getUserTier(userId) === "pro"
-          ? WELCOME_SKIP_REASONS.alreadyPro
-          : null,
-      render: (_user, urls) => {
-        const stats = getUsageStats(_user.id);
+        getUserTier(userId) === "pro" ? WELCOME_SKIP_REASONS.alreadyPro : null,
+      render: async (_user, urls) => {
+        const stats = await getUsageStats(_user.id);
         return welcomeDay14({
           firstName: firstName(_user.name),
           applicationCount: stats.applicationCount,

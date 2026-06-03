@@ -10,7 +10,7 @@ export async function GET() {
 
   try {
     return NextResponse.json({
-      streak: getStreakState(authResult.userId),
+      streak: await getStreakState(authResult.userId),
     });
   } catch (error) {
     console.error("Get streak error:", error);

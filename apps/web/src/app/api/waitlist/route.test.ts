@@ -27,7 +27,7 @@ function post(body: unknown) {
 describe("/api/waitlist", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.createWaitlistEntry.mockReturnValue({
+    mocks.createWaitlistEntry.mockResolvedValue({
       id: "wait-1",
       email: "avery@example.com",
       source: "pricing",

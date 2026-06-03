@@ -42,7 +42,8 @@ export async function runEmailRetryCron(
 ): Promise<EmailRetryResult> {
   const startedAt = nowEpoch();
   const failedSends =
-    options.failedSends ?? getFailedEmailSends({ limit: options.limit ?? 25 });
+    options.failedSends ??
+    (await getFailedEmailSends({ limit: options.limit ?? 25 }));
   const sender = options.sender ?? sendTransactionalEmail;
   const outcomes: EmailRetryOutcome[] = [];
   let sent = 0;
@@ -62,7 +63,7 @@ export async function runEmailRetryCron(
       });
 
       if (result.ok) {
-        markEmailSendStatus(send.id, send.userId, "sent");
+        await markEmailSendStatus(send.id, send.userId, "sent");
         sent += 1;
         outcomes.push({
           id: send.id,
@@ -72,7 +73,7 @@ export async function runEmailRetryCron(
           sent: true,
         });
       } else {
-        markEmailSendStatus(send.id, send.userId, "failed", result.error);
+        await markEmailSendStatus(send.id, send.userId, "failed", result.error);
         failed += 1;
         outcomes.push({
           id: send.id,
@@ -85,7 +86,7 @@ export async function runEmailRetryCron(
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : "Unknown error";
-      markEmailSendStatus(send.id, send.userId, "failed", message);
+      await markEmailSendStatus(send.id, send.userId, "failed", message);
       failed += 1;
       outcomes.push({
         id: send.id,

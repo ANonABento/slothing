@@ -1,11 +1,13 @@
 import {
   getDocumentArtifact,
   getLatestDocumentArtifact,
-  saveDocumentParseRun,
   type DocumentArtifact,
+} from "@/lib/db/document-artifacts";
+import {
+  saveDocumentParseRun,
   type DocumentParseRun,
   type ParseWarning,
-} from "@/lib/db";
+} from "@/lib/db/document-parse-runs";
 import type { LLMConfig } from "@/types";
 import { normalizeAiSourceCitedParseResult } from "./ai-parse-run-normalizer";
 import { parseResumeWithAiSourceCitations } from "./ai-source-cited-parser";
@@ -30,19 +32,18 @@ export interface CreateBasicDocumentParseRunInput {
   artifactId?: string;
 }
 
-export interface CreateAiDocumentParseRunInput
-  extends CreateBasicDocumentParseRunInput {
+export interface CreateAiDocumentParseRunInput extends CreateBasicDocumentParseRunInput {
   llmConfig: LLMConfig;
 }
 
-export function resolveReadyDocumentArtifact({
+export async function resolveReadyDocumentArtifact({
   documentId,
   userId,
   artifactId,
-}: CreateBasicDocumentParseRunInput): DocumentArtifact {
+}: CreateBasicDocumentParseRunInput): Promise<DocumentArtifact> {
   const artifact = artifactId
-    ? getDocumentArtifact(artifactId, userId)
-    : getLatestDocumentArtifact(documentId, userId);
+    ? await getDocumentArtifact(artifactId, userId)
+    : await getLatestDocumentArtifact(documentId, userId);
 
   if (!artifact || artifact.documentId !== documentId) {
     throw new DocumentParseRunError("Document artifact not found", 404);
@@ -53,13 +54,13 @@ export function resolveReadyDocumentArtifact({
   return artifact;
 }
 
-export function createBasicDocumentParseRun({
+export async function createBasicDocumentParseRun({
   documentId,
   userId,
   artifactId,
-}: CreateBasicDocumentParseRunInput): DocumentParseRun {
+}: CreateBasicDocumentParseRunInput): Promise<DocumentParseRun> {
   try {
-    const artifact = resolveReadyDocumentArtifact({
+    const artifact = await resolveReadyDocumentArtifact({
       documentId,
       userId,
       artifactId,
@@ -72,7 +73,7 @@ export function createBasicDocumentParseRun({
       severity: "warning",
     }));
 
-    return saveDocumentParseRun({
+    return await saveDocumentParseRun({
       documentId,
       artifactId: artifact.id,
       userId,
@@ -99,7 +100,7 @@ export async function createAiDocumentParseRun({
   llmConfig,
 }: CreateAiDocumentParseRunInput): Promise<DocumentParseRun> {
   try {
-    const artifact = resolveReadyDocumentArtifact({
+    const artifact = await resolveReadyDocumentArtifact({
       documentId,
       userId,
       artifactId,
@@ -121,7 +122,7 @@ export async function createAiDocumentParseRun({
       }),
     );
 
-    return saveDocumentParseRun({
+    return await saveDocumentParseRun({
       documentId,
       artifactId: artifact.id,
       userId,

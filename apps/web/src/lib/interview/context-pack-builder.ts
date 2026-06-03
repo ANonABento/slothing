@@ -1,5 +1,5 @@
 import { getDocument, getProfile, listDocumentsPaginated } from "@/lib/db";
-import { getJobs, getJob } from "@/lib/db/jobs";
+import { getJobs, getJob } from "@/lib/db/jobs-async";
 import {
   getBankEntries,
   insertBankEntry,
@@ -274,7 +274,7 @@ async function resolveSource(
   }
 
   if (source.type === "opportunity" && source.id) {
-    const job = getJob(source.id, userId);
+    const job = await getJob(source.id, userId);
     if (!job) return null;
     return {
       ref: source,
@@ -313,7 +313,7 @@ async function resolveSource(
   }
 
   if (source.type === "company-research" && source.label) {
-    const research = getCompanyResearch(source.label, userId);
+    const research = await getCompanyResearch(source.label, userId);
     if (!research) return null;
     return {
       ref: source,
@@ -507,9 +507,9 @@ export async function buildInterviewContextPack({
   };
 }
 
-export function listInterviewSourceOptions(userId: string) {
+export async function listInterviewSourceOptions(userId: string) {
   const profile = getProfile(userId);
-  const jobs = getJobs(userId);
+  const jobs = await getJobs(userId);
   const bankEntries = getBankEntries(userId).filter((entry) =>
     ["experience", "project", "skill", "achievement", "bullet"].includes(
       entry.category,

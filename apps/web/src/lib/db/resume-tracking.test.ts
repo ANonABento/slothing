@@ -1,230 +1,206 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import type { Mock } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-// Mock the database module
-vi.mock("./legacy", () => {
-  const mockDb = {
-    prepare: vi.fn(),
-  };
-  return { default: mockDb };
-});
+const dbMocks = vi.hoisted(() => ({
+  execute: vi.fn(),
+}));
 
-// Mock utils to control ID generation
+vi.mock("./client", () => ({
+  getClient: () => dbMocks,
+}));
+
 vi.mock("@/lib/utils", () => ({
   generateId: () => "test-tracking-id",
 }));
 
-import db from "./legacy";
 import {
-  trackResumeSent,
-  updateTrackingOutcome,
+  deleteTrackingEntry,
+  getTrackedResumeIds,
   getTrackingEntries,
   getTrackingEntriesByResume,
-  getTrackedResumeIds,
-  deleteTrackingEntry,
+  trackResumeSent,
+  updateTrackingOutcome,
 } from "./resume-tracking";
 
 const TEST_USER_ID = "test-user";
 
+const trackingRow = {
+  id: "e1",
+  resume_id: "r1",
+  job_id: "j1",
+  outcome: "applied",
+  sent_at: "2024-01-01",
+  updated_at: "2024-01-01",
+  notes: "test note",
+};
+
+function result(rows: unknown[] = [], rowsAffected = 0) {
+  return { rows, rowsAffected };
+}
+
 describe("Resume A/B Tracking Database Functions", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    dbMocks.execute.mockResolvedValue(result([], 1));
   });
 
   describe("trackResumeSent", () => {
-    it("should insert a new tracking entry with applied outcome", () => {
-      const mockRun = vi.fn().mockReturnValue({ changes: 1 });
-      (db.prepare as Mock).mockReturnValue({ run: mockRun });
-
-      const result = trackResumeSent("resume-123", "job-456", TEST_USER_ID);
-
-      expect(db.prepare).toHaveBeenCalledWith(
-        expect.stringContaining("INSERT INTO resume_ab_tracking"),
+    it("should insert a new tracking entry with applied outcome", async () => {
+      const entry = await trackResumeSent(
+        "resume-123",
+        "job-456",
+        TEST_USER_ID,
       );
-      expect(mockRun).toHaveBeenCalled();
-      expect(result.id).toBe("test-tracking-id");
-      expect(result.resumeId).toBe("resume-123");
-      expect(result.jobId).toBe("job-456");
-      expect(result.outcome).toBe("applied");
+
+      expect(dbMocks.execute).toHaveBeenCalledWith({
+        sql: expect.stringContaining("INSERT INTO resume_ab_tracking"),
+        args: [
+          "test-tracking-id",
+          "resume-123",
+          "job-456",
+          TEST_USER_ID,
+          expect.any(String),
+          expect.any(String),
+          null,
+          "resume-123",
+          TEST_USER_ID,
+          "job-456",
+          TEST_USER_ID,
+        ],
+      });
+      expect(entry.id).toBe("test-tracking-id");
+      expect(entry.resumeId).toBe("resume-123");
+      expect(entry.jobId).toBe("job-456");
+      expect(entry.outcome).toBe("applied");
     });
 
-    it("should include notes when provided", () => {
-      const mockRun = vi.fn().mockReturnValue({ changes: 1 });
-      (db.prepare as Mock).mockReturnValue({ run: mockRun });
-
-      const result = trackResumeSent(
+    it("should include notes when provided", async () => {
+      const entry = await trackResumeSent(
         "resume-123",
         "job-456",
         TEST_USER_ID,
         "Tailored for role",
       );
 
-      expect(result.notes).toBe("Tailored for role");
+      expect(entry.notes).toBe("Tailored for role");
     });
 
-    it("should default to TEST_USER_ID user", () => {
-      const mockRun = vi.fn().mockReturnValue({ changes: 1 });
-      (db.prepare as Mock).mockReturnValue({ run: mockRun });
+    it("should reject tracking when the resume or job is outside the user", async () => {
+      dbMocks.execute.mockResolvedValueOnce(result([], 0));
 
-      trackResumeSent("resume-123", "job-456", TEST_USER_ID);
-
-      const args = mockRun.mock.calls[0];
-      expect(args[3]).toBe(TEST_USER_ID); // userId is 4th arg
-    });
-
-    it("should reject tracking when the resume or job is outside the user", () => {
-      const mockRun = vi.fn().mockReturnValue({ changes: 0 });
-      (db.prepare as Mock).mockReturnValue({ run: mockRun });
-
-      expect(() => trackResumeSent("resume-123", "job-456", "user-1")).toThrow(
-        "Resume or job not found",
-      );
-      expect(mockRun).toHaveBeenCalledWith(
-        "test-tracking-id",
-        "resume-123",
-        "job-456",
-        "user-1",
-        expect.any(String),
-        expect.any(String),
-        null,
-        "resume-123",
-        "user-1",
-        "job-456",
-        "user-1",
-      );
+      await expect(
+        trackResumeSent("resume-123", "job-456", "user-1"),
+      ).rejects.toThrow("Resume or job not found");
+      expect(dbMocks.execute).toHaveBeenCalledWith({
+        sql: expect.stringContaining("INSERT INTO resume_ab_tracking"),
+        args: [
+          "test-tracking-id",
+          "resume-123",
+          "job-456",
+          "user-1",
+          expect.any(String),
+          expect.any(String),
+          null,
+          "resume-123",
+          "user-1",
+          "job-456",
+          "user-1",
+        ],
+      });
     });
   });
 
   describe("updateTrackingOutcome", () => {
-    it("should update outcome and return true on success", () => {
-      const mockRun = vi.fn().mockReturnValue({ changes: 1 });
-      (db.prepare as Mock).mockReturnValue({ run: mockRun });
+    it("should update outcome and return true on success", async () => {
+      await expect(
+        updateTrackingOutcome("entry-1", "interviewing", TEST_USER_ID),
+      ).resolves.toBe(true);
 
-      const result = updateTrackingOutcome(
-        "entry-1",
-        "interviewing",
-        TEST_USER_ID,
-      );
-
-      expect(result).toBe(true);
-      expect(db.prepare).toHaveBeenCalledWith(
-        expect.stringContaining("UPDATE resume_ab_tracking"),
-      );
+      expect(dbMocks.execute).toHaveBeenCalledWith({
+        sql: expect.stringContaining("UPDATE resume_ab_tracking"),
+        args: ["interviewing", expect.any(String), "entry-1", TEST_USER_ID],
+      });
     });
 
-    it("should return false when entry not found", () => {
-      const mockRun = vi.fn().mockReturnValue({ changes: 0 });
-      (db.prepare as Mock).mockReturnValue({ run: mockRun });
+    it("should return false when entry not found", async () => {
+      dbMocks.execute.mockResolvedValueOnce(result([], 0));
 
-      const result = updateTrackingOutcome(
-        "nonexistent",
-        "offered",
-        TEST_USER_ID,
-      );
-
-      expect(result).toBe(false);
+      await expect(
+        updateTrackingOutcome("nonexistent", "offered", TEST_USER_ID),
+      ).resolves.toBe(false);
     });
   });
 
   describe("getTrackingEntries", () => {
-    it("should return mapped tracking entries", () => {
-      const mockAll = vi.fn().mockReturnValue([
+    it("should return mapped tracking entries", async () => {
+      dbMocks.execute.mockResolvedValueOnce(result([trackingRow]));
+
+      await expect(getTrackingEntries(TEST_USER_ID)).resolves.toEqual([
         {
           id: "e1",
-          resume_id: "r1",
-          job_id: "j1",
+          resumeId: "r1",
+          jobId: "j1",
           outcome: "applied",
-          sent_at: "2024-01-01",
-          updated_at: "2024-01-01",
+          sentAt: "2024-01-01",
+          updatedAt: "2024-01-01",
           notes: "test note",
         },
       ]);
-      (db.prepare as Mock).mockReturnValue({ all: mockAll });
-
-      const result = getTrackingEntries(TEST_USER_ID);
-
-      expect(result).toHaveLength(1);
-      expect(result[0]).toEqual({
-        id: "e1",
-        resumeId: "r1",
-        jobId: "j1",
-        outcome: "applied",
-        sentAt: "2024-01-01",
-        updatedAt: "2024-01-01",
-        notes: "test note",
-      });
     });
 
-    it("should handle null notes", () => {
-      const mockAll = vi.fn().mockReturnValue([
-        {
-          id: "e1",
-          resume_id: "r1",
-          job_id: "j1",
-          outcome: "applied",
-          sent_at: "2024-01-01",
-          updated_at: "2024-01-01",
-          notes: null,
-        },
-      ]);
-      (db.prepare as Mock).mockReturnValue({ all: mockAll });
+    it("should handle null notes", async () => {
+      dbMocks.execute.mockResolvedValueOnce(
+        result([{ ...trackingRow, notes: null }]),
+      );
 
-      const result = getTrackingEntries(TEST_USER_ID);
+      const entries = await getTrackingEntries(TEST_USER_ID);
 
-      expect(result[0].notes).toBeUndefined();
+      expect(entries[0].notes).toBeUndefined();
     });
 
-    it("should return empty array when no entries", () => {
-      const mockAll = vi.fn().mockReturnValue([]);
-      (db.prepare as Mock).mockReturnValue({ all: mockAll });
+    it("should return empty array when no entries", async () => {
+      dbMocks.execute.mockResolvedValueOnce(result([]));
 
-      const result = getTrackingEntries(TEST_USER_ID);
-
-      expect(result).toEqual([]);
+      await expect(getTrackingEntries(TEST_USER_ID)).resolves.toEqual([]);
     });
   });
 
   describe("getTrackingEntriesByResume", () => {
-    it("should filter by resume ID", () => {
-      const mockAll = vi.fn().mockReturnValue([]);
-      (db.prepare as Mock).mockReturnValue({ all: mockAll });
+    it("should filter by resume ID", async () => {
+      await getTrackingEntriesByResume("resume-123", TEST_USER_ID);
 
-      getTrackingEntriesByResume("resume-123", TEST_USER_ID);
-
-      expect(mockAll).toHaveBeenCalledWith("resume-123", TEST_USER_ID);
+      expect(dbMocks.execute).toHaveBeenCalledWith({
+        sql: expect.stringContaining("WHERE resume_id = ? AND user_id = ?"),
+        args: ["resume-123", TEST_USER_ID],
+      });
     });
   });
 
   describe("getTrackedResumeIds", () => {
-    it("should return distinct resume IDs", () => {
-      const mockAll = vi
-        .fn()
-        .mockReturnValue([{ resume_id: "r1" }, { resume_id: "r2" }]);
-      (db.prepare as Mock).mockReturnValue({ all: mockAll });
+    it("should return distinct resume IDs", async () => {
+      dbMocks.execute.mockResolvedValueOnce(
+        result([{ resume_id: "r1" }, { resume_id: "r2" }]),
+      );
 
-      const result = getTrackedResumeIds(TEST_USER_ID);
-
-      expect(result).toEqual(["r1", "r2"]);
+      await expect(getTrackedResumeIds(TEST_USER_ID)).resolves.toEqual([
+        "r1",
+        "r2",
+      ]);
     });
   });
 
   describe("deleteTrackingEntry", () => {
-    it("should return true when entry deleted", () => {
-      const mockRun = vi.fn().mockReturnValue({ changes: 1 });
-      (db.prepare as Mock).mockReturnValue({ run: mockRun });
-
-      const result = deleteTrackingEntry("entry-1", TEST_USER_ID);
-
-      expect(result).toBe(true);
+    it("should return true when entry deleted", async () => {
+      await expect(deleteTrackingEntry("entry-1", TEST_USER_ID)).resolves.toBe(
+        true,
+      );
     });
 
-    it("should return false when entry not found", () => {
-      const mockRun = vi.fn().mockReturnValue({ changes: 0 });
-      (db.prepare as Mock).mockReturnValue({ run: mockRun });
+    it("should return false when entry not found", async () => {
+      dbMocks.execute.mockResolvedValueOnce(result([], 0));
 
-      const result = deleteTrackingEntry("nonexistent", TEST_USER_ID);
-
-      expect(result).toBe(false);
+      await expect(
+        deleteTrackingEntry("nonexistent", TEST_USER_ID),
+      ).resolves.toBe(false);
     });
   });
 });

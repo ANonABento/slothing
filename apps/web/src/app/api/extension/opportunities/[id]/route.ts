@@ -15,7 +15,7 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const authResult = requireExtensionAuth(request);
+  const authResult = await requireExtensionAuth(request);
   if (!authResult.success) {
     return authResult.response;
   }

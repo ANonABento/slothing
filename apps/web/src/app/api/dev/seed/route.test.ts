@@ -12,7 +12,7 @@ vi.mock("@/lib/dev/clean-slate", () => ({
   })),
 }));
 
-vi.mock("@/lib/db/jobs", () => ({
+vi.mock("@/lib/db/jobs-async", () => ({
   createJob: vi.fn((job) => ({
     ...job,
     id: "job-1",
@@ -135,6 +135,26 @@ describe("/api/dev/seed", () => {
       success: true,
       preset: "opportunities",
       seeded: { opportunities: 6 },
+    });
+  });
+
+  it("seeds a heavy opportunities preset for pagination dogfooding", async () => {
+    vi.stubEnv("NODE_ENV", "development");
+
+    const response = await POST(
+      jsonRequest(
+        "http://localhost/api/dev/seed",
+        { preset: "opportunities-heavy" },
+        "POST",
+        { "x-slothing-dev-tools": "enabled" },
+      ),
+    );
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({
+      success: true,
+      preset: "opportunities-heavy",
+      seeded: { opportunities: 120 },
     });
   });
 });

@@ -1,4 +1,4 @@
-import db from "./legacy";
+import { getClient } from "./client";
 import { generateId } from "@/lib/utils";
 import type { AnalyzedTemplate } from "@/lib/resume/template-analyzer";
 
@@ -31,6 +31,13 @@ interface CustomTemplateRow {
   updated_at?: string | null;
 }
 
+interface CustomTemplateSource {
+  filename: string;
+  type: TemplateSourceType;
+}
+
+let customTemplatesSourceColumnsEnsured = false;
+
 function rowToCustomTemplate(row: CustomTemplateRow): CustomTemplate {
   const sourceType = isTemplateSourceType(row.source_type)
     ? row.source_type
@@ -49,67 +56,63 @@ function rowToCustomTemplate(row: CustomTemplateRow): CustomTemplate {
   };
 }
 
-export function ensureCustomTemplatesSourceColumns(): void {
+export async function ensureCustomTemplatesSourceColumns(): Promise<void> {
+  if (customTemplatesSourceColumnsEnsured) return;
+
   try {
-    const columns = db
-      .prepare("PRAGMA table_info(custom_templates)")
-      .all() as Array<{ name: string }>;
-    const columnNames = new Set(columns.map((column) => column.name));
+    const columnsResult = await getClient().execute(
+      "PRAGMA table_info(custom_templates)",
+    );
+    const columnNames = new Set(
+      (columnsResult.rows as unknown as Array<{ name: string }>).map(
+        (column) => column.name,
+      ),
+    );
 
     if (!columnNames.has("source_filename")) {
-      db.prepare(
+      await getClient().execute(
         "ALTER TABLE custom_templates ADD COLUMN source_filename text",
-      ).run();
+      );
     }
     if (!columnNames.has("source_type")) {
-      db.prepare(
+      await getClient().execute(
         "ALTER TABLE custom_templates ADD COLUMN source_type text",
-      ).run();
+      );
     }
     if (!columnNames.has("description")) {
-      db.prepare(
+      await getClient().execute(
         "ALTER TABLE custom_templates ADD COLUMN description text",
-      ).run();
+      );
     }
     if (!columnNames.has("updated_at")) {
-      db.prepare(
+      await getClient().execute(
         "ALTER TABLE custom_templates ADD COLUMN updated_at text",
-      ).run();
-      db.prepare(
+      );
+      await getClient().execute(
         "UPDATE custom_templates SET updated_at = created_at WHERE updated_at IS NULL",
-      ).run();
+      );
     }
+    customTemplatesSourceColumnsEnsured = true;
   } catch {
     // Tests and first-boot environments may not have the table available yet.
   }
-}
-
-interface CustomTemplateSource {
-  filename: string;
-  type: TemplateSourceType;
 }
 
 function isTemplateSourceType(value: unknown): value is TemplateSourceType {
   return value === "pdf" || value === "docx" || value === "tex";
 }
 
-export function saveCustomTemplate(
+export async function saveCustomTemplate(
   name: string,
   analyzedStyles: AnalyzedTemplate,
   sourceDocumentId: string | undefined,
   userId: string,
   source?: CustomTemplateSource,
   description?: string | null,
-): CustomTemplate {
-  ensureCustomTemplatesSourceColumns();
+): Promise<CustomTemplate> {
+  await ensureCustomTemplatesSourceColumns();
   const id = generateId();
   const now = nowIso();
-
-  const stmt = db.prepare(`
-    INSERT INTO custom_templates (id, user_id, name, description, source_document_id, source_filename, source_type, analyzed_styles, created_at, updated_at)
-    SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
-    ${sourceDocumentId ? "WHERE EXISTS (SELECT 1 FROM documents WHERE id = ? AND user_id = ?)" : ""}
-  `);
 
   const args = [
     id,
@@ -127,8 +130,15 @@ export function saveCustomTemplate(
     args.push(sourceDocumentId, userId);
   }
 
-  const result = stmt.run(...args);
-  if (result.changes === 0) {
+  const result = await getClient().execute({
+    sql: `
+      INSERT INTO custom_templates (id, user_id, name, description, source_document_id, source_filename, source_type, analyzed_styles, created_at, updated_at)
+      SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+      ${sourceDocumentId ? "WHERE EXISTS (SELECT 1 FROM documents WHERE id = ? AND user_id = ?)" : ""}
+    `,
+    args,
+  });
+  if (result.rowsAffected === 0) {
     throw new Error("Source document not found");
   }
 
@@ -146,64 +156,74 @@ export function saveCustomTemplate(
   };
 }
 
-export function getCustomTemplates(userId: string): CustomTemplate[] {
-  ensureCustomTemplatesSourceColumns();
-  const stmt = db.prepare(`
-    SELECT id, user_id, name, description, source_document_id, source_filename, source_type, analyzed_styles, created_at, updated_at
-    FROM custom_templates
-    WHERE user_id = ?
-    ORDER BY created_at DESC
-  `);
+export async function getCustomTemplates(
+  userId: string,
+): Promise<CustomTemplate[]> {
+  await ensureCustomTemplatesSourceColumns();
+  const result = await getClient().execute({
+    sql: `
+      SELECT id, user_id, name, description, source_document_id, source_filename, source_type, analyzed_styles, created_at, updated_at
+      FROM custom_templates
+      WHERE user_id = ?
+      ORDER BY created_at DESC
+    `,
+    args: [userId],
+  });
 
-  const rows = stmt.all(userId) as CustomTemplateRow[];
-  return rows.map(rowToCustomTemplate);
+  return (result.rows as unknown as CustomTemplateRow[]).map(
+    rowToCustomTemplate,
+  );
 }
 
-export function getCustomTemplate(
+export async function getCustomTemplate(
   id: string,
   userId: string,
-): CustomTemplate | null {
-  ensureCustomTemplatesSourceColumns();
-  const stmt = db.prepare(`
-    SELECT id, user_id, name, description, source_document_id, source_filename, source_type, analyzed_styles, created_at, updated_at
-    FROM custom_templates
-    WHERE id = ? AND user_id = ?
-  `);
+): Promise<CustomTemplate | null> {
+  await ensureCustomTemplatesSourceColumns();
+  const result = await getClient().execute({
+    sql: `
+      SELECT id, user_id, name, description, source_document_id, source_filename, source_type, analyzed_styles, created_at, updated_at
+      FROM custom_templates
+      WHERE id = ? AND user_id = ?
+    `,
+    args: [id, userId],
+  });
 
-  const row = stmt.get(id, userId) as CustomTemplateRow | undefined;
-  if (!row) return null;
-
-  return rowToCustomTemplate(row);
+  const row = result.rows[0] as unknown as CustomTemplateRow | undefined;
+  return row ? rowToCustomTemplate(row) : null;
 }
 
-export function deleteCustomTemplate(id: string, userId: string): boolean {
-  ensureCustomTemplatesSourceColumns();
-  const stmt = db.prepare(
-    "DELETE FROM custom_templates WHERE id = ? AND user_id = ?",
-  );
-  const result = stmt.run(id, userId);
-  return result.changes > 0;
+export async function deleteCustomTemplate(
+  id: string,
+  userId: string,
+): Promise<boolean> {
+  await ensureCustomTemplatesSourceColumns();
+  const result = await getClient().execute({
+    sql: "DELETE FROM custom_templates WHERE id = ? AND user_id = ?",
+    args: [id, userId],
+  });
+  return result.rowsAffected > 0;
 }
 
-export function updateCustomTemplateName(
+export async function updateCustomTemplateName(
   id: string,
   name: string,
   userId: string,
-): boolean {
-  ensureCustomTemplatesSourceColumns();
-  const stmt = db.prepare(
-    "UPDATE custom_templates SET name = ?, updated_at = ? WHERE id = ? AND user_id = ?",
-  );
-  const result = stmt.run(name, nowIso(), id, userId);
-  return result.changes > 0;
+): Promise<boolean> {
+  await ensureCustomTemplatesSourceColumns();
+  const result = await getClient().execute({
+    sql: "UPDATE custom_templates SET name = ?, updated_at = ? WHERE id = ? AND user_id = ?",
+    args: [name, nowIso(), id, userId],
+  });
+  return result.rowsAffected > 0;
 }
 
-export function updateCustomTemplateMetadata(
+export async function updateCustomTemplateMetadata(
   id: string,
   metadata: { name?: string; description?: string | null },
   userId: string,
-): boolean {
-  ensureCustomTemplatesSourceColumns();
+): Promise<boolean> {
+  await ensureCustomTemplatesSourceColumns();
   const updates: string[] = [];
   const values: Array<string | null> = [];
 
@@ -223,9 +243,9 @@ export function updateCustomTemplateMetadata(
   values.push(nowIso());
   values.push(id, userId);
 
-  const stmt = db.prepare(
-    `UPDATE custom_templates SET ${updates.join(", ")} WHERE id = ? AND user_id = ?`,
-  );
-  const result = stmt.run(...values);
-  return result.changes > 0;
+  const result = await getClient().execute({
+    sql: `UPDATE custom_templates SET ${updates.join(", ")} WHERE id = ? AND user_id = ?`,
+    args: values,
+  });
+  return result.rowsAffected > 0;
 }

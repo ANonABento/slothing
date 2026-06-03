@@ -12,7 +12,7 @@ import {
   createSalaryOffer,
   getSalaryStats,
 } from "@/lib/db/salary";
-import { getJob } from "@/lib/db/jobs";
+import { getJob } from "@/lib/db/jobs-async";
 import { requireAuth, isAuthError } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
@@ -23,8 +23,8 @@ export async function GET() {
   if (isAuthError(authResult)) return authResult;
 
   try {
-    const offers = getSalaryOffers(authResult.userId);
-    const stats = getSalaryStats(authResult.userId);
+    const offers = await getSalaryOffers(authResult.userId);
+    const stats = await getSalaryStats(authResult.userId);
 
     return NextResponse.json({ offers, stats });
   } catch (error) {
@@ -62,11 +62,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (jobId && !getJob(jobId, authResult.userId)) {
+    if (jobId && !(await getJob(jobId, authResult.userId))) {
       return NextResponse.json({ error: "Job not found" }, { status: 404 });
     }
 
-    const offer = createSalaryOffer(
+    const offer = await createSalaryOffer(
       {
         jobId,
         company,

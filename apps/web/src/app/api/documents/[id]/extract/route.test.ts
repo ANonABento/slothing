@@ -16,6 +16,9 @@ vi.mock("@/lib/auth", () => ({
 
 vi.mock("@/lib/db", () => ({
   getDocument: mocks.getDocument,
+}));
+
+vi.mock("@/lib/db/document-artifacts", () => ({
   saveDocumentArtifact: mocks.saveDocumentArtifact,
 }));
 

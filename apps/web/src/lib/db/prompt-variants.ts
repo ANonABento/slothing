@@ -1,5 +1,5 @@
-import db from "./legacy";
 import { PROMPT_VARIANTS_BOOTSTRAP_SQL } from "./bootstrap-sql";
+import { getClient } from "./client";
 import { generateId } from "@/lib/utils";
 
 import { nowIso } from "@/lib/format/time";
@@ -79,35 +79,47 @@ export const DEFAULT_PROMPT_CONTENT = `1. Write a professional summary (2-3 sent
  * (IDOR). This migration adds user_id with a backfill default of `default`,
  * matching the pattern used by other tables.
  */
-function ensurePromptVariantsUserSchema(): void {
+let ensured = false;
+
+async function ensurePromptVariantsUserSchema(): Promise<void> {
+  if (ensured && process.env.NODE_ENV !== "test") return;
+
   // Bootstrap base tables for fresh DBs (build-time prerender, first run).
   // Drizzle schema lives in schema.ts but isn't applied to legacy DB
   // connections; the DDL is co-located in `bootstrap-sql.ts`.
-  db.exec(PROMPT_VARIANTS_BOOTSTRAP_SQL);
+  await getClient().batch(
+    PROMPT_VARIANTS_BOOTSTRAP_SQL.split(";")
+      .map((sql) => sql.trim())
+      .filter(Boolean)
+      .map((sql) => ({ sql, args: [] })),
+    "write",
+  );
 
-  const promptCols = db
-    .prepare("PRAGMA table_info(prompt_variants)")
-    .all() as Array<{ name: string }>;
+  const promptCols = (
+    await getClient().execute("PRAGMA table_info(prompt_variants)")
+  ).rows as unknown as Array<{ name: string }>;
   if (!promptCols.some((c) => c.name === "user_id")) {
-    db.exec(
+    await getClient().execute(
       "ALTER TABLE prompt_variants ADD COLUMN user_id TEXT NOT NULL DEFAULT 'default'",
     );
   }
-  db.exec(
+  await getClient().execute(
     "CREATE INDEX IF NOT EXISTS idx_prompt_variants_user ON prompt_variants(user_id)",
   );
 
-  const resultCols = db
-    .prepare("PRAGMA table_info(prompt_variant_results)")
-    .all() as Array<{ name: string }>;
+  const resultCols = (
+    await getClient().execute("PRAGMA table_info(prompt_variant_results)")
+  ).rows as unknown as Array<{ name: string }>;
   if (!resultCols.some((c) => c.name === "user_id")) {
-    db.exec(
+    await getClient().execute(
       "ALTER TABLE prompt_variant_results ADD COLUMN user_id TEXT NOT NULL DEFAULT 'default'",
     );
   }
-  db.exec(
+  await getClient().execute(
     "CREATE INDEX IF NOT EXISTS idx_prompt_variant_results_user ON prompt_variant_results(user_id)",
   );
+
+  ensured = true;
 }
 
 function rowToVariant(row: PromptVariantRow): PromptVariant {
@@ -137,205 +149,227 @@ function rowToResult(row: PromptVariantResultRow): PromptVariantResult {
  * Ensure at least one default variant exists for this user. Seeds the DB on
  * first call. Returns the seeded variant's id if created, otherwise null.
  */
-export function seedDefaultPromptVariant(userId: string): string | null {
-  ensurePromptVariantsUserSchema();
-  const existing = db
-    .prepare("SELECT id FROM prompt_variants WHERE user_id = ? LIMIT 1")
-    .get(userId) as { id: string } | undefined;
+export async function seedDefaultPromptVariant(
+  userId: string,
+): Promise<string | null> {
+  await ensurePromptVariantsUserSchema();
+  const existingResult = await getClient().execute({
+    sql: "SELECT id FROM prompt_variants WHERE user_id = ? LIMIT 1",
+    args: [userId],
+  });
+  const existing = existingResult.rows[0] as unknown as
+    | { id: string }
+    | undefined;
 
   if (existing) return null;
 
   const id = generateId();
   const now = nowIso();
-  db.prepare(
-    `
+  await getClient().execute({
+    sql: `
     INSERT INTO prompt_variants (id, user_id, name, version, content, active, created_at, updated_at)
     VALUES (?, ?, ?, 1, ?, 1, ?, ?)
   `,
-  ).run(id, userId, "Default", DEFAULT_PROMPT_CONTENT, now, now);
+    args: [id, userId, "Default", DEFAULT_PROMPT_CONTENT, now, now],
+  });
 
   return id;
 }
 
-export function getAllPromptVariants(userId: string): PromptVariant[] {
-  ensurePromptVariantsUserSchema();
-  return (
-    db
-      .prepare(
-        "SELECT * FROM prompt_variants WHERE user_id = ? ORDER BY version ASC, created_at ASC",
-      )
-      .all(userId) as PromptVariantRow[]
-  ).map(rowToVariant);
+export async function getAllPromptVariants(
+  userId: string,
+): Promise<PromptVariant[]> {
+  await ensurePromptVariantsUserSchema();
+  const result = await getClient().execute({
+    sql: "SELECT * FROM prompt_variants WHERE user_id = ? ORDER BY version ASC, created_at ASC",
+    args: [userId],
+  });
+  return (result.rows as unknown as PromptVariantRow[]).map(rowToVariant);
 }
 
-export function getActivePromptVariant(userId: string): PromptVariant | null {
-  ensurePromptVariantsUserSchema();
-  seedDefaultPromptVariant(userId);
-  const row = db
-    .prepare(
-      "SELECT * FROM prompt_variants WHERE user_id = ? AND active = 1 LIMIT 1",
-    )
-    .get(userId) as PromptVariantRow | undefined;
+export async function getActivePromptVariant(
+  userId: string,
+): Promise<PromptVariant | null> {
+  await ensurePromptVariantsUserSchema();
+  await seedDefaultPromptVariant(userId);
+  const result = await getClient().execute({
+    sql: "SELECT * FROM prompt_variants WHERE user_id = ? AND active = 1 LIMIT 1",
+    args: [userId],
+  });
+  const row = result.rows[0] as unknown as PromptVariantRow | undefined;
   return row ? rowToVariant(row) : null;
 }
 
-export function getPromptVariantById(
+export async function getPromptVariantById(
   id: string,
   userId: string,
-): PromptVariant | null {
-  ensurePromptVariantsUserSchema();
-  const row = db
-    .prepare("SELECT * FROM prompt_variants WHERE id = ? AND user_id = ?")
-    .get(id, userId) as PromptVariantRow | undefined;
+): Promise<PromptVariant | null> {
+  await ensurePromptVariantsUserSchema();
+  const result = await getClient().execute({
+    sql: "SELECT * FROM prompt_variants WHERE id = ? AND user_id = ?",
+    args: [id, userId],
+  });
+  const row = result.rows[0] as unknown as PromptVariantRow | undefined;
   return row ? rowToVariant(row) : null;
 }
 
-export function createPromptVariant(
+export async function createPromptVariant(
   userId: string,
   name: string,
   content: string,
   version?: number,
-): PromptVariant {
-  ensurePromptVariantsUserSchema();
+): Promise<PromptVariant> {
+  await ensurePromptVariantsUserSchema();
   let resolvedVersion = version;
   if (resolvedVersion === undefined) {
-    const max = db
-      .prepare(
-        "SELECT MAX(version) as max_v FROM prompt_variants WHERE user_id = ?",
-      )
-      .get(userId) as { max_v: number | null };
+    const maxResult = await getClient().execute({
+      sql: "SELECT MAX(version) as max_v FROM prompt_variants WHERE user_id = ?",
+      args: [userId],
+    });
+    const max = maxResult.rows[0] as unknown as { max_v: number | null };
     resolvedVersion = (max.max_v ?? 0) + 1;
   }
 
   const id = generateId();
   const now = nowIso();
-  db.prepare(
-    `
+  await getClient().execute({
+    sql: `
     INSERT INTO prompt_variants (id, user_id, name, version, content, active, created_at, updated_at)
     VALUES (?, ?, ?, ?, ?, 0, ?, ?)
   `,
-  ).run(id, userId, name, resolvedVersion, content, now, now);
+    args: [id, userId, name, resolvedVersion, content, now, now],
+  });
 
-  return rowToVariant(
-    db
-      .prepare("SELECT * FROM prompt_variants WHERE id = ? AND user_id = ?")
-      .get(id, userId) as PromptVariantRow,
-  );
+  return {
+    id,
+    name,
+    version: resolvedVersion,
+    content,
+    active: false,
+    createdAt: now,
+    updatedAt: now,
+  };
 }
 
-export function setActivePromptVariant(id: string, userId: string): boolean {
-  ensurePromptVariantsUserSchema();
-  const variant = getPromptVariantById(id, userId);
+export async function setActivePromptVariant(
+  id: string,
+  userId: string,
+): Promise<boolean> {
+  await ensurePromptVariantsUserSchema();
+  const variant = await getPromptVariantById(id, userId);
   if (!variant) return false;
 
   const now = nowIso();
-  const activate = db.transaction(() => {
-    db.prepare(
-      "UPDATE prompt_variants SET active = 0, updated_at = ? WHERE user_id = ?",
-    ).run(now, userId);
-    return db
-      .prepare(
-        "UPDATE prompt_variants SET active = 1, updated_at = ? WHERE id = ? AND user_id = ?",
-      )
-      .run(now, id, userId);
-  });
-  const result = activate();
-  return result.changes > 0;
+  const results = await getClient().batch(
+    [
+      {
+        sql: "UPDATE prompt_variants SET active = 0, updated_at = ? WHERE user_id = ?",
+        args: [now, userId],
+      },
+      {
+        sql: "UPDATE prompt_variants SET active = 1, updated_at = ? WHERE id = ? AND user_id = ?",
+        args: [now, id, userId],
+      },
+    ],
+    "write",
+  );
+  return (results[1]?.rowsAffected ?? 0) > 0;
 }
 
-export function updatePromptVariant(
+export async function updatePromptVariant(
   id: string,
   userId: string,
   fields: Partial<Pick<PromptVariant, "name" | "content">>,
-): PromptVariant | null {
-  ensurePromptVariantsUserSchema();
-  const existing = getPromptVariantById(id, userId);
+): Promise<PromptVariant | null> {
+  await ensurePromptVariantsUserSchema();
+  const existing = await getPromptVariantById(id, userId);
   if (!existing) return null;
 
   const now = nowIso();
   const name = fields.name ?? existing.name;
   const content = fields.content ?? existing.content;
 
-  db.prepare(
-    `
+  await getClient().execute({
+    sql: `
     UPDATE prompt_variants SET name = ?, content = ?, updated_at = ?
     WHERE id = ? AND user_id = ?
   `,
-  ).run(name, content, now, id, userId);
+    args: [name, content, now, id, userId],
+  });
 
-  return rowToVariant(
-    db
-      .prepare("SELECT * FROM prompt_variants WHERE id = ? AND user_id = ?")
-      .get(id, userId) as PromptVariantRow,
-  );
+  return { ...existing, name, content, updatedAt: now };
 }
 
-export function deletePromptVariant(id: string, userId: string): boolean {
-  ensurePromptVariantsUserSchema();
-  const variant = getPromptVariantById(id, userId);
+export async function deletePromptVariant(
+  id: string,
+  userId: string,
+): Promise<boolean> {
+  await ensurePromptVariantsUserSchema();
+  const variant = await getPromptVariantById(id, userId);
   if (!variant) return false;
   if (variant.active) return false; // refuse to delete the active variant
 
-  const result = db
-    .prepare("DELETE FROM prompt_variants WHERE id = ? AND user_id = ?")
-    .run(id, userId);
-  return result.changes > 0;
+  const result = await getClient().execute({
+    sql: "DELETE FROM prompt_variants WHERE id = ? AND user_id = ?",
+    args: [id, userId],
+  });
+  return result.rowsAffected > 0;
 }
 
-export function logPromptVariantResult(
+export async function logPromptVariantResult(
   userId: string,
   promptVariantId: string,
   jobId?: string,
   resumeId?: string,
   matchScore?: number,
-): PromptVariantResult {
-  ensurePromptVariantsUserSchema();
+): Promise<PromptVariantResult> {
+  await ensurePromptVariantsUserSchema();
   const id = generateId();
   const now = nowIso();
-  db.prepare(
-    `
+  await getClient().execute({
+    sql: `
     INSERT INTO prompt_variant_results (id, user_id, prompt_variant_id, job_id, resume_id, match_score, created_at)
     VALUES (?, ?, ?, ?, ?, ?, ?)
   `,
-  ).run(
-    id,
-    userId,
-    promptVariantId,
-    jobId ?? null,
-    resumeId ?? null,
-    matchScore ?? null,
-    now,
-  );
+    args: [
+      id,
+      userId,
+      promptVariantId,
+      jobId ?? null,
+      resumeId ?? null,
+      matchScore ?? null,
+      now,
+    ],
+  });
 
-  return rowToResult(
-    db
-      .prepare(
-        "SELECT * FROM prompt_variant_results WHERE id = ? AND user_id = ?",
-      )
-      .get(id, userId) as PromptVariantResultRow,
-  );
+  return {
+    id,
+    promptVariantId,
+    jobId: jobId ?? null,
+    resumeId: resumeId ?? null,
+    matchScore: matchScore ?? null,
+    createdAt: now,
+  };
 }
 
-export function getPromptVariantResults(
+export async function getPromptVariantResults(
   promptVariantId: string,
   userId: string,
-): PromptVariantResult[] {
-  ensurePromptVariantsUserSchema();
-  return (
-    db
-      .prepare(
-        "SELECT * FROM prompt_variant_results WHERE prompt_variant_id = ? AND user_id = ? ORDER BY created_at DESC",
-      )
-      .all(promptVariantId, userId) as PromptVariantResultRow[]
-  ).map(rowToResult);
+): Promise<PromptVariantResult[]> {
+  await ensurePromptVariantsUserSchema();
+  const result = await getClient().execute({
+    sql: "SELECT * FROM prompt_variant_results WHERE prompt_variant_id = ? AND user_id = ? ORDER BY created_at DESC",
+    args: [promptVariantId, userId],
+  });
+  return (result.rows as unknown as PromptVariantResultRow[]).map(rowToResult);
 }
 
-export function getPromptVariantStats(userId: string): PromptVariantStats[] {
-  ensurePromptVariantsUserSchema();
-  return (
-    db
-      .prepare(
-        `
+export async function getPromptVariantStats(
+  userId: string,
+): Promise<PromptVariantStats[]> {
+  await ensurePromptVariantsUserSchema();
+  const result = await getClient().execute({
+    sql: `
         SELECT
           pv.id AS variant_id,
           pv.name AS variant_name,
@@ -350,9 +384,9 @@ export function getPromptVariantStats(userId: string): PromptVariantStats[] {
         GROUP BY pv.id
         ORDER BY pv.version ASC
       `,
-      )
-      .all(userId) as PromptVariantStatsRow[]
-  ).map((row) => ({
+    args: [userId],
+  });
+  return (result.rows as unknown as PromptVariantStatsRow[]).map((row) => ({
     variantId: row.variant_id,
     variantName: row.variant_name,
     version: row.version,

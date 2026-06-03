@@ -18,7 +18,7 @@ import {
   extractKeywords,
   type ParsedJob,
 } from "@/lib/import/job-parser";
-import { createJob } from "@/lib/db/jobs";
+import { createJob } from "@/lib/db/jobs-async";
 import { requireAuth, isAuthError } from "@/lib/auth";
 import { assertSafeOutboundUrl, SsrfBlockedError } from "@/lib/security/ssrf";
 
@@ -215,7 +215,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Save to database
-    const job = createJob(
+    const job = await createJob(
       {
         title,
         company,

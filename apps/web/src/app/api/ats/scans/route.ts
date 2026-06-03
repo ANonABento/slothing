@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
   try {
     // Cast to the lib's payload type — zod gives us a structurally
     // compatible shape but the `result` field is intentionally opaque.
-    const id = saveInAppScan(
+    const id = await saveInAppScan(
       authResult.userId,
       parsed.data as unknown as InAppScanSavePayload,
     );
@@ -110,7 +110,7 @@ export async function GET(request: NextRequest) {
       100,
     );
 
-    const history = getScanHistory(authResult.userId, limit);
+    const history = await getScanHistory(authResult.userId, limit);
     return NextResponse.json({ history });
   } catch (error) {
     console.error("List in-app ATS scans error:", error);

@@ -15,7 +15,7 @@ export async function GET() {
   if (isAuthError(authResult)) return authResult;
 
   try {
-    const versions = listProfileVersions(authResult.userId);
+    const versions = await listProfileVersions(authResult.userId);
     return NextResponse.json({ versions });
   } catch (error) {
     console.error("List profile versions error:", error);

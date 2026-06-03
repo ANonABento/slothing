@@ -101,7 +101,7 @@ export async function POST(request: NextRequest) {
 
     const linkedOpportunity =
       opportunityId && action === "generate"
-        ? getOpportunity(opportunityId, authResult.userId)
+        ? await getOpportunity(opportunityId, authResult.userId)
         : null;
     if (opportunityId && action === "generate" && !linkedOpportunity) {
       return NextResponse.json(
@@ -148,7 +148,7 @@ export async function POST(request: NextRequest) {
       userName,
     };
 
-    const gate = gateAiFeature(
+    const gate = await gateAiFeature(
       authResult.userId,
       "cover_letter",
       opportunityId || `${action}:${nowEpoch()}`,
@@ -212,13 +212,13 @@ export async function POST(request: NextRequest) {
     } = { success: true, content };
 
     if (opportunityId && linkedOpportunity) {
-      const savedCoverLetter = saveCoverLetter(
+      const savedCoverLetter = await saveCoverLetter(
         opportunityId,
         content,
         [],
         authResult.userId,
       );
-      linkOpportunityDocument(
+      await linkOpportunityDocument(
         opportunityId,
         { coverLetterId: savedCoverLetter.id },
         authResult.userId,

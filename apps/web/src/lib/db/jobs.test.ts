@@ -19,6 +19,9 @@ import {
   getJobs,
   getJob,
   getJobByUrl,
+  listJobsPaginated,
+  countJobsGroupedByStatus,
+  makeJobCursor,
   createJob,
   updateJob,
   updateJobStatus,
@@ -119,6 +122,120 @@ describe("Job Database Functions", () => {
       expect(result[0].responsibilities).toEqual([]);
       expect(result[0].keywords).toEqual([]);
       expect(result[0].remote).toBe(false);
+    });
+  });
+
+  describe("listJobsPaginated", () => {
+    it("pushes search, status, and sort work into SQL", () => {
+      const mockAll = vi.fn().mockReturnValue([]);
+      (db.prepare as Mock).mockReturnValue({ all: mockAll });
+
+      listJobsPaginated({
+        userId: TEST_USER_ID,
+        statuses: ["pending"],
+        query: "React",
+        remote: true,
+        keyword: "TypeScript",
+        sortBy: "deadline",
+        limit: 25,
+      });
+
+      const sql = (db.prepare as Mock).mock.calls[0][0] as string;
+      expect(sql).toContain("status IN (?)");
+      expect(sql).toContain("title LIKE ? ESCAPE");
+      expect(sql).toContain("remote = ?");
+      expect(sql).toContain("keywords_json LIKE ? ESCAPE");
+      expect(sql).toContain("ORDER BY (deadline IS NULL OR deadline = '') ASC");
+      expect(mockAll).toHaveBeenCalledWith(
+        TEST_USER_ID,
+        "pending",
+        "%React%",
+        "%React%",
+        "%React%",
+        "%React%",
+        "%React%",
+        "%React%",
+        "%React%",
+        "%React%",
+        1,
+        "%TypeScript%",
+        26,
+      );
+    });
+
+    it("uses the sort-specific cursor when sorting by company", () => {
+      const mockAll = vi.fn().mockReturnValue([]);
+      (db.prepare as Mock).mockReturnValue({ all: mockAll });
+
+      listJobsPaginated({
+        userId: TEST_USER_ID,
+        cursor: {
+          lastId: "job-2",
+          lastCreatedAt: "2026-05-01T10:00:00.000Z",
+          lastSortValue: "Acme\u0000Frontend Engineer",
+          sortBy: "company",
+        },
+        sortBy: "company",
+        limit: 10,
+      });
+
+      const sql = (db.prepare as Mock).mock.calls[0][0] as string;
+      expect(sql).toContain("company COLLATE NOCASE > ?");
+      expect(sql).toContain("ORDER BY company COLLATE NOCASE ASC");
+      expect(mockAll).toHaveBeenCalledWith(
+        TEST_USER_ID,
+        "Acme",
+        "Acme",
+        "Frontend Engineer",
+        "Acme",
+        "Frontend Engineer",
+        "2026-05-01T10:00:00.000Z",
+        "2026-05-01T10:00:00.000Z",
+        "job-2",
+        11,
+      );
+    });
+  });
+
+  describe("countJobsGroupedByStatus", () => {
+    it("returns counts keyed by normalized status", () => {
+      const mockAll = vi.fn().mockReturnValue([
+        { status: "pending", count: 2 },
+        { status: "saved", count: 3 },
+      ]);
+      (db.prepare as Mock).mockReturnValue({ all: mockAll });
+
+      expect(
+        countJobsGroupedByStatus({ userId: TEST_USER_ID, query: "Acme" }),
+      ).toEqual({ pending: 2, saved: 3 });
+      expect((db.prepare as Mock).mock.calls[0][0]).toContain(
+        "GROUP BY COALESCE(status, 'saved')",
+      );
+    });
+  });
+
+  describe("makeJobCursor", () => {
+    it("captures sort values for stable keyset pagination", () => {
+      expect(
+        makeJobCursor(
+          {
+            id: "job-1",
+            title: "Frontend Engineer",
+            company: "Acme",
+            description: "Desc",
+            requirements: [],
+            responsibilities: [],
+            keywords: [],
+            createdAt: "2026-05-01T10:00:00.000Z",
+          },
+          "company",
+        ),
+      ).toEqual({
+        lastId: "job-1",
+        lastCreatedAt: "2026-05-01T10:00:00.000Z",
+        lastSortValue: "Acme\u0000Frontend Engineer",
+        sortBy: "company",
+      });
     });
   });
 

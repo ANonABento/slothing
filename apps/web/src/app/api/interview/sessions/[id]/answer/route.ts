@@ -40,7 +40,7 @@ export async function POST(
       );
     }
 
-    const session = getInterviewSession(params.id, authResult.userId);
+    const session = await getInterviewSession(params.id, authResult.userId);
 
     if (!session) {
       return NextResponse.json({ error: "Session not found" }, { status: 404 });
@@ -56,7 +56,7 @@ export async function POST(
     }
 
     if (answer === "[skipped]") {
-      const savedAnswer = addInterviewAnswer(
+      const savedAnswer = await addInterviewAnswer(
         params.id,
         questionIndex,
         answer,
@@ -65,7 +65,7 @@ export async function POST(
       );
       const isComplete = questionIndex >= session.questions.length - 1;
       if (isComplete) {
-        completeInterviewSession(params.id, authResult.userId);
+        await completeInterviewSession(params.id, authResult.userId);
       }
 
       return NextResponse.json({
@@ -77,7 +77,7 @@ export async function POST(
 
     // Generate feedback using LLM if available
     let feedback = "";
-    const gate = gateAiFeature(
+    const gate = await gateAiFeature(
       authResult.userId,
       "interview_turn",
       `${params.id}:${questionIndex}`,
@@ -125,7 +125,7 @@ Be encouraging but also point out areas for improvement.`,
     }
 
     // Save the answer
-    const savedAnswer = addInterviewAnswer(
+    const savedAnswer = await addInterviewAnswer(
       params.id,
       questionIndex,
       answer,
@@ -136,7 +136,7 @@ Be encouraging but also point out areas for improvement.`,
     // Check if interview is complete
     const isComplete = questionIndex >= session.questions.length - 1;
     if (isComplete) {
-      completeInterviewSession(params.id, authResult.userId);
+      await completeInterviewSession(params.id, authResult.userId);
     }
 
     return NextResponse.json({

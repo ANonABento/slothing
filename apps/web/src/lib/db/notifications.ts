@@ -1,4 +1,4 @@
-import db from "./legacy";
+import { getClient } from "./client";
 import { generateId } from "@/lib/utils";
 import { ensureSuggestedStatusUpdatesSchema } from "./suggested-status-updates";
 
@@ -34,24 +34,32 @@ export interface Notification {
 export function createNotification(
   notification: Omit<Notification, "id" | "read" | "createdAt">,
   userId: string,
-): Notification {
+): Promise<Notification> {
+  return createNotificationAsync(notification, userId);
+}
+
+async function createNotificationAsync(
+  notification: Omit<Notification, "id" | "read" | "createdAt">,
+  userId: string,
+): Promise<Notification> {
   const id = generateId();
   const now = nowIso();
 
-  const stmt = db.prepare(`
-    INSERT INTO notifications (id, type, title, message, link, created_at, user_id)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
-  `);
-
-  stmt.run(
-    id,
-    notification.type,
-    notification.title,
-    notification.message || null,
-    notification.link || null,
-    now,
-    userId,
-  );
+  await getClient().execute({
+    sql: `
+      INSERT INTO notifications (id, type, title, message, link, created_at, user_id)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `,
+    args: [
+      id,
+      notification.type,
+      notification.title,
+      notification.message || null,
+      notification.link || null,
+      now,
+      userId,
+    ],
+  });
 
   return {
     id,
@@ -69,9 +77,17 @@ export function getNotifications(options: {
   unreadOnly?: boolean;
   limit?: number;
   userId: string;
-}): Notification[] {
+}): Promise<Notification[]> {
+  return getNotificationsAsync(options);
+}
+
+async function getNotificationsAsync(options: {
+  unreadOnly?: boolean;
+  limit?: number;
+  userId: string;
+}): Promise<Notification[]> {
   const { unreadOnly = false, limit = 50, userId } = options || {};
-  ensureSuggestedStatusUpdatesSchema();
+  await ensureSuggestedStatusUpdatesSchema();
 
   let query = `
     SELECT
@@ -96,24 +112,8 @@ export function getNotifications(options: {
   query += " ORDER BY notifications.created_at DESC LIMIT ?";
   params.push(limit);
 
-  const stmt = db.prepare(query);
-  return (
-    stmt.all(...params) as Array<{
-      id: string;
-      type: string;
-      title: string;
-      message: string | null;
-      link: string | null;
-      read: number;
-      created_at: string;
-      suggested_state: string | null;
-      suggested_opportunity_id: string | null;
-      suggested_status: string | null;
-      suggested_confidence: number | null;
-      suggested_reason: string | null;
-      suggested_evidence_json: string | null;
-    }>
-  ).map((row) => ({
+  const result = await getClient().execute({ sql: query, args: params });
+  return (result.rows as unknown as NotificationQueryRow[]).map((row) => ({
     id: row.id,
     type: row.type as NotificationType,
     title: row.title,
@@ -137,6 +137,22 @@ export function getNotifications(options: {
   }));
 }
 
+interface NotificationQueryRow {
+  id: string;
+  type: string;
+  title: string;
+  message: string | null;
+  link: string | null;
+  read: number | boolean;
+  created_at: string;
+  suggested_state: string | null;
+  suggested_opportunity_id: string | null;
+  suggested_status: string | null;
+  suggested_confidence: number | null;
+  suggested_reason: string | null;
+  suggested_evidence_json: string | null;
+}
+
 function parseEvidence(value: string | null | undefined): string[] {
   if (!value) return [];
   try {
@@ -150,44 +166,53 @@ function parseEvidence(value: string | null | undefined): string[] {
 }
 
 // Mark notification as read
-export function markNotificationRead(id: string, userId: string): void {
-  const stmt = db.prepare(
-    "UPDATE notifications SET read = 1 WHERE id = ? AND user_id = ?",
-  );
-  stmt.run(id, userId);
+export async function markNotificationRead(
+  id: string,
+  userId: string,
+): Promise<void> {
+  await getClient().execute({
+    sql: "UPDATE notifications SET read = 1 WHERE id = ? AND user_id = ?",
+    args: [id, userId],
+  });
 }
 
 // Mark all notifications as read
-export function markAllNotificationsRead(userId: string): void {
-  const stmt = db.prepare(
-    "UPDATE notifications SET read = 1 WHERE read = 0 AND user_id = ?",
-  );
-  stmt.run(userId);
+export async function markAllNotificationsRead(userId: string): Promise<void> {
+  await getClient().execute({
+    sql: "UPDATE notifications SET read = 1 WHERE read = 0 AND user_id = ?",
+    args: [userId],
+  });
 }
 
 // Delete a notification
-export function deleteNotification(id: string, userId: string): void {
-  const stmt = db.prepare(
-    "DELETE FROM notifications WHERE id = ? AND user_id = ?",
-  );
-  stmt.run(id, userId);
+export async function deleteNotification(
+  id: string,
+  userId: string,
+): Promise<void> {
+  await getClient().execute({
+    sql: "DELETE FROM notifications WHERE id = ? AND user_id = ?",
+    args: [id, userId],
+  });
 }
 
 // Delete all read notifications
-export function deleteReadNotifications(userId: string): void {
-  const stmt = db.prepare(
-    "DELETE FROM notifications WHERE read = 1 AND user_id = ?",
-  );
-  stmt.run(userId);
+export async function deleteReadNotifications(userId: string): Promise<void> {
+  await getClient().execute({
+    sql: "DELETE FROM notifications WHERE read = 1 AND user_id = ?",
+    args: [userId],
+  });
 }
 
 // Get unread notification count
-export function getUnreadNotificationCount(userId: string): number {
-  const stmt = db.prepare(
-    "SELECT COUNT(*) as count FROM notifications WHERE read = 0 AND user_id = ?",
-  );
-  const row = stmt.get(userId) as { count: number };
-  return row.count;
+export async function getUnreadNotificationCount(
+  userId: string,
+): Promise<number> {
+  const result = await getClient().execute({
+    sql: "SELECT COUNT(*) as count FROM notifications WHERE read = 0 AND user_id = ?",
+    args: [userId],
+  });
+  const row = result.rows[0] as unknown as { count: number } | undefined;
+  return row?.count ?? 0;
 }
 
 // Create reminder notification
@@ -197,7 +222,7 @@ export function createReminderNotification(
   isOverdue: boolean,
   jobId: string,
   userId: string,
-): Notification {
+): Promise<Notification> {
   return createNotification(
     {
       type: isOverdue ? "reminder_overdue" : "reminder_due",
@@ -215,7 +240,7 @@ export function createApplicationUpdateNotification(
   newStatus: string,
   jobId: string,
   userId: string,
-): Notification {
+): Promise<Notification> {
   return createNotification(
     {
       type: "application_update",

@@ -5,11 +5,11 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth, isAuthError } from "@/lib/auth";
+import { getLatestDocumentArtifact } from "@/lib/db/document-artifacts";
 import {
   getDocumentParseRun,
-  getLatestDocumentArtifact,
   listDocumentParseRuns,
-} from "@/lib/db";
+} from "@/lib/db/document-parse-runs";
 import {
   createParserV2Diagnostic,
   createParserV2SourceRefs,
@@ -26,7 +26,10 @@ export async function GET(
   if (isAuthError(authResult)) return authResult;
 
   try {
-    const artifact = getLatestDocumentArtifact(params.id, authResult.userId);
+    const artifact = await getLatestDocumentArtifact(
+      params.id,
+      authResult.userId,
+    );
     if (!artifact) {
       return NextResponse.json(
         { error: "Document artifact not found" },
@@ -37,8 +40,12 @@ export async function GET(
     const requestedParseRunId =
       request.nextUrl.searchParams.get("parseRunId") ?? undefined;
     const parseRun = requestedParseRunId
-      ? getDocumentParseRun(requestedParseRunId, params.id, authResult.userId)
-      : (listDocumentParseRuns(params.id, authResult.userId).find(
+      ? await getDocumentParseRun(
+          requestedParseRunId,
+          params.id,
+          authResult.userId,
+        )
+      : ((await listDocumentParseRuns(params.id, authResult.userId)).find(
           (run) => run.artifactId === artifact.id && run.status === "ready",
         ) ?? null);
 

@@ -1,4 +1,4 @@
-import db from "./legacy";
+import { getClient } from "./client";
 import { nowIso } from "@/lib/format/time";
 
 export type CronRunStatus = "success" | "failure" | "disabled";
@@ -37,10 +37,10 @@ interface CronRunRow {
 
 let ensured = false;
 
-export function ensureCronRunsSchema(): void {
+export async function ensureCronRunsSchema(): Promise<void> {
   if (ensured) return;
 
-  db.prepare(
+  await getClient().batch([
     `CREATE TABLE IF NOT EXISTS cron_runs (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       cron TEXT NOT NULL,
@@ -51,19 +51,15 @@ export function ensureCronRunsSchema(): void {
       summary_json TEXT,
       error TEXT
     )`,
-  ).run();
-  db.prepare(
     "CREATE INDEX IF NOT EXISTS idx_cron_runs_cron_started ON cron_runs(cron, started_at)",
-  ).run();
-  db.prepare(
     "CREATE INDEX IF NOT EXISTS idx_cron_runs_started ON cron_runs(started_at)",
-  ).run();
+  ]);
 
   ensured = true;
 }
 
-export function recordCronRun(input: RecordCronRunInput): void {
-  ensureCronRunsSchema();
+export async function recordCronRun(input: RecordCronRunInput): Promise<void> {
+  await ensureCronRunsSchema();
 
   const finishedAt = input.finishedAt ?? nowIso();
   const durationMs =
@@ -73,32 +69,33 @@ export function recordCronRun(input: RecordCronRunInput): void {
       Date.parse(finishedAt || "") - Date.parse(input.startedAt || ""),
     );
 
-  db.prepare(
-    `INSERT INTO cron_runs (
+  await getClient().execute({
+    sql: `INSERT INTO cron_runs (
       cron, status, started_at, finished_at, duration_ms, summary_json, error
     ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-  ).run(
-    input.cron,
-    input.status,
-    input.startedAt,
-    finishedAt,
-    durationMs,
-    input.summary ? JSON.stringify(input.summary) : null,
-    input.error ?? null,
-  );
+    args: [
+      input.cron,
+      input.status,
+      input.startedAt,
+      finishedAt,
+      durationMs,
+      input.summary ? JSON.stringify(input.summary) : null,
+      input.error ?? null,
+    ],
+  });
 }
 
-export function listRecentCronRuns(limit = 50): CronRun[] {
-  ensureCronRunsSchema();
-  const rows = db
-    .prepare(
-      `SELECT id, cron, status, started_at, finished_at, duration_ms,
+export async function listRecentCronRuns(limit = 50): Promise<CronRun[]> {
+  await ensureCronRunsSchema();
+  const result = await getClient().execute({
+    sql: `SELECT id, cron, status, started_at, finished_at, duration_ms,
               summary_json, error
          FROM cron_runs
         ORDER BY started_at DESC, id DESC
         LIMIT ?`,
-    )
-    .all(Math.min(Math.max(limit, 1), 200)) as CronRunRow[];
+    args: [Math.min(Math.max(limit, 1), 200)],
+  });
+  const rows = result.rows as unknown as CronRunRow[];
 
   return rows.map(mapCronRun);
 }

@@ -90,7 +90,7 @@ describe("runSearchProviders", () => {
 
     expect(fetch).toHaveBeenCalledTimes(5);
     expect(vi.mocked(fetch).mock.calls.map(([url]) => url)).toEqual([
-      "/api/opportunities?limit=10",
+      "/api/opportunities?q=react&limit=5",
       "/api/bank?q=react&limit=10",
       "/api/answer-bank?limit=10",
       "/api/email/drafts?limit=10",

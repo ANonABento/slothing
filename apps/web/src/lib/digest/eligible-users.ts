@@ -1,4 +1,4 @@
-import db from "@/lib/db/legacy";
+import { getClient } from "@/lib/db/client";
 
 export interface EligibleDigestUser {
   userId: string;
@@ -14,10 +14,11 @@ interface EligibleDigestUserRow {
   digest_enabled: string | null;
 }
 
-export function getEligibleDigestUsers(limit = 1000): EligibleDigestUser[] {
-  const rows = db
-    .prepare(
-      `
+export async function getEligibleDigestUsers(
+  limit = 1000,
+): Promise<EligibleDigestUser[]> {
+  const result = await getClient().execute({
+    sql: `
         SELECT u.id, u.email, u.name
              , COALESCE(s.value, 'true') AS digest_enabled
         FROM user u
@@ -28,8 +29,9 @@ export function getEligibleDigestUsers(limit = 1000): EligibleDigestUser[] {
         ORDER BY u.id ASC
         LIMIT ?
       `,
-    )
-    .all(limit) as EligibleDigestUserRow[];
+    args: [limit],
+  });
+  const rows = result.rows as unknown as EligibleDigestUserRow[];
 
   return rows
     .filter((row) => row.email)

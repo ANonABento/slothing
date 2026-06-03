@@ -1,18 +1,20 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { Mock } from "vitest";
 
-vi.mock("./legacy", () => ({
-  default: {
-    prepare: vi.fn(),
-  },
+const dbMocks = vi.hoisted(() => ({
+  execute: vi.fn(),
+  batch: vi.fn(),
+}));
+
+vi.mock("./client", () => ({
+  getClient: () => dbMocks,
 }));
 
 vi.mock("@/lib/utils", () => ({
   generateId: vi.fn(() => "artifact-generated"),
 }));
 
-import db from "./legacy";
 import {
+  deleteDocumentArtifactsByDocumentIds,
   getLatestDocumentArtifact,
   listDocumentArtifacts,
   saveDocumentArtifact,
@@ -42,6 +44,10 @@ const sourceMap: DocumentSourceMap = {
   ],
 };
 
+function result(rows: unknown[] = [], rowsAffected = 0) {
+  return { rows, rowsAffected };
+}
+
 function artifactRow(overrides: Record<string, unknown> = {}) {
   return {
     id: "artifact-1",
@@ -65,13 +71,12 @@ function artifactRow(overrides: Record<string, unknown> = {}) {
 describe("document artifact db helpers", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    dbMocks.batch.mockResolvedValue([]);
+    dbMocks.execute.mockResolvedValue(result([], 1));
   });
 
-  it("persists a source map artifact with pages and lines", () => {
-    const run = vi.fn();
-    (db.prepare as Mock).mockReturnValue({ run });
-
-    const artifact = saveDocumentArtifact({
+  it("persists a source map artifact with pages and lines", async () => {
+    const artifact = await saveDocumentArtifact({
       documentId: "doc-1",
       userId: "user-1",
       sourceMap,
@@ -88,51 +93,72 @@ describe("document artifact db helpers", () => {
       normalizedText: "Jake Ryan",
       sourceMap,
     });
-    expect(db.prepare).toHaveBeenCalledWith(
-      expect.stringContaining("INSERT INTO document_artifacts"),
-    );
-    expect(run).toHaveBeenLastCalledWith(
-      "artifact-generated",
-      "doc-1",
-      "user-1",
-      "pdf-source-map-v1",
-      "ready",
-      null,
-      "Jake Ryan",
-      "Jake Ryan",
-      JSON.stringify([{ ...sourceMap.pages[0], lines: sourceMap.lines }]),
-      JSON.stringify([{ url: "https://example.com", page: 1 }]),
-      0,
-      "2026-05-18T10:00:00.000Z",
-    );
+    expect(dbMocks.execute).toHaveBeenCalledWith({
+      sql: expect.stringContaining("INSERT INTO document_artifacts"),
+      args: [
+        "artifact-generated",
+        "doc-1",
+        "user-1",
+        "pdf-source-map-v1",
+        "ready",
+        null,
+        "Jake Ryan",
+        "Jake Ryan",
+        JSON.stringify([{ ...sourceMap.pages[0], lines: sourceMap.lines }]),
+        JSON.stringify([{ url: "https://example.com", page: 1 }]),
+        0,
+        "2026-05-18T10:00:00.000Z",
+      ],
+    });
   });
 
-  it("loads the latest artifact and reconstructs the source map", () => {
-    const get = vi.fn().mockReturnValue(artifactRow());
-    (db.prepare as Mock).mockReturnValue({ run: vi.fn(), get });
+  it("loads the latest artifact and reconstructs the source map", async () => {
+    dbMocks.execute.mockResolvedValueOnce(result([artifactRow()]));
 
-    expect(getLatestDocumentArtifact("doc-1", "user-1")).toMatchObject({
+    await expect(
+      getLatestDocumentArtifact("doc-1", "user-1"),
+    ).resolves.toMatchObject({
       id: "artifact-1",
       documentId: "doc-1",
       userId: "user-1",
       sourceMap,
       links: [{ url: "https://example.com", page: 1 }],
     });
-    expect(get).toHaveBeenLastCalledWith("doc-1", "user-1");
   });
 
-  it("lists artifacts newest first", () => {
-    const all = vi
-      .fn()
-      .mockReturnValue([
-        artifactRow({ id: "artifact-2" }),
-        artifactRow({ id: "artifact-1" }),
-      ]);
-    (db.prepare as Mock).mockReturnValue({ run: vi.fn(), all });
+  it("lists artifacts newest first", async () => {
+    dbMocks.execute.mockResolvedValueOnce(
+      result([artifactRow({ id: "artifact-2" }), artifactRow()]),
+    );
 
-    expect(
-      listDocumentArtifacts("doc-1", "user-1").map((row) => row.id),
-    ).toEqual(["artifact-2", "artifact-1"]);
-    expect(all).toHaveBeenLastCalledWith("doc-1", "user-1");
+    await expect(
+      listDocumentArtifacts("doc-1", "user-1").then((rows) =>
+        rows.map((row) => row.id),
+      ),
+    ).resolves.toEqual(["artifact-2", "artifact-1"]);
+  });
+
+  it("deletes unique document ids in an atomic batch", async () => {
+    dbMocks.batch.mockResolvedValueOnce([result([], 1), result([], 2)]);
+
+    await expect(
+      deleteDocumentArtifactsByDocumentIds(
+        ["doc-1", "doc-1", "doc-2"],
+        "user-1",
+      ),
+    ).resolves.toBe(3);
+    expect(dbMocks.batch).toHaveBeenLastCalledWith(
+      [
+        {
+          sql: "DELETE FROM document_artifacts WHERE document_id = ? AND user_id = ?",
+          args: ["doc-1", "user-1"],
+        },
+        {
+          sql: "DELETE FROM document_artifacts WHERE document_id = ? AND user_id = ?",
+          args: ["doc-2", "user-1"],
+        },
+      ],
+      "write",
+    );
   });
 });

@@ -30,7 +30,7 @@ describe("gateAiFeature", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     delete process.env.SLOTHING_HOSTED_LLM_API_KEY;
-    mocks.getUserPlan.mockReturnValue("hosted-free");
+    mocks.getUserPlan.mockResolvedValue("hosted-free");
     mocks.getLLMConfig.mockReturnValue(null);
     mocks.deductCredits.mockReturnValue({
       userId: "user-1",
@@ -41,15 +41,15 @@ describe("gateAiFeature", () => {
     });
   });
 
-  it("lets self-host users pass with their configured provider", () => {
-    mocks.getUserPlan.mockReturnValue("self-host");
+  it("lets self-host users pass with their configured provider", async () => {
+    mocks.getUserPlan.mockResolvedValue("self-host");
     mocks.getLLMConfig.mockReturnValue({
       provider: "openai",
       apiKey: "sk-byok",
       model: "gpt-test",
     });
 
-    const result = gateAiFeature("user-1", "tailor", "job-1");
+    const result = await gateAiFeature("user-1", "tailor", "job-1");
 
     expect(isAiGateResponse(result)).toBe(false);
     if (!isAiGateResponse(result)) {
@@ -59,14 +59,14 @@ describe("gateAiFeature", () => {
     expect(mocks.deductCredits).not.toHaveBeenCalled();
   });
 
-  it("lets hosted BYOK users pass without deducting credits", () => {
+  it("lets hosted BYOK users pass without deducting credits", async () => {
     mocks.getLLMConfig.mockReturnValue({
       provider: "anthropic",
       apiKey: "sk-byok",
       model: "claude-test",
     });
 
-    const result = gateAiFeature("user-1", "cover_letter", "letter-1");
+    const result = await gateAiFeature("user-1", "cover_letter", "letter-1");
 
     expect(isAiGateResponse(result)).toBe(false);
     if (!isAiGateResponse(result)) expect(result.source).toBe("byok");
@@ -74,7 +74,7 @@ describe("gateAiFeature", () => {
   });
 
   it("returns 402 for hosted-free users without BYOK", async () => {
-    const result = gateAiFeature("user-1", "tailor", "job-1");
+    const result = await gateAiFeature("user-1", "tailor", "job-1");
 
     expect(isAiGateResponse(result)).toBe(true);
     if (isAiGateResponse(result)) {
@@ -85,11 +85,11 @@ describe("gateAiFeature", () => {
     }
   });
 
-  it("deducts Pro credits and refunds on request", () => {
+  it("deducts Pro credits and refunds on request", async () => {
     process.env.SLOTHING_HOSTED_LLM_API_KEY = "sk-hosted";
-    mocks.getUserPlan.mockReturnValue("pro-monthly");
+    mocks.getUserPlan.mockResolvedValue("pro-monthly");
 
-    const result = gateAiFeature("user-1", "tailor", "job-1");
+    const result = await gateAiFeature("user-1", "tailor", "job-1");
 
     expect(isAiGateResponse(result)).toBe(false);
     if (!isAiGateResponse(result)) {
@@ -109,10 +109,10 @@ describe("gateAiFeature", () => {
     );
   });
 
-  it("lets self-host optional AI routes fall back without a provider", () => {
-    mocks.getUserPlan.mockReturnValue("self-host");
+  it("lets self-host optional AI routes fall back without a provider", async () => {
+    mocks.getUserPlan.mockResolvedValue("self-host");
 
-    const result = gateOptionalAiFeature("user-1", "tailor", "upload-1");
+    const result = await gateOptionalAiFeature("user-1", "tailor", "upload-1");
 
     expect(isAiGateResponse(result)).toBe(false);
     if (!isAiGateResponse(result)) {
@@ -122,8 +122,8 @@ describe("gateAiFeature", () => {
     expect(mocks.deductCredits).not.toHaveBeenCalled();
   });
 
-  it("lets hosted-free optional AI routes fall back without billing", () => {
-    const result = gateOptionalAiFeature("user-1", "tailor", "upload-1");
+  it("lets hosted-free optional AI routes fall back without billing", async () => {
+    const result = await gateOptionalAiFeature("user-1", "tailor", "upload-1");
 
     expect(isAiGateResponse(result)).toBe(false);
     if (!isAiGateResponse(result)) {

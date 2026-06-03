@@ -1,4 +1,4 @@
-import db from "@/lib/db/legacy";
+import { getClient } from "@/lib/db/client";
 
 interface ExistsRow {
   found: number;
@@ -13,37 +13,39 @@ export interface UsageStats {
   tailoredResumeCount: number;
 }
 
-export function hasUserApplied(userId: string): boolean {
-  const row = db
-    .prepare(
-      "SELECT 1 AS found FROM jobs WHERE user_id = ? AND status = 'applied' LIMIT 1",
-    )
-    .get(userId) as ExistsRow | undefined;
+export async function hasUserApplied(userId: string): Promise<boolean> {
+  const result = await getClient().execute({
+    sql: "SELECT 1 AS found FROM jobs WHERE user_id = ? AND status = 'applied' LIMIT 1",
+    args: [userId],
+  });
+  const row = result.rows[0] as unknown as ExistsRow | undefined;
 
   return Boolean(row?.found);
 }
 
-export function hasUserBookedInterview(userId: string): boolean {
-  const row = db
-    .prepare(
-      "SELECT 1 AS found FROM interview_sessions WHERE user_id = ? LIMIT 1",
-    )
-    .get(userId) as ExistsRow | undefined;
+export async function hasUserBookedInterview(userId: string): Promise<boolean> {
+  const result = await getClient().execute({
+    sql: "SELECT 1 AS found FROM interview_sessions WHERE user_id = ? LIMIT 1",
+    args: [userId],
+  });
+  const row = result.rows[0] as unknown as ExistsRow | undefined;
 
   return Boolean(row?.found);
 }
 
-export function getUsageStats(userId: string): UsageStats {
-  const applicationRow = db
-    .prepare(
-      "SELECT COUNT(*) AS count FROM jobs WHERE user_id = ? AND status = 'applied'",
-    )
-    .get(userId) as CountRow | undefined;
-  const tailoredRow = db
-    .prepare(
-      "SELECT COUNT(*) AS count FROM generated_resumes WHERE user_id = ?",
-    )
-    .get(userId) as CountRow | undefined;
+export async function getUsageStats(userId: string): Promise<UsageStats> {
+  const applicationResult = await getClient().execute({
+    sql: "SELECT COUNT(*) AS count FROM jobs WHERE user_id = ? AND status = 'applied'",
+    args: [userId],
+  });
+  const tailoredResult = await getClient().execute({
+    sql: "SELECT COUNT(*) AS count FROM generated_resumes WHERE user_id = ?",
+    args: [userId],
+  });
+  const applicationRow = applicationResult.rows[0] as unknown as
+    | CountRow
+    | undefined;
+  const tailoredRow = tailoredResult.rows[0] as unknown as CountRow | undefined;
 
   return {
     applicationCount: applicationRow?.count ?? 0,

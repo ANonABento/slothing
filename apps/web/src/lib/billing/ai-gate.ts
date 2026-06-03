@@ -27,13 +27,13 @@ export interface OptionalAiGatePass extends Omit<AiGatePass, "llmConfig"> {
 
 export type OptionalAiGateResult = OptionalAiGatePass | NextResponse;
 
-export function gateAiFeature(
+export async function gateAiFeature(
   userId: string,
   feature: CreditFeature,
   refId: string,
-): AiGateResult {
+): Promise<AiGateResult> {
   const llmConfig = getLLMConfig(userId);
-  const plan = getUserPlan(userId);
+  const plan = await getUserPlan(userId);
 
   if (plan === "self-host") {
     if (!isUsableLLMConfig(llmConfig)) return missingProviderResponse();
@@ -45,7 +45,7 @@ export function gateAiFeature(
   }
 
   if (plan === "pro-monthly" || plan === "pro-weekly") {
-    const transaction = deductCredits(userId, feature, refId);
+    const transaction = await deductCredits(userId, feature, refId);
     const hostedConfig = getHostedLLMConfig();
     return pass(hostedConfig, plan, "credits", transaction);
   }
@@ -60,13 +60,13 @@ export function gateAiFeature(
   );
 }
 
-export function gateOptionalAiFeature(
+export async function gateOptionalAiFeature(
   userId: string,
   feature: CreditFeature,
   refId: string,
-): OptionalAiGateResult {
+): Promise<OptionalAiGateResult> {
   const llmConfig = getLLMConfig(userId);
-  const plan = getUserPlan(userId);
+  const plan = await getUserPlan(userId);
 
   if (plan === "self-host") {
     return optionalPass(
@@ -85,7 +85,7 @@ export function gateOptionalAiFeature(
     if (!process.env.SLOTHING_HOSTED_LLM_API_KEY) {
       return optionalPass(null, plan, "fallback", null);
     }
-    const transaction = deductCredits(userId, feature, refId);
+    const transaction = await deductCredits(userId, feature, refId);
     return optionalPass(getHostedLLMConfig(), plan, "credits", transaction);
   }
 
@@ -117,7 +117,7 @@ function pass(
     transaction,
     refund() {
       if (transaction?.feature && transaction.refId) {
-        refundCredits(
+        void refundCredits(
           transaction.userId,
           transaction.feature,
           transaction.refId,
@@ -141,7 +141,7 @@ function optionalPass(
     transaction,
     refund() {
       if (transaction?.feature && transaction.refId) {
-        refundCredits(
+        void refundCredits(
           transaction.userId,
           transaction.feature,
           transaction.refId,

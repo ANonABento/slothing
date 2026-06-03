@@ -141,7 +141,7 @@ async function renderResumeHtml(
     return generateResumeHTMLV3(resume, documentTemplateV3.template);
   }
   const { generateResumeHTML } = await import("@/lib/resume/pdf");
-  const template = getTemplateWithCustom(templateId, userId);
+  const template = await getTemplateWithCustom(templateId, userId);
   return generateResumeHTML(resume, templateId, template);
 }
 
@@ -176,7 +176,7 @@ export async function POST(request: NextRequest) {
     // Get resume content
     let resume: TailoredResume | null = null;
     if (resumeId) {
-      const saved = getGeneratedResume(resumeId, authResult.userId);
+      const saved = await getGeneratedResume(resumeId, authResult.userId);
       if (!saved) {
         return NextResponse.json(
           { error: "Resume not found" },

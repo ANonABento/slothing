@@ -2,7 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requireAuth, isAuthError } from "@/lib/auth";
 import { jobToOpportunity } from "@/lib/opportunities";
-import { createJob, listJobsPaginated } from "@/lib/db/jobs";
+import {
+  countJobsGroupedByStatus,
+  createJob,
+  listJobsPaginated,
+  makeJobCursor,
+  type JobListSort,
+} from "@/lib/db/jobs-async";
 import { enrichCompany } from "@/lib/enrichment";
 import {
   gateOptionalAiFeature,
@@ -29,10 +35,21 @@ export const dynamic = "force-dynamic";
 const createdAtCursorSchema = z.object({
   lastId: z.string(),
   lastCreatedAt: z.string(),
+  lastSortValue: z.string().nullable().optional(),
+  sortBy: z.enum(["createdAt", "deadline", "company", "salary"]).optional(),
 });
 
 const opportunitiesQuerySchema = PaginationParamsSchema.extend({
   status: z.string().optional(),
+  q: z.string().trim().optional(),
+  search: z.string().trim().optional(),
+  sort: z
+    .enum(["createdAt", "deadline", "scrapedAt", "company", "salary"])
+    .optional(),
+  remoteType: z.enum(["remote", "hybrid", "onsite", "all"]).optional(),
+  type: z.string().trim().optional(),
+  techStack: z.string().trim().optional(),
+  tag: z.string().trim().optional(),
 });
 
 const opportunityStatuses = new Set<OpportunityStatus>(OPPORTUNITY_STATUSES);
@@ -76,6 +93,16 @@ export async function GET(request: NextRequest) {
     }
     const cursor = decodeCursor(parsed.data.cursor, createdAtCursorSchema);
     const statuses = statusParamToJobStatuses(parsed.data.status);
+    const sortBy = normalizeSortParam(parsed.data.sort);
+    const query = parsed.data.q || parsed.data.search || undefined;
+    const remote =
+      parsed.data.remoteType === "remote"
+        ? true
+        : parsed.data.remoteType && parsed.data.remoteType !== "all"
+          ? false
+          : null;
+    const keyword = firstNonAll(parsed.data.techStack, parsed.data.tag);
+    const type = firstNonAll(parsed.data.type);
     if (statuses === null) {
       return NextResponse.json({
         jobs: [],
@@ -83,18 +110,33 @@ export async function GET(request: NextRequest) {
         items: [],
         nextCursor: null,
         hasMore: false,
+        statusCounts: emptyStatusCounts(),
+        totalMatching: 0,
       });
     }
-    const jobs = listJobsPaginated({
+    const jobs = await listJobsPaginated({
       userId: authResult.userId,
       statuses,
       cursor,
       limit: parsed.data.limit,
+      query,
+      remote,
+      type,
+      keyword,
+      sortBy,
     });
-    const page = buildPaginationResult(jobs, parsed.data.limit, (job) => ({
-      lastId: job.id,
-      lastCreatedAt: job.createdAt,
-    }));
+    const page = buildPaginationResult(jobs, parsed.data.limit, (job) =>
+      makeJobCursor(job, sortBy),
+    );
+    const statusCounts = normalizeStatusCounts(
+      await countJobsGroupedByStatus({
+        userId: authResult.userId,
+        query,
+        remote,
+        type,
+        keyword,
+      }),
+    );
     const opportunities = page.items.map(jobToOpportunity);
     return NextResponse.json({
       jobs: page.items,
@@ -102,6 +144,8 @@ export async function GET(request: NextRequest) {
       items: opportunities,
       nextCursor: page.nextCursor,
       hasMore: page.hasMore,
+      statusCounts,
+      totalMatching: sumMatchingStatuses(statusCounts, statuses),
     });
   } catch (error) {
     if (error instanceof InvalidCursorError) {
@@ -113,6 +157,47 @@ export async function GET(request: NextRequest) {
       { status: 500 },
     );
   }
+}
+
+function normalizeSortParam(value?: string): JobListSort {
+  if (value === "deadline" || value === "company" || value === "salary") {
+    return value;
+  }
+  return "createdAt";
+}
+
+function firstNonAll(...values: Array<string | undefined>): string | null {
+  const value = values.find((item) => item && item !== "all")?.trim();
+  return value || null;
+}
+
+function emptyStatusCounts(): Record<OpportunityStatus, number> {
+  return Object.fromEntries(
+    OPPORTUNITY_STATUSES.map((status) => [status, 0]),
+  ) as Record<OpportunityStatus, number>;
+}
+
+function normalizeStatusCounts(
+  counts: Record<string, number>,
+): Record<OpportunityStatus, number> {
+  const normalized = emptyStatusCounts();
+  for (const status of OPPORTUNITY_STATUSES) {
+    normalized[status] = counts[status] ?? 0;
+  }
+  return normalized;
+}
+
+function sumMatchingStatuses(
+  counts: Record<OpportunityStatus, number>,
+  statuses: JobStatus[] | undefined,
+): number {
+  const selectedStatuses = statuses?.length
+    ? statuses
+    : (OPPORTUNITY_STATUSES as readonly OpportunityStatus[]);
+  return selectedStatuses.reduce(
+    (sum, status) => sum + (counts[status as OpportunityStatus] ?? 0),
+    0,
+  );
 }
 
 export async function POST(request: NextRequest) {
@@ -127,7 +212,7 @@ export async function POST(request: NextRequest) {
       const data = legacyJobParseResult.data;
       let keywords: string[] = [];
 
-      const gate = gateOptionalAiFeature(
+      const gate = await gateOptionalAiFeature(
         authResult.userId,
         "document_assistant",
         `opportunity:${data.company}:${data.title}`,
@@ -167,7 +252,7 @@ Return format: ["skill1", "skill2", "skill3", ...]`,
         keywords = extractKeywordsBasic(data.description);
       }
 
-      const job = createJob(
+      const job = await createJob(
         {
           ...data,
           requirements: data.requirements ?? [],
@@ -182,7 +267,7 @@ Return format: ["skill1", "skill2", "skill3", ...]`,
         "opp_created",
       );
       try {
-        trackActivationEvent({
+        await trackActivationEvent({
           event: "opportunity_created",
           userId: authResult.userId,
           source: "api/opportunities",
@@ -213,7 +298,7 @@ Return format: ["skill1", "skill2", "skill3", ...]`,
       );
     }
     const data = parseResult.data;
-    const job = createJob(
+    const job = await createJob(
       {
         title: data.title,
         company: data.company,
@@ -245,7 +330,7 @@ Return format: ["skill1", "skill2", "skill3", ...]`,
       "opp_created",
     );
     try {
-      trackActivationEvent({
+      await trackActivationEvent({
         event: "opportunity_created",
         userId: authResult.userId,
         source: "api/opportunities",

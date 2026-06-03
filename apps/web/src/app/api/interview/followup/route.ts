@@ -6,7 +6,7 @@
  * @response InterviewFollowupResponse from @/types/api
  */
 import { NextRequest, NextResponse } from "next/server";
-import { getJob } from "@/lib/db/jobs";
+import { getJob } from "@/lib/db/jobs-async";
 import { getProfile } from "@/lib/db";
 import {
   gateOptionalAiFeature,
@@ -40,9 +40,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const job = jobId ? getJob(jobId, authResult.userId) : null;
+    const job = jobId ? await getJob(jobId, authResult.userId) : null;
     const profile = getProfile(authResult.userId);
-    const gate = gateOptionalAiFeature(
+    const gate = await gateOptionalAiFeature(
       authResult.userId,
       "interview_turn",
       `followup:${jobId ?? "general"}`,

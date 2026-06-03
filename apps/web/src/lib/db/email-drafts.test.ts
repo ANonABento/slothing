@@ -1,17 +1,19 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { Mock } from "vitest";
 
-vi.mock("./legacy", () => ({
-  default: {
-    prepare: vi.fn(),
-  },
+const mocks = vi.hoisted(() => ({
+  execute: vi.fn(),
+}));
+
+vi.mock("./client", () => ({
+  getClient: () => ({
+    execute: mocks.execute,
+  }),
 }));
 
 vi.mock("@/lib/utils", () => ({
   generateId: () => "test-draft-id",
 }));
 
-import db from "./legacy";
 import { createEmailDraft } from "./email-drafts";
 
 describe("Email Draft Database Functions", () => {
@@ -19,11 +21,10 @@ describe("Email Draft Database Functions", () => {
     vi.clearAllMocks();
   });
 
-  it("should create drafts without a job link", () => {
-    const mockRun = vi.fn().mockReturnValue({ changes: 1 });
-    (db.prepare as Mock).mockReturnValue({ run: mockRun });
+  it("should create drafts without a job link", async () => {
+    mocks.execute.mockResolvedValueOnce({ rows: [], rowsAffected: 1 });
 
-    const draft = createEmailDraft(
+    const draft = await createEmailDraft(
       {
         type: "follow_up",
         subject: "Hello",
@@ -33,27 +34,26 @@ describe("Email Draft Database Functions", () => {
     );
 
     expect(draft.id).toBe("test-draft-id");
-    expect(db.prepare).toHaveBeenCalledWith(
-      expect.not.stringContaining("WHERE EXISTS"),
-    );
-    expect(mockRun).toHaveBeenCalledWith(
-      "test-draft-id",
-      "user-1",
-      "follow_up",
-      null,
-      "Hello",
-      "Checking in",
-      null,
-      expect.any(String),
-      expect.any(String),
-    );
+    expect(mocks.execute).toHaveBeenCalledWith({
+      sql: expect.not.stringContaining("WHERE EXISTS"),
+      args: [
+        "test-draft-id",
+        "user-1",
+        "follow_up",
+        null,
+        "Hello",
+        "Checking in",
+        null,
+        expect.any(String),
+        expect.any(String),
+      ],
+    });
   });
 
-  it("should reject drafts linked to jobs outside the user", () => {
-    const mockRun = vi.fn().mockReturnValue({ changes: 0 });
-    (db.prepare as Mock).mockReturnValue({ run: mockRun });
+  it("should reject drafts linked to jobs outside the user", async () => {
+    mocks.execute.mockResolvedValueOnce({ rows: [], rowsAffected: 0 });
 
-    expect(() =>
+    await expect(
       createEmailDraft(
         {
           type: "follow_up",
@@ -63,23 +63,23 @@ describe("Email Draft Database Functions", () => {
         },
         "user-1",
       ),
-    ).toThrow("Job not found");
+    ).rejects.toThrow("Job not found");
 
-    expect(db.prepare).toHaveBeenCalledWith(
-      expect.stringContaining("WHERE EXISTS"),
-    );
-    expect(mockRun).toHaveBeenCalledWith(
-      "test-draft-id",
-      "user-1",
-      "follow_up",
-      "job-1",
-      "Hello",
-      "Checking in",
-      null,
-      expect.any(String),
-      expect.any(String),
-      "job-1",
-      "user-1",
-    );
+    expect(mocks.execute).toHaveBeenCalledWith({
+      sql: expect.stringContaining("WHERE EXISTS"),
+      args: [
+        "test-draft-id",
+        "user-1",
+        "follow_up",
+        "job-1",
+        "Hello",
+        "Checking in",
+        null,
+        expect.any(String),
+        expect.any(String),
+        "job-1",
+        "user-1",
+      ],
+    });
   });
 });

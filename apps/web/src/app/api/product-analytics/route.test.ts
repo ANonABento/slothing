@@ -33,14 +33,14 @@ describe("/api/product-analytics", () => {
     vi.clearAllMocks();
     mocks.requireAuth.mockResolvedValue({ userId: "user-1" });
     mocks.isAuthError.mockImplementation((value) => value instanceof Response);
-    mocks.getActivationFunnelCounts.mockReturnValue({
+    mocks.getActivationFunnelCounts.mockResolvedValue({
       waitlist_joined: 1,
       opportunity_created: 2,
       resume_uploaded: 0,
       resume_tailored: 1,
       extension_connected: 1,
     });
-    mocks.trackActivationEvent.mockReturnValue({
+    mocks.trackActivationEvent.mockResolvedValue({
       id: "evt-1",
       event: "opportunity_created",
       userId: "user-1",

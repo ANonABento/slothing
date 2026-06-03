@@ -53,9 +53,9 @@ export async function enrichCompany({
     enrichedAt,
   };
 
-  saveCompanyEnrichment(userId, companyName, snapshot);
+  await saveCompanyEnrichment(userId, companyName, snapshot);
   if (snapshot.github?.ok && snapshot.github.data.resolvedSlug) {
-    setCompanyGithubSlug(
+    await setCompanyGithubSlug(
       userId,
       companyName,
       snapshot.github.data.resolvedSlug,

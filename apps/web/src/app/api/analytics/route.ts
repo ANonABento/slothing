@@ -18,14 +18,17 @@ import { requireAuth, isAuthError } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
-function debugQuery<T>(label: string, query: () => T): T {
+async function debugQuery<T>(
+  label: string,
+  query: () => Promise<T>,
+): Promise<T> {
   if (process.env.DEBUG_QUERIES !== "1") {
-    return query();
+    return await query();
   }
 
   console.time(label);
   try {
-    return query();
+    return await query();
   } finally {
     console.timeEnd(label);
   }
@@ -36,19 +39,19 @@ export async function GET() {
   if (isAuthError(authResult)) return authResult;
 
   try {
-    const profile = debugQuery("analytics:profile", () =>
+    const profile = await debugQuery("analytics:profile", () =>
       getProfileAnalyticsView(authResult.userId),
     );
-    const jobs = debugQuery("analytics:jobs", () =>
+    const jobs = await debugQuery("analytics:jobs", () =>
       getJobsAnalyticsView(authResult.userId),
     );
-    const totalDocuments = debugQuery("analytics:documents", () =>
+    const totalDocuments = await debugQuery("analytics:documents", () =>
       getDocumentCount(authResult.userId),
     );
-    const interviews = debugQuery("analytics:interviews", () =>
+    const interviews = await debugQuery("analytics:interviews", () =>
       getInterviewSessionStats(authResult.userId),
     );
-    const totalResumesGenerated = debugQuery("analytics:resumes", () =>
+    const totalResumesGenerated = await debugQuery("analytics:resumes", () =>
       getGeneratedResumeCount(authResult.userId),
     );
 
@@ -142,10 +145,10 @@ export async function GET() {
     };
 
     // Save today's snapshot for historical tracking without blocking the read.
-    void Promise.resolve().then(() => {
+    void Promise.resolve().then(async () => {
       try {
         const today = formatIsoDateOnly();
-        saveAnalyticsSnapshot(
+        await saveAnalyticsSnapshot(
           {
             userId: authResult.userId,
             snapshotDate: today,

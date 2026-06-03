@@ -88,7 +88,7 @@ export async function runGmailStatusDetectionForUser(
     });
     result.scanned += messages.length;
 
-    const opportunities = listAllOpportunities(userId, [
+    const opportunities = await listAllOpportunities(userId, [
       "saved",
       "applied",
       "interviewing",
@@ -132,7 +132,7 @@ export async function runGmailStatusDetectionForUser(
           result.skipped += 1;
           continue;
         }
-        const notification = createNotification(
+        const notification = await createNotification(
           {
             type: "application_update",
             title: "Review Gmail status suggestion",
@@ -149,7 +149,7 @@ export async function runGmailStatusDetectionForUser(
           },
           userId,
         );
-        createSuggestedStatusUpdate({
+        await createSuggestedStatusUpdate({
           userId,
           notificationId: notification.id,
           opportunityId: match.opportunity.id,
@@ -164,7 +164,7 @@ export async function runGmailStatusDetectionForUser(
         continue;
       }
 
-      const updated = changeOpportunityStatus(
+      const updated = await changeOpportunityStatus(
         match.opportunity.id,
         detection.status,
         userId,
@@ -175,7 +175,7 @@ export async function runGmailStatusDetectionForUser(
       }
 
       result.updated += 1;
-      createNotification(
+      await createNotification(
         {
           type: "application_update",
           title: "Application status updated from Gmail",

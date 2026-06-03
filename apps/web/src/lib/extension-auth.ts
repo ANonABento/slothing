@@ -1,18 +1,15 @@
 import { nowDate, nowIso, parseToDate } from "@/lib/format/time";
 // Extension authentication utilities
 import { NextRequest, NextResponse } from "next/server";
-import db from "@/lib/db/legacy";
+import {
+  deleteExtensionSession,
+  getExtensionSessionByToken,
+  touchExtensionSession,
+} from "@/lib/db/extension-sessions";
 import {
   calculateQuestionSimilarity,
   normalizeQuestion,
 } from "@/lib/answers/answer-bank";
-
-interface ExtensionSession {
-  id: string;
-  user_id: string;
-  token: string;
-  expires_at: string;
-}
 
 export type ExtensionAuthResult =
   | { success: true; userId: string }
@@ -21,9 +18,9 @@ export type ExtensionAuthResult =
 /**
  * Validate extension token and return user ID
  */
-export function requireExtensionAuth(
+export async function requireExtensionAuth(
   request: NextRequest,
-): ExtensionAuthResult {
+): Promise<ExtensionAuthResult> {
   const token = request.headers.get("X-Extension-Token");
 
   if (!token) {
@@ -37,13 +34,7 @@ export function requireExtensionAuth(
   }
 
   try {
-    const session = db
-      .prepare(
-        `
-      SELECT * FROM extension_sessions WHERE token = ?
-    `,
-      )
-      .get(token) as ExtensionSession | undefined;
+    const session = await getExtensionSessionByToken(token);
 
     if (!session) {
       return {
@@ -58,9 +49,7 @@ export function requireExtensionAuth(
     // Check expiry
     const expiresAt = parseToDate(session.expires_at)!;
     if (expiresAt < nowDate()) {
-      db.prepare(
-        `DELETE FROM extension_sessions WHERE id = ? AND user_id = ?`,
-      ).run(session.id, session.user_id);
+      await deleteExtensionSession(session.id, session.user_id);
       return {
         success: false,
         response: NextResponse.json(
@@ -71,11 +60,7 @@ export function requireExtensionAuth(
     }
 
     // Update last used
-    db.prepare(
-      `
-      UPDATE extension_sessions SET last_used_at = ? WHERE id = ? AND user_id = ?
-    `,
-    ).run(nowIso(), session.id, session.user_id);
+    await touchExtensionSession(session.id, session.user_id, nowIso());
 
     return {
       success: true,

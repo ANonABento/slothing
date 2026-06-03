@@ -35,7 +35,7 @@ export async function PATCH(
       );
     }
 
-    if (!getPromptVariantById(id, authResult.userId)) {
+    if (!(await getPromptVariantById(id, authResult.userId))) {
       return NextResponse.json(
         { error: "Prompt variant not found" },
         { status: 404 },
@@ -43,7 +43,7 @@ export async function PATCH(
     }
 
     if (parsed.data.active === true) {
-      const ok = setActivePromptVariant(id, authResult.userId);
+      const ok = await setActivePromptVariant(id, authResult.userId);
       if (!ok) {
         return NextResponse.json(
           { error: "Failed to activate variant" },
@@ -54,10 +54,10 @@ export async function PATCH(
 
     const { name, content } = parsed.data;
     if (name !== undefined || content !== undefined) {
-      updatePromptVariant(id, authResult.userId, { name, content });
+      await updatePromptVariant(id, authResult.userId, { name, content });
     }
 
-    const updated = getPromptVariantById(id, authResult.userId);
+    const updated = await getPromptVariantById(id, authResult.userId);
     return NextResponse.json({ variant: updated });
   } catch (error) {
     console.error(
@@ -80,7 +80,7 @@ export async function DELETE(
 
   const { id } = await params;
 
-  const variant = getPromptVariantById(id, authResult.userId);
+  const variant = await getPromptVariantById(id, authResult.userId);
   if (!variant) {
     return NextResponse.json(
       { error: "Prompt variant not found" },
@@ -98,7 +98,7 @@ export async function DELETE(
     );
   }
 
-  const deleted = deletePromptVariant(id, authResult.userId);
+  const deleted = await deletePromptVariant(id, authResult.userId);
   if (!deleted) {
     return NextResponse.json(
       { error: "Failed to delete prompt variant" },

@@ -23,8 +23,8 @@ export async function GET() {
   if (isAuthError(authResult)) return authResult;
 
   try {
-    const entries = getTrackingEntries(authResult.userId);
-    const resumeIds = getTrackedResumeIds(authResult.userId);
+    const entries = await getTrackingEntries(authResult.userId);
+    const resumeIds = await getTrackedResumeIds(authResult.userId);
 
     const stats = resumeIds.map((id) => calculateVersionStats(id, entries));
     const recommendation = generateRecommendation(entries, resumeIds);

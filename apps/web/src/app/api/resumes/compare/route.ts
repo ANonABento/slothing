@@ -54,8 +54,8 @@ export async function POST(request: NextRequest) {
 
     const { beforeId, afterId } = parseResult.data;
 
-    const beforeResume = getGeneratedResume(beforeId, authResult.userId);
-    const afterResume = getGeneratedResume(afterId, authResult.userId);
+    const beforeResume = await getGeneratedResume(beforeId, authResult.userId);
+    const afterResume = await getGeneratedResume(afterId, authResult.userId);
 
     if (!beforeResume) {
       return NextResponse.json(

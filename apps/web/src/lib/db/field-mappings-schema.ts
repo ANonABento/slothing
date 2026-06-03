@@ -11,6 +11,7 @@
 // (per CLAUDE.md common pitfall #8): existing dev DBs would lose data.
 
 import type Database from "libsql";
+import { getClient } from "./client";
 
 let ensured = false;
 
@@ -74,6 +75,65 @@ export function ensureFieldMappingsCorrectionColumns(
       `CREATE INDEX IF NOT EXISTS idx_field_mappings_user_domain
        ON field_mappings (user_id, domain)`,
     ).run();
+
+    ensured = true;
+  } catch {
+    // First-boot environments or in-memory test DBs may not have the table
+    // available yet — let the Drizzle CREATE handle the fresh schema.
+  }
+}
+
+export async function ensureFieldMappingsCorrectionColumnsAsync(): Promise<void> {
+  if (ensured) return;
+
+  try {
+    const result = await getClient().execute(
+      "PRAGMA table_info(field_mappings)",
+    );
+
+    if (result.rows.length === 0) {
+      ensured = true;
+      return;
+    }
+
+    const names = new Set(result.rows.map((column) => String(column.name)));
+
+    if (!names.has("domain")) {
+      await getClient().execute(
+        "ALTER TABLE field_mappings ADD COLUMN domain TEXT",
+      );
+    }
+    if (!names.has("field_signature")) {
+      await getClient().execute(
+        "ALTER TABLE field_mappings ADD COLUMN field_signature TEXT",
+      );
+    }
+    if (!names.has("observed_value")) {
+      await getClient().execute(
+        "ALTER TABLE field_mappings ADD COLUMN observed_value TEXT",
+      );
+    }
+    if (!names.has("hit_count")) {
+      await getClient().execute(
+        "ALTER TABLE field_mappings ADD COLUMN hit_count INTEGER DEFAULT 1",
+      );
+    }
+    if (!names.has("last_seen_at")) {
+      await getClient().execute(
+        "ALTER TABLE field_mappings ADD COLUMN last_seen_at TEXT",
+      );
+    }
+
+    await getClient().execute(
+      `CREATE UNIQUE INDEX IF NOT EXISTS uniq_field_mappings_user_domain_signature
+       ON field_mappings (user_id, domain, field_signature)
+       WHERE domain IS NOT NULL AND field_signature IS NOT NULL`,
+    );
+
+    await getClient().execute(
+      `CREATE INDEX IF NOT EXISTS idx_field_mappings_user_domain
+       ON field_mappings (user_id, domain)`,
+    );
 
     ensured = true;
   } catch {

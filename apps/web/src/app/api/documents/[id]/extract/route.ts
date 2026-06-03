@@ -7,7 +7,8 @@ import path from "node:path";
 import { readFile } from "node:fs/promises";
 import { NextResponse } from "next/server";
 import { requireAuth, isAuthError } from "@/lib/auth";
-import { getDocument, saveDocumentArtifact } from "@/lib/db";
+import { getDocument } from "@/lib/db";
+import { saveDocumentArtifact } from "@/lib/db/document-artifacts";
 import { extractDocumentSourceMap } from "@/lib/ingest/extract-document";
 
 export const dynamic = "force-dynamic";
@@ -51,7 +52,7 @@ export async function POST(
       filename: document.filename,
       mimeType: document.mimeType,
     });
-    const artifact = saveDocumentArtifact({
+    const artifact = await saveDocumentArtifact({
       documentId: document.id,
       userId: authResult.userId,
       extractorVersion: extracted.extractorVersion,
@@ -75,7 +76,7 @@ export async function POST(
   } catch (error) {
     const failureReason =
       error instanceof Error ? error.message : "Document extraction failed";
-    const artifact = saveDocumentArtifact({
+    const artifact = await saveDocumentArtifact({
       documentId: document.id,
       userId: authResult.userId,
       status: "failed",

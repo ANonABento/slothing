@@ -1,4 +1,4 @@
-import db from "./legacy";
+import { getClient } from "./client";
 import { SUGGESTED_STATUS_UPDATES_BOOTSTRAP_SQL } from "./bootstrap-sql";
 import { generateId } from "@/lib/utils";
 import { nowIso } from "@/lib/format/time";
@@ -49,30 +49,40 @@ interface SuggestedStatusUpdateRow {
   resolved_at: string | null;
 }
 
-export function ensureSuggestedStatusUpdatesSchema(): void {
+let suggestedStatusUpdatesSchemaEnsured = false;
+
+export async function ensureSuggestedStatusUpdatesSchema(): Promise<void> {
+  if (suggestedStatusUpdatesSchemaEnsured) return;
+
   // DDL co-located with `schema.ts: suggestedStatusUpdates`. See
   // `bootstrap-sql.ts`.
-  db.exec(SUGGESTED_STATUS_UPDATES_BOOTSTRAP_SQL);
+  await getClient().batch(
+    SUGGESTED_STATUS_UPDATES_BOOTSTRAP_SQL.split(";")
+      .map((statement) => statement.trim())
+      .filter(Boolean),
+  );
+  const columnsResult = await getClient().execute(
+    "PRAGMA table_info(suggested_status_updates)",
+  );
   const columns = (
-    db.prepare("PRAGMA table_info(suggested_status_updates)").all() as Array<{
-      name: string;
-    }>
+    columnsResult.rows as unknown as Array<{ name: string }>
   ).map((column) => column.name);
   if (!columns.includes("confidence")) {
-    db.prepare(
+    await getClient().execute(
       "ALTER TABLE suggested_status_updates ADD COLUMN confidence REAL",
-    ).run();
+    );
   }
   if (!columns.includes("reason")) {
-    db.prepare(
+    await getClient().execute(
       "ALTER TABLE suggested_status_updates ADD COLUMN reason TEXT",
-    ).run();
+    );
   }
   if (!columns.includes("evidence_json")) {
-    db.prepare(
+    await getClient().execute(
       "ALTER TABLE suggested_status_updates ADD COLUMN evidence_json TEXT",
-    ).run();
+    );
   }
+  suggestedStatusUpdatesSchemaEnsured = true;
 }
 
 function parseEvidence(value: string | null | undefined): string[] {
@@ -109,63 +119,75 @@ function rowToSuggestedStatusUpdate(
 
 export function createSuggestedStatusUpdate(
   input: CreateSuggestedStatusUpdateInput,
-): SuggestedStatusUpdate {
-  ensureSuggestedStatusUpdatesSchema();
+): Promise<SuggestedStatusUpdate> {
+  return createSuggestedStatusUpdateAsync(input);
+}
+
+async function createSuggestedStatusUpdateAsync(
+  input: CreateSuggestedStatusUpdateInput,
+): Promise<SuggestedStatusUpdate> {
+  await ensureSuggestedStatusUpdatesSchema();
   const id = generateId();
   const createdAt = nowIso();
 
-  db.prepare(
-    `INSERT INTO suggested_status_updates (
+  await getClient().execute({
+    sql: `INSERT INTO suggested_status_updates (
       id, user_id, notification_id, opportunity_id, suggested_status,
       source_provider, source_event_id, confidence, reason, evidence_json,
       state, created_at
     )
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?)`,
-  ).run(
-    id,
-    input.userId,
-    input.notificationId,
-    input.opportunityId,
-    input.suggestedStatus,
-    input.sourceProvider ?? null,
-    input.sourceEventId ?? null,
-    input.confidence ?? null,
-    input.reason ?? null,
-    input.evidence ? JSON.stringify(input.evidence) : null,
-    createdAt,
-  );
+    args: [
+      id,
+      input.userId,
+      input.notificationId,
+      input.opportunityId,
+      input.suggestedStatus,
+      input.sourceProvider ?? null,
+      input.sourceEventId ?? null,
+      input.confidence ?? null,
+      input.reason ?? null,
+      input.evidence ? JSON.stringify(input.evidence) : null,
+      createdAt,
+    ],
+  });
 
-  return getSuggestedStatusUpdateByNotification(
+  const suggestion = await getSuggestedStatusUpdateByNotification(
     input.notificationId,
     input.userId,
-  )!;
+  );
+  if (!suggestion) {
+    throw new Error("Failed to create suggested status update");
+  }
+  return suggestion;
 }
 
-export function getSuggestedStatusUpdateByNotification(
+export async function getSuggestedStatusUpdateByNotification(
   notificationId: string,
   userId: string,
-): SuggestedStatusUpdate | null {
-  ensureSuggestedStatusUpdatesSchema();
-  const row = db
-    .prepare(
-      `SELECT * FROM suggested_status_updates
+): Promise<SuggestedStatusUpdate | null> {
+  await ensureSuggestedStatusUpdatesSchema();
+  const result = await getClient().execute({
+    sql: `SELECT * FROM suggested_status_updates
        WHERE notification_id = ? AND user_id = ?`,
-    )
-    .get(notificationId, userId) as SuggestedStatusUpdateRow | undefined;
+    args: [notificationId, userId],
+  });
+  const row = result.rows[0] as unknown as SuggestedStatusUpdateRow | undefined;
   return row ? rowToSuggestedStatusUpdate(row) : null;
 }
 
-export function updateSuggestedStatusUpdateState(
+export async function updateSuggestedStatusUpdateState(
   notificationId: string,
   userId: string,
   state: Exclude<SuggestedStatusUpdateState, "pending">,
-): SuggestedStatusUpdate | null {
-  ensureSuggestedStatusUpdatesSchema();
-  db.prepare(
-    `UPDATE suggested_status_updates
+): Promise<SuggestedStatusUpdate | null> {
+  await ensureSuggestedStatusUpdatesSchema();
+  await getClient().execute({
+    sql: `UPDATE suggested_status_updates
      SET state = ?, resolved_at = ?
      WHERE notification_id = ? AND user_id = ? AND state = 'pending'`,
-  ).run(state, nowIso(), notificationId, userId);
+    args: [state, nowIso(), notificationId, userId],
+  });
 
   return getSuggestedStatusUpdateByNotification(notificationId, userId);
 }

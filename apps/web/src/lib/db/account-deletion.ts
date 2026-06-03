@@ -1,4 +1,4 @@
-import db from "./legacy";
+import { getClient } from "./client";
 import {
   deleteStoredDocumentFiles,
   type DocumentFileCleanupResult,
@@ -193,28 +193,39 @@ const USER_SCOPED_DELETES: DeleteStatement[] = [
   { table: "user", sql: "DELETE FROM `user` WHERE id = ?" },
 ];
 
-function getUserDocumentFiles(userId: string): StoredDocumentFileRef[] {
-  return db
-    .prepare("SELECT id, path FROM documents WHERE user_id = ?")
-    .all(userId) as StoredDocumentFileRef[];
+async function getUserDocumentFiles(
+  userId: string,
+): Promise<StoredDocumentFileRef[]> {
+  const result = await getClient().execute({
+    sql: "SELECT id, path FROM documents WHERE user_id = ?",
+    args: [userId],
+  });
+
+  return result.rows as unknown as StoredDocumentFileRef[];
 }
 
 export async function deleteAccountData(
   userId: string,
 ): Promise<AccountDeletionResult> {
   const deletedRows: Record<string, number> = {};
-  const documentFiles = getUserDocumentFiles(userId);
+  const documentFiles = await getUserDocumentFiles(userId);
+  const statements: DeleteStatement[] = [];
 
-  db.transaction(() => {
-    for (const statement of USER_SCOPED_DELETES) {
-      if (statement.optional && !tableExists(statement.table)) continue;
-      const result = db.prepare(statement.sql).run(userId) as {
-        changes?: number;
-      };
-      deletedRows[statement.table] =
-        (deletedRows[statement.table] ?? 0) + Number(result.changes ?? 0);
-    }
-  })();
+  for (const statement of USER_SCOPED_DELETES) {
+    if (statement.optional && !(await tableExists(statement.table))) continue;
+    statements.push(statement);
+  }
+
+  const results = await getClient().batch(
+    statements.map((statement) => ({ sql: statement.sql, args: [userId] })),
+    "write",
+  );
+
+  statements.forEach((statement, index) => {
+    deletedRows[statement.table] =
+      (deletedRows[statement.table] ?? 0) +
+      Number(results[index]?.rowsAffected ?? 0);
+  });
 
   const totalDeletedRows = Object.values(deletedRows).reduce(
     (sum, count) => sum + count,
@@ -226,12 +237,11 @@ export async function deleteAccountData(
   return { userId, deletedRows, totalDeletedRows, fileCleanup };
 }
 
-function tableExists(tableName: string): boolean {
-  return Boolean(
-    db
-      .prepare(
-        "SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?",
-      )
-      .get(tableName),
-  );
+async function tableExists(tableName: string): Promise<boolean> {
+  const result = await getClient().execute({
+    sql: "SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?",
+    args: [tableName],
+  });
+
+  return result.rows.length > 0;
 }

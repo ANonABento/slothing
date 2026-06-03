@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth, isAuthError } from "@/lib/auth";
-import { getJob, updateJob, deleteJob } from "@/lib/db/jobs";
+import { getJob, updateJob, deleteJob } from "@/lib/db/jobs-async";
 import { updateJobSchema } from "@/lib/validation/jobs";
 import { recordJobStatusChange } from "@/lib/db/analytics";
 import { jobToOpportunity } from "@/lib/opportunities";
@@ -19,7 +19,7 @@ export async function GET(_request: NextRequest, { params }: RouteContext) {
   if (isAuthError(authResult)) return authResult;
 
   try {
-    const job = getJob(params.id, authResult.userId);
+    const job = await getJob(params.id, authResult.userId);
     if (!job) {
       return NextResponse.json(
         { error: "Opportunity not found" },
@@ -42,7 +42,7 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
   if (isAuthError(authResult)) return authResult;
 
   try {
-    const existingJob = getJob(params.id, authResult.userId);
+    const existingJob = await getJob(params.id, authResult.userId);
     if (!existingJob) {
       return NextResponse.json(
         { error: "Opportunity not found" },
@@ -75,13 +75,13 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
       data.appliedAt = nowIso();
     }
 
-    updateJob(params.id, data, authResult.userId);
-    const job = getJob(params.id, authResult.userId);
+    await updateJob(params.id, data, authResult.userId);
+    const job = await getJob(params.id, authResult.userId);
 
     const unlocked: AchievementUnlock[] = [];
     if (data.status && data.status !== oldStatus) {
       try {
-        recordJobStatusChange(
+        await recordJobStatusChange(
           params.id,
           oldStatus,
           data.status,
@@ -122,14 +122,14 @@ export async function DELETE(_request: NextRequest, { params }: RouteContext) {
   if (isAuthError(authResult)) return authResult;
 
   try {
-    const existing = getJob(params.id, authResult.userId);
+    const existing = await getJob(params.id, authResult.userId);
     if (!existing) {
       return NextResponse.json(
         { error: "Opportunity not found" },
         { status: 404 },
       );
     }
-    deleteJob(params.id, authResult.userId);
+    await deleteJob(params.id, authResult.userId);
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Delete opportunity error:", error);

@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
 
   const startedAt = nowIso();
   const result = await runDailyDigest();
-  recordCronRun({
+  await recordCronRun({
     cron: "digest.daily",
     status: result.ok ? "success" : "failure",
     startedAt,

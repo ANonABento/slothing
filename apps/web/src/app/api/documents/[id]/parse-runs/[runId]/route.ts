@@ -5,7 +5,7 @@
  */
 import { NextResponse } from "next/server";
 import { requireAuth, isAuthError } from "@/lib/auth";
-import { getDocumentParseRun } from "@/lib/db";
+import { getDocumentParseRun } from "@/lib/db/document-parse-runs";
 
 export const dynamic = "force-dynamic";
 
@@ -17,7 +17,7 @@ export async function GET(
   if (isAuthError(authResult)) return authResult;
 
   try {
-    const parseRun = getDocumentParseRun(
+    const parseRun = await getDocumentParseRun(
       params.runId,
       params.id,
       authResult.userId,

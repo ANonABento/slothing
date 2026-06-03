@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth, isAuthError } from "@/lib/auth";
-import { getJob } from "@/lib/db/jobs";
+import { getJob } from "@/lib/db/jobs-async";
 import {
   deleteOpportunityContact,
   getContactsForOpportunity,
@@ -17,7 +17,7 @@ export async function DELETE(_request: NextRequest, { params }: RouteContext) {
   if (isAuthError(authResult)) return authResult;
 
   try {
-    const opportunity = getJob(params.id, authResult.userId);
+    const opportunity = await getJob(params.id, authResult.userId);
     if (!opportunity) {
       return NextResponse.json(
         { error: "Opportunity not found" },
@@ -25,12 +25,15 @@ export async function DELETE(_request: NextRequest, { params }: RouteContext) {
       );
     }
 
-    const existing = getContactsForOpportunity(params.id, authResult.userId);
+    const existing = await getContactsForOpportunity(
+      params.id,
+      authResult.userId,
+    );
     if (!existing.some((contact) => contact.id === params.contactId)) {
       return NextResponse.json({ error: "Contact not found" }, { status: 404 });
     }
 
-    const deleted = deleteOpportunityContact(
+    const deleted = await deleteOpportunityContact(
       params.contactId,
       authResult.userId,
     );

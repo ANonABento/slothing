@@ -7,7 +7,7 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { getProfile } from "@/lib/db";
-import { getJob } from "@/lib/db/jobs";
+import { getJob } from "@/lib/db/jobs-async";
 import { requireAuth, isAuthError } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
     }
 
     const { analyzeATS } = await import("@/lib/ats/analyzer");
-    const job = jobId ? getJob(jobId, authResult.userId) : undefined;
+    const job = jobId ? await getJob(jobId, authResult.userId) : undefined;
     const result = analyzeATS(profile, job || undefined);
 
     return NextResponse.json(result);

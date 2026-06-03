@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
   if (!parsed.ok) return parsed.response;
 
   try {
-    const share = createShare({
+    const share = await createShare({
       userId: auth.userId,
       html: parsed.data.html,
       title: parsed.data.title ?? "",
@@ -71,6 +71,6 @@ export async function GET() {
   const auth = await requireAuth();
   if (isAuthError(auth)) return auth;
 
-  const shares = listSharesForUser(auth.userId);
+  const shares = await listSharesForUser(auth.userId);
   return successResponse({ shares });
 }

@@ -2,7 +2,14 @@
 
 import { nowIso } from "@/lib/format/time";
 
-import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import {
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useLocale, useTranslations } from "next-intl";
 import {
   ArrowRight,
@@ -81,6 +88,8 @@ interface OpportunitiesResponse {
   opportunities?: Opportunity[];
   nextCursor?: string | null;
   hasMore?: boolean;
+  statusCounts?: Partial<Record<OpportunityStatus, number>>;
+  totalMatching?: number;
 }
 
 interface UpdateOpportunityResponse {
@@ -111,12 +120,6 @@ export default function OpportunitiesPage({
   const statusSearchParam = Array.isArray(searchParams.status)
     ? searchParams.status.join(",")
     : searchParams.status;
-  const opportunityStatusQuery = useMemo(() => {
-    if (!statusSearchParam) return "";
-    const params = new URLSearchParams();
-    params.set("status", statusSearchParam);
-    return params.toString();
-  }, [statusSearchParam]);
   const urlStatusFilters = useMemo(
     () => parseOpportunityStatusSearchParam(statusSearchParam),
     [statusSearchParam],
@@ -136,6 +139,10 @@ export default function OpportunitiesPage({
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [hasMoreOpportunities, setHasMoreOpportunities] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [serverStatusCounts, setServerStatusCounts] = useState<
+    Partial<Record<OpportunityStatus, number>>
+  >({});
+  const [totalMatching, setTotalMatching] = useState<number | null>(null);
   const [drawerOpportunityId, setDrawerOpportunityId] = useState<string | null>(
     null,
   );
@@ -146,22 +153,39 @@ export default function OpportunitiesPage({
   const showErrorToast = useErrorToast();
   const { addToast } = useToast();
   const { confirm, dialog: confirmDialog } = useConfirmDialog();
+  const latestOpportunitiesQueryRef = useRef("");
+
+  const opportunitiesApiQuery = useMemo(() => {
+    const params = new URLSearchParams();
+    const status =
+      filters.status !== "all" ? filters.status : statusSearchParam;
+    if (status) params.set("status", status);
+    if (filters.searchQuery.trim()) params.set("q", filters.searchQuery.trim());
+    if (filters.sortBy) params.set("sort", filters.sortBy);
+    return params.toString();
+  }, [filters.searchQuery, filters.sortBy, filters.status, statusSearchParam]);
 
   const fetchOpportunities = useCallback(async () => {
+    latestOpportunitiesQueryRef.current = opportunitiesApiQuery;
+    const requestQuery = opportunitiesApiQuery;
+
     try {
       const response = await fetch(
-        opportunityStatusQuery
-          ? `/api/opportunities?${opportunityStatusQuery}`
+        opportunitiesApiQuery
+          ? `/api/opportunities?${opportunitiesApiQuery}`
           : "/api/opportunities",
       );
       const data = await readJsonResponse<OpportunitiesResponse>(
         response,
         "Failed to load opportunities",
       );
+      if (latestOpportunitiesQueryRef.current !== requestQuery) return;
       if (data.opportunities) {
         setOpportunities(data.opportunities);
         setNextCursor(data.nextCursor ?? null);
         setHasMoreOpportunities(Boolean(data.hasMore));
+        setServerStatusCounts(data.statusCounts ?? {});
+        setTotalMatching(data.totalMatching ?? null);
         window.localStorage.setItem(
           STORAGE_KEY,
           JSON.stringify(data.opportunities),
@@ -175,7 +199,7 @@ export default function OpportunitiesPage({
     } finally {
       setHasFetched(true);
     }
-  }, [opportunityStatusQuery, showErrorToast]);
+  }, [opportunitiesApiQuery, showErrorToast]);
 
   const loadMoreOpportunities = useCallback(async () => {
     if (!nextCursor) return;
@@ -184,7 +208,9 @@ export default function OpportunitiesPage({
     try {
       const response = await fetch(
         `/api/opportunities?${new URLSearchParams({
-          ...(statusSearchParam ? { status: statusSearchParam } : {}),
+          ...(opportunitiesApiQuery
+            ? Object.fromEntries(new URLSearchParams(opportunitiesApiQuery))
+            : {}),
           cursor: nextCursor,
         }).toString()}`,
       );
@@ -198,6 +224,8 @@ export default function OpportunitiesPage({
       ]);
       setNextCursor(data.nextCursor ?? null);
       setHasMoreOpportunities(Boolean(data.hasMore));
+      setServerStatusCounts(data.statusCounts ?? {});
+      setTotalMatching(data.totalMatching ?? null);
     } catch (error) {
       showErrorToast(error, {
         title: "Could not load more opportunities",
@@ -206,7 +234,7 @@ export default function OpportunitiesPage({
     } finally {
       setIsLoadingMore(false);
     }
-  }, [nextCursor, showErrorToast, statusSearchParam]);
+  }, [nextCursor, opportunitiesApiQuery, showErrorToast]);
 
   useEffect(() => {
     const saved = window.localStorage.getItem(STORAGE_KEY);
@@ -262,7 +290,7 @@ export default function OpportunitiesPage({
 
   const counts = useMemo(() => {
     const base: Record<StatusTabValue, number> = {
-      all: opportunities.length,
+      all: totalMatching ?? opportunities.length,
       pending: 0,
       saved: 0,
       applied: 0,
@@ -272,13 +300,19 @@ export default function OpportunitiesPage({
       expired: 0,
       dismissed: 0,
     };
+    for (const status of Object.keys(
+      serverStatusCounts,
+    ) as OpportunityStatus[]) {
+      base[status] = serverStatusCounts[status] ?? 0;
+    }
+    if (Object.keys(serverStatusCounts).length > 0) return base;
     for (const opp of opportunities) {
       if (opp.status in base) {
         base[opp.status] = (base[opp.status] ?? 0) + 1;
       }
     }
     return base;
-  }, [opportunities]);
+  }, [opportunities, serverStatusCounts, totalMatching]);
 
   // Pending opportunities are the inbound review queue. The link in the
   // page head is suppressed when there's nothing to review.
@@ -645,7 +679,7 @@ export default function OpportunitiesPage({
             <div className="text-sm text-ink-3">
               {t("summary", {
                 shown: filteredOpportunities.length,
-                total: opportunities.length,
+                total: totalMatching ?? opportunities.length,
               })}
             </div>
 
@@ -674,6 +708,11 @@ export default function OpportunitiesPage({
                     className="max-h-[calc(100vh-26rem)]"
                     itemClassName="pb-2.5"
                     renderItem={renderOpportunityRow}
+                    onEndReached={
+                      hasMoreOpportunities && !isLoadingMore
+                        ? () => void loadMoreOpportunities()
+                        : undefined
+                    }
                   />
                   {hasMoreOpportunities ? (
                     <div className="flex justify-center">
@@ -683,9 +722,13 @@ export default function OpportunitiesPage({
                         disabled={isLoadingMore}
                       >
                         {isLoadingMore
-                          ? "Loading..."
+                          ? "Loading more…"
                           : "Load more opportunities"}
                       </Button>
+                    </div>
+                  ) : isLoadingMore ? (
+                    <div className="text-center text-sm text-ink-3">
+                      Loading more…
                     </div>
                   ) : null}
                 </div>

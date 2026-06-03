@@ -1,18 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { Mock } from "vitest";
 
 const mocks = vi.hoisted(() => ({
-  prepare: vi.fn(),
-  createReminderNotification: vi.fn(),
+  execute: vi.fn(),
   sendReminderEmail: vi.fn(),
 }));
 
-vi.mock("@/lib/db/legacy", () => ({
-  default: { prepare: mocks.prepare },
-}));
-
-vi.mock("@/lib/db/notifications", () => ({
-  createReminderNotification: mocks.createReminderNotification,
+vi.mock("@/lib/db/client", () => ({
+  getClient: () => ({ execute: mocks.execute }),
 }));
 
 vi.mock("./send-email", () => ({
@@ -41,16 +35,17 @@ describe("fireDueReminders", () => {
   beforeEach(() => {
     resetRemindersFiringSchemaForTest();
     vi.clearAllMocks();
-    mocks.prepare.mockImplementation((sql: string) => {
+    mocks.execute.mockImplementation((input: string | { sql: string }) => {
+      const sql = typeof input === "string" ? input : input.sql;
       if (sql.includes("PRAGMA table_info")) {
-        return {
-          all: vi.fn(() => [{ name: "fired_at" }, { name: "notify_by_email" }]),
-        };
+        return Promise.resolve({
+          rows: [{ name: "fired_at" }, { name: "notify_by_email" }],
+        });
       }
       if (sql.includes("SELECT r.id")) {
-        return { all: vi.fn(() => [dueReminder]) };
+        return Promise.resolve({ rows: [dueReminder] });
       }
-      return { run: vi.fn(() => ({ changes: 1 })) };
+      return Promise.resolve({ rowsAffected: 1 });
     });
     mocks.sendReminderEmail.mockResolvedValue({ ok: true, status: 202 });
   });
@@ -59,23 +54,30 @@ describe("fireDueReminders", () => {
     const result = await fireDueReminders("2026-05-10T12:05:00.000Z");
 
     expect(result).toMatchObject({ fired: 1, errors: 0 });
-    expect(mocks.createReminderNotification).toHaveBeenCalledWith(
-      "Follow up",
-      "Engineer",
-      false,
-      "job-1",
-      "user-1",
+    expect(mocks.execute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        sql: expect.stringContaining("INSERT INTO notifications"),
+        args: expect.arrayContaining([
+          "reminder_due",
+          "Reminder Due",
+          "Follow up for Engineer",
+          "/opportunities?id=job-1",
+          "user-1",
+        ]),
+      }),
     );
-    expect(mocks.prepare).toHaveBeenCalledWith(
-      expect.stringContaining("UPDATE reminders SET fired_at = ?"),
+    expect(mocks.execute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        sql: expect.stringContaining("UPDATE reminders SET fired_at = ?"),
+      }),
     );
   });
 
   it("selects only due active unfired reminders with a batch limit", async () => {
     await fireDueReminders("2026-05-10T12:05:00.000Z");
 
-    const selectSql = (mocks.prepare as Mock).mock.calls
-      .map(([sql]) => String(sql))
+    const selectSql = mocks.execute.mock.calls
+      .map(([input]) => (typeof input === "string" ? input : String(input.sql)))
       .find((sql) => sql.includes("SELECT r.id"));
     expect(selectSql).toContain("r.due_date <= ?");
     expect(selectSql).toContain("r.fired_at IS NULL");
@@ -85,18 +87,19 @@ describe("fireDueReminders", () => {
   });
 
   it("sends email when requested and configured by the sender", async () => {
-    mocks.prepare.mockImplementation((sql: string) => {
+    mocks.execute.mockImplementation((input: string | { sql: string }) => {
+      const sql = typeof input === "string" ? input : input.sql;
       if (sql.includes("PRAGMA table_info")) {
-        return {
-          all: vi.fn(() => [{ name: "fired_at" }, { name: "notify_by_email" }]),
-        };
+        return Promise.resolve({
+          rows: [{ name: "fired_at" }, { name: "notify_by_email" }],
+        });
       }
       if (sql.includes("SELECT r.id")) {
-        return {
-          all: vi.fn(() => [{ ...dueReminder, notify_by_email: 1 }]),
-        };
+        return Promise.resolve({
+          rows: [{ ...dueReminder, notify_by_email: 1 }],
+        });
       }
-      return { run: vi.fn(() => ({ changes: 1 })) };
+      return Promise.resolve({ rowsAffected: 1 });
     });
 
     const result = await fireDueReminders("2026-05-10T12:05:00.000Z");
@@ -111,18 +114,19 @@ describe("fireDueReminders", () => {
   });
 
   it("marks fired even when email delivery fails and reports the error", async () => {
-    mocks.prepare.mockImplementation((sql: string) => {
+    mocks.execute.mockImplementation((input: string | { sql: string }) => {
+      const sql = typeof input === "string" ? input : input.sql;
       if (sql.includes("PRAGMA table_info")) {
-        return {
-          all: vi.fn(() => [{ name: "fired_at" }, { name: "notify_by_email" }]),
-        };
+        return Promise.resolve({
+          rows: [{ name: "fired_at" }, { name: "notify_by_email" }],
+        });
       }
       if (sql.includes("SELECT r.id")) {
-        return {
-          all: vi.fn(() => [{ ...dueReminder, notify_by_email: 1 }]),
-        };
+        return Promise.resolve({
+          rows: [{ ...dueReminder, notify_by_email: 1 }],
+        });
       }
-      return { run: vi.fn(() => ({ changes: 1 })) };
+      return Promise.resolve({ rowsAffected: 1 });
     });
     mocks.sendReminderEmail.mockResolvedValue({
       ok: false,
@@ -133,36 +137,53 @@ describe("fireDueReminders", () => {
     const result = await fireDueReminders("2026-05-10T12:05:00.000Z");
 
     expect(result).toMatchObject({ fired: 1, errors: 1 });
-    expect(mocks.prepare).not.toHaveBeenCalledWith(
-      "UPDATE reminders SET fired_at = NULL WHERE id = ?",
+    expect(mocks.execute).not.toHaveBeenCalledWith(
+      expect.objectContaining({
+        sql: "UPDATE reminders SET fired_at = NULL WHERE id = ?",
+      }),
     );
   });
 
   it("rolls back fired_at when notification creation fails", async () => {
-    mocks.createReminderNotification.mockImplementation(() => {
-      throw new Error("notification failed");
+    mocks.execute.mockImplementation((input: string | { sql: string }) => {
+      const sql = typeof input === "string" ? input : input.sql;
+      if (sql.includes("PRAGMA table_info")) {
+        return Promise.resolve({
+          rows: [{ name: "fired_at" }, { name: "notify_by_email" }],
+        });
+      }
+      if (sql.includes("SELECT r.id")) {
+        return Promise.resolve({ rows: [dueReminder] });
+      }
+      if (sql.includes("INSERT INTO notifications")) {
+        throw new Error("notification failed");
+      }
+      return Promise.resolve({ rowsAffected: 1 });
     });
 
     const result = await fireDueReminders("2026-05-10T12:05:00.000Z");
 
     expect(result).toMatchObject({ fired: 0, errors: 1 });
-    expect(mocks.prepare).toHaveBeenCalledWith(
-      "UPDATE reminders SET fired_at = NULL WHERE id = ?",
+    expect(mocks.execute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        sql: "UPDATE reminders SET fired_at = NULL WHERE id = ?",
+      }),
     );
   });
 
-  it("adds the firing columns and index when ensuring schema", () => {
-    mocks.prepare.mockImplementation((sql: string) => {
+  it("adds the firing columns and index when ensuring schema", async () => {
+    mocks.execute.mockImplementation((input: string | { sql: string }) => {
+      const sql = typeof input === "string" ? input : input.sql;
       if (sql.includes("PRAGMA table_info")) {
-        return { all: vi.fn(() => []) };
+        return Promise.resolve({ rows: [] });
       }
-      return { run: vi.fn(() => ({ changes: 1 })) };
+      return Promise.resolve({ rowsAffected: 1 });
     });
 
-    ensureRemindersFiringSchema();
+    await ensureRemindersFiringSchema();
 
-    const sql = (mocks.prepare as Mock).mock.calls.map(([value]) =>
-      String(value),
+    const sql = mocks.execute.mock.calls.map(([value]) =>
+      typeof value === "string" ? value : String(value.sql),
     );
     expect(sql).toContain("ALTER TABLE reminders ADD COLUMN fired_at TEXT");
     expect(sql).toContain(

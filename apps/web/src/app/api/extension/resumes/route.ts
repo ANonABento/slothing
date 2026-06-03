@@ -10,7 +10,7 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { requireExtensionAuth } from "@/lib/extension-auth";
-import db from "@/lib/db/legacy";
+import { getClient } from "@/lib/db/client";
 
 interface ExtensionResumeSummary {
   id: string;
@@ -29,15 +29,14 @@ interface JoinedRow {
 const MAX_RESUMES = 5;
 
 export async function GET(request: NextRequest) {
-  const authResult = requireExtensionAuth(request);
+  const authResult = await requireExtensionAuth(request);
   if (!authResult.success) {
     return authResult.response;
   }
 
   try {
-    const rows = db
-      .prepare(
-        `
+    const result = await getClient().execute({
+      sql: `
         SELECT
           gr.id          AS id,
           gr.created_at  AS created_at,
@@ -49,8 +48,9 @@ export async function GET(request: NextRequest) {
         ORDER BY gr.created_at DESC
         LIMIT ?
         `,
-      )
-      .all(authResult.userId, MAX_RESUMES) as JoinedRow[];
+      args: [authResult.userId, MAX_RESUMES],
+    });
+    const rows = result.rows as unknown as JoinedRow[];
 
     const resumes: ExtensionResumeSummary[] = rows.map((row) => {
       const role = row.job_title?.trim() || "Untitled resume";

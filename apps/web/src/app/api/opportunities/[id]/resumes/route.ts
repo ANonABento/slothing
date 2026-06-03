@@ -23,7 +23,7 @@ export async function GET(
   if (isAuthError(authResult)) return authResult;
 
   try {
-    const resumes = getGeneratedResumes(params.id, authResult.userId);
+    const resumes = await getGeneratedResumes(params.id, authResult.userId);
 
     return NextResponse.json({ resumes });
   } catch (error) {
@@ -51,7 +51,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Delete from database
-    deleteGeneratedResume(resumeId, authResult.userId);
+    await deleteGeneratedResume(resumeId, authResult.userId);
 
     // Try to delete the file (optional - don't fail if file doesn't exist)
     if (htmlPath) {

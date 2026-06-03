@@ -5,99 +5,82 @@ const mocks = vi.hoisted(() => {
   let unlocks: Record<string, unknown>[] = [];
   let id = 0;
 
+  function applyStatement(sql: string, args: unknown[]) {
+    if (sql.includes("INSERT INTO user_activity")) {
+      row = {
+        id: args[0],
+        user_id: args[1],
+        current_streak: args[2],
+        longest_streak: args[3],
+        last_activity_day: args[4],
+        total_opps_created: args[5],
+        total_opps_applied: args[6],
+        total_resumes_tailored: args[7],
+        total_cover_letters: args[8],
+        total_emails_sent: args[9],
+        total_interviews_started: args[10],
+        updated_at: args[11],
+      };
+      return;
+    }
+
+    if (sql.includes("UPDATE user_activity")) {
+      row = {
+        ...row,
+        current_streak: args[0],
+        longest_streak: args[1],
+        last_activity_day: args[2],
+        total_opps_created:
+          Number(row?.total_opps_created ?? 0) +
+          (sql.includes("total_opps_created =") ? 1 : 0),
+        total_opps_applied:
+          Number(row?.total_opps_applied ?? 0) +
+          (sql.includes("total_opps_applied =") ? 1 : 0),
+        total_resumes_tailored:
+          Number(row?.total_resumes_tailored ?? 0) +
+          (sql.includes("total_resumes_tailored =") ? 1 : 0),
+        total_cover_letters:
+          Number(row?.total_cover_letters ?? 0) +
+          (sql.includes("total_cover_letters =") ? 1 : 0),
+        total_emails_sent:
+          Number(row?.total_emails_sent ?? 0) +
+          (sql.includes("total_emails_sent =") ? 1 : 0),
+        total_interviews_started:
+          Number(row?.total_interviews_started ?? 0) +
+          (sql.includes("total_interviews_started =") ? 1 : 0),
+        updated_at: args[3],
+      };
+      return;
+    }
+
+    if (sql.includes("INSERT OR IGNORE INTO achievement_unlocks")) {
+      const achievementId = args[2];
+      if (!unlocks.some((item) => item.achievement_id === achievementId)) {
+        unlocks.push({
+          id: args[0],
+          user_id: args[1],
+          achievement_id: achievementId,
+          unlocked_at: args[3],
+        });
+      }
+    }
+  }
+
   return {
-    exec: vi.fn(),
-    prepare: vi.fn((sql: string) => {
-      if (sql.includes("FROM user_activity")) {
-        return { get: vi.fn(() => row) };
-      }
-      if (sql.includes("FROM achievement_unlocks")) {
-        return { all: vi.fn(() => unlocks) };
-      }
-      if (sql.includes("INSERT INTO user_activity")) {
-        return {
-          run: vi.fn(
-            (
-              activityId,
-              userId,
-              currentStreak,
-              longestStreak,
-              lastActivityDay,
-              totalOppsCreated,
-              totalOppsApplied,
-              totalResumesTailored,
-              totalCoverLetters,
-              totalEmailsSent,
-              totalInterviewsStarted,
-              updatedAt,
-            ) => {
-              row = {
-                id: activityId,
-                user_id: userId,
-                current_streak: currentStreak,
-                longest_streak: longestStreak,
-                last_activity_day: lastActivityDay,
-                total_opps_created: totalOppsCreated,
-                total_opps_applied: totalOppsApplied,
-                total_resumes_tailored: totalResumesTailored,
-                total_cover_letters: totalCoverLetters,
-                total_emails_sent: totalEmailsSent,
-                total_interviews_started: totalInterviewsStarted,
-                updated_at: updatedAt,
-              };
-            },
-          ),
-        };
-      }
-      if (sql.includes("UPDATE user_activity")) {
-        return {
-          run: vi.fn((currentStreak, longestStreak, lastActivityDay, ...rest) => {
-            const updatedAt = rest.at(-2);
-            const typeSql = sql;
-            row = {
-              ...row,
-              current_streak: currentStreak,
-              longest_streak: longestStreak,
-              last_activity_day: lastActivityDay,
-              total_opps_created:
-                Number(row?.total_opps_created ?? 0) +
-                (typeSql.includes("total_opps_created =") ? 1 : 0),
-              total_opps_applied:
-                Number(row?.total_opps_applied ?? 0) +
-                (typeSql.includes("total_opps_applied =") ? 1 : 0),
-              total_resumes_tailored:
-                Number(row?.total_resumes_tailored ?? 0) +
-                (typeSql.includes("total_resumes_tailored =") ? 1 : 0),
-              total_cover_letters:
-                Number(row?.total_cover_letters ?? 0) +
-                (typeSql.includes("total_cover_letters =") ? 1 : 0),
-              total_emails_sent:
-                Number(row?.total_emails_sent ?? 0) +
-                (typeSql.includes("total_emails_sent =") ? 1 : 0),
-              total_interviews_started:
-                Number(row?.total_interviews_started ?? 0) +
-                (typeSql.includes("total_interviews_started =") ? 1 : 0),
-              updated_at: updatedAt,
-            };
-          }),
-        };
-      }
-      if (sql.includes("INSERT OR IGNORE INTO achievement_unlocks")) {
-        return {
-          run: vi.fn((unlockId, userId, achievementId, unlockedAt) => {
-            if (!unlocks.some((item) => item.achievement_id === achievementId)) {
-              unlocks.push({
-                id: unlockId,
-                user_id: userId,
-                achievement_id: achievementId,
-                unlocked_at: unlockedAt,
-              });
-            }
-          }),
-        };
-      }
-      return { run: vi.fn(), get: vi.fn(), all: vi.fn() };
+    execute: vi.fn(async (statement: string | { sql: string }) => {
+      const sql = typeof statement === "string" ? statement : statement.sql;
+      if (sql.includes("FROM user_activity")) return { rows: row ? [row] : [] };
+      if (sql.includes("FROM achievement_unlocks")) return { rows: unlocks };
+      return { rows: [] };
     }),
+    batch: vi.fn(
+      async (statements: Array<{ sql: string; args?: unknown[] }>) => {
+        for (const statement of statements) {
+          applyStatement(statement.sql, statement.args ?? []);
+        }
+        return [];
+      },
+    ),
     reset() {
       row = null;
       unlocks = [];
@@ -110,11 +93,11 @@ const mocks = vi.hoisted(() => {
   };
 });
 
-vi.mock("./legacy", () => ({
-  default: {
-    exec: mocks.exec,
-    prepare: mocks.prepare,
-  },
+vi.mock("./client", () => ({
+  getClient: () => ({
+    execute: mocks.execute,
+    batch: mocks.batch,
+  }),
 }));
 
 vi.mock("@/lib/utils", () => ({
@@ -130,42 +113,42 @@ describe("streak database helpers", () => {
     mocks.reset();
   });
 
-  it("increments counters but not streak for multiple same-day actions", () => {
+  it("increments counters but not streak for multiple same-day actions", async () => {
     const now = new Date("2026-05-10T12:00:00.000Z");
 
-    trackActivity("user-1", "opp_created", { now });
-    trackActivity("user-1", "opp_created", { now });
+    await trackActivity("user-1", "opp_created", { now });
+    await trackActivity("user-1", "opp_created", { now });
 
-    const state = getStreakState("user-1", { now });
+    const state = await getStreakState("user-1", { now });
     expect(state.currentStreak).toBe(1);
     expect(state.longestStreak).toBe(1);
     expect(state.lifetime.opportunitiesCreated).toBe(2);
   });
 
-  it("increments consecutive days and resets after a missed day", () => {
-    trackActivity("user-1", "email_sent", {
+  it("increments consecutive days and resets after a missed day", async () => {
+    await trackActivity("user-1", "email_sent", {
       now: new Date("2026-05-10T12:00:00.000Z"),
     });
-    trackActivity("user-1", "email_sent", {
+    await trackActivity("user-1", "email_sent", {
       now: new Date("2026-05-11T12:00:00.000Z"),
     });
-    trackActivity("user-1", "email_sent", {
+    await trackActivity("user-1", "email_sent", {
       now: new Date("2026-05-13T12:00:00.000Z"),
     });
 
-    const state = getStreakState("user-1", {
+    const state = await getStreakState("user-1", {
       now: new Date("2026-05-13T12:00:00.000Z"),
     });
     expect(state.currentStreak).toBe(1);
     expect(state.longestStreak).toBe(2);
   });
 
-  it("reports stale streaks as broken on read", () => {
-    trackActivity("user-1", "interview_started", {
+  it("reports stale streaks as broken on read", async () => {
+    await trackActivity("user-1", "interview_started", {
       now: new Date("2026-05-10T12:00:00.000Z"),
     });
 
-    const state = getStreakState("user-1", {
+    const state = await getStreakState("user-1", {
       now: new Date("2026-05-12T12:00:00.000Z"),
     });
     expect(state.currentStreak).toBe(0);

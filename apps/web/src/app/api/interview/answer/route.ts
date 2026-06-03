@@ -6,7 +6,7 @@
  * @response InterviewAnswerResponse from @/types/api
  */
 import { NextRequest, NextResponse } from "next/server";
-import { getJob } from "@/lib/db/jobs";
+import { getJob } from "@/lib/db/jobs-async";
 import {
   gateOptionalAiFeature,
   isAiGateResponse,
@@ -42,12 +42,12 @@ export async function POST(request: NextRequest) {
 
     const { jobId, answer, category } = parseResult.data;
 
-    const job = jobId ? getJob(jobId, authResult.userId) : null;
+    const job = jobId ? await getJob(jobId, authResult.userId) : null;
     if (jobId && !job) {
       return NextResponse.json({ error: "Job not found" }, { status: 404 });
     }
 
-    const gate = gateOptionalAiFeature(
+    const gate = await gateOptionalAiFeature(
       authResult.userId,
       "interview_turn",
       `answer:${jobId ?? "general"}`,

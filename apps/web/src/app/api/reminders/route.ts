@@ -35,16 +35,16 @@ export async function GET(request: NextRequest) {
     switch (filter) {
       case "upcoming":
         const days = parseInt(searchParams.get("days") || "7", 10);
-        reminders = getUpcomingReminders(days, authResult.userId);
+        reminders = await getUpcomingReminders(days, authResult.userId);
         break;
       case "overdue":
-        reminders = getOverdueReminders(authResult.userId);
+        reminders = await getOverdueReminders(authResult.userId);
         break;
       case "counts":
-        const counts = getReminderCounts(authResult.userId);
+        const counts = await getReminderCounts(authResult.userId);
         return NextResponse.json(counts);
       default:
-        reminders = getReminders({
+        reminders = await getReminders({
           jobId,
           includeCompleted,
           includeDismissed,
@@ -85,7 +85,7 @@ export async function POST(request: NextRequest) {
     const { jobId, type, title, description, dueDate, notifyByEmail } =
       parseResult.data;
 
-    const reminder = createReminder(
+    const reminder = await createReminder(
       {
         jobId,
         type: type as ReminderType,

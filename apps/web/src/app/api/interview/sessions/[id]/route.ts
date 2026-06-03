@@ -34,7 +34,7 @@ export async function GET(
   if (isAuthError(authResult)) return authResult;
 
   try {
-    const session = getInterviewSession(params.id, authResult.userId);
+    const session = await getInterviewSession(params.id, authResult.userId);
 
     if (!session) {
       return NextResponse.json({ error: "Session not found" }, { status: 404 });
@@ -62,10 +62,10 @@ export async function PATCH(
     const { status } = await request.json();
 
     if (status === "completed") {
-      completeInterviewSession(params.id, authResult.userId);
+      await completeInterviewSession(params.id, authResult.userId);
     }
 
-    const session = getInterviewSession(params.id, authResult.userId);
+    const session = await getInterviewSession(params.id, authResult.userId);
 
     return NextResponse.json({ session });
   } catch (error) {
@@ -86,7 +86,7 @@ export async function DELETE(
   if (isAuthError(authResult)) return authResult;
 
   try {
-    deleteInterviewSession(params.id, authResult.userId);
+    await deleteInterviewSession(params.id, authResult.userId);
 
     return NextResponse.json({ success: true });
   } catch (error) {

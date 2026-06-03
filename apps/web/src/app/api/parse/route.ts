@@ -98,15 +98,15 @@ async function parseResumeText(
   };
 }
 
-function createParserV2Context(
+async function createParserV2Context(
   documentId: string,
   userId: string,
   mode: "basic" | "ai",
-): ParserV2ParseContext | undefined {
+): Promise<ParserV2ParseContext | undefined> {
   if (mode !== "basic") return undefined;
 
   try {
-    const parseRun = createBasicDocumentParseRun({ documentId, userId });
+    const parseRun = await createBasicDocumentParseRun({ documentId, userId });
     return {
       status: "ready",
       parseRunId: parseRun.id,
@@ -189,7 +189,11 @@ export async function POST(request: NextRequest) {
 
     const gate =
       mode === "ai"
-        ? gateOptionalAiFeature(authResult.userId, "tailor", `parse:${doc.id}`)
+        ? await gateOptionalAiFeature(
+            authResult.userId,
+            "tailor",
+            `parse:${doc.id}`,
+          )
         : null;
 
     let llmConfigured = false;
@@ -259,7 +263,7 @@ export async function POST(request: NextRequest) {
       parsedProfile,
     );
     if (Object.keys(promoted).length > 0) {
-      updateProfile(promoted, authResult.userId);
+      await updateProfile(promoted, authResult.userId);
     }
 
     // Populate information bank from parsed profile (non-fatal)
@@ -274,7 +278,7 @@ export async function POST(request: NextRequest) {
 
     // Get updated profile
     const profile = getProfile(authResult.userId);
-    const parserV2 = createParserV2Context(
+    const parserV2 = await createParserV2Context(
       doc.id,
       authResult.userId,
       parsingMode,

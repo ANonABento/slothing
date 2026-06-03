@@ -15,7 +15,7 @@ vi.mock("@/lib/db/email-sends", () => ({
   hasDailyDigestSentSince: mocks.hasDailyDigestSentSince,
 }));
 
-vi.mock("@/lib/db/jobs", () => ({
+vi.mock("@/lib/db/jobs-async", () => ({
   listJobsPaginated: mocks.listJobsPaginated,
 }));
 

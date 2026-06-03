@@ -31,7 +31,7 @@ export async function PATCH(
       return validationErrorResponse(parseResult.error);
     }
 
-    const opportunity = changeOpportunityStatus(
+    const opportunity = await changeOpportunityStatus(
       params.id,
       parseResult.data.status,
       authResult.userId,

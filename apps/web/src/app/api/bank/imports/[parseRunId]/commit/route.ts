@@ -6,10 +6,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requireAuth, isAuthError } from "@/lib/auth";
+import { getDocumentArtifact } from "@/lib/db/document-artifacts";
+import { getDocumentParseRunById } from "@/lib/db/document-parse-runs";
 import {
   deleteBankEntriesBySource,
-  getDocumentArtifact,
-  getDocumentParseRunById,
   getProfile,
   insertBankEntries,
   updateProfile,
@@ -50,7 +50,7 @@ export async function POST(
   }
 
   try {
-    const parseRun = getDocumentParseRunById(
+    const parseRun = await getDocumentParseRunById(
       params.parseRunId,
       authResult.userId,
     );
@@ -67,7 +67,7 @@ export async function POST(
       );
     }
 
-    const artifact = getDocumentArtifact(
+    const artifact = await getDocumentArtifact(
       parseRun.artifactId,
       authResult.userId,
     );
@@ -111,7 +111,7 @@ export async function POST(
           parserV2ProfileToAutoPromoteInput(parseRun.structured.profile),
         );
         if (Object.keys(promoted).length > 0) {
-          updateProfile(promoted, authResult.userId);
+          await updateProfile(promoted, authResult.userId);
           profilePromoted = true;
         }
       } catch (promotionError) {

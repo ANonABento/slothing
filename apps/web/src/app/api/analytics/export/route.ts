@@ -6,7 +6,7 @@ import { nowDate, parseToDate } from "@/lib/format/time";
  * @response CSV or JSON file
  */
 import { NextRequest } from "next/server";
-import { getJobs } from "@/lib/db/jobs";
+import { getJobs } from "@/lib/db/jobs-async";
 import { getProfile, getDocuments } from "@/lib/db";
 import { getInterviewSessions } from "@/lib/db/interviews";
 import { getAllGeneratedResumes } from "@/lib/db/resumes";
@@ -80,10 +80,10 @@ export async function GET(request: NextRequest) {
 
     // Fetch all data
     const profile = getProfile(authResult.userId);
-    const allJobs = getJobs(authResult.userId);
+    const allJobs = await getJobs(authResult.userId);
     const documents = getDocuments(authResult.userId);
-    const interviews = getInterviewSessions(undefined, authResult.userId);
-    const resumes = getAllGeneratedResumes(authResult.userId);
+    const interviews = await getInterviewSessions(undefined, authResult.userId);
+    const resumes = await getAllGeneratedResumes(authResult.userId);
 
     // Filter jobs by range
     const jobs = filterJobsByRange(allJobs, range);

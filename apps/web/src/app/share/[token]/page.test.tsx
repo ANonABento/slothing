@@ -18,8 +18,8 @@ describe("SharedResumePage", () => {
     vi.clearAllMocks();
   });
 
-  it("renders the snapshotted HTML when the share exists", () => {
-    mocks.getShareByToken.mockReturnValue({
+  it("renders the snapshotted HTML when the share exists", async () => {
+    mocks.getShareByToken.mockResolvedValue({
       id: "tok-1",
       userId: "user-1",
       documentHtml:
@@ -30,7 +30,7 @@ describe("SharedResumePage", () => {
       viewCount: 2,
     });
 
-    render(SharedResumePage({ params: { token: "tok-1" } }));
+    render(await SharedResumePage({ params: { token: "tok-1" } }));
 
     expect(
       screen.getByRole("heading", { name: "Senior Engineer Resume" }),
@@ -41,10 +41,10 @@ describe("SharedResumePage", () => {
     expect(mocks.incrementViewCount).toHaveBeenCalledWith("tok-1");
   });
 
-  it("renders an expired state when the share is missing or expired", () => {
-    mocks.getShareByToken.mockReturnValue(null);
+  it("renders an expired state when the share is missing or expired", async () => {
+    mocks.getShareByToken.mockResolvedValue(null);
 
-    render(SharedResumePage({ params: { token: "missing" } }));
+    render(await SharedResumePage({ params: { token: "missing" } }));
 
     expect(
       screen.getByRole("heading", { name: /this share link has expired/i }),
@@ -55,8 +55,8 @@ describe("SharedResumePage", () => {
     expect(mocks.incrementViewCount).not.toHaveBeenCalled();
   });
 
-  it("still renders content if the view-count increment throws", () => {
-    mocks.getShareByToken.mockReturnValue({
+  it("still renders content if the view-count increment throws", async () => {
+    mocks.getShareByToken.mockResolvedValue({
       id: "tok-1",
       userId: "user-1",
       documentHtml: "<p>Content survives</p>",
@@ -65,13 +65,11 @@ describe("SharedResumePage", () => {
       expiresAt: Date.UTC(2026, 0, 8),
       viewCount: 0,
     });
-    mocks.incrementViewCount.mockImplementation(() => {
-      throw new Error("db down");
-    });
+    mocks.incrementViewCount.mockRejectedValue(new Error("db down"));
 
     const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
 
-    render(SharedResumePage({ params: { token: "tok-1" } }));
+    render(await SharedResumePage({ params: { token: "tok-1" } }));
     expect(screen.getByText("Content survives")).toBeInTheDocument();
 
     warn.mockRestore();

@@ -6,7 +6,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requireAuth, isAuthError } from "@/lib/auth";
-import { listDocumentParseRuns } from "@/lib/db";
+import { listDocumentParseRuns } from "@/lib/db/document-parse-runs";
 import {
   gateAiFeature,
   isAiGateResponse,
@@ -35,7 +35,7 @@ export async function GET(
 
   try {
     return NextResponse.json({
-      parseRuns: listDocumentParseRuns(params.id, authResult.userId),
+      parseRuns: await listDocumentParseRuns(params.id, authResult.userId),
     });
   } catch (error) {
     console.error("List document parse runs error:", error);
@@ -72,12 +72,12 @@ export async function POST(
   try {
     if (parsed.data.mode === "ai") {
       // Check artifact readiness before billing/gating the explicit AI parse.
-      resolveReadyDocumentArtifact({
+      await resolveReadyDocumentArtifact({
         documentId: params.id,
         userId: authResult.userId,
         artifactId: parsed.data.artifactId,
       });
-      const gate = gateAiFeature(
+      const gate = await gateAiFeature(
         authResult.userId,
         "tailor",
         `document-parse-run:${params.id}`,
@@ -93,7 +93,7 @@ export async function POST(
       return NextResponse.json({ parseRun }, { status: 201 });
     }
 
-    const parseRun = createBasicDocumentParseRun({
+    const parseRun = await createBasicDocumentParseRun({
       documentId: params.id,
       userId: authResult.userId,
       artifactId: parsed.data.artifactId,

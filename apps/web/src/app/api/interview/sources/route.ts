@@ -16,8 +16,8 @@ export async function GET() {
 
   try {
     return NextResponse.json({
-      sources: listInterviewSourceOptions(authResult.userId),
-      recentContextPacks: listInterviewContextPacks(authResult.userId, 8),
+      sources: await listInterviewSourceOptions(authResult.userId),
+      recentContextPacks: await listInterviewContextPacks(authResult.userId, 8),
     });
   } catch (error) {
     console.error("Interview sources error:", error);

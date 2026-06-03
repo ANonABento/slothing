@@ -141,8 +141,8 @@ export async function persistDocumentUpload({
         return { document: existing, duplicate: true };
       }
 
-      deleteDocumentParseRunsByDocumentIds([existing.id], userId);
-      deleteDocumentArtifactsByDocumentIds([existing.id], userId);
+      await deleteDocumentParseRunsByDocumentIds([existing.id], userId);
+      await deleteDocumentArtifactsByDocumentIds([existing.id], userId);
       deleteSourceDocuments([existing.id], userId);
       await unlink(existing.path).catch(() => undefined);
     }

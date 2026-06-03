@@ -1,4 +1,4 @@
-import db from "./legacy";
+import { getClient } from "./client";
 import { generateId } from "@/lib/utils";
 
 import {
@@ -36,49 +36,88 @@ export interface JobStatusChange {
   notes?: string;
 }
 
+interface AnalyticsSnapshotRow {
+  id: string;
+  user_id: string;
+  snapshot_date: string;
+  total_jobs: number;
+  jobs_saved: number;
+  jobs_applied: number;
+  jobs_interviewing: number;
+  jobs_offered: number;
+  jobs_rejected: number;
+  total_interviews: number;
+  interviews_completed: number;
+  total_documents: number;
+  total_resumes: number;
+  profile_completeness: number;
+  created_at: string;
+}
+
+function mapSnapshot(row: AnalyticsSnapshotRow): AnalyticsSnapshot {
+  return {
+    id: row.id,
+    userId: row.user_id,
+    snapshotDate: row.snapshot_date,
+    totalJobs: row.total_jobs,
+    jobsSaved: row.jobs_saved,
+    jobsApplied: row.jobs_applied,
+    jobsInterviewing: row.jobs_interviewing,
+    jobsOffered: row.jobs_offered,
+    jobsRejected: row.jobs_rejected,
+    totalInterviews: row.total_interviews,
+    interviewsCompleted: row.interviews_completed,
+    totalDocuments: row.total_documents,
+    totalResumes: row.total_resumes,
+    profileCompleteness: row.profile_completeness,
+    createdAt: row.created_at,
+  };
+}
+
 // Save today's analytics snapshot
-export function saveAnalyticsSnapshot(
+export async function saveAnalyticsSnapshot(
   data: Omit<AnalyticsSnapshot, "id" | "createdAt">,
   userId: string,
-): AnalyticsSnapshot {
+): Promise<AnalyticsSnapshot> {
   const id = generateId();
   const now = nowIso();
 
   // Use INSERT OR REPLACE to update if snapshot for today exists
-  const stmt = db.prepare(`
-    INSERT OR REPLACE INTO analytics_snapshots (
-      id, user_id, snapshot_date, total_jobs, jobs_saved, jobs_applied,
-      jobs_interviewing, jobs_offered, jobs_rejected, total_interviews,
-      interviews_completed, total_documents, total_resumes, profile_completeness, created_at
-    )
-    VALUES (
-      COALESCE(
-        (SELECT id FROM analytics_snapshots WHERE user_id = ? AND snapshot_date = ?),
-        ?
-      ),
-      ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
-    )
-  `);
-
-  stmt.run(
-    userId,
-    data.snapshotDate,
-    id,
-    userId,
-    data.snapshotDate,
-    data.totalJobs,
-    data.jobsSaved,
-    data.jobsApplied,
-    data.jobsInterviewing,
-    data.jobsOffered,
-    data.jobsRejected,
-    data.totalInterviews,
-    data.interviewsCompleted,
-    data.totalDocuments,
-    data.totalResumes,
-    data.profileCompleteness,
-    now,
-  );
+  await getClient().execute({
+    sql: `
+      INSERT OR REPLACE INTO analytics_snapshots (
+        id, user_id, snapshot_date, total_jobs, jobs_saved, jobs_applied,
+        jobs_interviewing, jobs_offered, jobs_rejected, total_interviews,
+        interviews_completed, total_documents, total_resumes, profile_completeness, created_at
+      )
+      VALUES (
+        COALESCE(
+          (SELECT id FROM analytics_snapshots WHERE user_id = ? AND snapshot_date = ?),
+          ?
+        ),
+        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+      )
+    `,
+    args: [
+      userId,
+      data.snapshotDate,
+      id,
+      userId,
+      data.snapshotDate,
+      data.totalJobs,
+      data.jobsSaved,
+      data.jobsApplied,
+      data.jobsInterviewing,
+      data.jobsOffered,
+      data.jobsRejected,
+      data.totalInterviews,
+      data.interviewsCompleted,
+      data.totalDocuments,
+      data.totalResumes,
+      data.profileCompleteness,
+      now,
+    ],
+  });
 
   return {
     id,
@@ -100,140 +139,81 @@ export function saveAnalyticsSnapshot(
 }
 
 // Get analytics snapshots for a date range
-export function getAnalyticsSnapshots(
+export async function getAnalyticsSnapshots(
   startDate: string,
   endDate: string,
   userId: string,
-): AnalyticsSnapshot[] {
-  const stmt = db.prepare(`
-    SELECT id, user_id, snapshot_date, total_jobs, jobs_saved, jobs_applied,
-           jobs_interviewing, jobs_offered, jobs_rejected, total_interviews,
-           interviews_completed, total_documents, total_resumes, profile_completeness, created_at
-    FROM analytics_snapshots
-    WHERE user_id = ? AND snapshot_date >= ? AND snapshot_date <= ?
-    ORDER BY snapshot_date ASC
-  `);
+): Promise<AnalyticsSnapshot[]> {
+  const result = await getClient().execute({
+    sql: `
+      SELECT id, user_id, snapshot_date, total_jobs, jobs_saved, jobs_applied,
+             jobs_interviewing, jobs_offered, jobs_rejected, total_interviews,
+             interviews_completed, total_documents, total_resumes, profile_completeness, created_at
+      FROM analytics_snapshots
+      WHERE user_id = ? AND snapshot_date >= ? AND snapshot_date <= ?
+      ORDER BY snapshot_date ASC
+    `,
+    args: [userId, startDate, endDate],
+  });
 
-  const rows = stmt.all(userId, startDate, endDate) as Array<{
-    id: string;
-    user_id: string;
-    snapshot_date: string;
-    total_jobs: number;
-    jobs_saved: number;
-    jobs_applied: number;
-    jobs_interviewing: number;
-    jobs_offered: number;
-    jobs_rejected: number;
-    total_interviews: number;
-    interviews_completed: number;
-    total_documents: number;
-    total_resumes: number;
-    profile_completeness: number;
-    created_at: string;
-  }>;
-
-  return rows.map((row) => ({
-    id: row.id,
-    userId: row.user_id,
-    snapshotDate: row.snapshot_date,
-    totalJobs: row.total_jobs,
-    jobsSaved: row.jobs_saved,
-    jobsApplied: row.jobs_applied,
-    jobsInterviewing: row.jobs_interviewing,
-    jobsOffered: row.jobs_offered,
-    jobsRejected: row.jobs_rejected,
-    totalInterviews: row.total_interviews,
-    interviewsCompleted: row.interviews_completed,
-    totalDocuments: row.total_documents,
-    totalResumes: row.total_resumes,
-    profileCompleteness: row.profile_completeness,
-    createdAt: row.created_at,
-  }));
+  return (result.rows as unknown as AnalyticsSnapshotRow[]).map(mapSnapshot);
 }
 
 // Get the most recent snapshot
-export function getLatestSnapshot(userId: string): AnalyticsSnapshot | null {
-  const stmt = db.prepare(`
-    SELECT id, user_id, snapshot_date, total_jobs, jobs_saved, jobs_applied,
-           jobs_interviewing, jobs_offered, jobs_rejected, total_interviews,
-           interviews_completed, total_documents, total_resumes, profile_completeness, created_at
-    FROM analytics_snapshots
-    WHERE user_id = ?
-    ORDER BY snapshot_date DESC
-    LIMIT 1
-  `);
+export async function getLatestSnapshot(
+  userId: string,
+): Promise<AnalyticsSnapshot | null> {
+  const result = await getClient().execute({
+    sql: `
+      SELECT id, user_id, snapshot_date, total_jobs, jobs_saved, jobs_applied,
+             jobs_interviewing, jobs_offered, jobs_rejected, total_interviews,
+             interviews_completed, total_documents, total_resumes, profile_completeness, created_at
+      FROM analytics_snapshots
+      WHERE user_id = ?
+      ORDER BY snapshot_date DESC
+      LIMIT 1
+    `,
+    args: [userId],
+  });
 
-  const row = stmt.get(userId) as
-    | {
-        id: string;
-        user_id: string;
-        snapshot_date: string;
-        total_jobs: number;
-        jobs_saved: number;
-        jobs_applied: number;
-        jobs_interviewing: number;
-        jobs_offered: number;
-        jobs_rejected: number;
-        total_interviews: number;
-        interviews_completed: number;
-        total_documents: number;
-        total_resumes: number;
-        profile_completeness: number;
-        created_at: string;
-      }
-    | undefined;
+  const row = result.rows[0] as unknown as AnalyticsSnapshotRow | undefined;
 
   if (!row) return null;
 
-  return {
-    id: row.id,
-    userId: row.user_id,
-    snapshotDate: row.snapshot_date,
-    totalJobs: row.total_jobs,
-    jobsSaved: row.jobs_saved,
-    jobsApplied: row.jobs_applied,
-    jobsInterviewing: row.jobs_interviewing,
-    jobsOffered: row.jobs_offered,
-    jobsRejected: row.jobs_rejected,
-    totalInterviews: row.total_interviews,
-    interviewsCompleted: row.interviews_completed,
-    totalDocuments: row.total_documents,
-    totalResumes: row.total_resumes,
-    profileCompleteness: row.profile_completeness,
-    createdAt: row.created_at,
-  };
+  return mapSnapshot(row);
 }
 
 // Record a job status change
-export function recordJobStatusChange(
+export async function recordJobStatusChange(
   jobId: string,
   fromStatus: string | null,
   toStatus: string,
   notes: string | undefined,
   userId: string,
-): JobStatusChange {
+): Promise<JobStatusChange> {
   const id = generateId();
   const now = nowIso();
 
-  const stmt = db.prepare(`
-    INSERT INTO job_status_history (id, user_id, job_id, from_status, to_status, changed_at, notes)
-    SELECT ?, ?, ?, ?, ?, ?, ?
-    WHERE EXISTS (SELECT 1 FROM jobs WHERE id = ? AND user_id = ?)
-  `);
+  const result = await getClient().execute({
+    sql: `
+      INSERT INTO job_status_history (id, user_id, job_id, from_status, to_status, changed_at, notes)
+      SELECT ?, ?, ?, ?, ?, ?, ?
+      WHERE EXISTS (SELECT 1 FROM jobs WHERE id = ? AND user_id = ?)
+    `,
+    args: [
+      id,
+      userId,
+      jobId,
+      fromStatus,
+      toStatus,
+      now,
+      notes || null,
+      jobId,
+      userId,
+    ],
+  });
 
-  const result = stmt.run(
-    id,
-    userId,
-    jobId,
-    fromStatus,
-    toStatus,
-    now,
-    notes || null,
-    jobId,
-    userId,
-  );
-
-  if (result.changes === 0) {
+  if (result.rowsAffected === 0) {
     throw new Error("Job not found");
   }
 
@@ -249,28 +229,31 @@ export function recordJobStatusChange(
 }
 
 // Get status history for a job
-export function getJobStatusHistory(
+export async function getJobStatusHistory(
   jobId: string,
   userId: string,
-): JobStatusChange[] {
-  const stmt = db.prepare(`
-    SELECT id, user_id, job_id, from_status, to_status, changed_at, notes
-    FROM job_status_history
-    WHERE job_id = ? AND user_id = ?
-    ORDER BY changed_at ASC
-  `);
+): Promise<JobStatusChange[]> {
+  const result = await getClient().execute({
+    sql: `
+      SELECT id, user_id, job_id, from_status, to_status, changed_at, notes
+      FROM job_status_history
+      WHERE job_id = ? AND user_id = ?
+      ORDER BY changed_at ASC
+    `,
+    args: [jobId, userId],
+  });
 
-  const rows = stmt.all(jobId, userId) as Array<{
-    id: string;
-    user_id: string;
-    job_id: string;
-    from_status: string | null;
-    to_status: string;
-    changed_at: string;
-    notes: string | null;
-  }>;
-
-  return rows.map((row) => ({
+  return (
+    result.rows as unknown as Array<{
+      id: string;
+      user_id: string;
+      job_id: string;
+      from_status: string | null;
+      to_status: string;
+      changed_at: string;
+      notes: string | null;
+    }>
+  ).map((row) => ({
     id: row.id,
     userId: row.user_id,
     jobId: row.job_id,
@@ -282,11 +265,11 @@ export function getJobStatusHistory(
 }
 
 // Calculate week-over-week changes
-export function getWeekOverWeekChange(userId: string): {
+export async function getWeekOverWeekChange(userId: string): Promise<{
   jobsChange: number;
   appliedChange: number;
   interviewsChange: number;
-} | null {
+} | null> {
   const today = nowDate();
   const lastWeek = parseToDate(today)!;
   lastWeek.setDate(lastWeek.getDate() - 7);
@@ -294,14 +277,17 @@ export function getWeekOverWeekChange(userId: string): {
   const todayStr = formatIsoDateOnly(today);
   const lastWeekStr = formatIsoDateOnly(lastWeek);
 
-  const stmt = db.prepare(`
-    SELECT snapshot_date, total_jobs, jobs_applied, total_interviews
-    FROM analytics_snapshots
-    WHERE user_id = ? AND snapshot_date IN (?, ?)
-    ORDER BY snapshot_date DESC
-  `);
+  const result = await getClient().execute({
+    sql: `
+      SELECT snapshot_date, total_jobs, jobs_applied, total_interviews
+      FROM analytics_snapshots
+      WHERE user_id = ? AND snapshot_date IN (?, ?)
+      ORDER BY snapshot_date DESC
+    `,
+    args: [userId, todayStr, lastWeekStr],
+  });
 
-  const rows = stmt.all(userId, todayStr, lastWeekStr) as Array<{
+  const rows = result.rows as unknown as Array<{
     snapshot_date: string;
     total_jobs: number;
     jobs_applied: number;
@@ -321,17 +307,22 @@ export function getWeekOverWeekChange(userId: string): {
 }
 
 // Get time spent in each status for jobs (average)
-export function getAverageTimeInStatus(userId: string): Record<string, number> {
+export async function getAverageTimeInStatus(
+  userId: string,
+): Promise<Record<string, number>> {
   // Get all status changes
-  const stmt = db.prepare(`
-    SELECT jsh.job_id, jsh.from_status, jsh.to_status, jsh.changed_at
-    FROM job_status_history jsh
-    INNER JOIN jobs j ON j.id = jsh.job_id
-    WHERE j.user_id = ? AND jsh.user_id = ?
-    ORDER BY jsh.job_id, jsh.changed_at ASC
-  `);
+  const result = await getClient().execute({
+    sql: `
+      SELECT jsh.job_id, jsh.from_status, jsh.to_status, jsh.changed_at
+      FROM job_status_history jsh
+      INNER JOIN jobs j ON j.id = jsh.job_id
+      WHERE j.user_id = ? AND jsh.user_id = ?
+      ORDER BY jsh.job_id, jsh.changed_at ASC
+    `,
+    args: [userId, userId],
+  });
 
-  const rows = stmt.all(userId, userId) as Array<{
+  const rows = result.rows as unknown as Array<{
     job_id: string;
     from_status: string | null;
     to_status: string;

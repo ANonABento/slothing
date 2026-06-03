@@ -71,18 +71,20 @@ export async function GET(request: NextRequest) {
       summary.usersProcessed += 1;
       const autoLinkEnabled = getCalendarPullEnabled(userId);
       const events = await searchInterviewEvents(userId, sinceDate);
-      const opportunities = listAllOpportunities(userId);
+      const opportunities = await listAllOpportunities(userId);
 
       for (const event of events) {
         summary.eventsScanned += 1;
-        if (hasProcessedExternalCalendarEvent(userId, PROVIDER, event.id)) {
+        if (
+          await hasProcessedExternalCalendarEvent(userId, PROVIDER, event.id)
+        ) {
           summary.skipped += 1;
           continue;
         }
 
         const match = matchOpportunityForCalendarEvent(event, opportunities);
         if (!match) {
-          recordExternalCalendarEvent({
+          await recordExternalCalendarEvent({
             userId,
             provider: PROVIDER,
             externalEventId: event.id,
@@ -98,8 +100,12 @@ export async function GET(request: NextRequest) {
         summary.matched += 1;
 
         if (autoLinkEnabled && shouldAutoApplyStatusUpdate(match.confidence)) {
-          changeOpportunityStatus(match.opportunity.id, "interviewing", userId);
-          createNotification(
+          await changeOpportunityStatus(
+            match.opportunity.id,
+            "interviewing",
+            userId,
+          );
+          await createNotification(
             {
               type: "interview_scheduled",
               title: "Interview detected",
@@ -117,7 +123,7 @@ export async function GET(request: NextRequest) {
             },
             userId,
           );
-          recordExternalCalendarEvent({
+          await recordExternalCalendarEvent({
             userId,
             provider: PROVIDER,
             externalEventId: event.id,
@@ -131,7 +137,7 @@ export async function GET(request: NextRequest) {
           continue;
         }
 
-        const notification = createNotification(
+        const notification = await createNotification(
           {
             type: "application_update",
             title: "Suggested status update",
@@ -148,7 +154,7 @@ export async function GET(request: NextRequest) {
           },
           userId,
         );
-        createSuggestedStatusUpdate({
+        await createSuggestedStatusUpdate({
           userId,
           notificationId: notification.id,
           opportunityId: match.opportunity.id,
@@ -159,7 +165,7 @@ export async function GET(request: NextRequest) {
           reason: match.reason,
           evidence: match.evidence,
         });
-        recordExternalCalendarEvent({
+        await recordExternalCalendarEvent({
           userId,
           provider: PROVIDER,
           externalEventId: event.id,
@@ -180,7 +186,7 @@ export async function GET(request: NextRequest) {
   }
 
   summary.durationMs = nowEpoch() - startedAt;
-  recordCronRun({
+  await recordCronRun({
     cron: "google.calendar-sync",
     status: summary.errors === 0 ? "success" : "failure",
     startedAt: startedIso,

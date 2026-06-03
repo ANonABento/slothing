@@ -5,7 +5,7 @@
  * @response Server-Sent Events stream
  */
 import { NextRequest } from "next/server";
-import { getJob } from "@/lib/db/jobs";
+import { getJob } from "@/lib/db/jobs-async";
 import { getProfile } from "@/lib/db";
 import {
   gateAiFeature,
@@ -27,7 +27,7 @@ export async function POST(
   let aiGate: AiGatePass | null = null;
 
   try {
-    const job = getJob(params.id, authResult.userId);
+    const job = await getJob(params.id, authResult.userId);
     if (!job) {
       return new Response(JSON.stringify({ error: "Opportunity not found" }), {
         status: 404,
@@ -43,7 +43,11 @@ export async function POST(
       );
     }
 
-    const gate = gateAiFeature(authResult.userId, "cover_letter", params.id);
+    const gate = await gateAiFeature(
+      authResult.userId,
+      "cover_letter",
+      params.id,
+    );
     if (isAiGateResponse(gate)) return gate;
     aiGate = gate;
 

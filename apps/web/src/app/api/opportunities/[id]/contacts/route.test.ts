@@ -10,7 +10,7 @@ vi.mock("@/lib/auth", () =>
   globalThis.__contractRouteMocks!.createAuthModuleMock(),
 );
 
-vi.mock("@/lib/db/jobs", () => ({
+vi.mock("@/lib/db/jobs-async", () => ({
   getJob: mocks.getJob,
 }));
 

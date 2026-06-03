@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
-  prepare: vi.fn(),
+  execute: vi.fn(),
   ensureWelcomeSeriesSchema: vi.fn(),
   processWelcomeSeriesForUser: vi.fn(),
 }));
@@ -11,8 +11,8 @@ vi.mock("@/lib/cron-auth", () => ({
   requireCronAuth: vi.fn(async () => null),
 }));
 
-vi.mock("@/lib/db/legacy", () => ({
-  default: { prepare: mocks.prepare },
+vi.mock("@/lib/db/client", () => ({
+  getClient: () => ({ execute: mocks.execute }),
 }));
 
 vi.mock("@/lib/db/cron-runs", () => ({
@@ -40,8 +40,8 @@ describe("/api/cron/follow-ups route contract", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(requireCronAuth).mockResolvedValue(null);
-    mocks.prepare.mockReturnValue({
-      all: vi.fn(() => [{ id: "user-1" }, { id: "user-2" }]),
+    mocks.execute.mockResolvedValue({
+      rows: [{ id: "user-1" }, { id: "user-2" }],
     });
     mocks.processWelcomeSeriesForUser
       .mockResolvedValueOnce({

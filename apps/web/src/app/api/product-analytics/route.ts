@@ -26,7 +26,7 @@ export async function GET() {
 
   return NextResponse.json({
     ok: true,
-    funnel: getActivationFunnelCounts(authResult.userId),
+    funnel: await getActivationFunnelCounts(authResult.userId),
   });
 }
 
@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const event = trackActivationEvent({
+  const event = await trackActivationEvent({
     ...parsed.data,
     userId: authResult.userId,
   });

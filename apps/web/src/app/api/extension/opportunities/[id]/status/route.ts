@@ -16,7 +16,7 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: { id: string } },
 ) {
-  const authResult = requireExtensionAuth(request);
+  const authResult = await requireExtensionAuth(request);
   if (!authResult.success) return authResult.response;
 
   try {
@@ -27,7 +27,7 @@ export async function PATCH(
       return validationErrorResponse(parseResult.error);
     }
 
-    const opportunity = changeOpportunityStatus(
+    const opportunity = await changeOpportunityStatus(
       params.id,
       parseResult.data.status,
       authResult.userId,

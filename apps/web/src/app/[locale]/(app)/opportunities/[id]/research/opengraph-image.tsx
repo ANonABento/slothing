@@ -1,4 +1,4 @@
-import { getJobByIdAnyUser } from "@/lib/db/jobs";
+import { getJobByIdAnyUser } from "@/lib/db/jobs-async";
 import { OG_CONTENT_TYPE, OG_SIZE } from "@/lib/og/config";
 import { BriefcaseIcon } from "@/lib/og/icons";
 import { renderOgImage } from "@/lib/og/template";
@@ -9,7 +9,7 @@ export const contentType = OG_CONTENT_TYPE;
 export const dynamic = "force-dynamic";
 
 export default async function Image({ params }: { params: { id: string } }) {
-  const opportunity = getJobByIdAnyUser(params.id);
+  const opportunity = await getJobByIdAnyUser(params.id);
 
   if (!opportunity) {
     return renderOgImage({

@@ -12,7 +12,7 @@
  * @response ImportCSVResponse from @/types/api
  */
 import { NextRequest, NextResponse } from "next/server";
-import { createJob } from "@/lib/db/jobs";
+import { createJob } from "@/lib/db/jobs-async";
 import { requireAuth, isAuthError } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
@@ -269,7 +269,7 @@ export async function PUT(request: NextRequest) {
 
     for (const job of jobs) {
       try {
-        createJob(
+        await createJob(
           {
             title: job.title,
             company: job.company,

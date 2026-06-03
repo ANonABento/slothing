@@ -68,7 +68,7 @@ describe("runGmailStatusDetectionForUser", () => {
         labels: ["INBOX"],
       },
     ]);
-    vi.mocked(listAllOpportunities).mockReturnValueOnce([
+    vi.mocked(listAllOpportunities).mockResolvedValueOnce([
       {
         id: "opp-1",
         type: "job",
@@ -82,7 +82,7 @@ describe("runGmailStatusDetectionForUser", () => {
         updatedAt: "2026-05-01T00:00:00Z",
       },
     ]);
-    vi.mocked(changeOpportunityStatus).mockReturnValueOnce({
+    vi.mocked(changeOpportunityStatus).mockResolvedValueOnce({
       id: "opp-1",
       type: "job",
       title: "Engineer",
@@ -133,7 +133,7 @@ describe("runGmailStatusDetectionForUser", () => {
         labels: ["INBOX"],
       },
     ]);
-    vi.mocked(listAllOpportunities).mockReturnValueOnce([
+    vi.mocked(listAllOpportunities).mockResolvedValueOnce([
       {
         id: "opp-1",
         type: "job",
@@ -216,7 +216,7 @@ describe("runGmailStatusDetectionForUser", () => {
         labels: ["INBOX"],
       },
     ]);
-    vi.mocked(listAllOpportunities).mockReturnValueOnce([
+    vi.mocked(listAllOpportunities).mockResolvedValueOnce([
       {
         id: "opp-1",
         type: "job",

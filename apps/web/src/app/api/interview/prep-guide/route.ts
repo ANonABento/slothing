@@ -5,7 +5,7 @@
  * @response JSON guide or Markdown document
  */
 import { NextRequest, NextResponse } from "next/server";
-import { getJob } from "@/lib/db/jobs";
+import { getJob } from "@/lib/db/jobs-async";
 import { getProfile } from "@/lib/db";
 import {
   gateOptionalAiFeature,
@@ -38,20 +38,23 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const job = getJob(jobId, authResult.userId);
+    const job = await getJob(jobId, authResult.userId);
     if (!job) {
       return NextResponse.json({ error: "Job not found" }, { status: 404 });
     }
 
     const profile = getProfile(authResult.userId);
-    const gate = gateOptionalAiFeature(
+    const gate = await gateOptionalAiFeature(
       authResult.userId,
       "interview_turn",
       jobId,
     );
     if (isAiGateResponse(gate)) return gate;
     aiGate = gate;
-    const companyResearch = getCompanyResearch(job.company, authResult.userId);
+    const companyResearch = await getCompanyResearch(
+      job.company,
+      authResult.userId,
+    );
     let usedLLM = false;
     let fallbackReason: "provider_not_configured" | "llm_error" | null =
       gate.llmConfig ? null : "provider_not_configured";

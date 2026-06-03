@@ -171,7 +171,7 @@ export async function POST(request: NextRequest) {
       location: "",
     };
 
-    const gate = gateOptionalAiFeature(
+    const gate = await gateOptionalAiFeature(
       authResult.userId,
       "tailor",
       opportunityId || `${company}:${nowEpoch()}`,
@@ -186,7 +186,10 @@ export async function POST(request: NextRequest) {
     // tailor flow keeps working if the chosen id has been deleted.
     let seedResume: TailoredResume | undefined;
     if (baseResumeId) {
-      const baseRecord = getGeneratedResume(baseResumeId, authResult.userId);
+      const baseRecord = await getGeneratedResume(
+        baseResumeId,
+        authResult.userId,
+      );
       if (baseRecord?.contentJson) {
         try {
           seedResume = JSON.parse(baseRecord.contentJson) as TailoredResume;
@@ -249,7 +252,7 @@ export async function POST(request: NextRequest) {
       ));
 
     // Save the generated resume
-    const savedResume = saveGeneratedResume(
+    const savedResume = await saveGeneratedResume(
       job.id,
       templateId,
       tailoredResume,
@@ -267,7 +270,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (promptVariantId) {
-      logPromptVariantResult(
+      await logPromptVariantResult(
         authResult.userId,
         promptVariantId,
         job.id,

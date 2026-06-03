@@ -3,8 +3,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   requireExtensionAuth: vi.fn(),
-  prepare: vi.fn(),
-  ensureFieldMappingsCorrectionColumns: vi.fn(),
+  execute: vi.fn(),
+  ensureFieldMappingsCorrectionColumnsAsync: vi.fn(),
   nowIso: vi.fn(),
 }));
 
@@ -12,15 +12,13 @@ vi.mock("@/lib/extension-auth", () => ({
   requireExtensionAuth: mocks.requireExtensionAuth,
 }));
 
-vi.mock("@/lib/db/legacy", () => ({
-  default: {
-    prepare: mocks.prepare,
-  },
+vi.mock("@/lib/db/client", () => ({
+  getClient: () => ({ execute: mocks.execute }),
 }));
 
 vi.mock("@/lib/db/field-mappings-schema", () => ({
-  ensureFieldMappingsCorrectionColumns:
-    mocks.ensureFieldMappingsCorrectionColumns,
+  ensureFieldMappingsCorrectionColumnsAsync:
+    mocks.ensureFieldMappingsCorrectionColumnsAsync,
 }));
 
 vi.mock("@/lib/format/time", () => ({
@@ -54,47 +52,28 @@ const sampleBody = {
 };
 
 describe("POST /api/extension/field-mappings/correct", () => {
-  const runInsert = vi.fn();
-  const runUpdate = vi.fn();
-  const getExisting = vi.fn();
-
   beforeEach(() => {
     vi.clearAllMocks();
-    runInsert.mockReset();
-    runUpdate.mockReset();
-    getExisting.mockReset();
     mocks.requireExtensionAuth.mockReturnValue({
       success: true,
       userId: "user-1",
     });
     mocks.nowIso.mockReturnValue("2026-05-12T12:00:00.000Z");
-
-    // Route prepares three different statements (SELECT existing, UPDATE,
-    // INSERT). Distinguish by inspecting the SQL passed in.
-    mocks.prepare.mockImplementation((sql: string) => {
-      if (/^SELECT/i.test(sql)) {
-        return { get: getExisting };
-      }
-      if (/^UPDATE/i.test(sql)) {
-        return { run: runUpdate };
-      }
-      return { run: runInsert };
-    });
   });
 
   it("inserts a new field mapping on first correction (happy path)", async () => {
-    getExisting.mockReturnValue(undefined);
+    mocks.execute
+      .mockResolvedValueOnce({ rows: [] })
+      .mockResolvedValueOnce({ rowsAffected: 1 });
 
     const response = await POST(jsonReq(sampleBody));
     expect(response.status).toBe(200);
     const data = await response.json();
     expect(data).toEqual({ saved: true, hitCount: 1 });
 
-    expect(mocks.ensureFieldMappingsCorrectionColumns).toHaveBeenCalled();
-    expect(runInsert).toHaveBeenCalledTimes(1);
-    expect(runUpdate).not.toHaveBeenCalled();
+    expect(mocks.ensureFieldMappingsCorrectionColumnsAsync).toHaveBeenCalled();
 
-    const args = runInsert.mock.calls[0];
+    const args = mocks.execute.mock.calls[1][0].args as unknown[];
     // Domain should be normalized (lowercased, www stripped) before write.
     expect(args).toContain("greenhouse.io");
     // The userId from auth makes it through.
@@ -102,17 +81,16 @@ describe("POST /api/extension/field-mappings/correct", () => {
   });
 
   it("bumps hit_count on an existing (user_id, domain, field_signature) row", async () => {
-    getExisting.mockReturnValue({ id: "row-1", hit_count: 3 });
+    mocks.execute
+      .mockResolvedValueOnce({ rows: [{ id: "row-1", hit_count: 3 }] })
+      .mockResolvedValueOnce({ rowsAffected: 1 });
 
     const response = await POST(jsonReq(sampleBody));
     expect(response.status).toBe(200);
     const data = await response.json();
     expect(data).toEqual({ saved: true, hitCount: 4 });
 
-    expect(runInsert).not.toHaveBeenCalled();
-    expect(runUpdate).toHaveBeenCalledTimes(1);
-
-    const args = runUpdate.mock.calls[0];
+    const args = mocks.execute.mock.calls[1][0].args as unknown[];
     // hit_count is the third bound parameter in the UPDATE call (after
     // observed_value and field_type). Use a loose assertion that 4 appears.
     expect(args).toContain(4);
@@ -135,8 +113,7 @@ describe("POST /api/extension/field-mappings/correct", () => {
 
     const response = await POST(jsonReq(sampleBody));
     expect(response.status).toBe(401);
-    expect(runInsert).not.toHaveBeenCalled();
-    expect(runUpdate).not.toHaveBeenCalled();
+    expect(mocks.execute).not.toHaveBeenCalled();
   });
 
   it("rejects payloads missing required fields with 400", async () => {
@@ -144,7 +121,7 @@ describe("POST /api/extension/field-mappings/correct", () => {
       jsonReq({ domain: "example.com", fieldSignature: "sig" }),
     );
     expect(response.status).toBe(400);
-    expect(runInsert).not.toHaveBeenCalled();
+    expect(mocks.execute).not.toHaveBeenCalled();
   });
 
   it("returns 400 on invalid JSON bodies", async () => {

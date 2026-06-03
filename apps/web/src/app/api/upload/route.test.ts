@@ -49,6 +49,9 @@ vi.mock("@/lib/db", () => ({
   getProfile: mocks.getProfile,
   updateProfile: mocks.updateProfile,
   getLLMConfig: mocks.getLLMConfig,
+}));
+
+vi.mock("@/lib/db/document-artifacts", () => ({
   saveDocumentArtifact: mocks.saveDocumentArtifact,
 }));
 

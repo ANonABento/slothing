@@ -6,7 +6,7 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { getCoverLettersByJob } from "@/lib/db/cover-letters";
-import { getJob } from "@/lib/db/jobs";
+import { getJob } from "@/lib/db/jobs-async";
 import { requireAuth, isAuthError } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
@@ -19,7 +19,7 @@ export async function GET(
   if (isAuthError(authResult)) return authResult;
 
   try {
-    const job = getJob(params.id, authResult.userId);
+    const job = await getJob(params.id, authResult.userId);
     if (!job) {
       return NextResponse.json(
         { error: "Opportunity not found" },
@@ -27,7 +27,10 @@ export async function GET(
       );
     }
 
-    const coverLetters = getCoverLettersByJob(params.id, authResult.userId);
+    const coverLetters = await getCoverLettersByJob(
+      params.id,
+      authResult.userId,
+    );
 
     return NextResponse.json({
       versions: coverLetters.map((cl) => ({

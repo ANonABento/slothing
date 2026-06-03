@@ -71,7 +71,7 @@ export async function generateFromBank(
     settings.atsStrictness,
   );
   if (llmConfig) {
-    const activeVariant = getActivePromptVariant(input.userId);
+    const activeVariant = await getActivePromptVariant(input.userId);
     const resume = applyAtsStrictnessToResume(
       await generateWithLLM(input, llmConfig, activeVariant),
       settings.atsStrictness,

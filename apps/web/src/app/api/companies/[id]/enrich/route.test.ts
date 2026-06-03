@@ -16,7 +16,7 @@ vi.mock("@/lib/auth", () => ({
   requireAuth: mocks.requireAuth,
   isAuthError: mocks.isAuthError,
 }));
-vi.mock("@/lib/db/jobs", () => ({ getJob: mocks.getJob }));
+vi.mock("@/lib/db/jobs-async", () => ({ getJob: mocks.getJob }));
 vi.mock("@/lib/db/company-research", () => ({
   getCompanyEnrichment: mocks.getCompanyEnrichment,
   getCompanyGithubSlug: mocks.getCompanyGithubSlug,

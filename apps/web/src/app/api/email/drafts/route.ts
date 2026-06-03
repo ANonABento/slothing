@@ -13,7 +13,7 @@ import {
   createEmailDraft,
   listEmailDraftsPaginated,
 } from "@/lib/db/email-drafts";
-import { getJob } from "@/lib/db/jobs";
+import { getJob } from "@/lib/db/jobs-async";
 import { requireAuth, isAuthError } from "@/lib/auth";
 import { createEmailDraftSchema } from "@/lib/schemas";
 import {
@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
     }
 
     const cursor = decodeCursor(parsed.data.cursor, emailDraftCursorSchema);
-    const rows = listEmailDraftsPaginated({
+    const rows = await listEmailDraftsPaginated({
       userId: authResult.userId,
       type: parsed.data.type,
       cursor,
@@ -90,11 +90,11 @@ export async function POST(request: NextRequest) {
     if (!parsed.ok) return parsed.response;
     const { type, jobId, subject, body, context } = parsed.data;
 
-    if (jobId && !getJob(jobId, authResult.userId)) {
+    if (jobId && !(await getJob(jobId, authResult.userId))) {
       return NextResponse.json({ error: "Job not found" }, { status: 404 });
     }
 
-    const draft = createEmailDraft(
+    const draft = await createEmailDraft(
       {
         type,
         jobId,

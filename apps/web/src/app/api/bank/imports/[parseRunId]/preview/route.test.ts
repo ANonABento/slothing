@@ -13,9 +13,12 @@ vi.mock("@/lib/auth", () => ({
   isAuthError: mocks.isAuthError,
 }));
 
-vi.mock("@/lib/db", () => ({
-  getDocumentParseRunById: mocks.getDocumentParseRunById,
+vi.mock("@/lib/db/document-artifacts", () => ({
   getDocumentArtifact: mocks.getDocumentArtifact,
+}));
+
+vi.mock("@/lib/db/document-parse-runs", () => ({
+  getDocumentParseRunById: mocks.getDocumentParseRunById,
 }));
 
 vi.mock("@/lib/ingest/parse-run-bank-import", () => ({

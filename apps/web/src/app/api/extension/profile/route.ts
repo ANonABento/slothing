@@ -12,7 +12,7 @@ import type { Experience, Education } from "@/types";
 
 // GET - Fetch profile optimized for extension auto-fill
 export async function GET(request: NextRequest) {
-  const authResult = requireExtensionAuth(request);
+  const authResult = await requireExtensionAuth(request);
   if (!authResult.success) {
     return authResult.response;
   }

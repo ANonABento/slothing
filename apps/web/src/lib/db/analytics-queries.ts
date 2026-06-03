@@ -1,4 +1,4 @@
-import db from "./legacy";
+import { getClient } from "./client";
 import type { JobDescription } from "@/types";
 import type { GeneratedResume } from "./resumes";
 
@@ -61,25 +61,29 @@ function parseContact(value?: string | null): ProfileAnalyticsView["contact"] {
   }
 }
 
-function readCount(
+async function readCount(
   sql: string,
   ...args: Array<string | number | null>
-): number {
-  const row = db.prepare(sql).get(...args) as { count?: number } | undefined;
+): Promise<number> {
+  const result = await getClient().execute({ sql, args });
+  const row = result.rows[0] as unknown as { count?: number } | undefined;
   return row?.count ?? 0;
 }
 
-export function getJobsAnalyticsView(userId: string): AnalyticsJobRow[] {
-  const rows = db
-    .prepare(
-      `
+export async function getJobsAnalyticsView(
+  userId: string,
+): Promise<AnalyticsJobRow[]> {
+  const result = await getClient().execute({
+    sql: `
         SELECT id, title, company, type, status, keywords_json, applied_at, created_at
         FROM jobs
         WHERE user_id = ?
         ORDER BY created_at DESC
       `,
-    )
-    .all(userId) as Array<{
+    args: [userId],
+  });
+
+  const rows = result.rows as unknown as Array<{
     id: string;
     title: string;
     company: string;
@@ -102,8 +106,10 @@ export function getJobsAnalyticsView(userId: string): AnalyticsJobRow[] {
   }));
 }
 
-export function getAnalyticsJobDescriptions(userId: string): JobDescription[] {
-  return getJobsAnalyticsView(userId).map((job) => ({
+export async function getAnalyticsJobDescriptions(
+  userId: string,
+): Promise<JobDescription[]> {
+  return (await getJobsAnalyticsView(userId)).map((job) => ({
     id: job.id,
     title: job.title,
     company: job.company,
@@ -119,27 +125,32 @@ export function getAnalyticsJobDescriptions(userId: string): JobDescription[] {
   }));
 }
 
-export function getProfileAnalyticsView(
+export async function getProfileAnalyticsView(
   userId: string,
-): ProfileAnalyticsView | null {
-  const profile = db
-    .prepare("SELECT id, contact_json, summary FROM profile WHERE id = ?")
-    .get(userId) as
+): Promise<ProfileAnalyticsView | null> {
+  const profileResult = await getClient().execute({
+    sql: "SELECT id, contact_json, summary FROM profile WHERE id = ?",
+    args: [userId],
+  });
+  const profile = profileResult.rows[0] as unknown as
     | { id: string; contact_json?: string | null; summary?: string | null }
     | undefined;
 
   if (!profile) return null;
 
-  const skills = db
-    .prepare(
-      `
+  const skillsResult = await getClient().execute({
+    sql: `
         SELECT name, category
         FROM skills
         WHERE profile_id = ?
         ORDER BY name ASC
       `,
-    )
-    .all(userId) as Array<{ name: string; category?: string | null }>;
+    args: [userId],
+  });
+  const skills = skillsResult.rows as unknown as Array<{
+    name: string;
+    category?: string | null;
+  }>;
 
   return {
     contact: parseContact(profile.contact_json),
@@ -148,45 +159,48 @@ export function getProfileAnalyticsView(
       name: skill.name,
       category: skill.category || "other",
     })),
-    experienceCount: readCount(
+    experienceCount: await readCount(
       "SELECT COUNT(*) as count FROM experiences WHERE profile_id = ?",
       userId,
     ),
-    educationCount: readCount(
+    educationCount: await readCount(
       "SELECT COUNT(*) as count FROM education WHERE profile_id = ?",
       userId,
     ),
-    projectCount: readCount(
+    projectCount: await readCount(
       "SELECT COUNT(*) as count FROM projects WHERE profile_id = ?",
       userId,
     ),
-    certificationCount: readCount(
+    certificationCount: await readCount(
       "SELECT COUNT(*) as count FROM certifications WHERE profile_id = ?",
       userId,
     ),
   };
 }
 
-export function getDocumentCount(userId: string): number {
+export async function getDocumentCount(userId: string): Promise<number> {
   return readCount(
     "SELECT COUNT(*) as count FROM documents WHERE user_id = ?",
     userId,
   );
 }
 
-export function getInterviewSessionStats(
+export async function getInterviewSessionStats(
   userId: string,
-): InterviewSessionStats {
-  const rows = db
-    .prepare(
-      `
+): Promise<InterviewSessionStats> {
+  const result = await getClient().execute({
+    sql: `
         SELECT COALESCE(status, 'in_progress') as status, COUNT(*) as count
         FROM interview_sessions
         WHERE user_id = ?
         GROUP BY COALESCE(status, 'in_progress')
       `,
-    )
-    .all(userId) as Array<{ status: string; count: number }>;
+    args: [userId],
+  });
+  const rows = result.rows as unknown as Array<{
+    status: string;
+    count: number;
+  }>;
 
   const byStatus = Object.fromEntries(
     rows.map((row) => [row.status, row.count]),
@@ -200,26 +214,26 @@ export function getInterviewSessionStats(
   };
 }
 
-export function getGeneratedResumeCount(userId: string): number {
+export async function getGeneratedResumeCount(userId: string): Promise<number> {
   return readCount(
     "SELECT COUNT(*) as count FROM generated_resumes WHERE user_id = ?",
     userId,
   );
 }
 
-export function getGeneratedResumeAnalyticsView(
+export async function getGeneratedResumeAnalyticsView(
   userId: string,
-): GeneratedResume[] {
-  const rows = db
-    .prepare(
-      `
+): Promise<GeneratedResume[]> {
+  const result = await getClient().execute({
+    sql: `
         SELECT id, job_id, profile_id, pdf_path, match_score, created_at
         FROM generated_resumes
         WHERE user_id = ?
         ORDER BY created_at DESC
       `,
-    )
-    .all(userId) as Array<{
+    args: [userId],
+  });
+  const rows = result.rows as unknown as Array<{
     id: string;
     job_id: string;
     profile_id: string;

@@ -1,11 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { Mock } from "vitest";
 import { checkTailorQuota, getMonthlyTailorCount } from "./quota";
 
-vi.mock("@/lib/db/legacy", () => ({
-  default: {
-    prepare: vi.fn(),
-  },
+const mocks = vi.hoisted(() => ({
+  execute: vi.fn(),
+}));
+
+vi.mock("@/lib/db/client", () => ({
+  getClient: () => ({ execute: mocks.execute }),
 }));
 
 vi.mock("@/lib/format/time", async () => {
@@ -28,7 +29,6 @@ vi.mock("./tier", async () => {
   };
 });
 
-const db = (await import("@/lib/db/legacy")).default;
 const { getUserTier } = await import("./tier");
 
 describe("tailor quota", () => {
@@ -37,23 +37,26 @@ describe("tailor quota", () => {
   });
 
   function mockMonthlyCount(count: number) {
-    const get = vi.fn().mockReturnValue({ count });
-    (db.prepare as Mock).mockReturnValue({ get });
-    return get;
+    mocks.execute.mockResolvedValueOnce({ rows: [{ count }] });
+    return mocks.execute;
   }
 
-  it("counts generated resumes from the current UTC month", () => {
-    const get = mockMonthlyCount(2);
+  it("counts generated resumes from the current UTC month", async () => {
+    const execute = mockMonthlyCount(2);
 
-    expect(getMonthlyTailorCount("user-1")).toBe(2);
-    expect(get).toHaveBeenCalledWith("user-1", "2026-05-01T00:00:00.000Z");
+    await expect(getMonthlyTailorCount("user-1")).resolves.toBe(2);
+    expect(execute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        args: ["user-1", "2026-05-01T00:00:00.000Z"],
+      }),
+    );
   });
 
-  it("allows free users below the monthly limit", () => {
+  it("allows free users below the monthly limit", async () => {
     mockMonthlyCount(4);
     vi.mocked(getUserTier).mockReturnValueOnce("free");
 
-    expect(checkTailorQuota("user-1")).toMatchObject({
+    await expect(checkTailorQuota("user-1")).resolves.toMatchObject({
       allowed: true,
       tier: "free",
       used: 4,
@@ -62,29 +65,30 @@ describe("tailor quota", () => {
     });
   });
 
-  it("blocks free users at the monthly limit", () => {
+  it("blocks free users at the monthly limit", async () => {
     mockMonthlyCount(5);
     vi.mocked(getUserTier).mockReturnValueOnce("free");
 
-    expect(checkTailorQuota("user-1")).toMatchObject({
+    await expect(checkTailorQuota("user-1")).resolves.toMatchObject({
       allowed: false,
       used: 5,
       limit: 5,
     });
   });
 
-  it("always allows pro and student tiers", () => {
+  it("always allows pro and student tiers", async () => {
     mockMonthlyCount(25);
     vi.mocked(getUserTier).mockReturnValueOnce("pro");
 
-    expect(checkTailorQuota("user-1")).toMatchObject({
+    await expect(checkTailorQuota("user-1")).resolves.toMatchObject({
       allowed: true,
       used: 25,
       limit: Infinity,
     });
 
     vi.mocked(getUserTier).mockReturnValueOnce("student");
-    expect(checkTailorQuota("user-1")).toMatchObject({
+    mocks.execute.mockResolvedValueOnce({ rows: [{ count: 25 }] });
+    await expect(checkTailorQuota("user-1")).resolves.toMatchObject({
       allowed: true,
       limit: Infinity,
     });

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireCronAuth } from "@/lib/cron-auth";
-import db from "@/lib/db/legacy";
+import { getClient } from "@/lib/db/client";
 import { recordCronRun } from "@/lib/db/cron-runs";
 import { nowEpoch, nowIso } from "@/lib/format/time";
 import { ensureWelcomeSeriesSchema } from "@/lib/welcome-series/state";
@@ -21,11 +21,12 @@ export async function GET(request: NextRequest) {
   const startedIso = nowIso();
 
   try {
-    ensureWelcomeSeriesSchema();
+    await ensureWelcomeSeriesSchema();
 
-    const users = db
-      .prepare("SELECT id FROM `user` WHERE email IS NOT NULL LIMIT 200")
-      .all() as UserIdRow[];
+    const usersResult = await getClient().execute(
+      "SELECT id FROM `user` WHERE email IS NOT NULL LIMIT 200",
+    );
+    const users = usersResult.rows as unknown as UserIdRow[];
 
     let sent = 0;
     let skipped = 0;
@@ -52,7 +53,7 @@ export async function GET(request: NextRequest) {
       errors,
       durationMs,
     };
-    recordCronRun({
+    await recordCronRun({
       cron: "follow-ups",
       status: errors === 0 ? "success" : "failure",
       startedAt: startedIso,
@@ -64,7 +65,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Welcome series cron failed";
-    recordCronRun({
+    await recordCronRun({
       cron: "follow-ups",
       status: "failure",
       startedAt: startedIso,

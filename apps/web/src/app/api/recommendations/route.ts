@@ -6,7 +6,7 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { getProfile } from "@/lib/db";
-import { getJobs } from "@/lib/db/jobs";
+import { getJobs } from "@/lib/db/jobs-async";
 import { generateRecommendations } from "@/lib/recommendations/job-matcher";
 import { requireAuth, isAuthError } from "@/lib/auth";
 import { parseSearchParams } from "@/lib/api-utils";
@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const jobs = getJobs(authResult.userId);
+    const jobs = await getJobs(authResult.userId);
     if (jobs.length === 0) {
       return NextResponse.json({
         recommendations: [],

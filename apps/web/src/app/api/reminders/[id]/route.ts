@@ -34,16 +34,16 @@ export async function PATCH(
 
     switch (action) {
       case "complete":
-        completeReminder(id, authResult.userId);
+        await completeReminder(id, authResult.userId);
         return NextResponse.json({ success: true, action: "completed" });
 
       case "dismiss":
-        dismissReminder(id, authResult.userId);
+        await dismissReminder(id, authResult.userId);
         return NextResponse.json({ success: true, action: "dismissed" });
 
       default:
         // Update reminder fields
-        updateReminder(id, updates, authResult.userId);
+        await updateReminder(id, updates, authResult.userId);
         return NextResponse.json({ success: true, action: "updated" });
     }
   } catch (error) {
@@ -64,7 +64,7 @@ export async function DELETE(
 
   try {
     const { id } = params;
-    deleteReminder(id, authResult.userId);
+    await deleteReminder(id, authResult.userId);
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Delete reminder error:", error);

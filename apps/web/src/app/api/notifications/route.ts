@@ -29,16 +29,16 @@ export async function GET(request: NextRequest) {
     const countOnly = searchParams.get("countOnly") === "true";
 
     if (countOnly) {
-      const count = getUnreadNotificationCount(authResult.userId);
+      const count = await getUnreadNotificationCount(authResult.userId);
       return NextResponse.json({ count });
     }
 
-    const notifications = getNotifications({
+    const notifications = await getNotifications({
       unreadOnly,
       limit,
       userId: authResult.userId,
     });
-    const unreadCount = getUnreadNotificationCount(authResult.userId);
+    const unreadCount = await getUnreadNotificationCount(authResult.userId);
 
     return NextResponse.json({ notifications, unreadCount });
   } catch (error) {
@@ -70,11 +70,11 @@ export async function POST(request: NextRequest) {
 
     switch (action) {
       case "markAllRead":
-        markAllNotificationsRead(authResult.userId);
+        await markAllNotificationsRead(authResult.userId);
         return NextResponse.json({ success: true, action: "markedAllRead" });
 
       case "deleteRead":
-        deleteReadNotifications(authResult.userId);
+        await deleteReadNotifications(authResult.userId);
         return NextResponse.json({ success: true, action: "deletedRead" });
     }
   } catch (error) {

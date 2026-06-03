@@ -38,7 +38,7 @@ export async function POST(
       );
     }
 
-    const session = getInterviewSession(params.id, authResult.userId);
+    const session = await getInterviewSession(params.id, authResult.userId);
     if (!session) {
       return NextResponse.json({ error: "Session not found" }, { status: 404 });
     }
@@ -56,7 +56,7 @@ export async function POST(
     }
 
     let feedback = "";
-    const gate = gateAiFeature(
+    const gate = await gateAiFeature(
       authResult.userId,
       "interview_turn",
       `${params.id}:follow-up:${questionIndex}`,
@@ -103,7 +103,7 @@ Return JSON:
         "Good follow-up. Add one concrete detail or measurable result to make this answer easier for an interviewer to evaluate.";
     }
 
-    const followUp = addInterviewFollowUp(
+    const followUp = await addInterviewFollowUp(
       params.id,
       questionIndex,
       followUpQuestion,

@@ -50,7 +50,7 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    updateProfile(parseResult.data, authResult.userId);
+    await updateProfile(parseResult.data, authResult.userId);
     const profile = getProfile(authResult.userId);
     return NextResponse.json({ success: true, profile });
   } catch (error) {

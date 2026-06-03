@@ -2,15 +2,17 @@ import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
-  prepare: vi.fn(),
+  deleteExtensionSession: vi.fn(),
+  getExtensionSessionByToken: vi.fn(),
+  touchExtensionSession: vi.fn(),
   nowDate: vi.fn(),
   nowIso: vi.fn(),
 }));
 
-vi.mock("@/lib/db/legacy", () => ({
-  default: {
-    prepare: mocks.prepare,
-  },
+vi.mock("@/lib/db/extension-sessions", () => ({
+  deleteExtensionSession: mocks.deleteExtensionSession,
+  getExtensionSessionByToken: mocks.getExtensionSessionByToken,
+  touchExtensionSession: mocks.touchExtensionSession,
 }));
 
 vi.mock("@/lib/format/time", () => ({
@@ -49,23 +51,19 @@ describe("/api/extension/auth/verify", () => {
     await expect(response.json()).resolves.toEqual({
       error: "No token provided",
     });
-    expect(mocks.prepare).not.toHaveBeenCalled();
+    expect(mocks.getExtensionSessionByToken).not.toHaveBeenCalled();
   });
 
   it("returns 401 for an unknown token", async () => {
-    const get = vi.fn(() => undefined);
-    mocks.prepare.mockReturnValue({ get });
+    mocks.getExtensionSessionByToken.mockResolvedValueOnce(null);
 
     const response = await GET(request("unknown-token"));
 
     expect(response.status).toBe(401);
     await expect(response.json()).resolves.toEqual({ error: "Invalid token" });
-    expect(mocks.prepare).toHaveBeenCalledWith(
-      expect.stringContaining(
-        "SELECT * FROM extension_sessions WHERE token = ?",
-      ),
+    expect(mocks.getExtensionSessionByToken).toHaveBeenCalledWith(
+      "unknown-token",
     );
-    expect(get).toHaveBeenCalledWith("unknown-token");
   });
 
   it("returns 401 and deletes an expired token", async () => {
@@ -73,42 +71,23 @@ describe("/api/extension/auth/verify", () => {
       ...validSession,
       expires_at: "2026-05-11T11:59:59.000Z",
     };
-    const get = vi.fn(() => expiredSession);
-    const deleteRun = vi.fn();
-    mocks.prepare.mockImplementation((sql: string) => {
-      if (sql.includes("SELECT * FROM extension_sessions")) {
-        return { get };
-      }
-
-      if (sql.includes("DELETE FROM extension_sessions")) {
-        return { run: deleteRun };
-      }
-
-      throw new Error(`Unexpected SQL: ${sql}`);
-    });
+    mocks.getExtensionSessionByToken.mockResolvedValueOnce(expiredSession);
 
     const response = await GET(request("expired-token"));
 
     expect(response.status).toBe(401);
     await expect(response.json()).resolves.toEqual({ error: "Token expired" });
-    expect(get).toHaveBeenCalledWith("expired-token");
-    expect(deleteRun).toHaveBeenCalledWith("session-1", "user-1");
+    expect(mocks.getExtensionSessionByToken).toHaveBeenCalledWith(
+      "expired-token",
+    );
+    expect(mocks.deleteExtensionSession).toHaveBeenCalledWith(
+      "session-1",
+      "user-1",
+    );
   });
 
   it("returns 200 and updates last_used_at for a valid token", async () => {
-    const get = vi.fn(() => validSession);
-    const updateRun = vi.fn();
-    mocks.prepare.mockImplementation((sql: string) => {
-      if (sql.includes("SELECT * FROM extension_sessions")) {
-        return { get };
-      }
-
-      if (sql.includes("UPDATE extension_sessions SET last_used_at")) {
-        return { run: updateRun };
-      }
-
-      throw new Error(`Unexpected SQL: ${sql}`);
-    });
+    mocks.getExtensionSessionByToken.mockResolvedValueOnce(validSession);
 
     const response = await GET(request("known-token"));
 
@@ -118,11 +97,13 @@ describe("/api/extension/auth/verify", () => {
       userId: "user-1",
       expiresAt: "2026-05-11T13:00:00.000Z",
     });
-    expect(get).toHaveBeenCalledWith("known-token");
-    expect(updateRun).toHaveBeenCalledWith(
-      "2026-05-11T12:00:00.000Z",
+    expect(mocks.getExtensionSessionByToken).toHaveBeenCalledWith(
+      "known-token",
+    );
+    expect(mocks.touchExtensionSession).toHaveBeenCalledWith(
       "session-1",
       "user-1",
+      "2026-05-11T12:00:00.000Z",
     );
   });
 });

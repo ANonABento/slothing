@@ -1,11 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
-  prepare: vi.fn(),
+  execute: vi.fn(),
 }));
 
-vi.mock("@/lib/db/legacy", () => ({
-  default: { prepare: mocks.prepare },
+vi.mock("@/lib/db/client", () => ({
+  getClient: () => ({ execute: mocks.execute }),
 }));
 
 import {
@@ -19,22 +19,22 @@ describe("welcome series predicates", () => {
     vi.clearAllMocks();
   });
 
-  it("detects applied jobs", () => {
-    mocks.prepare.mockReturnValueOnce({ get: vi.fn(() => ({ found: 1 })) });
-    expect(hasUserApplied("user-1")).toBe(true);
+  it("detects applied jobs", async () => {
+    mocks.execute.mockResolvedValueOnce({ rows: [{ found: 1 }] });
+    await expect(hasUserApplied("user-1")).resolves.toBe(true);
   });
 
-  it("detects booked interview sessions", () => {
-    mocks.prepare.mockReturnValueOnce({ get: vi.fn(() => undefined) });
-    expect(hasUserBookedInterview("user-1")).toBe(false);
+  it("detects booked interview sessions", async () => {
+    mocks.execute.mockResolvedValueOnce({ rows: [] });
+    await expect(hasUserBookedInterview("user-1")).resolves.toBe(false);
   });
 
-  it("returns usage stats", () => {
-    mocks.prepare
-      .mockReturnValueOnce({ get: vi.fn(() => ({ count: 3 })) })
-      .mockReturnValueOnce({ get: vi.fn(() => ({ count: 5 })) });
+  it("returns usage stats", async () => {
+    mocks.execute
+      .mockResolvedValueOnce({ rows: [{ count: 3 }] })
+      .mockResolvedValueOnce({ rows: [{ count: 5 }] });
 
-    expect(getUsageStats("user-1")).toEqual({
+    await expect(getUsageStats("user-1")).resolves.toEqual({
       applicationCount: 3,
       tailoredResumeCount: 5,
     });

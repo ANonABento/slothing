@@ -20,7 +20,7 @@ export async function POST(
 
   try {
     const { id } = await params;
-    const version = getProfileVersion(id, authResult.userId);
+    const version = await getProfileVersion(id, authResult.userId);
 
     if (!version) {
       return NextResponse.json({ error: "Version not found" }, { status: 404 });
@@ -29,7 +29,7 @@ export async function POST(
     const snapshot = JSON.parse(version.snapshotJson);
 
     // updateProfile auto-snapshots current state before overwriting
-    updateProfile(snapshot, authResult.userId);
+    await updateProfile(snapshot, authResult.userId);
 
     return NextResponse.json({
       success: true,

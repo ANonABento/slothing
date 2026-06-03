@@ -393,10 +393,13 @@ export function getProfile(userId: string): Profile | null {
   };
 }
 
-export function updateProfile(profile: Partial<Profile>, userId: string): void {
+export async function updateProfile(
+  profile: Partial<Profile>,
+  userId: string,
+): Promise<void> {
   const currentProfile = getProfile(userId);
   if (currentProfile) {
-    createProfileSnapshot(userId, JSON.stringify(currentProfile));
+    await createProfileSnapshot(userId, JSON.stringify(currentProfile));
   }
 
   const doUpdate = db.transaction(() => {
