@@ -1,15 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const templateMigrationMocks = vi.hoisted(() => ({
-  listReusableResumeTemplates: vi.fn(),
-  listDocumentTemplatesV3: vi.fn(),
-  deleteReusableResumeTemplate: vi.fn(),
-  deleteDocumentTemplateV3: vi.fn(),
-  updateReusableResumeTemplateMetadata: vi.fn(),
-  updateDocumentTemplateV3Metadata: vi.fn(),
+const storeMocks = vi.hoisted(() => ({
+  listResumeTemplates: vi.fn(),
+  deleteResumeTemplate: vi.fn(),
+  updateResumeTemplateMetadata: vi.fn(),
+  migrateV4ToCollapsed: vi.fn(),
 }));
 
-vi.mock("@/lib/db/template-migrations", () => templateMigrationMocks);
+vi.mock("@/lib/db/resume-templates", () => storeMocks);
 
 vi.mock("@/lib/resume/templates", () =>
   globalThis.__contractRouteMocks!.createContractModuleMock(
@@ -19,12 +17,6 @@ vi.mock("@/lib/resume/templates", () =>
 
 vi.mock("@/lib/auth", () =>
   globalThis.__contractRouteMocks!.createAuthModuleMock(),
-);
-
-vi.mock("@/lib/resume/template-analyzer", () =>
-  globalThis.__contractRouteMocks!.createContractModuleMock(
-    "@/lib/resume/template-analyzer",
-  ),
 );
 
 import { GET, POST, DELETE, PATCH } from "./route";
@@ -44,16 +36,13 @@ import {
 describe("/api/templates route contract", () => {
   beforeEach(() => {
     resetContractMocks();
-    templateMigrationMocks.listReusableResumeTemplates.mockReturnValue([]);
-    templateMigrationMocks.listDocumentTemplatesV3.mockReturnValue([]);
-    templateMigrationMocks.deleteReusableResumeTemplate.mockReturnValue(false);
-    templateMigrationMocks.deleteDocumentTemplateV3.mockReturnValue(false);
-    templateMigrationMocks.updateReusableResumeTemplateMetadata.mockReturnValue(
-      null,
-    );
-    templateMigrationMocks.updateDocumentTemplateV3Metadata.mockReturnValue(
-      null,
-    );
+    storeMocks.listResumeTemplates.mockReturnValue([]);
+    storeMocks.deleteResumeTemplate.mockReturnValue(false);
+    storeMocks.updateResumeTemplateMetadata.mockReturnValue(null);
+    storeMocks.migrateV4ToCollapsed.mockReturnValue({
+      migrated: 0,
+      skipped: 0,
+    });
   });
 
   it("invokes the real GET handler and returns an HTTP response contract", async () => {
@@ -64,7 +53,6 @@ describe("/api/templates route contract", () => {
       }),
       routeContext(),
     );
-
     await expectRouteResponseContract(response);
   });
 
@@ -75,11 +63,12 @@ describe("/api/templates route contract", () => {
         "http://localhost/api/templates",
         representativeBody(),
         "POST",
-        { "x-extension-token": "test-token" },
+        {
+          "x-extension-token": "test-token",
+        },
       ),
       routeContext(),
     );
-
     await expectRouteResponseContract(response);
   });
 
@@ -90,11 +79,12 @@ describe("/api/templates route contract", () => {
         "http://localhost/api/templates",
         representativeBody(),
         "DELETE",
-        { "x-extension-token": "test-token" },
+        {
+          "x-extension-token": "test-token",
+        },
       ),
       routeContext(),
     );
-
     await expectRouteResponseContract(response);
   });
 
@@ -105,28 +95,29 @@ describe("/api/templates route contract", () => {
         "http://localhost/api/templates",
         representativeBody(),
         "PATCH",
-        { "x-extension-token": "test-token" },
+        {
+          "x-extension-token": "test-token",
+        },
       ),
       routeContext(),
     );
-
     await expectRouteResponseContract(response);
   });
 
   it("returns the shared auth failure contract", async () => {
     setAuthFailure();
-
     const response = await invokeRouteHandler(
       POST,
       jsonRequest(
         "http://localhost/api/templates",
         representativeBody(),
         "POST",
-        { "x-extension-token": "test-token" },
+        {
+          "x-extension-token": "test-token",
+        },
       ),
       routeContext(),
     );
-
     expect(response.status).toBe(401);
     await expect(response.json()).resolves.toMatchObject({
       error: expect.any(String),
@@ -135,24 +126,17 @@ describe("/api/templates route contract", () => {
 
   it("returns an HTTP error response for malformed mutation input", async () => {
     setAuthSuccess();
-
     const response = await invokeRouteHandler(
       POST,
       invalidJsonRequest("http://localhost/api/templates", "POST"),
       routeContext(),
     );
-
     await expectRouteResponseContract(response);
   });
 
-  it("lists reusable custom templates by default and hides legacy V3 templates", async () => {
+  it("lists imported custom templates from the collapsed store", async () => {
     setAuthSuccess();
-    templateMigrationMocks.listReusableResumeTemplates.mockReturnValueOnce([
-      reusableTemplateRow("v4-template"),
-    ]);
-    templateMigrationMocks.listDocumentTemplatesV3.mockReturnValueOnce([
-      documentTemplateV3Row("v3-template"),
-    ]);
+    storeMocks.listResumeTemplates.mockReturnValueOnce([collapsedRow("imp-1")]);
 
     const response = await invokeRouteHandler(
       GET,
@@ -162,136 +146,87 @@ describe("/api/templates route contract", () => {
       routeContext(),
     );
     const body = (await response.json()) as {
-      templates: Array<{ id: string }>;
+      templates: Array<{ id: string; type: string; layout?: string }>;
     };
 
     expect(response.status).toBe(200);
-    expect(
-      templateMigrationMocks.listDocumentTemplatesV3,
-    ).not.toHaveBeenCalled();
-    expect(
-      body.templates.some((template) => template.id === "v4-template"),
-    ).toBe(true);
-    expect(
-      body.templates.some((template) => template.id === "v3-template"),
-    ).toBe(false);
-  });
-
-  it("includes legacy V3 custom templates when explicitly requested", async () => {
-    setAuthSuccess();
-    templateMigrationMocks.listReusableResumeTemplates.mockReturnValueOnce([
-      reusableTemplateRow("v4-template"),
-    ]);
-    templateMigrationMocks.listDocumentTemplatesV3.mockReturnValueOnce([
-      documentTemplateV3Row("v3-template"),
-    ]);
-
-    const response = await invokeRouteHandler(
-      GET,
-      getRequest("http://localhost/api/templates?includeLegacy=true", {
-        "x-extension-token": "test-token",
-      }),
-      routeContext(),
-    );
-    const body = (await response.json()) as {
-      templates: Array<{ id: string; legacy?: boolean }>;
-    };
-
-    expect(response.status).toBe(200);
-    expect(templateMigrationMocks.listDocumentTemplatesV3).toHaveBeenCalledWith(
-      "user-1",
-    );
+    expect(storeMocks.migrateV4ToCollapsed).toHaveBeenCalled();
     expect(body.templates).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ id: "v4-template", schemaVersion: 4 }),
         expect.objectContaining({
-          id: "v3-template",
-          schemaVersion: 3,
-          legacy: true,
+          id: "imp-1",
+          type: "custom",
+          layout: "two-column",
         }),
       ]),
     );
   });
 
-  it("deletes committed V3 templates", async () => {
+  it("deletes a custom template from the collapsed store", async () => {
     setAuthSuccess();
-    templateMigrationMocks.deleteDocumentTemplateV3.mockReturnValueOnce(true);
+    storeMocks.deleteResumeTemplate.mockReturnValueOnce(true);
 
     const response = await invokeRouteHandler(
       DELETE,
-      jsonRequest(
-        "http://localhost/api/templates?id=v2-template",
-        {},
-        "DELETE",
-        { "x-extension-token": "test-token" },
-      ),
+      jsonRequest("http://localhost/api/templates?id=imp-1", {}, "DELETE", {
+        "x-extension-token": "test-token",
+      }),
       routeContext(),
     );
 
     expect(response.status).toBe(200);
-    expect(
-      templateMigrationMocks.deleteDocumentTemplateV3,
-    ).toHaveBeenCalledWith("v2-template", "user-1");
+    expect(storeMocks.deleteResumeTemplate).toHaveBeenCalledWith(
+      "imp-1",
+      "user-1",
+    );
   });
 
-  it("updates committed V3 metadata", async () => {
+  it("updates custom template metadata in the collapsed store", async () => {
     setAuthSuccess();
-    templateMigrationMocks.updateDocumentTemplateV3Metadata.mockReturnValueOnce(
-      {
-        id: "v3-template",
-      },
-    );
+    storeMocks.updateResumeTemplateMetadata.mockReturnValueOnce({
+      id: "imp-1",
+    });
 
     const response = await invokeRouteHandler(
       PATCH,
       jsonRequest(
         "http://localhost/api/templates",
-        { id: "v3-template", name: "Reviewed Template" },
+        { id: "imp-1", name: "Renamed" },
         "PATCH",
-        { "x-extension-token": "test-token" },
+        {
+          "x-extension-token": "test-token",
+        },
       ),
       routeContext(),
     );
 
     expect(response.status).toBe(200);
-    expect(
-      templateMigrationMocks.updateDocumentTemplateV3Metadata,
-    ).toHaveBeenCalledWith("v3-template", "user-1", {
-      name: "Reviewed Template",
-      description: undefined,
-    });
+    expect(storeMocks.updateResumeTemplateMetadata).toHaveBeenCalledWith(
+      "imp-1",
+      "user-1",
+      {
+        name: "Renamed",
+        description: undefined,
+      },
+    );
   });
 });
 
-function reusableTemplateRow(id: string) {
+function collapsedRow(id: string) {
   return {
     id,
     userId: "user-1",
-    name: "Reusable Resume",
+    name: "Imported Sidebar",
     description: null,
     sourceFilename: "resume.pdf",
     sourceType: "pdf",
     template: {
-      schemaVersion: 4,
-      name: "Reusable Resume",
+      id,
+      name: "Imported Sidebar",
+      grammar: { columns: "left-sidebar" },
+      tokens: {},
     },
-    createdAt: "2026-05-20T00:00:00.000Z",
-    updatedAt: "2026-05-20T00:00:00.000Z",
-  };
-}
-
-function documentTemplateV3Row(id: string) {
-  return {
-    id,
-    userId: "user-1",
-    name: "Legacy Visual Resume",
-    description: null,
-    sourceFilename: "resume.pdf",
-    sourceType: "pdf",
-    template: {
-      schemaVersion: 3,
-      name: "Legacy Visual Resume",
-    },
+    rdm: null,
     createdAt: "2026-05-20T00:00:00.000Z",
     updatedAt: "2026-05-20T00:00:00.000Z",
   };

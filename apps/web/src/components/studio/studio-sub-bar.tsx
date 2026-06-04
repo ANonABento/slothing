@@ -125,7 +125,6 @@ export function StudioSubBar({
   templateId,
   customTemplates,
   onTemplateSelect,
-  onTemplateImported,
   onTemplatesChanged,
   onTailorAi,
   exportMenuOpen,
@@ -314,9 +313,6 @@ export function StudioSubBar({
         onOpenChange={setTemplateManagerOpen}
         onTemplatesChanged={onTemplatesChanged}
         onTemplateSelected={onTemplateSelect}
-        onTemplateImported={
-          onTemplateImported ?? ((id) => onTemplateSelect(id))
-        }
       />
       <ImportResumeDialog
         open={importResumeOpen}

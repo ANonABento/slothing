@@ -1,8 +1,8 @@
 # Resume Template Cloning & Rendering — Rebuild Spec
 
-> Status: **Phases 0–3 + 2.5 COMPLETE; Phase 4 substantially complete** (collapsed model,
-> V4 migration, import/preview/accept loop wired into Studio) · the legacy-machinery
-> DELETION is the one tracked remainder (see §12) · Owner: Kev · 2026-06-02
+> Status: **COMPLETE** — all phases (0–4, incl. 2.5) shipped. One collapsed (grammar+tokens)
+> model drives both HTML + Typst render; clone loop (XMP self-import / fingerprint+content) wired
+> into Studio; the V2/V3/V4 + migration + fidelity machinery is deleted. See §12 · Owner: Kev
 >
 > Goal: make "upload your resume → get a reusable template the tailor can fill from
 > the component bank" **consistent and high-success-rate**, and collapse the messy
@@ -545,19 +545,21 @@ Three panes (original PDF drag-drop ↔ HTML ↔ live Typst), full clone loop in
   (clone style)"). Component test drives import→preview→nudge→accept→commit.
 - **Dead-code removal (done):** deleted `template-visual-verification.ts` (0 importers).
 
-### ⏳ Remaining (tracked) — delete the legacy V2/V3/V4 + migration + fidelity machinery
-The new collapsed model + import/preview/accept loop are live; what remains is **removing** the
-old machinery: `template-v2/v3{,-renderer}.ts`, `template-migration.ts` (3.6k LOC),
-`universal-template-import.ts` (2k), `template-migration-fidelity.ts`, the
-`/api/templates/{migrate,migrations,v2,v3}` routes + their 15 tests, and the V2/V3/draft
-functions in `lib/db/template-migrations.ts`.
+### ✅ Render-path migration + legacy DELETION (done)
+The V2/V3/V4 sprawl is **gone**. The render path was migrated first, then the old machinery deleted:
 
-**Why sequenced separately (deviation, per §11 "update the spec if you deviate"):**
-`universal-template-renderer.ts` (the V4 "reusable" renderer) is **still the live render engine**
-for the export, builder, tailor, and opportunities routes — it is not dead sprawl. Removing it
-cleanly requires first bridging the content models (the live `TailoredResume`/semantic IR path ↔
-the new `RDM`) so export/builder/tailor render through the shared `renderHtml`/`renderTypeset`,
-then deleting the V4 renderer and the rest. That is a substantial, **export-critical** change best
-landed as its own focused, separately-reviewed PR rather than bundled here — bundling it risked
-destabilising the 4332-test suite and the live export feature. The collapse foundation, migration,
-and the entire new clone loop are already in place to make that follow-up mechanical.
+- **Bridge + dispatch:** `tailored-to-rdm.ts` (content-preserving `TailoredResume → RDM`) and
+  `render-resume.ts` (one `renderResumeHtmlForTemplate`: collapsed store via shared `renderHtml`,
+  built-in fallback, one-time idempotent `migrateV4ToCollapsed`). Export / builder / tailor /
+  opportunities all route through it; export PDF renders imported (collapsed) templates borderless.
+- **Consumers repointed** to the collapsed store: `/api/templates` (list/delete/rename),
+  `/api/opportunities/templates`, the `use-custom-templates` hook (adapts collapsed → picker shape),
+  and `custom-template-manager.tsx` — replaced (4.8k → ~230 LOC) with a lean manage dialog (import
+  now lives in `ImportResumeDialog`).
+- **Deleted (23 files):** `template-v2/v3{,-renderer}.ts`, `template-migration.ts` (3.6k),
+  `universal-template-import.ts` (2k), `universal-template-renderer.ts`, `template-migration-fidelity.ts`,
+  `template-visual-verification.ts`, `lib/db/template-migrations.ts`, the
+  `/api/templates/{migrate,migrations,v2,v3}` routes, and ~15 legacy test files.
+
+One model (`@slothing/shared` ResumeTemplate, grammar+tokens) now drives every render path. Full
+CI green throughout (type-check 5 pkgs · lint · web 4234 tests · shared 159).

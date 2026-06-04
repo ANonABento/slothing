@@ -11,13 +11,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import {
-  deleteReusableResumeTemplate,
-  deleteDocumentTemplateV3,
-  listReusableResumeTemplates,
-  listDocumentTemplatesV3,
-  updateReusableResumeTemplateMetadata,
-  updateDocumentTemplateV3Metadata,
-} from "@/lib/db/template-migrations";
+  deleteResumeTemplate,
+  listResumeTemplates,
+  migrateV4ToCollapsed,
+  updateResumeTemplateMetadata,
+} from "@/lib/db/resume-templates";
 import { TEMPLATES } from "@/lib/resume/templates";
 import { requireAuth, isAuthError } from "@/lib/auth";
 import {
@@ -52,16 +50,13 @@ export async function GET(request: NextRequest) {
   if (isAuthError(authResult)) return authResult;
 
   try {
-    const includeLegacy =
-      request.nextUrl.searchParams.get("includeLegacy") === "true";
-    const reusableRows = listReusableResumeTemplates(authResult.userId);
-    const documentTemplateV3Rows = includeLegacy
-      ? listDocumentTemplatesV3(authResult.userId)
-      : [];
-    const reusableTemplates = Array.isArray(reusableRows) ? reusableRows : [];
-    const documentTemplatesV3 = Array.isArray(documentTemplateV3Rows)
-      ? documentTemplateV3Rows
-      : [];
+    // Fold any committed legacy V4 templates into the collapsed store on read.
+    try {
+      migrateV4ToCollapsed();
+    } catch {
+      // best-effort
+    }
+    const customRows = listResumeTemplates(authResult.userId);
 
     const builtIn = TEMPLATES.map((t) => ({
       id: t.id,
@@ -70,46 +65,28 @@ export async function GET(request: NextRequest) {
       type: "built-in" as const,
     }));
 
-    const customV4 = reusableTemplates.map((t) => ({
+    const custom = customRows.map((t) => ({
       id: t.id,
       name: t.name,
       description:
         t.description ??
         (t.sourceType
-          ? `Reusable template from ${t.sourceType.toUpperCase()}`
-          : "Reusable template"),
+          ? `Imported template from ${t.sourceType.toUpperCase()}`
+          : "Imported template"),
       type: "custom" as const,
       customDescription: t.description,
       sourceFilename: t.sourceFilename,
       sourceType: t.sourceType,
-      schemaVersion: t.template.schemaVersion,
-      reusableTemplate: t.template,
+      layout:
+        t.template.grammar.columns === "single"
+          ? "single-column"
+          : "two-column",
+      template: t.template,
       createdAt: t.createdAt,
       updatedAt: t.updatedAt,
     }));
 
-    const customV3 = documentTemplatesV3.map((t) => ({
-      id: t.id,
-      name: t.name,
-      description:
-        t.description ??
-        (t.sourceType
-          ? `Visual template from ${t.sourceType.toUpperCase()}`
-          : "Visual template"),
-      type: "custom" as const,
-      customDescription: t.description,
-      sourceFilename: t.sourceFilename,
-      sourceType: t.sourceType,
-      schemaVersion: t.template.schemaVersion,
-      documentTemplateV3: t.template,
-      legacy: true,
-      createdAt: t.createdAt,
-      updatedAt: t.updatedAt,
-    }));
-
-    return successResponse({
-      templates: [...builtIn, ...customV4, ...customV3],
-    });
+    return successResponse({ templates: [...builtIn, ...custom] });
   } catch (error) {
     console.error("List templates error:", error);
     return errorResponse("internal_error", "Failed to list templates");
@@ -123,7 +100,7 @@ export async function POST(request: NextRequest) {
   try {
     return NextResponse.json(
       {
-        error: "Use /api/templates/migrate to import a V3 visual template.",
+        error: "Use /api/templates/import to clone a résumé into a template.",
         code: "legacy_template_creation_disabled",
       },
       { status: 410 },
@@ -146,9 +123,7 @@ export async function DELETE(request: NextRequest) {
       return ApiErrors.badRequest("Template ID is required");
     }
 
-    const deleted =
-      deleteReusableResumeTemplate(id, authResult.userId) ||
-      deleteDocumentTemplateV3(id, authResult.userId);
+    const deleted = deleteResumeTemplate(id, authResult.userId);
     if (!deleted) {
       return ApiErrors.notFound("Template");
     }
@@ -173,15 +148,10 @@ export async function PATCH(request: NextRequest) {
     }
 
     const { id, name, description } = parseResult.data;
-    const updated =
-      updateReusableResumeTemplateMetadata(id, authResult.userId, {
-        name,
-        description,
-      }) ??
-      updateDocumentTemplateV3Metadata(id, authResult.userId, {
-        name,
-        description,
-      });
+    const updated = updateResumeTemplateMetadata(id, authResult.userId, {
+      name,
+      description,
+    });
     if (!updated) {
       return ApiErrors.notFound("Template");
     }
