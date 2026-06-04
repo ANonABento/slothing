@@ -11,11 +11,10 @@ import { z } from "zod";
 import { requireAuth, isAuthError } from "@/lib/auth";
 import { getGeneratedResume } from "@/lib/db";
 import {
-  getReusableResumeTemplate,
-  getDocumentTemplateV3,
-  listReusableResumeTemplates,
-  listDocumentTemplatesV3,
-} from "@/lib/db/template-migrations";
+  getResumeTemplate,
+  listResumeTemplates,
+} from "@/lib/db/resume-templates";
+import { renderResumeHtmlForTemplate } from "@/lib/resume/render-resume";
 import type { TailoredResume } from "@/lib/resume/generator";
 import type { LatexOptions } from "@/lib/resume/latex-generator";
 import type { ServerPDFOptions } from "@/lib/resume/pdf-export";
@@ -23,7 +22,6 @@ import {
   getCoverLetterTemplate,
   getTemplate,
 } from "@/lib/resume/template-data";
-import { getTemplateWithCustom } from "@/lib/resume/templates";
 import {
   DEFAULT_PAGE_SETTINGS,
   normalizePageSettings,
@@ -53,8 +51,7 @@ export async function GET() {
   if (isAuthError(authResult)) return authResult;
 
   const { LATEX_TEMPLATES } = await import("@/lib/resume/latex-generator");
-  const reusableTemplates = listReusableResumeTemplates(authResult.userId);
-  const v3Templates = listDocumentTemplatesV3(authResult.userId);
+  const customTemplates = listResumeTemplates(authResult.userId);
   return NextResponse.json({
     templates: [
       ...LATEX_TEMPLATES.map((t) => ({
@@ -64,30 +61,15 @@ export async function GET() {
         layout: t.layout,
         type: "built-in" as const,
       })),
-      ...reusableTemplates.map((template) => ({
+      ...customTemplates.map((template) => ({
         id: template.id,
         name: template.name,
-        description: template.description ?? "Reusable template",
+        description: template.description ?? "Imported template",
         layout:
-          template.template.tokens.layout.columns?.value === 2
-            ? "two-column"
-            : "single-column",
+          template.template.grammar.columns === "single"
+            ? "single-column"
+            : "two-column",
         type: "custom" as const,
-        schemaVersion: 4,
-        sourceFilename: template.sourceFilename,
-        sourceType: template.sourceType,
-      })),
-      ...v3Templates.map((template) => ({
-        id: template.id,
-        name: template.name,
-        description: template.description ?? "Visual template",
-        layout: template.template.regions.some(
-          (region) => region.role === "sidebar",
-        )
-          ? "two-column"
-          : "single-column",
-        type: "custom" as const,
-        schemaVersion: 3,
         sourceFilename: template.sourceFilename,
         sourceType: template.sourceType,
       })),
@@ -125,24 +107,7 @@ async function renderResumeHtml(
   templateId: string,
   userId: string,
 ): Promise<string> {
-  const reusableTemplate = getReusableResumeTemplate(templateId, userId);
-  if (reusableTemplate) {
-    const { renderTailoredResumeWithReusableTemplate } =
-      await import("@/lib/resume/universal-template-renderer");
-    return renderTailoredResumeWithReusableTemplate(
-      resume,
-      reusableTemplate.template,
-    );
-  }
-  const documentTemplateV3 = getDocumentTemplateV3(templateId, userId);
-  if (documentTemplateV3) {
-    const { generateResumeHTMLV3 } =
-      await import("@/lib/resume/template-v3-renderer");
-    return generateResumeHTMLV3(resume, documentTemplateV3.template);
-  }
-  const { generateResumeHTML } = await import("@/lib/resume/pdf");
-  const template = await getTemplateWithCustom(templateId, userId);
-  return generateResumeHTML(resume, templateId, template);
+  return renderResumeHtmlForTemplate(resume, templateId, userId);
 }
 
 // POST — export resume in requested format
@@ -317,37 +282,25 @@ export async function POST(request: NextRequest) {
     }
 
     const { generatePDF } = await import("@/lib/resume/pdf-export");
-    const reusableTemplate = resume
-      ? getReusableResumeTemplate(templateId, authResult.userId)
+    // Imported (collapsed) templates emit a self-contained, Letter-sized page with
+    // their own margins, so the PDF is rendered borderless; built-in templates honor
+    // the editor's page settings.
+    const collapsedTemplate = resume
+      ? getResumeTemplate(templateId, authResult.userId)
       : null;
-    const documentTemplateV3 =
-      resume && !reusableTemplate
-        ? getDocumentTemplateV3(templateId, authResult.userId)
-        : null;
     const normalizedPageSettings = normalizePageSettings(
       (pageSettings as Partial<PageSettings> | undefined) ??
         DEFAULT_PAGE_SETTINGS,
     );
-    const pdfOptions: ServerPDFOptions = reusableTemplate
+    const pdfOptions: ServerPDFOptions = collapsedTemplate
       ? {
-          format:
-            reusableTemplate.template.page.size.toLowerCase() === "a4"
-              ? "A4"
-              : "Letter",
+          format: "Letter",
           margin: { top: "0", right: "0", bottom: "0", left: "0" },
         }
-      : documentTemplateV3
-        ? {
-            format:
-              documentTemplateV3.template.page.size.toLowerCase() === "a4"
-                ? "A4"
-                : "Letter",
-            margin: { top: "0", right: "0", bottom: "0", left: "0" },
-          }
-        : {
-            format: normalizedPageSettings.size === "a4" ? "A4" : "Letter",
-            margin: pageSettingsToPdfMargin(normalizedPageSettings),
-          };
+      : {
+          format: normalizedPageSettings.size === "a4" ? "A4" : "Letter",
+          margin: pageSettingsToPdfMargin(normalizedPageSettings),
+        };
     const pdfBuffer = await generatePDF(html, {
       format: pdfOptions.format,
       margin: pdfOptions.margin,

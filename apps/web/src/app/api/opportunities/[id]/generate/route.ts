@@ -25,12 +25,8 @@ import {
   generateTailoredResume,
   type TailoredResume,
 } from "@/lib/resume/generator";
-import { generateResumeHTML, TEMPLATES } from "@/lib/resume/pdf";
-import { getTemplateWithCustom } from "@/lib/resume/templates";
-import {
-  getReusableResumeTemplate,
-  getDocumentTemplateV3,
-} from "@/lib/db/template-migrations";
+import { TEMPLATES } from "@/lib/resume/pdf";
+import { renderResumeHtmlForTemplate } from "@/lib/resume/render-resume";
 import { writeFile, mkdir } from "fs/promises";
 import { generateId } from "@/lib/utils";
 import { PATHS } from "@/lib/constants";
@@ -170,21 +166,5 @@ async function renderTailoredResumeHtml(
   templateId: string,
   userId: string,
 ): Promise<string> {
-  const reusableTemplate = getReusableResumeTemplate(templateId, userId);
-  if (reusableTemplate) {
-    const { renderTailoredResumeWithReusableTemplate } =
-      await import("@/lib/resume/universal-template-renderer");
-    return renderTailoredResumeWithReusableTemplate(
-      resume,
-      reusableTemplate.template,
-    );
-  }
-  const documentTemplateV3 = getDocumentTemplateV3(templateId, userId);
-  if (documentTemplateV3) {
-    const { generateResumeHTMLV3 } =
-      await import("@/lib/resume/template-v3-renderer");
-    return generateResumeHTMLV3(resume, documentTemplateV3.template);
-  }
-  const template = await getTemplateWithCustom(templateId, userId);
-  return generateResumeHTML(resume, templateId, template);
+  return renderResumeHtmlForTemplate(resume, templateId, userId);
 }

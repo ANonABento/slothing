@@ -1,10 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const templateRenderMocks = vi.hoisted(() => ({
-  getReusableResumeTemplate: vi.fn(),
-  getDocumentTemplateV3: vi.fn(),
-  renderTailoredResumeWithReusableTemplate: vi.fn(),
-  generateResumeHTMLV3: vi.fn(),
+  renderResumeHtmlForTemplate: vi.fn(),
 }));
 
 vi.mock("@/lib/db", () =>
@@ -57,18 +54,8 @@ vi.mock("@/lib/resume/templates", () =>
   ),
 );
 
-vi.mock("@/lib/db/template-migrations", () => ({
-  getReusableResumeTemplate: templateRenderMocks.getReusableResumeTemplate,
-  getDocumentTemplateV3: templateRenderMocks.getDocumentTemplateV3,
-}));
-
-vi.mock("@/lib/resume/universal-template-renderer", () => ({
-  renderTailoredResumeWithReusableTemplate:
-    templateRenderMocks.renderTailoredResumeWithReusableTemplate,
-}));
-
-vi.mock("@/lib/resume/template-v3-renderer", () => ({
-  generateResumeHTMLV3: templateRenderMocks.generateResumeHTMLV3,
+vi.mock("@/lib/resume/render-resume", () => ({
+  renderResumeHtmlForTemplate: templateRenderMocks.renderResumeHtmlForTemplate,
 }));
 
 vi.mock("@/lib/builder/tailored-resume-api", () =>
@@ -118,13 +105,8 @@ import {
 describe("/api/tailor route contract", () => {
   beforeEach(() => {
     resetContractMocks();
-    templateRenderMocks.getReusableResumeTemplate.mockReturnValue(null);
-    templateRenderMocks.getDocumentTemplateV3.mockReturnValue(null);
-    templateRenderMocks.renderTailoredResumeWithReusableTemplate.mockReturnValue(
-      "<article>Reusable Tailor Resume</article>",
-    );
-    templateRenderMocks.generateResumeHTMLV3.mockReturnValue(
-      "<article>V3 Tailor Resume</article>",
+    templateRenderMocks.renderResumeHtmlForTemplate.mockResolvedValue(
+      "<article>Tailor Resume</article>",
     );
   });
 
@@ -250,7 +232,7 @@ describe("/api/tailor route contract", () => {
     });
   });
 
-  it("renders a generated resume through a saved reusable template", async () => {
+  it("renders a generated resume through the unified template dispatch", async () => {
     setAuthSuccess();
     const resume = {
       contact: { name: "Riley Chen" },
@@ -259,10 +241,6 @@ describe("/api/tailor route contract", () => {
       skills: ["TypeScript"],
       education: [],
     };
-    templateRenderMocks.getReusableResumeTemplate.mockReturnValueOnce({
-      id: "v4-template",
-      template: { schemaVersion: 4, id: "v4-template", name: "V4" },
-    });
 
     const response = await invokeRouteHandler(
       POST,
@@ -270,7 +248,7 @@ describe("/api/tailor route contract", () => {
         "http://localhost/api/tailor",
         {
           action: "render",
-          templateId: "v4-template",
+          templateId: "imported-1",
           resume,
         },
         "POST",
@@ -279,19 +257,16 @@ describe("/api/tailor route contract", () => {
     );
 
     expect(response.status).toBe(200);
-    expect(templateRenderMocks.getReusableResumeTemplate).toHaveBeenCalledWith(
-      "v4-template",
-      expect.any(String),
-    );
     expect(
-      templateRenderMocks.renderTailoredResumeWithReusableTemplate,
+      templateRenderMocks.renderResumeHtmlForTemplate,
     ).toHaveBeenCalledWith(
       expect.objectContaining({ summary: "Product engineer" }),
-      expect.objectContaining({ id: "v4-template" }),
+      "imported-1",
+      expect.any(String),
     );
     await expect(response.json()).resolves.toMatchObject({
       success: true,
-      html: "<article>Reusable Tailor Resume</article>",
+      html: "<article>Tailor Resume</article>",
     });
   });
 
