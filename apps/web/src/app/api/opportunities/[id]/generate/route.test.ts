@@ -6,10 +6,7 @@ const aiGateMocks = vi.hoisted(() => ({
 }));
 
 const templateRenderMocks = vi.hoisted(() => ({
-  getReusableResumeTemplate: vi.fn(),
-  getDocumentTemplateV3: vi.fn(),
-  renderTailoredResumeWithReusableTemplate: vi.fn(),
-  generateResumeHTMLV3: vi.fn(),
+  renderResumeHtmlForTemplate: vi.fn(),
 }));
 
 vi.mock("@/lib/db/jobs-async", () =>
@@ -39,18 +36,8 @@ vi.mock("@/lib/resume/templates", () =>
   ),
 );
 
-vi.mock("@/lib/db/template-migrations", () => ({
-  getReusableResumeTemplate: templateRenderMocks.getReusableResumeTemplate,
-  getDocumentTemplateV3: templateRenderMocks.getDocumentTemplateV3,
-}));
-
-vi.mock("@/lib/resume/universal-template-renderer", () => ({
-  renderTailoredResumeWithReusableTemplate:
-    templateRenderMocks.renderTailoredResumeWithReusableTemplate,
-}));
-
-vi.mock("@/lib/resume/template-v3-renderer", () => ({
-  generateResumeHTMLV3: templateRenderMocks.generateResumeHTMLV3,
+vi.mock("@/lib/resume/render-resume", () => ({
+  renderResumeHtmlForTemplate: templateRenderMocks.renderResumeHtmlForTemplate,
 }));
 
 vi.mock("@/lib/billing/ai-gate", async () => {
@@ -106,13 +93,8 @@ describe("opportunity resume generation route", () => {
       transaction: null,
       refund: aiGateMocks.refund,
     });
-    templateRenderMocks.getReusableResumeTemplate.mockReturnValue(null);
-    templateRenderMocks.getDocumentTemplateV3.mockReturnValue(null);
-    templateRenderMocks.renderTailoredResumeWithReusableTemplate.mockReturnValue(
-      "<article>Reusable Resume</article>",
-    );
-    templateRenderMocks.generateResumeHTMLV3.mockReturnValue(
-      "<article>V3 Resume</article>",
+    templateRenderMocks.renderResumeHtmlForTemplate.mockResolvedValue(
+      "<article>Imported Resume</article>",
     );
   });
 
@@ -233,12 +215,8 @@ describe("opportunity resume generation route", () => {
     expect(aiGateMocks.refund).toHaveBeenCalledOnce();
   });
 
-  it("renders generated opportunity content through a saved reusable template", async () => {
+  it("renders generated opportunity content through the unified template dispatch", async () => {
     setAuthSuccess();
-    templateRenderMocks.getReusableResumeTemplate.mockReturnValueOnce({
-      id: "v4-template",
-      template: { schemaVersion: 4, id: "v4-template", name: "V4" },
-    });
     vi.mocked(getJob).mockResolvedValueOnce({
       id: "job-1",
       title: "Senior Product Engineer",
@@ -271,22 +249,19 @@ describe("opportunity resume generation route", () => {
       POST,
       jsonRequest(
         "http://localhost/api/opportunities/job-1/generate",
-        { templateId: "v4-template" },
+        { templateId: "imported-1" },
         "POST",
       ),
       routeContext({ id: "job-1" }),
     );
 
     expect(response.status).toBe(200);
-    expect(templateRenderMocks.getReusableResumeTemplate).toHaveBeenCalledWith(
-      "v4-template",
-      expect.any(String),
-    );
     expect(
-      templateRenderMocks.renderTailoredResumeWithReusableTemplate,
+      templateRenderMocks.renderResumeHtmlForTemplate,
     ).toHaveBeenCalledWith(
       expect.any(Object),
-      expect.objectContaining({ id: "v4-template" }),
+      "imported-1",
+      expect.any(String),
     );
     await expect(response.json()).resolves.toMatchObject({
       success: true,

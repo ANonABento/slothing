@@ -1,10 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const builderMocks = vi.hoisted(() => ({
-  getReusableResumeTemplate: vi.fn(),
-  getDocumentTemplateV3: vi.fn(),
-  renderTailoredResumeWithReusableTemplate: vi.fn(),
-  generateResumeHTMLV3: vi.fn(),
+  renderResumeHtmlForTemplate: vi.fn(),
 }));
 
 vi.mock("@/lib/auth", () =>
@@ -29,28 +26,8 @@ vi.mock("@/lib/builder/editor-document", () =>
   ),
 );
 
-vi.mock("@/lib/db/template-migrations", () => ({
-  getReusableResumeTemplate: builderMocks.getReusableResumeTemplate,
-  getDocumentTemplateV3: builderMocks.getDocumentTemplateV3,
-}));
-
-vi.mock("@/lib/resume/pdf", () =>
-  globalThis.__contractRouteMocks!.createContractModuleMock("@/lib/resume/pdf"),
-);
-
-vi.mock("@/lib/resume/templates", () =>
-  globalThis.__contractRouteMocks!.createContractModuleMock(
-    "@/lib/resume/templates",
-  ),
-);
-
-vi.mock("@/lib/resume/template-v3-renderer", () => ({
-  generateResumeHTMLV3: builderMocks.generateResumeHTMLV3,
-}));
-
-vi.mock("@/lib/resume/universal-template-renderer", () => ({
-  renderTailoredResumeWithReusableTemplate:
-    builderMocks.renderTailoredResumeWithReusableTemplate,
+vi.mock("@/lib/resume/render-resume", () => ({
+  renderResumeHtmlForTemplate: builderMocks.renderResumeHtmlForTemplate,
 }));
 
 import { POST } from "./route";
@@ -70,13 +47,8 @@ import {
 describe("/api/builder route contract", () => {
   beforeEach(() => {
     resetContractMocks();
-    builderMocks.getReusableResumeTemplate.mockReturnValue(null);
-    builderMocks.getDocumentTemplateV3.mockReturnValue(null);
-    builderMocks.renderTailoredResumeWithReusableTemplate.mockReturnValue(
-      "<html>v4 builder</html>",
-    );
-    builderMocks.generateResumeHTMLV3.mockReturnValue(
-      "<html>v3 builder</html>",
+    builderMocks.renderResumeHtmlForTemplate.mockResolvedValue(
+      "<html>builder</html>",
     );
   });
 
@@ -159,12 +131,7 @@ describe("/api/builder route contract", () => {
     });
   });
 
-  it("uses a saved V3 visual template when building a preview", async () => {
-    builderMocks.getDocumentTemplateV3.mockReturnValue({
-      id: "v3-template",
-      template: { schemaVersion: 3, id: "v3-template", name: "V3" },
-    });
-
+  it("renders a preview through the unified template dispatch", async () => {
     const response = await invokeRouteHandler(
       POST,
       jsonRequest(
@@ -172,7 +139,7 @@ describe("/api/builder route contract", () => {
         {
           document: { sections: [{ id: "summary", title: "Summary" }] },
           contact: { name: "Mara Voss" },
-          templateId: "v3-template",
+          templateId: "imported-1",
         },
         "POST",
         { "x-extension-token": "test-token" },
@@ -180,53 +147,13 @@ describe("/api/builder route contract", () => {
       routeContext(),
     );
 
-    expect(builderMocks.getDocumentTemplateV3).toHaveBeenCalledWith(
-      "v3-template",
+    expect(builderMocks.renderResumeHtmlForTemplate).toHaveBeenCalledWith(
+      expect.any(Object),
+      "imported-1",
       expect.any(String),
     );
-    expect(builderMocks.generateResumeHTMLV3).toHaveBeenCalledWith(
-      expect.any(Object),
-      expect.objectContaining({ id: "v3-template" }),
-    );
     await expect(response.json()).resolves.toMatchObject({
-      html: "<html>v3 builder</html>",
-    });
-  });
-
-  it("uses a saved reusable template when building a preview", async () => {
-    builderMocks.getReusableResumeTemplate.mockReturnValue({
-      id: "v4-template",
-      template: { schemaVersion: 4, id: "v4-template", name: "V4" },
-    });
-
-    const response = await invokeRouteHandler(
-      POST,
-      jsonRequest(
-        "http://localhost/api/builder",
-        {
-          document: { sections: [{ id: "summary", title: "Summary" }] },
-          contact: { name: "Mara Voss" },
-          templateId: "v4-template",
-        },
-        "POST",
-        { "x-extension-token": "test-token" },
-      ),
-      routeContext(),
-    );
-
-    expect(builderMocks.getReusableResumeTemplate).toHaveBeenCalledWith(
-      "v4-template",
-      expect.any(String),
-    );
-    expect(
-      builderMocks.renderTailoredResumeWithReusableTemplate,
-    ).toHaveBeenCalledWith(
-      expect.any(Object),
-      expect.objectContaining({ id: "v4-template" }),
-    );
-    expect(builderMocks.getDocumentTemplateV3).not.toHaveBeenCalled();
-    await expect(response.json()).resolves.toMatchObject({
-      html: "<html>v4 builder</html>",
+      html: "<html>builder</html>",
     });
   });
 });

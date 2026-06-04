@@ -7,12 +7,7 @@ import {
   editableDocumentToResume,
   type EditableResumeDocument,
 } from "@/lib/builder/editor-document";
-import {
-  getReusableResumeTemplate,
-  getDocumentTemplateV3,
-} from "@/lib/db/template-migrations";
-import { generateResumeHTML } from "@/lib/resume/pdf";
-import { getTemplateWithCustom } from "@/lib/resume/templates";
+import { renderResumeHtmlForTemplate } from "@/lib/resume/render-resume";
 import { builderRequestSchema } from "@/lib/schemas";
 
 export const dynamic = "force-dynamic";
@@ -73,23 +68,7 @@ async function renderBuilderResumeHtml(
   templateId: string,
   userId: string,
 ): Promise<string> {
-  const reusableTemplate = getReusableResumeTemplate(templateId, userId);
-  if (reusableTemplate) {
-    const { renderTailoredResumeWithReusableTemplate } =
-      await import("@/lib/resume/universal-template-renderer");
-    return renderTailoredResumeWithReusableTemplate(
-      resume,
-      reusableTemplate.template,
-    );
-  }
-  const documentTemplateV3 = getDocumentTemplateV3(templateId, userId);
-  if (documentTemplateV3) {
-    const { generateResumeHTMLV3 } =
-      await import("@/lib/resume/template-v3-renderer");
-    return generateResumeHTMLV3(resume, documentTemplateV3.template);
-  }
-  const template = await getTemplateWithCustom(templateId, userId);
-  return generateResumeHTML(resume, templateId, template);
+  return renderResumeHtmlForTemplate(resume, templateId, userId);
 }
 
 function expandSelectedBankEntries(
