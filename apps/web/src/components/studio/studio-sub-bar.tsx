@@ -59,6 +59,7 @@ import {
   type StudioSaveStatus,
 } from "./save-status";
 import { CustomTemplateManagerDialog } from "./custom-template-manager";
+import { ImportResumeDialog } from "./import-resume-dialog";
 
 interface StudioSubBarProps {
   documentMode: DocumentMode;
@@ -148,6 +149,7 @@ export function StudioSubBar({
 
   const [now, setNow] = useState(() => nowEpoch());
   const [templateManagerOpen, setTemplateManagerOpen] = useState(false);
+  const [importResumeOpen, setImportResumeOpen] = useState(false);
   useEffect(() => {
     const interval = window.setInterval(() => setNow(nowEpoch()), 5_000);
     return () => window.clearInterval(interval);
@@ -272,6 +274,7 @@ export function StudioSubBar({
             selectedTemplate={selectedTemplate}
             onSelect={onTemplateSelect}
             onManageTemplates={() => setTemplateManagerOpen(true)}
+            onImportResume={() => setImportResumeOpen(true)}
           />
 
           <TailorSplit
@@ -314,6 +317,14 @@ export function StudioSubBar({
         onTemplateImported={
           onTemplateImported ?? ((id) => onTemplateSelect(id))
         }
+      />
+      <ImportResumeDialog
+        open={importResumeOpen}
+        onOpenChange={setImportResumeOpen}
+        onImported={(id) => {
+          void onTemplatesChanged();
+          onTemplateSelect(id);
+        }}
       />
     </TooltipProvider>
   );
@@ -573,6 +584,7 @@ function TemplatePill({
   selectedTemplate,
   onSelect,
   onManageTemplates,
+  onImportResume,
 }: {
   documentMode: DocumentMode;
   templateId: string;
@@ -581,6 +593,7 @@ function TemplatePill({
   selectedTemplate: { id: string; name: string };
   onSelect: (id: string) => void;
   onManageTemplates: () => void;
+  onImportResume: () => void;
 }) {
   const a11yT = useA11yTranslations();
   const [open, setOpen] = useState(false);
@@ -755,7 +768,18 @@ function TemplatePill({
               )}
             </div>
             {documentMode !== "cover_letter" ? (
-              <div className="mt-2 border-t border-border/70 pt-2">
+              <div className="mt-2 flex flex-col gap-1 border-t border-border/70 pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setOpen(false);
+                    onImportResume();
+                  }}
+                  className="inline-flex h-8 w-full items-center justify-center gap-1.5 rounded-sm text-sm font-medium text-primary transition-colors hover:bg-primary/10"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  Import résumé (clone style)
+                </button>
                 <button
                   type="button"
                   onClick={() => {

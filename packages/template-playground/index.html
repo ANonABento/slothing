@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Slothing — Template Playground</title>
+    <style>
+      :root { color-scheme: light; font-family: system-ui, sans-serif; }
+      body { margin: 0; display: grid; grid-template-columns: 300px 1fr; height: 100vh; }
+      #controls { padding: 1rem; border-right: 1px solid #ddd; overflow: auto; }
+      #controls h1 { font-size: 1rem; margin: 0 0 0.75rem; }
+      #controls label { display: block; font-size: 0.76rem; margin: 0.6rem 0 0.2rem; color: #444; }
+      #controls select, #controls input { width: 100%; box-sizing: border-box; }
+      #controls hr { margin: 0.9rem 0 0; border: 0; border-top: 1px solid #eee; }
+      #dropzone {
+        margin-top: 0.5rem; padding: 0.9rem; border: 1px dashed #bbb; border-radius: 6px;
+        font-size: 0.76rem; color: #666; text-align: center; cursor: pointer; background: #fafafa;
+      }
+      #dropzone.drag { border-color: #1f4e79; background: #eef4fb; color: #1f4e79; }
+      #extraction { font-size: 0.72rem; color: #555; margin-top: 0.5rem; line-height: 1.45; white-space: pre-wrap; }
+      .panes { display: grid; height: 100vh; min-width: 0; }
+      .pane { display: flex; flex-direction: column; min-width: 0; border-left: 1px solid #eee; }
+      .pane header { padding: 0.5rem 0.8rem; border-bottom: 1px solid #eee; font-size: 0.74rem; color: #666; display: flex; justify-content: space-between; }
+      iframe, embed { border: 0; width: 100%; height: 100%; background: #fff; flex: 1; }
+      .note { font-size: 0.68rem; color: #999; margin-top: 0.9rem; line-height: 1.4; }
+      button.link { background: none; border: 0; color: #1f4e79; cursor: pointer; font-size: 0.72rem; padding: 0; }
+    </style>
+  </head>
+  <body>
+    <div id="controls">
+      <h1>Template Playground</h1>
+      <label>Original resume (clone target)</label>
+      <div id="dropzone">Drop a PDF here, or click to choose</div>
+      <input id="file" type="file" accept="application/pdf" hidden />
+      <div id="extraction"></div>
+      <div id="form"></div>
+      <p class="note">
+        Phase 3 manual-verify surface. Drop a PDF → deterministic fingerprint pre-selects
+        + pre-tunes a template and the OpenResume pipeline drafts the content; or self-import
+        via embedded XMP. Compare original ↔ HTML ↔ Typeset (Typst WASM), nudge live, switch
+        templates. This loop ports into the Studio import dialog (Phase 4).
+      </p>
+    </div>
+    <div class="panes" id="panes">
+      <div class="pane" id="original-pane" style="display:none">
+        <header><span>Original PDF</span><button class="link" id="clear-original">clear</button></header>
+        <iframe id="original-frame" title="original resume"></iframe>
+      </div>
+      <div class="pane" id="html-pane">
+        <header>HTML preview (renderHtml)</header>
+        <iframe id="html-frame" title="HTML resume preview"></iframe>
+      </div>
+      <div class="pane" id="typeset-pane">
+        <header id="typeset-status">Typeset PDF (Typst WASM)</header>
+        <iframe id="typeset-frame" title="Typeset resume preview"></iframe>
+      </div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

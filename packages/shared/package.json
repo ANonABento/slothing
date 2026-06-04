@@ -10,7 +10,8 @@
     "./schemas": "./src/schemas.ts",
     "./scoring": "./src/scoring/index.ts",
     "./formatters": "./src/formatters/index.ts",
-    "./api-contracts": "./src/api-contracts.ts"
+    "./api-contracts": "./src/api-contracts.ts",
+    "./resume-template": "./src/resume-template/index.ts"
   },
   "scripts": {
     "build": "tsc --emitDeclarationOnly",
@@ -20,9 +21,12 @@
     "test:run": "vitest run"
   },
   "dependencies": {
+    "pdf-lib": "^1.17.1",
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@myriaddreamin/typst-ts-node-compiler": "^0.7.0",
+    "pdfjs-dist": "5.6.205",
     "typescript": "^5",
     "vitest": "4.0.18"
   }
