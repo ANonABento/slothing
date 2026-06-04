@@ -2,7 +2,10 @@
 
 import { useCallback, useEffect, useState } from "react";
 import type { ResumeTemplate } from "@/lib/resume/template-types";
-import type { ReusableResumeTemplateIR } from "@/lib/resume/universal-template-renderer";
+import {
+  FONT_STACKS,
+  type ResumeTemplate as CollapsedResumeTemplate,
+} from "@slothing/shared/resume-template";
 
 interface TemplateApiItem {
   id: string;
@@ -10,13 +13,9 @@ interface TemplateApiItem {
   description?: string;
   customDescription?: string | null;
   type: "built-in" | "custom";
-  analyzedStyles?: {
-    styles: ResumeTemplate["styles"];
-  };
   sourceFilename?: string | null;
   sourceType?: string | null;
-  schemaVersion?: number;
-  reusableTemplate?: ReusableResumeTemplateIR;
+  template?: CollapsedResumeTemplate;
   updatedAt?: string;
 }
 
@@ -38,66 +37,35 @@ async function fetchCustomTemplates(): Promise<ResumeTemplate[]> {
   const data = (await response.json()) as TemplatesApiResponse;
   return (data.templates ?? [])
     .filter(
-      (template) => template.type === "custom" && template.reusableTemplate,
+      (item): item is TemplateApiItem & { template: CollapsedResumeTemplate } =>
+        Boolean(item.type === "custom" && item.template),
     )
-    .map((template) =>
-      isReusableTemplateItem(template)
-        ? reusableTemplateToResumeTemplate(template)
-        : unreachableTemplate(template),
-    );
+    .map(collapsedTemplateToResumeTemplate);
 }
 
-function isReusableTemplateItem(
-  template: TemplateApiItem,
-): template is TemplateApiItem & {
-  reusableTemplate: ReusableResumeTemplateIR;
-} {
-  return Boolean(template.reusableTemplate);
-}
-
-function reusableTemplateToResumeTemplate(
-  template: TemplateApiItem & { reusableTemplate: ReusableResumeTemplateIR },
+/** Adapt the collapsed (grammar+tokens) template to the legacy picker/preview shape. */
+function collapsedTemplateToResumeTemplate(
+  item: TemplateApiItem & { template: CollapsedResumeTemplate },
 ): ResumeTemplate {
-  const reusableTemplate = template.reusableTemplate;
-  const body = reusableTemplate.tokens.typography.body;
-  const heading = reusableTemplate.tokens.typography.sectionHeading ?? body;
-  const name = reusableTemplate.tokens.typography.name ?? heading;
-  const accent =
-    reusableTemplate.tokens.color.accent?.value ??
-    heading?.color ??
-    name?.color ??
-    "#333333";
-
+  const { grammar, tokens } = item.template;
+  const base = tokens.baseFontSizePt;
   return {
-    id: template.id,
-    name: template.name,
-    description: template.description ?? "Reusable imported template",
-    schemaVersion: 4,
+    id: item.id,
+    name: item.name,
+    description: item.description ?? "Imported template",
     styles: {
-      fontFamily: body?.fontFamily ?? "'Helvetica Neue', Arial, sans-serif",
-      fontSize: `${body?.fontSizePt ?? 11}pt`,
-      headerSize: `${name?.fontSizePt ?? 20}pt`,
-      sectionHeaderSize: `${heading?.fontSizePt ?? 12}pt`,
-      lineHeight: body?.lineHeight ?? "1.4",
-      accentColor: accent,
-      layout:
-        reusableTemplate.tokens.layout.columns?.value === 2
-          ? "two-column"
-          : "single-column",
-      headerStyle:
-        reusableTemplate.tokens.layout.headerMode?.value === "stacked"
-          ? "centered"
-          : "left",
-      bulletStyle: "disc",
-      sectionDivider: reusableTemplate.tokens.rules.sectionDivider
-        ? "line"
-        : "space",
+      fontFamily: FONT_STACKS[tokens.fontClass],
+      fontSize: `${base}pt`,
+      headerSize: `${Math.round(base * 1.9)}pt`,
+      sectionHeaderSize: `${Math.round(base * 1.1)}pt`,
+      lineHeight: String(tokens.lineHeight),
+      accentColor: tokens.accent,
+      layout: grammar.columns === "single" ? "single-column" : "two-column",
+      headerStyle: grammar.header === "centered" ? "centered" : "left",
+      bulletStyle: grammar.bullets,
+      sectionDivider: grammar.sectionTitle === "small-caps" ? "space" : "line",
     },
   };
-}
-
-function unreachableTemplate(template: TemplateApiItem): ResumeTemplate {
-  throw new Error(`Unsupported custom template payload: ${template.id}`);
 }
 
 export function useCustomTemplates() {

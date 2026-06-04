@@ -197,44 +197,23 @@ function pressShortcut(
   });
 }
 
-function reusableTemplateApiItem(id: string) {
+function collapsedTemplateApiItem(id: string) {
   return {
-    schemaVersion: 4,
     id,
     name: "Reusable Resume",
-    source: { filename: "resume.pdf", type: "pdf" },
-    page: { widthPt: 612, heightPt: 792, marginPt: 36 },
-    tokens: {
-      page: { widthPt: 612, heightPt: 792, marginPt: 36 },
-      typography: {
-        body: {
-          fontFamily: "Courier New, monospace",
-          fontSizePt: 10,
-          lineHeight: "1.35",
-        },
-        name: {
-          fontFamily: "Courier New, monospace",
-          fontSizePt: 22,
-          lineHeight: "1.1",
-        },
-        sectionHeading: {
-          fontFamily: "Courier New, monospace",
-          fontSizePt: 12,
-          lineHeight: "1.2",
-        },
-      },
-      color: { accent: { value: "#123456" } },
-      spacing: {},
-      rules: { sectionDivider: { widthPt: 1, color: "#123456" } },
-      layout: {
-        columns: { value: 1 },
-        headerMode: { value: "stacked" },
-      },
-      warnings: [],
+    grammar: {
+      columns: "single",
+      header: "centered",
+      sectionTitle: "full-rule",
+      bullets: "disc",
+      density: "normal",
     },
-    components: [],
-    sectionOrder: ["experience", "skills"],
-    diagnostics: [],
+    tokens: {
+      accent: "#123456",
+      fontClass: "sans",
+      baseFontSizePt: 10.5,
+      lineHeight: 1.35,
+    },
   };
 }
 
@@ -873,7 +852,7 @@ describe("StudioPage", () => {
                   id: "v4-template",
                   name: "Reusable Resume",
                   type: "custom",
-                  reusableTemplate: reusableTemplateApiItem("v4-template"),
+                  template: collapsedTemplateApiItem("v4-template"),
                 },
               ],
             }),
@@ -914,7 +893,6 @@ describe("StudioPage", () => {
           templateId: "v4-template",
           resolvedResumeTemplate: expect.objectContaining({
             id: "v4-template",
-            schemaVersion: 4,
           }),
         }),
       ),
@@ -941,7 +919,6 @@ describe("StudioPage", () => {
           templateId: "v4-template",
           resolvedResumeTemplate: expect.objectContaining({
             id: "v4-template",
-            schemaVersion: 4,
           }),
           content: expect.objectContaining({ type: "doc" }),
         }),
