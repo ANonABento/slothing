@@ -24,6 +24,8 @@ const bodySchema = z.object({
   name: z.string().min(1).optional(),
   sourceFilename: z.string().optional(),
   sourceType: z.enum(["pdf", "docx", "tex"]).optional(),
+  /** Preferred PDF export engine chosen in the import dialog (Phase C follow-up). */
+  engine: z.enum(["html", "typst"]).optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -58,6 +60,7 @@ export async function POST(request: NextRequest) {
     name: parsed.data.name,
     sourceFilename: parsed.data.sourceFilename ?? null,
     sourceType: parsed.data.sourceType ?? null,
+    exportEngine: parsed.data.engine ?? null,
   });
 
   return NextResponse.json({

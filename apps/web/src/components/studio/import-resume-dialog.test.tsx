@@ -100,5 +100,7 @@ describe("ImportResumeDialog — preview + nudge + accept loop", () => {
     const body = JSON.parse((commitCall![1] as RequestInit).body as string);
     expect(body.template.grammar.density).toBe("airy");
     expect(body.rdm.basics.name).toBe("Jane Doe");
+    // The chosen export engine is persisted with the template (default "html").
+    expect(body.engine).toBe("html");
   });
 });

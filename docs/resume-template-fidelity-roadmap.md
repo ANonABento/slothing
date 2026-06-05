@@ -179,9 +179,16 @@ added; CI green.
 > Typst (422 for legacy-only templates, 500 on a genuine compile error — no silent
 > fallback). Export menu gains a **"PDF (Typst)"** entry. CI green.
 >
-> **Remaining C follow-ups (small):** make it the *default* PDF engine once trusted;
-> persist a per-template preferred engine so the import dialog's HTML/Typeset toggle
-> (currently cosmetic — its `engine` arg is dropped in `studio-sub-bar`) drives export.
+> **C follow-up — DONE** (branch `feat/resume-template-export-engine-pref`): per-template
+> preferred engine now persists. Added an `export_engine` column to `document_templates`
+> (additive migration), the import dialog sends its `engine` choice to
+> `/import/commit`, and `/api/resume/export` resolves the engine as **request →
+> template's saved preference → HTML**. So a résumé imported with "Typeset" exports as a
+> Typst PDF by default; the explicit "PDF (Typst)" menu item still force-overrides. The
+> import dialog's toggle is now real (no menu change needed).
+>
+> **Remaining (deferred):** make Typst the *global default* PDF engine once trusted
+> (product call); let users change a saved template's engine from the template manager.
 
 **Goal:** capture LaTeX/Overleaf users **without** building LaTeX ingestion. The wedge is
 "LaTeX-quality PDF + AI tailoring Overleaf will never have," not file compatibility.

@@ -84,8 +84,11 @@ const exportSchema = z.object({
   mode: z.enum(["resume", "cover_letter"]).default("resume"),
   templateId: z.string().min(1).default("classic"),
   format: z.enum(["pdf", "latex", "typst", "html", "docx"]).default("pdf"),
-  /** Which engine renders a PDF: HTML→Chromium (default) or Typst→PDF (server). */
-  engine: z.enum(["html", "typst"]).default("html"),
+  /**
+   * Which engine renders a PDF: HTML→Chromium or Typst→PDF (server). When omitted,
+   * falls back to the template's saved preference, then HTML.
+   */
+  engine: z.enum(["html", "typst"]).optional(),
   latexOptions: z.record(z.string(), z.unknown()).optional(),
   compilePdf: z.boolean().default(false),
   pageSettings: z
@@ -302,8 +305,15 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Default: PDF — Typst engine (server compile) when requested for a grammar template.
-    if (engine === "typst") {
+    // Default: PDF. Engine resolves from the request, else the template's saved
+    // preference (chosen at import), else HTML→Chromium.
+    const collapsedTemplate = resume
+      ? getResumeTemplate(templateId, authResult.userId)
+      : null;
+    const effectiveEngine = engine ?? collapsedTemplate?.exportEngine ?? "html";
+
+    // Typst engine (server compile) for a grammar-based template.
+    if (effectiveEngine === "typst") {
       if (!resume) {
         return NextResponse.json(
           { error: "resumeId required for a Typst PDF" },
@@ -364,10 +374,7 @@ export async function POST(request: NextRequest) {
     const { generatePDF } = await import("@/lib/resume/pdf-export");
     // Imported (collapsed) templates emit a self-contained, Letter-sized page with
     // their own margins, so the PDF is rendered borderless; built-in templates honor
-    // the editor's page settings.
-    const collapsedTemplate = resume
-      ? getResumeTemplate(templateId, authResult.userId)
-      : null;
+    // the editor's page settings. (collapsedTemplate resolved above.)
     const normalizedPageSettings = normalizePageSettings(
       (pageSettings as Partial<PageSettings> | undefined) ??
         DEFAULT_PAGE_SETTINGS,
