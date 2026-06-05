@@ -1,9 +1,9 @@
 /**
  * @route GET /api/resume/export
  * @route POST /api/resume/export
- * @description GET: List available export templates. POST: Export a resume as PDF, DOCX, HTML, or LaTeX.
+ * @description GET: List available export templates. POST: Export a resume as PDF, DOCX, HTML, LaTeX, or Typst.
  * @auth Required
- * @request { resumeId: string, template: string, format: "pdf" | "docx" | "html" | "latex" } (POST)
+ * @request { resumeId: string, template: string, format: "pdf" | "docx" | "html" | "latex" | "typst" } (POST)
  * @response ResumeTemplatesResponse from @/types/api
  */
 import { NextRequest, NextResponse } from "next/server";
@@ -83,7 +83,7 @@ const exportSchema = z.object({
   content: z.unknown().optional(),
   mode: z.enum(["resume", "cover_letter"]).default("resume"),
   templateId: z.string().min(1).default("classic"),
-  format: z.enum(["pdf", "latex", "html", "docx"]).default("pdf"),
+  format: z.enum(["pdf", "latex", "typst", "html", "docx"]).default("pdf"),
   latexOptions: z.record(z.string(), z.unknown()).optional(),
   compilePdf: z.boolean().default(false),
   pageSettings: z
@@ -244,6 +244,37 @@ export async function POST(request: NextRequest) {
         headers: {
           "Content-Type": "application/x-tex",
           "Content-Disposition": `attachment; filename="resume.tex"`,
+        },
+      });
+    }
+
+    if (format === "typst") {
+      if (!resume) {
+        return NextResponse.json(
+          { error: "resumeId required for Typst export" },
+          { status: 400 },
+        );
+      }
+      const { renderResumeTypstForTemplate } =
+        await import("@/lib/resume/render-resume");
+      const src = renderResumeTypstForTemplate(
+        resume,
+        templateId,
+        authResult.userId,
+      );
+      if (!src) {
+        return NextResponse.json(
+          {
+            error:
+              "Typst source is only available for imported/grammar-based templates.",
+          },
+          { status: 422 },
+        );
+      }
+      return new NextResponse(src, {
+        headers: {
+          "Content-Type": "application/x-typst; charset=utf-8",
+          "Content-Disposition": `attachment; filename="resume.typ"`,
         },
       });
     }

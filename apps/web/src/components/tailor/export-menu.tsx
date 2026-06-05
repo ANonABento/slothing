@@ -6,6 +6,7 @@ import {
   Download,
   FileText,
   Code,
+  FileCode,
   Globe,
   Copy,
   Check,
@@ -25,7 +26,7 @@ interface ExportOption {
   label: string;
   description: string;
   icon: React.ReactNode;
-  format: "pdf" | "latex" | "html" | "clipboard";
+  format: "pdf" | "latex" | "typst" | "html" | "clipboard";
 }
 
 export const EXPORT_OPTIONS: ExportOption[] = [
@@ -40,6 +41,12 @@ export const EXPORT_OPTIONS: ExportOption[] = [
     description: "Download .tex file",
     icon: <Code className="h-4 w-4" />,
     format: "latex",
+  },
+  {
+    label: "Typst",
+    description: "Download .typ source",
+    icon: <FileCode className="h-4 w-4" />,
+    format: "typst",
   },
   {
     label: "HTML",
@@ -112,7 +119,7 @@ function resumeToPlainText(resume: TailoredResume): string {
 async function downloadExport(
   resumeId: string,
   templateId: string,
-  format: "pdf" | "latex" | "html",
+  format: "pdf" | "latex" | "typst" | "html",
 ): Promise<void> {
   const res = await fetch("/api/resume/export", {
     method: "POST",
@@ -126,7 +133,14 @@ async function downloadExport(
   }
 
   const blob = await res.blob();
-  const ext = format === "pdf" ? "pdf" : format === "latex" ? "tex" : "html";
+  const ext =
+    format === "pdf"
+      ? "pdf"
+      : format === "latex"
+        ? "tex"
+        : format === "typst"
+          ? "typ"
+          : "html";
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;

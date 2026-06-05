@@ -7,6 +7,7 @@ const mocks = vi.hoisted(() => ({
   getResumeTemplate: vi.fn(),
   listResumeTemplates: vi.fn(),
   renderResumeHtmlForTemplate: vi.fn(),
+  renderResumeTypstForTemplate: vi.fn(),
   generatePDF: vi.fn(),
   convertContentToDocx: vi.fn(),
 }));
@@ -27,6 +28,7 @@ vi.mock("@/lib/db/resume-templates", () => ({
 
 vi.mock("@/lib/resume/render-resume", () => ({
   renderResumeHtmlForTemplate: mocks.renderResumeHtmlForTemplate,
+  renderResumeTypstForTemplate: mocks.renderResumeTypstForTemplate,
 }));
 
 vi.mock("@/lib/resume/pdf-export", () => ({
@@ -66,6 +68,7 @@ describe("resume export route", () => {
     mocks.getResumeTemplate.mockReturnValue(null);
     mocks.listResumeTemplates.mockReturnValue([]);
     mocks.renderResumeHtmlForTemplate.mockResolvedValue("<html>resume</html>");
+    mocks.renderResumeTypstForTemplate.mockReturnValue("#set page()\n= Jane");
     mocks.generatePDF.mockResolvedValue(new Uint8Array([1, 2, 3]));
     mocks.convertContentToDocx.mockResolvedValue(Buffer.from([4, 5, 6]));
   });
@@ -162,6 +165,41 @@ describe("resume export route", () => {
       format: "Letter",
       margin: { top: "0", right: "0", bottom: "0", left: "0" },
     });
+  });
+
+  it("exports the Typst source for a grammar-based template", async () => {
+    const response = await POST(
+      exportRequest({
+        resumeId: "resume-1",
+        templateId: "imported-1",
+        format: "typst",
+      }),
+    );
+
+    expect(mocks.renderResumeTypstForTemplate).toHaveBeenCalledWith(
+      resume,
+      "imported-1",
+      "user-1",
+    );
+    expect(response.headers.get("content-type")).toBe(
+      "application/x-typst; charset=utf-8",
+    );
+    expect(response.headers.get("content-disposition")).toContain("resume.typ");
+    await expect(response.text()).resolves.toContain("#set page()");
+  });
+
+  it("returns 422 for Typst export of a legacy-only template (no grammar form)", async () => {
+    mocks.renderResumeTypstForTemplate.mockReturnValue(null);
+
+    const response = await POST(
+      exportRequest({
+        resumeId: "resume-1",
+        templateId: "legacy-only",
+        format: "typst",
+      }),
+    );
+
+    expect(response.status).toBe(422);
   });
 
   it("exports a resume DOCX from TipTap content", async () => {
