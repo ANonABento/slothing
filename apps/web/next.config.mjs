@@ -38,7 +38,15 @@ const nextConfig = {
     // Next.js's (rsc) webpack layer hands it a non-object `module.exports`.
     // Symptom: `TypeError: Object.defineProperty called on non-object` inside
     // any server route that imports it.
-    serverComponentsExternalPackages: ['better-sqlite3', 'pdfjs-dist'],
+    // `@myriaddreamin/typst-ts-node-compiler` ships a native `.node` addon that
+    // webpack cannot parse ("Module parse failed: Unexpected character") — keep it
+    // external (loaded at runtime, server-only) like better-sqlite3. Used by the
+    // server Typst→PDF export path (lib/resume/typst-compile.ts).
+    serverComponentsExternalPackages: [
+      'better-sqlite3',
+      'pdfjs-dist',
+      '@myriaddreamin/typst-ts-node-compiler',
+    ],
   },
   images: {
     remotePatterns: [
