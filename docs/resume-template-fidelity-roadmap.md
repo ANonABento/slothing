@@ -220,6 +220,11 @@ concern, and `.tex ≠ .typ` (separate parsers).
 
 ## Phase D — Pixel-fidelity / WYSIWYG track  *(Tier 3; big bet, gated, opt-in)*
 
+> **Decision gate written up:** `docs/resume-template-pixel-fidelity-gate.md`. A+B+C are
+> merged; the go/no-go (with evidence to gather + cheaper alternatives) lives there.
+> Default verdict is **defer** until the residual gap + demand are measured. Do not write
+> Phase D code until that gate is passed.
+
 **Goal:** for users who want exact visual control and accept losing auto-tailoring on those
 docs. **Do not start until A–C ship and demand is proven.** This is a different product
 mode, not an enhancement of the clone path.
