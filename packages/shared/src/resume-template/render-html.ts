@@ -21,6 +21,15 @@ import type { RenderHtml } from "./render";
 const INK = "#1a1a1a";
 const INK_MUTED = "#555555";
 
+/** Accent color for section chrome (titles/rules/bullets/links), or ink when off. */
+function chromeColor(layout: ResumeLayout): string {
+  return layout.accentOnSections ? layout.accent : INK;
+}
+/** Accent color for the name, or ink when off. */
+function nameColor(layout: ResumeLayout): string {
+  return layout.accentOnName ? layout.accent : INK;
+}
+
 function esc(s: string): string {
   return s.replace(/[&<>"']/g, (c) =>
     c === "&"
@@ -71,7 +80,8 @@ function contactLineHtml(
 }
 
 function sectionTitleHtml(layout: ResumeLayout, title: string): string {
-  const { accent, spacing } = layout;
+  const accent = chromeColor(layout);
+  const { spacing } = layout;
   const base = `font-weight:700;color:${accent};margin:0 0 ${spacing.titleGap}em;font-size:0.92em;`;
   switch (layout.sectionTitle) {
     case "full-rule":
@@ -95,26 +105,37 @@ function sectionTitleHtml(layout: ResumeLayout, title: string): string {
 
 function entryHtml(layout: ResumeLayout, e: ResumeEntry): string {
   const { spacing } = layout;
-  const leadLeft = [
+  const meta = [e.trailing, e.subtrailing].filter(Boolean) as string[];
+  let leadLeft = [
     e.primary ? `<strong>${esc(e.primary)}</strong>` : "",
     e.secondary
       ? `<span>${e.primary ? ", " : ""}${esc(e.secondary)}</span>`
       : "",
   ].join("");
-  const leadRight = [
-    e.trailing ? `<div>${esc(e.trailing)}</div>` : "",
-    e.subtrailing
-      ? `<div style="font-size:0.92em">${esc(e.subtrailing)}</div>`
-      : "",
-  ].join("");
 
-  const head =
-    leadLeft || leadRight
-      ? `<div style="display:flex;justify-content:space-between;align-items:baseline;gap:1em">
+  let head: string;
+  if (layout.dateAlignment === "inline") {
+    // Meta flows right after the title on the same line, not a right tab stop.
+    const inlineMeta = meta.length
+      ? `<span style="color:${INK_MUTED}">${leadLeft ? " · " : ""}${esc(meta.join(" · "))}</span>`
+      : "";
+    leadLeft += inlineMeta;
+    head = leadLeft ? `<div>${leadLeft}</div>` : "";
+  } else {
+    const leadRight = [
+      e.trailing ? `<div>${esc(e.trailing)}</div>` : "",
+      e.subtrailing
+        ? `<div style="font-size:0.92em">${esc(e.subtrailing)}</div>`
+        : "",
+    ].join("");
+    head =
+      leadLeft || leadRight
+        ? `<div style="display:flex;justify-content:space-between;align-items:baseline;gap:1em">
           <div style="min-width:0">${leadLeft}</div>
           ${leadRight ? `<div style="text-align:right;color:${INK_MUTED};white-space:nowrap;flex:0 0 auto">${leadRight}</div>` : ""}
         </div>`
-      : "";
+        : "";
+  }
 
   const note = e.note
     ? `<div style="color:${INK_MUTED};font-style:italic;margin-top:0.12em">${
@@ -143,7 +164,7 @@ function bulletsHtml(layout: ResumeLayout, bullets: string[]): string {
   const items = bullets
     .map(
       (b) =>
-        `<li style="display:flex;gap:0.5em;margin-bottom:${spacing.bulletGap}em"><span style="flex:0 0 auto;color:${layout.accent}" aria-hidden="true">${bulletMarker}</span><span style="min-width:0">${esc(
+        `<li style="display:flex;gap:0.5em;margin-bottom:${spacing.bulletGap}em"><span style="flex:0 0 auto;color:${chromeColor(layout)}" aria-hidden="true">${bulletMarker}</span><span style="min-width:0">${esc(
           b,
         )}</span></li>`,
     )
@@ -202,10 +223,10 @@ function sectionHtml(layout: ResumeLayout, section: ResumeSection): string {
 }
 
 function headerHtml(layout: ResumeLayout): string {
-  const { header, accent, spacing } = layout;
-  const name = `<h1 style="margin:0;font-size:1.9em;font-weight:700;color:${accent};letter-spacing:-0.01em">${esc(
-    header.name,
-  )}</h1>`;
+  const { header, spacing } = layout;
+  const name = `<h1 style="margin:0;font-size:${layout.nameSizeEm}em;font-weight:700;color:${nameColor(
+    layout,
+  )};letter-spacing:-0.01em">${esc(header.name)}</h1>`;
   const headline = header.headline
     ? `<div style="color:${INK_MUTED};font-size:1.02em;margin-top:0.15em">${esc(header.headline)}</div>`
     : "";
@@ -214,7 +235,7 @@ function headerHtml(layout: ResumeLayout): string {
     : "";
 
   const wrapStyle = `padding-bottom:${spacing.headerGap * 0.5}em;margin-bottom:${spacing.headerGap * 0.5}em;border-bottom:1px solid ${tint(
-    accent,
+    chromeColor(layout),
     0.55,
   )}`;
 
@@ -244,7 +265,7 @@ export const renderHtml: RenderHtml = (template, rdm) => {
 
   let bodyInner: string;
   if (layout.sidebarSide && layout.sidebar.length) {
-    const sidebarBg = tint(layout.accent, 0.92);
+    const sidebarBg = tint(chromeColor(layout), 0.92);
     const sidebar = `<aside style="background:${sidebarBg};padding:0.5em 0.85em;border-radius:0">${columnHtml(
       layout,
       layout.sidebar,
@@ -257,6 +278,9 @@ export const renderHtml: RenderHtml = (template, rdm) => {
   } else {
     bodyInner = `${header}${mainCol}`;
   }
+
+  const pagePadding =
+    layout.pageMarginPt != null ? `${layout.pageMarginPt}pt` : "0.55in 0.6in";
 
   const html = `<!doctype html><html lang="en"><head><meta charset="utf-8">
 <style>
@@ -271,8 +295,8 @@ export const renderHtml: RenderHtml = (template, rdm) => {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
-  .page { width: 8.5in; min-height: 11in; margin: 0 auto; padding: 0.55in 0.6in; }
-  a { color: ${layout.accent}; text-decoration: none; }
+  .page { width: 8.5in; min-height: 11in; margin: 0 auto; padding: ${pagePadding}; }
+  a { color: ${chromeColor(layout)}; text-decoration: none; }
   h1, h2 { font-family: ${layout.font.cssStack}; }
   p { margin: 0; }
 </style></head>

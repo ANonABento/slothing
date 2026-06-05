@@ -222,6 +222,84 @@ describe("fingerprint — two-column left sidebar", () => {
   });
 });
 
+// --- Fixture C: right-tabbed dates (title left, date hugging the right margin)
+function rightTabDates(): PdfDocGeometry {
+  const accent = "#1f4e79";
+  const items: PdfTextItem[] = [];
+  items.push(mk("Jane Doe", 250, 40, { fontSize: 22, bold: true }));
+  let y = 120;
+  items.push(
+    mk("EXPERIENCE", 72, y, { fontSize: 12, bold: true, color: accent }),
+  );
+  y += 20;
+  items.push(mk("Senior Engineer, Acme Corp", 72, y, { fontSize: 11 }));
+  items.push(mk("2021 – Present", 482, y, { fontSize: 11 }));
+  y += 15;
+  items.push(mk("• Built the thing.", 90, y, { fontSize: 11 }));
+  y += 15;
+  items.push(mk("Engineer, Globex", 72, y, { fontSize: 11 }));
+  items.push(mk("2018 – 2021", 500, y, { fontSize: 11 }));
+  y += 15;
+  return { pages: [page(items)] };
+}
+
+// --- Fixture D: inline dates (meta flows after the title on the same item)
+function inlineDates(): PdfDocGeometry {
+  const accent = "#1f4e79";
+  const items: PdfTextItem[] = [];
+  items.push(
+    mk("Jane Doe", 72, 40, { fontSize: 22, bold: true, color: accent }),
+  );
+  let y = 120;
+  items.push(
+    mk("EXPERIENCE", 72, y, { fontSize: 12, bold: true, color: accent }),
+  );
+  y += 20;
+  items.push(
+    mk("Senior Engineer, Acme Corp · 2021 – Present", 72, y, {
+      fontSize: 11,
+    }),
+  );
+  y += 15;
+  items.push(mk("Engineer, Globex · 2018 – 2021", 72, y, { fontSize: 11 }));
+  y += 15;
+  return { pages: [page(items)] };
+}
+
+describe("fingerprint — Phase A axes (date alignment, name scale, margin, accent placement)", () => {
+  it("reads right-tabbed dates as right-tab", () => {
+    const fp = computeFingerprint(rightTabDates());
+    expect(fp.dateAlignment.value).toBe("right-tab");
+    expect(fp.dateAlignment.confidence).toBeGreaterThan(0.4);
+  });
+  it("reads inline dates as inline (no phantom right column)", () => {
+    const fp = computeFingerprint(inlineDates());
+    expect(fp.dateAlignment.value).toBe("inline");
+    // The right-tab false-positive must not resurface as a sidebar column.
+    expect(fp.columns.value).toBe("single");
+  });
+  it("estimates a name scale near the 1.9em baseline for a large name", () => {
+    const fp = computeFingerprint(rightTabDates());
+    // 22pt name over 11pt body ≈ 2.0× → scale ≈ 1.05.
+    expect(fp.nameScale.value).toBeGreaterThan(0.9);
+    expect(fp.nameScale.value).toBeLessThan(1.2);
+    expect(fp.nameScale.confidence).toBeGreaterThan(0.4);
+  });
+  it("estimates a plausible page margin in points", () => {
+    const fp = computeFingerprint(rightTabDates());
+    expect(fp.pageMarginPt.value).toBeGreaterThanOrEqual(18);
+    expect(fp.pageMarginPt.value).toBeLessThanOrEqual(96);
+  });
+  it("detects accent on section rules only when the name is not colored", () => {
+    const fp = computeFingerprint(rightTabDates());
+    expect(fp.accentPlacement.value).toBe("rules");
+  });
+  it("detects accent on both when the name is also colored", () => {
+    const fp = computeFingerprint(inlineDates());
+    expect(fp.accentPlacement.value).toBe("both");
+  });
+});
+
 describe("classifier — synthesis with per-axis default fallback", () => {
   it("synthesizes a template from a strong fingerprint", () => {
     const fp = computeFingerprint(singleColCenteredSerif());

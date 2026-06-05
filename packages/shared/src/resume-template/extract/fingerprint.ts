@@ -1,11 +1,12 @@
 import type {
   BulletStyle,
   ColumnLayout,
+  DateAlignment,
   Density,
   HeaderStyle,
   SectionTitleStyle,
 } from "../grammar";
-import type { FontClass } from "../tokens";
+import type { AccentPlacement, FontClass } from "../tokens";
 import {
   allLines,
   dominantBodyFontSize,
@@ -39,6 +40,11 @@ export interface StyleFingerprint {
   accent: AxisValue<string>;
   fontClass: AxisValue<FontClass>;
   baseFontSizePt: AxisValue<number>;
+  // Phase A (fidelity roadmap) — parametric knobs read from geometry.
+  dateAlignment: AxisValue<DateAlignment>;
+  nameScale: AxisValue<number>;
+  pageMarginPt: AxisValue<number>;
+  accentPlacement: AxisValue<AccentPlacement>;
 }
 
 // ---------------------------------------------------------------------------
@@ -66,6 +72,26 @@ function isInk(hex: string): boolean {
   const chroma = max - min;
   // Grayscale (low chroma) OR very dark => ink.
   return chroma < 28 || max < 60;
+}
+
+/** True when an item color is a real (non-ink) accent color. */
+function isAccentColor(color?: string): boolean {
+  if (!color) return false;
+  const rgb = parseHex(color);
+  return rgb ? !isInk(toHex(rgb)) : false;
+}
+
+/** The largest-font line in the top third (the name), or the largest line overall. */
+function findNameLine(
+  doc: PdfDocGeometry,
+  lines: TextLine[],
+): TextLine | undefined {
+  const page = doc.pages[0];
+  const top = page
+    ? lines.filter((l) => l.page === 0 && l.y < page.height * 0.33)
+    : [];
+  const pool = top.length ? top : lines;
+  return [...pool].sort((a, b) => b.fontSize - a.fontSize || a.y - b.y)[0];
 }
 
 // ---------------------------------------------------------------------------
@@ -422,6 +448,113 @@ function fingerprintSectionTitle(
 }
 
 // ---------------------------------------------------------------------------
+// Name scale (name size relative to body, normalized to the 1.9em baseline)
+// ---------------------------------------------------------------------------
+
+function fingerprintNameScale(
+  doc: PdfDocGeometry,
+  lines: TextLine[],
+  bodyFontSize: number,
+): AxisValue<number> {
+  const nameLine = findNameLine(doc, lines);
+  if (!nameLine || bodyFontSize <= 0) return { value: 1, confidence: 0 };
+  const ratio = nameLine.fontSize / bodyFontSize;
+  // The renderer draws the name at 1.9em × nameScale, so scale = observed / 1.9.
+  const value = clampNameScale(ratio / 1.9);
+  // Confident only when the name is clearly larger than body text.
+  const confidence =
+    nameLine.fontSize > bodyFontSize * 1.2
+      ? Math.min(1, 0.5 + (ratio - 1.2) * 0.4)
+      : 0.2;
+  return { value, confidence };
+}
+
+// ---------------------------------------------------------------------------
+// Page margin (content bounding box vs page box, in points)
+// ---------------------------------------------------------------------------
+
+function fingerprintPageMargin(doc: PdfDocGeometry): AxisValue<number> {
+  const page = doc.pages[0];
+  if (!page) return { value: 40, confidence: 0 };
+  const items = page.items.filter((it) => it.text.trim().length > 0);
+  if (items.length < 8) return { value: 40, confidence: 0 };
+  const left = Math.min(...items.map((i) => i.x));
+  const right = Math.max(...items.map((i) => i.x + i.width));
+  const top = Math.min(...items.map((i) => i.y));
+  // Sane margins only — discard outliers (e.g. a full-bleed sidebar band at x≈0).
+  const candidates = [left, page.width - right, top].filter(
+    (m) => m > 4 && m < page.width * 0.3,
+  );
+  if (!candidates.length) return { value: 40, confidence: 0.2 };
+  return { value: clampMargin(median(candidates)), confidence: 0.6 };
+}
+
+// ---------------------------------------------------------------------------
+// Accent placement (is the NAME colored? are the SECTION HEADERS colored?)
+// ---------------------------------------------------------------------------
+
+function fingerprintAccentPlacement(
+  doc: PdfDocGeometry,
+  lines: TextLine[],
+  bodyFontSize: number,
+): AxisValue<AccentPlacement> {
+  const nameLine = findNameLine(doc, lines);
+  const nameColored = !!nameLine?.items.some((it) => isAccentColor(it.color));
+  const headers = lines.filter((l) => isSectionHeader(l, bodyFontSize));
+  const sectionsColored = headers.some((h) =>
+    h.items.some((it) => isAccentColor(it.color)),
+  );
+
+  let value: AccentPlacement;
+  if (nameColored && sectionsColored) value = "both";
+  else if (nameColored) value = "name";
+  else if (sectionsColored) value = "rules";
+  else value = "none";
+
+  // We can read fill colors fairly reliably; confidence is higher when there are
+  // enough headers to judge the "sections" signal.
+  const confidence = headers.length >= 2 ? 0.6 : 0.4;
+  return { value, confidence };
+}
+
+// ---------------------------------------------------------------------------
+// Date alignment (do date-like tokens hug the right margin, or flow inline?)
+// ---------------------------------------------------------------------------
+
+const DATE_TOKEN_RE =
+  /\b(19|20)\d{2}\b|present|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec/i;
+
+function fingerprintDateAlignment(
+  doc: PdfDocGeometry,
+): AxisValue<DateAlignment> {
+  const page = doc.pages[0];
+  if (!page) return { value: "right-tab", confidence: 0 };
+  const items = page.items.filter((it) => it.text.trim().length > 0);
+  if (!items.length) return { value: "right-tab", confidence: 0 };
+  const left = Math.min(...items.map((i) => i.x));
+  const right = Math.max(...items.map((i) => i.x + i.width));
+  const width = Math.max(1, right - left);
+
+  let rightN = 0;
+  let inlineN = 0;
+  for (const it of items) {
+    if (!DATE_TOKEN_RE.test(it.text)) continue;
+    const center = (it.x + it.width / 2 - left) / width;
+    if (center > 0.6) rightN += 1;
+    else inlineN += 1;
+  }
+  const total = rightN + inlineN;
+  if (total < 2) return { value: "right-tab", confidence: 0.2 };
+  const value: DateAlignment = rightN >= inlineN ? "right-tab" : "inline";
+  const dominance = Math.max(rightN, inlineN) / total;
+  const confidence = Math.min(
+    1,
+    dominance * 0.7 + Math.min(1, total / 5) * 0.4,
+  );
+  return { value, confidence };
+}
+
+// ---------------------------------------------------------------------------
 
 /** Compute the full deterministic style fingerprint for a parsed PDF geometry. */
 export function computeFingerprint(doc: PdfDocGeometry): StyleFingerprint {
@@ -439,9 +572,21 @@ export function computeFingerprint(doc: PdfDocGeometry): StyleFingerprint {
     header: fingerprintHeader(doc, bodyFontSize),
     bullets: fingerprintBullets(lines),
     sectionTitle: fingerprintSectionTitle(lines, bodyFontSize),
+    dateAlignment: fingerprintDateAlignment(doc),
+    nameScale: fingerprintNameScale(doc, lines, bodyFontSize),
+    pageMarginPt: fingerprintPageMargin(doc),
+    accentPlacement: fingerprintAccentPlacement(doc, lines, bodyFontSize),
   };
 }
 
 function clampFont(size: number): number {
   return Math.min(14, Math.max(7, Math.round(size * 2) / 2));
+}
+
+function clampNameScale(scale: number): number {
+  return Math.min(1.8, Math.max(0.6, Math.round(scale * 20) / 20));
+}
+
+function clampMargin(pt: number): number {
+  return Math.min(96, Math.max(18, Math.round(pt)));
 }

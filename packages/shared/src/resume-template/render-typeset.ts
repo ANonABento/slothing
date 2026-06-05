@@ -24,6 +24,15 @@ import type { RenderTypeset } from "./render";
 const INK = "#1a1a1a";
 const INK_MUTED = "#555555";
 
+/** Accent hex for section chrome (titles/rules/bullets/links), or ink when off. */
+function chromeHex(layout: ResumeLayout): string {
+  return layout.accentOnSections ? layout.accent : INK;
+}
+/** Accent hex for the name, or ink when off. */
+function nameHex(layout: ResumeLayout): string {
+  return layout.accentOnName ? layout.accent : INK;
+}
+
 /** Emit a Typst string literal that renders `s` verbatim (no markup interpretation). */
 function tstr(s: string): string {
   return `"${s.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
@@ -55,7 +64,7 @@ function contactInline(
 }
 
 function sectionTitleTypst(layout: ResumeLayout, title: string): string {
-  const accent = rgb(layout.accent);
+  const accent = rgb(chromeHex(layout));
   const upper = title.toUpperCase();
   switch (layout.sectionTitle) {
     case "full-rule":
@@ -87,7 +96,7 @@ function bulletsTypst(layout: ResumeLayout, bullets: string[]): string {
       .map((b) => `#par[${lit(b)}]\n#v(${spacing.bulletGap}em, weak: true)`)
       .join("\n");
   }
-  const marker = `text(fill: ${rgb(layout.accent)})[${lit(bulletMarker)}]`;
+  const marker = `text(fill: ${rgb(chromeHex(layout))})[${lit(bulletMarker)}]`;
   const items = bullets.map((b) => `[${lit(b)}]`).join(", ");
   return `#list(marker: ${marker}, spacing: ${(spacing.bulletGap + 0.45).toFixed(3)}em, tight: true, ${items})`;
 }
@@ -96,21 +105,31 @@ function entryTypst(layout: ResumeLayout, e: ResumeEntry): string {
   const lead =
     (e.primary ? `#text(weight: "bold")[${lit(e.primary)}]` : "") +
     (e.secondary ? `${e.primary ? lit(", ") : ""}${lit(e.secondary)}` : "");
-  const rightLines: string[] = [];
-  if (e.trailing) rightLines.push(lit(e.trailing));
-  if (e.subtrailing)
-    rightLines.push(`#text(size: 0.92em)[${lit(e.subtrailing)}]`);
+  const meta = [e.trailing, e.subtrailing].filter(Boolean) as string[];
 
   let head = "";
-  if (lead && rightLines.length) {
-    // Code-position args: bare content blocks / function calls (no leading `#`).
-    head = `#grid(columns: (1fr, auto), column-gutter: 1em, [${lead}], align(right)[#text(fill: ${rgb(
-      INK_MUTED,
-    )})[${rightLines.join(" #linebreak() ")}]])`;
-  } else if (lead) {
-    head = `#par[${lead}]`;
-  } else if (rightLines.length) {
-    head = `#par[#text(fill: ${rgb(INK_MUTED)})[${rightLines.join(" #linebreak() ")}]]`;
+  if (layout.dateAlignment === "inline") {
+    // Meta flows right after the title (same line), not a right tab stop.
+    const inlineMeta = meta.length
+      ? `${lead ? lit(" · ") : ""}#text(fill: ${rgb(INK_MUTED)})[${lit(meta.join(" · "))}]`
+      : "";
+    const line = `${lead}${inlineMeta}`;
+    head = line ? `#par[${line}]` : "";
+  } else {
+    const rightLines: string[] = [];
+    if (e.trailing) rightLines.push(lit(e.trailing));
+    if (e.subtrailing)
+      rightLines.push(`#text(size: 0.92em)[${lit(e.subtrailing)}]`);
+    if (lead && rightLines.length) {
+      // Code-position args: bare content blocks / function calls (no leading `#`).
+      head = `#grid(columns: (1fr, auto), column-gutter: 1em, [${lead}], align(right)[#text(fill: ${rgb(
+        INK_MUTED,
+      )})[${rightLines.join(" #linebreak() ")}]])`;
+    } else if (lead) {
+      head = `#par[${lead}]`;
+    } else if (rightLines.length) {
+      head = `#par[#text(fill: ${rgb(INK_MUTED)})[${rightLines.join(" #linebreak() ")}]]`;
+    }
   }
 
   const note = e.note
@@ -178,8 +197,9 @@ ${body}
 
 function headerTypst(layout: ResumeLayout): string {
   const { header, spacing } = layout;
-  const accent = rgb(layout.accent);
-  const name = `#text(size: 1.9em, weight: "bold", fill: ${accent})[${lit(header.name)}]`;
+  const name = `#text(size: ${layout.nameSizeEm}em, weight: "bold", fill: ${rgb(
+    nameHex(layout),
+  )})[${lit(header.name)}]`;
   const headline = header.headline
     ? `\n#v(0.12em, weak: true)\n#text(fill: ${rgb(INK_MUTED)}, size: 1.02em)[${lit(header.headline)}]`
     : "";
@@ -209,7 +229,7 @@ function headerTypst(layout: ResumeLayout): string {
 
   return `${inner}
 #v(${(spacing.headerGap * 0.5).toFixed(3)}em, weak: true)
-#line(length: 100%, stroke: 0.5pt + ${rgb(layout.accent)})
+#line(length: 100%, stroke: 0.5pt + ${rgb(chromeHex(layout))})
 #v(${(spacing.headerGap * 0.5).toFixed(3)}em, weak: true)`;
 }
 
@@ -230,7 +250,7 @@ export const renderTypeset: RenderTypeset = (template, rdm) => {
   if (layout.sidebarSide && layout.sidebar.length) {
     const sidebarBody = columnTypst(layout, layout.sidebar);
     // Bare code expressions — these become grid positional args (code position).
-    const sidebarBlock = `block(fill: ${rgb(layout.accent)}.lighten(92%), inset: (x: 0.7em, y: 0.5em), radius: 0pt, width: 100%)[${sidebarBody}]`;
+    const sidebarBlock = `block(fill: ${rgb(chromeHex(layout))}.lighten(92%), inset: (x: 0.7em, y: 0.5em), radius: 0pt, width: 100%)[${sidebarBody}]`;
     const mainBlock = `[${header}\n${mainCol}]`;
     const [a, b, cols] =
       layout.sidebarSide === "left"
@@ -241,11 +261,16 @@ export const renderTypeset: RenderTypeset = (template, rdm) => {
     bodyInner = `${header}\n${mainCol}`;
   }
 
+  const margin =
+    layout.pageMarginPt != null
+      ? `${layout.pageMarginPt}pt`
+      : "(x: 0.6in, top: 0.55in, bottom: 0.55in)";
+
   const src = `#set document(title: ${tstr(layout.header.name)}, author: ${tstr(layout.header.name)})
-#set page(width: 8.5in, height: 11in, margin: (x: 0.6in, top: 0.55in, bottom: 0.55in))
+#set page(width: 8.5in, height: 11in, margin: ${margin})
 #set text(font: (${fontList}), size: ${layout.baseFontSizePt}pt, fill: ${rgb(INK)})
 #set par(leading: ${leadingEm(lineHeight).toFixed(3)}em, justify: false)
-#show link: set text(fill: ${rgb(layout.accent)})
+#show link: set text(fill: ${rgb(chromeHex(layout))})
 
 ${bodyInner}
 `;

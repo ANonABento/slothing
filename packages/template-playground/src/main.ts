@@ -6,6 +6,8 @@ import {
   HEADER_STYLES,
   SECTION_TITLE_STYLES,
   BULLET_STYLES,
+  ACCENT_PLACEMENTS,
+  DATE_ALIGNMENTS,
   ALL_FIXTURES,
   getDefaultTemplate,
   applyNudges,
@@ -19,8 +21,11 @@ import {
   type HeaderStyle,
   type SectionTitleStyle,
   type BulletStyle,
+  type AccentPlacement,
+  type DateAlignment,
   type ResumeTemplate,
   type ResumeDocumentModel,
+  type StyleTokens,
 } from "@slothing/shared/resume-template";
 
 import { browserTypstCompiler } from "./typst-compiler";
@@ -55,6 +60,13 @@ const state = {
   sectionTitle: FIRST.grammar.sectionTitle as SectionTitleStyle,
   bullets: FIRST.grammar.bullets as BulletStyle,
   density: FIRST.grammar.density as Density,
+  // Phase A knobs
+  accentPlacement: "both" as AccentPlacement,
+  dateAlignment: "right-tab" as DateAlignment,
+  nameScale: 1,
+  sectionSpacing: 1,
+  /** null = keep the engine default margin. */
+  pageMarginPt: null as number | null,
   originalUrl: null as string | null,
 };
 
@@ -63,6 +75,15 @@ function baseTemplate(): ResumeTemplate {
 }
 
 function currentTemplate(): ResumeTemplate {
+  const tokens: Partial<StyleTokens> = {
+    accent: state.accent,
+    fontClass: state.fontClass,
+    accentPlacement: state.accentPlacement,
+    nameScale: state.nameScale,
+    sectionSpacing: state.sectionSpacing,
+  };
+  // Only override the page margin once explicitly set (else keep the default).
+  if (state.pageMarginPt != null) tokens.pageMarginPt = state.pageMarginPt;
   return applyNudges(baseTemplate(), {
     grammar: {
       columns: state.columns,
@@ -70,8 +91,9 @@ function currentTemplate(): ResumeTemplate {
       sectionTitle: state.sectionTitle,
       bullets: state.bullets,
       density: state.density,
+      dateAlignment: state.dateAlignment,
     },
-    tokens: { accent: state.accent, fontClass: state.fontClass },
+    tokens,
   });
 }
 
@@ -88,6 +110,11 @@ function adoptTemplate(tpl: ResumeTemplate) {
   state.sectionTitle = tpl.grammar.sectionTitle;
   state.bullets = tpl.grammar.bullets;
   state.density = tpl.grammar.density;
+  state.accentPlacement = tpl.tokens.accentPlacement ?? "both";
+  state.dateAlignment = tpl.grammar.dateAlignment ?? "right-tab";
+  state.nameScale = tpl.tokens.nameScale ?? 1;
+  state.sectionSpacing = tpl.tokens.sectionSpacing ?? 1;
+  state.pageMarginPt = tpl.tokens.pageMarginPt ?? null;
 }
 
 let typesetToken = 0;
@@ -212,6 +239,17 @@ function buildForm() {
     <select id="bullets">${BULLET_STYLES.map((b) => opt(b)).join("")}</select>
     <label>Density</label>
     <select id="density">${DENSITIES.map((d) => opt(d)).join("")}</select>
+    <hr />
+    <label>Date alignment</label>
+    <select id="dateAlignment">${DATE_ALIGNMENTS.map((d) => opt(d)).join("")}</select>
+    <label>Accent placement</label>
+    <select id="accentPlacement">${ACCENT_PLACEMENTS.map((a) => opt(a)).join("")}</select>
+    <label>Name scale (<span id="nameScale-val">1.00</span>×)</label>
+    <input id="nameScale" type="range" min="0.6" max="1.8" step="0.05" value="${state.nameScale}" />
+    <label>Section spacing (<span id="sectionSpacing-val">1.00</span>×)</label>
+    <input id="sectionSpacing" type="range" min="0.4" max="2.5" step="0.05" value="${state.sectionSpacing}" />
+    <label>Page margin (<span id="pageMarginPt-val">default</span>)</label>
+    <input id="pageMarginPt" type="range" min="18" max="96" step="1" value="${state.pageMarginPt ?? 43}" />
   `;
 
   const bind = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
@@ -241,6 +279,22 @@ function buildForm() {
   onSel("sectionTitle", (v) => (state.sectionTitle = v as SectionTitleStyle));
   onSel("bullets", (v) => (state.bullets = v as BulletStyle));
   onSel("density", (v) => (state.density = v as Density));
+  onSel("dateAlignment", (v) => (state.dateAlignment = v as DateAlignment));
+  onSel(
+    "accentPlacement",
+    (v) => (state.accentPlacement = v as AccentPlacement),
+  );
+
+  const onRange = (id: string, set: (n: number) => void) => {
+    bind<HTMLInputElement>(id).oninput = (e) => {
+      set(Number((e.target as HTMLInputElement).value));
+      syncInputs();
+      renderPanes();
+    };
+  };
+  onRange("nameScale", (n) => (state.nameScale = n));
+  onRange("sectionSpacing", (n) => (state.sectionSpacing = n));
+  onRange("pageMarginPt", (n) => (state.pageMarginPt = n));
 
   syncInputs();
 }
@@ -259,6 +313,21 @@ function syncInputs() {
   setVal("sectionTitle", state.sectionTitle);
   setVal("bullets", state.bullets);
   setVal("density", state.density);
+  setVal("dateAlignment", state.dateAlignment);
+  setVal("accentPlacement", state.accentPlacement);
+  setVal("nameScale", String(state.nameScale));
+  setVal("sectionSpacing", String(state.sectionSpacing));
+  setVal("pageMarginPt", String(state.pageMarginPt ?? 43));
+  const setText = (id: string, v: string) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = v;
+  };
+  setText("nameScale-val", state.nameScale.toFixed(2));
+  setText("sectionSpacing-val", state.sectionSpacing.toFixed(2));
+  setText(
+    "pageMarginPt-val",
+    state.pageMarginPt == null ? "default" : `${state.pageMarginPt}pt`,
+  );
 }
 
 function wireDropzone() {
