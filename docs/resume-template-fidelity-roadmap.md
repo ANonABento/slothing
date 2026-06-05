@@ -157,6 +157,24 @@ added; CI green.
 
 ## Phase C — Overleaf positioning: Typst as export-of-record + source escape hatch  *(Tier 4; cheap, strategic)*
 
+> **DECISION (open question #2 resolved): production Typst compiles SERVER-SIDE (node
+> compiler).** The export route already ships ~200 MB headless Chromium for HTML→PDF
+> and shells out to `pdflatex`; a node Typst compiler is *lighter and more
+> deterministic* than what's already there (no `networkidle`/font flakiness, npm dep
+> always present so no "binary missing" fallback). Client WASM (28 MB/user, slow
+> in-tab) loses on every axis here.
+>
+> **C2 — DONE** (branch `feat/resume-template-fidelity-phase-c`, stacked on B): the
+> `.typ` source escape hatch. Added `renderResumeTypstForTemplate` (collapsed store →
+> shared default → null) and a `format: "typst"` export that returns the `.typ` source
+> for grammar-based templates (422 for legacy-only). Surfaced as a **Typst** entry in
+> the export menu. Pure `renderTypeset` — no compiler, no new dependency. CI green.
+>
+> **C1 — NEXT (its own change, now de-risked):** wire the node Typst compiler →
+> PDF as an opt-in export engine (making the import dialog's HTML/Typeset toggle real),
+> then later flip it to the default download. Only this part adds a runtime dep
+> (promote `@myriaddreamin/typst-ts-node-compiler` from devDep) + export wiring.
+
 **Goal:** capture LaTeX/Overleaf users **without** building LaTeX ingestion. The wedge is
 "LaTeX-quality PDF + AI tailoring Overleaf will never have," not file compatibility.
 

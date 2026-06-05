@@ -83,13 +83,13 @@ describe("resumeToPlainText", () => {
 });
 
 describe("EXPORT_OPTIONS", () => {
-  it("should have 4 export options", () => {
-    expect(EXPORT_OPTIONS).toHaveLength(4);
+  it("should have 5 export options", () => {
+    expect(EXPORT_OPTIONS).toHaveLength(5);
   });
 
-  it("should include pdf, latex, html, and clipboard", () => {
+  it("should include pdf, latex, typst, html, and clipboard", () => {
     const formats = EXPORT_OPTIONS.map((o) => o.format);
-    expect(formats).toEqual(["pdf", "latex", "html", "clipboard"]);
+    expect(formats).toEqual(["pdf", "latex", "typst", "html", "clipboard"]);
   });
 });
 
