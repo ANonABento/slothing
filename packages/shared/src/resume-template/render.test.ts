@@ -233,6 +233,47 @@ describe("Phase A knobs — Typst still COMPILES with no errors", () => {
   }
 }, 60_000);
 
+describe("Phase B — skillsLayout grid (labeled-rows table primitive)", () => {
+  const grid = withGrammar(primary, { skillsLayout: "grid" });
+
+  it("renders Skills as an aligned label|value grid in both backends", () => {
+    const html = renderHtml(grid, SAMPLE_SWE).html;
+    expect(html).toContain("grid-template-columns:26% 1fr");
+    expect(html).toContain("Languages");
+    expect(html).toContain("TypeScript, Go, Python, SQL");
+    const src = renderTypeset(grid, SAMPLE_SWE).src;
+    expect(src).toContain("columns: (26%, 1fr)");
+  });
+
+  it("default (list) is unchanged — byte-identical to the un-nudged template", () => {
+    expect(
+      renderHtml(withGrammar(primary, { skillsLayout: "list" }), SAMPLE_SWE)
+        .html,
+    ).toBe(renderHtml(primary, SAMPLE_SWE).html);
+    // The classic list layout never emits the labeled-rows grid.
+    expect(renderHtml(primary, SAMPLE_SWE).html).not.toContain(
+      "grid-template-columns:26% 1fr",
+    );
+  });
+
+  it("falls back to the flowing list when skill groups have no labels", () => {
+    const unlabeled = {
+      ...SAMPLE_SWE,
+      skills: SAMPLE_SWE.skills.map((s) => ({ ...s, name: "" })),
+    };
+    const html = renderHtml(grid, unlabeled).html;
+    // No half-empty table — degrades to the list, content still present.
+    expect(html).not.toContain("grid-template-columns:26% 1fr");
+    expect(html).toContain("TypeScript");
+  });
+
+  it("Typst still COMPILES with the skills grid", async () => {
+    const compiler = createNodeTypstCompiler();
+    const pdf = await compiler.compile(renderTypeset(grid, SAMPLE_SWE).src);
+    expect(Array.from(pdf.slice(0, 5))).toEqual([0x25, 0x50, 0x44, 0x46, 0x2d]);
+  }, 30_000);
+});
+
 describe("applyNudges — preview+nudge primitive (playground + Studio)", () => {
   it("layers grammar + token overrides over a base template immutably", () => {
     const out = applyNudges(primary, {

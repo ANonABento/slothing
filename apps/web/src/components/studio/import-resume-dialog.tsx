@@ -30,6 +30,7 @@ import {
   FONT_CLASSES,
   ACCENT_PLACEMENTS,
   DATE_ALIGNMENTS,
+  SKILLS_LAYOUTS,
   type ResumeTemplate,
   type ResumeDocumentModel,
   type TemplateNudges,
@@ -122,7 +123,8 @@ export function ImportResumeDialog({
       | "sectionTitle"
       | "bullets"
       | "density"
-      | "dateAlignment",
+      | "dateAlignment"
+      | "skillsLayout",
   ) => nudges.grammar?.[key] ?? baseTemplate.grammar[key] ?? "";
   const accentValue = nudges.tokens?.accent ?? baseTemplate.tokens.accent;
   const fontValue = nudges.tokens?.fontClass ?? baseTemplate.tokens.fontClass;
@@ -134,6 +136,8 @@ export function ImportResumeDialog({
     nudges.grammar?.dateAlignment ??
     baseTemplate.grammar.dateAlignment ??
     "right-tab";
+  const skillsLayoutValue =
+    nudges.grammar?.skillsLayout ?? baseTemplate.grammar.skillsLayout ?? "list";
   const nameScaleValue =
     nudges.tokens?.nameScale ?? baseTemplate.tokens.nameScale ?? 1;
   const sectionSpacingValue =
@@ -352,6 +356,12 @@ export function ImportResumeDialog({
                   value={dateAlignmentValue}
                   options={DATE_ALIGNMENTS}
                   onChange={(v) => setGrammar("dateAlignment", v)}
+                />
+                <NudgeSelect
+                  label="Skills"
+                  value={skillsLayoutValue}
+                  options={SKILLS_LAYOUTS}
+                  onChange={(v) => setGrammar("skillsLayout", v)}
                 />
                 <NudgeSelect
                   label="Accent"

@@ -44,6 +44,18 @@ export type DateAlignment = (typeof DATE_ALIGNMENTS)[number];
 
 export const DEFAULT_DATE_ALIGNMENT: DateAlignment = "right-tab";
 
+/**
+ * How the Skills section is laid out. `list` = the classic "Label: a, b, c" rows
+ * (one flowing line each); `grid` = an aligned two-column table (label column |
+ * keywords column) — the reflowing answer to a Google-Docs skills table (fidelity
+ * roadmap Phase B). The grid still wraps + reflows, so swapping content never breaks
+ * it. Optional + defaulted to `list` so existing templates are unchanged.
+ */
+export const SKILLS_LAYOUTS = ["list", "grid"] as const;
+export type SkillsLayout = (typeof SKILLS_LAYOUTS)[number];
+
+export const DEFAULT_SKILLS_LAYOUT: SkillsLayout = "list";
+
 export interface LayoutGrammar {
   columns: ColumnLayout;
   header: HeaderStyle;
@@ -52,6 +64,8 @@ export interface LayoutGrammar {
   density: Density;
   /** Optional (Phase A). Resolved to {@link DEFAULT_DATE_ALIGNMENT} when absent. */
   dateAlignment?: DateAlignment;
+  /** Optional (Phase B). Resolved to {@link DEFAULT_SKILLS_LAYOUT} when absent. */
+  skillsLayout?: SkillsLayout;
 }
 
 export const layoutGrammarSchema = z.object({
@@ -61,6 +75,7 @@ export const layoutGrammarSchema = z.object({
   bullets: z.enum(BULLET_STYLES),
   density: z.enum(DENSITIES),
   dateAlignment: z.enum(DATE_ALIGNMENTS).optional(),
+  skillsLayout: z.enum(SKILLS_LAYOUTS).optional(),
 });
 
 /** Curated per-axis defaults used when a fingerprint axis is low-confidence (§3). */
@@ -71,4 +86,5 @@ export const DEFAULT_GRAMMAR: LayoutGrammar = {
   bullets: "disc",
   density: "normal",
   dateAlignment: DEFAULT_DATE_ALIGNMENT,
+  skillsLayout: DEFAULT_SKILLS_LAYOUT,
 };

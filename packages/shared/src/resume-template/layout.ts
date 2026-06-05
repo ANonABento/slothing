@@ -1,10 +1,12 @@
 import {
   DEFAULT_DATE_ALIGNMENT,
+  DEFAULT_SKILLS_LAYOUT,
   type BulletStyle,
   type DateAlignment,
   type Density,
   type HeaderStyle,
   type SectionTitleStyle,
+  type SkillsLayout,
 } from "./grammar";
 import type { ResumeDocumentModel } from "./rdm";
 import type { ResumeTemplate } from "./template";
@@ -59,11 +61,26 @@ export interface ResumeSkillRow {
   keywords: string[];
 }
 
+/** One row of an aligned label|value table (Phase B `labeled-rows` primitive). */
+export interface ResumeLabeledRow {
+  label: string;
+  value: string;
+}
+
 export type ResumeSectionBody =
   | { kind: "text"; text: string }
   | { kind: "entries"; entries: ResumeEntry[] }
   | { kind: "skills"; rows: ResumeSkillRow[] }
+  | {
+      kind: "labeled-rows";
+      rows: ResumeLabeledRow[];
+      /** Left (label) column width as a fraction of the section width. */
+      labelRatio: number;
+    }
   | { kind: "contact"; items: ResumeContactItem[] };
+
+/** Default label-column width for the labeled-rows grid. */
+const LABEL_COLUMN_RATIO = 0.26;
 
 export interface ResumeSection {
   /** Stable identity for snapshots / debugging. */
@@ -269,12 +286,32 @@ function educationSection(rdm: ResumeDocumentModel): ResumeSection | null {
   };
 }
 
-function skillsSection(rdm: ResumeDocumentModel): ResumeSection | null {
+function skillsSection(
+  rdm: ResumeDocumentModel,
+  skillsLayout: SkillsLayout,
+): ResumeSection | null {
   if (!rdm.skills.length) return null;
   const rows: ResumeSkillRow[] = rdm.skills
     .filter((g) => g.keywords.length)
     .map((g) => ({ label: g.name, keywords: g.keywords }));
   if (!rows.length) return null;
+  // The grid only makes sense when rows are actually labeled; otherwise fall back
+  // to the flowing list so an unlabeled skills blob never renders as a half-empty
+  // table.
+  if (skillsLayout === "grid" && rows.some((r) => r.label)) {
+    return {
+      id: "skills",
+      title: "Skills",
+      body: {
+        kind: "labeled-rows",
+        rows: rows.map((r) => ({
+          label: r.label ?? "",
+          value: r.keywords.join(", "),
+        })),
+        labelRatio: LABEL_COLUMN_RATIO,
+      },
+    };
+  }
   return { id: "skills", title: "Skills", body: { kind: "skills", rows } };
 }
 
@@ -334,10 +371,11 @@ export function buildResumeLayout(
   let main: ResumeSection[];
   let sidebar: ResumeSection[] = [];
 
+  const skillsLayout = grammar.skillsLayout ?? DEFAULT_SKILLS_LAYOUT;
   if (isSidebar) {
     sidebar = compact([
       contactSection(rdm),
-      skillsSection(rdm),
+      skillsSection(rdm, skillsLayout),
       educationSection(rdm),
     ]);
     main = compact([
@@ -350,7 +388,7 @@ export function buildResumeLayout(
       summarySection(rdm),
       experienceSection(rdm),
       educationSection(rdm),
-      skillsSection(rdm),
+      skillsSection(rdm, skillsLayout),
       projectsSection(rdm),
     ]);
   }
