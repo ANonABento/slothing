@@ -84,6 +84,8 @@ const exportSchema = z.object({
   mode: z.enum(["resume", "cover_letter"]).default("resume"),
   templateId: z.string().min(1).default("classic"),
   format: z.enum(["pdf", "latex", "typst", "html", "docx"]).default("pdf"),
+  /** Which engine renders a PDF: HTML→Chromium (default) or Typst→PDF (server). */
+  engine: z.enum(["html", "typst"]).default("html"),
   latexOptions: z.record(z.string(), z.unknown()).optional(),
   compilePdf: z.boolean().default(false),
   pageSettings: z
@@ -133,6 +135,7 @@ export async function POST(request: NextRequest) {
       mode,
       templateId,
       format,
+      engine,
       latexOptions,
       compilePdf,
       pageSettings,
@@ -299,7 +302,53 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Default: PDF
+    // Default: PDF — Typst engine (server compile) when requested for a grammar template.
+    if (engine === "typst") {
+      if (!resume) {
+        return NextResponse.json(
+          { error: "resumeId required for a Typst PDF" },
+          { status: 400 },
+        );
+      }
+      const { renderResumeTypstForTemplate } =
+        await import("@/lib/resume/render-resume");
+      const src = renderResumeTypstForTemplate(
+        resume,
+        templateId,
+        authResult.userId,
+      );
+      if (!src) {
+        return NextResponse.json(
+          {
+            error:
+              "Typst PDF is only available for imported/grammar-based templates.",
+          },
+          { status: 422 },
+        );
+      }
+      try {
+        const { compileTypstToPdf } =
+          await import("@/lib/resume/typst-compile");
+        const pdf = await compileTypstToPdf(src);
+        return new NextResponse(new Uint8Array(pdf), {
+          status: 200,
+          headers: {
+            "Content-Type": "application/pdf",
+            "Content-Disposition": 'attachment; filename="resume.pdf"',
+            "Content-Length": String(pdf.length),
+            "X-Render-Engine": "typst",
+          },
+        });
+      } catch (err) {
+        console.error("Typst compile error:", err);
+        return NextResponse.json(
+          { error: "Typst compilation failed" },
+          { status: 500 },
+        );
+      }
+    }
+
+    // Default: PDF (HTML → headless Chromium)
     let html: string;
     if (rawHtml) {
       html = rawHtml;

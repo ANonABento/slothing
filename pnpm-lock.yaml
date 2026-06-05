@@ -108,6 +108,9 @@ importers:
       '@libsql/client':
         specifier: ^0.14.0
         version: 0.14.0
+      '@myriaddreamin/typst-ts-node-compiler':
+        specifier: ^0.7.0
+        version: 0.7.0
       '@next/env':
         specifier: 14.2.35
         version: 14.2.35

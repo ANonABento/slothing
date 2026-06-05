@@ -8,6 +8,7 @@ const mocks = vi.hoisted(() => ({
   listResumeTemplates: vi.fn(),
   renderResumeHtmlForTemplate: vi.fn(),
   renderResumeTypstForTemplate: vi.fn(),
+  compileTypstToPdf: vi.fn(),
   generatePDF: vi.fn(),
   convertContentToDocx: vi.fn(),
 }));
@@ -29,6 +30,10 @@ vi.mock("@/lib/db/resume-templates", () => ({
 vi.mock("@/lib/resume/render-resume", () => ({
   renderResumeHtmlForTemplate: mocks.renderResumeHtmlForTemplate,
   renderResumeTypstForTemplate: mocks.renderResumeTypstForTemplate,
+}));
+
+vi.mock("@/lib/resume/typst-compile", () => ({
+  compileTypstToPdf: mocks.compileTypstToPdf,
 }));
 
 vi.mock("@/lib/resume/pdf-export", () => ({
@@ -69,6 +74,7 @@ describe("resume export route", () => {
     mocks.listResumeTemplates.mockReturnValue([]);
     mocks.renderResumeHtmlForTemplate.mockResolvedValue("<html>resume</html>");
     mocks.renderResumeTypstForTemplate.mockReturnValue("#set page()\n= Jane");
+    mocks.compileTypstToPdf.mockResolvedValue(new Uint8Array([7, 8, 9]));
     mocks.generatePDF.mockResolvedValue(new Uint8Array([1, 2, 3]));
     mocks.convertContentToDocx.mockResolvedValue(Buffer.from([4, 5, 6]));
   });
@@ -186,6 +192,47 @@ describe("resume export route", () => {
     );
     expect(response.headers.get("content-disposition")).toContain("resume.typ");
     await expect(response.text()).resolves.toContain("#set page()");
+  });
+
+  it("renders a PDF via the Typst engine when engine=typst", async () => {
+    const response = await POST(
+      exportRequest({
+        resumeId: "resume-1",
+        templateId: "imported-1",
+        format: "pdf",
+        engine: "typst",
+      }),
+    );
+
+    expect(mocks.renderResumeTypstForTemplate).toHaveBeenCalledWith(
+      resume,
+      "imported-1",
+      "user-1",
+    );
+    expect(mocks.compileTypstToPdf).toHaveBeenCalledWith("#set page()\n= Jane");
+    // The Chromium HTML path is NOT used for a Typst-engine PDF.
+    expect(mocks.generatePDF).not.toHaveBeenCalled();
+    expect(response.headers.get("content-type")).toBe("application/pdf");
+    expect(response.headers.get("x-render-engine")).toBe("typst");
+    expect(Array.from(new Uint8Array(await response.arrayBuffer()))).toEqual([
+      7, 8, 9,
+    ]);
+  });
+
+  it("returns 422 for a Typst-engine PDF of a legacy-only template", async () => {
+    mocks.renderResumeTypstForTemplate.mockReturnValue(null);
+
+    const response = await POST(
+      exportRequest({
+        resumeId: "resume-1",
+        templateId: "legacy-only",
+        format: "pdf",
+        engine: "typst",
+      }),
+    );
+
+    expect(response.status).toBe(422);
+    expect(mocks.compileTypstToPdf).not.toHaveBeenCalled();
   });
 
   it("returns 422 for Typst export of a legacy-only template (no grammar form)", async () => {

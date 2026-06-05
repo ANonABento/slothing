@@ -170,10 +170,18 @@ added; CI green.
 > for grammar-based templates (422 for legacy-only). Surfaced as a **Typst** entry in
 > the export menu. Pure `renderTypeset` — no compiler, no new dependency. CI green.
 >
-> **C1 — NEXT (its own change, now de-risked):** wire the node Typst compiler →
-> PDF as an opt-in export engine (making the import dialog's HTML/Typeset toggle real),
-> then later flip it to the default download. Only this part adds a runtime dep
-> (promote `@myriaddreamin/typst-ts-node-compiler` from devDep) + export wiring.
+> **C1 — DONE** (branch `feat/resume-template-fidelity-phase-c1`, stacked on C2):
+> server-side Typst→PDF as an opt-in export engine. Added
+> `@myriaddreamin/typst-ts-node-compiler` as an **apps/web runtime dep** + a lazy,
+> server-only `lib/resume/typst-compile.ts` (the shared package's index stays
+> browser-safe — the addon is not re-exported there). `/api/resume/export` gains an
+> `engine: "html" | "typst"` param; `format: "pdf" + engine: "typst"` renders via
+> Typst (422 for legacy-only templates, 500 on a genuine compile error — no silent
+> fallback). Export menu gains a **"PDF (Typst)"** entry. CI green.
+>
+> **Remaining C follow-ups (small):** make it the *default* PDF engine once trusted;
+> persist a per-template preferred engine so the import dialog's HTML/Typeset toggle
+> (currently cosmetic — its `engine` arg is dropped in `studio-sub-bar`) drives export.
 
 **Goal:** capture LaTeX/Overleaf users **without** building LaTeX ingestion. The wedge is
 "LaTeX-quality PDF + AI tailoring Overleaf will never have," not file compatibility.

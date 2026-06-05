@@ -41,6 +41,7 @@
     "@anonabento/bento-router": "file:../../vendor/anonabento-bento-router-0.2.0-3b5a662.tgz",
     "@auth/drizzle-adapter": "^1.11.2",
     "@libsql/client": "^0.14.0",
+    "@myriaddreamin/typst-ts-node-compiler": "^0.7.0",
     "@next/env": "14.2.35",
     "@radix-ui/react-accordion": "^1.1.2",
     "@radix-ui/react-dialog": "^1.0.5",
