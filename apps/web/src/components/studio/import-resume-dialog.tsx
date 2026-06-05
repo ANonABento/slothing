@@ -201,6 +201,7 @@ export function ImportResumeDialog({
           name: name || undefined,
           sourceFilename: result?.sourceFilename,
           sourceType: result?.sourceType,
+          engine,
         }),
       });
       if (!res.ok)

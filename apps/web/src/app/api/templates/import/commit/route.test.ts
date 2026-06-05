@@ -61,6 +61,20 @@ describe("/api/templates/import/commit", () => {
     );
   });
 
+  it("persists the chosen export engine", async () => {
+    await POST(
+      jsonReq({
+        template: DEFAULT_TEMPLATES[0],
+        name: "Typst Clone",
+        engine: "typst",
+      }),
+    );
+    expect(mocks.saveResumeTemplate).toHaveBeenCalledWith(
+      "user-1",
+      expect.objectContaining({ exportEngine: "typst" }),
+    );
+  });
+
   it("rejects an invalid template payload", async () => {
     const res = await POST(
       jsonReq({ template: { id: "x", name: "bad", grammar: {}, tokens: {} } }),

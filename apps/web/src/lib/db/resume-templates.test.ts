@@ -97,6 +97,20 @@ describe("collapsed store — CRUD round-trip", () => {
     expect(deleteResumeTemplate(saved.id, "u1")).toBe(true);
     expect(listResumeTemplates("u1")).toHaveLength(0);
   });
+
+  it("persists the preferred export engine, defaulting to null", () => {
+    ensureResumeTemplatesTable();
+    const plain = saveResumeTemplate("u1", { template: DEFAULT_TEMPLATES[0] });
+    expect(plain.exportEngine).toBeNull();
+    expect(getResumeTemplate(plain.id, "u1")?.exportEngine).toBeNull();
+
+    const typst = saveResumeTemplate("u1", {
+      template: { ...DEFAULT_TEMPLATES[1], id: "with-engine" },
+      exportEngine: "typst",
+    });
+    expect(typst.exportEngine).toBe("typst");
+    expect(getResumeTemplate("with-engine", "u1")?.exportEngine).toBe("typst");
+  });
 });
 
 describe("migrateV4ToCollapsed — one-time V4 migration", () => {

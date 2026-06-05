@@ -18,6 +18,9 @@ import {
  * convention (CREATE TABLE IF NOT EXISTS + per-table user_id index), scoped by user_id.
  */
 
+/** Preferred PDF export engine for this template (set at import time). */
+export type ExportEngine = "html" | "typst";
+
 export interface SavedResumeTemplate {
   id: string;
   userId: string;
@@ -28,6 +31,8 @@ export interface SavedResumeTemplate {
   template: ResumeTemplate;
   /** The content the template was accepted with, if any (null for style-only). */
   rdm: ResumeDocumentModel | null;
+  /** Preferred PDF engine; null = use the app default (HTML→Chromium). */
+  exportEngine: ExportEngine | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -41,6 +46,7 @@ interface Row {
   source_type: TemplateSourceType | null;
   template_json: string;
   rdm_json: string | null;
+  export_engine: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -56,6 +62,7 @@ export function ensureResumeTemplatesTable(): void {
       source_type text,
       template_json text NOT NULL,
       rdm_json text,
+      export_engine text,
       created_at text NOT NULL,
       updated_at text NOT NULL
     )`,
@@ -63,6 +70,15 @@ export function ensureResumeTemplatesTable(): void {
   db.prepare(
     `CREATE INDEX IF NOT EXISTS idx_document_templates_user_id ON document_templates (user_id)`,
   ).run();
+  // Additive migration for existing dev DBs (Phase C follow-up): per-template engine.
+  const cols = db
+    .prepare(`PRAGMA table_info(document_templates)`)
+    .all() as Array<{ name: string }>;
+  if (!cols.some((c) => c.name === "export_engine")) {
+    db.prepare(
+      `ALTER TABLE document_templates ADD COLUMN export_engine text`,
+    ).run();
+  }
 }
 
 function rowToSaved(row: Row): SavedResumeTemplate | null {
@@ -77,6 +93,10 @@ function rowToSaved(row: Row): SavedResumeTemplate | null {
     );
     rdm = parsedRdm.success ? (parsedRdm.data as ResumeDocumentModel) : null;
   }
+  const exportEngine: ExportEngine | null =
+    row.export_engine === "html" || row.export_engine === "typst"
+      ? row.export_engine
+      : null;
   return {
     id: row.id,
     userId: row.user_id,
@@ -86,6 +106,7 @@ function rowToSaved(row: Row): SavedResumeTemplate | null {
     sourceType: row.source_type,
     template: parsedTemplate.data as ResumeTemplate,
     rdm,
+    exportEngine,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -98,6 +119,7 @@ export interface SaveResumeTemplateInput {
   description?: string | null;
   sourceFilename?: string | null;
   sourceType?: TemplateSourceType | null;
+  exportEngine?: ExportEngine | null;
 }
 
 export function saveResumeTemplate(
@@ -110,10 +132,11 @@ export function saveResumeTemplate(
   const template = { ...input.template, id };
   const name = input.name ?? template.name;
   const existing = getResumeTemplate(id, userId);
+  const exportEngine = input.exportEngine ?? existing?.exportEngine ?? null;
   if (existing) {
     db.prepare(
       `UPDATE document_templates
-       SET name = ?, description = ?, source_filename = ?, source_type = ?, template_json = ?, rdm_json = ?, updated_at = ?
+       SET name = ?, description = ?, source_filename = ?, source_type = ?, template_json = ?, rdm_json = ?, export_engine = ?, updated_at = ?
        WHERE id = ? AND user_id = ?`,
     ).run(
       name,
@@ -126,14 +149,15 @@ export function saveResumeTemplate(
         : existing.rdm
           ? JSON.stringify(existing.rdm)
           : null,
+      exportEngine,
       now,
       id,
       userId,
     );
   } else {
     db.prepare(
-      `INSERT INTO document_templates (id, user_id, name, description, source_filename, source_type, template_json, rdm_json, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO document_templates (id, user_id, name, description, source_filename, source_type, template_json, rdm_json, export_engine, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     ).run(
       id,
       userId,
@@ -143,6 +167,7 @@ export function saveResumeTemplate(
       input.sourceType ?? null,
       JSON.stringify(template),
       input.rdm ? JSON.stringify(input.rdm) : null,
+      exportEngine,
       now,
       now,
     );
@@ -156,6 +181,7 @@ export function saveResumeTemplate(
     sourceType: input.sourceType ?? existing?.sourceType ?? null,
     template,
     rdm: input.rdm ?? existing?.rdm ?? null,
+    exportEngine,
     createdAt: existing?.createdAt ?? now,
     updatedAt: now,
   };

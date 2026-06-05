@@ -219,6 +219,54 @@ describe("resume export route", () => {
     ]);
   });
 
+  it("uses the template's saved Typst engine when the request omits engine", async () => {
+    mocks.getResumeTemplate.mockReturnValue({
+      id: "imported-1",
+      exportEngine: "typst",
+      template: {
+        id: "imported-1",
+        grammar: { columns: "single" },
+        tokens: {},
+      },
+    });
+
+    const response = await POST(
+      exportRequest({
+        resumeId: "resume-1",
+        templateId: "imported-1",
+        format: "pdf",
+      }),
+    );
+
+    expect(mocks.compileTypstToPdf).toHaveBeenCalled();
+    expect(mocks.generatePDF).not.toHaveBeenCalled();
+    expect(response.headers.get("x-render-engine")).toBe("typst");
+  });
+
+  it("an explicit engine=html overrides a stored Typst preference", async () => {
+    mocks.getResumeTemplate.mockReturnValue({
+      id: "imported-1",
+      exportEngine: "typst",
+      template: {
+        id: "imported-1",
+        grammar: { columns: "single" },
+        tokens: {},
+      },
+    });
+
+    await POST(
+      exportRequest({
+        resumeId: "resume-1",
+        templateId: "imported-1",
+        format: "pdf",
+        engine: "html",
+      }),
+    );
+
+    expect(mocks.generatePDF).toHaveBeenCalled();
+    expect(mocks.compileTypstToPdf).not.toHaveBeenCalled();
+  });
+
   it("returns 422 for a Typst-engine PDF of a legacy-only template", async () => {
     mocks.renderResumeTypstForTemplate.mockReturnValue(null);
 
