@@ -23,38 +23,55 @@ export interface ExportMenuProps {
 }
 
 interface ExportOption {
+  /** Unique menu id (format alone is not unique — PDF has two engines). */
+  id: string;
   label: string;
   description: string;
   icon: React.ReactNode;
   format: "pdf" | "latex" | "typst" | "html" | "clipboard";
+  /** PDF render engine; omitted = HTML→Chromium (default). */
+  engine?: "typst";
 }
 
 export const EXPORT_OPTIONS: ExportOption[] = [
   {
+    id: "pdf",
     label: "PDF",
     description: "Download as PDF",
     icon: <FileText className="h-4 w-4" />,
     format: "pdf",
   },
   {
+    id: "pdf-typst",
+    label: "PDF (Typst)",
+    description: "Typesetter-quality",
+    icon: <FileText className="h-4 w-4" />,
+    format: "pdf",
+    engine: "typst",
+  },
+  {
+    id: "latex",
     label: "LaTeX",
     description: "Download .tex file",
     icon: <Code className="h-4 w-4" />,
     format: "latex",
   },
   {
+    id: "typst",
     label: "Typst",
     description: "Download .typ source",
     icon: <FileCode className="h-4 w-4" />,
     format: "typst",
   },
   {
+    id: "html",
     label: "HTML",
     description: "Download HTML file",
     icon: <Globe className="h-4 w-4" />,
     format: "html",
   },
   {
+    id: "clipboard",
     label: "Copy to Clipboard",
     description: "Copy resume text",
     icon: <Copy className="h-4 w-4" />,
@@ -120,11 +137,17 @@ async function downloadExport(
   resumeId: string,
   templateId: string,
   format: "pdf" | "latex" | "typst" | "html",
+  engine?: "typst",
 ): Promise<void> {
   const res = await fetch("/api/resume/export", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ resumeId, templateId, format }),
+    body: JSON.stringify({
+      resumeId,
+      templateId,
+      format,
+      ...(engine ? { engine } : {}),
+    }),
   });
 
   if (!res.ok) {
@@ -187,9 +210,14 @@ export function ExportMenu({ resumeId, resume, templateId }: ExportMenuProps) {
         return;
       }
 
-      setLoading(option.format);
+      setLoading(option.id);
       try {
-        await downloadExport(resumeId, templateId, option.format);
+        await downloadExport(
+          resumeId,
+          templateId,
+          option.format,
+          option.engine,
+        );
         setOpen(false);
       } catch (err) {
         setOpen(false);
@@ -220,7 +248,7 @@ export function ExportMenu({ resumeId, resume, templateId }: ExportMenuProps) {
         >
           {EXPORT_OPTIONS.map((option) => (
             <button
-              key={option.format}
+              key={option.id}
               role="menuitem"
               disabled={loading !== null}
               onClick={() => handleExport(option)}
@@ -231,7 +259,7 @@ export function ExportMenu({ resumeId, resume, templateId }: ExportMenuProps) {
                 "transition-colors",
               )}
             >
-              {loading === option.format ? (
+              {loading === option.id ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 option.icon

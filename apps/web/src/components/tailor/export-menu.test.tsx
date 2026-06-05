@@ -83,13 +83,25 @@ describe("resumeToPlainText", () => {
 });
 
 describe("EXPORT_OPTIONS", () => {
-  it("should have 5 export options", () => {
-    expect(EXPORT_OPTIONS).toHaveLength(5);
+  it("should have 6 export options", () => {
+    expect(EXPORT_OPTIONS).toHaveLength(6);
   });
 
-  it("should include pdf, latex, typst, html, and clipboard", () => {
-    const formats = EXPORT_OPTIONS.map((o) => o.format);
-    expect(formats).toEqual(["pdf", "latex", "typst", "html", "clipboard"]);
+  it("should include both PDF engines plus latex, typst, html, and clipboard", () => {
+    const ids = EXPORT_OPTIONS.map((o) => o.id);
+    expect(ids).toEqual([
+      "pdf",
+      "pdf-typst",
+      "latex",
+      "typst",
+      "html",
+      "clipboard",
+    ]);
+    // The Typst PDF flavor renders with the Typst engine; the plain PDF does not.
+    expect(EXPORT_OPTIONS.find((o) => o.id === "pdf-typst")?.engine).toBe(
+      "typst",
+    );
+    expect(EXPORT_OPTIONS.find((o) => o.id === "pdf")?.engine).toBeUndefined();
   });
 });
 
@@ -120,7 +132,12 @@ describe("ExportMenu", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /export/i }));
     expect(screen.getByRole("menu")).toBeInTheDocument();
-    expect(screen.getByRole("menuitem", { name: /pdf/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("menuitem", { name: /download as pdf/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("menuitem", { name: /pdf \(typst\)/i }),
+    ).toBeInTheDocument();
     expect(
       screen.getByRole("menuitem", { name: /latex/i }),
     ).toBeInTheDocument();
@@ -197,7 +214,7 @@ describe("ExportMenu", () => {
     );
 
     fireEvent.click(screen.getByRole("button", { name: /export/i }));
-    fireEvent.click(screen.getByRole("menuitem", { name: /pdf/i }));
+    fireEvent.click(screen.getByRole("menuitem", { name: /download as pdf/i }));
 
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith("/api/resume/export", {
@@ -207,6 +224,40 @@ describe("ExportMenu", () => {
           resumeId: "test-id",
           templateId: "classic",
           format: "pdf",
+        }),
+      });
+    });
+  });
+
+  it("should call export API for a Typst PDF with the typst engine", async () => {
+    const mockBlob = new Blob(["pdf content"], { type: "application/pdf" });
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      blob: () => Promise.resolve(mockBlob),
+    });
+    global.URL.createObjectURL = vi.fn().mockReturnValue("blob:test-url");
+    global.URL.revokeObjectURL = vi.fn();
+
+    render(
+      <ExportMenu
+        resumeId="test-id"
+        resume={mockResume}
+        templateId="imported-1"
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /export/i }));
+    fireEvent.click(screen.getByRole("menuitem", { name: /pdf \(typst\)/i }));
+
+    await waitFor(() => {
+      expect(global.fetch).toHaveBeenCalledWith("/api/resume/export", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          resumeId: "test-id",
+          templateId: "imported-1",
+          format: "pdf",
+          engine: "typst",
         }),
       });
     });
@@ -258,7 +309,7 @@ describe("ExportMenu", () => {
     );
 
     fireEvent.click(screen.getByRole("button", { name: /export/i }));
-    fireEvent.click(screen.getByRole("menuitem", { name: /pdf/i }));
+    fireEvent.click(screen.getByRole("menuitem", { name: /download as pdf/i }));
 
     await waitFor(() => {
       expect(screen.getByText("Server error")).toBeInTheDocument();
