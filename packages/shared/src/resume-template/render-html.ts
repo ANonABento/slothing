@@ -184,6 +184,21 @@ function skillsHtml(
     .join("");
 }
 
+function labeledRowsHtml(
+  layout: ResumeLayout,
+  rows: { label: string; value: string }[],
+  labelRatio: number,
+): string {
+  const left = `${Math.round(labelRatio * 100)}%`;
+  const cells = rows
+    .map(
+      (r) =>
+        `<div style="font-weight:700;min-width:0">${esc(r.label)}</div><div style="min-width:0">${esc(r.value)}</div>`,
+    )
+    .join("");
+  return `<div style="display:grid;grid-template-columns:${left} 1fr;gap:${layout.spacing.bulletGap}em 0.9em;align-items:baseline">${cells}</div>`;
+}
+
 function contactBlockHtml(
   layout: ResumeLayout,
   items: { text: string; href?: string }[],
@@ -211,6 +226,13 @@ function sectionHtml(layout: ResumeLayout, section: ResumeSection): string {
       break;
     case "skills":
       body = skillsHtml(layout, section.body.rows);
+      break;
+    case "labeled-rows":
+      body = labeledRowsHtml(
+        layout,
+        section.body.rows,
+        section.body.labelRatio,
+      );
       break;
     case "contact":
       body = contactBlockHtml(layout, section.body.items);

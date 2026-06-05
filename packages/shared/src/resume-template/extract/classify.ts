@@ -115,6 +115,8 @@ export function classifyFingerprint(
       fp.dateAlignment.value,
       base.grammar.dateAlignment ?? DEFAULT_DATE_ALIGNMENT,
     ),
+    // Skills layout is nudge-only (no reliable geometric signal); keep the base.
+    skillsLayout: base.grammar.skillsLayout,
   };
 
   const tokens: StyleTokens = {

@@ -8,6 +8,7 @@ import {
   BULLET_STYLES,
   ACCENT_PLACEMENTS,
   DATE_ALIGNMENTS,
+  SKILLS_LAYOUTS,
   ALL_FIXTURES,
   getDefaultTemplate,
   applyNudges,
@@ -23,6 +24,7 @@ import {
   type BulletStyle,
   type AccentPlacement,
   type DateAlignment,
+  type SkillsLayout,
   type ResumeTemplate,
   type ResumeDocumentModel,
   type StyleTokens,
@@ -65,6 +67,8 @@ const state = {
   dateAlignment: "right-tab" as DateAlignment,
   nameScale: 1,
   sectionSpacing: 1,
+  // Phase B knob
+  skillsLayout: "list" as SkillsLayout,
   /** null = keep the engine default margin. */
   pageMarginPt: null as number | null,
   originalUrl: null as string | null,
@@ -92,6 +96,7 @@ function currentTemplate(): ResumeTemplate {
       bullets: state.bullets,
       density: state.density,
       dateAlignment: state.dateAlignment,
+      skillsLayout: state.skillsLayout,
     },
     tokens,
   });
@@ -115,6 +120,7 @@ function adoptTemplate(tpl: ResumeTemplate) {
   state.nameScale = tpl.tokens.nameScale ?? 1;
   state.sectionSpacing = tpl.tokens.sectionSpacing ?? 1;
   state.pageMarginPt = tpl.tokens.pageMarginPt ?? null;
+  state.skillsLayout = tpl.grammar.skillsLayout ?? "list";
 }
 
 let typesetToken = 0;
@@ -244,6 +250,8 @@ function buildForm() {
     <select id="dateAlignment">${DATE_ALIGNMENTS.map((d) => opt(d)).join("")}</select>
     <label>Accent placement</label>
     <select id="accentPlacement">${ACCENT_PLACEMENTS.map((a) => opt(a)).join("")}</select>
+    <label>Skills layout</label>
+    <select id="skillsLayout">${SKILLS_LAYOUTS.map((s) => opt(s)).join("")}</select>
     <label>Name scale (<span id="nameScale-val">1.00</span>×)</label>
     <input id="nameScale" type="range" min="0.6" max="1.8" step="0.05" value="${state.nameScale}" />
     <label>Section spacing (<span id="sectionSpacing-val">1.00</span>×)</label>
@@ -284,6 +292,7 @@ function buildForm() {
     "accentPlacement",
     (v) => (state.accentPlacement = v as AccentPlacement),
   );
+  onSel("skillsLayout", (v) => (state.skillsLayout = v as SkillsLayout));
 
   const onRange = (id: string, set: (n: number) => void) => {
     bind<HTMLInputElement>(id).oninput = (e) => {
@@ -315,6 +324,7 @@ function syncInputs() {
   setVal("density", state.density);
   setVal("dateAlignment", state.dateAlignment);
   setVal("accentPlacement", state.accentPlacement);
+  setVal("skillsLayout", state.skillsLayout);
   setVal("nameScale", String(state.nameScale));
   setVal("sectionSpacing", String(state.sectionSpacing));
   setVal("pageMarginPt", String(state.pageMarginPt ?? 43));

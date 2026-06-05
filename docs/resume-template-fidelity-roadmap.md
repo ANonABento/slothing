@@ -107,7 +107,22 @@ exposes them; XMP round-trips losslessly old→new; CI green (`type-check`, `tes
 
 ---
 
-## Phase B — Table-like section primitive  *(Tier 2; medium)*
+## Phase B — Table-like section primitive  *(Tier 2; medium)* ✅ SHIPPED (skills grid)
+
+> **Status: DONE for the skills grid** (branch `feat/resume-template-fidelity-phase-b`,
+> stacked on Phase A). Added a reflowing `labeled-rows` layout primitive (aligned
+> label | value columns) + a `skillsLayout` grammar axis (`list` | `grid`, default
+> `list` → byte-identical to before). The Skills section renders as an aligned
+> two-column table in `grid` mode in **both** backends, still wrapping/reflowing on
+> content swap; it falls back to the flowing list when skill groups are unlabeled (no
+> half-empty table). Reuses the existing skills RDM — **no RDM / content-extraction /
+> tailoring churn**. `skillsLayout` is nudge-only for now (no reliable geometric
+> signal; detecting an in-line label/value grid is fragile — deferred). Exposed in the
+> playground + Studio import dialog. All CI gates green.
+>
+> **Deferred to a Phase B.2:** `entry-grid` (repeated dated-entry grid), and geometric
+> fingerprint detection of an aligned label/value grid. The `labeled-rows` primitive is
+> in place for certs/awards to reuse.
 
 **Goal:** kill ~90% of why people reach for Google Docs tables (skills grids, dated
 two-column entries, label|value rows) — **without** freezing positions. The user built

@@ -161,6 +161,21 @@ function skillsTypst(
     .join("\n");
 }
 
+function labeledRowsTypst(
+  layout: ResumeLayout,
+  rows: { label: string; value: string }[],
+  labelRatio: number,
+): string {
+  const left = `${Math.round(labelRatio * 100)}%`;
+  // Code-position cells: a bare function call for the label, a content block for
+  // the value. The grid reflows (value wraps within its column).
+  const cells = rows
+    .map((r) => `text(weight: "bold")[${lit(r.label)}], [${lit(r.value)}]`)
+    .join(", ");
+  const rowGutter = (layout.spacing.bulletGap + 0.2).toFixed(3);
+  return `#grid(columns: (${left}, 1fr), row-gutter: ${rowGutter}em, column-gutter: 0.9em, ${cells})`;
+}
+
 function contactBlockTypst(
   layout: ResumeLayout,
   items: { text: string; href?: string }[],
@@ -184,6 +199,13 @@ function sectionTypst(layout: ResumeLayout, section: ResumeSection): string {
       break;
     case "skills":
       body = skillsTypst(layout, section.body.rows);
+      break;
+    case "labeled-rows":
+      body = labeledRowsTypst(
+        layout,
+        section.body.rows,
+        section.body.labelRatio,
+      );
       break;
     case "contact":
       body = contactBlockTypst(layout, section.body.items);
