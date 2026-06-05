@@ -20,6 +20,22 @@ export const FONT_STACKS: Record<FontClass, string> = {
 
 const HEX_COLOR = /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/;
 
+/**
+ * Where the accent color is applied. `both` = name + section chrome (the classic
+ * look); `name` = colored name, monochrome sections; `rules` = monochrome name,
+ * colored section titles/rules/bullets/links; `none` = fully monochrome. See the
+ * fidelity roadmap Phase A — defaulted to `both` so existing templates are
+ * unchanged.
+ */
+export const ACCENT_PLACEMENTS = ["both", "name", "rules", "none"] as const;
+export type AccentPlacement = (typeof ACCENT_PLACEMENTS)[number];
+
+export const DEFAULT_ACCENT_PLACEMENT: AccentPlacement = "both";
+/** Name size multiplier on the baseline 1.9em name. */
+export const DEFAULT_NAME_SCALE = 1;
+/** Section-gap multiplier layered on top of density (1 = density default). */
+export const DEFAULT_SECTION_SPACING = 1;
+
 export interface StyleTokens {
   /** Single accent color (hex). Drives section rules, links, name emphasis. */
   accent: string;
@@ -28,6 +44,18 @@ export interface StyleTokens {
   baseFontSizePt: number;
   /** Unitless line height multiplier. Density also nudges this in render. */
   lineHeight: number;
+  /** Optional (Phase A). Resolved to {@link DEFAULT_ACCENT_PLACEMENT} when absent. */
+  accentPlacement?: AccentPlacement;
+  /**
+   * Optional (Phase A) page margin, in points, applied to all four sides. When
+   * absent the per-engine default margin is kept (HTML `0.55in 0.6in` / Typst
+   * `(x: 0.6in, y: 0.55in)`) so existing templates render byte-identically.
+   */
+  pageMarginPt?: number;
+  /** Optional (Phase A) name size multiplier. Resolved to {@link DEFAULT_NAME_SCALE}. */
+  nameScale?: number;
+  /** Optional (Phase A) section-gap multiplier. Resolved to {@link DEFAULT_SECTION_SPACING}. */
+  sectionSpacing?: number;
 }
 
 export const styleTokensSchema = z.object({
@@ -35,6 +63,10 @@ export const styleTokensSchema = z.object({
   fontClass: z.enum(FONT_CLASSES),
   baseFontSizePt: z.number().min(7).max(14),
   lineHeight: z.number().min(1).max(2),
+  accentPlacement: z.enum(ACCENT_PLACEMENTS).optional(),
+  pageMarginPt: z.number().min(18).max(96).optional(),
+  nameScale: z.number().min(0.6).max(1.8).optional(),
+  sectionSpacing: z.number().min(0.4).max(2.5).optional(),
 });
 
 export const DEFAULT_TOKENS: StyleTokens = {
@@ -42,4 +74,7 @@ export const DEFAULT_TOKENS: StyleTokens = {
   fontClass: "sans",
   baseFontSizePt: 10.5,
   lineHeight: 1.35,
+  accentPlacement: DEFAULT_ACCENT_PLACEMENT,
+  nameScale: DEFAULT_NAME_SCALE,
+  sectionSpacing: DEFAULT_SECTION_SPACING,
 };

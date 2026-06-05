@@ -1,12 +1,21 @@
-import type {
-  BulletStyle,
-  Density,
-  HeaderStyle,
-  SectionTitleStyle,
+import {
+  DEFAULT_DATE_ALIGNMENT,
+  type BulletStyle,
+  type DateAlignment,
+  type Density,
+  type HeaderStyle,
+  type SectionTitleStyle,
 } from "./grammar";
 import type { ResumeDocumentModel } from "./rdm";
 import type { ResumeTemplate } from "./template";
-import { FONT_STACKS, type FontClass } from "./tokens";
+import {
+  DEFAULT_ACCENT_PLACEMENT,
+  DEFAULT_NAME_SCALE,
+  DEFAULT_SECTION_SPACING,
+  FONT_STACKS,
+  type AccentPlacement,
+  type FontClass,
+} from "./tokens";
 
 /**
  * The shared render BRAIN. `buildResumeLayout` turns a (template, rdm) pair into a
@@ -123,6 +132,29 @@ export interface ResumeLayout {
   /** Token line height before the density factor. */
   baseLineHeight: number;
   accent: string;
+  /** Resolved (Phase A) — whether the accent colors the name. */
+  accentOnName: boolean;
+  /** Resolved (Phase A) — whether the accent colors section chrome / links. */
+  accentOnSections: boolean;
+  /** Resolved (Phase A) name size in em (baseline 1.9 × nameScale). */
+  nameSizeEm: number;
+  /** Resolved (Phase A) page margin in points; null keeps the per-engine default. */
+  pageMarginPt: number | null;
+  /** Resolved (Phase A) entry-meta alignment. */
+  dateAlignment: DateAlignment;
+}
+
+const BASE_NAME_EM = 1.9;
+
+/** Map an accent-placement token to the two resolved booleans the adapters use. */
+function resolveAccentPlacement(p: AccentPlacement): {
+  accentOnName: boolean;
+  accentOnSections: boolean;
+} {
+  return {
+    accentOnName: p === "both" || p === "name",
+    accentOnSections: p === "both" || p === "rules",
+  };
 }
 
 const DENSITY_SCALE: Record<Density, SpacingScale> = {
@@ -323,13 +355,28 @@ export function buildResumeLayout(
     ]);
   }
 
+  // Layer the optional sectionSpacing multiplier on top of the density scale.
+  const densityScale = DENSITY_SCALE[grammar.density];
+  const sectionSpacing = tokens.sectionSpacing ?? DEFAULT_SECTION_SPACING;
+  const spacing: SpacingScale =
+    sectionSpacing === 1
+      ? densityScale
+      : {
+          ...densityScale,
+          sectionGap: densityScale.sectionGap * sectionSpacing,
+        };
+
+  const { accentOnName, accentOnSections } = resolveAccentPlacement(
+    tokens.accentPlacement ?? DEFAULT_ACCENT_PLACEMENT,
+  );
+
   return {
     template,
     header,
     main,
     sidebar,
     sidebarSide,
-    spacing: DENSITY_SCALE[grammar.density],
+    spacing,
     font: {
       fontClass: tokens.fontClass,
       cssStack: FONT_STACKS[tokens.fontClass],
@@ -340,5 +387,13 @@ export function buildResumeLayout(
     baseFontSizePt: tokens.baseFontSizePt,
     baseLineHeight: tokens.lineHeight,
     accent: tokens.accent,
+    accentOnName,
+    accentOnSections,
+    nameSizeEm:
+      Math.round(
+        BASE_NAME_EM * (tokens.nameScale ?? DEFAULT_NAME_SCALE) * 1000,
+      ) / 1000,
+    pageMarginPt: tokens.pageMarginPt ?? null,
+    dateAlignment: grammar.dateAlignment ?? DEFAULT_DATE_ALIGNMENT,
   };
 }

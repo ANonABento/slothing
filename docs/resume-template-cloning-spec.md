@@ -4,6 +4,9 @@
 > model drives both HTML + Typst render; clone loop (XMP self-import / fingerprint+content) wired
 > into Studio; the V2/V3/V4 + migration + fidelity machinery is deleted. See §12 · Owner: Kev
 >
+> **Next:** fidelity & adjustability program (more knobs, table primitive, Typst
+> export-of-record, optional pixel mode) → `docs/resume-template-fidelity-roadmap.md`.
+>
 > Goal: make "upload your resume → get a reusable template the tailor can fill from
 > the component bank" **consistent and high-success-rate**, and collapse the messy
 > V2/V3/V4 template machinery into one clean model.

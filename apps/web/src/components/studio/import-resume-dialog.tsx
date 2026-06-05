@@ -28,6 +28,8 @@ import {
   BULLET_STYLES,
   DENSITIES,
   FONT_CLASSES,
+  ACCENT_PLACEMENTS,
+  DATE_ALIGNMENTS,
   type ResumeTemplate,
   type ResumeDocumentModel,
   type TemplateNudges,
@@ -110,12 +112,34 @@ export function ImportResumeDialog({
     setNudges((n) => ({ ...n, grammar: { ...n.grammar, [key]: value } }));
   const setToken = (key: string, value: string) =>
     setNudges((n) => ({ ...n, tokens: { ...n.tokens, [key]: value } }));
+  const setTokenNum = (key: string, value: number) =>
+    setNudges((n) => ({ ...n, tokens: { ...n.tokens, [key]: value } }));
 
   const grammarValue = (
-    key: "columns" | "header" | "sectionTitle" | "bullets" | "density",
-  ) => nudges.grammar?.[key] ?? baseTemplate.grammar[key];
+    key:
+      | "columns"
+      | "header"
+      | "sectionTitle"
+      | "bullets"
+      | "density"
+      | "dateAlignment",
+  ) => nudges.grammar?.[key] ?? baseTemplate.grammar[key] ?? "";
   const accentValue = nudges.tokens?.accent ?? baseTemplate.tokens.accent;
   const fontValue = nudges.tokens?.fontClass ?? baseTemplate.tokens.fontClass;
+  const accentPlacementValue =
+    nudges.tokens?.accentPlacement ??
+    baseTemplate.tokens.accentPlacement ??
+    "both";
+  const dateAlignmentValue =
+    nudges.grammar?.dateAlignment ??
+    baseTemplate.grammar.dateAlignment ??
+    "right-tab";
+  const nameScaleValue =
+    nudges.tokens?.nameScale ?? baseTemplate.tokens.nameScale ?? 1;
+  const sectionSpacingValue =
+    nudges.tokens?.sectionSpacing ?? baseTemplate.tokens.sectionSpacing ?? 1;
+  const pageMarginValue =
+    nudges.tokens?.pageMarginPt ?? baseTemplate.tokens.pageMarginPt ?? null;
 
   async function handleFile(file: File) {
     setLoading(true);
@@ -323,6 +347,47 @@ export function ImportResumeDialog({
                   options={DENSITIES}
                   onChange={(v) => setGrammar("density", v)}
                 />
+                <NudgeSelect
+                  label="Dates"
+                  value={dateAlignmentValue}
+                  options={DATE_ALIGNMENTS}
+                  onChange={(v) => setGrammar("dateAlignment", v)}
+                />
+                <NudgeSelect
+                  label="Accent"
+                  value={accentPlacementValue}
+                  options={ACCENT_PLACEMENTS}
+                  onChange={(v) => setToken("accentPlacement", v)}
+                />
+                <NudgeRange
+                  label="Name size"
+                  value={nameScaleValue}
+                  min={0.6}
+                  max={1.8}
+                  step={0.05}
+                  format={(n) => `${n.toFixed(2)}×`}
+                  onChange={(n) => setTokenNum("nameScale", n)}
+                />
+                <NudgeRange
+                  label="Section spacing"
+                  value={sectionSpacingValue}
+                  min={0.4}
+                  max={2.5}
+                  step={0.05}
+                  format={(n) => `${n.toFixed(2)}×`}
+                  onChange={(n) => setTokenNum("sectionSpacing", n)}
+                />
+                <NudgeRange
+                  label="Page margin"
+                  value={pageMarginValue ?? 43}
+                  min={18}
+                  max={96}
+                  step={1}
+                  format={(n) =>
+                    pageMarginValue == null ? "default" : `${n}pt`
+                  }
+                  onChange={(n) => setTokenNum("pageMarginPt", n)}
+                />
               </div>
 
               <div>
@@ -400,6 +465,42 @@ function NudgeSelect({
           </option>
         ))}
       </select>
+    </div>
+  );
+}
+
+function NudgeRange({
+  label,
+  value,
+  min,
+  max,
+  step,
+  format,
+  onChange,
+}: {
+  label: string;
+  value: number;
+  min: number;
+  max: number;
+  step: number;
+  format: (value: number) => string;
+  onChange: (value: number) => void;
+}) {
+  return (
+    <div>
+      <Label className="flex items-center justify-between text-xs">
+        <span>{label}</span>
+        <span className="text-ink-3">{format(value)}</span>
+      </Label>
+      <input
+        type="range"
+        className="h-9 w-full accent-brand"
+        min={min}
+        max={max}
+        step={step}
+        value={value}
+        onChange={(e) => onChange(Number(e.target.value))}
+      />
     </div>
   );
 }

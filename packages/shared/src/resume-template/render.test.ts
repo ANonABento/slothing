@@ -155,6 +155,84 @@ describe("Typst COMPILES WITH NO ERRORS on every fixture × template", () => {
   }
 }, 60_000);
 
+describe("Phase A knobs — accentPlacement / nameScale / pageMargin / dateAlignment", () => {
+  it("nameScale enlarges the rendered name in both backends", () => {
+    const tpl = withTokens(primary, { nameScale: 1.5 });
+    // 1.9em baseline × 1.5 = 2.85em.
+    expect(renderHtml(tpl, SAMPLE_SWE).html).toContain("font-size:2.85em");
+    expect(renderTypeset(tpl, SAMPLE_SWE).src).toContain("size: 2.85em");
+  });
+
+  it("accentPlacement 'none' drops the accent color entirely (monochrome)", () => {
+    const accent = "#b4541f";
+    const colored = withTokens(primary, { accent });
+    const mono = withTokens(primary, { accent, accentPlacement: "none" });
+    expect(renderHtml(colored, SAMPLE_SWE).html).toContain(accent);
+    expect(renderHtml(mono, SAMPLE_SWE).html).not.toContain(accent);
+    expect(renderTypeset(mono, SAMPLE_SWE).src).not.toContain(accent);
+  });
+
+  it("accentPlacement 'name' colors only the name, not section chrome", () => {
+    const accent = "#b4541f";
+    const html = renderHtml(
+      withTokens(primary, { accent, accentPlacement: "name" }),
+      SAMPLE_SWE,
+    ).html;
+    // The name carries the accent…
+    expect(html).toContain(`color:${accent}`);
+    // …but section titles fall back to ink (no accent border rule).
+    expect(html).not.toContain(`border-bottom:2px solid ${accent}`);
+  });
+
+  it("pageMarginPt overrides the default page padding in both backends", () => {
+    const tpl = withTokens(primary, { pageMarginPt: 30 });
+    expect(renderHtml(tpl, SAMPLE_SWE).html).toContain("padding: 30pt");
+    expect(renderTypeset(tpl, SAMPLE_SWE).src).toContain("margin: 30pt");
+  });
+
+  it("dateAlignment 'inline' changes the entry layout vs the right-tab default", () => {
+    const inline = withGrammar(primary, { dateAlignment: "inline" });
+    const rightTab = withGrammar(primary, { dateAlignment: "right-tab" });
+    const inlineHtml = renderHtml(inline, SAMPLE_SWE).html;
+    const rightHtml = renderHtml(rightTab, SAMPLE_SWE).html;
+    expect(inlineHtml).not.toBe(rightHtml);
+    // Right-tab default matches the un-nudged template (byte-identical).
+    expect(rightHtml).toBe(renderHtml(primary, SAMPLE_SWE).html);
+  });
+});
+
+describe("Phase A knobs — Typst still COMPILES with no errors", () => {
+  const perms: { label: string; tpl: ResumeTemplate }[] = [
+    { label: "nameScale", tpl: withTokens(primary, { nameScale: 1.4 }) },
+    {
+      label: "accent-none",
+      tpl: withTokens(primary, { accentPlacement: "none" }),
+    },
+    { label: "pageMargin", tpl: withTokens(primary, { pageMarginPt: 28 }) },
+    {
+      label: "dates-inline",
+      tpl: withGrammar(primary, { dateAlignment: "inline" }),
+    },
+    {
+      label: "section-spacing",
+      tpl: withTokens(primary, { sectionSpacing: 1.8 }),
+    },
+  ];
+  let compiler: TypesetCompiler;
+  beforeAll(() => {
+    compiler = createNodeTypstCompiler();
+  });
+  for (const { label, tpl } of perms) {
+    it(`compiles ${label}`, async () => {
+      const { src } = renderTypeset(tpl, SAMPLE_SWE);
+      const pdf = await compiler.compile(src);
+      expect(Array.from(pdf.slice(0, 5))).toEqual([
+        0x25, 0x50, 0x44, 0x46, 0x2d,
+      ]);
+    });
+  }
+}, 60_000);
+
 describe("applyNudges — preview+nudge primitive (playground + Studio)", () => {
   it("layers grammar + token overrides over a base template immutably", () => {
     const out = applyNudges(primary, {

@@ -1,5 +1,14 @@
-import { DEFAULT_GRAMMAR, type LayoutGrammar } from "../grammar";
-import { DEFAULT_TOKENS, type StyleTokens } from "../tokens";
+import {
+  DEFAULT_DATE_ALIGNMENT,
+  DEFAULT_GRAMMAR,
+  type LayoutGrammar,
+} from "../grammar";
+import {
+  DEFAULT_ACCENT_PLACEMENT,
+  DEFAULT_NAME_SCALE,
+  DEFAULT_TOKENS,
+  type StyleTokens,
+} from "../tokens";
 import { DEFAULT_TEMPLATES, getDefaultTemplate } from "../default-templates";
 import type { ResumeTemplate } from "../template";
 import type { StyleFingerprint } from "./fingerprint";
@@ -100,6 +109,12 @@ export function classifyFingerprint(
       fp.density.value,
       base.grammar.density,
     ),
+    dateAlignment: pick(
+      "dateAlignment",
+      fp.dateAlignment.confidence,
+      fp.dateAlignment.value,
+      base.grammar.dateAlignment ?? DEFAULT_DATE_ALIGNMENT,
+    ),
   };
 
   const tokens: StyleTokens = {
@@ -122,6 +137,26 @@ export function classifyFingerprint(
       base.tokens.baseFontSizePt,
     ),
     lineHeight: base.tokens.lineHeight,
+    accentPlacement: pick(
+      "accentPlacement",
+      fp.accentPlacement.confidence,
+      fp.accentPlacement.value,
+      base.tokens.accentPlacement ?? DEFAULT_ACCENT_PLACEMENT,
+    ),
+    nameScale: pick(
+      "nameScale",
+      fp.nameScale.confidence,
+      fp.nameScale.value,
+      base.tokens.nameScale ?? DEFAULT_NAME_SCALE,
+    ),
+    pageMarginPt: pick(
+      "pageMarginPt",
+      fp.pageMarginPt.confidence,
+      fp.pageMarginPt.value,
+      base.tokens.pageMarginPt,
+    ),
+    // Section spacing is nudge-only (no reliable geometric signal); keep the base.
+    sectionSpacing: base.tokens.sectionSpacing,
   };
 
   return {
