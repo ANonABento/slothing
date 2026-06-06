@@ -451,10 +451,19 @@ export function ImportResumeDialog({
                     </button>
                   ))}
                 </div>
+                {engine === "typst" && (
+                  <p className="mt-1 text-xs text-ink-3">
+                    Typeset (Typst) styling is applied when you export a PDF —
+                    the preview below is the HTML render.
+                  </p>
+                )}
               </div>
             </div>
 
             <div className="min-h-[420px] overflow-hidden rounded-md border border-rule bg-card">
+              <div className="border-b border-rule bg-paper px-2 py-1 text-[11px] text-ink-3">
+                HTML preview
+              </div>
               <iframe
                 title="Template preview"
                 className="h-[460px] w-full"
