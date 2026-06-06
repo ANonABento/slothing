@@ -83,3 +83,4 @@ apps/web/public/resumes/
 /layout-*.png
 /p1-*.png
 /p2-*.png
+.audit-fixtures/
