@@ -29,10 +29,10 @@ follow-ups; 2 were not bugs / dev-only.
 | F-010 | P2 | ✅ | Dates rendered twice (visible symptom of F-001) |
 | F-011 | P2 | ✅ | In-dialog preview identical for HTML/Typeset, no feedback |
 | F-014 | P3 | ✅ | File picker said "PDF" but accepts pdf/docx/tex |
-| F-012 | P1 | 🧭 | Typst export (PDF + .typ) unreachable — its UI is mounted nowhere in Studio |
-| F-009 | P1 | 📋 | Real multi-column/styled PDFs (Awesome-CV) extract an empty body |
-| F-013 | P2 | 📋 | Sub-bar "AI tailor" is a silent no-op (panel button gates correctly) |
-| F-015 | P3 | 📋 | `flushSync`-in-lifecycle React warning from bank selection |
+| F-012 | P1 | 🧭/✅ | Typst export unreachable — **server half fixed** (inline-resume export); UI half needs a TipTap→RDM converter |
+| F-009 | P1 | ✅ | Real styled PDFs (Awesome-CV) extracted an empty body — **fixed** (header-size heuristics) |
+| F-013 | P2 | ◐ | Sub-bar "AI tailor" expectation fixed (relabel); full entry-point unification deferred |
+| F-015 | P3 | ⚙️ | `flushSync` warning is **upstream** (not in our source) — can't fix without patching a dep |
 | F-016 | P3 | ☑️ | Accept success toast — it does fire (`handleAccept`); persona missed it |
 | F-005 | P2 | 🧭 | `.tex`/`.docx` extract nothing (by Phase-D-gate design) — folded into F-008/F-012 |
 
@@ -102,24 +102,38 @@ engine automatically when exporting PDF. Recommend deciding before building.
 
 ---
 
-## Follow-ups (clear fix, deferred)
+## Second pass (2026-06-07) — F-012 server half, F-009, F-013, F-015
 
-### F-009 — real multi-column/styled PDFs extract an empty body (P1) 📋
-`.audit-fixtures/overleaf/resume-pdf-sample.pdf` (Awesome-CV) → name/title only, 0 sections,
-0 bullets. Header/section detection (`isSectionHeader`, column handling in `geometry.ts`/
-`partitionSections`) doesn't segment styled two-column PDFs. Needs dedicated extraction work
-+ a real-PDF fixture suite (out of scope for a same-night safe fix; the phantom-entry fix
-already lifts the common single-column case). At minimum the dialog should warn "only the
-header could be read" (the F-008 banner covers the empty-content case partially).
+### F-009 — empty body on styled CVs (P1) ✅ FIXED
+Root cause (diagnosed on the Awesome-CV fixture): `isSectionHeader` rejected anything
+> 1.55× body to exclude the name, which also dropped the CV's 1.7× section titles → no
+headers → everything fell into the profile band → empty body. And the "bigger than body"
+cutoff of 1.08× turned every 1.1× entry/company line into a phantom section. Fixes
+(`geometry.ts`): exclude the name by being both large vs body AND near the document max
+font; raise the size cutoff to 1.25× ("clearly larger"); merge wrapped bullet
+continuations (`content.ts`). Result on Awesome-CV: empty → summary + 12 work entries with
+bullets. Controlled fixtures stay byte-clean. Complex multi-section CVs remain a *draft*
+for the import review UI (the documented ~82% parser-accuracy ceiling). 3 regression tests.
 
-### F-013 — sub-bar "AI tailor" silent no-op (P2) 📋
-Two AI-tailor entry points: the AI-panel "Tailor to JD" button shows the correct BYOK/Pro
-gate; the sub-bar Tailor split-button "AI tailor" does nothing (no network call, no gate).
-Fix: route the sub-bar action through the same quota-gate path.
+### F-012 — Typst export reachability (P1) — server half ✅, UI half 🧭
+`/api/resume/export` now accepts an inline `resume` (no `resumeId`), so Typst/PDF work for
+any caller holding structured content; the saved-engine auto-honor already works with it.
+The Studio UI wiring is **still blocked**: Studio's editable doc is TipTap and there is no
+TipTap→RDM converter, so a Studio Typst button would render stale/absent structured content
+and silently drop edits. The real next step is that converter — then wire the menu items.
 
-### F-015 — `flushSync` in lifecycle warning (P3) 📋
-7× `Warning: flushSync was called from inside a lifecycle method` when toggling bank
-checkboxes quickly. Move the `flushSync` out of render into an effect/event handler.
+### F-013 — sub-bar "AI tailor" (P2) ◐ PARTIAL
+Investigated: `handleTailorAi` *does* act — it opens the AI panel, which shows the BYOK/Pro
+gate card; it just doesn't initiate tailoring, and the JD state lives inside the panel.
+Unifying the two entry points cleanly means lifting the panel's gated action / JD state up,
+and verifying it needs a working LLM (currently 429). Shipped the safe, honest part: the
+sub-bar item is relabeled "AI tailor…" with a description that it opens the AI panel.
+Full unification deferred (needs the state lift + LLM to verify).
+
+### F-015 — `flushSync` warning (P3) ⚙️ UPSTREAM
+`flushSync` appears nowhere in our source (`apps/`, `packages/`) — the warning is emitted
+by a third-party UI dependency used in the bank picker. Not fixable without patching/
+upgrading that dependency; documented rather than forced.
 
 ---
 
