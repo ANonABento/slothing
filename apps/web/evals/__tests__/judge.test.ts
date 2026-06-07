@@ -6,6 +6,7 @@ import {
   judgeIsConfigured,
   judgeSingle,
   CLAUDE_OPUS_MODEL,
+  JUDGE_SYSTEM_PROMPT,
 } from "../judge.js";
 import type { TestCase, GeneratorResult } from "../types.js";
 
@@ -29,6 +30,14 @@ const CLAUDE_RESULT: GeneratorResult = {
   output: "Results-driven frontend engineer skilled in React and TypeScript...",
   latencyMs: 900,
 };
+
+describe("judge factuality criterion (P5)", () => {
+  it("makes grounding/factuality the most important, fabrication-penalizing criterion", () => {
+    expect(JUDGE_SYSTEM_PROMPT).toMatch(/factuality|grounding/i);
+    expect(JUDGE_SYSTEM_PROMPT).toMatch(/fabricat|invent/i);
+    expect(JUDGE_SYSTEM_PROMPT).toMatch(/most important/i);
+  });
+});
 
 describe("buildJudgePrompt", () => {
   it("includes the job description", () => {

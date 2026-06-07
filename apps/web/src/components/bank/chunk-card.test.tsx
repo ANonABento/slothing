@@ -353,6 +353,21 @@ describe("ChunkCard", () => {
     expect(screen.getByText("Low confidence")).toBeInTheDocument();
   });
 
+  it("shows an 'Unverified draft' badge for AI-drafted entries (spec §2)", () => {
+    const entry = makeBankEntry({
+      status: "draft",
+      authoredBy: "ai_strengthened",
+    });
+    render(<ChunkCard entry={entry} onUpdate={vi.fn()} onDelete={vi.fn()} />);
+    expect(screen.getByText("Unverified draft")).toBeInTheDocument();
+  });
+
+  it("shows no draft badge for a verified entry", () => {
+    const entry = makeBankEntry({ status: "verified" });
+    render(<ChunkCard entry={entry} onUpdate={vi.fn()} onDelete={vi.fn()} />);
+    expect(screen.queryByText("Unverified draft")).not.toBeInTheDocument();
+  });
+
   it("should expand on click and show content fields", () => {
     const entry = makeBankEntry();
     render(<ChunkCard entry={entry} onUpdate={vi.fn()} onDelete={vi.fn()} />);
