@@ -191,18 +191,38 @@ export function isLikelyScanned(doc: PdfDocGeometry): boolean {
  * larger-than-body, often UPPERCASE, no sentence punctuation. `bodyFontSize` is the
  * document's dominant body size for the relative comparison.
  */
-export function isSectionHeader(line: TextLine, bodyFontSize: number): boolean {
+export function isSectionHeader(
+  line: TextLine,
+  bodyFontSize: number,
+  maxFontSize?: number,
+): boolean {
   const t = line.text;
   if (!t || t.length > 40) return false;
   // Contact runs (email) and long sentences are never section headers.
   if (/@/.test(t)) return false;
   const wordCount = t.split(/\s+/).length;
   if (wordCount > 5) return false;
-  // The name / job title is much larger than body — exclude it so it stays in the
-  // profile band rather than being mistaken for the first section header.
-  if (line.fontSize > bodyFontSize * 1.55) return false;
+  // Exclude the name / job title so it stays in the profile band rather than being
+  // mistaken for the first section header. The name is both large vs body AND among the
+  // document's largest text — requiring BOTH means templates with big (~1.8×) section
+  // headers are still detected, whereas a flat 1.55× cap silently dropped them and lost
+  // the whole body (audit F-009). Falls back to the flat cap when the max is unknown.
+  if (maxFontSize) {
+    if (
+      line.fontSize > bodyFontSize * 1.55 &&
+      line.fontSize >= maxFontSize * 0.85
+    )
+      return false;
+  } else if (line.fontSize > bodyFontSize * 1.55) {
+    return false;
+  }
   const isUpper = t === t.toUpperCase() && /[A-Z]/.test(t);
-  const isBigger = line.fontSize > bodyFontSize * 1.08;
+  // "Clearly larger", not just barely: entry headers (company/role lines) often run a
+  // point above body (e.g. 10pt over 9pt = 1.11×); a 1.08× cutoff mistook each of them
+  // for a section header and split the body into garbage (audit F-009). Genuine
+  // size-only section titles (e.g. a 1.7× "Summary") still pass; uppercase/bold titles
+  // are caught regardless of size.
+  const isBigger = line.fontSize > bodyFontSize * 1.25;
   return isUpper || (line.bold && wordCount <= 4) || isBigger;
 }
 

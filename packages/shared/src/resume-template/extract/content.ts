@@ -24,7 +24,12 @@ import { labelSection, type SectionKind, type SectionLabeler } from "./labels";
  */
 
 const EMAIL_RE = /[\w.+-]+@[\w-]+\.[\w.-]+/;
-const PHONE_RE = /(\+?\d[\d ().\-]{7,}\d)/;
+// Allow an optional leading paren so "(617) 555-0142" keeps its "(" (audit F-004).
+const PHONE_RE = /(\+?\(?\d[\d ().\-]{7,}\d)/;
+// CONSERVATIVE location detector for entry bodies: "City, ST" (2-letter state) or a
+// short country/remote tag. Deliberately stricter than LOCATION_RE so it never swallows
+// a real "Role, Company" header (e.g. "Engineer, Globex") as a location (audit F-002).
+const CITY_STATE_RE = /^[A-Za-z .'À-ſ-]+,\s*(?:[A-Z]{2}|USA|UK|Remote)$/;
 const URL_RE =
   /((?:https?:\/\/)?(?:www\.)?[\w-]+\.(?:com|dev|io|me|org|net|co|ai|app|xyz)(?:\/[\w./#?=&%-]*)?)/i;
 const LOCATION_RE = /^[A-Za-z .'À-ſ-]+,\s*[A-Za-z .'À-ſ-]+$/;
@@ -92,9 +97,10 @@ function partitionSections(
   const sections: RawSection[] = [];
   let current: RawSection | null = null;
   let seenHeader = false;
+  const maxFontSize = lines.reduce((m, l) => Math.max(m, l.fontSize), 0);
 
   for (const line of lines) {
-    if (isSectionHeader(line, bodyFontSize)) {
+    if (isSectionHeader(line, bodyFontSize, maxFontSize)) {
       seenHeader = true;
       current = { kind: labelSection(line.text), header: line.text, lines: [] };
       sections.push(current);
@@ -112,7 +118,9 @@ function parseProfile(
 ): ResumeDocumentModel["basics"] {
   // Name = the largest-font line in the profile band, else the first line.
   const byFont = [...profile].sort((a, b) => b.fontSize - a.fontSize);
-  const name = (byFont[0]?.text ?? "").trim() || "Unknown";
+  // Empty (not a fake "Unknown") when no name line is found — the import dialog surfaces
+  // a "couldn't detect your name" affordance rather than asserting a wrong name (F-007).
+  const name = (byFont[0]?.text ?? "").trim();
 
   const email = EMAIL_RE.exec(allText)?.[0];
   const phone = PHONE_RE.exec(allText)?.[0]?.trim();
@@ -166,23 +174,18 @@ function parseProfile(
   };
 }
 
-function parseEntries(
-  lines: TextLine[],
-): {
+interface ParsedEntry {
   primary: string;
   secondary?: string;
+  location?: string;
   start?: string;
   end?: string;
   highlights: string[];
-}[] {
-  const entries: {
-    primary: string;
-    secondary?: string;
-    start?: string;
-    end?: string;
-    highlights: string[];
-  }[] = [];
-  let current: (typeof entries)[number] | null = null;
+}
+
+function parseEntries(lines: TextLine[]): ParsedEntry[] {
+  const entries: ParsedEntry[] = [];
+  let current: ParsedEntry | null = null;
 
   for (const line of lines) {
     if (isBullet(line)) {
@@ -190,9 +193,43 @@ function parseEntries(
       current.highlights.push(stripBullet(line.text));
       continue;
     }
-    if (!line.text.trim()) continue;
-    // A non-bullet line starts a new entry header.
+    const text = line.text.trim();
+    if (!text) continue;
+
     const { start, end, rest } = extractDates(line.text);
+
+    // A line that is ONLY a date range ("2021 — Present") belongs to the entry above it,
+    // not a new entry — right-tab/standalone dates otherwise spawn phantom entries
+    // (audit F-001/F-003/F-010). Attach to current; never reset it.
+    if (!rest && (start || end)) {
+      if (current) {
+        current.start ??= start;
+        current.end ??= end;
+      }
+      continue;
+    }
+
+    // A standalone "City, ST" line is the current entry's location, not a new entry, and
+    // must not reset `current` (else following bullets attach to a phantom) (audit F-002).
+    if (current && !current.location && CITY_STATE_RE.test(text)) {
+      current.location = text;
+      continue;
+    }
+
+    // A non-bullet line that begins with a lowercase letter is a wrapped continuation of
+    // the line above (a long bullet or header that overflowed), not a new entry — append
+    // it so wrapped bullets don't each spawn a phantom entry (audit F-009). Entry headers
+    // and bullets start with a capital / symbol, so this only catches continuations.
+    if (current && /^[a-z]/.test(text)) {
+      if (current.highlights.length) {
+        current.highlights[current.highlights.length - 1] += ` ${text}`;
+      } else if (current.primary) {
+        current.primary += ` ${text}`;
+      }
+      continue;
+    }
+
+    // Otherwise: a new entry header.
     const { primary, secondary } = splitLead(rest || line.text);
     current = { primary, secondary, start, end, highlights: [] };
     entries.push(current);
@@ -273,6 +310,7 @@ export async function extractContent(
           work.push({
             organization: e.secondary ?? "",
             position: e.primary,
+            location: e.location,
             startDate: e.start,
             endDate: e.end,
             highlights: e.highlights,

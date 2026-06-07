@@ -372,6 +372,150 @@ describe("content extraction — OpenResume-style RDM draft", () => {
   });
 });
 
+// --- Fixture E: real-world line splitting — date range and location each land on their
+// OWN line (as pdf.js often emits right-tab dates and italic location subtitles). This is
+// the layout that produced phantom work/education entries before the audit fix.
+function standaloneDateAndLocation(): PdfDocGeometry {
+  const accent = "#7a2e1e";
+  const items: PdfTextItem[] = [];
+  items.push(mk("Jordan A. Rivera", 230, 40, { fontSize: 22, bold: true }));
+  items.push(mk("(617) 555-0142", 230, 60, { fontSize: 9 }));
+  let y = 120;
+  items.push(
+    mk("EXPERIENCE", 72, y, { fontSize: 12, bold: true, color: accent }),
+  );
+  y += 18;
+  items.push(mk("Senior Software Engineer — Northwind Labs", 72, y));
+  y += 14;
+  items.push(mk("2021 — Present", 72, y)); // standalone date line
+  y += 14;
+  items.push(mk("Boston, MA", 72, y)); // standalone location line
+  y += 14;
+  items.push(mk("• Led the migration.", 90, y));
+  y += 14;
+  items.push(mk("• Mentored five engineers.", 90, y));
+  y += 18;
+  items.push(mk("Software Engineer — Cedar Systems", 72, y));
+  y += 14;
+  items.push(mk("2018 — 2021", 72, y));
+  y += 14;
+  items.push(mk("Cambridge, MA", 72, y));
+  y += 14;
+  items.push(mk("• Built the APIs.", 90, y));
+  y += 22;
+  items.push(
+    mk("EDUCATION", 72, y, { fontSize: 12, bold: true, color: accent }),
+  );
+  y += 18;
+  items.push(mk("B.S. Computer Science — Boston University", 72, y));
+  y += 14;
+  items.push(mk("2014 — 2018", 72, y));
+  return { pages: [page(items)] };
+}
+
+describe("content extraction — standalone date/location lines (audit F-001/2/3/4/10)", () => {
+  it("keeps the leading paren on a phone number", async () => {
+    const { rdm } = await extractContent(standaloneDateAndLocation());
+    expect(rdm.basics.phone).toBe("(617) 555-0142");
+  });
+
+  it("does not spawn phantom work entries from standalone date/location lines", async () => {
+    const { rdm } = await extractContent(standaloneDateAndLocation());
+    expect(rdm.work).toHaveLength(2);
+  });
+
+  it("attaches dates, location, and bullets to the correct job", async () => {
+    const { rdm } = await extractContent(standaloneDateAndLocation());
+    const first = rdm.work[0];
+    expect(first.position).toBe("Senior Software Engineer");
+    expect(first.organization).toBe("Northwind Labs");
+    expect(first.location).toBe("Boston, MA");
+    expect(first.startDate).toBe("2021");
+    expect(first.highlights).toHaveLength(2);
+    expect(first.highlights[0]).toBe("Led the migration.");
+  });
+
+  it("does not spawn a phantom education entry from a standalone date line", async () => {
+    const { rdm } = await extractContent(standaloneDateAndLocation());
+    expect(rdm.education).toHaveLength(1);
+    expect(rdm.education[0].institution).toBe("Boston University");
+    expect(rdm.education[0].startDate).toBe("2014");
+    expect(rdm.education[0].endDate).toBe("2018");
+  });
+
+  it("falls back to an empty (not 'Unknown') name when none is found", async () => {
+    // No profile band (content starts straight at a section header) → no name line.
+    const { rdm } = await extractContent({
+      pages: [
+        page([
+          mk("EXPERIENCE", 72, 80, { fontSize: 12, bold: true }),
+          mk("• just a bullet", 90, 100),
+        ]),
+      ],
+    });
+    expect(rdm.basics.name).toBe("");
+  });
+});
+
+// --- Fixture F: a styled CV (à la Awesome-CV) — large NON-bold/NON-upper section titles
+// (1.7× body), entry headers only ~1.1× body, and a bullet that wraps to a second line.
+// Before the F-009 fix: the title-size guard dropped the 1.7× headers (empty body) and the
+// 1.08× "bigger" cutoff turned every 1.1× entry line into a phantom section.
+function styledLargeHeaders(): PdfDocGeometry {
+  const items: PdfTextItem[] = [];
+  items.push(mk("Byungjin Park", 72, 20, { fontSize: 32, bold: true }));
+  let y = 90;
+  items.push(mk("Summary", 72, y, { fontSize: 16 })); // 1.78× body, not bold/upper
+  y += 16;
+  items.push(
+    mk("Seasoned SRE leader with deep platform experience.", 72, y, {
+      fontSize: 9,
+    }),
+  );
+  y += 24;
+  items.push(mk("Work Experience", 72, y, { fontSize: 16 }));
+  y += 18;
+  items.push(mk("Dunamu Inc.", 72, y, { fontSize: 10 })); // entry header, ~1.1× body
+  y += 14;
+  items.push(mk("DevOps Engineer", 72, y, { fontSize: 10 }));
+  items.push(mk("Sep. 2023 – Mar. 2024", 460, y, { fontSize: 9 }));
+  y += 14;
+  items.push(
+    mk("• Designed Terraform modules to manage and scale", 90, y, {
+      fontSize: 9,
+    }),
+  );
+  y += 12;
+  items.push(
+    mk("infrastructure deployments across regions.", 90, y, { fontSize: 9 }),
+  ); // wrap
+  y += 14;
+  items.push(mk("• Led service mesh adoption.", 90, y, { fontSize: 9 }));
+  return { pages: [page(items)] };
+}
+
+describe("content extraction — styled large headers + wrapped bullets (audit F-009)", () => {
+  it("detects 1.7×-body section titles that aren't bold/uppercase", async () => {
+    const { rdm } = await extractContent(styledLargeHeaders());
+    expect(rdm.summary).toContain("Seasoned SRE");
+    expect(rdm.work.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("does not turn ~1.1×-body entry lines into phantom sections (non-empty body)", async () => {
+    const { rdm } = await extractContent(styledLargeHeaders());
+    const withBullets = rdm.work.filter((w) => w.highlights.length > 0);
+    expect(withBullets.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("merges a wrapped bullet continuation into the bullet above it", async () => {
+    const { rdm } = await extractContent(styledLargeHeaders());
+    const merged = rdm.work
+      .flatMap((w) => w.highlights)
+      .find((h) => h.includes("Terraform"));
+    expect(merged).toContain("infrastructure deployments across regions");
+  });
+});
+
 describe("line grouping", () => {
   it("groups items on the same baseline into one line, ordered left-to-right", () => {
     const lines = groupIntoLines(

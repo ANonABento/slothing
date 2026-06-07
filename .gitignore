@@ -84,3 +84,4 @@ apps/web/public/resumes/
 /p1-*.png
 /p2-*.png
 apps/web/evals/reports/
+.audit-fixtures/
