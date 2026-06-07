@@ -17,6 +17,8 @@ import {
   strengthenEntryHighlights,
   strengthenedDraftInput,
   entryHighlights,
+  articulateToBullets,
+  articulatedDraftInput,
 } from "./ai-authoring";
 
 const entry: BankEntry = {
@@ -87,5 +89,50 @@ describe("AI bank authoring — Strengthen (spec §4)", () => {
     expect(draft.authoredBy).toBe("ai_strengthened");
     expect(draft.groundedIn).toEqual({ kind: "entry", refId: "e1" });
     expect(draft.content.highlights).toEqual(["Drove the migration"]);
+  });
+});
+
+describe("AI bank authoring — Articulate (spec §4.2)", () => {
+  beforeEach(() => completeMock.mockReset());
+
+  const notes =
+    "i set up the kubernetes cluster and cut our build time from 20 minutes to 6";
+
+  it("keeps bullets grounded in the user's notes", async () => {
+    completeMock.mockResolvedValueOnce(
+      JSON.stringify({
+        bullets: [
+          "Set up the Kubernetes cluster and cut build time to 6 minutes",
+        ],
+      }),
+    );
+    const out = await articulateToBullets(notes, llmConfig);
+    expect(out).toHaveLength(1);
+    expect(out[0]).toMatch(/kubernetes/i);
+  });
+
+  it("drops a bullet that introduces a fact/metric absent from the notes", async () => {
+    completeMock.mockResolvedValueOnce(
+      JSON.stringify({
+        bullets: [
+          "Set up the Kubernetes cluster", // grounded
+          "Saved the company $4M in cloud costs", // $4M not in notes
+        ],
+      }),
+    );
+    const out = await articulateToBullets(notes, llmConfig);
+    expect(out.join(" ")).not.toMatch(/\$4M|4M/);
+    expect(out.some((b) => /kubernetes/i.test(b))).toBe(true);
+  });
+
+  it("builds a draft bullet entry grounded in raw_input", () => {
+    const draft = articulatedDraftInput("my raw notes", "Set up Kubernetes");
+    expect(draft.category).toBe("bullet");
+    expect(draft.status).toBe("draft");
+    expect(draft.authoredBy).toBe("ai_articulated");
+    expect(draft.groundedIn).toEqual({
+      kind: "raw_input",
+      rawText: "my raw notes",
+    });
   });
 });

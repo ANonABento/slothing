@@ -7,6 +7,7 @@ const mocks = vi.hoisted(() => ({
   getBankEntryById: vi.fn(),
   insertBankEntry: vi.fn(),
   strengthenEntryHighlights: vi.fn(),
+  articulateToBullets: vi.fn(),
 }));
 
 vi.mock("@/lib/auth", () => ({
@@ -26,12 +27,24 @@ vi.mock("@/lib/db/profile-bank", () => ({
 
 vi.mock("@/lib/bank/ai-authoring", () => ({
   strengthenEntryHighlights: mocks.strengthenEntryHighlights,
+  articulateToBullets: mocks.articulateToBullets,
   strengthenedDraftInput: (entry: { id: string }, highlights: string[]) => ({
     category: "experience",
     content: { highlights },
     status: "draft",
     authoredBy: "ai_strengthened",
     groundedIn: { kind: "entry", refId: entry.id },
+  }),
+  articulatedDraftInput: (
+    rawText: string,
+    bullet: string,
+    category = "bullet",
+  ) => ({
+    category,
+    content: { description: bullet },
+    status: "draft",
+    authoredBy: "ai_articulated",
+    groundedIn: { kind: "raw_input", rawText },
   }),
 }));
 
@@ -64,10 +77,11 @@ describe("POST /api/bank/ai/draft — strengthen", () => {
       refund: vi.fn(),
     });
     mocks.strengthenEntryHighlights.mockResolvedValue(["Drove a thing"]);
+    mocks.articulateToBullets.mockResolvedValue(["Built X", "Shipped Y"]);
     mocks.insertBankEntry.mockReturnValue("draft-1");
   });
 
-  it("persists a DRAFT (ai_strengthened) and returns 201", async () => {
+  it("strengthen persists a DRAFT (ai_strengthened) and returns 201", async () => {
     const res = await POST(req({ mode: "strengthen", entryId: "e1" }));
     expect(res.status).toBe(201);
     const insertArg = mocks.insertBankEntry.mock.calls[0][0];
@@ -76,9 +90,38 @@ describe("POST /api/bank/ai/draft — strengthen", () => {
     expect(insertArg.groundedIn).toEqual({ kind: "entry", refId: "e1" });
     await expect(res.json()).resolves.toMatchObject({
       success: true,
-      id: "draft-1",
+      ids: ["draft-1"],
       status: "draft",
     });
+  });
+
+  it("articulate turns grounded notes into draft bullet entries (one per bullet)", async () => {
+    const res = await POST(
+      req({
+        mode: "articulate",
+        rawText: "I led the migration and mentored five engineers.",
+      }),
+    );
+    expect(res.status).toBe(201);
+    expect(mocks.insertBankEntry).toHaveBeenCalledTimes(2);
+    const first = mocks.insertBankEntry.mock.calls[0][0];
+    expect(first.status).toBe("draft");
+    expect(first.authoredBy).toBe("ai_articulated");
+    expect(first.groundedIn).toMatchObject({ kind: "raw_input" });
+    await expect(res.json()).resolves.toMatchObject({
+      success: true,
+      bullets: ["Built X", "Shipped Y"],
+      status: "draft",
+    });
+  });
+
+  it("articulate 422s when nothing can be grounded in the notes", async () => {
+    mocks.articulateToBullets.mockResolvedValue([]);
+    const res = await POST(
+      req({ mode: "articulate", rawText: "something vague and short-ish" }),
+    );
+    expect(res.status).toBe(422);
+    expect(mocks.insertBankEntry).not.toHaveBeenCalled();
   });
 
   it("404s for a missing/foreign entry", async () => {

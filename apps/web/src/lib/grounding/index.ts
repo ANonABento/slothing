@@ -94,8 +94,10 @@ export function contentWords(text: string): Set<string> {
   return new Set(words);
 }
 
+// A number with an optional unit. Letter units require a word boundary (\b) so we don't
+// swallow the first letter of the next word — e.g. "6 minutes" must read as "6", not "6m".
 const NUMBER_RE =
-  /\$?\d[\d,]*(?:\.\d+)?\s*(?:%|percent|k|m|bn|b|x|pb|tb|gb|mb)?\+?/gi;
+  /\$?\d[\d,]*(?:\.\d+)?\s?(?:%|percent\b|bn\b|pb\b|tb\b|gb\b|mb\b|[kmbx]\b)?\+?/gi;
 
 /** Canonical form of a numeric/metric token: lowercase, no $/commas/space, percent→%. */
 export function normalizeNumber(token: string): string {

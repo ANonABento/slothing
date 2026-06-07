@@ -1,4 +1,4 @@
-import type { BankEntry, LLMConfig } from "@/types";
+import type { BankCategory, BankEntry, LLMConfig } from "@/types";
 import { LLMClient, parseJSONFromLLM } from "@/lib/llm/client";
 import { groundClaims } from "@/lib/grounding";
 import type { InsertBankEntry } from "@/lib/db/profile-bank";
@@ -88,6 +88,71 @@ export async function strengthenEntryHighlights(
     : [];
   const grounded = groundClaims(rewritten, entryEvidence(entry)).supported;
   return grounded.length > 0 ? grounded : entryHighlights(entry);
+}
+
+// --- Articulate (spec §4.2): the user's own raw material → grounded draft bullets ---
+
+export function buildArticulatePrompt(
+  rawText: string,
+  jobContext?: JobContext,
+): string {
+  const job =
+    jobContext?.jobDescription || jobContext?.jobTitle
+      ? `\nTARGET JOB (use only to choose emphasis/wording — never to add facts the notes don't contain):\nTitle: ${jobContext.jobTitle ?? "N/A"}\nCompany: ${jobContext.company ?? "N/A"}\n${(jobContext.jobDescription ?? "").slice(0, 1500)}\n`
+      : "";
+  return `Turn the candidate's OWN notes into 1-3 strong, concise résumé bullets.
+
+NON-NEGOTIABLE RULES:
+- Use ONLY facts stated in the NOTES below. Do NOT invent or change metrics, numbers, tools, employers, titles, dates, clients, or outcomes.
+- Do not add a number or percentage that is not already in the notes.
+- Each bullet must be fully supported by the notes. Improve wording, action verbs, and concision only.
+- Return JSON ONLY, no prose: {"bullets": ["...", "..."]}
+
+NOTES:
+${rawText}
+${job}
+Return ONLY: {"bullets": ["bullet 1", "bullet 2"]}`;
+}
+
+/**
+ * Articulate the user's raw notes into bullets, keeping ONLY those grounded in the notes
+ * (claims ⊆ rawText; fabricated numbers dropped). The facts come from the user — AI only
+ * phrases them. Returns the grounded bullets (possibly empty if nothing was grounded).
+ */
+export async function articulateToBullets(
+  rawText: string,
+  llmConfig: LLMConfig,
+  jobContext?: JobContext,
+): Promise<string[]> {
+  const client = new LLMClient(llmConfig);
+  const response = await client.complete({
+    messages: [
+      { role: "user", content: buildArticulatePrompt(rawText, jobContext) },
+    ],
+    temperature: 0.4,
+    maxTokens: 600,
+  });
+  const parsed = parseJSONFromLLM<{ bullets?: unknown }>(response);
+  const bullets = Array.isArray(parsed.bullets)
+    ? parsed.bullets.map(String)
+    : [];
+  return groundClaims(bullets, rawText).supported;
+}
+
+/** Build a draft bank entry for one articulated bullet (unverified until confirmed). */
+export function articulatedDraftInput(
+  rawText: string,
+  bullet: string,
+  category: BankCategory = "bullet",
+): InsertBankEntry {
+  return {
+    category,
+    content: { description: bullet, text: bullet },
+    status: "draft",
+    authoredBy: "ai_articulated",
+    groundedIn: { kind: "raw_input", rawText },
+    confidenceScore: 0.6,
+  };
 }
 
 /** Build the draft bank entry for a strengthened rewrite (unverified until confirmed). */

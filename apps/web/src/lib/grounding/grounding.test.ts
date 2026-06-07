@@ -38,6 +38,15 @@ describe("grounding engine (AI Bank Authoring spec §3)", () => {
       // "5 engineers" / "team of 4" are plain small ints — not metrics.
       expect(metricNumbers("Mentored 5 engineers on 4 teams")).toEqual([]);
     });
+
+    it("does not mistake the first letter of the next word for a unit", () => {
+      // "6 minutes" must read as "6" (not the metric "6m") — a unit needs a word boundary.
+      expect(metricNumbers("cut build time to 6 minutes")).toEqual([]);
+      expect(metricNumbers("processed 8 PB and saved $2M")).toEqual([
+        "8pb",
+        "2m",
+      ]);
+    });
   });
 
   describe("splitClaims + contentWords", () => {
