@@ -54,8 +54,9 @@ export function buildStrengthenPrompt(
 
 NON-NEGOTIABLE RULES:
 - Use ONLY facts already present in the ENTRY below. Do NOT invent or change metrics, numbers, tools, employers, job titles, dates, clients, or outcomes.
-- Improve wording only. Every rewritten bullet must be supported by the entry's existing content.
-- Do not add a number or percentage that is not already in the entry.
+- Do not add a number or percentage that is not already in the entry (do NOT compute a derived metric like a "% improvement" — only reuse numbers exactly as written).
+- Do NOT add context, scope, skills, audiences, or descriptive detail not in the entry. Stay close to the entry — rephrase for impact, don't embellish. No trailing clauses ("guiding…", "demonstrating…", "leveraging…") unless that detail is already there.
+- Improve wording, action verbs, and clarity only. Every rewritten bullet must be supported by the entry's existing content.
 - Return JSON ONLY, no prose: {"highlights": ["...", "..."]}
 
 ENTRY:
