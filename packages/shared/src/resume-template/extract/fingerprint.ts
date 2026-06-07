@@ -435,7 +435,10 @@ function fingerprintSectionTitle(
   lines: TextLine[],
   bodyFontSize: number,
 ): AxisValue<SectionTitleStyle> {
-  const headers = lines.filter((l) => isSectionHeader(l, bodyFontSize));
+  const maxFontSize = lines.reduce((m, l) => Math.max(m, l.fontSize), 0);
+  const headers = lines.filter((l) =>
+    isSectionHeader(l, bodyFontSize, maxFontSize),
+  );
   if (headers.length < 2) return { value: "full-rule", confidence: 0.1 };
   const upperShare =
     headers.filter((h) => h.text === h.text.toUpperCase()).length /
@@ -500,7 +503,10 @@ function fingerprintAccentPlacement(
 ): AxisValue<AccentPlacement> {
   const nameLine = findNameLine(doc, lines);
   const nameColored = !!nameLine?.items.some((it) => isAccentColor(it.color));
-  const headers = lines.filter((l) => isSectionHeader(l, bodyFontSize));
+  const maxFontSize = lines.reduce((m, l) => Math.max(m, l.fontSize), 0);
+  const headers = lines.filter((l) =>
+    isSectionHeader(l, bodyFontSize, maxFontSize),
+  );
   const sectionsColored = headers.some((h) =>
     h.items.some((it) => isAccentColor(it.color)),
   );

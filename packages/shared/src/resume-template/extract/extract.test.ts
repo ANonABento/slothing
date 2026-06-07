@@ -457,6 +457,65 @@ describe("content extraction — standalone date/location lines (audit F-001/2/3
   });
 });
 
+// --- Fixture F: a styled CV (à la Awesome-CV) — large NON-bold/NON-upper section titles
+// (1.7× body), entry headers only ~1.1× body, and a bullet that wraps to a second line.
+// Before the F-009 fix: the title-size guard dropped the 1.7× headers (empty body) and the
+// 1.08× "bigger" cutoff turned every 1.1× entry line into a phantom section.
+function styledLargeHeaders(): PdfDocGeometry {
+  const items: PdfTextItem[] = [];
+  items.push(mk("Byungjin Park", 72, 20, { fontSize: 32, bold: true }));
+  let y = 90;
+  items.push(mk("Summary", 72, y, { fontSize: 16 })); // 1.78× body, not bold/upper
+  y += 16;
+  items.push(
+    mk("Seasoned SRE leader with deep platform experience.", 72, y, {
+      fontSize: 9,
+    }),
+  );
+  y += 24;
+  items.push(mk("Work Experience", 72, y, { fontSize: 16 }));
+  y += 18;
+  items.push(mk("Dunamu Inc.", 72, y, { fontSize: 10 })); // entry header, ~1.1× body
+  y += 14;
+  items.push(mk("DevOps Engineer", 72, y, { fontSize: 10 }));
+  items.push(mk("Sep. 2023 – Mar. 2024", 460, y, { fontSize: 9 }));
+  y += 14;
+  items.push(
+    mk("• Designed Terraform modules to manage and scale", 90, y, {
+      fontSize: 9,
+    }),
+  );
+  y += 12;
+  items.push(
+    mk("infrastructure deployments across regions.", 90, y, { fontSize: 9 }),
+  ); // wrap
+  y += 14;
+  items.push(mk("• Led service mesh adoption.", 90, y, { fontSize: 9 }));
+  return { pages: [page(items)] };
+}
+
+describe("content extraction — styled large headers + wrapped bullets (audit F-009)", () => {
+  it("detects 1.7×-body section titles that aren't bold/uppercase", async () => {
+    const { rdm } = await extractContent(styledLargeHeaders());
+    expect(rdm.summary).toContain("Seasoned SRE");
+    expect(rdm.work.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("does not turn ~1.1×-body entry lines into phantom sections (non-empty body)", async () => {
+    const { rdm } = await extractContent(styledLargeHeaders());
+    const withBullets = rdm.work.filter((w) => w.highlights.length > 0);
+    expect(withBullets.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("merges a wrapped bullet continuation into the bullet above it", async () => {
+    const { rdm } = await extractContent(styledLargeHeaders());
+    const merged = rdm.work
+      .flatMap((w) => w.highlights)
+      .find((h) => h.includes("Terraform"));
+    expect(merged).toContain("infrastructure deployments across regions");
+  });
+});
+
 describe("line grouping", () => {
   it("groups items on the same baseline into one line, ordered left-to-right", () => {
     const lines = groupIntoLines(
