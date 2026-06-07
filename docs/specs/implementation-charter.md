@@ -81,7 +81,12 @@ Stop and summarize only when:
   (deleted the 9-word regex + sanitizeExperiences/buildBankEvidenceText), verified-only
   reads; prompt-builders exposes id= + requires sourceEntryId. Anti-fabrication test
   rewritten + green; full suite green (web 4268). Live-LLM tailoring quality: PENDING-QUOTA.
-- [ ] P2 Strengthen
+- [x] **P2 Strengthen** (backend) — DONE 2026-06-07. Commits: baa3f453 (confirm path:
+  setBankEntryStatus + POST /api/bank/[id]/confirm), cedd9ddc (AI Strengthen:
+  src/lib/bank/ai-authoring.ts + POST /api/bank/ai/draft — grounded rewrite ⊆ original →
+  status:draft authoredBy:ai_strengthened, AI-gated, getBankEntryById). Mocked-LLM tests
+  green. Live rewrite quality: PENDING-QUOTA. NOTE: the per-card "Strengthen with AI" button
+  + draft/verified badge (UI) are folded into the P5 UI pass.
 - [ ] P3 Articulate
 - [ ] P4 Tailoring↔bank loop
 - [ ] P5 Polish & eval
