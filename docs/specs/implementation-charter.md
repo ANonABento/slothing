@@ -87,7 +87,12 @@ Stop and summarize only when:
   status:draft authoredBy:ai_strengthened, AI-gated, getBankEntryById). Mocked-LLM tests
   green. Live rewrite quality: PENDING-QUOTA. NOTE: the per-card "Strengthen with AI" button
   + draft/verified badge (UI) are folded into the P5 UI pass.
-- [ ] P3 Articulate
+- [x] **P3 Articulate** — DONE 2026-06-07. Commit 6f4ca294: POST /api/bank/ai/draft
+  mode:'articulate' turns the user's raw notes into bullets grounded ⊆ the notes →
+  status:'draft' authoredBy:'ai_articulated' groundedIn{kind:'raw_input'}; 422 when nothing
+  grounds. Route is a discriminated union (strengthen|articulate). Also fixed a
+  grounding-engine NUMBER_RE bug (unit suffix ate the next word's first letter, "6 minutes"→
+  "6m"). Mocked-LLM tests for both modes; live quality PENDING-QUOTA.
 - [ ] P4 Tailoring↔bank loop
 - [ ] P5 Polish & eval
 
