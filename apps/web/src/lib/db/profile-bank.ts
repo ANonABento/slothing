@@ -431,6 +431,14 @@ export function getBankEntries(userId: string): BankEntry[] {
   return attachChildCounts(rows.map(rowToEntry), userId);
 }
 
+export function getBankEntryById(id: string, userId: string): BankEntry | null {
+  ensureProfileBankHierarchySchema();
+  const row = db
+    .prepare("SELECT * FROM profile_bank WHERE id = ? AND user_id = ?")
+    .get(id, userId) as BankEntryRow | undefined;
+  return row ? rowToEntry(row) : null;
+}
+
 export function getBankEntriesByCategory(
   category: BankCategory,
   userId: string,
