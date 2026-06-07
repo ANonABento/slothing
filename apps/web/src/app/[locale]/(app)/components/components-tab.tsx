@@ -81,6 +81,7 @@ import {
 } from "@/components/ui/skeleton";
 import { VirtualGrid } from "@/components/ui/virtual-list";
 import { AddEntryDialog } from "@/components/bank/add-entry-dialog";
+import { ArticulateDialog } from "@/components/bank/articulate-dialog";
 import { useToast } from "@/components/ui/toast";
 import { useErrorToast } from "@/hooks/use-error-toast";
 import { uploadSuccessMessage } from "./utils";
@@ -519,6 +520,8 @@ export function BankComponentsTab({
     },
     [addToast, fetchEntries, markAiBusy],
   );
+
+  const [articulateOpen, setArticulateOpen] = useState(false);
 
   const handleConfirmDraft = useCallback(
     async (id: string) => {
@@ -1924,6 +1927,19 @@ export function BankComponentsTab({
                     Add Entry
                   </Button>
                 }
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setArticulateOpen(true)}
+              >
+                <Sparkles className="h-4 w-4 mr-2" />
+                Draft with AI
+              </Button>
+              <ArticulateDialog
+                open={articulateOpen}
+                onOpenChange={setArticulateOpen}
+                onCreated={() => void fetchEntries({ silent: true })}
               />
               <DriveFilePicker
                 onSelect={handleDriveSelect}
