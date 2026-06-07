@@ -10,16 +10,18 @@ export const CLAUDE_OPUS_MODEL = "claude-opus-4-7";
 const ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages";
 const ANTHROPIC_API_VERSION = "2023-06-01";
 
-const JUDGE_SYSTEM_PROMPT = `You are an expert hiring manager and career coach evaluating tailored resumes.
+export const JUDGE_SYSTEM_PROMPT = `You are an expert hiring manager and career coach evaluating tailored resumes.
 Your role is to objectively score two resume outputs for the same candidate and job.
 Score each resume on a 1-5 scale based on these criteria:
+- Factuality / grounding (MOST IMPORTANT): Is every claim, metric, employer, title, and date supported by the ORIGINAL CANDIDATE PROFILE? Any fabricated or unsupported claim is a serious failure — cap such a resume at 2 regardless of polish.
 - Keyword alignment: Does it incorporate relevant terms from the job description?
 - Relevance emphasis: Does it highlight the most relevant experience for this role?
-- Specificity: Are metrics and concrete achievements used effectively?
+- Specificity: Are metrics and concrete achievements used effectively (and grounded in the profile)?
 - Clarity: Is the writing professional, clear, and impactful?
 - ATS optimization: Is the structure and language optimized for applicant tracking systems?
 
 Be objective. Do not favor one resume over another without clear justification.
+A polished resume that invents experience must score BELOW an honest, plainer one.
 Respond ONLY with valid JSON — no markdown, no preamble.`;
 
 export function buildJudgePrompt(

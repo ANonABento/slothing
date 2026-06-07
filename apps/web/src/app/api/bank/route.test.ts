@@ -117,6 +117,10 @@ describe("bank route", () => {
         category: "hackathon",
         content: { name: "AI Build Weekend", prizes: ["Best AI App"] },
         confidenceScore: 1.0,
+        // Manual create defaults to a user-authored, verified fact (spec §2).
+        status: "verified",
+        authoredBy: "user",
+        verifiedAt: expect.any(String),
       },
       "user-1",
     );
@@ -149,6 +153,9 @@ describe("bank route", () => {
         },
         sourceDocumentId: "doc-1",
         confidenceScore: 0.82,
+        status: "verified",
+        authoredBy: "user",
+        verifiedAt: expect.any(String),
       },
       "user-1",
     );

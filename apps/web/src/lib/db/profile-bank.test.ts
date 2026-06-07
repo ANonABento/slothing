@@ -13,6 +13,7 @@ vi.mock("@/lib/utils", () => ({
   generateId: () => "test-id",
 }));
 
+import { bankEntryStatus, isVerifiedBankEntry } from "@/types";
 import db from "./legacy";
 import {
   insertBankEntry,
@@ -32,6 +33,7 @@ import {
   getSourceDocumentFiles,
   deleteSourceDocument,
   deleteSourceDocuments,
+  setBankEntryStatus,
 } from "./profile-bank";
 
 const TEST_USER_ID = "test-user";
@@ -77,6 +79,10 @@ describe("Profile Bank DB Functions", () => {
         null,
         null,
         null,
+        null,
+        null,
+        null,
+        null,
         0.9,
       );
     });
@@ -102,6 +108,10 @@ describe("Profile Bank DB Functions", () => {
         null,
         "skill",
         0,
+        null,
+        null,
+        null,
+        null,
         null,
         null,
         null,
@@ -151,6 +161,10 @@ describe("Profile Bank DB Functions", () => {
         "experience",
         2,
         "experience",
+        null,
+        null,
+        null,
+        null,
         null,
         null,
         null,
@@ -214,6 +228,10 @@ describe("Profile Bank DB Functions", () => {
         null,
         null,
         null,
+        null,
+        null,
+        null,
+        null,
         0.8,
       );
     });
@@ -258,8 +276,124 @@ describe("Profile Bank DB Functions", () => {
         JSON.stringify(["p1-l004"]),
         "exact",
         "parser-v2",
+        null,
+        null,
+        null,
+        null,
         0.8,
       );
+    });
+  });
+
+  describe("AI authoring provenance (status/authoredBy/groundedIn)", () => {
+    it("persists status, authored_by, grounded_in (JSON), and verified_at", () => {
+      const mockRun = vi.fn();
+      (db.prepare as Mock).mockReturnValue({ run: mockRun });
+
+      insertBankEntry(
+        {
+          category: "bullet",
+          content: { description: "Led the migration." },
+          status: "draft",
+          authoredBy: "ai_articulated",
+          groundedIn: { kind: "raw_input", rawText: "i led the migration" },
+        },
+        TEST_USER_ID,
+      );
+
+      const args = mockRun.mock.calls[0];
+      expect(args).toContain("draft");
+      expect(args).toContain("ai_articulated");
+      expect(args).toContain(
+        JSON.stringify({ kind: "raw_input", rawText: "i led the migration" }),
+      );
+    });
+
+    it("maps a draft AI row back to a draft, unverified entry", () => {
+      (db.prepare as Mock).mockReturnValue({
+        all: vi.fn().mockReturnValue([
+          {
+            id: "draft-1",
+            user_id: TEST_USER_ID,
+            category: "bullet",
+            content: '{"description":"Led the migration."}',
+            source_document_id: null,
+            status: "draft",
+            authored_by: "ai_articulated",
+            grounded_in: JSON.stringify({
+              kind: "raw_input",
+              rawText: "i led the migration",
+            }),
+            verified_at: null,
+            confidence_score: 0.6,
+            created_at: "2026-06-07T00:00:00.000Z",
+          },
+        ]),
+      });
+
+      const [entry] = getBankEntries(TEST_USER_ID);
+      expect(entry.status).toBe("draft");
+      expect(entry.authoredBy).toBe("ai_articulated");
+      expect(entry.groundedIn).toEqual({
+        kind: "raw_input",
+        rawText: "i led the migration",
+      });
+      expect(isVerifiedBankEntry(entry)).toBe(false);
+    });
+
+    it("setBankEntryStatus verifies a draft and stamps verified_at", () => {
+      const mockRun = vi.fn().mockReturnValue({ changes: 1 });
+      (db.prepare as Mock).mockReturnValue({ run: mockRun });
+
+      const ok = setBankEntryStatus(
+        "draft-1",
+        TEST_USER_ID,
+        "verified",
+        "2026-06-07T12:00:00.000Z",
+      );
+
+      expect(ok).toBe(true);
+      expect(mockRun).toHaveBeenCalledWith(
+        "verified",
+        "2026-06-07T12:00:00.000Z",
+        "draft-1",
+        TEST_USER_ID,
+      );
+    });
+
+    it("setBankEntryStatus does not stamp verified_at for non-verified status", () => {
+      const mockRun = vi.fn().mockReturnValue({ changes: 1 });
+      (db.prepare as Mock).mockReturnValue({ run: mockRun });
+
+      setBankEntryStatus(
+        "e-1",
+        TEST_USER_ID,
+        "draft",
+        "2026-06-07T12:00:00.000Z",
+      );
+
+      expect(mockRun).toHaveBeenCalledWith("draft", null, "e-1", TEST_USER_ID);
+    });
+
+    it("treats a legacy row (no status column) as verified", () => {
+      (db.prepare as Mock).mockReturnValue({
+        all: vi.fn().mockReturnValue([
+          {
+            id: "legacy-1",
+            user_id: TEST_USER_ID,
+            category: "skill",
+            content: '{"name":"React"}',
+            source_document_id: null,
+            confidence_score: 0.9,
+            created_at: "2024-01-15T10:00:00.000Z",
+          },
+        ]),
+      });
+
+      const [entry] = getBankEntries(TEST_USER_ID);
+      expect(entry.status).toBeUndefined();
+      expect(bankEntryStatus(entry)).toBe("verified");
+      expect(isVerifiedBankEntry(entry)).toBe(true);
     });
   });
 

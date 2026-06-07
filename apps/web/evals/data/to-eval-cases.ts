@@ -90,6 +90,7 @@ export function toEvalCases(dataset: BenchmarkDataset): EvalCase[] {
       candidateProfile: serializeResumeAsProfile(resume),
       jobDescription: serializeJobAsDescription(job),
       expectedKeywords: deriveKeywords(job),
+      structuredResume: resume,
     };
   });
 }

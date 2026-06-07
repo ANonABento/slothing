@@ -213,6 +213,16 @@ export function ChunkCard({
                   {config.label}
                 </Badge>
                 {/*
+                  AI-authored drafts (Strengthen/Articulate) are unverified until the
+                  user confirms them — tailoring treats only verified entries as fact, so
+                  the badge tells the user this entry needs a review/confirm. (spec §2)
+                */}
+                {entry.status === "draft" || entry.status === "suggested" ? (
+                  <Badge variant="warning" className="text-2xs">
+                    Unverified draft
+                  </Badge>
+                ) : null}
+                {/*
                   Confidence chip is informational, not decorative — only
                   surface it when something is worth flagging. High-confidence
                   rows (>= 0.9) carry no chip; medium (0.7–0.9) and low (< 0.7)

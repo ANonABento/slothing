@@ -3,6 +3,7 @@ import {
   extractKeywords,
   resumeToKeywordSearchText,
 } from "@/lib/tailor/analyze";
+import { groundClaims } from "@/lib/grounding";
 import type {
   EvalCase,
   EvalMetric,
@@ -108,11 +109,59 @@ export const errorMetric: EvalMetric = (_testCase, output) => ({
   details: output.error ? { message: output.error } : { message: null },
 });
 
+/** The output claims (bullets + summary) to ground against the candidate's material. */
+function outputClaims(output: GeneratorOutput): string[] {
+  if (output.kind === "resume" && output.resume) {
+    const r = output.resume;
+    return [
+      ...(r.summary ? [r.summary] : []),
+      ...r.experiences.flatMap((e) => e.highlights),
+    ];
+  }
+  return [];
+}
+
+/**
+ * Grounding / anti-fabrication metric (AI Bank Authoring spec §3): the fraction of output
+ * bullets traceable to the candidate's own material, with any ungrounded metric (a
+ * fabricated number) called out. The deterministic base generator copies bullets verbatim
+ * so it should score ~1.0; an LLM that invents content scores lower. Evidence = the
+ * candidate profile (the user's real résumé text).
+ */
+export const groundingMetric: EvalMetric = (testCase, output) => {
+  const claims = outputClaims(output);
+  if (claims.length === 0) {
+    return {
+      name: "grounding",
+      score: 1,
+      details: { note: "no claims to ground" },
+    };
+  }
+  const { supported, unsupported, ungroundedNumbers } = groundClaims(
+    claims,
+    testCase.candidateProfile,
+  );
+  const total = supported.length + unsupported.length;
+  // A fabricated number is the worst failure — hard-cap the score when any appear.
+  const base = total > 0 ? supported.length / total : 1;
+  const score = ungroundedNumbers.length > 0 ? Math.min(base, 0.5) : base;
+  return {
+    name: "grounding",
+    score: Number(score.toFixed(4)),
+    details: {
+      supported: supported.length,
+      unsupported: unsupported.length,
+      ungroundedNumbers,
+    },
+  };
+};
+
 export const DEFAULT_METRICS: EvalMetric[] = [
   keywordOverlapMetric,
   missingKeywordsMetric,
   lengthMetric,
   actionVerbMetric,
+  groundingMetric,
   errorMetric,
 ];
 

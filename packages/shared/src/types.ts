@@ -148,6 +148,31 @@ export type BankCategory = (typeof BANK_CATEGORIES)[number];
 
 export type SourceBbox = [number, number, number, number, number];
 
+/**
+ * Verification state of a bank entry (AI Bank Authoring spec §2). `verified` = a
+ * user-confirmed fact that tailoring may assert; `draft` = AI/in-progress, not usable as
+ * fact until confirmed; `suggested` = an AI proposal toward a specific job. Legacy rows
+ * (no column / null) are treated as `verified` — see `bankEntryStatus()`.
+ */
+export type BankEntryStatus = "verified" | "draft" | "suggested";
+
+/** Who produced an entry's text. AI authors land as `draft`/`suggested` until confirmed. */
+export type BankEntryAuthor =
+  | "user"
+  | "import"
+  | "ai_articulated"
+  | "ai_strengthened";
+
+/** What an AI-authored entry was grounded in (the evidence the grounding check ran on). */
+export interface BankEntryGrounding {
+  /** `raw_input` = the user's own typed material; `entry` = an existing verified entry. */
+  kind: "raw_input" | "entry";
+  /** The source entry id when `kind === "entry"`. */
+  refId?: string;
+  /** The user's raw input text when `kind === "raw_input"` (audit trail for grounding). */
+  rawText?: string;
+}
+
 export interface SourceLinkMetadata {
   url: string;
   text?: string;
@@ -205,7 +230,33 @@ export interface BankEntry {
    */
   matchMethod?: string;
   confidenceScore: number;
+  /**
+   * Verification state (AI Bank Authoring spec §2). Optional for back-compat: a missing
+   * value means a legacy/pre-migration row, which is treated as `verified`. Use
+   * `bankEntryStatus(entry)` to read it with that default applied.
+   */
+  status?: BankEntryStatus;
+  /** Who authored the text. Missing → legacy → treat as `user`. */
+  authoredBy?: BankEntryAuthor;
+  /** What an AI-authored entry was grounded in. */
+  groundedIn?: BankEntryGrounding;
+  /** When the entry became `verified` (user confirmation). */
+  verifiedAt?: string;
   createdAt: string;
+}
+
+/** Effective status with the legacy default applied (missing/null → verified). */
+export function bankEntryStatus(entry: {
+  status?: BankEntryStatus;
+}): BankEntryStatus {
+  return entry.status ?? "verified";
+}
+
+/** True when an entry is a confirmed fact tailoring may assert (spec §2 invariant). */
+export function isVerifiedBankEntry(entry: {
+  status?: BankEntryStatus;
+}): boolean {
+  return bankEntryStatus(entry) === "verified";
 }
 
 export interface GroupedBankEntries {
