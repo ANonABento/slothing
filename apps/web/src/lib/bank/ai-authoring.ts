@@ -154,7 +154,9 @@ export function buildArticulatePrompt(
 
 NON-NEGOTIABLE RULES:
 - Use ONLY facts stated in the NOTES below. Do NOT invent or change metrics, numbers, tools, employers, titles, dates, clients, or outcomes.
-- Do not add a number or percentage that is not already in the notes.
+- Do not add a number or percentage that is not already in the notes (do NOT compute a derived metric like a "% improvement" — only reuse numbers exactly as written).
+- Do NOT add context, scope, skills, audiences, or descriptive detail that is not in the notes. Stay minimal and close to the notes — rephrase, don't embellish.
+- Prefer the notes' own words; a strong verb + the stated fact is enough. No trailing clauses ("guiding…", "demonstrating…", "leveraging…") unless that detail is in the notes.
 - Each bullet must be fully supported by the notes. Improve wording, action verbs, and concision only.
 - Return JSON ONLY, no prose: {"bullets": ["...", "..."]}
 
