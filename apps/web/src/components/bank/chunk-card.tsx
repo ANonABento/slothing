@@ -154,6 +154,11 @@ export function ChunkCard({
       className={cn(
         "group relative",
         THEME_INTERACTIVE_SURFACE_CLASSES,
+        // Give standalone grid cards the editorial paper lift so the bank reads
+        // as polished as the dashboard/landing cards, not flatter (UX audit
+        // DS-18). Skipped in forceExpanded (table-row) mode where a shadow would
+        // fight the surrounding row chrome.
+        !forceExpanded && "shadow-paper-card",
         entry.category === "hackathon" &&
           "border-warning/40 bg-warning/5 hover:border-warning/60",
         highlighted && "ring-2 ring-primary",

@@ -74,9 +74,16 @@ function AnnouncementPill() {
   );
 }
 
+// the-loop.mp4 hasn't been produced yet (planned via Remotion/Hyperframes — see
+// ROADMAP "Landing demo videos"). Until it exists, don't mount the <video> at
+// all: starting hasVideo=true made the browser fetch the missing file and throw
+// a 404 before the onError handler could hide it (UX audit A7). Flip this to
+// true once the asset ships.
+const HERO_VIDEO_READY = false;
+
 function HeroVideoStage() {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [hasVideo, setHasVideo] = useState(true);
+  const [hasVideo, setHasVideo] = useState(HERO_VIDEO_READY);
 
   useEffect(() => {
     const node = videoRef.current;

@@ -512,6 +512,14 @@ export function TweaksPanel() {
     return () => document.removeEventListener("keydown", handleEscape);
   }, [open]);
 
+  // Dev-only surface. This is a design-iteration + QA panel (seed/reset fixtures,
+  // fake dates, API fault injection, granular accent/font/radius overrides). In
+  // production it was a floating gear that read as a duplicate of Settings and
+  // overlapped content (UX audit DS-11 / NU-13) — and its seed presets are what
+  // populated demo data into accounts. End-user theme choice lives in Settings
+  // (the supported preset picker), so the panel ships in development only.
+  if (!isDevelopment) return null;
+
   return (
     <>
       {!open && (
