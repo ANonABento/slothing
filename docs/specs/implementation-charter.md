@@ -93,8 +93,16 @@ Stop and summarize only when:
   grounds. Route is a discriminated union (strengthen|articulate). Also fixed a
   grounding-engine NUMBER_RE bug (unit suffix ate the next word's first letter, "6 minutes"→
   "6m"). Mocked-LLM tests for both modes; live quality PENDING-QUOTA.
-- [ ] P4 Tailoring↔bank loop
-- [ ] P5 Polish & eval
+- [x] **P4 Tailoring↔bank loop** — DONE 2026-06-07 (verifiable core). Commit d7441228:
+  classifyJobGaps splits JD missing-keywords into strengthenable (verified evidence exists →
+  grounded Strengthen) vs true gaps (→ Articulate, ask the user). Verified-only; unit-tested.
+  PENDING-QUOTA: the Studio gap-chip UI (gaps→Articulate, strengthen-toward-job) — browser +
+  live LLM to verify the flow.
+- [x] **P5 Polish & eval** — DONE 2026-06-07 (verifiable core). Commit 4d40b2d4: 'Unverified
+  draft' badge in chunk-card for AI-authored entries (component-tested); judge factuality is
+  now the most-important criterion (fabrication caps the score; prompt-content test).
+  PENDING-QUOTA: per-card 'Strengthen with AI' / 'Draft with AI' buttons, bulk-confirm —
+  endpoints exist and are tested; their browser+live-LLM E2E is deferred until quota returns.
 
 > The loop appends a dated note under each phase as it completes, with what was verified and
 > any `PENDING-QUOTA` items.
