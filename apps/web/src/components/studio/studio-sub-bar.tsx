@@ -868,8 +868,8 @@ function TailorSplit({
                 style={{ color: "var(--brand)" }}
               />
             }
-            title="AI tailor"
-            description="Let AI pick the best bullets & ordering for the target JD"
+            title="AI tailor…"
+            description="Opens the AI panel to paste a JD — AI then picks the best bullets & ordering"
             kbd="⌘ ⇧ T"
             onClick={() => {
               setOpen(false);

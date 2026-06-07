@@ -97,9 +97,10 @@ function partitionSections(
   const sections: RawSection[] = [];
   let current: RawSection | null = null;
   let seenHeader = false;
+  const maxFontSize = lines.reduce((m, l) => Math.max(m, l.fontSize), 0);
 
   for (const line of lines) {
-    if (isSectionHeader(line, bodyFontSize)) {
+    if (isSectionHeader(line, bodyFontSize, maxFontSize)) {
       seenHeader = true;
       current = { kind: labelSection(line.text), header: line.text, lines: [] };
       sections.push(current);
@@ -212,6 +213,19 @@ function parseEntries(lines: TextLine[]): ParsedEntry[] {
     // must not reset `current` (else following bullets attach to a phantom) (audit F-002).
     if (current && !current.location && CITY_STATE_RE.test(text)) {
       current.location = text;
+      continue;
+    }
+
+    // A non-bullet line that begins with a lowercase letter is a wrapped continuation of
+    // the line above (a long bullet or header that overflowed), not a new entry — append
+    // it so wrapped bullets don't each spawn a phantom entry (audit F-009). Entry headers
+    // and bullets start with a capital / symbol, so this only catches continuations.
+    if (current && /^[a-z]/.test(text)) {
+      if (current.highlights.length) {
+        current.highlights[current.highlights.length - 1] += ` ${text}`;
+      } else if (current.primary) {
+        current.primary += ` ${text}`;
+      }
       continue;
     }
 
