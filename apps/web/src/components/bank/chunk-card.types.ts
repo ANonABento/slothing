@@ -37,6 +37,15 @@ export interface ChunkCardProps {
    * that were created manually.
    */
   sourceFilenames?: Map<string, string>;
+  /**
+   * AI bank authoring (spec §4). When provided, a verified entry shows a "Strengthen with
+   * AI" action that drafts a grounded rewrite; an AI-drafted entry (status draft/suggested)
+   * shows a "Confirm" action. Optional so non-AI surfaces can omit them.
+   */
+  onStrengthen?: (id: string) => void;
+  onConfirm?: (id: string) => void;
+  /** Ids with an AI request in flight (disables the button + shows a spinner). */
+  aiBusyIds?: Set<string>;
 }
 
 export interface FieldEditorProps {
