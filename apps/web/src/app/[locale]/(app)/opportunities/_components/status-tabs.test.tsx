@@ -38,6 +38,28 @@ describe("StatusTabs", () => {
     }
   });
 
+  it("hides the count chip for zero-count tabs (UX audit DS-7)", () => {
+    render(
+      <StatusTabs
+        options={[
+          { value: "all", label: "All", count: 12 },
+          { value: "offer", label: "Offer", count: 0 },
+        ]}
+        value="all"
+        onChange={vi.fn()}
+        ariaLabel="Status filter"
+      />,
+    );
+
+    // The label still renders; the "0" count chip does not.
+    const offerTab = findTab("Offer");
+    expect(offerTab).toBeDefined();
+    expect(offerTab?.textContent).toBe("Offer");
+    expect(offerTab?.textContent).not.toContain("0");
+    // Non-zero counts are unaffected.
+    expect(findTab("All")?.textContent).toContain("12");
+  });
+
   it("marks the active tab via aria-selected", () => {
     render(
       <StatusTabs

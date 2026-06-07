@@ -833,13 +833,18 @@ export function AiAssistantPanel({
             placeholder={a11yT("pasteTheJdHere")}
             className="min-h-[132px] resize-none"
           />
+          {/*
+            This is the panel's primary action — you've just pasted the JD right
+            above it — so it's a solid primary, not an outline competing with
+            "Generate from Bank". The old apologetic footnote ("…same action as
+            the sub-bar Tailor…") was removed: admitting a duplicate confuses
+            more than it reassures (UX audit DS-1 / NU-8).
+          */}
           <Button
             type="button"
-            variant="outline"
             size="sm"
             className="w-full"
             disabled={isBusy}
-            title="Or use the Tailor split-button in the sub-bar above for AI tailor / Manual tailor / Settings."
             onClick={() => handleAssistantAction("match-jd-keywords")}
           >
             {isRunning("match-jd-keywords") ? (
@@ -849,11 +854,6 @@ export function AiAssistantPanel({
             )}
             {isRunning("match-jd-keywords") ? "Tailoring..." : "Tailor to JD"}
           </Button>
-          <p className="text-[11px] leading-snug text-muted-foreground">
-            Or use{" "}
-            <strong className="font-medium text-foreground">Tailor</strong> in
-            the sub-bar above — same action, with manual + settings options.
-          </p>
         </section>
 
         <section className="space-y-2">
