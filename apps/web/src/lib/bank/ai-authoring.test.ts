@@ -19,6 +19,7 @@ import {
   entryHighlights,
   articulateToBullets,
   articulatedDraftInput,
+  classifyJobGaps,
 } from "./ai-authoring";
 
 const entry: BankEntry = {
@@ -134,5 +135,55 @@ describe("AI bank authoring — Articulate (spec §4.2)", () => {
       kind: "raw_input",
       rawText: "my raw notes",
     });
+  });
+});
+
+describe("classifyJobGaps — tailoring↔bank loop (spec §6)", () => {
+  const verifiedEntry: BankEntry = {
+    id: "v1",
+    userId: "u1",
+    category: "experience",
+    content: {
+      company: "Acme",
+      title: "Engineer",
+      highlights: ["Built React dashboards and Postgres pipelines"],
+    },
+    confidenceScore: 0.9,
+    status: "verified",
+    createdAt: "2026-01-01",
+  };
+  const draftEntry: BankEntry = {
+    ...verifiedEntry,
+    id: "d1",
+    status: "draft",
+    content: { highlights: ["Used Kubernetes in a side project"] },
+  };
+
+  it("routes keywords WITH verified evidence to strengthenable (with entry ids)", () => {
+    const r = classifyJobGaps(["React", "Postgres"], [verifiedEntry]);
+    expect(r.gaps).toHaveLength(0);
+    expect(r.strengthenable.map((s) => s.keyword).sort()).toEqual([
+      "Postgres",
+      "React",
+    ]);
+    expect(r.strengthenable[0].entryIds).toContain("v1");
+  });
+
+  it("routes keywords with NO verified evidence to true gaps", () => {
+    const r = classifyJobGaps(["Rust", "Kafka"], [verifiedEntry]);
+    expect(r.strengthenable).toHaveLength(0);
+    expect(r.gaps.sort()).toEqual(["Kafka", "Rust"]);
+  });
+
+  it("ignores DRAFT entries as evidence (only verified counts as fact)", () => {
+    // "Kubernetes" appears only in a draft entry → still a true gap, not strengthenable.
+    const r = classifyJobGaps(["Kubernetes"], [verifiedEntry, draftEntry]);
+    expect(r.strengthenable).toHaveLength(0);
+    expect(r.gaps).toEqual(["Kubernetes"]);
+  });
+
+  it("dedupes keywords case-insensitively", () => {
+    const r = classifyJobGaps(["react", "React", "REACT"], [verifiedEntry]);
+    expect(r.strengthenable).toHaveLength(1);
   });
 });

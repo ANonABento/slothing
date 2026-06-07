@@ -1,4 +1,5 @@
 import type { BankCategory, BankEntry, LLMConfig } from "@/types";
+import { isVerifiedBankEntry } from "@/types";
 import { LLMClient, parseJSONFromLLM } from "@/lib/llm/client";
 import { groundClaims } from "@/lib/grounding";
 import type { InsertBankEntry } from "@/lib/db/profile-bank";
@@ -88,6 +89,55 @@ export async function strengthenEntryHighlights(
     : [];
   const grounded = groundClaims(rewritten, entryEvidence(entry)).supported;
   return grounded.length > 0 ? grounded : entryHighlights(entry);
+}
+
+// --- Tailoring ↔ bank loop (spec §6): turn JD gaps into safe next actions ---
+
+export interface JobGapAnalysis {
+  /**
+   * Missing JD keywords the user ALREADY has evidence for in a verified entry — a grounded
+   * Strengthen can surface them. Each carries the entry ids whose evidence contains it.
+   */
+  strengthenable: Array<{ keyword: string; entryIds: string[] }>;
+  /**
+   * Missing keywords with NO supporting verified evidence — a true gap. The UI routes these
+   * to Articulate (ask the user) rather than ever inventing the experience.
+   */
+  gaps: string[];
+}
+
+/**
+ * Classify a JD's missing keywords against the user's VERIFIED bank (spec §6). The result
+ * drives the safe loop: strengthenable → grounded rewrite suggestions; gaps → ask the user
+ * (Articulate). Never invents — a gap is surfaced as a question, not filled.
+ */
+export function classifyJobGaps(
+  missingKeywords: string[],
+  bankEntries: BankEntry[],
+): JobGapAnalysis {
+  const verified = bankEntries
+    .filter(isVerifiedBankEntry)
+    .map((e) => ({ id: e.id, text: entryEvidence(e).toLowerCase() }));
+
+  const strengthenable: JobGapAnalysis["strengthenable"] = [];
+  const gaps: string[] = [];
+  const seen = new Set<string>();
+
+  for (const raw of missingKeywords) {
+    const keyword = raw.trim();
+    const key = keyword.toLowerCase();
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    const entryIds = verified
+      .filter((e) => e.text.includes(key))
+      .map((e) => e.id);
+    if (entryIds.length > 0) {
+      strengthenable.push({ keyword, entryIds });
+    } else {
+      gaps.push(keyword);
+    }
+  }
+  return { strengthenable, gaps };
 }
 
 // --- Articulate (spec §4.2): the user's own raw material → grounded draft bullets ---
