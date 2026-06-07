@@ -1,9 +1,10 @@
 import type { MetricScore } from "../types.js";
 
 const DEFAULT_WEIGHTS: Record<string, number> = {
-  keyword_overlap: 0.5,
-  action_verbs: 0.2,
-  length: 0.2,
+  keyword_overlap: 0.4,
+  grounding: 0.3, // safety: fabricated content should tank the overall score
+  action_verbs: 0.15,
+  length: 0.15,
   missing_keywords: 0.1,
 };
 

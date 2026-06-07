@@ -1,5 +1,6 @@
 import type { TailoredResume } from "@/lib/resume/generator";
 import type { LLMConfig } from "@/types";
+import type { Resume } from "./data/schema.js";
 
 export interface TestCase {
   id: string;
@@ -7,6 +8,12 @@ export interface TestCase {
   candidateProfile: string;
   jobDescription: string;
   expectedKeywords?: string[];
+  /**
+   * The structured source résumé (golden-set cases). When present, adapters build proper
+   * experience/skill/education bank entries from it instead of one flattened prose blob —
+   * without it the deterministic base generator produced an empty résumé (offline score ~0).
+   */
+  structuredResume?: Resume;
 }
 
 export type EvalCase = TestCase;
