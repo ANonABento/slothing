@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { useConfirmDialog } from "@/components/ui/confirm-dialog";
 import type { ChunkCardProps } from "./chunk-card.types";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp, Sparkles, Check, Loader2 } from "lucide-react";
 import { TimeAgo } from "@/components/format/time-ago";
 import { useDevMode } from "@/hooks/use-dev-mode";
 import { cn } from "@/lib/utils";
@@ -52,6 +52,9 @@ export function ChunkCard({
   forceExpanded = false,
   onSelect,
   sourceFilenames,
+  onStrengthen,
+  onConfirm,
+  aiBusyIds,
 }: ChunkCardProps) {
   const [localExpanded, setLocalExpanded] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -238,6 +241,60 @@ export function ChunkCard({
                     Medium confidence
                   </Badge>
                 ) : null}
+                {/* AI bank authoring actions (spec §4): confirm a draft, or strengthen a
+                    verified bullet-bearing entry. */}
+                {(() => {
+                  const isDraft =
+                    entry.status === "draft" || entry.status === "suggested";
+                  const busy = aiBusyIds?.has(entry.id) ?? false;
+                  const canStrengthen = [
+                    "experience",
+                    "project",
+                    "bullet",
+                    "achievement",
+                    "hackathon",
+                  ].includes(entry.category);
+                  return (
+                    <>
+                      {onConfirm && isDraft ? (
+                        <button
+                          type="button"
+                          disabled={busy}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onConfirm(entry.id);
+                          }}
+                          className="inline-flex items-center gap-1 rounded-md border border-brand px-1.5 py-0.5 text-2xs font-medium text-brand-dark transition-colors hover:bg-brand-soft disabled:opacity-50"
+                        >
+                          {busy ? (
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                          ) : (
+                            <Check className="h-3 w-3" />
+                          )}
+                          Confirm
+                        </button>
+                      ) : null}
+                      {onStrengthen && !isDraft && canStrengthen ? (
+                        <button
+                          type="button"
+                          disabled={busy}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onStrengthen(entry.id);
+                          }}
+                          className="inline-flex items-center gap-1 rounded-md border border-input px-1.5 py-0.5 text-2xs text-ink-2 transition-colors hover:border-brand disabled:opacity-50"
+                        >
+                          {busy ? (
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                          ) : (
+                            <Sparkles className="h-3 w-3" />
+                          )}
+                          Strengthen
+                        </button>
+                      ) : null}
+                    </>
+                  );
+                })()}
               </div>
               {!expanded && <ChunkContentPreview entry={entry} />}
               <div className="flex items-center gap-2 mt-1 flex-wrap">

@@ -81,6 +81,7 @@ import {
 } from "@/components/ui/skeleton";
 import { VirtualGrid } from "@/components/ui/virtual-list";
 import { AddEntryDialog } from "@/components/bank/add-entry-dialog";
+import { ArticulateDialog } from "@/components/bank/articulate-dialog";
 import { useToast } from "@/components/ui/toast";
 import { useErrorToast } from "@/hooks/use-error-toast";
 import { uploadSuccessMessage } from "./utils";
@@ -475,6 +476,73 @@ export function BankComponentsTab({
   useEffect(() => {
     fetchEntries();
   }, [fetchEntries]);
+
+  // --- AI bank authoring (spec §4): strengthen a verified entry / confirm a draft ---
+  const [aiBusyIds, setAiBusyIds] = useState<Set<string>>(new Set());
+  const markAiBusy = useCallback((id: string, busy: boolean) => {
+    setAiBusyIds((prev) => {
+      const next = new Set(prev);
+      if (busy) next.add(id);
+      else next.delete(id);
+      return next;
+    });
+  }, []);
+
+  const handleStrengthen = useCallback(
+    async (id: string) => {
+      markAiBusy(id, true);
+      try {
+        const res = await fetch("/api/bank/ai/draft", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ mode: "strengthen", entryId: id }),
+        });
+        const data = (await res.json().catch(() => ({}))) as {
+          error?: string;
+        };
+        if (!res.ok)
+          throw new Error(data?.error ?? "Could not strengthen this entry.");
+        addToast({
+          type: "success",
+          title: "Drafted a stronger version",
+          description: "Review the unverified draft, then Confirm to keep it.",
+        });
+        await fetchEntries({ silent: true });
+      } catch (err) {
+        addToast({
+          type: "error",
+          title: "Strengthen failed",
+          description: getErrorMessage(err),
+        });
+      } finally {
+        markAiBusy(id, false);
+      }
+    },
+    [addToast, fetchEntries, markAiBusy],
+  );
+
+  const [articulateOpen, setArticulateOpen] = useState(false);
+
+  const handleConfirmDraft = useCallback(
+    async (id: string) => {
+      markAiBusy(id, true);
+      try {
+        const res = await fetch(`/api/bank/${id}/confirm`, { method: "POST" });
+        if (!res.ok) throw new Error("Could not confirm this entry.");
+        addToast({ type: "success", title: "Entry verified" });
+        await fetchEntries({ silent: true });
+      } catch (err) {
+        addToast({
+          type: "error",
+          title: "Confirm failed",
+          description: getErrorMessage(err),
+        });
+      } finally {
+        markAiBusy(id, false);
+      }
+    },
+    [addToast, fetchEntries, markAiBusy],
+  );
 
   const fetchSourceDocuments = useCallback(async () => {
     try {
@@ -1860,6 +1928,19 @@ export function BankComponentsTab({
                   </Button>
                 }
               />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setArticulateOpen(true)}
+              >
+                <Sparkles className="h-4 w-4 mr-2" />
+                Draft with AI
+              </Button>
+              <ArticulateDialog
+                open={articulateOpen}
+                onOpenChange={setArticulateOpen}
+                onCreated={() => void fetchEntries({ silent: true })}
+              />
               <DriveFilePicker
                 onSelect={handleDriveSelect}
                 accept={[
@@ -2335,6 +2416,9 @@ export function BankComponentsTab({
                               onDeselectEntries={deselectEntries}
                               reviewEntries={allEntries}
                               onSelectEntry={setSelectedEntryId}
+                              onStrengthen={handleStrengthen}
+                              onConfirm={handleConfirmDraft}
+                              aiBusyIds={aiBusyIds}
                             />
                           </div>
                         ))
@@ -2365,6 +2449,9 @@ export function BankComponentsTab({
                               onDeselectEntries={deselectEntries}
                               reviewEntries={allEntries}
                               onSelectEntry={setSelectedEntryId}
+                              onStrengthen={handleStrengthen}
+                              onConfirm={handleConfirmDraft}
+                              aiBusyIds={aiBusyIds}
                             />
                           </div>
                         ))}
@@ -2522,6 +2609,9 @@ function EntryCollection({
   onDeselectEntries,
   reviewEntries,
   onSelectEntry,
+  onStrengthen,
+  onConfirm,
+  aiBusyIds,
 }: {
   layoutMode: LayoutMode;
   displayMode: DisplayMode;
@@ -2542,6 +2632,9 @@ function EntryCollection({
   onDeselectEntries: (ids: string[]) => void;
   reviewEntries: BankEntry[];
   onSelectEntry: (id: string) => void;
+  onStrengthen?: (id: string) => void;
+  onConfirm?: (id: string) => void;
+  aiBusyIds?: Set<string>;
 }) {
   // Hook calls must precede any conditional return — see rules-of-hooks.
   const sourceFilenames = useMemo(
@@ -2589,6 +2682,9 @@ function EntryCollection({
         highlighted={isBulletNeedsReview(entry, reviewEntries)}
         onSelect={() => onSelectEntry(entry.id)}
         sourceFilenames={sourceFilenames}
+        onStrengthen={onStrengthen}
+        onConfirm={onConfirm}
+        aiBusyIds={aiBusyIds}
       />
     );
   }

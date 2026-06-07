@@ -368,6 +368,57 @@ describe("ChunkCard", () => {
     expect(screen.queryByText("Unverified draft")).not.toBeInTheDocument();
   });
 
+  it("Strengthen button calls onStrengthen for a verified bullet-bearing entry", () => {
+    const onStrengthen = vi.fn();
+    const entry = makeBankEntry({ status: "verified", category: "experience" });
+    render(
+      <ChunkCard
+        entry={entry}
+        onUpdate={vi.fn()}
+        onDelete={vi.fn()}
+        onStrengthen={onStrengthen}
+        onConfirm={vi.fn()}
+      />,
+    );
+    expect(screen.queryByText("Confirm")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByText("Strengthen"));
+    expect(onStrengthen).toHaveBeenCalledWith(entry.id);
+  });
+
+  it("draft entry shows Confirm (not Strengthen) and calls onConfirm", () => {
+    const onConfirm = vi.fn();
+    const entry = makeBankEntry({ status: "draft", category: "experience" });
+    render(
+      <ChunkCard
+        entry={entry}
+        onUpdate={vi.fn()}
+        onDelete={vi.fn()}
+        onStrengthen={vi.fn()}
+        onConfirm={onConfirm}
+      />,
+    );
+    expect(screen.queryByText("Strengthen")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByText("Confirm"));
+    expect(onConfirm).toHaveBeenCalledWith(entry.id);
+  });
+
+  it("does not show Strengthen for a name-only skill entry", () => {
+    const entry = makeBankEntry({
+      status: "verified",
+      category: "skill",
+      content: { name: "React" },
+    });
+    render(
+      <ChunkCard
+        entry={entry}
+        onUpdate={vi.fn()}
+        onDelete={vi.fn()}
+        onStrengthen={vi.fn()}
+      />,
+    );
+    expect(screen.queryByText("Strengthen")).not.toBeInTheDocument();
+  });
+
   it("should expand on click and show content fields", () => {
     const entry = makeBankEntry();
     render(<ChunkCard entry={entry} onUpdate={vi.fn()} onDelete={vi.fn()} />);
