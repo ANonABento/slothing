@@ -47,6 +47,11 @@ These are the current visible placeholders, planned-but-unshipped specs, or stal
 | MCP v2 write tools           | Shipped         | Agent-facing push-job, update-status, and scrape-url tools are exposed through `@slothing/mcp` over extension-token routes.                                         |
 | Pricing waitlist             | Implemented     | Pricing now includes a real waitlist form backed by `/api/waitlist` and persisted waitlist entries.                                                                 |
 | Production platform          | Partial         | Turso production DB setup and hosted migration execution remain account-bound; migration, backup/restore, and deployment runbooks are documented.                  |
+| Vocabulary re-skin           | Deferred spec   | UX audit found internal jargon (Components/Bank/Knowledge/JD/Unverified draft) is the #1 new-user barrier. Proposed label mapping parked in `docs/specs/vocabulary-reskin.md` pending wording sign-off. |
+| New-user seed data (B3)      | Open decision   | Fresh accounts show 718 sample jobs, "99+" notifications, and pre-checked onboarding — alarms new users. Decide: start empty vs label "Sample"; unify Opportunities + Review Queue. |
+| Landing demo videos (A7)     | Open decision   | Landing references 7 `/marketing/sections/*.mp4` that exist nowhere in the repo (404s); only `.png` posters ship. Decide: add the videos or go poster-only. |
+
+See `docs/ui-audit/ux-audit-2026-06-07.md` for the full 38-finding UX/UI audit.
 
 ---
 
