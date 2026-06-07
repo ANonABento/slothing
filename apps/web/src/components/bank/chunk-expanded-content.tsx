@@ -163,7 +163,7 @@ export function ChunkExpandedContent({
           </div>
         </div>
       ) : onChildCreate ? (
-        <div className="rounded-md border border-dashed border-border/70 bg-background/30 p-3">
+        <div className="rounded-md border border-border/70 bg-background/30 p-3">
           <Button variant="ghost" size="sm" onClick={onChildCreate}>
             <Plus className="h-3 w-3 mr-1" />
             Add bullet component

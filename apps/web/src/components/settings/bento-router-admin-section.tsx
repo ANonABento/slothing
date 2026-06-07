@@ -529,7 +529,7 @@ export function SlothingBentoRouterAdminSection() {
                     ))}
                   </div>
                 ) : (
-                  <p className="rounded-md border border-dashed p-4 text-sm leading-6 text-muted-foreground">
+                  <p className="rounded-md border p-4 text-sm leading-6 text-muted-foreground">
                     Add a provider key before running BentoRouter-backed tasks
                     in production.
                   </p>
@@ -827,7 +827,7 @@ function ModelDetails({
 }) {
   if (!modelId) {
     return (
-      <p className="rounded-md border border-dashed p-4 text-sm text-muted-foreground">
+      <p className="rounded-md border p-4 text-sm text-muted-foreground">
         Select a provider with registered models before saving this task policy.
       </p>
     );

@@ -100,7 +100,7 @@ describe("NotificationCenter", () => {
 
     render(<NotificationCenter variant="appbar" />);
 
-    expect(await screen.findByText("99+")).toBeInTheDocument();
+    expect(await screen.findByText("9+")).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Notifications (120 unread)" }),
     ).toBeInTheDocument();

@@ -269,7 +269,7 @@ function KanbanLaneCards({
 
   if (opportunities.length === 0) {
     return (
-      <div className="grid min-h-28 flex-1 place-items-center rounded-lg border border-dashed bg-background/50 px-3 text-center text-sm text-muted-foreground">
+      <div className="grid min-h-28 flex-1 place-items-center rounded-lg border bg-background/50 px-3 text-center text-sm text-muted-foreground">
         {emptyLabel}
       </div>
     );

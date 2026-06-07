@@ -732,7 +732,7 @@ export function ScannerForm({
         ) : null}
       </div>
 
-      <div className="rounded-lg border border-dashed border-border bg-muted/30 p-4">
+      <div className="rounded-lg border border-border bg-muted/30 p-4">
         <label htmlFor="job-url" className="mb-2 block text-sm font-medium">
           Import job from URL{" "}
           <span className="font-normal text-muted-foreground">(optional)</span>

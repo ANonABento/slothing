@@ -288,7 +288,7 @@ export function ResumePreview({
                   <Button
                     type="button"
                     variant="ghost"
-                    className="h-10 w-full border-[length:var(--border-width)] border-dashed border-border text-muted-foreground hover:border-primary hover:bg-primary/5 hover:text-primary"
+                    className="h-10 w-full border-[length:var(--border-width)] border-border text-muted-foreground hover:border-primary hover:bg-primary/5 hover:text-primary"
                     onClick={onAddSection}
                   >
                     <Plus className="mr-2 h-4 w-4" />

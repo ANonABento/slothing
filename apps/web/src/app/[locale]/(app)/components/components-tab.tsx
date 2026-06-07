@@ -1903,7 +1903,7 @@ export function BankComponentsTab({
         <PageHeader
           icon={Database}
           title="Components"
-          description="Reusable bullets, stories, and project chunks pulled from your resume — the source material Studio composes into tailored documents."
+          description="Reusable bullets, stories, and project chunks pulled from your resume — the source material Studio composes into tailored documents. AI drafts only rephrase facts you already provided, and stay unverified until you confirm them."
           variant="compact"
           meta={
             visibleEntryCount > 0 ? (

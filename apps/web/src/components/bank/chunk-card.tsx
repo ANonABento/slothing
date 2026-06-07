@@ -231,12 +231,21 @@ export function ChunkCard({
                   rows (>= 0.9) carry no chip; medium (0.7–0.9) and low (< 0.7)
                   show a warning- or destructive-tinted chip so the badge
                   actually means "review this." (P1.4)
+
+                  Suppressed for unverified drafts: the "Unverified draft" badge
+                  already signals "review this", so a second warning-tinted chip
+                  is redundant badge-soup and dilutes the warning color. (UX audit
+                  DS-2 / NU-3)
                 */}
-                {entry.confidenceScore < 0.7 ? (
+                {entry.status !== "draft" &&
+                entry.status !== "suggested" &&
+                entry.confidenceScore < 0.7 ? (
                   <Badge variant="destructive" className="text-2xs">
                     Low confidence
                   </Badge>
-                ) : entry.confidenceScore < 0.9 ? (
+                ) : entry.status !== "draft" &&
+                  entry.status !== "suggested" &&
+                  entry.confidenceScore < 0.9 ? (
                   <Badge variant="warning" className="text-2xs">
                     Medium confidence
                   </Badge>
@@ -264,7 +273,7 @@ export function ChunkCard({
                             e.stopPropagation();
                             onConfirm(entry.id);
                           }}
-                          className="inline-flex items-center gap-1 rounded-md border border-brand px-1.5 py-0.5 text-2xs font-medium text-brand-dark transition-colors hover:bg-brand-soft disabled:opacity-50"
+                          className="inline-flex min-h-7 items-center gap-1 rounded-md border border-brand px-2.5 py-1 text-xs font-medium text-brand-dark transition-colors hover:bg-brand-soft disabled:opacity-50"
                         >
                           {busy ? (
                             <Loader2 className="h-3 w-3 animate-spin" />
@@ -282,7 +291,7 @@ export function ChunkCard({
                             e.stopPropagation();
                             onStrengthen(entry.id);
                           }}
-                          className="inline-flex items-center gap-1 rounded-md border border-input px-1.5 py-0.5 text-2xs text-ink-2 transition-colors hover:border-brand disabled:opacity-50"
+                          className="inline-flex min-h-7 items-center gap-1 rounded-md border border-input px-2.5 py-1 text-xs text-ink-2 transition-colors hover:border-brand disabled:opacity-50"
                         >
                           {busy ? (
                             <Loader2 className="h-3 w-3 animate-spin" />
