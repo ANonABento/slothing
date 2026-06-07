@@ -19,6 +19,7 @@ import {
   entryHighlights,
   articulateToBullets,
   articulatedDraftInput,
+  buildArticulatePrompt,
   classifyJobGaps,
 } from "./ai-authoring";
 
@@ -124,6 +125,12 @@ describe("AI bank authoring — Articulate (spec §4.2)", () => {
     const out = await articulateToBullets(notes, llmConfig);
     expect(out.join(" ")).not.toMatch(/\$4M|4M/);
     expect(out.some((b) => /kubernetes/i.test(b))).toBe(true);
+  });
+
+  it("the articulate prompt forbids derived metrics and embellishment (live-tuning fix)", () => {
+    const p = buildArticulatePrompt("set up k8s, cut build 22m to 7m");
+    expect(p).toMatch(/derived metric|% improvement/i);
+    expect(p).toMatch(/embellish|do not add context/i);
   });
 
   it("builds a draft bullet entry grounded in raw_input", () => {
