@@ -25,11 +25,15 @@ export function buildTailoredResumePrompt(
   input: TailoredResumePromptInput,
   promptVariantContent: string,
 ): string {
-  const experienceEntries = formatBankCategory(input.bankEntries.experience);
+  const experienceEntries = formatAnchorableCategory(
+    input.bankEntries.experience,
+  );
   const skillEntries = formatBankCategory(input.bankEntries.skill);
   const educationEntries = formatBankCategory(input.bankEntries.education);
   const projectEntries = formatBankCategory(input.bankEntries.project);
-  const hackathonEntries = formatBankCategory(input.bankEntries.hackathon);
+  const hackathonEntries = formatAnchorableCategory(
+    input.bankEntries.hackathon,
+  );
   const bulletEntries = formatBankCategory(input.bankEntries.bullet);
   const achievementEntries = formatBankCategory(input.bankEntries.achievement);
   const certificationEntries = formatBankCategory(
@@ -81,6 +85,7 @@ NON-OVERRIDABLE SAFETY RULES:
 - Incorporate missing job keywords only when bank entries already support them; omit unsupported keywords rather than inventing support
 - Do not invent metrics, tools, employers, degrees, certifications, dates, job titles, clients, or responsibilities
 - Preserve contact details and education exactly from the source data; preserve employers, titles, and dates exactly for selected experiences
+- Each output experience MUST set "sourceEntryId" to the id= of the single EXPERIENCE/HACKATHON bank entry it is based on, and rewrite ONLY that entry's bullets. Do not merge entries, do not omit sourceEntryId, and do not output an experience without a matching bank entry id (company/title/dates are taken from that entry, not from you)
 - If AWS, Kubernetes, or any other requested keyword is absent from the knowledge bank evidence, do not include it anywhere in the JSON
 - Return schema-valid JSON only, with no markdown, labels, comments, or surrounding prose
 
@@ -96,6 +101,7 @@ Return ONLY a JSON object:
   "summary": "Tailored professional summary...",
   "experiences": [
     {
+      "sourceEntryId": "the id= of the bank EXPERIENCE/HACKATHON entry this is based on",
       "company": "Company Name",
       "title": "Job Title",
       "dates": "Jan 2020 - Present",
@@ -159,5 +165,17 @@ export function formatBankCategory(entries: BankEntry[]): string {
   if (entries.length === 0) return "(none)";
   return entries
     .map((e, i) => `${i + 1}. ${JSON.stringify(e.content)}`)
+    .join("\n");
+}
+
+/**
+ * Like {@link formatBankCategory} but prefixes each entry with its stable `id=`, so the
+ * model can anchor an output experience back to a specific bank entry via `sourceEntryId`
+ * (P1 grounded tailoring — the server rebuilds company/title/dates from that entry).
+ */
+export function formatAnchorableCategory(entries: BankEntry[]): string {
+  if (entries.length === 0) return "(none)";
+  return entries
+    .map((e) => `- id=${e.id}: ${JSON.stringify(e.content)}`)
     .join("\n");
 }

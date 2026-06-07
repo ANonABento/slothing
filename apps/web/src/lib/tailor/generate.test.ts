@@ -495,34 +495,43 @@ describe("generateFromBank", () => {
     expect(prompt.indexOf("NON-OVERRIDABLE SAFETY RULES")).toBeLessThan(
       prompt.indexOf("STYLE AND PRIORITIZATION GUIDANCE"),
     );
+    // P1: experiences are listed with stable ids and the model must anchor via sourceEntryId.
+    expect(prompt).toContain("id=e1");
+    expect(prompt).toContain("sourceEntryId");
   });
 
-  it("preserves contact and education while omitting unsupported LLM keywords", async () => {
+  it("anchors experiences to verified bank entries and strips fabricated content (P1)", async () => {
     const bank = makeBank();
     bank.skill.push(
-      makeBankEntry({
-        id: "graphql",
-        content: { name: "GraphQL" },
-      }),
+      makeBankEntry({ id: "graphql", content: { name: "GraphQL" } }),
     );
     bank.experience[0].content = {
       ...bank.experience[0].content,
       highlights: ["Built React and GraphQL dashboards"],
-      skills: ["React", "TypeScript", "GraphQL"],
     };
+    // LLM tries to mutate the employer/title/dates and smuggle a fabricated metric +
+    // unsupported cloud keywords. Only the id-anchored, grounded content should survive.
     completeMock.mockResolvedValueOnce(
       JSON.stringify({
         contact: { name: "Mutated" },
         summary: "React GraphQL engineer with AWS Kubernetes expertise.",
         experiences: [
           {
-            company: "Acme Corp",
-            title: "Senior Engineer",
-            dates: "2020-01 - 2023-06",
+            sourceEntryId: "e1",
+            company: "FAKE MegaCorp",
+            title: "VP of Everything",
+            dates: "1999-2099",
             highlights: [
-              "Built GraphQL dashboards",
-              "Managed AWS Kubernetes infrastructure",
+              "Built React and GraphQL dashboards",
+              "Increased revenue 400% single-handedly",
             ],
+          },
+          {
+            sourceEntryId: "does-not-exist",
+            company: "Ghost Inc",
+            title: "Phantom",
+            dates: "2000",
+            highlights: ["Invented a time machine"],
           },
         ],
         skills: ["React", "GraphQL", "AWS", "Kubernetes"],
@@ -551,22 +560,28 @@ describe("generateFromBank", () => {
       { provider: "openai", apiKey: "test", model: "gpt-test" },
     );
 
+    // Contact + education are taken from source, never the LLM.
     expect(result.resume.contact).toEqual({
       name: "Jane Doe",
       email: "jane@example.com",
     });
-    expect(result.resume.education).toEqual([
-      {
-        institution: "MIT",
-        degree: "BS",
-        field: "Computer Science",
-        date: "2018",
-      },
-    ]);
+    expect(result.resume.education[0].institution).toBe("MIT");
+
+    // Exactly one experience: the unanchored "Ghost Inc" entry is dropped.
+    expect(result.resume.experiences).toHaveLength(1);
+    const exp = result.resume.experiences[0];
+    // company/title/dates come from the VERIFIED bank entry e1, NOT the LLM's mutations.
+    expect(exp.company).toBe("Acme Corp");
+    expect(exp.title).toBe("Senior Engineer");
+    expect(exp.company).not.toBe("FAKE MegaCorp");
+    // The grounded rewrite is kept; the fabricated-metric bullet is stripped.
+    expect(exp.highlights).toContain("Built React and GraphQL dashboards");
+    expect(exp.highlights.join(" ")).not.toMatch(/400%|revenue/);
+
+    // Unsupported skills/keywords never appear anywhere in the résumé.
     expect(result.resume.skills).toEqual(["React", "GraphQL"]);
-    expect(result.resume.experiences[0].highlights).toEqual([
-      "Built GraphQL dashboards",
-    ]);
-    expect(JSON.stringify(result.resume)).not.toMatch(/AWS|Kubernetes/);
+    expect(JSON.stringify(result.resume)).not.toMatch(
+      /AWS|Kubernetes|Ghost|400%/,
+    );
   });
 });
