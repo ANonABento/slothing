@@ -3,6 +3,9 @@ import { generateId } from "@/lib/utils";
 import type {
   BankEntry,
   BankCategory,
+  BankEntryStatus,
+  BankEntryAuthor,
+  BankEntryGrounding,
   GroupedBankEntries,
   SourceBbox,
   SourceLinkMetadata,
@@ -28,6 +31,10 @@ interface BankEntryRow {
   source_span_ids?: string | null;
   source_quality?: string | null;
   match_method?: string | null;
+  status?: string | null;
+  authored_by?: string | null;
+  grounded_in?: string | null;
+  verified_at?: string | null;
   confidence_score: number;
   created_at: string;
 }
@@ -145,9 +152,52 @@ function rowToEntry(row: BankEntryRow): BankEntry {
     sourceSpanIds,
     sourceQuality: sourceQualityValue(row.source_quality),
     matchMethod: row.match_method ?? undefined,
+    status: bankStatusValue(row.status),
+    authoredBy: bankAuthorValue(row.authored_by),
+    groundedIn: parseGroundingJson(row.grounded_in),
+    verifiedAt: row.verified_at ?? undefined,
     confidenceScore: row.confidence_score,
     createdAt: row.created_at,
   };
+}
+
+function bankStatusValue(
+  value: string | null | undefined,
+): BankEntryStatus | undefined {
+  return value === "verified" || value === "draft" || value === "suggested"
+    ? value
+    : undefined;
+}
+
+function bankAuthorValue(
+  value: string | null | undefined,
+): BankEntryAuthor | undefined {
+  return value === "user" ||
+    value === "import" ||
+    value === "ai_articulated" ||
+    value === "ai_strengthened"
+    ? value
+    : undefined;
+}
+
+function parseGroundingJson(
+  value: string | null | undefined,
+): BankEntryGrounding | undefined {
+  if (!value) return undefined;
+  try {
+    const parsed = JSON.parse(value) as unknown;
+    if (
+      parsed &&
+      typeof parsed === "object" &&
+      ((parsed as BankEntryGrounding).kind === "raw_input" ||
+        (parsed as BankEntryGrounding).kind === "entry")
+    ) {
+      return parsed as BankEntryGrounding;
+    }
+  } catch {
+    // fall through
+  }
+  return undefined;
 }
 
 function supportsChildCount(entry: BankEntry): boolean {
@@ -217,10 +267,17 @@ export function ensureProfileBankHierarchySchema(): void {
     // match. Reserved values for the followup premium spec:
     // `"embedding"`, `"llm-citation"`, `"document-ai"`.
     "ALTER TABLE profile_bank ADD COLUMN match_method TEXT",
+    // AI Bank Authoring (spec §2) — verification/provenance. NULL for legacy rows:
+    // `status` NULL is treated as "verified", `authored_by` NULL as "user".
+    "ALTER TABLE profile_bank ADD COLUMN status TEXT",
+    "ALTER TABLE profile_bank ADD COLUMN authored_by TEXT",
+    "ALTER TABLE profile_bank ADD COLUMN grounded_in TEXT",
+    "ALTER TABLE profile_bank ADD COLUMN verified_at TEXT",
     "CREATE INDEX IF NOT EXISTS idx_profile_bank_parent ON profile_bank(user_id, parent_id)",
     "CREATE INDEX IF NOT EXISTS idx_profile_bank_component_type ON profile_bank(user_id, component_type)",
     "CREATE INDEX IF NOT EXISTS idx_profile_bank_parse_run ON profile_bank(user_id, source_parse_run_id)",
     "CREATE INDEX IF NOT EXISTS idx_profile_bank_artifact ON profile_bank(user_id, source_artifact_id)",
+    "CREATE INDEX IF NOT EXISTS idx_profile_bank_status ON profile_bank(user_id, status)",
   ];
 
   for (const statement of statements) {
@@ -254,6 +311,10 @@ export interface InsertBankEntry {
   sourceSpanIds?: string[];
   sourceQuality?: BankEntry["sourceQuality"];
   matchMethod?: string;
+  status?: BankEntryStatus;
+  authoredBy?: BankEntryAuthor;
+  groundedIn?: BankEntryGrounding;
+  verifiedAt?: string;
   confidenceScore?: number;
 }
 
@@ -312,9 +373,10 @@ export function insertBankEntry(
       source_page, source_bbox, source_order, source_header_bbox, source_links,
       source_artifact_id, source_parse_run_id, source_span_ids, source_quality,
       match_method,
+      status, authored_by, grounded_in, verified_at,
       confidence_score
     )
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `,
   ).run(
     id,
@@ -336,6 +398,10 @@ export function insertBankEntry(
     entry.sourceSpanIds ? JSON.stringify(entry.sourceSpanIds) : null,
     entry.sourceQuality ?? null,
     entry.matchMethod ?? null,
+    entry.status ?? null,
+    entry.authoredBy ?? null,
+    entry.groundedIn ? JSON.stringify(entry.groundedIn) : null,
+    entry.verifiedAt ?? null,
     entry.confidenceScore ?? 0.8,
   );
   return id;

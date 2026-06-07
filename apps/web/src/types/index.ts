@@ -7,6 +7,9 @@ export type { EmailTemplateType };
 export type {
   BankCategory,
   BankEntry,
+  BankEntryStatus,
+  BankEntryAuthor,
+  BankEntryGrounding,
   Certification,
   ContactInfo,
   Education,
@@ -25,6 +28,7 @@ export type {
   SourceLinkMetadata,
 } from "@slothing/shared/types";
 export { BANK_CATEGORIES } from "@slothing/shared/types";
+export { bankEntryStatus, isVerifiedBankEntry } from "@slothing/shared/types";
 
 export interface CoverLetterData {
   targetCompany?: string;

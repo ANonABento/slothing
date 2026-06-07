@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { parseJsonBody } from "@/lib/api-utils";
+import { nowIso } from "@/lib/format/time";
 import { requireAuth, isAuthError } from "@/lib/auth";
 import {
   insertBankEntry,
@@ -112,8 +113,15 @@ export async function POST(request: NextRequest) {
     const parsed = await parseJsonBody(request, createBankEntrySchema);
     if (!parsed.ok) return parsed.response;
 
-    const { category, content, sourceDocumentId, confidenceScore } =
-      parsed.data;
+    const {
+      category,
+      content,
+      sourceDocumentId,
+      confidenceScore,
+      status,
+      authoredBy,
+      groundedIn,
+    } = parsed.data;
 
     const id = insertBankEntry(
       {
@@ -121,6 +129,11 @@ export async function POST(request: NextRequest) {
         content,
         ...(sourceDocumentId ? { sourceDocumentId } : {}),
         confidenceScore,
+        status,
+        authoredBy,
+        ...(groundedIn ? { groundedIn } : {}),
+        // A verified entry created here is confirmed at creation time.
+        ...(status === "verified" ? { verifiedAt: nowIso() } : {}),
       },
       authResult.userId,
     );

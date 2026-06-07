@@ -771,10 +771,18 @@ export const profileBank = sqliteTable(
     sourceQuality: text("source_quality"),
     matchMethod: text("match_method"),
     confidenceScore: real("confidence_score").default(0.8),
+    // AI Bank Authoring (spec §2) — verification/provenance. `status` null = legacy =
+    // treated as "verified". `authored_by` null = legacy = "user". `grounded_in` is the
+    // JSON evidence pointer for AI-authored entries; `verified_at` is set on confirmation.
+    status: text("status"),
+    authoredBy: text("authored_by"),
+    groundedIn: text("grounded_in"),
+    verifiedAt: text("verified_at"),
     createdAt: text("created_at").default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => [
     index("idx_profile_bank_user").on(table.userId),
+    index("idx_profile_bank_status").on(table.userId, table.status),
     index("idx_profile_bank_category").on(table.userId, table.category),
     index("idx_profile_bank_user_source").on(
       table.userId,
