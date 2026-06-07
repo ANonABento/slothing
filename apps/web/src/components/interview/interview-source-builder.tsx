@@ -381,7 +381,7 @@ export function InterviewSourceBuilder({
                           );
                         })
                       ) : (
-                        <p className="rounded-xl border border-dashed p-4 text-sm text-muted-foreground">
+                        <p className="rounded-xl border p-4 text-sm text-muted-foreground">
                           No sources here yet.
                         </p>
                       )}
@@ -474,7 +474,7 @@ export function InterviewSourceBuilder({
                 ) : null}
               </div>
             ) : (
-              <div className="mt-4 rounded-2xl border border-dashed bg-card p-5 text-sm text-muted-foreground">
+              <div className="mt-4 rounded-2xl border bg-card p-5 text-sm text-muted-foreground">
                 <Search className="mb-3 h-5 w-5 text-primary" />
                 Build a context pack to see extracted skills, claims, weak
                 spots, and question angles.

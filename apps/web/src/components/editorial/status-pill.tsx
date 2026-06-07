@@ -57,7 +57,6 @@ const STAGE_PRESENTATION: Record<StageId, StagePresentation> = {
     label: "Rejected",
     container: "bg-rule-strong-bg text-ink-3",
     dot: "bg-ink-3",
-    extra: "line-through decoration-from-font",
   },
 };
 

@@ -433,7 +433,9 @@ export function NotificationCenter({
 
   const groups = groupNotifications(notifications);
   const unreadLabel = unreadCount === 1 ? "1 unread" : `${unreadCount} unread`;
-  const cappedUnreadCount = unreadCount > 99 ? "99+" : unreadCount;
+  // Cap at "9+" so the badge stays a calm signal rather than a loud "99+" wall
+  // of red on every page (UX audit DS-13 / NU-11).
+  const cappedUnreadCount = unreadCount > 9 ? "9+" : unreadCount;
 
   return (
     <div className="relative">
@@ -471,7 +473,7 @@ export function NotificationCenter({
           {unreadCount > 0 && (
             <span
               className={cn(
-                "absolute flex items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold leading-none text-destructive-foreground",
+                "absolute flex items-center justify-center rounded-full bg-brand px-1 text-[10px] font-bold leading-none text-inverse-ink",
                 variant === "appbar"
                   ? "-right-2 -top-2 h-4 min-w-[1rem]"
                   : "-right-1.5 -top-1.5 h-4 min-w-[1rem]",

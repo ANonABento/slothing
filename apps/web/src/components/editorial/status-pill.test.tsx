@@ -37,9 +37,11 @@ describe("StatusPill", () => {
     expect(pill?.className).toMatch(/bg-brand-soft/);
   });
 
-  it("applies line-through styling for the rejected stage", () => {
+  it("uses a muted, receded (not struck-through) treatment for the rejected stage", () => {
+    // Strikethrough reads as "deleted/invalid", not "rejected status" (UX audit DS-6).
     const { container } = render(<StatusPill stage="rejected" />);
     const pill = container.firstChild as HTMLElement;
-    expect(pill.className).toMatch(/line-through/);
+    expect(pill.className).not.toMatch(/line-through/);
+    expect(pill.className).toMatch(/text-ink-3/);
   });
 });
