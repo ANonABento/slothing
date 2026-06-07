@@ -312,8 +312,11 @@ describe("ChunkCard", () => {
     expect(screen.getByText("Engineer at Acme Corp")).toBeInTheDocument();
     expect(screen.getByText("Experience")).toBeInTheDocument();
     expect(container.firstElementChild?.className).toContain("rounded-md");
+    // Standalone (non-forceExpanded) grid cards carry the editorial paper lift;
+    // tailwind-merge replaces the glass resting shadow with shadow-paper-card
+    // (UX audit DS-18). The hover-elevated shadow + glass backdrop remain.
     expect(container.firstElementChild?.className).toContain(
-      "shadow-[var(--shadow-card)]",
+      "shadow-paper-card",
     );
     expect(container.firstElementChild?.className).toContain(
       "[backdrop-filter:var(--backdrop-blur)]",

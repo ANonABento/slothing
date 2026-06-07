@@ -37,6 +37,11 @@ const jsonLd = {
  * (Codex PR #278). Videos at /marketing/sections/<slug>.mp4 are
  * optional overlays — the still still carries the frame on its own.
  */
+// Demo section videos aren't produced yet (planned via Remotion/Hyperframes).
+// Flip to true once /marketing/sections/*.mp4 exist. See ROADMAP "Landing demo
+// videos". Until then the posters carry the frames and nothing 404s.
+const SECTION_VIDEOS_READY = false;
+
 const SECTIONS: SectionProps[] = [
   {
     number: "01",
@@ -192,7 +197,17 @@ export default function LandingPage() {
       <TheLoop />
       <LogoStrip />
       {SECTIONS.map((section) => (
-        <Section key={section.number} {...section} />
+        // Each section keeps its `videoSrc` (so the demo videos drop straight in
+        // once produced via Remotion/Hyperframes — see ROADMAP "Landing demo
+        // videos"), but we don't render the <video> until the assets exist:
+        // pointing at the missing .mp4 threw a 404 per section (UX audit A7).
+        // The poster carries the frame meanwhile. Flip SECTION_VIDEOS_READY when
+        // the files ship.
+        <Section
+          key={section.number}
+          {...section}
+          videoSrc={SECTION_VIDEOS_READY ? section.videoSrc : undefined}
+        />
       ))}
       <Closer />
     </>
