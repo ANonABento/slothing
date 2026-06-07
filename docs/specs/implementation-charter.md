@@ -70,7 +70,11 @@ Stop and summarize only when:
 
 ## Progress ledger (updated as the loop runs)
 
-- [ ] P0 Foundation
+- [x] **P0 Foundation** — DONE 2026-06-07. Commits: 3e3abc86 (docs), 48d9add9 (provenance
+  migration: status/authored_by/grounded_in/verified_at + helpers + /api/bank + tests),
+  465d5049 (shared grounding engine src/lib/grounding, 12 tests), 8207c381 (offline eval
+  adapter fix → 0.016→0.51, grounding metric + weight 0.3, capped offline CI gate
+  grounding-gate.test.ts). All gates green; no live LLM needed.
 - [ ] P1 Grounded tailoring
 - [ ] P2 Strengthen
 - [ ] P3 Articulate
