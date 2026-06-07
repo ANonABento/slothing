@@ -297,6 +297,36 @@ describe("resume export route", () => {
     expect(response.status).toBe(422);
   });
 
+  it("renders a Typst PDF from an INLINE resume (no resumeId) — Studio draft path (F-012)", async () => {
+    const response = await POST(
+      exportRequest({
+        resume,
+        templateId: "imported-1",
+        format: "pdf",
+        engine: "typst",
+      }),
+    );
+
+    // Never touches the saved-resume store when content is inline.
+    expect(mocks.getGeneratedResume).not.toHaveBeenCalled();
+    expect(mocks.renderResumeTypstForTemplate).toHaveBeenCalledWith(
+      resume,
+      "imported-1",
+      "user-1",
+    );
+    expect(mocks.compileTypstToPdf).toHaveBeenCalled();
+    expect(response.headers.get("x-render-engine")).toBe("typst");
+  });
+
+  it("exports the Typst source from an inline resume (no resumeId)", async () => {
+    const response = await POST(
+      exportRequest({ resume, templateId: "imported-1", format: "typst" }),
+    );
+
+    expect(mocks.getGeneratedResume).not.toHaveBeenCalled();
+    expect(response.headers.get("content-disposition")).toContain("resume.typ");
+  });
+
   it("exports a resume DOCX from TipTap content", async () => {
     const content = {
       type: "doc",

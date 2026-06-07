@@ -79,6 +79,12 @@ export async function GET() {
 
 const exportSchema = z.object({
   resumeId: z.string().min(1).optional(),
+  /**
+   * An inline TailoredResume, used when there is no saved `resumeId` (e.g. a Studio
+   * draft). Lets the Typst/LaTeX/HTML/PDF paths render structured content without first
+   * persisting a server resume. F-012.
+   */
+  resume: z.unknown().optional(),
   html: z.string().min(1).optional(),
   content: z.unknown().optional(),
   mode: z.enum(["resume", "cover_letter"]).default("resume"),
@@ -133,6 +139,7 @@ export async function POST(request: NextRequest) {
 
     const {
       resumeId,
+      resume: inlineResume,
       html: rawHtml,
       content,
       mode,
@@ -144,7 +151,7 @@ export async function POST(request: NextRequest) {
       pageSettings,
     } = parsed.data;
 
-    // Get resume content
+    // Get resume content: a saved resume by id, else an inline TailoredResume.
     let resume: TailoredResume | null = null;
     if (resumeId) {
       const saved = await getGeneratedResume(resumeId, authResult.userId);
@@ -155,6 +162,8 @@ export async function POST(request: NextRequest) {
         );
       }
       resume = JSON.parse(saved.contentJson);
+    } else if (inlineResume && typeof inlineResume === "object") {
+      resume = inlineResume as TailoredResume;
     }
 
     // Route by format
