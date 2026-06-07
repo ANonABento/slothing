@@ -847,6 +847,28 @@ export function updateBankEntryForUser(
 }
 
 /**
+ * Transition a bank entry's verification status (AI Bank Authoring spec §2) — e.g. a user
+ * confirming an AI draft into a verified fact. Sets `verified_at` when moving to verified.
+ * Scoped by user_id. Returns true if a row changed.
+ */
+export function setBankEntryStatus(
+  id: string,
+  userId: string,
+  status: BankEntryStatus,
+  verifiedAt: string | null,
+): boolean {
+  ensureProfileBankHierarchySchema();
+  const result = db
+    .prepare(
+      `UPDATE profile_bank
+       SET status = ?, verified_at = ?
+       WHERE id = ? AND user_id = ?`,
+    )
+    .run(status, status === "verified" ? verifiedAt : null, id, userId);
+  return result.changes > 0;
+}
+
+/**
  * Delete a single bank entry. Returns true if the entry existed and was deleted.
  */
 export function deleteBankEntry(id: string, userId: string): boolean {

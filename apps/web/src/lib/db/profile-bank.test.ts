@@ -33,6 +33,7 @@ import {
   getSourceDocumentFiles,
   deleteSourceDocument,
   deleteSourceDocuments,
+  setBankEntryStatus,
 } from "./profile-bank";
 
 const TEST_USER_ID = "test-user";
@@ -338,6 +339,40 @@ describe("Profile Bank DB Functions", () => {
         rawText: "i led the migration",
       });
       expect(isVerifiedBankEntry(entry)).toBe(false);
+    });
+
+    it("setBankEntryStatus verifies a draft and stamps verified_at", () => {
+      const mockRun = vi.fn().mockReturnValue({ changes: 1 });
+      (db.prepare as Mock).mockReturnValue({ run: mockRun });
+
+      const ok = setBankEntryStatus(
+        "draft-1",
+        TEST_USER_ID,
+        "verified",
+        "2026-06-07T12:00:00.000Z",
+      );
+
+      expect(ok).toBe(true);
+      expect(mockRun).toHaveBeenCalledWith(
+        "verified",
+        "2026-06-07T12:00:00.000Z",
+        "draft-1",
+        TEST_USER_ID,
+      );
+    });
+
+    it("setBankEntryStatus does not stamp verified_at for non-verified status", () => {
+      const mockRun = vi.fn().mockReturnValue({ changes: 1 });
+      (db.prepare as Mock).mockReturnValue({ run: mockRun });
+
+      setBankEntryStatus(
+        "e-1",
+        TEST_USER_ID,
+        "draft",
+        "2026-06-07T12:00:00.000Z",
+      );
+
+      expect(mockRun).toHaveBeenCalledWith("draft", null, "e-1", TEST_USER_ID);
     });
 
     it("treats a legacy row (no status column) as verified", () => {
