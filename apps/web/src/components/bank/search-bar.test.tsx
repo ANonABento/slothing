@@ -63,8 +63,11 @@ describe("SearchBar", () => {
     const bulletTab = screen.getByRole("tab", { name: /Bullets/i });
     expect(bulletTab).toHaveTextContent("6");
 
+    // Zero-count categories no longer render a "0" chip — a row of "0"s read as
+    // broken filters (UX audit DS-7). The label stays; the count badge is hidden.
     const achTab = screen.getByRole("tab", { name: /Achievements/i });
-    expect(achTab).toHaveTextContent("0");
+    expect(achTab).toHaveTextContent("Achievements");
+    expect(achTab).not.toHaveTextContent("0");
 
     const certTab = screen.getByRole("tab", { name: /Certifications/i });
     expect(certTab).toHaveTextContent("1");
