@@ -372,6 +372,91 @@ describe("content extraction — OpenResume-style RDM draft", () => {
   });
 });
 
+// --- Fixture E: real-world line splitting — date range and location each land on their
+// OWN line (as pdf.js often emits right-tab dates and italic location subtitles). This is
+// the layout that produced phantom work/education entries before the audit fix.
+function standaloneDateAndLocation(): PdfDocGeometry {
+  const accent = "#7a2e1e";
+  const items: PdfTextItem[] = [];
+  items.push(mk("Jordan A. Rivera", 230, 40, { fontSize: 22, bold: true }));
+  items.push(mk("(617) 555-0142", 230, 60, { fontSize: 9 }));
+  let y = 120;
+  items.push(
+    mk("EXPERIENCE", 72, y, { fontSize: 12, bold: true, color: accent }),
+  );
+  y += 18;
+  items.push(mk("Senior Software Engineer — Northwind Labs", 72, y));
+  y += 14;
+  items.push(mk("2021 — Present", 72, y)); // standalone date line
+  y += 14;
+  items.push(mk("Boston, MA", 72, y)); // standalone location line
+  y += 14;
+  items.push(mk("• Led the migration.", 90, y));
+  y += 14;
+  items.push(mk("• Mentored five engineers.", 90, y));
+  y += 18;
+  items.push(mk("Software Engineer — Cedar Systems", 72, y));
+  y += 14;
+  items.push(mk("2018 — 2021", 72, y));
+  y += 14;
+  items.push(mk("Cambridge, MA", 72, y));
+  y += 14;
+  items.push(mk("• Built the APIs.", 90, y));
+  y += 22;
+  items.push(
+    mk("EDUCATION", 72, y, { fontSize: 12, bold: true, color: accent }),
+  );
+  y += 18;
+  items.push(mk("B.S. Computer Science — Boston University", 72, y));
+  y += 14;
+  items.push(mk("2014 — 2018", 72, y));
+  return { pages: [page(items)] };
+}
+
+describe("content extraction — standalone date/location lines (audit F-001/2/3/4/10)", () => {
+  it("keeps the leading paren on a phone number", async () => {
+    const { rdm } = await extractContent(standaloneDateAndLocation());
+    expect(rdm.basics.phone).toBe("(617) 555-0142");
+  });
+
+  it("does not spawn phantom work entries from standalone date/location lines", async () => {
+    const { rdm } = await extractContent(standaloneDateAndLocation());
+    expect(rdm.work).toHaveLength(2);
+  });
+
+  it("attaches dates, location, and bullets to the correct job", async () => {
+    const { rdm } = await extractContent(standaloneDateAndLocation());
+    const first = rdm.work[0];
+    expect(first.position).toBe("Senior Software Engineer");
+    expect(first.organization).toBe("Northwind Labs");
+    expect(first.location).toBe("Boston, MA");
+    expect(first.startDate).toBe("2021");
+    expect(first.highlights).toHaveLength(2);
+    expect(first.highlights[0]).toBe("Led the migration.");
+  });
+
+  it("does not spawn a phantom education entry from a standalone date line", async () => {
+    const { rdm } = await extractContent(standaloneDateAndLocation());
+    expect(rdm.education).toHaveLength(1);
+    expect(rdm.education[0].institution).toBe("Boston University");
+    expect(rdm.education[0].startDate).toBe("2014");
+    expect(rdm.education[0].endDate).toBe("2018");
+  });
+
+  it("falls back to an empty (not 'Unknown') name when none is found", async () => {
+    // No profile band (content starts straight at a section header) → no name line.
+    const { rdm } = await extractContent({
+      pages: [
+        page([
+          mk("EXPERIENCE", 72, 80, { fontSize: 12, bold: true }),
+          mk("• just a bullet", 90, 100),
+        ]),
+      ],
+    });
+    expect(rdm.basics.name).toBe("");
+  });
+});
+
 describe("line grouping", () => {
   it("groups items on the same baseline into one line, ordered left-to-right", () => {
     const lines = groupIntoLines(

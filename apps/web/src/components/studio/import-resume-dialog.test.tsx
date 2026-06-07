@@ -103,4 +103,46 @@ describe("ImportResumeDialog — preview + nudge + accept loop", () => {
     // The chosen export engine is persisted with the template (default "html").
     expect(body.engine).toBe("html");
   });
+
+  it("commits engine 'typst' (not the 'Typeset' label) when Typeset is selected (F-006)", async () => {
+    const onImported = vi.fn();
+    render(
+      <ImportResumeDialog
+        open
+        onOpenChange={() => {}}
+        onImported={onImported}
+      />,
+    );
+
+    fetchMock.mockResolvedValueOnce(importResponse());
+    const file = new File([new Uint8Array([1, 2, 3])], "jane.pdf", {
+      type: "application/pdf",
+    });
+    const input = document.querySelector(
+      'input[type="file"]',
+    ) as HTMLInputElement;
+    fireEvent.change(input, { target: { files: [file] } });
+    await waitFor(() =>
+      expect(screen.getByTitle("Template preview")).toBeInTheDocument(),
+    );
+
+    // Flip the export engine to Typeset.
+    fireEvent.click(screen.getByText("Typeset"));
+
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ id: "tpl-typst" }),
+    });
+    fireEvent.click(screen.getByText("Accept template"));
+
+    await waitFor(() =>
+      expect(onImported).toHaveBeenCalledWith("tpl-typst", "typst"),
+    );
+    const commitCall = fetchMock.mock.calls.find(
+      (c) => c[0] === "/api/templates/import/commit",
+    );
+    const body = JSON.parse((commitCall![1] as RequestInit).body as string);
+    // The schema only accepts "html" | "typst" — sending "typeset" would 400.
+    expect(body.engine).toBe("typst");
+  });
 });

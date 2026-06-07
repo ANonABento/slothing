@@ -45,7 +45,10 @@ import {
  * (spec §10 gap #1) — used directly for scanned/foreign-format uploads.
  */
 
-type ExportEngine = "html" | "typeset";
+// Must match the commit route's schema (`z.enum(["html", "typst"])`). "Typeset" is the
+// user-facing LABEL for the "typst" value — sending the label string 400'd silently and
+// made the engine toggle a no-op (audit F-006).
+type ExportEngine = "html" | "typst";
 
 interface ImportResult {
   route: "fingerprint" | "self-import" | "manual";
@@ -259,8 +262,16 @@ export function ImportResumeDialog({
               <UploadCloud className="h-6 w-6" />
             )}
             <span>
-              {loading ? "Analyzing…" : "Choose a PDF résumé to import"}
+              {loading
+                ? "Analyzing…"
+                : "Choose a résumé to import (PDF, DOCX, or .tex)"}
             </span>
+            {!loading && (
+              <span className="text-xs text-ink-3">
+                PDFs clone your style + content. DOCX/.tex start from a clean
+                template.
+              </span>
+            )}
             <input
               ref={fileRef}
               type="file"
@@ -284,6 +295,26 @@ export function ImportResumeDialog({
                   .
                 </p>
               )}
+              {(result.route === "manual" || result.scanned) && (
+                <p className="rounded-md border border-rule bg-paper p-2 text-xs text-ink-2">
+                  {result.scanned
+                    ? "This PDF has no text layer (it looks scanned), so we couldn't read its content."
+                    : `We couldn't read text content from this ${
+                        result.sourceType === "tex"
+                          ? ".tex"
+                          : (result.sourceType?.toUpperCase() ?? "file")
+                      }.`}{" "}
+                  Pick a clean starter template below — the preview shows sample
+                  content you&apos;ll replace with your own after importing.
+                </p>
+              )}
+              {result.route === "fingerprint" &&
+                !result.rdm?.basics?.name?.trim() && (
+                  <p className="rounded-md border border-rule bg-paper p-2 text-xs text-ink-2">
+                    We couldn&apos;t confidently detect your name from this
+                    résumé. You can fix it after importing.
+                  </p>
+                )}
               {(result.route === "manual" || result.scanned) && (
                 <div>
                   <Label className="text-xs">Template</Label>
@@ -404,7 +435,7 @@ export function ImportResumeDialog({
               <div>
                 <Label className="text-xs">Export engine</Label>
                 <div className="flex gap-2">
-                  {(["html", "typeset"] as const).map((e) => (
+                  {(["html", "typst"] as const).map((e) => (
                     <button
                       key={e}
                       type="button"
@@ -420,10 +451,19 @@ export function ImportResumeDialog({
                     </button>
                   ))}
                 </div>
+                {engine === "typst" && (
+                  <p className="mt-1 text-xs text-ink-3">
+                    Typeset (Typst) styling is applied when you export a PDF —
+                    the preview below is the HTML render.
+                  </p>
+                )}
               </div>
             </div>
 
             <div className="min-h-[420px] overflow-hidden rounded-md border border-rule bg-card">
+              <div className="border-b border-rule bg-paper px-2 py-1 text-[11px] text-ink-3">
+                HTML preview
+              </div>
               <iframe
                 title="Template preview"
                 className="h-[460px] w-full"
