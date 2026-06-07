@@ -75,7 +75,12 @@ Stop and summarize only when:
   465d5049 (shared grounding engine src/lib/grounding, 12 tests), 8207c381 (offline eval
   adapter fix → 0.016→0.51, grounding metric + weight 0.3, capped offline CI gate
   grounding-gate.test.ts). All gates green; no live LLM needed.
-- [ ] P1 Grounded tailoring
+- [x] **P1 Grounded tailoring** — DONE 2026-06-07. Commit d9b56114: generate.ts id-anchors
+  experiences to verified bank entries via sourceEntryId (company/title/dates rebuilt from
+  the entry; unanchored dropped), grounds highlights/skills/summary via src/lib/grounding
+  (deleted the 9-word regex + sanitizeExperiences/buildBankEvidenceText), verified-only
+  reads; prompt-builders exposes id= + requires sourceEntryId. Anti-fabrication test
+  rewritten + green; full suite green (web 4268). Live-LLM tailoring quality: PENDING-QUOTA.
 - [ ] P2 Strengthen
 - [ ] P3 Articulate
 - [ ] P4 Tailoring↔bank loop
