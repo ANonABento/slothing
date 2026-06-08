@@ -80,6 +80,7 @@ Default undo window: 5 seconds. Increase it when the action is easy to mis-click
 | Studio                        | Delete local studio file  | Local state removal                                                 | Pattern A |
 | Settings                      | Delete prompt variant     | `DELETE /api/prompts/[id]`; hard delete                             | Pattern A |
 | Settings — Danger zone        | Reset local preferences   | Clears every `taida:*` localStorage key in this browser              | Pattern A |
+| Application drafts review     | Reject draft              | `PATCH /api/applications/drafts/[id]`, status to `rejected`; row remains, undo restores `pending_review` | Pattern B |
 
 ## Adding A New Destructive Action
 

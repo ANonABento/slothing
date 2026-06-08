@@ -7,6 +7,8 @@ import { saveAnswerTool } from "./save-answer.js";
 import { slothingPushJobTool } from "./slothing-push-job.js";
 import { slothingUpdateStatusTool } from "./slothing-update-status.js";
 import { slothingScrapeUrlTool } from "./slothing-scrape-url.js";
+import { draftApplicationTool } from "./draft-application.js";
+import { listDraftsTool } from "./list-drafts.js";
 import type { AnyToolDefinition, ToolDefinition } from "./types.js";
 
 // Each tool is type-erased to `AnyToolDefinition` for the dispatcher. The
@@ -22,6 +24,8 @@ export const allTools: ReadonlyArray<AnyToolDefinition> = [
   slothingPushJobTool as unknown as AnyToolDefinition,
   slothingUpdateStatusTool as unknown as AnyToolDefinition,
   slothingScrapeUrlTool as unknown as AnyToolDefinition,
+  draftApplicationTool as unknown as AnyToolDefinition,
+  listDraftsTool as unknown as AnyToolDefinition,
 ] as const;
 
 export {
@@ -34,5 +38,7 @@ export {
   slothingPushJobTool,
   slothingUpdateStatusTool,
   slothingScrapeUrlTool,
+  draftApplicationTool,
+  listDraftsTool,
 };
 export type { ToolDefinition, AnyToolDefinition };

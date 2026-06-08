@@ -515,6 +515,30 @@ export const agentSettings = sqliteTable(
   (table) => [index("idx_agent_settings_user_id").on(table.userId)],
 );
 
+// Drafted applications awaiting review (docs/agent-overnight-apply-spec.md, P2).
+// Self-bootstrapped at runtime by `./application-drafts.ts`; this is for type
+// parity. One open (pending_review/approved) draft per (user, job).
+export const applicationDrafts = sqliteTable(
+  "application_drafts",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id").notNull().default(DEFAULT_USER_ID),
+    jobId: text("job_id").notNull(),
+    questionsJson: text("questions_json").notNull().default("[]"),
+    answersJson: text("answers_json").notNull().default("[]"),
+    status: text("status").notNull().default("pending_review"),
+    authoredBy: text("authored_by"),
+    createdAt: text("created_at"),
+    reviewedAt: text("reviewed_at"),
+    submittedAt: text("submitted_at"),
+    submitResultJson: text("submit_result_json"),
+  },
+  (table) => [
+    index("idx_application_drafts_user_id").on(table.userId),
+    index("idx_application_drafts_user_status").on(table.userId, table.status),
+  ],
+);
+
 // Bootstrap DDL for stripeCustomers + subscriptions co-located in
 // `./bootstrap-sql.ts` (BILLING_BOOTSTRAP_SQL). Edit BOTH on column changes.
 export const stripeCustomers = sqliteTable(
@@ -1240,6 +1264,9 @@ export type NewLlmSettings = typeof llmSettings.$inferInsert;
 
 export type AgentSettings = typeof agentSettings.$inferSelect;
 export type NewAgentSettings = typeof agentSettings.$inferInsert;
+
+export type ApplicationDraftRow = typeof applicationDrafts.$inferSelect;
+export type NewApplicationDraftRow = typeof applicationDrafts.$inferInsert;
 
 export type EmailDraft = typeof emailDrafts.$inferSelect;
 export type NewEmailDraft = typeof emailDrafts.$inferInsert;

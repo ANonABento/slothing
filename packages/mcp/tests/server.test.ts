@@ -118,9 +118,11 @@ describe("@slothing/mcp server", () => {
     const names = result.tools.map((t) => t.name).sort();
     expect(names).toEqual(
       [
+        "draft_application",
         "get_agent_policy",
         "get_opportunity_detail",
         "get_profile",
+        "list_drafts",
         "list_opportunities",
         "save_answer",
         "search_answer_bank",
@@ -129,6 +131,56 @@ describe("@slothing/mcp server", () => {
         "slothing_update_status",
       ].sort(),
     );
+  });
+
+  it("draft_application POSTs the draft payload to /api/extension/drafts", async () => {
+    const { stub, calls } = makeFetchStub([
+      {
+        status: 201,
+        body: { draft: { id: "d1", status: "pending_review" } },
+        expectMethod: "POST",
+        expectPath: "/api/extension/drafts",
+      },
+    ]);
+    const { client, server } = await connectClient(stub);
+    opened.push({ close: () => server.close() });
+    opened.push({ close: () => client.close() });
+
+    const result = await client.callTool({
+      name: "draft_application",
+      arguments: {
+        jobId: "job-1",
+        questions: [{ id: "q1", label: "Why us?" }],
+        answers: [
+          { questionId: "q1", value: "Because", groundedIn: "bank:1", confidence: 0.9 },
+        ],
+      },
+    });
+
+    expect(result.isError).not.toBe(true);
+    expect(calls[0]?.body).toMatchObject({ jobId: "job-1" });
+  });
+
+  it("list_drafts forwards the status filter", async () => {
+    const { stub, calls } = makeFetchStub([
+      {
+        status: 200,
+        body: { drafts: [], total: 0 },
+        expectMethod: "GET",
+        expectPath: "/api/extension/drafts",
+      },
+    ]);
+    const { client, server } = await connectClient(stub);
+    opened.push({ close: () => server.close() });
+    opened.push({ close: () => client.close() });
+
+    const result = await client.callTool({
+      name: "list_drafts",
+      arguments: { status: "approved" },
+    });
+
+    expect(result.isError).not.toBe(true);
+    expect(calls[0]?.url).toContain("status=approved");
   });
 
   it("get_agent_policy calls GET /api/extension/agent-policy and returns the body", async () => {
