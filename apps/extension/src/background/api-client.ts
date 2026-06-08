@@ -2,6 +2,7 @@
 
 import type {
   AnswerBankMatch,
+  ApprovedDraftPayload,
   ChatJobContext,
   ExtensionProfile,
   ExtensionResumeSummary,
@@ -406,6 +407,27 @@ export class SlothingAPIClient {
       method: "PATCH",
       body: JSON.stringify({ answer }),
     });
+  }
+
+  // P3 — agent-drafted application submission (autonomy level L3).
+
+  /** Fetch drafts the user has approved, ready for an executor to submit. */
+  async getApprovedDrafts(): Promise<ApprovedDraftPayload[]> {
+    const response = await this.authenticatedFetch<{
+      drafts: ApprovedDraftPayload[];
+    }>("/api/extension/drafts?status=approved", {}, "safe");
+    return response.drafts;
+  }
+
+  /** Report the outcome of a submission attempt back to Slothing. */
+  async reportSubmitResult(
+    draftId: string,
+    result: { ok: boolean; atsRef?: string; error?: string },
+  ): Promise<{ draft: ApprovedDraftPayload }> {
+    return this.authenticatedFetch(
+      `/api/extension/drafts/${draftId}/submit-result`,
+      { method: "POST", body: JSON.stringify(result) },
+    );
   }
 
   /**

@@ -8,7 +8,12 @@ vi.mock("@/lib/format/time", () => ({
   nowIso: () => "2026-06-08T00:00:00.000Z",
 }));
 
-import { upsertDraft, reviewDraft, listDrafts } from "./application-drafts";
+import {
+  upsertDraft,
+  reviewDraft,
+  listDrafts,
+  recordSubmission,
+} from "./application-drafts";
 
 function result(rows: unknown[] = [], rowsAffected = 0) {
   return { rows, rowsAffected };
@@ -151,5 +156,36 @@ describe("application-drafts DB", () => {
         ? update![0]
         : (update![0] as { sql: string }).sql;
     expect(sql).toContain("reviewed_at = ?");
+  });
+
+  it("records a submission for an approved draft", async () => {
+    mockDb([], draftRow({ status: "approved" }));
+    const { gated } = await recordSubmission("draft-id", "user-1", {
+      ok: true,
+      atsRef: "GH-123",
+    });
+    expect(gated).toBe(false);
+    const update = dbMocks.execute.mock.calls.find((c) => {
+      const sql = typeof c[0] === "string" ? c[0] : c[0].sql;
+      return (
+        sql.includes("UPDATE application_drafts SET status = ?") &&
+        sql.includes("status = 'approved'")
+      );
+    });
+    expect(update).toBeTruthy();
+    expect((update![0] as { args: unknown[] }).args[0]).toBe("submitted");
+  });
+
+  it("gates submission for a non-approved draft", async () => {
+    mockDb([], draftRow({ status: "pending_review" }));
+    const { gated } = await recordSubmission("draft-id", "user-1", {
+      ok: true,
+    });
+    expect(gated).toBe(true);
+    const update = dbMocks.execute.mock.calls.find((c) => {
+      const sql = typeof c[0] === "string" ? c[0] : c[0].sql;
+      return sql.includes("UPDATE application_drafts SET status = ?");
+    });
+    expect(update).toBeFalsy();
   });
 });

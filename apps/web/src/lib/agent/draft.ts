@@ -108,3 +108,12 @@ export const draftReviewSchema = z
   });
 
 export type DraftReviewInput = z.infer<typeof draftReviewSchema>;
+
+/** Body schema for an executor reporting a submission outcome. */
+export const submitResultSchema = z.object({
+  ok: z.boolean(),
+  atsRef: z.string().max(500).optional(),
+  error: z.string().max(2000).optional(),
+});
+
+export type SubmitResultInput = z.infer<typeof submitResultSchema>;

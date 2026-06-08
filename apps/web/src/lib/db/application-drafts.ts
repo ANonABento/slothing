@@ -243,3 +243,32 @@ export async function reviewDraft(
   });
   return getDraft(id, userId);
 }
+
+export interface SubmissionRecord {
+  ok: boolean;
+  atsRef?: string;
+  error?: string;
+}
+
+/**
+ * Record a submission outcome from an executor. The per-application approval
+ * gate is enforced here: only an `approved` draft may transition to
+ * `submitted`/`failed`. Returns `{ gated: true }` if the draft was not approved.
+ */
+export async function recordSubmission(
+  id: string,
+  userId: string,
+  result: SubmissionRecord,
+): Promise<{ draft: ApplicationDraft | null; gated: boolean }> {
+  await ensureApplicationDraftsSchema();
+  const existing = await getDraft(id, userId);
+  if (!existing) return { draft: null, gated: false };
+  if (existing.status !== "approved") return { draft: existing, gated: true };
+
+  const status: DraftStatus = result.ok ? "submitted" : "failed";
+  await getClient().execute({
+    sql: "UPDATE application_drafts SET status = ?, submitted_at = ?, submit_result_json = ? WHERE id = ? AND user_id = ? AND status = 'approved'",
+    args: [status, nowIso(), JSON.stringify(result), id, userId],
+  });
+  return { draft: await getDraft(id, userId), gated: false };
+}

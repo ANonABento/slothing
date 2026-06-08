@@ -190,6 +190,15 @@ export interface LearnedAnswer {
   createdAt: string;
 }
 
+// P3 — a drafted application the user approved, ready for an executor to submit.
+export interface ApprovedDraftPayload {
+  id: string;
+  jobId: string;
+  status: string;
+  questions: Array<{ id: string; label: string }>;
+  answers: Array<{ questionId: string; value: string }>;
+}
+
 export interface SimilarAnswer {
   id: string;
   question: string;
