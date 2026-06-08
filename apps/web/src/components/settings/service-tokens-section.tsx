@@ -34,6 +34,9 @@ export function ServiceTokensSection() {
         "Failed to load service tokens",
       );
       setTokens(data.tokens);
+    } catch {
+      // Non-fatal: render the section empty rather than leaking an unhandled
+      // rejection (the on-mount fetch is fire-and-forget via `void load()`).
     } finally {
       setLoading(false);
     }
