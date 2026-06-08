@@ -34,6 +34,9 @@ export function DraftReviewList() {
       );
       setDrafts(data.drafts);
       setEdits(Object.fromEntries(data.drafts.map((d) => [d.id, d.answers])));
+    } catch {
+      // Non-fatal: render the empty state rather than leaking an unhandled
+      // rejection from the fire-and-forget on-mount fetch (`void load()`).
     } finally {
       setLoading(false);
     }
