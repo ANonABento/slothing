@@ -26,7 +26,7 @@
     "build": "tsc -p tsconfig.json",
     "dev": "tsc -p tsconfig.json --watch",
     "start": "node bin/slothing-mcp.mjs",
-    "type-check": "tsc -p tsconfig.json --noEmit",
+    "type-check": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.examples.json",
     "lint": "tsc -p tsconfig.json --noEmit",
     "test": "vitest",
     "test:run": "vitest run"
