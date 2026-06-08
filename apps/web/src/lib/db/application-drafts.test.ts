@@ -137,6 +137,37 @@ describe("application-drafts DB", () => {
     ).toBe(false);
   });
 
+  it("does not clobber an already-approved draft on re-push", async () => {
+    mockDb(
+      [draftRow({ status: "approved" })],
+      draftRow({ status: "approved" }),
+    );
+    const draft = await upsertDraft("user-1", {
+      jobId: "job-1",
+      questions: [],
+      answers: [],
+    });
+    expect(draft.status).toBe("approved");
+    const updated = dbMocks.execute.mock.calls.some((c) => {
+      const sql = typeof c[0] === "string" ? c[0] : c[0].sql;
+      return sql.includes("UPDATE application_drafts SET questions_json");
+    });
+    expect(updated).toBe(false);
+  });
+
+  it("refuses to re-approve a terminal (submitted) draft", async () => {
+    mockDb([], draftRow({ status: "submitted" }));
+    const draft = await reviewDraft("draft-id", "user-1", {
+      status: "approved",
+    });
+    expect(draft?.status).toBe("submitted");
+    const wrote = dbMocks.execute.mock.calls.some((c) => {
+      const sql = typeof c[0] === "string" ? c[0] : c[0].sql;
+      return sql.includes("UPDATE application_drafts SET");
+    });
+    expect(wrote).toBe(false);
+  });
+
   it("stamps reviewed_at when approving", async () => {
     mockDb(
       [],

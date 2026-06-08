@@ -123,4 +123,10 @@ describe("parseSalary", () => {
     expect(parseSalary("competitive")).toBeNull();
     expect(parseSalary(null)).toBeNull();
   });
+
+  it("applies a shared k-suffix to bare numbers in a range", () => {
+    // "120-150k" — the 120 must also be read as thousands, not 120.
+    expect(parseSalary("120-150k")).toBe(120000);
+    expect(parseSalary("$90k–120k")).toBe(90000);
+  });
 });

@@ -162,6 +162,9 @@ export async function saveAgentSettings(
   const now = nowIso();
 
   await getClient().execute({
+    // ON CONFLICT(user_id) requires the UNIQUE on user_id from the CREATE TABLE
+    // above (SQLite ALTER ADD COLUMN can't add UNIQUE, so the table must always
+    // be born from that CREATE TABLE, never reconstructed column-by-column).
     sql: `
       INSERT INTO agent_settings (
         id, user_id, autonomy, match_threshold, salary_floor,

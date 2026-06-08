@@ -12,11 +12,10 @@ const FORM_SELECTORS = [
   "[data-qa='application-form']",
 ];
 
-const SUBMIT_SELECTORS = [
-  "button[type=submit]",
-  ".template-btn-submit",
-  "[data-qa='btn-submit']",
-];
+// Only Lever-specific selectors — a bare `button[type=submit]` would match the
+// first submit button on the page. Unmatched pages fall through to the
+// label-text scan in findSubmitBySelectors (fails safe rather than mis-clicking).
+const SUBMIT_SELECTORS = [".template-btn-submit", "[data-qa='btn-submit']"];
 
 const SUBMIT_LABELS = [/submit application/i, /^submit$/i];
 

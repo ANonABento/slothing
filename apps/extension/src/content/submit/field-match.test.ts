@@ -49,6 +49,15 @@ describe("findFieldByLabel", () => {
     );
   });
 
+  it("prefers the most specific field over a bare name-attribute token", () => {
+    const root = form(`
+      <input id="generic" name="name" />
+      <label for="fn">Your first name</label><input id="fn" />
+    `);
+    // "First name" must land on the labelled field, not the generic name="name".
+    expect(findFieldByLabel(root, "First name")?.getAttribute("id")).toBe("fn");
+  });
+
   it("ignores submit/hidden inputs", () => {
     const root = form(
       `<input type="submit" aria-label="go" /><input type="hidden" aria-label="go" />`,

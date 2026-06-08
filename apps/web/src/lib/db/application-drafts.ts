@@ -148,6 +148,10 @@ export async function upsertDraft(
 
   const existing = await findOpenDraft(userId, input.jobId);
   if (existing) {
+    // Don't clobber a draft the user already approved — re-pushing the same job
+    // must not silently un-approve it (which would also drop an executor's
+    // authorization). Leave the approved draft as-is.
+    if (existing.status === "approved") return existing;
     await getClient().execute({
       sql: "UPDATE application_drafts SET questions_json = ?, answers_json = ?, authored_by = ?, status = 'pending_review', reviewed_at = NULL WHERE id = ? AND user_id = ?",
       args: [questionsJson, answersJson, authoredBy, existing.id, userId],
@@ -219,6 +223,11 @@ export async function reviewDraft(
   await ensureApplicationDraftsSchema();
   const existing = await getDraft(id, userId);
   if (!existing) return null;
+  // Terminal states are immutable: a submitted/failed draft must not be
+  // re-approved (which would let it be submitted a second time).
+  if (existing.status === "submitted" || existing.status === "failed") {
+    return existing;
+  }
 
   const sets: string[] = [];
   const args: string[] = [];

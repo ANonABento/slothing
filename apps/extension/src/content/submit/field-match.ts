@@ -72,10 +72,22 @@ export function findFieldByLabel(
 
   const exact = candidates.find((c) => c.text === target);
   if (exact) return exact.el;
-  const contains = candidates.find(
-    (c) => c.text.includes(target) || target.includes(c.text),
-  );
-  return contains ? contains.el : null;
+
+  // Bidirectional substring match, but: (a) ignore tiny labels like a bare
+  // `name="name"` attribute that would spuriously match "first name", and
+  // (b) prefer the closest-length candidate so the most specific field wins.
+  const contains = candidates
+    .filter(
+      (c) =>
+        Math.min(c.text.length, target.length) >= 3 &&
+        (c.text.includes(target) || target.includes(c.text)),
+    )
+    .sort(
+      (a, b) =>
+        Math.abs(a.text.length - target.length) -
+        Math.abs(b.text.length - target.length),
+    );
+  return contains.length > 0 ? contains[0].el : null;
 }
 
 function setNativeValue(el: Fillable, value: string): void {

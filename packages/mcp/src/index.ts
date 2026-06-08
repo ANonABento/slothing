@@ -131,14 +131,16 @@ export async function main(argv: readonly string[] = process.argv.slice(2)): Pro
   );
 }
 
-// Only auto-run when invoked as the CLI entry point. The `bin/slothing-mcp.mjs`
-// shim imports the compiled `dist/index.js` and calls `main()` explicitly so
-// tests can import this module without spawning a transport.
+// Only auto-run when this compiled module IS the process entry point
+// (`node dist/index.js`). The `bin/slothing-mcp.mjs` shim imports this module
+// and calls `main()` explicitly — matching the shim's own path here would run
+// `main()` TWICE (two stdio transports, or EADDRINUSE on the HTTP transport).
+// Tests import the module (argv[1] = the test runner) and never auto-run.
 const isDirectInvocation =
   typeof process !== "undefined" &&
   Array.isArray(process.argv) &&
   process.argv[1] !== undefined &&
-  /slothing-mcp(\.mjs|\.js)?$/.test(process.argv[1]);
+  /[\\/]dist[\\/]index\.(c?js|mjs)$/.test(process.argv[1]);
 
 if (isDirectInvocation) {
   main().catch((error) => {

@@ -13,10 +13,12 @@ const FORM_SELECTORS = [
   "form[action*='greenhouse']",
 ];
 
+// Only ID/value-specific selectors here — a bare `button[type=submit]` would
+// match the first submit button on the page (e.g. "Save"/"Next"). Anything not
+// matched by these falls through to the label-text scan in findSubmitBySelectors.
 const SUBMIT_SELECTORS = [
   "#submit_app",
   "input[type=submit][value*='Submit' i]",
-  "button[type=submit]",
 ];
 
 const SUBMIT_LABELS = [/submit application/i, /^submit$/i];

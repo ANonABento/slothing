@@ -100,15 +100,21 @@ export function evaluateUnattendedSubmission(
  */
 export function parseSalary(text: string | null | undefined): number | null {
   if (!text) return null;
-  const matches = text.replace(/,/g, "").match(/(\d+(?:\.\d+)?)\s*([kK])?/g);
+  const cleaned = text.replace(/,/g, "");
+  const matches = cleaned.match(/(\d+(?:\.\d+)?)\s*([kK])?/g);
   if (!matches) return null;
+  // If a "k" magnitude appears anywhere (e.g. a "120-150k" range), bare small
+  // numbers in the same string are thousands too — otherwise "120-150k" would
+  // parse to 120 instead of 120000 and wrongly trip the salary floor.
+  const hasThousands = /\d\s*[kK]/.test(cleaned);
   const numbers = matches
     .map((m) => {
       const parsed = m.match(/(\d+(?:\.\d+)?)\s*([kK])?/);
       if (!parsed) return null;
       const base = parseFloat(parsed[1]);
       if (!Number.isFinite(base)) return null;
-      return parsed[2] ? base * 1000 : base;
+      if (parsed[2]) return base * 1000;
+      return hasThousands && base < 1000 ? base * 1000 : base;
     })
     .filter((n): n is number => n != null && n > 0);
   if (numbers.length === 0) return null;

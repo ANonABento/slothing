@@ -53,7 +53,8 @@ export async function POST(request: NextRequest) {
     // Rank-on-push: score each opportunity against the user's profile so the
     // review queue can be ranked. Best-effort + zero LLM cost; never blocks an
     // import (see docs/agent-overnight-apply-spec.md, P1).
-    const terms = profileTerms(await getProfile(authResult.userId));
+    const profile = await getProfile(authResult.userId).catch(() => null);
+    const terms = profileTerms(profile);
     const scores: Record<string, number> = {};
 
     for (const opportunity of parseResult.opportunities) {

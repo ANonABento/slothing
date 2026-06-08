@@ -264,6 +264,24 @@ describe("opportunities from-extension route", () => {
     );
   });
 
+  it("still imports when the profile lookup throws (ranking is best-effort)", async () => {
+    mocks.getProfile.mockRejectedValueOnce(new Error("corrupt profile row"));
+    mocks.createJob.mockReturnValueOnce({
+      id: "job-7",
+      title: "Frontend Engineer",
+      company: "Acme",
+    });
+
+    const response = await POST(
+      jsonRequest({ title: "Frontend Engineer", company: "Acme" }),
+    );
+
+    expect(response.status).toBe(201);
+    const body = (await response.json()) as { scores: Record<string, number> };
+    // No profile signal → neutral score of 1, and the import is not blocked.
+    expect(body.scores["job-7"]).toBe(1);
+  });
+
   it("ranks a pushed job against the user's profile and persists the score", async () => {
     mocks.getProfile.mockResolvedValueOnce({
       id: "p1",
