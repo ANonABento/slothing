@@ -14,10 +14,21 @@ export interface SubmitReporter {
   ): Promise<unknown>;
 }
 
+export interface AuthorizationDecision {
+  authorized: boolean;
+  reasons: string[];
+}
+
 export interface RunSubmissionOptions {
   dryRun?: boolean;
   doc?: Document;
   host?: string;
+  /**
+   * Server-side guardrail check, consulted before an unattended (non-dry-run)
+   * submit. When it returns `authorized: false`, the runner skips entirely — no
+   * fill, no submit, no report.
+   */
+  authorize?: () => Promise<AuthorizationDecision>;
 }
 
 /**
@@ -31,6 +42,20 @@ export async function runDraftSubmission(
   reporter: SubmitReporter,
   options: RunSubmissionOptions = {},
 ): Promise<SubmitResult> {
+  // L4 guardrail: consult the server before any unattended submit. A blocked
+  // decision skips entirely — no fill, no submit, no report.
+  if (!options.dryRun && options.authorize) {
+    const decision = await options.authorize();
+    if (!decision.authorized) {
+      return {
+        ok: false,
+        skipped: true,
+        filled: 0,
+        error: `Blocked by guardrails: ${decision.reasons.join(", ")}`,
+      };
+    }
+  }
+
   const orchestrator = new SubmitOrchestrator(options.doc, options.host);
   const result = await orchestrator.submit(draft, { dryRun: options.dryRun });
 

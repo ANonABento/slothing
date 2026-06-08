@@ -59,4 +59,40 @@ describe("runDraftSubmission", () => {
       expect.objectContaining({ ok: false }),
     );
   });
+
+  it("skips entirely when guardrails block authorization", async () => {
+    const reporter = { reportSubmitResult: vi.fn().mockResolvedValue({}) };
+    const doc = leverPage();
+    let clicked = false;
+    doc
+      .querySelector("button")!
+      .addEventListener("click", () => (clicked = true));
+
+    const result = await runDraftSubmission(DRAFT, reporter, {
+      doc,
+      host: "jobs.lever.co",
+      authorize: async () => ({
+        authorized: false,
+        reasons: ["daily_cap_reached"],
+      }),
+    });
+
+    expect(result.skipped).toBe(true);
+    expect(result.error).toMatch(/daily_cap_reached/);
+    expect(clicked).toBe(false);
+    expect(reporter.reportSubmitResult).not.toHaveBeenCalled();
+    // The form was never even filled.
+    expect((doc.querySelector("#q1") as HTMLTextAreaElement).value).toBe("");
+  });
+
+  it("proceeds to submit when authorization passes", async () => {
+    const reporter = { reportSubmitResult: vi.fn().mockResolvedValue({}) };
+    const result = await runDraftSubmission(DRAFT, reporter, {
+      doc: leverPage(),
+      host: "jobs.lever.co",
+      authorize: async () => ({ authorized: true, reasons: [] }),
+    });
+    expect(result.ok).toBe(true);
+    expect(reporter.reportSubmitResult).toHaveBeenCalled();
+  });
 });

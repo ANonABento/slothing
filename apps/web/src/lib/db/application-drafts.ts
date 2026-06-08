@@ -244,6 +244,24 @@ export async function reviewDraft(
   return getDraft(id, userId);
 }
 
+/** Count submissions recorded at or after `sinceIso` — drives the daily cap. */
+export async function countSubmittedSince(
+  userId: string,
+  sinceIso: string,
+): Promise<number> {
+  await ensureApplicationDraftsSchema();
+  try {
+    const result = await getClient().execute({
+      sql: "SELECT COUNT(*) AS n FROM application_drafts WHERE user_id = ? AND status = 'submitted' AND submitted_at >= ?",
+      args: [userId, sinceIso],
+    });
+    const row = result.rows[0] as unknown as { n: number } | undefined;
+    return Number(row?.n ?? 0);
+  } catch {
+    return 0;
+  }
+}
+
 export interface SubmissionRecord {
   ok: boolean;
   atsRef?: string;

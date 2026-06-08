@@ -28,6 +28,8 @@ export interface SubmitResult {
   filled: number;
   /** True when fill ran but submit was intentionally NOT clicked. */
   dryRun?: boolean;
+  /** True when guardrails blocked the submission before any fill. */
+  skipped?: boolean;
 }
 
 /** Find the first matching submit element from a list of selectors + label text. */

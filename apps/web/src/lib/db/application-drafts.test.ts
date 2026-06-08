@@ -13,6 +13,7 @@ import {
   reviewDraft,
   listDrafts,
   recordSubmission,
+  countSubmittedSince,
 } from "./application-drafts";
 
 function result(rows: unknown[] = [], rowsAffected = 0) {
@@ -187,5 +188,22 @@ describe("application-drafts DB", () => {
       return sql.includes("UPDATE application_drafts SET status = ?");
     });
     expect(update).toBeFalsy();
+  });
+
+  it("counts submissions since a timestamp (daily cap)", async () => {
+    dbMocks.execute.mockImplementation(
+      (statement: string | { sql: string }) => {
+        const sql = typeof statement === "string" ? statement : statement.sql;
+        if (sql.startsWith("PRAGMA table_info")) {
+          return Promise.resolve(result(ALL_COLUMNS));
+        }
+        if (sql.includes("COUNT(*)")) {
+          return Promise.resolve(result([{ n: 3 }]));
+        }
+        return Promise.resolve(result([], 1));
+      },
+    );
+    const n = await countSubmittedSince("user-1", "2026-06-08T00:00:00.000Z");
+    expect(n).toBe(3);
   });
 });

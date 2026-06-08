@@ -419,6 +419,20 @@ export class SlothingAPIClient {
     return response.drafts;
   }
 
+  /** Ask the server whether an unattended submission is authorized right now. */
+  async checkSubmitAuthorization(draftId: string): Promise<{
+    authorized: boolean;
+    reasons: string[];
+    submittedToday: number;
+    dailyCap: number;
+  }> {
+    return this.authenticatedFetch(
+      `/api/extension/drafts/${draftId}/submit-authorization`,
+      {},
+      "safe",
+    );
+  }
+
   /** Report the outcome of a submission attempt back to Slothing. */
   async reportSubmitResult(
     draftId: string,
