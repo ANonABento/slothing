@@ -21,19 +21,16 @@ test.describe("Pricing page", () => {
   });
 
   test("shows all four pricing tier cards", async ({ page }) => {
-    await expect(page.getByRole("article")).toHaveCount(4);
-    await expect(
-      page.getByRole("heading", { name: "Self-host", level: 2 }),
-    ).toBeVisible();
-    await expect(
-      page.getByRole("heading", { name: "Hosted Free", level: 2 }),
-    ).toBeVisible();
-    await expect(
-      page.getByRole("heading", { name: "Weekly", level: 2 }),
-    ).toBeVisible();
-    await expect(
-      page.getByRole("heading", { name: "Monthly", level: 2 }),
-    ).toBeVisible();
+    // Cards render as PriceCard <div>s with the tier name as an <h3> (under the
+    // section's h2 — correct heading hierarchy), so assert the four tier-name
+    // headings at level 3 rather than counting `article` landmarks.
+    for (const name of ["Self-host", "Hosted Free", "Weekly", "Monthly"]) {
+      // exact: the tier names are substrings of FAQ question headings
+      // ("Self-host" ⊂ "Can I really self-host?", "Weekly" ⊂ "Why weekly billing?").
+      await expect(
+        page.getByRole("heading", { name, level: 3, exact: true }),
+      ).toBeVisible();
+    }
   });
 
   test("Hosted Free CTA links to sign-in", async ({ page }) => {
@@ -82,12 +79,10 @@ test.describe("Pricing page", () => {
   });
 
   test("FAQ section renders plan questions", async ({ page }) => {
-    await expect(
-      page.getByRole("heading", { name: /Plan questions/i }),
-    ).toBeVisible();
-    await expect(
-      page.getByText(/Why weekly billing/i),
-    ).toBeVisible();
+    // "Plan questions" is the FaqList eyebrow caption (the heading is the
+    // headline); each question renders as a visible <summary> <h3>.
+    await expect(page.getByText("Plan questions")).toBeVisible();
+    await expect(page.getByText(/Why weekly billing/i)).toBeVisible();
     await expect(page.getByText(/What's BYOK/i)).toBeVisible();
   });
 
