@@ -16,6 +16,14 @@ export interface TrackActivationEventInput {
   metadata?: Record<string, unknown> | null;
 }
 
+export interface RecordProductEventInput {
+  /** Free-form event name. Activation funnel events use the typed wrapper. */
+  event: string;
+  userId?: string | null;
+  source?: string | null;
+  metadata?: Record<string, unknown> | null;
+}
+
 export interface ActivationEvent {
   id: string;
   userId: string | null;
@@ -44,8 +52,13 @@ export async function ensureProductAnalyticsSchema(): Promise<void> {
   schemaReady = true;
 }
 
-export async function trackActivationEvent(
-  input: TrackActivationEventInput,
+/**
+ * Low-level insert for an arbitrary product event. The `product_events.event`
+ * column is unconstrained at the DB level, so experiment exposure/outcome
+ * events share this table with the activation funnel.
+ */
+export async function recordProductEvent(
+  input: RecordProductEventInput,
 ): Promise<ActivationEvent> {
   await ensureProductAnalyticsSchema();
   const id = generateId();
@@ -70,11 +83,17 @@ export async function trackActivationEvent(
   return {
     id,
     userId: input.userId ?? null,
-    event: input.event,
+    event: input.event as ActivationEventName,
     source: input.source ?? null,
     metadata: input.metadata ?? null,
     createdAt,
   };
+}
+
+export function trackActivationEvent(
+  input: TrackActivationEventInput,
+): Promise<ActivationEvent> {
+  return recordProductEvent(input);
 }
 
 export async function getActivationFunnelCounts(

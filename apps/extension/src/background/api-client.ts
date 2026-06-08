@@ -2,6 +2,7 @@
 
 import type {
   AnswerBankMatch,
+  BestFitResume,
   ChatJobContext,
   ExtensionProfile,
   ExtensionResumeSummary,
@@ -315,6 +316,37 @@ export class SlothingAPIClient {
     const response = await this.authenticatedFetch<{
       resumes: ExtensionResumeSummary[];
     }>("/api/extension/resumes", {}, "safe");
+    return response.resumes ?? [];
+  }
+
+  /** Experiment #1 — resolve the user's variant; defaults to control on error. */
+  async getExperiment(name: string): Promise<string> {
+    const response = await this.authenticatedFetch<{ variant?: string }>(
+      `/api/experiments/${encodeURIComponent(name)}`,
+      {},
+      "safe",
+    );
+    return response.variant ?? "control";
+  }
+
+  /** Experiment #1 — rank saved resumes by fit against the current job. */
+  async bestFit(job: ScrapedJob): Promise<BestFitResume[]> {
+    const response = await this.authenticatedFetch<{
+      resumes?: BestFitResume[];
+    }>(
+      "/api/extension/best-fit",
+      {
+        method: "POST",
+        body: JSON.stringify({
+          title: job.title,
+          company: job.company,
+          description: job.description,
+          requirements: job.requirements,
+          keywords: job.keywords ?? [],
+        }),
+      },
+      "safe",
+    );
     return response.resumes ?? [];
   }
 

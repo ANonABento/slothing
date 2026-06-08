@@ -8,6 +8,7 @@ import React, {
 import type {
   SidebarLayout,
   SidebarPosition,
+  BestFitResume,
   ExtensionResumeSummary,
   SimilarAnswer,
   ScrapedJob,
@@ -23,10 +24,18 @@ export interface JobPageSidebarProps {
   detectedUploadCount: number;
   latestResume: ExtensionResumeSummary | null;
   score: ResumeScore | null;
+  /**
+   * Experiment #1 — variant for the profile picker ("treatment" shows the
+   * resume selector + best-fit badge). Undefined/"control" hides it.
+   */
+  profilePickerVariant?: string;
+  /** Experiment #1 — resumes ranked best-fit-first against this job. */
+  bestFitResumes?: BestFitResume[];
   layout: SidebarLayout;
   onLayoutChange: (updates: Partial<SidebarLayout>) => void;
   onDismiss: () => Promise<void> | void;
-  onTailor: () => Promise<void>;
+  /** `baseResumeId` (from the picker) seeds the tailor from that resume. */
+  onTailor: (baseResumeId?: string) => Promise<void>;
   onCoverLetter: () => Promise<void>;
   onSave: () => Promise<void>;
   onAutoFill: (options?: { overwriteExisting?: boolean }) => Promise<unknown>;
@@ -86,7 +95,14 @@ export function JobPageSidebar(props: JobPageSidebarProps) {
   const [answers, setAnswers] = useState<SimilarAnswer[]>([]);
   const [searching, setSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
+  const [pickedResumeId, setPickedResumeId] = useState<string | null>(null);
   const dragState = useRef<DragState | null>(null);
+
+  const bestFitResumes = props.bestFitResumes ?? [];
+  const showResumePicker =
+    props.profilePickerVariant === "treatment" && bestFitResumes.length > 0;
+  // Default to the best-fit resume (first) until the user picks another.
+  const selectedResumeId = pickedResumeId ?? bestFitResumes[0]?.id ?? null;
 
   const scoreValue = props.score?.overall ?? null;
   const jobMeta = useMemo(
@@ -351,6 +367,36 @@ export function JobPageSidebar(props: JobPageSidebarProps) {
             </div>
           </section>
 
+          {showResumePicker && (
+            <section className="resume-picker" aria-label="Base resume">
+              <label
+                className="resume-picker-label"
+                htmlFor="slothing-resume-picker"
+              >
+                Tailor from
+              </label>
+              <select
+                id="slothing-resume-picker"
+                className="resume-picker-select"
+                value={selectedResumeId ?? ""}
+                onChange={(event) => setPickedResumeId(event.target.value)}
+                disabled={activeAction !== null}
+              >
+                {bestFitResumes.map((resume, index) => (
+                  <option key={resume.id} value={resume.id}>
+                    {index === 0 ? "★ " : ""}
+                    {resume.name} — {resume.score}% fit
+                  </option>
+                ))}
+              </select>
+              {selectedResumeId === bestFitResumes[0]?.id && (
+                <p className="resume-picker-note">
+                  Best fit for this job ({bestFitResumes[0]?.score}% match).
+                </p>
+              )}
+            </section>
+          )}
+
           <section className="actions" aria-label="Job actions">
             <ActionButton
               label="Tailor resume"
@@ -363,7 +409,11 @@ export function JobPageSidebar(props: JobPageSidebarProps) {
               }
               disabled={activeAction !== null}
               primary
-              onClick={() => runAction("tailor", props.onTailor)}
+              onClick={() =>
+                runAction("tailor", () =>
+                  props.onTailor(selectedResumeId ?? undefined),
+                )
+              }
             />
             <ActionButton
               label="Cover letter"

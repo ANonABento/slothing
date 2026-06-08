@@ -268,6 +268,36 @@ input:focus-visible {
   line-height: 1.4;
 }
 
+.resume-picker {
+  display: grid;
+  gap: 4px;
+  padding: 8px 8px 0;
+}
+
+.resume-picker-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--slothing-ink-3);
+}
+
+.resume-picker-select {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid var(--slothing-rule);
+  border-radius: 8px;
+  background: var(--slothing-paper);
+  color: var(--slothing-ink);
+  font: inherit;
+}
+
+.resume-picker-note {
+  margin: 0;
+  font-size: 11px;
+  color: var(--slothing-brand-dark);
+}
+
 .actions {
   display: grid;
   gap: 6px;

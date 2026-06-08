@@ -95,6 +95,12 @@ async function handleMessage(
     case "LIST_RESUMES":
       return handleListResumes();
 
+    case "GET_EXPERIMENT":
+      return handleGetExperiment(message.payload as { name: string });
+
+    case "GET_BEST_FIT":
+      return handleBestFit(message.payload as ScrapedJob);
+
     case "SAVE_ANSWER":
       return handleSaveAnswer(
         message.payload as {
@@ -221,6 +227,28 @@ async function handleListResumes(): Promise<ExtensionResponse> {
   try {
     const client = await getAPIClient();
     const resumes = await client.listResumes();
+    return { success: true, data: { resumes } };
+  } catch (error) {
+    return { success: false, error: (error as Error).message };
+  }
+}
+
+async function handleGetExperiment(payload: {
+  name: string;
+}): Promise<ExtensionResponse> {
+  try {
+    const client = await getAPIClient();
+    const variant = await client.getExperiment(payload.name);
+    return { success: true, data: { variant } };
+  } catch (error) {
+    return { success: false, error: (error as Error).message };
+  }
+}
+
+async function handleBestFit(job: ScrapedJob): Promise<ExtensionResponse> {
+  try {
+    const client = await getAPIClient();
+    const resumes = await client.bestFit(job);
     return { success: true, data: { resumes } };
   } catch (error) {
     return { success: false, error: (error as Error).message };

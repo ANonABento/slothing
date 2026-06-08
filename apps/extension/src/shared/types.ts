@@ -225,6 +225,9 @@ export type MessageType =
   | "TAILOR_FROM_PAGE"
   | "GENERATE_COVER_LETTER_FROM_PAGE"
   | "LIST_RESUMES"
+  // Experiment #1 — assignment fetch + best-fit resume ranking for the picker.
+  | "GET_EXPERIMENT"
+  | "GET_BEST_FIT"
   | "SAVE_ANSWER"
   | "SEARCH_ANSWERS"
   | "MATCH_ANSWER_BANK"
@@ -362,6 +365,17 @@ export interface ExtensionResumeSummary {
   name: string;
   targetRole: string;
   updatedAt: string;
+}
+
+/**
+ * One ranked candidate from POST /api/extension/best-fit — a saved resume
+ * scored against the current job. Drives experiment #1's picker + best-fit
+ * badge. The list is returned best-fit-first.
+ */
+export interface BestFitResume {
+  id: string;
+  name: string;
+  score: number;
 }
 
 export interface ExtensionMessage<T = unknown> {

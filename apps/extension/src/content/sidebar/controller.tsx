@@ -1,6 +1,7 @@
 import React from "react";
 import { createRoot, type Root } from "react-dom/client";
 import type {
+  BestFitResume,
   ExtensionProfile,
   ExtensionResumeSummary,
   ExtensionSettings,
@@ -32,7 +33,10 @@ export interface SidebarControllerUpdate {
   latestResume: ExtensionResumeSummary | null;
   profile: ExtensionProfile | null;
   settings?: ExtensionSettings | null;
-  onTailor: () => Promise<void>;
+  /** Experiment #1 — profile-picker variant + best-fit ranking. */
+  profilePickerVariant?: string;
+  bestFitResumes?: BestFitResume[];
+  onTailor: (baseResumeId?: string) => Promise<void>;
   onCoverLetter: () => Promise<void>;
   onSave: () => Promise<void>;
   onAutoFill: (options?: { overwriteExisting?: boolean }) => Promise<unknown>;
@@ -131,6 +135,8 @@ export class JobPageSidebarController {
         detectedUploadCount={this.state.detectedUploadCount}
         latestResume={this.state.latestResume}
         score={score}
+        profilePickerVariant={this.state.profilePickerVariant}
+        bestFitResumes={this.state.bestFitResumes}
         layout={this.layout}
         onLayoutChange={(updates) => {
           void this.updateLayout(updates);

@@ -18,6 +18,7 @@ import { WorkdayOrchestrator } from "./scrapers/workday-orchestrator";
 import type {
   AnswerBankMatch,
   ChatJobContext,
+  BestFitResume,
   ChatPortMessage,
   ChatStreamStartPayload,
   ExtensionProfile,
@@ -755,16 +756,20 @@ async function getExtensionSettings(): Promise<ExtensionSettings> {
 async function updateSidebar() {
   const profile = await loadProfileForSidebar();
   const latestResume = await loadLatestResumeForSidebar();
+  const { variant: profilePickerVariant, bestFitResumes } =
+    await loadProfilePickerData();
   await sidebarController.update({
     scrapedJob,
     detectedFieldCount: detectedFields.length,
     detectedUploadCount: detectedUploadFields.length,
     latestResume,
     profile,
-    onTailor: async () => {
+    profilePickerVariant,
+    bestFitResumes,
+    onTailor: async (baseResumeId?: string) => {
       if (!scrapedJob) throw new Error("No job detected");
       const response = await sendMessage<{ url: string }>(
-        Messages.tailorFromPage(scrapedJob),
+        Messages.tailorFromPage(scrapedJob, baseResumeId),
       );
       if (!response.success || !response.data?.url) {
         throw new Error(response.error || "Failed to tailor resume");
@@ -867,6 +872,35 @@ async function loadLatestResumeForSidebar(): Promise<ExtensionResumeSummary | nu
     return response.data?.[0] ?? null;
   } catch {
     return null;
+  }
+}
+
+/**
+ * Experiment #1 — resolve the profile-picker variant and, only for the
+ * treatment, fetch the best-fit resume ranking for the current job. Fails
+ * soft to control so the sidebar always renders.
+ */
+async function loadProfilePickerData(): Promise<{
+  variant: string;
+  bestFitResumes: BestFitResume[];
+}> {
+  if (!scrapedJob) return { variant: "control", bestFitResumes: [] };
+  try {
+    const variantResponse = await sendMessage<{ variant: string }>(
+      Messages.getExperiment("profilePicker"),
+    );
+    const variant =
+      (variantResponse.success && variantResponse.data?.variant) || "control";
+    if (variant !== "treatment") return { variant, bestFitResumes: [] };
+
+    const bestFitResponse = await sendMessage<{ resumes: BestFitResume[] }>(
+      Messages.bestFit(scrapedJob),
+    );
+    const bestFitResumes =
+      (bestFitResponse.success && bestFitResponse.data?.resumes) || [];
+    return { variant, bestFitResumes };
+  } catch {
+    return { variant: "control", bestFitResumes: [] };
   }
 }
 

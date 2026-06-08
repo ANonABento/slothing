@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import type {
+  BestFitResume,
   DocumentUploadKind,
   ExtensionProfile,
   ExtensionResumeSummary,
@@ -116,6 +117,11 @@ export default function App() {
     useState<PageSurfaceContext | null>(null);
   const [latestResume, setLatestResume] =
     useState<ExtensionResumeSummary | null>(null);
+  // Experiment #1 — profile-picker variant + best-fit ranking for the popup card.
+  const [profilePickerVariant, setProfilePickerVariant] = useState<
+    string | null
+  >(null);
+  const [bestFitResumes, setBestFitResumes] = useState<BestFitResume[]>([]);
   const [activeTabId, setActiveTabId] = useState<number | null>(null);
   const [activeTabUrl, setActiveTabUrl] = useState<string | null>(null);
   const [pageProbeState, setPageProbeState] =
@@ -239,6 +245,12 @@ export default function App() {
             void loadLatestResume();
           } else {
             setLatestResume(null);
+          }
+          if (context.page.job) {
+            void loadBestFit(context.page.job);
+          } else {
+            setProfilePickerVariant(null);
+            setBestFitResumes([]);
           }
           setPageProbeState("ready");
           if (
@@ -408,6 +420,32 @@ export default function App() {
     );
     if (response.success) {
       setLatestResume(response.data?.[0] ?? null);
+    }
+  }
+
+  // Experiment #1 — resolve the variant and, for the treatment, rank the
+  // user's resumes against the detected job. Fails soft to control.
+  async function loadBestFit(job: ScrapedJob) {
+    try {
+      const variantResponse = await sendMessage<{ variant: string }>(
+        Messages.getExperiment("profilePicker"),
+      );
+      const variant =
+        (variantResponse.success && variantResponse.data?.variant) || "control";
+      setProfilePickerVariant(variant);
+      if (variant !== "treatment") {
+        setBestFitResumes([]);
+        return;
+      }
+      const bestFitResponse = await sendMessage<{ resumes: BestFitResume[] }>(
+        Messages.bestFit(job),
+      );
+      setBestFitResumes(
+        (bestFitResponse.success && bestFitResponse.data?.resumes) || [],
+      );
+    } catch {
+      setProfilePickerVariant("control");
+      setBestFitResumes([]);
     }
   }
 
@@ -736,6 +774,20 @@ export default function App() {
                 </button>
               </div>
             )}
+            {detectedJob &&
+              profilePickerVariant === "treatment" &&
+              bestFitResumes.length > 0 && (
+                <div className="page-summary best-fit">
+                  <span className="status-eyebrow">Best-fit resume</span>
+                  <span className="clip" title={bestFitResumes[0].name}>
+                    {bestFitResumes[0].name}
+                  </span>
+                  <span className="card-sub clip">
+                    {bestFitResumes[0].score}% match · {bestFitResumes.length}{" "}
+                    ranked. Pick a base in job tools.
+                  </span>
+                </div>
+              )}
             {detectedJob && (
               <button className="btn primary block" onClick={handleShowPanel}>
                 Open job tools

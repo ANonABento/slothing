@@ -2,6 +2,7 @@
 
 import type {
   AnswerBankMatch,
+  BestFitResume,
   ExtensionMessage,
   ExtensionResponse,
   ExtensionProfile,
@@ -76,6 +77,16 @@ export const Messages = {
   }),
   /** #34 — fetch the user's recently-saved tailored resumes for the picker. */
   listResumes: (): ExtensionMessage => ({ type: "LIST_RESUMES" }),
+  /** Experiment #1 — resolve the user's variant for a registered experiment. */
+  getExperiment: (name: string): ExtensionMessage<{ name: string }> => ({
+    type: "GET_EXPERIMENT",
+    payload: { name },
+  }),
+  /** Experiment #1 — rank the user's saved resumes by fit against this job. */
+  bestFit: (job: ScrapedJob): ExtensionMessage<ScrapedJob> => ({
+    type: "GET_BEST_FIT",
+    payload: job,
+  }),
 
   // Learning messages
   saveAnswer: (data: {
@@ -268,6 +279,14 @@ export interface SearchAnswersResponse extends ExtensionResponse<
 
 export interface ListResumesResponse extends ExtensionResponse<{
   resumes: ExtensionResumeSummary[];
+}> {}
+
+export interface GetExperimentResponse extends ExtensionResponse<{
+  variant: string;
+}> {}
+
+export interface BestFitResponse extends ExtensionResponse<{
+  resumes: BestFitResume[];
 }> {}
 
 export interface MatchAnswerBankResponse extends ExtensionResponse<
