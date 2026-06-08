@@ -329,7 +329,7 @@ Validation:
 
 1. **Token lifetime / rotation.** Extension tokens have a 30-day TTL via `EXTENSION_TOKEN_TTL_RUNTIME_MS`. For headless MCP usage, do we want a longer "service" token type or just expect monthly re-mint? Suggest reusing the existing TTL for v1 and adding a `slothing-mcp refresh` helper if it gets annoying.
 2. **Per-tool rate limiting.** Existing routes go through `src/lib/rate-limit.ts`. For agent loops that hit `search_answer_bank` rapidly, the per-user limit may bite — confirm thresholds work for agentic flows.
-3. **MCP transports.** v1 = stdio (shipped). SSE/HTTP transport is straightforward to add but not needed until someone wants to host the server remotely.
+3. **MCP transports.** ~~v1 = stdio (shipped). SSE/HTTP transport is straightforward to add but not needed until someone wants to host the server remotely.~~ **Resolved:** a stateless Streamable HTTP transport ships alongside stdio — `slothing-mcp --http [--port N]` (or `SLOTHING_MCP_TRANSPORT=http`). See `src/http.ts` + `tests/http.test.ts`. stdio remains the default.
 
 ## Done definition (v1, ✅)
 

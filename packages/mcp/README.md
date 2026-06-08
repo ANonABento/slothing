@@ -18,6 +18,22 @@ SLOTHING_TOKEN=... SLOTHING_API_URL=http://localhost:3000 pnpm dlx @slothing/mcp
 
 Or wire it into an MCP host config (see below) and let the host launch it.
 
+### Remote agents (HTTP transport)
+
+stdio is the default (the host launches the server as a child process). For a
+**non-colocated** agent — your own stack running off-box — start the Streamable
+HTTP transport instead:
+
+```bash
+SLOTHING_TOKEN=... SLOTHING_API_URL=http://localhost:3000 \
+  pnpm dlx @slothing/mcp --http --port 3399
+# MCP endpoint: http://<host>:3399/mcp · health: http://<host>:3399/health
+```
+
+It runs **stateless** (a fresh server per request) so it scales without session
+affinity. Point any Streamable-HTTP MCP client at `…/mcp`. `--transport http`
+and `SLOTHING_MCP_TRANSPORT=http` / `SLOTHING_MCP_PORT` are equivalent.
+
 ## Tools
 
 | Tool                     | What it does                                                                                      | Underlying route                                 |
