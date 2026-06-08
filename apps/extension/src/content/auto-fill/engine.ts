@@ -22,6 +22,8 @@ export interface FillResult {
   cold: number;
   /** Count of fields filled with a yellow-band marker. */
   yellow: number;
+  /** Count of custom-question fields filled from the saved answer bank. */
+  fromAnswerBank: number;
   details: Array<{
     fieldType: string;
     filled: boolean;
@@ -39,6 +41,27 @@ export interface FillConflict {
   suggestedValue: string;
   label?: string;
 }
+
+/** A saved answer-bank match for a custom application question. */
+export interface CustomAnswerMatch {
+  answer: string;
+  /** Similarity to the asked question, 0–1. */
+  similarity: number;
+}
+
+/**
+ * Resolves a free-text application question against the user's saved answer
+ * bank. Injected (rather than calling chrome messaging directly) so the engine
+ * stays decoupled + unit-testable.
+ */
+export type ResolveCustomAnswer = (
+  question: string,
+) => Promise<CustomAnswerMatch | null>;
+
+/** Auto-fill a custom answer when the saved match is at least this similar. */
+const ANSWER_BANK_FILL_THRESHOLD = 0.82;
+/** Below the fill bar but worth offering as a cold-badge pick. */
+const ANSWER_BANK_SUGGEST_THRESHOLD = 0.6;
 
 /**
  * Optional per-field callback fired when a field has been filled successfully.
@@ -61,6 +84,13 @@ export interface FillFormOptions {
   onFilled?: OnFilledCallback;
   /** When true, non-empty fields may be replaced by Slothing suggestions. */
   overwriteExisting?: boolean;
+  /**
+   * Looks up free-text custom questions in the saved answer bank. When the
+   * mapper has no profile value for a `customQuestion` field, a high-similarity
+   * match is filled (with a review marker); a medium match is offered as a
+   * cold-badge pick; nothing is auto-submitted.
+   */
+  resolveCustomAnswer?: ResolveCustomAnswer;
 }
 
 export class AutoFillEngine {
@@ -84,6 +114,7 @@ export class AutoFillEngine {
       conflicts: 0,
       cold: 0,
       yellow: 0,
+      fromAnswerBank: 0,
       details: [],
     };
 
@@ -91,10 +122,49 @@ export class AutoFillEngine {
 
     for (const field of fields) {
       try {
-        const value = this.mapper.mapFieldToValue(field);
+        let value = this.mapper.mapFieldToValue(field);
+        let fromAnswerBank = false;
+
+        // Custom questions have no profile mapping — fall back to the saved
+        // answer bank. Only for empty fields, so we never clobber a real answer.
+        if (
+          !value &&
+          field.fieldType === "customQuestion" &&
+          field.label &&
+          options.resolveCustomAnswer &&
+          !this.hasMeaningfulExistingValue(field.element)
+        ) {
+          let match: CustomAnswerMatch | null = null;
+          try {
+            match = await options.resolveCustomAnswer(field.label);
+          } catch (lookupErr) {
+            console.error("[Slothing] answer-bank lookup failed:", lookupErr);
+          }
+          if (match && match.similarity >= ANSWER_BANK_FILL_THRESHOLD) {
+            value = match.answer;
+            fromAnswerBank = true;
+          } else if (
+            match &&
+            match.similarity >= ANSWER_BANK_SUGGEST_THRESHOLD
+          ) {
+            // Medium confidence: offer it as a pick instead of auto-filling.
+            this.attachColdBadge(field, match.answer);
+            result.cold++;
+            result.skipped++;
+            result.details.push({
+              fieldType: field.fieldType,
+              filled: false,
+              zone: "cold",
+            });
+            continue;
+          }
+        }
+
         const zone = classifyConfidence(field.confidence);
 
-        if (zone === "cold") {
+        // Answer-bank fills carry their own confidence (the match similarity),
+        // so they bypass the field-type cold zone.
+        if (!fromAnswerBank && zone === "cold") {
           // Cold zone: don't fill. Optionally add a "?" badge so the user can
           // pick from candidates. Fields below the minimumConfidence floor get
           // no badge either (existing semantics: settings.minimumConfidence is
@@ -164,13 +234,16 @@ export class AutoFillEngine {
 
         if (filled) {
           result.filled++;
+          if (fromAnswerBank) result.fromAnswerBank++;
           result.details.push({
             fieldType: field.fieldType,
             filled: true,
             overwritten: options.overwriteExisting && wouldOverwriteExisting,
             zone,
           });
-          if (zone === "yellow") {
+          // Answer-bank fills always get the review marker so the user
+          // eyeballs a reused answer before it's submitted.
+          if (zone === "yellow" || fromAnswerBank) {
             applyYellowMarker(field.element);
             result.yellow++;
           }

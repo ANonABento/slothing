@@ -25,6 +25,96 @@ function engineFor(value: string) {
   );
 }
 
+function customQuestionEngine() {
+  return new AutoFillEngine(
+    {} as never,
+    { mapFieldToValue: () => null } as never,
+  );
+}
+
+function customQuestionField(element: DetectedField["element"]): DetectedField {
+  return {
+    element,
+    fieldType: "customQuestion",
+    confidence: 0.2,
+    label: "Why do you want to work here?",
+  };
+}
+
+describe("AutoFillEngine custom-question answer bank", () => {
+  it("fills an empty custom question from a high-similarity match", async () => {
+    document.body.innerHTML = `<textarea id="q"></textarea>`;
+    const ta = document.querySelector<HTMLTextAreaElement>("#q")!;
+    const resolveCustomAnswer = vi.fn().mockResolvedValue({
+      answer: "Your mission resonates with me.",
+      similarity: 0.9,
+    });
+
+    const result = await customQuestionEngine().fillForm(
+      [customQuestionField(ta)],
+      { resolveCustomAnswer },
+    );
+
+    expect(resolveCustomAnswer).toHaveBeenCalledWith(
+      "Why do you want to work here?",
+    );
+    expect(ta.value).toBe("Your mission resonates with me.");
+    expect(result.filled).toBe(1);
+    expect(result.fromAnswerBank).toBe(1);
+    expect(result.yellow).toBe(1); // review marker applied
+  });
+
+  it("offers a medium-similarity match as a cold pick instead of filling", async () => {
+    document.body.innerHTML = `<div><textarea id="q"></textarea></div>`;
+    const ta = document.querySelector<HTMLTextAreaElement>("#q")!;
+    const resolveCustomAnswer = vi
+      .fn()
+      .mockResolvedValue({ answer: "Maybe relevant.", similarity: 0.65 });
+
+    const result = await customQuestionEngine().fillForm(
+      [customQuestionField(ta)],
+      { resolveCustomAnswer },
+    );
+
+    expect(ta.value).toBe("");
+    expect(result.filled).toBe(0);
+    expect(result.cold).toBe(1);
+  });
+
+  it("skips when there is no usable match", async () => {
+    document.body.innerHTML = `<textarea id="q"></textarea>`;
+    const ta = document.querySelector<HTMLTextAreaElement>("#q")!;
+    const resolveCustomAnswer = vi.fn().mockResolvedValue(null);
+
+    const result = await customQuestionEngine().fillForm(
+      [customQuestionField(ta)],
+      { resolveCustomAnswer },
+    );
+
+    expect(ta.value).toBe("");
+    expect(result.filled).toBe(0);
+    expect(result.fromAnswerBank).toBe(0);
+  });
+
+  it("never overwrites an answer the user already typed", async () => {
+    document.body.innerHTML = `<textarea id="q">My own answer</textarea>`;
+    const ta = document.querySelector<HTMLTextAreaElement>("#q")!;
+    const resolveCustomAnswer = vi.fn().mockResolvedValue({
+      answer: "Bank answer",
+      similarity: 0.95,
+    });
+
+    const result = await customQuestionEngine().fillForm(
+      [customQuestionField(ta)],
+      { resolveCustomAnswer },
+    );
+
+    expect(resolveCustomAnswer).not.toHaveBeenCalled();
+    expect(ta.value).toBe("My own answer");
+    expect(result.filled).toBe(0);
+  });
+});
+
 describe("AutoFillEngine overwrite safety", () => {
   it("fills empty text inputs", async () => {
     document.body.innerHTML = `<input id="firstName" />`;

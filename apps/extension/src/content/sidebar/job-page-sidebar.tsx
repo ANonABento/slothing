@@ -68,6 +68,7 @@ type AutoFillActionResult = {
   errors?: number;
   conflicts?: number;
   alreadyFilled?: number;
+  fromAnswerBank?: number;
 };
 type DragState = {
   pointerId: number;
@@ -211,9 +212,12 @@ export function JobPageSidebar(props: JobPageSidebarProps) {
           conflicts > 0
             ? `. Skipped ${conflicts} field${conflicts === 1 ? "" : "s"} with existing values.`
             : "";
+        const fromBank = fillResult.fromAnswerBank ?? 0;
+        const bankCopy =
+          fromBank > 0 ? ` (${fromBank} from your answer bank)` : "";
         setActionFeedback({
           action,
-          label: `Filled ${fillResult.filled ?? 0}${conflictCopy}`,
+          label: `Filled ${fillResult.filled ?? 0}${bankCopy}${conflictCopy}`,
         });
         return;
       }
