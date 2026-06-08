@@ -221,6 +221,9 @@ export const jobs = sqliteTable(
     appliedAt: text("applied_at"),
     deadline: text("deadline"),
     notes: text("notes"),
+    // Rank-on-push: [0,1] match score computed when an agent pushes a job.
+    // Nullable + additive — see ./job-match-score.ts.
+    matchScore: real("match_score"),
     createdAt: text("created_at").default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => [
@@ -488,6 +491,53 @@ export const llmSettings = sqliteTable("llm_settings", {
   createdAt: text("created_at").default(sql`CURRENT_TIMESTAMP`),
   updatedAt: text("updated_at").default(sql`CURRENT_TIMESTAMP`),
 });
+
+// Per-user agent autonomy policy (docs/agent-overnight-apply-spec.md, P1).
+// Self-bootstrapped at runtime by `./agent-settings.ts` (CREATE TABLE IF NOT
+// EXISTS + additive ALTERs); this drizzle definition is for type parity.
+export const agentSettings = sqliteTable(
+  "agent_settings",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id").notNull().default(DEFAULT_USER_ID).unique(),
+    autonomy: text("autonomy").notNull().default("source"),
+    matchThreshold: real("match_threshold").notNull().default(0.15),
+    salaryFloor: integer("salary_floor"),
+    companyBlocklistJson: text("company_blocklist_json")
+      .notNull()
+      .default("[]"),
+    dailySubmitCap: integer("daily_submit_cap").notNull().default(10),
+    dryRun: integer("dry_run", { mode: "boolean" }).notNull().default(true),
+    scheduleCron: text("schedule_cron"),
+    createdAt: text("created_at"),
+    updatedAt: text("updated_at"),
+  },
+  (table) => [index("idx_agent_settings_user_id").on(table.userId)],
+);
+
+// Drafted applications awaiting review (docs/agent-overnight-apply-spec.md, P2).
+// Self-bootstrapped at runtime by `./application-drafts.ts`; this is for type
+// parity. One open (pending_review/approved) draft per (user, job).
+export const applicationDrafts = sqliteTable(
+  "application_drafts",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id").notNull().default(DEFAULT_USER_ID),
+    jobId: text("job_id").notNull(),
+    questionsJson: text("questions_json").notNull().default("[]"),
+    answersJson: text("answers_json").notNull().default("[]"),
+    status: text("status").notNull().default("pending_review"),
+    authoredBy: text("authored_by"),
+    createdAt: text("created_at"),
+    reviewedAt: text("reviewed_at"),
+    submittedAt: text("submitted_at"),
+    submitResultJson: text("submit_result_json"),
+  },
+  (table) => [
+    index("idx_application_drafts_user_id").on(table.userId),
+    index("idx_application_drafts_user_status").on(table.userId, table.status),
+  ],
+);
 
 // Bootstrap DDL for stripeCustomers + subscriptions co-located in
 // `./bootstrap-sql.ts` (BILLING_BOOTSTRAP_SQL). Edit BOTH on column changes.
@@ -1211,6 +1261,12 @@ export type NewCoverLetter = typeof coverLetters.$inferInsert;
 
 export type LlmSettings = typeof llmSettings.$inferSelect;
 export type NewLlmSettings = typeof llmSettings.$inferInsert;
+
+export type AgentSettings = typeof agentSettings.$inferSelect;
+export type NewAgentSettings = typeof agentSettings.$inferInsert;
+
+export type ApplicationDraftRow = typeof applicationDrafts.$inferSelect;
+export type NewApplicationDraftRow = typeof applicationDrafts.$inferInsert;
 
 export type EmailDraft = typeof emailDrafts.$inferSelect;
 export type NewEmailDraft = typeof emailDrafts.$inferInsert;

@@ -8,6 +8,8 @@ const mocks = vi.hoisted(() => ({
   getJobByUrl: vi.fn(),
   updateJobStatus: vi.fn(),
   createNotification: vi.fn(),
+  getProfile: vi.fn(),
+  setJobMatchScore: vi.fn(),
 }));
 
 vi.mock("@/lib/extension-auth", () => ({
@@ -23,6 +25,14 @@ vi.mock("@/lib/db/jobs-async", () => ({
 
 vi.mock("@/lib/db/notifications", () => ({
   createNotification: mocks.createNotification,
+}));
+
+vi.mock("@/lib/db/queries/profile", () => ({
+  getProfile: mocks.getProfile,
+}));
+
+vi.mock("@/lib/db/job-match-score", () => ({
+  setJobMatchScore: mocks.setJobMatchScore,
 }));
 
 import { POST } from "./route";
@@ -52,6 +62,9 @@ describe("opportunities from-extension route", () => {
     });
     mocks.countJobsByStatus.mockReturnValue(4);
     mocks.getJobByUrl.mockReturnValue(null);
+    // No profile signal by default → every opportunity scores 1.0.
+    mocks.getProfile.mockResolvedValue(null);
+    mocks.setJobMatchScore.mockResolvedValue(undefined);
   });
 
   it("creates a pending opportunity and notification for a single scraped job", async () => {
@@ -76,7 +89,9 @@ describe("opportunities from-extension route", () => {
       opportunityIds: ["job-1"],
       pendingCount: 4,
       dedupedIds: [],
+      scores: { "job-1": 1 },
     });
+    expect(mocks.setJobMatchScore).toHaveBeenCalledWith("job-1", "user-1", 1);
     expect(mocks.createJob).toHaveBeenCalledWith(
       expect.objectContaining({
         title: "Frontend Engineer",
@@ -124,6 +139,7 @@ describe("opportunities from-extension route", () => {
       opportunityIds: ["job-1", "job-2"],
       pendingCount: 4,
       dedupedIds: [],
+      scores: { "job-1": 1, "job-2": 1 },
     });
     expect(mocks.createJob).toHaveBeenCalledTimes(2);
     expect(mocks.createNotification).toHaveBeenCalledWith(
@@ -203,6 +219,7 @@ describe("opportunities from-extension route", () => {
       opportunityIds: ["job-1"],
       pendingCount: 4,
       dedupedIds: ["job-1"],
+      scores: { "job-1": 1 },
     });
     expect(mocks.createJob).not.toHaveBeenCalled();
     expect(mocks.updateJobStatus).toHaveBeenCalledWith(
@@ -236,6 +253,7 @@ describe("opportunities from-extension route", () => {
       opportunityIds: ["job-1"],
       pendingCount: 4,
       dedupedIds: [],
+      scores: { "job-1": 1 },
     });
     expect(mocks.createJob).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -243,6 +261,62 @@ describe("opportunities from-extension route", () => {
         appliedAt: "2026-05-10T12:00:00.000Z",
       }),
       "user-1",
+    );
+  });
+
+  it("still imports when the profile lookup throws (ranking is best-effort)", async () => {
+    mocks.getProfile.mockRejectedValueOnce(new Error("corrupt profile row"));
+    mocks.createJob.mockReturnValueOnce({
+      id: "job-7",
+      title: "Frontend Engineer",
+      company: "Acme",
+    });
+
+    const response = await POST(
+      jsonRequest({ title: "Frontend Engineer", company: "Acme" }),
+    );
+
+    expect(response.status).toBe(201);
+    const body = (await response.json()) as { scores: Record<string, number> };
+    // No profile signal → neutral score of 1, and the import is not blocked.
+    expect(body.scores["job-7"]).toBe(1);
+  });
+
+  it("ranks a pushed job against the user's profile and persists the score", async () => {
+    mocks.getProfile.mockResolvedValueOnce({
+      id: "p1",
+      contact: {},
+      experiences: [],
+      education: [],
+      skills: [
+        { id: "s1", name: "TypeScript", category: "technical" },
+        { id: "s2", name: "React", category: "technical" },
+      ],
+      projects: [],
+      certifications: [],
+    });
+    mocks.createJob.mockReturnValueOnce({
+      id: "job-9",
+      title: "Frontend Engineer",
+      company: "Acme",
+    });
+
+    const response = await POST(
+      jsonRequest({
+        title: "Frontend Engineer",
+        company: "Acme",
+        // salient tokens: frontend (miss), engineer (miss), typescript (hit),
+        // cobol (miss) → 1/4 = 0.25
+        keywords: ["TypeScript", "Cobol"],
+      }),
+    );
+
+    const body = (await response.json()) as { scores: Record<string, number> };
+    expect(body.scores["job-9"]).toBe(0.25);
+    expect(mocks.setJobMatchScore).toHaveBeenCalledWith(
+      "job-9",
+      "user-1",
+      0.25,
     );
   });
 });

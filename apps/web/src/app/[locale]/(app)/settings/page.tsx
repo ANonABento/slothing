@@ -11,6 +11,8 @@ import {
   SlidersHorizontal,
 } from "lucide-react";
 import { SettingsSkeleton } from "@/components/skeletons/settings-skeleton";
+import { AgentAutonomySection } from "@/components/settings/agent-autonomy-section";
+import { ServiceTokensSection } from "@/components/settings/service-tokens-section";
 import { BillingSection } from "@/components/settings/billing-section";
 import { AiTaskRoutingSection } from "@/components/settings/ai-task-routing-section";
 import { SlothingBentoRouterAdminSection } from "@/components/settings/bento-router-admin-section";
@@ -225,6 +227,8 @@ function SettingsPageInner() {
                 <GoogleIntegration />
                 <GmailAutoStatusSection />
                 <OpportunityReviewSection />
+                <AgentAutonomySection />
+                <ServiceTokensSection />
               </div>
             )}
 

@@ -1,6 +1,10 @@
 # `@slothing/mcp` — Agent Integration Spec
 
-> Status: **v1 shipped** as of 2026-05-12 (PR #265). v2 (write-heavy push/queue surface) deferred — see "Deferred to v2" below.
+> Status: **v1 + v2 shipped.** v1 read-heavy surface landed 2026-05-12 (PR #265); the v2
+> write-heavy push/queue tools (`slothing_push_job`, `slothing_update_status`,
+> `slothing_scrape_url`) are now registered in `packages/mcp/src/tools/index.ts` — see
+> "v2 — shipped" below. The agent-driven *apply* feature that builds on this surface is
+> tracked separately in `docs/agent-overnight-apply-spec.md`.
 
 ## Why
 
@@ -33,7 +37,10 @@ packages/mcp/
 │       ├── list-opportunities.ts
 │       ├── get-opportunity-detail.ts
 │       ├── search-answer-bank.ts
-│       └── save-answer.ts
+│       ├── save-answer.ts
+│       ├── slothing-push-job.ts       # v2
+│       ├── slothing-update-status.ts  # v2
+│       └── slothing-scrape-url.ts     # v2
 ├── tests/                    # vitest integration tests via InMemoryTransport
 └── README.md
 ```
@@ -179,18 +186,21 @@ const client = new ClaudeAgentSdkClient({
 });
 ```
 
-## Deferred to v2
+## v2 — shipped
 
-The original design doc described a **write-heavy** surface — pushing jobs into Slothing from external agent runtimes (Choomfie skills, scraper bots, Hermes overlays). That surface is deferred:
+The **write-heavy** surface — pushing jobs into Slothing from external agent runtimes (Choomfie
+skills, scraper bots, Hermes overlays) — is now registered as MCP tools alongside the v1 read tools:
 
 | Tool | Purpose | Underlying route |
 | --- | --- | --- |
 | `slothing_push_job` | Enqueue a scraped job into the review queue | `POST /api/opportunities/from-extension` |
-| `slothing_list_queue` | Variant of `list_opportunities` filtered to the review queue | — (subsumed by v1's `list_opportunities`) |
-| `slothing_update_status` | Move an opportunity through the status pipeline | `PATCH /api/opportunities/[id]` |
-| `slothing_scrape_url` | Server-side scrape of an arbitrary URL | `POST /api/opportunities/scrape` |
+| `slothing_update_status` | Move an opportunity through the status pipeline | `PATCH /api/extension/opportunities/[id]/status` |
+| `slothing_scrape_url` | Server-side scrape of an arbitrary URL into a preview | `POST /api/extension/opportunities/scrape` |
 
-These exist as REST endpoints today — agents that need them can call them directly via `fetch` with the extension token. Promote to MCP tools when a concrete consumer (Choomfie skill, etc.) needs the discoverability.
+(`slothing_list_queue` was never needed — v1's `list_opportunities` with `status: "pending"` already
+returns the review queue.)
+
+The original v2 design notes below are retained for context; the implementation matches them.
 
 ### v2 implementation scope
 
@@ -319,7 +329,7 @@ Validation:
 
 1. **Token lifetime / rotation.** Extension tokens have a 30-day TTL via `EXTENSION_TOKEN_TTL_RUNTIME_MS`. For headless MCP usage, do we want a longer "service" token type or just expect monthly re-mint? Suggest reusing the existing TTL for v1 and adding a `slothing-mcp refresh` helper if it gets annoying.
 2. **Per-tool rate limiting.** Existing routes go through `src/lib/rate-limit.ts`. For agent loops that hit `search_answer_bank` rapidly, the per-user limit may bite — confirm thresholds work for agentic flows.
-3. **MCP transports.** v1 = stdio (shipped). SSE/HTTP transport is straightforward to add but not needed until someone wants to host the server remotely.
+3. **MCP transports.** ~~v1 = stdio (shipped). SSE/HTTP transport is straightforward to add but not needed until someone wants to host the server remotely.~~ **Resolved:** a stateless Streamable HTTP transport ships alongside stdio — `slothing-mcp --http [--port N]` (or `SLOTHING_MCP_TRANSPORT=http`). See `src/http.ts` + `tests/http.test.ts`. stdio remains the default.
 
 ## Done definition (v1, ✅)
 

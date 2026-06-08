@@ -18,6 +18,22 @@ SLOTHING_TOKEN=... SLOTHING_API_URL=http://localhost:3000 pnpm dlx @slothing/mcp
 
 Or wire it into an MCP host config (see below) and let the host launch it.
 
+### Remote agents (HTTP transport)
+
+stdio is the default (the host launches the server as a child process). For a
+**non-colocated** agent — your own stack running off-box — start the Streamable
+HTTP transport instead:
+
+```bash
+SLOTHING_TOKEN=... SLOTHING_API_URL=http://localhost:3000 \
+  pnpm dlx @slothing/mcp --http --port 3399
+# MCP endpoint: http://<host>:3399/mcp · health: http://<host>:3399/health
+```
+
+It runs **stateless** (a fresh server per request) so it scales without session
+affinity. Point any Streamable-HTTP MCP client at `…/mcp`. `--transport http`
+and `SLOTHING_MCP_TRANSPORT=http` / `SLOTHING_MCP_PORT` are equivalent.
+
 ## Tools
 
 | Tool                     | What it does                                                                                      | Underlying route                                 |
@@ -108,6 +124,37 @@ Add to `<repo>/.mcp.json`:
   },
 }
 ```
+
+## Checking your token (`refresh`)
+
+Extension tokens have a TTL (~30 days), which is short for a long-running
+headless agent. Before an overnight run, check the token is still live:
+
+```bash
+SLOTHING_TOKEN=... SLOTHING_API_URL=http://localhost:3000 pnpm dlx @slothing/mcp refresh
+```
+
+It probes `GET /api/extension/profile` and prints `OK` or `ACTION NEEDED` with
+exact re-mint steps (exit code 1 when the token is dead, so you can gate a cron
+job on it). Tokens cannot self-renew yet — automatic refresh arrives with the
+service-token work (see `docs/agent-overnight-apply-spec.md`, P5).
+
+## Example: overnight sourcing loop
+
+`examples/overnight-source.ts` is a runnable reference for autonomy level L1 —
+scrape a list of job URLs, score each against your profile, and push the matches
+into your review queue. It uses the package's exported `createApiClient`, so it
+also documents exactly which endpoints the MCP tools wrap:
+
+```bash
+SLOTHING_TOKEN=... SLOTHING_API_URL=http://localhost:3000 \
+  node --experimental-strip-types packages/mcp/examples/overnight-source.ts \
+    https://boards.greenhouse.io/acme/jobs/123 \
+    https://jobs.lever.co/globex/456
+```
+
+A real agent would call the equivalent MCP tools (`slothing_scrape_url`,
+`get_profile`, `slothing_push_job`) instead of HTTP directly.
 
 ## Bad-token behaviour
 

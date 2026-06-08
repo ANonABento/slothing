@@ -27,6 +27,8 @@ import { TEMPLATES } from "@/lib/resume/pdf";
 import { renderResumeHtmlForTemplate } from "@/lib/resume/render-resume";
 import { isTailoredResume } from "@/lib/builder/tailored-resume-api";
 import { trackActivationEvent } from "@/lib/db/product-analytics";
+import { EXPERIMENTS, getVariant } from "@/lib/experiments";
+import { trackExperimentEvent } from "@/lib/experiments/track";
 import { tailorRequestSchema } from "@/lib/schemas";
 import { writeFile, mkdir } from "fs/promises";
 import { generateId } from "@/lib/utils";
@@ -291,6 +293,21 @@ export async function POST(request: NextRequest) {
       });
     } catch (analyticsError) {
       console.error("Tailor analytics failed:", analyticsError);
+    }
+
+    // Attribute the tailor to the profile-picker experiment (deterministic
+    // variant — same assignment the extension saw). Best-effort.
+    try {
+      const variant = getVariant("profilePicker", authResult.userId);
+      await trackExperimentEvent(
+        EXPERIMENTS.profilePicker.key,
+        variant,
+        "resume_tailored",
+        authResult.userId,
+        { usedBaseResume: Boolean(baseResumeId) },
+      );
+    } catch (experimentError) {
+      console.error("Tailor experiment attribution failed:", experimentError);
     }
 
     return NextResponse.json({

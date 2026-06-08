@@ -2,6 +2,8 @@
 
 import type {
   AnswerBankMatch,
+  ApprovedDraftPayload,
+  BestFitResume,
   ChatJobContext,
   ExtensionProfile,
   ExtensionResumeSummary,
@@ -318,6 +320,37 @@ export class SlothingAPIClient {
     return response.resumes ?? [];
   }
 
+  /** Experiment #1 — resolve the user's variant; defaults to control on error. */
+  async getExperiment(name: string): Promise<string> {
+    const response = await this.authenticatedFetch<{ variant?: string }>(
+      `/api/experiments/${encodeURIComponent(name)}`,
+      {},
+      "safe",
+    );
+    return response.variant ?? "control";
+  }
+
+  /** Experiment #1 — rank saved resumes by fit against the current job. */
+  async bestFit(job: ScrapedJob): Promise<BestFitResume[]> {
+    const response = await this.authenticatedFetch<{
+      resumes?: BestFitResume[];
+    }>(
+      "/api/extension/best-fit",
+      {
+        method: "POST",
+        body: JSON.stringify({
+          title: job.title,
+          company: job.company,
+          description: job.description,
+          requirements: job.requirements,
+          keywords: job.keywords ?? [],
+        }),
+      },
+      "safe",
+    );
+    return response.resumes ?? [];
+  }
+
   async generateCoverLetterFromJob(job: ScrapedJob): Promise<{
     opportunityId: string;
     savedCoverLetter: { id: string };
@@ -406,6 +439,41 @@ export class SlothingAPIClient {
       method: "PATCH",
       body: JSON.stringify({ answer }),
     });
+  }
+
+  // P3 — agent-drafted application submission (autonomy level L3).
+
+  /** Fetch drafts the user has approved, ready for an executor to submit. */
+  async getApprovedDrafts(): Promise<ApprovedDraftPayload[]> {
+    const response = await this.authenticatedFetch<{
+      drafts: ApprovedDraftPayload[];
+    }>("/api/extension/drafts?status=approved", {}, "safe");
+    return response.drafts;
+  }
+
+  /** Ask the server whether an unattended submission is authorized right now. */
+  async checkSubmitAuthorization(draftId: string): Promise<{
+    authorized: boolean;
+    reasons: string[];
+    submittedToday: number;
+    dailyCap: number;
+  }> {
+    return this.authenticatedFetch(
+      `/api/extension/drafts/${draftId}/submit-authorization`,
+      {},
+      "safe",
+    );
+  }
+
+  /** Report the outcome of a submission attempt back to Slothing. */
+  async reportSubmitResult(
+    draftId: string,
+    result: { ok: boolean; atsRef?: string; error?: string },
+  ): Promise<{ draft: ApprovedDraftPayload }> {
+    return this.authenticatedFetch(
+      `/api/extension/drafts/${draftId}/submit-result`,
+      { method: "POST", body: JSON.stringify(result) },
+    );
   }
 
   /**

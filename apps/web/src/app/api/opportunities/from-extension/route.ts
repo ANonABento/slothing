@@ -12,6 +12,9 @@ import {
   updateJobStatus,
 } from "@/lib/db/jobs-async";
 import { createNotification } from "@/lib/db/notifications";
+import { setJobMatchScore } from "@/lib/db/job-match-score";
+import { getProfile } from "@/lib/db/queries/profile";
+import { profileTerms, scoreOpportunityMatch } from "@/lib/agent/match-score";
 import {
   buildJobFromExtension,
   parseExtensionOpportunityPayload,
@@ -47,7 +50,16 @@ export async function POST(request: NextRequest) {
     const importedJobs: JobDescription[] = [];
     const dedupedIds: string[] = [];
 
+    // Rank-on-push: score each opportunity against the user's profile so the
+    // review queue can be ranked. Best-effort + zero LLM cost; never blocks an
+    // import (see docs/agent-overnight-apply-spec.md, P1).
+    const profile = await getProfile(authResult.userId).catch(() => null);
+    const terms = profileTerms(profile);
+    const scores: Record<string, number> = {};
+
     for (const opportunity of parseResult.opportunities) {
+      const score = scoreOpportunityMatch(opportunity, terms);
+
       if (opportunity.status === "applied" && opportunity.url) {
         const existingJob = await getJobByUrl(
           opportunity.url,
@@ -62,13 +74,19 @@ export async function POST(request: NextRequest) {
           );
           importedJobs.push(updatedJob || existingJob);
           dedupedIds.push(existingJob.id);
+          await setJobMatchScore(existingJob.id, authResult.userId, score);
+          scores[existingJob.id] = score;
           continue;
         }
       }
 
-      importedJobs.push(
-        await createJob(buildJobFromExtension(opportunity), authResult.userId),
+      const createdJob = await createJob(
+        buildJobFromExtension(opportunity),
+        authResult.userId,
       );
+      importedJobs.push(createdJob);
+      await setJobMatchScore(createdJob.id, authResult.userId, score);
+      scores[createdJob.id] = score;
     }
 
     const pendingCount = await countJobsByStatus("pending", authResult.userId);
@@ -99,6 +117,7 @@ export async function POST(request: NextRequest) {
         opportunityIds: importedJobs.map((job) => job.id),
         pendingCount,
         dedupedIds,
+        scores,
       },
       { status: 201 },
     );
