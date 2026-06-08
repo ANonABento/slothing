@@ -40,15 +40,19 @@ test.describe("Navigation", () => {
     // Get sidebar navigation
     const sidebar = getSidebar(page);
 
-    // Check main navigation items visible in sidebar
+    // Check main navigation items visible in sidebar. ("Documents" is a section
+    // header, not a link — the documents area is split into Components/Answers.)
     await expect(
       sidebar.getByRole("link", { name: /Dashboard/i }),
     ).toBeVisible();
     await expect(
-      sidebar.getByRole("link", { name: /Documents/i }),
+      sidebar.getByRole("link", { name: /^Components$/i }),
     ).toBeVisible();
     await expect(
       sidebar.getByRole("link", { name: /^Studio$/i }),
+    ).toBeVisible();
+    await expect(
+      sidebar.getByRole("link", { name: /Opportunities/i }),
     ).toBeVisible();
     await expect(
       sidebar.getByRole("link", { name: /Interview Prep/i }),
@@ -69,12 +73,12 @@ test.describe("Navigation", () => {
     await expect(page).toHaveURL("/en/dashboard");
   });
 
-  test("should navigate to Documents (Bank) page", async ({ page }) => {
+  test("should navigate to Components page", async ({ page }) => {
     await preparePage(page);
     await ensureSidebarOpen(page);
     const sidebar = getSidebar(page);
-    await sidebar.getByRole("link", { name: /Documents/i }).click();
-    await expect(page).toHaveURL("/en/bank");
+    await sidebar.getByRole("link", { name: /^Components$/i }).click();
+    await expect(page).toHaveURL("/en/components");
   });
 
   test("should navigate to Studio page @smoke", async ({ page }) => {
@@ -110,10 +114,10 @@ test.describe("Navigation", () => {
   });
 
   test("should highlight active navigation item", async ({ page }) => {
-    await preparePage(page, "/en/bank");
+    await preparePage(page, "/en/components");
     await ensureSidebarOpen(page);
     const sidebar = getSidebar(page);
-    const activeLink = sidebar.getByRole("link", { name: /Documents/i });
+    const activeLink = sidebar.getByRole("link", { name: /^Components$/i });
     await expect(activeLink).toHaveAttribute("data-active", "true");
     await expect(activeLink).toHaveClass(/bg-card/);
     await expect(activeLink).toHaveClass(/text-foreground/);
@@ -124,7 +128,13 @@ test.describe("Navigation", () => {
     await preparePage(page);
     await ensureSidebarOpen(page);
     const sidebar = getSidebar(page);
-    await expect(sidebar.getByText("Slothing")).toBeVisible();
+    // The sidebar landmark contains the brand link in both the desktop rail and
+    // the mobile drawer header, so the name resolves to 2 elements — assert the
+    // first. (Use the aria-labelled link, not text: the wordmark can collapse to
+    // an icon.)
+    await expect(
+      sidebar.getByRole("link", { name: /Slothing/i }).first(),
+    ).toBeVisible();
   });
 });
 
