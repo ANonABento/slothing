@@ -118,6 +118,7 @@ describe("@slothing/mcp server", () => {
     const names = result.tools.map((t) => t.name).sort();
     expect(names).toEqual(
       [
+        "get_agent_policy",
         "get_opportunity_detail",
         "get_profile",
         "list_opportunities",
@@ -128,6 +129,35 @@ describe("@slothing/mcp server", () => {
         "slothing_update_status",
       ].sort(),
     );
+  });
+
+  it("get_agent_policy calls GET /api/extension/agent-policy and returns the body", async () => {
+    const policyBody = {
+      policy: { autonomy: "source", dryRun: true },
+      capabilities: { canSubmit: false, canSubmitUnattended: false },
+    };
+    const { stub, calls } = makeFetchStub([
+      {
+        status: 200,
+        body: policyBody,
+        expectMethod: "GET",
+        expectPath: "/api/extension/agent-policy",
+      },
+    ]);
+    const { client, server } = await connectClient(stub);
+    opened.push({ close: () => server.close() });
+    opened.push({ close: () => client.close() });
+
+    const result = await client.callTool({
+      name: "get_agent_policy",
+      arguments: {},
+    });
+
+    expect(result.isError).not.toBe(true);
+    expect(calls).toHaveLength(1);
+    const text = (result.content as Array<{ type: string; text: string }>)[0]
+      ?.text;
+    expect(JSON.parse(text!)).toEqual(policyBody);
   });
 
   it("get_profile calls GET /api/extension/profile and returns the body", async () => {

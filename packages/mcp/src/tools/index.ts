@@ -1,4 +1,5 @@
 import { getProfileTool } from "./get-profile.js";
+import { getAgentPolicyTool } from "./get-agent-policy.js";
 import { listOpportunitiesTool } from "./list-opportunities.js";
 import { getOpportunityDetailTool } from "./get-opportunity-detail.js";
 import { searchAnswerBankTool } from "./search-answer-bank.js";
@@ -13,6 +14,7 @@ import type { AnyToolDefinition, ToolDefinition } from "./types.js";
 // once here at the registry boundary.
 export const allTools: ReadonlyArray<AnyToolDefinition> = [
   getProfileTool as unknown as AnyToolDefinition,
+  getAgentPolicyTool as unknown as AnyToolDefinition,
   listOpportunitiesTool as unknown as AnyToolDefinition,
   getOpportunityDetailTool as unknown as AnyToolDefinition,
   searchAnswerBankTool as unknown as AnyToolDefinition,
@@ -24,6 +26,7 @@ export const allTools: ReadonlyArray<AnyToolDefinition> = [
 
 export {
   getProfileTool,
+  getAgentPolicyTool,
   listOpportunitiesTool,
   getOpportunityDetailTool,
   searchAnswerBankTool,
