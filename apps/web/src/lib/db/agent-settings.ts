@@ -118,6 +118,24 @@ function rowToPolicy(row: AgentSettingsRow): AgentPolicy {
   };
 }
 
+/** Users whose agent is switched on (autonomy != off) — drives the hosted runner. */
+export async function listUsersWithActiveAgent(): Promise<
+  Array<{ userId: string; autonomy: string }>
+> {
+  await ensureAgentSettingsSchema();
+  try {
+    const result = await getClient().execute({
+      sql: "SELECT user_id, autonomy FROM agent_settings WHERE autonomy IS NOT NULL AND autonomy != 'off'",
+      args: [],
+    });
+    return (
+      result.rows as unknown as Array<{ user_id: string; autonomy: string }>
+    ).map((r) => ({ userId: r.user_id, autonomy: r.autonomy }));
+  } catch {
+    return [];
+  }
+}
+
 /** Resolve the user's policy, or safe defaults when none has been saved. */
 export async function getAgentSettings(userId: string): Promise<AgentPolicy> {
   await ensureAgentSettingsSchema();
