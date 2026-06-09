@@ -267,6 +267,10 @@ export type MessageType =
   | "BULK_WORKDAY_PROGRESS"
   | "AUTH_CALLBACK"
   | "SAVE_CORRECTION"
+  // L3 (submit_approval) — in-browser submission of approved drafts.
+  | "GET_APPROVED_DRAFTS"
+  | "CHECK_SUBMIT_AUTHORIZATION"
+  | "REPORT_SUBMIT_RESULT"
   // P3 / #36 #37 — multi-step form support (Workday, Greenhouse).
   // Background → content: a `webNavigation.onHistoryStateUpdated` event fired
   // for a tab that has an in-progress multi-step application. The content

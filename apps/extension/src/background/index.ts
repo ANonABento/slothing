@@ -128,6 +128,23 @@ async function handleMessage(
     case "SAVE_CORRECTION":
       return handleSaveCorrection(message.payload as SaveCorrectionPayload);
 
+    // L3 (submit_approval) — approved-draft submission glue.
+    case "GET_APPROVED_DRAFTS":
+      return handleGetApprovedDrafts();
+
+    case "CHECK_SUBMIT_AUTHORIZATION":
+      return handleCheckSubmitAuthorization(
+        message.payload as { draftId: string },
+      );
+
+    case "REPORT_SUBMIT_RESULT":
+      return handleReportSubmitResult(
+        message.payload as {
+          draftId: string;
+          result: { ok: boolean; atsRef?: string; error?: string };
+        },
+      );
+
     // P3 / #36 #37 — multi-step support.
     case "GET_TAB_ID":
       return { success: true, data: { tabId: sender.tab?.id ?? null } };
@@ -228,6 +245,44 @@ async function handleListResumes(): Promise<ExtensionResponse> {
     const client = await getAPIClient();
     const resumes = await client.listResumes();
     return { success: true, data: { resumes } };
+  } catch (error) {
+    return { success: false, error: (error as Error).message };
+  }
+}
+
+async function handleGetApprovedDrafts(): Promise<ExtensionResponse> {
+  try {
+    const client = await getAPIClient();
+    const drafts = await client.getApprovedDrafts();
+    return { success: true, data: { drafts } };
+  } catch (error) {
+    return { success: false, error: (error as Error).message };
+  }
+}
+
+async function handleCheckSubmitAuthorization(payload: {
+  draftId: string;
+}): Promise<ExtensionResponse> {
+  try {
+    const client = await getAPIClient();
+    const decision = await client.checkSubmitAuthorization(payload.draftId);
+    return { success: true, data: decision };
+  } catch (error) {
+    return { success: false, error: (error as Error).message };
+  }
+}
+
+async function handleReportSubmitResult(payload: {
+  draftId: string;
+  result: { ok: boolean; atsRef?: string; error?: string };
+}): Promise<ExtensionResponse> {
+  try {
+    const client = await getAPIClient();
+    const result = await client.reportSubmitResult(
+      payload.draftId,
+      payload.result,
+    );
+    return { success: true, data: result };
   } catch (error) {
     return { success: false, error: (error as Error).message };
   }

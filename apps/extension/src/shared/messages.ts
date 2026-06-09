@@ -2,6 +2,7 @@
 
 import type {
   AnswerBankMatch,
+  ApprovedDraftPayload,
   BestFitResume,
   ExtensionMessage,
   ExtensionResponse,
@@ -189,6 +190,27 @@ export const Messages = {
     jobContext: payload.jobContext,
   }),
 
+  // L3 (submit_approval) — drive an already-approved draft through the submit
+  // adapters in the user's browser. The api-client methods already exist; these
+  // route them over messaging so the content script can fetch + submit + report.
+  getApprovedDrafts: (): ExtensionMessage => ({ type: "GET_APPROVED_DRAFTS" }),
+  checkSubmitAuthorization: (
+    draftId: string,
+  ): ExtensionMessage<{ draftId: string }> => ({
+    type: "CHECK_SUBMIT_AUTHORIZATION",
+    payload: { draftId },
+  }),
+  reportSubmitResult: (
+    draftId: string,
+    result: { ok: boolean; atsRef?: string; error?: string },
+  ): ExtensionMessage<{
+    draftId: string;
+    result: { ok: boolean; atsRef?: string; error?: string };
+  }> => ({
+    type: "REPORT_SUBMIT_RESULT",
+    payload: { draftId, result },
+  }),
+
   // Corrections feedback loop (#33). Fired when a user edits an autofilled
   // field and the final value differs from the original suggestion — the
   // background forwards it to /api/extension/field-mappings/correct so
@@ -279,6 +301,21 @@ export interface SearchAnswersResponse extends ExtensionResponse<
 
 export interface ListResumesResponse extends ExtensionResponse<{
   resumes: ExtensionResumeSummary[];
+}> {}
+
+export interface ApprovedDraftsResponse extends ExtensionResponse<{
+  drafts: ApprovedDraftPayload[];
+}> {}
+
+export interface SubmitAuthorizationResponse extends ExtensionResponse<{
+  authorized: boolean;
+  reasons: string[];
+  submittedToday: number;
+  dailyCap: number;
+}> {}
+
+export interface ReportSubmitResultResponse extends ExtensionResponse<{
+  draft: ApprovedDraftPayload;
 }> {}
 
 export interface GetExperimentResponse extends ExtensionResponse<{
