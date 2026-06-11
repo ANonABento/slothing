@@ -401,6 +401,50 @@ describe("AiAssistantPanel", () => {
     ).toBeInTheDocument();
   });
 
+  it("classifies JD keywords into strengthen vs articulate in the Suggestions tab", async () => {
+    const onOpenBank = vi.fn();
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string) => {
+        if (url === "/api/settings/status") return statusResponse(true);
+        if (url === "/api/bank/ai/gaps") {
+          return new Response(
+            JSON.stringify({
+              strengthenable: [{ keyword: "kubernetes", entryIds: ["e1"] }],
+              gaps: ["graphql"],
+              matchScore: 60,
+            }),
+            { status: 200 },
+          );
+        }
+        return new Response("Not found", { status: 404 });
+      }),
+    );
+
+    renderWithToast(
+      <AiAssistantPanel
+        documentContent="<p>resume</p>"
+        selectedEntryCount={1}
+        onOpenBank={onOpenBank}
+      />,
+    );
+
+    fireEvent.change(screen.getByLabelText("Job description"), {
+      target: { value: "We use Kubernetes and GraphQL." },
+    });
+    fireEvent.click(screen.getByRole("tab", { name: /Suggestions/i }));
+    fireEvent.click(screen.getByRole("button", { name: "Analyze fit" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("kubernetes")).toBeInTheDocument();
+      expect(screen.getByText("graphql")).toBeInTheDocument();
+    });
+
+    // Keyword chips route the user into their bank to act on the gap.
+    fireEvent.click(screen.getByRole("button", { name: "graphql" }));
+    expect(onOpenBank).toHaveBeenCalled();
+  });
+
   it("runs cover letter critique and renders clickable rewrite suggestions", async () => {
     const onCoverLetterCritique = vi.fn();
     const onCoverLetterSuggestionApply = vi.fn(() => true);

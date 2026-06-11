@@ -675,6 +675,13 @@ async function handleFillForm(options: { overwriteExisting?: boolean } = {}) {
     onFilled: ({ field, value }) => {
       correctionsTracker.track(field, value);
     },
+    resolveCustomAnswer: async (question) => {
+      const response = await sendMessage<AnswerBankMatch[]>(
+        Messages.matchAnswerBank({ q: question, limit: 1 }),
+      );
+      const top = response.success ? response.data?.[0] : undefined;
+      return top ? { answer: top.answer, similarity: top.score } : null;
+    },
   });
   if (result.filled >= 2) {
     for (const form of new Set(

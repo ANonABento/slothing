@@ -195,6 +195,15 @@ export function AiAssistantPanel({
   const [statusMessage, setStatusMessage] = useState("");
   const [assistantResult, setAssistantResult] = useState("");
 
+  // Tailor↔bank loop (spec §6): classify this JD's keywords against the bank.
+  const [gapAnalysis, setGapAnalysis] = useState<{
+    strengthenable: Array<{ keyword: string; entryIds: string[] }>;
+    gaps: string[];
+    matchScore: number;
+  } | null>(null);
+  const [gapsLoading, setGapsLoading] = useState(false);
+  const [gapsError, setGapsError] = useState("");
+
   useEffect(() => {
     function syncSelection() {
       const selection = window.getSelection();
@@ -613,6 +622,47 @@ export function AiAssistantPanel({
   const isBusy = runningAction !== null;
   const hasSelection = selectedText.length > 0;
   const isCoverLetter = documentMode === "cover_letter";
+
+  // Stale gap analysis shouldn't linger when the linked job changes.
+  useEffect(() => {
+    setGapAnalysis(null);
+    setGapsError("");
+  }, [jobDescription]);
+
+  const runGapAnalysis = useCallback(async () => {
+    const jd = jobDescription.trim();
+    if (!jd) return;
+    setGapsLoading(true);
+    setGapsError("");
+    try {
+      const response = await fetch("/api/bank/ai/gaps", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ jobDescription: jd }),
+      });
+      if (!response.ok) {
+        throw new Error(
+          await readApiError(response, "Couldn't analyze this job."),
+        );
+      }
+      const data = (await response.json()) as {
+        strengthenable?: Array<{ keyword: string; entryIds: string[] }>;
+        gaps?: string[];
+        matchScore?: number;
+      };
+      setGapAnalysis({
+        strengthenable: data.strengthenable ?? [],
+        gaps: data.gaps ?? [],
+        matchScore: data.matchScore ?? 0,
+      });
+    } catch (error) {
+      setGapsError(
+        error instanceof Error ? error.message : "Couldn't analyze this job.",
+      );
+    } finally {
+      setGapsLoading(false);
+    }
+  }, [jobDescription]);
   const generateBankLabel = isRunning("generate-from-bank")
     ? isCoverLetter
       ? "Generating..."
@@ -1059,14 +1109,115 @@ export function AiAssistantPanel({
               ))}
             </div>
           </section>
+        ) : !isCoverLetter ? (
+          <section className="space-y-4" aria-label="Tailor for this job">
+            {!jobDescription.trim() ? (
+              <div
+                className="rounded-md border bg-card/50 px-4 py-8 text-center text-sm text-muted-foreground"
+                role="status"
+              >
+                Link an opportunity in the Chat tab, then analyze how your bank
+                matches this job.
+              </div>
+            ) : (
+              <>
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-sm font-medium">Tailor for this job</p>
+                  <button
+                    type="button"
+                    className="rounded-md border bg-background px-3 py-1.5 text-xs font-medium transition-colors hover:bg-muted disabled:opacity-60"
+                    onClick={() => void runGapAnalysis()}
+                    disabled={gapsLoading}
+                  >
+                    {gapsLoading
+                      ? "Analyzing…"
+                      : gapAnalysis
+                        ? "Re-analyze"
+                        : "Analyze fit"}
+                  </button>
+                </div>
+
+                {gapsError && (
+                  <p className="text-sm text-destructive">{gapsError}</p>
+                )}
+
+                {!gapAnalysis && !gapsLoading && !gapsError && (
+                  <p className="text-sm text-muted-foreground">
+                    See which of this job&apos;s keywords you can strengthen
+                    with evidence you already have, and which gaps to articulate
+                    from your own experience. Grounded — nothing is invented.
+                  </p>
+                )}
+
+                {gapAnalysis && (
+                  <div className="space-y-4">
+                    <p className="text-xs text-muted-foreground">
+                      Bank match for this job:{" "}
+                      <span className="font-semibold text-foreground">
+                        {gapAnalysis.matchScore}/100
+                      </span>
+                    </p>
+
+                    {gapAnalysis.strengthenable.length > 0 && (
+                      <div className="space-y-2">
+                        <p className="font-mono text-xs uppercase tracking-[0.16em] text-muted-foreground">
+                          Strengthen — you have evidence
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          {gapAnalysis.strengthenable.map((item) => (
+                            <button
+                              key={item.keyword}
+                              type="button"
+                              onClick={onOpenBank}
+                              title="Open your bank to strengthen an entry for this keyword"
+                              className="rounded-full border border-primary/40 bg-primary/10 px-3 py-1 text-xs font-medium text-primary transition-colors hover:bg-primary/20"
+                            >
+                              {item.keyword}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {gapAnalysis.gaps.length > 0 && (
+                      <div className="space-y-2">
+                        <p className="font-mono text-xs uppercase tracking-[0.16em] text-muted-foreground">
+                          Gaps — articulate these
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          {gapAnalysis.gaps.map((keyword) => (
+                            <button
+                              key={keyword}
+                              type="button"
+                              onClick={onOpenBank}
+                              title="Open your bank to articulate this from your own experience"
+                              className="rounded-full border bg-muted px-3 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted/70"
+                            >
+                              {keyword}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {gapAnalysis.strengthenable.length === 0 &&
+                      gapAnalysis.gaps.length === 0 && (
+                        <p className="text-sm text-muted-foreground">
+                          Your bank already covers this job&apos;s keywords.
+                        </p>
+                      )}
+                  </div>
+                )}
+              </>
+            )}
+          </section>
         ) : (
           <div
             className="rounded-md border bg-card/50 px-4 py-8 text-center text-sm text-muted-foreground"
             role="status"
           >
-            {isCoverLetter
-              ? "Run Critique from the Chat tab to surface scored feedback and rewrite suggestions."
-              : "Suggestions surface here when the AI has feedback to share — run Critique on a cover letter or Tailor a resume to get started."}
+            Run Critique from the Chat tab to surface scored feedback and
+            rewrite suggestions.
           </div>
         )}
       </div>
