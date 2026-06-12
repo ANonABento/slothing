@@ -17,6 +17,7 @@ import { LeverOrchestrator } from "./scrapers/lever-orchestrator";
 import { WorkdayOrchestrator } from "./scrapers/workday-orchestrator";
 import type {
   AnswerBankMatch,
+  ApprovedDraftPayload,
   ChatJobContext,
   BestFitResume,
   ChatPortMessage,
@@ -30,6 +31,10 @@ import type {
   PageSurfaceContext,
   SimilarAnswer,
 } from "@/shared/types";
+import { pickSubmitAdapter } from "./submit/submit-registry";
+import { runDraftSubmission } from "./submit/submit-runner";
+import { findMatchingDraft } from "./submit/draft-match";
+import type { SubmitResult } from "./submit/submit-adapter";
 import { CHAT_PORT_NAME, DEFAULT_API_BASE_URL } from "@/shared/types";
 import { sendMessage, Messages } from "@/shared/messages";
 import { messageForError } from "@/shared/error-messages";
@@ -760,11 +765,71 @@ async function getExtensionSettings(): Promise<ExtensionSettings> {
   return response.data;
 }
 
+/**
+ * L3 increment 2 — fetch the user's approved drafts and match one to the page
+ * they're on. Gated on `pickSubmitAdapter` so we only hit the drafts endpoint
+ * on hosts we can actually submit to (Greenhouse/Lever) — not on every page.
+ * Fails soft to null so a drafts hiccup never blocks the sidebar.
+ */
+async function loadApprovedDraftForPage(): Promise<ApprovedDraftPayload | null> {
+  if (!pickSubmitAdapter(window.location.hostname)) return null;
+  try {
+    const response = await sendMessage<{ drafts: ApprovedDraftPayload[] }>(
+      Messages.getApprovedDrafts(),
+    );
+    if (!response.success || !response.data?.drafts) return null;
+    return findMatchingDraft(window.location.href, response.data.drafts);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * L3 increment 2 — fill (dry-run) or fill+submit one approved draft via the
+ * orchestrator. The live path consults the server authorization gate first and
+ * reports the outcome back through the background; the dry-run path only fills,
+ * so the user can preview exactly what would be submitted before committing.
+ */
+async function submitApprovedDraft(
+  draft: ApprovedDraftPayload,
+  opts: { dryRun: boolean },
+): Promise<SubmitResult> {
+  return runDraftSubmission(
+    draft,
+    {
+      reportSubmitResult: (draftId, result) =>
+        sendMessage(Messages.reportSubmitResult(draftId, result)),
+    },
+    {
+      dryRun: opts.dryRun,
+      authorize: opts.dryRun
+        ? undefined
+        : async () => {
+            const response = await sendMessage<{
+              authorized: boolean;
+              reasons: string[];
+            }>(Messages.checkSubmitAuthorization(draft.id));
+            if (!response.success || !response.data) {
+              return {
+                authorized: false,
+                reasons: [response.error || "Authorization check failed"],
+              };
+            }
+            return {
+              authorized: response.data.authorized,
+              reasons: response.data.reasons ?? [],
+            };
+          },
+    },
+  );
+}
+
 async function updateSidebar() {
   const profile = await loadProfileForSidebar();
   const latestResume = await loadLatestResumeForSidebar();
   const { variant: profilePickerVariant, bestFitResumes } =
     await loadProfilePickerData();
+  const approvedDraft = await loadApprovedDraftForPage();
   await sidebarController.update({
     scrapedJob,
     detectedFieldCount: detectedFields.length,
@@ -773,6 +838,10 @@ async function updateSidebar() {
     profile,
     profilePickerVariant,
     bestFitResumes,
+    approvedDraft,
+    onSubmitDraft: approvedDraft
+      ? (submitOpts) => submitApprovedDraft(approvedDraft, submitOpts)
+      : undefined,
     onTailor: async (baseResumeId?: string) => {
       if (!scrapedJob) throw new Error("No job detected");
       const response = await sendMessage<{ url: string }>(

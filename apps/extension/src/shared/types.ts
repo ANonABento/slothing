@@ -197,6 +197,16 @@ export interface ApprovedDraftPayload {
   status: string;
   questions: Array<{ id: string; label: string }>;
   answers: Array<{ questionId: string; value: string }>;
+  /**
+   * Job metadata resolved server-side (GET /api/extension/drafts) so the
+   * content script can match a draft to the page the user is on (`url`) and
+   * display what it is. `null` when the linked job no longer exists.
+   */
+  job?: {
+    title: string;
+    company: string;
+    url: string | null;
+  } | null;
 }
 
 export interface SimilarAnswer {

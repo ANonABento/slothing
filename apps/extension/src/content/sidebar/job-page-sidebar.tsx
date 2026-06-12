@@ -6,6 +6,7 @@ import React, {
   useState,
 } from "react";
 import type {
+  ApprovedDraftPayload,
   SidebarLayout,
   SidebarPosition,
   BestFitResume,
@@ -14,6 +15,7 @@ import type {
   ScrapedJob,
 } from "@/shared/types";
 import type { ResumeScore } from "@slothing/shared/scoring";
+import type { SubmitResult } from "../submit/submit-adapter";
 import { ChatPanel, type ChatIntent } from "./chat-panel";
 
 export type SidebarAction = "tailor" | "coverLetter" | "save" | "autoFill";
@@ -58,6 +60,17 @@ export interface JobPageSidebarProps {
    * streamed cover-letter opener seeded as a query param.
    */
   onUseInCoverLetter: (seedText: string) => void;
+  /**
+   * L3 — an approved draft the agent prepared for this exact posting, matched
+   * to the current page. Drives the "ready to submit" card. Absent → no card.
+   */
+  approvedDraft?: ApprovedDraftPayload | null;
+  /**
+   * L3 — fill the form from the approved draft. `dryRun` fills without clicking
+   * submit (a preview); `dryRun:false` consults the server guardrail gate, then
+   * submits and reports the outcome. Present only when `approvedDraft` is set.
+   */
+  onSubmitDraft?: (opts: { dryRun: boolean }) => Promise<SubmitResult>;
 }
 
 type Notice = { kind: "success" | "error"; message: string } | null;
@@ -371,6 +384,13 @@ export function JobPageSidebar(props: JobPageSidebarProps) {
             </div>
           </section>
 
+          {props.approvedDraft && props.onSubmitDraft && (
+            <SubmitDraftCard
+              draft={props.approvedDraft}
+              onSubmit={props.onSubmitDraft}
+            />
+          )}
+
           {showResumePicker && (
             <section className="resume-picker" aria-label="Base resume">
               <label
@@ -561,6 +581,129 @@ export function JobPageSidebar(props: JobPageSidebarProps) {
         </div>
       </div>
     </aside>
+  );
+}
+
+/**
+ * L3 — "ready to submit" card. Shows only when the agent prepared an approved
+ * draft for this exact posting. Dry-run preview is the default, safe action;
+ * the live submit is two-tap (Submit → Confirm) so it can't fire by accident,
+ * and routes through the server guardrail gate before it clicks anything.
+ */
+function SubmitDraftCard({
+  draft,
+  onSubmit,
+}: {
+  draft: ApprovedDraftPayload;
+  onSubmit: (opts: { dryRun: boolean }) => Promise<SubmitResult>;
+}) {
+  const [busy, setBusy] = useState<"preview" | "submit" | null>(null);
+  const [confirming, setConfirming] = useState(false);
+  const [done, setDone] = useState(false);
+  const [feedback, setFeedback] = useState<{
+    kind: "success" | "error" | "info";
+    message: string;
+  } | null>(null);
+
+  const jobLabel = draft.job?.title
+    ? `${draft.job.title}${draft.job.company ? ` — ${draft.job.company}` : ""}`
+    : "this application";
+  const answerCount = draft.answers.length;
+
+  async function run(dryRun: boolean) {
+    setBusy(dryRun ? "preview" : "submit");
+    setFeedback(null);
+    try {
+      const result = await onSubmit({ dryRun });
+      if (result.skipped) {
+        setFeedback({
+          kind: "error",
+          message: result.error || "Submission was blocked by your guardrails.",
+        });
+      } else if (result.needsHuman) {
+        setFeedback({
+          kind: "info",
+          message:
+            "This page isn't a supported ATS for auto-submit — finish it manually.",
+        });
+      } else if (dryRun) {
+        setFeedback({
+          kind: "success",
+          message: `Preview filled ${result.filled} field${
+            result.filled === 1 ? "" : "s"
+          }. Review the page, then submit.`,
+        });
+      } else if (result.ok) {
+        setDone(true);
+        setFeedback({
+          kind: "success",
+          message: result.atsRef
+            ? `Submitted. Reference: ${result.atsRef}`
+            : "Submitted.",
+        });
+      } else {
+        setFeedback({
+          kind: "error",
+          message: result.error || "Submission failed.",
+        });
+      }
+    } catch (error) {
+      setFeedback({
+        kind: "error",
+        message: (error as Error).message || "Submission failed.",
+      });
+    } finally {
+      setBusy(null);
+      setConfirming(false);
+    }
+  }
+
+  return (
+    <section className="status-card" aria-label="Ready to submit">
+      <strong>Approved draft ready</strong>
+      <span>
+        The agent prepared {answerCount} answer{answerCount === 1 ? "" : "s"}{" "}
+        for {jobLabel}. Preview the fill, then submit when it looks right.
+      </span>
+      <div className="actions">
+        <ActionButton
+          label="Preview fill (dry run)"
+          activeLabel="Filling..."
+          active={busy === "preview"}
+          disabled={busy !== null || done}
+          onClick={() => void run(true)}
+        />
+        {confirming ? (
+          <ActionButton
+            label="Confirm submit"
+            activeLabel="Submitting..."
+            active={busy === "submit"}
+            disabled={busy !== null || done}
+            primary
+            onClick={() => void run(false)}
+          />
+        ) : (
+          <ActionButton
+            label="Submit application"
+            activeLabel="Submitting..."
+            active={busy === "submit"}
+            disabled={busy !== null || done}
+            primary
+            onClick={() => setConfirming(true)}
+          />
+        )}
+      </div>
+      {feedback && (
+        <div
+          className={`status-card ${
+            feedback.kind === "error" ? "error" : "success"
+          }`}
+          role="status"
+        >
+          {feedback.message}
+        </div>
+      )}
+    </section>
   );
 }
 

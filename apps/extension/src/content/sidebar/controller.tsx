@@ -1,6 +1,7 @@
 import React from "react";
 import { createRoot, type Root } from "react-dom/client";
 import type {
+  ApprovedDraftPayload,
   BestFitResume,
   ExtensionProfile,
   ExtensionResumeSummary,
@@ -9,6 +10,7 @@ import type {
   SimilarAnswer,
   ScrapedJob,
 } from "@/shared/types";
+import type { SubmitResult } from "../submit/submit-adapter";
 import { JobPageSidebar } from "./job-page-sidebar";
 import type { ChatIntent } from "./chat-panel";
 import { computeJobMatchScore } from "./scoring";
@@ -55,6 +57,16 @@ export interface SidebarControllerUpdate {
   }) => Promise<void>;
   /** P4/#40 — Deep-link `/studio?mode=cover_letter&jobId=...&seed=...`. */
   onUseInCoverLetter: (seedText: string) => void;
+  /**
+   * L3 — an approved draft matched to this page, if any. Drives the
+   * "ready to submit" card. Null/undefined hides the card.
+   */
+  approvedDraft?: ApprovedDraftPayload | null;
+  /**
+   * L3 — fill (dry-run) or fill+submit the matched approved draft. Present only
+   * when `approvedDraft` is set.
+   */
+  onSubmitDraft?: (opts: { dryRun: boolean }) => Promise<SubmitResult>;
 }
 
 export class JobPageSidebarController {
@@ -151,6 +163,8 @@ export class JobPageSidebarController {
         onApplyAnswer={this.state.onApplyAnswer}
         onChatStream={this.state.onChatStream}
         onUseInCoverLetter={this.state.onUseInCoverLetter}
+        approvedDraft={this.state.approvedDraft}
+        onSubmitDraft={this.state.onSubmitDraft}
       />,
     );
   }
