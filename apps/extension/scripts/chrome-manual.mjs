@@ -33,9 +33,14 @@ console.log();
 
 const context = await chromium.launchPersistentContext(profileDir, {
   headless: false,
+  // viewport:null lets each page track the real OS window size, so maximizing
+  // the window actually enlarges the page (Playwright otherwise pins every page
+  // to a fixed 1280x720 viewport regardless of the window frame).
+  viewport: null,
   args: [
     `--disable-extensions-except=${distChrome}`,
     `--load-extension=${distChrome}`,
+    "--start-maximized",
     "--no-sandbox",
     "--disable-setuid-sandbox",
   ],
