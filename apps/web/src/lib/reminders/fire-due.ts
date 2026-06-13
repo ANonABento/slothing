@@ -53,6 +53,11 @@ export async function ensureRemindersFiringSchema(): Promise<void> {
   await getClient().execute(
     "CREATE INDEX IF NOT EXISTS idx_reminders_due_unfired ON reminders(due_date, fired_at)",
   );
+  // The user-facing reminder list + dashboard counts filter by user and order
+  // by due_date; without this they full-scan the table on every load.
+  await getClient().execute(
+    "CREATE INDEX IF NOT EXISTS idx_reminders_user_due ON reminders(user_id, due_date)",
+  );
   remindersFiringSchemaEnsured = true;
 }
 

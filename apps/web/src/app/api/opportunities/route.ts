@@ -114,29 +114,32 @@ export async function GET(request: NextRequest) {
         totalMatching: 0,
       });
     }
-    const jobs = await listJobsPaginated({
-      userId: authResult.userId,
-      statuses,
-      cursor,
-      limit: parsed.data.limit,
-      query,
-      remote,
-      type,
-      keyword,
-      sortBy,
-    });
-    const page = buildPaginationResult(jobs, parsed.data.limit, (job) =>
-      makeJobCursor(job, sortBy),
-    );
-    const statusCounts = normalizeStatusCounts(
-      await countJobsGroupedByStatus({
+    // The page of jobs and the status-count rollup are independent — run them
+    // concurrently so a remote DB pays one round-trip, not two sequentially.
+    const [jobs, statusCountRows] = await Promise.all([
+      listJobsPaginated({
+        userId: authResult.userId,
+        statuses,
+        cursor,
+        limit: parsed.data.limit,
+        query,
+        remote,
+        type,
+        keyword,
+        sortBy,
+      }),
+      countJobsGroupedByStatus({
         userId: authResult.userId,
         query,
         remote,
         type,
         keyword,
       }),
+    ]);
+    const page = buildPaginationResult(jobs, parsed.data.limit, (job) =>
+      makeJobCursor(job, sortBy),
     );
+    const statusCounts = normalizeStatusCounts(statusCountRows);
     const opportunities = page.items.map(jobToOpportunity);
     return NextResponse.json({
       jobs: page.items,

@@ -3,6 +3,27 @@ import { generateId } from "@/lib/utils";
 import { ensureSuggestedStatusUpdatesSchema } from "./suggested-status-updates";
 
 import { nowIso } from "@/lib/format/time";
+
+let notificationsIndexEnsured = false;
+
+/**
+ * The notification bell queries `WHERE user_id = ? ORDER BY created_at DESC` on
+ * every page load. Without an index that's a full table scan that grows with
+ * every reminder fire / status-change notification. Created at runtime
+ * (idempotent) since this table's schema is bootstrapped outside migrations.
+ */
+async function ensureNotificationsIndex(): Promise<void> {
+  if (notificationsIndexEnsured) return;
+  try {
+    await getClient().execute(
+      "CREATE INDEX IF NOT EXISTS idx_notifications_user_created ON notifications(user_id, created_at)",
+    );
+    notificationsIndexEnsured = true;
+  } catch {
+    // First-boot / test environments may lack the table; the read path's own
+    // try/catch handles that — don't let an index hiccup break notifications.
+  }
+}
 export type NotificationType =
   | "reminder_due"
   | "reminder_overdue"
@@ -88,6 +109,7 @@ async function getNotificationsAsync(options: {
 }): Promise<Notification[]> {
   const { unreadOnly = false, limit = 50, userId } = options || {};
   await ensureSuggestedStatusUpdatesSchema();
+  await ensureNotificationsIndex();
 
   let query = `
     SELECT
