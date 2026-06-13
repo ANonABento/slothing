@@ -667,7 +667,14 @@ export default function App() {
   return (
     <div className="popup">
       <section className="profile-card">
-        <div className="avatar">{profileInitial()}</div>
+        <div className="avatar-wrap">
+          <div className="avatar">{profileInitial()}</div>
+          <span
+            className="avatar-dot"
+            title="Connected"
+            aria-label="Connected"
+          />
+        </div>
         <div className="profile-meta">
           <div className="profile-name">
             {profile?.contact?.name ||
@@ -683,10 +690,6 @@ export default function App() {
           </div>
         </div>
         <div className="profile-aside">
-          <span className="pill ok" title="Extension connected">
-            <span className="pill-dot" />
-            Connected
-          </span>
           {profileScore !== null ? (
             <div
               className={`score ${profileScore >= 80 ? "high" : profileScore >= 50 ? "mid" : "low"}`}
@@ -745,7 +748,7 @@ export default function App() {
             )}
             {(pageStatus?.detectedUploadCount ?? 0) > 0 && (
               <div className="page-summary">
-                <span className="clip">
+                <span className="upload-note">
                   Resume upload detected. Attach your file manually.
                 </span>
                 {latestResume ? (

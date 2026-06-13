@@ -126,6 +126,7 @@ export function JobPageSidebar(props: JobPageSidebarProps) {
   const [searchError, setSearchError] = useState<string | null>(null);
   const [pickedResumeId, setPickedResumeId] = useState<string | null>(null);
   const [dockMenuOpen, setDockMenuOpen] = useState(false);
+  const [tab, setTab] = useState<"apply" | "assistant" | "answers">("apply");
   const dragState = useRef<DragState | null>(null);
   const resizeState = useRef<ResizeState | null>(null);
   const dockWrapRef = useRef<HTMLDivElement | null>(null);
@@ -154,6 +155,23 @@ export function JobPageSidebar(props: JobPageSidebarProps) {
   const selectedResumeId = pickedResumeId ?? bestFitResumes[0]?.id ?? null;
 
   const scoreValue = props.score?.overall ?? null;
+  const ringDeg =
+    scoreValue !== null ? Math.round((scoreValue / 100) * 360) : 0;
+  const fitLabel =
+    scoreValue === null
+      ? null
+      : scoreValue >= 80
+        ? "Strong fit"
+        : scoreValue >= 60
+          ? "Good fit"
+          : scoreValue >= 40
+            ? "Fair fit"
+            : "Stretch";
+  const companyInitial =
+    (props.scrapedJob.company || props.scrapedJob.title || "?")
+      .trim()
+      .charAt(0)
+      .toUpperCase() || "?";
   const jobMeta = useMemo(
     () =>
       [props.scrapedJob.company, props.scrapedJob.location]
@@ -311,24 +329,18 @@ export function JobPageSidebar(props: JobPageSidebarProps) {
       const result = await callback();
       const fillResult = isAutoFillResult(result) ? result : null;
       if (action === "autoFill" && fillResult) {
-        const conflicts = fillResult.conflicts ?? 0;
-        setAutoFillConflicts(conflicts);
-        const conflictCopy =
-          conflicts > 0
-            ? `. Skipped ${conflicts} field${conflicts === 1 ? "" : "s"} with existing values.`
-            : "";
-        const fromBank = fillResult.fromAnswerBank ?? 0;
-        const bankCopy =
-          fromBank > 0 ? ` (${fromBank} from your answer bank)` : "";
+        // Detailed conflict count surfaces as the dedicated "Overwrite" action
+        // below the grid; the cell itself keeps a short confirmation.
+        setAutoFillConflicts(fillResult.conflicts ?? 0);
         setActionFeedback({
           action,
-          label: `Filled ${fillResult.filled ?? 0}${bankCopy}${conflictCopy}`,
+          label: `Filled ${fillResult.filled ?? 0}`,
         });
         return;
       }
       setActionFeedback({
         action,
-        label: action === "autoFill" ? "Fields updated" : "Done",
+        label: action === "autoFill" ? "Filled" : "Done",
       });
     } catch (error) {
       setNotice({
@@ -390,16 +402,20 @@ export function JobPageSidebar(props: JobPageSidebarProps) {
     >
       <div className="panel" style={panelSizeStyle()}>
         <header
-          className="header"
+          className="brandhd"
           onPointerDown={startDrag}
           onPointerMove={moveDrag}
           onPointerUp={endDrag}
           onPointerCancel={endDrag}
           title="Drag to move"
         >
-          <div className="header-main">
-            <h2 className="title">{props.scrapedJob.title}</h2>
-            <p className="company">{jobMeta || props.scrapedJob.company}</p>
+          <div className="brand">
+            <img
+              className="brand-mark"
+              src={chrome.runtime.getURL("brand/slothing-mark.png")}
+              alt=""
+            />
+            <span className="brand-name">Slothing</span>
           </div>
           <div className="icon-row">
             <div className="dock-wrap" ref={dockWrapRef}>
@@ -470,218 +486,279 @@ export function JobPageSidebar(props: JobPageSidebarProps) {
           </div>
         </header>
 
+        <section className="jobsec" aria-label="Detected job">
+          <div className="job-logo" aria-hidden="true">
+            {companyInitial}
+          </div>
+          <div className="job-meta">
+            <h2 className="title">{props.scrapedJob.title}</h2>
+            <p className="company">{jobMeta || props.scrapedJob.company}</p>
+          </div>
+        </section>
+
         <div className="body">
-          <section className="score-card" aria-label="Match score">
-            <div>
+          <section className="score-hero" aria-label="Match score">
+            <div
+              className="ring"
+              style={{
+                background: `conic-gradient(var(--brand) ${ringDeg}deg, var(--rule-strong-bg) 0)`,
+              }}
+            >
+              <i>{scoreValue ?? "--"}</i>
+            </div>
+            <div className="score-meta">
               <p className="score-label">
                 {scoreValue === null ? "Profile needed" : "Match score"}
               </p>
               <p className="score-note">
                 {scoreValue === null
                   ? "Connect your profile to score this job."
-                  : "Based on your profile and this job description."}
+                  : "Based on your profile and this job."}
               </p>
-            </div>
-            <div className="score-pill" aria-label="Match score value">
-              <span>{scoreValue ?? "--"}</span>
-              {scoreValue !== null && <small>/100</small>}
+              {fitLabel && <span className="fit-tag">{fitLabel}</span>}
             </div>
           </section>
 
-          {props.approvedDraft && props.onSubmitDraft && (
-            <SubmitDraftCard
-              draft={props.approvedDraft}
-              onSubmit={props.onSubmitDraft}
-            />
-          )}
-
-          {showResumePicker && (
-            <section className="resume-picker" aria-label="Base resume">
-              <label
-                className="resume-picker-label"
-                htmlFor="slothing-resume-picker"
-              >
-                Tailor from
-              </label>
-              <select
-                id="slothing-resume-picker"
-                className="resume-picker-select"
-                value={selectedResumeId ?? ""}
-                onChange={(event) => setPickedResumeId(event.target.value)}
-                disabled={activeAction !== null}
-              >
-                {bestFitResumes.map((resume, index) => (
-                  <option key={resume.id} value={resume.id}>
-                    {index === 0 ? "★ " : ""}
-                    {resume.name} — {resume.score}% fit
-                  </option>
-                ))}
-              </select>
-              {selectedResumeId === bestFitResumes[0]?.id && (
-                <p className="resume-picker-note">
-                  Best fit for this job ({bestFitResumes[0]?.score}% match).
-                </p>
-              )}
-            </section>
-          )}
-
-          <section className="actions" aria-label="Job actions">
-            <ActionButton
-              label="Tailor resume"
-              activeLabel="Tailoring..."
-              active={activeAction === "tailor"}
-              feedback={
-                actionFeedback?.action === "tailor"
-                  ? actionFeedback.label
-                  : undefined
-              }
-              disabled={activeAction !== null}
-              primary
-              onClick={() =>
-                runAction("tailor", () =>
-                  props.onTailor(selectedResumeId ?? undefined),
-                )
-              }
-            />
-            <ActionButton
-              label="Cover letter"
-              activeLabel="Generating..."
-              active={activeAction === "coverLetter"}
-              feedback={
-                actionFeedback?.action === "coverLetter"
-                  ? actionFeedback.label
-                  : undefined
-              }
-              disabled={activeAction !== null}
-              onClick={() => runAction("coverLetter", props.onCoverLetter)}
-            />
-            <ActionButton
-              label="Save job"
-              activeLabel="Saving..."
-              active={activeAction === "save"}
-              feedback={actionFeedback?.action === "save" ? "Saved" : undefined}
-              disabled={activeAction !== null}
-              onClick={() => runAction("save", props.onSave)}
-            />
-            <ActionButton
-              label={
-                props.detectedFieldCount > 0
-                  ? `Auto-fill ${props.detectedFieldCount} fields`
-                  : "Auto-fill"
-              }
-              activeLabel="Filling..."
-              active={activeAction === "autoFill"}
-              feedback={
-                actionFeedback?.action === "autoFill"
-                  ? actionFeedback.label
-                  : undefined
-              }
-              disabled={activeAction !== null || props.detectedFieldCount === 0}
-              onClick={() =>
-                runAction("autoFill", () =>
-                  props.onAutoFill({ overwriteExisting: false }),
-                )
-              }
-            />
-            {autoFillConflicts > 0 && (
-              <ActionButton
-                label={`Overwrite ${autoFillConflicts} skipped field${autoFillConflicts === 1 ? "" : "s"}`}
-                activeLabel="Overwriting..."
-                active={activeAction === "autoFill"}
-                disabled={activeAction !== null}
-                onClick={() =>
-                  runAction("autoFill", () =>
-                    props.onAutoFill({ overwriteExisting: true }),
-                  )
-                }
-              />
-            )}
-          </section>
-
-          {props.detectedUploadCount > 0 && (
-            <section
-              className="status-card"
-              aria-label="Document upload handoff"
+          <div className="seg" role="tablist" aria-label="Sidebar sections">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={tab === "apply"}
+              className={tab === "apply" ? "on" : ""}
+              onClick={() => setTab("apply")}
             >
-              <strong>Resume upload detected</strong>
-              <span>
-                Slothing cannot attach files for you. Download your latest
-                document, then upload it manually on this application.
-              </span>
-              {props.latestResume && (
-                <span className="muted">{props.latestResume.name}</span>
-              )}
-              <button
-                className="small-button"
-                type="button"
-                onClick={() => void props.onOpenLatestResume()}
-              >
-                {props.latestResume ? "Open latest resume" : "Open Studio"}
-              </button>
-            </section>
-          )}
+              Apply
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={tab === "assistant"}
+              className={tab === "assistant" ? "on" : ""}
+              onClick={() => setTab("assistant")}
+            >
+              Assistant
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={tab === "answers"}
+              className={tab === "answers" ? "on" : ""}
+              onClick={() => setTab("answers")}
+            >
+              Answers
+            </button>
+          </div>
 
-          {notice?.kind === "error" && (
-            <div className={`status-card ${notice.kind}`} role="status">
-              {notice.message}
+          {tab === "apply" && (
+            <div className="tabpane" role="tabpanel">
+              {props.approvedDraft && props.onSubmitDraft && (
+                <SubmitDraftCard
+                  draft={props.approvedDraft}
+                  onSubmit={props.onSubmitDraft}
+                />
+              )}
+              {showResumePicker && (
+                <section className="resume-picker" aria-label="Base resume">
+                  <label
+                    className="resume-picker-label"
+                    htmlFor="slothing-resume-picker"
+                  >
+                    Tailor from
+                  </label>
+                  <select
+                    id="slothing-resume-picker"
+                    className="resume-picker-select"
+                    value={selectedResumeId ?? ""}
+                    onChange={(event) => setPickedResumeId(event.target.value)}
+                    disabled={activeAction !== null}
+                  >
+                    {bestFitResumes.map((resume, index) => (
+                      <option key={resume.id} value={resume.id}>
+                        {index === 0 ? "★ " : ""}
+                        {resume.name} — {resume.score}% fit
+                      </option>
+                    ))}
+                  </select>
+                  {selectedResumeId === bestFitResumes[0]?.id && (
+                    <p className="resume-picker-note">
+                      Best fit for this job ({bestFitResumes[0]?.score}% match).
+                    </p>
+                  )}
+                </section>
+              )}
+
+              <div className="agrid" aria-label="Job actions">
+                <GridAction
+                  icon="tailor"
+                  label="Tailor"
+                  activeLabel="Tailoring…"
+                  active={activeAction === "tailor"}
+                  feedback={
+                    actionFeedback?.action === "tailor" ? "Done" : undefined
+                  }
+                  disabled={activeAction !== null}
+                  primary
+                  onClick={() =>
+                    runAction("tailor", () =>
+                      props.onTailor(selectedResumeId ?? undefined),
+                    )
+                  }
+                />
+                <GridAction
+                  icon="cover"
+                  label="Cover letter"
+                  activeLabel="Generating…"
+                  active={activeAction === "coverLetter"}
+                  feedback={
+                    actionFeedback?.action === "coverLetter"
+                      ? "Done"
+                      : undefined
+                  }
+                  disabled={activeAction !== null}
+                  onClick={() => runAction("coverLetter", props.onCoverLetter)}
+                />
+                <GridAction
+                  icon="save"
+                  label="Save job"
+                  activeLabel="Saving…"
+                  active={activeAction === "save"}
+                  feedback={
+                    actionFeedback?.action === "save" ? "Saved" : undefined
+                  }
+                  disabled={activeAction !== null}
+                  onClick={() => runAction("save", props.onSave)}
+                />
+                <GridAction
+                  icon="autofill"
+                  label={
+                    props.detectedFieldCount > 0
+                      ? `Auto-fill ${props.detectedFieldCount}`
+                      : "Auto-fill"
+                  }
+                  activeLabel="Filling…"
+                  active={activeAction === "autoFill"}
+                  feedback={
+                    actionFeedback?.action === "autoFill"
+                      ? actionFeedback.label
+                      : undefined
+                  }
+                  disabled={
+                    activeAction !== null || props.detectedFieldCount === 0
+                  }
+                  onClick={() =>
+                    runAction("autoFill", () =>
+                      props.onAutoFill({ overwriteExisting: false }),
+                    )
+                  }
+                />
+                {autoFillConflicts > 0 && (
+                  <GridAction
+                    wide
+                    icon="autofill"
+                    label={`Overwrite ${autoFillConflicts} skipped field${autoFillConflicts === 1 ? "" : "s"}`}
+                    activeLabel="Overwriting…"
+                    active={activeAction === "autoFill"}
+                    disabled={activeAction !== null}
+                    onClick={() =>
+                      runAction("autoFill", () =>
+                        props.onAutoFill({ overwriteExisting: true }),
+                      )
+                    }
+                  />
+                )}
+              </div>
+
+              {props.detectedUploadCount > 0 && (
+                <section
+                  className="status-card"
+                  aria-label="Document upload handoff"
+                >
+                  <strong>Resume upload detected</strong>
+                  <span>
+                    Slothing cannot attach files for you. Download your latest
+                    document, then upload it manually on this application.
+                  </span>
+                  {props.latestResume && (
+                    <span className="muted">{props.latestResume.name}</span>
+                  )}
+                  <button
+                    className="small-button"
+                    type="button"
+                    onClick={() => void props.onOpenLatestResume()}
+                  >
+                    {props.latestResume ? "Open latest resume" : "Open Studio"}
+                  </button>
+                </section>
+              )}
+
+              {notice?.kind === "error" && (
+                <div className={`status-card ${notice.kind}`} role="status">
+                  {notice.message}
+                </div>
+              )}
             </div>
           )}
 
-          <details className="utility-section">
-            <summary>AI assistant</summary>
-            <ChatPanel
-              onStream={props.onChatStream}
-              onUseInCoverLetter={props.onUseInCoverLetter}
-            />
-          </details>
+          {tab === "assistant" && (
+            <div className="tabpane" role="tabpanel">
+              <ChatPanel
+                onStream={props.onChatStream}
+                onUseInCoverLetter={props.onUseInCoverLetter}
+              />
+            </div>
+          )}
 
-          <details className="utility-section">
-            <summary>Answer bank</summary>
-            <section className="answer-bank" aria-label="Answer bank search">
-              <form className="search-row" onSubmit={handleSearch}>
-                <input
-                  value={query}
-                  onChange={(event) => setQuery(event.target.value)}
-                  placeholder="Search saved answers"
-                  aria-label="Search saved answers"
-                />
-                <button type="submit" disabled={searching || !query.trim()}>
-                  {searching ? "..." : "Search"}
-                </button>
-              </form>
-              {searchError && (
-                <p className="status-card error">{searchError}</p>
-              )}
-              <div className="results">
-                {answers.map((answer) => (
-                  <article className="result" key={answer.id}>
-                    <p className="result-question">{answer.question}</p>
-                    <p className="result-answer">{answer.answer}</p>
-                    <p className="result-meta">
-                      {Math.round(answer.similarity * 100)}% match / used{" "}
-                      {answer.timesUsed} times
-                    </p>
-                    <div className="result-actions">
-                      <button
-                        className="small-button secondary"
-                        type="button"
-                        onClick={() => copyAnswer(answer)}
-                      >
-                        Copy
-                      </button>
-                      <button
-                        className="small-button"
-                        type="button"
-                        onClick={() => void props.onApplyAnswer(answer)}
-                      >
-                        Apply
-                      </button>
-                    </div>
-                  </article>
-                ))}
-              </div>
-            </section>
-          </details>
+          {tab === "answers" && (
+            <div className="tabpane" role="tabpanel">
+              <section className="answer-bank" aria-label="Answer bank search">
+                <form className="search-row" onSubmit={handleSearch}>
+                  <input
+                    value={query}
+                    onChange={(event) => setQuery(event.target.value)}
+                    placeholder="Search saved answers"
+                    aria-label="Search saved answers"
+                  />
+                  <button type="submit" disabled={searching || !query.trim()}>
+                    {searching ? "..." : "Search"}
+                  </button>
+                </form>
+                {searchError && (
+                  <p className="status-card error">{searchError}</p>
+                )}
+                {notice?.kind === "success" && (
+                  <p className="status-card success">{notice.message}</p>
+                )}
+                <div className="results">
+                  {answers.map((answer) => (
+                    <article className="result" key={answer.id}>
+                      <p className="result-question">{answer.question}</p>
+                      <p className="result-answer">{answer.answer}</p>
+                      <p className="result-meta">
+                        {Math.round(answer.similarity * 100)}% match / used{" "}
+                        {answer.timesUsed} times
+                      </p>
+                      <div className="result-actions">
+                        <button
+                          className="small-button secondary"
+                          type="button"
+                          onClick={() => copyAnswer(answer)}
+                        >
+                          Copy
+                        </button>
+                        <button
+                          className="small-button"
+                          type="button"
+                          onClick={() => void props.onApplyAnswer(answer)}
+                        >
+                          Apply
+                        </button>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              </section>
+            </div>
+          )}
         </div>
         <div
           className="resize-handle"
@@ -848,6 +925,80 @@ function clampSidebarPosition(
   };
 }
 
+const ICONS = {
+  tailor: (
+    <>
+      <path d="M12 20h9" />
+      <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z" />
+    </>
+  ),
+  cover: (
+    <>
+      <rect x="3" y="5" width="18" height="14" rx="2" />
+      <path d="m3 7 9 6 9-6" />
+    </>
+  ),
+  save: <path d="M6 3h12v18l-6-4-6 4z" />,
+  autofill: <path d="M13 2 4 14h7l-1 8 9-12h-7z" />,
+} as const;
+
+function Glyph({ name }: { name: keyof typeof ICONS }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width="16"
+      height="16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.7}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      {ICONS[name]}
+    </svg>
+  );
+}
+
+function GridAction({
+  icon,
+  label,
+  activeLabel,
+  active,
+  feedback,
+  disabled,
+  primary,
+  wide,
+  onClick,
+}: {
+  icon: keyof typeof ICONS;
+  label: string;
+  activeLabel: string;
+  active: boolean;
+  feedback?: string;
+  disabled: boolean;
+  primary?: boolean;
+  wide?: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      className={`acard${primary ? " primary" : ""}${feedback ? " done" : ""}${wide ? " wide" : ""}`}
+      type="button"
+      disabled={disabled}
+      onClick={onClick}
+    >
+      <Glyph name={icon} />
+      <span>{active ? activeLabel : feedback || label}</span>
+    </button>
+  );
+}
+
+/**
+ * Full-width labelled button used by the L3 SubmitDraftCard (preview / submit).
+ * The primary job actions use GridAction; this keeps the submit flow's two-button
+ * confirm pattern intact.
+ */
 function ActionButton({
   label,
   activeLabel,
