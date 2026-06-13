@@ -123,6 +123,11 @@ function parseJsonSafely(value: string): unknown {
   }
 }
 
+// Bucket G — pay normalization. The bento renderer + pay comparators prefer
+// these parsed values (from the raw `salary` string at import) over the string.
+export const PAY_NORMALIZATION_UNITS = ["hourly", "monthly", "annual"] as const;
+export type PayNormalizationUnit = (typeof PAY_NORMALIZATION_UNITS)[number];
+
 export interface Opportunity {
   id: string;
   type: OpportunityType;
@@ -143,6 +148,13 @@ export interface Opportunity {
   level?: OpportunityLevel;
   openings?: number;
   workTerm?: string;
+  // Competitiveness signal — number of applicants reported by the source.
+  applicants?: number;
+  // Bucket G — parsed/inferred pay from the raw `salary` string at import.
+  inferredPayUnit?: PayNormalizationUnit;
+  inferredPayMin?: number;
+  inferredPayMax?: number;
+  inferredPayCurrency?: string;
   applicationMethod?: string;
   requiredDocuments?: string[];
   targetedDegrees?: string[];
