@@ -264,177 +264,197 @@ export default function OptionsApp() {
         </div>
       </header>
 
-      <section className="settings-card connection-card">
-        <h2>Connection</h2>
-        <div className="setting-group">
-          <label>
-            <span>Slothing API URL</span>
-            <small>The URL where your Slothing app is running</small>
-          </label>
-          <div className="input-group">
-            <input
-              type="url"
-              value={apiUrl}
-              onChange={(e) => setApiUrl(e.target.value)}
-              placeholder={DEFAULT_API_BASE_URL}
-            />
-            <button
-              onClick={handleApiUrlChange}
-              disabled={apiUrlStatus.state === "saving"}
+      <div className="settings-grid">
+        <section className="settings-card connection-card">
+          <h2>Connection</h2>
+          <div className="setting-group">
+            <label>
+              <span>Slothing API URL</span>
+              <small>The URL where your Slothing app is running</small>
+            </label>
+            <div className="input-group">
+              <input
+                type="url"
+                value={apiUrl}
+                onChange={(e) => setApiUrl(e.target.value)}
+                placeholder={DEFAULT_API_BASE_URL}
+              />
+              <button
+                onClick={handleApiUrlChange}
+                disabled={apiUrlStatus.state === "saving"}
+              >
+                {apiUrlStatus.state === "saving" ? "Saving…" : "Save"}
+              </button>
+              <SaveStatusBadge status={apiUrlStatus} />
+            </div>
+          </div>
+        </section>
+
+        <section className="settings-card autofill-card">
+          <div className="section-head">
+            <h2>Auto-Fill</h2>
+            <SaveStatusBadge status={settingsStatus} />
+          </div>
+          <div className="setting-group">
+            <label className="checkbox-label">
+              <input
+                type="checkbox"
+                checked={settings.autoFillEnabled}
+                onChange={(e) =>
+                  handleSettingChange("autoFillEnabled", e.target.checked)
+                }
+              />
+              <span>Enable auto-fill</span>
+            </label>
+            <small>
+              Automatically detect form fields on job application pages
+            </small>
+          </div>
+
+          <div className="setting-group">
+            <label className="checkbox-label">
+              <input
+                type="checkbox"
+                checked={settings.showConfidenceIndicators}
+                onChange={(e) =>
+                  handleSettingChange(
+                    "showConfidenceIndicators",
+                    e.target.checked,
+                  )
+                }
+              />
+              <span>Show confidence indicators</span>
+            </label>
+            <small>Display confidence levels for detected fields</small>
+          </div>
+
+          <div className="setting-group">
+            <label>
+              <span>Minimum confidence threshold</span>
+              <small>Only fill fields with confidence above this level</small>
+            </label>
+            <div className="range-group">
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.1"
+                value={settings.minimumConfidence}
+                onChange={(e) =>
+                  handleSettingChange(
+                    "minimumConfidence",
+                    parseFloat(e.target.value),
+                  )
+                }
+              />
+              <span>{Math.round(settings.minimumConfidence * 100)}%</span>
+            </div>
+          </div>
+        </section>
+
+        <section className="settings-card compact-card">
+          <div className="section-head">
+            <h2>Learning</h2>
+            <SaveStatusBadge status={settingsStatus} />
+          </div>
+          <div className="setting-group">
+            <label className="checkbox-label">
+              <input
+                type="checkbox"
+                checked={settings.learnFromAnswers}
+                onChange={(e) =>
+                  handleSettingChange("learnFromAnswers", e.target.checked)
+                }
+              />
+              <span>Learn from my answers</span>
+            </label>
+            <small>
+              Save answers to custom questions for future suggestions
+            </small>
+          </div>
+        </section>
+
+        <section className="settings-card tracking-card">
+          <div className="section-head">
+            <h2>Tracking</h2>
+            <SaveStatusBadge status={settingsStatus} />
+          </div>
+          <div className="setting-group">
+            <label className="checkbox-label">
+              <input
+                type="checkbox"
+                checked={settings.autoTrackApplicationsEnabled}
+                onChange={(e) =>
+                  handleSettingChange(
+                    "autoTrackApplicationsEnabled",
+                    e.target.checked,
+                  )
+                }
+              />
+              <span>Track submitted applications</span>
+            </label>
+            <small>
+              Create an applied opportunity when an autofilled application form
+              is submitted
+            </small>
+          </div>
+
+          <div className="setting-group">
+            <label className="checkbox-label">
+              <input
+                type="checkbox"
+                checked={settings.captureScreenshotEnabled}
+                onChange={(e) =>
+                  handleSettingChange(
+                    "captureScreenshotEnabled",
+                    e.target.checked,
+                  )
+                }
+              />
+              <span>Capture screenshot when tracking</span>
+            </label>
+            <small>Off by default; form values are never captured</small>
+          </div>
+        </section>
+
+        <section className="settings-card compact-card">
+          <div className="section-head">
+            <h2>Notifications</h2>
+            <SaveStatusBadge status={settingsStatus} />
+          </div>
+          <div className="setting-group">
+            <label className="checkbox-label">
+              <input
+                type="checkbox"
+                checked={settings.notifyOnJobDetected}
+                onChange={(e) =>
+                  handleSettingChange("notifyOnJobDetected", e.target.checked)
+                }
+              />
+              <span>Show badge when job detected</span>
+            </label>
+            <small>
+              Display a badge on the extension icon when a job listing is found
+            </small>
+          </div>
+        </section>
+
+        <section className="settings-card about-card">
+          <h2>About</h2>
+          <p className="about">
+            Slothing Browser Extension v{chrome.runtime.getManifest().version}
+          </p>
+          <p className="about">
+            <a
+              href="https://github.com/ANonABento/slothing"
+              target="_blank"
+              rel="noopener noreferrer"
             >
-              {apiUrlStatus.state === "saving" ? "Saving…" : "Save"}
-            </button>
-            <SaveStatusBadge status={apiUrlStatus} />
-          </div>
-        </div>
-      </section>
-
-      <section className="settings-card autofill-card">
-        <div className="section-head">
-          <h2>Auto-Fill</h2>
-          <SaveStatusBadge status={settingsStatus} />
-        </div>
-        <div className="setting-group">
-          <label className="checkbox-label">
-            <input
-              type="checkbox"
-              checked={settings.autoFillEnabled}
-              onChange={(e) =>
-                handleSettingChange("autoFillEnabled", e.target.checked)
-              }
-            />
-            <span>Enable auto-fill</span>
-          </label>
-          <small>
-            Automatically detect form fields on job application pages
-          </small>
-        </div>
-
-        <div className="setting-group">
-          <label className="checkbox-label">
-            <input
-              type="checkbox"
-              checked={settings.showConfidenceIndicators}
-              onChange={(e) =>
-                handleSettingChange(
-                  "showConfidenceIndicators",
-                  e.target.checked,
-                )
-              }
-            />
-            <span>Show confidence indicators</span>
-          </label>
-          <small>Display confidence levels for detected fields</small>
-        </div>
-
-        <div className="setting-group">
-          <label>
-            <span>Minimum confidence threshold</span>
-            <small>Only fill fields with confidence above this level</small>
-          </label>
-          <div className="range-group">
-            <input
-              type="range"
-              min="0"
-              max="1"
-              step="0.1"
-              value={settings.minimumConfidence}
-              onChange={(e) =>
-                handleSettingChange(
-                  "minimumConfidence",
-                  parseFloat(e.target.value),
-                )
-              }
-            />
-            <span>{Math.round(settings.minimumConfidence * 100)}%</span>
-          </div>
-        </div>
-      </section>
-
-      <section className="settings-card compact-card">
-        <div className="section-head">
-          <h2>Learning</h2>
-          <SaveStatusBadge status={settingsStatus} />
-        </div>
-        <div className="setting-group">
-          <label className="checkbox-label">
-            <input
-              type="checkbox"
-              checked={settings.learnFromAnswers}
-              onChange={(e) =>
-                handleSettingChange("learnFromAnswers", e.target.checked)
-              }
-            />
-            <span>Learn from my answers</span>
-          </label>
-          <small>Save answers to custom questions for future suggestions</small>
-        </div>
-      </section>
-
-      <section className="settings-card tracking-card">
-        <div className="section-head">
-          <h2>Tracking</h2>
-          <SaveStatusBadge status={settingsStatus} />
-        </div>
-        <div className="setting-group">
-          <label className="checkbox-label">
-            <input
-              type="checkbox"
-              checked={settings.autoTrackApplicationsEnabled}
-              onChange={(e) =>
-                handleSettingChange(
-                  "autoTrackApplicationsEnabled",
-                  e.target.checked,
-                )
-              }
-            />
-            <span>Track submitted applications</span>
-          </label>
-          <small>
-            Create an applied opportunity when an autofilled application form is
-            submitted
-          </small>
-        </div>
-
-        <div className="setting-group">
-          <label className="checkbox-label">
-            <input
-              type="checkbox"
-              checked={settings.captureScreenshotEnabled}
-              onChange={(e) =>
-                handleSettingChange(
-                  "captureScreenshotEnabled",
-                  e.target.checked,
-                )
-              }
-            />
-            <span>Capture screenshot when tracking</span>
-          </label>
-          <small>Off by default; form values are never captured</small>
-        </div>
-      </section>
-
-      <section className="settings-card compact-card">
-        <div className="section-head">
-          <h2>Notifications</h2>
-          <SaveStatusBadge status={settingsStatus} />
-        </div>
-        <div className="setting-group">
-          <label className="checkbox-label">
-            <input
-              type="checkbox"
-              checked={settings.notifyOnJobDetected}
-              onChange={(e) =>
-                handleSettingChange("notifyOnJobDetected", e.target.checked)
-              }
-            />
-            <span>Show badge when job detected</span>
-          </label>
-          <small>
-            Display a badge on the extension icon when a job listing is found
-          </small>
-        </div>
-      </section>
+              View on GitHub
+            </a>
+          </p>
+        </section>
+      </div>
 
       {learnedAnswers.length > 0 && (
         <section className="settings-card saved-answers-card">
@@ -541,22 +561,6 @@ export default function OptionsApp() {
           </button>
         </div>
         {newHostError && <small className="field-error">{newHostError}</small>}
-      </section>
-
-      <section className="settings-card about-card">
-        <h2>About</h2>
-        <p className="about">
-          Slothing Browser Extension v{chrome.runtime.getManifest().version}
-        </p>
-        <p className="about">
-          <a
-            href="https://github.com/ANonABento/slothing"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            View on GitHub
-          </a>
-        </p>
       </section>
     </div>
   );

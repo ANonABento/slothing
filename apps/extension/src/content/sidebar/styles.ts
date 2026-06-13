@@ -102,10 +102,10 @@ input:focus-visible {
   border-radius: 0 8px 8px 0;
 }
 
-/* ---- Slim header: title + company on the left, controls on the right ---- */
-.header {
+/* ---- Branded header (draggable) ---- */
+.brandhd {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 8px;
   padding: 8px 10px;
@@ -116,18 +116,63 @@ input:focus-visible {
   touch-action: none;
 }
 
-.header:active {
+.brandhd:active {
   cursor: grabbing;
 }
 
-.header-main {
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+
+.brand-mark {
+  width: 20px;
+  height: 20px;
+  border-radius: 5px;
+  display: block;
+  object-fit: cover;
+}
+
+.brand-name {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+/* ---- Job section (logo + title + company) ---- */
+.jobsec {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border-bottom: 1px solid var(--rule);
+  background: var(--bg);
+}
+
+.job-logo {
+  width: 36px;
+  height: 36px;
+  flex: none;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  font-size: 15px;
+  background: var(--brand-soft);
+  color: var(--brand-dark);
+  border: 1px solid rgba(184, 112, 74, 0.3);
+}
+
+.job-meta {
   min-width: 0;
 }
 
 .title {
   margin: 0;
   font-size: 14px;
-  line-height: 1.25;
+  line-height: 1.2;
   font-weight: 800;
   overflow-wrap: anywhere;
 }
@@ -171,7 +216,7 @@ input:focus-visible {
 
 .dock-menu button {
   text-align: left;
-  padding: 7px 9px;
+  padding: 6px 9px;
   border-radius: 4px;
   background: none;
   color: var(--ink);
@@ -186,8 +231,154 @@ input:focus-visible {
 
 .body {
   display: grid;
-  gap: 10px;
-  padding: 12px;
+  gap: 8px;
+  padding: 10px;
+}
+
+/* ---- Score ring hero ---- */
+.score-hero {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 12px;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  background: var(--paper);
+}
+
+.ring {
+  position: relative;
+  width: 60px;
+  height: 60px;
+  flex: none;
+  border-radius: 50%;
+}
+
+.ring i {
+  position: absolute;
+  inset: 6px;
+  border-radius: 50%;
+  background: var(--paper);
+  display: grid;
+  place-items: center;
+  font-style: normal;
+  font-weight: 900;
+  font-size: 18px;
+}
+
+.score-meta {
+  min-width: 0;
+}
+
+.score-label {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.score-note {
+  margin: 2px 0 0;
+  color: var(--ink-3);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.fit-tag {
+  display: inline-block;
+  margin-top: 6px;
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--success);
+  background: var(--success-soft);
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(47, 107, 79, 0.28);
+}
+
+/* ---- Segmented tabs ---- */
+.seg {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 3px;
+  padding: 3px;
+  background: var(--bg-2);
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+}
+
+.seg button {
+  border: 0;
+  background: transparent;
+  padding: 6px 4px;
+  border-radius: 6px;
+  font: inherit;
+  font-weight: 700;
+  font-size: 12px;
+  color: var(--ink-3);
+  cursor: pointer;
+}
+
+.seg button.on {
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow: 0 1px 2px rgba(26, 21, 48, 0.08);
+}
+
+.tabpane {
+  display: grid;
+  gap: 8px;
+}
+
+/* ---- 2x2 action grid ---- */
+.agrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.acard {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+  font-weight: 750;
+  font-size: 12.5px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.acard svg {
+  flex: none;
+}
+
+.acard:hover:not(:disabled) {
+  filter: brightness(0.97);
+}
+
+.acard:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.acard.primary {
+  background: var(--ink);
+  color: var(--paper);
+  border-color: var(--ink);
+}
+
+.acard.done {
+  color: var(--success);
+  border-color: rgba(47, 107, 79, 0.3);
+}
+
+.acard.wide {
+  grid-column: 1 / -1;
+  justify-content: center;
 }
 
 .score-card,
@@ -203,7 +394,7 @@ input:focus-visible {
   grid-template-columns: 1fr auto;
   gap: 10px;
   align-items: center;
-  padding: 10px;
+  padding: 9px 10px;
 }
 
 .score-label {
@@ -252,17 +443,18 @@ input:focus-visible {
 
 .actions {
   display: grid;
-  gap: 6px;
-  padding: 8px;
+  gap: 5px;
+  padding: 7px;
 }
 
 .action-button {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
+  gap: 8px;
   width: 100%;
-  min-height: 36px;
-  padding: 8px 10px;
+  min-height: 34px;
+  padding: 7px 10px;
   border-radius: 6px;
   border: 1px solid var(--rule);
   background: var(--paper);
@@ -293,9 +485,21 @@ input:focus-visible {
 }
 
 .status-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5px;
   padding: 10px 12px;
   font-size: 12px;
   line-height: 1.4;
+}
+
+.status-card strong {
+  font-size: 12.5px;
+}
+
+.status-card .small-button {
+  margin-top: 3px;
 }
 
 .status-card.success {
@@ -431,23 +635,29 @@ input:focus-visible {
   color: var(--ink);
 }
 
-/* ---- Drag-to-resize handle (bottom inner corner) ---- */
+/* ---- Drag-to-resize handle (bottom inner corner) ----
+   No persistent visual — just a corner hit-area with a resize cursor; a faint
+   chevron fades in on hover so it stays discoverable without cluttering. */
 .resize-handle {
   position: absolute;
   bottom: 0;
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   z-index: 2;
-  cursor: nwse-resize;
   touch-action: none;
+  background: transparent;
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+
+.resize-handle:hover {
+  opacity: 1;
   background:
     linear-gradient(
       135deg,
-      transparent 0 55%,
-      var(--rule-strong) 55% 62%,
-      transparent 62% 74%,
-      var(--rule-strong) 74% 81%,
-      transparent 81%
+      transparent 0 62%,
+      var(--rule-strong) 62% 70%,
+      transparent 70%
     );
 }
 

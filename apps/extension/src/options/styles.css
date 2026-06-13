@@ -21,21 +21,34 @@ body {
 }
 
 .options-container {
-  max-width: 1060px;
+  max-width: 1040px;
   margin: 0 auto;
-  padding: 18px 20px 28px;
-  display: grid;
-  grid-template-columns: repeat(12, minmax(0, 1fr));
-  align-items: start;
-  gap: 12px;
+  padding: 16px 20px 24px;
 }
 
 header {
-  grid-column: 1 / -1;
-  margin-bottom: 2px;
+  margin-bottom: 12px;
   display: flex;
   align-items: center;
   gap: 12px;
+}
+
+/* Masonry-style packing for the small setting cards — fills tightly with no
+   ragged height gaps. Cards flow top-to-bottom across balanced columns. */
+.settings-grid {
+  columns: 300px;
+  column-gap: 12px;
+  margin-bottom: 12px;
+}
+
+.settings-grid > section {
+  break-inside: avoid;
+  margin-bottom: 12px;
+}
+
+/* Full-width sections live outside the masonry grid. */
+.manage-sites-card {
+  margin-bottom: 12px;
 }
 
 .header-mark {
@@ -64,23 +77,8 @@ section {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--r-md);
-  padding: 14px 16px;
+  padding: 12px 14px;
   margin-bottom: 0;
-  grid-column: span 4;
-}
-
-.connection-card,
-.autofill-card,
-.tracking-card {
-  grid-column: span 4;
-}
-
-.saved-answers-card {
-  grid-column: 1 / -1;
-}
-
-.about-card {
-  grid-column: span 4;
 }
 
 section h2 {
@@ -89,7 +87,7 @@ section h2 {
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--text-muted);
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 
 .section-head {
@@ -97,7 +95,7 @@ section h2 {
   align-items: baseline;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 
 .section-head h2 {
@@ -151,7 +149,7 @@ section h2 {
 }
 
 .setting-group {
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 
 .setting-group:last-child {
@@ -324,21 +322,13 @@ section h2 {
   background: rgba(255, 250, 239, 0.72);
 }
 
-@media (max-width: 900px) {
-  .options-container {
-    grid-template-columns: 1fr;
+@media (max-width: 720px) {
+  .settings-grid {
+    columns: 1;
   }
 
-  section,
-  .connection-card,
-  .autofill-card,
-  .tracking-card,
-  .about-card,
-  .saved-answers-card {
-    grid-column: 1 / -1;
-  }
-
-  .answers-list {
+  .answers-list,
+  .site-rules-list {
     grid-template-columns: 1fr;
   }
 }
@@ -393,21 +383,18 @@ section h2 {
 }
 
 /* ---------- Manage sites (allow/block list) ---------- */
-.manage-sites-card {
-  grid-column: 1 / -1;
-}
-
 .site-rules-list {
   display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 6px;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 
 .site-rule-row {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 8px 10px;
+  gap: 8px;
+  padding: 5px 6px 5px 10px;
   border: 1px solid var(--border);
   border-radius: var(--r-sm);
   background: rgba(255, 250, 239, 0.72);
@@ -431,7 +418,7 @@ section h2 {
 }
 
 .site-rule-toggle button {
-  padding: 4px 12px;
+  padding: 3px 10px;
   border: 0;
   background: transparent;
   color: var(--text-muted);
@@ -439,6 +426,10 @@ section h2 {
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
+}
+
+.site-rule-row .delete-btn {
+  padding: 3px 8px;
 }
 
 .site-rule-toggle button.active {
