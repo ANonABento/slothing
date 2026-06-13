@@ -8,6 +8,7 @@ const mocks = vi.hoisted(() => ({
   updateJob: vi.fn(),
   deleteJob: vi.fn(),
   recordJobStatusChange: vi.fn(),
+  ensureApplicationFollowUpReminder: vi.fn(),
   safeTrackActivity: vi.fn(),
   jobToOpportunity: vi.fn((job) => ({ id: job.id, status: job.status })),
 }));
@@ -25,6 +26,10 @@ vi.mock("@/lib/db/jobs-async", () => ({
 
 vi.mock("@/lib/db/analytics", () => ({
   recordJobStatusChange: mocks.recordJobStatusChange,
+}));
+
+vi.mock("@/lib/db/reminders", () => ({
+  ensureApplicationFollowUpReminder: mocks.ensureApplicationFollowUpReminder,
 }));
 
 vi.mock("@/lib/opportunities", () => ({
@@ -60,6 +65,7 @@ describe("opportunity detail route", () => {
     mocks.requireAuth.mockResolvedValue({ userId: "user-1" });
     mocks.isAuthError.mockReturnValue(false);
     mocks.safeTrackActivity.mockResolvedValue({ unlocked: [] });
+    mocks.ensureApplicationFollowUpReminder.mockResolvedValue(null);
   });
 
   it("returns the underlying job and opportunity view for the authenticated user", async () => {
@@ -131,6 +137,40 @@ describe("opportunity detail route", () => {
       "user-1",
       "opp_applied",
     );
+    expect(mocks.ensureApplicationFollowUpReminder).toHaveBeenCalledWith(
+      "opportunity-1",
+      "user-1",
+    );
+  });
+
+  it("does not schedule a follow-up reminder for non-applied transitions", async () => {
+    mocks.getJob.mockReturnValueOnce(baseJob).mockReturnValueOnce({
+      ...baseJob,
+      status: "interviewing",
+    });
+
+    await PATCH(jsonRequest({ status: "interviewing" }), routeContext);
+
+    expect(mocks.recordJobStatusChange).toHaveBeenCalled();
+    expect(mocks.ensureApplicationFollowUpReminder).not.toHaveBeenCalled();
+  });
+
+  it("still updates status when the follow-up reminder fails", async () => {
+    mocks.getJob.mockReturnValueOnce(baseJob).mockReturnValueOnce({
+      ...baseJob,
+      status: "applied",
+    });
+    mocks.ensureApplicationFollowUpReminder.mockRejectedValueOnce(
+      new Error("db down"),
+    );
+
+    const response = await PATCH(
+      jsonRequest({ status: "applied" }),
+      routeContext,
+    );
+
+    expect(response.status).toBe(200);
+    expect(mocks.updateJob).toHaveBeenCalled();
   });
 
   it("rejects invalid update payloads", async () => {
