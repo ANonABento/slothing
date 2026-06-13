@@ -36,6 +36,8 @@ export const Messages = {
   // Profile messages
   getProfile: (): ExtensionMessage => ({ type: "GET_PROFILE" }),
   getSettings: (): ExtensionMessage => ({ type: "GET_SETTINGS" }),
+  /** Effective site allow/block rules (with the app-host system block injected). */
+  getSiteRules: (): ExtensionMessage => ({ type: "GET_SITE_RULES" }),
 
   // Form filling messages
   fillForm: (fields: DetectedField[]): ExtensionMessage<DetectedField[]> => ({

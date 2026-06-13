@@ -1,18 +1,24 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   AUTH_CACHE_TTL_MS,
+  addSiteRule,
   clearSessionAuthCache,
+  getEffectiveSiteRules,
   getStorage,
+  getStoredSiteRules,
   getSessionAuthCache,
   isSessionLost,
+  removeSiteRule,
   SESSION_LOST_WINDOW_MS,
   setAuthToken,
   setSessionAuthCache,
+  updateSiteRule,
 } from "./storage";
 import {
   DEFAULT_API_BASE_URL,
   LEGACY_LOCAL_API_BASE_URL,
 } from "@/shared/types";
+import { DEFAULT_SITE_RULES } from "@/shared/site-rules";
 
 describe("isSessionLost", () => {
   const now = new Date("2026-05-12T12:00:00.000Z").getTime();
@@ -144,6 +150,105 @@ describe("storage defaults", () => {
       authToken: "token-1",
       apiBaseUrl: "https://slothing.work",
     });
+  });
+});
+
+describe("site rules (#redesign)", () => {
+  let store: Record<string, unknown>;
+
+  beforeEach(() => {
+    store = {};
+    vi.stubGlobal("chrome", {
+      storage: {
+        local: {
+          get: (key: string, cb: (result: Record<string, unknown>) => void) => {
+            cb({ [key]: store[key] });
+          },
+          set: (entries: Record<string, unknown>, cb: () => void) => {
+            Object.assign(store, entries);
+            cb();
+          },
+          remove: (key: string, cb: () => void) => {
+            delete store[key];
+            cb();
+          },
+        },
+      },
+    });
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("defaults to the seeded allow list when nothing is stored", async () => {
+    const rules = await getStoredSiteRules();
+    expect(rules).toEqual(DEFAULT_SITE_RULES);
+  });
+
+  it("injects the app host as a system block at the front", async () => {
+    store.slothing_extension = { apiBaseUrl: "https://slothing.work" };
+    const rules = await getEffectiveSiteRules();
+    expect(rules[0]).toEqual({
+      host: "slothing.work",
+      mode: "block",
+      system: true,
+    });
+  });
+
+  it("tracks the app host when the API URL is localhost (keeps port)", async () => {
+    // A token keeps the explicit localhost base URL (otherwise getStorage
+    // promotes the token-less legacy localhost default to the prod host).
+    store.slothing_extension = {
+      apiBaseUrl: "http://localhost:3000",
+      authToken: "t",
+    };
+    const rules = await getEffectiveSiteRules();
+    expect(rules[0]).toEqual({
+      host: "localhost:3000",
+      mode: "block",
+      system: true,
+    });
+  });
+
+  it("dedupes a user rule that collides with the app host", async () => {
+    store.slothing_extension = {
+      apiBaseUrl: "https://slothing.work",
+      siteRules: [{ host: "slothing.work", mode: "allow" }],
+    };
+    const rules = await getEffectiveSiteRules();
+    expect(rules.filter((r) => r.host === "slothing.work")).toEqual([
+      { host: "slothing.work", mode: "block", system: true },
+    ]);
+  });
+
+  it("adds, updates, and removes user rules", async () => {
+    store.slothing_extension = {
+      apiBaseUrl: "https://slothing.work",
+      siteRules: [],
+    };
+
+    await addSiteRule("Boards.Example.com", "block");
+    let stored = await getStoredSiteRules();
+    expect(stored).toEqual([{ host: "boards.example.com", mode: "block" }]);
+
+    await updateSiteRule("boards.example.com", "allow");
+    stored = await getStoredSiteRules();
+    expect(stored).toEqual([{ host: "boards.example.com", mode: "allow" }]);
+
+    await removeSiteRule("boards.example.com");
+    stored = await getStoredSiteRules();
+    expect(stored).toEqual([]);
+  });
+
+  it("does not duplicate when adding an existing host (upsert)", async () => {
+    store.slothing_extension = { apiBaseUrl: "https://slothing.work" };
+    await addSiteRule("foo.com", "block");
+    await addSiteRule("foo.com", "allow");
+    const stored = await getStoredSiteRules();
+    expect(stored.filter((r) => r.host === "foo.com")).toEqual([
+      { host: "foo.com", mode: "allow" },
+    ]);
   });
 });
 

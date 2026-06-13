@@ -112,6 +112,15 @@ export class JobPageSidebarController {
     this.state = null;
   }
 
+  /**
+   * Tears down the rendered sidebar without disposing the controller (keeps the
+   * resize listener) — used when a host becomes blocked via site rules so the
+   * sidebar can re-mount cleanly if the rule is later removed.
+   */
+  hide() {
+    this.unmount();
+  }
+
   private render() {
     if (
       !this.state?.scrapedJob ||

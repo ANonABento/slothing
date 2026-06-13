@@ -8,6 +8,8 @@ import {
   normalizeSidebarDomain,
   restoreSidebarForDomain,
   setSidebarLayoutForDomain,
+  SIDEBAR_MAX_WIDTH,
+  SIDEBAR_MIN_HEIGHT,
 } from "./storage";
 
 const DISMISSED_STORAGE_KEY = "slothing:sidebar:dismissedDomains";
@@ -103,5 +105,34 @@ describe("sidebar storage", () => {
       position: null,
       collapsed: false,
     });
+  });
+
+  it("persists resized width/height per domain", async () => {
+    await setSidebarLayoutForDomain(
+      { width: 420, height: 600 },
+      "linkedin.com",
+    );
+
+    await expect(
+      getSidebarLayoutForDomain("linkedin.com"),
+    ).resolves.toMatchObject({ width: 420, height: 600 });
+  });
+
+  it("clamps out-of-range dimensions into bounds", async () => {
+    await setSidebarLayoutForDomain(
+      { width: 9000, height: 10 },
+      "linkedin.com",
+    );
+
+    const layout = await getSidebarLayoutForDomain("linkedin.com");
+    expect(layout.width).toBe(SIDEBAR_MAX_WIDTH);
+    expect(layout.height).toBe(SIDEBAR_MIN_HEIGHT);
+  });
+
+  it("omits dimensions entirely when none are set (CSS default applies)", async () => {
+    await setSidebarLayoutForDomain({ dock: "right" }, "linkedin.com");
+    const layout = await getSidebarLayoutForDomain("linkedin.com");
+    expect(layout.width).toBeUndefined();
+    expect(layout.height).toBeUndefined();
   });
 });

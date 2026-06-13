@@ -31,6 +31,8 @@ import type {
   SimilarAnswer,
 } from "@/shared/types";
 import { CHAT_PORT_NAME, DEFAULT_API_BASE_URL } from "@/shared/types";
+import type { SiteRule } from "@/shared/types";
+import { matchSiteRules } from "@/shared/site-rules";
 import { sendMessage, Messages } from "@/shared/messages";
 import { messageForError } from "@/shared/error-messages";
 import type { ChatIntent } from "./sidebar/chat-panel";
@@ -88,6 +90,73 @@ const submitWatcher = new SubmitWatcher({
   },
 });
 
+// ---- Site allow/block guard --------------------------------------------
+//
+// The user can block the extension on any host via Settings → Manage sites,
+// and the configured Slothing app host is always blocked (system rule). A
+// "block" means the content script does nothing here: no scrape, no sidebar,
+// no autofill, no answer-bank decoration. This also fixes the old false
+// positive where the Slothing dashboard (localhost / self-hosted) was scraped
+// as a job.
+let cachedSiteRules: SiteRule[] | null = null;
+
+async function getSiteRulesCached(): Promise<SiteRule[]> {
+  if (cachedSiteRules) return cachedSiteRules;
+  const response = await sendMessage<SiteRule[]>(Messages.getSiteRules());
+  cachedSiteRules = response.success && response.data ? response.data : [];
+  return cachedSiteRules;
+}
+
+async function isHostBlocked(): Promise<boolean> {
+  const rules = await getSiteRulesCached();
+  return matchSiteRules(window.location.hostname, rules) === "block";
+}
+
+function teardownForBlockedHost() {
+  scrapedJob = null;
+  jobDetectedForUrl = null;
+  detectedFields = [];
+  detectedUploadFields = [];
+  try {
+    unmountAllAnswerBankButtons();
+  } catch {
+    // best effort
+  }
+  sidebarController.hide();
+}
+
+// Message types that must be inert on a blocked host (popup/sidebar-initiated
+// actions). Read-only context probes stay allowed so the popup can still render.
+const BLOCKED_GUARDED_TYPES = new Set<string>([
+  "SHOW_SLOTHING_PANEL",
+  "TRIGGER_FILL",
+  "TRIGGER_IMPORT",
+  "SCRAPE_JOB",
+  "SCRAPE_JOB_LIST",
+  "WW_GET_PAGE_STATE",
+  "WW_SCRAPE_ALL_VISIBLE",
+  "WW_SCRAPE_ALL_PAGINATED",
+  "BULK_GREENHOUSE_GET_PAGE_STATE",
+  "BULK_GREENHOUSE_SCRAPE_VISIBLE",
+  "BULK_GREENHOUSE_SCRAPE_PAGINATED",
+  "BULK_LEVER_GET_PAGE_STATE",
+  "BULK_LEVER_SCRAPE_VISIBLE",
+  "BULK_LEVER_SCRAPE_PAGINATED",
+  "BULK_WORKDAY_GET_PAGE_STATE",
+  "BULK_WORKDAY_SCRAPE_VISIBLE",
+  "BULK_WORKDAY_SCRAPE_PAGINATED",
+]);
+
+// Re-evaluate when the user toggles a rule (or changes the API URL) so open
+// tabs respond without a manual reload. Both live under one storage key.
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area !== "local") return;
+  if (changes["slothing_extension"]) {
+    cachedSiteRules = null;
+    void scanPage();
+  }
+});
+
 // Scan page on load
 scanPage();
 submitWatcher.attach();
@@ -97,6 +166,11 @@ const observer = new MutationObserver(debounce(scanPage, 500));
 observer.observe(document.body, { childList: true, subtree: true });
 
 async function scanPage() {
+  if (await isHostBlocked()) {
+    teardownForBlockedHost();
+    return;
+  }
+
   // Detect forms
   const forms = document.querySelectorAll("form");
   let nextDetectedFields: DetectedField[] = [];
@@ -128,7 +202,10 @@ async function scanPage() {
 }
 
 async function refreshScrapedJob(): Promise<ScrapedJob | null> {
-  if (isSlothingWebAppPage()) {
+  // Never scrape a blocked host. The configured Slothing app host is always
+  // blocked via the system site rule, which is what stops the dashboard
+  // (prod, localhost, or self-hosted) from being detected as a job.
+  if (await isHostBlocked()) {
     scrapedJob = null;
     return null;
   }
@@ -181,17 +258,6 @@ async function refreshScrapedJob(): Promise<ScrapedJob | null> {
   return scrapedJob;
 }
 
-function isSlothingWebAppPage(): boolean {
-  const host = window.location.hostname;
-  if (host === "slothing.work" || host.endsWith(".slothing.work")) {
-    return true;
-  }
-  if (host !== "localhost" && host !== "127.0.0.1") return false;
-  return /\/(?:[a-z]{2}(?:-[A-Z]{2})?\/)?extension\/connect(?:\/|$)/.test(
-    window.location.pathname,
-  );
-}
-
 // Handle messages from popup and background
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   handleMessage(message)
@@ -201,6 +267,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 });
 
 async function handleMessage(message: { type: string; payload?: unknown }) {
+  if (BLOCKED_GUARDED_TYPES.has(message.type) && (await isHostBlocked())) {
+    return { success: false, error: "Slothing is turned off for this site." };
+  }
   switch (message.type) {
     case "GET_PAGE_STATUS":
       if (!scrapedJob) {
@@ -761,6 +830,10 @@ async function getExtensionSettings(): Promise<ExtensionSettings> {
 }
 
 async function updateSidebar() {
+  if (await isHostBlocked()) {
+    sidebarController.hide();
+    return;
+  }
   const profile = await loadProfileForSidebar();
   const latestResume = await loadLatestResumeForSidebar();
   const { variant: profilePickerVariant, bestFitResumes } =

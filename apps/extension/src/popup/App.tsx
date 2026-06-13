@@ -666,21 +666,6 @@ export default function App() {
 
   return (
     <div className="popup">
-      <header className="topbar">
-        <div className="brand">
-          <img
-            className="brand-mark"
-            src={chrome.runtime.getURL("brand/slothing-mark.png")}
-            alt=""
-          />
-          <span className="brand-name">Slothing</span>
-        </div>
-        <span className="pill ok" title="Extension connected">
-          <span className="pill-dot" />
-          Connected
-        </span>
-      </header>
-
       <section className="profile-card">
         <div className="avatar">{profileInitial()}</div>
         <div className="profile-meta">
@@ -697,19 +682,25 @@ export default function App() {
                 "Add your work history so Slothing can tailor"}
           </div>
         </div>
-        {profileScore !== null ? (
-          <div
-            className={`score ${profileScore >= 80 ? "high" : profileScore >= 50 ? "mid" : "low"}`}
-            title="Profile completeness"
-          >
-            <span className="score-num">{profileScore}</span>
-            <span className="score-unit">/100</span>
-          </div>
-        ) : (
-          <button className="btn ghost tight" onClick={handleOpenDashboard}>
-            Open
-          </button>
-        )}
+        <div className="profile-aside">
+          <span className="pill ok" title="Extension connected">
+            <span className="pill-dot" />
+            Connected
+          </span>
+          {profileScore !== null ? (
+            <div
+              className={`score ${profileScore >= 80 ? "high" : profileScore >= 50 ? "mid" : "low"}`}
+              title="Profile completeness"
+            >
+              <span className="score-num">{profileScore}</span>
+              <span className="score-unit">/100</span>
+            </div>
+          ) : (
+            <button className="btn ghost tight" onClick={handleOpenDashboard}>
+              Open
+            </button>
+          )}
+        </div>
       </section>
 
       <main className="content">
