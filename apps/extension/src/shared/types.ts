@@ -214,6 +214,16 @@ export interface ApprovedDraftPayload {
   status: string;
   questions: Array<{ id: string; label: string }>;
   answers: Array<{ questionId: string; value: string }>;
+  /**
+   * Job metadata resolved server-side (GET /api/extension/drafts) so the
+   * content script can match a draft to the page the user is on (`url`) and
+   * display what it is. `null` when the linked job no longer exists.
+   */
+  job?: {
+    title: string;
+    company: string;
+    url: string | null;
+  } | null;
 }
 
 export interface SimilarAnswer {
@@ -285,6 +295,10 @@ export type MessageType =
   | "BULK_WORKDAY_PROGRESS"
   | "AUTH_CALLBACK"
   | "SAVE_CORRECTION"
+  // L3 (submit_approval) — in-browser submission of approved drafts.
+  | "GET_APPROVED_DRAFTS"
+  | "CHECK_SUBMIT_AUTHORIZATION"
+  | "REPORT_SUBMIT_RESULT"
   // P3 / #36 #37 — multi-step form support (Workday, Greenhouse).
   // Background → content: a `webNavigation.onHistoryStateUpdated` event fired
   // for a tab that has an in-progress multi-step application. The content
