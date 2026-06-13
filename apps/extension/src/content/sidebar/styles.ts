@@ -158,11 +158,19 @@ input:focus-visible {
   border-radius: 8px;
   display: grid;
   place-items: center;
+  overflow: hidden;
   font-weight: 800;
   font-size: 15px;
   background: var(--brand-soft);
   color: var(--brand-dark);
   border: 1px solid rgba(184, 112, 74, 0.3);
+}
+
+.job-logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: var(--paper);
 }
 
 .job-meta {

@@ -39,6 +39,13 @@ export const Messages = {
   getSettings: (): ExtensionMessage => ({ type: "GET_SETTINGS" }),
   /** Effective site allow/block rules (with the app-host system block injected). */
   getSiteRules: (): ExtensionMessage => ({ type: "GET_SITE_RULES" }),
+  /** Layer 2 company-logo lookup by domain → cached data: URL (or null). */
+  resolveCompanyLogo: (
+    domain: string,
+  ): ExtensionMessage<{ domain: string }> => ({
+    type: "RESOLVE_COMPANY_LOGO",
+    payload: { domain },
+  }),
 
   // Form filling messages
   fillForm: (fields: DetectedField[]): ExtensionMessage<DetectedField[]> => ({

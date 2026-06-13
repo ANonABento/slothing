@@ -8,6 +8,10 @@ import { FieldMapper } from "./auto-fill/field-mapper";
 import { AutoFillEngine } from "./auto-fill/engine";
 import { getScraperForUrl } from "./scrapers/scraper-registry";
 import {
+  extractCompanyLogoUrl,
+  deriveCompanyDomain,
+} from "./scrapers/company-logo";
+import {
   WaterlooWorksOrchestrator,
   getWaterlooWorksNextPageLink,
   getWaterlooWorksRows,
@@ -206,6 +210,39 @@ async function scanPage() {
   void updateSidebar();
 }
 
+// Layer 2 — per-domain remote logo cache so re-scans don't re-message the
+// background. Values: data: URL, or null when the service had no logo.
+const remoteLogoByDomain = new Map<string, string | null>();
+
+async function ensureRemoteCompanyLogo(job: ScrapedJob): Promise<void> {
+  if (job.companyLogoUrl) return;
+  const domain = deriveCompanyDomain(document, window.location.href);
+  if (!domain) return;
+
+  if (remoteLogoByDomain.has(domain)) {
+    const cached = remoteLogoByDomain.get(domain);
+    if (cached && scrapedJob === job) job.companyLogoUrl = cached;
+    return;
+  }
+
+  try {
+    const settings = await getExtensionSettings();
+    if (!settings.showCompanyLogos) return;
+    const response = await sendMessage<{ dataUrl: string | null }>(
+      Messages.resolveCompanyLogo(domain),
+    );
+    const dataUrl =
+      response.success && response.data ? response.data.dataUrl : null;
+    remoteLogoByDomain.set(domain, dataUrl);
+    if (dataUrl && scrapedJob === job) {
+      job.companyLogoUrl = dataUrl;
+      void updateSidebar();
+    }
+  } catch {
+    // Best effort — the letter tile remains the fallback.
+  }
+}
+
 async function refreshScrapedJob(): Promise<ScrapedJob | null> {
   // Never scrape a blocked host. The configured Slothing app host is always
   // blocked via the system site rule, which is what stops the dashboard
@@ -224,6 +261,10 @@ async function refreshScrapedJob(): Promise<ScrapedJob | null> {
     scrapedJob = nextScrapedJob;
     if (nextScrapedJob) {
       console.log("[Slothing] Scraped job:", nextScrapedJob.title);
+      // Layer 1: grab any on-page company logo synchronously; Layer 2 (remote
+      // favicon by domain) runs fire-and-forget and re-renders when it lands.
+      nextScrapedJob.companyLogoUrl = extractCompanyLogoUrl(document);
+      void ensureRemoteCompanyLogo(nextScrapedJob);
       const detectionKey = nextScrapedJob.sourceJobId || nextScrapedJob.url;
       if (jobDetectedForUrl !== detectionKey) {
         jobDetectedForUrl = detectionKey;

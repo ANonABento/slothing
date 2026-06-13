@@ -124,6 +124,12 @@ export interface ScrapedJob {
   deadline?: string;
   postedAt?: string;
   keywords?: string[];
+  /**
+   * Company logo. Layer 1 is a URL scraped from the page (JSON-LD logo / site
+   * logo img / og:image); Layer 2 is a data: URL resolved by the background from
+   * a favicon/logo service when the page has none. Undefined → letter-tile.
+   */
+  companyLogoUrl?: string;
 }
 
 export interface PageSnapshot {
@@ -259,6 +265,7 @@ export type MessageType =
   | "CAPTURE_VISIBLE_TAB"
   | "GET_SETTINGS"
   | "GET_SITE_RULES"
+  | "RESOLVE_COMPANY_LOGO"
   | "TAILOR_FROM_PAGE"
   | "GENERATE_COVER_LETTER_FROM_PAGE"
   | "LIST_RESUMES"
@@ -461,6 +468,11 @@ export interface ExtensionSettings {
   notifyOnJobDetected: boolean;
   autoTrackApplicationsEnabled: boolean;
   captureScreenshotEnabled: boolean;
+  /**
+   * Fetch company logos from a third-party favicon/logo service when the job
+   * page has none (Layer 2). Off → only on-page logos / the letter tile.
+   */
+  showCompanyLogos: boolean;
 }
 
 export const DEFAULT_SETTINGS: ExtensionSettings = {
@@ -471,6 +483,7 @@ export const DEFAULT_SETTINGS: ExtensionSettings = {
   notifyOnJobDetected: true,
   autoTrackApplicationsEnabled: true,
   captureScreenshotEnabled: false,
+  showCompanyLogos: true,
 };
 
 export const LEGACY_LOCAL_API_BASE_URL = "http://localhost:3000";
