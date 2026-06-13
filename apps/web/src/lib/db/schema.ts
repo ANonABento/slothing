@@ -358,33 +358,49 @@ export const interviewFollowUps = sqliteTable(
 );
 
 // Reminders table
-export const reminders = sqliteTable("reminders", {
-  id: text("id").primaryKey(),
-  userId: text("user_id").notNull().default(DEFAULT_USER_ID),
-  jobId: text("job_id").notNull(),
-  type: text("type").default("follow_up"),
-  title: text("title").notNull(),
-  description: text("description"),
-  dueDate: text("due_date").notNull(),
-  completed: integer("completed", { mode: "boolean" }).default(false),
-  dismissed: integer("dismissed", { mode: "boolean" }).default(false),
-  createdAt: text("created_at").default(sql`CURRENT_TIMESTAMP`),
-  completedAt: text("completed_at"),
-  firedAt: text("fired_at"),
-  notifyByEmail: integer("notify_by_email", { mode: "boolean" }).default(false),
-});
+export const reminders = sqliteTable(
+  "reminders",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id").notNull().default(DEFAULT_USER_ID),
+    jobId: text("job_id").notNull(),
+    type: text("type").default("follow_up"),
+    title: text("title").notNull(),
+    description: text("description"),
+    dueDate: text("due_date").notNull(),
+    completed: integer("completed", { mode: "boolean" }).default(false),
+    dismissed: integer("dismissed", { mode: "boolean" }).default(false),
+    createdAt: text("created_at").default(sql`CURRENT_TIMESTAMP`),
+    completedAt: text("completed_at"),
+    firedAt: text("fired_at"),
+    notifyByEmail: integer("notify_by_email", { mode: "boolean" }).default(
+      false,
+    ),
+  },
+  // The reminder list + dashboard counts filter by user and order by due_date;
+  // without this they full-scan the table on every load.
+  (table) => [index("idx_reminders_user_due").on(table.userId, table.dueDate)],
+);
 
 // Notifications table
-export const notifications = sqliteTable("notifications", {
-  id: text("id").primaryKey(),
-  userId: text("user_id").notNull().default(DEFAULT_USER_ID),
-  type: text("type").notNull(),
-  title: text("title").notNull(),
-  message: text("message"),
-  link: text("link"),
-  read: integer("read", { mode: "boolean" }).default(false),
-  createdAt: text("created_at").default(sql`CURRENT_TIMESTAMP`),
-});
+export const notifications = sqliteTable(
+  "notifications",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id").notNull().default(DEFAULT_USER_ID),
+    type: text("type").notNull(),
+    title: text("title").notNull(),
+    message: text("message"),
+    link: text("link"),
+    read: integer("read", { mode: "boolean" }).default(false),
+    createdAt: text("created_at").default(sql`CURRENT_TIMESTAMP`),
+  },
+  // The notification bell queries `WHERE user_id = ? ORDER BY created_at DESC`
+  // on every page load — index it so that's a seek, not a scan.
+  (table) => [
+    index("idx_notifications_user_created").on(table.userId, table.createdAt),
+  ],
+);
 
 // Bootstrap DDL co-located in `./bootstrap-sql.ts`
 // (EXTERNAL_CALENDAR_EVENTS_BOOTSTRAP_SQL). Edit BOTH on column changes.

@@ -39,21 +39,26 @@ export async function GET() {
   if (isAuthError(authResult)) return authResult;
 
   try {
-    const profile = await debugQuery("analytics:profile", () =>
-      getProfileAnalyticsView(authResult.userId),
-    );
-    const jobs = await debugQuery("analytics:jobs", () =>
-      getJobsAnalyticsView(authResult.userId),
-    );
-    const totalDocuments = await debugQuery("analytics:documents", () =>
-      getDocumentCount(authResult.userId),
-    );
-    const interviews = await debugQuery("analytics:interviews", () =>
-      getInterviewSessionStats(authResult.userId),
-    );
-    const totalResumesGenerated = await debugQuery("analytics:resumes", () =>
-      getGeneratedResumeCount(authResult.userId),
-    );
+    // These five views are independent — run them concurrently so a remote DB
+    // pays one round-trip of latency, not five stacked sequentially.
+    const [profile, jobs, totalDocuments, interviews, totalResumesGenerated] =
+      await Promise.all([
+        debugQuery("analytics:profile", () =>
+          getProfileAnalyticsView(authResult.userId),
+        ),
+        debugQuery("analytics:jobs", () =>
+          getJobsAnalyticsView(authResult.userId),
+        ),
+        debugQuery("analytics:documents", () =>
+          getDocumentCount(authResult.userId),
+        ),
+        debugQuery("analytics:interviews", () =>
+          getInterviewSessionStats(authResult.userId),
+        ),
+        debugQuery("analytics:resumes", () =>
+          getGeneratedResumeCount(authResult.userId),
+        ),
+      ]);
 
     // Calculate profile completeness
     let profileScore = 0;

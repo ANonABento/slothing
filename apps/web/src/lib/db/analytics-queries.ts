@@ -138,15 +138,42 @@ export async function getProfileAnalyticsView(
 
   if (!profile) return null;
 
-  const skillsResult = await getClient().execute({
-    sql: `
+  // Skills + the four section counts are all independent of each other (they
+  // only needed the profile to exist, checked above). Run them concurrently
+  // so a remote DB pays one round-trip instead of five stacked sequentially.
+  const [
+    skillsResult,
+    experienceCount,
+    educationCount,
+    projectCount,
+    certificationCount,
+  ] = await Promise.all([
+    getClient().execute({
+      sql: `
         SELECT name, category
         FROM skills
         WHERE profile_id = ?
         ORDER BY name ASC
       `,
-    args: [userId],
-  });
+      args: [userId],
+    }),
+    readCount(
+      "SELECT COUNT(*) as count FROM experiences WHERE profile_id = ?",
+      userId,
+    ),
+    readCount(
+      "SELECT COUNT(*) as count FROM education WHERE profile_id = ?",
+      userId,
+    ),
+    readCount(
+      "SELECT COUNT(*) as count FROM projects WHERE profile_id = ?",
+      userId,
+    ),
+    readCount(
+      "SELECT COUNT(*) as count FROM certifications WHERE profile_id = ?",
+      userId,
+    ),
+  ]);
   const skills = skillsResult.rows as unknown as Array<{
     name: string;
     category?: string | null;
@@ -159,22 +186,10 @@ export async function getProfileAnalyticsView(
       name: skill.name,
       category: skill.category || "other",
     })),
-    experienceCount: await readCount(
-      "SELECT COUNT(*) as count FROM experiences WHERE profile_id = ?",
-      userId,
-    ),
-    educationCount: await readCount(
-      "SELECT COUNT(*) as count FROM education WHERE profile_id = ?",
-      userId,
-    ),
-    projectCount: await readCount(
-      "SELECT COUNT(*) as count FROM projects WHERE profile_id = ?",
-      userId,
-    ),
-    certificationCount: await readCount(
-      "SELECT COUNT(*) as count FROM certifications WHERE profile_id = ?",
-      userId,
-    ),
+    experienceCount,
+    educationCount,
+    projectCount,
+    certificationCount,
   };
 }
 
