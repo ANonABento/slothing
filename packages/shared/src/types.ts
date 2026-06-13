@@ -108,6 +108,16 @@ export interface JobDescription {
   appliedAt?: string;
   deadline?: string;
   notes?: string;
+  // Posting signals + inferred pay — columns already on the jobs table,
+  // surfaced for the bento review card's signal/pay cells.
+  openings?: number;
+  applicants?: number;
+  level?: string;
+  workTerm?: string;
+  inferredPayUnit?: import("./schemas").PayNormalizationUnit;
+  inferredPayMin?: number;
+  inferredPayMax?: number;
+  inferredPayCurrency?: string;
   createdAt: string;
   linkedResumeId?: string;
   linkedCoverLetterId?: string;
