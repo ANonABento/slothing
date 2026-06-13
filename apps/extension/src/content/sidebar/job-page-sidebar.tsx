@@ -1,6 +1,7 @@
 import React, {
   FormEvent,
   PointerEvent,
+  useEffect,
   useMemo,
   useRef,
   useState,
@@ -15,6 +16,12 @@ import type {
 } from "@/shared/types";
 import type { ResumeScore } from "@slothing/shared/scoring";
 import { ChatPanel, type ChatIntent } from "./chat-panel";
+import {
+  SIDEBAR_MIN_WIDTH,
+  SIDEBAR_MAX_WIDTH,
+  SIDEBAR_MIN_HEIGHT,
+  SIDEBAR_MAX_HEIGHT,
+} from "./storage";
 
 export type SidebarAction = "tailor" | "coverLetter" | "save" | "autoFill";
 
@@ -79,6 +86,14 @@ type DragState = {
   width: number;
   height: number;
 };
+type ResizeState = {
+  pointerId: number;
+  startX: number;
+  startY: number;
+  startW: number;
+  startH: number;
+  dirX: number;
+};
 
 const ACTION_LABELS: Record<SidebarAction, string> = {
   tailor: "Tailor",
@@ -97,7 +112,27 @@ export function JobPageSidebar(props: JobPageSidebarProps) {
   const [searching, setSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
   const [pickedResumeId, setPickedResumeId] = useState<string | null>(null);
+  const [dockMenuOpen, setDockMenuOpen] = useState(false);
   const dragState = useRef<DragState | null>(null);
+  const resizeState = useRef<ResizeState | null>(null);
+  const dockWrapRef = useRef<HTMLDivElement | null>(null);
+
+  // Close the dock-position menu on any pointer-down outside it. composedPath()
+  // pierces the shadow root so the in-shadow dock-wrap is detected correctly.
+  useEffect(() => {
+    if (!dockMenuOpen) return;
+    const onPointerDown = (event: Event) => {
+      const path =
+        (
+          event as Event & { composedPath?: () => EventTarget[] }
+        ).composedPath?.() ?? [];
+      if (dockWrapRef.current && path.includes(dockWrapRef.current)) return;
+      setDockMenuOpen(false);
+    };
+    document.addEventListener("pointerdown", onPointerDown, true);
+    return () =>
+      document.removeEventListener("pointerdown", onPointerDown, true);
+  }, [dockMenuOpen]);
 
   const bestFitResumes = props.bestFitResumes ?? [];
   const showResumePicker =
@@ -127,6 +162,63 @@ export function JobPageSidebar(props: JobPageSidebarProps) {
       };
     }
     return undefined;
+  }
+
+  // Applies the user's resized dimensions to the panel; undefined lets the CSS
+  // defaults size it.
+  function panelSizeStyle(): React.CSSProperties | undefined {
+    const style: React.CSSProperties = {};
+    if (props.layout.width) style.width = `${props.layout.width}px`;
+    if (props.layout.height) style.height = `${props.layout.height}px`;
+    return Object.keys(style).length > 0 ? style : undefined;
+  }
+
+  function startResize(event: PointerEvent<HTMLElement>) {
+    if (event.button !== 0) return;
+    const panel = event.currentTarget.closest(".panel") as HTMLElement | null;
+    if (!panel) return;
+    const rect = panel.getBoundingClientRect();
+    resizeState.current = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      startW: rect.width,
+      startH: rect.height,
+      // Right-docked/floating panels grow leftward (negative X delta widens).
+      dirX: props.layout.dock === "left" ? 1 : -1,
+    };
+    event.currentTarget.setPointerCapture(event.pointerId);
+    event.stopPropagation();
+    event.preventDefault();
+  }
+
+  function moveResize(event: PointerEvent<HTMLElement>) {
+    const state = resizeState.current;
+    if (!state || state.pointerId !== event.pointerId) return;
+    const maxW = Math.min(SIDEBAR_MAX_WIDTH, window.innerWidth - 24);
+    const maxH = Math.min(SIDEBAR_MAX_HEIGHT, window.innerHeight - 24);
+    const width = clampRange(
+      state.startW + state.dirX * (event.clientX - state.startX),
+      SIDEBAR_MIN_WIDTH,
+      maxW,
+    );
+    const height = clampRange(
+      state.startH + (event.clientY - state.startY),
+      SIDEBAR_MIN_HEIGHT,
+      maxH,
+    );
+    props.onLayoutChange({ width, height });
+  }
+
+  function endResize(event: PointerEvent<HTMLElement>) {
+    const state = resizeState.current;
+    if (!state || state.pointerId !== event.pointerId) return;
+    resizeState.current = null;
+    try {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    } catch {
+      // The browser may release capture first if the pointer is canceled.
+    }
   }
 
   function startDrag(event: PointerEvent<HTMLElement>) {
@@ -283,7 +375,7 @@ export function JobPageSidebar(props: JobPageSidebarProps) {
       style={sidebarStyle()}
       aria-label="Slothing job sidebar"
     >
-      <div className="panel">
+      <div className="panel" style={panelSizeStyle()}>
         <header
           className="header"
           onPointerDown={startDrag}
@@ -292,57 +384,69 @@ export function JobPageSidebar(props: JobPageSidebarProps) {
           onPointerCancel={endDrag}
           title="Drag to move"
         >
-          <div>
-            <div className="workspace-brand-row">
-              <img
-                className="workspace-mark"
-                src={chrome.runtime.getURL("brand/slothing-mark.png")}
-                alt=""
-              />
-              <span>Slothing</span>
-            </div>
+          <div className="header-main">
             <h2 className="title">{props.scrapedJob.title}</h2>
             <p className="company">{jobMeta || props.scrapedJob.company}</p>
           </div>
           <div className="icon-row">
+            <div className="dock-wrap" ref={dockWrapRef}>
+              <button
+                className="icon-btn"
+                type="button"
+                aria-haspopup="menu"
+                aria-expanded={dockMenuOpen}
+                aria-label="Sidebar position"
+                title="Position"
+                onClick={() => setDockMenuOpen((open) => !open)}
+              >
+                &#8943;
+              </button>
+              {dockMenuOpen && (
+                <div className="dock-menu" role="menu">
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => {
+                      props.onLayoutChange({ dock: "left" });
+                      setDockMenuOpen(false);
+                    }}
+                  >
+                    Dock left
+                  </button>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => {
+                      props.onLayoutChange({ dock: "right" });
+                      setDockMenuOpen(false);
+                    }}
+                  >
+                    Dock right
+                  </button>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={(event) => {
+                      floatAtCurrentPosition(event);
+                      setDockMenuOpen(false);
+                    }}
+                  >
+                    Float
+                  </button>
+                </div>
+              )}
+            </div>
             <button
-              className="icon-button"
-              type="button"
-              onClick={() => props.onLayoutChange({ dock: "left" })}
-              aria-label="Dock Slothing sidebar on the left"
-              title="Dock left"
-            >
-              &lsaquo;
-            </button>
-            <button
-              className="icon-button"
-              type="button"
-              onClick={() => props.onLayoutChange({ dock: "right" })}
-              aria-label="Dock Slothing sidebar on the right"
-              title="Dock right"
-            >
-              &rsaquo;
-            </button>
-            <button
-              className="icon-button"
-              type="button"
-              onClick={floatAtCurrentPosition}
-              aria-label="Float Slothing sidebar"
-              title="Float"
-            >
-              &#9633;
-            </button>
-            <button
-              className="icon-button"
+              className="icon-btn"
               type="button"
               onClick={() => props.onLayoutChange({ collapsed: true })}
               aria-label="Collapse Slothing sidebar"
               title="Collapse"
             >
-              -
+              &minus;
             </button>
             <button
-              className="icon-button"
+              className="icon-btn"
               type="button"
               onClick={() => void props.onDismiss()}
               aria-label="Dismiss Slothing sidebar for this domain"
@@ -559,6 +663,16 @@ export function JobPageSidebar(props: JobPageSidebarProps) {
             </section>
           </details>
         </div>
+        <div
+          className="resize-handle"
+          role="separator"
+          aria-label="Resize Slothing sidebar"
+          title="Drag to resize"
+          onPointerDown={startResize}
+          onPointerMove={moveResize}
+          onPointerUp={endResize}
+          onPointerCancel={endResize}
+        />
       </div>
     </aside>
   );
@@ -570,6 +684,10 @@ function isAutoFillResult(value: unknown): value is AutoFillActionResult {
     typeof value === "object" &&
     ("filled" in value || "conflicts" in value || "skipped" in value),
   );
+}
+
+function clampRange(value: number, min: number, max: number): number {
+  return Math.min(Math.max(Math.round(value), min), Math.max(min, max));
 }
 
 function clampSidebarPosition(

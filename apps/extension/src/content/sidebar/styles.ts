@@ -1,29 +1,22 @@
-export const SIDEBAR_STYLES = `
-:host {
-  all: initial;
-  color-scheme: light;
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --slothing-bg: #f5efe2;
-  --slothing-bg-2: #e9dec8;
-  --slothing-paper: #fffaef;
-  --slothing-ink: #1a1530;
-  --slothing-ink-2: #3a2f24;
-  --slothing-ink-3: #6a5e4a;
-  --slothing-rule: rgba(26, 20, 16, 0.12);
-  --slothing-rule-strong: rgba(26, 20, 16, 0.4);
-  --slothing-rule-strong-bg: rgba(26, 20, 16, 0.07);
-  --slothing-brand: #b8704a;
-  --slothing-brand-dark: #8e5132;
-  --slothing-brand-soft: #f0d9c1;
-  --slothing-success: #2f6b4f;
-  --slothing-success-soft: #dcebdc;
-  --slothing-danger: #991b1b;
-  --slothing-danger-soft: #f3d6d1;
-  --slothing-shadow: 0 16px 42px rgba(26, 21, 48, 0.18);
-}
+import { EDITORIAL_TOKENS, COMPONENT_CSS } from "@/shared/ui/tokens";
 
+// Sidebar-specific layout. Shared tokens + component primitives (.icon-btn,
+// .score-pill, .btn, .pill, .badge, .field, .card, .empty, .eyebrow) come from
+// COMPONENT_CSS so the sidebar matches the popup and options surfaces exactly.
+const SIDEBAR_LAYOUT_CSS = `
 *, *::before, *::after {
   box-sizing: border-box;
+}
+
+button {
+  border: 0;
+  font: inherit;
+}
+
+button:focus-visible,
+input:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
 }
 
 .slothing-sidebar {
@@ -31,7 +24,7 @@ export const SIDEBAR_STYLES = `
   top: clamp(72px, 10vh, 96px);
   right: 0;
   z-index: 2147483000;
-  color: var(--slothing-ink);
+  color: var(--ink);
   font-family: inherit;
 }
 
@@ -46,8 +39,8 @@ export const SIDEBAR_STYLES = `
 
 .rail,
 .panel {
-  border: 1px solid var(--slothing-rule);
-  box-shadow: var(--slothing-shadow);
+  border: 1px solid var(--rule);
+  box-shadow: var(--shadow-panel);
 }
 
 .rail {
@@ -61,12 +54,12 @@ export const SIDEBAR_STYLES = `
   padding: 10px 7px;
   border-right: 0;
   border-radius: 8px 0 0 8px;
-  background: var(--slothing-paper);
+  background: var(--paper);
   cursor: pointer;
 }
 
 .dock-left .rail {
-  border-right: 1px solid var(--slothing-rule);
+  border-right: 1px solid var(--rule);
   border-left: 0;
   border-radius: 0 8px 8px 0;
 }
@@ -78,47 +71,46 @@ export const SIDEBAR_STYLES = `
   min-width: 30px;
   min-height: 30px;
   border-radius: 999px;
-  background: var(--slothing-brand-soft);
-  color: var(--slothing-brand-dark);
+  background: var(--brand-soft);
+  color: var(--brand-dark);
   font-size: 12px;
   font-weight: 800;
-  writing-mode: horizontal-tb;
 }
 
 .rail-label {
   max-width: 44px;
-  color: var(--slothing-ink);
+  color: var(--ink);
   font-size: 10px;
   font-weight: 800;
-  letter-spacing: 0;
   line-height: 1.1;
   text-align: center;
-  writing-mode: horizontal-tb;
 }
 
 .panel {
+  position: relative;
   width: min(330px, calc(100vw - 28px));
-  max-height: min(720px, calc(100vh - 96px));
+  max-height: min(900px, calc(100vh - 64px));
   overflow: auto;
   border-right: 0;
   border-radius: 8px 0 0 8px;
-  background: var(--slothing-bg);
+  background: var(--bg);
 }
 
 .dock-left .panel {
-  border-right: 1px solid var(--slothing-rule);
+  border-right: 1px solid var(--rule);
   border-left: 0;
   border-radius: 0 8px 8px 0;
 }
 
+/* ---- Slim header: title + company on the left, controls on the right ---- */
 .header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 10px;
-  padding: 12px 12px 10px;
-  border-bottom: 1px solid var(--slothing-rule);
-  background: var(--slothing-paper);
+  gap: 8px;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--rule);
+  background: var(--paper);
   cursor: grab;
   user-select: none;
   touch-action: none;
@@ -128,47 +120,22 @@ export const SIDEBAR_STYLES = `
   cursor: grabbing;
 }
 
-.brand {
-  margin: 0 0 8px;
-  color: var(--slothing-brand-dark);
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 0;
-  text-transform: uppercase;
-}
-
-.workspace-brand-row {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  margin: 0 0 7px;
-  color: var(--slothing-brand-dark);
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0;
-  text-transform: uppercase;
-}
-
-.workspace-mark {
-  display: block;
-  width: 18px;
-  height: 18px;
-  border-radius: 5px;
-  object-fit: cover;
+.header-main {
+  min-width: 0;
 }
 
 .title {
   margin: 0;
-  font-size: 15px;
+  font-size: 14px;
   line-height: 1.25;
   font-weight: 800;
   overflow-wrap: anywhere;
 }
 
 .company {
-  margin: 3px 0 0;
-  color: #536068;
-  font-size: 13px;
+  margin: 2px 0 0;
+  color: var(--ink-3);
+  font-size: 12px;
   line-height: 1.35;
   overflow-wrap: anywhere;
 }
@@ -176,34 +143,45 @@ export const SIDEBAR_STYLES = `
 .icon-row {
   display: flex;
   gap: 4px;
+  flex-shrink: 0;
 }
 
-button {
-  border: 0;
-  font: inherit;
+.dock-wrap {
+  position: relative;
 }
 
-button:focus-visible,
-input:focus-visible {
-  outline: 2px solid var(--slothing-brand);
-  outline-offset: 2px;
+.dock-menu {
+  position: absolute;
+  top: 32px;
+  right: 0;
+  z-index: 3;
+  display: grid;
+  min-width: 124px;
+  padding: 4px;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-md);
 }
 
-.icon-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 6px;
-  border: 1px solid var(--slothing-rule);
-  background: var(--slothing-bg);
-  color: var(--slothing-ink);
+.dock-left .dock-menu {
+  right: auto;
+  left: 0;
+}
+
+.dock-menu button {
+  text-align: left;
+  padding: 7px 9px;
+  border-radius: 4px;
+  background: none;
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 600;
   cursor: pointer;
 }
 
-.icon-button:hover {
-  background: var(--slothing-rule-strong-bg);
+.dock-menu button:hover {
+  background: var(--rule-strong-bg);
 }
 
 .body {
@@ -215,9 +193,9 @@ input:focus-visible {
 .score-card,
 .actions,
 .status-card {
-  border: 1px solid var(--slothing-rule);
+  border: 1px solid var(--rule);
   border-radius: 8px;
-  background: var(--slothing-paper);
+  background: var(--paper);
 }
 
 .score-card {
@@ -226,32 +204,6 @@ input:focus-visible {
   gap: 10px;
   align-items: center;
   padding: 10px;
-}
-
-.score-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  min-width: 58px;
-  justify-content: flex-end;
-  padding: 5px 8px;
-  border: 1px solid rgba(184, 112, 74, 0.3);
-  border-radius: 999px;
-  background: var(--slothing-brand-soft);
-  color: var(--slothing-ink);
-}
-
-.score-pill span {
-  font-size: 14px;
-  font-weight: 900;
-  line-height: 1;
-}
-
-.score-pill small {
-  color: var(--slothing-brand-dark);
-  font-size: 10px;
-  font-weight: 800;
-  line-height: 1;
 }
 
 .score-label {
@@ -263,7 +215,7 @@ input:focus-visible {
 .score-note,
 .muted,
 .result-meta {
-  color: var(--slothing-ink-3);
+  color: var(--ink-3);
   font-size: 11px;
   line-height: 1.4;
 }
@@ -279,23 +231,23 @@ input:focus-visible {
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--slothing-ink-3);
+  color: var(--ink-3);
 }
 
 .resume-picker-select {
   width: 100%;
   padding: 6px 8px;
-  border: 1px solid var(--slothing-rule);
+  border: 1px solid var(--rule);
   border-radius: 8px;
-  background: var(--slothing-paper);
-  color: var(--slothing-ink);
+  background: var(--paper);
+  color: var(--ink);
   font: inherit;
 }
 
 .resume-picker-note {
   margin: 0;
   font-size: 11px;
-  color: var(--slothing-brand-dark);
+  color: var(--brand-dark);
 }
 
 .actions {
@@ -312,23 +264,23 @@ input:focus-visible {
   min-height: 36px;
   padding: 8px 10px;
   border-radius: 6px;
-  border: 1px solid var(--slothing-rule);
-  background: var(--slothing-paper);
-  color: var(--slothing-ink);
+  border: 1px solid var(--rule);
+  background: var(--paper);
+  color: var(--ink);
   font-weight: 750;
   cursor: pointer;
 }
 
 .action-status {
-  color: var(--slothing-success);
+  color: var(--success);
   font-size: 10px;
   font-weight: 850;
   text-transform: uppercase;
 }
 
 .action-button.primary {
-  background: var(--slothing-ink);
-  color: var(--slothing-paper);
+  background: var(--ink);
+  color: var(--paper);
 }
 
 .action-button:hover:not(:disabled) {
@@ -348,20 +300,20 @@ input:focus-visible {
 
 .status-card.success {
   border-color: rgba(47, 107, 79, 0.3);
-  color: var(--slothing-success);
-  background: var(--slothing-success-soft);
+  color: var(--success);
+  background: var(--success-soft);
 }
 
 .status-card.error {
   border-color: rgba(153, 27, 27, 0.26);
-  color: var(--slothing-danger);
-  background: var(--slothing-danger-soft);
+  color: var(--danger);
+  background: var(--danger-soft);
 }
 
 .utility-section {
-  border: 1px solid var(--slothing-rule);
+  border: 1px solid var(--rule);
   border-radius: 8px;
-  background: var(--slothing-paper);
+  background: var(--paper);
 }
 
 .utility-section summary {
@@ -370,7 +322,7 @@ input:focus-visible {
   justify-content: space-between;
   min-height: 36px;
   padding: 0 10px;
-  color: var(--slothing-ink);
+  color: var(--ink);
   font-size: 13px;
   font-weight: 850;
   cursor: pointer;
@@ -383,12 +335,12 @@ input:focus-visible {
 
 .utility-section summary::after {
   content: "+";
-  color: var(--slothing-ink-3);
+  color: var(--ink-3);
   font-weight: 900;
 }
 
 .utility-section[open] summary {
-  border-bottom: 1px solid var(--slothing-rule);
+  border-bottom: 1px solid var(--rule);
 }
 
 .utility-section[open] summary::after {
@@ -415,10 +367,10 @@ input:focus-visible {
   width: 100%;
   min-width: 0;
   height: 34px;
-  border: 1px solid var(--slothing-rule);
+  border: 1px solid var(--rule);
   border-radius: 6px;
   padding: 0 10px;
-  color: var(--slothing-ink);
+  color: var(--ink);
   font: inherit;
   font-size: 13px;
 }
@@ -428,9 +380,9 @@ input:focus-visible {
   min-height: 34px;
   border-radius: 6px;
   padding: 0 10px;
-  border: 1px solid var(--slothing-ink);
-  background: var(--slothing-ink);
-  color: var(--slothing-paper);
+  border: 1px solid var(--ink);
+  background: var(--ink);
+  color: var(--paper);
   cursor: pointer;
 }
 
@@ -441,7 +393,7 @@ input:focus-visible {
 }
 
 .result {
-  border-top: 1px solid var(--slothing-rule);
+  border-top: 1px solid var(--rule);
   padding-top: 8px;
 }
 
@@ -458,7 +410,7 @@ input:focus-visible {
 
 .result-answer {
   margin-top: 4px;
-  color: var(--slothing-ink-2);
+  color: var(--ink-2);
 }
 
 .result-actions {
@@ -474,9 +426,41 @@ input:focus-visible {
 }
 
 .small-button.secondary {
-  border-color: var(--slothing-rule);
-  background: var(--slothing-paper);
-  color: var(--slothing-ink);
+  border-color: var(--rule);
+  background: var(--paper);
+  color: var(--ink);
+}
+
+/* ---- Drag-to-resize handle (bottom inner corner) ---- */
+.resize-handle {
+  position: absolute;
+  bottom: 0;
+  width: 18px;
+  height: 18px;
+  z-index: 2;
+  cursor: nwse-resize;
+  touch-action: none;
+  background:
+    linear-gradient(
+      135deg,
+      transparent 0 55%,
+      var(--rule-strong) 55% 62%,
+      transparent 62% 74%,
+      var(--rule-strong) 74% 81%,
+      transparent 81%
+    );
+}
+
+/* Right-docked / floating panels grow from the bottom-left corner. */
+.slothing-sidebar:not(.dock-left) .resize-handle {
+  left: 0;
+  cursor: nesw-resize;
+  transform: scaleX(-1);
+}
+
+.dock-left .resize-handle {
+  right: 0;
+  cursor: nwse-resize;
 }
 
 /* P4/#40 — Inline AI assistant chat panel */
@@ -519,19 +503,19 @@ input:focus-visible {
   resize: vertical;
   min-height: 36px;
   max-height: 120px;
-  border: 1px solid var(--slothing-rule);
+  border: 1px solid var(--rule);
   border-radius: 6px;
   padding: 8px 10px;
-  color: var(--slothing-ink);
+  color: var(--ink);
   font: inherit;
   font-size: 13px;
   line-height: 1.35;
-  background: var(--slothing-paper);
+  background: var(--paper);
 }
 
 .chat-input-row textarea:disabled {
-  background: var(--slothing-bg-2);
-  color: var(--slothing-ink-3);
+  background: var(--bg-2);
+  color: var(--ink-3);
 }
 
 .chat-result {
@@ -541,14 +525,14 @@ input:focus-visible {
 
 .chat-spinner {
   margin: 0;
-  color: var(--slothing-ink-3);
+  color: var(--ink-3);
   font-size: 12px;
   font-style: italic;
 }
 
 .chat-output {
   margin: 0;
-  color: var(--slothing-ink);
+  color: var(--ink);
   font-size: 13px;
   line-height: 1.5;
   white-space: pre-wrap;
@@ -569,4 +553,15 @@ input:focus-visible {
     display: none;
   }
 }
+`;
+
+export const SIDEBAR_STYLES = `
+:host {
+  all: initial;
+  color-scheme: light;
+  ${EDITORIAL_TOKENS}
+  font-family: var(--font-ui);
+}
+${COMPONENT_CSS}
+${SIDEBAR_LAYOUT_CSS}
 `;

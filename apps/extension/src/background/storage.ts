@@ -4,6 +4,8 @@ import type {
   ExtensionStorage,
   ExtensionSettings,
   ExtensionProfile,
+  SiteRule,
+  SiteRuleMode,
 } from "@/shared/types";
 import {
   DEFAULT_SETTINGS,
@@ -11,6 +13,7 @@ import {
   LEGACY_LOCAL_API_BASE_URL,
   SHOULD_PROMOTE_LEGACY_LOCAL_API_BASE_URL,
 } from "@/shared/types";
+import { DEFAULT_SITE_RULES, normalizeRuleHost } from "@/shared/site-rules";
 
 const STORAGE_KEY = "slothing_extension";
 
@@ -196,6 +199,71 @@ export async function setApiBaseUrl(url: string): Promise<void> {
 export async function getApiBaseUrl(): Promise<string> {
   const storage = await getStorage();
   return storage.apiBaseUrl;
+}
+
+// ---- Site allow/block rules (#redesign) ---------------------------------
+//
+// The user's persisted rules live under `siteRules`. The Slothing app host is
+// NOT persisted — it's injected as a system block at read time by
+// `getEffectiveSiteRules` so it always tracks whatever apiBaseUrl is set. The
+// content script and options page both read via `getEffectiveSiteRules`.
+
+/** Persisted user rules only (defaults to the seeded known-good allow list). */
+export async function getStoredSiteRules(): Promise<SiteRule[]> {
+  const storage = await getStorage();
+  return storage.siteRules ?? DEFAULT_SITE_RULES;
+}
+
+/**
+ * Effective rules = the app-host system BLOCK row (front) + user rules, with any
+ * user rule duplicating the app host dropped. Injecting the system row here
+ * means it tracks the configured apiBaseUrl across prod / localhost / self-host.
+ */
+export async function getEffectiveSiteRules(): Promise<SiteRule[]> {
+  const [rules, apiBaseUrl] = await Promise.all([
+    getStoredSiteRules(),
+    getApiBaseUrl(),
+  ]);
+  const appHost = normalizeRuleHost(apiBaseUrl);
+  const systemRow: SiteRule = { host: appHost, mode: "block", system: true };
+  const userRules = rules.filter((r) => normalizeRuleHost(r.host) !== appHost);
+  return [systemRow, ...userRules];
+}
+
+export async function addSiteRule(
+  host: string,
+  mode: SiteRuleMode,
+): Promise<SiteRule[]> {
+  const normalized = normalizeRuleHost(host);
+  const rules = await getStoredSiteRules();
+  const next = [
+    ...rules.filter((r) => normalizeRuleHost(r.host) !== normalized),
+    { host: normalized, mode },
+  ];
+  await setStorage({ siteRules: next });
+  return getEffectiveSiteRules();
+}
+
+export async function updateSiteRule(
+  host: string,
+  mode: SiteRuleMode,
+): Promise<SiteRule[]> {
+  const normalized = normalizeRuleHost(host);
+  const rules = await getStoredSiteRules();
+  const next = rules.map((r) =>
+    normalizeRuleHost(r.host) === normalized ? { ...r, mode } : r,
+  );
+  await setStorage({ siteRules: next });
+  return getEffectiveSiteRules();
+}
+
+export async function removeSiteRule(host: string): Promise<SiteRule[]> {
+  const normalized = normalizeRuleHost(host);
+  const rules = await getStoredSiteRules();
+  await setStorage({
+    siteRules: rules.filter((r) => normalizeRuleHost(r.host) !== normalized),
+  });
+  return getEffectiveSiteRules();
 }
 
 // ---- Session-scoped auth cache (#30) ------------------------------------

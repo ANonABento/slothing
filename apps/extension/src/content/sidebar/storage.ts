@@ -9,6 +9,26 @@ export const DEFAULT_SIDEBAR_LAYOUT: SidebarLayout = {
   collapsed: false,
 };
 
+// Bounds for the user-resizable panel (px). Shared by the resize handler and
+// the storage normalizer so persisted sizes and live drags agree.
+export const SIDEBAR_MIN_WIDTH = 280;
+export const SIDEBAR_MAX_WIDTH = 560;
+export const SIDEBAR_MIN_HEIGHT = 320;
+export const SIDEBAR_MAX_HEIGHT = 900;
+
+/**
+ * Clamps a candidate dimension into [min, max]; returns undefined for any
+ * non-finite input so the panel falls back to its CSS default size.
+ */
+export function clampSidebarDimension(
+  value: number | undefined,
+  min: number,
+  max: number,
+): number | undefined {
+  if (typeof value !== "number" || !Number.isFinite(value)) return undefined;
+  return Math.min(Math.max(Math.round(value), min), max);
+}
+
 export function normalizeSidebarDomain(hostname: string): string {
   return hostname
     .trim()
@@ -107,10 +127,22 @@ function normalizeSidebarLayout(
     Number.isFinite(value.position.y)
       ? { x: value.position.x, y: value.position.y }
       : null;
+  const width = clampSidebarDimension(
+    value?.width,
+    SIDEBAR_MIN_WIDTH,
+    SIDEBAR_MAX_WIDTH,
+  );
+  const height = clampSidebarDimension(
+    value?.height,
+    SIDEBAR_MIN_HEIGHT,
+    SIDEBAR_MAX_HEIGHT,
+  );
   return {
     dock,
     position: dock === "floating" ? position : null,
     collapsed: !!value?.collapsed,
+    ...(width !== undefined ? { width } : {}),
+    ...(height !== undefined ? { height } : {}),
   };
 }
 

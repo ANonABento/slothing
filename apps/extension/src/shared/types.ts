@@ -150,6 +150,23 @@ export interface SidebarLayout {
   dock: SidebarDock;
   position: SidebarPosition | null;
   collapsed: boolean;
+  /** User-resized panel dimensions (px). Undefined → CSS defaults apply. */
+  width?: number;
+  height?: number;
+}
+
+/** Per-host allow/block control for where the extension runs. */
+export type SiteRuleMode = "allow" | "block";
+
+export interface SiteRule {
+  /** Normalized host, e.g. "linkedin.com" (no scheme/www/path). */
+  host: string;
+  mode: SiteRuleMode;
+  /**
+   * True for the auto-injected Slothing app-host block row. Tracks the
+   * configured API base URL and is not user-editable/removable.
+   */
+  system?: boolean;
 }
 
 export interface PageSurfaceContext {
@@ -231,6 +248,7 @@ export type MessageType =
   | "OPEN_DASHBOARD"
   | "CAPTURE_VISIBLE_TAB"
   | "GET_SETTINGS"
+  | "GET_SITE_RULES"
   | "TAILOR_FROM_PAGE"
   | "GENERATE_COVER_LETTER_FROM_PAGE"
   | "LIST_RESUMES"
@@ -413,6 +431,12 @@ export interface ExtensionStorage {
    */
   lastSeenAuthAt?: string;
   settings: ExtensionSettings;
+  /**
+   * User-managed per-host allow/block rules. The Slothing app host is injected
+   * as a system block at read time (see getEffectiveSiteRules) rather than
+   * persisted here, so it always tracks the configured apiBaseUrl.
+   */
+  siteRules?: SiteRule[];
 }
 
 export interface ExtensionSettings {

@@ -1,11 +1,21 @@
 import React, { useEffect, useRef, useState } from "react";
-import type { ExtensionSettings, LearnedAnswer } from "@/shared/types";
+import type {
+  ExtensionSettings,
+  LearnedAnswer,
+  SiteRule,
+  SiteRuleMode,
+} from "@/shared/types";
 import { DEFAULT_SETTINGS, DEFAULT_API_BASE_URL } from "@/shared/types";
+import { normalizeRuleHost } from "@/shared/site-rules";
 import {
   updateSettings,
   getSettings,
   getApiBaseUrl,
   setApiBaseUrl,
+  getEffectiveSiteRules,
+  addSiteRule,
+  updateSiteRule,
+  removeSiteRule,
 } from "../background/storage";
 import { messageForError } from "@/shared/error-messages";
 import {
@@ -21,6 +31,17 @@ export default function OptionsApp() {
   const [apiUrl, setApiUrl] = useState(DEFAULT_API_BASE_URL);
   const [learnedAnswers, setLearnedAnswers] = useState<LearnedAnswer[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Manage-sites allow/block list (#redesign).
+  const [siteRules, setSiteRules] = useState<SiteRule[]>([]);
+  const [siteRulesStatus, setSiteRulesStatus] = useState<OptionsSaveStatus>({
+    state: "idle",
+  });
+  const [newHost, setNewHost] = useState("");
+  const [newHostError, setNewHostError] = useState<string | null>(null);
+  const siteRulesFadeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
 
   // Save-status indicator (see save-status.ts). One per surface so the URL
   // save button doesn't flicker the checkbox area, and vice versa.
@@ -50,22 +71,77 @@ export default function OptionsApp() {
       if (savedFadeTimerRef.current) clearTimeout(savedFadeTimerRef.current);
       if (apiSavedFadeTimerRef.current)
         clearTimeout(apiSavedFadeTimerRef.current);
+      if (siteRulesFadeTimerRef.current)
+        clearTimeout(siteRulesFadeTimerRef.current);
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function loadSettings() {
     try {
-      const [settingsData, url] = await Promise.all([
+      const [settingsData, url, rules] = await Promise.all([
         getSettings(),
         getApiBaseUrl(),
+        getEffectiveSiteRules(),
       ]);
       setSettingsState(settingsData);
       setApiUrl(url);
+      setSiteRules(rules);
     } catch (err) {
       setSettingsStatus({ state: "error", error: messageForError(err) });
     } finally {
       setLoading(false);
     }
+  }
+
+  // All site-rule mutations flow through here so the status badge + persisted
+  // list stay in sync. getEffectiveSiteRules (returned by each mutation) keeps
+  // the app-host system row present.
+  async function runSiteRuleMutation(fn: () => Promise<SiteRule[]>) {
+    setSiteRulesStatus({ state: "saving" });
+    if (siteRulesFadeTimerRef.current) {
+      clearTimeout(siteRulesFadeTimerRef.current);
+      siteRulesFadeTimerRef.current = null;
+    }
+    try {
+      setSiteRules(await fn());
+      setSiteRulesStatus({ state: "saved" });
+      siteRulesFadeTimerRef.current = setTimeout(() => {
+        setSiteRulesStatus({ state: "idle" });
+        siteRulesFadeTimerRef.current = null;
+      }, SAVED_LINGER_MS);
+    } catch (err) {
+      setSiteRulesStatus({ state: "error", error: messageForError(err) });
+    }
+  }
+
+  function handleToggleSiteMode(host: string, mode: SiteRuleMode) {
+    void runSiteRuleMutation(() => updateSiteRule(host, mode));
+  }
+
+  function handleRemoveSite(host: string) {
+    void runSiteRuleMutation(() => removeSiteRule(host));
+  }
+
+  function handleAddSite() {
+    const normalized = normalizeRuleHost(newHost);
+    const valid =
+      !!normalized &&
+      !/\s/.test(normalized) &&
+      (normalized.includes(".") || normalized.includes(":"));
+    if (!valid) {
+      setNewHostError("Enter a valid site, e.g. boards.example.com");
+      return;
+    }
+    const appHost = siteRules.find((r) => r.system)?.host;
+    if (appHost && normalized === appHost) {
+      setNewHostError("Your Slothing app host is always blocked.");
+      return;
+    }
+    setNewHostError(null);
+    setNewHost("");
+    // New manual entries default to "block" — the common intent is "stop
+    // running here". The user can flip to allow afterward.
+    void runSiteRuleMutation(() => addSiteRule(normalized, "block"));
   }
 
   async function loadLearnedAnswers() {
@@ -383,6 +459,89 @@ export default function OptionsApp() {
           </div>
         </section>
       )}
+
+      <section className="settings-card manage-sites-card">
+        <div className="section-head">
+          <h2>Manage sites</h2>
+          <SaveStatusBadge status={siteRulesStatus} />
+        </div>
+        <p className="about">
+          Allow keeps Slothing active on a site; Block turns it off completely
+          (no scraping, sidebar, autofill, or answer bank). Sites that
+          aren&apos;t listed use the default behavior. Your Slothing app host is
+          always blocked so its own pages are never detected as jobs.
+        </p>
+
+        <div className="site-rules-list">
+          {siteRules.map((rule) => (
+            <div key={rule.host} className="site-rule-row">
+              <span className="site-rule-host">{rule.host}</span>
+              {rule.system ? (
+                <span
+                  className="site-rule-locked"
+                  title="Your Slothing app host is always blocked"
+                >
+                  Blocked (system)
+                </span>
+              ) : (
+                <>
+                  <div
+                    className="site-rule-toggle"
+                    role="group"
+                    aria-label={`Mode for ${rule.host}`}
+                  >
+                    <button
+                      type="button"
+                      className={rule.mode === "allow" ? "active" : ""}
+                      aria-pressed={rule.mode === "allow"}
+                      onClick={() => handleToggleSiteMode(rule.host, "allow")}
+                    >
+                      Allow
+                    </button>
+                    <button
+                      type="button"
+                      className={
+                        rule.mode === "block" ? "active block" : "block"
+                      }
+                      aria-pressed={rule.mode === "block"}
+                      onClick={() => handleToggleSiteMode(rule.host, "block")}
+                    >
+                      Block
+                    </button>
+                  </div>
+                  <button
+                    type="button"
+                    className="delete-btn"
+                    onClick={() => handleRemoveSite(rule.host)}
+                  >
+                    Remove
+                  </button>
+                </>
+              )}
+            </div>
+          ))}
+        </div>
+
+        <div className="input-group">
+          <input
+            type="text"
+            value={newHost}
+            placeholder="boards.example.com"
+            aria-label="Add a site to block"
+            onChange={(e) => {
+              setNewHost(e.target.value);
+              setNewHostError(null);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleAddSite();
+            }}
+          />
+          <button type="button" onClick={handleAddSite}>
+            Add
+          </button>
+        </div>
+        {newHostError && <small className="field-error">{newHostError}</small>}
+      </section>
 
       <section className="settings-card about-card">
         <h2>About</h2>

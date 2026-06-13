@@ -22,6 +22,7 @@ import {
   setCachedProfile,
   getApiBaseUrl,
   getSettings,
+  getEffectiveSiteRules,
   isSessionLost,
   getSessionAuthCache,
   setSessionAuthCache,
@@ -68,6 +69,9 @@ async function handleMessage(
 
     case "GET_SETTINGS":
       return handleGetSettings();
+
+    case "GET_SITE_RULES":
+      return handleGetSiteRules();
 
     case "IMPORT_JOB":
       return handleImportJob(message.payload as ScrapedJob);
@@ -417,6 +421,14 @@ async function handleGetProfile(): Promise<ExtensionResponse> {
 async function handleGetSettings(): Promise<ExtensionResponse> {
   try {
     return { success: true, data: await getSettings() };
+  } catch (error) {
+    return { success: false, error: (error as Error).message };
+  }
+}
+
+async function handleGetSiteRules(): Promise<ExtensionResponse> {
+  try {
+    return { success: true, data: await getEffectiveSiteRules() };
   } catch (error) {
     return { success: false, error: (error as Error).message };
   }
