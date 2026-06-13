@@ -3,6 +3,7 @@ import { requireAuth, isAuthError } from "@/lib/auth";
 import { getJob, updateJob, deleteJob } from "@/lib/db/jobs-async";
 import { updateJobSchema } from "@/lib/validation/jobs";
 import { recordJobStatusChange } from "@/lib/db/analytics";
+import { ensureApplicationFollowUpReminder } from "@/lib/db/reminders";
 import { jobToOpportunity } from "@/lib/opportunities";
 import { safeTrackActivity } from "@/lib/streak/track";
 import type { AchievementUnlock } from "@/lib/streak/types";
@@ -100,6 +101,14 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
           ...(await safeTrackActivity(authResult.userId, "opp_applied"))
             .unlocked,
         );
+        // Auto-schedule a follow-up nudge a week out. Best-effort + deduped:
+        // a reminder hiccup must never fail the status update, and re-applying
+        // won't stack duplicate reminders.
+        try {
+          await ensureApplicationFollowUpReminder(params.id, authResult.userId);
+        } catch (reminderError) {
+          console.error("Failed to create follow-up reminder:", reminderError);
+        }
       }
     }
 

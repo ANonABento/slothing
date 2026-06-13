@@ -337,6 +337,32 @@ export async function createFollowUpReminder(
   );
 }
 
+/**
+ * Auto-create the "follow up on your application" reminder when an opportunity
+ * first moves to `applied`. Idempotent: if an OPEN follow-up reminder (not yet
+ * completed or dismissed) already exists for this job, it no-ops — re-applying
+ * or toggling status back and forth never piles up duplicate nudges. Returns
+ * the new reminder, or `null` when one already existed.
+ */
+export async function ensureApplicationFollowUpReminder(
+  jobId: string,
+  userId: string,
+  daysFromNow: number = 7,
+): Promise<Reminder | null> {
+  await ensureRemindersFiringSchema();
+  const existing = await getClient().execute({
+    sql: `
+      SELECT id FROM reminders
+      WHERE user_id = ? AND job_id = ? AND type = 'follow_up'
+        AND completed = 0 AND dismissed = 0
+      LIMIT 1
+    `,
+    args: [userId, jobId],
+  });
+  if (existing.rows[0]) return null;
+  return createFollowUpReminder(jobId, daysFromNow, userId);
+}
+
 // Get reminder counts for dashboard
 export async function getReminderCounts(userId: string): Promise<{
   total: number;

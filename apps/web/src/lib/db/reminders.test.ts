@@ -27,6 +27,7 @@ import {
   dismissReminder,
   deleteReminder,
   updateReminder,
+  ensureApplicationFollowUpReminder,
 } from "./reminders";
 
 function result(rows: unknown[] = [], rowsAffected = 0) {
@@ -152,5 +153,36 @@ describe("Reminder Database Functions", () => {
       sql: expect.stringContaining("AND user_id = ?"),
       args: ["New title", null, "reminder-1", "user-1"],
     });
+  });
+
+  it("auto-creates a follow-up reminder when none is open for the job", async () => {
+    // 1: dedupe SELECT (no open follow-up) → 2: createReminder job-ownership
+    // SELECT → 3: INSERT.
+    dbMocks.execute
+      .mockResolvedValueOnce(result([]))
+      .mockResolvedValueOnce(result([{ id: "job-1" }]))
+      .mockResolvedValueOnce(result([], 1));
+
+    const created = await ensureApplicationFollowUpReminder("job-1", "user-1");
+
+    expect(dbMocks.execute).toHaveBeenNthCalledWith(1, {
+      sql: expect.stringContaining("type = 'follow_up'"),
+      args: ["user-1", "job-1"],
+    });
+    expect(dbMocks.execute).toHaveBeenNthCalledWith(3, {
+      sql: expect.stringContaining("INSERT INTO reminders"),
+      args: expect.arrayContaining(["job-1", "follow_up"]),
+    });
+    expect(created?.type).toBe("follow_up");
+  });
+
+  it("does not duplicate a follow-up reminder that already exists", async () => {
+    dbMocks.execute.mockResolvedValueOnce(result([{ id: "existing" }]));
+
+    const created = await ensureApplicationFollowUpReminder("job-1", "user-1");
+
+    expect(created).toBeNull();
+    // Only the dedupe SELECT ran — no ownership check, no INSERT.
+    expect(dbMocks.execute).toHaveBeenCalledTimes(1);
   });
 });
