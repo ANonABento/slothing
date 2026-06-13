@@ -22,6 +22,8 @@
     "*://*.myworkdayjobs.com/*",
     "https://slothing.work/*",
     "https://*.slothing.work/*",
+    "https://logo.clearbit.com/*",
+    "https://icons.duckduckgo.com/*",
     "http://localhost/*",
     "http://127.0.0.1/*",
     "http://localhost:3000/*",

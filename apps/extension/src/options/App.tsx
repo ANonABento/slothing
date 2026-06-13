@@ -439,6 +439,29 @@ export default function OptionsApp() {
           </div>
         </section>
 
+        <section className="settings-card compact-card">
+          <div className="section-head">
+            <h2>Display</h2>
+            <SaveStatusBadge status={settingsStatus} />
+          </div>
+          <div className="setting-group">
+            <label className="checkbox-label">
+              <input
+                type="checkbox"
+                checked={settings.showCompanyLogos}
+                onChange={(e) =>
+                  handleSettingChange("showCompanyLogos", e.target.checked)
+                }
+              />
+              <span>Show company logos</span>
+            </label>
+            <small>
+              When a job page has no logo, fetch one from a third-party logo
+              service by company domain. Off keeps the initials badge.
+            </small>
+          </div>
+        </section>
+
         <section className="settings-card about-card">
           <h2>About</h2>
           <p className="about">

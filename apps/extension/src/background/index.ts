@@ -29,6 +29,7 @@ import {
   clearSessionAuthCache,
 } from "./storage";
 import { setBadgeForTab, clearBadgeForTab } from "./badge";
+import { resolveCompanyLogoDataUrl } from "./company-logo";
 import {
   clearSession,
   listSessions,
@@ -72,6 +73,11 @@ async function handleMessage(
 
     case "GET_SITE_RULES":
       return handleGetSiteRules();
+
+    case "RESOLVE_COMPANY_LOGO":
+      return handleResolveCompanyLogo(
+        message.payload as { domain: string } | undefined,
+      );
 
     case "IMPORT_JOB":
       return handleImportJob(message.payload as ScrapedJob);
@@ -484,6 +490,17 @@ async function handleGetSettings(): Promise<ExtensionResponse> {
 async function handleGetSiteRules(): Promise<ExtensionResponse> {
   try {
     return { success: true, data: await getEffectiveSiteRules() };
+  } catch (error) {
+    return { success: false, error: (error as Error).message };
+  }
+}
+
+async function handleResolveCompanyLogo(
+  payload: { domain: string } | undefined,
+): Promise<ExtensionResponse> {
+  try {
+    const dataUrl = await resolveCompanyLogoDataUrl(payload?.domain || "");
+    return { success: true, data: { dataUrl } };
   } catch (error) {
     return { success: false, error: (error as Error).message };
   }

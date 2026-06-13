@@ -127,6 +127,7 @@ export function JobPageSidebar(props: JobPageSidebarProps) {
   const [pickedResumeId, setPickedResumeId] = useState<string | null>(null);
   const [dockMenuOpen, setDockMenuOpen] = useState(false);
   const [tab, setTab] = useState<"apply" | "assistant" | "answers">("apply");
+  const [logoError, setLogoError] = useState(false);
   const dragState = useRef<DragState | null>(null);
   const resizeState = useRef<ResizeState | null>(null);
   const dockWrapRef = useRef<HTMLDivElement | null>(null);
@@ -147,6 +148,10 @@ export function JobPageSidebar(props: JobPageSidebarProps) {
     return () =>
       document.removeEventListener("pointerdown", onPointerDown, true);
   }, [dockMenuOpen]);
+
+  // Reset the logo-failed flag when the job (and thus its logo URL) changes.
+  const companyLogoUrl = props.scrapedJob.companyLogoUrl;
+  useEffect(() => setLogoError(false), [companyLogoUrl]);
 
   const bestFitResumes = props.bestFitResumes ?? [];
   const showResumePicker =
@@ -488,7 +493,16 @@ export function JobPageSidebar(props: JobPageSidebarProps) {
 
         <section className="jobsec" aria-label="Detected job">
           <div className="job-logo" aria-hidden="true">
-            {companyInitial}
+            {companyLogoUrl && !logoError ? (
+              <img
+                className="job-logo-img"
+                src={companyLogoUrl}
+                alt=""
+                onError={() => setLogoError(true)}
+              />
+            ) : (
+              companyInitial
+            )}
           </div>
           <div className="job-meta">
             <h2 className="title">{props.scrapedJob.title}</h2>

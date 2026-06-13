@@ -24,6 +24,7 @@ const enabledSettings: ExtensionSettings = {
   notifyOnJobDetected: true,
   autoTrackApplicationsEnabled: true,
   captureScreenshotEnabled: false,
+  showCompanyLogos: true,
 };
 
 describe("submit tracking heuristics", () => {
