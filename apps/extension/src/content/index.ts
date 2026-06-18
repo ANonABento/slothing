@@ -13,8 +13,7 @@ import {
 } from "./scrapers/company-logo";
 import {
   WaterlooWorksOrchestrator,
-  getWaterlooWorksNextPageLink,
-  getWaterlooWorksRows,
+  getWaterlooWorksBulkState,
 } from "./scrapers/waterloo-works-orchestrator";
 import { GreenhouseOrchestrator } from "./scrapers/greenhouse-orchestrator";
 import { LeverOrchestrator } from "./scrapers/lever-orchestrator";
@@ -142,9 +141,9 @@ const BLOCKED_GUARDED_TYPES = new Set<string>([
   "TRIGGER_IMPORT",
   "SCRAPE_JOB",
   "SCRAPE_JOB_LIST",
-  "WW_GET_PAGE_STATE",
-  "WW_SCRAPE_ALL_VISIBLE",
-  "WW_SCRAPE_ALL_PAGINATED",
+  "BULK_WATERLOOWORKS_GET_PAGE_STATE",
+  "BULK_WATERLOOWORKS_SCRAPE_VISIBLE",
+  "BULK_WATERLOOWORKS_SCRAPE_PAGINATED",
   "BULK_GREENHOUSE_GET_PAGE_STATE",
   "BULK_GREENHOUSE_SCRAPE_VISIBLE",
   "BULK_GREENHOUSE_SCRAPE_PAGINATED",
@@ -365,19 +364,17 @@ async function handleMessage(message: { type: string; payload?: unknown }) {
       }
       return { success: false, error: "No scraper available for this site" };
 
-    case "WW_GET_PAGE_STATE":
-      return getWwPageState();
-
-    case "WW_SCRAPE_ALL_VISIBLE":
-      return runWwBulkScrape({ paginated: false });
-
-    case "WW_SCRAPE_ALL_PAGINATED":
-      return runWwBulkScrape({
+    // Bulk-scrape orchestrators. WaterlooWorks shares the generic path now.
+    case "BULK_WATERLOOWORKS_GET_PAGE_STATE":
+      return getBulkSourcePageState("waterlooworks");
+    case "BULK_WATERLOOWORKS_SCRAPE_VISIBLE":
+      return runBulkSourceScrape("waterlooworks", { paginated: false });
+    case "BULK_WATERLOOWORKS_SCRAPE_PAGINATED":
+      return runBulkSourceScrape("waterlooworks", {
         paginated: true,
         ...(message.payload as object),
       });
 
-    // P3/#39 — Generic bulk-scrape orchestrators for public ATS hosts.
     case "BULK_GREENHOUSE_GET_PAGE_STATE":
       return getBulkSourcePageState("greenhouse");
     case "BULK_GREENHOUSE_SCRAPE_VISIBLE":
@@ -448,38 +445,10 @@ async function getSurfaceContext(): Promise<PageSurfaceContext> {
   };
 }
 
-function isWaterlooWorks(): boolean {
-  return /waterlooworks\.uwaterloo\.ca/.test(window.location.href);
-}
-
-function getWwPageState() {
-  if (!isWaterlooWorks()) {
-    return {
-      success: true,
-      data: { kind: "other", rowCount: 0, hasNextPage: false },
-    };
-  }
-  const rows = getWaterlooWorksRows();
-  const nextBtn = getWaterlooWorksNextPageLink();
-  const currentPage = document
-    .querySelector<HTMLAnchorElement>("a.pagination__link.active")
-    ?.textContent?.trim();
-  const hasDetail = !!document.querySelector(
-    ".dashboard-header__posting-title",
-  );
-  return {
-    success: true,
-    data: {
-      kind: hasDetail ? "detail" : rows.length > 0 ? "list" : "other",
-      rowCount: rows.length,
-      hasNextPage: !!nextBtn && !nextBtn.classList.contains("disabled"),
-      currentPage,
-    },
-  };
-}
-
-// P3/#39 — Generic bulk-source plumbing for Greenhouse/Lever/Workday.
-type BulkSource = "greenhouse" | "lever" | "workday";
+// Generic bulk-source plumbing. WaterlooWorks (#39 was Greenhouse/Lever/Workday)
+// is now folded in here too, so every listing host shares one detect/scrape path
+// instead of WaterlooWorks carrying a parallel, separately-rotting code path.
+type BulkSource = "waterlooworks" | "greenhouse" | "lever" | "workday";
 
 interface BulkOrchestratorLike {
   scrapeAllVisible(opts: {
@@ -511,6 +480,8 @@ interface BulkOrchestratorLike {
 
 function getOrchestratorForSource(source: BulkSource): BulkOrchestratorLike {
   switch (source) {
+    case "waterlooworks":
+      return new WaterlooWorksOrchestrator();
     case "greenhouse":
       return new GreenhouseOrchestrator();
     case "lever":
@@ -522,6 +493,8 @@ function getOrchestratorForSource(source: BulkSource): BulkOrchestratorLike {
 
 function isBulkSourceHandled(source: BulkSource, url: string): boolean {
   switch (source) {
+    case "waterlooworks":
+      return /waterlooworks\.uwaterloo\.ca/.test(url);
     case "greenhouse":
       return GreenhouseOrchestrator.canHandle(url);
     case "lever":
@@ -537,7 +510,9 @@ function isBulkSourceHandled(source: BulkSource, url: string): boolean {
  * out-of-band so we can probe the page cheaply without instantiating the
  * orchestrator just to count.
  */
-const BULK_ROW_SELECTORS: Record<BulkSource, string[]> = {
+type CssBulkSource = Exclude<BulkSource, "waterlooworks">;
+
+const BULK_ROW_SELECTORS: Record<CssBulkSource, string[]> = {
   greenhouse: [
     "div.opening",
     ".job-post",
@@ -553,7 +528,7 @@ const BULK_ROW_SELECTORS: Record<BulkSource, string[]> = {
   ],
 };
 
-const BULK_NEXT_SELECTORS: Record<BulkSource, string[]> = {
+const BULK_NEXT_SELECTORS: Record<CssBulkSource, string[]> = {
   greenhouse: [
     'a[rel="next"]',
     'a[aria-label="Next page" i]',
@@ -572,7 +547,7 @@ const BULK_NEXT_SELECTORS: Record<BulkSource, string[]> = {
   ],
 };
 
-function countBulkRows(source: BulkSource): number {
+function countBulkRows(source: CssBulkSource): number {
   for (const selector of BULK_ROW_SELECTORS[source]) {
     const matches = document.querySelectorAll(selector);
     if (matches.length > 0) return matches.length;
@@ -580,7 +555,7 @@ function countBulkRows(source: BulkSource): number {
   return 0;
 }
 
-function bulkHasNextPage(source: BulkSource): boolean {
+function bulkHasNextPage(source: CssBulkSource): boolean {
   for (const selector of BULK_NEXT_SELECTORS[source]) {
     const el = document.querySelector<HTMLElement>(selector);
     if (!el) continue;
@@ -603,6 +578,11 @@ function getBulkSourcePageState(source: BulkSource) {
       success: true,
       data: { detected: false, rowCount: 0, hasNextPage: false },
     };
+  }
+  // WaterlooWorks counts rows with the th-aware filter + detail-panel
+  // suppression rather than the CSS-selector heuristic used for ATS boards.
+  if (source === "waterlooworks") {
+    return { success: true, data: getWaterlooWorksBulkState() };
   }
   const rowCount = countBulkRows(source);
   return {
@@ -657,76 +637,6 @@ async function runBulkSourceScrape(
       data: { imported: 0, attempted: 0, pages, errors },
     };
   }
-  const importResp = await sendMessage<{
-    imported: number;
-    opportunityIds: string[];
-    pendingCount: number;
-    dedupedIds?: string[];
-  }>(Messages.importJobsBatch(jobs));
-  if (!importResp.success) {
-    return {
-      success: false,
-      error: importResp.error || "Bulk import failed",
-    };
-  }
-  return {
-    success: true,
-    data: {
-      imported: importResp.data?.imported ?? jobs.length,
-      attempted: jobs.length,
-      pages,
-      duplicateCount:
-        importResp.data?.dedupedIds?.length ??
-        Math.max(0, jobs.length - (importResp.data?.imported ?? jobs.length)),
-      dedupedIds: importResp.data?.dedupedIds,
-      errors,
-    },
-  };
-}
-
-async function runWwBulkScrape(opts: {
-  paginated: boolean;
-  maxJobs?: number;
-  maxPages?: number;
-}) {
-  if (!isWaterlooWorks()) {
-    return { success: false, error: "Not a WaterlooWorks page" };
-  }
-  const orchestrator = new WaterlooWorksOrchestrator();
-  let errors: string[] = [];
-  let pages = 1;
-  const onProgress = (p: {
-    scrapedCount: number;
-    attemptedCount: number;
-    currentPage: number;
-    totalRowsOnPage: number;
-    done: boolean;
-    errors: string[];
-  }) => {
-    pages = p.currentPage;
-    errors = p.errors;
-    // Fire-and-forget progress event to the background, which can fan it out
-    // to the popup if open.
-    sendMessage({
-      type: "WW_BULK_PROGRESS",
-      payload: p,
-    } as never).catch(() => undefined);
-  };
-  const jobs = opts.paginated
-    ? await orchestrator.scrapeAllPaginated({
-        onProgress,
-        maxJobs: opts.maxJobs,
-        maxPages: opts.maxPages,
-      })
-    : await orchestrator.scrapeAllVisible({ onProgress });
-
-  if (jobs.length === 0) {
-    return {
-      success: true,
-      data: { imported: 0, attempted: 0, pages, errors },
-    };
-  }
-  // Hand off to background to bulk-import to Slothing.
   const importResp = await sendMessage<{
     imported: number;
     opportunityIds: string[];
