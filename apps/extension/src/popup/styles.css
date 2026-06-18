@@ -13,7 +13,7 @@
 
 html,
 body {
-  width: min(360px, 100vw);
+  width: 360px;
   font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto,
     Oxygen, Ubuntu, sans-serif;
   font-size: 14px;
@@ -29,7 +29,7 @@ body {
 }
 
 .popup {
-  width: min(360px, 100vw);
+  width: 360px;
   display: flex;
   flex-direction: column;
   background: var(--bg);
