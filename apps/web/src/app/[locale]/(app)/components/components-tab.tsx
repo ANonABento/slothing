@@ -83,7 +83,7 @@ import {
 import { VirtualGrid } from "@/components/ui/virtual-list";
 import { AddEntryDialog } from "@/components/bank/add-entry-dialog";
 import { ArticulateDialog } from "@/components/bank/articulate-dialog";
-import { ResearchDialog } from "@/components/bank/research-dialog";
+import { BankScratchpad } from "@/components/bank/bank-scratchpad";
 import { useToast } from "@/components/ui/toast";
 import { useErrorToast } from "@/hooks/use-error-toast";
 import { uploadSuccessMessage } from "./utils";
@@ -1999,7 +1999,7 @@ export function BankComponentsTab({
                 <Link2 className="h-4 w-4 mr-2" />
                 From a link
               </Button>
-              <ResearchDialog
+              <BankScratchpad
                 open={researchOpen}
                 onOpenChange={setResearchOpen}
                 onCreated={() => void fetchEntries({ silent: true })}

@@ -51,6 +51,16 @@ export const researchBankSchema = z.object({
 });
 export type ResearchBankInput = z.infer<typeof researchBankSchema>;
 
+/** POST /api/bank/ai/revise — iterate on one bullet, grounded against supplied evidence. */
+export const reviseBankSchema = z.object({
+  bullet: z.string().trim().min(1).max(1000),
+  evidence: z.string().trim().min(1).max(16000),
+  preset: z.enum(["shorter", "impact", "metric", "rephrase"]).optional(),
+  instruction: z.string().trim().max(500).optional(),
+  jobContext: jobContextSchema,
+});
+export type ReviseBankInput = z.infer<typeof reviseBankSchema>;
+
 /** POST /api/bank/from-source — commit a reviewed project + its bullets to the bank. */
 export const fromSourceBankSchema = z.object({
   url: z.string().trim().url().optional(),

@@ -22,6 +22,7 @@ import {
   buildArticulatePrompt,
   classifyJobGaps,
   draftProjectFromSource,
+  reviseBullet,
 } from "./ai-authoring";
 
 const entry: BankEntry = {
@@ -250,5 +251,56 @@ describe("AI bank authoring — draftProjectFromSource (spec §4.3)", () => {
     );
     const draft = await draftProjectFromSource(source, llmConfig);
     expect(draft.name).toBe("flowTO");
+  });
+});
+
+describe("AI bank authoring — reviseBullet (spec §4.4)", () => {
+  beforeEach(() => completeMock.mockReset());
+
+  const evidence =
+    "Built a Python CLI that cut deploy time from 20 minutes to 4 minutes by parallelizing uploads.";
+
+  it("applies a revision that stays grounded in the evidence", async () => {
+    completeMock.mockResolvedValueOnce(
+      JSON.stringify({
+        bullet:
+          "Cut deploy time from 20 minutes to 4 minutes with a Python CLI that parallelizes uploads",
+      }),
+    );
+    const out = await reviseBullet(
+      "Built a Python CLI to speed up deploys",
+      evidence,
+      "Add a metric",
+      llmConfig,
+    );
+    expect(out.applied).toBe(true);
+    expect(out.bullet).toMatch(/20 minutes to 4/);
+  });
+
+  it("rejects a fabricating revision and keeps the original bullet", async () => {
+    const original = "Built a Python CLI to speed up deploys";
+    completeMock.mockResolvedValueOnce(
+      JSON.stringify({
+        bullet:
+          "Cut deploy time 95% across 500 microservices with a Python CLI",
+      }),
+    );
+    const out = await reviseBullet(
+      original,
+      evidence,
+      "Add a metric",
+      llmConfig,
+    );
+    expect(out.applied).toBe(false);
+    expect(out.bullet).toBe(original);
+    expect(out.ungroundedNumbers.length).toBeGreaterThan(0);
+  });
+
+  it("keeps the original when the model returns nothing usable", async () => {
+    const original = "Built a Python CLI to speed up deploys";
+    completeMock.mockResolvedValueOnce(JSON.stringify({ bullet: "" }));
+    const out = await reviseBullet(original, evidence, "Shorter", llmConfig);
+    expect(out.applied).toBe(false);
+    expect(out.bullet).toBe(original);
   });
 });

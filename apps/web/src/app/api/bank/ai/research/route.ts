@@ -123,7 +123,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         success: true,
-        source: { kind: source.kind, title: source.title, url: source.url },
+        source: {
+          kind: source.kind,
+          title: source.title,
+          url: source.url,
+          // The grounding evidence — returned so the scratchpad can ground per-bullet revisions
+          // against the same source without re-fetching.
+          text: source.text,
+        },
         draft,
       },
       { status: 200 },

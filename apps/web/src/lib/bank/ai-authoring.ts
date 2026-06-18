@@ -332,3 +332,93 @@ export function strengthenedDraftInput(
     confidenceScore: 0.7,
   };
 }
+
+// --- Revise (spec §4.4): iterative pair-writing on a single bullet, grounded ⊆ evidence ---
+
+/** Built-in revise instructions the scratchpad exposes as one-click presets. */
+export const REVISE_PRESETS = {
+  shorter:
+    "Make it more concise and tighter without losing the key fact or metric.",
+  impact:
+    "Lead with a stronger action verb and emphasize the impact/outcome. Add NO new facts.",
+  metric:
+    "If — and ONLY if — the evidence contains a quantitative result, surface it; never invent or estimate a number.",
+  rephrase: "Rephrase for clarity and flow.",
+} as const;
+
+export type RevisePreset = keyof typeof REVISE_PRESETS;
+
+export interface ReviseResult {
+  /** The bullet to show: the revision if it stayed grounded, else the original (unchanged). */
+  bullet: string;
+  /** True when the revision was grounded ⊆ evidence and therefore applied. */
+  applied: boolean;
+  /** Metric tokens the revision introduced that the evidence does not support. */
+  ungroundedNumbers: string[];
+}
+
+export function buildRevisePrompt(
+  bullet: string,
+  evidence: string,
+  instruction: string,
+  jobContext?: JobContext,
+): string {
+  const job =
+    jobContext?.jobDescription || jobContext?.jobTitle
+      ? `\nTARGET JOB (use only to choose which TRUE details to emphasize — never to add facts):\nTitle: ${jobContext.jobTitle ?? "N/A"}\nCompany: ${jobContext.company ?? "N/A"}\n${(jobContext.jobDescription ?? "").slice(0, 1500)}\n`
+      : "";
+  return `Revise ONE résumé bullet per the instruction.
+
+INSTRUCTION: ${instruction}
+
+NON-NEGOTIABLE RULES:
+- Use ONLY facts present in the EVIDENCE below. Do NOT invent or change metrics, numbers, tools, scope, employers, titles, dates, or outcomes.
+- Do not add a number or percentage that is not already in the evidence (no derived/estimated metrics).
+- Keep it a single, concise, verb-first résumé bullet. No trailing filler clauses unless that detail is in the evidence.
+- Return JSON ONLY, no prose: {"bullet": "..."}
+
+CURRENT BULLET:
+${bullet}
+
+EVIDENCE (the only facts you may use):
+${evidence}
+${job}
+Return ONLY: {"bullet": "revised bullet"}`;
+}
+
+/**
+ * Revise a single bullet against its evidence. The revision is kept ONLY if it stays grounded ⊆
+ * the evidence (no fabricated metrics); otherwise the original bullet is returned unchanged and
+ * `applied` is false so the UI can tell the user the revision was rejected.
+ */
+export async function reviseBullet(
+  bullet: string,
+  evidence: string,
+  instruction: string,
+  llmConfig: LLMConfig,
+  jobContext?: JobContext,
+): Promise<ReviseResult> {
+  const client = new LLMClient(llmConfig);
+  const response = await client.complete({
+    messages: [
+      {
+        role: "user",
+        content: buildRevisePrompt(bullet, evidence, instruction, jobContext),
+      },
+    ],
+    temperature: 0.4,
+    maxTokens: 300,
+  });
+  const parsed = parseJSONFromLLM<{ bullet?: unknown }>(response);
+  const revised = typeof parsed.bullet === "string" ? parsed.bullet.trim() : "";
+  if (!revised) {
+    return { bullet, applied: false, ungroundedNumbers: [] };
+  }
+  const result = groundClaims([revised], evidence);
+  const applied = result.supported.includes(revised);
+  return {
+    bullet: applied ? revised : bullet,
+    applied,
+    ungroundedNumbers: result.ungroundedNumbers,
+  };
+}
