@@ -192,6 +192,112 @@ export async function articulateToBullets(
   return groundClaims(bullets, rawText).supported;
 }
 
+// --- Project-from-source (spec §4.3): a fetched URL's text → a grounded project draft ---
+
+export interface ProjectSource {
+  /** Readable source text (README / page) — the grounding evidence. */
+  text: string;
+  /** A suggested name (repo/page title) the AI may keep or refine. */
+  suggestedName: string;
+  /** Detected technologies (e.g. GitHub languages) — authoritative, kept as-is. */
+  technologies: string[];
+}
+
+export interface ProjectDraft {
+  name: string;
+  technologies: string[];
+  bullets: string[];
+}
+
+export function buildProjectFromSourcePrompt(
+  source: ProjectSource,
+  styleExemplars: string[],
+  jobContext?: JobContext,
+): string {
+  const job =
+    jobContext?.jobDescription || jobContext?.jobTitle
+      ? `\nTARGET JOB (use only to choose which TRUE details to emphasize — never to add facts):\nTitle: ${jobContext.jobTitle ?? "N/A"}\nCompany: ${jobContext.company ?? "N/A"}\n${(jobContext.jobDescription ?? "").slice(0, 1500)}\n`
+      : "";
+  const style =
+    styleExemplars.length > 0
+      ? `\nSTYLE EXAMPLES (match the tone, verb-first structure, and concision — DO NOT copy their facts):\n${styleExemplars.map((s) => `- ${s}`).join("\n")}\n`
+      : "";
+  return `Summarize ONE software project into résumé content, using ONLY the SOURCE below.
+
+NON-NEGOTIABLE RULES:
+- Use ONLY facts present in the SOURCE. Do NOT invent or change metrics, numbers, tools, scope, outcomes, employers, or dates.
+- Do not add a number or percentage that is not already in the source (no derived/estimated metrics).
+- Each bullet must be a strong, concise, verb-first résumé bullet fully supported by the source. No filler or embellishment.
+- "technologies" must be tools/languages explicitly named in the source.
+- Suggested name to refine: "${source.suggestedName}".
+- Return JSON ONLY, no prose: {"name": "...", "technologies": ["..."], "bullets": ["...", "..."]}
+${style}
+SOURCE:
+${source.text}
+${job}
+Return ONLY: {"name": "Project Name", "technologies": ["Tech"], "bullets": ["bullet 1", "bullet 2", "bullet 3"]}`;
+}
+
+/**
+ * Draft a project (name + technologies + 3–5 bullets) from fetched source text. Bullets are kept
+ * only if grounded ⊆ the source (fabricated metrics dropped via {@link groundClaims}); technologies
+ * are restricted to those the source names (or the authoritative detected list). The AI phrases —
+ * it never originates facts. Bullets may be empty if nothing was grounded.
+ */
+export async function draftProjectFromSource(
+  source: ProjectSource,
+  llmConfig: LLMConfig,
+  styleExemplars: string[] = [],
+  jobContext?: JobContext,
+): Promise<ProjectDraft> {
+  const client = new LLMClient(llmConfig);
+  const response = await client.complete({
+    messages: [
+      {
+        role: "user",
+        content: buildProjectFromSourcePrompt(
+          source,
+          styleExemplars,
+          jobContext,
+        ),
+      },
+    ],
+    temperature: 0.4,
+    maxTokens: 900,
+  });
+  const parsed = parseJSONFromLLM<{
+    name?: unknown;
+    technologies?: unknown;
+    bullets?: unknown;
+  }>(response);
+
+  const rawBullets = Array.isArray(parsed.bullets)
+    ? parsed.bullets.map(String)
+    : [];
+  const bullets = groundClaims(rawBullets, source.text).supported;
+
+  // Technologies the source supports: the detected list (authoritative) plus any AI-named tech
+  // that actually appears in the source text.
+  const sourceLower = source.text.toLowerCase();
+  const detected = new Set(source.technologies.map((t) => t.trim()));
+  const aiTech = Array.isArray(parsed.technologies)
+    ? parsed.technologies
+        .map(String)
+        .map((t) => t.trim())
+        .filter((t) => t && sourceLower.includes(t.toLowerCase()))
+    : [];
+  const technologies = Array.from(new Set([...detected, ...aiTech])).filter(
+    Boolean,
+  );
+
+  const name =
+    typeof parsed.name === "string" && parsed.name.trim()
+      ? parsed.name.trim()
+      : source.suggestedName;
+
+  return { name, technologies, bullets };
+}
+
 /** Build a draft bank entry for one articulated bullet (unverified until confirmed). */
 export function articulatedDraftInput(
   rawText: string,

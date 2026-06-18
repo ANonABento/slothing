@@ -26,11 +26,40 @@ export const createBankEntrySchema = z.object({
     .default("user"),
   groundedIn: z
     .object({
-      kind: z.enum(["raw_input", "entry"]),
+      kind: z.enum(["raw_input", "entry", "url"]),
       refId: z.string().optional(),
       rawText: z.string().optional(),
+      url: z.string().optional(),
     })
     .optional(),
 });
 
 export type CreateBankEntryInput = z.infer<typeof createBankEntrySchema>;
+
+const jobContextSchema = z
+  .object({
+    jobTitle: z.string().optional(),
+    company: z.string().optional(),
+    jobDescription: z.string().optional(),
+  })
+  .optional();
+
+/** POST /api/bank/ai/research — fetch a URL and draft a grounded project (preview, no persist). */
+export const researchBankSchema = z.object({
+  url: z.string().trim().url(),
+  jobContext: jobContextSchema,
+});
+export type ResearchBankInput = z.infer<typeof researchBankSchema>;
+
+/** POST /api/bank/from-source — commit a reviewed project + its bullets to the bank. */
+export const fromSourceBankSchema = z.object({
+  url: z.string().trim().url().optional(),
+  name: z.string().trim().min(1).max(200),
+  technologies: z
+    .array(z.string().trim().min(1))
+    .max(40)
+    .optional()
+    .default([]),
+  bullets: z.array(z.string().trim().min(1)).min(1).max(20),
+});
+export type FromSourceBankInput = z.infer<typeof fromSourceBankSchema>;

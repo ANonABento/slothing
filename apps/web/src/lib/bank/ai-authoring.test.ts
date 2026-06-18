@@ -21,6 +21,7 @@ import {
   articulatedDraftInput,
   buildArticulatePrompt,
   classifyJobGaps,
+  draftProjectFromSource,
 } from "./ai-authoring";
 
 const entry: BankEntry = {
@@ -192,5 +193,62 @@ describe("classifyJobGaps — tailoring↔bank loop (spec §6)", () => {
   it("dedupes keywords case-insensitively", () => {
     const r = classifyJobGaps(["react", "React", "REACT"], [verifiedEntry]);
     expect(r.strengthenable).toHaveLength(1);
+  });
+});
+
+describe("AI bank authoring — draftProjectFromSource (spec §4.3)", () => {
+  beforeEach(() => completeMock.mockReset());
+
+  const source = {
+    text: "FlowTO is a city-scale traffic digital twin of Toronto. Built with Python and cuGraph. The road graph has 73,036 directed edges.",
+    suggestedName: "flowTO",
+    technologies: ["Python", "TypeScript"],
+  };
+
+  it("keeps grounded bullets and drops fabricated metrics", async () => {
+    completeMock.mockResolvedValueOnce(
+      JSON.stringify({
+        name: "FlowTO",
+        technologies: ["Python", "cuGraph"],
+        bullets: [
+          "Built a city-scale traffic digital twin of Toronto with Python and cuGraph",
+          "Scaled the system to 5,000,000 users with 99.99% uptime", // fabricated — not in source
+        ],
+      }),
+    );
+    const draft = await draftProjectFromSource(source, llmConfig);
+    expect(draft.name).toBe("FlowTO");
+    expect(draft.bullets).toHaveLength(1);
+    expect(draft.bullets[0]).toMatch(/digital twin/);
+    expect(draft.bullets.some((b) => /5,000,000|99\.99/.test(b))).toBe(false);
+  });
+
+  it("restricts technologies to the detected list plus tech named in the source", async () => {
+    completeMock.mockResolvedValueOnce(
+      JSON.stringify({
+        name: "FlowTO",
+        technologies: ["cuGraph", "Kubernetes"], // cuGraph is in source text, Kubernetes is not
+        bullets: [
+          "Built a traffic digital twin of Toronto with Python and cuGraph",
+        ],
+      }),
+    );
+    const draft = await draftProjectFromSource(source, llmConfig);
+    expect(draft.technologies).toEqual(
+      expect.arrayContaining(["Python", "TypeScript", "cuGraph"]),
+    );
+    expect(draft.technologies).not.toContain("Kubernetes");
+  });
+
+  it("falls back to the suggested name when the model omits one", async () => {
+    completeMock.mockResolvedValueOnce(
+      JSON.stringify({
+        bullets: [
+          "Built a traffic digital twin of Toronto with Python and cuGraph",
+        ],
+      }),
+    );
+    const draft = await draftProjectFromSource(source, llmConfig);
+    expect(draft.name).toBe("flowTO");
   });
 });
