@@ -166,6 +166,58 @@ describe("WaterlooWorksOrchestrator", () => {
     expect(getWaterlooWorksRows().length).toBe(2);
   });
 
+  it('detects body rows whose lead cell is a <th scope="row"> (live data-viewer DOM)', () => {
+    // Regression: the live WaterlooWorks data viewer renders each posting row
+    // with a <th scope="row"> lead cell (checkbox + Save/Remove/Apply actions)
+    // and a <th scope="col"> header row. A naive "row has a <th> -> skip" check
+    // wrongly dropped every posting, so the popup never offered the bulk card.
+    document.body.className = "new-student__posting-search";
+    document.body.innerHTML = `
+      <table class="data-viewer-table">
+        <thead>
+          <tr class="table__row--header">
+            <th scope="col">Select</th>
+            <th scope="col">ID</th>
+            <th scope="col">Job Title</th>
+            <th scope="col">Organization</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="table__row--body">
+            <th scope="row">
+              <input type="checkbox" id="resultRow_1" value="1" />
+              <button aria-label="Save to My Jobs Folder" type="button"></button>
+              <button aria-label="Remove from search results" type="button"></button>
+              <button aria-label="Apply" type="button"></button>
+            </th>
+            <td>475442</td>
+            <td><a href="javascript:void(0)">Building and Systems Engineering Intern</a></td>
+            <td>Acme Corp</td>
+          </tr>
+          <tr class="table__row--body">
+            <th scope="row">
+              <input type="checkbox" id="resultRow_2" value="2" />
+            </th>
+            <td>475382</td>
+            <td><a href="javascript:void(0)">Software Developer Back-End C#, .NET</a></td>
+            <td>LVM Tech</td>
+          </tr>
+        </tbody>
+      </table>
+      <a class="pagination__link" aria-label="Go to next page" href="javascript:void(0)">next</a>
+    `;
+
+    // 3 <tr> total (1 header + 2 body); only the 2 body rows must be detected.
+    expect(document.querySelectorAll("table tbody tr").length).toBe(2);
+    const rows = getWaterlooWorksRows();
+    expect(rows.length).toBe(2);
+    // The detected rows must be the body rows (carry the title link), never the
+    // column-header row.
+    expect(
+      rows.every((r) => r.querySelector("td a[href='javascript:void(0)']")),
+    ).toBe(true);
+  });
+
   it("scrapeAllVisible respects maxJobs cap", async () => {
     buildPostingsPage({
       rowTitles: ["A", "B", "C", "D", "E"],

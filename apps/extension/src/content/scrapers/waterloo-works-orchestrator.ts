@@ -95,10 +95,15 @@ function isLikelyPostingRow(row: HTMLElement): boolean {
   ) {
     return false;
   }
-  if (row.querySelector("th")) return false;
+  // Reject real header rows only. WaterlooWorks' data viewer renders each body
+  // row with a <th scope="row"> lead cell (the checkbox/actions column), so a
+  // bare "has a <th>" check wrongly drops every posting. Column headers use
+  // scope="col" or live in <thead> — those are the ones to skip.
+  if (row.closest("thead")) return false;
+  if (row.querySelector('th[scope="col"]')) return false;
   if (row.querySelector(ROW_TITLE_LINK_SELECTOR)) return true;
   if (row.querySelector("a, button")) return text.length > 8;
-  const cells = row.querySelectorAll("td, [role='cell']");
+  const cells = row.querySelectorAll("td, th, [role='cell']");
   return cells.length >= 2 && text.length > 12;
 }
 
