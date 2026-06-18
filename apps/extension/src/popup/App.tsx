@@ -18,6 +18,7 @@ import {
   type BulkScrapeMode,
   type BulkScrapeResult,
 } from "./BulkSourceCard";
+import { derivePopupMode } from "./popup-mode";
 
 type ViewState =
   | "loading"
@@ -641,28 +642,50 @@ export default function App() {
   const detectedJob = pageStatus?.scrapedJob;
   const supportedSite = supportedTabLabel();
   const workspaceVisible = !!surfaceContext?.workspace.visible;
-  const showWwBulk = wwState && wwState.kind === "list";
   const detectedBulkSources = (
     Object.keys(BULK_SOURCE_LABELS) as BulkSourceKey[]
   ).filter((key) => bulkStates[key]?.detected);
-  const nothingDetected =
-    !pageStatus?.hasForm &&
-    !detectedJob &&
-    !showWwBulk &&
-    detectedBulkSources.length === 0 &&
-    pageProbeState !== "needs-refresh" &&
-    !supportedSite;
-  const hasPageStatus =
-    !!detectedJob || !!pageStatus?.hasForm || pageProbeState === "ready";
-  const currentTabTitle = workspaceVisible
-    ? "Job workspace active"
-    : detectedJob
-      ? "Job detected"
-      : pageStatus?.hasForm
-        ? "Application detected"
-        : pageProbeState === "ready"
-          ? "No job detected"
-          : "Unsupported page";
+
+  // One derived mode drives the whole layout — see popup-mode.ts. This replaces
+  // the old overlapping booleans that let a list page show both a bulk card and
+  // a contradictory "No job detected" card.
+  const mode = derivePopupMode({
+    pageProbeState,
+    workspaceVisible,
+    detectedJob: detectedJob ?? null,
+    hasForm: !!pageStatus?.hasForm,
+    detectedFields: pageStatus?.detectedFields ?? 0,
+    detectedUploadCount: pageStatus?.detectedUploadCount ?? 0,
+    ww: wwState
+      ? {
+          kind: wwState.kind,
+          rowCount: wwState.rowCount,
+          hasNextPage: wwState.hasNextPage,
+        }
+      : null,
+    bulkSources: detectedBulkSources.map((key) => ({
+      key,
+      label: BULK_SOURCE_LABELS[key],
+      rowCount: bulkStates[key]?.rowCount ?? 0,
+      hasNextPage: bulkStates[key]?.hasNextPage ?? false,
+    })),
+    supportedSite,
+  });
+
+  const showCurrentTab =
+    mode.kind === "single-job" ||
+    mode.kind === "application-form" ||
+    mode.kind === "no-posting" ||
+    mode.kind === "workspace-active";
+  const showBulk = mode.kind === "bulk-list";
+  const currentTabTitle =
+    mode.kind === "workspace-active"
+      ? "Job workspace active"
+      : mode.kind === "single-job"
+        ? "Job detected"
+        : mode.kind === "application-form"
+          ? "Application detected"
+          : "No job detected";
 
   return (
     <div className="popup">
@@ -707,7 +730,7 @@ export default function App() {
       </section>
 
       <main className="content">
-        {pageProbeState === "needs-refresh" && (
+        {mode.kind === "needs-refresh" && (
           <article className="status-card">
             <div className="status-copy">
               <span className="status-eyebrow">Current tab</span>
@@ -719,7 +742,7 @@ export default function App() {
           </article>
         )}
 
-        {hasPageStatus && (
+        {showCurrentTab && (
           <article className="status-card active">
             <header className="status-head">
               <div className="status-copy">
@@ -795,7 +818,7 @@ export default function App() {
           </article>
         )}
 
-        {showWwBulk && wwState && (
+        {showBulk && wwState && wwState.kind === "list" && (
           <BulkSourceCard
             sourceLabel="WaterlooWorks"
             detectedCount={wwState.rowCount}
@@ -810,25 +833,28 @@ export default function App() {
 
         {/* P3/#39 — Generic bulk sources (Greenhouse, Lever, Workday). Only
            one will render at a time because the user is on a single host. */}
-        {detectedBulkSources.map((key) => {
-          const state = bulkStates[key];
-          if (!state) return null;
-          return (
-            <BulkSourceCard
-              key={key}
-              sourceLabel={BULK_SOURCE_LABELS[key]}
-              detectedCount={state.rowCount}
-              busy={bulkInFlight[key] ?? null}
-              lastResult={bulkResults[key] ?? null}
-              lastError={bulkErrors[key] ?? null}
-              onScrapeVisible={() => handleBulkSourceScrape(key, "visible")}
-              onScrapePaginated={() => handleBulkSourceScrape(key, "paginated")}
-              onViewTracker={handleViewReviewQueue}
-            />
-          );
-        })}
+        {showBulk &&
+          detectedBulkSources.map((key) => {
+            const state = bulkStates[key];
+            if (!state) return null;
+            return (
+              <BulkSourceCard
+                key={key}
+                sourceLabel={BULK_SOURCE_LABELS[key]}
+                detectedCount={state.rowCount}
+                busy={bulkInFlight[key] ?? null}
+                lastResult={bulkResults[key] ?? null}
+                lastError={bulkErrors[key] ?? null}
+                onScrapeVisible={() => handleBulkSourceScrape(key, "visible")}
+                onScrapePaginated={() =>
+                  handleBulkSourceScrape(key, "paginated")
+                }
+                onViewTracker={handleViewReviewQueue}
+              />
+            );
+          })}
 
-        {nothingDetected && !hasPageStatus && (
+        {mode.kind === "unsupported" && (
           <div className="idle">
             <p className="idle-title">Unsupported page</p>
             <p className="idle-sub">
@@ -837,9 +863,9 @@ export default function App() {
           </div>
         )}
 
-        {!hasPageStatus && !nothingDetected && supportedSite && (
+        {mode.kind === "scanning" && (
           <div className="idle">
-            <p className="idle-title">{supportedSite} is supported</p>
+            <p className="idle-title">{mode.site} is supported</p>
             <p className="idle-sub">
               Scanning this tab for a job posting or application form.
             </p>
