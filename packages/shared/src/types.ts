@@ -165,12 +165,17 @@ export type BankEntryAuthor =
 
 /** What an AI-authored entry was grounded in (the evidence the grounding check ran on). */
 export interface BankEntryGrounding {
-  /** `raw_input` = the user's own typed material; `entry` = an existing verified entry. */
-  kind: "raw_input" | "entry";
+  /**
+   * `raw_input` = the user's own typed material; `entry` = an existing verified entry;
+   * `url` = text fetched from a source URL (e.g. a GitHub README) the draft was grounded in.
+   */
+  kind: "raw_input" | "entry" | "url";
   /** The source entry id when `kind === "entry"`. */
   refId?: string;
   /** The user's raw input text when `kind === "raw_input"` (audit trail for grounding). */
   rawText?: string;
+  /** The source URL when `kind === "url"` (audit trail for grounding). */
+  url?: string;
 }
 
 export interface SourceLinkMetadata {

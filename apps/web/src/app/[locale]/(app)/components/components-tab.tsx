@@ -50,6 +50,7 @@ import {
   FileText,
   HardDrive,
   LayoutGrid,
+  Link2,
   Loader2,
   Plus,
   Rows3,
@@ -82,6 +83,7 @@ import {
 import { VirtualGrid } from "@/components/ui/virtual-list";
 import { AddEntryDialog } from "@/components/bank/add-entry-dialog";
 import { ArticulateDialog } from "@/components/bank/articulate-dialog";
+import { BankScratchpad } from "@/components/bank/bank-scratchpad";
 import { useToast } from "@/components/ui/toast";
 import { useErrorToast } from "@/hooks/use-error-toast";
 import { uploadSuccessMessage } from "./utils";
@@ -522,6 +524,7 @@ export function BankComponentsTab({
   );
 
   const [articulateOpen, setArticulateOpen] = useState(false);
+  const [researchOpen, setResearchOpen] = useState(false);
 
   const handleConfirmDraft = useCallback(
     async (id: string) => {
@@ -656,20 +659,67 @@ export function BankComponentsTab({
     });
   }, [visibleEntryIds]);
 
-  // Group by category for display
-  const groupedEntries = useMemo(() => {
+  // Group by category for display.
+  // - `bullet` entries render nested under their parent experience/project, so they
+  //   are intentionally excluded from the top-level grouping (no flat "Bullets" wall).
+  // - `paragraph` + `achievement` are low-volume, summary-feeding components; they are
+  //   coalesced into a single "Other" section rather than getting a heading each.
+  const groupedEntries = useMemo<
+    { key: string; title: string; count: number; entries: BankEntry[] }[]
+  >(() => {
     if (activeCategory !== "all") {
-      return [{ category: activeCategory, entries: sortedEntries }];
+      return [
+        {
+          key: activeCategory,
+          title: CATEGORY_LABELS[activeCategory] ?? activeCategory,
+          count: categoryCounts[activeCategory] ?? sortedEntries.length,
+          entries: sortedEntries,
+        },
+      ];
     }
-    const groups: { category: BankCategory; entries: BankEntry[] }[] = [];
-    for (const cat of BANK_CATEGORIES) {
+    const PRIMARY: BankCategory[] = [
+      "experience",
+      "project",
+      "skill",
+      "education",
+      "certification",
+      "hackathon",
+    ];
+    const OTHER: BankCategory[] = ["paragraph", "achievement"];
+    const groups: {
+      key: string;
+      title: string;
+      count: number;
+      entries: BankEntry[];
+    }[] = [];
+    for (const cat of PRIMARY) {
       const catEntries = sortedEntries.filter((e) => e.category === cat);
       if (catEntries.length > 0) {
-        groups.push({ category: cat, entries: catEntries });
+        groups.push({
+          key: cat,
+          title: CATEGORY_LABELS[cat],
+          count: categoryCounts[cat] ?? catEntries.length,
+          entries: catEntries,
+        });
       }
     }
+    const otherEntries = sortedEntries.filter((e) =>
+      OTHER.includes(e.category),
+    );
+    if (otherEntries.length > 0) {
+      const otherCount = OTHER.reduce(
+        (n, c) => n + (categoryCounts[c] ?? 0),
+        0,
+      );
+      groups.push({
+        key: "other",
+        title: "Other",
+        count: otherCount || otherEntries.length,
+        entries: otherEntries,
+      });
+    }
     return groups;
-  }, [sortedEntries, activeCategory]);
+  }, [sortedEntries, activeCategory, categoryCounts]);
 
   const sourceGroupedEntries = useMemo(() => {
     const groups: {
@@ -1941,6 +1991,19 @@ export function BankComponentsTab({
                 onOpenChange={setArticulateOpen}
                 onCreated={() => void fetchEntries({ silent: true })}
               />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setResearchOpen(true)}
+              >
+                <Link2 className="h-4 w-4 mr-2" />
+                From a link
+              </Button>
+              <BankScratchpad
+                open={researchOpen}
+                onOpenChange={setResearchOpen}
+                onCreated={() => void fetchEntries({ silent: true })}
+              />
               <DriveFilePicker
                 onSelect={handleDriveSelect}
                 accept={[
@@ -2423,14 +2486,11 @@ export function BankComponentsTab({
                           </div>
                         ))
                       : groupedEntries.map((group) => (
-                          <div key={group.category}>
+                          <div key={group.key}>
                             <h2 className="mb-3 flex items-center gap-2 font-display text-lg font-semibold tracking-tight">
-                              {CATEGORY_LABELS[group.category]}
+                              {group.title}
                               <span className="text-sm font-normal text-muted-foreground">
-                                (
-                                {categoryCounts[group.category] ??
-                                  group.entries.length}
-                                )
+                                ({group.count})
                               </span>
                             </h2>
                             <EntryCollection

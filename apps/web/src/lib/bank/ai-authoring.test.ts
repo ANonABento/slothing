@@ -21,6 +21,8 @@ import {
   articulatedDraftInput,
   buildArticulatePrompt,
   classifyJobGaps,
+  draftProjectFromSource,
+  reviseBullet,
 } from "./ai-authoring";
 
 const entry: BankEntry = {
@@ -192,5 +194,113 @@ describe("classifyJobGaps — tailoring↔bank loop (spec §6)", () => {
   it("dedupes keywords case-insensitively", () => {
     const r = classifyJobGaps(["react", "React", "REACT"], [verifiedEntry]);
     expect(r.strengthenable).toHaveLength(1);
+  });
+});
+
+describe("AI bank authoring — draftProjectFromSource (spec §4.3)", () => {
+  beforeEach(() => completeMock.mockReset());
+
+  const source = {
+    text: "FlowTO is a city-scale traffic digital twin of Toronto. Built with Python and cuGraph. The road graph has 73,036 directed edges.",
+    suggestedName: "flowTO",
+    technologies: ["Python", "TypeScript"],
+  };
+
+  it("keeps grounded bullets and drops fabricated metrics", async () => {
+    completeMock.mockResolvedValueOnce(
+      JSON.stringify({
+        name: "FlowTO",
+        technologies: ["Python", "cuGraph"],
+        bullets: [
+          "Built a city-scale traffic digital twin of Toronto with Python and cuGraph",
+          "Scaled the system to 5,000,000 users with 99.99% uptime", // fabricated — not in source
+        ],
+      }),
+    );
+    const draft = await draftProjectFromSource(source, llmConfig);
+    expect(draft.name).toBe("FlowTO");
+    expect(draft.bullets).toHaveLength(1);
+    expect(draft.bullets[0]).toMatch(/digital twin/);
+    expect(draft.bullets.some((b) => /5,000,000|99\.99/.test(b))).toBe(false);
+  });
+
+  it("restricts technologies to the detected list plus tech named in the source", async () => {
+    completeMock.mockResolvedValueOnce(
+      JSON.stringify({
+        name: "FlowTO",
+        technologies: ["cuGraph", "Kubernetes"], // cuGraph is in source text, Kubernetes is not
+        bullets: [
+          "Built a traffic digital twin of Toronto with Python and cuGraph",
+        ],
+      }),
+    );
+    const draft = await draftProjectFromSource(source, llmConfig);
+    expect(draft.technologies).toEqual(
+      expect.arrayContaining(["Python", "TypeScript", "cuGraph"]),
+    );
+    expect(draft.technologies).not.toContain("Kubernetes");
+  });
+
+  it("falls back to the suggested name when the model omits one", async () => {
+    completeMock.mockResolvedValueOnce(
+      JSON.stringify({
+        bullets: [
+          "Built a traffic digital twin of Toronto with Python and cuGraph",
+        ],
+      }),
+    );
+    const draft = await draftProjectFromSource(source, llmConfig);
+    expect(draft.name).toBe("flowTO");
+  });
+});
+
+describe("AI bank authoring — reviseBullet (spec §4.4)", () => {
+  beforeEach(() => completeMock.mockReset());
+
+  const evidence =
+    "Built a Python CLI that cut deploy time from 20 minutes to 4 minutes by parallelizing uploads.";
+
+  it("applies a revision that stays grounded in the evidence", async () => {
+    completeMock.mockResolvedValueOnce(
+      JSON.stringify({
+        bullet:
+          "Cut deploy time from 20 minutes to 4 minutes with a Python CLI that parallelizes uploads",
+      }),
+    );
+    const out = await reviseBullet(
+      "Built a Python CLI to speed up deploys",
+      evidence,
+      "Add a metric",
+      llmConfig,
+    );
+    expect(out.applied).toBe(true);
+    expect(out.bullet).toMatch(/20 minutes to 4/);
+  });
+
+  it("rejects a fabricating revision and keeps the original bullet", async () => {
+    const original = "Built a Python CLI to speed up deploys";
+    completeMock.mockResolvedValueOnce(
+      JSON.stringify({
+        bullet:
+          "Cut deploy time 95% across 500 microservices with a Python CLI",
+      }),
+    );
+    const out = await reviseBullet(
+      original,
+      evidence,
+      "Add a metric",
+      llmConfig,
+    );
+    expect(out.applied).toBe(false);
+    expect(out.bullet).toBe(original);
+    expect(out.ungroundedNumbers.length).toBeGreaterThan(0);
+  });
+
+  it("keeps the original when the model returns nothing usable", async () => {
+    const original = "Built a Python CLI to speed up deploys";
+    completeMock.mockResolvedValueOnce(JSON.stringify({ bullet: "" }));
+    const out = await reviseBullet(original, evidence, "Shorter", llmConfig);
+    expect(out.applied).toBe(false);
+    expect(out.bullet).toBe(original);
   });
 });

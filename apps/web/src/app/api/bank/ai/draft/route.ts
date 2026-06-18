@@ -4,6 +4,8 @@ import { z } from "zod";
 import { requireAuth, isAuthError } from "@/lib/auth";
 import { parseJsonBody } from "@/lib/api-utils";
 import { gateOptionalAiFeature, isAiGateResponse } from "@/lib/billing/ai-gate";
+import { rateLimiters, getClientIdentifier } from "@/lib/rate-limit";
+import { nowEpoch } from "@/lib/format/time";
 import { getBankEntryById, insertBankEntry } from "@/lib/db/profile-bank";
 import { BANK_CATEGORIES, isVerifiedBankEntry } from "@/types";
 import {
@@ -50,6 +52,26 @@ const bodySchema = z.discriminatedUnion("mode", [
 export async function POST(request: NextRequest) {
   const auth = await requireAuth();
   if (isAuthError(auth)) return auth;
+
+  const limit = rateLimiters.standard(
+    getClientIdentifier(request, auth.userId),
+  );
+  if (!limit.allowed) {
+    return NextResponse.json(
+      {
+        error: "Too many requests. Please try again shortly.",
+        code: "rate_limited",
+      },
+      {
+        status: 429,
+        headers: {
+          "Retry-After": Math.ceil(
+            (limit.resetAt - nowEpoch()) / 1000,
+          ).toString(),
+        },
+      },
+    );
+  }
 
   const parsed = await parseJsonBody(request, bodySchema);
   if (!parsed.ok) return parsed.response;
@@ -138,7 +160,7 @@ export async function POST(request: NextRequest) {
     gate.refund();
     console.error("AI draft error:", error);
     return NextResponse.json(
-      { error: "Failed to create AI draft" },
+      { error: "Failed to create AI draft", code: "llm_failed" },
       { status: 500 },
     );
   }
