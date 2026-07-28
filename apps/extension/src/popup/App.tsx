@@ -42,14 +42,6 @@ interface PageStatus {
 
 type PageProbeState = "unknown" | "ready" | "needs-refresh";
 
-type WwPageKind = "list" | "detail" | "other";
-interface WwPageState {
-  kind: WwPageKind;
-  rowCount: number;
-  hasNextPage: boolean;
-  currentPage?: string;
-}
-
 // Generic bulk-scrape modes/results are exported by BulkSourceCard so popup
 // state can share one shape across every source (WW + GH + Lever + Workday).
 
@@ -57,7 +49,7 @@ interface WwPageState {
  * P3/#39 — per-source bulk-scrape page state for the generic ATS hosts. Mirrors
  * the WW shape but expressed in BulkSourceCard's vocabulary.
  */
-type BulkSourceKey = "greenhouse" | "lever" | "workday";
+type BulkSourceKey = "waterlooworks" | "greenhouse" | "lever" | "workday";
 
 interface BulkSourceState {
   detected: boolean;
@@ -66,12 +58,14 @@ interface BulkSourceState {
 }
 
 const BULK_SOURCE_LABELS: Record<BulkSourceKey, string> = {
+  waterlooworks: "WaterlooWorks",
   greenhouse: "Greenhouse",
   lever: "Lever",
   workday: "Workday",
 };
 
 const BULK_SOURCE_URL_PATTERNS: Record<BulkSourceKey, RegExp[]> = {
+  waterlooworks: [/waterlooworks\.uwaterloo\.ca\//],
   greenhouse: [/boards\.greenhouse\.io\//, /[\w-]+\.greenhouse\.io\//],
   lever: [/jobs\.lever\.co\//, /[\w-]+\.lever\.co\//],
   workday: [/\.myworkdayjobs\.com\//, /\.workdayjobs\.com\//],
@@ -91,6 +85,10 @@ const CONTENT_SCRIPT_URL_PATTERNS = [
 const LINKEDIN_JOBS_URL_PATTERN =
   /linkedin\.com\/jobs\/(?:view|search-results|search|collections)/;
 const LINKEDIN_JOB_RETRY_DELAYS_MS = [600, 1400];
+// Listing tables (WaterlooWorks, Workday, …) load their rows via XHR after the
+// page shell, so the first probe can see zero rows. Re-probe a few times before
+// giving up, so a slow table isn't misread as "no postings".
+const BULK_ROWS_RETRY_DELAYS_MS = [500, 1200, 2000];
 
 function matchBulkSource(url: string | undefined): BulkSourceKey | null {
   if (!url) return null;
@@ -132,16 +130,8 @@ export default function App() {
   // GET_AUTH_STATUS again. Populated from the auth-status response on first
   // load and kept stable for the lifetime of the popup.
   const [apiBaseUrl, setApiBaseUrl] = useState<string | null>(null);
-  const [wwState, setWwState] = useState<WwPageState | null>(null);
-  const [wwBulkInFlight, setWwBulkInFlight] = useState<BulkScrapeMode | null>(
-    null,
-  );
-  const [wwBulkResult, setWwBulkResult] = useState<BulkScrapeResult | null>(
-    null,
-  );
-  const [wwBulkError, setWwBulkError] = useState<string | null>(null);
-  // P3/#39 — Per-source state for Greenhouse / Lever / Workday. Keyed by
-  // BulkSourceKey so a future source is a one-line addition.
+  // Per-source bulk-listing state (WaterlooWorks + Greenhouse / Lever / Workday).
+  // Keyed by BulkSourceKey so a future source is a one-line addition.
   const [bulkStates, setBulkStates] = useState<
     Partial<Record<BulkSourceKey, BulkSourceState>>
   >({});
@@ -171,6 +161,25 @@ export default function App() {
     chrome.runtime.onMessage.addListener(listener);
     return () => chrome.runtime.onMessage.removeListener(listener);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Re-probe when the active tab navigates while the popup is open. Listing
+  // hosts are SPAs (WaterlooWorks list ↔ detail doesn't reload the page), so a
+  // popup left open would otherwise show stale detection.
+  useEffect(() => {
+    const onUpdated = (
+      tabId: number,
+      changeInfo: chrome.tabs.TabChangeInfo,
+    ) => {
+      if (
+        tabId === activeTabId &&
+        (changeInfo.url || changeInfo.status === "complete")
+      ) {
+        void checkPageStatus();
+      }
+    };
+    chrome.tabs.onUpdated.addListener(onUpdated);
+    return () => chrome.tabs.onUpdated.removeListener(onUpdated);
+  }, [activeTabId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (viewState !== "session-lost") return;
@@ -271,18 +280,8 @@ export default function App() {
             : "unknown",
         );
       }
-      if (tab.url && /waterlooworks\.uwaterloo\.ca/.test(tab.url)) {
-        try {
-          const r = await chrome.tabs.sendMessage(tab.id, {
-            type: "WW_GET_PAGE_STATE",
-          });
-          if (r?.success) setWwState(r.data);
-        } catch {
-          // Content script not yet loaded
-        }
-      }
-      // P3/#39 — probe Greenhouse/Lever/Workday listing pages. Only one
-      // matcher fires per visit (the user is on a single host).
+      // Probe the listing host (WaterlooWorks / Greenhouse / Lever / Workday).
+      // Only one matcher fires per visit (the user is on a single host).
       const bulkKey = matchBulkSource(tab.url);
       if (bulkKey) {
         try {
@@ -292,6 +291,16 @@ export default function App() {
           });
           if (r?.success && r.data) {
             setBulkStates((prev) => ({ ...prev, [bulkKey]: r.data }));
+            // Async row tables can report zero rows on the first probe — retry
+            // with backoff until rows appear or we run out of attempts.
+            if (
+              !r.data.detected &&
+              attempt < BULK_ROWS_RETRY_DELAYS_MS.length
+            ) {
+              window.setTimeout(() => {
+                void checkPageStatus(attempt + 1);
+              }, BULK_ROWS_RETRY_DELAYS_MS[attempt]);
+            }
           }
         } catch {
           // Content script not yet loaded
@@ -345,39 +354,6 @@ export default function App() {
         delete next[key];
         return next;
       });
-    }
-  }
-
-  async function handleWwBulkScrape(mode: BulkScrapeMode) {
-    setWwBulkInFlight(mode);
-    setWwBulkError(null);
-    setWwBulkResult(null);
-    try {
-      const [tab] = await chrome.tabs.query({
-        active: true,
-        currentWindow: true,
-      });
-      if (!tab?.id) throw new Error("No active tab");
-      const message =
-        mode === "visible"
-          ? Messages.wwScrapeAllVisible()
-          : Messages.wwScrapeAllPaginated();
-      const response: {
-        success: boolean;
-        data?: BulkScrapeResult;
-        error?: string;
-      } = await chrome.tabs.sendMessage(tab.id, message);
-      if (response?.success && response.data) {
-        setWwBulkResult(response.data);
-      } else {
-        setWwBulkError(
-          messageForError(new Error(response?.error || "Bulk scrape failed")),
-        );
-      }
-    } catch (err) {
-      setWwBulkError(messageForError(err));
-    } finally {
-      setWwBulkInFlight(null);
     }
   }
 
@@ -527,10 +503,11 @@ export default function App() {
     site?: string;
   } | null {
     const site = supportedTabLabel();
-    if (wwState?.kind === "list") {
+    const wwBulk = bulkStates.waterlooworks;
+    if (wwBulk?.detected) {
       return {
         title: "WaterlooWorks jobs found",
-        body: `Connect Slothing to import and track these ${wwState.rowCount} postings.`,
+        body: `Connect Slothing to import and track these ${wwBulk.rowCount} postings.`,
         site: "WaterlooWorks",
       };
     }
@@ -656,13 +633,6 @@ export default function App() {
     hasForm: !!pageStatus?.hasForm,
     detectedFields: pageStatus?.detectedFields ?? 0,
     detectedUploadCount: pageStatus?.detectedUploadCount ?? 0,
-    ww: wwState
-      ? {
-          kind: wwState.kind,
-          rowCount: wwState.rowCount,
-          hasNextPage: wwState.hasNextPage,
-        }
-      : null,
     bulkSources: detectedBulkSources.map((key) => ({
       key,
       label: BULK_SOURCE_LABELS[key],
@@ -818,21 +788,8 @@ export default function App() {
           </article>
         )}
 
-        {showBulk && wwState && wwState.kind === "list" && (
-          <BulkSourceCard
-            sourceLabel="WaterlooWorks"
-            detectedCount={wwState.rowCount}
-            busy={wwBulkInFlight}
-            lastResult={wwBulkResult}
-            lastError={wwBulkError}
-            onScrapeVisible={() => handleWwBulkScrape("visible")}
-            onScrapePaginated={() => handleWwBulkScrape("paginated")}
-            onViewTracker={handleViewReviewQueue}
-          />
-        )}
-
-        {/* P3/#39 — Generic bulk sources (Greenhouse, Lever, Workday). Only
-           one will render at a time because the user is on a single host. */}
+        {/* Bulk-listing sources (WaterlooWorks, Greenhouse, Lever, Workday).
+           Only one renders at a time because the user is on a single host. */}
         {showBulk &&
           detectedBulkSources.map((key) => {
             const state = bulkStates[key];

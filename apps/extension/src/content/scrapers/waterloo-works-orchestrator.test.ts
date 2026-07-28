@@ -3,6 +3,7 @@ import { describe, expect, it, beforeEach, vi } from "vitest";
 
 import {
   WaterlooWorksOrchestrator,
+  getWaterlooWorksBulkState,
   getWaterlooWorksRows,
 } from "./waterloo-works-orchestrator";
 
@@ -216,6 +217,28 @@ describe("WaterlooWorksOrchestrator", () => {
     expect(
       rows.every((r) => r.querySelector("td a[href='javascript:void(0)']")),
     ).toBe(true);
+  });
+
+  it("getWaterlooWorksBulkState detects a list and suppresses on a detail panel", () => {
+    buildPostingsPage({
+      rowTitles: ["Job A", "Job B", "Job C"],
+      totalPages: 2,
+      currentPage: 1,
+    });
+
+    let state = getWaterlooWorksBulkState();
+    expect(state).toEqual({ detected: true, rowCount: 3, hasNextPage: true });
+
+    // Opening a posting detail panel makes the list a non-active surface — the
+    // bulk card must yield to the single-posting flow (rowCount 0).
+    const panel = document.createElement("section");
+    panel.innerHTML =
+      '<div class="dashboard-header__posting-title">A Job</div>';
+    document.body.appendChild(panel);
+
+    state = getWaterlooWorksBulkState();
+    expect(state.detected).toBe(false);
+    expect(state.rowCount).toBe(0);
   });
 
   it("scrapeAllVisible respects maxJobs cap", async () => {

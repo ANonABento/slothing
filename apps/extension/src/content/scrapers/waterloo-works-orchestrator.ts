@@ -85,6 +85,32 @@ export function getWaterlooWorksNextPageLink(): HTMLAnchorElement | null {
   );
 }
 
+/** A WaterlooWorks detail panel (single posting) is open over the list. */
+function hasWaterlooWorksDetailPanel(): boolean {
+  return !!document.querySelector(".dashboard-header__posting-title");
+}
+
+/**
+ * Bulk-listing state for WaterlooWorks, expressed in the generic BulkSource
+ * vocabulary ({ detected, rowCount, hasNextPage }) so the popup can treat it
+ * like any other ATS board. When a posting detail panel is open the list is not
+ * the active surface, so we report zero rows (the popup falls back to the
+ * single-posting flow instead of offering a bulk import).
+ */
+export function getWaterlooWorksBulkState(): {
+  detected: boolean;
+  rowCount: number;
+  hasNextPage: boolean;
+} {
+  const rows = hasWaterlooWorksDetailPanel() ? [] : getWaterlooWorksRows();
+  const next = getWaterlooWorksNextPageLink();
+  return {
+    detected: rows.length > 0,
+    rowCount: rows.length,
+    hasNextPage: !!next && !next.classList.contains("disabled"),
+  };
+}
+
 function isLikelyPostingRow(row: HTMLElement): boolean {
   const text = normalizeText(row.textContent || "");
   if (!text) return false;
