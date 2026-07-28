@@ -365,19 +365,22 @@ test("WaterlooWorks live-style listing rows surface bulk page state", async () =
     await page.waitForLoadState("domcontentloaded");
     await page.waitForTimeout(800);
 
+    // WaterlooWorks is a generic BulkSource now, so it answers the shared
+    // BULK_WATERLOOWORKS_* probe with { detected, rowCount, hasNextPage }
+    // instead of the retired WW_GET_PAGE_STATE / { kind } shape.
     const wwState = await sendMessageToTab<{
       success: boolean;
       data: {
-        kind: "list" | "detail" | "other";
+        detected: boolean;
         rowCount: number;
         hasNextPage: boolean;
       };
     }>(context, extensionId, "waterlooworks.uwaterloo.ca", {
-      type: "WW_GET_PAGE_STATE",
+      type: "BULK_WATERLOOWORKS_GET_PAGE_STATE",
     });
     expect(wwState).toMatchObject({
       success: true,
-      data: { kind: "list", rowCount: 2, hasNextPage: true },
+      data: { detected: true, rowCount: 2, hasNextPage: true },
     });
   } finally {
     await page.close();
