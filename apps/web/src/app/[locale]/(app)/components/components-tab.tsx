@@ -101,11 +101,10 @@ import {
 } from "@/lib/upload-conflict";
 import { getUploadReviewPreviewStatus } from "./upload-review-preview-status";
 import {
-  loadParserV2ReviewContext,
   type ParserV2ReviewContext,
   type ParserV2ReviewDiagnostic,
+  type ParserV2ReviewSourceRef,
 } from "./parser-v2-review-context";
-import { shouldAdoptParserV2DraftEntries } from "./upload-review-parser-v2-adoption";
 import { cn } from "@/lib/utils";
 import {
   getBankEntryParentId,
@@ -148,10 +147,9 @@ interface UploadConflict {
   existing: UploadConflictExisting;
 }
 
-interface BankUploadResponse {
+interface ParserV2UploadReviewResponse {
   success: boolean;
   error?: string;
-  entriesCreated?: number;
   document?: {
     id: string;
     filename: string;
@@ -160,6 +158,12 @@ interface BankUploadResponse {
     size: number;
     extractedText?: string;
   };
+  artifact?: { id: string };
+  parseRun?: { id: string };
+  entries?: BankEntry[];
+  sourceText?: string;
+  sourceRefs?: ParserV2ReviewSourceRef[];
+  diagnostic?: ParserV2ReviewDiagnostic | null;
 }
 
 interface UploadReviewState {
@@ -1161,11 +1165,12 @@ export function BankComponentsTab({
   async function uploadFile(
     file: File,
     options?: { force?: boolean },
-  ): Promise<BankUploadResponse | null> {
+  ): Promise<ParserV2UploadReviewResponse | null> {
     const formData = new FormData();
     formData.append("file", file);
+    formData.append("type", "resume");
     const uploadRes = await fetch(
-      `/api/upload${options?.force ? "?force=true" : ""}`,
+      `/api/documents/upload/review${options?.force ? "?force=true" : ""}`,
       {
         method: "POST",
         body: formData,
@@ -1192,99 +1197,58 @@ export function BankComponentsTab({
 
   async function finishSuccessfulUpload(
     file: File,
-    uploadData: BankUploadResponse,
+    uploadData: ParserV2UploadReviewResponse,
   ) {
-    await handleDataRefresh({ silent: true });
     const documentId = uploadData.document?.id;
-    let openedReview = false;
+    if (!documentId || !uploadData.parseRun?.id) {
+      throw new Error("Parser-v2 upload completed without review context");
+    }
+    const reviewEntries = uploadData.entries ?? [];
 
-    if (documentId) {
-      const reviewRes = await fetch(
-        `/api/bank?sourceDocumentId=${encodeURIComponent(documentId)}`,
+    try {
+      window.localStorage.setItem(
+        "slothing:dev:last-import",
+        JSON.stringify({
+          documentId,
+          filename: uploadData.document?.filename || file.name,
+          mimeType: uploadData.document?.mimeType || file.type,
+          entryCount: reviewEntries.length,
+          importedAt: nowIso(),
+        }),
       );
-      if (reviewRes.ok) {
-        const reviewData = await reviewRes.json();
-        const reviewEntries = (reviewData.entries || []) as BankEntry[];
-        if (reviewEntries.length > 0) {
-          try {
-            window.localStorage.setItem(
-              "slothing:dev:last-import",
-              JSON.stringify({
-                documentId,
-                filename: uploadData.document?.filename || file.name,
-                mimeType: uploadData.document?.mimeType || file.type,
-                entryCount: reviewEntries.length,
-                importedAt: nowIso(),
-              }),
-            );
-          } catch {
-            // Dev-only convenience; blocked storage should not affect uploads.
-          }
-          setActiveDocumentId(documentId);
-          const docType = uploadData.document?.type || "other";
-          setUploadReview({
-            documentId,
-            docType,
-            filename: uploadData.document?.filename || file.name,
-            mimeType: uploadData.document?.mimeType || file.type,
-            entries: reviewEntries,
-            parserV2Loading: docType === "resume",
-            legacyEntryIds: reviewEntries.map((entry) => entry.id),
-          });
-          if (docType === "resume") {
-            void loadParserV2ReviewContext(documentId).then((context) => {
-              setUploadReview((prev) => {
-                if (!prev || prev.documentId !== documentId) return prev;
-                let nextEntries = prev.entries;
-                let parserV2Draft = prev.parserV2Draft;
-
-                if (context.status === "ready") {
-                  const adoption = shouldAdoptParserV2DraftEntries({
-                    legacyEntries: reviewEntries,
-                    parserV2Entries: context.entries,
-                  });
-                  if (adoption.adopt) {
-                    nextEntries = context.entries;
-                    parserV2Draft = true;
-                  }
-                }
-
-                return {
-                  ...prev,
-                  parserV2Context: context,
-                  parserV2Loading: false,
-                  entries: nextEntries,
-                  parserV2Draft,
-                };
-              });
-            });
-          }
-          openedReview = true;
-        } else {
-          setUploadReview(null);
-          setActiveDocumentId(null);
-        }
-      }
+    } catch {
+      // Dev-only convenience; blocked storage should not affect uploads.
     }
 
-    const count = uploadData.entriesCreated ?? 0;
-    addToast({
-      type: "success",
-      title: uploadSuccessMessage(count, file.name),
+    setActiveDocumentId(documentId);
+    setUploadReview({
+      documentId,
+      docType: uploadData.document?.type || "resume",
+      filename: uploadData.document?.filename || file.name,
+      mimeType: uploadData.document?.mimeType || file.type,
+      entries: reviewEntries,
+      parserV2Context: {
+        status: "ready",
+        artifactId: uploadData.artifact?.id,
+        parseRunId: uploadData.parseRun.id,
+        sourceText: uploadData.sourceText ?? "",
+        sourceRefs: uploadData.sourceRefs ?? [],
+        diagnostic: uploadData.diagnostic ?? null,
+        entries: reviewEntries,
+      },
+      parserV2Loading: false,
+      parserV2Draft: true,
+      legacyEntryIds: [],
     });
 
-    if (openedReview) {
-      requestAnimationFrame(() => {
-        scrollComponentsPageToTop();
-      });
-    } else {
-      requestAnimationFrame(() => {
-        entriesListRef.current?.scrollIntoView({
-          behavior: "smooth",
-          block: "start",
-        });
-      });
-    }
+    addToast({
+      type: "success",
+      title: `Parsed ${reviewEntries.length} component${reviewEntries.length === 1 ? "" : "s"} from ${file.name}`,
+    });
+
+    requestAnimationFrame(() => {
+      scrollComponentsPageToTop();
+    });
   }
 
   function closeUploadReview() {
@@ -1320,6 +1284,82 @@ export function BankComponentsTab({
 
     setIsReviewParsingWithAi(true);
     try {
+      const currentContext = uploadReview.parserV2Context;
+      if (uploadReview.parserV2Draft && currentContext?.status === "ready") {
+        const encodedDocumentId = encodeURIComponent(uploadReview.documentId);
+        const parseRes = await fetch(
+          `/api/documents/${encodedDocumentId}/parse-runs`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              mode: "ai",
+              artifactId: currentContext.artifactId,
+            }),
+          },
+        );
+        const parseData = await parseRes.json().catch(() => null);
+        if (!parseRes.ok) {
+          throw new Error(parseData?.error || "Could not run AI parse");
+        }
+        const parseRunId = parseData?.parseRun?.id;
+        if (typeof parseRunId !== "string" || !parseRunId) {
+          throw new Error("AI parse did not return a parser-v2 parse run");
+        }
+
+        const [sourceMapRes, previewRes] = await Promise.all([
+          fetch(
+            `/api/documents/${encodedDocumentId}/source-map?parseRunId=${encodeURIComponent(parseRunId)}`,
+          ),
+          fetch(`/api/bank/imports/${encodeURIComponent(parseRunId)}/preview`),
+        ]);
+        const sourceMapData = await sourceMapRes.json().catch(() => null);
+        const previewData = await previewRes.json().catch(() => null);
+        if (!sourceMapRes.ok) {
+          throw new Error(
+            sourceMapData?.error || "Could not load AI source map",
+          );
+        }
+        if (!previewRes.ok) {
+          throw new Error(previewData?.error || "Could not load AI preview");
+        }
+        const nextEntries = Array.isArray(previewData?.entries)
+          ? (previewData.entries as BankEntry[])
+          : [];
+
+        setUploadReview((prev) =>
+          prev && prev.documentId === uploadReview.documentId
+            ? {
+                ...prev,
+                entries: nextEntries,
+                parserV2Context: {
+                  status: "ready",
+                  artifactId:
+                    typeof sourceMapData?.artifact?.id === "string"
+                      ? sourceMapData.artifact.id
+                      : currentContext.artifactId,
+                  parseRunId,
+                  sourceText:
+                    typeof sourceMapData?.sourceText === "string"
+                      ? sourceMapData.sourceText
+                      : currentContext.sourceText,
+                  sourceRefs: Array.isArray(sourceMapData?.sourceRefs)
+                    ? sourceMapData.sourceRefs
+                    : currentContext.sourceRefs,
+                  diagnostic: sourceMapData?.diagnostic ?? null,
+                  entries: nextEntries,
+                },
+              }
+            : prev,
+        );
+        addToast({
+          type: "success",
+          title: "AI review completed",
+          description: "Updated parser-v2 draft entries with source citations.",
+        });
+        return;
+      }
+
       const parseRes = await fetch("/api/parse", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -1445,6 +1485,18 @@ export function BankComponentsTab({
     if (!confirmed) return;
 
     try {
+      if (uploadReview.parserV2Draft) {
+        await fetch(
+          `/api/documents/${encodeURIComponent(uploadReview.documentId)}`,
+          {
+            method: "DELETE",
+          },
+        ).catch(() => undefined);
+        closeUploadReview();
+        addToast({ type: "info", title: `Discarded ${filename}.` });
+        return;
+      }
+
       const deleteIds = uploadReview.parserV2Draft
         ? (uploadReview.legacyEntryIds ?? [])
         : importedEntries.map((entry) => entry.id);
@@ -1694,6 +1746,7 @@ export function BankComponentsTab({
             edits: Object.fromEntries(
               uploadReview.entries.map((entry) => [entry.id, entry.content]),
             ),
+            autoPromoteProfile: true,
           }),
         },
       );

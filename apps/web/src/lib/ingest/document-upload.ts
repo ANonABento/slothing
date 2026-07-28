@@ -10,10 +10,17 @@ import {
 } from "@/lib/constants";
 import {
   DuplicateDocumentError,
+  deleteDocumentArtifactsByDocumentIds,
+  deleteDocumentParseRunsByDocumentIds,
   getDocumentByFileHash,
   saveDocument,
 } from "@/lib/db";
+import {
+  deleteSourceDocuments,
+  type SourceDocumentFileRef,
+} from "@/lib/db/profile-bank";
 import { nowIso } from "@/lib/format/time";
+import { deleteStoredDocumentFiles } from "@/lib/ingest/document-file-cleanup";
 import { sanitizeFilename } from "@/lib/upload/filename";
 import { generateId } from "@/lib/utils";
 import type { Document, DocumentType } from "@/types";
@@ -50,11 +57,13 @@ export interface PersistDocumentUploadInput {
   file: File;
   userId: string;
   documentType: DocumentType;
+  replaceExisting?: boolean;
 }
 
 export interface PersistDocumentUploadResult {
   document: Document;
   duplicate: boolean;
+  replacedDocumentId?: string;
 }
 
 export interface ValidatedUploadFile {
@@ -124,14 +133,24 @@ export async function persistDocumentUpload({
   file,
   userId,
   documentType,
+  replaceExisting = false,
 }: PersistDocumentUploadInput): Promise<PersistDocumentUploadResult> {
   let writtenFilePath: string | undefined;
 
   try {
     const { buffer, fileHash } = await readValidatedUploadFile(file);
     const existing = getDocumentByFileHash(fileHash, userId);
-    if (existing) {
+    if (existing && !replaceExisting) {
       return { document: existing, duplicate: true };
+    }
+    if (existing && replaceExisting) {
+      const files: SourceDocumentFileRef[] = [
+        { id: existing.id, path: existing.path },
+      ];
+      deleteDocumentParseRunsByDocumentIds([existing.id], userId);
+      deleteDocumentArtifactsByDocumentIds([existing.id], userId);
+      deleteSourceDocuments([existing.id], userId);
+      await deleteStoredDocumentFiles(files);
     }
 
     await mkdir(PATHS.UPLOADS, { recursive: true });
@@ -167,7 +186,11 @@ export async function persistDocumentUpload({
       throw error;
     }
 
-    return { document, duplicate: false };
+    return {
+      document,
+      duplicate: false,
+      replacedDocumentId: existing?.id,
+    };
   } catch (error) {
     if (writtenFilePath) await unlink(writtenFilePath).catch(() => undefined);
     if (error instanceof DocumentUploadError) throw error;

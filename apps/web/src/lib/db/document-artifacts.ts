@@ -240,3 +240,26 @@ export function listDocumentArtifacts(
     .all(documentId, userId) as DocumentArtifactRow[];
   return rows.map(mapArtifactRow);
 }
+
+export function deleteDocumentArtifactsByDocumentIds(
+  documentIds: string[],
+  userId: string,
+): number {
+  ensureDocumentArtifactsSchema();
+  if (documentIds.length === 0) return 0;
+
+  const uniqueDocumentIds = Array.from(new Set(documentIds));
+  const deleteArtifact = db.prepare(
+    "DELETE FROM document_artifacts WHERE document_id = ? AND user_id = ?",
+  );
+
+  const transaction = db.transaction(() => {
+    let deleted = 0;
+    for (const documentId of uniqueDocumentIds) {
+      deleted += deleteArtifact.run(documentId, userId).changes;
+    }
+    return deleted;
+  });
+
+  return transaction();
+}
