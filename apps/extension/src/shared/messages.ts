@@ -127,21 +127,8 @@ export const Messages = {
     payload: meta,
   }),
 
-  // WaterlooWorks-specific bulk scraping (driven from popup, executed in content
-  // script by waterloo-works-orchestrator.ts).
-  wwScrapeAllVisible: (): ExtensionMessage => ({
-    type: "WW_SCRAPE_ALL_VISIBLE",
-  }),
-  wwScrapeAllPaginated: (opts?: {
-    maxJobs?: number;
-    maxPages?: number;
-  }): ExtensionMessage<{ maxJobs?: number; maxPages?: number }> => ({
-    type: "WW_SCRAPE_ALL_PAGINATED",
-    payload: opts ?? {},
-  }),
-  wwGetPageState: (): ExtensionMessage => ({ type: "WW_GET_PAGE_STATE" }),
-
-  // P3/#39 — Bulk scraping for public ATS board hosts. Popup → content-script.
+  // Bulk scraping for listing hosts (WaterlooWorks + public ATS boards).
+  // Popup → content-script.
   // Each pair mirrors the WW shape so the same `BulkSourceCard` UX can drive
   // every source. Each orchestrator caps at 200/session (overridable below).
   bulkGreenhouseGetPageState: (): ExtensionMessage => ({
@@ -339,25 +326,7 @@ export interface MatchAnswerBankResponse extends ExtensionResponse<
   AnswerBankMatch[]
 > {}
 
-export type WwPageKind = "list" | "detail" | "other";
-
-export interface WwPageStateResponse extends ExtensionResponse<{
-  kind: WwPageKind;
-  rowCount: number;
-  hasNextPage: boolean;
-  currentPage?: string;
-}> {}
-
-export interface WwBulkScrapeResponse extends ExtensionResponse<{
-  imported: number;
-  attempted: number;
-  pages: number;
-  duplicateCount?: number;
-  dedupedIds?: string[];
-  errors: string[];
-}> {}
-
-/** P3/#39 — Page-state probe for the generic bulk sources (GH/Lever/Workday). */
+/** Page-state probe for a bulk listing source (WaterlooWorks + ATS boards). */
 export interface BulkSourcePageStateResponse extends ExtensionResponse<{
   detected: boolean;
   rowCount: number;
@@ -365,9 +334,9 @@ export interface BulkSourcePageStateResponse extends ExtensionResponse<{
 }> {}
 
 /**
- * P3/#39 — Result of a bulk scrape run against one of the generic ATS sources.
- * Shape mirrors `WwBulkScrapeResponse` so the popup can render every source
- * with the same `BulkSourceCard` component without per-source casts.
+ * Result of a bulk scrape run against one of the listing sources. One shape so
+ * the popup can render every source with the same `BulkSourceCard` component
+ * without per-source casts.
  */
 export interface BulkSourceScrapeResponse extends ExtensionResponse<{
   imported: number;

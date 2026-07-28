@@ -11,7 +11,6 @@
 
 import type { ScrapedJob } from "@/shared/types";
 
-export type WwPageKind = "list" | "detail" | "other";
 export type PageProbeState = "unknown" | "ready" | "needs-refresh";
 
 export type BulkSourceKey =
@@ -35,9 +34,11 @@ export interface PopupModeInput {
   hasForm: boolean;
   detectedFields: number;
   detectedUploadCount: number;
-  /** WaterlooWorks page state, or null when not on WaterlooWorks. */
-  ww: { kind: WwPageKind; rowCount: number; hasNextPage: boolean } | null;
-  /** Already-detected generic ATS listing sources (Greenhouse/Lever/Workday). */
+  /**
+   * Already-detected bulk listing sources (WaterlooWorks / Greenhouse / Lever /
+   * Workday), each with a positive row count. WaterlooWorks is just another
+   * source here — it shares the generic detection path.
+   */
   bulkSources: BulkListEntry[];
   /** Human label for the host when it's supported but nothing's detected yet. */
   supportedSite: string | null;
@@ -67,21 +68,9 @@ export type PopupMode =
   // Not a supported job site.
   | { kind: "unsupported" };
 
-/** Listing surfaces with at least one row, WaterlooWorks first. */
+/** Listing surfaces with at least one row. */
 export function collectBulkSources(input: PopupModeInput): BulkListEntry[] {
-  const out: BulkListEntry[] = [];
-  if (input.ww && input.ww.kind === "list" && input.ww.rowCount > 0) {
-    out.push({
-      key: "waterlooworks",
-      label: "WaterlooWorks",
-      rowCount: input.ww.rowCount,
-      hasNextPage: input.ww.hasNextPage,
-    });
-  }
-  for (const s of input.bulkSources) {
-    if (s.rowCount > 0) out.push(s);
-  }
-  return out;
+  return input.bulkSources.filter((s) => s.rowCount > 0);
 }
 
 /**

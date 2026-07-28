@@ -21,14 +21,18 @@ function input(over: Partial<PopupModeInput> = {}): PopupModeInput {
     hasForm: false,
     detectedFields: 0,
     detectedUploadCount: 0,
-    ww: null,
     bulkSources: [],
     supportedSite: null,
     ...over,
   };
 }
 
-const WW_LIST = { kind: "list" as const, rowCount: 50, hasNextPage: true };
+const WW: BulkListEntry = {
+  key: "waterlooworks",
+  label: "WaterlooWorks",
+  rowCount: 50,
+  hasNextPage: true,
+};
 const GH: BulkListEntry = {
   key: "greenhouse",
   label: "Greenhouse",
@@ -42,7 +46,7 @@ describe("derivePopupMode", () => {
       input({
         pageProbeState: "needs-refresh",
         detectedJob: JOB,
-        ww: WW_LIST,
+        bulkSources: [WW],
         workspaceVisible: true,
       }),
     );
@@ -51,7 +55,7 @@ describe("derivePopupMode", () => {
 
   it("workspace-active outranks job/form/list", () => {
     const m = derivePopupMode(
-      input({ workspaceVisible: true, detectedJob: JOB, ww: WW_LIST }),
+      input({ workspaceVisible: true, detectedJob: JOB, bulkSources: [WW] }),
     );
     expect(m.kind).toBe("workspace-active");
   });
@@ -84,7 +88,7 @@ describe("derivePopupMode", () => {
   });
 
   it("bulk-list for a WaterlooWorks list page", () => {
-    const m = derivePopupMode(input({ ww: WW_LIST }));
+    const m = derivePopupMode(input({ bulkSources: [WW] }));
     expect(m.kind).toBe("bulk-list");
     if (m.kind === "bulk-list") {
       expect(m.sources).toEqual([
@@ -105,7 +109,7 @@ describe("derivePopupMode", () => {
   });
 
   it("WaterlooWorks comes first when multiple sources somehow co-occur", () => {
-    const m = derivePopupMode(input({ ww: WW_LIST, bulkSources: [GH] }));
+    const m = derivePopupMode(input({ bulkSources: [WW, GH] }));
     expect(m.kind).toBe("bulk-list");
     if (m.kind === "bulk-list") {
       expect(m.sources.map((s) => s.key)).toEqual([
@@ -122,17 +126,17 @@ describe("derivePopupMode", () => {
         pageProbeState: "ready",
         detectedJob: null,
         hasForm: false,
-        ww: WW_LIST,
+        bulkSources: [WW],
       }),
     );
     expect(m.kind).toBe("bulk-list");
     expect(m.kind).not.toBe("no-posting");
   });
 
-  it("WaterlooWorks detail page is NOT a bulk list", () => {
-    const m = derivePopupMode(
-      input({ ww: { kind: "detail", rowCount: 0, hasNextPage: false } }),
-    );
+  it("WaterlooWorks detail page (no rows detected) is NOT a bulk list", () => {
+    // On a detail page the content script reports the WW source as undetected,
+    // so it never reaches bulkSources; the popup falls back to no-posting.
+    const m = derivePopupMode(input({ bulkSources: [] }));
     expect(m.kind).toBe("no-posting");
   });
 
@@ -167,17 +171,17 @@ describe("collectBulkSources", () => {
   it("drops zero-row sources", () => {
     const sources = collectBulkSources(
       input({
-        ww: { kind: "list", rowCount: 0, hasNextPage: false },
-        bulkSources: [{ ...GH, rowCount: 0 }],
+        bulkSources: [
+          { ...WW, rowCount: 0 },
+          { ...GH, rowCount: 0 },
+        ],
       }),
     );
     expect(sources).toEqual([]);
   });
 
   it("keeps WaterlooWorks ahead of generic sources", () => {
-    const sources = collectBulkSources(
-      input({ ww: WW_LIST, bulkSources: [GH] }),
-    );
+    const sources = collectBulkSources(input({ bulkSources: [WW, GH] }));
     expect(sources.map((s) => s.key)).toEqual(["waterlooworks", "greenhouse"]);
   });
 });

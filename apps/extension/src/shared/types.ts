@@ -283,11 +283,11 @@ export type MessageType =
   | "OPEN_AUTH"
   | "LOGOUT"
   | "JOB_DETECTED"
-  | "WW_GET_PAGE_STATE"
-  | "WW_SCRAPE_ALL_VISIBLE"
-  | "WW_SCRAPE_ALL_PAGINATED"
-  | "WW_BULK_PROGRESS"
-  // P3/#39 — Generic bulk-scrape orchestrators for public ATS hosts.
+  // Bulk-scrape orchestrators for listing pages (WaterlooWorks + public ATS).
+  | "BULK_WATERLOOWORKS_GET_PAGE_STATE"
+  | "BULK_WATERLOOWORKS_SCRAPE_VISIBLE"
+  | "BULK_WATERLOOWORKS_SCRAPE_PAGINATED"
+  | "BULK_WATERLOOWORKS_PROGRESS"
   | "BULK_GREENHOUSE_GET_PAGE_STATE"
   | "BULK_GREENHOUSE_SCRAPE_VISIBLE"
   | "BULK_GREENHOUSE_SCRAPE_PAGINATED"
