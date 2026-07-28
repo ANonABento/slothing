@@ -21,6 +21,15 @@ interface JobRow {
   deadline?: string;
   notes?: string;
   created_at?: string;
+  // Posting signals + inferred pay (columns already on the jobs table).
+  openings?: number;
+  applicants?: number;
+  level?: string;
+  work_term?: string;
+  inferred_pay_unit?: string;
+  inferred_pay_min?: number;
+  inferred_pay_max?: number;
+  inferred_pay_currency?: string;
 }
 
 export interface CreatedAtCursor {
@@ -74,6 +83,25 @@ function mapRowToJob(row: JobRow): JobDescription {
     deadline: row.deadline,
     notes: row.notes,
     createdAt: row.created_at || nowIso(),
+    openings: typeof row.openings === "number" ? row.openings : undefined,
+    applicants: typeof row.applicants === "number" ? row.applicants : undefined,
+    level: row.level ?? undefined,
+    workTerm: row.work_term ?? undefined,
+    inferredPayUnit:
+      row.inferred_pay_unit === "hourly" ||
+      row.inferred_pay_unit === "monthly" ||
+      row.inferred_pay_unit === "annual"
+        ? row.inferred_pay_unit
+        : undefined,
+    inferredPayMin:
+      typeof row.inferred_pay_min === "number"
+        ? row.inferred_pay_min
+        : undefined,
+    inferredPayMax:
+      typeof row.inferred_pay_max === "number"
+        ? row.inferred_pay_max
+        : undefined,
+    inferredPayCurrency: row.inferred_pay_currency ?? undefined,
   };
 }
 

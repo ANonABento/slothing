@@ -5,22 +5,55 @@ import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { useFormatter } from "next-intl";
 import { AnimatePresence, motion, type PanInfo } from "framer-motion";
-import { Check, ExternalLink, Inbox, MapPin, Settings, X } from "lucide-react";
+import { Check, ExternalLink, Inbox, Settings } from "lucide-react";
 import { ExtensionInstallButtons } from "@/components/marketing/extension-install-buttons";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { StatusPill } from "@/components/opportunities/status-pill";
 import { OnboardingEmptyState } from "@/components/ui/empty-states";
 import { cn } from "@/lib/utils";
 import type { Opportunity } from "@/types/opportunity";
 
 import { toNullableEpoch } from "@/lib/format/time";
+import {
+  formatOpportunityPay,
+  type CurrencyRateMap,
+} from "@/lib/opportunities/pay";
+import { getEffectiveBentoLayout } from "@/lib/opportunities/default-bento";
+import { BentoGrid } from "@/components/opportunities/bento-grid";
 import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 type QueueAction = "save" | "dismiss" | "apply";
 
-const DESCRIPTION_PREVIEW_LENGTH = 260;
+// Sized for the bento ABOUT-THE-ROLE cell (col-span 2, row-span 2).
+// 260 chars was the F.1 single-column limit; the wider cell fits ~600
+// before the user benefits from the Show more affordance.
+const DESCRIPTION_PREVIEW_LENGTH = 600;
 const SWIPE_DISTANCE_THRESHOLD = 110;
 const SWIPE_VELOCITY_THRESHOLD = 650;
+// Bento — desktop card capped at max-w-5xl (1024px) since the grid
+// breathes meaningfully wider than the F.1 single-column shape.
+// Mobile keeps the narrow swipe deck.
+const DESKTOP_MIN_WIDTH = 768;
+
+/**
+ * Picks "desktop" or "mobile" via matchMedia. SSR defaults to desktop
+ * (typical laptop-first user); post-mount effect swaps to mobile if the
+ * viewport is narrow. Also avoids the JSDOM "two trees in DOM" issue
+ * the F.1 implementation had — only one device renders at a time.
+ */
+function useDevice(): "desktop" | "mobile" {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const mq = window.matchMedia(`(max-width: ${DESKTOP_MIN_WIDTH - 1}px)`);
+    const handle = (event: MediaQueryListEvent | MediaQueryList) => {
+      setIsMobile(event.matches);
+    };
+    handle(mq);
+    mq.addEventListener("change", handle);
+    return () => mq.removeEventListener("change", handle);
+  }, []);
+  return isMobile ? "mobile" : "desktop";
+}
 
 function getDeadlineTime(deadline?: string): number {
   if (!deadline) {
@@ -50,7 +83,18 @@ export function getPendingOpportunities(jobs: Opportunity[]): Opportunity[] {
 }
 
 export function getOpportunityTags(job: Opportunity, limit = 6): string[] {
-  const tags = [...(job.tags || []), ...(job.requiredSkills || [])]
+  // Tag chunk shows only first-class tags. Required skills used to be
+  // merged in here, but that polluted the row with multi-sentence
+  // bullets like "Be comfortable working in a heavy fabrication
+  // environment" rendered as ugly chip-shaped badges. Short skill names
+  // (≤ 32 chars, no period) still pass through so a clean skills list
+  // ("React", "TypeScript") fills out an otherwise-empty tag row.
+  const isShortSkill = (value: string): boolean =>
+    value.length > 0 && value.length <= 32 && !/[.!?]/.test(value);
+  const tags = [
+    ...(job.tags || []),
+    ...(job.requiredSkills || []).filter(isShortSkill),
+  ]
     .map((tag) => tag.trim())
     .filter(Boolean);
 
@@ -68,22 +112,46 @@ export function getDescriptionPreview(description: string): string {
 interface OpportunityReviewQueueProps {
   jobs: Opportunity[];
   updating: boolean;
-  hasMore?: boolean;
-  onLoadMore?: () => Promise<void>;
   onStatusChange: (
     job: Opportunity,
     status: Opportunity["status"],
   ) => Promise<void>;
   onApplyNow: (job: Opportunity) => Promise<void>;
+  // Load-more (infinite scroll) — main's cursor pagination, grafted onto the
+  // bento card: when `hasMore`, the queue auto-fetches the next page as it
+  // nears the end so the deck never runs dry mid-review.
+  hasMore?: boolean;
+  onLoadMore?: () => Promise<void>;
+  // Bucket G — when set, the salary line renders the inferred pay in
+  // this unit (e.g. "$62k/yr" for a "$30/hr" posting). Defaults to
+  // "annual" so the queue ranks the same way the sort comparator does.
+  payDisplayUnit?: "hourly" | "monthly" | "annual";
+  // Bucket G.1 — the user's preferred display currency + the FX-rate
+  // map. When omitted, salary renders in its source currency
+  // (back-compat). `currencyRates` is the cached map from the daily
+  // /api/cron/currency-rates run.
+  payDisplayCurrency?: string;
+  currencyRates?: CurrencyRateMap;
+  /**
+   * Bento layout — user-customisable cell grid. Accepts either the new
+   * bento shape, the legacy F.1 section shape (auto-migrated at read
+   * time), or null (use defaults). The page wrapper fetches this from
+   * /api/preferences/opportunities and passes it through.
+   */
+  layout?: unknown;
 }
 
 export function OpportunityReviewQueue({
   jobs,
   updating,
-  hasMore = false,
-  onLoadMore,
   onStatusChange,
   onApplyNow,
+  hasMore = false,
+  onLoadMore,
+  payDisplayUnit = "annual",
+  payDisplayCurrency,
+  currencyRates,
+  layout,
 }: OpportunityReviewQueueProps) {
   const format = useFormatter();
   const a11yT = useA11yTranslations();
@@ -92,6 +160,8 @@ export function OpportunityReviewQueue({
   const queue = useMemo(() => getPendingOpportunities(jobs), [jobs]);
   const activeJob = queue[0];
   const remainingCount = queue.length;
+  const bentoLayout = useMemo(() => getEffectiveBentoLayout(layout), [layout]);
+  const device = useDevice();
 
   const runAction = async (action: QueueAction) => {
     if (!activeJob || updating || activeAction) {
@@ -196,16 +266,12 @@ export function OpportunityReviewQueue({
     );
   }
 
-  const tags = getOpportunityTags(activeJob);
-  const preview = expanded
-    ? activeJob.summary
-    : getDescriptionPreview(activeJob.summary);
-  const canApply = Boolean(activeJob.sourceUrl);
-  const shouldLoadMore = hasMore && queue.length <= 3 && !updating;
-  const location = [activeJob.city, activeJob.province, activeJob.country]
-    .filter(Boolean)
-    .join(", ");
-  const salary =
+  // Pre-compute the legacy salary fallback once per render. RenderChunk
+  // for the `salary` chunk consults inferred pay first, but the legacy
+  // string in the activeJob object isn't directly readable from the
+  // chunk renderer — so it stays in the queue's render scope as a
+  // computed value used only when inferred fields are absent.
+  const legacySalary =
     activeJob.salaryMin != null || activeJob.salaryMax != null
       ? [activeJob.salaryMin, activeJob.salaryMax]
           .filter((value): value is number => value != null)
@@ -218,152 +284,101 @@ export function OpportunityReviewQueue({
           )
           .join(" - ")
       : null;
+  // Decide once whether to show the legacy fallback. RenderChunk for
+  // `salary` returns null when no normalized pay exists; in that case
+  // we want to slot the legacy string into the same chunk position.
+  const normalizedPay = formatOpportunityPay(activeJob, payDisplayUnit, {
+    targetCurrency: payDisplayCurrency,
+    rates: currencyRates,
+  });
+  const salaryFallback = !normalizedPay && legacySalary ? legacySalary : null;
+
+  const tags = getOpportunityTags(activeJob);
+  const preview = expanded
+    ? activeJob.summary
+    : getDescriptionPreview(activeJob.summary);
+  const canApply = Boolean(activeJob.sourceUrl);
+  const chunkContext = {
+    preview,
+    expanded,
+    setExpanded,
+    tags,
+    payDisplayUnit,
+    payDisplayCurrency,
+    currencyRates,
+    onAction: (action: QueueAction) => void runAction(action),
+    actionDisabled: updating || Boolean(activeAction),
+    canApply,
+  };
+
+  const shouldLoadMore = hasMore && queue.length <= 3 && !updating;
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
-      <header className="px-5 pb-4 pt-6">
-        <div className="mx-auto flex w-full max-w-md items-center justify-between">
-          <div>
-            <Badge variant="secondary">Pending review</Badge>
-            <h1 className="mt-3 font-display text-2xl font-semibold tracking-tight">
-              Opportunities
-            </h1>
-          </div>
-          <div className="text-right">
-            <p className="font-display text-3xl font-bold tracking-tight text-primary">
-              {remainingCount}
-            </p>
-            <p className="text-xs text-muted-foreground">remaining</p>
-          </div>
-        </div>
-      </header>
-
-      <main className="flex flex-1 items-center justify-center px-4 pb-28">
-        {shouldLoadMore ? <LoadMorePending onLoadMore={onLoadMore} /> : null}
-        <div className="relative h-[min(680px,72vh)] w-full max-w-md">
-          {queue[1] && (
-            <div
-              className="absolute inset-x-3 top-5 h-[calc(100%-1.25rem)] rounded-lg border bg-card/50 shadow-sm"
-              aria-hidden="true"
+    <main className="flex flex-1 flex-col items-center px-4 pb-12 pt-6 md:pt-10">
+      <h1 className="sr-only">Review Queue — {remainingCount} pending</h1>
+      {shouldLoadMore ? <LoadMorePending onLoadMore={onLoadMore} /> : null}
+      {/* Bento card. Desktop uses ~95vw with a generous max so the grid
+          fills the screen instead of stranding cream on the sides.
+          Card height is capped to ~viewport-minus-toolbar so the
+          whole card stays visible without scrolling the page — the
+          summary cell handles its own overflow internally.
+          Mobile keeps the narrow swipe-deck width. */}
+      <div className="relative h-[min(640px,80vh)] w-full max-w-md md:h-auto md:max-h-[calc(100vh-180px)] md:w-[min(100%,1600px)] md:max-w-none">
+        {queue[1] && (
+          <div
+            className="absolute inset-x-3 top-5 h-[calc(100%-1.25rem)] rounded-lg border bg-card/50 shadow-sm md:relative md:inset-x-0 md:top-0 md:h-0"
+            aria-hidden="true"
+          />
+        )}
+        <AnimatePresence mode="popLayout">
+          <motion.article
+            key={activeJob.id}
+            drag
+            dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
+            dragElastic={0.25}
+            onDragEnd={handleDragEnd}
+            initial={{ opacity: 0, y: 24, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{
+              opacity: 0,
+              x:
+                activeAction === "save"
+                  ? 320
+                  : activeAction === "dismiss"
+                    ? -320
+                    : 0,
+              y: activeAction === "apply" ? -360 : 0,
+              rotate:
+                activeAction === "save"
+                  ? 12
+                  : activeAction === "dismiss"
+                    ? -12
+                    : 0,
+              transition: { duration: 0.22 },
+            }}
+            className="absolute inset-0 cursor-grab overflow-hidden rounded-lg border bg-card p-3 shadow-xl active:cursor-grabbing md:relative md:inset-auto md:flex md:max-h-[calc(100vh-180px)] md:flex-col md:overflow-y-auto md:p-5"
+          >
+            <BentoGrid
+              layout={bentoLayout.desktop}
+              mobileExpandedCount={bentoLayout.mobile.expandedCount}
+              device={device}
+              opportunity={activeJob}
+              context={chunkContext}
             />
-          )}
-          <AnimatePresence mode="popLayout">
-            <motion.article
-              key={activeJob.id}
-              drag
-              dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
-              dragElastic={0.25}
-              onDragEnd={handleDragEnd}
-              initial={{ opacity: 0, y: 24, scale: 0.98 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{
-                opacity: 0,
-                x:
-                  activeAction === "save"
-                    ? 320
-                    : activeAction === "dismiss"
-                      ? -320
-                      : 0,
-                y: activeAction === "apply" ? -360 : 0,
-                rotate:
-                  activeAction === "save"
-                    ? 12
-                    : activeAction === "dismiss"
-                      ? -12
-                      : 0,
-                transition: { duration: 0.22 },
-              }}
-              className="absolute inset-0 flex cursor-grab flex-col overflow-hidden rounded-lg border bg-card shadow-xl active:cursor-grabbing"
-            >
-              <div className="flex-1 overflow-y-auto p-6">
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <p className="text-sm font-medium text-primary">
-                      {activeJob.company}
-                    </p>
-                    <h2 className="mt-2 font-display text-3xl font-bold leading-tight tracking-tight">
-                      {activeJob.title}
-                    </h2>
-                    <div className="mt-3 flex flex-wrap items-center gap-2">
-                      <StatusPill status={activeJob.status} />
-                      {activeJob.remoteType === "remote" && (
-                        <Badge variant="info">Remote</Badge>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-5 flex flex-wrap gap-2 text-sm text-muted-foreground">
-                  {location && (
-                    <span className="inline-flex items-center gap-1.5">
-                      <MapPin className="h-4 w-4" />
-                      {location}
-                    </span>
-                  )}
-                  {salary && <span>{salary}</span>}
-                  {activeJob.deadline && (
-                    <span>Deadline {activeJob.deadline}</span>
-                  )}
-                </div>
-
-                {tags.length > 0 && (
-                  <div className="mt-6 flex flex-wrap gap-2">
-                    {tags.map((tag) => (
-                      <Badge key={tag} variant="outline">
-                        {tag}
-                      </Badge>
-                    ))}
-                  </div>
-                )}
-
-                <div className="mt-6">
-                  <p className="whitespace-pre-line text-sm leading-6 text-muted-foreground">
-                    {preview}
-                  </p>
-                  {activeJob.summary.length > DESCRIPTION_PREVIEW_LENGTH && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="mt-3 px-0"
-                      onClick={() => setExpanded((current) => !current)}
-                    >
-                      {expanded ? "Show less" : "Show more"}
-                    </Button>
-                  )}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-3 gap-2 border-t bg-background/80 p-4 backdrop-blur">
-                <ActionButton
-                  label="Dismiss"
-                  icon={<X className="h-5 w-5" />}
-                  className="text-destructive"
-                  disabled={updating || Boolean(activeAction)}
-                  onClick={() => void runAction("dismiss")}
-                />
-                <ActionButton
-                  label="Apply"
-                  icon={<ExternalLink className="h-5 w-5" />}
-                  disabled={!canApply || updating || Boolean(activeAction)}
-                  onClick={() => void runAction("apply")}
-                />
-                <ActionButton
-                  label="Save"
-                  icon={<Check className="h-5 w-5" />}
-                  className="text-primary"
-                  disabled={updating || Boolean(activeAction)}
-                  onClick={() => void runAction("save")}
-                />
-              </div>
-            </motion.article>
-          </AnimatePresence>
-        </div>
-      </main>
-    </div>
+            {salaryFallback && (
+              <p className="mt-3 text-xs text-muted-foreground">
+                Listed: {salaryFallback}
+              </p>
+            )}
+          </motion.article>
+        </AnimatePresence>
+      </div>
+    </main>
   );
 }
 
+// Load-more sentinel — fires the parent's cursor fetch once when the deck runs
+// low. Renders nothing; it exists purely for the mount effect.
 function LoadMorePending({ onLoadMore }: { onLoadMore?: () => Promise<void> }) {
   useEffect(() => {
     if (onLoadMore) void onLoadMore();
@@ -372,33 +387,30 @@ function LoadMorePending({ onLoadMore }: { onLoadMore?: () => Promise<void> }) {
   return null;
 }
 
-interface ActionButtonProps {
+interface QuickActionLinkLegacyProps {
   label: string;
   icon: ReactNode;
-  className?: string;
-  disabled?: boolean;
-  onClick: () => void;
+  href: string;
 }
-
-function ActionButton({
+// Kept exported for back-compat with any tests that imported the legacy
+// helper. New code should use `<RenderChunk chunk="open-original" />`.
+export function QuickActionLink({
   label,
   icon,
-  className,
-  disabled,
-  onClick,
-}: ActionButtonProps) {
+  href,
+}: QuickActionLinkLegacyProps) {
   return (
-    <button
-      type="button"
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
       className={cn(
-        "flex h-16 flex-col items-center justify-center gap-1 rounded-xl border bg-card text-xs font-medium transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50",
-        className,
+        "flex h-10 items-center justify-center gap-2 rounded-lg border bg-card text-xs font-medium",
+        "transition-colors hover:bg-muted",
       )}
-      disabled={disabled}
-      onClick={onClick}
     >
       {icon}
-      {label}
-    </button>
+      <span className="truncate">{label}</span>
+    </a>
   );
 }

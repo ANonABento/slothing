@@ -21,6 +21,16 @@ interface JobRow {
   deadline?: string | null;
   notes?: string | null;
   created_at?: string | null;
+  // Posting signals + inferred pay. These columns already exist on the jobs
+  // table; surfaced here for the bento review card's signal/pay cells.
+  openings?: number | null;
+  applicants?: number | null;
+  level?: string | null;
+  work_term?: string | null;
+  inferred_pay_unit?: string | null;
+  inferred_pay_min?: number | null;
+  inferred_pay_max?: number | null;
+  inferred_pay_currency?: string | null;
 }
 
 export interface CreatedAtCursor {
@@ -82,6 +92,25 @@ function mapRowToJob(row: JobRow): JobDescription {
     deadline: row.deadline ?? undefined,
     notes: row.notes ?? undefined,
     createdAt: row.created_at || nowIso(),
+    openings: typeof row.openings === "number" ? row.openings : undefined,
+    applicants: typeof row.applicants === "number" ? row.applicants : undefined,
+    level: row.level ?? undefined,
+    workTerm: row.work_term ?? undefined,
+    inferredPayUnit:
+      row.inferred_pay_unit === "hourly" ||
+      row.inferred_pay_unit === "monthly" ||
+      row.inferred_pay_unit === "annual"
+        ? row.inferred_pay_unit
+        : undefined,
+    inferredPayMin:
+      typeof row.inferred_pay_min === "number"
+        ? row.inferred_pay_min
+        : undefined,
+    inferredPayMax:
+      typeof row.inferred_pay_max === "number"
+        ? row.inferred_pay_max
+        : undefined,
+    inferredPayCurrency: row.inferred_pay_currency ?? undefined,
   };
 }
 

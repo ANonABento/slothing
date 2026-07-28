@@ -63,6 +63,63 @@ export const CLOSED_SUB_STATUSES = [
   "dismissed",
 ] as const;
 
+// Built-in sort orders for the review queue + opportunities list. All
+// `Opportunity[]` callers route through `sortOpportunities()` in
+// apps/web/src/lib/opportunities/sort.ts; the helper looks up the
+// comparator for a given ID. `ai-recommended` and `closest-to-location`
+// are placeholders for follow-up specs — they render in the dropdown but
+// fall back to `most-recent` if their preconditions aren't met (no
+// profile-fit score; no user location).
+export const OPPORTUNITY_SORT_IDS = [
+  "most-recent",
+  "soonest-deadline",
+  "highest-pay",
+  "lowest-pay",
+  "lowest-applicants",
+  "highest-applicants",
+  "best-applicant-ratio",
+  "ai-recommended",
+  "closest-to-location",
+] as const;
+export type OpportunitySortId = (typeof OPPORTUNITY_SORT_IDS)[number];
+
+export const OPPORTUNITY_PRESET_SCOPES = ["review", "list"] as const;
+export type OpportunityPresetScope = (typeof OPPORTUNITY_PRESET_SCOPES)[number];
+
+// Auto-tag rule triggers used by the import endpoint to apply tags to
+// freshly-created jobs. Add a new trigger type → extend the union here
+// + the switch in applyAutoTagRules + the dropdown in
+// AutoTagRulesBuilder. Spec: opportunity-customization-spec §4 bucket E.
+export const AUTO_TAG_TRIGGER_TYPES = [
+  "source-equals", // opportunity.source === triggerValue
+  "title-includes", // case-insensitive substring match on title
+  "work-term-includes", // case-insensitive substring match on workTerm
+  "level-equals", // opportunity.level === triggerValue
+] as const;
+export type AutoTagTriggerType = (typeof AUTO_TAG_TRIGGER_TYPES)[number];
+
+// Status the import endpoint stamps onto newly-imported opportunities
+// when the user has set a default. Restricted to early-funnel statuses;
+// "applied"+ shouldn't be auto-assigned via import.
+export const IMPORT_DEFAULT_STATUSES = ["pending", "saved"] as const;
+export type ImportDefaultStatus = (typeof IMPORT_DEFAULT_STATUSES)[number];
+
+// Bucket G — pay normalization display preferences. The renderer
+// converts each opportunity's inferred pay into the user's chosen
+// unit/currency before showing it. Currency conversion follow-up
+// (bucket G.1) — until that ships, non-matching currencies render as
+// the source currency with a prefix.
+export const PAY_NORMALIZATION_UNITS = ["hourly", "monthly", "annual"] as const;
+export type PayNormalizationUnit = (typeof PAY_NORMALIZATION_UNITS)[number];
+export const PAY_NORMALIZATION_CURRENCIES = [
+  "USD",
+  "CAD",
+  "EUR",
+  "GBP",
+] as const;
+export type PayNormalizationCurrency =
+  (typeof PAY_NORMALIZATION_CURRENCIES)[number];
+
 export type OpportunityType = (typeof OPPORTUNITY_TYPES)[number];
 export type OpportunitySource = (typeof OPPORTUNITY_SOURCES)[number];
 export type OpportunityRemoteType = (typeof OPPORTUNITY_REMOTE_TYPES)[number];
@@ -142,6 +199,9 @@ export interface Opportunity {
   jobType?: OpportunityJobType;
   level?: OpportunityLevel;
   openings?: number;
+  // Competitiveness signal — number of applicants reported by the source
+  // (WaterlooWorks exposes this on the list view but not in the modal).
+  applicants?: number;
   workTerm?: string;
   applicationMethod?: string;
   requiredDocuments?: string[];
@@ -159,6 +219,13 @@ export interface Opportunity {
   salaryMin?: number;
   salaryMax?: number;
   salaryCurrency?: string;
+  // Bucket G — parsed/inferred pay from the raw `salary` string at import
+  // time. The renderer + highest/lowest-pay comparators prefer these when
+  // present; falls back to the raw string + heuristic midpoint otherwise.
+  inferredPayUnit?: PayNormalizationUnit;
+  inferredPayMin?: number;
+  inferredPayMax?: number;
+  inferredPayCurrency?: string;
   benefits?: string[];
   deadline?: string;
   additionalInfo?: string;
@@ -247,6 +314,7 @@ const opportunityInputFields = {
   jobType: opportunityJobTypeSchema.optional(),
   level: opportunityLevelSchema.optional(),
   openings: z.number().int().positive().optional(),
+  applicants: z.number().int().nonnegative().optional(),
   workTerm: optionalText(120),
   applicationMethod: optionalText(120),
   requiredDocuments: optionalStringList,
@@ -330,6 +398,65 @@ export type UpdateOpportunityInput = z.input<typeof updateOpportunitySchema>;
 export type OpportunityFilters = z.infer<typeof opportunityFiltersSchema>;
 export type OpportunityStatusChangeInput = z.input<
   typeof opportunityStatusChangeSchema
+>;
+
+// Saved filter+sort combination the user can apply to the review queue or
+// opportunities list in one click. `position` controls pinned ordering;
+// negative or null positions are treated as "unpinned tail".
+export const opportunitySortIdSchema = z.enum(OPPORTUNITY_SORT_IDS);
+export const opportunityPresetScopeSchema = z.enum(OPPORTUNITY_PRESET_SCOPES);
+
+export const opportunityPresetSchema = z.object({
+  id: z.string(),
+  name: z.string().trim().min(1, "Name is required").max(80),
+  scope: opportunityPresetScopeSchema.default("review"),
+  filters: opportunityFiltersSchema,
+  sortId: opportunitySortIdSchema.default("most-recent"),
+  pinned: z.boolean().default(false),
+  position: z.number().int().nullable().optional(),
+  createdAt: z.string().optional(),
+  updatedAt: z.string().optional(),
+});
+export type OpportunityPreset = z.infer<typeof opportunityPresetSchema>;
+
+// Used by POST /api/opportunity-presets — server assigns id + timestamps.
+export const createOpportunityPresetSchema = opportunityPresetSchema
+  .omit({ id: true, createdAt: true, updatedAt: true })
+  // `pinned` defaults to false but callers may omit it
+  .extend({
+    pinned: z.boolean().optional().default(false),
+  });
+export type CreateOpportunityPresetInput = z.input<
+  typeof createOpportunityPresetSchema
+>;
+
+// Used by PATCH /api/opportunity-presets/[id] — every field is optional.
+export const updateOpportunityPresetSchema = opportunityPresetSchema
+  .omit({ id: true, createdAt: true, updatedAt: true })
+  .partial();
+export type UpdateOpportunityPresetInput = z.input<
+  typeof updateOpportunityPresetSchema
+>;
+
+// Auto-tag rule that runs against newly-imported opportunities. See
+// opportunity-customization-spec §4 bucket E. The trigger types live
+// in AUTO_TAG_TRIGGER_TYPES above; the engine in
+// apps/web/src/lib/opportunities/auto-tag.ts does the matching.
+export const autoTagTriggerSchema = z.enum(AUTO_TAG_TRIGGER_TYPES);
+export const importDefaultStatusSchema = z.enum(IMPORT_DEFAULT_STATUSES);
+
+export const opportunityAutoTagRuleSchema = z.object({
+  id: z.string(),
+  enabled: z.boolean().default(true),
+  trigger: autoTagTriggerSchema,
+  triggerValue: z.string().trim().min(1).max(200),
+  tags: z
+    .array(z.string().trim().min(1).max(40))
+    .min(1, "At least one tag is required")
+    .max(10),
+});
+export type OpportunityAutoTagRule = z.infer<
+  typeof opportunityAutoTagRuleSchema
 >;
 
 // LLM provider configuration. The runtime validation source lives here so the

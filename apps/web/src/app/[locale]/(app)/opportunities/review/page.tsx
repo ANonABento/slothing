@@ -2,8 +2,9 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Settings } from "lucide-react";
+import { ArrowLeft, LayoutPanelLeft, Settings } from "lucide-react";
 import { OpportunityReviewQueue } from "@/components/opportunities/review-queue";
+import { LayoutBuilderModal } from "@/components/opportunities/layout-builder-modal";
 import { OpportunitiesReviewSkeleton } from "@/components/skeletons/opportunities-review-skeleton";
 import { Button } from "@/components/ui/button";
 import { AppPage, PageContent } from "@/components/ui/page-layout";
@@ -12,12 +13,19 @@ import { useErrorToast } from "@/hooks/use-error-toast";
 import { readJsonResponse } from "@/lib/http";
 import type { SettingsResponse } from "@/types/api";
 import type { Opportunity } from "@/types/opportunity";
+import type { BentoLayoutPreference } from "@/lib/opportunities/bento-layout";
 import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 
 interface OpportunitiesResponse {
   opportunities?: Opportunity[];
   nextCursor?: string | null;
   hasMore?: boolean;
+}
+
+interface OpportunityPreferencesResponse {
+  preferences?: {
+    layoutPreference?: BentoLayoutPreference | null;
+  };
 }
 
 export default function OpportunityReviewPage() {
@@ -29,15 +37,23 @@ export default function OpportunityReviewPage() {
   const [updating, setUpdating] = useState(false);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(false);
+  // Bento card layout — null = the default layout. The builder modal edits a
+  // draft + PATCHes /api/preferences/opportunities; we mirror the saved value
+  // here so the live card re-renders.
+  const [layoutPreference, setBentoLayoutPreference] =
+    useState<BentoLayoutPreference | null>(null);
+  const [layoutModalOpen, setLayoutModalOpen] = useState(false);
   const showErrorToast = useErrorToast();
 
   const fetchPageData = useCallback(async () => {
     setLoading(true);
     try {
-      const [settingsResponse, jobsResponse] = await Promise.all([
-        fetch("/api/settings"),
-        fetch("/api/opportunities?status=pending&sort=deadline&limit=50"),
-      ]);
+      const [settingsResponse, jobsResponse, preferencesResponse] =
+        await Promise.all([
+          fetch("/api/settings"),
+          fetch("/api/opportunities?status=pending&sort=deadline&limit=50"),
+          fetch("/api/preferences/opportunities"),
+        ]);
       const settingsData = await readJsonResponse<SettingsResponse>(
         settingsResponse,
         "Failed to load settings",
@@ -46,11 +62,19 @@ export default function OpportunityReviewPage() {
         jobsResponse,
         "Failed to load opportunities",
       );
+      const preferencesData =
+        await readJsonResponse<OpportunityPreferencesResponse>(
+          preferencesResponse,
+          "Failed to load preferences",
+        );
 
       setEnabled(settingsData.opportunityReview?.enabled ?? true);
       setJobs(jobsData.opportunities || []);
       setNextCursor(jobsData.nextCursor ?? null);
       setHasMore(Boolean(jobsData.hasMore));
+      if (preferencesData.preferences?.layoutPreference) {
+        setBentoLayoutPreference(preferencesData.preferences.layoutPreference);
+      }
     } catch (error) {
       showErrorToast(error, {
         title: "Could not load review queue",
@@ -166,6 +190,15 @@ export default function OpportunityReviewPage() {
       >
         <ArrowLeft className="h-5 w-5" />
       </Link>
+      <button
+        type="button"
+        onClick={() => setLayoutModalOpen(true)}
+        className="fixed right-4 top-4 z-30 inline-flex h-11 items-center justify-center gap-1.5 rounded-full border bg-card/90 px-4 text-xs font-medium text-muted-foreground shadow-sm backdrop-blur transition-colors hover:text-foreground"
+        aria-label="Customize card layout"
+      >
+        <LayoutPanelLeft className="h-4 w-4" />
+        Layout
+      </button>
       <OpportunityReviewQueue
         jobs={jobs}
         updating={updating}
@@ -173,6 +206,13 @@ export default function OpportunityReviewPage() {
         onLoadMore={loadMorePending}
         onStatusChange={updateJobStatus}
         onApplyNow={applyNow}
+        layout={layoutPreference}
+      />
+      <LayoutBuilderModal
+        open={layoutModalOpen}
+        onOpenChange={setLayoutModalOpen}
+        value={layoutPreference}
+        onPersisted={setBentoLayoutPreference}
       />
     </div>
   );
