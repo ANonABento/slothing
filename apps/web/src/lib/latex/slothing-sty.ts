@@ -80,36 +80,63 @@ export const SLOTHING_STY = String.raw`%% slothing.sty — the Slothing document
   {\normalfont\large\bfseries\color{slothingaccent}}
   {}{0pt}{}[\vspace{-0.6\baselineskip}\rule{\linewidth}{0.4pt}]
 
+%% --- span anchors (preview only) --------------------------------------------
+%% In preview compiles the app appends \slothing@anchorstrue to this file, which makes
+%% every id-bearing span emit an invisible link annotation carrying its id. The compile
+%% service then extracts those annotations server-side into a JSON hit map, so clicking
+%% the rendered PDF resolves to a field.
+%%
+%% EXPORT compiles never set the flag, so a downloaded resume contains no annotations —
+%% the reader would otherwise find every bullet was a dead slothing:// link.
+\newif\ifslothing@anchors
+\slothing@anchorsfalse
+
+\define@key{slothingspan}{id}{\def\slothing@spanid{#1}}
+
+%% #1 = raw optional-argument body (may be empty), #2 = content to anchor.
+\newcommand{\slothing@span}[2]{%
+  \def\slothing@spanid{}%
+  \ifx\relax#1\relax\else\setkeys{slothingspan}{#1}\fi
+  \ifslothing@anchors
+    \ifx\slothing@spanid\empty
+      #2%
+    \else
+      \href{slothing://\slothing@spanid}{#2}%
+    \fi
+  \else
+    #2%
+  \fi
+}
+
 %% --- addressable macros -----------------------------------------------------
 %% #1 (optional) is the [id=...] token string, ignored here by design.
 
 \newcommand{\slothingHeader}[3][]{%
   \begin{center}
-    {\LARGE\bfseries #2}\\[0.35em]
-    {\small #3}
+    \slothing@span{#1}{{\LARGE\bfseries #2}\\[0.35em]{\small #3}}
   \end{center}
   \vspace{0.4em}
 }
 
 \newcommand{\slothingSection}[2][]{%
   \vspace{\slothing@sectionskip}%
-  \section*{#2}%
+  \section*{\slothing@span{#1}{#2}}%
 }
 
 %% {org}{role}{dates}{body}
 \newcommand{\slothingEntry}[5][]{%
-  \noindent\textbf{#2}\hfill{\small #4}\\
+  \slothing@span{#1}{\noindent\textbf{#2}\hfill{\small #4}}\\
   \textit{#3}
   \vspace{-0.2em}
   #5
   \vspace{0.35em}
 }
 
-\newcommand{\slothingItem}[2][]{\item #2}
+\newcommand{\slothingItem}[2][]{\item \slothing@span{#1}{#2}}
 
-\newcommand{\slothingPara}[2][]{#2\par\vspace{0.6em}}
+\newcommand{\slothingPara}[2][]{\slothing@span{#1}{#2}\par\vspace{0.6em}}
 
-\newcommand{\slothingSkills}[2][]{\noindent #2\par\vspace{0.3em}}
+\newcommand{\slothingSkills}[2][]{\noindent \slothing@span{#1}{#2}\par\vspace{0.3em}}
 
 %% Entry bodies wrap their items so \slothingItem always has a list to land in.
 \newenvironment{slothingItems}
@@ -126,4 +153,4 @@ export const SLOTHING_STY = String.raw`%% slothing.sty — the Slothing document
 `;
 
 /** Bumped whenever the macros change; participates in the compile cache key. */
-export const STY_VERSION = 1;
+export const STY_VERSION = 2;

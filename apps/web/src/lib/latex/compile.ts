@@ -20,6 +20,7 @@ import { existsSync } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
 
+import { extractHitMap, type HitMap } from "./hitmap";
 import { SLOTHING_STY, STY_VERSION } from "./slothing-sty";
 
 export type CompileMode = "preview" | "export";
@@ -49,6 +50,11 @@ export interface CompileResult {
   pdf: Uint8Array;
   synctex: Uint8Array | null;
   log: CompileLog;
+  /**
+   * Span rectangles for click-to-select. Populated for `preview` compiles only —
+   * `export` compiles carry no anchors, so there is nothing to extract.
+   */
+  hitMap: HitMap | null;
 }
 
 export class CompileError extends Error {
@@ -155,7 +161,7 @@ export async function warmBundle(timeoutMs = 300_000): Promise<void> {
   const dir = await mkdtemp(join(tmpdir(), "slothing-warm-"));
   try {
     await writeFile(join(dir, "main.tex"), WARMUP_DOC, "utf8");
-    await writeFile(join(dir, "slothing.sty"), SLOTHING_STY, "utf8");
+    await writeFile(join(dir, "slothing.sty"), styleFor("preview"), "utf8");
     // Deliberately WITHOUT --only-cached: this is the one place we fetch.
     await run(
       engine,
@@ -183,6 +189,21 @@ const WARMUP_DOC = String.raw`\documentclass[11pt,letterpaper]{article}
 }
 \end{document}`;
 
+/**
+ * The style sheet for a compile mode. Preview appends the anchors flag; export does not.
+ *
+ * Flipping it here rather than rewriting the document keeps the compiled source
+ * byte-identical between modes, so a log line number always refers to the same line of
+ * the stored document.
+ */
+export function styleFor(mode: CompileMode): string {
+  if (mode !== "preview") return SLOTHING_STY;
+  return SLOTHING_STY.replace(
+    "\\endinput",
+    "\\slothing@anchorstrue\n\\endinput",
+  );
+}
+
 export async function compile(input: CompileInput): Promise<CompileResult> {
   const engine = resolveEngine();
   if (!engine) throw new EngineUnavailableError();
@@ -192,7 +213,7 @@ export async function compile(input: CompileInput): Promise<CompileResult> {
 
   try {
     await writeFile(join(dir, "main.tex"), input.source, "utf8");
-    await writeFile(join(dir, "slothing.sty"), SLOTHING_STY, "utf8");
+    await writeFile(join(dir, "slothing.sty"), styleFor(input.mode), "utf8");
 
     const args = [
       "-X",
@@ -242,10 +263,15 @@ export async function compile(input: CompileInput): Promise<CompileResult> {
       ? new Uint8Array(await readFile(synctexPath))
       : null;
 
+    const bytes = new Uint8Array(pdf);
+    // Only preview compiles carry anchors, so only they have a map to extract.
+    const hitMap = input.mode === "preview" ? await extractHitMap(bytes) : null;
+
     return {
-      pdf: new Uint8Array(pdf),
+      pdf: bytes,
       synctex,
       log: parseCompileLog(raw, true),
+      hitMap,
     };
   } finally {
     // The jail goes away even when the compile threw.
