@@ -36,7 +36,9 @@ import {
   compileDocument,
   fetchPdfByKey,
   rateLimitDelayMs,
+  requestAiRevision,
   saveDocument,
+  type AiProposalOutcome,
   type TexEditorTransport,
 } from "./tex-editor-api";
 import {
@@ -83,6 +85,12 @@ export interface UseTexEditorResult {
   commit: (label?: string) => Promise<void>;
   /** Compile immediately, bypassing the debounce. Used for the first render. */
   compileNow: () => void;
+  /** Ask for a grounded revision. Returns a proposal; writes nothing. */
+  requestAi: (
+    spanId: string,
+    fieldIndex: number,
+    action: string,
+  ) => Promise<AiProposalOutcome>;
   retryCompile: () => void;
   setSplitRatio: (ratio: number) => void;
   setZoom: (zoom: number) => void;
@@ -445,6 +453,22 @@ export function useTexEditor(
     [runCompile, runSave],
   );
 
+  const requestAi = useCallback(
+    (spanId: string, fieldIndex: number, action: string) =>
+      // Always sends the LOCAL source, so the AI revises what the user can actually see.
+      requestAiRevision(
+        document.id,
+        {
+          spanId,
+          fieldIndex,
+          action,
+          source: stateRef.current.document.source,
+        },
+        { transport: runtimeRef.current.transport },
+      ),
+    [document.id],
+  );
+
   const compileNow = useCallback(() => {
     if (compileTimer.current) {
       clearTimeout(compileTimer.current);
@@ -504,6 +528,7 @@ export function useTexEditor(
     select,
     commit,
     compileNow,
+    requestAi,
     retryCompile,
     setSplitRatio: useCallback(
       (ratio: number) => dispatch({ type: "SET_SPLIT_RATIO", ratio }),

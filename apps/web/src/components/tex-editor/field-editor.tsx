@@ -20,6 +20,8 @@ import { latexToPlainText, type InlineViolation } from "@/lib/latex/inline";
 import type { FieldWrite } from "@/lib/latex/field-edit";
 import { cn } from "@/lib/utils";
 
+import { AiActions, type AiProposal } from "./ai-actions";
+
 export interface FieldEditorProps {
   spanId: string;
   field: FieldDescriptor;
@@ -27,6 +29,8 @@ export interface FieldEditorProps {
   onChange: (write: FieldWrite) => boolean;
   onCommit: () => void;
   autoFocus?: boolean;
+  /** Omitted when the surface has no AI wired up (tests, read-only contexts). */
+  onRequestAi?: (action: string) => Promise<AiProposal | null>;
 }
 
 function describeViolation(violation: InlineViolation): string {
@@ -49,6 +53,7 @@ export function FieldEditor({
   onChange,
   onCommit,
   autoFocus,
+  onRequestAi,
 }: FieldEditorProps) {
   const [draft, setDraft] = useState(field.display);
   const [rawMode, setRawMode] = useState(false);
@@ -156,6 +161,20 @@ export function FieldEditor({
             Remove formatting
           </Button>
         </div>
+      ) : null}
+
+      {onRequestAi ? (
+        <AiActions
+          onRequest={(action) => onRequestAi(action)}
+          unavailableReason={
+            isRich ? "Remove the formatting to use AI on this field." : null
+          }
+          onAccept={(text) => {
+            setDraft(text);
+            onChange({ kind: "plain", text });
+            onCommit();
+          }}
+        />
       ) : null}
 
       {dialog}

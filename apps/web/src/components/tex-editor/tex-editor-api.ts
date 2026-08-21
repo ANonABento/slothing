@@ -175,6 +175,51 @@ export async function fetchPdfByKey(
   }
 }
 
+export interface AiProposalOutcome {
+  original: string;
+  proposal: string;
+  applied: boolean;
+  ungroundedNumbers: string[];
+  sources: string[];
+  usedJobContext: boolean;
+}
+
+/**
+ * Ask for a grounded revision of one field. Returns a PROPOSAL — nothing is written until
+ * the user accepts it, at which point it goes through the normal field-write path.
+ */
+export async function requestAiRevision(
+  documentId: string,
+  input: {
+    spanId: string;
+    fieldIndex: number;
+    action: string;
+    source: string;
+  },
+  options: { transport?: TexEditorTransport } = {},
+): Promise<AiProposalOutcome> {
+  const transport = options.transport ?? defaultTransport;
+  const response = await transport.fetch(
+    `/api/tex-documents/${encodeURIComponent(documentId)}/ai/revise`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input),
+    },
+  );
+
+  const body = (await response.json().catch(() => ({}))) as Record<
+    string,
+    unknown
+  >;
+  if (!response.ok) {
+    throw new Error(
+      typeof body.error === "string" ? body.error : "The AI request failed.",
+    );
+  }
+  return body as unknown as AiProposalOutcome;
+}
+
 /** The URL for a download. Export always follows a save, so the saved-source key matches. */
 export function exportDownloadUrl(documentId: string): string {
   return `/api/tex-documents/${encodeURIComponent(documentId)}/pdf?mode=export&download=true`;
