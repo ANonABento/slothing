@@ -128,6 +128,14 @@ export const SLOTHING_AI_TASKS: readonly SlothingAiTask[] = [
     bentoTaskId: "slothing.tailor_resume",
   },
   {
+    id: "studio.tex_cover_letter",
+    label: "Tex cover letter",
+    surface: "Studio",
+    route: "POST /api/tex-documents/cover-letter",
+    mode: "needs_llm",
+    bentoTaskId: "slothing.cover_letter_generate",
+  },
+  {
     id: "opportunities.match_analysis",
     label: "Opportunity match analysis",
     surface: "Opportunities",

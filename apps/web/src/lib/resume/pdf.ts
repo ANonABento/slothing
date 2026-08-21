@@ -9,6 +9,7 @@ import {
 import type { CoverLetterTemplate, ResumeTemplate } from "./template-types";
 import type { ContactInfo } from "@/types";
 import { escapeHtml } from "@/lib/html";
+import { splitParagraphs } from "@/lib/latex/cover-letter";
 
 export { COVER_LETTER_TEMPLATES, TEMPLATES };
 
@@ -37,12 +38,11 @@ export interface CoverLetterHTMLInput {
   date?: string;
 }
 
-export function splitCoverLetterParagraphs(content: string): string[] {
-  return content
-    .split(/\n{2,}/)
-    .map((paragraph) => paragraph.replace(/\s*\n\s*/g, " ").trim())
-    .filter(Boolean);
-}
+/**
+ * Re-exported from `lib/latex/cover-letter`, which survives this file's deletion.
+ * Kept here so existing callers keep working until they are migrated.
+ */
+export { splitParagraphs as splitCoverLetterParagraphs };
 
 export function generateCoverLetterHTML({
   content,
@@ -55,7 +55,7 @@ export function generateCoverLetterHTML({
 }: CoverLetterHTMLInput): string {
   const template = resolvedTemplate ?? getCoverLetterTemplate(templateId);
   const styles = template.styles;
-  const paragraphs = splitCoverLetterParagraphs(content);
+  const paragraphs = splitParagraphs(content);
   const title = [candidateName, company || jobTitle, "Cover Letter"]
     .filter(Boolean)
     .join(" - ");
