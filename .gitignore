@@ -74,7 +74,6 @@ evals/reports/
 apps/web/src/cloud/billing/stripe-config.json
 
 # Generated resume HTML/PDF output (per-user runtime artifacts).
-apps/web/public/resumes/
 
 # Loose UI-audit screenshots dropped at the repo root.
 /audit-iter-*.png

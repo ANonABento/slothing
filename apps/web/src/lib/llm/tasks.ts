@@ -112,16 +112,6 @@ export const SLOTHING_AI_TASKS: readonly SlothingAiTask[] = [
     bentoTaskId: "slothing.tailor_resume",
   },
   {
-    id: "opportunities.resume_generate",
-    label: "Opportunity resume generate",
-    surface: "Opportunities",
-    route: "POST /api/opportunities/[id]/generate",
-    mode: "optional_llm",
-    fallbackDescription:
-      "Falls back to a deterministic resume generated from the opportunity and profile bank.",
-    bentoTaskId: "slothing.tailor_resume",
-  },
-  {
     id: "opportunities.match_analysis",
     label: "Opportunity match analysis",
     surface: "Opportunities",
