@@ -11,7 +11,12 @@ import { z } from "zod";
 export const settingsSchema = z
   .object({
     font: z.enum(["LatinModern", "Times", "Helvetica", "Palatino"]),
-    fontsize: z.enum(["10pt", "10.5pt", "11pt", "12pt"]),
+    /**
+     * Restricted to the sizes \documentclass accepts. Half-point sizes need an
+     * extsizes-style class or a \fontsize override that \normalsize would undo, so
+     * they are deliberately out of scope for v1 rather than silently ignored.
+     */
+    fontsize: z.enum(["10pt", "11pt", "12pt"]),
     margin: z.string().regex(/^\d+(\.\d+)?(in|cm|mm|pt)$/),
     sectionskip: z.string().regex(/^\d+(\.\d+)?(pt|em|ex)$/),
     /** `r,g,b` with each channel 0–255. */
