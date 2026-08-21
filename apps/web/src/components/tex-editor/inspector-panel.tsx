@@ -10,7 +10,13 @@
  * The panel's width never changes with selection — a canvas that reflows on every click
  * is the cheapest-feeling thing an editor can do.
  */
-import { ChevronRight, Download, FileText, Settings2 } from "lucide-react";
+import {
+  ChevronRight,
+  Download,
+  FileText,
+  Info,
+  Settings2,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -229,7 +235,14 @@ export function InspectorPanel({
               <h3 className="font-mono text-[10px] uppercase tracking-[0.16em] text-ink-3">
                 Style
               </h3>
-              {settingsError ? (
+              {!model.editableSettings ? (
+                // An imported .tex brings its own preamble. Offering Font/Size/Margin
+                // here would write into a \slothingset block that does not exist.
+                <p className="text-[12.5px] leading-relaxed text-ink-3">
+                  This document carries its own styling, so these controls do
+                  not apply. Edit its preamble to change the look.
+                </p>
+              ) : settingsError ? (
                 <p className="text-[12.5px] text-destructive">
                   {settingsError}
                 </p>
@@ -278,19 +291,40 @@ export function InspectorPanel({
 
             <section className="px-2 py-4">
               <h3 className="px-2 pb-2 font-mono text-[10px] uppercase tracking-[0.16em] text-ink-3">
-                Structure · {pluralize(spanCount, "element")}
+                Structure
+                {spanCount > 0 ? ` · ${pluralize(spanCount, "element")}` : ""}
               </h3>
-              <div className="space-y-0.5">
-                {model.outline.map((node) => (
-                  <OutlineRow
-                    key={node.spanId}
-                    node={node}
-                    depth={0}
-                    selectedSpanId={selectedSpanId}
-                    onSelect={onSelect}
-                  />
-                ))}
-              </div>
+              {spanCount === 0 ? (
+                // An imported .tex renders perfectly but carries none of our macros, so
+                // there is nothing to click. Say why, rather than showing an empty list
+                // that reads like something is broken.
+                <div className="mx-2 flex gap-2 rounded-md border border-rule bg-page-2 p-3">
+                  <Info className="mt-0.5 h-4 w-4 shrink-0 text-ink-3" />
+                  <div className="space-y-1">
+                    <p className="text-[13px] font-medium text-ink">
+                      Not annotated yet
+                    </p>
+                    <p className="text-[12.5px] leading-relaxed text-ink-3">
+                      This document renders and downloads exactly as written,
+                      but Slothing cannot yet tell its sections and bullets
+                      apart — so clicking the preview and per-field AI are
+                      unavailable.
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-0.5">
+                  {model.outline.map((node) => (
+                    <OutlineRow
+                      key={node.spanId}
+                      node={node}
+                      depth={0}
+                      selectedSpanId={selectedSpanId}
+                      onSelect={onSelect}
+                    />
+                  ))}
+                </div>
+              )}
             </section>
           </div>
         )}

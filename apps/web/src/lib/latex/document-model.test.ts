@@ -111,6 +111,18 @@ describe("buildDocumentModel", () => {
     expect(buildDocumentModel(broken).byId.size).toBe(7);
   });
 
+  it("flags a document that carries no settings block as unstyleable", () => {
+    // An imported third-party .tex brings its own preamble; writing settings into it
+    // would throw, so the panel must not offer the controls.
+    const imported = String.raw`\documentclass{article}
+\usepackage{titlesec}
+\begin{document}
+\section{Experience}
+\end{document}`;
+    expect(buildDocumentModel(imported).editableSettings).toBe(false);
+    expect(buildDocumentModel(DOC).editableSettings).toBe(true);
+  });
+
   it("returns an identical object for an identical source", () => {
     expect(buildDocumentModel(DOC)).toBe(buildDocumentModel(DOC));
   });

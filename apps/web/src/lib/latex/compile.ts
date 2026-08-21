@@ -31,6 +31,23 @@ export interface CompileInput {
   source: string;
   mode: CompileMode;
   timeoutMs?: number;
+  /**
+   * Allow Tectonic to fetch packages it does not already have cached.
+   *
+   * Every routine compile runs sealed (`--only-cached`), because a preview loop must never
+   * depend on the network. An IMPORTED document is different: it is someone else's .tex and
+   * may legitimately use a package our warm bundle has never seen, which would otherwise
+   * fail with a confusing missing-file error.
+   *
+   * The reasoning for why this is safe: a LaTeX document cannot direct Tectonic at an
+   * arbitrary URL. Without shell-escape — which `--untrusted` disables unconditionally —
+   * the only thing a document influences is which PACKAGE NAMES get looked up in
+   * Tectonic's own bundle. Every other sandbox layer (untrusted mode, the temp-dir jail,
+   * the wall-clock timeout, the output cap) still applies.
+   *
+   * Use it ONLY for one-off, user-initiated imports. Never for the preview loop.
+   */
+  allowFetch?: boolean;
 }
 
 export interface CompileLogEntry {
@@ -215,15 +232,10 @@ export async function compile(input: CompileInput): Promise<CompileResult> {
     await writeFile(join(dir, "main.tex"), input.source, "utf8");
     await writeFile(join(dir, "slothing.sty"), styleFor(input.mode), "utf8");
 
-    const args = [
-      "-X",
-      "compile",
-      "--untrusted",
-      "--only-cached",
-      "--outfmt",
-      "pdf",
-      "--keep-logs",
-    ];
+    const args = ["-X", "compile", "--untrusted"];
+    // Sealed by default; see CompileInput.allowFetch for why import is the one exception.
+    if (!input.allowFetch) args.push("--only-cached");
+    args.push("--outfmt", "pdf", "--keep-logs");
     if (input.mode === "preview") args.push("--synctex");
     args.push("main.tex");
 

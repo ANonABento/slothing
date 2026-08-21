@@ -99,6 +99,11 @@ function splitPairs(body: string): Record<string, string> {
   return out;
 }
 
+/** Does this document carry a \slothingset block at all? */
+export function hasSettingsBlock(source: string): boolean {
+  return locateBlock(source) !== null;
+}
+
 /**
  * Read the settings block. Missing keys fall back to defaults; unknown keys throw, per
  * the strict schema.
