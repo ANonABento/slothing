@@ -167,7 +167,11 @@ and are dropped from *use* in the deletion PR (columns stay; migrations are addi
 `sha256(source + sty_version + mode)`, with a DB-tracked pointer. Explicitly:
 
 - Not in a public directory. Served only through an authed, user-scoped route
-  (`GET /api/documents/[id]/pdf`).
+  (`GET /api/tex-documents/[id]/pdf`).
+
+  **Namespace note:** `/api/documents/*` was already taken by the uploaded-documents /
+  bank ingestion API (including `/api/documents/[id]/preview/pdf`). The LaTeX document API
+  therefore lives at **`/api/tex-documents/*`**, matching the `tex_documents` table.
 - Content-addressed, evictable, and fully regenerable — losing the cache costs a recompile.
 
 This is deliberately *unlike* the retired `/api/opportunities/[id]/generate`, which wrote
@@ -463,7 +467,7 @@ the last old path on the day the new one takes over.
 | 1 | Deletion part 1 (§13) ✅ | CI green; no user-facing regression — the opportunity drawer's fake-PDF button is replaced by a link to Studio for that opportunity |
 | 2 | Contract + `slothing.sty` + compile service + sandbox + cache ✅ | `compile()` produces a PDF from a fixture; every sandbox limit has a test that trips it |
 | 3 | Span hit-map spike (§6) ✅ | DONE — Option A proven and recorded in §6 |
-| 4 | Generation: bank + template → annotated `.tex` → PDF; `tex_documents` store | A document generates, compiles, downloads, and round-trips through re-upload with IDs intact |
+| 4 | Generation: bank + template → annotated `.tex` → PDF; `tex_documents` store ✅ | A document generates, compiles, downloads, and round-trips through re-upload with IDs intact |
 | 5 | Inspector editor: PDF canvas, click-to-select, field edit, settings panel, recompile loop | Click a bullet, edit it, see the PDF update; a failed compile keeps the last good PDF on screen |
 | 6 | AI span actions + reviewable diff for batch tailoring | Actions are rate-limited, grounded, validated against the inline subset, and revertible |
 | 7 | Import: `.tex` upload, annotation pass, PDF→bank | An un-annotated Jake's Resume compiles, then annotates via a reviewable diff |

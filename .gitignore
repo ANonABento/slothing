@@ -84,3 +84,6 @@ apps/web/src/cloud/billing/stripe-config.json
 /p2-*.png
 apps/web/evals/reports/
 .audit-fixtures/
+
+# Compiled LaTeX PDF cache (derived, regenerable)
+apps/web/.cache/
