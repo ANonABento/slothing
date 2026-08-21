@@ -40,6 +40,8 @@ import { pluralize } from "@/lib/text/pluralize";
 import { cn } from "@/lib/utils";
 
 import type { AiProposal } from "./ai-actions";
+import { AnnotatePrompt } from "./annotate-prompt";
+import type { AnnotateOutcome } from "./tex-editor-api";
 import { FieldEditor } from "./field-editor";
 
 const FONTS: DocumentSettings["font"][] = [
@@ -71,6 +73,8 @@ export interface InspectorPanelProps {
     fieldIndex: number,
     action: string,
   ) => Promise<AiProposal | null>;
+  onRequestAnnotate?: () => Promise<AnnotateOutcome>;
+  onApplyAnnotation?: (annotated: string) => Promise<void> | void;
 }
 
 function OutlineRow({
@@ -158,6 +162,8 @@ export function InspectorPanel({
   onDownload,
   downloadDisabled,
   onRequestAi,
+  onRequestAnnotate,
+  onApplyAnnotation,
 }: InspectorPanelProps) {
   const fields = fieldsFor(model, selectedSpanId);
   const trail = breadcrumbFor(model, selectedSpanId);
@@ -310,6 +316,14 @@ export function InspectorPanel({
                       apart — so clicking the preview and per-field AI are
                       unavailable.
                     </p>
+                    {onRequestAnnotate && onApplyAnnotation ? (
+                      <div className="pt-1">
+                        <AnnotatePrompt
+                          onRequest={onRequestAnnotate}
+                          onAccept={onApplyAnnotation}
+                        />
+                      </div>
+                    ) : null}
                   </div>
                 </div>
               ) : (

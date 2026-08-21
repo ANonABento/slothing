@@ -138,6 +138,16 @@ export const SLOTHING_STY = String.raw`%% slothing.sty — the Slothing document
 
 \newcommand{\slothingSkills}[2][]{\noindent \slothing@span{#1}{#2}\par\vspace{0.3em}}
 
+%% --- annotation of imported documents ------------------------------------------
+%% \slothingMark renders its content EXACTLY as given and adds nothing visual — it only
+%% carries the id so the span becomes addressable.
+%%
+%% The structural macros above cannot do this job. \slothingItem emits its own \item, so
+%% wrapping a bullet that already lives inside someone else's list produces a nested \item
+%% and breaks the document. A neutral anchor is the only safe way to annotate a .tex we
+%% did not generate.
+\newcommand{\slothingMark}[2][]{\slothing@span{#1}{#2}}
+
 %% Entry bodies wrap their items so \slothingItem always has a list to land in.
 \newenvironment{slothingItems}
   {\begin{itemize}[leftmargin=1.2em,itemsep=0.1em,topsep=0.2em,parsep=0pt]}
@@ -153,4 +163,4 @@ export const SLOTHING_STY = String.raw`%% slothing.sty — the Slothing document
 `;
 
 /** Bumped whenever the macros change; participates in the compile cache key. */
-export const STY_VERSION = 2;
+export const STY_VERSION = 3;

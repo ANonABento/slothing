@@ -220,6 +220,50 @@ export async function requestAiRevision(
   return body as unknown as AiProposalOutcome;
 }
 
+export type AnnotateOutcome =
+  | {
+      ok: true;
+      annotated: string;
+      spanCount: number;
+      summary: string;
+    }
+  | {
+      ok: false;
+      reason: string;
+      issues: Array<{ code: string; message: string }>;
+    };
+
+/**
+ * Ask for structural annotation of an imported document. Returns a PROPOSAL — the
+ * document is only changed if the user accepts it.
+ */
+export async function requestAnnotation(
+  documentId: string,
+  source: string,
+  options: { transport?: TexEditorTransport } = {},
+): Promise<AnnotateOutcome> {
+  const transport = options.transport ?? defaultTransport;
+  const response = await transport.fetch(
+    `/api/tex-documents/${encodeURIComponent(documentId)}/annotate`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ source }),
+    },
+  );
+
+  const body = (await response.json().catch(() => ({}))) as Record<
+    string,
+    unknown
+  >;
+  if (!response.ok) {
+    throw new Error(
+      typeof body.error === "string" ? body.error : "Annotation failed.",
+    );
+  }
+  return body as unknown as AnnotateOutcome;
+}
+
 /** The URL for a download. Export always follows a save, so the saved-source key matches. */
 export function exportDownloadUrl(documentId: string): string {
   return `/api/tex-documents/${encodeURIComponent(documentId)}/pdf?mode=export&download=true`;

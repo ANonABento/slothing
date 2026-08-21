@@ -37,8 +37,10 @@ import {
   fetchPdfByKey,
   rateLimitDelayMs,
   requestAiRevision,
+  requestAnnotation,
   saveDocument,
   type AiProposalOutcome,
+  type AnnotateOutcome,
   type TexEditorTransport,
 } from "./tex-editor-api";
 import {
@@ -91,6 +93,10 @@ export interface UseTexEditorResult {
     fieldIndex: number,
     action: string,
   ) => Promise<AiProposalOutcome>;
+  /** Ask for structural annotation of an imported document. Returns a proposal. */
+  requestAnnotate: () => Promise<AnnotateOutcome>;
+  /** Apply an accepted annotation and immediately persist + recompile. */
+  applyAnnotation: (annotated: string) => Promise<void>;
   retryCompile: () => void;
   setSplitRatio: (ratio: number) => void;
   setZoom: (zoom: number) => void;
@@ -469,6 +475,29 @@ export function useTexEditor(
     [document.id],
   );
 
+  const requestAnnotate = useCallback(
+    () =>
+      requestAnnotation(document.id, stateRef.current.document.source, {
+        transport: runtimeRef.current.transport,
+      }),
+    [document.id],
+  );
+
+  /**
+   * Accepting an annotation is a structural change to the whole document, so it commits
+   * immediately — one version row, one clear point to revert to.
+   */
+  const applyAnnotation = useCallback(
+    async (annotatedSource: string) => {
+      dispatch({ type: "SET_SOURCE", source: annotatedSource, at: now() });
+      await runSave("annotated");
+      // The whole structure changed, so re-render straight away rather than waiting for
+      // the next edit to trip the debounce.
+      void runCompile();
+    },
+    [now, runCompile, runSave],
+  );
+
   const compileNow = useCallback(() => {
     if (compileTimer.current) {
       clearTimeout(compileTimer.current);
@@ -529,6 +558,8 @@ export function useTexEditor(
     commit,
     compileNow,
     requestAi,
+    requestAnnotate,
+    applyAnnotation,
     retryCompile,
     setSplitRatio: useCallback(
       (ratio: number) => dispatch({ type: "SET_SPLIT_RATIO", ratio }),

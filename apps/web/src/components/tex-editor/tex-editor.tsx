@@ -122,6 +122,8 @@ export function TexEditor({ document, runtime }: TexEditorProps) {
           onDownload={() => void handleDownload()}
           downloadDisabled={isCompileSuspended(state)}
           onRequestAi={editor.requestAi}
+          onRequestAnnotate={editor.requestAnnotate}
+          onApplyAnnotation={editor.applyAnnotation}
         />
       </div>
     </div>
