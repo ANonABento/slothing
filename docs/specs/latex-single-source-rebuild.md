@@ -201,10 +201,23 @@ do.** A downloaded resume must contain nothing but the resume.
 **Tectonic.** Self-contained Rust/XeTeX, on-demand zipped bundles, ~95% smaller than a full
 TeX Live image, no shell-escape implementation to defend against, and `--synctex` support.
 
-Invocation: `tectonic -X compile --untrusted --synctex --outfmt pdf`.
+Invocation: `tectonic -X compile --untrusted --only-cached --synctex --outfmt pdf`.
 
-The bundle is pre-warmed into the image / cache at build time. A cold bundle fetch on a
-user's first compile is unacceptable latency and an unnecessary network dependency.
+The bundle is pre-warmed into the image / cache at build time, and `--only-cached` then
+pins the compile to that cache so it never reaches the network. **Measured on Tectonic
+0.17.0 (x86_64-linux-musl), a representative resume preamble** (geometry + enumitem +
+titlesec + hyperref):
+
+| | measured |
+| --- | --- |
+| Cold compile (bundle download) | 39s |
+| Warm compile | **0.54s** |
+| `--only-cached`, no network | 0.54s |
+| Bundle cache on disk | 43 MB |
+
+This supersedes the earlier "1–3s typical" estimate in §2 — sub-second warm compiles put the
+edit loop comfortably inside the debounce window, and the cold/warm gap (72×) is what makes
+pre-warming mandatory rather than an optimisation.
 
 ### 5.3 Sandbox
 
@@ -214,6 +227,12 @@ Compiling user-supplied LaTeX is arbitrary-code-execution territory. Layers, in 
    other settings, including `-Z shell-escape`. Also set `TECTONIC_UNTRUSTED_MODE=1` as
    defence in depth (noting it is defeatable only by something already executing, which
    `--untrusted` prevents).
+
+   **Verified behaviour:** under `--untrusted`, Tectonic **silently disables** `\write18`
+   rather than raising an error — the document compiles and the shell command simply never
+   runs. Sandbox tests must therefore assert the **absence of the side effect**, not a
+   thrown error. A test that expects a compile failure here passes for the wrong reason
+   today and would keep passing if the protection were removed.
 2. **Process limits** — wall-clock timeout (20s default), memory cap, output-size cap, page
    cap. A compile that exceeds any limit is killed and surfaced as a user-facing error.
 3. **Filesystem jail** — a fresh temp dir per compile containing only `main.tex`,
@@ -460,7 +479,7 @@ the last old path on the day the new one takes over.
 | Risk | Severity | Response |
 | --- | --- | --- |
 | Span hit-map: none of A/B/C works cleanly | High | Gated spike (§6) before any editor work. C is the guaranteed floor. |
-| Compile latency makes editing feel sluggish | Medium | Debounce + cache + stale-preview-never-blanks. Measure p50/p95 in PR 5 and set a budget. |
+| Compile latency makes editing feel sluggish | Low (was Medium) | Measured 0.54s warm on a representative preamble (§5.2). Still: debounce + cache + stale-preview-never-blanks, and re-measure p50/p95 on a real full-page resume in PR 5. |
 | Self-hosters without Tectonic | Medium | Graceful degradation to the Overleaf zip (§5.6). Never a second engine. |
 | Sandbox escape | High | `--untrusted` + process limits + jail + no network, each with a test that trips it (§16). |
 | Non-LaTeX users lose their existing look | Medium | Named in §2.1. Template gallery must be genuinely good — it is the mitigation, so PR 10 is not optional polish. |
