@@ -121,6 +121,7 @@ export function TexEditor({ document, runtime }: TexEditorProps) {
           onCommit={() => void editor.commit("field edit")}
           onDownload={() => void handleDownload()}
           downloadDisabled={isCompileSuspended(state)}
+          onRequestAi={editor.requestAi}
         />
       </div>
     </div>

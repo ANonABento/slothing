@@ -33,6 +33,7 @@ import type { InlineViolation } from "@/lib/latex/inline";
 import { pluralize } from "@/lib/text/pluralize";
 import { cn } from "@/lib/utils";
 
+import type { AiProposal } from "./ai-actions";
 import { FieldEditor } from "./field-editor";
 
 const FONTS: DocumentSettings["font"][] = [
@@ -59,6 +60,11 @@ export interface InspectorPanelProps {
   onCommit: () => void;
   onDownload: () => void;
   downloadDisabled?: boolean;
+  onRequestAi?: (
+    spanId: string,
+    fieldIndex: number,
+    action: string,
+  ) => Promise<AiProposal | null>;
 }
 
 function OutlineRow({
@@ -145,6 +151,7 @@ export function InspectorPanel({
   onCommit,
   onDownload,
   downloadDisabled,
+  onRequestAi,
 }: InspectorPanelProps) {
   const fields = fieldsFor(model, selectedSpanId);
   const trail = breadcrumbFor(model, selectedSpanId);
@@ -206,6 +213,12 @@ export function InspectorPanel({
                     onEditField(selectedSpanId, field.index, write)
                   }
                   onCommit={onCommit}
+                  onRequestAi={
+                    onRequestAi
+                      ? (action) =>
+                          onRequestAi(selectedSpanId, field.index, action)
+                      : undefined
+                  }
                 />
               ))
             )}

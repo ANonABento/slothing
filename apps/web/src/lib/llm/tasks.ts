@@ -112,6 +112,14 @@ export const SLOTHING_AI_TASKS: readonly SlothingAiTask[] = [
     bentoTaskId: "slothing.tailor_resume",
   },
   {
+    id: "studio.tex_span_revise",
+    label: "Tex editor span revise",
+    surface: "Studio",
+    route: "POST /api/tex-documents/[id]/ai/revise",
+    mode: "needs_llm",
+    bentoTaskId: "slothing.tailor_resume",
+  },
+  {
     id: "opportunities.match_analysis",
     label: "Opportunity match analysis",
     surface: "Opportunities",
