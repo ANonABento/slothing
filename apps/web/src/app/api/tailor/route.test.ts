@@ -232,7 +232,7 @@ describe("/api/tailor route contract", () => {
     });
   });
 
-  it("renders a generated resume through the unified template dispatch", async () => {
+  it("returns .tex source for a generated resume, not HTML", async () => {
     setAuthSuccess();
     const resume = {
       contact: { name: "Riley Chen" },
@@ -257,17 +257,15 @@ describe("/api/tailor route contract", () => {
     );
 
     expect(response.status).toBe(200);
-    expect(
-      templateRenderMocks.renderResumeHtmlForTemplate,
-    ).toHaveBeenCalledWith(
-      expect.objectContaining({ summary: "Product engineer" }),
-      "imported-1",
-      expect.any(String),
-    );
-    await expect(response.json()).resolves.toMatchObject({
-      success: true,
-      html: "<article>Tailor Resume</article>",
-    });
+
+    // The HTML render served the TipTap editor, which the rebuild deleted. A tailored
+    // résumé is a .tex document now.
+    const body = await response.json();
+    expect(body.success).toBe(true);
+    expect(body).not.toHaveProperty("html");
+    expect(body.source).toContain("\\usepackage{slothing}");
+    expect(body.source).toContain("Riley Chen");
+    expect(body.source).toContain("Product engineer");
   });
 
   it("generates from the deterministic bank path without a provider", async () => {

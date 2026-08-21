@@ -23,8 +23,8 @@ import { nowEpoch } from "@/lib/format/time";
 import { analyzeJobFit, extractKeywords } from "@/lib/tailor/analyze";
 import { generateFromBank } from "@/lib/tailor/generate";
 import { normalizeTailorSettings } from "@/lib/tailor/settings";
-import { TEMPLATES } from "@/lib/resume/pdf";
-import { renderResumeHtmlForTemplate } from "@/lib/resume/render-resume";
+import { createTexDocument } from "@/lib/db/tex-documents";
+import { tailoredResumeToTex } from "@/lib/latex/from-tailored";
 import { isTailoredResume } from "@/lib/builder/tailored-resume-api";
 import { trackActivationEvent } from "@/lib/db/product-analytics";
 import { EXPERIMENTS, getVariant } from "@/lib/experiments";
@@ -40,13 +40,10 @@ export const dynamic = "force-dynamic";
  * GET /api/tailor — returns available templates
  */
 export async function GET() {
-  return NextResponse.json({
-    templates: TEMPLATES.map((t) => ({
-      id: t.id,
-      name: t.name,
-      description: t.description,
-    })),
-  });
+  // The grammar-template system this listed is gone. A curated .tex gallery replaces it
+  // (spec §10); until then there is nothing to offer, and an empty list is the honest
+  // answer rather than a stale one.
+  return NextResponse.json({ templates: [] });
 }
 
 /**
@@ -80,13 +77,11 @@ export async function POST(request: NextRequest) {
         );
       }
 
+      // The old HTML render served the TipTap editor, which no longer exists. A tailored
+      // résumé is a .tex document now, so this returns the source instead.
       return NextResponse.json({
         success: true,
-        html: await renderTailoredResumeHtml(
-          body.resume,
-          templateId,
-          authResult.userId,
-        ),
+        source: tailoredResumeToTex(body.resume),
       });
     }
 
@@ -215,12 +210,7 @@ export async function POST(request: NextRequest) {
       llmConfig,
     );
 
-    // Generate HTML
-    const html = await renderTailoredResumeHtml(
-      tailoredResume,
-      templateId,
-      authResult.userId,
-    );
+    const source = tailoredResumeToTex(tailoredResume);
 
     // Save a job record so it appears in the job tracker, unless this run
     // came from an existing opportunity in the bank.
@@ -240,6 +230,15 @@ export async function POST(request: NextRequest) {
       ));
 
     // Save the generated resume
+    // A tailored résumé is now a real editable document, not just a stored blob.
+    const texDocument = await createTexDocument({
+      userId: authResult.userId,
+      kind: "resume",
+      title: `${company} — ${jobTitle}`.trim(),
+      source,
+      opportunityId: existingOpportunity?.id ?? null,
+    });
+
     const savedResume = await saveGeneratedResume(
       job.id,
       templateId,
@@ -302,7 +301,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      html,
+      texDocumentId: texDocument.id,
       resume: tailoredResume,
       baseResume,
       savedResume,
@@ -331,12 +330,4 @@ export async function POST(request: NextRequest) {
       { status: 500 },
     );
   }
-}
-
-async function renderTailoredResumeHtml(
-  resume: TailoredResume,
-  templateId: string,
-  userId: string,
-): Promise<string> {
-  return renderResumeHtmlForTemplate(resume, templateId, userId);
 }
