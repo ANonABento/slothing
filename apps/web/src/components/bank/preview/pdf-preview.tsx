@@ -14,6 +14,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
+import {
+  loadPdfjs,
+  type PdfJsDocument,
+  type PdfJsViewport,
+} from "@/lib/pdf/load-pdfjs";
+
 import { HighlightLayer, type HighlightInput } from "./highlight-layer";
 
 type PdfPreviewTab = "pdf" | "source" | "diagnostics";
@@ -47,67 +53,6 @@ interface PdfPreviewProps {
    * P1.6 "View in document" link.
    */
   onRegisterNavigator?: (navigator: (entryId: string) => void) => () => void;
-}
-
-interface PdfJsViewport {
-  width: number;
-  height: number;
-}
-
-interface PdfJsPage {
-  getViewport: (opts: { scale: number }) => PdfJsViewport;
-  render: (opts: {
-    canvasContext: CanvasRenderingContext2D;
-    viewport: PdfJsViewport;
-  }) => { promise: Promise<void> };
-}
-
-interface PdfJsDocument {
-  numPages: number;
-  getPage: (n: number) => Promise<PdfJsPage>;
-  destroy?: () => Promise<void> | void;
-}
-
-interface PdfJsModule {
-  getDocument: (opts: { data: Uint8Array; verbosity?: number }) => {
-    promise: Promise<PdfJsDocument>;
-  };
-  GlobalWorkerOptions?: { workerSrc: string };
-}
-
-let pdfjsPromise: Promise<PdfJsModule> | null = null;
-const PDFJS_MODULE_PATH = "/pdfjs/pdf.mjs";
-
-/**
- * Load pdfjs-dist once and configure its worker. The non-legacy build is the
- * browser-targeted ESM module. Worker URL is served from `/pdfjs/`-prefixed
- * public assets — `new URL(..., import.meta.url)` doesn't resolve through
- * Next.js's webpack for ESM packages, and we don't want to fall back to
- * "fake worker" mode (which warns loudly and runs PDF parsing on the main
- * thread, blocking the modal).
- *
- * Loading the legacy build (`pdfjs-dist/legacy/build/pdf.mjs`) in Next.js's
- * (app-pages-browser) layer triggers `Object.defineProperty called on
- * non-object` inside its webpack-shim header — we steer clear of it here.
- */
-function loadPdfjs(): Promise<PdfJsModule> {
-  if (!pdfjsPromise) {
-    // `webpackIgnore: true` tells Next.js's webpack not to re-bundle the
-    // pdfjs module — the browser fetches the ESM directly from `/public`.
-    // Re-bundling triggered a webpack-runtime collision (pdfjs's own
-    // `__webpack_require__.r(...)` shim called inside Next's webpack
-    // runtime) that threw `Object.defineProperty called on non-object`.
-    pdfjsPromise = import(
-      /* @vite-ignore */ /* webpackIgnore: true */ PDFJS_MODULE_PATH
-    ).then((mod) => {
-      const pdfjs = mod as unknown as PdfJsModule;
-      if (pdfjs.GlobalWorkerOptions) {
-        pdfjs.GlobalWorkerOptions.workerSrc = "/pdfjs/pdf.worker.mjs";
-      }
-      return pdfjs;
-    });
-  }
-  return pdfjsPromise;
 }
 
 type LoadState =
