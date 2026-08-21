@@ -228,6 +228,41 @@ describe("draft mirror", () => {
   });
 });
 
+describe("first render", () => {
+  // Regression: the shell originally called `commit()` on mount, which only flushes a
+  // PENDING debounce. With no timer set there was nothing to flush, so the document never
+  // compiled and the preview stayed blank. Caught in the browser, not by the suite.
+  it("compileNow compiles without requiring an edit first", async () => {
+    const t = makeTransport();
+    const { result } = renderHook(() => useTexEditor(DOCUMENT, t.runtime));
+
+    act(() => {
+      result.current.compileNow();
+    });
+
+    await waitFor(() => expect(t.compiles().length).toBe(1));
+  });
+
+  // Regression: pending bytes were exposed from a ref. Mutating a ref does not re-render,
+  // so the canvas never received them and the PDF never appeared.
+  it("exposes fetched bytes as state so the canvas actually re-renders", async () => {
+    const t = makeTransport();
+    const { result } = renderHook(() => useTexEditor(DOCUMENT, t.runtime));
+
+    expect(result.current.pendingBytes).toBeNull();
+
+    act(() => {
+      result.current.compileNow();
+    });
+
+    await waitFor(() => {
+      expect(result.current.pendingBytes).not.toBeNull();
+    });
+    expect(result.current.pendingBytes?.key).toBe(t.key);
+    expect(result.current.pendingBytes?.bytes.byteLength).toBe(3);
+  });
+});
+
 describe("field editing", () => {
   it("rejects a plain write into a rich field and reports it", async () => {
     const rich = SOURCE.replace(

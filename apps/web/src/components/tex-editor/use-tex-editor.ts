@@ -13,7 +13,14 @@
  *
  * `nowIso()` is called only here, so the reducer stays pure and fixed-clock testable.
  */
-import { useCallback, useEffect, useMemo, useReducer, useRef } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useReducer,
+  useRef,
+  useState,
+} from "react";
 
 import { nowIso } from "@/lib/format/time";
 import {
@@ -74,6 +81,8 @@ export interface UseTexEditorResult {
   ) => void;
   /** Commit boundary — blur, Cmd+S, structural edit. Flushes both loops. */
   commit: (label?: string) => Promise<void>;
+  /** Compile immediately, bypassing the debounce. Used for the first render. */
+  compileNow: () => void;
   retryCompile: () => void;
   setSplitRatio: (ratio: number) => void;
   setZoom: (zoom: number) => void;
@@ -118,7 +127,14 @@ export function useTexEditor(
   const compileInFlight = useRef(false);
   const compilePending = useRef(false);
   const seq = useRef({ compile: 0, save: 0 });
-  const bytesRef = useRef<{ key: string; bytes: Uint8Array } | null>(null);
+  /**
+   * STATE, not a ref: the canvas receives these bytes as a prop, and a ref mutation does
+   * not re-render, so the preview would stay blank forever.
+   */
+  const [pendingBytes, setPendingBytes] = useState<{
+    key: string;
+    bytes: Uint8Array;
+  } | null>(null);
 
   const model = useMemo(
     () => buildDocumentModel(state.document.source),
@@ -209,7 +225,7 @@ export function useTexEditor(
       });
 
       if (bytes.ok) {
-        bytesRef.current = { key: outcome.key, bytes: bytes.bytes };
+        setPendingBytes({ key: outcome.key, bytes: bytes.bytes });
       } else if (bytes.kind === "stale_key") {
         // The entry was evicted. Recompiling regenerates it.
         compilePending.current = true;
@@ -429,6 +445,14 @@ export function useTexEditor(
     [runCompile, runSave],
   );
 
+  const compileNow = useCallback(() => {
+    if (compileTimer.current) {
+      clearTimeout(compileTimer.current);
+      compileTimer.current = null;
+    }
+    void runCompile();
+  }, [runCompile]);
+
   const retryCompile = useCallback(() => {
     dispatch({ type: "RESUME_COMPILING" });
     void runCompile();
@@ -479,6 +503,7 @@ export function useTexEditor(
     editSettings,
     select,
     commit,
+    compileNow,
     retryCompile,
     setSplitRatio: useCallback(
       (ratio: number) => dispatch({ type: "SET_SPLIT_RATIO", ratio }),
@@ -490,7 +515,7 @@ export function useTexEditor(
     ),
     notifyRendered,
     notifyRenderFailed,
-    pendingBytes: bytesRef.current,
+    pendingBytes,
   };
 }
 
