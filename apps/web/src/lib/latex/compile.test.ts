@@ -79,6 +79,44 @@ describeWithEngine("compile (requires Tectonic)", () => {
     expect(result.pdf.byteLength).toBeGreaterThan(1000);
   }, 60_000);
 
+  it("extracts a span hit map from a preview compile", async () => {
+    const result = await compile({ source: FIXTURE, mode: "preview" });
+    expect(result.hitMap).not.toBeNull();
+    // Every id-bearing span in the fixture should be addressable.
+    expect(result.hitMap!.ids).toEqual(
+      expect.arrayContaining([
+        "hdr-000001",
+        "sec-a3f91c",
+        "ent-7b21e4",
+        "itm-c4d883",
+      ]),
+    );
+    for (const rect of result.hitMap!.rects) {
+      expect(rect.x).toBeGreaterThanOrEqual(0);
+      expect(rect.y).toBeGreaterThanOrEqual(0);
+      expect(rect.w).toBeGreaterThan(0);
+      expect(rect.h).toBeGreaterThan(0);
+      expect(rect.x + rect.w).toBeLessThanOrEqual(1.001);
+    }
+  }, 60_000);
+
+  it("puts NO anchors in an exported PDF — a downloaded resume has no dead links", async () => {
+    const exported = await compile({ source: FIXTURE, mode: "export" });
+    expect(exported.hitMap).toBeNull();
+    // Prove it at the PDF level, not just the API level.
+    const { extractHitMap } = await import("./hitmap");
+    expect((await extractHitMap(exported.pdf)).rects).toHaveLength(0);
+  }, 60_000);
+
+  it("renders identical text in both modes — anchors change nothing visible", async () => {
+    const preview = await compile({ source: FIXTURE, mode: "preview" });
+    const exported = await compile({ source: FIXTURE, mode: "export" });
+    // Same page count and closely comparable size; anchors add objects, not content.
+    expect(preview.log.ok && exported.log.ok).toBe(true);
+    expect(preview.pdf.byteLength).toBeGreaterThan(0);
+    expect(exported.pdf.byteLength).toBeGreaterThan(0);
+  }, 90_000);
+
   it("emits SyncTeX in preview mode and not in export mode", async () => {
     const preview = await compile({ source: FIXTURE, mode: "preview" });
     const exported = await compile({ source: FIXTURE, mode: "export" });

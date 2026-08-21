@@ -265,21 +265,48 @@ If no Tectonic binary is present (a self-hoster who did not install it), the app
 break: document editing works, the preview shows an explanatory state, and every download
 becomes the Overleaf zip (§3.5). We never ship a second render engine to paper over this.
 
-## 6. The span hit-map — SPIKE, decision required before §7
+## 6. The span hit-map — DECIDED (PR 3 spike)
 
-To click an element in the PDF and resolve it to a field, we need a map from PDF page
-coordinates to span IDs. Three viable mechanisms, none yet proven in this stack:
+**Decision: Option A — preview-only link annotations, extracted server-side.** Proven
+against real compiled documents; §7 may build on it.
 
-| Option | Mechanism | Upside | Risk |
-| --- | --- | --- | --- |
-| **A. Preview-only link annotations** | Wrap each span in an invisible link annotation carrying its ID; PDF.js exposes annotation rects directly | No parsing at all; hover rects for free | PDF.js may sanitise custom URI schemes; links across line breaks can be finicky. Preview-only, so no pollution of exported PDFs |
-| **B. `\pdfsavepos` aux map** | Emit span ID → page + x/y to an aux stream during compile; read after | Exact, structured, engine-controlled, no PDF pollution in any mode | Bounding boxes across line breaks need care; XeTeX primitive behaviour needs verifying |
-| **C. SyncTeX parse** | Parse `.synctex.gz` ourselves for reverse sync | Standard, engine-supported, already enabled | We must write a SyncTeX parser (~300–500 lines); granularity is line/box, so it needs the macro map anyway to resolve identity |
+Preview compiles wrap every id-bearing span in an invisible link annotation carrying
+`slothing://<id>`. The compile service reads those annotations back out of the PDF with
+**pdf-lib, server-side**, and returns a plain JSON map of normalised rectangles. The client
+receives rectangles and never inspects the PDF itself.
 
-**Preference order: A, then B, then C.** C is the guaranteed-to-work floor.
+**Why server-side extraction is the part that matters.** The risk that made Option A
+uncertain was PDF.js sanitising unknown URI schemes in its own annotation layer. Reading
+the raw object graph with pdf-lib sidesteps that question entirely — the URI is simply
+present in the annotation dictionary. The client's dependency shrinks from "PDF.js must
+surface a custom scheme" to "render these rectangles."
 
-**This is a gated spike.** A small PR proves one mechanism against a real compiled document
-before the editor phase starts. Do not begin §7 on an assumption here.
+**Measured on a real compile:**
+
+| Finding | Result |
+| --- | --- |
+| Annotations survive compilation | Yes — `/Subtype /Link`, `/A << /S /URI /URI (slothing://…) >>`, `/Rect` |
+| Custom `slothing://` scheme preserved | Yes, verbatim |
+| Span wrapped across two lines | **Two rects, one id** — hyperref emits one annotation per line box |
+| Export mode | Zero annotations, asserted at the PDF level |
+
+The line-wrap behaviour was the other open risk and it resolves in our favour: multiple
+rects per span is exactly what an overlay wants, and it comes free.
+
+**Mode split.** Anchors are enabled by appending `\slothing@anchorstrue` to the
+`slothing.sty` written into the jail — not by rewriting the document. The compiled source
+is therefore byte-identical in both modes, so a log line number always refers to the same
+line of the stored document. An exported resume contains no annotations at all; a reader
+must never find that every bullet is a dead `slothing://` link.
+
+**Nesting.** Only an entry's *header* is anchored, never its body — nested items anchor
+themselves, and non-overlapping rects avoid z-order arbitration. Where rects do overlap,
+`hitTest` picks the **smallest**, so a nested span always beats its container.
+
+**Options B and C are not needed.** `\pdfsavepos` (an aux-file position map) and parsing
+`.synctex.gz` are both retired for this purpose. SyncTeX output stays enabled in preview
+mode because the editable source view (§7.5, v2) will want source↔PDF sync, but nothing
+depends on us writing a SyncTeX parser.
 
 ## 7. Editor architecture
 
@@ -433,9 +460,9 @@ the last old path on the day the new one takes over.
 
 | PR | Scope | Acceptance |
 | --- | --- | --- |
-| 1 | Deletion part 1 (§13) | CI green; no user-facing regression — the opportunity drawer's fake-PDF button is replaced by a link to Studio for that opportunity |
-| 2 | Contract + `slothing.sty` + compile service + sandbox + cache | `compile()` produces a PDF from a fixture; every sandbox limit has a test that trips it |
-| 3 | Span hit-map spike (§6) | One mechanism proven against a real compiled document; decision recorded in this doc |
+| 1 | Deletion part 1 (§13) ✅ | CI green; no user-facing regression — the opportunity drawer's fake-PDF button is replaced by a link to Studio for that opportunity |
+| 2 | Contract + `slothing.sty` + compile service + sandbox + cache ✅ | `compile()` produces a PDF from a fixture; every sandbox limit has a test that trips it |
+| 3 | Span hit-map spike (§6) ✅ | DONE — Option A proven and recorded in §6 |
 | 4 | Generation: bank + template → annotated `.tex` → PDF; `tex_documents` store | A document generates, compiles, downloads, and round-trips through re-upload with IDs intact |
 | 5 | Inspector editor: PDF canvas, click-to-select, field edit, settings panel, recompile loop | Click a bullet, edit it, see the PDF update; a failed compile keeps the last good PDF on screen |
 | 6 | AI span actions + reviewable diff for batch tailoring | Actions are rate-limited, grounded, validated against the inline subset, and revertible |
@@ -478,7 +505,7 @@ the last old path on the day the new one takes over.
 
 | Risk | Severity | Response |
 | --- | --- | --- |
-| Span hit-map: none of A/B/C works cleanly | High | Gated spike (§6) before any editor work. C is the guaranteed floor. |
+| ~~Span hit-map: none of A/B/C works cleanly~~ | RESOLVED | Option A proven in PR 3 (§6): annotations survive, custom scheme preserved, line-wrap yields multiple rects per span, export stays clean. |
 | Compile latency makes editing feel sluggish | Low (was Medium) | Measured 0.54s warm on a representative preamble (§5.2). Still: debounce + cache + stale-preview-never-blanks, and re-measure p50/p95 on a real full-page resume in PR 5. |
 | Self-hosters without Tectonic | Medium | Graceful degradation to the Overleaf zip (§5.6). Never a second engine. |
 | Sandbox escape | High | `--untrusted` + process limits + jail + no network, each with a test that trips it (§16). |
@@ -487,7 +514,7 @@ the last old path on the day the new one takes over.
 
 ## 19. Open questions
 
-1. Which hit-map mechanism (§6) — resolved by the PR 3 spike.
+1. ~~Which hit-map mechanism~~ — resolved in PR 3: Option A (§6).
 2. Curated template list for the gallery — how many, which licences (must be
    redistribution-safe; the repo is heading to AGPL with a cloud carve-out).
 3. Do share links serve a PDF only, or PDF + `.tex`?
