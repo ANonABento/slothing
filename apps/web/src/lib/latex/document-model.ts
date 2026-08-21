@@ -11,7 +11,11 @@ import { SPAN_SHAPES, type Span, type SpanKind } from "./contract";
 import { classifyField, fieldDisplayText, type FieldMode } from "./field-edit";
 import { latexToPlainText } from "./inline";
 import { scanSpans } from "./scanner";
-import { readSettings, type DocumentSettings } from "./settings";
+import {
+  hasSettingsBlock,
+  readSettings,
+  type DocumentSettings,
+} from "./settings";
 
 export interface FieldDescriptor {
   index: number;
@@ -46,6 +50,11 @@ export interface DocumentModel {
   outline: OutlineNode[];
   fields: Map<string, FieldDescriptor[]>;
   settings: SettingsResult;
+  /**
+   * False for an imported third-party .tex. Its style is its own, so the settings panel
+   * must not offer controls that would throw on write.
+   */
+  editableSettings: boolean;
 }
 
 const MAX_LABEL = 60;
@@ -139,6 +148,7 @@ function build(source: string): DocumentModel {
     outline: buildOutline(spans),
     fields,
     settings,
+    editableSettings: hasSettingsBlock(source),
   };
 }
 
