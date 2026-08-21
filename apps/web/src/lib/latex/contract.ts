@@ -16,7 +16,14 @@ export type SpanKind =
   | "entry"
   | "item"
   | "para"
-  | "skills";
+  | "skills"
+  /**
+   * A neutral anchor in an IMPORTED document. It renders nothing of its own — it just
+   * makes an existing piece of someone else's .tex addressable. The structural kinds
+   * above cannot be used for that: `\slothingItem` emits its own `\item`, so wrapping a
+   * bullet that already sits in a foreign list breaks the document.
+   */
+  | "mark";
 
 /** Macro name (without the leading backslash) → span kind. */
 export const MACRO_KINDS: Record<string, SpanKind> = {
@@ -26,6 +33,7 @@ export const MACRO_KINDS: Record<string, SpanKind> = {
   slothingItem: "item",
   slothingPara: "para",
   slothingSkills: "skills",
+  slothingMark: "mark",
 };
 
 /**
@@ -74,6 +82,11 @@ export const SPAN_SHAPES: Record<
     arity: 1,
     fields: [{ index: 0, label: "Text" }],
   },
+  mark: {
+    macro: "slothingMark",
+    arity: 1,
+    fields: [{ index: 0, label: "Text" }],
+  },
 };
 
 const ID_PREFIXES: Record<SpanKind, string> = {
@@ -83,6 +96,7 @@ const ID_PREFIXES: Record<SpanKind, string> = {
   item: "itm",
   para: "par",
   skills: "skl",
+  mark: "mrk",
 };
 
 /** `<kind>-<6 hex>`, e.g. `itm-c4d883`. Opaque on purpose — slugs collide on reorder. */
@@ -90,7 +104,7 @@ export function createSpanId(kind: SpanKind): string {
   return `${ID_PREFIXES[kind]}-${randomBytes(3).toString("hex")}`;
 }
 
-const ID_PATTERN = /^(?:hdr|sec|ent|itm|par|skl)-[0-9a-f]{6}$/;
+const ID_PATTERN = /^(?:hdr|sec|ent|itm|par|skl|mrk)-[0-9a-f]{6}$/;
 
 export function isSpanId(value: string): boolean {
   return ID_PATTERN.test(value);
