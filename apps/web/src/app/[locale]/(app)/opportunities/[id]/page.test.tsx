@@ -80,15 +80,6 @@ function mockOpportunityFetch(initialJob: JobDescription = baseOpportunity) {
       return new Response(JSON.stringify({ contacts: [] }), { status: 200 });
     }
 
-    if (url === "/api/opportunities/templates") {
-      return new Response(
-        JSON.stringify({
-          templates: [{ id: "classic", name: "Classic", description: "" }],
-        }),
-        { status: 200 },
-      );
-    }
-
     return new Response(JSON.stringify({ error: "Not found" }), {
       status: 404,
     });
@@ -132,7 +123,9 @@ describe("OpportunityDetailPage", () => {
     expect(
       screen.getByRole("button", { name: /ATS Check/i }),
     ).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Resume/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /Tailor Resume in Studio/i }),
+    ).toHaveAttribute("href", "/studio?opportunityId=job-1");
     expect(
       screen.getByRole("button", { name: /Cover Letter/i }),
     ).toBeInTheDocument();

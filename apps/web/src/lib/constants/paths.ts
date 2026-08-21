@@ -13,7 +13,6 @@ export const PATHS = {
   /** Upload directory for user files */
   UPLOADS: path.join(process.cwd(), "uploads"),
   /** Generated resumes output directory */
-  RESUMES_OUTPUT: path.join(process.cwd(), "public", "resumes"),
   /** Public directory root */
   PUBLIC: path.join(process.cwd(), "public"),
 } as const;

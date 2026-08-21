@@ -1,11 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import {
-  Download,
   FileEdit,
+  FileText,
   Info,
   Loader2,
   Send,
@@ -15,18 +15,10 @@ import {
 import { CoverLetterDialog } from "@/components/cover-letter/cover-letter-dialog";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useErrorToast } from "@/hooks/use-error-toast";
 import type { ATSAnalysisResult } from "@/lib/ats/analyzer";
 import { readJsonResponse } from "@/lib/http";
 import type { JobDescription, JobMatch } from "@/types";
-import { useA11yTranslations } from "@/lib/i18n/use-a11y-translations";
 
 const ATSScoreBreakdown = dynamic(
   () =>
@@ -38,16 +30,6 @@ const ATSScoreBreakdown = dynamic(
   },
 );
 
-interface ResumeTemplate {
-  id: string;
-  name: string;
-  description: string;
-}
-
-interface TemplatesResponse {
-  templates?: ResumeTemplate[];
-}
-
 interface AnalyzeOpportunityResponse {
   analysis?: JobMatch;
   fallbackUsed?: boolean;
@@ -55,45 +37,6 @@ interface AnalyzeOpportunityResponse {
     message?: string;
   };
 }
-
-interface GenerateResumeResponse {
-  pdfUrl?: string;
-  fallbackUsed?: boolean;
-  providerError?: {
-    message?: string;
-  };
-}
-
-const FALLBACK_TEMPLATES: ResumeTemplate[] = [
-  {
-    id: "classic",
-    name: "Classic",
-    description: "Traditional professional format",
-  },
-  { id: "modern", name: "Modern", description: "Contemporary design" },
-  { id: "minimal", name: "Minimal", description: "Clean and simple" },
-  {
-    id: "executive",
-    name: "Executive",
-    description: "Bold headers, strong hierarchy",
-  },
-  { id: "tech", name: "Tech", description: "Tech industry focused" },
-  {
-    id: "creative",
-    name: "Creative",
-    description: "Bold colors for creative roles",
-  },
-  {
-    id: "compact",
-    name: "Compact",
-    description: "Dense layout for experienced pros",
-  },
-  {
-    id: "professional",
-    name: "Professional",
-    description: "Conservative for business",
-  },
-];
 
 interface OpportunityActionsProps {
   opportunity: JobDescription;
@@ -106,42 +49,14 @@ export function OpportunityActions({
   onApply,
   onGeneratedDocument,
 }: OpportunityActionsProps) {
-  const a11yT = useA11yTranslations();
-
-  const [templates, setTemplates] =
-    useState<ResumeTemplate[]>(FALLBACK_TEMPLATES);
-  const [selectedTemplate, setSelectedTemplate] = useState("classic");
   const [analysis, setAnalysis] = useState<JobMatch | null>(null);
   const [atsResult, setAtsResult] = useState<ATSAnalysisResult | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
   const [atsAnalyzing, setAtsAnalyzing] = useState(false);
-  const [generating, setGenerating] = useState(false);
   const [atsDialogOpen, setAtsDialogOpen] = useState(false);
   const [coverLetterOpen, setCoverLetterOpen] = useState(false);
   const showErrorToast = useErrorToast();
   const { addToast } = useToast();
-
-  useEffect(() => {
-    let active = true;
-
-    async function fetchTemplates() {
-      try {
-        const response = await fetch("/api/opportunities/templates");
-        const data = await readJsonResponse<TemplatesResponse>(
-          response,
-          "Failed to load templates",
-        );
-        if (active) setTemplates(data.templates || FALLBACK_TEMPLATES);
-      } catch {
-        if (active) setTemplates(FALLBACK_TEMPLATES);
-      }
-    }
-
-    void fetchTemplates();
-    return () => {
-      active = false;
-    };
-  }, []);
 
   const analyzeOpportunity = useCallback(async () => {
     setAnalyzing(true);
@@ -173,48 +88,6 @@ export function OpportunityActions({
       setAnalyzing(false);
     }
   }, [addToast, opportunity.id, showErrorToast]);
-
-  const generateResume = useCallback(async () => {
-    setGenerating(true);
-    try {
-      const response = await fetch(
-        `/api/opportunities/${opportunity.id}/generate`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ templateId: selectedTemplate }),
-        },
-      );
-      const data = await readJsonResponse<GenerateResumeResponse>(
-        response,
-        "Failed to generate resume",
-      );
-      if (data.pdfUrl) window.open(data.pdfUrl, "_blank");
-      if (data.fallbackUsed) {
-        addToast({
-          type: "warning",
-          title: "Used local fallback",
-          description:
-            data.providerError?.message ??
-            "The AI provider was unavailable, so Slothing generated a deterministic resume.",
-        });
-      }
-      await onGeneratedDocument?.();
-    } catch (error) {
-      showErrorToast(error, {
-        title: "Could not generate resume",
-        fallbackDescription: "Please try generating the resume again.",
-      });
-    } finally {
-      setGenerating(false);
-    }
-  }, [
-    addToast,
-    onGeneratedDocument,
-    opportunity.id,
-    selectedTemplate,
-    showErrorToast,
-  ]);
 
   const runAtsCheck = useCallback(async () => {
     setAtsAnalyzing(true);
@@ -283,35 +156,12 @@ export function OpportunityActions({
             )}
             {atsResult ? "Re-check ATS" : "ATS Check"}
           </Button>
-          <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
-            <Select
-              value={selectedTemplate}
-              onValueChange={setSelectedTemplate}
-            >
-              <SelectTrigger aria-label={a11yT("resumeTemplate")}>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {templates.map((template) => (
-                  <SelectItem key={template.id} value={template.id}>
-                    {template.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button
-              type="button"
-              onClick={() => void generateResume()}
-              disabled={generating}
-            >
-              {generating ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <Download className="mr-2 h-4 w-4" />
-              )}
-              Resume
-            </Button>
-          </div>
+          <Button asChild variant="outline" className="justify-start">
+            <Link href={`/studio?opportunityId=${opportunity.id}`}>
+              <FileText className="mr-2 h-4 w-4" />
+              Tailor Resume in Studio
+            </Link>
+          </Button>
           <Button
             type="button"
             variant="outline"

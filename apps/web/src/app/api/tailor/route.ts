@@ -30,9 +30,6 @@ import { trackActivationEvent } from "@/lib/db/product-analytics";
 import { EXPERIMENTS, getVariant } from "@/lib/experiments";
 import { trackExperimentEvent } from "@/lib/experiments/track";
 import { tailorRequestSchema } from "@/lib/schemas";
-import { writeFile, mkdir } from "fs/promises";
-import { generateId } from "@/lib/utils";
-import { PATHS } from "@/lib/constants";
 import { requireUserAuth, isAuthError } from "@/lib/auth";
 import { checkTailorQuota } from "@/lib/plan/quota";
 import { safeTrackActivity } from "@/lib/streak/track";
@@ -225,13 +222,6 @@ export async function POST(request: NextRequest) {
       authResult.userId,
     );
 
-    // Save file
-    await mkdir(PATHS.RESUMES_OUTPUT, { recursive: true });
-    const filename = `resume-${company.toLowerCase().replace(/\s+/g, "-")}-${generateId()}.html`;
-    const filePath = `${PATHS.RESUMES_OUTPUT}/${filename}`;
-    await writeFile(filePath, html);
-    const pdfUrl = `/resumes/${filename}`;
-
     // Save a job record so it appears in the job tracker, unless this run
     // came from an existing opportunity in the bank.
     const job =
@@ -254,7 +244,7 @@ export async function POST(request: NextRequest) {
       job.id,
       templateId,
       tailoredResume,
-      pdfUrl,
+      "",
       analysis.matchScore,
       authResult.userId,
     );
@@ -313,7 +303,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       html,
-      pdfUrl,
       resume: tailoredResume,
       baseResume,
       savedResume,

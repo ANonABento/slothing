@@ -28,22 +28,8 @@ import {
   pageSettingsToPdfMargin,
   type PageSettings,
 } from "@/lib/editor/page-settings";
-import { exec } from "child_process";
-import { writeFile, readFile, unlink, mkdtemp } from "fs/promises";
-import { tmpdir } from "os";
-import { join } from "path";
-import { promisify } from "util";
 
 export const dynamic = "force-dynamic";
-
-const execAsync = promisify(exec);
-const LATEX_CLEANUP_EXTENSIONS = [
-  "resume.tex",
-  "resume.pdf",
-  "resume.aux",
-  "resume.log",
-  "resume.out",
-];
 
 // GET — list available templates
 export async function GET() {
@@ -96,7 +82,6 @@ const exportSchema = z.object({
    */
   engine: z.enum(["html", "typst"]).optional(),
   latexOptions: z.record(z.string(), z.unknown()).optional(),
-  compilePdf: z.boolean().default(false),
   pageSettings: z
     .object({
       size: z.enum(["letter", "a4"]).optional(),
@@ -147,7 +132,6 @@ export async function POST(request: NextRequest) {
       format,
       engine,
       latexOptions,
-      compilePdf,
       pageSettings,
     } = parsed.data;
 
@@ -217,43 +201,6 @@ export async function POST(request: NextRequest) {
         templateId,
         (latexOptions || {}) as LatexOptions,
       );
-
-      if (compilePdf) {
-        try {
-          const tmpDir = await mkdtemp(join(tmpdir(), "resume-"));
-          const texPath = join(tmpDir, "resume.tex");
-          const pdfPath = join(tmpDir, "resume.pdf");
-
-          await writeFile(texPath, latex);
-          await execAsync(
-            `pdflatex -interaction=nonstopmode -output-directory="${tmpDir}" "${texPath}"`,
-            {
-              timeout: 30000,
-            },
-          );
-
-          const pdfBuffer = await readFile(pdfPath);
-          await Promise.allSettled(
-            LATEX_CLEANUP_EXTENSIONS.map((f) => unlink(join(tmpDir, f))),
-          );
-
-          return new NextResponse(pdfBuffer, {
-            headers: {
-              "Content-Type": "application/pdf",
-              "Content-Disposition": `attachment; filename="resume.pdf"`,
-            },
-          });
-        } catch {
-          // pdflatex unavailable, fall back to .tex
-          return new NextResponse(latex, {
-            headers: {
-              "Content-Type": "application/x-tex",
-              "Content-Disposition": `attachment; filename="resume.tex"`,
-              "X-Fallback": "pdflatex-unavailable",
-            },
-          });
-        }
-      }
 
       return new NextResponse(latex, {
         headers: {

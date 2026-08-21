@@ -12,36 +12,6 @@ import { escapeHtml } from "@/lib/html";
 
 export { COVER_LETTER_TEMPLATES, TEMPLATES };
 
-function renderPrintButton(): string {
-  return `
-  <div class="no-print" style="position: fixed; top: 10px; right: 10px; z-index: 1000;">
-    <button
-      onclick="window.print()"
-      style="
-        background: #2563eb;
-        color: white;
-        border: none;
-        padding: 10px 20px;
-        border-radius: 8px;
-        font-size: 14px;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-        font-family: system-ui, sans-serif;
-      "
-    >
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-        <polyline points="7 10 12 15 17 10"/>
-        <line x1="12" y1="15" x2="12" y2="3"/>
-      </svg>
-      Download PDF
-    </button>
-  </div>`;
-}
-
 function renderContactInfo(contact: ContactInfo): string {
   const email = contact.email ? escapeHtml(contact.email) : "";
   const phone = contact.phone ? escapeHtml(contact.phone) : "";
@@ -126,7 +96,6 @@ ${getCoverLetterDocumentStyles(styles)}
   </style>
 </head>
 <body>
-  ${renderPrintButton()}
   <article class="cover-letter-document">
     <div class="letter-page">
       <header class="letter-header">
@@ -305,7 +274,6 @@ export function generateResumeHTML(
   </style>
 </head>
 <body>
-  ${renderPrintButton()}
   <div class="header">
     <h1>${escapeHtml(contact.name)}</h1>
     <div class="contact">
@@ -542,7 +510,6 @@ function generateTwoColumnHTML(
   </style>
 </head>
 <body>
-  ${renderPrintButton()}
 
   <div class="two-col-header">
     <h1>${escapeHtml(contact.name)}</h1>
