@@ -85,7 +85,8 @@ vi.mock("@/lib/db/tex-documents", () => ({
 }));
 
 import { GET, POST } from "./route";
-import { POST as DUPLICATE, copyTitle } from "./[id]/duplicate/route";
+import { POST as DUPLICATE } from "./[id]/duplicate/route";
+import { copyTitle } from "@/lib/latex/copy-title";
 import {
   DELETE as DELETE_ONE,
   GET as GET_ONE,

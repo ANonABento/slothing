@@ -418,7 +418,12 @@ export function StudioDocumentList() {
           </p>
 
           {view === "grid" ? (
-            <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+            <ul
+              // One column until sm: at 390px a two-column grid leaves ~74px for the
+              // title once the three action buttons are placed, which truncated every
+              // name to "Rena…" — the exact problem the grid exists to solve.
+              className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
+            >
               {visible.map((document) => (
                 <li key={document.id}>
                   <DocumentCard {...rowProps(document)} />

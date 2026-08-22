@@ -84,7 +84,8 @@ vi.mock("@/lib/db/tex-documents", () => ({
   ),
 }));
 
-import { POST, explainLlmFailure } from "./route";
+import { POST } from "./route";
+import { explainLlmFailure } from "@/lib/latex/llm-error";
 import { invokeRouteHandler, jsonRequest, routeContext } from "@/test/contract";
 
 function annotated(body: string) {

@@ -13,23 +13,13 @@ import { z } from "zod";
 import { parseJsonBody } from "@/lib/api-utils";
 import { isAuthError, requireAuth } from "@/lib/auth";
 import { duplicateTexDocument, getTexDocument } from "@/lib/db/tex-documents";
+import { copyTitle } from "@/lib/latex/copy-title";
 
 export const dynamic = "force-dynamic";
 
 const bodySchema = z.object({
   title: z.string().min(1).max(200).optional(),
 });
-
-/** "Resume" → "Resume (copy)", but "Resume (copy)" → "Resume (copy 2)". */
-export function copyTitle(title: string): string {
-  const numbered = /^(.*)\s\(copy(?:\s(\d+))?\)$/.exec(title);
-  if (numbered) {
-    const next = numbered[2] ? Number(numbered[2]) + 1 : 2;
-    return `${numbered[1]} (copy ${next})`;
-  }
-  // 200 is the column's limit, and " (copy)" has to fit inside it.
-  return `${title.slice(0, 193)} (copy)`;
-}
 
 export async function POST(
   request: NextRequest,
