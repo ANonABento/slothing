@@ -419,10 +419,11 @@ export function StudioDocumentList() {
 
           {view === "grid" ? (
             <ul
-              // One column until sm: at 390px a two-column grid leaves ~74px for the
-              // title once the three action buttons are placed, which truncated every
-              // name to "Rena…" — the exact problem the grid exists to solve.
-              className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
+              // Column counts are set by how much width a TITLE needs, not by how many
+              // cards fit. Each card spends ~96px on its three action buttons, so a
+              // narrow card truncates every name to "Rena…" — the exact problem a grid
+              // of thumbnails exists to solve. Verified at 390 / 768 / 1024 / 1440.
+              className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
             >
               {visible.map((document) => (
                 <li key={document.id}>

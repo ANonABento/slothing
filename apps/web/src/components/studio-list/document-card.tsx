@@ -89,34 +89,40 @@ export function DocumentCard({
         </Link>
       </div>
 
-      <div className="flex items-start gap-2 p-3">
-        <div className="min-w-0 flex-1">
-          {renaming ? (
-            <RenameField
-              initial={document.title}
-              onSubmit={onSubmitRename}
-              onCancel={onCancelRename}
-            />
-          ) : (
-            <Link
-              href={`/studio/tex/${document.id}`}
-              className="block truncate text-[13.5px] font-semibold text-ink hover:text-brand"
-            >
-              {document.title}
-            </Link>
-          )}
-          <span className="mt-0.5 block truncate text-[11.5px] text-ink-3">
+      {/*
+        The title gets the card's FULL width, with the actions on the line below beside
+        the (short) kind and time. Sharing a line with three buttons cost it ~96px, which
+        truncated even "Untitled cover letter" at common widths — a card you cannot read
+        the name of defeats the point of the grid.
+      */}
+      <div className="min-w-0 p-3">
+        {renaming ? (
+          <RenameField
+            initial={document.title}
+            onSubmit={onSubmitRename}
+            onCancel={onCancelRename}
+          />
+        ) : (
+          <Link
+            href={`/studio/tex/${document.id}`}
+            className="block truncate text-[13.5px] font-semibold text-ink hover:text-brand"
+          >
+            {document.title}
+          </Link>
+        )}
+        <div className="mt-1 flex items-center gap-2">
+          <span className="min-w-0 flex-1 truncate text-[11.5px] text-ink-3">
             {KIND_LABEL[document.kind]} · <TimeAgo date={document.updatedAt} />
           </span>
+          <DocumentActions
+            title={document.title}
+            busy={busy}
+            onRename={onStartRename}
+            onDuplicate={onDuplicate}
+            onDelete={onDelete}
+            className="-mr-1 shrink-0"
+          />
         </div>
-        <DocumentActions
-          title={document.title}
-          busy={busy}
-          onRename={onStartRename}
-          onDuplicate={onDuplicate}
-          onDelete={onDelete}
-          className="-mr-1 -mt-1"
-        />
       </div>
     </div>
   );
