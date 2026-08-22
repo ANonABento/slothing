@@ -190,10 +190,10 @@ describe("POST /api/tex-documents/import", () => {
       await importSource({
         source: THIRD_PARTY,
         filename: "r.tex",
-        title: "My Real Résumé",
+        title: "My Real Resume",
       })
     ).json();
-    expect(body.document.title).toBe("My Real Résumé");
+    expect(body.document.title).toBe("My Real Resume");
   });
 
   // The multipart branch is not unit-tested: jsdom lacks real File/FormData semantics and

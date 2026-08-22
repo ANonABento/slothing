@@ -259,7 +259,7 @@ describe("/api/tailor route contract", () => {
     expect(response.status).toBe(200);
 
     // The HTML render served the TipTap editor, which the rebuild deleted. A tailored
-    // résumé is a .tex document now.
+    // resume is a .tex document now.
     const body = await response.json();
     expect(body.success).toBe(true);
     expect(body).not.toHaveProperty("html");

@@ -2,7 +2,7 @@
  * @route GET /api/tex-documents/[id]
  * @description Fetch one document including its .tex source.
  * @route PATCH /api/tex-documents/[id]
- * @description Update the source (snapshotting the previous one) or rename.
+ * @description Update the source (snapshotting the previous one), rename, or relabel.
  * @route DELETE /api/tex-documents/[id]
  * @description Delete a document and its version history.
  * @auth Required
@@ -17,6 +17,7 @@ import {
   getTexDocument,
   listTexDocumentVersions,
   renameTexDocument,
+  setTexDocumentKind,
   updateTexDocumentSource,
 } from "@/lib/db/tex-documents";
 
@@ -26,11 +27,14 @@ const patchSchema = z
   .object({
     source: z.string().min(1).optional(),
     title: z.string().min(1).max(200).optional(),
+    kind: z.enum(["resume", "cv", "cover_letter"]).optional(),
     label: z.string().max(120).optional(),
   })
-  .refine((v) => v.source !== undefined || v.title !== undefined, {
-    message: "Provide `source` or `title`.",
-  });
+  .refine(
+    (v) =>
+      v.source !== undefined || v.title !== undefined || v.kind !== undefined,
+    { message: "Provide `source`, `title`, or `kind`." },
+  );
 
 export async function GET(
   request: NextRequest,
@@ -71,6 +75,11 @@ export async function PATCH(
   if (parsed.data.title) {
     document =
       (await renameTexDocument(params.id, auth.userId, parsed.data.title)) ??
+      document;
+  }
+  if (parsed.data.kind) {
+    document =
+      (await setTexDocumentKind(params.id, auth.userId, parsed.data.kind)) ??
       document;
   }
   if (parsed.data.source) {

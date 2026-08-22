@@ -65,9 +65,27 @@ vi.mock("@/lib/db/tex-documents", () => ({
   listTexDocumentVersions: vi.fn(async (documentId: string) =>
     store.versions.filter((v) => v.documentId === documentId),
   ),
+  setTexDocumentKind: vi.fn(
+    async (id: string, userId: string, kind: string) => {
+      const doc = store.docs.get(id);
+      if (!doc || doc.userId !== userId) return null;
+      doc.kind = kind;
+      return doc;
+    },
+  ),
+  duplicateTexDocument: vi.fn(
+    async (id: string, userId: string, title: string) => {
+      const doc = store.docs.get(id);
+      if (!doc || doc.userId !== userId) return null;
+      const copy = { ...doc, id: store.next(), title, opportunityId: null };
+      store.docs.set(copy.id as string, copy);
+      return copy;
+    },
+  ),
 }));
 
 import { GET, POST } from "./route";
+import { POST as DUPLICATE, copyTitle } from "./[id]/duplicate/route";
 import {
   DELETE as DELETE_ONE,
   GET as GET_ONE,
@@ -270,5 +288,89 @@ describe("/api/tex-documents/[id]", () => {
       routeContext({ id }),
     );
     expect(after.status).toBe(404);
+  });
+});
+
+describe("PATCH /api/tex-documents/[id] — kind", () => {
+  it("relabels a document without touching its source", async () => {
+    const { body } = await createDocument("Mislabelled");
+    const before = body.document.source;
+
+    const response = await invokeRouteHandler(
+      PATCH_ONE,
+      jsonRequest(
+        `http://localhost/api/tex-documents/${body.document.id}`,
+        { kind: "cover_letter" },
+        "PATCH",
+      ),
+      routeContext({ id: body.document.id }),
+    );
+    const patched = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(patched.document.kind).toBe("cover_letter");
+    // Kind is a label, not a format — relabelling must never rewrite the document.
+    expect(patched.document.source).toBe(before);
+  });
+
+  it("rejects a body that changes nothing", async () => {
+    const { body } = await createDocument("Untouched");
+    const response = await invokeRouteHandler(
+      PATCH_ONE,
+      jsonRequest(
+        `http://localhost/api/tex-documents/${body.document.id}`,
+        {},
+        "PATCH",
+      ),
+      routeContext({ id: body.document.id }),
+    );
+    expect(response.status).toBe(400);
+  });
+});
+
+describe("copyTitle", () => {
+  it("numbers repeated copies instead of stacking suffixes", () => {
+    expect(copyTitle("Resume")).toBe("Resume (copy)");
+    expect(copyTitle("Resume (copy)")).toBe("Resume (copy 2)");
+    expect(copyTitle("Resume (copy 2)")).toBe("Resume (copy 3)");
+  });
+
+  it("keeps the result inside the 200-character title column", () => {
+    expect(copyTitle("x".repeat(400)).length).toBeLessThanOrEqual(200);
+  });
+});
+
+describe("POST /api/tex-documents/[id]/duplicate", () => {
+  it("copies the source and kind under a new id", async () => {
+    const { body } = await createDocument("Original");
+    const response = await invokeRouteHandler(
+      DUPLICATE,
+      jsonRequest(
+        `http://localhost/api/tex-documents/${body.document.id}/duplicate`,
+        {},
+        "POST",
+      ),
+      routeContext({ id: body.document.id }),
+    );
+    const copy = await response.json();
+
+    expect(response.status).toBe(201);
+    expect(copy.document.id).not.toBe(body.document.id);
+    expect(copy.document.title).toBe("Original (copy)");
+    expect(copy.document.source).toBe(body.document.source);
+    expect(copy.document.kind).toBe(body.document.kind);
+  });
+
+  it("404s for a document belonging to someone else", async () => {
+    const response = await invokeRouteHandler(
+      DUPLICATE,
+      jsonRequest(
+        "http://localhost/api/tex-documents/nope/duplicate",
+        {},
+        "POST",
+      ),
+      routeContext({ id: "nope" }),
+    );
+    expect(response.status).toBe(404);
   });
 });

@@ -3,7 +3,7 @@
  * @description Generate a cover letter as a LaTeX document.
  * @auth Required
  *
- * Spec §11. Same contract, same compile service, same inspector as a résumé — the only
+ * Spec §11. Same contract, same compile service, same inspector as a resume — the only
  * difference is that its spans are paragraphs. That sameness is what lets TipTap be
  * deleted outright rather than kept alive for this one surface.
  *
@@ -104,7 +104,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         error:
-          "Your knowledge bank is empty. Upload a résumé first so the letter has something true to draw on.",
+          "Your knowledge bank is empty. Upload a resume first so the letter has something true to draw on.",
         code: "empty_bank",
       },
       { status: 400 },

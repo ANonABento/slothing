@@ -11,10 +11,15 @@ import { useCallback, useEffect } from "react";
 
 import { exportDownloadUrl } from "./tex-editor-api";
 import { CompileStatusBar } from "./compile-status-bar";
+import { DocumentHeader } from "./document-header";
 import { InspectorPanel } from "./inspector-panel";
 import { TexPdfCanvas } from "./tex-pdf-canvas";
 import { useSplitPane } from "./use-split-pane";
-import { isCompileSuspended, previewIsStale } from "./tex-editor-state";
+import {
+  isCompileSuspended,
+  isDirty,
+  previewIsStale,
+} from "./tex-editor-state";
 import {
   useTexEditor,
   type TexEditorInitialDocument,
@@ -54,77 +59,87 @@ export function TexEditor({ document, runtime }: TexEditorProps) {
     state.preview.phase.status === "fetching";
 
   return (
-    <div
-      ref={containerRef}
-      className="flex h-full min-h-0 w-full flex-col lg:flex-row"
-    >
-      <div
-        className="flex min-h-0 min-w-0 flex-1 flex-col"
-        style={{ flexBasis: `${state.ui.splitRatio * 100}%` }}
-      >
-        <CompileStatusBar
-          busy={busy}
-          problem={state.preview.problem}
-          suspended={isCompileSuspended(state)}
-          onRetry={editor.retryCompile}
-        />
-        <div className="min-h-0 flex-1">
-          <TexPdfCanvas
-            pending={editor.pendingBytes}
-            hitMap={state.preview.displayed?.hitMap ?? null}
-            selectedSpanId={state.selection.spanId}
-            onSelectSpan={(spanId) => editor.select(spanId, 0, "canvas")}
-            onRendered={editor.notifyRendered}
-            onRenderFailed={editor.notifyRenderFailed}
-            zoom={state.ui.zoom}
-            onZoomChange={editor.setZoom}
-            stale={previewIsStale(state)}
-          />
-        </div>
-      </div>
-
-      <div
-        role="separator"
-        aria-orientation="vertical"
-        aria-label="Resize panels"
-        tabIndex={0}
-        {...handleProps}
-        onKeyDown={(event) => {
-          if (event.key === "ArrowLeft") {
-            editor.setSplitRatio(Math.max(0.35, state.ui.splitRatio - 0.02));
-          }
-          if (event.key === "ArrowRight") {
-            editor.setSplitRatio(Math.min(0.8, state.ui.splitRatio + 0.02));
-          }
-        }}
-        className={
-          dragging
-            ? "hidden w-1 shrink-0 cursor-col-resize bg-brand lg:block"
-            : "hidden w-1 shrink-0 cursor-col-resize bg-rule transition-colors hover:bg-brand lg:block"
-        }
+    <div className="flex h-full min-h-0 w-full flex-col">
+      <DocumentHeader
+        documentId={document.id}
+        initialTitle={document.title}
+        initialKind={document.kind}
+        saving={state.save.status === "saving"}
+        dirty={isDirty(state)}
       />
 
       <div
-        className="min-h-0 min-w-0 flex-1"
-        style={{ flexBasis: `${(1 - state.ui.splitRatio) * 100}%` }}
+        ref={containerRef}
+        className="flex min-h-0 w-full flex-1 flex-col lg:flex-row"
       >
-        <InspectorPanel
-          model={model}
-          selectedSpanId={state.selection.spanId}
-          fieldViolations={state.fieldViolations}
-          settingsError={state.settingsError}
-          onSelect={(spanId) =>
-            editor.select(spanId, spanId ? 0 : null, "outline")
+        <div
+          className="flex min-h-0 min-w-0 flex-1 flex-col"
+          style={{ flexBasis: `${state.ui.splitRatio * 100}%` }}
+        >
+          <CompileStatusBar
+            busy={busy}
+            problem={state.preview.problem}
+            suspended={isCompileSuspended(state)}
+            onRetry={editor.retryCompile}
+          />
+          <div className="min-h-0 flex-1">
+            <TexPdfCanvas
+              pending={editor.pendingBytes}
+              hitMap={state.preview.displayed?.hitMap ?? null}
+              selectedSpanId={state.selection.spanId}
+              onSelectSpan={(spanId) => editor.select(spanId, 0, "canvas")}
+              onRendered={editor.notifyRendered}
+              onRenderFailed={editor.notifyRenderFailed}
+              zoom={state.ui.zoom}
+              onZoomChange={editor.setZoom}
+              stale={previewIsStale(state)}
+            />
+          </div>
+        </div>
+
+        <div
+          role="separator"
+          aria-orientation="vertical"
+          aria-label="Resize panels"
+          tabIndex={0}
+          {...handleProps}
+          onKeyDown={(event) => {
+            if (event.key === "ArrowLeft") {
+              editor.setSplitRatio(Math.max(0.35, state.ui.splitRatio - 0.02));
+            }
+            if (event.key === "ArrowRight") {
+              editor.setSplitRatio(Math.min(0.8, state.ui.splitRatio + 0.02));
+            }
+          }}
+          className={
+            dragging
+              ? "hidden w-1 shrink-0 cursor-col-resize bg-brand lg:block"
+              : "hidden w-1 shrink-0 cursor-col-resize bg-rule transition-colors hover:bg-brand lg:block"
           }
-          onEditField={editor.editField}
-          onEditSettings={editor.editSettings}
-          onCommit={() => void editor.commit("field edit")}
-          onDownload={() => void handleDownload()}
-          downloadDisabled={isCompileSuspended(state)}
-          onRequestAi={editor.requestAi}
-          onRequestAnnotate={editor.requestAnnotate}
-          onApplyAnnotation={editor.applyAnnotation}
         />
+
+        <div
+          className="min-h-0 min-w-0 flex-1"
+          style={{ flexBasis: `${(1 - state.ui.splitRatio) * 100}%` }}
+        >
+          <InspectorPanel
+            model={model}
+            selectedSpanId={state.selection.spanId}
+            fieldViolations={state.fieldViolations}
+            settingsError={state.settingsError}
+            onSelect={(spanId) =>
+              editor.select(spanId, spanId ? 0 : null, "outline")
+            }
+            onEditField={editor.editField}
+            onEditSettings={editor.editSettings}
+            onCommit={() => void editor.commit("field edit")}
+            onDownload={() => void handleDownload()}
+            downloadDisabled={isCompileSuspended(state)}
+            onRequestAi={editor.requestAi}
+            onRequestAnnotate={editor.requestAnnotate}
+            onApplyAnnotation={editor.applyAnnotation}
+          />
+        </div>
       </div>
     </div>
   );

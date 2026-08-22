@@ -1,6 +1,6 @@
 /**
  * @route POST /api/tex-documents/from-bank
- * @description Create a résumé document from the knowledge bank.
+ * @description Create a resume document from the knowledge bank.
  * @auth Required
  *
  * The cold-start path (spec §8): a user with a populated bank and no document gets one
@@ -17,6 +17,7 @@ import { getGroupedBankEntries } from "@/lib/db/profile-bank";
 import { nowEpoch } from "@/lib/format/time";
 import { tailoredResumeToTex } from "@/lib/latex/from-tailored";
 import { bankEntriesToResume } from "@/lib/resume/bank-to-resume";
+import { settingsSchema } from "@/lib/latex/settings";
 import { getClientIdentifier, rateLimiters } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
@@ -24,6 +25,8 @@ export const dynamic = "force-dynamic";
 const bodySchema = z.object({
   title: z.string().min(1).max(200).optional(),
   kind: z.enum(["resume", "cv"]).default("resume"),
+  /** The caller's Studio defaults — font, size, margin — applied at creation. */
+  settings: settingsSchema.partial().optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -63,19 +66,22 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         error:
-          "Your knowledge bank is empty. Upload a résumé first so there is something to build from.",
+          "Your knowledge bank is empty. Upload a resume first so there is something to build from.",
         code: "empty_bank",
       },
       { status: 400 },
     );
   }
 
-  const source = tailoredResumeToTex(bankEntriesToResume(entries));
+  const source = tailoredResumeToTex(
+    bankEntriesToResume(entries),
+    parsed.data.settings,
+  );
 
   const document = await createTexDocument({
     userId: auth.userId,
     kind: parsed.data.kind,
-    title: parsed.data.title?.trim() || "Résumé",
+    title: parsed.data.title?.trim() || "Resume",
     source,
   });
 

@@ -49,7 +49,7 @@ export function assessImportability(
   if (Buffer.byteLength(source, "utf8") > MAX_TEX_BYTES) {
     return {
       code: "too_large",
-      message: "That file is too large to be a résumé (max 512KB).",
+      message: "That file is too large to be a resume (max 512KB).",
     };
   }
   if (filename && !/\.tex$/i.test(filename)) {
@@ -107,11 +107,11 @@ export function explainCompileFailure(logText: string): string | null {
 
 /** A title guess from the filename, so the import does not land as "Untitled". */
 export function titleFromFilename(filename: string | undefined): string {
-  if (!filename) return "Imported résumé";
+  if (!filename) return "Imported resume";
   const base = filename
     .replace(/\.tex$/i, "")
     .replace(/[_-]+/g, " ")
     .trim();
-  if (!base) return "Imported résumé";
+  if (!base) return "Imported resume";
   return base.charAt(0).toUpperCase() + base.slice(1);
 }

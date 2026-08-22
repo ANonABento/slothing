@@ -236,6 +236,53 @@ export async function renameTexDocument(
   return { ...existing, title, updatedAt: now };
 }
 
+/**
+ * Change what a document claims to be.
+ *
+ * Kind is a label, not a format: every kind compiles through the same contract, so this is
+ * a pure metadata update and never rewrites the source.
+ */
+export async function setTexDocumentKind(
+  id: string,
+  userId: string,
+  kind: TexDocumentKind,
+): Promise<TexDocument | null> {
+  const existing = await getTexDocument(id, userId);
+  if (!existing) return null;
+  const now = nowIso();
+  await getClient().execute({
+    sql: "UPDATE tex_documents SET kind = ?, updated_at = ? WHERE id = ? AND user_id = ?",
+    args: [kind, now, id, userId],
+  });
+  return { ...existing, kind, updatedAt: now };
+}
+
+/**
+ * Copy a document, source and all.
+ *
+ * The copy deliberately starts with EMPTY version history. History records how this
+ * document got here; inheriting someone else's would let a "restore" on the copy pull in
+ * content the user never wrote into it.
+ */
+export async function duplicateTexDocument(
+  id: string,
+  userId: string,
+  title: string,
+): Promise<TexDocument | null> {
+  const existing = await getTexDocument(id, userId);
+  if (!existing) return null;
+  return createTexDocument({
+    userId,
+    kind: existing.kind,
+    title,
+    source: existing.source,
+    templateId: existing.templateId,
+    // Deliberately not carried over: two documents claiming the same opportunity would
+    // make "the resume for this job" ambiguous everywhere that looks it up.
+    opportunityId: null,
+  });
+}
+
 export async function deleteTexDocument(
   id: string,
   userId: string,

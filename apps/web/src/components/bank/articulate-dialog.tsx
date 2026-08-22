@@ -96,7 +96,7 @@ export function ArticulateDialog({
           <DialogTitle>Draft bullets with AI</DialogTitle>
           <DialogDescription>
             Tell us what you did in your own words — the AI turns it into strong
-            résumé bullets using only the facts you provide. Drafts are saved
+            resume bullets using only the facts you provide. Drafts are saved
             unverified; confirm the ones you want to keep.
           </DialogDescription>
         </DialogHeader>

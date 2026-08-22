@@ -83,6 +83,7 @@ Default undo window: 5 seconds. Increase it when the action is easy to mis-click
 | Application drafts review     | Reject draft              | `PATCH /api/applications/drafts/[id]`, status to `rejected`; row remains, undo restores `pending_review` | Pattern B |
 | Settings — Service tokens     | Revoke service token      | `DELETE /api/agent/tokens/[id]`; hard delete, irreversible                                               | Pattern A |
 | Tex editor — field inspector  | Remove formatting         | Flattens a field's inline bold/italic/link to plain text in the `.tex` source; not recoverable except via document version history | Pattern A |
+| Studio — document list        | Delete document           | `DELETE /api/tex-documents/[id]`; hard delete of the document and every version row                                              | Pattern A |
 
 ## Adding A New Destructive Action
 

@@ -10,9 +10,8 @@ export const dynamic = "force-dynamic";
 /**
  * The LaTeX document editor.
  *
- * NOT in the sidebar yet — during the rebuild `/studio` is still the TipTap editor, and
- * shipping two resume editors at once is the confusion this work exists to end. PR 9 adds
- * the nav entry and redirects `/studio` here.
+ * Reached from the Studio list rather than the sidebar: `/studio` lists documents and
+ * this route edits one of them, so there is exactly one entry point.
  *
  * A server component so the first paint already holds the source and can compile
  * immediately, with no client round trip on mount.

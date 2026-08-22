@@ -625,7 +625,7 @@ export function extractExperiences(text: string): Experience[] {
     if (hasDateRange(trimmed)) {
       pushCurrentEntry();
       const dateStr = extractDateRange(trimmed);
-      // Two-row entry header (common in LaTeX-rendered résumés like
+      // Two-row entry header (common in LaTeX-rendered resumes like
       // Awesome-CV): a non-dated line sits above a dated line, with
       // the upper line carrying "Company | Location" and the lower
       // line carrying "Title | Date". Without this branch the two

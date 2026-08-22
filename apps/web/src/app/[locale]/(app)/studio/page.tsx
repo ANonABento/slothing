@@ -22,7 +22,7 @@ export default function StudioPage() {
       <PageHeader
         icon={FileText}
         title="Studio"
-        description="Your résumés, CVs, and cover letters."
+        description="Your resumes, CVs, and cover letters."
         variant="compact"
       />
       <PageContent>

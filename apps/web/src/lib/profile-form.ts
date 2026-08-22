@@ -30,7 +30,7 @@ function cleanList(values: string[] | undefined): string[] {
 }
 
 function mostRecentExperience(profile: Profile | null): Experience | undefined {
-  // LLM-extracted résumé dates can be anything from "Jan 2024" (parseable)
+  // LLM-extracted resume dates can be anything from "Jan 2024" (parseable)
   // to "Present", "Q1 2024", or a misformatted year — `toEpoch` throws on
   // those. Sort defensively: treat unparseable dates as oldest (epoch 0)
   // so the page doesn't crash on one malformed experience row.

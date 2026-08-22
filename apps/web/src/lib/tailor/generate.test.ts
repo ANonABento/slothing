@@ -578,7 +578,7 @@ describe("generateFromBank", () => {
     expect(exp.highlights).toContain("Built React and GraphQL dashboards");
     expect(exp.highlights.join(" ")).not.toMatch(/400%|revenue/);
 
-    // Unsupported skills/keywords never appear anywhere in the résumé.
+    // Unsupported skills/keywords never appear anywhere in the resume.
     expect(result.resume.skills).toEqual(["React", "GraphQL"]);
     expect(JSON.stringify(result.resume)).not.toMatch(
       /AWS|Kubernetes|Ghost|400%/,

@@ -18,7 +18,7 @@ function contactLine(contact: TailoredResume["contact"]): string {
     .join(" · ");
 }
 
-/** Build the section list, skipping anything the résumé has no content for. */
+/** Build the section list, skipping anything the resume has no content for. */
 export function tailoredResumeToSections(
   resume: TailoredResume,
 ): GenerateSection[] {

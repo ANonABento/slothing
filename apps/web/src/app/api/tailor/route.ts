@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
       }
 
       // The old HTML render served the TipTap editor, which no longer exists. A tailored
-      // résumé is a .tex document now, so this returns the source instead.
+      // resume is a .tex document now, so this returns the source instead.
       return NextResponse.json({
         success: true,
         source: tailoredResumeToTex(body.resume),
@@ -230,7 +230,7 @@ export async function POST(request: NextRequest) {
       ));
 
     // Save the generated resume
-    // A tailored résumé is now a real editable document, not just a stored blob.
+    // A tailored resume is now a real editable document, not just a stored blob.
     const texDocument = await createTexDocument({
       userId: authResult.userId,
       kind: "resume",
