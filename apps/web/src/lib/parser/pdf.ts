@@ -222,7 +222,7 @@ export async function extractTextFromPDF(filePath: string): Promise<string> {
 
   if (!parseFailed && parsedText && !needsOCRFallback(parsedText)) {
     // pdf-parse's output is unreliable for layout-heavy PDFs (LaTeX
-    // résumés especially): it routinely loses inter-word spaces or
+    // resumes especially): it routinely loses inter-word spaces or
     // emits the entire document on one line. The positions path
     // reads x/y from pdfjs and reconstructs lines + spaces from the
     // geometry — uniformly more reliable, so we prefer it when it

@@ -2368,7 +2368,7 @@ export function BankComponentsTab({
                       description="Upload a resume or paste career notes; Slothing extracts reusable bullets, stories, and project chunks. Studio recomposes them into tailored docs for each opportunity."
                       steps={[
                         {
-                          label: "Upload résumé",
+                          label: "Upload resume",
                           description: "PDF, DOCX, or paste plain text.",
                           icon: Upload,
                         },
@@ -2393,7 +2393,7 @@ export function BankComponentsTab({
                           ) : (
                             <Upload className="h-4 w-4 mr-2" />
                           )}
-                          {uploading ? "Uploading..." : "Upload résumé"}
+                          {uploading ? "Uploading..." : "Upload resume"}
                         </Button>
                       }
                       secondaryAction={

@@ -50,7 +50,7 @@ export function buildStrengthenPrompt(
     jobContext?.jobDescription || jobContext?.jobTitle
       ? `\nTARGET JOB (use only to choose which TRUE details to emphasize — never to add new facts):\nTitle: ${jobContext.jobTitle ?? "N/A"}\nCompany: ${jobContext.company ?? "N/A"}\n${(jobContext.jobDescription ?? "").slice(0, 1500)}\n`
       : "";
-  return `Strengthen the bullets of ONE résumé entry. Rewrite for impact, strong action verbs, and clarity.
+  return `Strengthen the bullets of ONE resume entry. Rewrite for impact, strong action verbs, and clarity.
 
 NON-NEGOTIABLE RULES:
 - Use ONLY facts already present in the ENTRY below. Do NOT invent or change metrics, numbers, tools, employers, job titles, dates, clients, or outcomes.
@@ -151,7 +151,7 @@ export function buildArticulatePrompt(
     jobContext?.jobDescription || jobContext?.jobTitle
       ? `\nTARGET JOB (use only to choose emphasis/wording — never to add facts the notes don't contain):\nTitle: ${jobContext.jobTitle ?? "N/A"}\nCompany: ${jobContext.company ?? "N/A"}\n${(jobContext.jobDescription ?? "").slice(0, 1500)}\n`
       : "";
-  return `Turn the candidate's OWN notes into 1-3 strong, concise résumé bullets.
+  return `Turn the candidate's OWN notes into 1-3 strong, concise resume bullets.
 
 NON-NEGOTIABLE RULES:
 - Use ONLY facts stated in the NOTES below. Do NOT invent or change metrics, numbers, tools, employers, titles, dates, clients, or outcomes.
@@ -222,12 +222,12 @@ export function buildProjectFromSourcePrompt(
     styleExemplars.length > 0
       ? `\nSTYLE EXAMPLES (match the tone, verb-first structure, and concision — DO NOT copy their facts):\n${styleExemplars.map((s) => `- ${s}`).join("\n")}\n`
       : "";
-  return `Summarize ONE software project into résumé content, using ONLY the SOURCE below.
+  return `Summarize ONE software project into resume content, using ONLY the SOURCE below.
 
 NON-NEGOTIABLE RULES:
 - Use ONLY facts present in the SOURCE. Do NOT invent or change metrics, numbers, tools, scope, outcomes, employers, or dates.
 - Do not add a number or percentage that is not already in the source (no derived/estimated metrics).
-- Each bullet must be a strong, concise, verb-first résumé bullet fully supported by the source. No filler or embellishment.
+- Each bullet must be a strong, concise, verb-first resume bullet fully supported by the source. No filler or embellishment.
 - "technologies" must be tools/languages explicitly named in the source.
 - Suggested name to refine: "${source.suggestedName}".
 - Return JSON ONLY, no prose: {"name": "...", "technologies": ["..."], "bullets": ["...", "..."]}
@@ -367,14 +367,14 @@ export function buildRevisePrompt(
     jobContext?.jobDescription || jobContext?.jobTitle
       ? `\nTARGET JOB (use only to choose which TRUE details to emphasize — never to add facts):\nTitle: ${jobContext.jobTitle ?? "N/A"}\nCompany: ${jobContext.company ?? "N/A"}\n${(jobContext.jobDescription ?? "").slice(0, 1500)}\n`
       : "";
-  return `Revise ONE résumé bullet per the instruction.
+  return `Revise ONE resume bullet per the instruction.
 
 INSTRUCTION: ${instruction}
 
 NON-NEGOTIABLE RULES:
 - Use ONLY facts present in the EVIDENCE below. Do NOT invent or change metrics, numbers, tools, scope, employers, titles, dates, or outcomes.
 - Do not add a number or percentage that is not already in the evidence (no derived/estimated metrics).
-- Keep it a single, concise, verb-first résumé bullet. No trailing filler clauses unless that detail is in the evidence.
+- Keep it a single, concise, verb-first resume bullet. No trailing filler clauses unless that detail is in the evidence.
 - Return JSON ONLY, no prose: {"bullet": "..."}
 
 CURRENT BULLET:

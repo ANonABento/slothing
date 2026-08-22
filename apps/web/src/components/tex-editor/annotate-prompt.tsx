@@ -3,7 +3,7 @@
 /**
  * The annotate prompt shown on an imported document.
  *
- * Annotation is structural surgery on someone's résumé, so this presents the RESULT of
+ * Annotation is structural surgery on someone's resume, so this presents the RESULT of
  * the server's verification rather than a raw source diff. A 60-line preamble diff would
  * be noise; what the user actually needs to judge is "did it find the right structure",
  * because "does it still render identically" has already been proven server-side.

@@ -5,7 +5,7 @@
  * addressable. This asks a model to insert `\slothing*` wrappers around the structure it
  * already has, WITHOUT changing a single visible character.
  *
- * That is a genuinely risky operation — a model rewriting someone's hand-tuned résumé —
+ * That is a genuinely risky operation — a model rewriting someone's hand-tuned resume —
  * so it is defended in three layers, cheapest first:
  *
  *   1. Structural checks here (no compile): ids well-formed and unique, every emitted
@@ -39,7 +39,7 @@ export interface AnnotationShape {
   byKind: Record<string, number>;
 }
 
-/** Words the model is free to move around; they carry no résumé content. */
+/** Words the model is free to move around; they carry no resume content. */
 const LATEX_NOISE = /\\[A-Za-z@]+|[{}[\]\\$&%#_^~]/g;
 /**
  * Our own `[id=...]` arguments. Stripped FIRST — the bracket characters alone would go,
@@ -183,7 +183,7 @@ export function summarizeAnnotation(byKind: Record<string, number>): string {
 }
 
 export function buildAnnotatePrompt(source: string): string {
-  return `Add Slothing structural macros to this LaTeX résumé.
+  return `Add Slothing structural macros to this LaTeX resume.
 
 ABSOLUTE RULES — a violation makes the whole result unusable:
 - Do NOT change, reword, reorder, add or remove ANY visible text.

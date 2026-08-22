@@ -3,7 +3,7 @@
  * @description Import a .tex file as a Slothing document.
  * @auth Required
  *
- * The wedge (spec §9.1): paste your Overleaf résumé and it renders exactly as it does
+ * The wedge (spec §9.1): paste your Overleaf resume and it renders exactly as it does
  * today, because it is still your document. Nothing is reinterpreted or restyled.
  *
  * The import COMPILES the document before accepting it. A file that does not compile is
@@ -30,6 +30,7 @@ import {
   explainCompileFailure,
   titleFromFilename,
 } from "@/lib/latex/import";
+import { detectDocumentKind } from "@/lib/latex/detect-kind";
 import { getClientIdentifier, rateLimiters } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
@@ -46,8 +47,17 @@ function isUploadedFile(value: unknown): value is File {
   );
 }
 
-function kindFrom(value: unknown): TexDocumentKind {
-  return value === "cv" || value === "cover_letter" ? value : "resume";
+/**
+ * An explicitly supplied kind, or null to fall back to detection.
+ *
+ * Null rather than "resume" is the point: the old default silently labelled every import a
+ * resume, so a cover letter came in wearing the wrong kind with nothing to signal it.
+ */
+function kindFrom(value: unknown): TexDocumentKind | null {
+  if (value === "cv" || value === "cover_letter" || value === "resume") {
+    return value;
+  }
+  return null;
 }
 
 export async function POST(request: NextRequest) {
@@ -78,7 +88,7 @@ export async function POST(request: NextRequest) {
   let source: string;
   let filename: string | undefined;
   let title: string | undefined;
-  let kind: TexDocumentKind = "resume";
+  let kind: TexDocumentKind | null = null;
 
   const contentType = request.headers.get("content-type") ?? "";
 
@@ -122,6 +132,10 @@ export async function POST(request: NextRequest) {
   }
 
   const assessment = assessImport(source);
+  // The client normally detects and asks first, so `kind` arrives already chosen. This
+  // covers direct API callers, who would otherwise land everything under "resume".
+  const guess = detectDocumentKind(source, filename);
+  const resolvedKind = kind ?? guess.kind;
 
   // Prove it renders before we keep it. `allowFetch` is on because an imported document
   // may legitimately need a package our warm bundle has never seen; see CompileInput.
@@ -163,7 +177,7 @@ export async function POST(request: NextRequest) {
 
   const document = await createTexDocument({
     userId: auth.userId,
-    kind,
+    kind: resolvedKind,
     title: title?.trim() || titleFromFilename(filename),
     source,
   });
@@ -179,6 +193,8 @@ export async function POST(request: NextRequest) {
       annotated: assessment.annotated,
       spanCount: assessment.spanCount,
       packages: assessment.packages,
+      /** Echoed so a caller that did not choose can see what was decided, and why. */
+      detectedKind: guess,
     },
     { status: 201 },
   );

@@ -51,7 +51,7 @@ describe("assessImportability", () => {
     ).toBe("no_document_body");
   });
 
-  it("rejects something far too large to be a résumé", () => {
+  it("rejects something far too large to be a resume", () => {
     const huge = `\\begin{document}${"x".repeat(MAX_TEX_BYTES + 1)}\\end{document}`;
     expect(assessImportability(huge, "resume.tex")?.code).toBe("too_large");
   });
@@ -124,7 +124,7 @@ describe("titleFromFilename", () => {
   });
 
   it("falls back when there is no usable name", () => {
-    expect(titleFromFilename(undefined)).toBe("Imported résumé");
-    expect(titleFromFilename(".tex")).toBe("Imported résumé");
+    expect(titleFromFilename(undefined)).toBe("Imported resume");
+    expect(titleFromFilename(".tex")).toBe("Imported resume");
   });
 });

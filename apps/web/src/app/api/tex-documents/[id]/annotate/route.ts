@@ -32,6 +32,7 @@ import {
 } from "@/lib/latex/annotate";
 import { compile } from "@/lib/latex/compile";
 import { extractPdfText, compareRenderedText } from "@/lib/latex/pdf-text";
+import { explainLlmFailure } from "@/lib/latex/llm-error";
 import { getClientIdentifier, rateLimiters } from "@/lib/rate-limit";
 import { z } from "zod";
 
@@ -113,7 +114,7 @@ export async function POST(
     gate.refund();
     console.error("Annotate error:", error);
     return NextResponse.json(
-      { error: "Could not annotate this document.", code: "llm_failed" },
+      { error: explainLlmFailure(error), code: "llm_failed" },
       { status: 502 },
     );
   }

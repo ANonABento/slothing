@@ -16,7 +16,7 @@ export const dynamic = "force-dynamic";
 
 /**
  * @route POST /api/bank/ai/revise
- * @description Iterate on a single résumé bullet (the scratchpad's per-bullet "Revise"). The
+ * @description Iterate on a single resume bullet (the scratchpad's per-bullet "Revise"). The
  *   revision is grounded ⊆ the supplied evidence — a fabricating revision is rejected server-side
  *   and the original bullet is returned with `applied:false`. Preview only; nothing is persisted.
  * @auth Required

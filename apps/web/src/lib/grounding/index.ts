@@ -72,7 +72,7 @@ const STOPWORDS = new Set([
   "which",
   "who",
   "whom",
-  "led", // common résumé verb that adds little grounding signal on its own
+  "led", // common resume verb that adds little grounding signal on its own
 ]);
 
 /** Split a block of text into atomic claims (bullets / lines / sentences). */

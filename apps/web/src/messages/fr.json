@@ -286,7 +286,7 @@
           "name": "Nom",
           "email": "Adresse e-mail",
           "targetRole": "Poste visé",
-          "backgroundSummary": "Résumé du parcours",
+          "backgroundSummary": "Resume du parcours",
           "education": "Formation",
           "school": "Établissement",
           "degree": "Diplôme",
@@ -593,7 +593,7 @@
     },
     "import": {
       "csvPreview": {
-        "summaryTitle": "Résumé de l'import",
+        "summaryTitle": "Resume de l'import",
         "stats": {
           "totalRows": "Nombre total de lignes",
           "validOpportunities": "Opportunités valides",
@@ -974,7 +974,7 @@
     "responseRate": "Taux de réponse",
     "interviewRate": "Taux d'entretien",
     "successRate": "Taux de réussite",
-    "summary": "Résumé",
+    "summary": "Resume",
     "experience": "Expérience",
     "skills": "Compétences",
     "promptABTesting": "Tests A/B rapides",
@@ -1216,7 +1216,7 @@
         "description": "Gardez à jour le profil source que Slothing utilise pour les CV, lettres de motivation et contrôles de compatibilité."
       },
       "summary": {
-        "title": "Résumé professionnel",
+        "title": "Resume professionnel",
         "description": "Gardez à jour le profil source que Slothing utilise pour les CV, lettres de motivation et contrôles de compatibilité."
       },
       "savedSignals": {
@@ -1238,7 +1238,7 @@
       "linkedin": "Profil LinkedIn",
       "github": "Profil GitHub",
       "website": "Site web",
-      "summary": "Résumé professionnel",
+      "summary": "Resume professionnel",
       "targetRoles": "Postes cibles",
       "currency": "Devise",
       "minimum": "Valeur minimale",
@@ -1291,7 +1291,7 @@
       "points": "+{points, plural, one {# pt} other {# pts}}",
       "gaps": {
         "contact-info": "Ajoutez votre nom, e-mail et titre",
-        "summary": "Ajoutez un résumé professionnel",
+        "summary": "Ajoutez un resume professionnel",
         "experience-bullets": {
           "empty": "Ajoutez une expérience avec au moins 3 points",
           "role": "Ajoutez {missing, plural, one {# point de plus} other {# points de plus}} à votre poste chez {company}"

@@ -73,7 +73,7 @@ describe("coverLetterToTex", () => {
     });
     const model = buildDocumentModel(source);
 
-    // A cover letter drives the same inspector as a résumé — same contract, same panel.
+    // A cover letter drives the same inspector as a resume — same contract, same panel.
     expect(model.outline.length).toBeGreaterThan(0);
     expect(model.editableSettings).toBe(true);
     const firstPara = model.outline.find((node) => node.kind === "para");

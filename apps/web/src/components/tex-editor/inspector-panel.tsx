@@ -209,7 +209,7 @@ export function InspectorPanel({
           <div className="space-y-5 px-4 py-4">
             {fields.length === 0 ? (
               <p className="text-[13px] text-ink-3">
-                This element has no editable fields.
+                There is nothing to edit in this part.
               </p>
             ) : (
               fields.map((field, index) => (
@@ -297,8 +297,8 @@ export function InspectorPanel({
 
             <section className="px-2 py-4">
               <h3 className="px-2 pb-2 font-mono text-[10px] uppercase tracking-[0.16em] text-ink-3">
-                Structure
-                {spanCount > 0 ? ` · ${pluralize(spanCount, "element")}` : ""}
+                Outline
+                {spanCount > 0 ? ` · ${pluralize(spanCount, "part")}` : ""}
               </h3>
               {spanCount === 0 ? (
                 // An imported .tex renders perfectly but carries none of our macros, so
@@ -308,13 +308,13 @@ export function InspectorPanel({
                   <Info className="mt-0.5 h-4 w-4 shrink-0 text-ink-3" />
                   <div className="space-y-1">
                     <p className="text-[13px] font-medium text-ink">
-                      Not annotated yet
+                      Not broken into parts yet
                     </p>
                     <p className="text-[12.5px] leading-relaxed text-ink-3">
                       This document renders and downloads exactly as written,
                       but Slothing cannot yet tell its sections and bullets
-                      apart — so clicking the preview and per-field AI are
-                      unavailable.
+                      apart — so you cannot click the preview to edit it, and AI
+                      cannot rewrite a single bullet.
                     </p>
                     {onRequestAnnotate && onApplyAnnotation ? (
                       <div className="pt-1">

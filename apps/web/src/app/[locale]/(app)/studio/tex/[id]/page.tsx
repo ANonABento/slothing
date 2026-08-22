@@ -10,9 +10,8 @@ export const dynamic = "force-dynamic";
 /**
  * The LaTeX document editor.
  *
- * NOT in the sidebar yet — during the rebuild `/studio` is still the TipTap editor, and
- * shipping two resume editors at once is the confusion this work exists to end. PR 9 adds
- * the nav entry and redirects `/studio` here.
+ * Reached from the Studio list rather than the sidebar: `/studio` lists documents and
+ * this route edits one of them, so there is exactly one entry point.
  *
  * A server component so the first paint already holds the source and can compile
  * immediately, with no client round trip on mount.
@@ -30,7 +29,13 @@ export default async function TexEditorPage({
 
   return (
     <AppPage padding="none">
-      <div className="h-[calc(100vh-4rem)] min-h-0 lg:h-screen">
+      {/*
+        Matched to the app shell, not to the viewport. Below lg the shell reserves 4rem of
+        padding above `main`; at lg it is a 3.5rem sticky bar instead. `h-screen` here
+        overflowed by exactly that bar's height, which pushed the inspector's Download
+        button off the bottom of the window.
+      */}
+      <div className="h-[calc(100vh-4rem)] min-h-0 lg:h-[calc(100vh-3.5rem)]">
         <TexEditor
           document={{
             id: document.id,
