@@ -84,7 +84,7 @@ vi.mock("@/lib/db/tex-documents", () => ({
   ),
 }));
 
-import { POST } from "./route";
+import { POST, explainLlmFailure } from "./route";
 import { invokeRouteHandler, jsonRequest, routeContext } from "@/test/contract";
 
 function annotated(body: string) {
@@ -190,5 +190,34 @@ describe("POST /api/tex-documents/[id]/annotate", () => {
   it("404s for another user's document", async () => {
     state.llmResponse = annotated(GOOD);
     expect((await post("someone-elses")).status).toBe(404);
+  });
+});
+
+describe("explainLlmFailure", () => {
+  it("names a missing key as the fixable thing it is", () => {
+    expect(
+      explainLlmFailure(new Error("OpenAI API error: invalid api key")),
+    ).toMatch(/provider key in Settings/);
+    expect(explainLlmFailure(new Error("401 Unauthorized"))).toMatch(
+      /provider key in Settings/,
+    );
+  });
+
+  it("distinguishes an unreachable provider from a bad answer", () => {
+    expect(explainLlmFailure(new Error("fetch failed"))).toMatch(
+      /could not be reached/,
+    );
+  });
+
+  it("reassures that the document is untouched when the model just fails", () => {
+    // The user's fear on any AI error is that it half-rewrote their resume.
+    expect(
+      explainLlmFailure(new Error("no annotated source returned")),
+    ).toMatch(/unchanged/);
+  });
+
+  it("survives a thrown non-Error", () => {
+    expect(() => explainLlmFailure("boom")).not.toThrow();
+    expect(explainLlmFailure("boom")).toBeTruthy();
   });
 });

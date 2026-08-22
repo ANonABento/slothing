@@ -92,14 +92,23 @@ export function generateResumeTex(input: GenerateInput): string {
         )
         .join("\n");
 
-      // An entry with no bullets still needs a well-formed body argument, so the item
-      // list is emitted either way — an empty itemize is valid and renders as nothing.
-      body.push(
-        `\\slothingEntry[id=${id("entry")}]{${plainTextToLatex(entry.organisation)}}{${plainTextToLatex(entry.role)}}{${plainTextToLatex(entry.dates)}}{
+      /**
+       * An entry with no bullets gets NO list.
+       *
+       * An itemize containing no \item is a hard LaTeX error, not an empty render — this
+       * previously produced documents that could never compile, which is exactly what an
+       * education row (institution, degree, dates, no bullets) looks like.
+       */
+      const listBlock = items
+        ? `
   \\begin{slothingItems}
 ${items}
   \\end{slothingItems}
-}`,
+`
+        : "";
+
+      body.push(
+        `\\slothingEntry[id=${id("entry")}]{${plainTextToLatex(entry.organisation)}}{${plainTextToLatex(entry.role)}}{${plainTextToLatex(entry.dates)}}{${listBlock}}`,
       );
     }
   }

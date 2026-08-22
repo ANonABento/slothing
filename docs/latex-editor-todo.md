@@ -8,16 +8,8 @@ The LaTeX single-source rebuild is built and merged through PR 8. **PR 9 (#336) 
 and deliberately NOT auto-merged** — it is waiting on hands-on testing.
 
 - Branch `feat/latex-consolidation` is checked out; PR #336 targets `main`.
-- Spec: `docs/specs/latex-single-source-rebuild.md` (kept current — §6 records the
-  hit-map decision, §13 the corrected deletion manifest).
-- Merged so far: #327 (deletion 1) · #328 (contract + compile) · #329 (hit map) ·
-  #330 (store/generation/cache/API) · #331 (inspector editor) · #332 (AI span actions) ·
-  #333 (.tex import) · #334 (annotation pass) · #335 (cover letters).
-- PR 9 deletes 30,823 lines: TipTap Studio, `lib/editor`, the grammar model, Chromium
-  PDF, DOCX, Typst, PDF style cloning, `template-playground`, 23 dependencies.
-
-**Do not merge #336 until the list below is worked through and re-tested**, since several
-items change surfaces that PR introduces.
+- Spec: `docs/specs/latex-single-source-rebuild.md`.
+- Merged so far: #327 · #328 · #329 · #330 · #331 · #332 · #333 · #334 · #335.
 
 ## Running it
 
@@ -25,133 +17,126 @@ items change surfaces that PR introduces.
 pnpm dev                      # http://localhost:3000/en/studio
 ```
 
-Environment facts worth not rediscovering:
+- **Tectonic** is at `~/.local/bin/tectonic` (0.17.0); override with `SLOTHING_TECTONIC_BIN`.
+- **No LLM provider key is configured** (`OPENAI_API_KEY` is present but empty, and Ollama
+  is not running), so every AI path fails. See section E.
+- **Playwright chromium is installed**, but the playwright **MCP** does not work — it wants
+  `/opt/google/chrome`. Drive a browser with a `node` script importing
+  `node_modules/.pnpm/playwright@*/node_modules/playwright/index.mjs`. That is what found
+  every bug listed under "Fixed by the browser pass".
+- Kill the dev server with `ss -lptn 'sport = :3000'` → `kill <pid>`. Never
+  `pkill -f "next dev"` — it has killed the agent's own shell.
 
-- **Tectonic** is at `~/.local/bin/tectonic` (0.17.0). `resolveEngine()` finds it; override
-  with `SLOTHING_TECTONIC_BIN`.
-- **No LLM provider key is configured.** Every AI path therefore fails with a friendly
-  error. Add `ANTHROPIC_API_KEY` or `OPENAI_API_KEY` to `apps/web/.env.local` to exercise
-  them.
-- **Playwright chromium is installed** (`~/.cache/ms-playwright/`). The playwright **MCP**
-  does *not* work — it wants `/opt/google/chrome`. Drive the browser with a small
-  `node` script using `require("playwright")` instead; that is what verified PRs 5–9.
-- Port 3000 is the dev server. Kill it with
-  `ss -lptn 'sport = :3000'` → `kill <pid>` (never `pkill -f "next dev"`; it has killed the
-  agent's own shell).
+## Done
 
-## The work
+### A. Copy and naming — done
 
-### A. Copy and naming
+- "résumé" → "resume" everywhere user-facing (the one remaining accent is deliberate
+  Unicode test data in `lib/upload/filename.test.ts`).
+- "Import a .tex file" → **"Upload your own"**, with the format named in helper text
+  underneath rather than in the button.
+- Jargon pass on the inspector: "Structure" → **"Outline"**, "elements" → "parts",
+  "Not annotated yet" → "Not broken into parts yet", "This element has no editable
+  fields" → "There is nothing to edit in this part".
 
-- [ ] **Drop the accent: "résumé" → "resume"** in all user-facing copy. Grep is
-      `rg 'résumé' apps/web/src`. Present in `studio-document-list.tsx`,
-      `from-bank/route.ts`, `import.ts` (`titleFromFilename` fallback), and several
-      error strings.
-- [ ] **Friendlier file wording.** "Import a .tex file" → something like "Upload a file"
-      or "Use your own file". The `.tex` restriction should be explained *after* the
-      click (or in helper text), not be the label. Same for the empty state.
-- [ ] Re-read every string added in PRs 5–9 for jargon. "Span", "annotate", and
-      "structure" leak implementation vocabulary; `docs/specs/vocabulary-reskin.md` is the
-      existing parked spec on this problem.
+### B. Document kind — done
 
-### B. Document kind — resume vs CV vs cover letter
+- `lib/latex/detect-kind.ts` guesses from the document BODY first (our own macros, then a
+  salutation or sign-off) and the filename second. Whole-word matching, so "discovery"
+  is not read as "cover".
+- The browser reads the file, detects, and **shows the guess with its reasoning** in a
+  confirm dialog before anything is created. The API applies the same detection for
+  direct callers instead of the old unconditional `kind: "resume"`.
+- Kind is editable afterwards — `PATCH /api/tex-documents/[id]` accepts `kind`, and the
+  editor's new document bar exposes it.
 
-Right now import **always creates `kind: "resume"`** and nothing asks or detects. The
-kinds already exist in the DB (`TexDocumentKind`) and in `generateCoverLetterTex`.
+### C. Studio page — done
 
-- [ ] Let the user pick a kind on import (and on create).
-- [ ] Consider light detection as a *default*, never a silent decision — e.g. filename
-      containing "cover", or the body having `\slothingPara` / no `\slothingSection`.
-- [ ] Make kind editable after the fact (it drives the list label and, later, the
-      thumbnail badge).
-- [ ] Decide whether `cv` differs from `resume` beyond the label — spec §19 Q4 is still
-      open. If it does not, consider collapsing the two.
+- **Delete** (Pattern A confirm; row added to `docs/destructive-actions-pattern.md`),
+  **inline rename** (optimistic, rolls back on failure), **duplicate** (new
+  `POST /api/tex-documents/[id]/duplicate`, `copyTitle` numbers repeats).
+- **Grid view** with real first-page thumbnails: lazy via IntersectionObserver, globally
+  capped at 2 concurrent compiles, cached per `(id, updatedAt)`, with a "No preview yet"
+  placeholder for documents that will not compile or when no engine is present.
+- Search, kind filter chips (zero-count chips are disabled rather than leading to a dead
+  end), sort. A distinct "Nothing matches" empty state so a filter is never mistaken for
+  lost work. View/sort/defaults persist under `taida:studio:view|sort|defaults`.
+- **New-document defaults** (font, size, margin) behind the toolbar's settings toggle,
+  applied at creation and honestly scoped — the panel says it cannot restyle existing
+  documents, because it cannot.
+- **`POST /api/tex-documents/starter`** — new. An empty knowledge bank used to be a dead
+  end: `from-bank` refuses it and the cover-letter route needs both a job description and
+  a provider key, so a new account could create nothing at all.
+- The editor gained a **document bar** — title, type, save state, and a link back to
+  Studio. It previously opened into two panes with no chrome whatsoever.
 
-### C. Studio page (`/studio`)
+### D. Browser pass — done
 
-Currently: a flat list, two buttons, no settings, no delete.
+Walked with a real browser at 1440×900 and 390×844, light and dark: create (all three
+kinds, both sources), upload (a Slothing `.tex`, a foreign Overleaf `.tex`, a broken one,
+a `.txt`), open, click-to-select, rename, duplicate, delete, grid, filters, settings.
+**Zero console errors, zero failed API calls, no horizontal scroll at 390px.**
 
-- [ ] **Delete a document.** Backend already exists (`DELETE /api/tex-documents/[id]`,
-      cascades versions). Must use **Pattern A** (`useConfirmDialog`) per
-      `docs/destructive-actions-pattern.md`, and **append a row to its Current Actions
-      table** — that is a hard project rule.
-- [ ] **Rename** (backend exists: `PATCH` with `title`). Inline rename in the list.
-- [ ] **Duplicate** — cheap and useful given documents are just strings.
-- [ ] **Grid view, Google-Docs style,** with a real first-page thumbnail so a document is
-      identifiable at a glance. Toggle between list and grid, persisted under
-      `taida:studio:view` (canonical `taida:` prefix; see `lib/constants/storage.ts`).
-      - Thumbnail source: the PDF already exists per document. Options are rendering page
-        1 to a PNG server-side, or rendering client-side with the pdfjs loader already
-        extracted at `lib/pdf/load-pdfjs.ts` and caching the data URL. Prefer whichever
-        avoids adding a dependency.
-      - Needs a placeholder for documents that have never compiled and for the
-        engine-unavailable case.
-- [ ] **Expose settings on the Studio page**, not only inside a document. At minimum
-      default font/size/margin for new documents. Decide where these live — a new
-      user-preferences row, or reuse the existing settings surface.
-- [ ] Sort/filter (by kind, by edited-at). Empty state should point at the bank when the
-      bank is empty, since "New resume from my bank" fails in that case.
+Fixed by the browser pass:
 
-### D. UI pass, driven in the browser
+1. **Documents that could never compile.** `generateResumeTex` emitted
+   `\begin{slothingItems}\end{slothingItems}` for an entry with no bullets — an education
+   row, the ordinary case. An empty `itemize` is a hard LaTeX error, not an empty render,
+   so "build from my bank" produced resumes that 422'd forever. Fixed in the generator
+   (no list at all) **and** guarded in `slothing.sty` (`\ifslothing@sawitem`) for
+   documents the generator does not control. `STY_VERSION` bumped to 4 so cached PDFs
+   are invalidated. Both verified against the real engine.
+2. **The editor overflowed the viewport** — `lg:h-screen` ignored the shell's 3.5rem
+   sticky bar, pushing "Download PDF" off the bottom of the window.
+3. **Vague AI errors.** A missing provider key and a model returning nonsense gave the
+   identical "Could not annotate this document." Now separated, and the model-failure
+   case says the document is unchanged, which is the actual worry.
 
-The agent should drive Chrome itself and walk every path, capturing screenshots and
-console errors. Precedent: this method caught two blank-screen bugs in PR 5, a broken
-settings panel in 7a, and a design flaw in 7b that no unit test saw.
+Not a bug: the floating gear that overlaps the inspector footer is `TweaksPanel`, which
+is **development-only**.
 
-- [ ] `/studio` — empty state, populated list, grid view, every action.
-- [ ] Import flow — a real Overleaf `.tex`, a broken one, a non-`.tex`, a huge one.
-- [ ] Editor — click/hover on every span kind, multi-page documents, zoom, the splitter,
-      selection surviving a recompile, the never-blank rule under a failing compile.
-- [ ] Field editing — plain fields, rich fields (the read-only + "Edit as LaTeX" path),
-      "Remove formatting" confirm.
-- [ ] AI actions and the annotation pass **with a provider key configured** — these have
-      never run against a real model (see E).
-- [ ] Cover letter end to end.
-- [ ] Narrow viewport. Below ~1024px the two-pane layout has **no** mobile treatment yet;
-      the plan was a bottom sheet using the existing `components/ui/sheet.tsx`.
-- [ ] Dark mode. None of the new UI has been looked at in dark mode. Note the documented
-      precedent in `bank/preview/highlight-layer.tsx`: overlay colours are inline-styled
-      because the PDF canvas is white regardless of theme.
+## Still open
 
-### E. Unverified and known
+### E. Unverified
 
-- [ ] **No AI path has ever run against a real model.** Three features rest on this:
-      span revision (PR 6), the annotation pass (PR 7b), cover-letter generation (PR 8).
-      PR 7b's design was *broken* in a way only real execution revealed, so treat all
-      three as unproven until exercised with a key.
-- [ ] `/api/tailor` was ported for the extension but **not tested against a live
-      extension** — only read from its source that it consumes `savedResume.id` + `jobId`.
-- [ ] Command palette lists **no templates** (both template routes return empty lists).
-      Resolves when the curated `.tex` gallery lands — spec §10, was "PR 10".
-- [ ] PDF **style** cloning is gone (accepted trade, spec §2.1). PDF *content* import into
-      the bank still works.
-- [ ] Pre-existing, unrelated to this work: the dev log spams
+- [ ] **No AI path has ever run against a real model.** Span revision (PR 6), the
+      annotation pass (PR 7b), and cover-letter generation (PR 8) all rest on this, and
+      PR 7b's design was *broken* in a way only real execution revealed. The failure
+      paths are now verified graceful; the success paths are not verified at all.
+      Add a working `ANTHROPIC_API_KEY`/`OPENAI_API_KEY` to `apps/web/.env.local`.
+- [ ] `/api/tailor` was ported for the extension but never tested against a live extension.
+- [ ] Command palette lists **no templates** — both template routes return empty lists.
+      Resolves when the curated `.tex` gallery lands (spec §10).
+- [ ] Multipart import has no unit test (jsdom lacks a real `File`/`FormData`); covered by
+      the live-server browser pass only.
+
+### F. Deliberately not done
+
+- [ ] **Mobile is functional but not designed.** Below `lg` the two panes stack and
+      everything is reachable and scrollable, with no horizontal overflow — but the
+      planned bottom sheet (`components/ui/sheet.tsx`) was not built.
+- [ ] Whether `cv` should differ from `resume` beyond its label is still open (spec §19
+      Q4). They currently share a pipeline and a starter.
+- [ ] Version history has no UI. The rows are written on every source change and
+      `GET /api/tex-documents/[id]?versions=true` returns them; nothing renders them.
+- [ ] Pre-existing and unrelated: the dev log spams
       `[db] chunks_vec bootstrap skipped: SQLITE_ERROR: no such module: vec0`.
-      That is the sqlite-vec extension being absent locally.
-- [ ] Multipart import has no unit test (jsdom lacks real `File`/`FormData`, and the
-      shared test setup requires jsdom). Covered by a live-server check only.
 
 ## Conventions that will bite
 
-From `CLAUDE.md` plus things learned the hard way this session:
-
 - **Lints hard-fail CI**: no `bg-white`/`text-gray-*`/hex in style props; no `font-sans`
-  or `font-serif`; no arbitrary `rounded-[8px]`; **no `new Date()` / `Date.now()`** outside
-  a small allowlist — use `nowIso()` from `@/lib/format/time`.
+  or `font-serif`; no arbitrary `rounded-[8px]`; **no `new Date()` / `Date.now()`** —
+  use `nowIso()` from `@/lib/format/time`.
 - `pluralize()` for counts; `<TimeAgo />` for times; `crypto` for ids, never `Math.random()`.
 - Destructive actions need confirm/undo **and** a row in
   `docs/destructive-actions-pattern.md`.
-- Adding a sidebar entry breaks `sidebar.test.ts` (exact-array assertions). Studio already
-  has one, so no change is needed.
+- The shared test setup replaces `localStorage` with no-op `vi.fn()`s. A round-trip
+  assertion has to install its own backing store — see `lib/studio/preferences.test.ts`.
 - `error.tsx` in any new route dir must match the exact 3-line shape asserted by
   `route-errors.test.ts`.
-- **i18n**: app pages hardcode English (22 of 27, including Studio). Adding a message key
-  means genuinely translating it into all 7 non-English files, since the suite effectively
-  enforces strict-identical. Keep hardcoding English.
-- `pnpm run test:run` runs the translation check first; the LaTeX CI job needs Tectonic and
-  self-skips without it.
-- **Prettier reformats between edits**, so a string-replacement's "before" text goes stale.
-  Always assert the replacement matched instead of letting it silently no-op — that
-  silently swallowed two edits this session.
+- **i18n**: app pages hardcode English (Studio included). Adding a message key means
+  genuinely translating it into all 7 non-English files. Keep hardcoding English.
+- **Prettier reformats between edits**, so a string replacement's "before" text goes
+  stale. Always assert the replacement matched instead of letting it silently no-op.
 - `/api/documents/*` is the uploaded-documents API. The LaTeX one is
   **`/api/tex-documents/*`**. Do not `mkdir -p` into the former.

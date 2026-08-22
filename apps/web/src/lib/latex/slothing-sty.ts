@@ -132,7 +132,7 @@ export const SLOTHING_STY = String.raw`%% slothing.sty — the Slothing document
   \vspace{0.35em}
 }
 
-\newcommand{\slothingItem}[2][]{\item \slothing@span{#1}{#2}}
+\newcommand{\slothingItem}[2][]{\global\slothing@sawitemtrue\item \slothing@span{#1}{#2}}
 
 \newcommand{\slothingPara}[2][]{\slothing@span{#1}{#2}\par\vspace{0.6em}}
 
@@ -149,9 +149,20 @@ export const SLOTHING_STY = String.raw`%% slothing.sty — the Slothing document
 \newcommand{\slothingMark}[2][]{\slothing@span{#1}{#2}}
 
 %% Entry bodies wrap their items so \slothingItem always has a list to land in.
+%%
+%% The guard is load-bearing. An itemize containing no \item is a hard LaTeX error
+%% ("Something's wrong--perhaps a missing \item") that kills the whole document, and an
+%% entry with no bullets is completely ordinary — an education row, or a bullet the user
+%% just deleted. The generator avoids emitting an empty list at all; this catches the
+%% cases it does not control: AI annotation, imported documents, and hand edits.
+%%
+%% The flag is global because \item's own grouping would otherwise discard it.
+\newif\ifslothing@sawitem
 \newenvironment{slothingItems}
-  {\begin{itemize}[leftmargin=1.2em,itemsep=0.1em,topsep=0.2em,parsep=0pt]}
-  {\end{itemize}}
+  {\global\slothing@sawitemfalse
+   \begin{itemize}[leftmargin=1.2em,itemsep=0.1em,topsep=0.2em,parsep=0pt]}
+  {\ifslothing@sawitem\else\item[]\fi
+   \end{itemize}}
 
 %% --- inline subset (§3.4) ---------------------------------------------------
 %% The ONLY inline markup the app or the AI may emit. Everything else is escaped text.
@@ -163,4 +174,4 @@ export const SLOTHING_STY = String.raw`%% slothing.sty — the Slothing document
 `;
 
 /** Bumped whenever the macros change; participates in the compile cache key. */
-export const STY_VERSION = 3;
+export const STY_VERSION = 4;

@@ -37,6 +37,24 @@ import { z } from "zod";
 
 export const dynamic = "force-dynamic";
 
+/**
+ * Turn a provider exception into something the user can act on.
+ *
+ * The generic "could not do that" this replaced was the same message for a missing API
+ * key and for a model that returned nonsense — one of which the user can fix in thirty
+ * seconds, and the other of which they cannot. Saying which is the whole value.
+ */
+export function explainLlmFailure(error: unknown): string {
+  const message = error instanceof Error ? error.message : String(error);
+  if (/api[ _-]?key|unauthorized|401|403|invalid[ _-]?token/i.test(message)) {
+    return "No working AI provider is set up. Add a provider key in Settings, then try again.";
+  }
+  if (/timeout|ETIMEDOUT|ECONNREFUSED|fetch failed|ENOTFOUND/i.test(message)) {
+    return "The AI provider could not be reached. Check your connection or provider settings, then try again.";
+  }
+  return "The AI could not work out this document's sections and bullets. Your document is unchanged.";
+}
+
 const bodySchema = z.object({ source: z.string().min(1).optional() });
 
 /** Annotating a whole document is a large generation. */
@@ -113,7 +131,7 @@ export async function POST(
     gate.refund();
     console.error("Annotate error:", error);
     return NextResponse.json(
-      { error: "Could not annotate this document.", code: "llm_failed" },
+      { error: explainLlmFailure(error), code: "llm_failed" },
       { status: 502 },
     );
   }

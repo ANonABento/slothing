@@ -112,6 +112,61 @@ describe("generateCoverLetterTex", () => {
   });
 });
 
+describe("entries with no bullets", () => {
+  const BULLETLESS = {
+    name: "Kevin Jiang",
+    contact: "k@example.com",
+    sections: [
+      {
+        title: "Education",
+        entries: [
+          {
+            organisation: "University of Waterloo",
+            role: "BASc, Computer Engineering",
+            dates: "Present",
+            bullets: [],
+          },
+        ],
+      },
+    ],
+  };
+
+  it("emits no item list at all", () => {
+    // An itemize with no \item is a hard LaTeX error, not an empty render. This
+    // produced documents that could never compile — an education row is the ordinary
+    // case that hit it.
+    const tex = generateResumeTex(BULLETLESS);
+    expect(tex).not.toContain("begin{slothingItems}");
+  });
+
+  it("still emits the entry, with its four arguments intact", () => {
+    const tex = generateResumeTex(BULLETLESS);
+    expect(tex).toContain(
+      "{University of Waterloo}{BASc, Computer Engineering}{Present}{}",
+    );
+  });
+
+  it("keeps the list for entries that do have bullets", () => {
+    const tex = generateResumeTex({
+      ...BULLETLESS,
+      sections: [
+        {
+          title: "Experience",
+          entries: [
+            {
+              organisation: "Bracket Bot",
+              role: "Engineer",
+              dates: "2025",
+              bullets: ["Cut calibration time 40%."],
+            },
+          ],
+        },
+      ],
+    });
+    expect(tex).toContain("begin{slothingItems}");
+  });
+});
+
 const describeWithEngine = isEngineAvailable() ? describe : describe.skip;
 
 describeWithEngine("generated documents compile (requires Tectonic)", () => {
@@ -138,6 +193,47 @@ describeWithEngine("generated documents compile (requires Tectonic)", () => {
     const result = await compile({ source: tex, mode: "export" });
     expect(result.log.ok).toBe(true);
     expect(result.pdf.byteLength).toBeGreaterThan(1000);
+  }, 90_000);
+
+  it("compiles a resume whose entries have no bullets", async () => {
+    const tex = generateResumeTex({
+      name: "Kevin Jiang",
+      contact: "k@example.com",
+      sections: [
+        {
+          title: "Education",
+          entries: [
+            {
+              organisation: "University of Waterloo",
+              role: "BASc",
+              dates: "Present",
+              bullets: [],
+            },
+          ],
+        },
+      ],
+    });
+    const result = await compile({ source: tex, mode: "export" });
+    expect(result.log.ok).toBe(true);
+  }, 90_000);
+
+  it("survives a hand-written empty item list rather than failing the document", async () => {
+    // The generator no longer emits one, but AI annotation, an imported .tex, and a hand
+    // edit all can. A missing bullet must not cost the user their whole document.
+    const source = `\\documentclass[11pt,letterpaper]{article}
+\\usepackage{slothing}
+\\slothingcontract{1}
+\\slothingset{ font = LatinModern, accent = {0,0,0} }
+\\begin{document}
+\\slothingHeader[id=hdr-000000]{Guard}{g@example.com}
+\\slothingSection[id=sec-000000]{Education}
+\\slothingEntry[id=ent-000000]{Waterloo}{BASc}{Present}{
+  \\begin{slothingItems}
+  \\end{slothingItems}
+}
+\\end{document}`;
+    const result = await compile({ source, mode: "export" });
+    expect(result.log.ok).toBe(true);
   }, 90_000);
 
   it("round-trips: generate → compile → re-scan keeps ids stable", async () => {

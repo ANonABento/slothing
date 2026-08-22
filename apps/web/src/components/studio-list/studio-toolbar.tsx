@@ -53,16 +53,22 @@ function Chip({
   count: number;
   onClick: () => void;
 }) {
+  // A chip with nothing behind it can only ever produce "nothing matches", so it is
+  // shown (the vocabulary is useful) but not clickable.
+  const empty = count === 0;
   return (
     <button
       type="button"
       onClick={onClick}
+      disabled={empty}
       aria-pressed={active}
       className={cn(
         "rounded-full border px-3 py-1 text-[12px] transition-colors",
-        active
-          ? "border-brand bg-brand-soft text-ink"
-          : "border-rule text-ink-2 hover:border-brand hover:text-ink",
+        empty
+          ? "cursor-default border-rule text-ink-3 opacity-60"
+          : active
+            ? "border-brand bg-brand-soft text-ink"
+            : "border-rule text-ink-2 hover:border-brand hover:text-ink",
       )}
     >
       {label}
