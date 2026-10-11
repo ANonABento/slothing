@@ -1,0 +1,31 @@
+# Slothing — AI agent instructions
+
+Active app is `v2/` (Next.js 15 App Router + React 19 + Tailwind 3 + better-sqlite3 + Zod, npm).
+`v1/` is a frozen archive. Read it for reference and port code deliberately, but never edit it.
+
+## Principles for v2
+
+- **Stay small.** v2 exists because v1 grew to 300k LOC, 55 tables, and 4 competing render paths.
+  Add a feature only when the core loop (profile → job → tailor → PDF) needs it. When
+  something replaces something else, delete the old one in the same change.
+- **Grounding is non-negotiable.** Tailored output references profile ids; identity fields
+  come from the profile only. Every path that writes a resume goes through `groundResume`.
+- Single local user, no auth. Don't add `user_id` plumbing until there is a second user.
+
+## Commands (from `v2/`)
+
+```bash
+npm run dev        # :3000
+npm run typecheck
+npm test           # vitest; render tests skip if an engine is missing
+npm run engines    # fetch typst + tectonic into .engines/
+```
+
+## Conventions
+
+- Colors only via tokens in `src/app/globals.css` / `tailwind.config.ts` (`bg-paper`, `text-ink`, `text-brand`, …).
+  No raw Tailwind palette colors (`bg-white`, `text-gray-500`).
+- Headings: `font-display tracking-tight`. Eyebrows: `<Eyebrow>` (mono, uppercase).
+- Mutations are server actions in `src/app/actions.ts` returning `Result`.
+- Render engines share one input shape (`ResolvedResume` / `ResolvedLetter`). A template change
+  should land in all three engines until one is chosen.
