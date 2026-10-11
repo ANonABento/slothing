@@ -1,0 +1,89 @@
+# Dependencies
+node_modules
+**/node_modules/
+.pnpm-store
+.turbo/
+
+# Next.js
+.next
+**/.next/
+out
+build
+**/dist/
+**/dist-firefox/
+!apps/extension/dist/
+!apps/extension/dist/sharedUi.js
+
+# Local data
+data/
+!evals/data/
+!evals/data/**
+uploads/
+evals/reports/
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+
+# Environment
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# Misc
+*.log
+.context/
+.claude/
+.playwright-mcp/
+
+# Playwright
+playwright-report/
+test-results/
+
+.worktrees/
+.audit/
+evals/reports/
+.design-ref/
+.design-ref-v2/
+.dogfood/
+**/.dogfood/
+
+# Local Stripe provisioning artifacts (price IDs).
+# Production reads these from env / dashboard, not from this file.
+apps/web/src/cloud/billing/stripe-config.json
+
+# Generated resume HTML/PDF output (per-user runtime artifacts).
+
+# Loose UI-audit screenshots dropped at the repo root.
+/audit-iter-*.png
+/bento-*.png
+/review-*.png
+/layout-*.png
+/p1-*.png
+/p2-*.png
+apps/web/evals/reports/
+.audit-fixtures/
+
+# Compiled LaTeX PDF cache (derived, regenerable)
+apps/web/.cache/
