@@ -15,6 +15,10 @@ import {
 } from "./types";
 
 const DATA_DIR = process.env.SLOTHING_DATA_DIR || join(process.cwd(), "data");
+// Belt and braces: a test run that bypasses vitest.config (e.g. a stray file run from elsewhere) must not touch real data.
+if (process.env.VITEST && !process.env.SLOTHING_DATA_DIR) {
+  throw new Error("Refusing to open the real database from a test. Set SLOTHING_DATA_DIR.");
+}
 
 function open() {
   mkdirSync(DATA_DIR, { recursive: true });
