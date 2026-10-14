@@ -13,7 +13,7 @@ function openAICompat(): OpenAICompat | null {
       provider: "Nebius",
       key: process.env.NEBIUS_API_KEY,
       base: process.env.NEBIUS_BASE_URL || "https://api.studio.nebius.com/v1",
-      model: process.env.NEBIUS_MODEL || "meta-llama/Llama-3.3-70B-Instruct",
+      model: process.env.NEBIUS_MODEL || "moonshotai/Kimi-K3",
     };
   }
   if (process.env.OPENAI_API_KEY) {
