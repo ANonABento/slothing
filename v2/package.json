@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "better-sqlite3": "^13.0.3",
+    "lucide-react": "^1.57.0",
     "mammoth": "^1.13.0",
     "next": "^15.5.27",
     "playwright-core": "^1.64.0",

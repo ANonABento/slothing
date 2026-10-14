@@ -1,5 +1,6 @@
 "use client";
 
+import { Sparkles } from "lucide-react";
 import { useState, useTransition } from "react";
 
 import { saveLetterAction, writeLetterAction } from "@/app/actions";
@@ -55,7 +56,7 @@ export function LetterEditor({
       <div className="space-y-3">
         <p className="text-sm text-ink-2">No cover letter yet.</p>
         <div className="flex gap-2">
-          <Button variant="primary" disabled={pending} onClick={generate}>{pending ? "Writing…" : "Write with AI"}</Button>
+          <Button variant="primary" disabled={pending} onClick={generate}><Sparkles className="h-4 w-4" />{pending ? "Writing…" : "Write with AI"}</Button>
           <Button variant="ghost" disabled={pending} onClick={blank}>Start blank</Button>
         </div>
         {error && <p className="text-sm text-warn">{error}</p>}
@@ -66,7 +67,7 @@ export function LetterEditor({
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <Button variant="secondary" disabled={pending} onClick={generate}>{pending ? "Writing…" : "Rewrite with AI"}</Button>
+        <Button variant="secondary" disabled={pending} onClick={generate}><Sparkles className="h-4 w-4" />{pending ? "Writing…" : "Rewrite with AI"}</Button>
         <div className="flex items-center gap-2">
           {dirty && <span className="text-xs text-ink-3">Unsaved</span>}
           <Button variant="primary" disabled={!dirty || pending} onClick={save}>Save</Button>

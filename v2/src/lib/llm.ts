@@ -1,12 +1,40 @@
 import type { z } from "zod";
 
 /**
- * Minimal provider-agnostic LLM client. Anthropic if ANTHROPIC_API_KEY is set,
- * otherwise any OpenAI-compatible endpoint.
+ * Minimal provider-agnostic LLM client. First configured wins:
+ * Anthropic → Nebius (OpenAI-compatible) → any OpenAI-compatible endpoint.
  */
 
+type OpenAICompat = { provider: string; key: string; base: string; model: string };
+
+function openAICompat(): OpenAICompat | null {
+  if (process.env.NEBIUS_API_KEY) {
+    return {
+      provider: "Nebius",
+      key: process.env.NEBIUS_API_KEY,
+      base: process.env.NEBIUS_BASE_URL || "https://api.studio.nebius.com/v1",
+      model: process.env.NEBIUS_MODEL || "meta-llama/Llama-3.3-70B-Instruct",
+    };
+  }
+  if (process.env.OPENAI_API_KEY) {
+    return {
+      provider: process.env.OPENAI_BASE_URL ? "OpenAI-compatible" : "OpenAI",
+      key: process.env.OPENAI_API_KEY,
+      base: process.env.OPENAI_BASE_URL || "https://api.openai.com/v1",
+      model: process.env.OPENAI_MODEL || "gpt-5",
+    };
+  }
+  return null;
+}
+
+export function llmInfo(): { provider: string; model: string } | null {
+  if (process.env.ANTHROPIC_API_KEY) return { provider: "Anthropic", model: process.env.ANTHROPIC_MODEL || "claude-sonnet-5-5" };
+  const c = openAICompat();
+  return c ? { provider: c.provider, model: c.model } : null;
+}
+
 export function llmConfigured() {
-  return Boolean(process.env.ANTHROPIC_API_KEY || process.env.OPENAI_API_KEY);
+  return llmInfo() !== null;
 }
 
 async function complete(system: string, user: string): Promise<string> {
@@ -30,13 +58,13 @@ async function complete(system: string, user: string): Promise<string> {
     return json.content.map((c) => c.text ?? "").join("");
   }
 
-  if (process.env.OPENAI_API_KEY) {
-    const base = (process.env.OPENAI_BASE_URL || "https://api.openai.com/v1").replace(/\/+$/, "");
-    const res = await fetch(`${base}/chat/completions`, {
+  const c = openAICompat();
+  if (c) {
+    const res = await fetch(`${c.base.replace(/\/+$/, "")}/chat/completions`, {
       method: "POST",
-      headers: { "content-type": "application/json", authorization: `Bearer ${process.env.OPENAI_API_KEY}` },
+      headers: { "content-type": "application/json", authorization: `Bearer ${c.key}` },
       body: JSON.stringify({
-        model: process.env.OPENAI_MODEL || "gpt-5",
+        model: c.model,
         messages: [
           { role: "system", content: system },
           { role: "user", content: user },
@@ -44,12 +72,12 @@ async function complete(system: string, user: string): Promise<string> {
         response_format: { type: "json_object" },
       }),
     });
-    if (!res.ok) throw new Error(`OpenAI ${res.status}: ${await res.text()}`);
+    if (!res.ok) throw new Error(`${c.provider} ${res.status}: ${await res.text()}`);
     const json = (await res.json()) as { choices: { message: { content: string } }[] };
     return json.choices[0]?.message.content ?? "";
   }
 
-  throw new Error("No LLM configured. Set ANTHROPIC_API_KEY or OPENAI_API_KEY in v2/.env.local.");
+  throw new Error("No LLM configured. Set ANTHROPIC_API_KEY, NEBIUS_API_KEY or OPENAI_API_KEY in v2/.env.local.");
 }
 
 function extractJSON(text: string): unknown {

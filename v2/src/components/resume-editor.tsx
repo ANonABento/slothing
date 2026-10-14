@@ -1,5 +1,6 @@
 "use client";
 
+import { Sparkles } from "lucide-react";
 import { useState, useTransition } from "react";
 
 import { saveResumeAction, tailorResumeAction } from "@/app/actions";
@@ -73,7 +74,7 @@ function EntryList({
         {sources.map((s) => {
           const entry = byId.get(s.id);
           return (
-            <div key={s.id} className="rounded-md border border-rule p-3">
+            <div key={s.id} className="rounded-lg border border-rule bg-page p-4">
               <label className="flex cursor-pointer items-center gap-2 text-sm font-medium">
                 <input type="checkbox" checked={Boolean(entry)} onChange={(e) => toggle(s.id, e.target.checked)} className="accent-[var(--brand)]" />
                 {s.heading}
@@ -136,9 +137,10 @@ export function ResumeEditor({
   const actions = (
     <div className="flex flex-wrap gap-2">
       <Button variant={doc ? "secondary" : "primary"} disabled={pending} onClick={() => generate(true)}>
+        <Sparkles className="h-4 w-4" />
         {pending ? "Working…" : doc ? "Re-tailor with AI" : "Tailor with AI"}
       </Button>
-      <Button variant="ghost" disabled={pending} onClick={() => generate(false)}>Start from full profile</Button>
+      <Button variant="ghost" disabled={pending} onClick={() => generate(false)}>Use full profile</Button>
     </div>
   );
 

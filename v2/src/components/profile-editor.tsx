@@ -1,20 +1,22 @@
 "use client";
 
+import { Check, FileUp, Sparkles, UserRound } from "lucide-react";
 import { useRef, useState, useTransition } from "react";
 
 import { importResumeAction, saveProfileAction } from "@/app/actions";
 import type { Bullet, Profile } from "@/lib/types";
 import { ListEditor } from "./list-editor";
+import { PageBody, PageHeader } from "./page-header";
 import { PdfPreview } from "./pdf-preview";
-import { Button, Card, Eyebrow, Input, Label, Textarea } from "./ui";
+import { Button, Card, CardTitle, Eyebrow, Input, Label, Textarea } from "./ui";
 
 const cid = (p: string) => `${p}_${crypto.randomUUID().slice(0, 12)}`;
 
 function Section({ title, children, action }: { title: string; children: React.ReactNode; action?: React.ReactNode }) {
   return (
-    <Card className="p-4">
-      <div className="mb-3 flex items-center justify-between">
-        <h2 className="font-display text-base font-semibold tracking-tight">{title}</h2>
+    <Card className="p-5">
+      <div className="mb-4 flex items-center justify-between">
+        <CardTitle>{title}</CardTitle>
         {action}
       </div>
       {children}
@@ -51,14 +53,15 @@ function ImportPanel({ hasData, onImported }: { hasData: boolean; onImported: (p
 
   if (!open) {
     return (
-      <Button variant="ghost" onClick={() => setOpen(true)}>
-        Import from a resume…
+      <Button variant="ghost" size="sm" onClick={() => setOpen(true)}>
+        <FileUp className="h-3.5 w-3.5" /> Re-import from a resume
       </Button>
     );
   }
   return (
-    <Card className="p-4">
-      <Eyebrow className="mb-2">Import</Eyebrow>
+    <Card className="border-brand p-5">
+      <Eyebrow className="mb-1">Import</Eyebrow>
+      <CardTitle className="mb-2">Start from your current resume</CardTitle>
       <p className="mb-3 text-sm text-ink-2">
         Upload your current resume (PDF, DOCX, or text) or paste it. It&apos;s parsed into the editor below, and nothing is saved
         until you review it and click Save.{hasData && " Importing replaces what's in the editor."}
@@ -78,11 +81,11 @@ function ImportPanel({ hasData, onImported }: { hasData: boolean; onImported: (p
         }
         className="space-y-3"
       >
-        <input type="file" name="file" accept=".pdf,.docx,.txt,.md" className="block text-sm text-ink-2 file:mr-3 file:rounded-md file:border file:border-rule-strong file:bg-paper file:px-3 file:py-1 file:text-sm file:text-ink" />
+        <input type="file" name="file" accept=".pdf,.docx,.txt,.md" className="block text-sm text-ink-2 file:mr-3 file:mr-3 file:h-9 file:rounded-lg file:border file:border-ink file:bg-transparent file:px-3 file:text-sm file:font-medium file:text-ink" />
         <Textarea name="text" rows={4} placeholder="…or paste resume text here" />
         {error && <p className="text-sm text-warn">{error}</p>}
         <div className="flex gap-2">
-          <Button variant="primary" disabled={pending}>{pending ? "Parsing…" : "Parse resume"}</Button>
+          <Button variant="primary" disabled={pending}><Sparkles className="h-4 w-4" />{pending ? "Parsing…" : "Parse resume"}</Button>
           {hasData && <Button type="button" variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>}
         </div>
       </form>
@@ -113,21 +116,21 @@ export function ProfileEditor({ initial }: { initial: Profile }) {
     });
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-      <div className="space-y-4">
-        <div className="flex items-end justify-between gap-4">
-          <div>
-            <Eyebrow>Your experience</Eyebrow>
-            <h1 className="font-display text-3xl font-semibold tracking-tight">Profile</h1>
-            <p className="mt-1 max-w-prose text-sm text-ink-2">
-              Everything you&apos;ve done, written once. Tailored resumes only ever pick and rephrase from here, and never add to it.
-            </p>
-          </div>
-          <div className="flex shrink-0 items-center gap-2">
-            {dirty && <span className="text-xs text-ink-3">Unsaved</span>}
-            <Button variant="primary" onClick={save} disabled={pending || !dirty}>{pending ? "Saving…" : "Save"}</Button>
-          </div>
-        </div>
+    <>
+      <PageHeader
+        icon={UserRound}
+        title="Profile"
+        description="Everything you've done, written once. Tailored resumes only pick and rephrase from here. They never add to it."
+        actions={
+          <>
+            {dirty ? <span className="text-xs text-ink-3">Unsaved changes</span> : hasData && <span className="inline-flex items-center gap-1 text-xs text-ok"><Check className="h-3.5 w-3.5" />Saved</span>}
+            <Button variant="primary" onClick={save} disabled={pending || !dirty}>{pending ? "Saving…" : "Save profile"}</Button>
+          </>
+        }
+      />
+      <PageBody>
+    <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+      <div className="min-w-0 space-y-4">
         {error && <p className="text-sm text-warn">{error}</p>}
 
         <ImportPanel hasData={hasData} onImported={setP} />
@@ -162,7 +165,7 @@ export function ProfileEditor({ initial }: { initial: Profile }) {
             addLabel="Role"
             onAdd={() => ({ id: cid("exp"), company: "", title: "", location: "", start: "", end: "", bullets: [] })}
             render={(e, update) => (
-              <div className="space-y-2 rounded-md border border-rule p-3">
+              <div className="space-y-3 rounded-lg border border-rule bg-page p-4">
                 <div className="grid gap-2 sm:grid-cols-2">
                   <Field label="Title" value={e.title} onChange={(v) => update({ ...e, title: v })} />
                   <Field label="Company" value={e.company} onChange={(v) => update({ ...e, company: v })} />
@@ -184,7 +187,7 @@ export function ProfileEditor({ initial }: { initial: Profile }) {
             addLabel="Project"
             onAdd={() => ({ id: cid("prj"), name: "", url: "", bullets: [] })}
             render={(pr, update) => (
-              <div className="space-y-2 rounded-md border border-rule p-3">
+              <div className="space-y-3 rounded-lg border border-rule bg-page p-4">
                 <div className="grid gap-2 sm:grid-cols-2">
                   <Field label="Name" value={pr.name} onChange={(v) => update({ ...pr, name: v })} />
                   <Field label="URL" value={pr.url} onChange={(v) => update({ ...pr, url: v })} />
@@ -203,7 +206,7 @@ export function ProfileEditor({ initial }: { initial: Profile }) {
             addLabel="School"
             onAdd={() => ({ id: cid("edu"), school: "", degree: "", location: "", start: "", end: "", details: "" })}
             render={(e, update) => (
-              <div className="grid gap-2 rounded-md border border-rule p-3 sm:grid-cols-2">
+              <div className="grid gap-3 rounded-lg border border-rule p-4 sm:grid-cols-2">
                 <Field label="School" value={e.school} onChange={(v) => update({ ...e, school: v })} />
                 <Field label="Degree" value={e.degree} onChange={(v) => update({ ...e, degree: v })} />
                 <Field label="Start" value={e.start} onChange={(v) => update({ ...e, start: v })} />
@@ -236,14 +239,16 @@ export function ProfileEditor({ initial }: { initial: Profile }) {
         </Section>
       </div>
 
-      <div className="lg:sticky lg:top-6 lg:h-[calc(100vh-3rem)]">
-        <Eyebrow className="mb-2">Base resume · all of it, untailored</Eyebrow>
+      <div className="xl:sticky xl:top-6 xl:h-[calc(100vh-3rem)]">
+        <Eyebrow className="mb-2">Base resume · everything, untailored</Eyebrow>
         {hasData ? (
           <PdfPreview query="kind=resume" version={version} />
         ) : (
-          <Card className="p-6 text-sm text-ink-2">Import or fill in your profile, save, and a preview appears here.</Card>
+          <Card className="grid min-h-[50vh] place-items-center p-6 text-center text-sm text-ink-3">Import or fill in your profile, save, and a preview appears here.</Card>
         )}
       </div>
     </div>
+      </PageBody>
+    </>
   );
 }

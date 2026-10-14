@@ -14,7 +14,7 @@ import {
   type Warning,
 } from "./types";
 
-const DATA_DIR = join(process.cwd(), "data");
+const DATA_DIR = process.env.SLOTHING_DATA_DIR || join(process.cwd(), "data");
 
 function open() {
   mkdirSync(DATA_DIR, { recursive: true });

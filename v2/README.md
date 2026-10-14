@@ -18,11 +18,11 @@ Single user, local SQLite, no auth.
 cd v2
 npm install
 npm run engines            # downloads typst + tectonic into .engines/ (HTML engine uses your Chrome)
-cp .env.example .env.local # add ANTHROPIC_API_KEY or OPENAI_API_KEY
+cp .env.example .env.local # add NEBIUS_API_KEY, ANTHROPIC_API_KEY or OPENAI_API_KEY
 npm run dev                # http://localhost:3000
 ```
 
-Data lives in `v2/data/slothing.db`. The first LaTeX render downloads the TeX bundle, so it takes a while.
+Data lives in `v2/data/slothing.db` (override with `SLOTHING_DATA_DIR`). The first LaTeX render downloads the TeX bundle, so it takes a while.
 
 ## Grounding
 
