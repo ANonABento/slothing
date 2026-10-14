@@ -3,6 +3,7 @@ import { chromium, type Browser } from "playwright-core";
 import type { ResolvedLetter, ResolvedResume } from "../types";
 import { letterHtml, resumeHtml } from "./html";
 import { letterTex, resumeTex } from "./latex";
+import { contactItems } from "./contact";
 import { compileInTemp, engineBin } from "./run";
 import { LETTER_TYP, RESUME_TYP } from "./typst";
 
@@ -14,7 +15,11 @@ export type RenderInput = { kind: "resume"; data: ResolvedResume } | { kind: "le
 const g = globalThis as unknown as { __slothingBrowser?: Promise<Browser> };
 
 async function browser() {
-  g.__slothingBrowser ??= chromium.launch({ channel: "chrome", headless: true });
+  // Don't cache a failed launch (e.g. Chrome not installed yet), or HTML stays broken until restart.
+  g.__slothingBrowser ??= chromium.launch({ channel: "chrome", headless: true }).catch((e) => {
+    g.__slothingBrowser = undefined;
+    throw new Error(`Couldn't start Google Chrome for the HTML engine: ${(e as Error).message.split("\n")[0]}`);
+  });
   const b = await g.__slothingBrowser;
   if (!b.isConnected()) {
     g.__slothingBrowser = undefined;
@@ -47,7 +52,7 @@ export async function renderPdf(engine: Engine, input: RenderInput): Promise<Buf
       return htmlToPdf(source);
     case "typst":
       return compileInTemp(
-        { "main.typ": source, "data.json": JSON.stringify(input.data) },
+        { "main.typ": source, "data.json": JSON.stringify({ ...input.data, contactItems: contactItems(input.data.contact) }) },
         engineBin("typst"),
         ["compile", "main.typ", "out.pdf"],
         "out.pdf",

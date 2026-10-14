@@ -13,21 +13,29 @@ const GROUPS = [
 
 const isActive = (path: string, href: string) => (href === "/" ? path === "/" || path.startsWith("/jobs") : path.startsWith(href));
 
+const THEME_EVENT = "slothing:theme";
+
 function ThemeToggle() {
   const [dark, setDark] = useState(false);
-  useEffect(() => setDark(document.documentElement.dataset.theme === "dark"), []);
+  // Both toggles (mobile row + desktop footer) follow the <html> attribute, so they never disagree.
+  useEffect(() => {
+    const sync = () => setDark(document.documentElement.dataset.theme === "dark");
+    sync();
+    window.addEventListener(THEME_EVENT, sync);
+    return () => window.removeEventListener(THEME_EVENT, sync);
+  }, []);
   const flip = () => {
     const next = !dark;
-    setDark(next);
     if (next) document.documentElement.dataset.theme = "dark";
     else delete document.documentElement.dataset.theme;
     try {
       localStorage.setItem("slothing:theme", next ? "dark" : "light");
     } catch {}
+    window.dispatchEvent(new Event(THEME_EVENT));
   };
   const Icon = dark ? Sun : Moon;
   return (
-    <button onClick={flip} className="grid h-8 w-8 place-items-center rounded-md text-ink-3 transition-colors hover:bg-paper hover:text-ink" aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}>
+    <button onClick={flip} className="grid h-9 w-9 place-items-center rounded-md text-ink-3 transition-colors hover:bg-paper hover:text-ink" aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}>
       <Icon className="h-4 w-4" />
     </button>
   );
@@ -48,7 +56,7 @@ export function Sidebar({ llm }: { llm: { provider: string; model: string } | nu
         {/* Mobile: nav collapses into this row */}
         <nav className="flex items-center gap-1 lg:hidden">
           {GROUPS.flatMap((g) => g.items).map(({ href, label, icon: Icon }) => (
-            <Link key={href} href={href} className={`flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm font-medium ${isActive(path, href) ? "bg-paper text-ink shadow-paper" : "text-ink-2"}`}>
+            <Link key={href} href={href} className={`flex h-9 items-center gap-1.5 rounded-md px-3 text-sm font-medium ${isActive(path, href) ? "bg-paper text-ink shadow-paper" : "text-ink-2"}`}>
               <Icon className="h-4 w-4" />
               {label}
             </Link>

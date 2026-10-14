@@ -91,15 +91,27 @@ export function createJob(input: Pick<Job, "company" | "title" | "url" | "locati
   const t = now();
   db.prepare(
     "INSERT INTO jobs (id, company, title, url, location, description, status, notes, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, 'saved', '', ?, ?)",
-  ).run(id, input.company, input.title, input.url, input.location, input.description, t, t);
+  ).run(id, input.company, input.title, normalizeUrl(input.url), input.location, input.description, t, t);
   return id;
 }
 
-export function updateJob(id: string, patch: Partial<Pick<Job, "company" | "title" | "url" | "location" | "description" | "notes" | "status">>) {
-  const keys = Object.keys(patch) as (keyof typeof patch)[];
+const JOB_COLUMNS = ["company", "title", "url", "location", "description", "notes", "status"] as const;
+export type JobPatch = Partial<Pick<Job, (typeof JOB_COLUMNS)[number]>>;
+
+/** Pasted posting links often lack a scheme ("linkedin.com/jobs/…"), which would render as a relative link. */
+export const normalizeUrl = (u: string) => {
+  const t = u.trim();
+  return !t || /^[a-z][a-z\d+.-]*:/i.test(t) ? t : `https://${t}`;
+};
+
+export function updateJob(id: string, patch: JobPatch) {
+  // Column names are interpolated into SQL, so only ever use the whitelist.
+  const keys = JOB_COLUMNS.filter((k) => patch[k] !== undefined);
+  if (patch.url !== undefined) patch = { ...patch, url: normalizeUrl(patch.url) };
   if (!keys.length) return;
   const sets = keys.map((k) => `${k} = @${k}`).join(", ");
-  db.prepare(`UPDATE jobs SET ${sets}, updated_at = @updated_at WHERE id = @id`).run({ ...patch, id, updated_at: now() });
+  const params = Object.fromEntries(keys.map((k) => [k, patch[k]]));
+  db.prepare(`UPDATE jobs SET ${sets}, updated_at = @updated_at WHERE id = @id`).run({ ...params, id, updated_at: now() });
 }
 
 export function setJobStatus(id: string, status: JobStatus) {

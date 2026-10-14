@@ -24,3 +24,28 @@ describe.each(ENGINES)("%s engine", (engine) => {
     }
   }, 240_000);
 });
+
+describe.each(ENGINES)("%s engine edge cases", (engine) => {
+  const sparse = resolveResume(
+    {
+      ...profile,
+      contact: { name: "", email: "", phone: "", location: "", links: ["Portfolio", "https://www.example.dev/"] },
+      experience: [{ ...profile.experience[0], company: "", location: "", bullets: [{ id: "x1", text: "[Internal] Moved C:\\Users\\build to 100% caching & {braces} ~ ^" }] }],
+      projects: [{ id: "p", name: "Tool", url: "example.com/tool", bullets: [] }],
+      education: [{ id: "e", school: "Uni", degree: "", location: "", start: "", end: "", details: "  " }],
+    },
+    profileAsTailored({ ...profile, experience: [{ ...profile.experience[0], bullets: [{ id: "x1", text: "[Internal] Moved C:\\Users\\build to 100% caching & {braces} ~ ^" }] }], projects: [{ id: "p", name: "Tool", url: "example.com/tool", bullets: [] }], education: [{ id: "e", school: "Uni", degree: "", location: "", start: "", end: "", details: "" }] }),
+  );
+  const bareLetter = resolveLetter({ ...profile, contact: { ...profile.contact, name: "山田 太郎" } }, { company: "", title: "Engineer" }, {
+    greeting: "",
+    paragraphs: ["Only paragraph."],
+    closing: "",
+  });
+
+  it.skipIf(!available(engine))("renders sparse/odd content without failing", async () => {
+    for (const input of [{ kind: "resume", data: sparse } as const, { kind: "letter", data: bareLetter } as const]) {
+      const pdf = await renderPdf(engine, input);
+      expect(pdf.subarray(0, 4).toString()).toBe("%PDF");
+    }
+  }, 240_000);
+});

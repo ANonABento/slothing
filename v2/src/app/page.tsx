@@ -1,9 +1,10 @@
-import { Briefcase, ChevronRight, Plus } from "lucide-react";
+import { Briefcase, ChevronRight } from "lucide-react";
 import Link from "next/link";
 
 import { createJobAction } from "./actions";
 import { PageBody, PageHeader } from "@/components/page-header";
-import { Button, Card, CardTitle, Eyebrow, Input, StatusPill, Textarea, cx } from "@/components/ui";
+import { AddJobButton } from "@/components/submit-button";
+import { Card, CardTitle, Eyebrow, Input, StatusPill, Textarea, cx } from "@/components/ui";
 import { getProfile, listJobs } from "@/lib/db";
 import { llmConfigured } from "@/lib/llm";
 import { JOB_STATUSES, type Job } from "@/lib/types";
@@ -94,7 +95,7 @@ export default async function JobsPage({ searchParams }: { searchParams: Promise
             )}
           </div>
 
-          <Card className="h-fit p-5 xl:sticky xl:top-6">
+          <Card className="order-first h-fit p-5 xl:order-none xl:sticky xl:top-6">
             <Eyebrow className="mb-1">New</Eyebrow>
             <CardTitle className="mb-4">Add a job</CardTitle>
             <form action={createJobAction} className="space-y-3">
@@ -105,9 +106,7 @@ export default async function JobsPage({ searchParams }: { searchParams: Promise
                 <Input name="title" placeholder="Title" />
               </div>
               <p className="text-xs leading-5 text-ink-3">Leave company and title blank and AI fills them in from the description.</p>
-              <Button variant="primary" className="w-full">
-                <Plus className="h-4 w-4" /> Add job
-              </Button>
+              <AddJobButton />
             </form>
           </Card>
         </div>

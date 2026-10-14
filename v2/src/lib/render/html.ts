@@ -1,8 +1,13 @@
 import type { ResolvedLetter, ResolvedResume } from "../types";
+import { contactItems, displayUrl, linkTarget } from "./contact";
 
 const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 const join = (parts: string[], sep: string) => parts.filter((p) => p.trim()).map(esc).join(sep);
 const range = (a: string, b: string) => join([a, b], " – ");
+const contactLine = (c: ResolvedResume["contact"]) =>
+  contactItems(c)
+    .map((i) => (i.href ? `<a href="${esc(i.href)}">${esc(i.text)}</a>` : esc(i.text)))
+    .join("  ·  ");
 
 const BASE_CSS = `
   @page { size: letter; margin: 0.55in 0.6in; }
@@ -18,16 +23,23 @@ export function resumeHtml(r: ResolvedResume): string {
   const section = (title: string, body: string) =>
     body ? `<section><h2>${title}</h2>${body}</section>` : "";
   const bullets = (b: string[]) => (b.length ? `<ul>${b.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>` : "");
-  const row = (l: string, r: string, cls = "") => `<div class="row ${cls}"><span>${l}</span><span>${r}</span></div>`;
+  // Skip the row entirely when both sides are empty, so empty fields don't leave blank lines.
+  const row = (l: string, r: string) => (l || r ? `<div class="row"><span>${l}</span><span>${r}</span></div>` : "");
+  const b = (s: string) => (s.trim() ? `<b>${esc(s)}</b>` : "");
+  const i = (s: string) => (s.trim() ? `<i>${esc(s)}</i>` : "");
+  const url = (u: string) => {
+    const href = linkTarget(u);
+    return href ? `<a href="${esc(href)}">${esc(displayUrl(u))}</a>` : esc(u);
+  };
 
   const exp = r.experience
-    .map((e) => `<div class="entry">${row(`<b>${esc(e.title)}</b>`, range(e.start, e.end))}${row(`<i>${esc(e.company)}</i>`, `<i>${esc(e.location)}</i>`)}${bullets(e.bullets)}</div>`)
+    .map((e) => `<div class="entry">${row(b(e.title), range(e.start, e.end))}${row(i(e.company), i(e.location))}${bullets(e.bullets)}</div>`)
     .join("");
   const prj = r.projects
-    .map((p) => `<div class="entry">${row(`<b>${esc(p.name)}</b>`, esc(p.url))}${bullets(p.bullets)}</div>`)
+    .map((p) => `<div class="entry">${row(b(p.name), url(p.url))}${bullets(p.bullets)}</div>`)
     .join("");
   const edu = r.education
-    .map((e) => `<div class="entry">${row(`<b>${esc(e.school)}</b>`, range(e.start, e.end))}${row(`<i>${esc(e.degree)}</i>`, `<i>${esc(e.location)}</i>`)}${e.details ? `<div class="details">${esc(e.details)}</div>` : ""}</div>`)
+    .map((e) => `<div class="entry">${row(b(e.school), range(e.start, e.end))}${row(i(e.degree), i(e.location))}${e.details.trim() ? `<div class="details">${esc(e.details)}</div>` : ""}</div>`)
     .join("");
   const skills = r.skills.map((s) => `<div><b>${esc(s.category)}:</b> ${esc(s.items.join(", "))}</div>`).join("");
 
@@ -40,7 +52,7 @@ export function resumeHtml(r: ResolvedResume): string {
     .details { font-size: 10pt; }
   </style></head><body>
     <header><h1>${esc(r.contact.name)}</h1>
-      <div class="contact">${join([r.contact.email, r.contact.phone, r.contact.location, ...r.contact.links], "  ·  ")}</div></header>
+      <div class="contact">${contactLine(r.contact)}</div></header>
     ${section("Summary", r.summary ? `<p style="margin:0">${esc(r.summary)}</p>` : "")}
     ${section("Experience", exp)}
     ${section("Projects", prj)}
@@ -57,11 +69,11 @@ export function letterHtml(l: ResolvedLetter): string {
     p { margin: 0 0 10pt; }
   </style></head><body>
     <header><h1>${esc(l.contact.name)}</h1>
-      <div class="contact">${join([l.contact.email, l.contact.phone, l.contact.location, ...l.contact.links], "  ·  ")}</div></header>
+      <div class="contact">${contactLine(l.contact)}</div></header>
     <p>${esc(l.date)}</p>
-    <p>${join([l.recipient.company], "")}${l.recipient.title ? `<br>Re: ${esc(l.recipient.title)}` : ""}</p>
+    ${l.recipient.company.trim() || l.recipient.title.trim() ? `<p>${[esc(l.recipient.company.trim()), l.recipient.title.trim() ? `Re: ${esc(l.recipient.title)}` : ""].filter(Boolean).join("<br>")}</p>` : ""}
     <p>${esc(l.greeting)}</p>
     ${l.paragraphs.map((p) => `<p>${esc(p)}</p>`).join("")}
-    <p style="margin-top:16pt">${esc(l.closing)}<br><br>${esc(l.contact.name)}</p>
+    <p style="margin-top:16pt">${l.closing.trim() ? `${esc(l.closing)}<br><br>` : ""}${esc(l.contact.name)}</p>
   </body></html>`;
 }

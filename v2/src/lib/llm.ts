@@ -37,6 +37,20 @@ export function llmConfigured() {
   return llmInfo() !== null;
 }
 
+const TIMEOUT_MS = 120_000;
+
+/** Pull a short human-readable message out of a provider error body instead of dumping it raw. */
+async function providerError(provider: string, res: Response): Promise<Error> {
+  const body = await res.text();
+  let msg = body;
+  try {
+    const j = JSON.parse(body);
+    msg = j?.error?.message ?? j?.message ?? j?.detail ?? body;
+  } catch {}
+  const hint = res.status === 401 || res.status === 403 ? " Check the API key in v2/.env.local." : res.status === 429 ? " Rate limited or out of credits." : "";
+  return new Error(`${provider} error ${res.status}: ${String(msg).slice(0, 200)}${hint}`);
+}
+
 async function complete(system: string, user: string): Promise<string> {
   if (process.env.ANTHROPIC_API_KEY) {
     const res = await fetch("https://api.anthropic.com/v1/messages", {
@@ -52,8 +66,9 @@ async function complete(system: string, user: string): Promise<string> {
         system,
         messages: [{ role: "user", content: user }],
       }),
+      signal: AbortSignal.timeout(TIMEOUT_MS),
     });
-    if (!res.ok) throw new Error(`Anthropic ${res.status}: ${await res.text()}`);
+    if (!res.ok) throw await providerError("Anthropic", res);
     const json = (await res.json()) as { content: { type: string; text?: string }[] };
     return json.content.map((c) => c.text ?? "").join("");
   }
@@ -71,8 +86,9 @@ async function complete(system: string, user: string): Promise<string> {
         ],
         response_format: { type: "json_object" },
       }),
+      signal: AbortSignal.timeout(TIMEOUT_MS),
     });
-    if (!res.ok) throw new Error(`${c.provider} ${res.status}: ${await res.text()}`);
+    if (!res.ok) throw await providerError(c.provider, res);
     const json = (await res.json()) as { choices: { message: { content: string } }[] };
     return json.choices[0]?.message.content ?? "";
   }
@@ -94,11 +110,17 @@ export async function generateJSON<T extends z.ZodTypeAny>(schema: T, system: st
   const sys = `${system}\n\nRespond with a single JSON object and nothing else.`;
   let prompt = user;
   for (let attempt = 0; attempt < 2; attempt++) {
-    const raw = await complete(sys, prompt);
+    let raw: string;
+    try {
+      raw = await complete(sys, prompt);
+    } catch (err) {
+      if ((err as Error).name === "TimeoutError") throw new Error(`The model didn't answer within ${TIMEOUT_MS / 1000}s. Try again.`);
+      throw err;
+    }
     try {
       return schema.parse(extractJSON(raw));
     } catch (err) {
-      if (attempt === 1) throw err;
+      if (attempt === 1) throw new Error("The model returned an unexpected format twice. Try again, or switch models.");
       prompt = `${user}\n\nYour previous reply was invalid (${(err as Error).message.slice(0, 500)}). Return corrected JSON only.`;
     }
   }

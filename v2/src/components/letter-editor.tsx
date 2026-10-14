@@ -1,35 +1,37 @@
 "use client";
 
+import { safe } from "@/lib/safe";
 import { Sparkles } from "lucide-react";
 import { useState, useTransition } from "react";
 
 import { saveLetterAction, writeLetterAction } from "@/app/actions";
 import type { CoverLetter, Warning } from "@/lib/types";
 import { ListEditor } from "./list-editor";
+import { useConfirm } from "./confirm";
+import { SaveBar } from "./save-bar";
 import { Button, Input, Label, Textarea, Warnings } from "./ui";
 
 export function LetterEditor({
   jobId,
   initial,
   initialWarnings,
-  onSaved,
 }: {
   jobId: string;
   initial: CoverLetter | null;
   initialWarnings: Warning[];
-  onSaved: () => void;
 }) {
   const [doc, setDoc] = useState(initial);
   const [saved, setSaved] = useState(initial);
   const [error, setError] = useState("");
   const [pending, start] = useTransition();
+  const { confirm, dialog } = useConfirm();
   const dirty = JSON.stringify(doc) !== JSON.stringify(saved);
 
-  const generate = () => {
-    if (doc && !window.confirm("Replace the current cover letter?")) return;
+  const generate = async () => {
+    if (doc && !(await confirm({ title: "Rewrite this cover letter?", body: "AI will write a new draft. Your edits to this letter will be lost.", confirmLabel: "Rewrite" }))) return;
     start(async () => {
       setError("");
-      const res = await writeLetterAction(jobId);
+      const res = await safe(() => writeLetterAction(jobId));
       if (!res.ok) setError(res.error);
     });
   };
@@ -37,17 +39,16 @@ export function LetterEditor({
   const blank = () =>
     start(async () => {
       const empty: CoverLetter = { greeting: "Dear Hiring Manager,", paragraphs: [""], closing: "Sincerely," };
-      const res = await saveLetterAction(jobId, empty);
+      const res = await safe(() => saveLetterAction(jobId, empty));
       if (!res.ok) setError(res.error);
     });
 
   const save = () =>
     start(async () => {
       if (!doc) return;
-      const res = await saveLetterAction(jobId, doc);
+      const res = await safe(() => saveLetterAction(jobId, doc));
       if (res.ok) {
         setSaved(doc);
-        onSaved();
       } else setError(res.error);
     });
 
@@ -65,19 +66,18 @@ export function LetterEditor({
   }
 
   return (
-    <div className="space-y-4">
+    // Locked while saving/generating: the editor remounts with server data afterwards, so typing now would be lost.
+    <fieldset disabled={pending} className="min-w-0 space-y-4">
+      {dialog}
       <div className="flex flex-wrap items-center justify-between gap-2">
         <Button variant="secondary" disabled={pending} onClick={generate}><Sparkles className="h-4 w-4" />{pending ? "Writing…" : "Rewrite with AI"}</Button>
-        <div className="flex items-center gap-2">
-          {dirty && <span className="text-xs text-ink-3">Unsaved</span>}
-          <Button variant="primary" disabled={!dirty || pending} onClick={save}>Save</Button>
-        </div>
+
       </div>
       {error && <p className="text-sm text-warn">{error}</p>}
       {!dirty && <Warnings items={initialWarnings} />}
       <div>
         <Label>Greeting</Label>
-        <Input value={doc.greeting} onChange={(e) => setDoc({ ...doc, greeting: e.target.value })} />
+        <Input aria-label="Greeting" value={doc.greeting} onChange={(e) => setDoc({ ...doc, greeting: e.target.value })} />
       </div>
       <div>
         <Label>Paragraphs</Label>
@@ -86,13 +86,15 @@ export function LetterEditor({
           onChange={(paragraphs) => setDoc({ ...doc, paragraphs })}
           addLabel="Paragraph"
           onAdd={() => ""}
-          render={(p, update) => <Textarea rows={5} value={p} onChange={(e) => update(e.target.value)} />}
+          itemLabel="paragraph"
+          render={(p, update) => <Textarea rows={5} aria-label="Paragraph" className="min-h-[7rem]" value={p} onChange={(e) => update(e.target.value)} />}
         />
       </div>
       <div>
         <Label>Closing</Label>
-        <Input value={doc.closing} onChange={(e) => setDoc({ ...doc, closing: e.target.value })} />
+        <Input aria-label="Closing" value={doc.closing} onChange={(e) => setDoc({ ...doc, closing: e.target.value })} />
       </div>
-    </div>
+      <SaveBar dirty={dirty} pending={pending} onSave={save} onDiscard={() => setDoc(saved)} />
+    </fieldset>
   );
 }

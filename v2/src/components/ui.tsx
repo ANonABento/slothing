@@ -12,26 +12,38 @@ const variants: Record<Variant, string> = {
 type Size = "md" | "sm";
 const sizes: Record<Size, string> = { md: "h-10 px-4 text-sm", sm: "h-8 px-3 text-xs" };
 
-export function Button({ variant = "secondary", size = "md", className, ...props }: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant; size?: Size }) {
-  return (
-    <button
-      className={cx(
-        "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand disabled:pointer-events-none disabled:opacity-45",
-        sizes[size],
-        variants[variant],
-        className,
-      )}
-      {...props}
-    />
+/** Button styling, also for <a> elements that look like buttons (never nest a <button> in a link). */
+export const buttonClass = (variant: Variant = "secondary", size: Size = "md", className?: string) =>
+  cx(
+    "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand disabled:pointer-events-none disabled:opacity-45",
+    sizes[size],
+    variants[variant],
+    className,
   );
+
+export function Button({ variant = "secondary", size = "md", className, ...props }: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant; size?: Size }) {
+  return <button className={buttonClass(variant, size, className)} {...props} />;
 }
 
 const field =
   "w-full rounded-lg border border-rule-strong bg-paper px-3 py-2 text-sm text-ink placeholder:text-ink-3 transition-colors focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand-soft";
 
 export const Input = ({ className, ...p }: InputHTMLAttributes<HTMLInputElement>) => <input className={cx(field, "h-10", className)} {...p} />;
-export const Textarea = ({ className, ...p }: TextareaHTMLAttributes<HTMLTextAreaElement>) => <textarea className={cx(field, "leading-relaxed", className)} {...p} />;
+/** Grows with its content (CSS field-sizing), so long bullets are never clipped. */
+export const Textarea = ({ className, ...p }: TextareaHTMLAttributes<HTMLTextAreaElement>) => (
+  <textarea className={cx(field, "min-h-[2.75rem] resize-y leading-relaxed [field-sizing:content]", className)} {...p} />
+);
 export const Select = ({ className, ...p }: SelectHTMLAttributes<HTMLSelectElement>) => <select className={cx(field, "h-10 w-auto pr-8", className)} {...p} />;
+
+/** A label that wraps its control, so the control gets an accessible name without id plumbing. */
+export function Field({ label, children, className }: { label: ReactNode; children: ReactNode; className?: string }) {
+  return (
+    <label className={cx("block", className)}>
+      <span className="mb-1.5 block text-xs font-semibold text-ink-2">{label}</span>
+      {children}
+    </label>
+  );
+}
 
 export function Label({ children, className }: { children: ReactNode; className?: string }) {
   return <label className={cx("mb-1.5 block text-xs font-semibold text-ink-2", className)}>{children}</label>;

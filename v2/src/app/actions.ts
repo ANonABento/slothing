@@ -4,16 +4,20 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import * as db from "@/lib/db";
-import { extractText, parseResumeText } from "@/lib/import";
+import { extractText, parseResumeText, reuseIds } from "@/lib/import";
 import { generateJSON } from "@/lib/llm";
 import { profileAsTailored } from "@/lib/resolve";
-import { groundResume, tailorResume, writeCoverLetter } from "@/lib/tailor";
-import { CoverLetter, Profile, TailoredResume, type JobStatus, type Warning } from "@/lib/types";
+import { groundResume, letterWarnings, tailorResume, writeCoverLetter } from "@/lib/tailor";
+import { CoverLetter, JOB_STATUSES, Profile, TailoredResume, type Warning } from "@/lib/types";
 import { z } from "zod";
 
 export type Result<T = undefined> = { ok: true; data?: T } | { ok: false; error: string };
 
-const fail = (err: unknown): { ok: false; error: string } => ({ ok: false, error: err instanceof Error ? err.message : String(err) });
+const fail = (err: unknown): { ok: false; error: string } => {
+  if (err instanceof z.ZodError) return { ok: false, error: "That data didn't look right, so nothing was saved." };
+  const msg = err instanceof Error ? err.message : String(err);
+  return { ok: false, error: msg.length > 400 ? `${msg.slice(0, 400)}…` : msg };
+};
 
 /* ─── Profile ─── */
 
@@ -34,7 +38,8 @@ export async function importResumeAction(form: FormData): Promise<Result<Profile
     const pasted = String(form.get("text") ?? "");
     const text = file instanceof File && file.size ? await extractText(file) : pasted;
     if (!text.trim()) return { ok: false, error: "Nothing to import — choose a file or paste text." };
-    return { ok: true, data: await parseResumeText(text) };
+    // Match against the saved profile so existing tailored resumes keep pointing at the same entries.
+    return { ok: true, data: reuseIds(db.getProfile(), await parseResumeText(text)) };
   } catch (e) {
     return fail(e);
   }
@@ -68,12 +73,22 @@ export async function createJobAction(form: FormData) {
   redirect(`/jobs/${id}`);
 }
 
-export async function updateJobAction(
-  id: string,
-  patch: Partial<{ company: string; title: string; url: string; location: string; description: string; notes: string; status: JobStatus }>,
-): Promise<Result> {
+const JobPatch = z
+  .object({
+    company: z.string(),
+    title: z.string(),
+    url: z.string(),
+    location: z.string(),
+    description: z.string(),
+    notes: z.string(),
+    status: z.enum(JOB_STATUSES),
+  })
+  .partial()
+  .strict();
+
+export async function updateJobAction(id: string, patch: z.input<typeof JobPatch>): Promise<Result> {
   try {
-    db.updateJob(id, patch);
+    db.updateJob(String(id), JobPatch.parse(patch));
     revalidatePath("/");
     revalidatePath(`/jobs/${id}`);
     return { ok: true };
@@ -138,7 +153,8 @@ export async function writeLetterAction(jobId: string): Promise<Result> {
 
 export async function saveLetterAction(jobId: string, data: CoverLetter): Promise<Result> {
   try {
-    db.saveDoc(jobId, "cover_letter", CoverLetter.parse(data), []);
+    const letter = CoverLetter.parse(data);
+    db.saveDoc(jobId, "cover_letter", letter, letterWarnings(db.getProfile(), letter, db.getJob(jobId) ?? undefined));
     revalidatePath(`/jobs/${jobId}`);
     return { ok: true };
   } catch (e) {

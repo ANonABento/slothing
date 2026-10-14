@@ -1,14 +1,44 @@
 "use client";
 
-import { Sparkles } from "lucide-react";
+import { safe } from "@/lib/safe";
+import { History, Sparkles } from "lucide-react";
 import { useState, useTransition } from "react";
 
 import { saveResumeAction, tailorResumeAction } from "@/app/actions";
 import type { Profile, TailoredResume, Warning } from "@/lib/types";
+import { CommaInput } from "./comma-input";
 import { ListEditor } from "./list-editor";
+import { useConfirm } from "./confirm";
+import { SaveBar } from "./save-bar";
 import { Button, Input, Label, Select, Textarea, Warnings } from "./ui";
 
 type Entry = TailoredResume["experience"][number];
+
+/** A rewritten bullet, with its profile source one click away instead of always on screen. */
+function TailoredBulletField({ text, original, onChange }: { text: string; original: string; onChange: (t: string) => void }) {
+  const [show, setShow] = useState(false);
+  const changed = Boolean(original) && original.trim() !== text.trim();
+  return (
+    <div>
+      <Textarea aria-label="Bullet" value={text} onChange={(e) => onChange(e.target.value)} />
+      {changed && (
+        <div className="mt-1 text-xs">
+          <button type="button" onClick={() => setShow((s) => !s)} className="inline-flex items-center gap-1 text-ink-3 hover:text-ink">
+            <History className="h-3 w-3" /> {show ? "Hide original" : "Reworded · show original"}
+          </button>
+          {show && (
+            <div className="mt-1.5 rounded-md border border-rule bg-paper px-3 py-2 text-ink-2">
+              {original}
+              <button type="button" onClick={() => onChange(original)} className="ml-2 font-medium text-brand hover:underline">
+                Revert
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 
 /** Bullets for one included entry. New bullets must start from a profile bullet so they stay grounded. */
 function EntryBullets({ entry, sources, onChange }: { entry: Entry; sources: { id: string; text: string }[]; onChange: (e: Entry) => void }) {
@@ -20,14 +50,11 @@ function EntryBullets({ entry, sources, onChange }: { entry: Entry; sources: { i
       <ListEditor
         items={entry.bullets}
         onChange={(bullets) => onChange({ ...entry, bullets })}
+        getKey={(b, i) => b.sourceIds.join("+") || String(i)}
+        itemLabel="bullet"
         render={(b, update) => {
-          const original = b.sourceIds.map((id) => srcText.get(id)).filter(Boolean).join(" / ");
-          return (
-            <div>
-              <Textarea rows={2} value={b.text} onChange={(e) => update({ ...b, text: e.target.value })} />
-              {original && original !== b.text && <p className="mt-0.5 text-xs text-ink-3">Source: {original}</p>}
-            </div>
-          );
+          const original = b.sourceIds.map((id) => srcText.get(id)).filter(Boolean).join(" ");
+          return <TailoredBulletField text={b.text} original={original} onChange={(text) => update({ ...b, text })} />;
         }}
       />
       {unused.length > 0 && (
@@ -97,26 +124,33 @@ export function ResumeEditor({
   profile,
   initial,
   initialWarnings,
-  onSaved,
 }: {
   jobId: string;
   profile: Profile;
   initial: TailoredResume | null;
   initialWarnings: Warning[];
-  onSaved: () => void;
 }) {
   const [doc, setDoc] = useState<TailoredResume | null>(initial);
   const [saved, setSaved] = useState(initial);
   const [warnings, setWarnings] = useState(initialWarnings);
   const [error, setError] = useState("");
   const [pending, start] = useTransition();
+  const { confirm, dialog } = useConfirm();
   const dirty = JSON.stringify(doc) !== JSON.stringify(saved);
 
-  const generate = (useAI: boolean) => {
-    if (doc && !window.confirm("Replace the current resume for this job?")) return;
+  const generate = async (useAI: boolean) => {
+    if (
+      doc &&
+      !(await confirm({
+        title: "Replace this resume?",
+        body: useAI ? "AI will re-tailor from your profile. Your edits to this resume will be lost." : "This resets the resume to your full profile. Your edits will be lost.",
+        confirmLabel: "Replace",
+      }))
+    )
+      return;
     start(async () => {
       setError("");
-      const res = await tailorResumeAction(jobId, useAI);
+      const res = await safe(() => tailorResumeAction(jobId, useAI));
       if (!res.ok) setError(res.error);
       // The server re-renders this page with the new doc; the key on this component resets state.
     });
@@ -126,11 +160,10 @@ export function ResumeEditor({
     start(async () => {
       if (!doc) return;
       setError("");
-      const res = await saveResumeAction(jobId, doc);
+      const res = await safe(() => saveResumeAction(jobId, doc));
       if (res.ok) {
         setSaved(doc);
         setWarnings(res.data ?? []);
-        onSaved();
       } else setError(res.error);
     });
 
@@ -158,20 +191,19 @@ export function ResumeEditor({
   }
 
   return (
-    <div className="space-y-4">
+    // Locked while saving/generating: the editor remounts with server data afterwards, so typing now would be lost.
+    <fieldset disabled={pending} className="min-w-0 space-y-4">
+      {dialog}
       <div className="flex flex-wrap items-center justify-between gap-2">
         {actions}
-        <div className="flex items-center gap-2">
-          {dirty && <span className="text-xs text-ink-3">Unsaved</span>}
-          <Button variant="primary" disabled={!dirty || pending} onClick={save}>Save</Button>
-        </div>
+
       </div>
       {error && <p className="text-sm text-warn">{error}</p>}
       <Warnings items={warnings} />
 
       <div>
         <Label>Summary</Label>
-        <Textarea rows={3} value={doc.summary} onChange={(e) => setDoc({ ...doc, summary: e.target.value })} />
+        <Textarea rows={3} aria-label="Summary" value={doc.summary} onChange={(e) => setDoc({ ...doc, summary: e.target.value })} />
       </div>
 
       <EntryList
@@ -220,18 +252,16 @@ export function ResumeEditor({
           onChange={(skills) => setDoc({ ...doc, skills })}
           addLabel="Skill group"
           onAdd={() => ({ category: "", items: [] })}
+          itemLabel="skill group"
           render={(s, update) => (
             <div className="grid gap-2 sm:grid-cols-[10rem_1fr]">
-              <Input value={s.category} onChange={(e) => update({ ...s, category: e.target.value })} />
-              <Input
-                value={s.items.join(", ")}
-                onChange={(e) => update({ ...s, items: e.target.value.split(",").map((x) => x.trimStart()) })}
-                onBlur={() => update({ ...s, items: s.items.map((x) => x.trim()).filter(Boolean) })}
-              />
+              <Input aria-label="Skill group name" value={s.category} onChange={(e) => update({ ...s, category: e.target.value })} />
+              <CommaInput aria-label={`${s.category || "Skills"}, comma-separated`} value={s.items} onChange={(items) => update({ ...s, items })} />
             </div>
           )}
         />
       </div>
-    </div>
+      <SaveBar dirty={dirty} pending={pending} onSave={save} onDiscard={() => setDoc(saved)} />
+    </fieldset>
   );
 }

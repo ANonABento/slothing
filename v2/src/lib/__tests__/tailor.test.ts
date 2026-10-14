@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { profileAsTailored, resolveResume } from "../resolve";
-import { groundResume } from "../tailor";
+import { groundResume, letterWarnings, unsupportedNumbers } from "../tailor";
 import { profile } from "./fixture";
 
 describe("groundResume", () => {
@@ -17,7 +17,7 @@ describe("groundResume", () => {
     const r = resolveResume(profile, doc);
     expect(r.experience[0]).toMatchObject({ company: "Acme & Co", title: "Senior Software Engineer", start: "Jan 2022" });
     expect(r.skills[0].items).toEqual(["TypeScript"]);
-    expect(r.education).toHaveLength(1); // empty educationIds falls back to all
+    expect(r.education).toHaveLength(0); // hand edits may remove education entirely
   });
 
   it("drops invented entries, uncited bullets, cross-entry citations and unknown skills", () => {
@@ -62,5 +62,43 @@ describe("groundResume", () => {
       ],
     });
     expect(doc.experience.map((e) => e.sourceId)).toEqual(["exp_a", "exp_b"]);
+  });
+});
+
+describe("unsupportedNumbers", () => {
+  it.each([
+    ["Grew 5 accounts", "Grew 5 key accounts"],
+    ["Mentored 3 engineers", "Mentored 3 bright engineers"],
+    ["Cut costs 40 percent", "Cut costs by 40%"],
+    ["Version 3.0", "Version 3"],
+    ["Served 1,200 users", "Served 1200 users"],
+    ["Ran 3 services", "Ran 3+ services"],
+  ])("accepts %s given %s", (text, source) => {
+    expect(unsupportedNumbers(text, source)).toEqual([]);
+  });
+
+  it.each([
+    ["$3M in revenue", "3 months", "3m"],
+    ["Led 20 engineers", "Led 2 engineers", "20"],
+    ["Improved 3x", "Improved by 3", "3x"],
+  ])("flags %s given %s", (text, source, flagged) => {
+    expect(unsupportedNumbers(text, source)).toContain(flagged);
+  });
+});
+
+describe("letterWarnings", () => {
+  const letter = (p: string) => ({ greeting: "", closing: "", paragraphs: [p] });
+
+  it("ignores ids and contact details as sources", () => {
+    // 555 and 0100 appear only in the phone number; 12 and 40 are real bullet facts.
+    expect(letterWarnings(profile, letter("I led 555 people and cut CI 40% across 12 runners."))[0].message).toContain("555");
+  });
+
+  it("doesn't let the posting vouch for experience, but allows its years", () => {
+    const job = { title: "Intern", description: "Winter 2027 term. 5+ years experience required." };
+    const w = letterWarnings(profile, letter("I have 5+ years of experience and am excited for the Winter 2027 term."), job);
+    expect(w).toHaveLength(1);
+    expect(w[0].message).toContain("5+");
+    expect(w[0].message).not.toContain("2027");
   });
 });

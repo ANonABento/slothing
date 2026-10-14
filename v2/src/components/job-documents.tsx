@@ -21,7 +21,6 @@ export function JobDocuments({
   letter: StoredDoc<CoverLetter> | null;
 }) {
   const [tab, setTab] = useState<"resume" | "letter">("resume");
-  const [bump, setBump] = useState(0);
   const current = tab === "resume" ? resume : letter;
 
   return (
@@ -36,28 +35,23 @@ export function JobDocuments({
       />
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <Card className="self-start p-5">
-          {tab === "resume" ? (
+          {/* Both stay mounted so switching tabs never drops unsaved edits. */}
+          <div hidden={tab !== "resume"}>
             <ResumeEditor
               key={resume?.updatedAt ?? "none"}
               jobId={jobId}
               profile={profile}
               initial={resume?.data ?? null}
               initialWarnings={resume?.warnings ?? []}
-              onSaved={() => setBump((b) => b + 1)}
             />
-          ) : (
-            <LetterEditor
-              key={letter?.updatedAt ?? "none"}
-              jobId={jobId}
-              initial={letter?.data ?? null}
-              initialWarnings={letter?.warnings ?? []}
-              onSaved={() => setBump((b) => b + 1)}
-            />
-          )}
+          </div>
+          <div hidden={tab !== "letter"}>
+            <LetterEditor key={letter?.updatedAt ?? "none"} jobId={jobId} initial={letter?.data ?? null} initialWarnings={letter?.warnings ?? []} />
+          </div>
         </Card>
         <div className="xl:sticky xl:top-6 xl:h-[calc(100vh-3rem)]">
           {current ? (
-            <PdfPreview query={`job=${jobId}&kind=${tab}`} version={`${current.updatedAt}-${bump}`} />
+            <PdfPreview query={`job=${jobId}&kind=${tab}`} version={current.updatedAt} />
           ) : (
             <Card className="grid min-h-[50vh] place-items-center p-6 text-center text-sm text-ink-3">
               The PDF preview appears here once there&apos;s a {tab === "resume" ? "resume" : "cover letter"}.

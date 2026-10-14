@@ -1,5 +1,6 @@
 "use client";
 
+import { safe } from "@/lib/safe";
 import { Check, FileUp, Sparkles, UserRound } from "lucide-react";
 import { useRef, useState, useTransition } from "react";
 
@@ -8,9 +9,12 @@ import type { Bullet, Profile } from "@/lib/types";
 import { ListEditor } from "./list-editor";
 import { PageBody, PageHeader } from "./page-header";
 import { PdfPreview } from "./pdf-preview";
-import { Button, Card, CardTitle, Eyebrow, Input, Label, Textarea } from "./ui";
+import { SaveBar } from "./save-bar";
+import { CommaInput } from "./comma-input";
+import { Button, Card, CardTitle, Eyebrow, Field as FieldShell, Input, Textarea } from "./ui";
 
-const cid = (p: string) => `${p}_${crypto.randomUUID().slice(0, 12)}`;
+// getRandomValues works on plain-http LAN addresses too, unlike randomUUID.
+const cid = (p: string) => `${p}_${Array.from(crypto.getRandomValues(new Uint8Array(6)), (b) => b.toString(16).padStart(2, "0")).join("")}`;
 
 function Section({ title, children, action }: { title: string; children: React.ReactNode; action?: React.ReactNode }) {
   return (
@@ -30,18 +34,19 @@ function Bullets({ bullets, onChange }: { bullets: Bullet[]; onChange: (b: Bulle
       items={bullets}
       onChange={onChange}
       addLabel="Bullet"
+      itemLabel="bullet"
+      getKey={(b) => b.id}
       onAdd={() => ({ id: cid("b"), text: "" })}
-      render={(b, update) => <Textarea rows={2} value={b.text} onChange={(e) => update({ ...b, text: e.target.value })} placeholder="What you did, and what came of it" />}
+      render={(b, update) => <Textarea rows={2} aria-label="Bullet" value={b.text} onChange={(e) => update({ ...b, text: e.target.value })} placeholder="What you did, and what came of it" />}
     />
   );
 }
 
 function Field({ label, value, onChange, placeholder }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string }) {
   return (
-    <div>
-      <Label>{label}</Label>
+    <FieldShell label={label}>
       <Input value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} />
-    </div>
+    </FieldShell>
   );
 }
 
@@ -50,6 +55,7 @@ function ImportPanel({ hasData, onImported }: { hasData: boolean; onImported: (p
   const [error, setError] = useState("");
   const [pending, start] = useTransition();
   const formRef = useRef<HTMLFormElement>(null);
+  const [text, setText] = useState("");
 
   if (!open) {
     return (
@@ -68,21 +74,25 @@ function ImportPanel({ hasData, onImported }: { hasData: boolean; onImported: (p
       </p>
       <form
         ref={formRef}
-        action={(fd) =>
+        // onSubmit (not action) so a failed parse keeps the chosen file and pasted text.
+        onSubmit={(e) => {
+          e.preventDefault();
+          const fd = new FormData(e.currentTarget);
           start(async () => {
             setError("");
-            const res = await importResumeAction(fd);
+            const res = await safe(() => importResumeAction(fd));
             if (res.ok && res.data) {
               onImported(res.data);
               setOpen(false);
+              setText("");
               formRef.current?.reset();
             } else if (!res.ok) setError(res.error);
-          })
-        }
+          });
+        }}
         className="space-y-3"
       >
-        <input type="file" name="file" accept=".pdf,.docx,.txt,.md" className="block text-sm text-ink-2 file:mr-3 file:mr-3 file:h-9 file:rounded-lg file:border file:border-ink file:bg-transparent file:px-3 file:text-sm file:font-medium file:text-ink" />
-        <Textarea name="text" rows={4} placeholder="…or paste resume text here" />
+        <input type="file" name="file" aria-label="Resume file" accept=".pdf,.docx,.txt,.md" className="block text-sm text-ink-2 file:mr-3 file:h-9 file:rounded-lg file:border file:border-ink file:bg-transparent file:px-3 file:text-sm file:font-medium file:text-ink" />
+        <Textarea name="text" rows={4} value={text} onChange={(e) => setText(e.target.value)} aria-label="Resume text" placeholder="…or paste resume text here" />
         {error && <p className="text-sm text-warn">{error}</p>}
         <div className="flex gap-2">
           <Button variant="primary" disabled={pending}><Sparkles className="h-4 w-4" />{pending ? "Parsing…" : "Parse resume"}</Button>
@@ -108,7 +118,7 @@ export function ProfileEditor({ initial }: { initial: Profile }) {
   const save = () =>
     start(async () => {
       setError("");
-      const res = await saveProfileAction(p);
+      const res = await safe(() => saveProfileAction(p));
       if (res.ok) {
         setSaved(p);
         setVersion((v) => v + 1);
@@ -142,8 +152,7 @@ export function ProfileEditor({ initial }: { initial: Profile }) {
             <Field label="Phone" value={p.contact.phone} onChange={(v) => setContact("phone", v)} />
             <Field label="Location" value={p.contact.location} onChange={(v) => setContact("location", v)} />
           </div>
-          <div className="mt-3">
-            <Label>Links (one per line)</Label>
+          <FieldShell label="Links (one per line)" className="mt-3">
             <Textarea
               rows={2}
               value={p.contact.links.join("\n")}
@@ -151,11 +160,11 @@ export function ProfileEditor({ initial }: { initial: Profile }) {
               onBlur={() => set("contact", { ...p.contact, links: p.contact.links.map((l) => l.trim()).filter(Boolean) })}
               placeholder="linkedin.com/in/you"
             />
-          </div>
+          </FieldShell>
         </Section>
 
         <Section title="Summary">
-          <Textarea rows={3} value={p.summary} onChange={(e) => set("summary", e.target.value)} placeholder="Optional. Two or three sentences about you." />
+          <Textarea rows={3} aria-label="Summary" value={p.summary} onChange={(e) => set("summary", e.target.value)} placeholder="Optional. Two or three sentences about you." />
         </Section>
 
         <Section title="Experience">
@@ -163,6 +172,9 @@ export function ProfileEditor({ initial }: { initial: Profile }) {
             items={p.experience}
             onChange={(v) => set("experience", v)}
             addLabel="Role"
+            itemLabel="role"
+            confirmRemove={(e) => (e.company || e.title || e.bullets.length ? `${e.title || "This role"}${e.company ? ` at ${e.company}` : ""} and its ${e.bullets.length} bullets will be removed from your profile when you save.` : null)}
+            getKey={(x) => x.id}
             onAdd={() => ({ id: cid("exp"), company: "", title: "", location: "", start: "", end: "", bullets: [] })}
             render={(e, update) => (
               <div className="space-y-3 rounded-lg border border-rule bg-page p-4">
@@ -173,7 +185,7 @@ export function ProfileEditor({ initial }: { initial: Profile }) {
                   <Field label="End" value={e.end} onChange={(v) => update({ ...e, end: v })} placeholder="Present" />
                   <Field label="Location" value={e.location} onChange={(v) => update({ ...e, location: v })} />
                 </div>
-                <Label className="pt-1">Bullets</Label>
+                <div className="pt-1 text-xs font-semibold text-ink-2">Bullets</div>
                 <Bullets bullets={e.bullets} onChange={(b) => update({ ...e, bullets: b })} />
               </div>
             )}
@@ -185,6 +197,9 @@ export function ProfileEditor({ initial }: { initial: Profile }) {
             items={p.projects}
             onChange={(v) => set("projects", v)}
             addLabel="Project"
+            itemLabel="project"
+            confirmRemove={(x) => (x.name || x.bullets.length ? `${x.name || "This project"} and its bullets will be removed from your profile when you save.` : null)}
+            getKey={(x) => x.id}
             onAdd={() => ({ id: cid("prj"), name: "", url: "", bullets: [] })}
             render={(pr, update) => (
               <div className="space-y-3 rounded-lg border border-rule bg-page p-4">
@@ -192,7 +207,7 @@ export function ProfileEditor({ initial }: { initial: Profile }) {
                   <Field label="Name" value={pr.name} onChange={(v) => update({ ...pr, name: v })} />
                   <Field label="URL" value={pr.url} onChange={(v) => update({ ...pr, url: v })} />
                 </div>
-                <Label className="pt-1">Bullets</Label>
+                <div className="pt-1 text-xs font-semibold text-ink-2">Bullets</div>
                 <Bullets bullets={pr.bullets} onChange={(b) => update({ ...pr, bullets: b })} />
               </div>
             )}
@@ -204,6 +219,9 @@ export function ProfileEditor({ initial }: { initial: Profile }) {
             items={p.education}
             onChange={(v) => set("education", v)}
             addLabel="School"
+            itemLabel="school"
+            confirmRemove={(e) => (e.school ? `${e.school} will be removed from your profile when you save.` : null)}
+            getKey={(x) => x.id}
             onAdd={() => ({ id: cid("edu"), school: "", degree: "", location: "", start: "", end: "", details: "" })}
             render={(e, update) => (
               <div className="grid gap-3 rounded-lg border border-rule p-4 sm:grid-cols-2">
@@ -223,26 +241,24 @@ export function ProfileEditor({ initial }: { initial: Profile }) {
             items={p.skills}
             onChange={(v) => set("skills", v)}
             addLabel="Skill group"
+            itemLabel="skill group"
+            getKey={(x) => x.id}
             onAdd={() => ({ id: cid("sk"), category: "", items: [] })}
             render={(s, update) => (
               <div className="grid gap-2 sm:grid-cols-[10rem_1fr]">
-                <Input value={s.category} onChange={(e) => update({ ...s, category: e.target.value })} placeholder="Languages" />
-                <Input
-                  value={s.items.join(", ")}
-                  onChange={(e) => update({ ...s, items: e.target.value.split(",").map((x) => x.trimStart()) })}
-                  onBlur={() => update({ ...s, items: s.items.map((x) => x.trim()).filter(Boolean) })}
-                  placeholder="TypeScript, Python, SQL"
-                />
+                <Input aria-label="Skill group name" value={s.category} onChange={(e) => update({ ...s, category: e.target.value })} placeholder="Languages" />
+                <CommaInput aria-label={`${s.category || "Skills"}, comma-separated`} value={s.items} onChange={(items) => update({ ...s, items })} placeholder="TypeScript, Python, SQL" />
               </div>
             )}
           />
         </Section>
+        <SaveBar dirty={dirty} pending={pending} onSave={save} onDiscard={() => setP(saved)} label="Save profile" />
       </div>
 
-      <div className="xl:sticky xl:top-6 xl:h-[calc(100vh-3rem)]">
+      <div className="flex flex-col xl:sticky xl:top-6 xl:h-[calc(100vh-3rem)]">
         <Eyebrow className="mb-2">Base resume · everything, untailored</Eyebrow>
         {hasData ? (
-          <PdfPreview query="kind=resume" version={version} />
+          <div className="min-h-0 flex-1"><PdfPreview query="kind=resume" version={version} /></div>
         ) : (
           <Card className="grid min-h-[50vh] place-items-center p-6 text-center text-sm text-ink-3">Import or fill in your profile, save, and a preview appears here.</Card>
         )}

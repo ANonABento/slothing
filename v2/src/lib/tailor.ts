@@ -7,12 +7,41 @@ import { CoverLetter, TailoredResume, type Job, type Profile, type Warning } fro
  * entry, skills must already exist, and any number not present in the cited sources is flagged.
  */
 
-const NUM = /\d[\d,.]*\s*(?:%|x|k|m|b|\+)?/gi;
-const numbersIn = (s: string) => new Set((s.match(NUM) ?? []).map((n) => n.replace(/[,\s]/g, "").toLowerCase().replace(/\.$/, "")));
+// A number plus an optional unit that is clearly part of it: "40%", "3x", "5k", "$2M", "100+".
+// Single-letter units need a word boundary so "5 key accounts" isn't read as "5k".
+const NUM = /(\d+(?:[.,]\d+)*)\s*(%|\s?percent\b|x\b|[kmb]\b|\+)?/gi;
 
-function unsupportedNumbers(text: string, sources: string): string[] {
+function numbersIn(s: string): Set<string> {
+  const out = new Set<string>();
+  for (const [, raw, unit = ""] of s.matchAll(NUM)) {
+    const n = raw.replace(/,/g, "").replace(/\.0+$/, "").replace(/\.$/, "");
+    const u = unit.trim().toLowerCase().replace("percent", "%");
+    out.add(n + u);
+  }
+  return out;
+}
+
+/** Numbers in `text` that don't appear (with the same unit, or bare) anywhere in `sources`. */
+export function unsupportedNumbers(text: string, sources: string): string[] {
   const known = numbersIn(sources);
-  return [...numbersIn(text)].filter((n) => !known.has(n));
+  const bare = new Set([...known].map((k) => k.replace(/[^\d.]/g, "")));
+  return [...numbersIn(text)].filter((n) => {
+    if (known.has(n)) return false;
+    const digits = n.replace(/[^\d.]/g, "");
+    // "3" written where the source says "3+" or "3x" is fine; a bare number never vouches for a unit.
+    return !(n === digits && bare.has(digits));
+  });
+}
+
+/** The candidate's own words: what may vouch for a number. Excludes ids, contact details and the job posting. */
+export function profileFacts(p: Profile): string {
+  return [
+    p.summary,
+    ...p.experience.flatMap((e) => [e.title, e.company, e.start, e.end, ...e.bullets.map((b) => b.text)]),
+    ...p.projects.flatMap((x) => [x.name, ...x.bullets.map((b) => b.text)]),
+    ...p.education.flatMap((e) => [e.school, e.degree, e.start, e.end, e.details]),
+    ...p.skills.flatMap((g) => g.items),
+  ].join("\n");
 }
 
 export function groundResume(profile: Profile, draft: TailoredResume): { doc: TailoredResume; warnings: Warning[] } {
@@ -75,8 +104,7 @@ export function groundResume(profile: Profile, draft: TailoredResume): { doc: Ta
     })
     .filter((g) => g.items.length);
 
-  const profileText = JSON.stringify(profile);
-  const summaryNums = unsupportedNumbers(draft.summary, profileText);
+  const summaryNums = unsupportedNumbers(draft.summary, profileFacts(profile));
   if (summaryNums.length) warnings.push({ where: "summary", message: `Summary mentions ${summaryNums.join(", ")}, which isn't in your profile.` });
 
   const eduIds = draft.educationIds.filter((id) => profile.education.some((e) => e.id === id));
@@ -86,7 +114,7 @@ export function groundResume(profile: Profile, draft: TailoredResume): { doc: Ta
       summary: draft.summary.trim(),
       experience: groundEntries("experience", draft.experience, expLabel),
       projects: groundEntries("projects", draft.projects, prjLabel),
-      educationIds: eduIds.length ? eduIds : profile.education.map((e) => e.id),
+      educationIds: eduIds,
       skills,
     },
     warnings,
@@ -125,6 +153,8 @@ export async function tailorResume(profile: Profile, job: Job) {
     RESUME_SYSTEM,
     `${jobBlock(job)}\n\nCandidate profile (JSON):\n${JSON.stringify(profile)}`,
   );
+  // The model sometimes forgets education; default to all of it for an AI draft (hand edits may remove it).
+  if (!draft.educationIds.length) draft.educationIds = profile.education.map((e) => e.id);
   return groundResume(profile, draft);
 }
 
@@ -142,12 +172,19 @@ export async function writeCoverLetter(profile: Profile, job: Job): Promise<{ do
     LETTER_SYSTEM,
     `${jobBlock(job)}\n\nCandidate profile (JSON):\n${JSON.stringify(profile)}`,
   );
-  const profileText = JSON.stringify(profile) + job.description;
-  const warnings: Warning[] = doc.paragraphs.flatMap((p, i) => {
-    const nums = unsupportedNumbers(p, profileText);
-    return nums.length ? [{ where: `paragraph ${i + 1}`, message: `Mentions ${nums.join(", ")}, which isn't in your profile.` }] : [];
-  });
-  return { doc, warnings };
+  return { doc, warnings: letterWarnings(profile, doc, job) };
 }
 
-export { unsupportedNumbers };
+/**
+ * Numbers in a letter must come from the profile. The posting only vouches for years ("Winter 2027 term"):
+ * a "5+ years" in the requirements isn't the candidate's.
+ */
+export function letterWarnings(profile: Profile, doc: CoverLetter, job?: Pick<Job, "title" | "description">): Warning[] {
+  const postingYears = job ? (`${job.title} ${job.description}`.match(/\b(19|20)\d{2}\b/g) ?? []) : [];
+  const facts = `${profileFacts(profile)}\n${postingYears.join(" ")}`;
+  return doc.paragraphs.flatMap((p, i) => {
+    const nums = unsupportedNumbers(p, facts);
+    return nums.length ? [{ where: `Paragraph ${i + 1}`, message: `Mentions ${nums.join(", ")}, which isn't in your profile.` }] : [];
+  });
+}
+

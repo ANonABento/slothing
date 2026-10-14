@@ -85,21 +85,25 @@ export interface Job {
  * each bullet citing the profile bullet(s) it came from.
  */
 
-export const TailoredBullet = z.object({ text: z.string(), sourceIds: z.array(z.string()).default([]) });
+// AI drafts go through these schemas too, and models send null for "nothing".
+const str = z.preprocess((v) => v ?? "", z.string());
+const arr = <T extends z.ZodTypeAny>(item: T) => z.preprocess((v) => v ?? [], z.array(item));
+
+export const TailoredBullet = z.object({ text: str, sourceIds: arr(z.string()) });
 
 export const TailoredResume = z.object({
-  summary: z.string().default(""),
-  experience: z.array(z.object({ sourceId: z.string(), bullets: z.array(TailoredBullet).default([]) })).default([]),
-  projects: z.array(z.object({ sourceId: z.string(), bullets: z.array(TailoredBullet).default([]) })).default([]),
-  educationIds: z.array(z.string()).default([]),
-  skills: z.array(z.object({ category: z.string(), items: z.array(z.string()).default([]) })).default([]),
+  summary: str,
+  experience: arr(z.object({ sourceId: z.string(), bullets: arr(TailoredBullet) })),
+  projects: arr(z.object({ sourceId: z.string(), bullets: arr(TailoredBullet) })),
+  educationIds: arr(z.string()),
+  skills: arr(z.object({ category: str, items: arr(z.string()) })),
 });
 export type TailoredResume = z.infer<typeof TailoredResume>;
 
 export const CoverLetter = z.object({
-  greeting: z.string().default("Dear Hiring Manager,"),
-  paragraphs: z.array(z.string()).default([]),
-  closing: z.string().default("Sincerely,"),
+  greeting: z.preprocess((v) => v ?? "Dear Hiring Manager,", z.string()),
+  paragraphs: arr(z.string()),
+  closing: z.preprocess((v) => v ?? "Sincerely,", z.string()),
 });
 export type CoverLetter = z.infer<typeof CoverLetter>;
 

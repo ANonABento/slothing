@@ -43,16 +43,17 @@ export async function GET(req: NextRequest) {
     return new NextResponse(renderSource(engine, input), { headers: { "content-type": "text/plain; charset=utf-8" } });
   }
 
+  // ASCII fallback plus RFC 5987 UTF-8 name, so "山田" or "Société" don't break the header.
+  const ascii = filename.normalize("NFKD").replace(/[^\w.-]+/g, "_").replace(/_+/g, "_") || "document";
+  const disposition = `${q.get("download") ? "attachment" : "inline"}; filename="${ascii}.pdf"; filename*=UTF-8''${encodeURIComponent(`${filename}.pdf`)}`;
+
+  let pdf: Buffer;
   try {
-    const pdf = await renderPdf(engine, input);
-    return new NextResponse(new Uint8Array(pdf), {
-      headers: {
-        "content-type": "application/pdf",
-        "content-disposition": `${q.get("download") ? "attachment" : "inline"}; filename="${filename}.pdf"`,
-        "cache-control": "no-store",
-      },
-    });
+    pdf = await renderPdf(engine, input);
   } catch (e) {
     return new NextResponse(`Render failed (${engine}):\n\n${(e as Error).message}`, { status: 500, headers: { "content-type": "text/plain" } });
   }
+  return new NextResponse(new Uint8Array(pdf), {
+    headers: { "content-type": "application/pdf", "content-disposition": disposition, "cache-control": "no-store" },
+  });
 }
