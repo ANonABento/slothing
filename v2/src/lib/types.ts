@@ -128,6 +128,9 @@ export interface StoredDoc<T> {
 export const PROVIDERS = ["anthropic", "nebius", "openai"] as const;
 export type Provider = (typeof PROVIDERS)[number];
 
+export const LATITUDES = ["select", "rephrase", "rewrite"] as const;
+export type Latitude = (typeof LATITUDES)[number];
+
 export const Settings = z.object({
   ai: z
     .object({
@@ -139,9 +142,18 @@ export const Settings = z.object({
       openaiBaseUrl: z.string().default(""),
     })
     .default({ provider: null, models: { anthropic: "", nebius: "", openai: "" }, openaiBaseUrl: "" }),
+  tailoring: z
+    .object({
+      /** How far AI may move from the profile's wording. Grounding is the same at every level. */
+      latitude: z.enum(LATITUDES).default("rephrase"),
+      /** Free-text style preferences added to the resume and cover letter prompts. */
+      instructions: z.string().default(""),
+    })
+    .default({ latitude: "rephrase", instructions: "" }),
 });
 export type Settings = z.infer<typeof Settings>;
 export type AiSettings = Settings["ai"];
+export type TailoringSettings = Settings["tailoring"];
 
 /* ─── Fully-resolved shapes the renderers consume ─── */
 

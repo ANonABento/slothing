@@ -6,11 +6,11 @@ import { useState, useTransition, type ReactNode } from "react";
 import { saveSettingsAction, testLlmAction } from "@/app/actions";
 import type { ProviderStatus } from "@/lib/llm";
 import { safe } from "@/lib/safe";
-import type { Provider, Settings } from "@/lib/types";
+import { LATITUDES, type Latitude, type Provider, type Settings } from "@/lib/types";
 import { Dropdown } from "./dropdown";
 import { PageBody, PageHeader } from "./page-header";
 import { SaveBar } from "./save-bar";
-import { Button, Card, CardTitle, Field, Input } from "./ui";
+import { Button, Card, CardTitle, Field, Input, Textarea, cx } from "./ui";
 
 function Section({ title, description, children }: { title: string; description: ReactNode; children: ReactNode }) {
   return (
@@ -105,6 +105,54 @@ function ModelSection({ ai, providers, onChange }: { ai: Settings["ai"]; provide
   );
 }
 
+const LATITUDE_COPY: Record<Latitude, { label: string; body: string }> = {
+  select: { label: "Select only", body: "Picks and orders your bullets. Never changes a word, and keeps your profile summary." },
+  rephrase: { label: "Light rephrase", body: "Stays close to each bullet, borrowing the job post's wording where your bullet supports it." },
+  rewrite: { label: "Rewrite", body: "Restructures for impact and may merge related bullets from the same role." },
+};
+
+function TailoringSection({ t, onChange }: { t: Settings["tailoring"]; onChange: (t: Settings["tailoring"]) => void }) {
+  return (
+    <Section
+      title="Tailoring"
+      description="How much AI may change your wording. At every level it can only use facts from your profile, and invented numbers, skills or roles are removed or flagged."
+    >
+      <div role="radiogroup" aria-label="How much AI may change" className="grid gap-2 sm:grid-cols-3">
+        {LATITUDES.map((l) => {
+          const on = t.latitude === l;
+          return (
+            <button
+              key={l}
+              type="button"
+              role="radio"
+              aria-checked={on}
+              onClick={() => onChange({ ...t, latitude: l })}
+              className={cx(
+                "rounded-control border p-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand",
+                on ? "border-ink bg-page shadow-paper" : "border-rule hover:border-rule-strong",
+              )}
+            >
+              <div className="flex items-center gap-2 text-sm font-semibold">
+                <span className={cx("h-3 w-3 rounded-full border", on ? "border-[3.5px] border-brand" : "border-rule-strong")} aria-hidden />
+                {LATITUDE_COPY[l].label}
+              </div>
+              <p className="mt-1 text-xs leading-snug text-ink-2">{LATITUDE_COPY[l].body}</p>
+            </button>
+          );
+        })}
+      </div>
+      <Field label="Extra instructions for resumes and cover letters">
+        <Textarea
+          rows={3}
+          value={t.instructions}
+          onChange={(e) => onChange({ ...t, instructions: e.target.value })}
+          placeholder={"e.g. No first person. Past tense for past roles. Never use “spearheaded”."}
+        />
+      </Field>
+    </Section>
+  );
+}
+
 export function SettingsEditor({ initial, providers }: { initial: Settings; providers: ProviderStatus[] }) {
   const [s, setS] = useState(initial);
   const [saved, setSaved] = useState(initial);
@@ -137,6 +185,7 @@ export function SettingsEditor({ initial, providers }: { initial: Settings; prov
         <div className="max-w-3xl space-y-4">
           {error && <p className="text-sm text-warn">{error}</p>}
           <ModelSection ai={s.ai} providers={providers} onChange={(ai) => setS({ ...s, ai })} />
+          <TailoringSection t={s.tailoring} onChange={(tailoring) => setS({ ...s, tailoring })} />
           <SaveBar dirty={dirty} pending={pending} onSave={save} onDiscard={() => setS(saved)} label="Save settings" />
         </div>
       </PageBody>

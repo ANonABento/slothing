@@ -139,7 +139,7 @@ export async function tailorResumeAction(jobId: string, useAI: boolean): Promise
     if (!profile.experience.length && !profile.projects.length) {
       return { ok: false, error: "Your profile is empty — add your experience on the Profile page first." };
     }
-    const { doc, warnings } = useAI ? await tailorResume(profile, job) : { doc: profileAsTailored(profile), warnings: [] as Warning[] };
+    const { doc, warnings } = useAI ? await tailorResume(profile, job, db.getSettings().tailoring) : { doc: profileAsTailored(profile), warnings: [] as Warning[] };
     db.saveDoc(jobId, "resume", doc, warnings);
     revalidatePath(`/jobs/${jobId}`);
     return { ok: true };
@@ -163,7 +163,7 @@ export async function saveResumeAction(jobId: string, data: TailoredResume): Pro
 export async function writeLetterAction(jobId: string): Promise<Result> {
   try {
     const job = requireJob(jobId);
-    const { doc, warnings } = await writeCoverLetter(db.getProfile(), job);
+    const { doc, warnings } = await writeCoverLetter(db.getProfile(), job, db.getSettings().tailoring);
     db.saveDoc(jobId, "cover_letter", doc, warnings);
     revalidatePath(`/jobs/${jobId}`);
     return { ok: true };

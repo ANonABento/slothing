@@ -1,5 +1,5 @@
 import { generateJSON } from "./llm";
-import { CoverLetter, TailoredResume, type Job, type Profile, type Warning } from "./types";
+import { CoverLetter, Settings, TailoredResume, type Job, type Latitude, type Profile, type TailoringSettings, type Warning } from "./types";
 
 /* ─── Grounding ───
  * The model only ever chooses and rephrases. Everything it returns is checked against the
@@ -124,37 +124,81 @@ export function groundResume(profile: Profile, draft: TailoredResume): { doc: Ta
 const jobBlock = (job: Job) =>
   `Target role: ${job.title || "(unknown title)"} at ${job.company || "(unknown company)"}\n\nJob description:\n${job.description.slice(0, 20000)}`;
 
-const RESUME_SYSTEM = `You tailor a resume to a job description using ONLY the candidate's profile.
+const LATITUDE_RULES: Record<Latitude, string> = {
+  select: `- Do NOT reword anything. Choose which bullets to keep and in what order; each bullet's
+  "text" must be copied exactly from the single profile bullet it cites (one id in "sourceIds").
+- Set "summary" to the profile's summary exactly, or "" if it has none.`,
+  rephrase: `- You may select, reorder, and lightly rephrase bullets to mirror the job description's
+  vocabulary where the source genuinely supports it. Keep each bullet close to its source.
+- Write a 2-3 sentence summary from the profile (may be empty).`,
+  rewrite: `- You may rewrite bullets freely for impact and clarity: restructure sentences, lead with
+  outcomes, and merge closely related bullets from the same entry into one (citing all of them).
+- Write a 2-3 sentence summary from the profile (may be empty).`,
+};
+
+/** Free-text preferences, framed so they can't override the hard rules. */
+const preferences = (instructions: string) =>
+  instructions.trim()
+    ? `\n\nThe candidate's style preferences. Follow them unless they conflict with the rules above:\n${instructions.trim().slice(0, 2000)}`
+    : "";
+
+export function resumeSystem(t: TailoringSettings): string {
+  return `You tailor a resume to a job description using ONLY the candidate's profile.
 
 Hard rules — violating any of them makes the resume unusable:
-- You may select, reorder, and rephrase. You may NOT add facts: no new employers, titles,
-  dates, metrics, numbers, tools, responsibilities, or outcomes that the cited source bullets
-  do not state.
+- You may NOT add facts: no new employers, titles, dates, metrics, numbers, tools,
+  responsibilities, or outcomes that the cited source bullets do not state.
 - Every bullet must list "sourceIds": the ids of the profile bullets it is based on, all
   from the same experience/project entry.
 - Reference entries by their "id" as "sourceId". Never restate company, title, or dates.
 - Skills must be copied verbatim from the profile's skills. Regroup or omit freely.
 - Prefer 3–5 strong bullets for recent relevant roles, fewer for older ones. Drop irrelevant
   projects. Keep the whole resume to roughly one page.
-- Mirror the job description's vocabulary only where the source genuinely supports it.
+
+How much you may change the wording:
+${LATITUDE_RULES[t.latitude]}
 
 JSON shape:
 {
-  "summary": string (2-3 sentences, may be empty),
+  "summary": string,
   "experience": [{ "sourceId": string, "bullets": [{ "text": string, "sourceIds": [string] }] }],
   "projects":   [{ "sourceId": string, "bullets": [{ "text": string, "sourceIds": [string] }] }],
   "educationIds": [string],
   "skills": [{ "category": string, "items": [string] }]
-}`;
+}${preferences(t.instructions)}`;
+}
 
-export async function tailorResume(profile: Profile, job: Job) {
-  const draft = await generateJSON(
+/**
+ * "Select only", enforced in code rather than trusted to the prompt: every bullet becomes the exact
+ * text of the profile bullet(s) it cites (a bullet citing two becomes two), and the summary is the profile's.
+ */
+export function verbatim(profile: Profile, draft: TailoredResume): TailoredResume {
+  const copy = (kind: "experience" | "projects") =>
+    draft[kind].map((e) => {
+      const src = new Map((profile[kind].find((x) => x.id === e.sourceId)?.bullets ?? []).map((b) => [b.id, b.text]));
+      const seen = new Set<string>();
+      const bullets = e.bullets.flatMap((b) =>
+        b.sourceIds.flatMap((id) => {
+          if (seen.has(id)) return [];
+          seen.add(id);
+          // Unknown ids pass through unchanged so grounding drops them with a warning.
+          return [{ text: src.get(id) ?? b.text, sourceIds: [id] }];
+        }),
+      );
+      return { ...e, bullets };
+    });
+  return { ...draft, summary: profile.summary, experience: copy("experience"), projects: copy("projects") };
+}
+
+export async function tailorResume(profile: Profile, job: Job, t: TailoringSettings = Settings.parse({}).tailoring) {
+  let draft = await generateJSON(
     TailoredResume,
-    RESUME_SYSTEM,
+    resumeSystem(t),
     `${jobBlock(job)}\n\nCandidate profile (JSON):\n${JSON.stringify(profile)}`,
   );
   // The model sometimes forgets education; default to all of it for an AI draft (hand edits may remove it).
   if (!draft.educationIds.length) draft.educationIds = profile.education.map((e) => e.id);
+  if (t.latitude === "select") draft = verbatim(profile, draft);
   return groundResume(profile, draft);
 }
 
@@ -166,10 +210,14 @@ name; those are added separately.
 
 JSON shape: { "greeting": string, "paragraphs": [string], "closing": string }`;
 
-export async function writeCoverLetter(profile: Profile, job: Job): Promise<{ doc: CoverLetter; warnings: Warning[] }> {
+export async function writeCoverLetter(
+  profile: Profile,
+  job: Job,
+  t: TailoringSettings = Settings.parse({}).tailoring,
+): Promise<{ doc: CoverLetter; warnings: Warning[] }> {
   const doc = await generateJSON(
     CoverLetter,
-    LETTER_SYSTEM,
+    LETTER_SYSTEM + preferences(t.instructions),
     `${jobBlock(job)}\n\nCandidate profile (JSON):\n${JSON.stringify(profile)}`,
   );
   return { doc, warnings: letterWarnings(profile, doc, job) };
