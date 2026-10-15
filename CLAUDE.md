@@ -17,8 +17,8 @@ Active app is `v2/` (Next.js 15 App Router + React 19 + Tailwind 3 + better-sqli
 ```bash
 npm run dev        # :3000
 npm run typecheck
-npm test           # vitest; render tests skip if an engine is missing
-npm run engines    # fetch typst + tectonic into .engines/
+npm test           # vitest; render tests skip if typst is missing
+npm run engines    # fetch typst into .engines/
 ```
 
 ## Conventions
@@ -27,5 +27,5 @@ npm run engines    # fetch typst + tectonic into .engines/
   No raw Tailwind palette colors (`bg-white`, `text-gray-500`).
 - Headings: `font-display tracking-tight`. Eyebrows: `<Eyebrow>` (mono, uppercase).
 - Mutations are server actions in `src/app/actions.ts` returning `Result`.
-- Render engines share one input shape (`ResolvedResume` / `ResolvedLetter`). A template change
-  should land in all three engines until one is chosen.
+- PDFs are rendered with Typst only (`src/lib/render/typst.ts`). Templates read `ResolvedResume` /
+  `ResolvedLetter` as JSON. A resume template and its letter template share one header style.

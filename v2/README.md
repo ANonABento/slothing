@@ -8,7 +8,7 @@ A deliberately small rebuild of Slothing. One loop, done well:
 2. **Jobs**: paste a job description and track its status.
 3. **Tailor**: AI picks and rephrases from your profile. It never adds to it (see *Grounding* below).
 4. **Cover letter**: drafted from your profile and the job description.
-5. **PDF**: rendered by three swappable engines (HTML/Chrome, Typst, LaTeX) so you can compare them side by side.
+5. **PDF**: rendered with Typst.
 
 Single user, local SQLite, no auth.
 
@@ -17,12 +17,12 @@ Single user, local SQLite, no auth.
 ```bash
 cd v2
 npm install
-npm run engines            # downloads typst + tectonic into .engines/ (HTML engine uses your Chrome)
+npm run engines            # downloads typst into .engines/
 cp .env.example .env.local # add NEBIUS_API_KEY, ANTHROPIC_API_KEY or OPENAI_API_KEY
 npm run dev                # http://localhost:3000
 ```
 
-Data lives in `v2/data/slothing.db` (override with `SLOTHING_DATA_DIR`). The first LaTeX render downloads the TeX bundle, so it takes a while.
+Data lives in `v2/data/slothing.db` (override with `SLOTHING_DATA_DIR`).
 
 ## Grounding
 
@@ -46,9 +46,9 @@ src/lib/llm.ts       Anthropic / OpenAI-compatible JSON client
 src/lib/import.ts    PDF/DOCX/text → Profile
 src/lib/tailor.ts    grounded tailoring + cover letter
 src/lib/resolve.ts   tailored doc + profile → render-ready shape
-src/lib/render/      html.ts, typst.ts, latex.ts → renderPdf(engine, input)
+src/lib/render/      typst.ts templates → renderPdf(input)
 src/app/actions.ts   server actions
-src/app/api/pdf      GET ?engine=&kind=&job=&download=&source=
+src/app/api/pdf      GET ?kind=&job=&download=&source=
 ```
 
 ## Not in v1 (on purpose)

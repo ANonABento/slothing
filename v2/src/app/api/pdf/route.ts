@@ -1,20 +1,17 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 import { getDoc, getJob, getProfile } from "@/lib/db";
-import { ENGINES, renderPdf, renderSource, type Engine, type RenderInput } from "@/lib/render";
+import { renderPdf, renderSource, type RenderInput } from "@/lib/render";
 import { profileAsTailored, resolveLetter, resolveResume } from "@/lib/resolve";
 
 export const runtime = "nodejs";
 
 /**
- * GET /api/pdf?engine=html|typst|latex&kind=resume|letter[&job=ID][&download=1][&source=1]
+ * GET /api/pdf?kind=resume|letter[&job=ID][&download=1][&source=1]
  * Without `job`, renders the untailored profile as a resume.
  */
 export async function GET(req: NextRequest) {
   const q = req.nextUrl.searchParams;
-  const engine = (q.get("engine") ?? "typst") as Engine;
-  if (!ENGINES.includes(engine)) return NextResponse.json({ error: "unknown engine" }, { status: 400 });
-
   const profile = getProfile();
   const jobId = q.get("job");
   const kind = q.get("kind") === "letter" ? "letter" : "resume";
@@ -40,7 +37,7 @@ export async function GET(req: NextRequest) {
   }
 
   if (q.get("source")) {
-    return new NextResponse(renderSource(engine, input), { headers: { "content-type": "text/plain; charset=utf-8" } });
+    return new NextResponse(renderSource(input), { headers: { "content-type": "text/plain; charset=utf-8" } });
   }
 
   // ASCII fallback plus RFC 5987 UTF-8 name, so "山田" or "Société" don't break the header.
@@ -49,9 +46,9 @@ export async function GET(req: NextRequest) {
 
   let pdf: Buffer;
   try {
-    pdf = await renderPdf(engine, input);
+    pdf = await renderPdf(input);
   } catch (e) {
-    return new NextResponse(`Render failed (${engine}):\n\n${(e as Error).message}`, { status: 500, headers: { "content-type": "text/plain" } });
+    return new NextResponse(`Render failed:\n\n${(e as Error).message}`, { status: 500, headers: { "content-type": "text/plain" } });
   }
   return new NextResponse(new Uint8Array(pdf), {
     headers: { "content-type": "application/pdf", "content-disposition": disposition, "cache-control": "no-store" },

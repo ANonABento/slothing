@@ -3,7 +3,7 @@ import { mkdtemp, readFile, rm, writeFile } from "fs/promises";
 import { tmpdir } from "os";
 import { join } from "path";
 
-export const engineBin = (name: "typst" | "tectonic") => join(process.cwd(), ".engines", name);
+export const typstBin = () => join(process.cwd(), ".engines", "typst");
 
 /** Run a compiler in a throwaway directory holding only `files`; return the produced PDF. */
 export async function compileInTemp(

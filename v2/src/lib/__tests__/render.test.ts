@@ -1,8 +1,8 @@
 import { existsSync } from "fs";
 import { describe, expect, it } from "vitest";
 
-import { ENGINES, renderPdf } from "../render";
-import { engineBin } from "../render/run";
+import { renderPdf } from "../render";
+import { typstBin } from "../render/run";
 import { profileAsTailored, resolveResume, resolveLetter } from "../resolve";
 import { profile } from "./fixture";
 
@@ -13,19 +13,18 @@ const letter = resolveLetter(profile, { company: "Initech", title: "Staff Engine
   closing: "Best,",
 });
 
-const available = (e: string) =>
-  e === "html" ? existsSync("/Applications/Google Chrome.app") : existsSync(engineBin(e === "typst" ? "typst" : "tectonic"));
+const available = existsSync(typstBin());
 
-describe.each(ENGINES)("%s engine", (engine) => {
-  it.skipIf(!available(engine))("renders a resume and a letter to PDF", async () => {
+describe("typst render", () => {
+  it.skipIf(!available)("renders a resume and a letter to PDF", async () => {
     for (const input of [{ kind: "resume", data: resume } as const, { kind: "letter", data: letter } as const]) {
-      const pdf = await renderPdf(engine, input);
+      const pdf = await renderPdf(input);
       expect(pdf.subarray(0, 4).toString()).toBe("%PDF");
     }
-  }, 240_000);
+  }, 60_000);
 });
 
-describe.each(ENGINES)("%s engine edge cases", (engine) => {
+describe("typst render edge cases", () => {
   const sparse = resolveResume(
     {
       ...profile,
@@ -42,10 +41,10 @@ describe.each(ENGINES)("%s engine edge cases", (engine) => {
     closing: "",
   });
 
-  it.skipIf(!available(engine))("renders sparse/odd content without failing", async () => {
+  it.skipIf(!available)("renders sparse/odd content without failing", async () => {
     for (const input of [{ kind: "resume", data: sparse } as const, { kind: "letter", data: bareLetter } as const]) {
-      const pdf = await renderPdf(engine, input);
+      const pdf = await renderPdf(input);
       expect(pdf.subarray(0, 4).toString()).toBe("%PDF");
     }
-  }, 240_000);
+  }, 60_000);
 });

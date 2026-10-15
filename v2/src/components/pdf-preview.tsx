@@ -1,17 +1,9 @@
 "use client";
 
-import { AlertTriangle, Code2, Columns3, Download, Loader2, X } from "lucide-react";
+import { AlertTriangle, Code2, Download, Loader2 } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 
-import { Button, Eyebrow, Segmented, buttonClass, cx } from "./ui";
-
-const ENGINES = [
-  { value: "html", label: "HTML" },
-  { value: "typst", label: "Typst" },
-  { value: "latex", label: "LaTeX" },
-] as const;
-type Engine = (typeof ENGINES)[number]["value"];
-const STORAGE_KEY = "slothing:engine";
+import { buttonClass, cx } from "./ui";
 
 type Pdf = Awaited<ReturnType<typeof import("unpdf").getDocumentProxy>>;
 
@@ -113,7 +105,7 @@ function PdfFrame({ src, title, className }: { src: string; title: string; class
       )}
       {state.error && (
         <div className="absolute inset-0 overflow-auto bg-paper p-5 text-sm">
-          <div className="mb-2 inline-flex items-center gap-2 font-semibold text-warn"><AlertTriangle className="h-4 w-4" /> This engine couldn&apos;t render the document</div>
+          <div className="mb-2 inline-flex items-center gap-2 font-semibold text-warn"><AlertTriangle className="h-4 w-4" /> Couldn&apos;t render the document</div>
           <pre className="whitespace-pre-wrap font-mono text-xs text-ink-2">{state.error}</pre>
         </div>
       )}
@@ -135,89 +127,21 @@ export function PreviewPane({ children }: { children: ReactNode }) {
   return <div className="flex min-w-0 flex-col xl:sticky xl:top-6 xl:max-h-[calc(100vh-3rem)]">{children}</div>;
 }
 
-/** Live PDF preview with an engine toggle and a full-screen side-by-side compare. */
+/** Live PDF preview with source and download links. */
 export function PdfPreview({ query, version }: { query: string; version: number | string }) {
-  // null until mounted: the stored engine is read first, so we never render Typst only to throw it away.
-  const [engine, setEngine] = useState<Engine | null>(null);
-  const [compare, setCompare] = useState(false);
-
-  useEffect(() => {
-    let saved: string | null = null;
-    try {
-      saved = localStorage.getItem(STORAGE_KEY);
-    } catch {}
-    setEngine(ENGINES.some((e) => e.value === saved) ? (saved as Engine) : "typst");
-  }, []);
-
-  const pick = (e: Engine) => {
-    setEngine(e);
-    setCompare(false);
-    try {
-      localStorage.setItem(STORAGE_KEY, e);
-    } catch {}
-  };
-
-  useEffect(() => {
-    if (!compare) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setCompare(false);
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [compare]);
-
-  const src = (e: Engine, extra = "") => `/api/pdf?${query}&engine=${e}&v=${encodeURIComponent(String(version))}${extra}`;
+  const src = (extra = "") => `/api/pdf?${query}&v=${encodeURIComponent(String(version))}${extra}`;
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3">
-      <div className="flex flex-wrap items-center gap-2">
-        <Segmented size="sm" value={engine} onChange={pick} options={[...ENGINES]} />
-        <Button size="sm" variant="ghost" onClick={() => setCompare(true)}>
-          <Columns3 className="h-3.5 w-3.5" /> Compare
-        </Button>
-        {engine && (
-          <div className="ml-auto flex gap-1">
-            <a href={src(engine, "&source=1")} target="_blank" rel="noreferrer" className={buttonClass("ghost", "sm")}>
-              <Code2 className="h-3.5 w-3.5" /> Source
-            </a>
-            <a href={src(engine, "&download=1")} className={buttonClass("secondary", "sm")}>
-              <Download className="h-3.5 w-3.5" /> PDF
-            </a>
-          </div>
-        )}
+      <div className="flex justify-end gap-1">
+        <a href={src("&source=1")} target="_blank" rel="noreferrer" className={buttonClass("ghost", "sm")}>
+          <Code2 className="h-3.5 w-3.5" /> Source
+        </a>
+        <a href={src("&download=1")} className={buttonClass("secondary", "sm")}>
+          <Download className="h-3.5 w-3.5" /> PDF
+        </a>
       </div>
-
-      {engine && <PdfFrame title="Preview" src={src(engine)} className="min-h-0" />}
-
-      {compare && (
-        <div role="dialog" aria-modal="true" aria-label="Compare engines" className="fixed inset-0 z-50 flex flex-col gap-4 bg-page p-4 sm:p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <Eyebrow>Same content, three renderers</Eyebrow>
-              <div className="font-display text-2xl font-bold tracking-tight">Compare engines</div>
-            </div>
-            <Button variant="secondary" onClick={() => setCompare(false)} autoFocus>
-              <X className="h-4 w-4" /> Close <kbd className="font-mono text-eyebrow opacity-60">Esc</kbd>
-            </Button>
-          </div>
-          <div className="grid flex-1 grid-cols-1 gap-4 overflow-y-auto lg:grid-cols-3">
-            {ENGINES.map((e) => (
-              <div key={e.value} className="flex min-h-0 flex-col gap-2">
-                <div className="flex items-center justify-between">
-                  <span className="font-display text-base font-semibold">{e.label}</span>
-                  <span className="flex gap-1">
-                    <Button size="sm" variant={engine === e.value ? "primary" : "secondary"} onClick={() => pick(e.value)}>
-                      {engine === e.value ? "In use" : "Use this"}
-                    </Button>
-                    <a href={src(e.value, "&download=1")} aria-label={`Download ${e.label} PDF`} className={buttonClass("ghost", "sm")}>
-                      <Download className="h-3.5 w-3.5" />
-                    </a>
-                  </span>
-                </div>
-                <PdfFrame title={e.label} src={src(e.value)} className="min-h-0" />
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      <PdfFrame title="Preview" src={src()} className="min-h-0" />
     </div>
   );
 }
