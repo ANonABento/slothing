@@ -12,8 +12,9 @@ import { CommaInput } from "./comma-input";
 import { ListEditor } from "./list-editor";
 import { useConfirm } from "./confirm";
 import { Dropdown } from "./dropdown";
+import { EntryCard, count, dates, entryMeta } from "./entry-card";
 import { SaveBar } from "./save-bar";
-import { Button, Inset, Input, Label, Textarea, Warnings, buttonClass } from "./ui";
+import { Button, Input, Label, Textarea, Warnings, buttonClass } from "./ui";
 
 type Entry = TailoredResume["experience"][number];
 
@@ -84,7 +85,7 @@ function EntryList({
 }: {
   label: string;
   entries: Entry[];
-  sources: { id: string; heading: string; bullets: { id: string; text: string }[] }[];
+  sources: { id: string; heading: string; meta: string; bullets: { id: string; text: string }[] }[];
   onChange: (e: Entry[]) => void;
 }) {
   if (!sources.length) return null;
@@ -101,17 +102,20 @@ function EntryList({
         {sources.map((s) => {
           const entry = byId.get(s.id);
           return (
-            <Inset key={s.id}>
-              <label className="flex cursor-pointer items-center gap-2 text-sm font-medium">
-                <input type="checkbox" checked={Boolean(entry)} onChange={(e) => toggle(s.id, e.target.checked)} className="accent-[var(--brand)]" />
-                {s.heading}
-              </label>
-              {entry && (
-                <div className="mt-2">
-                  <EntryBullets entry={entry} sources={s.bullets} onChange={(n) => onChange(entries.map((x) => (x.sourceId === s.id ? n : x)))} />
-                </div>
-              )}
-            </Inset>
+            <EntryCard
+              key={s.id}
+              title={s.heading}
+              meta={entryMeta(s.meta, entry ? `${entry.bullets.length} of ${count(s.bullets.length, "bullet")}` : "left off")}
+              dim={!entry}
+              aside={
+                <label className="flex cursor-pointer items-center gap-1.5 px-1 text-xs text-ink-2">
+                  <input type="checkbox" checked={Boolean(entry)} onChange={(e) => toggle(s.id, e.target.checked)} className="accent-[var(--brand)]" />
+                  Include
+                </label>
+              }
+            >
+              {entry && <EntryBullets entry={entry} sources={s.bullets} onChange={(n) => onChange(entries.map((x) => (x.sourceId === s.id ? n : x)))} />}
+            </EntryCard>
           );
         })}
       </div>
@@ -212,13 +216,13 @@ export function ResumeEditor({
         label="Experience"
         entries={doc.experience}
         onChange={(experience) => setDoc({ ...doc, experience })}
-        sources={profile.experience.map((e) => ({ id: e.id, heading: `${e.title} · ${e.company}`, bullets: e.bullets }))}
+        sources={profile.experience.map((e) => ({ id: e.id, heading: [e.title, e.company].filter(Boolean).join(" · "), meta: dates(e.start, e.end), bullets: e.bullets }))}
       />
       <EntryList
         label="Projects"
         entries={doc.projects}
         onChange={(projects) => setDoc({ ...doc, projects })}
-        sources={profile.projects.map((p) => ({ id: p.id, heading: p.name, bullets: p.bullets }))}
+        sources={profile.projects.map((p) => ({ id: p.id, heading: p.name, meta: "", bullets: p.bullets }))}
       />
 
       {profile.education.length > 0 && (

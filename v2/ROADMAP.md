@@ -28,6 +28,21 @@ Iteration 1 ends when step 6 is done. Nothing from the lists below starts before
 - **Keyword gap.** Job keywords that are in your profile but missing from the tailored resume.
   The fitter's scorer computes these anyway.
 
+## Iteration 3: self-hosting (others can run it with their own data and keys)
+
+The data is already one SQLite file (`SLOTHING_DATA_DIR`) and the keys are already the user's own,
+so this is mostly packaging. In order, each step only if the one before falls short:
+
+1. **Docker image.** One `docker run` with a volume for the data folder and Typst baked in. Keys
+   come from env vars, as now.
+2. **Keys in Settings.** Entered in the app and stored locally, so a user never edits `.env.local`.
+   Env vars still win when set.
+3. **Backup and restore.** Download the database file from Settings and load it back.
+4. **Desktop app** (Tauri or Electron around the same server) if Docker is too much for the
+   people using it.
+
+Not planned: a hosted multi-user version. That brings back auth, `user_id` and billing.
+
 ## Later (maybe, each needs its own case)
 
 - **Templates.** A gallery once a second Typst resume + letter pair exists.
@@ -36,6 +51,8 @@ Iteration 1 ends when step 6 is done. Nothing from the lists below starts before
 - **Interview prep.** Likely questions from the job description and your profile.
 - **Insights.** Funnel counts: saved → applied → interview → offer.
 - **Company research.** A notes panel on the job page, not its own page.
+- **Document history.** Earlier versions of a job's resume and letter, so a re-tailor can be undone.
+  Each job already keeps its latest pair, so the Jobs list is the history today.
 
 ## v1 pages and where they went
 

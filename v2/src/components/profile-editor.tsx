@@ -6,14 +6,15 @@ import { Check, FileUp, Sparkles, UserRound } from "lucide-react";
 import { useRef, useState, useTransition } from "react";
 
 import { importResumeAction, saveProfileAction } from "@/app/actions";
-import type { Bullet, Profile, Rank } from "@/lib/types";
+import type { Bullet, Profile } from "@/lib/types";
 import { ListEditor } from "./list-editor";
 import { RankNote, RankToggle } from "./rank-toggle";
 import { PageBody, PageHeader } from "./page-header";
 import { PdfPreview, PreviewEmpty, PreviewPane } from "./pdf-preview";
 import { SaveBar } from "./save-bar";
 import { CommaInput } from "./comma-input";
-import { Button, Card, CardTitle, Eyebrow, Field as FieldShell, Inset, Input, Textarea, cx } from "./ui";
+import { EntryCard, count, dates, entryMeta } from "./entry-card";
+import { Button, Card, CardTitle, Eyebrow, Field as FieldShell, Input, Textarea, cx } from "./ui";
 
 // getRandomValues works on plain-http LAN addresses too, unlike randomUUID.
 const cid = (p: string) => `${p}_${Array.from(crypto.getRandomValues(new Uint8Array(6)), (b) => b.toString(16).padStart(2, "0")).join("")}`;
@@ -53,18 +54,6 @@ function Bullets({ bullets, onChange }: { bullets: Bullet[]; onChange: (b: Bulle
         </div>
       )}
     />
-  );
-}
-
-/** Top row of a role/project/school: what its rank means, and the pin/hide toggles. */
-function EntryRank({ rank, onChange, what, className }: { rank: Rank; onChange: (r: Rank) => void; what: string; className?: string }) {
-  return (
-    <div className={cx("-mb-1 -mt-1 flex min-h-8 items-center justify-between gap-2", className)}>
-      <RankNote rank={rank} />
-      <span className="ml-auto">
-        <RankToggle rank={rank} onChange={onChange} what={what} />
-      </span>
-    </div>
   );
 }
 
@@ -198,13 +187,20 @@ export function ProfileEditor({ initial }: { initial: Profile }) {
             items={p.experience}
             onChange={(v) => set("experience", v)}
             addLabel="Role"
+            controls="row"
             itemLabel="role"
             confirmRemove={(e) => (e.company || e.title || e.bullets.length ? `${e.title || "This role"}${e.company ? ` at ${e.company}` : ""} and its ${e.bullets.length} bullets will be removed from your profile when you save.` : null)}
             getKey={(x) => x.id}
             onAdd={() => ({ id: cid("exp"), company: "", title: "", location: "", start: "", end: "", bullets: [], rank: "normal" as const })}
             render={(e, update) => (
-              <Inset className={cx("space-y-3", e.rank === "hidden" && "opacity-60")}>
-                <EntryRank rank={e.rank} onChange={(rank) => update({ ...e, rank })} what="role" />
+              <EntryCard
+                title={[e.title, e.company].filter(Boolean).join(" · ") || "New role"}
+                meta={entryMeta(dates(e.start, e.end), count(e.bullets.length, "bullet"))}
+                aside={<RankToggle rank={e.rank} onChange={(rank) => update({ ...e, rank })} what="role" />}
+                defaultOpen={!e.title && !e.company}
+                dim={e.rank === "hidden"}
+              >
+                <RankNote rank={e.rank} />
                 <div className="grid gap-2 sm:grid-cols-2">
                   <Field label="Title" value={e.title} onChange={(v) => update({ ...e, title: v })} />
                   <Field label="Company" value={e.company} onChange={(v) => update({ ...e, company: v })} />
@@ -214,7 +210,7 @@ export function ProfileEditor({ initial }: { initial: Profile }) {
                 </div>
                 <div className="pt-1 text-xs font-semibold text-ink-2">Bullets</div>
                 <Bullets bullets={e.bullets} onChange={(b) => update({ ...e, bullets: b })} />
-              </Inset>
+              </EntryCard>
             )}
           />
         </Section>
@@ -224,20 +220,27 @@ export function ProfileEditor({ initial }: { initial: Profile }) {
             items={p.projects}
             onChange={(v) => set("projects", v)}
             addLabel="Project"
+            controls="row"
             itemLabel="project"
             confirmRemove={(x) => (x.name || x.bullets.length ? `${x.name || "This project"} and its bullets will be removed from your profile when you save.` : null)}
             getKey={(x) => x.id}
             onAdd={() => ({ id: cid("prj"), name: "", url: "", bullets: [], rank: "normal" as const })}
             render={(pr, update) => (
-              <Inset className={cx("space-y-3", pr.rank === "hidden" && "opacity-60")}>
-                <EntryRank rank={pr.rank} onChange={(rank) => update({ ...pr, rank })} what="project" />
+              <EntryCard
+                title={pr.name || "New project"}
+                meta={entryMeta(pr.url, count(pr.bullets.length, "bullet"))}
+                aside={<RankToggle rank={pr.rank} onChange={(rank) => update({ ...pr, rank })} what="project" />}
+                defaultOpen={!pr.name}
+                dim={pr.rank === "hidden"}
+              >
+                <RankNote rank={pr.rank} />
                 <div className="grid gap-2 sm:grid-cols-2">
                   <Field label="Name" value={pr.name} onChange={(v) => update({ ...pr, name: v })} />
                   <Field label="URL" value={pr.url} onChange={(v) => update({ ...pr, url: v })} />
                 </div>
                 <div className="pt-1 text-xs font-semibold text-ink-2">Bullets</div>
                 <Bullets bullets={pr.bullets} onChange={(b) => update({ ...pr, bullets: b })} />
-              </Inset>
+              </EntryCard>
             )}
           />
         </Section>
@@ -247,20 +250,29 @@ export function ProfileEditor({ initial }: { initial: Profile }) {
             items={p.education}
             onChange={(v) => set("education", v)}
             addLabel="School"
+            controls="row"
             itemLabel="school"
             confirmRemove={(e) => (e.school ? `${e.school} will be removed from your profile when you save.` : null)}
             getKey={(x) => x.id}
             onAdd={() => ({ id: cid("edu"), school: "", degree: "", location: "", start: "", end: "", details: "", rank: "normal" as const })}
             render={(e, update) => (
-              <Inset className={cx("grid gap-3 sm:grid-cols-2", e.rank === "hidden" && "opacity-60")}>
-                <EntryRank rank={e.rank} onChange={(rank) => update({ ...e, rank })} what="school" className="sm:col-span-2" />
+              <EntryCard
+                title={[e.school, e.degree].filter(Boolean).join(" · ") || "New school"}
+                meta={dates(e.start, e.end)}
+                aside={<RankToggle rank={e.rank} onChange={(rank) => update({ ...e, rank })} what="school" />}
+                defaultOpen={!e.school}
+                dim={e.rank === "hidden"}
+              >
+                <RankNote rank={e.rank} />
+                <div className="grid gap-3 sm:grid-cols-2">
                 <Field label="School" value={e.school} onChange={(v) => update({ ...e, school: v })} />
                 <Field label="Degree" value={e.degree} onChange={(v) => update({ ...e, degree: v })} />
                 <Field label="Start" value={e.start} onChange={(v) => update({ ...e, start: v })} />
                 <Field label="End" value={e.end} onChange={(v) => update({ ...e, end: v })} />
                 <Field label="Location" value={e.location} onChange={(v) => update({ ...e, location: v })} />
                 <Field label="Details" value={e.details} onChange={(v) => update({ ...e, details: v })} placeholder="GPA, honours, coursework" />
-              </Inset>
+                </div>
+              </EntryCard>
             )}
           />
         </Section>

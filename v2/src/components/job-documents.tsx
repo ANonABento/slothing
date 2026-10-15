@@ -89,8 +89,9 @@ function DocOrigin({ meta }: { meta: DocMeta }) {
         ? ["Tailored without AI"]
         : meta.source === "profile"
           ? ["From your full profile"]
-          : meta.edited
-            ? ["Written by hand"]
+          : // Made before origins were recorded: all we know is whether it was edited.
+            meta.edited
+            ? ["Edited"]
             : [];
   if (!parts.length) return null;
   if (meta.source && meta.edited) parts.push("edited since");
