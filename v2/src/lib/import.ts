@@ -2,7 +2,7 @@ import { z } from "zod";
 
 import { newId } from "./ids";
 import { generateJSON } from "./llm";
-import { Profile } from "./types";
+import { Profile, type Bullet } from "./types";
 
 // Models often send null for missing fields; treat it as empty.
 const str = z.preprocess((v) => v ?? "", z.string());
@@ -105,9 +105,13 @@ export function reuseIds(prev: Profile, next: Profile): Profile {
       return match;
     };
   };
-  const bullets = (old: { id: string; text: string }[] | undefined, fresh: { id: string; text: string }[]) => {
+  // Matched entries and bullets keep their id and their pin/hide rank.
+  const bullets = (old: Bullet[] | undefined, fresh: Bullet[]) => {
     const find = take(old ?? [], (b) => norm(b.text));
-    return fresh.map((b) => ({ ...b, id: find(b)?.id ?? b.id }));
+    return fresh.map((b) => {
+      const match = find(b);
+      return { ...b, id: match?.id ?? b.id, rank: match?.rank ?? b.rank };
+    });
   };
   const exp = take(prev.experience, (e) => norm(`${e.company}|${e.title}`));
   const prj = take(prev.projects, (p) => norm(p.name));
@@ -117,13 +121,16 @@ export function reuseIds(prev: Profile, next: Profile): Profile {
     ...next,
     experience: next.experience.map((e) => {
       const old = exp(e);
-      return { ...e, id: old?.id ?? e.id, bullets: bullets(old?.bullets, e.bullets) };
+      return { ...e, id: old?.id ?? e.id, rank: old?.rank ?? e.rank, bullets: bullets(old?.bullets, e.bullets) };
     }),
     projects: next.projects.map((p) => {
       const old = prj(p);
-      return { ...p, id: old?.id ?? p.id, bullets: bullets(old?.bullets, p.bullets) };
+      return { ...p, id: old?.id ?? p.id, rank: old?.rank ?? p.rank, bullets: bullets(old?.bullets, p.bullets) };
     }),
-    education: next.education.map((e) => ({ ...e, id: edu(e)?.id ?? e.id })),
+    education: next.education.map((e) => {
+      const old = edu(e);
+      return { ...e, id: old?.id ?? e.id, rank: old?.rank ?? e.rank };
+    }),
     skills: next.skills.map((g) => ({ ...g, id: sk(g)?.id ?? g.id })),
   };
 }

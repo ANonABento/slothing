@@ -2,8 +2,20 @@ import { Settings, type CoverLetter, type Job, type Paper, type Profile, type Re
 
 const DEFAULTS = Settings.parse({});
 
-/** The profile as-is, rendered as a resume. Also the starting point for manual tailoring. */
-export function profileAsTailored(profile: Profile): TailoredResume {
+/** What automatic tailoring may pick from: the profile without hidden entries and bullets. */
+export function withoutHidden(profile: Profile): Profile {
+  const shown = <T extends { rank: string }>(xs: T[]) => xs.filter((x) => x.rank !== "hidden");
+  return {
+    ...profile,
+    experience: shown(profile.experience).map((e) => ({ ...e, bullets: shown(e.bullets) })),
+    projects: shown(profile.projects).map((p) => ({ ...p, bullets: shown(p.bullets) })),
+    education: shown(profile.education),
+  };
+}
+
+/** The profile as-is (minus hidden items), rendered as a resume. Also the starting point for manual tailoring. */
+export function profileAsTailored(full: Profile): TailoredResume {
+  const profile = withoutHidden(full);
   const cite = (bullets: { id: string; text: string }[]) => bullets.map((b) => ({ text: b.text, sourceIds: [b.id] }));
   return {
     summary: profile.summary,

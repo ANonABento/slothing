@@ -1,4 +1,5 @@
 import { generateJSON } from "./llm";
+import { withoutHidden } from "./resolve";
 import { CoverLetter, LETTER_LENGTHS, Settings, TailoredResume, type Job, type Latitude, type LetterLength, type LetterSettings, type Profile, type TailoringSettings, type Warning } from "./types";
 
 /* ─── Grounding ───
@@ -152,6 +153,8 @@ Hard rules — violating any of them makes the resume unusable:
   from the same experience/project entry.
 - Reference entries by their "id" as "sourceId". Never restate company, title, or dates.
 - Skills must be copied verbatim from the profile's skills. Regroup or omit freely.
+- Entries and bullets with "rank": "pinned" must be included. Order bullets within an entry
+  as the profile does unless the job clearly calls for a different emphasis.
 - Prefer 3–5 strong bullets for recent relevant roles, fewer for older ones. Drop irrelevant
   projects. Keep the whole resume to roughly one page.
 
@@ -190,7 +193,40 @@ export function verbatim(profile: Profile, draft: TailoredResume): TailoredResum
   return { ...draft, summary: profile.summary, experience: copy("experience"), projects: copy("projects") };
 }
 
-export async function tailorResume(profile: Profile, job: Job, t: TailoringSettings = Settings.parse({}).tailoring) {
+/**
+ * Pinned items, enforced in code: a pinned entry, or an entry with a pinned bullet, is always present,
+ * and every pinned bullet is in it (verbatim when the model left it out). A pinned entry the model
+ * skipped gets its bullets in profile order.
+ */
+export function withPinned(profile: Profile, draft: TailoredResume): TailoredResume {
+  const pin = (kind: "experience" | "projects") => {
+    const out = draft[kind].map((e) => ({ ...e, bullets: [...e.bullets] }));
+    for (const src of profile[kind]) {
+      const pinnedBullets = src.bullets.filter((b) => b.rank === "pinned");
+      if (src.rank !== "pinned" && !pinnedBullets.length) continue;
+      let entry = out.find((e) => e.sourceId === src.id);
+      if (!entry) {
+        const bullets = (src.rank === "pinned" ? src.bullets : pinnedBullets).filter((b) => b.rank !== "hidden");
+        out.push({ sourceId: src.id, bullets: bullets.map((b) => ({ text: b.text, sourceIds: [b.id] })) });
+        continue;
+      }
+      const cited = new Set(entry.bullets.flatMap((b) => b.sourceIds));
+      for (const b of pinnedBullets) if (!cited.has(b.id)) entry.bullets.push({ text: b.text, sourceIds: [b.id] });
+    }
+    return out;
+  };
+  const pinnedEdu = profile.education.filter((e) => e.rank === "pinned").map((e) => e.id);
+  return {
+    ...draft,
+    experience: pin("experience"),
+    projects: pin("projects"),
+    educationIds: [...new Set([...draft.educationIds, ...pinnedEdu])],
+  };
+}
+
+export async function tailorResume(full: Profile, job: Job, t: TailoringSettings = Settings.parse({}).tailoring) {
+  // The model never sees hidden items, so it can't pick them.
+  const profile = withoutHidden(full);
   let draft = await generateJSON(
     TailoredResume,
     resumeSystem(t),
@@ -199,7 +235,7 @@ export async function tailorResume(profile: Profile, job: Job, t: TailoringSetti
   // The model sometimes forgets education; default to all of it for an AI draft (hand edits may remove it).
   if (!draft.educationIds.length) draft.educationIds = profile.education.map((e) => e.id);
   if (t.latitude === "select") draft = verbatim(profile, draft);
-  return groundResume(profile, draft);
+  return groundResume(full, withPinned(profile, draft));
 }
 
 export const letterSystem = (length: LetterLength) => `You write a concise cover letter (${length === "short" ? "2–3" : "3–4"} short paragraphs, under ${LETTER_LENGTHS[length]} words)

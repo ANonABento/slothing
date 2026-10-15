@@ -2,7 +2,15 @@ import { z } from "zod";
 
 /* ─── Profile: the single source of truth for every fact on a resume ─── */
 
-export const Bullet = z.object({ id: z.string(), text: z.string() });
+/**
+ * How automatic tailoring treats an entry or bullet: pinned is always included, hidden is never picked
+ * (you can still add it by hand in a tailored resume), normal is up to the job.
+ */
+export const RANKS = ["pinned", "normal", "hidden"] as const;
+export type Rank = (typeof RANKS)[number];
+const rank = z.enum(RANKS).default("normal");
+
+export const Bullet = z.object({ id: z.string(), text: z.string(), rank });
 
 export const Experience = z.object({
   id: z.string(),
@@ -12,6 +20,7 @@ export const Experience = z.object({
   start: z.string().default(""),
   end: z.string().default(""),
   bullets: z.array(Bullet).default([]),
+  rank,
 });
 
 export const Education = z.object({
@@ -22,6 +31,7 @@ export const Education = z.object({
   start: z.string().default(""),
   end: z.string().default(""),
   details: z.string().default(""),
+  rank,
 });
 
 export const Project = z.object({
@@ -29,6 +39,7 @@ export const Project = z.object({
   name: z.string(),
   url: z.string().default(""),
   bullets: z.array(Bullet).default([]),
+  rank,
 });
 
 export const SkillGroup = z.object({

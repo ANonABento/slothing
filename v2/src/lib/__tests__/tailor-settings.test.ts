@@ -1,8 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { generateJSON } from "../llm";
-import { resumeSystem, tailorResume, verbatim, writeCoverLetter } from "../tailor";
-import type { Job, TailoredResume } from "../types";
+import { profileAsTailored } from "../resolve";
+import { resumeSystem, tailorResume, verbatim, withPinned, writeCoverLetter } from "../tailor";
+import { Profile, type Job, type TailoredResume } from "../types";
 import { profile } from "./fixture";
 
 vi.mock("../llm", () => ({ generateJSON: vi.fn() }));
@@ -88,5 +89,45 @@ describe("tailoring settings reach the model and the result", () => {
     const { doc } = await tailorResume(profile, job, { latitude: "rephrase", instructions: "" });
     expect(doc.experience[0].bullets[0].text).toBe("Sped up CI 40% and moved services to GraphQL.");
     expect(doc.summary).toBe("Staff-ready engineer who loves CI.");
+  });
+});
+
+describe("profile ranks", () => {
+  // exp_a: b1 pinned, b2 hidden. exp_b pinned (the model will skip it). Project hidden.
+  const ranked = Profile.parse({
+    ...profile,
+    experience: [
+      { ...profile.experience[0], bullets: [{ ...profile.experience[0].bullets[0], rank: "pinned" }, { ...profile.experience[0].bullets[1], rank: "hidden" }] },
+      { ...profile.experience[1], rank: "pinned" },
+    ],
+    projects: [{ ...profile.projects[0], rank: "hidden" }],
+  });
+
+  it("the full-profile resume leaves out hidden entries and bullets", () => {
+    const doc = profileAsTailored(ranked);
+    expect(doc.experience[0].bullets.map((b) => b.sourceIds[0])).toEqual(["b1"]);
+    expect(doc.projects).toEqual([]);
+  });
+
+  it("AI never sees hidden items, and pinned ones are added back if it skips them", async () => {
+    llm.mockResolvedValueOnce({
+      summary: "",
+      experience: [{ sourceId: "exp_a", bullets: [] }],
+      projects: [],
+      educationIds: ["edu_a"],
+      skills: [],
+    });
+    const { doc } = await tailorResume(ranked, job, { latitude: "rephrase", instructions: "" });
+    const prompt = llm.mock.calls[0][2];
+    expect(prompt).not.toContain(profile.experience[0].bullets[1].text);
+    expect(prompt).not.toContain(profile.projects[0].bullets[0].text);
+    expect(doc.experience.map((e) => e.sourceId)).toEqual(["exp_a", "exp_b"]);
+    expect(doc.experience[0].bullets).toEqual([{ text: profile.experience[0].bullets[0].text, sourceIds: ["b1"] }]);
+    expect(doc.experience[1].bullets.map((b) => b.sourceIds[0])).toEqual(["b3"]);
+  });
+
+  it("withPinned leaves a pinned bullet alone when the model already used it", () => {
+    const draft = { summary: "", experience: [{ sourceId: "exp_a", bullets: [{ text: "Reworded CI bullet.", sourceIds: ["b1"] }] }], projects: [], educationIds: [], skills: [] };
+    expect(withPinned(ranked, draft).experience[0].bullets).toEqual([{ text: "Reworded CI bullet.", sourceIds: ["b1"] }]);
   });
 });

@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { reuseIds } from "../import";
 import { resolveResume } from "../resolve";
-import type { TailoredResume } from "../types";
+import { Profile, type TailoredResume } from "../types";
 import { profile } from "./fixture";
 
 describe("reuseIds", () => {
@@ -17,10 +17,14 @@ describe("reuseIds", () => {
       ],
       education: profile.education.map((e) => ({ ...e, id: "newedu" })),
     };
-    const merged = reuseIds(profile, fresh);
+    const merged = reuseIds({ ...profile, experience: profile.experience.map((e, i) => (i === 0 ? { ...e, rank: "pinned" as const, bullets: e.bullets.map((b) => ({ ...b, rank: "hidden" as const })) } : e)) }, Profile.parse(fresh));
     expect(merged.experience.map((e) => e.id)).toEqual(["exp_a", "exp_b", "new3"]);
     expect(merged.experience[0].bullets.map((b) => b.id)).toEqual(["b1", "nb2"]);
     expect(merged.education[0].id).toBe("edu_a");
+    // Pins and hides survive a re-import for matched entries and bullets; new ones start normal.
+    expect(merged.experience[0].rank).toBe("pinned");
+    expect(merged.experience[0].bullets.map((b) => b.rank)).toEqual(["hidden", "normal"]);
+    expect(merged.experience[2].rank).toBe("normal");
 
     const tailored: TailoredResume = { summary: "", experience: [{ sourceId: "exp_a", bullets: [{ text: "x", sourceIds: ["b1"] }] }], projects: [], educationIds: ["edu_a"], skills: [] };
     const r = resolveResume(merged, tailored);

@@ -6,13 +6,14 @@ import { Check, FileUp, Sparkles, UserRound } from "lucide-react";
 import { useRef, useState, useTransition } from "react";
 
 import { importResumeAction, saveProfileAction } from "@/app/actions";
-import type { Bullet, Profile } from "@/lib/types";
+import type { Bullet, Profile, Rank } from "@/lib/types";
 import { ListEditor } from "./list-editor";
+import { RankNote, RankToggle } from "./rank-toggle";
 import { PageBody, PageHeader } from "./page-header";
 import { PdfPreview, PreviewEmpty, PreviewPane } from "./pdf-preview";
 import { SaveBar } from "./save-bar";
 import { CommaInput } from "./comma-input";
-import { Button, Card, CardTitle, Eyebrow, Field as FieldShell, Inset, Input, Textarea } from "./ui";
+import { Button, Card, CardTitle, Eyebrow, Field as FieldShell, Inset, Input, Textarea, cx } from "./ui";
 
 // getRandomValues works on plain-http LAN addresses too, unlike randomUUID.
 const cid = (p: string) => `${p}_${Array.from(crypto.getRandomValues(new Uint8Array(6)), (b) => b.toString(16).padStart(2, "0")).join("")}`;
@@ -37,9 +38,33 @@ function Bullets({ bullets, onChange }: { bullets: Bullet[]; onChange: (b: Bulle
       addLabel="Bullet"
       itemLabel="bullet"
       getKey={(b) => b.id}
-      onAdd={() => ({ id: cid("b"), text: "" })}
-      render={(b, update) => <Textarea rows={2} aria-label="Bullet" value={b.text} onChange={(e) => update({ ...b, text: e.target.value })} placeholder="What you did, and what came of it" />}
+      onAdd={() => ({ id: cid("b"), text: "", rank: "normal" as const })}
+      render={(b, update) => (
+        <div className="flex gap-1">
+          <Textarea
+            rows={2}
+            aria-label="Bullet"
+            value={b.text}
+            onChange={(e) => update({ ...b, text: e.target.value })}
+            placeholder="What you did, and what came of it"
+            className={cx("flex-1", b.rank === "hidden" && "opacity-50", b.rank === "pinned" && "border-brand")}
+          />
+          <RankToggle vertical rank={b.rank} onChange={(rank) => update({ ...b, rank })} what="bullet" />
+        </div>
+      )}
     />
+  );
+}
+
+/** Top row of a role/project/school: what its rank means, and the pin/hide toggles. */
+function EntryRank({ rank, onChange, what, className }: { rank: Rank; onChange: (r: Rank) => void; what: string; className?: string }) {
+  return (
+    <div className={cx("-mb-1 -mt-1 flex min-h-8 items-center justify-between gap-2", className)}>
+      <RankNote rank={rank} />
+      <span className="ml-auto">
+        <RankToggle rank={rank} onChange={onChange} what={what} />
+      </span>
+    </div>
   );
 }
 
@@ -176,9 +201,10 @@ export function ProfileEditor({ initial }: { initial: Profile }) {
             itemLabel="role"
             confirmRemove={(e) => (e.company || e.title || e.bullets.length ? `${e.title || "This role"}${e.company ? ` at ${e.company}` : ""} and its ${e.bullets.length} bullets will be removed from your profile when you save.` : null)}
             getKey={(x) => x.id}
-            onAdd={() => ({ id: cid("exp"), company: "", title: "", location: "", start: "", end: "", bullets: [] })}
+            onAdd={() => ({ id: cid("exp"), company: "", title: "", location: "", start: "", end: "", bullets: [], rank: "normal" as const })}
             render={(e, update) => (
-              <Inset className="space-y-3">
+              <Inset className={cx("space-y-3", e.rank === "hidden" && "opacity-60")}>
+                <EntryRank rank={e.rank} onChange={(rank) => update({ ...e, rank })} what="role" />
                 <div className="grid gap-2 sm:grid-cols-2">
                   <Field label="Title" value={e.title} onChange={(v) => update({ ...e, title: v })} />
                   <Field label="Company" value={e.company} onChange={(v) => update({ ...e, company: v })} />
@@ -201,9 +227,10 @@ export function ProfileEditor({ initial }: { initial: Profile }) {
             itemLabel="project"
             confirmRemove={(x) => (x.name || x.bullets.length ? `${x.name || "This project"} and its bullets will be removed from your profile when you save.` : null)}
             getKey={(x) => x.id}
-            onAdd={() => ({ id: cid("prj"), name: "", url: "", bullets: [] })}
+            onAdd={() => ({ id: cid("prj"), name: "", url: "", bullets: [], rank: "normal" as const })}
             render={(pr, update) => (
-              <Inset className="space-y-3">
+              <Inset className={cx("space-y-3", pr.rank === "hidden" && "opacity-60")}>
+                <EntryRank rank={pr.rank} onChange={(rank) => update({ ...pr, rank })} what="project" />
                 <div className="grid gap-2 sm:grid-cols-2">
                   <Field label="Name" value={pr.name} onChange={(v) => update({ ...pr, name: v })} />
                   <Field label="URL" value={pr.url} onChange={(v) => update({ ...pr, url: v })} />
@@ -223,9 +250,10 @@ export function ProfileEditor({ initial }: { initial: Profile }) {
             itemLabel="school"
             confirmRemove={(e) => (e.school ? `${e.school} will be removed from your profile when you save.` : null)}
             getKey={(x) => x.id}
-            onAdd={() => ({ id: cid("edu"), school: "", degree: "", location: "", start: "", end: "", details: "" })}
+            onAdd={() => ({ id: cid("edu"), school: "", degree: "", location: "", start: "", end: "", details: "", rank: "normal" as const })}
             render={(e, update) => (
-              <Inset className="grid gap-3 sm:grid-cols-2">
+              <Inset className={cx("grid gap-3 sm:grid-cols-2", e.rank === "hidden" && "opacity-60")}>
+                <EntryRank rank={e.rank} onChange={(rank) => update({ ...e, rank })} what="school" className="sm:col-span-2" />
                 <Field label="School" value={e.school} onChange={(v) => update({ ...e, school: v })} />
                 <Field label="Degree" value={e.degree} onChange={(v) => update({ ...e, degree: v })} />
                 <Field label="Start" value={e.start} onChange={(v) => update({ ...e, start: v })} />
@@ -257,7 +285,7 @@ export function ProfileEditor({ initial }: { initial: Profile }) {
       </div>
 
       <PreviewPane>
-        <Eyebrow className="mb-2">Base resume · everything, untailored</Eyebrow>
+        <Eyebrow className="mb-2">Base resume · everything except hidden</Eyebrow>
         {hasData ? (
           <PdfPreview query="kind=resume" version={version} settings={{ href: settingsHref("layout", "/profile"), label: "Layout" }} />
         ) : (

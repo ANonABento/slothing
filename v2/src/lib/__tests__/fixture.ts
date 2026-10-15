@@ -1,6 +1,6 @@
-import type { Profile } from "../types";
+import { Profile } from "../types";
 
-export const profile: Profile = {
+export const profile: Profile = Profile.parse({
   contact: { name: "Alex Rivera", email: "alex@example.com", phone: "555-0100", location: "Toronto, ON", links: ["github.com/alexr"] },
   summary: "Full-stack engineer focused on developer tools.",
   experience: [
@@ -29,4 +29,4 @@ export const profile: Profile = {
   education: [{ id: "edu_a", school: "University of Waterloo", degree: "BASc, Computer Engineering", location: "Waterloo, ON", start: "2015", end: "2019", details: "" }],
   projects: [{ id: "prj_a", name: "slothing", url: "github.com/alexr/slothing", bullets: [{ id: "b4", text: "Open-source job search assistant {with} 100% of #edge_cases ~covered^." }] }],
   skills: [{ id: "sk_a", category: "Languages", items: ["TypeScript", "Python", "SQL"] }],
-};
+});
