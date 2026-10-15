@@ -14,8 +14,11 @@ export function JobDocuments({
   profile,
   resume,
   letter,
+  letterWords,
 }: {
   jobId: string;
+  /** The cover letter word target from Settings. */
+  letterWords: number;
   profile: Profile;
   resume: StoredDoc<TailoredResume> | null;
   letter: StoredDoc<CoverLetter> | null;
@@ -46,7 +49,7 @@ export function JobDocuments({
             />
           </div>
           <div hidden={tab !== "letter"}>
-            <LetterEditor key={letter?.updatedAt ?? "none"} jobId={jobId} initial={letter?.data ?? null} initialWarnings={letter?.warnings ?? []} />
+            <LetterEditor key={letter?.updatedAt ?? "none"} jobId={jobId} initial={letter?.data ?? null} initialWarnings={letter?.warnings ?? []} targetWords={letterWords} />
           </div>
         </Card>
         <PreviewPane>

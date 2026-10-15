@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import { renderPdf } from "../render";
 import { typstBin } from "../render/run";
 import { profileAsTailored, resolveResume, resolveLetter } from "../resolve";
+import { Settings } from "../types";
 import { profile } from "./fixture";
 
 const resume = resolveResume(profile, profileAsTailored(profile));
@@ -46,5 +47,22 @@ describe("typst render edge cases", () => {
       const pdf = await renderPdf(input);
       expect(pdf.subarray(0, 4).toString()).toBe("%PDF");
     }
+  }, 60_000);
+});
+
+describe("typst render layout", () => {
+  it.skipIf(!available)("follows section order and paper size", async () => {
+    const layout = Settings.parse({ resume: { order: ["education", "skills", "experience"], hide: ["summary"], paper: "a4" } }).resume;
+    const pdf = await renderPdf({ kind: "resume", data: resolveResume(profile, profileAsTailored(profile), layout) });
+    const { extractText, getDocumentProxy } = await import("unpdf");
+    const doc = await getDocumentProxy(new Uint8Array(pdf));
+    const { width, height } = (await doc.getPage(1)).getViewport({ scale: 1 });
+    expect([Math.round(width), Math.round(height)]).toEqual([595, 842]); // A4 in points
+    const { text } = await extractText(doc, { mergePages: true });
+    const at = (s: string) => text.search(new RegExp(s, "i"));
+    expect(at("education")).toBeGreaterThanOrEqual(0);
+    expect(at("education")).toBeLessThan(at("skills"));
+    expect(at("skills")).toBeLessThan(at("experience"));
+    expect(at("summary")).toBe(-1);
   }, 60_000);
 });

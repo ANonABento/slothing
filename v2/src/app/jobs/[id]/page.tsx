@@ -4,7 +4,8 @@ import { notFound } from "next/navigation";
 import { JobDocuments } from "@/components/job-documents";
 import { JobPanel, StatusSelect } from "@/components/job-panel";
 import { PageBody, PageHeader } from "@/components/page-header";
-import { getDoc, getJob, getProfile } from "@/lib/db";
+import { getDoc, getJob, getProfile, getSettings } from "@/lib/db";
+import { LETTER_LENGTHS } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -35,7 +36,9 @@ export default async function JobPage({ params }: { params: Promise<{ id: string
       <PageBody>
         <div className="space-y-6">
           <JobPanel job={job} />
-          <JobDocuments jobId={job.id} profile={getProfile()} resume={getDoc(job.id, "resume")} letter={getDoc(job.id, "cover_letter")} />
+          <JobDocuments jobId={job.id} profile={getProfile()} resume={getDoc(job.id, "resume")} letter={getDoc(job.id, "cover_letter")}
+            letterWords={LETTER_LENGTHS[getSettings().letter.length]}
+          />
         </div>
       </PageBody>
     </>

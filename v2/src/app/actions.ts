@@ -163,7 +163,7 @@ export async function saveResumeAction(jobId: string, data: TailoredResume): Pro
 export async function writeLetterAction(jobId: string): Promise<Result> {
   try {
     const job = requireJob(jobId);
-    const { doc, warnings } = await writeCoverLetter(db.getProfile(), job, db.getSettings().tailoring);
+    const { doc, warnings } = await writeCoverLetter(db.getProfile(), job, db.getSettings().tailoring, db.getSettings().letter);
     db.saveDoc(jobId, "cover_letter", doc, warnings);
     revalidatePath(`/jobs/${jobId}`);
     return { ok: true };
@@ -175,7 +175,7 @@ export async function writeLetterAction(jobId: string): Promise<Result> {
 export async function saveLetterAction(jobId: string, data: CoverLetter): Promise<Result> {
   try {
     const letter = CoverLetter.parse(data);
-    db.saveDoc(jobId, "cover_letter", letter, letterWarnings(db.getProfile(), letter, db.getJob(jobId) ?? undefined));
+    db.saveDoc(jobId, "cover_letter", letter, letterWarnings(db.getProfile(), letter, db.getJob(jobId) ?? undefined, db.getSettings().letter.length));
     revalidatePath(`/jobs/${jobId}`);
     return { ok: true };
   } catch (e) {

@@ -9,16 +9,18 @@ import type { CoverLetter, Warning } from "@/lib/types";
 import { ListEditor } from "./list-editor";
 import { useConfirm } from "./confirm";
 import { SaveBar } from "./save-bar";
-import { Button, Input, Label, Textarea, Warnings } from "./ui";
+import { Button, Input, Label, Textarea, Warnings, cx } from "./ui";
 
 export function LetterEditor({
   jobId,
   initial,
   initialWarnings,
+  targetWords,
 }: {
   jobId: string;
   initial: CoverLetter | null;
   initialWarnings: Warning[];
+  targetWords: number;
 }) {
   const [doc, setDoc] = useState(initial);
   const [saved, setSaved] = useState(initial);
@@ -79,7 +81,10 @@ export function LetterEditor({
         <Input aria-label="Greeting" value={doc.greeting} onChange={(e) => setDoc({ ...doc, greeting: e.target.value })} />
       </div>
       <div>
-        <Label>Paragraphs</Label>
+        <div className="flex items-baseline justify-between">
+          <Label>Paragraphs</Label>
+          <WordCount words={doc.paragraphs.join(" ").split(/\s+/).filter(Boolean).length} target={targetWords} />
+        </div>
         <ListEditor
           items={doc.paragraphs}
           onChange={(paragraphs) => setDoc({ ...doc, paragraphs })}
@@ -95,5 +100,12 @@ export function LetterEditor({
       </div>
       <SaveBar dirty={dirty} pending={pending} onSave={save} onDiscard={() => setDoc(saved)} />
     </fieldset>
+  );
+}
+function WordCount({ words, target }: { words: number; target: number }) {
+  return (
+    <span className={cx("font-mono text-xs", words > target * 1.1 ? "text-warn" : "text-ink-3")} title="Word target is set in Settings">
+      {words} / {target} words
+    </span>
   );
 }

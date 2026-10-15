@@ -12,7 +12,7 @@ const COMMON = `
 `;
 
 export const RESUME_TYP = `${COMMON}
-#set page(paper: "us-letter", margin: (x: 0.6in, y: 0.55in))
+#set page(paper: d.paper, margin: (x: 0.6in, y: 0.55in))
 #set text(font: "Libertinus Serif", size: 10.5pt)
 #set par(leading: 0.48em, spacing: 0.6em)
 #set list(indent: 4pt, body-indent: 5pt, spacing: 0.45em)
@@ -34,14 +34,13 @@ export const RESUME_TYP = `${COMMON}
 }
 #let range(a, b) = nonempty((a, b)).join(" – ")
 
-#header
-
-#if d.summary != "" {
+// One function per section, rendered in the order settings give (d.sections).
+#let summary() = if d.summary != "" {
   section("Summary")
   d.summary
 }
 
-#if d.experience.len() > 0 {
+#let experience() = if d.experience.len() > 0 {
   section("Experience")
   for e in d.experience {
     block(breakable: false, below: 7pt)[
@@ -53,7 +52,7 @@ export const RESUME_TYP = `${COMMON}
   }
 }
 
-#if d.projects.len() > 0 {
+#let projects() = if d.projects.len() > 0 {
   section("Projects")
   for p in d.projects {
     block(breakable: false, below: 7pt)[
@@ -63,7 +62,7 @@ export const RESUME_TYP = `${COMMON}
   }
 }
 
-#if d.education.len() > 0 {
+#let education() = if d.education.len() > 0 {
   section("Education")
   for e in d.education {
     block(breakable: false, below: 7pt)[
@@ -75,16 +74,21 @@ export const RESUME_TYP = `${COMMON}
   }
 }
 
-#if d.skills.len() > 0 {
+#let skills() = if d.skills.len() > 0 {
   section("Skills")
   for s in d.skills [
     *#s.category:* #s.items.join(", ") \\
   ]
 }
+
+#let sections = (summary: summary, experience: experience, projects: projects, education: education, skills: skills)
+
+#header
+#for name in d.sections { sections.at(name)() }
 `;
 
 export const LETTER_TYP = `${COMMON}
-#set page(paper: "us-letter", margin: (x: 1in, y: 0.9in))
+#set page(paper: d.paper, margin: (x: 1in, y: 0.9in))
 #set text(font: "Libertinus Serif", size: 11pt)
 #set par(leading: 0.62em, spacing: 1.1em)
 

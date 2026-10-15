@@ -1,5 +1,5 @@
 import { generateJSON } from "./llm";
-import { CoverLetter, Settings, TailoredResume, type Job, type Latitude, type Profile, type TailoringSettings, type Warning } from "./types";
+import { CoverLetter, LETTER_LENGTHS, Settings, TailoredResume, type Job, type Latitude, type LetterLength, type LetterSettings, type Profile, type TailoringSettings, type Warning } from "./types";
 
 /* ─── Grounding ───
  * The model only ever chooses and rephrases. Everything it returns is checked against the
@@ -202,7 +202,7 @@ export async function tailorResume(profile: Profile, job: Job, t: TailoringSetti
   return groundResume(profile, draft);
 }
 
-const LETTER_SYSTEM = `You write a concise cover letter (3–4 short paragraphs, under 350 words)
+export const letterSystem = (length: LetterLength) => `You write a concise cover letter (${length === "short" ? "2–3" : "3–4"} short paragraphs, under ${LETTER_LENGTHS[length]} words)
 for the candidate, using ONLY facts from their profile. Do not invent metrics, employers,
 projects, or experiences. Be specific to the job description, warm but plain — no clichés
 like "I am writing to express my interest". Do not include the date, addresses, or signature
@@ -214,25 +214,34 @@ export async function writeCoverLetter(
   profile: Profile,
   job: Job,
   t: TailoringSettings = Settings.parse({}).tailoring,
+  letter: LetterSettings = Settings.parse({}).letter,
 ): Promise<{ doc: CoverLetter; warnings: Warning[] }> {
   const doc = await generateJSON(
     CoverLetter,
-    LETTER_SYSTEM + preferences(t.instructions),
+    letterSystem(letter.length) + preferences(t.instructions),
     `${jobBlock(job)}\n\nCandidate profile (JSON):\n${JSON.stringify(profile)}`,
   );
-  return { doc, warnings: letterWarnings(profile, doc, job) };
+  return { doc, warnings: letterWarnings(profile, doc, job, letter.length) };
 }
 
 /**
  * Numbers in a letter must come from the profile. The posting only vouches for years ("Winter 2027 term"):
  * a "5+ years" in the requirements isn't the candidate's.
  */
-export function letterWarnings(profile: Profile, doc: CoverLetter, job?: Pick<Job, "title" | "description">): Warning[] {
+export function letterWarnings(profile: Profile, doc: CoverLetter, job?: Pick<Job, "title" | "description">, length?: LetterLength): Warning[] {
   const postingYears = job ? (`${job.title} ${job.description}`.match(/\b(19|20)\d{2}\b/g) ?? []) : [];
   const facts = `${profileFacts(profile)}\n${postingYears.join(" ")}`;
-  return doc.paragraphs.flatMap((p, i) => {
+  const warnings: Warning[] = doc.paragraphs.flatMap((p, i) => {
     const nums = unsupportedNumbers(p, facts);
     return nums.length ? [{ where: `Paragraph ${i + 1}`, message: `Mentions ${nums.join(", ")}, which isn't in your profile.` }] : [];
   });
+  // A little slack, so a letter a few words over its target doesn't raise a warning every time.
+  const words = wordCount(doc.paragraphs);
+  if (length && words > LETTER_LENGTHS[length] * 1.1) {
+    warnings.push({ where: "Length", message: `${words} words, over the ${LETTER_LENGTHS[length]}-word target in Settings.` });
+  }
+  return warnings;
 }
 
+
+export const wordCount = (paragraphs: string[]) => paragraphs.join(" ").split(/\s+/).filter(Boolean).length;

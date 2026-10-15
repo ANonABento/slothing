@@ -2,7 +2,10 @@ import { describe, expect, it } from "vitest";
 
 import { getSettings, saveSettings } from "../db";
 import { resolveLlm } from "../llm";
+import { profileAsTailored, resolveResume } from "../resolve";
+import { letterSystem, letterWarnings } from "../tailor";
 import { Settings } from "../types";
+import { profile } from "./fixture";
 
 const ai = (patch: Partial<Settings["ai"]> = {}) => ({ ...Settings.parse({}).ai, ...patch });
 
@@ -51,5 +54,39 @@ describe("settings storage", () => {
     saveSettings(s);
     expect(getSettings()).toEqual(s);
     expect(getSettings().ai.models).toEqual({ anthropic: "", nebius: "", openai: "" });
+  });
+});
+
+describe("resume layout", () => {
+  it("normalizes section order: drops repeats, appends missing sections in default order", () => {
+    const s = Settings.parse({ resume: { order: ["education", "education", "skills"] } });
+    expect(s.resume.order).toEqual(["education", "skills", "summary", "experience", "projects"]);
+  });
+
+  it("rejects hiding a required section", () => {
+    expect(() => Settings.parse({ resume: { hide: ["experience"] } })).toThrow();
+  });
+
+  it("resolveResume applies order and hidden sections; content stays in the doc", () => {
+    const layout = Settings.parse({ resume: { order: ["education", "experience"], hide: ["summary"], paper: "a4" } }).resume;
+    const r = resolveResume(profile, profileAsTailored(profile), layout);
+    expect(r.sections).toEqual(["education", "experience", "projects", "skills"]);
+    expect(r.paper).toBe("a4");
+    expect(r.summary).toBe(profile.summary);
+  });
+});
+
+describe("cover letter length", () => {
+  const letter = (words: number) => ({ greeting: "", closing: "", paragraphs: [Array.from({ length: words }, () => "word").join(" ")] });
+
+  it("warns only past the target plus 10% slack", () => {
+    expect(letterWarnings(profile, letter(215), undefined, "short")).toEqual([]);
+    expect(letterWarnings(profile, letter(230), undefined, "short")).toEqual([{ where: "Length", message: "230 words, over the 200-word target in Settings." }]);
+    expect(letterWarnings(profile, letter(230), undefined, "standard")).toEqual([]);
+  });
+
+  it("the prompt states the target", () => {
+    expect(letterSystem("short")).toMatch(/under 200 words/);
+    expect(letterSystem("standard")).toMatch(/under 350 words/);
   });
 });

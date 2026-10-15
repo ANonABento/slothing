@@ -1,4 +1,6 @@
-import type { CoverLetter, Job, Profile, ResolvedLetter, ResolvedResume, TailoredResume } from "./types";
+import { Settings, type CoverLetter, type Job, type Paper, type Profile, type ResolvedLetter, type ResolvedResume, type ResumeLayout, type TailoredResume } from "./types";
+
+const DEFAULTS = Settings.parse({});
 
 /** The profile as-is, rendered as a resume. Also the starting point for manual tailoring. */
 export function profileAsTailored(profile: Profile): TailoredResume {
@@ -13,12 +15,15 @@ export function profileAsTailored(profile: Profile): TailoredResume {
 }
 
 /** Join a tailored resume back onto the profile. Identity fields always come from the profile. */
-export function resolveResume(profile: Profile, doc: TailoredResume): ResolvedResume {
+export function resolveResume(profile: Profile, doc: TailoredResume, layout: ResumeLayout = DEFAULTS.resume): ResolvedResume {
   const byId = <T extends { id: string }>(list: T[]) => new Map(list.map((x) => [x.id, x]));
   const exps = byId(profile.experience);
   const prjs = byId(profile.projects);
   const edus = byId(profile.education);
+  const hidden = new Set<string>(layout.hide);
   return {
+    sections: layout.order.filter((s) => !hidden.has(s)),
+    paper: layout.paper,
     contact: profile.contact,
     summary: doc.summary,
     experience: doc.experience.flatMap(({ sourceId, bullets }) => {
@@ -41,8 +46,9 @@ export function resolveResume(profile: Profile, doc: TailoredResume): ResolvedRe
   };
 }
 
-export function resolveLetter(profile: Profile, job: Pick<Job, "company" | "title">, letter: CoverLetter): ResolvedLetter {
+export function resolveLetter(profile: Profile, job: Pick<Job, "company" | "title">, letter: CoverLetter, paper: Paper = DEFAULTS.resume.paper): ResolvedLetter {
   return {
+    paper,
     contact: profile.contact,
     date: new Intl.DateTimeFormat("en-US", { dateStyle: "long" }).format(new Date()),
     recipient: { company: job.company, title: job.title },

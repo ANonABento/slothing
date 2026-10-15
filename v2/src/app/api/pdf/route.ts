@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-import { getDoc, getJob, getProfile } from "@/lib/db";
+import { getDoc, getJob, getProfile, getSettings } from "@/lib/db";
 import { renderPdf, renderSource, type RenderInput } from "@/lib/render";
 import { profileAsTailored, resolveLetter, resolveResume } from "@/lib/resolve";
 
@@ -13,13 +13,14 @@ export const runtime = "nodejs";
 export async function GET(req: NextRequest) {
   const q = req.nextUrl.searchParams;
   const profile = getProfile();
+  const { resume: layout } = getSettings();
   const jobId = q.get("job");
   const kind = q.get("kind") === "letter" ? "letter" : "resume";
   let input: RenderInput;
   let filename = `${profile.contact.name || "resume"}`.replace(/\s+/g, "_");
 
   if (!jobId) {
-    input = { kind: "resume", data: resolveResume(profile, profileAsTailored(profile)) };
+    input = { kind: "resume", data: resolveResume(profile, profileAsTailored(profile), layout) };
   } else {
     const job = getJob(jobId);
     if (!job) return NextResponse.json({ error: "job not found" }, { status: 404 });
@@ -27,11 +28,11 @@ export async function GET(req: NextRequest) {
     if (kind === "resume") {
       const doc = getDoc(jobId, "resume");
       if (!doc) return NextResponse.json({ error: "no resume yet" }, { status: 404 });
-      input = { kind, data: resolveResume(profile, doc.data) };
+      input = { kind, data: resolveResume(profile, doc.data, layout) };
     } else {
       const doc = getDoc(jobId, "cover_letter");
       if (!doc) return NextResponse.json({ error: "no cover letter yet" }, { status: 404 });
-      input = { kind, data: resolveLetter(profile, job, doc.data) };
+      input = { kind, data: resolveLetter(profile, job, doc.data, layout.paper) };
       filename += "_cover_letter";
     }
   }

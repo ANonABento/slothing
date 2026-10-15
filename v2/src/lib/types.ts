@@ -131,6 +131,22 @@ export type Provider = (typeof PROVIDERS)[number];
 export const LATITUDES = ["select", "rephrase", "rewrite"] as const;
 export type Latitude = (typeof LATITUDES)[number];
 
+export const SECTIONS = ["summary", "experience", "projects", "education", "skills"] as const;
+export type Section = (typeof SECTIONS)[number];
+/** Sections that can be left off the page. The rest always render when they have content. */
+export const OPTIONAL_SECTIONS = ["summary", "projects"] as const;
+export const PAPERS = ["us-letter", "a4"] as const;
+export const LETTER_LENGTHS = { short: 200, standard: 350 } as const;
+export type LetterLength = keyof typeof LETTER_LENGTHS;
+
+/** Every section exactly once: unknown and repeated ones dropped, missing ones appended in default order. */
+const fullOrder = (order: Section[]): Section[] => {
+  const seen = [...new Set(order)];
+  return [...seen, ...SECTIONS.filter((s) => !seen.includes(s))];
+};
+
+const DEFAULT_LAYOUT = { order: [...SECTIONS], hide: [], paper: "us-letter" as const };
+
 export const Settings = z.object({
   ai: z
     .object({
@@ -150,14 +166,28 @@ export const Settings = z.object({
       instructions: z.string().default(""),
     })
     .default({ latitude: "rephrase", instructions: "" }),
+  resume: z
+    .object({
+      order: z.array(z.enum(SECTIONS)).default([...SECTIONS]).transform(fullOrder),
+      hide: z.array(z.enum(OPTIONAL_SECTIONS)).default([]),
+      paper: z.enum(PAPERS).default("us-letter"),
+    })
+    .default(DEFAULT_LAYOUT),
+  letter: z.object({ length: z.enum(["short", "standard"]).default("standard") }).default({ length: "standard" }),
 });
 export type Settings = z.infer<typeof Settings>;
 export type AiSettings = Settings["ai"];
 export type TailoringSettings = Settings["tailoring"];
+export type ResumeLayout = Settings["resume"];
+export type LetterSettings = Settings["letter"];
+export type Paper = (typeof PAPERS)[number];
 
 /* ─── Fully-resolved shapes the renderers consume ─── */
 
 export interface ResolvedResume {
+  /** Sections to render, in order. */
+  sections: Section[];
+  paper: Paper;
   contact: Profile["contact"];
   summary: string;
   experience: { company: string; title: string; location: string; start: string; end: string; bullets: string[] }[];
@@ -167,6 +197,7 @@ export interface ResolvedResume {
 }
 
 export interface ResolvedLetter {
+  paper: Paper;
   contact: Profile["contact"];
   date: string;
   recipient: { company: string; title: string };

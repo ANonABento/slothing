@@ -1,16 +1,16 @@
 "use client";
 
-import { AlertTriangle, Check, Loader2, Plug, Settings2 } from "lucide-react";
+import { AlertTriangle, ArrowDown, ArrowUp, Check, Loader2, Plug, Settings2 } from "lucide-react";
 import { useState, useTransition, type ReactNode } from "react";
 
 import { saveSettingsAction, testLlmAction } from "@/app/actions";
 import type { ProviderStatus } from "@/lib/llm";
 import { safe } from "@/lib/safe";
-import { LATITUDES, type Latitude, type Provider, type Settings } from "@/lib/types";
+import { LATITUDES, LETTER_LENGTHS, OPTIONAL_SECTIONS, type Latitude, type LetterLength, type Paper, type Provider, type Section as SectionId, type Settings } from "@/lib/types";
 import { Dropdown } from "./dropdown";
 import { PageBody, PageHeader } from "./page-header";
 import { SaveBar } from "./save-bar";
-import { Button, Card, CardTitle, Field, Input, Textarea, cx } from "./ui";
+import { Button, Card, CardTitle, Field, IconButton, Input, Label, Segmented, Textarea, cx } from "./ui";
 
 function Section({ title, description, children }: { title: string; description: ReactNode; children: ReactNode }) {
   return (
@@ -153,6 +153,72 @@ function TailoringSection({ t, onChange }: { t: Settings["tailoring"]; onChange:
   );
 }
 
+const SECTION_LABELS: Record<SectionId, string> = { summary: "Summary", experience: "Experience", projects: "Projects", education: "Education", skills: "Skills" };
+const optional = (s: SectionId): s is (typeof OPTIONAL_SECTIONS)[number] => (OPTIONAL_SECTIONS as readonly string[]).includes(s);
+
+function LayoutSection({ layout, onChange }: { layout: Settings["resume"]; onChange: (l: Settings["resume"]) => void }) {
+  const move = (i: number, d: number) => {
+    const order = [...layout.order];
+    [order[i], order[i + d]] = [order[i + d], order[i]];
+    onChange({ ...layout, order });
+  };
+  const toggle = (s: (typeof OPTIONAL_SECTIONS)[number], show: boolean) =>
+    onChange({ ...layout, hide: show ? layout.hide.filter((h) => h !== s) : [...layout.hide, s] });
+
+  return (
+    <Section title="Resume layout" description="Section order and paper size for every resume. Hidden sections stay in your profile and tailored resumes; they're just left off the page.">
+      <div>
+        <Label>Section order</Label>
+        <ol className="divide-y divide-rule rounded-control border border-rule">
+          {layout.order.map((s, i) => {
+            const hidden = optional(s) && layout.hide.includes(s);
+            return (
+              <li key={s} className="flex h-11 items-center gap-3 px-3">
+                <span className="w-4 font-mono text-xs text-ink-3">{i + 1}</span>
+                <span className={cx("flex-1 text-sm font-medium", hidden && "text-ink-3 line-through")}>{SECTION_LABELS[s]}</span>
+                {optional(s) && (
+                  <label className="flex items-center gap-1.5 text-xs text-ink-2">
+                    <input type="checkbox" className="accent-brand" checked={!hidden} onChange={(e) => toggle(s, e.target.checked)} />
+                    Show
+                  </label>
+                )}
+                <IconButton size="sm" label={`Move ${SECTION_LABELS[s]} up`} onClick={() => move(i, -1)} disabled={i === 0}><ArrowUp className="h-3.5 w-3.5" /></IconButton>
+                <IconButton size="sm" label={`Move ${SECTION_LABELS[s]} down`} onClick={() => move(i, 1)} disabled={i === layout.order.length - 1}><ArrowDown className="h-3.5 w-3.5" /></IconButton>
+              </li>
+            );
+          })}
+        </ol>
+      </div>
+      <div>
+        <Label>Paper size (resumes and cover letters)</Label>
+        <Segmented<Paper>
+          value={layout.paper}
+          onChange={(paper) => onChange({ ...layout, paper })}
+          options={[
+            { value: "us-letter", label: "US Letter" },
+            { value: "a4", label: "A4" },
+          ]}
+        />
+      </div>
+    </Section>
+  );
+}
+
+function LetterSection({ letter, onChange }: { letter: Settings["letter"]; onChange: (l: Settings["letter"]) => void }) {
+  return (
+    <Section title="Cover letter" description="How long AI drafts should be. Letters over the target get a warning.">
+      <Segmented<LetterLength>
+        value={letter.length}
+        onChange={(length) => onChange({ length })}
+        options={[
+          { value: "short", label: `Short · ${LETTER_LENGTHS.short} words` },
+          { value: "standard", label: `Standard · ${LETTER_LENGTHS.standard} words` },
+        ]}
+      />
+    </Section>
+  );
+}
+
 export function SettingsEditor({ initial, providers }: { initial: Settings; providers: ProviderStatus[] }) {
   const [s, setS] = useState(initial);
   const [saved, setSaved] = useState(initial);
@@ -173,7 +239,7 @@ export function SettingsEditor({ initial, providers }: { initial: Settings; prov
       <PageHeader
         icon={Settings2}
         title="Settings"
-        description="Which model to use and how much it may change your resume."
+        description="Which model to use, how much it may change your resume, and how documents are laid out."
         actions={
           <>
             {dirty ? <span className="text-xs text-ink-3">Unsaved changes</span> : <span className="inline-flex items-center gap-1 text-xs text-ok"><Check className="h-3.5 w-3.5" />Saved</span>}
@@ -186,6 +252,8 @@ export function SettingsEditor({ initial, providers }: { initial: Settings; prov
           {error && <p className="text-sm text-warn">{error}</p>}
           <ModelSection ai={s.ai} providers={providers} onChange={(ai) => setS({ ...s, ai })} />
           <TailoringSection t={s.tailoring} onChange={(tailoring) => setS({ ...s, tailoring })} />
+          <LayoutSection layout={s.resume} onChange={(resume) => setS({ ...s, resume })} />
+          <LetterSection letter={s.letter} onChange={(letter) => setS({ ...s, letter })} />
           <SaveBar dirty={dirty} pending={pending} onSave={save} onDiscard={() => setS(saved)} label="Save settings" />
         </div>
       </PageBody>
