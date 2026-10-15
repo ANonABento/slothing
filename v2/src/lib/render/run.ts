@@ -5,21 +5,22 @@ import { join } from "path";
 
 export const typstBin = () => join(process.cwd(), ".engines", "typst");
 
-/** Run a compiler in a throwaway directory holding only `files`; return the produced PDF. */
-export async function compileInTemp(
+/** Run a command in a throwaway directory holding only `files`; return its stdout and, if named, an output file. */
+async function runInTemp(
   files: Record<string, string>,
   bin: string,
   args: string[],
-  output: string,
+  output: string | null,
   timeoutMs = 60_000,
-): Promise<Buffer> {
+): Promise<{ stdout: string; file: Buffer | null }> {
   const dir = await mkdtemp(join(tmpdir(), "slothing-"));
   try {
     for (const [name, content] of Object.entries(files)) await writeFile(join(dir, name), content);
-    await new Promise<void>((resolve, reject) => {
+    const stdout = await new Promise<string>((resolve, reject) => {
       const child = spawn(bin, args, { cwd: dir });
+      let out = "";
       let log = "";
-      child.stdout.on("data", (d) => (log += d));
+      child.stdout.on("data", (d) => ((out += d), (log += d)));
       child.stderr.on("data", (d) => (log += d));
       const timer = setTimeout(() => {
         child.kill("SIGKILL");
@@ -31,11 +32,21 @@ export async function compileInTemp(
       });
       child.on("close", (code) => {
         clearTimeout(timer);
-        code === 0 ? resolve() : reject(new Error(`${bin} exited ${code}:\n${log.slice(-3000)}`));
+        code === 0 ? resolve(out) : reject(new Error(`${bin} exited ${code}:\n${log.slice(-3000)}`));
       });
     });
-    return await readFile(join(dir, output));
+    return { stdout, file: output ? await readFile(join(dir, output)) : null };
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
+}
+
+/** Compile in a throwaway directory; return the produced file (the PDF). */
+export async function compileInTemp(files: Record<string, string>, bin: string, args: string[], output: string, timeoutMs?: number): Promise<Buffer> {
+  return (await runInTemp(files, bin, args, output, timeoutMs)).file!;
+}
+
+/** Run in a throwaway directory; return stdout (e.g. `typst eval` output). */
+export async function evalInTemp(files: Record<string, string>, bin: string, args: string[], timeoutMs?: number): Promise<string> {
+  return (await runInTemp(files, bin, args, null, timeoutMs)).stdout;
 }

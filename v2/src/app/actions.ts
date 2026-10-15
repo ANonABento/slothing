@@ -7,6 +7,7 @@ import * as db from "@/lib/db";
 import { extractText, parseResumeText, reuseIds } from "@/lib/import";
 import { generateJSON, llmInfo, testLlm } from "@/lib/llm";
 import { profileAsTailored } from "@/lib/resolve";
+import { fitResume } from "@/lib/fit";
 import { groundResume, letterWarnings, tailorResume, writeCoverLetter } from "@/lib/tailor";
 import { CoverLetter, JOB_STATUSES, Profile, Settings, TailoredResume, type AiSettings, type DocMeta, type Warning } from "@/lib/types";
 import { z } from "zod";
@@ -150,11 +151,17 @@ export async function tailorResumeAction(jobId: string, useAI: boolean): Promise
     if (!profile.experience.length && !profile.projects.length) {
       return { ok: false, error: "Your profile is empty — add your experience on the Profile page first." };
     }
-    const { tailoring } = db.getSettings();
+    const { tailoring, resume: layout } = db.getSettings();
     const llm = llmInfo();
-    const { doc, warnings } = useAI ? await tailorResume(profile, job, tailoring) : { doc: profileAsTailored(profile), warnings: [] as Warning[] };
-    const meta: DocMeta = useAI ? { source: "ai", provider: llm?.provider, model: llm?.model, latitude: tailoring.latitude } : { source: "profile" };
-    db.saveDoc(jobId, "resume", doc, warnings, meta);
+    // Both paths go through the same fitter: the AI's draft, or your whole profile.
+    const drafted = useAI ? await tailorResume(profile, job, tailoring) : { doc: profileAsTailored(profile), warnings: [] as Warning[] };
+    const fitted = await fitResume(profile, job, drafted.doc, layout);
+    // Re-ground the fitted resume: number warnings for bullets the fitter dropped go away; drops the AI caused stay.
+    const { doc, warnings } = groundResume(profile, fitted.doc);
+    const all = [...drafted.warnings.filter((w) => w.kind !== "number"), ...warnings];
+    if (fitted.overflow) all.unshift({ where: "Page length", message: `Your pinned items alone run past ${layout.pages === "two" ? "2 pages" : "1 page"}. Unpin something or change Page length in Settings.` });
+    const meta: DocMeta = useAI ? { source: "ai", provider: llm?.provider, model: llm?.model, latitude: tailoring.latitude } : { source: "auto" };
+    db.saveDoc(jobId, "resume", doc, all, meta);
     revalidatePath(`/jobs/${jobId}`);
     return { ok: true };
   } catch (e) {

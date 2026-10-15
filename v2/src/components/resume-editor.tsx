@@ -143,7 +143,9 @@ export function ResumeEditor({
       doc &&
       !(await confirm({
         title: "Replace this resume?",
-        body: useAI ? "AI will re-tailor from your profile. Your edits to this resume will be lost." : "This resets the resume to your full profile. Your edits will be lost.",
+        body: useAI
+          ? "AI will re-tailor from your profile. Your edits to this resume will be lost."
+          : "Your best-matching bullets will be picked to fill the page, without AI. Your edits to this resume will be lost.",
         confirmLabel: "Replace",
       }))
     )
@@ -173,7 +175,7 @@ export function ResumeEditor({
         <Sparkles className="h-4 w-4" />
         {pending ? "Working…" : doc ? "Re-tailor with AI" : "Tailor with AI"}
       </Button>
-      <Button variant="ghost" disabled={pending} onClick={() => generate(false)}>Use full profile</Button>
+      <Button variant="ghost" disabled={pending} onClick={() => generate(false)}>Tailor without AI</Button>
       <Link href={settingsHref("tailoring", `/jobs/${jobId}`)} className={buttonClass("ghost", "md", "ml-auto")}>
         <SlidersHorizontal className="h-4 w-4" /> Tailoring settings
       </Link>

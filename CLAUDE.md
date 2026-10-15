@@ -10,6 +10,8 @@ Active app is `v2/` (Next.js 15 App Router + React 19 + Tailwind 3 + better-sqli
   something replaces something else, delete the old one in the same change.
 - **Grounding is non-negotiable.** Tailored output references profile ids; identity fields
   come from the profile only. Every path that writes a resume goes through `groundResume`.
+- **One tailoring system.** AI and no-AI drafts both go through `fitResume` (`src/lib/fit.ts`),
+  which only selects and orders. Don't add a second path that builds resumes differently.
 - Single local user, no auth. Don't add `user_id` plumbing until there is a second user.
 
 ## Commands (from `v2/`)

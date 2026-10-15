@@ -12,7 +12,8 @@ const COMMON = `
 `;
 
 export const RESUME_TYP = `${COMMON}
-#set page(paper: d.paper, margin: (x: 0.6in, y: 0.55in))
+#let margin-y = 0.55in
+#set page(paper: d.paper, margin: (x: 0.6in, y: margin-y))
 #set text(font: "Libertinus Serif", size: 10.5pt)
 #set par(leading: 0.48em, spacing: 0.6em)
 #set list(indent: 4pt, body-indent: 5pt, spacing: 0.45em)
@@ -85,6 +86,9 @@ export const RESUME_TYP = `${COMMON}
 
 #header
 #for name in d.sections { sections.at(name)() }
+
+// Where the content ends, for fitting to the page (read with typst eval; invisible in the PDF).
+#context [#metadata((page: here().page(), y: here().position().y.pt(), top: margin-y.pt(), bottom: (page.height - margin-y).pt())) <slothing-end>]
 `;
 
 export const LETTER_TYP = `${COMMON}

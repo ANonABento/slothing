@@ -6,7 +6,8 @@ A deliberately small rebuild of Slothing. One loop, done well:
 
 1. **Profile**: import your resume once and edit it as structured entries.
 2. **Jobs**: paste a job description and track its status.
-3. **Tailor**: AI picks and rephrases from your profile. It never adds to it (see *Grounding* below).
+3. **Tailor**: with AI, or without it by relevance scoring. Either way the result is fitted to your page
+   length on the real layout and never adds to your profile (see *Grounding* below).
 4. **Cover letter**: drafted from your profile and the job description.
 5. **PDF**: rendered with Typst.
 
@@ -45,7 +46,9 @@ src/lib/types.ts     Zod schemas: Profile, TailoredResume, CoverLetter
 src/lib/db.ts        better-sqlite3, 4 tables (profile, settings, jobs, documents)
 src/lib/llm.ts       Anthropic / OpenAI-compatible JSON client; provider + model from Settings, keys from env
 src/lib/import.ts    PDF/DOCX/text → Profile
-src/lib/tailor.ts    grounded tailoring + cover letter
+src/lib/tailor.ts    grounded AI tailoring + cover letter
+src/lib/score.ts     job-relevance scoring (no AI)
+src/lib/fit.ts       fills the page limit with the best bullets, measured on the real Typst layout
 src/lib/resolve.ts   tailored doc + profile → render-ready shape
 src/lib/render/      typst.ts templates → renderPdf(input)
 src/app/actions.ts   server actions

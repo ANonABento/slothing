@@ -14,8 +14,8 @@ ships or the idea is dropped.
 | 2 | Typst as the only PDF engine | Done |
 | 3 | Settings: model, tailoring level, instructions, layout, letter length | Done |
 | 4 | Profile ranking: pin / normal / hide and order on entries and bullets | Done |
-| 5 | Tailoring without AI + fit to exactly one page (the AI path goes through the same fitter) | Next |
-| 6 | Use it: ~10 real applications, keeping `FRICTION.md` | |
+| 5 | Tailoring without AI + fit to exactly one page (the AI path goes through the same fitter) | Done |
+| 6 | Use it: ~10 real applications, keeping `FRICTION.md` | Next |
 
 Iteration 1 ends when step 6 is done. Nothing from the lists below starts before then.
 

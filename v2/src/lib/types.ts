@@ -123,6 +123,8 @@ export type DocKind = "resume" | "cover_letter";
 export interface Warning {
   where: string;
   message: string;
+  /** "number": a figure not found in the source. Recomputed whenever the resume changes. */
+  kind?: "number";
 }
 
 export interface StoredDoc<T> {
@@ -163,7 +165,9 @@ export type Theme = (typeof LIGHT_THEMES)[number] | (typeof DARK_THEMES)[number]
 export const THEME_MODES = ["light", "dark", "system"] as const;
 export type ThemeMode = (typeof THEME_MODES)[number];
 
-const DEFAULT_LAYOUT = { order: [...SECTIONS], hide: [], paper: "us-letter" as const };
+export const PAGE_LIMITS = ["one", "two", "any"] as const;
+
+const DEFAULT_LAYOUT = { order: [...SECTIONS], hide: [], paper: "us-letter" as const, pages: "one" as const };
 
 export const Settings = z.object({
   ai: z
@@ -189,6 +193,8 @@ export const Settings = z.object({
       order: z.array(z.enum(SECTIONS)).default([...SECTIONS]).transform(fullOrder),
       hide: z.array(z.enum(OPTIONAL_SECTIONS)).default([]),
       paper: z.enum(PAPERS).default("us-letter"),
+      /** Tailoring fills exactly this many pages; "any" includes everything. */
+      pages: z.enum(PAGE_LIMITS).default("one"),
     })
     .default(DEFAULT_LAYOUT),
   letter: z.object({ length: z.enum(["short", "standard"]).default("standard") }).default({ length: "standard" }),
@@ -211,7 +217,8 @@ export type Appearance = Settings["appearance"];
 
 /** Where a document came from, shown above the editor. Older documents have an empty object. */
 export const DocMeta = z.object({
-  source: z.enum(["ai", "profile"]).optional(),
+  /** "auto": tailored without AI. "profile": older documents made from the full profile. */
+  source: z.enum(["ai", "auto", "profile"]).optional(),
   provider: z.string().optional(),
   model: z.string().optional(),
   latitude: z.enum(LATITUDES).optional(),

@@ -78,7 +78,7 @@ export function groundResume(profile: Profile, draft: TailoredResume): { doc: Ta
           }
           const nums = unsupportedNumbers(b.text, sourceIds.map((id) => srcBullets.get(id)).join(" "));
           if (nums.length) {
-            warnings.push({ where: label(e.sourceId), message: `"${b.text}" mentions ${nums.join(", ")}, which isn't in the source bullet.` });
+            warnings.push({ where: label(e.sourceId), message: `"${b.text}" mentions ${nums.join(", ")}, which isn't in the source bullet.`, kind: "number" });
           }
           return [{ text: b.text.trim(), sourceIds }];
         });
@@ -106,7 +106,7 @@ export function groundResume(profile: Profile, draft: TailoredResume): { doc: Ta
     .filter((g) => g.items.length);
 
   const summaryNums = unsupportedNumbers(draft.summary, profileFacts(profile));
-  if (summaryNums.length) warnings.push({ where: "summary", message: `Summary mentions ${summaryNums.join(", ")}, which isn't in your profile.` });
+  if (summaryNums.length) warnings.push({ where: "summary", message: `Summary mentions ${summaryNums.join(", ")}, which isn't in your profile.`, kind: "number" });
 
   const eduIds = draft.educationIds.filter((id) => profile.education.some((e) => e.id === id));
 

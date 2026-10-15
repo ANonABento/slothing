@@ -64,7 +64,7 @@ function PdfPage({ pdf, n, width }: { pdf: Pdf; n: number; width: number }) {
  * Fetches the PDF and draws it with pdf.js (bundled in unpdf) instead of the browser's PDF viewer,
  * so the frame is exactly the paper: no viewer chrome or backdrop around the page.
  */
-function PdfFrame({ src, title, className }: { src: string; title: string; className?: string }) {
+function PdfFrame({ src, title, className, onPages }: { src: string; title: string; className?: string; onPages?: (n: number) => void }) {
   const [frame, width] = useWidth<HTMLDivElement>();
   const [state, setState] = useState<{ pdf: Pdf | null; error: string | null; loading: boolean }>({ pdf: null, error: null, loading: true });
 
@@ -79,6 +79,7 @@ function PdfFrame({ src, title, className }: { src: string; title: string; class
       const pdf = await getDocumentProxy(data);
       if (cancelled) return void pdf.loadingTask.destroy();
       setState({ pdf, error: null, loading: false });
+      onPages?.(pdf.numPages);
     })().catch((e: Error) => !cancelled && setState({ pdf: null, error: e.message, loading: false }));
     return () => {
       cancelled = true;
@@ -129,8 +130,20 @@ export function PreviewPane({ children }: { children: ReactNode }) {
 }
 
 /** Live PDF preview with source and download links, and optionally a link to the settings that shape it. */
-export function PdfPreview({ query, version, settings }: { query: string; version: number | string; settings?: { href: string; label: string } }) {
+export function PdfPreview({
+  query,
+  version,
+  settings,
+  maxPages,
+}: {
+  query: string;
+  version: number | string;
+  settings?: { href: string; label: string };
+  /** Warn when the document runs longer (the Page length setting). */
+  maxPages?: number | null;
+}) {
   const src = (extra = "") => `/api/pdf?${query}&v=${encodeURIComponent(String(version))}${extra}`;
+  const [pages, setPages] = useState(0);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3">
@@ -147,7 +160,13 @@ export function PdfPreview({ query, version, settings }: { query: string; versio
           <Download className="h-3.5 w-3.5" /> PDF
         </a>
       </div>
-      <PdfFrame title="Preview" src={src()} className="min-h-0" />
+      {maxPages && pages > maxPages ? (
+        <p className="flex items-center gap-2 rounded-control border border-warn bg-warn-soft px-3 py-2 text-sm text-warn">
+          <AlertTriangle className="h-4 w-4 shrink-0" />
+          Runs to {pages} pages; your page length is {maxPages}. Remove a bullet, or re-tailor to fit.
+        </p>
+      ) : null}
+      <PdfFrame title="Preview" src={src()} className="min-h-0" onPages={setPages} />
     </div>
   );
 }

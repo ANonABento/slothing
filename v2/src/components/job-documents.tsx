@@ -16,8 +16,11 @@ export function JobDocuments({
   resume,
   letter,
   letterWords,
+  resumePages,
 }: {
   jobId: string;
+  /** The page length from Settings, or null for no limit. */
+  resumePages: number | null;
   /** The cover letter word target from Settings. */
   letterWords: number;
   profile: Profile;
@@ -59,6 +62,7 @@ export function JobDocuments({
             <PdfPreview
               query={`job=${jobId}&kind=${tab}`}
               version={current.updatedAt}
+              maxPages={tab === "resume" ? resumePages : null}
               settings={
                 tab === "resume"
                   ? { href: settingsHref("layout", `/jobs/${jobId}`), label: "Layout" }
@@ -81,11 +85,13 @@ function DocOrigin({ meta }: { meta: DocMeta }) {
   const parts =
     meta.source === "ai"
       ? [`AI · ${[meta.provider, meta.model].filter(Boolean).join(" · ")}`, meta.latitude && LATITUDE_LABEL[meta.latitude]]
-      : meta.source === "profile"
-        ? ["From your full profile"]
-        : meta.edited
-          ? ["Written by hand"]
-          : [];
+      : meta.source === "auto"
+        ? ["Tailored without AI"]
+        : meta.source === "profile"
+          ? ["From your full profile"]
+          : meta.edited
+            ? ["Written by hand"]
+            : [];
   if (!parts.length) return null;
   if (meta.source && meta.edited) parts.push("edited since");
   return <p className="mb-4 font-mono text-xs text-ink-3">{parts.filter(Boolean).join(" · ")}</p>;

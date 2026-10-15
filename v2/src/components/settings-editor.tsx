@@ -11,6 +11,8 @@ import { safe } from "@/lib/safe";
 import { MODE_SAVED_EVENT, applyAppearance } from "@/lib/theme";
 import { SETTINGS_SECTIONS, isSettingsSection, safeBack, settingsHref, type SettingsSection } from "@/lib/settings-sections";
 import { DARK_THEMES, LATITUDES, LETTER_LENGTHS, LIGHT_THEMES, OPTIONAL_SECTIONS, type Latitude, type LetterLength, type Paper, type Provider, type Section as SectionId, type Settings, type Theme, type ThemeMode } from "@/lib/types";
+
+type PageLimit = Settings["resume"]["pages"];
 import { Dropdown } from "./dropdown";
 import { PageBody, PageHeader } from "./page-header";
 import { SaveBar } from "./save-bar";
@@ -170,7 +172,7 @@ function LayoutSection({ layout, onChange }: { layout: Settings["resume"]; onCha
     onChange({ ...layout, hide: show ? layout.hide.filter((h) => h !== s) : [...layout.hide, s] });
 
   return (
-    <Section title="Resume layout" description="Section order and paper size for every resume. Hidden sections stay in your profile and tailored resumes; they're just left off the page.">
+    <Section title="Resume layout" description="Page length, section order and paper size for every resume. Hidden sections stay in your profile and tailored resumes; they're just left off the page.">
       <div>
         <Label>Section order</Label>
         <ol className="divide-y divide-rule rounded-control border border-rule">
@@ -192,6 +194,21 @@ function LayoutSection({ layout, onChange }: { layout: Settings["resume"]; onCha
             );
           })}
         </ol>
+      </div>
+      <div>
+        <Label>Page length</Label>
+        <Segmented<PageLimit>
+          value={layout.pages}
+          onChange={(pages) => onChange({ ...layout, pages })}
+          options={[
+            { value: "one", label: "1 page" },
+            { value: "two", label: "2 pages" },
+            { value: "any", label: "No limit" },
+          ]}
+        />
+        <p className="mt-1.5 text-xs text-ink-2">
+          Tailoring picks your best-matching bullets until the page is full, measured on the real layout. Pinned items always go in.
+        </p>
       </div>
       <div>
         <Label>Paper size (resumes and cover letters)</Label>
