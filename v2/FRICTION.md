@@ -40,4 +40,5 @@ Made-up test profiles on a copy of the data, real public postings. Not Kevin's a
 | 2026-10-15 | tailor | Keyword gap: tools the posting names only once or twice (SQL, Tableau, ARIMA) didn't show at first. | Fixed before commit: a profile skill counts when named once. |
 | 2026-10-15 | tailor | `terms()` folds "processes" to "processe", so "process" and "processes" are separate terms (in the gap and the fitter). | Logged; plural rules are a rabbit hole. |
 | 2026-10-15 | import | Name imported as written, ALL CAPS ("MAYA LINDQVIST"), and the resume shows it in caps. | Left it; debatable whether import should title-case. |
-| 2026-10-15 | jobs | "Add job" did nothing on the first click right after the page loaded (dev server, before hydration). | Clicked again. Probably dev-only. |
+| 2026-10-15 | other | Browser-automation clicks were often dropped (Add job, Tailor without AI) while a JS `.click()` on the same button worked. | Not an app bug as far as I can tell; used JS clicks. |
+| 2026-10-15 | tailor | Keyword gap on a poor match (Benefits Analyst): 15 of 20 chips grey, mostly trademark boilerplate ("Fortune Media", "IP Limited") and places. | Fixed: at most 8 grey chips; the freed slots go to terms you have. |
