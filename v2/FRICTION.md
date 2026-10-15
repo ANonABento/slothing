@@ -44,4 +44,4 @@ Made-up test profiles on a copy of the data, real public postings. Not Kevin's a
 | 2026-10-15 | tailor | Keyword gap on a poor match (Benefits Analyst): 15 of 20 chips grey, mostly trademark boilerplate ("Fortune Media", "IP Limited") and places. | Fixed: at most 8 grey chips; the freed slots go to terms you have. |
 | 2026-10-15 | speed | Reword with AI takes ~15–20 s per bullet (Nebius DeepSeek). Fine for one bullet, slow for a pass over the whole resume. | Waited. |
 | 2026-10-15 | editor | After Save, every entry on the job's resume collapses again (the editor remounts), so you lose your place after each edit. | Re-opened the role. |
-| 2026-10-15 | tailor | Reword alternatives sometimes swap a word for the posting's ("volume forecast" → "demand forecast"). Grounded (no new facts or numbers), but a subtle claim change worth a glance. | Picked one that kept "volume"… or not; logged. |
+| 2026-10-15 | tailor | Reword alternatives sometimes swap a word for the posting's ("volume forecast" → "demand forecast"). Grounded (no new facts or numbers), but a subtle claim change worth a glance. | Used it anyway; worth knowing. |
