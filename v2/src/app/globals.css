@@ -2,10 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Editorial tokens from v1 (Kev handoff): cream paper light, graphite dark, rust accent.
-   Light is the default. Dark applies via [data-theme="dark"] (sidebar toggle). */
+/* Color themes. Every color in the app is one of these tokens; a theme only swaps their values.
+   The active theme is data-theme on <html> (set server-side from Settings → Appearance). Any element
+   can carry data-theme too, which is how the settings page draws live swatches. Cream is the default. */
 
-:root {
+:root,
+[data-theme="cream"] {
   --page: #f5efe2;
   --page-2: #e9dec8;
   --paper: #fffaef;
@@ -18,6 +20,28 @@
   --rule-strong-bg: rgba(26, 20, 16, 0.07);
   --paper-shadow: rgba(60, 40, 20, 0.14);
   --paper-shadow-strong: rgba(60, 40, 20, 0.22);
+}
+
+/* Paper: neutral off-white, no yellow cast. */
+[data-theme="paper"] {
+  --page: #f3f3f1;
+  --page-2: #e6e6e3;
+  --paper: #fcfcfb;
+  --header: #f8f8f6;
+  --ink: #1b1b1d;
+  --ink-2: #3f3f43;
+  --ink-3: #6e6e74;
+  --rule: rgba(20, 20, 25, 0.11);
+  --rule-strong: rgba(20, 20, 25, 0.36);
+  --rule-strong-bg: rgba(20, 20, 25, 0.06);
+  --paper-shadow: rgba(20, 20, 30, 0.1);
+  --paper-shadow-strong: rgba(20, 20, 30, 0.18);
+}
+
+/* Shared by the light themes. */
+:root,
+[data-theme="cream"],
+[data-theme="paper"] {
   --brand: #b8704a;
   --brand-dark: #8e5132;
   --brand-soft: #f0d9c1;
@@ -26,19 +50,10 @@
   --ok: #3f6b2a;
   --ok-soft: #dfe9cf;
   color-scheme: light;
-
-  /* Shape + layout tokens (theme-independent). Change these, never per-component values. */
-  --radius-card: 6px; /* cards, panels, dialogs, menus */
-  --radius-control: 4px; /* buttons, inputs, dropdown triggers, segments */
-  --radius-chip: 2px; /* pills, small tiles, menu items */
-  --bar-h: 4.5rem; /* sidebar brand row + page header band share one height so their rules line up */
-  --scrim: color-mix(in srgb, var(--ink) 35%, transparent); /* behind modals */
-  --veil: color-mix(in srgb, var(--paper) 80%, transparent); /* over content that is loading */
 }
 
-:root[data-theme="dark"] {
-  /* Graphite: neutral near-black with a trace of warmth, built for long sessions.
-     Not pure black (light text on #000 blurs), and text is off-white, never #fff. */
+/* Graphite: near-black with a trace of warmth. */
+[data-theme="graphite"] {
   --page: #161514;
   --page-2: #22211f;
   --paper: #1d1c1a;
@@ -46,9 +61,49 @@
   --ink: #e8e4dc;
   --ink-2: #bdb8ae;
   --ink-3: #8a857c;
-  --rule: rgba(232, 228, 220, 0.09);
-  --rule-strong: rgba(232, 228, 220, 0.28);
-  --rule-strong-bg: rgba(232, 228, 220, 0.06);
+}
+
+/* Slate: cool neutral gray, like most code editors' dark themes. */
+[data-theme="slate"] {
+  --page: #1d1f23;
+  --page-2: #2a2d33;
+  --paper: #24272c;
+  --header: #202227;
+  --ink: #e2e4e8;
+  --ink-2: #b2b6bd;
+  --ink-3: #858a93;
+}
+
+/* Dim: a lighter, low-contrast gray for long sessions in a lit room. */
+[data-theme="dim"] {
+  --page: #2b2b2b;
+  --page-2: #383838;
+  --paper: #323232;
+  --header: #2e2e2e;
+  --ink: #dddddb;
+  --ink-2: #b1b1ae;
+  --ink-3: #8c8c89;
+}
+
+/* Black: true black for OLED screens and dark rooms; cards lift slightly off it. */
+[data-theme="black"] {
+  --page: #000000;
+  --page-2: #161616;
+  --paper: #0d0d0d;
+  --header: #070707;
+  --ink: #e4e4e4;
+  --ink-2: #b0b0b0;
+  --ink-3: #7e7e7e;
+}
+
+/* Shared by the dark themes. Text is off-white, never #fff. */
+[data-theme="graphite"],
+[data-theme="slate"],
+[data-theme="dim"],
+[data-theme="black"] {
+  --rule: rgba(232, 232, 232, 0.1);
+  --rule-strong: rgba(232, 232, 232, 0.28);
+  --rule-strong-bg: rgba(232, 232, 232, 0.06);
   --paper-shadow: rgba(0, 0, 0, 0.45);
   --paper-shadow-strong: rgba(0, 0, 0, 0.6);
   --brand: #d08a62;
@@ -59,6 +114,21 @@
   --ok: #9fbd7a;
   --ok-soft: rgba(159, 189, 122, 0.13);
   color-scheme: dark;
+}
+
+:root {
+  /* Shape + layout tokens (theme-independent). Change these, never per-component values. */
+  --radius-card: 6px; /* cards, panels, dialogs, menus */
+  --radius-control: 4px; /* buttons, inputs, dropdown triggers, segments */
+  --radius-chip: 2px; /* pills, small tiles, menu items */
+  --bar-h: 4.5rem; /* sidebar brand row + page header band share one height so their rules line up */
+}
+
+/* Derived from the theme, so they're declared wherever a theme can be. */
+:root,
+[data-theme] {
+  --scrim: color-mix(in srgb, var(--ink) 35%, transparent); /* behind modals */
+  --veil: color-mix(in srgb, var(--paper) 80%, transparent); /* over content that is loading */
 }
 
 html,

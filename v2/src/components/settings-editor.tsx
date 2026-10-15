@@ -3,13 +3,14 @@
 import { AlertTriangle, ArrowDown, ArrowUp, Check, Loader2, Plug, Settings2 } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams, useSelectedLayoutSegment } from "next/navigation";
-import { useState, useTransition, type ReactNode } from "react";
+import { useEffect, useRef, useState, useTransition, type ReactNode } from "react";
 
 import { saveSettingsAction, testLlmAction } from "@/app/actions";
 import type { ProviderStatus } from "@/lib/llm";
 import { safe } from "@/lib/safe";
+import { MODE_SAVED_EVENT, applyAppearance } from "@/lib/theme";
 import { SETTINGS_SECTIONS, isSettingsSection, safeBack, settingsHref, type SettingsSection } from "@/lib/settings-sections";
-import { LATITUDES, LETTER_LENGTHS, OPTIONAL_SECTIONS, type Latitude, type LetterLength, type Paper, type Provider, type Section as SectionId, type Settings } from "@/lib/types";
+import { DARK_THEMES, LATITUDES, LETTER_LENGTHS, LIGHT_THEMES, OPTIONAL_SECTIONS, type Latitude, type LetterLength, type Paper, type Provider, type Section as SectionId, type Settings, type Theme, type ThemeMode } from "@/lib/types";
 import { Dropdown } from "./dropdown";
 import { PageBody, PageHeader } from "./page-header";
 import { SaveBar } from "./save-bar";
@@ -222,12 +223,116 @@ function LetterSection({ letter, onChange }: { letter: Settings["letter"]; onCha
   );
 }
 
+const THEME_COPY: Record<Theme, { label: string; body: string }> = {
+  cream: { label: "Cream", body: "Warm paper, the original." },
+  paper: { label: "Paper", body: "Neutral off-white." },
+  graphite: { label: "Graphite", body: "Near-black with a little warmth." },
+  slate: { label: "Slate", body: "Cool gray, like a code editor." },
+  dim: { label: "Dim", body: "Lighter gray, lowest contrast." },
+  black: { label: "Black", body: "True black for OLED and dark rooms." },
+};
+
+/** A miniature of the app drawn with the theme's own tokens (data-theme scopes them to this element). */
+function ThemeSwatch({ theme, selected, onSelect }: { theme: Theme; selected: boolean; onSelect: () => void }) {
+  return (
+    <button
+      type="button"
+      role="radio"
+      aria-checked={selected}
+      onClick={onSelect}
+      className={cx(
+        "rounded-card border p-1.5 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand",
+        selected ? "border-ink shadow-paper" : "border-rule hover:border-rule-strong",
+      )}
+    >
+      <div data-theme={theme} className="flex h-20 overflow-hidden rounded-control border border-rule bg-page">
+        <div className="w-1/4 border-r border-rule bg-page p-1.5">
+          <div className="mb-1 h-1.5 w-3/4 rounded-full bg-ink" />
+          <div className="h-1 w-1/2 rounded-full bg-ink-3" />
+        </div>
+        <div className="flex-1">
+          <div className="h-3 border-b border-rule bg-header" />
+          <div className="m-1.5 rounded-chip border border-rule bg-paper p-1.5">
+            <div className="mb-1 h-1.5 w-2/3 rounded-full bg-ink" />
+            <div className="mb-1 h-1 w-full rounded-full bg-ink-2" />
+            <div className="h-1.5 w-6 rounded-full bg-brand" />
+          </div>
+        </div>
+      </div>
+      <div className="mt-2 flex items-center gap-2 px-1 text-sm font-semibold">
+        <span className={cx("h-3 w-3 rounded-full border", selected ? "border-[3.5px] border-brand" : "border-rule-strong")} aria-hidden />
+        {THEME_COPY[theme].label}
+      </div>
+      <p className="px-1 pb-1 text-xs text-ink-2">{THEME_COPY[theme].body}</p>
+    </button>
+  );
+}
+
+function AppearanceSection({ a, onChange }: { a: Settings["appearance"]; onChange: (a: Settings["appearance"]) => void }) {
+  const group = (label: string, themes: readonly Theme[], value: Theme, set: (t: Theme) => void) => (
+    <div>
+      <Label>{label}</Label>
+      <div role="radiogroup" aria-label={label} className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        {themes.map((t) => (
+          <ThemeSwatch key={t} theme={t} selected={value === t} onSelect={() => set(t)} />
+        ))}
+      </div>
+    </div>
+  );
+  return (
+    <Section title="Appearance" description="Changes preview right away. The moon/sun button in the sidebar switches between your light and dark theme.">
+      <div>
+        <Label>Mode</Label>
+        <Segmented<ThemeMode>
+          value={a.mode}
+          onChange={(mode) => onChange({ ...a, mode })}
+          options={[
+            { value: "light", label: "Light" },
+            { value: "dark", label: "Dark" },
+            { value: "system", label: "Match system" },
+          ]}
+        />
+      </div>
+      {group("Light theme", LIGHT_THEMES, a.light, (t) => onChange({ ...a, light: t as Settings["appearance"]["light"], mode: a.mode === "dark" ? "light" : a.mode }))}
+      {group("Dark theme", DARK_THEMES, a.dark, (t) => onChange({ ...a, dark: t as Settings["appearance"]["dark"], mode: a.mode === "light" ? "dark" : a.mode }))}
+    </Section>
+  );
+}
+
 export function SettingsEditor({ initial, providers }: { initial: Settings; providers: ProviderStatus[] }) {
   const [s, setS] = useState(initial);
   const [saved, setSaved] = useState(initial);
   const [error, setError] = useState("");
   const [pending, start] = useTransition();
   const dirty = JSON.stringify(s) !== JSON.stringify(saved);
+
+  // Preview appearance edits live; leaving settings puts the saved theme back.
+  // Only an unsaved preview is undone, so a sidebar toggle made meanwhile isn't overwritten.
+  const appearanceKey = JSON.stringify(s.appearance);
+  const latest = useRef({ current: s.appearance, saved: saved.appearance });
+  latest.current = { current: s.appearance, saved: saved.appearance };
+  const previewed = useRef(false);
+  useEffect(() => {
+    if (!previewed.current) return void (previewed.current = true); // first render: already applied server-side
+    applyAppearance(JSON.parse(appearanceKey));
+  }, [appearanceKey]);
+  // The sidebar toggle saves the mode itself; mirror it so this page neither shows nor re-saves a stale one.
+  useEffect(() => {
+    const onSaved = (e: Event) => {
+      const mode = (e as CustomEvent<"light" | "dark">).detail;
+      setS((x) => ({ ...x, appearance: { ...x.appearance, mode } }));
+      setSaved((x) => ({ ...x, appearance: { ...x.appearance, mode } }));
+    };
+    window.addEventListener(MODE_SAVED_EVENT, onSaved);
+    return () => window.removeEventListener(MODE_SAVED_EVENT, onSaved);
+  }, []);
+  useEffect(
+    () => () => {
+      const { current, saved } = latest.current;
+      if (JSON.stringify(current) !== JSON.stringify(saved)) applyAppearance(saved);
+    },
+    [],
+  );
 
   const segment = useSelectedLayoutSegment() ?? "";
   const section: SettingsSection = isSettingsSection(segment) ? segment : "ai";
@@ -249,7 +354,7 @@ export function SettingsEditor({ initial, providers }: { initial: Settings; prov
         icon={Settings2}
         back={back ? { href: back, label: back.startsWith("/jobs/") ? "the job" : "where you were" } : undefined}
         title="Settings"
-        description="Which model to use, how much it may change your resume, and how documents are laid out."
+        description="Model, tailoring, document layout and appearance."
         actions={
           <>
             {dirty ? <span className="text-xs text-ink-3">Unsaved changes</span> : <span className="inline-flex items-center gap-1 text-xs text-ok"><Check className="h-3.5 w-3.5" />Saved</span>}
@@ -286,6 +391,7 @@ export function SettingsEditor({ initial, providers }: { initial: Settings; prov
             {section === "tailoring" && <TailoringSection t={s.tailoring} onChange={(tailoring) => setS({ ...s, tailoring })} />}
             {section === "layout" && <LayoutSection layout={s.resume} onChange={(resume) => setS({ ...s, resume })} />}
             {section === "letter" && <LetterSection letter={s.letter} onChange={(letter) => setS({ ...s, letter })} />}
+            {section === "appearance" && <AppearanceSection a={s.appearance} onChange={(appearance) => setS({ ...s, appearance })} />}
             <SaveBar dirty={dirty} pending={pending} onSave={save} onDiscard={() => setS(saved)} label="Save settings" />
           </div>
         </div>

@@ -4,6 +4,7 @@ export const SETTINGS_SECTIONS = [
   { id: "tailoring", label: "Tailoring" },
   { id: "layout", label: "Resume layout" },
   { id: "letter", label: "Cover letter" },
+  { id: "appearance", label: "Appearance" },
 ] as const;
 export type SettingsSection = (typeof SETTINGS_SECTIONS)[number]["id"];
 

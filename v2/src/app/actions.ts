@@ -58,6 +58,17 @@ export async function saveSettingsAction(settings: Settings): Promise<Result> {
   }
 }
 
+/** The sidebar's light/dark toggle. Only changes the mode; the themes themselves are picked in Settings. */
+export async function setThemeModeAction(mode: "light" | "dark"): Promise<Result> {
+  try {
+    const s = db.getSettings();
+    db.saveSettings({ ...s, appearance: { ...s.appearance, mode: z.enum(["light", "dark"]).parse(mode) } });
+    return { ok: true };
+  } catch (e) {
+    return fail(e);
+  }
+}
+
 export async function testLlmAction(ai: AiSettings): Promise<Result<{ provider: string; model: string; ms: number }>> {
   try {
     return { ok: true, data: await testLlm(Settings.shape.ai.parse(ai)) };

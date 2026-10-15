@@ -113,3 +113,11 @@ describe("document meta", () => {
     expect(getDoc(jobId, "resume")?.meta).toMatchObject({ source: "ai", edited: true });
   });
 });
+
+describe("appearance", () => {
+  it("defaults to light cream with graphite as the dark theme, and rejects unknown themes", () => {
+    expect(Settings.parse({}).appearance).toEqual({ mode: "light", light: "cream", dark: "graphite" });
+    expect(Settings.parse({ appearance: { mode: "system", dark: "black" } }).appearance).toEqual({ mode: "system", light: "cream", dark: "black" });
+    expect(() => Settings.parse({ appearance: { dark: "cream" } })).toThrow();
+  });
+});

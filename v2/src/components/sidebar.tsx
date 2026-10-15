@@ -6,7 +6,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
+import { setThemeModeAction } from "@/app/actions";
 import { PLANNED, V1_URL } from "@/lib/roadmap";
+import { safe } from "@/lib/safe";
+import { MODE_SAVED_EVENT, THEME_EVENT } from "@/lib/theme";
+import { DARK_THEMES } from "@/lib/types";
 import { Eyebrow, IconButton, cx } from "./ui";
 
 const GROUPS = [
@@ -22,25 +26,25 @@ const GROUPS = [
 
 const isActive = (path: string, href: string) => (href === "/" ? path === "/" || path.startsWith("/jobs") : path.startsWith(href));
 
-const THEME_EVENT = "slothing:theme";
+const isDarkTheme = (t: string | undefined) => (DARK_THEMES as readonly string[]).includes(t ?? "");
 
+/** Flips between your light and dark themes (picked in Settings → Appearance) and saves the choice. */
 function ThemeToggle() {
   const [dark, setDark] = useState(false);
   // Both toggles (mobile row + desktop footer) follow the <html> attribute, so they never disagree.
   useEffect(() => {
-    const sync = () => setDark(document.documentElement.dataset.theme === "dark");
+    const sync = () => setDark(isDarkTheme(document.documentElement.dataset.theme));
     sync();
     window.addEventListener(THEME_EVENT, sync);
     return () => window.removeEventListener(THEME_EVENT, sync);
   }, []);
   const flip = () => {
-    const next = !dark;
-    if (next) document.documentElement.dataset.theme = "dark";
-    else delete document.documentElement.dataset.theme;
-    try {
-      localStorage.setItem("slothing:theme", next ? "dark" : "light");
-    } catch {}
+    const h = document.documentElement;
+    const mode = dark ? "light" : "dark";
+    h.dataset.mode = mode;
+    h.dataset.theme = mode === "dark" ? h.dataset.dark : h.dataset.light;
     window.dispatchEvent(new Event(THEME_EVENT));
+    void safe(() => setThemeModeAction(mode)).then((r) => r.ok && window.dispatchEvent(new CustomEvent(MODE_SAVED_EVENT, { detail: mode })));
   };
   const Icon = dark ? Sun : Moon;
   return (

@@ -157,6 +157,12 @@ const fullOrder = (order: Section[]): Section[] => {
   return [...seen, ...SECTIONS.filter((s) => !seen.includes(s))];
 };
 
+export const LIGHT_THEMES = ["cream", "paper"] as const;
+export const DARK_THEMES = ["graphite", "slate", "dim", "black"] as const;
+export type Theme = (typeof LIGHT_THEMES)[number] | (typeof DARK_THEMES)[number];
+export const THEME_MODES = ["light", "dark", "system"] as const;
+export type ThemeMode = (typeof THEME_MODES)[number];
+
 const DEFAULT_LAYOUT = { order: [...SECTIONS], hide: [], paper: "us-letter" as const };
 
 export const Settings = z.object({
@@ -186,6 +192,14 @@ export const Settings = z.object({
     })
     .default(DEFAULT_LAYOUT),
   letter: z.object({ length: z.enum(["short", "standard"]).default("standard") }).default({ length: "standard" }),
+  appearance: z
+    .object({
+      /** "system" follows the OS light/dark setting. */
+      mode: z.enum(THEME_MODES).default("light"),
+      light: z.enum(LIGHT_THEMES).default("cream"),
+      dark: z.enum(DARK_THEMES).default("graphite"),
+    })
+    .default({ mode: "light", light: "cream", dark: "graphite" }),
 });
 export type Settings = z.infer<typeof Settings>;
 export type AiSettings = Settings["ai"];
@@ -193,6 +207,7 @@ export type TailoringSettings = Settings["tailoring"];
 export type ResumeLayout = Settings["resume"];
 export type LetterSettings = Settings["letter"];
 export type Paper = (typeof PAPERS)[number];
+export type Appearance = Settings["appearance"];
 
 /** Where a document came from, shown above the editor. Older documents have an empty object. */
 export const DocMeta = z.object({
