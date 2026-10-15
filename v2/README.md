@@ -41,8 +41,8 @@ Warnings are shown above the editor and stored with the document.
 
 ```
 src/lib/types.ts     Zod schemas: Profile, TailoredResume, CoverLetter
-src/lib/db.ts        better-sqlite3, 3 tables (profile, jobs, documents)
-src/lib/llm.ts       Anthropic / OpenAI-compatible JSON client
+src/lib/db.ts        better-sqlite3, 4 tables (profile, settings, jobs, documents)
+src/lib/llm.ts       Anthropic / OpenAI-compatible JSON client; provider + model from Settings, keys from env
 src/lib/import.ts    PDF/DOCX/text → Profile
 src/lib/tailor.ts    grounded tailoring + cover letter
 src/lib/resolve.ts   tailored doc + profile → render-ready shape

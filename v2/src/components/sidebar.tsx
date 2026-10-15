@@ -1,6 +1,6 @@
 "use client";
 
-import { Briefcase, Moon, Sparkles, Sun, UserRound } from "lucide-react";
+import { Briefcase, Moon, Settings2, Sparkles, Sun, UserRound } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -10,7 +10,13 @@ import { Eyebrow, IconButton, cx } from "./ui";
 
 const GROUPS = [
   { label: "Pipeline", items: [{ href: "/", label: "Jobs", icon: Briefcase }] },
-  { label: "You", items: [{ href: "/profile", label: "Profile", icon: UserRound }] },
+  {
+    label: "You",
+    items: [
+      { href: "/profile", label: "Profile", icon: UserRound },
+      { href: "/settings", label: "Settings", icon: Settings2 },
+    ],
+  },
 ];
 
 const isActive = (path: string, href: string) => (href === "/" ? path === "/" || path.startsWith("/jobs") : path.startsWith(href));
@@ -94,7 +100,7 @@ export function Sidebar({ llm }: { llm: { provider: string; model: string } | nu
       </nav>
 
       <div className="hidden space-y-2 border-t border-rule p-3 lg:block">
-        <div className="flex items-start gap-2 rounded-control border border-rule bg-paper px-3 py-2.5 shadow-paper">
+        <Link href="/settings" className="flex items-start gap-2 rounded-control border border-rule bg-paper px-3 py-2.5 shadow-paper transition-colors hover:border-rule-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand">
           <Sparkles className={cx("mt-0.5 h-4 w-4 shrink-0", llm ? "text-brand" : "text-ink-3")} />
           <div className="min-w-0 text-xs leading-snug">
             {llm ? (
@@ -109,7 +115,7 @@ export function Sidebar({ llm }: { llm: { provider: string; model: string } | nu
               </>
             )}
           </div>
-        </div>
+        </Link>
         <div className="flex items-center justify-between px-1">
           <Eyebrow>v2 · local</Eyebrow>
           <ThemeToggle />

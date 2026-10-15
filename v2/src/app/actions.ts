@@ -5,10 +5,10 @@ import { redirect } from "next/navigation";
 
 import * as db from "@/lib/db";
 import { extractText, parseResumeText, reuseIds } from "@/lib/import";
-import { generateJSON } from "@/lib/llm";
+import { generateJSON, testLlm } from "@/lib/llm";
 import { profileAsTailored } from "@/lib/resolve";
 import { groundResume, letterWarnings, tailorResume, writeCoverLetter } from "@/lib/tailor";
-import { CoverLetter, JOB_STATUSES, Profile, TailoredResume, type Warning } from "@/lib/types";
+import { CoverLetter, JOB_STATUSES, Profile, Settings, TailoredResume, type AiSettings, type Warning } from "@/lib/types";
 import { z } from "zod";
 
 export type Result<T = undefined> = { ok: true; data?: T } | { ok: false; error: string };
@@ -40,6 +40,27 @@ export async function importResumeAction(form: FormData): Promise<Result<Profile
     if (!text.trim()) return { ok: false, error: "Nothing to import — choose a file or paste text." };
     // Match against the saved profile so existing tailored resumes keep pointing at the same entries.
     return { ok: true, data: reuseIds(db.getProfile(), await parseResumeText(text)) };
+  } catch (e) {
+    return fail(e);
+  }
+}
+
+/* ─── Settings ─── */
+
+export async function saveSettingsAction(settings: Settings): Promise<Result> {
+  try {
+    db.saveSettings(Settings.parse(settings));
+    // The sidebar shows the active model, so refresh every page.
+    revalidatePath("/", "layout");
+    return { ok: true };
+  } catch (e) {
+    return fail(e);
+  }
+}
+
+export async function testLlmAction(ai: AiSettings): Promise<Result<{ provider: string; model: string; ms: number }>> {
+  try {
+    return { ok: true, data: await testLlm(Settings.shape.ai.parse(ai)) };
   } catch (e) {
     return fail(e);
   }

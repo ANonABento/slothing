@@ -123,6 +123,26 @@ export interface StoredDoc<T> {
   updatedAt: string;
 }
 
+/* ─── Settings: one row, every field defaulted so an empty row means "today's behavior" ─── */
+
+export const PROVIDERS = ["anthropic", "nebius", "openai"] as const;
+export type Provider = (typeof PROVIDERS)[number];
+
+export const Settings = z.object({
+  ai: z
+    .object({
+      /** null: use the first provider that has a key. */
+      provider: z.enum(PROVIDERS).nullable().default(null),
+      /** Per provider, so switching back and forth keeps each choice. "" means the env/default model. */
+      models: z.object({ anthropic: z.string().default(""), nebius: z.string().default(""), openai: z.string().default("") }).default({ anthropic: "", nebius: "", openai: "" }),
+      /** OpenAI-compatible endpoint (OpenRouter, Ollama, LM Studio…). "" means OPENAI_BASE_URL or api.openai.com. */
+      openaiBaseUrl: z.string().default(""),
+    })
+    .default({ provider: null, models: { anthropic: "", nebius: "", openai: "" }, openaiBaseUrl: "" }),
+});
+export type Settings = z.infer<typeof Settings>;
+export type AiSettings = Settings["ai"];
+
 /* ─── Fully-resolved shapes the renderers consume ─── */
 
 export interface ResolvedResume {

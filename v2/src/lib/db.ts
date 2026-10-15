@@ -6,6 +6,7 @@ import { newId } from "./ids";
 import {
   CoverLetter,
   Profile,
+  Settings,
   TailoredResume,
   type DocKind,
   type Job,
@@ -26,6 +27,11 @@ function open() {
   db.pragma("journal_mode = WAL");
   db.exec(`
     CREATE TABLE IF NOT EXISTS profile (
+      id INTEGER PRIMARY KEY CHECK (id = 1),
+      data TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
+    CREATE TABLE IF NOT EXISTS settings (
       id INTEGER PRIMARY KEY CHECK (id = 1),
       data TEXT NOT NULL,
       updated_at TEXT NOT NULL
@@ -73,6 +79,20 @@ export function saveProfile(profile: Profile) {
   const data = JSON.stringify(Profile.parse(profile));
   db.prepare(
     "INSERT INTO profile (id, data, updated_at) VALUES (1, ?, ?) ON CONFLICT(id) DO UPDATE SET data = excluded.data, updated_at = excluded.updated_at",
+  ).run(data, now());
+}
+
+/* ─── Settings ─── */
+
+export function getSettings(): Settings {
+  const row = db.prepare("SELECT data FROM settings WHERE id = 1").get() as { data: string } | undefined;
+  return Settings.parse(row ? JSON.parse(row.data) : {});
+}
+
+export function saveSettings(settings: Settings) {
+  const data = JSON.stringify(Settings.parse(settings));
+  db.prepare(
+    "INSERT INTO settings (id, data, updated_at) VALUES (1, ?, ?) ON CONFLICT(id) DO UPDATE SET data = excluded.data, updated_at = excluded.updated_at",
   ).run(data, now());
 }
 
