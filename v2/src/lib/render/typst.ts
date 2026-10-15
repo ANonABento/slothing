@@ -18,7 +18,8 @@ const COMMON = `
   "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='" + st.accent + "' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'><path d='M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71'/><path d='M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71'/></svg>"
 ), height: 0.85em))
 
-#let contact-parts = d.contactItems.map(i => if i.href != none { link(i.href, i.text) } else { i.text })
+// Boxed so a line only breaks between items, never inside a phone number or URL.
+#let contact-parts = d.contactItems.map(i => box(if i.href != none { link(i.href, i.text) } else { i.text }))
 #let header = {
   let big = if st.header == "center" { 2.0 } else { 2.3 }
   let name = text(font: st.headingFont, size: base * big, weight: "bold", d.contact.name)
