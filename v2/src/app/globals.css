@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Editorial tokens from v1 (Kev handoff): cream paper light, Midnight Indigo dark, rust accent.
+/* Editorial tokens from v1 (Kev handoff): cream paper light, graphite dark, rust accent.
    Light is the default. Dark applies via [data-theme="dark"] (sidebar toggle). */
 
 :root {
@@ -37,25 +37,27 @@
 }
 
 :root[data-theme="dark"] {
-  --page: #0f1226;
-  --page-2: #1a1d38;
-  --paper: #161936;
-  --header: #13162e;
-  --ink: #f6ecd6;
-  --ink-2: #d2c5a8;
-  --ink-3: #8a83a8;
-  --rule: rgba(246, 236, 214, 0.1);
-  --rule-strong: rgba(246, 236, 214, 0.32);
-  --rule-strong-bg: rgba(246, 236, 214, 0.06);
-  --paper-shadow: rgba(0, 0, 0, 0.55);
-  --paper-shadow-strong: rgba(0, 0, 0, 0.7);
-  --brand: #e09060;
+  /* Graphite: neutral near-black with a trace of warmth, built for long sessions.
+     Not pure black (light text on #000 blurs), and text is off-white, never #fff. */
+  --page: #161514;
+  --page-2: #22211f;
+  --paper: #1d1c1a;
+  --header: #191817;
+  --ink: #e8e4dc;
+  --ink-2: #bdb8ae;
+  --ink-3: #8a857c;
+  --rule: rgba(232, 228, 220, 0.09);
+  --rule-strong: rgba(232, 228, 220, 0.28);
+  --rule-strong-bg: rgba(232, 228, 220, 0.06);
+  --paper-shadow: rgba(0, 0, 0, 0.45);
+  --paper-shadow-strong: rgba(0, 0, 0, 0.6);
+  --brand: #d08a62;
   --brand-dark: #b8704a;
-  --brand-soft: rgba(224, 144, 96, 0.18);
-  --warn: #f2c26b;
-  --warn-soft: rgba(242, 194, 107, 0.12);
-  --ok: #a3c478;
-  --ok-soft: rgba(163, 196, 120, 0.14);
+  --brand-soft: rgba(208, 138, 98, 0.16);
+  --warn: #e5b866;
+  --warn-soft: rgba(229, 184, 102, 0.12);
+  --ok: #9fbd7a;
+  --ok-soft: rgba(159, 189, 122, 0.13);
   color-scheme: dark;
 }
 
