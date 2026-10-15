@@ -1,6 +1,13 @@
 # Overnight report (2026-10-15)
 
-Iteration 2 of `ROADMAP.md`, worked in the order from the handoff. This file is updated as the night goes.
+Iteration 2 of `ROADMAP.md`, in the order from the handoff. **All four items are done**: keyword gap,
+reword this bullet and URL import are shipped and dogfooded; Docker is written but not built (no Docker here).
+`npm run typecheck` and `npm test` (92 tests) pass. Nothing pushed. `HANDOFF.md` deleted as it asked.
+About 11 AI calls in total (2 resume imports, 1 job-title fill, 2 tailorings, 2 letters, 2 rewordings,
+2 URL-import fallbacks).
+
+**Start here:** the grounding gap in the nurse's summary and letter (under Dogfooding). It's the one
+finding that affects trust in what the app sends.
 
 ## Setup notes
 
@@ -8,7 +15,9 @@ Iteration 2 of `ROADMAP.md`, worked in the order from the handoff. This file is 
   permission classifier, so I left it alone and ran the dogfood server on **:3002** with its own build folder
   (`NEXT_DIST_DIR=.next-dogfood`, new in `next.config.ts`), so the two never shared `.next`.
   Data: a copy at `/tmp/slothing-dogfood`. `v2/data` was never touched.
-- Port 3000 is another project (BentoSite), left alone.
+- Port 3000 is another project (BentoSite), left alone. **Your :3001 server is still running** (I couldn't
+  stop it), so it has been serving your real data all night with the old code; restart it to pick up these
+  commits. The `next.config.ts` → `.mjs` rename means a restart is needed anyway.
 - Test profile: a made-up demand-planning analyst ("Maya Lindqvist"), imported in the copy only.
 
 ## Shipped
