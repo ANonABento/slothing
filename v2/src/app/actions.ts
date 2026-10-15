@@ -9,7 +9,7 @@ import { generateJSON, llmInfo, testLlm } from "@/lib/llm";
 import { profileAsTailored } from "@/lib/resolve";
 import { fitResume } from "@/lib/fit";
 import { groundResume, letterWarnings, tailorResume, writeCoverLetter } from "@/lib/tailor";
-import { CoverLetter, JOB_STATUSES, Profile, Settings, TailoredResume, type AiSettings, type DocMeta, type Warning } from "@/lib/types";
+import { CoverLetter, JOB_STATUSES, Profile, Settings, TailoredResume, type AiSettings, type DocKind, type DocMeta, type Warning } from "@/lib/types";
 import { z } from "zod";
 
 export type Result<T = undefined> = { ok: true; data?: T } | { ok: false; error: string };
@@ -200,6 +200,31 @@ export async function saveLetterAction(jobId: string, data: CoverLetter): Promis
     const letter = CoverLetter.parse(data);
     const warnings = letterWarnings(db.getProfile(), letter, db.getJob(jobId) ?? undefined, db.getSettings().letter.length);
     db.saveDoc(jobId, "cover_letter", letter, warnings, db.editedMeta(jobId, "cover_letter"));
+    revalidatePath(`/jobs/${jobId}`);
+    return { ok: true };
+  } catch (e) {
+    return fail(e);
+  }
+}
+
+/**
+ * Make an earlier version current again. It's saved as a new version, so a restore can itself be undone.
+ * A resume is re-grounded against today's profile: bullets whose source was deleted since are dropped.
+ */
+export async function restoreVersionAction(jobId: string, kind: DocKind, versionId: string): Promise<Result> {
+  try {
+    const job = requireJob(jobId);
+    if (kind !== "resume" && kind !== "cover_letter") return { ok: false, error: "Unknown document." };
+    const v = db.getVersion(jobId, kind, versionId);
+    if (!v) return { ok: false, error: "That version is no longer in the history." };
+    const profile = db.getProfile();
+    if (kind === "resume") {
+      const { doc, warnings } = groundResume(profile, TailoredResume.parse(v.data));
+      db.saveDoc(jobId, "resume", doc, warnings, v.meta);
+    } else {
+      const letter = CoverLetter.parse(v.data);
+      db.saveDoc(jobId, "cover_letter", letter, letterWarnings(profile, letter, job, db.getSettings().letter.length), v.meta);
+    }
     revalidatePath(`/jobs/${jobId}`);
     return { ok: true };
   } catch (e) {

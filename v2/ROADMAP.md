@@ -16,6 +16,7 @@ ships or the idea is dropped.
 | 4 | Profile ranking: pin / normal / hide and order on entries and bullets | Done |
 | 5 | Tailoring without AI + fit to exactly one page (the AI path goes through the same fitter) | Done |
 | 5b | The resume you send (below) | Done |
+| 5c | Other sections (certifications, awards…), promotions, dates column, template presets; version history | Done |
 | 6 | Use it: ~10 real applications, keeping `FRICTION.md` | Next |
 
 ### Step 5b: the resume you send (from the first look at real output)
@@ -37,14 +38,20 @@ Not in 5b: a template gallery, uploaded templates, rich text, two-column layouts
 
 Iteration 1 ends when step 6 is done. Nothing from the lists below starts before then.
 
-## Iteration 2: capture (candidates, gated by the friction log)
+## Iteration 2: capture and polish (candidates, gated by the friction log)
 
 - **Extension: job capture.** One click on a posting sends it to v2 on localhost. Ports v1's
   LinkedIn / Greenhouse / Lever / generic JSON-LD scrapers. No autofill.
 - **Import a job from its URL.** A paste-a-link box on the Jobs page, using the same JSON-LD parser.
   It may make the extension unnecessary.
-- **Keyword gap.** Job keywords that are in your profile but missing from the tailored resume.
-  The fitter's scorer computes these anyway.
+- **Keyword gap.** On the job page, above the resume editor: chips for the job's key terms.
+  A term in your profile but not on this resume is clickable and shows the profile bullets that
+  have it, ready to add. A term not in your profile at all is grey, because grounding means it
+  can't be added, only noticed. The fitter's scorer already computes the terms.
+- **Reword this bullet.** In the ⋯ menu of each bullet on a job's resume: "Reword with AI".
+  Two or three alternatives appear under the bullet, citing the same source, with an optional
+  hint ("shorter", "lead with the result"). Pick one or dismiss. Not on Profile: the profile is
+  your own words, and rewording it with AI would blur what the AI is grounded against.
 
 ## Iteration 3: self-hosting (others can run it with their own data and keys)
 
@@ -69,8 +76,6 @@ Not planned: a hosted multi-user version. That brings back auth, `user_id` and b
 - **Interview prep.** Likely questions from the job description and your profile.
 - **Insights.** Funnel counts: saved → applied → interview → offer.
 - **Company research.** A notes panel on the job page, not its own page.
-- **Document history.** Earlier versions of a job's resume and letter, so a re-tailor can be undone.
-  Each job already keeps its latest pair, so the Jobs list is the history today.
 
 ## v1 pages and where they went
 

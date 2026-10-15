@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-import { getDoc, getJob, getProfile, getSettings } from "@/lib/db";
+import { getDoc, getJob, getProfile, getSettings, getVersion } from "@/lib/db";
 import { renderPdf, renderSource, type RenderInput } from "@/lib/render";
 import { profileAsTailored, resolveLetter, resolveResume } from "@/lib/resolve";
 import { Settings } from "@/lib/types";
@@ -8,7 +8,8 @@ import { Settings } from "@/lib/types";
 export const runtime = "nodejs";
 
 /**
- * GET /api/pdf?kind=resume|letter[&job=ID][&download=1][&source=1][&layout=JSON]
+ * GET /api/pdf?kind=resume|letter[&job=ID][&ver=ID][&download=1][&source=1][&layout=JSON]
+ * `ver` renders a saved version of the job's document instead of the current one.
  * Without `job`, renders the untailored profile as a resume. `layout` previews unsaved resume
  * settings (Settings → Resume design); without it, the saved ones are used.
  */
@@ -37,11 +38,13 @@ export async function GET(req: NextRequest) {
     if (!job) return NextResponse.json({ error: "job not found" }, { status: 404 });
     filename += `_${job.company || "job"}`.replace(/\s+/g, "_");
     if (kind === "resume") {
-      const doc = getDoc(jobId, "resume");
+      const ver = q.get("ver");
+      const doc = ver ? getVersion(jobId, "resume", ver) : getDoc(jobId, "resume");
       if (!doc) return NextResponse.json({ error: "no resume yet" }, { status: 404 });
       input = { kind, data: resolveResume(profile, doc.data, layout) };
     } else {
-      const doc = getDoc(jobId, "cover_letter");
+      const ver = q.get("ver");
+      const doc = ver ? getVersion(jobId, "cover_letter", ver) : getDoc(jobId, "cover_letter");
       if (!doc) return NextResponse.json({ error: "no cover letter yet" }, { status: 404 });
       input = { kind, data: resolveLetter(profile, job, doc.data, layout) };
       filename += "_cover_letter";

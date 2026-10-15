@@ -26,6 +26,8 @@ function open() {
   mkdirSync(DATA_DIR, { recursive: true });
   const db = new Database(join(DATA_DIR, "slothing.db"));
   db.pragma("journal_mode = WAL");
+  // Wait for another writer (a second process, or parallel test files) instead of failing at once.
+  db.pragma("busy_timeout = 5000");
   db.exec(`
     CREATE TABLE IF NOT EXISTS profile (
       id INTEGER PRIMARY KEY CHECK (id = 1),
@@ -60,14 +62,32 @@ function open() {
       UNIQUE (job_id, kind)
     );
   `);
+  createVersions(db);
   db.pragma("foreign_keys = ON");
   return db;
+}
+
+/** Every saved state of a job's resume and letter, newest last, so any of them can be restored. */
+function createVersions(db: Database.Database) {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS document_versions (
+      id TEXT PRIMARY KEY,
+      job_id TEXT NOT NULL REFERENCES jobs(id) ON DELETE CASCADE,
+      kind TEXT NOT NULL,
+      data TEXT NOT NULL,
+      warnings TEXT NOT NULL DEFAULT '[]',
+      meta TEXT NOT NULL DEFAULT '{}',
+      created_at TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS document_versions_doc ON document_versions (job_id, kind, created_at);
+  `);
 }
 
 /** Columns added after a table first shipped. CREATE TABLE above has them for new databases; this adds them to old ones. */
 export function migrate(db: Database.Database) {
   const has = (table: string, column: string) => (db.prepare(`PRAGMA table_info(${table})`).all() as { name: string }[]).some((c) => c.name === column);
   if (!has("documents", "meta")) db.exec("ALTER TABLE documents ADD COLUMN meta TEXT NOT NULL DEFAULT '{}'");
+  createVersions(db);
 }
 
 // Survive Next dev hot reloads without leaking connections.
@@ -177,22 +197,67 @@ export function getDoc<K extends DocKind>(jobId: string, kind: K): StoredDoc<Doc
   };
 }
 
-/** `warnings` and `meta` keep their stored values when omitted. */
+/** How many versions each document keeps; older ones are dropped. */
+export const MAX_VERSIONS = 50;
+
+const insertVersion = (jobId: string, kind: DocKind, data: string, warnings: string, meta: string, at: string) =>
+  db.prepare("INSERT INTO document_versions (id, job_id, kind, data, warnings, meta, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)").run(newId("ver"), jobId, kind, data, warnings, meta, at);
+
+/** `warnings` and `meta` keep their stored values when omitted. Every save is also kept as a version. */
 export function saveDoc<K extends DocKind>(jobId: string, kind: K, data: DocData<K>, warnings?: Warning[], meta?: DocMeta) {
   const parsed = schemas[kind].parse(data);
   const existing = getDoc(jobId, kind);
+  const row = {
+    data: JSON.stringify(parsed),
+    warnings: JSON.stringify(warnings ?? existing?.warnings ?? []),
+    meta: JSON.stringify(meta ?? existing?.meta ?? {}),
+    at: now(),
+  };
+  db.transaction(() => {
+    // A document from before versions existed: keep it as the first version, so it can be restored.
+    const count = (db.prepare("SELECT COUNT(*) AS n FROM document_versions WHERE job_id = ? AND kind = ?").get(jobId, kind) as { n: number }).n;
+    if (existing && count === 0) insertVersion(jobId, kind, JSON.stringify(existing.data), JSON.stringify(existing.warnings), JSON.stringify(existing.meta), existing.updatedAt);
+    upsertDoc(existing?.id ?? newId("doc"), jobId, kind, row);
+    insertVersion(jobId, kind, row.data, row.warnings, row.meta, row.at);
+    db.prepare(
+      `DELETE FROM document_versions WHERE job_id = ? AND kind = ? AND id NOT IN
+         (SELECT id FROM document_versions WHERE job_id = ? AND kind = ? ORDER BY created_at DESC, rowid DESC LIMIT ?)`,
+    ).run(jobId, kind, jobId, kind, MAX_VERSIONS);
+    // Immediate: take the write lock up front. A read-then-write transaction can't wait for another writer.
+  }).immediate();
+}
+
+function upsertDoc(id: string, jobId: string, kind: DocKind, row: { data: string; warnings: string; meta: string; at: string }) {
   db.prepare(
     `INSERT INTO documents (id, job_id, kind, data, warnings, meta, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)
      ON CONFLICT(job_id, kind) DO UPDATE SET data = excluded.data, warnings = excluded.warnings, meta = excluded.meta, updated_at = excluded.updated_at`,
-  ).run(
-    existing?.id ?? newId("doc"),
-    jobId,
-    kind,
-    JSON.stringify(parsed),
-    JSON.stringify(warnings ?? existing?.warnings ?? []),
-    JSON.stringify(meta ?? existing?.meta ?? {}),
-    now(),
-  );
+  ).run(id, jobId, kind, row.data, row.warnings, row.meta, row.at);
+}
+
+export interface DocVersion<T> {
+  id: string;
+  data: T;
+  warnings: Warning[];
+  meta: DocMeta;
+  createdAt: string;
+}
+
+/** Saved versions of one document, newest first. */
+export function listVersions<K extends DocKind>(jobId: string, kind: K): DocVersion<DocData<K>>[] {
+  const rows = db
+    .prepare("SELECT * FROM document_versions WHERE job_id = ? AND kind = ? ORDER BY created_at DESC, rowid DESC")
+    .all(jobId, kind) as { id: string; data: string; warnings: string; meta: string; created_at: string }[];
+  return rows.flatMap((r) => {
+    // A version that no longer parses (an old shape) is skipped rather than breaking the list.
+    const data = schemas[kind].safeParse(JSON.parse(r.data));
+    return data.success
+      ? [{ id: r.id, data: data.data as DocData<K>, warnings: JSON.parse(r.warnings), meta: DocMeta.catch({}).parse(JSON.parse(r.meta)), createdAt: r.created_at }]
+      : [];
+  });
+}
+
+export function getVersion<K extends DocKind>(jobId: string, kind: K, id: string): DocVersion<DocData<K>> | null {
+  return listVersions(jobId, kind).find((v) => v.id === id) ?? null;
 }
 
 /** Meta for a hand save: whatever made the document, now marked as edited. */
