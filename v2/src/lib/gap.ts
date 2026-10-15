@@ -22,7 +22,7 @@ const NOISE = new Set(
     "ll re ve our yourself ourselves everyone every us global based meet member support including like within " +
     "senior junior intern principal staff associate ii iii iv " +
     "complex multiple single individual develop manage supporting assigned drive deliver ensure provide build improve etc " +
-    "eligible eligibility recruiter recruiting hiring interview"
+    "eligible eligibility recruiter recruiting hiring interview current upon hire maintain package applicable employment"
   ).split(" "),
 );
 

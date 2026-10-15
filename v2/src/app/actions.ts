@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 
 import * as db from "@/lib/db";
 import { extractText, parseResumeText, reuseIds } from "@/lib/import";
+import { importJobFromUrl } from "@/lib/job-import";
 import { generateJSON, llmInfo, testLlm } from "@/lib/llm";
 import { profileAsTailored } from "@/lib/resolve";
 import { fitResume } from "@/lib/fit";
@@ -103,6 +104,18 @@ export async function createJobAction(form: FormData) {
     }
   }
   const id = db.createJob({ company, title, location, url: String(form.get("url") ?? "").trim(), description });
+  redirect(`/jobs/${id}`);
+}
+
+/** The Jobs page's paste-a-link box: read the posting, save it as a job, open it. */
+export async function importJobAction(_prev: Result | null, form: FormData): Promise<Result> {
+  let id: string;
+  try {
+    id = db.createJob(await importJobFromUrl(String(form.get("url") ?? "")));
+  } catch (e) {
+    return fail(e);
+  }
+  revalidatePath("/");
   redirect(`/jobs/${id}`);
 }
 
