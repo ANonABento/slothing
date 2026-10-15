@@ -185,7 +185,8 @@ const MAX_BYTES = 5_000_000;
 // Some boards (LinkedIn) only serve the public posting to a browser-like agent.
 const HEADERS = {
   "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0 Safari/537.36",
-  accept: "text/html,application/xhtml+xml,application/json;q=0.9,*/*;q=0.8",
+  // HTML first: some boards (Workday) answer a request that accepts JSON with an app-internal JSON blob.
+  accept: "text/html,application/xhtml+xml;q=0.9,*/*;q=0.8",
   "accept-language": "en-US,en;q=0.9",
 };
 
@@ -227,7 +228,7 @@ const MIN_TEXT = 400;
 async function fromPageText(html: string, host: string): Promise<ImportedJob> {
   const text = htmlToText(html.match(/<body[\s\S]*<\/body>/i)?.[0] ?? html);
   if (text.length < MIN_TEXT) {
-    throw new Error(`${host} loads its postings with JavaScript, so the link can't be read here. Paste the description with "Add job" instead.`);
+    throw new Error(`There's almost no text on that page, so no posting to read (${host} may load it with JavaScript). Paste the description with "Add job" instead.`);
   }
   const job = await generateJSON(
     AiJob,
