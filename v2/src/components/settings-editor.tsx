@@ -14,6 +14,7 @@ import { DARK_THEMES, LATITUDES, LETTER_LENGTHS, LIGHT_THEMES, OPTIONAL_SECTIONS
 
 type PageLimit = Settings["resume"]["pages"];
 import { Dropdown } from "./dropdown";
+import { DesignCard, DesignPreview } from "./resume-design";
 import { PageBody, PageHeader } from "./page-header";
 import { SaveBar } from "./save-bar";
 import { Button, Card, CardTitle, Field, IconButton, Input, Label, Segmented, SegmentedLinks, Textarea, cx } from "./ui";
@@ -172,7 +173,10 @@ function LayoutSection({ layout, onChange }: { layout: Settings["resume"]; onCha
     onChange({ ...layout, hide: show ? layout.hide.filter((h) => h !== s) : [...layout.hide, s] });
 
   return (
-    <Section title="Resume layout" description="Page length, section order and paper size for every resume. Hidden sections stay in your profile and tailored resumes; they're just left off the page.">
+    <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+    <div className="min-w-0 space-y-4">
+    <DesignCard style={layout.style} onChange={(style) => onChange({ ...layout, style })} />
+    <Section title="Layout" description="Page length, section order and paper size. Hidden sections stay in your profile and tailored resumes; they're just left off the page.">
       <div>
         <Label>Section order</Label>
         <ol className="divide-y divide-rule rounded-control border border-rule">
@@ -222,6 +226,9 @@ function LayoutSection({ layout, onChange }: { layout: Settings["resume"]; onCha
         />
       </div>
     </Section>
+    </div>
+    <DesignPreview layout={layout} />
+    </div>
   );
 }
 

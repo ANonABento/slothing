@@ -4,6 +4,8 @@ import { tmpdir } from "os";
 import { join } from "path";
 
 export const typstBin = () => join(process.cwd(), ".engines", "typst");
+/** Bundled fonts. System fonts are ignored so a resume lays out the same on every machine. */
+export const fontArgs = () => ["--font-path", join(process.cwd(), ".engines", "fonts"), "--ignore-system-fonts"];
 
 /** Run a command in a throwaway directory holding only `files`; return its stdout and, if named, an output file. */
 async function runInTemp(

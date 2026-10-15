@@ -6,21 +6,25 @@ import { useState, type ReactNode } from "react";
 import { cx } from "./ui";
 
 /**
- * A role, project or school as one collapsible row: title and details when closed, the editor when
- * open. Profile and the job resume both use it, so an entry looks the same in both places.
+ * A role, project or school as one collapsible row. Closed, it reads like the resume line: the title,
+ * and under it the details in muted text. Profile and the job resume both use it, so an entry looks
+ * the same in both places.
  */
 export function EntryCard({
   title,
-  meta,
+  subtitle,
+  badge,
   aside,
   defaultOpen,
   dim,
   children,
 }: {
   title: ReactNode;
-  /** Short details after the title, e.g. dates and bullet count. */
-  meta?: ReactNode;
-  /** Controls on the right of the header (pin/hide, include checkbox). Clicks here don't toggle. */
+  /** Second line: company, dates, tools… */
+  subtitle?: ReactNode;
+  /** A small marker after the title, shown only when there's something to say (pinned, hidden). */
+  badge?: ReactNode;
+  /** Controls on the right (a menu, an include switch). Clicks here don't toggle. */
   aside?: ReactNode;
   defaultOpen?: boolean;
   dim?: boolean;
@@ -30,18 +34,26 @@ export function EntryCard({
   const [open, setOpen] = useState(Boolean(defaultOpen));
   const openable = children !== undefined && children !== null && children !== false;
   return (
-    <div className={cx("rounded-control border border-rule bg-page", dim && "opacity-60")}>
-      <div className="flex min-h-11 items-center gap-2 pr-2">
+    <div className="rounded-control border border-rule bg-page">
+      <div className="flex items-center gap-1 pr-2">
         <button
           type="button"
           onClick={() => openable && setOpen((o) => !o)}
           aria-expanded={openable ? open : undefined}
           disabled={!openable}
-          className="flex min-w-0 flex-1 items-center gap-2 rounded-control py-2.5 pl-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand disabled:cursor-default"
+          className={cx(
+            "flex min-w-0 flex-1 items-start gap-2 rounded-control py-2.5 pl-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand disabled:cursor-default",
+            dim && "opacity-55",
+          )}
         >
-          <ChevronRight className={cx("h-4 w-4 shrink-0 text-ink-3 transition-transform", open && "rotate-90", !openable && "invisible")} />
-          <span className="min-w-0 truncate text-sm font-medium">{title}</span>
-          {meta && <span className="hidden shrink-0 truncate font-mono text-xs text-ink-3 sm:inline">{meta}</span>}
+          <ChevronRight className={cx("mt-0.5 h-4 w-4 shrink-0 text-ink-3 transition-transform", open && "rotate-90", !openable && "invisible")} />
+          <span className="min-w-0 flex-1">
+            <span className="flex items-center gap-1.5">
+              <span className="truncate text-sm font-medium">{title}</span>
+              {badge}
+            </span>
+            {subtitle && <span className="block truncate text-xs text-ink-3">{subtitle}</span>}
+          </span>
         </button>
         {aside}
       </div>
@@ -50,8 +62,8 @@ export function EntryCard({
   );
 }
 
-/** "Jan 2022 – Present · 4 bullets", skipping empty parts. */
-export const entryMeta = (...parts: (string | number | false | undefined)[]) =>
-  parts.filter((p) => p !== "" && p !== false && p !== undefined).join(" · ");
+/** Parts joined with " · ", skipping empty ones. */
+export const joinParts = (...parts: (string | number | false | null | undefined)[]) =>
+  parts.filter((p) => p !== "" && p !== false && p !== null && p !== undefined).join(" · ");
 export const dates = (start: string, end: string) => [start, end].filter(Boolean).join(" – ");
 export const count = (n: number, what: string) => `${n} ${what}${n === 1 ? "" : "s"}`;

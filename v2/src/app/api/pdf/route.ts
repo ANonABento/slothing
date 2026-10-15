@@ -3,17 +3,28 @@ import { NextResponse, type NextRequest } from "next/server";
 import { getDoc, getJob, getProfile, getSettings } from "@/lib/db";
 import { renderPdf, renderSource, type RenderInput } from "@/lib/render";
 import { profileAsTailored, resolveLetter, resolveResume } from "@/lib/resolve";
+import { Settings } from "@/lib/types";
 
 export const runtime = "nodejs";
 
 /**
- * GET /api/pdf?kind=resume|letter[&job=ID][&download=1][&source=1]
- * Without `job`, renders the untailored profile as a resume.
+ * GET /api/pdf?kind=resume|letter[&job=ID][&download=1][&source=1][&layout=JSON]
+ * Without `job`, renders the untailored profile as a resume. `layout` previews unsaved resume
+ * settings (Settings → Resume design); without it, the saved ones are used.
  */
 export async function GET(req: NextRequest) {
   const q = req.nextUrl.searchParams;
   const profile = getProfile();
-  const { resume: layout } = getSettings();
+  let layout = getSettings().resume;
+  const draft = q.get("layout");
+  if (draft) {
+    let parsed;
+    try {
+      parsed = Settings.shape.resume.safeParse(JSON.parse(draft));
+    } catch {}
+    if (!parsed?.success) return NextResponse.json({ error: "bad layout" }, { status: 400 });
+    layout = parsed.data;
+  }
   const jobId = q.get("job");
   const kind = q.get("kind") === "letter" ? "letter" : "resume";
   let input: RenderInput;
@@ -32,7 +43,7 @@ export async function GET(req: NextRequest) {
     } else {
       const doc = getDoc(jobId, "cover_letter");
       if (!doc) return NextResponse.json({ error: "no cover letter yet" }, { status: 404 });
-      input = { kind, data: resolveLetter(profile, job, doc.data, layout.paper) };
+      input = { kind, data: resolveLetter(profile, job, doc.data, layout) };
       filename += "_cover_letter";
     }
   }

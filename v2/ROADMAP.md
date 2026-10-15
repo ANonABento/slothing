@@ -15,7 +15,25 @@ ships or the idea is dropped.
 | 3 | Settings: model, tailoring level, instructions, layout, letter length | Done |
 | 4 | Profile ranking: pin / normal / hide and order on entries and bullets | Done |
 | 5 | Tailoring without AI + fit to exactly one page (the AI path goes through the same fitter) | Done |
+| 5b | The resume you send (below) | Done |
 | 6 | Use it: ~10 real applications, keeping `FRICTION.md` | Next |
+
+### Step 5b: the resume you send (from the first look at real output)
+
+The PDF is the product, and the first real import showed it falling short of the resume it came from.
+
+- **Import keeps what's on the page.** Projects split into name + tools ("FlowTO | Python | React" →
+  name FlowTO, tools Python, React). Hyperlinks are matched to the line they sit on, so roles, projects
+  and contact links keep their URLs. Contact links get a label ("Portfolio" → its URL), and a link
+  without a URL is plain text in the header ("Dual Citizen (U.S. & Canada)").
+- **Resume design** in Settings, with a live preview: font (bundled, so every machine renders the same),
+  size, spacing, margins, accent color, header (left or centered), section headings, entry style
+  (one line or two), bullet character, link icons. Presets to start from: Classic, LaTeX, Modern.
+  The cover letter shares the font, accent and header.
+- **Entry rows say less.** Title on the first line, details on the second. Pin and hide show only when
+  set; every action (pin, hide, move, remove) is in one menu per row.
+
+Not in 5b: a template gallery, uploaded templates, rich text, two-column layouts.
 
 Iteration 1 ends when step 6 is done. Nothing from the lists below starts before then.
 

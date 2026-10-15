@@ -65,7 +65,7 @@ export function JobDocuments({
               maxPages={tab === "resume" ? resumePages : null}
               settings={
                 tab === "resume"
-                  ? { href: settingsHref("layout", `/jobs/${jobId}`), label: "Layout" }
+                  ? { href: settingsHref("layout", `/jobs/${jobId}`), label: "Design" }
                   : { href: settingsHref("letter", `/jobs/${jobId}`), label: "Letter settings" }
               }
             />

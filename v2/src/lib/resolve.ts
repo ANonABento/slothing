@@ -1,4 +1,4 @@
-import { Settings, type CoverLetter, type Job, type Paper, type Profile, type ResolvedLetter, type ResolvedResume, type ResumeLayout, type TailoredResume } from "./types";
+import { BULLETS, FONTS, Settings, type CoverLetter, type ResolvedStyle, type ResumeStyle, type Job, type Paper, type Profile, type ResolvedLetter, type ResolvedResume, type ResumeLayout, type TailoredResume } from "./types";
 
 const DEFAULTS = Settings.parse({});
 
@@ -26,6 +26,11 @@ export function profileAsTailored(full: Profile): TailoredResume {
   };
 }
 
+export function resolveStyle(style: ResumeStyle): ResolvedStyle {
+  const font = FONTS[style.font].family;
+  return { ...style, font, headingFont: style.headingFont === "same" ? font : FONTS[style.headingFont].family, bullet: BULLETS[style.bullet] };
+}
+
 /** Join a tailored resume back onto the profile. Identity fields always come from the profile. */
 export function resolveResume(profile: Profile, doc: TailoredResume, layout: ResumeLayout = DEFAULTS.resume): ResolvedResume {
   const byId = <T extends { id: string }>(list: T[]) => new Map(list.map((x) => [x.id, x]));
@@ -36,17 +41,18 @@ export function resolveResume(profile: Profile, doc: TailoredResume, layout: Res
   return {
     sections: layout.order.filter((s) => !hidden.has(s)),
     paper: layout.paper,
+    style: resolveStyle(layout.style),
     contact: profile.contact,
     summary: doc.summary,
     experience: doc.experience.flatMap(({ sourceId, bullets }) => {
       const e = exps.get(sourceId);
       if (!e) return [];
-      const { company, title, location, start, end } = e;
-      return [{ company, title, location, start, end, bullets: bullets.map((b) => b.text).filter(Boolean) }];
+      const { company, title, url, location, start, end } = e;
+      return [{ company, title, url, location, start, end, bullets: bullets.map((b) => b.text).filter(Boolean) }];
     }),
     projects: doc.projects.flatMap(({ sourceId, bullets }) => {
       const p = prjs.get(sourceId);
-      return p ? [{ name: p.name, url: p.url, bullets: bullets.map((b) => b.text).filter(Boolean) }] : [];
+      return p ? [{ name: p.name, tech: p.tech, url: p.url, bullets: bullets.map((b) => b.text).filter(Boolean) }] : [];
     }),
     education: doc.educationIds.flatMap((id) => {
       const e = edus.get(id);
@@ -58,9 +64,11 @@ export function resolveResume(profile: Profile, doc: TailoredResume, layout: Res
   };
 }
 
-export function resolveLetter(profile: Profile, job: Pick<Job, "company" | "title">, letter: CoverLetter, paper: Paper = DEFAULTS.resume.paper): ResolvedLetter {
+/** The letter shares the resume's paper, font, accent and header. */
+export function resolveLetter(profile: Profile, job: Pick<Job, "company" | "title">, letter: CoverLetter, layout: Pick<ResumeLayout, "paper" | "style"> = DEFAULTS.resume): ResolvedLetter {
   return {
-    paper,
+    paper: layout.paper,
+    style: resolveStyle(layout.style),
     contact: profile.contact,
     date: new Intl.DateTimeFormat("en-US", { dateStyle: "long" }).format(new Date()),
     recipient: { company: job.company, title: job.title },

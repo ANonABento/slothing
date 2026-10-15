@@ -9,10 +9,11 @@ import { useState, useTransition } from "react";
 import { saveResumeAction, tailorResumeAction } from "@/app/actions";
 import type { Profile, TailoredResume, Warning } from "@/lib/types";
 import { CommaInput } from "./comma-input";
-import { ListEditor } from "./list-editor";
+import { ListEditor, itemActions } from "./list-editor";
 import { useConfirm } from "./confirm";
 import { Dropdown } from "./dropdown";
-import { EntryCard, count, dates, entryMeta } from "./entry-card";
+import { EntryCard, count, dates, joinParts } from "./entry-card";
+import { RowMenu } from "./row-menu";
 import { SaveBar } from "./save-bar";
 import { Button, Input, Label, Textarea, Warnings, buttonClass } from "./ui";
 
@@ -56,9 +57,17 @@ function EntryBullets({ entry, sources, onChange }: { entry: Entry; sources: { i
         onChange={(bullets) => onChange({ ...entry, bullets })}
         getKey={(b, i) => b.sourceIds.join("+") || String(i)}
         itemLabel="bullet"
-        render={(b, update) => {
+        controls="menu"
+        render={(b, update, ctl) => {
           const original = b.sourceIds.map((id) => srcText.get(id)).filter(Boolean).join(" ");
-          return <TailoredBulletField text={b.text} original={original} onChange={(text) => update({ ...b, text })} />;
+          return (
+            <div className="flex items-start gap-1">
+              <div className="min-w-0 flex-1">
+                <TailoredBulletField text={b.text} original={original} onChange={(text) => update({ ...b, text })} />
+              </div>
+              <RowMenu label="Bullet actions" actions={itemActions(ctl)} />
+            </div>
+          );
         }}
       />
       {unused.length > 0 && (
@@ -85,7 +94,7 @@ function EntryList({
 }: {
   label: string;
   entries: Entry[];
-  sources: { id: string; heading: string; meta: string; bullets: { id: string; text: string }[] }[];
+  sources: { id: string; heading: string; details: string; bullets: { id: string; text: string }[] }[];
   onChange: (e: Entry[]) => void;
 }) {
   if (!sources.length) return null;
@@ -105,12 +114,12 @@ function EntryList({
             <EntryCard
               key={s.id}
               title={s.heading}
-              meta={entryMeta(s.meta, entry ? `${entry.bullets.length} of ${count(s.bullets.length, "bullet")}` : "left off")}
+              subtitle={joinParts(s.details, entry ? `${entry.bullets.length} of ${count(s.bullets.length, "bullet")}` : "Not on this resume")}
               dim={!entry}
               aside={
                 <label className="flex cursor-pointer items-center gap-1.5 px-1 text-xs text-ink-2">
                   <input type="checkbox" checked={Boolean(entry)} onChange={(e) => toggle(s.id, e.target.checked)} className="accent-[var(--brand)]" />
-                  Include
+                  On resume
                 </label>
               }
             >
@@ -216,13 +225,13 @@ export function ResumeEditor({
         label="Experience"
         entries={doc.experience}
         onChange={(experience) => setDoc({ ...doc, experience })}
-        sources={profile.experience.map((e) => ({ id: e.id, heading: [e.title, e.company].filter(Boolean).join(" · "), meta: dates(e.start, e.end), bullets: e.bullets }))}
+        sources={profile.experience.map((e) => ({ id: e.id, heading: e.title || "Untitled role", details: joinParts(e.company, dates(e.start, e.end)), bullets: e.bullets }))}
       />
       <EntryList
         label="Projects"
         entries={doc.projects}
         onChange={(projects) => setDoc({ ...doc, projects })}
-        sources={profile.projects.map((p) => ({ id: p.id, heading: p.name, meta: "", bullets: p.bullets }))}
+        sources={profile.projects.map((p) => ({ id: p.id, heading: p.name || "Untitled project", details: p.tech.join(", "), bullets: p.bullets }))}
       />
 
       {profile.education.length > 0 && (
@@ -259,10 +268,14 @@ export function ResumeEditor({
           addLabel="Skill group"
           onAdd={() => ({ category: "", items: [] })}
           itemLabel="skill group"
-          render={(s, update) => (
-            <div className="grid gap-2 sm:grid-cols-[10rem_1fr]">
-              <Input aria-label="Skill group name" value={s.category} onChange={(e) => update({ ...s, category: e.target.value })} />
-              <CommaInput aria-label={`${s.category || "Skills"}, comma-separated`} value={s.items} onChange={(items) => update({ ...s, items })} />
+          controls="menu"
+          render={(s, update, ctl) => (
+            <div className="flex items-start gap-1">
+              <div className="grid flex-1 gap-2 sm:grid-cols-[10rem_1fr]">
+                <Input aria-label="Skill group name" value={s.category} onChange={(e) => update({ ...s, category: e.target.value })} />
+                <CommaInput aria-label={`${s.category || "Skills"}, comma-separated`} value={s.items} onChange={(items) => update({ ...s, items })} />
+              </div>
+              <RowMenu label="Skill group actions" actions={itemActions(ctl)} />
             </div>
           )}
         />

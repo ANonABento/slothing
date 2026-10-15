@@ -2,7 +2,7 @@
 export const SETTINGS_SECTIONS = [
   { id: "ai", label: "AI model" },
   { id: "tailoring", label: "Tailoring" },
-  { id: "layout", label: "Resume layout" },
+  { id: "layout", label: "Resume design" },
   { id: "letter", label: "Cover letter" },
   { id: "appearance", label: "Appearance" },
 ] as const;

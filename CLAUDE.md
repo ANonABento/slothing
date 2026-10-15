@@ -33,3 +33,7 @@ npm run engines    # fetch typst into .engines/
 - Mutations are server actions in `src/app/actions.ts` returning `Result`.
 - PDFs are rendered with Typst only (`src/lib/render/typst.ts`). Templates read `ResolvedResume` /
   `ResolvedLetter` as JSON. A resume template and its letter template share one header style.
+- Resume design is data, not templates: `ResumeStyle` in `src/lib/types.ts` (font, size, spacing, accent,
+  header, entry style…) drives the one Typst template. New looks are presets (`STYLE_PRESETS`).
+- Fonts are bundled in `.engines/fonts` (`npm run engines`) and Typst runs with `--ignore-system-fonts`,
+  so a resume lays out identically everywhere (the fitter depends on it).

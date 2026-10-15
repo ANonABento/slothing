@@ -18,7 +18,7 @@ Single user, local SQLite, no auth.
 ```bash
 cd v2
 npm install
-npm run engines            # downloads typst into .engines/
+npm run engines            # downloads typst and the resume fonts into .engines/
 cp .env.example .env.local # add NEBIUS_API_KEY, ANTHROPIC_API_KEY or OPENAI_API_KEY
 npm run dev                # http://localhost:3000
 npm run v1                 # optional: the archived v1 app on http://localhost:3100, for comparison

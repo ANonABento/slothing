@@ -6,14 +6,15 @@ import { Check, FileUp, Sparkles, UserRound } from "lucide-react";
 import { useRef, useState, useTransition } from "react";
 
 import { importResumeAction, saveProfileAction } from "@/app/actions";
-import type { Bullet, Profile } from "@/lib/types";
-import { ListEditor } from "./list-editor";
-import { RankNote, RankToggle } from "./rank-toggle";
+import type { Bullet, ContactLink, Profile } from "@/lib/types";
+import { ListEditor, itemActions } from "./list-editor";
+import { RankBadge, RankNote, rankActions } from "./rank-toggle";
+import { RowMenu } from "./row-menu";
 import { PageBody, PageHeader } from "./page-header";
 import { PdfPreview, PreviewEmpty, PreviewPane } from "./pdf-preview";
 import { SaveBar } from "./save-bar";
 import { CommaInput } from "./comma-input";
-import { EntryCard, count, dates, entryMeta } from "./entry-card";
+import { EntryCard, count, dates, joinParts } from "./entry-card";
 import { Button, Card, CardTitle, Eyebrow, Field as FieldShell, Input, Textarea, cx } from "./ui";
 
 // getRandomValues works on plain-http LAN addresses too, unlike randomUUID.
@@ -39,9 +40,10 @@ function Bullets({ bullets, onChange }: { bullets: Bullet[]; onChange: (b: Bulle
       addLabel="Bullet"
       itemLabel="bullet"
       getKey={(b) => b.id}
+      controls="menu"
       onAdd={() => ({ id: cid("b"), text: "", rank: "normal" as const })}
-      render={(b, update) => (
-        <div className="flex gap-1">
+      render={(b, update, ctl) => (
+        <div className="flex items-start gap-1">
           <Textarea
             rows={2}
             aria-label="Bullet"
@@ -50,7 +52,10 @@ function Bullets({ bullets, onChange }: { bullets: Bullet[]; onChange: (b: Bulle
             placeholder="What you did, and what came of it"
             className={cx("flex-1", b.rank === "hidden" && "opacity-50", b.rank === "pinned" && "border-brand")}
           />
-          <RankToggle vertical rank={b.rank} onChange={(rank) => update({ ...b, rank })} what="bullet" />
+          <div className="flex w-8 flex-col items-center gap-1">
+            <RowMenu label="Bullet actions" actions={[...rankActions(b.rank, (rank) => update({ ...b, rank })), ...itemActions(ctl)]} />
+            <RankBadge rank={b.rank} />
+          </div>
         </div>
       )}
     />
@@ -167,15 +172,27 @@ export function ProfileEditor({ initial }: { initial: Profile }) {
             <Field label="Phone" value={p.contact.phone} onChange={(v) => setContact("phone", v)} />
             <Field label="Location" value={p.contact.location} onChange={(v) => setContact("location", v)} />
           </div>
-          <FieldShell label="Links (one per line)" className="mt-3">
-            <Textarea
-              rows={2}
-              value={p.contact.links.join("\n")}
-              onChange={(e) => set("contact", { ...p.contact, links: e.target.value.split("\n") })}
-              onBlur={() => set("contact", { ...p.contact, links: p.contact.links.map((l) => l.trim()).filter(Boolean) })}
-              placeholder="linkedin.com/in/you"
+          <div className="mt-4">
+            <div className="mb-1 text-xs font-semibold text-ink-2">Links and other header items</div>
+            <p className="mb-2 text-xs text-ink-3">A label shows instead of the URL (&ldquo;Portfolio&rdquo;). Leave the URL empty for plain text, like &ldquo;Dual Citizen (U.S. &amp; Canada)&rdquo;.</p>
+            <ListEditor
+              items={p.contact.links}
+              onChange={(links) => set("contact", { ...p.contact, links })}
+              addLabel="Link"
+              itemLabel="link"
+              controls="menu"
+              onAdd={(): ContactLink => ({ label: "", url: "" })}
+              render={(l, update, ctl) => (
+                <div className="flex items-center gap-1">
+                  <div className="grid flex-1 gap-2 sm:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
+                    <Input aria-label="Label" value={l.label} onChange={(e) => update({ ...l, label: e.target.value })} placeholder="Label (optional)" />
+                    <Input aria-label="URL" value={l.url} onChange={(e) => update({ ...l, url: e.target.value })} placeholder="linkedin.com/in/you" />
+                  </div>
+                  <RowMenu label="Link actions" actions={itemActions(ctl)} />
+                </div>
+              )}
             />
-          </FieldShell>
+          </div>
         </Section>
 
         <Section title="Summary">
@@ -187,16 +204,17 @@ export function ProfileEditor({ initial }: { initial: Profile }) {
             items={p.experience}
             onChange={(v) => set("experience", v)}
             addLabel="Role"
-            controls="row"
+            controls="menu"
             itemLabel="role"
             confirmRemove={(e) => (e.company || e.title || e.bullets.length ? `${e.title || "This role"}${e.company ? ` at ${e.company}` : ""} and its ${e.bullets.length} bullets will be removed from your profile when you save.` : null)}
             getKey={(x) => x.id}
-            onAdd={() => ({ id: cid("exp"), company: "", title: "", location: "", start: "", end: "", bullets: [], rank: "normal" as const })}
-            render={(e, update) => (
+            onAdd={() => ({ id: cid("exp"), company: "", title: "", url: "", location: "", start: "", end: "", bullets: [], rank: "normal" as const })}
+            render={(e, update, ctl) => (
               <EntryCard
-                title={[e.title, e.company].filter(Boolean).join(" · ") || "New role"}
-                meta={entryMeta(dates(e.start, e.end), count(e.bullets.length, "bullet"))}
-                aside={<RankToggle rank={e.rank} onChange={(rank) => update({ ...e, rank })} what="role" />}
+                title={e.title || "New role"}
+                subtitle={joinParts(e.company, dates(e.start, e.end), count(e.bullets.length, "bullet"))}
+                badge={<RankBadge rank={e.rank} />}
+                aside={<RowMenu label="Role actions" actions={[...rankActions(e.rank, (rank) => update({ ...e, rank })), ...itemActions(ctl)]} />}
                 defaultOpen={!e.title && !e.company}
                 dim={e.rank === "hidden"}
               >
@@ -207,6 +225,7 @@ export function ProfileEditor({ initial }: { initial: Profile }) {
                   <Field label="Start" value={e.start} onChange={(v) => update({ ...e, start: v })} placeholder="Jan 2022" />
                   <Field label="End" value={e.end} onChange={(v) => update({ ...e, end: v })} placeholder="Present" />
                   <Field label="Location" value={e.location} onChange={(v) => update({ ...e, location: v })} />
+                  <Field label="Link" value={e.url} onChange={(v) => update({ ...e, url: v })} placeholder="company.com" />
                 </div>
                 <div className="pt-1 text-xs font-semibold text-ink-2">Bullets</div>
                 <Bullets bullets={e.bullets} onChange={(b) => update({ ...e, bullets: b })} />
@@ -220,23 +239,27 @@ export function ProfileEditor({ initial }: { initial: Profile }) {
             items={p.projects}
             onChange={(v) => set("projects", v)}
             addLabel="Project"
-            controls="row"
+            controls="menu"
             itemLabel="project"
             confirmRemove={(x) => (x.name || x.bullets.length ? `${x.name || "This project"} and its bullets will be removed from your profile when you save.` : null)}
             getKey={(x) => x.id}
-            onAdd={() => ({ id: cid("prj"), name: "", url: "", bullets: [], rank: "normal" as const })}
-            render={(pr, update) => (
+            onAdd={() => ({ id: cid("prj"), name: "", tech: [], url: "", bullets: [], rank: "normal" as const })}
+            render={(pr, update, ctl) => (
               <EntryCard
                 title={pr.name || "New project"}
-                meta={entryMeta(pr.url, count(pr.bullets.length, "bullet"))}
-                aside={<RankToggle rank={pr.rank} onChange={(rank) => update({ ...pr, rank })} what="project" />}
+                subtitle={joinParts(pr.tech.join(", "), count(pr.bullets.length, "bullet"))}
+                badge={<RankBadge rank={pr.rank} />}
+                aside={<RowMenu label="Project actions" actions={[...rankActions(pr.rank, (rank) => update({ ...pr, rank })), ...itemActions(ctl)]} />}
                 defaultOpen={!pr.name}
                 dim={pr.rank === "hidden"}
               >
                 <RankNote rank={pr.rank} />
                 <div className="grid gap-2 sm:grid-cols-2">
                   <Field label="Name" value={pr.name} onChange={(v) => update({ ...pr, name: v })} />
-                  <Field label="URL" value={pr.url} onChange={(v) => update({ ...pr, url: v })} />
+                  <Field label="Link" value={pr.url} onChange={(v) => update({ ...pr, url: v })} placeholder="github.com/you/project" />
+                  <FieldShell label="Tools" className="sm:col-span-2">
+                    <CommaInput aria-label="Tools, comma-separated" value={pr.tech} onChange={(tech) => update({ ...pr, tech })} placeholder="Python, React, PostgreSQL" />
+                  </FieldShell>
                 </div>
                 <div className="pt-1 text-xs font-semibold text-ink-2">Bullets</div>
                 <Bullets bullets={pr.bullets} onChange={(b) => update({ ...pr, bullets: b })} />
@@ -250,27 +273,28 @@ export function ProfileEditor({ initial }: { initial: Profile }) {
             items={p.education}
             onChange={(v) => set("education", v)}
             addLabel="School"
-            controls="row"
+            controls="menu"
             itemLabel="school"
             confirmRemove={(e) => (e.school ? `${e.school} will be removed from your profile when you save.` : null)}
             getKey={(x) => x.id}
             onAdd={() => ({ id: cid("edu"), school: "", degree: "", location: "", start: "", end: "", details: "", rank: "normal" as const })}
-            render={(e, update) => (
+            render={(e, update, ctl) => (
               <EntryCard
-                title={[e.school, e.degree].filter(Boolean).join(" · ") || "New school"}
-                meta={dates(e.start, e.end)}
-                aside={<RankToggle rank={e.rank} onChange={(rank) => update({ ...e, rank })} what="school" />}
+                title={e.school || "New school"}
+                subtitle={joinParts(e.degree, dates(e.start, e.end))}
+                badge={<RankBadge rank={e.rank} />}
+                aside={<RowMenu label="School actions" actions={[...rankActions(e.rank, (rank) => update({ ...e, rank })), ...itemActions(ctl)]} />}
                 defaultOpen={!e.school}
                 dim={e.rank === "hidden"}
               >
                 <RankNote rank={e.rank} />
-                <div className="grid gap-3 sm:grid-cols-2">
-                <Field label="School" value={e.school} onChange={(v) => update({ ...e, school: v })} />
-                <Field label="Degree" value={e.degree} onChange={(v) => update({ ...e, degree: v })} />
-                <Field label="Start" value={e.start} onChange={(v) => update({ ...e, start: v })} />
-                <Field label="End" value={e.end} onChange={(v) => update({ ...e, end: v })} />
-                <Field label="Location" value={e.location} onChange={(v) => update({ ...e, location: v })} />
-                <Field label="Details" value={e.details} onChange={(v) => update({ ...e, details: v })} placeholder="GPA, honours, coursework" />
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <Field label="School" value={e.school} onChange={(v) => update({ ...e, school: v })} />
+                  <Field label="Degree" value={e.degree} onChange={(v) => update({ ...e, degree: v })} />
+                  <Field label="Start" value={e.start} onChange={(v) => update({ ...e, start: v })} />
+                  <Field label="End" value={e.end} onChange={(v) => update({ ...e, end: v })} />
+                  <Field label="Location" value={e.location} onChange={(v) => update({ ...e, location: v })} />
+                  <Field label="Details" value={e.details} onChange={(v) => update({ ...e, details: v })} placeholder="GPA, honours, coursework" />
                 </div>
               </EntryCard>
             )}
@@ -283,12 +307,16 @@ export function ProfileEditor({ initial }: { initial: Profile }) {
             onChange={(v) => set("skills", v)}
             addLabel="Skill group"
             itemLabel="skill group"
+            controls="menu"
             getKey={(x) => x.id}
             onAdd={() => ({ id: cid("sk"), category: "", items: [] })}
-            render={(s, update) => (
-              <div className="grid gap-2 sm:grid-cols-[10rem_1fr]">
-                <Input aria-label="Skill group name" value={s.category} onChange={(e) => update({ ...s, category: e.target.value })} placeholder="Languages" />
-                <CommaInput aria-label={`${s.category || "Skills"}, comma-separated`} value={s.items} onChange={(items) => update({ ...s, items })} placeholder="TypeScript, Python, SQL" />
+            render={(s, update, ctl) => (
+              <div className="flex items-start gap-1">
+                <div className="grid flex-1 gap-2 sm:grid-cols-[10rem_1fr]">
+                  <Input aria-label="Skill group name" value={s.category} onChange={(e) => update({ ...s, category: e.target.value })} placeholder="Languages" />
+                  <CommaInput aria-label={`${s.category || "Skills"}, comma-separated`} value={s.items} onChange={(items) => update({ ...s, items })} placeholder="TypeScript, Python, SQL" />
+                </div>
+                <RowMenu label="Skill group actions" actions={itemActions(ctl)} />
               </div>
             )}
           />
@@ -299,7 +327,7 @@ export function ProfileEditor({ initial }: { initial: Profile }) {
       <PreviewPane>
         <Eyebrow className="mb-2">Base resume · everything except hidden</Eyebrow>
         {hasData ? (
-          <PdfPreview query="kind=resume" version={version} settings={{ href: settingsHref("layout", "/profile"), label: "Layout" }} />
+          <PdfPreview query="kind=resume" version={version} settings={{ href: settingsHref("layout", "/profile"), label: "Design" }} />
         ) : (
           <PreviewEmpty>Import or fill in your profile, save, and a preview appears here.</PreviewEmpty>
         )}

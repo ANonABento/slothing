@@ -16,7 +16,7 @@ const Imported = z.object({
       email: str,
       phone: str,
       location: str,
-      links: list(z.string()),
+      links: list(z.object({ label: str, url: str })),
     })
     .default({ name: "", email: "", phone: "", location: "", links: [] }),
   summary: str,
@@ -25,6 +25,7 @@ const Imported = z.object({
       z.object({
         company: str,
         title: str,
+        url: str,
         location: str,
         start: str,
         end: str,
@@ -45,10 +46,38 @@ const Imported = z.object({
     )
     .default([]),
   projects: z
-    .array(z.object({ name: str, url: str, bullets: list(z.string()) }))
+    .array(z.object({ name: str, tech: list(z.string()), url: str, bullets: list(z.string()) }))
     .default([]),
   skills: z.array(z.object({ category: str, items: list(z.string()) })).default([]),
 });
+
+type Pdf = Awaited<ReturnType<typeof import("unpdf").getDocumentProxy>>;
+
+/**
+ * Hyperlinks live in annotations, not the text layer, so a role line or "Portfolio" loses its URL in the
+ * extracted text. Pair each link with the words under its rectangle, so the model can put it back on
+ * the right role, project or contact item.
+ */
+async function pdfLinks(pdf: Pdf): Promise<string[]> {
+  const out: string[] = [];
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const annotations = (await page.getAnnotations()) as { url?: string; rect?: number[] }[];
+    if (!annotations.some((a) => a.url)) continue;
+    const items = (await page.getTextContent()).items.flatMap((t) =>
+      "str" in t && t.str.trim() ? [{ str: t.str, x: t.transform[4], y: t.transform[5], w: t.width, h: t.height || Math.abs(t.transform[3]) }] : [],
+    );
+    for (const a of annotations) {
+      if (!a.url || a.url.startsWith("mailto:") || !a.rect) continue;
+      const [x1, y1, x2, y2] = a.rect;
+      // Words whose middle falls inside the link's box.
+      const under = items.filter((t) => t.x + t.w / 2 >= x1 && t.x + t.w / 2 <= x2 && t.y + t.h / 2 >= y1 - 1 && t.y + t.h / 2 <= y2 + 1);
+      const label = under.map((t) => t.str).join(" ").replace(/\s+/g, " ").trim();
+      out.push(`${label || "(icon)"} → ${a.url}`);
+    }
+  }
+  return [...new Set(out)];
+}
 
 export async function extractText(file: File): Promise<string> {
   const buf = Buffer.from(await file.arrayBuffer());
@@ -57,13 +86,8 @@ export async function extractText(file: File): Promise<string> {
     const { extractText, getDocumentProxy } = await import("unpdf");
     const pdf = await getDocumentProxy(new Uint8Array(buf));
     const { text } = await extractText(pdf, { mergePages: true });
-    // Hyperlinks live in annotations, not the text layer ("Portfolio" → its URL), so collect them too.
-    const urls = new Set<string>();
-    for (let i = 1; i <= pdf.numPages; i++) {
-      const annotations = (await (await pdf.getPage(i)).getAnnotations()) as { url?: string }[];
-      for (const a of annotations) if (a.url && !a.url.startsWith("mailto:")) urls.add(a.url);
-    }
-    return urls.size ? `${text}\n\nHyperlinks in the document:\n${[...urls].join("\n")}` : text;
+    const links = await pdfLinks(pdf);
+    return links.length ? `${text}\n\nHyperlinks in the document (the text they sit on → URL):\n${links.join("\n")}` : text;
   }
   if (name.endsWith(".docx")) {
     const mammoth = await import("mammoth");
@@ -77,16 +101,25 @@ const SYSTEM = `You convert resume text into structured JSON. Copy facts exactly
 never invent, embellish, merge, or summarise. Keep every bullet point as its own string,
 verbatim (fix only broken line-wraps). Dates stay in the resume's own format ("Jan 2023",
 "2021", "Present"). If a field is absent, use an empty string.
-contact.links must be URLs (e.g. "github.com/name", "https://name.dev"). When the text only has a
-label like "Portfolio" or "LinkedIn", use the matching URL from the hyperlinks list if one is given.
+
+Links: when a hyperlinks list is given, each line is "text the link sits on → URL". Use it to fill
+contact.links, experience url and project url: a link on a role's line is that role's url, a link on
+a project's line (or its icon right after it) is that project's url.
+contact.links: one per header item, label copied exactly as written. A labelled link is
+{ "label": "<its text>", "url": "https://…" }; a
+bare URL is { "label": "", "url": "github.com/name" }; a header item that is not a link (e.g. a
+citizenship or availability note) is { "label": "the text", "url": "" }. Email, phone and location
+go in their own fields, not in links.
+Projects: a heading like "FlowTO | Python | FastAPI" is name "FlowTO" with tech ["Python", "FastAPI"].
+The name never contains the tools.
 
 JSON shape:
 {
-  "contact": { "name", "email", "phone", "location", "links": [string] },
+  "contact": { "name", "email", "phone", "location", "links": [{ "label", "url" }] },
   "summary": string,
-  "experience": [{ "company", "title", "location", "start", "end", "bullets": [string] }],
+  "experience": [{ "company", "title", "url", "location", "start", "end", "bullets": [string] }],
   "education": [{ "school", "degree", "location", "start", "end", "details" }],
-  "projects": [{ "name", "url", "bullets": [string] }],
+  "projects": [{ "name", "tech": [string], "url", "bullets": [string] }],
   "skills": [{ "category", "items": [string] }]
 }`;
 
@@ -114,7 +147,8 @@ export function reuseIds(prev: Profile, next: Profile): Profile {
     });
   };
   const exp = take(prev.experience, (e) => norm(`${e.company}|${e.title}`));
-  const prj = take(prev.projects, (p) => norm(p.name));
+  // Older imports kept the tools in the name ("FlowTO | Python"), so match on the part before "|".
+  const prj = take(prev.projects, (p) => norm(p.name.split("|")[0]));
   const edu = take(prev.education, (e) => norm(`${e.school}|${e.degree}`));
   const sk = take(prev.skills, (g) => norm(g.category));
   return {
