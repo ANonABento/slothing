@@ -117,10 +117,14 @@ export function greenhouseIds(url: URL): { board: string; id: string } | null {
 }
 
 /**
- * A company's own career site showing a Greenhouse job (`?gh_jid=…`): boards to try, the one the page
- * embeds first, then the site's name ("careers.airbnb.com" → "airbnb"), which is usually the board.
+ * A company's own career site showing a Greenhouse job: boards to try. A link to the same job id on
+ * Greenhouse names the board; with `?gh_jid=…`, the board the page embeds, then the site's name
+ * ("careers.airbnb.com" → "airbnb"), which is usually the board.
  */
 export function embeddedGreenhouse(url: URL, html: string): { boards: string[]; id: string } | null {
+  // A page that links to its own Greenhouse posting (the job id is in both): "mozilla.org/careers/position/gh/7137777".
+  const linked = [...html.matchAll(/greenhouse\.io\/([\w-]+)\/jobs\/(\d{4,})/g)].find((m) => m[1] !== "embed" && url.href.includes(m[2]));
+  if (linked) return { boards: [linked[1]], id: linked[2] };
   const id = url.searchParams.get("gh_jid");
   if (!id || !/^\d+$/.test(id)) return null;
   const embedded = html.match(/greenhouse\.io\/embed\/job_board(?:\/js)?\?for=([\w-]+)/)?.[1];

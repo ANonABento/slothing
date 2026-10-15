@@ -73,6 +73,9 @@ describe("URLs", () => {
     expect(embeddedGreenhouse(url, `<script src="https://boards.greenhouse.io/embed/job_board/js?for=airbnbjobs"></script>`)).toEqual({ boards: ["airbnbjobs", "airbnb"], id: "7839229" });
     expect(embeddedGreenhouse(url, "")).toEqual({ boards: ["airbnb"], id: "7839229" });
     expect(embeddedGreenhouse(new URL("https://acme.com/jobs/1"), "")).toBeNull();
+    const own = `<a href="https://job-boards.greenhouse.io/mozilla/jobs/7137777">Apply</a><a href="https://job-boards.greenhouse.io/mozilla/jobs/8188870">Other</a>`;
+    expect(embeddedGreenhouse(new URL("https://www.mozilla.org/en-US/careers/position/gh/7137777/"), own)).toEqual({ boards: ["mozilla"], id: "7137777" });
+    expect(embeddedGreenhouse(new URL("https://www.mozilla.org/en-US/careers/"), own)).toBeNull();
   });
 
   it("reads LinkedIn job ids from view, slug and search links", () => {
