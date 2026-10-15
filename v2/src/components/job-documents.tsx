@@ -7,7 +7,7 @@ import { useState, useTransition } from "react";
 import { restoreVersionAction } from "@/app/actions";
 import { safe } from "@/lib/safe";
 import { settingsHref } from "@/lib/settings-sections";
-import type { CoverLetter, DocMeta, Profile, StoredDoc, TailoredResume } from "@/lib/types";
+import type { CoverLetter, DocMeta, Job, Profile, StoredDoc, TailoredResume } from "@/lib/types";
 import { LetterEditor } from "./letter-editor";
 import { PdfPreview, PreviewEmpty, PreviewPane } from "./pdf-preview";
 import { useConfirm } from "./confirm";
@@ -25,6 +25,7 @@ export interface VersionItem {
 
 export function JobDocuments({
   jobId,
+  job,
   profile,
   resume,
   letter,
@@ -33,6 +34,8 @@ export function JobDocuments({
   history,
 }: {
   jobId: string;
+  /** What the keyword gap reads. */
+  job: Pick<Job, "title" | "description" | "company">;
   /** Saved versions of each document, newest first. The newest is the current one. */
   history: { resume: VersionItem[]; letter: VersionItem[] };
   /** The page length from Settings, or null for no limit. */
@@ -112,6 +115,7 @@ export function JobDocuments({
             <ResumeEditor
               key={resume?.updatedAt ?? "none"}
               jobId={jobId}
+              job={job}
               profile={profile}
               initial={resume?.data ?? null}
               initialWarnings={resume?.warnings ?? []}

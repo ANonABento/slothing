@@ -7,12 +7,13 @@ import Link from "next/link";
 import { useState, useTransition } from "react";
 
 import { saveResumeAction, tailorResumeAction } from "@/app/actions";
-import type { Profile, TailoredResume, Warning } from "@/lib/types";
+import type { Job, Profile, TailoredResume, Warning } from "@/lib/types";
 import { CommaInput } from "./comma-input";
 import { ListEditor, itemActions } from "./list-editor";
 import { useConfirm } from "./confirm";
 import { Dropdown } from "./dropdown";
 import { EntryCard, count, dates, joinParts } from "./entry-card";
+import { KeywordGap } from "./keyword-gap";
 import { RowMenu } from "./row-menu";
 import { SaveBar } from "./save-bar";
 import { Button, Input, Label, Textarea, Warnings, buttonClass } from "./ui";
@@ -134,11 +135,13 @@ function EntryList({
 
 export function ResumeEditor({
   jobId,
+  job,
   profile,
   initial,
   initialWarnings,
 }: {
   jobId: string;
+  job: Pick<Job, "title" | "description" | "company">;
   profile: Profile;
   initial: TailoredResume | null;
   initialWarnings: Warning[];
@@ -215,6 +218,7 @@ export function ResumeEditor({
       {actions}
       {error && <p className="text-sm text-warn">{error}</p>}
       <Warnings items={warnings} />
+      <KeywordGap job={job} profile={profile} doc={doc} onChange={setDoc} />
 
       <div>
         <Label>Summary</Label>
