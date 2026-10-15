@@ -10,6 +10,7 @@ import {
   linkedInJobId,
   parseLinkedInFragment,
   parsePostingUrl,
+  readJob,
 } from "../job-import";
 import { generateJSON } from "../llm";
 
@@ -163,5 +164,42 @@ describe("importJobFromUrl", () => {
     fetchMock.mockResolvedValueOnce(page(`<body><p>${long}</p></body>`));
     llm.mockResolvedValueOnce({ company: "", title: "", location: "", description: "", isJobPosting: false });
     await expect(importJobFromUrl("https://acme.com/careers")).rejects.toThrow(/single job posting/);
+  });
+});
+
+describe("readJob", () => {
+  const fetchMock = vi.fn();
+  beforeEach(() => {
+    vi.stubGlobal("fetch", fetchMock);
+    llm.mockReset();
+  });
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    fetchMock.mockReset();
+  });
+  const blank = { url: "", description: "", company: "", title: "" };
+
+  it("uses a pasted description as is, without fetching the link, and fills blanks by AI", async () => {
+    llm.mockResolvedValueOnce({ company: "Bistro", title: "Line Cook", location: "Austin, TX" });
+    const job = await readJob({ ...blank, url: "https://bistro.example.com/jobs/1", description: "  Cook things.  ", title: "Sous Chef" });
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(job).toEqual({ company: "Bistro", title: "Sous Chef", location: "Austin, TX", description: "Cook things.", url: "https://bistro.example.com/jobs/1" });
+  });
+
+  it("skips AI when company and title are typed, and keeps going when AI fails", async () => {
+    expect(await readJob({ ...blank, description: "x", company: "A", title: "B" })).toMatchObject({ company: "A", title: "B" });
+    expect(llm).not.toHaveBeenCalled();
+    llm.mockRejectedValueOnce(new Error("no key"));
+    expect(await readJob({ ...blank, description: "x" })).toMatchObject({ company: "", title: "", description: "x" });
+  });
+
+  it("reads a link alone, with typed fields winning", async () => {
+    fetchMock.mockResolvedValueOnce(new Response(ld({ ...posting, description: `<p>${long}</p>` }), { headers: { "content-type": "text/html" } }));
+    const job = await readJob({ ...blank, url: "jobs.ashbyhq.com/ramp/abc", company: "Ramp Inc." });
+    expect(job).toMatchObject({ company: "Ramp Inc.", title: "Credit Risk Associate", url: "https://jobs.ashbyhq.com/ramp/abc" });
+  });
+
+  it("needs a link or a description", async () => {
+    await expect(readJob({ ...blank, company: "A" })).rejects.toThrow(/link or its description/);
   });
 });

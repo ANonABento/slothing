@@ -45,7 +45,7 @@ bullet, import a job from its URL (see `OVERNIGHT-REPORT.md`). The extension is 
 
 - **Extension: job capture.** One click on a posting sends it to v2 on localhost. Ports v1's
   LinkedIn / Greenhouse / Lever / generic JSON-LD scrapers. No autofill.
-- **Import a job from its URL.** A paste-a-link box on the Jobs page, using the same JSON-LD parser.
+- **Import a job from its URL.** A link field in "Add job" (one form for a link, a pasted description or both), using the same JSON-LD parser.
   It may make the extension unnecessary.
 - **Keyword gap.** On the job page, above the resume editor: chips for the job's key terms.
   A term in your profile but not on this resume is clickable and shows the profile bullets that

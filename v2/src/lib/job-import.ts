@@ -2,8 +2,9 @@ import { z } from "zod";
 
 import { generateJSON } from "./llm";
 
-/* ─── Import a job from its URL ───
- * Fetched server-side. Greenhouse has a public API (its pages carry no structured data); every other
+/* ─── Reading a new job ───
+ * "Add job" takes a posting's link, its pasted description, or both; readJob is the one path for all
+ * three. A pasted description is used as given. A link alone is fetched server-side. Greenhouse has a public API (its pages carry no structured data); every other
  * page is read for a schema.org JobPosting (Lever, Ashby, LinkedIn's public pages and most career
  * sites have one). LinkedIn uses its guest endpoint, since its pages only sometimes have one. Without
  * structured data, AI reads the page text. Ported from v1's extension scrapers (generic JSON-LD parsing,
@@ -178,7 +179,7 @@ async function fromLinkedIn(id: string): Promise<ImportedJob> {
   if (res.status === 404 || res.status === 410) throw new Error("LinkedIn says this posting doesn't exist. It may have closed.");
   if (!res.ok) throw new Error(`LinkedIn answered ${res.status} (it limits automated reads). Try again in a minute, or paste the description.`);
   const job = parseLinkedInFragment(await res.text());
-  if (!job.title || job.description.length < 100) throw new Error("LinkedIn didn't return the posting. Open it, copy the description and use \"Add job\".");
+  if (!job.title || job.description.length < 100) throw new Error("LinkedIn didn't return the posting. Open it and paste the description instead.");
   return job;
 }
 
@@ -232,7 +233,7 @@ const MIN_TEXT = 400;
 async function fromPageText(html: string, host: string): Promise<ImportedJob> {
   const text = htmlToText(html.match(/<body[\s\S]*<\/body>/i)?.[0] ?? html);
   if (text.length < MIN_TEXT) {
-    throw new Error(`There's almost no text on that page, so no posting to read (${host} may load it with JavaScript). Paste the description with "Add job" instead.`);
+    throw new Error(`There's almost no text on that page, so no posting to read (${host} may load it with JavaScript). Paste the description instead.`);
   }
   const job = await generateJSON(
     AiJob,
@@ -272,9 +273,9 @@ export async function importJobFromUrl(raw: string): Promise<ImportedJob & { url
   const res = await get(url.href);
   if (linkedInError && !res.ok) throw linkedInError;
   if (res.status === 404 || res.status === 410) throw new Error("The site says this posting doesn't exist. It may have closed.");
-  if (!res.ok) throw new Error(`${url.hostname} answered ${res.status}, so the posting couldn't be read. Paste the description with "Add job" instead.`);
+  if (!res.ok) throw new Error(`${url.hostname} answered ${res.status}, so the posting couldn't be read. Paste the description instead.`);
   const type = res.headers.get("content-type") ?? "";
-  if (type && !/html|xml|text\/plain/i.test(type)) throw new Error('That link isn\'t a web page (it may be a PDF). Paste the description with "Add job" instead.');
+  if (type && !/html|xml|text\/plain/i.test(type)) throw new Error('That link isn\'t a web page (it may be a PDF). Paste the description instead.');
   if (Number(res.headers.get("content-length") ?? 0) > MAX_BYTES) throw new Error("That page is too large to read.");
   const html = (await res.text()).slice(0, MAX_BYTES);
 
@@ -292,4 +293,43 @@ export async function importJobFromUrl(raw: string): Promise<ImportedJob & { url
   // LinkedIn's page text is mostly sign-in prompts; better to say why than have AI guess.
   if (linkedInError) throw linkedInError;
   return done(await fromPageText(html, url.hostname));
+}
+
+const JobMeta = z.object({ company: z.string().default(""), title: z.string().default(""), location: z.string().default("") });
+
+/** Company, title and location from a pasted description, by AI. Blank when there's no LLM or it fails. */
+async function metaFromDescription(description: string): Promise<Omit<ImportedJob, "description">> {
+  try {
+    const meta = await generateJSON(
+      JobMeta,
+      'Extract the hiring company, job title, and location from this job posting. JSON: { "company", "title", "location" }. Empty string if unknown.',
+      description.slice(0, 8000),
+    );
+    return { company: meta.company.trim(), title: meta.title.trim(), location: meta.location.trim() };
+  } catch {
+    return { company: "", title: "", location: "" };
+  }
+}
+
+export interface JobInput {
+  url: string;
+  description: string;
+  company: string;
+  title: string;
+}
+
+/**
+ * The Add job form: a pasted description wins (nothing is fetched), otherwise the link is read. Company
+ * and title the user typed win over what was read; AI fills only what's still blank.
+ */
+export async function readJob(input: JobInput): Promise<ImportedJob & { url: string }> {
+  const description = input.description.trim();
+  const typed = { company: input.company.trim(), title: input.title.trim() };
+  if (!description && !input.url.trim()) throw new Error("Paste the posting's link or its description.");
+  if (!description) {
+    const job = await importJobFromUrl(input.url);
+    return { ...job, company: typed.company || job.company, title: typed.title || job.title };
+  }
+  const meta = typed.company && typed.title ? { company: "", title: "", location: "" } : await metaFromDescription(description);
+  return { company: typed.company || meta.company, title: typed.title || meta.title, location: meta.location, description, url: input.url.trim() };
 }

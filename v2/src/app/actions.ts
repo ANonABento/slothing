@@ -5,8 +5,8 @@ import { redirect } from "next/navigation";
 
 import * as db from "@/lib/db";
 import { extractText, parseResumeText, reuseIds } from "@/lib/import";
-import { importJobFromUrl } from "@/lib/job-import";
-import { generateJSON, llmInfo, testLlm } from "@/lib/llm";
+import { readJob } from "@/lib/job-import";
+import { llmInfo, testLlm } from "@/lib/llm";
 import { profileAsTailored } from "@/lib/resolve";
 import { fitResume } from "@/lib/fit";
 import { groundResume, letterWarnings, rewordBullet, tailorResume, writeCoverLetter, type Rewording } from "@/lib/tailor";
@@ -81,37 +81,12 @@ export async function testLlmAction(ai: AiSettings): Promise<Result<{ provider: 
 
 /* ─── Jobs ─── */
 
-const JobMeta = z.object({ company: z.string().default(""), title: z.string().default(""), location: z.string().default("") });
-
-export async function createJobAction(form: FormData) {
-  const description = String(form.get("description") ?? "").trim();
-  let company = String(form.get("company") ?? "").trim();
-  let title = String(form.get("title") ?? "").trim();
-  let location = "";
-  // Fill in whatever the user left blank from the description, if an LLM is available.
-  if (description && (!company || !title)) {
-    try {
-      const meta = await generateJSON(
-        JobMeta,
-        'Extract the hiring company, job title, and location from this job posting. JSON: { "company", "title", "location" }. Empty string if unknown.',
-        description.slice(0, 8000),
-      );
-      company ||= meta.company;
-      title ||= meta.title;
-      location = meta.location;
-    } catch {
-      // No LLM or it failed — the user can edit the fields later.
-    }
-  }
-  const id = db.createJob({ company, title, location, url: String(form.get("url") ?? "").trim(), description });
-  redirect(`/jobs/${id}`);
-}
-
-/** The Jobs page's paste-a-link box: read the posting, save it as a job, open it. */
-export async function importJobAction(_prev: Result | null, form: FormData): Promise<Result> {
+/** The Add job form: a link, a pasted description or both. Opens the new job. */
+export async function addJobAction(_prev: Result | null, form: FormData): Promise<Result> {
+  const field = (k: string) => String(form.get(k) ?? "");
   let id: string;
   try {
-    id = db.createJob(await importJobFromUrl(String(form.get("url") ?? "")));
+    id = db.createJob(await readJob({ url: field("url"), description: field("description"), company: field("company"), title: field("title") }));
   } catch (e) {
     return fail(e);
   }

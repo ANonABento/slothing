@@ -2,7 +2,6 @@ import { Briefcase, ChevronRight } from "lucide-react";
 import Link from "next/link";
 
 import { AddJob } from "@/components/add-job";
-import { ImportJob } from "@/components/import-job";
 import { PageBody, PageHeader } from "@/components/page-header";
 import { Card, EmptyState, Eyebrow, SegmentedLinks, StatusPill, cx } from "@/components/ui";
 import { getProfile, listJobs } from "@/lib/db";
@@ -45,7 +44,6 @@ export default async function JobsPage({ searchParams }: { searchParams: Promise
       <PageBody>
         <div className="space-y-4">
           {(profileEmpty || !llmConfigured()) && <SetupCard profileEmpty={profileEmpty} llm={llmConfigured()} />}
-          <ImportJob />
 
           <div className="flex flex-wrap items-center justify-between gap-3">
             <SegmentedLinks value={view} options={VIEWS.map((v) => ({ ...v, href: v.value === "active" ? "/" : `/?view=${v.value}` }))} />
@@ -54,7 +52,7 @@ export default async function JobsPage({ searchParams }: { searchParams: Promise
 
           {shown.length === 0 ? (
             <EmptyState icon={Briefcase} title={jobs.length ? "Nothing here" : "No jobs yet"}>
-              {jobs.length ? "No jobs match this view." : "Paste a posting's link above, or use “Add job” to paste its description."}
+              {jobs.length ? "No jobs match this view." : "Use “Add job” to paste a posting's link or its description."}
             </EmptyState>
           ) : (
             <div className="space-y-2">
