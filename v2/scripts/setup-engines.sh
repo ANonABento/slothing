@@ -8,6 +8,7 @@ case "$OS-$ARCH" in
   Darwin-arm64)  TYPST=typst-aarch64-apple-darwin.tar.xz ;;
   Darwin-x86_64) TYPST=typst-x86_64-apple-darwin.tar.xz ;;
   Linux-x86_64)  TYPST=typst-x86_64-unknown-linux-musl.tar.xz ;;
+  Linux-aarch64|Linux-arm64) TYPST=typst-aarch64-unknown-linux-musl.tar.xz ;;
   *) echo "unsupported platform $OS-$ARCH"; exit 1 ;;
 esac
 tmp=$(mktemp -d)

@@ -1,0 +1,13 @@
+# Your data lives in ./data next to this file (the same folder `npm run dev` uses), so you can
+# switch between Docker and a local checkout. Keys: put them in .env.local (see .env.example).
+services:
+  slothing:
+    build: .
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./data:/data
+    env_file:
+      - path: .env.local
+        required: false
+    restart: unless-stopped

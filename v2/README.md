@@ -26,6 +26,18 @@ npm run v1                 # optional: the archived v1 app on http://localhost:3
 
 Data lives in `v2/data/slothing.db` (override with `SLOTHING_DATA_DIR`).
 
+### With Docker
+
+```bash
+cd v2
+cp .env.example .env.local   # your own AI key(s)
+docker compose up --build    # http://localhost:3000
+```
+
+Typst and the fonts are baked into the image. Your data is `v2/data/` on the host (mounted at `/data`),
+the same folder `npm run dev` uses. The container runs as uid 1000; on Linux, make sure that user can
+write `v2/data/`.
+
 ## Grounding
 
 A tailored resume never restates company, title, dates, or school. It references profile
