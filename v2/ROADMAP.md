@@ -40,6 +40,9 @@ Iteration 1 ends when step 6 is done. Nothing from the lists below starts before
 
 ## Iteration 2: capture and polish (candidates, gated by the friction log)
 
+Built overnight on 2026-10-15 ahead of the friction log, at Kevin's request: keyword gap, reword this
+bullet, import a job from its URL (see `OVERNIGHT-REPORT.md`). The extension is not started.
+
 - **Extension: job capture.** One click on a posting sends it to v2 on localhost. Ports v1's
   LinkedIn / Greenhouse / Lever / generic JSON-LD scrapers. No autofill.
 - **Import a job from its URL.** A paste-a-link box on the Jobs page, using the same JSON-LD parser.
@@ -59,7 +62,7 @@ The data is already one SQLite file (`SLOTHING_DATA_DIR`) and the keys are alrea
 so this is mostly packaging. In order, each step only if the one before falls short:
 
 1. **Docker image.** One `docker run` with a volume for the data folder and Typst baked in. Keys
-   come from env vars, as now.
+   come from env vars, as now. *Written (`Dockerfile`, `docker-compose.yml`), not yet built in Docker.*
 2. **Keys in Settings.** Entered in the app and stored locally, so a user never edits `.env.local`.
    Env vars still win when set.
 3. **Backup and restore.** Download the database file from Settings and load it back.

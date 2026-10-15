@@ -18,6 +18,7 @@ Iteration 2 of `ROADMAP.md`, worked in the order from the handoff. This file is 
 | Keyword gap | `69497b89`, `781f0a5f` | Open a job with a resume. The chips above the editor are the posting's key terms: ✓ on the resume, orange "+" in your profile (click to see the bullets/skills that have it, then Add), grey dashed = not in your profile. Untick a role to watch chips turn orange live. |
 | Reword this bullet | `4f528b21` | On a job's resume, open a role, click a bullet's ⋯ → "Reword with AI". Pick a quick hint or type one (Enter runs it). "Use" swaps the text in the draft; Save re-grounds it. "Reworded · show original" lets you revert. |
 | Import a job from its URL | `687b4000`, `5cc554dd`, `d331b6fa` | Jobs page → paste a posting link → Import (or Enter). Opens the new job. Try `https://job-boards.greenhouse.io/gitlab/jobs/8864819002`, a `jobs.lever.co/…`, `jobs.ashbyhq.com/…` or `linkedin.com/jobs/view/…` link. Unreadable pages say why and suggest "Add job". |
+| Docker (self-hosting step 1) | `3ba186f3` | `cd v2 && docker compose up --build` → :3000, data in `v2/data`, keys from `.env.local`. **Unverified: Docker isn't installed here.** I verified `next build` + `next start` (in a separate build folder) serve pages and render a Typst PDF. |
 
 ## Bugs fixed along the way
 
@@ -51,6 +52,11 @@ Rows are in `FRICTION.md` under "Agent dogfooding (overnight)".
   checked outside bullets, so this passes grounding. Not fixed: it needs a decision (see Ideas).
 
 ## Unfinished / unverified / unsure
+
+- **Docker image never built** (no Docker on this machine). Likely snags if any: better-sqlite3 compiling
+  (build tools are in the build stage), font downloads from GitHub during build, and bind-mount
+  permissions on Linux (container runs as uid 1000). `next.config.ts` became `next.config.mjs` because
+  `next start` would otherwise try to npm-install TypeScript at runtime.
 
 - URL import: Greenhouse, Lever, Ashby and LinkedIn are verified against live postings (and unit-tested
   with fixtures). LinkedIn rate-limits quickly (I hit a 429 after ~10 requests), then the import falls back
