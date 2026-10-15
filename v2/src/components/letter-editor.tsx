@@ -69,9 +69,8 @@ export function LetterEditor({
     // Locked while saving/generating: the editor remounts with server data afterwards, so typing now would be lost.
     <fieldset disabled={pending} className="min-w-0 space-y-4">
       {dialog}
-      <div className="flex flex-wrap items-center justify-between gap-2">
+      <div>
         <Button variant="secondary" disabled={pending} onClick={generate}><Sparkles className="h-4 w-4" />{pending ? "Writing…" : "Rewrite with AI"}</Button>
-
       </div>
       {error && <p className="text-sm text-warn">{error}</p>}
       {!dirty && <Warnings items={initialWarnings} />}
@@ -87,7 +86,7 @@ export function LetterEditor({
           addLabel="Paragraph"
           onAdd={() => ""}
           itemLabel="paragraph"
-          render={(p, update) => <Textarea rows={5} aria-label="Paragraph" className="min-h-[7rem]" value={p} onChange={(e) => update(e.target.value)} />}
+          render={(p, update) => <Textarea rows={5} aria-label="Paragraph" value={p} onChange={(e) => update(e.target.value)} />}
         />
       </div>
       <div>

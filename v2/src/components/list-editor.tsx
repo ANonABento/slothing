@@ -4,22 +4,7 @@ import { ArrowDown, ArrowUp, Plus, X } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { useConfirm } from "./confirm";
-import { Button } from "./ui";
-
-function IconButton({ label, onClick, disabled, children, danger }: { label: string; onClick: () => void; disabled?: boolean; children: ReactNode; danger?: boolean }) {
-  return (
-    <button
-      type="button"
-      aria-label={label}
-      title={label}
-      onClick={onClick}
-      disabled={disabled}
-      className={`grid h-8 w-8 place-items-center rounded-md text-ink-3 transition-colors hover:bg-rule-bg disabled:pointer-events-none disabled:opacity-25 ${danger ? "hover:text-warn" : "hover:text-ink"}`}
-    >
-      {children}
-    </button>
-  );
-}
+import { Button, IconButton } from "./ui";
 
 /** Ordered list with move/remove controls. Pass `getKey` when items have stable ids so focus survives reordering. */
 export function ListEditor<T>({
@@ -62,9 +47,9 @@ export function ListEditor<T>({
         <div key={getKey ? getKey(item, i) : i} className="group flex gap-1.5">
           <div className="min-w-0 flex-1">{render(item, (n) => onChange(items.map((x, k) => (k === i ? n : x))), i)}</div>
           <div className="flex shrink-0 flex-col opacity-60 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100">
-            <IconButton label={`Move ${itemLabel} up`} onClick={() => move(i, -1)} disabled={i === 0}><ArrowUp className="h-3.5 w-3.5" /></IconButton>
-            <IconButton label={`Move ${itemLabel} down`} onClick={() => move(i, 1)} disabled={i === items.length - 1}><ArrowDown className="h-3.5 w-3.5" /></IconButton>
-            <IconButton label={`Remove ${itemLabel}`} danger onClick={() => remove(i)}><X className="h-3.5 w-3.5" /></IconButton>
+            <IconButton size="sm" label={`Move ${itemLabel} up`} onClick={() => move(i, -1)} disabled={i === 0}><ArrowUp className="h-3.5 w-3.5" /></IconButton>
+            <IconButton size="sm" label={`Move ${itemLabel} down`} onClick={() => move(i, 1)} disabled={i === items.length - 1}><ArrowDown className="h-3.5 w-3.5" /></IconButton>
+            <IconButton size="sm" label={`Remove ${itemLabel}`} danger onClick={() => remove(i)}><X className="h-3.5 w-3.5" /></IconButton>
           </div>
         </div>
       ))}

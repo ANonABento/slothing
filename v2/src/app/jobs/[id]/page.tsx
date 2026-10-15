@@ -1,5 +1,4 @@
-import { ArrowLeft, ExternalLink, FileText } from "lucide-react";
-import Link from "next/link";
+import { ExternalLink, FileText } from "lucide-react";
 import { notFound } from "next/navigation";
 
 import { JobDocuments } from "@/components/job-documents";
@@ -18,14 +17,10 @@ export default async function JobPage({ params }: { params: Promise<{ id: string
     <>
       <PageHeader
         icon={FileText}
-        eyebrow={
-          <Link href="/" className="inline-flex items-center gap-1 hover:text-ink">
-            <ArrowLeft className="h-3 w-3" /> Jobs
-          </Link>
-        }
+        back={{ href: "/", label: "Jobs" }}
         title={job.title || "Untitled role"}
         description={
-          <span className="inline-flex flex-wrap items-center gap-x-2">
+          <span className="inline-flex items-center gap-x-2">
             {job.company || "Unknown company"}
             {job.location && <span className="text-ink-3">· {job.location}</span>}
             {job.url && (

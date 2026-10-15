@@ -26,6 +26,14 @@
   --ok: #3f6b2a;
   --ok-soft: #dfe9cf;
   color-scheme: light;
+
+  /* Shape + layout tokens (theme-independent). Change these, never per-component values. */
+  --radius-card: 6px; /* cards, panels, dialogs, menus */
+  --radius-control: 4px; /* buttons, inputs, dropdown triggers, segments */
+  --radius-chip: 2px; /* pills, small tiles, menu items */
+  --bar-h: 4.5rem; /* sidebar brand row + page header band share one height so their rules line up */
+  --scrim: color-mix(in srgb, var(--ink) 35%, transparent); /* behind modals */
+  --veil: color-mix(in srgb, var(--paper) 80%, transparent); /* over content that is loading */
 }
 
 :root[data-theme="dark"] {

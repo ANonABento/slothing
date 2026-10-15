@@ -9,8 +9,9 @@ import type { Profile, TailoredResume, Warning } from "@/lib/types";
 import { CommaInput } from "./comma-input";
 import { ListEditor } from "./list-editor";
 import { useConfirm } from "./confirm";
+import { Dropdown } from "./dropdown";
 import { SaveBar } from "./save-bar";
-import { Button, Input, Label, Select, Textarea, Warnings } from "./ui";
+import { Button, Inset, Input, Label, Textarea, Warnings } from "./ui";
 
 type Entry = TailoredResume["experience"][number];
 
@@ -27,7 +28,7 @@ function TailoredBulletField({ text, original, onChange }: { text: string; origi
             <History className="h-3 w-3" /> {show ? "Hide original" : "Reworded · show original"}
           </button>
           {show && (
-            <div className="mt-1.5 rounded-md border border-rule bg-paper px-3 py-2 text-ink-2">
+            <div className="mt-1.5 rounded-control border border-rule bg-paper px-3 py-2 text-ink-2">
               {original}
               <button type="button" onClick={() => onChange(original)} className="ml-2 font-medium text-brand hover:underline">
                 Revert
@@ -58,19 +59,16 @@ function EntryBullets({ entry, sources, onChange }: { entry: Entry; sources: { i
         }}
       />
       {unused.length > 0 && (
-        <Select
-          value=""
-          className="w-full text-xs"
-          onChange={(e) => {
-            const s = sources.find((x) => x.id === e.target.value);
+        <Dropdown
+          label="Add a bullet from your profile"
+          value={null}
+          placeholder="+ Add a bullet from your profile…"
+          options={unused.map((s) => ({ value: s.id, label: s.text, text: s.text }))}
+          onChange={(id) => {
+            const s = sources.find((x) => x.id === id);
             if (s) onChange({ ...entry, bullets: [...entry.bullets, { text: s.text, sourceIds: [s.id] }] });
           }}
-        >
-          <option value="">+ Add a bullet from your profile…</option>
-          {unused.map((s) => (
-            <option key={s.id} value={s.id}>{s.text.slice(0, 110)}</option>
-          ))}
-        </Select>
+        />
       )}
     </div>
   );
@@ -101,7 +99,7 @@ function EntryList({
         {sources.map((s) => {
           const entry = byId.get(s.id);
           return (
-            <div key={s.id} className="rounded-lg border border-rule bg-page p-4">
+            <Inset key={s.id}>
               <label className="flex cursor-pointer items-center gap-2 text-sm font-medium">
                 <input type="checkbox" checked={Boolean(entry)} onChange={(e) => toggle(s.id, e.target.checked)} className="accent-[var(--brand)]" />
                 {s.heading}
@@ -111,7 +109,7 @@ function EntryList({
                   <EntryBullets entry={entry} sources={s.bullets} onChange={(n) => onChange(entries.map((x) => (x.sourceId === s.id ? n : x)))} />
                 </div>
               )}
-            </div>
+            </Inset>
           );
         })}
       </div>
@@ -194,10 +192,7 @@ export function ResumeEditor({
     // Locked while saving/generating: the editor remounts with server data afterwards, so typing now would be lost.
     <fieldset disabled={pending} className="min-w-0 space-y-4">
       {dialog}
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        {actions}
-
-      </div>
+      {actions}
       {error && <p className="text-sm text-warn">{error}</p>}
       <Warnings items={warnings} />
 

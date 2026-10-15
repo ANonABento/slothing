@@ -8,10 +8,10 @@ import { importResumeAction, saveProfileAction } from "@/app/actions";
 import type { Bullet, Profile } from "@/lib/types";
 import { ListEditor } from "./list-editor";
 import { PageBody, PageHeader } from "./page-header";
-import { PdfPreview } from "./pdf-preview";
+import { PdfPreview, PreviewEmpty, PreviewPane } from "./pdf-preview";
 import { SaveBar } from "./save-bar";
 import { CommaInput } from "./comma-input";
-import { Button, Card, CardTitle, Eyebrow, Field as FieldShell, Input, Textarea } from "./ui";
+import { Button, Card, CardTitle, Eyebrow, Field as FieldShell, Inset, Input, Textarea } from "./ui";
 
 // getRandomValues works on plain-http LAN addresses too, unlike randomUUID.
 const cid = (p: string) => `${p}_${Array.from(crypto.getRandomValues(new Uint8Array(6)), (b) => b.toString(16).padStart(2, "0")).join("")}`;
@@ -91,7 +91,7 @@ function ImportPanel({ hasData, onImported }: { hasData: boolean; onImported: (p
         }}
         className="space-y-3"
       >
-        <input type="file" name="file" aria-label="Resume file" accept=".pdf,.docx,.txt,.md" className="block text-sm text-ink-2 file:mr-3 file:h-9 file:rounded-lg file:border file:border-ink file:bg-transparent file:px-3 file:text-sm file:font-medium file:text-ink" />
+        <input type="file" name="file" aria-label="Resume file" accept=".pdf,.docx,.txt,.md" className="block text-sm text-ink-2 file:mr-3 file:h-9 file:rounded-control file:border file:border-ink file:bg-transparent file:px-3 file:text-sm file:font-medium file:text-ink" />
         <Textarea name="text" rows={4} value={text} onChange={(e) => setText(e.target.value)} aria-label="Resume text" placeholder="…or paste resume text here" />
         {error && <p className="text-sm text-warn">{error}</p>}
         <div className="flex gap-2">
@@ -177,7 +177,7 @@ export function ProfileEditor({ initial }: { initial: Profile }) {
             getKey={(x) => x.id}
             onAdd={() => ({ id: cid("exp"), company: "", title: "", location: "", start: "", end: "", bullets: [] })}
             render={(e, update) => (
-              <div className="space-y-3 rounded-lg border border-rule bg-page p-4">
+              <Inset className="space-y-3">
                 <div className="grid gap-2 sm:grid-cols-2">
                   <Field label="Title" value={e.title} onChange={(v) => update({ ...e, title: v })} />
                   <Field label="Company" value={e.company} onChange={(v) => update({ ...e, company: v })} />
@@ -187,7 +187,7 @@ export function ProfileEditor({ initial }: { initial: Profile }) {
                 </div>
                 <div className="pt-1 text-xs font-semibold text-ink-2">Bullets</div>
                 <Bullets bullets={e.bullets} onChange={(b) => update({ ...e, bullets: b })} />
-              </div>
+              </Inset>
             )}
           />
         </Section>
@@ -202,14 +202,14 @@ export function ProfileEditor({ initial }: { initial: Profile }) {
             getKey={(x) => x.id}
             onAdd={() => ({ id: cid("prj"), name: "", url: "", bullets: [] })}
             render={(pr, update) => (
-              <div className="space-y-3 rounded-lg border border-rule bg-page p-4">
+              <Inset className="space-y-3">
                 <div className="grid gap-2 sm:grid-cols-2">
                   <Field label="Name" value={pr.name} onChange={(v) => update({ ...pr, name: v })} />
                   <Field label="URL" value={pr.url} onChange={(v) => update({ ...pr, url: v })} />
                 </div>
                 <div className="pt-1 text-xs font-semibold text-ink-2">Bullets</div>
                 <Bullets bullets={pr.bullets} onChange={(b) => update({ ...pr, bullets: b })} />
-              </div>
+              </Inset>
             )}
           />
         </Section>
@@ -224,14 +224,14 @@ export function ProfileEditor({ initial }: { initial: Profile }) {
             getKey={(x) => x.id}
             onAdd={() => ({ id: cid("edu"), school: "", degree: "", location: "", start: "", end: "", details: "" })}
             render={(e, update) => (
-              <div className="grid gap-3 rounded-lg border border-rule p-4 sm:grid-cols-2">
+              <Inset className="grid gap-3 sm:grid-cols-2">
                 <Field label="School" value={e.school} onChange={(v) => update({ ...e, school: v })} />
                 <Field label="Degree" value={e.degree} onChange={(v) => update({ ...e, degree: v })} />
                 <Field label="Start" value={e.start} onChange={(v) => update({ ...e, start: v })} />
                 <Field label="End" value={e.end} onChange={(v) => update({ ...e, end: v })} />
                 <Field label="Location" value={e.location} onChange={(v) => update({ ...e, location: v })} />
                 <Field label="Details" value={e.details} onChange={(v) => update({ ...e, details: v })} placeholder="GPA, honours, coursework" />
-              </div>
+              </Inset>
             )}
           />
         </Section>
@@ -255,14 +255,14 @@ export function ProfileEditor({ initial }: { initial: Profile }) {
         <SaveBar dirty={dirty} pending={pending} onSave={save} onDiscard={() => setP(saved)} label="Save profile" />
       </div>
 
-      <div className="flex flex-col xl:sticky xl:top-6 xl:h-[calc(100vh-3rem)]">
+      <PreviewPane>
         <Eyebrow className="mb-2">Base resume · everything, untailored</Eyebrow>
         {hasData ? (
-          <div className="min-h-0 flex-1"><PdfPreview query="kind=resume" version={version} /></div>
+          <PdfPreview query="kind=resume" version={version} />
         ) : (
-          <Card className="grid min-h-[50vh] place-items-center p-6 text-center text-sm text-ink-3">Import or fill in your profile, save, and a preview appears here.</Card>
+          <PreviewEmpty>Import or fill in your profile, save, and a preview appears here.</PreviewEmpty>
         )}
-      </div>
+      </PreviewPane>
     </div>
       </PageBody>
     </>

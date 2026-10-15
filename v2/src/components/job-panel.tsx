@@ -7,39 +7,35 @@ import { useState, useTransition } from "react";
 import { deleteJobAction, updateJobAction } from "@/app/actions";
 import { JOB_STATUSES, type Job, type JobStatus } from "@/lib/types";
 import { useConfirm } from "./confirm";
+import { Dropdown } from "./dropdown";
 import { useUnsavedGuard } from "./save-bar";
-import { Button, Card, CardTitle, Field, Input, Select, Textarea, cx } from "./ui";
+import { Button, Card, CardTitle, Eyebrow, Field, Input, Textarea, cx } from "./ui";
+
+const STATUS_OPTIONS = JOB_STATUSES.map((s) => ({ value: s, label: s[0].toUpperCase() + s.slice(1) }));
 
 export function StatusSelect({ job }: { job: Job }) {
   const [status, setStatus] = useState(job.status);
   const [error, setError] = useState("");
   const [pending, start] = useTransition();
+  const change = (next: JobStatus) => {
+    if (next === status) return;
+    const prev = status;
+    setStatus(next);
+    setError("");
+    start(async () => {
+      const res = await safe(() => updateJobAction(job.id, { status: next }));
+      if (!res.ok) {
+        setStatus(prev);
+        setError(res.error);
+      }
+    });
+  };
   return (
-    <label className="flex flex-wrap items-center gap-2">
-      <span className="font-mono text-[11px] uppercase tracking-[0.16em] text-ink-3">Status</span>
-      <Select
-        value={status}
-        disabled={pending}
-        onChange={(e) => {
-          const next = e.target.value as JobStatus;
-          const prev = status;
-          setStatus(next);
-          setError("");
-          start(async () => {
-            const res = await safe(() => updateJobAction(job.id, { status: next }));
-            if (!res.ok) {
-              setStatus(prev);
-              setError(res.error);
-            }
-          });
-        }}
-      >
-        {JOB_STATUSES.map((s) => (
-          <option key={s} value={s}>{s[0].toUpperCase() + s.slice(1)}</option>
-        ))}
-      </Select>
-      {error && <span className="w-full text-xs text-warn">{error}</span>}
-    </label>
+    <div className="flex items-center gap-2">
+      <Eyebrow>Status</Eyebrow>
+      <Dropdown label="Job status" value={status} onChange={change} options={STATUS_OPTIONS} disabled={pending} align="end" className="w-40" />
+      {error && <span className="text-xs text-warn">{error}</span>}
+    </div>
   );
 }
 
@@ -91,8 +87,8 @@ export function JobPanel({ job }: { job: Job }) {
             <Field label="Posting URL"><Input value={f.url} onChange={set("url")} placeholder="https://" /></Field>
           </div>
           <div className="grid gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
-            <Field label="Job description"><Textarea rows={12} className="min-h-[16rem] max-h-[32rem]" value={f.description} onChange={set("description")} placeholder="Paste the full job description" /></Field>
-            <Field label="Notes"><Textarea rows={12} className="min-h-[16rem] max-h-[32rem]" value={f.notes} onChange={set("notes")} placeholder="Referral, recruiter name, follow-up date…" /></Field>
+            <Field label="Job description"><Textarea rows={12} className="max-h-[32rem]" value={f.description} onChange={set("description")} placeholder="Paste the full job description" /></Field>
+            <Field label="Notes"><Textarea rows={12} className="max-h-[32rem]" value={f.notes} onChange={set("notes")} placeholder="Referral, recruiter name, follow-up date…" /></Field>
           </div>
           <div className="flex items-center gap-3">
             <Button variant="primary" onClick={save} disabled={!dirty || pending}>Save details</Button>

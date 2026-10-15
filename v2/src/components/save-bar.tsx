@@ -31,7 +31,7 @@ export function SaveBar({
   useUnsavedGuard(dirty);
   if (!dirty) return null;
   return (
-    <div className="sticky bottom-4 z-10 flex items-center gap-3 rounded-xl border border-ink bg-paper px-4 py-2.5 shadow-panel">
+    <div className="sticky bottom-4 z-10 flex items-center gap-3 rounded-card border border-ink bg-paper px-4 py-2.5 shadow-panel">
       <span className="h-2 w-2 rounded-full bg-brand" aria-hidden />
       <span className="text-sm font-medium">Unsaved changes</span>
       <div className="ml-auto flex gap-2">

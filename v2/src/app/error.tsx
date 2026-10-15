@@ -12,7 +12,7 @@ export default function ErrorPage({ error, reset }: { error: Error & { digest?: 
           <AlertTriangle className="h-5 w-5 text-warn" /> Something went wrong
         </div>
         <p className="text-sm text-ink-2">Your saved data is fine. This page hit an error while loading.</p>
-        <pre className="max-h-40 overflow-auto whitespace-pre-wrap rounded-md bg-page p-3 font-mono text-xs text-ink-3">{error.message}</pre>
+        <pre className="max-h-40 overflow-auto whitespace-pre-wrap rounded-control bg-page p-3 font-mono text-xs text-ink-3">{error.message}</pre>
         <Button variant="primary" onClick={reset}>Try again</Button>
       </Card>
     </div>

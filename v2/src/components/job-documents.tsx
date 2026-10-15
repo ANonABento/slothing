@@ -5,7 +5,7 @@ import { useState } from "react";
 
 import type { CoverLetter, Profile, StoredDoc, TailoredResume } from "@/lib/types";
 import { LetterEditor } from "./letter-editor";
-import { PdfPreview } from "./pdf-preview";
+import { PdfPreview, PreviewEmpty, PreviewPane } from "./pdf-preview";
 import { ResumeEditor } from "./resume-editor";
 import { Card, Segmented } from "./ui";
 
@@ -49,15 +49,13 @@ export function JobDocuments({
             <LetterEditor key={letter?.updatedAt ?? "none"} jobId={jobId} initial={letter?.data ?? null} initialWarnings={letter?.warnings ?? []} />
           </div>
         </Card>
-        <div className="xl:sticky xl:top-6 xl:h-[calc(100vh-3rem)]">
+        <PreviewPane>
           {current ? (
             <PdfPreview query={`job=${jobId}&kind=${tab}`} version={current.updatedAt} />
           ) : (
-            <Card className="grid min-h-[50vh] place-items-center p-6 text-center text-sm text-ink-3">
-              The PDF preview appears here once there&apos;s a {tab === "resume" ? "resume" : "cover letter"}.
-            </Card>
+            <PreviewEmpty>The PDF preview appears here once there&apos;s a {tab === "resume" ? "resume" : "cover letter"}.</PreviewEmpty>
           )}
-        </div>
+        </PreviewPane>
       </div>
     </div>
   );
