@@ -118,7 +118,7 @@ contact.links: one per header item, label copied exactly as written. A labelled 
 bare URL is { "label": "", "url": "github.com/name" }; a header item that is not a link (e.g. a
 citizenship or availability note) is { "label": "the text", "url": "" }. Email, phone and location
 go in their own fields, not in links.
-Projects: a heading like "FlowTO | Python | FastAPI" is name "FlowTO" with tech ["Python", "FastAPI"].
+Projects: a heading like "Trailmap | Python | FastAPI" is name "Trailmap" with tech ["Python", "FastAPI"].
 The name never contains the tools.
 Every other section (Certifications, Awards, Leadership, Volunteering, Publications, Activities…)
 goes in "extras" under its own heading as written, one entry per item: title (the certification,
@@ -160,7 +160,7 @@ export function reuseIds(prev: Profile, next: Profile): Profile {
     });
   };
   const exp = take(prev.experience, (e) => norm(`${e.company}|${e.title}`));
-  // Older imports kept the tools in the name ("FlowTO | Python"), so match on the part before "|".
+  // Older imports kept the tools in the name ("Trailmap | Python"), so match on the part before "|".
   const prj = take(prev.projects, (p) => norm(p.name.split("|")[0]));
   const edu = take(prev.education, (e) => norm(`${e.school}|${e.degree}`));
   const sk = take(prev.skills, (g) => norm(g.category));

@@ -132,7 +132,7 @@ export function EmptyState({ icon, title, children }: { icon: LucideIcon; title:
 const segmentGroup = "inline-flex rounded-control border border-rule bg-paper p-1 shadow-paper";
 const segmentItem = (active: boolean, size: Size) =>
   cx(
-    "flex items-center rounded-chip font-medium transition-colors",
+    "flex items-center whitespace-nowrap rounded-chip font-medium transition-colors",
     focusRing,
     size === "md" ? "h-8 px-4 text-sm" : "h-7 px-3 text-xs",
     active ? "bg-ink text-paper" : "text-ink-2 hover:text-ink",

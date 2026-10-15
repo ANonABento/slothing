@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertTriangle, ArrowDown, ArrowUp, Check, Loader2, Plug, Settings2 } from "lucide-react";
+import { AlertTriangle, Check, Loader2, Plug, Settings2 } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams, useSelectedLayoutSegment } from "next/navigation";
 import { useEffect, useRef, useState, useTransition, type ReactNode } from "react";
@@ -10,14 +10,13 @@ import type { ProviderStatus } from "@/lib/llm";
 import { safe } from "@/lib/safe";
 import { MODE_SAVED_EVENT, applyAppearance } from "@/lib/theme";
 import { SETTINGS_SECTIONS, isSettingsSection, safeBack, settingsHref, type SettingsSection } from "@/lib/settings-sections";
-import { DARK_THEMES, LATITUDES, LETTER_LENGTHS, LIGHT_THEMES, OPTIONAL_SECTIONS, type Latitude, type LetterLength, type Paper, type Provider, type Section as SectionId, type Settings, type Theme, type ThemeMode } from "@/lib/types";
+import { DARK_THEMES, LATITUDES, LETTER_LENGTHS, LIGHT_THEMES, type Latitude, type LetterLength, type Provider, type Settings, type Theme, type ThemeMode } from "@/lib/types";
 
-type PageLimit = Settings["resume"]["pages"];
 import { Dropdown } from "./dropdown";
-import { DesignCard, DesignPreview } from "./resume-design";
+import { ResumeDesignSection } from "./resume-design";
 import { PageBody, PageHeader } from "./page-header";
 import { SaveBar } from "./save-bar";
-import { Button, Card, CardTitle, Field, IconButton, Input, Label, Segmented, SegmentedLinks, Textarea, cx } from "./ui";
+import { Button, Card, CardTitle, Field, Input, Label, Segmented, SegmentedLinks, Textarea, cx } from "./ui";
 
 function Section({ title, description, children }: { title: string; description: ReactNode; children: ReactNode }) {
   return (
@@ -157,78 +156,6 @@ function TailoringSection({ t, onChange }: { t: Settings["tailoring"]; onChange:
         />
       </Field>
     </Section>
-  );
-}
-
-const SECTION_LABELS: Record<SectionId, string> = { summary: "Summary", experience: "Experience", projects: "Projects", education: "Education", skills: "Skills", extras: "Other sections" };
-const optional = (s: SectionId): s is (typeof OPTIONAL_SECTIONS)[number] => (OPTIONAL_SECTIONS as readonly string[]).includes(s);
-
-function LayoutSection({ layout, onChange }: { layout: Settings["resume"]; onChange: (l: Settings["resume"]) => void }) {
-  const move = (i: number, d: number) => {
-    const order = [...layout.order];
-    [order[i], order[i + d]] = [order[i + d], order[i]];
-    onChange({ ...layout, order });
-  };
-  const toggle = (s: (typeof OPTIONAL_SECTIONS)[number], show: boolean) =>
-    onChange({ ...layout, hide: show ? layout.hide.filter((h) => h !== s) : [...layout.hide, s] });
-
-  return (
-    <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-    <div className="min-w-0 space-y-4">
-    <DesignCard style={layout.style} onChange={(style) => onChange({ ...layout, style })} />
-    <Section title="Layout" description="Page length, section order and paper size. Hidden sections stay in your profile and tailored resumes; they're just left off the page.">
-      <div>
-        <Label>Section order</Label>
-        <ol className="divide-y divide-rule rounded-control border border-rule">
-          {layout.order.map((s, i) => {
-            const hidden = optional(s) && layout.hide.includes(s);
-            return (
-              <li key={s} className="flex h-11 items-center gap-3 px-3">
-                <span className="w-4 font-mono text-xs text-ink-3">{i + 1}</span>
-                <span className={cx("flex-1 text-sm font-medium", hidden && "text-ink-3 line-through")}>{SECTION_LABELS[s]}</span>
-                {optional(s) && (
-                  <label className="flex items-center gap-1.5 text-xs text-ink-2">
-                    <input type="checkbox" className="accent-brand" checked={!hidden} onChange={(e) => toggle(s, e.target.checked)} />
-                    Show
-                  </label>
-                )}
-                <IconButton size="sm" label={`Move ${SECTION_LABELS[s]} up`} onClick={() => move(i, -1)} disabled={i === 0}><ArrowUp className="h-3.5 w-3.5" /></IconButton>
-                <IconButton size="sm" label={`Move ${SECTION_LABELS[s]} down`} onClick={() => move(i, 1)} disabled={i === layout.order.length - 1}><ArrowDown className="h-3.5 w-3.5" /></IconButton>
-              </li>
-            );
-          })}
-        </ol>
-      </div>
-      <div>
-        <Label>Page length</Label>
-        <Segmented<PageLimit>
-          value={layout.pages}
-          onChange={(pages) => onChange({ ...layout, pages })}
-          options={[
-            { value: "one", label: "1 page" },
-            { value: "two", label: "2 pages" },
-            { value: "any", label: "No limit" },
-          ]}
-        />
-        <p className="mt-1.5 text-xs text-ink-2">
-          Tailoring picks your best-matching bullets until the page is full, measured on the real layout. Pinned items always go in.
-        </p>
-      </div>
-      <div>
-        <Label>Paper size (resumes and cover letters)</Label>
-        <Segmented<Paper>
-          value={layout.paper}
-          onChange={(paper) => onChange({ ...layout, paper })}
-          options={[
-            { value: "us-letter", label: "US Letter" },
-            { value: "a4", label: "A4" },
-          ]}
-        />
-      </div>
-    </Section>
-    </div>
-    <DesignPreview layout={layout} />
-    </div>
   );
 }
 
@@ -413,7 +340,7 @@ export function SettingsEditor({ initial, providers }: { initial: Settings; prov
             {error && <p className="text-sm text-warn">{error}</p>}
             {section === "ai" && <ModelSection ai={s.ai} providers={providers} onChange={(ai) => setS({ ...s, ai })} />}
             {section === "tailoring" && <TailoringSection t={s.tailoring} onChange={(tailoring) => setS({ ...s, tailoring })} />}
-            {section === "layout" && <LayoutSection layout={s.resume} onChange={(resume) => setS({ ...s, resume })} />}
+            {section === "layout" && <ResumeDesignSection layout={s.resume} onChange={(resume) => setS({ ...s, resume })} />}
             {section === "letter" && <LetterSection letter={s.letter} onChange={(letter) => setS({ ...s, letter })} />}
             {section === "appearance" && <AppearanceSection a={s.appearance} onChange={(appearance) => setS({ ...s, appearance })} />}
             <SaveBar dirty={dirty} pending={pending} onSave={save} onDiscard={() => setS(saved)} label="Save settings" keepPrefix="/settings" />

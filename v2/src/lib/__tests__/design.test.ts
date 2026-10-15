@@ -10,18 +10,18 @@ import { profile } from "./fixture";
 
 describe("contact links", () => {
   it("reads old plain-string links as a URL or as plain text", () => {
-    const p = Profile.parse({ contact: { links: ["github.com/alexr", "Dual Citizen (U.S. & Canada)", { label: "Portfolio", url: "alex.dev" }] } });
+    const p = Profile.parse({ contact: { links: ["github.com/alexr", "Open to relocation", { label: "Portfolio", url: "alex.dev" }] } });
     expect(p.contact.links).toEqual([
       { label: "", url: "github.com/alexr" },
-      { label: "Dual Citizen (U.S. & Canada)", url: "" },
+      { label: "Open to relocation", url: "" },
       { label: "Portfolio", url: "alex.dev" },
     ]);
   });
 
   it("puts plain-text items first and shows labels instead of URLs", () => {
-    const items = contactItems(Profile.parse({ contact: { email: "a@b.co", links: [{ label: "Portfolio", url: "alex.dev" }, { label: "Dual Citizen", url: "" }, { label: "", url: "https://www.github.com/alexr/" }] } }).contact);
+    const items = contactItems(Profile.parse({ contact: { email: "a@b.co", links: [{ label: "Portfolio", url: "alex.dev" }, { label: "Open to relocation", url: "" }, { label: "", url: "https://www.github.com/alexr/" }] } }).contact);
     expect(items).toEqual([
-      { text: "Dual Citizen", href: null },
+      { text: "Open to relocation", href: null },
       { text: "a@b.co", href: "mailto:a@b.co" },
       { text: "Portfolio", href: "https://alex.dev" },
       { text: "github.com/alexr", href: "https://www.github.com/alexr/" },

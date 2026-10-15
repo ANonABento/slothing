@@ -35,9 +35,9 @@ describe("reuseIds", () => {
 
 describe("re-importing after the name/tools split", () => {
   it("matches an old 'Name | tools' project to the new name, keeping its id", () => {
-    const old = Profile.parse({ projects: [{ id: "prj_old", name: "FlowTO | Python | React", rank: "pinned", bullets: [] }] });
-    const fresh = Profile.parse({ projects: [{ id: "prj_new", name: "FlowTO", tech: ["Python", "React"], bullets: [] }] });
+    const old = Profile.parse({ projects: [{ id: "prj_old", name: "Trailmap | Python | React", rank: "pinned", bullets: [] }] });
+    const fresh = Profile.parse({ projects: [{ id: "prj_new", name: "Trailmap", tech: ["Python", "React"], bullets: [] }] });
     const merged = reuseIds(old, fresh);
-    expect(merged.projects[0]).toMatchObject({ id: "prj_old", name: "FlowTO", tech: ["Python", "React"], rank: "pinned" });
+    expect(merged.projects[0]).toMatchObject({ id: "prj_old", name: "Trailmap", tech: ["Python", "React"], rank: "pinned" });
   });
 });

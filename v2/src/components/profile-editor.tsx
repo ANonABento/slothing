@@ -219,7 +219,7 @@ export function ProfileEditor({ initial }: { initial: Profile }) {
           </div>
           <div className="mt-4">
             <div className="mb-1 text-xs font-semibold text-ink-2">Links and other header items</div>
-            <p className="mb-2 text-xs text-ink-3">A label shows instead of the URL (&ldquo;Portfolio&rdquo;). Leave the URL empty for plain text, like &ldquo;Dual Citizen (U.S. &amp; Canada)&rdquo;.</p>
+            <p className="mb-2 text-xs text-ink-3">A label shows instead of the URL (&ldquo;Portfolio&rdquo;). Leave the URL empty for plain text, like &ldquo;Open to relocation&rdquo;.</p>
             <ListEditor
               items={p.contact.links}
               onChange={(links) => set("contact", { ...p.contact, links })}

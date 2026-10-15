@@ -23,10 +23,10 @@ ships or the idea is dropped.
 
 The PDF is the product, and the first real import showed it falling short of the resume it came from.
 
-- **Import keeps what's on the page.** Projects split into name + tools ("FlowTO | Python | React" →
-  name FlowTO, tools Python, React). Hyperlinks are matched to the line they sit on, so roles, projects
+- **Import keeps what's on the page.** Projects split into name + tools ("Trailmap | Python | React" →
+  name Trailmap, tools Python, React). Hyperlinks are matched to the line they sit on, so roles, projects
   and contact links keep their URLs. Contact links get a label ("Portfolio" → its URL), and a link
-  without a URL is plain text in the header ("Dual Citizen (U.S. & Canada)").
+  without a URL is plain text in the header ("Open to relocation").
 - **Resume design** in Settings, with a live preview: font (bundled, so every machine renders the same),
   size, spacing, margins, accent color, header (left or centered), section headings, entry style
   (one line or two), bullet character, link icons. Presets to start from: Classic, LaTeX, Modern.

@@ -39,7 +39,7 @@ export const Education = z.object({
 export const Project = z.object({
   id: z.string(),
   name: z.string(),
-  /** Tools and languages used, shown after the name ("FlowTO | Python | React"). */
+  /** Tools and languages used, shown after the name ("Trailmap | Python | React"). */
   tech: z.array(z.string()).default([]),
   url: z.string().default(""),
   bullets: z.array(Bullet).default([]),
@@ -78,7 +78,7 @@ export const SkillGroup = z.object({
 
 /**
  * A header item: a labelled link ("Portfolio" → its URL), a bare URL (no label), or plain text (no URL,
- * e.g. "Dual Citizen (U.S. & Canada)"). Older profiles stored plain strings; those become url or label.
+ * e.g. "Open to relocation"). Older profiles stored plain strings; those become url or label.
  */
 export const ContactLink = z.preprocess(
   (v) => (typeof v === "string" ? (/^\S+\.\S+$/.test(v.trim()) ? { label: "", url: v } : { label: v, url: "" }) : v),
