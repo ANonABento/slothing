@@ -67,6 +67,14 @@ describe("keywordGap", () => {
     expect(status(doc, "graphql")).toEqual({ kind: "on" });
   });
 
+  it("shows at most a few terms that aren't in the profile", () => {
+    const words = "alpha bravo charlie delta echo foxtrot golf hotel india juliet kilo lima".split(" ");
+    const many = { ...job, description: `${job.description} ${words.map((w) => `${w} ${w} ${w}`).join(". ")}` };
+    const gap = keywordGap(profile, many, profileAsTailored(profile));
+    expect(gap.filter((g) => g.status.kind === "missing").length).toBe(8);
+    expect(gap.filter((g) => g.status.kind === "on").map((g) => g.term.term)).toEqual(expect.arrayContaining(["ci", "graphql"]));
+  });
+
   it("offers skills from the profile and adds them to their group", () => {
     const sqlJob = { ...job, description: `${job.description} SQL, SQL and more SQL.` };
     const st = keywordGap(profile, sqlJob, empty).find((g) => g.term.term === "sql")?.status;

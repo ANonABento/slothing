@@ -41,6 +41,8 @@ export interface KeyTerm {
 }
 
 const MAX_TERMS = 20;
+// Terms not in your profile at all are the noisiest (boilerplate, place names) and can't be acted on.
+const MAX_MISSING = 8;
 // A word needs this many uses to count, a phrase two: postings repeat filler words twice easily.
 const WORD_USES = 3;
 const PHRASE_USES = 2;
@@ -52,7 +54,7 @@ const PHRASE_USES = 2;
  * once: postings list tools once ("SQL, Python, Tableau") but pad with filler words. The company's own
  * name doesn't count.
  */
-export function keyTerms(job: Pick<Job, "title" | "description" | "company">, skills: string[] = []): KeyTerm[] {
+export function keyTerms(job: Pick<Job, "title" | "description" | "company">, skills: string[] = [], max = MAX_TERMS): KeyTerm[] {
   const own = new Set(terms(job.company));
   const title = new Set(terms(job.title));
   // A title word always counts ("Benefits Analyst"), even one that's usually noise.
@@ -92,7 +94,7 @@ export function keyTerms(job: Pick<Job, "title" | "description" | "company">, sk
     })
     .map(([term, c]) => ({ term, label: commonest(c.spellings), score: title.has(term) ? 100 + c.n : Math.min(c.n, 8) * (isPhrase(term) ? 1.5 : 1) + (skill.has(term) ? 4 : 0) }))
     .sort((a, b) => b.score - a.score)
-    .slice(0, MAX_TERMS)
+    .slice(0, max)
     .map(({ term, label }) => ({ term, label }));
 }
 
@@ -147,14 +149,15 @@ const entryName = (e: ReturnType<typeof entriesOf>[number]) =>
 
 /**
  * Each key term of the job, and where it stands for this resume. Hidden profile items count: you can
- * still add them by hand, tailoring just never picks them.
+ * still add them by hand, tailoring just never picks them. At most a few terms you don't have are shown,
+ * so the ones you can act on aren't crowded out.
  */
 export function keywordGap(profile: Profile, job: Pick<Job, "title" | "description" | "company">, doc: TailoredResume): { term: KeyTerm; status: TermStatus }[] {
   const onPage = resumeText(profile, doc);
   const inProfile = profileText(profile);
   const used = new Set(ENTRY_KINDS.flatMap((k) => doc[k].flatMap((e) => e.bullets.flatMap((b) => b.sourceIds))));
   const skillsOn = new Set(doc.skills.flatMap((g) => g.items.map((s) => s.toLowerCase())));
-  return keyTerms(job, profile.skills.flatMap((g) => g.items)).map((term) => {
+  const all = keyTerms(job, profile.skills.flatMap((g) => g.items), MAX_TERMS * 2).map((term): { term: KeyTerm; status: TermStatus } => {
     if (hasTerm(onPage, term.term)) return { term, status: { kind: "on" } };
     if (!hasTerm(inProfile, term.term)) return { term, status: { kind: "missing" } };
     const sources: GapSource[] = [
@@ -171,6 +174,8 @@ export function keywordGap(profile: Profile, job: Pick<Job, "title" | "descripti
     ];
     return { term, status: { kind: "profile", sources } };
   });
+  let missing = 0;
+  return all.filter((g) => g.status.kind !== "missing" || ++missing <= MAX_MISSING).slice(0, MAX_TERMS);
 }
 
 /** The resume with one gap source added: a bullet to its entry (adding the entry if needed), a skill to its group. */
