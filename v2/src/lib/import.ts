@@ -49,6 +49,14 @@ const Imported = z.object({
     .array(z.object({ name: str, tech: list(z.string()), url: str, bullets: list(z.string()) }))
     .default([]),
   skills: z.array(z.object({ category: str, items: list(z.string()) })).default([]),
+  extras: z
+    .array(
+      z.object({
+        title: str,
+        entries: list(z.object({ title: str, org: str, location: str, start: str, end: str, url: str, bullets: list(z.string()) })),
+      }),
+    )
+    .default([]),
 });
 
 type Pdf = Awaited<ReturnType<typeof import("unpdf").getDocumentProxy>>;
@@ -112,6 +120,10 @@ citizenship or availability note) is { "label": "the text", "url": "" }. Email, 
 go in their own fields, not in links.
 Projects: a heading like "FlowTO | Python | FastAPI" is name "FlowTO" with tech ["Python", "FastAPI"].
 The name never contains the tools.
+Every other section (Certifications, Awards, Leadership, Volunteering, Publications, Activities…)
+goes in "extras" under its own heading as written, one entry per item: title (the certification,
+award or role), org (issuer or organisation), dates, and any bullets. Plain lists such as
+Languages or Interests go in skills as their own group. Never drop a section.
 
 JSON shape:
 {
@@ -120,7 +132,8 @@ JSON shape:
   "experience": [{ "company", "title", "url", "location", "start", "end", "bullets": [string] }],
   "education": [{ "school", "degree", "location", "start", "end", "details" }],
   "projects": [{ "name", "tech": [string], "url", "bullets": [string] }],
-  "skills": [{ "category", "items": [string] }]
+  "skills": [{ "category", "items": [string] }],
+  "extras": [{ "title", "entries": [{ "title", "org", "location", "start", "end", "url", "bullets": [string] }] }]
 }`;
 
 const norm = (s: string) => s.toLowerCase().replace(/\s+/g, " ").trim();
@@ -151,6 +164,7 @@ export function reuseIds(prev: Profile, next: Profile): Profile {
   const prj = take(prev.projects, (p) => norm(p.name.split("|")[0]));
   const edu = take(prev.education, (e) => norm(`${e.school}|${e.degree}`));
   const sk = take(prev.skills, (g) => norm(g.category));
+  const sec = take(prev.extras, (x) => norm(x.title));
   return {
     ...next,
     experience: next.experience.map((e) => {
@@ -166,6 +180,18 @@ export function reuseIds(prev: Profile, next: Profile): Profile {
       return { ...e, id: old?.id ?? e.id, rank: old?.rank ?? e.rank };
     }),
     skills: next.skills.map((g) => ({ ...g, id: sk(g)?.id ?? g.id })),
+    extras: next.extras.map((x) => {
+      const old = sec(x);
+      const ent = take(old?.entries ?? [], (e) => norm(`${e.title}|${e.org}`));
+      return {
+        ...x,
+        id: old?.id ?? x.id,
+        entries: x.entries.map((e) => {
+          const o = ent(e);
+          return { ...e, id: o?.id ?? e.id, rank: o?.rank ?? e.rank, bullets: bullets(o?.bullets, e.bullets) };
+        }),
+      };
+    }),
   };
 }
 
@@ -179,5 +205,8 @@ export async function parseResumeText(text: string): Promise<Profile> {
     education: raw.education.map((e) => ({ ...e, id: newId("edu") })),
     projects: raw.projects.map((p) => ({ ...p, id: newId("prj"), bullets: withIds(p.bullets) })),
     skills: raw.skills.map((s) => ({ ...s, id: newId("sk") })),
+    extras: raw.extras
+      .filter((x) => x.entries.length)
+      .map((x) => ({ id: newId("sec"), title: x.title, entries: x.entries.map((e) => ({ ...e, id: newId("ext"), bullets: withIds(e.bullets) })) })),
   });
 }

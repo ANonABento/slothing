@@ -35,6 +35,7 @@ const reworded: TailoredResume = {
     },
   ],
   projects: [],
+  extras: [],
   educationIds: ["edu_a"],
   skills: [{ category: "Languages", items: ["TypeScript"] }],
 };
@@ -114,6 +115,7 @@ describe("profile ranks", () => {
       summary: "",
       experience: [{ sourceId: "exp_a", bullets: [] }],
       projects: [],
+      extras: [],
       educationIds: ["edu_a"],
       skills: [],
     });
@@ -127,7 +129,7 @@ describe("profile ranks", () => {
   });
 
   it("withPinned leaves a pinned bullet alone when the model already used it", () => {
-    const draft = { summary: "", experience: [{ sourceId: "exp_a", bullets: [{ text: "Reworded CI bullet.", sourceIds: ["b1"] }] }], projects: [], educationIds: [], skills: [] };
+    const draft = { summary: "", experience: [{ sourceId: "exp_a", bullets: [{ text: "Reworded CI bullet.", sourceIds: ["b1"] }] }], projects: [], extras: [], educationIds: [], skills: [] };
     expect(withPinned(ranked, draft).experience[0].bullets).toEqual([{ text: "Reworded CI bullet.", sourceIds: ["b1"] }]);
   });
 });

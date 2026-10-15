@@ -10,6 +10,7 @@ describe("groundResume", () => {
       summary: "Engineer who ships.",
       experience: [{ sourceId: "exp_a", bullets: [{ text: "Reduced CI time 40% with parallel test runners.", sourceIds: ["b1"] }] }],
       projects: [],
+      extras: [],
       educationIds: [],
       skills: [{ category: "Languages", items: ["typescript"] }],
     });
@@ -35,6 +36,7 @@ describe("groundResume", () => {
         },
       ],
       projects: [],
+      extras: [],
       educationIds: [],
       skills: [{ category: "Cloud", items: ["Kubernetes"] }],
     });

@@ -66,6 +66,7 @@ export function DesignCard({ style, onChange }: { style: Style; onChange: (s: St
               <button
                 key={p.id}
                 type="button"
+                title={p.hint}
                 aria-pressed={same(p.style, style)}
                 onClick={() => onChange(p.style)}
                 className={cx(
@@ -144,15 +145,24 @@ export function DesignCard({ style, onChange }: { style: Style; onChange: (s: St
           />
         </Row>
 
-        <Row label="Section headings">
-          <div className="flex flex-wrap items-center gap-4">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Row label="Section headings">
             <Segmented value={style.headingCase} onChange={(v) => set("headingCase", v)} options={[{ value: "caps", label: "UPPERCASE" }, { value: "smallcaps", label: "Small caps" }, { value: "title", label: "Title case" }]} />
-            <Check checked={style.headingRule} onChange={(v) => set("headingRule", v)}>Rule underneath</Check>
+          </Row>
+          <Row label="Heading rule">
+            <Segmented value={style.headingRule} onChange={(v) => set("headingRule", v)} options={[{ value: "below", label: "Under" }, { value: "beside", label: "Beside" }, { value: "none", label: "None" }]} />
+          </Row>
+        </div>
+
+        <Row label="Roles and schools" hint="Two lines: title, then company and location. One line: Title — Company — Location.">
+          <div className="flex flex-wrap items-center gap-4">
+            <Segmented value={style.entry} onChange={(v) => set("entry", v)} options={[{ value: "stacked", label: "Two lines" }, { value: "inline", label: "One line" }]} />
+            <Check checked={style.groupRoles} onChange={(v) => set("groupRoles", v)}>Group roles at the same company</Check>
           </div>
         </Row>
 
-        <Row label="Roles and schools" hint="Two lines: title and dates, then company and location. One line: Title — Company — Location, dates on the right.">
-          <Segmented value={style.entry} onChange={(v) => set("entry", v)} options={[{ value: "stacked", label: "Two lines" }, { value: "inline", label: "One line" }]} />
+        <Row label="Dates">
+          <Segmented value={style.dates} onChange={(v) => set("dates", v)} options={[{ value: "right", label: "Right of the title" }, { value: "left", label: "Left column" }]} />
         </Row>
 
         <div className="grid gap-4 sm:grid-cols-2">

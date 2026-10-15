@@ -10,6 +10,7 @@ export function withoutHidden(profile: Profile): Profile {
     experience: shown(profile.experience).map((e) => ({ ...e, bullets: shown(e.bullets) })),
     projects: shown(profile.projects).map((p) => ({ ...p, bullets: shown(p.bullets) })),
     education: shown(profile.education),
+    extras: profile.extras.map((s) => ({ ...s, entries: shown(s.entries).map((e) => ({ ...e, bullets: shown(e.bullets) })) })),
   };
 }
 
@@ -21,6 +22,7 @@ export function profileAsTailored(full: Profile): TailoredResume {
     summary: profile.summary,
     experience: profile.experience.map((e) => ({ sourceId: e.id, bullets: cite(e.bullets) })),
     projects: profile.projects.map((p) => ({ sourceId: p.id, bullets: cite(p.bullets) })),
+    extras: profile.extras.flatMap((s) => s.entries.map((e) => ({ sourceId: e.id, bullets: cite(e.bullets) }))),
     educationIds: profile.education.map((e) => e.id),
     skills: profile.skills.map(({ category, items }) => ({ category, items })),
   };
@@ -61,6 +63,17 @@ export function resolveResume(profile: Profile, doc: TailoredResume, layout: Res
       return [rest];
     }),
     skills: doc.skills.filter((s) => s.items.length),
+    // Extra sections in profile order; a section with none of its entries on this resume is left off.
+    extras: profile.extras.flatMap((section) => {
+      const chosen = new Map(doc.extras.map((e) => [e.sourceId, e]));
+      const entries = section.entries.flatMap((e) => {
+        const t = chosen.get(e.id);
+        if (!t) return [];
+        const { title, org, location, start, end, url } = e;
+        return [{ title, org, location, start, end, url, bullets: t.bullets.map((b) => b.text).filter(Boolean) }];
+      });
+      return entries.length ? [{ title: section.title, entries }] : [];
+    }),
   };
 }
 

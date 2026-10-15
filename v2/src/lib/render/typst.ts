@@ -56,11 +56,17 @@ export const RESUME_TYP = `${COMMON}
 
 #let section(title) = {
   let t = if st.headingCase == "caps" { upper(title) } else if st.headingCase == "smallcaps" { smallcaps(title) } else { title }
+  let heading = text(font: st.headingFont, size: base * 1.12, weight: "bold", fill: accent, tracking: if st.headingCase == "caps" { 0.04em } else { 0em }, t)
   v(sp.section)
   block(sticky: true, {
-    text(font: st.headingFont, size: base * 1.12, weight: "bold", fill: accent, tracking: if st.headingCase == "caps" { 0.04em } else { 0em }, t)
-    v(base * 0.3)
-    if st.headingRule { line(length: 100%, stroke: 0.6pt + accent); v(base * 0.4) }
+    if st.headingRule == "beside" {
+      grid(columns: (auto, 1fr), column-gutter: 8pt, align: horizon, heading, line(length: 100%, stroke: 0.6pt + accent))
+      v(base * 0.45)
+    } else {
+      heading
+      v(base * 0.3)
+      if st.headingRule == "below" { line(length: 100%, stroke: 0.6pt + accent); v(base * 0.4) }
+    }
   })
 }
 
@@ -69,19 +75,40 @@ export const RESUME_TYP = `${COMMON}
 #let some(s, f) = if s.trim() != "" { f(s) }
 #let range(a, b) = { let r = nonempty((a, b)).join(" – "); if r != none and r != "" { r } }
 #let joined(parts, sep) = { let p = parts.filter(x => x != none); if p.len() > 0 { p.join(sep) } }
-// A role or school: heading rows, then bullets, kept together on one page.
-#let entry(rows, bullets: ()) = block(breakable: false, {
-  let parts = rows.filter(r => r != none)
+#let date-col = base * 9.5
+
+/*
+ * One entry: its heading lines, then bullets, kept together on one page. Each line is (left, right).
+ * The date goes on the right of the first line, or in a column of its own when st.dates is "left".
+ */
+#let entry(date, lines, bullets: ()) = block(breakable: false, {
+  let lines = lines.filter(l => l != none)
+  if st.dates == "right" and date != none and lines.len() > 0 { lines.at(0) = (lines.at(0).at(0), date) }
+  let parts = lines.map(((l, r)) => row(l, r)).filter(r => r != none)
   if bullets.len() > 0 { parts.push(list(..bullets)) }
-  stack(spacing: sp.rows, ..parts)
+  let body = stack(spacing: sp.rows, ..parts)
+  if st.dates == "left" {
+    grid(columns: (date-col, 1fr), column-gutter: 10pt, text(size: base * 0.95, if date != none { date }), body)
+  } else { body }
 })
-// Entries of one section, with the entry gap between them (not after the last).
+// Entries of one section, with the entry gap between them (not after the last). f may return
+// (content, tight: true) to sit closer to the one before, as a second role at the same company does.
 #let entries(items, f) = for (i, x) in items.enumerate() {
-  if i > 0 { v(sp.entry) }
-  f(x)
+  let out = f(x, i)
+  let (body, tight) = if type(out) == dictionary { (out.body, out.tight) } else { (out, false) }
+  if i > 0 { v(if tight { sp.rows + 0.15em } else { sp.entry }) }
+  body
 }
 // Organisation name, linked (invisibly, like any resume link) when it has a URL.
 #let org(name, url) = if name.trim() != "" { if url.trim() != "" { link(href(url), name) } else { name } }
+// Heading lines for a role-shaped entry: title, organisation, location.
+#let lines-for(title, organisation, location, continued: false) = {
+  if st.entry == "inline" {
+    if continued { ((title, none),) } else { ((joined((title, organisation, location), " — "), none),) }
+  } else {
+    if continued { ((title, none),) } else { ((title, none), (organisation, location)) }
+  }
+}
 
 // One function per section, rendered in the order settings give (d.sections).
 #let summary() = if d.summary != "" {
@@ -91,18 +118,19 @@ export const RESUME_TYP = `${COMMON}
 
 #let experience() = if d.experience.len() > 0 {
   section("Experience")
-  entries(d.experience, e => {
-    if st.entry == "inline" {
-      entry((row(joined((some(e.title, strong), org(e.company, e.url), some(e.location, emph)), " — "), range(e.start, e.end)),), bullets: e.bullets)
-    } else {
-      entry((row(some(e.title, strong), range(e.start, e.end)), row(if e.company.trim() != "" { emph(org(e.company, e.url)) }, some(e.location, emph))), bullets: e.bullets)
-    }
+  entries(d.experience, (e, i) => {
+    let prev = if i > 0 { d.experience.at(i - 1) }
+    // A promotion: same company as the role above, so its company line isn't repeated.
+    let continued = st.groupRoles and prev != none and e.company.trim() != "" and prev.company.trim() == e.company.trim()
+    let organisation = if e.company.trim() != "" { if st.entry == "inline" { org(e.company, e.url) } else { emph(org(e.company, e.url)) } }
+    let body = entry(range(e.start, e.end), lines-for(some(e.title, strong), organisation, some(e.location, emph), continued: continued), bullets: e.bullets)
+    (body: body, tight: continued)
   })
 }
 
 #let projects() = if d.projects.len() > 0 {
   section("Projects")
-  entries(d.projects, p => {
+  entries(d.projects, (p, i) => {
     let name = if p.name.trim() != "" {
       let n = strong(p.name)
       if p.url.trim() != "" { link(href(p.url), n) } else { n }
@@ -111,19 +139,16 @@ export const RESUME_TYP = `${COMMON}
     let has-url = p.url.trim() != ""
     let left = if st.linkIcons and has-url { [#left #link(href(p.url), link-icon)] } else { left }
     let right = if not st.linkIcons and has-url { link(href(p.url), display-url(p.url)) }
-    entry((row(left, right),), bullets: p.bullets)
+    entry(none, ((left, right),), bullets: p.bullets)
   })
 }
 
 #let education() = if d.education.len() > 0 {
   section("Education")
-  entries(d.education, e => {
-    let details = if e.details.trim() != "" { text(size: base * 0.95, e.details) }
-    if st.entry == "inline" {
-      entry((row(joined((some(e.school, strong), some(e.degree, x => x), some(e.location, emph)), " — "), range(e.start, e.end)), details))
-    } else {
-      entry((row(some(e.school, strong), range(e.start, e.end)), row(some(e.degree, emph), some(e.location, emph)), details))
-    }
+  entries(d.education, (e, i) => {
+    let details = if e.details.trim() != "" { (text(size: base * 0.95, e.details), none) }
+    let degree = if e.degree.trim() != "" { if st.entry == "inline" { e.degree } else { emph(e.degree) } }
+    entry(range(e.start, e.end), (..lines-for(some(e.school, strong), degree, some(e.location, emph)), details))
   })
 }
 
@@ -132,7 +157,22 @@ export const RESUME_TYP = `${COMMON}
   stack(spacing: sp.rows + 0.1em, ..d.skills.map(s => [#if s.category.trim() != "" [*#s.category:* ]#s.items.join(", ")]))
 }
 
-#let sections = (summary: summary, experience: experience, projects: projects, education: education, skills: skills)
+// Sections you name yourself (certifications, awards, leadership…): role-shaped entries.
+#let extras() = for x in d.extras {
+  section(x.title)
+  entries(x.entries, (e, i) => {
+    let title = if e.title.trim() != "" {
+      let t = strong(e.title)
+      if e.url.trim() != "" and e.org.trim() == "" { link(href(e.url), t) } else { t }
+    }
+    let organisation = if e.org.trim() != "" { if st.entry == "inline" { org(e.org, e.url) } else { emph(org(e.org, e.url)) } }
+    // A one-line entry (a certification, an award) keeps issuer and title together on one line.
+    let lines = if e.bullets.len() == 0 and e.location.trim() == "" { ((joined((title, organisation), " — "), none),) } else { lines-for(title, organisation, some(e.location, emph)) }
+    entry(range(e.start, e.end), lines, bullets: e.bullets)
+  })
+}
+
+#let sections = (summary: summary, experience: experience, projects: projects, education: education, skills: skills, extras: extras)
 
 #header
 #for name in d.sections { sections.at(name)() }
@@ -147,7 +187,7 @@ export const LETTER_TYP = `${COMMON}
 #set par(leading: 0.62em, spacing: 1.1em)
 
 #header
-#if st.headingRule { v(2pt); line(length: 100%, stroke: 0.6pt + accent) }
+#if st.headingRule != "none" { v(2pt); line(length: 100%, stroke: 0.6pt + accent) }
 #v(14pt)
 #d.date
 

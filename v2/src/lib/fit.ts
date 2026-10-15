@@ -1,7 +1,7 @@
 import { measureResume } from "./render";
 import { resolveResume, withoutHidden } from "./resolve";
 import { relevance, skillsByRelevance } from "./score";
-import type { Job, Profile, ResumeLayout, TailoredResume } from "./types";
+import { entriesOf, type EntryKind, type Job, type Profile, type ResumeLayout, type TailoredResume } from "./types";
 
 /* ─── Fit to the page ───
  * One fitter for both paths. It takes a draft (the AI's, or your whole profile for "without AI"),
@@ -10,13 +10,13 @@ import type { Job, Profile, ResumeLayout, TailoredResume } from "./types";
  * profile, verbatim) are tried as filler. It only chooses and orders; it never writes text.
  */
 
-type Kind = "experience" | "projects";
+type Kind = EntryKind;
 type TailoredBullet = TailoredResume["experience"][number]["bullets"][number];
 
 interface Candidate {
   kind: Kind;
   entryId: string;
-  /** null: an entry that has no bullets at all, included on its own. */
+  /** null: an entry with no bullets at all (a certification, an award), included on its own. */
   bullet: TailoredBullet | null;
   /** Position within its entry on the page (draft order, then filler in profile order). */
   order: number;
@@ -56,23 +56,30 @@ export async function fitResume(
   const profile = withoutHidden(full);
   const jobText = `${job.title}\n${job.description}`;
   const limit = pageLimit(layout.pages);
-  const kinds: Kind[] = layout.hide.includes("projects") ? ["experience"] : ["experience", "projects"];
+  // Sections the layout leaves off aren't on the page, so they aren't fitted.
+  const kinds = (["experience", "projects", "extras"] as const).filter((k) => k === "experience" || !layout.hide.includes(k));
 
-  const corpus = [...kinds.flatMap((k) => profile[k].flatMap((e) => e.bullets.map((b) => b.text))), ...kinds.flatMap((k) => draft[k].flatMap((e) => e.bullets.map((b) => b.text)))];
+  // What a bullet-less entry is scored on: its heading.
+  const headingText = (e: ReturnType<typeof entriesOf>[number]) =>
+    "company" in e ? `${e.title} ${e.company}` : "name" in e ? `${e.name} ${e.tech.join(" ")}` : `${e.title} ${e.org}`;
+  const corpus = [
+    ...kinds.flatMap((k) => entriesOf(profile, k).flatMap((e) => (e.bullets.length ? e.bullets.map((b) => b.text) : [headingText(e)]))),
+    ...kinds.flatMap((k) => draft[k].flatMap((e) => e.bullets.map((b) => b.text))),
+  ];
   const score = relevance(jobText, corpus);
 
-  // Recent roles (top of the profile) get up to +30%; projects rank a little below roles.
+  // Recent entries (top of the list) get up to +30%; projects and extra sections rank a little below roles.
   const entryWeight = (kind: Kind, id: string) => {
-    const list = profile[kind];
+    const list = entriesOf(profile, kind);
     const i = list.findIndex((e) => e.id === id);
     const recency = list.length > 1 ? 1 - i / (list.length - 1) : 1;
-    return (kind === "projects" ? 0.9 : 1) * (1 + 0.3 * recency);
+    return (kind === "experience" ? 1 : kind === "projects" ? 0.9 : 0.8) * (1 + 0.3 * recency);
   };
-  const pinnedBullet = new Set(kinds.flatMap((k) => profile[k].flatMap((e) => e.bullets.filter((b) => b.rank === "pinned").map((b) => b.id))));
+  const pinnedBullet = new Set(kinds.flatMap((k) => entriesOf(profile, k).flatMap((e) => e.bullets.filter((b) => b.rank === "pinned").map((b) => b.id))));
 
   const candidates: Candidate[] = [];
   for (const kind of kinds) {
-    for (const entry of profile[kind]) {
+    for (const entry of entriesOf(profile, kind)) {
       const weight = entryWeight(kind, entry.id);
       const drafted = draft[kind].find((e) => e.sourceId === entry.id);
       const used = new Set(drafted?.bullets.flatMap((b) => b.sourceIds) ?? []);
@@ -92,8 +99,9 @@ export async function fitResume(
         const pinned = x.bullet.sourceIds.some((id) => pinnedBullet.has(id));
         mine.push({ kind, entryId: entry.id, bullet: x.bullet, order: x.order, pinned, tier: pinned ? 0 : x.filler ? 2 : 1, priority: x.priority });
       }
-      if (!entry.bullets.length && (drafted || entry.rank === "pinned")) {
-        mine.push({ kind, entryId: entry.id, bullet: null, order: 0, pinned: entry.rank === "pinned", tier: entry.rank === "pinned" ? 0 : drafted ? 1 : 2, priority: FLOOR * weight });
+      if (!entry.bullets.length) {
+        const priority = (score(headingText(entry)) + FLOOR) * weight;
+        mine.push({ kind, entryId: entry.id, bullet: null, order: 0, pinned: entry.rank === "pinned", tier: entry.rank === "pinned" ? 0 : drafted ? 1 : 2, priority });
       }
       // A pinned entry is always on the page, with at least its best bullet.
       if (entry.rank === "pinned" && mine.length && !mine.some((c) => c.pinned)) {
@@ -109,8 +117,8 @@ export async function fitResume(
   const skills = draft.skills.map((g) => ({ ...g, items: skillsByRelevance(g.items, jobText) }));
   const build = (chosen: Set<number>): TailoredResume => {
     const section = (kind: Kind) => {
-      if (!kinds.includes(kind)) return draft[kind]; // hidden by layout: not on the page, so not fitted
-      return profile[kind].flatMap((entry) => {
+      if (!(kinds as readonly Kind[]).includes(kind)) return draft[kind]; // hidden by layout: not on the page, so not fitted
+      return entriesOf(profile, kind).flatMap((entry) => {
         const picked = candidates.filter((c, i) => chosen.has(i) && c.kind === kind && c.entryId === entry.id);
         if (!picked.length) return [];
         const bullets = picked
@@ -119,7 +127,7 @@ export async function fitResume(
         return [{ sourceId: entry.id, bullets }];
       });
     };
-    return { summary: draft.summary, educationIds: draft.educationIds, skills, experience: section("experience"), projects: section("projects") };
+    return { summary: draft.summary, educationIds: draft.educationIds, skills, experience: section("experience"), projects: section("projects"), extras: section("extras") };
   };
   const prefix = (k: number) => new Set(Array.from({ length: k }, (_, i) => i));
 

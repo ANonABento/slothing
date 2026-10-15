@@ -1,6 +1,6 @@
 import { generateJSON } from "./llm";
 import { withoutHidden } from "./resolve";
-import { CoverLetter, LETTER_LENGTHS, Settings, TailoredResume, type Job, type Latitude, type LetterLength, type LetterSettings, type Profile, type TailoringSettings, type Warning } from "./types";
+import { CoverLetter, LETTER_LENGTHS, Settings, TailoredResume, entriesOf, type EntryKind, type Job, type Latitude, type LetterLength, type LetterSettings, type Profile, type TailoringSettings, type Warning } from "./types";
 
 /* ─── Grounding ───
  * The model only ever chooses and rephrases. Everything it returns is checked against the
@@ -41,6 +41,7 @@ export function profileFacts(p: Profile): string {
     ...p.experience.flatMap((e) => [e.title, e.company, e.start, e.end, ...e.bullets.map((b) => b.text)]),
     ...p.projects.flatMap((x) => [x.name, ...x.bullets.map((b) => b.text)]),
     ...p.education.flatMap((e) => [e.school, e.degree, e.start, e.end, e.details]),
+    ...p.extras.flatMap((s) => s.entries.flatMap((e) => [e.title, e.org, e.start, e.end, ...e.bullets.map((b) => b.text)])),
     ...p.skills.flatMap((g) => g.items),
   ].join("\n");
 }
@@ -48,13 +49,10 @@ export function profileFacts(p: Profile): string {
 export function groundResume(profile: Profile, draft: TailoredResume): { doc: TailoredResume; warnings: Warning[] } {
   const warnings: Warning[] = [];
 
-  const groundEntries = (
-    kind: "experience" | "projects",
-    entries: TailoredResume["experience"],
-    label: (id: string) => string,
-  ) => {
-    const source = new Map(profile[kind].map((e) => [e.id, e]));
-    const order = new Map(profile[kind].map((e, i) => [e.id, i]));
+  const groundEntries = (kind: EntryKind, entries: TailoredResume["experience"], label: (id: string) => string) => {
+    const list = entriesOf(profile, kind);
+    const source = new Map(list.map((e) => [e.id, e]));
+    const order = new Map(list.map((e, i) => [e.id, i]));
     const seen = new Set<string>();
     return entries
       .filter((e) => {
@@ -91,6 +89,10 @@ export function groundResume(profile: Profile, draft: TailoredResume): { doc: Ta
     return e ? `${e.title} @ ${e.company}` : id;
   };
   const prjLabel = (id: string) => profile.projects.find((x) => x.id === id)?.name ?? id;
+  const extraLabel = (id: string) => {
+    const e = entriesOf(profile, "extras").find((x) => x.id === id);
+    return e && "org" in e ? [e.title, e.org].filter(Boolean).join(" @ ") || id : id;
+  };
 
   const known = new Map(profile.skills.flatMap((g) => g.items).map((s) => [s.toLowerCase().trim(), s]));
   const skills = draft.skills
@@ -115,6 +117,7 @@ export function groundResume(profile: Profile, draft: TailoredResume): { doc: Ta
       summary: draft.summary.trim(),
       experience: groundEntries("experience", draft.experience, expLabel),
       projects: groundEntries("projects", draft.projects, prjLabel),
+      extras: groundEntries("extras", draft.extras, extraLabel),
       educationIds: eduIds,
       skills,
     },
@@ -150,13 +153,16 @@ Hard rules — violating any of them makes the resume unusable:
 - You may NOT add facts: no new employers, titles, dates, metrics, numbers, tools,
   responsibilities, or outcomes that the cited source bullets do not state.
 - Every bullet must list "sourceIds": the ids of the profile bullets it is based on, all
-  from the same experience/project entry.
+  from the same entry (a role, project, or an entry in one of the "extras" sections).
 - Reference entries by their "id" as "sourceId". Never restate company, title, or dates.
 - Skills must be copied verbatim from the profile's skills. Regroup or omit freely.
 - Entries and bullets with "rank": "pinned" must be included. Order bullets within an entry
   as the profile does unless the job clearly calls for a different emphasis.
 - Prefer 3–5 strong bullets for recent relevant roles, fewer for older ones. Drop irrelevant
   projects. Keep the whole resume to roughly one page.
+- "extras" holds entries from the profile's extra sections (certifications, awards, leadership…),
+  referenced by entry id. Include the ones relevant to the job; an entry with no bullets is
+  included with "bullets": [].
 
 How much you may change the wording:
 ${LATITUDE_RULES[t.latitude]}
@@ -166,6 +172,7 @@ JSON shape:
   "summary": string,
   "experience": [{ "sourceId": string, "bullets": [{ "text": string, "sourceIds": [string] }] }],
   "projects":   [{ "sourceId": string, "bullets": [{ "text": string, "sourceIds": [string] }] }],
+  "extras":     [{ "sourceId": string, "bullets": [{ "text": string, "sourceIds": [string] }] }],
   "educationIds": [string],
   "skills": [{ "category": string, "items": [string] }]
 }${preferences(t.instructions)}`;
@@ -176,9 +183,9 @@ JSON shape:
  * text of the profile bullet(s) it cites (a bullet citing two becomes two), and the summary is the profile's.
  */
 export function verbatim(profile: Profile, draft: TailoredResume): TailoredResume {
-  const copy = (kind: "experience" | "projects") =>
+  const copy = (kind: EntryKind) =>
     draft[kind].map((e) => {
-      const src = new Map((profile[kind].find((x) => x.id === e.sourceId)?.bullets ?? []).map((b) => [b.id, b.text]));
+      const src = new Map((entriesOf(profile, kind).find((x) => x.id === e.sourceId)?.bullets ?? []).map((b) => [b.id, b.text]));
       const seen = new Set<string>();
       const bullets = e.bullets.flatMap((b) =>
         b.sourceIds.flatMap((id) => {
@@ -190,7 +197,7 @@ export function verbatim(profile: Profile, draft: TailoredResume): TailoredResum
       );
       return { ...e, bullets };
     });
-  return { ...draft, summary: profile.summary, experience: copy("experience"), projects: copy("projects") };
+  return { ...draft, summary: profile.summary, experience: copy("experience"), projects: copy("projects"), extras: copy("extras") };
 }
 
 /**
@@ -199,9 +206,9 @@ export function verbatim(profile: Profile, draft: TailoredResume): TailoredResum
  * skipped gets its bullets in profile order.
  */
 export function withPinned(profile: Profile, draft: TailoredResume): TailoredResume {
-  const pin = (kind: "experience" | "projects") => {
+  const pin = (kind: EntryKind) => {
     const out = draft[kind].map((e) => ({ ...e, bullets: [...e.bullets] }));
-    for (const src of profile[kind]) {
+    for (const src of entriesOf(profile, kind)) {
       const pinnedBullets = src.bullets.filter((b) => b.rank === "pinned");
       if (src.rank !== "pinned" && !pinnedBullets.length) continue;
       let entry = out.find((e) => e.sourceId === src.id);
@@ -220,6 +227,7 @@ export function withPinned(profile: Profile, draft: TailoredResume): TailoredRes
     ...draft,
     experience: pin("experience"),
     projects: pin("projects"),
+    extras: pin("extras"),
     educationIds: [...new Set([...draft.educationIds, ...pinnedEdu])],
   };
 }

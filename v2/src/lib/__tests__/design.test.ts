@@ -51,3 +51,28 @@ describe("resume design", () => {
     expect(fills.size).toBe(STYLE_PRESETS.length);
   }, 120_000);
 });
+
+describe("entry layout", () => {
+  it.skipIf(!available)("groups a promotion under one company line, and renders extra sections", async () => {
+    const p = Profile.parse({
+      ...profile,
+      experience: [
+        { id: "a", company: "Initrode", title: "Senior Engineer", start: "2023", end: "Present", bullets: [{ id: "a1", text: "Led the platform team." }] },
+        { id: "b", company: "Initrode", title: "Engineer", start: "2021", end: "2023", bullets: [{ id: "b1", text: "Built the billing service." }] },
+      ],
+      extras: [{ id: "x", title: "Certifications", entries: [{ id: "c", title: "CKA", org: "CNCF", end: "2024" }] }],
+    });
+    const text = async (style: Partial<Settings["resume"]["style"]>) => {
+      const layout = { ...Settings.parse({}).resume, style: { ...Settings.parse({}).resume.style, ...style } };
+      const pdf = await renderPdf({ kind: "resume", data: resolveResume(p, profileAsTailored(p), layout) });
+      const { extractText, getDocumentProxy } = await import("unpdf");
+      return (await extractText(await getDocumentProxy(new Uint8Array(pdf)), { mergePages: true })).text;
+    };
+    const grouped = await text({ groupRoles: true });
+    expect(grouped.match(/Initrode/g)).toHaveLength(1);
+    expect(grouped).toMatch(/CERTIFICATIONS[\s\S]*CKA — CNCF/);
+    expect((await text({ groupRoles: false })).match(/Initrode/g)).toHaveLength(2);
+    // Dates in the left column still render (and so does every heading-rule style).
+    for (const headingRule of ["below", "beside", "none"] as const) expect(await text({ dates: "left", headingRule })).toContain("2021 – 2023");
+  }, 60_000);
+});

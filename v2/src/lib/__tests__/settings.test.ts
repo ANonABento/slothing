@@ -60,7 +60,7 @@ describe("settings storage", () => {
 describe("resume layout", () => {
   it("normalizes section order: drops repeats, appends missing sections in default order", () => {
     const s = Settings.parse({ resume: { order: ["education", "education", "skills"] } });
-    expect(s.resume.order).toEqual(["education", "skills", "summary", "experience", "projects"]);
+    expect(s.resume.order).toEqual(["education", "skills", "summary", "experience", "projects", "extras"]);
   });
 
   it("rejects hiding a required section", () => {
@@ -70,7 +70,7 @@ describe("resume layout", () => {
   it("resolveResume applies order and hidden sections; content stays in the doc", () => {
     const layout = Settings.parse({ resume: { order: ["education", "experience"], hide: ["summary"], paper: "a4" } }).resume;
     const r = resolveResume(profile, profileAsTailored(profile), layout);
-    expect(r.sections).toEqual(["education", "experience", "projects", "skills"]);
+    expect(r.sections).toEqual(["education", "experience", "projects", "skills", "extras"]);
     expect(r.paper).toBe("a4");
     expect(r.summary).toBe(profile.summary);
   });

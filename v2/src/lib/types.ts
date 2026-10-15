@@ -46,6 +46,30 @@ export const Project = z.object({
   rank,
 });
 
+/**
+ * An entry in an extra section (certification, award, leadership role, publication…). Shaped like a
+ * role so any of them fits: certifications usually have no bullets, leadership roles usually do.
+ */
+export const ExtraEntry = z.object({
+  id: z.string(),
+  title: z.string().default(""),
+  /** Issuer, organisation or publisher. */
+  org: z.string().default(""),
+  location: z.string().default(""),
+  start: z.string().default(""),
+  end: z.string().default(""),
+  url: z.string().default(""),
+  bullets: z.array(Bullet).default([]),
+  rank,
+});
+
+/** A section with a name you choose ("Certifications", "Leadership"), rendered after the standard ones by default. */
+export const ExtraSection = z.object({
+  id: z.string(),
+  title: z.string().default(""),
+  entries: z.array(ExtraEntry).default([]),
+});
+
 export const SkillGroup = z.object({
   id: z.string(),
   category: z.string(),
@@ -77,6 +101,7 @@ export const Profile = z.object({
   education: z.array(Education).default([]),
   projects: z.array(Project).default([]),
   skills: z.array(SkillGroup).default([]),
+  extras: z.array(ExtraSection).default([]),
 });
 
 export type Profile = z.infer<typeof Profile>;
@@ -84,6 +109,15 @@ export type Experience = z.infer<typeof Experience>;
 export type Education = z.infer<typeof Education>;
 export type Project = z.infer<typeof Project>;
 export type SkillGroup = z.infer<typeof SkillGroup>;
+export type ExtraEntry = z.infer<typeof ExtraEntry>;
+export type ExtraSection = z.infer<typeof ExtraSection>;
+
+/** The three kinds of entry that carry bullets, and so get tailored and fitted the same way. */
+export const ENTRY_KINDS = ["experience", "projects", "extras"] as const;
+export type EntryKind = (typeof ENTRY_KINDS)[number];
+/** Every entry of one kind, flat (extra sections' entries in section order). */
+export const entriesOf = (p: Profile, kind: EntryKind): (Experience | Project | ExtraEntry)[] =>
+  kind === "extras" ? p.extras.flatMap((s) => s.entries) : p[kind];
 export type Bullet = z.infer<typeof Bullet>;
 
 /* ─── Jobs ─── */
@@ -120,6 +154,8 @@ export const TailoredResume = z.object({
   summary: str,
   experience: arr(z.object({ sourceId: z.string(), bullets: arr(TailoredBullet) })),
   projects: arr(z.object({ sourceId: z.string(), bullets: arr(TailoredBullet) })),
+  /** Entries from extra sections, by entry id. */
+  extras: arr(z.object({ sourceId: z.string(), bullets: arr(TailoredBullet) })),
   educationIds: arr(z.string()),
   skills: arr(z.object({ category: str, items: arr(z.string()) })),
 });
@@ -159,10 +195,10 @@ export type Provider = (typeof PROVIDERS)[number];
 export const LATITUDES = ["select", "rephrase", "rewrite"] as const;
 export type Latitude = (typeof LATITUDES)[number];
 
-export const SECTIONS = ["summary", "experience", "projects", "education", "skills"] as const;
+export const SECTIONS = ["summary", "experience", "projects", "education", "skills", "extras"] as const;
 export type Section = (typeof SECTIONS)[number];
 /** Sections that can be left off the page. The rest always render when they have content. */
-export const OPTIONAL_SECTIONS = ["summary", "projects"] as const;
+export const OPTIONAL_SECTIONS = ["summary", "projects", "extras"] as const;
 export const PAPERS = ["us-letter", "a4"] as const;
 export const LETTER_LENGTHS = { short: 200, standard: 350 } as const;
 export type LetterLength = keyof typeof LETTER_LENGTHS;
@@ -207,10 +243,12 @@ export const MARGINS = ["narrow", "normal", "wide"] as const;
 /** center: everything centered. split: name left, contact right. left: both on the left. */
 export const HEADER_STYLES = ["center", "split", "left"] as const;
 export const HEADING_CASES = ["caps", "smallcaps", "title"] as const;
+export const HEADING_RULES = ["below", "beside", "none"] as const;
+export const DATE_POSITIONS = ["right", "left"] as const;
 /** stacked: title and dates, then company and location. inline: "Title — Company — Location   dates". */
 export const ENTRY_STYLES = ["stacked", "inline"] as const;
 export const BULLETS = { dot: "•", disc: "●", dash: "–", arrow: "▸" } as const;
-export const ACCENTS = ["#111111", "#1f3a5f", "#0f5e63", "#2f5d3a", "#7a2335", "#9b85c4", "#b45309"] as const;
+export const ACCENTS = ["#111111", "#1f3a5f", "#3873b3", "#0f5e63", "#2f5d3a", "#7a2335", "#dc3522", "#9b85c4", "#b45309"] as const;
 
 export const ResumeStyle = z.object({
   font: z.enum(FONT_IDS).default("libertinus"),
@@ -223,8 +261,13 @@ export const ResumeStyle = z.object({
   accent: z.string().regex(/^#[0-9a-fA-F]{6}$/).default("#111111"),
   header: z.enum(HEADER_STYLES).default("center"),
   headingCase: z.enum(HEADING_CASES).default("caps"),
-  headingRule: z.boolean().default(true),
+  /** A rule under the heading, a rule running on after it, or none. Older settings stored a boolean. */
+  headingRule: z.preprocess((v) => (v === true ? "below" : v === false ? "none" : v), z.enum(HEADING_RULES)).default("below"),
   entry: z.enum(ENTRY_STYLES).default("stacked"),
+  /** Dates on the right of the title, or in their own column on the left. */
+  dates: z.enum(DATE_POSITIONS).default("right"),
+  /** Consecutive roles at the same company share one company line (promotions). */
+  groupRoles: z.boolean().default(true),
   bullet: z.enum(Object.keys(BULLETS) as [keyof typeof BULLETS, ...(keyof typeof BULLETS)[]]).default("dot"),
   /** A small link icon instead of the URL written out. */
   linkIcons: z.boolean().default(false),
@@ -233,21 +276,40 @@ export type ResumeStyle = z.infer<typeof ResumeStyle>;
 const DEFAULT_STYLE = ResumeStyle.parse({});
 
 /** Starting points for the design settings. Each sets every style field; the user can adjust from there. */
-export const STYLE_PRESETS: { id: string; label: string; style: ResumeStyle }[] = [
-  { id: "classic", label: "Classic", style: DEFAULT_STYLE },
+/**
+ * Starting points for the design settings, modelled on widely used templates. Each sets every style
+ * field; the user adjusts from there.
+ */
+export const STYLE_PRESETS: { id: string; label: string; hint: string; style: ResumeStyle }[] = [
+  { id: "classic", label: "Classic", hint: "Serif, centered, the default", style: DEFAULT_STYLE },
   {
-    id: "latex",
-    label: "LaTeX",
+    id: "jakes",
+    label: "Jake's",
+    hint: "The LaTeX template popular in tech",
     style: { ...DEFAULT_STYLE, font: "computer-modern", size: 10, headingCase: "smallcaps" },
   },
   {
     id: "modern",
     label: "Modern",
+    hint: "Sans, color accent, one-line roles",
     style: { ...DEFAULT_STYLE, font: "asap", headingFont: "ubuntu", size: 10, spacing: "airy", margins: "narrow", accent: "#9b85c4", header: "split", entry: "inline", bullet: "disc", linkIcons: true },
+  },
+  {
+    id: "awesome",
+    label: "Awesome-CV",
+    hint: "Bold accent, rule beside headings",
+    style: { ...DEFAULT_STYLE, font: "source-sans", headingFont: "source-sans", size: 10.5, accent: "#dc3522", headingRule: "beside", bullet: "dot", linkIcons: true },
+  },
+  {
+    id: "moderncv",
+    label: "ModernCV",
+    hint: "Dates in a left column",
+    style: { ...DEFAULT_STYLE, font: "lato", size: 10, accent: "#3873b3", header: "left", headingCase: "title", headingRule: "beside", dates: "left", bullet: "dot" },
   },
   {
     id: "compact",
     label: "Compact",
+    hint: "Fits the most on a page",
     style: { ...DEFAULT_STYLE, font: "source-sans", size: 10, spacing: "tight", margins: "narrow", accent: "#1f3a5f", header: "left", entry: "inline", linkIcons: true },
   },
 ];
@@ -327,6 +389,7 @@ export interface ResolvedResume {
   summary: string;
   experience: { company: string; title: string; url: string; location: string; start: string; end: string; bullets: string[] }[];
   projects: { name: string; tech: string[]; url: string; bullets: string[] }[];
+  extras: { title: string; entries: { title: string; org: string; location: string; start: string; end: string; url: string; bullets: string[] }[] }[];
   education: Omit<Education, "id">[];
   skills: { category: string; items: string[] }[];
 }

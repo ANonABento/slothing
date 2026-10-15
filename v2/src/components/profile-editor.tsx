@@ -2,12 +2,12 @@
 
 import { safe } from "@/lib/safe";
 import { settingsHref } from "@/lib/settings-sections";
-import { Check, FileUp, Sparkles, UserRound } from "lucide-react";
+import { Check, FileUp, Plus, Sparkles, UserRound } from "lucide-react";
 import { useRef, useState, useTransition } from "react";
 
 import { importResumeAction, saveProfileAction } from "@/app/actions";
-import type { Bullet, ContactLink, Profile } from "@/lib/types";
-import { ListEditor, itemActions } from "./list-editor";
+import type { Bullet, ContactLink, ExtraEntry, ExtraSection, Profile } from "@/lib/types";
+import { ListEditor, itemActions, type ItemControls } from "./list-editor";
 import { RankBadge, RankNote, rankActions } from "./rank-toggle";
 import { RowMenu } from "./row-menu";
 import { PageBody, PageHeader } from "./page-header";
@@ -59,6 +59,51 @@ function Bullets({ bullets, onChange }: { bullets: Bullet[]; onChange: (b: Bulle
         </div>
       )}
     />
+  );
+}
+
+const SECTION_IDEAS = ["Certifications", "Awards", "Leadership", "Volunteering", "Publications"];
+
+/** One section you name yourself, with role-shaped entries (a certification needs only a title and issuer). */
+function ExtraSectionEditor({ section, onChange, controls }: { section: ExtraSection; onChange: (s: ExtraSection) => void; controls: ItemControls }) {
+  return (
+    <div className="space-y-2 rounded-control border border-rule p-3">
+      <div className="flex items-center gap-1">
+        <Input aria-label="Section name" value={section.title} onChange={(e) => onChange({ ...section, title: e.target.value })} placeholder="Section name, e.g. Certifications" className="flex-1 font-semibold" />
+        <RowMenu label="Section actions" actions={itemActions(controls)} />
+      </div>
+      <ListEditor
+        items={section.entries}
+        onChange={(entries) => onChange({ ...section, entries })}
+        addLabel="Entry"
+        itemLabel="entry"
+        controls="menu"
+        getKey={(x) => x.id}
+        onAdd={(): ExtraEntry => ({ id: cid("ext"), title: "", org: "", location: "", start: "", end: "", url: "", bullets: [], rank: "normal" })}
+        render={(e, update, ctl) => (
+          <EntryCard
+            title={e.title || "New entry"}
+            subtitle={joinParts(e.org, dates(e.start, e.end), e.bullets.length > 0 && count(e.bullets.length, "bullet"))}
+            badge={<RankBadge rank={e.rank} />}
+            aside={<RowMenu label="Entry actions" actions={[...rankActions(e.rank, (rank) => update({ ...e, rank })), ...itemActions(ctl)]} />}
+            defaultOpen={!e.title}
+            dim={e.rank === "hidden"}
+          >
+            <RankNote rank={e.rank} />
+            <div className="grid gap-2 sm:grid-cols-2">
+              <Field label="Title" value={e.title} onChange={(v) => update({ ...e, title: v })} placeholder="AWS Solutions Architect" />
+              <Field label="Issuer or organisation" value={e.org} onChange={(v) => update({ ...e, org: v })} />
+              <Field label="Start" value={e.start} onChange={(v) => update({ ...e, start: v })} />
+              <Field label="End or date" value={e.end} onChange={(v) => update({ ...e, end: v })} placeholder="2025" />
+              <Field label="Location" value={e.location} onChange={(v) => update({ ...e, location: v })} />
+              <Field label="Link" value={e.url} onChange={(v) => update({ ...e, url: v })} />
+            </div>
+            <div className="pt-1 text-xs font-semibold text-ink-2">Bullets (optional)</div>
+            <Bullets bullets={e.bullets} onChange={(b) => update({ ...e, bullets: b })} />
+          </EntryCard>
+        )}
+      />
+    </div>
   );
 }
 
@@ -320,6 +365,32 @@ export function ProfileEditor({ initial }: { initial: Profile }) {
               </div>
             )}
           />
+        </Section>
+        <Section title="Other sections">
+          <p className="-mt-2 mb-3 text-sm text-ink-2">Certifications, awards, leadership, volunteering: anything with its own heading on your resume.</p>
+          <ListEditor
+            items={p.extras}
+            onChange={(v) => set("extras", v)}
+            itemLabel="section"
+            controls="menu"
+            confirmRemove={(x) => (x.entries.length ? `${x.title || "This section"} and its ${x.entries.length} entries will be removed from your profile when you save.` : null)}
+            getKey={(x) => x.id}
+            render={(x, update, ctl) => <ExtraSectionEditor section={x} onChange={update} controls={ctl} />}
+          />
+          <div className="mt-2 flex flex-wrap items-center gap-1.5">
+            <span className="text-xs text-ink-3">Add a section:</span>
+            {[...SECTION_IDEAS.filter((t) => !p.extras.some((x) => x.title.toLowerCase() === t.toLowerCase())), "Other…"].map((t) => (
+              <Button
+                key={t}
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => set("extras", [...p.extras, { id: cid("sec"), title: t === "Other…" ? "" : t, entries: [] }])}
+              >
+                <Plus className="h-3.5 w-3.5" /> {t}
+              </Button>
+            ))}
+          </div>
         </Section>
         <SaveBar dirty={dirty} pending={pending} onSave={save} onDiscard={() => setP(saved)} label="Save profile" />
       </div>

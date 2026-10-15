@@ -26,7 +26,7 @@ describe("reuseIds", () => {
     expect(merged.experience[0].bullets.map((b) => b.rank)).toEqual(["hidden", "normal"]);
     expect(merged.experience[2].rank).toBe("normal");
 
-    const tailored: TailoredResume = { summary: "", experience: [{ sourceId: "exp_a", bullets: [{ text: "x", sourceIds: ["b1"] }] }], projects: [], educationIds: ["edu_a"], skills: [] };
+    const tailored: TailoredResume = { summary: "", experience: [{ sourceId: "exp_a", bullets: [{ text: "x", sourceIds: ["b1"] }] }], projects: [], extras: [], educationIds: ["edu_a"], skills: [] };
     const r = resolveResume(merged, tailored);
     expect(r.experience).toHaveLength(1);
     expect(r.education).toHaveLength(1);

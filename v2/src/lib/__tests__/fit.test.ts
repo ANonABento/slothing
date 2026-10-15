@@ -116,6 +116,7 @@ describe("fitResume", () => {
       summary: "",
       experience: [{ sourceId: "r2", bullets: [{ text: "CUDA-accelerated point clouds.", sourceIds: ["r2a"] }] }],
       projects: [],
+      extras: [],
       educationIds: [],
       skills: [],
     };
@@ -178,4 +179,35 @@ describe("fitResume with real Typst layout", () => {
     const after = await measureResume(resolveResume(long, doc, layout()));
     expect(after.pages).toBe(1);
   }, 60_000);
+});
+
+describe("extra sections", () => {
+  const withExtras = Profile.parse({
+    ...profile,
+    extras: [
+      { id: "x1", title: "Certifications", entries: [{ id: "c1", title: "ROS 2 Developer Certification", org: "Open Robotics" }, { id: "c2", title: "Food Handler Certificate", org: "City" }] },
+    ],
+  });
+
+  it("fills spare room with relevant bullet-less entries, and leaves them out when there's none", async () => {
+    // byCount only counts bullets, so certifications are free here: every one fits.
+    const roomy = await fitResume(withExtras, job, profileAsTailored(withExtras), layout(), byCount(100));
+    expect(roomy.doc.extras.map((e) => e.sourceId)).toEqual(["c1", "c2"]);
+    // A page that holds three items in total: the ROS certification beats the food one.
+    const tight: Measure = async (doc) => {
+      const n = [...doc.experience, ...doc.projects].reduce((a, e) => a + e.bullets.length, 0) + doc.extras.length;
+      return { pages: n > 3 ? 2 : 1, fill: n / 3 };
+    };
+    const { doc } = await fitResume(withExtras, job, profileAsTailored(withExtras), layout({ hide: ["projects"] }), tight);
+    expect(doc.extras.map((e) => e.sourceId)).not.toContain("c2");
+  });
+
+  it("drops extras the layout hides from fitting, and grounds AI extras like any entry", async () => {
+    const { doc } = await fitResume(withExtras, job, { ...profileAsTailored(withExtras), extras: [] }, layout({ hide: ["extras"] }), byCount(100));
+    expect(doc.extras).toEqual([]);
+    const { groundResume } = await import("../tailor");
+    const grounded = groundResume(withExtras, { ...profileAsTailored(withExtras), extras: [{ sourceId: "nope", bullets: [] }, { sourceId: "c1", bullets: [{ text: "made up", sourceIds: ["r1a"] }] }] });
+    expect(grounded.doc.extras).toEqual([{ sourceId: "c1", bullets: [] }]);
+    expect(grounded.warnings.map((w) => w.message).join(" ")).toMatch(/isn't in your profile.*no source/s);
+  });
 });

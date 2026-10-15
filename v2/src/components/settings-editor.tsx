@@ -160,7 +160,7 @@ function TailoringSection({ t, onChange }: { t: Settings["tailoring"]; onChange:
   );
 }
 
-const SECTION_LABELS: Record<SectionId, string> = { summary: "Summary", experience: "Experience", projects: "Projects", education: "Education", skills: "Skills" };
+const SECTION_LABELS: Record<SectionId, string> = { summary: "Summary", experience: "Experience", projects: "Projects", education: "Education", skills: "Skills", extras: "Other sections" };
 const optional = (s: SectionId): s is (typeof OPTIONAL_SECTIONS)[number] => (OPTIONAL_SECTIONS as readonly string[]).includes(s);
 
 function LayoutSection({ layout, onChange }: { layout: Settings["resume"]; onChange: (l: Settings["resume"]) => void }) {

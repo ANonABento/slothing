@@ -234,6 +234,16 @@ export function ResumeEditor({
         sources={profile.projects.map((p) => ({ id: p.id, heading: p.name || "Untitled project", details: p.tech.join(", "), bullets: p.bullets }))}
       />
 
+      {profile.extras.map((x) => (
+        <EntryList
+          key={x.id}
+          label={x.title || "Other"}
+          entries={doc.extras}
+          onChange={(extras) => setDoc({ ...doc, extras })}
+          sources={x.entries.map((e) => ({ id: e.id, heading: e.title || "Untitled", details: joinParts(e.org, dates(e.start, e.end)), bullets: e.bullets }))}
+        />
+      ))}
+
       {profile.education.length > 0 && (
         <div>
           <Label>Education</Label>
