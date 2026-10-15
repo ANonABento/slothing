@@ -237,9 +237,6 @@ export const FONTS = {
 export type FontId = keyof typeof FONTS;
 const FONT_IDS = Object.keys(FONTS) as [FontId, ...FontId[]];
 
-export const FONT_SIZES = [9.5, 10, 10.5, 11, 11.5] as const;
-export const SPACINGS = ["tight", "normal", "airy"] as const;
-export const MARGINS = ["narrow", "normal", "wide"] as const;
 /** center: everything centered. split: name left, contact right. left: both on the left. */
 export const HEADER_STYLES = ["center", "split", "left"] as const;
 export const HEADING_CASES = ["caps", "smallcaps", "title"] as const;
@@ -250,13 +247,41 @@ export const ENTRY_STYLES = ["stacked", "inline"] as const;
 export const BULLETS = { dot: "•", disc: "●", dash: "–", arrow: "▸" } as const;
 export const ACCENTS = ["#111111", "#1f3a5f", "#3873b3", "#0f5e63", "#2f5d3a", "#7a2335", "#dc3522", "#9b85c4", "#b45309"] as const;
 
-export const ResumeStyle = z.object({
+/** Sizes are numbers, like a word processor's; each template sets all of them. */
+export const SIZE_LIMITS = {
+  size: { min: 8, max: 13, step: 0.5 },
+  nameSize: { min: 12, max: 36, step: 1 },
+  headingSize: { min: 8, max: 18, step: 0.5 },
+  spacing: { min: 0.6, max: 1.6, step: 0.05 },
+  margin: { min: 0.25, max: 1.5, step: 0.05 },
+} as const;
+const sized = (k: keyof typeof SIZE_LIMITS) => z.number().min(SIZE_LIMITS[k].min).max(SIZE_LIMITS[k].max);
+const quarter = (n: number) => Math.round(n * 4) / 4;
+
+/** Older settings stored spacing and margins as named steps, and derived name and heading sizes. */
+function upgradeStyle(v: unknown) {
+  if (!v || typeof v !== "object") return v;
+  const s: Record<string, unknown> = { ...v };
+  const size = typeof s.size === "number" ? s.size : 10.5;
+  if (typeof s.spacing === "string") s.spacing = ({ tight: 0.75, normal: 1, airy: 1.25 } as Record<string, number>)[s.spacing] ?? 1;
+  if (typeof s.margins === "string") s.margins = ({ narrow: { x: 0.5, y: 0.45 }, wide: { x: 0.75, y: 0.7 } } as Record<string, unknown>)[s.margins] ?? { x: 0.6, y: 0.55 };
+  s.nameSize ??= quarter(size * ((s.header ?? "center") === "center" ? 2 : 2.3));
+  s.headingSize ??= quarter(size * 1.12);
+  return s;
+}
+
+export const ResumeStyle = z.preprocess(upgradeStyle, z.object({
   font: z.enum(FONT_IDS).default("libertinus"),
   /** Name and section headings; "same" uses the body font. */
   headingFont: z.enum(["same", ...FONT_IDS]).default("same"),
-  size: z.number().min(8).max(13).default(10.5),
-  spacing: z.enum(SPACINGS).default("normal"),
-  margins: z.enum(MARGINS).default("normal"),
+  /** Body text, in points. */
+  size: sized("size").default(10.5),
+  nameSize: sized("nameSize").default(21),
+  headingSize: sized("headingSize").default(11.75),
+  /** Scales every gap: line spacing, between bullets, entries and sections. 1 is the default. */
+  spacing: sized("spacing").default(1),
+  /** Inches: x is left and right, y is top and bottom. */
+  margins: z.object({ x: sized("margin"), y: sized("margin") }).default({ x: 0.6, y: 0.55 }),
   /** Section headings, their rule, bullets and link icons. */
   accent: z.string().regex(/^#[0-9a-fA-F]{6}$/).default("#111111"),
   header: z.enum(HEADER_STYLES).default("center"),
@@ -271,11 +296,10 @@ export const ResumeStyle = z.object({
   bullet: z.enum(Object.keys(BULLETS) as [keyof typeof BULLETS, ...(keyof typeof BULLETS)[]]).default("dot"),
   /** A small link icon instead of the URL written out. */
   linkIcons: z.boolean().default(false),
-});
+}));
 export type ResumeStyle = z.infer<typeof ResumeStyle>;
 const DEFAULT_STYLE = ResumeStyle.parse({});
 
-/** Starting points for the design settings. Each sets every style field; the user can adjust from there. */
 /**
  * Starting points for the design settings, modelled on widely used templates. Each sets every style
  * field; the user adjusts from there.
@@ -286,13 +310,13 @@ export const STYLE_PRESETS: { id: string; label: string; hint: string; style: Re
     id: "jakes",
     label: "Jake's",
     hint: "The LaTeX template popular in tech",
-    style: { ...DEFAULT_STYLE, font: "computer-modern", size: 10, headingCase: "smallcaps" },
+    style: { ...DEFAULT_STYLE, font: "computer-modern", size: 10, nameSize: 20, headingSize: 11.25, headingCase: "smallcaps" },
   },
   {
     id: "modern",
     label: "Modern",
     hint: "Sans, color accent, one-line roles",
-    style: { ...DEFAULT_STYLE, font: "asap", headingFont: "ubuntu", size: 10, spacing: "airy", margins: "narrow", accent: "#9b85c4", header: "split", entry: "inline", bullet: "disc", linkIcons: true },
+    style: { ...DEFAULT_STYLE, font: "asap", headingFont: "ubuntu", size: 10, nameSize: 23, headingSize: 11.25, spacing: 1.25, margins: { x: 0.5, y: 0.45 }, accent: "#9b85c4", header: "split", entry: "inline", bullet: "disc", linkIcons: true },
   },
   {
     id: "awesome",
@@ -304,13 +328,13 @@ export const STYLE_PRESETS: { id: string; label: string; hint: string; style: Re
     id: "moderncv",
     label: "ModernCV",
     hint: "Dates in a left column",
-    style: { ...DEFAULT_STYLE, font: "lato", size: 10, accent: "#3873b3", header: "left", headingCase: "title", headingRule: "beside", dates: "left", bullet: "dot" },
+    style: { ...DEFAULT_STYLE, font: "lato", size: 10, nameSize: 23, headingSize: 11.25, accent: "#3873b3", header: "left", headingCase: "title", headingRule: "beside", dates: "left", bullet: "dot" },
   },
   {
     id: "compact",
     label: "Compact",
     hint: "Fits the most on a page",
-    style: { ...DEFAULT_STYLE, font: "source-sans", size: 10, spacing: "tight", margins: "narrow", accent: "#1f3a5f", header: "left", entry: "inline", linkIcons: true },
+    style: { ...DEFAULT_STYLE, font: "source-sans", size: 10, nameSize: 23, headingSize: 11.25, spacing: 0.75, margins: { x: 0.5, y: 0.45 }, accent: "#1f3a5f", header: "left", entry: "inline", linkIcons: true },
   },
 ];
 

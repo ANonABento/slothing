@@ -21,8 +21,7 @@ const COMMON = `
 // Boxed so a line only breaks between items, never inside a phone number or URL.
 #let contact-parts = d.contactItems.map(i => box(if i.href != none { link(i.href, i.text) } else { i.text }))
 #let header = {
-  let big = if st.header == "center" { 2.0 } else { 2.3 }
-  let name = text(font: st.headingFont, size: base * big, weight: "bold", d.contact.name)
+  let name = text(font: st.headingFont, size: st.nameSize * 1pt, weight: "bold", d.contact.name)
   let sep = if st.header == "center" { "  ·  " } else { "  |  " }
   let contact = if contact-parts.len() > 0 { text(size: base * 0.95, contact-parts.join(sep)) }
   if st.header == "split" {
@@ -35,13 +34,11 @@ const COMMON = `
 `;
 
 export const RESUME_TYP = `${COMMON}
-#let sp = (
-  tight: (leading: 0.42em, item: 0.32em, entry: 5pt, section: 9pt, rows: 0.32em),
-  normal: (leading: 0.55em, item: 0.45em, entry: 7pt, section: 12pt, rows: 0.4em),
-  airy: (leading: 0.68em, item: 0.6em, entry: 10pt, section: 15pt, rows: 0.5em),
-).at(st.spacing)
-#let margin-x = (narrow: 0.5in, normal: 0.6in, wide: 0.75in).at(st.margins)
-#let margin-y = (narrow: 0.45in, normal: 0.55in, wide: 0.7in).at(st.margins)
+// Every gap is a default times st.spacing.
+#let sp = (leading: 0.55em, item: 0.45em, entry: 7pt, section: 12pt, rows: 0.4em)
+#let sp = sp.keys().zip(sp.values().map(v => v * st.spacing)).to-dict()
+#let margin-x = st.margins.x * 1in
+#let margin-y = st.margins.y * 1in
 
 #set page(paper: d.paper, margin: (x: margin-x, y: margin-y))
 #set text(font: st.font, size: base)
@@ -57,7 +54,7 @@ export const RESUME_TYP = `${COMMON}
 
 #let section(title) = {
   let t = if st.headingCase == "caps" { upper(title) } else if st.headingCase == "smallcaps" { smallcaps(title) } else { title }
-  let heading = text(font: st.headingFont, size: base * 1.12, weight: "bold", fill: accent, tracking: if st.headingCase == "caps" { 0.04em } else { 0em }, t)
+  let heading = text(font: st.headingFont, size: st.headingSize * 1pt, weight: "bold", fill: accent, tracking: if st.headingCase == "caps" { 0.04em } else { 0em }, t)
   v(sp.section)
   block(sticky: true, {
     if st.headingRule == "beside" {

@@ -1,14 +1,14 @@
 "use client";
 
-import { ArrowDown, ArrowUp, RotateCcw } from "lucide-react";
+import { ArrowDown, ArrowUp, Minus, Plus, RotateCcw } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 
 import {
   ACCENTS,
   BULLETS,
   FONTS,
-  FONT_SIZES,
   OPTIONAL_SECTIONS,
+  SIZE_LIMITS,
   STYLE_PRESETS,
   type FontId,
   type Paper,
@@ -58,7 +58,7 @@ function useDebounced<T>(value: T, ms: number): T {
 const sameStyle = (a: Style, b: Style) => JSON.stringify(a) === JSON.stringify(b);
 /** The preset this style matches, or the one it differs least from. */
 function closestPreset(style: Style) {
-  const diff = (p: Style) => (Object.keys(p) as (keyof Style)[]).filter((k) => p[k] !== style[k]).length;
+  const diff = (p: Style) => (Object.keys(p) as (keyof Style)[]).filter((k) => JSON.stringify(p[k]) !== JSON.stringify(style[k])).length;
   return STYLE_PRESETS.reduce((best, p) => (diff(p.style) < diff(best.style) ? p : best));
 }
 
@@ -69,6 +69,36 @@ function Row({ label, children, hint }: { label: string; children: ReactNode; hi
       <Label>{label}</Label>
       {children}
       {hint && <p className="mt-1.5 text-xs text-ink-2">{hint}</p>}
+    </div>
+  );
+}
+
+/** A word processor's spin box: type a number or step it, clamped to the limits and rounded to the step. */
+function Stepper({ label, value, onChange, limits, unit }: { label: string; value: number; onChange: (v: number) => void; limits: { min: number; max: number; step: number }; unit: string }) {
+  const [draft, setDraft] = useState<string | null>(null);
+  const commit = (n: number) => {
+    setDraft(null);
+    if (!Number.isFinite(n)) return;
+    const v = Math.min(limits.max, Math.max(limits.min, Math.round(n / limits.step) * limits.step));
+    onChange(Number(v.toFixed(2)));
+  };
+  return (
+    <div className="flex h-10 w-fit items-center rounded-control border border-rule bg-paper">
+      <IconButton size="sm" label={`Decrease ${label}`} onClick={() => commit(value - limits.step)} disabled={value <= limits.min}><Minus className="h-3.5 w-3.5" /></IconButton>
+      <input
+        aria-label={label}
+        inputMode="decimal"
+        value={draft ?? String(value)}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={() => draft !== null && commit(Number(draft))}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") { e.preventDefault(); commit(Number(draft ?? value)); }
+          if (e.key === "ArrowUp" || e.key === "ArrowDown") { e.preventDefault(); commit(value + (e.key === "ArrowUp" ? 1 : -1) * limits.step); }
+        }}
+        className="w-12 bg-transparent text-center font-mono text-sm text-ink focus:outline-none"
+      />
+      <span className="pr-1 text-xs text-ink-3">{unit}</span>
+      <IconButton size="sm" label={`Increase ${label}`} onClick={() => commit(value + limits.step)} disabled={value >= limits.max}><Plus className="h-3.5 w-3.5" /></IconButton>
     </div>
   );
 }
@@ -174,7 +204,7 @@ function TemplateTab({ style, onChange }: { style: Style; onChange: (s: Style) =
           );
         })}
       </div>
-      <p className="text-xs text-ink-3">Choosing a template replaces your text, color and entry choices. Page length, paper and section order stay as they are.</p>
+      <p className="text-xs text-ink-3">Choosing a template sets every font, size, spacing, margin, color and entry choice to its defaults. Page length, paper and section order stay as they are.</p>
     </div>
   );
 }
@@ -196,9 +226,18 @@ function TextTab({ style, set }: { style: Style; set: <K extends keyof Style>(k:
           />
         </Row>
       </div>
-      <Row label="Text size" hint="Most resumes use 10–11pt. Smaller fits more, but is harder to read.">
-        <Segmented value={String(style.size)} onChange={(v) => set("size", Number(v))} options={FONT_SIZES.map((n) => ({ value: String(n), label: `${n}pt` }))} />
-      </Row>
+      <div className="flex flex-wrap gap-x-6 gap-y-5">
+        <Row label="Body text">
+          <Stepper label="Body text size" value={style.size} onChange={(v) => set("size", v)} limits={SIZE_LIMITS.size} unit="pt" />
+        </Row>
+        <Row label="Name">
+          <Stepper label="Name size" value={style.nameSize} onChange={(v) => set("nameSize", v)} limits={SIZE_LIMITS.nameSize} unit="pt" />
+        </Row>
+        <Row label="Section headings">
+          <Stepper label="Section heading size" value={style.headingSize} onChange={(v) => set("headingSize", v)} limits={SIZE_LIMITS.headingSize} unit="pt" />
+        </Row>
+      </div>
+      <p className="-mt-2 text-xs text-ink-2">Most resumes use 10–11pt body text. Smaller fits more, but is harder to read. Each template sets its own sizes.</p>
       <Row label="Accent color" hint="Used for section headings, their rule, bullets and link icons. Names and body text stay black.">
         <div role="radiogroup" aria-label="Accent color" className="flex flex-wrap items-center gap-2">
           {ACCENTS.map((c) => (
@@ -245,12 +284,16 @@ function PageTab({ layout, onChange, set }: { layout: Layout; onChange: (l: Layo
       </Row>
       <div className="flex flex-wrap gap-x-6 gap-y-5">
         <Row label="Spacing">
-          <Segmented value={style.spacing} onChange={(v) => set("spacing", v)} options={[{ value: "tight", label: "Tight" }, { value: "normal", label: "Normal" }, { value: "airy", label: "Airy" }]} />
+          <Stepper label="Spacing" value={style.spacing} onChange={(v) => set("spacing", v)} limits={SIZE_LIMITS.spacing} unit="×" />
         </Row>
-        <Row label="Margins">
-          <Segmented value={style.margins} onChange={(v) => set("margins", v)} options={[{ value: "narrow", label: "Narrow" }, { value: "normal", label: "Normal" }, { value: "wide", label: "Wide" }]} />
+        <Row label="Left and right margins">
+          <Stepper label="Left and right margins" value={style.margins.x} onChange={(x) => set("margins", { ...style.margins, x })} limits={SIZE_LIMITS.margin} unit="in" />
+        </Row>
+        <Row label="Top and bottom margins">
+          <Stepper label="Top and bottom margins" value={style.margins.y} onChange={(y) => set("margins", { ...style.margins, y })} limits={SIZE_LIMITS.margin} unit="in" />
         </Row>
       </div>
+      <p className="-mt-2 text-xs text-ink-2">Spacing scales every gap at once: between lines, bullets, entries and sections. 1× is the default; each template sets its own.</p>
       <Row label="Header">
         <Segmented value={style.header} onChange={(v) => set("header", v)} options={[{ value: "center", label: "Centered" }, { value: "split", label: "Name left, contact right" }, { value: "left", label: "Left" }]} />
       </Row>

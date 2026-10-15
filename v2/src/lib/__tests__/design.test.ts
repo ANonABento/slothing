@@ -5,7 +5,7 @@ import { measureResume, renderPdf } from "../render";
 import { contactItems } from "../render/contact";
 import { typstBin } from "../render/run";
 import { profileAsTailored, resolveLetter, resolveResume } from "../resolve";
-import { Profile, STYLE_PRESETS, Settings } from "../types";
+import { Profile, ResumeStyle, STYLE_PRESETS, Settings } from "../types";
 import { profile } from "./fixture";
 
 describe("contact links", () => {
@@ -26,6 +26,20 @@ describe("contact links", () => {
       { text: "Portfolio", href: "https://alex.dev" },
       { text: "github.com/alexr", href: "https://www.github.com/alexr/" },
     ]);
+  });
+});
+
+describe("style sizes", () => {
+  it("reads older named spacing and margins as numbers, and derives name and heading sizes", () => {
+    expect(ResumeStyle.parse({ size: 10, spacing: "tight", margins: "narrow", header: "left" })).toMatchObject({ spacing: 0.75, margins: { x: 0.5, y: 0.45 }, nameSize: 23, headingSize: 11.25 });
+    expect(ResumeStyle.parse({ spacing: "airy", margins: "normal" })).toMatchObject({ spacing: 1.25, margins: { x: 0.6, y: 0.55 }, nameSize: 21, headingSize: 11.75 });
+    expect(ResumeStyle.parse({ nameSize: 30, spacing: 1.1 })).toMatchObject({ nameSize: 30, spacing: 1.1 });
+  });
+
+  it("keeps the defaults equal to the Classic template, and rejects sizes out of range", () => {
+    expect(ResumeStyle.parse({})).toEqual(STYLE_PRESETS[0].style);
+    expect(() => ResumeStyle.parse({ size: 40 })).toThrow();
+    expect(() => ResumeStyle.parse({ margins: { x: 0, y: 0.5 } })).toThrow();
   });
 });
 
