@@ -17,9 +17,11 @@ const STOP = new Set(
 /** Lowercased words, keeping tech spellings like c++, c#, node.js; plural "s" stripped. */
 export function terms(text: string): string[] {
   return (text.toLowerCase().match(/[a-z0-9][a-z0-9+#.]*[a-z0-9+#]|[a-z0-9]/g) ?? [])
+    // Stop words before plurals, so "this" isn't kept as "thi".
+    .filter((w) => !STOP.has(w) && !/^\d+$/.test(w))
     // Plurals only on plain words, so "node.js" and "aws" survive.
     .map((w) => (/^[a-z]{4,}$/.test(w) && w.endsWith("s") && !w.endsWith("ss") ? w.slice(0, -1) : w))
-    .filter((w) => !STOP.has(w) && !/^\d+$/.test(w));
+    .filter((w) => !STOP.has(w));
 }
 
 const grams = (ts: string[]) => {

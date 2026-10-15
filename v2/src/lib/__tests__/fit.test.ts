@@ -53,6 +53,8 @@ describe("scoring", () => {
     expect(terms("C++, C#, Node.js and the APIs")).toEqual(["c++", "c#", "node.js", "api"]);
     expect(terms("Robots use sensors")).toEqual(["robot", "sensor"]);
     expect(terms("C++ and C#")).toEqual(["c++", "c#"]);
+    // Stop words are dropped before plurals are folded, so "this" doesn't survive as "thi".
+    expect(terms("This does uses")).toEqual([]);
   });
 
   it("ranks bullets that share the job's terms above ones that don't", () => {
