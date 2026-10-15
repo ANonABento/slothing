@@ -2,23 +2,127 @@
 
 import { safe } from "@/lib/safe";
 import { settingsHref } from "@/lib/settings-sections";
-import { History, SlidersHorizontal, Sparkles } from "lucide-react";
+import { History, Loader2, SlidersHorizontal, Sparkles, X } from "lucide-react";
 import Link from "next/link";
 import { useState, useTransition } from "react";
 
-import { saveResumeAction, tailorResumeAction } from "@/app/actions";
+import { rewordBulletAction, saveResumeAction, tailorResumeAction } from "@/app/actions";
+import type { Rewording } from "@/lib/tailor";
 import type { Job, Profile, TailoredResume, Warning } from "@/lib/types";
 import { CommaInput } from "./comma-input";
-import { ListEditor, itemActions } from "./list-editor";
+import { ListEditor, itemActions, type ItemControls } from "./list-editor";
 import { useConfirm } from "./confirm";
 import { Dropdown } from "./dropdown";
 import { EntryCard, count, dates, joinParts } from "./entry-card";
 import { KeywordGap } from "./keyword-gap";
 import { RowMenu } from "./row-menu";
 import { SaveBar } from "./save-bar";
-import { Button, Input, Label, Textarea, Warnings, buttonClass } from "./ui";
+import { Button, IconButton, Input, Label, Textarea, Warnings, buttonClass } from "./ui";
 
 type Entry = TailoredResume["experience"][number];
+type Bullet = Entry["bullets"][number];
+
+const HINTS = ["Shorter", "Lead with the result", "Use the job's wording"];
+
+/**
+ * "Reword with AI" for one bullet: a few alternatives citing the same source, shown under it. Picking one
+ * only edits the draft; saving grounds it like any other edit. Not on Profile: that's what AI is grounded against.
+ */
+function Reword({ jobId, bullet, onPick, onClose }: { jobId: string; bullet: Bullet; onPick: (text: string) => void; onClose: () => void }) {
+  const [hint, setHint] = useState("");
+  const [options, setOptions] = useState<Rewording[] | null>(null);
+  const [error, setError] = useState("");
+  const [pending, start] = useTransition();
+  const run = (h = hint) =>
+    start(async () => {
+      setError("");
+      const res = await safe(() => rewordBulletAction(jobId, bullet, h));
+      if (res.ok) setOptions(res.data ?? []);
+      else setError(res.error);
+    });
+  return (
+    <div className="mt-2 space-y-2 rounded-control border border-rule bg-paper px-3 py-2.5">
+      <div className="flex items-center gap-2">
+        <Sparkles className="h-3.5 w-3.5 shrink-0 text-brand" />
+        <Input
+          aria-label="Hint for the rewording (optional)"
+          value={hint}
+          onChange={(e) => setHint(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              run();
+            }
+          }}
+          placeholder="Optional hint: shorter, lead with the result…"
+          className="h-8 py-1 text-xs"
+        />
+        <Button type="button" size="sm" variant="primary" disabled={pending} onClick={() => run()}>
+          {pending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : options ? "Again" : "Reword"}
+        </Button>
+        <IconButton label="Close rewording" size="sm" onClick={onClose}>
+          <X className="h-3.5 w-3.5" />
+        </IconButton>
+      </div>
+      {!options && !pending && (
+        <div className="flex flex-wrap gap-1.5">
+          {HINTS.map((h) => (
+            <button
+              key={h}
+              type="button"
+              onClick={() => {
+                setHint(h);
+                run(h);
+              }}
+              className="rounded-chip border border-rule px-2 py-0.5 text-xs text-ink-2 hover:border-rule-strong hover:text-ink"
+            >
+              {h}
+            </button>
+          ))}
+        </div>
+      )}
+      {pending && <p className="text-xs text-ink-3">Rewording from the source bullet…</p>}
+      {error && <p className="text-xs text-warn">{error}</p>}
+      {options && !pending && (
+        <ul className="space-y-1.5">
+          {options.map((o) => (
+            <li key={o.text} className="flex items-start gap-2">
+              <div className="min-w-0 flex-1 text-sm">
+                {o.text}
+                {o.warning && <p className="mt-0.5 text-xs text-warn">{o.warning}</p>}
+              </div>
+              <Button type="button" size="sm" variant="secondary" onClick={() => onPick(o.text)}>Use</Button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+/** One bullet with its menu: reword, move, remove. */
+function BulletRow({ jobId, bullet, original, update, ctl }: { jobId: string; bullet: Bullet; original: string; update: (b: Bullet) => void; ctl: ItemControls }) {
+  const [reword, setReword] = useState(false);
+  return (
+    <div className="flex items-start gap-1">
+      <div className="min-w-0 flex-1">
+        <TailoredBulletField text={bullet.text} original={original} onChange={(text) => update({ ...bullet, text })} />
+        {reword && (
+          <Reword
+            jobId={jobId}
+            bullet={bullet}
+            onClose={() => setReword(false)}
+            onPick={(text) => {
+              update({ ...bullet, text });
+              setReword(false);
+            }}
+          />
+        )}
+      </div>
+      <RowMenu label="Bullet actions" actions={[{ label: "Reword with AI", icon: Sparkles, onSelect: () => setReword(true) }, ...itemActions(ctl)]} />
+    </div>
+  );
+}
 
 /** A rewritten bullet, with its profile source one click away instead of always on screen. */
 function TailoredBulletField({ text, original, onChange }: { text: string; original: string; onChange: (t: string) => void }) {
@@ -47,7 +151,7 @@ function TailoredBulletField({ text, original, onChange }: { text: string; origi
 }
 
 /** Bullets for one included entry. New bullets must start from a profile bullet so they stay grounded. */
-function EntryBullets({ entry, sources, onChange }: { entry: Entry; sources: { id: string; text: string }[]; onChange: (e: Entry) => void }) {
+function EntryBullets({ jobId, entry, sources, onChange }: { jobId: string; entry: Entry; sources: { id: string; text: string }[]; onChange: (e: Entry) => void }) {
   const srcText = new Map(sources.map((s) => [s.id, s.text]));
   const used = new Set(entry.bullets.flatMap((b) => b.sourceIds));
   const unused = sources.filter((s) => !used.has(s.id));
@@ -61,14 +165,7 @@ function EntryBullets({ entry, sources, onChange }: { entry: Entry; sources: { i
         controls="menu"
         render={(b, update, ctl) => {
           const original = b.sourceIds.map((id) => srcText.get(id)).filter(Boolean).join(" ");
-          return (
-            <div className="flex items-start gap-1">
-              <div className="min-w-0 flex-1">
-                <TailoredBulletField text={b.text} original={original} onChange={(text) => update({ ...b, text })} />
-              </div>
-              <RowMenu label="Bullet actions" actions={itemActions(ctl)} />
-            </div>
-          );
+          return <BulletRow jobId={jobId} bullet={b} original={original} update={update} ctl={ctl} />;
         }}
       />
       {unused.length > 0 && (
@@ -88,11 +185,13 @@ function EntryBullets({ entry, sources, onChange }: { entry: Entry; sources: { i
 }
 
 function EntryList({
+  jobId,
   label,
   entries,
   sources,
   onChange,
 }: {
+  jobId: string;
   label: string;
   entries: Entry[];
   sources: { id: string; heading: string; details: string; bullets: { id: string; text: string }[] }[];
@@ -124,7 +223,7 @@ function EntryList({
                 </label>
               }
             >
-              {entry && <EntryBullets entry={entry} sources={s.bullets} onChange={(n) => onChange(entries.map((x) => (x.sourceId === s.id ? n : x)))} />}
+              {entry && <EntryBullets jobId={jobId} entry={entry} sources={s.bullets} onChange={(n) => onChange(entries.map((x) => (x.sourceId === s.id ? n : x)))} />}
             </EntryCard>
           );
         })}
@@ -226,12 +325,14 @@ export function ResumeEditor({
       </div>
 
       <EntryList
+        jobId={jobId}
         label="Experience"
         entries={doc.experience}
         onChange={(experience) => setDoc({ ...doc, experience })}
         sources={profile.experience.map((e) => ({ id: e.id, heading: e.title || "Untitled role", details: joinParts(e.company, dates(e.start, e.end)), bullets: e.bullets }))}
       />
       <EntryList
+        jobId={jobId}
         label="Projects"
         entries={doc.projects}
         onChange={(projects) => setDoc({ ...doc, projects })}
@@ -241,6 +342,7 @@ export function ResumeEditor({
       {profile.extras.map((x) => (
         <EntryList
           key={x.id}
+          jobId={jobId}
           label={x.title || "Other"}
           entries={doc.extras}
           onChange={(extras) => setDoc({ ...doc, extras })}

@@ -1,3 +1,5 @@
+import { z } from "zod";
+
 import { generateJSON } from "./llm";
 import { withoutHidden } from "./resolve";
 import { CoverLetter, LETTER_LENGTHS, Settings, TailoredResume, entriesOf, type EntryKind, type Job, type Latitude, type LetterLength, type LetterSettings, type Profile, type TailoringSettings, type Warning } from "./types";
@@ -244,6 +246,79 @@ export async function tailorResume(full: Profile, job: Job, t: TailoringSettings
   if (!draft.educationIds.length) draft.educationIds = profile.education.map((e) => e.id);
   if (t.latitude === "select") draft = verbatim(profile, draft);
   return groundResume(full, withPinned(profile, draft));
+}
+
+/* ─── Reword one bullet ───
+ * Alternatives for a single bullet on a job's resume, grounded like a tailored resume: they cite the
+ * same profile bullets as the one they replace, and any number those bullets don't state is flagged.
+ * Profile bullets are never reworded: they're what the AI is grounded against.
+ */
+
+export interface Rewording {
+  text: string;
+  /** Set when the text has a number the cited bullets don't. */
+  warning?: string;
+}
+
+const REWORDINGS = z.object({ alternatives: z.preprocess((v) => v ?? [], z.array(z.preprocess((v) => v ?? "", z.string()))) });
+
+export const rewordSystem = (instructions: string) => `You reword ONE resume bullet for a specific job, using ONLY what its source bullets say.
+
+Hard rules:
+- Do not add facts: no new numbers, metrics, tools, employers, scope or outcomes. Every claim must be
+  stated by the source bullets. You may drop detail.
+- Keep it one bullet: a single sentence, no leading bullet character, no trailing period required.
+- Where the source genuinely supports it, use the job description's vocabulary.
+- Give 3 alternatives that differ in structure or emphasis, not just synonyms. Follow the hint if one is given.
+
+JSON shape: { "alternatives": [string, string, string] }${preferences(instructions)}`;
+
+/** The profile bullets a tailored bullet cites, from one entry (the same rule grounding applies). */
+export function citedSources(profile: Profile, sourceIds: string[]): { heading: string; bullets: string[] } | null {
+  for (const kind of ["experience", "projects", "extras"] as const) {
+    for (const e of entriesOf(profile, kind)) {
+      const bullets = e.bullets.filter((b) => sourceIds.includes(b.id)).map((b) => b.text);
+      if (!bullets.length) continue;
+      const heading = "company" in e ? `${e.title} at ${e.company}` : "name" in e ? `Project: ${e.name}` : [e.title, e.org].filter(Boolean).join(", ");
+      return { heading, bullets };
+    }
+  }
+  return null;
+}
+
+export async function rewordBullet(
+  profile: Profile,
+  job: Pick<Job, "title" | "company" | "description">,
+  bullet: { text: string; sourceIds: string[] },
+  hint: string,
+  t: TailoringSettings = Settings.parse({}).tailoring,
+): Promise<Rewording[]> {
+  const src = citedSources(profile, bullet.sourceIds);
+  if (!src) throw new Error("This bullet doesn't cite a bullet in your profile, so there's nothing to reword it from.");
+  const { alternatives } = await generateJSON(
+    REWORDINGS,
+    rewordSystem(t.instructions),
+    [
+      `Target role: ${job.title || "(unknown title)"} at ${job.company || "(unknown company)"}`,
+      `Job description (excerpt):\n${job.description.slice(0, 6000)}`,
+      `The bullet is under: ${src.heading}`,
+      `Source bullet${src.bullets.length > 1 ? "s" : ""} (the only facts you may use):\n${src.bullets.map((b) => `- ${b}`).join("\n")}`,
+      `Current wording on the resume:\n${bullet.text}`,
+      hint.trim() ? `Hint: ${hint.trim().slice(0, 200)}` : "",
+    ]
+      .filter(Boolean)
+      .join("\n\n"),
+  );
+  const sources = src.bullets.join(" ");
+  const seen = new Set([bullet.text.trim().toLowerCase()]);
+  return alternatives
+    .map((a) => a.trim().replace(/^[-•*]\s*/, ""))
+    .filter((a) => a && !seen.has(a.toLowerCase()) && seen.add(a.toLowerCase()))
+    .slice(0, 3)
+    .map((text) => {
+      const nums = unsupportedNumbers(text, sources);
+      return nums.length ? { text, warning: `Mentions ${nums.join(", ")}, which isn't in the source bullet.` } : { text };
+    });
 }
 
 export const letterSystem = (length: LetterLength) => `You write a concise cover letter (${length === "short" ? "2–3" : "3–4"} short paragraphs, under ${LETTER_LENGTHS[length]} words)

@@ -8,8 +8,8 @@ import { extractText, parseResumeText, reuseIds } from "@/lib/import";
 import { generateJSON, llmInfo, testLlm } from "@/lib/llm";
 import { profileAsTailored } from "@/lib/resolve";
 import { fitResume } from "@/lib/fit";
-import { groundResume, letterWarnings, tailorResume, writeCoverLetter } from "@/lib/tailor";
-import { CoverLetter, JOB_STATUSES, Profile, Settings, TailoredResume, type AiSettings, type DocKind, type DocMeta, type Warning } from "@/lib/types";
+import { groundResume, letterWarnings, rewordBullet, tailorResume, writeCoverLetter, type Rewording } from "@/lib/tailor";
+import { CoverLetter, JOB_STATUSES, Profile, Settings, TailoredBullet, TailoredResume, type AiSettings, type DocKind, type DocMeta, type Warning } from "@/lib/types";
 import { z } from "zod";
 
 export type Result<T = undefined> = { ok: true; data?: T } | { ok: false; error: string };
@@ -176,6 +176,19 @@ export async function saveResumeAction(jobId: string, data: TailoredResume): Pro
     db.saveDoc(jobId, "resume", doc, warnings, db.editedMeta(jobId, "resume"));
     revalidatePath(`/jobs/${jobId}`);
     return { ok: true, data: warnings };
+  } catch (e) {
+    return fail(e);
+  }
+}
+
+/** Alternatives for one bullet of a job's resume. Nothing is saved: picking one edits the draft, and saving re-grounds it. */
+export async function rewordBulletAction(jobId: string, bullet: { text: string; sourceIds: string[] }, hint: string): Promise<Result<Rewording[]>> {
+  try {
+    const job = requireJob(jobId);
+    const b = TailoredBullet.parse(bullet);
+    const alternatives = await rewordBullet(db.getProfile(), job, b, String(hint ?? ""), db.getSettings().tailoring);
+    if (!alternatives.length) return { ok: false, error: "The model didn't come up with anything different. Try a hint, or try again." };
+    return { ok: true, data: alternatives };
   } catch (e) {
     return fail(e);
   }
