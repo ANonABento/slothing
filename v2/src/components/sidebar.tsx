@@ -6,6 +6,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
+import { PLANNED } from "@/lib/roadmap";
 import { Eyebrow, IconButton, cx } from "./ui";
 
 const GROUPS = [
@@ -73,7 +74,7 @@ export function Sidebar({ llm }: { llm: { provider: string; model: string } | nu
         </nav>
       </div>
 
-      <nav className="hidden flex-1 flex-col px-3 py-2 lg:flex">
+      <nav className="hidden flex-1 flex-col overflow-y-auto px-3 py-2 lg:flex">
         {GROUPS.map((g) => (
           <div key={g.label}>
             <Eyebrow className="px-2 pb-1.5 pt-4">{g.label}</Eyebrow>
@@ -97,6 +98,30 @@ export function Sidebar({ llm }: { llm: { provider: string; model: string } | nu
             </div>
           </div>
         ))}
+
+        {/* Roadmap placeholders (desktop only), muted so they never read as working pages. */}
+        <div>
+          <Eyebrow className="px-2 pb-1.5 pt-4">Planned</Eyebrow>
+          <div className="space-y-0.5">
+            {PLANNED.map(({ slug, label, icon: Icon }) => {
+              const href = `/planned/${slug}`;
+              const active = path === href;
+              return (
+                <Link
+                  key={slug}
+                  href={href}
+                  className={cx(
+                    "flex h-9 items-center gap-2.5 rounded-control border px-2.5 text-sm transition-all",
+                    active ? "border-rule bg-paper text-ink-2 shadow-paper" : "border-transparent text-ink-3 hover:border-rule hover:bg-paper hover:text-ink-2",
+                  )}
+                >
+                  <Icon className="h-4 w-4 opacity-70" />
+                  {label}
+                </Link>
+              );
+            })}
+          </div>
+        </div>
       </nav>
 
       <div className="hidden space-y-2 border-t border-rule p-3 lg:block">

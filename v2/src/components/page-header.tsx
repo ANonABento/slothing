@@ -23,8 +23,9 @@ export function PageHeader({
   actions?: ReactNode;
 }) {
   return (
-    <header className="border-b border-rule bg-header">
-      <div className="flex min-h-bar flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3 sm:px-8 lg:h-bar lg:flex-nowrap lg:py-0">
+    // The border sits inside --bar-h (like the sidebar brand row's), so both bottom rules land on the same pixel.
+    <header className="border-b border-rule bg-header lg:h-bar">
+      <div className="flex min-h-bar flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3 sm:px-8 lg:h-full lg:min-h-0 lg:flex-nowrap lg:py-0">
         {back ? (
           <Link href={back.href} aria-label={`Back to ${back.label}`} title={`Back to ${back.label}`} className="group rounded-control focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand">
             <IconTile icon={ArrowLeft} className="transition-colors group-hover:border-rule-strong group-hover:bg-paper" />

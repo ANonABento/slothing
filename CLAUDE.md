@@ -26,6 +26,8 @@ npm run engines    # fetch typst into .engines/
 - Colors only via tokens in `src/app/globals.css` / `tailwind.config.ts` (`bg-paper`, `text-ink`, `text-brand`, …).
   No raw Tailwind palette colors (`bg-white`, `text-gray-500`).
 - Headings: `font-display tracking-tight`. Eyebrows: `<Eyebrow>` (mono, uppercase).
+- Every page starts with `<PageHeader>`. Its bottom rule must line up exactly with the sidebar brand row's
+  (both are `--bar-h` tall with the border inside), so the two lines read as one.
 - Mutations are server actions in `src/app/actions.ts` returning `Result`.
 - PDFs are rendered with Typst only (`src/lib/render/typst.ts`). Templates read `ResolvedResume` /
   `ResolvedLetter` as JSON. A resume template and its letter template share one header style.

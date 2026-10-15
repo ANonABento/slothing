@@ -51,8 +51,7 @@ src/app/actions.ts   server actions
 src/app/api/pdf      GET ?kind=&job=&download=&source=
 ```
 
-## Not in v1 (on purpose)
+## Roadmap
 
-Browser extension, scrapers, auth/multi-user, Google integrations, interview prep, salary,
-ATS scanner, analytics, email, billing, i18n, extra themes. The archived app in `../v1` has
-working versions of most of these to borrow from once the core loop is solid.
+What's next, what each v1 page became, and when planned pages get built: see [ROADMAP.md](ROADMAP.md).
+Planned pages show in the sidebar as placeholders (`src/lib/roadmap.ts`).
