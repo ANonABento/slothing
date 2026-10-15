@@ -3,6 +3,7 @@
 import { FileText, Mail } from "lucide-react";
 import { useState } from "react";
 
+import { settingsHref } from "@/lib/settings-sections";
 import type { CoverLetter, DocMeta, Profile, StoredDoc, TailoredResume } from "@/lib/types";
 import { LetterEditor } from "./letter-editor";
 import { PdfPreview, PreviewEmpty, PreviewPane } from "./pdf-preview";
@@ -55,7 +56,15 @@ export function JobDocuments({
         </Card>
         <PreviewPane>
           {current ? (
-            <PdfPreview query={`job=${jobId}&kind=${tab}`} version={current.updatedAt} />
+            <PdfPreview
+              query={`job=${jobId}&kind=${tab}`}
+              version={current.updatedAt}
+              settings={
+                tab === "resume"
+                  ? { href: settingsHref("layout", `/jobs/${jobId}`), label: "Layout" }
+                  : { href: settingsHref("letter", `/jobs/${jobId}`), label: "Letter settings" }
+              }
+            />
           ) : (
             <PreviewEmpty>The PDF preview appears here once there&apos;s a {tab === "resume" ? "resume" : "cover letter"}.</PreviewEmpty>
           )}

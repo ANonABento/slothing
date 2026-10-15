@@ -1,16 +1,19 @@
 "use client";
 
 import { AlertTriangle, ArrowDown, ArrowUp, Check, Loader2, Plug, Settings2 } from "lucide-react";
+import Link from "next/link";
+import { useSearchParams, useSelectedLayoutSegment } from "next/navigation";
 import { useState, useTransition, type ReactNode } from "react";
 
 import { saveSettingsAction, testLlmAction } from "@/app/actions";
 import type { ProviderStatus } from "@/lib/llm";
 import { safe } from "@/lib/safe";
+import { SETTINGS_SECTIONS, isSettingsSection, safeBack, settingsHref, type SettingsSection } from "@/lib/settings-sections";
 import { LATITUDES, LETTER_LENGTHS, OPTIONAL_SECTIONS, type Latitude, type LetterLength, type Paper, type Provider, type Section as SectionId, type Settings } from "@/lib/types";
 import { Dropdown } from "./dropdown";
 import { PageBody, PageHeader } from "./page-header";
 import { SaveBar } from "./save-bar";
-import { Button, Card, CardTitle, Field, IconButton, Input, Label, Segmented, Textarea, cx } from "./ui";
+import { Button, Card, CardTitle, Field, IconButton, Input, Label, Segmented, SegmentedLinks, Textarea, cx } from "./ui";
 
 function Section({ title, description, children }: { title: string; description: ReactNode; children: ReactNode }) {
   return (
@@ -226,6 +229,10 @@ export function SettingsEditor({ initial, providers }: { initial: Settings; prov
   const [pending, start] = useTransition();
   const dirty = JSON.stringify(s) !== JSON.stringify(saved);
 
+  const segment = useSelectedLayoutSegment() ?? "";
+  const section: SettingsSection = isSettingsSection(segment) ? segment : "ai";
+  const back = safeBack(useSearchParams().get("back"));
+
   const save = () =>
     start(async () => {
       setError("");
@@ -234,10 +241,13 @@ export function SettingsEditor({ initial, providers }: { initial: Settings; prov
       else setError(res.error);
     });
 
+  const nav = SETTINGS_SECTIONS.map((x) => ({ value: x.id, label: x.label, href: settingsHref(x.id, back ?? undefined) }));
+
   return (
     <>
       <PageHeader
         icon={Settings2}
+        back={back ? { href: back, label: back.startsWith("/jobs/") ? "the job" : "where you were" } : undefined}
         title="Settings"
         description="Which model to use, how much it may change your resume, and how documents are laid out."
         actions={
@@ -248,13 +258,36 @@ export function SettingsEditor({ initial, providers }: { initial: Settings; prov
         }
       />
       <PageBody>
-        <div className="max-w-3xl space-y-4">
-          {error && <p className="text-sm text-warn">{error}</p>}
-          <ModelSection ai={s.ai} providers={providers} onChange={(ai) => setS({ ...s, ai })} />
-          <TailoringSection t={s.tailoring} onChange={(tailoring) => setS({ ...s, tailoring })} />
-          <LayoutSection layout={s.resume} onChange={(resume) => setS({ ...s, resume })} />
-          <LetterSection letter={s.letter} onChange={(letter) => setS({ ...s, letter })} />
-          <SaveBar dirty={dirty} pending={pending} onSave={save} onDiscard={() => setS(saved)} label="Save settings" />
+        <div className="grid gap-6 lg:grid-cols-[200px_minmax(0,1fr)]">
+          {/* Mobile: a segmented row. Desktop: a sticky list beside the content. */}
+          <div className="overflow-x-auto lg:hidden">
+            <SegmentedLinks value={section} options={nav} size="sm" />
+          </div>
+          <nav aria-label="Settings sections" className="hidden lg:block">
+            <div className="sticky top-6 space-y-0.5">
+              {nav.map((n) => (
+                <Link
+                  key={n.value}
+                  href={n.href}
+                  aria-current={section === n.value ? "page" : undefined}
+                  className={cx(
+                    "flex h-9 items-center rounded-control border px-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand",
+                    section === n.value ? "border-rule bg-paper text-ink shadow-paper" : "border-transparent text-ink-2 hover:border-rule hover:bg-paper hover:text-ink",
+                  )}
+                >
+                  {n.label}
+                </Link>
+              ))}
+            </div>
+          </nav>
+          <div className="min-w-0 space-y-4">
+            {error && <p className="text-sm text-warn">{error}</p>}
+            {section === "ai" && <ModelSection ai={s.ai} providers={providers} onChange={(ai) => setS({ ...s, ai })} />}
+            {section === "tailoring" && <TailoringSection t={s.tailoring} onChange={(tailoring) => setS({ ...s, tailoring })} />}
+            {section === "layout" && <LayoutSection layout={s.resume} onChange={(resume) => setS({ ...s, resume })} />}
+            {section === "letter" && <LetterSection letter={s.letter} onChange={(letter) => setS({ ...s, letter })} />}
+            <SaveBar dirty={dirty} pending={pending} onSave={save} onDiscard={() => setS(saved)} label="Save settings" />
+          </div>
         </div>
       </PageBody>
     </>

@@ -1,7 +1,9 @@
 "use client";
 
 import { safe } from "@/lib/safe";
+import { settingsHref } from "@/lib/settings-sections";
 import { Sparkles } from "lucide-react";
+import Link from "next/link";
 import { useState, useTransition } from "react";
 
 import { saveLetterAction, writeLetterAction } from "@/app/actions";
@@ -83,7 +85,7 @@ export function LetterEditor({
       <div>
         <div className="flex items-baseline justify-between">
           <Label>Paragraphs</Label>
-          <WordCount words={doc.paragraphs.join(" ").split(/\s+/).filter(Boolean).length} target={targetWords} />
+          <WordCount words={doc.paragraphs.join(" ").split(/\s+/).filter(Boolean).length} target={targetWords} href={settingsHref("letter", `/jobs/${jobId}`)} />
         </div>
         <ListEditor
           items={doc.paragraphs}
@@ -102,10 +104,10 @@ export function LetterEditor({
     </fieldset>
   );
 }
-function WordCount({ words, target }: { words: number; target: number }) {
+function WordCount({ words, target, href }: { words: number; target: number; href: string }) {
   return (
-    <span className={cx("font-mono text-xs", words > target * 1.1 ? "text-warn" : "text-ink-3")} title="Word target is set in Settings">
+    <Link href={href} className={cx("font-mono text-xs underline-offset-2 hover:underline", words > target * 1.1 ? "text-warn" : "text-ink-3")} title="Change the word target in Settings">
       {words} / {target} words
-    </span>
+    </Link>
   );
 }

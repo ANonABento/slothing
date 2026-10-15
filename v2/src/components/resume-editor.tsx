@@ -1,7 +1,9 @@
 "use client";
 
 import { safe } from "@/lib/safe";
-import { History, Sparkles } from "lucide-react";
+import { settingsHref } from "@/lib/settings-sections";
+import { History, SlidersHorizontal, Sparkles } from "lucide-react";
+import Link from "next/link";
 import { useState, useTransition } from "react";
 
 import { saveResumeAction, tailorResumeAction } from "@/app/actions";
@@ -11,7 +13,7 @@ import { ListEditor } from "./list-editor";
 import { useConfirm } from "./confirm";
 import { Dropdown } from "./dropdown";
 import { SaveBar } from "./save-bar";
-import { Button, Inset, Input, Label, Textarea, Warnings } from "./ui";
+import { Button, Inset, Input, Label, Textarea, Warnings, buttonClass } from "./ui";
 
 type Entry = TailoredResume["experience"][number];
 
@@ -172,6 +174,9 @@ export function ResumeEditor({
         {pending ? "Working…" : doc ? "Re-tailor with AI" : "Tailor with AI"}
       </Button>
       <Button variant="ghost" disabled={pending} onClick={() => generate(false)}>Use full profile</Button>
+      <Link href={settingsHref("tailoring", `/jobs/${jobId}`)} className={buttonClass("ghost", "md", "ml-auto")}>
+        <SlidersHorizontal className="h-4 w-4" /> Tailoring settings
+      </Link>
     </div>
   );
 

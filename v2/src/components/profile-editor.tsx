@@ -1,6 +1,7 @@
 "use client";
 
 import { safe } from "@/lib/safe";
+import { settingsHref } from "@/lib/settings-sections";
 import { Check, FileUp, Sparkles, UserRound } from "lucide-react";
 import { useRef, useState, useTransition } from "react";
 
@@ -258,7 +259,7 @@ export function ProfileEditor({ initial }: { initial: Profile }) {
       <PreviewPane>
         <Eyebrow className="mb-2">Base resume · everything, untailored</Eyebrow>
         {hasData ? (
-          <PdfPreview query="kind=resume" version={version} />
+          <PdfPreview query="kind=resume" version={version} settings={{ href: settingsHref("layout", "/profile"), label: "Layout" }} />
         ) : (
           <PreviewEmpty>Import or fill in your profile, save, and a preview appears here.</PreviewEmpty>
         )}

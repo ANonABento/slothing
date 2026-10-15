@@ -1,6 +1,7 @@
 "use client";
 
-import { AlertTriangle, Code2, Download, Loader2 } from "lucide-react";
+import { AlertTriangle, Code2, Download, Loader2, SlidersHorizontal } from "lucide-react";
+import Link from "next/link";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 
 import { buttonClass, cx } from "./ui";
@@ -127,14 +128,19 @@ export function PreviewPane({ children }: { children: ReactNode }) {
   return <div className="flex min-w-0 flex-col xl:sticky xl:top-6 xl:max-h-[calc(100vh-3rem)]">{children}</div>;
 }
 
-/** Live PDF preview with source and download links. */
-export function PdfPreview({ query, version }: { query: string; version: number | string }) {
+/** Live PDF preview with source and download links, and optionally a link to the settings that shape it. */
+export function PdfPreview({ query, version, settings }: { query: string; version: number | string; settings?: { href: string; label: string } }) {
   const src = (extra = "") => `/api/pdf?${query}&v=${encodeURIComponent(String(version))}${extra}`;
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3">
-      <div className="flex justify-end gap-1">
-        <a href={src("&source=1")} target="_blank" rel="noreferrer" className={buttonClass("ghost", "sm")}>
+      <div className="flex gap-1">
+        {settings && (
+          <Link href={settings.href} className={buttonClass("ghost", "sm")}>
+            <SlidersHorizontal className="h-3.5 w-3.5" /> {settings.label}
+          </Link>
+        )}
+        <a href={src("&source=1")} target="_blank" rel="noreferrer" className={buttonClass("ghost", "sm", "ml-auto")}>
           <Code2 className="h-3.5 w-3.5" /> Source
         </a>
         <a href={src("&download=1")} className={buttonClass("secondary", "sm")}>
