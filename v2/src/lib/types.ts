@@ -120,6 +120,7 @@ export interface StoredDoc<T> {
   kind: DocKind;
   data: T;
   warnings: Warning[];
+  meta: DocMeta;
   updatedAt: string;
 }
 
@@ -181,6 +182,17 @@ export type TailoringSettings = Settings["tailoring"];
 export type ResumeLayout = Settings["resume"];
 export type LetterSettings = Settings["letter"];
 export type Paper = (typeof PAPERS)[number];
+
+/** Where a document came from, shown above the editor. Older documents have an empty object. */
+export const DocMeta = z.object({
+  source: z.enum(["ai", "profile"]).optional(),
+  provider: z.string().optional(),
+  model: z.string().optional(),
+  latitude: z.enum(LATITUDES).optional(),
+  /** Hand-edited since it was generated. */
+  edited: z.boolean().optional(),
+});
+export type DocMeta = z.infer<typeof DocMeta>;
 
 /* ─── Fully-resolved shapes the renderers consume ─── */
 

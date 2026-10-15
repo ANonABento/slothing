@@ -5,6 +5,7 @@ import { join } from "path";
 import { newId } from "./ids";
 import {
   CoverLetter,
+  DocMeta,
   Profile,
   Settings,
   TailoredResume,
@@ -54,6 +55,7 @@ function open() {
       kind TEXT NOT NULL,
       data TEXT NOT NULL,
       warnings TEXT NOT NULL DEFAULT '[]',
+      meta TEXT NOT NULL DEFAULT '{}',
       updated_at TEXT NOT NULL,
       UNIQUE (job_id, kind)
     );
@@ -62,9 +64,17 @@ function open() {
   return db;
 }
 
+/** Columns added after a table first shipped. CREATE TABLE above has them for new databases; this adds them to old ones. */
+export function migrate(db: Database.Database) {
+  const has = (table: string, column: string) => (db.prepare(`PRAGMA table_info(${table})`).all() as { name: string }[]).some((c) => c.name === column);
+  if (!has("documents", "meta")) db.exec("ALTER TABLE documents ADD COLUMN meta TEXT NOT NULL DEFAULT '{}'");
+}
+
 // Survive Next dev hot reloads without leaking connections.
 const g = globalThis as unknown as { __slothingDb?: Database.Database };
 const db = (g.__slothingDb ??= open());
+// Outside open(): a dev server keeps its connection across hot reloads, so new migrations must still run.
+migrate(db);
 
 const now = () => new Date().toISOString();
 
@@ -153,7 +163,7 @@ type DocData<K extends DocKind> = K extends "resume" ? TailoredResume : CoverLet
 
 export function getDoc<K extends DocKind>(jobId: string, kind: K): StoredDoc<DocData<K>> | null {
   const row = db.prepare("SELECT * FROM documents WHERE job_id = ? AND kind = ?").get(jobId, kind) as
-    | { id: string; job_id: string; kind: K; data: string; warnings: string; updated_at: string }
+    | { id: string; job_id: string; kind: K; data: string; warnings: string; meta: string; updated_at: string }
     | undefined;
   if (!row) return null;
   return {
@@ -162,22 +172,28 @@ export function getDoc<K extends DocKind>(jobId: string, kind: K): StoredDoc<Doc
     kind,
     data: schemas[kind].parse(JSON.parse(row.data)) as DocData<K>,
     warnings: JSON.parse(row.warnings),
+    meta: DocMeta.catch({}).parse(JSON.parse(row.meta)),
     updatedAt: row.updated_at,
   };
 }
 
-export function saveDoc<K extends DocKind>(jobId: string, kind: K, data: DocData<K>, warnings?: Warning[]) {
+/** `warnings` and `meta` keep their stored values when omitted. */
+export function saveDoc<K extends DocKind>(jobId: string, kind: K, data: DocData<K>, warnings?: Warning[], meta?: DocMeta) {
   const parsed = schemas[kind].parse(data);
   const existing = getDoc(jobId, kind);
   db.prepare(
-    `INSERT INTO documents (id, job_id, kind, data, warnings, updated_at) VALUES (?, ?, ?, ?, ?, ?)
-     ON CONFLICT(job_id, kind) DO UPDATE SET data = excluded.data, warnings = excluded.warnings, updated_at = excluded.updated_at`,
+    `INSERT INTO documents (id, job_id, kind, data, warnings, meta, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)
+     ON CONFLICT(job_id, kind) DO UPDATE SET data = excluded.data, warnings = excluded.warnings, meta = excluded.meta, updated_at = excluded.updated_at`,
   ).run(
     existing?.id ?? newId("doc"),
     jobId,
     kind,
     JSON.stringify(parsed),
     JSON.stringify(warnings ?? existing?.warnings ?? []),
+    JSON.stringify(meta ?? existing?.meta ?? {}),
     now(),
   );
 }
+
+/** Meta for a hand save: whatever made the document, now marked as edited. */
+export const editedMeta = (jobId: string, kind: DocKind): DocMeta => ({ ...getDoc(jobId, kind)?.meta, edited: true });

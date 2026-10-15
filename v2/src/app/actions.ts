@@ -5,10 +5,10 @@ import { redirect } from "next/navigation";
 
 import * as db from "@/lib/db";
 import { extractText, parseResumeText, reuseIds } from "@/lib/import";
-import { generateJSON, testLlm } from "@/lib/llm";
+import { generateJSON, llmInfo, testLlm } from "@/lib/llm";
 import { profileAsTailored } from "@/lib/resolve";
 import { groundResume, letterWarnings, tailorResume, writeCoverLetter } from "@/lib/tailor";
-import { CoverLetter, JOB_STATUSES, Profile, Settings, TailoredResume, type AiSettings, type Warning } from "@/lib/types";
+import { CoverLetter, JOB_STATUSES, Profile, Settings, TailoredResume, type AiSettings, type DocMeta, type Warning } from "@/lib/types";
 import { z } from "zod";
 
 export type Result<T = undefined> = { ok: true; data?: T } | { ok: false; error: string };
@@ -139,8 +139,11 @@ export async function tailorResumeAction(jobId: string, useAI: boolean): Promise
     if (!profile.experience.length && !profile.projects.length) {
       return { ok: false, error: "Your profile is empty — add your experience on the Profile page first." };
     }
-    const { doc, warnings } = useAI ? await tailorResume(profile, job, db.getSettings().tailoring) : { doc: profileAsTailored(profile), warnings: [] as Warning[] };
-    db.saveDoc(jobId, "resume", doc, warnings);
+    const { tailoring } = db.getSettings();
+    const llm = llmInfo();
+    const { doc, warnings } = useAI ? await tailorResume(profile, job, tailoring) : { doc: profileAsTailored(profile), warnings: [] as Warning[] };
+    const meta: DocMeta = useAI ? { source: "ai", provider: llm?.provider, model: llm?.model, latitude: tailoring.latitude } : { source: "profile" };
+    db.saveDoc(jobId, "resume", doc, warnings, meta);
     revalidatePath(`/jobs/${jobId}`);
     return { ok: true };
   } catch (e) {
@@ -152,7 +155,7 @@ export async function saveResumeAction(jobId: string, data: TailoredResume): Pro
   try {
     // Hand edits are re-checked against the profile too.
     const { doc, warnings } = groundResume(db.getProfile(), TailoredResume.parse(data));
-    db.saveDoc(jobId, "resume", doc, warnings);
+    db.saveDoc(jobId, "resume", doc, warnings, db.editedMeta(jobId, "resume"));
     revalidatePath(`/jobs/${jobId}`);
     return { ok: true, data: warnings };
   } catch (e) {
@@ -163,8 +166,10 @@ export async function saveResumeAction(jobId: string, data: TailoredResume): Pro
 export async function writeLetterAction(jobId: string): Promise<Result> {
   try {
     const job = requireJob(jobId);
-    const { doc, warnings } = await writeCoverLetter(db.getProfile(), job, db.getSettings().tailoring, db.getSettings().letter);
-    db.saveDoc(jobId, "cover_letter", doc, warnings);
+    const settings = db.getSettings();
+    const llm = llmInfo();
+    const { doc, warnings } = await writeCoverLetter(db.getProfile(), job, settings.tailoring, settings.letter);
+    db.saveDoc(jobId, "cover_letter", doc, warnings, { source: "ai", provider: llm?.provider, model: llm?.model });
     revalidatePath(`/jobs/${jobId}`);
     return { ok: true };
   } catch (e) {
@@ -175,7 +180,8 @@ export async function writeLetterAction(jobId: string): Promise<Result> {
 export async function saveLetterAction(jobId: string, data: CoverLetter): Promise<Result> {
   try {
     const letter = CoverLetter.parse(data);
-    db.saveDoc(jobId, "cover_letter", letter, letterWarnings(db.getProfile(), letter, db.getJob(jobId) ?? undefined, db.getSettings().letter.length));
+    const warnings = letterWarnings(db.getProfile(), letter, db.getJob(jobId) ?? undefined, db.getSettings().letter.length);
+    db.saveDoc(jobId, "cover_letter", letter, warnings, db.editedMeta(jobId, "cover_letter"));
     revalidatePath(`/jobs/${jobId}`);
     return { ok: true };
   } catch (e) {

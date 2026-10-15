@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { getSettings, saveSettings } from "../db";
+import { createJob, editedMeta, getDoc, getSettings, migrate, saveDoc, saveSettings } from "../db";
 import { resolveLlm } from "../llm";
 import { profileAsTailored, resolveResume } from "../resolve";
 import { letterSystem, letterWarnings } from "../tailor";
@@ -88,5 +88,28 @@ describe("cover letter length", () => {
   it("the prompt states the target", () => {
     expect(letterSystem("short")).toMatch(/under 200 words/);
     expect(letterSystem("standard")).toMatch(/under 350 words/);
+  });
+});
+
+describe("document meta", () => {
+  it("migrate adds the meta column to an old documents table, keeping rows, and is idempotent", async () => {
+    const { default: Database } = await import("better-sqlite3");
+    const old = new Database(":memory:");
+    old.exec(`CREATE TABLE documents (id TEXT PRIMARY KEY, job_id TEXT NOT NULL, kind TEXT NOT NULL, data TEXT NOT NULL,
+      warnings TEXT NOT NULL DEFAULT '[]', updated_at TEXT NOT NULL, UNIQUE (job_id, kind));
+      INSERT INTO documents VALUES ('d1', 'j1', 'resume', '{}', '[]', 'now');`);
+    migrate(old);
+    migrate(old);
+    expect(old.prepare("SELECT meta FROM documents WHERE id = 'd1'").get()).toEqual({ meta: "{}" });
+  });
+
+  it("saveDoc stores meta, keeps it when omitted, and editedMeta marks hand edits", () => {
+    const jobId = createJob({ company: "Initech", title: "Eng", url: "", location: "", description: "" });
+    const doc = profileAsTailored(profile);
+    saveDoc(jobId, "resume", doc, [], { source: "ai", provider: "Nebius", model: "m", latitude: "select" });
+    saveDoc(jobId, "resume", doc);
+    expect(getDoc(jobId, "resume")?.meta).toEqual({ source: "ai", provider: "Nebius", model: "m", latitude: "select" });
+    saveDoc(jobId, "resume", doc, [], editedMeta(jobId, "resume"));
+    expect(getDoc(jobId, "resume")?.meta).toMatchObject({ source: "ai", edited: true });
   });
 });
