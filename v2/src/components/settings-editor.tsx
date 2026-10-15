@@ -409,7 +409,7 @@ export function SettingsEditor({ initial, providers }: { initial: Settings; prov
             {section === "layout" && <LayoutSection layout={s.resume} onChange={(resume) => setS({ ...s, resume })} />}
             {section === "letter" && <LetterSection letter={s.letter} onChange={(letter) => setS({ ...s, letter })} />}
             {section === "appearance" && <AppearanceSection a={s.appearance} onChange={(appearance) => setS({ ...s, appearance })} />}
-            <SaveBar dirty={dirty} pending={pending} onSave={save} onDiscard={() => setS(saved)} label="Save settings" />
+            <SaveBar dirty={dirty} pending={pending} onSave={save} onDiscard={() => setS(saved)} label="Save settings" keepPrefix="/settings" />
           </div>
         </div>
       </PageBody>
