@@ -17,6 +17,7 @@ Iteration 2 of `ROADMAP.md`, worked in the order from the handoff. This file is 
 |---|---|---|
 | Keyword gap | `69497b89`, `781f0a5f` | Open a job with a resume. The chips above the editor are the posting's key terms: ✓ on the resume, orange "+" in your profile (click to see the bullets/skills that have it, then Add), grey dashed = not in your profile. Untick a role to watch chips turn orange live. |
 | Reword this bullet | `4f528b21` | On a job's resume, open a role, click a bullet's ⋯ → "Reword with AI". Pick a quick hint or type one (Enter runs it). "Use" swaps the text in the draft; Save re-grounds it. "Reworded · show original" lets you revert. |
+| Import a job from its URL | `687b4000`, `5cc554dd`, `d331b6fa` | Jobs page → paste a posting link → Import (or Enter). Opens the new job. Try `https://job-boards.greenhouse.io/gitlab/jobs/8864819002`, a `jobs.lever.co/…`, `jobs.ashbyhq.com/…` or `linkedin.com/jobs/view/…` link. Unreadable pages say why and suggest "Add job". |
 
 ## Bugs fixed along the way
 
@@ -38,7 +39,27 @@ Rows are in `FRICTION.md` under "Agent dogfooding (overnight)".
   Worst friction (both features): AI tailoring took ~70 s with no progress feedback; and the no-AI term picker still lets
   some boilerplate through as grey chips.
 
+- **URL import**, second test profile (a made-up ICU nurse with 4 roles, licenses, an award): imported a
+  LinkedIn ICU posting from a *search* link, tailored without and with AI (fitter cut one old bullet to hold
+  one page), wrote a cover letter. Also imported GitLab (Greenhouse), Airbnb and Stripe career sites
+  (Greenhouse behind them), Spotify (Lever), Ramp (Ashby), two Mozilla postings (one via the AI fallback,
+  6.7k chars copied verbatim; one via its Greenhouse link). Failure paths seen for real: a closed LinkedIn
+  posting, LinkedIn rate limiting (429), Workday and Workable (JavaScript shells), HN (419), a listings page
+  (AI said "not a single posting").
+  **Worst friction of the night:** the AI summary and cover letter for the nurse claimed things from the
+  *posting* ("hemodynamic monitoring", "comfortable with weekend and holiday rotation"). Only numbers are
+  checked outside bullets, so this passes grounding. Not fixed: it needs a decision (see Ideas).
+
 ## Unfinished / unverified / unsure
+
+- URL import: Greenhouse, Lever, Ashby and LinkedIn are verified against live postings (and unit-tested
+  with fixtures). LinkedIn rate-limits quickly (I hit a 429 after ~10 requests), then the import falls back
+  to the page's JSON-LD and otherwise says to wait. Workday and Workable aren't supported (JavaScript shells).
+- URL import has no duplicate check: importing the same link twice makes two jobs.
+- The `fetch` runs from your machine to whatever link you paste (http/https only). Fine for a local
+  single-user app; it would need an allow-list before any hosted use.
+- The noise-word tweak for keyword gap (`current`, `upon`, `hire`…) went into the URL import commit
+  `687b4000` by accident rather than its own.
 
 - Keyword gap term picking is heuristic (title words; words used 3+ times; phrases 2+; your own skills
   named once; a noise list). It's decent on the 4 postings I tuned on, but a posting with a long company
@@ -50,3 +71,11 @@ Rows are in `FRICTION.md` under "Agent dogfooding (overnight)".
   passes. Same limit as tailoring, so I left it.
 
 ## Ideas not built
+
+- **Grounding for prose** (the nurse finding): flag summary/letter phrases that appear in the posting but
+  nowhere in the profile ("hemodynamic monitoring"). The keyword gap's `keyTerms` + `hasTerm` already
+  compute exactly that set, so it could become a warning like the number check. Needs your call on noise.
+- Workday and Workable readers: both have public JSON endpoints behind their SPAs.
+- URL import: if the link is already a job, open that job instead of creating a second one.
+- Progress feedback for slow AI calls (tailoring ~60–70 s on Nebius DeepSeek): even an elapsed-seconds counter.
+- Keyword gap: acronym pairs (RN ↔ Registered Nurse, ICU ↔ intensive care).
