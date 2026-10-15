@@ -6,7 +6,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
-import { PLANNED } from "@/lib/roadmap";
+import { PLANNED, V1_URL } from "@/lib/roadmap";
 import { Eyebrow, IconButton, cx } from "./ui";
 
 const GROUPS = [
@@ -142,7 +142,12 @@ export function Sidebar({ llm }: { llm: { provider: string; model: string } | nu
           </div>
         </Link>
         <div className="flex items-center justify-between px-1">
-          <Eyebrow>v2 · local</Eyebrow>
+          <Eyebrow>
+            v2 · local ·{" "}
+            <a href={V1_URL} target="_blank" rel="noreferrer" className="hover:text-ink" title="The archived v1 app (start it with npm run v1)">
+              open v1
+            </a>
+          </Eyebrow>
           <ThemeToggle />
         </div>
       </div>

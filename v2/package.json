@@ -8,7 +8,8 @@
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "engines": "bash scripts/setup-engines.sh"
+    "engines": "bash scripts/setup-engines.sh",
+    "v1": "bash scripts/run-v1.sh"
   },
   "dependencies": {
     "better-sqlite3": "^13.0.3",
