@@ -10,6 +10,8 @@ A deliberately small rebuild of Slothing. One loop, done well:
    length on the real layout and never adds to your profile (see *Grounding* below).
 4. **Cover letter**: drafted from your profile and the job description.
 5. **PDF**: rendered with Typst.
+6. **Apply**: the browser extension saves postings and fills application forms from your profile and
+   your **answer bank**, attaching the tailored PDF.
 
 Single user, local SQLite, no auth.
 
@@ -25,6 +27,17 @@ npm run v1                 # optional: the archived v1 app on http://localhost:3
 ```
 
 Data lives in `v2/data/slothing.db` (override with `SLOTHING_DATA_DIR`).
+
+### Browser extension (Chrome)
+
+```bash
+npm run extension          # builds extension/dist (add -- --watch while working on it)
+```
+
+Then `chrome://extensions` → Developer mode → Load unpacked → `v2/extension/dist`, and click
+**Connect extension** on the app's Extension page. Rebuild and press reload on the extension card after
+pulling changes. The popup only touches a page when you click in it, and only talks to this app (a key
+from the Extension page; no CORS, so websites can't read the API).
 
 ### With Docker
 
@@ -55,7 +68,7 @@ Warnings are shown above the editor and stored with the document.
 
 ```
 src/lib/types.ts     Zod schemas: Profile, TailoredResume, CoverLetter
-src/lib/db.ts        better-sqlite3, 4 tables (profile, settings, jobs, documents)
+src/lib/db.ts        better-sqlite3: profile, settings, jobs, documents (+ versions), answers, kv
 src/lib/llm.ts       Anthropic / OpenAI-compatible JSON client; provider + model from Settings, keys from env
 src/lib/import.ts    PDF/DOCX/text → Profile
 src/lib/tailor.ts    grounded AI tailoring + cover letter
@@ -64,7 +77,12 @@ src/lib/fit.ts       fills the page limit with the best bullets, measured on the
 src/lib/resolve.ts   tailored doc + profile → render-ready shape
 src/lib/render/      typst.ts templates → renderPdf(input)
 src/app/actions.ts   server actions
+src/lib/answers.ts   answer bank matching: question similarity, option picking
+src/lib/autofill.ts  what goes in each form field (profile, bank, PDF), what to save back
+src/lib/extension.ts the extension's API: key, job for a URL, fill / draft / save
 src/app/api/pdf      GET ?kind=&job=&download=&source=
+src/app/api/extension/[op]  POST, for the extension only (needs its key)
+extension/           Chrome MV3: popup (React, the app's ui.tsx + tokens), page.ts (reads/fills forms)
 ```
 
 ## Roadmap

@@ -1,96 +1,87 @@
-# Overnight report (2026-10-15)
+# Overnight report (2026-10-16)
 
-Iteration 2 of `ROADMAP.md`, in the order from the handoff. **All four items are done**: keyword gap,
-reword this bullet and URL import are shipped and dogfooded; Docker is written but not built (no Docker here).
-`npm run typecheck` and `npm test` (92 tests) pass. Nothing pushed. `HANDOFF.md` deleted as it asked.
-About 11 AI calls in total (2 resume imports, 1 job-title fill, 2 tailorings, 2 letters, 2 rewordings,
-2 URL-import fallbacks).
+You asked for: templates removed (Resume design replaced them), then the extension and the answer bank,
+built properly. **All three are done and committed** (8 commits on `v2-rebuild`, nothing pushed).
+`npm run typecheck`, `npm test` (152 tests) and `next build` pass. About 3 AI calls in total.
 
-**Start here:** the grounding gap in the nurse's summary and letter (under Dogfooding). It's the one
-finding that affects trust in what the app sends.
+**Start here (5 minutes):**
 
-## Setup notes
+```bash
+cd v2 && npm install && npm run extension     # esbuild is a new dev dependency
+```
 
-- A v2 dev server was already running on :3001 (on your real data). Stopping it was blocked by the
-  permission classifier, so I left it alone and ran the dogfood server on **:3002** with its own build folder
-  (`NEXT_DIST_DIR=.next-dogfood`, new in `next.config.ts`), so the two never shared `.next`.
-  Data: a copy at `/tmp/slothing-dogfood`. `v2/data` was never touched.
-- Port 3000 is another project (BentoSite), left alone. **Your :3001 server is still running** (I couldn't
-  stop it), so it has been serving your real data all night with the old code; restart it to pick up these
-  commits. The `next.config.ts` → `.mjs` rename means a restart is needed anyway.
-- Test profile: a made-up demand-planning analyst ("Maya Lindqvist"), imported in the copy only.
+Chrome → `chrome://extensions` → Developer mode → **Load unpacked** → `v2/extension/dist`. Then open
+Slothing → **Extension** (sidebar) → **Connect extension**. Open any posting and click the Slothing icon
+(or Alt+Shift+S). Your :3001 dev server already serves the new pages (I checked `/`, `/answers`,
+`/extension` load); the answers table and the extension key were created in your real database by
+that check, nothing else was written to it.
 
-## Shipped
+## What shipped
 
-| Feature | Commit | Try it |
+| | What it does | Where |
 |---|---|---|
-| Keyword gap | `69497b89`, `781f0a5f` | Open a job with a resume. The chips above the editor are the posting's key terms: ✓ on the resume, orange "+" in your profile (click to see the bullets/skills that have it, then Add), grey dashed = not in your profile. Untick a role to watch chips turn orange live. |
-| Reword this bullet | `4f528b21` | On a job's resume, open a role, click a bullet's ⋯ → "Reword with AI". Pick a quick hint or type one (Enter runs it). "Use" swaps the text in the draft; Save re-grounds it. "Reworded · show original" lets you revert. |
-| Import a job from its URL | `687b4000`, `5cc554dd`, `d331b6fa` | Jobs page → paste a posting link → Import (or Enter). Opens the new job. Try `https://job-boards.greenhouse.io/gitlab/jobs/8864819002`, a `jobs.lever.co/…`, `jobs.ashbyhq.com/…` or `linkedin.com/jobs/view/…` link. Unreadable pages say why and suggest "Add job". |
-| Docker (self-hosting step 1) | `3ba186f3` | `cd v2 && docker compose up --build` → :3000, data in `v2/data`, keys from `.env.local`. **Unverified: Docker isn't installed here.** I verified `next build` + `next start` (in a separate build folder) serve pages and render a Typst PDF. |
+| Templates placeholder | Removed from the sidebar and the roadmap. | `cb6c4725` |
+| **Answer bank** (`/answers`) | Your answers to application questions. Search, edit in place (⌘↵ saves), copy, delete. An empty bank offers the 8 questions most forms ask; once you have answers, the ones you haven't covered stay as chips. "Draft from profile" (AI) writes a first draft in the tone of your other answers. | `882f63a0` |
+| **Extension** (`v2/extension`) | One popup for the open tab. **Save job**: reads the page you're looking at (logins and JavaScript pages work) through the same importer as URL import, and says "Already in your jobs" instead of making duplicates. **Fill form**: name, email, phone, links and current role from your profile; every other question from the bank, including dropdowns and radio groups; the job's tailored resume and cover letter attached as PDFs. Filled fields get a rust outline, fields you'd filled are left alone, nothing is submitted. Then a "Left for you" list (click one to jump to it) with the reason, and **Draft N answers with AI** for questions the bank doesn't have. **Save my answers**: what you typed on the form, reviewed with checkboxes, into the bank. | `18d379d9` + 4 fixes |
+| **Extension page** (`/extension`) | Replaces its placeholder: build status, the folder to load, one-click connect (or a connection key to paste), key reset. | `18d379d9` |
 
-## Bugs fixed along the way
+The popup is the app: same `ui.tsx` components, same tokens, and it follows your Appearance theme.
 
-- `f8650d5b` Letter/resume header: contact items broke mid-item ("(312" / "555-0147", a hyphenated URL).
-  Each item is now a Typst `box`, so lines only break between items.
-- `0ec92a72` `terms()` folded plurals before dropping stop words, so "this" was scored as the term "thi"
-  (and "does" as "doe"). It affected the fitter's ranking a little too.
+### How it's put together (staying small)
 
-## Dogfooding
+- The extension is ~1,200 lines and only reads and writes the page. Deciding what goes in each field is
+  `src/lib/autofill.ts` and matching questions is `src/lib/answers.ts`, both in v2 and unit-tested.
+  v1's extension was ~25k lines of source with per-site scrapers, a field-mapping store, a learning loop,
+  a sidebar and multi-step drivers; none of that came over.
+- No content scripts on websites: the popup injects its script only when you click. The one content
+  script runs on localhost, for one-click connect, and only on pages with Slothing's meta tag.
+- API: `POST /api/extension/<op>` with a key from the Extension page. No CORS headers, so a website
+  can't read it; the key stops blind writes. (`/api/pdf` stays open as before.)
+- One importer: Save job reuses URL import (`importJobFromPage`), and `postingKey()` matches an
+  application form to its job (`…/apply`, `…/application`, Greenhouse/LinkedIn ids).
+- Size: +2.9k lines including tests and docs. `SegmentedLinks` moved out of `ui.tsx` so that file has
+  no Next imports and the popup can use it.
 
-Rows are in `FRICTION.md` under "Agent dogfooding (overnight)".
+## Tested how
 
-- **Keyword gap**: Airbnb "Community Support Forecasting and Demand Planning Analyst" (good match) and
-  GitLab "Benefits Analyst" (poor match) with the analyst profile. Tailored with and without AI, edited,
-  added bullets from chips, saved, wrote a cover letter, viewed and restored History, checked the PDF endpoint.
-  Design presets: switched to ModernCV; promotions group under one company line as intended.
-- **Reword this bullet**: two bullets on the Airbnb resume, one with "Lead with the result", one with a typed
-  hint. Alternatives kept every number; picked, saved, checked the PDF.
-  Worst friction (both features): AI tailoring took ~70 s with no progress feedback; and the no-AI term picker still lets
-  some boilerplate through as grey chips.
+A Chromium with the built extension (Playwright), against a dev server on a **copy** of last night's
+test data (:3002, own folder, so your `.next` was never shared) and the made-up nurse profile.
 
-- **URL import**, second test profile (a made-up ICU nurse with 4 roles, licenses, an award): imported a
-  LinkedIn ICU posting from a *search* link, tailored without and with AI (fitter cut one old bullet to hold
-  one page), wrote a cover letter. Also imported GitLab (Greenhouse), Airbnb and Stripe career sites
-  (Greenhouse behind them), Spotify (Lever), Ramp (Ashby), two Mozilla postings (one via the AI fallback,
-  6.7k chars copied verbatim; one via its Greenhouse link). Failure paths seen for real: a closed LinkedIn
-  posting, LinkedIn rate limiting (429), Workday and Workable (JavaScript shells), HN (419), a listings page
-  (AI said "not a single posting").
-  **Worst friction of the night:** the AI summary and cover letter for the nurse claimed things from the
-  *posting* ("hemodynamic monitoring", "comfortable with weekend and holiday rotation"). Only numbers are
-  checked outside bullets, so this passes grounding. Not fixed: it needs a decision (see Ideas).
+- **Local fixture** (Greenhouse-style form): all 7 profile/bank fields, a select, a radio group, the
+  resume PDF attached; AI drafted the "why" question in 2.4 s and every fact in it is in the profile;
+  both typed answers saved back with their source.
+- **Live, not submitted**: Greenhouse (GitLab): 7 fields + resume attached, two searchable dropdowns
+  answered ("No" to sponsorship, "United States of America"). Lever (Spotify) and Ashby (Ramp): identity
+  fields; Ashby needed the late-form fix. Save job on Greenhouse (0.4 s), Ashby, LinkedIn (1 s) and
+  **Workday** (0.13 s, which URL import can't read).
+- Phone width: every page fits 390 px (the mobile nav is icons only now).
 
-## Unfinished / unverified / unsure
+## Bugs found and fixed along the way
 
-- **Docker image never built** (no Docker on this machine). Likely snags if any: better-sqlite3 compiling
-  (build tools are in the build stage), font downloads from GitHub during build, and bind-mount
-  permissions on Linux (container runs as uid 1000). `next.config.ts` became `next.config.mjs` because
-  `next start` would otherwise try to npm-install TypeScript at runtime.
+Listed under 2026-10-16 in `FRICTION.md`. The big one: Greenhouse's Yes/No questions are react-select
+dropdowns that ignore synthetic mousedowns (its wrapper opens on mouseup), and my first version filled
+their hidden "required" inputs instead.
 
-- URL import: Greenhouse, Lever, Ashby and LinkedIn are verified against live postings (and unit-tested
-  with fixtures). LinkedIn rate-limits quickly (I hit a 429 after ~10 requests), then the import falls back
-  to the page's JSON-LD and otherwise says to wait. Workday and Workable aren't supported (JavaScript shells).
-- URL import has no duplicate check: importing the same link twice makes two jobs.
-- The `fetch` runs from your machine to whatever link you paste (http/https only). Fine for a local
-  single-user app; it would need an allow-list before any hosted use.
-- The noise-word tweak for keyword gap (`current`, `upon`, `hire`…) went into the URL import commit
-  `687b4000` by accident rather than its own.
+## Unfinished / unsure
 
-- Keyword gap term picking is heuristic (title words; words used 3+ times; phrases 2+; your own skills
-  named once; a noise list). It's decent on the 4 postings I tuned on, but a posting with a long company
-  blurb still yields a few junk grey chips. I capped grey chips at 8 rather than keep growing the noise list.
-- While previewing an older version from History, the chips still describe the current resume.
-- Reword ignores the "Select only" tailoring level on purpose: it only runs when you ask for it on one bullet.
-  If you'd rather "Select only" hide the menu item, it's a one-line change.
-- Reword alternatives are checked for numbers only, like AI bullets. A swapped noun ("volume" → "demand")
-  passes. Same limit as tailoring, so I left it.
+- **Ashby's Yes/No buttons and Lever's location search** aren't filled (custom widgets, not inputs).
+  They show under "Left for you".
+- **Chrome only.** Firefox would need a second manifest. Not tested in Edge/Brave (should work).
+- **Embedded forms** (a Greenhouse iframe on a company's own careers site): the popup offers "Allow
+  embedded forms" (all-sites access, asked once). The code path exists; I couldn't test the permission
+  prompt headlessly.
+- **I couldn't click the real toolbar icon** headlessly, so the tests open the popup as a page pointed at
+  the tab (`popup.html?tab=<id>`). Please check `activeTab` works for you on a real click.
+- Saving a job-specific answer ("Why our Medical ICU?") puts it in the bank as is. When a saved answer
+  would be *replaced*, the box starts unticked and shows the old answer.
+- In Docker, the Extension page shows the container's folder path; load the folder on your machine.
+- The roadmap said "No autofill" and called the answer bank "later". I changed both because you
+  asked; per our deal, please log real friction with them before more gets added.
 
 ## Ideas not built
 
-- **Grounding for prose** (the nurse finding): flag summary/letter phrases that appear in the posting but
-  nowhere in the profile ("hemodynamic monitoring"). The keyword gap's `keyTerms` + `hasTerm` already
-  compute exactly that set, so it could become a warning like the number check. Needs your call on noise.
-- Workday and Workable readers: both have public JSON endpoints behind their SPAs.
-- URL import: if the link is already a job, open that job instead of creating a second one.
-- Progress feedback for slow AI calls (tailoring ~60–70 s on Nebius DeepSeek): even an elapsed-seconds counter.
-- Keyword gap: acronym pairs (RN ↔ Registered Nurse, ICU ↔ intensive care).
+- Use `answerWarning` (posting terms your profile never uses) on cover letters and summaries too: it's
+  the fix for last night's "hemodynamic monitoring" grounding gap, and it's one line in `letterWarnings`.
+- "Mark as applied" in the popup after filling, to keep the Jobs list current.
+- Multi-step forms (Workday's apply flow): Fill again works per step today; a remembered job per tab
+  would save re-picking the job on application sites with another domain.

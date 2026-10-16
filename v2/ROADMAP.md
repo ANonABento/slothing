@@ -41,10 +41,18 @@ Iteration 1 ends when step 6 is done. Nothing from the lists below starts before
 ## Iteration 2: capture and polish (candidates, gated by the friction log)
 
 Built overnight on 2026-10-15 ahead of the friction log, at Kevin's request: keyword gap, reword this
-bullet, import a job from its URL (see `OVERNIGHT-REPORT.md`). The extension is not started.
+bullet, import a job from its URL. On 2026-10-16, also at his request, the extension and the answer bank
+(he counts both as core: applying is part of the loop). See `OVERNIGHT-REPORT.md`.
 
-- **Extension: job capture.** One click on a posting sends it to v2 on localhost. Ports v1's
-  LinkedIn / Greenhouse / Lever / generic JSON-LD scrapers. No autofill.
+- **Extension** *(built)*. One popup for the open tab: **Save job** (sends the rendered page to the same
+  importer as URL import, so logins and JavaScript-built pages like Workday work), **Fill form** (identity
+  fields from the profile, other questions from the answer bank, the job's tailored resume and letter
+  attached as PDFs; never submits), **Save my answers** back to the bank. Matching lives in
+  `src/lib/autofill.ts`, so it's tested in v2; the extension only reads and writes the page. Chrome only.
+  v1 had autofill with a field-mapping store, a learning loop and per-site multistep drivers: none ported.
+- **Answer bank** *(built)*. Saved answers to application questions, matched to a form's wording by
+  terms, not text. A draft from your profile on request (AI), checked like a letter plus one check letters
+  don't have yet: a key term of the posting your profile never uses.
 - **Import a job from its URL.** A link field in "Add job" (one form for a link, a pasted description or both), using the same JSON-LD parser.
   It may make the extension unnecessary.
 - **Keyword gap.** On the job page, above the resume editor: chips for the job's key terms.
@@ -74,7 +82,6 @@ Not planned: a hosted multi-user version. That brings back auth, `user_id` and b
 ## Later (maybe, each needs its own case)
 
 - **Follow-ups.** Applied date, plus a nudge when nothing has happened in N days.
-- **Answer bank.** Saved answers to application questions. Mostly valuable alongside autofill.
 - **Interview prep.** Likely questions from the job description and your profile.
 - **Insights.** Funnel counts: saved → applied → interview → offer.
 - **Company research.** A notes panel on the job page, not its own page.
@@ -87,11 +94,11 @@ Not planned: a hosted multi-user version. That brings back auth, `user_id` and b
 | Opportunity detail, Tailor, Studio, Builder, Cover letter, Documents | **Job page**: resume + cover letter editors with live preview (shipped) |
 | Bank, Components, Upload, Profile | **Profile**, with import (shipped) |
 | Settings | **Settings** (shipped) |
-| Extension connect | **Extension** (Iteration 2, capture only) |
+| Extension connect, extension | **Extension** (shipped: save job, fill form, save answers) |
 | ATS scanner | **Keyword gap** on the job page (Iteration 2) |
 | Templates (custom upload) | Not planned: Resume design in Settings (presets + every style setting) replaced it |
 | Calendar, reminders | **Follow-ups** (later) |
-| Answer bank, Answers | **Answer bank** (later) |
+| Answer bank, Answers | **Answer bank** (shipped) |
 | Interview | **Interview prep** (later) |
 | Dashboard, Analytics | **Insights** (later) |
 | Company research | **Job page panel** (later) |
