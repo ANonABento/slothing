@@ -68,16 +68,25 @@ const RULES: { key: ProfileKey; auto?: string[]; re: RegExp; not?: RegExp }[] = 
 ];
 
 const RESUME = /resume|r[ée]sum[ée]|\bcv\b|curriculum/i;
-const LETTER = /cover\s*letter|motivation\s*letter/i;
+const LETTER = /cover[\s_-]*letter|motivation[\s_-]*letter/i;
+// An upload that parses your resume to fill the form (Ashby's "Autofill from resume"): the form is filled here instead.
+const PARSER = /autofill|auto-fill|parse|import from/i;
+// Profile values that make sense as a choice in a dropdown or radio group. A "Phone" dropdown is a country code.
+const CHOICE_KEYS = new Set<ProfileKey>(["city", "location", "school", "degree"]);
 
 /** What a field asks for. Labels decide; name and placeholder only help when the label is empty or generic. */
 export function classify(f: FormField): FieldRole {
   const hay = [f.label, f.name, f.placeholder].filter(Boolean).join(" ");
-  if (f.kind === "file") return LETTER.test(hay) ? { type: "file", doc: "letter" } : RESUME.test(hay) || !f.label ? { type: "file", doc: "resume" } : { type: "question" };
+  if (f.kind === "file") {
+    if (PARSER.test(f.label)) return { type: "question" };
+    return LETTER.test(hay) ? { type: "file", doc: "letter" } : RESUME.test(hay) || !f.label ? { type: "file", doc: "resume" } : { type: "question" };
+  }
   // A long-form question that mentions LinkedIn ("Tell us about your experience on LinkedIn") isn't the URL field.
   if (f.kind === "textarea" && f.label.length > 60) return { type: "question" };
   const auto = f.autocomplete.toLowerCase().split(/\s+/);
+  const choice = f.kind === "select" || f.kind === "radio";
   for (const r of RULES) {
+    if (choice && !CHOICE_KEYS.has(r.key)) continue;
     if (r.auto?.some((a) => auto.includes(a))) return { type: "profile", key: r.key };
     // Label first: "name" attributes are often generated ("question_123").
     const text = f.label || [f.placeholder, f.name.replace(/[_\-[\]]+/g, " ")].join(" ");
@@ -136,7 +145,7 @@ export type Fill =
   | { id: string; source: "bank"; value: string; option?: number; answerId: string }
   | { id: string; source: "file"; doc: "resume" | "letter" };
 
-export type Skip = { id: string; reason: "has-value" | "no-answer" | "no-option" | "no-profile-value" | "no-document" };
+export type Skip = { id: string; reason: "has-value" | "no-answer" | "no-option" | "no-profile-value" | "no-document" | "upload" };
 
 export interface FillPlan {
   fills: Fill[];
@@ -153,6 +162,10 @@ export function planFill(fields: FormField[], profile: Profile, bank: Answer[], 
   const plan: FillPlan = { fills: [], skipped: [] };
   for (const f of fields) {
     const role = classify(f);
+    if (f.kind === "file" && role.type !== "file") {
+      plan.skipped.push({ id: f.id, reason: "upload" });
+      continue;
+    }
     if (role.type === "file") {
       if (docs[role.doc]) plan.fills.push({ id: f.id, source: "file", doc: role.doc });
       else plan.skipped.push({ id: f.id, reason: "no-document" });
@@ -175,7 +188,8 @@ export function planFill(fields: FormField[], profile: Profile, bank: Answer[], 
       continue;
     }
     let option: number | undefined;
-    if (CHOICE.has(f.kind)) {
+    // A searchable dropdown's options only appear once it's open, so the page picks the option there.
+    if (CHOICE.has(f.kind) && f.options.length) {
       option = matchOption(value, f.options);
       if (option < 0) {
         plan.skipped.push({ id: f.id, reason: "no-option" });

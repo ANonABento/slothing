@@ -43,7 +43,14 @@ describe("classify", () => {
     expect(role.type === "profile" ? role.key : role.type).toBe(expected);
   });
 
+  it("never reads a dropdown as an identity field", () => {
+    expect(classify(field("p", "Phone", { kind: "select", options: ["+1", "+44"] }))).toEqual({ type: "question" });
+    expect(classify(field("c", "Current location", { kind: "select" }))).toEqual({ type: "profile", key: "location" });
+  });
+
   it("sorts file inputs into resume and cover letter", () => {
+    expect(classify(field("f", "Attach", { kind: "file", name: "cover_letter" }))).toEqual({ type: "file", doc: "letter" });
+    expect(classify(field("f", "Autofill from resume", { kind: "file" }))).toEqual({ type: "question" });
     expect(classify(field("f", "Resume/CV", { kind: "file" }))).toEqual({ type: "file", doc: "resume" });
     expect(classify(field("f", "Cover Letter", { kind: "file" }))).toEqual({ type: "file", doc: "letter" });
     expect(classify(field("f", "Transcript", { kind: "file" }))).toEqual({ type: "question" });
@@ -71,7 +78,12 @@ describe("profileValue", () => {
 });
 
 describe("planFill", () => {
-  const bank = [saved("a1", "Are you authorized to work in the US?", "Yes"), saved("a2", "How did you hear about us?", "LinkedIn"), saved("a3", "When can you start?", "")];
+  const bank = [
+    saved("a1", "Are you authorized to work in the US?", "Yes"),
+    saved("a2", "How did you hear about us?", "LinkedIn"),
+    saved("a3", "When can you start?", ""),
+    saved("a4", "Will you require visa sponsorship?", "No"),
+  ];
   const fields = [
     field("1", "First name"),
     field("2", "Email", { kind: "email", value: "typed@me.com" }),
@@ -95,6 +107,13 @@ describe("planFill", () => {
     expect(fill("3")).toEqual({ id: "3", source: "bank", value: "Yes, I am", option: 0, answerId: "a1" });
     expect(skip("4")).toBe("no-option");
     expect(skip("5")).toBe("no-answer");
+  });
+  it("passes the answer through for a searchable dropdown, whose options the page finds", () => {
+    const p = planFill([field("s", "Do you require sponsorship?", { kind: "select" })], profile, bank, { resume: false, letter: false });
+    expect(p.fills).toEqual([{ id: "s", source: "bank", value: "No", option: undefined, answerId: "a4" }]);
+  });
+  it("leaves other uploads to you", () => {
+    expect(planFill([field("t", "Transcript", { kind: "file" })], profile, bank, { resume: true, letter: true }).skipped).toEqual([{ id: "t", reason: "upload" }]);
   });
   it("attaches only documents the job has", () => {
     expect(fill("6")).toEqual({ id: "6", source: "file", doc: "resume" });

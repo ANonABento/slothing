@@ -307,6 +307,7 @@ const SKIP_LABEL: Record<Skip["reason"], string> = {
   "no-profile-value": "Not in your profile",
   "no-document": "No PDF for this job yet",
   "has-value": "Already filled",
+  upload: "Upload this yourself",
 };
 
 function FormSection({
@@ -353,13 +354,17 @@ function FormSection({
           } catch (e) {
             docError = (e as Error).message;
           }
-        } else pageFills.push({ id: f.id, value: f.value, option: f.option });
+        } else pageFills.push({ id: f.id, value: f.value, option: f.option, loose: f.source === "profile" });
       }
       const done = new Set(await fillPage(tab, pageFills));
       setResult({
         filled: plan.fills.filter((f) => f.source !== "file" && done.has(f.id)).map((f) => ({ id: f.id, source: f.source, label: fields.get(f.id)?.label ?? "" })),
         attached: attached.filter((a) => plan.fills.some((f) => f.source === "file" && f.doc === a.doc && done.has(f.id))),
-        skipped: plan.skipped.filter((s) => s.reason !== "has-value").map((s) => ({ ...s, label: fields.get(s.id)?.label || fields.get(s.id)?.name || "", field: fields.get(s.id)! })),
+        skipped: [
+          ...plan.skipped.filter((s) => s.reason !== "has-value"),
+          // Planned, but the page couldn't apply it (a dropdown without that option, a field that went away).
+          ...plan.fills.filter((f) => !done.has(f.id) && fields.has(f.id)).map((f): Skip => ({ id: f.id, reason: f.source === "file" ? "upload" : "no-option" })),
+        ].map((s) => ({ ...s, label: fields.get(s.id)?.label || fields.get(s.id)?.name || "", field: fields.get(s.id)! })),
         docError,
       });
     } catch (e) {
@@ -454,7 +459,6 @@ function FormSection({
           <Button variant="ghost" size="sm" onClick={fillForm} disabled={busy !== ""}>Fill again</Button>
         </div>
       )}
-      {form.combos > 0 && <p className="text-xs text-ink-3">{plural(form.combos, "searchable dropdown")} on this page {form.combos === 1 ? "isn't" : "aren't"} filled yet. Pick those by hand.</p>}
       {error && <Notice tone="warn">{error}</Notice>}
       <div className="border-t border-rule pt-3">
         <Button variant="secondary" size="sm" onClick={onSaveAnswers} className="w-full">
