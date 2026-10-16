@@ -1,4 +1,4 @@
-import { BellRing, ChartColumn, LayoutTemplate, MessageSquareText, Mic, Puzzle, type LucideIcon } from "lucide-react";
+import { BellRing, ChartColumn, MessageSquareText, Mic, Puzzle, type LucideIcon } from "lucide-react";
 
 /**
  * Pages that are planned but not built, shown in the sidebar as placeholders (see ROADMAP.md).
@@ -28,16 +28,6 @@ export const PLANNED: PlannedPage[] = [
     summary: "One click on a job posting sends it to Slothing: title, company and the full description, ready to tailor.",
     v1: "A Chrome/Firefox extension with scrapers for LinkedIn, Indeed, Greenhouse, Lever and Workday, plus autofill. Only capture is planned.",
     gate: "Pasting job descriptions shows up as friction during the first ~10 applications, and importing a job from its URL isn't enough.",
-  },
-  {
-    slug: "templates",
-    v1Path: "/en/studio",
-    label: "Templates",
-    icon: LayoutTemplate,
-    when: "Later",
-    summary: "Pick a resume + cover letter design. Each template is a matched Typst pair kept in the repo.",
-    v1: "Custom template uploads (HTML, Markdown, DOCX, PDF) with pixel-matching. Uploads aren't planned.",
-    gate: "A second template exists that you'd actually send.",
   },
   {
     slug: "follow-ups",

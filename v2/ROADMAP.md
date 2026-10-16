@@ -73,7 +73,6 @@ Not planned: a hosted multi-user version. That brings back auth, `user_id` and b
 
 ## Later (maybe, each needs its own case)
 
-- **Templates.** A gallery once a second Typst resume + letter pair exists.
 - **Follow-ups.** Applied date, plus a nudge when nothing has happened in N days.
 - **Answer bank.** Saved answers to application questions. Mostly valuable alongside autofill.
 - **Interview prep.** Likely questions from the job description and your profile.
@@ -90,7 +89,7 @@ Not planned: a hosted multi-user version. That brings back auth, `user_id` and b
 | Settings | **Settings** (shipped) |
 | Extension connect | **Extension** (Iteration 2, capture only) |
 | ATS scanner | **Keyword gap** on the job page (Iteration 2) |
-| Templates (custom upload) | **Templates** (later, in-repo Typst only, no uploads) |
+| Templates (custom upload) | Not planned: Resume design in Settings (presets + every style setting) replaced it |
 | Calendar, reminders | **Follow-ups** (later) |
 | Answer bank, Answers | **Answer bank** (later) |
 | Interview | **Interview prep** (later) |
