@@ -1,8 +1,9 @@
 import { z } from "zod";
 
+import { hasTerm, keyTerms } from "./gap";
 import { generateJSON } from "./llm";
 import { withoutHidden } from "./resolve";
-import { CoverLetter, LETTER_LENGTHS, Settings, TailoredResume, entriesOf, type EntryKind, type Job, type Latitude, type LetterLength, type LetterSettings, type Profile, type TailoringSettings, type Warning } from "./types";
+import { CoverLetter, LETTER_LENGTHS, type Answer, Settings, TailoredResume, entriesOf, type EntryKind, type Job, type Latitude, type LetterLength, type LetterSettings, type Profile, type TailoringSettings, type Warning } from "./types";
 
 /* ─── Grounding ───
  * The model only ever chooses and rephrases. Everything it returns is checked against the
@@ -364,3 +365,82 @@ export function letterWarnings(profile: Profile, doc: CoverLetter, job?: Pick<Jo
 
 
 export const wordCount = (paragraphs: string[]) => paragraphs.join(" ").split(/\s+/).filter(Boolean).length;
+
+/* ─── Application answers ───
+ * Drafts for questions on an application form (the extension) or in the answer bank, from the profile
+ * only. A question the profile can't answer (salary, start date, visa status) comes back blank, so you
+ * write it. Prose can't cite bullets, so drafts are checked like letters, plus one check letters don't
+ * have yet: a key term of the posting that the profile never uses is flagged, since it's the posting's
+ * claim, not yours.
+ */
+
+export interface DraftQuestion {
+  id: string;
+  question: string;
+  /** A one-line input (short answer) or a text area (a paragraph). */
+  long: boolean;
+}
+
+export interface DraftAnswer {
+  id: string;
+  text: string;
+  warning?: string;
+}
+
+const DRAFTS = z.object({
+  answers: z.preprocess((v) => v ?? [], z.array(z.object({ id: z.string(), text: z.preprocess((v) => v ?? "", z.string()) }))),
+});
+
+export const answersSystem = (instructions: string) => `You draft the candidate's answers to questions on a job application, using ONLY facts from their profile.
+
+Hard rules:
+- Do not invent experience, employers, numbers, tools, credentials or outcomes. The job description tells
+  you what to emphasise; it is never evidence about the candidate.
+- If the profile can't answer a question (salary, start date, work authorization, visa, relocation,
+  demographics, personal preferences, references), return "" for it. Never guess those.
+- First person, plain and specific. No clichés ("I am excited to apply", "passionate").
+- A short-answer question gets one line. A paragraph question gets 60–150 words unless it asks for a length.
+- Match the tone of the candidate's saved answers when examples are given.
+
+JSON shape: { "answers": [{ "id": string, "text": string }] }${preferences(instructions)}`;
+
+/** A number the profile doesn't state, or a key term of the posting the profile never uses. */
+export function answerWarning(profile: Profile, text: string, job?: Pick<Job, "title" | "description" | "company">): string | undefined {
+  const facts = profileFacts(profile);
+  const nums = unsupportedNumbers(text, facts);
+  if (nums.length) return `Mentions ${nums.join(", ")}, which isn't in your profile.`;
+  if (!job?.description) return undefined;
+  const borrowed = keyTerms(job, profile.skills.flatMap((g) => g.items))
+    .filter((t) => hasTerm(text, t.term) && !hasTerm(facts, t.term) && !hasTerm(job.title, t.term))
+    .map((t) => `“${t.label}”`);
+  return borrowed.length ? `Uses ${borrowed.slice(0, 3).join(", ")} from the posting, which your profile doesn't mention.` : undefined;
+}
+
+export async function draftAnswers(
+  full: Profile,
+  questions: DraftQuestion[],
+  context: { job?: Pick<Job, "title" | "description" | "company">; examples?: Pick<Answer, "question" | "answer">[] } = {},
+  t: TailoringSettings = Settings.parse({}).tailoring,
+): Promise<DraftAnswer[]> {
+  if (!questions.length) return [];
+  const profile = withoutHidden(full);
+  const { job, examples = [] } = context;
+  const { answers } = await generateJSON(
+    DRAFTS,
+    answersSystem(t.instructions),
+    [
+      job ? `Applying for: ${job.title || "(unknown title)"} at ${job.company || "(unknown company)"}\n\nJob description (excerpt):\n${job.description.slice(0, 8000)}` : "",
+      examples.length ? `The candidate's saved answers, for tone:\n${examples.slice(0, 5).map((e) => `Q: ${e.question}\nA: ${e.answer.slice(0, 600)}`).join("\n\n")}` : "",
+      `Candidate profile (JSON):\n${JSON.stringify(profile)}`,
+      `Questions:\n${JSON.stringify(questions.map((q) => ({ id: q.id, question: q.question.slice(0, 500), length: q.long ? "paragraph" : "short answer" })))}`,
+    ]
+      .filter(Boolean)
+      .join("\n\n"),
+  );
+  const byId = new Map(answers.map((a) => [a.id, a.text.trim()]));
+  return questions.map((q) => {
+    const text = byId.get(q.id) ?? "";
+    const warning = text ? answerWarning(full, text, job) : undefined;
+    return warning ? { id: q.id, text, warning } : { id: q.id, text };
+  });
+}

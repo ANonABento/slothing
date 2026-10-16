@@ -138,6 +138,21 @@ export interface Job {
   updatedAt: string;
 }
 
+/* ─── Answer bank: your answers to application questions, reused by the extension's form fill ─── */
+
+export interface Answer {
+  id: string;
+  question: string;
+  answer: string;
+  /** The application page it was saved from, if any. */
+  sourceUrl: string;
+  /** How many times a form was filled with it. */
+  uses: number;
+  usedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 /* ─── Tailored documents ───
  * A tailored resume never restates identity facts (company, title, dates, school).
  * It references profile entries by id and only carries the rewritten bullet text,

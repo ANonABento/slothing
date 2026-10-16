@@ -1,4 +1,4 @@
-import { BellRing, ChartColumn, MessageSquareText, Mic, Puzzle, type LucideIcon } from "lucide-react";
+import { BellRing, ChartColumn, Mic, Puzzle, type LucideIcon } from "lucide-react";
 
 /**
  * Pages that are planned but not built, shown in the sidebar as placeholders (see ROADMAP.md).
@@ -38,16 +38,6 @@ export const PLANNED: PlannedPage[] = [
     summary: "When you applied, and a nudge when a job has been quiet for a while.",
     v1: "A calendar, reminders and cron jobs. The follow-up reminder was built but never wired up.",
     gate: "You lose track of applications while using the Jobs list.",
-  },
-  {
-    slug: "answer-bank",
-    v1Path: "/en/answers",
-    label: "Answer bank",
-    icon: MessageSquareText,
-    when: "Later",
-    summary: "Your saved answers to application questions (“Why this company?”), reusable and tailorable.",
-    v1: "An answer bank that the extension captured into and autofilled from.",
-    gate: "You rewrite the same application answers more than a few times.",
   },
   {
     slug: "interview",

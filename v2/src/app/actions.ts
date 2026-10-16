@@ -9,7 +9,7 @@ import { readJob } from "@/lib/job-import";
 import { llmInfo, testLlm } from "@/lib/llm";
 import { profileAsTailored } from "@/lib/resolve";
 import { fitResume } from "@/lib/fit";
-import { groundResume, letterWarnings, rewordBullet, tailorResume, writeCoverLetter, type Rewording } from "@/lib/tailor";
+import { draftAnswers, groundResume, letterWarnings, rewordBullet, tailorResume, writeCoverLetter, type DraftAnswer, type Rewording } from "@/lib/tailor";
 import { CoverLetter, JOB_STATUSES, Profile, Settings, TailoredBullet, TailoredResume, type AiSettings, type DocKind, type DocMeta, type Warning } from "@/lib/types";
 import { z } from "zod";
 
@@ -228,6 +228,46 @@ export async function restoreVersionAction(jobId: string, kind: DocKind, version
     }
     revalidatePath(`/jobs/${jobId}`);
     return { ok: true };
+  } catch (e) {
+    return fail(e);
+  }
+}
+
+/* ─── Answer bank ─── */
+
+const AnswerInput = z.object({ id: z.string().optional(), question: z.string(), answer: z.string() });
+
+export async function saveAnswerAction(input: z.input<typeof AnswerInput>): Promise<Result<{ id: string }>> {
+  try {
+    const a = AnswerInput.parse(input);
+    if (!a.question.trim()) return { ok: false, error: "Write the question first." };
+    const id = db.saveAnswer({ id: a.id, question: a.question.trim(), answer: a.answer.trim() });
+    revalidatePath("/answers");
+    return { ok: true, data: { id } };
+  } catch (e) {
+    return fail(e);
+  }
+}
+
+export async function deleteAnswerAction(id: string): Promise<Result> {
+  try {
+    db.deleteAnswer(String(id));
+    revalidatePath("/answers");
+    return { ok: true };
+  } catch (e) {
+    return fail(e);
+  }
+}
+
+/** A first draft from your profile, in the tone of your other answers. Nothing is saved. */
+export async function draftAnswerAction(question: string): Promise<Result<DraftAnswer>> {
+  try {
+    const q = String(question).trim();
+    if (!q) return { ok: false, error: "Write the question first." };
+    const examples = db.listAnswers().filter((a) => a.answer.trim() && a.question.trim() !== q);
+    const [draft] = await draftAnswers(db.getProfile(), [{ id: "q", question: q, long: true }], { examples }, db.getSettings().tailoring);
+    if (!draft?.text) return { ok: false, error: "Your profile doesn't answer this one (salary, dates and visa questions are yours to write)." };
+    return { ok: true, data: draft };
   } catch (e) {
     return fail(e);
   }

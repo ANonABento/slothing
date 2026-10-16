@@ -5,6 +5,7 @@ import { AddJob } from "@/components/add-job";
 import { PageBody, PageHeader } from "@/components/page-header";
 import { Card, EmptyState, Eyebrow, SegmentedLinks, StatusPill, cx } from "@/components/ui";
 import { getProfile, listJobs } from "@/lib/db";
+import { ago } from "@/lib/format";
 import { llmConfigured } from "@/lib/llm";
 import { JOB_STATUSES, type Job } from "@/lib/types";
 
@@ -18,11 +19,6 @@ const VIEWS = [
 type View = (typeof VIEWS)[number]["value"];
 
 const isClosed = (j: Job) => j.status === "rejected" || j.status === "archived";
-
-function ago(iso: string) {
-  const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000);
-  return days <= 0 ? "Today" : days === 1 ? "Yesterday" : `${days} days ago`;
-}
 
 export default async function JobsPage({ searchParams }: { searchParams: Promise<{ view?: string }> }) {
   const requested = (await searchParams).view;

@@ -1,6 +1,6 @@
 "use client";
 
-import { Briefcase, Moon, Settings2, Sparkles, Sun, UserRound } from "lucide-react";
+import { Briefcase, MessageSquareText, Moon, Settings2, Sparkles, Sun, UserRound } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -19,6 +19,7 @@ const GROUPS = [
     label: "You",
     items: [
       { href: "/profile", label: "Profile", icon: UserRound },
+      { href: "/answers", label: "Answers", icon: MessageSquareText },
       { href: "/settings", label: "Settings", icon: Settings2 },
     ],
   },

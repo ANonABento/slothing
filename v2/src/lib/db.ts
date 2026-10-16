@@ -5,6 +5,7 @@ import { join } from "path";
 import { newId } from "./ids";
 import {
   CoverLetter,
+  type Answer,
   DocMeta,
   Profile,
   Settings,
@@ -63,8 +64,28 @@ function open() {
     );
   `);
   createVersions(db);
+  createAnswers(db);
   db.pragma("foreign_keys = ON");
   return db;
+}
+
+function createAnswers(db: Database.Database) {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS answers (
+      id TEXT PRIMARY KEY,
+      question TEXT NOT NULL,
+      answer TEXT NOT NULL DEFAULT '',
+      source_url TEXT NOT NULL DEFAULT '',
+      uses INTEGER NOT NULL DEFAULT 0,
+      used_at TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
+    CREATE TABLE IF NOT EXISTS kv (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL
+    );
+  `);
 }
 
 /** Every saved state of a job's resume and letter, newest last, so any of them can be restored. */
@@ -88,6 +109,7 @@ export function migrate(db: Database.Database) {
   const has = (table: string, column: string) => (db.prepare(`PRAGMA table_info(${table})`).all() as { name: string }[]).some((c) => c.name === column);
   if (!has("documents", "meta")) db.exec("ALTER TABLE documents ADD COLUMN meta TEXT NOT NULL DEFAULT '{}'");
   createVersions(db);
+  createAnswers(db);
 }
 
 // Survive Next dev hot reloads without leaking connections.
@@ -262,3 +284,52 @@ export function getVersion<K extends DocKind>(jobId: string, kind: K, id: string
 
 /** Meta for a hand save: whatever made the document, now marked as edited. */
 export const editedMeta = (jobId: string, kind: DocKind): DocMeta => ({ ...getDoc(jobId, kind)?.meta, edited: true });
+
+/* ─── Answer bank ─── */
+
+type AnswerRow = { id: string; question: string; answer: string; source_url: string; uses: number; used_at: string | null; created_at: string; updated_at: string };
+const toAnswer = (r: AnswerRow): Answer => ({ id: r.id, question: r.question, answer: r.answer, sourceUrl: r.source_url, uses: r.uses, usedAt: r.used_at, createdAt: r.created_at, updatedAt: r.updated_at });
+
+export function listAnswers(): Answer[] {
+  return (db.prepare("SELECT * FROM answers ORDER BY updated_at DESC, rowid DESC").all() as AnswerRow[]).map(toAnswer);
+}
+
+/** Insert (no id, or an id that's gone) or update one answer. Returns its id. */
+export function saveAnswer(input: { id?: string; question: string; answer: string; sourceUrl?: string }): string {
+  const t = now();
+  if (input.id) {
+    const res = db.prepare("UPDATE answers SET question = ?, answer = ?, updated_at = ? WHERE id = ?").run(input.question, input.answer, t, input.id);
+    if (res.changes) return input.id;
+  }
+  const id = newId("ans");
+  db.prepare("INSERT INTO answers (id, question, answer, source_url, uses, used_at, created_at, updated_at) VALUES (?, ?, ?, ?, 0, NULL, ?, ?)").run(
+    id,
+    input.question,
+    input.answer,
+    input.sourceUrl ?? "",
+    t,
+    t,
+  );
+  return id;
+}
+
+export function deleteAnswer(id: string) {
+  db.prepare("DELETE FROM answers WHERE id = ?").run(id);
+}
+
+/** Counted when a form is filled with them, so the bank can show what you actually reuse. */
+export function markAnswersUsed(ids: string[]) {
+  const t = now();
+  const stmt = db.prepare("UPDATE answers SET uses = uses + 1, used_at = ? WHERE id = ?");
+  db.transaction(() => ids.forEach((id) => stmt.run(t, id)))();
+}
+
+/* ─── Small app state (the extension's key) ─── */
+
+export function getKv(key: string): string | null {
+  return (db.prepare("SELECT value FROM kv WHERE key = ?").get(key) as { value: string } | undefined)?.value ?? null;
+}
+
+export function setKv(key: string, value: string) {
+  db.prepare("INSERT INTO kv (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value").run(key, value);
+}

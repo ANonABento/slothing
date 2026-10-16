@@ -118,12 +118,13 @@ export function IconTile({ icon: Icon, className }: { icon: LucideIcon; classNam
   );
 }
 
-export function EmptyState({ icon, title, children }: { icon: LucideIcon; title: ReactNode; children?: ReactNode }) {
+export function EmptyState({ icon, title, children, footer }: { icon: LucideIcon; title: ReactNode; children?: ReactNode; footer?: ReactNode }) {
   return (
     <Card className="flex flex-col items-center gap-2 px-6 py-12 text-center">
       <IconTile icon={icon} />
       <CardTitle>{title}</CardTitle>
       {children && <div className="max-w-sm text-sm text-ink-2">{children}</div>}
+      {footer && <div className="mt-3 max-w-2xl">{footer}</div>}
     </Card>
   );
 }
