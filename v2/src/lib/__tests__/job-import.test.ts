@@ -10,6 +10,7 @@ import {
   linkedInJobId,
   parseLinkedInFragment,
   parsePostingUrl,
+  postingKey,
   readJob,
 } from "../job-import";
 import { generateJSON } from "../llm";
@@ -201,5 +202,19 @@ describe("readJob", () => {
 
   it("needs a link or a description", async () => {
     await expect(readJob({ ...blank, company: "A" })).rejects.toThrow(/link or its description/);
+  });
+});
+
+describe("postingKey", () => {
+  it("matches an application form to its posting", () => {
+    expect(postingKey("https://jobs.lever.co/acme/1234-abcd/apply")).toBe(postingKey("https://jobs.lever.co/acme/1234-abcd"));
+    expect(postingKey("https://jobs.ashbyhq.com/ramp/uuid-1/application?src=x")).toBe(postingKey("jobs.ashbyhq.com/ramp/uuid-1"));
+    expect(postingKey("https://job-boards.greenhouse.io/gitlab/jobs/8864819002#app")).toBe("greenhouse:8864819002");
+    expect(postingKey("https://careers.airbnb.com/positions/?gh_jid=8864819002")).toBe("greenhouse:8864819002");
+    expect(postingKey("https://www.linkedin.com/jobs/search/?currentJobId=42&keywords=x")).toBe("linkedin:42");
+  });
+  it("keeps different postings apart, and is blank for junk", () => {
+    expect(postingKey("https://jobs.lever.co/acme/1")).not.toBe(postingKey("https://jobs.lever.co/acme/2"));
+    expect(postingKey("not a link")).toBe("");
   });
 });

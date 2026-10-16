@@ -1,4 +1,4 @@
-import { BellRing, ChartColumn, Mic, Puzzle, type LucideIcon } from "lucide-react";
+import { BellRing, ChartColumn, Mic, type LucideIcon } from "lucide-react";
 
 /**
  * Pages that are planned but not built, shown in the sidebar as placeholders (see ROADMAP.md).
@@ -8,7 +8,7 @@ export interface PlannedPage {
   slug: string;
   label: string;
   icon: LucideIcon;
-  when: "Iteration 2" | "Later";
+  when: "Later";
   summary: string;
   /** What v1 had, to port from. */
   v1: string;
@@ -19,16 +19,6 @@ export interface PlannedPage {
 }
 
 export const PLANNED: PlannedPage[] = [
-  {
-    slug: "extension",
-    v1Path: "/en/extension/connect",
-    label: "Extension",
-    icon: Puzzle,
-    when: "Iteration 2",
-    summary: "One click on a job posting sends it to Slothing: title, company and the full description, ready to tailor.",
-    v1: "A Chrome/Firefox extension with scrapers for LinkedIn, Indeed, Greenhouse, Lever and Workday, plus autofill. Only capture is planned.",
-    gate: "Pasting job descriptions shows up as friction during the first ~10 applications, and importing a job from its URL isn't enough.",
-  },
   {
     slug: "follow-ups",
     v1Path: "/en/calendar",

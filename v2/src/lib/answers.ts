@@ -47,11 +47,14 @@ export function questionSimilarity(a: string, b: string): number {
 /** Below this a saved answer isn't offered. Tuned so "Why this company?" doesn't match "Why this role?". */
 export const MATCH_THRESHOLD = 0.6;
 
-/** The saved answer that best fits a form's question: highest score, then the one used most recently. */
-export function bestAnswer(question: string, bank: Answer[]): { answer: Answer; score: number } | null {
+/**
+ * The saved answer that best fits a form's question: highest score, then the one used most recently.
+ * Questions saved without an answer yet are skipped unless `includeBlank`.
+ */
+export function bestAnswer(question: string, bank: Answer[], { includeBlank = false } = {}): { answer: Answer; score: number } | null {
   let best: { answer: Answer; score: number } | null = null;
   for (const a of bank) {
-    if (!a.answer.trim()) continue;
+    if (!includeBlank && !a.answer.trim()) continue;
     const score = questionSimilarity(question, a.question);
     if (score < MATCH_THRESHOLD) continue;
     if (!best || score > best.score || (score === best.score && (a.usedAt ?? a.updatedAt) > (best.answer.usedAt ?? best.answer.updatedAt))) best = { answer: a, score };

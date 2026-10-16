@@ -10,7 +10,8 @@ const display = Outfit({ subsets: ["latin"], variable: "--font-display" });
 const body = Geist({ subsets: ["latin"], variable: "--font-body" });
 const mono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono" });
 
-export const metadata: Metadata = { title: "Slothing", description: "You're not lazy. Your job search system is." };
+// "slothing-app" tells the browser extension this page is Slothing, so its Extension page can connect it.
+export const metadata: Metadata = { title: "Slothing", description: "You're not lazy. Your job search system is.", other: { "slothing-app": "v2" } };
 
 // The theme is rendered server-side from Settings. Only "system" needs the OS preference, so this
 // runs before paint (no flash) and keeps following the OS while the page is open.

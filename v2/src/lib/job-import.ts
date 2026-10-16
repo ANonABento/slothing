@@ -230,8 +230,7 @@ const AiJob = z.object({
 const MIN_TEXT = 400;
 
 /** The page's text, read by AI: the fallback when there's no structured data. */
-async function fromPageText(html: string, host: string): Promise<ImportedJob> {
-  const text = htmlToText(html.match(/<body[\s\S]*<\/body>/i)?.[0] ?? html);
+async function fromPageText(text: string, host: string): Promise<ImportedJob> {
   if (text.length < MIN_TEXT) {
     throw new Error(`There's almost no text on that page, so no posting to read (${host} may load it with JavaScript). Paste the description instead.`);
   }
@@ -247,28 +246,51 @@ JSON: { "company": string, "title": string, "location": string, "description": s
   return { company: job.company.trim(), title: job.title.trim(), location: job.location.trim(), description: job.description.trim() };
 }
 
-export async function importJobFromUrl(raw: string): Promise<ImportedJob & { url: string }> {
-  const url = parsePostingUrl(raw);
+/** A LinkedIn search link ("…/jobs/search/?currentJobId=…&keywords=…") is saved as the posting's own link. */
+const savedUrl = (url: URL) => {
   const li = linkedInJobId(url);
-  // A LinkedIn search link ("…/jobs/search/?currentJobId=…&keywords=…") is saved as the posting's own link.
-  const saved = li ? `https://www.linkedin.com/jobs/view/${li}` : url.href;
-  const done = (job: ImportedJob) => ({ ...job, url: saved });
+  return li ? `https://www.linkedin.com/jobs/view/${li}` : url.href;
+};
 
+/** Boards with an API for the posting itself (Greenhouse, LinkedIn's guest endpoint): better text than any page. */
+async function fromBoardApi(url: URL): Promise<{ job: ImportedJob | null; linkedInError: Error | null }> {
   const gh = greenhouseIds(url);
   if (gh) {
     const job = await fromGreenhouse(gh);
     if (!job) throw new Error("Greenhouse says this posting no longer exists. It may have closed.");
-    return done(job);
+    return { job, linkedInError: null };
   }
-  let linkedInError: Error | null = null;
-  if (li) {
-    try {
-      return done(await fromLinkedIn(li));
-    } catch (e) {
-      // Rate limited or empty: the link's own page may still carry JSON-LD (the /jobs/view/<slug> pages do).
-      linkedInError = e as Error;
-    }
+  const li = linkedInJobId(url);
+  if (!li) return { job: null, linkedInError: null };
+  try {
+    return { job: await fromLinkedIn(li), linkedInError: null };
+  } catch (e) {
+    // Rate limited or empty: the link's own page may still carry JSON-LD (the /jobs/view/<slug> pages do).
+    return { job: null, linkedInError: e as Error };
   }
+}
+
+/** The posting in a page's HTML: its Greenhouse job, its JSON-LD, else AI on its text. */
+async function fromPage(url: URL, html: string, text: string, linkedInError: Error | null): Promise<ImportedJob> {
+  const embedded = embeddedGreenhouse(url, html);
+  for (const board of embedded?.boards ?? []) {
+    const job = await fromGreenhouse({ board, id: embedded!.id });
+    if (job) return job;
+  }
+  const posting = findJobPosting(html);
+  if (posting) {
+    const job = fromJobPosting(posting);
+    if (job.title && job.description.length >= 100) return job;
+  }
+  // LinkedIn's page text is mostly sign-in prompts; better to say why than have AI guess.
+  if (linkedInError) throw linkedInError;
+  return fromPageText(text, url.hostname);
+}
+
+export async function importJobFromUrl(raw: string): Promise<ImportedJob & { url: string }> {
+  const url = parsePostingUrl(raw);
+  const { job, linkedInError } = await fromBoardApi(url);
+  if (job) return { ...job, url: savedUrl(url) };
 
   const res = await get(url.href);
   if (linkedInError && !res.ok) throw linkedInError;
@@ -278,21 +300,40 @@ export async function importJobFromUrl(raw: string): Promise<ImportedJob & { url
   if (type && !/html|xml|text\/plain/i.test(type)) throw new Error('That link isn\'t a web page (it may be a PDF). Paste the description instead.');
   if (Number(res.headers.get("content-length") ?? 0) > MAX_BYTES) throw new Error("That page is too large to read.");
   const html = (await res.text()).slice(0, MAX_BYTES);
+  const text = htmlToText(html.match(/<body[\s\S]*<\/body>/i)?.[0] ?? html);
+  return { ...(await fromPage(url, html, text, linkedInError)), url: savedUrl(url) };
+}
 
-  const embedded = embeddedGreenhouse(url, html);
-  for (const board of embedded?.boards ?? []) {
-    const job = await fromGreenhouse({ board, id: embedded!.id });
-    if (job) return done(job);
-  }
+/**
+ * A page open in your browser, sent by the extension: its rendered HTML and visible text. Nothing is
+ * fetched except a board's API, so pages behind a login or built by JavaScript (Workday) read fine.
+ */
+export async function importJobFromPage(page: { url: string; html: string; text: string }): Promise<ImportedJob & { url: string }> {
+  const url = parsePostingUrl(page.url);
+  const { job, linkedInError } = await fromBoardApi(url);
+  if (job) return { ...job, url: savedUrl(url) };
+  return { ...(await fromPage(url, page.html.slice(0, MAX_BYTES), page.text, linkedInError)), url: savedUrl(url) };
+}
 
-  const posting = findJobPosting(html);
-  if (posting) {
-    const job = fromJobPosting(posting);
-    if (job.title && job.description.length >= 100) return done(job);
+/**
+ * One key per posting, so an application form finds the job it belongs to: Greenhouse and LinkedIn by
+ * job id, anything else by host and path, without "/apply" or "/application" (Lever, Ashby) and the query.
+ */
+export function postingKey(raw: string): string {
+  let url: URL;
+  try {
+    url = parsePostingUrl(raw);
+  } catch {
+    return "";
   }
-  // LinkedIn's page text is mostly sign-in prompts; better to say why than have AI guess.
-  if (linkedInError) throw linkedInError;
-  return done(await fromPageText(html, url.hostname));
+  const gh = greenhouseIds(url);
+  if (gh) return `greenhouse:${gh.id}`;
+  const li = linkedInJobId(url);
+  if (li) return `linkedin:${li}`;
+  const ghJid = url.searchParams.get("gh_jid");
+  if (ghJid && /^\d+$/.test(ghJid)) return `greenhouse:${ghJid}`;
+  const path = url.pathname.replace(/\/+$/, "").replace(/\/(apply|application|applications)(\/.*)?$/i, "").toLowerCase();
+  return `${url.hostname.replace(/^www\./, "").toLowerCase()}${path}`;
 }
 
 const JobMeta = z.object({ company: z.string().default(""), title: z.string().default(""), location: z.string().default("") });

@@ -9,7 +9,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "engines": "bash scripts/setup-engines.sh",
-    "v1": "bash scripts/run-v1.sh"
+    "v1": "bash scripts/run-v1.sh",
+    "extension": "node extension/build.mjs"
   },
   "dependencies": {
     "better-sqlite3": "^13.0.3",
@@ -23,10 +24,12 @@
   },
   "devDependencies": {
     "@types/better-sqlite3": "^9.6.0",
+    "@types/chrome": "^0.1.43",
     "@types/node": "^26.6.5",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "autoprefixer": "^10.6.1",
+    "esbuild": "^0.28.2",
     "postcss": "^8.5.29",
     "tailwindcss": "^3.4.19",
     "typescript": "^5.9.3",

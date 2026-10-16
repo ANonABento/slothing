@@ -29,7 +29,8 @@ export async function GET(req: NextRequest) {
   const jobId = q.get("job");
   const kind = q.get("kind") === "letter" ? "letter" : "resume";
   let input: RenderInput;
-  let filename = `${profile.contact.name || "resume"}`.replace(/\s+/g, "_");
+  // "Dana Smith, RN" → "Dana_Smith": credentials after a comma don't belong in a file name a recruiter sees.
+  let filename = `${profile.contact.name.split(",")[0].trim() || "resume"}`.replace(/\s+/g, "_");
 
   if (!jobId) {
     input = { kind: "resume", data: resolveResume(profile, profileAsTailored(profile), layout) };

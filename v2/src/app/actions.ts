@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import * as db from "@/lib/db";
+import { resetExtensionKey } from "@/lib/extension";
 import { extractText, parseResumeText, reuseIds } from "@/lib/import";
 import { readJob } from "@/lib/job-import";
 import { llmInfo, testLlm } from "@/lib/llm";
@@ -268,6 +269,19 @@ export async function draftAnswerAction(question: string): Promise<Result<DraftA
     const [draft] = await draftAnswers(db.getProfile(), [{ id: "q", question: q, long: true }], { examples }, db.getSettings().tailoring);
     if (!draft?.text) return { ok: false, error: "Your profile doesn't answer this one (salary, dates and visa questions are yours to write)." };
     return { ok: true, data: draft };
+  } catch (e) {
+    return fail(e);
+  }
+}
+
+/* ─── Extension ─── */
+
+/** A new key. The extension stops working until it's connected again. */
+export async function resetExtensionKeyAction(): Promise<Result<{ key: string }>> {
+  try {
+    const key = resetExtensionKey();
+    revalidatePath("/extension");
+    return { ok: true, data: { key } };
   } catch (e) {
     return fail(e);
   }
