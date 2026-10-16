@@ -91,7 +91,7 @@ export function ExtensionSetup({ connectionKey, seen, dist, built }: { connectio
       {dialog}
       <PageHeader icon={Puzzle} title="Extension" description="Save postings and fill applications from your browser, with your profile and answer bank." />
       <PageBody>
-        <div className="mx-auto grid max-w-5xl gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+        <div className="mx-auto grid max-w-5xl grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
           <Card className="p-5">
             <Eyebrow className="mb-1">Set up · Chrome</Eyebrow>
             <CardTitle className="mb-4">Install it once</CardTitle>

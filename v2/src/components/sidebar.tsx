@@ -61,7 +61,7 @@ export function Sidebar({ llm }: { llm: { provider: string; model: string } | nu
   return (
     <aside className="flex shrink-0 flex-col border-b border-rule bg-page lg:w-[248px] lg:border-b-0 lg:border-r">
       <div className="flex h-14 items-center justify-between gap-2 px-4 lg:h-bar lg:border-b lg:border-rule">
-        <Link href="/" className="flex min-w-0 items-center gap-2.5">
+        <Link href="/" className="flex min-w-0 shrink-0 items-center gap-2.5">
           <Image src="/brand/slothing-mark.png" alt="" width={32} height={32} className="h-8 w-8 rounded-control" priority />
           <div className="min-w-0 leading-tight">
             <div className="font-display text-lg font-bold tracking-tight">Slothing</div>
@@ -69,11 +69,18 @@ export function Sidebar({ llm }: { llm: { provider: string; model: string } | nu
           </div>
         </Link>
         {/* Mobile: nav collapses into this row */}
-        <nav className="flex items-center gap-1 lg:hidden">
+        {/* Labels from sm up; on a phone the row only fits icons. */}
+        <nav className="flex min-w-0 items-center gap-1 lg:hidden">
           {GROUPS.flatMap((g) => g.items).map(({ href, label, icon: Icon }) => (
-            <Link key={href} href={href} className={cx("flex h-9 items-center gap-1.5 rounded-control px-3 text-sm font-medium", isActive(path, href) ? "bg-paper text-ink shadow-paper" : "text-ink-2")}>
+            <Link
+              key={href}
+              href={href}
+              aria-label={label}
+              title={label}
+              className={cx("flex h-9 shrink-0 items-center gap-1.5 rounded-control px-2.5 text-sm font-medium sm:px-3", isActive(path, href) ? "bg-paper text-ink shadow-paper" : "text-ink-2")}
+            >
               <Icon className="h-4 w-4" />
-              {label}
+              <span className="hidden sm:inline">{label}</span>
             </Link>
           ))}
           <ThemeToggle />
