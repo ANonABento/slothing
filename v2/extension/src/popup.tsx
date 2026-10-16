@@ -31,7 +31,7 @@ import {
 
 /** Apps that render their form after load (Ashby) get a moment before "no form" is believed. */
 async function readFormSoon(tab: Tab): Promise<PageForm> {
-  let form = await readForm(tab);
+  let form: PageForm = { fields: [], combos: 0, blockedFrames: 0 };
   for (let i = 0; i < 3 && !form.fields.length && !form.blockedFrames; i++) {
     await new Promise((r) => setTimeout(r, 700));
     form = await readForm(tab);
@@ -39,7 +39,7 @@ async function readFormSoon(tab: Tab): Promise<PageForm> {
   return form;
 }
 
-type Loaded = { conn: Connection; tab: Tab; status: Status; form: PageForm | null; formError: string };
+type Loaded = { conn: Connection; tab: Tab; status: Status; form: PageForm | null; formError: string; looking: boolean };
 
 type FillResult = {
   filled: { id: string; source: Fill["source"] | "ai"; label: string }[];
@@ -66,13 +66,20 @@ function App() {
     const tab = await activeTab();
     if (!tab) return setState({ kind: "error", error: "No tab to work with.", conn });
     try {
+      const readable = /^https?:/.test(tab.url);
       const [status, form] = await Promise.all([
         api.status(conn, tab.url),
-        /^https?:/.test(tab.url) ? readFormSoon(tab).then((f) => ({ f, e: "" }), (e: Error) => ({ f: null, e: e.message })) : Promise.resolve({ f: null, e: "Slothing can't read this kind of page." }),
+        readable ? readForm(tab).then((f) => ({ f, e: "" }), (e: Error) => ({ f: null, e: e.message })) : Promise.resolve({ f: null, e: "Slothing can't read this kind of page." }),
       ]);
       applyTheme(status.theme);
       void chrome.storage.local.set({ theme: status.theme });
-      setState({ kind: "ready", conn, tab, status, form: form.f, formError: form.e });
+      const late = readable && form.f && !form.f.fields.length && !form.f.blockedFrames;
+      setState({ kind: "ready", conn, tab, status, form: form.f, formError: form.e, looking: Boolean(late) });
+      // A form some apps render after load (Ashby): keep looking a moment, without holding up the rest.
+      if (late) {
+        const again = await readFormSoon(tab).catch(() => null);
+        setState((s) => (s.kind === "ready" && s.tab.id === tab.id ? { ...s, form: again ?? s.form, looking: false } : s));
+      }
     } catch (e) {
       if (e instanceof ApiError && e.unauthorized) return setState({ kind: "connect", error: e.message });
       setState({ kind: "error", error: (e as Error).message, conn });
@@ -150,7 +157,7 @@ function Connect({ error, onConnected }: { error?: string; onConnected: () => vo
 
 /* ─── The open tab ─── */
 
-function Main({ conn, tab, status, form, formError, reload, disconnect }: Loaded & { reload: () => void; disconnect: () => void }) {
+function Main({ conn, tab, status, form, formError, looking, reload, disconnect }: Loaded & { reload: () => void; disconnect: () => void }) {
   const [job, setJob] = useState<JobSummary | null>(status.job);
   const [view, setView] = useState<"main" | "save">("main");
   const hasForm = Boolean(form?.fields.length);
@@ -166,7 +173,7 @@ function Main({ conn, tab, status, form, formError, reload, disconnect }: Loaded
           ) : (
             <Section>
               <p className="text-xs leading-relaxed text-ink-3">
-                {formError || (form?.blockedFrames ? "" : "No application form on this page. Open the application to fill it.")}
+                {looking ? "Looking for an application form…" : formError || (form?.blockedFrames ? "" : "No application form on this page. Open the application to fill it.")}
               </p>
               {form?.blockedFrames ? <FrameAccess onGranted={reload} /> : null}
             </Section>

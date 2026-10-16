@@ -246,6 +246,17 @@ JSON: { "company": string, "title": string, "location": string, "description": s
   return { company: job.company.trim(), title: job.title.trim(), location: job.location.trim(), description: job.description.trim() };
 }
 
+/**
+ * Workday postings name a legal entity as the employer ("IN02 NVIDIA GraphicsPLtd,Pune"). The tenant in
+ * the host ("nvidia.wd5.myworkdayjobs.com") is the company: as the entity spells it when it's in there.
+ */
+export function workdayCompany(url: URL, company: string): string {
+  const m = url.hostname.match(/^([\w-]+)\.wd\d+\.myworkdayjobs\.com$/i);
+  if (!m) return company;
+  const tenant = m[1];
+  return company.match(new RegExp(`\\b${tenant}\\b`, "i"))?.[0] ?? tenant[0].toUpperCase() + tenant.slice(1);
+}
+
 /** A LinkedIn search link ("…/jobs/search/?currentJobId=…&keywords=…") is saved as the posting's own link. */
 const savedUrl = (url: URL) => {
   const li = linkedInJobId(url);
@@ -301,7 +312,8 @@ export async function importJobFromUrl(raw: string): Promise<ImportedJob & { url
   if (Number(res.headers.get("content-length") ?? 0) > MAX_BYTES) throw new Error("That page is too large to read.");
   const html = (await res.text()).slice(0, MAX_BYTES);
   const text = htmlToText(html.match(/<body[\s\S]*<\/body>/i)?.[0] ?? html);
-  return { ...(await fromPage(url, html, text, linkedInError)), url: savedUrl(url) };
+  const read = await fromPage(url, html, text, linkedInError);
+  return { ...read, company: workdayCompany(url, read.company), url: savedUrl(url) };
 }
 
 /**
@@ -312,7 +324,8 @@ export async function importJobFromPage(page: { url: string; html: string; text:
   const url = parsePostingUrl(page.url);
   const { job, linkedInError } = await fromBoardApi(url);
   if (job) return { ...job, url: savedUrl(url) };
-  return { ...(await fromPage(url, page.html.slice(0, MAX_BYTES), page.text, linkedInError)), url: savedUrl(url) };
+  const read = await fromPage(url, page.html.slice(0, MAX_BYTES), page.text, linkedInError);
+  return { ...read, company: workdayCompany(url, read.company), url: savedUrl(url) };
 }
 
 /**

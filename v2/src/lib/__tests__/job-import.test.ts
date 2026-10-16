@@ -11,6 +11,7 @@ import {
   parseLinkedInFragment,
   parsePostingUrl,
   postingKey,
+  workdayCompany,
   readJob,
 } from "../job-import";
 import { generateJSON } from "../llm";
@@ -216,5 +217,14 @@ describe("postingKey", () => {
   it("keeps different postings apart, and is blank for junk", () => {
     expect(postingKey("https://jobs.lever.co/acme/1")).not.toBe(postingKey("https://jobs.lever.co/acme/2"));
     expect(postingKey("not a link")).toBe("");
+  });
+});
+
+describe("workdayCompany", () => {
+  const url = (h: string) => new URL(`https://${h}/External/job/x`);
+  it("uses the tenant, spelled as the legal entity spells it", () => {
+    expect(workdayCompany(url("nvidia.wd5.myworkdayjobs.com"), "IN02 NVIDIA GraphicsPLtd,Pune")).toBe("NVIDIA");
+    expect(workdayCompany(url("acme.wd1.myworkdayjobs.com"), "Holdco 12 LLC")).toBe("Acme");
+    expect(workdayCompany(url("jobs.lever.co"), "Spotify")).toBe("Spotify");
   });
 });
