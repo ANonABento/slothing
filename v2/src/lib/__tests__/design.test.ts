@@ -31,9 +31,12 @@ describe("contact links", () => {
 
 describe("style sizes", () => {
   it("reads older named spacing and margins as numbers, and derives name and heading sizes", () => {
-    expect(ResumeStyle.parse({ size: 10, spacing: "tight", margins: "narrow", header: "left" })).toMatchObject({ spacing: 0.75, margins: { x: 0.5, y: 0.45 }, nameSize: 23, headingSize: 11.25 });
-    expect(ResumeStyle.parse({ spacing: "airy", margins: "normal" })).toMatchObject({ spacing: 1.25, margins: { x: 0.6, y: 0.55 }, nameSize: 21, headingSize: 11.75 });
-    expect(ResumeStyle.parse({ nameSize: 30, spacing: 1.1 })).toMatchObject({ nameSize: 30, spacing: 1.1 });
+    expect(ResumeStyle.parse({ size: 10, spacing: "tight", margins: "narrow", header: "left" })).toMatchObject({ spacing: { line: 0.75, bullets: 3.5, entries: 5.5, sections: 9, headings: 4 }, margins: { x: 0.5, y: 0.45 }, nameSize: 23, headingSize: 11.25 });
+    expect(ResumeStyle.parse({ spacing: "airy", margins: "normal" })).toMatchObject({ spacing: { line: 1.25, bullets: 6, entries: 9, sections: 15 }, margins: { x: 0.6, y: 0.55 }, nameSize: 21, headingSize: 11.75 });
+    // The gap after a heading followed its rule style.
+    expect(ResumeStyle.parse({ size: 10, headingRule: "beside" }).spacing.headings).toBe(4.5);
+    const spacing = { line: 1.1, bullets: 2, entries: 10, sections: 6, headings: 3 };
+    expect(ResumeStyle.parse({ nameSize: 30, spacing })).toMatchObject({ nameSize: 30, spacing });
   });
 
   it("keeps the defaults equal to the Classic template, and rejects sizes out of range", () => {

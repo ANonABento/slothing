@@ -252,18 +252,29 @@ export const SIZE_LIMITS = {
   size: { min: 8, max: 13, step: 0.5 },
   nameSize: { min: 12, max: 36, step: 1 },
   headingSize: { min: 8, max: 18, step: 0.5 },
-  spacing: { min: 0.6, max: 1.6, step: 0.05 },
+  line: { min: 0.5, max: 2, step: 0.05 },
+  gap: { min: 0, max: 30, step: 0.5 },
   margin: { min: 0.25, max: 1.5, step: 0.05 },
 } as const;
 const sized = (k: keyof typeof SIZE_LIMITS) => z.number().min(SIZE_LIMITS[k].min).max(SIZE_LIMITS[k].max);
 const quarter = (n: number) => Math.round(n * 4) / 4;
+const half = (n: number) => Math.round(n * 2) / 2;
+const AFTER_HEADING = { below: 0.4, beside: 0.45, none: 0.3 } as Record<string, number>;
 
-/** Older settings stored spacing and margins as named steps, and derived name and heading sizes. */
+/**
+ * Older settings stored spacing as one scale (or a named step), margins as named steps, and derived
+ * name and heading sizes from the body size. These give the same gaps as numbers.
+ */
 function upgradeStyle(v: unknown) {
   if (!v || typeof v !== "object") return v;
   const s: Record<string, unknown> = { ...v };
   const size = typeof s.size === "number" ? s.size : 10.5;
   if (typeof s.spacing === "string") s.spacing = ({ tight: 0.75, normal: 1, airy: 1.25 } as Record<string, number>)[s.spacing] ?? 1;
+  if (typeof s.spacing === "number" || s.spacing === undefined) {
+    const m = (s.spacing as number | undefined) ?? 1;
+    const rule = s.headingRule === true ? "below" : s.headingRule === false ? "none" : String(s.headingRule ?? "below");
+    s.spacing = { line: m, bullets: half(size * 0.45 * m), entries: half(7 * m), sections: half(12 * m), headings: half(size * (AFTER_HEADING[rule] ?? 0.4)) };
+  }
   if (typeof s.margins === "string") s.margins = ({ narrow: { x: 0.5, y: 0.45 }, wide: { x: 0.75, y: 0.7 } } as Record<string, unknown>)[s.margins] ?? { x: 0.6, y: 0.55 };
   s.nameSize ??= quarter(size * ((s.header ?? "center") === "center" ? 2 : 2.3));
   s.headingSize ??= quarter(size * 1.12);
@@ -278,8 +289,16 @@ export const ResumeStyle = z.preprocess(upgradeStyle, z.object({
   size: sized("size").default(10.5),
   nameSize: sized("nameSize").default(21),
   headingSize: sized("headingSize").default(11.75),
-  /** Scales every gap: line spacing, between bullets, entries and sections. 1 is the default. */
-  spacing: sized("spacing").default(1),
+  /** line scales the space between lines (1 is the default); the gaps are in points. */
+  spacing: z.object({
+    line: sized("line"),
+    bullets: sized("gap"),
+    entries: sized("gap"),
+    /** Above each section heading. */
+    sections: sized("gap"),
+    /** Below each section heading (and its rule). */
+    headings: sized("gap"),
+  }),
   /** Inches: x is left and right, y is top and bottom. */
   margins: z.object({ x: sized("margin"), y: sized("margin") }).default({ x: 0.6, y: 0.55 }),
   /** Section headings, their rule, bullets and link icons. */
@@ -316,25 +335,25 @@ export const STYLE_PRESETS: { id: string; label: string; hint: string; style: Re
     id: "modern",
     label: "Modern",
     hint: "Sans, color accent, one-line roles",
-    style: { ...DEFAULT_STYLE, font: "asap", headingFont: "ubuntu", size: 10, nameSize: 23, headingSize: 11.25, spacing: 1.25, margins: { x: 0.5, y: 0.45 }, accent: "#9b85c4", header: "split", entry: "inline", bullet: "disc", linkIcons: true },
+    style: { ...DEFAULT_STYLE, font: "asap", headingFont: "ubuntu", size: 10, nameSize: 23, headingSize: 11.25, spacing: { line: 1.25, bullets: 5.5, entries: 9, sections: 15, headings: 4 }, margins: { x: 0.5, y: 0.45 }, accent: "#9b85c4", header: "split", entry: "inline", bullet: "disc", linkIcons: true },
   },
   {
     id: "awesome",
     label: "Awesome-CV",
     hint: "Bold accent, rule beside headings",
-    style: { ...DEFAULT_STYLE, font: "source-sans", headingFont: "source-sans", size: 10.5, accent: "#dc3522", headingRule: "beside", bullet: "dot", linkIcons: true },
+    style: { ...DEFAULT_STYLE, font: "source-sans", headingFont: "source-sans", size: 10.5, spacing: { ...DEFAULT_STYLE.spacing, headings: 4.5 }, accent: "#dc3522", headingRule: "beside", bullet: "dot", linkIcons: true },
   },
   {
     id: "moderncv",
     label: "ModernCV",
     hint: "Dates in a left column",
-    style: { ...DEFAULT_STYLE, font: "lato", size: 10, nameSize: 23, headingSize: 11.25, accent: "#3873b3", header: "left", headingCase: "title", headingRule: "beside", dates: "left", bullet: "dot" },
+    style: { ...DEFAULT_STYLE, font: "lato", size: 10, nameSize: 23, headingSize: 11.25, spacing: { ...DEFAULT_STYLE.spacing, headings: 4.5 }, accent: "#3873b3", header: "left", headingCase: "title", headingRule: "beside", dates: "left", bullet: "dot" },
   },
   {
     id: "compact",
     label: "Compact",
     hint: "Fits the most on a page",
-    style: { ...DEFAULT_STYLE, font: "source-sans", size: 10, nameSize: 23, headingSize: 11.25, spacing: 0.75, margins: { x: 0.5, y: 0.45 }, accent: "#1f3a5f", header: "left", entry: "inline", linkIcons: true },
+    style: { ...DEFAULT_STYLE, font: "source-sans", size: 10, nameSize: 23, headingSize: 11.25, spacing: { line: 0.75, bullets: 3.5, entries: 5.5, sections: 9, headings: 4 }, margins: { x: 0.5, y: 0.45 }, accent: "#1f3a5f", header: "left", entry: "inline", linkIcons: true },
   },
 ];
 

@@ -27,6 +27,7 @@ const TABS = [
   { value: "template", label: "Template" },
   { value: "text", label: "Text & color" },
   { value: "page", label: "Page" },
+  { value: "spacing", label: "Spacing" },
   { value: "sections", label: "Sections" },
   { value: "entries", label: "Entries" },
 ] as const;
@@ -283,9 +284,6 @@ function PageTab({ layout, onChange, set }: { layout: Layout; onChange: (l: Layo
         />
       </Row>
       <div className="flex flex-wrap gap-x-6 gap-y-5">
-        <Row label="Spacing">
-          <Stepper label="Spacing" value={style.spacing} onChange={(v) => set("spacing", v)} limits={SIZE_LIMITS.spacing} unit="×" />
-        </Row>
         <Row label="Left and right margins">
           <Stepper label="Left and right margins" value={style.margins.x} onChange={(x) => set("margins", { ...style.margins, x })} limits={SIZE_LIMITS.margin} unit="in" />
         </Row>
@@ -293,7 +291,6 @@ function PageTab({ layout, onChange, set }: { layout: Layout; onChange: (l: Layo
           <Stepper label="Top and bottom margins" value={style.margins.y} onChange={(y) => set("margins", { ...style.margins, y })} limits={SIZE_LIMITS.margin} unit="in" />
         </Row>
       </div>
-      <p className="-mt-2 text-xs text-ink-2">Spacing scales every gap at once: between lines, bullets, entries and sections. 1× is the default; each template sets its own.</p>
       <Row label="Header">
         <Segmented value={style.header} onChange={(v) => set("header", v)} options={[{ value: "center", label: "Centered" }, { value: "split", label: "Name left, contact right" }, { value: "left", label: "Left" }]} />
       </Row>
@@ -307,6 +304,32 @@ function PageTab({ layout, onChange, set }: { layout: Layout; onChange: (l: Layo
           ]}
         />
       </Row>
+    </div>
+  );
+}
+
+const GAPS = [
+  { key: "bullets", label: "Between bullets" },
+  { key: "entries", label: "Between entries", hint: "Roles, projects and schools" },
+  { key: "sections", label: "Before section headings" },
+  { key: "headings", label: "After section headings" },
+] as const;
+
+function SpacingTab({ style, set }: { style: Style; set: <K extends keyof Style>(k: K, v: Style[K]) => void }) {
+  const gap = (k: keyof Style["spacing"], v: number) => set("spacing", { ...style.spacing, [k]: v });
+  return (
+    <div className="space-y-5">
+      <Row label="Line spacing" hint="Between the lines of a paragraph or a wrapped bullet, and an entry's own lines. 1× is the default.">
+        <Stepper label="Line spacing" value={style.spacing.line} onChange={(v) => gap("line", v)} limits={SIZE_LIMITS.line} unit="×" />
+      </Row>
+      <div className="grid gap-x-6 gap-y-5 sm:grid-cols-2">
+        {GAPS.map((g) => (
+          <Row key={g.key} label={g.label} hint={"hint" in g ? g.hint : undefined}>
+            <Stepper label={g.label} value={style.spacing[g.key]} onChange={(v) => gap(g.key, v)} limits={SIZE_LIMITS.gap} unit="pt" />
+          </Row>
+        ))}
+      </div>
+      <p className="text-xs text-ink-2">Each template sets its own spacing. Tighter spacing fits more on a page.</p>
     </div>
   );
 }
@@ -410,6 +433,7 @@ export function ResumeDesignSection({ layout, onChange }: { layout: Layout; onCh
         {tab === "template" && <TemplateTab style={layout.style} onChange={(style) => onChange({ ...layout, style })} />}
         {tab === "text" && <TextTab style={layout.style} set={set} />}
         {tab === "page" && <PageTab layout={layout} onChange={onChange} set={set} />}
+        {tab === "spacing" && <SpacingTab style={layout.style} set={set} />}
         {tab === "sections" && <SectionsTab layout={layout} onChange={onChange} set={set} />}
         {tab === "entries" && <EntriesTab style={layout.style} set={set} />}
       </Card>

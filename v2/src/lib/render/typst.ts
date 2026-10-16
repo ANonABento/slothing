@@ -34,9 +34,15 @@ const COMMON = `
 `;
 
 export const RESUME_TYP = `${COMMON}
-// Every gap is a default times st.spacing.
-#let sp = (leading: 0.55em, item: 0.45em, entry: 7pt, section: 12pt, rows: 0.4em)
-#let sp = sp.keys().zip(sp.values().map(v => v * st.spacing)).to-dict()
+// Line spacing scales the space between lines (and between an entry's own lines); gaps are in points.
+#let sp = (
+  leading: 0.55em * st.spacing.line,
+  rows: 0.4em * st.spacing.line,
+  item: st.spacing.bullets * 1pt,
+  entry: st.spacing.entries * 1pt,
+  section: st.spacing.sections * 1pt,
+  heading: st.spacing.headings * 1pt,
+)
 #let margin-x = st.margins.x * 1in
 #let margin-y = st.margins.y * 1in
 
@@ -59,12 +65,11 @@ export const RESUME_TYP = `${COMMON}
   block(sticky: true, {
     if st.headingRule == "beside" {
       grid(columns: (auto, 1fr), column-gutter: 8pt, align: horizon, heading, line(length: 100%, stroke: 0.6pt + accent))
-      v(base * 0.45)
     } else {
       heading
-      v(base * 0.3)
-      if st.headingRule == "below" { line(length: 100%, stroke: 0.6pt + accent); v(base * 0.4) }
+      if st.headingRule == "below" { v(base * 0.3); line(length: 100%, stroke: 0.6pt + accent) }
     }
+    v(sp.heading)
   })
 }
 
