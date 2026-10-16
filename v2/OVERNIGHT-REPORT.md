@@ -2,7 +2,7 @@
 
 You asked for: templates removed (Resume design replaced them), then the extension and the answer bank,
 built properly. **All three are done and committed** (8 commits on `v2-rebuild`, nothing pushed).
-`npm run typecheck`, `npm test` (152 tests) and `next build` pass. About 3 AI calls in total.
+`npm run typecheck`, `npm test` (153 tests) and `next build` pass. About 3 AI calls in total.
 
 **Start here (5 minutes):**
 
