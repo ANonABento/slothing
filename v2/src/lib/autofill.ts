@@ -46,7 +46,8 @@ export type ProfileKey =
   | "school"
   | "degree";
 
-export type FieldRole = { type: "profile"; key: ProfileKey } | { type: "file"; doc: "resume" | "letter" } | { type: "question" };
+/** "ignore": not a question for you (an upload that parses your resume to fill the form, which is done here). */
+export type FieldRole = { type: "profile"; key: ProfileKey } | { type: "file"; doc: "resume" | "letter" } | { type: "question" } | { type: "ignore" };
 
 // Checked in order: the first rule whose pattern matches (and whose `not` doesn't) wins.
 const RULES: { key: ProfileKey; auto?: string[]; re: RegExp; not?: RegExp }[] = [
@@ -62,7 +63,7 @@ const RULES: { key: ProfileKey; auto?: string[]; re: RegExp; not?: RegExp }[] = 
   { key: "currentCompany", auto: ["organization"], re: /(current|present|most recent)\s*(company|employer)|^\W*(company|employer)\W*$|company\s*name/i, not: /previous|past|former|why|applying/i },
   { key: "currentTitle", auto: ["organization-title"], re: /(current|present|most recent)\s*(job\s*)?(title|position|role)|^\W*(job\s*)?title\W*$/i, not: /previous|past|desired|applying/i },
   { key: "city", auto: ["address-level2"], re: /^\W*city\W*$|current\s*city|city\s*of\s*residence/i },
-  { key: "location", re: /^\W*(current\s*)?location\W*$|where\s*are\s*you\s*(currently\s*)?(based|located)|location\s*\(city/i, not: /preferred|desired|willing|open to/i },
+  { key: "location", re: /^\W*(current\s*)?location\W*$|what\s*is\s*your\s*(current\s*)?location|where\s*are\s*you\s*(currently\s*)?(based|located)|location\s*\(city/i, not: /preferred|desired|willing|open to/i },
   { key: "school", re: /^\W*(school|university|college|institution)(\s*name)?\W*$/i },
   { key: "degree", re: /^\W*degree\W*$/i },
 ];
@@ -78,7 +79,7 @@ const CHOICE_KEYS = new Set<ProfileKey>(["city", "location", "school", "degree"]
 export function classify(f: FormField): FieldRole {
   const hay = [f.label, f.name, f.placeholder].filter(Boolean).join(" ");
   if (f.kind === "file") {
-    if (PARSER.test(f.label)) return { type: "question" };
+    if (PARSER.test(f.label)) return { type: "ignore" };
     return LETTER.test(hay) ? { type: "file", doc: "letter" } : RESUME.test(hay) || !f.label ? { type: "file", doc: "resume" } : { type: "question" };
   }
   // A long-form question that mentions LinkedIn ("Tell us about your experience on LinkedIn") isn't the URL field.
@@ -162,6 +163,7 @@ export function planFill(fields: FormField[], profile: Profile, bank: Answer[], 
   const plan: FillPlan = { fills: [], skipped: [] };
   for (const f of fields) {
     const role = classify(f);
+    if (role.type === "ignore") continue;
     if (f.kind === "file" && role.type !== "file") {
       plan.skipped.push({ id: f.id, reason: "upload" });
       continue;

@@ -33,6 +33,7 @@ describe("classify", () => {
     [{ label: "Portfolio link" }, "website"],
     [{ label: "Current company" }, "currentCompany"],
     [{ label: "Current location" }, "location"],
+    [{ label: "What is your location?" }, "location"],
     [{ label: "Are you willing to relocate?" }, "question"],
     [{ label: "", name: "job_application[first_name]" }, "firstName"],
     [{ label: "", autocomplete: "family-name" }, "lastName"],
@@ -50,7 +51,7 @@ describe("classify", () => {
 
   it("sorts file inputs into resume and cover letter", () => {
     expect(classify(field("f", "Attach", { kind: "file", name: "cover_letter" }))).toEqual({ type: "file", doc: "letter" });
-    expect(classify(field("f", "Autofill from resume", { kind: "file" }))).toEqual({ type: "question" });
+    expect(classify(field("f", "Autofill from resume", { kind: "file" }))).toEqual({ type: "ignore" });
     expect(classify(field("f", "Resume/CV", { kind: "file" }))).toEqual({ type: "file", doc: "resume" });
     expect(classify(field("f", "Cover Letter", { kind: "file" }))).toEqual({ type: "file", doc: "letter" });
     expect(classify(field("f", "Transcript", { kind: "file" }))).toEqual({ type: "question" });

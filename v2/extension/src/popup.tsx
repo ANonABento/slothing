@@ -29,6 +29,16 @@ import {
  * Fill form → what was filled and what's left → Save answers to the bank.
  */
 
+/** Apps that render their form after load (Ashby) get a moment before "no form" is believed. */
+async function readFormSoon(tab: Tab): Promise<PageForm> {
+  let form = await readForm(tab);
+  for (let i = 0; i < 3 && !form.fields.length && !form.blockedFrames; i++) {
+    await new Promise((r) => setTimeout(r, 700));
+    form = await readForm(tab);
+  }
+  return form;
+}
+
 type Loaded = { conn: Connection; tab: Tab; status: Status; form: PageForm | null; formError: string };
 
 type FillResult = {
@@ -58,7 +68,7 @@ function App() {
     try {
       const [status, form] = await Promise.all([
         api.status(conn, tab.url),
-        /^https?:/.test(tab.url) ? readForm(tab).then((f) => ({ f, e: "" }), (e: Error) => ({ f: null, e: e.message })) : Promise.resolve({ f: null, e: "Slothing can't read this kind of page." }),
+        /^https?:/.test(tab.url) ? readFormSoon(tab).then((f) => ({ f, e: "" }), (e: Error) => ({ f: null, e: e.message })) : Promise.resolve({ f: null, e: "Slothing can't read this kind of page." }),
       ]);
       applyTheme(status.theme);
       void chrome.storage.local.set({ theme: status.theme });

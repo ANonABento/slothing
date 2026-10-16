@@ -15,7 +15,8 @@ type Control = HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
 const clean = (s: string | null | undefined) =>
   (s ?? "")
     .replace(/\s+/g, " ")
-    .replace(/\s*\*\s*$/, "")
+    .replace(/\s*[*✱]\s*/g, " ")
+    .replace(/\s+/g, " ")
     .trim();
 
 const visible = (el: Element) => {
@@ -57,7 +58,7 @@ const byIds = (ids: string | null) =>
   );
 
 /** The question a control asks: its labels, aria, a fieldset legend, or the nearest text before it. */
-function labelOf(el: Control): string {
+function labelOf(el: Control, nearby = true): string {
   const aria = byIds(el.getAttribute("aria-labelledby"));
   if (aria) return aria;
   if (el.labels?.length) {
@@ -66,7 +67,7 @@ function labelOf(el: Control): string {
   }
   const ariaLabel = clean(el.getAttribute("aria-label"));
   if (ariaLabel) return ariaLabel;
-  return nearbyText(el);
+  return nearby ? nearbyText(el) : "";
 }
 
 /** The closest short text above a control, for forms whose labels aren't tied to their inputs. */
@@ -127,17 +128,22 @@ const GENERIC_FILE = /^(attach|upload|choose|browse|select|drop|add)\b.{0,30}$/i
 
 /** A file input's purpose: its label unless that's just "Attach", then the text above its group. */
 function fileLabel(el: HTMLInputElement): string {
-  const own = labelOf(el);
+  // "Resume/CV ATTACH RESUME/CV" (Lever): the label, without the button text inside it.
+  // Its own label only: for an upload, the text above it is often unrelated (Ashby's page tabs).
+  const own = labelOf(el, false).replace(/\s+(attach|upload|choose|browse)\b.*$/i, "");
   if (own && !GENERIC_FILE.test(own)) return own;
   let box: Element | null = el.parentElement;
   for (let i = 0; box && i < 4; i++, box = box.parentElement) {
+    // A small upload box says what it's for itself ("Autofill from resume · Upload your resume here…").
+    const boxText = visibleText(box);
+    if (boxText.length > 12 && boxText.length <= 160 && !GENERIC_FILE.test(boxText)) return boxText;
     const heading = box.querySelector("label, legend, h3, h4, [class*=label]");
     const t = heading && !heading.contains(el) ? visibleText(heading) : "";
     if (t && !GENERIC_FILE.test(t)) return t;
     const near = nearbyText(box);
     if (near && !GENERIC_FILE.test(near)) return near;
   }
-  return own;
+  return own || nearbyText(el);
 }
 
 const KIND: Record<string, FormField["kind"]> = { email: "email", tel: "tel", url: "url", number: "number", date: "date", text: "text", "": "text", file: "file", radio: "radio" };
