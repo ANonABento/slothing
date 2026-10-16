@@ -3,7 +3,8 @@ import Link from "next/link";
 
 import { AddJob } from "@/components/add-job";
 import { PageBody, PageHeader } from "@/components/page-header";
-import { Card, EmptyState, Eyebrow, SegmentedLinks, StatusPill, cx } from "@/components/ui";
+import { Card, EmptyState, Eyebrow, StatusPill, cx } from "@/components/ui";
+import { SegmentedLinks } from "@/components/segmented-links";
 import { getProfile, listJobs } from "@/lib/db";
 import { ago } from "@/lib/format";
 import { llmConfigured } from "@/lib/llm";

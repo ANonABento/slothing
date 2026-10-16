@@ -16,7 +16,8 @@ import { Dropdown } from "./dropdown";
 import { ResumeDesignSection } from "./resume-design";
 import { PageBody, PageHeader } from "./page-header";
 import { SaveBar } from "./save-bar";
-import { Button, Card, CardTitle, Field, Input, Label, Segmented, SegmentedLinks, Textarea, cx } from "./ui";
+import { Button, Card, CardTitle, Field, Input, Label, Segmented, Textarea, cx } from "./ui";
+import { SegmentedLinks } from "./segmented-links";
 
 function Section({ title, description, children }: { title: string; description: ReactNode; children: ReactNode }) {
   return (

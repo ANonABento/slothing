@@ -1,5 +1,5 @@
 import type { LucideIcon } from "lucide-react";
-import Link from "next/link";
+// No Next imports here: the browser extension's popup uses these components too (see extension/).
 import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode, TextareaHTMLAttributes } from "react";
 
 export const cx = (...c: (string | false | undefined | null)[]) => c.filter(Boolean).join(" ");
@@ -11,7 +11,7 @@ const variants: Record<Variant, string> = {
   ghost: "text-ink-2 hover:bg-rule-bg hover:text-ink",
   danger: "text-ink-3 hover:bg-warn-soft hover:text-warn",
 };
-type Size = "md" | "sm";
+export type Size = "md" | "sm";
 const sizes: Record<Size, string> = { md: "h-10 px-4 text-sm", sm: "h-8 px-3 text-xs" };
 
 const focusRing = "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand";
@@ -130,8 +130,8 @@ export function EmptyState({ icon, title, children, footer }: { icon: LucideIcon
 }
 
 /* v1's segmented control: dark block marks the active option. Buttons (client state) or links (URL state). */
-const segmentGroup = "inline-flex rounded-control border border-rule bg-paper p-1 shadow-paper";
-const segmentItem = (active: boolean, size: Size) =>
+export const segmentGroup = "inline-flex rounded-control border border-rule bg-paper p-1 shadow-paper";
+export const segmentItem = (active: boolean, size: Size) =>
   cx(
     "flex items-center whitespace-nowrap rounded-chip font-medium transition-colors",
     focusRing,
@@ -158,18 +158,6 @@ export function Segmented<T extends string>({
         </button>
       ))}
     </div>
-  );
-}
-
-export function SegmentedLinks({ options, value, size = "md" }: { options: { value: string; label: ReactNode; href: string }[]; value: string; size?: Size }) {
-  return (
-    <nav className={segmentGroup}>
-      {options.map((o) => (
-        <Link key={o.value} href={o.href} aria-current={value === o.value ? "page" : undefined} className={segmentItem(value === o.value, size)}>
-          {o.label}
-        </Link>
-      ))}
-    </nav>
   );
 }
 
